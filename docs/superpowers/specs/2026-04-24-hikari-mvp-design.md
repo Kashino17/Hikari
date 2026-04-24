@@ -1,147 +1,179 @@
-# Hikari MVP — Design Specification
+# Hikari MVP — Design Specification (v2)
 
 - **Datum:** 2026-04-24
-- **Status:** Draft for Review
+- **Status:** Draft for Review (v2 — überarbeitet nach Content-Source-Entscheidung)
 - **Autoren:** Kadir-kun (Vision/Decisions), Rem (Architektur-Ausarbeitung)
 
 ---
 
 ## 1. Vision
 
-**Hikari** (japanisch: Licht) ist eine Single-User Reels-App, die kuratierte, positive, wissensfördernde Kurzvideos von einer vom User selbst ausgewählten YouTube-Channel-Whitelist zeigt — ohne Algorithmus-Manipulation, ohne Doom-Scroll, ohne Werbung.
+**Hikari** (japanisch: Licht) ist eine Single-User Reels-App, die kuratierte, positive, wissensfördernde Kurzvideos von einer vom User selbst ausgewählten YouTube-Channel-Whitelist zeigt — mit nativem TikTok/Shorts-artigem Swipe-Interface, ohne YouTube-Branding, ohne Werbung, ohne Algorithmus-Manipulation.
 
 **Kern-Prinzipien:**
-1. **User kontrolliert die Quellen** — Kein Discovery-Algorithmus. Kadir-kun gibt die Channels vor.
-2. **AI filtert die Qualität, nicht die Entdeckung** — Nur Clickbait/emotionale Manipulation aus vertrautem Channel-Pool rausfiltern.
-3. **Kein Dark Pattern** — Keine View-Counts, keine Likes, keine "Mehr für dich"-Rabbit-Holes. Optional: Tages-Budget.
-4. **Local-First** — Kein Cloud-Dependency für Logik oder Daten. Dein Laptop ist Server + Datenbank.
+1. **User kontrolliert die Quellen** — Kadir-kun gibt Channel-Links vor, kein Discovery-Algorithmus.
+2. **AI filtert die Qualität, nicht die Entdeckung** — Clickbait / emotionale Manipulation raus.
+3. **Kein Dark Pattern** — Keine View-Counts, Likes, Infinite Rabbit-Holes. Optional: Tages-Budget.
+4. **Local-First** — Laptop ist Server + Datenbank. Phone spricht nur mit dem Laptop (Tailscale).
+5. **Native Playback** — Raw Video-Streams via ExoPlayer, kein IFrame, keine YouTube-Ads, volle UI-Kontrolle.
 
 ## 2. User-Set Constraints
 
 Von Kadir-kun explizit vorgegeben, nicht verhandelbar:
 
-- Backend läuft **lokal auf dem Laptop** (macOS). Kein Vercel, keine Cloud-DB, keine Managed Services.
-- Client ist **Android-APK, nativ**. Kein Web, kein PWA, keine Cross-Platform-Abstraktion.
-- **Single-User** — nur Kadir-kun. Kein Auth, keine User-Accounts, keine Multi-Tenancy.
-- **Content-Source:** YouTube IFrame Embed (legal), Werbungsfreiheit durch Kuration + SponsorBlock, nicht durch Ad-Blocking.
+- Backend läuft **lokal auf dem Laptop** (macOS). Kein Vercel, keine Cloud-DB.
+- Client ist **Android-APK, nativ**. Kein Web, kein PWA.
+- **Single-User** — nur Kadir-kun. Kein Auth, keine Multi-Tenancy.
+- **Kein YouTube Data API.** Content wird via `yt-dlp`-Scraping ingested.
+- **Direct Embedding, kein IFrame.** Videos spielen nativ via ExoPlayer.
+- **UX:** Vertikaler Scroll-Feed wie TikTok/Shorts.
 
-## 3. Architecture Overview
+## 3. Rechtliche & Betriebs-Realität (Kadir-kun bewusst akzeptiert)
+
+Der gewählte Scraping-Ansatz bringt Implikationen:
+
+- **YouTube ToS-Verletzung** — in der Praxis für Single-User-Privatnutzung nicht verfolgt, formal aber gegeben.
+- **Keine App-Store-Distribution** — APK wird direkt per USB/ADB auf Kadir's Phone installiert.
+- **`yt-dlp`-Wartung** — YouTube bricht Scraping-Endpoints typischerweise alle paar Wochen. Upgrade via `pipx upgrade yt-dlp` oder equivalent gehört zu den regelmäßigen Wartungsaufgaben.
+- **IP-Rate-Limiting** möglich bei aggressivem Scraping. Pipeline implementiert vernünftige Delays und exponentielles Backoff.
+- **Creator-Monetarisierung umgangen** — bewusste Akzeptanz des Users. Optional: "Support Creator"-Button im Player, der zum Patreon / YouTube-Channel linkt.
+
+## 4. Architecture Overview
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│  LAPTOP (Hikari Backend)                                          │
+│  LAPTOP (Hikari Backend, Node.js)                                 │
 │                                                                   │
-│  ┌────────────┐   ┌────────────┐   ┌────────────┐   ┌──────────┐ │
-│  │ 1. Monitor │→  │ 2. Ingest  │→  │ 3. Score   │→  │ 4. Store │ │
-│  │ RSS Poller │   │ YouTube    │   │ LLM Rating │   │ SQLite   │ │
-│  │ (node-cron)│   │ Data API + │   │ (pluggable:│   │ feed_    │ │
-│  │            │   │ Captions   │   │  Claude/   │   │ items    │ │
-│  │            │   │            │   │  Ollama)   │   │          │ │
-│  └────────────┘   └────────────┘   └────────────┘   └─────┬────┘ │
-│                                                           │      │
-│                              ┌────────────────────────────▼────┐ │
-│                              │ 5. HTTP API (Fastify)           │ │
-│                              │ GET /feed, POST /channels, ...  │ │
-│                              └──────────────┬──────────────────┘ │
-└─────────────────────────────────────────────┼────────────────────┘
+│ ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────┐ │
+│ │1.Monitor │→ │2. Ingest │→ │3. Score  │→ │4.Download│→ │5.Store│ │
+│ │RSS Poll  │  │yt-dlp    │  │LLM       │  │yt-dlp    │  │SQLite│ │
+│ │(15 min)  │  │meta+subs │  │Haiku 4.5 │  │download  │  │+ FS  │ │
+│ │          │  │          │  │(approve?)│  │720p mp4  │  │videos│ │
+│ └──────────┘  └──────────┘  └──────────┘  └──────────┘  └──┬───┘ │
+│                                                             │     │
+│                              ┌──────────────────────────────▼──┐  │
+│                              │ 6. HTTP API (Fastify)           │  │
+│                              │   /feed, /channels              │  │
+│                              │   /videos/:id.mp4 (file serve,  │  │
+│                              │     Range requests)             │  │
+│                              └──────────────┬──────────────────┘  │
+└─────────────────────────────────────────────┼─────────────────────┘
                                               │
-                                    Tailscale (WireGuard)
+                                    Tailscale (WireGuard) — ALLES
                                               │
 ┌─────────────────────────────────────────────▼────────────────────┐
 │  ANDROID APP (Kotlin + Jetpack Compose)                           │
 │                                                                   │
 │  ┌──────────┐   ┌──────────┐   ┌──────────────────────────────┐ │
 │  │ Room DB  │ ← │ Feed-    │ ← │ Reel-Player (vertical swipe) │ │
-│  │ (cache)  │   │ Repo     │   │  └ android-youtube-player    │ │
-│  └──────────┘   │ (Retro-  │   │    (IFrame wrapper + Sponsor │ │
-│                 │  fit)    │   │     Block integration)       │ │
-│                 └──────────┘   └──────────────────────────────┘ │
+│  │ (cache)  │   │ Repo     │   │  └ ExoPlayer (Media3)        │ │
+│  └──────────┘   │ (Retro-  │   │    - plays laptop mp4 via    │ │
+│                 │  fit)    │   │      Tailscale HTTP          │ │
+│                 └──────────┘   │    - SponsorBlock skip       │ │
+│                                │    - preload next 2 videos   │ │
+│                                └──────────────────────────────┘ │
 └───────────────────────────────────────────────────────────────────┘
 ```
 
-**Data Flow im Normalbetrieb:**
-1. Cron-Job auf Laptop pollt alle 15 Min die RSS-Feeds der whitelisted Channels
-2. Neues Video entdeckt → Ingest holt Metadata + Transkript
-3. LLM scort das Video (Qualität/Kategorie/Clickbait-Risiko)
-4. Wenn Score ≥ Threshold → Eintrag in `feed_items`
-5. Android-App fetcht Feed via Retrofit → rendert Reel-Stack mit YouTube-IFrame-Player
+**Data Flow:**
+1. Cron-Job pollt alle 15 Min die RSS-Feeds der whitelisted Channels
+2. Neues Video entdeckt → `yt-dlp --dump-json --write-auto-subs --skip-download` holt Meta + Transkript
+3. LLM scort das Video
+4. Wenn **approved** → `yt-dlp` lädt das Video als MP4 (720p, H.264+AAC) nach `~/.hikari/videos/{videoId}.mp4`
+5. Eintrag in `feed_items` + `downloaded_videos`
+6. Android-App fetcht Feed. Beim Swipe-to-Play öffnet ExoPlayer direkt `https://kadir-laptop.tailxxxx.ts.net/videos/{videoId}.mp4` — Fastify serviert die Datei mit HTTP-Range-Support. Rock-solid, kein Stream-URL-Expiry, offline-fähig wenn Tailscale steht.
 
-## 4. Component Details
+## 5. Component Details
 
-### 4.1 Stage 1 — Monitor (RSS Poller)
+### 5.1 Stage 1 — Monitor (RSS-Poller)
 
-- **Lib:** `node-cron` für Scheduling, `fast-xml-parser` für RSS
-- **Schedule:** Alle 15 Min — Poll aller whitelisted Channels
-- **Source:** `https://www.youtube.com/feeds/videos.xml?channel_id={CHANNEL_ID}` (werbungsfreies, API-quota-freies RSS)
-- **Output:** Für jeden Channel eine Liste der letzten ~15 Video-IDs. Deduplication gegen `videos`-Tabelle.
-- **Warum nicht WebSub Push:** Laptop ist nicht öffentlich erreichbar, und 15 Min Latenz sind für Single-User-Feed irrelevant.
+- **Lib:** `node-cron` + `fast-xml-parser`
+- **Schedule:** Alle 15 Min, alle `is_active = 1` Channels
+- **Source:** `https://www.youtube.com/feeds/videos.xml?channel_id={CHANNEL_ID}` — ist ein **regulärer RSS-Feed**, kein YouTube Data API, kein Key nötig
+- **Output:** Liste von Video-IDs pro Channel. Dedupe gegen `videos`-Tabelle.
 
-### 4.2 Stage 2 — Ingest
+### 5.2 Stage 2 — Ingest (yt-dlp)
 
-- **Metadata:** 1× `youtube.videos.list` API-Call pro neuem Video (Title, Description, Duration, Thumbnails, Category, DefaultLanguage)
-- **Transkript:**
-  - Primär: `youtube-transcript-api` (npm) — zieht Captions direkt vom Timedtext-Endpoint (gratis, kein API-Quota)
-  - Fallback: Wenn keine Captions → Video wird mit `hasTranscript: false` markiert und durchläuft einen schwächeren Score-Pfad (nur auf Title/Description)
-- **Hard Filters (vor AI):**
-  - Dauer 30s – 10min
-  - `liveBroadcastContent === "none"` (keine Livestreams/Premieres)
-  - Nicht bereits in DB
-- **Lib:** `googleapis` SDK für YouTube API v3
+**Tool:** [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) — Python CLI, installiert via `pipx install yt-dlp` auf dem Laptop.
 
-### 4.3 Stage 3 — Score (AI-Filter)
+**Wrapper im Node.js-Backend:** direkter Child-Process-Aufruf via `execa` (kein NPM-Wrapper nötig, der eh nur subprozess-spawned).
 
-- **Pluggable Interface:**
-  ```ts
-  interface Scorer {
-    score(video: VideoWithTranscript): Promise<Score>;
-  }
-  ```
-- **Default Implementation:** `ClaudeScorer` via Anthropic SDK
-  - Modell: `claude-haiku-4-5` (günstig, schnell, gut genug für Nuancen)
-  - Prompt mit Prompt-Caching auf System-Instruction (Kadirs Wert-System)
-  - Structured Output via `response_format: { type: "json_schema" }`
-- **Alternative Implementation:** `OllamaScorer` — HTTP-Call an `localhost:11434/api/chat`, Modell z.B. `qwen2.5:14b`
-- **Score-Schema:**
-  ```ts
-  {
-    overall_score: number,          // 0-100
-    category: Category,             // enum: science, tech, philosophy, history, ...
-    clickbait_risk: number,         // 0-10
-    educational_value: number,      // 0-10
-    emotional_manipulation: number, // 0-10
-    reasoning: string               // 1-2 Sätze
-  }
-  ```
-- **Decision-Rule (in einer eigenen Funktion, separat vom Scorer):**
-  `overall_score >= 60 && clickbait_risk <= 4 && emotional_manipulation <= 3`
-  → `approved`, sonst `rejected` mit reasoning.
-- **SponsorBlock:** Parallel pro Video ein Lookup an `https://sponsor.ajay.pw/api/skipSegments?videoID={id}` — Ergebnis in `sponsor_segments` cachen.
+**Channel-URL → Channel-ID (beim Hinzufügen eines Channels):**
+```bash
+yt-dlp --flat-playlist --playlist-items 1 --print channel_id --no-warnings 'https://www.youtube.com/@3blue1brown'
+```
 
-> **NOTE:** Die Scoring-Prompt-Definition ist die wichtigste Design-Entscheidung im ganzen Projekt — sie enkodiert, was "gut" für Hikari bedeutet. Beim Implementieren wird dies eine Kadir-zu-schreiben Komponente sein (5-10 Zeilen Prompt, die dein Value-System encoden).
+**Metadata + Transkript pro Video:**
+```bash
+yt-dlp --dump-json --skip-download --write-auto-subs --sub-lang 'de,en' \
+       --cookies-from-browser chrome --no-warnings \
+       'https://www.youtube.com/watch?v={VIDEO_ID}'
+```
+Output: JSON mit `title`, `description`, `duration`, `upload_date`, `thumbnail`, `width/height` (für Aspect-Ratio), `automatic_captions.en/de[0].url` (für Transkript).
 
-### 4.4 Stage 4 — Store (SQLite)
+**Transkript-Fetch:** Separater `curl` auf die `automatic_captions.*.url` → VTT-Parsing.
 
-**Datei:** `~/.hikari/hikari.db` (via `better-sqlite3`)
+**Hard Filters:** Dauer 30s–10min, keine Livestreams (`live_status == "not_live"`), nicht in DB.
 
-**Schema:**
+**Rate-Limiting:** Max 1 Request pro 2 Sekunden pro Channel, exponentielles Backoff bei HTTP 429.
+
+### 5.3 Stage 3 — Score (AI-Filter)
+
+**Pluggable Interface:**
+```ts
+interface Scorer {
+  score(video: VideoWithTranscript): Promise<Score>;
+}
+```
+
+**Default:** `ClaudeScorer` via Anthropic SDK
+- Modell: `claude-haiku-4-5`
+- Prompt-Caching auf System-Instruction (Kadirs Wert-System)
+- Structured Output (JSON Schema)
+
+**Alternative:** `OllamaScorer` — lokaler Ollama-Server (`localhost:11434`), Modell z.B. `qwen2.5:14b`.
+
+**Score-Schema:**
+```ts
+{
+  overall_score: number,          // 0-100
+  category: Category,             // enum: science, tech, philosophy, history, ...
+  clickbait_risk: number,         // 0-10
+  educational_value: number,      // 0-10
+  emotional_manipulation: number, // 0-10
+  reasoning: string
+}
+```
+
+**Decision-Rule:**
+`overall_score >= 60 && clickbait_risk <= 4 && emotional_manipulation <= 3` → `approved`.
+
+**SponsorBlock:** Parallel pro Video Lookup an `https://sponsor.ajay.pw/api/skipSegments?videoID={id}` → `sponsor_segments` cachen.
+
+> **NOTE:** Die Scoring-Prompt-Definition ist die wichtigste Design-Entscheidung. Beim Implementieren wird dies eine Kadir-zu-schreiben Komponente sein (5–10 Zeilen Prompt, die sein Value-System encoden).
+
+### 5.4 Stage 4 — Store (SQLite)
+
+**Datei:** `~/.hikari/hikari.db` via `better-sqlite3`.
 
 ```sql
 CREATE TABLE channels (
-  id TEXT PRIMARY KEY,          -- YouTube Channel ID
+  id TEXT PRIMARY KEY,                 -- YouTube Channel ID (UCxxxxxx)
+  url TEXT NOT NULL,                   -- original link that Kadir added
   title TEXT NOT NULL,
-  added_at INTEGER NOT NULL,    -- Unix epoch ms
+  added_at INTEGER NOT NULL,
   is_active INTEGER DEFAULT 1,
   last_polled_at INTEGER
 );
 
 CREATE TABLE videos (
-  id TEXT PRIMARY KEY,          -- YouTube Video ID
+  id TEXT PRIMARY KEY,                 -- YouTube Video ID
   channel_id TEXT NOT NULL REFERENCES channels(id),
   title TEXT NOT NULL,
   description TEXT,
   published_at INTEGER NOT NULL,
   duration_seconds INTEGER NOT NULL,
-  aspect_ratio TEXT,            -- "16:9" | "9:16"
+  aspect_ratio TEXT,                   -- "16:9" | "9:16" | "1:1"
   default_language TEXT,
   thumbnail_url TEXT,
   transcript TEXT,
@@ -156,220 +188,278 @@ CREATE TABLE scores (
   educational_value INTEGER NOT NULL,
   emotional_manipulation INTEGER NOT NULL,
   reasoning TEXT NOT NULL,
-  model_used TEXT NOT NULL,     -- "claude-haiku-4-5" oder "ollama:qwen2.5:14b"
+  model_used TEXT NOT NULL,
   scored_at INTEGER NOT NULL,
-  decision TEXT NOT NULL        -- "approved" | "rejected"
+  decision TEXT NOT NULL               -- "approved" | "rejected"
 );
 
 CREATE TABLE feed_items (
   video_id TEXT PRIMARY KEY REFERENCES videos(id),
   added_to_feed_at INTEGER NOT NULL,
-  seen_at INTEGER,              -- NULL = ungesehen
-  saved INTEGER DEFAULT 0,      -- Merk-Liste
-  playback_failed INTEGER DEFAULT 0   -- IFrame-Error beim Abspielen
+  seen_at INTEGER,
+  saved INTEGER DEFAULT 0,
+  playback_failed INTEGER DEFAULT 0
 );
 
 CREATE TABLE sponsor_segments (
   video_id TEXT NOT NULL REFERENCES videos(id),
   start_seconds REAL NOT NULL,
   end_seconds REAL NOT NULL,
-  category TEXT NOT NULL        -- "sponsor" | "selfpromo" | "intro" | ...
+  category TEXT NOT NULL
+);
+
+CREATE TABLE downloaded_videos (
+  video_id TEXT PRIMARY KEY REFERENCES videos(id),
+  file_path TEXT NOT NULL,             -- z.B. "/Users/ayysir/.hikari/videos/xxx.mp4"
+  file_size_bytes INTEGER NOT NULL,
+  video_codec TEXT,                    -- "h264" | "vp9" | ...
+  audio_codec TEXT,                    -- "aac" | "opus" | ...
+  resolution_height INTEGER,           -- 720, 480, ...
+  downloaded_at INTEGER NOT NULL,
+  last_served_at INTEGER               -- für LRU-basierte Cleanup
 );
 
 CREATE INDEX idx_feed_items_added ON feed_items(added_to_feed_at DESC);
 CREATE INDEX idx_videos_channel ON videos(channel_id);
+CREATE INDEX idx_downloaded_last_served ON downloaded_videos(last_served_at);
 ```
 
-### 4.5 Stage 5 — HTTP API
+### 5.5 Stage 5 — Download Worker (yt-dlp)
 
-**Framework:** Fastify (lightweight, TypeScript-first)
+Wenn Score-Decision `approved` → Download-Worker triggert:
 
-**Endpoints (JSON):**
+```bash
+yt-dlp -f "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720]" \
+       --merge-output-format mp4 \
+       -o "~/.hikari/videos/%(id)s.%(ext)s" \
+       --no-warnings \
+       'https://www.youtube.com/watch?v={VIDEO_ID}'
+```
+
+- **Format:** 720p H.264 + AAC in MP4 — sehr gut von ExoPlayer unterstützt, mobile-freundliche Dateigröße (~30-80MB pro 5-Min-Video)
+- **Concurrency:** Max 2 parallele Downloads (zum Schutz vor YouTube-Rate-Limits)
+- **Retry:** Bei Fehler 3× mit exponentiellem Backoff
+- **Post-Download:** File-Size + Codec-Info in `downloaded_videos` schreiben
+
+**Auto-Cleanup (LRU-basiert):**
+- Alle 24 h läuft ein Cleanup-Job
+- Policy: Wenn Gesamtgröße von `~/.hikari/videos/` > 10 GB (konfigurierbar) → lösche Videos mit ältestem `last_served_at`, außer `saved = 1`
+- Bei Löschung: Eintrag aus `downloaded_videos` raus, `feed_items` bleibt aber als "bereits gesehen"-Historie
+
+**Filesystem-Konsistenz:** `~/.hikari/videos/` ist ein Verzeichnis, das mit der DB konsistent gehalten wird. DB (`downloaded_videos`) ist Single-Source-of-Truth; Dateien ohne DB-Eintrag werden beim Start-up als "orphans" gelöscht. Umgekehrt: DB-Einträge ohne File werden bereinigt + das zugehörige `feed_items` bekommt `playback_failed = 1`.
+
+### 5.6 Stage 6 — HTTP API (Fastify)
 
 | Method | Path | Purpose |
 |--------|------|---------|
 | `GET` | `/feed?cursor=...&limit=20` | Kuratierte Reels, paginiert, neueste zuerst |
-| `POST` | `/feed/:videoId/seen` | Markiere als gesehen |
-| `POST` | `/feed/:videoId/save` | Zur Merk-Liste |
+| `GET` | `/videos/:videoId.mp4` | MP4-Datei serven (HTTP Range-Support via `@fastify/static` oder `send`) |
+| `POST` | `/feed/:videoId/seen` | Markiere als gesehen + update `last_served_at` |
+| `POST` | `/feed/:videoId/save` | Zur Merk-Liste (schützt vor Cleanup) |
 | `DELETE` | `/feed/:videoId/save` | Aus Merk-Liste |
-| `POST` | `/feed/:videoId/unplayable` | IFrame-Fehler — Video aus Feed entfernen |
+| `POST` | `/feed/:videoId/unplayable` | Playback-Error — Video aus Feed entfernen |
+| `POST` | `/feed/:videoId/less-like-this` | Negativ-Feedback fürs Prompt-Tuning |
 | `GET` | `/channels` | Whitelisted Channels |
-| `POST` | `/channels` | Channel hinzufügen (`{ channelUrl }` → parsen → ID) |
+| `POST` | `/channels` | Channel hinzufügen: `{ channelUrl }` → resolve via yt-dlp → ID + Title |
 | `DELETE` | `/channels/:id` | Channel entfernen |
-| `GET` | `/rejected?limit=50` | AI-abgelehnte Videos (zum Tuning des Prompts) |
-| `GET` | `/health` | Liveness |
+| `GET` | `/rejected?limit=50` | AI-abgelehnte Videos (zum Prompt-Tuning) |
+| `GET` | `/health` | Liveness + yt-dlp-Version + DB + Disk-Usage |
 
-**Kein Auth** — weil Single-User und nur über Tailscale erreichbar (implizite Auth via Netzwerk-Layer).
+**Kein Auth** — Single-User, implizite Auth via Tailscale.
 
-### 4.6 Android App
+**Video-Serving Details:**
+- `@fastify/static` mit `prefix: "/videos/"` + root auf `~/.hikari/videos/`
+- HTTP Range-Requests sind automatisch unterstützt → ExoPlayer kann mitten im Video starten, effizient buffern
+- `Cache-Control: public, max-age=604800` — Phone kann bei Wieder-Anschauen sogar lokal cachen
+- File-IDs sind YouTube-Video-IDs (non-guessable); kein Auth nötig
+
+### 5.7 Android App
 
 **Stack:**
 - **Kotlin** + **Jetpack Compose**
-- **Min SDK:** 26 (Android 8.0) — deckt 95%+ aller aktiven Geräte
+- **Min SDK:** 26 (Android 8.0)
 - **HTTP:** Retrofit 2 + OkHttp + kotlinx-serialization
-- **Player:** [`android-youtube-player`](https://github.com/PierfrancescoSoffritti/android-youtube-player) (IFrame-Wrapper, aktiv gepflegt, nimmt WebView-Schmerzen weg)
-- **Local Cache:** Room (Feed-Items für Offline-Browsing der Liste, Videos streamen immer live)
+- **Player:** **ExoPlayer (Media3)** — `androidx.media3:media3-exoplayer:1.4.x` + `media3-ui:1.4.x` (HLS-Module nicht nötig, wir spielen nur MP4 ab)
+- **Local Cache:** Room (Feed-Items, Metadata); ExoPlayer SimpleCache für Chunk-Caching der MP4s
 - **DI:** Hilt
 - **Image Loading:** Coil
 
 **Screens:**
-1. **FeedScreen** — Vertikal swipe-basierter Reel-Stack. Ein Video pro "Seite", wie Instagram Reels.
-2. **SavedScreen** — Gemerkte Videos.
-3. **ChannelsScreen** — Whitelist verwalten.
-4. **SettingsScreen** — Backend-URL, Tages-Budget, Kategorie-Filter.
+1. **FeedScreen** — VerticalPager (Compose Foundation) mit einem Video pro Page
+2. **SavedScreen** — Gemerkte Videos als Grid
+3. **ChannelsScreen** — Whitelist verwalten
+4. **SettingsScreen** — Backend-Tailscale-URL, Tages-Budget, Kategorie-Filter
 
-**Reel-Player-Behavior:**
-- 9:16 Container, full-screen
-- Bei 16:9 Video → letterboxed mit dezenten horizontalen Balken (schwarz), Titel + Channel als Overlay unten
-- Bei Shorts (9:16) → cover, Overlay transparent
-- **SponsorBlock-Integration:** Im `YouTubePlayerListener.onCurrentSecond()` Handler → wenn aktueller Zeitpunkt in einem Sponsor-Segment → `player.seekTo(segment.end_seconds)`
-- Swipe Up = nächstes Video, Swipe Down = vorheriges
-- Tap = Play/Pause
-- Long-press = Save, Double-tap = "Weniger wie das" (flaggt Video zur Re-Evaluation)
+**Reel-Player (ExoPlayer) Behavior:**
+- Container immer 9:16 full-screen
+- Video-Content: `scaleType = FIT` bei 16:9 (letterboxed) oder `FILL` bei 9:16
+- **Preloading:** Nächste 2 Videos bekommen `MediaItem` (URL = `https://kadir-laptop.tailxxxx.ts.net/videos/{id}.mp4`) in einem `ExoPlayer` mit `PreloadMediaSource` — Buffer wird sofort im Hintergrund aufgebaut, Swipe = instant Playback
+- **SponsorBlock-Skip:** Player-Listener polling current position, bei Sponsor-Segment → `player.seekTo(segment.end_seconds * 1000L)`
+- **Swipe Up:** nächstes Video, **Swipe Down:** vorheriges
+- **Tap:** Play/Pause
+- **Long-Press:** Save toggle
+- **Double-Tap:** "Weniger wie das" (flaggt Video)
+- **Overlay unten:** Channel-Name, Titel, Kategorie, Länge. Semi-transparent. "Support Creator"-Button (optional) linkt zum YouTube-Kanal.
 
-**Explizit NICHT:**
-- Like-Count, View-Count, Kommentar-Sektion
-- "Suggestions for you" Leiste
-- Infinite Scroll — Feed hat ein natürliches Ende (nur curated items)
+**Explizit nicht:**
+- Kein Like-Count, kein View-Count, kein Comment-Thread
+- Kein "Suggestions for you" außerhalb der Whitelist
+- Kein Infinite-Scroll-Loop — natürliches Ende des kuratierten Feeds
 
-### 4.7 Networking
+### 5.8 Networking
 
-**Empfehlung: Tailscale**
-- Laptop und Android-Phone joinen in das gleiche Tailnet (kostenlos für persönliche Nutzung, bis zu 100 Geräte)
-- Laptop bekommt eine stabile Tailnet-Adresse (z.B. `100.x.y.z` oder MagicDNS: `kadir-laptop.tailxxxx.ts.net`)
-- Android-App hat die URL hardcoded in den Settings (einmalig setzen)
-- **Funktioniert überall** — zu Hause, im Café, im Urlaub — solange Phone Internet hat und Tailscale-App läuft
-- **Safer** als öffentlicher Endpoint: Niemand außer Kadir im Tailnet kann den Server erreichen
+**Tailscale — ALLES läuft drüber:**
+- Laptop + Android-Phone im gleichen Tailnet
+- Laptop bekommt MagicDNS: `kadir-laptop.tailxxxx.ts.net`
+- Android-App hat diese URL in Settings hardcoded (einmalig)
+- Funktioniert überall, solange Phone Internet + Tailscale-App laufen
+- **Video-Traffic geht jetzt durch Tailscale** (Pre-Download-Design) — Laptop streamt die MP4-Dateien zum Phone. Bei Laptop-Heim-Internet mit ~50 Mbps upload ist das für Single-User problemlos; typische 720p-MP4-Bitrate ist 3-5 Mbps.
+- **Offline-Szenario:** Wenn Phone keine Internet hat (Flugmodus, U-Bahn), funktioniert die App NICHT — Laptop ist nicht erreichbar. Kein echtes Offline-Playback, aber ExoPlayer-SimpleCache hält kürzlich gesehene Videos ein paar Stunden.
 
-**Alternative: LAN-only**
-- Einfacher Setup: Phone und Laptop im gleichen WLAN, App nutzt `http://192.168.x.x:3000`
-- Nachteil: Funktioniert nur zu Hause. Wenn das OK ist, noch simpler.
-
-## 5. Monorepo-Struktur
+## 6. Monorepo-Struktur
 
 ```
 Hikari/
 ├── .gitignore
-├── README.md
 ├── docs/
 │   └── superpowers/
 │       └── specs/
-│           └── 2026-04-24-hikari-mvp-design.md   ← dieses Dokument
-├── backend/                         ← Node.js Server auf Laptop
+│           └── 2026-04-24-hikari-mvp-design.md
+├── backend/                           ← Node.js auf Laptop
 │   ├── package.json
 │   ├── tsconfig.json
 │   ├── src/
-│   │   ├── index.ts                 ← Fastify server entry
+│   │   ├── index.ts                   ← Fastify entry
 │   │   ├── db/
 │   │   │   ├── schema.sql
 │   │   │   └── migrations.ts
 │   │   ├── monitor/
 │   │   │   └── rss-poller.ts
 │   │   ├── ingest/
-│   │   │   ├── youtube-api.ts
-│   │   │   └── transcript.ts
+│   │   │   ├── yt-dlp.ts              ← execa-wrapper für yt-dlp
+│   │   │   ├── channel-resolver.ts    ← URL → channel_id
+│   │   │   └── transcript.ts          ← VTT-Parser
 │   │   ├── scorer/
-│   │   │   ├── types.ts             ← Scorer interface
+│   │   │   ├── types.ts
 │   │   │   ├── claude-scorer.ts
 │   │   │   ├── ollama-scorer.ts
-│   │   │   └── decision.ts          ← threshold rules
+│   │   │   └── decision.ts
 │   │   ├── sponsorblock/
 │   │   │   └── client.ts
+│   │   ├── download/
+│   │   │   ├── worker.ts               ← yt-dlp-Download + Retry
+│   │   │   └── cleanup.ts              ← LRU-Cleanup-Job
 │   │   ├── api/
 │   │   │   ├── feed.ts
 │   │   │   ├── channels.ts
+│   │   │   ├── videos.ts               ← @fastify/static MP4-Serving
 │   │   │   └── health.ts
 │   │   └── pipeline/
-│   │       └── orchestrator.ts      ← verknüpft Stages 1–4
+│   │       └── orchestrator.ts
 │   └── tests/
-└── android/                         ← Kotlin Compose App
+└── android/
     ├── settings.gradle.kts
     ├── app/
     │   ├── build.gradle.kts
     │   └── src/main/
     │       ├── java/com/hikari/
     │       │   ├── MainActivity.kt
-    │       │   ├── data/             ← Retrofit, Room, Repo
+    │       │   ├── data/
     │       │   ├── ui/
     │       │   │   ├── feed/
     │       │   │   ├── saved/
     │       │   │   ├── channels/
     │       │   │   └── settings/
-    │       │   └── player/           ← YouTube player wrapper
+    │       │   └── player/            ← ExoPlayer wrapper
     │       └── res/
     └── tests/
 ```
 
-## 6. Error Handling & Resilience
+## 7. Error Handling & Resilience
 
-- **RSS-Poll Failure:** Log-Level WARN, nächster Cron-Run retryt. Kein Retry-Storm.
-- **YouTube API Rate-Limit (10k units/day default):** Ingest-Calls sind ~1 Unit pro Video. Bei Whitelist ≤ 500 Channels und realistischen Upload-Frequenzen: niemals limitiert. Monitoring via `rate_limit_used` Gauge in Logs.
-- **LLM API Down:** Retry mit Exponential Backoff (3 Versuche), dann Video-Status `pending_score`. Nächster Cron-Run probiert erneut.
-- **Transkript nicht verfügbar:** Score-Call läuft trotzdem, aber Prompt macht das explizit → LLM scort vorsichtig (schärfere Default-Thresholds).
-- **SponsorBlock Outage:** Kein Blocker. Video läuft eben mit Sponsor-Segmenten durch.
-- **Android-App Offline:** Room-Cache zeigt letzten bekannten Feed. Neue Items fehlen bis Reconnect.
-- **Sponsor-Block Skip beim Ende:** Wenn Sponsor-Segment am Video-Ende ist und `seekTo(end)` über die Dauer hinaus geht → nächstes Video laden.
-- **IFrame-Player-Fehler** (Video gelöscht, altersbeschränkt, region-gesperrt, Embedding vom Creator deaktiviert): App fängt `onError` ab, flaggt `feed_items.playback_failed = 1` serverseitig via `POST /feed/:videoId/unplayable`, wischt automatisch zum nächsten Video. Backend entfernt solche Videos aus künftigen Feed-Queries.
+- **RSS-Poll Failure:** WARN-Log, nächster Cron-Run retryt.
+- **yt-dlp Ingest-Failure (Video nicht verfügbar, geo-blocked, altersrestriktiert):** Logge stderr, markiere `playback_failed = 1`, kein Retry-Storm, skip für künftige Feed-Queries.
+- **yt-dlp Download-Failure:** 3× Retry mit Exponential Backoff. Bei endgültigem Scheitern: Eintrag in `scores` bleibt als `approved`, aber `feed_items.playback_failed = 1` → erscheint nicht im Feed. Re-Download beim nächsten Cron-Run möglich.
+- **yt-dlp-Format gebrochen** (YouTube hat Scraping gebrochen):
+  - Globaler Fehler, alle Ingests/Downloads schlagen fehl
+  - Health-Endpoint zeigt "yt-dlp-Version veraltet" an
+  - Kadir wird via Log oder (optional später) Push-Notification benachrichtigt → manueller `pipx upgrade yt-dlp`
+- **Disk Full:** Cleanup-Job läuft bei jedem Download-Ende. Bei < 500 MB frei: blockiere neue Downloads, log CRITICAL, Health-Endpoint flaggt `disk_warning`. Saved-Videos nie auto-gelöscht — wenn Kadir alle saved macht und Disk voll, muss er manuell aufräumen.
+- **LLM API Down:** Retry mit Backoff (3×), dann Status `pending_score`, nächster Cron probiert erneut.
+- **Transkript nicht verfügbar:** Score-Call läuft, Prompt weiß das, Thresholds schärfer.
+- **SponsorBlock Outage:** Video läuft mit Sponsor-Segmenten, kein Blocker.
+- **Tailscale Down / Phone Offline:** App zeigt Room-Cache-Feed, Playback schlägt fehl → "Keine Verbindung zum Hikari-Server"-Message. ExoPlayer SimpleCache kann kürzlich gesehene Videos noch ein paar Stunden wiedergeben.
+- **Orphan-Files / DB-Mismatch:** Beim Backend-Start läuft ein Consistency-Check: Files in `~/.hikari/videos/` ohne DB-Eintrag → löschen. DB-Einträge ohne File → löschen + flag `playback_failed = 1`.
 
-## 7. Testing Strategy
+## 8. Testing Strategy
 
-- **Backend Unit Tests:** `vitest` — Decision-Rules, SponsorBlock-Client, RSS-Parser
-- **Backend Integration Tests:** Full-Pipeline mit Mock-YouTube-API und Mock-LLM — läuft gegen SQLite-in-Memory
-- **Android Unit Tests:** JUnit + MockK für ViewModels und Repos
-- **Android UI Tests:** Compose Test Rule für FeedScreen-Interaktion
-- **Keine E2E-Tests im MVP** — manuelles Smoke-Testing durch Kadir auf echtem Gerät reicht
+- **Backend Unit:** `vitest` — Decision-Rules, RSS-Parser, yt-dlp-Output-Parser, LRU-Cleanup-Policy, Orphan-File-Detection
+- **Backend Integration:** Full-Pipeline mit Mock-yt-dlp-CLI (script-replacement im PATH), Mock-LLM, In-Memory-SQLite
+- **Android Unit:** JUnit + MockK für ViewModels und Repos
+- **Android UI:** Compose Test Rule für FeedScreen-Swipe-Interaktion
+- **Keine E2E** — Smoke-Test durch Kadir auf echtem Gerät
 
-## 8. Out of Scope (YAGNI — bewusst weggelassen)
+## 9. Out of Scope (YAGNI)
 
-- **User-Accounts / Auth** — Single-User.
-- **Multi-Device-Sync** — ein Android-Phone.
-- **Downloads / Offline-Playback** — YouTube-ToS + YAGNI. Phone ist eh meist online.
-- **Empfehlungs-Algorithmus** — nicht Teil der Vision.
-- **Social Features** (Teilen, Kommentieren) — bewusst weg.
-- **Analytics/Tracking** — Single-User, nicht nötig.
-- **Publishing/Play Store** — direkte APK-Installation.
-- **Web-Dashboard** — alle Steuerung via Android-App.
-- **Channel-Discovery (außer manuell)** — explizit User-kuratiert.
+- User-Accounts / Auth
+- Multi-Device-Sync
+- Live-Streaming ohne Download (Option A aus Brainstorming wurde verworfen — Pre-Download ist gewählt)
+- Empfehlungs-Algorithmus
+- Social Features
+- Analytics
+- Play-Store-Distribution
+- Web-Dashboard
+- Channel-Discovery (außer manuell)
 
-## 9. Open Decisions (User-Approval benötigt beim Review)
+## 10. Entscheidungen (Decided)
 
-### 9.1 LLM-Provider — Default
+| # | Thema | Entscheidung |
+|---|-------|--------------|
+| 1 | Content-Quelle | yt-dlp-Scraping (kein YouTube Data API) |
+| 2 | Playback | Pre-Download 720p MP4 → ExoPlayer, alles via Tailscale |
+| 3 | Backend-Runtime | Node.js + Fastify auf Laptop |
+| 4 | DB | SQLite (better-sqlite3) |
+| 5 | Client | Kotlin + Jetpack Compose + Media3/ExoPlayer |
+| 6 | Netzwerk | Tailscale |
 
-- **Option A (empfohlen):** Claude API (`claude-haiku-4-5`) via Anthropic SDK, mit Prompt-Caching
-  - **Pro:** Massiv bessere Qualität bei Nuancen (Clickbait, Manipulation), Kosten ~0.01–0.10 €/Tag bei Single-User-Volumen
-  - **Contra:** Nicht "rein lokal", hängt am Internet
-- **Option B:** Ollama lokal (z.B. `qwen2.5:14b` oder `llama3.2:3b`)
-  - **Pro:** Komplett offline, keine API-Kosten, philosophisch konsequent
-  - **Contra:** LLM-Qualität bei Nuancen deutlich schwächer, Latenz sekunden bis zig-Sekunden pro Call
-- **Option C:** Pluggable, beide implementieren — Default Claude, in Settings umstellbar
+## 11. Open Decisions (Review benötigt)
 
-**Rem's Empfehlung:** **Option C**. Code kostet eine halbe Stunde extra, gibt dir Flexibilität und du kannst ausprobieren.
+### 11.1 LLM-Provider — Default
 
-### 9.2 Netzwerk-Strategie
+- **Option A:** Claude Haiku 4.5 (Cloud, bessere Qualität, ~0,01–0,10 €/Tag)
+- **Option B:** Ollama lokal (konsequent "alles lokal", Qualität schwächer)
+- **Option C (empfohlen):** Pluggable — Default Claude, Ollama-Switch in Settings
 
-- **Option A (empfohlen):** Tailscale — überall erreichbar
-- **Option B:** LAN-only — nur zu Hause, aber Zero-Setup
+### 11.2 Tages-Budget
 
-**Rem's Empfehlung:** **Option A (Tailscale)**.
+- **Option A (empfohlen):** Hard Limit, Default 15 Reels/Tag, Settings-konfigurierbar
+- **Option B:** Soft Indicator ohne Stop
+- **Option C:** Weg damit
 
-### 9.3 Tages-Budget (Anti-Doom-Scroll-Feature)
+### 11.3 Disk-Limit für Download-Cache
 
-- **Option A:** Hard Limit — "Du hast 15 neue Reels heute. Komm morgen wieder."
-- **Option B:** Soft Indicator — Zähler zeigt, wie viele du heute schon gesehen hast, aber kein Stop
-- **Option C:** Weg damit — ist dir selbst überlassen, Kadir
+- **Option A (empfohlen):** Default 10 GB, in Settings konfigurierbar. LRU-Cleanup wenn überschritten.
+- **Option B:** Unlimited — Kadir managed selbst, Cleanup nur für `seen_at > 30 Tage alt`
 
-**Rem's Empfehlung:** **Option A mit konfigurierbarem Tageslimit (Default 15)**. Das ist der philosophische Kern von Hikari — sonst verfällst du auch hier ins endlose Scrollen.
+### 11.4 "Support Creator"-Button im Player
 
-## 10. Success Criteria (MVP fertig, wenn...)
+- **Option A (empfohlen):** Diskret, unten-rechts, linkt zum YouTube-Channel (Patreon-Auto-Detection ist aufwändig, später)
+- **Option B:** Weg damit
 
-1. Kadir kann über Android-App Channels zu seiner Whitelist hinzufügen
-2. Backend pollt diese Channels und ingested neue Videos innerhalb 15 Min
-3. LLM filtert Videos; nur approved Items landen im Feed
-4. Android-App zeigt Feed als vertikal-swipebare Reels mit eingebettetem YouTube-Player
-5. SponsorBlock überspringt Sponsor-Segmente automatisch
-6. Kadir kann Videos speichern, als "weniger wie das" flaggen, als gesehen markieren
-7. System läuft stabil 1 Woche lang ohne manuellen Eingriff
+## 12. Success Criteria (MVP fertig, wenn...)
 
-## 11. Next Step
+1. Kadir kann über Android-App Channels (per URL) zu seiner Whitelist hinzufügen — Backend resolved via yt-dlp zu Channel-ID
+2. Backend pollt RSS, ingested neue Videos via yt-dlp innerhalb 15 Min nach Upload
+3. LLM filtert; nur approved Items werden heruntergeladen und landen im Feed
+4. Approved Videos werden als 720p MP4 auf den Laptop heruntergeladen
+5. Android-App zeigt Feed als vertikal-swipebare Reels mit ExoPlayer
+6. Videos streamen über Tailscale vom Laptop zum Phone
+7. SponsorBlock überspringt Sponsor-Segmente automatisch
+8. Kadir kann Save, "Less-Like-This", Seen markieren
+9. LRU-Cleanup hält Disk-Usage unter 10 GB
+10. Kein YouTube-Branding oder -Werbung sichtbar
+11. System läuft 1 Woche stabil ohne manuellen Eingriff (außer ggf. yt-dlp-Upgrade)
 
-Nach Approval dieses Dokuments → `superpowers:writing-plans` Skill invoken, um einen detaillierten Implementation-Plan zu schreiben.
+## 13. Next Step
+
+Nach Approval → `superpowers:writing-plans` für detaillierten Implementation-Plan mit Dependencies und Task-Reihenfolge.
