@@ -10,7 +10,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,15 +21,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -46,6 +44,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.PlaybackException
@@ -54,20 +55,18 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import coil.compose.AsyncImage
 import com.hikari.app.data.sponsor.SponsorBlockClient
 import com.hikari.app.data.sponsor.SponsorSegment
 import com.hikari.app.domain.model.FeedItem
 import com.hikari.app.domain.repo.PlaybackRepository
 import com.hikari.app.player.SponsorSkipListener
 
-private fun formatTime(ms: Long): String {
-    val totalSeconds = ms / 1000
-    val hours = totalSeconds / 3600
-    val minutes = (totalSeconds % 3600) / 60
-    val seconds = totalSeconds % 60
-    return if (hours > 0) "%d:%02d:%02d".format(hours, minutes, seconds)
-    else "%d:%02d".format(minutes, seconds)
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// Internal helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+private enum class SeekDirection { Backward, Forward }
 
 /** Animated play/pause indicator shown in center when tapping. */
 @Composable
@@ -106,7 +105,43 @@ private fun PlayPauseIndicator(
     }
 }
 
-@OptIn(UnstableApi::class, ExperimentalMaterial3Api::class)
+/**
+ * Seek badge shown briefly after a double-tap seek.
+ * Dismisses itself after 600ms.
+ */
+@Composable
+private fun SeekBadge(direction: SeekDirection?, onDismiss: () -> Unit) {
+    if (direction == null) return
+    LaunchedEffect(direction) {
+        kotlinx.coroutines.delay(600)
+        onDismiss()
+    }
+    Row(
+        modifier = Modifier
+            .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+            .padding(horizontal = 20.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = if (direction == SeekDirection.Backward) HikariIcons.Replay5 else HikariIcons.Forward5,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(28.dp),
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            if (direction == SeekDirection.Backward) "-5s" else "+5s",
+            color = Color.White,
+            style = MaterialTheme.typography.titleMedium,
+        )
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main composable
+// ─────────────────────────────────────────────────────────────────────────────
+
+@OptIn(UnstableApi::class)
 @Composable
 fun ReelPlayer(
     item: FeedItem,
@@ -118,120 +153,143 @@ fun ReelPlayer(
     onToggleSave: () -> Unit,
     onLessLikeThis: () -> Unit,
     onUnplayable: () -> Unit,
+    /** Called when the user taps/double-taps so the parent can show its top chrome. */
+    onShowControls: () -> Unit = {},
 ) {
     var playing by remember { mutableStateOf(true) }
     var showTrigger by remember { mutableIntStateOf(0) }
 
-    // A4: Player error → onUnplayable + auto-advance (only the current page reacts)
+    // ── Controls visibility (auto-hide after 3s when playing) ────────────────
+    var controlsVisible by remember { mutableStateOf(true) }
+    LaunchedEffect(controlsVisible, playing) {
+        if (controlsVisible && playing) {
+            kotlinx.coroutines.delay(3_000)
+            controlsVisible = false
+        }
+    }
+
+    // ── Double-tap seek state ────────────────────────────────────────────────
+    var showSeekBadge by remember { mutableStateOf<SeekDirection?>(null) }
+    var boxWidth by remember { mutableStateOf(0) }
+
+    // ── Error listener ───────────────────────────────────────────────────────
     DisposableEffect(item.videoId, player, isCurrent) {
         if (!isCurrent) return@DisposableEffect onDispose {}
         val listener = object : Player.Listener {
-            override fun onPlayerError(error: PlaybackException) {
-                onUnplayable()
-            }
+            override fun onPlayerError(error: PlaybackException) { onUnplayable() }
         }
         player.addListener(listener)
         onDispose { player.removeListener(listener) }
     }
 
-    // B3: Restore position when becoming current; save when leaving current
+    // ── Restore / save position ──────────────────────────────────────────────
     LaunchedEffect(item.videoId, isCurrent) {
         if (!isCurrent) return@LaunchedEffect
         val savedPos = playbackRepo.getPosition(item.videoId)
-        if (savedPos > 0L) {
-            player.seekTo(savedPos)
-        }
+        if (savedPos > 0L) player.seekTo(savedPos)
     }
     DisposableEffect(item.videoId, isCurrent) {
         onDispose {
             if (isCurrent) {
                 val pos = player.currentPosition
                 if (pos > 0L) {
-                    kotlinx.coroutines.runBlocking {
-                        playbackRepo.savePosition(item.videoId, pos)
-                    }
+                    kotlinx.coroutines.runBlocking { playbackRepo.savePosition(item.videoId, pos) }
                 }
             }
         }
     }
 
-    // A1: mark seen after 3 seconds of actual playback (only current page)
+    // ── Mark seen after 3s of playback ──────────────────────────────────────
     var seenFired by remember(item.videoId) { mutableStateOf(false) }
     LaunchedEffect(item.videoId, isCurrent) {
         if (!isCurrent) return@LaunchedEffect
         while (!seenFired) {
             kotlinx.coroutines.delay(500)
-            val pos = player.currentPosition
-            if (pos >= 3_000L) {
-                seenFired = true
-                onSeen()
-            }
+            if (player.currentPosition >= 3_000L) { seenFired = true; onSeen() }
         }
     }
 
-    // A2: SponsorBlock skip (only current page drives player seeks)
+    // ── SponsorBlock skip ────────────────────────────────────────────────────
     var segments by remember(item.videoId) { mutableStateOf<List<SponsorSegment>>(emptyList()) }
-    LaunchedEffect(item.videoId) {
-        segments = sponsorBlock.fetchSegments(item.videoId)
-    }
+    LaunchedEffect(item.videoId) { segments = sponsorBlock.fetchSegments(item.videoId) }
     LaunchedEffect(item.videoId, segments, isCurrent) {
         if (!isCurrent) return@LaunchedEffect
         while (true) {
             kotlinx.coroutines.delay(200)
             val pos = player.currentPosition
             val skip = SponsorSkipListener.skipTargetMs(pos, segments)
-            if (skip != null && skip > pos) {
-                player.seekTo(skip)
-            }
+            if (skip != null && skip > pos) player.seekTo(skip)
         }
     }
 
-    // Scrubber state
+    // ── Position tracking ────────────────────────────────────────────────────
     var position by remember { mutableLongStateOf(0L) }
     var duration by remember { mutableLongStateOf(1L) }
-    var scrubbing by remember { mutableStateOf(false) }
-    var scrubPositionMs by remember { mutableLongStateOf(0L) }
+    var isScrubbing by remember { mutableStateOf(false) }
     val wasPlayingBeforeScrub = remember { mutableStateOf(true) }
 
     LaunchedEffect(item.videoId, isCurrent) {
         if (!isCurrent) return@LaunchedEffect
         while (true) {
             kotlinx.coroutines.delay(500)
-            if (!scrubbing) {
+            if (!isScrubbing) {
                 position = player.currentPosition
                 duration = player.duration.coerceAtLeast(1L)
             }
         }
     }
 
+    // ════════════════════════════════════════════════════════════════════════
+    // UI
+    // ════════════════════════════════════════════════════════════════════════
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
+            .onGloballyPositioned { boxWidth = it.size.width }
             .pointerInput(item.videoId) {
                 detectTapGestures(
                     onTap = {
+                        // Single tap: toggle play/pause + show controls
                         playing = !playing
                         player.playWhenReady = playing
                         showTrigger++
+                        controlsVisible = true
+                        onShowControls()
                     },
-                    onDoubleTap = { onLessLikeThis() },
+                    onDoubleTap = { offset ->
+                        // Double-tap left/right: seek -5s / +5s
+                        val isLeft = offset.x < boxWidth / 2f
+                        val delta = if (isLeft) -5_000L else 5_000L
+                        val newPos = (player.currentPosition + delta).coerceAtLeast(0L)
+                        player.seekTo(newPos)
+                        position = newPos.coerceIn(0L, duration)
+                        showSeekBadge = if (isLeft) SeekDirection.Backward else SeekDirection.Forward
+                        controlsVisible = true
+                        onShowControls()
+                    },
                     onLongPress = { onToggleSave() },
                 )
             },
     ) {
-        // Video surface — RESIZE_MODE_FIT preserves original aspect ratio.
-        // 9:16 content fills portrait; 16:9 content letterboxes (black bars top/bottom).
-        // In landscape fullscreen the player width becomes screen width, so 16:9 fills screen.
-        //
-        // CRITICAL: only the current page binds the shared ExoPlayer to its PlayerView.
-        // Adjacent pages (composed by VerticalPager) must keep player = null, or they
-        // steal the video surface and the current page shows a frozen first frame.
+        // ── Task 1: Thumbnail underlay + PlayerView with transparent shutter ──
+        // The thumbnail shows through until ExoPlayer renders its first video frame,
+        // eliminating the stale-last-frame flash that used to blink on every swipe.
+        AsyncImage(
+            model = item.thumbnailUrl,
+            contentDescription = item.title,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.fillMaxSize(),
+        )
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
                     useController = false
                     resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                    // Transparent shutter: thumbnail shows through until first video frame renders
+                    setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
+                    // Don't freeze on last frame when player is detached
+                    setKeepContentOnPlayerReset(false)
                 }
             },
             update = { view ->
@@ -240,105 +298,124 @@ fun ReelPlayer(
             modifier = Modifier.fillMaxSize(),
         )
 
-        // Play/Pause indicator centered
+        // ── Center: play/pause indicator ─────────────────────────────────────
         Box(modifier = Modifier.align(Alignment.Center)) {
             PlayPauseIndicator(playing = playing, showTrigger = showTrigger)
         }
 
-        // Bottom gradient overlay — goes from transparent to 65% black
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .fillMaxWidth()
-                .height(240.dp)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.65f)),
-                    ),
-                ),
-        )
+        // ── Double-tap seek badges ────────────────────────────────────────────
+        showSeekBadge?.let { dir ->
+            val alignment = if (dir == SeekDirection.Backward) Alignment.CenterStart else Alignment.CenterEnd
+            Box(modifier = Modifier.align(alignment).padding(24.dp)) {
+                SeekBadge(direction = dir, onDismiss = { showSeekBadge = null })
+            }
+        }
 
-        // Bottom content: scrubber + metadata
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(bottom = 12.dp),
+        // ── Task 2 + 3: animated chrome (auto-hides after 3s) ────────────────
+
+        // Bottom gradient — subtler, 180dp, 40% black max
+        AnimatedVisibility(
+            visible = controlsVisible,
+            enter = fadeIn(tween(200)),
+            exit = fadeOut(tween(150)),
+            modifier = Modifier.align(Alignment.BottomStart),
         ) {
-            // Video metadata
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.40f)),
+                        ),
+                    ),
+            )
+        }
+
+        // Bottom content column (scrubber + metadata) — fades with controls
+        AnimatedVisibility(
+            visible = controlsVisible,
+            enter = fadeIn(tween(200)),
+            exit = fadeOut(tween(150)),
+            modifier = Modifier.align(Alignment.BottomStart),
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(bottom = 8.dp),
             ) {
-                Text(
-                    text = item.channelTitle,
-                    color = Color.White,
-                    style = MaterialTheme.typography.labelLarge,
-                )
-                Text(
-                    text = item.title,
-                    color = Color.White,
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-                Text(
-                    text = "${item.category} · ${item.durationSeconds}s",
-                    color = Color.White.copy(alpha = 0.7f),
-                    style = MaterialTheme.typography.labelMedium,
-                )
-            }
+                // Channel name + title (no category, no duration text)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                ) {
+                    Text(
+                        text = item.channelTitle,
+                        color = Color.White.copy(alpha = 0.70f),
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = item.title,
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            // Time row
-            val displayPositionMs = if (scrubbing) scrubPositionMs else position
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(
-                    text = formatTime(displayPositionMs),
-                    color = Color.White.copy(alpha = 0.85f),
-                    style = MaterialTheme.typography.labelSmall,
-                )
-                Text(
-                    text = formatTime(duration),
-                    color = Color.White.copy(alpha = 0.85f),
-                    style = MaterialTheme.typography.labelSmall,
-                )
-            }
-
-            // Interactive scrubber
-            Slider(
-                value = displayPositionMs.toFloat(),
-                onValueChange = { newVal ->
-                    if (!scrubbing) {
+                // Task 4: Precision scrubber (replaces Material3 Slider + time row)
+                PrecisionScrubber(
+                    positionMs = position,
+                    durationMs = duration,
+                    onScrubStart = {
                         wasPlayingBeforeScrub.value = player.playWhenReady
                         player.playWhenReady = false
-                        scrubbing = true
-                    }
-                    scrubPositionMs = newVal.toLong()
-                },
-                onValueChangeFinished = {
-                    player.seekTo(scrubPositionMs)
-                    if (wasPlayingBeforeScrub.value) {
-                        player.playWhenReady = true
-                        playing = true
-                    }
-                    scrubbing = false
-                },
-                valueRange = 0f..duration.toFloat(),
-                colors = SliderDefaults.colors(
-                    thumbColor = Color.White,
-                    activeTrackColor = Color.White,
-                    inactiveTrackColor = Color.White.copy(alpha = 0.3f),
-                ),
+                        isScrubbing = true
+                    },
+                    onScrubUpdate = { previewMs ->
+                        position = previewMs
+                    },
+                    onScrubEnd = { finalMs ->
+                        player.seekTo(finalMs)
+                        if (wasPlayingBeforeScrub.value) {
+                            player.playWhenReady = true
+                            playing = true
+                        }
+                        isScrubbing = false
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                )
+            }
+        }
+
+        // ── Always-visible thin progress line (2dp, bottom of screen) ─────────
+        // Visible even when chrome is hidden — quick glance at progress.
+        // Hidden only while the full scrubber is showing (to avoid double bar).
+        AnimatedVisibility(
+            visible = !controlsVisible,
+            enter = fadeIn(tween(300)),
+            exit = fadeOut(tween(150)),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .windowInsetsPadding(WindowInsets.navigationBars),
+        ) {
+            LinearProgressIndicator(
+                progress = { (position.toFloat() / duration.toFloat()).coerceIn(0f, 1f) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
+                    .height(2.dp),
+                color = Color.White.copy(alpha = 0.90f),
+                trackColor = Color.White.copy(alpha = 0.15f),
+                drawStopIndicator = {},
+                gapSize = 0.dp,
             )
         }
     }
