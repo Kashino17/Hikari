@@ -79,13 +79,19 @@ export class LMStudioScorer implements Scorer {
       throw new Error(`LM Studio request failed: ${res.status} ${await res.text()}`);
     }
     const body = (await res.json()) as {
-      choices: { message: { content: string } }[];
+      choices: { message: { content: string; reasoning_content?: string } }[];
     };
-    const content = body.choices[0]?.message.content;
-    if (!content) {
-      throw new Error("LM Studio returned no content");
+    const msg = body.choices[0]?.message;
+    if (!msg) {
+      throw new Error("LM Studio returned no choices");
     }
-    const score = JSON.parse(content) as Score;
+    // Reasoning models (Qwen3, DeepSeek-R1, QwQ) put structured output in
+    // reasoning_content when thinking mode is on. Prefer content; fall back.
+    const raw = msg.content?.trim() ? msg.content : (msg.reasoning_content ?? "");
+    if (!raw.trim()) {
+      throw new Error("LM Studio returned empty content and reasoning_content");
+    }
+    const score = JSON.parse(raw) as Score;
     return { score, modelUsed: this.opts.model };
   }
 }

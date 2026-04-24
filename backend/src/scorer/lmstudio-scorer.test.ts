@@ -80,4 +80,41 @@ describe("LMStudioScorer", () => {
       scorer.score({ title: "x", description: "", transcript: null, durationSeconds: 60 }),
     ).rejects.toThrow();
   });
+
+  it("falls back to reasoning_content when content is empty (Qwen3/DeepSeek-R1 quirk)", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: "",
+                reasoning_content: JSON.stringify({
+                  overallScore: 68,
+                  category: "math",
+                  clickbaitRisk: 2,
+                  educationalValue: 8,
+                  emotionalManipulation: 1,
+                  reasoning: "Classic probability puzzle.",
+                }),
+              },
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+    );
+    const scorer = new LMStudioScorer({
+      baseUrl: "http://localhost:1234",
+      model: "qwen/qwen3.6-27b",
+    });
+    const result = await scorer.score({
+      title: "Monty Hall",
+      description: "",
+      transcript: null,
+      durationSeconds: 380,
+    });
+    expect(result.score.overallScore).toBe(68);
+    expect(result.score.category).toBe("math");
+  });
 });
