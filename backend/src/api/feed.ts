@@ -63,4 +63,36 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
       .run(Date.now(), req.params.id);
     return reply.code(204).send();
   });
+
+  app.get("/feed/today-count", async () => {
+    const row = deps.db
+      .prepare("SELECT COUNT(*) AS c FROM feed_items WHERE seen_at IS NULL AND playback_failed = 0")
+      .get() as { c: number };
+    const unseenCount = row.c;
+    return {
+      dailyBudget: deps.dailyBudget,
+      unseenCount,
+      capped: unseenCount >= deps.dailyBudget,
+    };
+  });
+
+  app.get<{ Querystring: { limit?: string } }>("/rejected", async (req) => {
+    const limit = Math.min(Number(req.query.limit ?? 50), 200);
+    return deps.db
+      .prepare(`
+        SELECT
+          v.id AS videoId, v.title, v.channel_id AS channelId,
+          c.title AS channelTitle, v.duration_seconds AS durationSeconds,
+          v.thumbnail_url AS thumbnailUrl,
+          s.overall_score AS overallScore, s.category, s.reasoning,
+          s.clickbait_risk AS clickbaitRisk, s.emotional_manipulation AS emotionalManipulation
+        FROM scores s
+        JOIN videos v ON v.id = s.video_id
+        LEFT JOIN channels c ON c.id = v.channel_id
+        WHERE s.decision = 'rejected'
+        ORDER BY s.scored_at DESC
+        LIMIT ?
+      `)
+      .all(limit);
+  });
 }

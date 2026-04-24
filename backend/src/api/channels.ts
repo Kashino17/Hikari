@@ -1,9 +1,18 @@
 import type { FastifyInstance } from "fastify";
 import type Database from "better-sqlite3";
 import { resolveChannel } from "../monitor/channel-resolver.js";
+import { fetchChannelFeed } from "../monitor/rss-poller.js";
+import { processNewVideo } from "../pipeline/orchestrator.js";
+import { fetchVideoMetadata } from "../ingest/metadata.js";
+import { fetchTranscript } from "../ingest/transcript.js";
+import { fetchSponsorSegments } from "../sponsorblock/client.js";
+import { downloadVideo } from "../download/worker.js";
+import type { Scorer } from "../scorer/types.js";
 
 export interface ChannelsDeps {
   db: Database.Database;
+  scorer?: Scorer;
+  videoDir?: string;
 }
 
 export async function registerChannelsRoutes(
@@ -31,5 +40,80 @@ export async function registerChannelsRoutes(
   app.delete<{ Params: { id: string } }>("/channels/:id", async (req, reply) => {
     deps.db.prepare("UPDATE channels SET is_active = 0 WHERE id = ?").run(req.params.id);
     return reply.code(204).send();
+  });
+
+  app.post<{ Params: { id: string } }>("/channels/:id/poll", async (req, reply) => {
+    if (!deps.scorer || !deps.videoDir) {
+      return reply.code(503).send({ error: "poll not available: scorer/videoDir not configured" });
+    }
+    const channelId = req.params.id;
+    const channel = deps.db
+      .prepare("SELECT id FROM channels WHERE id = ? AND is_active = 1")
+      .get(channelId);
+    if (!channel) return reply.code(404).send({ error: "channel not found or inactive" });
+
+    const entries = await fetchChannelFeed(channelId);
+    let queued = 0;
+    let skipped = 0;
+    const errors: string[] = [];
+
+    for (const e of entries.slice(0, 5)) {
+      const existing = deps.db.prepare("SELECT 1 FROM videos WHERE id = ?").get(e.videoId);
+      if (existing) { skipped++; continue; }
+      try {
+        await processNewVideo({
+          db: deps.db,
+          videoId: e.videoId,
+          channelId,
+          fetchMetadata: fetchVideoMetadata,
+          fetchTranscript,
+          fetchSponsorSegments,
+          scorer: deps.scorer,
+          download: (id) => downloadVideo({ videoId: id, outDir: deps.videoDir! }),
+        });
+        queued++;
+      } catch (err) {
+        errors.push(`${e.videoId}: ${(err as Error).message}`);
+      }
+    }
+    deps.db
+      .prepare("UPDATE channels SET last_polled_at = ? WHERE id = ?")
+      .run(Date.now(), channelId);
+    return reply.code(202).send({ queued, skipped, errors });
+  });
+
+  app.get<{ Params: { id: string } }>("/channels/:id/stats", async (req, reply) => {
+    const channelId = req.params.id;
+    const channel = deps.db
+      .prepare("SELECT id FROM channels WHERE id = ?")
+      .get(channelId);
+    if (!channel) return reply.code(404).send({ error: "channel not found" });
+
+    const row = deps.db.prepare(`
+      SELECT
+        COUNT(DISTINCT v.id) AS totalVideos,
+        SUM(CASE WHEN s.decision = 'approved' THEN 1 ELSE 0 END) AS approved,
+        SUM(CASE WHEN s.decision = 'rejected' THEN 1 ELSE 0 END) AS rejected,
+        MAX(v.discovered_at) AS latestAdded,
+        COALESCE(SUM(dv.file_size_bytes), 0) AS diskBytes
+      FROM videos v
+      LEFT JOIN scores s ON s.video_id = v.id
+      LEFT JOIN downloaded_videos dv ON dv.video_id = v.id
+      WHERE v.channel_id = ?
+    `).get(channelId) as {
+      totalVideos: number;
+      approved: number | null;
+      rejected: number | null;
+      latestAdded: number | null;
+      diskBytes: number;
+    };
+
+    return {
+      totalVideos: row.totalVideos,
+      approved: row.approved ?? 0,
+      rejected: row.rejected ?? 0,
+      latestAdded: row.latestAdded,
+      diskBytes: row.diskBytes,
+    };
   });
 }

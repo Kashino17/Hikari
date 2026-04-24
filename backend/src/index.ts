@@ -7,6 +7,7 @@ import cron from "node-cron";
 import { registerChannelsRoutes } from "./api/channels.js";
 import { registerFeedRoutes } from "./api/feed.js";
 import { registerHealthRoute } from "./api/health.js";
+import { registerStatsRoutes } from "./api/stats.js";
 import { loadConfig } from "./config.js";
 import { openDatabase } from "./db/connection.js";
 import { runCleanup } from "./download/cleanup.js";
@@ -46,9 +47,10 @@ for (const r of orphanRows) {
 
 const app = Fastify({ logger: { level: "info" } });
 await app.register(fastifyStatic, { root: cfg.videoDir, prefix: "/videos/" });
-await registerChannelsRoutes(app, { db });
+await registerChannelsRoutes(app, { db, scorer, videoDir: cfg.videoDir });
 await registerFeedRoutes(app, { db, dailyBudget: cfg.dailyBudget });
 await registerHealthRoute(app, { db, videoDir: cfg.videoDir });
+await registerStatsRoutes(app, { db });
 
 // 15-min channel polling
 cron.schedule("*/15 * * * *", async () => {
