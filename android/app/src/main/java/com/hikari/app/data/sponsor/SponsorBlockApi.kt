@@ -9,5 +9,8 @@ data class SkipSegmentDto(val category: String, val segment: List<Double>)
 
 interface SponsorBlockApi {
     @GET("api/skipSegments")
-    suspend fun skipSegments(@Query("videoID") videoId: String): List<SkipSegmentDto>
+    suspend fun skipSegments(
+        @Query("videoID") videoId: String,
+        @Query("categories") categoriesJson: String,
+    ): List<SkipSegmentDto>
 }

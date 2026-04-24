@@ -9,6 +9,9 @@ import okhttp3.OkHttpClient
 import retrofit2.HttpException
 import retrofit2.Retrofit
 
+private val CATEGORIES_JSON = SegmentCategories.all
+    .joinToString(prefix = "[", postfix = "]", separator = ",") { "\"${it.apiKey}\"" }
+
 @Singleton
 class SponsorBlockClient @Inject constructor(client: OkHttpClient, json: Json) {
     private val api = Retrofit.Builder()
@@ -20,7 +23,7 @@ class SponsorBlockClient @Inject constructor(client: OkHttpClient, json: Json) {
 
     suspend fun fetchSegments(videoId: String): List<SponsorSegment> =
         runCatching {
-            api.skipSegments(videoId).map {
+            api.skipSegments(videoId, CATEGORIES_JSON).map {
                 SponsorSegment(
                     startSeconds = it.segment[0],
                     endSeconds = it.segment[1],
