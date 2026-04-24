@@ -8,8 +8,12 @@ export interface FeedDeps {
 }
 
 export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): Promise<void> {
+  // SELECT DISTINCT as defensive safeguard — even though all four JOINed tables
+  // (videos, feed_items, scores, downloaded_videos) have video_id as PRIMARY KEY
+  // and can't structurally produce duplicates, future schema changes or
+  // dev-state drift shouldn't be able to leak duplicate rows to the client.
   const BASE_SELECT = `
-    SELECT fi.video_id as videoId, v.title, v.duration_seconds as durationSeconds,
+    SELECT DISTINCT fi.video_id as videoId, v.title, v.duration_seconds as durationSeconds,
            v.aspect_ratio as aspectRatio, v.thumbnail_url as thumbnailUrl,
            v.channel_id as channelId, c.title as channelTitle,
            s.category, s.reasoning,

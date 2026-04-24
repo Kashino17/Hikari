@@ -42,7 +42,8 @@ class FeedViewModel @Inject constructor(
 
     private fun loadOld() = viewModelScope.launch {
         _refreshing.value = true
-        runCatching { repo.fetchOld() }.onSuccess { _oldItems.value = it }
+        runCatching { repo.fetchOld() }
+            .onSuccess { list -> _oldItems.value = list.distinctBy { it.videoId } }
         _refreshing.value = false
     }
 
@@ -51,7 +52,9 @@ class FeedViewModel @Inject constructor(
 
     val items: StateFlow<List<FeedItem>> =
         combine(repo.unseenItems(), settings.dailyBudget, _selectedCategory) { list, budget, cat ->
-            list.filter { cat == null || it.category == cat }.take(budget)
+            list.filter { cat == null || it.category == cat }
+                .distinctBy { it.videoId }  // defensive: never render the same videoId twice
+                .take(budget)
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val categories: StateFlow<List<String>> =
