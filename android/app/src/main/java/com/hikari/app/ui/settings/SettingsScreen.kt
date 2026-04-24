@@ -9,7 +9,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(
+    vm: SettingsViewModel = hiltViewModel(),
+    onNavigateToStats: () -> Unit = {},
+) {
     val backend by vm.backendUrl.collectAsState()
     val budget by vm.dailyBudget.collectAsState()
     var draftUrl by remember(backend) { mutableStateOf(backend) }
@@ -43,6 +46,13 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
             Spacer(Modifier.height(24.dp))
             Text("Changes to the backend URL require an app restart.",
                 style = MaterialTheme.typography.labelSmall)
+
+            Spacer(Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(Modifier.height(16.dp))
+            Button(onClick = onNavigateToStats, modifier = Modifier.fillMaxWidth()) {
+                Text("Weekly Stats")
+            }
         }
     }
 }
