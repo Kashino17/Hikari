@@ -23,10 +23,14 @@ class FeedRepository @Inject constructor(
         dao.savedItems().map { rows -> rows.map { it.toDomain() } }
 
     suspend fun refresh() {
-        val remote = api.getFeed()
+        val remote = api.getFeed(mode = "new")
         dao.upsertAll(remote.map { it.toEntity() })
         dao.pruneNotIn(remote.map { it.videoId })
     }
+
+    /** Fetch history (seen videos) directly from API — no Room caching for browse history. */
+    suspend fun fetchOld(): List<FeedItem> =
+        api.getFeed(mode = "old").map { it.toDomainOld() }
 
     suspend fun markSeen(videoId: String) {
         dao.markSeen(videoId)
@@ -65,4 +69,12 @@ private fun FeedItemEntity.toDomain() = FeedItem(
     aspectRatio = aspectRatio, thumbnailUrl = thumbnailUrl,
     channelTitle = channelTitle, category = category,
     reasoning = reasoning, saved = saved,
+)
+
+// For mode=old: maps a DTO directly to domain (API order = seen_at DESC, no Room sort needed).
+private fun FeedItemDto.toDomainOld() = FeedItem(
+    videoId = videoId, title = title, durationSeconds = durationSeconds,
+    aspectRatio = aspectRatio, thumbnailUrl = thumbnailUrl,
+    channelTitle = channelTitle, category = category,
+    reasoning = reasoning, saved = saved == 1,
 )

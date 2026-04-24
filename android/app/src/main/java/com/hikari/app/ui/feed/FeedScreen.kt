@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,6 +31,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -77,7 +80,13 @@ fun FeedScreen(
     vm: FeedViewModel = hiltViewModel(),
     onNavigate: (String) -> Unit = {},
 ) {
-    val items by vm.items.collectAsState()
+    val mode by vm.mode.collectAsState()
+    val newItems by vm.items.collectAsState()
+    val oldItems by vm.oldItems.collectAsState()
+    val items = when (mode) {
+        FeedMode.NEW -> newItems
+        FeedMode.OLD -> oldItems
+    }
     val baseUrl by vm.backendUrl.collectAsState()
     val refreshing by vm.refreshing.collectAsState()
     val today by vm.today.collectAsState()
@@ -233,54 +242,82 @@ fun FeedScreen(
             }
         }
 
-        // Top overlay: menu + budget + fullscreen toggle
+        // Top overlay: menu + budget + fullscreen toggle + New/Old tabs
         // Hidden in fullscreen landscape (system bars hidden, user taps for transient reveal)
         if (!isFullscreen) {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.TopStart)
-                    .windowInsetsPadding(WindowInsets.statusBars)
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                    .windowInsetsPadding(WindowInsets.statusBars),
             ) {
-                // Hamburger / menu icon
-                IconButton(onClick = { menuOpen = true }) {
-                    Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Color.White)
-                }
+                // Top row: hamburger / filter / budget / fullscreen
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // Hamburger / menu icon
+                    IconButton(onClick = { menuOpen = true }) {
+                        Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Color.White)
+                    }
 
-                // Category filter
-                if (categories.isNotEmpty()) {
-                    IconButton(onClick = { showFilterDialog = true }) {
+                    // Category filter (only meaningful in NEW mode)
+                    if (mode == FeedMode.NEW && categories.isNotEmpty()) {
+                        IconButton(onClick = { showFilterDialog = true }) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Filter by category",
+                                tint = if (selectedCategory != null)
+                                    MaterialTheme.colorScheme.primary
+                                else Color.White.copy(alpha = 0.8f),
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    // Daily budget indicator — only relevant in NEW mode
+                    if (mode == FeedMode.NEW) {
+                        today?.let { todayData ->
+                            Text(
+                                "${todayData.unseenCount} / ${todayData.dailyBudget}",
+                                color = Color.White.copy(alpha = 0.75f),
+                                style = MaterialTheme.typography.labelMedium,
+                                modifier = Modifier.padding(end = 4.dp),
+                            )
+                        }
+                    }
+
+                    // Fullscreen toggle
+                    IconButton(onClick = { toggleFullscreen() }) {
                         Icon(
-                            Icons.Default.Close,
-                            contentDescription = "Filter by category",
-                            tint = if (selectedCategory != null)
-                                MaterialTheme.colorScheme.primary
-                            else Color.White.copy(alpha = 0.8f),
+                            imageVector = if (isFullscreen) HikariIcons.FullscreenExit else HikariIcons.Fullscreen,
+                            contentDescription = if (isFullscreen) "Exit fullscreen" else "Enter fullscreen",
+                            tint = Color.White,
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
-
-                // Daily budget indicator
-                today?.let { todayData ->
-                    Text(
-                        "${todayData.unseenCount} / ${todayData.dailyBudget}",
-                        color = Color.White.copy(alpha = 0.75f),
-                        style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(end = 4.dp),
-                    )
-                }
-
-                // Fullscreen toggle
-                IconButton(onClick = { toggleFullscreen() }) {
-                    Icon(
-                        imageVector = if (isFullscreen) HikariIcons.FullscreenExit else HikariIcons.Fullscreen,
-                        contentDescription = if (isFullscreen) "Exit fullscreen" else "Enter fullscreen",
-                        tint = Color.White,
-                    )
+                // New / Old tabs — full width under the top row
+                PrimaryTabRow(
+                    selectedTabIndex = if (mode == FeedMode.NEW) 0 else 1,
+                    containerColor = Color.Transparent,
+                    contentColor = Color.White,
+                ) {
+                    Tab(
+                        selected = mode == FeedMode.NEW,
+                        onClick = { vm.setMode(FeedMode.NEW) },
+                    ) {
+                        Text("New", modifier = Modifier.padding(16.dp), color = Color.White)
+                    }
+                    Tab(
+                        selected = mode == FeedMode.OLD,
+                        onClick = { vm.setMode(FeedMode.OLD) },
+                    ) {
+                        Text("Old", modifier = Modifier.padding(16.dp), color = Color.White)
+                    }
                 }
             }
         } else {

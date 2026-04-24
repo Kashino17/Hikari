@@ -212,12 +212,14 @@ fun ReelPlayer(
                 )
             },
     ) {
-        // Video surface
+        // Video surface — RESIZE_MODE_FIT preserves original aspect ratio.
+        // 9:16 content fills portrait; 16:9 content letterboxes (black bars top/bottom).
+        // In landscape fullscreen the player width becomes screen width, so 16:9 fills screen.
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
                     useController = false
-                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                     setPlayer(player)
                 }
             },

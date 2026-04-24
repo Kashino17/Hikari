@@ -18,7 +18,7 @@ class FeedRepositoryTest {
     private val repo = FeedRepository(api, dao)
 
     @Test fun refresh_upsertsItemsFromApi() = runTest {
-        coEvery { api.getFeed() } returns listOf(
+        coEvery { api.getFeed(mode = "new") } returns listOf(
             FeedItemDto(
                 videoId = "v1", title = "t", durationSeconds = 60,
                 aspectRatio = "9:16", thumbnailUrl = "thumb",
@@ -30,6 +30,21 @@ class FeedRepositoryTest {
         repo.refresh()
         coVerify { dao.upsertAll(match { it.size == 1 && it[0].videoId == "v1" }) }
         coVerify { dao.pruneNotIn(listOf("v1")) }
+    }
+
+    @Test fun fetchOld_returnsItemsFromApi() = runTest {
+        coEvery { api.getFeed(mode = "old") } returns listOf(
+            FeedItemDto(
+                videoId = "v2", title = "t2", durationSeconds = 120,
+                aspectRatio = "16:9", thumbnailUrl = "thumb2",
+                channelId = "c1", channelTitle = "chan",
+                category = "science", reasoning = "r",
+                addedAt = 200L, saved = 0, seenAt = 300L,
+            )
+        )
+        val result = repo.fetchOld()
+        assertEquals(1, result.size)
+        assertEquals("v2", result[0].videoId)
     }
 
     @Test fun unseenItems_mapsEntitiesToModels() = runTest {

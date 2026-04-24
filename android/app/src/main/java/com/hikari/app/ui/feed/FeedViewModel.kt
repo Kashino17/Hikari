@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+enum class FeedMode { NEW, OLD }
+
 @HiltViewModel
 class FeedViewModel @Inject constructor(
     private val repo: FeedRepository,
@@ -25,6 +27,24 @@ class FeedViewModel @Inject constructor(
 
     val backendUrl: StateFlow<String> = settings.backendUrl
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
+
+    // Feed mode: NEW = unseen queue, OLD = history browse
+    private val _mode = MutableStateFlow(FeedMode.NEW)
+    val mode: StateFlow<FeedMode> = _mode.asStateFlow()
+
+    private val _oldItems = MutableStateFlow<List<FeedItem>>(emptyList())
+    val oldItems: StateFlow<List<FeedItem>> = _oldItems.asStateFlow()
+
+    fun setMode(newMode: FeedMode) {
+        _mode.value = newMode
+        if (newMode == FeedMode.OLD) loadOld()
+    }
+
+    private fun loadOld() = viewModelScope.launch {
+        _refreshing.value = true
+        runCatching { repo.fetchOld() }.onSuccess { _oldItems.value = it }
+        _refreshing.value = false
+    }
 
     private val _selectedCategory = MutableStateFlow<String?>(null)
     val selectedCategory: StateFlow<String?> = _selectedCategory.asStateFlow()
@@ -49,14 +69,21 @@ class FeedViewModel @Inject constructor(
 
     fun refresh() = viewModelScope.launch {
         _refreshing.value = true
-        runCatching { repo.refresh() }
-        runCatching { _today.value = repo.todayCount() }
+        if (_mode.value == FeedMode.OLD) {
+            runCatching { repo.fetchOld() }.onSuccess { _oldItems.value = it }
+        } else {
+            runCatching { repo.refresh() }
+            runCatching { _today.value = repo.todayCount() }
+        }
         _refreshing.value = false
     }
 
     fun selectCategory(cat: String?) { _selectedCategory.value = cat }
 
-    fun onSeen(id: String) = viewModelScope.launch { repo.markSeen(id) }
+    fun onSeen(id: String) = viewModelScope.launch {
+        // Skip marking seen in OLD mode — video is already in history
+        if (_mode.value == FeedMode.NEW) repo.markSeen(id)
+    }
     fun onToggleSave(id: String, currentlySaved: Boolean) = viewModelScope.launch {
         repo.toggleSave(id, currentlySaved)
     }

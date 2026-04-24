@@ -15,4 +15,5 @@ data class FeedItemDto(
     val reasoning: String,
     val addedAt: Long,
     val saved: Int,
+    val seenAt: Long? = null,  // only present in mode=old responses
 )

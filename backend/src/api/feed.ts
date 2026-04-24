@@ -7,25 +7,40 @@ export interface FeedDeps {
 }
 
 export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): Promise<void> {
-  app.get("/feed", async () => {
-    return deps.db
-      .prepare(
-        `SELECT fi.video_id as videoId, v.title, v.duration_seconds as durationSeconds,
-                v.aspect_ratio as aspectRatio, v.thumbnail_url as thumbnailUrl,
-                v.channel_id as channelId, c.title as channelTitle,
-                s.category, s.reasoning,
-                fi.added_to_feed_at as addedAt, fi.saved
-         FROM feed_items fi
-         JOIN videos v ON v.id = fi.video_id
-         JOIN channels c ON c.id = v.channel_id
-         JOIN scores s ON s.video_id = fi.video_id
-         JOIN downloaded_videos dv ON dv.video_id = fi.video_id
-         WHERE fi.seen_at IS NULL
-           AND fi.playback_failed = 0
-         ORDER BY fi.added_to_feed_at DESC
-         LIMIT ?`,
-      )
-      .all(deps.dailyBudget);
+  const BASE_SELECT = `
+    SELECT fi.video_id as videoId, v.title, v.duration_seconds as durationSeconds,
+           v.aspect_ratio as aspectRatio, v.thumbnail_url as thumbnailUrl,
+           v.channel_id as channelId, c.title as channelTitle,
+           s.category, s.reasoning,
+           fi.added_to_feed_at as addedAt, fi.saved, fi.seen_at as seenAt
+    FROM feed_items fi
+    JOIN videos v ON v.id = fi.video_id
+    JOIN channels c ON c.id = v.channel_id
+    JOIN scores s ON s.video_id = fi.video_id
+    JOIN downloaded_videos dv ON dv.video_id = fi.video_id
+  `;
+
+  app.get<{ Querystring: { mode?: string } }>("/feed", async (req, reply) => {
+    const mode = (req.query.mode ?? "new") as "new" | "old";
+    if (mode !== "new" && mode !== "old") {
+      return reply.code(400).send({ error: "mode must be new or old" });
+    }
+
+    if (mode === "new") {
+      return deps.db
+        .prepare(BASE_SELECT + `
+          WHERE fi.seen_at IS NULL AND fi.playback_failed = 0
+          ORDER BY fi.added_to_feed_at DESC
+          LIMIT ?`)
+        .all(deps.dailyBudget);
+    } else {
+      return deps.db
+        .prepare(BASE_SELECT + `
+          WHERE fi.seen_at IS NOT NULL
+          ORDER BY fi.seen_at DESC
+          LIMIT 100`)
+        .all();
+    }
   });
 
   app.post<{ Params: { id: string } }>("/feed/:id/seen", async (req, reply) => {

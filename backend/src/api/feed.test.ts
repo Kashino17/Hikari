@@ -95,4 +95,45 @@ describe("feed API", () => {
       db.prepare("SELECT playback_failed FROM feed_items WHERE video_id='v1'").get(),
     ).toEqual({ playback_failed: 1 });
   });
+
+  it("GET /feed?mode=new defaults to unseen only (backward compat)", async () => {
+    const now = Date.now();
+    seedFeedItem(db, "seen1", now - 2000, true);
+    seedFeedItem(db, "unseen1", now - 1000);
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+
+    const res = await app.inject({ method: "GET", url: "/feed?mode=new" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { videoId: string }[];
+    expect(body.map((x) => x.videoId)).toEqual(["unseen1"]);
+  });
+
+  it("GET /feed?mode=old returns only seen items, newest seenAt first", async () => {
+    const now = Date.now();
+    seedFeedItem(db, "seen_old", now - 5000, true);
+    seedFeedItem(db, "seen_new", now - 1000, true);
+    seedFeedItem(db, "unseen1", now - 500);
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+
+    const res = await app.inject({ method: "GET", url: "/feed?mode=old" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { videoId: string; seenAt: number }[];
+    // unseen1 must not appear
+    expect(body.find((x) => x.videoId === "unseen1")).toBeUndefined();
+    // both seen items must appear
+    expect(body.some((x) => x.videoId === "seen_old")).toBe(true);
+    expect(body.some((x) => x.videoId === "seen_new")).toBe(true);
+    // newest seenAt first
+    expect(body[0].videoId).toBe("seen_new");
+  });
+
+  it("GET /feed?mode=invalid returns 400", async () => {
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+    const res = await app.inject({ method: "GET", url: "/feed?mode=invalid" });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toEqual({ error: "mode must be new or old" });
+  });
 });

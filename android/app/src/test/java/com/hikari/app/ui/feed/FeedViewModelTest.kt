@@ -29,6 +29,8 @@ class FeedViewModelTest {
         every { settings.backendUrl } returns flowOf("http://laptop.local:3000")
         every { settings.dailyBudget } returns flowOf(15)
         coEvery { repo.refresh() } returns Unit
+        coEvery { repo.fetchOld() } returns emptyList()
+        every { repo.unseenItems() } returns flowOf(emptyList())
     }
     @After fun tearDown() { Dispatchers.resetMain() }
 

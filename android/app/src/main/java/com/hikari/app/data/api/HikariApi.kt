@@ -18,7 +18,7 @@ import retrofit2.http.Query
 
 interface HikariApi {
     @GET("feed")
-    suspend fun getFeed(): List<FeedItemDto>
+    suspend fun getFeed(@Query("mode") mode: String = "new"): List<FeedItemDto>
 
     @POST("feed/{id}/seen")
     suspend fun markSeen(@Path("id") videoId: String)
