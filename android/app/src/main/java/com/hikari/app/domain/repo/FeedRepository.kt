@@ -53,6 +53,11 @@ class FeedRepository @Inject constructor(
         runCatching { api.lessLikeThis(videoId) }
     }
 
+    suspend fun delete(videoId: String) {
+        dao.delete(videoId)
+        runCatching { api.deleteVideo(videoId) }
+    }
+
     suspend fun todayCount(): TodayCountResponse = api.todayCount()
 }
 

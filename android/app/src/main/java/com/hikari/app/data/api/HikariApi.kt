@@ -35,6 +35,9 @@ interface HikariApi {
     @POST("feed/{id}/less-like-this")
     suspend fun lessLikeThis(@Path("id") videoId: String)
 
+    @DELETE("feed/{id}")
+    suspend fun deleteVideo(@Path("id") videoId: String)
+
     @GET("feed/today-count")
     suspend fun todayCount(): TodayCountResponse
 

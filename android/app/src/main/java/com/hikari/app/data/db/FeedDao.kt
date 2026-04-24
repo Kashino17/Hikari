@@ -25,4 +25,7 @@ interface FeedDao {
 
     @Query("DELETE FROM feed_items WHERE videoId NOT IN (:keepIds)")
     suspend fun pruneNotIn(keepIds: List<String>)
+
+    @Query("DELETE FROM feed_items WHERE videoId = :videoId")
+    suspend fun delete(videoId: String)
 }

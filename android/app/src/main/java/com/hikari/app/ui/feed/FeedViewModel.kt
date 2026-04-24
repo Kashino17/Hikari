@@ -89,4 +89,8 @@ class FeedViewModel @Inject constructor(
     }
     fun onUnplayable(id: String) = viewModelScope.launch { repo.markUnplayable(id) }
     fun onLessLikeThis(id: String) = viewModelScope.launch { repo.lessLikeThis(id) }
+    fun onDelete(videoId: String) = viewModelScope.launch {
+        repo.delete(videoId)
+        if (_mode.value == FeedMode.OLD) loadOld()
+    }
 }
