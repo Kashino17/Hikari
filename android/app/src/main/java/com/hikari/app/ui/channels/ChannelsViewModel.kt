@@ -25,6 +25,9 @@ class ChannelsViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    private val _pollStatus = MutableStateFlow<String?>(null)
+    val pollStatus: StateFlow<String?> = _pollStatus.asStateFlow()
+
     init { load() }
 
     fun load() = viewModelScope.launch {
@@ -47,5 +50,16 @@ class ChannelsViewModel @Inject constructor(
     fun remove(channelId: String) = viewModelScope.launch {
         runCatching { repo.remove(channelId) }
         load()
+    }
+
+    fun poll(channelId: String) = viewModelScope.launch {
+        _pollStatus.value = null
+        runCatching { repo.poll(channelId) }
+            .onSuccess { resp ->
+                _pollStatus.value = "Queued ${resp.queued}, skipped ${resp.skipped}"
+            }
+            .onFailure {
+                _pollStatus.value = "Poll failed: ${it.message}"
+            }
     }
 }

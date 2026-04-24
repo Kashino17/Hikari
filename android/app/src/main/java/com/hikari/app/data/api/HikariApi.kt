@@ -4,6 +4,8 @@ import com.hikari.app.data.api.dto.AddChannelRequest
 import com.hikari.app.data.api.dto.AddChannelResponse
 import com.hikari.app.data.api.dto.ChannelDto
 import com.hikari.app.data.api.dto.FeedItemDto
+import com.hikari.app.data.api.dto.PollResponse
+import com.hikari.app.data.api.dto.TodayCountResponse
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -29,6 +31,9 @@ interface HikariApi {
     @POST("feed/{id}/less-like-this")
     suspend fun lessLikeThis(@Path("id") videoId: String)
 
+    @GET("feed/today-count")
+    suspend fun todayCount(): TodayCountResponse
+
     @GET("channels")
     suspend fun getChannels(): List<ChannelDto>
 
@@ -37,4 +42,7 @@ interface HikariApi {
 
     @DELETE("channels/{id}")
     suspend fun deleteChannel(@Path("id") channelId: String)
+
+    @POST("channels/{id}/poll")
+    suspend fun pollChannel(@Path("id") channelId: String): PollResponse
 }

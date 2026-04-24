@@ -2,6 +2,7 @@ package com.hikari.app.domain.repo
 
 import com.hikari.app.data.api.HikariApi
 import com.hikari.app.data.api.dto.FeedItemDto
+import com.hikari.app.data.api.dto.TodayCountResponse
 import com.hikari.app.data.db.FeedDao
 import com.hikari.app.data.db.FeedItemEntity
 import com.hikari.app.domain.model.FeedItem
@@ -47,6 +48,8 @@ class FeedRepository @Inject constructor(
         dao.markSeen(videoId)
         runCatching { api.lessLikeThis(videoId) }
     }
+
+    suspend fun todayCount(): TodayCountResponse = api.todayCount()
 }
 
 private fun FeedItemDto.toEntity() = FeedItemEntity(

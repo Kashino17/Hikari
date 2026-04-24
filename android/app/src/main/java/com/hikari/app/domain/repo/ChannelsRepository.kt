@@ -2,6 +2,7 @@ package com.hikari.app.domain.repo
 
 import com.hikari.app.data.api.HikariApi
 import com.hikari.app.data.api.dto.AddChannelRequest
+import com.hikari.app.data.api.dto.PollResponse
 import com.hikari.app.domain.model.Channel
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,4 +23,6 @@ class ChannelsRepository @Inject constructor(
     suspend fun remove(channelId: String) {
         api.deleteChannel(channelId)
     }
+
+    suspend fun poll(channelId: String): PollResponse = api.pollChannel(channelId)
 }

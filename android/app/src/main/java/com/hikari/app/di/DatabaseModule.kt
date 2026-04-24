@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.hikari.app.data.db.FeedDao
 import com.hikari.app.data.db.HikariDatabase
+import com.hikari.app.data.db.PlaybackPositionDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,8 +17,14 @@ import javax.inject.Singleton
 object DatabaseModule {
     @Provides @Singleton
     fun provideDatabase(@ApplicationContext ctx: Context): HikariDatabase =
-        Room.databaseBuilder(ctx, HikariDatabase::class.java, "hikari.db").build()
+        Room.databaseBuilder(ctx, HikariDatabase::class.java, "hikari.db")
+            .fallbackToDestructiveMigration()
+            .build()
 
     @Provides @Singleton
     fun provideFeedDao(db: HikariDatabase): FeedDao = db.feedDao()
+
+    @Provides @Singleton
+    fun providePlaybackPositionDao(db: HikariDatabase): PlaybackPositionDao =
+        db.playbackPositionDao()
 }

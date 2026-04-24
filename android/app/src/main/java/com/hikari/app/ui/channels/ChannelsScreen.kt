@@ -3,6 +3,8 @@ package com.hikari.app.ui.channels
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -16,6 +18,7 @@ fun ChannelsScreen(vm: ChannelsViewModel = hiltViewModel()) {
     val channels by vm.channels.collectAsState()
     val busy by vm.busy.collectAsState()
     val error by vm.error.collectAsState()
+    val pollStatus by vm.pollStatus.collectAsState()
     var newUrl by remember { mutableStateOf("") }
 
     Scaffold(topBar = { TopAppBar(title = { Text("Channels") }) }) { padding ->
@@ -37,6 +40,10 @@ fun ChannelsScreen(vm: ChannelsViewModel = hiltViewModel()) {
                 Spacer(Modifier.height(8.dp))
                 Text(it, color = MaterialTheme.colorScheme.error)
             }
+            pollStatus?.let {
+                Spacer(Modifier.height(8.dp))
+                Text(it, style = MaterialTheme.typography.labelSmall)
+            }
             Spacer(Modifier.height(16.dp))
             LazyColumn {
                 items(channels, key = { it.id }) { c ->
@@ -46,7 +53,12 @@ fun ChannelsScreen(vm: ChannelsViewModel = hiltViewModel()) {
                             Text(c.url, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         },
                         trailingContent = {
-                            TextButton(onClick = { vm.remove(c.id) }) { Text("Remove") }
+                            Row {
+                                IconButton(onClick = { vm.poll(c.id) }) {
+                                    Icon(Icons.Default.Refresh, contentDescription = "Poll Now")
+                                }
+                                TextButton(onClick = { vm.remove(c.id) }) { Text("Remove") }
+                            }
                         },
                     )
                     HorizontalDivider()
