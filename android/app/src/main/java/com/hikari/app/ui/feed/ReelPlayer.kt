@@ -111,6 +111,7 @@ private fun PlayPauseIndicator(
 fun ReelPlayer(
     item: FeedItem,
     player: ExoPlayer,
+    isCurrent: Boolean,
     sponsorBlock: SponsorBlockClient,
     playbackRepo: PlaybackRepository,
     onSeen: () -> Unit,
@@ -121,8 +122,9 @@ fun ReelPlayer(
     var playing by remember { mutableStateOf(true) }
     var showTrigger by remember { mutableIntStateOf(0) }
 
-    // A4: Player error → onUnplayable + auto-advance
-    DisposableEffect(item.videoId, player) {
+    // A4: Player error → onUnplayable + auto-advance (only the current page reacts)
+    DisposableEffect(item.videoId, player, isCurrent) {
+        if (!isCurrent) return@DisposableEffect onDispose {}
         val listener = object : Player.Listener {
             override fun onPlayerError(error: PlaybackException) {
                 onUnplayable()
@@ -132,27 +134,31 @@ fun ReelPlayer(
         onDispose { player.removeListener(listener) }
     }
 
-    // B3: Restore playback position on mount, save on dispose
-    DisposableEffect(item.videoId) {
-        onDispose {
-            val pos = player.currentPosition
-            if (pos > 0L) {
-                kotlinx.coroutines.runBlocking {
-                    playbackRepo.savePosition(item.videoId, pos)
-                }
-            }
-        }
-    }
-    LaunchedEffect(item.videoId) {
+    // B3: Restore position when becoming current; save when leaving current
+    LaunchedEffect(item.videoId, isCurrent) {
+        if (!isCurrent) return@LaunchedEffect
         val savedPos = playbackRepo.getPosition(item.videoId)
         if (savedPos > 0L) {
             player.seekTo(savedPos)
         }
     }
+    DisposableEffect(item.videoId, isCurrent) {
+        onDispose {
+            if (isCurrent) {
+                val pos = player.currentPosition
+                if (pos > 0L) {
+                    kotlinx.coroutines.runBlocking {
+                        playbackRepo.savePosition(item.videoId, pos)
+                    }
+                }
+            }
+        }
+    }
 
-    // A1: mark seen after 3 seconds of actual playback
+    // A1: mark seen after 3 seconds of actual playback (only current page)
     var seenFired by remember(item.videoId) { mutableStateOf(false) }
-    LaunchedEffect(item.videoId) {
+    LaunchedEffect(item.videoId, isCurrent) {
+        if (!isCurrent) return@LaunchedEffect
         while (!seenFired) {
             kotlinx.coroutines.delay(500)
             val pos = player.currentPosition
@@ -163,12 +169,13 @@ fun ReelPlayer(
         }
     }
 
-    // A2: SponsorBlock skip
+    // A2: SponsorBlock skip (only current page drives player seeks)
     var segments by remember(item.videoId) { mutableStateOf<List<SponsorSegment>>(emptyList()) }
     LaunchedEffect(item.videoId) {
         segments = sponsorBlock.fetchSegments(item.videoId)
     }
-    LaunchedEffect(item.videoId, segments) {
+    LaunchedEffect(item.videoId, segments, isCurrent) {
+        if (!isCurrent) return@LaunchedEffect
         while (true) {
             kotlinx.coroutines.delay(200)
             val pos = player.currentPosition
@@ -186,7 +193,8 @@ fun ReelPlayer(
     var scrubPositionMs by remember { mutableLongStateOf(0L) }
     val wasPlayingBeforeScrub = remember { mutableStateOf(true) }
 
-    LaunchedEffect(item.videoId) {
+    LaunchedEffect(item.videoId, isCurrent) {
+        if (!isCurrent) return@LaunchedEffect
         while (true) {
             kotlinx.coroutines.delay(500)
             if (!scrubbing) {

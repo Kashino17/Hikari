@@ -209,13 +209,14 @@ fun FeedScreen(
             } else {
                 val pagerState = rememberPagerState(pageCount = { items.size })
 
-                // Preload next videos
+                // Queue the current + next 2 videos on every page change.
+                // setMediaItems(..., resetPosition=true) starts playback at item 0 of the
+                // new queue (the page the user just swiped to). No explicit seekTo needed.
                 LaunchedEffect(pagerState.currentPage, items) {
                     val upcoming = items.drop(pagerState.currentPage).take(3).map {
                         factory.mediaItemFor(baseUrl, it.videoId)
                     }
                     PreloadCoordinator.setQueue(player, upcoming)
-                    player.seekTo(0, 0L)
                     player.playWhenReady = true
                 }
 
@@ -224,6 +225,7 @@ fun FeedScreen(
                     ReelPlayer(
                         item = item,
                         player = player,
+                        isCurrent = page == pagerState.currentPage,
                         sponsorBlock = sponsorBlock,
                         playbackRepo = playbackRepo,
                         onSeen = { vm.onSeen(item.videoId) },
