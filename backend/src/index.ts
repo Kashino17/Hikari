@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { mkdirSync, existsSync, readdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import fastifyStatic from "@fastify/static";
