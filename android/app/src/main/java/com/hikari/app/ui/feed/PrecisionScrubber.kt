@@ -6,7 +6,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,7 +28,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -76,7 +79,16 @@ fun PrecisionScrubber(
         if (scrubbing) onScrubUpdate(previewPositionMs)
     }
 
-    // Outer Box = touch target (40dp tall), content aligned bottom so bar sits at very bottom
+    // Outer Box = touch target (40dp tall), content aligned bottom so bar sits at very bottom.
+    //
+    // IMPORTANT: we CANNOT use detectDragGestures here because the parent Box uses
+    // detectTapGestures (tap/double-tap/long-press). detectDragGestures only claims the
+    // pointer after touch-slop is exceeded — before that, the long-press detector in the
+    // parent (500ms timeout) will fire, cancelling the drag and toggling save instead.
+    //
+    // Instead: awaitEachGesture + consume from the very first DOWN event, and start
+    // scrubbing immediately (no touch-slop). Every subsequent pointer event is also
+    // consumed so the parent's tap gestures never see them.
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -85,27 +97,32 @@ fun PrecisionScrubber(
                 trackWidthPx = coords.size.width.toFloat().coerceAtLeast(1f)
             }
             .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = { _ ->
-                        scrubbing = true
-                        dragStartPositionMs = positionMs
-                        dragDeltaX = 0f
-                        dragDeltaY = 0f
-                        onScrubStart()
-                    },
-                    onDrag = { _, drag ->
-                        dragDeltaX += drag.x
-                        dragDeltaY += drag.y
-                    },
-                    onDragEnd = {
-                        onScrubEnd(previewPositionMs)
-                        scrubbing = false
-                    },
-                    onDragCancel = {
-                        onScrubEnd(previewPositionMs)
-                        scrubbing = false
-                    },
-                )
+                awaitEachGesture {
+                    // Wait for a finger down anywhere in this Box.
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    down.consume()
+
+                    // Start scrubbing immediately — NO touch-slop delay.
+                    scrubbing = true
+                    dragStartPositionMs = positionMs
+                    dragDeltaX = 0f
+                    dragDeltaY = 0f
+                    onScrubStart()
+
+                    // Drain subsequent events until all pointers lift.
+                    while (true) {
+                        val event = awaitPointerEvent(PointerEventPass.Main)
+                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                        val moved = change.positionChange()
+                        dragDeltaX += moved.x
+                        dragDeltaY += moved.y
+                        change.consume()
+                        if (!change.pressed) break
+                    }
+
+                    onScrubEnd(previewPositionMs)
+                    scrubbing = false
+                }
             },
         contentAlignment = Alignment.BottomStart,
     ) {
