@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:yt="http://www.youtube.com/xml/schemas/2015">
+  <title>3Blue1Brown</title>
+  <entry>
+    <yt:videoId>dQw4w9WgXcQ</yt:videoId>
+    <title>Sample video one</title>
+    <published>2026-04-23T10:00:00+00:00</published>
+  </entry>
+  <entry>
+    <yt:videoId>aBcDeFgHiJk</yt:videoId>
+    <title>Sample video two</title>
+    <published>2026-04-22T10:00:00+00:00</published>
+  </entry>
+</feed>
