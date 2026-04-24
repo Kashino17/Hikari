@@ -1,25 +1,38 @@
 package com.hikari.app.ui.feed
 
+import android.content.pm.ActivityInfo
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -34,11 +47,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import com.hikari.app.data.sponsor.SponsorBlockClient
 import com.hikari.app.domain.repo.PlaybackRepository
 import com.hikari.app.player.HikariPlayerFactory
 import com.hikari.app.player.PreloadCoordinator
+import com.hikari.app.ui.navigation.hikariDestinations
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -55,7 +73,10 @@ interface FeedEntryPoint {
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun FeedScreen(vm: FeedViewModel = hiltViewModel()) {
+fun FeedScreen(
+    vm: FeedViewModel = hiltViewModel(),
+    onNavigate: (String) -> Unit = {},
+) {
     val items by vm.items.collectAsState()
     val baseUrl by vm.backendUrl.collectAsState()
     val refreshing by vm.refreshing.collectAsState()
@@ -65,6 +86,9 @@ fun FeedScreen(vm: FeedViewModel = hiltViewModel()) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var showFilterDialog by remember { mutableStateOf(false) }
+    var menuOpen by remember { mutableStateOf(false) }
+    var isFullscreen by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val entryPoint = remember {
         EntryPointAccessors.fromApplication(ctx, FeedEntryPoint::class.java)
@@ -74,8 +98,40 @@ fun FeedScreen(vm: FeedViewModel = hiltViewModel()) {
     val playbackRepo = remember { entryPoint.playbackRepository() }
     val player = remember { factory.create() }
 
+    // Get activity for fullscreen control
+    val activity = remember {
+        var c = ctx
+        while (c !is ComponentActivity) {
+            c = (c as android.content.ContextWrapper).baseContext
+        }
+        c as ComponentActivity
+    }
+
+    // Fullscreen toggle helper
+    fun toggleFullscreen() {
+        isFullscreen = !isFullscreen
+        val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
+        if (isFullscreen) {
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        } else {
+            activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            controller.show(WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
+    // Restore portrait on leave
     DisposableEffect(Unit) {
-        onDispose { player.release() }
+        onDispose {
+            player.release()
+            if (isFullscreen) {
+                val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
+                controller.show(WindowInsetsCompat.Type.systemBars())
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            }
+        }
     }
     LaunchedEffect(Unit) { vm.refresh() }
 
@@ -85,9 +141,7 @@ fun FeedScreen(vm: FeedViewModel = hiltViewModel()) {
             onDismissRequest = { showFilterDialog = false },
             title = { Text("Filter by Category") },
             text = {
-                Row(
-                    Modifier.horizontalScroll(rememberScrollState()),
-                ) {
+                Row(Modifier.horizontalScroll(rememberScrollState())) {
                     FilterChip(
                         selected = selectedCategory == null,
                         onClick = { vm.selectCategory(null); showFilterDialog = false },
@@ -110,75 +164,137 @@ fun FeedScreen(vm: FeedViewModel = hiltViewModel()) {
         )
     }
 
-    PullToRefreshBox(
-        isRefreshing = refreshing,
-        onRefresh = { vm.refresh() },
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        if (items.isEmpty()) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No new reels today. Come back tomorrow.", Modifier.padding(24.dp))
-            }
-        } else {
-            val pagerState = rememberPagerState(pageCount = { items.size })
-
-            // A3: Preload next 2 videos via ExoPlayer queue
-            LaunchedEffect(pagerState.currentPage, items) {
-                val upcoming = items.drop(pagerState.currentPage).take(3).map {
-                    factory.mediaItemFor(baseUrl, it.videoId)
-                }
-                PreloadCoordinator.setQueue(player, upcoming)
-                player.seekTo(0, 0L)
-                player.playWhenReady = true
-            }
-
-            VerticalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
-                val item = items[page]
-                ReelPlayer(
-                    item = item,
-                    player = player,
-                    sponsorBlock = sponsorBlock,
-                    playbackRepo = playbackRepo,
-                    onSeen = { vm.onSeen(item.videoId) },
-                    onToggleSave = { vm.onToggleSave(item.videoId, item.saved) },
-                    onLessLikeThis = { vm.onLessLikeThis(item.videoId) },
-                    onUnplayable = {
-                        vm.onUnplayable(item.videoId)
-                        scope.launch {
-                            if (page + 1 < items.size) {
-                                pagerState.animateScrollToPage(page + 1)
+    // Navigation menu bottom sheet
+    if (menuOpen) {
+        ModalBottomSheet(
+            onDismissRequest = { menuOpen = false },
+            sheetState = sheetState,
+        ) {
+            Column(modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)) {
+                hikariDestinations.filter { it.route != "feed" }.forEach { d ->
+                    ListItem(
+                        headlineContent = { Text(d.label) },
+                        leadingContent = { Icon(d.icon, d.label) },
+                        modifier = Modifier.clickable {
+                            scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                menuOpen = false
+                                onNavigate(d.route)
                             }
-                        }
-                    },
-                )
+                        },
+                    )
+                }
             }
+        }
+    }
 
-            // B5: Daily budget indicator
-            today?.let { todayData ->
-                Text(
-                    "${todayData.unseenCount} / ${todayData.dailyBudget}",
-                    color = Color.White.copy(alpha = 0.7f),
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(16.dp),
-                    style = MaterialTheme.typography.labelMedium,
-                )
+    Box(modifier = Modifier.fillMaxSize()) {
+        PullToRefreshBox(
+            isRefreshing = refreshing,
+            onRefresh = { vm.refresh() },
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            if (items.isEmpty()) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No new reels today. Come back tomorrow.", Modifier.padding(24.dp))
+                }
+            } else {
+                val pagerState = rememberPagerState(pageCount = { items.size })
+
+                // Preload next videos
+                LaunchedEffect(pagerState.currentPage, items) {
+                    val upcoming = items.drop(pagerState.currentPage).take(3).map {
+                        factory.mediaItemFor(baseUrl, it.videoId)
+                    }
+                    PreloadCoordinator.setQueue(player, upcoming)
+                    player.seekTo(0, 0L)
+                    player.playWhenReady = true
+                }
+
+                VerticalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+                    val item = items[page]
+                    ReelPlayer(
+                        item = item,
+                        player = player,
+                        sponsorBlock = sponsorBlock,
+                        playbackRepo = playbackRepo,
+                        onSeen = { vm.onSeen(item.videoId) },
+                        onToggleSave = { vm.onToggleSave(item.videoId, item.saved) },
+                        onLessLikeThis = { vm.onLessLikeThis(item.videoId) },
+                        onUnplayable = {
+                            vm.onUnplayable(item.videoId)
+                            scope.launch {
+                                if (page + 1 < items.size) {
+                                    pagerState.animateScrollToPage(page + 1)
+                                }
+                            }
+                        },
+                    )
+                }
             }
         }
 
-        // C3: Category filter button (always visible)
-        if (categories.isNotEmpty()) {
-            IconButton(
-                onClick = { showFilterDialog = true },
+        // Top overlay: menu + budget + fullscreen toggle
+        // Hidden in fullscreen landscape (system bars hidden, user taps for transient reveal)
+        if (!isFullscreen) {
+            Row(
                 modifier = Modifier
+                    .fillMaxWidth()
                     .align(Alignment.TopStart)
-                    .padding(8.dp),
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Hamburger / menu icon
+                IconButton(onClick = { menuOpen = true }) {
+                    Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Color.White)
+                }
+
+                // Category filter
+                if (categories.isNotEmpty()) {
+                    IconButton(onClick = { showFilterDialog = true }) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Filter by category",
+                            tint = if (selectedCategory != null)
+                                MaterialTheme.colorScheme.primary
+                            else Color.White.copy(alpha = 0.8f),
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Daily budget indicator
+                today?.let { todayData ->
+                    Text(
+                        "${todayData.unseenCount} / ${todayData.dailyBudget}",
+                        color = Color.White.copy(alpha = 0.75f),
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(end = 4.dp),
+                    )
+                }
+
+                // Fullscreen toggle
+                IconButton(onClick = { toggleFullscreen() }) {
+                    Icon(
+                        imageVector = if (isFullscreen) HikariIcons.FullscreenExit else HikariIcons.Fullscreen,
+                        contentDescription = if (isFullscreen) "Exit fullscreen" else "Enter fullscreen",
+                        tint = Color.White,
+                    )
+                }
+            }
+        } else {
+            // In landscape fullscreen: just the exit button top-right
+            IconButton(
+                onClick = { toggleFullscreen() },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(12.dp),
             ) {
                 Icon(
-                    Icons.Default.List,
-                    contentDescription = "Filter by category",
-                    tint = if (selectedCategory != null) MaterialTheme.colorScheme.primary
-                           else Color.White.copy(alpha = 0.8f),
+                    imageVector = HikariIcons.FullscreenExit,
+                    contentDescription = "Exit fullscreen",
+                    tint = Color.White,
                 )
             }
         }
