@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -25,10 +26,18 @@ class FeedViewModel @Inject constructor(
     val backendUrl: StateFlow<String> = settings.backendUrl
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
+    private val _selectedCategory = MutableStateFlow<String?>(null)
+    val selectedCategory: StateFlow<String?> = _selectedCategory.asStateFlow()
+
     val items: StateFlow<List<FeedItem>> =
-        combine(repo.unseenItems(), settings.dailyBudget) { list, budget ->
-            list.take(budget)
+        combine(repo.unseenItems(), settings.dailyBudget, _selectedCategory) { list, budget, cat ->
+            list.filter { cat == null || it.category == cat }.take(budget)
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val categories: StateFlow<List<String>> =
+        repo.unseenItems()
+            .map { list -> list.map { it.category }.distinct().sorted() }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _refreshing = MutableStateFlow(false)
     val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
@@ -44,6 +53,8 @@ class FeedViewModel @Inject constructor(
         runCatching { _today.value = repo.todayCount() }
         _refreshing.value = false
     }
+
+    fun selectCategory(cat: String?) { _selectedCategory.value = cat }
 
     fun onSeen(id: String) = viewModelScope.launch { repo.markSeen(id) }
     fun onToggleSave(id: String, currentlySaved: Boolean) = viewModelScope.launch {
