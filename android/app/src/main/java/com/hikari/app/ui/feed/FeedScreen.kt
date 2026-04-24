@@ -221,11 +221,23 @@ fun FeedScreen(
             } else {
                 val pagerState = rememberPagerState(pageCount = { items.size })
 
-                // Queue the current + next 2 videos on every page change.
-                // setMediaItems(..., resetPosition=true) starts playback at item 0 of the
-                // new queue (the page the user just swiped to). No explicit seekTo needed.
-                LaunchedEffect(pagerState.currentPage, items) {
-                    val upcoming = items.drop(pagerState.currentPage).take(3).map {
+                // CRITICAL: only rebuild the player queue when the USER swipes to a new
+                // page — NEVER when items reshuffles underneath us (e.g., mark-seen,
+                // save-toggle, or any other Room state change). Rebuilding the queue
+                // calls setMediaItems(resetPosition = true), which snaps the player
+                // back to position 0 of item 0 — and that was responsible for the
+                // "seek forward, snap back" bug users were seeing after ±5s seeks.
+                //
+                // We therefore key ONLY on pagerState.currentPage. We also fire once
+                // on the empty→non-empty transition to initialize the queue when
+                // items first load.
+                val itemsState = androidx.compose.runtime.rememberUpdatedState(items)
+                val firstItemReady = items.isNotEmpty()
+                LaunchedEffect(pagerState.currentPage, firstItemReady) {
+                    if (!firstItemReady) return@LaunchedEffect
+                    val current = itemsState.value
+                    val idx = pagerState.currentPage.coerceAtMost(current.size - 1)
+                    val upcoming = current.drop(idx).take(3).map {
                         factory.mediaItemFor(baseUrl, it.videoId)
                     }
                     PreloadCoordinator.setQueue(player, upcoming)
