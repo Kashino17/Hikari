@@ -2,6 +2,7 @@ package com.hikari.app.domain.repo
 
 import com.hikari.app.data.api.HikariApi
 import com.hikari.app.data.api.dto.AddChannelRequest
+import com.hikari.app.data.api.dto.ChannelStatsDto
 import com.hikari.app.data.api.dto.PollResponse
 import com.hikari.app.domain.model.Channel
 import javax.inject.Inject
@@ -13,6 +14,14 @@ class ChannelsRepository @Inject constructor(
 ) {
     suspend fun list(): List<Channel> = api.getChannels().map {
         Channel(id = it.id, url = it.url, title = it.title)
+    }
+
+    suspend fun listWithStats(): List<Pair<Channel, ChannelStatsDto?>> {
+        val channels = list()
+        return channels.map { ch ->
+            val stats = runCatching { api.getChannelStats(ch.id) }.getOrNull()
+            ch to stats
+        }
     }
 
     suspend fun add(url: String): Channel {

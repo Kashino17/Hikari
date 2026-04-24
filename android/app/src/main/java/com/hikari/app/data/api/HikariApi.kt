@@ -3,14 +3,18 @@ package com.hikari.app.data.api
 import com.hikari.app.data.api.dto.AddChannelRequest
 import com.hikari.app.data.api.dto.AddChannelResponse
 import com.hikari.app.data.api.dto.ChannelDto
+import com.hikari.app.data.api.dto.ChannelStatsDto
 import com.hikari.app.data.api.dto.FeedItemDto
 import com.hikari.app.data.api.dto.PollResponse
+import com.hikari.app.data.api.dto.RejectedItemDto
 import com.hikari.app.data.api.dto.TodayCountResponse
+import com.hikari.app.data.api.dto.WeeklyStatsDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface HikariApi {
     @GET("feed")
@@ -45,4 +49,13 @@ interface HikariApi {
 
     @POST("channels/{id}/poll")
     suspend fun pollChannel(@Path("id") channelId: String): PollResponse
+
+    @GET("channels/{id}/stats")
+    suspend fun getChannelStats(@Path("id") channelId: String): ChannelStatsDto
+
+    @GET("rejected")
+    suspend fun getRejected(@Query("limit") limit: Int = 50): List<RejectedItemDto>
+
+    @GET("stats/weekly")
+    suspend fun getWeeklyStats(): WeeklyStatsDto
 }

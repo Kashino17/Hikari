@@ -2,6 +2,7 @@ package com.hikari.app.ui.channels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hikari.app.data.api.dto.ChannelStatsDto
 import com.hikari.app.domain.model.Channel
 import com.hikari.app.domain.repo.ChannelsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,8 +17,8 @@ class ChannelsViewModel @Inject constructor(
     private val repo: ChannelsRepository,
 ) : ViewModel() {
 
-    private val _channels = MutableStateFlow<List<Channel>>(emptyList())
-    val channels: StateFlow<List<Channel>> = _channels.asStateFlow()
+    private val _channels = MutableStateFlow<List<Pair<Channel, ChannelStatsDto?>>>(emptyList())
+    val channels: StateFlow<List<Pair<Channel, ChannelStatsDto?>>> = _channels.asStateFlow()
 
     private val _busy = MutableStateFlow(false)
     val busy: StateFlow<Boolean> = _busy.asStateFlow()
@@ -32,7 +33,7 @@ class ChannelsViewModel @Inject constructor(
 
     fun load() = viewModelScope.launch {
         _busy.value = true
-        runCatching { repo.list() }
+        runCatching { repo.listWithStats() }
             .onSuccess { _channels.value = it; _error.value = null }
             .onFailure { _error.value = it.message ?: "Unknown error" }
         _busy.value = false

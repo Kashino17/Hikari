@@ -12,6 +12,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
+private fun formatBytes(bytes: Long): String {
+    if (bytes < 1024 * 1024) return "${bytes / 1024} KB"
+    if (bytes < 1024L * 1024 * 1024) return "${bytes / (1024 * 1024)} MB"
+    return "${"%.1f".format(bytes / (1024.0 * 1024 * 1024))} GB"
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChannelsScreen(vm: ChannelsViewModel = hiltViewModel()) {
@@ -46,11 +52,21 @@ fun ChannelsScreen(vm: ChannelsViewModel = hiltViewModel()) {
             }
             Spacer(Modifier.height(16.dp))
             LazyColumn {
-                items(channels, key = { it.id }) { c ->
+                items(channels, key = { it.first.id }) { (c, stats) ->
                     ListItem(
                         headlineContent = { Text(c.title) },
                         supportingContent = {
-                            Text(c.url, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Column {
+                                Text(c.url, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                if (stats != null) {
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(
+                                        "${stats.totalVideos} videos · ${stats.approved} approved · ${stats.rejected} rejected · ${formatBytes(stats.diskBytes)}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
                         },
                         trailingContent = {
                             Row {
