@@ -223,13 +223,19 @@ fun ReelPlayer(
         // Video surface — RESIZE_MODE_FIT preserves original aspect ratio.
         // 9:16 content fills portrait; 16:9 content letterboxes (black bars top/bottom).
         // In landscape fullscreen the player width becomes screen width, so 16:9 fills screen.
+        //
+        // CRITICAL: only the current page binds the shared ExoPlayer to its PlayerView.
+        // Adjacent pages (composed by VerticalPager) must keep player = null, or they
+        // steal the video surface and the current page shows a frozen first frame.
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
                     useController = false
                     resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-                    setPlayer(player)
                 }
+            },
+            update = { view ->
+                view.player = if (isCurrent) player else null
             },
             modifier = Modifier.fillMaxSize(),
         )
