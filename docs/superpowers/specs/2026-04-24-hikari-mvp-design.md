@@ -288,7 +288,7 @@ yt-dlp -f "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720]"
 1. **FeedScreen** — VerticalPager (Compose Foundation) mit einem Video pro Page
 2. **SavedScreen** — Gemerkte Videos als Grid
 3. **ChannelsScreen** — Whitelist verwalten
-4. **SettingsScreen** — Backend-Tailscale-URL, Tages-Budget, Kategorie-Filter
+4. **SettingsScreen** — Backend-Tailscale-URL, Tages-Budget (Default 15), LLM-Provider-Switch (Claude/Ollama), Kategorie-Filter
 
 **Reel-Player (ExoPlayer) Behavior:**
 - Container immer 9:16 full-screen
@@ -421,32 +421,12 @@ Hikari/
 | 4 | DB | SQLite (better-sqlite3) |
 | 5 | Client | Kotlin + Jetpack Compose + Media3/ExoPlayer |
 | 6 | Netzwerk | Tailscale |
+| 7 | LLM-Provider | **Pluggable:** Claude Haiku 4.5 als Default, Ollama als Fallback (in Settings umschaltbar) |
+| 8 | Tages-Budget | **Hard Limit 15/Tag**, in Settings konfigurierbar |
+| 9 | Disk-Limit | **10 GB Default**, LRU-Cleanup wenn überschritten, `saved = 1` nie gelöscht |
+| 10 | Support-Creator-Button | **Nein** — keiner |
 
-## 11. Open Decisions (Review benötigt)
-
-### 11.1 LLM-Provider — Default
-
-- **Option A:** Claude Haiku 4.5 (Cloud, bessere Qualität, ~0,01–0,10 €/Tag)
-- **Option B:** Ollama lokal (konsequent "alles lokal", Qualität schwächer)
-- **Option C (empfohlen):** Pluggable — Default Claude, Ollama-Switch in Settings
-
-### 11.2 Tages-Budget
-
-- **Option A (empfohlen):** Hard Limit, Default 15 Reels/Tag, Settings-konfigurierbar
-- **Option B:** Soft Indicator ohne Stop
-- **Option C:** Weg damit
-
-### 11.3 Disk-Limit für Download-Cache
-
-- **Option A (empfohlen):** Default 10 GB, in Settings konfigurierbar. LRU-Cleanup wenn überschritten.
-- **Option B:** Unlimited — Kadir managed selbst, Cleanup nur für `seen_at > 30 Tage alt`
-
-### 11.4 "Support Creator"-Button im Player
-
-- **Option A (empfohlen):** Diskret, unten-rechts, linkt zum YouTube-Channel (Patreon-Auto-Detection ist aufwändig, später)
-- **Option B:** Weg damit
-
-## 12. Success Criteria (MVP fertig, wenn...)
+## 11. Success Criteria (MVP fertig, wenn...)
 
 1. Kadir kann über Android-App Channels (per URL) zu seiner Whitelist hinzufügen — Backend resolved via yt-dlp zu Channel-ID
 2. Backend pollt RSS, ingested neue Videos via yt-dlp innerhalb 15 Min nach Upload
@@ -460,6 +440,6 @@ Hikari/
 10. Kein YouTube-Branding oder -Werbung sichtbar
 11. System läuft 1 Woche stabil ohne manuellen Eingriff (außer ggf. yt-dlp-Upgrade)
 
-## 13. Next Step
+## 12. Next Step
 
-Nach Approval → `superpowers:writing-plans` für detaillierten Implementation-Plan mit Dependencies und Task-Reihenfolge.
+Implementation-Plan via `superpowers:writing-plans`, dann Subagent-driven Development mit TDD pro Komponente.
