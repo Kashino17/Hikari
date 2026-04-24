@@ -1,30 +1,55 @@
 package com.hikari.app.player
 
+import com.hikari.app.data.sponsor.SegmentBehavior
 import com.hikari.app.data.sponsor.SponsorSegment
 import org.junit.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class SponsorSkipListenerTest {
-    @Test fun noSegments_returnsNull() {
-        assertNull(SponsorSkipListener.skipTargetMs(currentMs = 5000, segments = emptyList()))
-    }
+    private val allAuto = mapOf(
+        "sponsor" to SegmentBehavior.SKIP_AUTO,
+        "intro" to SegmentBehavior.SKIP_AUTO,
+    )
+    private val introManual = mapOf(
+        "sponsor" to SegmentBehavior.SKIP_AUTO,
+        "intro" to SegmentBehavior.SKIP_MANUAL,
+    )
+    private val introIgnore = mapOf(
+        "sponsor" to SegmentBehavior.SKIP_AUTO,
+        "intro" to SegmentBehavior.IGNORE,
+    )
 
-    @Test fun currentInsideSegment_returnsEndMs() {
+    @Test fun none_when_outside_any_segment() {
         val segs = listOf(SponsorSegment(10.0, 20.0, "sponsor"))
-        assertEquals(20_000L, SponsorSkipListener.skipTargetMs(currentMs = 12_000, segments = segs))
+        assertTrue(SponsorSkipListener.evaluate(5_000, segs, allAuto) is SponsorSkipListener.Decision.None)
     }
 
-    @Test fun currentBeforeAllSegments_returnsNull() {
+    @Test fun auto_returns_end_of_containing_segment() {
         val segs = listOf(SponsorSegment(10.0, 20.0, "sponsor"))
-        assertNull(SponsorSkipListener.skipTargetMs(currentMs = 5000, segments = segs))
+        val d = SponsorSkipListener.evaluate(12_000, segs, allAuto)
+        assertTrue(d is SponsorSkipListener.Decision.Auto)
+        assertEquals(20_000L, (d as SponsorSkipListener.Decision.Auto).targetMs)
     }
 
-    @Test fun currentBetweenSegments_returnsNull() {
+    @Test fun manual_when_behavior_is_manual() {
+        val segs = listOf(SponsorSegment(10.0, 20.0, "intro"))
+        val d = SponsorSkipListener.evaluate(12_000, segs, introManual)
+        assertTrue(d is SponsorSkipListener.Decision.Manual)
+    }
+
+    @Test fun none_when_behavior_is_ignore() {
+        val segs = listOf(SponsorSegment(10.0, 20.0, "intro"))
+        assertTrue(SponsorSkipListener.evaluate(12_000, segs, introIgnore) is SponsorSkipListener.Decision.None)
+    }
+
+    @Test fun overlapping_segments_prefers_longer_ending() {
         val segs = listOf(
-            SponsorSegment(5.0, 10.0, "sponsor"),
-            SponsorSegment(30.0, 40.0, "selfpromo"),
+            SponsorSegment(10.0, 15.0, "sponsor"),
+            SponsorSegment(10.0, 25.0, "sponsor"),
         )
-        assertNull(SponsorSkipListener.skipTargetMs(currentMs = 20_000, segments = segs))
+        val d = SponsorSkipListener.evaluate(12_000, segs, allAuto)
+        assertTrue(d is SponsorSkipListener.Decision.Auto)
+        assertEquals(25_000L, (d as SponsorSkipListener.Decision.Auto).targetMs)
     }
 }
