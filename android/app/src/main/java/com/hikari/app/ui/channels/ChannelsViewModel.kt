@@ -54,13 +54,29 @@ class ChannelsViewModel @Inject constructor(
     }
 
     fun poll(channelId: String) = viewModelScope.launch {
-        _pollStatus.value = null
+        _pollStatus.value = "Prüfe Kanal…"
         runCatching { repo.poll(channelId) }
             .onSuccess { resp ->
-                _pollStatus.value = "Queued ${resp.queued}, skipped ${resp.skipped}"
+                _pollStatus.value = when {
+                    resp.queued == 0 && resp.skipped > 0 ->
+                        "Keine neuen Videos (${resp.skipped} schon erfasst)"
+                    resp.queued == 1 ->
+                        "1 neues Video wird verarbeitet…"
+                    resp.queued > 1 ->
+                        "${resp.queued} neue Videos werden verarbeitet…"
+                    else ->
+                        "Kanal-RSS leer"
+                }
+                // Auto-dismiss after 5 seconds
+                kotlinx.coroutines.delay(5_000)
+                _pollStatus.value = null
+                // Reload stats so user sees the updated numbers
+                load()
             }
             .onFailure {
-                _pollStatus.value = "Poll failed: ${it.message}"
+                _pollStatus.value = "Fehler: ${it.message}"
+                kotlinx.coroutines.delay(5_000)
+                _pollStatus.value = null
             }
     }
 }
