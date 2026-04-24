@@ -59,6 +59,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import com.hikari.app.data.prefs.SponsorBlockPrefs
 import com.hikari.app.data.sponsor.SponsorBlockClient
 import com.hikari.app.domain.repo.PlaybackRepository
 import com.hikari.app.player.HikariPlayerFactory
@@ -76,6 +77,7 @@ interface FeedEntryPoint {
     fun playerFactory(): HikariPlayerFactory
     fun sponsorBlockClient(): SponsorBlockClient
     fun playbackRepository(): PlaybackRepository
+    fun sponsorBlockPrefs(): SponsorBlockPrefs
 }
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -117,6 +119,7 @@ fun FeedScreen(
     val factory = remember { entryPoint.playerFactory() }
     val sponsorBlock = remember { entryPoint.sponsorBlockClient() }
     val playbackRepo = remember { entryPoint.playbackRepository() }
+    val sponsorBlockPrefs = remember { entryPoint.sponsorBlockPrefs() }
     val player = remember { factory.create() }
 
     // Get activity for fullscreen control
@@ -252,6 +255,7 @@ fun FeedScreen(
                         isCurrent = page == pagerState.currentPage,
                         sponsorBlock = sponsorBlock,
                         playbackRepo = playbackRepo,
+                        sponsorBlockPrefs = sponsorBlockPrefs,
                         onSeen = { vm.onSeen(item.videoId) },
                         onToggleSave = { vm.onToggleSave(item.videoId, item.saved) },
                         onLessLikeThis = { vm.onLessLikeThis(item.videoId) },
