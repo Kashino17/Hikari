@@ -27,7 +27,6 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
   const meta = await deps.fetchMetadata(videoId);
 
   if (meta.isLive) return;
-  if (meta.durationSeconds < 30 || meta.durationSeconds > 600) return;
 
   const transcript = meta.captionsUrl ? await deps.fetchTranscript(meta.captionsUrl) : null;
   const [scored, sponsors] = await Promise.all([
