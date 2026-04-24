@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "PATH=\"/opt/homebrew/opt/node@24/bin:$PATH\" tsx watch src/index.ts",
-    "build": "PATH=\"/opt/homebrew/opt/node@24/bin:$PATH\" tsc -p tsconfig.json",
+    "build": "PATH=\"/opt/homebrew/opt/node@24/bin:$PATH\" tsc -p tsconfig.json && mkdir -p dist/db && cp src/db/schema.sql dist/db/schema.sql",
     "start": "PATH=\"/opt/homebrew/opt/node@24/bin:$PATH\" node dist/index.js",
     "test": "PATH=\"/opt/homebrew/opt/node@24/bin:$PATH\" vitest run",
     "test:watch": "PATH=\"/opt/homebrew/opt/node@24/bin:$PATH\" vitest",

@@ -63,3 +63,4 @@ CREATE TABLE IF NOT EXISTS downloaded_videos (
 CREATE INDEX IF NOT EXISTS idx_feed_items_added ON feed_items(added_to_feed_at DESC);
 CREATE INDEX IF NOT EXISTS idx_videos_channel ON videos(channel_id);
 CREATE INDEX IF NOT EXISTS idx_downloaded_last_served ON downloaded_videos(last_served_at);
+CREATE INDEX IF NOT EXISTS idx_sponsor_segments_video ON sponsor_segments(video_id);
