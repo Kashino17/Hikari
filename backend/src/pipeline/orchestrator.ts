@@ -93,7 +93,7 @@ function insertScore(
   now: number,
 ): void {
   db.prepare(
-    `INSERT INTO scores
+    `INSERT OR IGNORE INTO scores
      (video_id, overall_score, category, clickbait_risk, educational_value,
       emotional_manipulation, reasoning, model_used, scored_at, decision)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -116,6 +116,8 @@ function insertSponsors(
   videoId: string,
   segments: SponsorSegment[],
 ): void {
+  // Idempotent: clear any existing segments for this video, then insert fresh
+  db.prepare("DELETE FROM sponsor_segments WHERE video_id = ?").run(videoId);
   const stmt = db.prepare(
     `INSERT INTO sponsor_segments (video_id, start_seconds, end_seconds, category)
      VALUES (?, ?, ?, ?)`,
@@ -132,11 +134,14 @@ function insertDownload(
   now: number,
 ): void {
   db.prepare(
-    `INSERT INTO downloaded_videos (video_id, file_path, file_size_bytes, downloaded_at)
+    `INSERT OR IGNORE INTO downloaded_videos (video_id, file_path, file_size_bytes, downloaded_at)
      VALUES (?, ?, ?, ?)`,
   ).run(videoId, dl.filePath, dl.fileSizeBytes, now);
 }
 
 function insertFeedItem(db: Database.Database, videoId: string, now: number): void {
-  db.prepare(`INSERT INTO feed_items (video_id, added_to_feed_at) VALUES (?, ?)`).run(videoId, now);
+  db.prepare(`INSERT OR IGNORE INTO feed_items (video_id, added_to_feed_at) VALUES (?, ?)`).run(
+    videoId,
+    now,
+  );
 }
