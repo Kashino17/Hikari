@@ -1,11 +1,14 @@
 package com.hikari.app.ui.settings
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.hikari.app.data.sponsor.SegmentCategories
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -19,7 +22,12 @@ fun SettingsScreen(
     var draftBudget by remember(budget) { mutableStateOf(budget.toString()) }
 
     Scaffold(topBar = { TopAppBar(title = { Text("Settings") }) }) { padding ->
-        Column(Modifier.padding(padding).padding(16.dp)) {
+        Column(
+            Modifier
+                .padding(padding)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
             Text("Hikari Backend URL (Tailscale)")
             OutlinedTextField(
                 value = draftUrl,
@@ -53,6 +61,21 @@ fun SettingsScreen(
             Button(onClick = onNavigateToStats, modifier = Modifier.fillMaxWidth()) {
                 Text("Weekly Stats")
             }
+
+            Spacer(Modifier.height(32.dp))
+            HorizontalDivider()
+            Spacer(Modifier.height(16.dp))
+            val behaviors by vm.segmentBehaviors.collectAsState()
+            val skippedCount by vm.totalSkippedCount.collectAsState()
+            val skippedMs by vm.totalSkippedMs.collectAsState()
+            SponsorBlockSection(
+                categories = SegmentCategories.all,
+                behaviors = behaviors,
+                totalSkippedCount = skippedCount,
+                totalSkippedMs = skippedMs,
+                onBehaviorChange = vm::setSegmentBehavior,
+                onResetStats = vm::resetSponsorStats,
+            )
         }
     }
 }
