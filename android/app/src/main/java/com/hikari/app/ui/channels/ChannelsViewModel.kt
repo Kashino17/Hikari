@@ -1,0 +1,51 @@
+package com.hikari.app.ui.channels
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.hikari.app.domain.model.Channel
+import com.hikari.app.domain.repo.ChannelsRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+
+@HiltViewModel
+class ChannelsViewModel @Inject constructor(
+    private val repo: ChannelsRepository,
+) : ViewModel() {
+
+    private val _channels = MutableStateFlow<List<Channel>>(emptyList())
+    val channels: StateFlow<List<Channel>> = _channels.asStateFlow()
+
+    private val _busy = MutableStateFlow(false)
+    val busy: StateFlow<Boolean> = _busy.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
+    init { load() }
+
+    fun load() = viewModelScope.launch {
+        _busy.value = true
+        runCatching { repo.list() }
+            .onSuccess { _channels.value = it; _error.value = null }
+            .onFailure { _error.value = it.message ?: "Unknown error" }
+        _busy.value = false
+    }
+
+    fun add(url: String) = viewModelScope.launch {
+        _busy.value = true
+        runCatching { repo.add(url) }
+            .onSuccess { _error.value = null }
+            .onFailure { _error.value = it.message ?: "Couldn't add channel" }
+        _busy.value = false
+        load()
+    }
+
+    fun remove(channelId: String) = viewModelScope.launch {
+        runCatching { repo.remove(channelId) }
+        load()
+    }
+}
