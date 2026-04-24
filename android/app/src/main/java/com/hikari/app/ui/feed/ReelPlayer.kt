@@ -332,91 +332,65 @@ fun ReelPlayer(
             )
         }
 
-        // Bottom content column (scrubber + metadata) — fades with controls
+        // Channel + title text — fades with controls
         AnimatedVisibility(
             visible = controlsVisible,
             enter = fadeIn(tween(200)),
             exit = fadeOut(tween(150)),
-            modifier = Modifier.align(Alignment.BottomStart),
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(bottom = 52.dp),  // sits above the always-visible scrubber
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(bottom = 8.dp),
+                    .padding(horizontal = 16.dp),
             ) {
-                // Channel name + title (no category, no duration text)
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                ) {
-                    Text(
-                        text = item.channelTitle,
-                        color = Color.White.copy(alpha = 0.70f),
-                        style = MaterialTheme.typography.labelMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        text = item.title,
-                        color = Color.White,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Task 4: Precision scrubber (replaces Material3 Slider + time row)
-                PrecisionScrubber(
-                    positionMs = position,
-                    durationMs = duration,
-                    onScrubStart = {
-                        wasPlayingBeforeScrub.value = player.playWhenReady
-                        player.playWhenReady = false
-                        isScrubbing = true
-                    },
-                    onScrubUpdate = { previewMs ->
-                        position = previewMs
-                    },
-                    onScrubEnd = { finalMs ->
-                        player.seekTo(finalMs)
-                        if (wasPlayingBeforeScrub.value) {
-                            player.playWhenReady = true
-                            playing = true
-                        }
-                        isScrubbing = false
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp),
+                Text(
+                    text = item.channelTitle,
+                    color = Color.White.copy(alpha = 0.70f),
+                    style = MaterialTheme.typography.labelMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = item.title,
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
 
-        // ── Always-visible thin progress line (2dp, bottom of screen) ─────────
-        // Visible even when chrome is hidden — quick glance at progress.
-        // Hidden only while the full scrubber is showing (to avoid double bar).
-        AnimatedVisibility(
-            visible = !controlsVisible,
-            enter = fadeIn(tween(300)),
-            exit = fadeOut(tween(150)),
+        // ── Always-visible PrecisionScrubber ────────────────────────────────────
+        // At rest: thin 2dp line. On touch: expands to 4dp + thumb. Drag anytime,
+        // no need to tap-to-reveal first. This matches YouTube/Instagram UX where
+        // the progress bar IS the scrubber.
+        PrecisionScrubber(
+            positionMs = position,
+            durationMs = duration,
+            onScrubStart = {
+                wasPlayingBeforeScrub.value = player.playWhenReady
+                player.playWhenReady = false
+                isScrubbing = true
+                controlsVisible = true
+                onShowControls()
+            },
+            onScrubUpdate = { previewMs -> position = previewMs },
+            onScrubEnd = { finalMs ->
+                player.seekTo(finalMs)
+                if (wasPlayingBeforeScrub.value) {
+                    player.playWhenReady = true
+                    playing = true
+                }
+                isScrubbing = false
+            },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .windowInsetsPadding(WindowInsets.navigationBars),
-        ) {
-            LinearProgressIndicator(
-                progress = { (position.toFloat() / duration.toFloat()).coerceIn(0f, 1f) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(2.dp),
-                color = Color.White.copy(alpha = 0.90f),
-                trackColor = Color.White.copy(alpha = 0.15f),
-                drawStopIndicator = {},
-                gapSize = 0.dp,
-            )
-        }
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .fillMaxWidth(),
+        )
     }
 }
