@@ -1,0 +1,17 @@
+{
+  "id": "dQw4w9WgXcQ",
+  "title": "Why is this number everywhere?",
+  "description": "A short description.",
+  "duration": 612,
+  "upload_date": "20260401",
+  "thumbnail": "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxres.jpg",
+  "width": 1920,
+  "height": 1080,
+  "language": "en",
+  "live_status": "not_live",
+  "automatic_captions": {
+    "en": [
+      { "url": "https://youtube.com/caption-url-en", "ext": "vtt" }
+    ]
+  }
+}
