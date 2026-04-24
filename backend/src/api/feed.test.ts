@@ -136,4 +136,27 @@ describe("feed API", () => {
     expect(res.statusCode).toBe(400);
     expect(res.json()).toEqual({ error: "mode must be new or old" });
   });
+
+  it("DELETE /feed/:id returns 404 for unknown video", async () => {
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+    const res = await app.inject({ method: "DELETE", url: "/feed/nonexistent" });
+    expect(res.statusCode).toBe(404);
+    expect(res.json()).toEqual({ error: "video not found" });
+  });
+
+  it("DELETE /feed/:id cascades and returns 204", async () => {
+    seedFeedItem(db, "del1", Date.now(), true);
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+
+    const res = await app.inject({ method: "DELETE", url: "/feed/del1" });
+    expect(res.statusCode).toBe(204);
+
+    // Verify cascading deletes
+    expect(db.prepare("SELECT 1 FROM videos WHERE id = 'del1'").get()).toBeUndefined();
+    expect(db.prepare("SELECT 1 FROM feed_items WHERE video_id = 'del1'").get()).toBeUndefined();
+    expect(db.prepare("SELECT 1 FROM downloaded_videos WHERE video_id = 'del1'").get()).toBeUndefined();
+    expect(db.prepare("SELECT 1 FROM scores WHERE video_id = 'del1'").get()).toBeUndefined();
+  });
 });

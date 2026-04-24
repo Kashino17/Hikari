@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import type Database from "better-sqlite3";
+import fs from "node:fs";
 
 export interface FeedDeps {
   db: Database.Database;
@@ -89,6 +90,31 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
       unseenCount,
       capped: unseenCount >= deps.dailyBudget,
     };
+  });
+
+  app.delete<{ Params: { id: string } }>("/feed/:id", async (req, reply) => {
+    const videoId = req.params.id;
+    const existing = deps.db.prepare("SELECT 1 FROM videos WHERE id = ?").get(videoId);
+    if (!existing) return reply.code(404).send({ error: "video not found" });
+
+    const dlRow = deps.db
+      .prepare("SELECT file_path FROM downloaded_videos WHERE video_id = ?")
+      .get(videoId) as { file_path: string } | undefined;
+
+    deps.db.transaction(() => {
+      deps.db.prepare("DELETE FROM sponsor_segments WHERE video_id = ?").run(videoId);
+      deps.db.prepare("DELETE FROM feed_items WHERE video_id = ?").run(videoId);
+      deps.db.prepare("DELETE FROM downloaded_videos WHERE video_id = ?").run(videoId);
+      deps.db.prepare("DELETE FROM scores WHERE video_id = ?").run(videoId);
+      deps.db.prepare("DELETE FROM videos WHERE id = ?").run(videoId);
+    })();
+
+    if (dlRow?.file_path) {
+      try {
+        await fs.promises.unlink(dlRow.file_path);
+      } catch {}
+    }
+    return reply.code(204).send();
   });
 
   app.get<{ Querystring: { limit?: string } }>("/rejected", async (req) => {
