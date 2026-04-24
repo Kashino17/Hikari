@@ -24,12 +24,18 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -40,6 +46,8 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -112,6 +120,12 @@ fun FeedScreen(
         }
     }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var moreOptionsOpen by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+    var deleteTargetId by remember { mutableStateOf<String?>(null) }
+    val moreOptionsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    // Hoisted current page index so the MoreOptions sheet (rendered at Box level) knows which item
+    var currentPageIndex by remember { mutableStateOf(0) }
 
     val entryPoint = remember {
         EntryPointAccessors.fromApplication(ctx, FeedEntryPoint::class.java)
@@ -211,7 +225,76 @@ fun FeedScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    // Delete confirmation dialog
+    if (showDeleteConfirm && deleteTargetId != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Video löschen?") },
+            text = { Text("Das Video wird unwiderruflich von deinem Gerät und Server entfernt.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        vm.onDelete(deleteTargetId!!)
+                        showDeleteConfirm = false
+                        deleteTargetId = null
+                    },
+                ) { Text("Ja, löschen", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) { Text("Abbrechen") }
+            },
+        )
+    }
+
+    val edgeZoneDp = 40.dp
+    val triggerDp = 50.dp
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    val screenWidthPx = size.width.toFloat()
+                    val edgePx = edgeZoneDp.toPx()
+                    val triggerPx = triggerDp.toPx()
+
+                    // Only consider touches starting near the right edge
+                    if (down.position.x < screenWidthPx - edgePx) return@awaitEachGesture
+
+                    var dx = 0f
+                    var dy = 0f
+                    var decided = false
+                    var willOpenMenu = false
+
+                    while (!decided) {
+                        val event = awaitPointerEvent()
+                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                        if (!change.pressed) break
+
+                        val moved = change.positionChange()
+                        dx += moved.x
+                        dy += moved.y
+
+                        // Decide early if we should open menu (aggressive leftward drag)
+                        if (dx < -triggerPx && kotlin.math.abs(dx) > kotlin.math.abs(dy) * 1.5f) {
+                            willOpenMenu = true
+                            decided = true
+                            change.consume()
+                        }
+
+                        // If movement is primarily vertical, bail so VerticalPager handles it
+                        if (kotlin.math.abs(dy) > kotlin.math.abs(dx) * 1.5f) {
+                            decided = true
+                        }
+                    }
+
+                    if (willOpenMenu && !menuOpen) {
+                        menuOpen = true
+                    }
+                }
+            },
+    ) {
         PullToRefreshBox(
             isRefreshing = refreshing,
             onRefresh = { vm.refresh() },
@@ -223,6 +306,11 @@ fun FeedScreen(
                 }
             } else {
                 val pagerState = rememberPagerState(pageCount = { items.size })
+
+                // Keep hoisted page index in sync for MoreOptions sheet
+                LaunchedEffect(pagerState.currentPage) {
+                    currentPageIndex = pagerState.currentPage
+                }
 
                 // CRITICAL: only rebuild the player queue when the USER swipes to a new
                 // page — NEVER when items reshuffles underneath us (e.g., mark-seen,
@@ -269,6 +357,64 @@ fun FeedScreen(
                         },
                         onShowControls = { topControlsVisible = true },
                     )
+                }
+            }
+        }
+
+        // MoreOptions bottom sheet (Save / Less-like-this / Delete)
+        if (moreOptionsOpen) {
+            val current = items.getOrNull(currentPageIndex)
+            if (current != null) {
+                ModalBottomSheet(
+                    onDismissRequest = { moreOptionsOpen = false },
+                    sheetState = moreOptionsSheetState,
+                ) {
+                    Column(modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)) {
+                        ListItem(
+                            headlineContent = {
+                                Text(if (current.saved) "Aus Merkliste entfernen" else "Speichern")
+                            },
+                            leadingContent = { Icon(Icons.Default.Favorite, null) },
+                            modifier = Modifier.clickable {
+                                vm.onToggleSave(current.videoId, current.saved)
+                                scope.launch { moreOptionsSheetState.hide() }.invokeOnCompletion {
+                                    moreOptionsOpen = false
+                                }
+                            },
+                        )
+                        ListItem(
+                            headlineContent = { Text("Weniger wie das") },
+                            leadingContent = { Icon(Icons.Default.Close, null) },
+                            modifier = Modifier.clickable {
+                                vm.onLessLikeThis(current.videoId)
+                                scope.launch { moreOptionsSheetState.hide() }.invokeOnCompletion {
+                                    moreOptionsOpen = false
+                                }
+                            },
+                        )
+                        if (mode == FeedMode.OLD) {
+                            HorizontalDivider()
+                            ListItem(
+                                headlineContent = {
+                                    Text("Löschen", color = MaterialTheme.colorScheme.error)
+                                },
+                                leadingContent = {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                    )
+                                },
+                                modifier = Modifier.clickable {
+                                    deleteTargetId = current.videoId
+                                    scope.launch { moreOptionsSheetState.hide() }.invokeOnCompletion {
+                                        moreOptionsOpen = false
+                                        showDeleteConfirm = true
+                                    }
+                                },
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -327,6 +473,11 @@ fun FeedScreen(
                                 modifier = Modifier.padding(end = 4.dp),
                             )
                         }
+                    }
+
+                    // More options
+                    IconButton(onClick = { moreOptionsOpen = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "More options", tint = Color.White)
                     }
 
                     // Fullscreen toggle
