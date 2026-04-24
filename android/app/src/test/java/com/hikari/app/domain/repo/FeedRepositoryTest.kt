@@ -1,0 +1,52 @@
+package com.hikari.app.domain.repo
+
+import com.hikari.app.data.api.HikariApi
+import com.hikari.app.data.api.dto.FeedItemDto
+import com.hikari.app.data.db.FeedDao
+import com.hikari.app.data.db.FeedItemEntity
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
+import org.junit.Test
+import kotlin.test.assertEquals
+
+class FeedRepositoryTest {
+    private val api = mockk<HikariApi>(relaxUnitFun = true)
+    private val dao = mockk<FeedDao>(relaxUnitFun = true)
+    private val repo = FeedRepository(api, dao)
+
+    @Test fun refresh_upsertsItemsFromApi() = runTest {
+        coEvery { api.getFeed() } returns listOf(
+            FeedItemDto(
+                videoId = "v1", title = "t", durationSeconds = 60,
+                aspectRatio = "9:16", thumbnailUrl = "thumb",
+                channelId = "c1", channelTitle = "chan",
+                category = "science", reasoning = "r",
+                addedAt = 100L, saved = 0,
+            )
+        )
+        repo.refresh()
+        coVerify { dao.upsertAll(match { it.size == 1 && it[0].videoId == "v1" }) }
+        coVerify { dao.pruneNotIn(listOf("v1")) }
+    }
+
+    @Test fun unseenItems_mapsEntitiesToModels() = runTest {
+        coEvery { dao.unseenItems() } returns flowOf(
+            listOf(
+                FeedItemEntity(
+                    videoId = "v1", title = "t", durationSeconds = 60,
+                    aspectRatio = "9:16", thumbnailUrl = "thumb",
+                    channelId = "c1", channelTitle = "chan",
+                    category = "art", reasoning = "r",
+                    addedAt = 100L, saved = false, seen = false,
+                )
+            )
+        )
+        val emitted = mutableListOf<List<com.hikari.app.domain.model.FeedItem>>()
+        repo.unseenItems().collect { emitted += it }
+        assertEquals(1, emitted[0].size)
+        assertEquals("v1", emitted[0][0].videoId)
+    }
+}
