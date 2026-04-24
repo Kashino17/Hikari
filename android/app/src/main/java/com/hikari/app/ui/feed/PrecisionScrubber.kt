@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,16 +60,29 @@ fun PrecisionScrubber(
     var dragDeltaX by remember { mutableStateOf(0f) }
     var dragDeltaY by remember { mutableStateOf(0f) }  // downward positive
 
-    // Effective position during drag (accounts for precision mode)
-    val previewPositionMs: Long = if (!scrubbing) {
-        positionMs
-    } else {
-        val dyUp = (-dragDeltaY).coerceAtLeast(0f)          // upward distance in px
-        val speed = 1f / (1f + dyUp / 100f)                  // 1× → 0.5× → …
-        val rawDelta = (dragDeltaX / trackWidthPx) * durationMs.toFloat()
+    // Live snapshots so the pointerInput coroutine (captured once via key=Unit)
+    // can always read the latest values from subsequent recompositions.
+    // Without this, the coroutine closes over the first-composition value of
+    // every external var — which is why "release snaps to start of video":
+    // onScrubEnd was always being called with the position from composition #1,
+    // i.e. 0.
+    val positionMsState = rememberUpdatedState(positionMs)
+    val durationMsState = rememberUpdatedState(durationMs)
+    val onScrubStartState = rememberUpdatedState(onScrubStart)
+    val onScrubUpdateState = rememberUpdatedState(onScrubUpdate)
+    val onScrubEndState = rememberUpdatedState(onScrubEnd)
+
+    // Pure function used both for UI rendering and for the coroutine's final commit
+    fun computePreview(): Long {
+        val dyUp = (-dragDeltaY).coerceAtLeast(0f)
+        val speed = 1f / (1f + dyUp / 100f)
+        val rawDelta = (dragDeltaX / trackWidthPx) * durationMsState.value.toFloat()
         val scaledDelta = (rawDelta * speed).toLong()
-        (dragStartPositionMs + scaledDelta).coerceIn(0L, durationMs)
+        return (dragStartPositionMs + scaledDelta).coerceIn(0L, durationMsState.value)
     }
+
+    // Effective position for rendering
+    val previewPositionMs: Long = if (!scrubbing) positionMs else computePreview()
 
     val fraction = (previewPositionMs.toFloat() / durationMs.coerceAtLeast(1L).toFloat()).coerceIn(0f, 1f)
     val barHeight by animateDpAsState(if (scrubbing) 4.dp else 2.dp, label = "scrubberBarHeight")
@@ -104,10 +118,10 @@ fun PrecisionScrubber(
 
                     // Start scrubbing immediately — NO touch-slop delay.
                     scrubbing = true
-                    dragStartPositionMs = positionMs
+                    dragStartPositionMs = positionMsState.value
                     dragDeltaX = 0f
                     dragDeltaY = 0f
-                    onScrubStart()
+                    onScrubStartState.value.invoke()
 
                     // Drain subsequent events until all pointers lift.
                     while (true) {
@@ -120,7 +134,10 @@ fun PrecisionScrubber(
                         if (!change.pressed) break
                     }
 
-                    onScrubEnd(previewPositionMs)
+                    // Compute the final target here, from CURRENT state, not the
+                    // stale previewPositionMs that was captured at composition #1.
+                    val finalPreview = computePreview()
+                    onScrubEndState.value.invoke(finalPreview)
                     scrubbing = false
                 }
             },
