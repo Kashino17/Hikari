@@ -2,6 +2,10 @@ package com.hikari.app.ui.feed
 
 import android.content.pm.ActivityInfo
 import androidx.activity.ComponentActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -97,6 +101,14 @@ fun FeedScreen(
     var showFilterDialog by remember { mutableStateOf(false) }
     var menuOpen by remember { mutableStateOf(false) }
     var isFullscreen by remember { mutableStateOf(false) }
+    // Top chrome auto-hides after 3s, same pattern as bottom chrome in ReelPlayer
+    var topControlsVisible by remember { mutableStateOf(true) }
+    LaunchedEffect(topControlsVisible) {
+        if (topControlsVisible) {
+            kotlinx.coroutines.delay(3_000)
+            topControlsVisible = false
+        }
+    }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val entryPoint = remember {
@@ -239,18 +251,27 @@ fun FeedScreen(
                                 }
                             }
                         },
+                        onShowControls = { topControlsVisible = true },
                     )
                 }
             }
         }
 
         // Top overlay: menu + budget + fullscreen toggle + New/Old tabs
-        // Hidden in fullscreen landscape (system bars hidden, user taps for transient reveal)
+        // Fades out after 3s of no interaction; tap/double-tap on player reveals it again.
+        // Hidden in fullscreen landscape (system bars hidden, user taps for transient reveal).
         if (!isFullscreen) {
+            AnimatedVisibility(
+                visible = topControlsVisible,
+                enter = fadeIn(tween(200)),
+                exit = fadeOut(tween(150)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopStart),
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.TopStart)
                     .windowInsetsPadding(WindowInsets.statusBars),
             ) {
                 // Top row: hamburger / filter / budget / fullscreen
@@ -322,6 +343,7 @@ fun FeedScreen(
                     }
                 }
             }
+            } // end AnimatedVisibility
         } else {
             // In landscape fullscreen: just the exit button top-right
             IconButton(
