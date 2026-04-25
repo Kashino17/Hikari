@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
 import { mangaApi, MANGA_API_BASE, type ApiPage } from '@/lib/manga-api'
 
 interface Props {
@@ -95,8 +96,17 @@ export function MangaReader({ seriesId, chapterId, pages, initialPage, nextChapt
   const skipClickRef = useRef(false)
   const SWIPE_THRESHOLD = 40
 
-  const advance = () => setPageIdx((i) => Math.min(pages.length, i + 1))
-  const goBack = () => setPageIdx((i) => Math.max(0, i - 1))
+  // 1 = forward (next), -1 = back. Drives slide direction in AnimatePresence.
+  const [direction, setDirection] = useState(1)
+
+  const advance = () => {
+    setDirection(1)
+    setPageIdx((i) => Math.min(pages.length, i + 1))
+  }
+  const goBack = () => {
+    setDirection(-1)
+    setPageIdx((i) => Math.max(0, i - 1))
+  }
 
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartXRef.current = e.touches[0]?.clientX ?? null
@@ -197,19 +207,51 @@ export function MangaReader({ seriesId, chapterId, pages, initialPage, nextChapt
           </div>
         </div>
       )}
-      {pages.length > 0 && !isPastEnd && current && current.ready && (
-        <img
-          src={mangaApi.pageUrl(current.id)}
-          alt={`Page ${current.pageNumber}`}
-          className="absolute inset-0 w-full h-full object-contain"
-          draggable={false}
-          onError={onImgError(current.id)}
-        />
-      )}
-      {pages.length > 0 && !isPastEnd && current && !current.ready && (
-        <div className="absolute inset-0 flex items-center justify-center text-faint text-sm">
-          Diese Seite wird gerade geladen…
-        </div>
+      {pages.length > 0 && !isPastEnd && (
+        <AnimatePresence custom={direction} initial={false}>
+          {current && current.ready && (
+            <motion.img
+              key={current.id}
+              src={mangaApi.pageUrl(current.id)}
+              alt={`Page ${current.pageNumber}`}
+              className="absolute inset-0 w-full h-full object-contain"
+              draggable={false}
+              onError={onImgError(current.id)}
+              custom={direction}
+              variants={{
+                enter: (dir: number) => ({ x: dir > 0 ? '100%' : '-100%', opacity: 0.6 }),
+                center: { x: 0, opacity: 1 },
+                exit: (dir: number) => ({ x: dir > 0 ? '-100%' : '100%', opacity: 0.6 }),
+              }}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{
+                x: { type: 'tween', ease: [0.32, 0.72, 0, 1], duration: 0.28 },
+                opacity: { duration: 0.18 },
+              }}
+              style={{ boxShadow: '0 0 40px rgba(0,0,0,0.6)' }}
+            />
+          )}
+          {current && !current.ready && (
+            <motion.div
+              key={`loading-${current.id}`}
+              className="absolute inset-0 flex items-center justify-center text-faint text-sm"
+              custom={direction}
+              variants={{
+                enter: (dir: number) => ({ x: dir > 0 ? '100%' : '-100%' }),
+                center: { x: 0 },
+                exit: (dir: number) => ({ x: dir > 0 ? '-100%' : '100%' }),
+              }}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ x: { type: 'tween', ease: [0.32, 0.72, 0, 1], duration: 0.28 } }}
+            >
+              Diese Seite wird gerade geladen…
+            </motion.div>
+          )}
+        </AnimatePresence>
       )}
       {isPastEnd && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-8 text-center">
