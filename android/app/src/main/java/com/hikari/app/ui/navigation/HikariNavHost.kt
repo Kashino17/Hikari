@@ -32,6 +32,9 @@ import com.hikari.app.ui.channels.ChannelsScreen
 import com.hikari.app.ui.feed.FeedScreen
 import com.hikari.app.ui.library.LibraryScreen
 import com.hikari.app.ui.library.SeriesDetailScreen
+import com.hikari.app.ui.manga.MangaDetailScreen
+import com.hikari.app.ui.manga.MangaListScreen
+import com.hikari.app.ui.manga.MangaReaderScreen
 import com.hikari.app.ui.player.VideoPlayerScreen
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -68,11 +71,12 @@ fun HikariNavHost() {
     }
 
     val isVideoRoute = currentRoute?.startsWith("video/") == true
+    val isReaderRoute = currentRoute?.matches(Regex("manga/[^/]+/[^/?]+(\\?.*)?")) == true
 
     Scaffold(
         containerColor = HikariBg,
         bottomBar = {
-            if (!(currentRoute == "feed" && feedFullscreen) && !isVideoRoute) {
+            if (!(currentRoute == "feed" && feedFullscreen) && !isVideoRoute && !isReaderRoute) {
                 HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
                 NavigationBar(
                     containerColor = HikariBg,
@@ -177,6 +181,67 @@ fun HikariNavHost() {
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     TuningScreen()
                 }
+            }
+            composable("manga") {
+                MangaListScreen(
+                    onSeriesClick = { id ->
+                        nav.navigate("manga/${URLEncoder.encode(id, "UTF-8")}")
+                    },
+                    onContinueClick = { sId, cId, page ->
+                        val sE = URLEncoder.encode(sId, "UTF-8")
+                        val cE = URLEncoder.encode(cId, "UTF-8")
+                        nav.navigate("manga/$sE/$cE?page=$page")
+                    },
+                )
+            }
+            composable(
+                "manga/{seriesId}",
+                arguments = listOf(navArgument("seriesId") { type = NavType.StringType }),
+            ) { entry ->
+                val sId = URLDecoder.decode(
+                    entry.arguments!!.getString("seriesId")!!,
+                    "UTF-8",
+                )
+                MangaDetailScreen(
+                    seriesId = sId,
+                    onBack = { nav.popBackStack() },
+                    onChapterClick = { cId, page ->
+                        val sE = URLEncoder.encode(sId, "UTF-8")
+                        val cE = URLEncoder.encode(cId, "UTF-8")
+                        val pq = page?.let { "?page=$it" } ?: ""
+                        nav.navigate("manga/$sE/$cE$pq")
+                    },
+                )
+            }
+            composable(
+                "manga/{seriesId}/{chapterId}?page={page}",
+                arguments = listOf(
+                    navArgument("seriesId") { type = NavType.StringType },
+                    navArgument("chapterId") { type = NavType.StringType },
+                    navArgument("page") {
+                        type = NavType.IntType
+                        defaultValue = 1
+                    },
+                ),
+            ) { entry ->
+                val sId = URLDecoder.decode(entry.arguments!!.getString("seriesId")!!, "UTF-8")
+                val cId = URLDecoder.decode(entry.arguments!!.getString("chapterId")!!, "UTF-8")
+                val page = entry.arguments!!.getInt("page")
+                MangaReaderScreen(
+                    seriesId = sId,
+                    chapterId = cId,
+                    initialPage = page,
+                    onBack = { nav.popBackStack() },
+                    onOpenChapter = { nextChapterId ->
+                        val sE = URLEncoder.encode(sId, "UTF-8")
+                        val cE = URLEncoder.encode(nextChapterId, "UTF-8")
+                        nav.navigate("manga/$sE/$cE") {
+                            popUpTo("manga/$sE/${URLEncoder.encode(cId, "UTF-8")}") {
+                                inclusive = true
+                            }
+                        }
+                    },
+                )
             }
         }
     }
