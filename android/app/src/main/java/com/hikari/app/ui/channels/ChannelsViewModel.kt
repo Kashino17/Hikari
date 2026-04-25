@@ -7,6 +7,7 @@ import com.hikari.app.data.api.dto.ChannelStatsDto
 import com.hikari.app.data.api.dto.RecommendationDto
 import com.hikari.app.domain.model.Channel
 import com.hikari.app.domain.repo.ChannelsRepository
+import com.hikari.app.domain.repo.FeedRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.FlowPreview
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class ChannelsViewModel @Inject constructor(
     private val repo: ChannelsRepository,
+    private val feedRepo: FeedRepository,
 ) : ViewModel() {
 
     private val _channels = MutableStateFlow<List<Pair<Channel, ChannelStatsDto?>>>(emptyList())
@@ -99,6 +101,7 @@ class ChannelsViewModel @Inject constructor(
                 _pollStatus.value = "$it Videos werden importiert…"
                 onDone(it)
                 kotlinx.coroutines.delay(8_000)
+                runCatching { feedRepo.refresh() }
                 _pollStatus.value = null
                 load()
             }

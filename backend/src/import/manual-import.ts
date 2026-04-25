@@ -212,8 +212,12 @@ async function resolveImportSource(url: string): Promise<ResolvedImportSource> {
 
 function ensureManualChannel(db: Database.Database): void {
   db.prepare(
-    `INSERT OR IGNORE INTO channels (id, url, title, added_at, is_active)
-     VALUES (?, ?, ?, ?, 1)`,
+    `INSERT INTO channels (id, url, title, added_at, is_active)
+     VALUES (?, ?, ?, ?, 1)
+     ON CONFLICT(id) DO UPDATE SET
+       url = excluded.url,
+       title = excluded.title,
+       is_active = 1`,
   ).run(MANUAL_CHANNEL_ID, "manual:hikari", MANUAL_CHANNEL_TITLE, Date.now());
 }
 
@@ -229,6 +233,10 @@ export async function importDirectLink(
 ): Promise<ImportResult> {
   const cleanUrl = url.trim();
   if (!cleanUrl) return { url, status: "failed", error: "empty URL" };
+
+  // Keep the synthetic manual channel visible even after the user hid it
+  // previously. Imports should revive the archive container automatically.
+  ensureManualChannel(db);
 
   // Step 1: extract metadata only (no download yet — we want to validate first)
   let meta: YtDlpVideoMeta;
@@ -258,8 +266,6 @@ export async function importDirectLink(
       ...(meta.title ? { title: meta.title } : {}),
     };
   }
-
-  ensureManualChannel(db);
 
   const title = meta.title ?? meta.id;
   const description = meta.description ?? "";

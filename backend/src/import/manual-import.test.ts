@@ -86,6 +86,21 @@ class MockDb {
       };
     }
 
+    if (sql.includes("INSERT INTO channels") && sql.includes("ON CONFLICT(id) DO UPDATE")) {
+      return {
+        run: (id: string, url: string, title: string, addedAt: number) => {
+          const existing = this.channels.get(id);
+          this.channels.set(id, {
+            id,
+            url,
+            title,
+            added_at: existing?.added_at ?? addedAt,
+            is_active: 1,
+          });
+        },
+      };
+    }
+
     if (sql.includes("INSERT INTO videos")) {
       return {
         run: (
@@ -256,5 +271,46 @@ describe("importDirectLink", () => {
       expect.arrayContaining(["-o", filePath, "--no-warnings", sourceUrl]),
       expect.any(Object),
     );
+  });
+
+  it("reactivates the manual channel before returning duplicate imports", async () => {
+    const pageUrl =
+      "https://timmaybealready.com/fsz0jl0y8u39?Dragonball%20Super%202%20HD%20GER%20SUB";
+    const db = new MockDb();
+    db.channels.set("manual", {
+      id: "manual",
+      url: "manual:hikari",
+      title: "Manuell hinzugefügt",
+      added_at: 1,
+      is_active: 0,
+    });
+    db.videos.set("voe_fsz0jl0y8u39", {
+      id: "voe_fsz0jl0y8u39",
+      channel_id: "manual",
+      title: "Dragonball Super 2 HD GER SUB by Dragonball-Tube",
+      description: "",
+      published_at: 1,
+      duration_seconds: 1209,
+      thumbnail_url: null,
+      discovered_at: 1,
+    });
+
+    const { runYtDlp } = await import("../yt-dlp/client.js");
+    vi.mocked(runYtDlp).mockResolvedValue({
+      stdout: JSON.stringify({
+        id: "fsz0jl0y8u39",
+        extractor: "voe",
+        title: "Dragonball Super 2 HD GER SUB by Dragonball-Tube",
+      }),
+      stderr: "",
+    });
+
+    const result = await importDirectLink(db as never, pageUrl, tmpdir());
+
+    expect(result).toMatchObject({
+      status: "duplicate",
+      videoId: "voe_fsz0jl0y8u39",
+    });
+    expect(db.channels.get("manual")?.is_active).toBe(1);
   });
 });
