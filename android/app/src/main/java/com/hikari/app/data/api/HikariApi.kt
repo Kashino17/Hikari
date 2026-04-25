@@ -69,7 +69,7 @@ interface HikariApi {
     ): List<ChannelSearchResultDto>
 
     @GET("channels/recommendations")
-    suspend fun getRecommendations(): List<RecommendationDto>
+    suspend fun getRecommendations(@Query("force") force: String? = null): List<RecommendationDto>
 
     @POST("channels")
     suspend fun addChannel(@Body req: AddChannelRequest): AddChannelResponse
