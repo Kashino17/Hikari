@@ -9,8 +9,10 @@ import com.hikari.app.data.sponsor.SegmentCategories
 import com.hikari.app.domain.model.FilterConfig
 import com.hikari.app.domain.model.FilterState
 import com.hikari.app.domain.repo.FilterRepository
+import com.hikari.app.domain.repo.MangaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +25,7 @@ class TuningViewModel @Inject constructor(
     private val filterRepo: FilterRepository,
     private val settings: SettingsStore,
     private val sbPrefs: SponsorBlockPrefs,
+    private val mangaRepo: MangaRepository,
 ) : ViewModel() {
 
     // ── Filter / Prompt state (loaded from server) ───────────────────────────
@@ -91,6 +94,27 @@ class TuningViewModel @Inject constructor(
             .onSuccess { _state.value = it; _error.value = null }
             .onFailure { _error.value = it.message ?: "Override löschen fehlgeschlagen" }
         _saving.value = false
+    }
+
+    // ── Manga sync ───────────────────────────────────────────────────────────
+    private val _mangaSyncStatus = MutableStateFlow<String?>(null)
+    val mangaSyncStatus: StateFlow<String?> = _mangaSyncStatus.asStateFlow()
+
+    fun triggerMangaSync() {
+        viewModelScope.launch {
+            _mangaSyncStatus.value = null
+            runCatching { mangaRepo.startSync() }
+                .onSuccess { _mangaSyncStatus.value = "Sync gestartet" }
+                .onFailure { e ->
+                    val msg = e.message.orEmpty()
+                    _mangaSyncStatus.value = when {
+                        "409" in msg -> "Sync läuft bereits"
+                        else -> "Backend nicht erreichbar"
+                    }
+                }
+            delay(5_000)
+            _mangaSyncStatus.value = null
+        }
     }
 
     // ── Settings ─────────────────────────────────────────────────────────────
