@@ -16,10 +16,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.hikari.app.ui.channels.ChannelDetailScreen
 import com.hikari.app.ui.channels.ChannelsScreen
 import com.hikari.app.ui.feed.FeedScreen
 import com.hikari.app.ui.theme.HikariBg
@@ -76,7 +79,17 @@ fun HikariNavHost() {
             composable("feed") {
                 FeedScreen(onNavigate = { route -> navTo(nav, route) })
             }
-            composable("channels") { ChannelsScreen() }
+            composable("channels") {
+                ChannelsScreen(
+                    onOpenChannel = { id -> nav.navigate("channel/$id") },
+                )
+            }
+            composable(
+                route = "channel/{channelId}",
+                arguments = listOf(navArgument("channelId") { type = NavType.StringType }),
+            ) {
+                ChannelDetailScreen(onBack = { nav.popBackStack() })
+            }
             composable("tuning") { TuningScreen() }
         }
     }

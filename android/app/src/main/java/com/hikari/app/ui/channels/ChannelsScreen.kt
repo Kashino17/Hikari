@@ -108,7 +108,10 @@ private fun avatarColor(seed: String): Color {
 
 // ─── Main screen ────────────────────────────────────────────────────────────
 @Composable
-fun ChannelsScreen(vm: ChannelsViewModel = hiltViewModel()) {
+fun ChannelsScreen(
+    onOpenChannel: (String) -> Unit = {},
+    vm: ChannelsViewModel = hiltViewModel(),
+) {
     val channels by vm.channels.collectAsState()
     val error by vm.error.collectAsState()
     val pollStatus by vm.pollStatus.collectAsState()
@@ -192,6 +195,7 @@ fun ChannelsScreen(vm: ChannelsViewModel = hiltViewModel()) {
                         SubscribedRow(
                             channel = channel,
                             stats = stats,
+                            onClick = { onOpenChannel(channel.id) },
                             onPoll = { vm.poll(channel.id) },
                             onDeepScan = { deepScanTarget = channel },
                             onRemove = { vm.remove(channel.id) },
@@ -401,12 +405,16 @@ private fun FollowPill(subscribed: Boolean, onClick: () -> Unit) {
 private fun SubscribedRow(
     channel: Channel,
     stats: ChannelStatsDto?,
+    onClick: () -> Unit,
     onPoll: () -> Unit,
     onDeepScan: () -> Unit,
     onRemove: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ChannelAvatar(title = channel.title, thumbnail = channel.thumbnail, seed = channel.id)

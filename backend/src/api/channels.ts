@@ -170,6 +170,37 @@ export async function registerChannelsRoutes(
     return reply.code(202).send({ queued, skipped, errors: [], deep: isDeep });
   });
 
+  app.get<{ Params: { id: string } }>("/channels/:id/videos", async (req, reply) => {
+    const channelId = req.params.id;
+    const channel = deps.db
+      .prepare("SELECT id FROM channels WHERE id = ?")
+      .get(channelId);
+    if (!channel) return reply.code(404).send({ error: "channel not found" });
+
+    return deps.db.prepare(`
+      SELECT v.id AS videoId,
+             v.title,
+             v.thumbnail_url AS thumbnailUrl,
+             v.duration_seconds AS durationSeconds,
+             v.published_at AS publishedAt,
+             v.discovered_at AS discoveredAt,
+             s.overall_score AS score,
+             s.category,
+             s.reasoning,
+             s.decision,
+             dv.file_size_bytes AS downloadedBytes,
+             fi.added_to_feed_at AS addedToFeedAt,
+             fi.seen_at AS seenAt,
+             fi.saved AS saved
+      FROM videos v
+      LEFT JOIN scores s ON s.video_id = v.id
+      LEFT JOIN downloaded_videos dv ON dv.video_id = v.id
+      LEFT JOIN feed_items fi ON fi.video_id = v.id
+      WHERE v.channel_id = ?
+      ORDER BY COALESCE(v.published_at, v.discovered_at) DESC
+    `).all(channelId);
+  });
+
   app.get<{ Params: { id: string } }>("/channels/:id/stats", async (req, reply) => {
     const channelId = req.params.id;
     const channel = deps.db

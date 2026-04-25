@@ -4,6 +4,7 @@ import com.hikari.app.data.api.HikariApi
 import com.hikari.app.data.api.dto.AddChannelRequest
 import com.hikari.app.data.api.dto.ChannelSearchResultDto
 import com.hikari.app.data.api.dto.ChannelStatsDto
+import com.hikari.app.data.api.dto.ChannelVideoDto
 import com.hikari.app.data.api.dto.PollResponse
 import com.hikari.app.domain.model.Channel
 import javax.inject.Inject
@@ -50,4 +51,11 @@ class ChannelsRepository @Inject constructor(
 
     suspend fun deepScan(channelId: String, limit: Int = 100): PollResponse =
         api.pollChannel(channelId, deep = true, limit = limit)
+
+    suspend fun listVideos(channelId: String): List<ChannelVideoDto> =
+        api.getChannelVideos(channelId)
+
+    suspend fun deleteVideo(videoId: String) {
+        api.deleteVideo(videoId)
+    }
 }

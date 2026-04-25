@@ -5,6 +5,7 @@ import com.hikari.app.data.api.dto.AddChannelResponse
 import com.hikari.app.data.api.dto.ChannelDto
 import com.hikari.app.data.api.dto.ChannelSearchResultDto
 import com.hikari.app.data.api.dto.ChannelStatsDto
+import com.hikari.app.data.api.dto.ChannelVideoDto
 import com.hikari.app.data.api.dto.ClearOverrideRequest
 import com.hikari.app.data.api.dto.FeedItemDto
 import com.hikari.app.data.api.dto.FilterStateDto
@@ -71,6 +72,9 @@ interface HikariApi {
 
     @GET("channels/{id}/stats")
     suspend fun getChannelStats(@Path("id") channelId: String): ChannelStatsDto
+
+    @GET("channels/{id}/videos")
+    suspend fun getChannelVideos(@Path("id") channelId: String): List<ChannelVideoDto>
 
     @GET("rejected")
     suspend fun getRejected(@Query("limit") limit: Int = 50): List<RejectedItemDto>
