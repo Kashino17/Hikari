@@ -61,15 +61,19 @@ export async function registerChannelsRoutes(
       .all();
   });
 
-  app.get("/channels/recommendations", async (_req, reply) => {
-    try {
-      const results = await recommendChannels(deps.db);
-      return reply.code(200).send(results);
-    } catch (err) {
-      app.log.warn({ err }, "channel recommendations failed");
-      return reply.code(502).send({ error: "recommendations failed" });
-    }
-  });
+  app.get<{ Querystring: { force?: string } }>(
+    "/channels/recommendations",
+    async (req, reply) => {
+      const bypassCache = req.query.force === "true" || req.query.force === "1";
+      try {
+        const results = await recommendChannels(deps.db, { bypassCache });
+        return reply.code(200).send(results);
+      } catch (err) {
+        app.log.warn({ err }, "channel recommendations failed");
+        return reply.code(502).send({ error: "recommendations failed" });
+      }
+    },
+  );
 
   app.get<{ Querystring: { q?: string; limit?: string } }>(
     "/channels/search",

@@ -20,6 +20,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@fastify/static": "^8.0.0",
+    "@types/cheerio": "^0.22.35",
     "better-sqlite3": "^12.9.0",
     "cheerio": "^1.2.0",
     "dotenv": "^17.4.2",

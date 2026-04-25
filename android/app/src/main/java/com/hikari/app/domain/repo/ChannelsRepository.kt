@@ -39,8 +39,8 @@ class ChannelsRepository @Inject constructor(
     suspend fun search(query: String): List<ChannelSearchResultDto> =
         api.searchChannels(query)
 
-    suspend fun recommendations(): List<RecommendationDto> =
-        api.getRecommendations()
+    suspend fun recommendations(force: Boolean = false): List<RecommendationDto> =
+        api.getRecommendations(force = if (force) "true" else null)
 
     suspend fun add(url: String): Channel {
         val res = api.addChannel(AddChannelRequest(channelUrl = url))
