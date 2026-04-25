@@ -1,40 +1,39 @@
-import type { Metadata } from "next"
-import { Geist, Geist_Mono, Fraunces } from "next/font/google"
-import "./globals.css"
+import type { Metadata, Viewport } from 'next'
+import { Geist, Geist_Mono } from 'next/font/google'
+import './globals.css'
+import { BottomNav } from '@/components/BottomNav'
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
 })
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-})
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  weight: "variable",
-  style: ["normal", "italic"],
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
 })
 
 export const metadata: Metadata = {
-  title: "Hikari — Pick your redesign",
-  description: "Three distinct design directions for the Hikari Android app v1.0",
+  title: 'Hikari',
+  description: 'Kuratierte Kurzvideos. Anti-Doomscroll.',
+}
+
+export const viewport: Viewport = {
+  themeColor: '#0a0a0a',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} dark`}
-    >
-      <body className="min-h-screen antialiased">{children}</body>
+    <html lang="de" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className="min-h-svh">
+        <main className="pb-16">{children}</main>
+        <BottomNav />
+      </body>
     </html>
   )
 }
