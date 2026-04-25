@@ -11,6 +11,7 @@
     "build": "tsc -p tsconfig.json && mkdir -p dist/db && cp src/db/schema.sql dist/db/schema.sql",
     "start": "node dist/index.js",
     "trigger-once": "tsx scripts/trigger-once.ts",
+    "scrape:fixtures": "tsx scripts/scrape-manga-fixtures.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "biome check src tests",
