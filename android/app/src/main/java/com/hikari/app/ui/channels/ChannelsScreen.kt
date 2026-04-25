@@ -251,7 +251,7 @@ fun ChannelsScreen(
                                 color = HikariTextMuted,
                                 modifier = Modifier
                                     .size(20.dp)
-                                    .clickable { vm.loadRecommendations() },
+                                    .clickable { vm.loadRecommendations(force = true) },
                                 style = MaterialTheme.typography.bodyMedium,
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                             )

@@ -112,9 +112,9 @@ class ChannelsViewModel @Inject constructor(
         _busy.value = false
     }
 
-    fun loadRecommendations() = viewModelScope.launch {
+    fun loadRecommendations(force: Boolean = false) = viewModelScope.launch {
         _loadingRecs.value = true
-        runCatching { repo.recommendations() }
+        runCatching { repo.recommendations(force = force) }
             .onSuccess { _recommendations.value = it }
             .onFailure { /* silent — recommendations are optional */ }
         _loadingRecs.value = false
