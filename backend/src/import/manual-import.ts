@@ -217,7 +217,7 @@ async function resolveImportSource(url: string): Promise<ResolvedImportSource> {
   const voe = await resolveVoePage(url);
   if (voe) return voe;
 
-  return { metadata, downloadUrl: url };
+  throw primaryError ?? new Error(`Could not resolve import source for ${url}`);
   }
 
   export async function fetchImportMetadata(url: string): Promise<YtDlpVideoMeta & { downloadUrl: string }> {

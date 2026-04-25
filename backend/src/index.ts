@@ -27,8 +27,8 @@ mkdirSync(cfg.videoDir, { recursive: true });
 
 const db = openDatabase(cfg.dbPath);
 const scorer = createScorer(cfg);
-const extractor = cfg.anthropicApiKey
-  ? new MetadataExtractor({ apiKey: cfg.anthropicApiKey, model: cfg.anthropicModel })
+const extractor = cfg.claude.apiKey
+  ? new MetadataExtractor({ apiKey: cfg.claude.apiKey, model: cfg.claude.model })
   : null;
 
 // Startup consistency check: orphan files (file on disk without DB row)
