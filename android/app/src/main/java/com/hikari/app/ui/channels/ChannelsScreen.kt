@@ -1,5 +1,7 @@
 package com.hikari.app.ui.channels
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -46,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
@@ -57,6 +60,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.ChannelSearchResultDto
 import com.hikari.app.data.api.dto.ChannelStatsDto
+import com.hikari.app.data.api.dto.RecommendationDto
 import com.hikari.app.domain.model.Channel
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariAmberSoft
@@ -118,6 +122,9 @@ fun ChannelsScreen(
     val query by vm.query.collectAsState()
     val searchResults by vm.searchResults.collectAsState()
     val searching by vm.searching.collectAsState()
+    val recommendations by vm.recommendations.collectAsState()
+    val loadingRecs by vm.loadingRecs.collectAsState()
+    val ctx = LocalContext.current
 
     var deepScanTarget by remember { mutableStateOf<Channel?>(null) }
 
@@ -199,6 +206,64 @@ fun ChannelsScreen(
                             onPoll = { vm.poll(channel.id) },
                             onDeepScan = { deepScanTarget = channel },
                             onRemove = { vm.remove(channel.id) },
+                        )
+                        HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
+                    }
+                }
+
+                // ── Empfohlen-Sektion (nur wenn Tuning-Tags Empfehlungen liefern) ──
+                if (recommendations.isNotEmpty() || loadingRecs) {
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                "EMPFOHLEN",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 10.sp,
+                                    letterSpacing = 1.5.sp,
+                                    fontFamily = FontFamily.Monospace,
+                                ),
+                                color = HikariTextFaint,
+                            )
+                            Spacer(Modifier.weight(1f))
+                            Text(
+                                "↻",
+                                color = HikariTextMuted,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clickable { vm.loadRecommendations() },
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            )
+                        }
+                    }
+                    if (loadingRecs && recommendations.isEmpty()) {
+                        item {
+                            Text(
+                                "Lade Empfehlungen…",
+                                color = HikariTextFaint,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 32.dp),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            )
+                        }
+                    }
+                    items(recommendations, key = { it.channelId }) { rec ->
+                        RecommendationRow(
+                            rec = rec,
+                            onOpenInBrowser = {
+                                ctx.startActivity(
+                                    Intent(Intent.ACTION_VIEW, Uri.parse(rec.channelUrl))
+                                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                                )
+                            },
+                            onFollow = { vm.followRecommendation(rec) },
                         )
                         HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
                     }
@@ -490,5 +555,56 @@ private fun IconChip(
             tint = HikariTextMuted,
             modifier = Modifier.size(16.dp),
         )
+    }
+}
+
+// ─── Recommendation row (tap row → open in browser, separate Folgen pill) ──
+@Composable
+private fun RecommendationRow(
+    rec: RecommendationDto,
+    onOpenInBrowser: () -> Unit,
+    onFollow: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onOpenInBrowser)
+            .padding(horizontal = 20.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ChannelAvatar(title = rec.title, thumbnail = rec.thumbnail, seed = rec.channelId)
+        Spacer(Modifier.size(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    rec.title,
+                    color = HikariText,
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                if (rec.verified) {
+                    Spacer(Modifier.size(4.dp))
+                    Text("✓", color = HikariTextMuted, style = MaterialTheme.typography.labelSmall)
+                }
+            }
+            val meta = listOfNotNull(rec.handle, formatSubs(rec.subscribers)).joinToString(" · ")
+            if (meta.isNotEmpty()) {
+                Text(meta, color = HikariTextFaint, style = MaterialTheme.typography.bodySmall)
+            }
+            if (rec.matchingTags.isNotEmpty()) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    "passt zu: ${rec.matchingTags.joinToString(", ")}",
+                    color = HikariAmber.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        Spacer(Modifier.size(12.dp))
+        FollowPill(subscribed = rec.subscribed, onClick = onFollow)
     }
 }

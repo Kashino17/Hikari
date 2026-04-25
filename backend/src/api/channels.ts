@@ -3,6 +3,7 @@ import type Database from "better-sqlite3";
 import { resolveChannel } from "../monitor/channel-resolver.js";
 import { searchChannels } from "../monitor/channel-search.js";
 import { fetchChannelDeepScan } from "../monitor/deep-scan.js";
+import { recommendChannels } from "../monitor/recommendations.js";
 import { fetchChannelFeed } from "../monitor/rss-poller.js";
 import { processNewVideo } from "../pipeline/orchestrator.js";
 import { fetchVideoMetadata } from "../ingest/metadata.js";
@@ -58,6 +59,16 @@ export async function registerChannelsRoutes(
          FROM channels WHERE is_active=1 ORDER BY added_at DESC`,
       )
       .all();
+  });
+
+  app.get("/channels/recommendations", async (_req, reply) => {
+    try {
+      const results = await recommendChannels(deps.db);
+      return reply.code(200).send(results);
+    } catch (err) {
+      app.log.warn({ err }, "channel recommendations failed");
+      return reply.code(502).send({ error: "recommendations failed" });
+    }
   });
 
   app.get<{ Querystring: { q?: string; limit?: string } }>(

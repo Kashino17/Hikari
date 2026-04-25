@@ -6,6 +6,7 @@ import com.hikari.app.data.api.dto.ChannelSearchResultDto
 import com.hikari.app.data.api.dto.ChannelStatsDto
 import com.hikari.app.data.api.dto.ChannelVideoDto
 import com.hikari.app.data.api.dto.PollResponse
+import com.hikari.app.data.api.dto.RecommendationDto
 import com.hikari.app.domain.model.Channel
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -37,6 +38,9 @@ class ChannelsRepository @Inject constructor(
 
     suspend fun search(query: String): List<ChannelSearchResultDto> =
         api.searchChannels(query)
+
+    suspend fun recommendations(): List<RecommendationDto> =
+        api.getRecommendations()
 
     suspend fun add(url: String): Channel {
         val res = api.addChannel(AddChannelRequest(channelUrl = url))

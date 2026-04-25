@@ -10,6 +10,7 @@ import com.hikari.app.data.api.dto.ClearOverrideRequest
 import com.hikari.app.data.api.dto.FeedItemDto
 import com.hikari.app.data.api.dto.FilterStateDto
 import com.hikari.app.data.api.dto.PollResponse
+import com.hikari.app.data.api.dto.RecommendationDto
 import com.hikari.app.data.api.dto.RejectedItemDto
 import com.hikari.app.data.api.dto.SetOverrideRequest
 import com.hikari.app.data.api.dto.TodayCountResponse
@@ -56,6 +57,9 @@ interface HikariApi {
         @Query("q") query: String,
         @Query("limit") limit: Int = 10,
     ): List<ChannelSearchResultDto>
+
+    @GET("channels/recommendations")
+    suspend fun getRecommendations(): List<RecommendationDto>
 
     @POST("channels")
     suspend fun addChannel(@Body req: AddChannelRequest): AddChannelResponse
