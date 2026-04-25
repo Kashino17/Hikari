@@ -41,4 +41,59 @@ describe("resolveChannel", () => {
 
     await expect(resolveChannel("https://invalid")).rejects.toThrow(/channel_id/);
   });
+
+  it("picks the square avatar thumbnail, skipping banners that come first", async () => {
+    // yt-dlp's channel-URL output puts banners (wide aspect) before avatars
+    // (square). Mock that ordering — we expect the resolver to skip past
+    // the banners and grab the 900x900 avatar.
+    const { runYtDlp } = await import("../yt-dlp/client.js");
+    vi.mocked(runYtDlp).mockResolvedValue({
+      stdout: JSON.stringify({
+        channel_id: "UC1",
+        channel: "SpongeLore",
+        uploader_id: "@SpongeLore",
+        thumbnails: [
+          { url: "https://yt3.example/banner1.jpg", width: 1060, height: 175 },
+          { url: "https://yt3.example/banner2.jpg", width: 2560, height: 424 },
+          { url: "https://yt3.example/avatar.jpg", width: 900, height: 900 },
+        ],
+      }),
+      stderr: "",
+    });
+
+    const result = await resolveChannel("https://www.youtube.com/@SpongeLore");
+    expect(result.thumbnail).toBe("https://yt3.example/avatar.jpg");
+  });
+
+  it("falls back to last thumbnail when no square one is found", async () => {
+    const { runYtDlp } = await import("../yt-dlp/client.js");
+    vi.mocked(runYtDlp).mockResolvedValue({
+      stdout: JSON.stringify({
+        channel_id: "UC1",
+        channel: "X",
+        thumbnails: [
+          { url: "https://yt3.example/wide-a.jpg", width: 100, height: 50 },
+          { url: "https://yt3.example/wide-b.jpg", width: 200, height: 80 },
+        ],
+      }),
+      stderr: "",
+    });
+
+    const result = await resolveChannel("https://x");
+    expect(result.thumbnail).toBe("https://yt3.example/wide-b.jpg");
+  });
+
+  it("normalizes protocol-relative URLs", async () => {
+    const { runYtDlp } = await import("../yt-dlp/client.js");
+    vi.mocked(runYtDlp).mockResolvedValue({
+      stdout: JSON.stringify({
+        channel_id: "UC1",
+        channel: "X",
+        thumbnails: [{ url: "//yt3.example/a.jpg", width: 100, height: 100 }],
+      }),
+      stderr: "",
+    });
+    const result = await resolveChannel("https://x");
+    expect(result.thumbnail).toBe("https://yt3.example/a.jpg");
+  });
 });
