@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -59,7 +58,7 @@ import com.hikari.app.ui.theme.HikariTextMuted
 fun LibraryScreen(
     onOpenSeries: (String) -> Unit,
     onOpenChannel: (String) -> Unit,
-    onPlayVideo: (String) -> Unit,
+    onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -88,10 +87,12 @@ private fun LibraryContent(
     data: LibraryResponse,
     onOpenSeries: (String) -> Unit,
     onOpenChannel: (String) -> Unit,
-    onPlayVideo: (String) -> Unit,
+    onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
 ) {
+    fun play(v: LibraryVideoDto) = onPlayVideo(v.id, v.title, v.channelTitle ?: "")
+
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        item { HeroSection(data.recentlyAdded.firstOrNull(), onPlayVideo) }
+        item { HeroSection(data.recentlyAdded.firstOrNull()) { play(it) } }
 
         val continueWatching = data.recentlyAdded.filter { (it.progress_seconds ?: 0f) > 0f }
         if (continueWatching.isNotEmpty()) {
@@ -102,7 +103,7 @@ private fun LibraryContent(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(continueWatching, key = { it.id }) { video ->
-                            VideoCard(video) { onPlayVideo(video.id) }
+                            VideoCard(video) { play(video) }
                         }
                     }
                 }
@@ -146,7 +147,7 @@ private fun LibraryContent(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     items(data.recentlyAdded, key = { it.id }) { video ->
-                        VideoCard(video) { onPlayVideo(video.id) }
+                        VideoCard(video) { play(video) }
                     }
                 }
             }
@@ -159,7 +160,7 @@ private fun LibraryContent(
 // ─── Hero ────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun HeroSection(video: LibraryVideoDto?, onPlay: (String) -> Unit) {
+private fun HeroSection(video: LibraryVideoDto?, onPlay: (LibraryVideoDto) -> Unit) {
     if (video == null) {
         Box(modifier = Modifier.fillMaxWidth().height(220.dp).background(HikariSurface))
         return
@@ -223,27 +224,14 @@ private fun HeroSection(video: LibraryVideoDto?, onPlay: (String) -> Unit) {
                 overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.height(16.dp))
-            Row(
+            HeroButton(
+                label = "Abspielen",
+                icon = Icons.Default.PlayArrow,
+                background = Color.White,
+                contentColor = Color.Black,
+                onClick = { onPlay(video) },
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                HeroButton(
-                    label = "Abspielen",
-                    icon = Icons.Default.PlayArrow,
-                    background = Color.White,
-                    contentColor = Color.Black,
-                    onClick = { onPlay(video.id) },
-                    modifier = Modifier.weight(1f),
-                )
-                HeroButton(
-                    label = "Mehr Infos",
-                    icon = Icons.Default.Info,
-                    background = Color.White.copy(alpha = 0.18f),
-                    contentColor = Color.White,
-                    onClick = { },
-                    modifier = Modifier.weight(1f),
-                )
-            }
+            )
         }
     }
 }

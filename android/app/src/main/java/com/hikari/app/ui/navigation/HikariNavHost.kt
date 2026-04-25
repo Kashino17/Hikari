@@ -32,6 +32,9 @@ import com.hikari.app.ui.channels.ChannelsScreen
 import com.hikari.app.ui.feed.FeedScreen
 import com.hikari.app.ui.library.LibraryScreen
 import com.hikari.app.ui.library.SeriesDetailScreen
+import com.hikari.app.ui.player.VideoPlayerScreen
+import java.net.URLDecoder
+import java.net.URLEncoder
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
 import com.hikari.app.ui.theme.HikariTextFaint
@@ -43,6 +46,12 @@ private fun navTo(nav: NavController, route: String) {
         launchSingleTop = true
         restoreState = true
     }
+}
+
+private fun playVideoRoute(videoId: String, title: String, channel: String): String {
+    val t = URLEncoder.encode(title, "UTF-8")
+    val c = URLEncoder.encode(channel, "UTF-8")
+    return "video/$videoId?title=$t&channel=$c"
 }
 
 @Composable
@@ -58,10 +67,12 @@ fun HikariNavHost() {
         }
     }
 
+    val isVideoRoute = currentRoute?.startsWith("video/") == true
+
     Scaffold(
         containerColor = HikariBg,
         bottomBar = {
-            if (!(currentRoute == "feed" && feedFullscreen)) {
+            if (!(currentRoute == "feed" && feedFullscreen) && !isVideoRoute) {
                 HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
                 NavigationBar(
                     containerColor = HikariBg,
@@ -97,10 +108,9 @@ fun HikariNavHost() {
                     LibraryScreen(
                         onOpenSeries = { id -> nav.navigate("series/$id") },
                         onOpenChannel = { id -> nav.navigate("channel/$id") },
-                        onPlayVideo = { videoId ->
-                            navTo(nav, "feed")
-                            // TODO: Add logic to play specific video in FeedScreen
-                        }
+                        onPlayVideo = { videoId, title, channel ->
+                            nav.navigate(playVideoRoute(videoId, title, channel))
+                        },
                     )
                 }
             }
@@ -114,10 +124,32 @@ fun HikariNavHost() {
                         seriesId = seriesId,
                         onBack = { nav.popBackStack() },
                         onPlayVideo = { videoId ->
-                            navTo(nav, "feed")
-                        }
+                            nav.navigate(playVideoRoute(videoId, "", ""))
+                        },
                     )
                 }
+            }
+            composable(
+                route = "video/{videoId}?title={title}&channel={channel}",
+                arguments = listOf(
+                    navArgument("videoId") { type = NavType.StringType },
+                    navArgument("title") { type = NavType.StringType; defaultValue = "" },
+                    navArgument("channel") { type = NavType.StringType; defaultValue = "" },
+                ),
+            ) { backStackEntry ->
+                val videoId = backStackEntry.arguments?.getString("videoId").orEmpty()
+                val title = URLDecoder.decode(
+                    backStackEntry.arguments?.getString("title").orEmpty(), "UTF-8",
+                )
+                val channel = URLDecoder.decode(
+                    backStackEntry.arguments?.getString("channel").orEmpty(), "UTF-8",
+                )
+                VideoPlayerScreen(
+                    videoId = videoId,
+                    title = title,
+                    channel = channel,
+                    onBack = { nav.popBackStack() },
+                )
             }
             composable("feed") {
                 FeedScreen(
