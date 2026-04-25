@@ -36,7 +36,7 @@ The reading experience must be **ad-free, distraction-free, and aligned with the
 └─────────────────────────────────┬───────────────────────────────┘
                                   │ HTTP (HIKARI_API_BASE_URL)
 ┌─────────────────────────────────▼───────────────────────────────┐
-│  backend (Node + Express + better-sqlite3)                      │
+│  backend (Node + Fastify + better-sqlite3)                      │
 │  ├── api/manga.ts          REST endpoints                       │
 │  ├── manga/sync.ts         Sync engine (idempotent)             │
 │  └── manga/sources/                                             │
@@ -149,7 +149,7 @@ CREATE TABLE IF NOT EXISTS manga_sync_jobs (
 
 **Migrations:** add to `backend/src/db/schema.sql`. The existing `applyMigrations` in `backend/src/db/migrations.ts` already runs `db.exec(schema)` and is idempotent (`CREATE TABLE IF NOT EXISTS`), no extra wiring needed for fresh installs.
 
-**Storage layout on disk** — controlled by env var `HIKARI_MANGA_DATA_DIR` (referred to as `MANGA_DATA_DIR` in this doc), default `backend/data/manga/`:
+**Storage layout on disk** — under `${HIKARI_DATA_DIR}/manga/` (using the existing `HIKARI_DATA_DIR` env var, default `~/.hikari/manga/`). The `Config` interface in `backend/src/config.ts` gets a new `mangaDir` field. Referenced as `MANGA_DATA_DIR` in the rest of this doc:
 ```
 manga/
   onepiecetube/
