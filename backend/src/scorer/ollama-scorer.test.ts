@@ -29,6 +29,7 @@ describe("OllamaScorer", () => {
       description: "",
       transcript: null,
       durationSeconds: 300,
+      systemPrompt: "test prompt",
     });
 
     expect(result.modelUsed).toBe("qwen2.5:14b");
@@ -43,7 +44,7 @@ describe("OllamaScorer", () => {
     vi.spyOn(global, "fetch").mockResolvedValue(new Response("boom", { status: 500 }));
     const scorer = new OllamaScorer({ baseUrl: "http://localhost:11434", model: "qwen2.5:14b" });
     await expect(
-      scorer.score({ title: "x", description: "", transcript: null, durationSeconds: 60 }),
+      scorer.score({ title: "x", description: "", transcript: null, durationSeconds: 60, systemPrompt: "test" }),
     ).rejects.toThrow(/Ollama/);
   });
 });

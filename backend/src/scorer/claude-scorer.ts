@@ -1,6 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { SCORING_SYSTEM_PROMPT } from "./prompt.js";
-import type { Score, ScoredVideo, Scorer } from "./types.js";
+import type { Score, ScoredVideo, ScoreInput, Scorer } from "./types.js";
 
 const SCORE_TOOL = {
   name: "record_score",
@@ -54,12 +53,7 @@ export class ClaudeScorer implements Scorer {
     this.model = opts.model;
   }
 
-  async score(input: {
-    title: string;
-    description: string;
-    transcript: string | null;
-    durationSeconds: number;
-  }): Promise<ScoredVideo> {
+  async score(input: ScoreInput): Promise<ScoredVideo> {
     const userText = buildUserMessage(input);
 
     const response = await this.client.messages.create({
@@ -68,7 +62,7 @@ export class ClaudeScorer implements Scorer {
       system: [
         {
           type: "text",
-          text: SCORING_SYSTEM_PROMPT,
+          text: input.systemPrompt,
           cache_control: { type: "ephemeral" },
         },
       ],
@@ -85,12 +79,7 @@ export class ClaudeScorer implements Scorer {
   }
 }
 
-function buildUserMessage(input: {
-  title: string;
-  description: string;
-  transcript: string | null;
-  durationSeconds: number;
-}): string {
+function buildUserMessage(input: Omit<ScoreInput, "systemPrompt">): string {
   const transcriptPart = input.transcript
     ? `TRANSCRIPT (first 2000 chars):\n${input.transcript.slice(0, 2000)}`
     : "TRANSCRIPT: (not available — score on title+description alone; apply stricter thresholds)";

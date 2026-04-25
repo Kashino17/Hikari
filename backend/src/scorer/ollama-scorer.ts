@@ -1,5 +1,4 @@
-import { SCORING_SYSTEM_PROMPT } from "./prompt.js";
-import type { Score, ScoredVideo, Scorer } from "./types.js";
+import type { Score, ScoredVideo, ScoreInput, Scorer } from "./types.js";
 
 export interface OllamaScorerOptions {
   baseUrl: string;
@@ -43,12 +42,7 @@ export class OllamaScorer implements Scorer {
   readonly name = "ollama";
   constructor(private readonly opts: OllamaScorerOptions) {}
 
-  async score(input: {
-    title: string;
-    description: string;
-    transcript: string | null;
-    durationSeconds: number;
-  }): Promise<ScoredVideo> {
+  async score(input: ScoreInput): Promise<ScoredVideo> {
     const userMessage =
       `TITLE: ${input.title}\n\nDURATION: ${input.durationSeconds}s\n\n` +
       `DESCRIPTION:\n${input.description.slice(0, 1000)}\n\n` +
@@ -62,7 +56,7 @@ export class OllamaScorer implements Scorer {
       body: JSON.stringify({
         model: this.opts.model,
         messages: [
-          { role: "system", content: SCORING_SYSTEM_PROMPT },
+          { role: "system", content: input.systemPrompt },
           { role: "user", content: userMessage },
         ],
         format: JSON_SCHEMA,

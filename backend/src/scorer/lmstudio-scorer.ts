@@ -1,5 +1,4 @@
-import { SCORING_SYSTEM_PROMPT } from "./prompt.js";
-import type { Score, ScoredVideo, Scorer } from "./types.js";
+import type { Score, ScoredVideo, ScoreInput, Scorer } from "./types.js";
 
 export interface LMStudioScorerOptions {
   baseUrl: string;
@@ -48,12 +47,7 @@ export class LMStudioScorer implements Scorer {
   readonly name = "lmstudio";
   constructor(private readonly opts: LMStudioScorerOptions) {}
 
-  async score(input: {
-    title: string;
-    description: string;
-    transcript: string | null;
-    durationSeconds: number;
-  }): Promise<ScoredVideo> {
+  async score(input: ScoreInput): Promise<ScoredVideo> {
     const userMessage =
       `TITLE: ${input.title}\n\nDURATION: ${input.durationSeconds}s\n\n` +
       `DESCRIPTION:\n${input.description.slice(0, 1000)}\n\n` +
@@ -67,7 +61,7 @@ export class LMStudioScorer implements Scorer {
       body: JSON.stringify({
         model: this.opts.model,
         messages: [
-          { role: "system", content: SCORING_SYSTEM_PROMPT },
+          { role: "system", content: input.systemPrompt },
           { role: "user", content: userMessage },
         ],
         response_format: { type: "json_schema", json_schema: JSON_SCHEMA },

@@ -36,6 +36,7 @@ describe("LMStudioScorer", () => {
       description: "",
       transcript: null,
       durationSeconds: 400,
+      systemPrompt: "test prompt",
     });
 
     expect(result.modelUsed).toBe("qwen3-27b");
@@ -59,7 +60,7 @@ describe("LMStudioScorer", () => {
       model: "qwen3-27b",
     });
     await expect(
-      scorer.score({ title: "x", description: "", transcript: null, durationSeconds: 60 }),
+      scorer.score({ title: "x", description: "", transcript: null, durationSeconds: 60, systemPrompt: "test" }),
     ).rejects.toThrow(/LM Studio/);
   });
 
@@ -77,7 +78,7 @@ describe("LMStudioScorer", () => {
       model: "qwen3-27b",
     });
     await expect(
-      scorer.score({ title: "x", description: "", transcript: null, durationSeconds: 60 }),
+      scorer.score({ title: "x", description: "", transcript: null, durationSeconds: 60, systemPrompt: "test" }),
     ).rejects.toThrow();
   });
 
@@ -113,6 +114,7 @@ describe("LMStudioScorer", () => {
       description: "",
       transcript: null,
       durationSeconds: 380,
+      systemPrompt: "test prompt",
     });
     expect(result.score.overallScore).toBe(68);
     expect(result.score.category).toBe("math");

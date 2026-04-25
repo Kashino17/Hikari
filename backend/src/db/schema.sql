@@ -60,6 +60,13 @@ CREATE TABLE IF NOT EXISTS downloaded_videos (
   last_served_at INTEGER
 );
 
+CREATE TABLE IF NOT EXISTS filter_config (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  filter_json TEXT NOT NULL,
+  prompt_override TEXT,
+  updated_at INTEGER NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_feed_items_added ON feed_items(added_to_feed_at DESC);
 CREATE INDEX IF NOT EXISTS idx_videos_channel ON videos(channel_id);
 CREATE INDEX IF NOT EXISTS idx_downloaded_last_served ON downloaded_videos(last_served_at);

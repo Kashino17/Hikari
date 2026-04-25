@@ -6,6 +6,7 @@ import Fastify from "fastify";
 import cron from "node-cron";
 import { registerChannelsRoutes } from "./api/channels.js";
 import { registerFeedRoutes } from "./api/feed.js";
+import { registerFilterRoutes } from "./api/filter.js";
 import { registerHealthRoute } from "./api/health.js";
 import { registerStatsRoutes } from "./api/stats.js";
 import { loadConfig } from "./config.js";
@@ -49,6 +50,7 @@ const app = Fastify({ logger: { level: "info" } });
 await app.register(fastifyStatic, { root: cfg.videoDir, prefix: "/videos/" });
 await registerChannelsRoutes(app, { db, scorer, videoDir: cfg.videoDir });
 await registerFeedRoutes(app, { db, dailyBudget: cfg.dailyBudget });
+await registerFilterRoutes(app, { db });
 await registerHealthRoute(app, { db, videoDir: cfg.videoDir });
 await registerStatsRoutes(app, { db });
 

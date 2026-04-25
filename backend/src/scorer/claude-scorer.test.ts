@@ -36,6 +36,7 @@ describe("ClaudeScorer", () => {
       description: "A look at prime distribution.",
       transcript: "Some transcript text...",
       durationSeconds: 420,
+      systemPrompt: "test prompt",
     });
 
     expect(result.modelUsed).toBe("claude-haiku-4-5");
@@ -49,7 +50,7 @@ describe("ClaudeScorer", () => {
     });
     const scorer = new ClaudeScorer({ apiKey: "test", model: "claude-haiku-4-5" });
     await expect(
-      scorer.score({ title: "x", description: "", transcript: null, durationSeconds: 60 }),
+      scorer.score({ title: "x", description: "", transcript: null, durationSeconds: 60, systemPrompt: "test" }),
     ).rejects.toThrow(/tool_use/);
   });
 });

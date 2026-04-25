@@ -23,12 +23,15 @@ export interface ScoredVideo {
   modelUsed: string;
 }
 
+export interface ScoreInput {
+  title: string;
+  description: string;
+  transcript: string | null;
+  durationSeconds: number;
+  systemPrompt: string;
+}
+
 export interface Scorer {
   readonly name: string;
-  score(input: {
-    title: string;
-    description: string;
-    transcript: string | null;
-    durationSeconds: number;
-  }): Promise<ScoredVideo>;
+  score(input: ScoreInput): Promise<ScoredVideo>;
 }

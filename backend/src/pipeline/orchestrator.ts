@@ -1,6 +1,7 @@
 import type Database from "better-sqlite3";
 import type { VideoMetadata } from "../ingest/metadata.js";
 import { decide } from "../scorer/decision.js";
+import { getActivePrompt } from "../scorer/filter-repo.js";
 import type { Scorer } from "../scorer/types.js";
 import type { SponsorSegment } from "../sponsorblock/client.js";
 import type { DownloadResult } from "../download/worker.js";
@@ -29,12 +30,14 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
   if (meta.isLive) return;
 
   const transcript = meta.captionsUrl ? await deps.fetchTranscript(meta.captionsUrl) : null;
+  const systemPrompt = getActivePrompt(db);
   const [scored, sponsors] = await Promise.all([
     deps.scorer.score({
       title: meta.title,
       description: meta.description,
       transcript,
       durationSeconds: meta.durationSeconds,
+      systemPrompt,
     }),
     deps.fetchSponsorSegments(videoId),
   ]);
