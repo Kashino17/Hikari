@@ -106,6 +106,7 @@ class MockDb {
         run: (
           id: string,
           channelId: string,
+          _seriesId: string | null,
           title: string,
           description: string,
           publishedAt: number,
@@ -115,6 +116,11 @@ class MockDb {
           thumbnailUrl: string | null,
           _transcript: string | null,
           discoveredAt: number,
+          _season: number | null,
+          _episode: number | null,
+          _dubLanguage: string | null,
+          _subLanguage: string | null,
+          _isMovie: number,
         ) => {
           this.videos.set(id, {
             id,
