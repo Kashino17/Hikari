@@ -6,6 +6,7 @@ import { sponsorBlockCategories } from '@/lib/mock-data'
 import { buildPrompt, MOOD_OPTIONS, DEPTH_OPTIONS, LANGUAGE_OPTIONS } from '@/lib/prompt-builder'
 import { ChipMulti, ChipFreeInput } from '@/components/Chip'
 import { Copy, RotateCcw, Edit3, Check, X } from 'lucide-react'
+import { MangaSyncButton } from '@/components/manga/MangaSyncButton'
 
 type Tab = 'filter' | 'prompt' | 'system'
 
@@ -382,6 +383,10 @@ function SystemTab() {
             )
           })}
         </ul>
+      </Section>
+
+      <Section label="Manga">
+        <MangaSyncButton />
       </Section>
 
       <div className="h-8" />

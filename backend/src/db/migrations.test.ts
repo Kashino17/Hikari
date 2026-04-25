@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { applyMigrations } from "./migrations.js";
 
 describe("applyMigrations", () => {
-  it("creates all 7 tables on a fresh database", () => {
+  it("creates all expected tables on a fresh database", () => {
     const db = new Database(":memory:");
     applyMigrations(db);
     const tables = db
@@ -15,7 +15,16 @@ describe("applyMigrations", () => {
       "downloaded_videos",
       "feed_items",
       "filter_config",
+      "manga_arcs",
+      "manga_chapter_read",
+      "manga_chapters",
+      "manga_library",
+      "manga_pages",
+      "manga_progress",
+      "manga_series",
+      "manga_sync_jobs",
       "scores",
+      "series",
       "sponsor_segments",
       "videos",
     ]);

@@ -90,3 +90,84 @@ CREATE INDEX IF NOT EXISTS idx_feed_items_added ON feed_items(added_to_feed_at D
 CREATE INDEX IF NOT EXISTS idx_videos_channel ON videos(channel_id);
 CREATE INDEX IF NOT EXISTS idx_downloaded_last_served ON downloaded_videos(last_served_at);
 CREATE INDEX IF NOT EXISTS idx_sponsor_segments_video ON sponsor_segments(video_id);
+
+CREATE TABLE IF NOT EXISTS manga_series (
+  id TEXT PRIMARY KEY,
+  source TEXT NOT NULL,
+  source_url TEXT NOT NULL,
+  title TEXT NOT NULL,
+  author TEXT,
+  description TEXT,
+  cover_path TEXT,
+  status TEXT,
+  total_chapters INTEGER DEFAULT 0,
+  added_at INTEGER NOT NULL,
+  last_synced_at INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS manga_arcs (
+  id TEXT PRIMARY KEY,
+  series_id TEXT NOT NULL REFERENCES manga_series(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  arc_order INTEGER NOT NULL,
+  chapter_start INTEGER,
+  chapter_end INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS manga_chapters (
+  id TEXT PRIMARY KEY,
+  series_id TEXT NOT NULL REFERENCES manga_series(id) ON DELETE CASCADE,
+  arc_id TEXT REFERENCES manga_arcs(id),
+  number REAL NOT NULL,
+  title TEXT,
+  source_url TEXT NOT NULL,
+  page_count INTEGER DEFAULT 0,
+  published_at INTEGER,
+  added_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_manga_chapters_series_num
+  ON manga_chapters(series_id, number);
+
+CREATE TABLE IF NOT EXISTS manga_pages (
+  id TEXT PRIMARY KEY,
+  chapter_id TEXT NOT NULL REFERENCES manga_chapters(id) ON DELETE CASCADE,
+  page_number INTEGER NOT NULL,
+  source_url TEXT NOT NULL,
+  local_path TEXT,
+  width INTEGER,
+  height INTEGER,
+  bytes INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_manga_pages_chapter
+  ON manga_pages(chapter_id, page_number);
+
+CREATE TABLE IF NOT EXISTS manga_library (
+  series_id TEXT PRIMARY KEY REFERENCES manga_series(id) ON DELETE CASCADE,
+  added_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS manga_progress (
+  series_id TEXT PRIMARY KEY REFERENCES manga_series(id) ON DELETE CASCADE,
+  chapter_id TEXT NOT NULL REFERENCES manga_chapters(id),
+  page_number INTEGER NOT NULL DEFAULT 1,
+  updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS manga_chapter_read (
+  chapter_id TEXT PRIMARY KEY REFERENCES manga_chapters(id) ON DELETE CASCADE,
+  read_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS manga_sync_jobs (
+  id TEXT PRIMARY KEY,
+  source TEXT NOT NULL,
+  series_id TEXT,
+  status TEXT NOT NULL,
+  total_chapters INTEGER DEFAULT 0,
+  done_chapters INTEGER DEFAULT 0,
+  total_pages INTEGER DEFAULT 0,
+  done_pages INTEGER DEFAULT 0,
+  error_message TEXT,
+  started_at INTEGER NOT NULL,
+  finished_at INTEGER
+);

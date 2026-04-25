@@ -6,6 +6,7 @@ export interface Config {
   port: number;
   dataDir: string;
   videoDir: string;
+  mangaDir: string;
   dbPath: string;
   dailyBudget: number;
   diskLimitBytes: number;
@@ -28,6 +29,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     port: Number(env.PORT ?? 3000),
     dataDir,
     videoDir: join(dataDir, "videos"),
+    mangaDir: join(dataDir, "manga"),
     dbPath: join(dataDir, "hikari.db"),
     dailyBudget: Number(env.DAILY_BUDGET ?? 15),
     diskLimitBytes: Number(env.DISK_LIMIT_GB ?? 10) * 1024 ** 3,

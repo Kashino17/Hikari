@@ -37,4 +37,9 @@ describe("loadConfig", () => {
     const cfg = loadConfig({ HOME: "/h", LLM_PROVIDER: "claude", ANTHROPIC_API_KEY: "sk-test" });
     expect(cfg.llmProvider).toBe("claude");
   });
+
+  it("exposes mangaDir under HIKARI_DATA_DIR", () => {
+    const cfg = loadConfig({ HIKARI_DATA_DIR: "/tmp/hikari-test" });
+    expect(cfg.mangaDir).toBe("/tmp/hikari-test/manga");
+  });
 });
