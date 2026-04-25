@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -42,7 +43,13 @@ fun MangaListScreen(
         onDispose { vm.stopSyncPolling() }
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(HikariBg).verticalScroll(rememberScrollState())) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(HikariBg)
+            .statusBarsPadding()
+            .verticalScroll(rememberScrollState()),
+    ) {
         if (syncStatus is SyncStatus.Active) {
             MangaSyncBanner((syncStatus as SyncStatus.Active).job)
         }
