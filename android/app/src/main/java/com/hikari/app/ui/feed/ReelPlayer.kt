@@ -156,6 +156,7 @@ fun ReelPlayer(
     item: FeedItem,
     player: ExoPlayer,
     isCurrent: Boolean,
+    fullscreen: Boolean,
     sponsorBlock: SponsorBlockClient,
     playbackRepo: PlaybackRepository,
     sponsorBlockPrefs: SponsorBlockPrefs,
@@ -163,6 +164,7 @@ fun ReelPlayer(
     onToggleSave: () -> Unit,
     onLessLikeThis: () -> Unit,
     onUnplayable: () -> Unit,
+    onToggleFullscreen: () -> Unit,
     /** Called when the user taps/double-taps so the parent can show its top chrome. */
     onShowControls: () -> Unit = {},
 ) {
@@ -317,14 +319,14 @@ fun ReelPlayer(
         AsyncImage(
             model = item.thumbnailUrl,
             contentDescription = item.title,
-            contentScale = ContentScale.Crop,
+            contentScale = ContentScale.Fit,
             modifier = Modifier.fillMaxSize(),
         )
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
                     useController = false
-                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                     // Transparent shutter: thumbnail shows through until first video frame renders
                     setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
                     // Don't freeze on last frame when player is detached
@@ -371,6 +373,33 @@ fun ReelPlayer(
 
         // ── Task 2 + 3: animated chrome (auto-hides after 3s) ────────────────
 
+        AnimatedVisibility(
+            visible = controlsVisible,
+            enter = fadeIn(tween(200)),
+            exit = fadeOut(tween(150)),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(end = 16.dp, bottom = if (fullscreen) 28.dp else 116.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(Color.Black.copy(alpha = 0.48f), CircleShape)
+                    .pointerInput(fullscreen) {
+                        detectTapGestures(onTap = { onToggleFullscreen() })
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = if (fullscreen) HikariIcons.FullscreenExit else HikariIcons.Fullscreen,
+                    contentDescription = if (fullscreen) "Vollbild beenden" else "Vollbild",
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
+
         // Subtle bottom gradient — 120dp tall, max 60% black at very bottom only
         AnimatedVisibility(
             visible = controlsVisible,
@@ -398,7 +427,7 @@ fun ReelPlayer(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(bottom = 96.dp),
+                .padding(bottom = if (fullscreen) 40.dp else 96.dp),
         ) {
             Column(
                 modifier = Modifier
@@ -451,7 +480,7 @@ fun ReelPlayer(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(bottom = FeedBottomBarClearance)
+                .padding(bottom = if (fullscreen) 20.dp else FeedBottomBarClearance)
                 .fillMaxWidth(),
         )
     }

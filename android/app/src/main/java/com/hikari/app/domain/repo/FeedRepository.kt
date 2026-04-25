@@ -16,16 +16,16 @@ class FeedRepository @Inject constructor(
     private val api: HikariApi,
     private val dao: FeedDao,
 ) {
-    fun unseenItems(): Flow<List<FeedItem>> =
-        dao.unseenItems().map { rows -> rows.map { it.toDomain() } }
+    fun newItems(): Flow<List<FeedItem>> =
+        dao.newItems().map { rows -> rows.map { it.toDomain() } }
 
     suspend fun refresh() {
         val remote = api.getFeed(mode = "new")
         dao.upsertAll(remote.map { it.toEntity() })
         if (remote.isEmpty()) {
-            dao.pruneAllUnseenUnsaved()
+            dao.pruneAll()
         } else {
-            dao.pruneUnseenUnsavedNotIn(remote.map { it.videoId })
+            dao.pruneNotIn(remote.map { it.videoId })
         }
     }
 
@@ -41,10 +41,16 @@ class FeedRepository @Inject constructor(
         runCatching { api.markSeen(videoId) }
     }
 
-    suspend fun toggleSave(videoId: String, currentlySaved: Boolean) {
+    suspend fun toggleSave(videoId: String, currentlySaved: Boolean): Boolean {
         val new = !currentlySaved
         dao.setSaved(videoId, new)
-        runCatching { if (new) api.save(videoId) else api.unsave(videoId) }
+        try {
+            if (new) api.save(videoId) else api.unsave(videoId)
+            return new
+        } catch (error: Exception) {
+            dao.setSaved(videoId, currentlySaved)
+            throw error
+        }
     }
 
     suspend fun markUnplayable(videoId: String) {

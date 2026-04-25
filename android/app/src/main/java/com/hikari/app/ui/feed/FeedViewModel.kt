@@ -13,9 +13,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 
 enum class FeedMode { NEW, SAVED, OLD }
 
@@ -33,6 +34,7 @@ class FeedViewModel @Inject constructor(
 
     private val _savedItems = MutableStateFlow<List<FeedItem>>(emptyList())
     private val _oldItems = MutableStateFlow<List<FeedItem>>(emptyList())
+    private val _saveOverrides = MutableStateFlow<Map<String, Boolean>>(emptyMap())
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
@@ -68,17 +70,20 @@ class FeedViewModel @Inject constructor(
     }
 
     private val newItems: StateFlow<List<FeedItem>> =
-        combine(repo.unseenItems(), settings.dailyBudget) { list, budget ->
-            list.distinctBy { it.videoId }.take(budget)
-        }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+        repo.newItems()
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val items: StateFlow<List<FeedItem>> =
-        combine(_mode, newItems, _savedItems, _oldItems) { mode, newL, savedL, oldL ->
-            when (mode) {
+        combine(_mode, newItems, _savedItems, _oldItems, _saveOverrides) { mode, newL, savedL, oldL, overrides ->
+            val base = when (mode) {
                 FeedMode.NEW -> newL
                 FeedMode.SAVED -> savedL
                 FeedMode.OLD -> oldL
             }
+            val patched = base
+                .distinctBy { it.videoId }
+                .withSaveOverrides(overrides)
+            if (mode == FeedMode.SAVED) patched.filter { it.saved } else patched
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val _refreshing = MutableStateFlow(false)
@@ -126,22 +131,25 @@ class FeedViewModel @Inject constructor(
         if (_mode.value == FeedMode.NEW) repo.markSeen(id)
     }
     fun onToggleSave(id: String, currentlySaved: Boolean) = viewModelScope.launch {
-        repo.toggleSave(id, currentlySaved)
-        when (_mode.value) {
-            FeedMode.NEW -> Unit
-            FeedMode.SAVED -> {
-                if (currentlySaved) {
-                    _savedItems.value = _savedItems.value.filterNot { it.videoId == id }
-                } else {
-                    refresh()
-                }
-            }
-            FeedMode.OLD -> {
+        val newSaved = !currentlySaved
+        _saveOverrides.update { it + (id to newSaved) }
+        yield()
+
+        runCatching { repo.toggleSave(id, currentlySaved) }
+            .onSuccess {
+                _savedItems.value = _savedItems.value
+                    .map { if (it.videoId == id) it.copy(saved = newSaved) else it }
+                    .filter { it.saved }
                 _oldItems.value = _oldItems.value.map {
-                    if (it.videoId == id) it.copy(saved = !currentlySaved) else it
+                    if (it.videoId == id) it.copy(saved = newSaved) else it
                 }
+                _saveOverrides.update { it - id }
+                _error.value = null
             }
-        }
+            .onFailure {
+                _saveOverrides.update { it - id }
+                _error.value = it.message ?: "Speicherstatus konnte nicht aktualisiert werden"
+            }
     }
     fun onUnplayable(id: String) = viewModelScope.launch { repo.markUnplayable(id) }
     fun onLessLikeThis(id: String) = viewModelScope.launch { repo.lessLikeThis(id) }
@@ -150,3 +158,9 @@ class FeedViewModel @Inject constructor(
         if (_mode.value == FeedMode.OLD) loadOld()
     }
 }
+
+private fun List<FeedItem>.withSaveOverrides(overrides: Map<String, Boolean>): List<FeedItem> =
+    map { item ->
+        val saved = overrides[item.videoId] ?: return@map item
+        item.copy(saved = saved)
+    }

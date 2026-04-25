@@ -6,10 +6,12 @@ import com.hikari.app.data.db.FeedDao
 import com.hikari.app.data.db.FeedItemEntity
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import kotlin.test.assertFailsWith
 import kotlin.test.assertEquals
 
 class FeedRepositoryTest {
@@ -29,14 +31,14 @@ class FeedRepositoryTest {
         )
         repo.refresh()
         coVerify { dao.upsertAll(match { it.size == 1 && it[0].videoId == "v1" }) }
-        coVerify { dao.pruneUnseenUnsavedNotIn(listOf("v1")) }
+        coVerify { dao.pruneNotIn(listOf("v1")) }
     }
 
     @Test fun refresh_whenApiReturnsNoItems_prunesUnseenUnsaved() = runTest {
         coEvery { api.getFeed(mode = "new") } returns emptyList()
         repo.refresh()
         coVerify { dao.upsertAll(emptyList()) }
-        coVerify { dao.pruneAllUnseenUnsaved() }
+        coVerify { dao.pruneAll() }
     }
 
     @Test fun fetchOld_returnsItemsFromApi() = runTest {
@@ -70,8 +72,8 @@ class FeedRepositoryTest {
         assertEquals(true, result[0].saved)
     }
 
-    @Test fun unseenItems_mapsEntitiesToModels() = runTest {
-        coEvery { dao.unseenItems() } returns flowOf(
+    @Test fun newItems_mapsEntitiesToModels() = runTest {
+        every { dao.newItems() } returns flowOf(
             listOf(
                 FeedItemEntity(
                     videoId = "v1", title = "t", durationSeconds = 60,
@@ -83,8 +85,19 @@ class FeedRepositoryTest {
             )
         )
         val emitted = mutableListOf<List<com.hikari.app.domain.model.FeedItem>>()
-        repo.unseenItems().collect { emitted += it }
+        repo.newItems().collect { emitted += it }
         assertEquals(1, emitted[0].size)
         assertEquals("v1", emitted[0][0].videoId)
+    }
+
+    @Test fun toggleSave_revertsLocalStateWhenApiFails() = runTest {
+        coEvery { api.save("v1") } throws IllegalStateException("offline")
+
+        assertFailsWith<IllegalStateException> {
+            repo.toggleSave("v1", currentlySaved = false)
+        }
+
+        coVerify { dao.setSaved("v1", true) }
+        coVerify { dao.setSaved("v1", false) }
     }
 }

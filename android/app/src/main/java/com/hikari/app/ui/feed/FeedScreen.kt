@@ -1,5 +1,9 @@
 package com.hikari.app.ui.feed
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.ActivityInfo
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -46,6 +50,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -78,6 +85,8 @@ interface FeedEntryPoint {
 @Composable
 fun FeedScreen(
     vm: FeedViewModel = hiltViewModel(),
+    fullscreen: Boolean = false,
+    onFullscreenChange: (Boolean) -> Unit = {},
     @Suppress("UNUSED_PARAMETER") onNavigate: (String) -> Unit = {},
 ) {
     val mode by vm.mode.collectAsState()
@@ -86,6 +95,7 @@ fun FeedScreen(
     val refreshing by vm.refreshing.collectAsState()
     val error by vm.error.collectAsState()
     val ctx = LocalContext.current
+    val activity = remember(ctx) { ctx.findActivity() }
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
 
@@ -99,6 +109,9 @@ fun FeedScreen(
             chromeVisible = false
         }
     }
+    LaunchedEffect(items.isEmpty(), fullscreen) {
+        if (fullscreen && items.isEmpty()) onFullscreenChange(false)
+    }
 
     val entryPoint = remember {
         EntryPointAccessors.fromApplication(ctx, FeedEntryPoint::class.java)
@@ -110,6 +123,23 @@ fun FeedScreen(
     val player = remember { factory.create() }
 
     DisposableEffect(Unit) { onDispose { player.release() } }
+    DisposableEffect(activity, fullscreen) {
+        val window = activity?.window
+        val controller = window?.let { WindowCompat.getInsetsController(it, it.decorView) }
+        if (fullscreen) {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            controller?.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller?.hide(WindowInsetsCompat.Type.systemBars())
+        } else {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            controller?.show(WindowInsetsCompat.Type.systemBars())
+        }
+        onDispose {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            controller?.show(WindowInsetsCompat.Type.systemBars())
+        }
+    }
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) vm.refresh()
@@ -173,6 +203,11 @@ fun FeedScreen(
                 }
             } else {
                 val pagerState = rememberPagerState(pageCount = { items.size })
+                LaunchedEffect(items.size) {
+                    if (items.isNotEmpty() && pagerState.currentPage > items.lastIndex) {
+                        pagerState.scrollToPage(items.lastIndex)
+                    }
+                }
 
                 val itemsState = rememberUpdatedState(items)
                 val firstItemReady = items.isNotEmpty()
@@ -187,12 +222,17 @@ fun FeedScreen(
                     player.playWhenReady = true
                 }
 
-                VerticalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+                VerticalPager(
+                    state = pagerState,
+                    key = { items[it].videoId },
+                    modifier = Modifier.fillMaxSize(),
+                ) { page ->
                     val item = items[page]
                     ReelPlayer(
                         item = item,
                         player = player,
                         isCurrent = page == pagerState.currentPage,
+                        fullscreen = fullscreen,
                         sponsorBlock = sponsorBlock,
                         playbackRepo = playbackRepo,
                         sponsorBlockPrefs = sponsorBlockPrefs,
@@ -207,6 +247,7 @@ fun FeedScreen(
                                 }
                             }
                         },
+                        onToggleFullscreen = { onFullscreenChange(!fullscreen) },
                         onShowControls = { chromeVisible = true },
                     )
                 }
@@ -238,11 +279,13 @@ fun FeedScreen(
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                             )
                             Spacer(Modifier.weight(1f))
-                            FilterPills(
-                                mode = mode,
-                                onSelect = { vm.setMode(it) },
-                            )
-                            Spacer(Modifier.weight(1f))
+                            if (!fullscreen) {
+                                FilterPills(
+                                    mode = mode,
+                                    onSelect = { vm.setMode(it) },
+                                )
+                                Spacer(Modifier.weight(1f))
+                            }
                             current?.let {
                                 BookmarkButton(
                                     saved = it.saved,
@@ -306,4 +349,10 @@ private fun BookmarkButton(saved: Boolean, onClick: () -> Unit) {
             modifier = Modifier.size(18.dp),
         )
     }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }

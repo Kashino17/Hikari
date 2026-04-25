@@ -8,6 +8,7 @@ export interface FeedDeps {
 }
 
 export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): Promise<void> {
+  const NEW_BASELINE_COUNT = 10;
   // SELECT DISTINCT as defensive safeguard — even though all four JOINed tables
   // (videos, feed_items, scores, downloaded_videos) have video_id as PRIMARY KEY
   // and can't structurally produce duplicates, future schema changes or
@@ -33,11 +34,20 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
 
     if (mode === "new") {
       return deps.db
-        .prepare(BASE_SELECT + `
-          WHERE fi.seen_at IS NULL AND fi.playback_failed = 0
+        .prepare(`
+          WITH recent AS (
+            SELECT video_id
+            FROM feed_items
+            WHERE playback_failed = 0
+            ORDER BY added_to_feed_at DESC
+            LIMIT ${NEW_BASELINE_COUNT}
+          )
+          ${BASE_SELECT}
+          WHERE fi.playback_failed = 0
+            AND (fi.seen_at IS NULL OR fi.video_id IN (SELECT video_id FROM recent))
           ORDER BY fi.added_to_feed_at DESC
-          LIMIT ?`)
-        .all(deps.dailyBudget);
+        `)
+        .all();
     } else if (mode === "saved") {
       return deps.db
         .prepare(BASE_SELECT + `

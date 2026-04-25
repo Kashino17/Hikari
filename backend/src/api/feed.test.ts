@@ -39,7 +39,7 @@ describe("feed API", () => {
     applyMigrations(db);
   });
 
-  it("GET /feed returns unseen items, newest first, capped by daily budget", async () => {
+  it("GET /feed returns all unseen items, newest first, without daily budget capping", async () => {
     const today = Date.now();
     for (let i = 0; i < 20; i++) {
       seedFeedItem(db, `v${i}`, today - i * 1000);
@@ -50,20 +50,33 @@ describe("feed API", () => {
     const res = await app.inject({ method: "GET", url: "/feed" });
     expect(res.statusCode).toBe(200);
     const body = res.json() as { videoId: string }[];
-    expect(body).toHaveLength(5);
+    expect(body).toHaveLength(20);
     expect(body[0].videoId).toBe("v0");
   });
 
-  it("GET /feed excludes already-seen items", async () => {
+  it("GET /feed excludes seen items older than the newest baseline", async () => {
     const now = Date.now();
-    seedFeedItem(db, "seen1", now - 1000, true);
+    for (let i = 0; i < 12; i++) {
+      seedFeedItem(db, `seen${i}`, now - (i + 1) * 1000, true);
+    }
     seedFeedItem(db, "unseen1", now - 500);
     const app = Fastify();
     await registerFeedRoutes(app, { db, dailyBudget: 15 });
 
     const res = await app.inject({ method: "GET", url: "/feed" });
     const body = res.json() as { videoId: string }[];
-    expect(body.map((x) => x.videoId)).toEqual(["unseen1"]);
+    expect(body.map((x) => x.videoId)).toEqual([
+      "unseen1",
+      "seen0",
+      "seen1",
+      "seen2",
+      "seen3",
+      "seen4",
+      "seen5",
+      "seen6",
+      "seen7",
+      "seen8",
+    ]);
   });
 
   it("POST /feed/:id/seen marks the item seen", async () => {
@@ -102,17 +115,29 @@ describe("feed API", () => {
     ).toEqual({ playback_failed: 1 });
   });
 
-  it("GET /feed?mode=new defaults to unseen only (backward compat)", async () => {
+  it("GET /feed?mode=new keeps the newest 10 items even after they were seen", async () => {
     const now = Date.now();
-    seedFeedItem(db, "seen1", now - 2000, true);
-    seedFeedItem(db, "unseen1", now - 1000);
+    for (let i = 0; i < 12; i++) {
+      seedFeedItem(db, `seen${i}`, now - i * 1000, true);
+    }
     const app = Fastify();
     await registerFeedRoutes(app, { db, dailyBudget: 15 });
 
     const res = await app.inject({ method: "GET", url: "/feed?mode=new" });
     expect(res.statusCode).toBe(200);
     const body = res.json() as { videoId: string }[];
-    expect(body.map((x) => x.videoId)).toEqual(["unseen1"]);
+    expect(body.map((x) => x.videoId)).toEqual([
+      "seen0",
+      "seen1",
+      "seen2",
+      "seen3",
+      "seen4",
+      "seen5",
+      "seen6",
+      "seen7",
+      "seen8",
+      "seen9",
+    ]);
   });
 
   it("GET /feed?mode=old returns only seen items, newest seenAt first", async () => {
