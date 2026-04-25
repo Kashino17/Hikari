@@ -19,6 +19,13 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: here,
   },
+  // Proxy /api/manga/* through Next so the browser sees same-origin requests
+  // (no CORS) regardless of whether it's loaded over Tailscale, LAN, or local.
+  // Server Components hit the backend directly via mangaApi's absolute base URL.
+  async rewrites() {
+    const target = process.env.HIKARI_API_BASE_URL ?? "http://localhost:3000";
+    return [{ source: "/api/manga/:path*", destination: `${target}/api/manga/:path*` }];
+  },
 };
 
 export default nextConfig;

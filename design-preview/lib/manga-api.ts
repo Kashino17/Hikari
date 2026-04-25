@@ -1,4 +1,10 @@
-const API_BASE = process.env.HIKARI_API_BASE_URL ?? "http://localhost:3000";
+// Server Components need an absolute backend URL.
+// In the browser we use empty base so requests go to the same origin and
+// hit the Next.js rewrite (configured in next.config.ts), avoiding CORS.
+const API_BASE =
+  typeof window === "undefined"
+    ? process.env.HIKARI_API_BASE_URL ?? "http://localhost:3000"
+    : "";
 
 export interface ApiSeries {
   id: string;
