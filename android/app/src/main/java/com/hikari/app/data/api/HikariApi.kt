@@ -117,39 +117,39 @@ interface HikariApi {
     @PUT("filter")
     suspend fun clearPromptOverride(@Body req: ClearOverrideRequest = ClearOverrideRequest()): FilterStateDto
 
-    @GET("manga/series")
+    @GET("api/manga/series")
     suspend fun listMangaSeries(): List<MangaSeriesDto>
 
-    @GET("manga/series/{id}")
+    @GET("api/manga/series/{id}")
     suspend fun getMangaSeries(@Path("id") id: String): MangaSeriesDetailDto
 
-    @GET("manga/chapters/{id}/pages")
+    @GET("api/manga/chapters/{id}/pages")
     suspend fun getMangaChapterPages(@Path("id") id: String): List<MangaPageDto>
 
-    @GET("manga/continue")
+    @GET("api/manga/continue")
     suspend fun getMangaContinue(): List<MangaContinueDto>
 
-    @POST("manga/library/{id}")
+    @POST("api/manga/library/{id}")
     suspend fun addMangaToLibrary(@Path("id") seriesId: String)
 
-    @DELETE("manga/library/{id}")
+    @DELETE("api/manga/library/{id}")
     suspend fun removeMangaFromLibrary(@Path("id") seriesId: String)
 
-    @PUT("manga/progress/{seriesId}")
+    @PUT("api/manga/progress/{seriesId}")
     suspend fun setMangaProgress(
         @Path("seriesId") seriesId: String,
         @Body body: MangaProgressRequest,
     )
 
-    @PUT("manga/chapters/{id}/read")
+    @PUT("api/manga/chapters/{id}/read")
     suspend fun markMangaChapterRead(@Path("id") chapterId: String)
 
-    @POST("manga/chapters/{id}/sync")
+    @POST("api/manga/chapters/{id}/sync")
     suspend fun startMangaChapterSync(@Path("id") chapterId: String)
 
-    @POST("manga/sync")
+    @POST("api/manga/sync")
     suspend fun startMangaSync()
 
-    @GET("manga/sync/jobs")
+    @GET("api/manga/sync/jobs")
     suspend fun listMangaSyncJobs(): List<MangaSyncJobDto>
 }
