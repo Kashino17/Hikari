@@ -2,6 +2,7 @@ package com.hikari.app.domain.repo
 
 import com.hikari.app.data.api.HikariApi
 import com.hikari.app.data.api.dto.AddChannelRequest
+import com.hikari.app.data.api.dto.ChannelSearchResultDto
 import com.hikari.app.data.api.dto.ChannelStatsDto
 import com.hikari.app.data.api.dto.PollResponse
 import com.hikari.app.domain.model.Channel
@@ -23,6 +24,9 @@ class ChannelsRepository @Inject constructor(
             ch to stats
         }
     }
+
+    suspend fun search(query: String): List<ChannelSearchResultDto> =
+        api.searchChannels(query)
 
     suspend fun add(url: String): Channel {
         val res = api.addChannel(AddChannelRequest(channelUrl = url))

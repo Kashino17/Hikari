@@ -3,6 +3,7 @@ package com.hikari.app.data.api
 import com.hikari.app.data.api.dto.AddChannelRequest
 import com.hikari.app.data.api.dto.AddChannelResponse
 import com.hikari.app.data.api.dto.ChannelDto
+import com.hikari.app.data.api.dto.ChannelSearchResultDto
 import com.hikari.app.data.api.dto.ChannelStatsDto
 import com.hikari.app.data.api.dto.ClearOverrideRequest
 import com.hikari.app.data.api.dto.FeedItemDto
@@ -48,6 +49,12 @@ interface HikariApi {
 
     @GET("channels")
     suspend fun getChannels(): List<ChannelDto>
+
+    @GET("channels/search")
+    suspend fun searchChannels(
+        @Query("q") query: String,
+        @Query("limit") limit: Int = 10,
+    ): List<ChannelSearchResultDto>
 
     @POST("channels")
     suspend fun addChannel(@Body req: AddChannelRequest): AddChannelResponse

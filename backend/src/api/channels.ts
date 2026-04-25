@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import type Database from "better-sqlite3";
 import { resolveChannel } from "../monitor/channel-resolver.js";
+import { searchChannels } from "../monitor/channel-search.js";
 import { fetchChannelFeed } from "../monitor/rss-poller.js";
 import { processNewVideo } from "../pipeline/orchestrator.js";
 import { fetchVideoMetadata } from "../ingest/metadata.js";
@@ -36,6 +37,28 @@ export async function registerChannelsRoutes(
       .prepare("SELECT id, url, title, added_at, is_active FROM channels WHERE is_active=1 ORDER BY added_at DESC")
       .all();
   });
+
+  app.get<{ Querystring: { q?: string; limit?: string } }>(
+    "/channels/search",
+    async (req, reply) => {
+      const q = (req.query.q ?? "").trim();
+      if (q.length < 2) return reply.code(200).send([]);
+      const limit = Math.min(Math.max(Number(req.query.limit ?? 10) || 10, 1), 25);
+      try {
+        const results = await searchChannels(q, limit);
+        // Mark which results the user already follows so the UI can dim those.
+        const subscribedIds = new Set(
+          (deps.db
+            .prepare("SELECT id FROM channels WHERE is_active=1")
+            .all() as { id: string }[]).map((r) => r.id),
+        );
+        return results.map((r) => ({ ...r, subscribed: subscribedIds.has(r.channelId) }));
+      } catch (err) {
+        app.log.warn({ err, q }, "channel search failed");
+        return reply.code(502).send({ error: "search failed" });
+      }
+    },
+  );
 
   app.delete<{ Params: { id: string } }>("/channels/:id", async (req, reply) => {
     deps.db.prepare("UPDATE channels SET is_active = 0 WHERE id = ?").run(req.params.id);
