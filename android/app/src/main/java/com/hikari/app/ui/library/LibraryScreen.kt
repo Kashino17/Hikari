@@ -379,9 +379,9 @@ private fun ChannelAvatar(channel: ChannelDto, onClick: () -> Unit) {
                 .background(channelGradient(channel.title)),
             contentAlignment = Alignment.Center,
         ) {
-            if (!channel.thumbnail.isNullOrBlank()) {
+            if (!channel.thumbnail_url.isNullOrBlank()) {
                 AsyncImage(
-                    model = channel.thumbnail,
+                    model = channel.thumbnail_url,
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize().clip(CircleShape),
                     contentScale = ContentScale.Crop,

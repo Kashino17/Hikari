@@ -23,7 +23,7 @@ class ChannelsRepository @Inject constructor(
             handle = it.handle,
             description = it.description,
             subscribers = it.subscribers,
-            thumbnail = it.thumbnail,
+            thumbnail = it.thumbnail_url,
             lastPolledAt = it.last_polled_at,
         )
     }

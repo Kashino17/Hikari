@@ -13,7 +13,7 @@ data class ChannelDto(
     val handle: String? = null,
     val description: String? = null,
     val subscribers: Long? = null,
-    val thumbnail: String? = null,
+    val thumbnail_url: String? = null,
 )
 
 @Serializable
@@ -25,6 +25,6 @@ data class AddChannelResponse(
     val title: String,
     val url: String,
     val handle: String? = null,
-    val thumbnail: String? = null,
+    val thumbnail_url: String? = null,
     val subscribers: Long? = null,
 )
