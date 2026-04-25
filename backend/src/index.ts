@@ -24,6 +24,7 @@ import { fetchSponsorSegments } from "./sponsorblock/client.js";
 
 const cfg = loadConfig();
 mkdirSync(cfg.videoDir, { recursive: true });
+mkdirSync(cfg.mangaDir, { recursive: true });
 
 const db = openDatabase(cfg.dbPath);
 const scorer = createScorer(cfg);
