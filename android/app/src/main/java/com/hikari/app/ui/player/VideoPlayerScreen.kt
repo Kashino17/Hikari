@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,17 +23,21 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Forward10
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,7 +48,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -79,10 +86,21 @@ interface VideoPlayerEntryPoint {
     fun settingsStore(): SettingsStore
 }
 
+private const val SEEK_STEP_MS = 10_000L
+private const val CHROME_AUTO_HIDE_MS = 4_000L
+
 /**
- * Standalone fullscreen-style video player — opened from the Library hero
+ * Standalone fullscreen video player — opened from the Library hero
  * "Abspielen" CTA. Owns its own ExoPlayer (separate from the Feed's shared
  * player) so a Library playback doesn't disturb the feed queue.
+ *
+ * Tap behaviour matches Netflix / YouTube full-screen:
+ *   - single tap   = toggle chrome (the controls overlay)
+ *   - double tap L = -10s
+ *   - double tap R = +10s
+ *   - tap on play  = actually toggles play/pause
+ *
+ * Keeps the screen awake while the screen is on the back stack.
  */
 @OptIn(UnstableApi::class)
 @Composable
@@ -104,9 +122,17 @@ fun VideoPlayerScreen(
     val baseUrl = remember { runBlocking { settingsStore.backendUrl.first() } }
     val player = remember { factory.create() }
 
+    KeepScreenOn()
+
     var landscape by remember { mutableStateOf(false) }
     var playing by remember { mutableStateOf(true) }
     var controlsVisible by remember { mutableStateOf(true) }
+    var chromeBumpToken by remember { mutableIntStateOf(0) } // resets the auto-hide timer
+
+    fun showChrome() {
+        controlsVisible = true
+        chromeBumpToken++
+    }
 
     // ── Lifecycle: prepare once, save position on dispose ────────────────────
     LaunchedEffect(videoId) {
@@ -142,10 +168,10 @@ fun VideoPlayerScreen(
         }
     }
 
-    // ── Auto-hide chrome after 3s when playing ───────────────────────────────
-    LaunchedEffect(controlsVisible, playing) {
+    // ── Auto-hide chrome — restarts when chromeBumpToken changes ─────────────
+    LaunchedEffect(chromeBumpToken, controlsVisible, playing) {
         if (controlsVisible && playing) {
-            kotlinx.coroutines.delay(3_000)
+            kotlinx.coroutines.delay(CHROME_AUTO_HIDE_MS)
             controlsVisible = false
         }
     }
@@ -165,16 +191,51 @@ fun VideoPlayerScreen(
         }
     }
 
+    // ── Transient seek badge after a double-tap ──────────────────────────────
+    var seekBadge by remember { mutableStateOf<SeekDir?>(null) }
+    LaunchedEffect(seekBadge) {
+        if (seekBadge != null) {
+            kotlinx.coroutines.delay(650)
+            seekBadge = null
+        }
+    }
+
+    fun seekBy(deltaMs: Long) {
+        val newPos = (player.currentPosition + deltaMs).coerceIn(0L, duration)
+        player.seekTo(newPos)
+        position = newPos
+    }
+
+    fun togglePlayPause() {
+        playing = !playing
+        player.playWhenReady = playing
+        showChrome()
+    }
+
+    var boxWidthPx by remember { mutableIntStateOf(0) }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(HikariBg)
+            .onGloballyPositioned { boxWidthPx = it.size.width }
             .pointerInput(videoId) {
                 detectTapGestures(
                     onTap = {
-                        playing = !playing
-                        player.playWhenReady = playing
-                        controlsVisible = true
+                        // Netflix-style: a tap *only* toggles the chrome,
+                        // never pause/play. Pause lives on the centre button.
+                        controlsVisible = !controlsVisible
+                        if (controlsVisible) chromeBumpToken++
+                    },
+                    onDoubleTap = { offset ->
+                        val isLeft = boxWidthPx > 0 && offset.x < boxWidthPx / 2f
+                        if (isLeft) {
+                            seekBy(-SEEK_STEP_MS)
+                            seekBadge = SeekDir.Backward
+                        } else {
+                            seekBy(SEEK_STEP_MS)
+                            seekBadge = SeekDir.Forward
+                        }
                     },
                 )
             },
@@ -194,25 +255,64 @@ fun VideoPlayerScreen(
             modifier = Modifier.fillMaxSize(),
         )
 
-        // ── Top scrim + back arrow + title ───────────────────────────────────
+        // Centre transport controls (Replay10 / Play-Pause / Forward10) ──────
+        AnimatedVisibility(
+            visible = controlsVisible,
+            enter = fadeIn(tween(180)),
+            exit = fadeOut(tween(150)),
+            modifier = Modifier.align(Alignment.Center),
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(36.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CircleControl(
+                    icon = Icons.Default.Replay10,
+                    contentDescription = "10 Sekunden zurück",
+                    size = 56.dp,
+                    iconSize = 28.dp,
+                    onClick = {
+                        seekBy(-SEEK_STEP_MS)
+                        showChrome()
+                    },
+                )
+                CircleControl(
+                    icon = if (playing) HikariIcons.Pause else Icons.Default.PlayArrow,
+                    contentDescription = if (playing) "Pause" else "Wiedergabe",
+                    size = 76.dp,
+                    iconSize = 42.dp,
+                    onClick = { togglePlayPause() },
+                )
+                CircleControl(
+                    icon = Icons.Default.Forward10,
+                    contentDescription = "10 Sekunden vor",
+                    size = 56.dp,
+                    iconSize = 28.dp,
+                    onClick = {
+                        seekBy(SEEK_STEP_MS)
+                        showChrome()
+                    },
+                )
+            }
+        }
+
+        // Top scrim + back arrow + title ─────────────────────────────────────
         AnimatedVisibility(
             visible = controlsVisible,
             enter = fadeIn(tween(180)),
             exit = fadeOut(tween(150)),
             modifier = Modifier.align(Alignment.TopStart).fillMaxWidth(),
         ) {
-            Column {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(140.dp)
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(Color.Black.copy(alpha = 0.7f), Color.Transparent),
-                            ),
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color.Black.copy(alpha = 0.7f), Color.Transparent),
                         ),
-                )
-            }
+                    ),
+            )
         }
 
         AnimatedVisibility(
@@ -230,23 +330,16 @@ fun VideoPlayerScreen(
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color.Black.copy(alpha = 0.45f))
-                        .pointerInput(Unit) { detectTapGestures(onTap = { onBack() }) },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Zurück",
-                        tint = HikariText,
-                        modifier = Modifier.size(22.dp),
-                    )
-                }
-                Spacer(Modifier.size(12.dp))
-                Column(modifier = androidx.compose.ui.Modifier.weight(1f)) {
+                CircleControl(
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Zurück",
+                    size = 40.dp,
+                    iconSize = 22.dp,
+                    background = Color.Black.copy(alpha = 0.45f),
+                    onClick = onBack,
+                )
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
                     if (channel.isNotBlank()) {
                         Text(
                             text = channel.uppercase(),
@@ -268,47 +361,22 @@ fun VideoPlayerScreen(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                Spacer(Modifier.size(8.dp))
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color.Black.copy(alpha = 0.45f))
-                        .pointerInput(landscape) {
-                            detectTapGestures(onTap = { landscape = !landscape })
-                        },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = if (landscape) HikariIcons.FullscreenExit else HikariIcons.Fullscreen,
-                        contentDescription = if (landscape) "Vollbild beenden" else "Vollbild",
-                        tint = HikariText,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-            }
-        }
-
-        // ── Center play/pause indicator (when paused) ────────────────────────
-        if (!playing && controlsVisible) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(82.dp)
-                    .clip(CircleShape)
-                    .background(Color.Black.copy(alpha = 0.45f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(48.dp),
+                Spacer(Modifier.width(8.dp))
+                CircleControl(
+                    icon = if (landscape) HikariIcons.FullscreenExit else HikariIcons.Fullscreen,
+                    contentDescription = if (landscape) "Vollbild beenden" else "Vollbild",
+                    size = 40.dp,
+                    iconSize = 20.dp,
+                    background = Color.Black.copy(alpha = 0.45f),
+                    onClick = {
+                        landscape = !landscape
+                        showChrome()
+                    },
                 )
             }
         }
 
-        // ── Bottom scrim + scrubber ──────────────────────────────────────────
+        // Bottom scrim + scrubber ────────────────────────────────────────────
         AnimatedVisibility(
             visible = controlsVisible,
             enter = fadeIn(tween(180)),
@@ -344,7 +412,7 @@ fun VideoPlayerScreen(
                     wasPlayingBeforeScrub.value = player.playWhenReady
                     player.playWhenReady = false
                     isScrubbing = true
-                    controlsVisible = true
+                    showChrome()
                 },
                 onScrubUpdate = { previewMs -> position = previewMs },
                 onScrubEnd = { finalMs ->
@@ -354,19 +422,94 @@ fun VideoPlayerScreen(
                         playing = true
                     }
                     isScrubbing = false
+                    showChrome()
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
         }
+
+        // Double-tap badges (always above chrome, fades quickly) ─────────────
+        seekBadge?.let { dir ->
+            val align = if (dir == SeekDir.Backward) Alignment.CenterStart else Alignment.CenterEnd
+            Box(modifier = Modifier.align(align).padding(horizontal = 32.dp)) {
+                SeekBadge(dir)
+            }
+        }
     }
 
-    // Listen to player state to keep `playing` in sync (e.g. ended)
+    // Mirror player state into our `playing` flag (handles end-of-stream too)
     DisposableEffect(player) {
         val listener = object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) { playing = isPlaying }
         }
         player.addListener(listener)
         onDispose { player.removeListener(listener) }
+    }
+}
+
+private enum class SeekDir { Backward, Forward }
+
+@Composable
+private fun SeekBadge(dir: SeekDir) {
+    Row(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(Color.Black.copy(alpha = 0.55f))
+            .padding(horizontal = 18.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = if (dir == SeekDir.Backward) Icons.Default.Replay10 else Icons.Default.Forward10,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(24.dp),
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            if (dir == SeekDir.Backward) "−10s" else "+10s",
+            color = Color.White,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
+@Composable
+private fun CircleControl(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String?,
+    size: androidx.compose.ui.unit.Dp,
+    iconSize: androidx.compose.ui.unit.Dp,
+    onClick: () -> Unit,
+    background: Color = Color.Black.copy(alpha = 0.55f),
+) {
+    Box(
+        modifier = Modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(background)
+            .pointerInput(Unit) { detectTapGestures(onTap = { onClick() }) },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = HikariText,
+            modifier = Modifier.size(iconSize),
+        )
+    }
+}
+
+/**
+ * Keeps the screen awake while this composable is in the composition.
+ * Useful for video players and (future) manga readers.
+ */
+@Composable
+fun KeepScreenOn() {
+    val view = LocalView.current
+    DisposableEffect(view) {
+        view.keepScreenOn = true
+        onDispose { view.keepScreenOn = false }
     }
 }
 
