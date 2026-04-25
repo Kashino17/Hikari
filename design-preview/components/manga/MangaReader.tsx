@@ -88,17 +88,47 @@ export function MangaReader({ seriesId, chapterId, pages, initialPage, nextChapt
   }, [pageIdx, pages.length, chapterId])
 
   // RTL: tap right = back, tap left = forward, middle = toggle chrome.
+  // Swipe left (finger moves right→left) = forward, swipe right = back.
+  // Touch swipe is detected before the synthesized click; the click handler
+  // skips when a swipe just fired.
+  const touchStartXRef = useRef<number | null>(null)
+  const skipClickRef = useRef(false)
+  const SWIPE_THRESHOLD = 40
+
+  const advance = () => setPageIdx((i) => Math.min(pages.length, i + 1))
+  const goBack = () => setPageIdx((i) => Math.max(0, i - 1))
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartXRef.current = e.touches[0]?.clientX ?? null
+  }
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const start = touchStartXRef.current
+    touchStartXRef.current = null
+    if (start == null) return
+    const end = e.changedTouches[0]?.clientX
+    if (end == null) return
+    const dx = end - start
+    if (dx < -SWIPE_THRESHOLD) {
+      skipClickRef.current = true
+      advance() // swiped left → next (RTL forward)
+    } else if (dx > SWIPE_THRESHOLD) {
+      skipClickRef.current = true
+      goBack() // swiped right → prev
+    }
+  }
+
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (skipClickRef.current) {
+      skipClickRef.current = false
+      return
+    }
     const rect = e.currentTarget.getBoundingClientRect()
     const x = e.clientX - rect.left
     const w = rect.width
-    if (x < w * 0.33) {
-      setPageIdx((i) => Math.min(pages.length, i + 1))
-    } else if (x > w * 0.66) {
-      setPageIdx((i) => Math.max(0, i - 1))
-    } else {
-      setChromeVisible((v) => !v)
-    }
+    if (x < w * 0.33) advance()
+    else if (x > w * 0.66) goBack()
+    else setChromeVisible((v) => !v)
   }
 
   const onImgError = (pageId: string) => () => {
@@ -126,7 +156,12 @@ export function MangaReader({ seriesId, chapterId, pages, initialPage, nextChapt
   }, [pageIdx, pages])
 
   return (
-    <div className="fixed inset-0 bg-black text-white" onClick={handleClick}>
+    <div
+      className="fixed inset-0 bg-black text-white z-[60] touch-none select-none"
+      onClick={handleClick}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
       {chromeVisible && (
         <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-5 py-3 bg-black/70 backdrop-blur">
           <Link
