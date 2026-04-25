@@ -16,20 +16,39 @@ export function MangaReader({ seriesId, chapterId, pages, initialPage, nextChapt
     Math.max(0, Math.min(pages.length - 1, initialPage - 1)),
   )
   const [chromeVisible, setChromeVisible] = useState(true)
-  const lastSendRef = useRef<number>(0)
+  const [failedPageIds, setFailedPageIds] = useState<Set<string>>(new Set())
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const chapterSyncTriggeredRef = useRef(false)
 
-  // Persist progress (throttled to ~1.5s).
+  // Persist progress (debounced — sends the latest page 1.5s after user stops flipping).
   useEffect(() => {
-    const now = Date.now()
-    if (now - lastSendRef.current < 1500) return
-    lastSendRef.current = now
-    void mangaApi.setProgress(seriesId, chapterId, pageIdx + 1)
-  }, [pageIdx, seriesId, chapterId])
+    // Skip when the user has scrolled past the last page (Fix #4).
+    if (pageIdx >= pages.length) return
+
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      void mangaApi.setProgress(seriesId, chapterId, pageIdx + 1)
+    }, 1500)
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [pageIdx, pages.length, seriesId, chapterId])
+
+  // Trigger chapter-only sync when any page is not ready.
+  useEffect(() => {
+    if (chapterSyncTriggeredRef.current) return
+    if (pages.some((p) => !p.ready)) {
+      chapterSyncTriggeredRef.current = true
+      void mangaApi.startChapterSync(chapterId)
+    }
+  }, [pages, chapterId])
 
   // Final flush on pagehide via sendBeacon.
   useEffect(() => {
     const onHide = () => {
-      const data = JSON.stringify({ chapterId, pageNumber: pageIdx + 1 })
+      const safePageNumber = Math.min(pageIdx + 1, pages.length)
+      const data = JSON.stringify({ chapterId, pageNumber: safePageNumber })
       navigator.sendBeacon?.(
         `${MANGA_API_BASE}/api/manga/progress/${encodeURIComponent(seriesId)}`,
         new Blob([data], { type: 'application/json' }),
@@ -37,7 +56,7 @@ export function MangaReader({ seriesId, chapterId, pages, initialPage, nextChapt
     }
     window.addEventListener('pagehide', onHide)
     return () => window.removeEventListener('pagehide', onHide)
-  }, [pageIdx, seriesId, chapterId])
+  }, [pageIdx, pages.length, seriesId, chapterId])
 
   // Mark chapter as read once user reaches the last page.
   useEffect(() => {
@@ -58,6 +77,17 @@ export function MangaReader({ seriesId, chapterId, pages, initialPage, nextChapt
     } else {
       setChromeVisible((v) => !v)
     }
+  }
+
+  const onImgError = (pageId: string) => () => {
+    setFailedPageIds((prev) => {
+      if (prev.has(pageId)) return prev
+      const next = new Set(prev)
+      next.add(pageId)
+      return next
+    })
+    // Auto-skip forward (RTL: forward = next index)
+    setPageIdx((i) => Math.min(pages.length, i + 1))
   }
 
   const current = pages[pageIdx]
@@ -84,8 +114,14 @@ export function MangaReader({ seriesId, chapterId, pages, initialPage, nextChapt
           >
             ←
           </Link>
-          <span className="font-mono text-[12px] text-faint">
+          <span
+            className="font-mono text-[12px] text-faint"
+            onClick={(e) => e.stopPropagation()}
+          >
             {Math.min(pageIdx + 1, pages.length)} / {pages.length}
+            {failedPageIds.size > 0 && (
+              <span className="text-amber-400 ml-2">({failedPageIds.size} missing)</span>
+            )}
           </span>
         </div>
       )}
@@ -96,6 +132,7 @@ export function MangaReader({ seriesId, chapterId, pages, initialPage, nextChapt
           alt={`Page ${current.pageNumber}`}
           className="absolute inset-0 w-full h-full object-contain"
           draggable={false}
+          onError={onImgError(current.id)}
         />
       )}
       {!isPastEnd && current && !current.ready && (

@@ -90,6 +90,8 @@ export const mangaApi = {
     fetch(`${API_BASE}/api/manga/chapters/${encodeURIComponent(chapterId)}/read`, { method: "PUT" }),
 
   startSync: () => fetch(`${API_BASE}/api/manga/sync`, { method: "POST" }),
+  startChapterSync: (chapterId: string) =>
+    fetch(`${API_BASE}/api/manga/chapters/${encodeURIComponent(chapterId)}/sync`, { method: "POST" }),
   listJobs: () => getJson<ApiSyncJob[]>("/api/manga/sync/jobs"),
 };
 
