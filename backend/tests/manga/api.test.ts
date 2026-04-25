@@ -107,3 +107,154 @@ test("GET /api/manga/chapters/:id/pages reports ready: false when local_path is 
   const body = r.json() as { ready: boolean }[];
   expect(body[0].ready).toBe(false);
 });
+
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+test("GET /api/manga/page/:id streams image bytes when local_path set", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "manga-api-"));
+  try {
+    const sub = join(dir, "fake", "x", "1");
+    mkdirSync(sub, { recursive: true });
+    const bytes = Buffer.from([1, 2, 3, 4, 5]);
+    writeFileSync(join(sub, "01.png"), bytes);
+
+    const db = new Database(":memory:");
+    db.pragma("foreign_keys = ON");
+    applyMigrations(db);
+    upsertSeries(db, {
+      source: "fake", sourceSlug: "x",
+      title: "X", sourceUrl: "https://fake.test/x",
+    });
+    upsertChapter(db, {
+      source: "fake", seriesSlug: "x",
+      number: 1, sourceUrl: "https://fake.test/x/1",
+    });
+    upsertPage(db, {
+      source: "fake", seriesSlug: "x",
+      chapterNumber: 1, pageNumber: 1,
+      sourceUrl: "https://fake.test/p.png",
+      localPath: "fake/x/1/01.png",
+    });
+
+    const app = Fastify();
+    registerMangaRoutes(app, { db, mangaDir: dir });
+    const r = await app.inject({ method: "GET", url: "/api/manga/page/fake:x:1:01" });
+    expect(r.statusCode).toBe(200);
+    expect(r.headers["content-type"]).toMatch(/image\//);
+    expect(r.rawPayload.equals(bytes)).toBe(true);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("GET /api/manga/page/:id sets long-lived Cache-Control", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "manga-api-"));
+  try {
+    const sub = join(dir, "fake", "x", "1");
+    mkdirSync(sub, { recursive: true });
+    writeFileSync(join(sub, "01.png"), Buffer.from([1]));
+
+    const db = new Database(":memory:");
+    db.pragma("foreign_keys = ON");
+    applyMigrations(db);
+    upsertSeries(db, { source: "fake", sourceSlug: "x", title: "X", sourceUrl: "https://x" });
+    upsertChapter(db, { source: "fake", seriesSlug: "x", number: 1, sourceUrl: "https://x" });
+    upsertPage(db, {
+      source: "fake", seriesSlug: "x",
+      chapterNumber: 1, pageNumber: 1,
+      sourceUrl: "https://x/p.png",
+      localPath: "fake/x/1/01.png",
+    });
+
+    const app = Fastify();
+    registerMangaRoutes(app, { db, mangaDir: dir });
+    const r = await app.inject({ method: "GET", url: "/api/manga/page/fake:x:1:01" });
+    expect(r.headers["cache-control"]).toMatch(/max-age=\d+/);
+    expect(r.headers["cache-control"]).toMatch(/immutable/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("GET /api/manga/page/:id rejects local_path that escapes mangaDir (path traversal)", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "manga-api-"));
+  try {
+    const db = new Database(":memory:");
+    db.pragma("foreign_keys = ON");
+    applyMigrations(db);
+    upsertSeries(db, { source: "fake", sourceSlug: "x", title: "X", sourceUrl: "https://x" });
+    upsertChapter(db, { source: "fake", seriesSlug: "x", number: 1, sourceUrl: "https://x" });
+    // Inject a malicious local_path manually (bypassing upsertPage normalization)
+    db.prepare(
+      "INSERT INTO manga_pages (id, chapter_id, page_number, source_url, local_path) VALUES (?, ?, ?, ?, ?)",
+    ).run("fake:x:1:99", "fake:x:1", 99, "https://x", "../../../etc/passwd");
+
+    const app = Fastify();
+    registerMangaRoutes(app, { db, mangaDir: dir });
+    const r = await app.inject({ method: "GET", url: "/api/manga/page/fake:x:1:99" });
+    expect(r.statusCode).toBe(400);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("GET /api/manga/page/:id also rejects absolute paths in local_path", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "manga-api-"));
+  try {
+    const db = new Database(":memory:");
+    db.pragma("foreign_keys = ON");
+    applyMigrations(db);
+    upsertSeries(db, { source: "fake", sourceSlug: "x", title: "X", sourceUrl: "https://x" });
+    upsertChapter(db, { source: "fake", seriesSlug: "x", number: 1, sourceUrl: "https://x" });
+    db.prepare(
+      "INSERT INTO manga_pages (id, chapter_id, page_number, source_url, local_path) VALUES (?, ?, ?, ?, ?)",
+    ).run("fake:x:1:50", "fake:x:1", 50, "https://x", "/etc/passwd");
+
+    const app = Fastify();
+    registerMangaRoutes(app, { db, mangaDir: dir });
+    const r = await app.inject({ method: "GET", url: "/api/manga/page/fake:x:1:50" });
+    expect(r.statusCode).toBe(400);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("GET /api/manga/page/:id returns 404 when local_path is NULL (pending)", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "manga-api-"));
+  try {
+    const db = new Database(":memory:");
+    db.pragma("foreign_keys = ON");
+    applyMigrations(db);
+    upsertSeries(db, { source: "fake", sourceSlug: "x", title: "X", sourceUrl: "https://x" });
+    upsertChapter(db, { source: "fake", seriesSlug: "x", number: 1, sourceUrl: "https://x" });
+    upsertPage(db, {
+      source: "fake", seriesSlug: "x",
+      chapterNumber: 1, pageNumber: 1,
+      sourceUrl: "https://x/p.png",
+      // localPath omitted → NULL
+    });
+    const app = Fastify();
+    registerMangaRoutes(app, { db, mangaDir: dir });
+    const r = await app.inject({ method: "GET", url: "/api/manga/page/fake:x:1:01" });
+    expect(r.statusCode).toBe(404);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("GET /api/manga/page/:id returns 404 when page id doesn't exist", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "manga-api-"));
+  try {
+    const db = new Database(":memory:");
+    db.pragma("foreign_keys = ON");
+    applyMigrations(db);
+    const app = Fastify();
+    registerMangaRoutes(app, { db, mangaDir: dir });
+    const r = await app.inject({ method: "GET", url: "/api/manga/page/no:such:thing" });
+    expect(r.statusCode).toBe(404);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

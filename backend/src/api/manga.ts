@@ -1,5 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import type Database from "better-sqlite3";
+import { createReadStream } from "node:fs";
+import { resolve, sep, extname } from "node:path";
 
 export interface MangaDeps {
   db: Database.Database;
@@ -63,5 +65,32 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
       pageNumber: r.pageNumber,
       ready: r.localPath !== null,
     }));
+  });
+
+  app.get<{ Params: { pageId: string } }>("/api/manga/page/:pageId", async (req, reply) => {
+    const row = db
+      .prepare("SELECT local_path AS localPath FROM manga_pages WHERE id = ?")
+      .get(req.params.pageId) as { localPath: string | null } | undefined;
+
+    if (!row) return reply.code(404).send({ error: "page not found" });
+    if (!row.localPath) {
+      return reply.code(404).send({ status: "pending", error: "page not yet downloaded" });
+    }
+
+    const baseAbs = resolve(deps.mangaDir);
+    const fullAbs = resolve(baseAbs, row.localPath);
+    if (!fullAbs.startsWith(baseAbs + sep) && fullAbs !== baseAbs) {
+      return reply.code(400).send({ error: "invalid path" });
+    }
+
+    const ext = extname(fullAbs).toLowerCase();
+    const ct =
+      ext === ".png" ? "image/png" :
+      ext === ".webp" ? "image/webp" :
+      "image/jpeg";
+
+    reply.header("Content-Type", ct);
+    reply.header("Cache-Control", "public, max-age=31536000, immutable");
+    return reply.send(createReadStream(fullAbs));
   });
 }
