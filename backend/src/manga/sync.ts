@@ -164,7 +164,11 @@ export async function runSeriesSync(input: SeriesSyncInput): Promise<void> {
     seriesId(input.adapter.id, input.seriesSlug),
   );
 
-  for (const ch of detail.chapters) {
+  // Sync newest-first so users can read the latest chapters while older ones
+  // are still being downloaded. The DB/UI keeps ascending order — only the
+  // download iteration is reversed.
+  const reversed = [...detail.chapters].reverse();
+  for (const ch of reversed) {
     try {
       await runChapterSync({
         db: input.db,

@@ -35,14 +35,36 @@ export function MangaReader({ seriesId, chapterId, pages, initialPage, nextChapt
     }
   }, [pageIdx, pages.length, seriesId, chapterId])
 
-  // Trigger chapter-only sync when any page is not ready.
+  // Trigger chapter-only sync when the chapter has no pages at all (queued
+  // for sync but not yet downloaded) OR has at least one page with ready=false.
   useEffect(() => {
     if (chapterSyncTriggeredRef.current) return
-    if (pages.some((p) => !p.ready)) {
+    if (pages.length === 0 || pages.some((p) => !p.ready)) {
       chapterSyncTriggeredRef.current = true
       void mangaApi.startChapterSync(chapterId)
     }
   }, [pages, chapterId])
+
+  // When the chapter is empty (sync hasn't reached it), poll for pages every
+  // 3s and reload the page once they appear.
+  useEffect(() => {
+    if (pages.length > 0) return
+    let cancelled = false
+    const id = setInterval(async () => {
+      try {
+        const fresh = await mangaApi.getChapterPages(chapterId)
+        if (!cancelled && fresh.length > 0) {
+          window.location.reload()
+        }
+      } catch {
+        // 404 still — sync hasn't reached this chapter yet
+      }
+    }, 3000)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [pages.length, chapterId])
 
   // Final flush on pagehide via sendBeacon.
   useEffect(() => {
@@ -126,7 +148,21 @@ export function MangaReader({ seriesId, chapterId, pages, initialPage, nextChapt
         </div>
       )}
 
-      {!isPastEnd && current && current.ready && (
+      {pages.length === 0 && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-8 text-center">
+          <div className="text-[10px] uppercase tracking-widest text-faint">Kapitel</div>
+          <div className="text-base text-white/90">Wird gerade synchronisiert…</div>
+          <div className="text-[11px] text-faint max-w-xs">
+            Hikari lädt dieses Kapitel von der Quelle. Sobald die Bilder da sind, springt der Reader automatisch los.
+          </div>
+          <div className="flex gap-1 mt-2">
+            <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
+            <span className="w-1.5 h-1.5 bg-accent/60 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+            <span className="w-1.5 h-1.5 bg-accent/30 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+          </div>
+        </div>
+      )}
+      {pages.length > 0 && !isPastEnd && current && current.ready && (
         <img
           src={mangaApi.pageUrl(current.id)}
           alt={`Page ${current.pageNumber}`}
@@ -135,7 +171,7 @@ export function MangaReader({ seriesId, chapterId, pages, initialPage, nextChapt
           onError={onImgError(current.id)}
         />
       )}
-      {!isPastEnd && current && !current.ready && (
+      {pages.length > 0 && !isPastEnd && current && !current.ready && (
         <div className="absolute inset-0 flex items-center justify-center text-faint text-sm">
           Diese Seite wird gerade geladen…
         </div>

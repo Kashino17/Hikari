@@ -18,7 +18,13 @@ export default async function MangaReaderPage({ params, searchParams }: Props) {
     mangaApi.getSeries(decodedSeries).catch(() => null),
   ])
 
-  if (pages.length === 0 || !detail) notFound()
+  if (!detail) notFound()
+
+  // Verify the chapter actually exists in the series (and isn't just a typo'd
+  // URL). If not in chapters list, 404. If it exists but pages are empty, the
+  // reader will render a "syncing" state and trigger a chapter-only sync.
+  const chapterKnown = detail.chapters.some((c) => c.id === decodedChapter)
+  if (!chapterKnown) notFound()
 
   const sorted = [...detail.chapters].sort((a, b) => a.number - b.number)
   const idx = sorted.findIndex((c) => c.id === decodedChapter)
