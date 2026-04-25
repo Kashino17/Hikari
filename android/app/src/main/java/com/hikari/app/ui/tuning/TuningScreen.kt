@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -514,6 +515,28 @@ private fun SystemTab(vm: TuningViewModel) {
                     }
                     BehaviorPicker(current = current, onPick = { vm.setSbBehavior(cat.apiKey, it) })
                 }
+            }
+        }
+        Section("Manga") {
+            val mangaStatus by vm.mangaSyncStatus.collectAsState()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(HikariSurface)
+                    .border(0.5.dp, HikariBorder, RoundedCornerShape(6.dp))
+                    .clickable { vm.triggerMangaSync() }
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+            ) {
+                Text("Manga sync now", color = HikariText.copy(alpha = 0.9f), fontSize = 13.sp)
+            }
+            mangaStatus?.let {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = it,
+                    color = HikariTextFaint,
+                    fontSize = 10.sp,
+                )
             }
         }
         Spacer(Modifier.height(80.dp))

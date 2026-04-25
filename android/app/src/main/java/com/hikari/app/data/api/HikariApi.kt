@@ -12,6 +12,12 @@ import com.hikari.app.data.api.dto.FilterStateDto
 import com.hikari.app.data.api.dto.ImportVideosRequest
 import com.hikari.app.data.api.dto.ImportVideosResponse
 import com.hikari.app.data.api.dto.LibraryResponse
+import com.hikari.app.data.api.dto.MangaContinueDto
+import com.hikari.app.data.api.dto.MangaPageDto
+import com.hikari.app.data.api.dto.MangaProgressRequest
+import com.hikari.app.data.api.dto.MangaSeriesDetailDto
+import com.hikari.app.data.api.dto.MangaSeriesDto
+import com.hikari.app.data.api.dto.MangaSyncJobDto
 import com.hikari.app.data.api.dto.PollResponse
 import com.hikari.app.data.api.dto.RecommendationDto
 import com.hikari.app.data.api.dto.RejectedItemDto
@@ -110,4 +116,40 @@ interface HikariApi {
 
     @PUT("filter")
     suspend fun clearPromptOverride(@Body req: ClearOverrideRequest = ClearOverrideRequest()): FilterStateDto
+
+    @GET("manga/series")
+    suspend fun listMangaSeries(): List<MangaSeriesDto>
+
+    @GET("manga/series/{id}")
+    suspend fun getMangaSeries(@Path("id") id: String): MangaSeriesDetailDto
+
+    @GET("manga/chapters/{id}/pages")
+    suspend fun getMangaChapterPages(@Path("id") id: String): List<MangaPageDto>
+
+    @GET("manga/continue")
+    suspend fun getMangaContinue(): List<MangaContinueDto>
+
+    @POST("manga/library/{id}")
+    suspend fun addMangaToLibrary(@Path("id") seriesId: String)
+
+    @DELETE("manga/library/{id}")
+    suspend fun removeMangaFromLibrary(@Path("id") seriesId: String)
+
+    @PUT("manga/progress/{seriesId}")
+    suspend fun setMangaProgress(
+        @Path("seriesId") seriesId: String,
+        @Body body: MangaProgressRequest,
+    )
+
+    @PUT("manga/chapters/{id}/read")
+    suspend fun markMangaChapterRead(@Path("id") chapterId: String)
+
+    @POST("manga/chapters/{id}/sync")
+    suspend fun startMangaChapterSync(@Path("id") chapterId: String)
+
+    @POST("manga/sync")
+    suspend fun startMangaSync()
+
+    @GET("manga/sync/jobs")
+    suspend fun listMangaSyncJobs(): List<MangaSyncJobDto>
 }

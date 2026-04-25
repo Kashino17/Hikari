@@ -15,8 +15,8 @@ android {
         applicationId = "com.hikari.app"
         minSdk = 26
         targetSdk = 34   // was 36 in plan — same deviation
-        versionCode = 11
-        versionName = "0.2.1"
+        versionCode = 12
+        versionName = "0.13.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -78,6 +78,7 @@ dependencies {
     implementation(libs.media3.datasource.okhttp)
 
     implementation(libs.coil.compose)
+    implementation(libs.telephoto.zoomable.image.coil)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test)
