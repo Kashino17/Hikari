@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { mangaApi, MANGA_API_BASE, type ApiPage } from '@/lib/manga-api'
 
 interface Props {
@@ -88,49 +88,158 @@ export function MangaReader({ seriesId, chapterId, pages, initialPage, nextChapt
     }
   }, [pageIdx, pages.length, chapterId])
 
-  // RTL: tap right = back, tap left = forward, middle = toggle chrome.
-  // Swipe left (finger moves right→left) = forward, swipe right = back.
-  // Touch swipe is detected before the synthesized click; the click handler
-  // skips when a swipe just fired.
+  // Page-flip: track an explicit flip state so we can render two layers
+  // (current page on top, destination beneath) and avoid AnimatePresence
+  // cross-fade flashing.
+  const [flipState, setFlipState] = useState<{
+    toIdx: number
+    dir: 1 | -1
+  } | null>(null)
+
+  // Pinch zoom + pan
+  const [zoom, setZoom] = useState({ scale: 1, x: 0, y: 0 })
+  const pinchRef = useRef<{
+    startD: number
+    baseScale: number
+    baseX: number
+    baseY: number
+  } | null>(null)
+  const panRef = useRef<{
+    startX: number
+    startY: number
+    baseX: number
+    baseY: number
+  } | null>(null)
+  const multitouchRef = useRef(false)
+
   const touchStartXRef = useRef<number | null>(null)
   const skipClickRef = useRef(false)
   const SWIPE_THRESHOLD = 40
-
-  // 1 = forward (next), -1 = back. Drives slide direction in AnimatePresence.
-  const [direction, setDirection] = useState(1)
+  const ZOOMED_THRESHOLD = 1.05
 
   const advance = () => {
-    setDirection(1)
-    setPageIdx((i) => Math.min(pages.length, i + 1))
+    if (flipState || zoom.scale > ZOOMED_THRESHOLD) return
+    if (pageIdx >= pages.length - 1) {
+      // jump to past-end (chapter-end UI)
+      setPageIdx(pages.length)
+      return
+    }
+    setFlipState({ toIdx: pageIdx + 1, dir: 1 })
   }
   const goBack = () => {
-    setDirection(-1)
-    setPageIdx((i) => Math.max(0, i - 1))
+    if (flipState || zoom.scale > ZOOMED_THRESHOLD) return
+    if (pageIdx === 0) return
+    setFlipState({ toIdx: pageIdx - 1, dir: -1 })
   }
 
   const onTouchStart = (e: React.TouchEvent) => {
-    touchStartXRef.current = e.touches[0]?.clientX ?? null
+    if (e.touches.length === 2) {
+      const [t1, t2] = [e.touches[0], e.touches[1]]
+      pinchRef.current = {
+        startD: Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY),
+        baseScale: zoom.scale,
+        baseX: zoom.x,
+        baseY: zoom.y,
+      }
+      multitouchRef.current = true
+      skipClickRef.current = true
+      touchStartXRef.current = null
+      panRef.current = null
+      return
+    }
+    if (e.touches.length === 1) {
+      if (zoom.scale > ZOOMED_THRESHOLD) {
+        // when zoomed in, single finger pans the image
+        const t = e.touches[0]
+        panRef.current = {
+          startX: t.clientX,
+          startY: t.clientY,
+          baseX: zoom.x,
+          baseY: zoom.y,
+        }
+        skipClickRef.current = true
+      } else {
+        // at base zoom, single finger may be a swipe-to-flip
+        touchStartXRef.current = e.touches[0].clientX
+      }
+    }
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (multitouchRef.current && e.touches.length === 2 && pinchRef.current) {
+      const [t1, t2] = [e.touches[0], e.touches[1]]
+      const d = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY)
+      const next = pinchRef.current.baseScale * (d / pinchRef.current.startD)
+      const clamped = Math.min(4, Math.max(1, next))
+      setZoom((z) => ({ ...z, scale: clamped }))
+      return
+    }
+    if (panRef.current && e.touches.length === 1) {
+      const t = e.touches[0]
+      const dx = t.clientX - panRef.current.startX
+      const dy = t.clientY - panRef.current.startY
+      setZoom((z) => ({
+        ...z,
+        x: panRef.current!.baseX + dx,
+        y: panRef.current!.baseY + dy,
+      }))
+    }
   }
 
   const onTouchEnd = (e: React.TouchEvent) => {
+    // any pinch ending (one of two fingers lifted, or both)
+    if (multitouchRef.current && e.touches.length < 2) {
+      multitouchRef.current = false
+      pinchRef.current = null
+      if (zoom.scale < ZOOMED_THRESHOLD) {
+        setZoom({ scale: 1, x: 0, y: 0 })
+      }
+      // also clear any in-flight one-finger swipe state
+      touchStartXRef.current = null
+      return
+    }
+    // pan end
+    if (panRef.current && e.touches.length === 0) {
+      panRef.current = null
+      return
+    }
+    // swipe end (only valid at base zoom + no flip in progress)
     const start = touchStartXRef.current
     touchStartXRef.current = null
-    if (start == null) return
+    if (start == null || zoom.scale > ZOOMED_THRESHOLD || flipState) return
     const end = e.changedTouches[0]?.clientX
     if (end == null) return
     const dx = end - start
     if (dx < -SWIPE_THRESHOLD) {
       skipClickRef.current = true
-      advance() // swiped left → next (RTL forward)
+      advance()
     } else if (dx > SWIPE_THRESHOLD) {
       skipClickRef.current = true
-      goBack() // swiped right → prev
+      goBack()
     }
   }
+
+  // Double-tap detection — used while zoomed to reset zoom.
+  const lastTapRef = useRef<number>(0)
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (skipClickRef.current) {
       skipClickRef.current = false
+      return
+    }
+    if (zoom.scale > ZOOMED_THRESHOLD) {
+      const now = Date.now()
+      if (now - lastTapRef.current < 300) {
+        setZoom({ scale: 1, x: 0, y: 0 })
+        lastTapRef.current = 0
+        return
+      }
+      lastTapRef.current = now
+      setChromeVisible((v) => !v)
+      return
+    }
+    if (flipState) {
+      setChromeVisible((v) => !v)
       return
     }
     const rect = e.currentTarget.getBoundingClientRect()
@@ -167,9 +276,10 @@ export function MangaReader({ seriesId, chapterId, pages, initialPage, nextChapt
 
   return (
     <div
-      className="fixed inset-0 bg-black text-white z-[60] touch-none select-none"
+      className="fixed inset-0 bg-black text-white z-[60] touch-none select-none overflow-hidden"
       onClick={handleClick}
       onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
       {chromeVisible && (
@@ -210,61 +320,81 @@ export function MangaReader({ seriesId, chapterId, pages, initialPage, nextChapt
       {pages.length > 0 && !isPastEnd && (
         <div
           className="absolute inset-0"
-          style={{ perspective: '1600px' }}
+          style={{
+            transform: `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.scale})`,
+            transformOrigin: '50% 50%',
+            transition:
+              multitouchRef.current || panRef.current
+                ? 'none'
+                : 'transform 180ms ease-out',
+            perspective: '1600px',
+          }}
         >
-          <AnimatePresence custom={direction} initial={false}>
-            {current && current.ready && (
-              <motion.img
-                key={current.id}
-                src={mangaApi.pageUrl(current.id)}
-                alt={`Page ${current.pageNumber}`}
-                className="absolute inset-0 w-full h-full object-contain"
-                draggable={false}
-                onError={onImgError(current.id)}
-                custom={direction}
-                variants={{
-                  enter: { rotateY: 0, opacity: 0, scale: 0.97 },
-                  center: { rotateY: 0, opacity: 1, scale: 1 },
-                  exit: (dir: number) => ({
-                    rotateY: dir > 0 ? -170 : 170,
-                    rotateZ: dir > 0 ? -3 : 3,
-                    opacity: 0,
-                  }),
-                }}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{
-                  rotateY: { duration: 0.85, ease: [0.55, 0.06, 0.45, 0.94] },
-                  rotateZ: { duration: 0.85, ease: [0.55, 0.06, 0.45, 0.94] },
-                  opacity: {
-                    times: [0, 0.7, 1],
-                    duration: 0.85,
-                    ease: 'easeIn',
-                  },
-                  scale: { duration: 0.5, ease: 'easeOut' },
-                }}
-                style={{
-                  transformOrigin: direction > 0 ? '0% 100%' : '100% 100%',
-                  transformStyle: 'preserve-3d',
-                  backfaceVisibility: 'hidden',
-                  boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
-                }}
-              />
-            )}
-            {current && !current.ready && (
-              <motion.div
-                key={`loading-${current.id}`}
-                className="absolute inset-0 flex items-center justify-center text-faint text-sm"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                Diese Seite wird gerade geladen…
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Destination page beneath — only rendered during a flip. */}
+          {flipState && pages[flipState.toIdx]?.ready && (
+            <img
+              key={`under-${flipState.toIdx}`}
+              src={mangaApi.pageUrl(pages[flipState.toIdx]!.id)}
+              alt=""
+              className="absolute inset-0 w-full h-full object-contain"
+              draggable={false}
+            />
+          )}
+
+          {/* Top page — animates rotateY when flipState is set. */}
+          {current && current.ready && (
+            <motion.img
+              key={`top-${pageIdx}`}
+              src={mangaApi.pageUrl(current.id)}
+              alt={`Page ${current.pageNumber}`}
+              className="absolute inset-0 w-full h-full object-contain"
+              draggable={false}
+              onError={onImgError(current.id)}
+              initial={false}
+              animate={
+                flipState
+                  ? {
+                      rotateY: flipState.dir > 0 ? -170 : 170,
+                      rotateZ: flipState.dir > 0 ? -3 : 3,
+                    }
+                  : { rotateY: 0, rotateZ: 0 }
+              }
+              transition={{
+                rotateY: { duration: 0.9, ease: [0.45, 0.05, 0.35, 1] },
+                rotateZ: { duration: 0.9, ease: [0.45, 0.05, 0.35, 1] },
+              }}
+              onAnimationComplete={() => {
+                if (flipState) {
+                  setPageIdx(flipState.toIdx)
+                  setFlipState(null)
+                }
+              }}
+              style={{
+                transformOrigin:
+                  flipState?.dir === 1
+                    ? '0% 100%'
+                    : flipState?.dir === -1
+                    ? '100% 100%'
+                    : '50% 50%',
+                transformStyle: 'preserve-3d',
+                backfaceVisibility: 'hidden',
+                boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+              }}
+            />
+          )}
+
+          {current && !current.ready && (
+            <div className="absolute inset-0 flex items-center justify-center text-faint text-sm">
+              Diese Seite wird gerade geladen…
+            </div>
+          )}
+
+          {/* Subtle zoom indicator in the corner */}
+          {zoom.scale > ZOOMED_THRESHOLD && (
+            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-30 px-3 py-1 rounded-full bg-black/70 backdrop-blur text-[10px] uppercase tracking-widest text-faint pointer-events-none">
+              Zoom {zoom.scale.toFixed(1)}× · Doppeltipp zum Reset
+            </div>
+          )}
         </div>
       )}
       {isPastEnd && (
