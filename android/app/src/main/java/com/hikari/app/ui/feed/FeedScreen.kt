@@ -42,7 +42,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,7 +59,6 @@ import com.hikari.app.data.prefs.SponsorBlockPrefs
 import com.hikari.app.data.sponsor.SponsorBlockClient
 import com.hikari.app.domain.repo.PlaybackRepository
 import com.hikari.app.player.HikariPlayerFactory
-import com.hikari.app.player.PreloadCoordinator
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
@@ -209,17 +207,31 @@ fun FeedScreen(
                     }
                 }
 
-                val itemsState = rememberUpdatedState(items)
-                val firstItemReady = items.isNotEmpty()
-                LaunchedEffect(pagerState.currentPage, firstItemReady) {
-                    if (!firstItemReady) return@LaunchedEffect
-                    val current = itemsState.value
-                    val idx = pagerState.currentPage.coerceAtMost(current.size - 1)
-                    val upcoming = current.drop(idx).take(3).map {
-                        factory.mediaItemFor(baseUrl, it.videoId)
-                    }
-                    PreloadCoordinator.setQueue(player, upcoming)
+                // Build the player playlist ONCE per items change. ExoPlayer
+                // keeps already-buffered windows when the list overlaps, so a
+                // refresh that re-orders or appends videos won't re-prepare the
+                // currently-playing one.
+                val playlistKey = remember(items, baseUrl) {
+                    items.joinToString("|") { it.videoId }
+                }
+                LaunchedEffect(playlistKey) {
+                    if (items.isEmpty()) return@LaunchedEffect
+                    val mediaItems = items.map { factory.mediaItemFor(baseUrl, it.videoId) }
+                    val targetIdx = pagerState.currentPage.coerceIn(0, items.lastIndex)
+                    player.setMediaItems(mediaItems, targetIdx, 0L)
+                    player.prepare()
                     player.playWhenReady = true
+                }
+
+                // Page wechsel = nur seekTo, kein setMediaItems / prepare. Decoder
+                // bleibt warm, Buffer bleiben gefüllt → smoother swipe.
+                LaunchedEffect(pagerState.currentPage) {
+                    if (items.isEmpty()) return@LaunchedEffect
+                    val idx = pagerState.currentPage.coerceIn(0, items.lastIndex)
+                    if (idx != player.currentMediaItemIndex) {
+                        player.seekTo(idx, 0L)
+                        player.playWhenReady = true
+                    }
                 }
 
                 VerticalPager(

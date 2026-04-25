@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -25,8 +26,11 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -49,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -346,23 +351,26 @@ fun ReelPlayer(
                 modifier = Modifier.fillMaxSize(),
             )
         }
-        AndroidView(
-            factory = { ctx ->
-                PlayerView(ctx).apply {
-                    useController = false
-                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-                    // Opaque black letterbox bars — no thumbnail bleed-through
-                    setBackgroundColor(android.graphics.Color.BLACK)
-                    setShutterBackgroundColor(android.graphics.Color.BLACK)
-                    // Don't freeze on last frame when player is detached
-                    setKeepContentOnPlayerReset(false)
-                }
-            },
-            update = { view ->
-                view.player = if (isCurrent) player else null
-            },
-            modifier = Modifier.fillMaxSize(),
-        )
+        // PlayerView only mounts for the current page — non-current pages show
+        // the thumbnail above and don't need a Surface in the tree. Avoids
+        // multiple PlayerViews fighting over the shared ExoPlayer surface.
+        if (isCurrent) {
+            AndroidView(
+                factory = { ctx ->
+                    PlayerView(ctx).apply {
+                        useController = false
+                        resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                        // Opaque black letterbox bars — no thumbnail bleed-through
+                        setBackgroundColor(android.graphics.Color.BLACK)
+                        setShutterBackgroundColor(android.graphics.Color.BLACK)
+                        setKeepContentOnPlayerReset(false)
+                    }
+                },
+                update = { view -> view.player = player },
+                onRelease = { view -> view.player = null },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
 
         // ── Center: play/pause indicator ─────────────────────────────────────
         Box(modifier = Modifier.align(Alignment.Center)) {

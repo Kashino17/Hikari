@@ -280,7 +280,7 @@ fun ChannelCircle(channel: ChannelDto, onClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AsyncImage(
-            model = channel.thumbnailUrl,
+            model = channel.thumbnail,
             contentDescription = null,
             modifier = Modifier.size(70.dp).clip(CircleShape).background(HikariBorder),
             contentScale = ContentScale.Crop
