@@ -165,19 +165,25 @@ export async function runSeriesSync(input: SeriesSyncInput): Promise<void> {
   );
 
   for (const ch of detail.chapters) {
-    await runChapterSync({
-      db: input.db,
-      adapter: input.adapter,
-      seriesSlug: input.seriesSlug,
-      chapterNumber: ch.number,
-      chapterUrl: ch.sourceUrl,
-      mangaDir: input.mangaDir,
-      onProgress: (d) => {
-        if (d.pagesDone !== undefined) input.onProgress?.({ pagesDone: d.pagesDone });
-        if (d.pagesFailed !== undefined) input.onProgress?.({ pagesFailed: d.pagesFailed });
-        if (d.pagesQueued !== undefined) input.onProgress?.({ pagesQueued: d.pagesQueued });
-      },
-    });
+    try {
+      await runChapterSync({
+        db: input.db,
+        adapter: input.adapter,
+        seriesSlug: input.seriesSlug,
+        chapterNumber: ch.number,
+        chapterUrl: ch.sourceUrl,
+        mangaDir: input.mangaDir,
+        onProgress: (d) => {
+          if (d.pagesDone !== undefined) input.onProgress?.({ pagesDone: d.pagesDone });
+          if (d.pagesFailed !== undefined) input.onProgress?.({ pagesFailed: d.pagesFailed });
+          if (d.pagesQueued !== undefined) input.onProgress?.({ pagesQueued: d.pagesQueued });
+        },
+      });
+    } catch (err) {
+      // One chapter failing shouldn't kill the whole series sync. Surface it
+      // through the failure counter so the job's error_message reflects reality.
+      input.onProgress?.({ pagesFailed: 1 });
+    }
     input.onProgress?.({ chaptersDone: 1 });
   }
 }
