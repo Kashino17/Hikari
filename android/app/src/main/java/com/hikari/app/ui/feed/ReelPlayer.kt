@@ -184,11 +184,15 @@ fun ReelPlayer(
     var showSeekBadge by remember { mutableStateOf<SeekDirection?>(null) }
     var boxWidth by remember { mutableStateOf(0) }
 
-    // ── Error listener ───────────────────────────────────────────────────────
+    // ── First-frame tracking + error listener ────────────────────────────────
+    // Thumbnail is shown until the player renders its first frame for this item.
+    // Keyed on videoId so a re-visit (swipe back) re-arms the gate.
+    var firstFrameRendered by remember(item.videoId) { mutableStateOf(false) }
     DisposableEffect(item.videoId, player, isCurrent) {
         if (!isCurrent) return@DisposableEffect onDispose {}
         val listener = object : Player.Listener {
             override fun onPlayerError(error: PlaybackException) { onUnplayable() }
+            override fun onRenderedFirstFrame() { firstFrameRendered = true }
         }
         player.addListener(listener)
         onDispose { player.removeListener(listener) }
@@ -280,6 +284,22 @@ fun ReelPlayer(
         }
     }
 
+    var showNextEpisode by remember { mutableStateOf(false) }
+
+    LaunchedEffect(item.videoId, isCurrent) {
+        if (!isCurrent) return@LaunchedEffect
+        while (true) {
+            kotlinx.coroutines.delay(1000)
+            val pos = player.currentPosition
+            val dur = player.duration
+            if (dur > 0 && pos > dur - 20_000L) {
+                showNextEpisode = true
+            } else {
+                showNextEpisode = false
+            }
+        }
+    }
+
     // ════════════════════════════════════════════════════════════════════════
     // UI
     // ════════════════════════════════════════════════════════════════════════
@@ -313,22 +333,27 @@ fun ReelPlayer(
                 )
             },
     ) {
-        // ── Task 1: Thumbnail underlay + PlayerView with transparent shutter ──
-        // The thumbnail shows through until ExoPlayer renders its first video frame,
-        // eliminating the stale-last-frame flash that used to blink on every swipe.
-        AsyncImage(
-            model = item.thumbnailUrl,
-            contentDescription = item.title,
-            contentScale = ContentScale.Fit,
-            modifier = Modifier.fillMaxSize(),
-        )
+        // ── Thumbnail underlay + PlayerView with opaque letterbox ────────────
+        // Thumbnail is only shown for non-current pages or while the current page
+        // is still loading its first frame. This prevents the thumbnail from
+        // bleeding through the player's letterbox bars when the thumbnail's
+        // aspect ratio differs from the video's (common with YouTube thumbnails).
+        if (!isCurrent || !firstFrameRendered) {
+            AsyncImage(
+                model = item.thumbnailUrl,
+                contentDescription = item.title,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
                     useController = false
                     resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-                    // Transparent shutter: thumbnail shows through until first video frame renders
-                    setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
+                    // Opaque black letterbox bars — no thumbnail bleed-through
+                    setBackgroundColor(android.graphics.Color.BLACK)
+                    setShutterBackgroundColor(android.graphics.Color.BLACK)
                     // Don't freeze on last frame when player is detached
                     setKeepContentOnPlayerReset(false)
                 }
@@ -366,10 +391,30 @@ fun ReelPlayer(
                 }
             },
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(top = 48.dp, end = 12.dp),
+                .align(Alignment.BottomEnd)
+                .padding(bottom = if (fullscreen) 100.dp else 190.dp),
         )
+
+        // ── Next Episode button ──────────────────────────────────────────────
+        AnimatedVisibility(
+            visible = showNextEpisode && isCurrent,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(bottom = if (fullscreen) 100.dp else 190.dp)
+        ) {
+            Button(
+                onClick = { /* TODO: next item in pager */ },
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                shape = RoundedCornerShape(0.dp),
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp)
+            ) {
+                Text("NÄCHSTE FOLGE", fontWeight = FontWeight.Bold, color = Color.Black)
+                Spacer(Modifier.width(8.dp))
+                Icon(Icons.Default.PlayArrow, null, tint = Color.Black)
+            }
+        }
 
         // ── Task 2 + 3: animated chrome (auto-hides after 3s) ────────────────
 

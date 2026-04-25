@@ -2,6 +2,9 @@ package com.hikari.app.domain.repo
 
 import com.hikari.app.data.api.HikariApi
 import com.hikari.app.data.api.dto.FeedItemDto
+import com.hikari.app.data.api.dto.LibraryResponse
+import com.hikari.app.data.api.dto.LibraryVideoDto
+import com.hikari.app.data.api.dto.SeriesDetailResponse
 import com.hikari.app.data.api.dto.TodayCountResponse
 import com.hikari.app.data.db.FeedDao
 import com.hikari.app.data.db.FeedItemEntity
@@ -69,6 +72,10 @@ class FeedRepository @Inject constructor(
     }
 
     suspend fun todayCount(): TodayCountResponse = api.todayCount()
+
+    suspend fun getLibrary(): LibraryResponse = api.getLibrary()
+
+    suspend fun getSeries(id: String): SeriesDetailResponse = api.getSeries(id)
 }
 
 private fun FeedItemDto.toEntity() = FeedItemEntity(

@@ -30,6 +30,8 @@ import androidx.navigation.navArgument
 import com.hikari.app.ui.channels.ChannelDetailScreen
 import com.hikari.app.ui.channels.ChannelsScreen
 import com.hikari.app.ui.feed.FeedScreen
+import com.hikari.app.ui.library.LibraryScreen
+import com.hikari.app.ui.library.SeriesDetailScreen
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
 import com.hikari.app.ui.theme.HikariTextFaint
@@ -87,9 +89,36 @@ fun HikariNavHost() {
     ) { padding ->
         NavHost(
             nav,
-            startDestination = "feed",
+            startDestination = "library",
             modifier = Modifier.fillMaxSize(),
         ) {
+            composable("library") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    LibraryScreen(
+                        onOpenSeries = { id -> nav.navigate("series/$id") },
+                        onOpenChannel = { id -> nav.navigate("channel/$id") },
+                        onPlayVideo = { videoId ->
+                            navTo(nav, "feed")
+                            // TODO: Add logic to play specific video in FeedScreen
+                        }
+                    )
+                }
+            }
+            composable(
+                route = "series/{seriesId}",
+                arguments = listOf(navArgument("seriesId") { type = NavType.StringType }),
+            ) { backStackEntry ->
+                val seriesId = backStackEntry.arguments?.getString("seriesId")
+                Box(Modifier.fillMaxSize()) {
+                    SeriesDetailScreen(
+                        seriesId = seriesId,
+                        onBack = { nav.popBackStack() },
+                        onPlayVideo = { videoId ->
+                            navTo(nav, "feed")
+                        }
+                    )
+                }
+            }
             composable("feed") {
                 FeedScreen(
                     fullscreen = feedFullscreen,

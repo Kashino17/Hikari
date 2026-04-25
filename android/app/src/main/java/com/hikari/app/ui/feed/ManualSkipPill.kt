@@ -62,22 +62,21 @@ fun ManualSkipPill(
                 horizontalArrangement = Arrangement.Start,
                 modifier = Modifier
                     .clickable { onSkip() }
-                    .background(Color.Black.copy(alpha = 0.65f), RoundedCornerShape(24.dp))
-                    .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(24.dp))
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                    .background(Color.Black.copy(alpha = 0.65f))
+                    .border(1.dp, Color.White.copy(alpha = 0.2f))
+                    .padding(horizontal = 24.dp, vertical = 14.dp),
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .background(cat.color, CircleShape),
-                )
-                Spacer(Modifier.width(10.dp))
                 Text(
-                    "${cat.label} überspringen  →",
+                    "${cat.label} überspringen".uppercase(),
                     color = Color.White,
                     style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
                 )
             }
         }
     }
 }
+
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp

@@ -11,9 +11,11 @@ import com.hikari.app.data.api.dto.FeedItemDto
 import com.hikari.app.data.api.dto.FilterStateDto
 import com.hikari.app.data.api.dto.ImportVideosRequest
 import com.hikari.app.data.api.dto.ImportVideosResponse
+import com.hikari.app.data.api.dto.LibraryResponse
 import com.hikari.app.data.api.dto.PollResponse
 import com.hikari.app.data.api.dto.RecommendationDto
 import com.hikari.app.data.api.dto.RejectedItemDto
+import com.hikari.app.data.api.dto.SeriesDetailResponse
 import com.hikari.app.data.api.dto.SetOverrideRequest
 import com.hikari.app.data.api.dto.TodayCountResponse
 import com.hikari.app.data.api.dto.UpdateFilterRequest
@@ -84,6 +86,12 @@ interface HikariApi {
 
     @GET("rejected")
     suspend fun getRejected(@Query("limit") limit: Int = 50): List<RejectedItemDto>
+
+    @GET("library")
+    suspend fun getLibrary(): LibraryResponse
+
+    @GET("series/{id}")
+    suspend fun getSeries(@Path("id") seriesId: String): SeriesDetailResponse
 
     @GET("stats/weekly")
     suspend fun getWeeklyStats(): WeeklyStatsDto
