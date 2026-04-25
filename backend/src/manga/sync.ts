@@ -1,5 +1,6 @@
+import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
-import { upsertPage } from "./persist.js";
+import { upsertPage, upsertSeries, upsertChapter, seriesId } from "./persist.js";
 import { downloadPage } from "./image-store.js";
 import type { MangaSourceAdapter } from "./sources/types.js";
 
@@ -24,7 +25,7 @@ async function withConcurrency<T>(
   const runners = Array.from({ length: limit }, async () => {
     while (i < items.length) {
       const idx = i++;
-      await worker(items[idx]);
+      await worker(items[idx]!);
     }
   });
   await Promise.all(runners);
@@ -33,7 +34,7 @@ async function withConcurrency<T>(
 function extFromUrl(url: string): string {
   const m = url.match(/\.(png|jpe?g|webp)(\?.*)?$/i);
   if (!m) return ".jpg";
-  return `.${m[1].toLowerCase().replace("jpeg", "jpg")}`;
+  return `.${m[1]!.toLowerCase().replace("jpeg", "jpg")}`;
 }
 
 export async function runChapterSync(input: ChapterSyncInput): Promise<void> {
@@ -77,4 +78,153 @@ export async function runChapterSync(input: ChapterSyncInput): Promise<void> {
       // Page download failure: leave local_path NULL, sync continues.
     }
   });
+}
+
+interface SeriesSyncInput {
+  db: Database.Database;
+  adapter: MangaSourceAdapter;
+  seriesSlug: string;
+  seriesUrl: string;
+  seriesTitle: string;
+  mangaDir: string;
+  onProgress?: (delta: { chaptersDone?: number; pagesDone?: number }) => void;
+}
+
+export async function runSeriesSync(input: SeriesSyncInput): Promise<void> {
+  upsertSeries(input.db, {
+    source: input.adapter.id,
+    sourceSlug: input.seriesSlug,
+    title: input.seriesTitle,
+    sourceUrl: input.seriesUrl,
+  });
+
+  const detail = await input.adapter.fetchSeriesDetail(input.seriesUrl);
+
+  // Persist arcs first so chapters can reference them.
+  const arcByNumber = new Map<number, string>();
+  for (const arc of detail.arcs) {
+    const arcId = `${input.adapter.id}:${input.seriesSlug}:arc-${arc.arcOrder}`;
+    input.db.prepare(
+      `INSERT INTO manga_arcs (id, series_id, title, arc_order, chapter_start, chapter_end)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         title = excluded.title,
+         arc_order = excluded.arc_order,
+         chapter_start = excluded.chapter_start,
+         chapter_end = excluded.chapter_end`,
+    ).run(
+      arcId,
+      seriesId(input.adapter.id, input.seriesSlug),
+      arc.title,
+      arc.arcOrder,
+      arc.chapterNumbers[0] ?? null,
+      arc.chapterNumbers[arc.chapterNumbers.length - 1] ?? null,
+    );
+    for (const n of arc.chapterNumbers) arcByNumber.set(n, arcId);
+  }
+
+  for (const ch of detail.chapters) {
+    upsertChapter(input.db, {
+      source: input.adapter.id,
+      seriesSlug: input.seriesSlug,
+      number: ch.number,
+      ...(ch.title !== undefined && { title: ch.title }),
+      sourceUrl: ch.sourceUrl,
+      arcId: arcByNumber.get(ch.number) ?? null,
+      ...(ch.publishedAt !== undefined && { publishedAt: ch.publishedAt }),
+    });
+  }
+
+  input.db.prepare("UPDATE manga_series SET total_chapters = ?, last_synced_at = ? WHERE id = ?").run(
+    detail.chapters.length,
+    Date.now(),
+    seriesId(input.adapter.id, input.seriesSlug),
+  );
+
+  for (const ch of detail.chapters) {
+    await runChapterSync({
+      db: input.db,
+      adapter: input.adapter,
+      seriesSlug: input.seriesSlug,
+      chapterNumber: ch.number,
+      chapterUrl: ch.sourceUrl,
+      mangaDir: input.mangaDir,
+      onProgress: (d) => {
+        if (d.pagesDone !== undefined) input.onProgress?.({ pagesDone: d.pagesDone });
+      },
+    });
+    input.onProgress?.({ chaptersDone: 1 });
+  }
+}
+
+interface FullSyncInput {
+  db: Database.Database;
+  adapter: MangaSourceAdapter;
+  mangaDir: string;
+}
+
+export interface SyncJobRow {
+  id: string;
+  source: string;
+  series_id: string | null;
+  status: "queued" | "running" | "done" | "failed";
+  total_chapters: number;
+  done_chapters: number;
+  total_pages: number;
+  done_pages: number;
+  error_message: string | null;
+  started_at: number;
+  finished_at: number | null;
+}
+
+export async function runFullSync(input: FullSyncInput): Promise<SyncJobRow> {
+  const id = randomUUID();
+  const now = Date.now();
+  input.db.prepare(
+    `INSERT INTO manga_sync_jobs (id, source, status, started_at) VALUES (?, ?, 'running', ?)`,
+  ).run(id, input.adapter.id, now);
+
+  try {
+    const series = await input.adapter.listSeries();
+
+    let totalChapters = 0;
+    for (const s of series) {
+      const detail = await input.adapter.fetchSeriesDetail(s.sourceUrl);
+      totalChapters += detail.chapters.length;
+    }
+    input.db.prepare("UPDATE manga_sync_jobs SET total_chapters = ? WHERE id = ?").run(totalChapters, id);
+
+    let doneChapters = 0;
+    let donePages = 0;
+    for (const s of series) {
+      await runSeriesSync({
+        db: input.db,
+        adapter: input.adapter,
+        seriesSlug: s.sourceSlug,
+        seriesUrl: s.sourceUrl,
+        seriesTitle: s.title,
+        mangaDir: input.mangaDir,
+        onProgress: (d) => {
+          if (d.chaptersDone) {
+            doneChapters += d.chaptersDone;
+            input.db.prepare("UPDATE manga_sync_jobs SET done_chapters = ? WHERE id = ?").run(doneChapters, id);
+          }
+          if (d.pagesDone) {
+            donePages += d.pagesDone;
+            input.db.prepare("UPDATE manga_sync_jobs SET done_pages = ? WHERE id = ?").run(donePages, id);
+          }
+        },
+      });
+    }
+
+    input.db.prepare(
+      "UPDATE manga_sync_jobs SET status = 'done', finished_at = ? WHERE id = ?",
+    ).run(Date.now(), id);
+  } catch (err) {
+    input.db.prepare(
+      "UPDATE manga_sync_jobs SET status = 'failed', error_message = ?, finished_at = ? WHERE id = ?",
+    ).run(String(err), Date.now(), id);
+  }
+
+  return input.db.prepare("SELECT * FROM manga_sync_jobs WHERE id = ?").get(id) as SyncJobRow;
 }
