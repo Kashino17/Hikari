@@ -112,28 +112,32 @@ class ChannelsViewModel @Inject constructor(
         load()
     }
 
-    fun poll(channelId: String) = viewModelScope.launch {
-        _pollStatus.value = "Prüfe Kanal…"
-        runCatching { repo.poll(channelId) }
-            .onSuccess { resp ->
-                _pollStatus.value = when {
-                    resp.queued == 0 && resp.skipped > 0 ->
-                        "Keine neuen Videos (${resp.skipped} schon erfasst)"
-                    resp.queued == 1 ->
-                        "1 neues Video wird verarbeitet…"
-                    resp.queued > 1 ->
-                        "${resp.queued} neue Videos werden verarbeitet…"
-                    else ->
-                        "Kanal-RSS leer"
-                }
-                kotlinx.coroutines.delay(5_000)
-                _pollStatus.value = null
-                load()
+    fun poll(channelId: String) = doFetch(channelId, deep = false)
+
+    fun deepScan(channelId: String) = doFetch(channelId, deep = true)
+
+    private fun doFetch(channelId: String, deep: Boolean) = viewModelScope.launch {
+        _pollStatus.value = if (deep) "Tiefensuche läuft… (kann dauern)" else "Prüfe Kanal…"
+        runCatching {
+            if (deep) repo.deepScan(channelId) else repo.poll(channelId)
+        }.onSuccess { resp ->
+            _pollStatus.value = when {
+                resp.queued == 0 && resp.skipped > 0 ->
+                    "Keine neuen Videos (${resp.skipped} schon erfasst)"
+                resp.queued == 1 ->
+                    "1 neues Video wird verarbeitet…"
+                resp.queued > 1 ->
+                    "${resp.queued} neue Videos werden verarbeitet…"
+                else ->
+                    "Kein Video gefunden"
             }
-            .onFailure {
-                _pollStatus.value = "Fehler: ${it.message}"
-                kotlinx.coroutines.delay(5_000)
-                _pollStatus.value = null
-            }
+            kotlinx.coroutines.delay(5_000)
+            _pollStatus.value = null
+            load()
+        }.onFailure {
+            _pollStatus.value = "Fehler: ${it.message}"
+            kotlinx.coroutines.delay(5_000)
+            _pollStatus.value = null
+        }
     }
 }

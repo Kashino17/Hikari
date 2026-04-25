@@ -63,7 +63,11 @@ interface HikariApi {
     suspend fun deleteChannel(@Path("id") channelId: String)
 
     @POST("channels/{id}/poll")
-    suspend fun pollChannel(@Path("id") channelId: String): PollResponse
+    suspend fun pollChannel(
+        @Path("id") channelId: String,
+        @Query("deep") deep: Boolean? = null,
+        @Query("limit") limit: Int? = null,
+    ): PollResponse
 
     @GET("channels/{id}/stats")
     suspend fun getChannelStats(@Path("id") channelId: String): ChannelStatsDto

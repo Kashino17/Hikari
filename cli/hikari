@@ -1,0 +1,200 @@
+#!/usr/bin/env bash
+# Hikari Server CLI — start/stop/inspect the local backend daemon.
+# Default action (no args) = start in background.
+
+set -e
+
+# ─── Config ─────────────────────────────────────────────────────────────────
+BACKEND_DIR="/Users/ayysir/Desktop/Hikari/backend"
+NODE_PATH_PREFIX="/opt/homebrew/opt/node@24/bin"
+
+STATE_DIR="$HOME/.hikari"
+PID_FILE="$STATE_DIR/server.pid"
+LOG_FILE="$STATE_DIR/server.log"
+
+mkdir -p "$STATE_DIR"
+
+# ─── Helpers ────────────────────────────────────────────────────────────────
+RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; AMBER=$'\033[38;5;214m'
+DIM=$'\033[2m'; BOLD=$'\033[1m'; RESET=$'\033[0m'
+
+is_running() {
+    [[ -f "$PID_FILE" ]] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null
+}
+
+read_pid() {
+    [[ -f "$PID_FILE" ]] && cat "$PID_FILE" || echo ""
+}
+
+kill_tree() {
+    local pid="$1"
+    local sig="${2:-TERM}"
+    # Kill children first so they don't get orphaned + adopted by launchd
+    pkill -"$sig" -P "$pid" 2>/dev/null || true
+    kill -"$sig" "$pid" 2>/dev/null || true
+}
+
+wait_for_health() {
+    local i=0
+    while (( i < 20 )); do
+        if curl -s --max-time 1 "http://localhost:3000/health" > /dev/null 2>&1; then
+            return 0
+        fi
+        sleep 0.25
+        ((i++))
+    done
+    return 1
+}
+
+# ─── Commands ───────────────────────────────────────────────────────────────
+cmd_start() {
+    if is_running; then
+        echo "${YELLOW}Hikari läuft schon${RESET} (PID $(read_pid))"
+        echo "${DIM}  → ${BOLD}hikari status${RESET}${DIM} oder ${BOLD}hikari logs${RESET}${DIM} für Details${RESET}"
+        return 0
+    fi
+
+    echo "${AMBER}Starte Hikari im Hintergrund…${RESET}"
+    cd "$BACKEND_DIR"
+    PATH="$NODE_PATH_PREFIX:$PATH" nohup npm run dev > "$LOG_FILE" 2>&1 &
+    local pid=$!
+    echo "$pid" > "$PID_FILE"
+
+    if wait_for_health; then
+        echo "${GREEN}Läuft${RESET} (PID $pid)"
+        echo "${DIM}  Logs:    ${BOLD}hikari logs${RESET}"
+        echo "${DIM}  Stoppen: ${BOLD}hikari stop${RESET}"
+        echo "${DIM}  URL:     http://localhost:3000  ·  http://100.125.192.44:3000${RESET}"
+    else
+        echo "${RED}Server reagiert nicht auf /health binnen 5s.${RESET}"
+        echo "${DIM}  Letzte Log-Zeilen:${RESET}"
+        tail -n 8 "$LOG_FILE" | sed "s/^/  /"
+        echo "${DIM}  Volle Logs: ${BOLD}hikari logs${RESET}"
+        return 1
+    fi
+}
+
+cmd_stop() {
+    if ! is_running; then
+        if [[ -f "$PID_FILE" ]]; then
+            rm -f "$PID_FILE"
+            echo "${DIM}Stale PID-Datei aufgeräumt.${RESET}"
+        else
+            echo "${DIM}Lief nicht.${RESET}"
+        fi
+        return 0
+    fi
+
+    local pid
+    pid=$(read_pid)
+    echo "${AMBER}Stoppe (PID $pid)…${RESET}"
+    kill_tree "$pid" TERM
+
+    # Wait up to 5s for graceful shutdown
+    local i=0
+    while (( i < 20 )) && kill -0 "$pid" 2>/dev/null; do
+        sleep 0.25
+        ((i++))
+    done
+
+    if kill -0 "$pid" 2>/dev/null; then
+        echo "${YELLOW}TERM ignoriert — nehme den Hammer.${RESET}"
+        kill_tree "$pid" KILL
+    fi
+
+    rm -f "$PID_FILE"
+    echo "${GREEN}Gestoppt.${RESET}"
+}
+
+cmd_status() {
+    if is_running; then
+        local pid
+        pid=$(read_pid)
+        echo "${GREEN}● running${RESET}  (PID $pid)"
+        if curl -s --max-time 1 "http://localhost:3000/health" > /dev/null 2>&1; then
+            local body
+            body=$(curl -s --max-time 1 "http://localhost:3000/health")
+            echo "${DIM}  /health: $body${RESET}"
+        else
+            echo "${YELLOW}  /health antwortet nicht — Prozess ist da, aber Server hängt evtl.${RESET}"
+        fi
+        # Disk usage of state + videos
+        if [[ -d "$HOME/.hikari" ]]; then
+            local size
+            size=$(du -sh "$HOME/.hikari" 2>/dev/null | awk '{print $1}')
+            echo "${DIM}  ~/.hikari: $size${RESET}"
+        fi
+    else
+        echo "${DIM}○ stopped${RESET}"
+        if [[ -f "$LOG_FILE" ]]; then
+            echo "${DIM}  Letzte Logs: ${BOLD}hikari logs${RESET}"
+        fi
+    fi
+}
+
+cmd_restart() {
+    cmd_stop
+    sleep 0.5
+    cmd_start
+}
+
+cmd_logs() {
+    if [[ ! -f "$LOG_FILE" ]]; then
+        echo "${DIM}Noch keine Logs (Server lief noch nicht).${RESET}"
+        return 1
+    fi
+    # -F follows even if file is rotated
+    tail -F -n 50 "$LOG_FILE"
+}
+
+cmd_fg() {
+    if is_running; then
+        echo "${YELLOW}Background-Server läuft schon (PID $(read_pid)).${RESET}"
+        echo "${DIM}  Erst ${BOLD}hikari stop${RESET}${DIM} damit nichts kollidiert.${RESET}"
+        return 1
+    fi
+    echo "${AMBER}Starte im Vordergrund — Ctrl+C beendet.${RESET}"
+    cd "$BACKEND_DIR"
+    exec env PATH="$NODE_PATH_PREFIX:$PATH" npm run dev
+}
+
+cmd_help() {
+    cat <<EOF
+${BOLD}Hikari${RESET} — Backend-Server CLI
+
+${BOLD}USAGE${RESET}
+  ${AMBER}hikari${RESET}              Starte Server im Hintergrund (default)
+  ${AMBER}hikari start${RESET}        Wie oben
+  ${AMBER}hikari stop${RESET}         Stoppe Server
+  ${AMBER}hikari restart${RESET}      Stop + Start
+  ${AMBER}hikari status${RESET}       Läuft er? + Health-Check
+  ${AMBER}hikari logs${RESET}         Live-Logs verfolgen (tail -F)
+  ${AMBER}hikari fg${RESET}           Im Vordergrund starten (Ctrl+C beendet)
+  ${AMBER}hikari -h${RESET}           Diese Hilfe
+
+${BOLD}DATEIEN${RESET}
+  ${DIM}~/.hikari/server.pid    PID des laufenden Servers${RESET}
+  ${DIM}~/.hikari/server.log    Server-Output (alle Logs)${RESET}
+
+${BOLD}URLS${RESET}
+  ${DIM}http://localhost:3000          (lokal)${RESET}
+  ${DIM}http://100.125.192.44:3000     (Tailscale, fürs Handy)${RESET}
+EOF
+}
+
+# ─── Dispatch ───────────────────────────────────────────────────────────────
+case "${1:-start}" in
+    start|up)         cmd_start ;;
+    stop|down)        cmd_stop ;;
+    restart)          cmd_restart ;;
+    status|st)        cmd_status ;;
+    logs|log|tail)    cmd_logs ;;
+    fg|foreground)    cmd_fg ;;
+    -h|--help|help)   cmd_help ;;
+    *)
+        echo "${RED}Unknown command: $1${RESET}" >&2
+        echo ""
+        cmd_help
+        exit 1
+        ;;
+esac

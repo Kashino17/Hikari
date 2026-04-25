@@ -5,7 +5,33 @@ import type Database from "better-sqlite3";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
+interface ColumnInfo {
+  name: string;
+}
+
+/**
+ * Adds a column only if it doesn't already exist. SQLite has no "ADD COLUMN
+ * IF NOT EXISTS" so we look it up via PRAGMA first.
+ */
+function addColumnIfMissing(
+  db: Database.Database,
+  table: string,
+  column: string,
+  ddlType: string,
+): void {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all() as ColumnInfo[];
+  if (cols.some((c) => c.name === column)) return;
+  db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${ddlType}`);
+}
+
 export function applyMigrations(db: Database.Database): void {
   const schema = readFileSync(join(here, "schema.sql"), "utf8");
   db.exec(schema);
+
+  // Live-DB upgrades: columns added after v0.8.x channels page polish.
+  // Each call is idempotent — safe across reboots and across CI test DBs.
+  addColumnIfMissing(db, "channels", "handle", "TEXT");
+  addColumnIfMissing(db, "channels", "description", "TEXT");
+  addColumnIfMissing(db, "channels", "subscribers", "INTEGER");
+  addColumnIfMissing(db, "channels", "thumbnail_url", "TEXT");
 }

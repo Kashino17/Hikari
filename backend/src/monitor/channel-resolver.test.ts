@@ -17,7 +17,14 @@ describe("resolveChannel", () => {
     });
 
     const result = await resolveChannel("https://www.youtube.com/@3blue1brown");
-    expect(result).toEqual({ channelId: "UCabc123", title: "3Blue1Brown" });
+    expect(result).toEqual({
+      channelId: "UCabc123",
+      title: "3Blue1Brown",
+      handle: null,
+      description: null,
+      subscribers: null,
+      thumbnail: null,
+    });
     expect(runYtDlp).toHaveBeenCalledWith([
       "--flat-playlist",
       "--playlist-items",

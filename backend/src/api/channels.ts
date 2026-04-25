@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import type Database from "better-sqlite3";
 import { resolveChannel } from "../monitor/channel-resolver.js";
 import { searchChannels } from "../monitor/channel-search.js";
+import { fetchChannelDeepScan } from "../monitor/deep-scan.js";
 import { fetchChannelFeed } from "../monitor/rss-poller.js";
 import { processNewVideo } from "../pipeline/orchestrator.js";
 import { fetchVideoMetadata } from "../ingest/metadata.js";
@@ -25,16 +26,37 @@ export async function registerChannelsRoutes(
     const resolved = await resolveChannel(channelUrl);
     deps.db
       .prepare(
-        `INSERT OR REPLACE INTO channels (id, url, title, added_at, is_active)
-         VALUES (?, ?, ?, ?, 1)`,
+        `INSERT OR REPLACE INTO channels
+         (id, url, title, added_at, is_active, handle, description, subscribers, thumbnail_url)
+         VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?)`,
       )
-      .run(resolved.channelId, channelUrl, resolved.title, Date.now());
-    return reply.code(200).send({ id: resolved.channelId, title: resolved.title, url: channelUrl });
+      .run(
+        resolved.channelId,
+        channelUrl,
+        resolved.title,
+        Date.now(),
+        resolved.handle,
+        resolved.description,
+        resolved.subscribers,
+        resolved.thumbnail,
+      );
+    return reply.code(200).send({
+      id: resolved.channelId,
+      title: resolved.title,
+      url: channelUrl,
+      handle: resolved.handle,
+      thumbnail: resolved.thumbnail,
+      subscribers: resolved.subscribers,
+    });
   });
 
   app.get("/channels", async () => {
     return deps.db
-      .prepare("SELECT id, url, title, added_at, is_active FROM channels WHERE is_active=1 ORDER BY added_at DESC")
+      .prepare(
+        `SELECT id, url, title, added_at, is_active, last_polled_at,
+                handle, description, subscribers, thumbnail_url AS thumbnail
+         FROM channels WHERE is_active=1 ORDER BY added_at DESC`,
+      )
       .all();
   });
 
@@ -65,21 +87,27 @@ export async function registerChannelsRoutes(
     return reply.code(204).send();
   });
 
-  app.post<{ Params: { id: string } }>("/channels/:id/poll", async (req, reply) => {
+  app.post<{
+    Params: { id: string };
+    Querystring: { deep?: string; limit?: string };
+  }>("/channels/:id/poll", async (req, reply) => {
     if (!deps.scorer || !deps.videoDir) {
       return reply.code(503).send({ error: "poll not available: scorer/videoDir not configured" });
     }
     const channelId = req.params.id;
     const channel = deps.db
-      .prepare("SELECT id FROM channels WHERE id = ? AND is_active = 1")
-      .get(channelId);
+      .prepare("SELECT id, url FROM channels WHERE id = ? AND is_active = 1")
+      .get(channelId) as { id: string; url: string } | undefined;
     if (!channel) return reply.code(404).send({ error: "channel not found or inactive" });
 
-    // Fetch RSS (all ~15 entries YouTube returns) and split into
-    // {already-processed, new}. Respond immediately with the counts so the
-    // UI unblocks; actual ingestion runs in the background — each video can
-    // take 30s-2min (metadata + LLM score + optional 100 MB download).
-    const entries = await fetchChannelFeed(channelId);
+    const isDeep = req.query.deep === "true" || req.query.deep === "1";
+    const deepLimit = Math.min(Math.max(Number(req.query.limit ?? 50) || 50, 1), 200);
+
+    // RSS gives ~15 entries. Deep scan via yt-dlp can fetch up to `limit`.
+    const entries = isDeep
+      ? await fetchChannelDeepScan(channelId, deepLimit)
+      : await fetchChannelFeed(channelId);
+
     const newEntries = entries.filter(
       (e) => !deps.db.prepare("SELECT 1 FROM videos WHERE id = ?").get(e.videoId),
     );
@@ -90,7 +118,30 @@ export async function registerChannelsRoutes(
       .prepare("UPDATE channels SET last_polled_at = ? WHERE id = ?")
       .run(Date.now(), channelId);
 
-    // Fire-and-forget background processing
+    // Refresh channel metadata in the background — keeps thumbnail/handle/
+    // subscribers fresh without an extra explicit endpoint. Errors silenced
+    // because metadata refresh is best-effort.
+    (async () => {
+      try {
+        const refreshed = await resolveChannel(channel.url);
+        deps.db
+          .prepare(
+            `UPDATE channels SET handle = ?, description = ?, subscribers = ?, thumbnail_url = ?
+             WHERE id = ?`,
+          )
+          .run(
+            refreshed.handle,
+            refreshed.description,
+            refreshed.subscribers,
+            refreshed.thumbnail,
+            channelId,
+          );
+      } catch (err) {
+        app.log.debug({ err, channelId }, "channel metadata refresh failed (non-fatal)");
+      }
+    })().catch(() => {});
+
+    // Fire-and-forget background ingest of new videos.
     (async () => {
       for (const e of newEntries) {
         try {
@@ -111,12 +162,12 @@ export async function registerChannelsRoutes(
           );
         }
       }
-      app.log.info({ channelId, queued }, "channel poll completed");
+      app.log.info({ channelId, queued, isDeep }, "channel poll completed");
     })().catch((err) => {
       app.log.error({ err, channelId }, "channel poll background failed");
     });
 
-    return reply.code(202).send({ queued, skipped, errors: [] });
+    return reply.code(202).send({ queued, skipped, errors: [], deep: isDeep });
   });
 
   app.get<{ Params: { id: string } }>("/channels/:id/stats", async (req, reply) => {

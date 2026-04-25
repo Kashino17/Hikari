@@ -17,9 +17,16 @@ describe("channels API", () => {
     vi.clearAllMocks();
   });
 
-  it("POST /channels resolves URL and inserts row", async () => {
+  it("POST /channels resolves URL and inserts row with metadata", async () => {
     const { resolveChannel } = await import("../monitor/channel-resolver.js");
-    vi.mocked(resolveChannel).mockResolvedValue({ channelId: "UC1", title: "Test Channel" });
+    vi.mocked(resolveChannel).mockResolvedValue({
+      channelId: "UC1",
+      title: "Test Channel",
+      handle: "@test",
+      description: "desc",
+      subscribers: 12345,
+      thumbnail: "https://yt.example/thumb.jpg",
+    });
 
     const app = Fastify();
     await registerChannelsRoutes(app, { db });
@@ -31,8 +38,17 @@ describe("channels API", () => {
     });
 
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ id: "UC1", title: "Test Channel", url: "https://www.youtube.com/@test" });
-    expect(db.prepare("SELECT COUNT(*) as c FROM channels").get()).toEqual({ c: 1 });
+    expect(res.json()).toMatchObject({
+      id: "UC1",
+      title: "Test Channel",
+      handle: "@test",
+      thumbnail: "https://yt.example/thumb.jpg",
+      subscribers: 12345,
+    });
+    const row = db.prepare(
+      "SELECT handle, subscribers, thumbnail_url FROM channels WHERE id='UC1'",
+    ).get();
+    expect(row).toEqual({ handle: "@test", subscribers: 12345, thumbnail_url: "https://yt.example/thumb.jpg" });
   });
 
   it("GET /channels lists active channels", async () => {

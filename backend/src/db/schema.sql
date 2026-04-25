@@ -4,8 +4,16 @@ CREATE TABLE IF NOT EXISTS channels (
   title TEXT NOT NULL,
   added_at INTEGER NOT NULL,
   is_active INTEGER DEFAULT 1,
-  last_polled_at INTEGER
+  last_polled_at INTEGER,
+  handle TEXT,
+  description TEXT,
+  subscribers INTEGER,
+  thumbnail_url TEXT
 );
+
+-- Idempotent ALTER for pre-existing databases that lack the new columns.
+-- SQLite has no `IF NOT EXISTS` for ADD COLUMN; the apply layer wraps these
+-- in try/catch so re-runs are safe.
 
 CREATE TABLE IF NOT EXISTS videos (
   id TEXT PRIMARY KEY,

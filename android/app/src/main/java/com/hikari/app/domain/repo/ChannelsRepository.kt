@@ -14,7 +14,16 @@ class ChannelsRepository @Inject constructor(
     private val api: HikariApi,
 ) {
     suspend fun list(): List<Channel> = api.getChannels().map {
-        Channel(id = it.id, url = it.url, title = it.title)
+        Channel(
+            id = it.id,
+            url = it.url,
+            title = it.title,
+            handle = it.handle,
+            description = it.description,
+            subscribers = it.subscribers,
+            thumbnail = it.thumbnail,
+            lastPolledAt = it.last_polled_at,
+        )
     }
 
     suspend fun listWithStats(): List<Pair<Channel, ChannelStatsDto?>> {
@@ -38,4 +47,7 @@ class ChannelsRepository @Inject constructor(
     }
 
     suspend fun poll(channelId: String): PollResponse = api.pollChannel(channelId)
+
+    suspend fun deepScan(channelId: String, limit: Int = 100): PollResponse =
+        api.pollChannel(channelId, deep = true, limit = limit)
 }

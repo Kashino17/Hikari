@@ -3,6 +3,8 @@ package com.hikari.app.ui.channels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,13 +30,18 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,30 +56,57 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.ChannelSearchResultDto
+import com.hikari.app.data.api.dto.ChannelStatsDto
+import com.hikari.app.domain.model.Channel
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariAmberSoft
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
 import com.hikari.app.ui.theme.HikariSurface
+import com.hikari.app.ui.theme.HikariSurfaceHigh
 import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 
-private fun formatBytes(bytes: Long): String {
-    if (bytes < 1024 * 1024) return "${bytes / 1024} KB"
-    if (bytes < 1024L * 1024 * 1024) return "${bytes / (1024 * 1024)} MB"
-    return "%.1f GB".format(bytes / (1024.0 * 1024 * 1024))
+// ─── Formatting helpers ─────────────────────────────────────────────────────
+private fun formatBytes(bytes: Long): String = when {
+    bytes < 1024 -> "$bytes B"
+    bytes < 1024L * 1024 -> "${bytes / 1024} KB"
+    bytes < 1024L * 1024 * 1024 -> "${bytes / (1024 * 1024)} MB"
+    else -> "%.1f GB".format(bytes / (1024.0 * 1024 * 1024))
 }
 
 private fun formatSubs(n: Long?): String? {
     if (n == null) return null
     return when {
-        n >= 1_000_000 -> "%.1fM".format(n / 1_000_000.0)
+        n >= 1_000_000 -> {
+            val m = n / 1_000_000.0
+            if (m >= 10.0) "${m.toLong()}M" else "%.1fM".format(m)
+        }
         n >= 1_000 -> "${n / 1000}K"
         else -> n.toString()
     }
 }
 
+private fun formatRelativeTime(epochMs: Long?): String? {
+    if (epochMs == null) return null
+    val diff = System.currentTimeMillis() - epochMs
+    return when {
+        diff < 60_000 -> "gerade eben"
+        diff < 3_600_000 -> "vor ${diff / 60_000}min"
+        diff < 86_400_000 -> "vor ${diff / 3_600_000}h"
+        diff < 30 * 86_400_000L -> "vor ${diff / 86_400_000}d"
+        else -> "vor ${diff / (30 * 86_400_000L)}mo"
+    }
+}
+
+/** Deterministic colour for the initials avatar — same channel always picks the same hue. */
+private fun avatarColor(seed: String): Color {
+    val hue = (seed.hashCode().toULong() % 360u).toFloat()
+    return Color.hsv(hue, 0.55f, 0.45f)
+}
+
+// ─── Main screen ────────────────────────────────────────────────────────────
 @Composable
 fun ChannelsScreen(vm: ChannelsViewModel = hiltViewModel()) {
     val channels by vm.channels.collectAsState()
@@ -82,7 +116,35 @@ fun ChannelsScreen(vm: ChannelsViewModel = hiltViewModel()) {
     val searchResults by vm.searchResults.collectAsState()
     val searching by vm.searching.collectAsState()
 
+    var deepScanTarget by remember { mutableStateOf<Channel?>(null) }
+
     val isSearching = query.trim().length >= 2
+
+    if (deepScanTarget != null) {
+        AlertDialog(
+            onDismissRequest = { deepScanTarget = null },
+            containerColor = HikariBg,
+            title = { Text("Tieferes Scannen?", color = HikariText) },
+            text = {
+                Text(
+                    "Lädt bis zu 100 ältere Videos statt nur den 15 neuesten. " +
+                        "Kann ein paar Minuten dauern und kostet LM-Studio-Zeit pro Video.",
+                    color = HikariTextMuted,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    deepScanTarget?.let { vm.deepScan(it.id) }
+                    deepScanTarget = null
+                }) { Text("Tiefer scannen", color = HikariAmber) }
+            },
+            dismissButton = {
+                TextButton(onClick = { deepScanTarget = null }) {
+                    Text("Abbrechen", color = HikariTextMuted)
+                }
+            },
+        )
+    }
 
     Box(Modifier.fillMaxSize().background(HikariBg)) {
         LazyColumn(
@@ -121,22 +183,18 @@ fun ChannelsScreen(vm: ChannelsViewModel = hiltViewModel()) {
                             "Suche oben nach einem Kanal-Namen.",
                             color = HikariTextMuted,
                             style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(48.dp),
+                            modifier = Modifier.fillMaxWidth().padding(48.dp),
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         )
                     }
                 } else {
-                    items(channels, key = { it.first.id }) { (c, stats) ->
+                    items(channels, key = { it.first.id }) { (channel, stats) ->
                         SubscribedRow(
-                            title = c.title,
-                            url = c.url,
-                            statsLine = stats?.let {
-                                "${it.approved} ok · ${it.rejected} abg · ${formatBytes(it.diskBytes)}"
-                            },
-                            onPoll = { vm.poll(c.id) },
-                            onRemove = { vm.remove(c.id) },
+                            channel = channel,
+                            stats = stats,
+                            onPoll = { vm.poll(channel.id) },
+                            onDeepScan = { deepScanTarget = channel },
+                            onRemove = { vm.remove(channel.id) },
                         )
                         HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
                     }
@@ -146,6 +204,7 @@ fun ChannelsScreen(vm: ChannelsViewModel = hiltViewModel()) {
     }
 }
 
+// ─── Header ─────────────────────────────────────────────────────────────────
 @Composable
 private fun Header(
     query: String,
@@ -171,9 +230,7 @@ private fun Header(
                 .border(0.5.dp, HikariBorder, RoundedCornerShape(8.dp)),
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 12.dp),
+                modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
@@ -193,11 +250,7 @@ private fun Header(
                         modifier = Modifier.fillMaxWidth(),
                         decorationBox = { inner ->
                             if (query.isEmpty()) {
-                                Text(
-                                    "Kanal suchen…",
-                                    color = HikariTextFaint,
-                                    style = TextStyle(fontSize = 13.sp),
-                                )
+                                Text("Kanal suchen…", color = HikariTextFaint, style = TextStyle(fontSize = 13.sp))
                             }
                             inner()
                         },
@@ -205,9 +258,7 @@ private fun Header(
                 }
                 if (query.isNotEmpty()) {
                     Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clickable(onClick = onClear),
+                        modifier = Modifier.size(24.dp).clickable(onClick = onClear),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
@@ -227,7 +278,7 @@ private fun Header(
         }
         pollStatus?.let {
             Spacer(Modifier.height(8.dp))
-            Text(it, color = HikariTextMuted, style = MaterialTheme.typography.bodySmall)
+            Text(it, color = HikariAmber, style = MaterialTheme.typography.bodySmall)
         }
     }
 }
@@ -238,32 +289,54 @@ private fun SectionLabel(text: String) {
         Text(
             text,
             style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 10.sp,
-                letterSpacing = 1.5.sp,
-                fontFamily = FontFamily.Monospace,
+                fontSize = 10.sp, letterSpacing = 1.5.sp, fontFamily = FontFamily.Monospace,
             ),
             color = HikariTextFaint,
         )
     }
 }
 
+// ─── Avatar (thumbnail or initials fallback) ────────────────────────────────
+@Composable
+private fun ChannelAvatar(
+    title: String,
+    thumbnail: String?,
+    seed: String,
+    size: androidx.compose.ui.unit.Dp = 44.dp,
+) {
+    if (!thumbnail.isNullOrBlank()) {
+        AsyncImage(
+            model = thumbnail,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.size(size).clip(CircleShape).background(HikariSurface),
+        )
+    } else {
+        val initial = title.trim().firstOrNull()?.uppercaseChar()?.toString().orEmpty()
+        Box(
+            modifier = Modifier
+                .size(size)
+                .clip(CircleShape)
+                .background(avatarColor(seed)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                initial,
+                color = Color.White.copy(alpha = 0.9f),
+                style = TextStyle(fontSize = (size.value * 0.42f).sp, fontFamily = FontFamily.Monospace),
+            )
+        }
+    }
+}
+
+// ─── Search-result row ──────────────────────────────────────────────────────
 @Composable
 private fun SearchResultRow(r: ChannelSearchResultDto, onFollow: () -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 14.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AsyncImage(
-            model = r.thumbnail,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .background(HikariSurface),
-        )
+        ChannelAvatar(title = r.title, thumbnail = r.thumbnail, seed = r.channelId)
         Spacer(Modifier.size(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -312,12 +385,7 @@ private fun FollowPill(subscribed: Boolean, onClick: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         if (subscribed) {
-            Icon(
-                Icons.Default.Check,
-                contentDescription = null,
-                tint = fg,
-                modifier = Modifier.size(12.dp),
-            )
+            Icon(Icons.Default.Check, contentDescription = null, tint = fg, modifier = Modifier.size(12.dp))
         }
         Text(
             if (subscribed) "Abonniert" else "Folgen",
@@ -327,76 +395,92 @@ private fun FollowPill(subscribed: Boolean, onClick: () -> Unit) {
     }
 }
 
+// ─── Subscribed row ─────────────────────────────────────────────────────────
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SubscribedRow(
-    title: String,
-    url: String,
-    statsLine: String?,
+    channel: Channel,
+    stats: ChannelStatsDto?,
     onPoll: () -> Unit,
+    onDeepScan: () -> Unit,
     onRemove: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.Top,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
+        ChannelAvatar(title = channel.title, thumbnail = channel.thumbnail, seed = channel.id)
+        Spacer(Modifier.size(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                title,
+                channel.title,
                 color = HikariText,
                 style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                url,
-                color = HikariTextFaint,
-                style = MaterialTheme.typography.bodySmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+            // Meta line: handle · subs · last polled
+            val metaParts = listOfNotNull(
+                channel.handle,
+                formatSubs(channel.subscribers),
+                formatRelativeTime(channel.lastPolledAt)?.let { "akt. $it" },
             )
-            if (statsLine != null) {
-                Spacer(Modifier.height(6.dp))
+            if (metaParts.isNotEmpty()) {
+                Spacer(Modifier.height(2.dp))
                 Text(
-                    statsLine,
+                    metaParts.joinToString(" · "),
+                    color = HikariTextFaint,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            // Stats line
+            if (stats != null) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "${stats.approved} ok · ${stats.rejected} abg · ${formatBytes(stats.diskBytes)}",
                     color = HikariTextMuted,
                     style = MaterialTheme.typography.labelSmall.copy(
-                        fontFamily = FontFamily.Monospace,
-                        letterSpacing = 0.sp,
+                        fontFamily = FontFamily.Monospace, letterSpacing = 0.sp,
                     ),
                 )
             }
         }
         Spacer(Modifier.size(8.dp))
-        Row(verticalAlignment = Alignment.Top) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clickable(onClick = onPoll),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    Icons.Default.Refresh,
-                    contentDescription = "Aktualisieren",
-                    tint = HikariTextMuted,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clickable(onClick = onRemove),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Entfernen",
-                    tint = HikariTextMuted,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
-        }
+        IconChip(
+            icon = Icons.Default.Refresh,
+            contentDescription = "Aktualisieren (lang drücken: Tiefer scannen)",
+            modifier = Modifier.combinedClickable(onClick = onPoll, onLongClick = onDeepScan),
+        )
+        Spacer(Modifier.size(2.dp))
+        IconChip(
+            icon = Icons.Default.Delete,
+            contentDescription = "Entfernen",
+            modifier = Modifier.clickable(onClick = onRemove),
+        )
+    }
+}
+
+/** Pill-shaped icon button — softer than a raw IconButton, fits the hairline aesthetic. */
+@Composable
+private fun IconChip(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .size(36.dp)
+            .clip(CircleShape)
+            .background(HikariSurfaceHigh.copy(alpha = 0.5f)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            icon,
+            contentDescription = contentDescription,
+            tint = HikariTextMuted,
+            modifier = Modifier.size(16.dp),
+        )
     }
 }
