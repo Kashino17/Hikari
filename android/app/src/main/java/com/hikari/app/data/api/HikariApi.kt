@@ -4,15 +4,20 @@ import com.hikari.app.data.api.dto.AddChannelRequest
 import com.hikari.app.data.api.dto.AddChannelResponse
 import com.hikari.app.data.api.dto.ChannelDto
 import com.hikari.app.data.api.dto.ChannelStatsDto
+import com.hikari.app.data.api.dto.ClearOverrideRequest
 import com.hikari.app.data.api.dto.FeedItemDto
+import com.hikari.app.data.api.dto.FilterStateDto
 import com.hikari.app.data.api.dto.PollResponse
 import com.hikari.app.data.api.dto.RejectedItemDto
+import com.hikari.app.data.api.dto.SetOverrideRequest
 import com.hikari.app.data.api.dto.TodayCountResponse
+import com.hikari.app.data.api.dto.UpdateFilterRequest
 import com.hikari.app.data.api.dto.WeeklyStatsDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -61,4 +66,16 @@ interface HikariApi {
 
     @GET("stats/weekly")
     suspend fun getWeeklyStats(): WeeklyStatsDto
+
+    @GET("filter")
+    suspend fun getFilter(): FilterStateDto
+
+    @PUT("filter")
+    suspend fun updateFilter(@Body req: UpdateFilterRequest): FilterStateDto
+
+    @PUT("filter")
+    suspend fun setPromptOverride(@Body req: SetOverrideRequest): FilterStateDto
+
+    @PUT("filter")
+    suspend fun clearPromptOverride(@Body req: ClearOverrideRequest = ClearOverrideRequest()): FilterStateDto
 }

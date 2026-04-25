@@ -369,7 +369,7 @@ fun ReelPlayer(
 
         // ── Task 2 + 3: animated chrome (auto-hides after 3s) ────────────────
 
-        // Bottom gradient — subtler, 180dp, 40% black max
+        // Subtle bottom gradient — 120dp tall, max 60% black at very bottom only
         AnimatedVisibility(
             visible = controlsVisible,
             enter = fadeIn(tween(200)),
@@ -379,16 +379,16 @@ fun ReelPlayer(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
+                    .height(120.dp)
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.40f)),
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f)),
                         ),
                     ),
             )
         }
 
-        // Channel + title text — fades with controls
+        // Channel meta-line + title — minimal, matches /feed mock
         AnimatedVisibility(
             visible = controlsVisible,
             enter = fadeIn(tween(200)),
@@ -396,24 +396,27 @@ fun ReelPlayer(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(bottom = 52.dp),  // sits above the always-visible scrubber
+                .padding(bottom = 80.dp),  // bottom-nav (64) + a bit of breathing room
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .fillMaxWidth(0.85f)
+                    .padding(horizontal = 20.dp),
             ) {
-                Text(
-                    text = item.channelTitle,
-                    color = Color.White.copy(alpha = 0.70f),
-                    style = MaterialTheme.typography.labelMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = item.channelTitle.uppercase(),
+                        color = com.hikari.app.ui.theme.HikariAmber,
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
                 Text(
                     text = item.title,
-                    color = Color.White,
-                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.95f),
+                    style = MaterialTheme.typography.bodyLarge,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )

@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-enum class FeedMode { NEW, OLD }
+enum class FeedMode { NEW, SAVED, OLD }
 
 @HiltViewModel
 class FeedViewModel @Inject constructor(
@@ -28,12 +28,10 @@ class FeedViewModel @Inject constructor(
     val backendUrl: StateFlow<String> = settings.backendUrl
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
-    // Feed mode: NEW = unseen queue, OLD = history browse
     private val _mode = MutableStateFlow(FeedMode.NEW)
     val mode: StateFlow<FeedMode> = _mode.asStateFlow()
 
     private val _oldItems = MutableStateFlow<List<FeedItem>>(emptyList())
-    val oldItems: StateFlow<List<FeedItem>> = _oldItems.asStateFlow()
 
     fun setMode(newMode: FeedMode) {
         _mode.value = newMode
@@ -47,20 +45,24 @@ class FeedViewModel @Inject constructor(
         _refreshing.value = false
     }
 
-    private val _selectedCategory = MutableStateFlow<String?>(null)
-    val selectedCategory: StateFlow<String?> = _selectedCategory.asStateFlow()
-
-    val items: StateFlow<List<FeedItem>> =
-        combine(repo.unseenItems(), settings.dailyBudget, _selectedCategory) { list, budget, cat ->
-            list.filter { cat == null || it.category == cat }
-                .distinctBy { it.videoId }  // defensive: never render the same videoId twice
-                .take(budget)
+    private val newItems: StateFlow<List<FeedItem>> =
+        combine(repo.unseenItems(), settings.dailyBudget) { list, budget ->
+            list.distinctBy { it.videoId }.take(budget)
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    val categories: StateFlow<List<String>> =
-        repo.unseenItems()
-            .map { list -> list.map { it.category }.distinct().sorted() }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    private val savedItems: StateFlow<List<FeedItem>> =
+        repo.savedItems()
+            .map { it.distinctBy { item -> item.videoId } }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val items: StateFlow<List<FeedItem>> =
+        combine(_mode, newItems, savedItems, _oldItems) { mode, newL, savedL, oldL ->
+            when (mode) {
+                FeedMode.NEW -> newL
+                FeedMode.SAVED -> savedL
+                FeedMode.OLD -> oldL
+            }
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val _refreshing = MutableStateFlow(false)
     val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
@@ -72,19 +74,20 @@ class FeedViewModel @Inject constructor(
 
     fun refresh() = viewModelScope.launch {
         _refreshing.value = true
-        if (_mode.value == FeedMode.OLD) {
-            runCatching { repo.fetchOld() }.onSuccess { _oldItems.value = it }
-        } else {
-            runCatching { repo.refresh() }
-            runCatching { _today.value = repo.todayCount() }
+        when (_mode.value) {
+            FeedMode.NEW -> {
+                runCatching { repo.refresh() }
+                runCatching { _today.value = repo.todayCount() }
+            }
+            FeedMode.SAVED -> { /* savedItems is a Room Flow — already live */ }
+            FeedMode.OLD -> {
+                runCatching { repo.fetchOld() }.onSuccess { _oldItems.value = it }
+            }
         }
         _refreshing.value = false
     }
 
-    fun selectCategory(cat: String?) { _selectedCategory.value = cat }
-
     fun onSeen(id: String) = viewModelScope.launch {
-        // Skip marking seen in OLD mode — video is already in history
         if (_mode.value == FeedMode.NEW) repo.markSeen(id)
     }
     fun onToggleSave(id: String, currentlySaved: Boolean) = viewModelScope.launch {

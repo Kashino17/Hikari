@@ -9,11 +9,52 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
+private fun ImageVector.Builder.bookmarkShape(filled: Boolean) = apply {
+    path(
+        fill = if (filled) SolidColor(Color.Black) else null,
+        stroke = if (filled) null else SolidColor(Color.Black),
+        strokeLineWidth = if (filled) 0f else 1.6f,
+        strokeLineCap = StrokeCap.Round,
+        strokeLineJoin = StrokeJoin.Round,
+        pathFillType = PathFillType.NonZero,
+    ) {
+        // M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z
+        moveTo(19f, 21f)
+        lineTo(12f, 16f)
+        lineTo(5f, 21f)
+        verticalLineTo(5f)
+        curveTo(5f, 3.9f, 5.9f, 3f, 7f, 3f)
+        horizontalLineTo(17f)
+        curveTo(18.1f, 3f, 19f, 3.9f, 19f, 5f)
+        close()
+    }
+}
+
 /**
  * Custom SVG icons not present in material-icons-core.
  * Built with ImageVector.Builder so they are proper Compose vector icons.
  */
 object HikariIcons {
+
+    val Bookmark: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "Bookmark",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f,
+        ).bookmarkShape(filled = true).build()
+    }
+
+    val BookmarkOutline: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "BookmarkOutline",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f,
+        ).bookmarkShape(filled = false).build()
+    }
 
     /** Two vertical bars — standard pause icon (24x24 dp). */
     val Pause: ImageVector by lazy {
