@@ -368,3 +368,68 @@ test("GET /api/manga/continue excludes series with progress but NOT in library",
   const body = r.json() as unknown[];
   expect(body).toHaveLength(0);
 });
+
+test("POST /api/manga/sync returns 409 if a job is already running", async () => {
+  const { app, db } = buildApp();
+  db.prepare(
+    "INSERT INTO manga_sync_jobs (id, source, status, started_at) VALUES (?, ?, 'running', ?)",
+  ).run("job-1", "onepiecetube", Date.now());
+  const r = await app.inject({ method: "POST", url: "/api/manga/sync" });
+  expect(r.statusCode).toBe(409);
+});
+
+test("POST /api/manga/sync returns 409 if a queued job exists", async () => {
+  const { app, db } = buildApp();
+  db.prepare(
+    "INSERT INTO manga_sync_jobs (id, source, status, started_at) VALUES (?, ?, 'queued', ?)",
+  ).run("job-1", "onepiecetube", Date.now());
+  const r = await app.inject({ method: "POST", url: "/api/manga/sync" });
+  expect(r.statusCode).toBe(409);
+});
+
+test("POST /api/manga/sync returns 202 when no job is running", async () => {
+  const { app } = buildApp();
+  const r = await app.inject({ method: "POST", url: "/api/manga/sync" });
+  expect(r.statusCode).toBe(202);
+});
+
+test("POST /api/manga/sync returns 400 when sourceId is unknown", async () => {
+  const { app } = buildApp();
+  const r = await app.inject({
+    method: "POST",
+    url: "/api/manga/sync",
+    payload: { sourceId: "no-such-source" },
+  });
+  expect(r.statusCode).toBe(400);
+});
+
+test("GET /api/manga/sync/jobs lists recent jobs descending by started_at", async () => {
+  const { app, db } = buildApp();
+  db.prepare(
+    "INSERT INTO manga_sync_jobs (id, source, status, started_at) VALUES (?, ?, 'done', ?)",
+  ).run("job-old", "onepiecetube", 1000);
+  db.prepare(
+    "INSERT INTO manga_sync_jobs (id, source, status, started_at) VALUES (?, ?, 'done', ?)",
+  ).run("job-new", "onepiecetube", 9000);
+  const r = await app.inject({ method: "GET", url: "/api/manga/sync/jobs" });
+  expect(r.statusCode).toBe(200);
+  const body = r.json() as { id: string }[];
+  expect(body[0].id).toBe("job-new");
+  expect(body[1].id).toBe("job-old");
+});
+
+test("GET /api/manga/sync/jobs/:id returns single job", async () => {
+  const { app, db } = buildApp();
+  db.prepare(
+    "INSERT INTO manga_sync_jobs (id, source, status, started_at) VALUES (?, ?, 'done', ?)",
+  ).run("job-1", "onepiecetube", 1000);
+  const r = await app.inject({ method: "GET", url: "/api/manga/sync/jobs/job-1" });
+  expect(r.statusCode).toBe(200);
+  expect((r.json() as { id: string }).id).toBe("job-1");
+});
+
+test("GET /api/manga/sync/jobs/:id returns 404 for unknown id", async () => {
+  const { app } = buildApp();
+  const r = await app.inject({ method: "GET", url: "/api/manga/sync/jobs/no-such-job" });
+  expect(r.statusCode).toBe(404);
+});

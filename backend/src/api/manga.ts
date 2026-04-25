@@ -2,6 +2,8 @@ import type { FastifyInstance } from "fastify";
 import type Database from "better-sqlite3";
 import { createReadStream } from "node:fs";
 import { resolve, sep, extname } from "node:path";
+import { adapters, getAdapter } from "../manga/sources/index.js";
+import { runFullSync } from "../manga/sync.js";
 
 export interface MangaDeps {
   db: Database.Database;
@@ -147,5 +149,44 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
        JOIN manga_series s ON s.id = p.series_id
        ORDER BY p.updated_at DESC`,
     ).all();
+  });
+
+  app.post<{ Body?: { sourceId?: string } }>("/api/manga/sync", async (req, reply) => {
+    const running = db
+      .prepare("SELECT id FROM manga_sync_jobs WHERE status IN ('queued','running') LIMIT 1")
+      .get();
+    if (running) return reply.code(409).send({ error: "sync already running" });
+
+    const sourceId = req.body?.sourceId;
+    const targets = sourceId
+      ? [getAdapter(sourceId)].filter((x): x is NonNullable<typeof x> => Boolean(x))
+      : adapters;
+    if (sourceId && targets.length === 0) return reply.code(400).send({ error: "no such source" });
+    if (targets.length === 0) return reply.code(400).send({ error: "no source registered" });
+
+    // Fire-and-forget — return immediately with job started.
+    queueMicrotask(async () => {
+      for (const adapter of targets) {
+        try {
+          await runFullSync({ db, adapter, mangaDir: deps.mangaDir });
+        } catch (err) {
+          app.log.error({ err, adapter: adapter.id }, "manga sync failed");
+        }
+      }
+    });
+
+    return reply.code(202).send({ status: "queued" });
+  });
+
+  app.get("/api/manga/sync/jobs", async () => {
+    return db
+      .prepare("SELECT * FROM manga_sync_jobs ORDER BY started_at DESC LIMIT 10")
+      .all();
+  });
+
+  app.get<{ Params: { id: string } }>("/api/manga/sync/jobs/:id", async (req, reply) => {
+    const row = db.prepare("SELECT * FROM manga_sync_jobs WHERE id = ?").get(req.params.id);
+    if (!row) return reply.code(404).send({ error: "not found" });
+    return row;
   });
 }
