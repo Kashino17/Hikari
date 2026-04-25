@@ -139,7 +139,7 @@ fun ChannelsScreen(
         ImportSheet(
             onDismiss = { importSheetOpen = false },
             onImport = { urls ->
-                vm.importVideos(urls) { _ -> }
+                vm.importVideos(urls) { _: Int -> }
                 importSheetOpen = false
             },
         )
@@ -762,96 +762,3 @@ private fun ImportSheet(
     }
 }
 
-// ─── Import sheet (paste video URLs, bulk supported) ───────────────────────
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ImportSheet(
-    onDismiss: () -> Unit,
-    onImport: (List<String>) -> Unit,
-) {
-    var raw by remember { mutableStateOf("") }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val urls = remember(raw) {
-        raw.split('\n', ',', ';')
-            .map { it.trim() }
-            .filter { it.startsWith("http") }
-    }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = HikariBg,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-                .padding(bottom = 24.dp),
-        ) {
-            Text(
-                "Video-Link einfügen",
-                style = MaterialTheme.typography.titleMedium,
-                color = HikariText,
-            )
-            Text(
-                "Eine URL pro Zeile, oder kommagetrennt. Bis 50 Stück.",
-                color = HikariTextFaint,
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Spacer(Modifier.height(12.dp))
-
-            BasicTextField(
-                value = raw,
-                onValueChange = { raw = it },
-                textStyle = TextStyle(color = HikariText, fontSize = 13.sp, lineHeight = 18.sp, fontFamily = FontFamily.Monospace),
-                cursorBrush = SolidColor(HikariAmber),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(160.dp)
-                    .background(HikariSurface, RoundedCornerShape(8.dp))
-                    .border(0.5.dp, HikariBorder, RoundedCornerShape(8.dp))
-                    .padding(12.dp),
-                decorationBox = { inner ->
-                    if (raw.isEmpty()) {
-                        Text(
-                            "https://voe.sx/...\nhttps://streamtape.com/...\nhttps://vimeo.com/...",
-                            color = HikariTextFaint,
-                            style = TextStyle(fontSize = 13.sp, lineHeight = 18.sp, fontFamily = FontFamily.Monospace),
-                        )
-                    }
-                    inner()
-                },
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    "${urls.size} URL${if (urls.size == 1) "" else "s"} erkannt",
-                    color = HikariTextFaint,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.weight(1f),
-                )
-                TextButton(onClick = onDismiss) {
-                    Text("Abbrechen", color = HikariTextMuted)
-                }
-                Spacer(Modifier.size(4.dp))
-                Box(
-                    modifier = Modifier
-                        .height(38.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (urls.isEmpty()) HikariSurface else HikariAmber)
-                        .clickable(enabled = urls.isNotEmpty()) { onImport(urls) }
-                        .padding(horizontal = 16.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        "Importieren",
-                        color = if (urls.isEmpty()) HikariTextFaint else androidx.compose.ui.graphics.Color.Black,
-                        style = MaterialTheme.typography.labelLarge,
-                    )
-                }
-            }
-        }
-    }
-}
