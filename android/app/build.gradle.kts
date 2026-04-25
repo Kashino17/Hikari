@@ -78,6 +78,7 @@ dependencies {
     implementation(libs.media3.datasource.okhttp)
 
     implementation(libs.coil.compose)
+    implementation(libs.telephoto.zoomable.image.coil)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test)
