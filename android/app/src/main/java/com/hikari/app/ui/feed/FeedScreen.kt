@@ -132,17 +132,32 @@ fun FeedScreen(
             modifier = Modifier.fillMaxSize(),
         ) {
             if (items.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        when (mode) {
-                            FeedMode.NEW -> "Keine neuen Reels heute."
-                            FeedMode.SAVED -> "Noch nichts gespeichert."
-                            FeedMode.OLD -> "Archiv ist leer."
-                        },
-                        color = HikariTextFaint,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(24.dp),
-                    )
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.statusBars),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        FilterPills(mode = mode, onSelect = { vm.setMode(it) })
+                    }
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            when (mode) {
+                                FeedMode.NEW -> "Keine neuen Reels heute.\nTipp auf Archiv für ältere Videos."
+                                FeedMode.SAVED -> "Noch nichts gespeichert."
+                                FeedMode.OLD -> "Archiv ist leer."
+                            },
+                            color = HikariTextFaint,
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            modifier = Modifier.padding(24.dp),
+                        )
+                    }
                 }
             } else {
                 val pagerState = rememberPagerState(pageCount = { items.size })
