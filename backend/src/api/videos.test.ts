@@ -13,7 +13,7 @@ describe("videos API", () => {
 
     const app = Fastify();
     await app.register(fastifyStatic, { root: dir, prefix: "/videos/" });
-    await registerVideosRoutes(app);
+    await registerVideosRoutes(app, { db: undefined as never, videoDir: dir });
 
     const full = await app.inject({ method: "GET", url: "/videos/vid1.mp4" });
     expect(full.statusCode).toBe(200);
@@ -32,7 +32,7 @@ describe("videos API", () => {
     const dir = mkdtempSync(join(tmpdir(), "hikari-videos-empty-"));
     const app = Fastify();
     await app.register(fastifyStatic, { root: dir, prefix: "/videos/" });
-    await registerVideosRoutes(app);
+    await registerVideosRoutes(app, { db: undefined as never, videoDir: dir });
 
     const res = await app.inject({ method: "GET", url: "/videos/nope.mp4" });
     expect(res.statusCode).toBe(404);

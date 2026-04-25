@@ -9,6 +9,7 @@ import { registerFeedRoutes } from "./api/feed.js";
 import { registerFilterRoutes } from "./api/filter.js";
 import { registerHealthRoute } from "./api/health.js";
 import { registerStatsRoutes } from "./api/stats.js";
+import { registerVideosRoutes } from "./api/videos.js";
 import { loadConfig } from "./config.js";
 import { openDatabase } from "./db/connection.js";
 import { runCleanup } from "./download/cleanup.js";
@@ -53,6 +54,7 @@ await registerFeedRoutes(app, { db, dailyBudget: cfg.dailyBudget });
 await registerFilterRoutes(app, { db });
 await registerHealthRoute(app, { db, videoDir: cfg.videoDir });
 await registerStatsRoutes(app, { db });
+await registerVideosRoutes(app, { db, videoDir: cfg.videoDir });
 
 // 15-min channel polling
 cron.schedule("*/15 * * * *", async () => {

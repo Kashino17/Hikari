@@ -27,17 +27,21 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -127,8 +131,19 @@ fun ChannelsScreen(
     val ctx = LocalContext.current
 
     var deepScanTarget by remember { mutableStateOf<Channel?>(null) }
+    var importSheetOpen by remember { mutableStateOf(false) }
 
     val isSearching = query.trim().length >= 2
+
+    if (importSheetOpen) {
+        ImportSheet(
+            onDismiss = { importSheetOpen = false },
+            onImport = { urls ->
+                vm.importVideos(urls) { _ -> }
+                importSheetOpen = false
+            },
+        )
+    }
 
     if (deepScanTarget != null) {
         AlertDialog(
@@ -166,6 +181,7 @@ fun ChannelsScreen(
                     query = query,
                     onQueryChange = { vm.setQuery(it) },
                     onClear = { vm.clearQuery() },
+                    onOpenImport = { importSheetOpen = true },
                     error = error,
                     pollStatus = pollStatus,
                 )
@@ -279,6 +295,7 @@ private fun Header(
     query: String,
     onQueryChange: (String) -> Unit,
     onClear: () -> Unit,
+    onOpenImport: () -> Unit,
     error: String?,
     pollStatus: String?,
 ) {
@@ -288,7 +305,30 @@ private fun Header(
             .windowInsetsPadding(WindowInsets.statusBars)
             .padding(horizontal = 20.dp, vertical = 16.dp),
     ) {
-        Text("Kanäle", style = MaterialTheme.typography.titleMedium, color = HikariText)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "Kanäle",
+                style = MaterialTheme.typography.titleMedium,
+                color = HikariText,
+                modifier = Modifier.weight(1f),
+            )
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(HikariSurface)
+                    .border(0.5.dp, HikariBorder, androidx.compose.foundation.shape.CircleShape)
+                    .clickable(onClick = onOpenImport),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "Direkten Video-Link einfügen",
+                    tint = HikariAmber,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        }
         Spacer(Modifier.height(12.dp))
 
         Box(
@@ -606,5 +646,212 @@ private fun RecommendationRow(
         }
         Spacer(Modifier.size(12.dp))
         FollowPill(subscribed = rec.subscribed, onClick = onFollow)
+    }
+}
+
+// ─── Import sheet ───────────────────────────────────────────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ImportSheet(
+    onDismiss: () -> Unit,
+    onImport: (List<String>) -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var text by remember { mutableStateOf("") }
+
+    // Parse input into clean URL list — one per line, comma-separated, trimmed
+    val urls = remember(text) {
+        text.split('\n', ',')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() && (it.startsWith("http://") || it.startsWith("https://")) }
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = HikariBg,
+        contentColor = HikariText,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 24.dp),
+        ) {
+            Text(
+                "Direkten Video-Link",
+                style = MaterialTheme.typography.titleMedium,
+                color = HikariText,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Eine URL pro Zeile (oder Komma-getrennt). yt-dlp probiert die Extraktion — funktioniert für alle 1700+ Sites die yt-dlp kennt. Auto-genehmigt, Score-Skip, direkt ins Archiv.",
+                style = MaterialTheme.typography.bodySmall,
+                color = HikariTextMuted,
+            )
+            Spacer(Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .background(HikariSurface, RoundedCornerShape(8.dp))
+                    .border(0.5.dp, HikariBorder, RoundedCornerShape(8.dp))
+                    .padding(12.dp),
+            ) {
+                BasicTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    textStyle = TextStyle(
+                        color = HikariText,
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.Monospace,
+                        lineHeight = 18.sp,
+                    ),
+                    cursorBrush = SolidColor(HikariAmber),
+                    modifier = Modifier.fillMaxSize(),
+                    decorationBox = { inner ->
+                        if (text.isEmpty()) {
+                            Text(
+                                "https://…\nhttps://…",
+                                color = HikariTextFaint,
+                                style = TextStyle(
+                                    fontSize = 12.sp,
+                                    fontFamily = FontFamily.Monospace,
+                                    lineHeight = 18.sp,
+                                ),
+                            )
+                        }
+                        inner()
+                    },
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "${urls.size} URL${if (urls.size == 1) "" else "s"} erkannt",
+                    color = HikariTextFaint,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(1f),
+                )
+                TextButton(onClick = onDismiss) {
+                    Text("Abbrechen", color = HikariTextMuted)
+                }
+                Spacer(Modifier.size(8.dp))
+                Box(
+                    modifier = Modifier
+                        .height(40.dp)
+                        .background(
+                            if (urls.isEmpty()) HikariSurface else HikariAmber,
+                            RoundedCornerShape(6.dp),
+                        )
+                        .clickable(enabled = urls.isNotEmpty()) { onImport(urls) }
+                        .padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        "Importieren",
+                        color = if (urls.isEmpty()) HikariTextFaint else Color.Black,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ─── Import sheet (paste video URLs, bulk supported) ───────────────────────
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ImportSheet(
+    onDismiss: () -> Unit,
+    onImport: (List<String>) -> Unit,
+) {
+    var raw by remember { mutableStateOf("") }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val urls = remember(raw) {
+        raw.split('\n', ',', ';')
+            .map { it.trim() }
+            .filter { it.startsWith("http") }
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = HikariBg,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .padding(bottom = 24.dp),
+        ) {
+            Text(
+                "Video-Link einfügen",
+                style = MaterialTheme.typography.titleMedium,
+                color = HikariText,
+            )
+            Text(
+                "Eine URL pro Zeile, oder kommagetrennt. Bis 50 Stück.",
+                color = HikariTextFaint,
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Spacer(Modifier.height(12.dp))
+
+            BasicTextField(
+                value = raw,
+                onValueChange = { raw = it },
+                textStyle = TextStyle(color = HikariText, fontSize = 13.sp, lineHeight = 18.sp, fontFamily = FontFamily.Monospace),
+                cursorBrush = SolidColor(HikariAmber),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .background(HikariSurface, RoundedCornerShape(8.dp))
+                    .border(0.5.dp, HikariBorder, RoundedCornerShape(8.dp))
+                    .padding(12.dp),
+                decorationBox = { inner ->
+                    if (raw.isEmpty()) {
+                        Text(
+                            "https://voe.sx/...\nhttps://streamtape.com/...\nhttps://vimeo.com/...",
+                            color = HikariTextFaint,
+                            style = TextStyle(fontSize = 13.sp, lineHeight = 18.sp, fontFamily = FontFamily.Monospace),
+                        )
+                    }
+                    inner()
+                },
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "${urls.size} URL${if (urls.size == 1) "" else "s"} erkannt",
+                    color = HikariTextFaint,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(1f),
+                )
+                TextButton(onClick = onDismiss) {
+                    Text("Abbrechen", color = HikariTextMuted)
+                }
+                Spacer(Modifier.size(4.dp))
+                Box(
+                    modifier = Modifier
+                        .height(38.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (urls.isEmpty()) HikariSurface else HikariAmber)
+                        .clickable(enabled = urls.isNotEmpty()) { onImport(urls) }
+                        .padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        "Importieren",
+                        color = if (urls.isEmpty()) HikariTextFaint else androidx.compose.ui.graphics.Color.Black,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+            }
+        }
     }
 }

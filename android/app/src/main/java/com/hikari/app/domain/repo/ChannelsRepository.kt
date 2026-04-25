@@ -62,4 +62,7 @@ class ChannelsRepository @Inject constructor(
     suspend fun deleteVideo(videoId: String) {
         api.deleteVideo(videoId)
     }
+
+    suspend fun importVideos(urls: List<String>): Int =
+        api.importVideos(com.hikari.app.data.api.dto.ImportVideosRequest(urls)).queued
 }

@@ -9,6 +9,8 @@ import com.hikari.app.data.api.dto.ChannelVideoDto
 import com.hikari.app.data.api.dto.ClearOverrideRequest
 import com.hikari.app.data.api.dto.FeedItemDto
 import com.hikari.app.data.api.dto.FilterStateDto
+import com.hikari.app.data.api.dto.ImportVideosRequest
+import com.hikari.app.data.api.dto.ImportVideosResponse
 import com.hikari.app.data.api.dto.PollResponse
 import com.hikari.app.data.api.dto.RecommendationDto
 import com.hikari.app.data.api.dto.RejectedItemDto
@@ -85,6 +87,9 @@ interface HikariApi {
 
     @GET("stats/weekly")
     suspend fun getWeeklyStats(): WeeklyStatsDto
+
+    @POST("videos/import")
+    suspend fun importVideos(@Body req: ImportVideosRequest): ImportVideosResponse
 
     @GET("filter")
     suspend fun getFilter(): FilterStateDto
