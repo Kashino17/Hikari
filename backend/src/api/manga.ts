@@ -3,7 +3,7 @@ import type Database from "better-sqlite3";
 import { createReadStream } from "node:fs";
 import { resolve, sep, extname } from "node:path";
 import { adapters, getAdapter } from "../manga/sources/index.js";
-import { runFullSync } from "../manga/sync.js";
+import { runFullSync, runChapterSync } from "../manga/sync.js";
 
 export interface MangaDeps {
   db: Database.Database;
@@ -188,5 +188,39 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
     const row = db.prepare("SELECT * FROM manga_sync_jobs WHERE id = ?").get(req.params.id);
     if (!row) return reply.code(404).send({ error: "not found" });
     return row;
+  });
+
+  app.post<{ Params: { id: string } }>("/api/manga/chapters/:id/sync", async (req, reply) => {
+    const chapter = db.prepare(
+      `SELECT c.id, c.number, c.source_url AS sourceUrl, s.id AS seriesId, s.source, s.source_url AS seriesUrl
+       FROM manga_chapters c
+       JOIN manga_series s ON s.id = c.series_id
+       WHERE c.id = ?`,
+    ).get(req.params.id) as
+      | { id: string; number: number; sourceUrl: string; seriesId: string; source: string; seriesUrl: string }
+      | undefined;
+    if (!chapter) return reply.code(404).send({ error: "chapter not found" });
+
+    const adapter = getAdapter(chapter.source);
+    if (!adapter) return reply.code(400).send({ error: "no adapter for source " + chapter.source });
+
+    const seriesSlug = chapter.seriesId.slice(chapter.source.length + 1); // "source:slug" → "slug"
+
+    queueMicrotask(async () => {
+      try {
+        await runChapterSync({
+          db,
+          adapter,
+          seriesSlug,
+          chapterNumber: chapter.number,
+          chapterUrl: chapter.sourceUrl,
+          mangaDir: deps.mangaDir,
+        });
+      } catch (err) {
+        app.log.error({ err, chapterId: chapter.id }, "chapter sync failed");
+      }
+    });
+
+    return reply.code(202).send({ status: "queued" });
   });
 }

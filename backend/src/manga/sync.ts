@@ -3,6 +3,27 @@ import type Database from "better-sqlite3";
 import { upsertPage, upsertSeries, upsertChapter, seriesId } from "./persist.js";
 import { downloadPage } from "./image-store.js";
 import type { MangaSourceAdapter } from "./sources/types.js";
+import { SourceLayoutError } from "./sources/types.js";
+
+function serializeSyncError(err: unknown): string {
+  if (err instanceof SourceLayoutError) {
+    return JSON.stringify({
+      kind: "SourceLayoutError",
+      message: err.message,
+      url: err.url,
+      selector: err.selector ?? null,
+      stack: err.stack ?? null,
+    });
+  }
+  if (err instanceof Error) {
+    return JSON.stringify({
+      kind: err.name,
+      message: err.message,
+      stack: err.stack ?? null,
+    });
+  }
+  return String(err);
+}
 
 interface ChapterSyncInput {
   db: Database.Database;
@@ -11,7 +32,7 @@ interface ChapterSyncInput {
   chapterNumber: number;
   chapterUrl: string;
   mangaDir: string;
-  onProgress?: (delta: { pagesDone?: number }) => void;
+  onProgress?: (delta: { pagesDone?: number; pagesFailed?: number; pagesQueued?: number }) => void;
 }
 
 const CONCURRENCY = 4;
@@ -55,6 +76,8 @@ export async function runChapterSync(input: ChapterSyncInput): Promise<void> {
     .prepare("UPDATE manga_chapters SET page_count = ? WHERE id = ?")
     .run(rawPages.length, `${input.adapter.id}:${input.seriesSlug}:${input.chapterNumber}`);
 
+  input.onProgress?.({ pagesQueued: rawPages.length });
+
   await withConcurrency(rawPages, async (p) => {
     const ext = extFromUrl(p.sourceUrl);
     const relativePath = `${input.adapter.id}/${input.seriesSlug}/${input.chapterNumber}/${String(p.pageNumber).padStart(2, "0")}${ext}`;
@@ -75,7 +98,7 @@ export async function runChapterSync(input: ChapterSyncInput): Promise<void> {
       });
       input.onProgress?.({ pagesDone: 1 });
     } catch {
-      // Page download failure: leave local_path NULL, sync continues.
+      input.onProgress?.({ pagesFailed: 1 });
     }
   });
 }
@@ -87,7 +110,7 @@ interface SeriesSyncInput {
   seriesUrl: string;
   seriesTitle: string;
   mangaDir: string;
-  onProgress?: (delta: { chaptersDone?: number; pagesDone?: number }) => void;
+  onProgress?: (delta: { chaptersDone?: number; pagesDone?: number; pagesFailed?: number; pagesQueued?: number }) => void;
 }
 
 export async function runSeriesSync(input: SeriesSyncInput): Promise<void> {
@@ -151,6 +174,8 @@ export async function runSeriesSync(input: SeriesSyncInput): Promise<void> {
       mangaDir: input.mangaDir,
       onProgress: (d) => {
         if (d.pagesDone !== undefined) input.onProgress?.({ pagesDone: d.pagesDone });
+        if (d.pagesFailed !== undefined) input.onProgress?.({ pagesFailed: d.pagesFailed });
+        if (d.pagesQueued !== undefined) input.onProgress?.({ pagesQueued: d.pagesQueued });
       },
     });
     input.onProgress?.({ chaptersDone: 1 });
@@ -196,6 +221,8 @@ export async function runFullSync(input: FullSyncInput): Promise<SyncJobRow> {
 
     let doneChapters = 0;
     let donePages = 0;
+    let pagesFailed = 0;
+    let pagesQueued = 0;
     for (const s of series) {
       await runSeriesSync({
         db: input.db,
@@ -213,6 +240,13 @@ export async function runFullSync(input: FullSyncInput): Promise<SyncJobRow> {
             donePages += d.pagesDone;
             input.db.prepare("UPDATE manga_sync_jobs SET done_pages = ? WHERE id = ?").run(donePages, id);
           }
+          if (d.pagesFailed) {
+            pagesFailed += d.pagesFailed;
+          }
+          if (d.pagesQueued) {
+            pagesQueued += d.pagesQueued;
+            input.db.prepare("UPDATE manga_sync_jobs SET total_pages = ? WHERE id = ?").run(pagesQueued, id);
+          }
         },
       });
     }
@@ -220,10 +254,16 @@ export async function runFullSync(input: FullSyncInput): Promise<SyncJobRow> {
     input.db.prepare(
       "UPDATE manga_sync_jobs SET status = 'done', finished_at = ? WHERE id = ?",
     ).run(Date.now(), id);
+
+    if (pagesFailed > 0) {
+      input.db.prepare(
+        "UPDATE manga_sync_jobs SET error_message = ? WHERE id = ?",
+      ).run(JSON.stringify({ kind: "PartialFailure", pagesFailed }), id);
+    }
   } catch (err) {
     input.db.prepare(
       "UPDATE manga_sync_jobs SET status = 'failed', error_message = ?, finished_at = ? WHERE id = ?",
-    ).run(String(err), Date.now(), id);
+    ).run(serializeSyncError(err), Date.now(), id);
   }
 
   return input.db.prepare("SELECT * FROM manga_sync_jobs WHERE id = ?").get(id) as SyncJobRow;

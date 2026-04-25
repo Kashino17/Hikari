@@ -433,3 +433,33 @@ test("GET /api/manga/sync/jobs/:id returns 404 for unknown id", async () => {
   const r = await app.inject({ method: "GET", url: "/api/manga/sync/jobs/no-such-job" });
   expect(r.statusCode).toBe(404);
 });
+
+// Fix #1 — POST /api/manga/chapters/:id/sync
+
+test("POST /api/manga/chapters/:id/sync returns 202 when chapter exists", async () => {
+  const { app, db } = buildApp();
+  // Use a source that has a real registered adapter so the endpoint can resolve it
+  db.prepare("INSERT INTO manga_series (id, source, source_url, title, added_at) VALUES (?, ?, ?, ?, ?)")
+    .run("onepiecetube:x", "onepiecetube", "https://onepiece.test/x", "X2", Date.now());
+  db.prepare("INSERT INTO manga_chapters (id, series_id, number, source_url, added_at) VALUES (?, ?, ?, ?, ?)")
+    .run("onepiecetube:x:1", "onepiecetube:x", 1, "https://onepiece.test/x/1", Date.now());
+  const r = await app.inject({ method: "POST", url: "/api/manga/chapters/onepiecetube:x:1/sync" });
+  expect(r.statusCode).toBe(202);
+});
+
+test("POST /api/manga/chapters/:id/sync returns 404 when chapter unknown", async () => {
+  const { app } = buildApp();
+  const r = await app.inject({ method: "POST", url: "/api/manga/chapters/no:such:thing/sync" });
+  expect(r.statusCode).toBe(404);
+});
+
+test("POST /api/manga/chapters/:id/sync returns 400 when adapter for source is unknown", async () => {
+  const { app, db } = buildApp();
+  // Insert a chapter for a series whose source has no adapter
+  db.prepare("INSERT INTO manga_series (id, source, source_url, title, added_at) VALUES (?, ?, ?, ?, ?)")
+    .run("zzz:x", "zzz", "https://x", "X", Date.now());
+  db.prepare("INSERT INTO manga_chapters (id, series_id, number, source_url, added_at) VALUES (?, ?, ?, ?, ?)")
+    .run("zzz:x:1", "zzz:x", 1, "https://x", Date.now());
+  const r = await app.inject({ method: "POST", url: "/api/manga/chapters/zzz:x:1/sync" });
+  expect(r.statusCode).toBe(400);
+});

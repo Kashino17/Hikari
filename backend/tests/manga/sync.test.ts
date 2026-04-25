@@ -292,3 +292,48 @@ test("runFullSync marks job 'failed' with error_message when adapter throws", as
   expect(job.status).toBe("failed");
   expect(job.error_message).toMatch(/boom/);
 });
+
+// Fix #2 — error fidelity: SourceLayoutError fields preserved
+test("runFullSync error_message preserves SourceLayoutError fields", async () => {
+  const { SourceLayoutError } = await import("../../src/manga/sources/types.js");
+  const broken: MangaSourceAdapter = {
+    id: "broke", name: "Broke", baseUrl: "https://x",
+    listSeries: async () => { throw new SourceLayoutError("bad layout", "https://example.com/list", "a.foo"); },
+    fetchSeriesDetail: async () => ({ chapters: [], arcs: [] }),
+    fetchChapterPages: async () => [],
+  };
+  const job = await runFullSync({ db, adapter: broken, mangaDir: baseDir });
+  expect(job.status).toBe("failed");
+  const parsed = JSON.parse(job.error_message ?? "");
+  expect(parsed.kind).toBe("SourceLayoutError");
+  expect(parsed.url).toBe("https://example.com/list");
+  expect(parsed.selector).toBe("a.foo");
+});
+
+// Fix #3 — partial failures recorded in error_message even when status=done
+test("runFullSync records partial failures in error_message even when status=done", async () => {
+  const adapter = fakeAdapterWithSeriesAndChapters();
+  // fakeAdapterWithSeriesAndChapters generates URLs p1.png and p2.png for the two chapters.
+  // Only p1.png matches "p1", so exactly 1 page fails.
+  vi.stubGlobal("fetch", vi.fn(async (input: string) => {
+    if (input.includes("p1")) return { ok: false, status: 500 };
+    return { ok: true, arrayBuffer: async () => new ArrayBuffer(1) };
+  }));
+  const job = await runFullSync({ db, adapter, mangaDir: baseDir });
+  expect(job.status).toBe("done");
+  expect(job.error_message).toBeTruthy();
+  const parsed = JSON.parse(job.error_message ?? "");
+  expect(parsed.kind).toBe("PartialFailure");
+  expect(parsed.pagesFailed).toBeGreaterThanOrEqual(1);
+});
+
+// Fix #4 — total_pages is populated
+test("runFullSync populates total_pages and done_pages", async () => {
+  vi.stubGlobal("fetch", vi.fn(async () => ({
+    ok: true, arrayBuffer: async () => new ArrayBuffer(1),
+  })));
+  const adapter = fakeAdapterWithSeriesAndChapters();
+  const job = await runFullSync({ db, adapter, mangaDir: baseDir });
+  expect(job.total_pages).toBe(2);
+  expect(job.done_pages).toBe(2);
+});
