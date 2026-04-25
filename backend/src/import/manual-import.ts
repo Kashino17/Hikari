@@ -1,12 +1,16 @@
 import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type Database from "better-sqlite3";
-import { runYtDlp, YtDlpError } from "../yt-dlp/client.js";
+import { load as loadHtml } from "cheerio";
+import { YtDlpError, runYtDlp } from "../yt-dlp/client.js";
 
 export const MANUAL_CHANNEL_ID = "manual";
 const MANUAL_CHANNEL_TITLE = "Manuell hinzugefügt";
 const MANUAL_IMPORT_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36";
+const MAX_IMPORT_PAGE_BYTES = 1_500_000;
+const MAX_IMPORT_LINKS_PER_PAGE = 200;
+const IMPORT_PAGE_TIMEOUT_MS = 15_000;
 
 export interface ImportResult {
   url: string;
@@ -24,6 +28,13 @@ export interface ManualMetadata {
   dubLanguage?: string;
   subLanguage?: string;
   isMovie?: boolean;
+}
+
+export interface ScrapedImportLinks {
+  sourceUrl: string;
+  links: string[];
+  totalFound: number;
+  limited: boolean;
 }
 
 interface YtDlpVideoMeta {
@@ -55,6 +66,31 @@ interface ResolvedImportSource {
 function fixProtocol(u: string | null | undefined): string | null {
   if (!u) return null;
   return u.startsWith("//") ? `https:${u}` : u;
+}
+
+function parseHttpUrl(value: string, baseUrl?: string): URL | null {
+  try {
+    const url = baseUrl ? new URL(value, baseUrl) : new URL(value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    url.hash = "";
+    return url;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeEmbeddedUrl(value: string): string {
+  return value
+    .trim()
+    .replaceAll("&amp;", "&")
+    .replaceAll("&quot;", '"')
+    .replace(/[),.;\]]+$/g, "");
+}
+
+function isLikelyNonVideoAsset(url: URL): boolean {
+  return /\.(?:avif|bmp|css|gif|ico|jpe?g|js|json|pdf|png|svg|txt|webp|xml|zip)$/i.test(
+    url.pathname,
+  );
 }
 
 function parseUploadDate(d: string | undefined): number {
@@ -139,10 +175,9 @@ function decodeVoeConfig(encoded: string): VoeConfig {
 }
 
 async function resolveViaYtDlp(url: string): Promise<ResolvedImportSource> {
-  const result = await runYtDlp(
-    ["--dump-single-json", "--no-warnings", "--no-playlist", url],
-    { timeoutMs: 30_000 },
-  );
+  const result = await runYtDlp(["--dump-single-json", "--no-warnings", "--no-playlist", url], {
+    timeoutMs: 30_000,
+  });
   const metadata = JSON.parse(result.stdout) as YtDlpVideoMeta;
   if (!metadata.id) {
     throw new Error("yt-dlp returned no video id");
@@ -198,10 +233,85 @@ async function resolveVoePage(url: string): Promise<ResolvedImportSource | null>
       extractor_key: "VOE",
       title: config.title ?? metadata.title ?? config.file_code,
       webpage_url: url,
-      ...(config.thumbnail ?? metadata.thumbnail
+      ...((config.thumbnail ?? metadata.thumbnail)
         ? { thumbnail: config.thumbnail ?? metadata.thumbnail }
         : {}),
     },
+  };
+}
+
+export async function scrapeImportLinksFromPage(
+  pageUrl: string,
+  limit = MAX_IMPORT_LINKS_PER_PAGE,
+): Promise<ScrapedImportLinks> {
+  const source = parseHttpUrl(pageUrl.trim());
+  if (!source) {
+    throw new Error("invalid page URL");
+  }
+
+  const response = await fetch(source.toString(), {
+    headers: {
+      "User-Agent": MANUAL_IMPORT_UA,
+      Accept: "text/html,application/xhtml+xml",
+    },
+    redirect: "follow",
+    signal: AbortSignal.timeout(IMPORT_PAGE_TIMEOUT_MS),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} for ${source.toString()}`);
+  }
+
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType && !/text\/html|application\/xhtml\+xml/i.test(contentType)) {
+    throw new Error(`page is not HTML (${contentType})`);
+  }
+
+  const contentLength = Number(response.headers.get("content-length") ?? 0);
+  if (contentLength > MAX_IMPORT_PAGE_BYTES) {
+    throw new Error(`page is too large (${contentLength} bytes)`);
+  }
+
+  const html = Buffer.from(await response.arrayBuffer()).toString("utf8");
+  if (Buffer.byteLength(html, "utf8") > MAX_IMPORT_PAGE_BYTES) {
+    throw new Error(`page is too large (>${MAX_IMPORT_PAGE_BYTES} bytes)`);
+  }
+
+  const base = parseHttpUrl(response.url) ?? source;
+  const $ = loadHtml(html);
+  const found = new Map<string, string>();
+  const sourceKey = source.toString();
+  const baseKey = base.toString();
+
+  const add = (raw: string | undefined) => {
+    if (!raw) return;
+    const normalized = normalizeEmbeddedUrl(raw);
+    if (!normalized) return;
+    const url = parseHttpUrl(normalized, base.toString());
+    if (!url || isLikelyNonVideoAsset(url)) return;
+    const href = url.toString();
+    if (href === sourceKey || href === baseKey) return;
+    if (!found.has(href)) found.set(href, href);
+  };
+
+  $("a[href], area[href]").each((_, el) => add($(el).attr("href")));
+  $("[data-url], [data-href], [data-src]").each((_, el) => {
+    add($(el).attr("data-url"));
+    add($(el).attr("data-href"));
+    add($(el).attr("data-src"));
+  });
+
+  for (const match of html.matchAll(/https?:\/\/[^\s"'<>]+/gi)) {
+    add(match[0]);
+  }
+
+  const safeLimit = Math.min(Math.max(limit, 1), MAX_IMPORT_LINKS_PER_PAGE);
+  const links = [...found.values()];
+  return {
+    sourceUrl: source.toString(),
+    links: links.slice(0, safeLimit),
+    totalFound: links.length,
+    limited: links.length > safeLimit,
   };
 }
 
@@ -218,14 +328,16 @@ async function resolveImportSource(url: string): Promise<ResolvedImportSource> {
   if (voe) return voe;
 
   throw primaryError ?? new Error(`Could not resolve import source for ${url}`);
-  }
+}
 
-  export async function fetchImportMetadata(url: string): Promise<YtDlpVideoMeta & { downloadUrl: string }> {
+export async function fetchImportMetadata(
+  url: string,
+): Promise<YtDlpVideoMeta & { downloadUrl: string }> {
   const resolved = await resolveImportSource(url);
   return { ...resolved.metadata, downloadUrl: resolved.downloadUrl };
-  }
+}
 
-  function ensureManualChannel(db: Database.Database): void {
+function ensureManualChannel(db: Database.Database): void {
   db.prepare(
     `INSERT INTO channels (id, url, title, added_at, is_active)
      VALUES (?, ?, ?, ?, 1)
@@ -234,9 +346,9 @@ async function resolveImportSource(url: string): Promise<ResolvedImportSource> {
        title = excluded.title,
        is_active = 1`,
   ).run(MANUAL_CHANNEL_ID, "manual:hikari", MANUAL_CHANNEL_TITLE, Date.now());
-  }
+}
 
-  function ensureSeries(db: Database.Database, title: string): string {
+function ensureSeries(db: Database.Database, title: string): string {
   const id = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   db.prepare(
     `INSERT INTO series (id, title, added_at)
@@ -244,9 +356,9 @@ async function resolveImportSource(url: string): Promise<ResolvedImportSource> {
      ON CONFLICT(id) DO NOTHING`,
   ).run(id, title, Date.now());
   return id;
-  }
+}
 
-  /**
+/**
   * Import a single URL: extract metadata via yt-dlp, auto-approve (no LLM
 
  * call), download via yt-dlp, write all rows. Returns status per URL so
@@ -297,7 +409,9 @@ export async function importDirectLink(
   const title = meta.title ?? meta.id;
   const description = meta.description ?? "";
   const duration = Math.round(meta.duration ?? 0);
-  const thumbnail = fixProtocol(meta.thumbnail ?? meta.thumbnails?.[meta.thumbnails.length - 1]?.url);
+  const thumbnail = fixProtocol(
+    meta.thumbnail ?? meta.thumbnails?.[meta.thumbnails.length - 1]?.url,
+  );
   const publishedAt = parseUploadDate(meta.upload_date);
   const now = Date.now();
 
@@ -341,7 +455,7 @@ export async function importDirectLink(
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     videoId,
-    100,                       // top score — user explicitly added this
+    100, // top score — user explicitly added this
     "other",
     0,
     0,
@@ -390,9 +504,10 @@ export async function importDirectLink(
      VALUES (?, ?, ?, ?)`,
   ).run(videoId, filePath, size, now);
 
-  db.prepare(
-    `INSERT OR IGNORE INTO feed_items (video_id, added_to_feed_at) VALUES (?, ?)`,
-  ).run(videoId, now);
+  db.prepare("INSERT OR IGNORE INTO feed_items (video_id, added_to_feed_at) VALUES (?, ?)").run(
+    videoId,
+    now,
+  );
 
   return { url, status: "ok", videoId, title };
 }

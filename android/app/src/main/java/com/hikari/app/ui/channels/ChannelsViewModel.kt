@@ -93,12 +93,13 @@ class ChannelsViewModel @Inject constructor(
         _busy.value = false
     }
 
-    fun importVideos(urls: List<String>, onDone: (Int) -> Unit) = viewModelScope.launch {
+    fun importVideos(urls: List<String>, scrapeLinks: Boolean = false, onDone: (Int) -> Unit) = viewModelScope.launch {
         _busy.value = true
-        runCatching { repo.importVideos(urls) }
+        runCatching { repo.importVideos(urls, scrapeLinks) }
             .onSuccess {
                 _error.value = null
-                _pollStatus.value = "$it Videos werden importiert…"
+                _pollStatus.value =
+                    if (scrapeLinks) "$it Links werden importiert…" else "$it Videos werden importiert…"
                 onDone(it)
                 kotlinx.coroutines.delay(8_000)
                 runCatching { feedRepo.refresh() }

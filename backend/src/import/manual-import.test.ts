@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { importDirectLink } from "./manual-import.js";
+import { importDirectLink, scrapeImportLinksFromPage } from "./manual-import.js";
 
 vi.mock("../yt-dlp/client.js", () => {
   class YtDlpError extends Error {
@@ -51,7 +51,10 @@ function encodeVoeConfig(config: Record<string, unknown>): string {
 }
 
 class MockDb {
-  channels = new Map<string, { id: string; url: string; title: string; added_at: number; is_active: number }>();
+  channels = new Map<
+    string,
+    { id: string; url: string; title: string; added_at: number; is_active: number }
+  >();
   videos = new Map<
     string,
     {
@@ -66,7 +69,10 @@ class MockDb {
     }
   >();
   scores = new Map<string, { video_id: string }>();
-  downloadedVideos = new Map<string, { video_id: string; file_path: string; file_size_bytes: number }>();
+  downloadedVideos = new Map<
+    string,
+    { video_id: string; file_path: string; file_size_bytes: number }
+  >();
   feedItems = new Map<string, { video_id: string; added_to_feed_at: number }>();
 
   prepare(sql: string) {
@@ -318,5 +324,73 @@ describe("importDirectLink", () => {
       videoId: "voe_fsz0jl0y8u39",
     });
     expect(db.channels.get("manual")?.is_active).toBe(1);
+  });
+});
+
+describe("scrapeImportLinksFromPage", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("extracts and deduplicates video links from an HTML page", async () => {
+    const html = `
+      <html>
+        <body>
+          <a href="https://voe.sx/e/abc#watch">VOE</a>
+          <a href="/watch/local">Local page</a>
+          <a href="https://library.example/poster.jpg">Poster</a>
+          <div data-url="https://cdn.example/video/master.m3u8?token=1"></div>
+          <script>
+            window.extra = "https://voe.sx/e/abc";
+          </script>
+        </body>
+      </html>
+    `;
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(html, {
+          status: 200,
+          headers: { "content-type": "text/html; charset=utf-8" },
+        }),
+      ),
+    );
+
+    const result = await scrapeImportLinksFromPage("https://library.example/list");
+
+    expect(result).toEqual({
+      sourceUrl: "https://library.example/list",
+      links: [
+        "https://voe.sx/e/abc",
+        "https://library.example/watch/local",
+        "https://cdn.example/video/master.m3u8?token=1",
+      ],
+      totalFound: 3,
+      limited: false,
+    });
+  });
+
+  it("limits large link pages", async () => {
+    const html = Array.from(
+      { length: 5 },
+      (_, i) => `<a href="https://videos.example/${i}">Video ${i}</a>`,
+    ).join("");
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(html, {
+          status: 200,
+          headers: { "content-type": "text/html" },
+        }),
+      ),
+    );
+
+    const result = await scrapeImportLinksFromPage("https://library.example/list", 3);
+
+    expect(result.links).toHaveLength(3);
+    expect(result.totalFound).toBe(5);
+    expect(result.limited).toBe(true);
   });
 });

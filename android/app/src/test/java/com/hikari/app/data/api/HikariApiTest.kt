@@ -1,6 +1,7 @@
 package com.hikari.app.data.api
 
 import com.hikari.app.data.api.dto.AddChannelRequest
+import com.hikari.app.data.api.dto.ImportVideosRequest
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -80,5 +81,27 @@ class HikariApiTest {
         val recorded = server.takeRequest()
         assertEquals("POST", recorded.method)
         assertEquals("/channels", recorded.path)
+    }
+
+    @Test fun importVideos_sendsScrapeLinksFlag() = runBlocking {
+        server.enqueue(
+            MockResponse().setBody(
+                """{"queued":3,"status":"queued"}"""
+            )
+        )
+        val res = api.importVideos(
+            ImportVideosRequest(
+                urls = listOf("https://library.example/list"),
+                scrapeLinks = true,
+            )
+        )
+        assertEquals(3, res.queued)
+        val recorded = server.takeRequest()
+        assertEquals("POST", recorded.method)
+        assertEquals("/videos/import", recorded.path)
+        assertEquals(
+            """{"urls":["https://library.example/list"],"scrapeLinks":true}""",
+            recorded.body.readUtf8(),
+        )
     }
 }

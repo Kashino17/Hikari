@@ -39,6 +39,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -138,8 +139,8 @@ fun ChannelsScreen(
     if (importSheetOpen) {
         ImportSheet(
             onDismiss = { importSheetOpen = false },
-            onImport = { urls ->
-                vm.importVideos(urls) { _: Int -> }
+            onImport = { urls, scrapeLinks ->
+                vm.importVideos(urls, scrapeLinks) { _: Int -> }
                 importSheetOpen = false
             },
         )
@@ -654,10 +655,11 @@ private fun RecommendationRow(
 @Composable
 private fun ImportSheet(
     onDismiss: () -> Unit,
-    onImport: (List<String>) -> Unit,
+    onImport: (List<String>, Boolean) -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var text by remember { mutableStateOf("") }
+    var scrapeLinks by remember { mutableStateOf(false) }
 
     // Parse input into clean URL list — one per line, comma-separated, trimmed
     val urls = remember(text) {
@@ -679,17 +681,50 @@ private fun ImportSheet(
                 .padding(bottom = 24.dp),
         ) {
             Text(
-                "Direkten Video-Link",
+                if (scrapeLinks) "Sammelseite importieren" else "Direkten Video-Link",
                 style = MaterialTheme.typography.titleMedium,
                 color = HikariText,
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                "Eine URL pro Zeile (oder Komma-getrennt). yt-dlp probiert die Extraktion — funktioniert für alle 1700+ Sites die yt-dlp kennt. Auto-genehmigt, Score-Skip, direkt ins Archiv.",
+                if (scrapeLinks) {
+                    "Eine Seite pro Zeile. Hikari liest die Links auf der Seite aus und importiert die gefundenen Videos."
+                } else {
+                    "Eine URL pro Zeile (oder Komma-getrennt). yt-dlp probiert die Extraktion. Auto-genehmigt, direkt ins Archiv."
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = HikariTextMuted,
             )
             Spacer(Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(HikariSurface, RoundedCornerShape(8.dp))
+                    .border(0.5.dp, HikariBorder, RoundedCornerShape(8.dp))
+                    .clickable { scrapeLinks = !scrapeLinks }
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Sammelseite auslesen",
+                        color = HikariText,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(
+                        "Links auf der Seite importieren",
+                        color = HikariTextFaint,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Switch(
+                    checked = scrapeLinks,
+                    onCheckedChange = { scrapeLinks = it },
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
 
             Box(
                 modifier = Modifier
@@ -713,7 +748,7 @@ private fun ImportSheet(
                     decorationBox = { inner ->
                         if (text.isEmpty()) {
                             Text(
-                                "https://…\nhttps://…",
+                                if (scrapeLinks) "https://deine-seite.example/filme" else "https://…\nhttps://…",
                                 color = HikariTextFaint,
                                 style = TextStyle(
                                     fontSize = 12.sp,
@@ -731,7 +766,11 @@ private fun ImportSheet(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "${urls.size} URL${if (urls.size == 1) "" else "s"} erkannt",
+                    if (scrapeLinks) {
+                        "${urls.size} Seite${if (urls.size == 1) "" else "n"} erkannt"
+                    } else {
+                        "${urls.size} URL${if (urls.size == 1) "" else "s"} erkannt"
+                    },
                     color = HikariTextFaint,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.weight(1f),
@@ -747,7 +786,7 @@ private fun ImportSheet(
                             if (urls.isEmpty()) HikariSurface else HikariAmber,
                             RoundedCornerShape(6.dp),
                         )
-                        .clickable(enabled = urls.isNotEmpty()) { onImport(urls) }
+                        .clickable(enabled = urls.isNotEmpty()) { onImport(urls, scrapeLinks) }
                         .padding(horizontal = 16.dp),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -761,4 +800,3 @@ private fun ImportSheet(
         }
     }
 }
-
