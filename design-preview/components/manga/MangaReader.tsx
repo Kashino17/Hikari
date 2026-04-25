@@ -208,50 +208,64 @@ export function MangaReader({ seriesId, chapterId, pages, initialPage, nextChapt
         </div>
       )}
       {pages.length > 0 && !isPastEnd && (
-        <AnimatePresence custom={direction} initial={false}>
-          {current && current.ready && (
-            <motion.img
-              key={current.id}
-              src={mangaApi.pageUrl(current.id)}
-              alt={`Page ${current.pageNumber}`}
-              className="absolute inset-0 w-full h-full object-contain"
-              draggable={false}
-              onError={onImgError(current.id)}
-              custom={direction}
-              variants={{
-                enter: (dir: number) => ({ x: dir > 0 ? '100%' : '-100%', opacity: 0.6 }),
-                center: { x: 0, opacity: 1 },
-                exit: (dir: number) => ({ x: dir > 0 ? '-100%' : '100%', opacity: 0.6 }),
-              }}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{
-                x: { type: 'tween', ease: [0.32, 0.72, 0, 1], duration: 0.28 },
-                opacity: { duration: 0.18 },
-              }}
-              style={{ boxShadow: '0 0 40px rgba(0,0,0,0.6)' }}
-            />
-          )}
-          {current && !current.ready && (
-            <motion.div
-              key={`loading-${current.id}`}
-              className="absolute inset-0 flex items-center justify-center text-faint text-sm"
-              custom={direction}
-              variants={{
-                enter: (dir: number) => ({ x: dir > 0 ? '100%' : '-100%' }),
-                center: { x: 0 },
-                exit: (dir: number) => ({ x: dir > 0 ? '-100%' : '100%' }),
-              }}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ x: { type: 'tween', ease: [0.32, 0.72, 0, 1], duration: 0.28 } }}
-            >
-              Diese Seite wird gerade geladen…
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div
+          className="absolute inset-0"
+          style={{ perspective: '1600px' }}
+        >
+          <AnimatePresence custom={direction} initial={false}>
+            {current && current.ready && (
+              <motion.img
+                key={current.id}
+                src={mangaApi.pageUrl(current.id)}
+                alt={`Page ${current.pageNumber}`}
+                className="absolute inset-0 w-full h-full object-contain"
+                draggable={false}
+                onError={onImgError(current.id)}
+                custom={direction}
+                variants={{
+                  enter: { rotateY: 0, opacity: 0, scale: 0.97 },
+                  center: { rotateY: 0, opacity: 1, scale: 1 },
+                  exit: (dir: number) => ({
+                    rotateY: dir > 0 ? -170 : 170,
+                    rotateZ: dir > 0 ? -3 : 3,
+                    opacity: 0,
+                  }),
+                }}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{
+                  rotateY: { duration: 0.85, ease: [0.55, 0.06, 0.45, 0.94] },
+                  rotateZ: { duration: 0.85, ease: [0.55, 0.06, 0.45, 0.94] },
+                  opacity: {
+                    times: [0, 0.7, 1],
+                    duration: 0.85,
+                    ease: 'easeIn',
+                  },
+                  scale: { duration: 0.5, ease: 'easeOut' },
+                }}
+                style={{
+                  transformOrigin: direction > 0 ? '0% 100%' : '100% 100%',
+                  transformStyle: 'preserve-3d',
+                  backfaceVisibility: 'hidden',
+                  boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+                }}
+              />
+            )}
+            {current && !current.ready && (
+              <motion.div
+                key={`loading-${current.id}`}
+                className="absolute inset-0 flex items-center justify-center text-faint text-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                Diese Seite wird gerade geladen…
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       )}
       {isPastEnd && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-8 text-center">
