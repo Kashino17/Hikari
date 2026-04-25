@@ -34,4 +34,14 @@ export function applyMigrations(db: Database.Database): void {
   addColumnIfMissing(db, "channels", "description", "TEXT");
   addColumnIfMissing(db, "channels", "subscribers", "INTEGER");
   addColumnIfMissing(db, "channels", "thumbnail_url", "TEXT");
+
+  // Netflix-style upgrades
+  addColumnIfMissing(db, "videos", "series_id", "TEXT REFERENCES series(id)");
+  addColumnIfMissing(db, "videos", "season", "INTEGER");
+  addColumnIfMissing(db, "videos", "episode", "INTEGER");
+  addColumnIfMissing(db, "videos", "dub_language", "TEXT");
+  addColumnIfMissing(db, "videos", "sub_language", "TEXT");
+  addColumnIfMissing(db, "videos", "is_movie", "INTEGER DEFAULT 0");
+
+  addColumnIfMissing(db, "feed_items", "progress_seconds", "REAL DEFAULT 0");
 }

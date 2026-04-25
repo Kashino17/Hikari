@@ -41,10 +41,41 @@ function Slide({ videoId, title, channel, durationSec, aiScore, index, total, is
   const [playing, setPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
   const [hearts, setHearts] = useState<HeartAnim[]>([])
+  const [showSkipIntro, setShowSkipIntro] = useState(false)
+  const [showNextEpisode, setShowNextEpisode] = useState(false)
 
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastTap = useRef(0)
   const heartId = useRef(0)
+
+  // Simulate SponsorBlock Intro at 10-30 seconds
+  useEffect(() => {
+    if (!playing || !isActive) return
+    const currentSec = progress * durationSec
+    if (currentSec > 5 && currentSec < 15) {
+      setShowSkipIntro(true)
+    } else {
+      setShowSkipIntro(false)
+    }
+
+    if (currentSec > durationSec - 20) {
+      setShowNextEpisode(true)
+    } else {
+      setShowNextEpisode(false)
+    }
+  }, [progress, playing, isActive, durationSec])
+
+  const skipIntro = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setProgress(20 / durationSec) // Skip to 20s
+    setShowSkipIntro(false)
+  }
+
+  const nextEpisode = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    // In a real app, this would scroll to the next slide
+    alert("Nächste Folge wird geladen...")
+  }
 
   const showChrome = useCallback(() => {
     setChrome(true)
@@ -107,6 +138,27 @@ function Slide({ videoId, title, channel, durationSec, aiScore, index, total, is
           </div>
         </div>
       )}
+
+      {/* Netflix-style overlays */}
+      <div className="absolute right-0 bottom-32 flex flex-col items-end gap-3 z-30 transition-opacity duration-300">
+        {showSkipIntro && (
+          <button
+            onClick={skipIntro}
+            className="bg-black/60 backdrop-blur-md border-y border-l border-white/20 text-white text-[13px] font-bold py-3 pl-6 pr-12 flex items-center gap-2 hover:bg-white/20 transition-all active:scale-95"
+          >
+            Intro überspringen
+          </button>
+        )}
+        
+        {showNextEpisode && (
+          <button
+            onClick={nextEpisode}
+            className="bg-accent/90 text-black text-[13px] font-bold py-3 pl-6 pr-12 flex items-center gap-2 shadow-2xl active:scale-95"
+          >
+            Nächste Folge <Play size={14} fill="black" />
+          </button>
+        )}
+      </div>
 
       {/* Heart bursts */}
       {hearts.map((h) => (

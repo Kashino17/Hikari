@@ -1,15 +1,17 @@
 import type { FastifyInstance } from "fastify";
 import type Database from "better-sqlite3";
-import { importDirectLink, type ImportResult } from "../import/manual-import.js";
+import { importDirectLink, fetchImportMetadata, type ImportResult, type ManualMetadata } from "../import/manual-import.js";
+import type { MetadataExtractor } from "../scorer/metadata-extractor.js";
 
 export interface VideosDeps {
   db: Database.Database;
   videoDir: string;
+  extractor: MetadataExtractor | null;
 }
 
 interface ImportBody {
-  urls?: string[];
   url?: string;
+  metadata?: ManualMetadata;
 }
 
 // @fastify/static with { prefix: "/videos/", root: VIDEO_DIR } handles Range,
@@ -18,42 +20,71 @@ export async function registerVideosRoutes(
   app: FastifyInstance,
   deps: VideosDeps,
 ): Promise<void> {
-  app.post<{ Body: ImportBody }>("/videos/import", async (req, reply) => {
-    const body = req.body ?? {};
-    const urls = Array.isArray(body.urls) ? body.urls : body.url ? [body.url] : [];
-    const cleaned = urls
-      .map((u) => u.trim())
-      .filter((u) => u.length > 0);
-    if (cleaned.length === 0) {
-      return reply.code(400).send({ error: "no urls" });
-    }
-    if (cleaned.length > 50) {
-      return reply.code(400).send({ error: "max 50 urls per request" });
-    }
+  app.post<{ Body: { url: string } }>("/videos/analyze", async (req, reply) => {
+    const { url } = req.body;
+    if (!url) return reply.code(400).send({ error: "no url" });
 
-    // Respond immediately with "queued" — actual import happens in the
-    // background. Each URL is sequential to avoid hammering yt-dlp +
-    // saturating disk bandwidth on big downloads.
-    const queued = cleaned.length;
+    try {
+      const meta = await fetchImportMetadata(url);
+      let aiMeta = {};
+      if (deps.extractor) {
+        aiMeta = await deps.extractor.extract(meta.title ?? "", meta.description ?? "");
+      }
+      return {
+        url,
+        title: meta.title,
+        description: meta.description,
+        thumbnailUrl: meta.thumbnail,
+        aiMeta,
+      };
+    } catch (err) {
+      return reply.code(500).send({ error: String(err) });
+    }
+  });
+
+  app.post<{ Body: ImportBody }>("/videos/import", async (req, reply) => {
+    const { url, metadata } = req.body;
+    if (!url) return reply.code(400).send({ error: "no url" });
 
     (async () => {
-      const results: ImportResult[] = [];
-      for (const url of cleaned) {
-        try {
-          const r = await importDirectLink(deps.db, url, deps.videoDir);
-          results.push(r);
-          app.log.info({ url, result: r }, "manual import");
-        } catch (err) {
-          app.log.error({ err, url }, "manual import threw");
-          results.push({ url, status: "failed", error: String(err) });
-        }
+      try {
+        const r = await importDirectLink(deps.db, url, deps.videoDir, metadata);
+        app.log.info({ url, result: r }, "manual import");
+      } catch (err) {
+        app.log.error({ err, url }, "manual import threw");
       }
-      const ok = results.filter((r) => r.status === "ok").length;
-      const dup = results.filter((r) => r.status === "duplicate").length;
-      const fail = results.filter((r) => r.status === "failed").length;
-      app.log.info({ queued, ok, dup, fail }, "manual import batch done");
-    })().catch((err) => app.log.error({ err }, "manual import batch failed"));
+    })().catch((err) => app.log.error({ err }, "manual import failed"));
 
-    return reply.code(202).send({ queued });
+    return reply.code(202).send({ status: "queued" });
+  });
+
+  app.get("/library", async () => {
+    const series = deps.db.prepare("SELECT * FROM series ORDER BY added_at DESC").all();
+    const recentlyAdded = deps.db.prepare(`
+      SELECT v.*, c.title as channelTitle, fi.progress_seconds
+      FROM videos v
+      JOIN channels c ON c.id = v.channel_id
+      JOIN feed_items fi ON fi.video_id = v.id
+      ORDER BY v.discovered_at DESC
+      LIMIT 20
+    `).all();
+    const channels = deps.db.prepare("SELECT * FROM channels WHERE is_active = 1").all();
+
+    return { series, recentlyAdded, channels };
+  });
+
+  app.get<{ Params: { id: string } }>("/series/:id", async (req, reply) => {
+    const series = deps.db.prepare("SELECT * FROM series WHERE id = ?").get(req.params.id);
+    if (!series) return reply.code(404).send({ error: "series not found" });
+
+    const videos = deps.db.prepare(`
+      SELECT v.*, fi.progress_seconds
+      FROM videos v
+      LEFT JOIN feed_items fi ON fi.video_id = v.id
+      WHERE v.series_id = ?
+      ORDER BY v.season ASC, v.episode ASC
+    `).all(req.params.id);
+
+    return { ...series, videos };
   });
 }

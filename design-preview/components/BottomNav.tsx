@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Play, Hash, Sliders } from 'lucide-react'
+import { Play, Hash, Sliders, LayoutGrid } from 'lucide-react'
 
 const items = [
+  { href: '/library', label: 'Bibliothek', Icon: LayoutGrid },
   { href: '/feed', label: 'Feed', Icon: Play },
   { href: '/channels', label: 'Kanäle', Icon: Hash },
   { href: '/tuning', label: 'Tuning', Icon: Sliders },

@@ -1,3 +1,11 @@
+CREATE TABLE IF NOT EXISTS series (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT,
+  thumbnail_url TEXT,
+  added_at INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS channels (
   id TEXT PRIMARY KEY,
   url TEXT NOT NULL,
@@ -11,13 +19,10 @@ CREATE TABLE IF NOT EXISTS channels (
   thumbnail_url TEXT
 );
 
--- Idempotent ALTER for pre-existing databases that lack the new columns.
--- SQLite has no `IF NOT EXISTS` for ADD COLUMN; the apply layer wraps these
--- in try/catch so re-runs are safe.
-
 CREATE TABLE IF NOT EXISTS videos (
   id TEXT PRIMARY KEY,
   channel_id TEXT NOT NULL REFERENCES channels(id),
+  series_id TEXT REFERENCES series(id),
   title TEXT NOT NULL,
   description TEXT,
   published_at INTEGER NOT NULL,
@@ -26,7 +31,12 @@ CREATE TABLE IF NOT EXISTS videos (
   default_language TEXT,
   thumbnail_url TEXT,
   transcript TEXT,
-  discovered_at INTEGER NOT NULL
+  discovered_at INTEGER NOT NULL,
+  season INTEGER,
+  episode INTEGER,
+  dub_language TEXT,
+  sub_language TEXT,
+  is_movie INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS scores (
@@ -47,7 +57,8 @@ CREATE TABLE IF NOT EXISTS feed_items (
   added_to_feed_at INTEGER NOT NULL,
   seen_at INTEGER,
   saved INTEGER DEFAULT 0,
-  playback_failed INTEGER DEFAULT 0
+  playback_failed INTEGER DEFAULT 0,
+  progress_seconds REAL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS sponsor_segments (

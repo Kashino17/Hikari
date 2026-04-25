@@ -16,6 +16,16 @@ export interface ImportResult {
   error?: string;
 }
 
+export interface ManualMetadata {
+  seriesId?: string;
+  seriesTitle?: string;
+  season?: number;
+  episode?: number;
+  dubLanguage?: string;
+  subLanguage?: string;
+  isMovie?: boolean;
+}
+
 interface YtDlpVideoMeta {
   id?: string;
   extractor?: string;
@@ -207,10 +217,15 @@ async function resolveImportSource(url: string): Promise<ResolvedImportSource> {
   const voe = await resolveVoePage(url);
   if (voe) return voe;
 
-  throw primaryError;
-}
+  return { metadata, downloadUrl: url };
+  }
 
-function ensureManualChannel(db: Database.Database): void {
+  export async function fetchImportMetadata(url: string): Promise<YtDlpVideoMeta & { downloadUrl: string }> {
+  const resolved = await resolveImportSource(url);
+  return { ...resolved.metadata, downloadUrl: resolved.downloadUrl };
+  }
+
+  function ensureManualChannel(db: Database.Database): void {
   db.prepare(
     `INSERT INTO channels (id, url, title, added_at, is_active)
      VALUES (?, ?, ?, ?, 1)
@@ -219,10 +234,21 @@ function ensureManualChannel(db: Database.Database): void {
        title = excluded.title,
        is_active = 1`,
   ).run(MANUAL_CHANNEL_ID, "manual:hikari", MANUAL_CHANNEL_TITLE, Date.now());
-}
+  }
 
-/**
- * Import a single URL: extract metadata via yt-dlp, auto-approve (no LLM
+  function ensureSeries(db: Database.Database, title: string): string {
+  const id = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  db.prepare(
+    `INSERT INTO series (id, title, added_at)
+     VALUES (?, ?, ?)
+     ON CONFLICT(id) DO NOTHING`,
+  ).run(id, title, Date.now());
+  return id;
+  }
+
+  /**
+  * Import a single URL: extract metadata via yt-dlp, auto-approve (no LLM
+
  * call), download via yt-dlp, write all rows. Returns status per URL so
  * the bulk caller can show a result line.
  */
@@ -230,6 +256,7 @@ export async function importDirectLink(
   db: Database.Database,
   url: string,
   videoDir: string,
+  manualMeta?: ManualMetadata,
 ): Promise<ImportResult> {
   const cleanUrl = url.trim();
   if (!cleanUrl) return { url, status: "failed", error: "empty URL" };
@@ -274,15 +301,22 @@ export async function importDirectLink(
   const publishedAt = parseUploadDate(meta.upload_date);
   const now = Date.now();
 
+  let seriesId = manualMeta?.seriesId;
+  if (!seriesId && manualMeta?.seriesTitle) {
+    seriesId = ensureSeries(db, manualMeta.seriesTitle);
+  }
+
   // Insert video row.
   db.prepare(
     `INSERT INTO videos
-     (id, channel_id, title, description, published_at, duration_seconds,
-      aspect_ratio, default_language, thumbnail_url, transcript, discovered_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     (id, channel_id, series_id, title, description, published_at, duration_seconds,
+      aspect_ratio, default_language, thumbnail_url, transcript, discovered_at,
+      season, episode, dub_language, sub_language, is_movie)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     videoId,
     MANUAL_CHANNEL_ID,
+    seriesId ?? null,
     title,
     description,
     publishedAt,
@@ -292,6 +326,11 @@ export async function importDirectLink(
     thumbnail,
     null,
     now,
+    manualMeta?.season ?? null,
+    manualMeta?.episode ?? null,
+    manualMeta?.dubLanguage ?? null,
+    manualMeta?.subLanguage ?? null,
+    manualMeta?.isMovie ? 1 : 0,
   );
 
   // Insert auto-approved score — user-curated content, no LLM.

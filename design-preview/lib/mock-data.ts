@@ -11,6 +11,19 @@ export interface MockVideo {
   aiReasoning: string
   saved: boolean
   seen: boolean
+  seriesId?: string
+  season?: number
+  episode?: number
+  progress?: number // 0 to 1
+  dub?: string
+}
+
+export interface MockSeries {
+  id: string
+  title: string
+  description: string
+  thumbnailGradient: string
+  category: VideoCategory
 }
 
 export interface MockChannel {
@@ -25,6 +38,7 @@ export interface MockChannel {
   category: VideoCategory
   accentColor: string
   description: string
+  thumbnailGradient?: string
 }
 
 export interface MockRejectedVideo {
@@ -56,7 +70,7 @@ export interface SponsorBlockCategory {
 export const mockVideos: MockVideo[] = [
   {
     videoId: 'v001',
-    title: 'But what is a Neural Network? | Deep learning, chapter 1',
+    title: 'But what is a Neural Network? | Chapter 1',
     channel: '3Blue1Brown',
     durationSec: 1204,
     category: 'math',
@@ -65,30 +79,26 @@ export const mockVideos: MockVideo[] = [
     aiReasoning: 'Visuelle Erklärung neuronaler Netze — mathematisch präzise und dabei zugänglich.',
     saved: true,
     seen: true,
+    seriesId: 's001',
+    season: 1,
+    episode: 1,
+    progress: 0.9,
   },
   {
-    videoId: 'v002',
-    title: 'The Ancient Philosophy Behind Stoicism — Marcus Aurelius Explained',
-    channel: 'Kurzgesagt',
-    durationSec: 892,
-    category: 'philosophy',
-    thumbnailGradient: 'from-amber-700 via-orange-600 to-yellow-500',
-    aiScore: 91,
-    aiReasoning: 'Dichte Philosophiegeschichte verständlich gemacht — kein Clickbait-Framing.',
-    saved: false,
-    seen: true,
-  },
-  {
-    videoId: 'v003',
-    title: 'The Banach–Tarski Paradox',
-    channel: 'Vsauce',
-    durationSec: 1437,
+    videoId: 'v006',
+    title: 'Gradient Descent, how neural networks learn | Chapter 2',
+    channel: '3Blue1Brown',
+    durationSec: 1552,
     category: 'math',
-    thumbnailGradient: 'from-slate-800 via-slate-700 to-zinc-600',
-    aiScore: 94,
-    aiReasoning: 'Mengenlehre und Unendlichkeit — respektiert die Intelligenz des Zuschauers.',
+    thumbnailGradient: 'from-violet-900 via-purple-700 to-indigo-600',
+    aiScore: 96,
+    aiReasoning: "Eulers Formel geometrisch erklärt.",
     saved: true,
     seen: false,
+    seriesId: 's001',
+    season: 1,
+    episode: 2,
+    progress: 0.1,
   },
   {
     videoId: 'v004',
@@ -101,6 +111,9 @@ export const mockVideos: MockVideo[] = [
     aiReasoning: 'Überraschend fundierte Wirtschaftsanalyse mit SpongeBob als Einstieg.',
     saved: false,
     seen: false,
+    seriesId: 's002',
+    season: 1,
+    episode: 1,
   },
   {
     videoId: 'v005',
@@ -755,3 +768,20 @@ export const sponsorBlockStats = {
   timeSaved: '2h 56min',
   topCategory: 'sponsor',
 }
+
+export const mockSeries: MockSeries[] = [
+  {
+    id: 's001',
+    title: 'Deep Learning',
+    description: 'Eine Reise durch die Grundlagen und Fortgeschrittenen-Themen der Neuronalen Netze.',
+    thumbnailGradient: 'from-blue-900 via-indigo-800 to-blue-600',
+    category: 'math',
+  },
+  {
+    id: 's002',
+    title: 'SpongeBob Wirtschaft',
+    description: 'Warum Bikini Bottom dem Untergang geweiht ist und andere soziologische Analysen.',
+    thumbnailGradient: 'from-yellow-600 via-amber-500 to-orange-400',
+    category: 'society',
+  },
+]

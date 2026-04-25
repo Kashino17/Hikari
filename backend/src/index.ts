@@ -19,6 +19,7 @@ import { fetchTranscript } from "./ingest/transcript.js";
 import { fetchChannelFeed } from "./monitor/rss-poller.js";
 import { processNewVideo } from "./pipeline/orchestrator.js";
 import { createScorer } from "./scorer/factory.js";
+import { MetadataExtractor } from "./scorer/metadata-extractor.js";
 import { fetchSponsorSegments } from "./sponsorblock/client.js";
 
 const cfg = loadConfig();
@@ -26,6 +27,9 @@ mkdirSync(cfg.videoDir, { recursive: true });
 
 const db = openDatabase(cfg.dbPath);
 const scorer = createScorer(cfg);
+const extractor = cfg.anthropicApiKey
+  ? new MetadataExtractor({ apiKey: cfg.anthropicApiKey, model: cfg.anthropicModel })
+  : null;
 
 // Startup consistency check: orphan files (file on disk without DB row)
 for (const f of readdirSync(cfg.videoDir)) {
@@ -54,7 +58,7 @@ await registerFeedRoutes(app, { db, dailyBudget: cfg.dailyBudget });
 await registerFilterRoutes(app, { db });
 await registerHealthRoute(app, { db, videoDir: cfg.videoDir });
 await registerStatsRoutes(app, { db });
-await registerVideosRoutes(app, { db, videoDir: cfg.videoDir });
+await registerVideosRoutes(app, { db, videoDir: cfg.videoDir, extractor });
 
 // 15-min channel polling
 cron.schedule("*/15 * * * *", async () => {
