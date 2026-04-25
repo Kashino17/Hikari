@@ -93,4 +93,59 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
     reply.header("Cache-Control", "public, max-age=31536000, immutable");
     return reply.send(createReadStream(fullAbs));
   });
+
+  app.post<{ Params: { seriesId: string } }>("/api/manga/library/:seriesId", async (req) => {
+    db.prepare(
+      "INSERT INTO manga_library (series_id, added_at) VALUES (?, ?) ON CONFLICT(series_id) DO NOTHING",
+    ).run(req.params.seriesId, Date.now());
+    return { ok: true };
+  });
+
+  app.delete<{ Params: { seriesId: string } }>("/api/manga/library/:seriesId", async (req) => {
+    db.prepare("DELETE FROM manga_library WHERE series_id = ?").run(req.params.seriesId);
+    return { ok: true };
+  });
+
+  app.put<{
+    Params: { seriesId: string };
+    Body: { chapterId: string; pageNumber: number };
+  }>("/api/manga/progress/:seriesId", async (req, reply) => {
+    const { chapterId, pageNumber } = req.body ?? {};
+    if (!chapterId || typeof pageNumber !== "number") {
+      return reply.code(400).send({ error: "chapterId + pageNumber required" });
+    }
+    db.prepare(
+      `INSERT INTO manga_progress (series_id, chapter_id, page_number, updated_at)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(series_id) DO UPDATE SET
+         chapter_id = excluded.chapter_id,
+         page_number = excluded.page_number,
+         updated_at = excluded.updated_at`,
+    ).run(req.params.seriesId, chapterId, pageNumber, Date.now());
+    return { ok: true };
+  });
+
+  app.put<{ Params: { id: string } }>("/api/manga/chapters/:id/read", async (req) => {
+    db.prepare(
+      `INSERT INTO manga_chapter_read (chapter_id, read_at) VALUES (?, ?)
+       ON CONFLICT(chapter_id) DO UPDATE SET read_at = excluded.read_at`,
+    ).run(req.params.id, Date.now());
+    return { ok: true };
+  });
+
+  app.get("/api/manga/continue", async () => {
+    return db.prepare(
+      `SELECT
+         s.id AS seriesId,
+         s.title,
+         s.cover_path AS coverPath,
+         p.chapter_id AS chapterId,
+         p.page_number AS pageNumber,
+         p.updated_at AS updatedAt
+       FROM manga_progress p
+       JOIN manga_library l ON l.series_id = p.series_id
+       JOIN manga_series s ON s.id = p.series_id
+       ORDER BY p.updated_at DESC`,
+    ).all();
+  });
 }

@@ -258,3 +258,113 @@ test("GET /api/manga/page/:id returns 404 when page id doesn't exist", async () 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("POST and DELETE /api/manga/library/:seriesId toggles membership", async () => {
+  const { app, db } = buildApp();
+  const r1 = await app.inject({ method: "POST", url: "/api/manga/library/fake:x" });
+  expect(r1.statusCode).toBe(200);
+  expect(
+    (db.prepare("SELECT COUNT(*) as c FROM manga_library").get() as { c: number }).c,
+  ).toBe(1);
+
+  // Idempotent — POST again, still 1 row
+  await app.inject({ method: "POST", url: "/api/manga/library/fake:x" });
+  expect(
+    (db.prepare("SELECT COUNT(*) as c FROM manga_library").get() as { c: number }).c,
+  ).toBe(1);
+
+  const r2 = await app.inject({ method: "DELETE", url: "/api/manga/library/fake:x" });
+  expect(r2.statusCode).toBe(200);
+  expect(
+    (db.prepare("SELECT COUNT(*) as c FROM manga_library").get() as { c: number }).c,
+  ).toBe(0);
+});
+
+test("PUT /api/manga/progress/:seriesId stores chapter+page", async () => {
+  const { app, db } = buildApp();
+  const r = await app.inject({
+    method: "PUT",
+    url: "/api/manga/progress/fake:x",
+    payload: { chapterId: "fake:x:1", pageNumber: 5 },
+  });
+  expect(r.statusCode).toBe(200);
+  const row = db
+    .prepare("SELECT chapter_id, page_number FROM manga_progress WHERE series_id = 'fake:x'")
+    .get() as { chapter_id: string; page_number: number } | undefined;
+  expect(row?.chapter_id).toBe("fake:x:1");
+  expect(row?.page_number).toBe(5);
+});
+
+test("PUT /api/manga/progress/:seriesId rejects missing fields with 400", async () => {
+  const { app } = buildApp();
+  const r = await app.inject({
+    method: "PUT",
+    url: "/api/manga/progress/fake:x",
+    payload: { chapterId: "fake:x:1" }, // pageNumber missing
+  });
+  expect(r.statusCode).toBe(400);
+});
+
+test("PUT /api/manga/progress/:seriesId is idempotent — second call updates same row", async () => {
+  const { app, db } = buildApp();
+  await app.inject({
+    method: "PUT", url: "/api/manga/progress/fake:x",
+    payload: { chapterId: "fake:x:1", pageNumber: 5 },
+  });
+  await app.inject({
+    method: "PUT", url: "/api/manga/progress/fake:x",
+    payload: { chapterId: "fake:x:1", pageNumber: 8 },
+  });
+  const c = db.prepare("SELECT COUNT(*) as c FROM manga_progress").get() as { c: number };
+  expect(c.c).toBe(1);
+  const row = db
+    .prepare("SELECT page_number FROM manga_progress WHERE series_id = 'fake:x'")
+    .get() as { page_number: number };
+  expect(row.page_number).toBe(8);
+});
+
+test("PUT /api/manga/chapters/:id/read marks chapter as read", async () => {
+  const { app, db } = buildApp();
+  const r = await app.inject({ method: "PUT", url: "/api/manga/chapters/fake:x:1/read" });
+  expect(r.statusCode).toBe(200);
+  const row = db
+    .prepare("SELECT chapter_id, read_at FROM manga_chapter_read WHERE chapter_id = 'fake:x:1'")
+    .get() as { chapter_id: string; read_at: number } | undefined;
+  expect(row).toBeDefined();
+  expect(typeof row!.read_at).toBe("number");
+});
+
+test("GET /api/manga/continue returns library series with progress, sorted recent first", async () => {
+  const { app, db } = buildApp();
+  // Setup: add to library and create progress
+  db.prepare("INSERT INTO manga_library (series_id, added_at) VALUES (?, ?)").run("fake:x", Date.now());
+  db.prepare(
+    "INSERT INTO manga_progress (series_id, chapter_id, page_number, updated_at) VALUES (?, ?, ?, ?)",
+  ).run("fake:x", "fake:x:1", 3, Date.now());
+
+  const r = await app.inject({ method: "GET", url: "/api/manga/continue" });
+  expect(r.statusCode).toBe(200);
+  const body = r.json() as {
+    seriesId: string;
+    title: string;
+    chapterId: string;
+    pageNumber: number;
+    updatedAt: number;
+  }[];
+  expect(body).toHaveLength(1);
+  expect(body[0].seriesId).toBe("fake:x");
+  expect(body[0].title).toBe("X");
+  expect(body[0].chapterId).toBe("fake:x:1");
+  expect(body[0].pageNumber).toBe(3);
+});
+
+test("GET /api/manga/continue excludes series with progress but NOT in library", async () => {
+  const { app, db } = buildApp();
+  db.prepare(
+    "INSERT INTO manga_progress (series_id, chapter_id, page_number, updated_at) VALUES (?, ?, ?, ?)",
+  ).run("fake:x", "fake:x:1", 3, Date.now());
+  // NOT added to library
+  const r = await app.inject({ method: "GET", url: "/api/manga/continue" });
+  const body = r.json() as unknown[];
+  expect(body).toHaveLength(0);
+});
