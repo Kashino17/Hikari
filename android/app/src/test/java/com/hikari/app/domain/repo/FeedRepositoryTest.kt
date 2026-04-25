@@ -29,7 +29,14 @@ class FeedRepositoryTest {
         )
         repo.refresh()
         coVerify { dao.upsertAll(match { it.size == 1 && it[0].videoId == "v1" }) }
-        coVerify { dao.pruneNotIn(listOf("v1")) }
+        coVerify { dao.pruneUnseenUnsavedNotIn(listOf("v1")) }
+    }
+
+    @Test fun refresh_whenApiReturnsNoItems_prunesUnseenUnsaved() = runTest {
+        coEvery { api.getFeed(mode = "new") } returns emptyList()
+        repo.refresh()
+        coVerify { dao.upsertAll(emptyList()) }
+        coVerify { dao.pruneAllUnseenUnsaved() }
     }
 
     @Test fun fetchOld_returnsItemsFromApi() = runTest {
@@ -45,6 +52,22 @@ class FeedRepositoryTest {
         val result = repo.fetchOld()
         assertEquals(1, result.size)
         assertEquals("v2", result[0].videoId)
+    }
+
+    @Test fun fetchSaved_returnsItemsFromApi() = runTest {
+        coEvery { api.getFeed(mode = "saved") } returns listOf(
+            FeedItemDto(
+                videoId = "v3", title = "t3", durationSeconds = 180,
+                aspectRatio = null, thumbnailUrl = null,
+                channelId = "c1", channelTitle = "chan",
+                category = "science", reasoning = "r",
+                addedAt = 400L, saved = 1,
+            )
+        )
+        val result = repo.fetchSaved()
+        assertEquals(1, result.size)
+        assertEquals("v3", result[0].videoId)
+        assertEquals(true, result[0].saved)
     }
 
     @Test fun unseenItems_mapsEntitiesToModels() = runTest {

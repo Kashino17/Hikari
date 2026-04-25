@@ -69,6 +69,8 @@ import com.hikari.app.domain.repo.PlaybackRepository
 import com.hikari.app.player.SponsorSkipListener
 import kotlinx.coroutines.launch
 
+private val FeedBottomBarClearance = 72.dp
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Internal helpers
 // ─────────────────────────────────────────────────────────────────────────────
@@ -315,14 +317,14 @@ fun ReelPlayer(
         AsyncImage(
             model = item.thumbnailUrl,
             contentDescription = item.title,
-            contentScale = ContentScale.Fit,
+            contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
         )
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
                     useController = false
-                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
                     // Transparent shutter: thumbnail shows through until first video frame renders
                     setShutterBackgroundColor(android.graphics.Color.TRANSPARENT)
                     // Don't freeze on last frame when player is detached
@@ -396,7 +398,7 @@ fun ReelPlayer(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(bottom = 80.dp),  // bottom-nav (64) + a bit of breathing room
+                .padding(bottom = 96.dp),
         ) {
             Column(
                 modifier = Modifier
@@ -449,6 +451,7 @@ fun ReelPlayer(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(bottom = FeedBottomBarClearance)
                 .fillMaxWidth(),
         )
     }

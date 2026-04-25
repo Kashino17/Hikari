@@ -46,6 +46,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.hikari.app.data.prefs.SponsorBlockPrefs
 import com.hikari.app.data.sponsor.SponsorBlockClient
 import com.hikari.app.domain.repo.PlaybackRepository
@@ -81,7 +84,9 @@ fun FeedScreen(
     val items by vm.items.collectAsState()
     val baseUrl by vm.backendUrl.collectAsState()
     val refreshing by vm.refreshing.collectAsState()
+    val error by vm.error.collectAsState()
     val ctx = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
 
     var chromeVisible by remember { mutableStateOf(true) }
@@ -105,6 +110,13 @@ fun FeedScreen(
     val player = remember { factory.create() }
 
     DisposableEffect(Unit) { onDispose { player.release() } }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) vm.refresh()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     if (showDeleteConfirm && deleteTargetId != null) {
         AlertDialog(
@@ -147,7 +159,7 @@ fun FeedScreen(
                     }
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            when (mode) {
+                            error ?: when (mode) {
                                 FeedMode.NEW -> "Keine neuen Reels heute.\nTipp auf Archiv für ältere Videos."
                                 FeedMode.SAVED -> "Noch nichts gespeichert."
                                 FeedMode.OLD -> "Archiv ist leer."

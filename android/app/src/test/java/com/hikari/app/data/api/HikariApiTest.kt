@@ -50,6 +50,25 @@ class HikariApiTest {
         assertEquals("9:16", feed[0].aspectRatio)
     }
 
+    @Test fun getFeed_acceptsNullableAspectRatioAndThumbnail() = runBlocking {
+        server.enqueue(
+            MockResponse().setBody(
+                """
+                [{
+                  "videoId":"voe_fsz0jl0y8u39","title":"Dragonball","durationSeconds":1209,
+                  "aspectRatio":null,"thumbnailUrl":null,
+                  "channelId":"manual","channelTitle":"Manuell hinzugefügt","category":"other",
+                  "reasoning":"ok","addedAt":1777134579454,"saved":0
+                }]
+                """.trimIndent()
+            )
+        )
+        val feed = api.getFeed()
+        assertEquals(1, feed.size)
+        assertEquals(null, feed[0].aspectRatio)
+        assertEquals(null, feed[0].thumbnailUrl)
+    }
+
     @Test fun addChannel_sendsJsonBody() = runBlocking {
         server.enqueue(
             MockResponse().setBody(

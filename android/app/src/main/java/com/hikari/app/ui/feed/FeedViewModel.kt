@@ -31,17 +31,39 @@ class FeedViewModel @Inject constructor(
     private val _mode = MutableStateFlow(FeedMode.NEW)
     val mode: StateFlow<FeedMode> = _mode.asStateFlow()
 
+    private val _savedItems = MutableStateFlow<List<FeedItem>>(emptyList())
     private val _oldItems = MutableStateFlow<List<FeedItem>>(emptyList())
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     fun setMode(newMode: FeedMode) {
         _mode.value = newMode
-        if (newMode == FeedMode.OLD) loadOld()
+        when (newMode) {
+            FeedMode.NEW -> refresh()
+            FeedMode.SAVED -> loadSaved()
+            FeedMode.OLD -> loadOld()
+        }
     }
 
     private fun loadOld() = viewModelScope.launch {
         _refreshing.value = true
         runCatching { repo.fetchOld() }
-            .onSuccess { list -> _oldItems.value = list.distinctBy { it.videoId } }
+            .onSuccess {
+                _oldItems.value = it.distinctBy { item -> item.videoId }
+                _error.value = null
+            }
+            .onFailure { _error.value = it.message ?: "Archiv konnte nicht geladen werden" }
+        _refreshing.value = false
+    }
+
+    private fun loadSaved() = viewModelScope.launch {
+        _refreshing.value = true
+        runCatching { repo.fetchSaved() }
+            .onSuccess {
+                _savedItems.value = it.distinctBy { item -> item.videoId }
+                _error.value = null
+            }
+            .onFailure { _error.value = it.message ?: "Gespeicherte Videos konnten nicht geladen werden" }
         _refreshing.value = false
     }
 
@@ -50,13 +72,8 @@ class FeedViewModel @Inject constructor(
             list.distinctBy { it.videoId }.take(budget)
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    private val savedItems: StateFlow<List<FeedItem>> =
-        repo.savedItems()
-            .map { it.distinctBy { item -> item.videoId } }
-            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
-
     val items: StateFlow<List<FeedItem>> =
-        combine(_mode, newItems, savedItems, _oldItems) { mode, newL, savedL, oldL ->
+        combine(_mode, newItems, _savedItems, _oldItems) { mode, newL, savedL, oldL ->
             when (mode) {
                 FeedMode.NEW -> newL
                 FeedMode.SAVED -> savedL
@@ -76,12 +93,30 @@ class FeedViewModel @Inject constructor(
         _refreshing.value = true
         when (_mode.value) {
             FeedMode.NEW -> {
-                runCatching { repo.refresh() }
-                runCatching { _today.value = repo.todayCount() }
+                runCatching {
+                    repo.refresh()
+                    _today.value = repo.todayCount()
+                }.onSuccess {
+                    _error.value = null
+                }.onFailure {
+                    _error.value = it.message ?: "Feed konnte nicht geladen werden"
+                }
             }
-            FeedMode.SAVED -> { /* savedItems is a Room Flow — already live */ }
+            FeedMode.SAVED -> {
+                runCatching { repo.fetchSaved() }
+                    .onSuccess {
+                        _savedItems.value = it.distinctBy { item -> item.videoId }
+                        _error.value = null
+                    }
+                    .onFailure { _error.value = it.message ?: "Gespeicherte Videos konnten nicht geladen werden" }
+            }
             FeedMode.OLD -> {
-                runCatching { repo.fetchOld() }.onSuccess { _oldItems.value = it }
+                runCatching { repo.fetchOld() }
+                    .onSuccess {
+                        _oldItems.value = it.distinctBy { item -> item.videoId }
+                        _error.value = null
+                    }
+                    .onFailure { _error.value = it.message ?: "Archiv konnte nicht geladen werden" }
             }
         }
         _refreshing.value = false
@@ -92,6 +127,21 @@ class FeedViewModel @Inject constructor(
     }
     fun onToggleSave(id: String, currentlySaved: Boolean) = viewModelScope.launch {
         repo.toggleSave(id, currentlySaved)
+        when (_mode.value) {
+            FeedMode.NEW -> Unit
+            FeedMode.SAVED -> {
+                if (currentlySaved) {
+                    _savedItems.value = _savedItems.value.filterNot { it.videoId == id }
+                } else {
+                    refresh()
+                }
+            }
+            FeedMode.OLD -> {
+                _oldItems.value = _oldItems.value.map {
+                    if (it.videoId == id) it.copy(saved = !currentlySaved) else it
+                }
+            }
+        }
     }
     fun onUnplayable(id: String) = viewModelScope.launch { repo.markUnplayable(id) }
     fun onLessLikeThis(id: String) = viewModelScope.launch { repo.lessLikeThis(id) }

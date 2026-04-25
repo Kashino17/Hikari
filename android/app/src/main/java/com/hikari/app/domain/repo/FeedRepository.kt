@@ -19,18 +19,22 @@ class FeedRepository @Inject constructor(
     fun unseenItems(): Flow<List<FeedItem>> =
         dao.unseenItems().map { rows -> rows.map { it.toDomain() } }
 
-    fun savedItems(): Flow<List<FeedItem>> =
-        dao.savedItems().map { rows -> rows.map { it.toDomain() } }
-
     suspend fun refresh() {
         val remote = api.getFeed(mode = "new")
         dao.upsertAll(remote.map { it.toEntity() })
-        dao.pruneNotIn(remote.map { it.videoId })
+        if (remote.isEmpty()) {
+            dao.pruneAllUnseenUnsaved()
+        } else {
+            dao.pruneUnseenUnsavedNotIn(remote.map { it.videoId })
+        }
     }
+
+    suspend fun fetchSaved(): List<FeedItem> =
+        api.getFeed(mode = "saved").map { it.toDomain() }
 
     /** Fetch history (seen videos) directly from API — no Room caching for browse history. */
     suspend fun fetchOld(): List<FeedItem> =
-        api.getFeed(mode = "old").map { it.toDomainOld() }
+        api.getFeed(mode = "old").map { it.toDomain() }
 
     suspend fun markSeen(videoId: String) {
         dao.markSeen(videoId)
@@ -66,7 +70,7 @@ private fun FeedItemDto.toEntity() = FeedItemEntity(
     aspectRatio = aspectRatio, thumbnailUrl = thumbnailUrl,
     channelId = channelId, channelTitle = channelTitle,
     category = category, reasoning = reasoning,
-    addedAt = addedAt, saved = saved == 1, seen = false,
+    addedAt = addedAt, saved = saved == 1, seen = seenAt != null,
 )
 
 private fun FeedItemEntity.toDomain() = FeedItem(
@@ -76,8 +80,7 @@ private fun FeedItemEntity.toDomain() = FeedItem(
     reasoning = reasoning, saved = saved,
 )
 
-// For mode=old: maps a DTO directly to domain (API order = seen_at DESC, no Room sort needed).
-private fun FeedItemDto.toDomainOld() = FeedItem(
+private fun FeedItemDto.toDomain() = FeedItem(
     videoId = videoId, title = title, durationSeconds = durationSeconds,
     aspectRatio = aspectRatio, thumbnailUrl = thumbnailUrl,
     channelTitle = channelTitle, category = category,

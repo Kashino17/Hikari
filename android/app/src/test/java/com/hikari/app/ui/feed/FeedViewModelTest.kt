@@ -29,6 +29,7 @@ class FeedViewModelTest {
         every { settings.backendUrl } returns flowOf("http://laptop.local:3000")
         every { settings.dailyBudget } returns flowOf(15)
         coEvery { repo.refresh() } returns Unit
+        coEvery { repo.fetchSaved() } returns emptyList()
         coEvery { repo.fetchOld() } returns emptyList()
         every { repo.unseenItems() } returns flowOf(emptyList())
     }
@@ -39,7 +40,7 @@ class FeedViewModelTest {
         val testDispatcher = UnconfinedTestDispatcher(testScheduler)
         Dispatchers.setMain(testDispatcher)
 
-        val items = (0..19).map { FeedItem("v$it", "t$it", 60, "9:16", "", "c", "sci", "r", false) }
+        val items = (0..19).map { FeedItem("v$it", "t$it", 60, "9:16", null, "c", "sci", "r", false) }
         every { repo.unseenItems() } returns flowOf(items)
 
         val vm = FeedViewModel(repo, settings)
@@ -49,6 +50,23 @@ class FeedViewModelTest {
             val capped = awaitItem()
             assertEquals(15, capped.size)
             assertEquals("v0", capped[0].videoId)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test fun setMode_saved_loadsRemoteSavedItems() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        val saved = listOf(FeedItem("saved1", "t", 60, null, null, "c", "sci", "r", true))
+        coEvery { repo.fetchSaved() } returns saved
+
+        val vm = FeedViewModel(repo, settings)
+        vm.setMode(FeedMode.SAVED)
+
+        vm.items.test {
+            val current = awaitItem()
+            assertEquals(listOf("saved1"), current.map { it.videoId })
             cancelAndIgnoreRemainingEvents()
         }
     }

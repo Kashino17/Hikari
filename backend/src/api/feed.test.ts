@@ -4,7 +4,13 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { applyMigrations } from "../db/migrations.js";
 import { registerFeedRoutes } from "./feed.js";
 
-function seedFeedItem(db: Database.Database, id: string, addedAt: number, seen = false) {
+function seedFeedItem(
+  db: Database.Database,
+  id: string,
+  addedAt: number,
+  seen = false,
+  saved = false,
+) {
   db.prepare(
     "INSERT OR IGNORE INTO channels (id, url, title, added_at) VALUES ('UC1','x','c',0)",
   ).run();
@@ -22,8 +28,8 @@ function seedFeedItem(db: Database.Database, id: string, addedAt: number, seen =
      VALUES (?, '/x', 0, 0)`,
   ).run(id);
   db.prepare(
-    `INSERT INTO feed_items (video_id, added_to_feed_at, seen_at) VALUES (?, ?, ?)`,
-  ).run(id, addedAt, seen ? addedAt : null);
+    `INSERT INTO feed_items (video_id, added_to_feed_at, seen_at, saved) VALUES (?, ?, ?, ?)`,
+  ).run(id, addedAt, seen ? addedAt : null, saved ? 1 : 0);
 }
 
 describe("feed API", () => {
@@ -129,12 +135,26 @@ describe("feed API", () => {
     expect(body[0].videoId).toBe("seen_new");
   });
 
+  it("GET /feed?mode=saved returns saved items regardless of seen state", async () => {
+    const now = Date.now();
+    seedFeedItem(db, "saved_seen", now - 3000, true, true);
+    seedFeedItem(db, "saved_new", now - 1000, false, true);
+    seedFeedItem(db, "plain_new", now - 500, false, false);
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+
+    const res = await app.inject({ method: "GET", url: "/feed?mode=saved" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { videoId: string }[];
+    expect(body.map((x) => x.videoId)).toEqual(["saved_new", "saved_seen"]);
+  });
+
   it("GET /feed?mode=invalid returns 400", async () => {
     const app = Fastify();
     await registerFeedRoutes(app, { db, dailyBudget: 15 });
     const res = await app.inject({ method: "GET", url: "/feed?mode=invalid" });
     expect(res.statusCode).toBe(400);
-    expect(res.json()).toEqual({ error: "mode must be new or old" });
+    expect(res.json()).toEqual({ error: "mode must be new, saved, or old" });
   });
 
   it("DELETE /feed/:id returns 404 for unknown video", async () => {

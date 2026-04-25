@@ -2,6 +2,7 @@ package com.hikari.app.ui.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -74,23 +75,31 @@ fun HikariNavHost() {
         NavHost(
             nav,
             startDestination = "feed",
-            modifier = Modifier.fillMaxSize().padding(padding),
+            modifier = Modifier.fillMaxSize(),
         ) {
             composable("feed") {
                 FeedScreen(onNavigate = { route -> navTo(nav, route) })
             }
             composable("channels") {
-                ChannelsScreen(
-                    onOpenChannel = { id -> nav.navigate("channel/$id") },
-                )
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    ChannelsScreen(
+                        onOpenChannel = { id -> nav.navigate("channel/$id") },
+                    )
+                }
             }
             composable(
                 route = "channel/{channelId}",
                 arguments = listOf(navArgument("channelId") { type = NavType.StringType }),
             ) {
-                ChannelDetailScreen(onBack = { nav.popBackStack() })
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    ChannelDetailScreen(onBack = { nav.popBackStack() })
+                }
             }
-            composable("tuning") { TuningScreen() }
+            composable("tuning") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    TuningScreen()
+                }
+            }
         }
     }
 }

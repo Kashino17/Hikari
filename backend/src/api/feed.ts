@@ -26,9 +26,9 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
   `;
 
   app.get<{ Querystring: { mode?: string } }>("/feed", async (req, reply) => {
-    const mode = (req.query.mode ?? "new") as "new" | "old";
-    if (mode !== "new" && mode !== "old") {
-      return reply.code(400).send({ error: "mode must be new or old" });
+    const mode = (req.query.mode ?? "new") as "new" | "saved" | "old";
+    if (mode !== "new" && mode !== "saved" && mode !== "old") {
+      return reply.code(400).send({ error: "mode must be new, saved, or old" });
     }
 
     if (mode === "new") {
@@ -38,6 +38,13 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
           ORDER BY fi.added_to_feed_at DESC
           LIMIT ?`)
         .all(deps.dailyBudget);
+    } else if (mode === "saved") {
+      return deps.db
+        .prepare(BASE_SELECT + `
+          WHERE fi.saved = 1
+          ORDER BY COALESCE(fi.seen_at, fi.added_to_feed_at) DESC
+          LIMIT 100`)
+        .all();
     } else {
       return deps.db
         .prepare(BASE_SELECT + `

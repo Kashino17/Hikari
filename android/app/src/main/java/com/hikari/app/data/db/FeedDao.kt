@@ -23,8 +23,11 @@ interface FeedDao {
     @Query("UPDATE feed_items SET saved = :saved WHERE videoId = :videoId")
     suspend fun setSaved(videoId: String, saved: Boolean)
 
-    @Query("DELETE FROM feed_items WHERE videoId NOT IN (:keepIds)")
-    suspend fun pruneNotIn(keepIds: List<String>)
+    @Query("DELETE FROM feed_items WHERE seen = 0 AND saved = 0 AND videoId NOT IN (:keepIds)")
+    suspend fun pruneUnseenUnsavedNotIn(keepIds: List<String>)
+
+    @Query("DELETE FROM feed_items WHERE seen = 0 AND saved = 0")
+    suspend fun pruneAllUnseenUnsaved()
 
     @Query("DELETE FROM feed_items WHERE videoId = :videoId")
     suspend fun delete(videoId: String)
