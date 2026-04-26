@@ -17,6 +17,7 @@ export interface ImportResult {
 }
 
 export interface ManualMetadata {
+  title?: string;
   seriesId?: string;
   seriesTitle?: string;
   season?: number;
@@ -294,7 +295,7 @@ export async function importDirectLink(
     };
   }
 
-  const title = meta.title ?? meta.id;
+  const title = manualMeta?.title ?? meta.title ?? meta.id;
   const description = meta.description ?? "";
   const duration = Math.round(meta.duration ?? 0);
   const thumbnail = fixProtocol(meta.thumbnail ?? meta.thumbnails?.[meta.thumbnails.length - 1]?.url);

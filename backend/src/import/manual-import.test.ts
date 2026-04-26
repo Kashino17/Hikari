@@ -279,6 +279,50 @@ describe("importDirectLink", () => {
     );
   });
 
+  it("uses manualMeta.title to override yt-dlp title", async () => {
+    const url = "https://example.com/auto-title-test";
+
+    const { runYtDlp } = await import("../yt-dlp/client.js");
+    vi.mocked(runYtDlp).mockImplementation(async (args: string[]) => {
+      if (args.includes("--dump-single-json")) {
+        return {
+          stdout: JSON.stringify({
+            id: "abc123",
+            extractor: "youtube",
+            title: "auto-generated-title",
+            duration: 100,
+            thumbnail: "https://t/x.jpg",
+            upload_date: "20240101",
+            webpage_url: url,
+          }),
+          stderr: "",
+        };
+      }
+      if (args.includes("-o")) {
+        // simulate file write success — importDirectLink checks existsSync, so
+        // we need the file to exist; use writeFileSync on the expected path
+        const oIdx = args.indexOf("-o");
+        const filePath = args[oIdx + 1];
+        writeFileSync(filePath, Buffer.alloc(1024, 0xff));
+        return { stdout: "", stderr: "" };
+      }
+      throw new Error(`Unexpected yt-dlp args: ${JSON.stringify(args)}`);
+    });
+
+    const dir = mkdtempSync(join(tmpdir(), "hikari-import-"));
+    const db = new MockDb();
+    const result = await importDirectLink(
+      db as never,
+      url,
+      dir,
+      { title: "User Override Title" },
+    );
+
+    expect(result.status).toBe("ok");
+    const stored = db.videos.get("abc123");
+    expect(stored?.title).toBe("User Override Title");
+  });
+
   it("reactivates the manual channel before returning duplicate imports", async () => {
     const pageUrl =
       "https://timmaybealready.com/fsz0jl0y8u39?Dragonball%20Super%202%20HD%20GER%20SUB";

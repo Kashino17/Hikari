@@ -60,6 +60,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.ChannelSearchResultDto
@@ -75,6 +81,9 @@ import com.hikari.app.ui.theme.HikariSurfaceHigh
 import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
+import com.hikari.app.ui.channels.components.ImportCard
+import com.hikari.app.ui.channels.components.SharedDefaultsBlock
+import kotlinx.coroutines.launch
 
 // ─── Formatting helpers ─────────────────────────────────────────────────────
 private fun formatBytes(bytes: Long): String = when {
@@ -136,13 +145,7 @@ fun ChannelsScreen(
     val isSearching = query.trim().length >= 2
 
     if (importSheetOpen) {
-        ImportSheet(
-            onDismiss = { importSheetOpen = false },
-            onImport = { urls ->
-                vm.importVideos(urls) { _: Int -> }
-                importSheetOpen = false
-            },
-        )
+        ImportSheet(onDismiss = { importSheetOpen = false })
     }
 
     if (deepScanTarget != null) {
@@ -654,17 +657,11 @@ private fun RecommendationRow(
 @Composable
 private fun ImportSheet(
     onDismiss: () -> Unit,
-    onImport: (List<String>) -> Unit,
+    vm: ImportSheetViewModel = hiltViewModel(),
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var text by remember { mutableStateOf("") }
-
-    // Parse input into clean URL list — one per line, comma-separated, trimmed
-    val urls = remember(text) {
-        text.split('\n', ',')
-            .map { it.trim() }
-            .filter { it.isNotEmpty() && (it.startsWith("http://") || it.startsWith("https://")) }
-    }
+    val state by vm.uiState.collectAsState()
+    val scope = rememberCoroutineScope()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -675,89 +672,73 @@ private fun ImportSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 24.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                "Direkten Video-Link",
-                style = MaterialTheme.typography.titleMedium,
+                "Videos importieren",
                 color = HikariText,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
             )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                "Eine URL pro Zeile (oder Komma-getrennt). yt-dlp probiert die Extraktion — funktioniert für alle 1700+ Sites die yt-dlp kennt. Auto-genehmigt, Score-Skip, direkt ins Archiv.",
-                style = MaterialTheme.typography.bodySmall,
-                color = HikariTextMuted,
-            )
-            Spacer(Modifier.height(16.dp))
-
-            Box(
+            OutlinedTextField(
+                value = state.rawInput,
+                onValueChange = vm::onInputChanged,
+                placeholder = { Text("URLs hier einfügen (eine pro Zeile)…") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
-                    .background(HikariSurface, RoundedCornerShape(8.dp))
-                    .border(0.5.dp, HikariBorder, RoundedCornerShape(8.dp))
-                    .padding(12.dp),
-            ) {
-                BasicTextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    textStyle = TextStyle(
-                        color = HikariText,
-                        fontSize = 12.sp,
-                        fontFamily = FontFamily.Monospace,
-                        lineHeight = 18.sp,
-                    ),
-                    cursorBrush = SolidColor(HikariAmber),
-                    modifier = Modifier.fillMaxSize(),
-                    decorationBox = { inner ->
-                        if (text.isEmpty()) {
-                            Text(
-                                "https://…\nhttps://…",
-                                color = HikariTextFaint,
-                                style = TextStyle(
-                                    fontSize = 12.sp,
-                                    fontFamily = FontFamily.Monospace,
-                                    lineHeight = 18.sp,
-                                ),
-                            )
-                        }
-                        inner()
-                    },
-                )
-            }
+                    .height(100.dp),
+                maxLines = 6,
+            )
 
-            Spacer(Modifier.height(12.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    "${urls.size} URL${if (urls.size == 1) "" else "s"} erkannt",
-                    color = HikariTextFaint,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.weight(1f),
+            if (state.cards.isNotEmpty()) {
+                SharedDefaultsBlock(
+                    defaults = state.defaults,
+                    allSeries = state.allSeries,
+                    onUpdate = { transform -> vm.updateDefaults(transform) },
                 )
-                TextButton(onClick = onDismiss) {
-                    Text("Abbrechen", color = HikariTextMuted)
-                }
-                Spacer(Modifier.size(8.dp))
-                Box(
-                    modifier = Modifier
-                        .height(40.dp)
-                        .background(
-                            if (urls.isEmpty()) HikariSurface else HikariAmber,
-                            RoundedCornerShape(6.dp),
-                        )
-                        .clickable(enabled = urls.isNotEmpty()) { onImport(urls) }
-                        .padding(horizontal = 16.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        "Importieren",
-                        color = if (urls.isEmpty()) HikariTextFaint else Color.Black,
-                        style = MaterialTheme.typography.labelLarge,
+
+                state.cards.forEach { card ->
+                    ImportCard(
+                        card = card,
+                        allSeries = state.allSeries,
+                        onToggleExpand = { vm.toggleExpanded(card.url) },
+                        onRemove = { vm.removeCard(card.url) },
+                        onRetry = { vm.retryCard(card.url) },
+                        onPatchReady = { transform ->
+                            vm.updateCard(card.url) { transform(this) }
+                        },
                     )
                 }
             }
+
+            state.submitError?.let { err ->
+                Text(err, color = Color(0xFFEF4444), fontSize = 12.sp)
+            }
+
+            val readyCount = state.cards.count { it is ImportCardState.Ready }
+            val anyLoading = state.cards.any { it is ImportCardState.Loading }
+            Button(
+                onClick = {
+                    scope.launch {
+                        val n = vm.submit()
+                        if (n != null) onDismiss()
+                    }
+                },
+                enabled = readyCount > 0 && !anyLoading && !state.submitting,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    when {
+                        state.submitting -> "Importiere…"
+                        anyLoading -> "Analysiere $readyCount von ${state.cards.size}…"
+                        readyCount == 0 -> "Keine URLs"
+                        else -> "$readyCount Importieren"
+                    },
+                )
+            }
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
