@@ -58,6 +58,34 @@ export async function registerVideosRoutes(
     return reply.code(202).send({ status: "queued" });
   });
 
+  app.post<{
+    Body: { items?: { url: string; metadata?: ManualMetadata }[] };
+  }>("/videos/import/bulk", async (req, reply) => {
+    const items = req.body?.items;
+    if (!Array.isArray(items) || items.length === 0) {
+      return reply.code(400).send({ error: "no items" });
+    }
+
+    const queue = [...items];
+    const max = 4;
+    const runners = Array.from({ length: max }, async () => {
+      while (queue.length > 0) {
+        const item = queue.shift();
+        if (!item) break;
+        try {
+          await importDirectLink(deps.db, item.url, deps.videoDir, item.metadata);
+        } catch (err) {
+          app.log.error({ err, url: item.url }, "bulk import item failed");
+        }
+      }
+    });
+    Promise.all(runners).catch((err) =>
+      app.log.error({ err }, "bulk import runners crashed"),
+    );
+
+    return reply.code(202).send({ queued: items.length });
+  });
+
   app.get("/library", async () => {
     const series = deps.db.prepare("SELECT * FROM series ORDER BY added_at DESC").all();
     const recentlyAdded = deps.db.prepare(`
