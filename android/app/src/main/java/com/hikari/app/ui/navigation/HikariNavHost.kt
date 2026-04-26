@@ -29,6 +29,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.hikari.app.ui.channels.ChannelDetailScreen
 import com.hikari.app.ui.channels.ChannelsScreen
+import com.hikari.app.ui.channels.VideoEditScreen
 import com.hikari.app.ui.feed.FeedScreen
 import com.hikari.app.ui.library.LibraryScreen
 import com.hikari.app.ui.library.SeriesDetailScreen
@@ -174,7 +175,23 @@ fun HikariNavHost() {
                 arguments = listOf(navArgument("channelId") { type = NavType.StringType }),
             ) {
                 Box(Modifier.fillMaxSize().padding(padding)) {
-                    ChannelDetailScreen(onBack = { nav.popBackStack() })
+                    ChannelDetailScreen(
+                        onBack = { nav.popBackStack() },
+                        onEditVideo = { videoId -> nav.navigate("video-edit/$videoId") },
+                    )
+                }
+            }
+            composable(
+                route = "video-edit/{videoId}",
+                arguments = listOf(navArgument("videoId") { type = NavType.StringType }),
+            ) { entry ->
+                val videoId = entry.arguments?.getString("videoId").orEmpty()
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    VideoEditScreen(
+                        videoId = videoId,
+                        onBack = { nav.popBackStack() },
+                        onSaved = { nav.popBackStack() },
+                    )
                 }
             }
             composable("tuning") {

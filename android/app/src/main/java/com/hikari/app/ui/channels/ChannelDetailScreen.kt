@@ -1,8 +1,10 @@
 package com.hikari.app.ui.channels
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -69,6 +71,7 @@ private fun fmtDur(sec: Int): String {
 @Composable
 fun ChannelDetailScreen(
     onBack: () -> Unit,
+    onEditVideo: (String) -> Unit = {},
     vm: ChannelDetailViewModel = hiltViewModel(),
 ) {
     val channel by vm.channel.collectAsState()
@@ -161,6 +164,7 @@ fun ChannelDetailScreen(
                     onToggle = {
                         expandedVideo = if (expandedVideo == video.videoId) null else video.videoId
                     },
+                    onLongPress = { onEditVideo(video.videoId) },
                     onDelete = { deleteTarget = video },
                 )
                 HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
@@ -213,17 +217,19 @@ private fun DetailHeader(channelTitle: String?, handle: String?, onBack: () -> U
     HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun VideoRow(
     video: ChannelVideoDto,
     expanded: Boolean,
     onToggle: () -> Unit,
+    onLongPress: () -> Unit,
     onDelete: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onToggle)
+            .combinedClickable(onClick = onToggle, onLongClick = onLongPress)
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         Row(verticalAlignment = Alignment.Top) {

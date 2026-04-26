@@ -10,6 +10,9 @@ import com.hikari.app.data.api.dto.RecommendationDto
 import com.hikari.app.domain.model.Channel
 import javax.inject.Inject
 import javax.inject.Singleton
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 @Singleton
 class ChannelsRepository @Inject constructor(
@@ -75,4 +78,27 @@ class ChannelsRepository @Inject constructor(
 
     suspend fun listLanguages(): com.hikari.app.data.api.dto.LanguagesResponse =
         api.listLanguages()
+
+    suspend fun getVideo(id: String): com.hikari.app.data.api.dto.VideoDetailDto =
+        api.getVideo(id)
+
+    suspend fun updateVideo(
+        id: String,
+        req: com.hikari.app.data.api.dto.UpdateVideoRequest,
+    ): com.hikari.app.data.api.dto.VideoDetailDto = api.updateVideo(id, req)
+
+    suspend fun uploadVideoThumbnail(
+        id: String,
+        bytes: ByteArray,
+        mime: String,
+    ): com.hikari.app.data.api.dto.VideoDetailDto {
+        val body = bytes.toRequestBody(mime.toMediaType())
+        val ext = when (mime) {
+            "image/png" -> "png"
+            "image/webp" -> "webp"
+            else -> "jpg"
+        }
+        val part = MultipartBody.Part.createFormData("cover", "thumb.$ext", body)
+        return api.uploadVideoThumbnail(id, part)
+    }
 }
