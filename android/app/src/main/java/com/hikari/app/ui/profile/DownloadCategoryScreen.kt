@@ -102,28 +102,42 @@ fun DownloadCategoryScreen(
 
                 state.data != null -> {
                     val data = state.data!!
+                    val localIds by vm.localIds.collectAsState()
+                    val progress by vm.downloadProgress.collectAsState()
                     when (state.category) {
                         DownloadCategory.SERIES -> SeriesPanel(
                             groups = data.series,
                             state = state,
+                            localIds = localIds,
+                            downloadProgress = progress,
                             onToggle = { vm.toggleExpand(it) },
                             onSelect = { vm.toggleSelection(it) },
                             onPlay = { onPlayVideo(it.id, it.title, "") },
+                            onDownload = { vm.downloadLocally(it.id, it.duration_seconds) },
+                            onRemoveLocal = { vm.removeLocal(it.id) },
                         )
                         DownloadCategory.CHANNELS -> ChannelsPanel(
                             groups = data.channels,
                             state = state,
+                            localIds = localIds,
+                            downloadProgress = progress,
                             onToggle = { vm.toggleExpand(it) },
                             onSelect = { vm.toggleSelection(it) },
                             onPlay = { v, channelTitle ->
                                 onPlayVideo(v.id, v.title, channelTitle)
                             },
+                            onDownload = { v -> vm.downloadLocally(v.id, v.duration_seconds) },
+                            onRemoveLocal = { v -> vm.removeLocal(v.id) },
                         )
                         DownloadCategory.MOVIES -> MoviesPanel(
                             movies = data.movies,
                             state = state,
+                            localIds = localIds,
+                            downloadProgress = progress,
                             onSelect = { vm.toggleSelection(it) },
                             onPlay = { onPlayVideo(it.id, it.title, "") },
+                            onDownload = { m -> vm.downloadLocally(m.id, m.duration_seconds) },
+                            onRemoveLocal = { m -> vm.removeLocal(m.id) },
                         )
                     }
                 }
@@ -245,9 +259,13 @@ private fun Hero(title: String, meta: String) {
 private fun SeriesPanel(
     groups: List<SeriesGroupDto>,
     state: DownloadCategoryUiState,
+    localIds: Set<String>,
+    downloadProgress: Map<String, Float>,
     onToggle: (String) -> Unit,
     onSelect: (String) -> Unit,
     onPlay: (com.hikari.app.data.api.dto.SeriesEpisodeDto) -> Unit,
+    onDownload: (com.hikari.app.data.api.dto.SeriesEpisodeDto) -> Unit,
+    onRemoveLocal: (com.hikari.app.data.api.dto.SeriesEpisodeDto) -> Unit,
 ) {
     val totalEps = groups.sumOf { it.episode_count }
     val totalSize = groups.sumOf { it.total_bytes }
@@ -270,10 +288,12 @@ private fun SeriesPanel(
                 selectionMode = state.editMode,
                 selected = false,
                 onToggle = { onToggle(group.id) },
-                onCheckChange = null, // Groups aren't selectable; only individual episodes are
+                onCheckChange = null,
                 expandedContent = {
                     androidx.compose.foundation.layout.Column {
                         group.episodes.forEach { ep ->
+                            val isLocal = localIds.contains(ep.id)
+                            val progress = downloadProgress[ep.id]
                             EpisodeRow(
                                 title = "F${ep.episode ?: "-"} · ${ep.title}",
                                 meta = "${formatBytes(ep.size_bytes)} · ${formatDuration(ep.duration_seconds)}",
@@ -283,6 +303,15 @@ private fun SeriesPanel(
                                 selected = state.selectedVideoIds.contains(ep.id),
                                 onPlay = { onPlay(ep) },
                                 onCheckChange = { onSelect(ep.id) },
+                                localState = when {
+                                    isLocal -> com.hikari.app.ui.profile.components.LocalState.Local
+                                    progress != null -> com.hikari.app.ui.profile.components.LocalState.Downloading
+                                    else -> com.hikari.app.ui.profile.components.LocalState.NotLocal
+                                },
+                                downloadProgress = progress,
+                                onDownloadClick = {
+                                    if (isLocal) onRemoveLocal(ep) else onDownload(ep)
+                                },
                             )
                         }
                     }
@@ -296,9 +325,13 @@ private fun SeriesPanel(
 private fun ChannelsPanel(
     groups: List<ChannelGroupDto>,
     state: DownloadCategoryUiState,
+    localIds: Set<String>,
+    downloadProgress: Map<String, Float>,
     onToggle: (String) -> Unit,
     onSelect: (String) -> Unit,
     onPlay: (com.hikari.app.data.api.dto.ChannelVideoEntryDto, String) -> Unit,
+    onDownload: (com.hikari.app.data.api.dto.ChannelVideoEntryDto) -> Unit,
+    onRemoveLocal: (com.hikari.app.data.api.dto.ChannelVideoEntryDto) -> Unit,
 ) {
     val totalVids = groups.sumOf { it.video_count }
     val totalSize = groups.sumOf { it.total_bytes }
@@ -325,6 +358,8 @@ private fun ChannelsPanel(
                 expandedContent = {
                     androidx.compose.foundation.layout.Column {
                         group.videos.forEach { v ->
+                            val isLocal = localIds.contains(v.id)
+                            val progress = downloadProgress[v.id]
                             EpisodeRow(
                                 title = v.title,
                                 meta = "${formatBytes(v.size_bytes)} · ${formatDuration(v.duration_seconds)}",
@@ -334,6 +369,15 @@ private fun ChannelsPanel(
                                 selected = state.selectedVideoIds.contains(v.id),
                                 onPlay = { onPlay(v, group.title) },
                                 onCheckChange = { onSelect(v.id) },
+                                localState = when {
+                                    isLocal -> com.hikari.app.ui.profile.components.LocalState.Local
+                                    progress != null -> com.hikari.app.ui.profile.components.LocalState.Downloading
+                                    else -> com.hikari.app.ui.profile.components.LocalState.NotLocal
+                                },
+                                downloadProgress = progress,
+                                onDownloadClick = {
+                                    if (isLocal) onRemoveLocal(v) else onDownload(v)
+                                },
                             )
                         }
                     }
@@ -347,8 +391,12 @@ private fun ChannelsPanel(
 private fun MoviesPanel(
     movies: List<MovieEntryDto>,
     state: DownloadCategoryUiState,
+    localIds: Set<String>,
+    downloadProgress: Map<String, Float>,
     onSelect: (String) -> Unit,
     onPlay: (MovieEntryDto) -> Unit,
+    onDownload: (MovieEntryDto) -> Unit,
+    onRemoveLocal: (MovieEntryDto) -> Unit,
 ) {
     val totalSize = movies.sumOf { it.size_bytes }
     LazyVerticalGrid(
@@ -365,12 +413,19 @@ private fun MoviesPanel(
             SimpleFilterStrip("ALLE", movies.size)
         }
         gridItems(movies, key = { it.id }) { movie ->
+            val isLocal = localIds.contains(movie.id)
+            val progress = downloadProgress[movie.id]
             MoviePoster(
                 movie = movie,
                 selected = state.selectedVideoIds.contains(movie.id),
                 selectionMode = state.editMode,
+                isLocal = isLocal,
+                downloadProgress = progress,
                 onClick = {
                     if (state.editMode) onSelect(movie.id) else onPlay(movie)
+                },
+                onDownloadToggle = {
+                    if (isLocal) onRemoveLocal(movie) else onDownload(movie)
                 },
             )
         }
@@ -382,7 +437,10 @@ private fun MoviePoster(
     movie: MovieEntryDto,
     selected: Boolean,
     selectionMode: Boolean,
+    isLocal: Boolean,
+    downloadProgress: Float?,
     onClick: () -> Unit,
+    onDownloadToggle: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -458,6 +516,22 @@ private fun MoviePoster(
                 if (selected) {
                     Text("✓", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Black)
                 }
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp),
+            ) {
+                com.hikari.app.ui.profile.components.LocalDownloadIcon(
+                    state = when {
+                        isLocal -> com.hikari.app.ui.profile.components.LocalState.Local
+                        downloadProgress != null -> com.hikari.app.ui.profile.components.LocalState.Downloading
+                        else -> com.hikari.app.ui.profile.components.LocalState.NotLocal
+                    },
+                    progress = downloadProgress,
+                    onClick = onDownloadToggle,
+                )
             }
         }
     }

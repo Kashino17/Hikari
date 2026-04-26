@@ -195,6 +195,8 @@ private fun CoverThumb(shape: GroupCoverShape, url: String?, fallbackInitial: St
     }
 }
 
+enum class LocalState { NotLocal, Downloading, Local }
+
 @Composable
 fun EpisodeRow(
     title: String,
@@ -206,6 +208,9 @@ fun EpisodeRow(
     selected: Boolean = false,
     selectionMode: Boolean = false,
     onCheckChange: (() -> Unit)? = null,
+    localState: LocalState = LocalState.NotLocal,
+    downloadProgress: Float? = null,
+    onDownloadClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -276,11 +281,18 @@ fun EpisodeRow(
                 if (selected) Text("✓", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Black)
             }
         } else {
+            LocalDownloadIcon(
+                state = localState,
+                progress = downloadProgress,
+                onClick = onDownloadClick,
+            )
+            Spacer(Modifier.width(8.dp))
             Box(
                 modifier = Modifier
                     .size(28.dp)
                     .clip(CircleShape)
-                    .background(HikariAmber.copy(alpha = 0.12f)),
+                    .background(HikariAmber.copy(alpha = 0.12f))
+                    .clickable(onClick = onPlay),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
