@@ -52,6 +52,9 @@ class LibraryViewModel @Inject constructor(
     private val _today = MutableStateFlow<TodayCountResponse?>(null)
     val today: StateFlow<TodayCountResponse?> = _today.asStateFlow()
 
+    private val _queueItems = MutableStateFlow<List<FeedItem>>(emptyList())
+    val queueItems: StateFlow<List<FeedItem>> = _queueItems.asStateFlow()
+
     init {
         loadLibrary()
     }
@@ -78,6 +81,10 @@ class LibraryViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { repo.todayCount() }
                 .onSuccess { _today.value = it }
+        }
+        viewModelScope.launch {
+            runCatching { repo.fetchQueue() }
+                .onSuccess { _queueItems.value = it.distinctBy { item -> item.videoId } }
         }
     }
 

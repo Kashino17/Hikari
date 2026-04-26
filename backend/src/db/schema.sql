@@ -58,7 +58,9 @@ CREATE TABLE IF NOT EXISTS feed_items (
   seen_at INTEGER,
   saved INTEGER DEFAULT 0,
   playback_failed INTEGER DEFAULT 0,
-  progress_seconds REAL DEFAULT 0
+  progress_seconds REAL DEFAULT 0,
+  queued_at INTEGER,
+  queue_order INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS sponsor_segments (

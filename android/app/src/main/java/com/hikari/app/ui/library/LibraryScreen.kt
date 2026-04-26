@@ -74,6 +74,7 @@ fun LibraryScreen(
     val coverEdit by viewModel.coverEditState.collectAsState()
     val savedItems by viewModel.savedItems.collectAsState()
     val today by viewModel.today.collectAsState()
+    val queueItems by viewModel.queueItems.collectAsState()
     var editingSeries by remember { mutableStateOf<SeriesDto?>(null) }
 
     Box(modifier = Modifier.fillMaxSize().background(HikariBg)) {
@@ -93,6 +94,7 @@ fun LibraryScreen(
                 LibraryContent(
                     s.data,
                     savedItems,
+                    queueItems,
                     today,
                     onOpenSeries,
                     onOpenChannel,
@@ -128,6 +130,7 @@ fun LibraryScreen(
 private fun LibraryContent(
     data: LibraryResponse,
     savedItems: List<FeedItem>,
+    queueItems: List<FeedItem>,
     today: TodayCountResponse?,
     onOpenSeries: (String) -> Unit,
     onOpenChannel: (String) -> Unit,
@@ -148,6 +151,15 @@ private fun LibraryContent(
                 onPlayVideo = { play(it) },
                 onPlaySaved = { playSaved(it) },
             )
+        }
+
+        if (queueItems.isNotEmpty()) {
+            item {
+                QueueSection(
+                    videos = queueItems,
+                    onPlay = { playSaved(it) },
+                )
+            }
         }
 
         val continueWatching = data.recentlyAdded.filter { (it.progress_seconds ?: 0f) > 0f }
@@ -387,6 +399,80 @@ private fun DailyLightCardView(card: DailyLightCard) {
                 text = card.subtitle,
                 color = HikariTextMuted,
                 fontSize = 11.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+// ─── Hikari Queue ────────────────────────────────────────────────────────────
+
+@Composable
+private fun QueueSection(videos: List<FeedItem>, onPlay: (FeedItem) -> Unit) {
+    Section(title = "Heute schauen") {
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            items(videos, key = { "queue-${it.videoId}" }) { video ->
+                QueueCard(video = video, onClick = { onPlay(video) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun QueueCard(video: FeedItem, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .width(180.dp)
+            .height(148.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(HikariSurface)
+            .clickable(onClick = onClick),
+    ) {
+        AsyncImage(
+            model = video.thumbnailUrl,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.88f)),
+                    ),
+                ),
+        )
+        Column(
+            modifier = Modifier.align(Alignment.BottomStart).padding(12.dp),
+        ) {
+            Text(
+                text = queueReason(video),
+                color = HikariAmber,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.Monospace,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = video.title,
+                color = Color.White,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                lineHeight = 15.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = "${durationLabel(video.durationSeconds)} · ${video.channelTitle}",
+                color = HikariTextMuted,
+                fontSize = 10.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -663,6 +749,13 @@ private fun progressLabel(video: LibraryVideoDto): String {
     val progress = video.progress_seconds ?: return video.channelTitle ?: "Weitersehen"
     val percent = (progress / video.duration_seconds.toFloat()).coerceIn(0f, 1f)
     return "${(percent * 100).toInt()}% gesehen"
+}
+
+private fun queueReason(video: FeedItem): String = when {
+    (video.educationalValue ?: 0) >= 8 -> "LERNWERT ${video.educationalValue}/10"
+    video.saved -> "GESPEICHERT"
+    video.durationSeconds <= 5 * 60 -> "KURZ"
+    else -> video.category.uppercase()
 }
 
 @OptIn(ExperimentalFoundationApi::class)

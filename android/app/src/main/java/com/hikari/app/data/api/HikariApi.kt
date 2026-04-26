@@ -71,6 +71,15 @@ interface HikariApi {
     @GET("feed/today-count")
     suspend fun todayCount(): TodayCountResponse
 
+    @GET("queue")
+    suspend fun getQueue(): List<FeedItemDto>
+
+    @POST("queue/{id}")
+    suspend fun addToQueue(@Path("id") videoId: String)
+
+    @DELETE("queue/{id}")
+    suspend fun removeFromQueue(@Path("id") videoId: String)
+
     @GET("channels")
     suspend fun getChannels(): List<ChannelDto>
 

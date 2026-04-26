@@ -174,6 +174,43 @@ describe("feed API", () => {
     expect(body.map((x) => x.videoId)).toEqual(["saved_new", "saved_seen"]);
   });
 
+  it("GET /queue returns an automatic daily queue when no explicit queue exists", async () => {
+    const now = Date.now();
+    seedFeedItem(db, "seen_saved", now - 3000, true, true);
+    seedFeedItem(db, "fresh", now - 1000, false, false);
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+
+    const res = await app.inject({ method: "GET", url: "/queue" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { videoId: string; educationalValue: number }[];
+    expect(body.map((x) => x.videoId)).toContain("fresh");
+    expect(body[0].educationalValue).toBe(9);
+  });
+
+  it("POST /queue/:id pins an explicit queue order and DELETE removes it", async () => {
+    const now = Date.now();
+    seedFeedItem(db, "first", now - 2000);
+    seedFeedItem(db, "second", now - 1000);
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+
+    expect((await app.inject({ method: "POST", url: "/queue/second" })).statusCode).toBe(204);
+    expect((await app.inject({ method: "POST", url: "/queue/first" })).statusCode).toBe(204);
+
+    const queued = await app.inject({ method: "GET", url: "/queue" });
+    expect((queued.json() as { videoId: string }[]).map((x) => x.videoId)).toEqual([
+      "second",
+      "first",
+    ]);
+
+    expect((await app.inject({ method: "DELETE", url: "/queue/second" })).statusCode).toBe(204);
+    const afterDelete = await app.inject({ method: "GET", url: "/queue" });
+    expect((afterDelete.json() as { videoId: string }[]).map((x) => x.videoId)).toEqual([
+      "first",
+    ]);
+  });
+
   it("GET /feed?mode=invalid returns 400", async () => {
     const app = Fastify();
     await registerFeedRoutes(app, { db, dailyBudget: 15 });

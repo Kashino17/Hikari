@@ -44,6 +44,17 @@ class FeedRepository @Inject constructor(
     suspend fun fetchOld(): List<FeedItem> =
         api.getFeed(mode = "old").map { it.toDomain() }
 
+    suspend fun fetchQueue(): List<FeedItem> =
+        api.getQueue().map { it.toDomain() }
+
+    suspend fun addToQueue(videoId: String) {
+        api.addToQueue(videoId)
+    }
+
+    suspend fun removeFromQueue(videoId: String) {
+        api.removeFromQueue(videoId)
+    }
+
     suspend fun markSeen(videoId: String) {
         dao.markSeen(videoId)
         runCatching { api.markSeen(videoId) }

@@ -66,6 +66,61 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
     }
   });
 
+  app.get("/queue", async () => {
+    const explicit = deps.db
+      .prepare(BASE_SELECT + `
+        WHERE fi.playback_failed = 0
+          AND fi.queued_at IS NOT NULL
+        ORDER BY COALESCE(fi.queue_order, fi.queued_at) ASC, fi.queued_at ASC
+        LIMIT 12`)
+      .all();
+
+    if (explicit.length > 0) return explicit;
+
+    return deps.db
+      .prepare(BASE_SELECT + `
+        WHERE fi.playback_failed = 0
+        ORDER BY
+          CASE
+            WHEN fi.progress_seconds > 0 THEN 0
+            WHEN fi.seen_at IS NULL THEN 1
+            WHEN fi.saved = 1 THEN 2
+            ELSE 3
+          END ASC,
+          s.educational_value DESC,
+          s.overall_score DESC,
+          v.duration_seconds ASC,
+          fi.added_to_feed_at DESC
+        LIMIT 6`)
+      .all();
+  });
+
+  app.post<{ Params: { id: string } }>("/queue/:id", async (req, reply) => {
+    const existing = deps.db.prepare("SELECT 1 FROM feed_items WHERE video_id = ?").get(req.params.id);
+    if (!existing) return reply.code(404).send({ error: "video not found in feed" });
+
+    const maxOrder = deps.db
+      .prepare("SELECT COALESCE(MAX(queue_order), 0) AS maxOrder FROM feed_items")
+      .get() as { maxOrder: number };
+
+    deps.db
+      .prepare(
+        `UPDATE feed_items
+         SET queued_at = COALESCE(queued_at, ?),
+             queue_order = COALESCE(queue_order, ?)
+         WHERE video_id = ?`,
+      )
+      .run(Date.now(), maxOrder.maxOrder + 1, req.params.id);
+    return reply.code(204).send();
+  });
+
+  app.delete<{ Params: { id: string } }>("/queue/:id", async (req, reply) => {
+    deps.db
+      .prepare("UPDATE feed_items SET queued_at = NULL, queue_order = NULL WHERE video_id = ?")
+      .run(req.params.id);
+    return reply.code(204).send();
+  });
+
   app.post<{ Params: { id: string } }>("/feed/:id/seen", async (req, reply) => {
     deps.db
       .prepare("UPDATE feed_items SET seen_at = ? WHERE video_id = ?")
