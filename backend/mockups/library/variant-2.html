@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<base href="/mockups/library/">
+<title>Hikari · Bibliothek V2 — Discovery-Hub</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;background:#0a0a0a;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Inter","SF Pro Text",sans-serif;-webkit-font-smoothing:antialiased}
+  body{min-height:100vh;padding:34px 0 env(safe-area-inset-bottom)}
+  .frame{max-width:430px;margin:0 auto;min-height:100vh}
+
+  /* Top */
+  .topbar{display:flex;align-items:center;padding:calc(env(safe-area-inset-top) + 14px) 16px 12px}
+  .greet{flex:1}
+  .greet .h{font-size:22px;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-.4px}
+  .greet .s{margin-top:2px;font-size:11px;color:#666;font-family:ui-monospace,"SF Mono",monospace;letter-spacing:.3px}
+  .topbar .icon{width:36px;height:36px;border-radius:50%;background:#161616;border:0.5px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+  .topbar .icon svg{width:15px;height:15px}
+
+  /* Resume callout — single-card prominent */
+  .resume{margin:6px 14px 0;padding:14px;border-radius:14px;background:linear-gradient(135deg,#1a0a04 0%,#0a0a0a 60%);border:0.5px solid rgba(251,191,36,.18);position:relative;overflow:hidden}
+  .resume::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:#FBBF24}
+  .resume .row{display:flex;align-items:center;gap:12px}
+  .resume .thumb{width:80px;flex:0 0 80px;aspect-ratio:16/9;border-radius:6px;background-size:cover;background-position:center;position:relative;overflow:hidden}
+  .resume .thumb .progress{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.18)}
+  .resume .thumb .progress > div{height:100%;background:#FBBF24}
+  .resume .info{flex:1;min-width:0}
+  .resume .label{font-size:9px;letter-spacing:1.5px;color:#FBBF24;font-weight:800;font-family:ui-monospace,"SF Mono",monospace}
+  .resume .ttl{margin-top:3px;font-size:14px;font-weight:700;color:#fff;line-height:1.25;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+  .resume .meta{margin-top:3px;font-size:11px;color:#888;font-family:ui-monospace,"SF Mono",monospace}
+  .resume .play{flex:0 0 auto;width:38px;height:38px;border-radius:50%;background:#FBBF24;display:flex;align-items:center;justify-content:center;color:#0a0a0a}
+  .resume .play svg{width:16px;height:16px;margin-left:1.5px}
+
+  /* Hub-Cards (3 big tappable, like Downloads) */
+  .hub{padding:16px 14px 0;display:flex;flex-direction:column;gap:10px}
+  .hubcard{display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;background:#0e0e0e;border:0.5px solid rgba(255,255,255,.06);position:relative;overflow:hidden;cursor:pointer;transition:all .15s}
+  .hubcard:active{background:#161616;transform:scale(.99)}
+  .hubcard::before{content:"";position:absolute;inset:0;opacity:.18;pointer-events:none}
+  .hubcard.serien::before{background:radial-gradient(circle at 0% 0%,#FBBF24,transparent 60%)}
+  .hubcard.kanaele::before{background:radial-gradient(circle at 0% 0%,#3b82f6,transparent 60%)}
+  .hubcard.empfohlen::before{background:radial-gradient(circle at 0% 0%,#f472b6,transparent 60%)}
+
+  .hubcard .stack{position:relative;flex:0 0 96px;height:78px}
+  .hubcard .stack .s{position:absolute;width:48px;height:72px;border-radius:6px;background-size:cover;background-position:center;box-shadow:0 4px 10px rgba(0,0,0,.6);border:1px solid rgba(0,0,0,.4)}
+  .hubcard .stack .s.a{left:0;top:3px;transform:rotate(-8deg)}
+  .hubcard .stack .s.b{left:24px;top:0;z-index:1}
+  .hubcard .stack .s.c{left:48px;top:3px;transform:rotate(8deg)}
+  .hubcard .avstack{position:relative;flex:0 0 96px;height:60px;display:flex;align-items:center;padding-left:6px}
+  .hubcard .avstack .av{position:absolute;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;border:2.5px solid #0e0e0e}
+  .hubcard .avstack .av.a{left:0}
+  .hubcard .avstack .av.b{left:28px}
+  .hubcard .avstack .av.c{left:56px}
+  .hubcard .info{flex:1;min-width:0;position:relative;z-index:1}
+  .hubcard .info .t{font-size:18px;font-weight:800;color:#fff;line-height:1.1;letter-spacing:-.3px}
+  .hubcard .info .m{margin-top:5px;font-size:11px;color:#888;font-family:ui-monospace,"SF Mono",monospace}
+  .hubcard .arrow{flex:0 0 auto;color:#444;position:relative;z-index:1}
+  .hubcard .arrow svg{width:18px;height:18px}
+
+  /* Recent mixed list */
+  .recents{padding:24px 14px 0}
+  .recent-title{display:flex;align-items:baseline;padding:0 0 12px}
+  .recent-title .t{font-size:11px;letter-spacing:1.5px;color:#888;font-weight:700;font-family:ui-monospace,"SF Mono",monospace}
+  .recent-title .c{margin-left:8px;color:#444;font-size:11px;font-family:ui-monospace,"SF Mono",monospace}
+  .recent-title .more{margin-left:auto;font-size:11px;color:#FBBF24;font-weight:700;letter-spacing:.5px}
+  .ritem{display:flex;align-items:center;gap:12px;padding:8px 0;border-top:0.5px solid rgba(255,255,255,.05);cursor:pointer}
+  .ritem:first-child{border-top:0}
+  .ritem .thumb{width:104px;flex:0 0 104px;aspect-ratio:16/9;border-radius:5px;background-size:cover;background-position:center;position:relative;overflow:hidden}
+  .ritem .thumb .dur{position:absolute;bottom:3px;right:3px;background:rgba(0,0,0,.8);color:#fff;font-size:9px;font-weight:600;padding:1px 4px;border-radius:2px;font-family:ui-monospace,"SF Mono",monospace}
+  .ritem .info{flex:1;min-width:0}
+  .ritem .ttl{font-size:13px;font-weight:600;color:#fff;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ritem .sub{margin-top:4px;font-size:10px;color:#888;font-family:ui-monospace,"SF Mono",monospace;letter-spacing:.3px}
+
+  /* Quick-tag pills bottom */
+  .tags{padding:24px 14px 0;display:flex;flex-wrap:wrap;gap:6px}
+  .tag{padding:7px 12px;border-radius:18px;background:#161616;border:0.5px solid rgba(255,255,255,.08);color:#aaa;font-size:11px;font-weight:600}
+  .tag.active{background:#FBBF24;color:#0a0a0a;border-color:transparent}
+
+  /* Bottom-nav mock */
+  .bottomnav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,10,.95);backdrop-filter:blur(8px);border-top:0.5px solid rgba(255,255,255,.08);padding:10px env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 10px) env(safe-area-inset-left);max-width:430px;margin:0 auto}
+  .bottomnav .row{display:flex;justify-content:space-around;max-width:430px;margin:0 auto}
+  .bottomnav .item{display:flex;flex-direction:column;align-items:center;color:#666;font-size:10px;font-weight:600;gap:3px}
+  .bottomnav .item.active{color:#FBBF24}
+  .bottomnav .item svg{width:18px;height:18px}
+
+  .bottomspace{height:90px}
+
+  .variantnav{position:fixed;top:0;left:0;right:0;background:rgba(10,10,10,.92);backdrop-filter:blur(8px);border-bottom:0.5px solid rgba(255,255,255,.08);padding:6px env(safe-area-inset-right) 6px env(safe-area-inset-left);z-index:10}
+  .variantnav .row{display:flex;justify-content:center;gap:0;max-width:430px;margin:0 auto}
+  .variantnav a{flex:1;text-align:center;padding:6px;font-size:10px;color:#666;text-decoration:none;font-family:ui-monospace,"SF Mono",monospace;letter-spacing:.5px;border-radius:4px}
+  .variantnav a.cur{color:#FBBF24;background:#1a1a1a}
+</style>
+</head>
+<body>
+<div class="variantnav">
+  <div class="row">
+    <a href="variant-1.html">V1 Netflix</a>
+    <a class="cur" href="variant-2.html">V2 Hub</a>
+    <a href="variant-3.html">V3 Feed</a>
+    <a href="index.html">Index</a>
+  </div>
+</div>
+
+<div class="frame">
+  <div class="topbar">
+    <div class="greet">
+      <div class="h">Bibliothek</div>
+      <div class="s">142 VIDEOS · 8 KANÄLE · 3 SERIEN</div>
+    </div>
+    <div class="icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </div>
+  </div>
+
+  <!-- Resume callout (single, prominent) -->
+  <div class="resume">
+    <div class="row">
+      <div class="thumb" style="background:linear-gradient(135deg,#7c2d12,#fbbf24)">
+        <div class="progress"><div style="width:42%"></div></div>
+      </div>
+      <div class="info">
+        <div class="label">▶ WEITERSCHAUEN</div>
+        <div class="ttl">Dragonball Super · F3</div>
+        <div class="meta">noch 13 min · 1080p</div>
+      </div>
+      <div class="play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+    </div>
+  </div>
+
+  <!-- 3 Hub-Cards -->
+  <div class="hub">
+    <a class="hubcard serien">
+      <div class="stack">
+        <div class="s a" style="background:linear-gradient(135deg,#0f172a,#3b82f6)"></div>
+        <div class="s b" style="background:linear-gradient(135deg,#7c2d12,#fbbf24)"></div>
+        <div class="s c" style="background:linear-gradient(135deg,#166534,#22d3ee)"></div>
+      </div>
+      <div class="info">
+        <div class="t">Serien</div>
+        <div class="m">3 Serien · 23 Folgen</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </a>
+    <a class="hubcard kanaele">
+      <div class="avstack">
+        <div class="av a" style="background:linear-gradient(135deg,#1e40af,#60a5fa)">F</div>
+        <div class="av b" style="background:linear-gradient(135deg,#7e22ce,#c084fc)">P</div>
+        <div class="av c" style="background:linear-gradient(135deg,#374151,#6b7280)">V</div>
+      </div>
+      <div class="info">
+        <div class="t">Kanäle</div>
+        <div class="m">8 abonniert · 142 Videos</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </a>
+    <a class="hubcard empfohlen">
+      <div class="stack">
+        <div class="s a" style="background:linear-gradient(135deg,#831843,#f472b6)"></div>
+        <div class="s b" style="background:linear-gradient(135deg,#0f172a,#1e293b)"></div>
+        <div class="s c" style="background:linear-gradient(135deg,#7c2d12,#ea580c)"></div>
+      </div>
+      <div class="info">
+        <div class="t">Empfohlen</div>
+        <div class="m">12 neue Treffer · ›95% Match</div>
+      </div>
+      <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </a>
+  </div>
+
+  <!-- Recents -->
+  <div class="recents">
+    <div class="recent-title">
+      <span class="t">ZULETZT HINZUGEFÜGT</span>
+      <span class="c">12</span>
+      <span class="more">ALLE ›</span>
+    </div>
+    <div class="ritem">
+      <div class="thumb" style="background:linear-gradient(135deg,#7e22ce,#c084fc)">
+        <div class="dur">20:09</div>
+      </div>
+      <div class="info">
+        <div class="ttl">Dragonball Super 2 HD GER SUB</div>
+        <div class="sub">DRAGONBALL-TUBE · vor 1 h</div>
+      </div>
+    </div>
+    <div class="ritem">
+      <div class="thumb" style="background:linear-gradient(135deg,#1e40af,#60a5fa)">
+        <div class="dur">8:55</div>
+      </div>
+      <div class="info">
+        <div class="ttl">Compose Theme Tricks für Dark UIs</div>
+        <div class="sub">CHRIS BANES · vor 3 h</div>
+      </div>
+    </div>
+    <div class="ritem">
+      <div class="thumb" style="background:linear-gradient(135deg,#166534,#34d399)">
+        <div class="dur">12:41</div>
+      </div>
+      <div class="info">
+        <div class="ttl">Tailscale Setup Guide</div>
+        <div class="sub">FIRESHIP · gestern</div>
+      </div>
+    </div>
+    <div class="ritem">
+      <div class="thumb" style="background:linear-gradient(135deg,#be185d,#f472b6)">
+        <div class="dur">15:02</div>
+      </div>
+      <div class="info">
+        <div class="ttl">Manga Reader Build mit Compose</div>
+        <div class="sub">PHIL EDWARDS · vor 2 T</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tags -->
+  <div class="tags">
+    <span class="tag active">Alle</span>
+    <span class="tag">Anime</span>
+    <span class="tag">Tech</span>
+    <span class="tag">Tutorial</span>
+    <span class="tag">Vlog</span>
+    <span class="tag">Movie</span>
+  </div>
+
+  <div class="bottomspace"></div>
+</div>
+
+<div class="bottomnav">
+  <div class="row">
+    <div class="item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Bibliothek</div>
+    <div class="item"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>Feed</div>
+    <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Manga</div>
+    <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>Profil</div>
+  </div>
+</div>
+</body>
+</html>
