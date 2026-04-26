@@ -17,7 +17,8 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
     SELECT DISTINCT fi.video_id as videoId, v.title, v.duration_seconds as durationSeconds,
            v.aspect_ratio as aspectRatio, v.thumbnail_url as thumbnailUrl,
            v.channel_id as channelId, c.title as channelTitle,
-           s.category, s.reasoning,
+           s.category, s.reasoning, s.overall_score as overallScore,
+           s.educational_value as educationalValue,
            fi.added_to_feed_at as addedAt, fi.saved, fi.seen_at as seenAt
     FROM feed_items fi
     JOIN videos v ON v.id = fi.video_id

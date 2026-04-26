@@ -13,6 +13,8 @@ data class FeedItemDto(
     val channelTitle: String,
     val category: String,
     val reasoning: String,
+    val overallScore: Int? = null,
+    val educationalValue: Int? = null,
     val addedAt: Long,
     val saved: Int,
     val seenAt: Long? = null,  // only present in mode=old responses

@@ -14,6 +14,8 @@ data class FeedItemEntity(
     val channelTitle: String,
     val category: String,
     val reasoning: String,
+    val overallScore: Int? = null,
+    val educationalValue: Int? = null,
     val addedAt: Long,
     val saved: Boolean,
     val seen: Boolean,

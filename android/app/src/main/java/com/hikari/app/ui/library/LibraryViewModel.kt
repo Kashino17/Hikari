@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.LibraryResponse
 import com.hikari.app.data.api.dto.SeriesDetailResponse
+import com.hikari.app.data.api.dto.TodayCountResponse
+import com.hikari.app.domain.model.FeedItem
 import com.hikari.app.domain.repo.FeedRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -44,6 +46,12 @@ class LibraryViewModel @Inject constructor(
     private val _coverEditState = MutableStateFlow<CoverEditState>(CoverEditState.Idle)
     val coverEditState: StateFlow<CoverEditState> = _coverEditState.asStateFlow()
 
+    private val _savedItems = MutableStateFlow<List<FeedItem>>(emptyList())
+    val savedItems: StateFlow<List<FeedItem>> = _savedItems.asStateFlow()
+
+    private val _today = MutableStateFlow<TodayCountResponse?>(null)
+    val today: StateFlow<TodayCountResponse?> = _today.asStateFlow()
+
     init {
         loadLibrary()
     }
@@ -55,9 +63,21 @@ class LibraryViewModel @Inject constructor(
                 repo.getLibrary()
             }.onSuccess {
                 _uiState.value = LibraryUiState.Success(it)
+                loadBriefingExtras()
             }.onFailure {
                 _uiState.value = LibraryUiState.Error(it.message ?: "Unbekannter Fehler")
             }
+        }
+    }
+
+    private fun loadBriefingExtras() {
+        viewModelScope.launch {
+            runCatching { repo.fetchSaved() }
+                .onSuccess { _savedItems.value = it.distinctBy { item -> item.videoId } }
+        }
+        viewModelScope.launch {
+            runCatching { repo.todayCount() }
+                .onSuccess { _today.value = it }
         }
     }
 

@@ -10,4 +10,6 @@ data class FeedItem(
     val category: String,
     val reasoning: String,
     val saved: Boolean,
+    val overallScore: Int? = null,
+    val educationalValue: Int? = null,
 )

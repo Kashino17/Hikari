@@ -102,6 +102,7 @@ private fun FeedItemDto.toEntity() = FeedItemEntity(
     aspectRatio = aspectRatio, thumbnailUrl = thumbnailUrl,
     channelId = channelId, channelTitle = channelTitle,
     category = category, reasoning = reasoning,
+    overallScore = overallScore, educationalValue = educationalValue,
     addedAt = addedAt, saved = saved == 1, seen = seenAt != null,
 )
 
@@ -110,6 +111,7 @@ private fun FeedItemEntity.toDomain() = FeedItem(
     aspectRatio = aspectRatio, thumbnailUrl = thumbnailUrl,
     channelTitle = channelTitle, category = category,
     reasoning = reasoning, saved = saved,
+    overallScore = overallScore, educationalValue = educationalValue,
 )
 
 private fun FeedItemDto.toDomain() = FeedItem(
@@ -117,4 +119,5 @@ private fun FeedItemDto.toDomain() = FeedItem(
     aspectRatio = aspectRatio, thumbnailUrl = thumbnailUrl,
     channelTitle = channelTitle, category = category,
     reasoning = reasoning, saved = saved == 1,
+    overallScore = overallScore, educationalValue = educationalValue,
 )

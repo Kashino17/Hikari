@@ -41,6 +41,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -51,6 +52,8 @@ import com.hikari.app.data.api.dto.ChannelDto
 import com.hikari.app.data.api.dto.LibraryResponse
 import com.hikari.app.data.api.dto.LibraryVideoDto
 import com.hikari.app.data.api.dto.SeriesDto
+import com.hikari.app.data.api.dto.TodayCountResponse
+import com.hikari.app.domain.model.FeedItem
 import com.hikari.app.ui.library.components.CoverEditSheet
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
@@ -69,6 +72,8 @@ fun LibraryScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val coverEdit by viewModel.coverEditState.collectAsState()
+    val savedItems by viewModel.savedItems.collectAsState()
+    val today by viewModel.today.collectAsState()
     var editingSeries by remember { mutableStateOf<SeriesDto?>(null) }
 
     Box(modifier = Modifier.fillMaxSize().background(HikariBg)) {
@@ -87,6 +92,8 @@ fun LibraryScreen(
             is LibraryUiState.Success ->
                 LibraryContent(
                     s.data,
+                    savedItems,
+                    today,
                     onOpenSeries,
                     onOpenChannel,
                     onPlayVideo,
@@ -120,15 +127,28 @@ fun LibraryScreen(
 @Composable
 private fun LibraryContent(
     data: LibraryResponse,
+    savedItems: List<FeedItem>,
+    today: TodayCountResponse?,
     onOpenSeries: (String) -> Unit,
     onOpenChannel: (String) -> Unit,
     onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
     onLongPressSeries: (SeriesDto) -> Unit,
 ) {
     fun play(v: LibraryVideoDto) = onPlayVideo(v.id, v.title, v.channelTitle ?: "")
+    fun playSaved(v: FeedItem) = onPlayVideo(v.videoId, v.title, v.channelTitle)
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item { HeroSection(data.recentlyAdded.firstOrNull()) { play(it) } }
+
+        item {
+            DailyLightSection(
+                data = data,
+                savedItems = savedItems,
+                today = today,
+                onPlayVideo = { play(it) },
+                onPlaySaved = { playSaved(it) },
+            )
+        }
 
         val continueWatching = data.recentlyAdded.filter { (it.progress_seconds ?: 0f) > 0f }
         if (continueWatching.isNotEmpty()) {
@@ -140,6 +160,23 @@ private fun LibraryContent(
                     ) {
                         items(continueWatching, key = { it.id }) { video ->
                             VideoCard(video) { play(video) }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (savedItems.isNotEmpty()) {
+            savedCollections(savedItems).forEach { collection ->
+                item {
+                    Section(title = collection.title) {
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 20.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            items(collection.videos, key = { "${collection.title}-${it.videoId}" }) { video ->
+                                SavedVideoCard(video) { playSaved(video) }
+                            }
                         }
                     }
                 }
@@ -195,6 +232,205 @@ private fun LibraryContent(
 
         item { Spacer(Modifier.height(96.dp)) }
     }
+}
+
+// ─── Daily Light ─────────────────────────────────────────────────────────────
+
+private data class DailyLightCard(
+    val label: String,
+    val title: String,
+    val subtitle: String,
+    val thumbnailUrl: String?,
+    val onClick: () -> Unit,
+)
+
+@Composable
+private fun DailyLightSection(
+    data: LibraryResponse,
+    savedItems: List<FeedItem>,
+    today: TodayCountResponse?,
+    onPlayVideo: (LibraryVideoDto) -> Unit,
+    onPlaySaved: (FeedItem) -> Unit,
+) {
+    val continueVideo = data.recentlyAdded.firstOrNull { (it.progress_seconds ?: 0f) > 0f }
+    val quickVideo = data.recentlyAdded.firstOrNull { it.duration_seconds <= 5 * 60 }
+    val savedPick = savedItems.firstOrNull()
+    val newest = data.recentlyAdded.firstOrNull()
+
+    val cards = listOfNotNull(
+        newest?.let { video ->
+            DailyLightCard(
+                label = "Neu",
+                title = video.title,
+                subtitle = video.channelTitle ?: "Hikari",
+                thumbnailUrl = video.thumbnail_url,
+                onClick = { onPlayVideo(video) },
+            )
+        },
+        continueVideo?.takeIf { it.id != newest?.id }?.let { video ->
+            DailyLightCard(
+                label = "Weiter",
+                title = video.title,
+                subtitle = progressLabel(video),
+                thumbnailUrl = video.thumbnail_url,
+                onClick = { onPlayVideo(video) },
+            )
+        },
+        quickVideo?.takeIf { it.id != newest?.id && it.id != continueVideo?.id }?.let { video ->
+            DailyLightCard(
+                label = "Kurz",
+                title = video.title,
+                subtitle = durationLabel(video.duration_seconds),
+                thumbnailUrl = video.thumbnail_url,
+                onClick = { onPlayVideo(video) },
+            )
+        },
+        savedPick?.let { video ->
+            DailyLightCard(
+                label = "Saved",
+                title = video.title,
+                subtitle = video.category.replaceFirstChar { it.uppercase() },
+                thumbnailUrl = video.thumbnailUrl,
+                onClick = { onPlaySaved(video) },
+            )
+        },
+    ).distinctBy { it.title }.take(4)
+
+    if (cards.isEmpty()) return
+
+    Column(modifier = Modifier.padding(top = 24.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = "Daily Light",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Black,
+                )
+                Text(
+                    text = today?.let { "${it.unseenCount} neue Videos im heutigen Licht" }
+                        ?: "Dein kompakter Einstieg fuer heute",
+                    color = HikariTextFaint,
+                    fontSize = 12.sp,
+                )
+            }
+            today?.let {
+                Text(
+                    text = "${it.unseenCount}/${it.dailyBudget}",
+                    color = if (it.capped) HikariAmber else HikariTextMuted,
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                )
+            }
+        }
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(top = 12.dp),
+        ) {
+            items(cards, key = { "${it.label}-${it.title}" }) { card ->
+                DailyLightCardView(card)
+            }
+        }
+    }
+}
+
+@Composable
+private fun DailyLightCardView(card: DailyLightCard) {
+    Box(
+        modifier = Modifier
+            .width(220.dp)
+            .height(128.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(HikariSurface)
+            .clickable(onClick = card.onClick),
+    ) {
+        AsyncImage(
+            model = card.thumbnailUrl,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color.Black.copy(alpha = 0.18f), Color.Black.copy(alpha = 0.86f)),
+                    ),
+                ),
+        )
+        Column(
+            modifier = Modifier.align(Alignment.BottomStart).padding(12.dp),
+        ) {
+            Text(
+                text = card.label.uppercase(),
+                color = HikariAmber,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.Monospace,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = card.title,
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                lineHeight = 16.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = card.subtitle,
+                color = HikariTextMuted,
+                fontSize = 11.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+// ─── Smart Saved Collections ────────────────────────────────────────────────
+
+private data class SavedCollection(val title: String, val videos: List<FeedItem>)
+
+private fun savedCollections(savedItems: List<FeedItem>): List<SavedCollection> {
+    val collections = mutableListOf<SavedCollection>()
+    val quick = savedItems.filter { it.durationSeconds <= 5 * 60 }
+    val deep = savedItems.filter { it.durationSeconds >= 12 * 60 }
+    val highLearning = savedItems.filter {
+        (it.educationalValue ?: 0) >= 8 || (it.overallScore ?: 0) >= 85
+    }
+
+    if (highLearning.isNotEmpty()) collections += SavedCollection("Gespeichert · Hoher Lernwert", highLearning)
+    if (quick.isNotEmpty()) collections += SavedCollection("Gespeichert · Kurz ansehen", quick)
+    if (deep.isNotEmpty()) collections += SavedCollection("Gespeichert · Deep Dives", deep)
+
+    savedItems
+        .groupBy { it.category.ifBlank { "Thema" } }
+        .entries
+        .sortedByDescending { it.value.size }
+        .take(3)
+        .forEach { (category, videos) ->
+            collections += SavedCollection("Thema · ${category.replaceFirstChar { it.uppercase() }}", videos)
+        }
+
+    savedItems
+        .groupBy { it.channelTitle }
+        .entries
+        .sortedByDescending { it.value.size }
+        .take(2)
+        .forEach { (channel, videos) ->
+            collections += SavedCollection("Kanal · $channel", videos)
+        }
+
+    return collections
+        .filter { it.videos.isNotEmpty() }
+        .distinctBy { it.title }
 }
 
 // ─── Hero ────────────────────────────────────────────────────────────────────
@@ -366,6 +602,67 @@ private fun VideoCard(video: LibraryVideoDto, onClick: () -> Unit) {
             modifier = Modifier.padding(top = 6.dp),
         )
     }
+}
+
+@Composable
+private fun SavedVideoCard(video: FeedItem, onClick: () -> Unit) {
+    Column(modifier = Modifier.width(160.dp).clickable(onClick = onClick)) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(6.dp))
+                .background(HikariSurface),
+        ) {
+            AsyncImage(
+                model = video.thumbnailUrl,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+            Text(
+                text = durationLabel(video.durationSeconds),
+                color = Color.White,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(6.dp)
+                    .background(Color.Black.copy(alpha = 0.72f), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 5.dp, vertical = 2.dp),
+            )
+        }
+        Text(
+            text = video.title,
+            color = HikariText,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            lineHeight = 14.sp,
+            modifier = Modifier.padding(top = 6.dp),
+        )
+        Text(
+            text = video.channelTitle,
+            color = HikariTextMuted,
+            fontSize = 10.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 2.dp),
+        )
+    }
+}
+
+private fun durationLabel(seconds: Int): String {
+    val minutes = seconds / 60
+    val rest = seconds % 60
+    return "%d:%02d".format(minutes, rest)
+}
+
+private fun progressLabel(video: LibraryVideoDto): String {
+    val progress = video.progress_seconds ?: return video.channelTitle ?: "Weitersehen"
+    val percent = (progress / video.duration_seconds.toFloat()).coerceIn(0f, 1f)
+    return "${(percent * 100).toInt()}% gesehen"
 }
 
 @OptIn(ExperimentalFoundationApi::class)
