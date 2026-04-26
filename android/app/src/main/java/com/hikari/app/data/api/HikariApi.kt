@@ -26,15 +26,21 @@ import com.hikari.app.data.api.dto.PollResponse
 import com.hikari.app.data.api.dto.RecommendationDto
 import com.hikari.app.data.api.dto.RejectedItemDto
 import com.hikari.app.data.api.dto.SeriesDetailResponse
+import com.hikari.app.data.api.dto.SeriesDto
 import com.hikari.app.data.api.dto.SetOverrideRequest
+import com.hikari.app.data.api.dto.UpdateSeriesRequest
 import com.hikari.app.data.api.dto.TodayCountResponse
 import com.hikari.app.data.api.dto.UpdateFilterRequest
 import com.hikari.app.data.api.dto.WeeklyStatsDto
+import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.PATCH
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -102,6 +108,16 @@ interface HikariApi {
 
     @GET("series/{id}")
     suspend fun getSeries(@Path("id") seriesId: String): SeriesDetailResponse
+
+    @PATCH("series/{id}")
+    suspend fun updateSeries(@Path("id") seriesId: String, @Body req: UpdateSeriesRequest): SeriesDto
+
+    @Multipart
+    @POST("series/{id}/cover")
+    suspend fun uploadSeriesCover(
+        @Path("id") seriesId: String,
+        @Part cover: MultipartBody.Part,
+    ): SeriesDto
 
     @GET("stats/weekly")
     suspend fun getWeeklyStats(): WeeklyStatsDto

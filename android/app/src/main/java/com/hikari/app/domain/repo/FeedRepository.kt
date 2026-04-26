@@ -5,7 +5,12 @@ import com.hikari.app.data.api.dto.FeedItemDto
 import com.hikari.app.data.api.dto.LibraryResponse
 import com.hikari.app.data.api.dto.LibraryVideoDto
 import com.hikari.app.data.api.dto.SeriesDetailResponse
+import com.hikari.app.data.api.dto.SeriesDto
 import com.hikari.app.data.api.dto.TodayCountResponse
+import com.hikari.app.data.api.dto.UpdateSeriesRequest
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import com.hikari.app.data.db.FeedDao
 import com.hikari.app.data.db.FeedItemEntity
 import com.hikari.app.domain.model.FeedItem
@@ -76,6 +81,20 @@ class FeedRepository @Inject constructor(
     suspend fun getLibrary(): LibraryResponse = api.getLibrary()
 
     suspend fun getSeries(id: String): SeriesDetailResponse = api.getSeries(id)
+
+    suspend fun updateSeries(id: String, thumbnailUrl: String?, description: String?): SeriesDto =
+        api.updateSeries(id, UpdateSeriesRequest(thumbnail_url = thumbnailUrl, description = description))
+
+    suspend fun uploadSeriesCover(id: String, bytes: ByteArray, mime: String): SeriesDto {
+        val body = bytes.toRequestBody(mime.toMediaType())
+        val ext = when (mime) {
+            "image/png" -> "png"
+            "image/webp" -> "webp"
+            else -> "jpg"
+        }
+        val part = MultipartBody.Part.createFormData("cover", "cover.$ext", body)
+        return api.uploadSeriesCover(id, part)
+    }
 }
 
 private fun FeedItemDto.toEntity() = FeedItemEntity(
