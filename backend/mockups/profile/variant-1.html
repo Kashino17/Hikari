@@ -96,6 +96,38 @@
   .dl-section-title{padding:0 14px 8px;display:flex;align-items:baseline;gap:8px;font-size:11px;letter-spacing:1.5px;color:#888;font-weight:700;font-family:ui-monospace,"SF Mono",monospace}
   .dl-section-title .count{color:#444;font-weight:600}
 
+  /* Category cards (main downloads view) */
+  .dl-cats{padding:16px 14px;display:flex;flex-direction:column;gap:12px}
+  .dl-cat{display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;background:#0e0e0e;border:0.5px solid rgba(255,255,255,.06);text-decoration:none;color:inherit;position:relative;overflow:hidden;cursor:pointer;transition:all .15s}
+  .dl-cat:active{background:#161616;transform:scale(.99)}
+  .dl-cat::before{content:"";position:absolute;inset:0;opacity:.18;pointer-events:none}
+  .dl-cat.serien::before{background:radial-gradient(circle at 0% 0%,#FBBF24,transparent 60%)}
+  .dl-cat.kanaele::before{background:radial-gradient(circle at 0% 0%,#3b82f6,transparent 60%)}
+  .dl-cat.filme::before{background:radial-gradient(circle at 0% 0%,#f472b6,transparent 60%)}
+
+  /* Cover-stack for serien/movies (3 fanned posters) */
+  .dl-cat .stack{position:relative;flex:0 0 96px;height:84px}
+  .dl-cat .stack .s{position:absolute;width:50px;height:75px;border-radius:6px;background-size:cover;background-position:center;box-shadow:0 4px 10px rgba(0,0,0,.6);border:1px solid rgba(0,0,0,.4)}
+  .dl-cat .stack .s.a{left:0;top:6px;transform:rotate(-8deg)}
+  .dl-cat .stack .s.b{left:24px;top:2px;z-index:1}
+  .dl-cat .stack .s.c{left:48px;top:6px;transform:rotate(8deg)}
+
+  /* Avatar-stack for kanaele (3 overlapping circles) */
+  .dl-cat .avstack{position:relative;flex:0 0 96px;height:64px;display:flex;align-items:center;padding-left:6px}
+  .dl-cat .avstack .av{position:absolute;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;border:2.5px solid #0e0e0e}
+  .dl-cat .avstack .av.a{left:0}
+  .dl-cat .avstack .av.b{left:28px}
+  .dl-cat .avstack .av.c{left:56px}
+
+  .dl-cat .info{flex:1;min-width:0;position:relative;z-index:1}
+  .dl-cat .info .t{font-size:18px;font-weight:800;color:#fff;line-height:1.1}
+  .dl-cat .info .m{margin-top:6px;font-size:11px;color:#888;font-family:ui-monospace,"SF Mono",monospace;letter-spacing:.3px}
+  .dl-cat .info .m .sep{color:#333;margin:0 4px}
+  .dl-cat .info .pill{margin-top:10px;display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:12px;background:rgba(251,191,36,.12);color:#FBBF24;font-size:10px;font-weight:800;letter-spacing:.5px;font-family:ui-monospace,"SF Mono",monospace}
+
+  .dl-cat .arrow{flex:0 0 auto;color:#444;position:relative;z-index:1}
+  .dl-cat .arrow svg{width:18px;height:18px}
+
   /* Group row (collapsed/expanded) */
   .dlgroup{border-top:0.5px solid rgba(255,255,255,.05)}
   .dlgroup-head{display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer}
@@ -266,8 +298,51 @@
       <div class="toggle"></div>
     </div>
 
-    <!-- Serien -->
-    <div class="dl-section">
+    <!-- Category cards: tap → sub-page -->
+    <div class="dl-cats">
+      <a class="dl-cat serien" href="variant-1-downloads-series.html">
+        <div class="stack">
+          <div class="s a" style="background:linear-gradient(135deg,#0f172a,#3b82f6)"></div>
+          <div class="s b" style="background:linear-gradient(135deg,#7c2d12,#fbbf24)"></div>
+          <div class="s c" style="background:linear-gradient(135deg,#166534,#22d3ee)"></div>
+        </div>
+        <div class="info">
+          <div class="t">Serien</div>
+          <div class="m">2 Serien<span class="sep">·</span>5 Folgen<span class="sep">·</span>880 MB</div>
+          <span class="pill">↓ ÖFFNEN</span>
+        </div>
+        <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </a>
+      <a class="dl-cat kanaele" href="variant-1-downloads-channels.html">
+        <div class="avstack">
+          <div class="av a" style="background:linear-gradient(135deg,#1e40af,#60a5fa)">F</div>
+          <div class="av b" style="background:linear-gradient(135deg,#7e22ce,#c084fc)">P</div>
+          <div class="av c" style="background:linear-gradient(135deg,#374151,#6b7280)">V</div>
+        </div>
+        <div class="info">
+          <div class="t">Kanäle</div>
+          <div class="m">3 Kanäle<span class="sep">·</span>6 Videos<span class="sep">·</span>637 MB</div>
+          <span class="pill">↓ ÖFFNEN</span>
+        </div>
+        <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </a>
+      <a class="dl-cat filme" href="variant-1-downloads-movies.html">
+        <div class="stack">
+          <div class="s a" style="background:linear-gradient(135deg,#831843,#f472b6)"></div>
+          <div class="s b" style="background:linear-gradient(135deg,#0f172a,#1e293b)"></div>
+          <div class="s c" style="background:linear-gradient(135deg,#7c2d12,#ea580c)"></div>
+        </div>
+        <div class="info">
+          <div class="t">Filme</div>
+          <div class="m">2 Filme<span class="sep">·</span>3.8 GB</div>
+          <span class="pill">↓ ÖFFNEN</span>
+        </div>
+        <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </a>
+    </div>
+
+    <!-- Hidden, but kept as reference for the sub-pages -->
+    <div class="dl-section" style="display:none">
       <div class="dl-section-title">SERIEN <span class="count">2</span></div>
       <div class="dlgroup open" onclick="tg(this,event)">
         <div class="dlgroup-head">

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<base href="/mockups/profile/">
+<link rel="stylesheet" href="_dl-styles.css">
+<title>Hikari · Downloads · Kanäle</title>
+</head>
+<body>
+<div class="frame">
+  <div class="topbar">
+    <a href="variant-1.html" class="iconpill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      <span class="lbl">Downloads</span>
+    </a>
+    <div class="title">KANÄLE</div>
+    <a href="#" class="iconpill" aria-label="Bearbeiten">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </a>
+  </div>
+
+  <div class="hero">
+    <div class="h">Kanäle</div>
+    <div class="m">3 Kanäle<span class="sep">·</span>6 Videos<span class="sep">·</span>637 MB</div>
+  </div>
+
+  <div class="filters">
+    <div class="fp active">Alle <span class="n">3</span></div>
+    <div class="fp">Auto-DL <span class="n">2</span></div>
+    <div class="fp">Manuell <span class="n">1</span></div>
+    <div class="fp">YouTube <span class="n">3</span></div>
+  </div>
+
+  <div class="toolrow">
+    <div class="left"><span class="v">Sortieren:</span> Zuletzt geladen</div>
+    <div class="actions">
+      <div class="b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M6 12h12M10 18h4"/></svg>Filter</div>
+    </div>
+  </div>
+
+  <div class="dlgroup open" onclick="tg(this,event)">
+    <div class="dlgroup-head">
+      <div class="cover round" style="background:linear-gradient(135deg,#1e40af,#60a5fa)">F</div>
+      <div class="text">
+        <div class="nm">Fireship</div>
+        <div class="meta">3 Videos<span class="sep">·</span>189 MB<span class="sep">·</span>AUTO-DL</div>
+      </div>
+      <div class="chev"><span class="badge">3</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>
+    <div class="dlgroup-body">
+      <div class="ep"><div class="thumb" style="background:linear-gradient(135deg,#166534,#34d399)"><div class="dur">12:41</div></div><div class="text"><div class="nm">Tailscale Setup Guide</div><div class="meta">89 MB · 1080p · vor 5 T</div></div><div class="play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>
+      <div class="ep"><div class="thumb" style="background:linear-gradient(135deg,#1e40af,#60a5fa)"><div class="dur">8:55</div></div><div class="text"><div class="nm">Compose Theme Tricks</div><div class="meta">62 MB · 1080p · vor 3 T</div></div><div class="play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>
+      <div class="ep"><div class="thumb" style="background:linear-gradient(135deg,#7c2d12,#ea580c)"><div class="dur">11:08</div></div><div class="text"><div class="nm">SQLite Migrations</div><div class="meta">38 MB · 720p · vor 1 T</div></div><div class="play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>
+    </div>
+  </div>
+
+  <div class="dlgroup" onclick="tg(this,event)">
+    <div class="dlgroup-head">
+      <div class="cover round" style="background:linear-gradient(135deg,#7e22ce,#c084fc)">P</div>
+      <div class="text">
+        <div class="nm">Phil Edwards</div>
+        <div class="meta">2 Videos<span class="sep">·</span>250 MB<span class="sep">·</span>AUTO-DL</div>
+      </div>
+      <div class="chev"><span class="badge">2</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>
+  </div>
+
+  <div class="dlgroup" onclick="tg(this,event)">
+    <div class="dlgroup-head">
+      <div class="cover round" style="background:linear-gradient(135deg,#374151,#6b7280)">V</div>
+      <div class="text">
+        <div class="nm">Veritasium</div>
+        <div class="meta">1 Video<span class="sep">·</span>198 MB<span class="sep">·</span>MANUELL</div>
+      </div>
+      <div class="chev"><span class="badge">1</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>
+  </div>
+
+  <div class="bottomspace"></div>
+</div>
+
+<div class="variantnav">
+  <div class="row">
+    <a class="cur" href="variant-1.html">V1</a>
+    <a href="variant-2.html">V2</a>
+    <a href="variant-3.html">V3</a>
+    <a href="index.html">Index</a>
+  </div>
+</div>
+
+<script>
+function tg(el,e){if(e.target.closest('.dlgroup-body'))return;el.classList.toggle('open');}
+document.querySelectorAll('.fp').forEach(p=>p.addEventListener('click',()=>{document.querySelectorAll('.fp').forEach(x=>x.classList.remove('active'));p.classList.add('active');}));
+</script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+/* Shared styles for downloads sub-pages */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;background:#0a0a0a;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Inter","SF Pro Text",sans-serif;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.frame{max-width:430px;margin:0 auto;min-height:100vh}
+
+/* Top bar */
+.topbar{display:flex;align-items:center;padding:14px 14px;border-bottom:0.5px solid rgba(255,255,255,.06);gap:8px}
+.iconpill{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 10px;border-radius:18px;background:#161616;border:0.5px solid rgba(255,255,255,.08);color:#fff;text-decoration:none;cursor:pointer;transition:all .15s;gap:6px}
+.iconpill:active{background:#1f1f1f;transform:scale(.96)}
+.iconpill svg{width:16px;height:16px}
+.iconpill .lbl{font-size:13px;font-weight:600;color:#fff}
+.topbar .title{margin:0 auto;font-size:13px;font-weight:600;font-family:ui-monospace,"SF Mono",monospace;letter-spacing:1.5px;color:#888}
+
+/* Hero band: big title + meta */
+.hero{padding:18px 16px 6px}
+.hero .h{font-size:26px;font-weight:900;color:#fff;line-height:1.05}
+.hero .m{margin-top:6px;font-size:11px;color:#888;font-family:ui-monospace,"SF Mono",monospace;letter-spacing:.5px}
+.hero .m .sep{color:#333;margin:0 4px}
+
+/* Filter pills */
+.filters{padding:12px 14px 10px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:0.5px solid rgba(255,255,255,.06)}
+.filters::-webkit-scrollbar{display:none}
+.fp{flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:18px;background:#161616;border:0.5px solid rgba(255,255,255,.08);color:#aaa;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s}
+.fp.active{background:#FBBF24;color:#0a0a0a;border-color:transparent}
+.fp .n{font-size:10px;font-weight:800;opacity:.7;font-family:ui-monospace,"SF Mono",monospace}
+.fp.active .n{opacity:1}
+
+/* Sort/Edit row */
+.toolrow{padding:8px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:0.5px solid rgba(255,255,255,.06)}
+.toolrow .left{font-size:11px;color:#666;font-family:ui-monospace,"SF Mono",monospace;letter-spacing:.5px}
+.toolrow .left .v{color:#fff;font-weight:700;font-size:12px}
+.toolrow .actions{display:flex;gap:6px}
+.toolrow .actions .b{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:14px;background:#161616;border:0.5px solid rgba(255,255,255,.08);color:#fff;font-size:11px;font-weight:600;cursor:pointer}
+.toolrow .actions .b svg{width:11px;height:11px;color:#FBBF24}
+
+/* Group rows (reused) */
+.dlgroup{border-top:0.5px solid rgba(255,255,255,.05)}
+.dlgroup-head{display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer}
+.dlgroup-head:active{background:rgba(255,255,255,.02)}
+.dlgroup-head .cover{width:54px;height:54px;border-radius:6px;flex-shrink:0;background-size:cover;background-position:center;overflow:hidden;position:relative}
+.dlgroup-head .cover.round{border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff}
+.dlgroup-head .cover.movie{aspect-ratio:2/3;width:42px;height:auto}
+.dlgroup-head .cover.big{width:72px;height:108px}
+.dlgroup-head .text{flex:1;min-width:0}
+.dlgroup-head .nm{font-size:14px;font-weight:700;color:#fff;line-height:1.2;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.dlgroup-head .meta{margin-top:3px;font-size:11px;color:#888;font-family:ui-monospace,"SF Mono",monospace;letter-spacing:.3px}
+.dlgroup-head .meta .sep{color:#333;margin:0 4px}
+.dlgroup-head .chev{flex:0 0 auto;color:#444;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;font-family:ui-monospace,"SF Mono",monospace}
+.dlgroup-head .chev .badge{background:#1a1a1a;color:#FBBF24;padding:2px 7px;border-radius:10px;font-size:10px}
+.dlgroup-head .chev svg{width:14px;height:14px;transition:transform .2s}
+.dlgroup.open .dlgroup-head .chev svg{transform:rotate(90deg)}
+.dlgroup-body{display:none;padding:0 14px 12px}
+.dlgroup.open .dlgroup-body{display:block}
+.ep{display:flex;align-items:center;gap:10px;padding:8px 0;padding-left:66px;border-top:0.5px solid rgba(255,255,255,.04)}
+.ep:first-child{border-top:0;margin-top:2px}
+.ep .thumb{width:74px;flex:0 0 74px;aspect-ratio:16/9;border-radius:4px;background-size:cover;background-position:center;position:relative;overflow:hidden}
+.ep .thumb .dur{position:absolute;bottom:2px;right:2px;background:rgba(0,0,0,.8);color:#fff;font-size:9px;font-weight:600;padding:1px 3px;border-radius:2px;font-family:ui-monospace,"SF Mono",monospace}
+.ep .text{flex:1;min-width:0}
+.ep .nm{font-size:12px;font-weight:600;color:#fff;line-height:1.25;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.ep .meta{margin-top:2px;font-size:10px;color:#666;font-family:ui-monospace,"SF Mono",monospace;letter-spacing:.3px}
+.ep .play{flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:rgba(251,191,36,.12);color:#FBBF24;display:flex;align-items:center;justify-content:center}
+.ep .play svg{width:12px;height:12px;margin-left:1.5px}
+
+/* Movie grid (no expansion, 2-col posters) */
+.moviegrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:12px 14px}
+.movie-card{position:relative;border-radius:10px;overflow:hidden;background:#1a1a1a;aspect-ratio:2/3}
+.movie-card .bg{position:absolute;inset:0;background-size:cover;background-position:center}
+.movie-card .gradient{position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,.92) 100%)}
+.movie-card .body{position:absolute;left:10px;right:10px;bottom:10px}
+.movie-card .nm{font-size:13px;font-weight:800;color:#fff;line-height:1.2}
+.movie-card .meta{margin-top:4px;font-size:10px;color:#FBBF24;font-family:ui-monospace,"SF Mono",monospace;letter-spacing:.3px}
+.movie-card .size{position:absolute;top:8px;left:8px;background:rgba(251,191,36,.95);color:#0a0a0a;font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;font-family:ui-monospace,"SF Mono",monospace}
+
+/* Bottom safe area + variant nav */
+.bottomspace{height:80px}
+.variantnav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,10,.92);backdrop-filter:blur(8px);border-top:0.5px solid rgba(255,255,255,.08);padding:8px env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 8px) env(safe-area-inset-left)}
+.variantnav .row{display:flex;justify-content:center;gap:0;max-width:430px;margin:0 auto}
+.variantnav a{flex:1;text-align:center;padding:8px;font-size:11px;color:#666;text-decoration:none;font-family:ui-monospace,"SF Mono",monospace;letter-spacing:.5px;border-radius:4px}
+.variantnav a.cur{color:#FBBF24;background:#1a1a1a}
