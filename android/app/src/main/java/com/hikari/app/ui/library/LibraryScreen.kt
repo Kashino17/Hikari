@@ -72,6 +72,17 @@ fun LibraryScreen(
     val coverEdit by viewModel.coverEditState.collectAsState()
     var editingSeries by remember { mutableStateOf<SeriesDto?>(null) }
 
+    // Reload on resume so Continue-Watching reflects the user's latest
+    // playback position right after they return from the player.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val obs = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) viewModel.loadLibrary()
+        }
+        lifecycleOwner.lifecycle.addObserver(obs)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
+    }
+
     Box(modifier = Modifier.fillMaxSize().background(HikariBg)) {
         when (val s = state) {
             is LibraryUiState.Loading -> CircularProgressIndicator(
