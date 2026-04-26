@@ -72,4 +72,7 @@ class ChannelsRepository @Inject constructor(
 
     suspend fun listSeries(): List<com.hikari.app.data.api.dto.SeriesItemDto> =
         api.listSeries()
+
+    suspend fun listLanguages(): com.hikari.app.data.api.dto.LanguagesResponse =
+        api.listLanguages()
 }
