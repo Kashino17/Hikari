@@ -2,7 +2,6 @@ package com.hikari.app.ui.profile.tabs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,9 +20,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
@@ -131,13 +127,6 @@ private fun DownloadsContent(
                 localBytes = localTotalBytes,
             )
         }
-        item { MiniActionsRow() }
-        item {
-            SmartDownloadsCard(
-                enabled = smartEnabled,
-                onToggle = onSmartChange,
-            )
-        }
         item {
             Column(
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 16.dp),
@@ -185,6 +174,12 @@ private fun DownloadsContent(
                     EmptyState()
                 }
             }
+        }
+        item {
+            SmartDownloadsCard(
+                enabled = smartEnabled,
+                onToggle = onSmartChange,
+            )
         }
     }
 }
@@ -260,60 +255,6 @@ private fun StorageStrip(
             }
         }
     }
-}
-
-@Composable
-private fun MiniActionsRow() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Row(
-            modifier = Modifier.clickable { /* TODO: sort sheet */ },
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
-        ) {
-            Icon(
-                Icons.Default.SortByAlpha,
-                contentDescription = null,
-                tint = HikariTextMuted,
-                modifier = Modifier.size(12.dp),
-            )
-            Text("Sortiert nach ", color = HikariTextMuted, fontSize = 12.sp)
-            Text("Neueste", color = HikariText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-            Icon(
-                Icons.Default.ExpandMore,
-                contentDescription = null,
-                tint = HikariTextMuted,
-                modifier = Modifier.size(12.dp),
-            )
-        }
-        Spacer(Modifier.width(14.dp))
-        Box(
-            modifier = Modifier
-                .width(0.5.dp)
-                .height(11.dp)
-                .background(HikariBorder),
-        )
-        Spacer(Modifier.width(14.dp))
-        Row(
-            modifier = Modifier.clickable { /* TODO: enter edit mode */ },
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
-        ) {
-            Icon(
-                Icons.Default.Edit,
-                contentDescription = null,
-                tint = HikariTextMuted,
-                modifier = Modifier.size(12.dp),
-            )
-            Text("Bearbeiten", color = HikariTextMuted, fontSize = 12.sp)
-        }
-    }
-    Spacer(Modifier.height(8.dp))
 }
 
 @Composable
