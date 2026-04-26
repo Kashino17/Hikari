@@ -93,25 +93,6 @@ class ChannelsViewModel @Inject constructor(
         _busy.value = false
     }
 
-    fun importVideos(urls: List<String>, onDone: (Int) -> Unit) = viewModelScope.launch {
-        _busy.value = true
-        runCatching { repo.importVideos(urls) }
-            .onSuccess {
-                _error.value = null
-                _pollStatus.value = "$it Videos werden importiert…"
-                onDone(it)
-                kotlinx.coroutines.delay(8_000)
-                runCatching { feedRepo.refresh() }
-                _pollStatus.value = null
-                load()
-            }
-            .onFailure {
-                _error.value = it.message ?: "Import fehlgeschlagen"
-                onDone(0)
-            }
-        _busy.value = false
-    }
-
     fun loadRecommendations(force: Boolean = false) = viewModelScope.launch {
         _loadingRecs.value = true
         runCatching { repo.recommendations(force = force) }
