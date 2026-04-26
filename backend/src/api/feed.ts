@@ -136,6 +136,17 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
     return reply.code(204).send();
   });
 
+  app.put<{
+    Params: { id: string };
+    Body: { seconds?: number };
+  }>("/feed/:id/progress", async (req, reply) => {
+    const seconds = Math.max(0, Number(req.body?.seconds ?? 0));
+    deps.db
+      .prepare("UPDATE feed_items SET progress_seconds = ? WHERE video_id = ?")
+      .run(seconds, req.params.id);
+    return reply.code(204).send();
+  });
+
   app.delete<{ Params: { id: string } }>("/feed/:id/save", async (req, reply) => {
     deps.db.prepare("UPDATE feed_items SET saved = 0 WHERE video_id = ?").run(req.params.id);
     return reply.code(204).send();
