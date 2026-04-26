@@ -21,7 +21,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -62,7 +65,10 @@ import com.hikari.app.ui.theme.HikariTextMuted
 private enum class Tab { FILTER, PROMPT, SYSTEM }
 
 @Composable
-fun TuningScreen(vm: TuningViewModel = hiltViewModel()) {
+fun TuningScreen(
+    onBack: () -> Unit = {},
+    vm: TuningViewModel = hiltViewModel(),
+) {
     val state by vm.state.collectAsState()
     val saving by vm.saving.collectAsState()
     val error by vm.error.collectAsState()
@@ -70,7 +76,7 @@ fun TuningScreen(vm: TuningViewModel = hiltViewModel()) {
 
     Box(Modifier.fillMaxSize().background(HikariBg)) {
         Column(Modifier.fillMaxSize()) {
-            Header(tab = tab, onTab = { tab = it })
+            Header(tab = tab, onTab = { tab = it }, onBack = onBack)
 
             if (saving) {
                 LinearProgressIndicator(
@@ -104,19 +110,39 @@ fun TuningScreen(vm: TuningViewModel = hiltViewModel()) {
 }
 
 @Composable
-private fun Header(tab: Tab, onTab: (Tab) -> Unit) {
+private fun Header(tab: Tab, onTab: (Tab) -> Unit, onBack: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.statusBars),
     ) {
-        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
-            Text("Tuning", style = MaterialTheme.typography.titleMedium, color = HikariText)
-            Text(
-                "Was die KI für dich aussortiert.",
-                style = MaterialTheme.typography.bodySmall,
-                color = HikariTextFaint,
-            )
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .clickable(onClick = onBack),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Zurück",
+                    tint = HikariText,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            Spacer(Modifier.size(8.dp))
+            Column {
+                Text("Tuning", style = MaterialTheme.typography.titleMedium, color = HikariText)
+                Text(
+                    "Was die KI für dich aussortiert.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = HikariTextFaint,
+                )
+            }
         }
         HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
         Row(modifier = Modifier.fillMaxWidth()) {
