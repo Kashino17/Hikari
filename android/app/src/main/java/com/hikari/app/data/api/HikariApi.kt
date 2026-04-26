@@ -9,8 +9,11 @@ import com.hikari.app.data.api.dto.ChannelVideoDto
 import com.hikari.app.data.api.dto.ClearOverrideRequest
 import com.hikari.app.data.api.dto.FeedItemDto
 import com.hikari.app.data.api.dto.FilterStateDto
-import com.hikari.app.data.api.dto.ImportVideosRequest
-import com.hikari.app.data.api.dto.ImportVideosResponse
+import com.hikari.app.data.api.dto.AnalyzeRequest
+import com.hikari.app.data.api.dto.AnalyzeResponse
+import com.hikari.app.data.api.dto.BulkImportRequest
+import com.hikari.app.data.api.dto.BulkImportResponse
+import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.data.api.dto.LibraryResponse
 import com.hikari.app.data.api.dto.MangaContinueDto
 import com.hikari.app.data.api.dto.MangaPageDto
@@ -102,8 +105,14 @@ interface HikariApi {
     @GET("stats/weekly")
     suspend fun getWeeklyStats(): WeeklyStatsDto
 
-    @POST("videos/import")
-    suspend fun importVideos(@Body req: ImportVideosRequest): ImportVideosResponse
+    @POST("videos/analyze")
+    suspend fun analyzeVideo(@Body req: AnalyzeRequest): AnalyzeResponse
+
+    @POST("videos/import/bulk")
+    suspend fun importVideosBulk(@Body req: BulkImportRequest): BulkImportResponse
+
+    @GET("series")
+    suspend fun listSeries(): List<SeriesItemDto>
 
     @GET("filter")
     suspend fun getFilter(): FilterStateDto
