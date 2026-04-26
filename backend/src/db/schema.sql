@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS channels (
   description TEXT,
   subscribers INTEGER,
   thumbnail_url TEXT,
+  banner_url TEXT,
   auto_approve INTEGER DEFAULT 0
 );
 
