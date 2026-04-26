@@ -50,6 +50,8 @@ import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.ChannelGroupDto
 import com.hikari.app.data.api.dto.MovieEntryDto
 import com.hikari.app.data.api.dto.SeriesGroupDto
+import com.hikari.app.data.db.LocalDownloadKind
+import com.hikari.app.domain.download.LocalDownloadMetadata
 import com.hikari.app.ui.profile.components.DownloadGroupCard
 import com.hikari.app.ui.profile.components.EpisodeRow
 import com.hikari.app.ui.profile.components.GroupCoverShape
@@ -113,7 +115,22 @@ fun DownloadCategoryScreen(
                             onToggle = { vm.toggleExpand(it) },
                             onSelect = { vm.toggleSelection(it) },
                             onPlay = { onPlayVideo(it.id, it.title, "") },
-                            onDownload = { vm.downloadLocally(it.id, it.duration_seconds) },
+                            onDownload = { group, ep ->
+                                vm.downloadLocally(
+                                    LocalDownloadMetadata(
+                                        videoId = ep.id,
+                                        kind = LocalDownloadKind.SERIES,
+                                        title = ep.title,
+                                        durationSeconds = ep.duration_seconds,
+                                        thumbnailUrl = ep.thumbnail_url,
+                                        seriesId = group.id,
+                                        seriesTitle = group.title,
+                                        seriesThumbnailUrl = group.thumbnail_url,
+                                        season = ep.season,
+                                        episode = ep.episode,
+                                    ),
+                                )
+                            },
                             onRemoveLocal = { vm.removeLocal(it.id) },
                         )
                         DownloadCategory.CHANNELS -> ChannelsPanel(
@@ -126,7 +143,20 @@ fun DownloadCategoryScreen(
                             onPlay = { v, channelTitle ->
                                 onPlayVideo(v.id, v.title, channelTitle)
                             },
-                            onDownload = { v -> vm.downloadLocally(v.id, v.duration_seconds) },
+                            onDownload = { group, v ->
+                                vm.downloadLocally(
+                                    LocalDownloadMetadata(
+                                        videoId = v.id,
+                                        kind = LocalDownloadKind.CHANNEL,
+                                        title = v.title,
+                                        durationSeconds = v.duration_seconds,
+                                        thumbnailUrl = v.thumbnail_url,
+                                        channelId = group.id,
+                                        channelTitle = group.title,
+                                        channelThumbnailUrl = group.thumbnail_url,
+                                    ),
+                                )
+                            },
                             onRemoveLocal = { v -> vm.removeLocal(v.id) },
                         )
                         DownloadCategory.MOVIES -> MoviesPanel(
@@ -136,7 +166,17 @@ fun DownloadCategoryScreen(
                             downloadProgress = progress,
                             onSelect = { vm.toggleSelection(it) },
                             onPlay = { onPlayVideo(it.id, it.title, "") },
-                            onDownload = { m -> vm.downloadLocally(m.id, m.duration_seconds) },
+                            onDownload = { m ->
+                                vm.downloadLocally(
+                                    LocalDownloadMetadata(
+                                        videoId = m.id,
+                                        kind = LocalDownloadKind.MOVIE,
+                                        title = m.title,
+                                        durationSeconds = m.duration_seconds,
+                                        thumbnailUrl = m.thumbnail_url,
+                                    ),
+                                )
+                            },
                             onRemoveLocal = { m -> vm.removeLocal(m.id) },
                         )
                     }
@@ -264,7 +304,7 @@ private fun SeriesPanel(
     onToggle: (String) -> Unit,
     onSelect: (String) -> Unit,
     onPlay: (com.hikari.app.data.api.dto.SeriesEpisodeDto) -> Unit,
-    onDownload: (com.hikari.app.data.api.dto.SeriesEpisodeDto) -> Unit,
+    onDownload: (SeriesGroupDto, com.hikari.app.data.api.dto.SeriesEpisodeDto) -> Unit,
     onRemoveLocal: (com.hikari.app.data.api.dto.SeriesEpisodeDto) -> Unit,
 ) {
     val totalEps = groups.sumOf { it.episode_count }
@@ -310,7 +350,7 @@ private fun SeriesPanel(
                                 },
                                 downloadProgress = progress,
                                 onDownloadClick = {
-                                    if (isLocal) onRemoveLocal(ep) else onDownload(ep)
+                                    if (isLocal) onRemoveLocal(ep) else onDownload(group, ep)
                                 },
                             )
                         }
@@ -330,7 +370,7 @@ private fun ChannelsPanel(
     onToggle: (String) -> Unit,
     onSelect: (String) -> Unit,
     onPlay: (com.hikari.app.data.api.dto.ChannelVideoEntryDto, String) -> Unit,
-    onDownload: (com.hikari.app.data.api.dto.ChannelVideoEntryDto) -> Unit,
+    onDownload: (ChannelGroupDto, com.hikari.app.data.api.dto.ChannelVideoEntryDto) -> Unit,
     onRemoveLocal: (com.hikari.app.data.api.dto.ChannelVideoEntryDto) -> Unit,
 ) {
     val totalVids = groups.sumOf { it.video_count }
@@ -376,7 +416,7 @@ private fun ChannelsPanel(
                                 },
                                 downloadProgress = progress,
                                 onDownloadClick = {
-                                    if (isLocal) onRemoveLocal(v) else onDownload(v)
+                                    if (isLocal) onRemoveLocal(v) else onDownload(group, v)
                                 },
                             )
                         }

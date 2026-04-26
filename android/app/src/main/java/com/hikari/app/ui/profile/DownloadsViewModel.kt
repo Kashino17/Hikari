@@ -3,11 +3,9 @@ package com.hikari.app.ui.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.DownloadsResponse
-import com.hikari.app.data.db.LocalDownloadEntity
 import com.hikari.app.data.prefs.SettingsStore
-import com.hikari.app.domain.download.LocalDownloadManager
 import com.hikari.app.domain.download.SmartDownloadScheduler
-import com.hikari.app.domain.repo.FeedRepository
+import com.hikari.app.domain.repo.DownloadsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,9 +26,8 @@ data class LocalSummary(val count: Int, val totalBytes: Long)
 
 @HiltViewModel
 class DownloadsViewModel @Inject constructor(
-    private val repo: FeedRepository,
+    private val downloadsRepo: DownloadsRepository,
     private val settings: SettingsStore,
-    private val localDownloads: LocalDownloadManager,
     private val scheduler: SmartDownloadScheduler,
     localDownloadDao: com.hikari.app.data.db.LocalDownloadDao,
 ) : ViewModel() {
@@ -57,11 +54,11 @@ class DownloadsViewModel @Inject constructor(
     fun load() {
         viewModelScope.launch {
             _state.value = DownloadsUiState.Loading
-            runCatching { repo.getDownloads() }
-                .onSuccess { _state.value = DownloadsUiState.Success(it) }
-                .onFailure {
-                    _state.value = DownloadsUiState.Error(it.message ?: "Konnte Downloads nicht laden")
-                }
+            // DownloadsRepository.load() versucht Server, fällt bei Fehler auf
+            // den lokalen Bestand zurück. Damit kann die UI nie mehr in Error
+            // landen — Offline = leer aber funktional.
+            val data = downloadsRepo.load()
+            _state.value = DownloadsUiState.Success(data)
         }
     }
 

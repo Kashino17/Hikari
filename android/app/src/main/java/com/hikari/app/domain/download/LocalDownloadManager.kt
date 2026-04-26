@@ -3,6 +3,7 @@ package com.hikari.app.domain.download
 import android.content.Context
 import com.hikari.app.data.db.LocalDownloadDao
 import com.hikari.app.data.db.LocalDownloadEntity
+import com.hikari.app.data.db.LocalDownloadKind
 import com.hikari.app.data.prefs.SettingsStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
@@ -17,6 +18,32 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+
+/**
+ * Reichhaltige Metadaten, die beim Download mitgeschrieben werden, damit der
+ * Profile-Tab offline ohne Server vollständig rendern kann.
+ *
+ * Pflichtfelder: videoId, kind, title, durationSeconds.
+ * Alles andere ist optional und wird je nach kind gefüllt:
+ *   - SERIES → seriesId/Title/Thumbnail + season/episode
+ *   - CHANNEL → channelId/Title/Thumbnail
+ *   - MOVIE → kein Gruppen-Bezug
+ */
+data class LocalDownloadMetadata(
+    val videoId: String,
+    val kind: LocalDownloadKind,
+    val title: String,
+    val durationSeconds: Int,
+    val thumbnailUrl: String? = null,
+    val channelId: String? = null,
+    val channelTitle: String? = null,
+    val channelThumbnailUrl: String? = null,
+    val seriesId: String? = null,
+    val seriesTitle: String? = null,
+    val seriesThumbnailUrl: String? = null,
+    val season: Int? = null,
+    val episode: Int? = null,
+)
 
 /**
  * Pulls a video file from the backend onto the device's app-private storage
@@ -69,24 +96,24 @@ class LocalDownloadManager @Inject constructor(
      * storage. Returns Result.success on completion, Result.failure on any
      * IO/HTTP error (also clears progress entry).
      */
-    suspend fun download(videoId: String, durationSeconds: Int = 0): Result<LocalDownloadEntity> =
+    suspend fun download(meta: LocalDownloadMetadata): Result<LocalDownloadEntity> =
         withContext(Dispatchers.IO) {
-            val target = File(downloadsDir, "$videoId.mp4")
+            val target = File(downloadsDir, "${meta.videoId}.mp4")
             try {
-                _progress.update(videoId, 0f)
+                _progress.update(meta.videoId, 0f)
                 val backend = settings.backendUrl.first().trimEnd('/')
                 val req = Request.Builder()
-                    .url("$backend/videos/$videoId.mp4")
+                    .url("$backend/videos/${meta.videoId}.mp4")
                     .build()
                 client.newCall(req).execute().use { resp ->
                     if (!resp.isSuccessful) {
-                        _progress.remove(videoId)
+                        _progress.remove(meta.videoId)
                         return@withContext Result.failure(
                             IllegalStateException("HTTP ${resp.code}: ${resp.message}"),
                         )
                     }
                     val body = resp.body ?: return@withContext Result.failure(
-                        IllegalStateException("empty body").also { _progress.remove(videoId) },
+                        IllegalStateException("empty body").also { _progress.remove(meta.videoId) },
                     )
                     val totalBytes = body.contentLength()
                     body.byteStream().use { input ->
@@ -100,7 +127,7 @@ class LocalDownloadManager @Inject constructor(
                                 written += n
                                 if (totalBytes > 0) {
                                     _progress.update(
-                                        videoId,
+                                        meta.videoId,
                                         (written.toFloat() / totalBytes).coerceIn(0f, 1f),
                                     )
                                 }
@@ -110,18 +137,29 @@ class LocalDownloadManager @Inject constructor(
                 }
 
                 val entity = LocalDownloadEntity(
-                    videoId = videoId,
+                    videoId = meta.videoId,
                     localFilePath = target.absolutePath,
                     byteSize = target.length(),
                     downloadedAt = System.currentTimeMillis(),
-                    durationSeconds = durationSeconds,
+                    durationSeconds = meta.durationSeconds,
+                    kind = meta.kind.name,
+                    title = meta.title,
+                    thumbnailUrl = meta.thumbnailUrl,
+                    channelId = meta.channelId,
+                    channelTitle = meta.channelTitle,
+                    channelThumbnailUrl = meta.channelThumbnailUrl,
+                    seriesId = meta.seriesId,
+                    seriesTitle = meta.seriesTitle,
+                    seriesThumbnailUrl = meta.seriesThumbnailUrl,
+                    season = meta.season,
+                    episode = meta.episode,
                 )
                 dao.upsert(entity)
-                _progress.remove(videoId)
+                _progress.remove(meta.videoId)
                 Result.success(entity)
             } catch (e: Exception) {
                 target.delete()
-                _progress.remove(videoId)
+                _progress.remove(meta.videoId)
                 Result.failure(e)
             }
         }

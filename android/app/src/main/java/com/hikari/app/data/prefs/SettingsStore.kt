@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -17,6 +18,7 @@ private val Context.dataStore by preferencesDataStore(name = "hikari_settings")
 private val BACKEND_URL_KEY = stringPreferencesKey("backend_url")
 private val DAILY_BUDGET_KEY = intPreferencesKey("daily_budget")
 private val SMART_DOWNLOADS_KEY = booleanPreferencesKey("smart_downloads")
+private val DOWNLOADS_LIMIT_BYTES_KEY = longPreferencesKey("downloads_limit_bytes")
 
 const val DEFAULT_BACKEND_URL = "http://macbook-pro.taile64a95.ts.net:3000"
 const val DEFAULT_DAILY_BUDGET = 15
@@ -37,6 +39,11 @@ class SettingsStore @Inject constructor(
         it[SMART_DOWNLOADS_KEY] ?: true
     }
 
+    /** Letztes vom Server gemeldetes Storage-Limit. Wird offline weitergeführt. */
+    val downloadsLimitBytes: Flow<Long> = ctx.dataStore.data.map {
+        it[DOWNLOADS_LIMIT_BYTES_KEY] ?: 0L
+    }
+
     suspend fun setBackendUrl(url: String) {
         ctx.dataStore.edit { it[BACKEND_URL_KEY] = url.trimEnd('/') }
     }
@@ -47,5 +54,9 @@ class SettingsStore @Inject constructor(
 
     suspend fun setSmartDownloads(enabled: Boolean) {
         ctx.dataStore.edit { it[SMART_DOWNLOADS_KEY] = enabled }
+    }
+
+    suspend fun setDownloadsLimitBytes(bytes: Long) {
+        ctx.dataStore.edit { it[DOWNLOADS_LIMIT_BYTES_KEY] = bytes }
     }
 }

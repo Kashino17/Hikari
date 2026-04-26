@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.hikari.app.data.db.LocalDownloadKind
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.repo.FeedRepository
 import dagger.assisted.Assisted
@@ -43,9 +44,17 @@ class SmartDownloadWorker @AssistedInject constructor(
         for (item in saved) {
             if (queued >= MAX_PER_FIRE) break
             if (localDownloads.isDownloaded(item.videoId)) continue
+            // Smart-Downloads ziehen "Saved"-Feed-Items — die haben Channel-Bezug,
+            // aber keinen Series-Kontext. Daher CHANNEL als kind.
             val res = localDownloads.download(
-                videoId = item.videoId,
-                durationSeconds = item.durationSeconds,
+                LocalDownloadMetadata(
+                    videoId = item.videoId,
+                    kind = LocalDownloadKind.CHANNEL,
+                    title = item.title,
+                    durationSeconds = item.durationSeconds,
+                    thumbnailUrl = item.thumbnailUrl,
+                    channelTitle = item.channelTitle.ifBlank { null },
+                ),
             )
             if (res.isSuccess) queued += 1
         }

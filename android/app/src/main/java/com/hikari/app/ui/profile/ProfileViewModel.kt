@@ -9,6 +9,7 @@ import com.hikari.app.data.prefs.BIO_MAX_LENGTH
 import com.hikari.app.data.prefs.ProfileStore
 import com.hikari.app.domain.model.FeedItem
 import com.hikari.app.domain.repo.ChannelsRepository
+import com.hikari.app.domain.repo.DownloadsRepository
 import com.hikari.app.domain.repo.FeedRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -31,6 +32,7 @@ class ProfileViewModel @Inject constructor(
     @ApplicationContext private val ctx: Context,
     private val store: ProfileStore,
     private val feedRepo: FeedRepository,
+    private val downloadsRepo: DownloadsRepository,
     private val channelsRepo: ChannelsRepository,
 ) : ViewModel() {
 
@@ -89,13 +91,14 @@ class ProfileViewModel @Inject constructor(
 
     fun refreshDownloadsCount() {
         viewModelScope.launch {
-            runCatching { feedRepo.getDownloads() }
-                .onSuccess { d ->
-                    _downloadsCount.value =
-                        d.series.sumOf { it.episode_count } +
-                        d.channels.sumOf { it.video_count } +
-                        d.movies.size
-                }
+            // downloadsRepo.load() greift bei Server-Fehler auf den lokalen
+            // Bestand zurück → der Counter zeigt offline genau das, was auf
+            // dem Gerät liegt.
+            val d = downloadsRepo.load()
+            _downloadsCount.value =
+                d.series.sumOf { it.episode_count } +
+                d.channels.sumOf { it.video_count } +
+                d.movies.size
         }
     }
 

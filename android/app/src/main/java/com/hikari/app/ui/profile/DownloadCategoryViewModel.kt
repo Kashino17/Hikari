@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.DownloadsResponse
 import com.hikari.app.domain.download.LocalDownloadManager
+import com.hikari.app.domain.download.LocalDownloadMetadata
+import com.hikari.app.domain.repo.DownloadsRepository
 import com.hikari.app.domain.repo.FeedRepository
 import com.hikari.app.ui.profile.tabs.DownloadCategory
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,6 +34,7 @@ data class DownloadCategoryUiState(
 class DownloadCategoryViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repo: FeedRepository,
+    private val downloadsRepo: DownloadsRepository,
     private val localDownloads: LocalDownloadManager,
 ) : ViewModel() {
 
@@ -53,9 +56,9 @@ class DownloadCategoryViewModel @Inject constructor(
         load()
     }
 
-    fun downloadLocally(videoId: String, durationSeconds: Int) {
+    fun downloadLocally(meta: LocalDownloadMetadata) {
         viewModelScope.launch {
-            localDownloads.download(videoId, durationSeconds)
+            localDownloads.download(meta)
                 .onFailure { e ->
                     _state.update { it.copy(error = "Lokal-Download: ${e.message}") }
                 }
@@ -69,13 +72,8 @@ class DownloadCategoryViewModel @Inject constructor(
     fun load() {
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
-            runCatching { repo.getDownloads() }
-                .onSuccess { data ->
-                    _state.update { it.copy(loading = false, data = data) }
-                }
-                .onFailure { e ->
-                    _state.update { it.copy(loading = false, error = e.message ?: "Konnte Downloads nicht laden") }
-                }
+            val data = downloadsRepo.load()
+            _state.update { it.copy(loading = false, data = data) }
         }
     }
 
@@ -107,29 +105,25 @@ class DownloadCategoryViewModel @Inject constructor(
         val ids = _state.value.selectedVideoIds.toList()
         if (ids.isEmpty()) return
         viewModelScope.launch {
-            val failures = mutableListOf<String>()
+            val serverFailures = mutableListOf<String>()
             ids.forEach { videoId ->
-                runCatching { repo.delete(videoId) }.onFailure { failures.add(videoId) }
+                // Server-Delete (best effort — schlägt offline fehl, ist ok)
+                runCatching { repo.delete(videoId) }.onFailure { serverFailures.add(videoId) }
+                // Lokal immer entfernen, damit Storage tatsächlich frei wird
+                runCatching { localDownloads.delete(videoId) }
             }
-            // Refresh inline so we can keep failed IDs selected for retry
-            runCatching { repo.getDownloads() }
-                .onSuccess { data ->
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            data = data,
-                            selectedVideoIds = failures.toSet(),
-                            editMode = failures.isNotEmpty(),
-                            error = if (failures.isEmpty()) null
-                                else "${failures.size} von ${ids.size} konnten nicht gelöscht werden",
-                        )
-                    }
-                }
-                .onFailure { e ->
-                    _state.update {
-                        it.copy(loading = false, error = e.message ?: "Reload nach Löschen fehlgeschlagen")
-                    }
-                }
+            // Reload nutzt offline-Fallback automatisch
+            val data = downloadsRepo.load()
+            _state.update {
+                it.copy(
+                    loading = false,
+                    data = data,
+                    selectedVideoIds = emptySet(),
+                    editMode = false,
+                    error = if (serverFailures.isEmpty()) null
+                        else "${serverFailures.size} Server-Löschungen fehlgeschlagen (lokal entfernt)",
+                )
+            }
         }
     }
 
