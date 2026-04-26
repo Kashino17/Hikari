@@ -180,3 +180,118 @@ test("PATCH /series/:id returns 400 when no updatable fields supplied", async ()
   });
   expect(r.statusCode).toBe(400);
 });
+
+// ── Video edit tests ──────────────────────────────────────────────────────
+
+test("GET /videos/:id returns video with series_title joined", async () => {
+  seedSeriesWithVideo("s1");
+  const app = buildApp();
+  const r = await app.inject({ method: "GET", url: "/videos/v1" });
+  expect(r.statusCode).toBe(200);
+  const body = r.json() as { id: string; series_id: string; series_title: string };
+  expect(body.id).toBe("v1");
+  expect(body.series_id).toBe("s1");
+  expect(body.series_title).toBe("Test Series");
+});
+
+test("GET /videos/:id returns 404 for missing video", async () => {
+  const app = buildApp();
+  const r = await app.inject({ method: "GET", url: "/videos/nope" });
+  expect(r.statusCode).toBe(404);
+});
+
+test("PATCH /videos/:id updates basic fields", async () => {
+  seedSeriesWithVideo();
+  const app = buildApp();
+  const r = await app.inject({
+    method: "PATCH",
+    url: "/videos/v1",
+    payload: {
+      title: "Neuer Titel",
+      description: "Neue Beschreibung",
+      season: 2,
+      episode: 5,
+      dub_language: "Japanisch",
+      sub_language: "Deutsch",
+      is_movie: false,
+    },
+  });
+  expect(r.statusCode).toBe(200);
+  const body = r.json() as Record<string, unknown>;
+  expect(body.title).toBe("Neuer Titel");
+  expect(body.description).toBe("Neue Beschreibung");
+  expect(body.season).toBe(2);
+  expect(body.episode).toBe(5);
+  expect(body.dub_language).toBe("Japanisch");
+  expect(body.sub_language).toBe("Deutsch");
+  expect(body.is_movie).toBe(0);
+});
+
+test("PATCH /videos/:id with series_title creates new series if needed", async () => {
+  seedSeriesWithVideo();
+  const app = buildApp();
+  const r = await app.inject({
+    method: "PATCH",
+    url: "/videos/v1",
+    payload: { series_title: "Neue Serie" },
+  });
+  expect(r.statusCode).toBe(200);
+  const body = r.json() as { series_id: string; series_title: string };
+  expect(body.series_id).toBe("neue-serie");
+  expect(body.series_title).toBe("Neue Serie");
+});
+
+test("PATCH /videos/:id auto-deletes old series when last video moves out", async () => {
+  // s1 has only v1. Move v1 to a new series "Other".
+  seedSeriesWithVideo("s1");
+  const app = buildApp();
+  await app.inject({
+    method: "PATCH",
+    url: "/videos/v1",
+    payload: { series_title: "Other" },
+  });
+  const oldSeries = db.prepare("SELECT id FROM series WHERE id = 's1'").get();
+  expect(oldSeries).toBeUndefined();
+  const newSeries = db.prepare("SELECT title FROM series WHERE id = 'other'").get() as
+    | { title: string }
+    | undefined;
+  expect(newSeries?.title).toBe("Other");
+});
+
+test("PATCH /videos/:id keeps old series when other videos remain", async () => {
+  seedSeriesWithVideo("s1");
+  // Add a second video to s1 so it stays populated after we move v1 out.
+  db.prepare(
+    "INSERT INTO videos (id, channel_id, series_id, title, published_at, duration_seconds, discovered_at) VALUES (?, ?, ?, ?, 0, 0, 0)",
+  ).run("v2", "c1", "s1", "Episode 2");
+
+  const app = buildApp();
+  await app.inject({
+    method: "PATCH",
+    url: "/videos/v1",
+    payload: { series_title: "Other" },
+  });
+  const stillThere = db.prepare("SELECT id FROM series WHERE id = 's1'").get();
+  expect(stillThere).toBeDefined();
+});
+
+test("PATCH /videos/:id returns 404 for missing video", async () => {
+  const app = buildApp();
+  const r = await app.inject({
+    method: "PATCH",
+    url: "/videos/nope",
+    payload: { title: "x" },
+  });
+  expect(r.statusCode).toBe(404);
+});
+
+test("PATCH /videos/:id returns 400 when no fields", async () => {
+  seedSeriesWithVideo();
+  const app = buildApp();
+  const r = await app.inject({
+    method: "PATCH",
+    url: "/videos/v1",
+    payload: {},
+  });
+  expect(r.statusCode).toBe(400);
+});

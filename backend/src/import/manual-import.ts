@@ -237,7 +237,7 @@ async function resolveImportSource(url: string): Promise<ResolvedImportSource> {
   ).run(MANUAL_CHANNEL_ID, "manual:hikari", MANUAL_CHANNEL_TITLE, Date.now());
   }
 
-  function ensureSeries(db: Database.Database, title: string): string {
+  export function ensureSeries(db: Database.Database, title: string): string {
   const id = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   db.prepare(
     `INSERT INTO series (id, title, added_at)

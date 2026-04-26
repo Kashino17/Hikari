@@ -4,7 +4,7 @@ import { createWriteStream } from "node:fs";
 import { unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
-import { importDirectLink, fetchImportMetadata, type ImportResult, type ManualMetadata } from "../import/manual-import.js";
+import { importDirectLink, fetchImportMetadata, ensureSeries, type ImportResult, type ManualMetadata } from "../import/manual-import.js";
 import type { MetadataExtractor } from "../scorer/metadata-extractor.js";
 
 export interface VideosDeps {
@@ -230,6 +230,133 @@ export async function registerVideosRoutes(
     deps.db.prepare("UPDATE series SET thumbnail_url = ? WHERE id = ?").run(url, req.params.id);
 
     const updated = deps.db.prepare("SELECT * FROM series WHERE id = ?").get(req.params.id) as SeriesRow;
+    return updated;
+  });
+
+  // ── Video edit endpoints ─────────────────────────────────────────────────
+  app.get<{ Params: { id: string } }>("/videos/:id", async (req, reply) => {
+    const row = deps.db.prepare(`
+      SELECT v.*, s.title AS series_title
+      FROM videos v
+      LEFT JOIN series s ON s.id = v.series_id
+      WHERE v.id = ?
+    `).get(req.params.id);
+    if (!row) return reply.code(404).send({ error: "video not found" });
+    return row;
+  });
+
+  app.patch<{
+    Params: { id: string };
+    Body: {
+      title?: string;
+      description?: string | null;
+      thumbnail_url?: string | null;
+      season?: number | null;
+      episode?: number | null;
+      dub_language?: string | null;
+      sub_language?: string | null;
+      is_movie?: boolean;
+      series_id?: string | null;
+      series_title?: string | null;
+    };
+  }>("/videos/:id", async (req, reply) => {
+    const existing = deps.db
+      .prepare("SELECT id, series_id FROM videos WHERE id = ?")
+      .get(req.params.id) as { id: string; series_id: string | null } | undefined;
+    if (!existing) return reply.code(404).send({ error: "video not found" });
+
+    const body = req.body;
+    const fields: string[] = [];
+    const values: unknown[] = [];
+
+    const setField = (name: string, value: unknown) => {
+      fields.push(`${name} = ?`);
+      values.push(value);
+    };
+
+    if ("title" in body && typeof body.title === "string") setField("title", body.title);
+    if ("description" in body) setField("description", body.description || null);
+    if ("thumbnail_url" in body) setField("thumbnail_url", body.thumbnail_url || null);
+    if ("season" in body) setField("season", body.season ?? null);
+    if ("episode" in body) setField("episode", body.episode ?? null);
+    if ("dub_language" in body) setField("dub_language", body.dub_language || null);
+    if ("sub_language" in body) setField("sub_language", body.sub_language || null);
+    if ("is_movie" in body) setField("is_movie", body.is_movie ? 1 : 0);
+
+    // Resolve series: explicit series_id wins, else series_title creates/finds
+    let newSeriesId: string | null | undefined;
+    if ("series_id" in body) newSeriesId = body.series_id;
+    else if ("series_title" in body) {
+      newSeriesId = body.series_title ? ensureSeries(deps.db, body.series_title) : null;
+    }
+    if (newSeriesId !== undefined) setField("series_id", newSeriesId);
+
+    if (fields.length === 0) return reply.code(400).send({ error: "no fields to update" });
+
+    values.push(req.params.id);
+    deps.db.prepare(`UPDATE videos SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+
+    // Auto-delete old series if it was changed and is now empty
+    if (
+      newSeriesId !== undefined &&
+      existing.series_id &&
+      existing.series_id !== newSeriesId
+    ) {
+      const remaining = deps.db
+        .prepare("SELECT COUNT(*) AS n FROM videos WHERE series_id = ?")
+        .get(existing.series_id) as { n: number };
+      if (remaining.n === 0) {
+        deps.db.prepare("DELETE FROM series WHERE id = ?").run(existing.series_id);
+      }
+    }
+
+    const updated = deps.db.prepare(`
+      SELECT v.*, s.title AS series_title
+      FROM videos v
+      LEFT JOIN series s ON s.id = v.series_id
+      WHERE v.id = ?
+    `).get(req.params.id);
+    return updated;
+  });
+
+  app.post<{ Params: { id: string } }>("/videos/:id/thumbnail", async (req, reply) => {
+    const existing = deps.db.prepare("SELECT id FROM videos WHERE id = ?").get(req.params.id);
+    if (!existing) return reply.code(404).send({ error: "video not found" });
+
+    const file = await req.file();
+    if (!file) return reply.code(400).send({ error: "no file uploaded" });
+
+    const ext = (() => {
+      const m = file.mimetype;
+      if (m === "image/jpeg" || m === "image/jpg") return "jpg";
+      if (m === "image/png") return "png";
+      if (m === "image/webp") return "webp";
+      return null;
+    })();
+    if (!ext) return reply.code(415).send({ error: `unsupported mime: ${file.mimetype}` });
+
+    const filename = `vid_${req.params.id}.${ext}`;
+    const filepath = join(deps.coverDir, filename);
+
+    for (const oldExt of ["jpg", "png", "webp"]) {
+      if (oldExt === ext) continue;
+      await unlink(join(deps.coverDir, `vid_${req.params.id}.${oldExt}`)).catch(() => {});
+    }
+
+    await pipeline(file.file, createWriteStream(filepath));
+
+    const proto = req.headers["x-forwarded-proto"] ?? req.protocol;
+    const host = req.headers["x-forwarded-host"] ?? req.headers.host;
+    const url = `${proto}://${host}/covers/${filename}?t=${Date.now()}`;
+
+    deps.db.prepare("UPDATE videos SET thumbnail_url = ? WHERE id = ?").run(url, req.params.id);
+
+    const updated = deps.db.prepare(`
+      SELECT v.*, s.title AS series_title
+      FROM videos v
+      LEFT JOIN series s ON s.id = v.series_id
+      WHERE v.id = ?
+    `).get(req.params.id);
     return updated;
   });
 }
