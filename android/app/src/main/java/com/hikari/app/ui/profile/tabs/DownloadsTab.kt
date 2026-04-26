@@ -70,6 +70,7 @@ fun DownloadsTab(
 ) {
     val state by vm.state.collectAsState()
     val smart by vm.smartDownloads.collectAsState()
+    val localSummary by vm.localSummary.collectAsState()
 
     // Reload when the user returns to this tab (e.g. after deleting items in
     // DownloadCategoryScreen). Without this, storage-strip + counts go stale.
@@ -96,6 +97,8 @@ fun DownloadsTab(
         is DownloadsUiState.Success -> DownloadsContent(
             data = s.data,
             smartEnabled = smart,
+            localCount = localSummary.count,
+            localTotalBytes = localSummary.totalBytes,
             onSmartChange = vm::setSmartDownloads,
             onOpenCategory = onOpenCategory,
         )
@@ -106,6 +109,8 @@ fun DownloadsTab(
 private fun DownloadsContent(
     data: DownloadsResponse,
     smartEnabled: Boolean,
+    localCount: Int,
+    localTotalBytes: Long,
     onSmartChange: (Boolean) -> Unit,
     onOpenCategory: (DownloadCategory) -> Unit,
 ) {
@@ -122,6 +127,8 @@ private fun DownloadsContent(
                 totalBytes = data.total_bytes,
                 limitBytes = data.limit_bytes,
                 count = totalCount,
+                localCount = localCount,
+                localBytes = localTotalBytes,
             )
         }
         item { MiniActionsRow() }
@@ -183,54 +190,75 @@ private fun DownloadsContent(
 }
 
 @Composable
-private fun StorageStrip(totalBytes: Long, limitBytes: Long, count: Int) {
-    Row(
+private fun StorageStrip(
+    totalBytes: Long,
+    limitBytes: Long,
+    count: Int,
+    localCount: Int,
+    localBytes: Long,
+) {
+    androidx.compose.foundation.layout.Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(horizontal = 14.dp, vertical = 10.dp),
     ) {
-        Text(
-            "${formatBytes(totalBytes)} / ${formatBytes(limitBytes)}",
-            color = HikariText,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Black,
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            "$count DOWNLOADS",
-            color = HikariTextFaint,
-            fontSize = 11.sp,
-            fontFamily = FontFamily.Monospace,
-            letterSpacing = 0.5.sp,
-        )
-        Spacer(Modifier.weight(1f))
-        Box(
-            modifier = Modifier
-                .width(64.dp)
-                .height(3.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(HikariSurfaceHigh),
-        ) {
-            val frac = if (limitBytes > 0) (totalBytes.toFloat() / limitBytes).coerceIn(0f, 1f) else 0f
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "${formatBytes(totalBytes)} / ${formatBytes(limitBytes)}",
+                color = HikariText,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Black,
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                "$count DOWNLOADS",
+                color = HikariTextFaint,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace,
+                letterSpacing = 0.5.sp,
+            )
+            Spacer(Modifier.weight(1f))
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(frac)
-                    .fillMaxHeight()
-                    .background(
-                        Brush.horizontalGradient(listOf(HikariAmber, Color(0xFFB45309))),
-                    ),
+                    .width(64.dp)
+                    .height(3.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(HikariSurfaceHigh),
+            ) {
+                val frac = if (limitBytes > 0) (totalBytes.toFloat() / limitBytes).coerceIn(0f, 1f) else 0f
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(frac)
+                        .fillMaxHeight()
+                        .background(
+                            Brush.horizontalGradient(listOf(HikariAmber, Color(0xFFB45309))),
+                        ),
+                )
+            }
+            Spacer(Modifier.width(10.dp))
+            Text(
+                "OFFLINE",
+                color = HikariAmber,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.sp,
+                fontFamily = FontFamily.Monospace,
             )
         }
-        Spacer(Modifier.width(10.dp))
-        Text(
-            "OFFLINE",
-            color = HikariAmber,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Black,
-            letterSpacing = 1.sp,
-            fontFamily = FontFamily.Monospace,
-        )
+        if (localCount > 0) {
+            Spacer(Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Spacer(Modifier.width(2.dp))
+                Text(
+                    "$localCount lokal · ${formatBytes(localBytes)}",
+                    color = HikariAmber,
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.3.sp,
+                )
+            }
+        }
     }
 }
 
