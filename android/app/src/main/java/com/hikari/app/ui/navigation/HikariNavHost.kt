@@ -77,11 +77,14 @@ fun HikariNavHost() {
 
     val isVideoRoute = currentRoute?.startsWith("video/") == true
     val isReaderRoute = currentRoute?.matches(Regex("manga/[^/]+/[^/?]+(\\?.*)?")) == true
+    // Settings + Tuning sind ab v0.25.0 nur über Profil-Gear erreichbar — sub-pages,
+    // also auch ohne Bottom-Nav rendern (eigener Back-Button reicht).
+    val isGearSubPage = currentRoute == "settings" || currentRoute == "tuning"
 
     Scaffold(
         containerColor = HikariBg,
         bottomBar = {
-            if (!(currentRoute == "feed" && feedFullscreen) && !isVideoRoute && !isReaderRoute) {
+            if (!(currentRoute == "feed" && feedFullscreen) && !isVideoRoute && !isReaderRoute && !isGearSubPage) {
                 HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
                 NavigationBar(
                     containerColor = HikariBg,
@@ -185,8 +188,8 @@ fun HikariNavHost() {
                 }
             }
             composable("tuning") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    TuningScreen()
+                Box(Modifier.fillMaxSize()) {
+                    TuningScreen(onBack = { nav.popBackStack() })
                 }
             }
             composable("profile") {
@@ -205,7 +208,10 @@ fun HikariNavHost() {
             }
             composable("settings") {
                 Box(Modifier.fillMaxSize()) {
-                    SettingsScreen(onBack = { nav.popBackStack() })
+                    SettingsScreen(
+                        onBack = { nav.popBackStack() },
+                        onOpenTuning = { nav.navigate("tuning") },
+                    )
                 }
             }
             composable(

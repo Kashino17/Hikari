@@ -64,6 +64,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onOpenTuning: () -> Unit = {},
     vm: SettingsViewModel = hiltViewModel(),
 ) {
     val backendUrl by vm.backendUrl.collectAsState(initial = "")
@@ -276,9 +277,46 @@ fun SettingsScreen(
                 }
             }
 
+            // ── Filter & AI-Tuning ────────────────────────────────────────────
+            SectionLabel("FILTER & AI")
+            SettingsCard {
+                androidx.compose.foundation.layout.Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                ) {
+                    androidx.compose.foundation.layout.Column(
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(
+                            "Tuning öffnen",
+                            color = HikariText,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            "Filter-Prompts und AI-Scoring justieren — Tuning-Workflow.",
+                            color = HikariTextMuted,
+                            fontSize = 11.sp,
+                            lineHeight = 14.sp,
+                            modifier = Modifier.padding(top = 3.dp),
+                        )
+                    }
+                    androidx.compose.foundation.layout.Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(HikariSurface)
+                            .border(0.5.dp, HikariBorder, RoundedCornerShape(8.dp))
+                            .clickable(onClick = onOpenTuning)
+                            .padding(horizontal = 14.dp, vertical = 9.dp),
+                    ) {
+                        Text("Öffnen", color = HikariAmber, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+
             Spacer(Modifier.height(12.dp))
             Text(
-                "Hikari · Phase C v0.22.0",
+                "Hikari · v0.25.0",
                 color = HikariTextFaint,
                 fontSize = 10.sp,
                 fontFamily = FontFamily.Monospace,
