@@ -7,7 +7,7 @@ lifecycle = "2.8.7"
 activityCompose = "1.9.3"
 composeBom = "2024.12.01"
 navigationCompose = "2.8.4"
-hilt = "2.52"
+hilt = "2.53"
 hiltNavigationCompose = "1.2.0"
 retrofit = "2.11.0"
 okhttp = "5.0.0-alpha.14"
@@ -15,6 +15,8 @@ kotlinxSerialization = "1.7.3"
 kotlinxCoroutines = "1.9.0"
 room = "2.6.1"
 datastore = "1.1.1"
+work = "2.9.1"
+hiltWork = "1.2.0"
 media3 = "1.4.1"
 coil = "2.7.0"
 telephoto = "0.13.0"
@@ -49,6 +51,9 @@ room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
+hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
+hilt-work-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltWork" }
 media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3" }
 media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3" }
 media3-datasource-okhttp = { module = "androidx.media3:media3-datasource-okhttp", version.ref = "media3" }

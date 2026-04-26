@@ -15,8 +15,8 @@ android {
         applicationId = "com.hikari.app"
         minSdk = 26
         targetSdk = 34   // was 36 in plan — same deviation
-        versionCode = 29
-        versionName = "0.23.0"
+        versionCode = 30
+        versionName = "0.24.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -72,6 +72,10 @@ dependencies {
     ksp(libs.room.compiler)
 
     implementation(libs.datastore.preferences)
+
+    implementation(libs.work.runtime)
+    implementation(libs.hilt.work)
+    ksp(libs.hilt.work.compiler)
 
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)

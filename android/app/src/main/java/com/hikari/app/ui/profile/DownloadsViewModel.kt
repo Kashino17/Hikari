@@ -3,7 +3,10 @@ package com.hikari.app.ui.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.DownloadsResponse
+import com.hikari.app.data.db.LocalDownloadEntity
 import com.hikari.app.data.prefs.SettingsStore
+import com.hikari.app.domain.download.LocalDownloadManager
+import com.hikari.app.domain.download.SmartDownloadScheduler
 import com.hikari.app.domain.repo.FeedRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -11,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -20,10 +24,15 @@ sealed interface DownloadsUiState {
     data class Error(val message: String) : DownloadsUiState
 }
 
+data class LocalSummary(val count: Int, val totalBytes: Long)
+
 @HiltViewModel
 class DownloadsViewModel @Inject constructor(
     private val repo: FeedRepository,
     private val settings: SettingsStore,
+    private val localDownloads: LocalDownloadManager,
+    private val scheduler: SmartDownloadScheduler,
+    localDownloadDao: com.hikari.app.data.db.LocalDownloadDao,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<DownloadsUiState>(DownloadsUiState.Loading)
@@ -31,6 +40,15 @@ class DownloadsViewModel @Inject constructor(
 
     val smartDownloads: StateFlow<Boolean> = settings.smartDownloads
         .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    val localSummary: StateFlow<LocalSummary> = localDownloadDao.observeAll()
+        .map { rows ->
+            LocalSummary(
+                count = rows.size,
+                totalBytes = rows.sumOf { it.byteSize },
+            )
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, LocalSummary(0, 0L))
 
     init {
         load()
@@ -49,5 +67,10 @@ class DownloadsViewModel @Inject constructor(
 
     fun setSmartDownloads(enabled: Boolean) = viewModelScope.launch {
         settings.setSmartDownloads(enabled)
+        if (enabled) {
+            // Kick off a one-shot sync immediately so the user sees activity
+            // (subject to WLAN constraint).
+            scheduler.runOnceNow()
+        }
     }
 }
