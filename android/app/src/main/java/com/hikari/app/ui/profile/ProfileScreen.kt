@@ -76,6 +76,7 @@ fun ProfileScreen(
     onOpenSettings: () -> Unit,
     onOpenChannel: (String) -> Unit,
     onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
+    onOpenDownloadCategory: (com.hikari.app.ui.profile.tabs.DownloadCategory) -> Unit,
     vm: ProfileViewModel = hiltViewModel(),
 ) {
     val name by vm.name.collectAsState()
@@ -207,7 +208,9 @@ fun ProfileScreen(
                         onOpenChannel = onOpenChannel,
                         onOpenImport = { importOpen = true },
                     )
-                    ProfileTab.DOWNLOADS -> DownloadsTab()
+                    ProfileTab.DOWNLOADS -> DownloadsTab(
+                        onOpenCategory = onOpenDownloadCategory,
+                    )
                 }
             }
         }

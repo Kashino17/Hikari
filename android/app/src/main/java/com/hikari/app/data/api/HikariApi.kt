@@ -15,6 +15,7 @@ import com.hikari.app.data.api.dto.AnalyzeRequest
 import com.hikari.app.data.api.dto.AnalyzeResponse
 import com.hikari.app.data.api.dto.BulkImportRequest
 import com.hikari.app.data.api.dto.BulkImportResponse
+import com.hikari.app.data.api.dto.DownloadsResponse
 import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.data.api.dto.LanguagesResponse
 import com.hikari.app.data.api.dto.LibraryResponse
@@ -124,6 +125,9 @@ interface HikariApi {
 
     @GET("library")
     suspend fun getLibrary(): LibraryResponse
+
+    @GET("downloads")
+    suspend fun getDownloads(): DownloadsResponse
 
     @GET("series/{id}")
     suspend fun getSeries(@Path("id") seriesId: String): SeriesDetailResponse
