@@ -4,6 +4,8 @@ import com.hikari.app.data.api.dto.AddChannelRequest
 import com.hikari.app.data.api.dto.AddChannelResponse
 import com.hikari.app.data.api.dto.ChannelDto
 import com.hikari.app.data.api.dto.ChannelSearchResultDto
+import com.hikari.app.data.api.dto.SetAutoApproveRequest
+import com.hikari.app.data.api.dto.SetAutoApproveResponse
 import com.hikari.app.data.api.dto.ChannelStatsDto
 import com.hikari.app.data.api.dto.ChannelVideoDto
 import com.hikari.app.data.api.dto.ClearOverrideRequest
@@ -104,6 +106,12 @@ interface HikariApi {
         @Query("deep") deep: Boolean? = null,
         @Query("limit") limit: Int? = null,
     ): PollResponse
+
+    @PATCH("channels/{id}/auto-approve")
+    suspend fun setChannelAutoApprove(
+        @Path("id") channelId: String,
+        @Body req: SetAutoApproveRequest,
+    ): SetAutoApproveResponse
 
     @GET("channels/{id}/stats")
     suspend fun getChannelStats(@Path("id") channelId: String): ChannelStatsDto

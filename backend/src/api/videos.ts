@@ -235,6 +235,13 @@ export async function registerVideosRoutes(
 
   // ── Video edit endpoints ─────────────────────────────────────────────────
   app.get<{ Params: { id: string } }>("/videos/:id", async (req, reply) => {
+    // Stream URLs (`/videos/<id>.mp4`) match this route before @fastify/static
+    // can serve them — Fastify prefers explicit param routes over the static
+    // wildcard. Hand .mp4 requests over to fastify-static via reply.sendFile so
+    // Range / ETag / Content-Type still work for ExoPlayer.
+    if (req.params.id.endsWith(".mp4")) {
+      return reply.sendFile(req.params.id);
+    }
     const row = deps.db.prepare(`
       SELECT v.*, s.title AS series_title
       FROM videos v

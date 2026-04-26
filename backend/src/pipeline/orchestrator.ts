@@ -1,10 +1,40 @@
 import type Database from "better-sqlite3";
 import type { VideoMetadata } from "../ingest/metadata.js";
 import { decide } from "../scorer/decision.js";
-import { getActivePrompt } from "../scorer/filter-repo.js";
-import type { Scorer } from "../scorer/types.js";
+import { getActivePrompt, getFilterState } from "../scorer/filter-repo.js";
+import type { ScoredVideo, Scorer } from "../scorer/types.js";
 import type { SponsorSegment } from "../sponsorblock/client.js";
 import type { DownloadResult } from "../download/worker.js";
+
+const AUTO_APPROVE_MODEL = "auto-approve";
+
+function autoApproveScore(): ScoredVideo {
+  return {
+    score: {
+      overallScore: 100,
+      category: "other",
+      clickbaitRisk: 0,
+      educationalValue: 10,
+      emotionalManipulation: 0,
+      reasoning: "auto-approved (Green Card / Vertrauenskanal)",
+    },
+    modelUsed: AUTO_APPROVE_MODEL,
+  };
+}
+
+function autoRejectScore(reasoning: string): ScoredVideo {
+  return {
+    score: {
+      overallScore: 0,
+      category: "other",
+      clickbaitRisk: 0,
+      educationalValue: 0,
+      emotionalManipulation: 0,
+      reasoning,
+    },
+    modelUsed: AUTO_APPROVE_MODEL,
+  };
+}
 
 export interface ProcessNewVideoDeps {
   db: Database.Database;
@@ -28,6 +58,45 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
   const meta = await deps.fetchMetadata(videoId);
 
   if (meta.isLive) return;
+
+  // Green Card / "Vertrauenskanal": skip scorer entirely. Hard filters that
+  // still apply: isLive (above) + duration range from active filter.
+  const channelRow = db
+    .prepare("SELECT auto_approve FROM channels WHERE id = ?")
+    .get(channelId) as { auto_approve: number } | undefined;
+  if ((channelRow?.auto_approve ?? 0) === 1) {
+    const { filter } = getFilterState(db);
+    const inRange =
+      meta.durationSeconds >= filter.minDurationSec &&
+      meta.durationSeconds <= filter.maxDurationSec;
+    const now = Date.now();
+
+    if (!inRange) {
+      const reasoning =
+        `auto-rejected (Green Card): duration ${Math.round(meta.durationSeconds / 60)}min ` +
+        `outside ${Math.round(filter.minDurationSec / 60)}–` +
+        `${Math.round(filter.maxDurationSec / 60)}min range`;
+      db.transaction(() => {
+        insertVideo(db, meta, null, channelId);
+        insertScore(db, videoId, autoRejectScore(reasoning), "rejected", now);
+      })();
+      return;
+    }
+
+    const [transcript, sponsors] = await Promise.all([
+      meta.captionsUrl ? deps.fetchTranscript(meta.captionsUrl) : Promise.resolve(null),
+      deps.fetchSponsorSegments(videoId),
+    ]);
+    const dl = await deps.download(videoId);
+    db.transaction(() => {
+      insertVideo(db, meta, transcript, channelId);
+      insertScore(db, videoId, autoApproveScore(), "approved", now);
+      insertSponsors(db, videoId, sponsors);
+      insertDownload(db, videoId, dl, now);
+      insertFeedItem(db, videoId, now);
+    })();
+    return;
+  }
 
   const transcript = meta.captionsUrl ? await deps.fetchTranscript(meta.captionsUrl) : null;
   const systemPrompt = getActivePrompt(db);

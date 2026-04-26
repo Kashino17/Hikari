@@ -55,4 +55,16 @@ class ChannelDetailViewModel @Inject constructor(
             }
             .onFailure { _error.value = it.message ?: "Löschen fehlgeschlagen" }
     }
+
+    fun toggleAutoApprove() = viewModelScope.launch {
+        val current = _channel.value ?: return@launch
+        val target = !current.autoApprove
+        // Optimistic update — flip locally, revert on failure.
+        _channel.value = current.copy(autoApprove = target)
+        runCatching { repo.setAutoApprove(channelId, target) }
+            .onFailure {
+                _channel.value = current
+                _error.value = it.message ?: "Konnte Vertrauenskanal nicht umschalten"
+            }
+    }
 }

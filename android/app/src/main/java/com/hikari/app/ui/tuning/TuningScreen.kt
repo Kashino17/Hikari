@@ -223,8 +223,8 @@ private fun FilterTab(filter: FilterConfig?, onUpdate: ((FilterConfig) -> Filter
             LabeledSlider(
                 label = "Max",
                 value = filter.maxDurationSec.toFloat(),
-                range = 300f..3600f,
-                steps = ((3600 - 300) / 60) - 1,
+                range = 300f..7200f,
+                steps = ((7200 - 300) / 60) - 1,
                 valueLabel = "${filter.maxDurationSec / 60}m",
                 onValueChange = { v ->
                     onUpdate { it.copy(maxDurationSec = v.toInt().coerceAtLeast(it.minDurationSec)) }

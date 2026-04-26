@@ -27,6 +27,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -112,7 +114,15 @@ fun ChannelDetailScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 24.dp),
         ) {
-            item { DetailHeader(channelTitle = channel?.title, handle = channel?.handle, onBack = onBack) }
+            item {
+                DetailHeader(
+                    channelTitle = channel?.title,
+                    handle = channel?.handle,
+                    autoApprove = channel?.autoApprove == true,
+                    onBack = onBack,
+                    onToggleAutoApprove = { vm.toggleAutoApprove() },
+                )
+            }
 
             item {
                 val approved = videos.count { it.decision == "approved" }
@@ -174,7 +184,13 @@ fun ChannelDetailScreen(
 }
 
 @Composable
-private fun DetailHeader(channelTitle: String?, handle: String?, onBack: () -> Unit) {
+private fun DetailHeader(
+    channelTitle: String?,
+    handle: String?,
+    autoApprove: Boolean,
+    onBack: () -> Unit,
+    onToggleAutoApprove: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -212,6 +228,24 @@ private fun DetailHeader(channelTitle: String?, handle: String?, onBack: () -> U
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
+        }
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(50))
+                .clickable(onClick = onToggleAutoApprove),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = if (autoApprove) Icons.Default.Star
+                else Icons.Outlined.StarBorder,
+                contentDescription = if (autoApprove)
+                    "Vertrauenskanal aktiv — alle Videos werden ohne KI-Bewertung übernommen"
+                else
+                    "Vertrauenskanal aktivieren",
+                tint = if (autoApprove) HikariAmber else HikariTextMuted,
+                modifier = Modifier.size(20.dp),
+            )
         }
     }
     HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)

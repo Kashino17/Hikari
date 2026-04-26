@@ -55,10 +55,25 @@ export async function registerChannelsRoutes(
     return deps.db
       .prepare(
         `SELECT id, url, title, added_at, is_active, last_polled_at,
-                handle, description, subscribers, thumbnail_url AS thumbnail
+                handle, description, subscribers, thumbnail_url AS thumbnail,
+                auto_approve AS autoApprove
          FROM channels WHERE is_active=1 ORDER BY added_at DESC`,
       )
       .all();
+  });
+
+  app.patch<{
+    Params: { id: string };
+    Body: { autoApprove: boolean };
+  }>("/channels/:id/auto-approve", async (req, reply) => {
+    const channel = deps.db
+      .prepare("SELECT id FROM channels WHERE id = ? AND is_active = 1")
+      .get(req.params.id);
+    if (!channel) return reply.code(404).send({ error: "channel not found" });
+    deps.db
+      .prepare("UPDATE channels SET auto_approve = ? WHERE id = ?")
+      .run(req.body.autoApprove ? 1 : 0, req.params.id);
+    return { id: req.params.id, autoApprove: req.body.autoApprove };
   });
 
   app.get<{ Querystring: { force?: string } }>(

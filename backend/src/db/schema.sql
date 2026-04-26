@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS channels (
   handle TEXT,
   description TEXT,
   subscribers INTEGER,
-  thumbnail_url TEXT
+  thumbnail_url TEXT,
+  auto_approve INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS videos (

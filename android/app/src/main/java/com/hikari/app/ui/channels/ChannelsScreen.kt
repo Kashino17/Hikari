@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -528,13 +529,25 @@ private fun SubscribedRow(
         ChannelAvatar(title = channel.title, thumbnail = channel.thumbnail, seed = channel.id)
         Spacer(Modifier.size(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                channel.title,
-                color = HikariText,
-                style = MaterialTheme.typography.bodyLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    channel.title,
+                    color = HikariText,
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                if (channel.autoApprove) {
+                    Spacer(Modifier.size(4.dp))
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = "Vertrauenskanal",
+                        tint = HikariAmber,
+                        modifier = Modifier.size(14.dp),
+                    )
+                }
+            }
             // Meta line: handle · subs · last polled
             val metaParts = listOfNotNull(
                 channel.handle,

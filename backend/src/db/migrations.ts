@@ -48,4 +48,8 @@ export function applyMigrations(db: Database.Database): void {
   addColumnIfMissing(db, "feed_items", "queue_order", "INTEGER");
 
   addColumnIfMissing(db, "manga_chapters", "is_available", "INTEGER DEFAULT 1");
+
+  // Green-Card / "Vertrauenskanal" — when 1, processNewVideo skips the AI scorer
+  // for videos from this channel (still respects isLive + duration filter).
+  addColumnIfMissing(db, "channels", "auto_approve", "INTEGER DEFAULT 0");
 }

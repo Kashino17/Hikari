@@ -28,7 +28,16 @@ class ChannelsRepository @Inject constructor(
             subscribers = it.subscribers,
             thumbnail = it.thumbnail_url,
             lastPolledAt = it.last_polled_at,
+            autoApprove = it.autoApprove == 1,
         )
+    }
+
+    suspend fun setAutoApprove(channelId: String, autoApprove: Boolean): Boolean {
+        val res = api.setChannelAutoApprove(
+            channelId,
+            com.hikari.app.data.api.dto.SetAutoApproveRequest(autoApprove),
+        )
+        return res.autoApprove
     }
 
     suspend fun listWithStats(): List<Pair<Channel, ChannelStatsDto?>> {
