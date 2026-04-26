@@ -8,6 +8,7 @@ data class Channel(
     val description: String? = null,
     val subscribers: Long? = null,
     val thumbnail: String? = null,
+    val bannerUrl: String? = null,
     val lastPolledAt: Long? = null,
     val autoApprove: Boolean = false,
 )
