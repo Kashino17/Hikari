@@ -73,6 +73,12 @@ export async function registerVideosRoutes(
     return { series, recentlyAdded, channels };
   });
 
+  app.get("/series", async () => {
+    return deps.db
+      .prepare("SELECT id, title FROM series ORDER BY title")
+      .all();
+  });
+
   app.get<{ Params: { id: string } }>("/series/:id", async (req, reply) => {
     const series = deps.db.prepare("SELECT * FROM series WHERE id = ?").get(req.params.id);
     if (!series) return reply.code(404).send({ error: "series not found" });
