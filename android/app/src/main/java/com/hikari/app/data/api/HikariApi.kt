@@ -29,6 +29,8 @@ import com.hikari.app.data.api.dto.SeriesDetailResponse
 import com.hikari.app.data.api.dto.SeriesDto
 import com.hikari.app.data.api.dto.SetOverrideRequest
 import com.hikari.app.data.api.dto.UpdateSeriesRequest
+import com.hikari.app.data.api.dto.UpdateVideoRequest
+import com.hikari.app.data.api.dto.VideoDetailDto
 import com.hikari.app.data.api.dto.TodayCountResponse
 import com.hikari.app.data.api.dto.UpdateFilterRequest
 import com.hikari.app.data.api.dto.WeeklyStatsDto
@@ -127,6 +129,22 @@ interface HikariApi {
 
     @POST("videos/import/bulk")
     suspend fun importVideosBulk(@Body req: BulkImportRequest): BulkImportResponse
+
+    @GET("videos/{id}")
+    suspend fun getVideo(@Path("id") videoId: String): VideoDetailDto
+
+    @PATCH("videos/{id}")
+    suspend fun updateVideo(
+        @Path("id") videoId: String,
+        @Body req: UpdateVideoRequest,
+    ): VideoDetailDto
+
+    @Multipart
+    @POST("videos/{id}/thumbnail")
+    suspend fun uploadVideoThumbnail(
+        @Path("id") videoId: String,
+        @Part cover: MultipartBody.Part,
+    ): VideoDetailDto
 
     @GET("series")
     suspend fun listSeries(): List<SeriesItemDto>
