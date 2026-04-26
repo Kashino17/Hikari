@@ -30,16 +30,15 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.hikari.app.ui.channels.ChannelDetailScreen
-import com.hikari.app.ui.channels.ChannelsScreen
 import com.hikari.app.ui.channels.VideoEditScreen
 import com.hikari.app.ui.feed.FeedScreen
-import com.hikari.app.ui.library.LibraryScreen
 import com.hikari.app.ui.library.SeriesDetailScreen
 import com.hikari.app.ui.manga.MangaDetailScreen
 import com.hikari.app.ui.manga.MangaListScreen
 import com.hikari.app.ui.manga.MangaReaderScreen
 import com.hikari.app.ui.player.VideoPlayerScreen
 import com.hikari.app.ui.profile.ProfileScreen
+import com.hikari.app.ui.settings.SettingsScreen
 import java.net.URLDecoder
 import java.net.URLEncoder
 import com.hikari.app.ui.theme.HikariBg
@@ -108,24 +107,13 @@ fun HikariNavHost() {
     ) { padding ->
         NavHost(
             nav,
-            startDestination = "library",
+            startDestination = "profile",
             modifier = Modifier.fillMaxSize(),
             enterTransition = { EnterTransition.None },
             exitTransition = { ExitTransition.None },
             popEnterTransition = { EnterTransition.None },
             popExitTransition = { ExitTransition.None },
         ) {
-            composable("library") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    LibraryScreen(
-                        onOpenSeries = { id -> nav.navigate("series/$id") },
-                        onOpenChannel = { id -> nav.navigate("channel/$id") },
-                        onPlayVideo = { videoId, title, channel ->
-                            nav.navigate(playVideoRoute(videoId, title, channel))
-                        },
-                    )
-                }
-            }
             composable(
                 route = "series/{seriesId}",
                 arguments = listOf(navArgument("seriesId") { type = NavType.StringType }),
@@ -170,13 +158,6 @@ fun HikariNavHost() {
                     onNavigate = { route -> navTo(nav, route) },
                 )
             }
-            composable("channels") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    ChannelsScreen(
-                        onOpenChannel = { id -> nav.navigate("channel/$id") },
-                    )
-                }
-            }
             composable(
                 route = "channel/{channelId}",
                 arguments = listOf(navArgument("channelId") { type = NavType.StringType }),
@@ -209,8 +190,17 @@ fun HikariNavHost() {
             composable("profile") {
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     ProfileScreen(
-                        onOpenSettings = { nav.navigate("tuning") },
+                        onOpenSettings = { nav.navigate("settings") },
+                        onOpenChannel = { id -> nav.navigate("channel/$id") },
+                        onPlayVideo = { videoId, title, channel ->
+                            nav.navigate(playVideoRoute(videoId, title, channel))
+                        },
                     )
+                }
+            }
+            composable("settings") {
+                Box(Modifier.fillMaxSize()) {
+                    SettingsScreen(onBack = { nav.popBackStack() })
                 }
             }
             composable("manga") {
