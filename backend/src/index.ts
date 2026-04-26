@@ -2,6 +2,7 @@ import "dotenv/config";
 import { mkdirSync, existsSync, readdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import fastifyStatic from "@fastify/static";
+import fastifyMultipart from "@fastify/multipart";
 import Fastify from "fastify";
 import cron from "node-cron";
 import { registerChannelsRoutes } from "./api/channels.js";
@@ -26,6 +27,7 @@ import { fetchSponsorSegments } from "./sponsorblock/client.js";
 const cfg = loadConfig();
 mkdirSync(cfg.videoDir, { recursive: true });
 mkdirSync(cfg.mangaDir, { recursive: true });
+mkdirSync(cfg.coverDir, { recursive: true });
 
 const db = openDatabase(cfg.dbPath);
 const scorer = createScorer(cfg);
@@ -55,12 +57,14 @@ for (const r of orphanRows) {
 
 const app = Fastify({ logger: { level: "info" } });
 await app.register(fastifyStatic, { root: cfg.videoDir, prefix: "/videos/" });
+await app.register(fastifyStatic, { root: cfg.coverDir, prefix: "/covers/", decorateReply: false });
+await app.register(fastifyMultipart, { limits: { fileSize: 10 * 1024 * 1024 } });
 await registerChannelsRoutes(app, { db, scorer, videoDir: cfg.videoDir });
 await registerFeedRoutes(app, { db, dailyBudget: cfg.dailyBudget });
 await registerFilterRoutes(app, { db });
 await registerHealthRoute(app, { db, videoDir: cfg.videoDir });
 await registerStatsRoutes(app, { db });
-await registerVideosRoutes(app, { db, videoDir: cfg.videoDir, extractor });
+await registerVideosRoutes(app, { db, videoDir: cfg.videoDir, coverDir: cfg.coverDir, extractor });
 await registerMangaRoutes(app, { db, mangaDir: cfg.mangaDir });
 
 // 15-min channel polling

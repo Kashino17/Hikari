@@ -45,3 +45,9 @@ data class SeriesDetailResponse(
     val added_at: Long,
     val videos: List<LibraryVideoDto>
 )
+
+@Serializable
+data class UpdateSeriesRequest(
+    val thumbnail_url: String? = null,
+    val description: String? = null,
+)

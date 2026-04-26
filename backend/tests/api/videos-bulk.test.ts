@@ -14,7 +14,7 @@ beforeEach(() => {
 
 function buildApp() {
   const app = Fastify();
-  registerVideosRoutes(app, { db, videoDir: "/tmp/test", extractor: null });
+  registerVideosRoutes(app, { db, videoDir: "/tmp/test", coverDir: "/tmp/test-covers", extractor: null });
   return app;
 }
 
@@ -82,4 +82,101 @@ test("GET /languages returns empty arrays when no videos", async () => {
   const r = await app.inject({ method: "GET", url: "/languages" });
   expect(r.statusCode).toBe(200);
   expect(r.json()).toEqual({ dub: [], sub: [] });
+});
+
+function seedSeriesWithVideo(
+  seriesId = "s1",
+  episodeThumb = "https://thumb.test/ep1.jpg",
+) {
+  db.prepare(
+    "INSERT INTO series (id, title, added_at) VALUES (?, ?, 0)",
+  ).run(seriesId, "Test Series");
+  db.prepare(
+    "INSERT INTO channels (id, title, url, is_active, added_at) VALUES (?, ?, ?, 1, 0)",
+  ).run("c1", "Channel", "http://x");
+  db.prepare(
+    "INSERT INTO videos (id, channel_id, series_id, title, published_at, duration_seconds, discovered_at, thumbnail_url, season, episode) VALUES (?, ?, ?, ?, 0, 0, 0, ?, 1, 1)",
+  ).run("v1", "c1", seriesId, "Episode 1", episodeThumb);
+}
+
+test("GET /series/:id falls back to first episode thumbnail when cover not set", async () => {
+  seedSeriesWithVideo("s1", "https://thumb.test/ep1.jpg");
+  const app = buildApp();
+  const r = await app.inject({ method: "GET", url: "/series/s1" });
+  expect(r.statusCode).toBe(200);
+  const body = r.json() as { thumbnail_url: string | null };
+  expect(body.thumbnail_url).toBe("https://thumb.test/ep1.jpg");
+});
+
+test("GET /series/:id keeps manual cover over fallback", async () => {
+  seedSeriesWithVideo("s1", "https://thumb.test/ep1.jpg");
+  db.prepare("UPDATE series SET thumbnail_url = ? WHERE id = ?").run(
+    "https://manual.test/cover.jpg",
+    "s1",
+  );
+  const app = buildApp();
+  const r = await app.inject({ method: "GET", url: "/series/s1" });
+  const body = r.json() as { thumbnail_url: string };
+  expect(body.thumbnail_url).toBe("https://manual.test/cover.jpg");
+});
+
+test("GET /library applies cover fallback to all series", async () => {
+  seedSeriesWithVideo("s1", "https://thumb.test/ep1.jpg");
+  const app = buildApp();
+  const r = await app.inject({ method: "GET", url: "/library" });
+  const body = r.json() as { series: { id: string; thumbnail_url: string }[] };
+  expect(body.series.find((s) => s.id === "s1")?.thumbnail_url).toBe(
+    "https://thumb.test/ep1.jpg",
+  );
+});
+
+test("PATCH /series/:id updates thumbnail_url and description", async () => {
+  seedSeriesWithVideo();
+  const app = buildApp();
+  const r = await app.inject({
+    method: "PATCH",
+    url: "/series/s1",
+    payload: { thumbnail_url: "https://new.test/c.jpg", description: "neue Beschreibung" },
+  });
+  expect(r.statusCode).toBe(200);
+  const body = r.json() as { thumbnail_url: string; description: string };
+  expect(body.thumbnail_url).toBe("https://new.test/c.jpg");
+  expect(body.description).toBe("neue Beschreibung");
+});
+
+test("PATCH /series/:id with empty thumbnail_url clears manual cover (fallback resumes)", async () => {
+  seedSeriesWithVideo("s1", "https://thumb.test/ep1.jpg");
+  db.prepare("UPDATE series SET thumbnail_url = 'https://old.test/c.jpg' WHERE id = 's1'").run();
+
+  const app = buildApp();
+  const r = await app.inject({
+    method: "PATCH",
+    url: "/series/s1",
+    payload: { thumbnail_url: "" },
+  });
+  expect(r.statusCode).toBe(200);
+  const body = r.json() as { thumbnail_url: string };
+  // After clearing, fallback to first episode thumb kicks in
+  expect(body.thumbnail_url).toBe("https://thumb.test/ep1.jpg");
+});
+
+test("PATCH /series/:id returns 404 when series not found", async () => {
+  const app = buildApp();
+  const r = await app.inject({
+    method: "PATCH",
+    url: "/series/nope",
+    payload: { description: "x" },
+  });
+  expect(r.statusCode).toBe(404);
+});
+
+test("PATCH /series/:id returns 400 when no updatable fields supplied", async () => {
+  seedSeriesWithVideo();
+  const app = buildApp();
+  const r = await app.inject({
+    method: "PATCH",
+    url: "/series/s1",
+    payload: {},
+  });
+  expect(r.statusCode).toBe(400);
 });
