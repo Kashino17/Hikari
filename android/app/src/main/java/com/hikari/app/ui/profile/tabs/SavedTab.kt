@@ -4,14 +4,22 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,22 +38,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.hikari.app.data.api.dto.LibraryVideoDto
 import com.hikari.app.domain.model.FeedItem
 import com.hikari.app.ui.profile.ProfileViewModel
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariSurface
+import com.hikari.app.ui.theme.HikariSurfaceHigh
+import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
 
 @Composable
 fun SavedTab(
     onPlay: (FeedItem) -> Unit,
+    onPlayLibraryVideo: (LibraryVideoDto) -> Unit,
     vm: ProfileViewModel = hiltViewModel(),
 ) {
     val saved by vm.saved.collectAsState()
-    // Initial load handled by ProfileViewModel.init — no LaunchedEffect here
-    // (would re-fetch on every tab switch as SavedTab leaves/re-enters composition).
+    val continueWatching by vm.continueWatching.collectAsState()
 
-    if (saved.isEmpty()) {
+    if (saved.isEmpty() && continueWatching.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize().padding(48.dp),
             contentAlignment = Alignment.Center,
@@ -66,8 +77,97 @@ fun SavedTab(
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
+        if (continueWatching.isNotEmpty()) {
+            item(span = { GridItemSpan(3) }) {
+                Column {
+                    SectionLabel("WEITERSCHAUEN")
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 14.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        items(continueWatching, key = { it.id }) { v ->
+                            ContinueCard(video = v, onClick = { onPlayLibraryVideo(v) })
+                        }
+                    }
+                    Spacer(Modifier.height(20.dp))
+                    SectionLabel("GESPEICHERT · ${saved.size}")
+                }
+            }
+        }
         items(saved, key = { it.videoId }) { item ->
             SavedCell(item = item, onClick = { onPlay(item) })
+        }
+    }
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+    Text(
+        text,
+        color = HikariTextFaint,
+        fontSize = 10.sp,
+        fontWeight = FontWeight.SemiBold,
+        letterSpacing = 1.5.sp,
+        fontFamily = FontFamily.Monospace,
+        modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 8.dp),
+    )
+}
+
+@Composable
+private fun ContinueCard(video: LibraryVideoDto, onClick: () -> Unit) {
+    Column(modifier = Modifier.width(160.dp).clickable(onClick = onClick)) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(6.dp))
+                .background(HikariSurfaceHigh),
+        ) {
+            if (!video.thumbnail_url.isNullOrBlank()) {
+                AsyncImage(
+                    model = video.thumbnail_url,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            }
+            // Progress bar at bottom
+            val progress = (video.progress_seconds ?: 0f) / video.duration_seconds.toFloat()
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .background(Color.White.copy(alpha = 0.18f)),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(progress.coerceIn(0f, 1f))
+                        .fillMaxHeight()
+                        .background(HikariAmber),
+                )
+            }
+        }
+        Text(
+            text = video.title,
+            color = HikariText,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            lineHeight = 14.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 6.dp),
+        )
+        if (!video.channelTitle.isNullOrBlank()) {
+            Text(
+                text = video.channelTitle,
+                color = HikariTextFaint,
+                fontSize = 10.sp,
+                fontFamily = FontFamily.Monospace,
+                modifier = Modifier.padding(top = 2.dp),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
@@ -89,7 +189,6 @@ private fun SavedCell(item: FeedItem, onClick: () -> Unit) {
                 contentScale = ContentScale.Crop,
             )
         }
-        // Bottom gradient for legibility
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -100,7 +199,6 @@ private fun SavedCell(item: FeedItem, onClick: () -> Unit) {
                     ),
                 ),
         )
-        // Duration badge top-right
         Text(
             formatDuration(item.durationSeconds),
             color = Color.White,
@@ -113,7 +211,6 @@ private fun SavedCell(item: FeedItem, onClick: () -> Unit) {
                 .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(3.dp))
                 .padding(horizontal = 4.dp, vertical = 2.dp),
         )
-        // Title bottom
         Text(
             item.title,
             color = Color.White,

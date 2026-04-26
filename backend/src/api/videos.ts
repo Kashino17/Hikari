@@ -288,14 +288,28 @@ export async function registerVideosRoutes(
     if ("episode" in body) setField("episode", body.episode ?? null);
     if ("dub_language" in body) setField("dub_language", body.dub_language || null);
     if ("sub_language" in body) setField("sub_language", body.sub_language || null);
-    if ("is_movie" in body) setField("is_movie", body.is_movie ? 1 : 0);
 
-    // Resolve series: explicit series_id wins, else series_title creates/finds
+    // Movie/Series mutual exclusion: a video is EITHER a film OR an episode
+    // of a series, never both. Whichever the user just set wins; the other
+    // gets auto-cleared so /downloads bucketing stays clean.
     let newSeriesId: string | null | undefined;
     if ("series_id" in body) newSeriesId = body.series_id;
     else if ("series_title" in body) {
       newSeriesId = body.series_title ? ensureSeries(deps.db, body.series_title) : null;
     }
+    let newIsMovie: number | undefined;
+    if ("is_movie" in body) newIsMovie = body.is_movie ? 1 : 0;
+
+    // If movie is being set true, force-clear series_id (any incoming or existing)
+    if (newIsMovie === 1) {
+      newSeriesId = null
+    }
+    // If a non-null series_id is being set, force-clear is_movie
+    if (newSeriesId != null && newSeriesId !== undefined) {
+      newIsMovie = 0;
+    }
+
+    if (newIsMovie !== undefined) setField("is_movie", newIsMovie);
     if (newSeriesId !== undefined) setField("series_id", newSeriesId);
 
     if (fields.length === 0) return reply.code(400).send({ error: "no fields to update" });

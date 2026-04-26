@@ -85,10 +85,23 @@ fun ProfileScreen(
     val avatarPath by vm.avatarPath.collectAsState()
     val savedCount by vm.savedCount.collectAsState()
     val channelsCount by vm.channelsCount.collectAsState()
+    val downloadsCount by vm.downloadsCount.collectAsState()
 
     var editing by remember { mutableStateOf<EditField?>(null) }
     var tab by remember { mutableStateOf(ProfileTab.SAVED) }
     var importOpen by remember { mutableStateOf(false) }
+
+    // Refresh stats + saved list + continue-watching when returning to the
+    // Profile tab — covers cases like deleting downloads, saving a video from
+    // the Feed tab, or following a new channel.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val obs = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) vm.refreshAll()
+        }
+        lifecycleOwner.lifecycle.addObserver(obs)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
+    }
 
     val pickPhoto = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia(),
@@ -154,7 +167,7 @@ fun ProfileScreen(
                 ) {
                     Stat(value = savedCount, label = "VIDEOS")
                     Stat(value = channelsCount, label = "KANÄLE")
-                    Stat(value = 0, label = "DOWNLOADS", muted = true)
+                    Stat(value = downloadsCount, label = "DOWNLOADS")
                 }
             }
 
@@ -203,6 +216,9 @@ fun ProfileScreen(
                 when (tab) {
                     ProfileTab.SAVED -> SavedTab(
                         onPlay = { onPlayVideo(it.videoId, it.title, it.channelTitle) },
+                        onPlayLibraryVideo = { v ->
+                            onPlayVideo(v.id, v.title, v.channelTitle ?: "")
+                        },
                     )
                     ProfileTab.CHANNELS -> ChannelsTab(
                         onOpenChannel = onOpenChannel,
