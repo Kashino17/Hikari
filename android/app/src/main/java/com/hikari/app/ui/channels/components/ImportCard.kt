@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.ui.channels.ImportCardState
+import com.hikari.app.ui.channels.SharedDefaults
 
 private val Accent = Color(0xFFFBBF24)
 private val FailedRed = Color(0xFFEF4444)
@@ -44,7 +45,10 @@ private val FailedRed = Color(0xFFEF4444)
 @Composable
 fun ImportCard(
     card: ImportCardState,
+    defaults: SharedDefaults,
     allSeries: List<SeriesItemDto>,
+    allDubLanguages: List<String>,
+    allSubLanguages: List<String>,
     onToggleExpand: () -> Unit,
     onRemove: () -> Unit,
     onRetry: () -> Unit,
@@ -133,8 +137,9 @@ fun ImportCard(
                             maxLines = 1,
                         )
                         if (card.episode != null) {
+                            val effSeason = card.season ?: defaults.season
                             Text(
-                                "S${card.season ?: '-'} · E${card.episode}",
+                                "S${effSeason ?: '-'} · E${card.episode}",
                                 color = Accent,
                                 fontSize = 10.sp,
                             )
@@ -168,7 +173,7 @@ fun ImportCard(
                         AnimatedVisibility(visible = !card.isMovie) {
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 SeriesTypeahead(
-                                    value = card.seriesTitle.orEmpty(),
+                                    value = (card.seriesTitle ?: defaults.seriesTitle).orEmpty(),
                                     allSeries = allSeries,
                                     onChange = { _, sid, stitle ->
                                         onPatchReady { it -> it.copy(seriesId = sid, seriesTitle = stitle) }
@@ -176,7 +181,7 @@ fun ImportCard(
                                 )
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     OutlinedTextField(
-                                        value = card.season?.toString().orEmpty(),
+                                        value = (card.season ?: defaults.season)?.toString().orEmpty(),
                                         onValueChange = { input ->
                                             val v = input.toIntOrNull()
                                             onPatchReady { it -> it.copy(season = v) }
@@ -201,22 +206,22 @@ fun ImportCard(
                             }
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedTextField(
-                                value = card.dubLanguage.orEmpty(),
-                                onValueChange = { input ->
+                            LanguageTypeahead(
+                                value = (card.dubLanguage ?: defaults.dubLanguage).orEmpty(),
+                                options = allDubLanguages,
+                                label = "Sprache",
+                                onChange = { input ->
                                     onPatchReady { it -> it.copy(dubLanguage = input.takeIf { v -> v.isNotBlank() }) }
                                 },
-                                label = { Text("Sprache") },
-                                singleLine = true,
                                 modifier = Modifier.weight(1f),
                             )
-                            OutlinedTextField(
-                                value = card.subLanguage.orEmpty(),
-                                onValueChange = { input ->
+                            LanguageTypeahead(
+                                value = (card.subLanguage ?: defaults.subLanguage).orEmpty(),
+                                options = allSubLanguages,
+                                label = "Untertitel",
+                                onChange = { input ->
                                     onPatchReady { it -> it.copy(subLanguage = input.takeIf { v -> v.isNotBlank() }) }
                                 },
-                                label = { Text("Untertitel") },
-                                singleLine = true,
                                 modifier = Modifier.weight(1f),
                             )
                         }

@@ -696,13 +696,18 @@ private fun ImportSheet(
                 SharedDefaultsBlock(
                     defaults = state.defaults,
                     allSeries = state.allSeries,
+                    allDubLanguages = state.allDubLanguages,
+                    allSubLanguages = state.allSubLanguages,
                     onUpdate = { transform -> vm.updateDefaults(transform) },
                 )
 
                 state.cards.forEach { card ->
                     ImportCard(
                         card = card,
+                        defaults = state.defaults,
                         allSeries = state.allSeries,
+                        allDubLanguages = state.allDubLanguages,
+                        allSubLanguages = state.allSubLanguages,
                         onToggleExpand = { vm.toggleExpanded(card.url) },
                         onRemove = { vm.removeCard(card.url) },
                         onRetry = { vm.retryCard(card.url) },

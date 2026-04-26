@@ -26,6 +26,8 @@ import com.hikari.app.ui.channels.SharedDefaults
 fun SharedDefaultsBlock(
     defaults: SharedDefaults,
     allSeries: List<SeriesItemDto>,
+    allDubLanguages: List<String>,
+    allSubLanguages: List<String>,
     onUpdate: (SharedDefaults.() -> SharedDefaults) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -63,23 +65,23 @@ fun SharedDefaultsBlock(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.width(100.dp),
             )
-            OutlinedTextField(
+            LanguageTypeahead(
                 value = defaults.dubLanguage.orEmpty(),
-                onValueChange = { input ->
+                options = allDubLanguages,
+                label = "Sprache",
+                onChange = { input ->
                     onUpdate { copy(dubLanguage = input.takeIf { it.isNotBlank() }) }
                 },
-                label = { Text("Sprache") },
-                singleLine = true,
                 modifier = Modifier.weight(1f),
             )
         }
-        OutlinedTextField(
+        LanguageTypeahead(
             value = defaults.subLanguage.orEmpty(),
-            onValueChange = { input ->
+            options = allSubLanguages,
+            label = "Untertitel",
+            onChange = { input ->
                 onUpdate { copy(subLanguage = input.takeIf { it.isNotBlank() }) }
             },
-            label = { Text("Untertitel") },
-            singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
     }

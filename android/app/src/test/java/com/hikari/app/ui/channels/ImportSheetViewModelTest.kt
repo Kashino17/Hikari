@@ -3,6 +3,7 @@ package com.hikari.app.ui.channels
 import com.hikari.app.data.api.dto.AiMeta
 import com.hikari.app.data.api.dto.AnalyzeResponse
 import com.hikari.app.data.api.dto.BulkImportItem
+import com.hikari.app.data.api.dto.LanguagesResponse
 import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.domain.repo.ChannelsRepository
 import io.mockk.coEvery
@@ -30,6 +31,10 @@ class ImportSheetViewModelTest {
     @Before fun setUp() {
         Dispatchers.setMain(StandardTestDispatcher())
         coEvery { repo.listSeries() } returns listOf(SeriesItemDto("s1", "One Piece"))
+        coEvery { repo.listLanguages() } returns LanguagesResponse(
+            dub = listOf("Japanisch", "Deutsch"),
+            sub = listOf("Deutsch", "Englisch"),
+        )
     }
     @After fun tearDown() { Dispatchers.resetMain() }
 

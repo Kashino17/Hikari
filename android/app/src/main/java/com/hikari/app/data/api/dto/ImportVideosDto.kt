@@ -58,3 +58,9 @@ data class SeriesItemDto(
     val id: String,
     val title: String,
 )
+
+@Serializable
+data class LanguagesResponse(
+    val dub: List<String> = emptyList(),
+    val sub: List<String> = emptyList(),
+)

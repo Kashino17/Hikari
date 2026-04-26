@@ -14,6 +14,7 @@ import com.hikari.app.data.api.dto.AnalyzeResponse
 import com.hikari.app.data.api.dto.BulkImportRequest
 import com.hikari.app.data.api.dto.BulkImportResponse
 import com.hikari.app.data.api.dto.SeriesItemDto
+import com.hikari.app.data.api.dto.LanguagesResponse
 import com.hikari.app.data.api.dto.LibraryResponse
 import com.hikari.app.data.api.dto.MangaContinueDto
 import com.hikari.app.data.api.dto.MangaPageDto
@@ -113,6 +114,9 @@ interface HikariApi {
 
     @GET("series")
     suspend fun listSeries(): List<SeriesItemDto>
+
+    @GET("languages")
+    suspend fun listLanguages(): LanguagesResponse
 
     @GET("filter")
     suspend fun getFilter(): FilterStateDto

@@ -59,6 +59,8 @@ data class ImportSheetUiState(
     val cards: List<ImportCardState> = emptyList(),
     val defaults: SharedDefaults = SharedDefaults(),
     val allSeries: List<SeriesItemDto> = emptyList(),
+    val allDubLanguages: List<String> = emptyList(),
+    val allSubLanguages: List<String> = emptyList(),
     val submitting: Boolean = false,
     val submitError: String? = null,
 )
@@ -77,6 +79,14 @@ class ImportSheetViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { repo.listSeries() }
                 .onSuccess { fetched -> _uiState.update { it.copy(allSeries = fetched) } }
+        }
+        viewModelScope.launch {
+            runCatching { repo.listLanguages() }
+                .onSuccess { langs ->
+                    _uiState.update {
+                        it.copy(allDubLanguages = langs.dub, allSubLanguages = langs.sub)
+                    }
+                }
         }
     }
 
@@ -219,7 +229,11 @@ class ImportSheetViewModel @Inject constructor(
             .getOrNull()
         if (n != null) {
             _uiState.update { s ->
-                ImportSheetUiState(allSeries = s.allSeries) // reset everything except series cache
+                ImportSheetUiState(
+                    allSeries = s.allSeries,
+                    allDubLanguages = s.allDubLanguages,
+                    allSubLanguages = s.allSubLanguages,
+                )
             }
         }
         return n

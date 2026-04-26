@@ -107,6 +107,22 @@ export async function registerVideosRoutes(
       .all();
   });
 
+  app.get("/languages", async () => {
+    const dub = deps.db
+      .prepare(
+        "SELECT DISTINCT dub_language AS v FROM videos WHERE dub_language IS NOT NULL AND dub_language != '' ORDER BY v",
+      )
+      .all()
+      .map((r) => (r as { v: string }).v);
+    const sub = deps.db
+      .prepare(
+        "SELECT DISTINCT sub_language AS v FROM videos WHERE sub_language IS NOT NULL AND sub_language != '' ORDER BY v",
+      )
+      .all()
+      .map((r) => (r as { v: string }).v);
+    return { dub, sub };
+  });
+
   app.get<{ Params: { id: string } }>("/series/:id", async (req, reply) => {
     const series = deps.db.prepare("SELECT * FROM series WHERE id = ?").get(req.params.id);
     if (!series) return reply.code(404).send({ error: "series not found" });
