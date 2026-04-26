@@ -32,6 +32,7 @@ import androidx.navigation.navArgument
 import com.hikari.app.ui.channels.ChannelDetailScreen
 import com.hikari.app.ui.channels.VideoEditScreen
 import com.hikari.app.ui.feed.FeedScreen
+import com.hikari.app.ui.library.LibraryScreen
 import com.hikari.app.ui.library.SeriesDetailScreen
 import com.hikari.app.ui.manga.MangaDetailScreen
 import com.hikari.app.ui.manga.MangaListScreen
@@ -112,13 +113,24 @@ fun HikariNavHost() {
     ) { padding ->
         NavHost(
             nav,
-            startDestination = "profile",
+            startDestination = "library",
             modifier = Modifier.fillMaxSize(),
             enterTransition = { EnterTransition.None },
             exitTransition = { ExitTransition.None },
             popEnterTransition = { EnterTransition.None },
             popExitTransition = { ExitTransition.None },
         ) {
+            composable("library") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    LibraryScreen(
+                        onOpenSeries = { id -> nav.navigate("series/$id") },
+                        onOpenChannel = { id -> nav.navigate("channel/$id") },
+                        onPlayVideo = { videoId, title, channel ->
+                            nav.navigate(playVideoRoute(videoId, title, channel))
+                        },
+                    )
+                }
+            }
             composable(
                 route = "series/{seriesId}",
                 arguments = listOf(navArgument("seriesId") { type = NavType.StringType }),
