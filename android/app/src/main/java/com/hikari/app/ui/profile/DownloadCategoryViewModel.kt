@@ -4,13 +4,17 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.DownloadsResponse
+import com.hikari.app.domain.download.LocalDownloadManager
 import com.hikari.app.domain.repo.FeedRepository
 import com.hikari.app.ui.profile.tabs.DownloadCategory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -28,6 +32,7 @@ data class DownloadCategoryUiState(
 class DownloadCategoryViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repo: FeedRepository,
+    private val localDownloads: LocalDownloadManager,
 ) : ViewModel() {
 
     private val initialCategory = (savedStateHandle.get<String>("category") ?: "SERIES")
@@ -36,8 +41,29 @@ class DownloadCategoryViewModel @Inject constructor(
     private val _state = MutableStateFlow(DownloadCategoryUiState(category = initialCategory))
     val state: StateFlow<DownloadCategoryUiState> = _state.asStateFlow()
 
+    /** videoIds that are present on this device's local storage */
+    val localIds: StateFlow<Set<String>> = localDownloads.downloadedIds
+        .map { it.toSet() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+
+    /** Per-videoId download progress 0f..1f. Absent = not downloading. */
+    val downloadProgress: StateFlow<Map<String, Float>> = localDownloads.progress
+
     init {
         load()
+    }
+
+    fun downloadLocally(videoId: String, durationSeconds: Int) {
+        viewModelScope.launch {
+            localDownloads.download(videoId, durationSeconds)
+                .onFailure { e ->
+                    _state.update { it.copy(error = "Lokal-Download: ${e.message}") }
+                }
+        }
+    }
+
+    fun removeLocal(videoId: String) {
+        viewModelScope.launch { localDownloads.delete(videoId) }
     }
 
     fun load() {

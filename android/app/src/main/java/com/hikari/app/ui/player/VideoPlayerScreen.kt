@@ -84,6 +84,7 @@ interface VideoPlayerEntryPoint {
     fun playerFactory(): HikariPlayerFactory
     fun playbackRepository(): PlaybackRepository
     fun settingsStore(): SettingsStore
+    fun localDownloadManager(): com.hikari.app.domain.download.LocalDownloadManager
 }
 
 private const val SEEK_STEP_MS = 10_000L
@@ -119,6 +120,7 @@ fun VideoPlayerScreen(
     val factory = remember { ep.playerFactory() }
     val playbackRepo = remember { ep.playbackRepository() }
     val settingsStore = remember { ep.settingsStore() }
+    val localDl = remember { ep.localDownloadManager() }
     val baseUrl = remember { runBlocking { settingsStore.backendUrl.first() } }
     val player = remember { factory.create() }
 
@@ -137,7 +139,8 @@ fun VideoPlayerScreen(
     // ── Lifecycle: prepare once, save position on dispose ────────────────────
     LaunchedEffect(videoId) {
         val savedPos = playbackRepo.getPosition(videoId)
-        player.setMediaItem(factory.mediaItemFor(baseUrl, videoId), savedPos)
+        val localPath = localDl.localFile(videoId)?.absolutePath
+        player.setMediaItem(factory.mediaItemFor(baseUrl, videoId, localPath), savedPos)
         player.prepare()
         player.playWhenReady = true
     }
