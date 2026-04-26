@@ -17,6 +17,8 @@ export interface RawChapter {
   number: number;
   title?: string;
   sourceUrl: string;
+  pageCount?: number;
+  isAvailable?: boolean;
   publishedAt?: number;
 }
 

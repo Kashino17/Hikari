@@ -1,9 +1,9 @@
 import { load as loadHtml } from "cheerio";
 import {
   type MangaSourceAdapter,
+  type RawPage,
   type RawSeries,
   type RawSeriesDetail,
-  type RawPage,
   SourceLayoutError,
 } from "./types.js";
 
@@ -73,10 +73,7 @@ function extractData<T>(html: string, url: string): T {
   try {
     return JSON.parse(payload) as T;
   } catch (err) {
-    throw new SourceLayoutError(
-      `window.__data JSON parse failed: ${(err as Error).message}`,
-      url,
-    );
+    throw new SourceLayoutError(`window.__data JSON parse failed: ${(err as Error).message}`, url);
   }
 }
 
@@ -112,14 +109,10 @@ async function fetchSeriesDetail(seriesUrl: string): Promise<RawSeriesDetail> {
     throw new SourceLayoutError("No entries[] in window.__data", seriesUrl);
   }
 
-  // Skip chapters the site marked as unavailable. ~419 of One Piece's older
-  // chapters are unavailable on onepiece.tube — fetching their page returns
-  // an "unavailable" stub without window.__data, which would otherwise crash
-  // the sync at the first such chapter.
-  const availableEntries = data.entries.filter((e) => e.is_available !== false);
-
-  // entries are newest-first; sort ascending by chapter number
-  const chapters = [...availableEntries]
+  // entries are newest-first; sort ascending by chapter number for stable DB/UI
+  // ordering. Unavailable entries are still persisted as metadata so arcs are
+  // complete, but the sync worker skips their page download.
+  const chapters = [...data.entries]
     .sort((a, b) => a.number - b.number)
     .map((e) => {
       const publishedAt = parseGermanDate(e.date);
@@ -127,18 +120,22 @@ async function fetchSeriesDetail(seriesUrl: string): Promise<RawSeriesDetail> {
         number: e.number,
         title: e.name,
         sourceUrl: e.href,
+        pageCount: e.pages ?? 0,
+        isAvailable: e.is_available !== false,
         ...(publishedAt !== undefined ? { publishedAt } : {}),
       };
     });
 
-  // Build arc membership map from available entries only.
+  // Build arc membership map from all entries; unavailable chapters remain
+  // visible but disabled in the app instead of making old arcs look empty.
   const chapterNumbersByArcId = new Map<number, number[]>();
-  for (const e of availableEntries) {
+  for (const e of data.entries) {
     if (e.arc_id == null) continue;
     if (!chapterNumbersByArcId.has(e.arc_id)) {
       chapterNumbersByArcId.set(e.arc_id, []);
     }
-    chapterNumbersByArcId.get(e.arc_id)!.push(e.number);
+    const chapterNumbers = chapterNumbersByArcId.get(e.arc_id);
+    if (chapterNumbers) chapterNumbers.push(e.number);
   }
 
   // Sort arcs by min chapter ascending, assign arcOrder = index

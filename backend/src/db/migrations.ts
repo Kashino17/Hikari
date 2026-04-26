@@ -44,4 +44,6 @@ export function applyMigrations(db: Database.Database): void {
   addColumnIfMissing(db, "videos", "is_movie", "INTEGER DEFAULT 0");
 
   addColumnIfMissing(db, "feed_items", "progress_seconds", "REAL DEFAULT 0");
+
+  addColumnIfMissing(db, "manga_chapters", "is_available", "INTEGER DEFAULT 1");
 }

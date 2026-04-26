@@ -1,7 +1,7 @@
-import { test, expect, vi, beforeEach } from "vitest";
 import { readFileSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { beforeEach, expect, test, vi } from "vitest";
 import { onePieceTubeAdapter } from "../../src/manga/sources/onepiece-tube.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -12,10 +12,13 @@ beforeEach(() => {
 });
 
 function stubFetch(html: string) {
-  vi.stubGlobal("fetch", vi.fn(async () => ({
-    ok: true,
-    text: async () => html,
-  })));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => ({
+      ok: true,
+      text: async () => html,
+    })),
+  );
 }
 
 test("listSeries returns exactly one series for One Piece", async () => {
@@ -29,23 +32,37 @@ test("listSeries returns exactly one series for One Piece", async () => {
   expect(series[0].status).toBe("ongoing");
 });
 
-test("fetchSeriesDetail returns 1100+ chapters with arcs", async () => {
+test("fetchSeriesDetail returns all chapters with complete arcs", async () => {
   stubFetch(readFileSync(join(FIXTURES, "mangaliste.html"), "utf8"));
   const detail = await onePieceTubeAdapter.fetchSeriesDetail(
     "https://onepiece.tube/manga/kapitel-mangaliste",
   );
-  // sorted ascending by chapter number — many older chapters are not available
-  // on onepiece.tube and get filtered, so the count is well below the total 1181
-  expect(detail.chapters.length).toBeGreaterThan(700);
+  expect(detail.chapters.length).toBe(1181);
   // must be monotonically increasing — no dupes, no reverse
   for (let i = 1; i < detail.chapters.length; i++) {
     expect(detail.chapters[i].number).toBeGreaterThan(detail.chapters[i - 1].number);
   }
+  expect(detail.chapters[0]).toMatchObject({
+    number: 1,
+    isAvailable: false,
+    pageCount: 0,
+  });
+  expect(detail.chapters.at(-1)).toMatchObject({
+    number: 1181,
+    title: "Götter und Teufel",
+    isAvailable: true,
+    pageCount: 12,
+  });
   // chapter sourceUrl must be absolute
   expect(detail.chapters[0].sourceUrl).toMatch(/^https?:\/\//);
-  // arcs are present
+  // arcs are present and every arc contains at least metadata chapters.
   expect(detail.arcs.length).toBeGreaterThan(0);
   expect(detail.arcs[0].arcOrder).toBe(0);
+  expect(detail.arcs.every((arc) => arc.chapterNumbers.length > 0)).toBe(true);
+  expect(detail.arcs.at(-1)).toMatchObject({
+    title: "Elban Arc",
+    chapterNumbers: expect.arrayContaining([1181]),
+  });
 });
 
 test("fetchSeriesDetail correctly parses German DD.MM.YYYY dates", async () => {
@@ -56,8 +73,9 @@ test("fetchSeriesDetail correctly parses German DD.MM.YYYY dates", async () => {
   // chapters with publishedAt should have epoch-ms numbers
   const withDate = detail.chapters.find((c) => c.publishedAt !== undefined);
   expect(withDate).toBeDefined();
-  expect(typeof withDate!.publishedAt).toBe("number");
-  expect(withDate!.publishedAt).toBeGreaterThan(0);
+  if (!withDate) throw new Error("Expected at least one chapter with a date");
+  expect(typeof withDate.publishedAt).toBe("number");
+  expect(withDate.publishedAt).toBeGreaterThan(0);
 });
 
 test("fetchChapterPages returns ordered image URLs from chapter fixture", async () => {

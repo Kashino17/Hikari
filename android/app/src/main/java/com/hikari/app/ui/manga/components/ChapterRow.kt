@@ -24,10 +24,11 @@ fun ChapterRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val available = chapter.isAvailable == 1
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(enabled = available, onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -40,13 +41,20 @@ fun ChapterRow(
         )
         Text(
             text = chapter.title.orEmpty(),
-            color = Color.White.copy(alpha = 0.9f),
+            color = Color.White.copy(alpha = if (available) 0.9f else 0.35f),
             fontSize = 13.sp,
             modifier = Modifier.weight(1f),
             maxLines = 1,
         )
         Spacer(modifier = Modifier.width(8.dp))
-        if (chapter.isRead == 1) {
+        if (!available) {
+            Text(
+                text = "NICHT VERFÜGBAR",
+                color = Color.White.copy(alpha = 0.35f),
+                fontSize = 10.sp,
+                letterSpacing = 1.2.sp,
+            )
+        } else if (chapter.isRead == 1) {
             Text(
                 text = "READ",
                 color = Accent,

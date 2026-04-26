@@ -31,6 +31,7 @@ data class MangaChapterDto(
     val title: String? = null,
     @SerialName("arcId") val arcId: String? = null,
     @SerialName("pageCount") val pageCount: Int = 0,
+    @SerialName("isAvailable") val isAvailable: Int = 1,
     @SerialName("isRead") val isRead: Int = 0,
 )
 

@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import type Database from "better-sqlite3";
-import { upsertPage, upsertSeries, upsertChapter, seriesId } from "./persist.js";
 import { downloadPage } from "./image-store.js";
+import { seriesId, upsertChapter, upsertPage, upsertSeries } from "./persist.js";
 import type { MangaSourceAdapter } from "./sources/types.js";
 import { SourceLayoutError } from "./sources/types.js";
 
@@ -46,7 +48,7 @@ async function withConcurrency<T>(
   const runners = Array.from({ length: limit }, async () => {
     while (i < items.length) {
       const idx = i++;
-      await worker(items[idx]!);
+      await worker(items[idx] as T);
     }
   });
   await Promise.all(runners);
@@ -55,7 +57,41 @@ async function withConcurrency<T>(
 function extFromUrl(url: string): string {
   const m = url.match(/\.(png|jpe?g|webp)(\?.*)?$/i);
   if (!m) return ".jpg";
-  return `.${m[1]!.toLowerCase().replace("jpeg", "jpg")}`;
+  const ext = m[1];
+  if (!ext) return ".jpg";
+  return `.${ext.toLowerCase().replace("jpeg", "jpg")}`;
+}
+
+function localPathExists(mangaDir: string, localPath: string | null): boolean {
+  return Boolean(localPath && existsSync(join(mangaDir, localPath)));
+}
+
+function isPageReady(db: Database.Database, pageId: string, mangaDir: string): boolean {
+  const row = db
+    .prepare("SELECT local_path AS localPath FROM manga_pages WHERE id = ?")
+    .get(pageId) as { localPath: string | null } | undefined;
+  return localPathExists(mangaDir, row?.localPath ?? null);
+}
+
+function isChapterComplete(input: {
+  db: Database.Database;
+  chapterId: string;
+  mangaDir: string;
+  expectedPageCount?: number;
+}): boolean {
+  const chapter = input.db
+    .prepare("SELECT page_count AS pageCount FROM manga_chapters WHERE id = ?")
+    .get(input.chapterId) as { pageCount: number | null } | undefined;
+  const expected = input.expectedPageCount ?? chapter?.pageCount ?? 0;
+  if (!expected || expected <= 0) return false;
+
+  const pages = input.db
+    .prepare(
+      "SELECT local_path AS localPath FROM manga_pages WHERE chapter_id = ? ORDER BY page_number",
+    )
+    .all(input.chapterId) as { localPath: string | null }[];
+  if (pages.length < expected) return false;
+  return pages.slice(0, expected).every((p) => localPathExists(input.mangaDir, p.localPath));
 }
 
 export async function runChapterSync(input: ChapterSyncInput): Promise<void> {
@@ -79,6 +115,12 @@ export async function runChapterSync(input: ChapterSyncInput): Promise<void> {
   input.onProgress?.({ pagesQueued: rawPages.length });
 
   await withConcurrency(rawPages, async (p) => {
+    const pageId = `${input.adapter.id}:${input.seriesSlug}:${input.chapterNumber}:${String(p.pageNumber).padStart(2, "0")}`;
+    if (isPageReady(input.db, pageId, input.mangaDir)) {
+      input.onProgress?.({ pagesDone: 1 });
+      return;
+    }
+
     const ext = extFromUrl(p.sourceUrl);
     const relativePath = `${input.adapter.id}/${input.seriesSlug}/${input.chapterNumber}/${String(p.pageNumber).padStart(2, "0")}${ext}`;
     try {
@@ -110,7 +152,12 @@ interface SeriesSyncInput {
   seriesUrl: string;
   seriesTitle: string;
   mangaDir: string;
-  onProgress?: (delta: { chaptersDone?: number; pagesDone?: number; pagesFailed?: number; pagesQueued?: number }) => void;
+  onProgress?: (delta: {
+    chaptersDone?: number;
+    pagesDone?: number;
+    pagesFailed?: number;
+    pagesQueued?: number;
+  }) => void;
 }
 
 export async function runSeriesSync(input: SeriesSyncInput): Promise<void> {
@@ -127,22 +174,24 @@ export async function runSeriesSync(input: SeriesSyncInput): Promise<void> {
   const arcByNumber = new Map<number, string>();
   for (const arc of detail.arcs) {
     const arcId = `${input.adapter.id}:${input.seriesSlug}:arc-${arc.arcOrder}`;
-    input.db.prepare(
-      `INSERT INTO manga_arcs (id, series_id, title, arc_order, chapter_start, chapter_end)
+    input.db
+      .prepare(
+        `INSERT INTO manga_arcs (id, series_id, title, arc_order, chapter_start, chapter_end)
        VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          title = excluded.title,
          arc_order = excluded.arc_order,
          chapter_start = excluded.chapter_start,
          chapter_end = excluded.chapter_end`,
-    ).run(
-      arcId,
-      seriesId(input.adapter.id, input.seriesSlug),
-      arc.title,
-      arc.arcOrder,
-      arc.chapterNumbers[0] ?? null,
-      arc.chapterNumbers[arc.chapterNumbers.length - 1] ?? null,
-    );
+      )
+      .run(
+        arcId,
+        seriesId(input.adapter.id, input.seriesSlug),
+        arc.title,
+        arc.arcOrder,
+        arc.chapterNumbers[0] ?? null,
+        arc.chapterNumbers[arc.chapterNumbers.length - 1] ?? null,
+      );
     for (const n of arc.chapterNumbers) arcByNumber.set(n, arcId);
   }
 
@@ -154,21 +203,42 @@ export async function runSeriesSync(input: SeriesSyncInput): Promise<void> {
       ...(ch.title !== undefined && { title: ch.title }),
       sourceUrl: ch.sourceUrl,
       arcId: arcByNumber.get(ch.number) ?? null,
+      ...(ch.pageCount !== undefined && { pageCount: ch.pageCount }),
+      isAvailable: ch.isAvailable !== false,
       ...(ch.publishedAt !== undefined && { publishedAt: ch.publishedAt }),
     });
   }
 
-  input.db.prepare("UPDATE manga_series SET total_chapters = ?, last_synced_at = ? WHERE id = ?").run(
-    detail.chapters.length,
-    Date.now(),
-    seriesId(input.adapter.id, input.seriesSlug),
-  );
+  input.db
+    .prepare("UPDATE manga_series SET total_chapters = ?, last_synced_at = ? WHERE id = ?")
+    .run(detail.chapters.length, Date.now(), seriesId(input.adapter.id, input.seriesSlug));
 
   // Sync newest-first so users can read the latest chapters while older ones
   // are still being downloaded. The DB/UI keeps ascending order — only the
   // download iteration is reversed.
   const reversed = [...detail.chapters].reverse();
   for (const ch of reversed) {
+    if (ch.isAvailable === false) {
+      input.onProgress?.({ chaptersDone: 1 });
+      continue;
+    }
+
+    const cId = `${input.adapter.id}:${input.seriesSlug}:${ch.number}`;
+    if (
+      isChapterComplete({
+        db: input.db,
+        chapterId: cId,
+        mangaDir: input.mangaDir,
+        ...(ch.pageCount !== undefined ? { expectedPageCount: ch.pageCount } : {}),
+      })
+    ) {
+      if (ch.pageCount && ch.pageCount > 0) {
+        input.onProgress?.({ pagesQueued: ch.pageCount, pagesDone: ch.pageCount });
+      }
+      input.onProgress?.({ chaptersDone: 1 });
+      continue;
+    }
+
     try {
       await runChapterSync({
         db: input.db,
@@ -215,9 +285,11 @@ export interface SyncJobRow {
 export async function runFullSync(input: FullSyncInput): Promise<SyncJobRow> {
   const id = randomUUID();
   const now = Date.now();
-  input.db.prepare(
-    `INSERT INTO manga_sync_jobs (id, source, status, started_at) VALUES (?, ?, 'running', ?)`,
-  ).run(id, input.adapter.id, now);
+  input.db
+    .prepare(
+      `INSERT INTO manga_sync_jobs (id, source, status, started_at) VALUES (?, ?, 'running', ?)`,
+    )
+    .run(id, input.adapter.id, now);
 
   try {
     const series = await input.adapter.listSeries();
@@ -227,7 +299,9 @@ export async function runFullSync(input: FullSyncInput): Promise<SyncJobRow> {
       const detail = await input.adapter.fetchSeriesDetail(s.sourceUrl);
       totalChapters += detail.chapters.length;
     }
-    input.db.prepare("UPDATE manga_sync_jobs SET total_chapters = ? WHERE id = ?").run(totalChapters, id);
+    input.db
+      .prepare("UPDATE manga_sync_jobs SET total_chapters = ? WHERE id = ?")
+      .run(totalChapters, id);
 
     let doneChapters = 0;
     let donePages = 0;
@@ -244,36 +318,44 @@ export async function runFullSync(input: FullSyncInput): Promise<SyncJobRow> {
         onProgress: (d) => {
           if (d.chaptersDone) {
             doneChapters += d.chaptersDone;
-            input.db.prepare("UPDATE manga_sync_jobs SET done_chapters = ? WHERE id = ?").run(doneChapters, id);
+            input.db
+              .prepare("UPDATE manga_sync_jobs SET done_chapters = ? WHERE id = ?")
+              .run(doneChapters, id);
           }
           if (d.pagesDone) {
             donePages += d.pagesDone;
-            input.db.prepare("UPDATE manga_sync_jobs SET done_pages = ? WHERE id = ?").run(donePages, id);
+            input.db
+              .prepare("UPDATE manga_sync_jobs SET done_pages = ? WHERE id = ?")
+              .run(donePages, id);
           }
           if (d.pagesFailed) {
             pagesFailed += d.pagesFailed;
           }
           if (d.pagesQueued) {
             pagesQueued += d.pagesQueued;
-            input.db.prepare("UPDATE manga_sync_jobs SET total_pages = ? WHERE id = ?").run(pagesQueued, id);
+            input.db
+              .prepare("UPDATE manga_sync_jobs SET total_pages = ? WHERE id = ?")
+              .run(pagesQueued, id);
           }
         },
       });
     }
 
-    input.db.prepare(
-      "UPDATE manga_sync_jobs SET status = 'done', finished_at = ? WHERE id = ?",
-    ).run(Date.now(), id);
+    input.db
+      .prepare("UPDATE manga_sync_jobs SET status = 'done', finished_at = ? WHERE id = ?")
+      .run(Date.now(), id);
 
     if (pagesFailed > 0) {
-      input.db.prepare(
-        "UPDATE manga_sync_jobs SET error_message = ? WHERE id = ?",
-      ).run(JSON.stringify({ kind: "PartialFailure", pagesFailed }), id);
+      input.db
+        .prepare("UPDATE manga_sync_jobs SET error_message = ? WHERE id = ?")
+        .run(JSON.stringify({ kind: "PartialFailure", pagesFailed }), id);
     }
   } catch (err) {
-    input.db.prepare(
-      "UPDATE manga_sync_jobs SET status = 'failed', error_message = ?, finished_at = ? WHERE id = ?",
-    ).run(serializeSyncError(err), Date.now(), id);
+    input.db
+      .prepare(
+        "UPDATE manga_sync_jobs SET status = 'failed', error_message = ?, finished_at = ? WHERE id = ?",
+      )
+      .run(serializeSyncError(err), Date.now(), id);
   }
 
   return input.db.prepare("SELECT * FROM manga_sync_jobs WHERE id = ?").get(id) as SyncJobRow;

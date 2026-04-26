@@ -65,7 +65,8 @@ fun MangaDetailScreen(
                             author = s.detail.author,
                             ctaLabel = if (s.continueItem != null) "Weiterlesen" else "Lesen",
                             onCta = {
-                                val ctaChapter = s.continueItem?.chapterId ?: s.detail.chapters.firstOrNull()?.id
+                                val ctaChapter = s.continueItem?.chapterId
+                                    ?: s.detail.chapters.firstOrNull { it.isAvailable == 1 }?.id
                                 if (ctaChapter != null) {
                                     onChapterClick(ctaChapter, s.continueItem?.pageNumber)
                                 }

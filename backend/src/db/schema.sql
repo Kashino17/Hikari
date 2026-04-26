@@ -122,6 +122,7 @@ CREATE TABLE IF NOT EXISTS manga_chapters (
   title TEXT,
   source_url TEXT NOT NULL,
   page_count INTEGER DEFAULT 0,
+  is_available INTEGER DEFAULT 1,
   published_at INTEGER,
   added_at INTEGER NOT NULL
 );

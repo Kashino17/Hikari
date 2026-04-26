@@ -1,9 +1,9 @@
-import type { FastifyInstance } from "fastify";
-import type Database from "better-sqlite3";
 import { createReadStream } from "node:fs";
-import { resolve, sep, extname } from "node:path";
+import { extname, resolve, sep } from "node:path";
+import type Database from "better-sqlite3";
+import type { FastifyInstance } from "fastify";
 import { adapters, getAdapter } from "../manga/sources/index.js";
-import { runFullSync, runChapterSync } from "../manga/sync.js";
+import { runChapterSync, runFullSync } from "../manga/sync.js";
 
 export interface MangaDeps {
   db: Database.Database;
@@ -12,14 +12,17 @@ export interface MangaDeps {
 
 export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void {
   const { db } = deps;
+  let syncQueuedOrRunning = false;
 
   app.get("/api/manga/series", async () => {
-    return db.prepare(
-      `SELECT id, source, title, author, description, cover_path AS coverPath,
+    return db
+      .prepare(
+        `SELECT id, source, title, author, description, cover_path AS coverPath,
               total_chapters AS totalChapters, last_synced_at AS lastSyncedAt
        FROM manga_series
        ORDER BY title`,
-    ).all();
+      )
+      .all();
   });
 
   app.get<{ Params: { id: string } }>("/api/manga/series/:id", async (req, reply) => {
@@ -33,18 +36,19 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
       .prepare(
         `SELECT id, title, arc_order AS arcOrder,
                 chapter_start AS chapterStart, chapter_end AS chapterEnd
-         FROM manga_arcs WHERE series_id = ? ORDER BY arc_order`,
+         FROM manga_arcs WHERE series_id = ? ORDER BY arc_order DESC`,
       )
       .all(id);
     const chapters = db
       .prepare(
         `SELECT c.id, c.number, c.title, c.arc_id AS arcId,
                 c.page_count AS pageCount,
+                c.is_available AS isAvailable,
                 CASE WHEN r.chapter_id IS NOT NULL THEN 1 ELSE 0 END AS isRead
          FROM manga_chapters c
          LEFT JOIN manga_chapter_read r ON r.chapter_id = c.id
          WHERE c.series_id = ?
-         ORDER BY c.number`,
+         ORDER BY c.number DESC`,
       )
       .all(id);
 
@@ -86,10 +90,7 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
     }
 
     const ext = extname(fullAbs).toLowerCase();
-    const ct =
-      ext === ".png" ? "image/png" :
-      ext === ".webp" ? "image/webp" :
-      "image/jpeg";
+    const ct = ext === ".png" ? "image/png" : ext === ".webp" ? "image/webp" : "image/jpeg";
 
     reply.header("Content-Type", ct);
     reply.header("Cache-Control", "public, max-age=31536000, immutable");
@@ -136,8 +137,9 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
   });
 
   app.get("/api/manga/continue", async () => {
-    return db.prepare(
-      `SELECT
+    return db
+      .prepare(
+        `SELECT
          s.id AS seriesId,
          s.title,
          s.cover_path AS coverPath,
@@ -148,14 +150,16 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
        JOIN manga_library l ON l.series_id = p.series_id
        JOIN manga_series s ON s.id = p.series_id
        ORDER BY p.updated_at DESC`,
-    ).all();
+      )
+      .all();
   });
 
   app.post<{ Body?: { sourceId?: string } }>("/api/manga/sync", async (req, reply) => {
     const running = db
       .prepare("SELECT id FROM manga_sync_jobs WHERE status IN ('queued','running') LIMIT 1")
       .get();
-    if (running) return reply.code(409).send({ error: "sync already running" });
+    if (running || syncQueuedOrRunning)
+      return reply.code(409).send({ error: "sync already running" });
 
     const sourceId = req.body?.sourceId;
     const targets = sourceId
@@ -164,14 +168,19 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
     if (sourceId && targets.length === 0) return reply.code(400).send({ error: "no such source" });
     if (targets.length === 0) return reply.code(400).send({ error: "no source registered" });
 
+    syncQueuedOrRunning = true;
     // Fire-and-forget — return immediately with job started.
     queueMicrotask(async () => {
-      for (const adapter of targets) {
-        try {
-          await runFullSync({ db, adapter, mangaDir: deps.mangaDir });
-        } catch (err) {
-          app.log.error({ err, adapter: adapter.id }, "manga sync failed");
+      try {
+        for (const adapter of targets) {
+          try {
+            await runFullSync({ db, adapter, mangaDir: deps.mangaDir });
+          } catch (err) {
+            app.log.error({ err, adapter: adapter.id }, "manga sync failed");
+          }
         }
+      } finally {
+        syncQueuedOrRunning = false;
       }
     });
 
@@ -179,9 +188,7 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
   });
 
   app.get("/api/manga/sync/jobs", async () => {
-    return db
-      .prepare("SELECT * FROM manga_sync_jobs ORDER BY started_at DESC LIMIT 10")
-      .all();
+    return db.prepare("SELECT * FROM manga_sync_jobs ORDER BY started_at DESC LIMIT 10").all();
   });
 
   app.get<{ Params: { id: string } }>("/api/manga/sync/jobs/:id", async (req, reply) => {
@@ -191,18 +198,27 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
   });
 
   app.post<{ Params: { id: string } }>("/api/manga/chapters/:id/sync", async (req, reply) => {
-    const chapter = db.prepare(
-      `SELECT c.id, c.number, c.source_url AS sourceUrl, s.id AS seriesId, s.source, s.source_url AS seriesUrl
+    const chapter = db
+      .prepare(
+        `SELECT c.id, c.number, c.source_url AS sourceUrl, s.id AS seriesId, s.source, s.source_url AS seriesUrl
        FROM manga_chapters c
        JOIN manga_series s ON s.id = c.series_id
        WHERE c.id = ?`,
-    ).get(req.params.id) as
-      | { id: string; number: number; sourceUrl: string; seriesId: string; source: string; seriesUrl: string }
+      )
+      .get(req.params.id) as
+      | {
+          id: string;
+          number: number;
+          sourceUrl: string;
+          seriesId: string;
+          source: string;
+          seriesUrl: string;
+        }
       | undefined;
     if (!chapter) return reply.code(404).send({ error: "chapter not found" });
 
     const adapter = getAdapter(chapter.source);
-    if (!adapter) return reply.code(400).send({ error: "no adapter for source " + chapter.source });
+    if (!adapter) return reply.code(400).send({ error: `no adapter for source ${chapter.source}` });
 
     const seriesSlug = chapter.seriesId.slice(chapter.source.length + 1); // "source:slug" → "slug"
 

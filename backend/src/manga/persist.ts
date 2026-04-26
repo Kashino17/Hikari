@@ -6,7 +6,12 @@ export function seriesId(source: string, slug: string): string {
 export function chapterId(source: string, slug: string, number: number): string {
   return `${source}:${slug}:${number}`;
 }
-export function pageId(source: string, slug: string, chapterNumber: number, pageNumber: number): string {
+export function pageId(
+  source: string,
+  slug: string,
+  chapterNumber: number,
+  pageNumber: number,
+): string {
   return `${source}:${slug}:${chapterNumber}:${String(pageNumber).padStart(2, "0")}`;
 }
 
@@ -55,6 +60,8 @@ export interface UpsertChapterInput {
   title?: string;
   sourceUrl: string;
   arcId?: string | null;
+  pageCount?: number;
+  isAvailable?: boolean;
   publishedAt?: number;
 }
 
@@ -63,12 +70,17 @@ export function upsertChapter(db: Database.Database, input: UpsertChapterInput):
   const sId = seriesId(input.source, input.seriesSlug);
   const now = Date.now();
   db.prepare(
-    `INSERT INTO manga_chapters (id, series_id, arc_id, number, title, source_url, published_at, added_at)
-     VALUES (@id, @series_id, @arc_id, @number, @title, @source_url, @published_at, @added_at)
+    `INSERT INTO manga_chapters
+       (id, series_id, arc_id, number, title, source_url, page_count, is_available, published_at, added_at)
+     VALUES
+       (@id, @series_id, @arc_id, @number, @title, @source_url, @page_count, @is_available, @published_at, @added_at)
      ON CONFLICT(id) DO UPDATE SET
        title = excluded.title,
        source_url = excluded.source_url,
-       arc_id = COALESCE(excluded.arc_id, manga_chapters.arc_id)`,
+       arc_id = COALESCE(excluded.arc_id, manga_chapters.arc_id),
+       page_count = COALESCE(excluded.page_count, manga_chapters.page_count),
+       is_available = excluded.is_available,
+       published_at = COALESCE(excluded.published_at, manga_chapters.published_at)`,
   ).run({
     id,
     series_id: sId,
@@ -76,6 +88,8 @@ export function upsertChapter(db: Database.Database, input: UpsertChapterInput):
     number: input.number,
     title: input.title ?? null,
     source_url: input.sourceUrl,
+    page_count: input.pageCount ?? null,
+    is_available: input.isAvailable === false ? 0 : 1,
     published_at: input.publishedAt ?? null,
     added_at: now,
   });

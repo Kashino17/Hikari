@@ -1,12 +1,12 @@
-import { test, expect, beforeEach, afterEach, vi } from "vitest";
-import Database from "better-sqlite3";
-import { mkdtempSync, rmSync, existsSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import Database from "better-sqlite3";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { applyMigrations } from "../../src/db/migrations.js";
-import { upsertSeries, upsertChapter } from "../../src/manga/persist.js";
-import { runChapterSync, runSeriesSync, runFullSync } from "../../src/manga/sync.js";
+import { upsertChapter, upsertSeries } from "../../src/manga/persist.js";
 import type { MangaSourceAdapter } from "../../src/manga/sources/types.js";
+import { runChapterSync, runFullSync, runSeriesSync } from "../../src/manga/sync.js";
 
 let db: Database.Database;
 let baseDir: string;
@@ -39,19 +39,27 @@ function fakeAdapter(): MangaSourceAdapter {
 
 test("runChapterSync downloads pages and stores local_path with correct extension", async () => {
   upsertSeries(db, {
-    source: "fake", sourceSlug: "x", title: "X",
+    source: "fake",
+    sourceSlug: "x",
+    title: "X",
     sourceUrl: "https://fake.test/manga/x",
   });
   upsertChapter(db, {
-    source: "fake", seriesSlug: "x", number: 1,
+    source: "fake",
+    seriesSlug: "x",
+    number: 1,
     sourceUrl: "https://fake.test/manga/x/1",
   });
 
   const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47]); // PNG header start
-  vi.stubGlobal("fetch", vi.fn(async () => ({
-    ok: true,
-    arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
-  })));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => ({
+      ok: true,
+      arrayBuffer: async () =>
+        bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+    })),
+  );
 
   await runChapterSync({
     db,
@@ -67,28 +75,39 @@ test("runChapterSync downloads pages and stores local_path with correct extensio
     .all() as { page_number: number; local_path: string | null; bytes: number | null }[];
 
   expect(pages).toHaveLength(2);
+  const [firstPage, secondPage] = pages;
+  if (!firstPage?.local_path || !secondPage?.local_path) {
+    throw new Error("Expected both pages to have local paths");
+  }
   // Extension must come from URL, not hardcoded jpg
-  expect(pages[0].local_path).toBe("fake/x/1/01.png");
-  expect(pages[1].local_path).toBe("fake/x/1/02.png");
-  expect(existsSync(join(baseDir, pages[0].local_path!))).toBe(true);
-  expect(existsSync(join(baseDir, pages[1].local_path!))).toBe(true);
-  expect(pages[0].bytes).toBe(bytes.length);
+  expect(firstPage.local_path).toBe("fake/x/1/01.png");
+  expect(secondPage.local_path).toBe("fake/x/1/02.png");
+  expect(existsSync(join(baseDir, firstPage.local_path))).toBe(true);
+  expect(existsSync(join(baseDir, secondPage.local_path))).toBe(true);
+  expect(firstPage.bytes).toBe(bytes.length);
 });
 
 test("runChapterSync updates manga_chapters.page_count", async () => {
   upsertSeries(db, {
-    source: "fake", sourceSlug: "x", title: "X",
+    source: "fake",
+    sourceSlug: "x",
+    title: "X",
     sourceUrl: "https://fake.test/manga/x",
   });
   upsertChapter(db, {
-    source: "fake", seriesSlug: "x", number: 1,
+    source: "fake",
+    seriesSlug: "x",
+    number: 1,
     sourceUrl: "https://fake.test/manga/x/1",
   });
 
-  vi.stubGlobal("fetch", vi.fn(async () => ({
-    ok: true,
-    arrayBuffer: async () => new ArrayBuffer(4),
-  })));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => ({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(4),
+    })),
+  );
 
   await runChapterSync({
     db,
@@ -99,64 +118,85 @@ test("runChapterSync updates manga_chapters.page_count", async () => {
     mangaDir: baseDir,
   });
 
-  const ch = db.prepare("SELECT page_count FROM manga_chapters WHERE id = 'fake:x:1'").get() as { page_count: number };
+  const ch = db.prepare("SELECT page_count FROM manga_chapters WHERE id = 'fake:x:1'").get() as {
+    page_count: number;
+  };
   expect(ch.page_count).toBe(2);
 });
 
 test("runChapterSync is idempotent — second run does not duplicate rows", async () => {
   upsertSeries(db, {
-    source: "fake", sourceSlug: "x", title: "X",
+    source: "fake",
+    sourceSlug: "x",
+    title: "X",
     sourceUrl: "https://fake.test/manga/x",
   });
   upsertChapter(db, {
-    source: "fake", seriesSlug: "x", number: 1,
+    source: "fake",
+    seriesSlug: "x",
+    number: 1,
     sourceUrl: "https://fake.test/manga/x/1",
   });
 
-  vi.stubGlobal("fetch", vi.fn(async () => ({
+  const fetchMock = vi.fn(async () => ({
     ok: true,
     arrayBuffer: async () => new ArrayBuffer(1),
-  })));
+  }));
+  vi.stubGlobal("fetch", fetchMock);
 
   await runChapterSync({
-    db, adapter: fakeAdapter(),
-    seriesSlug: "x", chapterNumber: 1,
+    db,
+    adapter: fakeAdapter(),
+    seriesSlug: "x",
+    chapterNumber: 1,
     chapterUrl: "https://fake.test/manga/x/1",
     mangaDir: baseDir,
   });
   await runChapterSync({
-    db, adapter: fakeAdapter(),
-    seriesSlug: "x", chapterNumber: 1,
+    db,
+    adapter: fakeAdapter(),
+    seriesSlug: "x",
+    chapterNumber: 1,
     chapterUrl: "https://fake.test/manga/x/1",
     mangaDir: baseDir,
   });
 
   const c = db.prepare("SELECT COUNT(*) as c FROM manga_pages").get() as { c: number };
   expect(c.c).toBe(2); // 2 pages, not 4
+  expect(fetchMock).toHaveBeenCalledTimes(2); // second run reused downloaded pages
 });
 
 test("runChapterSync survives a single page download failure — that page's local_path stays NULL", async () => {
   upsertSeries(db, {
-    source: "fake", sourceSlug: "x", title: "X",
+    source: "fake",
+    sourceSlug: "x",
+    title: "X",
     sourceUrl: "https://fake.test/manga/x",
   });
   upsertChapter(db, {
-    source: "fake", seriesSlug: "x", number: 1,
+    source: "fake",
+    seriesSlug: "x",
+    number: 1,
     sourceUrl: "https://fake.test/manga/x/1",
   });
 
   let calls = 0;
-  vi.stubGlobal("fetch", vi.fn(async (input: string) => {
-    calls++;
-    if (input.includes("p2")) {
-      return { ok: false, status: 500 };
-    }
-    return { ok: true, arrayBuffer: async () => new ArrayBuffer(2) };
-  }));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: string) => {
+      calls++;
+      if (input.includes("p2")) {
+        return { ok: false, status: 500 };
+      }
+      return { ok: true, arrayBuffer: async () => new ArrayBuffer(2) };
+    }),
+  );
 
   await runChapterSync({
-    db, adapter: fakeAdapter(),
-    seriesSlug: "x", chapterNumber: 1,
+    db,
+    adapter: fakeAdapter(),
+    seriesSlug: "x",
+    chapterNumber: 1,
     chapterUrl: "https://fake.test/manga/x/1",
     mangaDir: baseDir,
   });
@@ -166,8 +206,8 @@ test("runChapterSync survives a single page download failure — that page's loc
     .all() as { page_number: number; local_path: string | null }[];
 
   expect(pages).toHaveLength(2);
-  expect(pages[0].local_path).toBeTruthy();   // p1 succeeded
-  expect(pages[1].local_path).toBeNull();     // p2 failed → NULL
+  expect(pages[0].local_path).toBeTruthy(); // p1 succeeded
+  expect(pages[1].local_path).toBeNull(); // p2 failed → NULL
 });
 
 function fakeAdapterWithSeriesAndChapters(): MangaSourceAdapter {
@@ -185,8 +225,8 @@ function fakeAdapterWithSeriesAndChapters(): MangaSourceAdapter {
     ],
     fetchSeriesDetail: async () => ({
       chapters: [
-        { number: 1, sourceUrl: "https://fake.test/manga/x/1" },
-        { number: 2, sourceUrl: "https://fake.test/manga/x/2" },
+        { number: 1, sourceUrl: "https://fake.test/manga/x/1", pageCount: 1 },
+        { number: 2, sourceUrl: "https://fake.test/manga/x/2", pageCount: 1 },
       ],
       arcs: [{ title: "Arc One", arcOrder: 0, chapterNumbers: [1, 2] }],
     }),
@@ -198,10 +238,13 @@ function fakeAdapterWithSeriesAndChapters(): MangaSourceAdapter {
 }
 
 test("runSeriesSync writes series, chapters, arcs, and pages", async () => {
-  vi.stubGlobal("fetch", vi.fn(async () => ({
-    ok: true,
-    arrayBuffer: async () => new ArrayBuffer(1),
-  })));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => ({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(1),
+    })),
+  );
 
   await runSeriesSync({
     db,
@@ -212,7 +255,9 @@ test("runSeriesSync writes series, chapters, arcs, and pages", async () => {
     mangaDir: baseDir,
   });
 
-  const ch = db.prepare("SELECT number FROM manga_chapters ORDER BY number").all() as { number: number }[];
+  const ch = db.prepare("SELECT number FROM manga_chapters ORDER BY number").all() as {
+    number: number;
+  }[];
   expect(ch.map((c) => c.number)).toEqual([1, 2]);
 
   const arcs = db.prepare("SELECT title FROM manga_arcs").all() as { title: string }[];
@@ -220,18 +265,80 @@ test("runSeriesSync writes series, chapters, arcs, and pages", async () => {
   expect(arcs[0].title).toBe("Arc One");
 
   // chapters should have arc_id pointing at the arc
-  const chWithArc = db.prepare("SELECT arc_id FROM manga_chapters WHERE number = 1").get() as { arc_id: string | null };
+  const chWithArc = db.prepare("SELECT arc_id FROM manga_chapters WHERE number = 1").get() as {
+    arc_id: string | null;
+  };
   expect(chWithArc.arc_id).toBeTruthy();
 
   const pages = db.prepare("SELECT COUNT(*) as c FROM manga_pages").get() as { c: number };
   expect(pages.c).toBe(2); // one page per chapter
 });
 
+test("runSeriesSync persists unavailable chapters but skips their page sync", async () => {
+  const adapter: MangaSourceAdapter = {
+    id: "fake",
+    name: "Fake",
+    baseUrl: "https://fake.test",
+    listSeries: async () => [],
+    fetchSeriesDetail: async () => ({
+      chapters: [
+        {
+          number: 1,
+          title: "Unavailable",
+          sourceUrl: "https://fake.test/manga/x/1",
+          pageCount: 0,
+          isAvailable: false,
+        },
+        {
+          number: 2,
+          title: "Available",
+          sourceUrl: "https://fake.test/manga/x/2",
+          pageCount: 1,
+          isAvailable: true,
+        },
+      ],
+      arcs: [{ title: "Arc One", arcOrder: 0, chapterNumbers: [1, 2] }],
+    }),
+    fetchChapterPages: vi.fn(async () => [
+      { pageNumber: 1, sourceUrl: "https://fake.test/p2.png" },
+    ]),
+  };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => ({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(1),
+    })),
+  );
+
+  await runSeriesSync({
+    db,
+    adapter,
+    seriesSlug: "x",
+    seriesUrl: "https://fake.test/manga/x",
+    seriesTitle: "X",
+    mangaDir: baseDir,
+  });
+
+  const chapters = db
+    .prepare("SELECT number, is_available, page_count, arc_id FROM manga_chapters ORDER BY number")
+    .all() as { number: number; is_available: number; page_count: number; arc_id: string | null }[];
+  expect(chapters).toEqual([
+    { number: 1, is_available: 0, page_count: 0, arc_id: "fake:x:arc-0" },
+    { number: 2, is_available: 1, page_count: 1, arc_id: "fake:x:arc-0" },
+  ]);
+  expect(adapter.fetchChapterPages).toHaveBeenCalledTimes(1);
+  expect(adapter.fetchChapterPages).toHaveBeenCalledWith("https://fake.test/manga/x/2");
+});
+
 test("runSeriesSync sets total_chapters and last_synced_at on the series", async () => {
-  vi.stubGlobal("fetch", vi.fn(async () => ({
-    ok: true,
-    arrayBuffer: async () => new ArrayBuffer(1),
-  })));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => ({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(1),
+    })),
+  );
   await runSeriesSync({
     db,
     adapter: fakeAdapterWithSeriesAndChapters(),
@@ -240,17 +347,22 @@ test("runSeriesSync sets total_chapters and last_synced_at on the series", async
     seriesTitle: "X",
     mangaDir: baseDir,
   });
-  const s = db.prepare("SELECT total_chapters, last_synced_at FROM manga_series WHERE id = 'fake:x'").get() as { total_chapters: number; last_synced_at: number };
+  const s = db
+    .prepare("SELECT total_chapters, last_synced_at FROM manga_series WHERE id = 'fake:x'")
+    .get() as { total_chapters: number; last_synced_at: number };
   expect(s.total_chapters).toBe(2);
   expect(typeof s.last_synced_at).toBe("number");
   expect(s.last_synced_at).toBeGreaterThan(0);
 });
 
 test("runFullSync creates a sync_jobs row and marks it done", async () => {
-  vi.stubGlobal("fetch", vi.fn(async () => ({
-    ok: true,
-    arrayBuffer: async () => new ArrayBuffer(1),
-  })));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => ({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(1),
+    })),
+  );
 
   const adapter = fakeAdapterWithSeriesAndChapters();
   const job = await runFullSync({ db, adapter, mangaDir: baseDir });
@@ -261,10 +373,11 @@ test("runFullSync creates a sync_jobs row and marks it done", async () => {
 });
 
 test("runFullSync second run is idempotent", async () => {
-  vi.stubGlobal("fetch", vi.fn(async () => ({
+  const fetchMock = vi.fn(async () => ({
     ok: true,
     arrayBuffer: async () => new ArrayBuffer(1),
-  })));
+  }));
+  vi.stubGlobal("fetch", fetchMock);
 
   const adapter = fakeAdapterWithSeriesAndChapters();
   await runFullSync({ db, adapter, mangaDir: baseDir });
@@ -276,6 +389,7 @@ test("runFullSync second run is idempotent", async () => {
   expect(series.c).toBe(1);
   expect(chapters.c).toBe(2);
   expect(pages.c).toBe(2);
+  expect(fetchMock).toHaveBeenCalledTimes(2); // second full sync skipped page downloads
   // But two job rows
   const jobs = db.prepare("SELECT COUNT(*) as c FROM manga_sync_jobs").get() as { c: number };
   expect(jobs.c).toBe(2);
@@ -283,8 +397,12 @@ test("runFullSync second run is idempotent", async () => {
 
 test("runFullSync marks job 'failed' with error_message when adapter throws", async () => {
   const broken: MangaSourceAdapter = {
-    id: "broke", name: "Broke", baseUrl: "https://x",
-    listSeries: async () => { throw new Error("boom"); },
+    id: "broke",
+    name: "Broke",
+    baseUrl: "https://x",
+    listSeries: async () => {
+      throw new Error("boom");
+    },
     fetchSeriesDetail: async () => ({ chapters: [], arcs: [] }),
     fetchChapterPages: async () => [],
   };
@@ -297,8 +415,12 @@ test("runFullSync marks job 'failed' with error_message when adapter throws", as
 test("runFullSync error_message preserves SourceLayoutError fields", async () => {
   const { SourceLayoutError } = await import("../../src/manga/sources/types.js");
   const broken: MangaSourceAdapter = {
-    id: "broke", name: "Broke", baseUrl: "https://x",
-    listSeries: async () => { throw new SourceLayoutError("bad layout", "https://example.com/list", "a.foo"); },
+    id: "broke",
+    name: "Broke",
+    baseUrl: "https://x",
+    listSeries: async () => {
+      throw new SourceLayoutError("bad layout", "https://example.com/list", "a.foo");
+    },
     fetchSeriesDetail: async () => ({ chapters: [], arcs: [] }),
     fetchChapterPages: async () => [],
   };
@@ -315,10 +437,13 @@ test("runFullSync records partial failures in error_message even when status=don
   const adapter = fakeAdapterWithSeriesAndChapters();
   // fakeAdapterWithSeriesAndChapters generates URLs p1.png and p2.png for the two chapters.
   // Only p1.png matches "p1", so exactly 1 page fails.
-  vi.stubGlobal("fetch", vi.fn(async (input: string) => {
-    if (input.includes("p1")) return { ok: false, status: 500 };
-    return { ok: true, arrayBuffer: async () => new ArrayBuffer(1) };
-  }));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: string) => {
+      if (input.includes("p1")) return { ok: false, status: 500 };
+      return { ok: true, arrayBuffer: async () => new ArrayBuffer(1) };
+    }),
+  );
   const job = await runFullSync({ db, adapter, mangaDir: baseDir });
   expect(job.status).toBe("done");
   expect(job.error_message).toBeTruthy();
@@ -329,9 +454,13 @@ test("runFullSync records partial failures in error_message even when status=don
 
 // Fix #4 — total_pages is populated
 test("runFullSync populates total_pages and done_pages", async () => {
-  vi.stubGlobal("fetch", vi.fn(async () => ({
-    ok: true, arrayBuffer: async () => new ArrayBuffer(1),
-  })));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => ({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(1),
+    })),
+  );
   const adapter = fakeAdapterWithSeriesAndChapters();
   const job = await runFullSync({ db, adapter, mangaDir: baseDir });
   expect(job.total_pages).toBe(2);
