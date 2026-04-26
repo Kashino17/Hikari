@@ -19,3 +19,6 @@ data class FeedItemDto(
     val saved: Int,
     val seenAt: Long? = null,  // only present in mode=old responses
 )
+
+@Serializable
+data class ProgressBody(val seconds: Float)

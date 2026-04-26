@@ -59,6 +59,12 @@ interface HikariApi {
     @POST("feed/{id}/save")
     suspend fun save(@Path("id") videoId: String)
 
+    @PUT("feed/{id}/progress")
+    suspend fun setProgress(
+        @Path("id") videoId: String,
+        @Body body: com.hikari.app.data.api.dto.ProgressBody,
+    )
+
     @DELETE("feed/{id}/save")
     suspend fun unsave(@Path("id") videoId: String)
 
