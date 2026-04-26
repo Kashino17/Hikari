@@ -24,6 +24,12 @@ sealed interface SeriesUiState {
     data class Error(val message: String) : SeriesUiState
 }
 
+sealed interface CoverEditState {
+    object Idle : CoverEditState
+    object Saving : CoverEditState
+    data class Error(val message: String) : CoverEditState
+}
+
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
     private val repo: FeedRepository
@@ -34,6 +40,9 @@ class LibraryViewModel @Inject constructor(
 
     private val _seriesState = MutableStateFlow<SeriesUiState>(SeriesUiState.Loading)
     val seriesState: StateFlow<SeriesUiState> = _seriesState.asStateFlow()
+
+    private val _coverEditState = MutableStateFlow<CoverEditState>(CoverEditState.Idle)
+    val coverEditState: StateFlow<CoverEditState> = _coverEditState.asStateFlow()
 
     init {
         loadLibrary()
@@ -63,5 +72,39 @@ class LibraryViewModel @Inject constructor(
                 _seriesState.value = SeriesUiState.Error(it.message ?: "Unbekannter Fehler")
             }
         }
+    }
+
+    fun setSeriesCoverUrl(seriesId: String, url: String, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            _coverEditState.value = CoverEditState.Saving
+            runCatching {
+                repo.updateSeries(seriesId, thumbnailUrl = url.ifBlank { null }, description = null)
+            }.onSuccess {
+                _coverEditState.value = CoverEditState.Idle
+                loadLibrary()
+                onDone()
+            }.onFailure {
+                _coverEditState.value = CoverEditState.Error(it.message ?: "Speichern fehlgeschlagen")
+            }
+        }
+    }
+
+    fun uploadSeriesCover(seriesId: String, bytes: ByteArray, mime: String, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            _coverEditState.value = CoverEditState.Saving
+            runCatching {
+                repo.uploadSeriesCover(seriesId, bytes, mime)
+            }.onSuccess {
+                _coverEditState.value = CoverEditState.Idle
+                loadLibrary()
+                onDone()
+            }.onFailure {
+                _coverEditState.value = CoverEditState.Error(it.message ?: "Upload fehlgeschlagen")
+            }
+        }
+    }
+
+    fun resetCoverEdit() {
+        _coverEditState.value = CoverEditState.Idle
     }
 }

@@ -1,7 +1,9 @@
 package com.hikari.app.ui.library
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +32,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +51,7 @@ import com.hikari.app.data.api.dto.ChannelDto
 import com.hikari.app.data.api.dto.LibraryResponse
 import com.hikari.app.data.api.dto.LibraryVideoDto
 import com.hikari.app.data.api.dto.SeriesDto
+import com.hikari.app.ui.library.components.CoverEditSheet
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
@@ -62,6 +68,8 @@ fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+    val coverEdit by viewModel.coverEditState.collectAsState()
+    var editingSeries by remember { mutableStateOf<SeriesDto?>(null) }
 
     Box(modifier = Modifier.fillMaxSize().background(HikariBg)) {
         when (val s = state) {
@@ -77,8 +85,35 @@ fun LibraryScreen(
                     modifier = Modifier.align(Alignment.Center).padding(24.dp),
                 )
             is LibraryUiState.Success ->
-                LibraryContent(s.data, onOpenSeries, onOpenChannel, onPlayVideo)
+                LibraryContent(
+                    s.data,
+                    onOpenSeries,
+                    onOpenChannel,
+                    onPlayVideo,
+                    onLongPressSeries = { editingSeries = it },
+                )
         }
+    }
+
+    editingSeries?.let { series ->
+        CoverEditSheet(
+            seriesTitle = series.title,
+            state = coverEdit,
+            onDismiss = {
+                editingSeries = null
+                viewModel.resetCoverEdit()
+            },
+            onSaveUrl = { url ->
+                viewModel.setSeriesCoverUrl(series.id, url) {
+                    editingSeries = null
+                }
+            },
+            onPickGallery = { bytes, mime ->
+                viewModel.uploadSeriesCover(series.id, bytes, mime) {
+                    editingSeries = null
+                }
+            },
+        )
     }
 }
 
@@ -88,6 +123,7 @@ private fun LibraryContent(
     onOpenSeries: (String) -> Unit,
     onOpenChannel: (String) -> Unit,
     onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
+    onLongPressSeries: (SeriesDto) -> Unit,
 ) {
     fun play(v: LibraryVideoDto) = onPlayVideo(v.id, v.title, v.channelTitle ?: "")
 
@@ -118,7 +154,11 @@ private fun LibraryContent(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(data.series, key = { it.id }) { series ->
-                            SeriesCard(series) { onOpenSeries(series.id) }
+                            SeriesCard(
+                                series = series,
+                                onClick = { onOpenSeries(series.id) },
+                                onLongClick = { onLongPressSeries(series) },
+                            )
                         }
                     }
                 }
@@ -328,15 +368,20 @@ private fun VideoCard(video: LibraryVideoDto, onClick: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun SeriesCard(series: SeriesDto, onClick: () -> Unit) {
+private fun SeriesCard(
+    series: SeriesDto,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+) {
     Box(
         modifier = Modifier
             .width(120.dp)
             .aspectRatio(2f / 3f)
             .clip(RoundedCornerShape(6.dp))
             .background(HikariSurface)
-            .clickable(onClick = onClick),
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
     ) {
         AsyncImage(
             model = series.thumbnail_url,
