@@ -32,7 +32,12 @@ class SmartDownloadWorker @AssistedInject constructor(
         val enabled = runCatching { settings.smartDownloads.first() }.getOrDefault(true)
         if (!enabled) return Result.success()
 
-        val saved = runCatching { feedRepo.fetchSaved() }.getOrNull() ?: return Result.retry()
+        // Backend down or fetch-saved errors → skip this fire silently. Next
+        // periodic run is in 6h anyway. Result.retry() here would trigger
+        // exponential backoff that hammers the backend during outages —
+        // reserved for genuinely-transient cases where a sooner re-attempt
+        // actually helps.
+        val saved = runCatching { feedRepo.fetchSaved() }.getOrNull() ?: return Result.success()
 
         var queued = 0
         for (item in saved) {
