@@ -58,6 +58,9 @@ for (const r of orphanRows) {
 const app = Fastify({ logger: { level: "info" } });
 await app.register(fastifyStatic, { root: cfg.videoDir, prefix: "/videos/" });
 await app.register(fastifyStatic, { root: cfg.coverDir, prefix: "/covers/", decorateReply: false });
+// Static mockups for design exploration — served as plain HTML
+const mockupsDir = new URL("../mockups", import.meta.url).pathname;
+await app.register(fastifyStatic, { root: mockupsDir, prefix: "/mockups/", decorateReply: false });
 await app.register(fastifyMultipart, { limits: { fileSize: 10 * 1024 * 1024 } });
 await registerChannelsRoutes(app, { db, scorer, videoDir: cfg.videoDir });
 await registerFeedRoutes(app, { db, dailyBudget: cfg.dailyBudget });

@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<title>Hikari · Variante 1 — Instagram-Klassiker</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;background:#0a0a0a;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Inter","SF Pro Text",sans-serif;-webkit-font-smoothing:antialiased}
+  body{min-height:100vh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .frame{max-width:430px;margin:0 auto;min-height:100vh}
+
+  /* Top bar */
+  .topbar{display:flex;align-items:center;padding:14px 18px;border-bottom:0.5px solid rgba(255,255,255,.06)}
+  .topbar .back{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:18px;background:transparent;color:#fff;text-decoration:none;font-size:18px}
+  .topbar .title{margin:0 auto;font-size:15px;font-weight:600;font-family:ui-monospace,"SF Mono",monospace;letter-spacing:1px;color:#fff}
+
+  /* Profile header */
+  .header{padding:24px 18px 8px}
+  .row{display:flex;align-items:center;gap:24px}
+  .avatar{width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,#B45309 0%,#FBBF24 100%);display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:900;color:#0a0a0a;flex-shrink:0;box-shadow:0 0 0 2px #1a1a1a inset}
+  .stats{display:flex;flex:1;justify-content:space-around}
+  .stat{text-align:center}
+  .stat .n{font-size:18px;font-weight:700;color:#fff}
+  .stat .l{font-size:11px;color:#888;font-family:ui-monospace,"SF Mono",monospace;margin-top:2px;letter-spacing:.5px}
+
+  .name{margin-top:14px;font-size:14px;font-weight:600;color:#fff}
+  .bio{margin-top:2px;font-size:13px;color:#aaa;line-height:1.4}
+  .bio .tag{color:#FBBF24}
+
+  /* Tab bar */
+  .tabs{display:flex;margin-top:24px;border-top:0.5px solid rgba(255,255,255,.08)}
+  .tab{flex:1;display:flex;align-items:center;justify-content:center;height:46px;color:#555;cursor:pointer;border-bottom:1.5px solid transparent;transition:all .15s}
+  .tab.active{color:#fff;border-bottom-color:#FBBF24}
+  .tab svg{width:22px;height:22px}
+
+  /* Grid */
+  .panel{display:none}
+  .panel.active{display:block}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:2px 0}
+  .cell{position:relative;aspect-ratio:1;background:#1a1a1a;overflow:hidden}
+  .cell img{width:100%;height:100%;object-fit:cover;display:block}
+  .cell .badge{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);color:#fff;font-size:10px;font-weight:600;padding:2px 5px;border-radius:3px;font-family:ui-monospace,"SF Mono",monospace}
+  .cell .gradient{position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,.65) 100%)}
+  .cell .label{position:absolute;left:6px;right:6px;bottom:5px;font-size:10px;color:#fff;font-weight:600;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+  /* Channel grid (square avatars like Insta-Reels but with names) */
+  .channelgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:2px 0}
+  .ch{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0e0e0e;padding:14px 8px;text-align:center}
+  .ch .av{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;background:#444;margin-bottom:8px}
+  .ch .nm{font-size:11px;font-weight:600;color:#fff;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ch .sub{font-size:10px;color:#666;margin-top:2px;font-family:ui-monospace,"SF Mono",monospace}
+
+  /* Search bar in channels tab */
+  .search{margin:0 18px 12px;display:flex;align-items:center;background:#161616;border:0.5px solid rgba(255,255,255,.08);border-radius:8px;padding:0 12px;height:38px}
+  .search input{flex:1;background:transparent;border:0;outline:0;color:#fff;font-size:13px;padding:0 8px}
+  .search input::placeholder{color:#555}
+  .search svg{width:14px;height:14px;color:#666}
+
+  /* Series 2-col grid */
+  .seriesgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:8px 18px}
+  .se{position:relative;aspect-ratio:2/3;border-radius:8px;overflow:hidden;background:#1a1a1a}
+  .se img{width:100%;height:100%;object-fit:cover;display:block}
+  .se .gradient{position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,.85) 100%)}
+  .se .name{position:absolute;left:10px;right:10px;bottom:8px;font-size:13px;font-weight:700;color:#fff;line-height:1.2}
+  .se .meta{position:absolute;left:10px;bottom:32px;font-size:10px;color:#FBBF24;font-weight:700;font-family:ui-monospace,"SF Mono",monospace}
+
+  /* Bottom safe area */
+  .bottomspace{height:80px}
+
+  /* Variant nav (helper for testing) */
+  .variantnav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,10,.92);backdrop-filter:blur(8px);border-top:0.5px solid rgba(255,255,255,.08);padding:8px env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 8px) env(safe-area-inset-left)}
+  .variantnav .row{justify-content:center;gap:0;max-width:430px;margin:0 auto}
+  .variantnav a{flex:1;text-align:center;padding:8px;font-size:11px;color:#666;text-decoration:none;font-family:ui-monospace,"SF Mono",monospace;letter-spacing:.5px;border-radius:4px}
+  .variantnav a.cur{color:#FBBF24;background:#1a1a1a}
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="topbar">
+    <a href="index.html" class="back">←</a>
+    <div class="title">VARIANTE 01</div>
+    <div style="width:36px"></div>
+  </div>
+
+  <div class="header">
+    <div class="row">
+      <div class="avatar">H</div>
+      <div class="stats">
+        <div class="stat"><div class="n">142</div><div class="l">VIDEOS</div></div>
+        <div class="stat"><div class="n">8</div><div class="l">KANÄLE</div></div>
+        <div class="stat"><div class="n">3</div><div class="l">SERIEN</div></div>
+      </div>
+    </div>
+    <div class="name">Hikari</div>
+    <div class="bio">Anti-Doom-Scroll Library<br><span class="tag">#kuratiert</span> <span class="tag">#offline-first</span></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="saved" onclick="sw('saved')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+    </div>
+    <div class="tab" data-tab="channels" onclick="sw('channels')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+    </div>
+    <div class="tab" data-tab="series" onclick="sw('series')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
+    </div>
+  </div>
+
+  <!-- Saved -->
+  <div class="panel active" id="p-saved">
+    <div class="grid">
+      <div class="cell"><div class="gradient"></div><img src="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg" onerror="this.style.background='linear-gradient(135deg,#1f2937,#374151)'"><div class="badge">23:24</div><div class="label">Dragonball Super 1 HD GER SUB</div></div>
+      <div class="cell"><div class="gradient"></div><div style="width:100%;height:100%;background:linear-gradient(135deg,#7e22ce,#c084fc)"></div><div class="badge">20:09</div><div class="label">Dragonball Super 2 HD</div></div>
+      <div class="cell"><div class="gradient"></div><div style="width:100%;height:100%;background:linear-gradient(135deg,#166534,#34d399)"></div><div class="badge">12:41</div><div class="label">Tailscale Setup Guide</div></div>
+      <div class="cell"><div class="gradient"></div><div style="width:100%;height:100%;background:linear-gradient(135deg,#1e40af,#60a5fa)"></div><div class="badge">8:55</div><div class="label">Compose Theme Tricks</div></div>
+      <div class="cell"><div class="gradient"></div><div style="width:100%;height:100%;background:linear-gradient(135deg,#be185d,#f472b6)"></div><div class="badge">15:02</div><div class="label">Manga Reader Build</div></div>
+      <div class="cell"><div class="gradient"></div><div style="width:100%;height:100%;background:linear-gradient(135deg,#374151,#6b7280)"></div><div class="badge">5:33</div><div class="label">VOE Source Pattern</div></div>
+      <div class="cell"><div class="gradient"></div><div style="width:100%;height:100%;background:linear-gradient(135deg,#B45309,#FBBF24)"></div><div class="badge">19:47</div><div class="label">Telephoto Pinch Zoom</div></div>
+      <div class="cell"><div class="gradient"></div><div style="width:100%;height:100%;background:linear-gradient(135deg,#7c2d12,#ea580c)"></div><div class="badge">11:08</div><div class="label">SQLite Migrations</div></div>
+      <div class="cell"><div class="gradient"></div><div style="width:100%;height:100%;background:linear-gradient(135deg,#0f172a,#475569)"></div><div class="badge">26:13</div><div class="label">Hilt Multi-Module</div></div>
+    </div>
+  </div>
+
+  <!-- Channels -->
+  <div class="panel" id="p-channels">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input placeholder="Kanal suchen…">
+    </div>
+    <div class="channelgrid">
+      <div class="ch"><div class="av" style="background:linear-gradient(135deg,#B45309,#FBBF24);color:#0a0a0a">M</div><div class="nm">Manuell hinzugefügt</div><div class="sub">2 vid</div></div>
+      <div class="ch"><div class="av" style="background:linear-gradient(135deg,#1e40af,#60a5fa)">F</div><div class="nm">Fireship</div><div class="sub">3.2M</div></div>
+      <div class="ch"><div class="av" style="background:linear-gradient(135deg,#166534,#34d399)">D</div><div class="nm">Dragonball Tube</div><div class="sub">812K</div></div>
+      <div class="ch"><div class="av" style="background:linear-gradient(135deg,#7e22ce,#c084fc)">P</div><div class="nm">Phil Edwards</div><div class="sub">541K</div></div>
+      <div class="ch"><div class="av" style="background:linear-gradient(135deg,#be185d,#f472b6)">K</div><div class="nm">Kurzgesagt</div><div class="sub">22M</div></div>
+      <div class="ch"><div class="av" style="background:linear-gradient(135deg,#374151,#6b7280)">V</div><div class="nm">Veritasium</div><div class="sub">15M</div></div>
+    </div>
+  </div>
+
+  <!-- Series -->
+  <div class="panel" id="p-series">
+    <div class="seriesgrid">
+      <div class="se">
+        <div style="width:100%;height:100%;background:linear-gradient(135deg,#7c2d12,#fbbf24)"></div>
+        <div class="gradient"></div>
+        <div class="meta">12 FOLGEN</div>
+        <div class="name">Dragonball Super</div>
+      </div>
+      <div class="se">
+        <div style="width:100%;height:100%;background:linear-gradient(135deg,#0f172a,#3b82f6)"></div>
+        <div class="gradient"></div>
+        <div class="meta">8 FOLGEN</div>
+        <div class="name">One Piece</div>
+      </div>
+      <div class="se">
+        <div style="width:100%;height:100%;background:linear-gradient(135deg,#166534,#22d3ee)"></div>
+        <div class="gradient"></div>
+        <div class="meta">3 FOLGEN</div>
+        <div class="name">Demon Slayer</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottomspace"></div>
+</div>
+
+<div class="variantnav">
+  <div class="row" style="display:flex">
+    <a class="cur" href="variant-1.html">V1</a>
+    <a href="variant-2.html">V2</a>
+    <a href="variant-3.html">V3</a>
+    <a href="index.html">Index</a>
+  </div>
+</div>
+
+<script>
+function sw(t){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===t));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id==='p-'+t));
+}
+</script>
+</body>
+</html>
