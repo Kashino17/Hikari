@@ -668,7 +668,7 @@ private fun RecommendationRow(
 // ─── Import sheet ───────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ImportSheet(
+internal fun ImportSheet(
     onDismiss: () -> Unit,
     vm: ImportSheetViewModel = hiltViewModel(),
 ) {
