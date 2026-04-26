@@ -16,7 +16,7 @@ private val Context.dataStore by preferencesDataStore(name = "hikari_settings")
 private val BACKEND_URL_KEY = stringPreferencesKey("backend_url")
 private val DAILY_BUDGET_KEY = intPreferencesKey("daily_budget")
 
-const val DEFAULT_BACKEND_URL = "http://kadir-laptop.tail1234.ts.net:3000"
+const val DEFAULT_BACKEND_URL = "http://macbook-pro.taile64a95.ts.net:3000"
 const val DEFAULT_DAILY_BUDGET = 15
 
 @Singleton
