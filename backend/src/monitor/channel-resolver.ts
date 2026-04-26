@@ -59,7 +59,8 @@ function pickAvatar(thumbnails: YtDlpThumbnail[] | undefined): string | null {
 /**
  * Pick the highest-resolution wide-aspect banner from yt-dlp thumbnails.
  * Banners are typically 2560×424 (~6:1) but YT serves several sizes;
- * pick the widest.
+ * pick the widest. Threshold 3.0 keeps a 16:9 video preview (1.78) from
+ * sneaking through if yt-dlp ever bundles them with a channel response.
  */
 function pickBanner(thumbnails: YtDlpThumbnail[] | undefined): string | null {
   if (!thumbnails?.length) return null;
@@ -68,7 +69,7 @@ function pickBanner(thumbnails: YtDlpThumbnail[] | undefined): string | null {
       const w = t.width ?? 0;
       const h = t.height ?? 0;
       if (w <= 0 || h <= 0) return false;
-      return w / h >= 2.5;
+      return w / h >= 3.0;
     })
     .sort((a, b) => (b.width ?? 0) - (a.width ?? 0));
   const top = wide[0];
