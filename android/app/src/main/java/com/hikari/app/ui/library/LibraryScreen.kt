@@ -125,6 +125,15 @@ private fun LibraryContent(
         val p = it.progress_seconds ?: 0f
         p > 0f && p < it.duration_seconds.toFloat() * 0.95f
     }
+    // "Empfohlen für dich" = top-scored Videos (immer Inhalt sobald
+    // recentlyAdded nicht leer). Sortiert by overall_score desc, gefiltert
+    // gegen Items die schon im Continue-Watching sind damit's nicht doppelt.
+    val cwIds = continueWatching.map { it.id }.toSet()
+    val recommended = data.recentlyAdded
+        .filter { it.id !in cwIds }
+        .sortedByDescending { it.overall_score ?: 0 }
+        .take(10)
+
     val heroVideo = continueWatching.firstOrNull() ?: data.recentlyAdded.firstOrNull()
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -144,9 +153,23 @@ private fun LibraryContent(
             }
         }
 
+        if (recommended.isNotEmpty()) {
+            item {
+                SectionHeader("Empfohlen für dich", count = recommended.size)
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(recommended, key = { "rec-${it.id}" }) { v ->
+                        RecommendedCard(video = v, onClick = { play(v) })
+                    }
+                }
+            }
+        }
+
         if (data.series.isNotEmpty()) {
             item {
-                SectionHeader("Empfohlen für dich", count = data.series.size)
+                SectionHeader("Serien", count = data.series.size)
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -189,6 +212,101 @@ private fun LibraryContent(
         }
 
         item { Spacer(Modifier.height(96.dp)) }
+    }
+}
+
+@Composable
+private fun RecommendedCard(video: LibraryVideoDto, onClick: () -> Unit) {
+    Column(modifier = Modifier.width(200.dp).clickable(onClick = onClick)) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(6.dp))
+                .background(HikariSurface),
+        ) {
+            AsyncImage(
+                model = video.thumbnail_url,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f)),
+                            startY = 100f,
+                        ),
+                    ),
+            )
+            // Match% badge top-left
+            video.overall_score?.let { score ->
+                Text(
+                    "$score%",
+                    color = Color.Black,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Black,
+                    fontFamily = FontFamily.Monospace,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(5.dp)
+                        .background(HikariAmber, RoundedCornerShape(3.dp))
+                        .padding(horizontal = 5.dp, vertical = 2.dp),
+                )
+            }
+            Text(
+                "${video.duration_seconds / 60}:${"%02d".format(video.duration_seconds % 60)}",
+                color = Color.White,
+                fontSize = 10.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(5.dp)
+                    .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(3.dp))
+                    .padding(horizontal = 5.dp, vertical = 2.dp),
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.92f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = Color.Black,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        }
+        Text(
+            text = video.title,
+            color = HikariText,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            lineHeight = 14.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 7.dp),
+        )
+        if (!video.channelTitle.isNullOrBlank()) {
+            Text(
+                text = video.channelTitle.uppercase(),
+                color = Color(0xFF4ADE80),
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.sp,
+                fontFamily = FontFamily.Monospace,
+                modifier = Modifier.padding(top = 4.dp),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
