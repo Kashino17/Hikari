@@ -227,6 +227,36 @@ test("PATCH /videos/:id updates basic fields", async () => {
   expect(body.is_movie).toBe(0);
 });
 
+test("PATCH /videos/:id setting is_movie=true clears series_id (mutual exclusion)", async () => {
+  seedSeriesWithVideo("s1");
+  const app = buildApp();
+  const r = await app.inject({
+    method: "PATCH",
+    url: "/videos/v1",
+    payload: { is_movie: true },
+  });
+  expect(r.statusCode).toBe(200);
+  const body = r.json() as { is_movie: number; series_id: string | null };
+  expect(body.is_movie).toBe(1);
+  expect(body.series_id).toBeNull();
+});
+
+test("PATCH /videos/:id setting series_title clears is_movie", async () => {
+  seedSeriesWithVideo("s1");
+  // Pre-mark v1 as a movie
+  db.prepare("UPDATE videos SET is_movie = 1, series_id = NULL WHERE id = 'v1'").run();
+  const app = buildApp();
+  const r = await app.inject({
+    method: "PATCH",
+    url: "/videos/v1",
+    payload: { series_title: "Cured" },
+  });
+  expect(r.statusCode).toBe(200);
+  const body = r.json() as { is_movie: number; series_id: string };
+  expect(body.is_movie).toBe(0);
+  expect(body.series_id).toBe("cured");
+});
+
 test("PATCH /videos/:id with series_title creates new series if needed", async () => {
   seedSeriesWithVideo();
   const app = buildApp();

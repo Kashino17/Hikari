@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hikari.app.data.api.dto.LibraryVideoDto
 import com.hikari.app.data.prefs.BIO_MAX_LENGTH
 import com.hikari.app.data.prefs.ProfileStore
 import com.hikari.app.domain.model.FeedItem
@@ -50,13 +51,26 @@ class ProfileViewModel @Inject constructor(
     private val _channelsCount = MutableStateFlow(0)
     val channelsCount: StateFlow<Int> = _channelsCount.asStateFlow()
 
+    private val _downloadsCount = MutableStateFlow(0)
+    val downloadsCount: StateFlow<Int> = _downloadsCount.asStateFlow()
+
+    private val _continueWatching = MutableStateFlow<List<LibraryVideoDto>>(emptyList())
+    val continueWatching: StateFlow<List<LibraryVideoDto>> = _continueWatching.asStateFlow()
+
     val savedCount: StateFlow<Int> = _saved
         .map { it.size }
         .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
     init {
+        refreshAll()
+    }
+
+    /** Reloads all profile-tab data — used on screen-resume so counts stay live. */
+    fun refreshAll() {
         refreshSaved()
         refreshChannelsCount()
+        refreshLibrary()
+        refreshDownloadsCount()
     }
 
     fun refreshSaved() {
@@ -70,6 +84,31 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { channelsRepo.list() }
                 .onSuccess { _channelsCount.value = it.size }
+        }
+    }
+
+    fun refreshDownloadsCount() {
+        viewModelScope.launch {
+            runCatching { feedRepo.getDownloads() }
+                .onSuccess { d ->
+                    _downloadsCount.value =
+                        d.series.sumOf { it.episode_count } +
+                        d.channels.sumOf { it.video_count } +
+                        d.movies.size
+                }
+        }
+    }
+
+    fun refreshLibrary() {
+        viewModelScope.launch {
+            runCatching { feedRepo.getLibrary() }
+                .onSuccess { lib ->
+                    _continueWatching.value = lib.recentlyAdded.filter { v ->
+                        val p = v.progress_seconds ?: 0f
+                        // In-progress = at least started, not yet 95% done
+                        p > 0f && p < v.duration_seconds.toFloat() * 0.95f
+                    }
+                }
         }
     }
 
