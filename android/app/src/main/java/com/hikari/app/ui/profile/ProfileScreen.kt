@@ -216,9 +216,6 @@ fun ProfileScreen(
                 when (tab) {
                     ProfileTab.SAVED -> SavedTab(
                         onPlay = { onPlayVideo(it.videoId, it.title, it.channelTitle) },
-                        onPlayLibraryVideo = { v ->
-                            onPlayVideo(v.id, v.title, v.channelTitle ?: "")
-                        },
                     )
                     ProfileTab.CHANNELS -> ChannelsTab(
                         onOpenChannel = onOpenChannel,
