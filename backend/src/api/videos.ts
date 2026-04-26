@@ -120,10 +120,12 @@ export async function registerVideosRoutes(
     const series = (deps.db.prepare("SELECT * FROM series ORDER BY added_at DESC").all() as SeriesRow[])
       .map((s) => withCoverFallback(deps.db, s));
     const recentlyAdded = deps.db.prepare(`
-      SELECT v.*, c.title as channelTitle, fi.progress_seconds
+      SELECT v.*, c.title as channelTitle, fi.progress_seconds,
+             s.overall_score as overall_score
       FROM videos v
       JOIN channels c ON c.id = v.channel_id
       JOIN feed_items fi ON fi.video_id = v.id
+      LEFT JOIN scores s ON s.video_id = v.id
       ORDER BY v.discovered_at DESC
       LIMIT 20
     `).all();

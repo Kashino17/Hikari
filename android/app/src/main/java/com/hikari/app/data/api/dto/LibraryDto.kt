@@ -26,7 +26,8 @@ data class LibraryVideoDto(
     val season: Int? = null,
     val episode: Int? = null,
     val channelTitle: String? = null,
-    val progress_seconds: Float? = null
+    val progress_seconds: Float? = null,
+    val overall_score: Int? = null,
 )
 
 @Serializable
