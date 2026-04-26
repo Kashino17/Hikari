@@ -11,6 +11,7 @@ data class RecommendationDto(
     val description: String? = null,
     val subscribers: Long? = null,
     val thumbnail: String? = null,
+    val banner: String? = null,
     val verified: Boolean = false,
     val subscribed: Boolean = false,
     val matchingTags: List<String> = emptyList(),

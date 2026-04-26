@@ -39,7 +39,7 @@ function fixProtocol(url: string | null | undefined): string | null {
  * Banners come first in the array, so naively picking [0] gives the banner.
  * We want the avatar — the first roughly-square entry.
  */
-function pickAvatar(thumbnails: YtDlpThumbnail[] | undefined): string | null {
+export function pickAvatar(thumbnails: YtDlpThumbnail[] | undefined): string | null {
   if (!thumbnails?.length) return null;
   // Square = width and height set, ratio close to 1.
   const square = thumbnails.find((t) => {
@@ -62,7 +62,7 @@ function pickAvatar(thumbnails: YtDlpThumbnail[] | undefined): string | null {
  * pick the widest. Threshold 3.0 keeps a 16:9 video preview (1.78) from
  * sneaking through if yt-dlp ever bundles them with a channel response.
  */
-function pickBanner(thumbnails: YtDlpThumbnail[] | undefined): string | null {
+export function pickBanner(thumbnails: YtDlpThumbnail[] | undefined): string | null {
   if (!thumbnails?.length) return null;
   const wide = thumbnails
     .filter((t) => {

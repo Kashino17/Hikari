@@ -42,7 +42,7 @@ describe("channels API", () => {
       id: "UC1",
       title: "Test Channel",
       handle: "@test",
-      thumbnail: "https://yt.example/thumb.jpg",
+      thumbnail_url: "https://yt.example/thumb.jpg",
       subscribers: 12345,
     });
     const row = db.prepare(

@@ -47,7 +47,7 @@ export async function registerChannelsRoutes(
       title: resolved.title,
       url: channelUrl,
       handle: resolved.handle,
-      thumbnail: resolved.thumbnail,
+      thumbnail_url: resolved.thumbnail,
       banner_url: resolved.banner,
       subscribers: resolved.subscribers,
     });
@@ -57,7 +57,7 @@ export async function registerChannelsRoutes(
     return deps.db
       .prepare(
         `SELECT id, url, title, added_at, is_active, last_polled_at,
-                handle, description, subscribers, thumbnail_url AS thumbnail,
+                handle, description, subscribers, thumbnail_url,
                 banner_url, auto_approve AS autoApprove
          FROM channels WHERE is_active=1 ORDER BY added_at DESC`,
       )

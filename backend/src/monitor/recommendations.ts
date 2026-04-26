@@ -1,6 +1,7 @@
 import type Database from "better-sqlite3";
 import { getFilterState } from "../scorer/filter-repo.js";
 import { searchChannels, type ChannelSearchResult } from "./channel-search.js";
+import { pickAvatar, pickBanner } from "./channel-resolver.js";
 import { runYtDlp } from "../yt-dlp/client.js";
 
 export interface RecommendationResult extends ChannelSearchResult {
@@ -98,10 +99,18 @@ export async function recommendChannels(
   preFiltered.sort(scoreCompare);
   const pool = preFiltered.slice(0, PRE_RANK_POOL);
 
-  // 5) Deep-fetch activity for pool in parallel
+  // 5) Deep-fetch channel info for pool in parallel — gets activity AND
+  //    fills in banner art + a higher-quality avatar (the flat-mode search
+  //    sometimes returns null thumbnails). One yt-dlp call per channel.
   await Promise.all(
     pool.map(async (c) => {
-      c.lastUploadDays = await fetchLastUploadDays(c.channelId);
+      const info = await fetchChannelDeepInfo(c.channelId);
+      c.lastUploadDays = info.lastUploadDays;
+      c.banner = info.banner;
+      // Only overwrite if the deep fetch produced something — preserves the
+      // search-mode thumbnail when the channel page lookup yields nothing.
+      if (info.thumbnail) c.thumbnail = info.thumbnail;
+      if (info.handle && !c.handle) c.handle = info.handle;
     }),
   );
 
@@ -170,27 +179,53 @@ function shuffleEqualScores(arr: RecommendationResult[]): void {
 
 // ─── Activity fetch ─────────────────────────────────────────────────────────
 
+interface ChannelDeepInfo {
+  lastUploadDays: number | null;
+  thumbnail: string | null;
+  banner: string | null;
+  handle: string | null;
+}
+
 /**
- * Returns days since the channel's most recent public upload, or null if
- * yt-dlp couldn't tell us. Cheap-ish: --flat-playlist + playlist-end 1.
+ * One yt-dlp call against the channel URL with `--playlist-items 1` —
+ * returns enough JSON for both the latest-upload timestamp AND the
+ * channel-level art (banner + avatar). Replaces the older timestamp-only
+ * `fetchLastUploadDays` so recommendation cards can show real banners
+ * instead of placeholder gradients.
  */
-async function fetchLastUploadDays(channelId: string): Promise<number | null> {
+async function fetchChannelDeepInfo(channelId: string): Promise<ChannelDeepInfo> {
+  const empty: ChannelDeepInfo = {
+    lastUploadDays: null, thumbnail: null, banner: null, handle: null,
+  };
   try {
     const result = await runYtDlp(
       [
         "--flat-playlist",
-        "--playlist-end", "1",
+        "--playlist-items", "1",
+        "--dump-single-json",
         "--no-warnings",
-        "--print", "%(timestamp)s",
-        `https://www.youtube.com/channel/${channelId}/videos`,
+        `https://www.youtube.com/channel/${channelId}`,
       ],
-      { timeoutMs: 8_000 },
+      { timeoutMs: 10_000 },
     );
-    const ts = parseInt(result.stdout.trim(), 10);
-    if (!Number.isFinite(ts) || ts <= 0) return null;
-    const days = (Date.now() / 1000 - ts) / 86_400;
-    return Math.max(0, Math.round(days));
+    if (!result.stdout.trim()) return empty;
+    const parsed = JSON.parse(result.stdout) as {
+      thumbnails?: { url?: string; width?: number | null; height?: number | null }[];
+      uploader_id?: string | null;
+      entries?: { timestamp?: number | null }[];
+    };
+    const ts = parsed.entries?.[0]?.timestamp;
+    const lastUploadDays =
+      typeof ts === "number" && ts > 0
+        ? Math.max(0, Math.round((Date.now() / 1000 - ts) / 86_400))
+        : null;
+    return {
+      lastUploadDays,
+      thumbnail: pickAvatar(parsed.thumbnails),
+      banner: pickBanner(parsed.thumbnails),
+      handle: parsed.uploader_id ?? null,
+    };
   } catch {
-    return null;
+    return empty;
   }
 }

@@ -8,6 +8,9 @@ export interface ChannelSearchResult {
   description: string | null;
   subscribers: number | null;
   thumbnail: string | null;
+  /** Wide channel-art banner. Search-mode never has this — populated later
+   *  by the recommendations pipeline's deep fetch. */
+  banner: string | null;
   verified: boolean;
 }
 
@@ -73,6 +76,7 @@ export async function searchChannels(
         description: e.description ?? null,
         subscribers: e.channel_follower_count ?? null,
         thumbnail: thumb,
+        banner: null,
         verified: e.channel_is_verified === true,
       };
     });

@@ -48,6 +48,7 @@ describe("searchChannels", () => {
         description: "math channel",
         subscribers: 8280000,
         thumbnail: "https://yt3.googleusercontent.com/foo=s88",
+        banner: null,
         verified: true,
       },
     ]);

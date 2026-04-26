@@ -297,7 +297,7 @@ private fun RecommendationBannerCard(rec: RecommendationDto, onClick: () -> Unit
         subtitle = parts.joinToString(" · "),
         seed = rec.channelId,
         avatarText = rec.title.firstOrNull()?.uppercaseChar()?.toString(),
-        bannerUrl = null,
+        bannerUrl = rec.banner,
         avatarUrl = rec.thumbnail,
         onClick = onClick,
     )
