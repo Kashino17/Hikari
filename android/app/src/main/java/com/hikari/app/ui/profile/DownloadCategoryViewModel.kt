@@ -81,11 +81,33 @@ class DownloadCategoryViewModel @Inject constructor(
         val ids = _state.value.selectedVideoIds.toList()
         if (ids.isEmpty()) return
         viewModelScope.launch {
+            val failures = mutableListOf<String>()
             ids.forEach { videoId ->
-                runCatching { repo.delete(videoId) }
+                runCatching { repo.delete(videoId) }.onFailure { failures.add(videoId) }
             }
-            _state.update { it.copy(selectedVideoIds = emptySet(), editMode = false) }
-            load()
+            // Refresh inline so we can keep failed IDs selected for retry
+            runCatching { repo.getDownloads() }
+                .onSuccess { data ->
+                    _state.update {
+                        it.copy(
+                            loading = false,
+                            data = data,
+                            selectedVideoIds = failures.toSet(),
+                            editMode = failures.isNotEmpty(),
+                            error = if (failures.isEmpty()) null
+                                else "${failures.size} von ${ids.size} konnten nicht gelöscht werden",
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    _state.update {
+                        it.copy(loading = false, error = e.message ?: "Reload nach Löschen fehlgeschlagen")
+                    }
+                }
         }
+    }
+
+    fun clearError() {
+        _state.update { it.copy(error = null) }
     }
 }

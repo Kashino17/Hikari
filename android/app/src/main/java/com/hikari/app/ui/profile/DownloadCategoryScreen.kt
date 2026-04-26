@@ -270,7 +270,7 @@ private fun SeriesPanel(
                 selectionMode = state.editMode,
                 selected = false,
                 onToggle = { onToggle(group.id) },
-                onCheckChange = { /* groups not selectable themselves; episodes are */ },
+                onCheckChange = null, // Groups aren't selectable; only individual episodes are
                 expandedContent = {
                     androidx.compose.foundation.layout.Column {
                         group.episodes.forEach { ep ->
@@ -321,7 +321,7 @@ private fun ChannelsPanel(
                 selectionMode = state.editMode,
                 selected = false,
                 onToggle = { onToggle(group.id) },
-                onCheckChange = {},
+                onCheckChange = null,
                 expandedContent = {
                     androidx.compose.foundation.layout.Column {
                         group.videos.forEach { v ->

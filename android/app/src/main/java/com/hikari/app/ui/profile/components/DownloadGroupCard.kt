@@ -97,7 +97,7 @@ fun DownloadGroupCard(
                     modifier = Modifier.padding(top = 3.dp),
                 )
             }
-            if (selectionMode) {
+            if (selectionMode && onCheckChange != null) {
                 Box(
                     modifier = Modifier
                         .size(22.dp)
