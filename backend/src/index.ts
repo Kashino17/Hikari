@@ -6,6 +6,7 @@ import fastifyMultipart from "@fastify/multipart";
 import Fastify from "fastify";
 import cron from "node-cron";
 import { registerChannelsRoutes } from "./api/channels.js";
+import { registerDownloadsRoutes } from "./api/downloads.js";
 import { registerFeedRoutes } from "./api/feed.js";
 import { registerFilterRoutes } from "./api/filter.js";
 import { registerHealthRoute } from "./api/health.js";
@@ -68,6 +69,7 @@ await registerFilterRoutes(app, { db });
 await registerHealthRoute(app, { db, videoDir: cfg.videoDir });
 await registerStatsRoutes(app, { db });
 await registerVideosRoutes(app, { db, videoDir: cfg.videoDir, coverDir: cfg.coverDir, extractor });
+await registerDownloadsRoutes(app, { db, diskLimitBytes: cfg.diskLimitBytes });
 await registerMangaRoutes(app, { db, mangaDir: cfg.mangaDir });
 
 // 15-min channel polling

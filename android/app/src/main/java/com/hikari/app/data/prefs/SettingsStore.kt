@@ -1,9 +1,10 @@
 package com.hikari.app.data.prefs
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -15,6 +16,7 @@ private val Context.dataStore by preferencesDataStore(name = "hikari_settings")
 
 private val BACKEND_URL_KEY = stringPreferencesKey("backend_url")
 private val DAILY_BUDGET_KEY = intPreferencesKey("daily_budget")
+private val SMART_DOWNLOADS_KEY = booleanPreferencesKey("smart_downloads")
 
 const val DEFAULT_BACKEND_URL = "http://macbook-pro.taile64a95.ts.net:3000"
 const val DEFAULT_DAILY_BUDGET = 15
@@ -31,11 +33,19 @@ class SettingsStore @Inject constructor(
         it[DAILY_BUDGET_KEY] ?: DEFAULT_DAILY_BUDGET
     }
 
+    val smartDownloads: Flow<Boolean> = ctx.dataStore.data.map {
+        it[SMART_DOWNLOADS_KEY] ?: true
+    }
+
     suspend fun setBackendUrl(url: String) {
         ctx.dataStore.edit { it[BACKEND_URL_KEY] = url.trimEnd('/') }
     }
 
     suspend fun setDailyBudget(value: Int) {
         ctx.dataStore.edit { it[DAILY_BUDGET_KEY] = value.coerceIn(1, 100) }
+    }
+
+    suspend fun setSmartDownloads(enabled: Boolean) {
+        ctx.dataStore.edit { it[SMART_DOWNLOADS_KEY] = enabled }
     }
 }

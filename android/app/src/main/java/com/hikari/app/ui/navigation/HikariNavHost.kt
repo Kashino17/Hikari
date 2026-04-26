@@ -37,7 +37,9 @@ import com.hikari.app.ui.manga.MangaDetailScreen
 import com.hikari.app.ui.manga.MangaListScreen
 import com.hikari.app.ui.manga.MangaReaderScreen
 import com.hikari.app.ui.player.VideoPlayerScreen
+import com.hikari.app.ui.profile.DownloadCategoryScreen
 import com.hikari.app.ui.profile.ProfileScreen
+import com.hikari.app.ui.profile.tabs.DownloadCategory
 import com.hikari.app.ui.settings.SettingsScreen
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -195,12 +197,28 @@ fun HikariNavHost() {
                         onPlayVideo = { videoId, title, channel ->
                             nav.navigate(playVideoRoute(videoId, title, channel))
                         },
+                        onOpenDownloadCategory = { cat ->
+                            nav.navigate("download-category/${cat.name}")
+                        },
                     )
                 }
             }
             composable("settings") {
                 Box(Modifier.fillMaxSize()) {
                     SettingsScreen(onBack = { nav.popBackStack() })
+                }
+            }
+            composable(
+                route = "download-category/{category}",
+                arguments = listOf(navArgument("category") { type = NavType.StringType }),
+            ) {
+                Box(Modifier.fillMaxSize()) {
+                    DownloadCategoryScreen(
+                        onBack = { nav.popBackStack() },
+                        onPlayVideo = { videoId, title, channel ->
+                            nav.navigate(playVideoRoute(videoId, title, channel))
+                        },
+                    )
                 }
             }
             composable("manga") {

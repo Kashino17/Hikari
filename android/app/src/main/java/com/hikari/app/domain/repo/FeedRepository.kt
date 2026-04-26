@@ -91,6 +91,9 @@ class FeedRepository @Inject constructor(
 
     suspend fun getLibrary(): LibraryResponse = api.getLibrary()
 
+    suspend fun getDownloads(): com.hikari.app.data.api.dto.DownloadsResponse =
+        api.getDownloads()
+
     suspend fun getSeries(id: String): SeriesDetailResponse = api.getSeries(id)
 
     suspend fun updateSeries(id: String, thumbnailUrl: String?, description: String?): SeriesDto =
