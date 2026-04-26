@@ -52,4 +52,7 @@ export function applyMigrations(db: Database.Database): void {
   // Green-Card / "Vertrauenskanal" — when 1, processNewVideo skips the AI scorer
   // for videos from this channel (still respects isLive + duration filter).
   addColumnIfMissing(db, "channels", "auto_approve", "INTEGER DEFAULT 0");
+
+  // Channel banner art (16:7-ish wide image), extracted from yt-dlp.
+  addColumnIfMissing(db, "channels", "banner_url", "TEXT");
 }

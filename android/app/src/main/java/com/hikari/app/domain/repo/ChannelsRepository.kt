@@ -27,6 +27,7 @@ class ChannelsRepository @Inject constructor(
             description = it.description,
             subscribers = it.subscribers,
             thumbnail = it.thumbnail_url,
+            bannerUrl = it.banner_url,
             lastPolledAt = it.last_polled_at,
             autoApprove = it.autoApprove == 1,
         )

@@ -24,6 +24,7 @@ describe("resolveChannel", () => {
       description: null,
       subscribers: null,
       thumbnail: null,
+      banner: null,
     });
     expect(runYtDlp).toHaveBeenCalledWith([
       "--flat-playlist",
@@ -95,5 +96,38 @@ describe("resolveChannel", () => {
     });
     const result = await resolveChannel("https://x");
     expect(result.thumbnail).toBe("https://yt3.example/a.jpg");
+  });
+
+  it("picks the widest banner thumbnail (ratio >= 2.5)", async () => {
+    const { runYtDlp } = await import("../yt-dlp/client.js");
+    vi.mocked(runYtDlp).mockResolvedValue({
+      stdout: JSON.stringify({
+        channel_id: "UC1",
+        channel: "BannerChannel",
+        thumbnails: [
+          { url: "https://yt3.example/banner-sm.jpg", width: 1060, height: 175 },
+          { url: "https://yt3.example/banner-lg.jpg", width: 2560, height: 424 },
+          { url: "https://yt3.example/avatar.jpg", width: 900, height: 900 },
+        ],
+      }),
+      stderr: "",
+    });
+    const result = await resolveChannel("https://x");
+    expect(result.banner).toBe("https://yt3.example/banner-lg.jpg");
+    expect(result.thumbnail).toBe("https://yt3.example/avatar.jpg");
+  });
+
+  it("returns null banner when no wide thumbnails exist", async () => {
+    const { runYtDlp } = await import("../yt-dlp/client.js");
+    vi.mocked(runYtDlp).mockResolvedValue({
+      stdout: JSON.stringify({
+        channel_id: "UC1",
+        channel: "AvatarOnly",
+        thumbnails: [{ url: "https://yt3.example/a.jpg", width: 800, height: 800 }],
+      }),
+      stderr: "",
+    });
+    const result = await resolveChannel("https://x");
+    expect(result.banner).toBeNull();
   });
 });

@@ -28,8 +28,8 @@ export async function registerChannelsRoutes(
     deps.db
       .prepare(
         `INSERT OR REPLACE INTO channels
-         (id, url, title, added_at, is_active, handle, description, subscribers, thumbnail_url)
-         VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?)`,
+         (id, url, title, added_at, is_active, handle, description, subscribers, thumbnail_url, banner_url)
+         VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?)`,
       )
       .run(
         resolved.channelId,
@@ -40,6 +40,7 @@ export async function registerChannelsRoutes(
         resolved.description,
         resolved.subscribers,
         resolved.thumbnail,
+        resolved.banner,
       );
     return reply.code(200).send({
       id: resolved.channelId,
@@ -47,6 +48,7 @@ export async function registerChannelsRoutes(
       url: channelUrl,
       handle: resolved.handle,
       thumbnail: resolved.thumbnail,
+      banner_url: resolved.banner,
       subscribers: resolved.subscribers,
     });
   });
@@ -56,7 +58,7 @@ export async function registerChannelsRoutes(
       .prepare(
         `SELECT id, url, title, added_at, is_active, last_polled_at,
                 handle, description, subscribers, thumbnail_url AS thumbnail,
-                auto_approve AS autoApprove
+                banner_url, auto_approve AS autoApprove
          FROM channels WHERE is_active=1 ORDER BY added_at DESC`,
       )
       .all();
@@ -156,7 +158,8 @@ export async function registerChannelsRoutes(
         const refreshed = await resolveChannel(channel.url);
         deps.db
           .prepare(
-            `UPDATE channels SET handle = ?, description = ?, subscribers = ?, thumbnail_url = ?
+            `UPDATE channels SET handle = ?, description = ?, subscribers = ?,
+                                  thumbnail_url = ?, banner_url = ?
              WHERE id = ?`,
           )
           .run(
@@ -164,6 +167,7 @@ export async function registerChannelsRoutes(
             refreshed.description,
             refreshed.subscribers,
             refreshed.thumbnail,
+            refreshed.banner,
             channelId,
           );
       } catch (err) {

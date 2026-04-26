@@ -7,6 +7,7 @@ export interface ResolvedChannel {
   description: string | null;
   subscribers: number | null;
   thumbnail: string | null;
+  banner: string | null;       // wide 16:7-ish banner art
 }
 
 interface YtDlpThumbnail {
@@ -55,6 +56,26 @@ function pickAvatar(thumbnails: YtDlpThumbnail[] | undefined): string | null {
   return fixProtocol(last?.url);
 }
 
+/**
+ * Pick the highest-resolution wide-aspect banner from yt-dlp thumbnails.
+ * Banners are typically 2560×424 (~6:1) but YT serves several sizes;
+ * pick the widest.
+ */
+function pickBanner(thumbnails: YtDlpThumbnail[] | undefined): string | null {
+  if (!thumbnails?.length) return null;
+  const wide = thumbnails
+    .filter((t) => {
+      const w = t.width ?? 0;
+      const h = t.height ?? 0;
+      if (w <= 0 || h <= 0) return false;
+      return w / h >= 2.5;
+    })
+    .sort((a, b) => (b.width ?? 0) - (a.width ?? 0));
+  const top = wide[0];
+  if (top?.url) return fixProtocol(top.url);
+  return null;
+}
+
 export async function resolveChannel(url: string): Promise<ResolvedChannel> {
   const { stdout } = await runYtDlp([
     "--flat-playlist",
@@ -76,5 +97,6 @@ export async function resolveChannel(url: string): Promise<ResolvedChannel> {
     description: parsed.description ?? null,
     subscribers: parsed.channel_follower_count ?? null,
     thumbnail: pickAvatar(parsed.thumbnails) ?? fixProtocol(parsed.thumbnail),
+    banner: pickBanner(parsed.thumbnails),
   };
 }

@@ -14,6 +14,7 @@ data class ChannelDto(
     val description: String? = null,
     val subscribers: Long? = null,
     val thumbnail_url: String? = null,
+    val banner_url: String? = null,
     val autoApprove: Int = 0,
 )
 
@@ -33,5 +34,6 @@ data class AddChannelResponse(
     val url: String,
     val handle: String? = null,
     val thumbnail_url: String? = null,
+    val banner_url: String? = null,
     val subscribers: Long? = null,
 )

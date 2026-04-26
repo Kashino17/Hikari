@@ -6,13 +6,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.prefs.BIO_MAX_LENGTH
 import com.hikari.app.data.prefs.ProfileStore
+import com.hikari.app.domain.model.FeedItem
+import com.hikari.app.domain.repo.ChannelsRepository
+import com.hikari.app.domain.repo.FeedRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -23,6 +29,8 @@ data class NicknameError(val msg: String)
 class ProfileViewModel @Inject constructor(
     @ApplicationContext private val ctx: Context,
     private val store: ProfileStore,
+    private val feedRepo: FeedRepository,
+    private val channelsRepo: ChannelsRepository,
 ) : ViewModel() {
 
     val name: StateFlow<String> =
@@ -35,6 +43,35 @@ class ProfileViewModel @Inject constructor(
         store.avatarPath.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val bioMax = BIO_MAX_LENGTH
+
+    private val _saved = MutableStateFlow<List<FeedItem>>(emptyList())
+    val saved: StateFlow<List<FeedItem>> = _saved.asStateFlow()
+
+    private val _channelsCount = MutableStateFlow(0)
+    val channelsCount: StateFlow<Int> = _channelsCount.asStateFlow()
+
+    val savedCount: StateFlow<Int> = _saved
+        .map { it.size }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
+
+    init {
+        refreshSaved()
+        refreshChannelsCount()
+    }
+
+    fun refreshSaved() {
+        viewModelScope.launch {
+            runCatching { feedRepo.fetchSaved() }
+                .onSuccess { _saved.value = it }
+        }
+    }
+
+    fun refreshChannelsCount() {
+        viewModelScope.launch {
+            runCatching { channelsRepo.list() }
+                .onSuccess { _channelsCount.value = it.size }
+        }
+    }
 
     fun setName(v: String) = viewModelScope.launch { store.setName(v) }
 
