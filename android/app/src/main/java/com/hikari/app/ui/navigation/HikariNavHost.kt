@@ -1,5 +1,7 @@
 package com.hikari.app.ui.navigation
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Box
@@ -37,6 +39,7 @@ import com.hikari.app.ui.manga.MangaDetailScreen
 import com.hikari.app.ui.manga.MangaListScreen
 import com.hikari.app.ui.manga.MangaReaderScreen
 import com.hikari.app.ui.player.VideoPlayerScreen
+import com.hikari.app.ui.profile.ProfileScreen
 import java.net.URLDecoder
 import java.net.URLEncoder
 import com.hikari.app.ui.theme.HikariBg
@@ -107,6 +110,10 @@ fun HikariNavHost() {
             nav,
             startDestination = "library",
             modifier = Modifier.fillMaxSize(),
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None },
         ) {
             composable("library") {
                 Box(Modifier.fillMaxSize().padding(padding)) {
@@ -197,6 +204,13 @@ fun HikariNavHost() {
             composable("tuning") {
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     TuningScreen()
+                }
+            }
+            composable("profile") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    ProfileScreen(
+                        onOpenSettings = { nav.navigate("tuning") },
+                    )
                 }
             }
             composable("manga") {
