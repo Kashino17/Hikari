@@ -176,3 +176,32 @@ CREATE TABLE IF NOT EXISTS manga_sync_jobs (
   started_at INTEGER NOT NULL,
   finished_at INTEGER
 );
+
+-- Discovery: feed-tuning knobs. Singleton row (id = 1) — single user, no auth.
+-- category_weights is a JSON-stringified Record<Category, number>; mirrored
+-- row-per-row into category_preferences for SQL-friendly joins.
+CREATE TABLE IF NOT EXISTS discovery_settings (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  discovery_ratio REAL NOT NULL,
+  quality_threshold INTEGER NOT NULL,
+  category_weights TEXT NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
+-- Per-channel "match score" cached for ranking. Recomputed by a separate job.
+CREATE TABLE IF NOT EXISTS channel_match_scores (
+  channel_id TEXT PRIMARY KEY REFERENCES channels(id) ON DELETE CASCADE,
+  calculated_score REAL NOT NULL,
+  last_updated INTEGER NOT NULL
+);
+
+-- Normalized mirror of discovery_settings.category_weights — one row per
+-- Category. Kept in sync via transaction on every settings write.
+CREATE TABLE IF NOT EXISTS category_preferences (
+  category TEXT PRIMARY KEY,
+  weight REAL NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_channel_match_scores_score
+  ON channel_match_scores(calculated_score DESC);

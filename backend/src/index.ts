@@ -6,6 +6,8 @@ import fastifyMultipart from "@fastify/multipart";
 import Fastify from "fastify";
 import cron from "node-cron";
 import { registerChannelsRoutes } from "./api/channels.js";
+import { registerDiscoveryRoutes as registerDiscoverySettingsRoutes } from "./api/discovery.js";
+import { registerDiscoveryRoutes } from "./routes/discovery.js";
 import { registerDownloadsRoutes } from "./api/downloads.js";
 import { registerFeedRoutes } from "./api/feed.js";
 import { registerFilterRoutes } from "./api/filter.js";
@@ -66,6 +68,8 @@ await app.register(fastifyMultipart, { limits: { fileSize: 10 * 1024 * 1024 } })
 await registerChannelsRoutes(app, { db, scorer, videoDir: cfg.videoDir });
 await registerFeedRoutes(app, { db, dailyBudget: cfg.dailyBudget });
 await registerFilterRoutes(app, { db });
+await registerDiscoverySettingsRoutes(app, { db });
+await registerDiscoveryRoutes(app, { db });
 await registerHealthRoute(app, { db, videoDir: cfg.videoDir });
 await registerStatsRoutes(app, { db });
 await registerVideosRoutes(app, { db, videoDir: cfg.videoDir, coverDir: cfg.coverDir, extractor });

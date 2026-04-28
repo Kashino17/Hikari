@@ -11,7 +11,10 @@ describe("applyMigrations", () => {
       .all() as { name: string }[];
     const names = tables.map((t) => t.name);
     expect(names).toEqual([
+      "category_preferences",
+      "channel_match_scores",
       "channels",
+      "discovery_settings",
       "downloaded_videos",
       "feed_items",
       "filter_config",
