@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -51,6 +52,7 @@ import com.hikari.app.data.api.dto.ChannelGroupDto
 import com.hikari.app.data.api.dto.MovieEntryDto
 import com.hikari.app.data.api.dto.SeriesGroupDto
 import com.hikari.app.data.db.LocalDownloadKind
+import com.hikari.app.data.db.LocalMangaArcEntity
 import com.hikari.app.domain.download.LocalDownloadMetadata
 import com.hikari.app.ui.profile.components.DownloadGroupCard
 import com.hikari.app.ui.profile.components.EpisodeRow
@@ -180,16 +182,11 @@ fun DownloadCategoryScreen(
                             },
                             onRemoveLocal = { m -> vm.removeLocal(m.id) },
                         )
-                        // Phase 3c füllt diese Branch mit MangasPanel —
-                        // bis dahin: Empty-Stub damit der when exhaustive bleibt.
-                        DownloadCategory.MANGAS -> Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                "Manga-Liste folgt",
-                                color = HikariTextMuted,
-                                fontSize = 13.sp,
+                        DownloadCategory.MANGAS -> {
+                            val arcs by vm.mangaArcs.collectAsState()
+                            MangasPanel(
+                                arcs = arcs,
+                                onDelete = { arcId -> vm.deleteMangaArc(arcId) },
                             )
                         }
                     }
@@ -609,6 +606,88 @@ private fun SimpleFilterStrip(activeLabel: String, count: Int) {
                 color = HikariBg,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
+            )
+        }
+    }
+}
+
+@Composable
+private fun MangasPanel(
+    arcs: List<LocalMangaArcEntity>,
+    onDelete: (arcId: String) -> Unit,
+) {
+    val totalBytes = arcs.sumOf { it.totalByteSize }
+    val totalPages = arcs.sumOf { it.expectedPageCount }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 0.dp, bottom = 96.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        item {
+            Hero("Mangas", "${arcs.size} Arcs · $totalPages Seiten · ${formatBytes(totalBytes)}")
+        }
+        if (arcs.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        "Keine offline gespeicherten Mangas",
+                        color = HikariTextMuted,
+                        fontSize = 13.sp,
+                    )
+                }
+            }
+        } else {
+            items(arcs, key = { it.arcId }) { arc ->
+                MangaArcRow(arc = arc, onDelete = { onDelete(arc.arcId) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun MangaArcRow(
+    arc: LocalMangaArcEntity,
+    onDelete: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(HikariSurface)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                arc.seriesTitle,
+                color = HikariText,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                arc.arcTitle,
+                color = HikariTextMuted,
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                "${arc.expectedPageCount} Seiten · ${formatBytes(arc.totalByteSize)}",
+                color = HikariTextFaint,
+                fontSize = 10.sp,
+                fontFamily = FontFamily.Monospace,
+            )
+        }
+        IconButton(onClick = onDelete) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Arc löschen",
+                tint = HikariDanger,
             )
         }
     }

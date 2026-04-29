@@ -4,8 +4,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.DownloadsResponse
+import com.hikari.app.data.db.LocalMangaArcEntity
+import com.hikari.app.data.db.LocalMangaDao
 import com.hikari.app.domain.download.LocalDownloadManager
 import com.hikari.app.domain.download.LocalDownloadMetadata
+import com.hikari.app.domain.download.LocalMangaDownloadManager
 import com.hikari.app.domain.repo.DownloadsRepository
 import com.hikari.app.domain.repo.FeedRepository
 import com.hikari.app.ui.profile.tabs.DownloadCategory
@@ -36,6 +39,8 @@ class DownloadCategoryViewModel @Inject constructor(
     private val repo: FeedRepository,
     private val downloadsRepo: DownloadsRepository,
     private val localDownloads: LocalDownloadManager,
+    private val localMangaDownloads: LocalMangaDownloadManager,
+    localMangaDao: LocalMangaDao,
 ) : ViewModel() {
 
     private val initialCategory = (savedStateHandle.get<String>("category") ?: "SERIES")
@@ -51,6 +56,14 @@ class DownloadCategoryViewModel @Inject constructor(
 
     /** Per-videoId download progress 0f..1f. Absent = not downloading. */
     val downloadProgress: StateFlow<Map<String, Float>> = localDownloads.progress
+
+    /** Live list of locally-downloaded manga arcs, neueste zuerst. */
+    val mangaArcs: StateFlow<List<LocalMangaArcEntity>> = localMangaDao.observeArcs()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    fun deleteMangaArc(arcId: String) {
+        viewModelScope.launch { localMangaDownloads.delete(arcId) }
+    }
 
     init {
         load()
