@@ -19,6 +19,7 @@ import com.hikari.app.data.api.dto.DownloadsResponse
 import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.data.api.dto.LanguagesResponse
 import com.hikari.app.data.api.dto.LibraryResponse
+import com.hikari.app.data.api.dto.MangaArcManifestDto
 import com.hikari.app.data.api.dto.MangaContinueDto
 import com.hikari.app.data.api.dto.MangaPageDto
 import com.hikari.app.data.api.dto.MangaProgressRequest
@@ -226,4 +227,10 @@ interface HikariApi {
 
     @GET("api/manga/sync/jobs")
     suspend fun listMangaSyncJobs(): List<MangaSyncJobDto>
+
+    @GET("api/manga/arcs/{arcId}/manifest")
+    suspend fun getMangaArcManifest(@Path("arcId") arcId: String): MangaArcManifestDto
+
+    @POST("api/manga/arcs/{arcId}/download")
+    suspend fun startMangaArcDownload(@Path("arcId") arcId: String)
 }

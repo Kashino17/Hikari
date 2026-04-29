@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.hikari.app.data.db.FeedDao
 import com.hikari.app.data.db.HikariDatabase
 import com.hikari.app.data.db.LocalDownloadDao
+import com.hikari.app.data.db.LocalMangaDao
 import com.hikari.app.data.db.PlaybackPositionDao
 import dagger.Module
 import dagger.Provides
@@ -32,4 +33,8 @@ object DatabaseModule {
     @Provides @Singleton
     fun provideLocalDownloadDao(db: HikariDatabase): LocalDownloadDao =
         db.localDownloadDao()
+
+    @Provides @Singleton
+    fun provideLocalMangaDao(db: HikariDatabase): LocalMangaDao =
+        db.localMangaDao()
 }
