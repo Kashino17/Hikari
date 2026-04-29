@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.MangaPageDto
 import com.hikari.app.data.prefs.SettingsStore
+import com.hikari.app.domain.download.LocalMangaDownloadManager
 import com.hikari.app.domain.repo.MangaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -30,6 +31,7 @@ sealed interface ReaderUiState {
 @HiltViewModel
 class MangaReaderViewModel @Inject constructor(
     private val repo: MangaRepository,
+    private val mangaDownloads: LocalMangaDownloadManager,
     settings: SettingsStore,
 ) : ViewModel() {
 
@@ -38,11 +40,27 @@ class MangaReaderViewModel @Inject constructor(
     val backendUrl: StateFlow<String> = settings.backendUrl
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
+    /**
+     * pageId → absolute path of an offline copy on this device (sourced from
+     * LocalMangaDownloadManager). Populated before ReaderUiState.Success is
+     * emitted so the first composition uses the correct file:// URL — no
+     * Coil cache-flip from backend → local mid-session.
+     */
+    private val _localPagePaths = MutableStateFlow<Map<String, String>>(emptyMap())
+
     private var seriesId: String = ""
     private var chapterId: String = ""
     private var saveJob: Job? = null
     private var pendingPage: Int? = null
     private var pollJob: Job? = null
+
+    private suspend fun resolveLocalPaths(pages: List<MangaPageDto>): Map<String, String> {
+        val out = mutableMapOf<String, String>()
+        for (p in pages) {
+            mangaDownloads.localPageFile(p.id)?.let { out[p.id] = it.absolutePath }
+        }
+        return out
+    }
 
     fun load(seriesId: String, chapterId: String) {
         this.seriesId = seriesId
@@ -62,6 +80,7 @@ class MangaReaderViewModel @Inject constructor(
                     val sorted = detail.chapters.sortedBy { it.number }
                     val idx = sorted.indexOfFirst { it.id == chapterId }
                     val next = if (idx >= 0 && idx < sorted.size - 1) sorted[idx + 1].id else null
+                    _localPagePaths.value = resolveLocalPaths(pages)
                     _uiState.value = ReaderUiState.Success(pages, next)
                 }
             }.onFailure {
@@ -81,6 +100,7 @@ class MangaReaderViewModel @Inject constructor(
                         val sorted = detail?.chapters?.sortedBy { it.number } ?: emptyList()
                         val idx = sorted.indexOfFirst { it.id == chapterId }
                         val next = if (idx >= 0 && idx < sorted.size - 1) sorted[idx + 1].id else null
+                        _localPagePaths.value = resolveLocalPaths(pages)
                         _uiState.value = ReaderUiState.Success(pages, next)
                         return@launch
                     }
@@ -114,8 +134,10 @@ class MangaReaderViewModel @Inject constructor(
         }
     }
 
-    fun pageImageUrl(baseUrl: String, pageId: String): String =
-        repo.pageImageUrl(baseUrl, pageId)
+    fun pageImageUrl(baseUrl: String, pageId: String): String {
+        val local = _localPagePaths.value[pageId]
+        return if (local != null) "file://$local" else repo.pageImageUrl(baseUrl, pageId)
+    }
 
     /** Cancels the page-availability poll loop. Called by the screen on
      *  dispose and by tests so `runTest` can settle. */
