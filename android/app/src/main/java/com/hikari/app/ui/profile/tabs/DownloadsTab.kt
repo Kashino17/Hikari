@@ -45,6 +45,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.hikari.app.data.api.dto.DownloadsResponse
 import com.hikari.app.ui.profile.DownloadsUiState
 import com.hikari.app.ui.profile.DownloadsViewModel
+import com.hikari.app.ui.profile.MangaSummary
 import com.hikari.app.ui.profile.components.CategoryCard
 import com.hikari.app.ui.profile.components.CategoryStyle
 import com.hikari.app.ui.profile.formatBytes
@@ -57,7 +58,7 @@ import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 
-enum class DownloadCategory { SERIES, CHANNELS, MOVIES }
+enum class DownloadCategory { SERIES, CHANNELS, MOVIES, MANGAS }
 
 @Composable
 fun DownloadsTab(
@@ -67,6 +68,7 @@ fun DownloadsTab(
     val state by vm.state.collectAsState()
     val smart by vm.smartDownloads.collectAsState()
     val localSummary by vm.localSummary.collectAsState()
+    val mangaSummary by vm.mangaSummary.collectAsState()
 
     // Reload when the user returns to this tab (e.g. after deleting items in
     // DownloadCategoryScreen). Without this, storage-strip + counts go stale.
@@ -95,6 +97,7 @@ fun DownloadsTab(
             smartEnabled = smart,
             localCount = localSummary.count,
             localTotalBytes = localSummary.totalBytes,
+            mangaSummary = mangaSummary,
             onSmartChange = vm::setSmartDownloads,
             onOpenCategory = onOpenCategory,
         )
@@ -107,6 +110,7 @@ private fun DownloadsContent(
     smartEnabled: Boolean,
     localCount: Int,
     localTotalBytes: Long,
+    mangaSummary: MangaSummary,
     onSmartChange: (Boolean) -> Unit,
     onOpenCategory: (DownloadCategory) -> Unit,
 ) {
@@ -170,7 +174,24 @@ private fun DownloadsContent(
                         onClick = { onOpenCategory(DownloadCategory.MOVIES) },
                     )
                 }
-                if (data.series.isEmpty() && data.channels.isEmpty() && data.movies.isEmpty()) {
+                if (mangaSummary.arcCount > 0) {
+                    CategoryCard(
+                        title = "Mangas",
+                        meta = "${mangaSummary.arcCount} Arcs · " +
+                            "${mangaSummary.totalPages} Seiten · " +
+                            formatBytes(mangaSummary.totalBytes),
+                        style = CategoryStyle.POSTERS,
+                        // Cover-Path noch nicht im Manifest — seed-basierte
+                        // Platzhalter sorgen für stabile Optik pro Arc.
+                        coverUrls = mangaSummary.arcIds.map { null },
+                        seedFallbacks = mangaSummary.arcIds,
+                        glowColor = Color(0xFF22d3ee),
+                        onClick = { onOpenCategory(DownloadCategory.MANGAS) },
+                    )
+                }
+                if (data.series.isEmpty() && data.channels.isEmpty() &&
+                    data.movies.isEmpty() && mangaSummary.arcCount == 0
+                ) {
                     EmptyState()
                 }
             }

@@ -24,12 +24,20 @@ sealed interface DownloadsUiState {
 
 data class LocalSummary(val count: Int, val totalBytes: Long)
 
+data class MangaSummary(
+    val arcCount: Int,
+    val totalPages: Int,
+    val totalBytes: Long,
+    val arcIds: List<String>,
+)
+
 @HiltViewModel
 class DownloadsViewModel @Inject constructor(
     private val downloadsRepo: DownloadsRepository,
     private val settings: SettingsStore,
     private val scheduler: SmartDownloadScheduler,
     localDownloadDao: com.hikari.app.data.db.LocalDownloadDao,
+    localMangaDao: com.hikari.app.data.db.LocalMangaDao,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<DownloadsUiState>(DownloadsUiState.Loading)
@@ -46,6 +54,17 @@ class DownloadsViewModel @Inject constructor(
             )
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, LocalSummary(0, 0L))
+
+    val mangaSummary: StateFlow<MangaSummary> = localMangaDao.observeArcs()
+        .map { arcs ->
+            MangaSummary(
+                arcCount = arcs.size,
+                totalPages = arcs.sumOf { it.expectedPageCount },
+                totalBytes = arcs.sumOf { it.totalByteSize },
+                arcIds = arcs.map { it.arcId },
+            )
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, MangaSummary(0, 0, 0L, emptyList()))
 
     init {
         load()

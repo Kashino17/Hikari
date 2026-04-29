@@ -82,6 +82,7 @@ fun DownloadCategoryScreen(
                     DownloadCategory.SERIES -> "SERIEN"
                     DownloadCategory.CHANNELS -> "KANÄLE"
                     DownloadCategory.MOVIES -> "FILME"
+                    DownloadCategory.MANGAS -> "MANGAS"
                 },
                 editMode = state.editMode,
                 selectedCount = state.selectedVideoIds.size,
@@ -179,6 +180,18 @@ fun DownloadCategoryScreen(
                             },
                             onRemoveLocal = { m -> vm.removeLocal(m.id) },
                         )
+                        // Phase 3c füllt diese Branch mit MangasPanel —
+                        // bis dahin: Empty-Stub damit der when exhaustive bleibt.
+                        DownloadCategory.MANGAS -> Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                "Manga-Liste folgt",
+                                color = HikariTextMuted,
+                                fontSize = 13.sp,
+                            )
+                        }
                     }
                 }
             }
