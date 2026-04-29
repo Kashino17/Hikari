@@ -5,6 +5,7 @@ import com.hikari.app.data.api.dto.MangaChapterDto
 import com.hikari.app.data.api.dto.MangaPageDto
 import com.hikari.app.data.api.dto.MangaSeriesDetailDto
 import com.hikari.app.data.prefs.SettingsStore
+import com.hikari.app.domain.download.LocalMangaDownloadManager
 import com.hikari.app.domain.repo.MangaRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -31,6 +32,9 @@ class MangaReaderViewModelTest {
     private val settings = mockk<SettingsStore>().apply {
         every { backendUrl } returns MutableStateFlow("http://x")
     }
+    // relaxed = true: localPageFile() returns null for all pageIds, so the
+    // ViewModel falls back to backend URLs as in pre-Phase-4 behavior.
+    private val mangaDownloads = mockk<LocalMangaDownloadManager>(relaxed = true)
 
     @Before fun setUp() { Dispatchers.setMain(StandardTestDispatcher()) }
     @After fun tearDown() { Dispatchers.resetMain() }
@@ -46,7 +50,7 @@ class MangaReaderViewModelTest {
                 MangaChapterDto("ch-2", 2.0),
             ),
         )
-        val vm = MangaReaderViewModel(repo, settings)
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
         try {
             vm.uiState.test(timeout = 4.seconds) {
                 assertTrue(awaitItem() is ReaderUiState.Loading)
@@ -66,7 +70,7 @@ class MangaReaderViewModelTest {
     @Test(timeout = 5_000) fun emptyPages_triggersChapterSyncAndShowsSyncing() = runTest {
         coEvery { repo.getChapterPages("ch-1") } returns emptyList()
         coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(id = "s", title = "X")
-        val vm = MangaReaderViewModel(repo, settings)
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
         try {
             vm.uiState.test(timeout = 4.seconds) {
                 awaitItem() // Loading
@@ -86,7 +90,7 @@ class MangaReaderViewModelTest {
     @Test(timeout = 5_000) fun savePosition_debouncedToLatestValueWithin1500ms() = runTest {
         coEvery { repo.getChapterPages("ch-1") } returns listOf(MangaPageDto("p1", 1, true))
         coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(id = "s", title = "X")
-        val vm = MangaReaderViewModel(repo, settings)
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
         try {
             vm.load("s", "ch-1")
             advanceTimeBy(500)
