@@ -1,11 +1,12 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useMemo } from 'react'
 import { useHikariStore } from '@/lib/store'
 import { sponsorBlockCategories } from '@/lib/mock-data'
 import { buildPrompt, MOOD_OPTIONS, DEPTH_OPTIONS, LANGUAGE_OPTIONS } from '@/lib/prompt-builder'
 import { ChipMulti, ChipFreeInput } from '@/components/Chip'
-import { Copy, RotateCcw, Edit3, Check, X } from 'lucide-react'
+import { Copy, RotateCcw, Edit3, Check, X, ChevronRight } from 'lucide-react'
 import { MangaSyncButton } from '@/components/manga/MangaSyncButton'
 
 type Tab = 'filter' | 'prompt' | 'system'
@@ -387,6 +388,21 @@ function SystemTab() {
 
       <Section label="Manga">
         <MangaSyncButton />
+      </Section>
+
+      <Section label="Discovery">
+        <Link
+          href="/tuning/discovery"
+          className="flex items-center justify-between bg-surface border-hairline rounded-md px-3 py-2.5 hover:bg-accent-soft transition-colors"
+        >
+          <div>
+            <div className="text-[13px]">Discovery-Tuning öffnen</div>
+            <div className="text-faint text-[11px]">
+              Ratio, Kategorie-Gewichtung, Qualitäts-Schwelle
+            </div>
+          </div>
+          <ChevronRight size={14} className="text-faint" strokeWidth={1.5} />
+        </Link>
       </Section>
 
       <div className="h-8" />

@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import { mockVideos, allChannels, mockSeries, MockVideo, MockSeries, MockChannel } from '@/lib/mock-data'
-import { Play, Info, ChevronRight, Plus } from 'lucide-react'
+import { useHikariStore } from '@/lib/store'
+import { Play, Info, ChevronRight, Plus, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 
 function VideoCard({ video }: { video: MockVideo }) {
@@ -48,11 +49,20 @@ function ChannelCard({ channel }: { channel: MockChannel }) {
   )
 }
 
-function Row({ title, children }: { title: string, children: React.ReactNode }) {
+function Row({
+  title,
+  icon,
+  children,
+}: {
+  title: string
+  icon?: React.ReactNode
+  children: React.ReactNode
+}) {
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between px-5 mb-3">
-        <h2 className="text-[15px] font-bold text-white/95 flex items-center gap-1">
+        <h2 className="text-[15px] font-bold text-white/95 flex items-center gap-1.5">
+          {icon}
           {title} <ChevronRight size={16} className="text-faint" />
         </h2>
       </div>
@@ -65,9 +75,20 @@ function Row({ title, children }: { title: string, children: React.ReactNode }) 
 
 export default function LibraryPage() {
   const [showImport, setShowImport] = useState(false)
+  const prefetchedByChannel = useHikariStore((s) => s.prefetchedByChannel)
   const continueWatching = useMemo(() => mockVideos.filter(v => v.progress && v.progress < 0.95), [])
   const newVideos = useMemo(() => mockVideos.slice(0, 8), [])
   const featured = mockVideos[0]
+
+  // Group-by-channel ordering: videos from the same follow-action stay together,
+  // so the row reads as discrete "discovery batches" instead of a shuffled list.
+  const freshlyDiscovered = useMemo(() => {
+    return Object.entries(prefetchedByChannel).flatMap(([, videoIds]) =>
+      videoIds
+        .map((id) => mockVideos.find((v) => v.videoId === id))
+        .filter((v): v is MockVideo => v !== undefined),
+    )
+  }, [prefetchedByChannel])
 
   return (
     <div className="min-h-svh bg-[#0f0f0f] text-white pb-24">
@@ -113,6 +134,15 @@ export default function LibraryPage() {
         {continueWatching.length > 0 && (
           <Row title="Weitersehen">
             {continueWatching.map(v => <VideoCard key={v.videoId} video={v} />)}
+          </Row>
+        )}
+
+        {freshlyDiscovered.length > 0 && (
+          <Row
+            title="Frisch entdeckt"
+            icon={<Sparkles size={14} className="text-accent" strokeWidth={2} />}
+          >
+            {freshlyDiscovered.map(v => <VideoCard key={v.videoId} video={v} />)}
           </Row>
         )}
 

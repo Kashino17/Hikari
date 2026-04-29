@@ -2,17 +2,27 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { sponsorBlockCategories } from './mock-data'
+import { sponsorBlockCategories, type VideoCategory } from './mock-data'
 import { DEFAULT_FILTER, type FilterConfig } from './prompt-builder'
+import {
+  DEFAULT_DISCOVERY_SETTINGS,
+  type DiscoverySettings,
+  type ScoreAxis,
+} from './discovery-tuning'
 
 export type SBBehavior = 'auto' | 'manual' | 'ignore'
 export type FeedFilter = 'all' | 'saved' | 'rejected'
+export type { DiscoverySettings }
 
 interface HikariStore {
   // Subscribed channels
   subscribedChannelIds: string[]
   subscribe: (id: string) => void
   unsubscribe: (id: string) => void
+
+  // Discover-prefetched videos, keyed by channelId so we can drop them on unsubscribe
+  prefetchedByChannel: Record<string, string[]>
+  addPrefetched: (channelId: string, videoIds: string[]) => void
 
   // Saved videos
   savedVideoIds: string[]
@@ -42,6 +52,13 @@ interface HikariStore {
   // SponsorBlock
   sbBehaviors: Record<string, SBBehavior>
   setSbBehavior: (key: string, b: SBBehavior) => void
+
+  // Discovery — field names mirror future `user_discovery_settings` columns
+  discoverySettings: DiscoverySettings
+  updateDiscoverySettings: (patch: Partial<DiscoverySettings>) => void
+  setCategoryWeight: (cat: VideoCategory, weight: number) => void
+  setScoreWeight: (axis: ScoreAxis, weight: number) => void
+  resetDiscoverySettings: () => void
 }
 
 export const useHikariStore = create<HikariStore>()(
@@ -51,8 +68,18 @@ export const useHikariStore = create<HikariStore>()(
       subscribe: (id) =>
         set((s) => ({ subscribedChannelIds: [...s.subscribedChannelIds, id] })),
       unsubscribe: (id) =>
+        set((s) => {
+          const { [id]: _dropped, ...rest } = s.prefetchedByChannel
+          return {
+            subscribedChannelIds: s.subscribedChannelIds.filter((x) => x !== id),
+            prefetchedByChannel: rest,
+          }
+        }),
+
+      prefetchedByChannel: {},
+      addPrefetched: (channelId, videoIds) =>
         set((s) => ({
-          subscribedChannelIds: s.subscribedChannelIds.filter((x) => x !== id),
+          prefetchedByChannel: { ...s.prefetchedByChannel, [channelId]: videoIds },
         })),
 
       savedVideoIds: ['v001', 'v003', 'v006', 'v009', 'v012', 'v015'],
@@ -85,6 +112,26 @@ export const useHikariStore = create<HikariStore>()(
       ),
       setSbBehavior: (key, b) =>
         set((s) => ({ sbBehaviors: { ...s.sbBehaviors, [key]: b } })),
+
+      discoverySettings: DEFAULT_DISCOVERY_SETTINGS,
+      updateDiscoverySettings: (patch) =>
+        set((s) => ({ discoverySettings: { ...s.discoverySettings, ...patch } })),
+      setCategoryWeight: (cat, weight) =>
+        set((s) => ({
+          discoverySettings: {
+            ...s.discoverySettings,
+            category_weights: { ...s.discoverySettings.category_weights, [cat]: weight },
+          },
+        })),
+      setScoreWeight: (axis, weight) =>
+        set((s) => ({
+          discoverySettings: {
+            ...s.discoverySettings,
+            score_weights: { ...s.discoverySettings.score_weights, [axis]: weight },
+          },
+        })),
+      resetDiscoverySettings: () =>
+        set({ discoverySettings: DEFAULT_DISCOVERY_SETTINGS }),
     }),
     { name: 'hikari-minimal-v2' },
   ),
