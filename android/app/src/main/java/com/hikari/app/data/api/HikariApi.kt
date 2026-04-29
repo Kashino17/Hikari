@@ -15,6 +15,7 @@ import com.hikari.app.data.api.dto.AnalyzeRequest
 import com.hikari.app.data.api.dto.AnalyzeResponse
 import com.hikari.app.data.api.dto.BulkImportRequest
 import com.hikari.app.data.api.dto.BulkImportResponse
+import com.hikari.app.data.api.dto.DiscoveryResponseDto
 import com.hikari.app.data.api.dto.DownloadsResponse
 import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.data.api.dto.LanguagesResponse
@@ -101,6 +102,12 @@ interface HikariApi {
 
     @GET("channels/recommendations")
     suspend fun getRecommendations(@Query("force") force: String? = null): List<RecommendationDto>
+
+    @GET("discovery")
+    suspend fun getDiscovery(
+        @Query("limit") limit: Int = 12,
+        @Query("longFormMinSeconds") longFormMinSeconds: Int? = null,
+    ): DiscoveryResponseDto
 
     @POST("channels")
     suspend fun addChannel(@Body req: AddChannelRequest): AddChannelResponse
