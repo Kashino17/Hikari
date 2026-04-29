@@ -2,6 +2,12 @@ import { createReadStream } from "node:fs";
 import { extname, resolve, sep } from "node:path";
 import type Database from "better-sqlite3";
 import type { FastifyInstance } from "fastify";
+import {
+  AdapterMismatchError,
+  ArcNotFoundError,
+  getArcManifest,
+  runArcSync,
+} from "../manga/arc-download.js";
 import { adapters, getAdapter } from "../manga/sources/index.js";
 import { runChapterSync, runFullSync } from "../manga/sync.js";
 
@@ -196,6 +202,54 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
     if (!row) return reply.code(404).send({ error: "not found" });
     return row;
   });
+
+  app.get<{ Params: { arcId: string } }>(
+    "/api/manga/arcs/:arcId/manifest",
+    async (req, reply) => {
+      const manifest = getArcManifest(db, req.params.arcId);
+      if (!manifest) return reply.code(404).send({ error: "arc not found" });
+      return manifest;
+    },
+  );
+
+  app.post<{ Params: { arcId: string } }>(
+    "/api/manga/arcs/:arcId/download",
+    async (req, reply) => {
+      const arc = db
+        .prepare(
+          `SELECT a.id AS arcId, s.source AS source
+             FROM manga_arcs a
+             JOIN manga_series s ON s.id = a.series_id
+            WHERE a.id = ?`,
+        )
+        .get(req.params.arcId) as { arcId: string; source: string } | undefined;
+      if (!arc) return reply.code(404).send({ error: "arc not found" });
+
+      const adapter = getAdapter(arc.source);
+      if (!adapter) {
+        return reply.code(400).send({ error: `no adapter for source ${arc.source}` });
+      }
+
+      queueMicrotask(async () => {
+        try {
+          await runArcSync({
+            db,
+            adapter,
+            arcId: arc.arcId,
+            mangaDir: deps.mangaDir,
+          });
+        } catch (err) {
+          if (err instanceof ArcNotFoundError || err instanceof AdapterMismatchError) {
+            app.log.warn({ err, arcId: arc.arcId }, "arc sync rejected");
+          } else {
+            app.log.error({ err, arcId: arc.arcId }, "arc sync failed");
+          }
+        }
+      });
+
+      return reply.code(202).send({ status: "queued" });
+    },
+  );
 
   app.post<{ Params: { id: string } }>("/api/manga/chapters/:id/sync", async (req, reply) => {
     const chapter = db
