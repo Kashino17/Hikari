@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.MangaContinueDto
 import com.hikari.app.data.api.dto.MangaSeriesDetailDto
 import com.hikari.app.data.prefs.SettingsStore
+import com.hikari.app.domain.download.LocalMangaDownloadManager
 import com.hikari.app.domain.repo.MangaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -29,6 +31,7 @@ sealed interface MangaDetailUiState {
 @HiltViewModel
 class MangaDetailViewModel @Inject constructor(
     private val repo: MangaRepository,
+    private val downloads: LocalMangaDownloadManager,
     settings: SettingsStore,
 ) : ViewModel() {
 
@@ -36,6 +39,15 @@ class MangaDetailViewModel @Inject constructor(
     val uiState: StateFlow<MangaDetailUiState> = _uiState.asStateFlow()
     val backendUrl: StateFlow<String> = settings.backendUrl
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
+
+    /** Set of arcIds, derived from the per-arc DAO, for cheap "downloaded?" lookups in the row. */
+    val downloadedArcs: StateFlow<Set<String>> = downloads.downloadedArcIds
+        .map { it.toSet() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+
+    /** Per-arcId progress 0f..1f. Empty entry = not currently downloading. */
+    val arcProgress: StateFlow<Map<String, Float>> = downloads.progress
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
     fun load(seriesId: String) {
         viewModelScope.launch {
@@ -52,6 +64,10 @@ class MangaDetailViewModel @Inject constructor(
                 _uiState.value = MangaDetailUiState.Error(it.message ?: "Nicht gefunden")
             }
         }
+    }
+
+    fun downloadArc(arcId: String) {
+        viewModelScope.launch { downloads.download(arcId) }
     }
 
     fun coverUrl(baseUrl: String, coverPath: String): String =

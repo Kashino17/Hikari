@@ -44,6 +44,8 @@ fun MangaDetailScreen(
 ) {
     LaunchedEffect(seriesId) { vm.load(seriesId) }
     val state by vm.uiState.collectAsState()
+    val downloadedArcs by vm.downloadedArcs.collectAsState()
+    val arcProgress by vm.arcProgress.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize().background(HikariBg)) {
         when (val s = state) {
@@ -82,6 +84,9 @@ fun MangaDetailScreen(
                                 s.detail.chapters.firstOrNull { it.id == c.chapterId }?.arcId
                             },
                             onChapterClick = { chapterId -> onChapterClick(chapterId, null) },
+                            downloadedArcIds = downloadedArcs,
+                            arcProgress = arcProgress,
+                            onDownloadArc = { arcId -> vm.downloadArc(arcId) },
                         )
                     }
                 }

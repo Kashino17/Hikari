@@ -1,15 +1,21 @@
 package com.hikari.app.ui.manga.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,6 +34,8 @@ import androidx.compose.ui.unit.sp
 import com.hikari.app.data.api.dto.MangaArcDto
 import com.hikari.app.data.api.dto.MangaChapterDto
 
+private val Accent = Color(0xFFFBBF24)
+
 private val SetSaver: Saver<Set<String>, List<String>> = Saver(
     save = { it.toList() },
     restore = { it.toSet() },
@@ -40,6 +48,9 @@ fun ArcAccordion(
     initialExpandedArcId: String?,
     onChapterClick: (chapterId: String) -> Unit,
     modifier: Modifier = Modifier,
+    downloadedArcIds: Set<String> = emptySet(),
+    arcProgress: Map<String, Float> = emptyMap(),
+    onDownloadArc: (arcId: String) -> Unit = {},
 ) {
     var expanded by rememberSaveable(stateSaver = SetSaver) {
         mutableStateOf(
@@ -99,6 +110,11 @@ fun ArcAccordion(
                         fontSize = 10.sp,
                         fontFamily = FontFamily.Monospace,
                     )
+                    ArcDownloadAffordance(
+                        isDownloaded = arc.id in downloadedArcIds,
+                        progress = arcProgress[arc.id],
+                        onDownload = { onDownloadArc(arc.id) },
+                    )
                 }
                 if (isOpen) {
                     byArc[arc.id]?.forEach { ch ->
@@ -119,6 +135,54 @@ fun ArcAccordion(
                     ChapterRow(ch, onClick = { onChapterClick(ch.id) })
                 }
             }
+        }
+    }
+}
+
+/**
+ * Drei mutually-exclusive States, gerendert in dieser Reihenfolge:
+ *  - aktiv downloadend → Kreis-Progress (kein Tap)
+ *  - heruntergeladen   → Checkmark in Accent (kein Tap, Delete via Profile)
+ *  - sonst             → Download-Icon-Button, Tap startet Download
+ */
+@Composable
+private fun ArcDownloadAffordance(
+    isDownloaded: Boolean,
+    progress: Float?,
+    onDownload: () -> Unit,
+) {
+    val box = Modifier.padding(start = 12.dp).size(28.dp)
+    when {
+        progress != null -> Box(modifier = box, contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(
+                progress = { progress.coerceIn(0f, 1f) },
+                color = Accent,
+                strokeWidth = 2.dp,
+                modifier = Modifier.size(20.dp),
+            )
+            Text(
+                text = "${(progress * 100).toInt()}",
+                color = Color.White.copy(alpha = 0.7f),
+                fontSize = 8.sp,
+                fontFamily = FontFamily.Monospace,
+            )
+        }
+        isDownloaded -> Icon(
+            imageVector = Icons.Default.CheckCircle,
+            contentDescription = "Heruntergeladen",
+            tint = Accent,
+            modifier = box,
+        )
+        else -> IconButton(
+            onClick = onDownload,
+            modifier = Modifier.padding(start = 4.dp).size(28.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Default.Download,
+                contentDescription = "Arc herunterladen",
+                tint = Color.White.copy(alpha = 0.6f),
+                modifier = Modifier.size(20.dp),
+            )
         }
     }
 }
