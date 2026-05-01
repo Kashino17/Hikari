@@ -122,7 +122,7 @@ fun SettingsScreen(
             SettingsCard {
                 Text("Server-URL", color = HikariText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 Text(
-                    "Tailscale-Hostname oder IP, z. B. http://macbook-pro.taile64a95.ts.net:3000",
+                    "Tailscale-Hostname oder IP, z. B. http://macbook-pro.taile64a95.ts.net:3939",
                     color = HikariTextMuted,
                     fontSize = 11.sp,
                     lineHeight = 14.sp,

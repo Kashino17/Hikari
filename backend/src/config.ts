@@ -27,7 +27,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   }
 
   return {
-    port: Number(env.PORT ?? 3000),
+    port: Number(env.PORT ?? 3939),
     dataDir,
     videoDir: join(dataDir, "videos"),
     mangaDir: join(dataDir, "manga"),

@@ -20,7 +20,7 @@ private val DAILY_BUDGET_KEY = intPreferencesKey("daily_budget")
 private val SMART_DOWNLOADS_KEY = booleanPreferencesKey("smart_downloads")
 private val DOWNLOADS_LIMIT_BYTES_KEY = longPreferencesKey("downloads_limit_bytes")
 
-const val DEFAULT_BACKEND_URL = "http://macbook-pro.taile64a95.ts.net:3000"
+const val DEFAULT_BACKEND_URL = "http://macbook-pro.taile64a95.ts.net:3939"
 const val DEFAULT_DAILY_BUDGET = 15
 
 @Singleton

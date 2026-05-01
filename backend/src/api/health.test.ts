@@ -18,7 +18,8 @@ describe("health API", () => {
     await registerHealthRoute(app, { db, videoDir: "/tmp/hikari-test" });
     const res = await app.inject({ method: "GET", url: "/health" });
     expect(res.statusCode).toBe(200);
-    const body = res.json() as { status: string; ytDlpVersion: string };
+    const body = res.json() as { service: string; status: string; ytDlpVersion: string };
+    expect(body.service).toBe("hikari");
     expect(body.status).toBe("ok");
     expect(body.ytDlpVersion).toBe("2026.04.01");
   });

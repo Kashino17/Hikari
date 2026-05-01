@@ -4,7 +4,7 @@ import { loadConfig } from "./config.js";
 describe("loadConfig", () => {
   it("defaults to lmstudio provider with no API key required", () => {
     const cfg = loadConfig({ HOME: "/home/k" });
-    expect(cfg.port).toBe(3000);
+    expect(cfg.port).toBe(3939);
     expect(cfg.dailyBudget).toBe(15);
     expect(cfg.diskLimitBytes).toBe(10 * 1024 ** 3);
     expect(cfg.dataDir).toBe("/home/k/.hikari");

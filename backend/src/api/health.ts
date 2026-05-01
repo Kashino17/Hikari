@@ -4,6 +4,11 @@ import type { FastifyInstance } from "fastify";
 import type Database from "better-sqlite3";
 import { runYtDlp, YtDlpError } from "../yt-dlp/client.js";
 
+// Stable identity marker — clients (e.g. cli/hikari) use this to verify
+// they're talking to a real Hikari backend, not some other server that
+// happens to be on the same port.
+export const SERVICE_NAME = "hikari";
+
 export interface HealthDeps {
   db: Database.Database;
   videoDir: string;
@@ -36,6 +41,8 @@ export async function registerHealthRoute(app: FastifyInstance, deps: HealthDeps
       : 0;
 
     return {
+      service: SERVICE_NAME,
+      version: process.env.npm_package_version ?? "unknown",
       status: dbOk && ytDlpVersion !== "unavailable" ? "ok" : "degraded",
       ytDlpVersion,
       dbOk,
