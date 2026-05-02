@@ -121,7 +121,8 @@ private fun FeedItemDto.toEntity() = FeedItemEntity(
 )
 
 private fun FeedItemEntity.toDomain() = FeedItem(
-    videoId = videoId, title = title, durationSeconds = durationSeconds,
+    videoId = videoId, kind = "legacy", parentVideoId = "",
+    title = title, durationSeconds = durationSeconds,
     aspectRatio = aspectRatio, thumbnailUrl = thumbnailUrl,
     channelTitle = channelTitle, category = category,
     reasoning = reasoning, saved = saved,
@@ -129,7 +130,8 @@ private fun FeedItemEntity.toDomain() = FeedItem(
 )
 
 private fun FeedItemDto.toDomain() = FeedItem(
-    videoId = videoId, title = title, durationSeconds = durationSeconds,
+    videoId = videoId, kind = kind, parentVideoId = parentVideoId,
+    title = title, durationSeconds = durationSeconds,
     aspectRatio = aspectRatio, thumbnailUrl = thumbnailUrl,
     channelTitle = channelTitle, category = category,
     reasoning = reasoning, saved = saved == 1,

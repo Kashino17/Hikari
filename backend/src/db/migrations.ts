@@ -55,4 +55,21 @@ export function applyMigrations(db: Database.Database): void {
 
   // Channel banner art (16:7-ish wide image), extracted from yt-dlp.
   addColumnIfMissing(db, "channels", "banner_url", "TEXT");
+
+  // Auto-Clipper: per-video clip lifecycle status.
+  // NULL = legacy/pre-clipper; values: pending | analyzing | rendering | done
+  //                                    | no_highlights | failed
+  addColumnIfMissing(db, "videos", "clip_status", "TEXT");
+
+  // Auto-Clipper: legacy items predating the clipper get is_pre_clipper=1
+  // and continue to behave as full-length feed items. New clipper-path items
+  // never go into feed_items; they go into the new `clips` table instead.
+  const feedCols = db.prepare("PRAGMA table_info(feed_items)").all() as { name: string }[];
+  const hadPreClipper = feedCols.some((c) => c.name === "is_pre_clipper");
+  addColumnIfMissing(db, "feed_items", "is_pre_clipper", "INTEGER DEFAULT 0");
+  if (!hadPreClipper) {
+    // First migration: every existing row is legacy. From here on, new rows
+    // are inserted with explicit is_pre_clipper values.
+    db.exec(`UPDATE feed_items SET is_pre_clipper = 1`);
+  }
 }

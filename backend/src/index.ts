@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { mkdirSync, existsSync, readdirSync, unlinkSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import fastifyStatic from "@fastify/static";
 import fastifyMultipart from "@fastify/multipart";
@@ -15,6 +16,8 @@ import { registerHealthRoute } from "./api/health.js";
 import { registerStatsRoutes } from "./api/stats.js";
 import { registerVideosRoutes } from "./api/videos.js";
 import { registerMangaRoutes } from "./api/manga.js";
+import { registerClipperStatusRoutes } from "./api/clipper-status.js";
+import { registerVideoFullRoute } from "./api/video-full.js";
 import { loadConfig } from "./config.js";
 import { openDatabase } from "./db/connection.js";
 import { runCleanup } from "./download/cleanup.js";
@@ -61,6 +64,14 @@ for (const r of orphanRows) {
 const app = Fastify({ logger: { level: "info" } });
 await app.register(fastifyStatic, { root: cfg.videoDir, prefix: "/videos/" });
 await app.register(fastifyStatic, { root: cfg.coverDir, prefix: "/covers/", decorateReply: false });
+// Clips are written to <videoDir>/clips/<uuid>.mp4 by the clipper worker.
+// Ensure the directory exists even if the worker hasn't run yet (backend boots first).
+await mkdir(join(cfg.videoDir, "clips"), { recursive: true });
+await app.register(fastifyStatic, {
+  root: join(cfg.videoDir, "clips"),
+  prefix: "/clips/",
+  decorateReply: false,
+});
 // Static mockups for design exploration — served as plain HTML
 const mockupsDir = new URL("../mockups", import.meta.url).pathname;
 await app.register(fastifyStatic, { root: mockupsDir, prefix: "/mockups/", decorateReply: false });
@@ -75,6 +86,11 @@ await registerStatsRoutes(app, { db });
 await registerVideosRoutes(app, { db, videoDir: cfg.videoDir, coverDir: cfg.coverDir, extractor });
 await registerDownloadsRoutes(app, { db, diskLimitBytes: cfg.diskLimitBytes });
 await registerMangaRoutes(app, { db, mangaDir: cfg.mangaDir });
+registerClipperStatusRoutes(app, db, {
+  startHour: cfg.clipper.scheduleStartHour,
+  endHour:   cfg.clipper.scheduleEndHour,
+});
+registerVideoFullRoute(app, db);
 
 // 15-min channel polling
 cron.schedule("*/15 * * * *", async () => {

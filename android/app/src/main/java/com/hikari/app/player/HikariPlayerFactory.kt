@@ -47,9 +47,21 @@ class HikariPlayerFactory @Inject constructor(
             }
     }
 
-    fun mediaItemFor(baseUrl: String, videoId: String, localFilePath: String? = null): MediaItem {
-        val uri = if (localFilePath != null) "file://$localFilePath"
-                  else "$baseUrl/videos/$videoId.mp4"
+    fun mediaItemFor(
+        baseUrl: String,
+        videoId: String,
+        localFilePath: String? = null,
+        kind: String = "legacy",
+    ): MediaItem {
+        val uri = if (localFilePath != null) {
+            "file://$localFilePath"
+        } else {
+            val path = when (kind) {
+                "clip" -> "/clips/$videoId.mp4"
+                else   -> "/videos/$videoId.mp4"
+            }
+            "$baseUrl$path"
+        }
         return MediaItem.fromUri(uri)
     }
 }

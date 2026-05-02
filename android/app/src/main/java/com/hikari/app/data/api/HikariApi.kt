@@ -36,6 +36,9 @@ import com.hikari.app.data.api.dto.SetOverrideRequest
 import com.hikari.app.data.api.dto.UpdateSeriesRequest
 import com.hikari.app.data.api.dto.UpdateVideoRequest
 import com.hikari.app.data.api.dto.VideoDetailDto
+import com.hikari.app.data.api.dto.VideoFullDto
+import com.hikari.app.data.api.dto.ClipperStatusDto
+import com.hikari.app.data.api.dto.RetryFailedResponse
 import com.hikari.app.data.api.dto.TodayCountResponse
 import com.hikari.app.data.api.dto.UpdateFilterRequest
 import com.hikari.app.data.api.dto.WeeklyStatsDto
@@ -240,4 +243,13 @@ interface HikariApi {
 
     @POST("api/manga/arcs/{arcId}/download")
     suspend fun startMangaArcDownload(@Path("arcId") arcId: String)
+
+    @GET("clipper/status")
+    suspend fun getClipperStatus(): ClipperStatusDto
+
+    @POST("clipper/retry-failed")
+    suspend fun retryFailed(): RetryFailedResponse
+
+    @GET("videos/{id}/full")
+    suspend fun getVideoFull(@Path("id") id: String): VideoFullDto
 }

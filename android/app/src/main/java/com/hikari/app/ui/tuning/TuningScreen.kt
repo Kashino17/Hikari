@@ -27,10 +27,12 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -543,6 +545,55 @@ private fun SystemTab(vm: TuningViewModel) {
                 }
             }
         }
+        // ── Clipper Status ────────────────────────────────────────────────────
+        val clipperStatus by vm.clipperStatus.collectAsState()
+        val clipperRetrying by vm.clipperRetrying.collectAsState()
+
+        LaunchedEffect(Unit) { vm.loadClipperStatus() }
+
+        Section("Clipper") {
+            val s = clipperStatus
+            if (s == null) {
+                Text("Lädt…", style = MaterialTheme.typography.bodySmall, color = HikariTextFaint)
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    ClipperCountRow("Pending", s.pending)
+                    ClipperCountRow("Processing", s.processing)
+                    ClipperCountRow("Done", s.done)
+                    if (s.failed > 0) {
+                        ClipperCountRow(
+                            label = "Failed",
+                            count = s.failed,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                    if (s.no_highlights > 0) {
+                        ClipperCountRow("No highlights", s.no_highlights)
+                    }
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = if (s.isWindowActive) "● Window: aktiv (22–08)" else "○ Window: pausiert",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (s.isWindowActive) HikariAmber else HikariTextFaint,
+                    )
+                    if (s.failed > 0) {
+                        Spacer(Modifier.height(4.dp))
+                        OutlinedButton(
+                            onClick = { vm.retryFailedClips() },
+                            enabled = !clipperRetrying,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                if (clipperRetrying) "Wird wiederholt…"
+                                else "Failed retry (${s.failed})",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         Section("Manga") {
             val mangaStatus by vm.mangaSyncStatus.collectAsState()
             Box(
@@ -566,6 +617,22 @@ private fun SystemTab(vm: TuningViewModel) {
             }
         }
         Spacer(Modifier.height(80.dp))
+    }
+}
+
+@Composable
+private fun ClipperCountRow(label: String, count: Int, color: Color = HikariText) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = color)
+        Text(
+            count.toString(),
+            style = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 13.sp),
+            color = color,
+        )
     }
 }
 

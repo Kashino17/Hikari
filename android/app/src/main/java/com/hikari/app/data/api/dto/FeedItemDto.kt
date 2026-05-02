@@ -5,6 +5,10 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FeedItemDto(
     val videoId: String,
+    val kind: String = "legacy",
+    val parentVideoId: String = "",
+    val startSec: Double? = null,
+    val endSec: Double? = null,
     val title: String,
     val durationSeconds: Int,
     val aspectRatio: String? = null,

@@ -46,7 +46,7 @@ describe("processNewVideo", () => {
     ).run();
   });
 
-  it("writes approved video to feed_items and triggers download", async () => {
+  it("approved video: enqueues for clipper, sets clip_status='pending', NOT in feed_items", async () => {
     const download = vi.fn(async () => ({
       filePath: "/fake/vid1.mp4",
       fileSizeBytes: 1024,
@@ -62,11 +62,16 @@ describe("processNewVideo", () => {
       download,
     });
 
+    const v = db.prepare("SELECT clip_status FROM videos WHERE id='vid1'").get() as any;
+    expect(v.clip_status).toBe("pending");
+
+    const queued = db.prepare("SELECT * FROM clipper_queue WHERE video_id='vid1'").get();
+    expect(queued).toBeTruthy();
+
     const feed = db.prepare("SELECT * FROM feed_items WHERE video_id='vid1'").all();
-    expect(feed).toHaveLength(1);
+    expect(feed).toHaveLength(0);
+
     expect(download).toHaveBeenCalledOnce();
-    const downloaded = db.prepare("SELECT * FROM downloaded_videos WHERE video_id='vid1'").get();
-    expect(downloaded).toBeTruthy();
   });
 
   it("writes rejected video to scores only, no feed_items, no download", async () => {

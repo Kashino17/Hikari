@@ -2,6 +2,8 @@ package com.hikari.app.domain.model
 
 data class FeedItem(
     val videoId: String,
+    val kind: String = "legacy",
+    val parentVideoId: String = "",
     val title: String,
     val durationSeconds: Int,
     val aspectRatio: String?,
