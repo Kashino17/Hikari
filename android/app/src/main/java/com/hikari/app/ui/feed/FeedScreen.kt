@@ -85,7 +85,7 @@ fun FeedScreen(
     vm: FeedViewModel = hiltViewModel(),
     fullscreen: Boolean = false,
     onFullscreenChange: (Boolean) -> Unit = {},
-    @Suppress("UNUSED_PARAMETER") onNavigate: (String) -> Unit = {},
+    onNavigate: (String) -> Unit = {},
 ) {
     val mode by vm.mode.collectAsState()
     val items by vm.items.collectAsState()
@@ -304,6 +304,27 @@ fun FeedScreen(
                                     onClick = { vm.onToggleSave(it.videoId, it.saved) },
                                 )
                             } ?: Box(Modifier.size(36.dp))
+                        }
+                        // "Original ansehen" — only for clip items
+                        if (current?.kind == "clip" && current.parentVideoId.isNotEmpty()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.End,
+                            ) {
+                                TextButton(
+                                    onClick = {
+                                        onNavigate("original/${current.parentVideoId}")
+                                    },
+                                ) {
+                                    Text(
+                                        "Original ansehen",
+                                        color = HikariAmber,
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                    )
+                                }
+                            }
                         }
                     }
                 }

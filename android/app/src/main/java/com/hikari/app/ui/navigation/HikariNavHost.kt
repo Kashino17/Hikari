@@ -37,6 +37,7 @@ import com.hikari.app.ui.library.SeriesDetailScreen
 import com.hikari.app.ui.manga.MangaDetailScreen
 import com.hikari.app.ui.manga.MangaListScreen
 import com.hikari.app.ui.manga.MangaReaderScreen
+import com.hikari.app.ui.player.FullscreenOriginalPlayer
 import com.hikari.app.ui.player.VideoPlayerScreen
 import com.hikari.app.ui.profile.DownloadCategoryScreen
 import com.hikari.app.ui.profile.ProfileScreen
@@ -76,7 +77,8 @@ fun HikariNavHost() {
         }
     }
 
-    val isVideoRoute = currentRoute?.startsWith("video/") == true
+    val isVideoRoute = currentRoute?.startsWith("video/") == true ||
+        currentRoute?.startsWith("original/") == true
     val isReaderRoute = currentRoute?.matches(Regex("manga/[^/]+/[^/?]+(\\?.*)?")) == true
     // Settings + Tuning sind ab v0.25.0 nur über Profil-Gear erreichbar — sub-pages,
     // also auch ohne Bottom-Nav rendern (eigener Back-Button reicht).
@@ -168,11 +170,21 @@ fun HikariNavHost() {
                     onBack = { nav.popBackStack() },
                 )
             }
+            composable(
+                route = "original/{videoId}",
+                arguments = listOf(navArgument("videoId") { type = NavType.StringType }),
+            ) { entry ->
+                val videoId = entry.arguments?.getString("videoId") ?: return@composable
+                FullscreenOriginalPlayer(
+                    videoId = videoId,
+                    onBack = { nav.popBackStack() },
+                )
+            }
             composable("feed") {
                 FeedScreen(
                     fullscreen = feedFullscreen,
                     onFullscreenChange = { feedFullscreen = it },
-                    onNavigate = { route -> navTo(nav, route) },
+                    onNavigate = { route -> nav.navigate(route) },
                 )
             }
             composable(
