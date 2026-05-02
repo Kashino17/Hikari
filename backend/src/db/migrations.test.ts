@@ -87,7 +87,26 @@ describe("clipper migrations", () => {
     expect(col?.dflt_value).toBe("0");
   });
 
-  it("backfills is_pre_clipper=1 on existing rows when the column is added", () => {
+  it("backfills is_pre_clipper=1 on rows that pre-existed the column", () => {
+    const db = new Database(":memory:");
+    // Manually create a minimal pre-clipper schema (without is_pre_clipper).
+    db.exec(`CREATE TABLE channels (id TEXT PRIMARY KEY, url TEXT, title TEXT, added_at INTEGER);`);
+    db.exec(`CREATE TABLE videos (id TEXT PRIMARY KEY, channel_id TEXT, title TEXT,
+      published_at INTEGER, duration_seconds INTEGER, discovered_at INTEGER);`);
+    db.exec(`CREATE TABLE feed_items (video_id TEXT PRIMARY KEY, added_to_feed_at INTEGER);`);
+    db.prepare("INSERT INTO channels (id,url,title,added_at) VALUES ('c1','x','c',0)").run();
+    db.prepare(`
+      INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at)
+      VALUES ('v1', 'c1', 't', 0, 100, 0)
+    `).run();
+    db.prepare("INSERT INTO feed_items (video_id, added_to_feed_at) VALUES ('v1', 0)").run();
+    applyMigrations(db);
+    const row = db.prepare("SELECT is_pre_clipper FROM feed_items WHERE video_id='v1'")
+      .get() as { is_pre_clipper: number };
+    expect(row.is_pre_clipper).toBe(1);
+  });
+
+  it("does NOT re-backfill is_pre_clipper on subsequent migrations (idempotency)", () => {
     const db = new Database(":memory:");
     // Apply the pre-existing migrations FIRST (without clipper additions).
     // We simulate this by applying the current migrations and then verifying
@@ -109,5 +128,25 @@ describe("clipper migrations", () => {
     const row = db.prepare("SELECT is_pre_clipper FROM feed_items WHERE video_id='v1'")
       .get() as { is_pre_clipper: number };
     expect(row.is_pre_clipper).toBe(0);
+  });
+
+  it("clips table has UNIQUE(parent_video_id, order_in_parent)", () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    db.prepare("INSERT INTO channels (id,url,title,added_at) VALUES ('c1','x','c',0)").run();
+    db.prepare(`
+      INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at)
+      VALUES ('v1', 'c1', 't', 0, 100, 0)
+    `).run();
+    const insertClip = db.prepare(`
+      INSERT INTO clips (id, parent_video_id, order_in_parent,
+        start_seconds, end_seconds, file_path, file_size_bytes,
+        focus_x, focus_y, focus_w, focus_h,
+        reason, created_at, added_to_feed_at)
+      VALUES (?, 'v1', ?, 0, 60, '/p.mp4', 1, 0, 0, 1, 1, 'r', 0, 0)
+    `);
+    insertClip.run("c-a", 0);
+    // Same parent_video_id + same order_in_parent → must throw
+    expect(() => insertClip.run("c-b", 0)).toThrow(/UNIQUE/);
   });
 });

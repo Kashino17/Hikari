@@ -225,7 +225,8 @@ CREATE TABLE IF NOT EXISTS clips (
   seen_at         INTEGER,
   saved           INTEGER DEFAULT 0,
   playback_failed INTEGER DEFAULT 0,
-  progress_seconds REAL DEFAULT 0
+  progress_seconds REAL DEFAULT 0,
+  UNIQUE(parent_video_id, order_in_parent)
 );
 CREATE INDEX IF NOT EXISTS idx_clips_added  ON clips(added_to_feed_at DESC);
 CREATE INDEX IF NOT EXISTS idx_clips_parent ON clips(parent_video_id);
