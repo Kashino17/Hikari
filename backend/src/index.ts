@@ -16,6 +16,7 @@ import { registerStatsRoutes } from "./api/stats.js";
 import { registerVideosRoutes } from "./api/videos.js";
 import { registerMangaRoutes } from "./api/manga.js";
 import { registerClipperStatusRoutes } from "./api/clipper-status.js";
+import { registerVideoFullRoute } from "./api/video-full.js";
 import { loadConfig } from "./config.js";
 import { openDatabase } from "./db/connection.js";
 import { runCleanup } from "./download/cleanup.js";
@@ -80,6 +81,7 @@ registerClipperStatusRoutes(app, db, {
   startHour: cfg.clipper.scheduleStartHour,
   endHour:   cfg.clipper.scheduleEndHour,
 });
+registerVideoFullRoute(app, db);
 
 // 15-min channel polling
 cron.schedule("*/15 * * * *", async () => {
