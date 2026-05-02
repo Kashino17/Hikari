@@ -216,7 +216,7 @@ fun FeedScreen(
                 }
                 LaunchedEffect(playlistKey) {
                     if (items.isEmpty()) return@LaunchedEffect
-                    val mediaItems = items.map { factory.mediaItemFor(baseUrl, it.videoId) }
+                    val mediaItems = items.map { factory.mediaItemFor(baseUrl, it.videoId, kind = it.kind) }
                     val targetIdx = pagerState.currentPage.coerceIn(0, items.lastIndex)
                     player.setMediaItems(mediaItems, targetIdx, 0L)
                     player.prepare()

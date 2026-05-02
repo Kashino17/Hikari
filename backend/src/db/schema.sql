@@ -209,7 +209,7 @@ CREATE INDEX IF NOT EXISTS idx_channel_match_scores_score
 -- Auto-Clipper: clip rows function as both clip definitions AND feed items.
 CREATE TABLE IF NOT EXISTS clips (
   id              TEXT PRIMARY KEY,
-  parent_video_id TEXT NOT NULL REFERENCES videos(id),
+  parent_video_id TEXT NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
   order_in_parent INTEGER NOT NULL,
   start_seconds   REAL NOT NULL,
   end_seconds     REAL NOT NULL,
@@ -232,8 +232,12 @@ CREATE INDEX IF NOT EXISTS idx_clips_added  ON clips(added_to_feed_at DESC);
 CREATE INDEX IF NOT EXISTS idx_clips_parent ON clips(parent_video_id);
 
 -- Single-slot job queue. locked_at NULL = available for dequeue.
+-- NOTE: ON DELETE CASCADE applies only to fresh databases; for existing DBs
+-- (SQLite cannot alter FK constraints) explicit deletes are done in the
+-- DELETE /feed/:id handler. Checked adding a CHECK on clip_status to videos
+-- deferred — too disruptive via ALTER TABLE migration.
 CREATE TABLE IF NOT EXISTS clipper_queue (
-  video_id    TEXT PRIMARY KEY REFERENCES videos(id),
+  video_id    TEXT PRIMARY KEY REFERENCES videos(id) ON DELETE CASCADE,
   queued_at   INTEGER NOT NULL,
   attempts    INTEGER DEFAULT 0,
   last_error  TEXT,

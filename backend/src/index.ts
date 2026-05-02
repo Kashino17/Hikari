@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { mkdirSync, existsSync, readdirSync, unlinkSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import fastifyStatic from "@fastify/static";
 import fastifyMultipart from "@fastify/multipart";
@@ -63,6 +64,14 @@ for (const r of orphanRows) {
 const app = Fastify({ logger: { level: "info" } });
 await app.register(fastifyStatic, { root: cfg.videoDir, prefix: "/videos/" });
 await app.register(fastifyStatic, { root: cfg.coverDir, prefix: "/covers/", decorateReply: false });
+// Clips are written to <videoDir>/clips/<uuid>.mp4 by the clipper worker.
+// Ensure the directory exists even if the worker hasn't run yet (backend boots first).
+await mkdir(join(cfg.videoDir, "clips"), { recursive: true });
+await app.register(fastifyStatic, {
+  root: join(cfg.videoDir, "clips"),
+  prefix: "/clips/",
+  decorateReply: false,
+});
 // Static mockups for design exploration — served as plain HTML
 const mockupsDir = new URL("../mockups", import.meta.url).pathname;
 await app.register(fastifyStatic, { root: mockupsDir, prefix: "/mockups/", decorateReply: false });

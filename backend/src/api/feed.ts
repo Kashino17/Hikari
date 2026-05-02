@@ -170,6 +170,23 @@ function hydrateFeedItem(db: Database.Database, row: RawFeedRow): unknown {
 }
 
 // ---------------------------------------------------------------------------
+// Feed-state mutation helpers — write to BOTH clips and feed_items so that
+// clip ids and legacy feed-item ids are handled by the same code path.
+// An id exists in exactly one of the two tables; the UPDATE on the other is
+// a harmless no-op.
+// ---------------------------------------------------------------------------
+
+function updateFeedRow(
+  db: Database.Database,
+  id: string,
+  set: string,
+  ...params: unknown[]
+): void {
+  db.prepare(`UPDATE clips SET ${set} WHERE id = ?`).run(...params, id);
+  db.prepare(`UPDATE feed_items SET ${set} WHERE video_id = ?`).run(...params, id);
+}
+
+// ---------------------------------------------------------------------------
 // Route registration
 // ---------------------------------------------------------------------------
 
@@ -311,17 +328,25 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
   });
 
   app.post<{ Params: { id: string } }>("/feed/:id/seen", async (req, reply) => {
-    deps.db
-      .prepare("UPDATE feed_items SET seen_at = ? WHERE video_id = ?")
-      .run(Date.now(), req.params.id);
+    const id = req.params.id;
+    const now = Date.now();
+    updateFeedRow(deps.db, id, "seen_at = ?", now);
+    // For clips, update last_served_at on the PARENT video; for legacy items, update
+    // last_served_at on the video itself. A single UNION query resolves the right id.
+    const parent = deps.db.prepare(`
+      SELECT parent_video_id AS parentVideoId FROM clips WHERE id = ?
+      UNION
+      SELECT video_id AS parentVideoId FROM feed_items WHERE video_id = ?
+    `).get(id, id) as { parentVideoId: string } | undefined;
+    const parentId = parent?.parentVideoId ?? id;
     deps.db
       .prepare("UPDATE downloaded_videos SET last_served_at = ? WHERE video_id = ?")
-      .run(Date.now(), req.params.id);
+      .run(now, parentId);
     return reply.code(204).send();
   });
 
   app.post<{ Params: { id: string } }>("/feed/:id/save", async (req, reply) => {
-    deps.db.prepare("UPDATE feed_items SET saved = 1 WHERE video_id = ?").run(req.params.id);
+    updateFeedRow(deps.db, req.params.id, "saved = 1");
     return reply.code(204).send();
   });
 
@@ -330,36 +355,41 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
     Body: { seconds?: number };
   }>("/feed/:id/progress", async (req, reply) => {
     const seconds = Math.max(0, Number(req.body?.seconds ?? 0));
-    deps.db
-      .prepare("UPDATE feed_items SET progress_seconds = ? WHERE video_id = ?")
-      .run(seconds, req.params.id);
+    updateFeedRow(deps.db, req.params.id, "progress_seconds = ?", seconds);
     return reply.code(204).send();
   });
 
   app.delete<{ Params: { id: string } }>("/feed/:id/save", async (req, reply) => {
-    deps.db.prepare("UPDATE feed_items SET saved = 0 WHERE video_id = ?").run(req.params.id);
+    updateFeedRow(deps.db, req.params.id, "saved = 0");
     return reply.code(204).send();
   });
 
   app.post<{ Params: { id: string } }>("/feed/:id/unplayable", async (req, reply) => {
-    deps.db
-      .prepare("UPDATE feed_items SET playback_failed = 1 WHERE video_id = ?")
-      .run(req.params.id);
+    updateFeedRow(deps.db, req.params.id, "playback_failed = 1");
     return reply.code(204).send();
   });
 
   app.post<{ Params: { id: string } }>("/feed/:id/less-like-this", async (req, reply) => {
+    const now = Date.now();
+    deps.db
+      .prepare("UPDATE clips SET seen_at = COALESCE(seen_at, ?), playback_failed = 1 WHERE id = ?")
+      .run(now, req.params.id);
     deps.db
       .prepare(
         "UPDATE feed_items SET seen_at = COALESCE(seen_at, ?), playback_failed = 1 WHERE video_id = ?",
       )
-      .run(Date.now(), req.params.id);
+      .run(now, req.params.id);
     return reply.code(204).send();
   });
 
   app.get("/feed/today-count", async () => {
     const row = deps.db
-      .prepare("SELECT COUNT(*) AS c FROM feed_items WHERE seen_at IS NULL AND playback_failed = 0")
+      .prepare(`
+        SELECT
+          (SELECT COUNT(*) FROM clips WHERE seen_at IS NULL AND playback_failed = 0)
+          + (SELECT COUNT(*) FROM feed_items WHERE seen_at IS NULL AND playback_failed = 0 AND is_pre_clipper = 1)
+          AS c
+      `)
       .get() as { c: number };
     const unseenCount = row.c;
     return {
@@ -378,8 +408,15 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
       .prepare("SELECT file_path FROM downloaded_videos WHERE video_id = ?")
       .get(videoId) as { file_path: string } | undefined;
 
+    // Collect clip file paths before deleting rows so we can unlink after.
+    const clipFiles = deps.db
+      .prepare("SELECT file_path FROM clips WHERE parent_video_id = ?")
+      .all(videoId) as { file_path: string }[];
+
     deps.db.transaction(() => {
       deps.db.prepare("DELETE FROM sponsor_segments WHERE video_id = ?").run(videoId);
+      deps.db.prepare("DELETE FROM clips WHERE parent_video_id = ?").run(videoId);
+      deps.db.prepare("DELETE FROM clipper_queue WHERE video_id = ?").run(videoId);
       deps.db.prepare("DELETE FROM feed_items WHERE video_id = ?").run(videoId);
       deps.db.prepare("DELETE FROM downloaded_videos WHERE video_id = ?").run(videoId);
       deps.db.prepare("DELETE FROM scores WHERE video_id = ?").run(videoId);
@@ -390,6 +427,10 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
       try {
         await fs.promises.unlink(dlRow.file_path);
       } catch {}
+    }
+    // Unlink clip files (on-disk only — DB rows already deleted above).
+    for (const cf of clipFiles) {
+      await fs.promises.unlink(cf.file_path).catch(() => undefined);
     }
     return reply.code(204).send();
   });

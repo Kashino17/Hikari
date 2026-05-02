@@ -331,3 +331,233 @@ describe("applyCooldown", () => {
     expect(out[2].id).toBe("c2");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Feed mutation routes — clip handling (C2 + C3)
+// ---------------------------------------------------------------------------
+
+function seedClip(
+  db: Database.Database,
+  clipId: string,
+  parentVideoId: string,
+  order = 0,
+  seen = false,
+  saved = false,
+) {
+  db.prepare(
+    "INSERT OR IGNORE INTO channels (id, url, title, added_at) VALUES ('UC1','x','c',0)",
+  ).run();
+  db.prepare(
+    `INSERT OR IGNORE INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at)
+     VALUES (?, 'UC1', ?, 0, 600, 0)`,
+  ).run(parentVideoId, `t-${parentVideoId}`);
+  db.prepare(
+    `INSERT INTO clips (id, parent_video_id, order_in_parent,
+       start_seconds, end_seconds, file_path, file_size_bytes,
+       focus_x, focus_y, focus_w, focus_h,
+       reason, created_at, added_to_feed_at, seen_at, saved)
+     VALUES (?, ?, ?, 10, 70, '/clips/${clipId}.mp4', 2000000,
+             0, 0, 1, 1, 'r', 1000, 1000, ?, ?)`,
+  ).run(clipId, parentVideoId, order, seen ? 1000 : null, saved ? 1 : 0);
+}
+
+describe("feed mutation routes — clip handling", () => {
+  let db: Database.Database;
+  beforeEach(() => {
+    db = new Database(":memory:");
+    applyMigrations(db);
+  });
+
+  it("POST /feed/:id/seen marks a clip as seen", async () => {
+    seedClip(db, "clip-a", "parent-a");
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+
+    const res = await app.inject({ method: "POST", url: "/feed/clip-a/seen" });
+    expect(res.statusCode).toBe(204);
+
+    const row = db
+      .prepare("SELECT seen_at FROM clips WHERE id = 'clip-a'")
+      .get() as { seen_at: number | null };
+    expect(row.seen_at).toBeGreaterThan(0);
+  });
+
+  it("POST /feed/:id/save sets saved=1 on a clip", async () => {
+    seedClip(db, "clip-b", "parent-b");
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+
+    await app.inject({ method: "POST", url: "/feed/clip-b/save" });
+    const row = db
+      .prepare("SELECT saved FROM clips WHERE id = 'clip-b'")
+      .get() as { saved: number };
+    expect(row.saved).toBe(1);
+  });
+
+  it("DELETE /feed/:id/save clears saved on a clip", async () => {
+    seedClip(db, "clip-c", "parent-c", 0, false, true);
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+
+    await app.inject({ method: "DELETE", url: "/feed/clip-c/save" });
+    const row = db
+      .prepare("SELECT saved FROM clips WHERE id = 'clip-c'")
+      .get() as { saved: number };
+    expect(row.saved).toBe(0);
+  });
+
+  it("POST /feed/:id/unplayable sets playback_failed on a clip", async () => {
+    seedClip(db, "clip-d", "parent-d");
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+
+    await app.inject({ method: "POST", url: "/feed/clip-d/unplayable" });
+    const row = db
+      .prepare("SELECT playback_failed FROM clips WHERE id = 'clip-d'")
+      .get() as { playback_failed: number };
+    expect(row.playback_failed).toBe(1);
+  });
+
+  it("POST /feed/:id/seen updates last_served_at on PARENT video for clips (C3)", async () => {
+    seedClip(db, "clip-e", "parent-e");
+    // Add a downloaded_videos row for the PARENT so last_served_at can be updated.
+    db.prepare(
+      `INSERT INTO downloaded_videos (video_id, file_path, file_size_bytes, downloaded_at)
+       VALUES ('parent-e', '/parent-e.mp4', 0, 0)`,
+    ).run();
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+
+    await app.inject({ method: "POST", url: "/feed/clip-e/seen" });
+
+    const dl = db
+      .prepare("SELECT last_served_at FROM downloaded_videos WHERE video_id = 'parent-e'")
+      .get() as { last_served_at: number | null };
+    expect(dl.last_served_at).toBeGreaterThan(0);
+  });
+
+  it("POST /feed/:id/seen still updates last_served_at for legacy feed_items rows", async () => {
+    seedFeedItem(db, "legacy-v", Date.now());
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+
+    await app.inject({ method: "POST", url: "/feed/legacy-v/seen" });
+
+    const fi = db
+      .prepare("SELECT seen_at FROM feed_items WHERE video_id = 'legacy-v'")
+      .get() as { seen_at: number | null };
+    expect(fi.seen_at).toBeGreaterThan(0);
+
+    const dl = db
+      .prepare("SELECT last_served_at FROM downloaded_videos WHERE video_id = 'legacy-v'")
+      .get() as { last_served_at: number | null };
+    expect(dl.last_served_at).toBeGreaterThan(0);
+  });
+
+  it("POST /feed/:id/less-like-this sets playback_failed and seen_at on a clip", async () => {
+    seedClip(db, "clip-f", "parent-f");
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+
+    await app.inject({ method: "POST", url: "/feed/clip-f/less-like-this" });
+
+    const row = db
+      .prepare("SELECT playback_failed, seen_at FROM clips WHERE id = 'clip-f'")
+      .get() as { playback_failed: number; seen_at: number | null };
+    expect(row.playback_failed).toBe(1);
+    expect(row.seen_at).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// today-count UNION (C4)
+// ---------------------------------------------------------------------------
+
+describe("GET /feed/today-count — clip + legacy union", () => {
+  it("counts unseen clips AND unseen legacy items together", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+
+    // 2 unseen clips
+    seedClip(db, "tc-clip1", "tc-parent1", 0);
+    seedClip(db, "tc-clip2", "tc-parent2", 0);
+    // 1 seen clip — must NOT be counted
+    seedClip(db, "tc-clip3", "tc-parent3", 0, true);
+    // 1 unseen legacy feed_item (is_pre_clipper=1)
+    seedFeedItem(db, "tc-legacy1", Date.now());
+
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 10 });
+
+    const res = await app.inject({ method: "GET", url: "/feed/today-count" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { unseenCount: number; dailyBudget: number; capped: boolean };
+    // 2 unseen clips + 1 unseen legacy = 3
+    expect(body.unseenCount).toBe(3);
+    expect(body.capped).toBe(false);
+  });
+
+  it("returns capped=true when unseenCount >= dailyBudget", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+
+    seedClip(db, "tc2-clip1", "tc2-p1", 0);
+    seedClip(db, "tc2-clip2", "tc2-p2", 0);
+
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 2 });
+
+    const res = await app.inject({ method: "GET", url: "/feed/today-count" });
+    const body = res.json() as { unseenCount: number; capped: boolean };
+    expect(body.unseenCount).toBe(2);
+    expect(body.capped).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DELETE /feed/:id — clip cascade cleanup (I1)
+// ---------------------------------------------------------------------------
+
+describe("DELETE /feed/:id — clip cascade cleanup", () => {
+  it("deletes clips and clipper_queue rows when parent video is deleted", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+
+    db.prepare("INSERT OR IGNORE INTO channels (id, url, title, added_at) VALUES ('UC1','x','c',0)").run();
+    db.prepare(
+      `INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at)
+       VALUES ('del-parent', 'UC1', 't', 0, 600, 0)`,
+    ).run();
+    db.prepare(
+      `INSERT INTO scores (video_id, overall_score, category, clickbait_risk, educational_value,
+        emotional_manipulation, reasoning, model_used, scored_at, decision)
+       VALUES ('del-parent', 80, 'tech', 0, 9, 0, 'ok', 'mock', 0, 'approved')`,
+    ).run();
+    db.prepare(
+      `INSERT INTO downloaded_videos (video_id, file_path, file_size_bytes, downloaded_at)
+       VALUES ('del-parent', '/tmp/del-parent.mp4', 0, 0)`,
+    ).run();
+    db.prepare(
+      `INSERT INTO clips (id, parent_video_id, order_in_parent,
+         start_seconds, end_seconds, file_path, file_size_bytes,
+         focus_x, focus_y, focus_w, focus_h, reason, created_at, added_to_feed_at)
+       VALUES ('del-clip1', 'del-parent', 0, 10, 70, '/tmp/del-clip1.mp4', 0,
+               0, 0, 1, 1, 'r', 0, 0),
+              ('del-clip2', 'del-parent', 1, 80, 120, '/tmp/del-clip2.mp4', 0,
+               0, 0, 1, 1, 'r', 0, 0)`,
+    ).run();
+    db.prepare(
+      `INSERT INTO clipper_queue (video_id, queued_at) VALUES ('del-parent', 0)`,
+    ).run();
+
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+
+    const res = await app.inject({ method: "DELETE", url: "/feed/del-parent" });
+    expect(res.statusCode).toBe(204);
+
+    expect(db.prepare("SELECT 1 FROM videos WHERE id = 'del-parent'").get()).toBeUndefined();
+    expect(db.prepare("SELECT COUNT(*) AS c FROM clips WHERE parent_video_id = 'del-parent'").get()).toEqual({ c: 0 });
+    expect(db.prepare("SELECT 1 FROM clipper_queue WHERE video_id = 'del-parent'").get()).toBeUndefined();
+  });
+});
