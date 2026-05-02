@@ -1,0 +1,61 @@
+import { stat } from "node:fs/promises";
+import { resolve } from "node:path";
+import { bundle } from "@remotion/bundler";
+import { renderMedia, selectComposition } from "@remotion/renderer";
+import { computeCropRect } from "./crop-math.js";
+import type { ClipSpec } from "./qwen-analyzer.js";
+
+export interface RenderInput {
+  inputPath: string;
+  videoWidth: number;
+  videoHeight: number;
+  spec: ClipSpec;
+  outputPath: string;
+}
+export interface RenderResult {
+  filePath: string;
+  sizeBytes: number;
+}
+
+const REMOTION_ENTRY = resolve(process.cwd(), "remotion/index.ts");
+
+let bundlePromise: Promise<string> | null = null;
+function getBundle(): Promise<string> {
+  bundlePromise ??= bundle({ entryPoint: REMOTION_ENTRY });
+  return bundlePromise;
+}
+
+export async function renderClip(input: RenderInput): Promise<RenderResult> {
+  const { inputPath, videoWidth, videoHeight, spec, outputPath } = input;
+  const crop = computeCropRect({
+    videoWidth, videoHeight,
+    focus: spec.focus,
+    targetAspect: 9 / 16,
+  });
+
+  const inputProps = {
+    src: `file://${inputPath}`,
+    startSec: spec.startSec,
+    endSec: spec.endSec,
+    videoWidth, videoHeight,
+    cropX: crop.x, cropY: crop.y, cropW: crop.w, cropH: crop.h,
+  };
+
+  const serveUrl = await getBundle();
+  const composition = await selectComposition({
+    serveUrl,
+    id: "Clip",
+    inputProps,
+  });
+
+  await renderMedia({
+    composition,
+    serveUrl,
+    codec: "h264",
+    outputLocation: outputPath,
+    inputProps,
+  });
+
+  const stats = await stat(outputPath);
+  return { filePath: outputPath, sizeBytes: stats.size };
+}
