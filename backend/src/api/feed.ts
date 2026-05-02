@@ -93,11 +93,12 @@ export function applyCooldown(candidates: RawFeedRow[], pageSize: number): RawFe
     if (pickIdx === -1) {
       const fallbackIdx = remaining.findIndex((r) => !last3Parents.has(r.parentVideoId));
       if (fallbackIdx === -1) break;
-      out.push(remaining.splice(fallbackIdx, 1)[0]);
+      const picked = remaining.splice(fallbackIdx, 1)[0]!;
+      out.push(picked);
       continue;
     }
 
-    const primary = window[pickIdx];
+    const primary = window[pickIdx]!;
 
     const lastOut = out[out.length - 1];
     if (lastOut && primary.category && lastOut.category === primary.category) {
@@ -108,15 +109,17 @@ export function applyCooldown(candidates: RawFeedRow[], pageSize: number): RawFe
         r.category && r.category !== lastOut.category
       );
       if (swapIdx !== -1) {
-        const better = window[swapIdx];
+        const better = window[swapIdx]!;
         const realIdx = remaining.indexOf(better);
-        out.push(remaining.splice(realIdx, 1)[0]);
+        const picked = remaining.splice(realIdx, 1)[0]!;
+        out.push(picked);
         continue;
       }
     }
 
     const realIdx = remaining.indexOf(primary);
-    out.push(remaining.splice(realIdx, 1)[0]);
+    const picked = remaining.splice(realIdx, 1)[0]!;
+    out.push(picked);
   }
 
   return out;

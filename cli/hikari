@@ -57,9 +57,14 @@ is_clipper_running() {
     pid=$(read_clipper_pid)
     [[ -n "$pid" ]] || return 1
     kill -0 "$pid" 2>/dev/null || return 1
+    # The PID we track is `npm run clipper`, which spawns tsx as a child.
+    # Either the parent or a child mentioning "clipper" in its cmdline counts.
     local cmd
     cmd=$(ps -p "$pid" -o command= 2>/dev/null) || return 1
-    echo "$cmd" | grep -q "clipper-worker"
+    if echo "$cmd" | grep -q "clipper"; then
+        return 0
+    fi
+    pgrep -P "$pid" -f "clipper-worker" >/dev/null 2>&1
 }
 
 kill_tree() {
@@ -146,15 +151,10 @@ start_backend() {
     echo "${AMBER}Starte Backend im Hintergrund auf Port $PORT…${RESET}"
     cd "$BACKEND_DIR"
     : > "$LOG_FILE"
-    # Build: tsc emits JS even when there are type errors (noEmitOnError defaults to false).
-    # The npm script uses && so schema.sql copy is skipped on tsc type errors — we do it
-    # manually here to ensure the DB migration file is always present.
-    # Use node@24 for the TypeScript compiler (tsc via npx), but run the compiled output
-    # with the system node to match the native module (better-sqlite3) ABI.
-    PATH="$NODE_PATH_PREFIX:$PATH" npx tsc -p tsconfig.json >> "$LOG_FILE" 2>&1 || true
-    mkdir -p dist/db && cp src/db/schema.sql dist/db/schema.sql >> "$LOG_FILE" 2>&1 || true
-    if [[ ! -f "dist/index.js" ]]; then
-        echo "${RED}Build schlug fehl — dist/index.js nicht vorhanden.${RESET}"
+    # Build with node@24's tsc (npm scripts), then run dist/ with system node so
+    # the native module (better-sqlite3) ABI matches.
+    if ! PATH="$NODE_PATH_PREFIX:$PATH" npm run build >> "$LOG_FILE" 2>&1; then
+        echo "${RED}Build fehlgeschlagen.${RESET}"
         echo "${DIM}  Letzte Log-Zeilen:${RESET}"
         tail -n 12 "$LOG_FILE" | sed "s/^/  /"
         echo "${DIM}  Volle Logs: ${BOLD}hikari logs backend${RESET}"

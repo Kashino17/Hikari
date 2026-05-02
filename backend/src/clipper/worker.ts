@@ -130,7 +130,7 @@ export async function processNextJob(
   }[] = [];
 
   for (let i = 0; i < specs.length; i++) {
-    const spec = specs[i];
+    const spec = specs[i]!;
     const clipId = randomUUID();
     const outputPath = join(deps.mediaDir, `${clipId}.mp4`);
     try {
