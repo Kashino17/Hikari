@@ -131,11 +131,15 @@ export function applyCooldown(candidates: RawFeedRow[], pageSize: number): RawFe
 
 function hydrateFeedItem(db: Database.Database, row: RawFeedRow): unknown {
   if (row.kind === "clip") {
+    // Clip title = the AI's reason (highlight description) per clip.
+    // Falls back to parent video title if reason is empty (e.g. short-form passthrough).
     return db.prepare(`
       SELECT 'clip' AS kind,
              c.id AS videoId,
              c.parent_video_id AS parentVideoId,
-             v.title, v.aspect_ratio AS aspectRatio, v.thumbnail_url AS thumbnailUrl,
+             COALESCE(NULLIF(c.reason, ''), v.title) AS title,
+             v.title AS parentTitle,
+             v.aspect_ratio AS aspectRatio, v.thumbnail_url AS thumbnailUrl,
              v.channel_id AS channelId, ch.title AS channelTitle,
              s.category, s.reasoning, s.overall_score AS overallScore,
              s.educational_value AS educationalValue,

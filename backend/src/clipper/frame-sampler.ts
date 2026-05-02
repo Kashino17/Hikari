@@ -8,7 +8,9 @@ export interface SampledFrame {
 const MIN_FRAMES = 6;
 const MAX_FRAMES = 16;
 const FRAME_INTERVAL_SEC = 60;
-const FRAME_WIDTH_PX = 480;
+const FRAME_WIDTH_PX = 720;  // bumped from 480 — Qwen needs the detail to
+                              // distinguish faces / UI elements / slide content
+                              // when picking focus. 720x405 ≈ 50KB jpg @ q70.
 const JPEG_QUALITY = 4;  // ffmpeg -q:v scale; 2 (best) – 31 (worst); 4 ≈ q70
 
 export function pickFrameCount(durationSec: number): number {

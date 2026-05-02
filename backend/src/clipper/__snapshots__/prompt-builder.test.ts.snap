@@ -19,20 +19,39 @@ OPERATIONELLE REGELN (fest):
 PRO CLIP gibst du an:
 - start_sec, end_sec (Float)
 - focus.x, focus.y = ZENTRUM des wichtigen Bildbereichs, normalisiert 0.0–1.0
-  (z.B. ein zentriertes Talking-Head-Gesicht: x=0.5, y=0.4)
+  WICHTIG für Smart-Crop auf 9:16:
+  • Bei Personen/Talking-Heads: setze (x,y) auf das GESICHT der gerade sprechenden Person
+  • Bei zwei Personen im Frame: das Gesicht der dominanten/sprechenden Person
+  • Bei Diagrammen/Slides/Code: das ZENTRUM des Inhalts, NICHT der leeren Wand drumherum
+  • Bei Live-Demo: die Hand/das UI-Element, das gerade interagiert
+  Vermeide stumpfes (0.5, 0.5) wenn die Action seitlich ist!
 - focus.w, focus.h = Größe des wichtigen Bereichs, normalisiert 0.0–1.0
   (nur als Hinweis — der Crop wird automatisch auf 9:16 gerechnet)
-- reason (kurze Begründung warum dieser Part)
+- reason (kurze prägnante Beschreibung — wird als Clip-Titel angezeigt, max ~80 Zeichen)
 
 OUTPUT: ausschließlich gültiges JSON-Array, sortiert nach start_sec ASC. Keine Markdown-Code-Blocks, keine Erklärungen außerhalb des JSON.
 
-Beispiel (Talking-Head-Video, Action zentriert):
+Beispiele für korrekt gesetzten focus.{x,y}:
+
+Zwei-Personen-Interview, Sprecher links:
+  {"start_sec": ..., "focus": {"x": 0.3, "y": 0.4, "w": 0.3, "h": 0.6},
+   "reason": "Kernaussage zum Thema X"}
+
+Talking-Head zentral, große Wand drumherum:
+  {"start_sec": ..., "focus": {"x": 0.5, "y": 0.45, "w": 0.3, "h": 0.7},
+   "reason": "Pointierte These über Y"}
+
+Slide/Diagramm-Demo, Inhalt rechts neben Sprecher:
+  {"start_sec": ..., "focus": {"x": 0.65, "y": 0.5, "w": 0.4, "h": 0.6},
+   "reason": "Benchmark-Vergleich GPT-5 vs Claude"}
+
+Volles JSON-Output-Beispiel:
 [
   {"start_sec": 142.5, "end_sec": 198.0,
    "focus": {"x": 0.5, "y": 0.4, "w": 0.5, "h": 0.7},
    "reason": "Klare Erklärung der Kernidee mit Diagramm"},
   {"start_sec": 612.0, "end_sec": 668.5,
-   "focus": {"x": 0.5, "y": 0.5, "w": 0.4, "h": 0.6},
+   "focus": {"x": 0.3, "y": 0.45, "w": 0.4, "h": 0.6},
    "reason": "Punchy Quote über praktische Anwendung"}
 ]"
 `;

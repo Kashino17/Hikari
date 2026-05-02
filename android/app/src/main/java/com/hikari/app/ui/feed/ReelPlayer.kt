@@ -291,21 +291,10 @@ fun ReelPlayer(
         }
     }
 
-    var showNextEpisode by remember { mutableStateOf(false) }
-
-    LaunchedEffect(item.videoId, isCurrent) {
-        if (!isCurrent) return@LaunchedEffect
-        while (true) {
-            kotlinx.coroutines.delay(1000)
-            val pos = player.currentPosition
-            val dur = player.duration
-            if (dur > 0 && pos > dur - 20_000L) {
-                showNextEpisode = true
-            } else {
-                showNextEpisode = false
-            }
-        }
-    }
+    // "Nächste Folge"-Button macht im Feed keinen Sinn (Feed ist scroll-basiert,
+    // nicht episodisch). Permanently off; the mechanism stays available for
+    // the Library/Series-Detail-Screen which uses a different player.
+    val showNextEpisode = false
 
     // ════════════════════════════════════════════════════════════════════════
     // UI

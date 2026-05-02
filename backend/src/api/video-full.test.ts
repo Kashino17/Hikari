@@ -30,7 +30,7 @@ describe("GET /videos/:id/full", () => {
       durationSec: 1234,
       title: "My Vid",
       channelTitle: "Ch",
-      fileUrl: expect.stringContaining("/media/originals/"),
+      fileUrl: expect.stringContaining("/videos/"),
     });
     await app.close();
   });

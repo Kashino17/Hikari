@@ -21,7 +21,10 @@ export function registerVideoFullRoute(app: FastifyInstance, db: Database.Databa
       durationSec: row.durationSec,
       thumbnailUrl: row.thumbnailUrl,
       channelTitle: row.channelTitle,
-      fileUrl: `/media/originals/${encodeURIComponent(basename(row.filePath))}`,
+      // The static-mount serves cfg.videoDir at /videos/. Earlier this was
+      // wrongly /media/originals/ which 404-ed silently, leaving the
+      // FullscreenOriginalPlayer with a black screen.
+      fileUrl: `/videos/${encodeURIComponent(basename(row.filePath))}`,
     };
   });
 }
