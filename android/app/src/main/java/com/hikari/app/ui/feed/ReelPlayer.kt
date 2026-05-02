@@ -291,6 +291,16 @@ fun ReelPlayer(
         }
     }
 
+    // ── Caption position — 20fps poll for smooth word-sync ──────────────────
+    var playerPositionMs by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(item.videoId, isCurrent) {
+        if (!isCurrent) return@LaunchedEffect
+        while (true) {
+            kotlinx.coroutines.delay(50)
+            playerPositionMs = player.currentPosition
+        }
+    }
+
     // "Nächste Folge"-Button macht im Feed keinen Sinn (Feed ist scroll-basiert,
     // nicht episodisch). Permanently off; the mechanism stays available for
     // the Library/Series-Detail-Screen which uses a different player.
@@ -499,6 +509,16 @@ fun ReelPlayer(
                 )
             }
         }
+
+        // ── Caption overlay — YouTube-Shorts-style word sync ─────────────────
+        CaptionOverlay(
+            captions = item.captions,
+            positionMs = playerPositionMs,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(bottom = if (fullscreen) 100.dp else 160.dp),
+        )
 
         // ── Always-visible PrecisionScrubber ────────────────────────────────────
         // At rest: thin 2dp line. On touch: expands to 4dp + thumb. Drag anytime,

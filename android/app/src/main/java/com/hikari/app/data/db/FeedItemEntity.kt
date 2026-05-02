@@ -25,4 +25,5 @@ data class FeedItemEntity(
     val addedAt: Long,
     val saved: Boolean,
     val seen: Boolean,
+    @ColumnInfo(defaultValue = "NULL") val captionsJson: String? = null,
 )

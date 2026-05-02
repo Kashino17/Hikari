@@ -83,4 +83,8 @@ export function applyMigrations(db: Database.Database): void {
   // "fit" letterboxes the full 16:9 frame in 9:16 with blur-bg padding —
   // for slides / text-heavy content where cropping would hide info.
   addColumnIfMissing(db, "clips", "display_mode", "TEXT NOT NULL DEFAULT 'smart-crop'");
+
+  // Word-level captions JSON: [{start, end, text}, ...] in clip-local seconds.
+  // NULL means transcription hasn't run yet; client falls back to no subtitles.
+  addColumnIfMissing(db, "clips", "captions", "TEXT");
 }

@@ -3,6 +3,13 @@ package com.hikari.app.data.api.dto
 import kotlinx.serialization.Serializable
 
 @Serializable
+data class CaptionDto(
+    val start: Double,
+    val end: Double,
+    val text: String,
+)
+
+@Serializable
 data class FeedItemDto(
     val videoId: String,
     val kind: String = "legacy",
@@ -22,6 +29,7 @@ data class FeedItemDto(
     val addedAt: Long,
     val saved: Int,
     val seenAt: Long? = null,  // only present in mode=old responses
+    val captions: List<CaptionDto>? = null,
 )
 
 @Serializable

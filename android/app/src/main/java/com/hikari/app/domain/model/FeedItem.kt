@@ -1,5 +1,7 @@
 package com.hikari.app.domain.model
 
+data class Caption(val startMs: Long, val endMs: Long, val text: String)
+
 data class FeedItem(
     val videoId: String,
     val title: String,
@@ -16,4 +18,5 @@ data class FeedItem(
     // (incl. tests that predate the clipper) keep compiling without churn.
     val kind: String = "legacy",
     val parentVideoId: String = "",
+    val captions: List<Caption>? = null,
 )

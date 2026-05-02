@@ -8,6 +8,7 @@ import { complete, dequeue, fail, setStep } from "./queue.js";
 import { QwenNetworkError } from "./qwen-analyzer.js";
 import type { ClipSpec, AnalyzerConfig } from "./qwen-analyzer.js";
 import type { RenderResult } from "./remotion-renderer.js";
+import { transcribe, type Caption } from "./transcriber.js";
 
 export interface WorkerDeps {
   analyze: (
@@ -22,6 +23,7 @@ export interface WorkerDeps {
     spec: ClipSpec;
     outputPath: string;
   }) => Promise<RenderResult>;
+  transcribeFn?: (filePath: string) => Promise<Caption[]>;
   mediaDir: string;
   analyzerConfig: AnalyzerConfig;
 }
@@ -72,7 +74,14 @@ export async function processNextJob(
 
   // Short-form passthrough: no analysis/rendering needed
   if (video.duration_seconds <= SHORT_FORM_THRESHOLD_SEC) {
-    insertPassthroughClip(db, video.id, video.duration_seconds, dl.file_path);
+    let passCaptions: Caption[] = [];
+    try {
+      const fn = deps.transcribeFn ?? transcribe;
+      passCaptions = await fn(dl.file_path);
+    } catch (e) {
+      console.warn(`[clipper] passthrough transcription failed:`, (e as Error).message);
+    }
+    insertPassthroughClip(db, video.id, video.duration_seconds, dl.file_path, passCaptions);
     db.prepare("UPDATE videos SET clip_status='done' WHERE id=?").run(video.id);
     complete(db, video.id);
     return true;
@@ -132,6 +141,7 @@ export async function processNextJob(
     result: RenderResult;
     spec: ClipSpec;
     order: number;
+    captions: Caption[];
   }[] = [];
 
   for (let i = 0; i < specs.length; i++) {
@@ -146,7 +156,16 @@ export async function processNextJob(
         spec,
         outputPath,
       });
-      rendered.push({ id: clipId, result, spec, order: i });
+      let captions: Caption[] = [];
+      try {
+        const fn = deps.transcribeFn ?? transcribe;
+        captions = await fn(result.filePath);
+      } catch (e) {
+        // Transcription failure is non-fatal — clip still ships, just without subtitles.
+        // Future: surface the error in clipper-status. For now, log + continue.
+        console.warn(`[clipper] transcription failed for ${clipId}:`, (e as Error).message);
+      }
+      rendered.push({ id: clipId, result, spec, order: i, captions });
     } catch (e) {
       // Clean up already-rendered files
       for (const r of rendered) {
@@ -164,8 +183,8 @@ export async function processNextJob(
       id, parent_video_id, order_in_parent,
       start_seconds, end_seconds, file_path, file_size_bytes,
       focus_x, focus_y, focus_w, focus_h,
-      reason, display_mode, created_at, added_to_feed_at
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      reason, display_mode, captions, created_at, added_to_feed_at
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `);
   const now = Date.now();
   db.transaction(() => {
@@ -184,6 +203,7 @@ export async function processNextJob(
         r.spec.focus.h,
         r.spec.reason,
         r.spec.displayMode,
+        r.captions.length > 0 ? JSON.stringify(r.captions) : null,
         now,
         now,
       );
@@ -200,6 +220,7 @@ function insertPassthroughClip(
   videoId: string,
   durationSec: number,
   filePath: string,
+  captions: Caption[] = [],
 ): void {
   const sizeBytes =
     (
@@ -213,8 +234,8 @@ function insertPassthroughClip(
       id, parent_video_id, order_in_parent,
       start_seconds, end_seconds, file_path, file_size_bytes,
       focus_x, focus_y, focus_w, focus_h,
-      reason, display_mode, created_at, added_to_feed_at
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      reason, display_mode, captions, created_at, added_to_feed_at
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `).run(
     randomUUID(),
     videoId,
@@ -229,6 +250,7 @@ function insertPassthroughClip(
     1,
     "short-form-passthrough",
     "smart-crop",
+    captions.length > 0 ? JSON.stringify(captions) : null,
     now,
     now,
   );

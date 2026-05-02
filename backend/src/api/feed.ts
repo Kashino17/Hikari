@@ -133,7 +133,7 @@ function hydrateFeedItem(db: Database.Database, row: RawFeedRow): unknown {
   if (row.kind === "clip") {
     // Clip title = the AI's reason (highlight description) per clip.
     // Falls back to parent video title if reason is empty (e.g. short-form passthrough).
-    return db.prepare(`
+    const clipRow = db.prepare(`
       SELECT 'clip' AS kind,
              c.id AS videoId,
              c.parent_video_id AS parentVideoId,
@@ -146,13 +146,17 @@ function hydrateFeedItem(db: Database.Database, row: RawFeedRow): unknown {
              c.start_seconds AS startSec, c.end_seconds AS endSec,
              (c.end_seconds - c.start_seconds) AS durationSeconds,
              c.added_to_feed_at AS addedAt, c.saved, c.seen_at AS seenAt,
-             c.file_path AS filePath
+             c.captions AS captions, c.file_path AS filePath
         FROM clips c
         JOIN videos v ON v.id = c.parent_video_id
         JOIN channels ch ON ch.id = v.channel_id
         LEFT JOIN scores s ON s.video_id = c.parent_video_id
        WHERE c.id = ?
-    `).get(row.id);
+    `).get(row.id) as any;
+    if (clipRow && typeof clipRow.captions === "string") {
+      try { clipRow.captions = JSON.parse(clipRow.captions); } catch { clipRow.captions = null; }
+    }
+    return clipRow;
   }
   // legacy
   return db.prepare(`

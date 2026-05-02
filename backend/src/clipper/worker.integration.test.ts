@@ -44,9 +44,12 @@ describe("processNextJob", () => {
     const render = vi.fn(async (i: any) => ({
       filePath: i.outputPath, sizeBytes: 5_000_000,
     }));
+    const captionsTranscribe = vi.fn(async () => [
+      { start: 0, end: 0.5, text: "Hello" },
+    ]);
 
     const ran = await processNextJob(db, {
-      analyze, render,
+      analyze, render, transcribeFn: captionsTranscribe,
       mediaDir: "/clips",
       analyzerConfig: { provider: "lmstudio", baseUrl: "http://x", model: "qwen" },
     });
@@ -64,6 +67,9 @@ describe("processNextJob", () => {
     expect(clips[0].parent_video_id).toBe("v1");
     expect(clips[0].file_path).toMatch(/\/clips\//);
 
+    // Verify captions are stored in DB
+    expect(JSON.parse(clips[0].captions)).toEqual([{ start: 0, end: 0.5, text: "Hello" }]);
+
     const queueRows = db.prepare("SELECT * FROM clipper_queue").all();
     expect(queueRows).toHaveLength(0);
   });
@@ -72,9 +78,10 @@ describe("processNextJob", () => {
     enqueue(db, "v1");
     const analyze = vi.fn(async () => []);
     const render = vi.fn();
+    const transcribeFn = vi.fn(async () => []);
 
     await processNextJob(db, {
-      analyze, render,
+      analyze, render, transcribeFn,
       mediaDir: "/clips",
       analyzerConfig: { provider: "lmstudio", baseUrl: "http://x", model: "qwen" },
     });
@@ -94,9 +101,10 @@ describe("processNextJob", () => {
       if (calls === 1) return { filePath: i.outputPath, sizeBytes: 5_000_000 };
       throw new Error("ffmpeg crashed");
     });
+    const transcribeFn = vi.fn(async () => []);
 
     await processNextJob(db, {
-      analyze, render,
+      analyze, render, transcribeFn,
       mediaDir: "/clips",
       analyzerConfig: { provider: "lmstudio", baseUrl: "http://x", model: "qwen" },
     });
@@ -111,9 +119,10 @@ describe("processNextJob", () => {
     enqueue(db, "v1");
     const analyze = vi.fn();
     const render = vi.fn();
+    const transcribeFn = vi.fn(async () => []);
 
     await processNextJob(db, {
-      analyze, render,
+      analyze, render, transcribeFn,
       mediaDir: "/clips",
       analyzerConfig: { provider: "lmstudio", baseUrl: "http://x", model: "qwen" },
     });
@@ -130,8 +139,9 @@ describe("processNextJob", () => {
   });
 
   it("returns false when queue is empty", async () => {
+    const transcribeFn = vi.fn(async () => []);
     const ran = await processNextJob(db, {
-      analyze: vi.fn(), render: vi.fn(),
+      analyze: vi.fn(), render: vi.fn(), transcribeFn,
       mediaDir: "/clips",
       analyzerConfig: { provider: "lmstudio", baseUrl: "http://x", model: "qwen" },
     });
@@ -147,9 +157,10 @@ describe("processNextJob", () => {
       throw err;
     });
     const render = vi.fn();
+    const transcribeFn = vi.fn(async () => []);
 
     await processNextJob(db, {
-      analyze, render, mediaDir: "/clips",
+      analyze, render, transcribeFn, mediaDir: "/clips",
       analyzerConfig: { provider: "lmstudio", baseUrl: "http://x", model: "q" },
     });
 

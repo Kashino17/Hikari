@@ -1,6 +1,7 @@
 package com.hikari.app.domain.repo
 
 import com.hikari.app.data.api.HikariApi
+import com.hikari.app.data.api.dto.CaptionDto
 import com.hikari.app.data.api.dto.FeedItemDto
 import com.hikari.app.data.api.dto.LibraryResponse
 import com.hikari.app.data.api.dto.LibraryVideoDto
@@ -13,7 +14,11 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import com.hikari.app.data.db.FeedDao
 import com.hikari.app.data.db.FeedItemEntity
+import com.hikari.app.domain.model.Caption
 import com.hikari.app.domain.model.FeedItem
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
@@ -119,6 +124,7 @@ private fun FeedItemDto.toEntity() = FeedItemEntity(
     category = category, reasoning = reasoning,
     overallScore = overallScore, educationalValue = educationalValue,
     addedAt = addedAt, saved = saved == 1, seen = seenAt != null,
+    captionsJson = captions?.let { runCatching { Json.encodeToString(it) }.getOrNull() },
 )
 
 private fun FeedItemEntity.toDomain() = FeedItem(
@@ -128,6 +134,17 @@ private fun FeedItemEntity.toDomain() = FeedItem(
     channelTitle = channelTitle, category = category,
     reasoning = reasoning, saved = saved,
     overallScore = overallScore, educationalValue = educationalValue,
+    captions = captionsJson?.let {
+        runCatching {
+            Json.decodeFromString<List<CaptionDto>>(it).map { c ->
+                Caption(
+                    startMs = (c.start * 1000).toLong(),
+                    endMs = (c.end * 1000).toLong(),
+                    text = c.text,
+                )
+            }
+        }.getOrNull()
+    },
 )
 
 private fun FeedItemDto.toDomain() = FeedItem(
@@ -137,4 +154,11 @@ private fun FeedItemDto.toDomain() = FeedItem(
     channelTitle = channelTitle, category = category,
     reasoning = reasoning, saved = saved == 1,
     overallScore = overallScore, educationalValue = educationalValue,
+    captions = captions?.map { c ->
+        Caption(
+            startMs = (c.start * 1000).toLong(),
+            endMs = (c.end * 1000).toLong(),
+            text = c.text,
+        )
+    },
 )
