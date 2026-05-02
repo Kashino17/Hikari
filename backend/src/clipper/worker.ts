@@ -78,9 +78,12 @@ export async function processNextJob(
   db.prepare("UPDATE videos SET clip_status='analyzing' WHERE id=?").run(video.id);
   setStep(db, video.id, "analyzing");
 
-  const filterState = getFilterState(db);
-  const prompt = filterState.promptOverride
-    ?? buildClipperPrompt(filterState.filter, { aspectRatio: video.aspect_ratio });
+  // promptOverride applies to the scorer only — the clipper always builds its
+  // own prompt from FilterConfig because the operational instructions and output
+  // shape are clipper-specific and would not be expressible in the scorer's
+  // override slot.
+  const { filter } = getFilterState(db);
+  const prompt = buildClipperPrompt(filter, { aspectRatio: video.aspect_ratio });
 
   let specs: ClipSpec[];
   try {
