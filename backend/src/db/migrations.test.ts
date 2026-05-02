@@ -15,6 +15,7 @@ describe("applyMigrations", () => {
       "channel_match_scores",
       "channels",
       "clipper_queue",
+      "clipper_runtime",
       "clips",
       "discovery_settings",
       "downloaded_videos",
