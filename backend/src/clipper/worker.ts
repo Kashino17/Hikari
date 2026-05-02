@@ -11,7 +11,7 @@ import type { RenderResult } from "./remotion-renderer.js";
 
 export interface WorkerDeps {
   analyze: (
-    input: { filePath: string; videoId: string; durationSec: number },
+    input: { filePath: string; videoId: string; durationSec: number; transcript?: string },
     prompt: string,
     config: AnalyzerConfig,
   ) => Promise<ClipSpec[]>;
@@ -30,6 +30,7 @@ interface VideoRow {
   id: string;
   duration_seconds: number;
   aspect_ratio: string | null;
+  transcript: string | null;
 }
 interface DownloadRow {
   file_path: string;
@@ -55,7 +56,9 @@ export async function processNextJob(
   if (!job) return false;
 
   const video = db
-    .prepare("SELECT id, duration_seconds, aspect_ratio FROM videos WHERE id = ?")
+    .prepare(`
+      SELECT id, duration_seconds, aspect_ratio, transcript FROM videos WHERE id = ?
+    `)
     .get(job.videoId) as VideoRow | undefined;
   const dl = db
     .prepare("SELECT file_path FROM downloaded_videos WHERE video_id = ?")
@@ -88,11 +91,13 @@ export async function processNextJob(
 
   let specs: ClipSpec[];
   try {
-    specs = await deps.analyze(
-      { filePath: dl.file_path, videoId: video.id, durationSec: video.duration_seconds },
-      prompt,
-      deps.analyzerConfig,
-    );
+    const analyzeInput: { filePath: string; videoId: string; durationSec: number; transcript?: string } = {
+      filePath: dl.file_path,
+      videoId: video.id,
+      durationSec: video.duration_seconds,
+    };
+    if (video.transcript != null) analyzeInput.transcript = video.transcript;
+    specs = await deps.analyze(analyzeInput, prompt, deps.analyzerConfig);
   } catch (e) {
     if (e instanceof QwenNetworkError || (e as Error).name === "QwenNetworkError") {
       // Transient: don't mark failed. Unlock the queue row but reset clip_status

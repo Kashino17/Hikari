@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sampleFrames, type SampledFrame } from "./frame-sampler.js";
 
 export class QwenNetworkError extends Error {
   constructor(message: string) {
@@ -18,6 +19,7 @@ export interface AnalyzeInput {
   filePath: string;
   videoId: string;
   durationSec: number;
+  transcript?: string;
 }
 
 export interface AnalyzerConfig {
@@ -25,6 +27,7 @@ export interface AnalyzerConfig {
   baseUrl: string;
   model: string;
   fetchFn?: typeof fetch;
+  sampleFn?: (filePath: string, durationSec: number) => Promise<SampledFrame[]>;
 }
 
 const MIN_CLIP_SEC = 20;
@@ -54,17 +57,36 @@ async function callQwen(
   const systemPrompt = retryHint
     ? `${prompt}\n\nWICHTIG: ${retryHint}`
     : prompt;
+
+  // Sample frames unless caller injected them via the optional sampleFn (for tests)
+  const frames = config.sampleFn
+    ? await config.sampleFn(input.filePath, input.durationSec)
+    : await sampleFrames(input.filePath, input.durationSec);
+
+  const userTextParts: string[] = [
+    `Analysiere dieses Video. Dauer: ${input.durationSec}s.`,
+    `Du siehst ${frames.length} Frames, gleichmäßig verteilt im Video.`,
+    `Frame-Timestamps (Sekunden): ${frames.map((f) => f.timestampSec).join(", ")}.`,
+  ];
+  if (input.transcript && input.transcript.length > 0) {
+    userTextParts.push(`\nTranskript:\n${input.transcript.slice(0, 8000)}`);
+  }
+
+  const userContent: Array<unknown> = [
+    { type: "text", text: userTextParts.join("\n") },
+  ];
+  for (const f of frames) {
+    userContent.push({
+      type: "image_url",
+      image_url: { url: f.base64DataUri },
+    });
+  }
+
   const body = {
     model: config.model,
     messages: [
       { role: "system", content: systemPrompt },
-      {
-        role: "user",
-        content: [
-          { type: "text", text: `Analysiere dieses Video (Dauer: ${input.durationSec}s).` },
-          { type: "video_url", video_url: { url: `file://${input.filePath}` } },
-        ],
-      },
+      { role: "user", content: userContent },
     ],
     temperature: 0.2,
     stream: false,
@@ -87,9 +109,7 @@ async function callQwen(
     }
     throw new Error(`Qwen request failed: ${res.status} ${text}`);
   }
-  const json = (await res.json()) as {
-    choices: Array<{ message: { content: string } }>;
-  };
+  const json = (await res.json()) as { choices: Array<{ message: { content: string } }> };
   const content = json.choices[0]?.message?.content;
   if (!content) throw new Error("Qwen returned no content");
   return content.trim();

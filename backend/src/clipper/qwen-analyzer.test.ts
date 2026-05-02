@@ -22,8 +22,13 @@ function mockFetch(responses: Array<{ ok: boolean; body: unknown }>) {
   });
 }
 
+const mockSample = vi.fn(async () => [
+  { timestampSec: 60, base64DataUri: "data:image/jpeg;base64,FAKE1" },
+  { timestampSec: 120, base64DataUri: "data:image/jpeg;base64,FAKE2" },
+]);
+
 describe("analyzeVideo", () => {
-  beforeEach(() => { vi.useFakeTimers(); });
+  beforeEach(() => { vi.useFakeTimers(); mockSample.mockClear(); });
   afterEach(() => { vi.restoreAllMocks(); vi.useRealTimers(); });
 
   it("parses a valid LM-Studio response into ClipSpec[]", async () => {
@@ -34,7 +39,7 @@ describe("analyzeVideo", () => {
     const out = await analyzeVideo(
       { filePath: "/fake.mp4", videoId: "v1", durationSec: 600 },
       "prompt",
-      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn },
+      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn, sampleFn: mockSample },
     );
     expect(out).toHaveLength(1);
     expect(out[0]).toMatchObject({
@@ -52,7 +57,7 @@ describe("analyzeVideo", () => {
     const out = await analyzeVideo(
       { filePath: "/fake.mp4", videoId: "v1", durationSec: 600 },
       "prompt",
-      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn },
+      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn, sampleFn: mockSample },
     );
     expect(out).toHaveLength(1);
     expect(fetchFn).toHaveBeenCalledTimes(2);
@@ -66,7 +71,7 @@ describe("analyzeVideo", () => {
     await expect(analyzeVideo(
       { filePath: "/fake.mp4", videoId: "v1", durationSec: 600 },
       "prompt",
-      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn },
+      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn, sampleFn: mockSample },
     )).rejects.toThrow(/invalid JSON/i);
   });
 
@@ -81,7 +86,7 @@ describe("analyzeVideo", () => {
     const out = await analyzeVideo(
       { filePath: "/fake.mp4", videoId: "v1", durationSec: 600 },
       "prompt",
-      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn },
+      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn, sampleFn: mockSample },
     );
     expect(out).toHaveLength(1);
     expect(out[0].endSec).toBe(60);
@@ -97,7 +102,7 @@ describe("analyzeVideo", () => {
     const out = await analyzeVideo(
       { filePath: "/fake.mp4", videoId: "v1", durationSec: 600 },
       "prompt",
-      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn },
+      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn, sampleFn: mockSample },
     );
     expect(out[0].endSec).toBe(50);
   });
@@ -112,7 +117,7 @@ describe("analyzeVideo", () => {
     const out = await analyzeVideo(
       { filePath: "/fake.mp4", videoId: "v1", durationSec: 600 },
       "prompt",
-      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn },
+      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn, sampleFn: mockSample },
     );
     expect(out[0].endSec).toBe(120);
   });
@@ -127,7 +132,7 @@ describe("analyzeVideo", () => {
     const out = await analyzeVideo(
       { filePath: "/fake.mp4", videoId: "v1", durationSec: 600 },
       "prompt",
-      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn },
+      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn, sampleFn: mockSample },
     );
     expect(out).toHaveLength(0);
   });
@@ -139,7 +144,7 @@ describe("analyzeVideo", () => {
     const out = await analyzeVideo(
       { filePath: "/fake.mp4", videoId: "v1", durationSec: 600 },
       "prompt",
-      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn },
+      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn, sampleFn: mockSample },
     );
     expect(out).toEqual([]);
   });
@@ -149,7 +154,7 @@ describe("analyzeVideo", () => {
     await expect(analyzeVideo(
       { filePath: "/x.mp4", videoId: "v1", durationSec: 600 },
       "p",
-      { provider: "lmstudio", baseUrl: "http://x", model: "q", fetchFn },
+      { provider: "lmstudio", baseUrl: "http://x", model: "q", fetchFn, sampleFn: mockSample },
     )).rejects.toThrow(/Cannot reach Qwen/);
   });
 
@@ -163,7 +168,35 @@ describe("analyzeVideo", () => {
     await expect(analyzeVideo(
       { filePath: "/x.mp4", videoId: "v1", durationSec: 600 },
       "p",
-      { provider: "lmstudio", baseUrl: "http://x", model: "q", fetchFn },
+      { provider: "lmstudio", baseUrl: "http://x", model: "q", fetchFn, sampleFn: mockSample },
     )).rejects.toThrow(/503/);
+  });
+
+  it("sends image_url content blocks for each sampled frame", async () => {
+    const fetchFn = mockFetch([{ ok: true, body: { choices: [{ message: { content: VALID_RESPONSE } }] } }]);
+    await analyzeVideo(
+      { filePath: "/fake.mp4", videoId: "v1", durationSec: 600 },
+      "prompt",
+      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn, sampleFn: mockSample },
+    );
+    const callArgs = fetchFn.mock.calls[0]!;
+    const sentBody = JSON.parse(callArgs[1]!.body as string);
+    const userContent = sentBody.messages[1].content;
+    expect(userContent[0].type).toBe("text");
+    expect(userContent.filter((c: any) => c.type === "image_url")).toHaveLength(2);
+    expect(userContent.find((c: any) => c.type === "video_url")).toBeUndefined();
+  });
+
+  it("includes transcript in user text when provided", async () => {
+    const fetchFn = mockFetch([{ ok: true, body: { choices: [{ message: { content: "[]" } }] } }]);
+    await analyzeVideo(
+      { filePath: "/fake.mp4", videoId: "v1", durationSec: 600, transcript: "Hello world from the video." },
+      "prompt",
+      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn, sampleFn: mockSample },
+    );
+    const sentBody = JSON.parse(fetchFn.mock.calls[0]![1]!.body as string);
+    const userText = sentBody.messages[1].content[0].text;
+    expect(userText).toContain("Transkript:");
+    expect(userText).toContain("Hello world from the video.");
   });
 });
