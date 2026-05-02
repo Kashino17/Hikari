@@ -149,6 +149,8 @@ start_backend() {
     # Build: tsc emits JS even when there are type errors (noEmitOnError defaults to false).
     # The npm script uses && so schema.sql copy is skipped on tsc type errors — we do it
     # manually here to ensure the DB migration file is always present.
+    # Use node@24 for the TypeScript compiler (tsc via npx), but run the compiled output
+    # with the system node to match the native module (better-sqlite3) ABI.
     PATH="$NODE_PATH_PREFIX:$PATH" npx tsc -p tsconfig.json >> "$LOG_FILE" 2>&1 || true
     mkdir -p dist/db && cp src/db/schema.sql dist/db/schema.sql >> "$LOG_FILE" 2>&1 || true
     if [[ ! -f "dist/index.js" ]]; then
@@ -158,7 +160,7 @@ start_backend() {
         echo "${DIM}  Volle Logs: ${BOLD}hikari logs backend${RESET}"
         return 1
     fi
-    PORT="$PORT" PATH="$NODE_PATH_PREFIX:$PATH" nohup node dist/index.js >> "$LOG_FILE" 2>&1 &
+    PORT="$PORT" nohup node dist/index.js >> "$LOG_FILE" 2>&1 &
     local pid=$!
     echo "$pid" > "$PID_FILE"
 
@@ -236,7 +238,7 @@ start_clipper() {
     echo "${AMBER}Starte Clipper-Worker im Hintergrund…${RESET}"
     cd "$BACKEND_DIR"
     : > "$CLIPPER_LOG_FILE"
-    PATH="$NODE_PATH_PREFIX:$PATH" nohup npm run clipper >> "$CLIPPER_LOG_FILE" 2>&1 &
+    nohup npm run clipper >> "$CLIPPER_LOG_FILE" 2>&1 &
     local pid=$!
     echo "$pid" > "$CLIPPER_PID_FILE"
 
