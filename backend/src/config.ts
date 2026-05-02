@@ -2,6 +2,15 @@ import { join } from "node:path";
 
 export type LLMProvider = "claude" | "ollama" | "lmstudio";
 
+export interface ClipperConfig {
+  enabled: boolean;
+  provider: "lmstudio" | "ollama";
+  baseUrl: string;
+  model: string;
+  scheduleStartHour: number;
+  scheduleEndHour: number;
+}
+
 export interface Config {
   port: number;
   dataDir: string;
@@ -15,6 +24,7 @@ export interface Config {
   claude: { apiKey: string; model: string };
   ollama: { baseUrl: string; model: string };
   lmstudio: { baseUrl: string; model: string };
+  clipper: ClipperConfig;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -47,6 +57,14 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     lmstudio: {
       baseUrl: env.LMSTUDIO_URL ?? "http://localhost:1234",
       model: env.LMSTUDIO_MODEL ?? "qwen3-27b",
+    },
+    clipper: {
+      enabled: env.CLIPPER_ENABLED !== "false",
+      provider: (env.CLIPPER_PROVIDER as "lmstudio" | "ollama") ?? "lmstudio",
+      baseUrl: env.CLIPPER_BASE_URL ?? "http://localhost:1234",
+      model: env.CLIPPER_MODEL ?? "qwen3.6-35b-a3b",
+      scheduleStartHour: Number(env.CLIPPER_START_HOUR ?? 22),
+      scheduleEndHour: Number(env.CLIPPER_END_HOUR ?? 8),
     },
   };
 }
