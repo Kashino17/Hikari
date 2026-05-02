@@ -1,11 +1,13 @@
 import type { FastifyInstance } from "fastify";
 import type Database from "better-sqlite3";
 import { enqueue, isWindowActive } from "../clipper/queue.js";
+import type { AnalyzerConfig } from "../clipper/qwen-analyzer.js";
 
 export function registerClipperStatusRoutes(
   app: FastifyInstance,
   db: Database.Database,
   schedule: { startHour: number; endHour: number },
+  clipperConfig?: Pick<AnalyzerConfig, "provider" | "baseUrl" | "model">,
 ): void {
   app.get("/clipper/status", async () => {
     const counts = db.prepare(`
@@ -54,6 +56,27 @@ export function registerClipperStatusRoutes(
                                     updated_at  = excluded.updated_at
     `).run(forceUntil, Date.now());
     return { forceUntil };
+  });
+
+  app.get("/clipper/llm-health", async () => {
+    const cfg = clipperConfig;
+    if (!cfg) {
+      return { reachable: false, baseUrl: "unknown", error: "clipper config not provided" };
+    }
+    try {
+      const res = await fetch(`${cfg.baseUrl}/v1/models`, {
+        signal: AbortSignal.timeout(2000),
+      });
+      if (!res.ok) {
+        return { reachable: false, baseUrl: cfg.baseUrl, error: `HTTP ${res.status}` };
+      }
+      const body = await res.json() as { data?: Array<{ id: string }> };
+      const models = body.data?.map((m) => m.id) ?? [];
+      const modelLoaded = models.includes(cfg.model);
+      return { reachable: true, baseUrl: cfg.baseUrl, expectedModel: cfg.model, modelLoaded, models };
+    } catch (e) {
+      return { reachable: false, baseUrl: cfg.baseUrl, error: (e as Error).message };
+    }
   });
 }
 

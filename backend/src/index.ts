@@ -89,7 +89,7 @@ await registerMangaRoutes(app, { db, mangaDir: cfg.mangaDir });
 registerClipperStatusRoutes(app, db, {
   startHour: cfg.clipper.scheduleStartHour,
   endHour:   cfg.clipper.scheduleEndHour,
-});
+}, cfg.clipper);
 registerVideoFullRoute(app, db);
 
 // 15-min channel polling

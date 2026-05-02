@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Hikari Server CLI — start/stop/inspect the local backend daemon.
-# Default action (no args) = start in background.
+# Hikari Server CLI — start/stop/inspect the local backend daemon + clipper worker.
+# Default action (no args) = start BOTH in background.
 
 set -e
 
@@ -16,6 +16,8 @@ MAGIC_DNS_HOST="${HIKARI_HOST:-macbook-pro.taile64a95.ts.net}"
 STATE_DIR="$HOME/.hikari"
 PID_FILE="$STATE_DIR/server.pid"
 LOG_FILE="$STATE_DIR/server.log"
+CLIPPER_PID_FILE="$STATE_DIR/clipper.pid"
+CLIPPER_LOG_FILE="$STATE_DIR/clipper.log"
 
 mkdir -p "$STATE_DIR"
 
@@ -25,6 +27,10 @@ DIM=$'\033[2m'; BOLD=$'\033[1m'; RESET=$'\033[0m'
 
 read_pid() {
     [[ -f "$PID_FILE" ]] && cat "$PID_FILE" || echo ""
+}
+
+read_clipper_pid() {
+    [[ -f "$CLIPPER_PID_FILE" ]] && cat "$CLIPPER_PID_FILE" || echo ""
 }
 
 # Process alive AND health endpoint identifies as Hikari.
@@ -43,6 +49,17 @@ health_says_hikari() {
     body=$(curl -s --max-time 1 "http://localhost:$PORT/health" 2>/dev/null) || return 1
     [[ -n "$body" ]] || return 1
     echo "$body" | grep -q "\"service\":[[:space:]]*\"$SERVICE_NAME\""
+}
+
+# Clipper is running if PID file exists, process is alive, and its command mentions clipper-worker.
+is_clipper_running() {
+    local pid
+    pid=$(read_clipper_pid)
+    [[ -n "$pid" ]] || return 1
+    kill -0 "$pid" 2>/dev/null || return 1
+    local cmd
+    cmd=$(ps -p "$pid" -o command= 2>/dev/null) || return 1
+    echo "$cmd" | grep -q "clipper-worker"
 }
 
 kill_tree() {
@@ -70,21 +87,40 @@ wait_for_health() {
     return 1
 }
 
-# ─── Commands ───────────────────────────────────────────────────────────────
-cmd_start() {
+# Waits up to 3s for the clipper process to be alive.
+wait_for_clipper() {
+    local pid="$1"
+    local i=0
+    while (( i < 12 )); do
+        if kill -0 "$pid" 2>/dev/null; then
+            return 0
+        fi
+        sleep 0.25
+        ((i++))
+    done
+    return 1
+}
+
+# LM Studio reachability check (silent, returns 0 if reachable).
+lm_studio_reachable() {
+    local status
+    status=$(curl -s --max-time 1 -o /dev/null -w "%{http_code}" "http://localhost:1234/v1/models" 2>/dev/null)
+    [[ "$status" == "200" ]]
+}
+
+# ─── Backend start/stop ──────────────────────────────────────────────────────
+start_backend() {
     if is_running; then
-        echo "${YELLOW}Hikari läuft schon${RESET} (PID $(read_pid))"
-        echo "${DIM}  → ${BOLD}hikari status${RESET}${DIM} oder ${BOLD}hikari logs${RESET}${DIM} für Details${RESET}"
+        echo "${YELLOW}Backend läuft schon${RESET} (PID $(read_pid))"
         return 0
     fi
 
-    # Stale PID-File aufräumen (Prozess ist tot oder identifiziert sich nicht als hikari).
+    # Stale PID-File aufräumen.
     if [[ -f "$PID_FILE" ]]; then
         local stale_pid
         stale_pid=$(read_pid)
         if [[ -n "$stale_pid" ]] && kill -0 "$stale_pid" 2>/dev/null; then
-            # Prozess lebt, aber Health-Check schlug fehl → unser eigener kaputter Prozess
-            echo "${DIM}Räume hängenden Prozess auf (PID $stale_pid)…${RESET}"
+            echo "${DIM}Räume hängenden Backend-Prozess auf (PID $stale_pid)…${RESET}"
             kill_tree "$stale_pid" TERM
             sleep 0.5
             kill -0 "$stale_pid" 2>/dev/null && kill_tree "$stale_pid" KILL
@@ -104,18 +140,22 @@ cmd_start() {
         echo "${DIM}Optionen:${RESET}"
         echo "${DIM}  • ${BOLD}kill $holder${RESET}${DIM} — wenn du den Prozess nicht mehr brauchst${RESET}"
         echo "${DIM}  • ${BOLD}PORT=3940 hikari${RESET}${DIM} — Hikari auf einem anderen Port starten${RESET}"
-        echo "${DIM}    (App-URL muss dann in Settings angepasst werden)${RESET}"
         return 1
     fi
 
-    echo "${AMBER}Starte Hikari im Hintergrund auf Port $PORT…${RESET}"
+    echo "${AMBER}Starte Backend im Hintergrund auf Port $PORT…${RESET}"
     cd "$BACKEND_DIR"
     : > "$LOG_FILE"
-    if ! PATH="$NODE_PATH_PREFIX:$PATH" npm run build >> "$LOG_FILE" 2>&1; then
-        echo "${RED}Build fehlgeschlagen.${RESET}"
+    # Build: tsc emits JS even when there are type errors (noEmitOnError defaults to false).
+    # The npm script uses && so schema.sql copy is skipped on tsc type errors — we do it
+    # manually here to ensure the DB migration file is always present.
+    PATH="$NODE_PATH_PREFIX:$PATH" npx tsc -p tsconfig.json >> "$LOG_FILE" 2>&1 || true
+    mkdir -p dist/db && cp src/db/schema.sql dist/db/schema.sql >> "$LOG_FILE" 2>&1 || true
+    if [[ ! -f "dist/index.js" ]]; then
+        echo "${RED}Build schlug fehl — dist/index.js nicht vorhanden.${RESET}"
         echo "${DIM}  Letzte Log-Zeilen:${RESET}"
         tail -n 12 "$LOG_FILE" | sed "s/^/  /"
-        echo "${DIM}  Volle Logs: ${BOLD}hikari logs${RESET}"
+        echo "${DIM}  Volle Logs: ${BOLD}hikari logs backend${RESET}"
         return 1
     fi
     PORT="$PORT" PATH="$NODE_PATH_PREFIX:$PATH" nohup node dist/index.js >> "$LOG_FILE" 2>&1 &
@@ -123,46 +163,39 @@ cmd_start() {
     echo "$pid" > "$PID_FILE"
 
     if ! kill -0 "$pid" 2>/dev/null; then
-        echo "${RED}Prozess ist sofort gestorben.${RESET}"
+        echo "${RED}Backend-Prozess ist sofort gestorben.${RESET}"
         rm -f "$PID_FILE"
-        echo "${DIM}  Letzte Log-Zeilen:${RESET}"
         tail -n 12 "$LOG_FILE" | sed "s/^/  /"
         return 1
     fi
 
     if wait_for_health; then
-        echo "${GREEN}Läuft${RESET} (PID $pid)"
-        echo "${DIM}  Logs:    ${BOLD}hikari logs${RESET}"
-        echo "${DIM}  Stoppen: ${BOLD}hikari stop${RESET}"
-        echo "${DIM}  URL:     http://localhost:$PORT  ·  http://$MAGIC_DNS_HOST:$PORT${RESET}"
+        echo "${GREEN}Backend läuft${RESET} (PID $pid, Port $PORT)"
     else
-        echo "${RED}Server reagiert nicht oder identifiziert sich nicht als Hikari binnen 5s.${RESET}"
+        echo "${RED}Backend reagiert nicht binnen 5s.${RESET}"
         if ! kill -0 "$pid" 2>/dev/null; then
-            echo "${DIM}  Prozess ist gestorben.${RESET}"
             rm -f "$PID_FILE"
         fi
-        echo "${DIM}  Letzte Log-Zeilen:${RESET}"
         tail -n 12 "$LOG_FILE" | sed "s/^/  /"
-        echo "${DIM}  Volle Logs: ${BOLD}hikari logs${RESET}"
         return 1
     fi
 }
 
-cmd_stop() {
+stop_backend() {
     local pid
     pid=$(read_pid)
 
     if [[ -z "$pid" ]] || ! kill -0 "$pid" 2>/dev/null; then
         if [[ -f "$PID_FILE" ]]; then
             rm -f "$PID_FILE"
-            echo "${DIM}Stale PID-Datei aufgeräumt.${RESET}"
+            echo "${DIM}Backend stale PID aufgeräumt.${RESET}"
         else
-            echo "${DIM}Lief nicht.${RESET}"
+            echo "${DIM}Backend lief nicht.${RESET}"
         fi
         return 0
     fi
 
-    echo "${AMBER}Stoppe (PID $pid)…${RESET}"
+    echo "${AMBER}Stoppe Backend (PID $pid)…${RESET}"
     kill_tree "$pid" TERM
 
     local i=0
@@ -177,51 +210,180 @@ cmd_stop() {
     fi
 
     rm -f "$PID_FILE"
-    echo "${GREEN}Gestoppt.${RESET}"
+    echo "${GREEN}Backend gestoppt.${RESET}"
 }
 
-cmd_status() {
-    if is_running; then
-        local pid
-        pid=$(read_pid)
-        echo "${GREEN}● running${RESET}  (PID $pid, Port $PORT)"
-        local body
-        body=$(curl -s --max-time 1 "http://localhost:$PORT/health" 2>/dev/null)
-        echo "${DIM}  /health: $body${RESET}"
-        if [[ -d "$STATE_DIR" ]]; then
-            local size
-            size=$(du -sh "$STATE_DIR" 2>/dev/null | awk '{print $1}')
-            echo "${DIM}  $STATE_DIR: $size${RESET}"
+# ─── Clipper start/stop ──────────────────────────────────────────────────────
+start_clipper() {
+    if is_clipper_running; then
+        echo "${YELLOW}Clipper-Worker läuft schon${RESET} (PID $(read_clipper_pid))"
+        return 0
+    fi
+
+    # Stale PID-File aufräumen.
+    if [[ -f "$CLIPPER_PID_FILE" ]]; then
+        local stale_pid
+        stale_pid=$(read_clipper_pid)
+        if [[ -n "$stale_pid" ]] && kill -0 "$stale_pid" 2>/dev/null; then
+            echo "${DIM}Räume hängenden Clipper-Prozess auf (PID $stale_pid)…${RESET}"
+            kill_tree "$stale_pid" TERM
+            sleep 0.5
+            kill -0 "$stale_pid" 2>/dev/null && kill_tree "$stale_pid" KILL
+        fi
+        rm -f "$CLIPPER_PID_FILE"
+    fi
+
+    echo "${AMBER}Starte Clipper-Worker im Hintergrund…${RESET}"
+    cd "$BACKEND_DIR"
+    : > "$CLIPPER_LOG_FILE"
+    PATH="$NODE_PATH_PREFIX:$PATH" nohup npm run clipper >> "$CLIPPER_LOG_FILE" 2>&1 &
+    local pid=$!
+    echo "$pid" > "$CLIPPER_PID_FILE"
+
+    if wait_for_clipper "$pid"; then
+        echo "${GREEN}Clipper-Worker läuft${RESET} (PID $pid)"
+    else
+        echo "${RED}Clipper-Worker ist sofort gestorben.${RESET}"
+        rm -f "$CLIPPER_PID_FILE"
+        tail -n 8 "$CLIPPER_LOG_FILE" | sed "s/^/  /"
+        return 1
+    fi
+}
+
+stop_clipper() {
+    local pid
+    pid=$(read_clipper_pid)
+
+    if [[ -z "$pid" ]] || ! kill -0 "$pid" 2>/dev/null; then
+        if [[ -f "$CLIPPER_PID_FILE" ]]; then
+            rm -f "$CLIPPER_PID_FILE"
+            echo "${DIM}Clipper stale PID aufgeräumt.${RESET}"
+        else
+            echo "${DIM}Clipper lief nicht.${RESET}"
         fi
         return 0
     fi
 
-    # Nicht "running" laut PID — aber liegt da was anderes auf dem Port?
-    local holder
-    holder=$(port_holder_pid)
-    if [[ -n "$holder" ]]; then
-        local cmd
-        cmd=$(ps -p "$holder" -o command= 2>/dev/null | cut -c1-90)
-        echo "${YELLOW}○ stopped${RESET}  ${DIM}(aber Port $PORT ist belegt)${RESET}"
-        echo "${DIM}  PID $holder: $cmd${RESET}"
-    else
-        echo "${DIM}○ stopped${RESET}"
+    echo "${AMBER}Stoppe Clipper-Worker (PID $pid)…${RESET}"
+    kill_tree "$pid" TERM
+
+    local i=0
+    while (( i < 20 )) && kill -0 "$pid" 2>/dev/null; do
+        sleep 0.25
+        ((i++))
+    done
+
+    if kill -0 "$pid" 2>/dev/null; then
+        echo "${YELLOW}TERM ignoriert — nehme den Hammer.${RESET}"
+        kill_tree "$pid" KILL
     fi
-    [[ -f "$LOG_FILE" ]] && echo "${DIM}  Letzte Logs: ${BOLD}hikari logs${RESET}"
+
+    rm -f "$CLIPPER_PID_FILE"
+    echo "${GREEN}Clipper gestoppt.${RESET}"
+}
+
+# ─── Commands ───────────────────────────────────────────────────────────────
+cmd_start() {
+    start_backend || return 1
+    start_clipper || true  # Clipper failure doesn't abort
+    echo ""
+    echo "${DIM}  Logs:      ${BOLD}hikari logs${RESET}${DIM} (beide) · ${BOLD}hikari logs backend${RESET} · ${BOLD}hikari logs clipper${RESET}"
+    echo "${DIM}  Stoppen:   ${BOLD}hikari stop${RESET}"
+    echo "${DIM}  URL:       http://localhost:$PORT  ·  http://$MAGIC_DNS_HOST:$PORT${RESET}"
+}
+
+cmd_stop() {
+    stop_backend
+    stop_clipper
+}
+
+cmd_status() {
+    echo "${BOLD}Backend:${RESET}"
+    if is_running; then
+        local pid
+        pid=$(read_pid)
+        echo "  ${GREEN}● running${RESET}  (PID $pid, Port $PORT)"
+        local body
+        body=$(curl -s --max-time 1 "http://localhost:$PORT/health" 2>/dev/null)
+        echo "  ${DIM}/health: $body${RESET}"
+    else
+        local holder
+        holder=$(port_holder_pid)
+        if [[ -n "$holder" ]]; then
+            local cmd
+            cmd=$(ps -p "$holder" -o command= 2>/dev/null | cut -c1-90)
+            echo "  ${YELLOW}○ stopped${RESET}  ${DIM}(aber Port $PORT ist belegt)${RESET}"
+            echo "  ${DIM}PID $holder: $cmd${RESET}"
+        else
+            echo "  ${DIM}○ stopped${RESET}"
+        fi
+    fi
+
+    echo ""
+    echo "${BOLD}Clipper-Worker:${RESET}"
+    if is_clipper_running; then
+        local cpid
+        cpid=$(read_clipper_pid)
+        echo "  ${GREEN}● running${RESET}  (PID $cpid)"
+    else
+        echo "  ${DIM}○ stopped${RESET}"
+    fi
+
+    echo ""
+    echo "${BOLD}LM Studio:${RESET}"
+    if lm_studio_reachable; then
+        echo "  ${GREEN}✓ erreichbar${RESET}  (http://localhost:1234)"
+    else
+        echo "  ${YELLOW}✗ nicht erreichbar${RESET}  ${DIM}(Clipper kann nicht analysieren)${RESET}"
+    fi
+
+    if [[ -d "$STATE_DIR" ]]; then
+        local size
+        size=$(du -sh "$STATE_DIR" 2>/dev/null | awk '{print $1}')
+        echo ""
+        echo "${DIM}  $STATE_DIR: $size${RESET}"
+    fi
 }
 
 cmd_restart() {
-    cmd_stop
+    stop_backend
+    stop_clipper
     sleep 0.5
-    cmd_start
+    start_backend || return 1
+    start_clipper || true
+    echo ""
+    echo "${DIM}  URL: http://localhost:$PORT  ·  http://$MAGIC_DNS_HOST:$PORT${RESET}"
 }
 
 cmd_logs() {
-    if [[ ! -f "$LOG_FILE" ]]; then
-        echo "${DIM}Noch keine Logs (Server lief noch nicht).${RESET}"
-        return 1
-    fi
-    tail -F -n 50 "$LOG_FILE"
+    local target="${1:-both}"
+    case "$target" in
+        backend)
+            if [[ ! -f "$LOG_FILE" ]]; then
+                echo "${DIM}Noch keine Backend-Logs.${RESET}"
+                return 1
+            fi
+            tail -F -n 50 "$LOG_FILE"
+            ;;
+        clipper)
+            if [[ ! -f "$CLIPPER_LOG_FILE" ]]; then
+                echo "${DIM}Noch keine Clipper-Logs.${RESET}"
+                return 1
+            fi
+            tail -F -n 50 "$CLIPPER_LOG_FILE"
+            ;;
+        both|*)
+            if [[ ! -f "$LOG_FILE" ]] && [[ ! -f "$CLIPPER_LOG_FILE" ]]; then
+                echo "${DIM}Noch keine Logs (weder Backend noch Clipper liefen).${RESET}"
+                return 1
+            fi
+            # tail -F both files interleaved; fall back gracefully if one doesn't exist yet
+            local files=()
+            [[ -f "$LOG_FILE" ]] && files+=("$LOG_FILE")
+            [[ -f "$CLIPPER_LOG_FILE" ]] && files+=("$CLIPPER_LOG_FILE")
+            tail -F -n 50 "${files[@]}"
+            ;;
+    esac
 }
 
 cmd_fg() {
@@ -236,36 +398,41 @@ cmd_fg() {
         echo "${RED}Port $PORT ist belegt (PID $holder). Erst aufräumen.${RESET}"
         return 1
     fi
-    echo "${AMBER}Starte im Vordergrund auf Port $PORT — Ctrl+C beendet.${RESET}"
+    echo "${AMBER}Starte Backend im Vordergrund auf Port $PORT — Ctrl+C beendet.${RESET}"
+    echo "${DIM}(Clipper-Worker nicht gestartet — nutze ${BOLD}hikari start${RESET}${DIM} für beide.)${RESET}"
     cd "$BACKEND_DIR"
     exec env PORT="$PORT" PATH="$NODE_PATH_PREFIX:$PATH" npm run dev
 }
 
 cmd_help() {
     cat <<EOF
-${BOLD}Hikari${RESET} — Backend-Server CLI
+${BOLD}Hikari${RESET} — Backend + Clipper-Worker CLI
 
 ${BOLD}USAGE${RESET}
-  ${AMBER}hikari${RESET}              Starte Server im Hintergrund (default)
-  ${AMBER}hikari start${RESET}        Wie oben
-  ${AMBER}hikari stop${RESET}         Stoppe Server
-  ${AMBER}hikari restart${RESET}      Stop + Start
-  ${AMBER}hikari status${RESET}       Läuft er? + Health-Check
-  ${AMBER}hikari logs${RESET}         Live-Logs verfolgen (tail -F)
-  ${AMBER}hikari fg${RESET}           Im Vordergrund starten (Ctrl+C beendet)
-  ${AMBER}hikari -h${RESET}           Diese Hilfe
+  ${AMBER}hikari${RESET}                    Starte Backend + Clipper-Worker (default)
+  ${AMBER}hikari start${RESET}              Wie oben
+  ${AMBER}hikari stop${RESET}               Stoppe beide
+  ${AMBER}hikari restart${RESET}            Stop + Start beider
+  ${AMBER}hikari status${RESET}             Status beider + LM Studio Erreichbarkeit
+  ${AMBER}hikari logs${RESET}               Live-Logs beider interleaved (tail -F)
+  ${AMBER}hikari logs backend${RESET}       Nur Backend-Logs
+  ${AMBER}hikari logs clipper${RESET}       Nur Clipper-Logs
+  ${AMBER}hikari fg${RESET}                 Backend im Vordergrund starten (debug)
+  ${AMBER}hikari -h${RESET}                 Diese Hilfe
 
 ${BOLD}ENV VARS${RESET}
-  ${DIM}PORT=3940 hikari        Anderer Port (Default: 3939)${RESET}
-  ${DIM}HIKARI_HOST=…  hikari   Anderer Tailscale-Hostname für die URL-Anzeige${RESET}
+  ${DIM}PORT=3940 hikari          Anderer Port (Default: 3939)${RESET}
+  ${DIM}HIKARI_HOST=…  hikari     Anderer Tailscale-Hostname für die URL-Anzeige${RESET}
 
 ${BOLD}DATEIEN${RESET}
-  ${DIM}~/.hikari/server.pid    PID des laufenden Servers${RESET}
-  ${DIM}~/.hikari/server.log    Server-Output (alle Logs)${RESET}
+  ${DIM}~/.hikari/server.pid      PID des laufenden Backends${RESET}
+  ${DIM}~/.hikari/server.log      Backend-Output${RESET}
+  ${DIM}~/.hikari/clipper.pid     PID des laufenden Clipper-Workers${RESET}
+  ${DIM}~/.hikari/clipper.log     Clipper-Worker-Output${RESET}
 
 ${BOLD}URLS${RESET}
-  ${DIM}http://localhost:$PORT          (lokal)${RESET}
-  ${DIM}http://$MAGIC_DNS_HOST:$PORT  (Tailscale, fürs Handy)${RESET}
+  ${DIM}http://localhost:$PORT            (lokal)${RESET}
+  ${DIM}http://$MAGIC_DNS_HOST:$PORT    (Tailscale, fürs Handy)${RESET}
 EOF
 }
 
@@ -275,7 +442,7 @@ case "${1:-start}" in
     stop|down)        cmd_stop ;;
     restart)          cmd_restart ;;
     status|st)        cmd_status ;;
-    logs|log|tail)    cmd_logs ;;
+    logs|log|tail)    cmd_logs "${2:-both}" ;;
     fg|foreground)    cmd_fg ;;
     -h|--help|help)   cmd_help ;;
     *)

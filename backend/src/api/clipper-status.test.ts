@@ -1,5 +1,5 @@
 import Database from "better-sqlite3";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import Fastify from "fastify";
 import { applyMigrations } from "../db/migrations.js";
 import { registerClipperStatusRoutes } from "./clipper-status.js";
@@ -102,6 +102,44 @@ describe("GET /clipper/status with force window", () => {
     const app = makeApp(db);
     const res = await app.inject({ method: "GET", url: "/clipper/status" });
     expect(res.json().isForceActive).toBe(true);
+    await app.close();
+  });
+});
+
+describe("GET /clipper/llm-health", () => {
+  it("returns reachable=true when LM Studio responds with models", async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: [{ id: "qwen3.6-35b-a3b" }] }),
+    } as Response));
+    vi.stubGlobal("fetch", fetchMock);
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    const app = Fastify();
+    registerClipperStatusRoutes(app, db, { startHour: 22, endHour: 8 }, {
+      provider: "lmstudio", baseUrl: "http://x", model: "qwen3.6-35b-a3b",
+    });
+    const res = await app.inject({ method: "GET", url: "/clipper/llm-health" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({
+      reachable: true, modelLoaded: true,
+    });
+    vi.unstubAllGlobals();
+    await app.close();
+  });
+
+  it("returns reachable=false when LM Studio is unreachable", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("fetch failed"); }));
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    const app = Fastify();
+    registerClipperStatusRoutes(app, db, { startHour: 22, endHour: 8 }, {
+      provider: "lmstudio", baseUrl: "http://x", model: "qwen3.6-35b-a3b",
+    });
+    const res = await app.inject({ method: "GET", url: "/clipper/llm-health" });
+    expect(res.json().reachable).toBe(false);
+    vi.unstubAllGlobals();
     await app.close();
   });
 });

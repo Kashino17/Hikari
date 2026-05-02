@@ -39,6 +39,7 @@ import com.hikari.app.data.api.dto.VideoDetailDto
 import com.hikari.app.data.api.dto.VideoFullDto
 import com.hikari.app.data.api.dto.ClipperStatusDto
 import com.hikari.app.data.api.dto.ForceWindowResponseDto
+import com.hikari.app.data.api.dto.LlmHealthDto
 import com.hikari.app.data.api.dto.RetryFailedResponse
 import com.hikari.app.data.api.dto.TodayCountResponse
 import com.hikari.app.data.api.dto.UpdateFilterRequest
@@ -253,6 +254,9 @@ interface HikariApi {
 
     @POST("clipper/force-window")
     suspend fun forceClipperWindow(): ForceWindowResponseDto
+
+    @GET("clipper/llm-health")
+    suspend fun getLlmHealth(): LlmHealthDto
 
     @GET("videos/{id}/full")
     suspend fun getVideoFull(@Path("id") id: String): VideoFullDto

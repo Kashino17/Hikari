@@ -5,6 +5,7 @@ import type Database from "better-sqlite3";
 import { getFilterState } from "../scorer/filter-repo.js";
 import { buildClipperPrompt } from "./prompt-builder.js";
 import { complete, dequeue, fail, setStep } from "./queue.js";
+import { QwenNetworkError } from "./qwen-analyzer.js";
 import type { ClipSpec, AnalyzerConfig } from "./qwen-analyzer.js";
 import type { RenderResult } from "./remotion-renderer.js";
 
@@ -93,6 +94,18 @@ export async function processNextJob(
       deps.analyzerConfig,
     );
   } catch (e) {
+    if (e instanceof QwenNetworkError || (e as Error).name === "QwenNetworkError") {
+      // Transient: don't mark failed. Unlock the queue row but reset clip_status
+      // to 'pending' so the worker picks it up on the next iteration.
+      db.prepare("UPDATE videos SET clip_status='pending' WHERE id=?").run(video.id);
+      db.prepare(`
+        UPDATE clipper_queue
+           SET locked_at = NULL, locked_step = NULL, last_error = ?
+         WHERE video_id = ?
+      `).run(`transient: ${(e as Error).message}`, video.id);
+      return true;  // ran (didn't fail, didn't succeed — caller will sleep + retry)
+    }
+    // Real failure (invalid JSON after retry, or other bug)
     fail(db, video.id, `analyze: ${(e as Error).message}`);
     db.prepare("UPDATE videos SET clip_status='failed' WHERE id=?").run(video.id);
     return true;

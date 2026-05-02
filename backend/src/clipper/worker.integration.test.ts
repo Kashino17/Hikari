@@ -137,4 +137,29 @@ describe("processNextJob", () => {
     });
     expect(ran).toBe(false);
   });
+
+  it("transient network error: clip_status stays 'pending', queue unlocks for retry", async () => {
+    enqueue(db, "v1");
+    // First call throws network error
+    const analyze = vi.fn(async () => {
+      const err = new Error("Cannot reach Qwen at http://x");
+      err.name = "QwenNetworkError";
+      throw err;
+    });
+    const render = vi.fn();
+
+    await processNextJob(db, {
+      analyze, render, mediaDir: "/clips",
+      analyzerConfig: { provider: "lmstudio", baseUrl: "http://x", model: "q" },
+    });
+
+    const v = db.prepare("SELECT clip_status FROM videos WHERE id=?").get("v1") as any;
+    expect(v.clip_status).toBe("pending");  // NOT 'failed'
+
+    const q = db.prepare("SELECT * FROM clipper_queue WHERE video_id=?").get("v1") as any;
+    expect(q).toBeTruthy();           // still in queue
+    expect(q.locked_at).toBeNull();   // unlocked
+    expect(q.attempts).toBe(0);       // NOT incremented (it's transient, not a fail)
+    expect(q.last_error).toMatch(/transient/);
+  });
 });

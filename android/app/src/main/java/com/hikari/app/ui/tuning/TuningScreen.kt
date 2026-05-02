@@ -576,6 +576,16 @@ private fun SystemTab(vm: TuningViewModel) {
                         style = MaterialTheme.typography.bodySmall,
                         color = if (s.isWindowActive) HikariAmber else HikariTextFaint,
                     )
+                    val llmHealth by vm.llmHealth.collectAsState()
+                    llmHealth?.let { h ->
+                        Text(
+                            text = if (h.reachable && h.modelLoaded == true) "● LM Studio: ✓ Modell geladen"
+                                   else if (h.reachable) "○ LM Studio: erreichbar, aber Modell '${h.expectedModel}' nicht geladen"
+                                   else "○ LM Studio: nicht erreichbar (Clipper hängt bis es kommt)",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (h.reachable && h.modelLoaded == true) HikariAmber else HikariTextFaint,
+                        )
+                    }
                     if (s.failed > 0) {
                         Spacer(Modifier.height(4.dp))
                         OutlinedButton(

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.HikariApi
 import com.hikari.app.data.api.dto.ClipperStatusDto
+import com.hikari.app.data.api.dto.LlmHealthDto
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.data.prefs.SponsorBlockPrefs
 import com.hikari.app.data.sponsor.SegmentBehavior
@@ -127,8 +128,12 @@ class TuningViewModel @Inject constructor(
     private val _clipperRetrying = MutableStateFlow(false)
     val clipperRetrying: StateFlow<Boolean> = _clipperRetrying.asStateFlow()
 
+    private val _llmHealth = MutableStateFlow<LlmHealthDto?>(null)
+    val llmHealth: StateFlow<LlmHealthDto?> = _llmHealth.asStateFlow()
+
     fun loadClipperStatus() = viewModelScope.launch {
         _clipperStatus.value = runCatching { api.getClipperStatus() }.getOrNull()
+        _llmHealth.value = runCatching { api.getLlmHealth() }.getOrNull()
     }
 
     fun retryFailedClips() = viewModelScope.launch {

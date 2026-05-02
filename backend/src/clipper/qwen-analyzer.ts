@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export class QwenNetworkError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "QwenNetworkError";
+  }
+}
+
 export interface ClipSpec {
   startSec: number;
   endSec: number;
@@ -63,13 +70,22 @@ async function callQwen(
     stream: false,
   };
 
-  const res = await fetchFn(url, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetchFn(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    throw new QwenNetworkError(`Cannot reach Qwen at ${config.baseUrl}: ${(e as Error).message}`);
+  }
   if (!res.ok) {
-    throw new Error(`Qwen request failed: ${res.status} ${await res.text()}`);
+    const text = await res.text();
+    if (res.status >= 500 && res.status < 600) {
+      throw new QwenNetworkError(`Qwen returned ${res.status}: ${text}`);
+    }
+    throw new Error(`Qwen request failed: ${res.status} ${text}`);
   }
   const json = (await res.json()) as {
     choices: Array<{ message: { content: string } }>;

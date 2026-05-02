@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { analyzeVideo } from "./qwen-analyzer.js";
+// QwenNetworkError exported for instanceof checks if needed
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 
 const VALID_RESPONSE = JSON.stringify([
   { start_sec: 30, end_sec: 60,
@@ -140,5 +142,28 @@ describe("analyzeVideo", () => {
       { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn },
     );
     expect(out).toEqual([]);
+  });
+
+  it("throws QwenNetworkError when fetch itself fails", async () => {
+    const fetchFn = vi.fn(async () => { throw new TypeError("fetch failed"); });
+    await expect(analyzeVideo(
+      { filePath: "/x.mp4", videoId: "v1", durationSec: 600 },
+      "p",
+      { provider: "lmstudio", baseUrl: "http://x", model: "q", fetchFn },
+    )).rejects.toThrow(/Cannot reach Qwen/);
+  });
+
+  it("throws QwenNetworkError on 5xx status", async () => {
+    const fetchFn = vi.fn(async () => ({
+      ok: false,
+      status: 503,
+      text: async () => "service unavailable",
+      json: async () => ({}),
+    } as Response));
+    await expect(analyzeVideo(
+      { filePath: "/x.mp4", videoId: "v1", durationSec: 600 },
+      "p",
+      { provider: "lmstudio", baseUrl: "http://x", model: "q", fetchFn },
+    )).rejects.toThrow(/503/);
   });
 });
