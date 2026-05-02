@@ -1,5 +1,6 @@
 import { stat } from "node:fs/promises";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
 import { computeCropRect } from "./crop-math.js";
@@ -17,7 +18,9 @@ export interface RenderResult {
   sizeBytes: number;
 }
 
-const REMOTION_ENTRY = resolve(process.cwd(), "remotion/index.ts");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const REMOTION_ENTRY = resolve(__dirname, "../../remotion/index.ts");
 
 let bundlePromise: Promise<string> | null = null;
 function getBundle(): Promise<string> {
