@@ -49,9 +49,12 @@ export async function extractFrame(
     "-loglevel", "error",
     "-",
   ], { encoding: "buffer", timeout: 10_000 });
-  // execa with encoding: 'buffer' returns Buffer in stdout
-  const buf = result.stdout as Buffer;
-  return `data:image/jpeg;base64,${buf.toString("base64")}`;
+  // execa with encoding: 'buffer' returns Uint8Array (NOT a Node Buffer) in stdout —
+  // (Uint8Array).toString("base64") would silently produce decimal-comma-separated
+  // bytes, not actual base64. Always wrap with Buffer.from() to guarantee correct
+  // base64 output.
+  const bytes = result.stdout as Uint8Array;
+  return `data:image/jpeg;base64,${Buffer.from(bytes).toString("base64")}`;
 }
 
 export async function sampleFrames(

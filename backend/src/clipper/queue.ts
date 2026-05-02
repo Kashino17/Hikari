@@ -21,11 +21,15 @@ export function enqueue(db: Database.Database, videoId: string): void {
  */
 export function dequeue(db: Database.Database): QueueJob | null {
   return db.transaction((): QueueJob | null => {
+    // Skip videos already marked as 'failed' or 'no_highlights' so a permanent
+    // failure can't infinite-loop into being re-dequeued. retry-failed flips
+    // clip_status back to 'pending' to revive a job.
     const row = db.prepare(`
       SELECT q.video_id AS videoId, q.queued_at AS queuedAt, q.attempts AS attempts
         FROM clipper_queue q
         JOIN videos v ON v.id = q.video_id
        WHERE q.locked_at IS NULL
+         AND (v.clip_status IS NULL OR v.clip_status NOT IN ('failed', 'no_highlights', 'done'))
        ORDER BY v.duration_seconds ASC, q.queued_at ASC
        LIMIT 1
     `).get() as QueueJob | undefined;
