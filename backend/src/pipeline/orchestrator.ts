@@ -5,6 +5,7 @@ import { getActivePrompt, getFilterState } from "../scorer/filter-repo.js";
 import type { ScoredVideo, Scorer } from "../scorer/types.js";
 import type { SponsorSegment } from "../sponsorblock/client.js";
 import type { DownloadResult } from "../download/worker.js";
+import { enqueue } from "../clipper/queue.js";
 
 const AUTO_APPROVE_MODEL = "auto-approve";
 
@@ -93,7 +94,8 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
       insertScore(db, videoId, autoApproveScore(), "approved", now);
       insertSponsors(db, videoId, sponsors);
       insertDownload(db, videoId, dl, now);
-      insertFeedItem(db, videoId, now);
+      db.prepare("UPDATE videos SET clip_status='pending' WHERE id=?").run(videoId);
+      enqueue(db, videoId);
     })();
     return;
   }
@@ -121,7 +123,8 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
       insertScore(db, videoId, scored, decision, now);
       insertSponsors(db, videoId, sponsors);
       insertDownload(db, videoId, dl, now);
-      insertFeedItem(db, videoId, now);
+      db.prepare("UPDATE videos SET clip_status='pending' WHERE id=?").run(videoId);
+      enqueue(db, videoId);
     })();
   } else {
     db.transaction(() => {
