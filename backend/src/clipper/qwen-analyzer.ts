@@ -174,19 +174,27 @@ const MIN_SEGMENT_SEC = 3;
  * 8. Return null if fewer than 2 valid segments remain
  */
 export function cleanSegments(
-  raw: Array<{ start_sec: number; end_sec: number; mode: "smart-crop" | "fit"; focus?: { x: number; y: number; w: number; h: number } }>,
+  raw: Array<{
+    start_sec: number;
+    end_sec: number;
+    mode: "smart-crop" | "fit";
+    focus?: { x: number; y: number; w: number; h: number } | undefined;
+  }>,
   clipDurationSec: number,
 ): DisplaySegment[] | null {
   if (!raw || raw.length === 0) return null;
 
-  // Convert to DisplaySegment with clip-local seconds, sort
+  // Convert to DisplaySegment with clip-local seconds, sort.
+  // Build with conditional focus to satisfy exactOptionalPropertyTypes.
   let segs: DisplaySegment[] = raw
-    .map((s) => ({
-      startSec: s.start_sec,
-      endSec: Math.min(s.end_sec, clipDurationSec),
-      mode: s.mode,
-      focus: s.focus,
-    }))
+    .map((s) => {
+      const base: DisplaySegment = {
+        startSec: s.start_sec,
+        endSec: Math.min(s.end_sec, clipDurationSec),
+        mode: s.mode,
+      };
+      return s.focus ? { ...base, focus: s.focus } : base;
+    })
     .filter((s) => s.endSec > s.startSec)
     .sort((a, b) => a.startSec - b.startSec);
 
