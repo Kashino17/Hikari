@@ -9,7 +9,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -438,10 +440,12 @@ fun ReelPlayer(
             Box(
                 modifier = Modifier
                     .size(40.dp)
+                    .clip(CircleShape)
                     .background(Color.Black.copy(alpha = 0.48f), CircleShape)
-                    .pointerInput(fullscreen) {
-                        detectTapGestures(onTap = { onToggleFullscreen() })
-                    },
+                    // clickable consumes the tap reliably; the outer Box's
+                    // detectTapGestures cannot then also fire (which would
+                    // re-show the scrubber and swallow the toggle).
+                    .clickable(onClick = onToggleFullscreen),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(

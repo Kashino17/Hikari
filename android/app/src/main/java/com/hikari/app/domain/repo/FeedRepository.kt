@@ -112,7 +112,8 @@ class FeedRepository @Inject constructor(
 }
 
 private fun FeedItemDto.toEntity() = FeedItemEntity(
-    videoId = videoId, title = title, durationSeconds = durationSeconds,
+    videoId = videoId, kind = kind, parentVideoId = parentVideoId,
+    title = title, durationSeconds = durationSeconds,
     aspectRatio = aspectRatio, thumbnailUrl = thumbnailUrl,
     channelId = channelId, channelTitle = channelTitle,
     category = category, reasoning = reasoning,
@@ -121,7 +122,7 @@ private fun FeedItemDto.toEntity() = FeedItemEntity(
 )
 
 private fun FeedItemEntity.toDomain() = FeedItem(
-    videoId = videoId, kind = "legacy", parentVideoId = "",
+    videoId = videoId, kind = kind, parentVideoId = parentVideoId,
     title = title, durationSeconds = durationSeconds,
     aspectRatio = aspectRatio, thumbnailUrl = thumbnailUrl,
     channelTitle = channelTitle, category = category,
