@@ -179,19 +179,20 @@ git commit -m "feat(config): add clipper config block"
 
 ## Phase 1 — Schema Migration
 
-### Task 1.1: Test for migration idempotency
+### Task 1.1: Tests for clipper schema additions
 
 **Files:**
-- Create: `backend/src/db/migrations.test.ts`
+- Modify: `backend/src/db/migrations.test.ts` (file exists — APPEND new describe block; ALSO update existing test's expected table list to include `clips` and `clipper_queue`)
 
-- [ ] **Step 1: Write failing test**
+- [ ] **Step 1: Update existing "creates all expected tables" test**
+
+The file currently asserts a specific list of tables. After our migration, `clips` and `clipper_queue` must be added to that list. Edit the existing `expect(names).toEqual([...])` to insert (in alphabetical order):
+- `"clipper_queue",` after `"channels",`
+- `"clips",` after `"clipper_queue",`
+
+- [ ] **Step 2: Append new clipper describe block at end of file**
 
 ```ts
-// backend/src/db/migrations.test.ts
-import Database from "better-sqlite3";
-import { describe, expect, it } from "vitest";
-import { applyMigrations } from "./migrations.js";
-
 describe("clipper migrations", () => {
   it("creates clips table with all required columns", () => {
     const db = new Database(":memory:");
@@ -247,14 +248,14 @@ describe("clipper migrations", () => {
 });
 ```
 
-- [ ] **Step 2: Run — expect FAIL**
+- [ ] **Step 3: Run — expect FAIL**
 
 ```bash
-cd /Users/ayysir/Desktop/Hikari/backend
-pnpm vitest run src/db/migrations.test.ts
+cd /Users/ayysir/Desktop/Hikari/.worktrees/auto-clipper/backend
+PATH="/opt/homebrew/bin:$PATH" npm test -- src/db/migrations.test.ts
 ```
 
-Expected: FAIL with "no such table: clips".
+Expected: FAIL — both the existing "creates all expected tables" test (now expecting clips+clipper_queue) and the new clipper tests fail because schema.sql doesn't have them yet.
 
 ---
 
