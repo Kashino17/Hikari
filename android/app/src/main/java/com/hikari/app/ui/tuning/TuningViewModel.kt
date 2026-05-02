@@ -2,6 +2,8 @@ package com.hikari.app.ui.tuning
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hikari.app.data.api.HikariApi
+import com.hikari.app.data.api.dto.ClipperStatusDto
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.data.prefs.SponsorBlockPrefs
 import com.hikari.app.data.sponsor.SegmentBehavior
@@ -26,6 +28,7 @@ class TuningViewModel @Inject constructor(
     private val settings: SettingsStore,
     private val sbPrefs: SponsorBlockPrefs,
     private val mangaRepo: MangaRepository,
+    private val api: HikariApi,
 ) : ViewModel() {
 
     // ── Filter / Prompt state (loaded from server) ───────────────────────────
@@ -115,6 +118,24 @@ class TuningViewModel @Inject constructor(
             delay(5_000)
             _mangaSyncStatus.value = null
         }
+    }
+
+    // ── Clipper status ───────────────────────────────────────────────────────
+    private val _clipperStatus = MutableStateFlow<ClipperStatusDto?>(null)
+    val clipperStatus: StateFlow<ClipperStatusDto?> = _clipperStatus.asStateFlow()
+
+    private val _clipperRetrying = MutableStateFlow(false)
+    val clipperRetrying: StateFlow<Boolean> = _clipperRetrying.asStateFlow()
+
+    fun loadClipperStatus() = viewModelScope.launch {
+        _clipperStatus.value = runCatching { api.getClipperStatus() }.getOrNull()
+    }
+
+    fun retryFailedClips() = viewModelScope.launch {
+        _clipperRetrying.value = true
+        runCatching { api.retryFailed() }
+        _clipperStatus.value = runCatching { api.getClipperStatus() }.getOrNull()
+        _clipperRetrying.value = false
     }
 
     // ── Settings ─────────────────────────────────────────────────────────────
