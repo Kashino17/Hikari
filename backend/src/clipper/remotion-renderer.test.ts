@@ -33,7 +33,7 @@ describe("renderClip", () => {
     expect(out.filePath).toBe("/clips/c1.mp4");
     expect(out.sizeBytes).toBe(4_500_000);
     const callArgs = (renderMedia as any).mock.calls[0][0];
-    expect(callArgs.inputProps.src).toBe("file:///orig/v1.mp4");
+    expect(callArgs.inputProps.src).toMatch(/^http:\/\/localhost:\d+\/videos\/v1\.mp4$/);
     expect(callArgs.inputProps.startSec).toBe(30);
     expect(callArgs.inputProps.endSec).toBe(80);
     expect(callArgs.inputProps.cropW).toBeCloseTo(1080 * (9 / 16), 0);
