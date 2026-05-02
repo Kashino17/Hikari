@@ -15,6 +15,7 @@ import { registerHealthRoute } from "./api/health.js";
 import { registerStatsRoutes } from "./api/stats.js";
 import { registerVideosRoutes } from "./api/videos.js";
 import { registerMangaRoutes } from "./api/manga.js";
+import { registerClipperStatusRoutes } from "./api/clipper-status.js";
 import { loadConfig } from "./config.js";
 import { openDatabase } from "./db/connection.js";
 import { runCleanup } from "./download/cleanup.js";
@@ -75,6 +76,10 @@ await registerStatsRoutes(app, { db });
 await registerVideosRoutes(app, { db, videoDir: cfg.videoDir, coverDir: cfg.coverDir, extractor });
 await registerDownloadsRoutes(app, { db, diskLimitBytes: cfg.diskLimitBytes });
 await registerMangaRoutes(app, { db, mangaDir: cfg.mangaDir });
+registerClipperStatusRoutes(app, db, {
+  startHour: cfg.clipper.scheduleStartHour,
+  endHour:   cfg.clipper.scheduleEndHour,
+});
 
 // 15-min channel polling
 cron.schedule("*/15 * * * *", async () => {
