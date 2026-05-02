@@ -64,14 +64,16 @@ const rawSegmentSchema = z.object({
 const rawSpecSchema = z.object({
   start_sec: z.number(),
   end_sec: z.number(),
+  reason: z.string(),
+  // Legacy fields. Kept optional so older Qwen outputs (and the rare case
+  // where Qwen still includes them) parse, but they're ignored at render
+  // time — the renderer always uses fit-mode now.
   focus: z.object({
     x: z.number().min(0).max(1),
     y: z.number().min(0).max(1),
     w: z.number().min(0).max(1),
     h: z.number().min(0).max(1),
-  }),
-  reason: z.string(),
-  // Optional in case Qwen forgets — defaults to smart-crop.
+  }).optional(),
   display_mode: z.enum(["smart-crop", "fit"]).optional(),
   display_segments: z.array(rawSegmentSchema).optional(),
 });
@@ -283,18 +285,16 @@ function clampSpecs(raw: z.infer<typeof rawSpecArraySchema>, durationSec: number
     if (endSec - r.start_sec > MAX_CLIP_SEC) {
       endSec = r.start_sec + MAX_CLIP_SEC;
     }
-    const clipDuration = endSec - r.start_sec;
-    const cleanedSegments = r.display_segments && r.display_segments.length > 0
-      ? cleanSegments(r.display_segments, clipDuration)
-      : null;
 
+    // Layout fields are no longer used at render-time. Provide harmless
+    // defaults so the rest of the pipeline (worker INSERT, schema) keeps
+    // working without churn. The renderer ignores these values.
     out.push({
       startSec: r.start_sec,
       endSec,
-      focus: r.focus,
+      focus: r.focus ?? { x: 0.5, y: 0.5, w: 1, h: 1 },
       reason: r.reason,
-      displayMode: r.display_mode ?? "smart-crop",
-      ...(cleanedSegments ? { displaySegments: cleanedSegments } : {}),
+      displayMode: "fit",
     });
   }
   return out.sort((a, b) => a.startSec - b.startSec);

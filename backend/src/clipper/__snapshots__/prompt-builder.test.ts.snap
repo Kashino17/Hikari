@@ -18,110 +18,22 @@ OPERATIONELLE REGELN (fest):
 
 PRO CLIP gibst du an:
 - start_sec, end_sec (Float)
-- focus.x, focus.y = ZENTRUM des wichtigen Bildbereichs, normalisiert 0.0–1.0
-  WICHTIG für Smart-Crop auf 9:16:
-  • Bei Personen/Talking-Heads: setze (x,y) auf das GESICHT der gerade sprechenden Person
-  • Bei zwei Personen im Frame: das Gesicht der dominanten/sprechenden Person
-  • Bei Diagrammen/Slides/Code: das ZENTRUM des Inhalts, NICHT der leeren Wand drumherum
-  • Bei Live-Demo: die Hand/das UI-Element, das gerade interagiert
-  Vermeide stumpfes (0.5, 0.5) wenn die Action seitlich ist!
-- focus.w, focus.h = Größe des wichtigen Bereichs, normalisiert 0.0–1.0
-  (nur als Hinweis — der Crop wird automatisch auf 9:16 gerechnet)
 - reason (kurze prägnante Beschreibung — wird als Clip-Titel angezeigt, max ~80 Zeichen)
-- display_mode = "smart-crop" oder "fit"
-  ENTSCHEIDUNGSREGEL nach VERHÄLTNIS Gesicht-zu-Frame:
-
-  ╔═══════════════════════════════════════════════════════════════════╗
-  ║  TALKING-HEAD (Gesicht ist der Hauptinhalt, füllt großen Teil    ║
-  ║  des Frames, kein konkurrierender Bildschirm/Visualisierung)     ║
-  ║  → "smart-crop". focus.x/y = Mitte des sprechenden Gesichts.     ║
-  ║  Beispiel: Solo-Interview, Podcast-Setup, Vlog mit Speaker-Cam   ║
-  ║  als Hauptmotiv.                                                  ║
-  ╠═══════════════════════════════════════════════════════════════════╣
-  ║  REACTION / EXPLAINER (kleine Reactor-Cam + großer Bildschirm   ║
-  ║  oder Content im Frame, Sprecher ist eine Picture-in-Picture-    ║
-  ║  Box in der Ecke <25% Frame-Fläche)                               ║
-  ║  → "fit". Der BILDSCHIRM/CONTENT ist der Punkt — Gesicht-Cam ist ║
-  ║  nur Beigabe. Frame komplett sichtbar mit Blur-BG.                ║
-  ║  Beispiel: User reagiert auf Tweet, Streamer mit Game-Footage,   ║
-  ║  Erklärvideo mit Slide + kleiner Webcam unten rechts.             ║
-  ╠═══════════════════════════════════════════════════════════════════╣
-  ║  PURE SLIDES / UI / CODE / DIAGRAMS (keine Menschen sichtbar)    ║
-  ║  → "fit". Komplettes Frame sichtbar mit Blur-BG.                  ║
-  ╚═══════════════════════════════════════════════════════════════════╝
-
-  Faustregel: Wie groß ist das Gesicht im Frame?
-  • Gesicht > ~30% Frame-Fläche → smart-crop (Face IS the content)
-  • Gesicht < ~25% Frame-Fläche → fit (Face ist Begleiter, Content ist
-                                        woanders)
-  • Dazwischen (25-30%): nimm den Hinweis vom Audio/Transkript — wenn
-    der Sprecher auf etwas zeigt/erklärt/reagiert → fit, wenn er
-    primär selbst Aussagen trifft → smart-crop.
-
-- display_segments (OPTIONAL, nur bei stark wechselndem Layout im Clip):
-  Manche Clips wechseln INNERHALB ihrer Dauer mehrfach zwischen Layout-Typen
-  (z.B. Sprecher → Vollbild-Text-Insert → Sprecher). Wenn das passiert,
-  gib statt einem einzelnen display_mode ein Array \`display_segments\` aus,
-  jedes mit (start_sec, end_sec) in CLIP-LOCAL Sekunden (0 bis Clip-Dauer)
-  und mode + optional focus.
-
-  HARTE Regeln:
-  - Mindestens 3 Sekunden pro Segment (keine Flicker-Cuts)
-  - Segmente lückenlos (decken 0..clipDuration ab)
-  - Nur ausgeben wenn ECHTER Layout-Wechsel passiert; bei stabilem
-    Talking-Head ODER stabilem Text-Slide → KEINE Segments, nur ein
-    display_mode. Du bist hier konservativ.
-
-  Beispiel — Clip mit Sprecher (0-15s), Text-Overlay (15-22s), Sprecher (22-60s):
-  "display_segments": [
-    {"start_sec": 0, "end_sec": 15, "mode": "smart-crop",
-     "focus": {"x": 0.5, "y": 0.4, "w": 0.3, "h": 0.7}},
-    {"start_sec": 15, "end_sec": 22, "mode": "fit"},
-    {"start_sec": 22, "end_sec": 60, "mode": "smart-crop",
-     "focus": {"x": 0.5, "y": 0.4, "w": 0.3, "h": 0.7}}
-  ]
-  display_mode bleibt trotzdem gesetzt (Fallback für Renderer ohne Segment-Support).
 
 OUTPUT: ausschließlich gültiges JSON-Array, sortiert nach start_sec ASC. Keine Markdown-Code-Blocks, keine Erklärungen außerhalb des JSON.
 
-Beispiele für korrekt gesetzten focus.{x,y}:
+Hinweis: Konzentrier dich nur darauf die wertvollsten Highlight-Momente
+zu finden und ihren Sinn in einem prägnanten reason-Satz zu beschreiben.
+Das Rendering ist deterministisch (16:9 Original mit Blur-Hintergrund) —
+kein Layout-Hinweis von dir nötig.
 
-Zwei-Personen-Interview, Sprecher links:
-  {"start_sec": ..., "focus": {"x": 0.3, "y": 0.4, "w": 0.3, "h": 0.6},
-   "reason": "Kernaussage zum Thema X"}
-
-Talking-Head zentral, große Wand drumherum:
-  {"start_sec": ..., "focus": {"x": 0.5, "y": 0.45, "w": 0.3, "h": 0.7},
-   "reason": "Pointierte These über Y"}
-
-Slide/Diagramm-Demo, Inhalt rechts neben Sprecher:
-  {"start_sec": ..., "focus": {"x": 0.65, "y": 0.5, "w": 0.4, "h": 0.6},
-   "reason": "Benchmark-Vergleich GPT-5 vs Claude"}
-
-Volles JSON-Output-Beispiel:
+Beispiel:
 [
   {"start_sec": 142.5, "end_sec": 198.0,
-   "focus": {"x": 0.5, "y": 0.4, "w": 0.5, "h": 0.7},
-   "reason": "Klare Erklärung der Kernidee mit Diagramm",
-   "display_mode": "smart-crop"},
+   "reason": "Klare Erklärung der Kernidee mit Diagramm"},
   {"start_sec": 305.0, "end_sec": 360.0,
-   "focus": {"x": 0.5, "y": 0.5, "w": 1.0, "h": 1.0},
-   "reason": "GPT-5.5 vs Claude Benchmark-Tabelle (textlastig)",
-   "display_mode": "fit"},
-  {"start_sec": 420.0, "end_sec": 480.0,
-   "focus": {"x": 0.5, "y": 0.4, "w": 0.3, "h": 0.7},
-   "reason": "AI-News: Sprecher + Vollbild-Text-Einschub",
-   "display_mode": "smart-crop",
-   "display_segments": [
-     {"start_sec": 0, "end_sec": 30, "mode": "smart-crop",
-      "focus": {"x": 0.5, "y": 0.4, "w": 0.3, "h": 0.7}},
-     {"start_sec": 30, "end_sec": 45, "mode": "fit"},
-     {"start_sec": 45, "end_sec": 60, "mode": "smart-crop",
-      "focus": {"x": 0.5, "y": 0.4, "w": 0.3, "h": 0.7}}
-   ]},
+   "reason": "GPT-5.5 vs Claude Benchmark-Tabelle"},
   {"start_sec": 612.0, "end_sec": 668.5,
-   "focus": {"x": 0.3, "y": 0.45, "w": 0.4, "h": 0.6},
-   "reason": "Punchy Quote über praktische Anwendung",
-   "display_mode": "smart-crop"}
+   "reason": "Punchy Quote über praktische Anwendung"}
 ]"
 `;

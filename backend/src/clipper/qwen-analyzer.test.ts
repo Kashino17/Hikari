@@ -200,14 +200,16 @@ describe("analyzeVideo", () => {
     expect(userText).toContain("Hello world from the video.");
   });
 
-  it("passes display_segments through clampSpecs and attaches cleaned segments to ClipSpec", async () => {
+  it("ignores legacy display_segments / focus / display_mode — renderer is fit-only", async () => {
+    // Even if Qwen still returns these legacy fields, ClipSpec carries
+    // only the deterministic defaults. Renderer always uses fit-mode.
     const body = JSON.stringify([{
       start_sec: 0, end_sec: 60,
       focus: { x: 0.5, y: 0.4, w: 0.3, h: 0.7 },
-      reason: "mixed layout",
+      reason: "any",
       display_mode: "smart-crop",
       display_segments: [
-        { start_sec: 0, end_sec: 30, mode: "smart-crop", focus: { x: 0.5, y: 0.4, w: 0.3, h: 0.7 } },
+        { start_sec: 0, end_sec: 30, mode: "smart-crop" },
         { start_sec: 30, end_sec: 60, mode: "fit" },
       ],
     }]);
@@ -217,21 +219,15 @@ describe("analyzeVideo", () => {
       "prompt",
       { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn, sampleFn: mockSample },
     );
-    expect(out[0]!.displaySegments).toHaveLength(2);
-    expect(out[0]!.displaySegments![0]!.mode).toBe("smart-crop");
-    expect(out[0]!.displaySegments![1]!.mode).toBe("fit");
+    expect(out[0]!.displayMode).toBe("fit");
+    expect(out[0]!.displaySegments).toBeUndefined();
   });
 
-  it("drops display_segments that reduce to fewer than 2 valid segments after cleanup", async () => {
-    // Single segment = fall back to clip-level mode
+  it("synthesizes default focus/displayMode when Qwen omits all layout fields", async () => {
+    // Simplified prompt — Qwen no longer needs to return focus or display_mode.
     const body = JSON.stringify([{
       start_sec: 0, end_sec: 60,
-      focus: { x: 0.5, y: 0.4, w: 0.3, h: 0.7 },
-      reason: "stable",
-      display_mode: "smart-crop",
-      display_segments: [
-        { start_sec: 0, end_sec: 60, mode: "smart-crop", focus: { x: 0.5, y: 0.4, w: 0.3, h: 0.7 } },
-      ],
+      reason: "minimal",
     }]);
     const fetchFn = mockFetch([{ ok: true, body: { choices: [{ message: { content: body } }] } }]);
     const out = await analyzeVideo(
@@ -239,7 +235,8 @@ describe("analyzeVideo", () => {
       "prompt",
       { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn, sampleFn: mockSample },
     );
-    expect(out[0]!.displaySegments).toBeUndefined();
+    expect(out[0]!.displayMode).toBe("fit");
+    expect(out[0]!.focus).toEqual({ x: 0.5, y: 0.5, w: 1, h: 1 });
   });
 });
 

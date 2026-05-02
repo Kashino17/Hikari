@@ -33,10 +33,13 @@ describe("buildClipperPrompt", () => {
     expect(out).toContain("kurze prägnante Erklärungen");
   });
 
-  it("hints fullframe focus when source is already 9:16", () => {
-    const out = buildClipperPrompt(SAMPLE_FILTER, { aspectRatio: "9:16" });
-    expect(out).toContain("schon hochkant");
-    expect(out).toContain("x=0, y=0, w=1, h=1");
+  it("does not include any layout/crop instructions (deterministic fit-mode renderer)", () => {
+    const out = buildClipperPrompt(SAMPLE_FILTER, { aspectRatio: "16:9" });
+    expect(out).not.toContain("focus.x");
+    expect(out).not.toContain("display_mode");
+    expect(out).not.toContain("smart-crop");
+    expect(out).toContain("start_sec");
+    expect(out).toContain("reason");
   });
 
   it("handles empty FilterConfig fields gracefully", () => {
