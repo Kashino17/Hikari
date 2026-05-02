@@ -19,6 +19,9 @@ export interface CropRect {
  *  - has the maximum possible size given the constraints
  *
  * If source aspect already matches target (within 1%), returns full frame.
+ *
+ * Preconditions: videoWidth > 0, videoHeight > 0, targetAspect > 0. Focus
+ * values outside [0,1] are silently clamped via the final bounds check.
  */
 export function computeCropRect(input: CropInput): CropRect {
   const { videoWidth: W, videoHeight: H, focus, targetAspect } = input;
