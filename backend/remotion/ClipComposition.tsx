@@ -27,33 +27,43 @@ export const ClipComposition: React.FC<ClipProps> = ({
 
   if (displayMode === "fit") {
     // For text-heavy slides: full 16:9 frame visible in 9:16, with a
-    // blurred + scaled copy of the same frame as background. Standard
-    // Instagram/YouTube-Shorts repack pattern for landscape sources.
+    // blurred + scaled copy as background. Each layer is wrapped in its
+    // own AbsoluteFill so they actually OVERLAP — without that wrap the
+    // two <OffthreadVideo> elements just stack vertically (block-flow)
+    // and end up split top/bottom instead of overlapping. Also the
+    // foreground is explicitly centered via flex so the contained 16:9
+    // band sits in the middle of the 9:16 canvas.
     return (
       <AbsoluteFill style={{ backgroundColor: "black", overflow: "hidden" }}>
-        {/* Background: same video, blurred + dimmed, fills the canvas */}
-        <OffthreadVideo
-          src={src}
-          startFrom={startFrame}
-          muted
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            filter: "blur(40px) brightness(0.5)",
-            transform: "scale(1.1)",  // hide blur edge bleed
-          }}
-        />
-        {/* Foreground: same video, contained, full content visible */}
-        <OffthreadVideo
-          src={src}
-          startFrom={startFrame}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "contain",
-          }}
-        />
+        <AbsoluteFill>
+          <OffthreadVideo
+            src={src}
+            startFrom={startFrame}
+            muted
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              filter: "blur(40px) brightness(0.5)",
+              transform: "scale(1.1)",
+            }}
+          />
+        </AbsoluteFill>
+        <AbsoluteFill style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          <OffthreadVideo
+            src={src}
+            startFrom={startFrame}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+            }}
+          />
+        </AbsoluteFill>
       </AbsoluteFill>
     );
   }

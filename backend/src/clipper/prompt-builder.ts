@@ -23,13 +23,19 @@ const OUTPUT_INSTRUCTIONS = `PRO CLIP gibst du an:
   (nur als Hinweis — der Crop wird automatisch auf 9:16 gerechnet)
 - reason (kurze prägnante Beschreibung — wird als Clip-Titel angezeigt, max ~80 Zeichen)
 - display_mode = "smart-crop" oder "fit"
-  • "smart-crop" (Standard) — wenn der Clip eine Person/Gesicht/klare Action im
-    Mittelpunkt hat. Crop wird auf focus zentriert, alles außerhalb verloren.
-  • "fit" — wenn der Frame textlastig ist (Slides, Banner, Tabellen, mehr-
-    spaltiger Content, Codedemo, Read-Along). Komplettes 16:9-Bild wird
-    sichtbar, oben/unten Blur-Background-Padding. NICHTS wird abgeschnitten.
-  Wähle "fit" konservativ — nur wenn Cropping signifikant Information
-  zerstören würde. Bei Talking-Head: immer "smart-crop".
+  HARTE ENTSCHEIDUNGSREGEL:
+  • Wenn IRGENDEIN menschliches Gesicht/Körper im Frame zu sehen ist
+    (auch klein, auch im Hintergrund, auch nur Hände einer Person):
+    → IMMER "smart-crop". Setze focus.x/y auf das GESICHT der GERADE
+       SPRECHENDEN Person (orientier dich am Audio/Transkript wenn
+       mehrere Personen sichtbar). Bei Wechseln zwischen Sprechern wähle
+       das DOMINANTE Gesicht im Clip-Zeitraum. NIEMALS "fit" wenn
+       Gesichter da sind — Personen sollen Fullscreen sein.
+  • Nur wenn der Clip KOMPLETT OHNE Menschen ist (reine Slides,
+    UI-Demos ohne Sprecher-Insert, Diagramme, Code-Editor ohne Webcam):
+    → "fit". Frame wird komplett sichtbar mit Blur-BG drumherum.
+  Im Zweifel: "smart-crop". Es ist immer besser ein Gesicht großzustellen
+  als ein Slide perfekt zu zeigen.
 
 OUTPUT: ausschließlich gültiges JSON-Array, sortiert nach start_sec ASC. Keine Markdown-Code-Blocks, keine Erklärungen außerhalb des JSON.
 
