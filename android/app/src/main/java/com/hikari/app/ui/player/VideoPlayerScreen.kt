@@ -110,6 +110,10 @@ fun VideoPlayerScreen(
     title: String,
     channel: String,
     onBack: () -> Unit,
+    // When true (e.g. opened via "Original ansehen" from the feed), the screen
+    // starts in landscape immersive mode. User can still toggle back via the
+    // fullscreen button. Defaults to false for normal Library/Series-Detail flow.
+    startInLandscape: Boolean = false,
 ) {
     val ctx = LocalContext.current
     val activity = remember(ctx) { ctx.findActivity() }
@@ -126,7 +130,7 @@ fun VideoPlayerScreen(
 
     KeepScreenOn()
 
-    var landscape by remember { mutableStateOf(false) }
+    var landscape by remember { mutableStateOf(startInLandscape) }
     var playing by remember { mutableStateOf(true) }
     var controlsVisible by remember { mutableStateOf(true) }
     var chromeBumpToken by remember { mutableIntStateOf(0) } // resets the auto-hide timer
