@@ -11,7 +11,12 @@ data class ClipperStatusDto(
     val done: Int,
     val isWindowActive: Boolean,
     val lastRanAt: Long?,
+    val forceUntil: Long = 0,
+    val isForceActive: Boolean = false,
 )
 
 @Serializable
 data class RetryFailedResponse(val retriedCount: Int)
+
+@Serializable
+data class ForceWindowResponseDto(val forceUntil: Long)

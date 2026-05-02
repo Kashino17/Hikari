@@ -72,3 +72,36 @@ describe("POST /clipper/retry-failed", () => {
     await app.close();
   });
 });
+
+describe("POST /clipper/force-window", () => {
+  it("sets force_until to ~1 hour from now and returns it", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    const app = makeApp(db);
+    const before = Date.now();
+    const res = await app.inject({ method: "POST", url: "/clipper/force-window" });
+    const after = Date.now();
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    // Should be roughly now + 1h
+    expect(body.forceUntil).toBeGreaterThanOrEqual(before + 60 * 60 * 1000 - 1000);
+    expect(body.forceUntil).toBeLessThanOrEqual(after + 60 * 60 * 1000 + 1000);
+
+    const row = db.prepare("SELECT force_until FROM clipper_runtime WHERE id = 1").get() as any;
+    expect(row.force_until).toBe(body.forceUntil);
+    await app.close();
+  });
+});
+
+describe("GET /clipper/status with force window", () => {
+  it("returns isForceActive=true when force_until is in future", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    db.prepare("UPDATE clipper_runtime SET force_until = ? WHERE id = 1")
+      .run(Date.now() + 60 * 1000);
+    const app = makeApp(db);
+    const res = await app.inject({ method: "GET", url: "/clipper/status" });
+    expect(res.json().isForceActive).toBe(true);
+    await app.close();
+  });
+});

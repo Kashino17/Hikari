@@ -95,12 +95,15 @@ export function unlockStale(
  * True if `now` falls within the configured nightly clipping window.
  * Wraps midnight: startHour=22, endHour=8 means 22:00..23:59 OR 00:00..07:59.
  * When startHour < endHour (non-wrapping window), it's a simple range check.
+ * When forceUntil is a future timestamp, returns true regardless of window.
  */
 export function isWindowActive(
   now: Date,
   startHour: number,
   endHour: number,
+  forceUntil: number = 0,
 ): boolean {
+  if (forceUntil > now.getTime()) return true;
   const h = now.getHours();
   if (startHour < endHour) {
     return h >= startHour && h < endHour;

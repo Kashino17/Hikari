@@ -38,6 +38,7 @@ import com.hikari.app.data.api.dto.UpdateVideoRequest
 import com.hikari.app.data.api.dto.VideoDetailDto
 import com.hikari.app.data.api.dto.VideoFullDto
 import com.hikari.app.data.api.dto.ClipperStatusDto
+import com.hikari.app.data.api.dto.ForceWindowResponseDto
 import com.hikari.app.data.api.dto.RetryFailedResponse
 import com.hikari.app.data.api.dto.TodayCountResponse
 import com.hikari.app.data.api.dto.UpdateFilterRequest
@@ -249,6 +250,9 @@ interface HikariApi {
 
     @POST("clipper/retry-failed")
     suspend fun retryFailed(): RetryFailedResponse
+
+    @POST("clipper/force-window")
+    suspend fun forceClipperWindow(): ForceWindowResponseDto
 
     @GET("videos/{id}/full")
     suspend fun getVideoFull(@Path("id") id: String): VideoFullDto

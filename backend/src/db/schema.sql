@@ -246,3 +246,12 @@ CREATE TABLE IF NOT EXISTS clipper_queue (
 );
 CREATE INDEX IF NOT EXISTS idx_clipper_queue_pending
   ON clipper_queue(queued_at) WHERE locked_at IS NULL;
+
+-- Clipper runtime state. Singleton (id = 1). Allows manual override of the
+-- nightly schedule window so the user can force the worker to run a queue-drain
+-- immediately for testing/debugging.
+CREATE TABLE IF NOT EXISTS clipper_runtime (
+  id          INTEGER PRIMARY KEY CHECK (id = 1),
+  force_until INTEGER NOT NULL DEFAULT 0,
+  updated_at  INTEGER NOT NULL
+);

@@ -27,15 +27,18 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -80,6 +83,8 @@ fun ChannelDetailScreen(
     val videos by vm.videos.collectAsState()
     val loading by vm.loading.collectAsState()
     val error by vm.error.collectAsState()
+    val syncing by vm.syncing.collectAsState()
+    val syncMessage by vm.syncMessage.collectAsState()
 
     var deleteTarget by remember { mutableStateOf<ChannelVideoDto?>(null) }
     var expandedVideo by remember { mutableStateOf<String?>(null) }
@@ -121,6 +126,8 @@ fun ChannelDetailScreen(
                     autoApprove = channel?.autoApprove == true,
                     onBack = onBack,
                     onToggleAutoApprove = { vm.toggleAutoApprove() },
+                    onSync = { vm.syncAndClip() },
+                    syncing = syncing,
                 )
             }
 
@@ -180,6 +187,23 @@ fun ChannelDetailScreen(
                 HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
             }
         }
+
+        syncMessage?.let { msg ->
+            LaunchedEffect(msg) {
+                kotlinx.coroutines.delay(4000)
+                vm.dismissSyncMessage()
+            }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .background(HikariSurface)
+                    .border(0.5.dp, HikariBorder)
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+            ) {
+                Text(msg, color = HikariText, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
     }
 }
 
@@ -190,6 +214,8 @@ private fun DetailHeader(
     autoApprove: Boolean,
     onBack: () -> Unit,
     onToggleAutoApprove: () -> Unit,
+    onSync: () -> Unit,
+    syncing: Boolean,
 ) {
     Row(
         modifier = Modifier
@@ -229,6 +255,29 @@ private fun DetailHeader(
                 )
             }
         }
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(50))
+                .clickable(enabled = !syncing, onClick = onSync),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (syncing) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    color = HikariAmber,
+                    strokeWidth = 2.dp,
+                )
+            } else {
+                Icon(
+                    Icons.Default.Refresh,
+                    contentDescription = "Sync & Clip",
+                    tint = HikariText,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
+        Spacer(Modifier.size(4.dp))
         Box(
             modifier = Modifier
                 .size(36.dp)

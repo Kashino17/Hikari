@@ -16,14 +16,21 @@ export function registerClipperStatusRoutes(
     `).all() as { status: string; c: number }[];
     const map = Object.fromEntries(counts.map((r) => [r.status, r.c]));
 
+    const forceRow = db.prepare("SELECT force_until FROM clipper_runtime WHERE id = 1")
+      .get() as { force_until: number } | undefined;
+    const forceUntil = forceRow?.force_until ?? 0;
+    const isForceActive = forceUntil > Date.now();
+
     return {
       pending:        map["pending"]        ?? 0,
       processing:    (map["analyzing"]      ?? 0) + (map["rendering"] ?? 0),
       failed:         map["failed"]         ?? 0,
       no_highlights: map["no_highlights"]   ?? 0,
       done:           map["done"]           ?? 0,
-      isWindowActive: isWindowActive(new Date(), schedule.startHour, schedule.endHour),
+      isWindowActive: isWindowActive(new Date(), schedule.startHour, schedule.endHour, forceUntil),
       lastRanAt: lastRunTimestamp(db),
+      forceUntil,
+      isForceActive,
     };
   });
 
@@ -37,6 +44,16 @@ export function registerClipperStatusRoutes(
       }
     })();
     return { retriedCount: failed.length };
+  });
+
+  app.post("/clipper/force-window", async () => {
+    const forceUntil = Date.now() + 60 * 60 * 1000;  // 1h from now
+    db.prepare(`
+      INSERT INTO clipper_runtime (id, force_until, updated_at) VALUES (1, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET force_until = excluded.force_until,
+                                    updated_at  = excluded.updated_at
+    `).run(forceUntil, Date.now());
+    return { forceUntil };
   });
 }
 

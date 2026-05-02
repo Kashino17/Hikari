@@ -32,6 +32,7 @@ async function main(): Promise<void> {
   if (recovered > 0) log.warn({ recovered }, "unlocked stale locks");
 
   const POLL_INTERVAL_MS = 60_000;
+  const FORCE_POLL_INTERVAL_MS = 5_000;
 
   let stopping = false;
   process.on("SIGTERM", () => {
@@ -44,11 +45,13 @@ async function main(): Promise<void> {
   });
 
   while (!stopping) {
+    const forceUntil = getForceUntil(db);
     if (
       !isWindowActive(
         new Date(),
         cfg.clipper.scheduleStartHour,
         cfg.clipper.scheduleEndHour,
+        forceUntil,
       )
     ) {
       await sleep(POLL_INTERVAL_MS);
@@ -65,7 +68,11 @@ async function main(): Promise<void> {
           model: cfg.clipper.model,
         },
       });
-      if (!ran) await sleep(POLL_INTERVAL_MS);
+      if (!ran) {
+        // When force-active and queue empty, poll quickly so new items appear fast.
+        const isForceActive = forceUntil > Date.now();
+        await sleep(isForceActive ? FORCE_POLL_INTERVAL_MS : POLL_INTERVAL_MS);
+      }
     } catch (e) {
       log.error({ err: e }, "unhandled error in processNextJob");
       await sleep(POLL_INTERVAL_MS);
@@ -78,6 +85,12 @@ async function main(): Promise<void> {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((res) => setTimeout(res, ms));
+}
+
+function getForceUntil(db: Database.Database): number {
+  const row = db.prepare("SELECT force_until FROM clipper_runtime WHERE id = 1")
+    .get() as { force_until: number } | undefined;
+  return row?.force_until ?? 0;
 }
 
 main().catch((e) => {

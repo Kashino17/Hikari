@@ -130,4 +130,16 @@ describe("isWindowActive", () => {
   it("returns false at 21:59", () => {
     expect(isWindowActive(new Date("2026-05-02T21:59:00"), 22, 8)).toBe(false);
   });
+
+  it("returns true at 14:00 when forceUntil is in the future", () => {
+    const now = new Date("2026-05-02T14:00:00");
+    const future = now.getTime() + 60 * 60 * 1000;
+    expect(isWindowActive(now, 22, 8, future)).toBe(true);
+  });
+
+  it("returns false at 14:00 when forceUntil is in the past", () => {
+    const now = new Date("2026-05-02T14:00:00");
+    const past = now.getTime() - 1000;
+    expect(isWindowActive(now, 22, 8, past)).toBe(false);
+  });
 });

@@ -33,6 +33,14 @@ class ChannelDetailViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    private val _syncing = MutableStateFlow(false)
+    val syncing: StateFlow<Boolean> = _syncing.asStateFlow()
+
+    private val _syncMessage = MutableStateFlow<String?>(null)
+    val syncMessage: StateFlow<String?> = _syncMessage.asStateFlow()
+
+    fun dismissSyncMessage() { _syncMessage.value = null }
+
     init { load() }
 
     fun load() = viewModelScope.launch {
@@ -66,5 +74,26 @@ class ChannelDetailViewModel @Inject constructor(
                 _channel.value = current
                 _error.value = it.message ?: "Konnte Vertrauenskanal nicht umschalten"
             }
+    }
+
+    fun syncAndClip() = viewModelScope.launch {
+        if (_syncing.value) return@launch
+        _syncing.value = true
+        _error.value = null
+        runCatching {
+            val pollResult = repo.pollChannel(channelId)
+            repo.forceClipperWindow()
+            pollResult
+        }.onSuccess { result ->
+            _syncMessage.value = if (result.queued > 0)
+                "Sync: ${result.queued} neu, ${result.skipped} bekannt · Clipper läuft jetzt"
+            else
+                "Keine neuen Videos · Clipper läuft (${result.skipped} bekannt)"
+            // Refresh the videos list — new ones should appear shortly via fire-and-forget pipeline
+            load()
+        }.onFailure {
+            _error.value = it.message ?: "Sync fehlgeschlagen"
+        }
+        _syncing.value = false
     }
 }

@@ -72,4 +72,10 @@ export function applyMigrations(db: Database.Database): void {
     // are inserted with explicit is_pre_clipper values.
     db.exec(`UPDATE feed_items SET is_pre_clipper = 1`);
   }
+
+  // Clipper runtime state singleton — seed if not yet present.
+  db.exec(`
+    INSERT OR IGNORE INTO clipper_runtime (id, force_until, updated_at)
+    VALUES (1, 0, ${Date.now()})
+  `);
 }
