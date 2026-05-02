@@ -18,18 +18,21 @@ OPERATIONELLE REGELN (fest):
 
 PRO CLIP gibst du an:
 - start_sec, end_sec (Float)
-- focus.{x,y,w,h} normalisiert 0.0–1.0 (wo das Wichtige im Frame liegt — für 9:16-Smart-Crop)
+- focus.x, focus.y = ZENTRUM des wichtigen Bildbereichs, normalisiert 0.0–1.0
+  (z.B. ein zentriertes Talking-Head-Gesicht: x=0.5, y=0.4)
+- focus.w, focus.h = Größe des wichtigen Bereichs, normalisiert 0.0–1.0
+  (nur als Hinweis — der Crop wird automatisch auf 9:16 gerechnet)
 - reason (kurze Begründung warum dieser Part)
 
 OUTPUT: ausschließlich gültiges JSON-Array, sortiert nach start_sec ASC. Keine Markdown-Code-Blocks, keine Erklärungen außerhalb des JSON.
 
-Beispiel:
+Beispiel (Talking-Head-Video, Action zentriert):
 [
   {"start_sec": 142.5, "end_sec": 198.0,
-   "focus": {"x": 0.25, "y": 0.15, "w": 0.5, "h": 0.7},
+   "focus": {"x": 0.5, "y": 0.4, "w": 0.5, "h": 0.7},
    "reason": "Klare Erklärung der Kernidee mit Diagramm"},
   {"start_sec": 612.0, "end_sec": 668.5,
-   "focus": {"x": 0.3, "y": 0.2, "w": 0.4, "h": 0.6},
+   "focus": {"x": 0.5, "y": 0.5, "w": 0.4, "h": 0.6},
    "reason": "Punchy Quote über praktische Anwendung"}
 ]"
 `;

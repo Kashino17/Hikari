@@ -1,5 +1,10 @@
 export interface FocusRegion {
-  x: number; y: number; w: number; h: number;  // all 0..1 normalized
+  // (x, y) = CENTER of the focus area in normalized [0..1] coords.
+  // (w, h) = size of the focus area in normalized [0..1] coords.
+  // We use center-coords because Qwen returns them as centers (e.g. {0.5, 0.5}
+  // means middle of frame, regardless of w/h). The crop rect is sized to match
+  // targetAspect and positioned to center on (x, y), clamped to bounds.
+  x: number; y: number; w: number; h: number;
 }
 export interface CropInput {
   videoWidth: number;
@@ -45,9 +50,9 @@ export function computeCropRect(input: CropInput): CropRect {
     cropH = W / targetAspect;
   }
 
-  // Center on focus-region center (in pixel coords)
-  const focusCenterX = (focus.x + focus.w / 2) * W;
-  const focusCenterY = (focus.y + focus.h / 2) * H;
+  // (focus.x, focus.y) is the CENTER of the focus area, in normalized coords.
+  const focusCenterX = focus.x * W;
+  const focusCenterY = focus.y * H;
   let x = focusCenterX - cropW / 2;
   let y = focusCenterY - cropH / 2;
 

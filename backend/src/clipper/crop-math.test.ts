@@ -14,14 +14,14 @@ describe("computeCropRect", () => {
   it("landscape 16:9 with center-focus crops a 9:16 column around focus center", () => {
     const rect = computeCropRect({
       videoWidth: 1920, videoHeight: 1080,
-      focus: { x: 0.4, y: 0.2, w: 0.2, h: 0.6 },
+      // x,y are CENTER coords (not top-left). Centered at frame middle.
+      focus: { x: 0.5, y: 0.5, w: 0.6, h: 0.6 },
       targetAspect: 9 / 16,
     });
     // For 9:16 at 1080 height: cropW = 1080 * 9/16 = 607.5
     expect(rect.h).toBe(1080);
     expect(rect.w).toBeCloseTo(607.5, 0);
-    // Focus center x = (0.4 + 0.2/2) * 1920 = 960; crop center should match,
-    // clamped within frame.
+    // Focus center x = 0.5 * 1920 = 960; crop center should match.
     const cropCenterX = rect.x + rect.w / 2;
     expect(cropCenterX).toBeCloseTo(960, 0);
   });

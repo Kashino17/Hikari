@@ -20,23 +20,35 @@ export const ClipComposition: React.FC<ClipProps> = ({
   videoWidth, videoHeight,
   cropX, cropY, cropW, cropH,
 }) => {
-  const { fps, width: outW, height: outH } = useVideoConfig();
-  const scale = Math.max(outW / cropW, outH / cropH);
-  const translateX = -(cropX + cropW / 2) * scale + outW / 2;
-  const translateY = -(cropY + cropH / 2) * scale + outH / 2;
+  const { fps } = useVideoConfig();
+  // Smart-crop via CSS object-fit/object-position. The crop rect is
+  // (cropX, cropY, cropW, cropH) in source-pixel coords. We translate that
+  // into an object-position percentage that aligns the crop center with the
+  // container center.
+  //
+  //   focusCenter / (sourceSize - cropSize) ≈ object-position percentage
+  //
+  // (the denominator is the over-pan range, so we map focus center to that).
+  const focusCenterX = cropX + cropW / 2;
+  const focusCenterY = cropY + cropH / 2;
+  const overPanX = videoWidth - cropW;
+  const overPanY = videoHeight - cropH;
+  const objectPosX = overPanX > 0 ? ((focusCenterX - cropW / 2) / overPanX) * 100 : 50;
+  const objectPosY = overPanY > 0 ? ((focusCenterY - cropH / 2) / overPanY) * 100 : 50;
+  const clampedX = Math.max(0, Math.min(100, objectPosX));
+  const clampedY = Math.max(0, Math.min(100, objectPosY));
   return (
     <AbsoluteFill style={{ backgroundColor: "black", overflow: "hidden" }}>
-      <div
+      <OffthreadVideo
+        src={src}
+        startFrom={Math.floor(startSec * fps)}
         style={{
-          position: "absolute",
-          width: videoWidth,
-          height: videoHeight,
-          transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
-          transformOrigin: "0 0",
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: `${clampedX}% ${clampedY}%`,
         }}
-      >
-        <OffthreadVideo src={src} startFrom={Math.floor(startSec * fps)} />
-      </div>
+      />
     </AbsoluteFill>
   );
 };

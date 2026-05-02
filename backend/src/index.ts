@@ -62,7 +62,20 @@ for (const r of orphanRows) {
 }
 
 const app = Fastify({ logger: { level: "info" } });
-await app.register(fastifyStatic, { root: cfg.videoDir, prefix: "/videos/" });
+// CORS for video assets — Remotion's compositor (headless Chrome) bundles
+// the React composition under a different origin and loads videos via
+// <video> tag, which requires Access-Control-Allow-Origin to render the
+// pixels (otherwise we get silent black frames). Wildcard is safe here:
+// videos are public, single-user backend, no auth.
+const videoCorsHeaders = (res: { setHeader: (name: string, value: string) => void }) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+};
+await app.register(fastifyStatic, {
+  root: cfg.videoDir,
+  prefix: "/videos/",
+  setHeaders: videoCorsHeaders,
+});
 await app.register(fastifyStatic, { root: cfg.coverDir, prefix: "/covers/", decorateReply: false });
 // Clips are written to <videoDir>/clips/<uuid>.mp4 by the clipper worker.
 // Ensure the directory exists even if the worker hasn't run yet (backend boots first).
@@ -71,6 +84,7 @@ await app.register(fastifyStatic, {
   root: join(cfg.videoDir, "clips"),
   prefix: "/clips/",
   decorateReply: false,
+  setHeaders: videoCorsHeaders,
 });
 // Static mockups for design exploration — served as plain HTML
 const mockupsDir = new URL("../mockups", import.meta.url).pathname;
