@@ -1,13 +1,9 @@
 package com.hikari.app.ui.feed
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -24,7 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
@@ -34,7 +29,6 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -74,84 +68,12 @@ import com.hikari.app.data.sponsor.SponsorSegment
 import com.hikari.app.domain.model.FeedItem
 import com.hikari.app.domain.repo.PlaybackRepository
 import com.hikari.app.player.SponsorSkipListener
+import com.hikari.app.ui.player.PlayPauseIndicator
+import com.hikari.app.ui.player.SeekBadge
+import com.hikari.app.ui.player.SeekDirection
 import kotlinx.coroutines.launch
 
 private val FeedBottomBarClearance = 72.dp
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Internal helpers
-// ─────────────────────────────────────────────────────────────────────────────
-
-private enum class SeekDirection { Backward, Forward }
-
-/** Animated play/pause indicator shown in center when tapping. */
-@Composable
-private fun PlayPauseIndicator(
-    playing: Boolean,
-    showTrigger: Int,
-) {
-    var visible by remember { mutableStateOf(false) }
-    LaunchedEffect(showTrigger) {
-        if (showTrigger > 0) {
-            visible = true
-            kotlinx.coroutines.delay(650)
-            visible = false
-        }
-    }
-    AnimatedVisibility(
-        visible = visible,
-        enter = fadeIn(tween(200, easing = FastOutSlowInEasing)) +
-            scaleIn(initialScale = 0.6f, animationSpec = tween(200, easing = FastOutSlowInEasing)),
-        exit = fadeOut(tween(180, easing = FastOutLinearInEasing)) +
-            scaleOut(targetScale = 1.15f, animationSpec = tween(180, easing = FastOutLinearInEasing)),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(88.dp)
-                .background(Color.Black.copy(alpha = 0.45f), shape = CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = if (playing) HikariIcons.Pause else Icons.Default.PlayArrow,
-                contentDescription = if (playing) "Paused" else "Playing",
-                tint = Color.White,
-                modifier = Modifier.size(52.dp),
-            )
-        }
-    }
-}
-
-/**
- * Seek badge shown briefly after a double-tap seek.
- * Dismisses itself after 600ms.
- */
-@Composable
-private fun SeekBadge(direction: SeekDirection?, onDismiss: () -> Unit) {
-    if (direction == null) return
-    LaunchedEffect(direction) {
-        kotlinx.coroutines.delay(600)
-        onDismiss()
-    }
-    Row(
-        modifier = Modifier
-            .background(Color.Black.copy(alpha = 0.5f), CircleShape)
-            .padding(horizontal = 20.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            imageVector = if (direction == SeekDirection.Backward) HikariIcons.Replay5 else HikariIcons.Forward5,
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier.size(28.dp),
-        )
-        Spacer(Modifier.width(6.dp))
-        Text(
-            if (direction == SeekDirection.Backward) "-5s" else "+5s",
-            color = Color.White,
-            style = MaterialTheme.typography.titleMedium,
-        )
-    }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main composable
