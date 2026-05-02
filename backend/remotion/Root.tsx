@@ -22,6 +22,7 @@ export const RemotionRoot: React.FC = () => {
         cropY: 0,
         cropW: 1920,
         cropH: 1080,
+        displayMode: "smart-crop" as const,
       }}
       calculateMetadata={({ props }) => ({
         durationInFrames: Math.ceil((props.endSec - props.startSec) * 30),

@@ -220,6 +220,7 @@ CREATE TABLE IF NOT EXISTS clips (
   focus_w         REAL NOT NULL,
   focus_h         REAL NOT NULL,
   reason          TEXT,
+  display_mode    TEXT NOT NULL DEFAULT 'smart-crop',
   created_at      INTEGER NOT NULL,
   added_to_feed_at INTEGER NOT NULL,
   seen_at         INTEGER,

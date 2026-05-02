@@ -28,6 +28,14 @@ PRO CLIP gibst du an:
 - focus.w, focus.h = Größe des wichtigen Bereichs, normalisiert 0.0–1.0
   (nur als Hinweis — der Crop wird automatisch auf 9:16 gerechnet)
 - reason (kurze prägnante Beschreibung — wird als Clip-Titel angezeigt, max ~80 Zeichen)
+- display_mode = "smart-crop" oder "fit"
+  • "smart-crop" (Standard) — wenn der Clip eine Person/Gesicht/klare Action im
+    Mittelpunkt hat. Crop wird auf focus zentriert, alles außerhalb verloren.
+  • "fit" — wenn der Frame textlastig ist (Slides, Banner, Tabellen, mehr-
+    spaltiger Content, Codedemo, Read-Along). Komplettes 16:9-Bild wird
+    sichtbar, oben/unten Blur-Background-Padding. NICHTS wird abgeschnitten.
+  Wähle "fit" konservativ — nur wenn Cropping signifikant Information
+  zerstören würde. Bei Talking-Head: immer "smart-crop".
 
 OUTPUT: ausschließlich gültiges JSON-Array, sortiert nach start_sec ASC. Keine Markdown-Code-Blocks, keine Erklärungen außerhalb des JSON.
 
@@ -49,9 +57,15 @@ Volles JSON-Output-Beispiel:
 [
   {"start_sec": 142.5, "end_sec": 198.0,
    "focus": {"x": 0.5, "y": 0.4, "w": 0.5, "h": 0.7},
-   "reason": "Klare Erklärung der Kernidee mit Diagramm"},
+   "reason": "Klare Erklärung der Kernidee mit Diagramm",
+   "display_mode": "smart-crop"},
+  {"start_sec": 305.0, "end_sec": 360.0,
+   "focus": {"x": 0.5, "y": 0.5, "w": 1.0, "h": 1.0},
+   "reason": "GPT-5.5 vs Claude Benchmark-Tabelle (textlastig)",
+   "display_mode": "fit"},
   {"start_sec": 612.0, "end_sec": 668.5,
    "focus": {"x": 0.3, "y": 0.45, "w": 0.4, "h": 0.6},
-   "reason": "Punchy Quote über praktische Anwendung"}
+   "reason": "Punchy Quote über praktische Anwendung",
+   "display_mode": "smart-crop"}
 ]"
 `;

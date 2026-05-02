@@ -30,8 +30,8 @@ function makeDb(): Database.Database {
 }
 
 const SPEC_TWO_CLIPS: ClipSpec[] = [
-  { startSec: 30, endSec: 90, focus: { x: 0.2, y: 0.2, w: 0.6, h: 0.6 }, reason: "first" },
-  { startSec: 200, endSec: 260, focus: { x: 0.3, y: 0.2, w: 0.4, h: 0.6 }, reason: "second" },
+  { startSec: 30, endSec: 90, focus: { x: 0.2, y: 0.2, w: 0.6, h: 0.6 }, reason: "first", displayMode: "smart-crop" },
+  { startSec: 200, endSec: 260, focus: { x: 0.3, y: 0.2, w: 0.4, h: 0.6 }, reason: "second", displayMode: "smart-crop" },
 ];
 
 describe("processNextJob", () => {

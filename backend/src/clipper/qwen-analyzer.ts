@@ -8,11 +8,17 @@ export class QwenNetworkError extends Error {
   }
 }
 
+export type DisplayMode = "smart-crop" | "fit";
+
 export interface ClipSpec {
   startSec: number;
   endSec: number;
   focus: { x: number; y: number; w: number; h: number };
   reason: string;
+  // "smart-crop" → crop tightly around focus (default; faces, action).
+  // "fit"        → show entire 16:9 frame in 9:16 with blur-bg padding
+  //                (text-heavy slides, multi-column UI, banners).
+  displayMode: DisplayMode;
 }
 
 export interface AnalyzeInput {
@@ -43,6 +49,8 @@ const rawSpecSchema = z.object({
     h: z.number().min(0).max(1),
   }),
   reason: z.string(),
+  // Optional in case Qwen forgets — defaults to smart-crop.
+  display_mode: z.enum(["smart-crop", "fit"]).optional(),
 });
 const rawSpecArraySchema = z.array(rawSpecSchema);
 
@@ -149,6 +157,7 @@ function clampSpecs(raw: z.infer<typeof rawSpecArraySchema>, durationSec: number
       endSec,
       focus: r.focus,
       reason: r.reason,
+      displayMode: r.display_mode ?? "smart-crop",
     });
   }
   return out.sort((a, b) => a.startSec - b.startSec);

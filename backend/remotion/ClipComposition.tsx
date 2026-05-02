@@ -12,6 +12,7 @@ export const clipPropsSchema = z.object({
   cropY: z.number(),
   cropW: z.number(),
   cropH: z.number(),
+  displayMode: z.enum(["smart-crop", "fit"]).default("smart-crop"),
 });
 export type ClipProps = z.infer<typeof clipPropsSchema>;
 
@@ -19,16 +20,45 @@ export const ClipComposition: React.FC<ClipProps> = ({
   src, startSec,
   videoWidth, videoHeight,
   cropX, cropY, cropW, cropH,
+  displayMode,
 }) => {
   const { fps } = useVideoConfig();
-  // Smart-crop via CSS object-fit/object-position. The crop rect is
-  // (cropX, cropY, cropW, cropH) in source-pixel coords. We translate that
-  // into an object-position percentage that aligns the crop center with the
-  // container center.
-  //
-  //   focusCenter / (sourceSize - cropSize) ≈ object-position percentage
-  //
-  // (the denominator is the over-pan range, so we map focus center to that).
+  const startFrame = Math.floor(startSec * fps);
+
+  if (displayMode === "fit") {
+    // For text-heavy slides: full 16:9 frame visible in 9:16, with a
+    // blurred + scaled copy of the same frame as background. Standard
+    // Instagram/YouTube-Shorts repack pattern for landscape sources.
+    return (
+      <AbsoluteFill style={{ backgroundColor: "black", overflow: "hidden" }}>
+        {/* Background: same video, blurred + dimmed, fills the canvas */}
+        <OffthreadVideo
+          src={src}
+          startFrom={startFrame}
+          muted
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            filter: "blur(40px) brightness(0.5)",
+            transform: "scale(1.1)",  // hide blur edge bleed
+          }}
+        />
+        {/* Foreground: same video, contained, full content visible */}
+        <OffthreadVideo
+          src={src}
+          startFrom={startFrame}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+          }}
+        />
+      </AbsoluteFill>
+    );
+  }
+
+  // Smart-crop: object-fit cover + object-position derived from crop rect.
   const focusCenterX = cropX + cropW / 2;
   const focusCenterY = cropY + cropH / 2;
   const overPanX = videoWidth - cropW;
@@ -41,7 +71,7 @@ export const ClipComposition: React.FC<ClipProps> = ({
     <AbsoluteFill style={{ backgroundColor: "black", overflow: "hidden" }}>
       <OffthreadVideo
         src={src}
-        startFrom={Math.floor(startSec * fps)}
+        startFrom={startFrame}
         style={{
           width: "100%",
           height: "100%",

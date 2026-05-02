@@ -164,8 +164,8 @@ export async function processNextJob(
       id, parent_video_id, order_in_parent,
       start_seconds, end_seconds, file_path, file_size_bytes,
       focus_x, focus_y, focus_w, focus_h,
-      reason, created_at, added_to_feed_at
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      reason, display_mode, created_at, added_to_feed_at
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `);
   const now = Date.now();
   db.transaction(() => {
@@ -183,6 +183,7 @@ export async function processNextJob(
         r.spec.focus.w,
         r.spec.focus.h,
         r.spec.reason,
+        r.spec.displayMode,
         now,
         now,
       );
@@ -212,8 +213,8 @@ function insertPassthroughClip(
       id, parent_video_id, order_in_parent,
       start_seconds, end_seconds, file_path, file_size_bytes,
       focus_x, focus_y, focus_w, focus_h,
-      reason, created_at, added_to_feed_at
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      reason, display_mode, created_at, added_to_feed_at
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `).run(
     randomUUID(),
     videoId,
@@ -227,6 +228,7 @@ function insertPassthroughClip(
     1,
     1,
     "short-form-passthrough",
+    "smart-crop",
     now,
     now,
   );

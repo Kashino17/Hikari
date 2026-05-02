@@ -51,6 +51,7 @@ export async function renderClip(input: RenderInput): Promise<RenderResult> {
     endSec: spec.endSec,
     videoWidth, videoHeight,
     cropX: crop.x, cropY: crop.y, cropW: crop.w, cropH: crop.h,
+    displayMode: spec.displayMode,
   };
 
   const serveUrl = await getBundle();

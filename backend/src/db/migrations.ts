@@ -78,4 +78,9 @@ export function applyMigrations(db: Database.Database): void {
     INSERT OR IGNORE INTO clipper_runtime (id, force_until, updated_at)
     VALUES (1, 0, ${Date.now()})
   `);
+
+  // Per-clip display mode. "smart-crop" (default) crops tightly to focus.
+  // "fit" letterboxes the full 16:9 frame in 9:16 with blur-bg padding —
+  // for slides / text-heavy content where cropping would hide info.
+  addColumnIfMissing(db, "clips", "display_mode", "TEXT NOT NULL DEFAULT 'smart-crop'");
 }
