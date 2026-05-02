@@ -10,6 +10,13 @@ export class QwenNetworkError extends Error {
 
 export type DisplayMode = "smart-crop" | "fit";
 
+export interface DisplaySegment {
+  startSec: number;
+  endSec: number;
+  mode: "smart-crop" | "fit";
+  focus?: { x: number; y: number; w: number; h: number };
+}
+
 export interface ClipSpec {
   startSec: number;
   endSec: number;
@@ -19,6 +26,9 @@ export interface ClipSpec {
   // "fit"        → show entire 16:9 frame in 9:16 with blur-bg padding
   //                (text-heavy slides, multi-column UI, banners).
   displayMode: DisplayMode;
+  // Optional per-clip sub-segment switching. When present, renderer uses
+  // these instead of the clip-level displayMode for the full duration.
+  displaySegments?: DisplaySegment[];
 }
 
 export interface AnalyzeInput {
@@ -39,6 +49,18 @@ export interface AnalyzerConfig {
 const MIN_CLIP_SEC = 20;
 const MAX_CLIP_SEC = 90;
 
+const rawSegmentSchema = z.object({
+  start_sec: z.number(),
+  end_sec: z.number(),
+  mode: z.enum(["smart-crop", "fit"]),
+  focus: z.object({
+    x: z.number().min(0).max(1),
+    y: z.number().min(0).max(1),
+    w: z.number().min(0).max(1),
+    h: z.number().min(0).max(1),
+  }).optional(),
+});
+
 const rawSpecSchema = z.object({
   start_sec: z.number(),
   end_sec: z.number(),
@@ -51,6 +73,7 @@ const rawSpecSchema = z.object({
   reason: z.string(),
   // Optional in case Qwen forgets — defaults to smart-crop.
   display_mode: z.enum(["smart-crop", "fit"]).optional(),
+  display_segments: z.array(rawSegmentSchema).optional(),
 });
 const rawSpecArraySchema = z.array(rawSpecSchema);
 
@@ -137,6 +160,106 @@ function parseAndValidate(content: string): z.infer<typeof rawSpecArraySchema> {
   return rawSpecArraySchema.parse(parsed);
 }
 
+const MIN_SEGMENT_SEC = 3;
+
+/**
+ * Clean up raw display_segments for a single clip:
+ * 1. Sort by startSec
+ * 2. Clamp endSec to <= clipDurationSec
+ * 3. Merge any segment shorter than 3s into the longer adjacent neighbor
+ * 4. Fill gaps: extend segment[i].endSec to segment[i+1].startSec
+ * 5. Extend first segment down to 0 if it doesn't start there
+ * 6. Extend last segment up to clipDurationSec if it doesn't end there
+ * 7. Drop zero-duration segments
+ * 8. Return null if fewer than 2 valid segments remain
+ */
+export function cleanSegments(
+  raw: Array<{ start_sec: number; end_sec: number; mode: "smart-crop" | "fit"; focus?: { x: number; y: number; w: number; h: number } }>,
+  clipDurationSec: number,
+): DisplaySegment[] | null {
+  if (!raw || raw.length === 0) return null;
+
+  // Convert to DisplaySegment with clip-local seconds, sort
+  let segs: DisplaySegment[] = raw
+    .map((s) => ({
+      startSec: s.start_sec,
+      endSec: Math.min(s.end_sec, clipDurationSec),
+      mode: s.mode,
+      focus: s.focus,
+    }))
+    .filter((s) => s.endSec > s.startSec)
+    .sort((a, b) => a.startSec - b.startSec);
+
+  if (segs.length === 0) return null;
+
+  // Resolve overlaps: if segment[i].endSec > segment[i+1].startSec, trim segment[i]
+  for (let i = 0; i < segs.length - 1; i++) {
+    if (segs[i]!.endSec > segs[i + 1]!.startSec) {
+      segs[i] = { ...segs[i]!, endSec: segs[i + 1]!.startSec };
+    }
+  }
+
+  // Remove zero-duration after overlap fix
+  segs = segs.filter((s) => s.endSec > s.startSec);
+  if (segs.length === 0) return null;
+
+  // Extend first segment to start at 0
+  if (segs[0]!.startSec > 0) {
+    segs[0] = { ...segs[0]!, startSec: 0 };
+  }
+
+  // Extend last segment to cover clipDurationSec
+  const last = segs[segs.length - 1]!;
+  if (last.endSec < clipDurationSec) {
+    segs[segs.length - 1] = { ...last, endSec: clipDurationSec };
+  }
+
+  // Fill gaps between segments
+  for (let i = 0; i < segs.length - 1; i++) {
+    if (segs[i]!.endSec < segs[i + 1]!.startSec) {
+      segs[i] = { ...segs[i]!, endSec: segs[i + 1]!.startSec };
+    }
+  }
+
+  // Merge short segments (< MIN_SEGMENT_SEC) into longer adjacent neighbor
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (let i = 0; i < segs.length; i++) {
+      const seg = segs[i]!;
+      const dur = seg.endSec - seg.startSec;
+      if (dur < MIN_SEGMENT_SEC) {
+        const prevDur = i > 0 ? segs[i - 1]!.endSec - segs[i - 1]!.startSec : -Infinity;
+        const nextDur = i < segs.length - 1 ? segs[i + 1]!.endSec - segs[i + 1]!.startSec : -Infinity;
+
+        if (prevDur >= nextDur && i > 0) {
+          // Merge into previous (extend its endSec)
+          segs[i - 1] = { ...segs[i - 1]!, endSec: seg.endSec };
+          segs.splice(i, 1);
+        } else if (i < segs.length - 1) {
+          // Merge into next (extend its startSec backward)
+          segs[i + 1] = { ...segs[i + 1]!, startSec: seg.startSec };
+          segs.splice(i, 1);
+        } else if (i > 0) {
+          // Last segment, only previous exists
+          segs[i - 1] = { ...segs[i - 1]!, endSec: seg.endSec };
+          segs.splice(i, 1);
+        }
+        changed = true;
+        break;
+      }
+    }
+  }
+
+  // Drop zero-duration
+  segs = segs.filter((s) => s.endSec > s.startSec);
+
+  // If fewer than 2 segments remain, fall back to clip-level display_mode
+  if (segs.length < 2) return null;
+
+  return segs;
+}
+
 function clampSpecs(raw: z.infer<typeof rawSpecArraySchema>, durationSec: number): ClipSpec[] {
   const out: ClipSpec[] = [];
   for (const r of raw) {
@@ -152,12 +275,18 @@ function clampSpecs(raw: z.infer<typeof rawSpecArraySchema>, durationSec: number
     if (endSec - r.start_sec > MAX_CLIP_SEC) {
       endSec = r.start_sec + MAX_CLIP_SEC;
     }
+    const clipDuration = endSec - r.start_sec;
+    const cleanedSegments = r.display_segments && r.display_segments.length > 0
+      ? cleanSegments(r.display_segments, clipDuration)
+      : null;
+
     out.push({
       startSec: r.start_sec,
       endSec,
       focus: r.focus,
       reason: r.reason,
       displayMode: r.display_mode ?? "smart-crop",
+      ...(cleanedSegments ? { displaySegments: cleanedSegments } : {}),
     });
   }
   return out.sort((a, b) => a.startSec - b.startSec);

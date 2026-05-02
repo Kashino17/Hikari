@@ -148,6 +148,37 @@ describe("processNextJob", () => {
     expect(ran).toBe(false);
   });
 
+  it("stores display_segments JSON when spec includes them", async () => {
+    enqueue(db, "v1");
+    const specWithSegments: ClipSpec[] = [{
+      startSec: 30, endSec: 90,
+      focus: { x: 0.5, y: 0.4, w: 0.3, h: 0.7 },
+      reason: "first",
+      displayMode: "smart-crop",
+      displaySegments: [
+        { startSec: 0, endSec: 30, mode: "smart-crop", focus: { x: 0.5, y: 0.4, w: 0.3, h: 0.7 } },
+        { startSec: 30, endSec: 60, mode: "fit" },
+      ],
+    }];
+    const analyze = vi.fn(async () => specWithSegments);
+    const render = vi.fn(async (i: any) => ({ filePath: i.outputPath, sizeBytes: 5_000_000 }));
+    const transcribeFn = vi.fn(async () => []);
+
+    await processNextJob(db, {
+      analyze, render, transcribeFn,
+      mediaDir: "/clips",
+      analyzerConfig: { provider: "lmstudio", baseUrl: "http://x", model: "qwen" },
+    });
+
+    const clips = db.prepare("SELECT * FROM clips WHERE parent_video_id=?").all("v1") as any[];
+    expect(clips).toHaveLength(1);
+    const segments = JSON.parse(clips[0].display_segments);
+    expect(Array.isArray(segments)).toBe(true);
+    expect(segments).toHaveLength(2);
+    expect(segments[0].mode).toBe("smart-crop");
+    expect(segments[1].mode).toBe("fit");
+  });
+
   it("transient network error: clip_status stays 'pending', queue unlocks for retry", async () => {
     enqueue(db, "v1");
     // First call throws network error

@@ -52,6 +52,7 @@ export async function renderClip(input: RenderInput): Promise<RenderResult> {
     videoWidth, videoHeight,
     cropX: crop.x, cropY: crop.y, cropW: crop.w, cropH: crop.h,
     displayMode: spec.displayMode,
+    displaySegments: spec.displaySegments ?? [],  // composition handles empty/non-empty
   };
 
   const serveUrl = await getBundle();

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { analyzeVideo } from "./qwen-analyzer.js";
+import { analyzeVideo, cleanSegments } from "./qwen-analyzer.js";
 // QwenNetworkError exported for instanceof checks if needed
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
@@ -198,5 +198,108 @@ describe("analyzeVideo", () => {
     const userText = sentBody.messages[1].content[0].text;
     expect(userText).toContain("Transkript:");
     expect(userText).toContain("Hello world from the video.");
+  });
+
+  it("passes display_segments through clampSpecs and attaches cleaned segments to ClipSpec", async () => {
+    const body = JSON.stringify([{
+      start_sec: 0, end_sec: 60,
+      focus: { x: 0.5, y: 0.4, w: 0.3, h: 0.7 },
+      reason: "mixed layout",
+      display_mode: "smart-crop",
+      display_segments: [
+        { start_sec: 0, end_sec: 30, mode: "smart-crop", focus: { x: 0.5, y: 0.4, w: 0.3, h: 0.7 } },
+        { start_sec: 30, end_sec: 60, mode: "fit" },
+      ],
+    }]);
+    const fetchFn = mockFetch([{ ok: true, body: { choices: [{ message: { content: body } }] } }]);
+    const out = await analyzeVideo(
+      { filePath: "/fake.mp4", videoId: "v1", durationSec: 600 },
+      "prompt",
+      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn, sampleFn: mockSample },
+    );
+    expect(out[0]!.displaySegments).toHaveLength(2);
+    expect(out[0]!.displaySegments![0]!.mode).toBe("smart-crop");
+    expect(out[0]!.displaySegments![1]!.mode).toBe("fit");
+  });
+
+  it("drops display_segments that reduce to fewer than 2 valid segments after cleanup", async () => {
+    // Single segment = fall back to clip-level mode
+    const body = JSON.stringify([{
+      start_sec: 0, end_sec: 60,
+      focus: { x: 0.5, y: 0.4, w: 0.3, h: 0.7 },
+      reason: "stable",
+      display_mode: "smart-crop",
+      display_segments: [
+        { start_sec: 0, end_sec: 60, mode: "smart-crop", focus: { x: 0.5, y: 0.4, w: 0.3, h: 0.7 } },
+      ],
+    }]);
+    const fetchFn = mockFetch([{ ok: true, body: { choices: [{ message: { content: body } }] } }]);
+    const out = await analyzeVideo(
+      { filePath: "/fake.mp4", videoId: "v1", durationSec: 600 },
+      "prompt",
+      { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn, sampleFn: mockSample },
+    );
+    expect(out[0]!.displaySegments).toBeUndefined();
+  });
+});
+
+describe("cleanSegments", () => {
+  it("returns two clean segments as-is", () => {
+    const result = cleanSegments([
+      { start_sec: 0, end_sec: 30, mode: "smart-crop", focus: { x: 0.5, y: 0.4, w: 0.3, h: 0.7 } },
+      { start_sec: 30, end_sec: 60, mode: "fit" },
+    ], 60);
+    expect(result).toHaveLength(2);
+    expect(result![0]!.startSec).toBe(0);
+    expect(result![0]!.endSec).toBe(30);
+    expect(result![1]!.startSec).toBe(30);
+    expect(result![1]!.endSec).toBe(60);
+  });
+
+  it("merges tiny segment (1s) sandwiched between two longer ones into the longer neighbor", () => {
+    // Segments: [0-25s smart-crop], [25-26s fit (tiny)], [26-60s smart-crop]
+    // tiny 1s segment should merge into the longer adjacent (both are 25s and 34s — next wins)
+    const result = cleanSegments([
+      { start_sec: 0, end_sec: 25, mode: "smart-crop" },
+      { start_sec: 25, end_sec: 26, mode: "fit" },
+      { start_sec: 26, end_sec: 60, mode: "smart-crop" },
+    ], 60);
+    // The 1s "fit" segment should be absorbed; result has ≤ 2 segments
+    // The tiny middle gets merged into the longer neighbor (next: 34s > prev: 25s)
+    expect(result).not.toBeNull();
+    // No segment should be < 3s
+    for (const seg of result!) {
+      expect(seg.endSec - seg.startSec).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("fills a gap between segments", () => {
+    // Segments: [0-20s smart-crop], gap, [30-60s fit]
+    const result = cleanSegments([
+      { start_sec: 0, end_sec: 20, mode: "smart-crop" },
+      { start_sec: 30, end_sec: 60, mode: "fit" },
+    ], 60);
+    expect(result).toHaveLength(2);
+    // Gap filled: first segment extended to 30
+    expect(result![0]!.endSec).toBe(30);
+    expect(result![1]!.startSec).toBe(30);
+  });
+
+  it("resolves an overlap: keeps earlier, trims later's start", () => {
+    // Segments: [0-35s smart-crop], [30-60s fit] — overlap 30-35s
+    const result = cleanSegments([
+      { start_sec: 0, end_sec: 35, mode: "smart-crop" },
+      { start_sec: 30, end_sec: 60, mode: "fit" },
+    ], 60);
+    expect(result).toHaveLength(2);
+    expect(result![0]!.endSec).toBe(30);  // trimmed to not-overlap
+    expect(result![1]!.startSec).toBe(30);
+  });
+
+  it("returns null for a single segment (fall back to clip-level display_mode)", () => {
+    const result = cleanSegments([
+      { start_sec: 0, end_sec: 60, mode: "smart-crop" },
+    ], 60);
+    expect(result).toBeNull();
   });
 });

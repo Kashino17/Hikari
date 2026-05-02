@@ -84,6 +84,12 @@ export function applyMigrations(db: Database.Database): void {
   // for slides / text-heavy content where cropping would hide info.
   addColumnIfMissing(db, "clips", "display_mode", "TEXT NOT NULL DEFAULT 'smart-crop'");
 
+  // Per-clip sub-segment overrides for display_mode/focus. JSON array
+  // [{startSec, endSec, mode, focus?}, ...] in clip-local seconds. NULL means
+  // use the single clip-level display_mode for the whole duration (backwards
+  // compat).
+  addColumnIfMissing(db, "clips", "display_segments", "TEXT");
+
   // Word-level captions JSON: [{start, end, text}, ...] in clip-local seconds.
   // NULL means transcription hasn't run yet; client falls back to no subtitles.
   addColumnIfMissing(db, "clips", "captions", "TEXT");

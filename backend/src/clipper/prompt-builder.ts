@@ -52,6 +52,30 @@ const OUTPUT_INSTRUCTIONS = `PRO CLIP gibst du an:
     der Sprecher auf etwas zeigt/erklärt/reagiert → fit, wenn er
     primär selbst Aussagen trifft → smart-crop.
 
+- display_segments (OPTIONAL, nur bei stark wechselndem Layout im Clip):
+  Manche Clips wechseln INNERHALB ihrer Dauer mehrfach zwischen Layout-Typen
+  (z.B. Sprecher → Vollbild-Text-Insert → Sprecher). Wenn das passiert,
+  gib statt einem einzelnen display_mode ein Array \`display_segments\` aus,
+  jedes mit (start_sec, end_sec) in CLIP-LOCAL Sekunden (0 bis Clip-Dauer)
+  und mode + optional focus.
+
+  HARTE Regeln:
+  - Mindestens 3 Sekunden pro Segment (keine Flicker-Cuts)
+  - Segmente lückenlos (decken 0..clipDuration ab)
+  - Nur ausgeben wenn ECHTER Layout-Wechsel passiert; bei stabilem
+    Talking-Head ODER stabilem Text-Slide → KEINE Segments, nur ein
+    display_mode. Du bist hier konservativ.
+
+  Beispiel — Clip mit Sprecher (0-15s), Text-Overlay (15-22s), Sprecher (22-60s):
+  "display_segments": [
+    {"start_sec": 0, "end_sec": 15, "mode": "smart-crop",
+     "focus": {"x": 0.5, "y": 0.4, "w": 0.3, "h": 0.7}},
+    {"start_sec": 15, "end_sec": 22, "mode": "fit"},
+    {"start_sec": 22, "end_sec": 60, "mode": "smart-crop",
+     "focus": {"x": 0.5, "y": 0.4, "w": 0.3, "h": 0.7}}
+  ]
+  display_mode bleibt trotzdem gesetzt (Fallback für Renderer ohne Segment-Support).
+
 OUTPUT: ausschließlich gültiges JSON-Array, sortiert nach start_sec ASC. Keine Markdown-Code-Blocks, keine Erklärungen außerhalb des JSON.
 
 Beispiele für korrekt gesetzten focus.{x,y}:
@@ -78,6 +102,17 @@ Volles JSON-Output-Beispiel:
    "focus": {"x": 0.5, "y": 0.5, "w": 1.0, "h": 1.0},
    "reason": "GPT-5.5 vs Claude Benchmark-Tabelle (textlastig)",
    "display_mode": "fit"},
+  {"start_sec": 420.0, "end_sec": 480.0,
+   "focus": {"x": 0.5, "y": 0.4, "w": 0.3, "h": 0.7},
+   "reason": "AI-News: Sprecher + Vollbild-Text-Einschub",
+   "display_mode": "smart-crop",
+   "display_segments": [
+     {"start_sec": 0, "end_sec": 30, "mode": "smart-crop",
+      "focus": {"x": 0.5, "y": 0.4, "w": 0.3, "h": 0.7}},
+     {"start_sec": 30, "end_sec": 45, "mode": "fit"},
+     {"start_sec": 45, "end_sec": 60, "mode": "smart-crop",
+      "focus": {"x": 0.5, "y": 0.4, "w": 0.3, "h": 0.7}}
+   ]},
   {"start_sec": 612.0, "end_sec": 668.5,
    "focus": {"x": 0.3, "y": 0.45, "w": 0.4, "h": 0.6},
    "reason": "Punchy Quote über praktische Anwendung",
