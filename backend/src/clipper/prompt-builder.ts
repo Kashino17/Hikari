@@ -23,19 +23,34 @@ const OUTPUT_INSTRUCTIONS = `PRO CLIP gibst du an:
   (nur als Hinweis — der Crop wird automatisch auf 9:16 gerechnet)
 - reason (kurze prägnante Beschreibung — wird als Clip-Titel angezeigt, max ~80 Zeichen)
 - display_mode = "smart-crop" oder "fit"
-  HARTE ENTSCHEIDUNGSREGEL:
-  • Wenn IRGENDEIN menschliches Gesicht/Körper im Frame zu sehen ist
-    (auch klein, auch im Hintergrund, auch nur Hände einer Person):
-    → IMMER "smart-crop". Setze focus.x/y auf das GESICHT der GERADE
-       SPRECHENDEN Person (orientier dich am Audio/Transkript wenn
-       mehrere Personen sichtbar). Bei Wechseln zwischen Sprechern wähle
-       das DOMINANTE Gesicht im Clip-Zeitraum. NIEMALS "fit" wenn
-       Gesichter da sind — Personen sollen Fullscreen sein.
-  • Nur wenn der Clip KOMPLETT OHNE Menschen ist (reine Slides,
-    UI-Demos ohne Sprecher-Insert, Diagramme, Code-Editor ohne Webcam):
-    → "fit". Frame wird komplett sichtbar mit Blur-BG drumherum.
-  Im Zweifel: "smart-crop". Es ist immer besser ein Gesicht großzustellen
-  als ein Slide perfekt zu zeigen.
+  ENTSCHEIDUNGSREGEL nach VERHÄLTNIS Gesicht-zu-Frame:
+
+  ╔═══════════════════════════════════════════════════════════════════╗
+  ║  TALKING-HEAD (Gesicht ist der Hauptinhalt, füllt großen Teil    ║
+  ║  des Frames, kein konkurrierender Bildschirm/Visualisierung)     ║
+  ║  → "smart-crop". focus.x/y = Mitte des sprechenden Gesichts.     ║
+  ║  Beispiel: Solo-Interview, Podcast-Setup, Vlog mit Speaker-Cam   ║
+  ║  als Hauptmotiv.                                                  ║
+  ╠═══════════════════════════════════════════════════════════════════╣
+  ║  REACTION / EXPLAINER (kleine Reactor-Cam + großer Bildschirm   ║
+  ║  oder Content im Frame, Sprecher ist eine Picture-in-Picture-    ║
+  ║  Box in der Ecke <25% Frame-Fläche)                               ║
+  ║  → "fit". Der BILDSCHIRM/CONTENT ist der Punkt — Gesicht-Cam ist ║
+  ║  nur Beigabe. Frame komplett sichtbar mit Blur-BG.                ║
+  ║  Beispiel: User reagiert auf Tweet, Streamer mit Game-Footage,   ║
+  ║  Erklärvideo mit Slide + kleiner Webcam unten rechts.             ║
+  ╠═══════════════════════════════════════════════════════════════════╣
+  ║  PURE SLIDES / UI / CODE / DIAGRAMS (keine Menschen sichtbar)    ║
+  ║  → "fit". Komplettes Frame sichtbar mit Blur-BG.                  ║
+  ╚═══════════════════════════════════════════════════════════════════╝
+
+  Faustregel: Wie groß ist das Gesicht im Frame?
+  • Gesicht > ~30% Frame-Fläche → smart-crop (Face IS the content)
+  • Gesicht < ~25% Frame-Fläche → fit (Face ist Begleiter, Content ist
+                                        woanders)
+  • Dazwischen (25-30%): nimm den Hinweis vom Audio/Transkript — wenn
+    der Sprecher auf etwas zeigt/erklärt/reagiert → fit, wenn er
+    primär selbst Aussagen trifft → smart-crop.
 
 OUTPUT: ausschließlich gültiges JSON-Array, sortiert nach start_sec ASC. Keine Markdown-Code-Blocks, keine Erklärungen außerhalb des JSON.
 
