@@ -39,7 +39,10 @@ export async function summarizeContext(
       { role: "user", content: `Transkript:\n${transcript}` },
     ],
     temperature: 0.3,
-    max_tokens: 250,
+    // Qwen 3.6 is a reasoning model and dumps thinking into reasoning_content
+    // before the actual answer lands in content. ~5k reasoning tokens is
+    // typical for a short summary, so we leave plenty of headroom.
+    max_tokens: 2000,
     stream: false,
   };
 
