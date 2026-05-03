@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -436,6 +437,17 @@ fun ReelPlayer(
                 )
             }
         }
+
+        // ── Context overlay — first 6 seconds, then fades out ────────────────
+        ContextOverlay(
+            context = item.context,
+            isCurrent = isCurrent,
+            positionMs = playerPositionMs,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(top = 56.dp),  // leave space for the top counter "01/05" + Alle/Gespeichert/Archiv pills
+        )
 
         // ── Caption overlay — YouTube-Shorts-style word sync ─────────────────
         CaptionOverlay(

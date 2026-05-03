@@ -11,7 +11,7 @@ import androidx.room.RoomDatabase
         LocalMangaArcEntity::class,
         LocalMangaPageEntity::class,
     ],
-    version = 9,
+    version = 10,
     exportSchema = false,
 )
 abstract class HikariDatabase : RoomDatabase() {

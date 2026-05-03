@@ -9,6 +9,7 @@ import { QwenNetworkError } from "./qwen-analyzer.js";
 import type { ClipSpec, AnalyzerConfig } from "./qwen-analyzer.js";
 import type { RenderResult } from "./remotion-renderer.js";
 import { transcribe, type Caption } from "./transcriber.js";
+import { summarizeContext } from "./context-summarizer.js";
 
 export interface WorkerDeps {
   analyze: (
@@ -24,6 +25,7 @@ export interface WorkerDeps {
     outputPath: string;
   }) => Promise<RenderResult>;
   transcribeFn?: (filePath: string) => Promise<Caption[]>;
+  summarizeFn?: (captions: Caption[]) => Promise<string | null>;
   mediaDir: string;
   analyzerConfig: AnalyzerConfig;
 }
@@ -142,6 +144,7 @@ export async function processNextJob(
     spec: ClipSpec;
     order: number;
     captions: Caption[];
+    context: string | null;
   }[] = [];
 
   for (let i = 0; i < specs.length; i++) {
@@ -165,7 +168,17 @@ export async function processNextJob(
         // Future: surface the error in clipper-status. For now, log + continue.
         console.warn(`[clipper] transcription failed for ${clipId}:`, (e as Error).message);
       }
-      rendered.push({ id: clipId, result, spec, order: i, captions });
+      let context: string | null = null;
+      if (captions.length > 0) {
+        try {
+          const fn = deps.summarizeFn ?? ((c: Caption[]) =>
+            summarizeContext(c, { baseUrl: deps.analyzerConfig.baseUrl, model: deps.analyzerConfig.model }));
+          context = await fn(captions);
+        } catch (e) {
+          console.warn(`[clipper] context summary failed for ${clipId}:`, (e as Error).message);
+        }
+      }
+      rendered.push({ id: clipId, result, spec, order: i, captions, context });
     } catch (e) {
       // Clean up already-rendered files
       for (const r of rendered) {
@@ -183,8 +196,8 @@ export async function processNextJob(
       id, parent_video_id, order_in_parent,
       start_seconds, end_seconds, file_path, file_size_bytes,
       focus_x, focus_y, focus_w, focus_h,
-      reason, display_mode, display_segments, captions, created_at, added_to_feed_at
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      reason, display_mode, display_segments, captions, context, created_at, added_to_feed_at
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `);
   const now = Date.now();
   db.transaction(() => {
@@ -207,6 +220,7 @@ export async function processNextJob(
           ? JSON.stringify(r.spec.displaySegments)
           : null,
         r.captions.length > 0 ? JSON.stringify(r.captions) : null,
+        r.context,
         now,
         now,
       );
@@ -237,8 +251,8 @@ function insertPassthroughClip(
       id, parent_video_id, order_in_parent,
       start_seconds, end_seconds, file_path, file_size_bytes,
       focus_x, focus_y, focus_w, focus_h,
-      reason, display_mode, display_segments, captions, created_at, added_to_feed_at
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      reason, display_mode, display_segments, captions, context, created_at, added_to_feed_at
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   `).run(
     randomUUID(),
     videoId,
@@ -255,6 +269,7 @@ function insertPassthroughClip(
     "smart-crop",
     null,
     captions.length > 0 ? JSON.stringify(captions) : null,
+    null,
     now,
     now,
   );

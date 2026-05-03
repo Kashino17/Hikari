@@ -48,8 +48,9 @@ describe("processNextJob", () => {
       { start: 0, end: 0.5, text: "Hello" },
     ]);
 
+    const summarizeFn = vi.fn(async () => "Test context summary");
     const ran = await processNextJob(db, {
-      analyze, render, transcribeFn: captionsTranscribe,
+      analyze, render, transcribeFn: captionsTranscribe, summarizeFn,
       mediaDir: "/clips",
       analyzerConfig: { provider: "lmstudio", baseUrl: "http://x", model: "qwen" },
     });
@@ -70,6 +71,10 @@ describe("processNextJob", () => {
     // Verify captions are stored in DB
     expect(JSON.parse(clips[0].captions)).toEqual([{ start: 0, end: 0.5, text: "Hello" }]);
 
+    // Verify context summary is stored in DB
+    const contextClips = db.prepare("SELECT context FROM clips WHERE parent_video_id=? ORDER BY order_in_parent").all("v1") as any[];
+    expect(contextClips[0].context).toBe("Test context summary");
+
     const queueRows = db.prepare("SELECT * FROM clipper_queue").all();
     expect(queueRows).toHaveLength(0);
   });
@@ -81,7 +86,7 @@ describe("processNextJob", () => {
     const transcribeFn = vi.fn(async () => []);
 
     await processNextJob(db, {
-      analyze, render, transcribeFn,
+      analyze, render, transcribeFn, summarizeFn: vi.fn(async () => null),
       mediaDir: "/clips",
       analyzerConfig: { provider: "lmstudio", baseUrl: "http://x", model: "qwen" },
     });
@@ -104,7 +109,7 @@ describe("processNextJob", () => {
     const transcribeFn = vi.fn(async () => []);
 
     await processNextJob(db, {
-      analyze, render, transcribeFn,
+      analyze, render, transcribeFn, summarizeFn: vi.fn(async () => null),
       mediaDir: "/clips",
       analyzerConfig: { provider: "lmstudio", baseUrl: "http://x", model: "qwen" },
     });
@@ -122,7 +127,7 @@ describe("processNextJob", () => {
     const transcribeFn = vi.fn(async () => []);
 
     await processNextJob(db, {
-      analyze, render, transcribeFn,
+      analyze, render, transcribeFn, summarizeFn: vi.fn(async () => null),
       mediaDir: "/clips",
       analyzerConfig: { provider: "lmstudio", baseUrl: "http://x", model: "qwen" },
     });
@@ -141,7 +146,7 @@ describe("processNextJob", () => {
   it("returns false when queue is empty", async () => {
     const transcribeFn = vi.fn(async () => []);
     const ran = await processNextJob(db, {
-      analyze: vi.fn(), render: vi.fn(), transcribeFn,
+      analyze: vi.fn(), render: vi.fn(), transcribeFn, summarizeFn: vi.fn(async () => null),
       mediaDir: "/clips",
       analyzerConfig: { provider: "lmstudio", baseUrl: "http://x", model: "qwen" },
     });
@@ -165,7 +170,7 @@ describe("processNextJob", () => {
     const transcribeFn = vi.fn(async () => []);
 
     await processNextJob(db, {
-      analyze, render, transcribeFn,
+      analyze, render, transcribeFn, summarizeFn: vi.fn(async () => null),
       mediaDir: "/clips",
       analyzerConfig: { provider: "lmstudio", baseUrl: "http://x", model: "qwen" },
     });
@@ -191,7 +196,7 @@ describe("processNextJob", () => {
     const transcribeFn = vi.fn(async () => []);
 
     await processNextJob(db, {
-      analyze, render, transcribeFn, mediaDir: "/clips",
+      analyze, render, transcribeFn, summarizeFn: vi.fn(async () => null), mediaDir: "/clips",
       analyzerConfig: { provider: "lmstudio", baseUrl: "http://x", model: "q" },
     });
 

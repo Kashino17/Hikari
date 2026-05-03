@@ -93,4 +93,9 @@ export function applyMigrations(db: Database.Database): void {
   // Word-level captions JSON: [{start, end, text}, ...] in clip-local seconds.
   // NULL means transcription hasn't run yet; client falls back to no subtitles.
   addColumnIfMissing(db, "clips", "captions", "TEXT");
+
+  // AI-generated context summary per clip (1-3 short sentences). Generated
+  // from the clip's Whisper-transcribed captions, not from the parent video
+  // title. Displayed as a top overlay during the first ~6s of playback.
+  addColumnIfMissing(db, "clips", "context", "TEXT");
 }

@@ -19,4 +19,5 @@ data class FeedItem(
     val kind: String = "legacy",
     val parentVideoId: String = "",
     val captions: List<Caption>? = null,
+    val context: String? = null,
 )
