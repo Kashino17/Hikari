@@ -17,7 +17,7 @@ const SAMPLE_FILTER: FilterConfig = {
 describe("buildClipperPrompt", () => {
   it("includes the operational rules verbatim", () => {
     const out = buildClipperPrompt(SAMPLE_FILTER, { aspectRatio: "16:9" });
-    expect(out).toContain("zwischen 20s und 60s");
+    expect(out).toContain("zwischen 30s und 75s");
     expect(out).toContain("Toleranz bis 90s");
     expect(out).toContain("1 pro 5 Min Original-Dauer");
     expect(out).toContain("ausschließlich gültiges JSON-Array");

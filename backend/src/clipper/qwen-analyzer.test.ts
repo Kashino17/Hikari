@@ -92,7 +92,7 @@ describe("analyzeVideo", () => {
     expect(out[0].endSec).toBe(60);
   });
 
-  it("clamps short clips to 20s by extending end_sec", async () => {
+  it("clamps short clips to MIN by extending end_sec", async () => {
     const body = JSON.stringify([
       { start_sec: 30, end_sec: 35, focus: { x: 0, y: 0, w: 1, h: 1 }, reason: "too short" },
     ]);
@@ -104,7 +104,8 @@ describe("analyzeVideo", () => {
       "prompt",
       { provider: "lmstudio", baseUrl: "http://x", model: "qwen", fetchFn, sampleFn: mockSample },
     );
-    expect(out[0].endSec).toBe(50);
+    // MIN_CLIP_SEC = 30, so 35→ extended to 60.
+    expect(out[0].endSec).toBe(60);
   });
 
   it("clamps long clips to 90s by trimming end_sec", async () => {

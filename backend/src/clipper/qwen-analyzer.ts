@@ -46,7 +46,9 @@ export interface AnalyzerConfig {
   sampleFn?: (filePath: string, durationSec: number) => Promise<SampledFrame[]>;
 }
 
-const MIN_CLIP_SEC = 20;
+// Bumped from 20 → 30: too-short clips were context-less and confusing for
+// the user. 30s gives Qwen room to include setup + the actual point.
+const MIN_CLIP_SEC = 30;
 const MAX_CLIP_SEC = 90;
 
 const rawSegmentSchema = z.object({

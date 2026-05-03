@@ -219,6 +219,12 @@ fun FeedScreen(
                     val mediaItems = items.map { factory.mediaItemFor(baseUrl, it.videoId, kind = it.kind) }
                     val targetIdx = pagerState.currentPage.coerceIn(0, items.lastIndex)
                     player.setMediaItems(mediaItems, targetIdx, 0L)
+                    // REPEAT_MODE_ONE: each clip loops at its end instead of
+                    // auto-advancing into the next playlist item. The internal
+                    // auto-advance was de-syncing the pager (still showing
+                    // item N) from the player (already on item N+1) — wrong
+                    // captions over wrong audio. User scrolls manually now.
+                    player.repeatMode = androidx.media3.common.Player.REPEAT_MODE_ONE
                     player.prepare()
                     player.playWhenReady = true
                 }

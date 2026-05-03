@@ -5,30 +5,56 @@ export interface VideoMeta {
 }
 
 const OPERATIONAL_RULES = `OPERATIONELLE REGELN (fest):
-- Pro Clip: zwischen 20s und 60s, Toleranz bis 90s wenn der Highlight-Moment unteilbar ist
+- Pro Clip: zwischen 30s und 75s, Toleranz bis 90s wenn der Highlight-Moment unteilbar ist
 - Anzahl Clips: ungefähr 1 pro 5 Min Original-Dauer (5 Min→1, 15 Min→3, 30 Min→6, 60 Min→12), aber NUR wenn Qualität es trägt
 - Lieber WENIGER Clips von hoher Qualität als das ganze Video zerstückeln
-- Wenn das Video keine highlight-würdigen Momente hat: leere Liste []`;
+- Wenn das Video keine highlight-würdigen Momente hat: leere Liste []
+
+╔══════════════════════════════════════════════════════════════════╗
+║  STANDALONE-VERSTÄNDLICHKEIT (höchste Priorität)                ║
+║                                                                  ║
+║  Jeder Clip wird im Feed ohne Vorwissen gezeigt — der User      ║
+║  scrollt rein und MUSS sofort verstehen worum es geht.           ║
+║                                                                  ║
+║  Konsequenzen:                                                   ║
+║  • Starte den Clip dort wo der Sprecher das Thema EINFÜHRT       ║
+║    oder benennt, NICHT mitten in einem Argument. Beispiel:       ║
+║    Schlecht: ab "...und genau deshalb funktioniert das so."      ║
+║    Gut:      ab "Das Phänomen X funktioniert so:"                ║
+║                                                                  ║
+║  • Ende den Clip nach einem ABGESCHLOSSENEN Gedanken — nicht     ║
+║    mitten in einem Satz. Eher 5s länger als zu früh schneiden.   ║
+║                                                                  ║
+║  • Wenn ein Highlight nur durch Vorwissen aus dem Originalvideo  ║
+║    Sinn ergibt (z.B. Pronoun-Referenz auf etwas vor 10 Minuten   ║
+║    Genanntes) — überspringe ihn lieber.                          ║
+║                                                                  ║
+║  • Wähle Stellen wo das THEMA ausgesprochen wird, nicht nur die  ║
+║    rhetorischen Höhepunkte. Eine ruhige Erklärung mit Setup ist  ║
+║    wertvoller als ein punchy Quote ohne Kontext.                 ║
+╚══════════════════════════════════════════════════════════════════╝`;
 
 const OUTPUT_INSTRUCTIONS = `PRO CLIP gibst du an:
 - start_sec, end_sec (Float)
-- reason (kurze prägnante Beschreibung — wird als Clip-Titel angezeigt, max ~80 Zeichen)
+- reason: SELBSTERKLÄRENDER Titel mit KONTEXT, nicht nur Inhalts-Stichwort.
+  Format: "<Thema/Begriff>: <was im Clip passiert>" — der User soll sofort
+  wissen WORUM ES GEHT, nicht nur WAS gerade passiert.
+  Schlecht: "Punchy Quote", "Wichtige Aussage", "Strategische Matrix"
+  Gut: "Was 'Multi-Hop-Reasoning' bei GPT-5 bedeutet — Demo am Beispiel"
+       "Wie LegalGPT mit Verordnungen umgeht — Architektur-Erklärung"
+       "Anne Greul über Compliance-Risiken bei Halluzinationen"
+  Max ~100 Zeichen.
 
 OUTPUT: ausschließlich gültiges JSON-Array, sortiert nach start_sec ASC. Keine Markdown-Code-Blocks, keine Erklärungen außerhalb des JSON.
 
-Hinweis: Konzentrier dich nur darauf die wertvollsten Highlight-Momente
-zu finden und ihren Sinn in einem prägnanten reason-Satz zu beschreiben.
-Das Rendering ist deterministisch (16:9 Original mit Blur-Hintergrund) —
-kein Layout-Hinweis von dir nötig.
-
 Beispiel:
 [
-  {"start_sec": 142.5, "end_sec": 198.0,
-   "reason": "Klare Erklärung der Kernidee mit Diagramm"},
-  {"start_sec": 305.0, "end_sec": 360.0,
-   "reason": "GPT-5.5 vs Claude Benchmark-Tabelle"},
-  {"start_sec": 612.0, "end_sec": 668.5,
-   "reason": "Punchy Quote über praktische Anwendung"}
+  {"start_sec": 142.5, "end_sec": 200.0,
+   "reason": "Was Multi-Agent-Systeme sind — Definition + erste Beispiele"},
+  {"start_sec": 305.0, "end_sec": 365.0,
+   "reason": "GPT-5 vs Claude Benchmark-Vergleich auf OSWorld + FinanceAgent"},
+  {"start_sec": 612.0, "end_sec": 670.0,
+   "reason": "Warum AutoEval bei Reward-Modellen genauer ist (Erklärung)"}
 ]`;
 
 export function buildClipperPrompt(filter: FilterConfig, _meta: VideoMeta): string {
