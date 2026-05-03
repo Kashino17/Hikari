@@ -73,7 +73,12 @@ import com.hikari.app.ui.player.SeekBadge
 import com.hikari.app.ui.player.SeekDirection
 import kotlinx.coroutines.launch
 
-private val FeedBottomBarClearance = 72.dp
+// Hikari's bottom-tab-bar (Bibliothek/Feed/Manga/Profil) sits inside the
+// nav-bar inset zone and is ~72dp tall. We add 16dp breathing room so the
+// scrubber doesn't visually touch the tab labels — feels like YouTube
+// Shorts / Instagram Reels where the progress bar floats clearly above
+// system UI.
+private val FeedBottomBarClearance = 88.dp
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main composable
@@ -356,7 +361,7 @@ fun ReelPlayer(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(end = 16.dp, bottom = if (fullscreen) 28.dp else 116.dp),
+                .padding(end = 16.dp, bottom = if (fullscreen) 28.dp else 140.dp),
         ) {
             Box(
                 modifier = Modifier
@@ -405,7 +410,7 @@ fun ReelPlayer(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(bottom = if (fullscreen) 40.dp else 96.dp),
+                .padding(bottom = if (fullscreen) 40.dp else 120.dp),
         ) {
             Column(
                 modifier = Modifier
@@ -439,7 +444,7 @@ fun ReelPlayer(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(bottom = if (fullscreen) 100.dp else 160.dp),
+                .padding(bottom = if (fullscreen) 100.dp else 195.dp),
         )
 
         // ── Always-visible PrecisionScrubber ────────────────────────────────────
