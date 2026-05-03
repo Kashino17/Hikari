@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -439,14 +438,15 @@ fun ReelPlayer(
         }
 
         // ── Context overlay — first 6 seconds, then fades out ────────────────
+        // Aligns to the top of the visible video content (16:9 portion inside
+        // a clip's 9:16 frame, or the native letterbox top for legacy items).
         ContextOverlay(
             context = item.context,
+            kind = item.kind,
+            aspectRatio = item.aspectRatio,
             isCurrent = isCurrent,
             positionMs = playerPositionMs,
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(top = 56.dp),  // leave space for the top counter "01/05" + Alle/Gespeichert/Archiv pills
+            modifier = Modifier.matchParentSize(),
         )
 
         // ── Caption overlay — YouTube-Shorts-style word sync ─────────────────
