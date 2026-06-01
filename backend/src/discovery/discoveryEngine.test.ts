@@ -125,13 +125,13 @@ describe("calculateChannelScore — Quality axis", () => {
   it("composes overall, educational, inverse-clickbait, and subscriber signal", () => {
     const channel = makeChannel({
       videoCount: 5,
-      avgOverallScore: 80,
-      avgEducationalValue: 90,
-      avgClickbaitRisk: 10,
+      avgOverallScore: 80, // 0–100 scale
+      avgEducationalValue: 9, // 0–10 scale
+      avgClickbaitRisk: 1, // 0–10 scale
       subscribers: 10_000,
     });
     const out = calculateChannelScore(channel, makePrefs({ weights: ONLY_QUALITY }));
-    // 0.45·0.8 + 0.30·0.9 + 0.15·(1-0.1) + 0.10·subSignal(10k) ≈ 0.845
+    // 0.45·(80/100) + 0.30·(9/10) + 0.15·(1-1/10) + 0.10·subSignal(10k) ≈ 0.845
     // subSignal = log10(10001)/log10(100001) ≈ 0.8000
     expect(out.breakdown.quality).toBeCloseTo(0.845, 2);
   });
@@ -140,9 +140,9 @@ describe("calculateChannelScore — Quality axis", () => {
     const out = calculateChannelScore(
       makeChannel({
         videoCount: 5,
-        avgOverallScore: 100,
-        avgEducationalValue: 100,
-        avgClickbaitRisk: 0,
+        avgOverallScore: 100, // 0–100 scale
+        avgEducationalValue: 10, // 0–10 scale (max)
+        avgClickbaitRisk: 0, // 0–10 scale
         subscribers: null,
       }),
       makePrefs({ weights: ONLY_QUALITY }),
@@ -160,9 +160,9 @@ describe("calculateChannelScore — empty category distribution", () => {
       videoCount: 5,
       categoryDistribution: {}, // e.g. videos exist but none scored yet
       longFormRatio: 0.6,
-      avgOverallScore: 50,
-      avgEducationalValue: 50,
-      avgClickbaitRisk: 50,
+      avgOverallScore: 50, // 0–100 scale
+      avgEducationalValue: 5, // 0–10 scale
+      avgClickbaitRisk: 5, // 0–10 scale
     });
     const prefs = makePrefs({
       // User has preferences set — should still be ignored, no overlap possible.
@@ -245,7 +245,7 @@ describe("getDiscoveryCandidates — sort and filter", () => {
       subscribers: 50_000,
       videos: [1, 2, 3].map((i) => ({
         id: `vA${i}`, durationSeconds: 1200, category: "math",
-        overall: 90, clickbait: 5, eduValue: 95,
+        overall: 90, clickbait: 1, eduValue: 9,
       })),
     });
     seedChannel(db, {
@@ -253,7 +253,7 @@ describe("getDiscoveryCandidates — sort and filter", () => {
       subscribers: 5_000,
       videos: [1, 2].map((i) => ({
         id: `vB${i}`, durationSeconds: 700, category: "math",
-        overall: 60, clickbait: 30, eduValue: 60,
+        overall: 60, clickbait: 3, eduValue: 6,
       })),
     });
     seedChannel(db, {
@@ -261,7 +261,7 @@ describe("getDiscoveryCandidates — sort and filter", () => {
       subscribers: 100,
       videos: [{
         id: "vC1", durationSeconds: 90, category: "art",
-        overall: 30, clickbait: 70, eduValue: 20,
+        overall: 30, clickbait: 7, eduValue: 2,
       }],
     });
 
@@ -284,7 +284,7 @@ describe("getDiscoveryCandidates — sort and filter", () => {
       subscribers: 50_000,
       videos: [{
         id: "vg", durationSeconds: 1200, category: "math",
-        overall: 90, clickbait: 5, eduValue: 95,
+        overall: 90, clickbait: 1, eduValue: 9,
       }],
     });
     seedChannel(db, {
@@ -292,7 +292,7 @@ describe("getDiscoveryCandidates — sort and filter", () => {
       subscribers: 100,
       videos: [{
         id: "vb", durationSeconds: 60, category: "art",
-        overall: 20, clickbait: 80, eduValue: 10,
+        overall: 20, clickbait: 8, eduValue: 1,
       }],
     });
 
@@ -312,7 +312,7 @@ describe("getDiscoveryCandidates — sort and filter", () => {
       subscribers: 50_000,
       videos: [{
         id: "vf", durationSeconds: 1200, category: "math",
-        overall: 100, clickbait: 0, eduValue: 100,
+        overall: 100, clickbait: 0, eduValue: 10,
       }],
     });
     seedChannel(db, {
@@ -320,7 +320,7 @@ describe("getDiscoveryCandidates — sort and filter", () => {
       subscribers: 5_000,
       videos: [{
         id: "vx", durationSeconds: 1200, category: "math",
-        overall: 70, clickbait: 20, eduValue: 70,
+        overall: 70, clickbait: 2, eduValue: 7,
       }],
     });
 
@@ -340,7 +340,7 @@ describe("getDiscoveryCandidates — sort and filter", () => {
         subscribers: 10_000 * i,
         videos: [{
           id: `v${i}`, durationSeconds: 1200, category: "math",
-          overall: 50 + 10 * i, clickbait: 20, eduValue: 60 + i,
+          overall: 50 + 10 * i, clickbait: 2, eduValue: 6,
         }],
       });
     }

@@ -1,5 +1,6 @@
 package com.hikari.app.ui.tuning
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.HikariApi
@@ -30,7 +31,16 @@ class TuningViewModel @Inject constructor(
     private val sbPrefs: SponsorBlockPrefs,
     private val mangaRepo: MangaRepository,
     private val api: HikariApi,
+    savedState: SavedStateHandle,
 ) : ViewModel() {
+
+    /**
+     * When non-null, this screen edits ONE channel's filter (per-channel mode);
+     * when null, it edits the global filter. Sourced from the `channelId` nav arg.
+     */
+    val channelId: String? = savedState.get<String>("channelId")?.takeIf { it.isNotBlank() }
+
+    val isChannelScoped: Boolean get() = channelId != null
 
     // ── Filter / Prompt state (loaded from server) ───────────────────────────
     private val _state = MutableStateFlow<FilterState?>(null)
@@ -58,9 +68,25 @@ class TuningViewModel @Inject constructor(
     init { load() }
 
     fun load() = viewModelScope.launch {
-        runCatching { filterRepo.fetch() }
+        val cid = channelId
+        runCatching { if (cid != null) filterRepo.fetchForChannel(cid) else filterRepo.fetch() }
             .onSuccess { _state.value = it; _error.value = null }
             .onFailure { _error.value = it.message ?: "Konnte Filter nicht laden" }
+    }
+
+    /** Per-channel only: drop the channel's own filter so it inherits the global one. */
+    fun resetToGlobal() {
+        val cid = channelId ?: return
+        viewModelScope.launch {
+            _saving.value = true
+            runCatching {
+                filterRepo.resetChannelToGlobal(cid)
+                filterRepo.fetchForChannel(cid)
+            }
+                .onSuccess { _state.value = it; _error.value = null }
+                .onFailure { _error.value = it.message ?: "Zurücksetzen fehlgeschlagen" }
+            _saving.value = false
+        }
     }
 
     /**
@@ -72,29 +98,49 @@ class TuningViewModel @Inject constructor(
     fun updateFilter(transform: (FilterConfig) -> FilterConfig) {
         val cur = _state.value ?: return
         val next = transform(cur.filter)
-        // Optimistic update — keep assembled prompt as-is until server returns
-        _state.value = cur.copy(filter = next)
+        val cid = channelId
+        // Optimistic update. In channel mode the first edit promotes an
+        // inherited filter into the channel's own copy, so inherited→false.
+        _state.value = cur.copy(filter = next, inherited = if (cid != null) false else cur.inherited)
         viewModelScope.launch {
-            runCatching { filterRepo.updateFilter(next) }
+            runCatching {
+                if (cid != null) filterRepo.updateFilterForChannel(cid, next)
+                else filterRepo.updateFilter(next)
+            }
                 .onSuccess { _state.value = it; _error.value = null }
                 .onFailure {
                     _error.value = it.message ?: "Speichern fehlgeschlagen"
-                    runCatching { filterRepo.fetch() }.onSuccess { _state.value = it }
+                    runCatching {
+                        if (cid != null) filterRepo.fetchForChannel(cid) else filterRepo.fetch()
+                    }.onSuccess { _state.value = it }
                 }
         }
     }
 
     fun setOverride(prompt: String) = viewModelScope.launch {
+        val cid = channelId
         _saving.value = true
-        runCatching { filterRepo.setOverride(prompt) }
+        runCatching {
+            if (cid != null) filterRepo.setOverrideForChannel(cid, prompt)
+            else filterRepo.setOverride(prompt)
+        }
             .onSuccess { _state.value = it; _error.value = null }
             .onFailure { _error.value = it.message ?: "Override speichern fehlgeschlagen" }
         _saving.value = false
     }
 
     fun clearOverride() = viewModelScope.launch {
+        val cid = channelId
         _saving.value = true
-        runCatching { filterRepo.clearOverride() }
+        // In channel mode "clear override" reverts the whole channel to global.
+        runCatching {
+            if (cid != null) {
+                filterRepo.resetChannelToGlobal(cid)
+                filterRepo.fetchForChannel(cid)
+            } else {
+                filterRepo.clearOverride()
+            }
+        }
             .onSuccess { _state.value = it; _error.value = null }
             .onFailure { _error.value = it.message ?: "Override löschen fehlgeschlagen" }
         _saving.value = false

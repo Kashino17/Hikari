@@ -90,6 +90,17 @@ CREATE TABLE IF NOT EXISTS filter_config (
   updated_at INTEGER NOT NULL
 );
 
+-- Per-channel filter override. A channel WITHOUT a row here inherits the global
+-- filter_config (id=1). A channel WITH a row applies its own FilterConfig +
+-- optional prompt_override, scoping curation criteria to that one channel —
+-- the data model behind "filter each subscribed channel by its own rules".
+CREATE TABLE IF NOT EXISTS channel_filters (
+  channel_id TEXT PRIMARY KEY REFERENCES channels(id) ON DELETE CASCADE,
+  filter_json TEXT NOT NULL,
+  prompt_override TEXT,
+  updated_at INTEGER NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_feed_items_added ON feed_items(added_to_feed_at DESC);
 CREATE INDEX IF NOT EXISTS idx_videos_channel ON videos(channel_id);
 CREATE INDEX IF NOT EXISTS idx_downloaded_last_served ON downloaded_videos(last_served_at);

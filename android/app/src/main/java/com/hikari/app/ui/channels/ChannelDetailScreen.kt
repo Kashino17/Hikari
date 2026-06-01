@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -77,6 +78,7 @@ private fun fmtDur(sec: Int): String {
 fun ChannelDetailScreen(
     onBack: () -> Unit,
     onEditVideo: (String) -> Unit = {},
+    onOpenFilter: () -> Unit = {},
     vm: ChannelDetailViewModel = hiltViewModel(),
 ) {
     val channel by vm.channel.collectAsState()

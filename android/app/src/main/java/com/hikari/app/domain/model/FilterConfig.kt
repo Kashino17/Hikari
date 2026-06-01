@@ -24,6 +24,8 @@ data class FilterState(
     val filter: FilterConfig,
     val promptOverride: String?,
     val assembledPrompt: String,
+    /** True when a channel is inheriting the global filter (per-channel mode). */
+    val inherited: Boolean = false,
 )
 
 fun FilterConfigDto.toDomain() = FilterConfig(
@@ -35,6 +37,7 @@ fun FilterStateDto.toDomain() = FilterState(
     filter = filter.toDomain(),
     promptOverride = promptOverride,
     assembledPrompt = assembledPrompt,
+    inherited = inherited,
 )
 
 /**

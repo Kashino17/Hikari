@@ -1,13 +1,42 @@
 import type Database from "better-sqlite3";
 import type { VideoMetadata } from "../ingest/metadata.js";
-import { decide } from "../scorer/decision.js";
-import { getActivePrompt, getFilterState } from "../scorer/filter-repo.js";
+import { decide, type Thresholds } from "../scorer/decision.js";
+import { getActivePromptForChannel, getFilterForChannel } from "../scorer/filter-repo.js";
+import type { FilterConfig } from "../scorer/filter.js";
 import type { ScoredVideo, Scorer } from "../scorer/types.js";
 import type { SponsorSegment } from "../sponsorblock/client.js";
 import type { DownloadResult } from "../download/worker.js";
 import { enqueue } from "../clipper/queue.js";
+import { recalculateChannelScore } from "../discovery/discovery-repo.js";
 
 const AUTO_APPROVE_MODEL = "auto-approve";
+
+// Baseline anti-manipulation floor that every channel keeps; only the overall
+// quality gate is driven per-channel by the filter's scoreThreshold.
+const BASELINE_MAX_CLICKBAIT = 4;
+const BASELINE_MAX_MANIPULATION = 3;
+
+/** Decision thresholds for a (resolved, per-channel or global) filter. */
+function thresholdsForFilter(filter: FilterConfig): Thresholds {
+  return {
+    minOverall: filter.scoreThreshold,
+    maxClickbait: BASELINE_MAX_CLICKBAIT,
+    maxManipulation: BASELINE_MAX_MANIPULATION,
+  };
+}
+
+/**
+ * Refresh a channel's cached match-score after its scored set changes, so the
+ * feed's channelMatch ranking signal stays live. Best-effort — a failure here
+ * must never abort ingestion.
+ */
+function refreshChannelMatch(db: Database.Database, channelId: string): void {
+  try {
+    recalculateChannelScore(db, channelId);
+  } catch {
+    // non-fatal — the feed falls back to a neutral channelMatch
+  }
+}
 
 function autoApproveScore(): ScoredVideo {
   return {
@@ -51,22 +80,23 @@ export interface ProcessNewVideoDeps {
 export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> {
   const { db, videoId, channelId } = deps;
 
-  const existing = db
-    .prepare("SELECT 1 FROM videos WHERE id = ?")
-    .get(videoId);
+  const existing = db.prepare("SELECT 1 FROM videos WHERE id = ?").get(videoId);
   if (existing) return;
 
   const meta = await deps.fetchMetadata(videoId);
 
   if (meta.isLive) return;
 
+  // Per-channel curation: resolve this channel's own filter (or the global
+  // fallback) once and use it for duration gating, prompt, and thresholds.
+  const filter = getFilterForChannel(db, channelId);
+
   // Green Card / "Vertrauenskanal": skip scorer entirely. Hard filters that
-  // still apply: isLive (above) + duration range from active filter.
+  // still apply: isLive (above) + duration range from the channel's filter.
   const channelRow = db
     .prepare("SELECT auto_approve FROM channels WHERE id = ?")
     .get(channelId) as { auto_approve: number } | undefined;
   if ((channelRow?.auto_approve ?? 0) === 1) {
-    const { filter } = getFilterState(db);
     const inRange =
       meta.durationSeconds >= filter.minDurationSec &&
       meta.durationSeconds <= filter.maxDurationSec;
@@ -102,7 +132,7 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
   }
 
   const transcript = meta.captionsUrl ? await deps.fetchTranscript(meta.captionsUrl) : null;
-  const systemPrompt = getActivePrompt(db);
+  const systemPrompt = getActivePromptForChannel(db, channelId);
   const [scored, sponsors] = await Promise.all([
     deps.scorer.score({
       title: meta.title,
@@ -114,7 +144,7 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
     deps.fetchSponsorSegments(videoId),
   ]);
 
-  const decision = decide(scored.score);
+  const decision = decide(scored.score, thresholdsForFilter(filter));
   const now = Date.now();
 
   if (decision === "approved") {
@@ -214,11 +244,4 @@ function insertDownload(
     `INSERT OR IGNORE INTO downloaded_videos (video_id, file_path, file_size_bytes, downloaded_at)
      VALUES (?, ?, ?, ?)`,
   ).run(videoId, dl.filePath, dl.fileSizeBytes, now);
-}
-
-function insertFeedItem(db: Database.Database, videoId: string, now: number): void {
-  db.prepare(`INSERT OR IGNORE INTO feed_items (video_id, added_to_feed_at) VALUES (?, ?)`).run(
-    videoId,
-    now,
-  );
 }

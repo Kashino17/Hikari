@@ -82,7 +82,7 @@ fun HikariNavHost() {
     val isReaderRoute = currentRoute?.matches(Regex("manga/[^/]+/[^/?]+(\\?.*)?")) == true
     // Settings + Tuning sind ab v0.25.0 nur über Profil-Gear erreichbar — sub-pages,
     // also auch ohne Bottom-Nav rendern (eigener Back-Button reicht).
-    val isGearSubPage = currentRoute == "settings" || currentRoute == "tuning"
+    val isGearSubPage = currentRoute == "settings" || currentRoute?.startsWith("tuning") == true
 
     Scaffold(
         containerColor = HikariBg,
@@ -190,11 +190,15 @@ fun HikariNavHost() {
             composable(
                 route = "channel/{channelId}",
                 arguments = listOf(navArgument("channelId") { type = NavType.StringType }),
-            ) {
+            ) { entry ->
+                val channelId = entry.arguments?.getString("channelId").orEmpty()
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     ChannelDetailScreen(
                         onBack = { nav.popBackStack() },
                         onEditVideo = { videoId -> nav.navigate("video-edit/$videoId") },
+                        onOpenFilter = {
+                            nav.navigate("tuning?channelId=${URLEncoder.encode(channelId, "UTF-8")}")
+                        },
                     )
                 }
             }
@@ -211,7 +215,12 @@ fun HikariNavHost() {
                     )
                 }
             }
-            composable("tuning") {
+            composable(
+                route = "tuning?channelId={channelId}",
+                arguments = listOf(
+                    navArgument("channelId") { type = NavType.StringType; defaultValue = "" },
+                ),
+            ) {
                 Box(Modifier.fillMaxSize()) {
                     TuningScreen(onBack = { nav.popBackStack() })
                 }

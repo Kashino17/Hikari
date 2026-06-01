@@ -23,6 +23,8 @@ data class FilterStateDto(
     val promptOverride: String? = null,
     val assembledPrompt: String,
     val updatedAt: Long,
+    /** True when a channel is falling back to the global filter (per-channel only). */
+    val inherited: Boolean = false,
 )
 
 /** PUT body for filter-only update. promptOverride field is omitted on the wire. */

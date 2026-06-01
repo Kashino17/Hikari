@@ -204,6 +204,25 @@ interface HikariApi {
     @PUT("filter")
     suspend fun clearPromptOverride(@Body req: ClearOverrideRequest = ClearOverrideRequest()): FilterStateDto
 
+    // ── Per-channel filter ────────────────────────────────────────────────
+    @GET("channels/{id}/filter")
+    suspend fun getChannelFilter(@Path("id") channelId: String): FilterStateDto
+
+    @PUT("channels/{id}/filter")
+    suspend fun updateChannelFilter(
+        @Path("id") channelId: String,
+        @Body req: UpdateFilterRequest,
+    ): FilterStateDto
+
+    @PUT("channels/{id}/filter")
+    suspend fun setChannelPromptOverride(
+        @Path("id") channelId: String,
+        @Body req: SetOverrideRequest,
+    ): FilterStateDto
+
+    @DELETE("channels/{id}/filter")
+    suspend fun clearChannelFilter(@Path("id") channelId: String)
+
     @GET("api/manga/series")
     suspend fun listMangaSeries(): List<MangaSeriesDto>
 
