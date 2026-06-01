@@ -37,9 +37,9 @@ export function validateYouTubeChannelUrl(input: string): string | null {
   if (!ALLOWED_HOSTS.has(url.hostname.toLowerCase())) return null;
 
   const segments = url.pathname.split("/").filter((s) => s !== "");
-  if (segments.length === 0) return null;
-
-  const [first, second] = segments;
+  const first = segments[0];
+  if (!first) return null;
+  const second = segments[1];
 
   // /@handle
   if (first.startsWith("@")) {

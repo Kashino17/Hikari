@@ -1,78 +1,92 @@
-import { z } from "zod";
-import { config as loadEnv } from "dotenv";
+import { join } from "node:path";
 
-loadEnv();
+export type LLMProvider = "claude" | "ollama" | "lmstudio";
 
-// `.finite()` on the numeric fields is the point: env vars arrive as strings and
-// `Number("abc")` is NaN, which `z.number()` alone would happily accept (NaN is
-// a number). Parsing through this schema turns a malformed PORT / DAILY_BUDGET
-// into a startup error instead of a silently-broken server.
-const ConfigSchema = z
-  .object({
-    llmProvider: z.enum(["claude", "ollama", "lmstudio"]),
-    claude: z.object({
-      apiKey: z.string(), // may be "" when running a local provider
-      model: z.string().min(1),
-    }),
-    ollama: z.object({
-      baseUrl: z.string().url(),
-      model: z.string().min(1),
-    }),
-    lmstudio: z.object({
-      baseUrl: z.string().url(),
-      model: z.string().min(1),
-    }),
-    port: z.number().finite().int().positive(),
-    videoDir: z.string().min(1),
-    mangaDir: z.string().min(1),
-    coverDir: z.string().min(1),
-    dbPath: z.string().min(1),
-    dailyBudget: z.number().finite().int().positive(),
-    diskLimitBytes: z.number().finite().positive(),
-    // Optional bearer token. When set, mutating routes require it (see auth
-    // hook). null/"" = open (single-user localhost default).
-    authToken: z.string().nullable(),
-    clipper: z.object({
-      scheduleStartHour: z.number().finite().int().min(0).max(23),
-      scheduleEndHour: z.number().finite().int().min(0).max(23),
-    }),
-  })
-  .readonly();
+export interface ClipperConfig {
+  enabled: boolean;
+  provider: "lmstudio" | "ollama";
+  baseUrl: string;
+  model: string;
+  scheduleStartHour: number;
+  scheduleEndHour: number;
+}
 
-export type Config = z.infer<typeof ConfigSchema>;
-export type ClipperConfig = Config["clipper"];
+export interface Config {
+  port: number;
+  dataDir: string;
+  videoDir: string;
+  mangaDir: string;
+  coverDir: string;
+  dbPath: string;
+  dailyBudget: number;
+  diskLimitBytes: number;
+  llmProvider: LLMProvider;
+  claude: { apiKey: string; model: string };
+  ollama: { baseUrl: string; model: string };
+  lmstudio: { baseUrl: string; model: string };
+  clipper: ClipperConfig;
+  /**
+   * Optional bearer token. When set (HIKARI_AUTH_TOKEN), mutating routes require
+   * it (see api/auth.ts). null = open, the single-user localhost default.
+   */
+  authToken: string | null;
+}
 
-export function loadConfig(): Config {
-  const env = process.env;
+/**
+ * Parses a numeric env var, throwing on a malformed value instead of letting
+ * NaN flow into the config. `Number("abc")` is NaN, and NaN silently breaks
+ * port binding / budget math; fail fast at startup instead.
+ */
+function num(name: string, raw: string | undefined, fallback: number): number {
+  if (raw === undefined) return fallback;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) {
+    throw new Error(`Config: ${name} must be a finite number, got "${raw}"`);
+  }
+  return n;
+}
+
+export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
+  const home = env.HOME ?? env.USERPROFILE ?? "/tmp";
+  const dataDir = (env.HIKARI_DATA_DIR ?? join(home, ".hikari")).replace(/^~/, home);
+  const llmProvider = (env.LLM_PROVIDER ?? "lmstudio") as LLMProvider;
+
+  if (llmProvider === "claude" && !env.ANTHROPIC_API_KEY) {
+    throw new Error("ANTHROPIC_API_KEY is required when LLM_PROVIDER=claude");
+  }
+
   const authTokenRaw = env.HIKARI_AUTH_TOKEN?.trim();
 
-  const cfg = {
-    llmProvider: (env.LLM_PROVIDER ?? "claude") as "claude" | "ollama" | "lmstudio",
+  return {
+    port: num("PORT", env.PORT, 3939),
+    dataDir,
+    videoDir: join(dataDir, "videos"),
+    mangaDir: join(dataDir, "manga"),
+    coverDir: join(dataDir, "covers"),
+    dbPath: join(dataDir, "hikari.db"),
+    dailyBudget: num("DAILY_BUDGET", env.DAILY_BUDGET, 15),
+    diskLimitBytes: num("DISK_LIMIT_GB", env.DISK_LIMIT_GB, 10) * 1024 ** 3,
+    llmProvider,
     claude: {
       apiKey: env.ANTHROPIC_API_KEY ?? "",
-      model: env.CLAUDE_MODEL ?? "claude-3-5-sonnet-20241022",
+      model: env.CLAUDE_MODEL ?? "claude-haiku-4-5",
     },
     ollama: {
-      baseUrl: env.OLLAMA_BASE_URL ?? "http://localhost:11434",
-      model: env.OLLAMA_MODEL ?? "llama3.2",
+      baseUrl: env.OLLAMA_URL ?? "http://localhost:11434",
+      model: env.OLLAMA_MODEL ?? "qwen2.5:14b",
     },
     lmstudio: {
-      baseUrl: env.LMSTUDIO_BASE_URL ?? "http://localhost:1234",
-      model: env.LMSTUDIO_MODEL ?? "qwen2.5",
+      baseUrl: env.LMSTUDIO_URL ?? "http://localhost:1234",
+      model: env.LMSTUDIO_MODEL ?? "qwen3-27b",
     },
-    port: Number(env.PORT ?? 8080),
-    videoDir: env.VIDEO_DIR ?? "./data/videos",
-    mangaDir: env.MANGA_DIR ?? "./data/manga",
-    coverDir: env.COVER_DIR ?? "./data/covers",
-    dbPath: env.DB_PATH ?? "./data/hikari.db",
-    dailyBudget: Number(env.DAILY_BUDGET ?? 50),
-    diskLimitBytes: Number(env.DISK_LIMIT_BYTES ?? 50 * 1024 * 1024 * 1024),
-    authToken: authTokenRaw ? authTokenRaw : null,
     clipper: {
-      scheduleStartHour: Number(env.CLIPPER_SCHEDULE_START_HOUR ?? 8),
-      scheduleEndHour: Number(env.CLIPPER_SCHEDULE_END_HOUR ?? 2),
+      enabled: env.CLIPPER_ENABLED !== "false",
+      provider: (env.CLIPPER_PROVIDER as "lmstudio" | "ollama") ?? "lmstudio",
+      baseUrl: env.CLIPPER_BASE_URL ?? "http://localhost:1234",
+      model: env.CLIPPER_MODEL ?? "qwen3.6-35b-a3b",
+      scheduleStartHour: num("CLIPPER_START_HOUR", env.CLIPPER_START_HOUR, 22),
+      scheduleEndHour: num("CLIPPER_END_HOUR", env.CLIPPER_END_HOUR, 8),
     },
+    authToken: authTokenRaw ? authTokenRaw : null,
   };
-
-  return ConfigSchema.parse(cfg);
 }
