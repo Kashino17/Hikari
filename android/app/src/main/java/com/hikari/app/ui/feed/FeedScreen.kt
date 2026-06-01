@@ -140,7 +140,20 @@ fun FeedScreen(
     }
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) vm.refresh()
+            when (event) {
+                // Backgrounding must stop audio + the active clip immediately.
+                // ON_PAUSE fires before the app loses foreground; flushing
+                // playWhenReady here prevents background audio + battery drain.
+                Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
+                    player.playWhenReady = false
+                }
+                // On return, refresh the feed and resume only the current page.
+                Lifecycle.Event.ON_RESUME -> {
+                    vm.refresh()
+                    player.playWhenReady = true
+                }
+                else -> Unit
+            }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
@@ -219,12 +232,15 @@ fun FeedScreen(
                     val mediaItems = items.map { factory.mediaItemFor(baseUrl, it.videoId, kind = it.kind) }
                     val targetIdx = pagerState.currentPage.coerceIn(0, items.lastIndex)
                     player.setMediaItems(mediaItems, targetIdx, 0L)
-                    // REPEAT_MODE_ONE: each clip loops at its end instead of
-                    // auto-advancing into the next playlist item. The internal
-                    // auto-advance was de-syncing the pager (still showing
-                    // item N) from the player (already on item N+1) — wrong
-                    // captions over wrong audio. User scrolls manually now.
-                    player.repeatMode = androidx.media3.common.Player.REPEAT_MODE_ONE
+                    // Anti-doomscroll: NO infinite loop. We pause at the end of
+                    // each clip instead of auto-looping (REPEAT_MODE_ONE) or
+                    // auto-advancing (which de-synced the pager from the player —
+                    // wrong captions over wrong audio). The clip plays once; the
+                    // user gets a calm tap-to-replay end-state and scrolls on
+                    // their own intent. REPEAT_MODE_OFF keeps the pager and the
+                    // player on the same item index.
+                    player.repeatMode = androidx.media3.common.Player.REPEAT_MODE_OFF
+                    player.pauseAtEndOfMediaItems = true
                     player.prepare()
                     player.playWhenReady = true
                 }
@@ -236,6 +252,11 @@ fun FeedScreen(
                     val idx = pagerState.currentPage.coerceIn(0, items.lastIndex)
                     if (idx != player.currentMediaItemIndex) {
                         player.seekTo(idx, 0L)
+                        // A clip that ran to its end leaves the player STATE_ENDED;
+                        // re-prepare so the freshly-swiped clip starts from frame 0.
+                        if (player.playbackState == androidx.media3.common.Player.STATE_ENDED) {
+                            player.prepare()
+                        }
                         player.playWhenReady = true
                     }
                 }

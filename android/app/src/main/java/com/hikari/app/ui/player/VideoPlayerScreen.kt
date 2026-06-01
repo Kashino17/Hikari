@@ -156,6 +156,25 @@ fun VideoPlayerScreen(
         }
     }
 
+    // Pause + flush position when backgrounded so audio never plays off-screen
+    // and the resume point survives a process kill; resume on return.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
+                    player.playWhenReady = false
+                    val pos = player.currentPosition
+                    if (pos > 0L) runBlocking { playbackRepo.savePosition(videoId, pos) }
+                }
+                Lifecycle.Event.ON_RESUME -> { player.playWhenReady = true }
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     // ── Orientation + system bars ────────────────────────────────────────────
     DisposableEffect(activity, landscape) {
         val window = activity?.window

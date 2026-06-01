@@ -106,31 +106,57 @@ registerClipperStatusRoutes(app, db, {
 }, cfg.clipper);
 registerVideoFullRoute(app, db);
 
-// 15-min channel polling
-cron.schedule("*/15 * * * *", async () => {
-  const channels = db
-    .prepare("SELECT id FROM channels WHERE is_active = 1")
-    .all() as { id: string }[];
-  for (const c of channels) {
-    try {
-      const entries = await fetchChannelFeed(c.id);
-      for (const e of entries) {
-        await processNewVideo({
-          db,
-          videoId: e.videoId,
-          channelId: c.id,
-          fetchMetadata: fetchVideoMetadata,
-          fetchTranscript,
-          fetchSponsorSegments,
-          scorer,
-          download: (id) => downloadVideo({ videoId: id, outDir: cfg.videoDir }),
-        });
-      }
-      db.prepare("UPDATE channels SET last_polled_at = ? WHERE id = ?").run(Date.now(), c.id);
-    } catch (err) {
-      app.log.warn({ err, channelId: c.id }, "channel poll failed");
-    }
+// 15-min channel polling.
+// Reentrancy guard: a slow poll (dozens of yt-dlp downloads) can outlast the
+// 15-min interval. Without this flag the next tick would start concurrently and
+// race the (non-atomic) dedup in processNewVideo, duplicating downloads/clips.
+let isPolling = false;
+async function pollAllChannels(): Promise<void> {
+  if (isPolling) {
+    app.log.info("channel poll skipped — previous run still in progress");
+    return;
   }
+  isPolling = true;
+  try {
+    const channels = db
+      .prepare("SELECT id FROM channels WHERE is_active = 1")
+      .all() as { id: string }[];
+    for (const c of channels) {
+      try {
+        const entries = await fetchChannelFeed(c.id);
+        for (const e of entries) {
+          // Per-entry guard: one failing video (yt-dlp 429, age-gate, network
+          // blip) must NOT abort the remaining entries for this channel.
+          try {
+            await processNewVideo({
+              db,
+              videoId: e.videoId,
+              channelId: c.id,
+              fetchMetadata: fetchVideoMetadata,
+              fetchTranscript,
+              fetchSponsorSegments,
+              scorer,
+              download: (id) => downloadVideo({ videoId: id, outDir: cfg.videoDir }),
+            });
+          } catch (err) {
+            app.log.warn({ err, channelId: c.id, videoId: e.videoId }, "channel poll: video failed");
+          }
+        }
+      } catch (err) {
+        app.log.warn({ err, channelId: c.id }, "channel poll failed");
+      } finally {
+        // Always advance the watermark — even on RSS failure — so a channel
+        // whose newest video keeps failing doesn't freeze last_polled_at forever.
+        db.prepare("UPDATE channels SET last_polled_at = ? WHERE id = ?").run(Date.now(), c.id);
+      }
+    }
+  } finally {
+    isPolling = false;
+  }
+}
+
+cron.schedule("*/15 * * * *", () => {
+  pollAllChannels().catch((err) => app.log.error({ err }, "channel poll crashed"));
 });
 
 // Daily cleanup at 04:00

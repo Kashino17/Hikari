@@ -1,4 +1,5 @@
-import type { Score, ScoredVideo, ScoreInput, Scorer } from "./types.js";
+import type { ScoredVideo, ScoreInput, Scorer } from "./types.js";
+import { parseScore } from "./score-schema.js";
 
 export interface LMStudioScorerOptions {
   baseUrl: string;
@@ -85,7 +86,6 @@ export class LMStudioScorer implements Scorer {
     if (!raw.trim()) {
       throw new Error("LM Studio returned empty content and reasoning_content");
     }
-    const score = JSON.parse(raw) as Score;
-    return { score, modelUsed: this.opts.model };
+    return { score: parseScore(raw), modelUsed: this.opts.model };
   }
 }

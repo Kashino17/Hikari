@@ -48,9 +48,9 @@ export interface ChannelCandidate {
   longFormRatio: number;
   /** Average overall_score of this channel's scored videos. 0..100 */
   avgOverallScore: number;
-  /** Average educational_value of scored videos. 0..100 */
+  /** Average educational_value of scored videos. 0..10 */
   avgEducationalValue: number;
-  /** Average clickbait_risk of scored videos. 0..100 (lower is better) */
+  /** Average clickbait_risk of scored videos. 0..10 (lower is better) */
   avgClickbaitRisk: number;
   /** Per-category video counts for this channel. */
   categoryDistribution: Record<string, number>;
@@ -161,9 +161,9 @@ export function calculateChannelScore(
     ? Math.min(1, Math.log10(channel.subscribers + 1) / Math.log10(SUBSCRIBER_QUALITY_CAP + 1))
     : 0;
   const quality = clamp01(
-    0.45 * (channel.avgOverallScore / 100) +
-      0.30 * (channel.avgEducationalValue / 100) +
-      0.15 * (1 - channel.avgClickbaitRisk / 100) +
+    0.45 * (channel.avgOverallScore / 100) + // overall_score is 0–100
+      0.30 * (channel.avgEducationalValue / 10) + // educational_value is 0–10
+      0.15 * (1 - channel.avgClickbaitRisk / 10) + // clickbait_risk is 0–10
       0.10 * subSignal,
   );
 

@@ -1,4 +1,5 @@
-import type { Score, ScoredVideo, ScoreInput, Scorer } from "./types.js";
+import type { ScoredVideo, ScoreInput, Scorer } from "./types.js";
+import { parseScore } from "./score-schema.js";
 
 export interface OllamaScorerOptions {
   baseUrl: string;
@@ -67,7 +68,6 @@ export class OllamaScorer implements Scorer {
       throw new Error(`Ollama request failed: ${res.status} ${await res.text()}`);
     }
     const body = (await res.json()) as { message: { content: string } };
-    const score = JSON.parse(body.message.content) as Score;
-    return { score, modelUsed: this.opts.model };
+    return { score: parseScore(body.message.content), modelUsed: this.opts.model };
   }
 }

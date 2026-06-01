@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -122,11 +123,21 @@ fun ReelPlayer(
     // Thumbnail is shown until the player renders its first frame for this item.
     // Keyed on videoId so a re-visit (swipe back) re-arms the gate.
     var firstFrameRendered by remember(item.videoId) { mutableStateOf(false) }
+    // Anti-doomscroll end-state: the clip plays once then pauses (the player has
+    // pauseAtEndOfMediaItems=true), surfacing a calm replay affordance instead
+    // of looping forever. Keyed on videoId so each page tracks its own end.
+    var reachedEnd by remember(item.videoId) { mutableStateOf(false) }
     DisposableEffect(item.videoId, player, isCurrent) {
         if (!isCurrent) return@DisposableEffect onDispose {}
         val listener = object : Player.Listener {
             override fun onPlayerError(error: PlaybackException) { onUnplayable() }
             override fun onRenderedFirstFrame() { firstFrameRendered = true }
+            override fun onPlaybackStateChanged(state: Int) {
+                if (state == Player.STATE_ENDED) {
+                    reachedEnd = true
+                    playing = false
+                }
+            }
         }
         player.addListener(listener)
         onDispose { player.removeListener(listener) }
@@ -244,9 +255,17 @@ fun ReelPlayer(
             .pointerInput(item.videoId) {
                 detectTapGestures(
                     onTap = {
-                        // Single tap: toggle play/pause + show controls
-                        playing = !playing
-                        player.playWhenReady = playing
+                        if (reachedEnd) {
+                            // Replay from the start after the clip finished.
+                            player.seekTo(0L)
+                            player.playWhenReady = true
+                            reachedEnd = false
+                            playing = true
+                        } else {
+                            // Single tap: toggle play/pause + show controls
+                            playing = !playing
+                            player.playWhenReady = playing
+                        }
                         showTrigger++
                         controlsVisible = true
                         onShowControls()
@@ -303,6 +322,44 @@ fun ReelPlayer(
         // ── Center: play/pause indicator ─────────────────────────────────────
         Box(modifier = Modifier.align(Alignment.Center)) {
             PlayPauseIndicator(playing = playing, showTrigger = showTrigger)
+        }
+
+        // ── Calm replay end-state (no auto-loop, no auto-advance) ─────────────
+        AnimatedVisibility(
+            visible = reachedEnd && isCurrent,
+            enter = fadeIn(tween(250)),
+            exit = fadeOut(tween(150)),
+            modifier = Modifier.align(Alignment.Center),
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(Color.Black.copy(alpha = 0.45f), CircleShape)
+                        .clickable {
+                            player.seekTo(0L)
+                            player.playWhenReady = true
+                            reachedEnd = false
+                            playing = true
+                            showTrigger++
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Erneut abspielen",
+                        tint = Color.White,
+                        modifier = Modifier.size(30.dp),
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = "Fertig — nach oben für das nächste",
+                    color = Color.White.copy(alpha = 0.8f),
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            }
         }
 
         // ── Double-tap seek badges ────────────────────────────────────────────

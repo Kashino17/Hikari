@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { Score, ScoredVideo, ScoreInput, Scorer } from "./types.js";
+import type { ScoredVideo, ScoreInput, Scorer } from "./types.js";
+import { validateScore } from "./score-schema.js";
 
 const SCORE_TOOL = {
   name: "record_score",
@@ -75,7 +76,7 @@ export class ClaudeScorer implements Scorer {
     if (!block || block.type !== "tool_use") {
       throw new Error("Claude did not return a tool_use block");
     }
-    return { score: block.input as Score, modelUsed: this.model };
+    return { score: validateScore(block.input), modelUsed: this.model };
   }
 }
 

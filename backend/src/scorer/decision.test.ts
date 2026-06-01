@@ -27,4 +27,9 @@ describe("decide", () => {
   it("rejects when emotional_manipulation > 3", () => {
     expect(decide({ ...base, emotionalManipulation: 4 })).toBe("rejected");
   });
+
+  it("rejects a non-finite overallScore instead of silently approving", () => {
+    expect(decide({ ...base, overallScore: Number.NaN })).toBe("rejected");
+    expect(decide({ ...base, clickbaitRisk: Number.POSITIVE_INFINITY })).toBe("rejected");
+  });
 });
