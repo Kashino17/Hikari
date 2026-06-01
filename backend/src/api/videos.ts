@@ -119,12 +119,20 @@ export async function registerVideosRoutes(
   app.get("/library", async () => {
     const series = (deps.db.prepare("SELECT * FROM series ORDER BY added_at DESC").all() as SeriesRow[])
       .map((s) => withCoverFallback(deps.db, s));
+    // Home/Library "recently added". MUST surface videos from BOTH pipelines:
+    // legacy pre-clipper items live in feed_items, but the current auto-clipper
+    // pipeline downloads approved videos WITHOUT a feed_items row (their clips
+    // go to the clips table). The old INNER JOIN feed_items dropped every new
+    // approved video — Home was frozen on month-old legacy items. We now key on
+    // downloaded_videos (every approved video, both paths, gets one) and pull
+    // progress_seconds from feed_items if present.
     const recentlyAdded = deps.db.prepare(`
       SELECT v.*, c.title as channelTitle, fi.progress_seconds,
              s.overall_score as overall_score
       FROM videos v
       JOIN channels c ON c.id = v.channel_id
-      JOIN feed_items fi ON fi.video_id = v.id
+      JOIN downloaded_videos dv ON dv.video_id = v.id
+      LEFT JOIN feed_items fi ON fi.video_id = v.id
       LEFT JOIN scores s ON s.video_id = v.id
       ORDER BY v.discovered_at DESC
       LIMIT 20

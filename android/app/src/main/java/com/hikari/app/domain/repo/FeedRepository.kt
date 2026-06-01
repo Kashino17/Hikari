@@ -34,7 +34,9 @@ class FeedRepository @Inject constructor(
 
     suspend fun refresh() {
         val remote = api.getFeed(mode = "new")
-        dao.upsertAll(remote.map { it.toEntity() })
+        // Stamp each item with its server-curated position so the DAO renders
+        // in the backend's interleaved/variety order, not re-sorted by addedAt.
+        dao.upsertAll(remote.mapIndexed { index, dto -> dto.toEntity(index) })
         if (remote.isEmpty()) {
             dao.pruneAll()
         } else {
@@ -116,7 +118,7 @@ class FeedRepository @Inject constructor(
     }
 }
 
-private fun FeedItemDto.toEntity() = FeedItemEntity(
+private fun FeedItemDto.toEntity(position: Int) = FeedItemEntity(
     videoId = videoId, kind = kind, parentVideoId = parentVideoId,
     title = title, durationSeconds = durationSeconds,
     aspectRatio = aspectRatio, thumbnailUrl = thumbnailUrl,
@@ -126,6 +128,7 @@ private fun FeedItemDto.toEntity() = FeedItemEntity(
     addedAt = addedAt, saved = saved == 1, seen = seenAt != null,
     captionsJson = captions?.let { runCatching { Json.encodeToString(it) }.getOrNull() },
     context = context,
+    position = position,
 )
 
 private fun FeedItemEntity.toDomain() = FeedItem(

@@ -208,6 +208,61 @@ export function applyCooldown(candidates: RawFeedRow[], pageSize: number): RawFe
 }
 
 // ---------------------------------------------------------------------------
+// Channel round-robin interleave — the real "variety" pass.
+//
+// applyCooldown only forbids clustering in a tiny 3-window, so when one channel
+// dominates the pool (e.g. 29 clips vs 8) you still get long same-channel runs.
+// This instead deals candidates out round-robin across channels: A, B, A, B, …
+// so consecutive items come from DIFFERENT channels as much as possible, never
+// the same parent video twice. Within a channel the ranked order is preserved.
+//
+// `rotation` shifts which channel starts each call, so a fresh app open / tab
+// switch reshuffles the top of the feed → new mix every time, without ever
+// reusing a clip the user already saw (seen items are filtered upstream).
+// This maximizes DIVERSITY, not watch-time — anti-doomscroll by design.
+// ---------------------------------------------------------------------------
+
+export function interleaveByChannel(ranked: RawFeedRow[], rotation = 0): RawFeedRow[] {
+  if (ranked.length <= 1) return [...ranked];
+
+  // Group preserving rank order; remember first-seen channel order.
+  const groups = new Map<string, RawFeedRow[]>();
+  for (const r of ranked) {
+    const g = groups.get(r.channelId);
+    if (g) g.push(r);
+    else groups.set(r.channelId, [r]);
+  }
+  const channels = [...groups.keys()];
+  if (channels.length <= 1) return [...ranked];
+
+  // Rotate the channel start position so each call leads with a different one.
+  const offset = ((rotation % channels.length) + channels.length) % channels.length;
+  const order = [...channels.slice(offset), ...channels.slice(0, offset)];
+
+  const out: RawFeedRow[] = [];
+  const seenParents = new Set<string>();
+  let remaining = ranked.length;
+  while (remaining > 0) {
+    let progressed = false;
+    for (const ch of order) {
+      const g = groups.get(ch)!;
+      // Take the next not-yet-emitted, distinct-parent item from this channel.
+      while (g.length > 0) {
+        const next = g.shift()!;
+        remaining--;
+        if (seenParents.has(next.parentVideoId)) continue; // skip dup parent
+        seenParents.add(next.parentVideoId);
+        out.push(next);
+        progressed = true;
+        break;
+      }
+    }
+    if (!progressed) break; // all groups exhausted
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // Hydration: lean RawFeedRow → full DTO for the API response
 // ---------------------------------------------------------------------------
 
@@ -331,17 +386,29 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
     JOIN downloaded_videos dv ON dv.video_id = fi.video_id
   `;
 
-  app.get<{ Querystring: { mode?: string } }>("/feed", async (req, reply) => {
+  app.get<{ Querystring: { mode?: string; rotation?: string } }>("/feed", async (req, reply) => {
     const mode = (req.query.mode ?? "new") as "new" | "saved" | "old";
     if (mode !== "new" && mode !== "saved" && mode !== "old") {
       return reply.code(400).send({ error: "mode must be new, saved, or old" });
     }
 
     if (mode === "new") {
-      // Larger pool → rank by curation score → diversity cooldown → page of 50.
+      // Pipeline: large pool → curation rank → channel round-robin interleave
+      // (variety) → diversity cooldown → page. The rotation makes each app
+      // open / tab switch lead with a different channel, so the mix is fresh
+      // every time without ever reusing an already-seen clip.
+      const now = Date.now();
+      // rotation: explicit query param wins (tests/paging); else time-derived
+      // so consecutive calls reshuffle. 90s bucket = stable within a session
+      // burst but changes between opens.
+      const rotation =
+        req.query.rotation !== undefined
+          ? Number(req.query.rotation) || 0
+          : Math.floor(now / 90_000);
       const candidates = listFeedRaw(deps.db, 200);
-      const ranked = rankCandidates(candidates, Date.now());
-      const ordered = applyCooldown(ranked, 50);
+      const ranked = rankCandidates(candidates, now);
+      const interleaved = interleaveByChannel(ranked, rotation);
+      const ordered = applyCooldown(interleaved, 50);
       // Batched hydration (2 queries) instead of one query per row (N+1).
       return hydrateFeedBatch(deps.db, ordered);
     } else if (mode === "saved") {

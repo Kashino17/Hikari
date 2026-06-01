@@ -27,4 +27,9 @@ data class FeedItemEntity(
     val seen: Boolean,
     @ColumnInfo(defaultValue = "NULL") val captionsJson: String? = null,
     @ColumnInfo(defaultValue = "NULL") val context: String? = null,
+    // Server-assigned feed position. The backend curates + interleaves the
+    // order for variety; we MUST render in that order, not re-sort by addedAt
+    // (which clusters one channel and kills the variety). Set from the server
+    // response index on each refresh.
+    @ColumnInfo(defaultValue = "0") val position: Int = 0,
 )

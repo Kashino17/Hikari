@@ -2,7 +2,7 @@ import Database from "better-sqlite3";
 import Fastify from "fastify";
 import { beforeEach, describe, expect, it } from "vitest";
 import { applyMigrations } from "../db/migrations.js";
-import { applyCooldown, listFeedRaw, registerFeedRoutes } from "./feed.js";
+import { applyCooldown, interleaveByChannel, listFeedRaw, registerFeedRoutes } from "./feed.js";
 import type { RawFeedRow } from "./feed.js";
 
 function seedFeedItem(
@@ -288,6 +288,73 @@ function row(id: string, parent: string, channel: string, cat: string, t: number
     category: cat, addedToFeedAt: t, durationSec: 60,
   };
 }
+
+describe("interleaveByChannel — variety", () => {
+  it("alternates channels instead of clustering one dominant channel", () => {
+    // 5 from chA, 2 from chB (skewed, like the real 29-vs-8 case).
+    const cands: RawFeedRow[] = [
+      row("a1", "pa1", "chA", "x", 100), row("a2", "pa2", "chA", "x", 99),
+      row("a3", "pa3", "chA", "x", 98), row("a4", "pa4", "chA", "x", 97),
+      row("a5", "pa5", "chA", "x", 96), row("b1", "pb1", "chB", "x", 95),
+      row("b2", "pb2", "chB", "x", 94),
+    ];
+    const out = interleaveByChannel(cands, 0);
+    // First two items must be from different channels (A then B).
+    expect(out[0]!.channelId).toBe("chA");
+    expect(out[1]!.channelId).toBe("chB");
+    expect(out[2]!.channelId).toBe("chA");
+    expect(out[3]!.channelId).toBe("chB");
+    // Nothing lost: all 7 present.
+    expect(out.length).toBe(7);
+    // No same-parent duplicate.
+    expect(new Set(out.map((r) => r.parentVideoId)).size).toBe(7);
+  });
+
+  it("preserves ranked order WITHIN a channel", () => {
+    const cands: RawFeedRow[] = [
+      row("a1", "pa1", "chA", "x", 100), row("a2", "pa2", "chA", "x", 99),
+      row("b1", "pb1", "chB", "x", 95),
+    ];
+    const out = interleaveByChannel(cands, 0);
+    const aOrder = out.filter((r) => r.channelId === "chA").map((r) => r.id);
+    expect(aOrder).toEqual(["a1", "a2"]);
+  });
+
+  it("rotation changes which channel leads (fresh mix per call)", () => {
+    const cands: RawFeedRow[] = [
+      row("a1", "pa1", "chA", "x", 100),
+      row("b1", "pb1", "chB", "x", 99),
+      row("c1", "pc1", "chC", "x", 98),
+    ];
+    const r0 = interleaveByChannel(cands, 0)[0]!.channelId;
+    const r1 = interleaveByChannel(cands, 1)[0]!.channelId;
+    const r2 = interleaveByChannel(cands, 2)[0]!.channelId;
+    expect(new Set([r0, r1, r2]).size).toBe(3); // each rotation leads differently
+  });
+
+  it("drops same-parent duplicates", () => {
+    const cands: RawFeedRow[] = [
+      row("a1", "pShared", "chA", "x", 100),
+      row("a2", "pShared", "chA", "x", 99), // same parent → dropped
+      row("b1", "pb1", "chB", "x", 95),
+    ];
+    const out = interleaveByChannel(cands, 0);
+    expect(out.map((r) => r.id).sort()).toEqual(["a1", "b1"]);
+  });
+
+  it("handles a single channel without losing items", () => {
+    const cands: RawFeedRow[] = [
+      row("a1", "pa1", "chA", "x", 100), row("a2", "pa2", "chA", "x", 99),
+    ];
+    expect(interleaveByChannel(cands, 0).length).toBe(2);
+  });
+
+  it("is a no-op for 0 or 1 items", () => {
+    expect(interleaveByChannel([], 0)).toEqual([]);
+    const one = [row("a1", "pa1", "chA", "x", 1)];
+    expect(interleaveByChannel(one, 5).length).toBe(1);
+  });
+});
 
 describe("applyCooldown", () => {
   it("never places same parent_video_id within 3-item window", () => {

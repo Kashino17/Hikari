@@ -15,10 +15,10 @@ interface FeedDao {
            OR videoId IN (
                SELECT videoId
                FROM feed_items
-               ORDER BY addedAt DESC
+               ORDER BY position ASC
                LIMIT 10
            )
-        ORDER BY addedAt DESC
+        ORDER BY position ASC
         """
     )
     fun newItems(): Flow<List<FeedItemEntity>>
