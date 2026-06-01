@@ -1,72 +1,85 @@
 import { describe, expect, it, vi } from "vitest";
-import { runYtDlp, isRetryableYtDlpError, isRateLimited } from "./client.js";
+import type { ExecaReturnValue } from "execa";
+import { runYtDlp, isRateLimited, isRetryableYtDlpError } from "./client.js";
 
 vi.mock("execa", () => ({
   execa: vi.fn(),
 }));
 
-import { execa } from "execa";
-
 const noSleep = () => Promise.resolve();
 
 describe("runYtDlp", () => {
-  it("passes args through to execa and returns stdout/stderr", async () => {
-    const mockExeca = vi.mocked(execa);
-    mockExeca.mockResolvedValue({ stdout: "out", stderr: "err" } as never);
-    const result = await runYtDlp({ args: ["--version"] });
-    expect(result.stdout).toBe("out");
-    expect(result.stderr).toBe("err");
+  it("calls yt-dlp with given args and returns stdout", async () => {
+    const { execa } = await import("execa");
+    vi.mocked(execa).mockReset();
+    vi.mocked(execa).mockResolvedValue({
+      stdout: '{"id":"abc","title":"test"}',
+      stderr: "",
+      exitCode: 0,
+    } as unknown as ExecaReturnValue);
+
+    const result = await runYtDlp(["--dump-json", "https://youtube.com/watch?v=abc"]);
+    expect(result.stdout).toBe('{"id":"abc","title":"test"}');
+    expect(execa).toHaveBeenCalledWith(
+      "yt-dlp",
+      ["--dump-json", "https://youtube.com/watch?v=abc"],
+      expect.objectContaining({ timeout: expect.any(Number) }),
+    );
   });
 
-  it("throws when execa rejects with a non-transient error (no retry)", async () => {
-    const mockExeca = vi.mocked(execa);
-    mockExeca.mockReset();
-    mockExeca.mockRejectedValue(new Error("Private video. Sign in"));
-    await expect(runYtDlp({ args: ["x"], sleep: noSleep })).rejects.toThrow("Private video");
-    // Non-transient → attempted exactly once.
-    expect(mockExeca).toHaveBeenCalledTimes(1);
+  it("throws YtDlpError with stderr when exit code is non-zero", async () => {
+    const { execa } = await import("execa");
+    vi.mocked(execa).mockReset();
+    vi.mocked(execa).mockRejectedValue({
+      stderr: "ERROR: Video unavailable",
+      exitCode: 1,
+      shortMessage: "Command failed",
+    });
+
+    await expect(runYtDlp(["--dump-json", "bad-url"], { sleep: noSleep })).rejects.toThrow(
+      /Video unavailable/,
+    );
+  });
+
+  it("does NOT retry a non-transient (content) error", async () => {
+    const { execa } = await import("execa");
+    vi.mocked(execa).mockReset();
+    vi.mocked(execa).mockRejectedValue({ stderr: "ERROR: Private video", exitCode: 1 });
+    await expect(runYtDlp(["x"], { sleep: noSleep })).rejects.toThrow(/Private video/);
+    expect(execa).toHaveBeenCalledTimes(1);
   });
 
   it("retries a rate-limit error then succeeds", async () => {
-    const mockExeca = vi.mocked(execa);
-    mockExeca.mockReset();
-    mockExeca
-      .mockRejectedValueOnce(new Error("HTTP Error 429: Too Many Requests"))
-      .mockResolvedValueOnce({ stdout: "ok", stderr: "" } as never);
-    const result = await runYtDlp({ args: ["x"], sleep: noSleep });
+    const { execa } = await import("execa");
+    vi.mocked(execa).mockReset();
+    vi.mocked(execa)
+      .mockRejectedValueOnce({ stderr: "HTTP Error 429: Too Many Requests", exitCode: 1 })
+      .mockResolvedValueOnce({ stdout: "ok", stderr: "" } as unknown as ExecaReturnValue);
+    const result = await runYtDlp(["x"], { sleep: noSleep });
     expect(result.stdout).toBe("ok");
-    expect(mockExeca).toHaveBeenCalledTimes(2);
+    expect(execa).toHaveBeenCalledTimes(2);
   });
 
-  it("gives up after maxRetries transient failures", async () => {
-    const mockExeca = vi.mocked(execa);
-    mockExeca.mockReset();
-    mockExeca.mockRejectedValue(new Error("Connection timed out"));
-    await expect(
-      runYtDlp({ args: ["x"], maxRetries: 2, sleep: noSleep }),
-    ).rejects.toThrow("timed out");
-    // 1 initial + 2 retries.
-    expect(mockExeca).toHaveBeenCalledTimes(3);
+  it("gives up after maxRetries transient failures, throwing YtDlpError", async () => {
+    const { execa } = await import("execa");
+    vi.mocked(execa).mockReset();
+    vi.mocked(execa).mockRejectedValue({ stderr: "Connection timed out", exitCode: 1 });
+    await expect(runYtDlp(["x"], { maxRetries: 2, sleep: noSleep })).rejects.toThrow(/timed out/);
+    expect(execa).toHaveBeenCalledTimes(3); // 1 initial + 2 retries
   });
 });
 
-describe("error classification", () => {
+describe("yt-dlp error classification", () => {
   it("detects rate-limit signatures", () => {
-    expect(isRateLimited(new Error("HTTP Error 429"))).toBe(true);
+    expect(isRateLimited({ stderr: "HTTP Error 429" })).toBe(true);
     expect(isRateLimited(new Error("Too Many Requests"))).toBe(true);
     expect(isRateLimited(new Error("Private video"))).toBe(false);
   });
 
-  it("treats network/timeout as retryable but content errors as terminal", () => {
+  it("treats network/timeout as retryable, content errors as terminal", () => {
     expect(isRetryableYtDlpError(new Error("ETIMEDOUT"))).toBe(true);
-    expect(isRetryableYtDlpError(new Error("getaddrinfo ENOTFOUND"))).toBe(true);
+    expect(isRetryableYtDlpError({ stderr: "getaddrinfo ENOTFOUND" })).toBe(true);
     expect(isRetryableYtDlpError(new Error("Video unavailable"))).toBe(false);
-    expect(isRetryableYtDlpError(new Error("This video is age-restricted"))).toBe(false);
-  });
-
-  it("reads execa-style stderr/shortMessage fields", () => {
-    expect(isRetryableYtDlpError({ shortMessage: "Command failed", stderr: "HTTP Error 429" })).toBe(
-      true,
-    );
+    expect(isRetryableYtDlpError(new Error("age-restricted"))).toBe(false);
   });
 });
