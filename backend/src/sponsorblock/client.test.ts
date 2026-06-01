@@ -21,8 +21,18 @@ describe("fetchSponsorSegments", () => {
     ]);
   });
 
-  it("returns empty array on 404", async () => {
+  it("returns empty array on 404 (confirmed: no segments)", async () => {
     vi.spyOn(global, "fetch").mockResolvedValue(new Response("[]", { status: 404 }));
     expect(await fetchSponsorSegments("noseg")).toEqual([]);
+  });
+
+  it("returns null on a server error (failure — must not be persisted)", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValue(new Response("oops", { status: 503 }));
+    expect(await fetchSponsorSegments("err")).toBeNull();
+  });
+
+  it("returns null on a network/parse failure", async () => {
+    vi.spyOn(global, "fetch").mockRejectedValue(new Error("ECONNRESET"));
+    expect(await fetchSponsorSegments("net")).toBeNull();
   });
 });

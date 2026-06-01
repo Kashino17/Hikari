@@ -72,7 +72,7 @@ export interface ProcessNewVideoDeps {
   channelId: string;
   fetchMetadata: (videoId: string) => Promise<VideoMetadata>;
   fetchTranscript: (url: string) => Promise<string | null>;
-  fetchSponsorSegments: (videoId: string) => Promise<SponsorSegment[]>;
+  fetchSponsorSegments: (videoId: string) => Promise<SponsorSegment[] | null>;
   scorer: Scorer;
   download: (videoId: string) => Promise<DownloadResult>;
 }
@@ -221,9 +221,13 @@ function insertScore(
 function insertSponsors(
   db: Database.Database,
   videoId: string,
-  segments: SponsorSegment[],
+  segments: SponsorSegment[] | null,
 ): void {
-  // Idempotent: clear any existing segments for this video, then insert fresh
+  // null = the SponsorBlock lookup FAILED (network/5xx). Skip the write
+  // entirely so a transient failure can't overwrite real segments with empty.
+  // An empty array IS persisted — it's a confirmed "no segments here".
+  if (segments === null) return;
+  // Idempotent: clear any existing segments for this video, then insert fresh.
   db.prepare("DELETE FROM sponsor_segments WHERE video_id = ?").run(videoId);
   const stmt = db.prepare(
     `INSERT INTO sponsor_segments (video_id, start_seconds, end_seconds, category)
