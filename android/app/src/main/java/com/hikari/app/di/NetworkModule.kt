@@ -36,9 +36,25 @@ object NetworkModule {
                 .build()
             chain.proceed(orig.newBuilder().url(newUrl).build())
         }
+        // Attach the bearer token when the user configured one (backend with
+        // HIKARI_AUTH_TOKEN enabled). Empty token → request passes through, so
+        // the open localhost default is unaffected.
+        val authInterceptor = Interceptor { chain ->
+            val token = runBlocking { store.authToken.first() }
+            if (token.isEmpty()) {
+                chain.proceed(chain.request())
+            } else {
+                chain.proceed(
+                    chain.request().newBuilder()
+                        .header("Authorization", "Bearer $token")
+                        .build(),
+                )
+            }
+        }
         val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC }
         return OkHttpClient.Builder()
             .addInterceptor(baseUrlInterceptor)
+            .addInterceptor(authInterceptor)
             .addInterceptor(logging)
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)

@@ -47,6 +47,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -71,7 +72,9 @@ fun SettingsScreen(
     val budget by vm.dailyBudget.collectAsState(initial = 15)
     val smart by vm.smartDownloads.collectAsState(initial = true)
     val disk by vm.diskUsage.collectAsState()
+    val authToken by vm.authToken.collectAsState(initial = "")
     var draft by remember(backendUrl) { mutableStateOf(backendUrl) }
+    var authDraft by remember(authToken) { mutableStateOf(authToken) }
     var budgetDraft by remember(budget) { mutableStateOf(budget.toString()) }
     val scope = rememberCoroutineScope()
     val keyboard = LocalSoftwareKeyboardController.current
@@ -147,6 +150,39 @@ fun SettingsScreen(
                 AmberButton("URL speichern") {
                     scope.launch {
                         vm.setBackendUrl(draft.trim())
+                        keyboard?.hide()
+                    }
+                }
+
+                Spacer(Modifier.height(14.dp))
+                Text("Zugriffs-Token", color = HikariText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    "Nur nötig, wenn der Server HIKARI_AUTH_TOKEN gesetzt hat. Leer lassen für offenen Zugriff.",
+                    color = HikariTextMuted,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
+                )
+                BasicTextField(
+                    value = authDraft,
+                    onValueChange = { authDraft = it },
+                    singleLine = true,
+                    cursorBrush = SolidColor(HikariAmber),
+                    textStyle = TextStyle(
+                        color = HikariText,
+                        fontSize = 13.sp,
+                        fontFamily = FontFamily.Monospace,
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(HikariBg, RoundedCornerShape(6.dp))
+                        .border(0.5.dp, HikariBorder, RoundedCornerShape(6.dp))
+                        .padding(horizontal = 10.dp, vertical = 10.dp),
+                )
+                AmberButton("Token speichern") {
+                    scope.launch {
+                        vm.setAuthToken(authDraft.trim())
                         keyboard?.hide()
                     }
                 }

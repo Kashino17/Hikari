@@ -19,6 +19,7 @@ private val BACKEND_URL_KEY = stringPreferencesKey("backend_url")
 private val DAILY_BUDGET_KEY = intPreferencesKey("daily_budget")
 private val SMART_DOWNLOADS_KEY = booleanPreferencesKey("smart_downloads")
 private val DOWNLOADS_LIMIT_BYTES_KEY = longPreferencesKey("downloads_limit_bytes")
+private val AUTH_TOKEN_KEY = stringPreferencesKey("auth_token")
 
 const val DEFAULT_BACKEND_URL = "http://macbook-pro.taile64a95.ts.net:3939"
 const val DEFAULT_DAILY_BUDGET = 15
@@ -44,6 +45,14 @@ class SettingsStore @Inject constructor(
         it[DOWNLOADS_LIMIT_BYTES_KEY] ?: 0L
     }
 
+    /**
+     * Optionaler Bearer-Token. Wird bei jeder Anfrage mitgeschickt, wenn der
+     * Server HIKARI_AUTH_TOKEN gesetzt hat. Leer = kein Token (localhost-Default).
+     */
+    val authToken: Flow<String> = ctx.dataStore.data.map {
+        it[AUTH_TOKEN_KEY].orEmpty()
+    }
+
     suspend fun setBackendUrl(url: String) {
         ctx.dataStore.edit { it[BACKEND_URL_KEY] = url.trimEnd('/') }
     }
@@ -58,5 +67,12 @@ class SettingsStore @Inject constructor(
 
     suspend fun setDownloadsLimitBytes(bytes: Long) {
         ctx.dataStore.edit { it[DOWNLOADS_LIMIT_BYTES_KEY] = bytes }
+    }
+
+    suspend fun setAuthToken(token: String) {
+        ctx.dataStore.edit {
+            val t = token.trim()
+            if (t.isEmpty()) it.remove(AUTH_TOKEN_KEY) else it[AUTH_TOKEN_KEY] = t
+        }
     }
 }

@@ -22,6 +22,7 @@ class SettingsViewModel @Inject constructor(
     val backendUrl: Flow<String> = store.backendUrl
     val dailyBudget: Flow<Int> = store.dailyBudget
     val smartDownloads: Flow<Boolean> = store.smartDownloads
+    val authToken: Flow<String> = store.authToken
 
     private val _diskUsage = MutableStateFlow<DownloadsResponse?>(null)
     val diskUsage: StateFlow<DownloadsResponse?> = _diskUsage.asStateFlow()
@@ -40,6 +41,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setSmartDownloads(enabled: Boolean) = viewModelScope.launch {
         store.setSmartDownloads(enabled)
+    }
+
+    fun setAuthToken(token: String) = viewModelScope.launch {
+        store.setAuthToken(token)
     }
 
     fun refreshDiskUsage() = viewModelScope.launch {
