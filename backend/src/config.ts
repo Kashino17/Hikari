@@ -30,6 +30,12 @@ export interface Config {
    * it (see api/auth.ts). null = open, the single-user localhost default.
    */
   authToken: string | null;
+  /**
+   * Comma-separated CORS origin allowlist (HIKARI_CORS_ORIGINS). Empty = CORS
+   * disabled (no JSON Access-Control headers), the localhost/native-client
+   * default. A browser client would set e.g. "https://app.example.com".
+   */
+  corsOrigins: string[];
 }
 
 /**
@@ -56,6 +62,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   }
 
   const authTokenRaw = env.HIKARI_AUTH_TOKEN?.trim();
+  const corsOrigins = (env.HIKARI_CORS_ORIGINS ?? "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter((o) => o !== "");
 
   return {
     port: num("PORT", env.PORT, 3939),
@@ -88,5 +98,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       scheduleEndHour: num("CLIPPER_END_HOUR", env.CLIPPER_END_HOUR, 8),
     },
     authToken: authTokenRaw ? authTokenRaw : null,
+    corsOrigins,
   };
 }

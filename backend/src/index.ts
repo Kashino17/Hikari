@@ -7,6 +7,7 @@ import fastifyMultipart from "@fastify/multipart";
 import Fastify from "fastify";
 import cron from "node-cron";
 import { registerAuth } from "./api/auth.js";
+import { registerCors } from "./api/cors.js";
 import { registerChannelsRoutes } from "./api/channels.js";
 import { registerDiscoveryRoutes as registerDiscoverySettingsRoutes } from "./api/discovery.js";
 import { registerDiscoveryRoutes } from "./routes/discovery.js";
@@ -70,6 +71,11 @@ for (const r of orphanRows) {
 }
 
 const app = Fastify({ logger: { level: "info" } });
+// Opt-in CORS for JSON routes (HIKARI_CORS_ORIGINS allowlist). Registered
+// BEFORE auth so a preflight OPTIONS — which carries no Authorization header —
+// is answered 204 here instead of being 401'd by the auth hook. No-op by
+// default (empty allowlist), so localhost / native-client behavior is unchanged.
+registerCors(app, { origins: cfg.corsOrigins });
 // Opt-in auth: when HIKARI_AUTH_TOKEN is set, mutating requests must carry it.
 // No-op (open) by default for the single-user localhost deployment. Registered
 // before routes so the onRequest hook covers them; GET media stays open.
