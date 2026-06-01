@@ -97,6 +97,7 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
       db.prepare("UPDATE videos SET clip_status='pending' WHERE id=?").run(videoId);
       enqueue(db, videoId);
     })();
+    refreshChannelMatch(db, channelId);
     return;
   }
 
@@ -132,6 +133,7 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
       insertScore(db, videoId, scored, decision, now);
     })();
   }
+  refreshChannelMatch(db, channelId);
 }
 
 function insertVideo(
