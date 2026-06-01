@@ -211,55 +211,84 @@ export function applyCooldown(candidates: RawFeedRow[], pageSize: number): RawFe
 // Hydration: lean RawFeedRow → full DTO for the API response
 // ---------------------------------------------------------------------------
 
-function hydrateFeedItem(db: Database.Database, row: RawFeedRow): unknown {
-  if (row.kind === "clip") {
-    // Clip title = the AI's reason (highlight description) per clip.
-    // Falls back to parent video title if reason is empty (e.g. short-form passthrough).
-    const clipRow = db.prepare(`
-      SELECT 'clip' AS kind,
-             c.id AS videoId,
-             c.parent_video_id AS parentVideoId,
-             COALESCE(NULLIF(c.reason, ''), v.title) AS title,
-             v.title AS parentTitle,
-             v.aspect_ratio AS aspectRatio, v.thumbnail_url AS thumbnailUrl,
-             v.channel_id AS channelId, ch.title AS channelTitle,
-             s.category, s.reasoning, s.overall_score AS overallScore,
-             s.educational_value AS educationalValue,
-             c.start_seconds AS startSec, c.end_seconds AS endSec,
-             (c.end_seconds - c.start_seconds) AS durationSeconds,
-             c.added_to_feed_at AS addedAt, c.saved, c.seen_at AS seenAt,
-             c.captions AS captions, c.context AS context, c.file_path AS filePath
-        FROM clips c
-        JOIN videos v ON v.id = c.parent_video_id
-        JOIN channels ch ON ch.id = v.channel_id
-        LEFT JOIN scores s ON s.video_id = c.parent_video_id
-       WHERE c.id = ?
-    `).get(row.id) as any;
-    if (clipRow && typeof clipRow.captions === "string") {
-      try { clipRow.captions = JSON.parse(clipRow.captions); } catch { clipRow.captions = null; }
+/**
+ * Batched hydration: turns N ranked RawFeedRows into N DTOs with just TWO
+ * queries (one for all clips, one for all legacy items) instead of one query
+ * per row. Per-row hydration was an N+1 on the hot feed path — up to 50
+ * synchronous SQLite round-trips per request, each blocking the event loop.
+ * Output preserves the input order (the ranking + cooldown order).
+ */
+function hydrateFeedBatch(db: Database.Database, rows: RawFeedRow[]): unknown[] {
+  if (rows.length === 0) return [];
+  const clipIds = rows.filter((r) => r.kind === "clip").map((r) => r.id);
+  const legacyIds = rows.filter((r) => r.kind === "legacy").map((r) => r.id);
+
+  const byId = new Map<string, any>();
+
+  if (clipIds.length > 0) {
+    const ph = clipIds.map(() => "?").join(",");
+    const clipRows = db
+      .prepare(`
+        SELECT 'clip' AS kind,
+               c.id AS videoId,
+               c.parent_video_id AS parentVideoId,
+               COALESCE(NULLIF(c.reason, ''), v.title) AS title,
+               v.title AS parentTitle,
+               v.aspect_ratio AS aspectRatio, v.thumbnail_url AS thumbnailUrl,
+               v.channel_id AS channelId, ch.title AS channelTitle,
+               s.category, s.reasoning, s.overall_score AS overallScore,
+               s.educational_value AS educationalValue,
+               c.start_seconds AS startSec, c.end_seconds AS endSec,
+               (c.end_seconds - c.start_seconds) AS durationSeconds,
+               c.added_to_feed_at AS addedAt, c.saved, c.seen_at AS seenAt,
+               c.captions AS captions, c.context AS context, c.file_path AS filePath
+          FROM clips c
+          JOIN videos v ON v.id = c.parent_video_id
+          JOIN channels ch ON ch.id = v.channel_id
+          LEFT JOIN scores s ON s.video_id = c.parent_video_id
+         WHERE c.id IN (${ph})
+      `)
+      .all(...clipIds) as any[];
+    for (const cr of clipRows) {
+      if (typeof cr.captions === "string") {
+        try {
+          cr.captions = JSON.parse(cr.captions);
+        } catch {
+          cr.captions = null;
+        }
+      }
+      byId.set(cr.videoId, cr);
     }
-    return clipRow;
   }
-  // legacy
-  return db.prepare(`
-    SELECT 'legacy' AS kind,
-           f.video_id AS videoId,
-           f.video_id AS parentVideoId,
-           v.title, v.duration_seconds AS durationSeconds,
-           v.aspect_ratio AS aspectRatio, v.thumbnail_url AS thumbnailUrl,
-           v.channel_id AS channelId, c.title AS channelTitle,
-           s.category, s.reasoning, s.overall_score AS overallScore,
-           s.educational_value AS educationalValue,
-           NULL AS startSec, NULL AS endSec,
-           f.added_to_feed_at AS addedAt, f.saved, f.seen_at AS seenAt,
-           dv.file_path AS filePath
-      FROM feed_items f
-      JOIN videos v ON v.id = f.video_id
-      JOIN channels c ON c.id = v.channel_id
-      JOIN scores s ON s.video_id = f.video_id
-      JOIN downloaded_videos dv ON dv.video_id = f.video_id
-     WHERE f.video_id = ?
-  `).get(row.id);
+
+  if (legacyIds.length > 0) {
+    const ph = legacyIds.map(() => "?").join(",");
+    const legacyRows = db
+      .prepare(`
+        SELECT 'legacy' AS kind,
+               f.video_id AS videoId,
+               f.video_id AS parentVideoId,
+               v.title, v.duration_seconds AS durationSeconds,
+               v.aspect_ratio AS aspectRatio, v.thumbnail_url AS thumbnailUrl,
+               v.channel_id AS channelId, c.title AS channelTitle,
+               s.category, s.reasoning, s.overall_score AS overallScore,
+               s.educational_value AS educationalValue,
+               NULL AS startSec, NULL AS endSec,
+               f.added_to_feed_at AS addedAt, f.saved, f.seen_at AS seenAt,
+               dv.file_path AS filePath
+          FROM feed_items f
+          JOIN videos v ON v.id = f.video_id
+          JOIN channels c ON c.id = v.channel_id
+          JOIN scores s ON s.video_id = f.video_id
+          JOIN downloaded_videos dv ON dv.video_id = f.video_id
+         WHERE f.video_id IN (${ph})
+      `)
+      .all(...legacyIds) as any[];
+    for (const lr of legacyRows) byId.set(lr.videoId, lr);
+  }
+
+  // Reassemble in the ranked order; drop any row a JOIN couldn't resolve.
+  return rows.map((r) => byId.get(r.id)).filter((x) => x != null);
 }
 
 // ---------------------------------------------------------------------------
@@ -313,7 +342,8 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
       const candidates = listFeedRaw(deps.db, 200);
       const ranked = rankCandidates(candidates, Date.now());
       const ordered = applyCooldown(ranked, 50);
-      return ordered.map((r) => hydrateFeedItem(deps.db, r));
+      // Batched hydration (2 queries) instead of one query per row (N+1).
+      return hydrateFeedBatch(deps.db, ordered);
     } else if (mode === "saved") {
       const clipsRows = deps.db.prepare(`
         SELECT 'clip' AS kind, c.id AS videoId, c.parent_video_id AS parentVideoId,

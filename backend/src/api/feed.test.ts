@@ -561,3 +561,53 @@ describe("DELETE /feed/:id — clip cascade cleanup", () => {
     expect(db.prepare("SELECT 1 FROM clipper_queue WHERE video_id = 'del-parent'").get()).toBeUndefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Batched hydration (GET /feed new mode) — clips + legacy in one response
+// ---------------------------------------------------------------------------
+
+describe("GET /feed (new) — batched hydration", () => {
+  it("hydrates clip AND legacy rows together with correct kind + shape", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    seedClip(db, "h-clip", "h-parent"); // unseen clip
+    seedFeedItem(db, "h-legacy", Date.now()); // unseen legacy item (downloaded)
+
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+    const res = await app.inject({ method: "GET", url: "/feed?mode=new" });
+    expect(res.statusCode).toBe(200);
+
+    const body = res.json() as { videoId: string; kind: string; filePath: string }[];
+    const clip = body.find((x) => x.videoId === "h-clip");
+    const legacy = body.find((x) => x.videoId === "h-legacy");
+
+    expect(clip?.kind).toBe("clip");
+    expect(clip?.filePath).toContain("/clips/h-clip.mp4");
+    expect(legacy?.kind).toBe("legacy");
+  });
+
+  it("returns clip captions parsed as an array, not a raw string", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    seedClip(db, "cap-clip", "cap-parent");
+    db.prepare("UPDATE clips SET captions = ? WHERE id = 'cap-clip'").run(
+      JSON.stringify([{ start: 0, end: 1, text: "hi" }]),
+    );
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+    const res = await app.inject({ method: "GET", url: "/feed?mode=new" });
+    const body = res.json() as { videoId: string; captions: unknown }[];
+    const clip = body.find((x) => x.videoId === "cap-clip");
+    expect(Array.isArray(clip?.captions)).toBe(true);
+  });
+
+  it("returns an empty array when nothing is unseen", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+    const res = await app.inject({ method: "GET", url: "/feed?mode=new" });
+    expect(res.json()).toEqual([]);
+  });
+});
