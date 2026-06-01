@@ -27,6 +27,13 @@ import { fetchVideoMetadata } from "./ingest/metadata.js";
 import { fetchTranscript } from "./ingest/transcript.js";
 import { fetchChannelFeed } from "./monitor/rss-poller.js";
 import { processNewVideo } from "./pipeline/orchestrator.js";
+import {
+  enqueueIngest,
+  claimNextIngest,
+  completeIngest,
+  failIngest,
+  unlockStaleIngest,
+} from "./ingest/queue.js";
 import { createScorer } from "./scorer/factory.js";
 import { MetadataExtractor } from "./scorer/metadata-extractor.js";
 import { fetchSponsorSegments } from "./sponsorblock/client.js";
@@ -162,6 +169,48 @@ async function pollAllChannels(): Promise<void> {
 
 cron.schedule("*/15 * * * *", () => {
   pollAllChannels().catch((err) => app.log.error({ err }, "channel poll crashed"));
+});
+
+// Durable ingest drain: claim queued videos one at a time and run the full
+// pipeline. A reentrancy guard keeps concurrent ticks from racing; each tick
+// drains a bounded batch so it can't run unbounded. A failed video is retried
+// (attempts++) until the dead-letter cap, never blocking the rest.
+let isDraining = false;
+const DRAIN_BATCH = 20;
+async function drainIngestQueue(): Promise<void> {
+  if (isDraining) return;
+  isDraining = true;
+  try {
+    for (let i = 0; i < DRAIN_BATCH; i++) {
+      const job = claimNextIngest(db);
+      if (!job) break;
+      try {
+        await processNewVideo({
+          db,
+          videoId: job.video_id,
+          channelId: job.channel_id,
+          fetchMetadata: fetchVideoMetadata,
+          fetchTranscript,
+          fetchSponsorSegments,
+          scorer,
+          download: (id) => downloadVideo({ videoId: id, outDir: cfg.videoDir }),
+        });
+        completeIngest(db, job.video_id);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        failIngest(db, job.video_id, msg);
+        app.log.warn({ err, videoId: job.video_id }, "ingest job failed (will retry)");
+      }
+    }
+  } finally {
+    isDraining = false;
+  }
+}
+
+// Recover stale locks from a previous crash, then drain every minute.
+unlockStaleIngest(db);
+cron.schedule("* * * * *", () => {
+  drainIngestQueue().catch((err) => app.log.error({ err }, "ingest drain crashed"));
 });
 
 // Daily cleanup at 04:00
