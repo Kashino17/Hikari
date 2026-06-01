@@ -26,7 +26,7 @@ import { runCleanup } from "./download/cleanup.js";
 import { downloadVideo } from "./download/worker.js";
 import { fetchVideoMetadata } from "./ingest/metadata.js";
 import { fetchTranscript } from "./ingest/transcript.js";
-import { fetchChannelFeed } from "./monitor/rss-poller.js";
+import { fetchChannelFeedConditional } from "./monitor/rss-poller.js";
 import { computePollIntervalMs, isChannelDue } from "./monitor/cadence.js";
 import { processNewVideo } from "./pipeline/orchestrator.js";
 import {
@@ -139,8 +139,17 @@ async function pollAllChannels(): Promise<void> {
   try {
     const now = Date.now();
     const channels = db
-      .prepare("SELECT id, last_polled_at AS lastPolledAt FROM channels WHERE is_active = 1")
-      .all() as { id: string; lastPolledAt: number | null }[];
+      .prepare(
+        `SELECT id, last_polled_at AS lastPolledAt, rss_etag AS rssEtag,
+                rss_last_modified AS rssLastModified
+           FROM channels WHERE is_active = 1`,
+      )
+      .all() as {
+      id: string;
+      lastPolledAt: number | null;
+      rssEtag: string | null;
+      rssLastModified: string | null;
+    }[];
     const recentPublished = db.prepare(
       "SELECT published_at AS publishedAt FROM videos WHERE channel_id = ? ORDER BY published_at DESC LIMIT 10",
     );
@@ -153,13 +162,22 @@ async function pollAllChannels(): Promise<void> {
       if (!isChannelDue(c.lastPolledAt, interval, now)) continue;
 
       try {
-        const entries = await fetchChannelFeed(c.id);
-        // The poll only ENQUEUEs (RSS + cheap insert). The heavy
-        // metadata/transcript/download/score pipeline runs in drainIngestQueue,
-        // off this loop — so a slow ingest can't stall the next poll and an
-        // in-flight ingest survives a restart (it stays in ingest_queue).
-        for (const e of entries) {
-          enqueueIngest(db, e.videoId, c.id);
+        // Conditional fetch: send the last ETag/Last-Modified so YouTube can
+        // answer 304 when nothing changed (the common case). On 304 there's
+        // nothing to enqueue; on 200 we enqueue new ids and store fresh
+        // validators. The poll only ENQUEUEs (RSS + cheap insert) — the heavy
+        // pipeline runs in drainIngestQueue, off this loop.
+        const result = await fetchChannelFeedConditional(c.id, {
+          etag: c.rssEtag,
+          lastModified: c.rssLastModified,
+        });
+        if (result.status === "ok") {
+          for (const e of result.entries) {
+            enqueueIngest(db, e.videoId, c.id);
+          }
+          db.prepare(
+            "UPDATE channels SET rss_etag = ?, rss_last_modified = ? WHERE id = ?",
+          ).run(result.etag, result.lastModified, c.id);
         }
       } catch (err) {
         app.log.warn({ err, channelId: c.id }, "channel poll failed");

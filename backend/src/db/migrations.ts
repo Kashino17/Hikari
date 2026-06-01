@@ -56,6 +56,12 @@ export function applyMigrations(db: Database.Database): void {
   // Channel banner art (16:7-ish wide image), extracted from yt-dlp.
   addColumnIfMissing(db, "channels", "banner_url", "TEXT");
 
+  // RSS conditional-fetch validators — the ETag / Last-Modified from the last
+  // successful poll, sent back as If-None-Match / If-Modified-Since so YouTube
+  // can answer 304 Not Modified when nothing changed.
+  addColumnIfMissing(db, "channels", "rss_etag", "TEXT");
+  addColumnIfMissing(db, "channels", "rss_last_modified", "TEXT");
+
   // Auto-Clipper: per-video clip lifecycle status.
   // NULL = legacy/pre-clipper; values: pending | analyzing | rendering | done
   //                                    | no_highlights | failed
