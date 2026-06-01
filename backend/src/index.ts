@@ -6,6 +6,7 @@ import fastifyStatic from "@fastify/static";
 import fastifyMultipart from "@fastify/multipart";
 import Fastify from "fastify";
 import cron from "node-cron";
+import { registerAuth } from "./api/auth.js";
 import { registerChannelsRoutes } from "./api/channels.js";
 import { registerDiscoveryRoutes as registerDiscoverySettingsRoutes } from "./api/discovery.js";
 import { registerDiscoveryRoutes } from "./routes/discovery.js";
@@ -62,6 +63,10 @@ for (const r of orphanRows) {
 }
 
 const app = Fastify({ logger: { level: "info" } });
+// Opt-in auth: when HIKARI_AUTH_TOKEN is set, mutating requests must carry it.
+// No-op (open) by default for the single-user localhost deployment. Registered
+// before routes so the onRequest hook covers them; GET media stays open.
+registerAuth(app, { token: cfg.authToken });
 // CORS for video assets — Remotion's compositor (headless Chrome) bundles
 // the React composition under a different origin and loads videos via
 // <video> tag, which requires Access-Control-Allow-Origin to render the
