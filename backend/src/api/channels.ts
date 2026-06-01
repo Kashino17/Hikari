@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import type Database from "better-sqlite3";
 import { resolveChannel } from "../monitor/channel-resolver.js";
+import { validateYouTubeChannelUrl } from "../monitor/youtube-url.js";
 import { searchChannels } from "../monitor/channel-search.js";
 import { fetchChannelDeepScan } from "../monitor/deep-scan.js";
 import { recommendChannels } from "../monitor/recommendations.js";
@@ -23,8 +24,15 @@ export async function registerChannelsRoutes(
   deps: ChannelsDeps,
 ): Promise<void> {
   app.post<{ Body: { channelUrl: string } }>("/channels", async (req, reply) => {
-    const { channelUrl } = req.body;
-    const resolved = await resolveChannel(channelUrl);
+    const { channelUrl } = req.body ?? {};
+    // SSRF guard: only spawn yt-dlp against a validated YouTube channel URL.
+    // Without this, an arbitrary url (file://, internal host, metadata endpoint)
+    // would be passed straight to the yt-dlp child process.
+    const safeUrl = validateYouTubeChannelUrl(channelUrl ?? "");
+    if (!safeUrl) {
+      return reply.code(400).send({ error: "invalid YouTube channel URL" });
+    }
+    const resolved = await resolveChannel(safeUrl);
     deps.db
       .prepare(
         `INSERT OR REPLACE INTO channels
@@ -33,7 +41,7 @@ export async function registerChannelsRoutes(
       )
       .run(
         resolved.channelId,
-        channelUrl,
+        safeUrl,
         resolved.title,
         Date.now(),
         resolved.handle,
@@ -45,7 +53,7 @@ export async function registerChannelsRoutes(
     return reply.code(200).send({
       id: resolved.channelId,
       title: resolved.title,
-      url: channelUrl,
+      url: safeUrl,
       handle: resolved.handle,
       thumbnail_url: resolved.thumbnail,
       banner_url: resolved.banner,
