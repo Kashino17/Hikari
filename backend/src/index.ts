@@ -27,6 +27,7 @@ import { downloadVideo } from "./download/worker.js";
 import { fetchVideoMetadata } from "./ingest/metadata.js";
 import { fetchTranscript } from "./ingest/transcript.js";
 import { fetchChannelFeed } from "./monitor/rss-poller.js";
+import { computePollIntervalMs, isChannelDue } from "./monitor/cadence.js";
 import { processNewVideo } from "./pipeline/orchestrator.js";
 import {
   enqueueIngest,
@@ -136,29 +137,29 @@ async function pollAllChannels(): Promise<void> {
   }
   isPolling = true;
   try {
+    const now = Date.now();
     const channels = db
-      .prepare("SELECT id FROM channels WHERE is_active = 1")
-      .all() as { id: string }[];
+      .prepare("SELECT id, last_polled_at AS lastPolledAt FROM channels WHERE is_active = 1")
+      .all() as { id: string; lastPolledAt: number | null }[];
+    const recentPublished = db.prepare(
+      "SELECT published_at AS publishedAt FROM videos WHERE channel_id = ? ORDER BY published_at DESC LIMIT 10",
+    );
     for (const c of channels) {
+      // Adaptive cadence: skip a channel that isn't due yet for its own
+      // upload rhythm. The cron still fires every 15 min; dormant channels are
+      // simply checked far less often, cutting wasted RSS/yt-dlp load.
+      const pub = (recentPublished.all(c.id) as { publishedAt: number }[]).map((r) => r.publishedAt);
+      const interval = computePollIntervalMs(pub, now);
+      if (!isChannelDue(c.lastPolledAt, interval, now)) continue;
+
       try {
         const entries = await fetchChannelFeed(c.id);
+        // The poll only ENQUEUEs (RSS + cheap insert). The heavy
+        // metadata/transcript/download/score pipeline runs in drainIngestQueue,
+        // off this loop — so a slow ingest can't stall the next poll and an
+        // in-flight ingest survives a restart (it stays in ingest_queue).
         for (const e of entries) {
-          // Per-entry guard: one failing video (yt-dlp 429, age-gate, network
-          // blip) must NOT abort the remaining entries for this channel.
-          try {
-            await processNewVideo({
-              db,
-              videoId: e.videoId,
-              channelId: c.id,
-              fetchMetadata: fetchVideoMetadata,
-              fetchTranscript,
-              fetchSponsorSegments,
-              scorer,
-              download: (id) => downloadVideo({ videoId: id, outDir: cfg.videoDir }),
-            });
-          } catch (err) {
-            app.log.warn({ err, channelId: c.id, videoId: e.videoId }, "channel poll: video failed");
-          }
+          enqueueIngest(db, e.videoId, c.id);
         }
       } catch (err) {
         app.log.warn({ err, channelId: c.id }, "channel poll failed");
