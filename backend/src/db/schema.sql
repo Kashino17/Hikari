@@ -262,6 +262,23 @@ CREATE TABLE IF NOT EXISTS clipper_queue (
 CREATE INDEX IF NOT EXISTS idx_clipper_queue_pending
   ON clipper_queue(queued_at) WHERE locked_at IS NULL;
 
+-- Durable ingest queue. The channel poll only ENQUEUEs newly-seen video ids
+-- here (fast: RSS + insert); a worker drains them, running the heavy
+-- metadata/transcript/download/score pipeline off the request loop. Mirrors
+-- clipper_queue: locked_at NULL = claimable; a stale lock (crashed worker) is
+-- reclaimed; attempts bounds retries so a permanently-failing video is dropped.
+-- channel_id is carried because the pipeline scores per-channel.
+CREATE TABLE IF NOT EXISTS ingest_queue (
+  video_id   TEXT PRIMARY KEY,
+  channel_id TEXT NOT NULL,
+  queued_at  INTEGER NOT NULL,
+  attempts   INTEGER DEFAULT 0,
+  last_error TEXT,
+  locked_at  INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_ingest_queue_pending
+  ON ingest_queue(queued_at) WHERE locked_at IS NULL;
+
 -- Clipper runtime state. Singleton (id = 1). Allows manual override of the
 -- nightly schedule window so the user can force the worker to run a queue-drain
 -- immediately for testing/debugging.
