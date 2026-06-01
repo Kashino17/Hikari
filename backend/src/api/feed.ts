@@ -19,11 +19,85 @@ export interface RawFeedRow {
   category: string | null;
   addedToFeedAt: number;
   durationSec: number;
+  // Ranking signals — optional so hand-built RawFeedRow literals (tests) and
+  // the cooldown pass, which don't need them, stay valid.
+  overallScore?: number | null;
+  educationalValue?: number | null;
+  channelMatch?: number | null;
 }
 
 const COOLDOWN_WINDOW = 3;
 const CHANNEL_MAX_IN_WINDOW = 2;
 const LOOKAHEAD = 5;
+
+// ---------------------------------------------------------------------------
+// Curation ranking
+//
+// A TRANSPARENT, anti-doomscroll composite score. It deliberately uses NO
+// engagement signal (no watch-time, clicks, dwell, completion). It rewards:
+//   - freshness   : exponential decay by age (calm content surfaces, but old
+//                   gems don't vanish — 48h half-life)
+//   - quality     : the scorer's overall_score (0–100)
+//   - educational : the scorer's educational_value (0–10)
+//   - channelMatch: the user's own per-channel affinity (channel_match_scores)
+// Diversity is handled separately by applyCooldown AFTER ranking.
+// ---------------------------------------------------------------------------
+
+export interface RankWeights {
+  freshness: number;
+  quality: number;
+  educational: number;
+  channelMatch: number;
+}
+
+export const DEFAULT_RANK_WEIGHTS: RankWeights = {
+  freshness: 0.4,
+  quality: 0.3,
+  educational: 0.15,
+  channelMatch: 0.15,
+};
+
+const FRESHNESS_HALFLIFE_HOURS = 48;
+
+function clamp01(n: number): number {
+  if (!Number.isFinite(n) || n < 0) return 0;
+  if (n > 1) return 1;
+  return n;
+}
+
+/**
+ * Reorders candidates by the composite curation score (highest first). Pure +
+ * deterministic for a given `now`; ties break by recency then id so paging and
+ * tests are stable. Missing signals fall back to neutral midpoints so a clip
+ * is never unfairly buried just because its channel hasn't been match-scored
+ * yet.
+ */
+export function rankCandidates(
+  candidates: RawFeedRow[],
+  now: number,
+  weights: RankWeights = DEFAULT_RANK_WEIGHTS,
+): RawFeedRow[] {
+  const scored = candidates.map((c) => {
+    const ageHours = Math.max(0, (now - c.addedToFeedAt) / 3_600_000);
+    const freshness = Math.exp(-ageHours / FRESHNESS_HALFLIFE_HOURS); // (0,1]
+    const quality = clamp01((c.overallScore ?? 70) / 100);
+    const educational = clamp01((c.educationalValue ?? 5) / 10);
+    const channelMatch = clamp01((c.channelMatch ?? 50) / 100);
+    const score =
+      weights.freshness * freshness +
+      weights.quality * quality +
+      weights.educational * educational +
+      weights.channelMatch * channelMatch;
+    return { c, score };
+  });
+  scored.sort(
+    (a, b) =>
+      b.score - a.score ||
+      b.c.addedToFeedAt - a.c.addedToFeedAt ||
+      (a.c.id < b.c.id ? -1 : a.c.id > b.c.id ? 1 : 0),
+  );
+  return scored.map((s) => s.c);
+}
 
 /**
  * UNION over clips (new clipper-pipeline items) + legacy feed_items
@@ -38,10 +112,14 @@ export function listFeedRaw(db: Database.Database, limit: number): RawFeedRow[] 
            v.channel_id AS channelId,
            s.category AS category,
            c.added_to_feed_at AS addedToFeedAt,
-           (c.end_seconds - c.start_seconds) AS durationSec
+           (c.end_seconds - c.start_seconds) AS durationSec,
+           s.overall_score AS overallScore,
+           s.educational_value AS educationalValue,
+           cms.calculated_score AS channelMatch
       FROM clips c
       JOIN videos v ON v.id = c.parent_video_id
       LEFT JOIN scores s ON s.video_id = c.parent_video_id
+      LEFT JOIN channel_match_scores cms ON cms.channel_id = v.channel_id
      WHERE c.seen_at IS NULL AND c.playback_failed = 0
     UNION ALL
     SELECT 'legacy' AS kind,
@@ -50,10 +128,14 @@ export function listFeedRaw(db: Database.Database, limit: number): RawFeedRow[] 
            v.channel_id AS channelId,
            s.category AS category,
            f.added_to_feed_at AS addedToFeedAt,
-           v.duration_seconds AS durationSec
+           v.duration_seconds AS durationSec,
+           s.overall_score AS overallScore,
+           s.educational_value AS educationalValue,
+           cms.calculated_score AS channelMatch
       FROM feed_items f
       JOIN videos v ON v.id = f.video_id
       LEFT JOIN scores s ON s.video_id = f.video_id
+      LEFT JOIN channel_match_scores cms ON cms.channel_id = v.channel_id
      WHERE f.seen_at IS NULL AND f.playback_failed = 0 AND f.is_pre_clipper = 1
     ORDER BY addedToFeedAt DESC
     LIMIT ?
@@ -227,8 +309,10 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
     }
 
     if (mode === "new") {
-      const candidates = listFeedRaw(deps.db, 100);
-      const ordered = applyCooldown(candidates, 50);
+      // Larger pool → rank by curation score → diversity cooldown → page of 50.
+      const candidates = listFeedRaw(deps.db, 200);
+      const ranked = rankCandidates(candidates, Date.now());
+      const ordered = applyCooldown(ranked, 50);
       return ordered.map((r) => hydrateFeedItem(deps.db, r));
     } else if (mode === "saved") {
       const clipsRows = deps.db.prepare(`
