@@ -587,6 +587,38 @@ describe("GET /feed (new) — batched hydration", () => {
     expect(legacy?.kind).toBe("legacy");
   });
 
+  it("returns an INTEGER durationSeconds for a clip with fractional bounds", async () => {
+    // Regression: clips have REAL start/end seconds, so end-start can be e.g.
+    // 75.5. The Android DTO declares durationSeconds: Int, and a float like
+    // "75.5" made kotlinx.serialization reject the ENTIRE feed response — the
+    // whole list vanished in the app. The API must round to an integer.
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    db.prepare("INSERT OR IGNORE INTO channels (id, url, title, added_at) VALUES ('UC1','x','c',0)").run();
+    db.prepare(
+      `INSERT OR IGNORE INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at)
+       VALUES ('frac-parent', 'UC1', 't', 0, 600, 0)`,
+    ).run();
+    db.prepare(
+      `INSERT INTO clips (id, parent_video_id, order_in_parent,
+         start_seconds, end_seconds, file_path, file_size_bytes,
+         focus_x, focus_y, focus_w, focus_h, reason, created_at, added_to_feed_at)
+       VALUES ('frac-clip', 'frac-parent', 0, 770, 845.5, '/clips/frac.mp4', 1,
+               0, 0, 1, 1, 'r', 1000, 1000)`,
+    ).run();
+
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+    const res = await app.inject({ method: "GET", url: "/feed?mode=new" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { videoId: string; durationSeconds: number }[];
+    const clip = body.find((x) => x.videoId === "frac-clip");
+    expect(clip).toBeDefined();
+    // 845.5 - 770 = 75.5 → must be rounded to an integer (76), not 75.5.
+    expect(Number.isInteger(clip!.durationSeconds)).toBe(true);
+    expect(clip!.durationSeconds).toBe(76);
+  });
+
   it("returns clip captions parsed as an array, not a raw string", async () => {
     const db = new Database(":memory:");
     applyMigrations(db);

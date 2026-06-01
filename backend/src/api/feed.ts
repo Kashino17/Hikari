@@ -239,7 +239,7 @@ function hydrateFeedBatch(db: Database.Database, rows: RawFeedRow[]): unknown[] 
                s.category, s.reasoning, s.overall_score AS overallScore,
                s.educational_value AS educationalValue,
                c.start_seconds AS startSec, c.end_seconds AS endSec,
-               (c.end_seconds - c.start_seconds) AS durationSeconds,
+               CAST(ROUND(c.end_seconds - c.start_seconds) AS INTEGER) AS durationSeconds,
                c.added_to_feed_at AS addedAt, c.saved, c.seen_at AS seenAt,
                c.captions AS captions, c.context AS context, c.file_path AS filePath
           FROM clips c
@@ -352,7 +352,7 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
                s.category, s.reasoning, s.overall_score AS overallScore,
                s.educational_value AS educationalValue,
                c.start_seconds AS startSec, c.end_seconds AS endSec,
-               (c.end_seconds - c.start_seconds) AS durationSeconds,
+               CAST(ROUND(c.end_seconds - c.start_seconds) AS INTEGER) AS durationSeconds,
                c.added_to_feed_at AS addedAt, c.saved, c.seen_at AS seenAt,
                c.file_path AS filePath
           FROM clips c
@@ -376,7 +376,7 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
                s.category, s.reasoning, s.overall_score AS overallScore,
                s.educational_value AS educationalValue,
                c.start_seconds AS startSec, c.end_seconds AS endSec,
-               (c.end_seconds - c.start_seconds) AS durationSeconds,
+               CAST(ROUND(c.end_seconds - c.start_seconds) AS INTEGER) AS durationSeconds,
                c.added_to_feed_at AS addedAt, c.saved, c.seen_at AS seenAt,
                c.file_path AS filePath
           FROM clips c
