@@ -35,6 +35,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +47,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -53,8 +56,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import android.widget.Toast
 import coil.compose.AsyncImage
 import com.hikari.app.ui.channels.ImportSheet
+import java.io.File
 import com.hikari.app.ui.profile.tabs.ChannelsTab
 import com.hikari.app.ui.profile.tabs.DownloadsTab
 import com.hikari.app.ui.profile.tabs.SavedTab
@@ -106,6 +111,14 @@ fun ProfileScreen(
     val pickPhoto = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia(),
     ) { uri -> if (uri != null) vm.pickAvatar(uri) }
+
+    // Surface avatar-save failures (previously swallowed silently).
+    val toastCtx = LocalContext.current
+    LaunchedEffect(Unit) {
+        vm.events.collect { msg ->
+            Toast.makeText(toastCtx, msg, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Box(Modifier.fillMaxSize().background(HikariBg)) {
         Column(Modifier.fillMaxSize()) {
@@ -355,10 +368,17 @@ private fun Avatar(
             .clickable { onClick() },
         contentAlignment = Alignment.Center,
     ) {
-        if (avatarPath != null) {
+        // Resolve to a real File, stripping any legacy "?v=<ts>" cache-bust
+        // suffix that an older build may have persisted. Falling back to the
+        // letter when the file is missing avoids a blank circle.
+        val avatarFile = remember(avatarPath) {
+            avatarPath?.substringBefore("?")?.let(::File)?.takeIf { it.exists() }
+        }
+        if (avatarFile != null) {
             AsyncImage(
-                model = avatarPath,
+                model = avatarFile,
                 contentDescription = "Profilbild",
+                contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize().clip(CircleShape),
             )
         } else if (fallbackChar != null) {
