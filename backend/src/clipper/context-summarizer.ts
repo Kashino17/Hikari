@@ -40,10 +40,12 @@ export async function summarizeContext(
       { role: "user", content: `Transkript:\n${transcript}` },
     ],
     temperature: 0.3,
-    // Qwen 3.6 is a reasoning model and dumps thinking into reasoning_content
-    // before the actual answer lands in content. ~5k reasoning tokens is
-    // typical for a short summary, so we leave plenty of headroom.
-    max_tokens: 2000,
+    // Qwen 3.6 is a reasoning model: it spends thinking tokens (reasoning_content)
+    // BEFORE the answer lands in content. Measured ~3k reasoning for a short
+    // summary; with the old 2000 cap the budget ran out mid-thinking and content
+    // came back EMPTY → null (53/60 clips failed the backfill). Give real
+    // headroom so reasoning + the one-sentence answer always fit.
+    max_tokens: 8000,
     stream: false,
   };
 
@@ -65,8 +67,20 @@ export async function summarizeContext(
     }
     throw new Error(`summarizer ${res.status}: ${await res.text()}`);
   }
-  const json = (await res.json()) as { choices: Array<{ message: { content: string } }> };
-  const text = json.choices[0]?.message?.content?.trim();
+  const json = (await res.json()) as {
+    choices: Array<{ message: { content?: string; reasoning_content?: string } }>;
+  };
+  const msg = json.choices[0]?.message;
+  // Prefer content; if a reasoning model returned empty content but parked the
+  // answer in reasoning_content, fall back to its last non-empty line.
+  let text = msg?.content?.trim();
+  if (!text && msg?.reasoning_content) {
+    const lines = msg.reasoning_content
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
+    text = lines[lines.length - 1];
+  }
   if (!text) return null;
   // Strip optional surrounding quotes / markdown if Qwen disobeys
   return text.replace(/^["'`]+|["'`]+$/g, "").trim();

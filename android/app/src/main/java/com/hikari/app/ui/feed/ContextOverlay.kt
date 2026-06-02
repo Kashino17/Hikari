@@ -60,14 +60,18 @@ fun ContextOverlay(
         // line and is bottom-anchored to it, so it never overlaps the picture.
         val videoTop = if (contentH < containerH) (containerH - contentH) / 2 else 0.dp
 
+        // Lift the card well into the empty band above the video (not flush
+        // against the video edge), with a status-bar-safe floor so it never
+        // slides under the clock. ~150dp clears a 2-line card plus a gap.
+        val cardTop = (videoTop - 150.dp).coerceAtLeast(56.dp)
+
         AnimatedVisibility(
             visible = visible,
             enter = fadeIn(tween(400)),
             exit = fadeOut(tween(fadeOutOverMs)),
-            // Place the card so its BOTTOM lands on the video's top edge.
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = (videoTop - 84.dp).coerceAtLeast(0.dp)),
+                .padding(top = cardTop),
         ) {
             Box(
                 modifier = Modifier
