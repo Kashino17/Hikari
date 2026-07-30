@@ -47,9 +47,11 @@ object MusicModule {
 
     @Provides
     @Singleton
-    fun providesMusicPlaylistDao(database: HikariDatabase): MusicPlaylistDao = database.musicPlaylistDao()
+    fun providesMusicPlaylistDao(database: HikariDatabase): MusicPlaylistDao =
+        database.musicPlaylistDao()
 
     @Provides
     @Singleton
-    fun providesMusicPlaylistSongDao(database: HikariDatabase): MusicPlaylistSongDao = database.musicPlaylistSongDao()
+    fun providesMusicPlaylistSongDao(database: HikariDatabase): MusicPlaylistSongDao =
+        database.musicPlaylistSongDao()
 }

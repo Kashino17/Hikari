@@ -191,8 +191,6 @@ fun ReflexTapGame(onBack: () -> Unit) {
                                 val points = 10 * combo
                                 score += points
                                 circles = circles.toMutableList().apply { removeAt(hitIdx) }
-                            } else {
-                                combo = 0
                             }
                         }
                     }

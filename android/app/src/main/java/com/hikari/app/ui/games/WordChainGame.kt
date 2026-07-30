@@ -39,7 +39,7 @@ fun WordChainGame(onBack: () -> Unit) {
     var currentWord by remember { mutableStateOf("") }
     var gameStarted by remember { mutableStateOf(false) }
     var gameOver by remember { mutableStateOf(false) }
-    var timeLeft by remember { mutableStateOf(60f) }
+    var timeLeft by remember { mutableStateOf(60) }
     var lastTap by remember { mutableStateOf(0L) }
 
     fun resetRound() {
@@ -81,7 +81,7 @@ fun WordChainGame(onBack: () -> Unit) {
             if (!gameOver) {
                 timeLeft--
                 if (timeLeft <= 0) {
-                    timeLeft = 0f
+                    timeLeft = 0
                     gameOver = true
                 }
             }
@@ -119,7 +119,7 @@ fun WordChainGame(onBack: () -> Unit) {
                 Column(Modifier.padding(horizontal = 32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Button(
                         onClick = {
-                            score = 0; timeLeft = 60f; gameOver = false; gameStarted = true
+                            score = 0; timeLeft = 60; gameOver = false; gameStarted = true
                             foundWords = emptySet(); resetRound()
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -135,7 +135,7 @@ fun WordChainGame(onBack: () -> Unit) {
         } else {
             // HUD
             Row(Modifier.fillMaxWidth().padding(16.dp), Arrangement.SpaceBetween) {
-                Text("⏱ ${timeLeft.toInt()}s", fontSize = 18.sp, color = if (timeLeft < 10) Color(0xFFFF5252) else HikariPrimary,
+                Text("⏱ ${timeLeft}s", fontSize = 18.sp, color = if (timeLeft < 10) Color(0xFFFF5252) else HikariPrimary,
                     fontWeight = FontWeight.Bold)
                 Text("⭐ $score", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
             }

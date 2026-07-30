@@ -139,7 +139,8 @@ data class Card(val colorIdx: Int, val matched: Boolean, val flipped: Boolean)
 
 @Composable
 private fun MemoryCard(card: Card, isFlipped: Boolean, onClick: () -> Unit) {
-    val color = if (isFlipped) colors[card.colorIdx] else Color(0xFF1A1A1A)
+    val cardColors = gameColors
+    val color = if (isFlipped) cardColors[card.colorIdx] else Color(0xFF1A1A1A)
     val borderColor = if (card.matched) Color(0xFF4ADE80) else Color.Transparent
 
     Box(
@@ -155,7 +156,7 @@ private fun MemoryCard(card: Card, isFlipped: Boolean, onClick: () -> Unit) {
                 val cx = size.width / 2
                 val cy = size.height / 2
                 val r = size.width * 0.25f
-                drawCircle(colors[card.colorIdx], radius = r * 1.5f)
+                drawCircle(cardColors[card.colorIdx], radius = r * 1.5f)
                 drawCircle(Color.White.copy(alpha = 0.3f), radius = r * 0.6f,
                     center = Offset(cx - r * 0.3f, cy - r * 0.3f))
             }
@@ -165,8 +166,9 @@ private fun MemoryCard(card: Card, isFlipped: Boolean, onClick: () -> Unit) {
     }
 }
 
-private val colors = listOf(
+private val gameColors = listOf(
     Color(0xFFFBBF24), Color(0xFF4ADE80), Color(0xFF60A5FA),
     Color(0xFFF472B6), Color(0xFFA78BFA), Color(0xFFFF8A65),
     Color(0xFF2DD4BF), Color(0xFFFB923C),
 )
+

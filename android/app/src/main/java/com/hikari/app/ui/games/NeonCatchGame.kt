@@ -102,9 +102,20 @@ fun NeonCatchGame(onBack: () -> Unit) {
             Text("❤️ ".repeat(lives).ifEmpty { "💀" }, fontSize = 18.sp)
         }
 
-        // Game area
-        Box(Modifier.weight(1f)) {
+        // Game area + drag input (merged for responsive control)
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .pointerInput(Unit) {
+                    detectDragGestures { change, dragAmount ->
+                        change.consume()
+                        basketX = (basketX + dragAmount.x / size.width)
+                            .coerceIn(0.08f, 0.92f)
+                    }
+                },
+        ) {
             Canvas(Modifier.fillMaxSize()) {
+                // Render items and basket in the same area as input
                 items.forEach { item ->
                     val cx = item.x * size.width
                     val cy = item.y * size.height
@@ -116,33 +127,13 @@ fun NeonCatchGame(onBack: () -> Unit) {
                 }
                 // Basket
                 val bx = basketX * size.width
-                // Basket (rounded via two semi-circles + rect)
                 drawRect(
                     color = HikariPrimary,
                     topLeft = Offset(bx - 40f, size.height * 0.86f),
                     size = androidx.compose.ui.geometry.Size(80f, 16f),
                 )
             }
-            // Touch controls
-            Canvas(Modifier.fillMaxSize()) {
-                // Invisible touch layer handled by pointerInput on parent
-            }
         }
-
-        // Drag area
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
-                        change.consume()
-                        basketX = (basketX + dragAmount.x / size.width * 0.5f)
-                            .coerceIn(0.08f, 0.92f)
-                    }
-                }
-                .background(HikariCardBg.copy(alpha = 0.3f)),
-        ) {}
     }
 }
 
