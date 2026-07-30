@@ -2,10 +2,10 @@ import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type Database from "better-sqlite3";
-import { downloadPage } from "./image-store.js";
-import { seriesId, upsertChapter, upsertPage, upsertSeries } from "./persist.js";
-import type { MangaSourceAdapter } from "./sources/types.js";
-import { SourceLayoutError } from "./sources/types.js";
+import { downloadPage } from "./image-store.ts";
+import { seriesId, upsertChapter, upsertPage, upsertSeries } from "./persist.ts";
+import type { MangaSourceAdapter } from "./sources/types.ts";
+import { SourceLayoutError } from "./sources/types.ts";
 
 function serializeSyncError(err: unknown): string {
   if (err instanceof SourceLayoutError) {

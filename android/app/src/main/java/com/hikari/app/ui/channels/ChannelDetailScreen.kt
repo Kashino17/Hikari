@@ -27,12 +27,15 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -78,7 +81,7 @@ private fun fmtDur(sec: Int): String {
 fun ChannelDetailScreen(
     onBack: () -> Unit,
     onEditVideo: (String) -> Unit = {},
-    onOpenFilter: () -> Unit = {},
+    onOpenFilter: (String) -> Unit = {},
     vm: ChannelDetailViewModel = hiltViewModel(),
 ) {
     val channel by vm.channel.collectAsState()
@@ -87,9 +90,40 @@ fun ChannelDetailScreen(
     val error by vm.error.collectAsState()
     val syncing by vm.syncing.collectAsState()
     val syncMessage by vm.syncMessage.collectAsState()
+    val removed by vm.removed.collectAsState()
+
+    // When the channel is unsubscribed, leave the now-empty detail screen.
+    LaunchedEffect(removed) { if (removed) onBack() }
 
     var deleteTarget by remember { mutableStateOf<ChannelVideoDto?>(null) }
     var expandedVideo by remember { mutableStateOf<String?>(null) }
+    var showUnsubscribe by remember { mutableStateOf(false) }
+
+    if (showUnsubscribe) {
+        AlertDialog(
+            onDismissRequest = { showUnsubscribe = false },
+            containerColor = HikariBg,
+            title = { Text("Kanal deabonnieren?", color = HikariText) },
+            text = {
+                Text(
+                    "Du bekommst dann keine neuen Videos mehr von „${channel?.title ?: "diesem Kanal"}“. " +
+                        "Bereits gespeicherte Videos bleiben erhalten.",
+                    color = HikariTextMuted,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    vm.unsubscribe()
+                    showUnsubscribe = false
+                }) { Text("Deabonnieren", color = HikariDanger) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUnsubscribe = false }) {
+                    Text("Abbrechen", color = HikariTextMuted)
+                }
+            },
+        )
+    }
 
     deleteTarget?.let { target ->
         AlertDialog(
@@ -130,6 +164,8 @@ fun ChannelDetailScreen(
                     onToggleAutoApprove = { vm.toggleAutoApprove() },
                     onSync = { vm.syncAndClip() },
                     syncing = syncing,
+                    onOpenFilter = { onOpenFilter(channel?.title.orEmpty()) },
+                    onUnsubscribe = { showUnsubscribe = true },
                 )
             }
 
@@ -218,7 +254,10 @@ private fun DetailHeader(
     onToggleAutoApprove: () -> Unit,
     onSync: () -> Unit,
     syncing: Boolean,
+    onOpenFilter: () -> Unit,
+    onUnsubscribe: () -> Unit,
 ) {
+    var menuOpen by remember { mutableStateOf(false) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -257,6 +296,22 @@ private fun DetailHeader(
                 )
             }
         }
+        // Per-channel tuning — own AI criteria just for this channel.
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(50))
+                .clickable(onClick = onOpenFilter),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                Icons.Default.Tune,
+                contentDescription = "Tuning für diesen Kanal",
+                tint = HikariText,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Spacer(Modifier.size(4.dp))
         Box(
             modifier = Modifier
                 .size(36.dp)
@@ -280,23 +335,62 @@ private fun DetailHeader(
             }
         }
         Spacer(Modifier.size(4.dp))
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(50))
-                .clickable(onClick = onToggleAutoApprove),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = if (autoApprove) Icons.Default.Star
-                else Icons.Outlined.StarBorder,
-                contentDescription = if (autoApprove)
-                    "Vertrauenskanal aktiv — alle Videos werden ohne KI-Bewertung übernommen"
-                else
-                    "Vertrauenskanal aktivieren",
-                tint = if (autoApprove) HikariAmber else HikariTextMuted,
-                modifier = Modifier.size(20.dp),
-            )
+        Box {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(50))
+                    .clickable(onClick = { menuOpen = true }),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Default.MoreVert,
+                    contentDescription = "Mehr",
+                    tint = HikariText,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            DropdownMenu(
+                expanded = menuOpen,
+                onDismissRequest = { menuOpen = false },
+                modifier = Modifier.background(HikariSurface),
+            ) {
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            if (autoApprove) "Vertrauenskanal · an" else "Vertrauenskanal · aus",
+                            color = HikariText,
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = if (autoApprove) Icons.Default.Star else Icons.Outlined.StarBorder,
+                            contentDescription = null,
+                            tint = if (autoApprove) HikariAmber else HikariTextMuted,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    },
+                    onClick = {
+                        onToggleAutoApprove()
+                        menuOpen = false
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text("Kanal deabonnieren", color = HikariDanger) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = null,
+                            tint = HikariDanger,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    },
+                    onClick = {
+                        menuOpen = false
+                        onUnsubscribe()
+                    },
+                )
+            }
         }
     }
     HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)

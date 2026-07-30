@@ -10,8 +10,11 @@ import androidx.room.RoomDatabase
         LocalDownloadEntity::class,
         LocalMangaArcEntity::class,
         LocalMangaPageEntity::class,
+        MusicSongEntity::class,
+        MusicPlaylistEntity::class,
+        MusicPlaylistSongEntity::class,
     ],
-    version = 11,
+    version = 12,
     exportSchema = false,
 )
 abstract class HikariDatabase : RoomDatabase() {
@@ -19,4 +22,7 @@ abstract class HikariDatabase : RoomDatabase() {
     abstract fun playbackPositionDao(): PlaybackPositionDao
     abstract fun localDownloadDao(): LocalDownloadDao
     abstract fun localMangaDao(): LocalMangaDao
+    abstract fun musicSongDao(): MusicSongDao
+    abstract fun musicPlaylistDao(): MusicPlaylistDao
+    abstract fun musicPlaylistSongDao(): MusicPlaylistSongDao
 }

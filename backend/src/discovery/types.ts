@@ -1,4 +1,4 @@
-import type { Category } from "../scorer/types.js";
+import type { Category } from "../scorer/types.ts";
 
 export type CategoryWeights = Record<Category, number>;
 

@@ -1,5 +1,5 @@
-import type { Caption } from "./transcriber.js";
-import { QwenNetworkError } from "./qwen-analyzer.js";
+import type { Caption } from "./transcriber.ts";
+import { QwenNetworkError } from "./qwen-analyzer.ts";
 
 export interface SummarizerConfig {
   baseUrl: string;

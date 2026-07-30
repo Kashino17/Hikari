@@ -140,8 +140,19 @@ class ChannelsViewModel @Inject constructor(
         load()
     }
 
+    /** Unsubscribe. Flips the local search/recommendation flags so the pill updates instantly. */
     fun remove(channelId: String) = viewModelScope.launch {
         runCatching { repo.remove(channelId) }
+            .onSuccess {
+                _error.value = null
+                _searchResults.value = _searchResults.value.map {
+                    if (it.channelId == channelId) it.copy(subscribed = false) else it
+                }
+                _recommendations.value = _recommendations.value.map {
+                    if (it.channelId == channelId) it.copy(subscribed = false) else it
+                }
+            }
+            .onFailure { _error.value = it.message ?: "Deabonnieren fehlgeschlagen" }
         load()
     }
 

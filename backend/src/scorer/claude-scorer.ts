@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { ScoredVideo, ScoreInput, Scorer } from "./types.js";
-import { validateScore } from "./score-schema.js";
+import type { ScoredVideo, ScoreInput, Scorer } from "./types.ts";
+import { validateScore } from "./score-schema.ts";
 
 const SCORE_TOOL = {
   name: "record_score",

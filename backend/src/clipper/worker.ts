@@ -2,14 +2,14 @@ import { unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import type Database from "better-sqlite3";
-import { getFilterState } from "../scorer/filter-repo.js";
-import { buildClipperPrompt } from "./prompt-builder.js";
-import { complete, dequeue, fail, setStep } from "./queue.js";
-import { QwenNetworkError } from "./qwen-analyzer.js";
-import type { ClipSpec, AnalyzerConfig } from "./qwen-analyzer.js";
-import type { RenderResult } from "./remotion-renderer.js";
-import { transcribe, type Caption } from "./transcriber.js";
-import { summarizeContext } from "./context-summarizer.js";
+import { getFilterState } from "../scorer/filter-repo.ts";
+import { buildClipperPrompt } from "./prompt-builder.ts";
+import { complete, dequeue, fail, setStep } from "./queue.ts";
+import { QwenNetworkError } from "./qwen-analyzer.ts";
+import type { ClipSpec, AnalyzerConfig } from "./qwen-analyzer.ts";
+import type { RenderResult } from "./remotion-renderer.ts";
+import { transcribe, type Caption } from "./transcriber.ts";
+import { summarizeContext } from "./context-summarizer.ts";
 
 export interface WorkerDeps {
   analyze: (

@@ -44,10 +44,25 @@ interface LocalMangaDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertPage(page: LocalMangaPageEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertPages(pages: List<LocalMangaPageEntity>)
+
     @Query("DELETE FROM local_manga_pages WHERE arc_id = :arcId")
     suspend fun deletePagesForArc(arcId: String)
 
     // -- Composite ------------------------------------------------------------
+
+    /**
+     * Atomarer Save: Arc zuerst (FK-Parent), dann alle Pages — alles in einer
+     * Transaktion. Verhindert FK-Constraint-Violations und garantiert, dass
+     * die DB nie einen halbfertigen Arc-State sieht (kein verwaister Arc ohne
+     * Pages, keine Pages ohne Arc).
+     */
+    @Transaction
+    suspend fun saveArcWithPages(arc: LocalMangaArcEntity, pages: List<LocalMangaPageEntity>) {
+        upsertArc(arc)
+        if (pages.isNotEmpty()) upsertPages(pages)
+    }
 
     /**
      * Atomarer Delete: erst Pages, dann Arc. CASCADE würde das auch tun, aber

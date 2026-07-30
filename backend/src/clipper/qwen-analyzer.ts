@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { sampleFrames, type SampledFrame } from "./frame-sampler.js";
+import { sampleFrames, type SampledFrame } from "./frame-sampler.ts";
 
 export class QwenNetworkError extends Error {
   constructor(message: string) {

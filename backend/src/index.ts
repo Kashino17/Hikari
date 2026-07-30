@@ -6,39 +6,39 @@ import fastifyStatic from "@fastify/static";
 import fastifyMultipart from "@fastify/multipart";
 import Fastify from "fastify";
 import cron from "node-cron";
-import { registerAuth } from "./api/auth.js";
-import { registerCors } from "./api/cors.js";
-import { registerChannelsRoutes } from "./api/channels.js";
-import { registerDiscoveryRoutes as registerDiscoverySettingsRoutes } from "./api/discovery.js";
-import { registerDiscoveryRoutes } from "./routes/discovery.js";
-import { registerDownloadsRoutes } from "./api/downloads.js";
-import { registerFeedRoutes } from "./api/feed.js";
-import { registerFilterRoutes } from "./api/filter.js";
-import { registerHealthRoute } from "./api/health.js";
-import { registerStatsRoutes } from "./api/stats.js";
-import { registerVideosRoutes } from "./api/videos.js";
-import { registerMangaRoutes } from "./api/manga.js";
-import { registerClipperStatusRoutes } from "./api/clipper-status.js";
-import { registerVideoFullRoute } from "./api/video-full.js";
-import { loadConfig } from "./config.js";
-import { openDatabase } from "./db/connection.js";
-import { runCleanup } from "./download/cleanup.js";
-import { downloadVideo } from "./download/worker.js";
-import { fetchVideoMetadata } from "./ingest/metadata.js";
-import { fetchTranscript } from "./ingest/transcript.js";
-import { fetchChannelFeedConditional } from "./monitor/rss-poller.js";
-import { computePollIntervalMs, isChannelDue } from "./monitor/cadence.js";
-import { processNewVideo } from "./pipeline/orchestrator.js";
+import { registerAuth } from "./api/auth.ts";
+import { registerCors } from "./api/cors.ts";
+import { registerChannelsRoutes } from "./api/channels.ts";
+import { registerDiscoveryRoutes as registerDiscoverySettingsRoutes } from "./api/discovery.ts";
+import { registerDiscoveryRoutes } from "./routes/discovery.ts";
+import { registerDownloadsRoutes } from "./api/downloads.ts";
+import { registerFeedRoutes } from "./api/feed.ts";
+import { registerFilterRoutes } from "./api/filter.ts";
+import { registerHealthRoute } from "./api/health.ts";
+import { registerStatsRoutes } from "./api/stats.ts";
+import { registerVideosRoutes } from "./api/videos.ts";
+import { registerMangaRoutes } from "./api/manga.ts";
+import { registerClipperStatusRoutes } from "./api/clipper-status.ts";
+import { registerVideoFullRoute } from "./api/video-full.ts";
+import { loadConfig } from "./config.ts";
+import { openDatabase } from "./db/connection.ts";
+import { runCleanup } from "./download/cleanup.ts";
+import { downloadVideo } from "./download/worker.ts";
+import { fetchVideoMetadata } from "./ingest/metadata.ts";
+import { fetchTranscript } from "./ingest/transcript.ts";
+import { fetchChannelFeedConditional } from "./monitor/rss-poller.ts";
+import { computePollIntervalMs, isChannelDue } from "./monitor/cadence.ts";
+import { processNewVideo } from "./pipeline/orchestrator.ts";
 import {
   enqueueIngest,
   claimNextIngest,
   completeIngest,
   failIngest,
   unlockStaleIngest,
-} from "./ingest/queue.js";
-import { createScorer } from "./scorer/factory.js";
-import { MetadataExtractor } from "./scorer/metadata-extractor.js";
-import { fetchSponsorSegments } from "./sponsorblock/client.js";
+} from "./ingest/queue.ts";
+import { createScorer } from "./scorer/factory.ts";
+import { MetadataExtractor } from "./scorer/metadata-extractor.ts";
+import { fetchSponsorSegments } from "./sponsorblock/client.ts";
 
 const cfg = loadConfig();
 mkdirSync(cfg.videoDir, { recursive: true });

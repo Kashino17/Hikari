@@ -1,8 +1,8 @@
 import type Database from "better-sqlite3";
-import { getFilterState } from "../scorer/filter-repo.js";
-import { searchChannels, type ChannelSearchResult } from "./channel-search.js";
-import { pickAvatar, pickBanner } from "./channel-resolver.js";
-import { runYtDlp } from "../yt-dlp/client.js";
+import { getFilterState } from "../scorer/filter-repo.ts";
+import { searchChannels, type ChannelSearchResult } from "./channel-search.ts";
+import { pickAvatar, pickBanner } from "./channel-resolver.ts";
+import { runYtDlp } from "../yt-dlp/client.ts";
 
 export interface RecommendationResult extends ChannelSearchResult {
   /** Which user-likeTags surfaced this channel. */

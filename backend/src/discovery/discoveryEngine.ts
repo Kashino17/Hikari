@@ -1,5 +1,5 @@
 import type Database from "better-sqlite3";
-import type { CategoryWeights } from "./types.js";
+import type { CategoryWeights } from "./types.ts";
 
 // Local AI Discovery Engine
 //

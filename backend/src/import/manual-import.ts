@@ -1,7 +1,7 @@
 import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type Database from "better-sqlite3";
-import { runYtDlp, YtDlpError } from "../yt-dlp/client.js";
+import { runYtDlp, YtDlpError } from "../yt-dlp/client.ts";
 
 export const MANUAL_CHANNEL_ID = "manual";
 const MANUAL_CHANNEL_TITLE = "Manuell hinzugefügt";
@@ -300,6 +300,41 @@ export async function importDirectLink(
   const duration = Math.round(meta.duration ?? 0);
   const thumbnail = fixProtocol(meta.thumbnail ?? meta.thumbnails?.[meta.thumbnails.length - 1]?.url);
   const publishedAt = parseUploadDate(meta.upload_date);
+
+  // Step 2: download FIRST, before writing any DB rows. The episode must only
+  // become visible once its file is actually on disk. Previously we inserted
+  // the videos + scores rows up front, so for the minutes-long download of a
+  // hundreds-of-MB episode it showed on the overview but had no file (playback
+  // 404) and no downloaded_videos row (absent from /downloads and its series
+  // list). Downloading first also means a failed download needs no rollback,
+  // and a mid-download crash leaves no orphaned, permanently-unplayable row.
+  // yt-dlp writes the file using its own id template, so we override -o to
+  // match our internal videoId.
+  const filePath = join(videoDir, `${videoId}.mp4`);
+  try {
+    await runYtDlp(
+      [
+        "-f",
+        "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720]/best",
+        "--merge-output-format",
+        "mp4",
+        "-o",
+        filePath,
+        "--no-warnings",
+        downloadUrl,
+      ],
+      { timeoutMs: 30 * 60_000 }, // up to 30 min for big files
+    );
+  } catch (err) {
+    const msg = err instanceof YtDlpError ? err.message : String(err);
+    return { url, status: "failed", error: `download failed: ${msg.slice(0, 200)}` };
+  }
+
+  if (!existsSync(filePath)) {
+    return { url, status: "failed", error: "download finished but file not found" };
+  }
+
+  const size = statSync(filePath).size;
   const now = Date.now();
 
   let seriesId = manualMeta?.seriesId;
@@ -307,7 +342,10 @@ export async function importDirectLink(
     seriesId = ensureSeries(db, manualMeta.seriesTitle);
   }
 
-  // Insert video row.
+  // Step 3: publish all rows together. These INSERTs are synchronous with no
+  // await between them, so no concurrent request can observe a half-imported
+  // episode — it appears fully downloaded, playable, and grouped under its
+  // series in one atomic burst.
   db.prepare(
     `INSERT INTO videos
      (id, channel_id, series_id, title, description, published_at, duration_seconds,
@@ -352,39 +390,6 @@ export async function importDirectLink(
     now,
     "approved",
   );
-
-  // Step 2: download. yt-dlp writes the file using its own id template,
-  // not ours, so we override -o to match our internal videoId.
-  const filePath = join(videoDir, `${videoId}.mp4`);
-  try {
-    await runYtDlp(
-      [
-        "-f",
-        "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720]/best",
-        "--merge-output-format",
-        "mp4",
-        "-o",
-        filePath,
-        "--no-warnings",
-        downloadUrl,
-      ],
-      { timeoutMs: 30 * 60_000 }, // up to 30 min for big files
-    );
-  } catch (err) {
-    // Roll back the video + score so the user can retry without "duplicate"
-    db.prepare("DELETE FROM scores WHERE video_id = ?").run(videoId);
-    db.prepare("DELETE FROM videos WHERE id = ?").run(videoId);
-    const msg = err instanceof YtDlpError ? err.message : String(err);
-    return { url, status: "failed", error: `download failed: ${msg.slice(0, 200)}` };
-  }
-
-  if (!existsSync(filePath)) {
-    db.prepare("DELETE FROM scores WHERE video_id = ?").run(videoId);
-    db.prepare("DELETE FROM videos WHERE id = ?").run(videoId);
-    return { url, status: "failed", error: "download finished but file not found" };
-  }
-
-  const size = statSync(filePath).size;
 
   db.prepare(
     `INSERT INTO downloaded_videos (video_id, file_path, file_size_bytes, downloaded_at)

@@ -7,9 +7,9 @@ import {
   ArcNotFoundError,
   getArcManifest,
   runArcSync,
-} from "../manga/arc-download.js";
-import { adapters, getAdapter } from "../manga/sources/index.js";
-import { runChapterSync, runFullSync } from "../manga/sync.js";
+} from "../manga/arc-download.ts";
+import { adapters, getAdapter } from "../manga/sources/index.ts";
+import { runChapterSync, runFullSync } from "../manga/sync.ts";
 
 export interface MangaDeps {
   db: Database.Database;

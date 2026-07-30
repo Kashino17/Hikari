@@ -4,8 +4,8 @@ import { createWriteStream } from "node:fs";
 import { unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
-import { importDirectLink, fetchImportMetadata, ensureSeries, type ImportResult, type ManualMetadata } from "../import/manual-import.js";
-import type { MetadataExtractor } from "../scorer/metadata-extractor.js";
+import { importDirectLink, fetchImportMetadata, ensureSeries, type ImportResult, type ManualMetadata } from "../import/manual-import.ts";
+import type { MetadataExtractor } from "../scorer/metadata-extractor.ts";
 
 export interface VideosDeps {
   db: Database.Database;

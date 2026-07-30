@@ -1,4 +1,4 @@
-import type { Score } from "./types.js";
+import type { Score } from "./types.ts";
 
 export type Decision = "approved" | "rejected";
 

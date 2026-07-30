@@ -1,8 +1,8 @@
-import type { Config } from "../config.js";
-import { ClaudeScorer } from "./claude-scorer.js";
-import { LMStudioScorer } from "./lmstudio-scorer.js";
-import { OllamaScorer } from "./ollama-scorer.js";
-import type { Scorer } from "./types.js";
+import type { Config } from "../config.ts";
+import { ClaudeScorer } from "./claude-scorer.ts";
+import { LMStudioScorer } from "./lmstudio-scorer.ts";
+import { OllamaScorer } from "./ollama-scorer.ts";
+import type { Scorer } from "./types.ts";
 
 export function createScorer(cfg: Config): Scorer {
   switch (cfg.llmProvider) {

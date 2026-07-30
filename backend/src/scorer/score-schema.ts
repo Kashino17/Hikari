@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Score } from "./types.js";
+import type { Score } from "./types.ts";
 
 /**
  * Runtime schema for an LLM-produced Score. Local scorers (Ollama, LM Studio)

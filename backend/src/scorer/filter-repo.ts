@@ -1,5 +1,5 @@
 import type Database from "better-sqlite3";
-import { DEFAULT_FILTER, buildPrompt, type FilterConfig } from "./filter.js";
+import { DEFAULT_FILTER, buildPrompt, type FilterConfig } from "./filter.ts";
 
 export interface FilterState {
   filter: FilterConfig;

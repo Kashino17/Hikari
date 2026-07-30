@@ -49,6 +49,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -74,17 +75,37 @@ fun TuningScreen(
     val state by vm.state.collectAsState()
     val saving by vm.saving.collectAsState()
     val error by vm.error.collectAsState()
+    val scoped = vm.isChannelScoped
+    // System settings are global — hide that tab when editing a single channel.
+    val tabs = remember(scoped) {
+        if (scoped) listOf(Tab.FILTER, Tab.PROMPT) else Tab.values().toList()
+    }
     var tab by remember { mutableStateOf(Tab.FILTER) }
 
     Box(Modifier.fillMaxSize().background(HikariBg)) {
         Column(Modifier.fillMaxSize()) {
-            Header(tab = tab, onTab = { tab = it }, onBack = onBack)
+            Header(
+                tab = tab,
+                tabs = tabs,
+                onTab = { tab = it },
+                onBack = onBack,
+                scoped = scoped,
+                channelTitle = vm.channelTitle,
+            )
 
             if (saving) {
                 LinearProgressIndicator(
                     color = HikariAmber,
                     trackColor = HikariBorder,
                     modifier = Modifier.fillMaxWidth().height(2.dp),
+                )
+            }
+
+            if (scoped) {
+                ChannelScopeBanner(
+                    inherited = state?.inherited == true,
+                    channelTitle = vm.channelTitle,
+                    onReset = vm::resetToGlobal,
                 )
             }
 
@@ -112,7 +133,14 @@ fun TuningScreen(
 }
 
 @Composable
-private fun Header(tab: Tab, onTab: (Tab) -> Unit, onBack: () -> Unit) {
+private fun Header(
+    tab: Tab,
+    tabs: List<Tab>,
+    onTab: (Tab) -> Unit,
+    onBack: () -> Unit,
+    scoped: Boolean,
+    channelTitle: String?,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -138,9 +166,17 @@ private fun Header(tab: Tab, onTab: (Tab) -> Unit, onBack: () -> Unit) {
             }
             Spacer(Modifier.size(8.dp))
             Column {
-                Text("Tuning", style = MaterialTheme.typography.titleMedium, color = HikariText)
                 Text(
-                    "Was die KI für dich aussortiert.",
+                    if (scoped) channelTitle?.takeIf { it.isNotBlank() } ?: "Dieser Kanal"
+                    else "Tuning",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = HikariText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    if (scoped) "Kriterien nur für diesen Kanal"
+                    else "Was die KI für dich aussortiert.",
                     style = MaterialTheme.typography.bodySmall,
                     color = HikariTextFaint,
                 )
@@ -148,7 +184,7 @@ private fun Header(tab: Tab, onTab: (Tab) -> Unit, onBack: () -> Unit) {
         }
         HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
         Row(modifier = Modifier.fillMaxWidth()) {
-            Tab.values().forEach { t ->
+            tabs.forEach { t ->
                 val active = tab == t
                 Box(
                     modifier = Modifier
@@ -182,6 +218,50 @@ private fun Header(tab: Tab, onTab: (Tab) -> Unit, onBack: () -> Unit) {
         }
         HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
     }
+}
+
+/**
+ * Shown above the tabs in per-channel mode. Makes it unmistakable that the
+ * criteria below apply ONLY to this channel — and lets the user fall back to
+ * the global filter with one tap.
+ */
+@Composable
+private fun ChannelScopeBanner(
+    inherited: Boolean,
+    channelTitle: String?,
+    onReset: () -> Unit,
+) {
+    val name = channelTitle?.takeIf { it.isNotBlank() } ?: "diesen Kanal"
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(HikariSurface)
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+    ) {
+        if (inherited) {
+            Text(
+                "Folgt aktuell den globalen Kriterien.",
+                style = MaterialTheme.typography.bodySmall,
+                color = HikariText,
+            )
+            Text(
+                "Sobald du unten etwas änderst, gilt es nur für „$name“.",
+                style = MaterialTheme.typography.bodySmall,
+                color = HikariTextFaint,
+            )
+        } else {
+            Text(
+                "Eigene Kriterien aktiv für „$name“.",
+                style = MaterialTheme.typography.bodySmall,
+                color = HikariAmber,
+            )
+            Spacer(Modifier.size(8.dp))
+            OutlinedButton(onClick = onReset) {
+                Text("Auf global zurücksetzen", style = MaterialTheme.typography.labelMedium)
+            }
+        }
+    }
+    HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
 }
 
 // ─── FILTER TAB ──────────────────────────────────────────────────────────────

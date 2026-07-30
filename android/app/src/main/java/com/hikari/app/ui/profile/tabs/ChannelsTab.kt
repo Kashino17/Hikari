@@ -25,11 +25,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,7 +57,9 @@ import com.hikari.app.domain.model.Channel
 import com.hikari.app.ui.channels.ChannelsViewModel
 import com.hikari.app.ui.profile.components.BannerCard
 import com.hikari.app.ui.theme.HikariAmber
+import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
+import com.hikari.app.ui.theme.HikariDanger
 import com.hikari.app.ui.theme.HikariSurface
 import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
@@ -72,7 +78,46 @@ fun ChannelsTab(
     val recommendations by vm.recommendations.collectAsState()
     val ctx = LocalContext.current
 
+    // Refresh the subscribed list on (re-)entry — e.g. after unsubscribing on the
+    // channel detail screen, so the removed channel doesn't linger here.
+    LaunchedEffect(Unit) { vm.load() }
+
     val isSearching = query.trim().length >= 2
+
+    fun openInBrowser(url: String) {
+        runCatching {
+            ctx.startActivity(
+                Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+        }
+    }
+
+    var unsubTarget by remember { mutableStateOf<Channel?>(null) }
+    unsubTarget?.let { target ->
+        AlertDialog(
+            onDismissRequest = { unsubTarget = null },
+            containerColor = HikariBg,
+            title = { Text("Kanal deabonnieren?", color = HikariText) },
+            text = {
+                Text(
+                    "Du bekommst dann keine neuen Videos mehr von „${target.title}“.",
+                    color = HikariTextMuted,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    vm.remove(target.id)
+                    unsubTarget = null
+                }) { Text("Deabonnieren", color = HikariDanger) }
+            },
+            dismissButton = {
+                TextButton(onClick = { unsubTarget = null }) {
+                    Text("Abbrechen", color = HikariTextMuted)
+                }
+            },
+        )
+    }
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -105,13 +150,27 @@ fun ChannelsTab(
                 SearchResultCard(
                     result = r,
                     onClick = {
-                        if (!r.subscribed) vm.follow(r) else onOpenChannel(r.channelId)
+                        // Tap = preview (no silent subscribe). Subscribed → open in-app.
+                        if (r.subscribed) onOpenChannel(r.channelId) else openInBrowser(r.channelUrl)
+                    },
+                    onFollowToggle = {
+                        if (r.subscribed) vm.remove(r.channelId) else vm.follow(r)
                     },
                 )
             }
         } else {
             item(span = { GridItemSpan(2) }) {
-                SectionLabel("ABONNIERT · ${channels.size}")
+                Column {
+                    SectionLabel("ABONNIERT · ${channels.size}")
+                    if (channels.isNotEmpty()) {
+                        Text(
+                            "Lange drücken zum Deabonnieren",
+                            color = HikariTextFaint,
+                            fontSize = 10.sp,
+                            modifier = Modifier.padding(top = 2.dp),
+                        )
+                    }
+                }
             }
             if (channels.isEmpty()) {
                 item(span = { GridItemSpan(2) }) {
@@ -130,6 +189,7 @@ fun ChannelsTab(
                     ChannelBannerCard(
                         channel = channel,
                         onClick = { onOpenChannel(channel.id) },
+                        onLongClick = { unsubTarget = channel },
                     )
                 }
             }
@@ -142,14 +202,13 @@ fun ChannelsTab(
                     RecommendationBannerCard(
                         rec = rec,
                         onClick = {
-                            if (!rec.subscribed) {
-                                vm.followRecommendation(rec)
-                            } else {
-                                ctx.startActivity(
-                                    Intent(Intent.ACTION_VIEW, Uri.parse(rec.channelUrl))
-                                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                                )
-                            }
+                            // Tap = preview on YouTube; subscribing is the explicit pill only.
+                            if (rec.subscribed) onOpenChannel(rec.channelId)
+                            else openInBrowser(rec.channelUrl)
+                        },
+                        onFollowToggle = {
+                            if (rec.subscribed) vm.remove(rec.channelId)
+                            else vm.followRecommendation(rec)
                         },
                     )
                 }
@@ -257,7 +316,11 @@ private fun SectionLabel(text: String) {
 }
 
 @Composable
-private fun ChannelBannerCard(channel: Channel, onClick: () -> Unit) {
+private fun ChannelBannerCard(
+    channel: Channel,
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
+) {
     val subs = formatSubs(channel.subscribers)
     val handle = channel.handle
     val subtitle = listOfNotNull(subs, handle).joinToString(" · ")
@@ -269,38 +332,82 @@ private fun ChannelBannerCard(channel: Channel, onClick: () -> Unit) {
         bannerUrl = channel.bannerUrl,
         avatarUrl = channel.thumbnail,
         onClick = onClick,
+        onLongClick = onLongClick,
     )
 }
 
 @Composable
-private fun SearchResultCard(result: ChannelSearchResultDto, onClick: () -> Unit) {
+private fun SearchResultCard(
+    result: ChannelSearchResultDto,
+    onClick: () -> Unit,
+    onFollowToggle: () -> Unit,
+) {
     val subs = formatSubs(result.subscribers)
-    val parts = listOfNotNull(subs, result.handle, if (result.subscribed) "✓ FOLGST" else "+ FOLGEN")
+    val parts = listOfNotNull(subs, result.handle)
     BannerCard(
         title = result.title,
-        subtitle = parts.joinToString(" · "),
+        subtitle = parts.joinToString(" · ").ifBlank { null },
         seed = result.channelId,
         avatarText = result.title.firstOrNull()?.uppercaseChar()?.toString(),
         bannerUrl = null,
         avatarUrl = result.thumbnail,
         onClick = onClick,
+        topEndBadge = { FollowPill(subscribed = result.subscribed, onToggle = onFollowToggle) },
     )
 }
 
 @Composable
-private fun RecommendationBannerCard(rec: RecommendationDto, onClick: () -> Unit) {
+private fun RecommendationBannerCard(
+    rec: RecommendationDto,
+    onClick: () -> Unit,
+    onFollowToggle: () -> Unit,
+) {
     val subs = formatSubs(rec.subscribers)
     val tagPart = if (rec.matchingTags.isNotEmpty()) "passt zu: ${rec.matchingTags.first()}" else null
-    val parts = listOfNotNull(subs, tagPart, if (rec.subscribed) "✓ FOLGST" else "+ FOLGEN")
+    val parts = listOfNotNull(subs, tagPart)
     BannerCard(
         title = rec.title,
-        subtitle = parts.joinToString(" · "),
+        subtitle = parts.joinToString(" · ").ifBlank { null },
         seed = rec.channelId,
         avatarText = rec.title.firstOrNull()?.uppercaseChar()?.toString(),
         bannerUrl = rec.banner,
         avatarUrl = rec.thumbnail,
         onClick = onClick,
+        topEndBadge = { FollowPill(subscribed = rec.subscribed, onToggle = onFollowToggle) },
     )
+}
+
+/** Explicit follow toggle pill, shown top-right on search/recommendation cards. */
+@Composable
+private fun FollowPill(subscribed: Boolean, onToggle: () -> Unit) {
+    val bg = if (subscribed) Color.Black.copy(alpha = 0.55f) else HikariAmber
+    val fg = if (subscribed) HikariText else Color.Black
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(bg)
+            .then(
+                if (subscribed) Modifier.border(0.5.dp, HikariBorder, RoundedCornerShape(20.dp))
+                else Modifier,
+            )
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        Icon(
+            if (subscribed) Icons.Default.Check else Icons.Default.Add,
+            contentDescription = null,
+            tint = fg,
+            modifier = Modifier.size(12.dp),
+        )
+        Text(
+            if (subscribed) "Folgst" else "Folgen",
+            color = fg,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
+    }
 }
 
 private fun formatSubs(n: Long?): String? {

@@ -1,13 +1,13 @@
 import type Database from "better-sqlite3";
-import type { VideoMetadata } from "../ingest/metadata.js";
-import { decide, type Thresholds } from "../scorer/decision.js";
-import { getActivePromptForChannel, getFilterForChannel } from "../scorer/filter-repo.js";
-import type { FilterConfig } from "../scorer/filter.js";
-import type { ScoredVideo, Scorer } from "../scorer/types.js";
-import type { SponsorSegment } from "../sponsorblock/client.js";
-import type { DownloadResult } from "../download/worker.js";
-import { enqueue } from "../clipper/queue.js";
-import { recalculateChannelScore } from "../discovery/discovery-repo.js";
+import type { VideoMetadata } from "../ingest/metadata.ts";
+import { decide, type Thresholds } from "../scorer/decision.ts";
+import { getActivePromptForChannel, getFilterForChannel } from "../scorer/filter-repo.ts";
+import type { FilterConfig } from "../scorer/filter.ts";
+import type { ScoredVideo, Scorer } from "../scorer/types.ts";
+import type { SponsorSegment } from "../sponsorblock/client.ts";
+import type { DownloadResult } from "../download/worker.ts";
+import { enqueue } from "../clipper/queue.ts";
+import { recalculateChannelScore } from "../discovery/discovery-repo.ts";
 
 const AUTO_APPROVE_MODEL = "auto-approve";
 
@@ -195,7 +195,7 @@ function insertVideo(
 function insertScore(
   db: Database.Database,
   videoId: string,
-  scored: { score: import("../scorer/types.js").Score; modelUsed: string },
+  scored: { score: import("../scorer/types.ts").Score; modelUsed: string },
   decision: "approved" | "rejected",
   now: number,
 ): void {

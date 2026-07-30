@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import type Database from "better-sqlite3";
-import { enqueue, isWindowActive } from "../clipper/queue.js";
-import type { AnalyzerConfig } from "../clipper/qwen-analyzer.js";
+import { enqueue, isWindowActive } from "../clipper/queue.ts";
+import type { AnalyzerConfig } from "../clipper/qwen-analyzer.ts";
 
 export function registerClipperStatusRoutes(
   app: FastifyInstance,

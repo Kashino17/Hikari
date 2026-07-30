@@ -30,9 +30,12 @@ import okhttp3.Request
  *   2. Poll GET /manifest bis readyPages == total (Backend ist async)
  *   3. Iteriere pages, GET /api/manga/page/{pageId}, ablegen unter
  *      filesDir/manga/<seriesSlug>/<arcOrder>/<chapterNumber>/<pageNumber>.<ext>
+ *   4. Atomar: Arc + alle Page-Rows in einer Transaktion in Room schreiben
+ *      (Arc zuerst — Pages haben FK auf Arc, sonst SQLiteConstraintException).
  *
- * Idempotent: Pages mit existierender File werden geskippt → Resume nach
- * Crash/App-Kill funktioniert ohne Doppel-Download.
+ * Atomar: Bricht der Download mittendrin ab, gibt es weder Arc noch Pages in
+ * der DB. Files auf Disk bleiben — beim nächsten Versuch werden sie über
+ * den deterministischen Pfad wiederverwendet (kein Doppel-Download).
  */
 @Singleton
 class LocalMangaDownloadManager @Inject constructor(
@@ -88,28 +91,26 @@ class LocalMangaDownloadManager @Inject constructor(
                 val arcDir = File(mangaDir, "${manifest.seriesSlug}/${manifest.arcOrder}")
                     .apply { mkdirs() }
 
+                val pageEntities = ArrayList<LocalMangaPageEntity>(manifest.pages.size)
                 var totalBytes = 0L
+                val now = System.currentTimeMillis()
+
                 manifest.pages.forEachIndexed { idx, page ->
-                    val existing = dao.getPage(page.pageId)
-                    val cachedFile = existing?.let { File(it.localFilePath) }
-                    if (existing != null && cachedFile?.exists() == true) {
-                        totalBytes += existing.byteSize
-                    } else {
-                        val (file, bytes) = downloadPage(backend, page, arcDir)
-                        dao.upsertPage(
-                            LocalMangaPageEntity(
-                                pageId = page.pageId,
-                                arcId = arcId,
-                                chapterId = page.chapterId,
-                                chapterNumber = page.chapterNumber,
-                                pageNumber = page.pageNumber,
-                                localFilePath = file.absolutePath,
-                                byteSize = bytes,
-                                downloadedAt = System.currentTimeMillis(),
-                            ),
-                        )
-                        totalBytes += bytes
-                    }
+                    val chapterDir = File(arcDir, chapterPathSegment(page.chapterNumber))
+                        .apply { mkdirs() }
+
+                    val (file, bytes) = reuseOrDownload(backend, page, chapterDir)
+                    pageEntities += LocalMangaPageEntity(
+                        pageId = page.pageId,
+                        arcId = arcId,
+                        chapterId = page.chapterId,
+                        chapterNumber = page.chapterNumber,
+                        pageNumber = page.pageNumber,
+                        localFilePath = file.absolutePath,
+                        byteSize = bytes,
+                        downloadedAt = now,
+                    )
+                    totalBytes += bytes
                     _progress.update(arcId, (idx + 1).toFloat() / manifest.pages.size)
                 }
 
@@ -123,9 +124,14 @@ class LocalMangaDownloadManager @Inject constructor(
                     arcTitle = manifest.arcTitle,
                     expectedPageCount = manifest.pages.size,
                     totalByteSize = totalBytes,
-                    downloadedAt = System.currentTimeMillis(),
+                    downloadedAt = now,
                 )
-                dao.upsertArc(arc)
+
+                // Atomar: Arc zuerst (FK-Parent), dann alle Pages. Eine
+                // Transaktion am Ende — entweder ist der Arc komplett in der
+                // DB oder gar nicht. Kein verwaister Check-Mark möglich.
+                dao.saveArcWithPages(arc, pageEntities)
+
                 _progress.remove(arcId)
                 Result.success(arc)
             } catch (e: Exception) {
@@ -150,10 +156,29 @@ class LocalMangaDownloadManager @Inject constructor(
         return manifest
     }
 
+    /**
+     * Mid-Crash-Resume: nach abgebrochenem Download ist die DB leer (Arc wird
+     * erst am Ende atomar geschrieben), aber Files können auf Disk liegen.
+     * Wenn eine non-empty Datei am canonical Pfad existiert, wiederverwenden
+     * wir sie statt sie neu zu fetchen.
+     */
+    private fun reuseOrDownload(
+        backend: String,
+        page: MangaArcManifestPageDto,
+        chapterDir: File,
+    ): Pair<File, Long> {
+        val base = page.pageNumber.toString().padStart(3, '0')
+        val existing = KNOWN_EXTENSIONS
+            .map { File(chapterDir, "$base$it") }
+            .firstOrNull { it.exists() && it.length() > 0L }
+        if (existing != null) return existing to existing.length()
+        return downloadPage(backend, page, chapterDir)
+    }
+
     private fun downloadPage(
         backend: String,
         page: MangaArcManifestPageDto,
-        arcDir: File,
+        chapterDir: File,
     ): Pair<File, Long> {
         val req = Request.Builder()
             .url("$backend/api/manga/page/${page.pageId}")
@@ -163,8 +188,6 @@ class LocalMangaDownloadManager @Inject constructor(
                 throw IllegalStateException("HTTP ${resp.code} fetching page ${page.pageId}")
             }
             val ext = extensionFromContentType(resp.header("Content-Type"))
-            val chapterDir = File(arcDir, chapterPathSegment(page.chapterNumber))
-                .apply { mkdirs() }
             val target = File(
                 chapterDir,
                 "${page.pageNumber.toString().padStart(3, '0')}$ext",
@@ -199,5 +222,6 @@ class LocalMangaDownloadManager @Inject constructor(
     companion object {
         private const val POLL_INTERVAL_MS = 2_000L
         private const val POLL_TIMEOUT_MS = 10 * 60_000L
+        private val KNOWN_EXTENSIONS = listOf(".jpg", ".png", ".webp")
     }
 }

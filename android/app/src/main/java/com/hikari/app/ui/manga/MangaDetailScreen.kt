@@ -17,11 +17,14 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -46,6 +49,11 @@ fun MangaDetailScreen(
     val state by vm.uiState.collectAsState()
     val downloadedArcs by vm.downloadedArcs.collectAsState()
     val arcProgress by vm.arcProgress.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(vm) {
+        vm.errors.collect { msg -> snackbarHostState.showSnackbar(msg) }
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(HikariBg)) {
         when (val s = state) {
@@ -92,6 +100,10 @@ fun MangaDetailScreen(
                 }
             }
         }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }
 

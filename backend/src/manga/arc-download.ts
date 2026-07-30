@@ -1,6 +1,6 @@
 import type Database from "better-sqlite3";
-import type { MangaSourceAdapter } from "./sources/types.js";
-import { runChapterSync } from "./sync.js";
+import type { MangaSourceAdapter } from "./sources/types.ts";
+import { runChapterSync } from "./sync.ts";
 
 export interface ArcManifestPage {
   pageId: string;

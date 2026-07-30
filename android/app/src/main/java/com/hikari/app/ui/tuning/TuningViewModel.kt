@@ -40,6 +40,9 @@ class TuningViewModel @Inject constructor(
      */
     val channelId: String? = savedState.get<String>("channelId")?.takeIf { it.isNotBlank() }
 
+    /** Human-readable channel name for the header (per-channel mode only). */
+    val channelTitle: String? = savedState.get<String>("channelTitle")?.takeIf { it.isNotBlank() }
+
     val isChannelScoped: Boolean get() = channelId != null
 
     // ── Filter / Prompt state (loaded from server) ───────────────────────────

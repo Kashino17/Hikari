@@ -323,6 +323,92 @@ describe("importDirectLink", () => {
     expect(stored?.title).toBe("User Override Title");
   });
 
+  it("does not insert the video/score rows until the download has completed", async () => {
+    // Regression: the import used to INSERT the videos + scores rows BEFORE
+    // downloading the (often hundreds-of-MB) file. For minutes the episode was
+    // visible on the overview but had no file on disk and no downloaded_videos
+    // row — so it couldn't play (404) and never showed under /downloads. The
+    // rows must only appear once the file is fully downloaded and playable.
+    const url = "https://example.com/order-test";
+    const { runYtDlp } = await import("../yt-dlp/client.js");
+
+    let videoExistedDuringDownload: boolean | null = null;
+    let scoreExistedDuringDownload: boolean | null = null;
+
+    vi.mocked(runYtDlp).mockImplementation(async (args: string[]) => {
+      if (args.includes("--dump-single-json")) {
+        return {
+          stdout: JSON.stringify({
+            id: "orderabc",
+            extractor: "youtube",
+            title: "Order Test",
+            duration: 100,
+            upload_date: "20240101",
+            webpage_url: url,
+          }),
+          stderr: "",
+        };
+      }
+      if (args.includes("-o")) {
+        // Snapshot DB visibility at the exact moment the download runs.
+        videoExistedDuringDownload = db.videos.has("orderabc");
+        scoreExistedDuringDownload = db.scores.has("orderabc");
+        const oIdx = args.indexOf("-o");
+        writeFileSync(args[oIdx + 1], Buffer.alloc(1024, 0xff));
+        return { stdout: "", stderr: "" };
+      }
+      throw new Error(`Unexpected yt-dlp args: ${JSON.stringify(args)}`);
+    });
+
+    const dir = mkdtempSync(join(tmpdir(), "hikari-import-"));
+    const db = new MockDb();
+    const result = await importDirectLink(db as never, url, dir);
+
+    expect(result.status).toBe("ok");
+    // The heart of the fix: nothing visible during the download …
+    expect(videoExistedDuringDownload).toBe(false);
+    expect(scoreExistedDuringDownload).toBe(false);
+    // … but fully consistent once it finished.
+    expect(db.videos.has("orderabc")).toBe(true);
+    expect(db.scores.has("orderabc")).toBe(true);
+    expect(db.downloadedVideos.has("orderabc")).toBe(true);
+    expect(db.feedItems.has("orderabc")).toBe(true);
+  });
+
+  it("leaves no orphaned video/score rows when the download fails", async () => {
+    const url = "https://example.com/fail-test";
+    const { runYtDlp, YtDlpError } = await import("../yt-dlp/client.js");
+
+    vi.mocked(runYtDlp).mockImplementation(async (args: string[]) => {
+      if (args.includes("--dump-single-json")) {
+        return {
+          stdout: JSON.stringify({
+            id: "failabc",
+            extractor: "youtube",
+            title: "Fail Test",
+            duration: 100,
+            upload_date: "20240101",
+            webpage_url: url,
+          }),
+          stderr: "",
+        };
+      }
+      if (args.includes("-o")) {
+        throw new YtDlpError("download boom", "network error", 1);
+      }
+      throw new Error(`Unexpected yt-dlp args: ${JSON.stringify(args)}`);
+    });
+
+    const dir = mkdtempSync(join(tmpdir(), "hikari-import-"));
+    const db = new MockDb();
+    const result = await importDirectLink(db as never, url, dir);
+
+    expect(result.status).toBe("failed");
+    expect(db.videos.has("failabc")).toBe(false);
+    expect(db.scores.has("failabc")).toBe(false);
+    expect(db.downloadedVideos.has("failabc")).toBe(false);
+  });
+
   it("reactivates the manual channel before returning duplicate imports", async () => {
     const pageUrl =
       "https://timmaybealready.com/fsz0jl0y8u39?Dragonball%20Super%202%20HD%20GER%20SUB";

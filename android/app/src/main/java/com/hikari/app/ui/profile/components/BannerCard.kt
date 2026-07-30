@@ -56,6 +56,7 @@ fun BannerCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
+    topEndBadge: (@Composable () -> Unit)? = null,
 ) {
     Column(
         modifier = modifier
@@ -133,6 +134,17 @@ fun BannerCard(
                             fontWeight = FontWeight.Black,
                         )
                     }
+                }
+            }
+            // Optional action badge (e.g. follow / following pill), top-right above the gradient
+            topEndBadge?.let { badge ->
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(6.dp)
+                        .zIndex(3f),
+                ) {
+                    badge()
                 }
             }
             Spacer(Modifier.height(0.dp))

@@ -2,7 +2,7 @@ import { existsSync, statSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { FastifyInstance } from "fastify";
 import type Database from "better-sqlite3";
-import { runYtDlp, YtDlpError } from "../yt-dlp/client.js";
+import { runYtDlp, YtDlpError } from "../yt-dlp/client.ts";
 
 // Stable identity marker — clients (e.g. cli/hikari) use this to verify
 // they're talking to a real Hikari backend, not some other server that

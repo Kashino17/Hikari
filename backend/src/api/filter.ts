@@ -4,7 +4,7 @@ import {
   buildPrompt,
   validateFilter,
   type FilterConfig,
-} from "../scorer/filter.js";
+} from "../scorer/filter.ts";
 import {
   getFilterState,
   setFilterConfig,
@@ -13,7 +13,7 @@ import {
   setChannelFilterConfig,
   setChannelPromptOverride,
   clearChannelFilter,
-} from "../scorer/filter-repo.js";
+} from "../scorer/filter-repo.ts";
 
 export interface FilterDeps {
   db: Database.Database;

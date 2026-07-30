@@ -4,8 +4,8 @@ import {
   DiscoveryValidationError,
   getSettings,
   updateSettings,
-} from "../discovery/discovery-repo.js";
-import type { DiscoverySettingsUpdate } from "../discovery/types.js";
+} from "../discovery/discovery-repo.ts";
+import type { DiscoverySettingsUpdate } from "../discovery/types.ts";
 
 export interface DiscoveryDeps {
   db: Database.Database;

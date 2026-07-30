@@ -39,7 +39,18 @@ class ChannelDetailViewModel @Inject constructor(
     private val _syncMessage = MutableStateFlow<String?>(null)
     val syncMessage: StateFlow<String?> = _syncMessage.asStateFlow()
 
+    /** Flips to true once the channel has been unsubscribed, so the screen can pop back. */
+    private val _removed = MutableStateFlow(false)
+    val removed: StateFlow<Boolean> = _removed.asStateFlow()
+
     fun dismissSyncMessage() { _syncMessage.value = null }
+
+    /** Unsubscribe from this channel (soft-delete on the backend → no more new videos). */
+    fun unsubscribe() = viewModelScope.launch {
+        runCatching { repo.remove(channelId) }
+            .onSuccess { _removed.value = true }
+            .onFailure { _error.value = it.message ?: "Deabonnieren fehlgeschlagen" }
+    }
 
     init { load() }
 

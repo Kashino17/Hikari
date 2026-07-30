@@ -23,6 +23,10 @@ val HikariAmber = Color(0xFFFBBF24)
 val HikariAmberSoft = Color(0x1FFBBF24)
 val HikariDanger = Color(0xFFF87171)
 
+// Card/background helpers
+val HikariCardBg = Color(0xFF141414)
+val HikariPrimary = HikariAmber
+
 private val HikariColors = darkColorScheme(
     primary = HikariAmber,
     onPrimary = Color.Black,

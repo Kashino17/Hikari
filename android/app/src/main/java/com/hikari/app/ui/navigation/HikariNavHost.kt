@@ -49,6 +49,13 @@ import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.tuning.TuningScreen
+import com.hikari.app.ui.music.MusicScreen
+import com.hikari.app.ui.games.GamesScreen
+import com.hikari.app.ui.games.NeonCatchGame
+import com.hikari.app.ui.games.MemoryGridGame
+import com.hikari.app.ui.games.ReflexTapGame
+import com.hikari.app.ui.games.WordChainGame
+import com.hikari.app.ui.games.OrbitGame
 
 private fun navTo(nav: NavController, route: String) {
     nav.navigate(route) {
@@ -83,11 +90,12 @@ fun HikariNavHost() {
     // Settings + Tuning sind ab v0.25.0 nur über Profil-Gear erreichbar — sub-pages,
     // also auch ohne Bottom-Nav rendern (eigener Back-Button reicht).
     val isGearSubPage = currentRoute == "settings" || currentRoute?.startsWith("tuning") == true
+    val isGameRoute = currentRoute?.startsWith("game/") == true
 
     Scaffold(
         containerColor = HikariBg,
         bottomBar = {
-            if (!(currentRoute == "feed" && feedFullscreen) && !isVideoRoute && !isReaderRoute && !isGearSubPage) {
+            if (!(currentRoute == "feed" && feedFullscreen) && !isVideoRoute && !isReaderRoute && !isGearSubPage && !isGameRoute) {
                 HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
                 NavigationBar(
                     containerColor = HikariBg,
@@ -196,8 +204,10 @@ fun HikariNavHost() {
                     ChannelDetailScreen(
                         onBack = { nav.popBackStack() },
                         onEditVideo = { videoId -> nav.navigate("video-edit/$videoId") },
-                        onOpenFilter = {
-                            nav.navigate("tuning?channelId=${URLEncoder.encode(channelId, "UTF-8")}")
+                        onOpenFilter = { title ->
+                            val cid = URLEncoder.encode(channelId, "UTF-8")
+                            val ct = URLEncoder.encode(title, "UTF-8")
+                            nav.navigate("tuning?channelId=$cid&channelTitle=$ct")
                         },
                     )
                 }
@@ -216,13 +226,46 @@ fun HikariNavHost() {
                 }
             }
             composable(
-                route = "tuning?channelId={channelId}",
+                route = "tuning?channelId={channelId}&channelTitle={channelTitle}",
                 arguments = listOf(
                     navArgument("channelId") { type = NavType.StringType; defaultValue = "" },
+                    navArgument("channelTitle") { type = NavType.StringType; defaultValue = "" },
                 ),
             ) {
                 Box(Modifier.fillMaxSize()) {
                     TuningScreen(onBack = { nav.popBackStack() })
+                }
+            }
+            composable("music") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    MusicScreen(onBack = { nav.popBackStack() })
+                }
+            }
+            composable("games") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    GamesScreen(
+                        onBack = { nav.popBackStack() },
+                        onLaunchGame = { gameId -> nav.navigate("game/$gameId") },
+                    )
+                }
+            }
+            composable(
+                route = "game/{gameId}",
+                arguments = listOf(navArgument("gameId") { type = NavType.StringType }),
+            ) { entry ->
+                val gameId = entry.arguments?.getString("gameId") ?: return@composable
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    when (gameId) {
+                        "neon-catch" -> NeonCatchGame(onBack = { nav.popBackStack() })
+                        "memory-grid" -> MemoryGridGame(onBack = { nav.popBackStack() })
+                        "reflex-tap" -> ReflexTapGame(onBack = { nav.popBackStack() })
+                        "word-chain" -> WordChainGame(onBack = { nav.popBackStack() })
+                        "orbit" -> OrbitGame(onBack = { nav.popBackStack() })
+                        else -> GamesScreen(
+                            onBack = { nav.popBackStack() },
+                            onLaunchGame = { id -> nav.navigate("game/$id") },
+                        )
+                    }
                 }
             }
             composable("profile") {
