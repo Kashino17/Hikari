@@ -2,7 +2,6 @@ package com.hikari.app.data.api
 
 import com.hikari.app.data.api.dto.PipedSearchResponse
 import com.hikari.app.data.api.dto.PipedStreamResponse
-import com.hikari.app.data.api.dto.PipedSuggestionResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -22,8 +21,9 @@ interface MusicApi {
         @Query("videoId") videoId: String,
     ): PipedStreamResponse
 
+    // Piped suggestions endpoint returns a plain string array: ["lofi hip hop", ...]
     @GET("suggestions")
     suspend fun getSuggestions(
         @Query("q") query: String,
-    ): PipedSuggestionResponse
+    ): List<String>
 }

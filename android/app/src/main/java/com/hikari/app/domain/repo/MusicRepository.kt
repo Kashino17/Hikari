@@ -2,7 +2,6 @@ package com.hikari.app.domain.repo
 
 import com.hikari.app.data.api.MusicApi
 import com.hikari.app.data.api.dto.PipedSearchResult
-import com.hikari.app.data.api.dto.PipedSuggestion
 import com.hikari.app.data.db.*
 import com.hikari.app.domain.model.MusicPlaylist
 import com.hikari.app.domain.model.MusicSong
@@ -20,8 +19,22 @@ class MusicRepository(
     }
 
     suspend fun getSuggestions(query: String): List<MusicSong> {
-        val results = api.getSuggestions(query)
-        return results.suggestions.mapIndexed { index, r -> r.toSong(index) }
+        // Piped suggestions returns plain strings, resolve via search
+        val suggestions = api.getSuggestions(query)
+        return suggestions.map { suggestion ->
+            // Use the suggestion text as a title with a placeholder uploader
+            val videoId = "suggestion_${suggestion.hashCode()}"
+            MusicSong(
+                videoId = videoId,
+                title = suggestion,
+                uploader = "Hikari Suggestions",
+                uploaderUrl = "",
+                thumbnailUrl = "",
+                duration = 0,
+                views = 0,
+                addedAt = System.currentTimeMillis(),
+            )
+        }
     }
 
     suspend fun insertSong(song: MusicSong) = songDao.insert(song.toEntity())
@@ -90,7 +103,19 @@ class MusicRepository(
         keywords.take(5).forEach { keyword ->
             try {
                 val suggestions = api.getSuggestions(keyword)
-                results.addAll(suggestions.suggestions.mapIndexed { i, r -> r.toSong(i) })
+                results.addAll(suggestions.map { suggestion ->
+                    val videoId = "suggestion_${keyword}_${suggestion.hashCode()}"
+                    MusicSong(
+                        videoId = videoId,
+                        title = suggestion,
+                        uploader = keyword,
+                        uploaderUrl = "",
+                        thumbnailUrl = "",
+                        duration = 0,
+                        views = 0,
+                        addedAt = System.currentTimeMillis(),
+                    )
+                })
             } catch (_: Exception) {}
         }
         return results
@@ -99,16 +124,8 @@ class MusicRepository(
     private fun PipedSearchResult.toSong(index: Int) = MusicSong(
         videoId = url.substringAfterLast("/"),
         title = title, uploader = uploader, uploaderUrl = uploaderUrl,
-        thumbnailUrl = if (thumbnail.startsWith("//")) "https:$thumbnail" else thumbnail,
-        duration = duration, views = views.toLong(),
-        addedAt = System.currentTimeMillis() + index,
-    )
-
-    private fun PipedSuggestion.toSong(index: Int) = MusicSong(
-        videoId = url.substringAfterLast("/"),
-        title = title, uploader = uploader, uploaderUrl = uploaderUrl,
-        thumbnailUrl = if (thumbnail.startsWith("//")) "https:$thumbnail" else thumbnail,
-        duration = duration, views = views.toLong(),
+        thumbnailUrl = thumbnail?.let { if (it.startsWith("//")) "https:$it" else it } ?: "",
+        duration = duration, views = views,
         addedAt = System.currentTimeMillis() + index,
     )
 

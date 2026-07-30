@@ -8,12 +8,12 @@ data class PipedSearchResult(
     val uploader: String,
     @SerializedName("uploader_url") val uploaderUrl: String,
     val duration: Int,
-    @SerializedName("thumbnail") val thumbnail: String,
-    @SerializedName("views") val views: Int,
+    val thumbnail: String?,
+    val views: Long,
 )
 
 data class PipedSearchResponse(
-    val results: List<PipedSearchResult>,
+    @SerializedName("items") val results: List<PipedSearchResult>,
 )
 
 data class PipedStream(
@@ -29,16 +29,17 @@ data class PipedStreamResponse(
     val streams: List<PipedStream>,
 )
 
+// Piped suggestions endpoint returns a plain string array: ["lofi hip hop", ...]
+data class PipedSuggestionsRawResponse(
+    val suggestions: List<String>,
+)
+
 data class PipedSuggestion(
     val title: String,
     val url: String,
     val uploader: String,
     @SerializedName("uploader_url") val uploaderUrl: String,
     val duration: Int,
-    @SerializedName("thumbnail") val thumbnail: String,
-    @SerializedName("views") val views: Int,
-)
-
-data class PipedSuggestionResponse(
-    val suggestions: List<PipedSuggestion>,
+    val thumbnail: String?,
+    val views: Long,
 )
