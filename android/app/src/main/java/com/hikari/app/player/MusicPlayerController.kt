@@ -46,6 +46,7 @@ class MusicPlayerController @Inject constructor(
     private var player: ExoPlayer? = null
     private var loadJob: Job? = null
     private var progressJob: Job? = null
+    private var autoplayJob: Job? = null
 
     private val _currentSong = MutableStateFlow<MusicSong?>(null)
     val currentSong: StateFlow<MusicSong?> = _currentSong.asStateFlow()
@@ -114,6 +115,7 @@ class MusicPlayerController @Inject constructor(
     }
 
     fun play(song: MusicSong, contextQueue: List<MusicSong> = emptyList()) {
+        autoplayJob?.cancel() // eigene Auswahl schlägt laufenden Nachschub
         val newQueue = if (contextQueue.isNotEmpty()) contextQueue else listOf(song)
         _queue.value = newQueue
         queueIndex = newQueue.indexOfFirst { it.videoId == song.videoId }.coerceAtLeast(0)
@@ -156,6 +158,7 @@ class MusicPlayerController @Inject constructor(
 
     fun stop() {
         loadJob?.cancel()
+        autoplayJob?.cancel()
         player?.stop()
         player?.clearMediaItems()
         _currentSong.value = null
@@ -236,10 +239,12 @@ class MusicPlayerController @Inject constructor(
                 val n = queueIndex + 1
                 when {
                     n < q.size -> n
-                    _repeatMode.value == REPEAT_ALL || manual -> 0
+                    _repeatMode.value == REPEAT_ALL -> 0
                     else -> {
-                        _isPlaying.value = false
-                        return // end of queue, repeat off
+                        // Ende der Liste: passende Stücke nachladen, statt
+                        // einfach zu verstummen.
+                        extendQueueAndContinue()
+                        return
                     }
                 }
             }
@@ -247,6 +252,41 @@ class MusicPlayerController @Inject constructor(
         }
         queueIndex = nextIndex
         loadAndPlay(q[nextIndex])
+    }
+
+    /**
+     * Autoplay am Listenende. Der Nachschub kommt aus dem Repository und ist
+     * damit automatisch so gefiltert wie der Rest — im Instrumental-Modus
+     * folgen also auch hier nur Stücke ohne Gesang.
+     */
+    private fun extendQueueAndContinue() {
+        if (autoplayJob?.isActive == true) return
+        val seed = _currentSong.value ?: run {
+            _isPlaying.value = false
+            return
+        }
+        _isBuffering.value = true
+        autoplayJob = scope.launch {
+            val current = _queue.value
+            val more = runCatching {
+                repo.getAutoplaySongs(seed, current.map { it.videoId }.toSet())
+            }.getOrDefault(emptyList())
+
+            if (more.isEmpty()) {
+                _isBuffering.value = false
+                // Nichts Passendes gefunden — lieber von vorn als abwürgen.
+                if (current.size > 1) {
+                    queueIndex = 0
+                    loadAndPlay(current[0])
+                } else {
+                    _isPlaying.value = false
+                }
+                return@launch
+            }
+            _queue.value = current + more
+            queueIndex = current.size
+            loadAndPlay(more.first())
+        }
     }
 
     private fun startProgressUpdates() {

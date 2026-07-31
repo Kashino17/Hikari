@@ -230,7 +230,13 @@ private fun DiscoverTab(
             when {
                 viewModel.searchLoading -> item(key = "search-loading") { CenteredLoader() }
                 viewModel.searchResults.isEmpty() -> item(key = "search-empty") {
-                    EmptyHint(Icons.Default.Search, "Nichts gefunden — anderer Suchbegriff?")
+                    if (instrumental) {
+                        // Der Filter ist die wahrscheinlichste Ursache — also
+                        // gleich den Ausweg anbieten statt nur "nichts gefunden".
+                        FilteredEmptyHint(onDisableFilter = { viewModel.toggleInstrumental() })
+                    } else {
+                        EmptyHint(Icons.Default.Search, "Nichts gefunden — anderer Suchbegriff?")
+                    }
                 }
                 else -> items(viewModel.searchResults, key = { "s-${it.videoId}" }) { song ->
                     SongRow(song, viewModel, viewModel.searchResults)

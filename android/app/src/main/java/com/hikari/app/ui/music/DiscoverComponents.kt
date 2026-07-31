@@ -1,7 +1,17 @@
 package com.hikari.app.ui.music
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,6 +39,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -44,6 +55,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -436,27 +448,101 @@ fun InstrumentalToggle(
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val iconTint by animateColorAsState(
+        targetValue = if (enabled) HikariPrimary else HikariTextFaint,
+        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        label = "toggle-icon",
+    )
+
     Row(
         modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(if (enabled) HikariPrimary else HikariCardBg)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(HikariCardBg)
             .clickable(onClick = onToggle)
-            .padding(horizontal = 13.dp, vertical = 9.dp),
+            .padding(start = 14.dp, end = 12.dp, top = 11.dp, bottom = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            if (enabled) Icons.Default.MusicNote else Icons.Default.Mic,
-            null,
-            tint = if (enabled) Color.Black else HikariTextMuted,
-            modifier = Modifier.size(15.dp),
-        )
-        Spacer(Modifier.width(6.dp))
+        // Durchgestrichenes Mikrofon sagt "keine Stimmen" direkter als eine Note.
+        Crossfade(targetState = enabled, label = "toggle-symbol") { on ->
+            Icon(
+                if (on) Icons.Default.MicOff else Icons.Default.Mic,
+                null,
+                tint = iconTint,
+                modifier = Modifier.size(19.dp),
+            )
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                "Ohne Gesang",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = HikariText,
+            )
+            AnimatedContent(
+                targetState = enabled,
+                transitionSpec = {
+                    (fadeIn(tween(180)) + slideInVertically { it / 3 })
+                        .togetherWith(fadeOut(tween(120)) + slideOutVertically { -it / 3 })
+                },
+                label = "toggle-caption",
+            ) { on ->
+                Text(
+                    if (on) "Nur Instrumentales" else "Alle Vorschläge",
+                    fontSize = 11.sp,
+                    color = HikariTextMuted,
+                )
+            }
+        }
+        HikariSwitch(checked = enabled, onCheckedChange = onToggle)
+    }
+}
+
+/**
+ * Leere Trefferliste bei aktivem Instrumental-Filter. Nennt den Grund und
+ * bietet die Lösung direkt an, statt den Suchenden raten zu lassen.
+ */
+@Composable
+fun FilteredEmptyHint(onDisableFilter: () -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Icon(Icons.Default.MicOff, null, tint = HikariPrimary, modifier = Modifier.size(38.dp))
         Text(
-            "Ohne Gesang",
-            fontSize = 12.sp,
-            fontWeight = if (enabled) FontWeight.Bold else FontWeight.Normal,
-            color = if (enabled) Color.Black else HikariTextMuted,
+            "Keine Treffer ohne Gesang",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
+            color = HikariText,
+            textAlign = TextAlign.Center,
         )
+        Text(
+            "„Ohne Gesang“ ist aktiv — dadurch bleiben Stücke mit Stimme außen vor. " +
+                "Schalte den Filter aus, um die vollständigen Ergebnisse zu sehen.",
+            fontSize = 13.sp,
+            color = HikariTextMuted,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(2.dp))
+        Row(
+            Modifier
+                .clip(RoundedCornerShape(20.dp))
+                .background(HikariPrimary)
+                .clickable(onClick = onDisableFilter)
+                .padding(horizontal = 18.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Default.Mic, null, tint = Color.Black, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(7.dp))
+            Text(
+                "Filter ausschalten",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+            )
+        }
     }
 }
 

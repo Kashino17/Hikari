@@ -88,39 +88,49 @@ class MusicRepository(
             "Soundtracks" to "epic cinematic instrumental soundtrack",
         )
 
-        /** Titelmerkmale, die eindeutig für Gesang sprechen. */
+        /**
+         * Merkmale, die Gesang belegen — sie schlagen jedes Instrumental-Wort.
+         * "You (Vocals only)" vom Kanal "izza beats" darf nicht durchrutschen,
+         * bloß weil "beats" im Namen steht.
+         */
         private val VOCAL_MARKERS = listOf(
-            "lyrics", "lyric video", "feat.", "feat ", "ft.", "ft ", "featuring",
-            "cover)", "karaoke", "acapella", "a cappella", "sing along",
-            "singing", "vocal cover", "gesang", "chor",
+            "vocal only", "vocals only", "vocals)", "(vocals", "with vocals",
+            "acapella", "a cappella", "lyrics", "lyric video", "sing along",
+            "singalong", "singing", "vocal cover", "gesang", "chor",
         )
 
-        /** Merkmale, die ein Stück trotz Gesangs-Wortlaut als instrumental ausweisen. */
+        /**
+         * Merkmale, die ein Stück als instrumental ausweisen und ein
+         * Gesangs-Merkmal überstimmen. "karaoke" gehört hierher: ein
+         * Karaoke-Playback ist gerade die Fassung ohne Leadstimme.
+         */
         private val INSTRUMENTAL_MARKERS = listOf(
             "instrumental", "no vocal", "without vocal", "ohne gesang", "backing track",
-            "lofi", "lo-fi", "beats", "piano", "guitar solo", "ambient", "bgm",
-            "background music", "soundtrack", "ost", "orchestral", "orchestra",
-            "classical", "jazz", "meditation", "relaxing", "study music", "sleep music",
+            "karaoke", "playback", "lofi", "lo-fi", "beats", "piano", "guitar solo",
+            "ambient", "bgm", "background music", "soundtrack", "ost", "orchestral",
+            "orchestra", "classical", "jazz", "meditation", "relaxing",
+            "study music", "sleep music", "no lyrics", "no copyright music",
         )
     }
 
     /**
-     * Entfernt Stücke, deren Titel klar auf Gesang hindeutet. Rein heuristisch —
-     * Piped liefert keine Angabe dazu. Ein Instrumental-Merkmal im Titel sticht
-     * das Gesangs-Merkmal, sonst wäre "Lofi ohne Gesang (no vocals)" gefiltert.
+     * Behält nur Stücke, die sich selbst als instrumental ausweisen.
+     *
+     * Bewusst als Positivliste: Piped sagt nichts über Gesang, und die
+     * Mehrheit der Treffer hat welchen, ohne es im Titel zu erwähnen. Wer nur
+     * ausschließt, was "lyrics" heißt, lässt fast alles durch — deshalb muss
+     * ein Stück den Nachweis erbringen statt nur unverdächtig zu wirken.
+     *
+     * Ohne Sicherheitsnetz: Ist der Schalter an, darf nichts mit Stimme
+     * durchrutschen. Eine leere Liste ist das ehrlichere Ergebnis — die Suche
+     * erklärt sie dann und bietet an, den Filter abzuschalten.
      */
-    private fun filterInstrumental(songs: List<MusicSong>): List<MusicSong> {
-        val filtered = songs.filter { song ->
+    private fun filterInstrumental(songs: List<MusicSong>): List<MusicSong> =
+        songs.filter { song ->
             val haystack = "${song.title} ${song.uploader}".lowercase()
-            when {
-                INSTRUMENTAL_MARKERS.any { it in haystack } -> true
-                VOCAL_MARKERS.any { it in haystack } -> false
-                else -> true
-            }
+            if (VOCAL_MARKERS.any { it in haystack }) return@filter false
+            INSTRUMENTAL_MARKERS.any { it in haystack }
         }
-        // Lieber etwas Unschärfe als eine leere Liste.
-        return if (filtered.size >= 4) filtered else songs
-    }
 
     private suspend fun instrumentalOnly(): Boolean =
         runCatching { settings.instrumentalOnly.first() }.getOrDefault(false)
@@ -166,6 +176,24 @@ class MusicRepository(
         val all = searchMusic(query)
         val tracks = all.filter { it.duration in 60..900 }
         return if (tracks.size >= 4) tracks else all
+    }
+
+    /**
+     * Nachschub, wenn die Warteschlange leerläuft. Sucht im Umfeld des zuletzt
+     * gespielten Stücks weiter; da der Weg über [searchMusic] führt, gilt der
+     * Instrumental-Filter hier genauso wie überall sonst.
+     */
+    suspend fun getAutoplaySongs(seed: MusicSong, exclude: Set<String>): List<MusicSong> {
+        val queries = listOfNotNull(
+            seed.uploader.takeIf { it.isNotBlank() },
+            seed.title.split(" ", "(", "-").firstOrNull { it.length > 3 },
+        )
+        for (q in queries) {
+            val found = runCatching { searchMusic(q) }.getOrDefault(emptyList())
+                .filter { it.videoId !in exclude && it.duration in 60..900 }
+            if (found.size >= 3) return found.take(10)
+        }
+        return emptyList()
     }
 
     suspend fun getAudioStream(videoId: String): String? {
