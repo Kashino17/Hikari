@@ -32,6 +32,25 @@ data class DiscoverSection(
     val query: String = "",
 )
 
+/**
+ * Suchmodus der Musik-Suche. YouTube hat Hörbücher und Podcasts nicht als
+ * eigenen Filter — sie laufen als gewöhnliche Videosuche, die über ein
+ * Stichwort im Query und eine Dauerheuristik in Richtung des Formats gelenkt
+ * wird.
+ */
+enum class MusicSearchMode(
+    /** Wert für den `mode`-Parameter des Backends. */
+    val apiValue: String,
+    /** Piped-Filter für den Direkt-Fallback ohne Backend. */
+    val pipedFilter: String,
+    /** Mindestdauer in Sekunden — kurze Clips sind selten Hörbuch oder Episode. */
+    val minDurationSeconds: Int,
+) {
+    MUSIC("music", "music_songs", 0),
+    AUDIOBOOK("audiobook", "videos", 600),
+    PODCAST("podcast", "videos", 300),
+}
+
 /** Playlist samt Songs und wie viele davon offline verfügbar sind. */
 data class PlaylistWithSongs(
     val playlist: MusicPlaylist,
@@ -135,22 +154,40 @@ class MusicRepository(
     private suspend fun instrumentalOnly(): Boolean =
         runCatching { settings.instrumentalOnly.first() }.getOrDefault(false)
 
-    suspend fun searchMusic(query: String): List<MusicSong> {
-        val instrumental = instrumentalOnly()
-        // Im Instrumental-Modus zieht schon die Anfrage in die richtige Richtung;
-        // der Filter danach räumt die Ausreißer weg. Die kuratierten Mixe tragen
-        // den Begriff bereits — doppelt anhängen träfe nur den Cache.
+    suspend fun searchMusic(query: String, mode: MusicSearchMode = MusicSearchMode.MUSIC): List<MusicSong> {
+        // Gesangsfilter gibt es nur für Musik — Hörbücher und Podcasts leben vom gesprochenen Wort.
+        val instrumental = mode == MusicSearchMode.MUSIC && instrumentalOnly()
+        // Stichwort und Filter ziehen die Anfrage schon in die richtige Richtung;
+        // der Nachfilter räumt die Ausreißer weg. Doppelt anhängen träfe nur den Cache.
         val effectiveQuery = when {
-            !instrumental -> query
-            query.contains("instrumental", ignoreCase = true) -> query
-            else -> "$query instrumental"
+            instrumental && !query.contains("instrumental", ignoreCase = true) -> "$query instrumental"
+            mode == MusicSearchMode.AUDIOBOOK &&
+                !query.contains("hörbuch", ignoreCase = true) &&
+                !query.contains("audiobook", ignoreCase = true) -> "$query hörbuch"
+            mode == MusicSearchMode.PODCAST &&
+                !query.contains("podcast", ignoreCase = true) -> "$query podcast"
+            else -> query
         }
         val tracks = try {
-            api.searchMusic(effectiveQuery).map { it.toSong() }
+            api.searchMusic(effectiveQuery, mode.apiValue).map { it.toSong() }
         } catch (_: Exception) {
-            pipedSearchFallback(effectiveQuery)
+            pipedSearchFallback(effectiveQuery, mode)
         }
-        return withFavoriteState(if (instrumental) filterInstrumental(tracks) else tracks)
+        val filtered = when {
+            instrumental -> filterInstrumental(tracks)
+            mode.minDurationSeconds > 0 -> filterByDuration(tracks, mode.minDurationSeconds)
+            else -> tracks
+        }
+        return withFavoriteState(filtered)
+    }
+
+    /**
+     * Hörbuch- und Podcast-Treffer sind lang; Ausschnitte und Trailer fliegen
+     * raus. Bleibt zu wenig übrig, lieber ungefiltert zeigen als eine leere Liste.
+     */
+    private fun filterByDuration(songs: List<MusicSong>, minSeconds: Int): List<MusicSong> {
+        val longEnough = songs.filter { it.duration >= minSeconds }
+        return if (longEnough.size >= 4) longEnough else songs
     }
 
     suspend fun getDiscoverSections(): List<DiscoverSection> = coroutineScope {
@@ -326,12 +363,15 @@ class MusicRepository(
 
     // --- Fallback path (direct Piped) ---
 
-    private suspend fun pipedSearchFallback(query: String): List<MusicSong> =
+    private suspend fun pipedSearchFallback(
+        query: String,
+        mode: MusicSearchMode = MusicSearchMode.MUSIC,
+    ): List<MusicSong> =
         withContext(Dispatchers.IO) {
             val q = URLEncoder.encode(query, "UTF-8")
             for (base in PIPED_INSTANCES) {
                 try {
-                    val body = httpGet("$base/search?q=$q&filter=music_songs") ?: continue
+                    val body = httpGet("$base/search?q=$q&filter=${mode.pipedFilter}") ?: continue
                     val page = json.decodeFromString<PipedSearchPageDto>(body)
                     val songs = page.items.mapNotNull { item ->
                         val videoId = item.url?.substringAfter("v=", "")?.substringBefore("&")

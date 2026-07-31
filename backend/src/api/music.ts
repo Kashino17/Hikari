@@ -22,6 +22,24 @@ const STREAM_CACHE_TTL_MS = 30 * 60 * 1000; // googlevideo URLs expire after ~6h
 const CACHE_MAX_ENTRIES = 200;
 const VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
 
+/**
+ * Piped kennt keinen Hörbuch-/Podcast-Filter — nur die feste Filterliste von
+ * YouTube. Hörbücher und Podcasts laufen deshalb als gewöhnliche Videosuche;
+ * die inhaltliche Einordnung (Stichwort im Query, Dauer-Heuristik) macht der
+ * Client.
+ */
+const SEARCH_MODES = {
+  music: "music_songs",
+  audiobook: "videos",
+  podcast: "videos",
+} as const;
+
+type SearchMode = keyof typeof SEARCH_MODES;
+
+function isSearchMode(value: string): value is SearchMode {
+  return value in SEARCH_MODES;
+}
+
 interface CacheEntry<T> { at: number; value: T }
 
 function cacheGet<T>(map: Map<string, CacheEntry<T>>, key: string, ttlMs: number, now: number): T | undefined {
@@ -79,17 +97,23 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
   const searchCache = new Map<string, CacheEntry<MusicTrack[]>>();
   const streamCache = new Map<string, CacheEntry<string>>();
 
-  app.get<{ Querystring: { q?: string } }>("/music/search", async (req, reply) => {
+  app.get<{ Querystring: { q?: string; mode?: string } }>("/music/search", async (req, reply) => {
     const q = (req.query.q ?? "").trim();
     if (!q) return reply.code(400).send({ error: "missing query parameter q" });
+    const modeParam = req.query.mode ?? "music";
+    if (!isSearchMode(modeParam)) {
+      return reply.code(400).send({ error: `unknown mode "${modeParam}"` });
+    }
+    const filter = SEARCH_MODES[modeParam];
 
-    const cached = cacheGet(searchCache, q.toLowerCase(), SEARCH_CACHE_TTL_MS, now());
+    const cacheKey = `${modeParam}:${q.toLowerCase()}`;
+    const cached = cacheGet(searchCache, cacheKey, SEARCH_CACHE_TTL_MS, now());
     if (cached) return cached;
 
     for (const base of PIPED_INSTANCES) {
       try {
         const res = await fetchImpl(
-          `${base}/search?q=${encodeURIComponent(q)}&filter=music_songs`,
+          `${base}/search?q=${encodeURIComponent(q)}&filter=${filter}`,
           { signal: AbortSignal.timeout(6000) },
         );
         if (!res.ok) continue;
@@ -100,7 +124,7 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
           .map(normalizeItem)
           .filter((t): t is MusicTrack => t !== null);
         if (tracks.length === 0) continue; // instance is up but degraded — try the next one
-        cachePut(searchCache, q.toLowerCase(), tracks, now());
+        cachePut(searchCache, cacheKey, tracks, now());
         return tracks;
       } catch {
         // dead instance — try the next one

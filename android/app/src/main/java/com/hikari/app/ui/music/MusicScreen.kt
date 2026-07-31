@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.hikari.app.domain.model.MusicSong
+import com.hikari.app.domain.repo.MusicSearchMode
 import com.hikari.app.domain.repo.PlaylistWithSongs
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariCardBg
@@ -177,6 +178,7 @@ private fun DiscoverTab(
     val searching = viewModel.searchAttempted
     val instrumental by viewModel.instrumentalOnly.collectAsState()
     val currentSong by viewModel.player.currentSong.collectAsState()
+    val searchMode = viewModel.searchMode
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 12.dp)) {
         item(key = "search") {
@@ -184,7 +186,16 @@ private fun DiscoverTab(
                 value = viewModel.searchQuery,
                 onValueChange = { viewModel.searchQuery = it },
                 modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp),
-                placeholder = { Text("Songs, Artists suchen…", color = HikariTextFaint) },
+                placeholder = {
+                    Text(
+                        when (searchMode) {
+                            MusicSearchMode.MUSIC -> "Songs, Artists suchen…"
+                            MusicSearchMode.AUDIOBOOK -> "Hörbücher suchen…"
+                            MusicSearchMode.PODCAST -> "Podcasts suchen…"
+                        },
+                        color = HikariTextFaint,
+                    )
+                },
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = HikariTextMuted) },
                 trailingIcon = {
                     if (viewModel.searchQuery.isNotEmpty()) {
@@ -207,16 +218,27 @@ private fun DiscoverTab(
             )
         }
 
-        item(key = "instrumental-toggle") {
-            Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 10.dp)) {
-                InstrumentalToggle(
-                    enabled = instrumental,
-                    onToggle = { viewModel.toggleInstrumental() },
-                )
+        item(key = "mode-chips") {
+            SearchModeChips(
+                selected = searchMode,
+                onSelect = { viewModel.selectSearchMode(it) },
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 10.dp),
+            )
+        }
+
+        // "Ohne Gesang" ergibt nur bei Musik Sinn — Hörbuch und Podcast leben von der Stimme.
+        if (searchMode == MusicSearchMode.MUSIC) {
+            item(key = "instrumental-toggle") {
+                Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 10.dp)) {
+                    InstrumentalToggle(
+                        enabled = instrumental,
+                        onToggle = { viewModel.toggleInstrumental() },
+                    )
+                }
             }
         }
 
-        if (!searching && viewModel.history.isNotEmpty()) {
+        if (!searching && searchMode == MusicSearchMode.MUSIC && viewModel.history.isNotEmpty()) {
             item(key = "history-strip") {
                 HistoryStrip(
                     songs = viewModel.history.take(10),
@@ -241,6 +263,23 @@ private fun DiscoverTab(
                 else -> items(viewModel.searchResults, key = { "s-${it.videoId}" }) { song ->
                     SongRow(song, viewModel, viewModel.searchResults)
                 }
+            }
+            return@LazyColumn
+        }
+
+        // Die kuratierten Mixe und der Verlauf sind Musik — in den anderen
+        // Modi steht hier die Suche im Mittelpunkt.
+        if (searchMode != MusicSearchMode.MUSIC) {
+            item(key = "mode-hint") {
+                EmptyHint(
+                    Icons.Default.Search,
+                    when (searchMode) {
+                        MusicSearchMode.AUDIOBOOK ->
+                            "Suche oben nach Titel oder Autor — Hörbücher werden als lange Videos gefunden."
+                        else ->
+                            "Suche oben nach Name oder Thema — Podcast-Folgen werden als Videos gefunden."
+                    },
+                )
             }
             return@LazyColumn
         }

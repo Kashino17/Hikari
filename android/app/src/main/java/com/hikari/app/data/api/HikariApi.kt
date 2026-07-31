@@ -60,7 +60,10 @@ import retrofit2.http.Query
 
 interface HikariApi {
     @GET("music/search")
-    suspend fun searchMusic(@Query("q") query: String): List<MusicTrackDto>
+    suspend fun searchMusic(
+        @Query("q") query: String,
+        @Query("mode") mode: String = "music",
+    ): List<MusicTrackDto>
 
     @GET("music/stream/{videoId}")
     suspend fun getMusicStream(@Path("videoId") videoId: String): MusicStreamDto

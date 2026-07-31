@@ -73,6 +73,46 @@ describe("GET /music/search", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     await app.close();
   });
+
+  it("defaults to the music_songs filter", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(okJson({ items: [PIPED_ITEM] }));
+    const app = await makeApp({ fetchImpl });
+    await app.inject({ method: "GET", url: "/music/search?q=rick" });
+    expect(fetchImpl).toHaveBeenCalledWith(
+      expect.stringContaining("filter=music_songs"),
+      expect.anything(),
+    );
+    await app.close();
+  });
+
+  it("searches plain videos in audiobook and podcast mode", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(okJson({ items: [PIPED_ITEM] }));
+    const app = await makeApp({ fetchImpl });
+    for (const mode of ["audiobook", "podcast"]) {
+      const res = await app.inject({ method: "GET", url: `/music/search?q=rick&mode=${mode}` });
+      expect(res.statusCode).toBe(200);
+    }
+    for (const call of fetchImpl.mock.calls) {
+      expect(call[0]).toContain("filter=videos");
+    }
+    await app.close();
+  });
+
+  it("rejects an unknown mode", async () => {
+    const app = await makeApp({ fetchImpl: vi.fn() });
+    const res = await app.inject({ method: "GET", url: "/music/search?q=rick&mode=radio" });
+    expect(res.statusCode).toBe(400);
+    await app.close();
+  });
+
+  it("caches modes separately", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(okJson({ items: [PIPED_ITEM] }));
+    const app = await makeApp({ fetchImpl, now: () => 1_000 });
+    await app.inject({ method: "GET", url: "/music/search?q=rick" });
+    await app.inject({ method: "GET", url: "/music/search?q=rick&mode=audiobook" });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    await app.close();
+  });
 });
 
 describe("GET /music/stream/:videoId", () => {

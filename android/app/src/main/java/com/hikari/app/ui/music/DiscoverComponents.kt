@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.hikari.app.domain.model.MusicSong
+import com.hikari.app.domain.repo.MusicSearchMode
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariCardBg
 import com.hikari.app.ui.theme.HikariPrimary
@@ -436,6 +437,36 @@ private fun HistoryChip(song: MusicSong, isCurrent: Boolean, onClick: () -> Unit
                 color = HikariTextMuted,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/** Moduswahl der Suche: Musik, Hörbücher oder Podcasts. */
+@Composable
+fun SearchModeChips(
+    selected: MusicSearchMode,
+    onSelect: (MusicSearchMode) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val labels = mapOf(
+        MusicSearchMode.MUSIC to "Musik",
+        MusicSearchMode.AUDIOBOOK to "Hörbücher",
+        MusicSearchMode.PODCAST to "Podcasts",
+    )
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        MusicSearchMode.entries.forEach { mode ->
+            val isSelected = mode == selected
+            Text(
+                labels.getValue(mode),
+                fontSize = 13.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = if (isSelected) Color.Black else HikariTextMuted,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(if (isSelected) HikariPrimary else HikariCardBg)
+                    .clickable { onSelect(mode) }
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
             )
         }
     }

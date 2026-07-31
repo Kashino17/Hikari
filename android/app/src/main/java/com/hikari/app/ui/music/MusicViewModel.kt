@@ -13,6 +13,7 @@ import com.hikari.app.domain.model.MusicPlaylist
 import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.domain.repo.DiscoverSection
 import com.hikari.app.domain.repo.MusicRepository
+import com.hikari.app.domain.repo.MusicSearchMode
 import com.hikari.app.domain.repo.PlaylistWithSongs
 import com.hikari.app.player.MusicPlayerController
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -42,6 +43,10 @@ class MusicViewModel @Inject constructor(
     var searchResults by mutableStateOf<List<MusicSong>>(emptyList())
     var searchLoading by mutableStateOf(false)
     var searchAttempted by mutableStateOf(false)
+
+    /** Musik, Hörbücher oder Podcasts — steuert Filter und Dauerheuristik der Suche. */
+    var searchMode by mutableStateOf(MusicSearchMode.MUSIC)
+        private set
 
     var discoverSections by mutableStateOf<List<DiscoverSection>>(emptyList())
     var discoverLoading by mutableStateOf(false)
@@ -123,9 +128,16 @@ class MusicViewModel @Inject constructor(
         searchJob = viewModelScope.launch {
             searchLoading = true
             searchAttempted = true
-            searchResults = repo.searchMusic(q)
+            searchResults = repo.searchMusic(q, searchMode)
             searchLoading = false
         }
+    }
+
+    /** Wechselt den Suchmodus und wiederholt eine offene Suche direkt. */
+    fun selectSearchMode(mode: MusicSearchMode) {
+        if (mode == searchMode) return
+        searchMode = mode
+        if (searchAttempted && searchQuery.isNotBlank()) search(searchQuery)
     }
 
     fun loadMix(query: String) {
