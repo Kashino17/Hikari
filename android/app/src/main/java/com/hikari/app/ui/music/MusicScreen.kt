@@ -20,7 +20,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.ui.theme.HikariBg
@@ -34,7 +34,7 @@ import com.hikari.app.ui.theme.HikariTextMuted
 @Composable
 fun MusicScreen(
     onBack: () -> Unit,
-    viewModel: MusicViewModel = viewModel(),
+    viewModel: MusicViewModel = hiltViewModel(),
 ) {
     var tab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Entdecken", "Bibliothek", "Favoriten")

@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.ui.music.MusicViewModel
@@ -37,7 +37,7 @@ import com.hikari.app.ui.theme.HikariTextMuted
 fun NowPlayingScreen(
     song: MusicSong,
     onBack: () -> Unit,
-    viewModel: MusicViewModel = viewModel(),
+    viewModel: MusicViewModel = hiltViewModel(),
 ) {
     Scaffold(
         topBar = {

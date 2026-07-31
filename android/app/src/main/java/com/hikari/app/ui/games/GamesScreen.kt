@@ -41,27 +41,6 @@ fun GamesScreen(
 ) {
     val games = listOf(
         GameInfo(
-            "minesweeper", "Minesweeper",
-            "Klassisches Minensuchspiel. Tippe zum Aufdecken, lange drücken für Flagge!",
-            { Icon(Icons.Default.GridOn, null, tint = Color(0xFFFBBF24), modifier = Modifier.size(28.dp)) },
-            Color(0xFFFBBF24),
-            { onBack -> MinesweeperGame(onBack) },
-        ),
-        GameInfo(
-            "snake", "Snake",
-            "Steuere die Schlange mit Wisch-Gesten oder D-Pad. Friss die roten Punkte!",
-            { Icon(Icons.Default.Cable, null, tint = Color(0xFF4ADE80), modifier = Modifier.size(28.dp)) },
-            Color(0xFF4ADE80),
-            { onBack -> SnakeGame(onBack) },
-        ),
-        GameInfo(
-            "tap-n-pop", "Tap 'n Pop",
-            "Tippe alle schwebenden Blasen weg, bevor sie entkommen. Combo-System!",
-            { Icon(Icons.Default.Circle, null, tint = Color(0xFFFF8A65), modifier = Modifier.size(28.dp)) },
-            Color(0xFFFF8A65),
-            { onBack -> TapNPopGame(onBack) },
-        ),
-        GameInfo(
             "tictactoe", "Tic-Tac-Toe",
             "Spiele gegen die KI. Wer zuerst drei in einer Reihe hat, gewinnt!",
             { Icon(Icons.Default.Close, null, tint = Color(0xFF60A5FA), modifier = Modifier.size(28.dp)) },
@@ -69,11 +48,32 @@ fun GamesScreen(
             { onBack -> TicTacToeGame(onBack) },
         ),
         GameInfo(
-            "color-match", "Color Match",
-            "Finde die Farbe, die zum Ziel-Ton passt. Immer schwieriger werdend!",
-            { Icon(Icons.Default.Palette, null, tint = Color(0xFFA78BFA), modifier = Modifier.size(28.dp)) },
-            Color(0xFFA78BFA),
-            { onBack -> ColorMatchGame(onBack) },
+            "connect4", "Vier Gewinnt",
+            "Klassiker gegen die KI: vier Steine in einer Reihe — waagerecht, senkrecht oder diagonal!",
+            { Icon(Icons.Default.GridOn, null, tint = Color(0xFFFBBF24), modifier = Modifier.size(28.dp)) },
+            Color(0xFFFBBF24),
+            { onBack -> ConnectFourGame(onBack) },
+        ),
+        GameInfo(
+            "2048", "2048",
+            "Wische, um gleichfarbige Zahlen zu vereinen. Erreiche die 2048 — und darüber hinaus!",
+            { Icon(Icons.Default.Calculate, null, tint = Color(0xFFEC4899), modifier = Modifier.size(28.dp)) },
+            Color(0xFFEC4899),
+            { onBack -> Game2048(onBack) },
+        ),
+        GameInfo(
+            "memory", "Memory",
+            "Finde alle passenden Paare. Merke dir die Karten — mit so wenigen Zügen wie möglich!",
+            { Icon(Icons.Default.Star, null, tint = Color(0xFF22D3EE), modifier = Modifier.size(28.dp)) },
+            Color(0xFF22D3EE),
+            { onBack -> MemoryGame(onBack) },
+        ),
+        GameInfo(
+            "simon", "Simon",
+            "Schaue der Licht-Folge zu und tippe sie nach. Jede Runde wird länger — wie weit kommst du?",
+            { Icon(Icons.Default.MusicNote, null, tint = Color(0xFF4ADE80), modifier = Modifier.size(28.dp)) },
+            Color(0xFF4ADE80),
+            { onBack -> SimonGame(onBack) },
         ),
     )
 

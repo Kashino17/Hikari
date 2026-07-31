@@ -51,11 +51,11 @@ import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.tuning.TuningScreen
 import com.hikari.app.ui.music.MusicScreen
 import com.hikari.app.ui.games.GamesScreen
-import com.hikari.app.ui.games.MinesweeperGame
-import com.hikari.app.ui.games.SnakeGame
-import com.hikari.app.ui.games.TapNPopGame
+import com.hikari.app.ui.games.ConnectFourGame
+import com.hikari.app.ui.games.Game2048
+import com.hikari.app.ui.games.MemoryGame
+import com.hikari.app.ui.games.SimonGame
 import com.hikari.app.ui.games.TicTacToeGame
-import com.hikari.app.ui.games.ColorMatchGame
 
 private fun navTo(nav: NavController, route: String) {
     nav.navigate(route) {
@@ -256,11 +256,11 @@ fun HikariNavHost() {
                 val gameId = entry.arguments?.getString("gameId") ?: return@composable
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     when (gameId) {
-                        "minesweeper" -> MinesweeperGame(onBack = { nav.popBackStack() })
-                        "snake" -> SnakeGame(onBack = { nav.popBackStack() })
-                        "tap-n-pop" -> TapNPopGame(onBack = { nav.popBackStack() })
                         "tictactoe" -> TicTacToeGame(onBack = { nav.popBackStack() })
-                        "color-match" -> ColorMatchGame(onBack = { nav.popBackStack() })
+                        "connect4" -> ConnectFourGame(onBack = { nav.popBackStack() })
+                        "2048" -> Game2048(onBack = { nav.popBackStack() })
+                        "memory" -> MemoryGame(onBack = { nav.popBackStack() })
+                        "simon" -> SimonGame(onBack = { nav.popBackStack() })
                         else -> GamesScreen(
                             onBack = { nav.popBackStack() },
                             onLaunchGame = { id -> nav.navigate("game/$id") },
