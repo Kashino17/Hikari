@@ -59,6 +59,16 @@ data class PlaylistWithSongs(
 )
 
 /**
+ * Erkanntes Hörbuch bzw. Podcast-Show in den Suchergebnissen: mehrere
+ * Treffer desselben Kanals gehören zusammen und werden als eine Gruppe mit
+ * geordneten Kapiteln/Folgen geführt.
+ */
+data class ChapterGroup(
+    val uploader: String,
+    val chapters: List<MusicSong>,
+)
+
+/**
  * Search + streaming go through the Hikari backend (yt-dlp — the same
  * extraction the clipper uses, so it works even when public Piped instances
  * are blocked). If the backend is unreachable the repo falls back to querying
@@ -95,10 +105,14 @@ class MusicRepository(
             "Party" to "party hits dance",
         )
 
+        /** Nummern-Muster in Kapitel- und Episodentiteln. */
+        private val CHAPTER_NUMBER_RE = Regex(
+            """(?i)\b(?:kapitel|kap\.?|chapter|ch\.?|part|pt\.?|teil|episode|ep\.?|folge|#)\s*0*(\d{1,4})\b""",
+        )
+
         /** Eigene Mixe für den Instrumental-Modus — Suchbegriffe, die von
          *  vornherein bei Stücken ohne Gesang landen. */
-        private val INSTRUMENTAL_SECTIONS = listOf(
-            "Lofi Beats" to "lofi hip hop instrumental beats no vocals",
+        private val INSTRUMENTAL_SECTIONS = listOf(            "Lofi Beats" to "lofi hip hop instrumental beats no vocals",
             "Piano" to "relaxing piano music instrumental",
             "Fokus & Lernen" to "focus study music instrumental no vocals",
             "Ambient" to "ambient instrumental music calm",
@@ -189,6 +203,35 @@ class MusicRepository(
         val longEnough = songs.filter { it.duration >= minSeconds }
         return if (longEnough.size >= 4) longEnough else songs
     }
+
+    /**
+     * Gruppiert Treffer nach Kanal: Kapitel eines Hörbuchs und Folgen eines
+     * Podcasts stammen fast immer vom selben Uploader und gehören so zusammen.
+     * Innerhalb einer Gruppe ordnet die Nummer im Titel ("Kapitel 3",
+     * "Episode 12"); ohne Nummer zählt die ursprüngliche Suchreihenfolge.
+     * Kanäle mit nur einem Treffer bleiben Einzelergebnisse.
+     *
+     * @return Gruppen in Reihenfolge ihres ersten Treffers, danach die Einzelgänger.
+     */
+    fun groupIntoShows(songs: List<MusicSong>): Pair<List<ChapterGroup>, List<MusicSong>> {
+        val groups = mutableListOf<ChapterGroup>()
+        val singles = mutableListOf<MusicSong>()
+        for (bucket in songs.groupBy { it.uploader.trim().lowercase() }.values) {
+            if (bucket.size < 2) {
+                singles += bucket
+                continue
+            }
+            groups += ChapterGroup(
+                uploader = bucket.first().uploader,
+                chapters = bucket.sortedBy { chapterNumberOf(it.title) ?: Int.MAX_VALUE },
+            )
+        }
+        return groups to singles
+    }
+
+    /** Nummer aus Titeln wie "Kapitel 3", "Chapter 04", "Pt. 1", "Folge 12". */
+    private fun chapterNumberOf(title: String): Int? =
+        CHAPTER_NUMBER_RE.find(title)?.groupValues?.get(1)?.toIntOrNull()
 
     suspend fun getDiscoverSections(): List<DiscoverSection> = coroutineScope {
         val sections = if (instrumentalOnly()) INSTRUMENTAL_SECTIONS else DISCOVER_SECTIONS

@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.hikari.app.domain.model.MusicSong
+import com.hikari.app.domain.repo.ChapterGroup
 import com.hikari.app.domain.repo.MusicSearchMode
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariCardBg
@@ -439,6 +440,60 @@ private fun HistoryChip(song: MusicSong, isCurrent: Boolean, onClick: () -> Unit
                 overflow = TextOverflow.Ellipsis,
             )
         }
+    }
+}
+
+/**
+ * Gruppen-Zeile in den Suchergebnissen: ein Hörbuch oder eine Podcast-Show
+ * als eine Zeile statt vieler loser Kapitel. Antippen öffnet die Kapitelliste.
+ */
+@Composable
+fun GroupRow(
+    group: ChapterGroup,
+    unitLabel: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(HikariCardBg)
+            .clickable(onClick = onClick)
+            .padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AsyncImage(
+            model = group.chapters.firstOrNull { it.thumbnailUrl.isNotEmpty() }?.thumbnailUrl,
+            contentDescription = null,
+            modifier = Modifier
+                .size(46.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(HikariSurfaceHigh),
+            contentScale = ContentScale.Crop,
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                group.uploader,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = HikariText,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                "${group.chapters.size} $unitLabel",
+                fontSize = 11.sp,
+                color = HikariTextMuted,
+            )
+        }
+        Icon(
+            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            null,
+            tint = HikariTextFaint,
+            modifier = Modifier.size(18.dp),
+        )
     }
 }
 

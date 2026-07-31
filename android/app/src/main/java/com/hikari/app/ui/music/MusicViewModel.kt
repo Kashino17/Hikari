@@ -11,6 +11,7 @@ import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.download.LocalMusicDownloadManager
 import com.hikari.app.domain.model.MusicPlaylist
 import com.hikari.app.domain.model.MusicSong
+import com.hikari.app.domain.repo.ChapterGroup
 import com.hikari.app.domain.repo.DiscoverSection
 import com.hikari.app.domain.repo.MusicRepository
 import com.hikari.app.domain.repo.MusicSearchMode
@@ -48,6 +49,20 @@ class MusicViewModel @Inject constructor(
     var searchMode by mutableStateOf(MusicSearchMode.MUSIC)
         private set
 
+    /** Erkannte Hörbücher/Podcast-Shows in den Suchergebnissen (nur außerhalb des Musik-Modus). */
+    var searchGroups by mutableStateOf<List<ChapterGroup>>(emptyList())
+        private set
+
+    /** Songs des gerade geöffneten Mixes — der Mix wird über seine Suche neu
+     *  geladen, damit die Detailseite ohne Zustandsübergabe auskommt. */
+    var mixSongs by mutableStateOf<List<MusicSong>>(emptyList())
+    var mixLoading by mutableStateOf(false)
+
+    /** Kapitel/Folgen der gerade geöffneten Gruppe — liegen aus der Suche
+     *  bereits vor und müssen nicht nachgeladen werden. */
+    var groupSongs by mutableStateOf<List<MusicSong>>(emptyList())
+        private set
+
     var discoverSections by mutableStateOf<List<DiscoverSection>>(emptyList())
     var discoverLoading by mutableStateOf(false)
     var discoverFailed by mutableStateOf(false)
@@ -77,11 +92,6 @@ class MusicViewModel @Inject constructor(
     val downloadedSongs: StateFlow<List<MusicSong>> = downloads.downloads
         .map { rows -> rows.map { it.toSong() } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
-
-    /** Songs des gerade geöffneten Mixes — der Mix wird über seine Suche neu
-     *  geladen, damit die Detailseite ohne Zustandsübergabe auskommt. */
-    var mixSongs by mutableStateOf<List<MusicSong>>(emptyList())
-    var mixLoading by mutableStateOf(false)
 
     private var searchJob: Job? = null
     private var mixJob: Job? = null
@@ -128,8 +138,42 @@ class MusicViewModel @Inject constructor(
         searchJob = viewModelScope.launch {
             searchLoading = true
             searchAttempted = true
-            searchResults = repo.searchMusic(q, searchMode)
+            val results = repo.searchMusic(q, searchMode)
+            if (searchMode == MusicSearchMode.MUSIC) {
+                searchResults = results
+                searchGroups = emptyList()
+            } else {
+                // Kapitel und Folgen desselben Kanals gehören in eine Gruppe —
+                // einzeln gelistet wäre ein Hörbuch Dutzende lose Zeilen.
+                val (groups, singles) = repo.groupIntoShows(results)
+                searchGroups = groups
+                searchResults = singles
+            }
             searchLoading = false
+        }
+    }
+
+    /** Öffnet eine gefundene Hörbuch-/Podcast-Gruppe in der Detailansicht. */
+    fun openGroup(group: ChapterGroup) {
+        groupSongs = group.chapters
+    }
+
+    /** Lädt alle noch fehlenden Kapitel/Folgen der offenen Gruppe herunter. */
+    fun downloadGroup(title: String) {
+        viewModelScope.launch {
+            val missing = groupSongs.filter { it.videoId !in downloadedIds.value }
+            if (missing.isEmpty()) {
+                message = "Alle Kapitel sind schon heruntergeladen"
+                return@launch
+            }
+            message = "Lade ${missing.size} Kapitel herunter…"
+            var ok = 0
+            missing.forEach { song -> if (downloads.download(song).isSuccess) ok++ }
+            message = if (ok == missing.size) {
+                "„$title“ ist offline verfügbar"
+            } else {
+                "$ok von ${missing.size} Kapiteln geladen"
+            }
         }
     }
 
@@ -172,6 +216,7 @@ class MusicViewModel @Inject constructor(
         searchJob?.cancel()
         searchQuery = ""
         searchResults = emptyList()
+        searchGroups = emptyList()
         searchAttempted = false
         searchLoading = false
     }

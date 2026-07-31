@@ -51,6 +51,7 @@ import com.hikari.app.ui.theme.HikariBorder
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.tuning.TuningScreen
 import com.hikari.app.ui.music.MiniMusicBubble
+import com.hikari.app.ui.music.GroupDetailScreen
 import com.hikari.app.ui.music.MixDetailScreen
 import com.hikari.app.ui.music.MusicScreen
 import com.hikari.app.ui.music.NowPlayingScreen
@@ -259,6 +260,11 @@ fun HikariNavHost() {
                             val q = URLEncoder.encode(query, "UTF-8")
                             nav.navigate("mix/$t?q=$q")
                         },
+                        onOpenGroup = { title, unit ->
+                            val t = URLEncoder.encode(title, "UTF-8")
+                            val u = URLEncoder.encode(unit, "UTF-8")
+                            nav.navigate("musicGroup/$t?unit=$u")
+                        },
                     )
                 }
             }
@@ -277,6 +283,23 @@ fun HikariNavHost() {
                 MixDetailScreen(
                     title = title,
                     query = query.ifBlank { title },
+                    onBack = { nav.popBackStack() },
+                    onOpenNowPlaying = { nav.navigate("nowplaying") },
+                )
+            }
+            composable(
+                route = "musicGroup/{title}?unit={unit}",
+                arguments = listOf(
+                    navArgument("title") { type = NavType.StringType },
+                    navArgument("unit") { type = NavType.StringType; defaultValue = "Kapitel" },
+                ),
+            ) { entry ->
+                val title = URLDecoder.decode(entry.arguments?.getString("title").orEmpty(), "UTF-8")
+                val unit = URLDecoder.decode(entry.arguments?.getString("unit").orEmpty(), "UTF-8")
+                    .ifBlank { "Kapitel" }
+                GroupDetailScreen(
+                    title = title,
+                    unitLabel = unit,
                     onBack = { nav.popBackStack() },
                     onOpenNowPlaying = { nav.navigate("nowplaying") },
                 )

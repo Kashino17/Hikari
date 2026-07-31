@@ -81,6 +81,7 @@ fun MusicScreen(
     onOpenNowPlaying: () -> Unit,
     onOpenPlaylist: (Int) -> Unit,
     onOpenMix: (title: String, query: String) -> Unit,
+    onOpenGroup: (title: String, unit: String) -> Unit,
     viewModel: MusicViewModel = hiltViewModel(),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(TAB_DISCOVER) }
@@ -138,7 +139,7 @@ fun MusicScreen(
 
             Box(Modifier.weight(1f)) {
                 when (tab) {
-                    TAB_DISCOVER -> DiscoverTab(viewModel, online, onOpenMix)
+                    TAB_DISCOVER -> DiscoverTab(viewModel, online, onOpenMix, onOpenGroup)
                     TAB_PLAYLISTS -> PlaylistsTab(viewModel, onOpenPlaylist)
                     TAB_DOWNLOADS -> DownloadsTab(viewModel)
                     TAB_FAVORITES -> FavoritesTab(viewModel)
@@ -169,6 +170,7 @@ private fun DiscoverTab(
     viewModel: MusicViewModel,
     online: Boolean,
     onOpenMix: (title: String, query: String) -> Unit,
+    onOpenGroup: (title: String, unit: String) -> Unit,
 ) {
     if (!online) {
         EmptyHint(Icons.Outlined.CloudDownload, "Entdecken braucht Internet — deine Downloads findest du im Downloads-Tab.")
@@ -251,7 +253,7 @@ private fun DiscoverTab(
         if (searching) {
             when {
                 viewModel.searchLoading -> item(key = "search-loading") { CenteredLoader() }
-                viewModel.searchResults.isEmpty() -> item(key = "search-empty") {
+                viewModel.searchResults.isEmpty() && viewModel.searchGroups.isEmpty() -> item(key = "search-empty") {
                     if (instrumental) {
                         // Der Filter ist die wahrscheinlichste Ursache — also
                         // gleich den Ausweg anbieten statt nur "nichts gefunden".
@@ -260,8 +262,23 @@ private fun DiscoverTab(
                         EmptyHint(Icons.Default.Search, "Nichts gefunden — anderer Suchbegriff?")
                     }
                 }
-                else -> items(viewModel.searchResults, key = { "s-${it.videoId}" }) { song ->
-                    SongRow(song, viewModel, viewModel.searchResults)
+                else -> {
+                    // Zuerst die erkannten Hörbücher/Shows als Gruppe, dann die
+                    // einzelnen Treffer, die keiner Gruppe zugeordnet werden konnten.
+                    items(viewModel.searchGroups, key = { "g-${it.uploader}" }) { group ->
+                        val unit = if (searchMode == MusicSearchMode.AUDIOBOOK) "Kapitel" else "Folgen"
+                        GroupRow(
+                            group = group,
+                            unitLabel = unit,
+                            onClick = {
+                                viewModel.openGroup(group)
+                                onOpenGroup(group.uploader, unit)
+                            },
+                        )
+                    }
+                    items(viewModel.searchResults, key = { "s-${it.videoId}" }) { song ->
+                        SongRow(song, viewModel, viewModel.searchResults)
+                    }
                 }
             }
             return@LazyColumn
