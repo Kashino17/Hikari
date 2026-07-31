@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,6 +54,7 @@ import com.hikari.app.data.api.dto.MovieEntryDto
 import com.hikari.app.data.api.dto.SeriesGroupDto
 import com.hikari.app.data.db.LocalDownloadKind
 import com.hikari.app.data.db.LocalMangaArcEntity
+import com.hikari.app.data.db.LocalMusicDownloadEntity
 import com.hikari.app.domain.download.LocalDownloadMetadata
 import com.hikari.app.ui.profile.components.DownloadGroupCard
 import com.hikari.app.ui.profile.components.EpisodeRow
@@ -63,6 +65,7 @@ import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
 import com.hikari.app.ui.theme.HikariDanger
+import com.hikari.app.ui.theme.HikariPrimary
 import com.hikari.app.ui.theme.HikariSurface
 import com.hikari.app.ui.theme.HikariSurfaceHigh
 import com.hikari.app.ui.theme.HikariText
@@ -85,6 +88,7 @@ fun DownloadCategoryScreen(
                     DownloadCategory.CHANNELS -> "KANÄLE"
                     DownloadCategory.MOVIES -> "FILME"
                     DownloadCategory.MANGAS -> "MANGAS"
+                    DownloadCategory.MUSIC -> "MUSIK"
                 },
                 editMode = state.editMode,
                 selectedCount = state.selectedVideoIds.size,
@@ -187,6 +191,16 @@ fun DownloadCategoryScreen(
                             MangasPanel(
                                 arcs = arcs,
                                 onDelete = { arcId -> vm.deleteMangaArc(arcId) },
+                            )
+                        }
+                        DownloadCategory.MUSIC -> {
+                            val songs by vm.musicDownloads.collectAsState()
+                            val currentId by vm.currentMusicId.collectAsState()
+                            MusicPanel(
+                                songs = songs,
+                                currentVideoId = currentId,
+                                onPlay = { song -> vm.playMusic(song) },
+                                onDelete = { videoId -> vm.deleteMusic(videoId) },
                             )
                         }
                     }
@@ -687,6 +701,123 @@ private fun MangaArcRow(
             Icon(
                 imageVector = Icons.Default.Delete,
                 contentDescription = "Arc löschen",
+                tint = HikariDanger,
+            )
+        }
+    }
+}
+
+@Composable
+private fun MusicPanel(
+    songs: List<LocalMusicDownloadEntity>,
+    currentVideoId: String?,
+    onPlay: (LocalMusicDownloadEntity) -> Unit,
+    onDelete: (videoId: String) -> Unit,
+) {
+    val totalBytes = songs.sumOf { it.byteSize }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 0.dp, bottom = 96.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        item {
+            Hero("Musik", "${songs.size} Songs · ${formatBytes(totalBytes)}")
+        }
+        item { SimpleFilterStrip("ALLE", songs.size) }
+        if (songs.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        "Keine offline gespeicherten Songs",
+                        color = HikariTextMuted,
+                        fontSize = 13.sp,
+                    )
+                }
+            }
+        } else {
+            items(songs, key = { it.videoId }) { song ->
+                MusicSongRow(
+                    song = song,
+                    isCurrent = song.videoId == currentVideoId,
+                    onPlay = { onPlay(song) },
+                    onDelete = { onDelete(song.videoId) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MusicSongRow(
+    song: LocalMusicDownloadEntity,
+    isCurrent: Boolean,
+    onPlay: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(HikariSurface)
+            .clickable(onClick = onPlay)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(HikariSurfaceHigh),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (song.thumbnailUrl.isNotBlank()) {
+                AsyncImage(
+                    model = song.thumbnailUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.MusicNote,
+                    contentDescription = null,
+                    tint = HikariTextFaint,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
+        Spacer(Modifier.size(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                song.title.ifBlank { song.videoId },
+                // Laufender Song wird amber hervorgehoben.
+                color = if (isCurrent) HikariPrimary else HikariText,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                song.uploader.ifBlank { "Unbekannt" },
+                color = HikariTextMuted,
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                "${formatDuration(song.durationSeconds)} · ${formatBytes(song.byteSize)}",
+                color = HikariTextFaint,
+                fontSize = 10.sp,
+                fontFamily = FontFamily.Monospace,
+            )
+        }
+        IconButton(onClick = onDelete) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Song löschen",
                 tint = HikariDanger,
             )
         }

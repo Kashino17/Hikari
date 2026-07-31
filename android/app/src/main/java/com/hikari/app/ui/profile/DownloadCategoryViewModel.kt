@@ -6,11 +6,15 @@ import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.DownloadsResponse
 import com.hikari.app.data.db.LocalMangaArcEntity
 import com.hikari.app.data.db.LocalMangaDao
+import com.hikari.app.data.db.LocalMusicDownloadEntity
 import com.hikari.app.domain.download.LocalDownloadManager
 import com.hikari.app.domain.download.LocalDownloadMetadata
 import com.hikari.app.domain.download.LocalMangaDownloadManager
+import com.hikari.app.domain.download.LocalMusicDownloadManager
+import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.domain.repo.DownloadsRepository
 import com.hikari.app.domain.repo.FeedRepository
+import com.hikari.app.player.MusicPlayerController
 import com.hikari.app.ui.profile.tabs.DownloadCategory
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -40,6 +44,8 @@ class DownloadCategoryViewModel @Inject constructor(
     private val downloadsRepo: DownloadsRepository,
     private val localDownloads: LocalDownloadManager,
     private val localMangaDownloads: LocalMangaDownloadManager,
+    private val localMusicDownloads: LocalMusicDownloadManager,
+    private val musicPlayer: MusicPlayerController,
     localMangaDao: LocalMangaDao,
 ) : ViewModel() {
 
@@ -64,6 +70,39 @@ class DownloadCategoryViewModel @Inject constructor(
     fun deleteMangaArc(arcId: String) {
         viewModelScope.launch { localMangaDownloads.delete(arcId) }
     }
+
+    /** Live-Liste der offline gespeicherten Songs, neueste zuerst. */
+    val musicDownloads: StateFlow<List<LocalMusicDownloadEntity>> = localMusicDownloads.downloads
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** videoId des gerade laufenden Songs — für die Hervorhebung in der Liste. */
+    val currentMusicId: StateFlow<String?> = musicPlayer.currentSong
+        .map { it?.videoId }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    fun deleteMusic(videoId: String) {
+        viewModelScope.launch { localMusicDownloads.delete(videoId) }
+    }
+
+    /**
+     * Startet den Song und übergibt die komplette Download-Liste als Queue,
+     * damit „Weiter“ innerhalb der Offline-Songs funktioniert.
+     */
+    fun playMusic(entity: LocalMusicDownloadEntity) {
+        val queue = musicDownloads.value.map { it.toSong() }
+        musicPlayer.play(entity.toSong(), queue)
+    }
+
+    private fun LocalMusicDownloadEntity.toSong() = MusicSong(
+        videoId = videoId,
+        title = title,
+        uploader = uploader,
+        uploaderUrl = "",
+        thumbnailUrl = thumbnailUrl,
+        duration = durationSeconds,
+        views = 0L,
+        addedAt = downloadedAt,
+    )
 
     init {
         load()

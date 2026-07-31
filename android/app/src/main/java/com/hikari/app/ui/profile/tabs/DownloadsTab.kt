@@ -46,6 +46,7 @@ import com.hikari.app.data.api.dto.DownloadsResponse
 import com.hikari.app.ui.profile.DownloadsUiState
 import com.hikari.app.ui.profile.DownloadsViewModel
 import com.hikari.app.ui.profile.MangaSummary
+import com.hikari.app.ui.profile.MusicSummary
 import com.hikari.app.ui.profile.components.CategoryCard
 import com.hikari.app.ui.profile.components.CategoryStyle
 import com.hikari.app.ui.profile.formatBytes
@@ -58,7 +59,7 @@ import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 
-enum class DownloadCategory { SERIES, CHANNELS, MOVIES, MANGAS }
+enum class DownloadCategory { SERIES, CHANNELS, MOVIES, MANGAS, MUSIC }
 
 @Composable
 fun DownloadsTab(
@@ -69,6 +70,7 @@ fun DownloadsTab(
     val smart by vm.smartDownloads.collectAsState()
     val localSummary by vm.localSummary.collectAsState()
     val mangaSummary by vm.mangaSummary.collectAsState()
+    val musicSummary by vm.musicSummary.collectAsState()
 
     // Reload when the user returns to this tab (e.g. after deleting items in
     // DownloadCategoryScreen). Without this, storage-strip + counts go stale.
@@ -98,6 +100,7 @@ fun DownloadsTab(
             localCount = localSummary.count,
             localTotalBytes = localSummary.totalBytes,
             mangaSummary = mangaSummary,
+            musicSummary = musicSummary,
             onSmartChange = vm::setSmartDownloads,
             onOpenCategory = onOpenCategory,
         )
@@ -111,6 +114,7 @@ private fun DownloadsContent(
     localCount: Int,
     localTotalBytes: Long,
     mangaSummary: MangaSummary,
+    musicSummary: MusicSummary,
     onSmartChange: (Boolean) -> Unit,
     onOpenCategory: (DownloadCategory) -> Unit,
 ) {
@@ -127,8 +131,10 @@ private fun DownloadsContent(
                 totalBytes = data.total_bytes,
                 limitBytes = data.limit_bytes,
                 count = totalCount,
-                localCount = localCount,
-                localBytes = localTotalBytes,
+                // Songs liegen genauso lokal wie Videos — beides zusammen
+                // ergibt erst den echten Offline-Speicherverbrauch.
+                localCount = localCount + musicSummary.count,
+                localBytes = localTotalBytes + musicSummary.totalBytes,
             )
         }
         item {
@@ -189,8 +195,20 @@ private fun DownloadsContent(
                         onClick = { onOpenCategory(DownloadCategory.MANGAS) },
                     )
                 }
+                if (musicSummary.count > 0) {
+                    CategoryCard(
+                        title = "Musik",
+                        meta = "${musicSummary.count} Songs · ${formatBytes(musicSummary.totalBytes)}",
+                        style = CategoryStyle.POSTERS,
+                        coverUrls = musicSummary.thumbnailUrls.map { it.ifBlank { null } },
+                        seedFallbacks = musicSummary.videoIds,
+                        glowColor = Color(0xFFa855f7),
+                        onClick = { onOpenCategory(DownloadCategory.MUSIC) },
+                    )
+                }
                 if (data.series.isEmpty() && data.channels.isEmpty() &&
-                    data.movies.isEmpty() && mangaSummary.arcCount == 0
+                    data.movies.isEmpty() && mangaSummary.arcCount == 0 &&
+                    musicSummary.count == 0
                 ) {
                     EmptyState()
                 }

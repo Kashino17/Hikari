@@ -4,19 +4,33 @@ import com.hikari.app.data.api.HikariApi
 import com.hikari.app.data.api.dto.MusicTrackDto
 import com.hikari.app.data.api.dto.PipedSearchPageDto
 import com.hikari.app.data.api.dto.PipedStreamsDto
+import com.hikari.app.data.db.LocalMusicDownloadDao
+import com.hikari.app.data.db.MusicPlaylistDao
+import com.hikari.app.data.db.MusicPlaylistEntity
+import com.hikari.app.data.db.MusicPlaylistSongDao
+import com.hikari.app.data.db.MusicPlaylistSongEntity
 import com.hikari.app.data.db.MusicSongDao
 import com.hikari.app.data.db.MusicSongEntity
+import com.hikari.app.domain.model.MusicPlaylist
 import com.hikari.app.domain.model.MusicSong
 import java.net.URLEncoder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
 data class DiscoverSection(val title: String, val songs: List<MusicSong>)
+
+/** Playlist samt Songs und wie viele davon offline verfügbar sind. */
+data class PlaylistWithSongs(
+    val playlist: MusicPlaylist,
+    val songs: List<MusicSong>,
+    val downloadedCount: Int,
+)
 
 /**
  * Search + streaming go through the Hikari backend (yt-dlp — the same
@@ -26,6 +40,9 @@ data class DiscoverSection(val title: String, val songs: List<MusicSong>)
  */
 class MusicRepository(
     private val songDao: MusicSongDao,
+    private val playlistDao: MusicPlaylistDao,
+    private val playlistSongDao: MusicPlaylistSongDao,
+    private val downloadDao: LocalMusicDownloadDao,
     private val api: HikariApi,
     private val fallbackClient: OkHttpClient,
     private val json: Json,
@@ -82,13 +99,40 @@ class MusicRepository(
 
     suspend fun getFavorites(): List<MusicSong> = songDao.getFavorites().map { it.toSong() }
 
-    /** Called on every playback start; keeps favorite state, bumps recency. */
-    suspend fun recordPlayed(song: MusicSong) {
+    /** Alle offline verfügbaren Songs — funktioniert ohne jedes Netz. */
+    suspend fun getDownloadedSongs(): List<MusicSong> {
+        val favorites = getFavoriteIds()
+        return downloadDao.getAll().map { row ->
+            MusicSong(
+                videoId = row.videoId,
+                title = row.title,
+                uploader = row.uploader,
+                uploaderUrl = "",
+                thumbnailUrl = row.thumbnailUrl,
+                duration = row.durationSeconds,
+                views = 0,
+                addedAt = row.downloadedAt,
+                isFavorite = row.videoId in favorites,
+            )
+        }
+    }
+
+    fun observeDownloadedIds(): Flow<List<String>> = downloadDao.observeIds()
+
+    /**
+     * Merkt einen Song in der Bibliothek. [touchRecency] steuert, ob er im
+     * Verlauf nach oben rutscht — beim Download soll er das nicht.
+     */
+    suspend fun recordPlayed(song: MusicSong, touchRecency: Boolean = true) {
         val existing = songDao.getByName(song.videoId)
         songDao.insert(
             song.toEntity().copy(
                 isFavorite = existing?.isFavorite ?: song.isFavorite,
-                addedAt = System.currentTimeMillis(),
+                addedAt = if (touchRecency) {
+                    System.currentTimeMillis()
+                } else {
+                    existing?.addedAt ?: song.addedAt
+                },
             ),
         )
     }
@@ -110,6 +154,64 @@ class MusicRepository(
 
     suspend fun getFavoriteIds(): Set<String> = songDao.getFavorites().map { it.videoId }.toSet()
 
+    // --- Playlists ---
+
+    suspend fun getPlaylists(): List<PlaylistWithSongs> {
+        val downloadedIds = downloadDao.getAll().map { it.videoId }.toSet()
+        val favorites = getFavoriteIds()
+        return playlistDao.getAll().map { entity ->
+            val songs = songsOf(entity.id, favorites)
+            PlaylistWithSongs(
+                playlist = entity.toModel(),
+                songs = songs,
+                downloadedCount = songs.count { it.videoId in downloadedIds },
+            )
+        }
+    }
+
+    suspend fun getPlaylist(id: Int): PlaylistWithSongs? {
+        val entity = playlistDao.getById(id) ?: return null
+        val downloadedIds = downloadDao.getAll().map { it.videoId }.toSet()
+        val songs = songsOf(id, getFavoriteIds())
+        return PlaylistWithSongs(
+            playlist = entity.toModel(),
+            songs = songs,
+            downloadedCount = songs.count { it.videoId in downloadedIds },
+        )
+    }
+
+    private suspend fun songsOf(playlistId: Int, favorites: Set<String>): List<MusicSong> {
+        val links = playlistSongDao.getByPlaylist(playlistId)
+        if (links.isEmpty()) return emptyList()
+        val byId = songDao.getAll().associateBy { it.videoId }
+        return links.mapNotNull { link ->
+            byId[link.songVideoId]?.toSong()?.copy(isFavorite = link.songVideoId in favorites)
+        }
+    }
+
+    suspend fun createPlaylist(name: String): Int {
+        val id = playlistDao.insert(MusicPlaylistEntity(name = name))
+        return id.toInt()
+    }
+
+    suspend fun renamePlaylist(playlist: MusicPlaylist, newName: String) {
+        playlistDao.getById(playlist.id)?.let { playlistDao.update(it.copy(name = newName)) }
+    }
+
+    suspend fun deletePlaylist(playlist: MusicPlaylist) {
+        playlistDao.getById(playlist.id)?.let { playlistDao.delete(it) }
+    }
+
+    /** Song muss in `music_songs` existieren — der Fremdschlüssel verlangt das. */
+    suspend fun addToPlaylist(playlistId: Int, song: MusicSong) {
+        recordPlayed(song, touchRecency = false)
+        playlistSongDao.insert(MusicPlaylistSongEntity(playlistId, song.videoId))
+    }
+
+    suspend fun removeFromPlaylist(playlistId: Int, song: MusicSong) {
+        playlistSongDao.delete(MusicPlaylistSongEntity(playlistId, song.videoId))
+    }
+
     // --- Fallback path (direct Piped) ---
 
     private suspend fun pipedSearchFallback(query: String): List<MusicSong> =
@@ -127,8 +229,7 @@ class MusicRepository(
                             title = item.title.orEmpty(),
                             uploader = item.uploaderName.orEmpty(),
                             uploaderUrl = "",
-                            thumbnailUrl = item.thumbnail.orEmpty()
-                                .let { if (it.startsWith("//")) "https:$it" else it },
+                            thumbnailUrl = "https://i.ytimg.com/vi/$videoId/mqdefault.jpg",
                             duration = item.duration ?: 0,
                             views = 0,
                         )
@@ -192,5 +293,10 @@ class MusicRepository(
         videoId = videoId, title = title, uploader = uploader, uploaderUrl = uploaderUrl,
         thumbnailUrl = thumbnailUrl, duration = duration, views = views,
         addedAt = addedAt, isFavorite = isFavorite,
+    )
+
+    private fun MusicPlaylistEntity.toModel() = MusicPlaylist(
+        id = id, name = name, description = description,
+        thumbnailUrl = thumbnailUrl, createdAt = createdAt,
     )
 }

@@ -5,19 +5,52 @@ import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.LibraryResponse
 import com.hikari.app.data.api.dto.SeriesDetailResponse
 import com.hikari.app.data.api.dto.TodayCountResponse
+import com.hikari.app.data.db.LocalDownloadDao
+import com.hikari.app.data.db.LocalDownloadEntity
+import com.hikari.app.data.db.LocalMangaArcEntity
+import com.hikari.app.data.db.LocalMangaDao
+import com.hikari.app.data.net.ConnectivityObserver
 import com.hikari.app.domain.model.FeedItem
+import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.domain.repo.FeedRepository
+import com.hikari.app.domain.repo.MusicRepository
+import com.hikari.app.player.MusicPlayerController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+/**
+ * Zustand der Bibliothek.
+ *
+ * Bewusst als *ein* sealed interface modelliert statt `offline: Boolean` +
+ * separate StateFlows: Online-Daten und Offline-Fallback schließen sich
+ * gegenseitig aus. Ein einziger State macht es unmöglich, aus Versehen beides
+ * gleichzeitig (oder gar nichts) zu rendern — der `when`-Block im Screen ist
+ * erschöpfend und der Compiler erzwingt die Behandlung.
+ *
+ * `Error` gibt es absichtlich nicht mehr: jeder fehlgeschlagene Call landet in
+ * [Offline]. Rohe Exception-Texte ("Unable to resolve host …") sind für Nutzer
+ * wertlos, und heruntergeladene Inhalte sind auch ohne Server abspielbar.
+ */
 sealed interface LibraryUiState {
     object Loading : LibraryUiState
     data class Success(val data: LibraryResponse) : LibraryUiState
-    data class Error(val message: String) : LibraryUiState
+
+    /** Lokal vorhandene Inhalte — kein Netz oder Backend nicht erreichbar. */
+    data class Offline(
+        val videos: List<LocalDownloadEntity>,
+        val mangaArcs: List<LocalMangaArcEntity>,
+        val songs: List<MusicSong>,
+    ) : LibraryUiState {
+        val isEmpty: Boolean
+            get() = videos.isEmpty() && mangaArcs.isEmpty() && songs.isEmpty()
+    }
 }
 
 sealed interface SeriesUiState {
@@ -34,7 +67,12 @@ sealed interface CoverEditState {
 
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
-    private val repo: FeedRepository
+    private val repo: FeedRepository,
+    private val connectivity: ConnectivityObserver,
+    private val downloadDao: LocalDownloadDao,
+    private val mangaDao: LocalMangaDao,
+    private val musicRepo: MusicRepository,
+    private val musicPlayer: MusicPlayerController,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<LibraryUiState>(LibraryUiState.Loading)
@@ -57,10 +95,33 @@ class LibraryViewModel @Inject constructor(
 
     init {
         loadLibrary()
+        observeConnectivity()
+    }
+
+    /**
+     * Sobald das Gerät wieder online geht, holen wir die Server-Bibliothek
+     * automatisch nach — der Nutzer soll nicht selbst neu laden müssen.
+     * `drop(1)` überspringt den Startwert (init lädt bereits), `filter { it }`
+     * lässt nur den Wechsel offline → online durch. `isOnline` ist bereits
+     * `distinctUntilChanged`, es feuert also wirklich nur bei echten Wechseln.
+     */
+    private fun observeConnectivity() {
+        viewModelScope.launch {
+            connectivity.isOnline
+                .drop(1)
+                .filter { it }
+                .collect { loadLibrary() }
+        }
     }
 
     fun loadLibrary() {
         viewModelScope.launch {
+            // Ohne Netz gar nicht erst einen Call absetzen: spart den Timeout
+            // und zeigt die lokalen Inhalte sofort (kein Loading-Flackern).
+            if (!connectivity.currentlyOnline()) {
+                showOffline()
+                return@launch
+            }
             _uiState.value = LibraryUiState.Loading
             runCatching {
                 repo.getLibrary()
@@ -68,9 +129,37 @@ class LibraryViewModel @Inject constructor(
                 _uiState.value = LibraryUiState.Success(it)
                 loadBriefingExtras()
             }.onFailure {
-                _uiState.value = LibraryUiState.Error(it.message ?: "Unbekannter Fehler")
+                // Netz da, aber Backend antwortet nicht → trotzdem Offline-Modus
+                // statt technischem Fehlertext.
+                showOffline()
             }
         }
+    }
+
+    /**
+     * Sammelt alles, was lokal auf dem Gerät liegt: Videos, Manga-Arcs, Musik.
+     * Jede Quelle wird einzeln abgesichert — fällt eine aus, bleiben die
+     * anderen sichtbar.
+     */
+    private suspend fun showOffline() {
+        val videos = runCatching { downloadDao.observeAll().first() }.getOrDefault(emptyList())
+        val arcs = runCatching { mangaDao.observeArcs().first() }.getOrDefault(emptyList())
+        val songs = runCatching { musicRepo.getDownloadedSongs() }.getOrDefault(emptyList())
+        _uiState.value = LibraryUiState.Offline(
+            videos = videos,
+            mangaArcs = arcs,
+            songs = songs,
+        )
+    }
+
+    /**
+     * Spielt einen heruntergeladenen Song ab. Die komplette Offline-Liste geht
+     * als Queue mit, damit "Weiter" auch ohne Netz funktioniert — der
+     * [MusicPlayerController] greift automatisch auf die lokale Datei zu.
+     */
+    fun playSong(song: MusicSong) {
+        val queue = (_uiState.value as? LibraryUiState.Offline)?.songs ?: listOf(song)
+        musicPlayer.play(song, queue)
     }
 
     private fun loadBriefingExtras() {

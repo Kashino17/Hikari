@@ -51,6 +51,7 @@ import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.tuning.TuningScreen
 import com.hikari.app.ui.music.MusicScreen
 import com.hikari.app.ui.music.NowPlayingScreen
+import com.hikari.app.ui.music.PlaylistDetailScreen
 import com.hikari.app.ui.games.GamesScreen
 import com.hikari.app.ui.games.BlockBlastGame
 import com.hikari.app.ui.games.FruitHoleGame
@@ -93,11 +94,12 @@ fun HikariNavHost() {
     val isGearSubPage = currentRoute == "settings" || currentRoute?.startsWith("tuning") == true
     val isGameRoute = currentRoute?.startsWith("game/") == true
     val isNowPlaying = currentRoute == "nowplaying"
+    val isPlaylistRoute = currentRoute?.startsWith("playlist/") == true
 
     Scaffold(
         containerColor = HikariBg,
         bottomBar = {
-            if (!(currentRoute == "feed" && feedFullscreen) && !isVideoRoute && !isReaderRoute && !isGearSubPage && !isGameRoute && !isNowPlaying) {
+            if (!(currentRoute == "feed" && feedFullscreen) && !isVideoRoute && !isReaderRoute && !isGearSubPage && !isGameRoute && !isNowPlaying && !isPlaylistRoute) {
                 HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
                 NavigationBar(
                     containerColor = HikariBg,
@@ -240,11 +242,25 @@ fun HikariNavHost() {
             }
             composable("music") {
                 Box(Modifier.fillMaxSize().padding(padding)) {
-                    MusicScreen(onOpenNowPlaying = { nav.navigate("nowplaying") })
+                    MusicScreen(
+                        onOpenNowPlaying = { nav.navigate("nowplaying") },
+                        onOpenPlaylist = { id -> nav.navigate("playlist/$id") },
+                    )
                 }
             }
             composable("nowplaying") {
                 NowPlayingScreen(onBack = { nav.popBackStack() })
+            }
+            composable(
+                route = "playlist/{playlistId}",
+                arguments = listOf(navArgument("playlistId") { type = NavType.IntType }),
+            ) { entry ->
+                val playlistId = entry.arguments?.getInt("playlistId") ?: return@composable
+                PlaylistDetailScreen(
+                    playlistId = playlistId,
+                    onBack = { nav.popBackStack() },
+                    onOpenNowPlaying = { nav.navigate("nowplaying") },
+                )
             }
             composable("games") {
                 Box(Modifier.fillMaxSize().padding(padding)) {

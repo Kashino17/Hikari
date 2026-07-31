@@ -7,17 +7,18 @@ import androidx.work.WorkerParameters
 import com.hikari.app.data.db.LocalDownloadKind
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.repo.FeedRepository
+import com.hikari.app.domain.repo.MusicRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
 
 /**
  * Periodic background sync that downloads any "saved" video that isn't yet
- * locally available. Runs only when the user's Smart-Downloads preference is
- * on AND the device is on an unmetered network (constraint set in the
- * scheduler).
+ * locally available, plus favorited songs. Runs only when the user's
+ * Smart-Downloads preference is on AND the device is on an unmetered network
+ * (constraint set in the scheduler).
  *
- * Limits per fire: at most 5 downloads — keeps the worker bounded and lets
+ * Limits per fire: at most 5 downloads each — keeps the worker bounded and lets
  * other Workers run.
  */
 @HiltWorker
@@ -26,12 +27,16 @@ class SmartDownloadWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val feedRepo: FeedRepository,
     private val localDownloads: LocalDownloadManager,
+    private val musicRepo: MusicRepository,
+    private val musicDownloads: LocalMusicDownloadManager,
     private val settings: SettingsStore,
 ) : CoroutineWorker(ctx, params) {
 
     override suspend fun doWork(): Result {
         val enabled = runCatching { settings.smartDownloads.first() }.getOrDefault(true)
         if (!enabled) return Result.success()
+
+        downloadFavoriteSongs()
 
         // Backend down or fetch-saved errors → skip this fire silently. Next
         // periodic run is in 6h anyway. Result.retry() here would trigger
@@ -59,6 +64,20 @@ class SmartDownloadWorker @AssistedInject constructor(
             if (res.isSuccess) queued += 1
         }
         return Result.success()
+    }
+
+    /**
+     * Favorisierte Songs offline vorhalten — die Favoriten liegen lokal in Room,
+     * das braucht also keinen erreichbaren Server, nur das Netz für den Stream.
+     */
+    private suspend fun downloadFavoriteSongs() {
+        val favorites = runCatching { musicRepo.getFavorites() }.getOrNull() ?: return
+        var queued = 0
+        for (song in favorites) {
+            if (queued >= MAX_PER_FIRE) break
+            if (musicDownloads.isDownloaded(song.videoId)) continue
+            if (musicDownloads.download(song).isSuccess) queued += 1
+        }
     }
 
     companion object {

@@ -31,6 +31,18 @@ data class MangaSummary(
     val arcIds: List<String>,
 )
 
+/**
+ * Musik-Downloads leben — wie Mangas — ausschließlich lokal in Room, der
+ * Server weiß nichts davon. [thumbnailUrls] dient nur der Cover-Vorschau auf
+ * der CategoryCard (analog zu [MangaSummary.arcIds]).
+ */
+data class MusicSummary(
+    val count: Int,
+    val totalBytes: Long,
+    val thumbnailUrls: List<String> = emptyList(),
+    val videoIds: List<String> = emptyList(),
+)
+
 @HiltViewModel
 class DownloadsViewModel @Inject constructor(
     private val downloadsRepo: DownloadsRepository,
@@ -38,6 +50,7 @@ class DownloadsViewModel @Inject constructor(
     private val scheduler: SmartDownloadScheduler,
     localDownloadDao: com.hikari.app.data.db.LocalDownloadDao,
     localMangaDao: com.hikari.app.data.db.LocalMangaDao,
+    localMusicDao: com.hikari.app.data.db.LocalMusicDownloadDao,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<DownloadsUiState>(DownloadsUiState.Loading)
@@ -65,6 +78,18 @@ class DownloadsViewModel @Inject constructor(
             )
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, MangaSummary(0, 0, 0L, emptyList()))
+
+    // Room-getrieben wie mangaSummary: Musik kommt nie vom Server.
+    val musicSummary: StateFlow<MusicSummary> = localMusicDao.observeAll()
+        .map { rows ->
+            MusicSummary(
+                count = rows.size,
+                totalBytes = rows.sumOf { it.byteSize },
+                thumbnailUrls = rows.map { it.thumbnailUrl },
+                videoIds = rows.map { it.videoId },
+            )
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, MusicSummary(0, 0L))
 
     init {
         load()

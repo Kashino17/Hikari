@@ -7,6 +7,8 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import com.hikari.app.data.net.ConnectivityObserver
+import com.hikari.app.domain.download.LocalMusicDownloadManager
 import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.domain.repo.MusicRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -31,6 +33,8 @@ import kotlinx.coroutines.launch
 class MusicPlayerController @Inject constructor(
     @ApplicationContext private val context: Context,
     private val repo: MusicRepository,
+    private val downloads: LocalMusicDownloadManager,
+    private val connectivity: ConnectivityObserver,
 ) {
     companion object {
         const val REPEAT_OFF = 0
@@ -169,15 +173,27 @@ class MusicPlayerController @Inject constructor(
         _isBuffering.value = true
         scope.launch { repo.recordPlayed(song) }
         loadJob = scope.launch {
-            val url = repo.getAudioStream(song.videoId)
-            if (url == null) {
+            // Heruntergeladene Datei schlägt den Stream immer — funktioniert
+            // auch ohne Netz und spart Daten.
+            val localFile = downloads.localFile(song.videoId)
+            val uri = if (localFile != null) {
+                "file://${localFile.absolutePath}"
+            } else if (!connectivity.currentlyOnline()) {
+                _isBuffering.value = false
+                _error.value = "Offline — „${song.title}“ wurde nicht heruntergeladen"
+                _isPlaying.value = false
+                return@launch
+            } else {
+                repo.getAudioStream(song.videoId)
+            }
+            if (uri == null) {
                 _isBuffering.value = false
                 _error.value = "„${song.title}“ ist nicht abspielbar"
                 skipAfterFailure()
                 return@launch
             }
             val p = ensurePlayer()
-            p.setMediaItem(MediaItem.fromUri(url))
+            p.setMediaItem(MediaItem.fromUri(uri))
             p.prepare()
             p.play()
         }

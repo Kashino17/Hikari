@@ -89,10 +89,12 @@ fun LibraryScreen(
                 color = HikariAmber,
                 modifier = Modifier.align(Alignment.Center),
             )
-            is LibraryUiState.Error -> Text(
-                text = s.message,
-                color = HikariTextMuted,
-                modifier = Modifier.align(Alignment.Center).padding(24.dp),
+            // Kein Netz oder Backend nicht erreichbar → lokale Downloads statt
+            // technischem Fehlertext.
+            is LibraryUiState.Offline -> OfflineLibrary(
+                state = s,
+                onPlayVideo = onPlayVideo,
+                onPlaySong = viewModel::playSong,
             )
             is LibraryUiState.Success -> LibraryContent(
                 data = s.data,

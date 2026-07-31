@@ -80,6 +80,9 @@ fun NowPlayingScreen(
         return
     }
     val isFavorite = current.videoId in viewModel.favoriteIds
+    val downloadedIds by viewModel.downloadedIds.collectAsState()
+    val downloadProgress by viewModel.downloadProgress.collectAsState()
+    val isDownloaded = current.videoId in downloadedIds
 
     Column(
         Modifier.fillMaxSize().background(HikariBg).statusBarsPadding(),
@@ -92,12 +95,19 @@ fun NowPlayingScreen(
             IconButton(onClick = onBack) {
                 Icon(Icons.Default.KeyboardArrowDown, "Schließen", tint = HikariText, modifier = Modifier.size(30.dp))
             }
-            Text(
-                "Läuft gerade",
-                fontSize = 13.sp,
-                color = HikariTextMuted,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f),
+            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    if (isDownloaded) "Läuft gerade · offline" else "Läuft gerade",
+                    fontSize = 13.sp,
+                    color = HikariTextMuted,
+                    textAlign = TextAlign.Center,
+                )
+            }
+            DownloadStateButton(
+                isDownloaded = isDownloaded,
+                progress = downloadProgress[current.videoId],
+                onDownload = { viewModel.downloadSong(current) },
+                onDelete = { viewModel.deleteDownload(current.videoId) },
             )
             IconButton(onClick = { viewModel.toggleFavorite(current) }) {
                 Icon(
