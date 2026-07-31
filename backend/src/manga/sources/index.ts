@@ -1,5 +1,5 @@
-import { type MangaSourceAdapter } from "./types.ts";
-import { onePieceTubeAdapter } from "./onepiece-tube.ts";
+import { type MangaSourceAdapter } from "./types.js";
+import { onePieceTubeAdapter } from "./onepiece-tube.js";
 
 export const adapters: MangaSourceAdapter[] = [onePieceTubeAdapter];
 

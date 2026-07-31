@@ -1,6 +1,6 @@
 import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { runYtDlp } from "../yt-dlp/client.ts";
+import { runYtDlp } from "../yt-dlp/client.js";
 
 export interface DownloadResult {
   filePath: string;

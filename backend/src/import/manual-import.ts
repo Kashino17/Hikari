@@ -1,7 +1,7 @@
 import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type Database from "better-sqlite3";
-import { runYtDlp, YtDlpError } from "../yt-dlp/client.ts";
+import { runYtDlp, YtDlpError } from "../yt-dlp/client.js";
 
 export const MANUAL_CHANNEL_ID = "manual";
 const MANUAL_CHANNEL_TITLE = "Manuell hinzugefügt";

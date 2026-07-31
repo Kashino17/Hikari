@@ -1,4 +1,4 @@
-import type { FilterConfig } from "../scorer/filter.ts";
+import type { FilterConfig } from "../scorer/filter.js";
 
 export interface VideoMeta {
   aspectRatio: string | null;

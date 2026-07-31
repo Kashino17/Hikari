@@ -3,8 +3,8 @@ import type Database from "better-sqlite3";
 import {
   getDiscoveryCandidates,
   type UserPreferences,
-} from "../discovery/discoveryEngine.ts";
-import { getSettings } from "../discovery/discovery-repo.ts";
+} from "../discovery/discoveryEngine.js";
+import { getSettings } from "../discovery/discovery-repo.js";
 
 export interface DiscoveryDeps {
   db: Database.Database;

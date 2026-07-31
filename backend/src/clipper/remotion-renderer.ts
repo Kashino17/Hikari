@@ -3,8 +3,8 @@ import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
-import { computeCropRect } from "./crop-math.ts";
-import type { ClipSpec } from "./qwen-analyzer.ts";
+import { computeCropRect } from "./crop-math.js";
+import type { ClipSpec } from "./qwen-analyzer.js";
 
 export interface RenderInput {
   inputPath: string;

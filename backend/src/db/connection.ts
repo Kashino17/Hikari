@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import Database from "better-sqlite3";
-import { applyMigrations } from "./migrations.ts";
+import { applyMigrations } from "./migrations.js";
 
 export function openDatabase(filePath: string): Database.Database {
   mkdirSync(dirname(filePath), { recursive: true });

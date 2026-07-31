@@ -1,5 +1,5 @@
-import type { ScoredVideo, ScoreInput, Scorer } from "./types.ts";
-import { parseScore } from "./score-schema.ts";
+import type { ScoredVideo, ScoreInput, Scorer } from "./types.js";
+import { parseScore } from "./score-schema.js";
 
 export interface OllamaScorerOptions {
   baseUrl: string;

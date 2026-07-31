@@ -1,10 +1,10 @@
 import type Database from "better-sqlite3";
-import type { Category } from "../scorer/types.ts";
+import type { Category } from "../scorer/types.js";
 import type {
   CategoryWeights,
   DiscoverySettings,
   DiscoverySettingsUpdate,
-} from "./types.ts";
+} from "./types.js";
 
 const ALL_CATEGORIES: readonly Category[] = [
   "science",

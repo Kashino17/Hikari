@@ -1,4 +1,4 @@
-import { runYtDlp } from "../yt-dlp/client.ts";
+import { runYtDlp } from "../yt-dlp/client.js";
 
 export interface ResolvedChannel {
   channelId: string;

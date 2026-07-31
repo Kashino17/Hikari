@@ -1,5 +1,5 @@
-import { runYtDlp } from "../yt-dlp/client.ts";
-import type { FeedEntry } from "./rss-poller.ts";
+import { runYtDlp } from "../yt-dlp/client.js";
+import type { FeedEntry } from "./rss-poller.js";
 
 interface YtDlpVideoEntry {
   id?: string;

@@ -1,17 +1,17 @@
 import type { FastifyInstance } from "fastify";
 import type Database from "better-sqlite3";
-import { resolveChannel } from "../monitor/channel-resolver.ts";
-import { validateYouTubeChannelUrl } from "../monitor/youtube-url.ts";
-import { searchChannels } from "../monitor/channel-search.ts";
-import { fetchChannelDeepScan } from "../monitor/deep-scan.ts";
-import { recommendChannels } from "../monitor/recommendations.ts";
-import { fetchChannelFeed } from "../monitor/rss-poller.ts";
-import { processNewVideo } from "../pipeline/orchestrator.ts";
-import { fetchVideoMetadata } from "../ingest/metadata.ts";
-import { fetchTranscript } from "../ingest/transcript.ts";
-import { fetchSponsorSegments } from "../sponsorblock/client.ts";
-import { downloadVideo } from "../download/worker.ts";
-import type { Scorer } from "../scorer/types.ts";
+import { resolveChannel } from "../monitor/channel-resolver.js";
+import { validateYouTubeChannelUrl } from "../monitor/youtube-url.js";
+import { searchChannels } from "../monitor/channel-search.js";
+import { fetchChannelDeepScan } from "../monitor/deep-scan.js";
+import { recommendChannels } from "../monitor/recommendations.js";
+import { fetchChannelFeed } from "../monitor/rss-poller.js";
+import { processNewVideo } from "../pipeline/orchestrator.js";
+import { fetchVideoMetadata } from "../ingest/metadata.js";
+import { fetchTranscript } from "../ingest/transcript.js";
+import { fetchSponsorSegments } from "../sponsorblock/client.js";
+import { downloadVideo } from "../download/worker.js";
+import type { Scorer } from "../scorer/types.js";
 
 export interface ChannelsDeps {
   db: Database.Database;

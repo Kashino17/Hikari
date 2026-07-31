@@ -5,7 +5,7 @@ import {
   type RawSeries,
   type RawSeriesDetail,
   SourceLayoutError,
-} from "./types.ts";
+} from "./types.js";
 
 const BASE = "https://onepiece.tube";
 const LIST_URL = `${BASE}/manga/kapitel-mangaliste`;
