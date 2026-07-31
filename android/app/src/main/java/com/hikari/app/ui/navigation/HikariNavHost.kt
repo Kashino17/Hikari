@@ -53,6 +53,7 @@ import com.hikari.app.ui.tuning.TuningScreen
 import com.hikari.app.ui.music.MiniMusicBubble
 import com.hikari.app.ui.music.GroupDetailScreen
 import com.hikari.app.ui.music.MixDetailScreen
+import com.hikari.app.domain.repo.MusicSearchMode
 import com.hikari.app.ui.music.MusicScreen
 import com.hikari.app.ui.music.NowPlayingScreen
 import com.hikari.app.ui.music.PlaylistDetailScreen
@@ -255,15 +256,16 @@ fun HikariNavHost() {
                     MusicScreen(
                         onOpenNowPlaying = { nav.navigate("nowplaying") },
                         onOpenPlaylist = { id -> nav.navigate("playlist/$id") },
-                        onOpenMix = { title, query ->
+                        onOpenMix = { title, query, mode ->
                             val t = URLEncoder.encode(title, "UTF-8")
                             val q = URLEncoder.encode(query, "UTF-8")
-                            nav.navigate("mix/$t?q=$q")
+                            nav.navigate("mix/$t?q=$q&mode=$mode")
                         },
-                        onOpenGroup = { title, unit ->
+                        onOpenGroup = { title, unit, query, mode ->
                             val t = URLEncoder.encode(title, "UTF-8")
                             val u = URLEncoder.encode(unit, "UTF-8")
-                            nav.navigate("musicGroup/$t?unit=$u")
+                            val q = URLEncoder.encode(query, "UTF-8")
+                            nav.navigate("musicGroup/$t?unit=$u&q=$q&mode=$mode")
                         },
                     )
                 }
@@ -272,10 +274,11 @@ fun HikariNavHost() {
                 NowPlayingScreen(onBack = { nav.popBackStack() })
             }
             composable(
-                route = "mix/{title}?q={q}",
+                route = "mix/{title}?q={q}&mode={mode}",
                 arguments = listOf(
                     navArgument("title") { type = NavType.StringType },
                     navArgument("q") { type = NavType.StringType; defaultValue = "" },
+                    navArgument("mode") { type = NavType.StringType; defaultValue = "music" },
                 ),
             ) { entry ->
                 val title = URLDecoder.decode(entry.arguments?.getString("title").orEmpty(), "UTF-8")
@@ -283,23 +286,29 @@ fun HikariNavHost() {
                 MixDetailScreen(
                     title = title,
                     query = query.ifBlank { title },
+                    mode = MusicSearchMode.fromApiValue(entry.arguments?.getString("mode")),
                     onBack = { nav.popBackStack() },
                     onOpenNowPlaying = { nav.navigate("nowplaying") },
                 )
             }
             composable(
-                route = "musicGroup/{title}?unit={unit}",
+                route = "musicGroup/{title}?unit={unit}&q={q}&mode={mode}",
                 arguments = listOf(
                     navArgument("title") { type = NavType.StringType },
                     navArgument("unit") { type = NavType.StringType; defaultValue = "Kapitel" },
+                    navArgument("q") { type = NavType.StringType; defaultValue = "" },
+                    navArgument("mode") { type = NavType.StringType; defaultValue = "music" },
                 ),
             ) { entry ->
                 val title = URLDecoder.decode(entry.arguments?.getString("title").orEmpty(), "UTF-8")
                 val unit = URLDecoder.decode(entry.arguments?.getString("unit").orEmpty(), "UTF-8")
                     .ifBlank { "Kapitel" }
+                val query = URLDecoder.decode(entry.arguments?.getString("q").orEmpty(), "UTF-8")
                 GroupDetailScreen(
                     title = title,
                     unitLabel = unit,
+                    query = query.ifBlank { title },
+                    mode = MusicSearchMode.fromApiValue(entry.arguments?.getString("mode")),
                     onBack = { nav.popBackStack() },
                     onOpenNowPlaying = { nav.navigate("nowplaying") },
                 )

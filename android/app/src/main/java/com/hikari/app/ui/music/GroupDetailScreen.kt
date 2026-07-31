@@ -28,6 +28,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -37,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.hikari.app.domain.repo.MusicSearchMode
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariPrimary
 import com.hikari.app.ui.theme.HikariText
@@ -44,14 +46,17 @@ import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 
 /**
- * Kapitel eines Hörbuchs bzw. Folgen einer Podcast-Show. Die Songs liegen aus
- * der Suche bereits im ViewModel — im Gegensatz zum Mix wird hier nichts
- * nachgeladen. Zufallswiedergabe fehlt bewusst: Kapitel haben eine Reihenfolge.
+ * Kapitel eines Hörbuchs bzw. Folgen einer Podcast-Show. Wie der Mix lädt die
+ * Seite ihre Songs über die ursprüngliche Suche neu, weil sie ihr eigenes
+ * ViewModel bekommt. Zufallswiedergabe fehlt bewusst: Kapitel haben eine
+ * Reihenfolge.
  */
 @Composable
 fun GroupDetailScreen(
     title: String,
     unitLabel: String,
+    query: String,
+    mode: MusicSearchMode,
     onBack: () -> Unit,
     onOpenNowPlaying: () -> Unit,
     viewModel: MusicViewModel = hiltViewModel(),
@@ -61,6 +66,8 @@ fun GroupDetailScreen(
     val downloadedIds by viewModel.downloadedIds.collectAsState()
     val downloadedCount = songs.count { it.videoId in downloadedIds }
     val allDownloaded = songs.isNotEmpty() && downloadedCount == songs.size
+
+    LaunchedEffect(query, mode) { viewModel.loadGroup(query, title, mode) }
 
     Column(Modifier.fillMaxSize().background(HikariBg).statusBarsPadding()) {
         Row(
@@ -103,7 +110,8 @@ fun GroupDetailScreen(
                         Spacer(Modifier.width(5.dp))
                         Text(
                             when {
-                                songs.isEmpty() -> "nichts ausgewählt"
+                                viewModel.groupLoading && songs.isEmpty() -> "wird geladen"
+                                songs.isEmpty() -> "nicht gefunden"
                                 allDownloaded -> "komplett offline verfügbar"
                                 downloadedCount > 0 -> "$downloadedCount von ${songs.size} offline"
                                 else -> "noch nichts offline"
@@ -140,13 +148,13 @@ fun GroupDetailScreen(
         }
 
         Box(Modifier.weight(1f)) {
-            if (songs.isEmpty()) {
-                EmptyHint(
+            when {
+                viewModel.groupLoading && songs.isEmpty() -> CenteredLoader()
+                songs.isEmpty() -> EmptyHint(
                     Icons.Outlined.CloudDownload,
-                    "Keine Kapitel ausgewählt — suche erneut und öffne eine Gruppe.",
+                    "Diese Gruppe ist gerade nicht erreichbar — später nochmal versuchen.",
                 )
-            } else {
-                LazyColumn(
+                else -> LazyColumn(
                     Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 12.dp),
                 ) {

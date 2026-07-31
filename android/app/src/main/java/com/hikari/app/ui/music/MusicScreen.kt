@@ -80,8 +80,8 @@ private const val TAB_FAVORITES = 3
 fun MusicScreen(
     onOpenNowPlaying: () -> Unit,
     onOpenPlaylist: (Int) -> Unit,
-    onOpenMix: (title: String, query: String) -> Unit,
-    onOpenGroup: (title: String, unit: String) -> Unit,
+    onOpenMix: (title: String, query: String, mode: String) -> Unit,
+    onOpenGroup: (title: String, unit: String, query: String, mode: String) -> Unit,
     viewModel: MusicViewModel = hiltViewModel(),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(TAB_DISCOVER) }
@@ -169,8 +169,8 @@ fun MusicScreen(
 private fun DiscoverTab(
     viewModel: MusicViewModel,
     online: Boolean,
-    onOpenMix: (title: String, query: String) -> Unit,
-    onOpenGroup: (title: String, unit: String) -> Unit,
+    onOpenMix: (title: String, query: String, mode: String) -> Unit,
+    onOpenGroup: (title: String, unit: String, query: String, mode: String) -> Unit,
 ) {
     if (!online) {
         EmptyHint(Icons.Outlined.CloudDownload, "Entdecken braucht Internet — deine Downloads findest du im Downloads-Tab.")
@@ -240,7 +240,7 @@ private fun DiscoverTab(
             }
         }
 
-        if (!searching && searchMode == MusicSearchMode.MUSIC && viewModel.history.isNotEmpty()) {
+        if (!searching && viewModel.history.isNotEmpty()) {
             item(key = "history-strip") {
                 HistoryStrip(
                     songs = viewModel.history.take(10),
@@ -271,8 +271,7 @@ private fun DiscoverTab(
                             group = group,
                             unitLabel = unit,
                             onClick = {
-                                viewModel.openGroup(group)
-                                onOpenGroup(group.uploader, unit)
+                                onOpenGroup(group.uploader, unit, viewModel.searchQuery, searchMode.apiValue)
                             },
                         )
                     }
@@ -280,23 +279,6 @@ private fun DiscoverTab(
                         SongRow(song, viewModel, viewModel.searchResults)
                     }
                 }
-            }
-            return@LazyColumn
-        }
-
-        // Die kuratierten Mixe und der Verlauf sind Musik — in den anderen
-        // Modi steht hier die Suche im Mittelpunkt.
-        if (searchMode != MusicSearchMode.MUSIC) {
-            item(key = "mode-hint") {
-                EmptyHint(
-                    Icons.Default.Search,
-                    when (searchMode) {
-                        MusicSearchMode.AUDIOBOOK ->
-                            "Suche oben nach Titel oder Autor — Hörbücher werden als lange Videos gefunden."
-                        else ->
-                            "Suche oben nach Name oder Thema — Podcast-Folgen werden als Videos gefunden."
-                    },
-                )
             }
             return@LazyColumn
         }
@@ -327,13 +309,17 @@ private fun DiscoverTab(
  */
 private fun LazyListScope.discoverContent(
     viewModel: MusicViewModel,
-    onOpenMix: (title: String, query: String) -> Unit,
+    onOpenMix: (title: String, query: String, mode: String) -> Unit,
 ) {
     val sections = viewModel.discoverSections
     if (sections.isEmpty()) return
+    val mode = viewModel.searchMode.apiValue
 
     item(key = "mixes-header") {
-        SectionHeader("Mixe", eyebrow = "KURATIERT")
+        SectionHeader(
+            if (viewModel.searchMode == MusicSearchMode.MUSIC) "Mixe" else "Genres",
+            eyebrow = "KURATIERT",
+        )
     }
     item(key = "mixes-row") {
         LazyRow(
@@ -344,7 +330,7 @@ private fun LazyListScope.discoverContent(
                 MixCard(
                     title = section.title,
                     songs = section.songs,
-                    onClick = { onOpenMix(section.title, section.query) },
+                    onClick = { onOpenMix(section.title, section.query, mode) },
                 )
             }
         }
@@ -353,7 +339,7 @@ private fun LazyListScope.discoverContent(
     // Erste Sektion als Rangliste — hier sagt die Reihenfolge etwas aus.
     val charts = sections.first()
     item(key = "charts-header") {
-        SectionHeader(charts.title, onSeeAll = { onOpenMix(charts.title, charts.query) })
+        SectionHeader(charts.title, onSeeAll = { onOpenMix(charts.title, charts.query, mode) })
     }
     itemsIndexed(
         charts.songs.take(5),
@@ -364,7 +350,7 @@ private fun LazyListScope.discoverContent(
 
     sections.drop(1).forEachIndexed { index, section ->
         item(key = "h-${section.title}") {
-            SectionHeader(section.title, onSeeAll = { onOpenMix(section.title, section.query) })
+            SectionHeader(section.title, onSeeAll = { onOpenMix(section.title, section.query, mode) })
         }
         if (index % 2 == 0) {
             item(key = "row-${section.title}") {

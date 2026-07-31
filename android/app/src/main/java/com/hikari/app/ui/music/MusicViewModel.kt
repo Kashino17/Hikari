@@ -58,9 +58,11 @@ class MusicViewModel @Inject constructor(
     var mixSongs by mutableStateOf<List<MusicSong>>(emptyList())
     var mixLoading by mutableStateOf(false)
 
-    /** Kapitel/Folgen der gerade geöffneten Gruppe — liegen aus der Suche
-     *  bereits vor und müssen nicht nachgeladen werden. */
+    /** Kapitel/Folgen der gerade geöffneten Gruppe — werden wie beim Mix
+     *  über die ursprüngliche Suche neu geladen. */
     var groupSongs by mutableStateOf<List<MusicSong>>(emptyList())
+        private set
+    var groupLoading by mutableStateOf(false)
         private set
 
     var discoverSections by mutableStateOf<List<DiscoverSection>>(emptyList())
@@ -95,6 +97,7 @@ class MusicViewModel @Inject constructor(
 
     private var searchJob: Job? = null
     private var mixJob: Job? = null
+    private var groupJob: Job? = null
 
     init {
         loadDiscover()
@@ -124,7 +127,7 @@ class MusicViewModel @Inject constructor(
         viewModelScope.launch {
             discoverLoading = true
             discoverFailed = false
-            val sections = repo.getDiscoverSections()
+            val sections = repo.getDiscoverSections(searchMode)
             discoverSections = sections
             discoverFailed = sections.isEmpty()
             discoverLoading = false
@@ -153,9 +156,21 @@ class MusicViewModel @Inject constructor(
         }
     }
 
-    /** Öffnet eine gefundene Hörbuch-/Podcast-Gruppe in der Detailansicht. */
-    fun openGroup(group: ChapterGroup) {
-        groupSongs = group.chapters
+    /**
+     * Lädt die Kapitel/Folgen einer Gruppe anhand ihrer Suche erneut — wie beim
+     * Mix bekommt die Detailseite ihr eigenes ViewModel und kann keinen State
+     * aus der Suche mitbringen. [uploader] ist der Gruppenname aus der Suche.
+     */
+    fun loadGroup(query: String, uploader: String, mode: MusicSearchMode) {
+        groupJob?.cancel()
+        groupJob = viewModelScope.launch {
+            groupLoading = true
+            val results = repo.searchMusic(query, mode)
+            val (groups, singles) = repo.groupIntoShows(results)
+            groupSongs = groups.firstOrNull { it.uploader.equals(uploader, ignoreCase = true) }?.chapters
+                ?: singles.filter { it.uploader.equals(uploader, ignoreCase = true) }
+            groupLoading = false
+        }
     }
 
     /** Lädt alle noch fehlenden Kapitel/Folgen der offenen Gruppe herunter. */
@@ -177,18 +192,20 @@ class MusicViewModel @Inject constructor(
         }
     }
 
-    /** Wechselt den Suchmodus und wiederholt eine offene Suche direkt. */
+    /** Wechselt den Suchmodus und lädt Suche und Entdecken-Vorschläge neu. */
     fun selectSearchMode(mode: MusicSearchMode) {
         if (mode == searchMode) return
         searchMode = mode
+        discoverSections = emptyList()
+        loadDiscover(force = true)
         if (searchAttempted && searchQuery.isNotBlank()) search(searchQuery)
     }
 
-    fun loadMix(query: String) {
+    fun loadMix(query: String, mode: MusicSearchMode = searchMode) {
         mixJob?.cancel()
         mixJob = viewModelScope.launch {
             mixLoading = true
-            mixSongs = repo.getMixSongs(query)
+            mixSongs = repo.getMixSongs(query, mode)
             mixLoading = false
         }
     }

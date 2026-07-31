@@ -49,6 +49,13 @@ enum class MusicSearchMode(
     MUSIC("music", "music_songs", 0),
     AUDIOBOOK("audiobook", "videos", 600),
     PODCAST("podcast", "videos", 300),
+    ;
+
+    companion object {
+        /** Modus zu einem API-Wert — unbekannte Werte fallen auf Musik zurück. */
+        fun fromApiValue(value: String?): MusicSearchMode =
+            entries.firstOrNull { it.apiValue == value } ?: MUSIC
+    }
 }
 
 /** Playlist samt Songs und wie viele davon offline verfügbar sind. */
@@ -112,13 +119,34 @@ class MusicRepository(
 
         /** Eigene Mixe für den Instrumental-Modus — Suchbegriffe, die von
          *  vornherein bei Stücken ohne Gesang landen. */
-        private val INSTRUMENTAL_SECTIONS = listOf(            "Lofi Beats" to "lofi hip hop instrumental beats no vocals",
+        private val INSTRUMENTAL_SECTIONS = listOf(
+            "Lofi Beats" to "lofi hip hop instrumental beats no vocals",
             "Piano" to "relaxing piano music instrumental",
             "Fokus & Lernen" to "focus study music instrumental no vocals",
             "Ambient" to "ambient instrumental music calm",
             "Jazz" to "smooth jazz instrumental",
             "Klassik" to "classical music instrumental",
             "Soundtracks" to "epic cinematic instrumental soundtrack",
+        )
+
+        /** Kuratierte Genres für den Hörbuch-Modus — Gegenstück zu den Musik-Mixen. */
+        private val AUDIOBOOK_SECTIONS = listOf(
+            "Krimi & Thriller" to "krimi thriller hörbuch",
+            "Fantasy & Sci-Fi" to "fantasy hörbuch deutsch",
+            "Sachbuch & Wissen" to "sachbuch hörbuch",
+            "Selbstentwicklung" to "selbsthilfe hörbuch",
+            "Klassiker" to "hörbuch klassiker deutsch",
+            "Horror" to "horror hörbuch deutsch",
+        )
+
+        /** Kuratierte Genres für den Podcast-Modus — Gegenstück zu den Musik-Mixen. */
+        private val PODCAST_SECTIONS = listOf(
+            "True Crime" to "true crime podcast deutsch",
+            "Comedy" to "comedy podcast deutsch",
+            "Wissen & Dokus" to "wissen podcast deutsch",
+            "Geschichte" to "geschichte podcast",
+            "Technologie" to "tech podcast deutsch",
+            "Wirtschaft & Finanzen" to "wirtschaft podcast deutsch",
         )
 
         /**
@@ -233,28 +261,40 @@ class MusicRepository(
     private fun chapterNumberOf(title: String): Int? =
         CHAPTER_NUMBER_RE.find(title)?.groupValues?.get(1)?.toIntOrNull()
 
-    suspend fun getDiscoverSections(): List<DiscoverSection> = coroutineScope {
-        val sections = if (instrumentalOnly()) INSTRUMENTAL_SECTIONS else DISCOVER_SECTIONS
-        sections.map { (title, query) ->
-            async {
-                val songs = try {
-                    getMixSongs(query).take(12)
-                } catch (_: Exception) {
-                    emptyList()
-                }
-                DiscoverSection(title, songs, query)
+    suspend fun getDiscoverSections(mode: MusicSearchMode = MusicSearchMode.MUSIC): List<DiscoverSection> =
+        coroutineScope {
+            val sections = when {
+                mode == MusicSearchMode.AUDIOBOOK -> AUDIOBOOK_SECTIONS
+                mode == MusicSearchMode.PODCAST -> PODCAST_SECTIONS
+                instrumentalOnly() -> INSTRUMENTAL_SECTIONS
+                else -> DISCOVER_SECTIONS
             }
-        }.map { it.await() }.filter { it.songs.isNotEmpty() }
-    }
+            sections.map { (title, query) ->
+                async {
+                    val songs = try {
+                        getMixSongs(query, mode).take(12)
+                    } catch (_: Exception) {
+                        emptyList()
+                    }
+                    DiscoverSection(title, songs, query)
+                }
+            }.map { it.await() }.filter { it.songs.isNotEmpty() }
+        }
 
     /**
-     * Songs eines kuratierten Mixes. Stunden-lange Mitschnitte und Endlos-Mixe
-     * fliegen raus — in einer Entdecken-Liste sollen echte Songs stehen.
-     * Greift der Filter zu hart, lieber ungefiltert zeigen als eine leere Liste.
+     * Songs eines kuratierten Mixes. Bei Musik fliegen stundenlange Mitschnitte
+     * und Endlos-Mixe raus — in einer Entdecken-Liste sollen echte Songs stehen.
+     * Hörbücher und Podcasts dürfen dagegen lang sein; dort fallen nur Clips
+     * und Trailer weg. Greift der Filter zu hart, lieber ungefiltert zeigen
+     * als eine leere Liste.
      */
-    suspend fun getMixSongs(query: String): List<MusicSong> {
-        val all = searchMusic(query)
-        val tracks = all.filter { it.duration in 60..900 }
+    suspend fun getMixSongs(query: String, mode: MusicSearchMode = MusicSearchMode.MUSIC): List<MusicSong> {
+        val all = searchMusic(query, mode)
+        val tracks = when (mode) {
+            MusicSearchMode.MUSIC -> all.filter { it.duration in 60..900 }
+            MusicSearchMode.AUDIOBOOK -> all.filter { it.duration >= 120 }
+            MusicSearchMode.PODCAST -> all.filter { it.duration >= 180 }
+        }
         return if (tracks.size >= 4) tracks else all
     }
 

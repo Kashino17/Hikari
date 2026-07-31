@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.hikari.app.domain.repo.MusicSearchMode
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariPrimary
 import com.hikari.app.ui.theme.HikariText
@@ -50,6 +51,7 @@ import com.hikari.app.ui.theme.HikariTextMuted
 fun MixDetailScreen(
     title: String,
     query: String,
+    mode: MusicSearchMode,
     onBack: () -> Unit,
     onOpenNowPlaying: () -> Unit,
     viewModel: MusicViewModel = hiltViewModel(),
@@ -60,7 +62,7 @@ fun MixDetailScreen(
     val downloadedCount = songs.count { it.videoId in downloadedIds }
     val allDownloaded = songs.isNotEmpty() && downloadedCount == songs.size
 
-    LaunchedEffect(query) { viewModel.loadMix(query) }
+    LaunchedEffect(query, mode) { viewModel.loadMix(query, mode) }
 
     Column(Modifier.fillMaxSize().background(HikariBg).statusBarsPadding()) {
         Row(
