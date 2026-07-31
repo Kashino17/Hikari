@@ -5,17 +5,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,7 +18,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -43,8 +36,11 @@ fun MusicScreen(
     onBack: () -> Unit,
     viewModel: MusicViewModel = viewModel(),
 ) {
-    var tab by remember { mutableStateOf(0) }
+    var tab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Entdecken", "Bibliothek", "Favoriten")
+
+    // Per-tab state
+    var searchQuery by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -83,78 +79,80 @@ fun MusicScreen(
             }
 
             when (tab) {
-                0 -> DiscoverTab(viewModel)
-                1 -> LibraryTab(viewModel)
-                2 -> FavoritesTab(viewModel)
+                0 -> {
+                    LaunchedEffect(Unit) { viewModel.loadSuggestions() }
+                    DiscoverTabContent(viewModel, searchQuery) { searchQuery = it }
+                }
+                1 -> {
+                    LaunchedEffect(Unit) { viewModel.loadAllSongs() }
+                    LibraryTabContent(viewModel)
+                }
+                2 -> {
+                    LaunchedEffect(Unit) { viewModel.loadFavorites() }
+                    FavoritesTabContent(viewModel)
+                }
             }
         }
     }
 }
 
 @Composable
-private fun DiscoverTab(viewModel: MusicViewModel) {
-    LaunchedEffect(Unit) {
-        viewModel.loadSuggestions()
-    }
-
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        // Search bar
-        var query by remember { mutableStateOf("") }
-        OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            modifier = Modifier.fillMaxWidth()
-                .padding(16.dp)
-                .background(HikariCardBg, RoundedCornerShape(24.dp)),
-            placeholder = { Text("Song, Künstler oder Album suchen...") },
-            leadingIcon = { Icon(Icons.Default.Search, null, tint = HikariTextMuted) },
-            trailingIcon = {
-                if (query.isNotEmpty()) {
-                    IconButton(onClick = { query = "" }) {
-                        Icon(Icons.Default.Close, null, tint = HikariTextMuted)
-                    }
-                }
-            },
-            shape = RoundedCornerShape(24.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = HikariPrimary,
-            ),
-            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                keyboardType = androidx.compose.ui.text.input.KeyboardType.Text,
-            ),
-            keyboardActions = androidx.compose.foundation.text.KeyboardActions(
-                onSearch = { if (query.isNotBlank()) viewModel.search(query) },
-            ),
-        )
-
-        // Search results
-        if (viewModel.searchResults.isNotEmpty()) {
-            Column(Modifier.padding(16.dp)) {
-                Text("Suchergebnisse", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = HikariText)
-                Spacer(Modifier.height(12.dp))
-                viewModel.searchResults.forEach { song ->
-                    MusicSongRow(song, viewModel, showPlaylistButton = true)
-                    Spacer(Modifier.height(8.dp))
-                }
-            }
-        }
-
-        // Suggestions / recommendations
-        if (viewModel.suggestionsLoading) {
-            CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally).padding(32.dp))
-        } else {
-            // Group suggestions by uploader
-            val grouped = viewModel.suggestions.groupBy { it.uploader }
-            grouped.forEach { (uploader, songs) ->
-                Column(Modifier.padding(16.dp)) {
-                    Text(uploader, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = HikariText)
-                    Spacer(Modifier.height(8.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(songs) { song ->
-                            MusicCardSmall(song, viewModel)
+private fun DiscoverTabContent(
+    viewModel: MusicViewModel,
+    query: String,
+    onQueryChange: (String) -> Unit,
+) {
+    LazyColumn(Modifier.fillMaxSize()) {
+        item {
+            OutlinedTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                placeholder = { Text("Suchen...") },
+                leadingIcon = { Icon(Icons.Default.Search, null, tint = HikariTextMuted) },
+                trailingIcon = {
+                    if (query.isNotEmpty()) {
+                        IconButton(onClick = { onQueryChange("") }) {
+                            Icon(Icons.Default.Close, null, tint = HikariTextMuted)
                         }
                     }
-                    Spacer(Modifier.height(16.dp))
+                },
+                shape = RoundedCornerShape(24.dp),
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = HikariPrimary),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Text,
+                ),
+                keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                    onSearch = { if (query.isNotBlank()) viewModel.search(query) },
+                ),
+            )
+        }
+
+        if (viewModel.searchResults.isNotEmpty()) {
+            item {
+                Text("Suchergebnisse", fontWeight = FontWeight.Bold, fontSize = 18.sp,
+                    color = HikariText, modifier = Modifier.padding(horizontal = 16.dp))
+            }
+            items(viewModel.searchResults, key = { it.videoId }) { song ->
+                SongRow(song, viewModel, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+            }
+        }
+
+        if (viewModel.suggestionsLoading) {
+            item {
+                Box(Modifier.fillMaxWidth().padding(32.dp), Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+        } else {
+            val grouped = viewModel.suggestions.groupBy { it.uploader }
+            grouped.forEach { (uploader, songs) ->
+                item {
+                    Text(uploader, fontWeight = FontWeight.Bold, fontSize = 16.sp,
+                        color = HikariText, modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp))
+                }
+                items(songs.take(4), key = { it.videoId }) { song ->
+                    SongRow(song, viewModel, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                 }
             }
         }
@@ -162,71 +160,55 @@ private fun DiscoverTab(viewModel: MusicViewModel) {
 }
 
 @Composable
-private fun LibraryTab(viewModel: MusicViewModel) {
-    LaunchedEffect(Unit) {
-        viewModel.loadAllSongs()
-    }
-
-    Column(Modifier.fillMaxSize()) {
+private fun LibraryTabContent(viewModel: MusicViewModel) {
+    LazyColumn(Modifier.fillMaxSize()) {
         if (viewModel.allSongs.isEmpty()) {
-            Box(Modifier.fillMaxSize(), Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.MusicNote, null, tint = HikariTextMuted, modifier = Modifier.size(48.dp))
-                    Spacer(Modifier.height(8.dp))
-                    Text("Noch keine Songs", color = HikariTextMuted)
+            item {
+                Box(Modifier.fillMaxWidth().padding(64.dp), Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.MusicNote, null, tint = HikariTextMuted, modifier = Modifier.size(48.dp))
+                        Spacer(Modifier.height(8.dp))
+                        Text("Noch keine Songs", color = HikariTextMuted)
+                    }
                 }
             }
         } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(viewModel.allSongs, { it.videoId }) { song ->
-                    MusicSongRow(song, viewModel)
-                }
+            items(viewModel.allSongs, key = { it.videoId }) { song ->
+                SongRow(song, viewModel, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
             }
         }
     }
 }
 
 @Composable
-private fun FavoritesTab(viewModel: MusicViewModel) {
-    LaunchedEffect(Unit) {
-        viewModel.loadFavorites()
-    }
-
-    Column(Modifier.fillMaxSize()) {
+private fun FavoritesTabContent(viewModel: MusicViewModel) {
+    LazyColumn(Modifier.fillMaxSize()) {
         if (viewModel.favorites.isEmpty()) {
-            Box(Modifier.fillMaxSize(), Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.Favorite, null, tint = HikariTextMuted, modifier = Modifier.size(48.dp))
-                    Spacer(Modifier.height(8.dp))
-                    Text("Keine Favoriten", color = HikariTextMuted)
+            item {
+                Box(Modifier.fillMaxWidth().padding(64.dp), Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.Favorite, null, tint = HikariTextMuted, modifier = Modifier.size(48.dp))
+                        Spacer(Modifier.height(8.dp))
+                        Text("Keine Favoriten", color = HikariTextMuted)
+                    }
                 }
             }
         } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(viewModel.favorites, { it.videoId }) { song ->
-                    MusicSongRow(song, viewModel, showPlaylistButton = false)
-                }
+            items(viewModel.favorites, key = { it.videoId }) { song ->
+                SongRow(song, viewModel, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
             }
         }
     }
 }
 
 @Composable
-private fun MusicSongRow(
+private fun SongRow(
     song: MusicSong,
     viewModel: MusicViewModel,
-    showPlaylistButton: Boolean = true,
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(HikariCardBg)
@@ -234,7 +216,6 @@ private fun MusicSongRow(
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Thumbnail
         Image(
             painter = rememberAsyncImagePainter(song.thumbnailUrl),
             contentDescription = null,
@@ -242,17 +223,11 @@ private fun MusicSongRow(
             contentScale = ContentScale.Crop,
         )
         Spacer(Modifier.width(12.dp))
-
-        // Info
         Column(Modifier.weight(1f)) {
             Text(song.title, fontWeight = FontWeight.Medium, fontSize = 14.sp, color = HikariText, maxLines = 1)
             Text(song.uploader, fontSize = 12.sp, color = HikariTextMuted, maxLines = 1)
         }
-
-        // Duration
         Text(formatDuration(song.duration), fontSize = 12.sp, color = HikariTextMuted)
-
-        // Favorite
         IconButton(onClick = { viewModel.toggleFavorite(song) }) {
             Icon(
                 if (song.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -260,32 +235,6 @@ private fun MusicSongRow(
                 tint = if (song.isFavorite) Color(0xFFFF5252) else HikariTextMuted,
             )
         }
-
-        // Add to playlist
-        if (showPlaylistButton) {
-            IconButton(onClick = { /* show playlist picker */ }) {
-                Icon(Icons.Default.Add, null, tint = HikariTextMuted)
-            }
-        }
-    }
-}
-
-@Composable
-private fun MusicCardSmall(song: MusicSong, viewModel: MusicViewModel) {
-    Column(
-        modifier = Modifier
-            .width(140.dp)
-            .clickable { viewModel.playSong(song) },
-    ) {
-        Image(
-            painter = rememberAsyncImagePainter(song.thumbnailUrl),
-            contentDescription = song.title,
-            modifier = Modifier.fillMaxWidth().height(80.dp).clip(RoundedCornerShape(8.dp)),
-            contentScale = ContentScale.Crop,
-        )
-        Spacer(Modifier.height(6.dp))
-        Text(song.title, fontSize = 12.sp, color = HikariText, maxLines = 1, fontWeight = FontWeight.Medium)
-        Text(song.uploader, fontSize = 11.sp, color = HikariTextMuted, maxLines = 1)
     }
 }
 
