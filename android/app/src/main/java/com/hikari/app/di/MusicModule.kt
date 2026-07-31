@@ -9,8 +9,10 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -18,13 +20,18 @@ import javax.inject.Singleton
 object MusicModule {
     @Provides
     @Singleton
-    fun providesGson(): Gson = GsonBuilder().create()
+    fun providesGson(): Gson = GsonBuilder().setLenient().create()
 
     @Provides
     @Singleton
     fun providesMusicApi(gson: Gson): MusicApi {
+        val client = OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .build()
         return Retrofit.Builder()
             .baseUrl(MusicApi.BASE_URL)
+            .client(client)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
             .create(MusicApi::class.java)

@@ -14,8 +14,12 @@ class MusicRepository(
     private val api: MusicApi,
 ) {
     suspend fun searchMusic(query: String): List<MusicSong> {
-        val results = api.search(query)
-        return results.results.mapIndexed { index, r -> r.toSong(index) }
+        return try {
+            val results = api.search(query)
+            results.results.mapIndexed { index, r -> r.toSong(index) }
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
     suspend fun getSuggestions(query: String): List<MusicSong> {
@@ -97,13 +101,12 @@ class MusicRepository(
     }
 
     suspend fun getMusicSuggestions(): List<MusicSong> {
-        val keywords = listOf("lofi", "pop", "rock", "jazz", "classical", "electronic", "hip hop",
-            "indie", "r&b", "soul", "metal", "blues", "country", "folk", "ambient")
+        val keywords = listOf("lofi", "pop", "jazz", "chill")
         val results = mutableListOf<MusicSong>()
-        keywords.take(5).forEach { keyword ->
+        keywords.take(3).forEach { keyword ->
             try {
                 val suggestions = api.getSuggestions(keyword)
-                results.addAll(suggestions.map { suggestion ->
+                results.addAll(suggestions.take(4).map { suggestion ->
                     val videoId = "suggestion_${keyword}_${suggestion.hashCode()}"
                     MusicSong(
                         videoId = videoId,

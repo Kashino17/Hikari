@@ -41,39 +41,39 @@ fun GamesScreen(
 ) {
     val games = listOf(
         GameInfo(
-            "neon-catch", "Neon Catch",
-            "Fange fallende Kristalle mit dem Korb. Grün = Punkte, Rot = Gefahr!",
-            { Icon(Icons.Default.Diamond, null, tint = Color(0xFF4ADE80), modifier = Modifier.size(28.dp)) },
-            Color(0xFF4ADE80),
-            { onBack -> NeonCatchGame(onBack) },
-        ),
-        GameInfo(
-            "memory-grid", "Memory Grid",
-            "Finde die passenden Farbpaare auf dem 4x3 Spielfeld!",
-            { Icon(Icons.Default.GridOn, null, tint = Color(0xFF60A5FA), modifier = Modifier.size(28.dp)) },
-            Color(0xFF60A5FA),
-            { onBack -> MemoryGridGame(onBack) },
-        ),
-        GameInfo(
-            "reflex-tap", "Reflex Tap",
-            "Tippe die Kreise so schnell wie möglich. Combo-System für Bonuspunkte!",
-            { Icon(Icons.Default.Fingerprint, null, tint = Color(0xFFFF8A65), modifier = Modifier.size(28.dp)) },
-            Color(0xFFFF8A65),
-            { onBack -> ReflexTapGame(onBack) },
-        ),
-        GameInfo(
-            "word-chain", "Wortkette",
-            "Bilde Wörter aus den Buchstaben im Raster. Mindestens 2 Buchstaben!",
-            { Icon(Icons.Default.TextFields, null, tint = Color(0xFFA78BFA), modifier = Modifier.size(28.dp)) },
-            Color(0xFFA78BFA),
-            { onBack -> WordChainGame(onBack) },
-        ),
-        GameInfo(
-            "orbit", "Orbit",
-            "Weiche Asteroiden auf der Umlaufbahn aus. Links/rechts tippen zum Drehen!",
-            { Icon(Icons.Default.Circle, null, tint = Color(0xFFFBBF24), modifier = Modifier.size(28.dp)) },
+            "minesweeper", "Minesweeper",
+            "Klassisches Minensuchspiel. Tippe zum Aufdecken, lange drücken für Flagge!",
+            { Icon(Icons.Default.GridOn, null, tint = Color(0xFFFBBF24), modifier = Modifier.size(28.dp)) },
             Color(0xFFFBBF24),
-            { onBack -> OrbitGame(onBack) },
+            { onBack -> MinesweeperGame(onBack) },
+        ),
+        GameInfo(
+            "snake", "Snake",
+            "Steuere die Schlange mit Wisch-Gesten oder D-Pad. Friss die roten Punkte!",
+            { Icon(Icons.Default.Cable, null, tint = Color(0xFF4ADE80), modifier = Modifier.size(28.dp)) },
+            Color(0xFF4ADE80),
+            { onBack -> SnakeGame(onBack) },
+        ),
+        GameInfo(
+            "tap-n-pop", "Tap 'n Pop",
+            "Tippe alle schwebenden Blasen weg, bevor sie entkommen. Combo-System!",
+            { Icon(Icons.Default.Circle, null, tint = Color(0xFFFF8A65), modifier = Modifier.size(28.dp)) },
+            Color(0xFFFF8A65),
+            { onBack -> TapNPopGame(onBack) },
+        ),
+        GameInfo(
+            "tictactoe", "Tic-Tac-Toe",
+            "Spiele gegen die KI. Wer zuerst drei in einer Reihe hat, gewinnt!",
+            { Icon(Icons.Default.Close, null, tint = Color(0xFF60A5FA), modifier = Modifier.size(28.dp)) },
+            Color(0xFF60A5FA),
+            { onBack -> TicTacToeGame(onBack) },
+        ),
+        GameInfo(
+            "color-match", "Color Match",
+            "Finde die Farbe, die zum Ziel-Ton passt. Immer schwieriger werdend!",
+            { Icon(Icons.Default.Palette, null, tint = Color(0xFFA78BFA), modifier = Modifier.size(28.dp)) },
+            Color(0xFFA78BFA),
+            { onBack -> ColorMatchGame(onBack) },
         ),
     )
 
