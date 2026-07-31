@@ -167,6 +167,7 @@ class MusicPlayerController @Inject constructor(
         _durationMs.value = 0
         _error.value = null
         _isBuffering.value = true
+        scope.launch { repo.recordPlayed(song) }
         loadJob = scope.launch {
             val url = repo.getAudioStream(song.videoId)
             if (url == null) {
@@ -175,7 +176,6 @@ class MusicPlayerController @Inject constructor(
                 skipAfterFailure()
                 return@launch
             }
-            scope.launch { repo.recordPlayed(song) }
             val p = ensurePlayer()
             p.setMediaItem(MediaItem.fromUri(url))
             p.prepare()

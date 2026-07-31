@@ -72,6 +72,12 @@ fun MusicScreen(
     val tabs = listOf("Entdecken", "Verlauf", "Favoriten")
     val currentSong by viewModel.player.currentSong.collectAsState()
 
+    // Verlauf/Favoriten ändern sich durch Playback im Hintergrund — beim
+    // Tab-Wechsel neu laden, sonst zeigt der Tab den Stand vom VM-Start.
+    androidx.compose.runtime.LaunchedEffect(tab) {
+        if (tab > 0) viewModel.refreshLibrary()
+    }
+
     Column(Modifier.fillMaxSize().background(HikariBg)) {
         Text(
             "Musik",
