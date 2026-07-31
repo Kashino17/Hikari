@@ -49,6 +49,7 @@ import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.tuning.TuningScreen
+import com.hikari.app.ui.music.MixDetailScreen
 import com.hikari.app.ui.music.MusicScreen
 import com.hikari.app.ui.music.NowPlayingScreen
 import com.hikari.app.ui.music.PlaylistDetailScreen
@@ -95,11 +96,12 @@ fun HikariNavHost() {
     val isGameRoute = currentRoute?.startsWith("game/") == true
     val isNowPlaying = currentRoute == "nowplaying"
     val isPlaylistRoute = currentRoute?.startsWith("playlist/") == true
+    val isMixRoute = currentRoute?.startsWith("mix/") == true
 
     Scaffold(
         containerColor = HikariBg,
         bottomBar = {
-            if (!(currentRoute == "feed" && feedFullscreen) && !isVideoRoute && !isReaderRoute && !isGearSubPage && !isGameRoute && !isNowPlaying && !isPlaylistRoute) {
+            if (!(currentRoute == "feed" && feedFullscreen) && !isVideoRoute && !isReaderRoute && !isGearSubPage && !isGameRoute && !isNowPlaying && !isPlaylistRoute && !isMixRoute) {
                 HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
                 NavigationBar(
                     containerColor = HikariBg,
@@ -245,11 +247,32 @@ fun HikariNavHost() {
                     MusicScreen(
                         onOpenNowPlaying = { nav.navigate("nowplaying") },
                         onOpenPlaylist = { id -> nav.navigate("playlist/$id") },
+                        onOpenMix = { title, query ->
+                            val t = URLEncoder.encode(title, "UTF-8")
+                            val q = URLEncoder.encode(query, "UTF-8")
+                            nav.navigate("mix/$t?q=$q")
+                        },
                     )
                 }
             }
             composable("nowplaying") {
                 NowPlayingScreen(onBack = { nav.popBackStack() })
+            }
+            composable(
+                route = "mix/{title}?q={q}",
+                arguments = listOf(
+                    navArgument("title") { type = NavType.StringType },
+                    navArgument("q") { type = NavType.StringType; defaultValue = "" },
+                ),
+            ) { entry ->
+                val title = URLDecoder.decode(entry.arguments?.getString("title").orEmpty(), "UTF-8")
+                val query = URLDecoder.decode(entry.arguments?.getString("q").orEmpty(), "UTF-8")
+                MixDetailScreen(
+                    title = title,
+                    query = query.ifBlank { title },
+                    onBack = { nav.popBackStack() },
+                    onOpenNowPlaying = { nav.navigate("nowplaying") },
+                )
             }
             composable(
                 route = "playlist/{playlistId}",

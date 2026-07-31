@@ -23,7 +23,12 @@ import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
-data class DiscoverSection(val title: String, val songs: List<MusicSong>)
+data class DiscoverSection(
+    val title: String,
+    val songs: List<MusicSong>,
+    /** Suchbegriff hinter dem Mix — erlaubt es, ihn später erneut zu laden. */
+    val query: String = "",
+)
 
 /** Playlist samt Songs und wie viele davon offline verfügbar sind. */
 data class PlaylistWithSongs(
@@ -53,12 +58,19 @@ class MusicRepository(
             "https://pipedapi.kavin.rocks",
             "https://pipedapi.reallyaweso.me",
         )
+        /**
+         * Kuratierte Mixe. Reihenfolge ist die Anzeigereihenfolge im
+         * Entdecken-Tab — der erste Eintrag wird als Rangliste gerendert,
+         * seine Reihenfolge trägt also Bedeutung.
+         */
         private val DISCOVER_SECTIONS = listOf(
-            "Top Hits" to "top hits 2026",
-            "Lofi & Study" to "lofi hip hop beats",
-            "Chill Pop" to "chill pop playlist",
-            "Hip-Hop" to "hip hop hits",
+            "Top Charts" to "top charts 2026",
+            "Zum Chillen" to "chill music playlist",
+            "Fokus & Lernen" to "lofi hip hop study beats",
+            "Deutschrap" to "deutschrap 2026",
             "Anime & Gaming" to "anime opening songs",
+            "Zum Trainieren" to "workout music motivation",
+            "Party" to "party hits dance",
         )
     }
 
@@ -75,13 +87,24 @@ class MusicRepository(
         DISCOVER_SECTIONS.map { (title, query) ->
             async {
                 val songs = try {
-                    searchMusic(query).take(10)
+                    getMixSongs(query).take(12)
                 } catch (_: Exception) {
                     emptyList()
                 }
-                DiscoverSection(title, songs)
+                DiscoverSection(title, songs, query)
             }
         }.map { it.await() }.filter { it.songs.isNotEmpty() }
+    }
+
+    /**
+     * Songs eines kuratierten Mixes. Stunden-lange Mitschnitte und Endlos-Mixe
+     * fliegen raus — in einer Entdecken-Liste sollen echte Songs stehen.
+     * Greift der Filter zu hart, lieber ungefiltert zeigen als eine leere Liste.
+     */
+    suspend fun getMixSongs(query: String): List<MusicSong> {
+        val all = searchMusic(query)
+        val tracks = all.filter { it.duration in 60..900 }
+        return if (tracks.size >= 4) tracks else all
     }
 
     suspend fun getAudioStream(videoId: String): String? {

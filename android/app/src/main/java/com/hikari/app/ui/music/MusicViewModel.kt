@@ -68,7 +68,13 @@ class MusicViewModel @Inject constructor(
         .map { rows -> rows.map { it.toSong() } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
+    /** Songs des gerade geöffneten Mixes — der Mix wird über seine Suche neu
+     *  geladen, damit die Detailseite ohne Zustandsübergabe auskommt. */
+    var mixSongs by mutableStateOf<List<MusicSong>>(emptyList())
+    var mixLoading by mutableStateOf(false)
+
     private var searchJob: Job? = null
+    private var mixJob: Job? = null
 
     init {
         loadDiscover()
@@ -102,6 +108,34 @@ class MusicViewModel @Inject constructor(
             searchAttempted = true
             searchResults = repo.searchMusic(q)
             searchLoading = false
+        }
+    }
+
+    fun loadMix(query: String) {
+        mixJob?.cancel()
+        mixJob = viewModelScope.launch {
+            mixLoading = true
+            mixSongs = repo.getMixSongs(query)
+            mixLoading = false
+        }
+    }
+
+    /** Lädt alle noch fehlenden Songs des offenen Mixes herunter. */
+    fun downloadMix(title: String) {
+        viewModelScope.launch {
+            val missing = mixSongs.filter { it.videoId !in downloadedIds.value }
+            if (missing.isEmpty()) {
+                message = "Alle Songs sind schon heruntergeladen"
+                return@launch
+            }
+            message = "Lade ${missing.size} Songs herunter…"
+            var ok = 0
+            missing.forEach { song -> if (downloads.download(song).isSuccess) ok++ }
+            message = if (ok == missing.size) {
+                "„$title“ ist offline verfügbar"
+            } else {
+                "$ok von ${missing.size} Songs geladen"
+            }
         }
     }
 

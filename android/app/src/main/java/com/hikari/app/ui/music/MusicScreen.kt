@@ -15,7 +15,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -56,6 +59,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.domain.repo.PlaylistWithSongs
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariCardBg
@@ -76,6 +80,7 @@ private const val TAB_HISTORY = 4
 fun MusicScreen(
     onOpenNowPlaying: () -> Unit,
     onOpenPlaylist: (Int) -> Unit,
+    onOpenMix: (title: String, query: String) -> Unit,
     viewModel: MusicViewModel = hiltViewModel(),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(TAB_DISCOVER) }
@@ -133,7 +138,7 @@ fun MusicScreen(
 
             Box(Modifier.weight(1f)) {
                 when (tab) {
-                    TAB_DISCOVER -> DiscoverTab(viewModel, online)
+                    TAB_DISCOVER -> DiscoverTab(viewModel, online, onOpenMix)
                     TAB_PLAYLISTS -> PlaylistsTab(viewModel, onOpenPlaylist)
                     TAB_DOWNLOADS -> DownloadsTab(viewModel)
                     TAB_FAVORITES -> FavoritesTab(viewModel)
@@ -161,7 +166,11 @@ fun MusicScreen(
 }
 
 @Composable
-private fun DiscoverTab(viewModel: MusicViewModel, online: Boolean) {
+private fun DiscoverTab(
+    viewModel: MusicViewModel,
+    online: Boolean,
+    onOpenMix: (title: String, query: String) -> Unit,
+) {
     if (!online) {
         EmptyHint(Icons.Outlined.CloudDownload, "Entdecken braucht Internet — deine Downloads findest du im Downloads-Tab.")
         return
@@ -212,7 +221,7 @@ private fun DiscoverTab(viewModel: MusicViewModel, online: Boolean) {
         }
 
         when {
-            viewModel.discoverLoading -> item(key = "disc-loading") { CenteredLoader() }
+            viewModel.discoverLoading -> item(key = "disc-loading") { DiscoverSkeleton() }
             viewModel.discoverFailed -> item(key = "disc-error") {
                 Column(
                     Modifier.fillMaxWidth().padding(48.dp),
@@ -225,22 +234,113 @@ private fun DiscoverTab(viewModel: MusicViewModel, online: Boolean) {
                     }
                 }
             }
-            else -> viewModel.discoverSections.forEach { section ->
-                item(key = "h-${section.title}") {
-                    Text(
-                        section.title,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp,
-                        color = HikariText,
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 6.dp),
-                    )
-                }
-                items(section.songs, key = { "${section.title}-${it.videoId}" }) { song ->
-                    SongRow(song, viewModel, section.songs)
-                }
+            else -> discoverContent(viewModel, onOpenMix)
+        }
+    }
+}
+
+/**
+ * Aufbau der Entdecken-Seite: erst die Mixe als Karten, dann die Charts als
+ * Rangliste, danach wechseln sich Kachelreihen und kompakte Listen ab —
+ * so bleibt beim Scrollen ein Rhythmus statt einer durchgehenden Liste.
+ */
+private fun LazyListScope.discoverContent(
+    viewModel: MusicViewModel,
+    onOpenMix: (title: String, query: String) -> Unit,
+) {
+    val sections = viewModel.discoverSections
+    if (sections.isEmpty()) return
+
+    item(key = "mixes-header") {
+        SectionHeader("Mixe", eyebrow = "KURATIERT")
+    }
+    item(key = "mixes-row") {
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            items(sections, key = { "mix-${it.title}" }) { section ->
+                MixCard(
+                    title = section.title,
+                    songs = section.songs,
+                    onClick = { onOpenMix(section.title, section.query) },
+                )
             }
         }
     }
+
+    // Erste Sektion als Rangliste — hier sagt die Reihenfolge etwas aus.
+    val charts = sections.first()
+    item(key = "charts-header") {
+        SectionHeader(charts.title, onSeeAll = { onOpenMix(charts.title, charts.query) })
+    }
+    itemsIndexed(
+        charts.songs.take(5),
+        key = { _, song -> "chart-${song.videoId}" },
+    ) { index, song ->
+        RankedRowBound(index + 1, song, viewModel, charts.songs)
+    }
+
+    sections.drop(1).forEachIndexed { index, section ->
+        item(key = "h-${section.title}") {
+            SectionHeader(section.title, onSeeAll = { onOpenMix(section.title, section.query) })
+        }
+        if (index % 2 == 0) {
+            item(key = "row-${section.title}") {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    items(section.songs, key = { "t-${section.title}-${it.videoId}" }) { song ->
+                        TileBound(song, viewModel, section.songs)
+                    }
+                }
+            }
+        } else {
+            items(
+                section.songs.take(4),
+                key = { "l-${section.title}-${it.videoId}" },
+            ) { song ->
+                SongRow(song, viewModel, section.songs)
+            }
+        }
+    }
+}
+
+/** Hält die Player-/Download-Zustände aus dem ViewModel an der Chart-Zeile. */
+@Composable
+private fun RankedRowBound(
+    rank: Int,
+    song: MusicSong,
+    viewModel: MusicViewModel,
+    queue: List<MusicSong>,
+) {
+    val currentSong by viewModel.player.currentSong.collectAsState()
+    val downloadedIds by viewModel.downloadedIds.collectAsState()
+    RankedSongRow(
+        rank = rank,
+        song = song,
+        isCurrent = currentSong?.videoId == song.videoId,
+        isDownloaded = song.videoId in downloadedIds,
+        onClick = { viewModel.play(song, queue) },
+    )
+}
+
+@Composable
+private fun TileBound(
+    song: MusicSong,
+    viewModel: MusicViewModel,
+    queue: List<MusicSong>,
+) {
+    val currentSong by viewModel.player.currentSong.collectAsState()
+    val downloadedIds by viewModel.downloadedIds.collectAsState()
+    SongTile(
+        song = song,
+        isCurrent = currentSong?.videoId == song.videoId,
+        isDownloaded = song.videoId in downloadedIds,
+        onClick = { viewModel.play(song, queue) },
+        onLongClick = { viewModel.addToPlaylistTarget = song },
+    )
 }
 
 @Composable
