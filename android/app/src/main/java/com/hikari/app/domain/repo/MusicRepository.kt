@@ -11,6 +11,7 @@ import com.hikari.app.data.db.MusicPlaylistSongDao
 import com.hikari.app.data.db.MusicPlaylistSongEntity
 import com.hikari.app.data.db.MusicSongDao
 import com.hikari.app.data.db.MusicSongEntity
+import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.model.MusicPlaylist
 import com.hikari.app.domain.model.MusicSong
 import java.net.URLEncoder
@@ -18,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
@@ -51,6 +53,7 @@ class MusicRepository(
     private val api: HikariApi,
     private val fallbackClient: OkHttpClient,
     private val json: Json,
+    private val settings: SettingsStore,
 ) {
     companion object {
         private val PIPED_INSTANCES = listOf(
@@ -72,19 +75,77 @@ class MusicRepository(
             "Zum Trainieren" to "workout music motivation",
             "Party" to "party hits dance",
         )
+
+        /** Eigene Mixe für den Instrumental-Modus — Suchbegriffe, die von
+         *  vornherein bei Stücken ohne Gesang landen. */
+        private val INSTRUMENTAL_SECTIONS = listOf(
+            "Lofi Beats" to "lofi hip hop instrumental beats no vocals",
+            "Piano" to "relaxing piano music instrumental",
+            "Fokus & Lernen" to "focus study music instrumental no vocals",
+            "Ambient" to "ambient instrumental music calm",
+            "Jazz" to "smooth jazz instrumental",
+            "Klassik" to "classical music instrumental",
+            "Soundtracks" to "epic cinematic instrumental soundtrack",
+        )
+
+        /** Titelmerkmale, die eindeutig für Gesang sprechen. */
+        private val VOCAL_MARKERS = listOf(
+            "lyrics", "lyric video", "feat.", "feat ", "ft.", "ft ", "featuring",
+            "cover)", "karaoke", "acapella", "a cappella", "sing along",
+            "singing", "vocal cover", "gesang", "chor",
+        )
+
+        /** Merkmale, die ein Stück trotz Gesangs-Wortlaut als instrumental ausweisen. */
+        private val INSTRUMENTAL_MARKERS = listOf(
+            "instrumental", "no vocal", "without vocal", "ohne gesang", "backing track",
+            "lofi", "lo-fi", "beats", "piano", "guitar solo", "ambient", "bgm",
+            "background music", "soundtrack", "ost", "orchestral", "orchestra",
+            "classical", "jazz", "meditation", "relaxing", "study music", "sleep music",
+        )
     }
 
-    suspend fun searchMusic(query: String): List<MusicSong> {
-        val tracks = try {
-            api.searchMusic(query).map { it.toSong() }
-        } catch (_: Exception) {
-            pipedSearchFallback(query)
+    /**
+     * Entfernt Stücke, deren Titel klar auf Gesang hindeutet. Rein heuristisch —
+     * Piped liefert keine Angabe dazu. Ein Instrumental-Merkmal im Titel sticht
+     * das Gesangs-Merkmal, sonst wäre "Lofi ohne Gesang (no vocals)" gefiltert.
+     */
+    private fun filterInstrumental(songs: List<MusicSong>): List<MusicSong> {
+        val filtered = songs.filter { song ->
+            val haystack = "${song.title} ${song.uploader}".lowercase()
+            when {
+                INSTRUMENTAL_MARKERS.any { it in haystack } -> true
+                VOCAL_MARKERS.any { it in haystack } -> false
+                else -> true
+            }
         }
-        return withFavoriteState(tracks)
+        // Lieber etwas Unschärfe als eine leere Liste.
+        return if (filtered.size >= 4) filtered else songs
+    }
+
+    private suspend fun instrumentalOnly(): Boolean =
+        runCatching { settings.instrumentalOnly.first() }.getOrDefault(false)
+
+    suspend fun searchMusic(query: String): List<MusicSong> {
+        val instrumental = instrumentalOnly()
+        // Im Instrumental-Modus zieht schon die Anfrage in die richtige Richtung;
+        // der Filter danach räumt die Ausreißer weg. Die kuratierten Mixe tragen
+        // den Begriff bereits — doppelt anhängen träfe nur den Cache.
+        val effectiveQuery = when {
+            !instrumental -> query
+            query.contains("instrumental", ignoreCase = true) -> query
+            else -> "$query instrumental"
+        }
+        val tracks = try {
+            api.searchMusic(effectiveQuery).map { it.toSong() }
+        } catch (_: Exception) {
+            pipedSearchFallback(effectiveQuery)
+        }
+        return withFavoriteState(if (instrumental) filterInstrumental(tracks) else tracks)
     }
 
     suspend fun getDiscoverSections(): List<DiscoverSection> = coroutineScope {
-        DISCOVER_SECTIONS.map { (title, query) ->
+        val sections = if (instrumentalOnly()) INSTRUMENTAL_SECTIONS else DISCOVER_SECTIONS
+        sections.map { (title, query) ->
             async {
                 val songs = try {
                     getMixSongs(query).take(12)

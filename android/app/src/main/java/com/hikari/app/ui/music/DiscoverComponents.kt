@@ -10,6 +10,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,10 +21,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -45,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.ui.theme.HikariBg
+import com.hikari.app.ui.theme.HikariCardBg
 import com.hikari.app.ui.theme.HikariPrimary
 import com.hikari.app.ui.theme.HikariSurfaceHigh
 import com.hikari.app.ui.theme.HikariText
@@ -324,6 +330,133 @@ fun RankedSongRow(
                 color = HikariTextFaint,
             )
         }
+    }
+}
+
+/**
+ * Kompakter Verlauf: die zuletzt gehörten Stücke bleiben eine Wischbewegung
+ * entfernt, ohne eine eigene Seite oder viel Höhe zu belegen.
+ */
+@Composable
+fun HistoryStrip(
+    songs: List<MusicSong>,
+    currentVideoId: String?,
+    onPlay: (MusicSong) -> Unit,
+) {
+    Column(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Default.History, null, tint = HikariTextFaint, modifier = Modifier.size(14.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(
+                "ZULETZT GEHÖRT",
+                fontSize = 10.sp,
+                letterSpacing = 1.5.sp,
+                color = HikariTextFaint,
+                fontWeight = FontWeight.Medium,
+            )
+        }
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(songs, key = { "hist-${it.videoId}" }) { song ->
+                HistoryChip(
+                    song = song,
+                    isCurrent = song.videoId == currentVideoId,
+                    onClick = { onPlay(song) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryChip(song: MusicSong, isCurrent: Boolean, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .width(196.dp)
+            .clip(RoundedCornerShape(9.dp))
+            .background(if (isCurrent) HikariSurfaceHigh else HikariCardBg)
+            .clickable(onClick = onClick)
+            .padding(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box {
+            AsyncImage(
+                model = song.thumbnailUrl.ifEmpty { null },
+                contentDescription = null,
+                modifier = Modifier
+                    .width(58.dp)
+                    .height(33.dp)
+                    .clip(RoundedCornerShape(5.dp))
+                    .background(HikariSurfaceHigh),
+                contentScale = ContentScale.Crop,
+            )
+            if (isCurrent) {
+                Box(
+                    Modifier
+                        .width(58.dp)
+                        .height(33.dp)
+                        .clip(RoundedCornerShape(5.dp))
+                        .background(Color.Black.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Default.GraphicEq, null, tint = HikariPrimary, modifier = Modifier.size(15.dp))
+                }
+            }
+        }
+        Spacer(Modifier.width(8.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                song.title,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                color = if (isCurrent) HikariPrimary else HikariText,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                song.uploader,
+                fontSize = 10.sp,
+                color = HikariTextMuted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/** Schalter für rein instrumentale Vorschläge. */
+@Composable
+fun InstrumentalToggle(
+    enabled: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(if (enabled) HikariPrimary else HikariCardBg)
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 13.dp, vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            if (enabled) Icons.Default.MusicNote else Icons.Default.Mic,
+            null,
+            tint = if (enabled) Color.Black else HikariTextMuted,
+            modifier = Modifier.size(15.dp),
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            "Ohne Gesang",
+            fontSize = 12.sp,
+            fontWeight = if (enabled) FontWeight.Bold else FontWeight.Normal,
+            color = if (enabled) Color.Black else HikariTextMuted,
+        )
     }
 }
 

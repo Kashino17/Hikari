@@ -66,7 +66,6 @@ fun SongRow(
     contextQueue: List<MusicSong>,
     modifier: Modifier = Modifier,
     onRemoveFromPlaylist: (() -> Unit)? = null,
-    showHistoryDelete: Boolean = false,
 ) {
     val currentSong by viewModel.player.currentSong.collectAsState()
     val progressMap by viewModel.downloadProgress.collectAsState()
@@ -190,15 +189,6 @@ fun SongRow(
                         onClick = {
                             menuOpen = false
                             remove()
-                        },
-                    )
-                }
-                if (showHistoryDelete) {
-                    DropdownMenuItem(
-                        text = { Text("Aus Verlauf entfernen") },
-                        onClick = {
-                            menuOpen = false
-                            viewModel.removeFromHistory(song)
                         },
                     )
                 }

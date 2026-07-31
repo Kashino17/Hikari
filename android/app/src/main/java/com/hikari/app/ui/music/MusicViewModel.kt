@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.db.LocalMusicDownloadEntity
 import com.hikari.app.data.net.ConnectivityObserver
+import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.download.LocalMusicDownloadManager
 import com.hikari.app.domain.model.MusicPlaylist
 import com.hikari.app.domain.model.MusicSong
@@ -27,11 +28,15 @@ import kotlinx.coroutines.launch
 class MusicViewModel @Inject constructor(
     private val repo: MusicRepository,
     private val downloads: LocalMusicDownloadManager,
+    private val settings: SettingsStore,
     connectivity: ConnectivityObserver,
     val player: MusicPlayerController,
 ) : ViewModel() {
 
     val isOnline: StateFlow<Boolean> = connectivity.isOnline
+
+    val instrumentalOnly: StateFlow<Boolean> = settings.instrumentalOnly
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     var searchQuery by mutableStateOf("")
     var searchResults by mutableStateOf<List<MusicSong>>(emptyList())
@@ -87,8 +92,20 @@ class MusicViewModel @Inject constructor(
         }
     }
 
-    fun loadDiscover() {
-        if (discoverLoading) return
+    /** Schaltet zwischen normalen und rein instrumentalen Vorschlägen um. */
+    fun toggleInstrumental() {
+        viewModelScope.launch {
+            val next = !instrumentalOnly.value
+            settings.setInstrumentalOnly(next)
+            discoverSections = emptyList()
+            loadDiscover(force = true)
+            if (searchAttempted && searchQuery.isNotBlank()) search(searchQuery)
+            message = if (next) "Nur noch Musik ohne Gesang" else "Alle Musik"
+        }
+    }
+
+    fun loadDiscover(force: Boolean = false) {
+        if (discoverLoading && !force) return
         viewModelScope.launch {
             discoverLoading = true
             discoverFailed = false
@@ -171,13 +188,6 @@ class MusicViewModel @Inject constructor(
             favoriteIds = if (nowFavorite) favoriteIds + song.videoId else favoriteIds - song.videoId
             history = repo.getHistory()
             favorites = repo.getFavorites()
-        }
-    }
-
-    fun removeFromHistory(song: MusicSong) {
-        viewModelScope.launch {
-            repo.removeSong(song)
-            refreshLibrary()
         }
     }
 

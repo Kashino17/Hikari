@@ -73,7 +73,6 @@ private const val TAB_DISCOVER = 0
 private const val TAB_PLAYLISTS = 1
 private const val TAB_DOWNLOADS = 2
 private const val TAB_FAVORITES = 3
-private const val TAB_HISTORY = 4
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,7 +83,8 @@ fun MusicScreen(
     viewModel: MusicViewModel = hiltViewModel(),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(TAB_DISCOVER) }
-    val tabs = listOf("Entdecken", "Playlists", "Downloads", "Favoriten", "Verlauf")
+    // Der Verlauf lebt als Widget oben im Entdecken-Tab, nicht als eigene Seite.
+    val tabs = listOf("Entdecken", "Playlists", "Downloads", "Favoriten")
     val currentSong by viewModel.player.currentSong.collectAsState()
     val online by viewModel.isOnline.collectAsState()
     val snackbar = remember { SnackbarHostState() }
@@ -94,9 +94,8 @@ fun MusicScreen(
         if (!online && tab == TAB_DISCOVER) tab = TAB_DOWNLOADS
     }
 
-    LaunchedEffect(tab) {
-        if (tab != TAB_DISCOVER) viewModel.refreshLibrary()
-    }
+    // Auch Entdecken braucht frische Daten — dort steht der Verlauf.
+    LaunchedEffect(tab) { viewModel.refreshLibrary() }
 
     viewModel.message?.let { msg ->
         LaunchedEffect(msg) {
@@ -142,7 +141,6 @@ fun MusicScreen(
                     TAB_PLAYLISTS -> PlaylistsTab(viewModel, onOpenPlaylist)
                     TAB_DOWNLOADS -> DownloadsTab(viewModel)
                     TAB_FAVORITES -> FavoritesTab(viewModel)
-                    TAB_HISTORY -> HistoryTab(viewModel)
                 }
             }
 
@@ -177,13 +175,15 @@ private fun DiscoverTab(
     }
 
     val searching = viewModel.searchAttempted
+    val instrumental by viewModel.instrumentalOnly.collectAsState()
+    val currentSong by viewModel.player.currentSong.collectAsState()
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 12.dp)) {
         item(key = "search") {
             OutlinedTextField(
                 value = viewModel.searchQuery,
                 onValueChange = { viewModel.searchQuery = it },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp),
                 placeholder = { Text("Songs, Artists suchen…", color = HikariTextFaint) },
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = HikariTextMuted) },
                 trailingIcon = {
@@ -205,6 +205,25 @@ private fun DiscoverTab(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { viewModel.search(viewModel.searchQuery) }),
             )
+        }
+
+        item(key = "instrumental-toggle") {
+            Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 10.dp)) {
+                InstrumentalToggle(
+                    enabled = instrumental,
+                    onToggle = { viewModel.toggleInstrumental() },
+                )
+            }
+        }
+
+        if (!searching && viewModel.history.isNotEmpty()) {
+            item(key = "history-strip") {
+                HistoryStrip(
+                    songs = viewModel.history.take(10),
+                    currentVideoId = currentSong?.videoId,
+                    onPlay = { song -> viewModel.play(song, viewModel.history.take(10)) },
+                )
+            }
         }
 
         if (searching) {
@@ -465,15 +484,3 @@ private fun FavoritesTab(viewModel: MusicViewModel) {
     }
 }
 
-@Composable
-private fun HistoryTab(viewModel: MusicViewModel) {
-    if (viewModel.history.isEmpty()) {
-        EmptyHint(Icons.Default.History, "Noch nichts gehört — starte im Entdecken-Tab!")
-        return
-    }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 8.dp)) {
-        items(viewModel.history, key = { it.videoId }) { song ->
-            SongRow(song, viewModel, viewModel.history, showHistoryDelete = true)
-        }
-    }
-}
