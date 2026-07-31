@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -49,6 +50,7 @@ import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.tuning.TuningScreen
+import com.hikari.app.ui.music.MiniMusicBubble
 import com.hikari.app.ui.music.MixDetailScreen
 import com.hikari.app.ui.music.MusicScreen
 import com.hikari.app.ui.music.NowPlayingScreen
@@ -97,11 +99,15 @@ fun HikariNavHost() {
     val isNowPlaying = currentRoute == "nowplaying"
     val isPlaylistRoute = currentRoute?.startsWith("playlist/") == true
     val isMixRoute = currentRoute?.startsWith("mix/") == true
+    val inMusicSection = currentRoute == "music" || isNowPlaying || isPlaylistRoute || isMixRoute
+    val showsBottomBar = !(currentRoute == "feed" && feedFullscreen) && !isVideoRoute &&
+        !isReaderRoute && !isGearSubPage && !isGameRoute && !isNowPlaying &&
+        !isPlaylistRoute && !isMixRoute
 
     Scaffold(
         containerColor = HikariBg,
         bottomBar = {
-            if (!(currentRoute == "feed" && feedFullscreen) && !isVideoRoute && !isReaderRoute && !isGearSubPage && !isGameRoute && !isNowPlaying && !isPlaylistRoute && !isMixRoute) {
+            if (showsBottomBar) {
                 HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
                 NavigationBar(
                     containerColor = HikariBg,
@@ -127,6 +133,7 @@ fun HikariNavHost() {
             }
         },
     ) { padding ->
+      Box(Modifier.fillMaxSize()) {
         NavHost(
             nav,
             startDestination = "library",
@@ -409,5 +416,21 @@ fun HikariNavHost() {
                 )
             }
         }
+
+        // Schnellzugriff auf die laufende Musik — sitzt über der Bottom-Bar
+        // im Daumenbereich und nur dort, wo die Leiste ohnehin sichtbar ist.
+        if (showsBottomBar) {
+            MiniMusicBubble(
+                inMusicSection = inMusicSection,
+                onOpen = { navTo(nav, "music") },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(
+                        bottom = padding.calculateBottomPadding() + 8.dp,
+                        end = 12.dp,
+                    ),
+            )
+        }
+      }
     }
 }

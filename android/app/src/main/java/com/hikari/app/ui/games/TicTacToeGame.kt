@@ -211,6 +211,10 @@ fun TicTacToeGame(onBack: () -> Unit) {
             }
         }
 
+        // Freiraum nach oben, damit das Brett auf langen Displays unten in
+        // Daumenreichweite sitzt statt am oberen Rand zu kleben.
+        Spacer(Modifier.weight(1f))
+
         // Ergebnis-Bereich (feste Höhe, damit das Brett nicht springt)
         Box(Modifier.height(110.dp), contentAlignment = Alignment.Center) {
             if (winner != null) {
@@ -262,6 +266,8 @@ fun TicTacToeGame(onBack: () -> Unit) {
                 }
             }
         }
+
+        Spacer(Modifier.height(48.dp))
     }
 }
 

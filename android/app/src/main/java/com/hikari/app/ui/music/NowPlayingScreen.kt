@@ -118,12 +118,15 @@ fun NowPlayingScreen(
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        // Freiraum sammelt sich oben, damit Cover, Titel und Bedienung als
+        // eine Gruppe unten in Daumenreichweite sitzen. Auf hohen Displays
+        // klaffte hier sonst ein totes Loch mitten im Bild.
+        Spacer(Modifier.weight(1f))
 
         Box(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 36.dp)
+                .padding(horizontal = 48.dp)
                 .aspectRatio(1f)
                 .clip(RoundedCornerShape(20.dp))
                 .background(HikariSurfaceHigh),
@@ -141,7 +144,7 @@ fun NowPlayingScreen(
             }
         }
 
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(24.dp))
 
         Text(
             current.title,
@@ -161,7 +164,7 @@ fun NowPlayingScreen(
                 modifier = Modifier.padding(horizontal = 28.dp))
         }
 
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(26.dp))
 
         // --- seek bar ---
         var dragging by remember { mutableStateOf(false) }
@@ -192,7 +195,7 @@ fun NowPlayingScreen(
             Text(formatDurationMs(duration), fontSize = 12.sp, color = HikariTextMuted)
         }
 
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(14.dp))
 
         // --- transport controls ---
         Row(
@@ -241,6 +244,6 @@ fun NowPlayingScreen(
             }
         }
 
-        Spacer(Modifier.height(40.dp))
+        Spacer(Modifier.height(36.dp))
     }
 }

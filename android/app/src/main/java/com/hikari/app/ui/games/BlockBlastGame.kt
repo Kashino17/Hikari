@@ -248,7 +248,10 @@ fun BlockBlastGame(onBack: () -> Unit) {
                 color = HikariPrimary,
                 fontWeight = FontWeight.Bold,
             )
-            Spacer(Modifier.height(8.dp))
+
+            // Überschüssige Höhe sammelt sich oben: auf langen Displays rutschen
+            // Feld und Steine zusammen nach unten in Daumenreichweite.
+            Spacer(Modifier.weight(1f))
 
             Canvas(
                 Modifier
@@ -323,7 +326,9 @@ fun BlockBlastGame(onBack: () -> Unit) {
                 }
             }
 
-            Spacer(Modifier.weight(1f))
+            // Deutlich kleiner als der obere Freiraum — Feld und Steine bleiben
+            // ein zusammenhängender Block statt an den Rändern zu kleben.
+            Spacer(Modifier.weight(0.3f))
 
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp).height(108.dp),
