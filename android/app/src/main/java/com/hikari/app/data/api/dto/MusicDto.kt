@@ -1,45 +1,48 @@
 package com.hikari.app.data.api.dto
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.Serializable
 
-data class PipedSearchResult(
-    val url: String,
-    val title: String,
-    val uploader: String,
-    @SerializedName("uploader_url") val uploaderUrl: String,
-    val duration: Int,
-    val thumbnail: String?,
-    val views: Long,
+// --- Hikari backend (/music/*) ---
+
+@Serializable
+data class MusicTrackDto(
+    val videoId: String,
+    val title: String = "",
+    val uploader: String = "",
+    val thumbnailUrl: String = "",
+    val durationSeconds: Int = 0,
 )
 
-data class PipedSearchResponse(
-    @SerializedName("items") val results: List<PipedSearchResult>,
+@Serializable
+data class MusicStreamDto(
+    val url: String? = null,
 )
 
-data class PipedStream(
-    val url: String,
-    @SerializedName("quality") val quality: String,
-    @SerializedName("quality_description") val qualityDesc: String,
-    val mimeType: String,
-    val bitrate: Long,
-    val fileSize: Long,
+// --- Piped direct fallback (used only when the backend is unreachable) ---
+
+@Serializable
+data class PipedSearchItemDto(
+    val url: String? = null,
+    val type: String? = null,
+    val title: String? = null,
+    val uploaderName: String? = null,
+    val thumbnail: String? = null,
+    val duration: Int? = null,
 )
 
-data class PipedStreamResponse(
-    val streams: List<PipedStream>,
+@Serializable
+data class PipedSearchPageDto(
+    val items: List<PipedSearchItemDto> = emptyList(),
 )
 
-// Piped suggestions endpoint returns a plain string array: ["lofi hip hop", ...]
-data class PipedSuggestionsRawResponse(
-    val suggestions: List<String>,
+@Serializable
+data class PipedAudioStreamDto(
+    val url: String? = null,
+    val mimeType: String? = null,
+    val bitrate: Long? = null,
 )
 
-data class PipedSuggestion(
-    val title: String,
-    val url: String,
-    val uploader: String,
-    @SerializedName("uploader_url") val uploaderUrl: String,
-    val duration: Int,
-    val thumbnail: String?,
-    val views: Long,
+@Serializable
+data class PipedStreamsDto(
+    val audioStreams: List<PipedAudioStreamDto> = emptyList(),
 )

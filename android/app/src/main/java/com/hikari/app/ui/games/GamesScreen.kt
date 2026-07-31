@@ -1,26 +1,46 @@
 package com.hikari.app.ui.games
 
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Extension
+import androidx.compose.material.icons.filled.RocketLaunch
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariCardBg
-import com.hikari.app.ui.theme.HikariPrimary
 import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextMuted
 
@@ -30,7 +50,6 @@ data class GameInfo(
     val description: String,
     val icon: @Composable () -> Unit,
     val color: Color,
-    val launch: @Composable (onBack: () -> Unit) -> Unit,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,39 +60,34 @@ fun GamesScreen(
 ) {
     val games = listOf(
         GameInfo(
+            "blockblast", "Block Blast",
+            "Der Puzzle-Hit: Platziere Blöcke auf dem 8×8-Feld und räume Reihen ab. Combos geben fette Punkte!",
+            { Icon(Icons.Default.Extension, null, tint = Color(0xFFFBBF24), modifier = Modifier.size(28.dp)) },
+            Color(0xFFFBBF24),
+        ),
+        GameInfo(
+            "fruitmerge", "Fruit Merge",
+            "Das Wassermelonen-Spiel: Lass gleiche Früchte verschmelzen und baue dich bis zur 🍉 hoch!",
+            { Text("🍉", fontSize = 24.sp) },
+            Color(0xFF4ADE80),
+        ),
+        GameInfo(
+            "spaceshooter", "Sky Strike",
+            "Weltraum-Shooter: Steuere dein Schiff, zerlege Gegnerwellen und schnapp dir Power-ups!",
+            { Icon(Icons.Default.RocketLaunch, null, tint = Color(0xFF22D3EE), modifier = Modifier.size(28.dp)) },
+            Color(0xFF22D3EE),
+        ),
+        GameInfo(
+            "fruithole", "Hungry Hole",
+            "Dein schwarzes Loch hat Hunger: Schluck fallende Früchte, weich den Bomben aus, halte die Combo!",
+            { Text("🕳️", fontSize = 24.sp) },
+            Color(0xFFA78BFA),
+        ),
+        GameInfo(
             "tictactoe", "Tic-Tac-Toe",
-            "Spiele gegen die KI. Wer zuerst drei in einer Reihe hat, gewinnt!",
+            "Der Klassiker gegen die KI — jetzt mit drei Schwierigkeitsgraden bis unschlagbar.",
             { Icon(Icons.Default.Close, null, tint = Color(0xFF60A5FA), modifier = Modifier.size(28.dp)) },
             Color(0xFF60A5FA),
-            { onBack -> TicTacToeGame(onBack) },
-        ),
-        GameInfo(
-            "connect4", "Vier Gewinnt",
-            "Klassiker gegen die KI: vier Steine in einer Reihe — waagerecht, senkrecht oder diagonal!",
-            { Icon(Icons.Default.GridOn, null, tint = Color(0xFFFBBF24), modifier = Modifier.size(28.dp)) },
-            Color(0xFFFBBF24),
-            { onBack -> ConnectFourGame(onBack) },
-        ),
-        GameInfo(
-            "2048", "2048",
-            "Wische, um gleichfarbige Zahlen zu vereinen. Erreiche die 2048 — und darüber hinaus!",
-            { Icon(Icons.Default.Calculate, null, tint = Color(0xFFEC4899), modifier = Modifier.size(28.dp)) },
-            Color(0xFFEC4899),
-            { onBack -> Game2048(onBack) },
-        ),
-        GameInfo(
-            "memory", "Memory",
-            "Finde alle passenden Paare. Merke dir die Karten — mit so wenigen Zügen wie möglich!",
-            { Icon(Icons.Default.Star, null, tint = Color(0xFF22D3EE), modifier = Modifier.size(28.dp)) },
-            Color(0xFF22D3EE),
-            { onBack -> MemoryGame(onBack) },
-        ),
-        GameInfo(
-            "simon", "Simon",
-            "Schaue der Licht-Folge zu und tippe sie nach. Jede Runde wird länger — wie weit kommst du?",
-            { Icon(Icons.Default.MusicNote, null, tint = Color(0xFF4ADE80), modifier = Modifier.size(28.dp)) },
-            Color(0xFF4ADE80),
-            { onBack -> SimonGame(onBack) },
         ),
     )
 
@@ -145,8 +159,7 @@ private fun GameCard(game: GameInfo, onClick: () -> Unit) {
             Column(Modifier.weight(1f)) {
                 Text(game.title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = HikariText)
                 Spacer(Modifier.height(4.dp))
-                Text(game.description, fontSize = 12.sp, color = HikariTextMuted,
-                    textAlign = TextAlign.Justify, maxLines = 2)
+                Text(game.description, fontSize = 12.sp, color = HikariTextMuted, maxLines = 2)
             }
             Icon(Icons.Default.ChevronRight, null, tint = HikariTextMuted)
         }

@@ -44,6 +44,8 @@ import com.hikari.app.data.api.dto.RetryFailedResponse
 import com.hikari.app.data.api.dto.TodayCountResponse
 import com.hikari.app.data.api.dto.UpdateFilterRequest
 import com.hikari.app.data.api.dto.WeeklyStatsDto
+import com.hikari.app.data.api.dto.MusicStreamDto
+import com.hikari.app.data.api.dto.MusicTrackDto
 import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -57,6 +59,12 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface HikariApi {
+    @GET("music/search")
+    suspend fun searchMusic(@Query("q") query: String): List<MusicTrackDto>
+
+    @GET("music/stream/{videoId}")
+    suspend fun getMusicStream(@Path("videoId") videoId: String): MusicStreamDto
+
     @GET("feed")
     suspend fun getFeed(@Query("mode") mode: String = "new"): List<FeedItemDto>
 

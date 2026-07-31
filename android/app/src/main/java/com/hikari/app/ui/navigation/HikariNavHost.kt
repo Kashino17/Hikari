@@ -50,11 +50,12 @@ import com.hikari.app.ui.theme.HikariBorder
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.tuning.TuningScreen
 import com.hikari.app.ui.music.MusicScreen
+import com.hikari.app.ui.music.NowPlayingScreen
 import com.hikari.app.ui.games.GamesScreen
-import com.hikari.app.ui.games.ConnectFourGame
-import com.hikari.app.ui.games.Game2048
-import com.hikari.app.ui.games.MemoryGame
-import com.hikari.app.ui.games.SimonGame
+import com.hikari.app.ui.games.BlockBlastGame
+import com.hikari.app.ui.games.FruitHoleGame
+import com.hikari.app.ui.games.FruitMergeGame
+import com.hikari.app.ui.games.SpaceShooterGame
 import com.hikari.app.ui.games.TicTacToeGame
 
 private fun navTo(nav: NavController, route: String) {
@@ -91,11 +92,12 @@ fun HikariNavHost() {
     // also auch ohne Bottom-Nav rendern (eigener Back-Button reicht).
     val isGearSubPage = currentRoute == "settings" || currentRoute?.startsWith("tuning") == true
     val isGameRoute = currentRoute?.startsWith("game/") == true
+    val isNowPlaying = currentRoute == "nowplaying"
 
     Scaffold(
         containerColor = HikariBg,
         bottomBar = {
-            if (!(currentRoute == "feed" && feedFullscreen) && !isVideoRoute && !isReaderRoute && !isGearSubPage && !isGameRoute) {
+            if (!(currentRoute == "feed" && feedFullscreen) && !isVideoRoute && !isReaderRoute && !isGearSubPage && !isGameRoute && !isNowPlaying) {
                 HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
                 NavigationBar(
                     containerColor = HikariBg,
@@ -238,8 +240,11 @@ fun HikariNavHost() {
             }
             composable("music") {
                 Box(Modifier.fillMaxSize().padding(padding)) {
-                    MusicScreen(onBack = { nav.popBackStack() })
+                    MusicScreen(onOpenNowPlaying = { nav.navigate("nowplaying") })
                 }
+            }
+            composable("nowplaying") {
+                NowPlayingScreen(onBack = { nav.popBackStack() })
             }
             composable("games") {
                 Box(Modifier.fillMaxSize().padding(padding)) {
@@ -257,10 +262,10 @@ fun HikariNavHost() {
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     when (gameId) {
                         "tictactoe" -> TicTacToeGame(onBack = { nav.popBackStack() })
-                        "connect4" -> ConnectFourGame(onBack = { nav.popBackStack() })
-                        "2048" -> Game2048(onBack = { nav.popBackStack() })
-                        "memory" -> MemoryGame(onBack = { nav.popBackStack() })
-                        "simon" -> SimonGame(onBack = { nav.popBackStack() })
+                        "blockblast" -> BlockBlastGame(onBack = { nav.popBackStack() })
+                        "spaceshooter" -> SpaceShooterGame(onBack = { nav.popBackStack() })
+                        "fruithole" -> FruitHoleGame(onBack = { nav.popBackStack() })
+                        "fruitmerge" -> FruitMergeGame(onBack = { nav.popBackStack() })
                         else -> GamesScreen(
                             onBack = { nav.popBackStack() },
                             onLaunchGame = { id -> nav.navigate("game/$id") },

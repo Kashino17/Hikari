@@ -18,6 +18,7 @@ import { registerHealthRoute } from "./api/health.js";
 import { registerStatsRoutes } from "./api/stats.js";
 import { registerVideosRoutes } from "./api/videos.js";
 import { registerMangaRoutes } from "./api/manga.js";
+import { registerMusicRoutes } from "./api/music.js";
 import { registerClipperStatusRoutes } from "./api/clipper-status.js";
 import { registerVideoFullRoute } from "./api/video-full.js";
 import { loadConfig } from "./config.js";
@@ -119,6 +120,7 @@ await registerStatsRoutes(app, { db });
 await registerVideosRoutes(app, { db, videoDir: cfg.videoDir, coverDir: cfg.coverDir, extractor });
 await registerDownloadsRoutes(app, { db, diskLimitBytes: cfg.diskLimitBytes });
 await registerMangaRoutes(app, { db, mangaDir: cfg.mangaDir });
+await registerMusicRoutes(app);
 registerClipperStatusRoutes(app, db, {
   startHour: cfg.clipper.scheduleStartHour,
   endHour:   cfg.clipper.scheduleEndHour,

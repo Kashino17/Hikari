@@ -1,159 +1,236 @@
 package com.hikari.app.ui.music
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.RepeatOne
+import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.hikari.app.domain.model.MusicSong
-import com.hikari.app.ui.music.MusicViewModel
+import com.hikari.app.player.MusicPlayerController
 import com.hikari.app.ui.theme.HikariBg
-import com.hikari.app.ui.theme.HikariCardBg
 import com.hikari.app.ui.theme.HikariPrimary
+import com.hikari.app.ui.theme.HikariSurfaceHigh
 import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NowPlayingScreen(
-    song: MusicSong,
     onBack: () -> Unit,
     viewModel: MusicViewModel = hiltViewModel(),
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Jetzt abspielen", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Default.ArrowBack, "Zurück")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = HikariBg,
-                    titleContentColor = HikariText,
-                ),
-            )
-        },
-        containerColor = HikariBg,
-    ) { padding ->
-        Column(
-            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
+    val controller = viewModel.player
+    val song by controller.currentSong.collectAsState()
+    val isPlaying by controller.isPlaying.collectAsState()
+    val isBuffering by controller.isBuffering.collectAsState()
+    val position by controller.positionMs.collectAsState()
+    val duration by controller.durationMs.collectAsState()
+    val shuffle by controller.shuffle.collectAsState()
+    val repeatMode by controller.repeatMode.collectAsState()
+    val error by controller.error.collectAsState()
+
+    val current = song ?: run {
+        // nothing playing (e.g. process restart) — nothing to show
+        onBack()
+        return
+    }
+    val isFavorite = current.videoId in viewModel.favoriteIds
+
+    Column(
+        Modifier.fillMaxSize().background(HikariBg).statusBarsPadding(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Spacer(Modifier.height(32.dp))
-
-            // Album art
-            AsyncImage(
-                model = song.thumbnailUrl,
-                contentDescription = song.title,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp)
-                    .aspectRatio(1f)
-                    .clip(RoundedCornerShape(16.dp)),
-                contentScale = ContentScale.Crop,
-            )
-
-            Spacer(Modifier.height(32.dp))
-
-            // Song info
-            Text(song.title, fontWeight = FontWeight.Bold, fontSize = 22.sp, color = HikariText,
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(song.uploader, fontSize = 16.sp, color = HikariTextMuted, maxLines = 1)
-
-            Spacer(Modifier.height(32.dp))
-
-            // Duration
-            Text(formatDuration(song.duration), fontSize = 14.sp, color = HikariTextMuted)
-
-            Spacer(Modifier.height(24.dp))
-
-            // Controls
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 48.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconButton(onClick = {}) {
-                    Icon(Icons.Default.Shuffle, null, tint = HikariTextMuted)
-                }
-                IconButton(onClick = { viewModel.playPrevious() }) {
-                    Icon(Icons.Default.SkipPrevious, null, tint = HikariText, modifier = Modifier.size(40.dp))
-                }
-                Surface(
-                    modifier = Modifier.size(72.dp).clip(CircleShape),
-                    color = HikariPrimary.copy(alpha = 0.2f),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        IconButton(onClick = { viewModel.togglePlayPause() },
-                            modifier = Modifier.size(56.dp)) {
-                            Icon(
-                                if (viewModel.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                null,
-                                tint = HikariPrimary,
-                                modifier = Modifier.size(32.dp),
-                            )
-                        }
-                    }
-                }
-                IconButton(onClick = { viewModel.playNext() }) {
-                    Icon(Icons.Default.SkipNext, null, tint = HikariText, modifier = Modifier.size(40.dp))
-                }
-                IconButton(onClick = {}) {
-                    Icon(Icons.Default.Repeat, null, tint = HikariTextMuted)
-                }
+            IconButton(onClick = onBack) {
+                Icon(Icons.Default.KeyboardArrowDown, "Schließen", tint = HikariText, modifier = Modifier.size(30.dp))
             }
-
-            Spacer(Modifier.height(32.dp))
-
-            // Queue
-            Text("NÄCHSTE SONGS", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = HikariTextMuted)
-            Spacer(Modifier.height(8.dp))
-            viewModel.queue.drop(1).take(5).forEach { s ->
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
-                        .clickable { viewModel.playSong(s) }
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(HikariCardBg),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    AsyncImage(model = s.thumbnailUrl, contentDescription = null,
-                        modifier = Modifier.size(40.dp).clip(RoundedCornerShape(6.dp)),
-                        contentScale = ContentScale.Crop)
-                    Spacer(Modifier.width(12.dp))
-                    Column {
-                        Text(s.title, fontSize = 13.sp, color = HikariText, maxLines = 1)
-                        Text(s.uploader, fontSize = 11.sp, color = HikariTextMuted, maxLines = 1)
-                    }
-                }
+            Text(
+                "Läuft gerade",
+                fontSize = 13.sp,
+                color = HikariTextMuted,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(onClick = { viewModel.toggleFavorite(current) }) {
+                Icon(
+                    if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    "Favorit",
+                    tint = if (isFavorite) Color(0xFFFF5252) else HikariTextMuted,
+                )
             }
         }
-    }
-}
 
-private fun formatDuration(seconds: Int): String {
-    val m = seconds / 60
-    val s = seconds % 60
-    return String.format("%d:%02d", m, s)
+        Spacer(Modifier.height(16.dp))
+
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 36.dp)
+                .aspectRatio(1f)
+                .clip(RoundedCornerShape(20.dp))
+                .background(HikariSurfaceHigh),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (current.thumbnailUrl.isNotEmpty()) {
+                AsyncImage(
+                    model = current.thumbnailUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                Icon(Icons.Default.MusicNote, null, tint = HikariTextFaint, modifier = Modifier.size(80.dp))
+            }
+        }
+
+        Spacer(Modifier.height(28.dp))
+
+        Text(
+            current.title,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = HikariText,
+            maxLines = 2,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 28.dp),
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(current.uploader, fontSize = 14.sp, color = HikariTextMuted, maxLines = 1)
+
+        error?.let {
+            Spacer(Modifier.height(10.dp))
+            Text(it, fontSize = 12.sp, color = Color(0xFFF87171), textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 28.dp))
+        }
+
+        Spacer(Modifier.weight(1f))
+
+        // --- seek bar ---
+        var dragging by remember { mutableStateOf(false) }
+        var dragValue by remember { mutableFloatStateOf(0f) }
+        val sliderValue = if (dragging) dragValue
+        else if (duration > 0) position.toFloat() / duration else 0f
+
+        Slider(
+            value = sliderValue.coerceIn(0f, 1f),
+            onValueChange = { dragging = true; dragValue = it },
+            onValueChangeFinished = {
+                if (duration > 0) controller.seekTo((dragValue * duration).toLong())
+                dragging = false
+            },
+            colors = SliderDefaults.colors(
+                thumbColor = HikariPrimary,
+                activeTrackColor = HikariPrimary,
+                inactiveTrackColor = HikariSurfaceHigh,
+            ),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+        )
+        Row(Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
+            Text(
+                formatDurationMs(if (dragging && duration > 0) (dragValue * duration).toLong() else position),
+                fontSize = 12.sp, color = HikariTextMuted,
+            )
+            Spacer(Modifier.weight(1f))
+            Text(formatDurationMs(duration), fontSize = 12.sp, color = HikariTextMuted)
+        }
+
+        Spacer(Modifier.height(10.dp))
+
+        // --- transport controls ---
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = { controller.toggleShuffle() }) {
+                Icon(
+                    Icons.Default.Shuffle, "Zufallswiedergabe",
+                    tint = if (shuffle) HikariPrimary else HikariTextMuted,
+                )
+            }
+            IconButton(onClick = { controller.previous() }, modifier = Modifier.size(56.dp)) {
+                Icon(Icons.Default.SkipPrevious, "Zurück", tint = HikariText, modifier = Modifier.size(40.dp))
+            }
+            Box(
+                Modifier
+                    .size(72.dp)
+                    .clip(CircleShape)
+                    .background(HikariPrimary),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (isBuffering) {
+                    CircularProgressIndicator(color = Color.Black, strokeWidth = 3.dp, modifier = Modifier.size(30.dp))
+                } else {
+                    IconButton(onClick = { controller.toggle() }, modifier = Modifier.size(72.dp)) {
+                        Icon(
+                            if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            if (isPlaying) "Pause" else "Abspielen",
+                            tint = Color.Black,
+                            modifier = Modifier.size(40.dp),
+                        )
+                    }
+                }
+            }
+            IconButton(onClick = { controller.next() }, modifier = Modifier.size(56.dp)) {
+                Icon(Icons.Default.SkipNext, "Weiter", tint = HikariText, modifier = Modifier.size(40.dp))
+            }
+            IconButton(onClick = { controller.cycleRepeat() }) {
+                Icon(
+                    if (repeatMode == MusicPlayerController.REPEAT_ONE) Icons.Default.RepeatOne else Icons.Default.Repeat,
+                    "Wiederholen",
+                    tint = if (repeatMode != MusicPlayerController.REPEAT_OFF) HikariPrimary else HikariTextMuted,
+                )
+            }
+        }
+
+        Spacer(Modifier.height(40.dp))
+    }
 }

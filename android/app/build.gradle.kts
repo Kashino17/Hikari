@@ -15,8 +15,8 @@ android {
         applicationId = "com.hikari.app"
         minSdk = 26
         targetSdk = 34   // was 36 in plan — same deviation
-        versionCode = 74
-        versionName = "0.39.0"
+        versionCode = 75
+        versionName = "0.40.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -83,7 +83,6 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.telephoto.zoomable.image.coil)
-    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test)

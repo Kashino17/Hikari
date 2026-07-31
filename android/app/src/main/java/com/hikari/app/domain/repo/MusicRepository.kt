@@ -1,135 +1,185 @@
 package com.hikari.app.domain.repo
 
-import com.hikari.app.data.api.MusicApi
-import com.hikari.app.data.api.dto.PipedSearchResult
-import com.hikari.app.data.db.*
-import com.hikari.app.domain.model.MusicPlaylist
+import com.hikari.app.data.api.HikariApi
+import com.hikari.app.data.api.dto.MusicTrackDto
+import com.hikari.app.data.api.dto.PipedSearchPageDto
+import com.hikari.app.data.api.dto.PipedStreamsDto
+import com.hikari.app.data.db.MusicSongDao
+import com.hikari.app.data.db.MusicSongEntity
 import com.hikari.app.domain.model.MusicSong
-import com.hikari.app.domain.model.PlaylistSong
+import java.net.URLEncoder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import okhttp3.OkHttpClient
+import okhttp3.Request
 
+data class DiscoverSection(val title: String, val songs: List<MusicSong>)
+
+/**
+ * Search + streaming go through the Hikari backend (yt-dlp — the same
+ * extraction the clipper uses, so it works even when public Piped instances
+ * are blocked). If the backend is unreachable the repo falls back to querying
+ * Piped instances directly from the device.
+ */
 class MusicRepository(
     private val songDao: MusicSongDao,
-    private val playlistDao: MusicPlaylistDao,
-    private val playlistSongDao: MusicPlaylistSongDao,
-    private val api: MusicApi,
+    private val api: HikariApi,
+    private val fallbackClient: OkHttpClient,
+    private val json: Json,
 ) {
+    companion object {
+        private val PIPED_INSTANCES = listOf(
+            "https://api.piped.private.coffee",
+            "https://pipedapi.kavin.rocks",
+            "https://pipedapi.reallyaweso.me",
+        )
+        private val DISCOVER_SECTIONS = listOf(
+            "Top Hits" to "top hits 2026",
+            "Lofi & Study" to "lofi hip hop beats",
+            "Chill Pop" to "chill pop playlist",
+            "Hip-Hop" to "hip hop hits",
+            "Anime & Gaming" to "anime opening songs",
+        )
+    }
+
     suspend fun searchMusic(query: String): List<MusicSong> {
-        return try {
-            val results = api.search(query)
-            results.results.mapIndexed { index, r -> r.toSong(index) }
-        } catch (e: Exception) {
-            emptyList()
+        val tracks = try {
+            api.searchMusic(query).map { it.toSong() }
+        } catch (_: Exception) {
+            pipedSearchFallback(query)
         }
+        return withFavoriteState(tracks)
     }
 
-    suspend fun getSuggestions(query: String): List<MusicSong> {
-        // Piped suggestions returns plain strings, resolve via search
-        val suggestions = api.getSuggestions(query)
-        return suggestions.map { suggestion ->
-            // Use the suggestion text as a title with a placeholder uploader
-            val videoId = "suggestion_${suggestion.hashCode()}"
-            MusicSong(
-                videoId = videoId,
-                title = suggestion,
-                uploader = "Hikari Suggestions",
-                uploaderUrl = "",
-                thumbnailUrl = "",
-                duration = 0,
-                views = 0,
-                addedAt = System.currentTimeMillis(),
-            )
-        }
+    suspend fun getDiscoverSections(): List<DiscoverSection> = coroutineScope {
+        DISCOVER_SECTIONS.map { (title, query) ->
+            async {
+                val songs = try {
+                    searchMusic(query).take(10)
+                } catch (_: Exception) {
+                    emptyList()
+                }
+                DiscoverSection(title, songs)
+            }
+        }.map { it.await() }.filter { it.songs.isNotEmpty() }
     }
 
-    suspend fun insertSong(song: MusicSong) = songDao.insert(song.toEntity())
+    suspend fun getAudioStream(videoId: String): String? {
+        try {
+            api.getMusicStream(videoId).url?.let { return it }
+        } catch (_: Exception) {
+            // backend down or extraction failed — try Piped directly
+        }
+        return pipedStreamFallback(videoId)
+    }
 
-    suspend fun insertSongs(songs: List<MusicSong>) = songDao.insertAll(songs.map { it.toEntity() })
+    // --- Library (= play history) & favorites ---
 
-    suspend fun getAllSongs(): List<MusicSong> = songDao.getAll().map { it.toSong() }
-
-    suspend fun getSong(videoId: String): MusicSong? = songDao.getByName(videoId)?.toSong()
+    suspend fun getHistory(): List<MusicSong> = songDao.getAll().map { it.toSong() }
 
     suspend fun getFavorites(): List<MusicSong> = songDao.getFavorites().map { it.toSong() }
 
-    suspend fun toggleFavorite(videoId: String) {
-        val current = songDao.getByName(videoId)
-        songDao.setFavorite(videoId, !(current?.isFavorite == true))
+    /** Called on every playback start; keeps favorite state, bumps recency. */
+    suspend fun recordPlayed(song: MusicSong) {
+        val existing = songDao.getByName(song.videoId)
+        songDao.insert(
+            song.toEntity().copy(
+                isFavorite = existing?.isFavorite ?: song.isFavorite,
+                addedAt = System.currentTimeMillis(),
+            ),
+        )
     }
 
-    suspend fun isFavorite(videoId: String): Boolean = songDao.getByName(videoId)?.isFavorite == true
+    /** Returns the new favorite state. Unknown songs get saved first. */
+    suspend fun toggleFavorite(song: MusicSong): Boolean {
+        val existing = songDao.getByName(song.videoId)
+        return if (existing == null) {
+            songDao.insert(song.toEntity().copy(isFavorite = true))
+            true
+        } else {
+            val next = !existing.isFavorite
+            songDao.setFavorite(song.videoId, next)
+            next
+        }
+    }
 
     suspend fun removeSong(song: MusicSong) = songDao.delete(song.toEntity())
 
-    suspend fun createPlaylist(name: String, description: String = ""): MusicPlaylist {
-        val id = playlistDao.insert(MusicPlaylistEntity(name = name, description = description))
-        return MusicPlaylist(id = id.toInt(), name = name, description = description)
-    }
+    suspend fun getFavoriteIds(): Set<String> = songDao.getFavorites().map { it.videoId }.toSet()
 
-    suspend fun getPlaylists(): List<MusicPlaylist> = playlistDao.getAll().map { it.toModel() }
+    // --- Fallback path (direct Piped) ---
 
-    suspend fun getPlaylist(id: Int): MusicPlaylist? = playlistDao.getById(id)?.toModel()
-
-    suspend fun deletePlaylist(playlist: MusicPlaylist) = playlistDao.delete(playlist.toEntity())
-
-    suspend fun getPlaylistSongs(playlistId: Int): List<PlaylistSong> {
-        val entities = playlistSongDao.getByPlaylist(playlistId)
-        val songs = songDao.getAll()
-        val songMap = songs.associateBy { it.videoId }
-        return entities.mapNotNull { e ->
-            songMap[e.songVideoId]?.toSong()?.let { PlaylistSong(playlistId, it, e.addedAt) }
+    private suspend fun pipedSearchFallback(query: String): List<MusicSong> =
+        withContext(Dispatchers.IO) {
+            val q = URLEncoder.encode(query, "UTF-8")
+            for (base in PIPED_INSTANCES) {
+                try {
+                    val body = httpGet("$base/search?q=$q&filter=music_songs") ?: continue
+                    val page = json.decodeFromString<PipedSearchPageDto>(body)
+                    val songs = page.items.mapNotNull { item ->
+                        val videoId = item.url?.substringAfter("v=", "")?.substringBefore("&")
+                        if (videoId.isNullOrBlank()) return@mapNotNull null
+                        MusicSong(
+                            videoId = videoId,
+                            title = item.title.orEmpty(),
+                            uploader = item.uploaderName.orEmpty(),
+                            uploaderUrl = "",
+                            thumbnailUrl = item.thumbnail.orEmpty()
+                                .let { if (it.startsWith("//")) "https:$it" else it },
+                            duration = item.duration ?: 0,
+                            views = 0,
+                        )
+                    }
+                    if (songs.isNotEmpty()) return@withContext songs
+                } catch (_: Exception) {
+                    // dead instance — try the next one
+                }
+            }
+            emptyList()
         }
-    }
 
-    suspend fun addSongToPlaylist(playlistId: Int, song: MusicSong): Long {
-        songDao.insert(song.toEntity())
-        return playlistSongDao.insert(MusicPlaylistSongEntity(playlistId, song.videoId))
-    }
-
-    suspend fun removeSongFromPlaylist(playlistId: Int, song: MusicSong) {
-        playlistSongDao.delete(MusicPlaylistSongEntity(playlistId, song.videoId))
-    }
-
-    suspend fun clearPlaylist(playlistId: Int) = playlistSongDao.clearPlaylist(playlistId)
-
-    suspend fun getAudioStream(videoId: String): String? {
-        return try {
-            val streams = api.getStreams(videoId)
-            streams.streams.firstOrNull { it.mimeType.contains("audio/mp4") }?.url
-        } catch (_: Exception) {
+    private suspend fun pipedStreamFallback(videoId: String): String? =
+        withContext(Dispatchers.IO) {
+            for (base in PIPED_INSTANCES) {
+                try {
+                    val body = httpGet("$base/streams/$videoId") ?: continue
+                    val streams = json.decodeFromString<PipedStreamsDto>(body)
+                    val best = streams.audioStreams
+                        .filter { it.url != null }
+                        .maxByOrNull { it.bitrate ?: 0L }
+                    if (best?.url != null) return@withContext best.url
+                } catch (_: Exception) {
+                    // dead instance — try the next one
+                }
+            }
             null
         }
-    }
 
-    suspend fun getMusicSuggestions(): List<MusicSong> {
-        val keywords = listOf("lofi", "pop", "jazz", "chill")
-        val results = mutableListOf<MusicSong>()
-        keywords.take(3).forEach { keyword ->
-            try {
-                val suggestions = api.getSuggestions(keyword)
-                results.addAll(suggestions.take(4).map { suggestion ->
-                    val videoId = "suggestion_${keyword}_${suggestion.hashCode()}"
-                    MusicSong(
-                        videoId = videoId,
-                        title = suggestion,
-                        uploader = keyword,
-                        uploaderUrl = "",
-                        thumbnailUrl = "",
-                        duration = 0,
-                        views = 0,
-                        addedAt = System.currentTimeMillis(),
-                    )
-                })
-            } catch (_: Exception) {}
+    private fun httpGet(url: String): String? {
+        val request = Request.Builder().url(url).build()
+        fallbackClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) return null
+            return response.body?.string()
         }
-        return results
     }
 
-    private fun PipedSearchResult.toSong(index: Int) = MusicSong(
-        videoId = url.substringAfterLast("/"),
-        title = title, uploader = uploader, uploaderUrl = uploaderUrl,
-        thumbnailUrl = thumbnail?.let { if (it.startsWith("//")) "https:$it" else it } ?: "",
-        duration = duration, views = views,
-        addedAt = System.currentTimeMillis() + index,
+    private suspend fun withFavoriteState(songs: List<MusicSong>): List<MusicSong> {
+        if (songs.isEmpty()) return songs
+        val favorites = getFavoriteIds()
+        return songs.map { it.copy(isFavorite = it.videoId in favorites) }
+    }
+
+    private fun MusicTrackDto.toSong() = MusicSong(
+        videoId = videoId,
+        title = title,
+        uploader = uploader,
+        uploaderUrl = "",
+        thumbnailUrl = thumbnailUrl,
+        duration = durationSeconds,
+        views = 0,
     )
 
     private fun MusicSong.toEntity() = MusicSongEntity(
@@ -142,15 +192,5 @@ class MusicRepository(
         videoId = videoId, title = title, uploader = uploader, uploaderUrl = uploaderUrl,
         thumbnailUrl = thumbnailUrl, duration = duration, views = views,
         addedAt = addedAt, isFavorite = isFavorite,
-    )
-
-    private fun MusicPlaylist.toEntity() = MusicPlaylistEntity(
-        id = id, name = name, description = description,
-        thumbnailUrl = thumbnailUrl, createdAt = createdAt,
-    )
-
-    private fun MusicPlaylistEntity.toModel() = MusicPlaylist(
-        id = id, name = name, description = description,
-        thumbnailUrl = thumbnailUrl, createdAt = createdAt,
     )
 }
