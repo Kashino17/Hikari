@@ -11,6 +11,8 @@ data class MusicTrackDto(
     val uploader: String = "",
     val thumbnailUrl: String = "",
     val durationSeconds: Int = 0,
+    val uploaderUrl: String? = null,
+    val views: Long? = null,
 )
 
 @Serializable
@@ -26,8 +28,10 @@ data class PipedSearchItemDto(
     val type: String? = null,
     val title: String? = null,
     val uploaderName: String? = null,
+    val uploaderUrl: String? = null,
     val thumbnail: String? = null,
     val duration: Int? = null,
+    val views: Long? = null,
 )
 
 @Serializable

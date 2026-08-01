@@ -162,3 +162,225 @@ describe("GET /music/stream/:videoId", () => {
     await app.close();
   });
 });
+
+const CHANNEL_ID = "UCuAXFkgsw1L7xaCfnd5JJOw";
+
+const PIPED_CHANNEL = {
+  id: CHANNEL_ID,
+  name: "Rick Astley",
+  avatarUrl: "https://img.example/avatar.jpg",
+  bannerUrl: "https://img.example/banner.jpg",
+  description: "Official channel",
+  subscriberCount: 4520000,
+  verified: true,
+  relatedStreams: [],
+};
+
+function streamItem(overrides: Record<string, unknown>) {
+  return {
+    url: "/watch?v=dQw4w9WgXcQ",
+    type: "stream",
+    title: "Song",
+    uploaderName: "Rick Astley",
+    uploaderUrl: `/channel/${CHANNEL_ID}`,
+    duration: 213,
+    views: 1000,
+    ...overrides,
+  };
+}
+
+describe("GET /music/artist/:channelId", () => {
+  it("normalizes the piped channel", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(okJson(PIPED_CHANNEL));
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}` });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({
+      channelId: CHANNEL_ID,
+      name: "Rick Astley",
+      avatarUrl: "https://img.example/avatar.jpg",
+      bannerUrl: "https://img.example/banner.jpg",
+      subscriberCount: 4520000,
+      description: "Official channel",
+      verified: true,
+    });
+    expect(fetchImpl).toHaveBeenCalledWith(
+      expect.stringContaining(`/channel/${CHANNEL_ID}`),
+      expect.anything(),
+    );
+    await app.close();
+  });
+
+  it("fails over to the next instance", async () => {
+    const fetchImpl = vi.fn()
+      .mockRejectedValueOnce(new Error("timeout"))
+      .mockResolvedValueOnce(okJson(PIPED_CHANNEL));
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}` });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().name).toBe("Rick Astley");
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    await app.close();
+  });
+
+  it("returns 502 when every instance fails", async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error("down"));
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}` });
+    expect(res.statusCode).toBe(502);
+    await app.close();
+  });
+
+  it("rejects malformed channel ids", async () => {
+    const app = await makeApp({ fetchImpl: vi.fn() });
+    const res = await app.inject({ method: "GET", url: "/music/artist/bad!" });
+    expect(res.statusCode).toBe(400);
+    await app.close();
+  });
+});
+
+describe("GET /music/artist/:channelId/top", () => {
+  it("sorts by views and prefers the artist's own channel", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(okJson({
+      items: [
+        streamItem({ title: "Fremd, viele Views", uploaderUrl: "/channel/UCother000", views: 9000 }),
+        streamItem({ title: "Eigen 1", views: 500 }),
+        streamItem({ title: "Eigen 2", views: 3000 }),
+        streamItem({ title: "Eigen 3", views: 100 }),
+      ],
+    }));
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({
+      method: "GET",
+      url: `/music/artist/${CHANNEL_ID}/top?name=Rick%20Astley`,
+    });
+    expect(res.statusCode).toBe(200);
+    // 3 eigene Treffer → nur der eigene Kanal, absteigend nach Views
+    expect(res.json().map((t: { title: string }) => t.title)).toEqual([
+      "Eigen 2", "Eigen 1", "Eigen 3",
+    ]);
+    expect(fetchImpl).toHaveBeenCalledWith(
+      expect.stringContaining("filter=videos"),
+      expect.anything(),
+    );
+    await app.close();
+  });
+
+  it("falls back to all streams when the channel has fewer than 3 hits", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(okJson({
+      items: [
+        streamItem({ title: "Fremd", uploaderUrl: "/channel/UCother000", views: 9000 }),
+        streamItem({ title: "Eigen", views: 500 }),
+        { url: "/watch?v=dQw4w9WgXcQ", type: "channel", title: "kein Stream" },
+      ],
+    }));
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({
+      method: "GET",
+      url: `/music/artist/${CHANNEL_ID}/top?name=Rick%20Astley`,
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().map((t: { title: string }) => t.title)).toEqual(["Fremd", "Eigen"]);
+    await app.close();
+  });
+
+  it("maps uploaderUrl and views onto tracks", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(okJson({ items: [streamItem({ views: 12345 })] }));
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({
+      method: "GET",
+      url: `/music/artist/${CHANNEL_ID}/top?name=Rick%20Astley`,
+    });
+    expect(res.json()[0]).toMatchObject({
+      uploaderUrl: `/channel/${CHANNEL_ID}`,
+      views: 12345,
+    });
+    await app.close();
+  });
+
+  it("returns 400 without name", async () => {
+    const app = await makeApp({ fetchImpl: vi.fn() });
+    const res = await app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}/top` });
+    expect(res.statusCode).toBe(400);
+    await app.close();
+  });
+
+  it("returns 502 when every instance fails", async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error("down"));
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({
+      method: "GET",
+      url: `/music/artist/${CHANNEL_ID}/top?name=Rick`,
+    });
+    expect(res.statusCode).toBe(502);
+    await app.close();
+  });
+});
+
+describe("GET /music/artist/:channelId/playlists", () => {
+  const playlistItem = {
+    url: "/playlist?list=PLabc123",
+    type: "playlist",
+    name: "Greatest Hits",
+    thumbnail: "https://img.example/pl.jpg",
+    uploaderName: "Rick Astley",
+    uploaderUrl: `/channel/${CHANNEL_ID}`,
+    videos: 42,
+  };
+
+  it("extracts playlistId and metadata", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(okJson({ items: [playlistItem] }));
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({
+      method: "GET",
+      url: `/music/artist/${CHANNEL_ID}/playlists?name=Rick%20Astley`,
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual([{
+      playlistId: "PLabc123",
+      name: "Greatest Hits",
+      thumbnailUrl: "https://img.example/pl.jpg",
+      videoCount: 42,
+      uploaderName: "Rick Astley",
+    }]);
+    expect(fetchImpl).toHaveBeenCalledWith(
+      expect.stringContaining("filter=playlists"),
+      expect.anything(),
+    );
+    await app.close();
+  });
+
+  it("prefers playlists of the artist's own channel", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(okJson({
+      items: [
+        { ...playlistItem, name: "Fremd", uploaderUrl: "/channel/UCother000", url: "/playlist?list=PLother" },
+        playlistItem,
+      ],
+    }));
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({
+      method: "GET",
+      url: `/music/artist/${CHANNEL_ID}/playlists?name=Rick%20Astley`,
+    });
+    expect(res.json().map((p: { name: string }) => p.name)).toEqual(["Greatest Hits"]);
+    await app.close();
+  });
+
+  it("returns 400 without name", async () => {
+    const app = await makeApp({ fetchImpl: vi.fn() });
+    const res = await app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}/playlists` });
+    expect(res.statusCode).toBe(400);
+    await app.close();
+  });
+
+  it("returns 502 when every instance fails", async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error("down"));
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({
+      method: "GET",
+      url: `/music/artist/${CHANNEL_ID}/playlists?name=Rick`,
+    });
+    expect(res.statusCode).toBe(502);
+    await app.close();
+  });
+});

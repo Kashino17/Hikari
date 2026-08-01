@@ -9,6 +9,8 @@ import com.hikari.app.data.db.LocalMusicDownloadEntity
 import com.hikari.app.data.net.ConnectivityObserver
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.download.LocalMusicDownloadManager
+import com.hikari.app.domain.model.Artist
+import com.hikari.app.domain.model.ArtistPlaylist
 import com.hikari.app.domain.model.MusicPlaylist
 import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.domain.repo.ChapterGroup
@@ -19,7 +21,10 @@ import com.hikari.app.domain.repo.PlaylistWithSongs
 import com.hikari.app.player.MusicPlayerController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -69,6 +74,18 @@ class MusicViewModel @Inject constructor(
     var discoverLoading by mutableStateOf(false)
     var discoverFailed by mutableStateOf(false)
 
+    /** Zustand der Artist-Seite — Profil, Top-Songs und Playlists werden parallel geladen. */
+    var artist by mutableStateOf<Artist?>(null)
+        private set
+    var artistTop by mutableStateOf<List<MusicSong>>(emptyList())
+        private set
+    var artistPlaylists by mutableStateOf<List<ArtistPlaylist>>(emptyList())
+        private set
+    var artistLoading by mutableStateOf(false)
+        private set
+    var artistFailed by mutableStateOf(false)
+        private set
+
     var history by mutableStateOf<List<MusicSong>>(emptyList())
     var favorites by mutableStateOf<List<MusicSong>>(emptyList())
     var playlists by mutableStateOf<List<PlaylistWithSongs>>(emptyList())
@@ -98,6 +115,7 @@ class MusicViewModel @Inject constructor(
     private var searchJob: Job? = null
     private var mixJob: Job? = null
     private var groupJob: Job? = null
+    private var artistJob: Job? = null
 
     init {
         loadDiscover()
@@ -210,6 +228,37 @@ class MusicViewModel @Inject constructor(
             mixLoading = true
             mixSongs = repo.getMixSongs(query, mode)
             mixLoading = false
+        }
+    }
+
+    /**
+     * Lädt Profil, Top-Songs und Playlists eines Künstlers parallel. [name] ist
+     * der Anzeigename aus dem Einstiegspunkt — das Backend sucht damit nach den
+     * Inhalten, weil die Piped-Kanal-Tabs degradiert sind.
+     */
+    fun loadArtist(channelId: String, name: String) {
+        artistJob?.cancel()
+        artistJob = viewModelScope.launch {
+            artistLoading = true
+            artistFailed = false
+            artist = null
+            artistTop = emptyList()
+            artistPlaylists = emptyList()
+            try {
+                coroutineScope {
+                    val profile = async { repo.getArtist(channelId) }
+                    val top = async { repo.getArtistTop(channelId, name) }
+                    val playlists = async { repo.getArtistPlaylists(channelId, name) }
+                    artist = profile.await()
+                    artistTop = top.await()
+                    artistPlaylists = playlists.await()
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                artistFailed = true
+            }
+            artistLoading = false
         }
     }
 

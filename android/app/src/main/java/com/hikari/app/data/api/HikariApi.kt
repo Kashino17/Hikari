@@ -13,6 +13,8 @@ import com.hikari.app.data.api.dto.FeedItemDto
 import com.hikari.app.data.api.dto.FilterStateDto
 import com.hikari.app.data.api.dto.AnalyzeRequest
 import com.hikari.app.data.api.dto.AnalyzeResponse
+import com.hikari.app.data.api.dto.ArtistDto
+import com.hikari.app.data.api.dto.ArtistPlaylistDto
 import com.hikari.app.data.api.dto.BulkImportRequest
 import com.hikari.app.data.api.dto.BulkImportResponse
 import com.hikari.app.data.api.dto.DiscoveryResponseDto
@@ -72,6 +74,21 @@ interface HikariApi {
         @Path("videoId") videoId: String,
         @Query("force") force: Boolean? = null,
     ): MusicStreamDto
+
+    @GET("music/artist/{channelId}")
+    suspend fun getArtist(@Path("channelId") channelId: String): ArtistDto
+
+    @GET("music/artist/{channelId}/top")
+    suspend fun getArtistTop(
+        @Path("channelId") channelId: String,
+        @Query("name") name: String,
+    ): List<MusicTrackDto>
+
+    @GET("music/artist/{channelId}/playlists")
+    suspend fun getArtistPlaylists(
+        @Path("channelId") channelId: String,
+        @Query("name") name: String,
+    ): List<ArtistPlaylistDto>
 
     // ── Täglicher KI-Tagesbericht ─────────────────────────────────────────
     @GET("news/topics")

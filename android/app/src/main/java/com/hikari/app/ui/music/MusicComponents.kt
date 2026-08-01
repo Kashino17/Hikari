@@ -2,6 +2,7 @@ package com.hikari.app.ui.music
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -67,6 +68,7 @@ fun SongRow(
     modifier: Modifier = Modifier,
     badge: String? = null,
     onRemoveFromPlaylist: (() -> Unit)? = null,
+    onOpenArtist: ((channelId: String, name: String) -> Unit)? = null,
 ) {
     val currentSong by viewModel.player.currentSong.collectAsState()
     val progressMap by viewModel.downloadProgress.collectAsState()
@@ -124,12 +126,23 @@ fun SongRow(
                 maxLines = 1,
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
+                // Klick auf den Uploader öffnet die Artist-Seite — nur wenn die
+                // Suche eine Kanal-URL mitgeliefert hat.
+                val artistChannelId = song.uploaderUrl.substringAfterLast("/", "")
                 Text(
                     song.uploader,
                     fontSize = 12.sp,
                     color = HikariTextMuted,
                     maxLines = 1,
-                    modifier = Modifier.weight(1f, fill = false),
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .then(
+                            if (onOpenArtist != null && artistChannelId.isNotBlank()) {
+                                Modifier.clickable { onOpenArtist(artistChannelId, song.uploader) }
+                            } else {
+                                Modifier
+                            },
+                        ),
                 )
                 if (song.duration > 0) {
                     Text("  ·  ${formatDuration(song.duration)}", fontSize = 12.sp, color = HikariTextFaint)

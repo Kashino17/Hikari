@@ -82,6 +82,7 @@ fun MusicScreen(
     onOpenPlaylist: (Int) -> Unit,
     onOpenMix: (title: String, query: String, mode: String) -> Unit,
     onOpenGroup: (title: String, unit: String, query: String, mode: String) -> Unit,
+    onOpenArtist: (channelId: String, name: String) -> Unit,
     viewModel: MusicViewModel = hiltViewModel(),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(TAB_DISCOVER) }
@@ -139,7 +140,7 @@ fun MusicScreen(
 
             Box(Modifier.weight(1f)) {
                 when (tab) {
-                    TAB_DISCOVER -> DiscoverTab(viewModel, online, onOpenMix, onOpenGroup)
+                    TAB_DISCOVER -> DiscoverTab(viewModel, online, onOpenMix, onOpenGroup, onOpenArtist)
                     TAB_PLAYLISTS -> PlaylistsTab(viewModel, onOpenPlaylist)
                     TAB_DOWNLOADS -> DownloadsTab(viewModel)
                     TAB_FAVORITES -> FavoritesTab(viewModel)
@@ -171,6 +172,7 @@ private fun DiscoverTab(
     online: Boolean,
     onOpenMix: (title: String, query: String, mode: String) -> Unit,
     onOpenGroup: (title: String, unit: String, query: String, mode: String) -> Unit,
+    onOpenArtist: (channelId: String, name: String) -> Unit,
 ) {
     if (!online) {
         EmptyHint(Icons.Outlined.CloudDownload, "Entdecken braucht Internet — deine Downloads findest du im Downloads-Tab.")
@@ -291,6 +293,7 @@ private fun DiscoverTab(
                             } else {
                                 null
                             },
+                            onOpenArtist = onOpenArtist,
                         )
                     }
                 }

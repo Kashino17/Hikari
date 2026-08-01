@@ -1,6 +1,7 @@
 package com.hikari.app.ui.music
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -63,6 +64,7 @@ import com.hikari.app.ui.theme.HikariTextMuted
 @Composable
 fun NowPlayingScreen(
     onBack: () -> Unit,
+    onOpenArtist: (channelId: String, name: String) -> Unit,
     viewModel: MusicViewModel = hiltViewModel(),
 ) {
     val controller = viewModel.player
@@ -163,7 +165,19 @@ fun NowPlayingScreen(
             modifier = Modifier.padding(horizontal = 28.dp),
         )
         Spacer(Modifier.height(6.dp))
-        Text(current.uploader, fontSize = 14.sp, color = HikariTextMuted, maxLines = 1)
+        // Klick öffnet die Artist-Seite — nur wenn der Song eine Kanal-URL trägt.
+        val artistChannelId = current.uploaderUrl.substringAfterLast("/", "")
+        Text(
+            current.uploader,
+            fontSize = 14.sp,
+            color = HikariTextMuted,
+            maxLines = 1,
+            modifier = if (artistChannelId.isNotBlank()) {
+                Modifier.clickable { onOpenArtist(artistChannelId, current.uploader) }
+            } else {
+                Modifier
+            },
+        )
 
         error?.let {
             Spacer(Modifier.height(10.dp))

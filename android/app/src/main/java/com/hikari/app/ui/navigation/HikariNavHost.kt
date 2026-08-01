@@ -51,6 +51,7 @@ import com.hikari.app.ui.theme.HikariBorder
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.tuning.TuningScreen
 import com.hikari.app.ui.music.MiniMusicBubble
+import com.hikari.app.ui.music.ArtistScreen
 import com.hikari.app.ui.music.GroupDetailScreen
 import com.hikari.app.ui.music.MixDetailScreen
 import com.hikari.app.domain.repo.MusicSearchMode
@@ -109,10 +110,11 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
     val isNowPlaying = currentRoute == "nowplaying"
     val isPlaylistRoute = currentRoute?.startsWith("playlist/") == true
     val isMixRoute = currentRoute?.startsWith("mix/") == true
-    val inMusicSection = currentRoute == "music" || isNowPlaying || isPlaylistRoute || isMixRoute
+    val isArtistRoute = currentRoute?.startsWith("artist/") == true
+    val inMusicSection = currentRoute == "music" || isNowPlaying || isPlaylistRoute || isMixRoute || isArtistRoute
     val showsBottomBar = !(currentRoute == "feed" && feedFullscreen) && !isVideoRoute &&
         !isReaderRoute && !isGearSubPage && !isGameRoute && !isNowPlaying &&
-        !isPlaylistRoute && !isMixRoute
+        !isPlaylistRoute && !isMixRoute && !isArtistRoute
 
     Scaffold(
         containerColor = HikariBg,
@@ -280,11 +282,40 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
                             val q = URLEncoder.encode(query, "UTF-8")
                             nav.navigate("musicGroup/$t?unit=$u&q=$q&mode=$mode")
                         },
+                        onOpenArtist = { id, name ->
+                            nav.navigate("artist/$id?name=${URLEncoder.encode(name, "UTF-8")}")
+                        },
                     )
                 }
             }
             composable("nowplaying") {
-                NowPlayingScreen(onBack = { nav.popBackStack() })
+                NowPlayingScreen(
+                    onBack = { nav.popBackStack() },
+                    onOpenArtist = { id, name ->
+                        nav.navigate("artist/$id?name=${URLEncoder.encode(name, "UTF-8")}")
+                    },
+                )
+            }
+            composable(
+                route = "artist/{channelId}?name={name}",
+                arguments = listOf(
+                    navArgument("channelId") { type = NavType.StringType },
+                    navArgument("name") { type = NavType.StringType; defaultValue = "" },
+                ),
+            ) { entry ->
+                val channelId = entry.arguments?.getString("channelId").orEmpty()
+                val name = URLDecoder.decode(entry.arguments?.getString("name").orEmpty(), "UTF-8")
+                ArtistScreen(
+                    channelId = channelId,
+                    fallbackName = name,
+                    onBack = { nav.popBackStack() },
+                    onOpenNowPlaying = { nav.navigate("nowplaying") },
+                    onOpenPlaylistMix = { title, query ->
+                        val t = URLEncoder.encode(title, "UTF-8")
+                        val q = URLEncoder.encode(query, "UTF-8")
+                        nav.navigate("mix/$t?q=$q&mode=music")
+                    },
+                )
             }
             composable(
                 route = "mix/{title}?q={q}&mode={mode}",

@@ -1,6 +1,8 @@
 package com.hikari.app.domain.repo
 
 import com.hikari.app.data.api.HikariApi
+import com.hikari.app.data.api.dto.ArtistDto
+import com.hikari.app.data.api.dto.ArtistPlaylistDto
 import com.hikari.app.data.api.dto.MusicTrackDto
 import com.hikari.app.data.api.dto.PipedSearchPageDto
 import com.hikari.app.data.api.dto.PipedStreamsDto
@@ -12,6 +14,8 @@ import com.hikari.app.data.db.MusicPlaylistSongEntity
 import com.hikari.app.data.db.MusicSongDao
 import com.hikari.app.data.db.MusicSongEntity
 import com.hikari.app.data.prefs.SettingsStore
+import com.hikari.app.domain.model.Artist
+import com.hikari.app.domain.model.ArtistPlaylist
 import com.hikari.app.domain.model.MusicPlaylist
 import com.hikari.app.domain.model.MusicSong
 import java.net.URLEncoder
@@ -502,10 +506,10 @@ class MusicRepository(
                             videoId = videoId,
                             title = item.title.orEmpty(),
                             uploader = item.uploaderName.orEmpty(),
-                            uploaderUrl = "",
+                            uploaderUrl = item.uploaderUrl.orEmpty(),
                             thumbnailUrl = "https://i.ytimg.com/vi/$videoId/mqdefault.jpg",
                             duration = item.duration ?: 0,
-                            views = 0,
+                            views = item.views?.takeIf { it > 0 } ?: 0,
                         )
                     }
                     if (songs.isNotEmpty()) return@withContext songs
@@ -551,10 +555,38 @@ class MusicRepository(
         videoId = videoId,
         title = title,
         uploader = uploader,
-        uploaderUrl = "",
+        uploaderUrl = uploaderUrl.orEmpty(),
         thumbnailUrl = thumbnailUrl,
         duration = durationSeconds,
-        views = 0,
+        views = views ?: 0,
+    )
+
+    // --- Artist-Seiten (nur Backend, kein Piped-Fallback — Fehler gehen an den Aufrufer) ---
+
+    suspend fun getArtist(channelId: String): Artist = api.getArtist(channelId).toModel()
+
+    suspend fun getArtistTop(channelId: String, name: String): List<MusicSong> =
+        withFavoriteState(api.getArtistTop(channelId, name).map { it.toSong() })
+
+    suspend fun getArtistPlaylists(channelId: String, name: String): List<ArtistPlaylist> =
+        api.getArtistPlaylists(channelId, name).map { it.toModel() }
+
+    private fun ArtistDto.toModel() = Artist(
+        channelId = channelId,
+        name = name,
+        avatarUrl = avatarUrl,
+        bannerUrl = bannerUrl,
+        subscriberCount = subscriberCount,
+        description = description,
+        verified = verified,
+    )
+
+    private fun ArtistPlaylistDto.toModel() = ArtistPlaylist(
+        playlistId = playlistId,
+        name = name,
+        thumbnailUrl = thumbnailUrl,
+        videoCount = videoCount,
+        uploaderName = uploaderName,
     )
 
     private fun MusicSong.toEntity() = MusicSongEntity(
