@@ -1,7 +1,11 @@
 package com.hikari.app.ui.manga.components
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
@@ -12,15 +16,22 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.hikari.app.data.api.dto.MangaSeriesDto
+import com.hikari.app.ui.theme.HikariSurfaceHigh
+import com.hikari.app.ui.theme.HikariText
 
 @Composable
 fun MangaCard(
@@ -29,57 +40,49 @@ fun MangaCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (pressed) 0.96f else 1f,
+        animationSpec = spring(dampingRatio = 0.6f),
+        label = "card-press",
+    )
+
     Column(
         modifier = modifier
             .width(128.dp)
-            .clickable(onClick = onClick),
+            .scale(pressScale)
+            .clickable(interactionSource = interaction, indication = null, onClick = onClick),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(2f / 3f)
-                .clip(RoundedCornerShape(6.dp))
-                .background(Color(0xFF111111)),
+                .clip(RoundedCornerShape(10.dp))
+                .background(HikariSurfaceHigh),
         ) {
-            // Always-on gradient backdrop with title — visible while cover loads
-            // and as final fallback when coverUrl is null/missing.
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                Color(0x66B45309),
-                                Color(0xFF18181B),
-                                Color(0xFF09090B),
-                            )
-                        )
-                    ),
-            )
-            Text(
-                text = series.title,
-                color = Color.White.copy(alpha = 0.9f),
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .padding(8.dp)
-                    .fillMaxSize(),
-            )
+            // Typografie-Karte als Lade-Hintergrund und End-Fallback.
+            MangaCoverFallback(title = series.title)
             if (coverUrl != null) {
                 AsyncImage(
-                    model = coverUrl,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(coverUrl)
+                        .crossfade(true)
+                        .build(),
                     contentDescription = series.title,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
                 )
             }
         }
         Text(
             text = series.title,
-            color = Color.White.copy(alpha = 0.9f),
-            fontSize = 11.sp,
+            color = HikariText,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.padding(top = 8.dp),
             maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }

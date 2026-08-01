@@ -33,8 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hikari.app.data.api.dto.MangaArcDto
 import com.hikari.app.data.api.dto.MangaChapterDto
-
-private val Accent = Color(0xFFFBBF24)
+import com.hikari.app.ui.theme.HikariPrimary
 
 private val SetSaver: Saver<Set<String>, List<String>> = Saver(
     save = { it.toList() },
@@ -156,7 +155,7 @@ private fun ArcDownloadAffordance(
         progress != null -> Box(modifier = box, contentAlignment = Alignment.Center) {
             CircularProgressIndicator(
                 progress = { progress.coerceIn(0f, 1f) },
-                color = Accent,
+                color = HikariPrimary,
                 strokeWidth = 2.dp,
                 modifier = Modifier.size(20.dp),
             )
@@ -170,7 +169,7 @@ private fun ArcDownloadAffordance(
         isDownloaded -> Icon(
             imageVector = Icons.Default.CheckCircle,
             contentDescription = "Heruntergeladen",
-            tint = Accent,
+            tint = HikariPrimary,
             modifier = box,
         )
         else -> IconButton(

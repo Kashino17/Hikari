@@ -15,8 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hikari.app.data.api.dto.MangaSyncJobDto
-
-private val Accent = Color(0xFFFBBF24)
+import com.hikari.app.ui.theme.HikariPrimary
 
 @Composable
 fun MangaSyncBanner(job: MangaSyncJobDto, modifier: Modifier = Modifier) {
@@ -38,7 +37,7 @@ fun MangaSyncBanner(job: MangaSyncJobDto, modifier: Modifier = Modifier) {
         LinearProgressIndicator(
             progress = { progress },
             modifier = Modifier.weight(1f).height(2.dp),
-            color = Accent,
+            color = HikariPrimary,
             trackColor = Color.White.copy(alpha = 0.1f),
         )
         Text(

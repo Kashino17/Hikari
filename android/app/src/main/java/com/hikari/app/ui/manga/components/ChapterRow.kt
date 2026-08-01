@@ -15,8 +15,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hikari.app.data.api.dto.MangaChapterDto
-
-private val Accent = Color(0xFFFBBF24)
+import com.hikari.app.ui.theme.HikariPrimary
 
 @Composable
 fun ChapterRow(
@@ -56,8 +55,8 @@ fun ChapterRow(
             )
         } else if (chapter.isRead == 1) {
             Text(
-                text = "READ",
-                color = Accent,
+                text = "GELESEN",
+                color = HikariPrimary,
                 fontSize = 10.sp,
                 letterSpacing = 1.5.sp,
             )
