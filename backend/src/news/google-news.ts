@@ -24,14 +24,17 @@ export async function fetchGoogleNewsTopic(
   const res = await fetchImpl(url, { signal: AbortSignal.timeout(6000) });
   if (!res.ok) throw new Error(`Google News request failed: ${res.status}`);
   const xml = await res.text();
-  // source name gets overwritten below — parsed per item from the title suffix
+  // source name gets overwritten below — parsed per item from the title suffix.
+  // Die Google-News-<description> wiederholt nur den Titel — sie ist kein
+  // Inhalt. Leer lassen, damit Zusammenfassung und UI nichts duplizieren.
   return parseFeedItems(xml, "Google News").map((item) => {
     const idx = item.title.lastIndexOf(" - ");
-    if (idx <= 0) return item;
+    if (idx <= 0) return { ...item, description: "" };
     return {
       ...item,
       title: item.title.slice(0, idx).trim(),
       source: item.title.slice(idx + 3).trim(),
+      description: "",
     };
   });
 }
