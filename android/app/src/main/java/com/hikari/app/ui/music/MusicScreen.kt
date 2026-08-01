@@ -38,6 +38,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
@@ -152,7 +153,15 @@ fun MusicScreen(
             }
         }
 
-        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp))
+        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp)) { data ->
+            // Material-Default ist hell — auf die dunklen Hikari-Flächen abstimmen.
+            Snackbar(
+                snackbarData = data,
+                containerColor = HikariSurfaceHigh,
+                contentColor = HikariText,
+                shape = RoundedCornerShape(12.dp),
+            )
+        }
     }
 
     viewModel.addToPlaylistTarget?.let { song ->

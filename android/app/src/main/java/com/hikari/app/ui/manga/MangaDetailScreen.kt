@@ -17,6 +17,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -35,6 +36,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.hikari.app.ui.manga.components.ArcAccordion
 import com.hikari.app.ui.theme.HikariBg
+import com.hikari.app.ui.theme.HikariSurfaceHigh
+import com.hikari.app.ui.theme.HikariText
 
 private val Accent = Color(0xFFFBBF24)
 
@@ -103,7 +106,15 @@ fun MangaDetailScreen(
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter),
-        )
+        ) { data ->
+            // Material-Default ist hell — auf die dunklen Hikari-Flächen abstimmen.
+            Snackbar(
+                snackbarData = data,
+                containerColor = HikariSurfaceHigh,
+                contentColor = HikariText,
+                shape = RoundedCornerShape(12.dp),
+            )
+        }
     }
 }
 
