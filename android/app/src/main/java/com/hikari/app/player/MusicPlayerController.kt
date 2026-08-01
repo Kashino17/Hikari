@@ -51,6 +51,11 @@ class MusicPlayerController @Inject constructor(
     private var progressJob: Job? = null
     private var autoplayJob: Job? = null
 
+    /** Vorausgeladene Stream-URL des nächsten Songs (siehe maybePrefetchNext). */
+    private var prefetchJob: Job? = null
+    private var prefetchedFor: String? = null
+    private var prefetchedUrl: String? = null
+
     private val _currentSong = MutableStateFlow<MusicSong?>(null)
     val currentSong: StateFlow<MusicSong?> = _currentSong.asStateFlow()
 
@@ -191,6 +196,9 @@ class MusicPlayerController @Inject constructor(
     fun stop() {
         loadJob?.cancel()
         autoplayJob?.cancel()
+        prefetchJob?.cancel()
+        prefetchedFor = null
+        prefetchedUrl = null
         player?.stop()
         player?.clearMediaItems()
         _currentSong.value = null
@@ -218,6 +226,9 @@ class MusicPlayerController @Inject constructor(
                 _error.value = "Offline — „${song.title}“ wurde nicht heruntergeladen"
                 _isPlaying.value = false
                 return@launch
+            } else if (!forceRefresh && prefetchedFor == song.videoId && prefetchedUrl != null) {
+                // Vorausgeladene URL — der Wechsel braucht keinen Netz-Call mehr.
+                prefetchedUrl
             } else {
                 repo.getAudioStream(song.videoId, forceRefresh)
             }
@@ -252,6 +263,10 @@ class MusicPlayerController @Inject constructor(
             )
             p.prepare()
             p.play()
+            if (prefetchedFor == song.videoId) {
+                prefetchedFor = null
+                prefetchedUrl = null
+            }
         }
     }
 
@@ -354,6 +369,39 @@ class MusicPlayerController @Inject constructor(
         }
     }
 
+    /**
+     * Lädt die Stream-URL des nächsten Songs vor, solange der aktuelle noch
+     * läuft. Ohne das Vorziehen entsteht beim Wechsel eine Lücke von bis zu
+     * 45 s (yt-dlp), in der der Player keine Wake-Lock hält — bei ausgeschaltetem
+     * Bildschirm friert das System die App mitten im Übergang ein und die
+     * Wiedergabe stirbt nach wenigen Songs.
+     */
+    private fun maybePrefetchNext() {
+        val next = nextLinearSong() ?: return
+        if (prefetchedFor == next.videoId || prefetchJob?.isActive == true) return
+        if (!connectivity.currentlyOnline()) return
+        prefetchJob = scope.launch {
+            if (downloads.localFile(next.videoId) != null) return@launch // lokale Datei braucht keine URL
+            val url = runCatching { repo.getAudioStream(next.videoId) }.getOrNull()
+            if (url != null) {
+                prefetchedFor = next.videoId
+                prefetchedUrl = url
+            }
+        }
+    }
+
+    /** Nächster Song bei linearem Abspielen; bei Shuffle/Listenende nicht vorhersagbar. */
+    private fun nextLinearSong(): MusicSong? {
+        if (_shuffle.value) return null
+        val q = _queue.value
+        val nextIndex = queueIndex + 1
+        return when {
+            nextIndex < q.size -> q[nextIndex]
+            _repeatMode.value == REPEAT_ALL && q.isNotEmpty() -> q[0]
+            else -> null // Autoplay-Nachschub ist nicht vorhersagbar
+        }
+    }
+
     private fun startProgressUpdates() {
         if (progressJob?.isActive == true) return
         progressJob = scope.launch {
@@ -362,7 +410,11 @@ class MusicPlayerController @Inject constructor(
                     if (it.isPlaying) {
                         _positionMs.value = it.currentPosition.coerceAtLeast(0)
                         val d = it.duration
-                        if (d > 0) _durationMs.value = d
+                        if (d > 0) {
+                            _durationMs.value = d
+                            // Letzte Minute: den nächsten Übergang vorbereiten.
+                            if (d - it.currentPosition < 60_000) maybePrefetchNext()
+                        }
                         // Läuft ein Song gesund, waren frühere Fehler nur
                         // vorübergehend — Zähler zurücksetzen.
                         if (it.currentPosition > 15_000) {
