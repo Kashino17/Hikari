@@ -93,9 +93,12 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
         }
     }
 
-    // Deep-Link aus Intents (z.B. News-Benachrichtigung) auf den Ziel-Tab.
+    // Deep-Link aus Intents (z.B. News-Benachrichtigung) auf den Ziel-Tab
+    // bzw. die Ziel-Section.
     LaunchedEffect(deepLinkRoute) {
-        if (deepLinkRoute != null && hikariDestinations.any { it.route == deepLinkRoute }) {
+        if (deepLinkRoute != null &&
+            (hikariDestinations.any { it.route == deepLinkRoute } || deepLinkRoute in hubSectionRoutes)
+        ) {
             navTo(nav, deepLinkRoute)
         }
     }
@@ -406,6 +409,8 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
                         onOpenDownloadCategory = { cat ->
                             nav.navigate("download-category/${cat.name}")
                         },
+                        // Hub-Bereiche als Push — System-Zurück führt ins Profil.
+                        onOpenSection = { route -> nav.navigate(route) },
                     )
                 }
             }

@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
@@ -60,12 +61,14 @@ import android.widget.Toast
 import coil.compose.AsyncImage
 import com.hikari.app.ui.channels.ImportSheet
 import java.io.File
+import com.hikari.app.ui.profile.components.AreaHub
 import com.hikari.app.ui.profile.tabs.ChannelsTab
 import com.hikari.app.ui.profile.tabs.DownloadsTab
 import com.hikari.app.ui.profile.tabs.SavedTab
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
+import com.hikari.app.ui.theme.HikariCardBg
 import com.hikari.app.ui.theme.HikariDanger
 import com.hikari.app.ui.theme.HikariSurface
 import com.hikari.app.ui.theme.HikariSurfaceHigh
@@ -82,6 +85,7 @@ fun ProfileScreen(
     onOpenChannel: (String) -> Unit,
     onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
     onOpenDownloadCategory: (com.hikari.app.ui.profile.tabs.DownloadCategory) -> Unit,
+    onOpenSection: (route: String) -> Unit,
     vm: ProfileViewModel = hiltViewModel(),
 ) {
     val name by vm.name.collectAsState()
@@ -219,6 +223,11 @@ fun ProfileScreen(
                 }
             }
 
+            Spacer(Modifier.height(18.dp))
+
+            // ── Bereichs-Hub: Musik, News, Manga, Spiele (keine Bottom-Tabs mehr)
+            AreaHub(onOpenSection = onOpenSection)
+
             Spacer(Modifier.height(14.dp))
 
             // ── Tab bar ──────────────────────────────────────────────────────
@@ -309,46 +318,50 @@ private fun TabBar(active: ProfileTab, onChange: (ProfileTab) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .background(HikariBg)
-            .padding(top = 4.dp),
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        TabIcon(Icons.Default.Bookmark, "Gespeichert", active == ProfileTab.SAVED) {
+        TabPill(Icons.Default.Bookmark, "Gespeichert", active == ProfileTab.SAVED) {
             onChange(ProfileTab.SAVED)
         }
-        TabIcon(Icons.Default.Public, "Kanäle", active == ProfileTab.CHANNELS) {
+        TabPill(Icons.Default.Public, "Kanäle", active == ProfileTab.CHANNELS) {
             onChange(ProfileTab.CHANNELS)
         }
-        TabIcon(Icons.Default.Download, "Downloads", active == ProfileTab.DOWNLOADS) {
+        TabPill(Icons.Default.Download, "Downloads", active == ProfileTab.DOWNLOADS) {
             onChange(ProfileTab.DOWNLOADS)
         }
     }
 }
 
 @Composable
-private fun androidx.compose.foundation.layout.RowScope.TabIcon(
+private fun androidx.compose.foundation.layout.RowScope.TabPill(
     icon: ImageVector,
-    contentDescription: String,
+    label: String,
     active: Boolean,
     onClick: () -> Unit,
 ) {
-    Column(
+    Row(
         modifier = Modifier
             .weight(1f)
-            .clickable(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (active) HikariSurfaceHigh else HikariCardBg)
+            .clickable(onClick = onClick)
+            .padding(vertical = 10.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             icon,
-            contentDescription = contentDescription,
-            tint = if (active) HikariText else HikariTextFaint,
-            modifier = Modifier
-                .size(48.dp)
-                .padding(12.dp),
+            contentDescription = label,
+            tint = if (active) HikariAmber else HikariTextFaint,
+            modifier = Modifier.size(16.dp),
         )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.5.dp)
-                .background(if (active) HikariAmber else Color.Transparent),
+        Spacer(Modifier.size(7.dp))
+        Text(
+            label,
+            color = if (active) HikariText else HikariTextFaint,
+            fontSize = 12.5.sp,
+            fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
         )
     }
 }
