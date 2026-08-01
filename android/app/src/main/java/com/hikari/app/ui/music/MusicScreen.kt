@@ -194,6 +194,7 @@ private fun DiscoverTab(
                             MusicSearchMode.MUSIC -> "Songs, Artists suchen…"
                             MusicSearchMode.AUDIOBOOK -> "Hörbücher suchen…"
                             MusicSearchMode.PODCAST -> "Podcasts suchen…"
+                            MusicSearchMode.TRUECRIME -> "Fälle, Shows suchen…"
                         },
                         color = HikariTextFaint,
                     )
@@ -270,13 +271,27 @@ private fun DiscoverTab(
                         GroupRow(
                             group = group,
                             unitLabel = unit,
+                            badge = if (searchMode == MusicSearchMode.TRUECRIME) {
+                                viewModel.languageBadge(group.chapters.first())
+                            } else {
+                                null
+                            },
                             onClick = {
                                 onOpenGroup(group.uploader, unit, viewModel.searchQuery, searchMode.apiValue)
                             },
                         )
                     }
                     items(viewModel.searchResults, key = { "s-${it.videoId}" }) { song ->
-                        SongRow(song, viewModel, viewModel.searchResults)
+                        SongRow(
+                            song,
+                            viewModel,
+                            viewModel.searchResults,
+                            badge = if (searchMode == MusicSearchMode.TRUECRIME) {
+                                viewModel.languageBadge(song)
+                            } else {
+                                null
+                            },
+                        )
                     }
                 }
             }

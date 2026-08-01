@@ -451,6 +451,7 @@ private fun HistoryChip(song: MusicSong, isCurrent: Boolean, onClick: () -> Unit
 fun GroupRow(
     group: ChapterGroup,
     unitLabel: String,
+    badge: String? = null,
     onClick: () -> Unit,
 ) {
     Row(
@@ -483,7 +484,7 @@ fun GroupRow(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                "${group.chapters.size} $unitLabel",
+                "${group.chapters.size} $unitLabel" + (badge?.let { "  ·  $it" } ?: ""),
                 fontSize = 11.sp,
                 color = HikariTextMuted,
             )
@@ -508,6 +509,7 @@ fun SearchModeChips(
         MusicSearchMode.MUSIC to "Musik",
         MusicSearchMode.AUDIOBOOK to "Hörbücher",
         MusicSearchMode.PODCAST to "Podcasts",
+        MusicSearchMode.TRUECRIME to "True Crime",
     )
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         MusicSearchMode.entries.forEach { mode ->

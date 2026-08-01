@@ -49,6 +49,7 @@ enum class MusicSearchMode(
     MUSIC("music", "music_songs", 0),
     AUDIOBOOK("audiobook", "videos", 600),
     PODCAST("podcast", "videos", 300),
+    TRUECRIME("truecrime", "videos", 300),
     ;
 
     companion object {
@@ -150,6 +151,30 @@ class MusicRepository(
         )
 
         /**
+         * True-Crime-Sektionen, bewusst nach Sprache getrennt: Der Sektionstitel
+         * trägt die Sprache, die Suchbegriffe steuern sie. Piped liefert keine
+         * Sprach-Metadaten — nur so ist die Beschriftung verlässlich.
+         */
+        private val TRUECRIME_SECTIONS = listOf(
+            "Wahre Verbrechen (DE)" to "true crime podcast deutsch",
+            "Kriminalfälle (DE)" to "kriminalfall podcast deutsch",
+            "Mordfälle (DE)" to "mordfall true crime deutsch",
+            "True Crime (EN)" to "true crime podcast english",
+            "Cold Cases (EN)" to "cold case true crime english",
+            "Unsolved (EN)" to "unsolved mystery true crime english",
+        )
+
+        /**
+         * Deutsche Marker für das DE/EN-Sprach-Badge. Umlaute prüft der Aufrufer
+         * vorab — diese Funktionswörter und Begriffe fangen Titel ohne Umlaute.
+         */
+        private val GERMAN_LANGUAGE_MARKERS = listOf(
+            " der ", " die ", " das ", " und ", " ein ", " eine ", " von ", " zu ",
+            " ist ", " mit ", " im ", " am ", " für ", " auf ", "wahre verbrechen",
+            "mordfall", "kriminalfall", "deutschland", " deutsch",
+        )
+
+        /**
          * Merkmale, die Gesang belegen — sie schlagen jedes Instrumental-Wort.
          * "You (Vocals only)" vom Kanal "izza beats" darf nicht durchrutschen,
          * bloß weil "beats" im Namen steht.
@@ -208,6 +233,8 @@ class MusicRepository(
                 !query.contains("audiobook", ignoreCase = true) -> "$query hörbuch"
             mode == MusicSearchMode.PODCAST &&
                 !query.contains("podcast", ignoreCase = true) -> "$query podcast"
+            mode == MusicSearchMode.TRUECRIME &&
+                !query.contains("true crime", ignoreCase = true) -> "$query true crime"
             else -> query
         }
         val tracks = try {
@@ -261,13 +288,25 @@ class MusicRepository(
     private fun chapterNumberOf(title: String): Int? =
         CHAPTER_NUMBER_RE.find(title)?.groupValues?.get(1)?.toIntOrNull()
 
+    /**
+     * Grobe Sprachschätzung für das DE/EN-Badge im True-Crime-Modus. Piped
+     * liefert keine Sprache mit — Umlaute sind ein fast sicheres Zeichen für
+     * Deutsch, danach helfen deutsche Funktionswörter und Genrebegriffe.
+     * Im Zweifel EN: der englische True-Crime-Markt ist der größere.
+     */
+    fun languageBadgeOf(song: MusicSong): String {
+        val text = " ${song.title} ${song.uploader} ".lowercase()
+        if (text.any { it in "äöüß" }) return "DE"
+        return if (GERMAN_LANGUAGE_MARKERS.any { it in text }) "DE" else "EN"
+    }
+
     suspend fun getDiscoverSections(mode: MusicSearchMode = MusicSearchMode.MUSIC): List<DiscoverSection> =
         coroutineScope {
-            val sections = when {
-                mode == MusicSearchMode.AUDIOBOOK -> AUDIOBOOK_SECTIONS
-                mode == MusicSearchMode.PODCAST -> PODCAST_SECTIONS
-                instrumentalOnly() -> INSTRUMENTAL_SECTIONS
-                else -> DISCOVER_SECTIONS
+            val sections = when (mode) {
+                MusicSearchMode.AUDIOBOOK -> AUDIOBOOK_SECTIONS
+                MusicSearchMode.PODCAST -> PODCAST_SECTIONS
+                MusicSearchMode.TRUECRIME -> TRUECRIME_SECTIONS
+                MusicSearchMode.MUSIC -> if (instrumentalOnly()) INSTRUMENTAL_SECTIONS else DISCOVER_SECTIONS
             }
             sections.map { (title, query) ->
                 async {
@@ -293,7 +332,7 @@ class MusicRepository(
         val tracks = when (mode) {
             MusicSearchMode.MUSIC -> all.filter { it.duration in 60..900 }
             MusicSearchMode.AUDIOBOOK -> all.filter { it.duration >= 120 }
-            MusicSearchMode.PODCAST -> all.filter { it.duration >= 180 }
+            MusicSearchMode.PODCAST, MusicSearchMode.TRUECRIME -> all.filter { it.duration >= 180 }
         }
         return if (tracks.size >= 4) tracks else all
     }

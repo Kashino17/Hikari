@@ -85,10 +85,10 @@ describe("GET /music/search", () => {
     await app.close();
   });
 
-  it("searches plain videos in audiobook and podcast mode", async () => {
+  it("searches plain videos in audiobook, podcast and truecrime mode", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(okJson({ items: [PIPED_ITEM] }));
     const app = await makeApp({ fetchImpl });
-    for (const mode of ["audiobook", "podcast"]) {
+    for (const mode of ["audiobook", "podcast", "truecrime"]) {
       const res = await app.inject({ method: "GET", url: `/music/search?q=rick&mode=${mode}` });
       expect(res.statusCode).toBe(200);
     }

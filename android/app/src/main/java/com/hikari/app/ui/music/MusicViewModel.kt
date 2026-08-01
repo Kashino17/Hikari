@@ -192,6 +192,9 @@ class MusicViewModel @Inject constructor(
         }
     }
 
+    /** DE/EN-Badge für den True-Crime-Modus — Heuristik aus Titel und Uploader. */
+    fun languageBadge(song: MusicSong): String = repo.languageBadgeOf(song)
+
     /** Wechselt den Suchmodus und lädt Suche und Entdecken-Vorschläge neu. */
     fun selectSearchMode(mode: MusicSearchMode) {
         if (mode == searchMode) return

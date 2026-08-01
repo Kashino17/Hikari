@@ -32,6 +32,7 @@ const SEARCH_MODES = {
   music: "music_songs",
   audiobook: "videos",
   podcast: "videos",
+  truecrime: "videos",
 } as const;
 
 type SearchMode = keyof typeof SEARCH_MODES;

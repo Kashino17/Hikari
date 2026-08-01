@@ -65,6 +65,7 @@ fun SongRow(
     viewModel: MusicViewModel,
     contextQueue: List<MusicSong>,
     modifier: Modifier = Modifier,
+    badge: String? = null,
     onRemoveFromPlaylist: (() -> Unit)? = null,
 ) {
     val currentSong by viewModel.player.currentSong.collectAsState()
@@ -132,6 +133,9 @@ fun SongRow(
                 )
                 if (song.duration > 0) {
                     Text("  ·  ${formatDuration(song.duration)}", fontSize = 12.sp, color = HikariTextFaint)
+                }
+                if (badge != null) {
+                    Text("  ·  $badge", fontSize = 12.sp, color = HikariPrimary)
                 }
                 if (!playable) {
                     Text("  ·  offline nicht verfügbar", fontSize = 11.sp, color = HikariTextFaint)
