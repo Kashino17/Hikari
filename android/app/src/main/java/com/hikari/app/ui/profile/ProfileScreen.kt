@@ -95,6 +95,10 @@ fun ProfileScreen(
     val savedCount by vm.savedCount.collectAsState()
     val channelsCount by vm.channelsCount.collectAsState()
     val downloadsCount by vm.downloadsCount.collectAsState()
+    val hubNews by vm.hubNews.collectAsState()
+    val hubNewsCount by vm.hubNewsCount.collectAsState()
+    val hubMangaCovers by vm.hubMangaCovers.collectAsState()
+    val hubMangaLabel by vm.hubMangaLabel.collectAsState()
 
     var editing by remember { mutableStateOf<EditField?>(null) }
     var tab by remember { mutableStateOf(ProfileTab.SAVED) }
@@ -225,8 +229,14 @@ fun ProfileScreen(
 
             Spacer(Modifier.height(18.dp))
 
-            // ── Bereichs-Hub: Musik, News, Manga, Spiele (keine Bottom-Tabs mehr)
-            AreaHub(onOpenSection = onOpenSection)
+            // ── Bereichs-Hub: News, Manga, Spiele mit echten Inhalten ──────
+            AreaHub(
+                news = hubNews,
+                newsCount = hubNewsCount,
+                mangaCovers = hubMangaCovers,
+                mangaLabel = hubMangaLabel,
+                onOpenSection = onOpenSection,
+            )
 
             Spacer(Modifier.height(14.dp))
 

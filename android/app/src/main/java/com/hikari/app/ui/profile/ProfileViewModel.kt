@@ -8,15 +8,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.prefs.BIO_MAX_LENGTH
 import com.hikari.app.data.prefs.ProfileStore
+import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.model.FeedItem
+import com.hikari.app.domain.model.NewsItem
 import com.hikari.app.domain.repo.ChannelsRepository
 import com.hikari.app.domain.repo.DownloadsRepository
 import com.hikari.app.domain.repo.FeedRepository
+import com.hikari.app.domain.repo.MangaRepository
+import com.hikari.app.domain.repo.NewsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -38,7 +44,26 @@ class ProfileViewModel @Inject constructor(
     private val feedRepo: FeedRepository,
     private val downloadsRepo: DownloadsRepository,
     private val channelsRepo: ChannelsRepository,
+    private val newsRepo: NewsRepository,
+    private val mangaRepo: MangaRepository,
+    settings: SettingsStore,
 ) : ViewModel() {
+
+    private val backendUrl: StateFlow<String> = settings.backendUrl
+        .stateIn(viewModelScope, SharingStarted.Eagerly, "")
+
+    /** Daten für den Bereichs-Hub: aktuelles News-Bild + echte Manga-Cover. */
+    private val _hubNews = MutableStateFlow<NewsItem?>(null)
+    val hubNews: StateFlow<NewsItem?> = _hubNews.asStateFlow()
+
+    private val _hubNewsCount = MutableStateFlow(0)
+    val hubNewsCount: StateFlow<Int> = _hubNewsCount.asStateFlow()
+
+    private val _hubMangaCovers = MutableStateFlow<List<String>>(emptyList())
+    val hubMangaCovers: StateFlow<List<String>> = _hubMangaCovers.asStateFlow()
+
+    private val _hubMangaLabel = MutableStateFlow<String?>(null)
+    val hubMangaLabel: StateFlow<String?> = _hubMangaLabel.asStateFlow()
 
     val name: StateFlow<String> =
         store.name.stateIn(viewModelScope, SharingStarted.Eagerly, "")
@@ -77,6 +102,29 @@ class ProfileViewModel @Inject constructor(
         refreshSaved()
         refreshChannelsCount()
         refreshDownloadsCount()
+        refreshHub()
+    }
+
+    /** Lädt die Bilder und Zeilen für den Bereichs-Hub (News + Manga). */
+    fun refreshHub() {
+        viewModelScope.launch {
+            runCatching { newsRepo.getBriefing(force = false) }
+                .onSuccess { items ->
+                    _hubNewsCount.value = items.size
+                    _hubNews.value = items.firstOrNull { it.imageUrls.isNotEmpty() }
+                        ?: items.firstOrNull()
+                }
+        }
+        viewModelScope.launch {
+            runCatching { mangaRepo.getContinue() }
+                .onSuccess { cont ->
+                    val base = backendUrl.value
+                    _hubMangaCovers.value = cont.mapNotNull { c ->
+                        c.coverPath?.let { mangaRepo.coverImageUrl(base, it) }
+                    }.take(3)
+                    _hubMangaLabel.value = cont.firstOrNull()?.let { "${it.title} · Seite ${it.pageNumber}" }
+                }
+        }
     }
 
     fun refreshSaved() {
