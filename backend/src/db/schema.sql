@@ -279,6 +279,14 @@ CREATE TABLE IF NOT EXISTS ingest_queue (
 CREATE INDEX IF NOT EXISTS idx_ingest_queue_pending
   ON ingest_queue(queued_at) WHERE locked_at IS NULL;
 
+-- Daily news briefing cache. Key = "<date>|<lang>|<sorted topics>|<city>",
+-- payload = JSON BriefingItem[]. One row per day/topic-set/city combo.
+CREATE TABLE IF NOT EXISTS news_briefings (
+  key TEXT PRIMARY KEY,
+  created_at INTEGER NOT NULL,
+  payload TEXT NOT NULL
+);
+
 -- Clipper runtime state. Singleton (id = 1). Allows manual override of the
 -- nightly schedule window so the user can force the worker to run a queue-drain
 -- immediately for testing/debugging.

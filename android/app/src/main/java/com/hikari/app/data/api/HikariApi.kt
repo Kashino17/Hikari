@@ -46,6 +46,8 @@ import com.hikari.app.data.api.dto.UpdateFilterRequest
 import com.hikari.app.data.api.dto.WeeklyStatsDto
 import com.hikari.app.data.api.dto.MusicStreamDto
 import com.hikari.app.data.api.dto.MusicTrackDto
+import com.hikari.app.data.api.dto.NewsItemDto
+import com.hikari.app.data.api.dto.NewsTopicDto
 import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -67,6 +69,18 @@ interface HikariApi {
 
     @GET("music/stream/{videoId}")
     suspend fun getMusicStream(@Path("videoId") videoId: String): MusicStreamDto
+
+    // ── Täglicher KI-Tagesbericht ─────────────────────────────────────────
+    @GET("news/topics")
+    suspend fun getNewsTopics(): List<NewsTopicDto>
+
+    @GET("news/briefing")
+    suspend fun getNewsBriefing(
+        @Query("topics") topics: String,
+        @Query("city") city: String? = null,
+        @Query("lang") lang: String = "de",
+        @Query("force") force: Boolean? = null,
+    ): List<NewsItemDto>
 
     @GET("feed")
     suspend fun getFeed(@Query("mode") mode: String = "new"): List<FeedItemDto>

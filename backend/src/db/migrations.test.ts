@@ -31,6 +31,7 @@ describe("applyMigrations", () => {
       "manga_progress",
       "manga_series",
       "manga_sync_jobs",
+      "news_briefings",
       "scores",
       "series",
       "sponsor_segments",

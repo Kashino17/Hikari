@@ -57,6 +57,7 @@ import com.hikari.app.domain.repo.MusicSearchMode
 import com.hikari.app.ui.music.MusicScreen
 import com.hikari.app.ui.music.NowPlayingScreen
 import com.hikari.app.ui.music.PlaylistDetailScreen
+import com.hikari.app.ui.news.NewsScreen
 import com.hikari.app.ui.games.GamesScreen
 import com.hikari.app.ui.games.BlockBlastGame
 import com.hikari.app.ui.games.FruitHoleGame
@@ -79,7 +80,7 @@ private fun playVideoRoute(videoId: String, title: String, channel: String): Str
 }
 
 @Composable
-fun HikariNavHost() {
+fun HikariNavHost(deepLinkRoute: String? = null) {
     val nav = rememberNavController()
     val backStack by nav.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
@@ -88,6 +89,13 @@ fun HikariNavHost() {
     LaunchedEffect(currentRoute) {
         if (currentRoute != "feed" && feedFullscreen) {
             feedFullscreen = false
+        }
+    }
+
+    // Deep-Link aus Intents (z.B. News-Benachrichtigung) auf den Ziel-Tab.
+    LaunchedEffect(deepLinkRoute) {
+        if (deepLinkRoute != null && hikariDestinations.any { it.route == deepLinkRoute }) {
+            navTo(nav, deepLinkRoute)
         }
     }
 
@@ -209,6 +217,11 @@ fun HikariNavHost() {
                     onFullscreenChange = { feedFullscreen = it },
                     onNavigate = { route -> nav.navigate(route) },
                 )
+            }
+            composable("news") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    NewsScreen()
+                }
             }
             composable(
                 route = "channel/{channelId}",
