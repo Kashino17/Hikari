@@ -1,8 +1,9 @@
 package com.hikari.app.player
 
+import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
+import androidx.core.content.ContextCompat
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -10,6 +11,9 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
+import com.google.common.util.concurrent.ListenableFuture
 import com.hikari.app.data.net.ConnectivityObserver
 import com.hikari.app.domain.download.LocalMusicDownloadManager
 import com.hikari.app.domain.model.MusicSong
@@ -149,6 +153,26 @@ class MusicPlayerController @Inject constructor(
     /** Der [MusicPlaybackService] teilt sich die Player-Instanz des Controllers. */
     fun playerForSession(): ExoPlayer = ensurePlayer()
 
+    private var mediaControllerFuture: ListenableFuture<MediaController>? = null
+
+    /**
+     * Hält eine MediaController-Bindung an den PlaybackService. Erst durch
+     * diese Verbindung postet Media3 die System-Notification und hält den
+     * Service im Vordergrund — ein bloßes startService() lässt ihn als
+     * Hintergrund-Service, den Android nach ~90 s als idle killt (dann ist
+     * auch das Media-Widget weg).
+     */
+    private fun ensureSessionConnection() {
+        if (mediaControllerFuture != null) return
+        val token = SessionToken(context, ComponentName(context, MusicPlaybackService::class.java))
+        val future = MediaController.Builder(context, token).buildAsync()
+        mediaControllerFuture = future
+        future.addListener(
+            { runCatching { future.get() } },
+            ContextCompat.getMainExecutor(context),
+        )
+    }
+
     fun play(song: MusicSong, contextQueue: List<MusicSong> = emptyList()) {
         autoplayJob?.cancel() // eigene Auswahl schlägt laufenden Nachschub
         consecutiveFailures = 0
@@ -240,10 +264,10 @@ class MusicPlayerController @Inject constructor(
                 return@launch
             }
             val p = ensurePlayer()
-            // Sorgt dafür, dass der MediaSessionService läuft — er zeigt die
-            // Systemsteuerung (Sperrbildschirm, Benachrichtigung) und geht bei
-            // Wiedergabestart selbst in den Vordergrund.
-            context.startService(Intent(context, MusicPlaybackService::class.java))
+            // Bindet den PlaybackService (MediaController) — erst damit darf
+            // Media3 die Systemsteuerung posten und der Service im
+            // Vordergrund überleben.
+            ensureSessionConnection()
             // Titel/Artist/Cover als Metadaten — daraus baut das System das
             // Widget auf Sperrbildschirm und in der Benachrichtigungsleiste.
             p.setMediaItem(
