@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1F1F22">
+<base href="/mockups/nav-redesign/">
+<title>Hikari · Navigation neu — 3 Varianten</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;background:#17171A;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Inter","SF Pro Text",sans-serif;-webkit-font-smoothing:antialiased}
+  body{min-height:100vh;padding:env(safe-area-inset-top) 20px env(safe-area-inset-bottom)}
+  .wrap{max-width:430px;margin:0 auto;padding:32px 0}
+  h1{font-size:12px;letter-spacing:2px;color:#8a8a8f;font-weight:600;margin:0 0 4px;text-transform:uppercase;font-family:ui-monospace,"SF Mono",monospace}
+  h2{font-size:26px;color:#fff;font-weight:800;margin:0 0 10px;line-height:1.2}
+  .sub{font-size:14px;color:#9a9aa0;line-height:1.5;margin:0 0 32px}
+  .sub b{color:#FBBF24;font-weight:600}
+  .grid{display:grid;gap:14px}
+  .card{display:block;text-decoration:none;background:#232327;border:0.5px solid rgba(255,255,255,.07);border-radius:16px;padding:20px;transition:all .15s}
+  .card:active{background:#28282C;transform:scale(.99)}
+  .card .num{font-size:11px;letter-spacing:1.5px;color:#FBBF24;font-weight:700;font-family:ui-monospace,"SF Mono",monospace;margin-bottom:8px}
+  .card .name{font-size:19px;font-weight:700;color:#fff;margin-bottom:8px}
+  .card .desc{font-size:13px;color:#9a9aa0;line-height:1.5;margin-bottom:14px}
+  .bar{display:flex;gap:4px;background:#1F1F22;border-radius:12px;padding:6px;margin-bottom:12px}
+  .bar span{flex:1;text-align:center;font-size:11px;color:#7a7a80;padding:6px 2px;border-radius:8px}
+  .bar span.on{background:#FBBF24;color:#000;font-weight:700}
+  .tags{display:flex;flex-wrap:wrap;gap:6px}
+  .tags span{font-size:11px;color:#c9c9cf;background:#2E2E33;padding:4px 10px;border-radius:20px}
+  .foot{margin-top:28px;font-size:12px;color:#6a6a70;line-height:1.6;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Hikari · Navigation neu</h1>
+  <h2>Drei Varianten für Bottom-Bar &amp; Profil</h2>
+  <p class="sub">Ist-Zustand: <b>7 Tabs</b> (Bibliothek, Feed, News, Music, Manga, Spiele, Profil) — überladen. Alle drei Varianten verschlanken die Bottom-Bar und machen das Profil zur Drehscheibe. Tippen zum Ansehen.</p>
+
+  <div class="grid">
+    <a class="card" href="variant-1.html">
+      <div class="num">VARIANTE 1</div>
+      <div class="name">Profil-Hub</div>
+      <div class="desc">Maximale Reduktion: nur 3 Tabs. Musik, News, Manga und Spiele ziehen als Bereichs-Karten ins Profil um — dort bleiben auch Gespeichert, Kanäle und Downloads.</div>
+      <div class="bar"><span>Bibliothek</span><span>Feed</span><span class="on">Profil</span></div>
+      <div class="tags"><span>3 Tabs</span><span>Maximal aufgeräumt</span><span>Alles im Profil</span></div>
+    </a>
+
+    <a class="card" href="variant-2.html">
+      <div class="num">VARIANTE 2</div>
+      <div class="name">News bleibt draußen</div>
+      <div class="desc">4 Tabs: Der Tagesbericht bleibt als täglicher Begleiter direkt erreichbar. Musik, Manga und Spiele werden kompakte Bereichs-Zeilen im Profil.</div>
+      <div class="bar"><span>Bibliothek</span><span>Feed</span><span>News</span><span class="on">Profil</span></div>
+      <div class="tags"><span>4 Tabs</span><span>News 1 Tap</span><span>Kompakter Hub</span></div>
+    </a>
+
+    <a class="card" href="variant-3.html">
+      <div class="num">VARIANTE 3</div>
+      <div class="name">Musik bleibt draußen</div>
+      <div class="desc">4 Tabs: Musik als täglicher Treiber behält ihren Tab. Tagesbericht, Manga und Spiele wandern als Schnellzugriff-Reihe direkt oben ins Profil.</div>
+      <div class="bar"><span>Bibliothek</span><span>Feed</span><span>Musik</span><span class="on">Profil</span></div>
+      <div class="tags"><span>4 Tabs</span><span>Musik 1 Tap</span><span>Schnellzugriff oben</span></div>
+    </a>
+  </div>
+
+  <p class="foot">Gemeinsam allen Varianten: Der Kern des Profils (Statistik, Gespeichert, Kanäle, Downloads) bleibt — er rutscht nur unter den neuen Hub-Bereich. Jede Bereichs-Karte öffnet die bestehende Section unverändert.</p>
+</div>
+</body>
+</html>

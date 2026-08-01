@@ -1,0 +1,86 @@
+/* Hikari Nav-Redesign Mockups — gemeinsames Styling (App-Theme Anthrazit) */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;background:#17171A;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Inter","SF Pro Text",sans-serif;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.frame{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+
+/* Konzept-Banner oben */
+.concept{margin:14px;background:#232327;border:0.5px solid rgba(255,255,255,.07);border-radius:14px;padding:14px 16px}
+.concept .v{font-size:11px;letter-spacing:1.5px;color:#FBBF24;font-weight:700;font-family:ui-monospace,"SF Mono",monospace;margin-bottom:6px}
+.concept .t{font-size:16px;font-weight:700;margin-bottom:6px}
+.concept .d{font-size:12.5px;color:#9a9aa0;line-height:1.5}
+.concept .d b{color:#fff;font-weight:600}
+.concept a{color:#FBBF24;text-decoration:none;font-size:12px}
+
+/* Phone-Inhalt */
+.phone{flex:1;background:#1F1F22;border-radius:22px 22px 0 0;margin-top:14px;overflow:hidden}
+
+/* Profil-Header */
+.header{padding:26px 20px 6px}
+.hrow{display:flex;align-items:center;gap:22px}
+.avatar{width:78px;height:78px;border-radius:50%;background:linear-gradient(135deg,#B45309 0%,#FBBF24 100%);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;color:#0a0a0a;flex-shrink:0;box-shadow:0 0 0 2px #2E2E33 inset}
+.stats{display:flex;flex:1;justify-content:space-around}
+.stat{text-align:center}
+.stat .n{font-size:17px;font-weight:700;color:#fff}
+.stat .l{font-size:10.5px;color:#8a8a8f;font-family:ui-monospace,"SF Mono",monospace;margin-top:3px;letter-spacing:.5px}
+.name{margin-top:14px;font-size:15px;font-weight:700}
+.bio{margin-top:3px;font-size:12.5px;color:#9a9aa0}
+
+/* Bereichs-Hub */
+.hub{padding:20px 16px 4px}
+.hub .eyebrow{font-size:10.5px;letter-spacing:1.8px;color:#8a8a8f;font-weight:600;font-family:ui-monospace,"SF Mono",monospace;margin:0 4px 12px}
+
+/* Variante 1: 2x2 Karten-Grid */
+.areagrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.area{position:relative;background:#28282C;border:0.5px solid rgba(255,255,255,.06);border-radius:16px;padding:16px 14px;overflow:hidden;transition:transform .12s}
+.area:active{transform:scale(.97)}
+.area .ic{width:38px;height:38px;border-radius:12px;background:rgba(251,191,36,.14);display:flex;align-items:center;justify-content:center;margin-bottom:26px}
+.area .ic svg{width:19px;height:19px;stroke:#FBBF24}
+.area .nm{font-size:14.5px;font-weight:700}
+.area .sb{font-size:11px;color:#8a8a8f;margin-top:3px;line-height:1.35}
+.area .chev{position:absolute;top:12px;right:12px;width:15px;height:15px;stroke:#55555c}
+
+/* Variante 2: Listen-Zeilen */
+.arealist{display:grid;gap:8px}
+.lrow{display:flex;align-items:center;gap:13px;background:#28282C;border:0.5px solid rgba(255,255,255,.06);border-radius:14px;padding:12px 14px;transition:transform .12s}
+.lrow:active{transform:scale(.98)}
+.lrow .ic{width:36px;height:36px;border-radius:11px;background:rgba(251,191,36,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lrow .ic svg{width:18px;height:18px;stroke:#FBBF24}
+.lrow .tx{flex:1;min-width:0}
+.lrow .nm{font-size:14px;font-weight:700}
+.lrow .sb{font-size:11px;color:#8a8a8f;margin-top:2px}
+.lrow .chev{width:16px;height:16px;stroke:#55555c;flex-shrink:0}
+
+/* Variante 3: horizontale Schnellzugriff-Reihe */
+.arearow{display:flex;gap:10px;overflow-x:auto;padding:2px 4px 6px;scrollbar-width:none}
+.arearow::-webkit-scrollbar{display:none}
+.chipcard{flex:0 0 118px;background:#28282C;border:0.5px solid rgba(255,255,255,.06);border-radius:16px;padding:14px 12px;transition:transform .12s}
+.chipcard:active{transform:scale(.96)}
+.chipcard .ic{width:34px;height:34px;border-radius:11px;background:rgba(251,191,36,.14);display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+.chipcard .ic svg{width:17px;height:17px;stroke:#FBBF24}
+.chipcard .nm{font-size:13px;font-weight:700}
+.chipcard .sb{font-size:10.5px;color:#8a8a8f;margin-top:2px}
+
+/* Profil-Tabs (Kern bleibt) */
+.tabs{display:flex;gap:6px;padding:18px 16px 12px}
+.tab{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;height:40px;border-radius:12px;background:#232327;color:#8a8a8f;font-size:12.5px;font-weight:600;transition:all .15s}
+.tab svg{width:16px;height:16px;stroke:currentColor}
+.tab.active{background:#2E2E33;color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+
+/* Gespeichert-Grid */
+.savedgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:0 16px 24px}
+.cell{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden}
+.cell .grad{position:absolute;inset:0}
+.cell .label{position:absolute;left:8px;right:8px;bottom:7px;font-size:10.5px;font-weight:600;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.cell .badge{position:absolute;top:7px;right:7px;background:rgba(31,31,34,.8);color:#FBBF24;font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:20px;font-family:ui-monospace,"SF Mono",monospace}
+
+/* Bottom-Bar */
+.bottombar{position:sticky;bottom:0;background:#1B1B1E;border-top:0.5px solid rgba(255,255,255,.07);display:flex;padding:8px 4px calc(10px + env(safe-area-inset-bottom));z-index:10}
+.bitem{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:5px 0;color:#7a7a80;text-decoration:none}
+.bitem svg{width:21px;height:21px;stroke:currentColor}
+.bitem .l{font-size:10.5px;font-weight:600}
+.bitem.on{color:#FBBF24}
+
+/* Nav-Flow-Hinweis */
+.flow{margin:12px 14px 18px;background:#232327;border-radius:12px;padding:11px 14px;font-size:12px;color:#9a9aa0;line-height:1.55}
+.flow b{color:#FBBF24;font-weight:600}
