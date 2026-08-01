@@ -68,7 +68,10 @@ interface HikariApi {
     ): List<MusicTrackDto>
 
     @GET("music/stream/{videoId}")
-    suspend fun getMusicStream(@Path("videoId") videoId: String): MusicStreamDto
+    suspend fun getMusicStream(
+        @Path("videoId") videoId: String,
+        @Query("force") force: Boolean? = null,
+    ): MusicStreamDto
 
     // ── Täglicher KI-Tagesbericht ─────────────────────────────────────────
     @GET("news/topics")

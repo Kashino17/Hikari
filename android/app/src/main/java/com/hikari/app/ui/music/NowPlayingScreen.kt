@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Shuffle
@@ -109,6 +110,9 @@ fun NowPlayingScreen(
                 onDownload = { viewModel.downloadSong(current) },
                 onDelete = { viewModel.deleteDownload(current.videoId) },
             )
+            IconButton(onClick = { viewModel.addToPlaylistTarget = current }) {
+                Icon(Icons.Default.PlaylistAdd, "Zu Playlist hinzufügen", tint = HikariTextMuted)
+            }
             IconButton(onClick = { viewModel.toggleFavorite(current) }) {
                 Icon(
                     if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -118,17 +122,20 @@ fun NowPlayingScreen(
             }
         }
 
-        // Freiraum sammelt sich oben, damit Cover, Titel und Bedienung als
-        // eine Gruppe unten in Daumenreichweite sitzen. Auf hohen Displays
-        // klaffte hier sonst ein totes Loch mitten im Bild.
-        Spacer(Modifier.weight(1f))
+        // Aufbau wie bei den üblichen Playern: großes Cover im oberen Drittel,
+        // Titel direkt darunter, Fortschritt und Tasten am unteren Rand in
+        // Daumenreichweite. Der dehnbare Zwischenraum sitzt zwischen Titel
+        // und Slider — dort fällt er nicht als Loch auf.
+        Spacer(Modifier.height(16.dp))
 
+        // Quellmaterial sind YouTube-Thumbnails (16:9) — ein quadratischer
+        // Zuschnitt würde die Seiten abstutzen, deshalb volle Breite in 16:9.
         Box(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 48.dp)
-                .aspectRatio(1f)
-                .clip(RoundedCornerShape(20.dp))
+                .padding(horizontal = 24.dp)
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(16.dp))
                 .background(HikariSurfaceHigh),
             contentAlignment = Alignment.Center,
         ) {
@@ -144,7 +151,7 @@ fun NowPlayingScreen(
             }
         }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(20.dp))
 
         Text(
             current.title,
@@ -164,7 +171,7 @@ fun NowPlayingScreen(
                 modifier = Modifier.padding(horizontal = 28.dp))
         }
 
-        Spacer(Modifier.height(26.dp))
+        Spacer(Modifier.weight(1f))
 
         // --- seek bar ---
         var dragging by remember { mutableStateOf(false) }
@@ -245,5 +252,15 @@ fun NowPlayingScreen(
         }
 
         Spacer(Modifier.height(36.dp))
+    }
+
+    viewModel.addToPlaylistTarget?.let { song ->
+        AddToPlaylistSheet(
+            song = song,
+            playlists = viewModel.playlists,
+            onDismiss = { viewModel.addToPlaylistTarget = null },
+            onSelect = { playlistId -> viewModel.addToPlaylist(playlistId, song) },
+            onCreate = { name -> viewModel.createPlaylist(name, addAfterwards = song) },
+        )
     }
 }

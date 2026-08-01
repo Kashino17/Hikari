@@ -152,4 +152,13 @@ describe("GET /music/stream/:videoId", () => {
     expect(ytDlp).toHaveBeenCalledTimes(1);
     await app.close();
   });
+
+  it("force=1 bypasses the stream cache", async () => {
+    const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/a.m4a", stderr: "" });
+    const app = await makeApp({ ytDlp, now: () => 1_000 });
+    await app.inject({ method: "GET", url: "/music/stream/dQw4w9WgXcQ" });
+    await app.inject({ method: "GET", url: "/music/stream/dQw4w9WgXcQ?force=1" });
+    expect(ytDlp).toHaveBeenCalledTimes(2);
+    await app.close();
+  });
 });

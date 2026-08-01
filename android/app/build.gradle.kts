@@ -15,8 +15,8 @@ android {
         applicationId = "com.hikari.app"
         minSdk = 26
         targetSdk = 34   // was 36 in plan — same deviation
-        versionCode = 85
-        versionName = "0.50.0"
+        versionCode = 86
+        versionName = "0.51.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -80,6 +80,7 @@ dependencies {
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
     implementation(libs.media3.datasource.okhttp)
+    implementation(libs.media3.session)
 
     implementation(libs.coil.compose)
     implementation(libs.telephoto.zoomable.image.coil)

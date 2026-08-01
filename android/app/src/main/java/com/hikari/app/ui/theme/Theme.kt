@@ -10,9 +10,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 // Hikari palette — dark only, single warm-amber accent ("Hikari" = light).
-val HikariBg = Color(0xFF0A0A0A)
-val HikariSurface = Color(0xFF111111)
-val HikariSurfaceHigh = Color(0xFF1A1A1A)
+// Anthrazit statt Tiefschwarz: tagsüber lesbar, ohne die dunkle Ruhe zu verlieren.
+val HikariBg = Color(0xFF1F1F22)
+val HikariSurface = Color(0xFF262629)
+val HikariSurfaceHigh = Color(0xFF333338)
 val HikariBorder = Color(0x0FFFFFFF)        // ~6% white
 val HikariBorderStrong = Color(0x1FFFFFFF)  // ~12% white
 val HikariText = Color(0xEBFFFFFF)          // ~92% white
@@ -24,7 +25,7 @@ val HikariAmberSoft = Color(0x1FFBBF24)
 val HikariDanger = Color(0xFFF87171)
 
 // Card/background helpers
-val HikariCardBg = Color(0xFF141414)
+val HikariCardBg = Color(0xFF28282C)
 val HikariPrimary = HikariAmber
 
 private val HikariColors = darkColorScheme(

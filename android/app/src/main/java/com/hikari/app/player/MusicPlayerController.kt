@@ -1,9 +1,12 @@
 package com.hikari.app.player
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -91,9 +94,33 @@ class MusicPlayerController @Inject constructor(
         }
 
         override fun onPlayerError(e: PlaybackException) {
-            _error.value = "Wiedergabe fehlgeschlagen — Song wird übersprungen"
-            skipAfterFailure()
+            retryOrSkip()
         }
+    }
+
+    /** After a load/playback failure move on, but never loop forever. */
+    private var consecutiveFailures = 0
+
+    /** Wiederholversuche mit frischer Stream-URL für den aktuellen Song. */
+    private var streamRetries = 0
+
+    /**
+     * Stirbt die Wiedergabe mitten im Song (typisch: gecachte googlevideo-URL
+     * wird vom CDN abgelehnt), bekommt derselbe Song bis zu zwei neue Chancen
+     * mit frisch extrahierter URL — erst dann wird weitergeschaltet. Ein
+     * sofortiges Überspringen wäre für den Hörer unverständlich.
+     */
+    private fun retryOrSkip() {
+        val current = _currentSong.value
+        if (current != null && streamRetries < 2) {
+            streamRetries++
+            _error.value = "Verbindung unterbrochen — lade neu"
+            loadAndPlay(current, forceRefresh = true)
+            return
+        }
+        streamRetries = 0
+        _error.value = "Wiedergabe fehlgeschlagen — Song wird übersprungen"
+        skipAfterFailure()
     }
 
     private fun ensurePlayer(): ExoPlayer {
@@ -114,8 +141,13 @@ class MusicPlayerController @Inject constructor(
         return built
     }
 
+    /** Der [MusicPlaybackService] teilt sich die Player-Instanz des Controllers. */
+    fun playerForSession(): ExoPlayer = ensurePlayer()
+
     fun play(song: MusicSong, contextQueue: List<MusicSong> = emptyList()) {
         autoplayJob?.cancel() // eigene Auswahl schlägt laufenden Nachschub
+        consecutiveFailures = 0
+        streamRetries = 0
         val newQueue = if (contextQueue.isNotEmpty()) contextQueue else listOf(song)
         _queue.value = newQueue
         queueIndex = newQueue.indexOfFirst { it.videoId == song.videoId }.coerceAtLeast(0)
@@ -167,7 +199,7 @@ class MusicPlayerController @Inject constructor(
         _durationMs.value = 0
     }
 
-    private fun loadAndPlay(song: MusicSong) {
+    private fun loadAndPlay(song: MusicSong, forceRefresh: Boolean = false) {
         loadJob?.cancel()
         _currentSong.value = song
         _positionMs.value = 0
@@ -187,16 +219,37 @@ class MusicPlayerController @Inject constructor(
                 _isPlaying.value = false
                 return@launch
             } else {
-                repo.getAudioStream(song.videoId)
+                repo.getAudioStream(song.videoId, forceRefresh)
             }
             if (uri == null) {
                 _isBuffering.value = false
                 _error.value = "„${song.title}“ ist nicht abspielbar"
-                skipAfterFailure()
+                // Kein Sofort-Skip: erst mit frisch extrahierter URL erneut versuchen.
+                retryOrSkip()
                 return@launch
             }
             val p = ensurePlayer()
-            p.setMediaItem(MediaItem.fromUri(uri))
+            // Sorgt dafür, dass der MediaSessionService läuft — er zeigt die
+            // Systemsteuerung (Sperrbildschirm, Benachrichtigung) und geht bei
+            // Wiedergabestart selbst in den Vordergrund.
+            context.startService(Intent(context, MusicPlaybackService::class.java))
+            // Titel/Artist/Cover als Metadaten — daraus baut das System das
+            // Widget auf Sperrbildschirm und in der Benachrichtigungsleiste.
+            p.setMediaItem(
+                MediaItem.Builder()
+                    .setUri(uri)
+                    .setMediaId(song.videoId)
+                    .setMediaMetadata(
+                        MediaMetadata.Builder()
+                            .setTitle(song.title)
+                            .setArtist(song.uploader.ifBlank { "Hikari" })
+                            .setArtworkUri(
+                                song.thumbnailUrl.takeIf { it.isNotBlank() }?.let(Uri::parse),
+                            )
+                            .build(),
+                    )
+                    .build(),
+            )
             p.prepare()
             p.play()
         }
@@ -211,9 +264,6 @@ class MusicPlayerController @Inject constructor(
         advance(forward = true, manual = false)
     }
 
-    /** After a load/playback failure move on, but never loop forever. */
-    private var consecutiveFailures = 0
-
     private fun skipAfterFailure() {
         consecutiveFailures++
         if (consecutiveFailures >= 3 || _queue.value.size <= 1) {
@@ -227,7 +277,10 @@ class MusicPlayerController @Inject constructor(
     private fun advance(forward: Boolean, manual: Boolean) {
         val q = _queue.value
         if (q.isEmpty()) return
-        if (manual) consecutiveFailures = 0
+        if (manual) {
+            consecutiveFailures = 0
+            streamRetries = 0
+        }
 
         val nextIndex = when {
             _shuffle.value && q.size > 1 -> {
@@ -258,6 +311,11 @@ class MusicPlayerController @Inject constructor(
      * Autoplay am Listenende. Der Nachschub kommt aus dem Repository und ist
      * damit automatisch so gefiltert wie der Rest — im Instrumental-Modus
      * folgen also auch hier nur Stücke ohne Gesang.
+     *
+     * Im Hintergrund ist das Netz oft träge oder kurz weg (Doze). Ein einziger
+     * Versuch ließe das Autoplay dann lautlos sterben — der Player bliebe nach
+     * dem Songende einfach stehen. Deshalb mehrere Versuche mit wachsender
+     * Pause, bevor auf den Queue-Anfang zurückgefallen wird.
      */
     private fun extendQueueAndContinue() {
         if (autoplayJob?.isActive == true) return
@@ -268,9 +326,16 @@ class MusicPlayerController @Inject constructor(
         _isBuffering.value = true
         autoplayJob = scope.launch {
             val current = _queue.value
-            val more = runCatching {
-                repo.getAutoplaySongs(seed, current.map { it.videoId }.toSet())
-            }.getOrDefault(emptyList())
+            var more = emptyList<MusicSong>()
+            if (connectivity.currentlyOnline()) {
+                for (attempt in 1..3) {
+                    more = runCatching {
+                        repo.getAutoplaySongs(seed, current.map { it.videoId }.toSet())
+                    }.getOrDefault(emptyList())
+                    if (more.isNotEmpty()) break
+                    if (attempt < 3) delay(3_000L * attempt)
+                }
+            }
 
             if (more.isEmpty()) {
                 _isBuffering.value = false
@@ -298,6 +363,12 @@ class MusicPlayerController @Inject constructor(
                         _positionMs.value = it.currentPosition.coerceAtLeast(0)
                         val d = it.duration
                         if (d > 0) _durationMs.value = d
+                        // Läuft ein Song gesund, waren frühere Fehler nur
+                        // vorübergehend — Zähler zurücksetzen.
+                        if (it.currentPosition > 15_000) {
+                            streamRetries = 0
+                            consecutiveFailures = 0
+                        }
                     }
                 }
                 delay(500)

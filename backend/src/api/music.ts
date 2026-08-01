@@ -134,29 +134,35 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
     return reply.code(502).send({ error: "all music search providers unavailable" });
   });
 
-  app.get<{ Params: { videoId: string } }>("/music/stream/:videoId", async (req, reply) => {
-    const { videoId } = req.params;
-    if (!VIDEO_ID_RE.test(videoId)) return reply.code(400).send({ error: "invalid videoId" });
+  app.get<{ Params: { videoId: string }; Querystring: { force?: string } }>(
+    "/music/stream/:videoId",
+    async (req, reply) => {
+      const { videoId } = req.params;
+      if (!VIDEO_ID_RE.test(videoId)) return reply.code(400).send({ error: "invalid videoId" });
 
-    const cached = cacheGet(streamCache, videoId, STREAM_CACHE_TTL_MS, now());
-    if (cached) return { url: cached };
+      // force=1 umgeht den Cache — für Wiederholversuche, wenn eine gecachte
+      // googlevideo-URL mitten im Playback stirbt.
+      const force = req.query.force === "1" || req.query.force === "true";
+      const cached = force ? undefined : cacheGet(streamCache, videoId, STREAM_CACHE_TTL_MS, now());
+      if (cached) return { url: cached };
 
-    try {
-      const result = await ytDlp(
-        [
-          "--no-playlist",
-          "-f", "bestaudio[ext=m4a]/bestaudio/best",
-          "-g",
-          `https://www.youtube.com/watch?v=${videoId}`,
-        ],
-        { timeoutMs: 45_000, maxRetries: 1 },
-      );
-      const url = result.stdout.trim().split("\n")[0];
-      if (!url?.startsWith("http")) return reply.code(502).send({ error: "no audio stream found" });
-      cachePut(streamCache, videoId, url, now());
-      return { url };
-    } catch {
-      return reply.code(502).send({ error: "audio extraction failed" });
-    }
-  });
+      try {
+        const result = await ytDlp(
+          [
+            "--no-playlist",
+            "-f", "bestaudio[ext=m4a]/bestaudio/best",
+            "-g",
+            `https://www.youtube.com/watch?v=${videoId}`,
+          ],
+          { timeoutMs: 45_000, maxRetries: 1 },
+        );
+        const url = result.stdout.trim().split("\n")[0];
+        if (!url?.startsWith("http")) return reply.code(502).send({ error: "no audio stream found" });
+        cachePut(streamCache, videoId, url, now());
+        return { url };
+      } catch {
+        return reply.code(502).send({ error: "audio extraction failed" });
+      }
+    },
+  );
 }

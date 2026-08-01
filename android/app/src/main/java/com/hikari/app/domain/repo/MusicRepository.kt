@@ -355,9 +355,9 @@ class MusicRepository(
         return emptyList()
     }
 
-    suspend fun getAudioStream(videoId: String): String? {
+    suspend fun getAudioStream(videoId: String, forceRefresh: Boolean = false): String? {
         try {
-            api.getMusicStream(videoId).url?.let { return it }
+            api.getMusicStream(videoId, forceRefresh.takeIf { it }).url?.let { return it }
         } catch (_: Exception) {
             // backend down or extraction failed — try Piped directly
         }
