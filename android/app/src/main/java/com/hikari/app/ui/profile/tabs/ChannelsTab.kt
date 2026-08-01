@@ -164,7 +164,7 @@ fun ChannelsTab(
                     SectionLabel("ABONNIERT · ${channels.size}")
                     if (channels.isNotEmpty()) {
                         Text(
-                            "Lange drücken zum Deabonnieren",
+                            "Zum Deabonnieren auf „Folgst“ tippen",
                             color = HikariTextFaint,
                             fontSize = 10.sp,
                             modifier = Modifier.padding(top = 2.dp),
@@ -190,6 +190,9 @@ fun ChannelsTab(
                         channel = channel,
                         onClick = { onOpenChannel(channel.id) },
                         onLongClick = { unsubTarget = channel },
+                        topEndBadge = {
+                            FollowPill(subscribed = true, onToggle = { unsubTarget = channel })
+                        },
                     )
                 }
             }
@@ -320,6 +323,7 @@ private fun ChannelBannerCard(
     channel: Channel,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
+    topEndBadge: (@Composable () -> Unit)? = null,
 ) {
     val subs = formatSubs(channel.subscribers)
     val handle = channel.handle
@@ -333,6 +337,7 @@ private fun ChannelBannerCard(
         avatarUrl = channel.thumbnail,
         onClick = onClick,
         onLongClick = onLongClick,
+        topEndBadge = topEndBadge,
     )
 }
 
