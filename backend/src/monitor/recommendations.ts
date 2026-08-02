@@ -27,9 +27,25 @@ interface CacheEntry {
 
 const cache = new Map<string, CacheEntry>();
 const TTL_MS = 60 * 60 * 1000; // 1h
+// Jedes Abo/Deabo erzeugt einen neuen Key (Key enthält alle Channel-IDs) —
+// ohne Sweep + Cap wächst die Map für die gesamte Prozesslaufzeit.
+const CACHE_MAX_ENTRIES = 16;
 
 function cacheKey(tags: string[], excludedIds: string[]): string {
   return `${tags.sort().join(",")}|${excludedIds.sort().join(",")}`;
+}
+
+function cachePut(key: string, entry: CacheEntry): void {
+  const now = Date.now();
+  for (const [k, v] of cache) {
+    if (v.expires <= now) cache.delete(k);
+  }
+  while (cache.size >= CACHE_MAX_ENTRIES) {
+    const oldest = cache.keys().next().value;
+    if (oldest === undefined) break;
+    cache.delete(oldest);
+  }
+  cache.set(key, entry);
 }
 
 /**
@@ -128,7 +144,7 @@ export async function recommendChannels(
   if (opts.bypassCache) shuffleEqualScores(active);
 
   const results = active.slice(0, RESULT_LIMIT);
-  cache.set(key, { expires: Date.now() + TTL_MS, results });
+  cachePut(key, { expires: Date.now() + TTL_MS, results });
   return results;
 }
 

@@ -307,13 +307,27 @@ export async function analyzeVideo(
   prompt: string,
   config: AnalyzerConfig,
 ): Promise<ClipSpec[]> {
+  // Frames nur einmal samplen: der Invalid-JSON-Retry unten ruft callQwen
+  // erneut auf und hätte sonst alle Frames neu extrahiert (~1,6MB Base64
+  // pro Versuch, landet als Large-Object direkt im Old-Space).
+  let framesPromise: Promise<SampledFrame[]> | null = null;
+  const cfg: AnalyzerConfig = {
+    ...config,
+    sampleFn: (filePath, durationSec) => {
+      framesPromise ??= config.sampleFn
+        ? config.sampleFn(filePath, durationSec)
+        : sampleFrames(filePath, durationSec);
+      return framesPromise;
+    },
+  };
+
   let raw: z.infer<typeof rawSpecArraySchema>;
   try {
-    raw = parseAndValidate(await callQwen(input, prompt, config));
+    raw = parseAndValidate(await callQwen(input, prompt, cfg));
   } catch (firstErr) {
     if (!/invalid JSON/i.test((firstErr as Error).message)) throw firstErr;
     raw = parseAndValidate(
-      await callQwen(input, prompt, config, "Respond with valid JSON only. No prose, no markdown."),
+      await callQwen(input, prompt, cfg, "Respond with valid JSON only. No prose, no markdown."),
     );
   }
   return clampSpecs(raw, input.durationSec);

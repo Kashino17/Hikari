@@ -127,6 +127,11 @@ export async function registerChannelsRoutes(
     return reply.code(204).send();
   });
 
+  // Pro Kanal max. ein laufender Poll: die Ingest-Pipeline unten (yt-dlp-
+  // Metadaten + Transkript + Download pro Video) ist teuer — mehrfaches
+  // Antippen darf keine parallelen Läufe desselben Kanals stapeln.
+  const pollsInFlight = new Set<string>();
+
   app.post<{
     Params: { id: string };
     Querystring: { deep?: string; limit?: string };
@@ -135,6 +140,9 @@ export async function registerChannelsRoutes(
       return reply.code(503).send({ error: "poll not available: scorer/videoDir not configured" });
     }
     const channelId = req.params.id;
+    if (pollsInFlight.has(channelId)) {
+      return reply.code(409).send({ error: "poll already running for this channel" });
+    }
     const channel = deps.db
       .prepare("SELECT id, url FROM channels WHERE id = ? AND is_active = 1")
       .get(channelId) as { id: string; url: string } | undefined;
@@ -143,10 +151,16 @@ export async function registerChannelsRoutes(
     const isDeep = req.query.deep === "true" || req.query.deep === "1";
     const deepLimit = Math.min(Math.max(Number(req.query.limit ?? 50) || 50, 1), 200);
 
+    pollsInFlight.add(channelId);
+
     // RSS gives ~15 entries. Deep scan via yt-dlp can fetch up to `limit`.
-    const entries = isDeep
-      ? await fetchChannelDeepScan(channelId, deepLimit)
-      : await fetchChannelFeed(channelId);
+    const entries = await (isDeep
+      ? fetchChannelDeepScan(channelId, deepLimit)
+      : fetchChannelFeed(channelId)
+    ).catch((err) => {
+      pollsInFlight.delete(channelId);
+      throw err;
+    });
 
     const newEntries = entries.filter(
       (e) => !deps.db.prepare("SELECT 1 FROM videos WHERE id = ?").get(e.videoId),
@@ -205,9 +219,13 @@ export async function registerChannelsRoutes(
         }
       }
       app.log.info({ channelId, queued, isDeep }, "channel poll completed");
-    })().catch((err) => {
-      app.log.error({ err, channelId }, "channel poll background failed");
-    });
+    })()
+      .catch((err) => {
+        app.log.error({ err, channelId }, "channel poll background failed");
+      })
+      .finally(() => {
+        pollsInFlight.delete(channelId);
+      });
 
     return reply.code(202).send({ queued, skipped, errors: [], deep: isDeep });
   });

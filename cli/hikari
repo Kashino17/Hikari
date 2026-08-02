@@ -18,6 +18,9 @@ PID_FILE="$STATE_DIR/server.pid"
 LOG_FILE="$STATE_DIR/server.log"
 CLIPPER_PID_FILE="$STATE_DIR/clipper.pid"
 CLIPPER_LOG_FILE="$STATE_DIR/clipper.log"
+BUILD_STAMP="$BACKEND_DIR/dist/.build-stamp"
+# V8-Heap-Limit: Default (~4GB) hat nachts zu FatalProcessOutOfMemory geführt.
+NODE_HEAP_MB="${HIKARI_HEAP_MB:-8192}"
 
 mkdir -p "$STATE_DIR"
 
@@ -43,7 +46,7 @@ is_running() {
 }
 
 # Returns 0 only if /health body contains "service":"hikari".
-# Prevents foreign servers (Remotion, Vite, …) from masquerading as Hikari.
+# Prevents foreign servers (Remotion, Vite, ...) from masquerading as Hikari.
 health_says_hikari() {
     local body
     body=$(curl -s --max-time 1 "http://localhost:$PORT/health" 2>/dev/null) || return 1
@@ -79,10 +82,43 @@ port_holder_pid() {
     lsof -nP -iTCP:"$PORT" -sTCP:LISTEN -t 2>/dev/null | head -n1
 }
 
-# Waits up to 5s for the server to come up AND identify itself as Hikari.
+# Altes Log als .prev behalten statt es zu löschen — sonst ist nach einem
+# Restart die Crash-Ursache der letzten Nacht unwiederbringlich weg.
+rotate_log() {
+    local file="$1"
+    [[ -f "$file" ]] && mv "$file" "$file.prev"
+    : > "$file"
+}
+
+# Build nötig? Nur wenn src/package.json/tsconfig neuer sind als der Stamp
+# des letzten erfolgreichen Builds. Spart die ~40s tsc bei jedem Restart.
+needs_build() {
+    [[ -f "$BUILD_STAMP" ]] || return 0
+    local changed
+    changed=$(find "$BACKEND_DIR/src" "$BACKEND_DIR/package.json" "$BACKEND_DIR/tsconfig.json" \
+        -newer "$BUILD_STAMP" -print -quit 2>/dev/null)
+    [[ -n "$changed" ]]
+}
+
+run_build() {
+    echo "${AMBER}Baue Backend (tsc) — dauert ca. 30-60s...${RESET}"
+    cd "$BACKEND_DIR"
+    # Output live ins Terminal UND ins Log; Exit-Code von npm via PIPESTATUS.
+    PATH="$NODE_PATH_PREFIX:$PATH" npm run build 2>&1 | tee -a "$LOG_FILE" | sed "s/^/  ${DIM}/;s/$/${RESET}/"
+    local rc=${PIPESTATUS[0]}
+    if [[ $rc -ne 0 ]]; then
+        echo "${RED}Build fehlgeschlagen (Exit $rc).${RESET}"
+        echo "${DIM}  Volle Logs: ${BOLD}hikari logs backend${RESET}"
+        return 1
+    fi
+    touch "$BUILD_STAMP"
+    echo "${GREEN}Build ok.${RESET}"
+}
+
+# Waits up to 10s for the server to come up AND identify itself as Hikari.
 wait_for_health() {
     local i=0
-    while (( i < 20 )); do
+    while (( i < 40 )); do
         if health_says_hikari; then
             return 0
         fi
@@ -125,7 +161,7 @@ start_backend() {
         local stale_pid
         stale_pid=$(read_pid)
         if [[ -n "$stale_pid" ]] && kill -0 "$stale_pid" 2>/dev/null; then
-            echo "${DIM}Räume hängenden Backend-Prozess auf (PID $stale_pid)…${RESET}"
+            echo "${DIM}Räume hängenden Backend-Prozess auf (PID $stale_pid)...${RESET}"
             kill_tree "$stale_pid" TERM
             sleep 0.5
             kill -0 "$stale_pid" 2>/dev/null && kill_tree "$stale_pid" KILL
@@ -133,34 +169,42 @@ start_backend() {
         rm -f "$PID_FILE"
     fi
 
-    # Pre-Flight: hält jemand Fremdes den Port?
+    # Pre-Flight: hält jemand den Port?
     local holder
     holder=$(port_holder_pid)
     if [[ -n "$holder" ]]; then
-        local cmd
-        cmd=$(ps -p "$holder" -o command= 2>/dev/null | cut -c1-90)
-        echo "${RED}Port $PORT ist belegt — von einem fremden Prozess:${RESET}"
-        echo "${DIM}  PID $holder: $cmd${RESET}"
-        echo ""
-        echo "${DIM}Optionen:${RESET}"
-        echo "${DIM}  • ${BOLD}kill $holder${RESET}${DIM} — wenn du den Prozess nicht mehr brauchst${RESET}"
-        echo "${DIM}  • ${BOLD}PORT=3940 hikari${RESET}${DIM} — Hikari auf einem anderen Port starten${RESET}"
-        return 1
+        if health_says_hikari; then
+            # Verwaister Hikari-Server (PID-File fehlt/stale) — übernehmen wir.
+            echo "${DIM}Räume verwaisten Hikari-Server auf (PID $holder)...${RESET}"
+            kill_tree "$holder" TERM
+            sleep 0.5
+            kill -0 "$holder" 2>/dev/null && kill_tree "$holder" KILL
+        else
+            local cmd
+            cmd=$(ps -p "$holder" -o command= 2>/dev/null | cut -c1-90)
+            echo "${RED}Port $PORT ist belegt — von einem fremden Prozess:${RESET}"
+            echo "${DIM}  PID $holder: $cmd${RESET}"
+            echo ""
+            echo "${DIM}Optionen:${RESET}"
+            echo "${DIM}  • ${BOLD}kill $holder${RESET}${DIM} — wenn du den Prozess nicht mehr brauchst${RESET}"
+            echo "${DIM}  • ${BOLD}PORT=3940 hikari${RESET}${DIM} — Hikari auf einem anderen Port starten${RESET}"
+            return 1
+        fi
     fi
 
-    echo "${AMBER}Starte Backend im Hintergrund auf Port $PORT…${RESET}"
-    cd "$BACKEND_DIR"
-    : > "$LOG_FILE"
+    rotate_log "$LOG_FILE"
     # Build with node@24's tsc (npm scripts), then run dist/ with system node so
     # the native module (better-sqlite3) ABI matches.
-    if ! PATH="$NODE_PATH_PREFIX:$PATH" npm run build >> "$LOG_FILE" 2>&1; then
-        echo "${RED}Build fehlgeschlagen.${RESET}"
-        echo "${DIM}  Letzte Log-Zeilen:${RESET}"
-        tail -n 12 "$LOG_FILE" | sed "s/^/  /"
-        echo "${DIM}  Volle Logs: ${BOLD}hikari logs backend${RESET}"
-        return 1
+    if needs_build; then
+        run_build || return 1
+    else
+        echo "${DIM}Code unverändert — Build übersprungen. (Erzwingen: ${BOLD}hikari build${RESET}${DIM})${RESET}"
     fi
-    PORT="$PORT" nohup node dist/index.js >> "$LOG_FILE" 2>&1 &
+
+    echo "${AMBER}Starte Backend im Hintergrund auf Port $PORT...${RESET}"
+    cd "$BACKEND_DIR"
+    # Supervisor-Modus: startet node und startet es bei Crash automatisch neu.
+    PORT="$PORT" nohup "$0" __supervise >> "$LOG_FILE" 2>&1 &
     local pid=$!
     echo "$pid" > "$PID_FILE"
 
@@ -197,7 +241,7 @@ stop_backend() {
         return 0
     fi
 
-    echo "${AMBER}Stoppe Backend (PID $pid)…${RESET}"
+    echo "${AMBER}Stoppe Backend (PID $pid)...${RESET}"
     kill_tree "$pid" TERM
 
     local i=0
@@ -227,7 +271,7 @@ start_clipper() {
         local stale_pid
         stale_pid=$(read_clipper_pid)
         if [[ -n "$stale_pid" ]] && kill -0 "$stale_pid" 2>/dev/null; then
-            echo "${DIM}Räume hängenden Clipper-Prozess auf (PID $stale_pid)…${RESET}"
+            echo "${DIM}Räume hängenden Clipper-Prozess auf (PID $stale_pid)...${RESET}"
             kill_tree "$stale_pid" TERM
             sleep 0.5
             kill -0 "$stale_pid" 2>/dev/null && kill_tree "$stale_pid" KILL
@@ -235,10 +279,10 @@ start_clipper() {
         rm -f "$CLIPPER_PID_FILE"
     fi
 
-    echo "${AMBER}Starte Clipper-Worker im Hintergrund…${RESET}"
+    echo "${AMBER}Starte Clipper-Worker im Hintergrund...${RESET}"
     cd "$BACKEND_DIR"
-    : > "$CLIPPER_LOG_FILE"
-    nohup npm run clipper >> "$CLIPPER_LOG_FILE" 2>&1 &
+    rotate_log "$CLIPPER_LOG_FILE"
+    NODE_OPTIONS="--max-old-space-size=$NODE_HEAP_MB" nohup npm run clipper >> "$CLIPPER_LOG_FILE" 2>&1 &
     local pid=$!
     echo "$pid" > "$CLIPPER_PID_FILE"
 
@@ -266,7 +310,7 @@ stop_clipper() {
         return 0
     fi
 
-    echo "${AMBER}Stoppe Clipper-Worker (PID $pid)…${RESET}"
+    echo "${AMBER}Stoppe Clipper-Worker (PID $pid)...${RESET}"
     kill_tree "$pid" TERM
 
     local i=0
@@ -282,6 +326,42 @@ stop_clipper() {
 
     rm -f "$CLIPPER_PID_FILE"
     echo "${GREEN}Clipper gestoppt.${RESET}"
+}
+
+# ─── Supervisor (interner Modus, via `hikari __supervise`) ──────────────────
+# Läuft als nohup-Hintergrundprozess; PID_FILE zeigt auf DIESEN Prozess.
+# Startet das Backend und bei Crash (z.B. nächtliches OOM) automatisch neu.
+cmd_supervise() {
+    set +e
+    cd "$BACKEND_DIR"
+    local child=0
+    trap 'kill "$child" 2>/dev/null; exit 0' TERM INT
+    local fast_deaths=0
+    while true; do
+        local started now code
+        started=$(date +%s)
+        echo "[supervisor] $(date '+%F %T') starte node dist/index.js (Heap: ${NODE_HEAP_MB}MB)"
+        PORT="$PORT" node --max-old-space-size="$NODE_HEAP_MB" dist/index.js &
+        child=$!
+        wait "$child"
+        code=$?
+        [[ $code -eq 0 ]] && { echo "[supervisor] sauberer Exit."; break; }
+        # PID-File weg oder zeigt auf jemand anderen → wir wurden abgelöst/gestoppt.
+        [[ -f "$PID_FILE" && "$(cat "$PID_FILE" 2>/dev/null)" == "$$" ]] || { echo "[supervisor] abgelöst — Ende."; break; }
+        now=$(date +%s)
+        if (( now - started < 15 )); then
+            ((fast_deaths++))
+            if (( fast_deaths >= 5 )); then
+                echo "[supervisor] Backend stirbt sofort ($fast_deaths mal in Folge) — gebe auf."
+                rm -f "$PID_FILE"
+                exit 1
+            fi
+        else
+            fast_deaths=0
+        fi
+        echo "[supervisor] Backend-Exit (Code $code) um $(date '+%F %T') — Neustart in 3s..."
+        sleep 3
+    done
 }
 
 # ─── Commands ───────────────────────────────────────────────────────────────
@@ -412,25 +492,27 @@ ${BOLD}Hikari${RESET} — Backend + Clipper-Worker CLI
 
 ${BOLD}USAGE${RESET}
   ${AMBER}hikari${RESET}                    Starte Backend + Clipper-Worker (default)
-  ${AMBER}hikari start${RESET}              Wie oben
+  ${AMBER}hikari start${RESET}              Wie oben (Backend mit Auto-Restart bei Crash)
   ${AMBER}hikari stop${RESET}               Stoppe beide
   ${AMBER}hikari restart${RESET}            Stop + Start beider
   ${AMBER}hikari status${RESET}             Status beider + LM Studio Erreichbarkeit
   ${AMBER}hikari logs${RESET}               Live-Logs beider interleaved (tail -F)
   ${AMBER}hikari logs backend${RESET}       Nur Backend-Logs
   ${AMBER}hikari logs clipper${RESET}       Nur Clipper-Logs
+  ${AMBER}hikari build${RESET}              Build erzwingen (sonst nur bei Code-Änderung)
   ${AMBER}hikari fg${RESET}                 Backend im Vordergrund starten (debug)
   ${AMBER}hikari -h${RESET}                 Diese Hilfe
 
 ${BOLD}ENV VARS${RESET}
   ${DIM}PORT=3940 hikari          Anderer Port (Default: 3939)${RESET}
-  ${DIM}HIKARI_HOST=…  hikari     Anderer Tailscale-Hostname für die URL-Anzeige${RESET}
+  ${DIM}HIKARI_HOST=... hikari    Anderer Tailscale-Hostname für die URL-Anzeige${RESET}
+  ${DIM}HIKARI_HEAP_MB=8192      V8-Heap-Limit für Backend + Clipper (MB)${RESET}
 
 ${BOLD}DATEIEN${RESET}
-  ${DIM}~/.hikari/server.pid      PID des laufenden Backends${RESET}
-  ${DIM}~/.hikari/server.log      Backend-Output${RESET}
+  ${DIM}~/.hikari/server.pid      PID des Supervisors (startet Backend bei Crash neu)${RESET}
+  ${DIM}~/.hikari/server.log      Backend-Output (Vorgänger: server.log.prev)${RESET}
   ${DIM}~/.hikari/clipper.pid     PID des laufenden Clipper-Workers${RESET}
-  ${DIM}~/.hikari/clipper.log     Clipper-Worker-Output${RESET}
+  ${DIM}~/.hikari/clipper.log     Clipper-Worker-Output (Vorgänger: clipper.log.prev)${RESET}
 
 ${BOLD}URLS${RESET}
   ${DIM}http://localhost:$PORT            (lokal)${RESET}
@@ -445,7 +527,9 @@ case "${1:-start}" in
     restart)          cmd_restart ;;
     status|st)        cmd_status ;;
     logs|log|tail)    cmd_logs "${2:-both}" ;;
+    build|rebuild)    run_build ;;
     fg|foreground)    cmd_fg ;;
+    __supervise)      cmd_supervise ;;
     -h|--help|help)   cmd_help ;;
     *)
         echo "${RED}Unknown command: $1${RESET}" >&2

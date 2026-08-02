@@ -230,6 +230,11 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
         return reply.code(400).send({ error: `no adapter for source ${arc.source}` });
       }
 
+      // Gleicher Guard wie /api/manga/sync: mehrfaches Antippen darf keine
+      // N parallelen Sync-Läufe (je hunderte Kapitel-Downloads) stapeln.
+      if (syncQueuedOrRunning) return reply.code(409).send({ error: "sync already running" });
+      syncQueuedOrRunning = true;
+
       queueMicrotask(async () => {
         try {
           await runArcSync({
@@ -244,6 +249,8 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
           } else {
             app.log.error({ err, arcId: arc.arcId }, "arc sync failed");
           }
+        } finally {
+          syncQueuedOrRunning = false;
         }
       });
 
@@ -276,6 +283,9 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
 
     const seriesSlug = chapter.seriesId.slice(chapter.source.length + 1); // "source:slug" → "slug"
 
+    if (syncQueuedOrRunning) return reply.code(409).send({ error: "sync already running" });
+    syncQueuedOrRunning = true;
+
     queueMicrotask(async () => {
       try {
         await runChapterSync({
@@ -288,6 +298,8 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
         });
       } catch (err) {
         app.log.error({ err, chapterId: chapter.id }, "chapter sync failed");
+      } finally {
+        syncQueuedOrRunning = false;
       }
     });
 

@@ -68,6 +68,11 @@ export async function renderClip(input: RenderInput): Promise<RenderResult> {
     codec: "h264",
     outputLocation: outputPath,
     inputProps,
+    // OffthreadVideo's frame cache defaults to ~half the FREE system RAM and the
+    // composition decodes the source twice (blur bg + foreground) — uncapped this
+    // OOM-killed the nightly clipper. 512MB is plenty for 9:16 clips.
+    offthreadVideoCacheSizeInBytes: 512 * 1024 * 1024,
+    concurrency: 2,
   });
 
   const stats = await stat(outputPath);
