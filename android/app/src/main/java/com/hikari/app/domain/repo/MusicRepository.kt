@@ -360,12 +360,14 @@ class MusicRepository(
     }
 
     suspend fun getAudioStream(videoId: String, forceRefresh: Boolean = false): String? {
-        try {
-            api.getMusicStream(videoId, forceRefresh.takeIf { it }).url?.let { return it }
-        } catch (_: Exception) {
-            // backend down or extraction failed — try Piped directly
-        }
-        return pipedStreamFallback(videoId)
+        // Audio läuft über den Backend-Proxy statt direkt gegen googlevideo:
+        // deren URLs sind an das Netz gebunden, das sie aufgelöst hat, und
+        // spielen vom Handy aus fremden Netzen nicht ab. Abgelaufene URLs
+        // löst der Proxy serverseitig selbst neu auf; forceRefresh bleibt für
+        // die Retry-Semantik der Aufrufer ohne eigene Wirkung.
+        val backend = runCatching { settings.backendUrl.first().trimEnd('/') }.getOrNull()
+            ?: return pipedStreamFallback(videoId)
+        return "$backend/music/audio/$videoId"
     }
 
     // --- Library (= play history) & favorites ---

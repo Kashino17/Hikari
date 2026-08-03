@@ -1,3 +1,4 @@
+import { Readable } from "node:stream";
 import type { FastifyInstance } from "fastify";
 import { runYtDlp } from "../yt-dlp/client.js";
 
@@ -173,28 +174,71 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
       // force=1 umgeht den Cache — für Wiederholversuche, wenn eine gecachte
       // googlevideo-URL mitten im Playback stirbt.
       const force = req.query.force === "1" || req.query.force === "true";
-      const cached = force ? undefined : cacheGet(streamCache, videoId, STREAM_CACHE_TTL_MS, now());
-      if (cached) return { url: cached };
-
-      try {
-        const result = await ytDlp(
-          [
-            "--no-playlist",
-            "-f", "bestaudio[ext=m4a]/bestaudio/best",
-            "-g",
-            `https://www.youtube.com/watch?v=${videoId}`,
-          ],
-          { timeoutMs: 45_000, maxRetries: 1 },
-        );
-        const url = result.stdout.trim().split("\n")[0];
-        if (!url?.startsWith("http")) return reply.code(502).send({ error: "no audio stream found" });
-        cachePut(streamCache, videoId, url, now());
-        return { url };
-      } catch {
-        return reply.code(502).send({ error: "audio extraction failed" });
-      }
+      const url = await resolveAudioUrl(videoId, force);
+      if (!url) return reply.code(502).send({ error: "audio extraction failed" });
+      return { url };
     },
   );
+
+  async function resolveAudioUrl(videoId: string, force: boolean): Promise<string | undefined> {
+    const cached = force ? undefined : cacheGet(streamCache, videoId, STREAM_CACHE_TTL_MS, now());
+    if (cached) return cached;
+    try {
+      const result = await ytDlp(
+        [
+          "--no-playlist",
+          "-f", "bestaudio[ext=m4a]/bestaudio/best",
+          "-g",
+          `https://www.youtube.com/watch?v=${videoId}`,
+        ],
+        { timeoutMs: 45_000, maxRetries: 1 },
+      );
+      const url = result.stdout.trim().split("\n")[0];
+      if (!url?.startsWith("http")) return undefined;
+      cachePut(streamCache, videoId, url, now());
+      return url;
+    } catch {
+      return undefined;
+    }
+  }
+
+  // Streaming-Proxy: das Handy holt Audio-Bytes vom Mac statt direkt von
+  // googlevideo — die URLs dort sind an Netz/IP des Auflösers gebunden und
+  // spielen von fremden Netzen aus nicht zuverlässig ab.
+  app.get<{ Params: { videoId: string } }>("/music/audio/:videoId", async (req, reply) => {
+    const { videoId } = req.params;
+    if (!VIDEO_ID_RE.test(videoId)) return reply.code(400).send({ error: "invalid videoId" });
+
+    const range = req.headers.range;
+    let resolved = false;
+    for (const force of [false, true]) {
+      const url = await resolveAudioUrl(videoId, force);
+      if (!url) continue;
+      resolved = true;
+
+      let upstream: Response;
+      try {
+        // Kein Abort-Timeout: der Body streamt so lange, wie der Song spielt.
+        upstream = await fetchImpl(url, { headers: range ? { range } : {} });
+      } catch {
+        continue;
+      }
+      // 403/410 = abgelaufene oder netzfremde URL → einmal frisch auflösen
+      if (upstream.status === 403 || upstream.status === 410) continue;
+      if (!upstream.ok && upstream.status !== 206) continue;
+
+      reply.code(upstream.status);
+      for (const name of ["content-type", "content-length", "content-range", "accept-ranges"]) {
+        const value = upstream.headers.get(name);
+        if (value) reply.header(name, value);
+      }
+      if (!upstream.headers.get("accept-ranges")) reply.header("accept-ranges", "bytes");
+      return reply.send(upstream.body ? Readable.fromWeb(upstream.body) : "");
+    }
+    return reply
+      .code(502)
+      .send({ error: resolved ? "upstream audio fetch failed" : "audio extraction failed" });
+  });
 
   // --- Artist-Seiten ---
   // /playlists/{id} und /channels/tabs sind auf den Instanzen degradiert —

@@ -163,6 +163,100 @@ describe("GET /music/stream/:videoId", () => {
   });
 });
 
+describe("GET /music/audio/:videoId", () => {
+  const upstream = (status: number, body: string, headers: Record<string, string> = {}) =>
+    new Response(body, {
+      status,
+      headers: {
+        "content-type": "audio/mp4",
+        "content-length": String(body.length),
+        "accept-ranges": "bytes",
+        ...headers,
+      },
+    });
+
+  it("proxies the audio bytes from the resolved URL", async () => {
+    const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/audio.m4a\n", stderr: "" });
+    const fetchImpl = vi.fn().mockResolvedValue(upstream(200, "AUDIOBYTES"));
+    const app = await makeApp({ ytDlp, fetchImpl });
+    const res = await app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toBe("AUDIOBYTES");
+    expect(res.headers["content-type"]).toBe("audio/mp4");
+    expect(res.headers["accept-ranges"]).toBe("bytes");
+    expect(fetchImpl).toHaveBeenCalledWith("https://cdn.example/audio.m4a", expect.anything());
+    await app.close();
+  });
+
+  it("forwards the Range header and passes 206 + Content-Range through", async () => {
+    const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/audio.m4a", stderr: "" });
+    const fetchImpl = vi.fn().mockResolvedValue(
+      upstream(206, "PART", { "content-range": "bytes 0-3/1000" }),
+    );
+    const app = await makeApp({ ytDlp, fetchImpl });
+    const res = await app.inject({
+      method: "GET",
+      url: "/music/audio/dQw4w9WgXcQ",
+      headers: { range: "bytes=0-3" },
+    });
+    expect(res.statusCode).toBe(206);
+    expect(res.headers["content-range"]).toBe("bytes 0-3/1000");
+    const [, init] = fetchImpl.mock.calls[0];
+    expect((init as { headers: Record<string, string> }).headers).toMatchObject({ range: "bytes=0-3" });
+    await app.close();
+  });
+
+  it("re-resolves once when the upstream URL is stale (403)", async () => {
+    const ytDlp = vi.fn()
+      .mockResolvedValueOnce({ stdout: "https://cdn.example/stale.m4a", stderr: "" })
+      .mockResolvedValueOnce({ stdout: "https://cdn.example/fresh.m4a", stderr: "" });
+    const fetchImpl = vi.fn()
+      .mockResolvedValueOnce(upstream(403, "denied"))
+      .mockResolvedValueOnce(upstream(200, "FRESH"));
+    const app = await makeApp({ ytDlp, fetchImpl });
+    const res = await app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toBe("FRESH");
+    expect(ytDlp).toHaveBeenCalledTimes(2);
+    expect(fetchImpl).toHaveBeenLastCalledWith("https://cdn.example/fresh.m4a", expect.anything());
+    await app.close();
+  });
+
+  it("shares the stream URL cache with /music/stream", async () => {
+    const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/a.m4a", stderr: "" });
+    const fetchImpl = vi.fn().mockResolvedValue(upstream(200, "X"));
+    const app = await makeApp({ ytDlp, fetchImpl, now: () => 1_000 });
+    await app.inject({ method: "GET", url: "/music/stream/dQw4w9WgXcQ" });
+    await app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
+    expect(ytDlp).toHaveBeenCalledTimes(1);
+    await app.close();
+  });
+
+  it("rejects malformed video ids", async () => {
+    const app = await makeApp({ ytDlp: vi.fn(), fetchImpl: vi.fn() });
+    const res = await app.inject({ method: "GET", url: "/music/audio/not-a-valid-id!!" });
+    expect(res.statusCode).toBe(400);
+    await app.close();
+  });
+
+  it("returns 502 when extraction fails", async () => {
+    const ytDlp = vi.fn().mockRejectedValue(new Error("blocked"));
+    const app = await makeApp({ ytDlp, fetchImpl: vi.fn() });
+    const res = await app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
+    expect(res.statusCode).toBe(502);
+    await app.close();
+  });
+
+  it("returns 502 when the upstream keeps failing", async () => {
+    const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/a.m4a", stderr: "" });
+    const fetchImpl = vi.fn().mockResolvedValue(upstream(403, "denied"));
+    const app = await makeApp({ ytDlp, fetchImpl });
+    const res = await app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
+    expect(res.statusCode).toBe(502);
+    await app.close();
+  });
+});
+
 const CHANNEL_ID = "UCuAXFkgsw1L7xaCfnd5JJOw";
 
 const PIPED_CHANNEL = {
