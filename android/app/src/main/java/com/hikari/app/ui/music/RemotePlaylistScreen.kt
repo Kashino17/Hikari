@@ -1,7 +1,6 @@
 package com.hikari.app.ui.music
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,12 +19,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.CloudDownload
-import androidx.compose.material.icons.outlined.OfflinePin
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,41 +32,36 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.hikari.app.domain.repo.MusicSearchMode
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariPrimary
 import com.hikari.app.ui.theme.HikariText
-import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 
 /**
- * Kapitel eines Hörbuchs bzw. Folgen einer Podcast-Show. Wie der Mix lädt die
- * Seite ihre Songs über die ursprüngliche Suche neu, weil sie ihr eigenes
- * ViewModel bekommt. Zufallswiedergabe fehlt bewusst: Kapitel haben eine
- * Reihenfolge.
+ * Detail-Seite einer Remote-Playlist oder eines Albums aus der Suche —
+ * dieselbe Anmutung wie die Mix-Seite, nur dass die Tracks über die
+ * Playlist-Id geladen werden statt über eine Suche.
  */
 @Composable
-fun GroupDetailScreen(
-    title: String,
-    unitLabel: String,
-    query: String,
-    mode: MusicSearchMode,
+fun RemotePlaylistScreen(
+    playlistId: String,
+    name: String,
+    isAlbum: Boolean,
     onBack: () -> Unit,
     onOpenNowPlaying: () -> Unit,
     viewModel: MusicViewModel = hiltViewModel(),
 ) {
-    val songs = viewModel.groupSongs
+    val tracks = viewModel.remotePlaylistTracks
     val currentSong by viewModel.player.currentSong.collectAsState()
     val downloadedIds by viewModel.downloadedIds.collectAsState()
     val progressMap by viewModel.downloadProgress.collectAsState()
     val online by viewModel.isOnline.collectAsState()
-    val downloadedCount = songs.count { it.videoId in downloadedIds }
-    val allDownloaded = songs.isNotEmpty() && downloadedCount == songs.size
 
-    LaunchedEffect(query, mode) { viewModel.loadGroup(query, title, mode) }
+    LaunchedEffect(playlistId) { viewModel.loadRemotePlaylist(playlistId) }
 
     Column(Modifier.fillMaxSize().background(HikariBg).statusBarsPadding()) {
         Row(
@@ -80,11 +72,12 @@ fun GroupDetailScreen(
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, "Zurück", tint = HikariText)
             }
             Text(
-                title,
+                name,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
                 color = HikariText,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -92,58 +85,34 @@ fun GroupDetailScreen(
         Column(Modifier.padding(horizontal = 16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(84.dp)) {
-                    MixCoverPreview(songs)
+                    MixCoverPreview(tracks)
                 }
                 Spacer(Modifier.width(14.dp))
                 Column {
                     Text(
-                        if (songs.size == 1) "1 $unitLabel" else "${songs.size} $unitLabel",
+                        if (isAlbum) "Album" else "Playlist",
+                        fontSize = 12.sp,
+                        color = HikariTextMuted,
+                    )
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        if (tracks.size == 1) "1 Song" else "${tracks.size} Songs",
                         fontSize = 14.sp,
                         color = HikariText,
                     )
-                    Spacer(Modifier.height(3.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            if (allDownloaded) Icons.Outlined.OfflinePin else Icons.Outlined.CloudDownload,
-                            null,
-                            tint = if (allDownloaded) HikariPrimary else HikariTextFaint,
-                            modifier = Modifier.size(14.dp),
-                        )
-                        Spacer(Modifier.width(5.dp))
-                        Text(
-                            when {
-                                viewModel.groupLoading && songs.isEmpty() -> "wird geladen"
-                                songs.isEmpty() -> "nicht gefunden"
-                                allDownloaded -> "komplett offline verfügbar"
-                                downloadedCount > 0 -> "$downloadedCount von ${songs.size} offline"
-                                else -> "noch nichts offline"
-                            },
-                            fontSize = 12.sp,
-                            color = HikariTextMuted,
-                        )
-                    }
                 }
             }
 
             Spacer(Modifier.height(14.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(
-                    onClick = { songs.firstOrNull()?.let { viewModel.play(it, songs); onOpenNowPlaying() } },
-                    enabled = songs.isNotEmpty(),
-                    colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                ) {
-                    Icon(Icons.Default.PlayArrow, null, tint = Color.Black, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("Abspielen", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                }
-                if (!allDownloaded && songs.isNotEmpty()) {
-                    OutlinedButton(onClick = { viewModel.downloadGroup(title) }) {
-                        Icon(Icons.Outlined.CloudDownload, null, tint = HikariPrimary, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("Alle laden", color = HikariPrimary, fontSize = 13.sp)
-                    }
-                }
+            Button(
+                onClick = { tracks.firstOrNull()?.let { viewModel.play(it, tracks); onOpenNowPlaying() } },
+                enabled = tracks.isNotEmpty(),
+                colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
+            ) {
+                Icon(Icons.Default.PlayArrow, null, tint = Color.Black, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Alle abspielen", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 13.sp)
             }
 
             Spacer(Modifier.height(10.dp))
@@ -151,20 +120,24 @@ fun GroupDetailScreen(
 
         Box(Modifier.weight(1f)) {
             when {
-                viewModel.groupLoading && songs.isEmpty() -> CenteredLoader()
-                songs.isEmpty() -> EmptyHint(
+                viewModel.remotePlaylistLoading && tracks.isEmpty() -> CenteredLoader()
+                tracks.isEmpty() -> EmptyHint(
                     Icons.Outlined.CloudDownload,
-                    "Diese Gruppe ist gerade nicht erreichbar — später nochmal versuchen.",
+                    if (isAlbum) {
+                        "Dieses Album ist gerade nicht erreichbar — später nochmal versuchen."
+                    } else {
+                        "Diese Playlist ist gerade nicht erreichbar — später nochmal versuchen."
+                    },
                 )
                 else -> LazyColumn(
                     Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 12.dp),
                 ) {
-                    items(songs, key = { it.videoId }) { song ->
+                    items(tracks, key = { it.videoId }) { song ->
                         SongRow(
                             song,
                             viewModel,
-                            songs,
+                            tracks,
                             isCurrent = currentSong?.videoId == song.videoId,
                             isDownloaded = song.videoId in downloadedIds,
                             progress = progressMap[song.videoId],

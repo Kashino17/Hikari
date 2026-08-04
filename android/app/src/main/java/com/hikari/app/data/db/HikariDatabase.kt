@@ -16,8 +16,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         MusicPlaylistEntity::class,
         MusicPlaylistSongEntity::class,
         LocalMusicDownloadEntity::class,
+        SearchHistoryEntity::class,
     ],
-    version = 13,
+    version = 14,
     exportSchema = false,
 )
 abstract class HikariDatabase : RoomDatabase() {
@@ -29,6 +30,7 @@ abstract class HikariDatabase : RoomDatabase() {
     abstract fun musicPlaylistDao(): MusicPlaylistDao
     abstract fun musicPlaylistSongDao(): MusicPlaylistSongDao
     abstract fun localMusicDownloadDao(): LocalMusicDownloadDao
+    abstract fun searchHistoryDao(): SearchHistoryDao
 }
 
 /**
@@ -50,6 +52,23 @@ val MIGRATION_12_13 = object : Migration(12, 13) {
                 `thumbnail_url` TEXT NOT NULL,
                 `duration_seconds` INTEGER NOT NULL,
                 PRIMARY KEY(`video_id`)
+            )
+            """.trimIndent(),
+        )
+    }
+}
+
+/**
+ * Rein additive Migration: Suchverlauf der Musik-Suche.
+ */
+val MIGRATION_13_14 = object : Migration(13, 14) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `search_history` (
+                `query` TEXT NOT NULL,
+                `searchedAt` INTEGER NOT NULL,
+                PRIMARY KEY(`query`)
             )
             """.trimIndent(),
         )

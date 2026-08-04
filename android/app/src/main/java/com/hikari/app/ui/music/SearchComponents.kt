@@ -1,0 +1,463 @@
+package com.hikari.app.ui.music
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.hikari.app.domain.model.MusicAlbum
+import com.hikari.app.domain.model.MusicSearchResult
+import com.hikari.app.domain.model.RemotePlaylist
+import com.hikari.app.domain.model.SearchArtist
+import com.hikari.app.domain.repo.MusicSearchFilter
+import com.hikari.app.ui.theme.HikariCardBg
+import com.hikari.app.ui.theme.HikariPrimary
+import com.hikari.app.ui.theme.HikariSurfaceHigh
+import com.hikari.app.ui.theme.HikariText
+import com.hikari.app.ui.theme.HikariTextFaint
+import com.hikari.app.ui.theme.HikariTextMuted
+
+/**
+ * Gespeicherte Suchanfragen unter dem leeren Suchfeld: Antippen sucht erneut,
+ * das X entfernt den Eintrag, der Footer räumt den ganzen Verlauf auf.
+ */
+@Composable
+fun SearchHistorySection(
+    history: List<String>,
+    onSelect: (String) -> Unit,
+    onRemove: (String) -> Unit,
+    onClearAll: () -> Unit,
+) {
+    Column(Modifier.fillMaxWidth().padding(top = 6.dp)) {
+        history.forEach { query ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { onSelect(query) }
+                    .padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Default.History, null, tint = HikariTextMuted, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    query,
+                    fontSize = 14.sp,
+                    color = HikariText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                IconButton(onClick = { onRemove(query) }, modifier = Modifier.size(36.dp)) {
+                    Icon(Icons.Default.Close, "Eintrag entfernen", tint = HikariTextMuted, modifier = Modifier.size(16.dp))
+                }
+            }
+        }
+        Text(
+            "Verlauf löschen",
+            fontSize = 13.sp,
+            color = HikariTextMuted,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(onClick = onClearAll)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+        )
+    }
+}
+
+/**
+ * Vorschläge zur laufenden Eingabe. Der getippte Text selbst bleibt die erste
+ * Option — darunter die Vorschläge mit fettem Treffer-Präfix.
+ */
+@Composable
+fun SuggestionsList(
+    query: String,
+    suggestions: List<String>,
+    onSelect: (String) -> Unit,
+) {
+    Column(Modifier.fillMaxWidth().padding(top = 6.dp)) {
+        SuggestionRow(text = query, typed = query, onClick = { onSelect(query) })
+        suggestions.filter { !it.equals(query, ignoreCase = true) }.forEach { suggestion ->
+            SuggestionRow(text = suggestion, typed = query, onClick = { onSelect(suggestion) })
+        }
+    }
+}
+
+@Composable
+private fun SuggestionRow(text: String, typed: String, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(Icons.Default.Search, null, tint = HikariTextMuted, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(12.dp))
+        Text(
+            highlightMatch(text, typed),
+            fontSize = 14.sp,
+            color = HikariText,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/** Der getippte Teil des Vorschlags wird fett gesetzt, der Rest bleibt normal. */
+private fun highlightMatch(text: String, typed: String): AnnotatedString = buildAnnotatedString {
+    val index = text.indexOf(typed, ignoreCase = true)
+    if (index < 0 || typed.isEmpty()) {
+        append(text)
+    } else {
+        append(text.substring(0, index))
+        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+            append(text.substring(index, index + typed.length))
+        }
+        append(text.substring(index + typed.length))
+    }
+}
+
+private data class GenreEntry(val title: String, val query: String, val color: Color)
+
+/** Kuratierte Genres des „Stöbern“-Grids — Titel mit der Suche dahinter. */
+private val GENRES = listOf(
+    GenreEntry("Lo-Fi", "lofi hip hop beats", Color(0xFF7E6BB8)),
+    GenreEntry("Hip-Hop", "hip hop 2026", Color(0xFFB2503C)),
+    GenreEntry("Deutschrap", "deutschrap 2026", Color(0xFF444B52)),
+    GenreEntry("R'n'B", "r&b hits", Color(0xFF9C5B8F)),
+    GenreEntry("Pop", "pop hits 2026", Color(0xFFD0607E)),
+    GenreEntry("US-Charts", "billboard hot 100", Color(0xFF2E6FA7)),
+    GenreEntry("Dance", "edm dance mix", Color(0xFF2F9E8F)),
+    GenreEntry("Rock", "rock classics", Color(0xFF8C3A2B)),
+    GenreEntry("Indie", "indie mix", Color(0xFF5B8C5A)),
+    GenreEntry("Jazz", "jazz lounge", Color(0xFF9E7B2D)),
+    GenreEntry("Klassik", "classical music", Color(0xFF6B7A8F)),
+    GenreEntry("Metal", "metal mix", Color(0xFF4A4A55)),
+    GenreEntry("Workout", "workout motivation music", Color(0xFFC7482D)),
+    GenreEntry("Chill", "chill vibes mix", Color(0xFF3D8A80)),
+    GenreEntry("K-Pop", "kpop hits", Color(0xFFD05FA0)),
+    GenreEntry("Latin", "latin hits", Color(0xFFC7742C)),
+)
+
+/**
+ * Genre-Kacheln unter dem leeren Suchfeld — der Einstieg für alle, die nicht
+ * wissen, wonach sie suchen wollen. Antippen öffnet den Mix hinter dem Genre.
+ */
+@Composable
+fun GenreBrowseGrid(onOpenGenre: (title: String, query: String) -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        Text(
+            "Stöbern",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = HikariText,
+            modifier = Modifier.padding(top = 22.dp, bottom = 10.dp),
+        )
+        GENRES.chunked(2).forEach { pair ->
+            Row(
+                Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                pair.forEach { genre ->
+                    Box(
+                        Modifier
+                            .weight(1f)
+                            .height(64.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(genre.color, genre.color.copy(alpha = 0.65f)),
+                                ),
+                            )
+                            .clickable { onOpenGenre(genre.title, genre.query) }
+                            .padding(horizontal = 14.dp),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
+                        Text(
+                            genre.title,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+                // Ungerade Anzahl: Platzhalter, damit die letzte Karte halb breit bleibt.
+                if (pair.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+/** Ergebnisfilter der Musik-Suche, Stil wie die Modus-Chips darüber. */
+@Composable
+fun ResultFilterChips(
+    selected: MusicSearchFilter,
+    onSelect: (MusicSearchFilter) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyRow(
+        modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(MusicSearchFilter.entries, key = { it.name }) { filter ->
+            val isSelected = filter == selected
+            Text(
+                filter.label,
+                fontSize = 13.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = if (isSelected) Color.Black else HikariTextMuted,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(if (isSelected) HikariPrimary else HikariCardBg)
+                    .clickable { onSelect(filter) }
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+            )
+        }
+    }
+}
+
+/**
+ * Das Top-Ergebnis der Vollsuche als große Karte: Typ-Badge, Bild (rund bei
+ * Künstlern, sonst abgerundetes Cover) und Titel mit Unterzeile.
+ */
+@Composable
+fun TopResultCard(result: MusicSearchResult, onClick: () -> Unit) {
+    val typeLabel: String
+    val title: String
+    val subtitle: String
+    val thumbnailUrl: String
+    val isArtist: Boolean
+    when (result) {
+        is MusicSearchResult.Song -> {
+            typeLabel = "Song"
+            title = result.song.title
+            subtitle = result.song.uploader
+            thumbnailUrl = result.song.thumbnailUrl
+            isArtist = false
+        }
+        is MusicSearchResult.Artist -> {
+            typeLabel = "Künstler"
+            title = result.artist.name
+            subtitle = if (result.artist.subscribers > 0) {
+                "Künstler • ${formatSubscribers(result.artist.subscribers)}"
+            } else {
+                "Künstler"
+            }
+            thumbnailUrl = result.artist.thumbnailUrl
+            isArtist = true
+        }
+        is MusicSearchResult.Album -> {
+            typeLabel = "Album"
+            title = result.album.name
+            subtitle = "Album • ${result.album.artistName}"
+            thumbnailUrl = result.album.thumbnailUrl
+            isArtist = false
+        }
+        is MusicSearchResult.Playlist -> {
+            typeLabel = "Playlist"
+            title = result.playlist.name
+            subtitle = "Playlist • ${result.playlist.uploaderName}"
+            thumbnailUrl = result.playlist.thumbnailUrl
+            isArtist = false
+        }
+    }
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(HikariCardBg)
+            .clickable(onClick = onClick)
+            .padding(14.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "TOP-ERGEBNIS",
+                fontSize = 10.sp,
+                letterSpacing = 1.5.sp,
+                color = HikariTextFaint,
+                fontWeight = FontWeight.Medium,
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                typeLabel,
+                fontSize = 10.sp,
+                color = HikariPrimary,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(HikariSurfaceHigh)
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+            )
+        }
+        Spacer(Modifier.height(12.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            AsyncImage(
+                model = thumbnailUrl.ifEmpty { null },
+                contentDescription = null,
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(if (isArtist) CircleShape else RoundedCornerShape(10.dp))
+                    .background(HikariSurfaceHigh),
+                contentScale = ContentScale.Crop,
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    title,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = HikariText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    subtitle,
+                    fontSize = 12.sp,
+                    color = HikariTextMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+/** Künstler-Treffer: rundes Avatar, Name und Abonnentenzahl. */
+@Composable
+fun ArtistResultRow(artist: SearchArtist, onClick: () -> Unit) {
+    SearchResultRow(
+        thumbnailUrl = artist.thumbnailUrl,
+        round = true,
+        title = artist.name,
+        subtitle = if (artist.subscribers > 0) {
+            "Künstler • ${formatSubscribers(artist.subscribers)}"
+        } else {
+            "Künstler"
+        },
+        onClick = onClick,
+    )
+}
+
+/** Album-Treffer: Cover, Name und Künstler. */
+@Composable
+fun AlbumResultRow(album: MusicAlbum, onClick: () -> Unit) {
+    SearchResultRow(
+        thumbnailUrl = album.thumbnailUrl,
+        round = false,
+        title = album.name,
+        subtitle = "Album • ${album.artistName}",
+        onClick = onClick,
+    )
+}
+
+/** Playlist-Treffer: Cover, Name und Ersteller. */
+@Composable
+fun PlaylistResultRow(playlist: RemotePlaylist, onClick: () -> Unit) {
+    SearchResultRow(
+        thumbnailUrl = playlist.thumbnailUrl,
+        round = false,
+        title = playlist.name,
+        subtitle = "Playlist • ${playlist.uploaderName}",
+        onClick = onClick,
+    )
+}
+
+/** Gemeinsame Zeile für Künstler-, Album- und Playlist-Treffer. */
+@Composable
+private fun SearchResultRow(
+    thumbnailUrl: String,
+    round: Boolean,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(HikariCardBg)
+            .clickable(onClick = onClick)
+            .padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AsyncImage(
+            model = thumbnailUrl.ifEmpty { null },
+            contentDescription = null,
+            modifier = Modifier
+                .size(48.dp)
+                .clip(if (round) CircleShape else RoundedCornerShape(8.dp))
+                .background(HikariSurfaceHigh),
+            contentScale = ContentScale.Crop,
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = HikariText,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                subtitle,
+                fontSize = 12.sp,
+                color = HikariTextMuted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/** Abonnentenzahlen kompakt auf Deutsch: 1,2 Mio. / 340 Tsd. */
+private fun formatSubscribers(count: Long): String = when {
+    count >= 1_000_000 -> "${compactNumber(count / 1_000_000.0)} Mio. Abonnenten"
+    count >= 1_000 -> "${compactNumber(count / 1_000.0)} Tsd. Abonnenten"
+    else -> "$count Abonnenten"
+}
+
+private fun compactNumber(value: Double): String =
+    "%.1f".format(value).replace('.', ',').removeSuffix(",0")

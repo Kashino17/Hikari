@@ -67,6 +67,8 @@ fun PlaylistDetailScreen(
     val entry = viewModel.playlists.firstOrNull { it.playlist.id == playlistId }
     val currentSong by viewModel.player.currentSong.collectAsState()
     val downloadedIds by viewModel.downloadedIds.collectAsState()
+    val progressMap by viewModel.downloadProgress.collectAsState()
+    val online by viewModel.isOnline.collectAsState()
     var menuOpen by remember { mutableStateOf(false) }
     var showRename by remember { mutableStateOf(false) }
 
@@ -217,6 +219,10 @@ fun PlaylistDetailScreen(
                             song = song,
                             viewModel = viewModel,
                             contextQueue = songs,
+                            isCurrent = currentSong?.videoId == song.videoId,
+                            isDownloaded = song.videoId in downloadedIds,
+                            progress = progressMap[song.videoId],
+                            online = online,
                             onRemoveFromPlaylist = { viewModel.removeFromPlaylist(playlistId, song) },
                         )
                     }

@@ -55,12 +55,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.hikari.app.domain.model.MusicSearchResult
 import com.hikari.app.domain.model.MusicSong
+import com.hikari.app.domain.repo.MusicSearchFilter
 import com.hikari.app.domain.repo.MusicSearchMode
 import com.hikari.app.domain.repo.PlaylistWithSongs
 import com.hikari.app.ui.theme.HikariBg
@@ -84,6 +87,7 @@ fun MusicScreen(
     onOpenMix: (title: String, query: String, mode: String) -> Unit,
     onOpenGroup: (title: String, unit: String, query: String, mode: String) -> Unit,
     onOpenArtist: (channelId: String, name: String) -> Unit,
+    onOpenCollection: (playlistId: String, name: String, isAlbum: Boolean) -> Unit,
     viewModel: MusicViewModel = hiltViewModel(),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(TAB_DISCOVER) }
@@ -97,9 +101,6 @@ fun MusicScreen(
     LaunchedEffect(online) {
         if (!online && tab == TAB_DISCOVER) tab = TAB_DOWNLOADS
     }
-
-    // Auch Entdecken braucht frische Daten — dort steht der Verlauf.
-    LaunchedEffect(tab) { viewModel.refreshLibrary() }
 
     viewModel.message?.let { msg ->
         LaunchedEffect(msg) {
@@ -141,7 +142,7 @@ fun MusicScreen(
 
             Box(Modifier.weight(1f)) {
                 when (tab) {
-                    TAB_DISCOVER -> DiscoverTab(viewModel, online, onOpenMix, onOpenGroup, onOpenArtist)
+                    TAB_DISCOVER -> DiscoverTab(viewModel, online, onOpenMix, onOpenGroup, onOpenArtist, onOpenCollection)
                     TAB_PLAYLISTS -> PlaylistsTab(viewModel, onOpenPlaylist)
                     TAB_DOWNLOADS -> DownloadsTab(viewModel)
                     TAB_FAVORITES -> FavoritesTab(viewModel)
@@ -182,6 +183,7 @@ private fun DiscoverTab(
     onOpenMix: (title: String, query: String, mode: String) -> Unit,
     onOpenGroup: (title: String, unit: String, query: String, mode: String) -> Unit,
     onOpenArtist: (channelId: String, name: String) -> Unit,
+    onOpenCollection: (playlistId: String, name: String, isAlbum: Boolean) -> Unit,
 ) {
     if (!online) {
         EmptyHint(Icons.Outlined.CloudDownload, "Entdecken braucht Internet — deine Downloads findest du im Downloads-Tab.")
@@ -191,14 +193,24 @@ private fun DiscoverTab(
     val searching = viewModel.searchAttempted
     val instrumental by viewModel.instrumentalOnly.collectAsState()
     val currentSong by viewModel.player.currentSong.collectAsState()
+    val downloadedIds by viewModel.downloadedIds.collectAsState()
+    val progressMap by viewModel.downloadProgress.collectAsState()
+    val searchHistory by viewModel.searchHistory.collectAsState()
     val searchMode = viewModel.searchMode
+    val musicMode = searchMode == MusicSearchMode.MUSIC
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 12.dp)) {
         item(key = "search") {
             OutlinedTextField(
                 value = viewModel.searchQuery,
-                onValueChange = { viewModel.searchQuery = it },
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp),
+                onValueChange = {
+                    viewModel.searchQuery = it
+                    viewModel.onSearchQueryChange(it)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp)
+                    .onFocusChanged { if (it.isFocused) viewModel.onSearchFocus() },
                 placeholder = {
                     Text(
                         when (searchMode) {
@@ -241,7 +253,7 @@ private fun DiscoverTab(
         }
 
         // "Ohne Gesang" ergibt nur bei Musik Sinn — Hörbuch und Podcast leben von der Stimme.
-        if (searchMode == MusicSearchMode.MUSIC) {
+        if (musicMode) {
             item(key = "instrumental-toggle") {
                 Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 10.dp)) {
                     InstrumentalToggle(
@@ -252,6 +264,43 @@ private fun DiscoverTab(
             }
         }
 
+        // Musik-Modus mit aktivem Suchfeld: Verlauf und Genres bzw. Vorschläge
+        // statt der Entdecken-Inhalte.
+        if (musicMode && viewModel.searchActive && !searching) {
+            if (viewModel.searchQuery.isBlank()) {
+                if (searchHistory.isNotEmpty()) {
+                    item(key = "search-history") {
+                        SearchHistorySection(
+                            history = searchHistory,
+                            onSelect = {
+                                viewModel.searchQuery = it
+                                viewModel.search(it)
+                            },
+                            onRemove = { viewModel.removeHistoryEntry(it) },
+                            onClearAll = { viewModel.clearHistory() },
+                        )
+                    }
+                }
+                item(key = "genre-browse") {
+                    GenreBrowseGrid(onOpenGenre = { title, query ->
+                        onOpenMix(title, query, MusicSearchMode.MUSIC.apiValue)
+                    })
+                }
+            } else {
+                item(key = "suggestions") {
+                    SuggestionsList(
+                        query = viewModel.searchQuery,
+                        suggestions = viewModel.suggestions,
+                        onSelect = {
+                            viewModel.searchQuery = it
+                            viewModel.search(it)
+                        },
+                    )
+                }
+            }
+            return@LazyColumn
+        }
+
         if (!searching && viewModel.history.isNotEmpty()) {
             item(key = "history-strip") {
                 HistoryStrip(
@@ -260,6 +309,20 @@ private fun DiscoverTab(
                     onPlay = { song -> viewModel.play(song, viewModel.history.take(10)) },
                 )
             }
+        }
+
+        if (searching && musicMode) {
+            smartSearchResults(
+                viewModel = viewModel,
+                instrumental = instrumental,
+                currentVideoId = currentSong?.videoId,
+                downloadedIds = downloadedIds,
+                progressMap = progressMap,
+                online = online,
+                onOpenArtist = onOpenArtist,
+                onOpenCollection = onOpenCollection,
+            )
+            return@LazyColumn
         }
 
         if (searching) {
@@ -297,6 +360,10 @@ private fun DiscoverTab(
                             song,
                             viewModel,
                             viewModel.searchResults,
+                            isCurrent = currentSong?.videoId == song.videoId,
+                            isDownloaded = song.videoId in downloadedIds,
+                            progress = progressMap[song.videoId],
+                            online = online,
                             badge = if (searchMode == MusicSearchMode.TRUECRIME) {
                                 viewModel.languageBadge(song)
                             } else {
@@ -324,7 +391,169 @@ private fun DiscoverTab(
                     }
                 }
             }
-            else -> discoverContent(viewModel, onOpenMix)
+            else -> discoverContent(
+                viewModel = viewModel,
+                currentVideoId = currentSong?.videoId,
+                downloadedIds = downloadedIds,
+                progressMap = progressMap,
+                online = online,
+                onOpenMix = onOpenMix,
+            )
+        }
+    }
+}
+
+/**
+ * Ergebnisbereich der Musik-Smart-Search: Filter-Chips oben, darunter bei
+ * „Alle“ die Vollsuche-Sektionen (Top-Ergebnis, Songs, Künstler, Alben,
+ * Playlists) — leere Sektionen bleiben unsichtbar. Die anderen Filter zeigen
+ * ihre lazy geladenen Trefferlisten.
+ */
+private fun LazyListScope.smartSearchResults(
+    viewModel: MusicViewModel,
+    instrumental: Boolean,
+    currentVideoId: String?,
+    downloadedIds: Set<String>,
+    progressMap: Map<String, Float>,
+    online: Boolean,
+    onOpenArtist: (channelId: String, name: String) -> Unit,
+    onOpenCollection: (playlistId: String, name: String, isAlbum: Boolean) -> Unit,
+) {
+    item(key = "filter-chips") {
+        ResultFilterChips(
+            selected = viewModel.activeFilter,
+            onSelect = { viewModel.selectFilter(it) },
+            modifier = Modifier.padding(top = 10.dp),
+        )
+    }
+
+    if (viewModel.searchLoading) {
+        item(key = "search-loading") { CenteredLoader() }
+        return
+    }
+
+    when (viewModel.activeFilter) {
+        MusicSearchFilter.ALLE -> {
+            val full = viewModel.fullResults
+            val nothingFound = full == null ||
+                (full.topResult == null && full.songs.isEmpty() && full.artists.isEmpty() &&
+                    full.albums.isEmpty() && full.playlists.isEmpty())
+            if (nothingFound) {
+                item(key = "search-empty") {
+                    if (instrumental) {
+                        FilteredEmptyHint(onDisableFilter = { viewModel.toggleInstrumental() })
+                    } else {
+                        EmptyHint(Icons.Default.Search, "Nichts gefunden — anderer Suchbegriff?")
+                    }
+                }
+                return
+            }
+            full!!.topResult?.let { top ->
+                item(key = "top-result") {
+                    TopResultCard(top, onClick = {
+                        when (top) {
+                            is MusicSearchResult.Song -> viewModel.play(top.song, full.songs)
+                            is MusicSearchResult.Artist -> onOpenArtist(top.artist.channelId, top.artist.name)
+                            is MusicSearchResult.Album ->
+                                onOpenCollection(top.album.playlistId, top.album.name, true)
+                            is MusicSearchResult.Playlist ->
+                                onOpenCollection(top.playlist.playlistId, top.playlist.name, false)
+                        }
+                    })
+                }
+            }
+            if (full.songs.isNotEmpty()) {
+                item(key = "songs-header") { SectionHeader("Songs") }
+                items(full.songs, key = { "s-${it.videoId}" }) { song ->
+                    SongRow(
+                        song,
+                        viewModel,
+                        full.songs,
+                        isCurrent = currentVideoId == song.videoId,
+                        isDownloaded = song.videoId in downloadedIds,
+                        progress = progressMap[song.videoId],
+                        online = online,
+                        onOpenArtist = onOpenArtist,
+                    )
+                }
+            }
+            if (full.artists.isNotEmpty()) {
+                item(key = "artists-header") { SectionHeader("Künstler") }
+                items(full.artists, key = { "a-${it.channelId}" }) { artist ->
+                    ArtistResultRow(artist, onClick = { onOpenArtist(artist.channelId, artist.name) })
+                }
+            }
+            if (full.albums.isNotEmpty()) {
+                item(key = "albums-header") { SectionHeader("Alben") }
+                items(full.albums, key = { "al-${it.playlistId}" }) { album ->
+                    AlbumResultRow(album, onClick = { onOpenCollection(album.playlistId, album.name, true) })
+                }
+            }
+            if (full.playlists.isNotEmpty()) {
+                item(key = "playlists-header") { SectionHeader("Playlists") }
+                items(full.playlists, key = { "pl-${it.playlistId}" }) { playlist ->
+                    PlaylistResultRow(
+                        playlist,
+                        onClick = { onOpenCollection(playlist.playlistId, playlist.name, false) },
+                    )
+                }
+            }
+        }
+        MusicSearchFilter.SONGS -> {
+            when {
+                viewModel.typedLoading -> item(key = "typed-loading") { CenteredLoader() }
+                viewModel.typedSongs.isEmpty() -> item(key = "typed-empty") {
+                    EmptyHint(Icons.Default.Search, "Nichts gefunden — anderer Suchbegriff?")
+                }
+                else -> items(viewModel.typedSongs, key = { "ts-${it.videoId}" }) { song ->
+                    SongRow(
+                        song,
+                        viewModel,
+                        viewModel.typedSongs,
+                        isCurrent = currentVideoId == song.videoId,
+                        isDownloaded = song.videoId in downloadedIds,
+                        progress = progressMap[song.videoId],
+                        online = online,
+                        onOpenArtist = onOpenArtist,
+                    )
+                }
+            }
+        }
+        MusicSearchFilter.ALBEN -> {
+            when {
+                viewModel.typedLoading -> item(key = "typed-loading") { CenteredLoader() }
+                viewModel.typedAlbums.isEmpty() -> item(key = "typed-empty") {
+                    EmptyHint(Icons.Default.Search, "Nichts gefunden — anderer Suchbegriff?")
+                }
+                else -> items(viewModel.typedAlbums, key = { "ta-${it.playlistId}" }) { album ->
+                    AlbumResultRow(album, onClick = { onOpenCollection(album.playlistId, album.name, true) })
+                }
+            }
+        }
+        MusicSearchFilter.KUENSTLER -> {
+            when {
+                viewModel.typedLoading -> item(key = "typed-loading") { CenteredLoader() }
+                viewModel.typedArtists.isEmpty() -> item(key = "typed-empty") {
+                    EmptyHint(Icons.Default.Search, "Nichts gefunden — anderer Suchbegriff?")
+                }
+                else -> items(viewModel.typedArtists, key = { "tk-${it.channelId}" }) { artist ->
+                    ArtistResultRow(artist, onClick = { onOpenArtist(artist.channelId, artist.name) })
+                }
+            }
+        }
+        MusicSearchFilter.PLAYLISTS -> {
+            when {
+                viewModel.typedLoading -> item(key = "typed-loading") { CenteredLoader() }
+                viewModel.typedPlaylists.isEmpty() -> item(key = "typed-empty") {
+                    EmptyHint(Icons.Default.Search, "Nichts gefunden — anderer Suchbegriff?")
+                }
+                else -> items(viewModel.typedPlaylists, key = { "tp-${it.playlistId}" }) { playlist ->
+                    PlaylistResultRow(
+                        playlist,
+                        onClick = { onOpenCollection(playlist.playlistId, playlist.name, false) },
+                    )
+                }
+            }
         }
     }
 }
@@ -336,6 +565,10 @@ private fun DiscoverTab(
  */
 private fun LazyListScope.discoverContent(
     viewModel: MusicViewModel,
+    currentVideoId: String?,
+    downloadedIds: Set<String>,
+    progressMap: Map<String, Float>,
+    online: Boolean,
     onOpenMix: (title: String, query: String, mode: String) -> Unit,
 ) {
     val sections = viewModel.discoverSections
@@ -395,7 +628,15 @@ private fun LazyListScope.discoverContent(
                 section.songs.take(4),
                 key = { "l-${section.title}-${it.videoId}" },
             ) { song ->
-                SongRow(song, viewModel, section.songs)
+                SongRow(
+                    song,
+                    viewModel,
+                    section.songs,
+                    isCurrent = currentVideoId == song.videoId,
+                    isDownloaded = song.videoId in downloadedIds,
+                    progress = progressMap[song.videoId],
+                    online = online,
+                )
             }
         }
     }
@@ -522,6 +763,10 @@ private fun PlaylistCard(entry: PlaylistWithSongs, onClick: () -> Unit) {
 @Composable
 private fun DownloadsTab(viewModel: MusicViewModel) {
     val songs by viewModel.downloadedSongs.collectAsState()
+    val currentSong by viewModel.player.currentSong.collectAsState()
+    val downloadedIds by viewModel.downloadedIds.collectAsState()
+    val progressMap by viewModel.downloadProgress.collectAsState()
+    val online by viewModel.isOnline.collectAsState()
 
     if (songs.isEmpty()) {
         EmptyHint(
@@ -540,7 +785,15 @@ private fun DownloadsTab(viewModel: MusicViewModel) {
         )
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 12.dp)) {
             items(songs, key = { it.videoId }) { song ->
-                SongRow(song, viewModel, songs)
+                SongRow(
+                    song,
+                    viewModel,
+                    songs,
+                    isCurrent = currentSong?.videoId == song.videoId,
+                    isDownloaded = song.videoId in downloadedIds,
+                    progress = progressMap[song.videoId],
+                    online = online,
+                )
             }
         }
     }
@@ -548,13 +801,26 @@ private fun DownloadsTab(viewModel: MusicViewModel) {
 
 @Composable
 private fun FavoritesTab(viewModel: MusicViewModel) {
+    val currentSong by viewModel.player.currentSong.collectAsState()
+    val downloadedIds by viewModel.downloadedIds.collectAsState()
+    val progressMap by viewModel.downloadProgress.collectAsState()
+    val online by viewModel.isOnline.collectAsState()
+
     if (viewModel.favorites.isEmpty()) {
         EmptyHint(Icons.Default.FavoriteBorder, "Tippe das Herz bei einem Song — er landet hier.")
         return
     }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 8.dp)) {
         items(viewModel.favorites, key = { it.videoId }) { song ->
-            SongRow(song, viewModel, viewModel.favorites)
+            SongRow(
+                song,
+                viewModel,
+                viewModel.favorites,
+                isCurrent = currentSong?.videoId == song.videoId,
+                isDownloaded = song.videoId in downloadedIds,
+                progress = progressMap[song.videoId],
+                online = online,
+            )
         }
     }
 }

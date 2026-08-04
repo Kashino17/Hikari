@@ -21,10 +21,12 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp as lerpColor
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -373,6 +375,19 @@ fun SpaceShooterGame(onBack: () -> Unit) {
     val den = LocalDensity.current.density
     val state = remember { SkyState(den) }
     val textMeasurer = rememberTextMeasurer()
+    val haptic = LocalHapticFeedback.current
+
+    // Haptics bei Lebensveränderung (Treffer / Extra-Leben durch Power-up)
+    var lastLives by remember { mutableIntStateOf(3) }
+    LaunchedEffect(state.lives) {
+        if (state.lives < lastLives) {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        } else if (state.lives == lastLives + 1) {
+            // +1 kommt nur vom Extra-Leben-Power-up (Reset springt 0 → 3)
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        }
+        lastLives = state.lives
+    }
 
     // Game-Loop — pausiert bei Game Over
     LaunchedEffect(state.gameOver) {

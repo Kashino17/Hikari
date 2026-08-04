@@ -48,6 +48,10 @@ import com.hikari.app.data.api.dto.UpdateFilterRequest
 import com.hikari.app.data.api.dto.WeeklyStatsDto
 import com.hikari.app.data.api.dto.MusicStreamDto
 import com.hikari.app.data.api.dto.MusicTrackDto
+import com.hikari.app.data.api.dto.FullSearchDto
+import com.hikari.app.data.api.dto.SearchAlbumDto
+import com.hikari.app.data.api.dto.SearchArtistDto
+import com.hikari.app.data.api.dto.SearchPlaylistDto
 import com.hikari.app.data.api.dto.NewsItemDto
 import com.hikari.app.data.api.dto.NewsTopicDto
 import okhttp3.MultipartBody
@@ -89,6 +93,29 @@ interface HikariApi {
         @Path("channelId") channelId: String,
         @Query("name") name: String,
     ): List<ArtistPlaylistDto>
+
+    @GET("music/suggestions")
+    suspend fun getSuggestions(@Query("q") q: String): List<String>
+
+    @GET("music/search/full")
+    suspend fun searchFullMusic(@Query("q") q: String): FullSearchDto
+
+    /** Vier Methoden mit festem type-Query — gleicher Pfad, sauber typisiert. */
+    @GET("music/search/typed?type=songs")
+    suspend fun searchTypedSongs(@Query("q") q: String): List<MusicTrackDto>
+
+    @GET("music/search/typed?type=albums")
+    suspend fun searchTypedAlbums(@Query("q") q: String): List<SearchAlbumDto>
+
+    @GET("music/search/typed?type=artists")
+    suspend fun searchTypedArtists(@Query("q") q: String): List<SearchArtistDto>
+
+    @GET("music/search/typed?type=playlists")
+    suspend fun searchTypedPlaylists(@Query("q") q: String): List<SearchPlaylistDto>
+
+    /** Tracks einer Remote-Playlist oder eines Albums. */
+    @GET("music/playlist/{playlistId}")
+    suspend fun getPlaylistTracks(@Path("playlistId") playlistId: String): List<MusicTrackDto>
 
     // ── Täglicher KI-Tagesbericht ─────────────────────────────────────────
     @GET("news/topics")

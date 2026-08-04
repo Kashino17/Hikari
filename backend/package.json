@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@fastify/compress": "^9.1.0",
     "@fastify/multipart": "^10.0.0",
     "@fastify/static": "^8.0.0",
     "@remotion/bundler": "^4.0.456",

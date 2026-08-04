@@ -29,8 +29,10 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -108,6 +110,7 @@ private class MergeWorld {
 @Composable
 fun FruitMergeGame(onBack: () -> Unit) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     val prefs = remember { context.getSharedPreferences("hikari_games", Context.MODE_PRIVATE) }
 
     var score by remember { mutableStateOf(0) }
@@ -129,6 +132,7 @@ fun FruitMergeGame(onBack: () -> Unit) {
             prefs.edit().putInt("fruitmerge_highscore", score).apply()
         }
         gameOver = true
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
     }
 
     fun restart() {
@@ -162,6 +166,7 @@ fun FruitMergeGame(onBack: () -> Unit) {
         )
         world.currentLevel = -1
         world.cooldown = 0.6f
+        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
     }
 
     // Game-Loop mit fixem Substep
@@ -290,6 +295,7 @@ fun FruitMergeGame(onBack: () -> Unit) {
                                     if (a.level >= 9) {
                                         // 🍉 + 🍉 → Feuerwerk + Bonus
                                         score += 500
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         world.pops.add(MergeTextPop(mx, my - 40f * sc, "+500 Bonus!", 1.6f))
                                         val fwColors = listOf(HikariAmber, Color(0xFFFF7043), Color(0xFF66BB6A), Color.White, Color(0xFFEF5350))
                                         repeat(42) {
@@ -309,6 +315,7 @@ fun FruitMergeGame(onBack: () -> Unit) {
                                         val nl = a.level + 1
                                         val pts = (nl + 1) * 10
                                         score += pts
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         fruits.add(
                                             MergeFruit(
                                                 mx, my,

@@ -1,3 +1,6 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import Fastify from "fastify";
 import { registerMusicRoutes, type MusicDeps } from "./music.js";
@@ -17,7 +20,9 @@ function okJson(body: unknown): Response {
 
 async function makeApp(deps: MusicDeps) {
   const app = Fastify();
-  await registerMusicRoutes(app, deps);
+  // Staffelung und Retry-Delays in Tests abschalten (keine echten Wartezeiten);
+  // gezielte Tests überschreiben sie per deps.
+  await registerMusicRoutes(app, { searchStaggerMs: [], retryDelaysMs: [0, 0], ...deps });
   return app;
 }
 
@@ -37,7 +42,7 @@ describe("GET /music/search", () => {
     await app.close();
   });
 
-  it("fails over to the next instance when the first is dead", async () => {
+  it("queries all instances in parallel and uses the first valid payload", async () => {
     const fetchImpl = vi.fn()
       .mockRejectedValueOnce(new Error("timeout"))
       .mockResolvedValueOnce({ ok: false } as unknown as Response)
@@ -46,7 +51,31 @@ describe("GET /music/search", () => {
     const res = await app.inject({ method: "GET", url: "/music/search?q=rick" });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toHaveLength(1);
-    expect(fetchImpl).toHaveBeenCalledTimes(3);
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
+    await app.close();
+  });
+
+  it("lets a fast instance win over a slow one", async () => {
+    const slow = new Promise<Response>((resolve) =>
+      setTimeout(() => resolve(okJson({ items: [{ ...PIPED_ITEM, title: "Langsam" }] })), 100),
+    );
+    const fetchImpl = vi.fn().mockImplementation((url: string) =>
+      url.startsWith("https://api.piped.private.coffee")
+        ? slow
+        : Promise.resolve(okJson({ items: [PIPED_ITEM] })),
+    );
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({ method: "GET", url: "/music/search?q=rick" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()[0].title).toBe("Never Gonna Give You Up");
+    await app.close();
+  });
+
+  it("sets Cache-Control on search responses", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(okJson({ items: [PIPED_ITEM] }));
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({ method: "GET", url: "/music/search?q=rick" });
+    expect(res.headers["cache-control"]).toBe("public, max-age=300");
     await app.close();
   });
 
@@ -70,7 +99,8 @@ describe("GET /music/search", () => {
     const app = await makeApp({ fetchImpl, now: () => 1_000 });
     await app.inject({ method: "GET", url: "/music/search?q=rick" });
     await app.inject({ method: "GET", url: "/music/search?q=RICK" });
-    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    // ein Suchdurchlauf = ein paralleler Aufruf pro Piped-Instanz
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
     await app.close();
   });
 
@@ -110,8 +140,63 @@ describe("GET /music/search", () => {
     const app = await makeApp({ fetchImpl, now: () => 1_000 });
     await app.inject({ method: "GET", url: "/music/search?q=rick" });
     await app.inject({ method: "GET", url: "/music/search?q=rick&mode=audiobook" });
-    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    // zwei Suchdurchläufe à vier parallele Instanz-Aufrufe
+    expect(fetchImpl).toHaveBeenCalledTimes(8);
     await app.close();
+  });
+
+  it("deduplicates identical concurrent searches", async () => {
+    let release!: (value: Response) => void;
+    const gate = new Promise<Response>((r) => { release = r; });
+    const fetchImpl = vi.fn().mockReturnValue(gate);
+    const app = await makeApp({ fetchImpl });
+    const first = app.inject({ method: "GET", url: "/music/search?q=rick" });
+    const second = app.inject({ method: "GET", url: "/music/search?q=RICK" });
+    release(okJson({ items: [PIPED_ITEM] }));
+    const [r1, r2] = await Promise.all([first, second]);
+    expect(r1.statusCode).toBe(200);
+    expect(r2.statusCode).toBe(200);
+    // beide Requests teilen einen Suchdurchlauf = vier parallele Instanz-Aufrufe
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
+    await app.close();
+  });
+
+  it("aborts the staggered starts once an instance has won", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(okJson({ items: [PIPED_ITEM] }));
+    const app = await makeApp({ fetchImpl, searchStaggerMs: [0, 400, 1200, 2400] });
+    const res = await app.inject({ method: "GET", url: "/music/search?q=rick" });
+    expect(res.statusCode).toBe(200);
+    // Instanz 1 gewinnt sofort und bricht die verzögerten Starts ab — ohne
+    // echtes Abwarten der Staffelung.
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    await app.close();
+  });
+
+  it("staggers the instance starts when nobody has won yet", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      const hanging = new Promise<Response>(() => {});
+      const fetchImpl = vi.fn()
+        .mockReturnValueOnce(hanging)
+        .mockResolvedValue(okJson({ items: [PIPED_ITEM] }));
+      const app = await makeApp({ fetchImpl, searchStaggerMs: [0, 400, 1200, 2400] });
+      const req = app.inject({ method: "GET", url: "/music/search?q=rick" });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(399);
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(1);
+      // zweite Instanz startet erst nach 400 ms, die erste hängt noch
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+      const res = await req;
+      expect(res.statusCode).toBe(200);
+      // der Gewinner bricht ab: Instanzen 3+4 werden nie angefragt
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+      await app.close();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
@@ -160,6 +245,42 @@ describe("GET /music/stream/:videoId", () => {
     await app.inject({ method: "GET", url: "/music/stream/dQw4w9WgXcQ?force=1" });
     expect(ytDlp).toHaveBeenCalledTimes(2);
     await app.close();
+  });
+
+  it("deduplicates concurrent resolutions of the same video", async () => {
+    let release!: (value: { stdout: string; stderr: string }) => void;
+    const gate = new Promise<{ stdout: string; stderr: string }>((r) => { release = r; });
+    const ytDlp = vi.fn().mockReturnValue(gate);
+    const app = await makeApp({ ytDlp });
+    const first = app.inject({ method: "GET", url: "/music/stream/dQw4w9WgXcQ" });
+    const second = app.inject({ method: "GET", url: "/music/stream/dQw4w9WgXcQ" });
+    release({ stdout: "https://cdn.example/a.m4a", stderr: "" });
+    const [r1, r2] = await Promise.all([first, second]);
+    expect(r1.statusCode).toBe(200);
+    expect(r2.statusCode).toBe(200);
+    expect(ytDlp).toHaveBeenCalledTimes(1);
+    await app.close();
+  });
+
+  it("persists the stream cache across restarts", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "hikari-music-"));
+    try {
+      const streamCachePath = join(dir, "stream-cache.json");
+      const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/a.m4a", stderr: "" });
+      const first = await makeApp({ ytDlp, streamCachePath });
+      await first.inject({ method: "GET", url: "/music/stream/dQw4w9WgXcQ" });
+      await first.close();
+
+      const ytDlpAfterRestart = vi.fn();
+      const restarted = await makeApp({ ytDlp: ytDlpAfterRestart, streamCachePath });
+      const res = await restarted.inject({ method: "GET", url: "/music/stream/dQw4w9WgXcQ" });
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toEqual({ url: "https://cdn.example/a.m4a" });
+      expect(ytDlpAfterRestart).not.toHaveBeenCalled();
+      await restarted.close();
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });
 
@@ -255,6 +376,45 @@ describe("GET /music/audio/:videoId", () => {
     expect(res.statusCode).toBe(502);
     await app.close();
   });
+
+  it("retries a transient fetch error with the same URL before re-resolving", async () => {
+    const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/a.m4a", stderr: "" });
+    const fetchImpl = vi.fn()
+      .mockRejectedValueOnce(new Error("connection reset"))
+      .mockResolvedValue(upstream(200, "RECOVERED"));
+    const app = await makeApp({ ytDlp, fetchImpl });
+    const res = await app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toBe("RECOVERED");
+    // der Retry mit derselben URL reicht — kein teures zweites yt-dlp
+    expect(ytDlp).toHaveBeenCalledTimes(1);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    await app.close();
+  });
+
+  it("times out a hanging upstream header phase instead of waiting forever", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/a.m4a", stderr: "" });
+      // Fetch hängt in der Header-Phase und reagiert nur auf das Abort-Signal
+      const fetchImpl = vi.fn().mockImplementation((_url: string, init: { signal: AbortSignal }) =>
+        new Promise<Response>((_resolve, reject) => {
+          init.signal.addEventListener("abort", () => reject(new Error("aborted")));
+        }),
+      );
+      const app = await makeApp({ ytDlp, fetchImpl });
+      const req = app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
+      // 2 Auflösungsrunden à 3 Versuche (1 + 2 Retries) mit je 12 s Header-Timeout
+      await vi.advanceTimersByTimeAsync(6 * 12_000 + 1_000);
+      const res = await req;
+      expect(res.statusCode).toBe(502);
+      expect(fetchImpl).toHaveBeenCalledTimes(6);
+      expect(ytDlp).toHaveBeenCalledTimes(2);
+      await app.close();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
 
 const CHANNEL_ID = "UCuAXFkgsw1L7xaCfnd5JJOw";
@@ -329,6 +489,33 @@ describe("GET /music/artist/:channelId", () => {
     const app = await makeApp({ fetchImpl: vi.fn() });
     const res = await app.inject({ method: "GET", url: "/music/artist/bad!" });
     expect(res.statusCode).toBe(400);
+    await app.close();
+  });
+
+  it("caches artist pages and sets Cache-Control", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(okJson(PIPED_CHANNEL));
+    const app = await makeApp({ fetchImpl, now: () => 1_000 });
+    const r1 = await app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}` });
+    const r2 = await app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}` });
+    expect(r1.statusCode).toBe(200);
+    expect(r2.statusCode).toBe(200);
+    expect(r1.headers["cache-control"]).toBe("public, max-age=300");
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    await app.close();
+  });
+
+  it("deduplicates concurrent artist lookups", async () => {
+    let release!: (value: Response) => void;
+    const gate = new Promise<Response>((r) => { release = r; });
+    const fetchImpl = vi.fn().mockReturnValue(gate);
+    const app = await makeApp({ fetchImpl });
+    const first = app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}` });
+    const second = app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}` });
+    release(okJson(PIPED_CHANNEL));
+    const [r1, r2] = await Promise.all([first, second]);
+    expect(r1.statusCode).toBe(200);
+    expect(r2.statusCode).toBe(200);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
     await app.close();
   });
 });
@@ -409,6 +596,19 @@ describe("GET /music/artist/:channelId/top", () => {
     expect(res.statusCode).toBe(502);
     await app.close();
   });
+
+  it("caches top tracks per channel and name with Cache-Control", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(okJson({ items: [streamItem({})] }));
+    const app = await makeApp({ fetchImpl, now: () => 1_000 });
+    const url = `/music/artist/${CHANNEL_ID}/top?name=Rick%20Astley`;
+    const r1 = await app.inject({ method: "GET", url });
+    const r2 = await app.inject({ method: "GET", url });
+    expect(r1.statusCode).toBe(200);
+    expect(r2.statusCode).toBe(200);
+    expect(r1.headers["cache-control"]).toBe("public, max-age=300");
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    await app.close();
+  });
 });
 
 describe("GET /music/artist/:channelId/playlists", () => {
@@ -475,6 +675,289 @@ describe("GET /music/artist/:channelId/playlists", () => {
       url: `/music/artist/${CHANNEL_ID}/playlists?name=Rick`,
     });
     expect(res.statusCode).toBe(502);
+    await app.close();
+  });
+});
+
+const CHANNEL_ITEM = {
+  url: `/channel/${CHANNEL_ID}`,
+  type: "channel",
+  name: "Rick Astley",
+  thumbnail: "https://img.example/rick.jpg",
+  subscribers: 4520000,
+};
+
+const ALBUM_ITEM = {
+  url: "/playlist?list=OLAK5uy_album",
+  type: "playlist",
+  name: "Whenever You Need Somebody",
+  thumbnail: "https://img.example/album.jpg",
+  uploaderName: "Rick Astley",
+  videos: 10,
+};
+
+const PLAYLIST_ITEM = {
+  url: "/playlist?list=PLhits123",
+  type: "playlist",
+  name: "80s Hits",
+  thumbnail: "https://img.example/pl.jpg",
+  uploaderName: "Someone Else",
+  videos: 42,
+};
+
+/** Mock-Fetch, der die Piped-URL auswertet (/suggestions, /search?filter=..., /playlists). */
+function urlDispatchMock(handlers: {
+  suggestions?: unknown;
+  filters?: Record<string, unknown[]>;
+  playlist?: unknown;
+}) {
+  return vi.fn().mockImplementation((url: string) => {
+    const parsed = new URL(url);
+    if (parsed.pathname.endsWith("/suggestions")) {
+      if (handlers.suggestions === undefined) return Promise.reject(new Error("down"));
+      return Promise.resolve(okJson(handlers.suggestions));
+    }
+    if (parsed.pathname.startsWith("/playlists/")) {
+      if (handlers.playlist === undefined) return Promise.reject(new Error("down"));
+      return Promise.resolve(okJson(handlers.playlist));
+    }
+    if (parsed.pathname.endsWith("/search")) {
+      const filter = parsed.searchParams.get("filter") ?? "";
+      return Promise.resolve(okJson({ items: handlers.filters?.[filter] ?? [] }));
+    }
+    return Promise.reject(new Error(`unexpected url ${url}`));
+  });
+}
+
+describe("GET /music/suggestions", () => {
+  it("returns the suggestion strings", async () => {
+    const fetchImpl = urlDispatchMock({ suggestions: ["rick astley", "rickroll"] });
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({ method: "GET", url: "/music/suggestions?q=rick" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual(["rick astley", "rickroll"]);
+    expect(res.headers["cache-control"]).toBe("public, max-age=300");
+    expect(fetchImpl).toHaveBeenCalledWith(
+      expect.stringContaining("/suggestions?query=rick"),
+      expect.anything(),
+    );
+    await app.close();
+  });
+
+  it("returns an empty list instead of 502 when every instance fails", async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error("down"));
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({ method: "GET", url: "/music/suggestions?q=rick" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual([]);
+    await app.close();
+  });
+
+  it("returns 400 without q", async () => {
+    const app = await makeApp({ fetchImpl: vi.fn() });
+    const res = await app.inject({ method: "GET", url: "/music/suggestions" });
+    expect(res.statusCode).toBe(400);
+    await app.close();
+  });
+
+  it("serves repeat queries from cache", async () => {
+    const fetchImpl = urlDispatchMock({ suggestions: ["rick astley"] });
+    const app = await makeApp({ fetchImpl, now: () => 1_000 });
+    await app.inject({ method: "GET", url: "/music/suggestions?q=rick" });
+    await app.inject({ method: "GET", url: "/music/suggestions?q=RICK" });
+    // ein Durchlauf = ein paralleler Aufruf pro Piped-Instanz
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
+    await app.close();
+  });
+});
+
+describe("GET /music/search/full", () => {
+  const fullMock = (artistName = "Rick Astley") =>
+    urlDispatchMock({
+      filters: {
+        music_songs: [PIPED_ITEM],
+        music_albums: [ALBUM_ITEM],
+        music_artists: [{ ...CHANNEL_ITEM, name: artistName }],
+        playlists: [PLAYLIST_ITEM],
+      },
+    });
+
+  it("returns the typed sections", async () => {
+    const app = await makeApp({ fetchImpl: fullMock() });
+    const res = await app.inject({ method: "GET", url: "/music/search/full?q=rick" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.songs).toEqual([{
+      videoId: "dQw4w9WgXcQ",
+      title: "Never Gonna Give You Up",
+      uploader: "Rick Astley",
+      thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg",
+      durationSeconds: 213,
+    }]);
+    expect(body.artists).toEqual([{
+      channelId: CHANNEL_ID,
+      name: "Rick Astley",
+      thumbnailUrl: "https://img.example/rick.jpg",
+      subscribers: 4520000,
+    }]);
+    expect(body.albums).toEqual([{
+      playlistId: "OLAK5uy_album",
+      name: "Whenever You Need Somebody",
+      artistName: "Rick Astley",
+      thumbnailUrl: "https://img.example/album.jpg",
+      videoCount: 10,
+    }]);
+    expect(body.playlists).toEqual([{
+      playlistId: "PLhits123",
+      name: "80s Hits",
+      uploaderName: "Someone Else",
+      thumbnailUrl: "https://img.example/pl.jpg",
+      videoCount: 42,
+    }]);
+    await app.close();
+  });
+
+  it("picks the artist as top result when the name matches the query", async () => {
+    const app = await makeApp({ fetchImpl: fullMock() });
+    const res = await app.inject({ method: "GET", url: "/music/search/full?q=rick" });
+    expect(res.json().topResult).toMatchObject({
+      type: "artist",
+      channelId: CHANNEL_ID,
+      name: "Rick Astley",
+    });
+    await app.close();
+  });
+
+  it("falls back to the first song as top result", async () => {
+    const app = await makeApp({ fetchImpl: fullMock("Adele") });
+    const res = await app.inject({ method: "GET", url: "/music/search/full?q=rick" });
+    expect(res.json().topResult).toMatchObject({ type: "song", videoId: "dQw4w9WgXcQ" });
+    await app.close();
+  });
+
+  it("returns empty sections for failed partial searches", async () => {
+    const fetchImpl = urlDispatchMock({ filters: { music_songs: [PIPED_ITEM] } });
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({ method: "GET", url: "/music/search/full?q=rick" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.songs).toHaveLength(1);
+    expect(body.artists).toEqual([]);
+    expect(body.albums).toEqual([]);
+    expect(body.playlists).toEqual([]);
+    expect(body.topResult).toMatchObject({ type: "song" });
+    await app.close();
+  });
+
+  it("returns 502 when every instance fails", async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error("down"));
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({ method: "GET", url: "/music/search/full?q=rick" });
+    expect(res.statusCode).toBe(502);
+    await app.close();
+  });
+
+  it("returns 400 without q", async () => {
+    const app = await makeApp({ fetchImpl: vi.fn() });
+    const res = await app.inject({ method: "GET", url: "/music/search/full" });
+    expect(res.statusCode).toBe(400);
+    await app.close();
+  });
+});
+
+describe("GET /music/search/typed", () => {
+  it("returns album objects for type=albums", async () => {
+    const fetchImpl = urlDispatchMock({ filters: { music_albums: [ALBUM_ITEM] } });
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({ method: "GET", url: "/music/search/typed?q=rick&type=albums" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual([{
+      playlistId: "OLAK5uy_album",
+      name: "Whenever You Need Somebody",
+      artistName: "Rick Astley",
+      thumbnailUrl: "https://img.example/album.jpg",
+      videoCount: 10,
+    }]);
+    expect(fetchImpl).toHaveBeenCalledWith(
+      expect.stringContaining("filter=music_albums"),
+      expect.anything(),
+    );
+    await app.close();
+  });
+
+  it("returns tracks for type=songs like /music/search?mode=music", async () => {
+    const fetchImpl = urlDispatchMock({ filters: { music_songs: [PIPED_ITEM] } });
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({ method: "GET", url: "/music/search/typed?q=rick&type=songs" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual([{
+      videoId: "dQw4w9WgXcQ",
+      title: "Never Gonna Give You Up",
+      uploader: "Rick Astley",
+      thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg",
+      durationSeconds: 213,
+    }]);
+    await app.close();
+  });
+
+  it("rejects an unknown type", async () => {
+    const app = await makeApp({ fetchImpl: vi.fn() });
+    const res = await app.inject({ method: "GET", url: "/music/search/typed?q=rick&type=genres" });
+    expect(res.statusCode).toBe(400);
+    await app.close();
+  });
+
+  it("returns 502 when every instance fails", async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error("down"));
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({ method: "GET", url: "/music/search/typed?q=rick&type=albums" });
+    expect(res.statusCode).toBe(502);
+    await app.close();
+  });
+});
+
+describe("GET /music/playlist/:playlistId", () => {
+  it("maps relatedStreams to tracks", async () => {
+    const fetchImpl = urlDispatchMock({ playlist: { name: "Mix", relatedStreams: [PIPED_ITEM] } });
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({ method: "GET", url: "/music/playlist/OLAK5uy_test123" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual([{
+      videoId: "dQw4w9WgXcQ",
+      title: "Never Gonna Give You Up",
+      uploader: "Rick Astley",
+      thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg",
+      durationSeconds: 213,
+    }]);
+    expect(fetchImpl).toHaveBeenCalledWith(
+      expect.stringContaining("/playlists/OLAK5uy_test123"),
+      expect.anything(),
+    );
+    await app.close();
+  });
+
+  it("rejects invalid playlist ids", async () => {
+    const app = await makeApp({ fetchImpl: vi.fn() });
+    const res = await app.inject({ method: "GET", url: "/music/playlist/bad!id" });
+    expect(res.statusCode).toBe(400);
+    await app.close();
+  });
+
+  it("returns 502 when every instance fails", async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error("down"));
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({ method: "GET", url: "/music/playlist/OLAK5uy_test123" });
+    expect(res.statusCode).toBe(502);
+    await app.close();
+  });
+
+  it("caches playlist tracks", async () => {
+    const fetchImpl = urlDispatchMock({ playlist: { relatedStreams: [PIPED_ITEM] } });
+    const app = await makeApp({ fetchImpl, now: () => 1_000 });
+    await app.inject({ method: "GET", url: "/music/playlist/OLAK5uy_test123" });
+    await app.inject({ method: "GET", url: "/music/playlist/OLAK5uy_test123" });
+    // ein Durchlauf = ein paralleler Aufruf pro Piped-Instanz
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
     await app.close();
   });
 });

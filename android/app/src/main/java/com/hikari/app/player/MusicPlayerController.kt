@@ -10,6 +10,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -21,11 +22,13 @@ import com.hikari.app.domain.repo.MusicRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -59,6 +62,14 @@ class MusicPlayerController @Inject constructor(
     private var prefetchJob: Job? = null
     private var prefetchedFor: String? = null
     private var prefetchedUrl: String? = null
+
+    /** Bei Shuffle einmalig gewürfelter Index des nächsten Songs — Prefetch
+     *  und Übergang müssen denselben Song treffen. */
+    private var plannedNextIndex: Int? = null
+
+    /** Früh gestarteter Autoplay-Nachschub (siehe maybeExtendQueueEarly). */
+    private var earlyExtendDone = false
+    private var resumeAfterExtend = false
 
     private val _currentSong = MutableStateFlow<MusicSong?>(null)
     val currentSong: StateFlow<MusicSong?> = _currentSong.asStateFlow()
@@ -105,6 +116,13 @@ class MusicPlayerController @Inject constructor(
         override fun onPlayerError(e: PlaybackException) {
             retryOrSkip()
         }
+
+        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            // AUTO = ExoPlayer ist selbständig in den vorbufferten nächsten
+            // Song gewechselt; andere Gründe (setMediaItem, Seek) pflegen
+            // ihren State selbst.
+            if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) onAutoAdvanced()
+        }
     }
 
     /** After a load/playback failure move on, but never loop forever. */
@@ -142,12 +160,37 @@ class MusicPlayerController @Inject constructor(
                     .build(),
                 /* handleAudioFocus = */ true,
             )
+            // Großzügiger Puffer: das nächste Playlist-Item wird schon während
+            // der laufenden Wiedergabe vorgeladen — dafür muss maxBuffer über
+            // die Default-50 s hinaus reichen (ein ganzer Song).
+            .setLoadControl(
+                DefaultLoadControl.Builder()
+                    .setBufferDurationsMs(
+                        DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
+                        /* maxBufferMs = */ 5 * 60_000,
+                        /* bufferForPlaybackMs = */ 2_500,
+                        /* bufferForPlaybackAfterRebufferMs = */ 5_000,
+                    )
+                    .build(),
+            )
             .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
         built.addListener(listener)
         player = built
         startProgressUpdates()
         return built
+    }
+
+    /**
+     * Repeat-One läuft über den ExoPlayer-eigenen Repeat-Modus: Ist schon ein
+     * nächstes Item eingeplant, wiederholt der Player trotzdem den aktuellen
+     * Song, statt in den eingeplanten überzugehen.
+     */
+    private fun syncRepeatMode(p: ExoPlayer) {
+        p.repeatMode = when (_repeatMode.value) {
+            REPEAT_ONE -> Player.REPEAT_MODE_ONE
+            else -> Player.REPEAT_MODE_OFF
+        }
     }
 
     /** Der [MusicPlaybackService] teilt sich die Player-Instanz des Controllers. */
@@ -177,6 +220,9 @@ class MusicPlayerController @Inject constructor(
         autoplayJob?.cancel() // eigene Auswahl schlägt laufenden Nachschub
         consecutiveFailures = 0
         streamRetries = 0
+        earlyExtendDone = false
+        resumeAfterExtend = false
+        plannedNextIndex = null
         val newQueue = if (contextQueue.isNotEmpty()) contextQueue else listOf(song)
         _queue.value = newQueue
         queueIndex = newQueue.indexOfFirst { it.videoId == song.videoId }.coerceAtLeast(0)
@@ -207,10 +253,30 @@ class MusicPlayerController @Inject constructor(
 
     fun toggleShuffle() {
         _shuffle.value = !_shuffle.value
+        clearPlannedNext()
     }
 
     fun cycleRepeat() {
         _repeatMode.value = (_repeatMode.value + 1) % 3
+        player?.let { syncRepeatMode(it) }
+        clearPlannedNext()
+    }
+
+    /**
+     * Shuffle/Repeat wurde mitten im Song umgeschaltet — ein bereits
+     * eingeplantes Folge-Item (Prefetch-URL + an die ExoPlayer-Playlist
+     * angehängtes MediaItem) passt nicht mehr zur Auswahl. Verwerfen, damit
+     * [maybePrefetchNext] frisch plant; sonst zeigen _currentSong/queueIndex
+     * nach einem AUTO-Übergang auf einen anderen Song als der Player spielt.
+     */
+    private fun clearPlannedNext() {
+        prefetchJob?.cancel()
+        prefetchedFor = null
+        prefetchedUrl = null
+        plannedNextIndex = null
+        val p = player ?: return
+        val nextSlot = p.currentMediaItemIndex + 1
+        if (p.mediaItemCount > nextSlot) p.removeMediaItem(nextSlot)
     }
 
     fun clearError() {
@@ -223,6 +289,9 @@ class MusicPlayerController @Inject constructor(
         prefetchJob?.cancel()
         prefetchedFor = null
         prefetchedUrl = null
+        plannedNextIndex = null
+        earlyExtendDone = false
+        resumeAfterExtend = false
         player?.stop()
         player?.clearMediaItems()
         _currentSong.value = null
@@ -231,8 +300,26 @@ class MusicPlayerController @Inject constructor(
         _durationMs.value = 0
     }
 
+    /** Baut das MediaItem samt Titel/Artist/Cover — daraus erstellt das System
+     *  das Widget auf Sperrbildschirm und in der Benachrichtigungsleiste. */
+    private fun mediaItemFor(song: MusicSong, uri: String): MediaItem =
+        MediaItem.Builder()
+            .setUri(uri)
+            .setMediaId(song.videoId)
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(song.title)
+                    .setArtist(song.uploader.ifBlank { "Hikari" })
+                    .setArtworkUri(
+                        song.thumbnailUrl.takeIf { it.isNotBlank() }?.let(Uri::parse),
+                    )
+                    .build(),
+            )
+            .build()
+
     private fun loadAndPlay(song: MusicSong, forceRefresh: Boolean = false) {
         loadJob?.cancel()
+        plannedNextIndex = null // Playlist wird ersetzt — etwaige Planung ist hinfällig
         _currentSong.value = song
         _positionMs.value = 0
         _durationMs.value = 0
@@ -264,27 +351,14 @@ class MusicPlayerController @Inject constructor(
                 return@launch
             }
             val p = ensurePlayer()
+            syncRepeatMode(p)
             // Bindet den PlaybackService (MediaController) — erst damit darf
             // Media3 die Systemsteuerung posten und der Service im
             // Vordergrund überleben.
             ensureSessionConnection()
-            // Titel/Artist/Cover als Metadaten — daraus baut das System das
-            // Widget auf Sperrbildschirm und in der Benachrichtigungsleiste.
-            p.setMediaItem(
-                MediaItem.Builder()
-                    .setUri(uri)
-                    .setMediaId(song.videoId)
-                    .setMediaMetadata(
-                        MediaMetadata.Builder()
-                            .setTitle(song.title)
-                            .setArtist(song.uploader.ifBlank { "Hikari" })
-                            .setArtworkUri(
-                                song.thumbnailUrl.takeIf { it.isNotBlank() }?.let(Uri::parse),
-                            )
-                            .build(),
-                    )
-                    .build(),
-            )
+            // setMediaItem ersetzt die komplette Playlist — ein zuvor
+            // eingeplantes nächstes Item gehört damit der Vergangenheit an.
+            p.setMediaItem(mediaItemFor(song, uri))
             p.prepare()
             p.play()
             if (prefetchedFor == song.videoId) {
@@ -321,29 +395,78 @@ class MusicPlayerController @Inject constructor(
             streamRetries = 0
         }
 
-        val nextIndex = when {
-            _shuffle.value && q.size > 1 -> {
-                var i: Int
-                do { i = q.indices.random() } while (i == queueIndex)
-                i
+        val nextIndex = QueueNavigator.advanceIndex(
+            queueSize = q.size,
+            currentIndex = queueIndex,
+            forward = forward,
+            shuffle = _shuffle.value,
+            repeatAll = _repeatMode.value == REPEAT_ALL,
+            // Vorwärts den gewürfelten Plan konsumieren (Prefetch trifft denselben
+            // Song); rückwärts bleibt der Plan für den nächsten Vorwärtsschritt.
+            plannedNextIndex = if (forward) plannedNextIndex else null,
+        )
+        if (nextIndex == QueueNavigator.EXTEND) {
+            // Ende der Liste: passende Stücke nachladen, statt einfach zu verstummen.
+            extendQueueAndContinue()
+            return
+        }
+        // Manuelles Weiterschalten nimmt den vorgebufferten nächsten Song mit,
+        // wenn er schon als Item in der ExoPlayer-Playlist liegt — kein erneutes
+        // Laden, keine Hörlücke. Der Player meldet den Wechsel als REASON_SEEK,
+        // der AUTO-Listener greift also nicht — den State hier selbst nachziehen.
+        if (manual && forward) {
+            val p = player
+            if (p != null && p.mediaItemCount > p.currentMediaItemIndex + 1 &&
+                p.getMediaItemAt(p.currentMediaItemIndex + 1).mediaId == q[nextIndex].videoId
+            ) {
+                queueIndex = nextIndex
+                plannedNextIndex = null
+                prefetchedFor = null
+                prefetchedUrl = null
+                _currentSong.value = q[nextIndex]
+                _positionMs.value = 0
+                _error.value = null
+                scope.launch { repo.recordPlayed(q[nextIndex]) }
+                p.seekToNextMediaItem()
+                // Gleich den übernächsten Song vorbereiten.
+                maybePrefetchNext()
+                return
             }
-            forward -> {
-                val n = queueIndex + 1
-                when {
-                    n < q.size -> n
-                    _repeatMode.value == REPEAT_ALL -> 0
-                    else -> {
-                        // Ende der Liste: passende Stücke nachladen, statt
-                        // einfach zu verstummen.
-                        extendQueueAndContinue()
-                        return
-                    }
-                }
-            }
-            else -> if (queueIndex - 1 >= 0) queueIndex - 1 else q.size - 1
         }
         queueIndex = nextIndex
         loadAndPlay(q[nextIndex])
+    }
+
+    /**
+     * ExoPlayer ist selbständig in den vorbufferten nächsten Song gewechselt
+     * (der von [maybePrefetchNext] in die Playlist gehängt wurde) — hier nur
+     * noch den Controller-State hinterherziehen, kein erneutes Laden.
+     */
+    private fun onAutoAdvanced() {
+        val q = _queue.value
+        if (q.isEmpty() || queueIndex !in q.indices) return
+        val p = player
+        // Abgespieltes Item aus der Player-Playlist entfernen — ExoPlayer räumt
+        // nicht selbst auf. Ohne das bliebe die Playlist dauerhaft bei 2 Items
+        // und maybePrefetchNext könnte nie wieder anhängen (Muster „lückenlos,
+        // Lücke, lückenlos, Lücke"). Danach: aktuell + höchstens 1 eingeplant.
+        if (p != null && p.currentMediaItemIndex > 0) p.removeMediaItem(0)
+        val nextIndex = QueueNavigator.autoAdvanceIndex(
+            queue = q,
+            currentIndex = queueIndex,
+            playingMediaId = p?.currentMediaItem?.mediaId,
+            plannedNextIndex = plannedNextIndex,
+        )
+        plannedNextIndex = null
+        prefetchedFor = null
+        prefetchedUrl = null
+        queueIndex = nextIndex
+        val song = q[nextIndex]
+        _currentSong.value = song
+        _positionMs.value = 0
+        scope.launch { repo.recordPlayed(song) }
+        // Gleich den übernächsten Song vorbereiten.
+        maybePrefetchNext()
     }
 
     /**
@@ -357,71 +480,167 @@ class MusicPlayerController @Inject constructor(
      * Pause, bevor auf den Queue-Anfang zurückgefallen wird.
      */
     private fun extendQueueAndContinue() {
-        if (autoplayJob?.isActive == true) return
-        val seed = _currentSong.value ?: run {
-            _isPlaying.value = false
+        launchAutoplayExtend(resumePlayback = true)
+    }
+
+    /**
+     * Startet die Autoplay-Suche früh, damit die Suchkaskade (Backend-Suche +
+     * Retries) nicht erst in der Hörlücke am Queue-Ende beginnt: sobald der
+     * vorletzte Song läuft oder der letzte über die Hälfte hinaus ist.
+     */
+    private fun maybeExtendQueueEarly() {
+        if (earlyExtendDone || autoplayJob?.isActive == true) return
+        val q = _queue.value
+        if (q.isEmpty() || queueIndex !in q.indices) return
+        val p = player ?: return
+        val nearTail = when {
+            // Vorletzter Song: der Nachschub hat eine volle Songlänge Zeit.
+            queueIndex == q.size - 2 -> true
+            // Letzter Song: ab der Hälfte suchen, damit sie vor dem Ende durch ist.
+            queueIndex == q.size - 1 -> p.duration > 0 && p.currentPosition > p.duration / 2
+            else -> false
+        }
+        if (!nearTail) return
+        if (!connectivity.currentlyOnline()) return
+        launchAutoplayExtend(resumePlayback = false)
+    }
+
+    /**
+     * Sucht Autoplay-Nachschub und hängt ihn an die Queue. Läuft bereits eine
+     * früh gestartete Suche, wird mit [resumePlayback] nur vermerkt, dass am
+     * Queue-Ende weitergespielt werden soll — keine doppelte Suche.
+     */
+    private fun launchAutoplayExtend(resumePlayback: Boolean) {
+        if (autoplayJob?.isActive == true) {
+            resumeAfterExtend = resumeAfterExtend || resumePlayback
+            if (resumePlayback) _isBuffering.value = true
             return
         }
-        _isBuffering.value = true
+        val seed = _currentSong.value ?: run {
+            if (resumePlayback) _isPlaying.value = false
+            return
+        }
+        earlyExtendDone = true
+        resumeAfterExtend = resumePlayback
+        if (resumePlayback) _isBuffering.value = true
         autoplayJob = scope.launch {
             val current = _queue.value
             var more = emptyList<MusicSong>()
             if (connectivity.currentlyOnline()) {
                 for (attempt in 1..3) {
-                    more = runCatching {
+                    more = try {
                         repo.getAutoplaySongs(seed, current.map { it.videoId }.toSet())
-                    }.getOrDefault(emptyList())
+                    } catch (e: CancellationException) {
+                        // Abbruch (z. B. eigene Songwahl via play()) ist kein
+                        // Fetch-Fehler — nicht als „leeres Ergebnis" weiterlaufen.
+                        throw e
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
                     if (more.isNotEmpty()) break
                     if (attempt < 3) delay(3_000L * attempt)
                 }
             }
+            // Ab hier nichts mehr schreiben, wenn der Job unterwegs abgebrochen
+            // wurde: play() hat Queue und Player längst ersetzt — der tote Job
+            // würde sonst die neue User-Queue mit der alten überschreiben und
+            // ihr Buffering-Flag löschen (Player stumm, Next/Prev wirkungslos).
+            ensureActive()
 
-            if (more.isEmpty()) {
+            val fresh = more.filter { n -> current.none { it.videoId == n.videoId } }
+            if (fresh.isEmpty()) {
                 _isBuffering.value = false
-                // Nichts Passendes gefunden — lieber von vorn als abwürgen.
-                if (current.size > 1) {
-                    queueIndex = 0
-                    loadAndPlay(current[0])
-                } else {
-                    _isPlaying.value = false
+                if (resumeAfterExtend) {
+                    // Nichts Passendes gefunden — lieber von vorn als abwürgen.
+                    if (current.size > 1) {
+                        queueIndex = 0
+                        loadAndPlay(current[0])
+                    } else {
+                        _isPlaying.value = false
+                    }
                 }
                 return@launch
             }
-            _queue.value = current + more
-            queueIndex = current.size
-            loadAndPlay(more.first())
+            _queue.value = current + fresh
+            // Neues Queue-Ende — der Früh-Extend darf sich erneut armieren.
+            earlyExtendDone = false
+            val shouldResume = resumeAfterExtend
+            resumeAfterExtend = false
+            _isBuffering.value = false
+            if (shouldResume && player?.isPlaying != true) {
+                queueIndex = current.size
+                loadAndPlay(fresh.first())
+            } else {
+                // URL des ersten neuen Songs direkt vorziehen, damit der
+                // Übergang am Queue-Ende vorgebuffert ablaufen kann.
+                maybePrefetchNext()
+            }
         }
     }
 
     /**
-     * Lädt die Stream-URL des nächsten Songs vor, solange der aktuelle noch
-     * läuft. Ohne das Vorziehen entsteht beim Wechsel eine Lücke von bis zu
-     * 45 s (yt-dlp), in der der Player keine Wake-Lock hält — bei ausgeschaltetem
-     * Bildschirm friert das System die App mitten im Übergang ein und die
-     * Wiedergabe stirbt nach wenigen Songs.
+     * Löst die Stream-URL des nächsten Songs vor und hängt ihn als MediaItem
+     * an die ExoPlayer-Playlist — ExoPlayer buffert ihn dann schon, während
+     * der aktuelle Song noch läuft, und der Übergang ist lückenlos. Läuft kurz
+     * nach Songstart statt erst in der letzten Minute, weil die URL-Auflösung
+     * selbst 1–2 s dauern kann und so auch der Prefetch mehr Vorlauf hat.
      */
     private fun maybePrefetchNext() {
-        val next = nextLinearSong() ?: return
+        // Repeat-One spielt ohnehin denselben Song erneut — nichts einzuplanen.
+        if (_repeatMode.value == REPEAT_ONE) return
+        val currentId = _currentSong.value?.videoId ?: return
+        val next = nextSong() ?: return
         if (prefetchedFor == next.videoId || prefetchJob?.isActive == true) return
         if (!connectivity.currentlyOnline()) return
         prefetchJob = scope.launch {
-            if (downloads.localFile(next.videoId) != null) return@launch // lokale Datei braucht keine URL
-            val url = runCatching { repo.getAudioStream(next.videoId) }.getOrNull()
-            if (url != null) {
-                prefetchedFor = next.videoId
-                prefetchedUrl = url
+            val localFile = downloads.localFile(next.videoId)
+            val uri = when {
+                localFile != null -> "file://${localFile.absolutePath}" // lokale Datei braucht kein Netz
+                else -> runCatching { repo.getAudioStream(next.videoId) }.getOrNull()
+            }
+            // Auch ein Fehlschlag wird vermerkt — sonst hämmert der 500-ms-Tick
+            // bei totem Netz immer wieder dieselbe Auflösung. loadAndPlay löst
+            // beim Übergang selbst noch einmal auf.
+            prefetchedFor = next.videoId
+            prefetchedUrl = uri
+            if (uri == null) return@launch
+            // Nur einreihen, wenn der Player noch denselben Song spielt —
+            // sonst hinge das Item an einer fremden Playlist.
+            val p = player ?: return@launch
+            if (_currentSong.value?.videoId != currentId) return@launch
+            if (p.currentMediaItem?.mediaId != currentId) return@launch
+            // ID- statt Count-Check: die Playlist enthält aktuell + höchstens
+            // ein eingeplantes Folge-Item (onAutoAdvanced räumt abgespielte
+            // ab) — doppelt anhängen darf trotzdem nicht passieren.
+            if (p.getMediaItemAt(p.mediaItemCount - 1).mediaId != next.videoId) {
+                p.addMediaItem(mediaItemFor(next, uri))
             }
         }
     }
 
-    /** Nächster Song bei linearem Abspielen; bei Shuffle/Listenende nicht vorhersagbar. */
-    private fun nextLinearSong(): MusicSong? {
-        if (_shuffle.value) return null
+    /**
+     * Tatsächlich nächster Song. Bei Shuffle wird er einmalig gewürfelt und in
+     * [plannedNextIndex] gemerkt, damit Prefetch und Übergang (manuell wie
+     * automatisch) denselben Song treffen.
+     */
+    private fun nextSong(): MusicSong? {
         val q = _queue.value
+        if (q.isEmpty() || queueIndex !in q.indices) return null
+        if (_shuffle.value && q.size > 1) {
+            val i = plannedNextIndex?.takeIf { it in q.indices && it != queueIndex }
+                ?: run {
+                    var r: Int
+                    do { r = q.indices.random() } while (r == queueIndex)
+                    plannedNextIndex = r
+                    r
+                }
+            return q[i]
+        }
+        plannedNextIndex = null
         val nextIndex = queueIndex + 1
         return when {
             nextIndex < q.size -> q[nextIndex]
-            _repeatMode.value == REPEAT_ALL && q.isNotEmpty() -> q[0]
+            _repeatMode.value == REPEAT_ALL -> q[0]
             else -> null // Autoplay-Nachschub ist nicht vorhersagbar
         }
     }
@@ -434,11 +653,13 @@ class MusicPlayerController @Inject constructor(
                     if (it.isPlaying) {
                         _positionMs.value = it.currentPosition.coerceAtLeast(0)
                         val d = it.duration
-                        if (d > 0) {
-                            _durationMs.value = d
-                            // Letzte Minute: den nächsten Übergang vorbereiten.
-                            if (d - it.currentPosition < 60_000) maybePrefetchNext()
-                        }
+                        if (d > 0) _durationMs.value = d
+                        // Kurz nach Songstart den nächsten Übergang vorbereiten
+                        // (URL auflösen + Item in die ExoPlayer-Playlist hängen).
+                        if (it.currentPosition > 5_000) maybePrefetchNext()
+                        // Läuft die Queue aus, den Autoplay-Nachschub schon
+                        // suchen, bevor die Suchkaskade in der Hörlücke startet.
+                        maybeExtendQueueEarly()
                         // Läuft ein Song gesund, waren frühere Fehler nur
                         // vorübergehend — Zähler zurücksetzen.
                         if (it.currentPosition > 15_000) {

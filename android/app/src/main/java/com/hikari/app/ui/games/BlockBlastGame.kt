@@ -25,11 +25,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp as lerpColor
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -116,6 +118,7 @@ private fun bbFullLines(grid: IntArray): Pair<List<Int>, List<Int>> {
 @Composable
 fun BlockBlastGame(onBack: () -> Unit) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     val prefs = remember { context.getSharedPreferences("hikari_games", Context.MODE_PRIVATE) }
     var highscore by remember { mutableIntStateOf(prefs.getInt("blockblast_highscore", 0)) }
     var newRecord by remember { mutableStateOf(false) }
@@ -179,6 +182,7 @@ fun BlockBlastGame(onBack: () -> Unit) {
             } else {
                 newRecord = false
             }
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             gameOver = true
         }
     }
@@ -201,6 +205,7 @@ fun BlockBlastGame(onBack: () -> Unit) {
         val lineCount = fullRows.size + fullCols.size
         if (lineCount > 0) {
             combo += 1
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             val bonus = lineCount * (lineCount + 1) / 2 * 100 * combo
             gained += bonus
             val fxCells = ArrayList<Triple<Int, Int, Int>>()
@@ -210,6 +215,7 @@ fun BlockBlastGame(onBack: () -> Unit) {
             clearFx = BbClearFx(fxCells, (clearFx?.key ?: 0) + 1)
         } else {
             combo = 0
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         }
         score += gained
         val text = "+$gained" + if (lineCount > 0 && combo >= 2) " · Combo x$combo" else ""
@@ -360,6 +366,7 @@ fun BlockBlastGame(onBack: () -> Unit) {
                                             if (t != null && t.third) {
                                                 place(piece, t.first, t.second, slot)
                                             } else {
+                                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                                 returnFx = BbReturnFx(piece, slot, dragPos)
                                             }
                                         }

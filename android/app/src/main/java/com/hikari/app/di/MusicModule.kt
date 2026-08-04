@@ -6,6 +6,7 @@ import com.hikari.app.data.db.LocalMusicDownloadDao
 import com.hikari.app.data.db.MusicPlaylistDao
 import com.hikari.app.data.db.MusicPlaylistSongDao
 import com.hikari.app.data.db.MusicSongDao
+import com.hikari.app.data.db.SearchHistoryDao
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.repo.MusicRepository
 import dagger.Module
@@ -59,12 +60,14 @@ object MusicModule {
         playlistDao: MusicPlaylistDao,
         playlistSongDao: MusicPlaylistSongDao,
         downloadDao: LocalMusicDownloadDao,
+        searchHistoryDao: SearchHistoryDao,
         api: HikariApi,
         @MusicFallbackClient fallbackClient: OkHttpClient,
         json: Json,
         settings: SettingsStore,
     ): MusicRepository = MusicRepository(
-        songDao, playlistDao, playlistSongDao, downloadDao, api, fallbackClient, json, settings,
+        songDao, playlistDao, playlistSongDao, downloadDao, searchHistoryDao,
+        api, fallbackClient, json, settings,
     )
 
     @Provides

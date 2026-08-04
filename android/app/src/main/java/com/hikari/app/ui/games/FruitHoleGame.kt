@@ -26,8 +26,10 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -81,6 +83,7 @@ private class HoleWorld {
 @Composable
 fun FruitHoleGame(onBack: () -> Unit) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     val prefs = remember { context.getSharedPreferences("hikari_games", Context.MODE_PRIVATE) }
 
     var score by remember { mutableStateOf(0) }
@@ -177,16 +180,26 @@ fun FruitHoleGame(onBack: () -> Unit) {
                     while (iter.hasNext()) {
                         val item = iter.next()
                         if (!item.swallowing) {
+                            val prevY = item.y
                             item.y += item.vy * dt
                             item.rot += item.rotSpeed * dt
-                            val inCatchZone = item.y >= floorY - catchBand && item.y <= floorY + catchBand
-                            if (inCatchZone && abs(item.x - world.holeX) < world.holeR * 0.9f) {
+                            // Segment- statt Punkt-Test: verhindert, dass schnelle
+                            // Früchte auf hohem Level durch die Fang-Zone tunneln
+                            val crossedZone = prevY <= floorY + catchBand && item.y >= floorY - catchBand
+                            if (crossedZone && abs(item.x - world.holeX) < world.holeR * 0.9f) {
                                 item.swallowing = true
                                 item.sx = item.x
                                 item.sy = item.y
                             } else if (item.y > h + w * 0.10f) {
                                 iter.remove()
-                                if (!item.isBomb) combo = 0 // verpasste Frucht: Kombo weg
+                                if (!item.isBomb) {
+                                    if (combo >= 4) {
+                                        world.pops.add(
+                                            HolePop(item.x, h - w * 0.16f, "Kombo verloren", 1.0f, bad = true)
+                                        )
+                                    }
+                                    combo = 0 // verpasste Frucht: Kombo weg
+                                }
                             }
                         } else {
                             item.swallow += dt * 4.2f
@@ -200,6 +213,7 @@ fun FruitHoleGame(onBack: () -> Unit) {
                                     combo = 0
                                     world.flash = 1f
                                     world.shake = 1f
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     world.pops.add(HolePop(world.holeX, floorY - world.holeR * 1.5f, "-1 ♥", 1.1f, bad = true))
                                     if (lives <= 0) finishGame()
                                 } else {
@@ -208,6 +222,7 @@ fun FruitHoleGame(onBack: () -> Unit) {
                                     val pts = 10 * mult
                                     score += pts
                                     world.eaten += 1
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     world.pops.add(HolePop(item.sx, floorY - world.holeR * 1.5f, "+$pts", 0.9f, bad = false))
                                     if (world.eaten % 12 == 0) {
                                         level += 1

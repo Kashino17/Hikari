@@ -3,6 +3,7 @@ import { mkdirSync, existsSync, readdirSync, unlinkSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import fastifyStatic from "@fastify/static";
+import fastifyCompress from "@fastify/compress";
 import fastifyMultipart from "@fastify/multipart";
 import Fastify from "fastify";
 import cron from "node-cron";
@@ -74,6 +75,11 @@ for (const r of orphanRows) {
 }
 
 const app = Fastify({ logger: { level: "info" } });
+// Response-Kompression für die JSON-APIs, vor allen Routen registriert.
+// @fastify/compress komprimiert nur komprimierbare Content-Types (text/*,
+// application/json, ...) — audio/* und video/* laufen per Default
+// unkomprimiert durch, der Musik-Proxy-Stream bleibt also unberührt.
+await app.register(fastifyCompress);
 // Opt-in CORS for JSON routes (HIKARI_CORS_ORIGINS allowlist). Registered
 // BEFORE auth so a preflight OPTIONS — which carries no Authorization header —
 // is answered 204 here instead of being 401'd by the auth hook. No-op by
@@ -121,7 +127,7 @@ await registerStatsRoutes(app, { db });
 await registerVideosRoutes(app, { db, videoDir: cfg.videoDir, coverDir: cfg.coverDir, extractor });
 await registerDownloadsRoutes(app, { db, diskLimitBytes: cfg.diskLimitBytes });
 await registerMangaRoutes(app, { db, mangaDir: cfg.mangaDir });
-await registerMusicRoutes(app);
+await registerMusicRoutes(app, { streamCachePath: join(cfg.dataDir, "music-stream-cache.json") });
 await registerNewsRoutes(app, { db, cfg });
 registerClipperStatusRoutes(app, db, {
   startHour: cfg.clipper.scheduleStartHour,

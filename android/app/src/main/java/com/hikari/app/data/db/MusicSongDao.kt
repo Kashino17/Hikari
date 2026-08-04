@@ -22,6 +22,9 @@ interface MusicSongDao {
     @Query("SELECT * FROM music_songs WHERE videoId = :videoId")
     suspend fun getByName(videoId: String): MusicSongEntity?
 
+    @Query("SELECT * FROM music_songs WHERE videoId IN (:videoIds)")
+    suspend fun getByIds(videoIds: List<String>): List<MusicSongEntity>
+
     @Query("SELECT * FROM music_songs WHERE isFavorite = 1 ORDER BY addedAt DESC")
     suspend fun getFavorites(): List<MusicSongEntity>
 

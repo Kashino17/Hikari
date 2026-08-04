@@ -73,6 +73,9 @@ fun ArtistScreen(
     val topSongs = viewModel.artistTop
     val playlists = viewModel.artistPlaylists
     val currentSong by viewModel.player.currentSong.collectAsState()
+    val downloadedIds by viewModel.downloadedIds.collectAsState()
+    val progressMap by viewModel.downloadProgress.collectAsState()
+    val online by viewModel.isOnline.collectAsState()
 
     LaunchedEffect(channelId, fallbackName) { viewModel.loadArtist(channelId, fallbackName) }
 
@@ -134,6 +137,10 @@ fun ArtistScreen(
                                 song,
                                 viewModel,
                                 topSongs,
+                                isCurrent = currentSong?.videoId == song.videoId,
+                                isDownloaded = song.videoId in downloadedIds,
+                                progress = progressMap[song.videoId],
+                                online = online,
                                 badge = if (song.views > 0) formatViewsDE(song.views) else null,
                             )
                         }

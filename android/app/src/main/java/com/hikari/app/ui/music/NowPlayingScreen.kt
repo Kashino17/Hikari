@@ -36,6 +36,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -71,17 +72,16 @@ fun NowPlayingScreen(
     val song by controller.currentSong.collectAsState()
     val isPlaying by controller.isPlaying.collectAsState()
     val isBuffering by controller.isBuffering.collectAsState()
-    val position by controller.positionMs.collectAsState()
-    val duration by controller.durationMs.collectAsState()
     val shuffle by controller.shuffle.collectAsState()
     val repeatMode by controller.repeatMode.collectAsState()
     val error by controller.error.collectAsState()
 
-    val current = song ?: run {
-        // nothing playing (e.g. process restart) — nothing to show
-        onBack()
-        return
+    // Nichts spielend (z. B. Prozess-Neustart) — nichts anzuzeigen. Der
+    // Sprung zurück gehört in einen Effekt, nicht mitten in die Composition.
+    LaunchedEffect(song) {
+        if (song == null) onBack()
     }
+    val current = song ?: return
     val isFavorite = current.videoId in viewModel.favoriteIds
     val downloadedIds by viewModel.downloadedIds.collectAsState()
     val downloadProgress by viewModel.downloadProgress.collectAsState()
@@ -187,34 +187,9 @@ fun NowPlayingScreen(
 
         Spacer(Modifier.weight(1f))
 
-        // --- seek bar ---
-        var dragging by remember { mutableStateOf(false) }
-        var dragValue by remember { mutableFloatStateOf(0f) }
-        val sliderValue = if (dragging) dragValue
-        else if (duration > 0) position.toFloat() / duration else 0f
-
-        Slider(
-            value = sliderValue.coerceIn(0f, 1f),
-            onValueChange = { dragging = true; dragValue = it },
-            onValueChangeFinished = {
-                if (duration > 0) controller.seekTo((dragValue * duration).toLong())
-                dragging = false
-            },
-            colors = SliderDefaults.colors(
-                thumbColor = HikariPrimary,
-                activeTrackColor = HikariPrimary,
-                inactiveTrackColor = HikariSurfaceHigh,
-            ),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-        )
-        Row(Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
-            Text(
-                formatDurationMs(if (dragging && duration > 0) (dragValue * duration).toLong() else position),
-                fontSize = 12.sp, color = HikariTextMuted,
-            )
-            Spacer(Modifier.weight(1f))
-            Text(formatDurationMs(duration), fontSize = 12.sp, color = HikariTextMuted)
-        }
+        // Eigenes Composable: der 500-ms-positionMs-Tick recomposed nur diese
+        // Sektion, nicht den ganzen Screen inklusive Cover-AsyncImage.
+        SeekSection(controller)
 
         Spacer(Modifier.height(14.dp))
 
@@ -276,5 +251,41 @@ fun NowPlayingScreen(
             onSelect = { playlistId -> viewModel.addToPlaylist(playlistId, song) },
             onCreate = { name -> viewModel.createPlaylist(name, addAfterwards = song) },
         )
+    }
+}
+
+
+/** Slider + Zeitangaben — hört allein auf positionMs/durationMs, damit der
+ *  500-ms-Tick nicht den ganzen Screen (inkl. Cover) recomposed. */
+@Composable
+private fun SeekSection(controller: MusicPlayerController) {
+    val position by controller.positionMs.collectAsState()
+    val duration by controller.durationMs.collectAsState()
+    var dragging by remember { mutableStateOf(false) }
+    var dragValue by remember { mutableFloatStateOf(0f) }
+    val sliderValue = if (dragging) dragValue
+    else if (duration > 0) position.toFloat() / duration else 0f
+
+    Slider(
+        value = sliderValue.coerceIn(0f, 1f),
+        onValueChange = { dragging = true; dragValue = it },
+        onValueChangeFinished = {
+            if (duration > 0) controller.seekTo((dragValue * duration).toLong())
+            dragging = false
+        },
+        colors = SliderDefaults.colors(
+            thumbColor = HikariPrimary,
+            activeTrackColor = HikariPrimary,
+            inactiveTrackColor = HikariSurfaceHigh,
+        ),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+    )
+    Row(Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
+        Text(
+            formatDurationMs(if (dragging && duration > 0) (dragValue * duration).toLong() else position),
+            fontSize = 12.sp, color = HikariTextMuted,
+        )
+        Spacer(Modifier.weight(1f))
+        Text(formatDurationMs(duration), fontSize = 12.sp, color = HikariTextMuted)
     }
 }

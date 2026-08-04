@@ -32,7 +32,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,10 +42,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.ui.theme.HikariCardBg
 import com.hikari.app.ui.theme.HikariPrimary
@@ -58,6 +60,10 @@ import com.hikari.app.ui.theme.HikariTextMuted
 /**
  * Song-Zeile für alle Musik-Listen. Zeigt Download-Zustand als Tri-State
  * (nicht geladen / lädt / offline verfügbar) analog zu [com.hikari.app.ui.profile.components.LocalDownloadIcon].
+ *
+ * Player-/Download-/Netz-Zustände kommen als Primitive herein — die Flows
+ * werden einmal im umgebenden Screen/Tab collectet (Muster wie RankedRowBound/
+ * TileBound in MusicScreen), statt dass jede Zeile vier StateFlows abonniert.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -65,20 +71,16 @@ fun SongRow(
     song: MusicSong,
     viewModel: MusicViewModel,
     contextQueue: List<MusicSong>,
+    isCurrent: Boolean,
+    isDownloaded: Boolean,
+    progress: Float?,
+    online: Boolean,
     modifier: Modifier = Modifier,
     badge: String? = null,
     onRemoveFromPlaylist: (() -> Unit)? = null,
     onOpenArtist: ((channelId: String, name: String) -> Unit)? = null,
 ) {
-    val currentSong by viewModel.player.currentSong.collectAsState()
-    val progressMap by viewModel.downloadProgress.collectAsState()
-    val downloadedIds by viewModel.downloadedIds.collectAsState()
-    val online by viewModel.isOnline.collectAsState()
-
-    val isCurrent = currentSong?.videoId == song.videoId
     val isFavorite = song.videoId in viewModel.favoriteIds
-    val isDownloaded = song.videoId in downloadedIds
-    val progress = progressMap[song.videoId]
     val playable = isDownloaded || online
 
     var menuOpen by remember { mutableStateOf(false) }
@@ -97,8 +99,14 @@ fun SongRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box {
+            // size()-Hint passend zur Zeilenhöhe — sonst dekodiert Coil die
+            // volle Thumbnail-Auflösung für ein 48-dp-Bild.
+            val thumbPx = with(LocalDensity.current) { 48.dp.roundToPx() }
             AsyncImage(
-                model = song.thumbnailUrl.ifEmpty { null },
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(song.thumbnailUrl.ifEmpty { null })
+                    .size(thumbPx)
+                    .build(),
                 contentDescription = null,
                 modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(HikariSurfaceHigh),
                 contentScale = ContentScale.Crop,

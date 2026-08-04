@@ -1,6 +1,8 @@
 package com.hikari.app.di
 
+import com.hikari.app.BuildConfig
 import com.hikari.app.data.api.HikariApi
+import com.hikari.app.data.prefs.DEFAULT_BACKEND_URL
 import com.hikari.app.data.prefs.SettingsStore
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
@@ -9,8 +11,10 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Interceptor
@@ -23,11 +27,25 @@ import retrofit2.Retrofit
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
+    /**
+     * Gespiegelte Einstellungen für die Interceptoren. Früher las jeder
+     * Request sie per runBlocking aus dem DataStore — das blockierte den
+     * Netzwerk-Thread bei jedem einzelnen Call. Jetzt werden sie einmalig
+     * gesammelt und bei Änderung nachgezogen; die Interceptoren lesen nur
+     * noch die volatile Kopie.
+     */
+    @Volatile private var cachedBackendUrl: String = DEFAULT_BACKEND_URL
+    @Volatile private var cachedAuthToken: String = ""
+
+    private val settingsScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     @Provides @Singleton
     fun provideOkHttpClient(store: SettingsStore): OkHttpClient {
+        settingsScope.launch { store.backendUrl.collect { cachedBackendUrl = it } }
+        settingsScope.launch { store.authToken.collect { cachedAuthToken = it } }
         val baseUrlInterceptor = Interceptor { chain ->
-            val currentBase = runBlocking { store.backendUrl.first() }
-            val base = currentBase.toHttpUrlOrNull() ?: return@Interceptor chain.proceed(chain.request())
+            val base = cachedBackendUrl.toHttpUrlOrNull()
+                ?: return@Interceptor chain.proceed(chain.request())
             val orig = chain.request()
             val newUrl = orig.url.newBuilder()
                 .scheme(base.scheme)
@@ -40,7 +58,7 @@ object NetworkModule {
         // HIKARI_AUTH_TOKEN enabled). Empty token → request passes through, so
         // the open localhost default is unaffected.
         val authInterceptor = Interceptor { chain ->
-            val token = runBlocking { store.authToken.first() }
+            val token = cachedAuthToken
             if (token.isEmpty()) {
                 chain.proceed(chain.request())
             } else {
@@ -51,7 +69,14 @@ object NetworkModule {
                 )
             }
         }
-        val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC }
+        // Request-Logging nur im Debug-Build — Release bleibt still.
+        val logging = HttpLoggingInterceptor().apply {
+            level = if (BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BASIC
+            } else {
+                HttpLoggingInterceptor.Level.NONE
+            }
+        }
         return OkHttpClient.Builder()
             .addInterceptor(baseUrlInterceptor)
             .addInterceptor(authInterceptor)
@@ -67,9 +92,10 @@ object NetworkModule {
     fun provideJson(): Json = Json { ignoreUnknownKeys = true }
 
     @Provides @Singleton
-    fun provideRetrofit(client: OkHttpClient, json: Json, store: SettingsStore): Retrofit {
-        val initialBase = runBlocking { store.backendUrl.first() }
-            .let { if (it.endsWith("/")) it else "$it/" }
+    fun provideRetrofit(client: OkHttpClient, json: Json): Retrofit {
+        // Nur Platzhalter — der baseUrlInterceptor schreibt jeden Request auf
+        // die aktuell eingestellte Backend-URL um.
+        val initialBase = cachedBackendUrl.let { if (it.endsWith("/")) it else "$it/" }
         return Retrofit.Builder()
             .baseUrl(initialBase)
             .client(client)

@@ -3,6 +3,7 @@ package com.hikari.app.ui.music
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.db.LocalMusicDownloadEntity
@@ -11,26 +12,36 @@ import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.download.LocalMusicDownloadManager
 import com.hikari.app.domain.model.Artist
 import com.hikari.app.domain.model.ArtistPlaylist
+import com.hikari.app.domain.model.FullSearchResults
+import com.hikari.app.domain.model.MusicAlbum
 import com.hikari.app.domain.model.MusicPlaylist
 import com.hikari.app.domain.model.MusicSong
+import com.hikari.app.domain.model.RemotePlaylist
+import com.hikari.app.domain.model.SearchArtist
 import com.hikari.app.domain.repo.ChapterGroup
 import com.hikari.app.domain.repo.DiscoverSection
 import com.hikari.app.domain.repo.MusicRepository
+import com.hikari.app.domain.repo.MusicSearchFilter
 import com.hikari.app.domain.repo.MusicSearchMode
 import com.hikari.app.domain.repo.PlaylistWithSongs
 import com.hikari.app.player.MusicPlayerController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+@OptIn(FlowPreview::class)
 @HiltViewModel
 class MusicViewModel @Inject constructor(
     private val repo: MusicRepository,
@@ -56,6 +67,46 @@ class MusicViewModel @Inject constructor(
 
     /** Erkannte Hörbücher/Podcast-Shows in den Suchergebnissen (nur außerhalb des Musik-Modus). */
     var searchGroups by mutableStateOf<List<ChapterGroup>>(emptyList())
+        private set
+
+    // --- Smart-Search (nur Musik-Modus) ---
+
+    /** true, solange das Suchfeld aktiv ist und noch nicht abgeschickt wurde. */
+    var searchActive by mutableStateOf(false)
+        private set
+
+    /** Vorschläge des Backends zur aktuellen Eingabe. */
+    var suggestions by mutableStateOf<List<String>>(emptyList())
+        private set
+
+    /** Gespeicherter Suchverlauf — aktualisiert sich über den DB-Flow selbst. */
+    val searchHistory: StateFlow<List<String>> = repo.observeSearchHistory()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Gewählter Ergebnisfilter der Musik-Suche. */
+    var activeFilter by mutableStateOf(MusicSearchFilter.ALLE)
+        private set
+
+    /** Ergebnis der Vollsuche über Songs, Künstler, Alben und Playlists. */
+    var fullResults by mutableStateOf<FullSearchResults?>(null)
+        private set
+
+    /** Lazy nachgeladene Treffer der Filter-Tabs (Filter ≠ „Alle“). */
+    var typedSongs by mutableStateOf<List<MusicSong>>(emptyList())
+        private set
+    var typedAlbums by mutableStateOf<List<MusicAlbum>>(emptyList())
+        private set
+    var typedArtists by mutableStateOf<List<SearchArtist>>(emptyList())
+        private set
+    var typedPlaylists by mutableStateOf<List<RemotePlaylist>>(emptyList())
+        private set
+    var typedLoading by mutableStateOf(false)
+        private set
+
+    /** Tracks der geöffneten Remote-Playlist bzw. des Albums (Detail-Seite). */
+    var remotePlaylistTracks by mutableStateOf<List<MusicSong>>(emptyList())
+        private set
+    var remotePlaylistLoading by mutableStateOf(false)
         private set
 
     /** Songs des gerade geöffneten Mixes — der Mix wird über seine Suche neu
@@ -116,6 +167,11 @@ class MusicViewModel @Inject constructor(
     private var mixJob: Job? = null
     private var groupJob: Job? = null
     private var artistJob: Job? = null
+    private var typedJob: Job? = null
+    private var remotePlaylistJob: Job? = null
+
+    /** Pro Filter die Query, für die seine Liste bereits geladen wurde. */
+    private val typedQueries = mutableMapOf<MusicSearchFilter, String>()
 
     init {
         loadDiscover()
@@ -125,6 +181,21 @@ class MusicViewModel @Inject constructor(
             isOnline.collect { online ->
                 if (online && discoverSections.isEmpty() && !discoverLoading) loadDiscover()
             }
+        }
+        // Vorschläge zur Eingabe mit kurzer Verzögerung nachladen — nur im
+        // Musik-Modus und nur, solange das Suchfeld aktiv ist. Das Repo
+        // mutiert den Query nicht, es komplettiert bloß.
+        viewModelScope.launch {
+            snapshotFlow { searchQuery }
+                .debounce(250)
+                .distinctUntilChanged()
+                .collectLatest { q ->
+                    suggestions = if (searchMode == MusicSearchMode.MUSIC && searchActive && q.trim().length >= 2) {
+                        repo.getSuggestions(q)
+                    } else {
+                        emptyList()
+                    }
+                }
         }
     }
 
@@ -159,11 +230,17 @@ class MusicViewModel @Inject constructor(
         searchJob = viewModelScope.launch {
             searchLoading = true
             searchAttempted = true
-            val results = repo.searchMusic(q, searchMode)
             if (searchMode == MusicSearchMode.MUSIC) {
-                searchResults = results
+                // Smart-Search: Verlauf mitschreiben, Volltext über alle Kategorien.
+                resetSmartSearch()
+                repo.recordSearch(q)
+                val full = repo.searchFullMusic(q)
+                fullResults = full
+                // searchResults bleibt der Play-Kontext der Song-Zeilen.
+                searchResults = full?.songs ?: emptyList()
                 searchGroups = emptyList()
             } else {
+                val results = repo.searchMusic(q, searchMode)
                 // Kapitel und Folgen desselben Kanals gehören in eine Gruppe —
                 // einzeln gelistet wäre ein Hörbuch Dutzende lose Zeilen.
                 val (groups, singles) = repo.groupIntoShows(results)
@@ -172,6 +249,71 @@ class MusicViewModel @Inject constructor(
             }
             searchLoading = false
         }
+    }
+
+    /** Fokus aufs Suchfeld aktiviert die Smart-Search (nur Musik-Modus). */
+    fun onSearchFocus() {
+        if (searchMode == MusicSearchMode.MUSIC) searchActive = true
+    }
+
+    /** Tippen im Suchfeld aktiviert die Smart-Search (nur Musik-Modus). */
+    fun onSearchQueryChange(query: String) {
+        if (searchMode == MusicSearchMode.MUSIC && query.isNotEmpty()) searchActive = true
+    }
+
+    /** Wechselt den Ergebnisfilter und lädt dessen Treffer bei Bedarf nach. */
+    fun selectFilter(filter: MusicSearchFilter) {
+        if (filter == activeFilter) return
+        activeFilter = filter
+        if (filter == MusicSearchFilter.ALLE) return
+        val q = searchQuery.trim()
+        // Lazy laden: dieselbe Query wird pro Filter nur einmal geholt.
+        if (q.isEmpty() || typedQueries[filter] == q) return
+        typedQueries[filter] = q
+        typedJob?.cancel()
+        typedJob = viewModelScope.launch {
+            typedLoading = true
+            when (filter) {
+                MusicSearchFilter.SONGS -> typedSongs = repo.searchTypedSongs(q)
+                MusicSearchFilter.ALBEN -> typedAlbums = repo.searchTypedAlbums(q)
+                MusicSearchFilter.KUENSTLER -> typedArtists = repo.searchTypedArtists(q)
+                MusicSearchFilter.PLAYLISTS -> typedPlaylists = repo.searchTypedPlaylists(q)
+                MusicSearchFilter.ALLE -> Unit
+            }
+            typedLoading = false
+        }
+    }
+
+    fun removeHistoryEntry(query: String) {
+        viewModelScope.launch { repo.deleteSearchHistoryEntry(query) }
+    }
+
+    fun clearHistory() {
+        viewModelScope.launch { repo.clearSearchHistory() }
+    }
+
+    /** Lädt die Tracks einer Remote-Playlist oder eines Albums für die Detail-Seite. */
+    fun loadRemotePlaylist(playlistId: String) {
+        remotePlaylistJob?.cancel()
+        remotePlaylistJob = viewModelScope.launch {
+            remotePlaylistLoading = true
+            remotePlaylistTracks = repo.getRemotePlaylistTracks(playlistId)
+            remotePlaylistLoading = false
+        }
+    }
+
+    /** Setzt den Smart-Search-Zustand zurück (Moduswechsel, neue Suche, Löschen). */
+    private fun resetSmartSearch() {
+        searchActive = false
+        suggestions = emptyList()
+        fullResults = null
+        typedSongs = emptyList()
+        typedAlbums = emptyList()
+        typedArtists = emptyList()
+        typedPlaylists = emptyList()
+        typedLoading = false
+        activeFilter = MusicSearchFilter.ALLE
+        typedQueries.clear()
     }
 
     /**
@@ -217,6 +359,8 @@ class MusicViewModel @Inject constructor(
     fun selectSearchMode(mode: MusicSearchMode) {
         if (mode == searchMode) return
         searchMode = mode
+        // Weg vom Musik-Modus: Smart-Search-Zustand mit zurücksetzen.
+        if (mode != MusicSearchMode.MUSIC) resetSmartSearch()
         discoverSections = emptyList()
         loadDiscover(force = true)
         if (searchAttempted && searchQuery.isNotBlank()) search(searchQuery)
@@ -288,32 +432,43 @@ class MusicViewModel @Inject constructor(
         searchGroups = emptyList()
         searchAttempted = false
         searchLoading = false
+        resetSmartSearch()
     }
 
+    /** History, Favoriten und Playlists werden parallel geladen. */
     fun refreshLibrary() {
         viewModelScope.launch {
-            history = repo.getHistory()
-            favorites = repo.getFavorites()
+            coroutineScope {
+                val h = async { repo.getHistory() }
+                val f = async { repo.getFavorites() }
+                val p = async { repo.getPlaylists() }
+                history = h.await()
+                favorites = f.await()
+                playlists = p.await()
+            }
             favoriteIds = favorites.map { it.videoId }.toSet()
-            playlists = repo.getPlaylists()
             libraryLoaded = true
         }
     }
 
     fun play(song: MusicSong, contextQueue: List<MusicSong>) {
         player.play(song, contextQueue)
-        viewModelScope.launch {
-            kotlinx.coroutines.delay(600)
-            refreshLibrary()
-        }
+        // Verlauf lokal nachziehen statt Komplett-Reload — das Schreiben in
+        // die DB übernimmt repo.recordPlayed im Player-Controller.
+        history = listOf(song) + history.filter { it.videoId != song.videoId }
     }
 
     fun toggleFavorite(song: MusicSong) {
         viewModelScope.launch {
             val nowFavorite = repo.toggleFavorite(song)
             favoriteIds = if (nowFavorite) favoriteIds + song.videoId else favoriteIds - song.videoId
-            history = repo.getHistory()
-            favorites = repo.getFavorites()
+            // Nur die Favoriten-Liste pflegen — Herz-Status in allen anderen
+            // Listen läuft ohnehin über favoriteIds.
+            favorites = if (nowFavorite) {
+                listOf(song.copy(isFavorite = true)) + favorites.filter { it.videoId != song.videoId }
+            } else {
+                favorites.filter { it.videoId != song.videoId }
+            }
         }
     }
 

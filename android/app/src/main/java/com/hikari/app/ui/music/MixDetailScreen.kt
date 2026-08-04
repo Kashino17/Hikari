@@ -59,6 +59,8 @@ fun MixDetailScreen(
     val songs = viewModel.mixSongs
     val currentSong by viewModel.player.currentSong.collectAsState()
     val downloadedIds by viewModel.downloadedIds.collectAsState()
+    val progressMap by viewModel.downloadProgress.collectAsState()
+    val online by viewModel.isOnline.collectAsState()
     val downloadedCount = songs.count { it.videoId in downloadedIds }
     val allDownloaded = songs.isNotEmpty() && downloadedCount == songs.size
 
@@ -164,7 +166,15 @@ fun MixDetailScreen(
                     contentPadding = PaddingValues(bottom = 12.dp),
                 ) {
                     items(songs, key = { it.videoId }) { song ->
-                        SongRow(song, viewModel, songs)
+                        SongRow(
+                            song,
+                            viewModel,
+                            songs,
+                            isCurrent = currentSong?.videoId == song.videoId,
+                            isDownloaded = song.videoId in downloadedIds,
+                            progress = progressMap[song.videoId],
+                            online = online,
+                        )
                     }
                 }
             }

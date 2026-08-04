@@ -6,6 +6,10 @@ import com.hikari.app.data.api.dto.ArtistPlaylistDto
 import com.hikari.app.data.api.dto.MusicTrackDto
 import com.hikari.app.data.api.dto.PipedSearchPageDto
 import com.hikari.app.data.api.dto.PipedStreamsDto
+import com.hikari.app.data.api.dto.SearchAlbumDto
+import com.hikari.app.data.api.dto.SearchArtistDto
+import com.hikari.app.data.api.dto.SearchPlaylistDto
+import com.hikari.app.data.api.dto.TopResultDto
 import com.hikari.app.data.db.LocalMusicDownloadDao
 import com.hikari.app.data.db.MusicPlaylistDao
 import com.hikari.app.data.db.MusicPlaylistEntity
@@ -13,17 +17,25 @@ import com.hikari.app.data.db.MusicPlaylistSongDao
 import com.hikari.app.data.db.MusicPlaylistSongEntity
 import com.hikari.app.data.db.MusicSongDao
 import com.hikari.app.data.db.MusicSongEntity
+import com.hikari.app.data.db.SearchHistoryDao
+import com.hikari.app.data.db.SearchHistoryEntity
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.model.Artist
 import com.hikari.app.domain.model.ArtistPlaylist
+import com.hikari.app.domain.model.FullSearchResults
+import com.hikari.app.domain.model.MusicAlbum
 import com.hikari.app.domain.model.MusicPlaylist
+import com.hikari.app.domain.model.MusicSearchResult
 import com.hikari.app.domain.model.MusicSong
+import com.hikari.app.domain.model.RemotePlaylist
+import com.hikari.app.domain.model.SearchArtist
 import java.net.URLEncoder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
@@ -63,6 +75,16 @@ enum class MusicSearchMode(
     }
 }
 
+/** Ergebnisfilter der YouTube-Music-artigen Suche. */
+enum class MusicSearchFilter(val label: String) {
+    ALLE("Alle"),
+    SONGS("Songs"),
+    ALBEN("Alben"),
+    KUENSTLER("Künstler"),
+    PLAYLISTS("Playlists"),
+    ;
+}
+
 /** Playlist samt Songs und wie viele davon offline verfügbar sind. */
 data class PlaylistWithSongs(
     val playlist: MusicPlaylist,
@@ -91,6 +113,7 @@ class MusicRepository(
     private val playlistDao: MusicPlaylistDao,
     private val playlistSongDao: MusicPlaylistSongDao,
     private val downloadDao: LocalMusicDownloadDao,
+    private val searchHistoryDao: SearchHistoryDao,
     private val api: HikariApi,
     private val fallbackClient: OkHttpClient,
     private val json: Json,
@@ -253,6 +276,150 @@ class MusicRepository(
         }
         return withFavoriteState(filtered)
     }
+
+    // --- YouTube-Music-artige Suche (full/typed/suggestions) ---
+
+    /**
+     * Vorschläge fürs Suchfeld. Bewusst ohne jede Query-Mutation — der
+     * Nutzer tippt, das Backend vervollständigt. Fehler liefern schlicht
+     * keine Vorschläge, niemals eine Exception.
+     */
+    suspend fun getSuggestions(query: String): List<String> =
+        try {
+            api.getSuggestions(query.trim())
+        } catch (_: Exception) {
+            emptyList()
+        }
+
+    /** Vollsuche über alle Kategorien; null bei Fehler. */
+    suspend fun searchFullMusic(query: String): FullSearchResults? =
+        try {
+            val dto = api.searchFullMusic(query.trim())
+            FullSearchResults(
+                topResult = dto.topResult?.toSearchResult(),
+                songs = withFavoriteState(dto.songs.map { it.toSong() }),
+                artists = dto.artists.map { it.toModel() },
+                albums = dto.albums.map { it.toModel() },
+                playlists = dto.playlists.map { it.toModel() },
+            )
+        } catch (_: Exception) {
+            null
+        }
+
+    suspend fun searchTypedSongs(query: String): List<MusicSong> =
+        try {
+            withFavoriteState(api.searchTypedSongs(query.trim()).map { it.toSong() })
+        } catch (_: Exception) {
+            emptyList()
+        }
+
+    suspend fun searchTypedAlbums(query: String): List<MusicAlbum> =
+        try {
+            api.searchTypedAlbums(query.trim()).map { it.toModel() }
+        } catch (_: Exception) {
+            emptyList()
+        }
+
+    suspend fun searchTypedArtists(query: String): List<SearchArtist> =
+        try {
+            api.searchTypedArtists(query.trim()).map { it.toModel() }
+        } catch (_: Exception) {
+            emptyList()
+        }
+
+    suspend fun searchTypedPlaylists(query: String): List<RemotePlaylist> =
+        try {
+            api.searchTypedPlaylists(query.trim()).map { it.toModel() }
+        } catch (_: Exception) {
+            emptyList()
+        }
+
+    /** Tracks einer Remote-Playlist oder eines Albums; Fehler → leere Liste. */
+    suspend fun getRemotePlaylistTracks(playlistId: String): List<MusicSong> =
+        try {
+            withFavoriteState(api.getPlaylistTracks(playlistId).map { it.toSong() })
+        } catch (_: Exception) {
+            emptyList()
+        }
+
+    private fun TopResultDto.toSearchResult(): MusicSearchResult? = when (type) {
+        "song" -> videoId?.let {
+            MusicSearchResult.Song(
+                MusicSong(
+                    videoId = it,
+                    title = title.orEmpty(),
+                    uploader = uploader.orEmpty(),
+                    uploaderUrl = uploaderUrl.orEmpty(),
+                    thumbnailUrl = thumbnailUrl.orEmpty(),
+                    duration = durationSeconds ?: 0,
+                    views = views ?: 0,
+                ),
+            )
+        }
+        "artist" -> channelId?.let {
+            MusicSearchResult.Artist(
+                SearchArtist(
+                    channelId = it,
+                    name = name.orEmpty(),
+                    thumbnailUrl = thumbnailUrl.orEmpty(),
+                    subscribers = subscribers ?: 0,
+                ),
+            )
+        }
+        "album" -> playlistId?.let {
+            MusicSearchResult.Album(
+                MusicAlbum(
+                    playlistId = it,
+                    name = name.orEmpty(),
+                    artistName = artistName.orEmpty(),
+                    thumbnailUrl = thumbnailUrl.orEmpty(),
+                    videoCount = videoCount ?: 0,
+                ),
+            )
+        }
+        "playlist" -> playlistId?.let {
+            MusicSearchResult.Playlist(
+                RemotePlaylist(
+                    playlistId = it,
+                    name = name.orEmpty(),
+                    uploaderName = uploaderName.orEmpty(),
+                    thumbnailUrl = thumbnailUrl.orEmpty(),
+                    videoCount = videoCount ?: 0,
+                ),
+            )
+        }
+        else -> null
+    }
+
+    private fun SearchArtistDto.toModel() = SearchArtist(
+        channelId = channelId, name = name, thumbnailUrl = thumbnailUrl, subscribers = subscribers,
+    )
+
+    private fun SearchAlbumDto.toModel() = MusicAlbum(
+        playlistId = playlistId, name = name, artistName = artistName,
+        thumbnailUrl = thumbnailUrl, videoCount = videoCount,
+    )
+
+    private fun SearchPlaylistDto.toModel() = RemotePlaylist(
+        playlistId = playlistId, name = name, uploaderName = uploaderName,
+        thumbnailUrl = thumbnailUrl, videoCount = videoCount,
+    )
+
+    // --- Suchverlauf ---
+
+    fun observeSearchHistory(): Flow<List<String>> =
+        searchHistoryDao.recent().map { entries -> entries.map { it.query } }
+
+    suspend fun recordSearch(query: String) {
+        val trimmed = query.trim()
+        if (trimmed.isEmpty()) return
+        searchHistoryDao.upsert(SearchHistoryEntity(trimmed, System.currentTimeMillis()))
+        searchHistoryDao.trim()
+    }
+
+    suspend fun deleteSearchHistoryEntry(query: String) = searchHistoryDao.delete(query)
+
+    suspend fun clearSearchHistory() = searchHistoryDao.clear()
 
     /**
      * Hörbuch- und Podcast-Treffer sind lang; Ausschnitte und Trailer fliegen
@@ -460,7 +627,8 @@ class MusicRepository(
     private suspend fun songsOf(playlistId: Int, favorites: Set<String>): List<MusicSong> {
         val links = playlistSongDao.getByPlaylist(playlistId)
         if (links.isEmpty()) return emptyList()
-        val byId = songDao.getAll().associateBy { it.videoId }
+        // Nur die verlinkten Songs laden — nicht pro Playlist die ganze Tabelle.
+        val byId = songDao.getByIds(links.map { it.songVideoId }).associateBy { it.videoId }
         return links.mapNotNull { link ->
             byId[link.songVideoId]?.toSong()?.copy(isFavorite = link.songVideoId in favorites)
         }

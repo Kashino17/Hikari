@@ -15,7 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -91,7 +93,7 @@ private fun tttMinimax(b: Array<String>, aiTurn: Boolean, depth: Int): Int {
 private fun tttBestMove(board: Array<String>): Int {
     val b = board.copyOf()
     var best = Int.MIN_VALUE
-    var move = -1
+    val moves = ArrayList<Int>()
     for (i in b.indices) {
         if (b[i].isNotEmpty()) continue
         b[i] = "O"
@@ -99,10 +101,15 @@ private fun tttBestMove(board: Array<String>): Int {
         b[i] = ""
         if (s > best) {
             best = s
-            move = i
+            moves.clear()
+            moves.add(i)
+        } else if (s == best) {
+            moves.add(i)
         }
     }
-    return move
+    // Zufall unter gleichwertigen Best-Moves: bleibt unschlagbar,
+    // spielt aber nicht jede Partie identisch.
+    return moves.random()
 }
 
 @Composable
@@ -119,6 +126,7 @@ fun TicTacToeGame(onBack: () -> Unit) {
     var aiWins by remember { mutableStateOf(0) }
 
     val aiThinking = winner == null && turn == "O"
+    val haptic = LocalHapticFeedback.current
 
     fun applyMove(idx: Int, symbol: String) {
         val nb = board.copyOf()
@@ -128,6 +136,7 @@ fun TicTacToeGame(onBack: () -> Unit) {
         if (res != null) {
             winner = res.first
             winLine = res.second
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             when (res.first) {
                 "X" -> playerWins++
                 "O" -> aiWins++
@@ -135,6 +144,7 @@ fun TicTacToeGame(onBack: () -> Unit) {
             }
         } else {
             turn = if (symbol == "X") "O" else "X"
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         }
     }
 

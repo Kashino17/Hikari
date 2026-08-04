@@ -58,6 +58,7 @@ import com.hikari.app.domain.repo.MusicSearchMode
 import com.hikari.app.ui.music.MusicScreen
 import com.hikari.app.ui.music.NowPlayingScreen
 import com.hikari.app.ui.music.PlaylistDetailScreen
+import com.hikari.app.ui.music.RemotePlaylistScreen
 import com.hikari.app.ui.news.NewsScreen
 import com.hikari.app.ui.games.GamesScreen
 import com.hikari.app.ui.games.BlockBlastGame
@@ -114,10 +115,12 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
     val isPlaylistRoute = currentRoute?.startsWith("playlist/") == true
     val isMixRoute = currentRoute?.startsWith("mix/") == true
     val isArtistRoute = currentRoute?.startsWith("artist/") == true
-    val inMusicSection = currentRoute == "music" || isNowPlaying || isPlaylistRoute || isMixRoute || isArtistRoute
+    val isCollectionRoute = currentRoute?.startsWith("music/collection/") == true
+    val inMusicSection = currentRoute == "music" || isNowPlaying || isPlaylistRoute || isMixRoute ||
+        isArtistRoute || isCollectionRoute
     val showsBottomBar = !(currentRoute == "feed" && feedFullscreen) && !isVideoRoute &&
         !isReaderRoute && !isGearSubPage && !isGameRoute && !isNowPlaying &&
-        !isPlaylistRoute && !isMixRoute && !isArtistRoute
+        !isPlaylistRoute && !isMixRoute && !isArtistRoute && !isCollectionRoute
 
     Scaffold(
         containerColor = HikariBg,
@@ -288,6 +291,10 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
                         onOpenArtist = { id, name ->
                             nav.navigate("artist/$id?name=${URLEncoder.encode(name, "UTF-8")}")
                         },
+                        onOpenCollection = { playlistId, name, isAlbum ->
+                            val n = URLEncoder.encode(name, "UTF-8")
+                            nav.navigate("music/collection/$playlistId?name=$n&isAlbum=$isAlbum")
+                        },
                     )
                 }
             }
@@ -334,6 +341,25 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
                     title = title,
                     query = query.ifBlank { title },
                     mode = MusicSearchMode.fromApiValue(entry.arguments?.getString("mode")),
+                    onBack = { nav.popBackStack() },
+                    onOpenNowPlaying = { nav.navigate("nowplaying") },
+                )
+            }
+            composable(
+                route = "music/collection/{playlistId}?name={name}&isAlbum={isAlbum}",
+                arguments = listOf(
+                    navArgument("playlistId") { type = NavType.StringType },
+                    navArgument("name") { type = NavType.StringType; defaultValue = "" },
+                    navArgument("isAlbum") { type = NavType.BoolType; defaultValue = false },
+                ),
+            ) { entry ->
+                val playlistId = entry.arguments?.getString("playlistId").orEmpty()
+                val name = URLDecoder.decode(entry.arguments?.getString("name").orEmpty(), "UTF-8")
+                val isAlbum = entry.arguments?.getBoolean("isAlbum") ?: false
+                RemotePlaylistScreen(
+                    playlistId = playlistId,
+                    name = name,
+                    isAlbum = isAlbum,
                     onBack = { nav.popBackStack() },
                     onOpenNowPlaying = { nav.navigate("nowplaying") },
                 )
