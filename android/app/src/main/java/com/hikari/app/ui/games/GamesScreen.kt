@@ -61,31 +61,31 @@ fun GamesScreen(
     val games = listOf(
         GameInfo(
             "blockblast", "Block Blast",
-            "Der Puzzle-Hit: Platziere Blöcke auf dem 8×8-Feld und räume Reihen ab. Combos geben fette Punkte!",
+            "Blöcke aufs 8×8-Feld, Reihen abräumen, Booster zünden — jetzt mit Abenteuer-Leveln und Zeitrausch!",
             { Icon(Icons.Default.Extension, null, tint = Color(0xFFFBBF24), modifier = Modifier.size(28.dp)) },
             Color(0xFFFBBF24),
         ),
         GameInfo(
             "fruitmerge", "Fruit Merge",
-            "Das Wassermelonen-Spiel: Lass gleiche Früchte verschmelzen und baue dich bis zur 🍉 hoch!",
+            "Früchte verschmelzen bis zur 🍉 — mit Ketten-Combos, Power-ups, Zen-Modus und Herausforderungs-Leveln!",
             { Text("🍉", fontSize = 24.sp) },
             Color(0xFF4ADE80),
         ),
         GameInfo(
             "spaceshooter", "Sky Strike",
-            "Weltraum-Shooter: Steuere dein Schiff, zerlege Gegnerwellen und schnapp dir Power-ups!",
+            "Weltraum-Shooter mit Bossen, Hangar-Upgrades, Boss-Rush und einer Kampagne durch 5 Sektoren!",
             { Icon(Icons.Default.RocketLaunch, null, tint = Color(0xFF22D3EE), modifier = Modifier.size(28.dp)) },
             Color(0xFF22D3EE),
         ),
         GameInfo(
             "fruithole", "Hungry Hole",
-            "Dein schwarzes Loch hat Hunger: Schluck fallende Früchte, weich den Bomben aus, halte die Combo!",
+            "Dein schwarzes Loch hat Hunger: Power-ups schlucken, Bomben entschärfen — plus Rush Hour und Welten-Reise!",
             { Text("🕳️", fontSize = 24.sp) },
             Color(0xFFA78BFA),
         ),
         GameInfo(
             "tictactoe", "Tic-Tac-Toe",
-            "Der Klassiker gegen die KI — jetzt mit drei Schwierigkeitsgraden bis unschlagbar.",
+            "Der Klassiker gegen KI oder zu zweit — jetzt mit Ultimate-Brett, Bolt-Modus und Best-of-Serien.",
             { Icon(Icons.Default.Close, null, tint = Color(0xFF60A5FA), modifier = Modifier.size(28.dp)) },
             Color(0xFF60A5FA),
         ),
@@ -113,7 +113,7 @@ fun GamesScreen(
             Text("Mini-Spiele", fontWeight = FontWeight.Bold, fontSize = 24.sp, color = HikariText,
                 modifier = Modifier.padding(horizontal = 20.dp))
             Spacer(Modifier.height(4.dp))
-            Text("5 kleine Spiele für zwischendurch", fontSize = 14.sp, color = HikariTextMuted,
+            Text("5 Spiele, je 3 Modi — mit Leveln, Erfolgen und Statistiken", fontSize = 14.sp, color = HikariTextMuted,
                 modifier = Modifier.padding(horizontal = 20.dp))
 
             Spacer(Modifier.height(20.dp))

@@ -1,21 +1,31 @@
 package com.hikari.app.ui.games
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Paint
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -34,9 +44,15 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.hikari.app.ui.theme.*
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
@@ -45,9 +61,14 @@ import kotlin.math.min
 import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.random.Random
+import kotlinx.coroutines.delay
 
 // Fruchtkette Stufe 0..9
 private val MergeEmoji = listOf("🍒", "🍓", "🍇", "🍊", "🍎", "🍐", "🍑", "🍍", "🍈", "🍉")
+private val MergeNames = listOf(
+    "Kirsche", "Erdbeere", "Traube", "Orange", "Apfel",
+    "Birne", "Pfirsich", "Ananas", "Melone", "Wassermelone",
+)
 private val MergeColors = listOf(
     Color(0xFFB71C1C), // Kirsche
     Color(0xFFEF5350), // Erdbeere
@@ -61,6 +82,76 @@ private val MergeColors = listOf(
     Color(0xFF43A047), // Wassermelone
 )
 
+// Hand-Zustände: -1 = leer/Cooldown, -2 = Regenbogen-Frucht, 0..4 = Fruchtstufe
+private const val MergeHandNone = -1
+private const val MergeHandRainbow = -2
+
+private enum class MergeMode(val label: String) {
+    CLASSIC("Klassisch"),
+    ZEN("Zen"),
+    CHALLENGE("Herausforderung"),
+}
+
+private enum class MergeScreenId { MENU, GAME, LEVELS, STATS, ACH }
+
+private enum class MergeGeom { NORMAL, NARROW, WIDE }
+
+private enum class MergeGoalType { FRUIT_DROPS, MERGES_TIME, SCORE_CLEAN, SCORE_DROPS }
+
+private class MergeLevelDef(
+    val geom: MergeGeom,
+    val pins: List<Triple<Float, Float, Float>>, // fx, fy (Anteil im Behälter), Radius als Anteil der Breite
+    val type: MergeGoalType,
+    val target: Int,
+    val limit: Int,
+    val title: String,
+)
+
+private val MergeLevels = listOf(
+    MergeLevelDef(MergeGeom.NORMAL, emptyList(), MergeGoalType.FRUIT_DROPS, 3, 18, "Aufwärmen"),
+    MergeLevelDef(MergeGeom.NORMAL, emptyList(), MergeGoalType.MERGES_TIME, 15, 60, "Im Takt"),
+    MergeLevelDef(MergeGeom.NARROW, emptyList(), MergeGoalType.FRUIT_DROPS, 4, 25, "Enge Röhre"),
+    MergeLevelDef(MergeGeom.NORMAL, listOf(Triple(0.5f, 0.45f, 0.045f)), MergeGoalType.SCORE_DROPS, 300, 30, "Der Pin"),
+    MergeLevelDef(MergeGeom.NORMAL, emptyList(), MergeGoalType.SCORE_CLEAN, 500, 0, "Pur"),
+    MergeLevelDef(MergeGeom.WIDE, emptyList(), MergeGoalType.FRUIT_DROPS, 5, 30, "Flachwasser"),
+    MergeLevelDef(MergeGeom.NARROW, emptyList(), MergeGoalType.MERGES_TIME, 20, 75, "Schneller Schacht"),
+    MergeLevelDef(MergeGeom.NORMAL, listOf(Triple(0.3f, 0.4f, 0.04f), Triple(0.7f, 0.4f, 0.04f)), MergeGoalType.FRUIT_DROPS, 6, 40, "Doppel-Pin"),
+    MergeLevelDef(MergeGeom.NORMAL, emptyList(), MergeGoalType.SCORE_DROPS, 800, 45, "Punktejagd"),
+    MergeLevelDef(MergeGeom.WIDE, emptyList(), MergeGoalType.MERGES_TIME, 25, 90, "Breite Bühne"),
+    MergeLevelDef(MergeGeom.NARROW, emptyList(), MergeGoalType.FRUIT_DROPS, 7, 45, "Ananas-Turm"),
+    MergeLevelDef(MergeGeom.NORMAL, listOf(Triple(0.25f, 0.35f, 0.038f), Triple(0.5f, 0.55f, 0.038f), Triple(0.75f, 0.35f, 0.038f)), MergeGoalType.SCORE_CLEAN, 700, 0, "Flipper"),
+    MergeLevelDef(MergeGeom.NORMAL, emptyList(), MergeGoalType.FRUIT_DROPS, 8, 55, "Melonenreif"),
+    MergeLevelDef(MergeGeom.NARROW, emptyList(), MergeGoalType.SCORE_DROPS, 1200, 60, "Präzision"),
+    MergeLevelDef(MergeGeom.NORMAL, listOf(Triple(0.35f, 0.4f, 0.042f), Triple(0.65f, 0.4f, 0.042f)), MergeGoalType.FRUIT_DROPS, 9, 70, "Meisterprüfung"),
+)
+
+// Erfolge (Bit-Index im Prefs-Bitmask)
+private const val MergeAchMelone = 0
+private const val MergeAchKette = 1
+private const val MergeAchTausend = 2
+private const val MergeAchRainbow = 3
+private const val MergeAchRunden = 4
+private const val MergeAchZen = 5
+private const val MergeAchChal = 6
+private const val MergeAchFeuerwerk = 7
+private const val MergeAchPower = 8
+private const val MergeAchSammler = 9
+
+private class MergeAchievement(val bit: Int, val emoji: String, val title: String, val desc: String)
+
+private val MergeAchievements = listOf(
+    MergeAchievement(MergeAchMelone, "🍉", "Wassermelone", "Baue deine erste Wassermelone"),
+    MergeAchievement(MergeAchKette, "⛓️", "Kettenmeister", "Erreiche eine 5er-Merge-Kette"),
+    MergeAchievement(MergeAchTausend, "💯", "Tausender", "1000 Punkte in einer Klassik-Runde"),
+    MergeAchievement(MergeAchRainbow, "🌈", "Regenbogen", "Verschmelze eine Regenbogen-Frucht"),
+    MergeAchievement(MergeAchRunden, "🎮", "Stammspieler", "Spiele 10 Runden"),
+    MergeAchievement(MergeAchZen, "🧘", "Zen-Geist", "10 Minuten im Zen-Modus"),
+    MergeAchievement(MergeAchChal, "🗺️", "Wegbereiter", "Schaffe Herausforderungs-Level 5"),
+    MergeAchievement(MergeAchFeuerwerk, "🎆", "Feuerwerk", "Zünde 🍉 + 🍉"),
+    MergeAchievement(MergeAchPower, "⚡", "Werkzeugkasten", "Nutze Schütteln und Pop in einer Runde"),
+    MergeAchievement(MergeAchSammler, "📚", "Sammler", "Entdecke alle 10 Früchte"),
+)
+
 private class MergeFruit(
     var x: Float,
     var y: Float,
@@ -70,6 +161,7 @@ private class MergeFruit(
     var r: Float,
     var pop: Float = 1f,      // 0→1 Pop-in beim Merge
     var overTime: Float = 0f, // Zeit über der Limit-Linie
+    var rainbow: Boolean = false,
 )
 
 private class MergeSpark(
@@ -83,7 +175,9 @@ private class MergeSpark(
     val size: Float,
 )
 
-private class MergeTextPop(var x: Float, var y: Float, val text: String, var life: Float)
+private class MergeTextPop(var x: Float, var y: Float, val text: String, var life: Float, val sizeMul: Float = 1f)
+
+private class MergePin(val x: Float, val y: Float, val r: Float)
 
 private class MergeWorld {
     var w = 0f
@@ -94,6 +188,7 @@ private class MergeWorld {
     val fruits = ArrayList<MergeFruit>()
     val sparks = ArrayList<MergeSpark>()
     val pops = ArrayList<MergeTextPop>()
+    val pins = ArrayList<MergePin>()
     var left = 0f
     var right = 0f
     var bottom = 0f
@@ -101,23 +196,609 @@ private class MergeWorld {
     var limitY = 0f
     var hangY = 0f
     var aimX = 0f
-    var currentLevel = -1 // -1 = Cooldown, keine Frucht in der Hand
+    var current = MergeHandNone
     var cooldown = 0f
     var warn = 0f
     var time = 0f
+
+    // Ketten-Combo
+    var chain = 0
+    var chainTimer = 0f
+    var longestChain = 0
+
+    // Power-ups
+    var mergesForShake = 0
+    var mergesForPop = 0
+    var shakeCharges = 0
+    var popCharges = 0
+    var shakeVis = 0f
+    var usedShake = false
+    var usedPop = false
+
+    // Runden-Zähler
+    var mergesRound = 0
+    var drops = 0
+    var bestFruit = 0
+    val milestones = BooleanArray(10)
+    var fillLevel = 0f
+    var graceTimer = -1f
 }
+
+// ————— Prefs-Helfer —————
+
+private fun mergeLevelInfo(totalXp: Int): Triple<Int, Int, Int> {
+    var lvl = 1
+    var rest = totalXp
+    var need = 150
+    while (rest >= need) {
+        rest -= need
+        lvl++
+        need = 150 + (lvl - 1) * 100
+    }
+    return Triple(lvl, rest, need)
+}
+
+private fun mergeLoadTop5(p: SharedPreferences): List<Pair<Int, Long>> =
+    (p.getString("fruitmerge_top5", "") ?: "").split(";").mapNotNull { entry ->
+        val parts = entry.split(":")
+        if (parts.size == 2) {
+            val s = parts[0].toIntOrNull()
+            val d = parts[1].toLongOrNull()
+            if (s != null && d != null) s to d else null
+        } else null
+    }
+
+private fun mergeLoadStars(p: SharedPreferences): IntArray {
+    val arr = IntArray(MergeLevels.size)
+    (p.getString("fruitmerge_stars", "") ?: "").split(",").forEachIndexed { i, s ->
+        if (i < arr.size) arr[i] = s.toIntOrNull() ?: 0
+    }
+    return arr
+}
+
+private fun mergeSaveStars(p: SharedPreferences, stars: IntArray) {
+    p.edit().putString("fruitmerge_stars", stars.joinToString(",")).apply()
+}
+
+private fun mergeGoalText(d: MergeLevelDef): String = when (d.type) {
+    MergeGoalType.FRUIT_DROPS -> "Baue ${MergeEmoji[d.target]} in max. ${d.limit} Drops"
+    MergeGoalType.MERGES_TIME -> "${d.target} Merges in ${d.limit} s"
+    MergeGoalType.SCORE_CLEAN -> "${d.target} Punkte ohne Power-ups"
+    MergeGoalType.SCORE_DROPS -> "${d.target} Punkte in max. ${d.limit} Drops"
+}
+
+private fun mergeStarsFor(d: MergeLevelDef, drops: Int, time: Float): Int = when (d.type) {
+    MergeGoalType.FRUIT_DROPS, MergeGoalType.SCORE_DROPS -> {
+        val ratio = drops.toFloat() / d.limit.coerceAtLeast(1)
+        if (ratio <= 0.6f) 3 else if (ratio <= 0.85f) 2 else 1
+    }
+    MergeGoalType.MERGES_TIME -> {
+        val remain = (d.limit - time) / d.limit.coerceAtLeast(1)
+        if (remain >= 0.4f) 3 else if (remain >= 0.15f) 2 else 1
+    }
+    MergeGoalType.SCORE_CLEAN -> if (time <= 90f) 3 else if (time <= 150f) 2 else 1
+}
+
+private fun mergeFmtTime(s: Int): String = "%d:%02d".format(s / 60, s % 60)
+
+private fun mergeFmtDuration(secs: Long): String {
+    val m = secs / 60
+    return if (m >= 60) "${m / 60} h ${m % 60} min" else "$m min"
+}
+
+private fun mergeRollDrop(): Int =
+    if (Random.nextFloat() < 0.04f) MergeHandRainbow else Random.nextInt(5)
+
+// ————— Einstieg / Router —————
 
 @Composable
 fun FruitMergeGame(onBack: () -> Unit) {
     val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("hikari_games", Context.MODE_PRIVATE) }
+    var screen by remember { mutableStateOf(MergeScreenId.MENU) }
+    var mode by remember {
+        mutableStateOf(
+            runCatching {
+                MergeMode.valueOf(prefs.getString("fruitmerge_last_mode", MergeMode.CLASSIC.name) ?: MergeMode.CLASSIC.name)
+            }.getOrDefault(MergeMode.CLASSIC)
+        )
+    }
+    var levelIdx by remember { mutableStateOf(0) }
+    var playKey by remember { mutableStateOf(0) }
+
+    fun startGame(m: MergeMode, lvl: Int = 0) {
+        mode = m
+        levelIdx = lvl
+        prefs.edit().putString("fruitmerge_last_mode", m.name).apply()
+        playKey++
+        screen = MergeScreenId.GAME
+    }
+
+    when (screen) {
+        MergeScreenId.MENU -> MergeMenuScreen(
+            prefs = prefs,
+            lastMode = mode,
+            onBack = onBack,
+            onPlay = { m -> if (m == MergeMode.CHALLENGE) screen = MergeScreenId.LEVELS else startGame(m) },
+            onStats = { screen = MergeScreenId.STATS },
+            onAchievements = { screen = MergeScreenId.ACH },
+        )
+        MergeScreenId.LEVELS -> MergeLevelSelectScreen(
+            prefs = prefs,
+            onBack = { screen = MergeScreenId.MENU },
+            onPick = { idx -> startGame(MergeMode.CHALLENGE, idx) },
+        )
+        MergeScreenId.STATS -> MergeStatsScreen(prefs, onBack = { screen = MergeScreenId.MENU })
+        MergeScreenId.ACH -> MergeAchievementsScreen(prefs, onBack = { screen = MergeScreenId.MENU })
+        MergeScreenId.GAME -> key(playKey) {
+            MergePlayScreen(
+                mode = mode,
+                levelIdx = levelIdx,
+                onMenu = { screen = MergeScreenId.MENU },
+                onNextLevel = { startGame(MergeMode.CHALLENGE, levelIdx + 1) },
+            )
+        }
+    }
+}
+
+// ————— Menü —————
+
+@Composable
+private fun MergeMenuScreen(
+    prefs: SharedPreferences,
+    lastMode: MergeMode,
+    onBack: () -> Unit,
+    onPlay: (MergeMode) -> Unit,
+    onStats: () -> Unit,
+    onAchievements: () -> Unit,
+) {
+    var showSettings by remember { mutableStateOf(false) }
+    val highscore = remember { prefs.getInt("fruitmerge_highscore", 0) }
+    val xp = remember { prefs.getInt("fruitmerge_xp", 0) }
+    val zenSecs = remember { prefs.getLong("fruitmerge_zen_secs", 0L) }
+    val stars = remember { mergeLoadStars(prefs) }
+    val starSum = stars.sum()
+    val levelsDone = stars.count { it > 0 }
+    val (lvl, xpIn, xpNeed) = mergeLevelInfo(xp)
+
+    Box(Modifier.fillMaxSize().background(HikariBg)) {
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
+                Arrangement.SpaceBetween,
+                Alignment.CenterVertically,
+            ) {
+                TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
+                TextButton(onClick = { showSettings = true }) { Text("⚙", fontSize = 18.sp, color = HikariTextMuted) }
+            }
+
+            Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
+                Text("Fruit Merge", fontSize = 28.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(4.dp))
+                Text("Das Wassermelonen-Spiel", fontSize = 13.sp, color = HikariTextMuted)
+                Spacer(Modifier.height(16.dp))
+
+                // Spielerstufe + XP
+                Column(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(HikariCardBg).padding(14.dp),
+                ) {
+                    Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
+                        Text("Stufe $lvl", fontSize = 14.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                        Text("$xpIn / $xpNeed XP", fontSize = 12.sp, color = HikariTextMuted)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Box(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)).background(HikariSurfaceHigh)) {
+                        Box(
+                            Modifier.fillMaxWidth(fraction = (xpIn.toFloat() / xpNeed).coerceIn(0f, 1f))
+                                .height(6.dp).clip(RoundedCornerShape(3.dp)).background(HikariPrimary)
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                MergeModeCard(
+                    emoji = "🍉", title = "Klassisch",
+                    desc = "Stapeln, mergen, überleben — bis zur Wassermelone.",
+                    info = "Rekord: $highscore",
+                    highlighted = lastMode == MergeMode.CLASSIC,
+                    onClick = { onPlay(MergeMode.CLASSIC) },
+                )
+                Spacer(Modifier.height(10.dp))
+                MergeModeCard(
+                    emoji = "🧘", title = "Zen",
+                    desc = "Kein Game Over, kein Druck. Einfach mergen und entspannen.",
+                    info = "Gespielt: ${mergeFmtDuration(zenSecs)}",
+                    highlighted = lastMode == MergeMode.ZEN,
+                    onClick = { onPlay(MergeMode.ZEN) },
+                )
+                Spacer(Modifier.height(10.dp))
+                MergeModeCard(
+                    emoji = "🗺️", title = "Herausforderung",
+                    desc = "15 Level mit eigenen Behältern, Pins und Zielen.",
+                    info = "★ $starSum/45 · Level $levelsDone/15",
+                    highlighted = lastMode == MergeMode.CHALLENGE,
+                    onClick = { onPlay(MergeMode.CHALLENGE) },
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(10.dp)) {
+                    MergeSmallNavButton("📊 Statistiken", Modifier.weight(1f), onStats)
+                    MergeSmallNavButton("🏆 Erfolge", Modifier.weight(1f), onAchievements)
+                }
+                Spacer(Modifier.height(24.dp))
+            }
+        }
+
+        if (showSettings) {
+            MergeSettingsOverlay(prefs = prefs, onClose = { showSettings = false })
+        }
+    }
+}
+
+@Composable
+private fun MergeModeCard(
+    emoji: String,
+    title: String,
+    desc: String,
+    info: String,
+    highlighted: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(HikariCardBg)
+            .then(
+                if (highlighted) Modifier.border(1.5.dp, HikariPrimary.copy(alpha = 0.6f), RoundedCornerShape(16.dp))
+                else Modifier
+            )
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(emoji, fontSize = 26.sp)
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(title, fontSize = 16.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                if (highlighted) {
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "Zuletzt gespielt",
+                        fontSize = 10.sp,
+                        color = HikariPrimary,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(HikariAmberSoft)
+                            .padding(horizontal = 7.dp, vertical = 2.dp),
+                    )
+                }
+            }
+            Spacer(Modifier.height(3.dp))
+            Text(desc, fontSize = 12.sp, color = HikariTextMuted)
+            Spacer(Modifier.height(5.dp))
+            Text(info, fontSize = 11.sp, color = HikariTextFaint)
+        }
+        Text("▶", fontSize = 16.sp, color = HikariPrimary)
+    }
+}
+
+@Composable
+private fun MergeSmallNavButton(label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Box(
+        modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(HikariCardBg)
+            .clickable(onClick = onClick)
+            .padding(vertical = 13.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(label, fontSize = 13.sp, color = HikariText, fontWeight = FontWeight.Medium)
+    }
+}
+
+@Composable
+private fun MergeSettingsOverlay(prefs: SharedPreferences, onClose: () -> Unit) {
+    var haptics by remember { mutableStateOf(prefs.getBoolean("fruitmerge_haptics", true)) }
+    var fxReduced by remember { mutableStateOf(prefs.getBoolean("fruitmerge_fx_reduced", false)) }
+    val playtime = remember { prefs.getLong("fruitmerge_playtime", 0L) }
+
+    Box(
+        Modifier.fillMaxSize().background(Color(0xCC000000)).clickable(onClick = onClose),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            Modifier
+                .padding(horizontal = 32.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(HikariCardBg)
+                .clickable(enabled = false) {}
+                .padding(22.dp),
+        ) {
+            Text("Einstellungen", fontSize = 18.sp, color = HikariText, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(14.dp))
+            MergeToggleRow("Haptik", haptics) {
+                haptics = it
+                prefs.edit().putBoolean("fruitmerge_haptics", it).apply()
+            }
+            MergeToggleRow("Reduzierte Effekte", fxReduced) {
+                fxReduced = it
+                prefs.edit().putBoolean("fruitmerge_fx_reduced", it).apply()
+            }
+            Spacer(Modifier.height(10.dp))
+            Text("Gesamtspielzeit: ${mergeFmtDuration(playtime)}", fontSize = 12.sp, color = HikariTextMuted)
+            Spacer(Modifier.height(16.dp))
+            Button(
+                onClick = onClose,
+                colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Fertig", color = Color.Black, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun MergeToggleRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        Arrangement.SpaceBetween,
+        Alignment.CenterVertically,
+    ) {
+        Text(label, fontSize = 14.sp, color = HikariText)
+        Switch(
+            checked = checked,
+            onCheckedChange = onChange,
+            colors = SwitchDefaults.colors(checkedTrackColor = HikariPrimary),
+        )
+    }
+}
+
+// ————— Level-Auswahl —————
+
+@Composable
+private fun MergeLevelSelectScreen(
+    prefs: SharedPreferences,
+    onBack: () -> Unit,
+    onPick: (Int) -> Unit,
+) {
+    BackHandler { onBack() }
+    val stars = remember { mergeLoadStars(prefs) }
+
+    Column(Modifier.fillMaxSize().background(HikariBg).verticalScroll(rememberScrollState())) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
+            Arrangement.SpaceBetween,
+            Alignment.CenterVertically,
+        ) {
+            TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
+            Text("Herausforderung", fontSize = 16.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+            Text(
+                "★ ${stars.sum()}/45",
+                fontSize = 13.sp,
+                color = HikariTextMuted,
+                modifier = Modifier.padding(end = 16.dp),
+            )
+        }
+
+        Column(Modifier.padding(horizontal = 16.dp)) {
+            for (row in 0 until 5) {
+                Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(10.dp)) {
+                    for (col in 0 until 3) {
+                        val idx = row * 3 + col
+                        val def = MergeLevels[idx]
+                        val unlocked = idx == 0 || stars[idx - 1] > 0
+                        Column(
+                            Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(HikariCardBg)
+                                .alpha(if (unlocked) 1f else 0.45f)
+                                .clickable(enabled = unlocked) { onPick(idx) }
+                                .padding(vertical = 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Text(
+                                if (unlocked) "${idx + 1}" else "🔒",
+                                fontSize = 19.sp,
+                                color = if (unlocked) HikariText else HikariTextFaint,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(def.title, fontSize = 9.sp, color = HikariTextMuted, maxLines = 1)
+                            Spacer(Modifier.height(3.dp))
+                            Text(
+                                "★".repeat(stars[idx]) + "☆".repeat(3 - stars[idx]),
+                                fontSize = 11.sp,
+                                color = if (stars[idx] > 0) HikariPrimary else HikariTextFaint,
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+            }
+            Text(
+                "Gewinne mindestens 1 Stern, um das nächste Level freizuschalten.",
+                fontSize = 11.sp,
+                color = HikariTextFaint,
+                modifier = Modifier.padding(vertical = 6.dp),
+            )
+            Spacer(Modifier.height(20.dp))
+        }
+    }
+}
+
+// ————— Statistiken —————
+
+@Composable
+private fun MergeStatsScreen(prefs: SharedPreferences, onBack: () -> Unit) {
+    BackHandler { onBack() }
+    val xp = remember { prefs.getInt("fruitmerge_xp", 0) }
+    val (lvl, xpIn, xpNeed) = mergeLevelInfo(xp)
+    val top5 = remember { mergeLoadTop5(prefs) }
+    val fmt = remember { DateTimeFormatter.ofPattern("dd.MM.yy") }
+
+    Column(Modifier.fillMaxSize().background(HikariBg).verticalScroll(rememberScrollState())) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
+            Arrangement.SpaceBetween,
+            Alignment.CenterVertically,
+        ) {
+            TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
+            Text("Statistiken", fontSize = 16.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.width(60.dp))
+        }
+
+        Column(Modifier.padding(horizontal = 20.dp)) {
+            MergeStatRow("Spielerstufe", "$lvl  ($xpIn/$xpNeed XP)")
+            MergeStatRow("Runden gespielt", "${prefs.getInt("fruitmerge_games", 0)}")
+            MergeStatRow("Rekord (Klassik)", "${prefs.getInt("fruitmerge_highscore", 0)}")
+            val bf = prefs.getInt("fruitmerge_fruit_best", 0)
+            MergeStatRow("Höchste Frucht", if (bf > 0 || prefs.getInt("fruitmerge_games", 0) > 0) "${MergeEmoji[bf]} ${MergeNames[bf]}" else "—")
+            MergeStatRow("Beste Kette", "×${prefs.getInt("fruitmerge_chain_best", 0)}")
+            MergeStatRow("Meiste Merges (Runde)", "${prefs.getInt("fruitmerge_merges_best", 0)}")
+            MergeStatRow("Merges gesamt", "${prefs.getInt("fruitmerge_merges_total", 0)}")
+            MergeStatRow("Spielzeit gesamt", mergeFmtDuration(prefs.getLong("fruitmerge_playtime", 0L)))
+            MergeStatRow("Zen-Zeit", mergeFmtDuration(prefs.getLong("fruitmerge_zen_secs", 0L)))
+            MergeStatRow("Challenge-Sterne", "★ ${mergeLoadStars(prefs).sum()}/45")
+
+            Spacer(Modifier.height(18.dp))
+            Text("Top 5 (Klassik)", fontSize = 15.sp, color = HikariText, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            if (top5.isEmpty()) {
+                Text("Noch keine Runden gespielt.", fontSize = 12.sp, color = HikariTextFaint)
+            } else {
+                top5.forEachIndexed { i, (s, day) ->
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        Arrangement.SpaceBetween,
+                    ) {
+                        Text("${i + 1}.  $s", fontSize = 14.sp, color = if (i == 0) HikariPrimary else HikariText)
+                        Text(LocalDate.ofEpochDay(day).format(fmt), fontSize = 12.sp, color = HikariTextMuted)
+                    }
+                }
+            }
+            Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun MergeStatRow(label: String, value: String) {
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 5.dp),
+        Arrangement.SpaceBetween,
+    ) {
+        Text(label, fontSize = 13.sp, color = HikariTextMuted)
+        Text(value, fontSize = 13.sp, color = HikariText, fontWeight = FontWeight.Medium)
+    }
+}
+
+// ————— Erfolge —————
+
+@Composable
+private fun MergeAchievementsScreen(prefs: SharedPreferences, onBack: () -> Unit) {
+    BackHandler { onBack() }
+    val mask = remember { prefs.getInt("fruitmerge_ach", 0) }
+    val unlockedCount = MergeAchievements.count { mask and (1 shl it.bit) != 0 }
+
+    Column(Modifier.fillMaxSize().background(HikariBg).verticalScroll(rememberScrollState())) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
+            Arrangement.SpaceBetween,
+            Alignment.CenterVertically,
+        ) {
+            TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
+            Text("Erfolge", fontSize = 16.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+            Text(
+                "$unlockedCount/${MergeAchievements.size}",
+                fontSize = 13.sp,
+                color = HikariTextMuted,
+                modifier = Modifier.padding(end = 16.dp),
+            )
+        }
+
+        Column(Modifier.padding(horizontal = 16.dp)) {
+            for (ach in MergeAchievements) {
+                val unlocked = mask and (1 shl ach.bit) != 0
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(HikariCardBg)
+                        .alpha(if (unlocked) 1f else 0.5f)
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(if (unlocked) ach.emoji else "🔒", fontSize = 22.sp)
+                    Spacer(Modifier.width(14.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(ach.title, fontSize = 14.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                        Text(ach.desc, fontSize = 11.sp, color = HikariTextMuted)
+                    }
+                    if (unlocked) Text("✓", fontSize = 16.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+                }
+            }
+            Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+// ————— Spiel —————
+
+@Composable
+private fun MergePlayScreen(
+    mode: MergeMode,
+    levelIdx: Int,
+    onMenu: () -> Unit,
+    onNextLevel: () -> Unit,
+) {
+    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val prefs = remember { context.getSharedPreferences("hikari_games", Context.MODE_PRIVATE) }
+    val def = if (mode == MergeMode.CHALLENGE) MergeLevels[levelIdx.coerceIn(0, MergeLevels.size - 1)] else null
+    val dropLimited = def != null && (def.type == MergeGoalType.FRUIT_DROPS || def.type == MergeGoalType.SCORE_DROPS)
+    val powerAllowed = def == null || def.type != MergeGoalType.SCORE_CLEAN
 
+    // Einstellungen
+    var hapticsOn by remember { mutableStateOf(prefs.getBoolean("fruitmerge_haptics", true)) }
+    var fxReduced by remember { mutableStateOf(prefs.getBoolean("fruitmerge_fx_reduced", false)) }
+
+    // Runden-Zustand
     var score by remember { mutableStateOf(0) }
+    var shownScore by remember { mutableStateOf(0) }
     var highscore by remember { mutableStateOf(prefs.getInt("fruitmerge_highscore", 0)) }
-    var nextLevel by remember { mutableStateOf(Random.nextInt(5)) }
-    var gameOver by remember { mutableStateOf(false) }
+    var next1 by remember { mutableStateOf(mergeRollDrop()) }
+    var next2 by remember { mutableStateOf(mergeRollDrop()) }
+    var over by remember { mutableStateOf(false) }
+    var won by remember { mutableStateOf(false) }
     var newRecord by remember { mutableStateOf(false) }
+    var recordShown by remember { mutableStateOf(false) }
+    var recordBanner by remember { mutableStateOf(false) }
+    var paused by remember { mutableStateOf(false) }
+    var confirmRestart by remember { mutableStateOf(false) }
+    var statsFlushed by remember { mutableStateOf(false) }
+    var stars by remember { mutableStateOf(0) }
+    var failReason by remember { mutableStateOf("") }
+    var levelUpTo by remember { mutableStateOf(0) }
+    var milestone by remember { mutableStateOf<Pair<Int, String>?>(null) }
+    var reachedMask by remember { mutableStateOf(0) }
+    var fruitMask by remember { mutableStateOf(prefs.getInt("fruitmerge_fruitmask", 0)) }
+    var achMask by remember { mutableStateOf(prefs.getInt("fruitmerge_ach", 0)) }
+    val achToasts = remember { mutableStateListOf<MergeAchievement>() }
+    var showHelp by remember { mutableStateOf(!prefs.getBoolean("fruitmerge_help_seen", false)) }
+    var namesPopup by remember { mutableStateOf<String?>(null) }
+    var shakeCh by remember { mutableStateOf(0) }
+    var popCh by remember { mutableStateOf(0) }
+    var zenSecs by remember { mutableStateOf(0) }
+    var timeLeft by remember { mutableStateOf(def?.limit ?: 0) }
+    var dropsState by remember { mutableStateOf(0) }
+    var mergesState by remember { mutableStateOf(0) }
     var restartKey by remember { mutableStateOf(0) }
     var tick by remember { mutableStateOf(0L) }
 
@@ -125,35 +806,184 @@ fun FruitMergeGame(onBack: () -> Unit) {
     val emojiPaint = remember { Paint().apply { textAlign = Paint.Align.CENTER; isAntiAlias = true } }
     val popPaint = remember { Paint().apply { textAlign = Paint.Align.CENTER; isAntiAlias = true; isFakeBoldText = true } }
 
+    fun buzz(type: HapticFeedbackType) {
+        if (hapticsOn) haptic.performHapticFeedback(type)
+    }
+
+    fun unlockAch(idx: Int) {
+        val bit = 1 shl idx
+        if (achMask and bit != 0) return
+        achMask = achMask or bit
+        prefs.edit().putInt("fruitmerge_ach", achMask).apply()
+        achToasts.add(MergeAchievements.first { it.bit == idx })
+        buzz(HapticFeedbackType.LongPress)
+    }
+
+    fun noteFruit(lvl: Int) {
+        reachedMask = reachedMask or (1 shl lvl)
+        if (fruitMask and (1 shl lvl) == 0) {
+            fruitMask = fruitMask or (1 shl lvl)
+            prefs.edit().putInt("fruitmerge_fruitmask", fruitMask).apply()
+        }
+        if (fruitMask == 0x3FF) unlockAch(MergeAchSammler)
+        if (lvl > world.bestFruit) world.bestFruit = lvl
+    }
+
+    fun flushRound(starsEarned: Int) {
+        if (statsFlushed) return
+        statsFlushed = true
+        val e = prefs.edit()
+        val games = prefs.getInt("fruitmerge_games", 0) + 1
+        e.putInt("fruitmerge_games", games)
+        e.putInt("fruitmerge_merges_total", prefs.getInt("fruitmerge_merges_total", 0) + world.mergesRound)
+        if (world.mergesRound > prefs.getInt("fruitmerge_merges_best", 0)) e.putInt("fruitmerge_merges_best", world.mergesRound)
+        if (world.longestChain > prefs.getInt("fruitmerge_chain_best", 0)) e.putInt("fruitmerge_chain_best", world.longestChain)
+        if (world.bestFruit > prefs.getInt("fruitmerge_fruit_best", 0)) e.putInt("fruitmerge_fruit_best", world.bestFruit)
+        e.putLong("fruitmerge_playtime", prefs.getLong("fruitmerge_playtime", 0L) + world.time.toLong())
+        var zenTotal = prefs.getLong("fruitmerge_zen_secs", 0L)
+        if (mode == MergeMode.ZEN) {
+            zenTotal += world.time.toLong()
+            e.putLong("fruitmerge_zen_secs", zenTotal)
+        }
+        val xpBefore = prefs.getInt("fruitmerge_xp", 0)
+        val gain = when (mode) {
+            MergeMode.CLASSIC -> score / 10
+            MergeMode.ZEN -> score / 20
+            MergeMode.CHALLENGE -> 25 * starsEarned
+        }
+        val xpAfter = xpBefore + gain
+        e.putInt("fruitmerge_xp", xpAfter)
+        if (mode == MergeMode.CLASSIC && score > 0) {
+            val list = mergeLoadTop5(prefs).toMutableList()
+            list.add(score to LocalDate.now().toEpochDay())
+            list.sortByDescending { it.first }
+            while (list.size > 5) list.removeAt(list.size - 1)
+            e.putString("fruitmerge_top5", list.joinToString(";") { "${it.first}:${it.second}" })
+        }
+        e.apply()
+        if (mergeLevelInfo(xpAfter).first > mergeLevelInfo(xpBefore).first) levelUpTo = mergeLevelInfo(xpAfter).first
+        if (games >= 10) unlockAch(MergeAchRunden)
+        if (mode == MergeMode.ZEN && zenTotal >= 600L) unlockAch(MergeAchZen)
+    }
+
     fun finishGame() {
+        if (over || won) return
         if (score > highscore) {
             highscore = score
             newRecord = true
             prefs.edit().putInt("fruitmerge_highscore", score).apply()
         }
-        gameOver = true
-        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        flushRound(0)
+        shownScore = score
+        over = true
+        buzz(HapticFeedbackType.LongPress)
     }
 
-    fun restart() {
+    fun winLevel() {
+        if (over || won || def == null) return
+        stars = mergeStarsFor(def, world.drops, world.time)
+        val cur = mergeLoadStars(prefs)
+        if (stars > cur[levelIdx]) {
+            cur[levelIdx] = stars
+            mergeSaveStars(prefs, cur)
+        }
+        if (levelIdx >= 4) unlockAch(MergeAchChal)
+        flushRound(stars)
+        shownScore = score
+        won = true
+        buzz(HapticFeedbackType.LongPress)
+    }
+
+    fun failLevel(reason: String) {
+        if (over || won) return
+        failReason = reason
+        flushRound(0)
+        shownScore = score
+        over = true
+        buzz(HapticFeedbackType.LongPress)
+    }
+
+    fun zenRelease() {
+        val victims = world.fruits.sortedByDescending { it.y }.take(5)
+        for (v in victims) {
+            world.fruits.remove(v)
+            if (!fxReduced) {
+                repeat(6) {
+                    val ang = Random.nextFloat() * 2f * PI.toFloat()
+                    val spd = (120f + Random.nextFloat() * 200f) * world.scale
+                    world.sparks.add(
+                        MergeSpark(
+                            v.x, v.y, cos(ang) * spd, sin(ang) * spd - 80f * world.scale,
+                            0.4f + Random.nextFloat() * 0.3f, 0.7f,
+                            Color.White.copy(alpha = 0.7f),
+                            (3f + Random.nextFloat() * 4f) * world.scale,
+                        )
+                    )
+                }
+            }
+        }
+        world.pops.add(MergeTextPop(world.w / 2f, world.limitY + 60f * world.scale, "Sanft gelöst ✨", 1.2f))
+        for (f in world.fruits) f.overTime = 0f
+        buzz(HapticFeedbackType.TextHandleMove)
+    }
+
+    fun resetRound() {
         world.fruits.clear()
         world.sparks.clear()
         world.pops.clear()
-        world.currentLevel = Random.nextInt(5)
+        world.chain = 0
+        world.chainTimer = 0f
+        world.longestChain = 0
+        world.mergesForShake = 0
+        world.mergesForPop = 0
+        world.shakeCharges = 0
+        world.popCharges = 0
+        world.shakeVis = 0f
+        world.usedShake = false
+        world.usedPop = false
+        world.mergesRound = 0
+        world.drops = 0
+        world.bestFruit = 0
+        world.milestones.fill(false)
+        world.fillLevel = 0f
+        world.graceTimer = -1f
+        world.current = MergeHandNone
         world.cooldown = 0f
         world.warn = 0f
-        if (world.initialized) world.aimX = world.w / 2f
-        nextLevel = Random.nextInt(5)
+        world.time = 0f
+        world.initialized = false
+        next1 = mergeRollDrop()
+        next2 = mergeRollDrop()
         score = 0
+        shownScore = 0
+        over = false
+        won = false
         newRecord = false
-        gameOver = false
+        recordShown = false
+        recordBanner = false
+        statsFlushed = false
+        stars = 0
+        failReason = ""
+        levelUpTo = 0
+        milestone = null
+        reachedMask = 0
+        shakeCh = 0
+        popCh = 0
+        zenSecs = 0
+        timeLeft = def?.limit ?: 0
+        dropsState = 0
+        mergesState = 0
+        paused = false
         restartKey++
     }
 
     fun dropFruit() {
-        if (gameOver || !world.initialized || world.currentLevel < 0) return
-        val lvl = world.currentLevel
-        val r = world.radii[lvl]
+        if (over || won || paused || showHelp || !world.initialized) return
+        val cur = world.current
+        if (cur == MergeHandNone) return
+        val rainbow = cur == MergeHandRainbow
+        val lvl = if (rainbow) 0 else cur
+        val r = if (rainbow) world.radii[1] else world.radii[lvl]
         world.fruits.add(
             MergeFruit(
                 x = world.aimX.coerceIn(world.left + r + 2f, world.right - r - 2f),
@@ -162,32 +992,145 @@ fun FruitMergeGame(onBack: () -> Unit) {
                 vy = 180f * world.scale,
                 level = lvl,
                 r = r,
+                rainbow = rainbow,
             )
         )
-        world.currentLevel = -1
-        world.cooldown = 0.6f
-        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        if (!rainbow) noteFruit(lvl)
+        world.drops++
+        dropsState = world.drops
+        world.current = MergeHandNone
+        world.cooldown = 0.55f
+        buzz(HapticFeedbackType.TextHandleMove)
+    }
+
+    fun doShake() {
+        if (world.shakeCharges <= 0 || over || won || paused || !powerAllowed) return
+        world.shakeCharges--
+        shakeCh = world.shakeCharges
+        world.usedShake = true
+        world.shakeVis = 0.6f
+        for (f in world.fruits) {
+            f.vx += (if (Random.nextBoolean()) 1f else -1f) * (350f + Random.nextFloat() * 350f) * world.scale
+            f.vy -= (120f + Random.nextFloat() * 180f) * world.scale
+        }
+        buzz(HapticFeedbackType.LongPress)
+        if (world.usedShake && world.usedPop) unlockAch(MergeAchPower)
+    }
+
+    fun doPop() {
+        if (world.popCharges <= 0 || over || won || paused || !powerAllowed) return
+        val target = world.fruits.filter { !it.rainbow }.minByOrNull { it.level } ?: return
+        world.fruits.remove(target)
+        world.popCharges--
+        popCh = world.popCharges
+        world.usedPop = true
+        if (!fxReduced) {
+            repeat(10) {
+                val ang = Random.nextFloat() * 2f * PI.toFloat()
+                val spd = (140f + Random.nextFloat() * 260f) * world.scale
+                world.sparks.add(
+                    MergeSpark(
+                        target.x, target.y, cos(ang) * spd, sin(ang) * spd,
+                        0.3f + Random.nextFloat() * 0.25f, 0.55f,
+                        MergeColors[target.level],
+                        (3f + Random.nextFloat() * 4f) * world.scale,
+                    )
+                )
+            }
+        }
+        world.pops.add(MergeTextPop(target.x, target.y, "Pop!", 0.7f))
+        buzz(HapticFeedbackType.TextHandleMove)
+        if (world.usedShake && world.usedPop) unlockAch(MergeAchPower)
+    }
+
+    // System-Back: pausiert im Spiel, verlässt aus Overlays
+    BackHandler {
+        when {
+            showHelp -> {
+                showHelp = false
+                prefs.edit().putBoolean("fruitmerge_help_seen", true).apply()
+            }
+            over || won -> onMenu()
+            else -> paused = !paused
+        }
+    }
+
+    // Auto-Pause bei App-Wechsel + Stats-Flush beim Verlassen
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val obs = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE && !over && !won) paused = true
+        }
+        lifecycleOwner.lifecycle.addObserver(obs)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(obs)
+            if (!statsFlushed && world.time > 5f) flushRound(0)
+        }
+    }
+
+    // Banner-Timer
+    LaunchedEffect(milestone) {
+        if (milestone != null) {
+            delay(2200)
+            milestone = null
+        }
+    }
+    LaunchedEffect(recordBanner) {
+        if (recordBanner) {
+            delay(2500)
+            recordBanner = false
+        }
+    }
+    LaunchedEffect(achToasts.firstOrNull()) {
+        if (achToasts.isNotEmpty()) {
+            delay(2400)
+            if (achToasts.isNotEmpty()) achToasts.removeAt(0)
+        }
+    }
+    LaunchedEffect(namesPopup) {
+        if (namesPopup != null) {
+            delay(2600)
+            namesPopup = null
+        }
     }
 
     // Game-Loop mit fixem Substep
-    LaunchedEffect(restartKey, gameOver) {
-        if (gameOver) return@LaunchedEffect
+    LaunchedEffect(restartKey) {
         var last = 0L
         while (true) {
             withFrameNanos { now ->
                 val dt = if (last == 0L) 0f else min((now - last) / 1_000_000_000f, 0.032f)
                 last = now
-                if (dt > 0f && world.initialized && !gameOver) {
+                val running = dt > 0f && world.initialized && !over && !won && !paused && !showHelp
+                if (running) {
                     val sc = world.scale
                     val g = 2000f * sc
                     world.time += dt
+                    if (mode == MergeMode.ZEN) {
+                        val s = world.time.toInt()
+                        if (s != zenSecs) zenSecs = s
+                    }
 
-                    // Nachschub nach Cooldown
-                    if (world.currentLevel < 0) {
+                    // Score-Count-up
+                    if (shownScore < score) {
+                        shownScore = min(score, shownScore + max(1, ((score - shownScore) * 0.18f).toInt()))
+                    }
+
+                    // Ketten-Countdown
+                    if (world.chainTimer > 0f) {
+                        world.chainTimer -= dt
+                        if (world.chainTimer <= 0f) world.chain = 0
+                    }
+                    if (world.shakeVis > 0f) world.shakeVis = max(0f, world.shakeVis - dt)
+
+                    // Nachschub nach Cooldown (bei Drop-Limit versiegt die Hand)
+                    if (world.current == MergeHandNone) {
                         world.cooldown -= dt
-                        if (world.cooldown <= 0f) {
-                            world.currentLevel = nextLevel
-                            nextLevel = Random.nextInt(5)
+                        val capped = dropLimited && def != null && world.drops >= def.limit
+                        if (world.cooldown <= 0f && !capped) {
+                            world.current = next1
+                            next1 = next2
+                            next2 = mergeRollDrop()
                         }
                     }
 
@@ -196,13 +1139,11 @@ fun FruitMergeGame(onBack: () -> Unit) {
                     val sub = 4
                     val hstep = dt / sub
                     repeat(sub) {
-                        // Integration
                         for (f in fruits) {
                             f.vy += g * hstep
                             f.x += f.vx * hstep
                             f.y += f.vy * hstep
                         }
-                        // Kollisionen (2 Iterationen)
                         repeat(2) {
                             for (i in 0 until fruits.size) {
                                 val a = fruits[i]
@@ -226,7 +1167,6 @@ fun FruitMergeGame(onBack: () -> Unit) {
                                         a.y -= ny * corr * wa
                                         b.x += nx * corr * wb
                                         b.y += ny * corr * wb
-                                        // Impuls entlang der Normalen
                                         val rvx = b.vx - a.vx
                                         val rvy = b.vy - a.vy
                                         val vn = rvx * nx + rvy * ny
@@ -237,7 +1177,6 @@ fun FruitMergeGame(onBack: () -> Unit) {
                                             a.vy -= ny * jn / ma
                                             b.vx += nx * jn / mb
                                             b.vy += ny * jn / mb
-                                            // leichte Reibung tangential
                                             val tx = -ny
                                             val ty = nx
                                             val vt = rvx * tx + rvy * ty
@@ -246,6 +1185,27 @@ fun FruitMergeGame(onBack: () -> Unit) {
                                             a.vy -= ty * jt / ma
                                             b.vx += tx * jt / mb
                                             b.vy += ty * jt / mb
+                                        }
+                                    }
+                                }
+                            }
+                            // Pins (Challenge-Maps): feste Kreise
+                            for (f in fruits) {
+                                for (p in world.pins) {
+                                    val dx = f.x - p.x
+                                    val dy = f.y - p.y
+                                    val rs = f.r + p.r
+                                    val d2 = dx * dx + dy * dy
+                                    if (d2 < rs * rs && d2 > 0.0001f) {
+                                        val d = sqrt(d2)
+                                        val nx = dx / d
+                                        val ny = dy / d
+                                        f.x = p.x + nx * rs
+                                        f.y = p.y + ny * rs
+                                        val vn = f.vx * nx + f.vy * ny
+                                        if (vn < 0f) {
+                                            f.vx -= nx * vn * 1.15f
+                                            f.vy -= ny * vn * 1.15f
                                         }
                                     }
                                 }
@@ -266,7 +1226,7 @@ fun FruitMergeGame(onBack: () -> Unit) {
                         }
                     }
 
-                    // Ruhige Stapel beruhigen (kein Zittern)
+                    // Ruhige Stapel beruhigen
                     for (f in fruits) {
                         val sp = abs(f.vx) + abs(f.vy)
                         if (sp < 30f * sc) {
@@ -283,22 +1243,63 @@ fun FruitMergeGame(onBack: () -> Unit) {
                         var j = i + 1
                         while (j < fruits.size) {
                             val b = fruits[j]
-                            if (a.level == b.level) {
+                            val anyRainbow = a.rainbow || b.rainbow
+                            val match = anyRainbow || a.level == b.level
+                            if (match) {
                                 val dx = b.x - a.x
                                 val dy = b.y - a.y
                                 val rs = a.r + b.r + 2f * sc
                                 if (dx * dx + dy * dy <= rs * rs) {
                                     val mx = (a.x + b.x) / 2f
                                     val my = (a.y + b.y) / 2f
+                                    // Basis-Stufe: Regenbogen übernimmt die Stufe des Partners
+                                    val baseLevel = when {
+                                        a.rainbow && b.rainbow -> 4
+                                        a.rainbow -> b.level
+                                        b.rainbow -> a.level
+                                        else -> a.level
+                                    }
                                     fruits.removeAt(j)
                                     fruits.removeAt(i)
-                                    if (a.level >= 9) {
+                                    world.mergesRound += 1
+                                    mergesState = world.mergesRound
+                                    if (anyRainbow) unlockAch(MergeAchRainbow)
+
+                                    // Ketten-Combo
+                                    if (world.chainTimer > 0f) world.chain += 1 else world.chain = 1
+                                    world.chainTimer = 2f
+                                    if (world.chain > world.longestChain) world.longestChain = world.chain
+                                    if (world.chain >= 5) unlockAch(MergeAchKette)
+                                    val mult = if (world.chain >= 4) 3 else if (world.chain >= 2) 2 else 1
+
+                                    // Power-up-Aufladung
+                                    if (world.shakeCharges < 2) {
+                                        world.mergesForShake += 1
+                                        if (world.mergesForShake >= 15) {
+                                            world.mergesForShake = 0
+                                            world.shakeCharges += 1
+                                            shakeCh = world.shakeCharges
+                                        }
+                                    }
+                                    if (world.popCharges < 2) {
+                                        world.mergesForPop += 1
+                                        if (world.mergesForPop >= 20) {
+                                            world.mergesForPop = 0
+                                            world.popCharges += 1
+                                            popCh = world.popCharges
+                                        }
+                                    }
+
+                                    if (baseLevel >= 9) {
                                         // 🍉 + 🍉 → Feuerwerk + Bonus
-                                        score += 500
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        world.pops.add(MergeTextPop(mx, my - 40f * sc, "+500 Bonus!", 1.6f))
+                                        val pts = 500 * mult
+                                        score += pts
+                                        unlockAch(MergeAchFeuerwerk)
+                                        buzz(HapticFeedbackType.LongPress)
+                                        world.pops.add(MergeTextPop(mx, my - 40f * sc, "+$pts Bonus!", 1.6f, sizeMul = 1.4f))
                                         val fwColors = listOf(HikariAmber, Color(0xFFFF7043), Color(0xFF66BB6A), Color.White, Color(0xFFEF5350))
-                                        repeat(42) {
+                                        val n = if (fxReduced) 10 else 42
+                                        repeat(n) {
                                             val ang = Random.nextFloat() * 2f * PI.toFloat()
                                             val spd = (300f + Random.nextFloat() * 650f) * sc
                                             world.sparks.add(
@@ -312,10 +1313,10 @@ fun FruitMergeGame(onBack: () -> Unit) {
                                             )
                                         }
                                     } else {
-                                        val nl = a.level + 1
-                                        val pts = (nl + 1) * 10
+                                        val nl = baseLevel + 1
+                                        val pts = (nl + 1) * 10 * mult
                                         score += pts
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        buzz(HapticFeedbackType.TextHandleMove)
                                         fruits.add(
                                             MergeFruit(
                                                 mx, my,
@@ -325,19 +1326,59 @@ fun FruitMergeGame(onBack: () -> Unit) {
                                                 pop = 0f,
                                             )
                                         )
-                                        world.pops.add(MergeTextPop(mx, my - world.radii[nl] - 18f * sc, "+$pts", 0.8f))
-                                        repeat(7) {
-                                            val ang = Random.nextFloat() * 2f * PI.toFloat()
-                                            val spd = (140f + Random.nextFloat() * 260f) * sc
-                                            world.sparks.add(
-                                                MergeSpark(
-                                                    mx, my,
-                                                    cos(ang) * spd, sin(ang) * spd,
-                                                    0.3f + Random.nextFloat() * 0.25f, 0.55f,
-                                                    MergeColors[nl],
-                                                    (3f + Random.nextFloat() * 4f) * sc,
-                                                )
+                                        noteFruit(nl)
+                                        // Meilenstein: erste große Frucht dieser Runde
+                                        if (nl >= 6 && !world.milestones[nl]) {
+                                            world.milestones[nl] = true
+                                            val bonus = when (nl) { 6 -> 50; 7 -> 100; 8 -> 200; else -> 500 }
+                                            score += bonus
+                                            milestone = nl to "Erste ${MergeEmoji[nl]} ${MergeNames[nl]}! +$bonus"
+                                            if (nl == 9) unlockAch(MergeAchMelone)
+                                            if (!fxReduced) {
+                                                val fw = listOf(HikariAmber, Color.White, MergeColors[nl])
+                                                repeat(26) {
+                                                    val ang = Random.nextFloat() * 2f * PI.toFloat()
+                                                    val spd = (250f + Random.nextFloat() * 450f) * sc
+                                                    world.sparks.add(
+                                                        MergeSpark(
+                                                            mx, my,
+                                                            cos(ang) * spd, sin(ang) * spd - 120f * sc,
+                                                            0.5f + Random.nextFloat() * 0.4f, 0.9f,
+                                                            fw.random(),
+                                                            (3f + Random.nextFloat() * 5f) * sc,
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        world.pops.add(
+                                            MergeTextPop(
+                                                mx, my - world.radii[nl] - 18f * sc, "+$pts", 0.8f,
+                                                sizeMul = (1f + min(0.6f, pts / 300f)),
                                             )
+                                        )
+                                        if (!fxReduced) {
+                                            repeat(7) {
+                                                val ang = Random.nextFloat() * 2f * PI.toFloat()
+                                                val spd = (140f + Random.nextFloat() * 260f) * sc
+                                                world.sparks.add(
+                                                    MergeSpark(
+                                                        mx, my,
+                                                        cos(ang) * spd, sin(ang) * spd,
+                                                        0.3f + Random.nextFloat() * 0.25f, 0.55f,
+                                                        MergeColors[nl],
+                                                        (3f + Random.nextFloat() * 4f) * sc,
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    if (mode == MergeMode.CLASSIC) {
+                                        if (score >= 1000) unlockAch(MergeAchTausend)
+                                        if (!recordShown && highscore > 0 && score > highscore) {
+                                            recordShown = true
+                                            recordBanner = true
                                         }
                                     }
                                     continue@outer
@@ -348,7 +1389,15 @@ fun FruitMergeGame(onBack: () -> Unit) {
                         i++
                     }
 
-                    // Game Over: ruhende Frucht ragt >1.2s über die Limit-Linie
+                    // Füllstand (höchster ruhender Stapel relativ zur Limit-Linie)
+                    var minTop = world.bottom
+                    for (f in fruits) {
+                        if (abs(f.vx) + abs(f.vy) < 90f * sc) minTop = min(minTop, f.y - f.r)
+                    }
+                    val denom = (world.bottom - world.limitY).coerceAtLeast(1f)
+                    world.fillLevel = ((world.bottom - minTop) / denom).coerceIn(0f, 1f)
+
+                    // Überlauf: ruhende Frucht ragt >1.2s über die Limit-Linie
                     var anyOver = false
                     for (f in fruits) {
                         val slow = abs(f.vx) + abs(f.vy) < 60f * world.scale
@@ -356,7 +1405,11 @@ fun FruitMergeGame(onBack: () -> Unit) {
                             f.overTime += dt
                             if (f.overTime > 0.1f) anyOver = true
                             if (f.overTime > 1.2f) {
-                                finishGame()
+                                when (mode) {
+                                    MergeMode.CLASSIC -> finishGame()
+                                    MergeMode.CHALLENGE -> failLevel("Über die Limit-Linie gestapelt")
+                                    MergeMode.ZEN -> zenRelease()
+                                }
                                 break
                             }
                         } else {
@@ -364,6 +1417,26 @@ fun FruitMergeGame(onBack: () -> Unit) {
                         }
                     }
                     world.warn = if (anyOver) min(1f, world.warn + dt * 4f) else max(0f, world.warn - dt * 4f)
+
+                    // Challenge-Ziele prüfen
+                    if (mode == MergeMode.CHALLENGE && def != null && !won && !over) {
+                        when (def.type) {
+                            MergeGoalType.FRUIT_DROPS -> if (world.bestFruit >= def.target) winLevel()
+                            MergeGoalType.SCORE_DROPS -> if (score >= def.target) winLevel()
+                            MergeGoalType.SCORE_CLEAN -> if (score >= def.target) winLevel()
+                            MergeGoalType.MERGES_TIME -> {
+                                if (world.mergesRound >= def.target) winLevel()
+                                val tl = (def.limit - world.time).toInt().coerceAtLeast(0)
+                                if (tl != timeLeft) timeLeft = tl
+                                if (!won && world.time >= def.limit) failLevel("Zeit abgelaufen")
+                            }
+                        }
+                        if (!won && !over && dropLimited && world.drops >= def.limit && world.current == MergeHandNone) {
+                            if (world.graceTimer < 0f) world.graceTimer = 4f
+                            world.graceTimer -= dt
+                            if (world.graceTimer <= 0f) failLevel("Drops aufgebraucht")
+                        }
+                    }
 
                     // Partikel
                     val sit = world.sparks.iterator()
@@ -391,15 +1464,91 @@ fun FruitMergeGame(onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().background(HikariBg)) {
         // Header
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
             Arrangement.SpaceBetween,
             Alignment.CenterVertically,
         ) {
-            TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
-            Text("Fruit Merge", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            Column(horizontalAlignment = Alignment.End) {
-                Text("$score", fontSize = 16.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                Text("Rekord: $highscore", fontSize = 11.sp, color = HikariTextMuted)
+            TextButton(onClick = { if (over || won) onMenu() else paused = true }) {
+                Text(if (over || won) "← Menü" else "❚❚", color = HikariTextMuted, fontSize = 14.sp)
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    when (mode) {
+                        MergeMode.CLASSIC -> "Fruit Merge"
+                        MergeMode.ZEN -> "Zen 🧘"
+                        MergeMode.CHALLENGE -> "Level ${levelIdx + 1}: ${def?.title ?: ""}"
+                    },
+                    fontSize = 16.sp, color = HikariPrimary, fontWeight = FontWeight.Bold,
+                )
+                if (mode == MergeMode.ZEN) {
+                    Text(mergeFmtTime(zenSecs), fontSize = 11.sp, color = HikariTextMuted)
+                }
+            }
+            Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(end = 10.dp)) {
+                Text("$shownScore", fontSize = 16.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                when (mode) {
+                    MergeMode.CLASSIC -> Text(
+                        if (highscore > 0 && score < highscore) "Noch ${highscore - score} bis Rekord"
+                        else if (highscore > 0 && score >= highscore) "Rekord!"
+                        else "Erste Runde",
+                        fontSize = 10.sp,
+                        color = if (highscore in 1..score) HikariPrimary else HikariTextMuted,
+                    )
+                    MergeMode.ZEN -> Text("ohne Druck", fontSize = 10.sp, color = HikariTextFaint)
+                    MergeMode.CHALLENGE -> Text(
+                        if (def == null) "" else when (def.type) {
+                            MergeGoalType.MERGES_TIME -> "⏱ ${timeLeft}s · ${mergesState}/${def.target}"
+                            MergeGoalType.FRUIT_DROPS, MergeGoalType.SCORE_DROPS -> "Drops ${dropsState}/${def.limit}"
+                            MergeGoalType.SCORE_CLEAN -> "ohne Power-ups"
+                        },
+                        fontSize = 10.sp, color = HikariTextMuted,
+                    )
+                }
+            }
+        }
+
+        // Ziel- und Werkzeugleiste
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp),
+            Arrangement.SpaceBetween,
+            Alignment.CenterVertically,
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (powerAllowed) {
+                    MergePowerButton("🌀", shakeCh, enabled = shakeCh > 0) { doShake() }
+                    Spacer(Modifier.width(8.dp))
+                    MergePowerButton("💥", popCh, enabled = popCh > 0) { doPop() }
+                } else {
+                    Text("Power-ups gesperrt", fontSize = 10.sp, color = HikariTextFaint)
+                }
+                Spacer(Modifier.width(8.dp))
+                TextButton(onClick = { showHelp = true }, contentPadding = PaddingValues(0.dp)) {
+                    Text("?", fontSize = 15.sp, color = HikariTextMuted)
+                }
+            }
+            // Vorschau nächste zwei Früchte — antippbar für Namen
+            Row(
+                Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(HikariCardBg)
+                    .clickable {
+                        val handName = when (world.current) {
+                            MergeHandRainbow -> "🌈 Regenbogen"
+                            MergeHandNone -> "—"
+                            else -> "${MergeEmoji[world.current]} ${MergeNames[world.current]}"
+                        }
+                        val n1 = if (next1 == MergeHandRainbow) "🌈 Regenbogen" else "${MergeEmoji[next1]} ${MergeNames[next1]}"
+                        val n2 = if (next2 == MergeHandRainbow) "🌈 Regenbogen" else "${MergeEmoji[next2]} ${MergeNames[next2]}"
+                        namesPopup = "Hand: $handName\nDanach: $n1, $n2"
+                    }
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Nächste:", fontSize = 11.sp, color = HikariTextMuted)
+                Spacer(Modifier.width(5.dp))
+                Text(if (next1 == MergeHandRainbow) "🌈" else MergeEmoji[next1], fontSize = 18.sp)
+                Spacer(Modifier.width(3.dp))
+                Text(if (next2 == MergeHandRainbow) "🌈" else MergeEmoji[next2], fontSize = 13.sp, modifier = Modifier.alpha(0.6f))
             }
         }
 
@@ -407,16 +1556,16 @@ fun FruitMergeGame(onBack: () -> Unit) {
             Canvas(
                 Modifier
                     .fillMaxSize()
-                    .pointerInput(restartKey, gameOver) {
-                        if (gameOver) return@pointerInput
+                    .pointerInput(restartKey) {
                         awaitEachGesture {
                             val down = awaitFirstDown()
+                            if (over || won || paused || showHelp) return@awaitEachGesture
                             world.aimX = down.position.x
                             val completed = drag(down.id) { change ->
                                 world.aimX = change.position.x
                                 change.consume()
                             }
-                            if (completed) dropFruit()
+                            if (completed && !over && !won && !paused && !showHelp) dropFruit()
                         }
                     }
             ) {
@@ -432,76 +1581,192 @@ fun FruitMergeGame(onBack: () -> Unit) {
                         world.radii[k] = r
                         r *= 1.35f
                     }
-                    val margin = w * 0.035f
-                    world.left = margin
-                    world.right = w - margin
-                    world.bottom = h - margin
-                    world.top = h * 0.15f
+                    val geom = def?.geom ?: MergeGeom.NORMAL
+                    val marginX = when (geom) {
+                        MergeGeom.NORMAL -> w * 0.035f
+                        MergeGeom.NARROW -> w * 0.16f
+                        MergeGeom.WIDE -> w * 0.02f
+                    }
+                    world.left = marginX
+                    world.right = w - marginX
+                    world.bottom = h - w * 0.035f
+                    world.top = if (geom == MergeGeom.WIDE) h * 0.34f else h * 0.15f
                     world.limitY = world.top + h * 0.045f
                     world.hangY = world.top * 0.45f
+                    world.pins.clear()
+                    for ((fx, fy, rf) in def?.pins ?: emptyList()) {
+                        world.pins.add(
+                            MergePin(
+                                world.left + fx * (world.right - world.left),
+                                world.top + fy * (world.bottom - world.top),
+                                rf * w,
+                            )
+                        )
+                    }
                     if (world.aimX == 0f) world.aimX = w / 2f
-                    if (world.currentLevel < 0 && world.cooldown <= 0f) world.currentLevel = Random.nextInt(5)
                     world.initialized = true
                 }
                 val sc = world.scale
+                val zen = mode == MergeMode.ZEN
+
+                // Schüttel-Wackeln
+                val shakeOff = if (world.shakeVis > 0f) sin(world.time * 70f) * world.shakeVis * 12f * sc else 0f
 
                 // Behälter-Innenraum
                 drawRect(
-                    Color(0xFF111111),
-                    topLeft = Offset(world.left, world.top),
+                    if (zen) Color(0xFF171208) else Color(0xFF111111),
+                    topLeft = Offset(world.left + shakeOff, world.top),
                     size = Size(world.right - world.left, world.bottom - world.top),
                 )
+
+                // Pins
+                for (p in world.pins) {
+                    drawCircle(Color(0xFF3A3226), p.r, Offset(p.x + shakeOff, p.y))
+                    drawCircle(HikariAmber.copy(alpha = 0.7f), p.r, Offset(p.x + shakeOff, p.y), style = Stroke(max(2f, 3f * sc)))
+                    drawCircle(Color.White.copy(alpha = 0.12f), p.r * 0.45f, Offset(p.x + shakeOff - p.r * 0.2f, p.y - p.r * 0.25f))
+                }
 
                 // Limit-Linie (gestrichelt, pulsiert bei Gefahr)
                 val warnPulse = if (world.warn > 0f) (0.5f + 0.5f * sin(world.time * 10f)) * world.warn else 0f
                 val lineColor = lerp(HikariTextFaint, HikariDanger, min(1f, world.warn + warnPulse * 0.3f))
                 drawLine(
                     lineColor,
-                    Offset(world.left + 8f * sc, world.limitY),
-                    Offset(world.right - 8f * sc, world.limitY),
+                    Offset(world.left + 8f * sc + shakeOff, world.limitY),
+                    Offset(world.right - 8f * sc + shakeOff, world.limitY),
                     strokeWidth = max(2f, 3f * sc),
                     pathEffect = PathEffect.dashPathEffect(floatArrayOf(20f * sc, 14f * sc)),
                 )
 
-                // Ziel-Hilfslinie + aktuelle Frucht in der Drop-Zone
-                if (!gameOver && world.currentLevel >= 0) {
-                    val lvl = world.currentLevel
-                    val cr = world.radii[lvl]
+                // Ziel-Hilfslinie + Hand-Frucht (Landepunkt via vertikalem Ray)
+                if (!over && !won && world.current != MergeHandNone) {
+                    val cur = world.current
+                    val rainbow = cur == MergeHandRainbow
+                    val cr = if (rainbow) world.radii[1] else world.radii[cur]
                     val cx = world.aimX.coerceIn(world.left + cr + 2f, world.right - cr - 2f)
+                    var landY = world.bottom - cr
+                    for (f in world.fruits) {
+                        val dx = abs(f.x - cx)
+                        val rs = f.r + cr
+                        if (dx < rs) {
+                            val dy = sqrt(rs * rs - dx * dx)
+                            if (f.y - dy < landY) landY = f.y - dy
+                        }
+                    }
+                    for (p in world.pins) {
+                        val dx = abs(p.x - cx)
+                        val rs = p.r + cr
+                        if (dx < rs) {
+                            val dy = sqrt(rs * rs - dx * dx)
+                            if (p.y - dy < landY) landY = p.y - dy
+                        }
+                    }
+                    landY = max(landY, world.hangY)
                     drawLine(
-                        Color.White.copy(alpha = 0.07f),
+                        Color.White.copy(alpha = 0.09f),
                         Offset(cx, world.hangY + cr),
-                        Offset(cx, world.bottom - 4f),
+                        Offset(cx, landY),
                         strokeWidth = 2f,
                         pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f * sc, 12f * sc)),
                     )
-                    drawFruitBall(cx, world.hangY, cr, lvl, emojiPaint, sc)
+                    drawCircle(
+                        Color.White.copy(alpha = 0.14f),
+                        cr,
+                        Offset(cx, landY),
+                        style = Stroke(width = max(2f, 2.5f * sc), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f * sc, 8f * sc))),
+                    )
+                    if (rainbow) {
+                        drawMergeRainbow(cx, world.hangY, cr, world.time, emojiPaint, sc)
+                    } else {
+                        drawMergeFruitBall(cx, world.hangY, cr, cur, emojiPaint, sc)
+                    }
+                } else if (!over && !won && world.current == MergeHandNone && world.cooldown > 0f) {
+                    // Cooldown-Ring an der Hand-Position
+                    val rr = world.radii[1]
+                    val cx = world.aimX.coerceIn(world.left + rr, world.right - rr)
+                    val prog = 1f - (world.cooldown / 0.55f).coerceIn(0f, 1f)
+                    drawArc(
+                        HikariAmber.copy(alpha = 0.45f),
+                        startAngle = -90f,
+                        sweepAngle = prog * 360f,
+                        useCenter = false,
+                        topLeft = Offset(cx - rr, world.hangY - rr),
+                        size = Size(rr * 2f, rr * 2f),
+                        style = Stroke(width = max(2f, 3f * sc)),
+                    )
                 }
 
                 // Früchte
                 for (f in world.fruits) {
                     val popT = f.pop
                     val visR = f.r * (0.55f + 0.45f * popT) * (1f + 0.18f * sin(popT * PI.toFloat()))
-                    drawFruitBall(f.x, f.y, visR, f.level, emojiPaint, sc)
+                    if (f.rainbow) {
+                        drawMergeRainbow(f.x + shakeOff, f.y, visR, world.time, emojiPaint, sc)
+                    } else {
+                        drawMergeFruitBall(f.x + shakeOff, f.y, visR, f.level, emojiPaint, sc)
+                    }
                 }
 
                 // Behälter-Wände
                 val corner = 28f * sc
                 val wallPath = Path().apply {
-                    moveTo(world.left, world.top)
-                    lineTo(world.left, world.bottom - corner)
-                    quadraticBezierTo(world.left, world.bottom, world.left + corner, world.bottom)
-                    lineTo(world.right - corner, world.bottom)
-                    quadraticBezierTo(world.right, world.bottom, world.right, world.bottom - corner)
-                    lineTo(world.right, world.top)
+                    moveTo(world.left + shakeOff, world.top)
+                    lineTo(world.left + shakeOff, world.bottom - corner)
+                    quadraticBezierTo(world.left + shakeOff, world.bottom, world.left + corner + shakeOff, world.bottom)
+                    lineTo(world.right - corner + shakeOff, world.bottom)
+                    quadraticBezierTo(world.right + shakeOff, world.bottom, world.right + shakeOff, world.bottom - corner)
+                    lineTo(world.right + shakeOff, world.top)
                 }
                 drawPath(
                     wallPath,
-                    Color(0xFF3A3226),
+                    if (zen) Color(0xFF4A3A20) else Color(0xFF3A3226),
                     style = Stroke(width = max(6f, 8f * sc), cap = StrokeCap.Round),
                 )
 
-                // Funken / Feuerwerk
+                // Gefahren-Meter am rechten Behälterrand
+                val meterW = 7f * sc
+                val meterX = world.right - meterW - 6f * sc + shakeOff
+                drawRoundRect(
+                    HikariSurfaceHigh.copy(alpha = 0.5f),
+                    Offset(meterX, world.limitY),
+                    Size(meterW, world.bottom - world.limitY),
+                    androidx.compose.ui.geometry.CornerRadius(meterW / 2f, meterW / 2f),
+                )
+                if (world.fillLevel > 0.01f) {
+                    val mh = (world.bottom - world.limitY) * world.fillLevel
+                    val mc = when {
+                        world.fillLevel > 0.8f -> HikariDanger
+                        world.fillLevel > 0.55f -> HikariAmber
+                        else -> Color(0xFF4ADE80)
+                    }
+                    drawRoundRect(
+                        mc.copy(alpha = 0.75f),
+                        Offset(meterX, world.bottom - mh),
+                        Size(meterW, mh),
+                        androidx.compose.ui.geometry.CornerRadius(meterW / 2f, meterW / 2f),
+                    )
+                }
+
+                // Ketten-Anzeige im Behälter oben
+                if (world.chain >= 2 && world.chainTimer > 0f) {
+                    val chainCol = when {
+                        world.chain >= 4 -> Color(0xFFEC4899)
+                        else -> HikariAmber
+                    }
+                    popPaint.textSize = 40f * sc
+                    popPaint.color = chainCol.toArgb()
+                    drawIntoCanvas { c ->
+                        c.nativeCanvas.drawText("Kette ×${world.chain}", world.w / 2f, world.top + 70f * sc, popPaint)
+                    }
+                    val barW = 180f * sc * (world.chainTimer / 2f).coerceIn(0f, 1f)
+                    drawRoundRect(
+                        chainCol.copy(alpha = 0.8f),
+                        Offset(world.w / 2f - barW / 2f, world.top + 84f * sc),
+                        Size(barW, 6f * sc),
+                        androidx.compose.ui.geometry.CornerRadius(3f * sc, 3f * sc),
+                    )
+                }
+
+                // Funken / Feuerwerk / Konfetti
                 for (s in world.sparks) {
                     drawCircle(
                         s.color.copy(alpha = (s.life / s.maxLife).coerceIn(0f, 1f)),
@@ -510,33 +1775,236 @@ fun FruitMergeGame(onBack: () -> Unit) {
                     )
                 }
 
-                // Punkte-Popups
+                // Punkte-Popups (skalieren mit Wert)
                 for (p in world.pops) {
-                    popPaint.textSize = 42f * sc
+                    popPaint.textSize = 42f * sc * p.sizeMul
                     popPaint.color = HikariAmber.copy(alpha = p.life.coerceIn(0f, 1f)).toArgb()
                     drawIntoCanvas { c ->
                         c.nativeCanvas.drawText(p.text, p.x, p.y, popPaint)
                     }
                 }
+
+                // Puls-Vignette bei akuter Gefahr
+                if (!zen && (world.fillLevel > 0.8f || world.warn > 0f)) {
+                    val strength = max((world.fillLevel - 0.8f) * 5f, world.warn)
+                    val pulse = (0.5f + 0.5f * sin(world.time * 8f)) * strength
+                    drawRect(
+                        HikariDanger.copy(alpha = 0.10f * pulse),
+                        topLeft = Offset(0f, 0f),
+                        size = Size(w, h),
+                    )
+                }
             }
 
-            // "Nächste:"-Preview
-            Row(
+            // Evolutionsleiste am linken Rand
+            Column(
                 Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(10.dp)
+                    .align(Alignment.CenterStart)
+                    .padding(start = 2.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(HikariCardBg)
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                    .background(Color(0x66000000))
+                    .padding(horizontal = 3.dp, vertical = 6.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text("Nächste:", fontSize = 11.sp, color = HikariTextMuted)
-                Spacer(Modifier.width(5.dp))
-                Text(MergeEmoji[nextLevel], fontSize = 18.sp)
+                for (lvl in 9 downTo 0) {
+                    Text(
+                        MergeEmoji[lvl],
+                        fontSize = 12.sp,
+                        modifier = Modifier
+                            .padding(vertical = 1.dp)
+                            .alpha(if (reachedMask and (1 shl lvl) != 0) 1f else 0.22f),
+                    )
+                }
             }
 
-            // Game-Over-Overlay
-            if (gameOver) {
+            // Meilenstein-Banner
+            milestone?.let { (_, text) ->
+                Box(Modifier.fillMaxSize().padding(top = 60.dp), contentAlignment = Alignment.TopCenter) {
+                    Text(
+                        text,
+                        fontSize = 17.sp,
+                        color = HikariPrimary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xDD1F1F22))
+                            .padding(horizontal = 18.dp, vertical = 10.dp),
+                    )
+                }
+            }
+
+            // Live-Rekord-Banner
+            if (recordBanner) {
+                Box(Modifier.fillMaxSize().padding(top = 14.dp), contentAlignment = Alignment.TopCenter) {
+                    Text(
+                        "✨ Neuer Rekord!",
+                        fontSize = 15.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(HikariPrimary)
+                            .padding(horizontal = 16.dp, vertical = 7.dp),
+                    )
+                }
+            }
+
+            // Frucht-Namen-Popup
+            namesPopup?.let { text ->
+                Box(Modifier.fillMaxSize().padding(top = 46.dp, end = 10.dp), contentAlignment = Alignment.TopEnd) {
+                    Text(
+                        text,
+                        fontSize = 12.sp,
+                        color = HikariText,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xEE28282C))
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                    )
+                }
+            }
+
+            // Erfolgs-Toast
+            achToasts.firstOrNull()?.let { ach ->
+                Box(Modifier.fillMaxSize().padding(bottom = 24.dp), contentAlignment = Alignment.BottomCenter) {
+                    Row(
+                        Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xEE28282C))
+                            .border(1.dp, HikariPrimary.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(ach.emoji, fontSize = 18.sp)
+                        Spacer(Modifier.width(10.dp))
+                        Column {
+                            Text("Erfolg freigeschaltet!", fontSize = 10.sp, color = HikariPrimary)
+                            Text(ach.title, fontSize = 13.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
+            // Hilfe-Overlay
+            if (showHelp) {
+                Column(
+                    Modifier.fillMaxSize().background(Color(0xE0000000))
+                        .clickable {
+                            showHelp = false
+                            prefs.edit().putBoolean("fruitmerge_help_seen", true).apply()
+                        },
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Column(
+                        Modifier
+                            .padding(horizontal = 28.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(HikariCardBg)
+                            .padding(22.dp),
+                    ) {
+                        Text("So geht's", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(10.dp))
+                        val lines = buildList {
+                            add("• Ziehen zum Zielen, loslassen zum Fallenlassen.")
+                            add("• Zwei gleiche Früchte verschmelzen zur nächsten Stufe.")
+                            add("• Schnelle Folge-Merges bilden Ketten: ×2 ab Kette 2, ×3 ab Kette 4.")
+                            add("• 🌀 schüttelt den Behälter, 💥 entfernt die kleinste Frucht.")
+                            add("• 🌈 verschmilzt mit der ersten berührten Frucht.")
+                            when (mode) {
+                                MergeMode.ZEN -> add("• Zen: Kein Game Over — Überlauf löst sich sanft auf.")
+                                MergeMode.CHALLENGE -> if (def != null) add("• Ziel: ${mergeGoalText(def)}")
+                                else -> add("• Über der Linie stapeln = Game Over. Viel Glück!")
+                            }
+                        }
+                        for (l in lines) {
+                            Text(l, fontSize = 13.sp, color = HikariText, modifier = Modifier.padding(vertical = 3.dp))
+                        }
+                        Spacer(Modifier.height(14.dp))
+                        Button(
+                            onClick = {
+                                showHelp = false
+                                prefs.edit().putBoolean("fruitmerge_help_seen", true).apply()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text("Los geht's", color = Color.Black, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
+            // Pause-Overlay
+            if (paused && !over && !won && !showHelp) {
+                Column(
+                    Modifier.fillMaxSize().background(Color(0xCC000000)),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Column(
+                        Modifier
+                            .padding(horizontal = 40.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(HikariCardBg)
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text("Pause", fontSize = 22.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(16.dp))
+                        if (confirmRestart) {
+                            Text("Runde wirklich neu starten?", fontSize = 13.sp, color = HikariTextMuted)
+                            Spacer(Modifier.height(12.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Button(
+                                    onClick = {
+                                        confirmRestart = false
+                                        resetRound()
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = HikariDanger),
+                                ) { Text("Ja, neu", color = Color.Black, fontWeight = FontWeight.Bold) }
+                                Button(
+                                    onClick = { confirmRestart = false },
+                                    colors = ButtonDefaults.buttonColors(containerColor = HikariSurfaceHigh),
+                                ) { Text("Abbrechen", color = HikariText) }
+                            }
+                        } else {
+                            Button(
+                                onClick = { paused = false },
+                                colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
+                                modifier = Modifier.fillMaxWidth(),
+                            ) { Text("Fortsetzen", color = Color.Black, fontWeight = FontWeight.Bold) }
+                            Spacer(Modifier.height(8.dp))
+                            Button(
+                                onClick = { confirmRestart = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = HikariSurfaceHigh),
+                                modifier = Modifier.fillMaxWidth(),
+                            ) { Text("Neustart", color = HikariText) }
+                            Spacer(Modifier.height(8.dp))
+                            Button(
+                                onClick = {
+                                    if (!statsFlushed && world.time > 5f) flushRound(0)
+                                    onMenu()
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = HikariSurfaceHigh),
+                                modifier = Modifier.fillMaxWidth(),
+                            ) { Text("Zum Menü", color = HikariText) }
+                            Spacer(Modifier.height(14.dp))
+                            MergeToggleRow("Haptik", hapticsOn) {
+                                hapticsOn = it
+                                prefs.edit().putBoolean("fruitmerge_haptics", it).apply()
+                            }
+                            MergeToggleRow("Reduzierte Effekte", fxReduced) {
+                                fxReduced = it
+                                prefs.edit().putBoolean("fruitmerge_fx_reduced", it).apply()
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Challenge gewonnen
+            if (won && def != null) {
                 Column(
                     Modifier.fillMaxSize().background(Color(0xCC000000)),
                     verticalArrangement = Arrangement.Center,
@@ -549,22 +2017,104 @@ fun FruitMergeGame(onBack: () -> Unit) {
                             .padding(horizontal = 32.dp, vertical = 28.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Text("Game Over", fontSize = 26.sp, color = HikariDanger, fontWeight = FontWeight.Bold)
+                        Text("Level geschafft!", fontSize = 24.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            "★".repeat(stars) + "☆".repeat(3 - stars),
+                            fontSize = 32.sp,
+                            color = HikariPrimary,
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        Text("Punkte: $score", fontSize = 16.sp, color = HikariText)
+                        Text(
+                            "Drops: ${world.drops} · Merges: ${world.mergesRound} · ${mergeFmtTime(world.time.toInt())}",
+                            fontSize = 12.sp, color = HikariTextMuted,
+                        )
+                        if (levelUpTo > 0) {
+                            Spacer(Modifier.height(6.dp))
+                            Text("⬆ Stufe $levelUpTo erreicht!", fontSize = 14.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(Modifier.height(20.dp))
+                        if (levelIdx < MergeLevels.size - 1) {
+                            Button(
+                                onClick = onNextLevel,
+                                colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
+                                modifier = Modifier.fillMaxWidth(),
+                            ) { Text("Nächstes Level ▶", color = Color.Black, fontWeight = FontWeight.Bold) }
+                            Spacer(Modifier.height(8.dp))
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Button(
+                                onClick = { resetRound() },
+                                colors = ButtonDefaults.buttonColors(containerColor = HikariSurfaceHigh),
+                            ) { Text("Nochmal", color = HikariText) }
+                            Button(
+                                onClick = onMenu,
+                                colors = ButtonDefaults.buttonColors(containerColor = HikariSurfaceHigh),
+                            ) { Text("Menü", color = HikariText) }
+                        }
+                    }
+                }
+            }
+
+            // Game Over / Level gescheitert
+            if (over) {
+                Column(
+                    Modifier.fillMaxSize().background(Color(0xCC000000)),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Column(
+                        Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(HikariCardBg)
+                            .padding(horizontal = 32.dp, vertical = 28.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            if (mode == MergeMode.CHALLENGE) "Nicht geschafft" else "Game Over",
+                            fontSize = 26.sp, color = HikariDanger, fontWeight = FontWeight.Bold,
+                        )
+                        if (mode == MergeMode.CHALLENGE && failReason.isNotEmpty()) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(failReason, fontSize = 12.sp, color = HikariTextMuted)
+                        }
                         Spacer(Modifier.height(12.dp))
                         Text("Punkte: $score", fontSize = 18.sp, color = HikariText)
                         Spacer(Modifier.height(6.dp))
-                        if (newRecord) {
-                            Text("Neuer Rekord!", fontSize = 16.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-                        } else {
-                            Text("Rekord: $highscore", fontSize = 14.sp, color = HikariTextMuted)
+                        if (mode == MergeMode.CLASSIC) {
+                            if (newRecord) {
+                                Text("Neuer Rekord!", fontSize = 16.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+                            } else {
+                                Text("Rekord: $highscore", fontSize = 14.sp, color = HikariTextMuted)
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        // Runden-Statistik
+                        Text(
+                            "⏱ ${mergeFmtTime(world.time.toInt())} · ${world.mergesRound} Merges",
+                            fontSize = 12.sp, color = HikariTextMuted,
+                        )
+                        Text(
+                            "Höchste: ${MergeEmoji[world.bestFruit]} · Längste Kette ×${world.longestChain}",
+                            fontSize = 12.sp, color = HikariTextMuted,
+                        )
+                        if (levelUpTo > 0) {
+                            Spacer(Modifier.height(6.dp))
+                            Text("⬆ Stufe $levelUpTo erreicht!", fontSize = 14.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
                         }
                         Spacer(Modifier.height(20.dp))
                         Button(
-                            onClick = { restart() },
+                            onClick = { resetRound() },
                             colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                        ) {
-                            Text("Nochmal", color = Color.Black, fontWeight = FontWeight.Bold)
-                        }
+                            modifier = Modifier.fillMaxWidth(),
+                        ) { Text("Nochmal", color = Color.Black, fontWeight = FontWeight.Bold) }
+                        Spacer(Modifier.height(8.dp))
+                        Button(
+                            onClick = onMenu,
+                            colors = ButtonDefaults.buttonColors(containerColor = HikariSurfaceHigh),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) { Text("Zum Menü", color = HikariText) }
                     }
                 }
             }
@@ -572,8 +2122,34 @@ fun FruitMergeGame(onBack: () -> Unit) {
     }
 }
 
+@Composable
+private fun MergePowerButton(emoji: String, count: Int, enabled: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier
+            .size(42.dp)
+            .clip(CircleShape)
+            .background(if (enabled) HikariAmberSoft else HikariCardBg)
+            .then(
+                if (enabled) Modifier.border(1.dp, HikariPrimary.copy(alpha = 0.6f), CircleShape)
+                else Modifier
+            )
+            .clickable(enabled = enabled, onClick = onClick)
+            .alpha(if (enabled) 1f else 0.4f),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(emoji, fontSize = 17.sp, textAlign = TextAlign.Center)
+        Text(
+            "$count",
+            fontSize = 9.sp,
+            color = if (enabled) HikariPrimary else HikariTextFaint,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 4.dp, bottom = 2.dp),
+        )
+    }
+}
+
 // Frucht = satter Farbkreis + Emoji zentriert darüber
-private fun DrawScope.drawFruitBall(x: Float, y: Float, r: Float, level: Int, paint: Paint, sc: Float) {
+private fun DrawScope.drawMergeFruitBall(x: Float, y: Float, r: Float, level: Int, paint: Paint, sc: Float) {
     val col = MergeColors[level]
     drawCircle(col.copy(alpha = 0.92f), radius = r, center = Offset(x, y))
     drawCircle(
@@ -591,5 +2167,27 @@ private fun DrawScope.drawFruitBall(x: Float, y: Float, r: Float, level: Int, pa
     val yOff = (paint.ascent() + paint.descent()) / 2f
     drawIntoCanvas { c ->
         c.nativeCanvas.drawText(MergeEmoji[level], x, y - yOff, paint)
+    }
+}
+
+// Regenbogen-Frucht: rotierender Farbton
+private fun DrawScope.drawMergeRainbow(x: Float, y: Float, r: Float, time: Float, paint: Paint, sc: Float) {
+    val hue = (time * 120f) % 360f
+    drawCircle(Color.hsv(hue, 0.65f, 1f), radius = r, center = Offset(x, y))
+    drawCircle(
+        Color.hsv((hue + 60f) % 360f, 0.8f, 1f),
+        radius = r,
+        center = Offset(x, y),
+        style = Stroke(width = max(2f, 3f * sc)),
+    )
+    drawCircle(
+        Color.White.copy(alpha = 0.25f),
+        radius = r * 0.6f,
+        center = Offset(x - r * 0.15f, y - r * 0.2f),
+    )
+    paint.textSize = r * 1.05f
+    val yOff = (paint.ascent() + paint.descent()) / 2f
+    drawIntoCanvas { c ->
+        c.nativeCanvas.drawText("🌈", x, y - yOff, paint)
     }
 }
