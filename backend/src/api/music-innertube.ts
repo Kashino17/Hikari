@@ -950,6 +950,41 @@ export async function itChannelVideos(
   }
 }
 
+// Shorts-Tab (base64-Protobuf, sprachunabhängig — empirisch verifiziert 2026-08).
+const WEB_SHORTS_TAB_PARAMS = "EgZzaG9ydHPyBgUKA5oBAA==";
+const CHANNEL_SHORTS_MAX = 30;
+
+/**
+ * IDs der neuesten Shorts eines Kanals. Bewusst ID-only: Shorts-Lockups tragen
+ * oft keine Dauer-Badge (der Video-Parser würde sie verwerfen), und die
+ * Ingest-Pipeline holt Metadaten ohnehin selbst.
+ */
+export async function itChannelShorts(
+  fetchImpl: typeof fetch,
+  channelId: string,
+): Promise<string[] | undefined> {
+  try {
+    const body = await webBrowse(fetchImpl, {
+      browseId: channelId,
+      params: WEB_SHORTS_TAB_PARAMS,
+    });
+    const ids: string[] = [];
+    const seen = new Set<string>();
+    for (const lockup of findAllByKey(body, "shortsLockupViewModel")) {
+      const id = findAllByKey(lockup, "videoId").find(
+        (v): v is string => typeof v === "string" && VIDEO_ID_RE.test(v),
+      );
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      ids.push(id);
+      if (ids.length >= CHANNEL_SHORTS_MAX) break;
+    }
+    return ids.length > 0 ? ids : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * Playlists eines gewöhnlichen YouTube-Kanals über den Playlists-Tab.
  * Parst das klassische gridPlaylistRenderer- und das aktuelle
