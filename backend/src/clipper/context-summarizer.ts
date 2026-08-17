@@ -31,13 +31,54 @@ export async function summarizeContext(
   if (!captions || captions.length === 0) return null;
   const transcript = captions.map((c) => c.text).join(" ").trim();
   if (transcript.length < 20) return null; // too short to be useful
+  return chatCompletion(SYSTEM_PROMPT, `Transkript:\n${transcript}`, config);
+}
 
+const SYSTEM_PROMPT_VIDEO = `Du schreibst Kurzbeschreibungen für Video-Vorschaukarten einer deutschen App. Du bekommst Titel und Transkript eines YouTube-Videos.
+
+REGELN:
+- 1-2 Sätze, zusammen höchstens ~220 Zeichen. Der Text steht auf einer Vorschaukarte und darf nicht abgeschnitten werden.
+- Mach neugierig, ohne zu spoilern — worum geht es, was ist der Reiz?
+- Nüchtern und konkret, keine Werbesprache, keine Floskeln wie "In diesem Video...".
+- Schreib in der Sprache des Transkripts (vermutlich Deutsch).
+
+OUTPUT: nur die Kurzbeschreibung. Keine Markdown, keine Anführungszeichen, kein Präfix.`;
+
+/**
+ * Karten-Teaser für ein Langvideo aus Titel + YouTube-Transkript.
+ * Best-effort: liefert null bei zu wenig Text oder jedem Fehler — die Karte
+ * fällt dann auf die Scorer-Begründung zurück, der Approve läuft weiter.
+ */
+export async function summarizeVideoTranscript(
+  title: string,
+  transcript: string,
+  config: SummarizerConfig,
+): Promise<string | null> {
+  const text = transcript.trim();
+  if (text.length < 100) return null;
+  try {
+    return await chatCompletion(
+      SYSTEM_PROMPT_VIDEO,
+      `Titel: ${title}\n\nTranskript:\n${text.slice(0, 24_000)}`,
+      config,
+    );
+  } catch {
+    return null;
+  }
+}
+
+/** Gemeinsamer OpenAI-kompatibler Chat-Call (LM Studio/Ollama) beider Summarizer. */
+async function chatCompletion(
+  systemPrompt: string,
+  userContent: string,
+  config: SummarizerConfig,
+): Promise<string | null> {
   const fetchFn = config.fetchFn ?? fetch;
   const body = {
     model: config.model,
     messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: `Transkript:\n${transcript}` },
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userContent },
     ],
     temperature: 0.3,
     // Qwen 3.6 is a reasoning model: it spends thinking tokens (reasoning_content)

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { summarizeContext } from "./context-summarizer.js";
+import { summarizeContext, summarizeVideoTranscript } from "./context-summarizer.js";
 
 const captionsToTranscript = (text: string) =>
   text.split(" ").map((w, i) => ({ start: i * 0.5, end: i * 0.5 + 0.4, text: w }));
@@ -38,5 +38,44 @@ describe("summarizeContext", () => {
       { baseUrl: "http://x", model: "q", fetchFn },
     );
     expect(out).toBe("Test summary");
+  });
+});
+
+describe("summarizeVideoTranscript", () => {
+  it("liefert Teaser aus Titel+Transkript", async () => {
+    const fetchFn = vi.fn(async () =>
+      ({
+        ok: true,
+        status: 200,
+        json: async () => ({ choices: [{ message: { content: "Ein Teaser." } }] }),
+      }) as Response,
+    );
+    const out = await summarizeVideoTranscript("Mein Titel", "x".repeat(200), {
+      baseUrl: "http://x",
+      model: "q",
+      fetchFn,
+    });
+    expect(out).toBe("Ein Teaser.");
+    const sentBody = JSON.parse((fetchFn.mock.calls[0]![1] as { body: string }).body);
+    expect(sentBody.messages[1].content).toContain("Mein Titel");
+  });
+
+  it("kurzes Transkript oder LLM-Fehler ⇒ null (wirft nie)", async () => {
+    const fetchFn = vi.fn();
+    expect(
+      await summarizeVideoTranscript("t", "kurz", { baseUrl: "http://x", model: "q", fetchFn }),
+    ).toBeNull();
+    expect(fetchFn).not.toHaveBeenCalled();
+
+    const failFn = vi.fn(async () => {
+      throw new Error("connection refused");
+    });
+    expect(
+      await summarizeVideoTranscript("t", "x".repeat(200), {
+        baseUrl: "http://x",
+        model: "q",
+        fetchFn: failFn as unknown as typeof fetch,
+      }),
+    ).toBeNull();
   });
 });
