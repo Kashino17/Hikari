@@ -560,11 +560,12 @@ internal fun PlayRoundButton(
     contentDesc: String = "Abspielen",
     onClick: () -> Unit,
 ) {
+    // YouTube-Music-Stil: weißer Kreis mit schwarzem Icon statt Akzentfarbe.
     Box(
         Modifier
             .size(size)
             .clip(CircleShape)
-            .background(Brush.radialGradient(listOf(Color(0xFFFFD263), HikariPrimary)))
+            .background(Color.White)
             .muPressable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {

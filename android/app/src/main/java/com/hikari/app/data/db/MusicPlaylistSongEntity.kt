@@ -27,4 +27,6 @@ data class MusicPlaylistSongEntity(
     val playlistId: Int,
     val songVideoId: String,
     val addedAt: Long = System.currentTimeMillis(),
+    /** Manuelle Sortierposition; Bestandszeilen (0) ordnen nach addedAt. */
+    val position: Int = 0,
 )

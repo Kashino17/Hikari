@@ -421,6 +421,17 @@ private fun DiscoverTab(
             }
         }
 
+        // Schnellauswahl: meistgehörte Songs der letzten 7 Tage.
+        if (!searching && viewModel.topWeekSongs.size >= 4) {
+            item(key = "top-week") {
+                TopWeekQuickPicks(
+                    songs = viewModel.topWeekSongs,
+                    currentVideoId = currentSong?.videoId,
+                    onPlay = { song -> viewModel.play(song, viewModel.topWeekSongs) },
+                )
+            }
+        }
+
         if (searching) {
             // Smart-Search-Ergebnisse in allen Modi: Filter-Chips + Sektionen.
             smartSearchResults(

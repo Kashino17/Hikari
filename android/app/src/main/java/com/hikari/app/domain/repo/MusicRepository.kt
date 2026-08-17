@@ -15,6 +15,8 @@ import com.hikari.app.data.db.LocalMusicDownloadDao
 import com.hikari.app.data.db.MusicPlaylistDao
 import com.hikari.app.data.db.MusicPlaylistEntity
 import com.hikari.app.data.db.MusicPlaylistSongDao
+import com.hikari.app.data.db.MusicPlayEventDao
+import com.hikari.app.data.db.MusicPlayEventEntity
 import com.hikari.app.data.db.MusicPlaylistSongEntity
 import com.hikari.app.data.db.MusicSongDao
 import com.hikari.app.data.db.MusicSongEntity
@@ -121,6 +123,7 @@ class MusicRepository(
     private val playlistSongDao: MusicPlaylistSongDao,
     private val downloadDao: LocalMusicDownloadDao,
     private val searchHistoryDao: SearchHistoryDao,
+    private val playEventDao: MusicPlayEventDao,
     private val api: HikariApi,
     private val fallbackClient: OkHttpClient,
     private val json: Json,
@@ -747,6 +750,19 @@ class MusicRepository(
                 },
             ),
         )
+        // Nur echte Wiedergaben zählen (touchRecency=false sind Downloads/
+        // Playlist-Verknüpfungen); alte Ereignisse gleich mit wegräumen.
+        if (touchRecency) {
+            val now = System.currentTimeMillis()
+            playEventDao.insert(MusicPlayEventEntity(videoId = song.videoId, playedAt = now))
+            playEventDao.prune(olderThan = now - 30L * 24 * 60 * 60 * 1000)
+        }
+    }
+
+    /** Meistgehörte Songs der letzten 7 Tage (für die Schnellauswahl). */
+    suspend fun getTopPlayedOfWeek(limit: Int = 40): List<MusicSong> {
+        val since = System.currentTimeMillis() - 7L * 24 * 60 * 60 * 1000
+        return playEventDao.topPlayedSince(since, limit).map { it.toSong() }
     }
 
     /** Returns the new favorite state. Unknown songs get saved first. */
@@ -818,7 +834,15 @@ class MusicRepository(
     /** Song muss in `music_songs` existieren — der Fremdschlüssel verlangt das. */
     suspend fun addToPlaylist(playlistId: Int, song: MusicSong) {
         recordPlayed(song, touchRecency = false)
-        playlistSongDao.insert(MusicPlaylistSongEntity(playlistId, song.videoId))
+        val nextPos = playlistSongDao.maxPosition(playlistId) + 1
+        playlistSongDao.insert(MusicPlaylistSongEntity(playlistId, song.videoId, position = nextPos))
+    }
+
+    /** Persistiert die manuelle Reihenfolge aus dem Bearbeiten-Modus. */
+    suspend fun reorderPlaylist(playlistId: Int, orderedVideoIds: List<String>) {
+        orderedVideoIds.forEachIndexed { index, videoId ->
+            playlistSongDao.setPosition(playlistId, videoId, index + 1)
+        }
     }
 
     suspend fun removeFromPlaylist(playlistId: Int, song: MusicSong) {

@@ -5,6 +5,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -32,6 +33,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -729,19 +732,20 @@ fun SectionHeader(
             Text(title, fontSize = 18.sp, fontWeight = FontWeight.Black, color = HikariText)
         }
         onSeeAll?.let {
+            // Neutral wie bei YouTube Music — kein Akzentfarben-Chip.
             Row(
                 Modifier
                     .clip(RoundedCornerShape(999.dp))
-                    .background(HikariPrimary.copy(alpha = 0.12f))
+                    .background(Color.White.copy(alpha = 0.08f))
                     .muPressable(onClick = it)
                     .padding(horizontal = 11.dp, vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(actionLabel, fontSize = 12.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+                Text(actionLabel, fontSize = 12.sp, color = HikariTextMuted, fontWeight = FontWeight.Bold)
                 Icon(
                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     null,
-                    tint = HikariPrimary,
+                    tint = HikariTextMuted,
                     modifier = Modifier.size(15.dp),
                 )
             }
@@ -812,6 +816,147 @@ fun DiscoverSkeleton() {
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Schnellauswahl wie bei YouTube Music: die meistgehörten Songs der letzten
+ * 7 Tage, seitenweise als 2×2-Raster mit Punkt-Navigation. Ein Tipp spielt
+ * den Song mit allen Top-Songs als Warteschlange.
+ */
+@Composable
+fun TopWeekQuickPicks(
+    songs: List<MusicSong>,
+    currentVideoId: String?,
+    onPlay: (MusicSong) -> Unit,
+) {
+    if (songs.size < 4) return
+    val pages = (songs.size + 3) / 4
+    val pagerState = rememberPagerState(pageCount = { pages })
+    Column {
+        MuSectionTitle("Deine Top-Songs")
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(HikariCardBg)
+                .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(20.dp)),
+        ) {
+            HorizontalPager(state = pagerState, modifier = Modifier.fillMaxWidth()) { page ->
+                Column(
+                    Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    repeat(2) { rowIdx ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            repeat(2) { colIdx ->
+                                val index = page * 4 + rowIdx * 2 + colIdx
+                                val song = songs.getOrNull(index)
+                                Box(Modifier.weight(1f)) {
+                                    if (song != null) {
+                                        QuickPickCell(
+                                            rank = index + 1,
+                                            song = song,
+                                            isCurrent = song.videoId == currentVideoId,
+                                            onClick = { onPlay(song) },
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Row(
+                Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                repeat(pages) { i ->
+                    val active = pagerState.currentPage == i
+                    val dotWidth by animateDpAsState(
+                        if (active) 14.dp else 6.dp,
+                        label = "quickpick-dot-$i",
+                    )
+                    Box(
+                        Modifier
+                            .padding(horizontal = 3.dp)
+                            .size(width = dotWidth, height = 6.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(
+                                if (active) Color.White else Color.White.copy(alpha = 0.18f),
+                            ),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickPickCell(
+    rank: Int,
+    song: MusicSong,
+    isCurrent: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .muPressable(onClick = onClick)
+            .padding(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            "$rank",
+            fontSize = 12.sp,
+            fontWeight = if (rank <= 3) FontWeight.Black else FontWeight.Medium,
+            color = if (rank <= 3) HikariText else HikariTextFaint,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.width(20.dp),
+        )
+        Box {
+            AsyncImage(
+                model = song.thumbnailUrl.ifEmpty { null },
+                contentDescription = null,
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(HikariSurfaceHigh),
+                contentScale = ContentScale.Crop,
+            )
+            if (isCurrent) {
+                Box(
+                    Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0x99000000)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    MuEqualizerBars(playing = true, modifier = Modifier.size(16.dp))
+                }
+            }
+        }
+        Spacer(Modifier.width(8.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                song.title,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = if (isCurrent) HikariPrimary else HikariText,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                song.uploader,
+                fontSize = 10.sp,
+                color = HikariTextMuted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }

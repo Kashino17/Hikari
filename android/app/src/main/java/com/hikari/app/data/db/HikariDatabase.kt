@@ -17,8 +17,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         MusicPlaylistSongEntity::class,
         LocalMusicDownloadEntity::class,
         SearchHistoryEntity::class,
+        MusicPlayEventEntity::class,
     ],
-    version = 14,
+    version = 16,
     exportSchema = false,
 )
 abstract class HikariDatabase : RoomDatabase() {
@@ -31,6 +32,7 @@ abstract class HikariDatabase : RoomDatabase() {
     abstract fun musicPlaylistSongDao(): MusicPlaylistSongDao
     abstract fun localMusicDownloadDao(): LocalMusicDownloadDao
     abstract fun searchHistoryDao(): SearchHistoryDao
+    abstract fun musicPlayEventDao(): MusicPlayEventDao
 }
 
 /**
@@ -72,5 +74,36 @@ val MIGRATION_13_14 = object : Migration(13, 14) {
             )
             """.trimIndent(),
         )
+    }
+}
+
+/**
+ * Rein additive Migration: Abspiel-Ereignisse für "Meistgehört der Woche".
+ */
+val MIGRATION_14_15 = object : Migration(14, 15) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `music_play_events` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `videoId` TEXT NOT NULL,
+                `playedAt` INTEGER NOT NULL
+            )
+            """.trimIndent(),
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_music_play_events_playedAt` ON `music_play_events` (`playedAt`)",
+        )
+        // Manuelle Playlist-Reihenfolge (Bearbeiten-Modus).
+        db.execSQL(
+            "ALTER TABLE `music_playlist_songs` ADD COLUMN `position` INTEGER NOT NULL DEFAULT 0",
+        )
+    }
+}
+
+// Etappe 2 (Feed-Streaming-Umbau): KI-Kurzbeschreibung fuer Langvideo-Karten.
+val MIGRATION_15_16 = object : Migration(15, 16) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE feed_items ADD COLUMN summary TEXT DEFAULT NULL")
     }
 }

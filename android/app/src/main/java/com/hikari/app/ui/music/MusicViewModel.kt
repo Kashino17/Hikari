@@ -148,6 +148,10 @@ class MusicViewModel @Inject constructor(
     var favorites by mutableStateOf<List<MusicSong>>(emptyList())
     var playlists by mutableStateOf<List<PlaylistWithSongs>>(emptyList())
 
+    /** Meistgehörte Songs der letzten 7 Tage — Schnellauswahl im Entdecken. */
+    var topWeekSongs by mutableStateOf<List<MusicSong>>(emptyList())
+        private set
+
     /** Erst nach dem ersten Laden darf die UI aus "nicht gefunden" Schlüsse ziehen. */
     var libraryLoaded by mutableStateOf(false)
         private set
@@ -493,9 +497,11 @@ class MusicViewModel @Inject constructor(
                 val h = async { repo.getHistory() }
                 val f = async { repo.getFavorites() }
                 val p = async { repo.getPlaylists() }
+                val t = async { repo.getTopPlayedOfWeek() }
                 history = h.await()
                 favorites = f.await()
                 playlists = p.await()
+                topWeekSongs = t.await()
             }
             favoriteIds = favorites.map { it.videoId }.toSet()
             libraryLoaded = true
@@ -627,6 +633,15 @@ class MusicViewModel @Inject constructor(
             addAfterwards?.let { repo.addToPlaylist(id, it) }
             refreshLibrary()
             message = "Playlist „$trimmed“ erstellt"
+        }
+    }
+
+    /** Persistiert die im Bearbeiten-Modus gezogene Reihenfolge. */
+    fun reorderPlaylist(playlistId: Int, orderedVideoIds: List<String>) {
+        viewModelScope.launch {
+            repo.reorderPlaylist(playlistId, orderedVideoIds)
+            refreshLibrary()
+            message = "Reihenfolge gespeichert"
         }
     }
 

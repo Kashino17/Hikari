@@ -28,8 +28,18 @@ interface MusicPlaylistSongDao {
     @Delete
     suspend fun delete(song: MusicPlaylistSongEntity)
 
-    @Query("SELECT * FROM music_playlist_songs WHERE playlistId = :playlistId ORDER BY addedAt ASC")
+    @Query(
+        "SELECT * FROM music_playlist_songs WHERE playlistId = :playlistId ORDER BY position ASC, addedAt ASC",
+    )
     suspend fun getByPlaylist(playlistId: Int): List<MusicPlaylistSongEntity>
+
+    @Query("SELECT COALESCE(MAX(position), 0) FROM music_playlist_songs WHERE playlistId = :playlistId")
+    suspend fun maxPosition(playlistId: Int): Int
+
+    @Query(
+        "UPDATE music_playlist_songs SET position = :position WHERE playlistId = :playlistId AND songVideoId = :videoId",
+    )
+    suspend fun setPosition(playlistId: Int, videoId: String, position: Int)
 
     @Query("SELECT COUNT(*) FROM music_playlist_songs WHERE playlistId = :playlistId")
     suspend fun getCount(playlistId: Int): Int

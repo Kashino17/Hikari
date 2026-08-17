@@ -159,17 +159,13 @@ internal fun MuPlayButton(
         pulse.snapTo(0.86f)
         pulse.animateTo(1f, spring(dampingRatio = 0.55f, stiffness = 480f))
     }
+    // YouTube-Music-Stil: weißer Play-Kreis statt Akzentfarbe.
     Box(
         Modifier
             .size(size)
             .graphicsLayer { scaleX = pulse.value; scaleY = pulse.value }
             .clip(CircleShape)
-            .background(
-                Brush.radialGradient(
-                    listOf(Color(0xFFFFD263), HikariPrimary),
-                    radius = size.value * 2.2f,
-                )
-            )
+            .background(Color.White)
             .muPressable(onClick = onToggle),
         contentAlignment = Alignment.Center,
     ) {
@@ -463,7 +459,7 @@ internal fun MuSectionTitle(
             Text(
                 actionLabel,
                 fontSize = 12.sp,
-                color = HikariPrimary,
+                color = HikariTextMuted,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .clip(RoundedCornerShape(999.dp))
@@ -482,11 +478,12 @@ internal fun MuPrimaryButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
+    // YouTube-Music-Stil: weiße Fläche mit schwarzem Inhalt statt Akzentfarbe.
     Row(
         modifier
             .height(48.dp)
             .clip(RoundedCornerShape(999.dp))
-            .background(Brush.horizontalGradient(listOf(HikariPrimary, Color(0xFFFFD263))))
+            .background(Color.White)
             .muPressable(onClick = onClick)
             .padding(horizontal = 24.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -496,7 +493,7 @@ internal fun MuPrimaryButton(
             Icon(icon, null, tint = Color.Black, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
         }
-        Text(label, fontSize = 15.sp, color = Color.Black, fontWeight = FontWeight.Black)
+        Text(label, fontSize = 15.sp, color = Color.Black, fontWeight = FontWeight.Bold)
     }
 }
 
