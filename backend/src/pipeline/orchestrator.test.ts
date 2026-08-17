@@ -135,6 +135,35 @@ describe("processNewVideo", () => {
     expect(db.prepare("SELECT COUNT(*) c FROM downloaded_videos").get()).toEqual({ c: 0 });
   });
 
+  it("Shorts: Scorer-Prompt bekommt den Kurzform-Hinweis, Langvideos nicht", async () => {
+    const prompts: (string | undefined)[] = [];
+    const spyScorer: Scorer = {
+      name: "spy",
+      async score(input: { systemPrompt?: string }) {
+        prompts.push(input.systemPrompt);
+        return {
+          modelUsed: "spy",
+          score: {
+            overallScore: 80,
+            category: "x",
+            clickbaitRisk: 1,
+            educationalValue: 9,
+            emotionalManipulation: 0,
+            reasoning: "ok",
+          },
+        };
+      },
+    } as Scorer;
+    await processNewVideo(
+      baseDeps({ scorer: spyScorer, fetchMetadata: async () => fakeShortMetadata }),
+    );
+    await processNewVideo(
+      baseDeps({ scorer: spyScorer, videoId: "vid2", fetchMetadata: async () => ({ ...fakeMetadata, id: "vid2" }) }),
+    );
+    expect(prompts[0]).toContain("natives YouTube-Short");
+    expect(prompts[1] ?? "").not.toContain("natives YouTube-Short");
+  });
+
   it("rejected: nur videos+scores, keine feed_items", async () => {
     await processNewVideo(baseDeps({ scorer: makeScorer("reject") }));
     const s = db.prepare("SELECT decision FROM scores WHERE video_id='vid1'").get() as {

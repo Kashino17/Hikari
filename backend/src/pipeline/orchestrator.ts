@@ -146,7 +146,13 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
   }
 
   const transcript = meta.captionsUrl ? await deps.fetchTranscript(meta.captionsUrl) : null;
-  const systemPrompt = getActivePromptForChannel(db, channelId);
+  const basePrompt = getActivePromptForChannel(db, channelId);
+  // Die Dauer-Regeln des Filters sind Langform-Kriterien. Ohne diesen Hinweis
+  // rejected der Scorer jedes native Short pauschal als "zu kurz".
+  const systemPrompt =
+    format === "short"
+      ? `${basePrompt}\n\nHINWEIS: Dieses Video ist ein natives YouTube-Short (Hochkant-Kurzform, max. 3 Minuten). Mindestdauer-Regeln gelten hier NICHT — bewerte ausschließlich Inhalt, Clickbait-Risiko und Manipulation.`
+      : basePrompt;
   const [scored, sponsors] = await Promise.all([
     deps.scorer.score({
       title: meta.title,
