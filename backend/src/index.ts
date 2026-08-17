@@ -20,6 +20,7 @@ import { registerStatsRoutes } from "./api/stats.js";
 import { registerVideosRoutes } from "./api/videos.js";
 import { registerMangaRoutes } from "./api/manga.js";
 import { registerMusicRoutes } from "./api/music.js";
+import { itChannelShorts } from "./api/music-innertube.js";
 import { registerNewsRoutes } from "./api/news.js";
 import { registerStreamRoutes } from "./api/stream.js";
 import { registerClipperStatusRoutes } from "./api/clipper-status.js";
@@ -193,6 +194,14 @@ async function pollAllChannels(): Promise<void> {
           db.prepare(
             "UPDATE channels SET rss_etag = ?, rss_last_modified = ? WHERE id = ?",
           ).run(result.etag, result.lastModified, c.id);
+        }
+        // Shorts-Tab zusätzlich zum RSS: Kanal-RSS enthält Shorts unzuverlässig.
+        // Best-effort — enqueueIngest skippt bereits bekannte Videos ohnehin.
+        try {
+          const shortIds = await itChannelShorts(fetch, c.id);
+          for (const id of shortIds ?? []) enqueueIngest(db, id, c.id);
+        } catch {
+          // ein Innertube-Schluckauf darf den Poll nicht brechen
         }
       } catch (err) {
         app.log.warn({ err, channelId: c.id }, "channel poll failed");
