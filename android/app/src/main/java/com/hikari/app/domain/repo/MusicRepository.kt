@@ -511,14 +511,35 @@ class MusicRepository(
      * und Trailer weg. Greift der Filter zu hart, lieber ungefiltert zeigen
      * als eine leere Liste.
      */
-    suspend fun getMixSongs(query: String, mode: MusicSearchMode = MusicSearchMode.MUSIC): List<MusicSong> {
+    suspend fun getMixSongs(
+        query: String,
+        mode: MusicSearchMode = MusicSearchMode.MUSIC,
+        /** true auf Mix-/Genre-Detailseiten: füllt kurze Suchlisten über
+         *  Radio-Queues auf ~50 Songs auf. Die Entdecken-Karussells bleiben
+         *  beim schnellen Pfad ohne Zusatz-Requests. */
+        expand: Boolean = false,
+    ): List<MusicSong> {
         val all = searchMusic(query, mode)
         val tracks = when (mode) {
             MusicSearchMode.MUSIC -> all.filter { it.duration in 60..900 }
             MusicSearchMode.AUDIOBOOK -> all.filter { it.duration >= 120 }
             MusicSearchMode.PODCAST, MusicSearchMode.TRUECRIME -> all.filter { it.duration >= 180 }
         }
-        return if (tracks.size >= 4) tracks else all
+        val base = if (tracks.size >= 4) tracks else all
+        // Radio-Expansion: eine einzelne Suche liefert oft nur eine Handvoll
+        // Songs — die Top-Treffer als Seeds der echten YouTube-Radio-Queue
+        // füllen den Mix stilistisch passend auf. Nicht im Instrumental-Modus
+        // (Related würde den Ohne-Gesang-Filter unterlaufen).
+        if (!expand || mode != MusicSearchMode.MUSIC || base.size >= 40 || instrumentalOnly()) {
+            return base
+        }
+        val related = coroutineScope {
+            base.take(3).map { seed -> async { getRelatedSongs(seed.videoId) } }.map { it.await() }
+        }
+        val seen = base.mapTo(mutableSetOf()) { it.videoId }
+        val extra = related.flatten()
+            .filter { it.duration in 60..900 && seen.add(it.videoId) }
+        return (base + extra).take(50)
     }
 
     /**

@@ -424,8 +424,13 @@ class MusicViewModel @Inject constructor(
         loadedMixKey = key
         mixJob = viewModelScope.launch {
             mixLoading = true
+            // Zweistufig: erst die schnellen Suchtreffer zeigen, dann die
+            // Radio-Expansion nachschieben (Suche ist backend-gecacht — der
+            // zweite Aufruf kostet praktisch nichts extra).
             mixSongs = repo.getMixSongs(query, mode)
             mixLoading = false
+            val expanded = repo.getMixSongs(query, mode, expand = true)
+            if (expanded.size > mixSongs.size) mixSongs = expanded
         }
     }
 
