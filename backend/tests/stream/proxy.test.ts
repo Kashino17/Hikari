@@ -16,10 +16,12 @@ function appWith(
   return app;
 }
 
-test("reicht Range durch und spiegelt 206 + Content-Range", async () => {
-  const seen: { range?: string } = {};
+test("reicht Range durch, sendet Browser-UA und spiegelt 206 + Content-Range", async () => {
+  const seen: { range?: string; ua?: string } = {};
   const fetchImpl = (async (_url: unknown, init?: RequestInit) => {
-    seen.range = (init?.headers as Record<string, string> | undefined)?.range;
+    const headers = init?.headers as Record<string, string> | undefined;
+    seen.range = headers?.range;
+    seen.ua = headers?.["user-agent"];
     return new Response("ab", {
       status: 206,
       headers: { "content-range": "bytes 0-1/2", "content-type": "video/mp4" },
@@ -28,6 +30,8 @@ test("reicht Range durch und spiegelt 206 + Content-Range", async () => {
   const app = appWith(async () => "https://gv/ok", fetchImpl);
   const res = await app.inject({ url: "/s/x", headers: { range: "bytes=0-1" } });
   expect(seen.range).toBe("bytes=0-1");
+  // googlevideo liefert ohne browserartigen User-Agent 403 (beobachtet 2026-08).
+  expect(seen.ua).toMatch(/^Mozilla\/5\.0/);
   expect(res.statusCode).toBe(206);
   expect(res.headers["content-range"]).toBe("bytes 0-1/2");
 });
