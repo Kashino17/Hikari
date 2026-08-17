@@ -76,7 +76,7 @@ private fun navTo(nav: NavController, route: String) {
     }
 }
 
-private fun playVideoRoute(videoId: String, title: String, channel: String): String {
+fun playVideoRoute(videoId: String, title: String, channel: String): String {
     val t = URLEncoder.encode(title, "UTF-8")
     val c = URLEncoder.encode(channel, "UTF-8")
     return "video/$videoId?title=$t&channel=$c"

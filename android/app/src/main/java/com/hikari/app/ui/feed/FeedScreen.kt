@@ -59,6 +59,7 @@ import com.hikari.app.data.prefs.SponsorBlockPrefs
 import com.hikari.app.data.sponsor.SponsorBlockClient
 import com.hikari.app.domain.repo.PlaybackRepository
 import com.hikari.app.player.HikariPlayerFactory
+import com.hikari.app.ui.navigation.playVideoRoute
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
@@ -220,17 +221,29 @@ fun FeedScreen(
                     }
                 }
 
+                // Langvideos erscheinen als Vorschau-Karte (kind "video") und
+                // spielen NICHT im Pager — nur die abspielbaren Items (Shorts,
+                // Clips, Legacy) bilden die Player-Playlist. Das Mapping ersetzt
+                // die frühere 1:1-Kopplung Pager-Seite == Playlist-Index.
+                val playableItems = remember(items) { items.filter { it.kind != "video" } }
+                val playlistIndexByVideoId = remember(playableItems) {
+                    playableItems.withIndex().associate { (i, it) -> it.videoId to i }
+                }
+
                 // Build the player playlist ONCE per items change. ExoPlayer
                 // keeps already-buffered windows when the list overlaps, so a
                 // refresh that re-orders or appends videos won't re-prepare the
                 // currently-playing one.
-                val playlistKey = remember(items, baseUrl) {
-                    items.joinToString("|") { it.videoId }
+                val playlistKey = remember(playableItems, baseUrl) {
+                    playableItems.joinToString("|") { it.videoId }
                 }
                 LaunchedEffect(playlistKey) {
-                    if (items.isEmpty()) return@LaunchedEffect
-                    val mediaItems = items.map { factory.mediaItemFor(baseUrl, it.videoId, kind = it.kind) }
-                    val targetIdx = pagerState.currentPage.coerceIn(0, items.lastIndex)
+                    if (playableItems.isEmpty()) return@LaunchedEffect
+                    val mediaItems =
+                        playableItems.map { factory.mediaItemFor(baseUrl, it.videoId, kind = it.kind) }
+                    val currentId = items.getOrNull(pagerState.currentPage)?.videoId
+                    val targetIdx = (currentId?.let { playlistIndexByVideoId[it] } ?: 0)
+                        .coerceIn(0, playableItems.lastIndex)
                     player.setMediaItems(mediaItems, targetIdx, 0L)
                     // Anti-doomscroll: NO infinite loop. We pause at the end of
                     // each clip instead of auto-looping (REPEAT_MODE_ONE) or
@@ -247,13 +260,25 @@ fun FeedScreen(
 
                 // Page wechsel = nur seekTo, kein setMediaItems / prepare. Decoder
                 // bleibt warm, Buffer bleiben gefüllt → smoother swipe.
-                LaunchedEffect(pagerState.currentPage) {
+                // Karten-Seiten (Langvideos) pausieren den Player nur.
+                LaunchedEffect(pagerState.currentPage, playlistKey) {
                     if (items.isEmpty()) return@LaunchedEffect
-                    val idx = pagerState.currentPage.coerceIn(0, items.lastIndex)
+                    val item = items.getOrNull(pagerState.currentPage) ?: return@LaunchedEffect
+                    if (item.kind == "video") {
+                        player.pause()
+                        return@LaunchedEffect
+                    }
+                    val idx = playlistIndexByVideoId[item.videoId] ?: return@LaunchedEffect
                     if (idx != player.currentMediaItemIndex) {
                         player.seekTo(idx, 0L)
                         // A clip that ran to its end leaves the player STATE_ENDED;
                         // re-prepare so the freshly-swiped clip starts from frame 0.
+                        if (player.playbackState == androidx.media3.common.Player.STATE_ENDED) {
+                            player.prepare()
+                        }
+                        player.playWhenReady = true
+                    } else if (!player.isPlaying) {
+                        // Rückkehr von einer Karten-Seite auf dasselbe abspielbare Item.
                         if (player.playbackState == androidx.media3.common.Player.STATE_ENDED) {
                             player.prepare()
                         }
@@ -267,6 +292,23 @@ fun FeedScreen(
                     modifier = Modifier.fillMaxSize(),
                 ) { page ->
                     val item = items[page]
+                    if (item.kind == "video") {
+                        LongVideoCard(
+                            item = item,
+                            onOpen = {
+                                onNavigate(playVideoRoute(item.videoId, item.title, item.channelTitle))
+                            },
+                        )
+                        // Karten-„gesehen": 1,5 s Verweildauer statt 3 s Playback —
+                        // Weiterswipen ohne Tap zählt bewusst als gesehen.
+                        LaunchedEffect(item.videoId, pagerState.settledPage) {
+                            if (pagerState.settledPage == page) {
+                                kotlinx.coroutines.delay(1_500)
+                                vm.onSeen(item.videoId)
+                            }
+                        }
+                        return@VerticalPager
+                    }
                     ReelPlayer(
                         item = item,
                         player = player,

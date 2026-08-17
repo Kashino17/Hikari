@@ -128,6 +128,7 @@ private fun FeedItemDto.toEntity(position: Int) = FeedItemEntity(
     addedAt = addedAt, saved = saved == 1, seen = seenAt != null,
     captionsJson = captions?.let { runCatching { Json.encodeToString(it) }.getOrNull() },
     context = context,
+    summary = summary,
     position = position,
 )
 
@@ -150,6 +151,7 @@ private fun FeedItemEntity.toDomain() = FeedItem(
         }.getOrNull()
     },
     context = context,
+    summary = summary,
 )
 
 private fun FeedItemDto.toDomain() = FeedItem(
@@ -167,4 +169,5 @@ private fun FeedItemDto.toDomain() = FeedItem(
         )
     },
     context = context,
+    summary = summary,
 )

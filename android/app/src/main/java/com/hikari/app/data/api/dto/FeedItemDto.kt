@@ -31,6 +31,7 @@ data class FeedItemDto(
     val seenAt: Long? = null,  // only present in mode=old responses
     val captions: List<CaptionDto>? = null,
     val context: String? = null,
+    val summary: String? = null,
 )
 
 @Serializable

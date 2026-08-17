@@ -20,4 +20,5 @@ data class FeedItem(
     val parentVideoId: String = "",
     val captions: List<Caption>? = null,
     val context: String? = null,
+    val summary: String? = null,
 )
