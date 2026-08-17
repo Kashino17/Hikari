@@ -96,6 +96,8 @@ fun SongRow(
     online: Boolean,
     modifier: Modifier = Modifier,
     badge: String? = null,
+    /** Positionsnummer in Ranglisten/Playlisten — null blendet die Spalte aus. */
+    number: Int? = null,
     onRemoveFromPlaylist: (() -> Unit)? = null,
     onOpenArtist: ((channelId: String, name: String) -> Unit)? = null,
 ) {
@@ -135,6 +137,17 @@ fun SongRow(
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        if (number != null) {
+            Text(
+                "$number",
+                fontSize = 13.sp,
+                fontWeight = if (number <= 3) FontWeight.Black else FontWeight.Medium,
+                color = if (number <= 3) HikariText else HikariTextFaint,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.width(26.dp),
+            )
+            Spacer(Modifier.width(4.dp))
+        }
         Box {
             // size()-Hint passend zur Zeilenhöhe — sonst dekodiert Coil die
             // volle Thumbnail-Auflösung für ein 48-dp-Bild.

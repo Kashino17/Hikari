@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -121,7 +122,7 @@ fun RemotePlaylistScreen(
                             Spacer(Modifier.height(8.dp))
                         }
                     }
-                    items(tracks, key = { it.videoId }) { song ->
+                    itemsIndexed(tracks, key = { _, s -> s.videoId }) { i, song ->
                         SongRow(
                             song,
                             viewModel,
@@ -130,6 +131,7 @@ fun RemotePlaylistScreen(
                             isDownloaded = song.videoId in downloadedIds,
                             progress = progressMap[song.videoId],
                             online = online,
+                            number = i + 1,
                         )
                     }
                 }

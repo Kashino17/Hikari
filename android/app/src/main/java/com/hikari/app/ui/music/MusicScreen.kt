@@ -1,5 +1,7 @@
 package com.hikari.app.ui.music
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -100,6 +102,19 @@ fun MusicScreen(
     val online by viewModel.isOnline.collectAsState()
     val snackbar = remember { SnackbarHostState() }
     var showModeSheet by remember { mutableStateOf(false) }
+
+    // Zurück-Geste auf der Musik-Übersicht: NIE zum Bibliothek-Tab
+    // zurückfallen — erst offene Zustände schließen, dann die App in den
+    // Hintergrund schicken (wie bei YouTube Music).
+    val backContext = LocalContext.current
+    BackHandler {
+        when {
+            showModeSheet -> showModeSheet = false
+            viewModel.searchActive || viewModel.searchQuery.isNotEmpty() || viewModel.searchAttempted ->
+                viewModel.clearSearch()
+            else -> (backContext as? android.app.Activity)?.moveTaskToBack(true)
+        }
+    }
 
     viewModel.message?.let { msg ->
         LaunchedEffect(msg) {

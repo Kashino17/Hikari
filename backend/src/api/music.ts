@@ -968,6 +968,16 @@ export async function registerMusicRoutes(
           }
           cachePut(artistPageCache, channelId, page, now());
         }
+      } else if (page && page.latest.length === 0) {
+        // Music-Artist: YTM liefert nur die beliebtesten Songs — die
+        // "Neuste"-Liste kommt best-effort aus den Kanal-Uploads.
+        const uploads = await dedupInflight(inflightArtistTops, `${channelId}:uploads`, () =>
+          itChannelVideos(fetchImpl, channelId),
+        );
+        if (uploads && uploads.length > 0) {
+          page = { ...page, latest: uploads.slice(0, 25) };
+          cachePut(artistPageCache, channelId, page, now());
+        }
       }
       if (page) {
         reply.header("cache-control", "public, max-age=300");

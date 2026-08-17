@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -215,18 +216,18 @@ fun ArtistScreen(
                                     PlayRoundButton { viewModel.play(topSongs.first(), topSongs) }
                                 }
                             }
-                            if (isPlainChannel) {
-                                // Kanal-Ansicht: kompakte Top/Neuste-Auswahl statt
-                                // einer endlosen Liste — der Rest folgt in Sektionen.
-                                if (latest.isNotEmpty()) {
-                                    item(key = "channel-tabs") {
-                                        ChannelListTabs(channelTab) { channelTab = it }
-                                    }
-                                } else {
-                                    item(key = "top-header") { SectionHeader("Videos") }
+                            // Kompakte Top-5/Neuste-5-Auswahl — bei Kanälen UND
+                            // Music-Artists, sobald es "Neuste" gibt; der Rest
+                            // der Beliebten folgt als eigene Sektion darunter.
+                            if (latest.isNotEmpty()) {
+                                item(key = "channel-tabs") {
+                                    ChannelListTabs(channelTab) { channelTab = it }
                                 }
-                                val tabQueue = if (channelTab == 0 || latest.isEmpty()) topSongs else latest
-                                items(tabQueue.take(5), key = { "tab-${it.videoId}" }) { song ->
+                                val tabQueue = if (channelTab == 0) topSongs else latest
+                                itemsIndexed(
+                                    tabQueue.take(5),
+                                    key = { _, s -> "tab-${s.videoId}" },
+                                ) { i, song ->
                                     SongRow(
                                         song,
                                         viewModel,
@@ -235,12 +236,18 @@ fun ArtistScreen(
                                         isDownloaded = song.videoId in downloadedIds,
                                         progress = progressMap[song.videoId],
                                         online = online,
+                                        number = i + 1,
                                         onOpenArtist = null,
                                     )
                                 }
                             } else {
-                                item(key = "top-header") { SectionHeader("Top-Songs") }
-                                items(topSongs, key = { "top-${it.videoId}" }) { song ->
+                                item(key = "top-header") {
+                                    SectionHeader(if (isPlainChannel) "Videos" else "Top-Songs")
+                                }
+                                itemsIndexed(
+                                    topSongs,
+                                    key = { _, s -> "top-${s.videoId}" },
+                                ) { i, song ->
                                     SongRow(
                                         song,
                                         viewModel,
@@ -249,6 +256,8 @@ fun ArtistScreen(
                                         isDownloaded = song.videoId in downloadedIds,
                                         progress = progressMap[song.videoId],
                                         online = online,
+                                        number = i + 1,
+                                        onOpenArtist = null,
                                     )
                                 }
                             }
@@ -307,13 +316,15 @@ fun ArtistScreen(
                             }
                         }
 
-                        // Kanal-Sektionen unter den Playlisten: die restlichen
-                        // beliebten Videos und alles noch nicht Gehörte.
-                        if (isPlainChannel) {
+                        // Unter den Playlisten: die restlichen Beliebten (Rang 6+)
+                        // — bei Kanälen zusätzlich alles noch nicht Gehörte.
+                        if (latest.isNotEmpty()) {
                             val popular = topSongs.drop(5).take(10)
                             if (popular.isNotEmpty()) {
-                                item(key = "popular-header") { SectionHeader("Beliebte Videos") }
-                                items(popular, key = { "pop-${it.videoId}" }) { song ->
+                                item(key = "popular-header") {
+                                    SectionHeader(if (isPlainChannel) "Beliebte Videos" else "Beliebte Songs")
+                                }
+                                itemsIndexed(popular, key = { _, s -> "pop-${s.videoId}" }) { i, song ->
                                     SongRow(
                                         song,
                                         viewModel,
@@ -322,10 +333,13 @@ fun ArtistScreen(
                                         isDownloaded = song.videoId in downloadedIds,
                                         progress = progressMap[song.videoId],
                                         online = online,
+                                        number = i + 6,
                                         onOpenArtist = null,
                                     )
                                 }
                             }
+                        }
+                        if (isPlainChannel) {
                             val seenIds = viewModel.history.map { it.videoId }.toSet()
                             val unseen = (latest + topSongs)
                                 .distinctBy { it.videoId }

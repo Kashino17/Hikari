@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -138,7 +139,7 @@ fun MixDetailScreen(
                             Spacer(Modifier.height(8.dp))
                         }
                     }
-                    items(songs, key = { it.videoId }) { song ->
+                    itemsIndexed(songs, key = { _, s -> s.videoId }) { i, song ->
                         SongRow(
                             song,
                             viewModel,
@@ -147,6 +148,7 @@ fun MixDetailScreen(
                             isDownloaded = song.videoId in downloadedIds,
                             progress = progressMap[song.videoId],
                             online = online,
+                            number = i + 1,
                         )
                     }
                 }
