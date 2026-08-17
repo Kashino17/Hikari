@@ -320,10 +320,12 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
                     fallbackName = name,
                     onBack = { nav.popBackStack() },
                     onOpenNowPlaying = { nav.navigate("nowplaying") },
-                    onOpenPlaylistMix = { title, query ->
-                        val t = URLEncoder.encode(title, "UTF-8")
-                        val q = URLEncoder.encode(query, "UTF-8")
-                        nav.navigate("mix/$t?q=$q&mode=music")
+                    onOpenCollection = { playlistId, collectionName, isAlbum ->
+                        val n = URLEncoder.encode(collectionName, "UTF-8")
+                        nav.navigate("music/collection/$playlistId?name=$n&isAlbum=$isAlbum")
+                    },
+                    onOpenArtist = { id, artistName ->
+                        nav.navigate("artist/$id?name=${URLEncoder.encode(artistName, "UTF-8")}")
                     },
                 )
             }

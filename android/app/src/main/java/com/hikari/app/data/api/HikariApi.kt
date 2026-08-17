@@ -46,6 +46,8 @@ import com.hikari.app.data.api.dto.RetryFailedResponse
 import com.hikari.app.data.api.dto.TodayCountResponse
 import com.hikari.app.data.api.dto.UpdateFilterRequest
 import com.hikari.app.data.api.dto.WeeklyStatsDto
+import com.hikari.app.data.api.dto.ArtistPageDto
+import com.hikari.app.data.api.dto.HomeFeedDto
 import com.hikari.app.data.api.dto.MusicStreamDto
 import com.hikari.app.data.api.dto.MusicTrackDto
 import com.hikari.app.data.api.dto.FullSearchDto
@@ -116,6 +118,18 @@ interface HikariApi {
     /** Tracks einer Remote-Playlist oder eines Albums. */
     @GET("music/playlist/{playlistId}")
     suspend fun getPlaylistTracks(@Path("playlistId") playlistId: String): List<MusicTrackDto>
+
+    /** YouTube-Music-Home-Feed (generisch, Personalisierung passiert im Client). */
+    @GET("music/home")
+    suspend fun getMusicHome(): HomeFeedDto
+
+    /** Radio-Queue zu einem Song — die Basis für Autoplay und "Dein Mix". */
+    @GET("music/related/{videoId}")
+    suspend fun getRelatedSongs(@Path("videoId") videoId: String): List<MusicTrackDto>
+
+    /** Komplette Artist-Seite (Profil, Top-Songs, Alben, Singles, Related) in einem Call. */
+    @GET("music/artist/{channelId}/page")
+    suspend fun getArtistPage(@Path("channelId") channelId: String): ArtistPageDto
 
     // ── Täglicher KI-Tagesbericht ─────────────────────────────────────────
     @GET("news/topics")

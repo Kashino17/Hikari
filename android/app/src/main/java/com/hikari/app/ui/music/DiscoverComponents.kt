@@ -707,6 +707,7 @@ fun SectionHeader(
     title: String,
     eyebrow: String? = null,
     onSeeAll: (() -> Unit)? = null,
+    actionLabel: String = "Alle",
 ) {
     Row(
         Modifier
@@ -736,7 +737,7 @@ fun SectionHeader(
                     .padding(horizontal = 11.dp, vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("Alle", fontSize = 12.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+                Text(actionLabel, fontSize = 12.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
                 Icon(
                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     null,

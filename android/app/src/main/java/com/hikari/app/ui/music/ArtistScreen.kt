@@ -23,7 +23,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -43,7 +45,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.hikari.app.domain.model.ArtistAlbum
 import com.hikari.app.domain.model.ArtistPlaylist
+import com.hikari.app.domain.model.SearchArtist
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariPrimary
 import com.hikari.app.ui.theme.HikariSurfaceHigh
@@ -55,10 +59,10 @@ private val PLAYLIST_CARD_WIDTH = 208.dp
 private val PLAYLIST_CARD_HEIGHT = 117.dp
 
 /**
- * Artist-Seite: Profil, Top-Songs und Playlists eines Künstlers. Die Inhalte
- * lädt das Backend über die Piped-Suche, weil die Kanal-Tabs der Instanzen
- * degradiert sind. [fallbackName] ist der Anzeigename aus dem Einstiegspunkt
- * und dient zugleich als Suchbegriff für Top-Songs und Playlists.
+ * Artist-Seite im YouTube-Music-Stil: Profil, Top-Songs, Alben, Singles,
+ * Playlists und ähnliche Künstler — alles aus einem Backend-Call, garantiert
+ * vom richtigen Kanal. [fallbackName] dient nur noch dem Fallback gegen alte
+ * Backends ohne den Page-Endpunkt.
  */
 @Composable
 fun ArtistScreen(
@@ -66,12 +70,14 @@ fun ArtistScreen(
     fallbackName: String,
     onBack: () -> Unit,
     onOpenNowPlaying: () -> Unit,
-    onOpenPlaylistMix: (title: String, query: String) -> Unit,
+    onOpenCollection: (playlistId: String, name: String, isAlbum: Boolean) -> Unit,
+    onOpenArtist: (channelId: String, name: String) -> Unit,
     viewModel: MusicViewModel = hiltViewModel(),
 ) {
-    val artist = viewModel.artist
-    val topSongs = viewModel.artistTop
-    val playlists = viewModel.artistPlaylists
+    val page = viewModel.artistPage
+    val artist = page?.artist
+    val topSongs = page?.topSongs.orEmpty()
+    val playlists = page?.playlists.orEmpty()
     val currentSong by viewModel.player.currentSong.collectAsState()
     val downloadedIds by viewModel.downloadedIds.collectAsState()
     val progressMap by viewModel.downloadProgress.collectAsState()
@@ -153,7 +159,28 @@ fun ArtistScreen(
                             }
                         }
 
+                        // Abspielen/Zufällig starten die Top-Songs als Queue.
                         if (topSongs.isNotEmpty()) {
+                            item(key = "actions") {
+                                Row(
+                                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                ) {
+                                    MuPrimaryButton(
+                                        "Abspielen",
+                                        Icons.Default.PlayArrow,
+                                        Modifier.weight(1f),
+                                    ) { viewModel.play(topSongs.first(), topSongs) }
+                                    MuGhostButton(
+                                        "Zufällig",
+                                        Icons.Default.Shuffle,
+                                        Modifier.weight(1f),
+                                    ) {
+                                        val shuffled = topSongs.shuffled()
+                                        viewModel.play(shuffled.first(), shuffled)
+                                    }
+                                }
+                            }
                             item(key = "top-header") { SectionHeader("Top-Songs") }
                             items(topSongs, key = { "top-${it.videoId}" }) { song ->
                                 SongRow(
@@ -169,17 +196,71 @@ fun ArtistScreen(
                             }
                         }
 
+                        val albums = page?.albums.orEmpty()
+                        if (albums.isNotEmpty()) {
+                            item(key = "albums-header") { SectionHeader("Alben") }
+                            item(key = "albums-row") {
+                                LazyRow(
+                                    contentPadding = PaddingValues(horizontal = 16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    items(albums, key = { "al-${it.playlistId}" }) { album ->
+                                        ArtistAlbumCard(
+                                            album = album,
+                                            onClick = { onOpenCollection(album.playlistId, album.name, true) },
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        val singles = page?.singles.orEmpty()
+                        if (singles.isNotEmpty()) {
+                            item(key = "singles-header") { SectionHeader("Singles & EPs") }
+                            item(key = "singles-row") {
+                                LazyRow(
+                                    contentPadding = PaddingValues(horizontal = 16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    items(singles, key = { "si-${it.playlistId}" }) { single ->
+                                        ArtistAlbumCard(
+                                            album = single,
+                                            onClick = { onOpenCollection(single.playlistId, single.name, true) },
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
                         if (playlists.isNotEmpty()) {
-                            item(key = "playlists-header") { SectionHeader("Alben & Playlists") }
+                            item(key = "playlists-header") { SectionHeader("Playlists") }
                             item(key = "playlists-row") {
                                 LazyRow(
                                     contentPadding = PaddingValues(horizontal = 16.dp),
                                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 ) {
-                                    items(playlists, key = { it.playlistId }) { playlist ->
+                                    items(playlists, key = { "pl-${it.playlistId}" }) { playlist ->
                                         ArtistPlaylistCard(
                                             playlist = playlist,
-                                            onClick = { onOpenPlaylistMix(playlist.name, playlist.name) },
+                                            onClick = { onOpenCollection(playlist.playlistId, playlist.name, false) },
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        val related = page?.related.orEmpty()
+                        if (related.isNotEmpty()) {
+                            item(key = "related-header") { SectionHeader("Ähnliche Künstler") }
+                            item(key = "related-row") {
+                                LazyRow(
+                                    contentPadding = PaddingValues(horizontal = 16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    items(related, key = { "re-${it.channelId}" }) { rel ->
+                                        RelatedArtistBubble(
+                                            artist = rel,
+                                            onClick = { onOpenArtist(rel.channelId, rel.name) },
                                         )
                                     }
                                 }
@@ -205,6 +286,90 @@ fun ArtistScreen(
                 .background(Color.Black.copy(alpha = 0.40f), CircleShape),
             tint = HikariText,
         ) { onBack() }
+    }
+}
+
+/** Album-/Single-Karte: quadratisches Cover, Name und Jahr darunter. */
+@Composable
+private fun ArtistAlbumCard(album: ArtistAlbum, onClick: () -> Unit) {
+    Column(Modifier.width(140.dp)) {
+        Box(
+            Modifier
+                .size(140.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(HikariSurfaceHigh)
+                .muPressable(onClick = onClick),
+        ) {
+            if (album.thumbnailUrl.isNotEmpty()) {
+                AsyncImage(
+                    model = album.thumbnailUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                Icon(
+                    Icons.Default.MusicNote,
+                    null,
+                    tint = HikariTextFaint,
+                    modifier = Modifier.size(36.dp).align(Alignment.Center),
+                )
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            album.name,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold,
+            color = HikariText,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        album.year?.let {
+            Text("$it", fontSize = 11.sp, color = HikariTextMuted)
+        }
+    }
+}
+
+/** Runder Avatar eines ähnlichen Künstlers — Tipp öffnet dessen Seite. */
+@Composable
+private fun RelatedArtistBubble(artist: SearchArtist, onClick: () -> Unit) {
+    Column(
+        Modifier.width(104.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            Modifier
+                .size(96.dp)
+                .clip(CircleShape)
+                .background(HikariSurfaceHigh)
+                .muPressable(onClick = onClick),
+        ) {
+            if (artist.thumbnailUrl.isNotEmpty()) {
+                AsyncImage(
+                    model = artist.thumbnailUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                Icon(
+                    Icons.Default.MusicNote,
+                    null,
+                    tint = HikariTextFaint,
+                    modifier = Modifier.size(30.dp).align(Alignment.Center),
+                )
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            artist.name,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = HikariText,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 

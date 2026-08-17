@@ -1,8 +1,10 @@
 package com.hikari.app.domain.repo
 
 import com.hikari.app.data.api.HikariApi
+import com.hikari.app.data.api.dto.ArtistAlbumDto
 import com.hikari.app.data.api.dto.ArtistDto
 import com.hikari.app.data.api.dto.ArtistPlaylistDto
+import com.hikari.app.data.api.dto.HomeItemDto
 import com.hikari.app.data.api.dto.MusicTrackDto
 import com.hikari.app.data.api.dto.PipedSearchPageDto
 import com.hikari.app.data.api.dto.PipedStreamsDto
@@ -21,8 +23,13 @@ import com.hikari.app.data.db.SearchHistoryDao
 import com.hikari.app.data.db.SearchHistoryEntity
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.model.Artist
+import com.hikari.app.domain.model.ArtistAlbum
+import com.hikari.app.domain.model.ArtistPage
 import com.hikari.app.domain.model.ArtistPlaylist
 import com.hikari.app.domain.model.FullSearchResults
+import com.hikari.app.domain.model.HomeItem
+import com.hikari.app.domain.model.HomeSection
+import com.hikari.app.domain.model.HomeSectionKind
 import com.hikari.app.domain.model.MusicAlbum
 import com.hikari.app.domain.model.MusicPlaylist
 import com.hikari.app.domain.model.MusicSearchResult
@@ -30,6 +37,7 @@ import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.domain.model.RemotePlaylist
 import com.hikari.app.domain.model.SearchArtist
 import java.net.URLEncoder
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -120,6 +128,9 @@ class MusicRepository(
     private val settings: SettingsStore,
 ) {
     companion object {
+        /** Gültigkeit des personalisierten Home-Feeds im Speicher. */
+        private const val HOME_CACHE_TTL_MS = 15 * 60 * 1000L
+
         private val PIPED_INSTANCES = listOf(
             "https://api.piped.private.coffee",
             "https://pipedapi.kavin.rocks",
@@ -509,11 +520,17 @@ class MusicRepository(
     }
 
     /**
-     * Nachschub, wenn die Warteschlange leerläuft. Sucht im Umfeld des zuletzt
-     * gespielten Stücks weiter; da der Weg über [searchMusic] führt, gilt der
-     * Instrumental-Filter hier genauso wie überall sonst.
+     * Nachschub, wenn die Warteschlange leerläuft. Erste Wahl ist die echte
+     * Radio-Queue von YouTube Music ([getRelatedSongs]); erst wenn sie nichts
+     * liefert, greift die alte Stichwortsuche im Umfeld des Seeds. Bei aktivem
+     * Instrumental-Filter bleibt es beim Suchweg — nur der filtert verlässlich
+     * auf Stücke ohne Gesang.
      */
     suspend fun getAutoplaySongs(seed: MusicSong, exclude: Set<String>): List<MusicSong> {
+        if (!instrumentalOnly()) {
+            val related = getRelatedSongs(seed.videoId).filter { it.videoId !in exclude }
+            if (related.size >= 3) return related.take(15)
+        }
         val queries = listOfNotNull(
             seed.uploader.takeIf { it.isNotBlank() },
             seed.title.split(" ", "(", "-").firstOrNull { it.length > 3 },
@@ -524,6 +541,136 @@ class MusicRepository(
             if (found.size >= 3) return found.take(10)
         }
         return emptyList()
+    }
+
+    /** Radio-Queue zu einem Song; Fehler → leere Liste. */
+    suspend fun getRelatedSongs(videoId: String): List<MusicSong> =
+        try {
+            withFavoriteState(api.getRelatedSongs(videoId).map { it.toSong() })
+        } catch (_: Exception) {
+            emptyList()
+        }
+
+    // --- Personalisierter Home-Feed ---
+
+    private var homeCache: List<HomeSection>? = null
+    private var homeCacheAt = 0L
+
+    /**
+     * Baut den Entdecken-Feed im YouTube-Music-Stil: Radio-Mixe aus den
+     * eigenen Hör-Seeds (Verlauf + Favoriten), dazu die generischen
+     * Home-Sektionen des Backends. Läuft alles ins Leere (kein Netz, neues
+     * Backend fehlt, leere Bibliothek), bleiben die kuratierten Mixe als
+     * Fallback — der Tab ist nie leer, solange irgendetwas erreichbar ist.
+     * Instrumental-Modus nutzt weiter die kuratierten Instrumental-Mixe:
+     * Radio-Queues können Gesang nicht ausschließen.
+     */
+    suspend fun getPersonalizedHome(force: Boolean = false): List<HomeSection> = coroutineScope {
+        if (instrumentalOnly()) return@coroutineScope curatedHomeSections(INSTRUMENTAL_SECTIONS)
+        val nowMs = System.currentTimeMillis()
+        homeCache?.takeIf { !force && nowMs - homeCacheAt < HOME_CACHE_TTL_MS }?.let {
+            return@coroutineScope it
+        }
+
+        val history = runCatching { getHistory() }.getOrDefault(emptyList())
+        val favorites = runCatching { getFavorites() }.getOrDefault(emptyList())
+        // Seeds: jüngster Verlauf zuerst, Favoriten mischen den Geschmack
+        // abseits der letzten Tage dazu.
+        val seeds = (history.take(8) + favorites.shuffled().take(4))
+            .distinctBy { it.videoId }
+            .shuffled()
+            .take(3)
+
+        val relatedDeferred = seeds.map { seed -> async { seed to getRelatedSongs(seed.videoId) } }
+        val backendHome = async { runCatching { api.getMusicHome() }.getOrNull() }
+        val relatedBySeed = relatedDeferred.map { it.await() }
+
+        val recentIds = history.take(10).map { it.videoId }.toSet()
+        val sections = mutableListOf<HomeSection>()
+
+        // "Dein Mix": alle Radio-Queues gemischt, ohne frisch Gehörtes.
+        val mix = relatedBySeed
+            .flatMap { it.second }
+            .shuffled()
+            .distinctBy { it.videoId }
+            .filter { it.videoId !in recentIds }
+            .take(20)
+        if (mix.size >= 5) {
+            sections += HomeSection("Dein Mix", HomeSectionKind.MIX, songs = mix)
+        }
+
+        // Bis zu zwei "Ähnlich wie …"-Sektionen aus einzelnen Seeds.
+        relatedBySeed
+            .filter { it.second.size >= 5 }
+            .take(2)
+            .forEach { (seed, related) ->
+                sections += HomeSection(
+                    "Ähnlich wie ${seedLabelOf(seed)}",
+                    HomeSectionKind.SIMILAR,
+                    songs = related.take(12),
+                )
+            }
+
+        // Generische YouTube-Music-Sektionen (Quick Picks, Charts, …).
+        backendHome.await()?.sections?.forEach { dto ->
+            val items = dto.items.mapNotNull { it.toHomeItem() }
+            if (dto.title.isNotBlank() && items.size >= 3) {
+                sections += HomeSection(dto.title, HomeSectionKind.BACKEND, items = items)
+            }
+        }
+
+        if (favorites.size >= 4) {
+            sections += HomeSection(
+                "Deine Favoriten",
+                HomeSectionKind.FAVORITES,
+                songs = favorites.shuffled().take(12),
+            )
+        }
+
+        // Nichts Personalisiertes und nichts vom Backend → kuratierte Mixe.
+        val result = sections.ifEmpty { curatedHomeSections(DISCOVER_SECTIONS) }
+        if (result.isNotEmpty()) {
+            homeCache = result
+            homeCacheAt = nowMs
+        }
+        result
+    }
+
+    /** Kuratierte Suchbegriff-Mixe im Home-Sektionsformat (Fallback-Pfad). */
+    private suspend fun curatedHomeSections(source: List<Pair<String, String>>): List<HomeSection> =
+        coroutineScope {
+            source.map { (title, query) ->
+                async {
+                    val songs = try {
+                        getMixSongs(query, MusicSearchMode.MUSIC).take(12)
+                    } catch (_: Exception) {
+                        emptyList()
+                    }
+                    HomeSection(title, HomeSectionKind.CURATED, songs = songs, query = query)
+                }
+            }.map { it.await() }.filter { it.songs.isNotEmpty() }
+        }
+
+    /** Kurzform des Seeds für den Sektionstitel — Titel bis zur Klammer, sonst Uploader. */
+    private fun seedLabelOf(seed: MusicSong): String {
+        val short = seed.title
+            .substringBefore("(")
+            .substringBefore("[")
+            .substringBefore(" - ")
+            .trim()
+        return when {
+            short.length in 2..32 -> "„$short“"
+            seed.uploader.isNotBlank() -> seed.uploader
+            else -> "„${seed.title.take(28)}“"
+        }
+    }
+
+    private fun HomeItemDto.toHomeItem(): HomeItem? = when (kind) {
+        "song" -> song?.let { HomeItem.SongItem(it.toSong()) }
+        "playlist" -> playlist?.let { HomeItem.PlaylistItem(it.toModel()) }
+        "album" -> album?.let { HomeItem.AlbumItem(it.toModel()) }
+        "artist" -> artist?.let { HomeItem.ArtistItem(it.toModel()) }
+        else -> null
     }
 
     suspend fun getAudioStream(videoId: String, forceRefresh: Boolean = false): String? {
@@ -740,6 +887,54 @@ class MusicRepository(
 
     suspend fun getArtistPlaylists(channelId: String, name: String): List<ArtistPlaylist> =
         api.getArtistPlaylists(channelId, name).map { it.toModel() }
+
+    /**
+     * Komplette Artist-Seite in einem Call. Fehlt der neue Endpunkt (altes
+     * Backend), wird die Seite aus den drei alten Endpunkten zusammengesetzt —
+     * [fallbackName] ist dort der Suchbegriff. Fehler der Zusatz-Sektionen
+     * verschlucken sich zu leeren Listen; nur ohne Profil fliegt die Exception
+     * zum Aufrufer.
+     */
+    suspend fun getArtistPage(channelId: String, fallbackName: String): ArtistPage =
+        try {
+            val dto = api.getArtistPage(channelId)
+            ArtistPage(
+                artist = dto.artist.toModel(),
+                topSongs = withFavoriteState(dto.topSongs.map { it.toSong() }),
+                albums = dto.albums.map { it.toModel() },
+                singles = dto.singles.map { it.toModel() },
+                playlists = dto.playlists.map { it.toModel() },
+                related = dto.related.map { it.toModel() },
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            coroutineScope {
+                val top = async {
+                    runCatching { getArtistTop(channelId, fallbackName) }.getOrDefault(emptyList())
+                }
+                val playlists = async {
+                    runCatching { getArtistPlaylists(channelId, fallbackName) }.getOrDefault(emptyList())
+                }
+                ArtistPage(
+                    artist = getArtist(channelId),
+                    topSongs = top.await(),
+                    albums = emptyList(),
+                    singles = emptyList(),
+                    playlists = playlists.await(),
+                    related = emptyList(),
+                )
+            }
+        }
+
+    private fun ArtistAlbumDto.toModel() = ArtistAlbum(
+        playlistId = playlistId,
+        name = name,
+        artistName = artistName,
+        thumbnailUrl = thumbnailUrl,
+        videoCount = videoCount,
+        year = year,
+    )
 
     private fun ArtistDto.toModel() = Artist(
         channelId = channelId,

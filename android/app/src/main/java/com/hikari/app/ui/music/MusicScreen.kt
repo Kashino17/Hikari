@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -60,12 +61,17 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import com.hikari.app.domain.model.HomeItem
+import com.hikari.app.domain.model.HomeSectionKind
 import com.hikari.app.domain.model.MusicSearchResult
 import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.domain.repo.MusicSearchFilter
@@ -365,6 +371,16 @@ private fun DiscoverTab(
                     MuGhostButton("Erneut versuchen", onClick = { viewModel.loadDiscover() })
                 }
             }
+            musicMode -> homeContent(
+                viewModel = viewModel,
+                currentVideoId = currentSong?.videoId,
+                downloadedIds = downloadedIds,
+                progressMap = progressMap,
+                online = online,
+                onOpenMix = onOpenMix,
+                onOpenArtist = onOpenArtist,
+                onOpenCollection = onOpenCollection,
+            )
             else -> discoverContent(
                 viewModel = viewModel,
                 currentVideoId = currentSong?.videoId,
@@ -373,6 +389,120 @@ private fun DiscoverTab(
                 online = online,
                 onOpenMix = onOpenMix,
             )
+        }
+    }
+}
+
+/**
+ * Personalisierter Home-Feed des Musik-Modus: "Dein Mix" und "Ähnlich wie …"
+ * aus den eigenen Hör-Seeds, dazu die YouTube-Music-Sektionen des Backends
+ * mit gemischten Inhalten (Songs, Playlists, Alben, Künstler). Song-Sektionen
+ * wechseln sich als Kachelreihe und kompakte Liste ab — gleicher Rhythmus wie
+ * die kuratierten Mixe.
+ */
+private fun LazyListScope.homeContent(
+    viewModel: MusicViewModel,
+    currentVideoId: String?,
+    downloadedIds: Set<String>,
+    progressMap: Map<String, Float>,
+    online: Boolean,
+    onOpenMix: (title: String, query: String, mode: String) -> Unit,
+    onOpenArtist: (channelId: String, name: String) -> Unit,
+    onOpenCollection: (playlistId: String, name: String, isAlbum: Boolean) -> Unit,
+) {
+    val sections = viewModel.homeSections
+    if (sections.isEmpty()) return
+
+    var songRowToggle = 0
+    sections.forEachIndexed { index, section ->
+        item(key = "hh-$index") {
+            when (section.kind) {
+                HomeSectionKind.MIX -> SectionHeader(
+                    section.title,
+                    eyebrow = "FÜR DICH",
+                    onSeeAll = { section.songs.firstOrNull()?.let { viewModel.play(it, section.songs) } },
+                    actionLabel = "Abspielen",
+                )
+                HomeSectionKind.SIMILAR, HomeSectionKind.FAVORITES -> SectionHeader(
+                    section.title,
+                    onSeeAll = { section.songs.firstOrNull()?.let { viewModel.play(it, section.songs) } },
+                    actionLabel = "Abspielen",
+                )
+                HomeSectionKind.CURATED -> SectionHeader(
+                    section.title,
+                    onSeeAll = { onOpenMix(section.title, section.query, MusicSearchMode.MUSIC.apiValue) },
+                )
+                HomeSectionKind.BACKEND -> SectionHeader(section.title)
+            }
+        }
+
+        if (section.items.isNotEmpty()) {
+            // Backend-Sektion: gemischtes Karussell aus allen Item-Typen.
+            val sectionQueue = section.items
+                .mapNotNull { (it as? HomeItem.SongItem)?.song }
+            item(key = "hi-$index") {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    itemsIndexed(section.items) { itemIndex, entry ->
+                        when (entry) {
+                            is HomeItem.SongItem -> TileBound(entry.song, viewModel, sectionQueue)
+                            is HomeItem.PlaylistItem -> HomeCollectionCard(
+                                name = entry.playlist.name,
+                                subtitle = entry.playlist.uploaderName,
+                                thumbnailUrl = entry.playlist.thumbnailUrl,
+                                onClick = {
+                                    onOpenCollection(entry.playlist.playlistId, entry.playlist.name, false)
+                                },
+                            )
+                            is HomeItem.AlbumItem -> HomeCollectionCard(
+                                name = entry.album.name,
+                                subtitle = entry.album.artistName,
+                                thumbnailUrl = entry.album.thumbnailUrl,
+                                onClick = {
+                                    onOpenCollection(entry.album.playlistId, entry.album.name, true)
+                                },
+                            )
+                            is HomeItem.ArtistItem -> HomeArtistBubble(
+                                name = entry.artist.name,
+                                thumbnailUrl = entry.artist.thumbnailUrl,
+                                onClick = { onOpenArtist(entry.artist.channelId, entry.artist.name) },
+                            )
+                        }
+                    }
+                }
+            }
+        } else if (section.songs.isNotEmpty()) {
+            if (songRowToggle % 2 == 0) {
+                item(key = "hr-$index") {
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(section.songs, key = { "ht-$index-${it.videoId}" }) { song ->
+                            TileBound(song, viewModel, section.songs)
+                        }
+                    }
+                }
+            } else {
+                items(
+                    section.songs.take(4),
+                    key = { "hl-$index-${it.videoId}" },
+                ) { song ->
+                    SongRow(
+                        song,
+                        viewModel,
+                        section.songs,
+                        isCurrent = currentVideoId == song.videoId,
+                        isDownloaded = song.videoId in downloadedIds,
+                        progress = progressMap[song.videoId],
+                        online = online,
+                        onOpenArtist = onOpenArtist,
+                    )
+                }
+            }
+            songRowToggle++
         }
     }
 }
@@ -633,6 +763,105 @@ private fun RankedRowBound(
         isDownloaded = song.videoId in downloadedIds,
         onClick = { viewModel.play(song, queue) },
     )
+}
+
+/** Playlist-/Album-Karte im Home-Feed: quadratisches Cover, Name darunter. */
+@Composable
+private fun HomeCollectionCard(
+    name: String,
+    subtitle: String,
+    thumbnailUrl: String,
+    onClick: () -> Unit,
+) {
+    Column(Modifier.width(140.dp)) {
+        Box(
+            Modifier
+                .size(140.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(HikariSurfaceHigh)
+                .muPressable(onClick = onClick),
+        ) {
+            if (thumbnailUrl.isNotEmpty()) {
+                AsyncImage(
+                    model = thumbnailUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                Icon(
+                    Icons.Default.MusicNote,
+                    null,
+                    tint = HikariTextFaint,
+                    modifier = Modifier.size(36.dp).align(Alignment.Center),
+                )
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            name,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold,
+            color = HikariText,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (subtitle.isNotBlank()) {
+            Text(
+                subtitle,
+                fontSize = 11.sp,
+                color = HikariTextMuted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/** Runder Künstler-Avatar für Home-Karusselle — Tipp öffnet die Artist-Seite. */
+@Composable
+private fun HomeArtistBubble(
+    name: String,
+    thumbnailUrl: String,
+    onClick: () -> Unit,
+) {
+    Column(
+        Modifier.width(104.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            Modifier
+                .size(96.dp)
+                .clip(CircleShape)
+                .background(HikariSurfaceHigh)
+                .muPressable(onClick = onClick),
+        ) {
+            if (thumbnailUrl.isNotEmpty()) {
+                AsyncImage(
+                    model = thumbnailUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                Icon(
+                    Icons.Default.MusicNote,
+                    null,
+                    tint = HikariTextFaint,
+                    modifier = Modifier.size(30.dp).align(Alignment.Center),
+                )
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            name,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = HikariText,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
 }
 
 @Composable

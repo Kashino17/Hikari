@@ -10,9 +10,9 @@ import com.hikari.app.data.db.LocalMusicDownloadEntity
 import com.hikari.app.data.net.ConnectivityObserver
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.download.LocalMusicDownloadManager
-import com.hikari.app.domain.model.Artist
-import com.hikari.app.domain.model.ArtistPlaylist
+import com.hikari.app.domain.model.ArtistPage
 import com.hikari.app.domain.model.FullSearchResults
+import com.hikari.app.domain.model.HomeSection
 import com.hikari.app.domain.model.MusicAlbum
 import com.hikari.app.domain.model.MusicPlaylist
 import com.hikari.app.domain.model.MusicSong
@@ -125,12 +125,12 @@ class MusicViewModel @Inject constructor(
     var discoverLoading by mutableStateOf(false)
     var discoverFailed by mutableStateOf(false)
 
-    /** Zustand der Artist-Seite — Profil, Top-Songs und Playlists werden parallel geladen. */
-    var artist by mutableStateOf<Artist?>(null)
+    /** Personalisierter Home-Feed des Musik-Modus (Mixe, Related, Backend-Sektionen). */
+    var homeSections by mutableStateOf<List<HomeSection>>(emptyList())
         private set
-    var artistTop by mutableStateOf<List<MusicSong>>(emptyList())
-        private set
-    var artistPlaylists by mutableStateOf<List<ArtistPlaylist>>(emptyList())
+
+    /** Zustand der Artist-Seite — kommt komplett aus einem Backend-Call. */
+    var artistPage by mutableStateOf<ArtistPage?>(null)
         private set
     var artistLoading by mutableStateOf(false)
         private set
@@ -179,7 +179,8 @@ class MusicViewModel @Inject constructor(
         // Kommt das Netz zurück, sind die Entdecken-Vorschläge nachholbar.
         viewModelScope.launch {
             isOnline.collect { online ->
-                if (online && discoverSections.isEmpty() && !discoverLoading) loadDiscover()
+                val empty = if (searchMode == MusicSearchMode.MUSIC) homeSections.isEmpty() else discoverSections.isEmpty()
+                if (online && empty && !discoverLoading) loadDiscover()
             }
         }
         // Vorschläge zur Eingabe mit kurzer Verzögerung nachladen — nur im
@@ -205,6 +206,7 @@ class MusicViewModel @Inject constructor(
             val next = !instrumentalOnly.value
             settings.setInstrumentalOnly(next)
             discoverSections = emptyList()
+            homeSections = emptyList()
             loadDiscover(force = true)
             if (searchAttempted && searchQuery.isNotBlank()) search(searchQuery)
             message = if (next) "Nur noch Musik ohne Gesang" else "Alle Musik"
@@ -216,9 +218,17 @@ class MusicViewModel @Inject constructor(
         viewModelScope.launch {
             discoverLoading = true
             discoverFailed = false
-            val sections = repo.getDiscoverSections(searchMode)
-            discoverSections = sections
-            discoverFailed = sections.isEmpty()
+            if (searchMode == MusicSearchMode.MUSIC) {
+                // Musik bekommt den personalisierten Feed; die kuratierten
+                // Sektionen stecken dort als Fallback bereits drin.
+                val sections = repo.getPersonalizedHome(force)
+                homeSections = sections
+                discoverFailed = sections.isEmpty()
+            } else {
+                val sections = repo.getDiscoverSections(searchMode)
+                discoverSections = sections
+                discoverFailed = sections.isEmpty()
+            }
             discoverLoading = false
         }
     }
@@ -362,6 +372,7 @@ class MusicViewModel @Inject constructor(
         // Weg vom Musik-Modus: Smart-Search-Zustand mit zurücksetzen.
         if (mode != MusicSearchMode.MUSIC) resetSmartSearch()
         discoverSections = emptyList()
+        homeSections = emptyList()
         loadDiscover(force = true)
         if (searchAttempted && searchQuery.isNotBlank()) search(searchQuery)
     }
@@ -376,27 +387,17 @@ class MusicViewModel @Inject constructor(
     }
 
     /**
-     * Lädt Profil, Top-Songs und Playlists eines Künstlers parallel. [name] ist
-     * der Anzeigename aus dem Einstiegspunkt — das Backend sucht damit nach den
-     * Inhalten, weil die Piped-Kanal-Tabs degradiert sind.
+     * Lädt die komplette Artist-Seite in einem Call. [name] dient nur noch dem
+     * Fallback-Pfad gegen alte Backends, die den Page-Endpunkt nicht kennen.
      */
     fun loadArtist(channelId: String, name: String) {
         artistJob?.cancel()
         artistJob = viewModelScope.launch {
             artistLoading = true
             artistFailed = false
-            artist = null
-            artistTop = emptyList()
-            artistPlaylists = emptyList()
+            artistPage = null
             try {
-                coroutineScope {
-                    val profile = async { repo.getArtist(channelId) }
-                    val top = async { repo.getArtistTop(channelId, name) }
-                    val playlists = async { repo.getArtistPlaylists(channelId, name) }
-                    artist = profile.await()
-                    artistTop = top.await()
-                    artistPlaylists = playlists.await()
-                }
+                artistPage = repo.getArtistPage(channelId, name)
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {

@@ -1,9 +1,9 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, it, vi } from "vitest";
 import Fastify from "fastify";
-import { registerMusicRoutes, type MusicDeps } from "./music.js";
+import { describe, expect, it, vi } from "vitest";
+import { type MusicDeps, registerMusicRoutes } from "./music.js";
 
 const PIPED_ITEM = {
   url: "/watch?v=dQw4w9WgXcQ",
@@ -18,11 +18,33 @@ function okJson(body: unknown): Response {
   return { ok: true, json: async () => body } as unknown as Response;
 }
 
-async function makeApp(deps: MusicDeps) {
+/**
+ * Baut die Test-App. Innertube-Aufrufe (music.youtube.com) werden standard-
+ * mäßig VOR dem übergebenen fetchImpl abgefangen und abgelehnt — die
+ * bestehenden Piped-Tests (Call-Counts, URL-Assertions) sehen sie so nie.
+ * Innertube-Tests setzen `innertube: true` und routen selbst per URL.
+ */
+async function makeApp(deps: MusicDeps, opts: { innertube?: boolean } = {}) {
   const app = Fastify();
+  const inner = deps.fetchImpl;
+  const routed: typeof fetch | undefined =
+    inner && !opts.innertube
+      ? (((url: unknown, init?: unknown) =>
+          String(url).includes("music.youtube.com")
+            ? Promise.reject(new Error("innertube disabled in test"))
+            : (inner as unknown as (u: unknown, i?: unknown) => Promise<Response>)(
+                url,
+                init,
+              )) as unknown as typeof fetch)
+      : inner;
   // Staffelung und Retry-Delays in Tests abschalten (keine echten Wartezeiten);
   // gezielte Tests überschreiben sie per deps.
-  await registerMusicRoutes(app, { searchStaggerMs: [], retryDelaysMs: [0, 0], ...deps });
+  await registerMusicRoutes(app, {
+    searchStaggerMs: [],
+    retryDelaysMs: [0, 0],
+    ...deps,
+    ...(routed ? { fetchImpl: routed } : {}),
+  });
   return app;
 }
 
@@ -32,18 +54,21 @@ describe("GET /music/search", () => {
     const app = await makeApp({ fetchImpl });
     const res = await app.inject({ method: "GET", url: "/music/search?q=rick" });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual([{
-      videoId: "dQw4w9WgXcQ",
-      title: "Never Gonna Give You Up",
-      uploader: "Rick Astley",
-      thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg",
-      durationSeconds: 213,
-    }]);
+    expect(res.json()).toEqual([
+      {
+        videoId: "dQw4w9WgXcQ",
+        title: "Never Gonna Give You Up",
+        uploader: "Rick Astley",
+        thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg",
+        durationSeconds: 213,
+      },
+    ]);
     await app.close();
   });
 
   it("queries all instances in parallel and uses the first valid payload", async () => {
-    const fetchImpl = vi.fn()
+    const fetchImpl = vi
+      .fn()
       .mockRejectedValueOnce(new Error("timeout"))
       .mockResolvedValueOnce({ ok: false } as unknown as Response)
       .mockResolvedValueOnce(okJson({ items: [PIPED_ITEM] }));
@@ -59,11 +84,13 @@ describe("GET /music/search", () => {
     const slow = new Promise<Response>((resolve) =>
       setTimeout(() => resolve(okJson({ items: [{ ...PIPED_ITEM, title: "Langsam" }] })), 100),
     );
-    const fetchImpl = vi.fn().mockImplementation((url: string) =>
-      url.startsWith("https://api.piped.private.coffee")
-        ? slow
-        : Promise.resolve(okJson({ items: [PIPED_ITEM] })),
-    );
+    const fetchImpl = vi
+      .fn()
+      .mockImplementation((url: string) =>
+        url.startsWith("https://api.piped.private.coffee")
+          ? slow
+          : Promise.resolve(okJson({ items: [PIPED_ITEM] })),
+      );
     const app = await makeApp({ fetchImpl });
     const res = await app.inject({ method: "GET", url: "/music/search?q=rick" });
     expect(res.statusCode).toBe(200);
@@ -147,7 +174,9 @@ describe("GET /music/search", () => {
 
   it("deduplicates identical concurrent searches", async () => {
     let release!: (value: Response) => void;
-    const gate = new Promise<Response>((r) => { release = r; });
+    const gate = new Promise<Response>((r) => {
+      release = r;
+    });
     const fetchImpl = vi.fn().mockReturnValue(gate);
     const app = await makeApp({ fetchImpl });
     const first = app.inject({ method: "GET", url: "/music/search?q=rick" });
@@ -176,7 +205,8 @@ describe("GET /music/search", () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     try {
       const hanging = new Promise<Response>(() => {});
-      const fetchImpl = vi.fn()
+      const fetchImpl = vi
+        .fn()
         .mockReturnValueOnce(hanging)
         .mockResolvedValue(okJson({ items: [PIPED_ITEM] }));
       const app = await makeApp({ fetchImpl, searchStaggerMs: [0, 400, 1200, 2400] });
@@ -202,7 +232,9 @@ describe("GET /music/search", () => {
 
 describe("GET /music/stream/:videoId", () => {
   it("returns the yt-dlp audio URL", async () => {
-    const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/audio.m4a\n", stderr: "" });
+    const ytDlp = vi
+      .fn()
+      .mockResolvedValue({ stdout: "https://cdn.example/audio.m4a\n", stderr: "" });
     const app = await makeApp({ ytDlp });
     const res = await app.inject({ method: "GET", url: "/music/stream/dQw4w9WgXcQ" });
     expect(res.statusCode).toBe(200);
@@ -249,7 +281,9 @@ describe("GET /music/stream/:videoId", () => {
 
   it("deduplicates concurrent resolutions of the same video", async () => {
     let release!: (value: { stdout: string; stderr: string }) => void;
-    const gate = new Promise<{ stdout: string; stderr: string }>((r) => { release = r; });
+    const gate = new Promise<{ stdout: string; stderr: string }>((r) => {
+      release = r;
+    });
     const ytDlp = vi.fn().mockReturnValue(gate);
     const app = await makeApp({ ytDlp });
     const first = app.inject({ method: "GET", url: "/music/stream/dQw4w9WgXcQ" });
@@ -297,7 +331,9 @@ describe("GET /music/audio/:videoId", () => {
     });
 
   it("proxies the audio bytes from the resolved URL", async () => {
-    const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/audio.m4a\n", stderr: "" });
+    const ytDlp = vi
+      .fn()
+      .mockResolvedValue({ stdout: "https://cdn.example/audio.m4a\n", stderr: "" });
     const fetchImpl = vi.fn().mockResolvedValue(upstream(200, "AUDIOBYTES"));
     const app = await makeApp({ ytDlp, fetchImpl });
     const res = await app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
@@ -310,10 +346,12 @@ describe("GET /music/audio/:videoId", () => {
   });
 
   it("forwards the Range header and passes 206 + Content-Range through", async () => {
-    const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/audio.m4a", stderr: "" });
-    const fetchImpl = vi.fn().mockResolvedValue(
-      upstream(206, "PART", { "content-range": "bytes 0-3/1000" }),
-    );
+    const ytDlp = vi
+      .fn()
+      .mockResolvedValue({ stdout: "https://cdn.example/audio.m4a", stderr: "" });
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(upstream(206, "PART", { "content-range": "bytes 0-3/1000" }));
     const app = await makeApp({ ytDlp, fetchImpl });
     const res = await app.inject({
       method: "GET",
@@ -323,15 +361,19 @@ describe("GET /music/audio/:videoId", () => {
     expect(res.statusCode).toBe(206);
     expect(res.headers["content-range"]).toBe("bytes 0-3/1000");
     const [, init] = fetchImpl.mock.calls[0];
-    expect((init as { headers: Record<string, string> }).headers).toMatchObject({ range: "bytes=0-3" });
+    expect((init as { headers: Record<string, string> }).headers).toMatchObject({
+      range: "bytes=0-3",
+    });
     await app.close();
   });
 
   it("re-resolves once when the upstream URL is stale (403)", async () => {
-    const ytDlp = vi.fn()
+    const ytDlp = vi
+      .fn()
       .mockResolvedValueOnce({ stdout: "https://cdn.example/stale.m4a", stderr: "" })
       .mockResolvedValueOnce({ stdout: "https://cdn.example/fresh.m4a", stderr: "" });
-    const fetchImpl = vi.fn()
+    const fetchImpl = vi
+      .fn()
       .mockResolvedValueOnce(upstream(403, "denied"))
       .mockResolvedValueOnce(upstream(200, "FRESH"));
     const app = await makeApp({ ytDlp, fetchImpl });
@@ -379,7 +421,8 @@ describe("GET /music/audio/:videoId", () => {
 
   it("retries a transient fetch error with the same URL before re-resolving", async () => {
     const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/a.m4a", stderr: "" });
-    const fetchImpl = vi.fn()
+    const fetchImpl = vi
+      .fn()
       .mockRejectedValueOnce(new Error("connection reset"))
       .mockResolvedValue(upstream(200, "RECOVERED"));
     const app = await makeApp({ ytDlp, fetchImpl });
@@ -397,10 +440,11 @@ describe("GET /music/audio/:videoId", () => {
     try {
       const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/a.m4a", stderr: "" });
       // Fetch hängt in der Header-Phase und reagiert nur auf das Abort-Signal
-      const fetchImpl = vi.fn().mockImplementation((_url: string, init: { signal: AbortSignal }) =>
-        new Promise<Response>((_resolve, reject) => {
-          init.signal.addEventListener("abort", () => reject(new Error("aborted")));
-        }),
+      const fetchImpl = vi.fn().mockImplementation(
+        (_url: string, init: { signal: AbortSignal }) =>
+          new Promise<Response>((_resolve, reject) => {
+            init.signal.addEventListener("abort", () => reject(new Error("aborted")));
+          }),
       );
       const app = await makeApp({ ytDlp, fetchImpl });
       const req = app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
@@ -466,7 +510,8 @@ describe("GET /music/artist/:channelId", () => {
   });
 
   it("fails over to the next instance", async () => {
-    const fetchImpl = vi.fn()
+    const fetchImpl = vi
+      .fn()
       .mockRejectedValueOnce(new Error("timeout"))
       .mockResolvedValueOnce(okJson(PIPED_CHANNEL));
     const app = await makeApp({ fetchImpl });
@@ -506,7 +551,9 @@ describe("GET /music/artist/:channelId", () => {
 
   it("deduplicates concurrent artist lookups", async () => {
     let release!: (value: Response) => void;
-    const gate = new Promise<Response>((r) => { release = r; });
+    const gate = new Promise<Response>((r) => {
+      release = r;
+    });
     const fetchImpl = vi.fn().mockReturnValue(gate);
     const app = await makeApp({ fetchImpl });
     const first = app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}` });
@@ -522,14 +569,20 @@ describe("GET /music/artist/:channelId", () => {
 
 describe("GET /music/artist/:channelId/top", () => {
   it("sorts by views and prefers the artist's own channel", async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(okJson({
-      items: [
-        streamItem({ title: "Fremd, viele Views", uploaderUrl: "/channel/UCother000", views: 9000 }),
-        streamItem({ title: "Eigen 1", views: 500 }),
-        streamItem({ title: "Eigen 2", views: 3000 }),
-        streamItem({ title: "Eigen 3", views: 100 }),
-      ],
-    }));
+    const fetchImpl = vi.fn().mockResolvedValue(
+      okJson({
+        items: [
+          streamItem({
+            title: "Fremd, viele Views",
+            uploaderUrl: "/channel/UCother000",
+            views: 9000,
+          }),
+          streamItem({ title: "Eigen 1", views: 500 }),
+          streamItem({ title: "Eigen 2", views: 3000 }),
+          streamItem({ title: "Eigen 3", views: 100 }),
+        ],
+      }),
+    );
     const app = await makeApp({ fetchImpl });
     const res = await app.inject({
       method: "GET",
@@ -538,7 +591,9 @@ describe("GET /music/artist/:channelId/top", () => {
     expect(res.statusCode).toBe(200);
     // 3 eigene Treffer → nur der eigene Kanal, absteigend nach Views
     expect(res.json().map((t: { title: string }) => t.title)).toEqual([
-      "Eigen 2", "Eigen 1", "Eigen 3",
+      "Eigen 2",
+      "Eigen 1",
+      "Eigen 3",
     ]);
     expect(fetchImpl).toHaveBeenCalledWith(
       expect.stringContaining("filter=videos"),
@@ -547,21 +602,24 @@ describe("GET /music/artist/:channelId/top", () => {
     await app.close();
   });
 
-  it("falls back to all streams when the channel has fewer than 3 hits", async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(okJson({
-      items: [
-        streamItem({ title: "Fremd", uploaderUrl: "/channel/UCother000", views: 9000 }),
-        streamItem({ title: "Eigen", views: 500 }),
-        { url: "/watch?v=dQw4w9WgXcQ", type: "channel", title: "kein Stream" },
-      ],
-    }));
+  it("keeps only own-channel streams — no foreign uploaders on artist pages", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      okJson({
+        items: [
+          streamItem({ title: "Fremd", uploaderUrl: "/channel/UCother000", views: 9000 }),
+          streamItem({ title: "Eigen", views: 500 }),
+          { url: "/watch?v=dQw4w9WgXcQ", type: "channel", title: "kein Stream" },
+        ],
+      }),
+    );
     const app = await makeApp({ fetchImpl });
     const res = await app.inject({
       method: "GET",
       url: `/music/artist/${CHANNEL_ID}/top?name=Rick%20Astley`,
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json().map((t: { title: string }) => t.title)).toEqual(["Fremd", "Eigen"]);
+    // Fremde Uploader fliegen raus — auch wenn dadurch weniger übrig bleibt.
+    expect(res.json().map((t: { title: string }) => t.title)).toEqual(["Eigen"]);
     await app.close();
   });
 
@@ -630,13 +688,15 @@ describe("GET /music/artist/:channelId/playlists", () => {
       url: `/music/artist/${CHANNEL_ID}/playlists?name=Rick%20Astley`,
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual([{
-      playlistId: "PLabc123",
-      name: "Greatest Hits",
-      thumbnailUrl: "https://img.example/pl.jpg",
-      videoCount: 42,
-      uploaderName: "Rick Astley",
-    }]);
+    expect(res.json()).toEqual([
+      {
+        playlistId: "PLabc123",
+        name: "Greatest Hits",
+        thumbnailUrl: "https://img.example/pl.jpg",
+        videoCount: 42,
+        uploaderName: "Rick Astley",
+      },
+    ]);
     expect(fetchImpl).toHaveBeenCalledWith(
       expect.stringContaining("filter=playlists"),
       expect.anything(),
@@ -645,12 +705,19 @@ describe("GET /music/artist/:channelId/playlists", () => {
   });
 
   it("prefers playlists of the artist's own channel", async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(okJson({
-      items: [
-        { ...playlistItem, name: "Fremd", uploaderUrl: "/channel/UCother000", url: "/playlist?list=PLother" },
-        playlistItem,
-      ],
-    }));
+    const fetchImpl = vi.fn().mockResolvedValue(
+      okJson({
+        items: [
+          {
+            ...playlistItem,
+            name: "Fremd",
+            uploaderUrl: "/channel/UCother000",
+            url: "/playlist?list=PLother",
+          },
+          playlistItem,
+        ],
+      }),
+    );
     const app = await makeApp({ fetchImpl });
     const res = await app.inject({
       method: "GET",
@@ -787,33 +854,41 @@ describe("GET /music/search/full", () => {
     const res = await app.inject({ method: "GET", url: "/music/search/full?q=rick" });
     expect(res.statusCode).toBe(200);
     const body = res.json();
-    expect(body.songs).toEqual([{
-      videoId: "dQw4w9WgXcQ",
-      title: "Never Gonna Give You Up",
-      uploader: "Rick Astley",
-      thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg",
-      durationSeconds: 213,
-    }]);
-    expect(body.artists).toEqual([{
-      channelId: CHANNEL_ID,
-      name: "Rick Astley",
-      thumbnailUrl: "https://img.example/rick.jpg",
-      subscribers: 4520000,
-    }]);
-    expect(body.albums).toEqual([{
-      playlistId: "OLAK5uy_album",
-      name: "Whenever You Need Somebody",
-      artistName: "Rick Astley",
-      thumbnailUrl: "https://img.example/album.jpg",
-      videoCount: 10,
-    }]);
-    expect(body.playlists).toEqual([{
-      playlistId: "PLhits123",
-      name: "80s Hits",
-      uploaderName: "Someone Else",
-      thumbnailUrl: "https://img.example/pl.jpg",
-      videoCount: 42,
-    }]);
+    expect(body.songs).toEqual([
+      {
+        videoId: "dQw4w9WgXcQ",
+        title: "Never Gonna Give You Up",
+        uploader: "Rick Astley",
+        thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg",
+        durationSeconds: 213,
+      },
+    ]);
+    expect(body.artists).toEqual([
+      {
+        channelId: CHANNEL_ID,
+        name: "Rick Astley",
+        thumbnailUrl: "https://img.example/rick.jpg",
+        subscribers: 4520000,
+      },
+    ]);
+    expect(body.albums).toEqual([
+      {
+        playlistId: "OLAK5uy_album",
+        name: "Whenever You Need Somebody",
+        artistName: "Rick Astley",
+        thumbnailUrl: "https://img.example/album.jpg",
+        videoCount: 10,
+      },
+    ]);
+    expect(body.playlists).toEqual([
+      {
+        playlistId: "PLhits123",
+        name: "80s Hits",
+        uploaderName: "Someone Else",
+        thumbnailUrl: "https://img.example/pl.jpg",
+        videoCount: 42,
+      },
+    ]);
     await app.close();
   });
 
@@ -871,13 +946,15 @@ describe("GET /music/search/typed", () => {
     const app = await makeApp({ fetchImpl });
     const res = await app.inject({ method: "GET", url: "/music/search/typed?q=rick&type=albums" });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual([{
-      playlistId: "OLAK5uy_album",
-      name: "Whenever You Need Somebody",
-      artistName: "Rick Astley",
-      thumbnailUrl: "https://img.example/album.jpg",
-      videoCount: 10,
-    }]);
+    expect(res.json()).toEqual([
+      {
+        playlistId: "OLAK5uy_album",
+        name: "Whenever You Need Somebody",
+        artistName: "Rick Astley",
+        thumbnailUrl: "https://img.example/album.jpg",
+        videoCount: 10,
+      },
+    ]);
     expect(fetchImpl).toHaveBeenCalledWith(
       expect.stringContaining("filter=music_albums"),
       expect.anything(),
@@ -890,13 +967,15 @@ describe("GET /music/search/typed", () => {
     const app = await makeApp({ fetchImpl });
     const res = await app.inject({ method: "GET", url: "/music/search/typed?q=rick&type=songs" });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual([{
-      videoId: "dQw4w9WgXcQ",
-      title: "Never Gonna Give You Up",
-      uploader: "Rick Astley",
-      thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg",
-      durationSeconds: 213,
-    }]);
+    expect(res.json()).toEqual([
+      {
+        videoId: "dQw4w9WgXcQ",
+        title: "Never Gonna Give You Up",
+        uploader: "Rick Astley",
+        thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg",
+        durationSeconds: 213,
+      },
+    ]);
     await app.close();
   });
 
@@ -922,13 +1001,15 @@ describe("GET /music/playlist/:playlistId", () => {
     const app = await makeApp({ fetchImpl });
     const res = await app.inject({ method: "GET", url: "/music/playlist/OLAK5uy_test123" });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual([{
-      videoId: "dQw4w9WgXcQ",
-      title: "Never Gonna Give You Up",
-      uploader: "Rick Astley",
-      thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg",
-      durationSeconds: 213,
-    }]);
+    expect(res.json()).toEqual([
+      {
+        videoId: "dQw4w9WgXcQ",
+        title: "Never Gonna Give You Up",
+        uploader: "Rick Astley",
+        thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg",
+        durationSeconds: 213,
+      },
+    ]);
     expect(fetchImpl).toHaveBeenCalledWith(
       expect.stringContaining("/playlists/OLAK5uy_test123"),
       expect.anything(),
@@ -958,6 +1039,272 @@ describe("GET /music/playlist/:playlistId", () => {
     await app.inject({ method: "GET", url: "/music/playlist/OLAK5uy_test123" });
     // ein Durchlauf = ein paralleler Aufruf pro Piped-Instanz
     expect(fetchImpl).toHaveBeenCalledTimes(4);
+    await app.close();
+  });
+});
+
+// ————— Innertube (YouTube Music API) —————
+
+/** fetchImpl-Router: Innertube-URLs → Fixture, alles andere (Piped) → Fehler. */
+function itOnlyFetch(body: unknown) {
+  return vi.fn((url: unknown) =>
+    String(url).includes("music.youtube.com")
+      ? Promise.resolve(okJson(body))
+      : Promise.reject(new Error("piped down")),
+  );
+}
+
+function itRun(text: string, browseId?: string) {
+  return { text, ...(browseId ? { navigationEndpoint: { browseEndpoint: { browseId } } } : {}) };
+}
+
+function itSongItem(videoId: string, title: string, artist: string, channelId: string) {
+  return {
+    musicResponsiveListItemRenderer: {
+      playlistItemData: { videoId },
+      flexColumns: [
+        { musicResponsiveListItemFlexColumnRenderer: { text: { runs: [itRun(title)] } } },
+        {
+          musicResponsiveListItemFlexColumnRenderer: {
+            text: { runs: [itRun(artist, channelId), itRun(" • "), itRun("3:33")] },
+          },
+        },
+      ],
+    },
+  };
+}
+
+describe("Innertube-first search", () => {
+  it("serves typed song search from Innertube without touching Piped", async () => {
+    const fetchImpl = itOnlyFetch({
+      contents: [itSongItem("dQw4w9WgXcQ", "Never Gonna Give You Up", "Rick Astley", CHANNEL_ID)],
+    });
+    const app = await makeApp({ fetchImpl }, { innertube: true });
+    const res = await app.inject({ method: "GET", url: "/music/search/typed?q=rick&type=songs" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual([
+      {
+        videoId: "dQw4w9WgXcQ",
+        title: "Never Gonna Give You Up",
+        uploader: "Rick Astley",
+        thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg",
+        durationSeconds: 213,
+        uploaderUrl: `/channel/${CHANNEL_ID}`,
+      },
+    ]);
+    await app.close();
+  });
+
+  it("falls back to Piped when Innertube is down (full search)", async () => {
+    const fetchImpl = vi.fn((url: unknown) =>
+      String(url).includes("music.youtube.com")
+        ? Promise.reject(new Error("it down"))
+        : Promise.resolve(okJson({ items: [PIPED_ITEM] })),
+    );
+    const app = await makeApp({ fetchImpl }, { innertube: true });
+    const res = await app.inject({ method: "GET", url: "/music/search/full?q=rick" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().songs).toHaveLength(1);
+    await app.close();
+  });
+});
+
+describe("GET /music/related/:videoId", () => {
+  it("returns the radio queue without the seed song", async () => {
+    const fetchImpl = itOnlyFetch({
+      contents: [
+        {
+          playlistPanelVideoRenderer: {
+            videoId: "dQw4w9WgXcQ",
+            title: { runs: [{ text: "Seed" }] },
+            longBylineText: { runs: [{ text: "Rick Astley" }] },
+            lengthText: { runs: [{ text: "3:33" }] },
+          },
+        },
+        {
+          playlistPanelVideoRenderer: {
+            videoId: "abcabcabc12",
+            title: { runs: [{ text: "Next Song" }] },
+            longBylineText: { runs: [{ text: "Other Artist" }] },
+            lengthText: { runs: [{ text: "3:03" }] },
+          },
+        },
+      ],
+    });
+    const app = await makeApp({ fetchImpl }, { innertube: true });
+    const res = await app.inject({ method: "GET", url: "/music/related/dQw4w9WgXcQ" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual([
+      {
+        videoId: "abcabcab" + "c12",
+        title: "Next Song",
+        uploader: "Other Artist",
+        thumbnailUrl: "https://i.ytimg.com/vi/abcabcabc12/mqdefault.jpg",
+        durationSeconds: 183,
+      },
+    ]);
+    await app.close();
+  });
+
+  it("502s when Innertube yields nothing", async () => {
+    const fetchImpl = itOnlyFetch({});
+    const app = await makeApp({ fetchImpl }, { innertube: true });
+    const res = await app.inject({ method: "GET", url: "/music/related/dQw4w9WgXcQ" });
+    expect(res.statusCode).toBe(502);
+    await app.close();
+  });
+});
+
+describe("GET /music/home", () => {
+  it("parses carousels into typed sections (min 3 items)", async () => {
+    const playlistTile = (id: string, name: string) => ({
+      musicTwoRowItemRenderer: {
+        title: { runs: [itRun(name, `VL${id}`)] },
+        subtitle: { runs: [{ text: "Playlist" }] },
+        thumbnailRenderer: {
+          musicThumbnailRenderer: { thumbnail: { thumbnails: [{ url: "https://img/p.jpg" }] } },
+        },
+      },
+    });
+    const fetchImpl = itOnlyFetch({
+      contents: [
+        {
+          musicCarouselShelfRenderer: {
+            header: {
+              musicCarouselShelfBasicHeaderRenderer: { title: { runs: [{ text: "Für dich" }] } },
+            },
+            contents: [
+              playlistTile("PL1x", "Mix 1"),
+              playlistTile("PL2x", "Mix 2"),
+              playlistTile("PL3x", "Mix 3"),
+            ],
+          },
+        },
+        {
+          musicCarouselShelfRenderer: {
+            header: {
+              musicCarouselShelfBasicHeaderRenderer: { title: { runs: [{ text: "Zu klein" }] } },
+            },
+            contents: [playlistTile("PL4x", "Mix 4")],
+          },
+        },
+      ],
+    });
+    const app = await makeApp({ fetchImpl }, { innertube: true });
+    const res = await app.inject({ method: "GET", url: "/music/home" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.sections).toHaveLength(1);
+    expect(body.sections[0].title).toBe("Für dich");
+    expect(body.sections[0].items[0]).toEqual({
+      kind: "playlist",
+      playlist: {
+        playlistId: "PL1x",
+        name: "Mix 1",
+        thumbnailUrl: "https://img/p.jpg",
+        videoCount: 0,
+        uploaderName: "Playlist",
+      },
+    });
+    await app.close();
+  });
+});
+
+describe("GET /music/artist/:channelId/page", () => {
+  const artistBody = {
+    header: {
+      musicImmersiveHeaderRenderer: {
+        title: { runs: [{ text: "Rick Astley" }] },
+        description: { runs: [{ text: "Bio" }] },
+        thumbnail: {
+          musicThumbnailRenderer: { thumbnail: { thumbnails: [{ url: "https://img/a.jpg" }] } },
+        },
+        subscriptionButton: {
+          subscribeButtonRenderer: {
+            subscriberCountText: { runs: [{ text: "1,2 Mio. Abonnenten" }] },
+          },
+        },
+      },
+    },
+    contents: [
+      {
+        musicShelfRenderer: {
+          contents: [
+            itSongItem("dQw4w9WgXcQ", "Never Gonna Give You Up", "Rick Astley", CHANNEL_ID),
+          ],
+        },
+      },
+      {
+        musicCarouselShelfRenderer: {
+          header: {
+            musicCarouselShelfBasicHeaderRenderer: { title: { runs: [{ text: "Alben" }] } },
+          },
+          contents: [
+            {
+              musicTwoRowItemRenderer: {
+                title: { runs: [itRun("Whenever You Need Somebody", "MPREb_abc")] },
+                subtitle: { runs: [{ text: "Album" }, { text: " • " }, { text: "1987" }] },
+                thumbnailRenderer: {
+                  musicThumbnailRenderer: {
+                    thumbnail: { thumbnails: [{ url: "https://img/album.jpg" }] },
+                  },
+                },
+              },
+            },
+            {
+              musicTwoRowItemRenderer: {
+                title: { runs: [itRun("Lonely Single", "MPREb_s1")] },
+                subtitle: { runs: [{ text: "Single" }, { text: " • " }, { text: "2020" }] },
+              },
+            },
+            {
+              musicTwoRowItemRenderer: {
+                title: { runs: [itRun("Similar Act", "UCother0000000000000000")] },
+                subtitle: { runs: [{ text: "Künstler" }] },
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  it("returns the full artist page from one Innertube browse", async () => {
+    const fetchImpl = itOnlyFetch(artistBody);
+    const app = await makeApp({ fetchImpl }, { innertube: true });
+    const res = await app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}/page` });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.artist).toMatchObject({
+      channelId: CHANNEL_ID,
+      name: "Rick Astley",
+      subscriberCount: 1_200_000,
+    });
+    expect(body.topSongs).toHaveLength(1);
+    expect(body.topSongs[0].uploader).toBe("Rick Astley");
+    expect(body.albums).toEqual([
+      expect.objectContaining({
+        playlistId: "MPREb_abc",
+        name: "Whenever You Need Somebody",
+        year: 1987,
+      }),
+    ]);
+    expect(body.singles).toEqual([expect.objectContaining({ playlistId: "MPREb_s1" })]);
+    expect(body.related).toEqual([
+      expect.objectContaining({ channelId: "UCother0000000000000000", name: "Similar Act" }),
+    ]);
+    await app.close();
+  });
+
+  it("serves /top from the same Innertube page — no name search, no foreign songs", async () => {
+    const fetchImpl = itOnlyFetch(artistBody);
+    const app = await makeApp({ fetchImpl }, { innertube: true });
+    const res = await app.inject({
+      method: "GET",
+      url: `/music/artist/${CHANNEL_ID}/top?name=Rick%20Astley`,
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().map((t: { title: string }) => t.title)).toEqual(["Never Gonna Give You Up"]);
     await app.close();
   });
 });

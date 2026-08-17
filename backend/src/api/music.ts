@@ -3,6 +3,18 @@ import { rename, writeFile } from "node:fs/promises";
 import { Readable } from "node:stream";
 import type { FastifyInstance } from "fastify";
 import { runYtDlp } from "../yt-dlp/client.js";
+import {
+  type ArtistPage,
+  type HomeFeed,
+  itArtistPage,
+  itHome,
+  itPlaylistTracks,
+  itRelated,
+  itSearchFull,
+  itSearchSongs,
+  itSearchTyped,
+  itSuggestions,
+} from "./music-innertube.js";
 
 export interface MusicTrack {
   videoId: string;
@@ -27,6 +39,8 @@ const ARTIST_CACHE_TTL_MS = 10 * 60 * 1000;
 const SUGGESTIONS_CACHE_TTL_MS = 10 * 60 * 1000;
 const FULL_SEARCH_CACHE_TTL_MS = 10 * 60 * 1000;
 const PLAYLIST_CACHE_TTL_MS = 30 * 60 * 1000;
+const RELATED_CACHE_TTL_MS = 10 * 60 * 1000;
+const HOME_CACHE_TTL_MS = 30 * 60 * 1000;
 const STREAM_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // googlevideo-URLs leben ~6 h; bei 403/410 löst der Proxy ohnehin frisch auf
 const CACHE_MAX_ENTRIES = 200;
 const SEARCH_INSTANCE_TIMEOUT_MS = 6000;
@@ -81,9 +95,17 @@ function isTypedSearchType(value: string): value is TypedSearchType {
   return value in TYPED_SEARCH_FILTERS;
 }
 
-interface CacheEntry<T> { at: number; value: T }
+interface CacheEntry<T> {
+  at: number;
+  value: T;
+}
 
-function cacheGet<T>(map: Map<string, CacheEntry<T>>, key: string, ttlMs: number, now: number): T | undefined {
+function cacheGet<T>(
+  map: Map<string, CacheEntry<T>>,
+  key: string,
+  ttlMs: number,
+  now: number,
+): T | undefined {
   const hit = map.get(key);
   if (hit && now - hit.at < ttlMs) return hit.value;
   if (hit) map.delete(key);
@@ -102,7 +124,11 @@ function cachePut<T>(map: Map<string, CacheEntry<T>>, key: string, value: T, now
  * In-Flight-Dedup: gleichzeitige identische Anfragen (Prefetch + Play,
  * doppelt gerenderte App-Screens) teilen sich ein laufendes Promise.
  */
-async function dedupInflight<T>(map: Map<string, Promise<T>>, key: string, run: () => Promise<T>): Promise<T> {
+async function dedupInflight<T>(
+  map: Map<string, Promise<T>>,
+  key: string,
+  run: () => Promise<T>,
+): Promise<T> {
   const existing = map.get(key);
   if (existing) return existing;
   const pending = run();
@@ -138,7 +164,11 @@ function loadStreamCache(path: string | undefined, ttlMs: number): Map<string, C
     const now = Date.now();
     for (const [key, entry] of Object.entries(raw)) {
       if (map.size >= CACHE_MAX_ENTRIES) break; // gleiche Obergrenze wie cachePut
-      if (typeof entry?.at === "number" && typeof entry?.value === "string" && now - entry.at < ttlMs) {
+      if (
+        typeof entry?.at === "number" &&
+        typeof entry?.value === "string" &&
+        now - entry.at < ttlMs
+      ) {
         map.set(key, entry);
       }
     }
@@ -149,7 +179,10 @@ function loadStreamCache(path: string | undefined, ttlMs: number): Map<string, C
 }
 
 /** Schreibt den Stream-URL-Cache atomar (tmp + rename) — asynchron, für den Debounce-Timer. */
-async function saveStreamCacheAsync(path: string, map: Map<string, CacheEntry<string>>): Promise<void> {
+async function saveStreamCacheAsync(
+  path: string,
+  map: Map<string, CacheEntry<string>>,
+): Promise<void> {
   try {
     const tmp = `${path}.tmp`;
     await writeFile(tmp, JSON.stringify(Object.fromEntries(map)));
@@ -200,7 +233,7 @@ interface PipedChannel {
 }
 
 /** Normalisierte Artist-Seite (Antwort von /music/artist/:channelId). */
-interface ArtistInfo {
+export interface ArtistInfo {
   channelId: string;
   name: string;
   avatarUrl: string | null;
@@ -211,7 +244,7 @@ interface ArtistInfo {
 }
 
 /** Normalisierte Playlist (Antwort von /music/artist/:channelId/playlists). */
-interface PlaylistSummary {
+export interface PlaylistSummary {
   playlistId: string;
   name: string;
   thumbnailUrl: string;
@@ -220,7 +253,7 @@ interface PlaylistSummary {
 }
 
 /** Normalisierter Künstler-Treffer (/music/search/full, /music/search/typed). */
-interface ArtistSearchResult {
+export interface ArtistSearchResult {
   channelId: string;
   name: string;
   thumbnailUrl: string;
@@ -228,7 +261,7 @@ interface ArtistSearchResult {
 }
 
 /** Normalisierter Album-Treffer — Piped liefert Alben als playlist-Items. */
-interface AlbumSearchResult {
+export interface AlbumSearchResult {
   playlistId: string;
   name: string;
   artistName: string;
@@ -293,7 +326,8 @@ function normalizeChannelItem(item: PipedSearchItem): ArtistSearchResult | null 
     channelId,
     name,
     thumbnailUrl: item.thumbnail ?? "",
-    subscribers: typeof item.subscribers === "number" && item.subscribers > 0 ? item.subscribers : 0,
+    subscribers:
+      typeof item.subscribers === "number" && item.subscribers > 0 ? item.subscribers : 0,
   };
 }
 
@@ -335,7 +369,10 @@ export interface MusicDeps {
   searchStaggerMs?: number[];
 }
 
-export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps = {}): Promise<void> {
+export async function registerMusicRoutes(
+  app: FastifyInstance,
+  deps: MusicDeps = {},
+): Promise<void> {
   const ytDlp = deps.ytDlp ?? runYtDlp;
   const fetchImpl = deps.fetchImpl ?? fetch;
   const now = deps.now ?? Date.now;
@@ -418,7 +455,14 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
       return cached;
     }
 
-    const tracks = await dedupInflight(inflightSearches, cacheKey, () => searchPiped(q, filter));
+    // Musik läuft Innertube-first (zuverlässig, korrekte Song-Metadaten);
+    // die Video-Modi (Hörbuch/Podcast/True-Crime) kann WEB_REMIX nicht und
+    // bleiben auf Piped.
+    const tracks = await dedupInflight(inflightSearches, cacheKey, async () =>
+      modeParam === "music"
+        ? ((await itSearchSongs(fetchImpl, q)) ?? (await searchPiped(q, filter)))
+        : searchPiped(q, filter),
+    );
     if (!tracks) return reply.code(502).send({ error: "all music search providers unavailable" });
     cachePut(searchCache, cacheKey, tracks, now());
     reply.header("cache-control", "public, max-age=300");
@@ -466,10 +510,9 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
     isUsable: (items: PipedSearchItem[]) => boolean = (items) => items.length > 0,
   ): Promise<PipedSearchItem[] | undefined> {
     return raceInstances(async (base, signal) => {
-      const res = await fetchImpl(
-        `${base}/search?q=${encodeURIComponent(q)}&filter=${filter}`,
-        { signal },
-      );
+      const res = await fetchImpl(`${base}/search?q=${encodeURIComponent(q)}&filter=${filter}`, {
+        signal,
+      });
       if (!res.ok) throw new Error(`search failed on ${base}`);
       const body = (await res.json()) as { items?: PipedSearchItem[] };
       if (!Array.isArray(body.items)) throw new Error(`bad payload from ${base}`);
@@ -505,8 +548,10 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
       return cached;
     }
 
-    const suggestions = await dedupInflight(inflightSuggestions, cacheKey, () =>
-      fetchSuggestions(q),
+    const suggestions = await dedupInflight(
+      inflightSuggestions,
+      cacheKey,
+      async () => (await itSuggestions(fetchImpl, q)) ?? (await fetchSuggestions(q)),
     );
     if (!suggestions) {
       reply.header("cache-control", "public, max-age=300");
@@ -551,7 +596,31 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
     return result;
   });
 
+  /**
+   * Top-Treffer-Heuristik: bevorzugt ein Artist, dessen Name im Query
+   * vorkommt (oder umgekehrt), sonst der erste Song, sonst nichts.
+   */
+  function pickTopResult(
+    q: string,
+    songs: MusicTrack[],
+    artists: ArtistSearchResult[],
+  ): FullSearchResult["topResult"] {
+    const needle = q.toLowerCase();
+    const topArtist = artists.find(
+      (a) => a.name.toLowerCase().includes(needle) || needle.includes(a.name.toLowerCase()),
+    );
+    return topArtist
+      ? { type: "artist", ...topArtist }
+      : songs[0]
+        ? { type: "song", ...songs[0] }
+        : null;
+  }
+
   async function fullSearch(q: string): Promise<FullSearchResult | undefined> {
+    // Innertube-first — liefert echte YTM-Sektionen; Piped nur noch Fallback.
+    const it = await itSearchFull(fetchImpl, q);
+    if (it) return { topResult: pickTopResult(q, it.songs, it.artists), ...it };
+
     const [songItems, albumItems, artistItems, playlistItems] = await Promise.all([
       searchPipedItems(q, "music_songs"),
       searchPipedItems(q, "music_albums"),
@@ -581,18 +650,7 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
       .filter((p): p is PlaylistSummary => p !== null)
       .slice(0, 6);
 
-    // Top-Treffer-Heuristik: bevorzugt ein Artist, dessen Name im Query
-    // vorkommt (oder umgekehrt), sonst der erste Song, sonst nichts.
-    const needle = q.toLowerCase();
-    const topArtist = artists.find(
-      (a) => a.name.toLowerCase().includes(needle) || needle.includes(a.name.toLowerCase()),
-    );
-    const topResult: FullSearchResult["topResult"] = topArtist
-      ? { type: "artist", ...topArtist }
-      : songs[0]
-        ? { type: "song", ...songs[0] }
-        : null;
-    return { topResult, songs, artists, albums, playlists };
+    return { topResult: pickTopResult(q, songs, artists), songs, artists, albums, playlists };
   }
 
   // --- Typspezifische Suche (größere Liste eines Typs, Limit 20) ---
@@ -625,7 +683,12 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
   );
 
   /** Gleiche Normalisierung wie /music/search/full, nur ohne Sektions-Limit. */
-  async function typedSearch(q: string, type: TypedSearchType): Promise<TypedSearchResult | undefined> {
+  async function typedSearch(
+    q: string,
+    type: TypedSearchType,
+  ): Promise<TypedSearchResult | undefined> {
+    const it = await itSearchTyped(fetchImpl, q, type);
+    if (it) return it;
     const items = await searchPipedItems(q, TYPED_SEARCH_FILTERS[type]);
     if (!items) return undefined;
     switch (type) {
@@ -660,7 +723,8 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
 
   app.get<{ Params: { playlistId: string } }>("/music/playlist/:playlistId", async (req, reply) => {
     const { playlistId } = req.params;
-    if (!PLAYLIST_ID_RE.test(playlistId)) return reply.code(400).send({ error: "invalid playlistId" });
+    if (!PLAYLIST_ID_RE.test(playlistId))
+      return reply.code(400).send({ error: "invalid playlistId" });
 
     const cached = cacheGet(playlistCache, playlistId, PLAYLIST_CACHE_TTL_MS, now());
     if (cached) {
@@ -668,8 +732,11 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
       return cached;
     }
 
-    const tracks = await dedupInflight(inflightPlaylists, playlistId, () =>
-      fetchPlaylistTracks(playlistId),
+    const tracks = await dedupInflight(
+      inflightPlaylists,
+      playlistId,
+      async () =>
+        (await itPlaylistTracks(fetchImpl, playlistId)) ?? (await fetchPlaylistTracks(playlistId)),
     );
     if (!tracks) return reply.code(502).send({ error: "all music providers unavailable" });
     cachePut(playlistCache, playlistId, tracks, now());
@@ -680,7 +747,9 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
   /** Piped /playlists/{id} — die Tracks stecken in relatedStreams. */
   async function fetchPlaylistTracks(playlistId: string): Promise<MusicTrack[] | undefined> {
     return raceInstances(async (base, signal) => {
-      const res = await fetchImpl(`${base}/playlists/${encodeURIComponent(playlistId)}`, { signal });
+      const res = await fetchImpl(`${base}/playlists/${encodeURIComponent(playlistId)}`, {
+        signal,
+      });
       if (!res.ok) throw new Error(`playlist failed on ${base}`);
       const body = (await res.json()) as { relatedStreams?: PipedSearchItem[] };
       if (!Array.isArray(body.relatedStreams)) throw new Error(`bad payload from ${base}`);
@@ -727,7 +796,8 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
       const result = await ytDlp(
         [
           "--no-playlist",
-          "-f", "bestaudio[ext=m4a]/bestaudio/best",
+          "-f",
+          "bestaudio[ext=m4a]/bestaudio/best",
           "-g",
           `https://www.youtube.com/watch?v=${videoId}`,
         ],
@@ -810,6 +880,22 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
   const inflightArtistTops = new Map<string, Promise<MusicTrack[] | undefined>>();
   const inflightArtistPlaylists = new Map<string, Promise<PlaylistSummary[] | undefined>>();
 
+  // Die komplette Innertube-Artist-Seite wird EINMAL geholt und von
+  // /artist, /top, /playlists und /page gemeinsam genutzt — sonst wäre jeder
+  // der drei Alt-Endpunkte ein eigener browse-Roundtrip.
+  const artistPageCache = new Map<string, CacheEntry<ArtistPage>>();
+  const inflightArtistPages = new Map<string, Promise<ArtistPage | undefined>>();
+
+  async function getArtistPage(channelId: string): Promise<ArtistPage | undefined> {
+    const cached = cacheGet(artistPageCache, channelId, ARTIST_CACHE_TTL_MS, now());
+    if (cached) return cached;
+    const page = await dedupInflight(inflightArtistPages, channelId, () =>
+      itArtistPage(fetchImpl, channelId),
+    );
+    if (page) cachePut(artistPageCache, channelId, page, now());
+    return page;
+  }
+
   app.get<{ Params: { channelId: string } }>("/music/artist/:channelId", async (req, reply) => {
     const { channelId } = req.params;
     if (!CHANNEL_ID_RE.test(channelId)) return reply.code(400).send({ error: "invalid channelId" });
@@ -819,17 +905,54 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
       reply.header("cache-control", "public, max-age=300");
       return cached;
     }
-    const artist = await dedupInflight(inflightArtists, channelId, () => fetchArtist(channelId));
+    const artist =
+      (await getArtistPage(channelId))?.artist ??
+      (await dedupInflight(inflightArtists, channelId, () => fetchArtist(channelId)));
     if (!artist) return reply.code(502).send({ error: "all music providers unavailable" });
     cachePut(artistCache, channelId, artist, now());
     reply.header("cache-control", "public, max-age=300");
     return artist;
   });
 
+  // Komplette Artist-Seite in einem Call — Top-Songs, Alben, Singles,
+  // Playlists und ähnliche Künstler, alles garantiert vom richtigen Kanal.
+  app.get<{ Params: { channelId: string } }>(
+    "/music/artist/:channelId/page",
+    async (req, reply) => {
+      const { channelId } = req.params;
+      if (!CHANNEL_ID_RE.test(channelId))
+        return reply.code(400).send({ error: "invalid channelId" });
+
+      const page = await getArtistPage(channelId);
+      if (page) {
+        reply.header("cache-control", "public, max-age=300");
+        return page;
+      }
+      // Innertube down: Minimal-Seite aus den Piped-Fallbacks bauen.
+      const artist = await dedupInflight(inflightArtists, channelId, () => fetchArtist(channelId));
+      if (!artist) return reply.code(502).send({ error: "all music providers unavailable" });
+      const topSongs =
+        (await dedupInflight(inflightArtistTops, `${channelId}:${artist.name.toLowerCase()}`, () =>
+          fetchArtistTop(channelId, artist.name),
+        )) ?? [];
+      reply.header("cache-control", "public, max-age=300");
+      return {
+        artist,
+        topSongs,
+        albums: [],
+        singles: [],
+        playlists: [],
+        related: [],
+      } satisfies ArtistPage;
+    },
+  );
+
   async function fetchArtist(channelId: string): Promise<ArtistInfo | undefined> {
     for (const base of PIPED_INSTANCES) {
       try {
-        const res = await fetchImpl(`${base}/channel/${channelId}`, { signal: AbortSignal.timeout(6000) });
+        const res = await fetchImpl(`${base}/channel/${channelId}`, {
+          signal: AbortSignal.timeout(6000),
+        });
         if (!res.ok) continue;
         const body = (await res.json()) as PipedChannel;
         if (!body || typeof body.name !== "string" || body.name.length === 0) continue;
@@ -856,7 +979,8 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
     "/music/artist/:channelId/top",
     async (req, reply) => {
       const { channelId } = req.params;
-      if (!CHANNEL_ID_RE.test(channelId)) return reply.code(400).send({ error: "invalid channelId" });
+      if (!CHANNEL_ID_RE.test(channelId))
+        return reply.code(400).send({ error: "invalid channelId" });
       const name = (req.query.name ?? "").trim();
       if (!name) return reply.code(400).send({ error: "missing query parameter name" });
 
@@ -866,9 +990,9 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
         reply.header("cache-control", "public, max-age=300");
         return cached;
       }
-      const tracks = await dedupInflight(inflightArtistTops, cacheKey, () =>
-        fetchArtistTop(channelId, name),
-      );
+      const tracks =
+        (await getArtistPage(channelId))?.topSongs ??
+        (await dedupInflight(inflightArtistTops, cacheKey, () => fetchArtistTop(channelId, name)));
       if (!tracks) return reply.code(502).send({ error: "all music providers unavailable" });
       cachePut(artistTopCache, cacheKey, tracks, now());
       reply.header("cache-control", "public, max-age=300");
@@ -876,13 +1000,15 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
     },
   );
 
-  async function fetchArtistTop(channelId: string, name: string): Promise<MusicTrack[] | undefined> {
+  async function fetchArtistTop(
+    channelId: string,
+    name: string,
+  ): Promise<MusicTrack[] | undefined> {
     for (const base of PIPED_INSTANCES) {
       try {
-        const res = await fetchImpl(
-          `${base}/search?q=${encodeURIComponent(name)}&filter=videos`,
-          { signal: AbortSignal.timeout(6000) },
-        );
+        const res = await fetchImpl(`${base}/search?q=${encodeURIComponent(name)}&filter=videos`, {
+          signal: AbortSignal.timeout(6000),
+        });
         if (!res.ok) continue;
         const body = (await res.json()) as { items?: PipedSearchItem[] };
         if (!Array.isArray(body.items)) continue;
@@ -891,10 +1017,11 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
           .map(normalizeItem)
           .filter((t): t is MusicTrack => t !== null);
         if (streams.length === 0) continue; // instance degraded — try the next one
-        // Treffer des eigenen Kanals zuerst; zu wenige davon → alle Streams.
-        const own = streams.filter((t) => t.uploaderUrl === `/channel/${channelId}`);
-        const pool = own.length >= 3 ? own : streams;
-        return pool
+        // NUR Treffer des eigenen Kanals — fremde Uploader mit ähnlichem Namen
+        // haben auf einer Artist-Seite nichts verloren. Lieber wenige, aber
+        // korrekte Songs als ein voller Pool mit Fremdmaterial.
+        return streams
+          .filter((t) => t.uploaderUrl === `/channel/${channelId}`)
           .sort((a, b) => (b.views ?? 0) - (a.views ?? 0))
           .slice(0, 20);
       } catch {
@@ -908,7 +1035,8 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
     "/music/artist/:channelId/playlists",
     async (req, reply) => {
       const { channelId } = req.params;
-      if (!CHANNEL_ID_RE.test(channelId)) return reply.code(400).send({ error: "invalid channelId" });
+      if (!CHANNEL_ID_RE.test(channelId))
+        return reply.code(400).send({ error: "invalid channelId" });
       const name = (req.query.name ?? "").trim();
       if (!name) return reply.code(400).send({ error: "missing query parameter name" });
 
@@ -918,9 +1046,22 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
         reply.header("cache-control", "public, max-age=300");
         return cached;
       }
-      const playlists = await dedupInflight(inflightArtistPlaylists, cacheKey, () =>
-        fetchArtistPlaylists(channelId, name),
-      );
+      const page = await getArtistPage(channelId);
+      const playlists =
+        (page
+          ? [...page.playlists, ...page.albums, ...page.singles].map(
+              ({ playlistId, name: plName, thumbnailUrl, videoCount }) => ({
+                playlistId,
+                name: plName,
+                thumbnailUrl,
+                videoCount,
+                uploaderName: page.artist.name,
+              }),
+            )
+          : undefined) ??
+        (await dedupInflight(inflightArtistPlaylists, cacheKey, () =>
+          fetchArtistPlaylists(channelId, name),
+        ));
       if (!playlists) return reply.code(502).send({ error: "all music providers unavailable" });
       cachePut(artistPlaylistCache, cacheKey, playlists, now());
       reply.header("cache-control", "public, max-age=300");
@@ -959,10 +1100,10 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
             };
           })
           .filter((p): p is NonNullable<typeof p> => p !== null);
-        // Eigene Kanal-Playlists zuerst; keine davon → alle Treffer.
-        const own = playlists.filter((p) => p.uploaderUrl === `/channel/${channelId}`);
-        const pool = own.length > 0 ? own : playlists;
-        return pool
+        // NUR eigene Kanal-Playlists — fremde Treffer sind auf einer
+        // Artist-Seite Chaos, nicht Inhalt.
+        return playlists
+          .filter((p) => p.uploaderUrl === `/channel/${channelId}`)
           .slice(0, 20)
           .map(({ uploaderUrl: _uploaderUrl, ...rest }) => rest);
       } catch {
@@ -971,4 +1112,46 @@ export async function registerMusicRoutes(app: FastifyInstance, deps: MusicDeps 
     }
     return undefined;
   }
+
+  // --- Empfehlungen (Innertube-only, kein Piped-Äquivalent) ---
+
+  const relatedCache = new Map<string, CacheEntry<MusicTrack[]>>();
+  const inflightRelated = new Map<string, Promise<MusicTrack[] | undefined>>();
+
+  // Radio-Queue zu einem Seed-Song — Grundlage für "Ähnliche Songs",
+  // Song-Radio und personalisierte Mixe aus dem Hörverlauf.
+  app.get<{ Params: { videoId: string } }>("/music/related/:videoId", async (req, reply) => {
+    const { videoId } = req.params;
+    if (!VIDEO_ID_RE.test(videoId)) return reply.code(400).send({ error: "invalid videoId" });
+
+    const cached = cacheGet(relatedCache, videoId, RELATED_CACHE_TTL_MS, now());
+    if (cached) {
+      reply.header("cache-control", "public, max-age=300");
+      return cached;
+    }
+    const tracks = await dedupInflight(inflightRelated, videoId, () =>
+      itRelated(fetchImpl, videoId),
+    );
+    if (!tracks) return reply.code(502).send({ error: "related lookup failed" });
+    cachePut(relatedCache, videoId, tracks, now());
+    reply.header("cache-control", "public, max-age=300");
+    return tracks;
+  });
+
+  const homeCache = new Map<string, CacheEntry<HomeFeed>>();
+  const inflightHome = new Map<string, Promise<HomeFeed | undefined>>();
+
+  // Kuratierter YTM-Home-Feed (Quick Picks, Playlists, Alben, Charts).
+  app.get("/music/home", async (_req, reply) => {
+    const cached = cacheGet(homeCache, "home", HOME_CACHE_TTL_MS, now());
+    if (cached) {
+      reply.header("cache-control", "public, max-age=600");
+      return cached;
+    }
+    const feed = await dedupInflight(inflightHome, "home", () => itHome(fetchImpl));
+    if (!feed) return reply.code(502).send({ error: "home feed unavailable" });
+    cachePut(homeCache, "home", feed, now());
+    reply.header("cache-control", "public, max-age=600");
+    return feed;
+  });
 }
