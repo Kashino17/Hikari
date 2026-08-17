@@ -117,4 +117,24 @@ export function applyMigrations(db: Database.Database): void {
     WHEN aspect_ratio = '9:16' AND duration_seconds <= 180 THEN 'short' ELSE 'long' END
     WHERE format IS NULL`);
   db.exec("UPDATE videos SET source = 'subscription' WHERE source IS NULL");
+  // Ur-DBs vor dem initialen Schema absichern (wie aspect_ratio oben).
+  addColumnIfMissing(db, "feed_items", "seen_at", "INTEGER");
+  // Backfill Etappe 2: approvte Videos aus der Clip-Ära haben nie eine
+  // feed_items-Row bekommen (der Feed bestand aus ihren Clips). Ohne Row wären
+  // sie im videobasierten Feed unsichtbar. Gesehen-Status erbt vom Clip-Zustand:
+  // wurde IRGENDEIN Clip des Videos gesehen, gilt das Video als gesehen.
+  db.exec(`
+    INSERT OR IGNORE INTO feed_items (video_id, added_to_feed_at, seen_at, is_pre_clipper)
+    SELECT s.video_id,
+           COALESCE(
+             (SELECT MIN(c.added_to_feed_at) FROM clips c WHERE c.parent_video_id = s.video_id),
+             (SELECT v.discovered_at FROM videos v WHERE v.id = s.video_id)
+           ),
+           (SELECT MAX(c.seen_at) FROM clips c
+             WHERE c.parent_video_id = s.video_id AND c.seen_at IS NOT NULL),
+           1
+      FROM scores s
+     WHERE s.decision = 'approved'
+       AND NOT EXISTS (SELECT 1 FROM feed_items f WHERE f.video_id = s.video_id)
+  `);
 }

@@ -146,6 +146,43 @@ describe("clipper migrations", () => {
     expect(() => insertClip.run("c-b", 0)).toThrow(/UNIQUE/);
   });
 
+  it("backfillt feed_items für approvte Clip-Ära-Videos (seen erbt vom Clip)", () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    db.prepare("INSERT INTO channels (id,url,title,added_at) VALUES ('c1','x','c',0)").run();
+    db.prepare(`
+      INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at)
+      VALUES ('unseen-v', 'c1', 't', 0, 600, 111), ('seen-v', 'c1', 't', 0, 600, 222)
+    `).run();
+    db.prepare(`
+      INSERT INTO scores (video_id, overall_score, category, clickbait_risk, educational_value,
+        emotional_manipulation, reasoning, model_used, scored_at, decision)
+      VALUES ('unseen-v', 80, 'x', 0, 9, 0, 'r', 'm', 0, 'approved'),
+             ('seen-v',   80, 'x', 0, 9, 0, 'r', 'm', 0, 'approved')
+    `).run();
+    const clip = db.prepare(`
+      INSERT INTO clips (id, parent_video_id, order_in_parent, start_seconds, end_seconds,
+        file_path, file_size_bytes, focus_x, focus_y, focus_w, focus_h, reason,
+        created_at, added_to_feed_at, seen_at)
+      VALUES (?, ?, 0, 0, 60, '/c.mp4', 1, 0, 0, 1, 1, 'r', 500, 500, ?)
+    `);
+    clip.run("cl-unseen", "unseen-v", null);
+    clip.run("cl-seen", "seen-v", 999);
+
+    applyMigrations(db); // idempotent — Backfill legt fehlende feed_items an
+
+    const rows = db
+      .prepare("SELECT video_id, seen_at, is_pre_clipper FROM feed_items ORDER BY video_id")
+      .all() as { video_id: string; seen_at: number | null; is_pre_clipper: number }[];
+    expect(rows).toEqual([
+      { video_id: "seen-v", seen_at: 999, is_pre_clipper: 1 },
+      { video_id: "unseen-v", seen_at: null, is_pre_clipper: 1 },
+    ]);
+
+    applyMigrations(db); // nochmal — darf nichts duplizieren
+    expect(db.prepare("SELECT COUNT(*) c FROM feed_items").get()).toEqual({ c: 2 });
+  });
+
   it("videos hat format/source/summary und Bestand wird als short/long backfilled", () => {
     const db = new Database(":memory:");
     applyMigrations(db);
