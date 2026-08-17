@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.PlayArrow
@@ -41,6 +42,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -50,10 +53,13 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.hikari.app.domain.model.MusicAlbum
 import com.hikari.app.domain.model.MusicSearchResult
 import com.hikari.app.domain.model.RemotePlaylist
 import com.hikari.app.domain.model.SearchArtist
+import com.hikari.app.domain.model.SearchSuggestion
+import com.hikari.app.domain.model.SuggestionKind
 import com.hikari.app.domain.repo.MusicSearchFilter
 import com.hikari.app.ui.theme.HikariCardBg
 import com.hikari.app.ui.theme.HikariPrimary
@@ -151,21 +157,120 @@ fun SearchHistorySection(
 
 /**
  * Vorschläge zur laufenden Eingabe. Der getippte Text selbst bleibt die erste
- * Option — darunter die Vorschläge mit fettem Treffer-Präfix.
+ * Option; reine Query-Vorschläge zeigen das Such-Icon, Entity-Vorschläge
+ * (Songs, Künstler, Alben, Playlists der ersten Suchergebnisse) bringen ein
+ * Mini-Thumbnail mit und springen direkt zum Ziel.
  */
 @Composable
 fun SuggestionsList(
     query: String,
-    suggestions: List<String>,
-    onSelect: (String) -> Unit,
+    suggestions: List<SearchSuggestion>,
+    onSelectQuery: (String) -> Unit,
+    onPlaySong: (SearchSuggestion) -> Unit,
+    onOpenArtist: (channelId: String, name: String) -> Unit,
+    onOpenCollection: (playlistId: String, name: String, isAlbum: Boolean) -> Unit,
 ) {
     SearchDockPanel {
         Spacer(Modifier.height(4.dp))
-        SuggestionRow(text = query, typed = query, onClick = { onSelect(query) })
-        suggestions.filter { !it.equals(query, ignoreCase = true) }.forEach { suggestion ->
-            SuggestionRow(text = suggestion, typed = query, onClick = { onSelect(suggestion) })
-        }
+        SuggestionRow(text = query, typed = query, onClick = { onSelectQuery(query) })
+        suggestions
+            .filter { !(it.kind == SuggestionKind.QUERY && it.text.equals(query, ignoreCase = true)) }
+            .forEach { s ->
+                val hasTarget = s.videoId != null || s.channelId != null || s.playlistId != null
+                if (s.kind == SuggestionKind.QUERY || !hasTarget) {
+                    SuggestionRow(text = s.text, typed = query, onClick = { onSelectQuery(s.text) })
+                } else {
+                    EntitySuggestionRow(
+                        suggestion = s,
+                        typed = query,
+                        onClick = {
+                            when (s.kind) {
+                                SuggestionKind.SONG, SuggestionKind.VIDEO ->
+                                    if (s.videoId != null) onPlaySong(s) else onSelectQuery(s.text)
+                                SuggestionKind.ARTIST ->
+                                    s.channelId?.let { onOpenArtist(it, s.text) }
+                                        ?: onSelectQuery(s.text)
+                                SuggestionKind.ALBUM ->
+                                    s.playlistId?.let { onOpenCollection(it, s.text, true) }
+                                        ?: onSelectQuery(s.text)
+                                SuggestionKind.PLAYLIST ->
+                                    s.playlistId?.let { onOpenCollection(it, s.text, false) }
+                                        ?: onSelectQuery(s.text)
+                                SuggestionKind.QUERY -> onSelectQuery(s.text)
+                            }
+                        },
+                    )
+                }
+            }
         Spacer(Modifier.height(4.dp))
+    }
+}
+
+/** Entity-Vorschlag: Mini-Thumbnail (rund bei Künstlern), Titel + Untertyp. */
+@Composable
+private fun EntitySuggestionRow(
+    suggestion: SearchSuggestion,
+    typed: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 6.dp, vertical = 1.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .muPressable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val thumbPx = with(LocalDensity.current) { 36.dp.roundToPx() }
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(suggestion.thumbnailUrl)
+                .size(thumbPx)
+                .build(),
+            contentDescription = null,
+            modifier = Modifier
+                .size(36.dp)
+                .clip(
+                    if (suggestion.kind == SuggestionKind.ARTIST) CircleShape
+                    else RoundedCornerShape(8.dp),
+                )
+                .background(HikariSurfaceHigh),
+            contentScale = ContentScale.Crop,
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                highlightMatch(suggestion.text, typed),
+                fontSize = 14.sp,
+                color = HikariText,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            val subtitle = suggestion.subtitle ?: when (suggestion.kind) {
+                SuggestionKind.SONG -> "Song"
+                SuggestionKind.VIDEO -> "Video"
+                SuggestionKind.ARTIST -> "Künstler"
+                SuggestionKind.ALBUM -> "Album"
+                SuggestionKind.PLAYLIST -> "Playlist"
+                SuggestionKind.QUERY -> null
+            }
+            if (subtitle != null) {
+                Text(
+                    subtitle,
+                    fontSize = 11.sp,
+                    color = HikariTextMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        Icon(
+            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            null,
+            tint = HikariTextFaint,
+            modifier = Modifier.size(16.dp),
+        )
     }
 }
 

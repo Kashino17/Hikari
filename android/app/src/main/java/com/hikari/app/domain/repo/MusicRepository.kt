@@ -10,6 +10,7 @@ import com.hikari.app.data.api.dto.PipedStreamsDto
 import com.hikari.app.data.api.dto.SearchAlbumDto
 import com.hikari.app.data.api.dto.SearchArtistDto
 import com.hikari.app.data.api.dto.SearchPlaylistDto
+import com.hikari.app.data.api.dto.SuggestionDto
 import com.hikari.app.data.api.dto.TopResultDto
 import com.hikari.app.data.db.LocalMusicDownloadDao
 import com.hikari.app.data.db.MusicPlaylistDao
@@ -36,7 +37,9 @@ import com.hikari.app.domain.model.MusicSearchResult
 import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.domain.model.RemotePlaylist
 import com.hikari.app.domain.model.SearchArtist
+import com.hikari.app.domain.model.SearchSuggestion
 import com.hikari.app.domain.model.SongArtist
+import com.hikari.app.domain.model.SuggestionKind
 import java.net.URLEncoder
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -297,9 +300,28 @@ class MusicRepository(
      * Nutzer tippt, das Backend vervollständigt. Fehler liefern schlicht
      * keine Vorschläge, niemals eine Exception.
      */
-    suspend fun getSuggestions(query: String): List<String> =
+    suspend fun getSuggestions(query: String): List<SearchSuggestion> =
         try {
-            api.getSuggestions(query.trim())
+            api.getSuggestions(query.trim()).mapNotNull { dto ->
+                if (dto.text.isBlank()) return@mapNotNull null
+                SearchSuggestion(
+                    text = dto.text,
+                    // Unbekannte kinds defensiv als reine Text-Query behandeln.
+                    kind = when (dto.kind) {
+                        "song" -> SuggestionKind.SONG
+                        "artist" -> SuggestionKind.ARTIST
+                        "album" -> SuggestionKind.ALBUM
+                        "playlist" -> SuggestionKind.PLAYLIST
+                        "video" -> SuggestionKind.VIDEO
+                        else -> SuggestionKind.QUERY
+                    },
+                    thumbnailUrl = dto.thumbnailUrl?.takeIf { it.isNotBlank() },
+                    subtitle = dto.subtitle?.takeIf { it.isNotBlank() },
+                    videoId = dto.videoId?.takeIf { it.isNotBlank() },
+                    channelId = dto.channelId?.takeIf { it.isNotBlank() },
+                    playlistId = dto.playlistId?.takeIf { it.isNotBlank() },
+                )
+            }
         } catch (_: Exception) {
             emptyList()
         }
@@ -498,7 +520,7 @@ class MusicRepository(
             sections.map { (title, query) ->
                 async {
                     val songs = try {
-                        getMixSongs(query, mode).take(12)
+                        getMixSongs(query, mode).take(24)
                     } catch (_: Exception) {
                         emptyList()
                     }
@@ -621,7 +643,7 @@ class MusicRepository(
             .shuffled()
             .distinctBy { it.videoId }
             .filter { it.videoId !in recentIds }
-            .take(20)
+            .take(30)
         if (mix.size >= 5) {
             sections += HomeSection("Dein Mix", HomeSectionKind.MIX, songs = mix)
         }
@@ -634,7 +656,7 @@ class MusicRepository(
                 sections += HomeSection(
                     "Ähnlich wie ${seedLabelOf(seed)}",
                     HomeSectionKind.SIMILAR,
-                    songs = related.take(12),
+                    songs = related.take(24),
                 )
             }
 
@@ -642,7 +664,7 @@ class MusicRepository(
             sections += HomeSection(
                 "Deine Favoriten",
                 HomeSectionKind.FAVORITES,
-                songs = favorites.shuffled().take(12),
+                songs = favorites.shuffled().take(24),
             )
         }
 

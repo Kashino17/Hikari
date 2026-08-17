@@ -20,6 +20,7 @@ import com.hikari.app.domain.model.MusicPlaylist
 import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.domain.model.RemotePlaylist
 import com.hikari.app.domain.model.SearchArtist
+import com.hikari.app.domain.model.SearchSuggestion
 import com.hikari.app.domain.repo.ChapterGroup
 import com.hikari.app.domain.repo.DiscoverSection
 import com.hikari.app.domain.repo.MusicRepository
@@ -82,8 +83,8 @@ class MusicViewModel @Inject constructor(
     var searchActive by mutableStateOf(false)
         private set
 
-    /** Vorschläge des Backends zur aktuellen Eingabe. */
-    var suggestions by mutableStateOf<List<String>>(emptyList())
+    /** Vorschläge des Backends zur aktuellen Eingabe — Queries und Entities. */
+    var suggestions by mutableStateOf<List<SearchSuggestion>>(emptyList())
         private set
 
     /** Gespeicherter Suchverlauf — aktualisiert sich über den DB-Flow selbst. */
@@ -330,6 +331,16 @@ class MusicViewModel @Inject constructor(
             }
             typedLoading = false
         }
+    }
+
+    /**
+     * Schreibt eine Suche in den Verlauf, ohne sie auszuführen — für
+     * Entity-Vorschläge, die direkt abspielen oder navigieren.
+     */
+    fun noteSearch(text: String) {
+        val q = text.trim()
+        if (q.isEmpty()) return
+        viewModelScope.launch { repo.recordSearch(q) }
     }
 
     fun removeHistoryEntry(query: String) {

@@ -797,18 +797,132 @@ function urlDispatchMock(handlers: {
   });
 }
 
+/** Erwarteter Query-Vorschlag der neuen Rich-Shape. */
+function querySuggestion(text: string) {
+  return {
+    text,
+    kind: "query",
+    thumbnailUrl: null,
+    subtitle: null,
+    videoId: null,
+    channelId: null,
+    playlistId: null,
+  };
+}
+
 describe("GET /music/suggestions", () => {
-  it("returns the suggestion strings", async () => {
+  it("maps Piped fallback strings to plain query suggestions", async () => {
     const fetchImpl = urlDispatchMock({ suggestions: ["rick astley", "rickroll"] });
     const app = await makeApp({ fetchImpl });
     const res = await app.inject({ method: "GET", url: "/music/suggestions?q=rick" });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual(["rick astley", "rickroll"]);
+    expect(res.json()).toEqual([querySuggestion("rick astley"), querySuggestion("rickroll")]);
     expect(res.headers["cache-control"]).toBe("public, max-age=300");
     expect(fetchImpl).toHaveBeenCalledWith(
       expect.stringContaining("/suggestions?query=rick"),
       expect.anything(),
     );
+    await app.close();
+  });
+
+  it("mixes query and entity suggestions with thumbnails in original order", async () => {
+    const fetchImpl = itOnlyFetch({
+      contents: [
+        {
+          searchSuggestionsSectionRenderer: {
+            contents: [
+              {
+                searchSuggestionRenderer: {
+                  navigationEndpoint: { searchEndpoint: { query: "imagine dragons" } },
+                },
+              },
+            ],
+          },
+        },
+        {
+          searchSuggestionsSectionRenderer: {
+            contents: [
+              {
+                musicResponsiveListItemRenderer: {
+                  thumbnail: {
+                    musicThumbnailRenderer: {
+                      thumbnail: {
+                        thumbnails: [
+                          { url: "https://img.example/artist-60.jpg" },
+                          { url: "https://img.example/artist-120.jpg" },
+                        ],
+                      },
+                    },
+                  },
+                  flexColumns: [
+                    {
+                      musicResponsiveListItemFlexColumnRenderer: {
+                        text: { runs: [{ text: "Imagine Dragons" }] },
+                      },
+                    },
+                    {
+                      musicResponsiveListItemFlexColumnRenderer: {
+                        text: { runs: [{ text: "Künstler" }] },
+                      },
+                    },
+                  ],
+                  navigationEndpoint: { browseEndpoint: { browseId: CHANNEL_ID } },
+                },
+              },
+              {
+                musicResponsiveListItemRenderer: {
+                  flexColumns: [
+                    {
+                      musicResponsiveListItemFlexColumnRenderer: {
+                        text: {
+                          runs: [
+                            {
+                              text: "Believer",
+                              navigationEndpoint: { watchEndpoint: { videoId: "belieVid001" } },
+                            },
+                          ],
+                        },
+                      },
+                    },
+                    {
+                      musicResponsiveListItemFlexColumnRenderer: {
+                        text: {
+                          runs: [{ text: "Song" }, { text: " • " }, { text: "Imagine Dragons" }],
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ],
+    });
+    const app = await makeApp({ fetchImpl }, { innertube: true });
+    const res = await app.inject({ method: "GET", url: "/music/suggestions?q=imagine" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual([
+      querySuggestion("imagine dragons"),
+      {
+        text: "Imagine Dragons",
+        kind: "artist",
+        thumbnailUrl: "https://img.example/artist-60.jpg",
+        subtitle: "Künstler",
+        videoId: null,
+        channelId: CHANNEL_ID,
+        playlistId: null,
+      },
+      {
+        text: "Believer",
+        kind: "song",
+        thumbnailUrl: "https://i.ytimg.com/vi/belieVid001/default.jpg",
+        subtitle: "Song • Imagine Dragons",
+        videoId: "belieVid001",
+        channelId: null,
+        playlistId: null,
+      },
+    ]);
     await app.close();
   });
 

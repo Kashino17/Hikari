@@ -54,6 +54,7 @@ import com.hikari.app.data.api.dto.FullSearchDto
 import com.hikari.app.data.api.dto.SearchAlbumDto
 import com.hikari.app.data.api.dto.SearchArtistDto
 import com.hikari.app.data.api.dto.SearchPlaylistDto
+import com.hikari.app.data.api.dto.SuggestionDto
 import com.hikari.app.data.api.dto.NewsItemDto
 import com.hikari.app.data.api.dto.NewsTopicDto
 import okhttp3.MultipartBody
@@ -97,7 +98,7 @@ interface HikariApi {
     ): List<ArtistPlaylistDto>
 
     @GET("music/suggestions")
-    suspend fun getSuggestions(@Query("q") q: String): List<String>
+    suspend fun getSuggestions(@Query("q") q: String): List<SuggestionDto>
 
     @GET("music/search/full")
     suspend fun searchFullMusic(

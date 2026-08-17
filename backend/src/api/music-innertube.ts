@@ -11,6 +11,7 @@ import type {
   AlbumSearchResult,
   ArtistInfo,
   ArtistSearchResult,
+  MusicSuggestion,
   MusicTrack,
   PlaylistSummary,
 } from "./music.js";
@@ -513,18 +514,122 @@ export async function itSearchFull(
   };
 }
 
-/** Suchvorschläge (music/get_search_suggestions). */
+/** Kleinstes Thumbnail eines Knotens — Vorschlagszeilen brauchen Miniaturen. */
+function smallestThumbnail(node: unknown): string {
+  const lists = findAllByKey(node, "thumbnails").filter(Array.isArray) as unknown[][];
+  for (const list of lists) {
+    const url = nav(list[0], "url");
+    if (typeof url === "string" && url.startsWith("http")) return url;
+  }
+  return "";
+}
+
+/** Reiner Text-Vorschlag als MusicSuggestion. */
+function querySuggestion(text: string): MusicSuggestion {
+  return {
+    text,
+    kind: "query",
+    thumbnailUrl: null,
+    subtitle: null,
+    videoId: null,
+    channelId: null,
+    playlistId: null,
+  };
+}
+
+/**
+ * Entity-Vorschlag (musicResponsiveListItemRenderer in den Suggestions):
+ * Song/Video über die watchEndpoint-videoId, Artist/Album/Playlist über die
+ * Browse-Id (UC… / MPREb… / VL…). Unbekannte Formen → null.
+ */
+function parseSuggestionEntity(item: unknown): MusicSuggestion | null {
+  const flexCols = (nav(item, "flexColumns") as unknown[] | undefined) ?? [];
+  const text = runText(
+    nav(flexCols[0], "musicResponsiveListItemFlexColumnRenderer", "text"),
+  ).trim();
+  if (!text) return null;
+  const subtitleRaw = runText(
+    nav(flexCols[1], "musicResponsiveListItemFlexColumnRenderer", "text"),
+  ).trim();
+  const base = {
+    text,
+    subtitle: subtitleRaw || null,
+    thumbnailUrl: null as string | null,
+    videoId: null as string | null,
+    channelId: null as string | null,
+    playlistId: null as string | null,
+  };
+
+  const videoId = findAllByKey(item, "watchEndpoint")
+    .map((w) => nav(w, "videoId"))
+    .find((v) => typeof v === "string" && VIDEO_ID_RE.test(v)) as string | undefined;
+  if (videoId) {
+    return {
+      ...base,
+      kind: /^videos?\b/i.test(subtitleRaw) ? "video" : "song",
+      videoId,
+      thumbnailUrl: `https://i.ytimg.com/vi/${videoId}/default.jpg`,
+    };
+  }
+
+  const browseId = browseIdOf(item);
+  if (!browseId) return null;
+  const thumb = smallestThumbnail(item) || null;
+  if (browseId.startsWith("UC")) {
+    return { ...base, kind: "artist", channelId: browseId, thumbnailUrl: thumb };
+  }
+  if (browseId.startsWith("MPREb")) {
+    // Album-Browse-Ids löst /music/playlist/:id direkt auf.
+    return { ...base, kind: "album", playlistId: browseId, thumbnailUrl: thumb };
+  }
+  if (browseId.startsWith("VL")) {
+    return { ...base, kind: "playlist", playlistId: browseId.slice(2), thumbnailUrl: thumb };
+  }
+  return null;
+}
+
+/**
+ * Suchvorschläge (music/get_search_suggestions) — Text-Queries UND
+ * Entity-Vorschläge mit Thumbnail, gemischt in Original-Reihenfolge.
+ */
 export async function itSuggestions(
   fetchImpl: typeof fetch,
   q: string,
-): Promise<string[] | undefined> {
+): Promise<MusicSuggestion[] | undefined> {
   try {
     const body = await itCall(fetchImpl, "music/get_search_suggestions", { input: q });
-    const renderers = findAllByKey(body, "searchSuggestionRenderer");
-    const suggestions = renderers
-      .map((r) => nav(r, "navigationEndpoint", "searchEndpoint", "query"))
-      .filter((s): s is string => typeof s === "string" && s.length > 0);
-    return suggestions.length > 0 ? suggestions.slice(0, 10) : undefined;
+    const out: MusicSuggestion[] = [];
+    const sections = findAllByKey(body, "searchSuggestionsSectionRenderer");
+    for (const section of sections) {
+      const contents = nav(section, "contents");
+      if (!Array.isArray(contents)) continue;
+      for (const entry of contents) {
+        const query = nav(
+          entry,
+          "searchSuggestionRenderer",
+          "navigationEndpoint",
+          "searchEndpoint",
+          "query",
+        );
+        if (typeof query === "string" && query.length > 0) {
+          out.push(querySuggestion(query));
+          continue;
+        }
+        const item = nav(entry, "musicResponsiveListItemRenderer");
+        if (item !== undefined) {
+          const parsed = parseSuggestionEntity(item);
+          if (parsed) out.push(parsed);
+        }
+      }
+    }
+    // Ältere Antwortformen ohne Sections: Text-Queries global einsammeln.
+    if (out.length === 0) {
+      for (const r of findAllByKey(body, "searchSuggestionRenderer")) {
+        const query = nav(r, "navigationEndpoint", "searchEndpoint", "query");
+        if (typeof query === "string" && query.length > 0) out.push(querySuggestion(query));
+      }
+    }
+    return out.length > 0 ? out.slice(0, 10) : undefined;
   } catch {
     return undefined;
   }

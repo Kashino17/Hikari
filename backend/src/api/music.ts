@@ -44,6 +44,21 @@ export interface MusicTrack {
   artists?: TrackArtist[];
 }
 
+/**
+ * Suchvorschlag der Autovervollständigung: entweder reine Text-Query
+ * (kind "query", alle Id-/Bild-Felder null) oder ein Entity-Treffer mit
+ * Miniatur-Thumbnail — Songs/Artists/Alben/Playlists passend zur Eingabe.
+ */
+export interface MusicSuggestion {
+  text: string;
+  kind: "query" | "song" | "artist" | "album" | "playlist" | "video";
+  thumbnailUrl: string | null;
+  subtitle: string | null;
+  videoId: string | null;
+  channelId: string | null;
+  playlistId: string | null;
+}
+
 /** Public Piped instances tried in order until one answers with usable JSON. */
 const PIPED_INSTANCES = [
   "https://api.piped.private.coffee",
@@ -365,8 +380,8 @@ export async function registerMusicRoutes(
   const inflightSearches = new Map<string, Promise<MusicTrack[] | undefined>>();
   // Caches + In-Flight-Dedup der neuen Such-Endpunkte — gleiches Muster wie
   // searchCache/inflightSearches.
-  const suggestionsCache = new Map<string, CacheEntry<string[]>>();
-  const inflightSuggestions = new Map<string, Promise<string[] | undefined>>();
+  const suggestionsCache = new Map<string, CacheEntry<MusicSuggestion[]>>();
+  const inflightSuggestions = new Map<string, Promise<MusicSuggestion[] | undefined>>();
   const fullSearchCache = new Map<string, CacheEntry<FullSearchResult>>();
   const inflightFullSearches = new Map<string, Promise<FullSearchResult | undefined>>();
   const typedSearchCache = new Map<string, CacheEntry<TypedSearchResult>>();
@@ -497,14 +512,24 @@ export async function registerMusicRoutes(
     return suggestions;
   });
 
-  /** Piped /suggestions — liefert ein JSON-Array von Strings. */
-  async function fetchSuggestions(q: string): Promise<string[] | undefined> {
+  /** Piped /suggestions — Strings werden zu reinen Query-Vorschlägen. */
+  async function fetchSuggestions(q: string): Promise<MusicSuggestion[] | undefined> {
     return raceInstances(async (base, signal) => {
       const res = await fetchImpl(`${base}/suggestions?query=${encodeURIComponent(q)}`, { signal });
       if (!res.ok) throw new Error(`suggestions failed on ${base}`);
       const body = (await res.json()) as unknown;
       if (!Array.isArray(body)) throw new Error(`bad payload from ${base}`);
-      return body.filter((s): s is string => typeof s === "string");
+      return body
+        .filter((s): s is string => typeof s === "string")
+        .map((text) => ({
+          text,
+          kind: "query" as const,
+          thumbnailUrl: null,
+          subtitle: null,
+          videoId: null,
+          channelId: null,
+          playlistId: null,
+        }));
     }, SUGGESTIONS_TIMEOUT_MS);
   }
 

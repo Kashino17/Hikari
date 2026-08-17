@@ -32,10 +32,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -48,6 +51,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -299,97 +303,6 @@ fun SongTile(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-    }
-}
-
-/**
- * Chart-Zeile mit Platzziffer. Nur dort einsetzen, wo die Reihenfolge
- * wirklich etwas aussagt — sonst ist die Nummer bloß Dekoration.
- */
-@Composable
-fun RankedSongRow(
-    rank: Int,
-    song: MusicSong,
-    isCurrent: Boolean,
-    isDownloaded: Boolean,
-    onClick: () -> Unit,
-) {
-    // Podest-Farben: Gold, Silber, Bronze — danach zurückhaltend.
-    val rankColor = when (rank) {
-        1 -> Color(0xFFFFD263)
-        2 -> Color(0xFFCBD5E1)
-        3 -> Color(0xFFE8A16B)
-        else -> HikariTextFaint
-    }
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .muPressable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 7.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            "$rank",
-            fontFamily = FontFamily.Monospace,
-            fontSize = if (rank <= 3) 18.sp else 15.sp,
-            fontWeight = if (rank <= 3) FontWeight.Black else FontWeight.Normal,
-            color = rankColor,
-            modifier = Modifier.width(30.dp),
-        )
-        Box {
-            AsyncImage(
-                model = song.thumbnailUrl.ifEmpty { null },
-                contentDescription = null,
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(HikariSurfaceHigh),
-                contentScale = ContentScale.Crop,
-            )
-            if (isCurrent) {
-                Box(
-                    Modifier
-                        .size(46.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.Black.copy(alpha = 0.6f)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    MuEqualizerBars(playing = true, modifier = Modifier.size(18.dp))
-                }
-            }
-        }
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(
-                song.title,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                color = if (isCurrent) HikariPrimary else HikariText,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    song.uploader,
-                    fontSize = 11.sp,
-                    color = HikariTextMuted,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false),
-                )
-                if (isDownloaded) {
-                    Text("  ·  offline", fontSize = 11.sp, color = HikariPrimary)
-                }
-            }
-        }
-        if (song.duration > 0) {
-            Text(
-                formatDuration(song.duration),
-                fontFamily = FontFamily.Monospace,
-                fontSize = 11.sp,
-                color = HikariTextFaint,
-            )
-        }
     }
 }
 
@@ -953,6 +866,123 @@ private fun QuickPickCell(
             Text(
                 song.uploader,
                 fontSize = 10.sp,
+                color = HikariTextMuted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/**
+ * Horizontales Song-Karussell im YouTube-Music-Stil: Spalten mit je drei
+ * kompakten Zeilen, seitlich wischbar mit Einrasten pro Spalte. [showRanks]
+ * nummeriert fortlaufend (Charts, Top 3 hervorgehoben), [showDuration] hängt
+ * die Laufzeit an den Uploader (Hörbuch/Podcast/True Crime).
+ */
+@Composable
+fun SongColumnCarousel(
+    songs: List<MusicSong>,
+    viewModel: MusicViewModel,
+    showRanks: Boolean = false,
+    showDuration: Boolean = false,
+) {
+    if (songs.isEmpty()) return
+    val currentSong by viewModel.player.currentSong.collectAsState()
+    val listState = rememberLazyListState()
+    LazyRow(
+        state = listState,
+        flingBehavior = rememberSnapFlingBehavior(listState),
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        itemsIndexed(songs.chunked(3), key = { i, _ -> "col-$i" }) { colIndex, column ->
+            Column(
+                Modifier.width(300.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                column.forEachIndexed { rowIndex, song ->
+                    CarouselSongCell(
+                        rank = if (showRanks) colIndex * 3 + rowIndex + 1 else null,
+                        song = song,
+                        isCurrent = currentSong?.videoId == song.videoId,
+                        showDuration = showDuration,
+                        onClick = { viewModel.play(song, songs) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Kompakte Karussell-Zeile — gleiche Anmutung wie die Schnellauswahl-Zellen. */
+@Composable
+private fun CarouselSongCell(
+    rank: Int?,
+    song: MusicSong,
+    isCurrent: Boolean,
+    showDuration: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .muPressable(onClick = onClick)
+            .padding(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (rank != null) {
+            Text(
+                "$rank",
+                fontSize = 13.sp,
+                fontWeight = if (rank <= 3) FontWeight.Black else FontWeight.Medium,
+                color = if (rank <= 3) HikariText else HikariTextFaint,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.width(26.dp),
+            )
+            Spacer(Modifier.width(2.dp))
+        }
+        Box {
+            AsyncImage(
+                model = song.thumbnailUrl.ifEmpty { null },
+                contentDescription = null,
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(HikariSurfaceHigh),
+                contentScale = ContentScale.Crop,
+            )
+            if (isCurrent) {
+                Box(
+                    Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0x99000000)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    MuEqualizerBars(playing = true, modifier = Modifier.size(18.dp))
+                }
+            }
+        }
+        Spacer(Modifier.width(10.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                song.title,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = if (isCurrent) HikariPrimary else HikariText,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(1.dp))
+            Text(
+                if (showDuration && song.duration > 0) {
+                    "${song.uploader} · ${formatDurationUnits(song.duration)}"
+                } else {
+                    song.uploader
+                },
+                fontSize = 11.sp,
                 color = HikariTextMuted,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

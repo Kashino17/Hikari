@@ -45,16 +45,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.hikari.app.domain.repo.PlaylistWithSongs
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariCardBg
 import com.hikari.app.ui.theme.HikariPrimary
 import com.hikari.app.ui.theme.HikariSurfaceHigh
+import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextMuted
 import java.io.File
@@ -257,18 +261,37 @@ private fun LibraryPlaylistCard(entry: PlaylistWithSongs, onClick: () -> Unit) {
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(
-                    Brush.radialGradient(
-                        listOf(HikariPrimary.copy(alpha = 0.25f), HikariPrimary.copy(alpha = 0.08f))
-                    )
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null, tint = HikariPrimary, modifier = Modifier.size(26.dp))
+        // Cover des ersten Songs als Playlist-Thumbnail; leer → dezentes Icon.
+        val cover = entry.songs.firstOrNull { it.thumbnailUrl.isNotEmpty() }?.thumbnailUrl
+        if (cover != null) {
+            val thumbPx = with(LocalDensity.current) { 48.dp.roundToPx() }
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(cover)
+                    .size(thumbPx)
+                    .build(),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(HikariSurfaceHigh),
+                contentScale = ContentScale.Crop,
+            )
+        } else {
+            Box(
+                Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(HikariSurfaceHigh),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.PlaylistPlay,
+                    null,
+                    tint = HikariTextFaint,
+                    modifier = Modifier.size(26.dp),
+                )
+            }
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
