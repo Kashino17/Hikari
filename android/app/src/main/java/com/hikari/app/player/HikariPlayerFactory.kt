@@ -57,8 +57,11 @@ class HikariPlayerFactory @Inject constructor(
             "file://$localFilePath"
         } else {
             val path = when (kind) {
+                // Gerenderte Clips existieren nur auf dem Server, nicht auf YouTube.
                 "clip" -> "/clips/$videoId.mp4"
-                else   -> "/videos/$videoId.mp4"
+                // Live-Proxy: Backend löst die YouTube-URL beim Abspielen auf und
+                // streamt die Bytes durch (206/Range) — kein Server-Download nötig.
+                else   -> "/stream/video/$videoId"
             }
             "$baseUrl$path"
         }
