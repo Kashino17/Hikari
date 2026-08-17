@@ -1,9 +1,11 @@
 package com.hikari.app.ui.music
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +17,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.CloudDownload
@@ -81,6 +86,36 @@ fun RemotePlaylistScreen(
             Spacer(Modifier.height(12.dp))
             MuPrimaryButton("Alle abspielen", Icons.Default.PlayArrow, Modifier.fillMaxWidth()) {
                 tracks.firstOrNull()?.let { viewModel.play(it, tracks); onOpenNowPlaying() }
+            }
+            Spacer(Modifier.height(8.dp))
+            // Speichern legt eine lokale Playlist an; Offline lädt zusätzlich
+            // alle Songs herunter — der Kurzweg zum Offline-Hören.
+            val saved = viewModel.playlists.any { it.playlist.name.equals(name, ignoreCase = true) }
+            val downloadedCount = tracks.count { it.videoId in downloadedIds }
+            val allOffline = tracks.isNotEmpty() && downloadedCount == tracks.size
+            val downloading = tracks.any { progressMap.containsKey(it.videoId) }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                MuActionPill(
+                    icon = if (saved) Icons.Default.Check else Icons.AutoMirrored.Outlined.PlaylistAdd,
+                    label = if (saved) "Gespeichert" else "Speichern",
+                    active = saved,
+                ) {
+                    if (!saved && tracks.isNotEmpty()) viewModel.saveRemotePlaylist(name, tracks)
+                }
+                MuActionPill(
+                    icon = if (allOffline) Icons.Default.DownloadDone else Icons.Outlined.CloudDownload,
+                    label = when {
+                        allOffline -> "Offline"
+                        downloading -> "Lädt… $downloadedCount/${tracks.size}"
+                        else -> "Offline speichern"
+                    },
+                    active = allOffline,
+                    activeColor = Color(0xFF4ADE80),
+                ) {
+                    if (!allOffline && !downloading && tracks.isNotEmpty()) {
+                        viewModel.saveRemotePlaylist(name, tracks, thenDownload = true)
+                    }
+                }
             }
             Spacer(Modifier.height(8.dp))
         }

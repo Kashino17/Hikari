@@ -4,7 +4,6 @@ import com.hikari.app.data.api.HikariApi
 import com.hikari.app.data.api.dto.ArtistAlbumDto
 import com.hikari.app.data.api.dto.ArtistDto
 import com.hikari.app.data.api.dto.ArtistPlaylistDto
-import com.hikari.app.data.api.dto.HomeItemDto
 import com.hikari.app.data.api.dto.MusicTrackDto
 import com.hikari.app.data.api.dto.PipedSearchPageDto
 import com.hikari.app.data.api.dto.PipedStreamsDto
@@ -27,7 +26,6 @@ import com.hikari.app.domain.model.ArtistAlbum
 import com.hikari.app.domain.model.ArtistPage
 import com.hikari.app.domain.model.ArtistPlaylist
 import com.hikari.app.domain.model.FullSearchResults
-import com.hikari.app.domain.model.HomeItem
 import com.hikari.app.domain.model.HomeSection
 import com.hikari.app.domain.model.HomeSectionKind
 import com.hikari.app.domain.model.MusicAlbum
@@ -557,12 +555,13 @@ class MusicRepository(
     private var homeCacheAt = 0L
 
     /**
-     * Baut den Entdecken-Feed im YouTube-Music-Stil: Radio-Mixe aus den
-     * eigenen Hör-Seeds (Verlauf + Favoriten), dazu die generischen
-     * Home-Sektionen des Backends. Läuft alles ins Leere (kein Netz, neues
-     * Backend fehlt, leere Bibliothek), bleiben die kuratierten Mixe als
-     * Fallback — der Tab ist nie leer, solange irgendetwas erreichbar ist.
-     * Instrumental-Modus nutzt weiter die kuratierten Instrumental-Mixe:
+     * Baut den Entdecken-Feed: Kern sind IMMER die kuratierten Genre-Mixe —
+     * die haben sich als deutlich besser erwiesen als die generischen
+     * YouTube-Home-Karussells (anonyme Quick Picks, teils fremdsprachige
+     * Community-Playlists), die deshalb hier bewusst nicht mehr auftauchen.
+     * Sobald Verlauf/Favoriten existieren, kommen personalisierte Sektionen
+     * ("Dein Mix", "Ähnlich wie …", "Deine Favoriten") OBEN dazu.
+     * Instrumental-Modus nutzt weiter nur die kuratierten Instrumental-Mixe:
      * Radio-Queues können Gesang nicht ausschließen.
      */
     suspend fun getPersonalizedHome(force: Boolean = false): List<HomeSection> = coroutineScope {
@@ -582,7 +581,7 @@ class MusicRepository(
             .take(3)
 
         val relatedDeferred = seeds.map { seed -> async { seed to getRelatedSongs(seed.videoId) } }
-        val backendHome = async { runCatching { api.getMusicHome() }.getOrNull() }
+        val curatedDeferred = async { curatedHomeSections(DISCOVER_SECTIONS) }
         val relatedBySeed = relatedDeferred.map { it.await() }
 
         val recentIds = history.take(10).map { it.videoId }.toSet()
@@ -611,14 +610,6 @@ class MusicRepository(
                 )
             }
 
-        // Generische YouTube-Music-Sektionen (Quick Picks, Charts, …).
-        backendHome.await()?.sections?.forEach { dto ->
-            val items = dto.items.mapNotNull { it.toHomeItem() }
-            if (dto.title.isNotBlank() && items.size >= 3) {
-                sections += HomeSection(dto.title, HomeSectionKind.BACKEND, items = items)
-            }
-        }
-
         if (favorites.size >= 4) {
             sections += HomeSection(
                 "Deine Favoriten",
@@ -627,8 +618,10 @@ class MusicRepository(
             )
         }
 
-        // Nichts Personalisiertes und nichts vom Backend → kuratierte Mixe.
-        val result = sections.ifEmpty { curatedHomeSections(DISCOVER_SECTIONS) }
+        // Kuratierte Genre-Mixe als fester Kern — auch für frische Accounts.
+        sections += curatedDeferred.await()
+
+        val result = sections.toList()
         if (result.isNotEmpty()) {
             homeCache = result
             homeCacheAt = nowMs
@@ -663,14 +656,6 @@ class MusicRepository(
             seed.uploader.isNotBlank() -> seed.uploader
             else -> "„${seed.title.take(28)}“"
         }
-    }
-
-    private fun HomeItemDto.toHomeItem(): HomeItem? = when (kind) {
-        "song" -> song?.let { HomeItem.SongItem(it.toSong()) }
-        "playlist" -> playlist?.let { HomeItem.PlaylistItem(it.toModel()) }
-        "album" -> album?.let { HomeItem.AlbumItem(it.toModel()) }
-        "artist" -> artist?.let { HomeItem.ArtistItem(it.toModel()) }
-        else -> null
     }
 
     suspend fun getAudioStream(videoId: String, forceRefresh: Boolean = false): String? {
@@ -897,10 +882,16 @@ class MusicRepository(
      */
     suspend fun getArtistPage(channelId: String, fallbackName: String): ArtistPage =
         try {
-            val dto = api.getArtistPage(channelId)
+            val dto = api.getArtistPage(channelId, fallbackName)
+            // Normale YouTube-Kanäle (True Crime, Podcasts) kennt YouTube Music
+            // nicht als Artist — liefert die Page nichts, holt der alte
+            // /top-Endpunkt wenigstens die Kanal-Videos.
+            val topSongs = dto.topSongs.map { it.toSong() }.ifEmpty {
+                runCatching { getArtistTop(channelId, fallbackName) }.getOrDefault(emptyList())
+            }
             ArtistPage(
                 artist = dto.artist.toModel(),
-                topSongs = withFavoriteState(dto.topSongs.map { it.toSong() }),
+                topSongs = withFavoriteState(topSongs),
                 albums = dto.albums.map { it.toModel() },
                 singles = dto.singles.map { it.toModel() },
                 playlists = dto.playlists.map { it.toModel() },

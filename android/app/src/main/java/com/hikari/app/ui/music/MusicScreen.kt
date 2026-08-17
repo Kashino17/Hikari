@@ -205,7 +205,12 @@ private fun DiscoverTab(
     val searchMode = viewModel.searchMode
     val musicMode = searchMode == MusicSearchMode.MUSIC
 
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 12.dp)) {
+    LazyColumn(
+        Modifier.fillMaxSize(),
+        // Zustand lebt im ViewModel: überlebt Tab-Crossfade und Rücknavigation.
+        state = viewModel.discoverListState,
+        contentPadding = PaddingValues(bottom = 12.dp),
+    ) {
         item(key = "search") {
             MusicSearchField(
                 value = viewModel.searchQuery,
@@ -905,7 +910,11 @@ private fun PlaylistsTab(viewModel: MusicViewModel, onOpenPlaylist: (Int) -> Uni
                 "Noch keine Playlists — tippe auf „Neu“ oder lange auf einen Song.",
             )
         } else {
-            LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 12.dp)) {
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                state = viewModel.playlistsListState,
+                contentPadding = PaddingValues(bottom = 12.dp),
+            ) {
                 items(viewModel.playlists, key = { it.playlist.id }) { entry ->
                     PlaylistCard(entry, onClick = { onOpenPlaylist(entry.playlist.id) })
                 }
@@ -990,7 +999,11 @@ private fun DownloadsTab(viewModel: MusicViewModel) {
             color = HikariTextMuted,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
         )
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 12.dp)) {
+        LazyColumn(
+            Modifier.fillMaxSize(),
+            state = viewModel.downloadsListState,
+            contentPadding = PaddingValues(bottom = 12.dp),
+        ) {
             items(songs, key = { it.videoId }) { song ->
                 SongRow(
                     song,
@@ -1017,7 +1030,11 @@ private fun FavoritesTab(viewModel: MusicViewModel) {
         EmptyHint(Icons.Default.FavoriteBorder, "Tippe das Herz bei einem Song — er landet hier.")
         return
     }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 8.dp)) {
+    LazyColumn(
+        Modifier.fillMaxSize(),
+        state = viewModel.favoritesListState,
+        contentPadding = PaddingValues(vertical = 8.dp),
+    ) {
         items(viewModel.favorites, key = { it.videoId }) { song ->
             SongRow(
                 song,

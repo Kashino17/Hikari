@@ -188,6 +188,24 @@ function browseIdOf(node: unknown): string | undefined {
   return typeof id === "string" ? id : undefined;
 }
 
+/**
+ * Titelzahl aus Untertiteln wie "54 Titel", "1.234 Songs", "54 tracks" —
+ * Tausendertrennzeichen (Punkt/Komma/geschütztes Leerzeichen) tolerant.
+ * Ohne Titel-Wort hinter der Zahl (z. B. "1,2 Mio. Aufrufe") → 0.
+ */
+export function trackCountFrom(text: string): number {
+  const m = /(\d[\d., \s]*)\s*(?:titel|songs?|lieder|tracks?|videos?)\b/i.exec(text);
+  if (!m?.[1]) return 0;
+  const value = Number.parseInt(m[1].replace(/\D/g, ""), 10);
+  return Number.isFinite(value) ? value : 0;
+}
+
+/** "123.456 Aufrufe" → 123456 — viewCountText ist nie abgekürzt. */
+function fullNumberFrom(text: string): number {
+  const digits = /\d[\d., \s]*/.exec(text)?.[0]?.replace(/\D/g, "") ?? "";
+  return digits ? Number.parseInt(digits, 10) : 0;
+}
+
 const VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
 
 function songThumb(videoId: string): string {
@@ -283,9 +301,8 @@ function parseAlbumSearchItem(item: unknown): AlbumSearchResult | null {
     nav(flexCols[0], "musicResponsiveListItemFlexColumnRenderer", "text"),
   ).trim();
   if (!name) return null;
-  const subtitleRuns = runsOf(
-    nav(flexCols[1], "musicResponsiveListItemFlexColumnRenderer", "text"),
-  );
+  const subtitleNode = nav(flexCols[1], "musicResponsiveListItemFlexColumnRenderer", "text");
+  const subtitleRuns = runsOf(subtitleNode);
   const artistRun =
     subtitleRuns.find((r) => (browseIdOf(r) ?? "").startsWith("UC")) ??
     subtitleRuns.find((r) => {
@@ -297,7 +314,7 @@ function parseAlbumSearchItem(item: unknown): AlbumSearchResult | null {
     name,
     artistName: ((artistRun?.text as string | undefined) ?? "").trim(),
     thumbnailUrl: bestThumbnail(item),
-    videoCount: 0,
+    videoCount: trackCountFrom(runText(subtitleNode)),
   };
 }
 
@@ -315,7 +332,7 @@ function parsePlaylistSearchItem(item: unknown): PlaylistSummary | null {
   );
   const countRun = subtitleRuns
     .map((r) => (typeof r.text === "string" ? r.text : ""))
-    .find((t) => /\d/.test(t) && /(titel|songs?|videos?|tracks?)/i.test(t));
+    .find((t) => /\d/.test(t) && /(titel|songs?|lieder|videos?|tracks?)/i.test(t));
   const uploaderRun = subtitleRuns.find((r) => {
     const t = (r.text as string | undefined)?.trim() ?? "";
     return t !== "" && t !== "•" && !/^Playlist$/i.test(t) && !(countRun && t === countRun);
@@ -324,7 +341,7 @@ function parsePlaylistSearchItem(item: unknown): PlaylistSummary | null {
     playlistId: browseId.slice(2),
     name,
     thumbnailUrl: bestThumbnail(item),
-    videoCount: countRun ? Number.parseInt(/\d+/.exec(countRun)?.[0] ?? "0", 10) : 0,
+    videoCount: countRun ? trackCountFrom(countRun) : 0,
     uploaderName: ((uploaderRun?.text as string | undefined) ?? "").trim(),
   };
 }
@@ -343,7 +360,7 @@ function parseTwoRowAlbum(item: unknown, fallbackArtist: string): AlbumPageItem 
     name,
     artistName: fallbackArtist,
     thumbnailUrl: bestThumbnail(item),
-    videoCount: 0,
+    videoCount: trackCountFrom(subtitle),
     ...(year ? { year: Number.parseInt(year, 10) } : {}),
   };
 }
@@ -605,7 +622,7 @@ export async function itArtistPage(
             playlistId: browseId.startsWith("VL") ? browseId.slice(2) : browseId,
             name: plName,
             thumbnailUrl: bestThumbnail(wrapped),
-            videoCount: 0,
+            videoCount: trackCountFrom(twoRowSubtitle(wrapped)),
             uploaderName: name,
           });
         }
@@ -666,7 +683,7 @@ export async function itHome(fetchImpl: typeof fetch): Promise<HomeFeed | undefi
               name: itemName,
               artistName,
               thumbnailUrl: bestThumbnail(twoRow),
-              videoCount: 0,
+              videoCount: trackCountFrom(twoRowSubtitle(twoRow)),
             },
           });
         } else if (browseId?.startsWith("UC")) {
@@ -686,7 +703,7 @@ export async function itHome(fetchImpl: typeof fetch): Promise<HomeFeed | undefi
               playlistId: browseId.startsWith("VL") ? browseId.slice(2) : browseId,
               name: itemName,
               thumbnailUrl: bestThumbnail(twoRow),
-              videoCount: 0,
+              videoCount: trackCountFrom(runText(nav(twoRow, "subtitle"))),
               uploaderName: runText(nav(twoRow, "subtitle")).replace(/•/g, "").trim(),
             },
           });
@@ -707,6 +724,117 @@ export async function itHome(fetchImpl: typeof fetch): Promise<HomeFeed | undefi
       if (items.length >= 3) sections.push({ title, items: items.slice(0, 20) });
     }
     return sections.length > 0 ? { sections } : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+// ————— Normale YouTube-Kanäle (kein Music-Artist) —————
+
+/** WEB-Client (www.youtube.com) — für Kanal-Browse, den WEB_REMIX nicht kann. */
+const WEB_BASE = "https://www.youtube.com/youtubei/v1";
+const WEB_CONTEXT = {
+  client: { clientName: "WEB", clientVersion: "2.20241126.01.00", hl: "de", gl: "DE" },
+} as const;
+/** browse-Param für den Videos-Tab einer Kanalseite. */
+const WEB_VIDEOS_TAB_PARAMS = "EgZ2aWRlb3PyBgQKAjoA";
+
+/**
+ * Uploads eines gewöhnlichen YouTube-Kanals (True-Crime, Podcasts …), dessen
+ * WEB_REMIX-Browse keine Songs-Shelves hat. Reihenfolge wie auf der
+ * Kanalseite (neueste zuerst) — bei episodischen Kanälen ist das die
+ * erwartete Ordnung.
+ */
+export async function itChannelVideos(
+  fetchImpl: typeof fetch,
+  channelId: string,
+): Promise<MusicTrack[] | undefined> {
+  try {
+    const res = await fetchImpl(`${WEB_BASE}/browse?prettyPrint=false`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: "https://www.youtube.com",
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+      },
+      body: JSON.stringify({
+        context: WEB_CONTEXT,
+        browseId: channelId,
+        params: WEB_VIDEOS_TAB_PARAMS,
+      }),
+      signal: AbortSignal.timeout(IT_TIMEOUT_MS),
+    });
+    if (!res.ok) throw new Error(`web browse -> ${res.status}`);
+    const body = (await res.json()) as unknown;
+
+    const channelName =
+      (nav(findAllByKey(body, "channelMetadataRenderer")[0], "title") as string | undefined) ??
+      (nav(findAllByKey(body, "microformatDataRenderer")[0], "title") as string | undefined) ??
+      "";
+
+    const seen = new Set<string>();
+    const tracks: MusicTrack[] = [];
+    const push = (
+      videoId: unknown,
+      title: string,
+      durationSeconds: number | undefined,
+      views: number,
+    ) => {
+      if (typeof videoId !== "string" || !VIDEO_ID_RE.test(videoId) || seen.has(videoId)) return;
+      if (!title) return;
+      // ohne Dauer = Livestream/Premiere — als Audio-Track nicht abspielbar
+      if (durationSeconds === undefined || durationSeconds <= 0) return;
+      seen.add(videoId);
+      tracks.push({
+        videoId,
+        title,
+        uploader: channelName,
+        thumbnailUrl: songThumb(videoId),
+        durationSeconds,
+        uploaderUrl: `/channel/${channelId}`,
+        ...(views > 0 ? { views } : {}),
+      });
+    };
+
+    // Klassisches Format (videoRenderer) — ältere Antworten.
+    for (const item of findAllByKey(body, "videoRenderer")) {
+      if (tracks.length >= 20) break;
+      const title =
+        runText(nav(item, "title")).trim() ||
+        ((nav(item, "title", "simpleText") as string | undefined) ?? "").trim();
+      const lengthText =
+        ((nav(item, "lengthText", "simpleText") as string | undefined) ?? "") ||
+        runText(nav(item, "lengthText"));
+      const views = fullNumberFrom(
+        (nav(item, "viewCountText", "simpleText") as string | undefined) ?? "",
+      );
+      push(nav(item, "videoId"), title, durationToSeconds(lengthText), views);
+    }
+
+    // Aktuelles Format (lockupViewModel) — Kanal-Tabs seit 2025.
+    for (const item of findAllByKey(body, "lockupViewModel")) {
+      if (tracks.length >= 20) break;
+      if (nav(item, "contentType") !== "LOCKUP_CONTENT_TYPE_VIDEO") continue;
+      const title = (
+        (nav(item, "metadata", "lockupMetadataViewModel", "title", "content") as
+          | string
+          | undefined) ?? ""
+      ).trim();
+      // Dauer steht als Badge-Text auf dem Thumbnail ("9:40").
+      const durationSeconds = findAllByKey(item, "thumbnailBadgeViewModel")
+        .map((b) => nav(b, "text"))
+        .filter((t): t is string => typeof t === "string")
+        .map(durationToSeconds)
+        .find((d) => d !== undefined);
+      const viewText =
+        findAllByKey(item, "content")
+          .filter((c): c is string => typeof c === "string")
+          .find((c) => /aufruf|view/i.test(c)) ?? "";
+      push(nav(item, "contentId"), title, durationSeconds, fullNumberFrom(viewText));
+    }
+
+    return tracks.length > 0 ? tracks : undefined;
   } catch {
     return undefined;
   }

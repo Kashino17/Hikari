@@ -159,6 +159,12 @@ fun ArtistScreen(
                             }
                         }
 
+                        // Normale YouTube-Kanäle (True Crime, Podcasts) haben
+                        // keine Music-Sektionen — dann sind die Treffer schlicht
+                        // "Videos", nicht "Top-Songs".
+                        val isPlainChannel = page != null &&
+                            page.albums.isEmpty() && page.singles.isEmpty() && page.related.isEmpty()
+
                         // Abspielen/Zufällig starten die Top-Songs als Queue.
                         if (topSongs.isNotEmpty()) {
                             item(key = "actions") {
@@ -181,7 +187,9 @@ fun ArtistScreen(
                                     }
                                 }
                             }
-                            item(key = "top-header") { SectionHeader("Top-Songs") }
+                            item(key = "top-header") {
+                                SectionHeader(if (isPlainChannel) "Videos" else "Top-Songs")
+                            }
                             items(topSongs, key = { "top-${it.videoId}" }) { song ->
                                 SongRow(
                                     song,
@@ -246,6 +254,19 @@ fun ArtistScreen(
                                         )
                                     }
                                 }
+                            }
+                        }
+
+                        // Gar nichts gefunden (Kanal existiert, aber weder Songs
+                        // noch Sektionen): freundlicher Hinweis statt Leere.
+                        if (page != null && topSongs.isEmpty() && albums.isEmpty() &&
+                            singles.isEmpty() && playlists.isEmpty() && page.related.isEmpty()
+                        ) {
+                            item(key = "artist-empty") {
+                                EmptyHint(
+                                    Icons.Default.MusicNote,
+                                    "Von diesem Kanal sind gerade keine Inhalte auffindbar — später nochmal versuchen.",
+                                )
                             }
                         }
 
@@ -418,7 +439,13 @@ private fun ArtistPlaylistCard(playlist: ArtistPlaylist, onClick: () -> Unit) {
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                if (playlist.videoCount == 1) "1 Song" else "${playlist.videoCount} Songs",
+                // 0 heißt "Anzahl unbekannt" (YTM liefert bei Community-
+                // Playlists oft keine) — dann lieber gar keine Zahl zeigen.
+                when {
+                    playlist.videoCount <= 0 -> "Playlist"
+                    playlist.videoCount == 1 -> "1 Song"
+                    else -> "${playlist.videoCount} Songs"
+                },
                 fontSize = 11.sp,
                 color = HikariText.copy(alpha = 0.75f),
             )

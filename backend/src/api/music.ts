@@ -7,6 +7,7 @@ import {
   type ArtistPage,
   type HomeFeed,
   itArtistPage,
+  itChannelVideos,
   itHome,
   itPlaylistTracks,
   itRelated,
@@ -914,16 +915,44 @@ export async function registerMusicRoutes(
     return artist;
   });
 
+  /**
+   * Kanal-Uploads als Top-Songs — für normale YouTube-Kanäle (True Crime,
+   * Podcasts …), die auf YouTube Music keinen Songs-Shelf haben. Bevorzugt
+   * der direkte Kanal-Browse (braucht keinen Namen); die Piped-Namenssuche
+   * strikt gefiltert auf den eigenen Kanal bleibt Fallback.
+   */
+  async function fetchChannelUploads(
+    channelId: string,
+    name: string,
+  ): Promise<MusicTrack[] | undefined> {
+    const uploads = await itChannelVideos(fetchImpl, channelId);
+    if (uploads && uploads.length > 0) return uploads;
+    if (!name) return undefined;
+    return fetchArtistTop(channelId, name);
+  }
+
   // Komplette Artist-Seite in einem Call — Top-Songs, Alben, Singles,
   // Playlists und ähnliche Künstler, alles garantiert vom richtigen Kanal.
-  app.get<{ Params: { channelId: string } }>(
+  app.get<{ Params: { channelId: string }; Querystring: { name?: string } }>(
     "/music/artist/:channelId/page",
     async (req, reply) => {
       const { channelId } = req.params;
       if (!CHANNEL_ID_RE.test(channelId))
         return reply.code(400).send({ error: "invalid channelId" });
+      const name = (req.query.name ?? "").trim();
 
-      const page = await getArtistPage(channelId);
+      let page = await getArtistPage(channelId);
+      if (page && page.topSongs.length === 0) {
+        // Kein YTM-Artist (z. B. True-Crime-Kanal): die Seite hätte nur einen
+        // Header — Kanal-Uploads nachladen, damit sie nicht leer bleibt.
+        const uploads = await dedupInflight(inflightArtistTops, `${channelId}:uploads`, () =>
+          fetchChannelUploads(channelId, name),
+        );
+        if (uploads && uploads.length > 0) {
+          page = { ...page, topSongs: uploads };
+          cachePut(artistPageCache, channelId, page, now());
+        }
+      }
       if (page) {
         reply.header("cache-control", "public, max-age=300");
         return page;
@@ -990,11 +1019,21 @@ export async function registerMusicRoutes(
         reply.header("cache-control", "public, max-age=300");
         return cached;
       }
-      const tracks =
-        (await getArtistPage(channelId))?.topSongs ??
-        (await dedupInflight(inflightArtistTops, cacheKey, () => fetchArtistTop(channelId, name)));
+      let tracks = (await getArtistPage(channelId))?.topSongs;
+      if (tracks && tracks.length === 0) {
+        // Kein YTM-Artist: Kanal-Uploads statt leerer Liste (siehe /page).
+        tracks =
+          (await dedupInflight(inflightArtistTops, `${channelId}:uploads`, () =>
+            fetchChannelUploads(channelId, name),
+          )) ?? tracks;
+      }
+      tracks ??= await dedupInflight(inflightArtistTops, cacheKey, () =>
+        fetchArtistTop(channelId, name),
+      );
       if (!tracks) return reply.code(502).send({ error: "all music providers unavailable" });
-      cachePut(artistTopCache, cacheKey, tracks, now());
+      // Leere Listen nicht cachen — der Uploads-Fallback darf es beim
+      // nächsten Aufruf erneut versuchen.
+      if (tracks.length > 0) cachePut(artistTopCache, cacheKey, tracks, now());
       reply.header("cache-control", "public, max-age=300");
       return tracks;
     },

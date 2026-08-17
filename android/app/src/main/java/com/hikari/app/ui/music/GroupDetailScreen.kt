@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.CloudDownload
@@ -123,13 +125,23 @@ fun GroupDetailScreen(
                 }
             }
 
-            if (!allDownloaded && songs.isNotEmpty()) {
+            if (songs.isNotEmpty()) {
                 Spacer(Modifier.height(10.dp))
-                MuActionPill(
-                    Icons.Outlined.CloudDownload,
-                    "Alle offline speichern",
-                    active = false,
-                ) { viewModel.downloadGroup(title) }
+                val saved = viewModel.playlists.any { it.playlist.name.equals(title, ignoreCase = true) }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    MuActionPill(
+                        icon = if (saved) Icons.Default.Check else Icons.AutoMirrored.Outlined.PlaylistAdd,
+                        label = if (saved) "Gespeichert" else "Speichern",
+                        active = saved,
+                    ) { if (!saved) viewModel.saveRemotePlaylist(title, songs) }
+                    if (!allDownloaded) {
+                        MuActionPill(
+                            Icons.Outlined.CloudDownload,
+                            "Alle offline speichern",
+                            active = false,
+                        ) { viewModel.downloadGroup(title) }
+                    }
+                }
             }
 
             Spacer(Modifier.height(8.dp))

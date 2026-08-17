@@ -127,9 +127,16 @@ interface HikariApi {
     @GET("music/related/{videoId}")
     suspend fun getRelatedSongs(@Path("videoId") videoId: String): List<MusicTrackDto>
 
-    /** Komplette Artist-Seite (Profil, Top-Songs, Alben, Singles, Related) in einem Call. */
+    /**
+     * Komplette Artist-Seite (Profil, Top-Songs, Alben, Singles, Related) in
+     * einem Call. [name] hilft dem Backend-Fallback für normale YouTube-Kanäle
+     * (True Crime, Podcasts), die YouTube Music nicht als Artist kennt.
+     */
     @GET("music/artist/{channelId}/page")
-    suspend fun getArtistPage(@Path("channelId") channelId: String): ArtistPageDto
+    suspend fun getArtistPage(
+        @Path("channelId") channelId: String,
+        @Query("name") name: String,
+    ): ArtistPageDto
 
     // ── Täglicher KI-Tagesbericht ─────────────────────────────────────────
     @GET("news/topics")

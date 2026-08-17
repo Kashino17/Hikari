@@ -1,5 +1,6 @@
 package com.hikari.app.ui.music
 
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -151,6 +152,16 @@ class MusicViewModel @Inject constructor(
     /** Song, für den gerade das "Zu Playlist hinzufügen"-Sheet offen ist. */
     var addToPlaylistTarget by mutableStateOf<MusicSong?>(null)
 
+    /**
+     * Scroll-Zustände der Tabs leben hier statt in der Composition: der
+     * Crossfade beim Tab-Wechsel entsorgt die Tab-Inhalte komplett, und beim
+     * Zurücknavigieren soll die Liste an der alten Position stehen.
+     */
+    val discoverListState = LazyListState()
+    val playlistsListState = LazyListState()
+    val downloadsListState = LazyListState()
+    val favoritesListState = LazyListState()
+
     var message by mutableStateOf<String?>(null)
 
     val downloadProgress: StateFlow<Map<String, Float>> = downloads.progress
@@ -169,6 +180,19 @@ class MusicViewModel @Inject constructor(
     private var artistJob: Job? = null
     private var typedJob: Job? = null
     private var remotePlaylistJob: Job? = null
+
+    // Merker, wofür die Detail-States bereits geladen wurden: die
+    // LaunchedEffects der Detailseiten feuern beim Zurücknavigieren erneut —
+    // ohne Guard würde jedes Mal neu geladen und die Scroll-Position verworfen.
+    private var loadedRemotePlaylistId: String? = null
+    private var loadedMixKey: String? = null
+    private var loadedGroupKey: String? = null
+    private var loadedArtistChannelId: String? = null
+
+    /** Springt die Entdecken-Liste nach oben — für frische Inhalte (neue Suche, Moduswechsel). */
+    private fun resetDiscoverScroll() {
+        viewModelScope.launch { runCatching { discoverListState.scrollToItem(0) } }
+    }
 
     /** Pro Filter die Query, für die seine Liste bereits geladen wurde. */
     private val typedQueries = mutableMapOf<MusicSearchFilter, String>()
@@ -237,6 +261,7 @@ class MusicViewModel @Inject constructor(
         val q = query.trim()
         if (q.isEmpty()) return
         searchJob?.cancel()
+        resetDiscoverScroll()
         searchJob = viewModelScope.launch {
             searchLoading = true
             searchAttempted = true
@@ -304,7 +329,9 @@ class MusicViewModel @Inject constructor(
 
     /** Lädt die Tracks einer Remote-Playlist oder eines Albums für die Detail-Seite. */
     fun loadRemotePlaylist(playlistId: String) {
+        if (loadedRemotePlaylistId == playlistId && remotePlaylistTracks.isNotEmpty()) return
         remotePlaylistJob?.cancel()
+        loadedRemotePlaylistId = playlistId
         remotePlaylistJob = viewModelScope.launch {
             remotePlaylistLoading = true
             remotePlaylistTracks = repo.getRemotePlaylistTracks(playlistId)
@@ -332,7 +359,10 @@ class MusicViewModel @Inject constructor(
      * aus der Suche mitbringen. [uploader] ist der Gruppenname aus der Suche.
      */
     fun loadGroup(query: String, uploader: String, mode: MusicSearchMode) {
+        val key = "$query|$uploader|${mode.apiValue}"
+        if (loadedGroupKey == key && groupSongs.isNotEmpty()) return
         groupJob?.cancel()
+        loadedGroupKey = key
         groupJob = viewModelScope.launch {
             groupLoading = true
             val results = repo.searchMusic(query, mode)
@@ -373,12 +403,16 @@ class MusicViewModel @Inject constructor(
         if (mode != MusicSearchMode.MUSIC) resetSmartSearch()
         discoverSections = emptyList()
         homeSections = emptyList()
+        resetDiscoverScroll()
         loadDiscover(force = true)
         if (searchAttempted && searchQuery.isNotBlank()) search(searchQuery)
     }
 
     fun loadMix(query: String, mode: MusicSearchMode = searchMode) {
+        val key = "$query|${mode.apiValue}"
+        if (loadedMixKey == key && mixSongs.isNotEmpty()) return
         mixJob?.cancel()
+        loadedMixKey = key
         mixJob = viewModelScope.launch {
             mixLoading = true
             mixSongs = repo.getMixSongs(query, mode)
@@ -391,7 +425,9 @@ class MusicViewModel @Inject constructor(
      * Fallback-Pfad gegen alte Backends, die den Page-Endpunkt nicht kennen.
      */
     fun loadArtist(channelId: String, name: String) {
+        if (loadedArtistChannelId == channelId && artistPage != null) return
         artistJob?.cancel()
+        loadedArtistChannelId = channelId
         artistJob = viewModelScope.launch {
             artistLoading = true
             artistFailed = false
@@ -505,6 +541,42 @@ class MusicViewModel @Inject constructor(
             }
             message = if (ok == missing.size) {
                 "„${entry.playlist.name}“ ist offline verfügbar"
+            } else {
+                "$ok von ${missing.size} Songs geladen"
+            }
+            refreshLibrary()
+        }
+    }
+
+    /**
+     * Speichert eine Remote-Playlist (oder ein Album) als lokale Playlist —
+     * existiert schon eine gleichnamige, wird sie wiederverwendet statt
+     * dupliziert (der Song-Link-Insert ignoriert Duplikate ohnehin).
+     * Mit [thenDownload] werden anschließend alle fehlenden Songs geladen.
+     */
+    fun saveRemotePlaylist(name: String, songs: List<MusicSong>, thenDownload: Boolean = false) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty() || songs.isEmpty()) return
+        viewModelScope.launch {
+            val existing = repo.getPlaylists()
+                .firstOrNull { it.playlist.name.equals(trimmed, ignoreCase = true) }
+            val id = existing?.playlist?.id ?: repo.createPlaylist(trimmed)
+            songs.forEach { repo.addToPlaylist(id, it) }
+            refreshLibrary()
+            if (!thenDownload) {
+                message = "„$trimmed“ gespeichert"
+                return@launch
+            }
+            val missing = songs.filter { it.videoId !in downloadedIds.value }
+            if (missing.isEmpty()) {
+                message = "„$trimmed“ gespeichert — alles schon offline"
+                return@launch
+            }
+            message = "„$trimmed“ gespeichert — lade ${missing.size} Songs…"
+            var ok = 0
+            missing.forEach { song -> if (downloads.download(song).isSuccess) ok++ }
+            message = if (ok == missing.size) {
+                "„$trimmed“ ist offline verfügbar"
             } else {
                 "$ok von ${missing.size} Songs geladen"
             }

@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import Fastify from "fastify";
 import { describe, expect, it, vi } from "vitest";
+import { trackCountFrom } from "./music-innertube.js";
 import { type MusicDeps, registerMusicRoutes } from "./music.js";
 
 const PIPED_ITEM = {
@@ -1306,5 +1307,175 @@ describe("GET /music/artist/:channelId/page", () => {
     expect(res.statusCode).toBe(200);
     expect(res.json().map((t: { title: string }) => t.title)).toEqual(["Never Gonna Give You Up"]);
     await app.close();
+  });
+});
+
+describe("channel fallback for non-music channels", () => {
+  // WEB_REMIX kennt normale Kanäle nur als Header — keine Songs-Shelves.
+  const channelHeaderOnly = {
+    header: {
+      musicVisualHeaderRenderer: {
+        title: { runs: [{ text: "Lucia Leona" }] },
+        thumbnail: {
+          musicThumbnailRenderer: { thumbnail: { thumbnails: [{ url: "https://img/l.jpg" }] } },
+        },
+      },
+    },
+    contents: [],
+  };
+
+  const webVideosBody = {
+    metadata: { channelMetadataRenderer: { title: "Lucia Leona" } },
+    contents: [
+      {
+        videoRenderer: {
+          videoId: "vidvidvid01",
+          title: { runs: [{ text: "Der Fall Peggy" }] },
+          lengthText: { simpleText: "57:07" },
+          viewCountText: { simpleText: "123.456 Aufrufe" },
+        },
+      },
+      {
+        // ohne Dauer = Livestream — darf nicht als Track auftauchen
+        videoRenderer: {
+          videoId: "vidvidvid02",
+          title: { runs: [{ text: "Live dabei" }] },
+        },
+      },
+    ],
+  };
+
+  it("fills topSongs from the channel's uploads via WEB browse", async () => {
+    const fetchImpl = vi.fn((url: unknown) => {
+      const u = String(url);
+      if (u.includes("music.youtube.com")) return Promise.resolve(okJson(channelHeaderOnly));
+      if (u.includes("www.youtube.com/youtubei")) return Promise.resolve(okJson(webVideosBody));
+      return Promise.reject(new Error("piped down"));
+    });
+    const app = await makeApp({ fetchImpl }, { innertube: true });
+    const res = await app.inject({
+      method: "GET",
+      url: `/music/artist/${CHANNEL_ID}/page?name=Lucia%20Leona`,
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.artist.name).toBe("Lucia Leona");
+    expect(body.topSongs).toEqual([
+      {
+        videoId: "vidvidvid01",
+        title: "Der Fall Peggy",
+        uploader: "Lucia Leona",
+        thumbnailUrl: "https://i.ytimg.com/vi/vidvidvid01/mqdefault.jpg",
+        durationSeconds: 3427,
+        uploaderUrl: `/channel/${CHANNEL_ID}`,
+        views: 123456,
+      },
+    ]);
+    await app.close();
+  });
+
+  it("parses the current lockupViewModel channel format", async () => {
+    const lockupBody = {
+      metadata: { channelMetadataRenderer: { title: "Lucia Leona" } },
+      contents: [
+        {
+          lockupViewModel: {
+            contentId: "lockuplck01",
+            contentType: "LOCKUP_CONTENT_TYPE_VIDEO",
+            metadata: {
+              lockupMetadataViewModel: {
+                title: { content: "Der Fall Maja" },
+                metadata: {
+                  contentMetadataViewModel: {
+                    metadataRows: [{ metadataParts: [{ text: { content: "3.412 Aufrufe" } }] }],
+                  },
+                },
+              },
+            },
+            contentImage: {
+              thumbnailViewModel: {
+                overlays: [{ thumbnailBadgeViewModel: { text: "56:31" } }],
+              },
+            },
+          },
+        },
+      ],
+    };
+    const fetchImpl = vi.fn((url: unknown) => {
+      const u = String(url);
+      if (u.includes("music.youtube.com")) return Promise.resolve(okJson(channelHeaderOnly));
+      if (u.includes("www.youtube.com/youtubei")) return Promise.resolve(okJson(lockupBody));
+      return Promise.reject(new Error("piped down"));
+    });
+    const app = await makeApp({ fetchImpl }, { innertube: true });
+    const res = await app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}/page` });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().topSongs).toEqual([
+      {
+        videoId: "lockuplck01",
+        title: "Der Fall Maja",
+        uploader: "Lucia Leona",
+        thumbnailUrl: "https://i.ytimg.com/vi/lockuplck01/mqdefault.jpg",
+        durationSeconds: 3391,
+        uploaderUrl: `/channel/${CHANNEL_ID}`,
+        views: 3412,
+      },
+    ]);
+    await app.close();
+  });
+
+  it("falls back to the Piped name search, strictly own-channel only", async () => {
+    const own = { ...PIPED_ITEM, uploaderUrl: `/channel/${CHANNEL_ID}` };
+    const foreign = {
+      ...PIPED_ITEM,
+      url: "/watch?v=zzzzzzzzzz1",
+      title: "Fremdes Video",
+      uploaderUrl: "/channel/UCsomeoneelse0000000000",
+    };
+    const fetchImpl = vi.fn((url: unknown) => {
+      const u = String(url);
+      if (u.includes("music.youtube.com")) return Promise.resolve(okJson(channelHeaderOnly));
+      if (u.includes("www.youtube.com/youtubei")) return Promise.reject(new Error("web down"));
+      return Promise.resolve(okJson({ items: [foreign, own] }));
+    });
+    const app = await makeApp({ fetchImpl }, { innertube: true });
+    const res = await app.inject({
+      method: "GET",
+      url: `/music/artist/${CHANNEL_ID}/top?name=Lucia%20Leona`,
+    });
+    expect(res.statusCode).toBe(200);
+    const titles = res.json().map((t: { title: string }) => t.title);
+    expect(titles).toEqual(["Never Gonna Give You Up"]);
+    await app.close();
+  });
+
+  it("keeps topSongs empty without a name when the WEB browse fails", async () => {
+    const fetchImpl = vi.fn((url: unknown) =>
+      String(url).includes("music.youtube.com")
+        ? Promise.resolve(okJson(channelHeaderOnly))
+        : Promise.reject(new Error("down")),
+    );
+    const app = await makeApp({ fetchImpl }, { innertube: true });
+    const res = await app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}/page` });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().topSongs).toEqual([]);
+    await app.close();
+  });
+});
+
+describe("trackCountFrom", () => {
+  it("parses German and English track counts with thousand separators", () => {
+    expect(trackCountFrom("54 Titel")).toBe(54);
+    expect(trackCountFrom("1.234 Titel")).toBe(1234);
+    expect(trackCountFrom("1,234 tracks")).toBe(1234);
+    expect(trackCountFrom("12 Songs")).toBe(12);
+    expect(trackCountFrom("Playlist • 7 Lieder")).toBe(7);
+    expect(trackCountFrom("38 Videos")).toBe(38);
+  });
+
+  it("ignores view counts and years", () => {
+    expect(trackCountFrom("1,2 Mio. Aufrufe")).toBe(0);
+    expect(trackCountFrom("Album • 2019")).toBe(0);
+    expect(trackCountFrom("")).toBe(0);
   });
 });
