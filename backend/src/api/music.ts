@@ -1,12 +1,13 @@
 import { readFileSync, renameSync, writeFileSync } from "node:fs";
 import { rename, writeFile } from "node:fs/promises";
 import { Readable } from "node:stream";
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyReply } from "fastify";
 import { runYtDlp } from "../yt-dlp/client.js";
 import {
   type ArtistPage,
   type HomeFeed,
   itArtistPage,
+  itChannelPlaylists,
   itChannelVideos,
   itHome,
   itPlaylistTracks,
@@ -17,14 +18,23 @@ import {
   itSuggestions,
 } from "./music-innertube.js";
 
+/** Einzelner (Mit-)Interpret eines Tracks — channelId nur bei UC…-Kanälen. */
+export interface TrackArtist {
+  name: string;
+  channelId: string | null;
+}
+
 export interface MusicTrack {
   videoId: string;
   title: string;
+  /** Anzeige-String ALLER Interpreten ("A, B & C") — Separatoren wie von YTM. */
   uploader: string;
   thumbnailUrl: string;
   durationSeconds: number;
   uploaderUrl?: string;
   views?: number;
+  /** Alle Interpreten einzeln (Kollaborationen) — nur aus Innertube-Pfaden. */
+  artists?: TrackArtist[];
 }
 
 /** Public Piped instances tried in order until one answers with usable JSON. */
@@ -77,6 +87,18 @@ const SEARCH_MODES = {
 } as const;
 
 type SearchMode = keyof typeof SEARCH_MODES;
+
+/**
+ * Mindestdauer pro Modus für die Vollsuche — kurze Clips/Trailer sind selten
+ * Hörbuch oder Podcast-Folge (gleiche Heuristik wie im Client). Greift der
+ * Filter zu hart (<4 Treffer), gewinnt die ungefilterte Liste.
+ */
+const MODE_MIN_DURATION_S: Record<SearchMode, number> = {
+  music: 0,
+  audiobook: 600,
+  podcast: 300,
+  truecrime: 300,
+};
 
 function isSearchMode(value: string): value is SearchMode {
   return value in SEARCH_MODES;
@@ -577,25 +599,73 @@ export async function registerMusicRoutes(
   // --- YouTube-Music-artige Vollsuche ---
   // Vier Teilsuchen (Songs, Alben, Artists, Playlists) laufen parallel;
   // einzelne fehlschlagende Teilsuchen liefern leere Sektionen, erst wenn
-  // alle vier scheitern gibt es 502.
+  // alle vier scheitern gibt es 502. Die Video-Modi (Hörbuch/Podcast/
+  // True-Crime) bekommen dieselben Sektionen aus der Piped-Videosuche.
 
-  app.get<{ Querystring: { q?: string } }>("/music/search/full", async (req, reply) => {
-    const q = (req.query.q ?? "").trim();
-    if (!q) return reply.code(400).send({ error: "missing query parameter q" });
+  app.get<{ Querystring: { q?: string; mode?: string } }>(
+    "/music/search/full",
+    async (req, reply) => {
+      const q = (req.query.q ?? "").trim();
+      if (!q) return reply.code(400).send({ error: "missing query parameter q" });
+      const modeParam = req.query.mode ?? "music";
+      if (!isSearchMode(modeParam)) {
+        return reply.code(400).send({ error: `unknown mode "${modeParam}"` });
+      }
 
-    const cacheKey = q.toLowerCase();
-    const cached = cacheGet(fullSearchCache, cacheKey, FULL_SEARCH_CACHE_TTL_MS, now());
-    if (cached) {
+      const cacheKey = `${modeParam}:${q.toLowerCase()}`;
+      const cached = cacheGet(fullSearchCache, cacheKey, FULL_SEARCH_CACHE_TTL_MS, now());
+      if (cached) {
+        reply.header("cache-control", "public, max-age=300");
+        return cached;
+      }
+
+      const result = await dedupInflight(inflightFullSearches, cacheKey, () =>
+        modeParam === "music" ? fullSearch(q) : fullVideoSearch(q, modeParam),
+      );
+      if (!result) return reply.code(502).send({ error: "all music search providers unavailable" });
+      cachePut(fullSearchCache, cacheKey, result, now());
       reply.header("cache-control", "public, max-age=300");
-      return cached;
-    }
+      return result;
+    },
+  );
 
-    const result = await dedupInflight(inflightFullSearches, cacheKey, () => fullSearch(q));
-    if (!result) return reply.code(502).send({ error: "all music search providers unavailable" });
-    cachePut(fullSearchCache, cacheKey, result, now());
-    reply.header("cache-control", "public, max-age=300");
-    return result;
-  });
+  /**
+   * Vollsuche der Video-Modi: Videos als Songs-Sektion (Dauer-Heuristik wie
+   * im Client), Kanäle als Artists, Playlists wie gehabt — Alben gibt es in
+   * diesen Welten nicht.
+   */
+  async function fullVideoSearch(
+    q: string,
+    mode: SearchMode,
+  ): Promise<FullSearchResult | undefined> {
+    const isStream = (i: PipedSearchItem) => i.type === "stream" || i.url?.includes("v=");
+    const [videoItems, channelItems, playlistItems] = await Promise.all([
+      searchPipedItems(q, "videos", (candidates) => candidates.some(isStream)),
+      searchPipedItems(q, "channels"),
+      searchPipedItems(q, "playlists"),
+    ]);
+    if (!videoItems && !channelItems && !playlistItems) return undefined;
+
+    const all = (videoItems ?? [])
+      .filter(isStream)
+      .map(normalizeItem)
+      .filter((t): t is MusicTrack => t !== null);
+    const minSeconds = MODE_MIN_DURATION_S[mode];
+    const longEnough = all.filter((t) => t.durationSeconds >= minSeconds);
+    const songs = (longEnough.length >= 4 ? longEnough : all).slice(0, 10);
+    const artists = (channelItems ?? [])
+      .filter((i) => i.type === "channel")
+      .map(normalizeChannelItem)
+      .filter((a): a is ArtistSearchResult => a !== null)
+      .slice(0, 6);
+    const playlists = (playlistItems ?? [])
+      .filter((i) => i.type === "playlist")
+      .map(normalizePlaylistItem)
+      .filter((p): p is PlaylistSummary => p !== null)
+      .slice(0, 6);
+
+    return { topResult: pickTopResult(q, songs, artists), songs, artists, albums: [], playlists };
+  }
 
   /**
    * Top-Treffer-Heuristik: bevorzugt ein Artist, dessen Name im Query
@@ -814,17 +884,22 @@ export async function registerMusicRoutes(
     }
   }
 
-  // Streaming-Proxy: das Handy holt Audio-Bytes vom Mac statt direkt von
-  // googlevideo — die URLs dort sind an Netz/IP des Auflösers gebunden und
-  // spielen von fremden Netzen aus nicht zuverlässig ab.
-  app.get<{ Params: { videoId: string } }>("/music/audio/:videoId", async (req, reply) => {
-    const { videoId } = req.params;
-    if (!VIDEO_ID_RE.test(videoId)) return reply.code(400).send({ error: "invalid videoId" });
-
-    const range = req.headers.range;
+  /**
+   * Gemeinsamer Streaming-Proxy für Audio UND Video: das Handy holt die Bytes
+   * vom Mac statt direkt von googlevideo — die URLs dort sind an Netz/IP des
+   * Auflösers gebunden und spielen von fremden Netzen aus nicht zuverlässig
+   * ab. Range-Requests werden durchgereicht (206 + Content-Range), sonst kann
+   * ExoPlayer nicht seeken.
+   */
+  async function proxyMediaStream(
+    reply: FastifyReply,
+    range: string | undefined,
+    resolveUrl: (force: boolean) => Promise<string | undefined>,
+    kind: "audio" | "video",
+  ) {
     let resolved = false;
     for (const force of [false, true]) {
-      const url = await resolveAudioUrl(videoId, force);
+      const url = await resolveUrl(force);
       if (!url) continue;
       resolved = true;
 
@@ -834,7 +909,7 @@ export async function registerMusicRoutes(
       for (let attempt = 0; ; attempt++) {
         // Timeout NUR für die Header-Phase: hängt googlevideo bei Connect/Headern,
         // hängt sonst der Request ewig. Nach Response-Eingang wird der Timer
-        // gecleart — der Body streamt ohne Timeout, so lange der Song spielt.
+        // gecleart — der Body streamt ohne Timeout, so lange abgespielt wird.
         const headerAbort = new AbortController();
         const headerTimer = setTimeout(() => headerAbort.abort(), AUDIO_HEADER_TIMEOUT_MS);
         try {
@@ -865,7 +940,67 @@ export async function registerMusicRoutes(
     }
     return reply
       .code(502)
-      .send({ error: resolved ? "upstream audio fetch failed" : "audio extraction failed" });
+      .send({ error: resolved ? `upstream ${kind} fetch failed` : `${kind} extraction failed` });
+  }
+
+  app.get<{ Params: { videoId: string } }>("/music/audio/:videoId", async (req, reply) => {
+    const { videoId } = req.params;
+    if (!VIDEO_ID_RE.test(videoId)) return reply.code(400).send({ error: "invalid videoId" });
+    return proxyMediaStream(
+      reply,
+      req.headers.range,
+      (force) => resolveAudioUrl(videoId, force),
+      "audio",
+    );
+  });
+
+  // --- Video-Stream (Audio↔Video-Umschalter im Player) ---
+  // Eigener URL-Cache getrennt vom Audio-Cache: dieselbe videoId hat zwei
+  // verschiedene googlevideo-URLs (bestaudio vs. muxed MP4).
+
+  const videoStreamCache = new Map<string, CacheEntry<string>>();
+  const inflightVideoResolutions = new Map<string, Promise<string | undefined>>();
+
+  async function resolveVideoUrl(videoId: string, force: boolean): Promise<string | undefined> {
+    const cached = force
+      ? undefined
+      : cacheGet(videoStreamCache, videoId, STREAM_CACHE_TTL_MS, now());
+    if (cached) return cached;
+    return dedupInflight(inflightVideoResolutions, videoId, () => extractVideoUrl(videoId));
+  }
+
+  async function extractVideoUrl(videoId: string): Promise<string | undefined> {
+    try {
+      const result = await ytDlp(
+        [
+          "--no-playlist",
+          "-f",
+          // muxed MP4 (Video+Audio in einer Datei), max 720p — ein einzelner
+          // Stream, den ExoPlayer ohne DASH-Manifest progressiv abspielen kann.
+          "best[height<=720][ext=mp4][vcodec!=none][acodec!=none]/best[height<=720][ext=mp4]/best[ext=mp4]/best",
+          "-g",
+          `https://www.youtube.com/watch?v=${videoId}`,
+        ],
+        { timeoutMs: 45_000, maxRetries: 1 },
+      );
+      const url = result.stdout.trim().split("\n")[0];
+      if (!url?.startsWith("http")) return undefined;
+      cachePut(videoStreamCache, videoId, url, now());
+      return url;
+    } catch {
+      return undefined;
+    }
+  }
+
+  app.get<{ Params: { videoId: string } }>("/music/video/:videoId", async (req, reply) => {
+    const { videoId } = req.params;
+    if (!VIDEO_ID_RE.test(videoId)) return reply.code(400).send({ error: "invalid videoId" });
+    return proxyMediaStream(
+      reply,
+      req.headers.range,
+      (force) => resolveVideoUrl(videoId, force),
+      "video",
+    );
   });
 
   // --- Artist-Seiten ---
@@ -945,11 +1080,24 @@ export async function registerMusicRoutes(
       if (page && page.topSongs.length === 0) {
         // Kein YTM-Artist (z. B. True-Crime-Kanal): die Seite hätte nur einen
         // Header — Kanal-Uploads nachladen, damit sie nicht leer bleibt.
+        // `latest` behält die Upload-Reihenfolge, topSongs sortiert nach Views.
         const uploads = await dedupInflight(inflightArtistTops, `${channelId}:uploads`, () =>
           fetchChannelUploads(channelId, name),
         );
         if (uploads && uploads.length > 0) {
-          page = { ...page, topSongs: uploads };
+          const popular = [...uploads].sort((a, b) => (b.views ?? 0) - (a.views ?? 0));
+          page = { ...page, topSongs: popular, latest: uploads };
+          // Kanal-Playlists über den Playlists-Tab — best-effort.
+          if (page.playlists.length === 0) {
+            const channelPlaylists = await dedupInflight(
+              inflightArtistPlaylists,
+              `${channelId}:tabs`,
+              () => itChannelPlaylists(fetchImpl, channelId),
+            );
+            if (channelPlaylists && channelPlaylists.length > 0) {
+              page = { ...page, playlists: channelPlaylists };
+            }
+          }
           cachePut(artistPageCache, channelId, page, now());
         }
       }
@@ -968,6 +1116,7 @@ export async function registerMusicRoutes(
       return {
         artist,
         topSongs,
+        latest: [],
         albums: [],
         singles: [],
         playlists: [],

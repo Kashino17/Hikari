@@ -1,6 +1,11 @@
 package com.hikari.app.ui.music
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,12 +38,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -77,11 +89,17 @@ fun ArtistScreen(
     val page = viewModel.artistPage
     val artist = page?.artist
     val topSongs = page?.topSongs.orEmpty()
+    val latest = page?.latest.orEmpty()
     val playlists = page?.playlists.orEmpty()
     val currentSong by viewModel.player.currentSong.collectAsState()
     val downloadedIds by viewModel.downloadedIds.collectAsState()
     val progressMap by viewModel.downloadProgress.collectAsState()
     val online by viewModel.isOnline.collectAsState()
+
+    // Kanal-Ansicht: Umschalter zwischen den beliebtesten und neuesten Videos.
+    var channelTab by rememberSaveable { mutableIntStateOf(0) }
+    // Beschreibung ist eingeklappt 3 Zeilen — aufklappbar statt abgeschnitten.
+    var aboutExpanded by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(channelId, fallbackName) { viewModel.loadArtist(channelId, fallbackName) }
 
@@ -110,14 +128,13 @@ fun ArtistScreen(
                         Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(bottom = 12.dp),
                     ) {
-                        // Hero: Künstlerfoto als großes Banner, Name + Abo-Zahl im Scrim
+                        // Hero: Künstlerfoto als großes Banner — bewusst ohne
+                        // Abo-/Aufruf-Zahlen, die tragen hier nichts bei.
                         item(key = "header") {
                             MuHeroHeader(
                                 imageUrl = artist?.avatarUrl,
                                 title = artist?.name ?: fallbackName,
-                                subtitle = artist?.subscriberCount
-                                    ?.takeIf { it > 0 }
-                                    ?.let { formatSubscribersDE(it) },
+                                subtitle = null,
                                 fallbackIcon = Icons.Default.MusicNote,
                                 height = 260.dp,
                             )
@@ -147,13 +164,30 @@ fun ArtistScreen(
                                     }
                                     if (description.isNotBlank()) {
                                         Spacer(Modifier.height(6.dp))
-                                        Text(
-                                            description,
-                                            fontSize = 13.sp,
-                                            color = HikariTextMuted,
-                                            maxLines = 3,
-                                            overflow = TextOverflow.Ellipsis,
-                                        )
+                                        // Aufklappbar statt hart abgeschnitten —
+                                        // der volle Text ist sonst unerreichbar.
+                                        Column(Modifier.animateContentSize()) {
+                                            Text(
+                                                description,
+                                                fontSize = 13.sp,
+                                                color = HikariTextMuted,
+                                                lineHeight = 18.sp,
+                                                maxLines = if (aboutExpanded) Int.MAX_VALUE else 3,
+                                                overflow = TextOverflow.Ellipsis,
+                                            )
+                                            if (description.length > 120) {
+                                                Text(
+                                                    if (aboutExpanded) "Weniger anzeigen" else "Mehr anzeigen",
+                                                    fontSize = 12.sp,
+                                                    color = HikariPrimary,
+                                                    fontWeight = FontWeight.Bold,
+                                                    modifier = Modifier
+                                                        .clip(RoundedCornerShape(999.dp))
+                                                        .muPressable { aboutExpanded = !aboutExpanded }
+                                                        .padding(vertical = 6.dp),
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -187,20 +221,40 @@ fun ArtistScreen(
                                     }
                                 }
                             }
-                            item(key = "top-header") {
-                                SectionHeader(if (isPlainChannel) "Videos" else "Top-Songs")
-                            }
-                            items(topSongs, key = { "top-${it.videoId}" }) { song ->
-                                SongRow(
-                                    song,
-                                    viewModel,
-                                    topSongs,
-                                    isCurrent = currentSong?.videoId == song.videoId,
-                                    isDownloaded = song.videoId in downloadedIds,
-                                    progress = progressMap[song.videoId],
-                                    online = online,
-                                    badge = if (song.views > 0) formatViewsDE(song.views) else null,
-                                )
+                            if (isPlainChannel && latest.isNotEmpty()) {
+                                // Kanal-Ansicht: kompakte Top/Neuste-Auswahl statt
+                                // einer endlosen Liste — der Rest folgt in Sektionen.
+                                item(key = "channel-tabs") {
+                                    ChannelListTabs(channelTab) { channelTab = it }
+                                }
+                                val tabQueue = if (channelTab == 0) topSongs else latest
+                                items(tabQueue.take(5), key = { "tab-${it.videoId}" }) { song ->
+                                    SongRow(
+                                        song,
+                                        viewModel,
+                                        tabQueue,
+                                        isCurrent = currentSong?.videoId == song.videoId,
+                                        isDownloaded = song.videoId in downloadedIds,
+                                        progress = progressMap[song.videoId],
+                                        online = online,
+                                        onOpenArtist = null,
+                                    )
+                                }
+                            } else {
+                                item(key = "top-header") {
+                                    SectionHeader(if (isPlainChannel) "Videos" else "Top-Songs")
+                                }
+                                items(topSongs, key = { "top-${it.videoId}" }) { song ->
+                                    SongRow(
+                                        song,
+                                        viewModel,
+                                        topSongs,
+                                        isCurrent = currentSong?.videoId == song.videoId,
+                                        isDownloaded = song.videoId in downloadedIds,
+                                        progress = progressMap[song.videoId],
+                                        online = online,
+                                    )
+                                }
                             }
                         }
 
@@ -257,9 +311,50 @@ fun ArtistScreen(
                             }
                         }
 
+                        // Kanal-Sektionen unter den Playlisten: die restlichen
+                        // beliebten Videos und alles noch nicht Gehörte.
+                        if (isPlainChannel && latest.isNotEmpty()) {
+                            val popular = topSongs.drop(5).take(10)
+                            if (popular.isNotEmpty()) {
+                                item(key = "popular-header") { SectionHeader("Beliebte Videos") }
+                                items(popular, key = { "pop-${it.videoId}" }) { song ->
+                                    SongRow(
+                                        song,
+                                        viewModel,
+                                        popular,
+                                        isCurrent = currentSong?.videoId == song.videoId,
+                                        isDownloaded = song.videoId in downloadedIds,
+                                        progress = progressMap[song.videoId],
+                                        online = online,
+                                        onOpenArtist = null,
+                                    )
+                                }
+                            }
+                            val seenIds = viewModel.history.map { it.videoId }.toSet()
+                            val unseen = (latest + topSongs)
+                                .distinctBy { it.videoId }
+                                .filter { it.videoId !in seenIds }
+                                .take(10)
+                            if (unseen.isNotEmpty()) {
+                                item(key = "unseen-header") { SectionHeader("Noch nicht angesehen") }
+                                items(unseen, key = { "new-${it.videoId}" }) { song ->
+                                    SongRow(
+                                        song,
+                                        viewModel,
+                                        unseen,
+                                        isCurrent = currentSong?.videoId == song.videoId,
+                                        isDownloaded = song.videoId in downloadedIds,
+                                        progress = progressMap[song.videoId],
+                                        online = online,
+                                        onOpenArtist = null,
+                                    )
+                                }
+                            }
+                        }
+
                         // Gar nichts gefunden (Kanal existiert, aber weder Songs
                         // noch Sektionen): freundlicher Hinweis statt Leere.
-                        if (page != null && topSongs.isEmpty() && albums.isEmpty() &&
+                        if (page != null && topSongs.isEmpty() && latest.isEmpty() && albums.isEmpty() &&
                             singles.isEmpty() && playlists.isEmpty() && page.related.isEmpty()
                         ) {
                             item(key = "artist-empty") {
@@ -307,6 +402,41 @@ fun ArtistScreen(
                 .background(Color.Black.copy(alpha = 0.40f), CircleShape),
             tint = HikariText,
         ) { onBack() }
+    }
+}
+
+/** Animierte Top/Neuste-Segmentpille der Kanal-Ansicht. */
+@Composable
+private fun ChannelListTabs(selected: Int, onSelect: (Int) -> Unit) {
+    val haptic = LocalHapticFeedback.current
+    Row(
+        Modifier
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clip(RoundedCornerShape(999.dp))
+            .background(HikariSurfaceHigh)
+            .padding(3.dp),
+    ) {
+        listOf("Top 5", "Neuste 5").forEachIndexed { i, label ->
+            val active = i == selected
+            val fill by animateFloatAsState(if (active) 1f else 0f, tween(180), label = "chTab$i")
+            Box(
+                Modifier
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(HikariPrimary.copy(alpha = fill))
+                    .clickable(remember { MutableInteractionSource() }, indication = null) {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onSelect(i)
+                    }
+                    .padding(horizontal = 20.dp, vertical = 9.dp),
+            ) {
+                Text(
+                    label,
+                    fontSize = 13.sp,
+                    color = if (active) Color.Black else HikariTextMuted,
+                    fontWeight = if (active) FontWeight.Black else FontWeight.Medium,
+                )
+            }
+        }
     }
 }
 

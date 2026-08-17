@@ -49,6 +49,8 @@ data class ArtistAlbumDto(
 data class ArtistPageDto(
     val artist: ArtistDto,
     val topSongs: List<MusicTrackDto> = emptyList(),
+    /** Neueste Uploads — nur bei normalen Kanälen gefüllt, Music-Artists leer. */
+    val latest: List<MusicTrackDto> = emptyList(),
     val albums: List<ArtistAlbumDto> = emptyList(),
     val singles: List<ArtistAlbumDto> = emptyList(),
     val playlists: List<ArtistPlaylistDto> = emptyList(),

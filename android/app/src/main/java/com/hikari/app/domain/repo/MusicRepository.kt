@@ -34,6 +34,7 @@ import com.hikari.app.domain.model.MusicSearchResult
 import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.domain.model.RemotePlaylist
 import com.hikari.app.domain.model.SearchArtist
+import com.hikari.app.domain.model.SongArtist
 import java.net.URLEncoder
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -301,9 +302,12 @@ class MusicRepository(
         }
 
     /** Vollsuche über alle Kategorien; null bei Fehler. */
-    suspend fun searchFullMusic(query: String): FullSearchResults? =
+    suspend fun searchFullMusic(
+        query: String,
+        mode: MusicSearchMode = MusicSearchMode.MUSIC,
+    ): FullSearchResults? =
         try {
-            val dto = api.searchFullMusic(query.trim())
+            val dto = api.searchFullMusic(query.trim(), mode.apiValue)
             FullSearchResults(
                 topResult = dto.topResult?.toSearchResult(),
                 songs = withFavoriteState(dto.songs.map { it.toSong() }),
@@ -669,6 +673,17 @@ class MusicRepository(
         return "$backend/music/audio/$videoId"
     }
 
+    /**
+     * Video-Variante für den Audio↔Video-Umschalter (Podcast/True Crime):
+     * muxed MP4 über den Backend-Proxy mit Range-Support. Ohne Backend-URL
+     * gibt es kein Video — der Player bleibt dann im Audio-Modus.
+     */
+    suspend fun getVideoStream(videoId: String): String? {
+        val backend = runCatching { settings.backendUrl.first().trimEnd('/') }.getOrNull()
+            ?: return null
+        return "$backend/music/video/$videoId"
+    }
+
     // --- Library (= play history) & favorites ---
 
     suspend fun getHistory(): List<MusicSong> = songDao.getAll().map { it.toSong() }
@@ -861,6 +876,7 @@ class MusicRepository(
         thumbnailUrl = thumbnailUrl,
         duration = durationSeconds,
         views = views ?: 0,
+        artists = artists.map { SongArtist(name = it.name, channelId = it.channelId) },
     )
 
     // --- Artist-Seiten (nur Backend, kein Piped-Fallback — Fehler gehen an den Aufrufer) ---
@@ -892,6 +908,7 @@ class MusicRepository(
             ArtistPage(
                 artist = dto.artist.toModel(),
                 topSongs = withFavoriteState(topSongs),
+                latest = withFavoriteState(dto.latest.map { it.toSong() }),
                 albums = dto.albums.map { it.toModel() },
                 singles = dto.singles.map { it.toModel() },
                 playlists = dto.playlists.map { it.toModel() },

@@ -1091,7 +1091,54 @@ describe("Innertube-first search", () => {
         thumbnailUrl: "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg",
         durationSeconds: 213,
         uploaderUrl: `/channel/${CHANNEL_ID}`,
+        artists: [{ name: "Rick Astley", channelId: CHANNEL_ID }],
       },
+    ]);
+    await app.close();
+  });
+
+  it("parses all collaborating artists with their channel ids", async () => {
+    const fetchImpl = itOnlyFetch({
+      contents: [
+        {
+          musicResponsiveListItemRenderer: {
+            playlistItemData: { videoId: "collabvid01" },
+            flexColumns: [
+              {
+                musicResponsiveListItemFlexColumnRenderer: {
+                  text: { runs: [itRun("Feature Song")] },
+                },
+              },
+              {
+                musicResponsiveListItemFlexColumnRenderer: {
+                  text: {
+                    runs: [
+                      itRun("Artist A", CHANNEL_ID),
+                      itRun(", "),
+                      itRun("Artist B", "UCother0000000000000000"),
+                      itRun(" & "),
+                      itRun("C ohne Kanal"),
+                      itRun(" • "),
+                      itRun("3:33"),
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        },
+      ],
+    });
+    const app = await makeApp({ fetchImpl }, { innertube: true });
+    const res = await app.inject({ method: "GET", url: "/music/search/typed?q=collab&type=songs" });
+    expect(res.statusCode).toBe(200);
+    const track = res.json()[0];
+    expect(track.uploader).toBe("Artist A, Artist B & C ohne Kanal");
+    expect(track.uploaderUrl).toBe(`/channel/${CHANNEL_ID}`);
+    expect(track.artists).toEqual([
+      { name: "Artist A", channelId: CHANNEL_ID },
+      { name: "Artist B", channelId: "UCother0000000000000000" },
+      { name: "C ohne Kanal", channelId: null },
     ]);
     await app.close();
   });
@@ -1142,6 +1189,7 @@ describe("GET /music/related/:videoId", () => {
         uploader: "Other Artist",
         thumbnailUrl: "https://i.ytimg.com/vi/abcabcabc12/mqdefault.jpg",
         durationSeconds: 183,
+        artists: [{ name: "Other Artist", channelId: null }],
       },
     ]);
     await app.close();
@@ -1369,6 +1417,7 @@ describe("channel fallback for non-music channels", () => {
         durationSeconds: 3427,
         uploaderUrl: `/channel/${CHANNEL_ID}`,
         views: 123456,
+        artists: [{ name: "Lucia Leona", channelId: CHANNEL_ID }],
       },
     ]);
     await app.close();
@@ -1419,6 +1468,7 @@ describe("channel fallback for non-music channels", () => {
         durationSeconds: 3391,
         uploaderUrl: `/channel/${CHANNEL_ID}`,
         views: 3412,
+        artists: [{ name: "Lucia Leona", channelId: CHANNEL_ID }],
       },
     ]);
     await app.close();
@@ -1459,6 +1509,321 @@ describe("channel fallback for non-music channels", () => {
     const res = await app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}/page` });
     expect(res.statusCode).toBe(200);
     expect(res.json().topSongs).toEqual([]);
+    await app.close();
+  });
+});
+
+describe("channel page: latest, popular order and playlists tab", () => {
+  const channelHeaderOnly = {
+    header: {
+      musicVisualHeaderRenderer: {
+        title: { runs: [{ text: "Lucia Leona" }] },
+      },
+    },
+    contents: [],
+  };
+  const video = (id: string, title: string, length: string, views: string) => ({
+    videoRenderer: {
+      videoId: id,
+      title: { runs: [{ text: title }] },
+      lengthText: { simpleText: length },
+      viewCountText: { simpleText: views },
+    },
+  });
+  const webVideosTwo = {
+    metadata: { channelMetadataRenderer: { title: "Lucia Leona" } },
+    contents: [
+      video("vidvidvid01", "Neuestes Video", "10:00", "100 Aufrufe"),
+      video("vidvidvid02", "Beliebtes Video", "20:00", "999.999 Aufrufe"),
+    ],
+  };
+  const webPlaylistsTab = {
+    metadata: { channelMetadataRenderer: { title: "Lucia Leona" } },
+    contents: [
+      {
+        gridPlaylistRenderer: {
+          playlistId: "PLchannel0001",
+          title: { runs: [{ text: "Alle Fälle" }] },
+          videoCountText: { runs: [{ text: "42" }] },
+          thumbnail: { thumbnails: [{ url: "https://img/pl.jpg" }] },
+        },
+      },
+    ],
+  };
+
+  /** Router: WEB-Browse nach params im Request-Body auf Videos-/Playlists-Tab verteilen. */
+  function channelFetch(videosBody: unknown, playlistsBody: unknown, continuationBody?: unknown) {
+    return vi.fn((url: unknown, init?: unknown) => {
+      const u = String(url);
+      if (u.includes("music.youtube.com")) return Promise.resolve(okJson(channelHeaderOnly));
+      if (u.includes("www.youtube.com/youtubei")) {
+        const body = JSON.parse(String((init as { body?: unknown })?.body ?? "{}")) as {
+          params?: string;
+          continuation?: string;
+        };
+        if (body.continuation) {
+          return continuationBody
+            ? Promise.resolve(okJson(continuationBody))
+            : Promise.reject(new Error("no continuation"));
+        }
+        if (body.params?.startsWith("Eglw")) return Promise.resolve(okJson(playlistsBody));
+        return Promise.resolve(okJson(videosBody));
+      }
+      return Promise.reject(new Error("piped down"));
+    });
+  }
+
+  it("keeps latest in upload order and sorts topSongs by views", async () => {
+    const fetchImpl = channelFetch(webVideosTwo, webPlaylistsTab);
+    const app = await makeApp({ fetchImpl }, { innertube: true });
+    const res = await app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}/page` });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.latest.map((t: { videoId: string }) => t.videoId)).toEqual([
+      "vidvidvid01",
+      "vidvidvid02",
+    ]);
+    expect(body.topSongs.map((t: { videoId: string }) => t.videoId)).toEqual([
+      "vidvidvid02",
+      "vidvidvid01",
+    ]);
+    await app.close();
+  });
+
+  it("fills channel playlists from the playlists tab", async () => {
+    const fetchImpl = channelFetch(webVideosTwo, webPlaylistsTab);
+    const app = await makeApp({ fetchImpl }, { innertube: true });
+    const res = await app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}/page` });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().playlists).toEqual([
+      {
+        playlistId: "PLchannel0001",
+        name: "Alle Fälle",
+        thumbnailUrl: "https://img/pl.jpg",
+        videoCount: 42,
+        uploaderName: "Lucia Leona",
+      },
+    ]);
+    await app.close();
+  });
+
+  it("follows one continuation of the videos tab", async () => {
+    const withToken = {
+      ...webVideosTwo,
+      contents: [
+        ...webVideosTwo.contents,
+        {
+          continuationItemRenderer: {
+            continuationEndpoint: { continuationCommand: { token: "CT1" } },
+          },
+        },
+      ],
+    };
+    const continuation = {
+      onResponseReceivedActions: [
+        {
+          appendContinuationItemsAction: {
+            continuationItems: [video("vidvidvid03", "Älteres Video", "30:00", "5 Aufrufe")],
+          },
+        },
+      ],
+    };
+    const fetchImpl = channelFetch(withToken, webPlaylistsTab, continuation);
+    const app = await makeApp({ fetchImpl }, { innertube: true });
+    const res = await app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}/page` });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().latest.map((t: { videoId: string }) => t.videoId)).toEqual([
+      "vidvidvid01",
+      "vidvidvid02",
+      "vidvidvid03",
+    ]);
+    await app.close();
+  });
+
+  it("leaves latest empty for real music artists", async () => {
+    const fetchImpl = itOnlyFetch({
+      header: { musicImmersiveHeaderRenderer: { title: { runs: [{ text: "Rick Astley" }] } } },
+      contents: [
+        {
+          musicShelfRenderer: {
+            contents: [itSongItem("dQw4w9WgXcQ", "Never Gonna Give You Up", "Rick", CHANNEL_ID)],
+          },
+        },
+      ],
+    });
+    const app = await makeApp({ fetchImpl }, { innertube: true });
+    const res = await app.inject({ method: "GET", url: `/music/artist/${CHANNEL_ID}/page` });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().latest).toEqual([]);
+    expect(res.json().topSongs).toHaveLength(1);
+    await app.close();
+  });
+});
+
+describe("GET /music/search/full with video modes", () => {
+  const longVideo = { ...PIPED_ITEM, duration: 3600 };
+  const shortClip = {
+    ...PIPED_ITEM,
+    url: "/watch?v=shortclip01",
+    title: "Trailer",
+    duration: 60,
+  };
+
+  it("returns videos, channels and playlists for mode=truecrime", async () => {
+    const fetchImpl = urlDispatchMock({
+      filters: {
+        videos: [longVideo, shortClip],
+        channels: [CHANNEL_ITEM],
+        playlists: [PLAYLIST_ITEM],
+      },
+    });
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({
+      method: "GET",
+      url: "/music/search/full?q=rick&mode=truecrime",
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    // Dauerfilter greift nicht hart genug (<4 lange Treffer) → ungefiltert
+    expect(body.songs.map((t: { title: string }) => t.title)).toEqual([
+      "Never Gonna Give You Up",
+      "Trailer",
+    ]);
+    expect(body.artists).toEqual([
+      expect.objectContaining({ channelId: CHANNEL_ID, name: "Rick Astley" }),
+    ]);
+    expect(body.albums).toEqual([]);
+    expect(body.playlists).toEqual([expect.objectContaining({ playlistId: "PLhits123" })]);
+    expect(body.topResult).toMatchObject({ type: "artist", name: "Rick Astley" });
+    await app.close();
+  });
+
+  it("filters short clips when enough long hits remain", async () => {
+    const longs = [0, 1, 2, 3].map((i) => ({
+      ...PIPED_ITEM,
+      url: `/watch?v=longvideo0${i}x`.slice(0, "/watch?v=".length + 11),
+      duration: 700 + i,
+    }));
+    const fetchImpl = urlDispatchMock({
+      filters: { videos: [...longs, shortClip], channels: [], playlists: [] },
+    });
+    const app = await makeApp({ fetchImpl });
+    const res = await app.inject({
+      method: "GET",
+      url: "/music/search/full?q=fall&mode=podcast",
+    });
+    expect(res.statusCode).toBe(200);
+    const durations = res.json().songs.map((t: { durationSeconds: number }) => t.durationSeconds);
+    expect(durations.every((d: number) => d >= 300)).toBe(true);
+    await app.close();
+  });
+
+  it("caches music and video modes separately", async () => {
+    const fetchImpl = urlDispatchMock({
+      filters: {
+        videos: [longVideo],
+        channels: [],
+        playlists: [PLAYLIST_ITEM],
+        music_songs: [PIPED_ITEM],
+        music_albums: [],
+        music_artists: [],
+      },
+    });
+    const app = await makeApp({ fetchImpl, now: () => 1_000 });
+    await app.inject({ method: "GET", url: "/music/search/full?q=rick&mode=truecrime" });
+    const calls = fetchImpl.mock.calls.length;
+    await app.inject({ method: "GET", url: "/music/search/full?q=rick&mode=truecrime" });
+    expect(fetchImpl.mock.calls.length).toBe(calls); // zweiter Aufruf aus dem Cache
+    await app.inject({ method: "GET", url: "/music/search/full?q=rick" });
+    expect(fetchImpl.mock.calls.length).toBeGreaterThan(calls); // anderer Modus = eigener Key
+    await app.close();
+  });
+
+  it("rejects an unknown mode", async () => {
+    const app = await makeApp({ fetchImpl: vi.fn() });
+    const res = await app.inject({ method: "GET", url: "/music/search/full?q=rick&mode=nope" });
+    expect(res.statusCode).toBe(400);
+    await app.close();
+  });
+});
+
+describe("GET /music/video/:videoId", () => {
+  const upstream = (status: number, body: string, headers: Record<string, string> = {}) =>
+    new Response(body, {
+      status,
+      headers: {
+        "content-type": "video/mp4",
+        "content-length": String(body.length),
+        "accept-ranges": "bytes",
+        ...headers,
+      },
+    });
+
+  it("proxies the muxed video stream and requests an mp4 format", async () => {
+    const ytDlp = vi
+      .fn()
+      .mockResolvedValue({ stdout: "https://cdn.example/video.mp4\n", stderr: "" });
+    const fetchImpl = vi.fn().mockResolvedValue(upstream(200, "VIDEOBYTES"));
+    const app = await makeApp({ ytDlp, fetchImpl });
+    const res = await app.inject({ method: "GET", url: "/music/video/dQw4w9WgXcQ" });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toBe("VIDEOBYTES");
+    expect(res.headers["content-type"]).toBe("video/mp4");
+    const format = (ytDlp.mock.calls[0]?.[0] as string[]).join(" ");
+    expect(format).toContain("vcodec!=none");
+    expect(format).toContain("height<=720");
+    await app.close();
+  });
+
+  it("forwards Range and passes 206 + Content-Range through", async () => {
+    const ytDlp = vi
+      .fn()
+      .mockResolvedValue({ stdout: "https://cdn.example/video.mp4", stderr: "" });
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(upstream(206, "PART", { "content-range": "bytes 0-3/9000" }));
+    const app = await makeApp({ ytDlp, fetchImpl });
+    const res = await app.inject({
+      method: "GET",
+      url: "/music/video/dQw4w9WgXcQ",
+      headers: { range: "bytes=0-3" },
+    });
+    expect(res.statusCode).toBe(206);
+    expect(res.headers["content-range"]).toBe("bytes 0-3/9000");
+    const [, init] = fetchImpl.mock.calls[0];
+    expect((init as { headers: Record<string, string> }).headers).toMatchObject({
+      range: "bytes=0-3",
+    });
+    await app.close();
+  });
+
+  it("caches video urls separately from audio urls", async () => {
+    const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/media\n", stderr: "" });
+    const fetchImpl = vi.fn().mockResolvedValue(upstream(200, "X"));
+    const app = await makeApp({ ytDlp, fetchImpl });
+    await app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
+    await app.inject({ method: "GET", url: "/music/video/dQw4w9WgXcQ" });
+    // zwei getrennte Auflösungen (bestaudio vs. muxed MP4) trotz gleicher videoId
+    expect(ytDlp).toHaveBeenCalledTimes(2);
+    const formats = ytDlp.mock.calls.map((c) => (c[0] as string[]).join(" "));
+    expect(formats[0]).toContain("bestaudio");
+    expect(formats[1]).toContain("vcodec!=none");
+    await app.close();
+  });
+
+  it("rejects malformed video ids", async () => {
+    const app = await makeApp({ fetchImpl: vi.fn() });
+    const res = await app.inject({ method: "GET", url: "/music/video/nope" });
+    expect(res.statusCode).toBe(400);
+    await app.close();
+  });
+
+  it("returns 502 when extraction fails", async () => {
+    const ytDlp = vi.fn().mockRejectedValue(new Error("boom"));
+    const app = await makeApp({ ytDlp, fetchImpl: vi.fn() });
+    const res = await app.inject({ method: "GET", url: "/music/video/dQw4w9WgXcQ" });
+    expect(res.statusCode).toBe(502);
+    expect(res.json().error).toContain("video");
     await app.close();
   });
 });

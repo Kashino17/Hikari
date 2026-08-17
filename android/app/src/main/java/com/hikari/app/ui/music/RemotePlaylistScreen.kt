@@ -17,9 +17,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.CloudDownload
@@ -88,36 +85,24 @@ fun RemotePlaylistScreen(
                 tracks.firstOrNull()?.let { viewModel.play(it, tracks); onOpenNowPlaying() }
             }
             Spacer(Modifier.height(8.dp))
-            // Speichern legt eine lokale Playlist an; Offline lädt zusätzlich
-            // alle Songs herunter — der Kurzweg zum Offline-Hören.
-            val saved = viewModel.playlists.any { it.playlist.name.equals(name, ignoreCase = true) }
-            val downloadedCount = tracks.count { it.videoId in downloadedIds }
-            val allOffline = tracks.isNotEmpty() && downloadedCount == tracks.size
-            val downloading = tracks.any { progressMap.containsKey(it.videoId) }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                MuActionPill(
-                    icon = if (saved) Icons.Default.Check else Icons.AutoMirrored.Outlined.PlaylistAdd,
-                    label = if (saved) "Gespeichert" else "Speichern",
-                    active = saved,
-                ) {
-                    if (!saved && tracks.isNotEmpty()) viewModel.saveRemotePlaylist(name, tracks)
-                }
-                MuActionPill(
-                    icon = if (allOffline) Icons.Default.DownloadDone else Icons.Outlined.CloudDownload,
-                    label = when {
-                        allOffline -> "Offline"
-                        downloading -> "✕ Abbrechen $downloadedCount/${tracks.size}"
-                        else -> "Offline speichern"
-                    },
-                    active = allOffline,
-                    activeColor = Color(0xFF4ADE80),
-                ) {
-                    when {
-                        // Läuft: Tipp bricht alle ausstehenden Downloads ab
-                        downloading -> viewModel.cancelAllDownloads()
-                        !allOffline && tracks.isNotEmpty() ->
-                            viewModel.saveRemotePlaylist(name, tracks, thenDownload = true)
-                    }
+            // Ein Speichern-Button mit Menü statt zweier Pillen: "in Bibliothek"
+            // und "alles herunterladen" sind dieselbe Aktion, einmal mit Download.
+            if (tracks.isNotEmpty()) {
+                val saved = viewModel.playlists.any { it.playlist.name.equals(name, ignoreCase = true) }
+                val downloadedCount = tracks.count { it.videoId in downloadedIds }
+                val allOffline = downloadedCount == tracks.size
+                val downloading = tracks.any { progressMap.containsKey(it.videoId) }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CollectionSaveMenu(
+                        saved = saved,
+                        allOffline = allOffline,
+                        downloading = downloading,
+                        downloadedCount = downloadedCount,
+                        totalCount = tracks.size,
+                        onSave = { viewModel.saveRemotePlaylist(name, tracks) },
+                        onSaveAndDownload = { viewModel.saveRemotePlaylist(name, tracks, thenDownload = true) },
+                        onCancelDownloads = { viewModel.cancelAllDownloads() },
+                    )
                 }
             }
             Spacer(Modifier.height(8.dp))

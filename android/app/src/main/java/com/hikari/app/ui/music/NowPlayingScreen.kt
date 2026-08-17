@@ -1,5 +1,6 @@
 package com.hikari.app.ui.music
 
+import android.view.TextureView
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -8,6 +9,8 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -33,11 +36,15 @@ import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.outlined.Audiotrack
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.OfflinePin
+import androidx.compose.material.icons.outlined.SmartDisplay
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -54,6 +61,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -68,6 +77,7 @@ import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NowPlayingScreen(
     onBack: () -> Unit,
@@ -81,6 +91,7 @@ fun NowPlayingScreen(
     val shuffle by controller.shuffle.collectAsState()
     val repeatMode by controller.repeatMode.collectAsState()
     val error by controller.error.collectAsState()
+    val videoMode by controller.videoMode.collectAsState()
 
     // Nichts spielend (z. B. Prozess-Neustart) — nichts anzuzeigen. Der
     // Sprung zurück gehört in einen Effekt, nicht mitten in die Composition.
@@ -152,8 +163,13 @@ fun NowPlayingScreen(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.weight(1f),
                 )
-                // Gleich breiter Platzhalter, damit der Titel mittig sitzt.
-                Spacer(Modifier.width(44.dp))
+                // Audio ↔ Video: bei Podcasts/True Crime läuft das Bild
+                // nahtlos an der aktuellen Position weiter.
+                MuIconButton(
+                    if (videoMode) Icons.Outlined.Audiotrack else Icons.Outlined.SmartDisplay,
+                    if (videoMode) "Zur Audio-Ansicht" else "Zur Video-Ansicht",
+                    active = videoMode,
+                ) { controller.toggleVideoMode() }
             }
 
             // Cover + Titel + Aktionen sitzen als Block MITTIG zwischen
@@ -184,7 +200,30 @@ fun NowPlayingScreen(
                     .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(20.dp)),
                 contentAlignment = Alignment.Center,
             ) {
-                if (current.thumbnailUrl.isNotEmpty()) {
+                if (videoMode) {
+                    // TextureView statt SurfaceView: respektiert das Compose-
+                    // Clipping der runden Karte. Der Player rendert direkt hinein.
+                    val ctx = LocalContext.current
+                    val textureView = remember { TextureView(ctx) }
+                    AndroidView(factory = { textureView }, modifier = Modifier.fillMaxSize())
+                    DisposableEffect(Unit) {
+                        val p = controller.playerForSession()
+                        p.setVideoTextureView(textureView)
+                        onDispose { p.clearVideoTextureView(textureView) }
+                    }
+                    if (isBuffering) {
+                        Box(
+                            Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.35f)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator(
+                                color = HikariText,
+                                strokeWidth = 3.dp,
+                                modifier = Modifier.size(34.dp),
+                            )
+                        }
+                    }
+                } else if (current.thumbnailUrl.isNotEmpty()) {
                     AsyncImage(
                         model = current.thumbnailUrl,
                         contentDescription = null,
@@ -209,25 +248,33 @@ fun NowPlayingScreen(
             )
             Spacer(Modifier.height(8.dp))
 
-            // Klick öffnet die Artist-Seite — als Pille mit Chevron, aber nur
-            // wenn der Song eine Kanal-URL trägt.
-            val artistChannelId = current.uploaderUrl.substringAfterLast("/", "")
-            if (artistChannelId.isNotBlank()) {
-                Row(
-                    Modifier
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(HikariCardBg.copy(alpha = 0.65f))
-                        .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(999.dp))
-                        .muPressable { onOpenArtist(artistChannelId, current.uploader) }
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+            // Interpreten: bei Kollaborationen eine Pille PRO Artist (jede
+            // öffnet die eigene Seite), sonst die gewohnte Einzel-Pille.
+            if (current.artists.size > 1) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.padding(horizontal = 28.dp),
                 ) {
-                    Text(current.uploader, fontSize = 13.sp, color = HikariTextMuted, maxLines = 1)
-                    Spacer(Modifier.width(2.dp))
-                    Icon(Icons.Default.ChevronRight, null, tint = HikariTextFaint, modifier = Modifier.size(16.dp))
+                    current.artists.forEach { a ->
+                        ArtistPill(
+                            name = a.name,
+                            clickable = a.channelId != null,
+                            onClick = { a.channelId?.let { onOpenArtist(it, a.name) } },
+                        )
+                    }
                 }
             } else {
-                Text(current.uploader, fontSize = 14.sp, color = HikariTextMuted, maxLines = 1)
+                val artistChannelId = current.uploaderUrl.substringAfterLast("/", "")
+                if (artistChannelId.isNotBlank()) {
+                    ArtistPill(
+                        name = current.uploader,
+                        clickable = true,
+                        onClick = { onOpenArtist(artistChannelId, current.uploader) },
+                    )
+                } else {
+                    Text(current.uploader, fontSize = 14.sp, color = HikariTextMuted, maxLines = 1)
+                }
             }
 
             Spacer(Modifier.height(14.dp))
@@ -338,6 +385,26 @@ fun NowPlayingScreen(
     }
 }
 
+
+/** Interpret-Pille — klickbar mit Chevron, wenn eine Kanal-Seite existiert. */
+@Composable
+private fun ArtistPill(name: String, clickable: Boolean, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(HikariCardBg.copy(alpha = 0.65f))
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(999.dp))
+            .then(if (clickable) Modifier.muPressable(onClick = onClick) else Modifier)
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(name, fontSize = 13.sp, color = HikariTextMuted, maxLines = 1)
+        if (clickable) {
+            Spacer(Modifier.width(2.dp))
+            Icon(Icons.Default.ChevronRight, null, tint = HikariTextFaint, modifier = Modifier.size(16.dp))
+        }
+    }
+}
 
 /** Eigener Seekbar + Zeitangaben — hört allein auf positionMs/durationMs,
  *  damit der 500-ms-Tick nicht den ganzen Screen (inkl. Cover) recomposed.

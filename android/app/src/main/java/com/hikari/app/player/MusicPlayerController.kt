@@ -98,6 +98,10 @@ class MusicPlayerController @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    /** true = der Player spielt den muxed Video-Stream statt nur Audio. */
+    private val _videoMode = MutableStateFlow(false)
+    val videoMode: StateFlow<Boolean> = _videoMode.asStateFlow()
+
     private var queueIndex = -1
 
     private val listener = object : Player.Listener {
@@ -139,6 +143,14 @@ class MusicPlayerController @Inject constructor(
      */
     private fun retryOrSkip() {
         val current = _currentSong.value
+        // Zickt der Video-Stream, zuerst zurück zu Audio statt zu skippen —
+        // die Tonspur ist wichtiger als das Bild.
+        if (current != null && _videoMode.value) {
+            _videoMode.value = false
+            _error.value = "Video-Wiedergabe gestört — weiter mit Audio"
+            loadAndPlay(current, forceRefresh = true)
+            return
+        }
         if (current != null && streamRetries < 2) {
             streamRetries++
             _error.value = "Verbindung unterbrochen — lade neu"
@@ -283,6 +295,63 @@ class MusicPlayerController @Inject constructor(
         _error.value = null
     }
 
+    /**
+     * Wechselt zwischen Audio (Thumbnail) und Video — Position und
+     * Wiedergabezustand bleiben erhalten, der Ton läuft konzeptionell einfach
+     * weiter. Video braucht Netz und Backend; ohne beides bleibt es bei Audio.
+     */
+    fun toggleVideoMode() {
+        val song = _currentSong.value ?: return
+        if (_videoMode.value) {
+            _videoMode.value = false
+            scope.launch {
+                val localFile = downloads.localFile(song.videoId)
+                val uri = if (localFile != null) {
+                    "file://${localFile.absolutePath}"
+                } else {
+                    runCatching { repo.getAudioStream(song.videoId) }.getOrNull()
+                }
+                if (uri == null) {
+                    _error.value = "„${song.title}“ ist nicht abspielbar"
+                    return@launch
+                }
+                applyStreamSwap(song, uri)
+            }
+        } else {
+            scope.launch {
+                if (!connectivity.currentlyOnline()) {
+                    _error.value = "Video braucht eine Internetverbindung"
+                    return@launch
+                }
+                val uri = runCatching { repo.getVideoStream(song.videoId) }.getOrNull()
+                if (uri == null) {
+                    _error.value = "Video ist für diesen Titel nicht verfügbar"
+                    return@launch
+                }
+                _videoMode.value = true
+                applyStreamSwap(song, uri)
+            }
+        }
+    }
+
+    /** Quellenwechsel ohne Fortschrittsverlust: gleiche Position, gleicher
+     *  Play-Zustand — nur die MediaSource wird getauscht. */
+    private fun applyStreamSwap(song: MusicSong, uri: String) {
+        // Song hat inzwischen gewechselt — der Tausch gehört zum alten Titel.
+        if (_currentSong.value?.videoId != song.videoId) return
+        val p = ensurePlayer()
+        val pos = p.currentPosition.coerceAtLeast(0)
+        val wasPlaying = p.playWhenReady
+        // Eingeplantes Folge-Item stammt aus dem anderen Modus — verwerfen.
+        clearPlannedNext()
+        prefetchedFor = null
+        prefetchedUrl = null
+        _isBuffering.value = true
+        p.setMediaItem(mediaItemFor(song, uri), pos)
+        p.prepare()
+        p.playWhenReady = wasPlaying
+    }
+
     fun stop() {
         loadJob?.cancel()
         autoplayJob?.cancel()
@@ -292,6 +361,7 @@ class MusicPlayerController @Inject constructor(
         plannedNextIndex = null
         earlyExtendDone = false
         resumeAfterExtend = false
+        _videoMode.value = false
         player?.stop()
         player?.clearMediaItems()
         _currentSong.value = null
@@ -327,6 +397,27 @@ class MusicPlayerController @Inject constructor(
         _isBuffering.value = true
         scope.launch { repo.recordPlayed(song) }
         loadJob = scope.launch {
+            // Video-Modus: der nächste Titel läuft direkt als Video weiter.
+            // Ohne Video-Quelle (kein Backend/offline) fällt der Player
+            // automatisch auf Audio zurück, statt stumm zu bleiben.
+            if (_videoMode.value) {
+                val videoUri = if (connectivity.currentlyOnline()) {
+                    runCatching { repo.getVideoStream(song.videoId) }.getOrNull()
+                } else {
+                    null
+                }
+                if (videoUri != null) {
+                    val p = ensurePlayer()
+                    syncRepeatMode(p)
+                    ensureSessionConnection()
+                    p.setMediaItem(mediaItemFor(song, videoUri))
+                    p.prepare()
+                    p.play()
+                    return@launch
+                }
+                _videoMode.value = false
+                _error.value = "Video nicht verfügbar — weiter mit Audio"
+            }
             // Heruntergeladene Datei schlägt den Stream immer — funktioniert
             // auch ohne Netz und spart Daten.
             val localFile = downloads.localFile(song.videoId)
@@ -588,6 +679,9 @@ class MusicPlayerController @Inject constructor(
     private fun maybePrefetchNext() {
         // Repeat-One spielt ohnehin denselben Song erneut — nichts einzuplanen.
         if (_repeatMode.value == REPEAT_ONE) return
+        // Im Video-Modus keine Audio-Items einplanen — der Übergang löst die
+        // passende Video-Quelle über loadAndPlay auf.
+        if (_videoMode.value) return
         val currentId = _currentSong.value?.videoId ?: return
         val next = nextSong() ?: return
         if (prefetchedFor == next.videoId || prefetchJob?.isActive == true) return

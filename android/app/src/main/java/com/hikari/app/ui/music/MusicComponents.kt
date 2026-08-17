@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -54,6 +56,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -169,6 +172,7 @@ fun SongRow(
                     fontSize = 12.sp,
                     color = HikariTextMuted,
                     maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
                         .weight(1f, fill = false)
                         .then(
@@ -180,7 +184,14 @@ fun SongRow(
                         ),
                 )
                 if (song.duration > 0) {
-                    Text("  ·  ${formatDuration(song.duration)}", fontSize = 12.sp, color = HikariTextFaint)
+                    // Lange Inhalte (ab 10 min) mit Einheit statt mm:ss —
+                    // "51 m" liest sich schneller als "51:28".
+                    val durationText = if (song.duration >= 600) {
+                        formatDurationUnits(song.duration)
+                    } else {
+                        formatDuration(song.duration)
+                    }
+                    Text("  ·  $durationText", fontSize = 12.sp, color = HikariTextFaint)
                 }
                 if (badge != null) {
                     Text("  ·  $badge", fontSize = 12.sp, color = HikariPrimary)
@@ -243,6 +254,21 @@ fun SongRow(
                         },
                     )
                 }
+                // Kollaborationen: ein Eintrag pro Artist mit eigener Seite.
+                if (onOpenArtist != null && song.artists.size > 1) {
+                    song.artists.forEach { a ->
+                        val chId = a.channelId
+                        if (chId != null) {
+                            DropdownMenuItem(
+                                text = { Text("Zu ${a.name}") },
+                                onClick = {
+                                    menuOpen = false
+                                    onOpenArtist(chId, a.name)
+                                },
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -299,6 +325,71 @@ fun DownloadStateButton(
             iconSize = 22.dp,
             onClick = onDownload,
         )
+    }
+}
+
+/**
+ * Ein Speichern-Button für Sammlungen (Playlist/Mix/Gruppe): bündelt
+ * "in Bibliothek speichern" und "alles herunterladen" in einem Menü —
+ * zwei getrennte Pillen für fast dieselbe Aktion sind UX-Ballast.
+ * Läuft ein Massen-Download, wird die Pille zum Abbrechen-Knopf.
+ */
+@Composable
+fun CollectionSaveMenu(
+    saved: Boolean,
+    allOffline: Boolean,
+    downloading: Boolean,
+    downloadedCount: Int,
+    totalCount: Int,
+    onSave: () -> Unit,
+    onSaveAndDownload: () -> Unit,
+    onCancelDownloads: () -> Unit,
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+    Box {
+        MuActionPill(
+            icon = when {
+                allOffline -> Icons.Outlined.OfflinePin
+                saved -> Icons.Filled.Check
+                else -> Icons.AutoMirrored.Outlined.PlaylistAdd
+            },
+            label = when {
+                downloading -> "✕ Abbrechen $downloadedCount/$totalCount"
+                allOffline -> "Offline ✓"
+                saved -> "Gespeichert ✓"
+                else -> "Speichern"
+            },
+            active = saved || allOffline,
+            activeColor = if (allOffline) Color(0xFF4ADE80) else HikariPrimary,
+        ) {
+            if (downloading) onCancelDownloads() else menuOpen = true
+        }
+        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+            if (!saved) {
+                DropdownMenuItem(
+                    leadingIcon = {
+                        Icon(Icons.AutoMirrored.Outlined.PlaylistAdd, null, tint = HikariTextMuted)
+                    },
+                    text = { Text("In Bibliothek speichern") },
+                    onClick = {
+                        menuOpen = false
+                        onSave()
+                    },
+                )
+            }
+            if (!allOffline) {
+                DropdownMenuItem(
+                    leadingIcon = {
+                        Icon(Icons.Outlined.CloudDownload, null, tint = HikariTextMuted)
+                    },
+                    text = { Text(if (saved) "Alle herunterladen" else "Speichern + herunterladen") },
+                    onClick = {
+                        menuOpen = false
+                        onSaveAndDownload()
+                    },
+                )
+            }
+        }
     }
 }
 
@@ -367,3 +458,19 @@ internal fun formatDuration(seconds: Int): String {
 }
 
 internal fun formatDurationMs(ms: Long): String = formatDuration((ms / 1000).toInt())
+
+/**
+ * Dauer mit Einheit für lange Inhalte (Podcasts, True Crime, Hörbücher):
+ * "45 s", "25 m", "1 h 12 m" — bei Laufzeiten liest sich das schneller
+ * als ein nacktes mm:ss.
+ */
+internal fun formatDurationUnits(seconds: Int): String {
+    if (seconds < 60) return "$seconds s"
+    val h = seconds / 3600
+    val m = (seconds % 3600) / 60
+    return if (h > 0) {
+        if (m > 0) "$h h $m m" else "$h h"
+    } else {
+        "$m m"
+    }
+}

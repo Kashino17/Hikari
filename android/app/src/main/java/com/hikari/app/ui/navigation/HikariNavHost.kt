@@ -55,6 +55,7 @@ import com.hikari.app.ui.music.ArtistScreen
 import com.hikari.app.ui.music.GroupDetailScreen
 import com.hikari.app.ui.music.MixDetailScreen
 import com.hikari.app.domain.repo.MusicSearchMode
+import com.hikari.app.ui.music.MusicProfileScreen
 import com.hikari.app.ui.music.MusicScreen
 import com.hikari.app.ui.music.NowPlayingScreen
 import com.hikari.app.ui.music.PlaylistDetailScreen
@@ -116,8 +117,9 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
     val isMixRoute = currentRoute?.startsWith("mix/") == true
     val isArtistRoute = currentRoute?.startsWith("artist/") == true
     val isCollectionRoute = currentRoute?.startsWith("music/collection/") == true
+    val isMusicProfileRoute = currentRoute == "music/profile"
     val inMusicSection = currentRoute == "music" || isNowPlaying || isPlaylistRoute || isMixRoute ||
-        isArtistRoute || isCollectionRoute
+        isArtistRoute || isCollectionRoute || isMusicProfileRoute
     val showsBottomBar = !(currentRoute == "feed" && feedFullscreen) && !isVideoRoute &&
         !isReaderRoute && !isGearSubPage && !isGameRoute && !isNowPlaying &&
         !isPlaylistRoute && !isMixRoute && !isArtistRoute && !isCollectionRoute
@@ -276,7 +278,7 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     MusicScreen(
                         onOpenNowPlaying = { nav.navigate("nowplaying") },
-                        onOpenPlaylist = { id -> nav.navigate("playlist/$id") },
+                        onOpenProfile = { nav.navigate("music/profile") },
                         onOpenMix = { title, query, mode ->
                             val t = URLEncoder.encode(title, "UTF-8")
                             val q = URLEncoder.encode(query, "UTF-8")
@@ -295,6 +297,15 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
                             val n = URLEncoder.encode(name, "UTF-8")
                             nav.navigate("music/collection/$playlistId?name=$n&isAlbum=$isAlbum")
                         },
+                    )
+                }
+            }
+            composable("music/profile") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    MusicProfileScreen(
+                        onBack = { nav.popBackStack() },
+                        onOpenPlaylist = { id -> nav.navigate("playlist/$id") },
+                        onOpenNowPlaying = { nav.navigate("nowplaying") },
                     )
                 }
             }

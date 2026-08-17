@@ -55,6 +55,11 @@ export interface AlbumPageItem {
 export interface ArtistPage {
   artist: ArtistInfo;
   topSongs: MusicTrack[];
+  /**
+   * Neueste Uploads in Upload-Reihenfolge — nur bei normalen YouTube-Kanälen
+   * gefüllt (topSongs ist dort nach Views sortiert); bei Music-Artists leer.
+   */
+  latest: MusicTrack[];
   albums: AlbumPageItem[];
   singles: AlbumPageItem[];
   playlists: PlaylistSummary[];
@@ -231,6 +236,57 @@ async function itCall(fetchImpl: typeof fetch, endpoint: string, payload: Dict):
 
 // ————— Item-Parser —————
 
+/**
+ * Interpreten-Segment aus Untertitel-Runs ("A, B & C • Album • 3:33"):
+ * `display` ist der Anzeige-String ALLER Interpreten mit den Original-
+ * Separatoren der Runs; `artists` je ein Eintrag pro Namens-Run —
+ * channelId nur bei UC…-BrowseIds (MPLA…-Library-Ids browsen unzuverlässig).
+ */
+function parseArtistsFromRuns(runs: Dict[]): {
+  display: string;
+  artists: { name: string; channelId: string | null }[];
+} {
+  // In Segmente an den "•"-Trenner-Runs teilen.
+  const segments: Dict[][] = [[]];
+  for (const r of runs) {
+    const t = typeof r.text === "string" ? r.text.trim() : "";
+    if (t === "•") {
+      segments.push([]);
+      continue;
+    }
+    (segments[segments.length - 1] as Dict[]).push(r);
+  }
+  // Segment mit Kanal-BrowseId bevorzugen, sonst das erste, das keine Dauer ist.
+  const seg =
+    segments.find((s) => s.some((r) => (browseIdOf(r) ?? "").startsWith("UC"))) ??
+    segments.find((s) => {
+      const text = s
+        .map((r) => (typeof r.text === "string" ? r.text : ""))
+        .join("")
+        .trim();
+      return text !== "" && durationToSeconds(text) === undefined;
+    });
+  if (!seg) return { display: "", artists: [] };
+  const display = seg
+    .map((r) => (typeof r.text === "string" ? r.text : ""))
+    .join("")
+    .trim();
+  const artists = seg
+    .filter((r) => {
+      const t = typeof r.text === "string" ? r.text.trim() : "";
+      // reine Separator-Runs (", ", " & ", "und", "feat.") sind keine Namen
+      return t !== "" && !/^[,&+×x]$/i.test(t) && !/^(und|and|feat\.?|ft\.?|mit|with)$/i.test(t);
+    })
+    .map((r) => {
+      const id = browseIdOf(r);
+      return {
+        name: (r.text as string).trim(),
+        channelId: id?.startsWith("UC") ? id : null,
+      };
+    });
+  return { display, artists };
+}
+
 /** musicResponsiveListItemRenderer → MusicTrack (Songs in Suche/Playlist/Shelf). */
 function parseSongItem(item: unknown, fallbackUploader = ""): MusicTrack | null {
   const videoId =
@@ -245,13 +301,13 @@ function parseSongItem(item: unknown, fallbackUploader = ""): MusicTrack | null 
   const title = runText(col0).trim();
   if (!title) return null;
 
-  // Interpret: erster Run in Spalte 2 mit Kanal-browseId, sonst erster Run.
+  // Interpreten: alle Namens-Runs des Artist-Segments in Spalte 2 —
+  // Kollaborationen ("A, B & C") komplett, nicht nur der erste Name.
   const col1Runs = runsOf(nav(flexCols[1], "musicResponsiveListItemFlexColumnRenderer", "text"));
-  const artistRun =
-    col1Runs.find((r) => (browseIdOf(r) ?? "").startsWith("UC")) ??
-    col1Runs.find((r) => typeof r.text === "string" && (r.text as string).trim() !== "•");
-  const uploader = ((artistRun?.text as string | undefined) ?? fallbackUploader).trim();
-  const channelId = browseIdOf(artistRun);
+  const parsed = parseArtistsFromRuns(col1Runs);
+  const uploader = (parsed.display || fallbackUploader).trim();
+  // uploaderUrl bleibt der erste Artist mit Kanal-Id (Rückwärtskompatibilität).
+  const channelId = parsed.artists.find((a) => a.channelId)?.channelId ?? undefined;
 
   // Dauer: letzter Zeit-förmige Run irgendwo im Item (fixedColumns oder Spalte 2).
   const allTexts = findAllByKey(item, "text").filter((t): t is string => typeof t === "string");
@@ -271,6 +327,7 @@ function parseSongItem(item: unknown, fallbackUploader = ""): MusicTrack | null 
     thumbnailUrl: songThumb(videoId),
     durationSeconds,
     ...(channelId ? { uploaderUrl: `/channel/${channelId}` } : {}),
+    ...(parsed.artists.length > 0 ? { artists: parsed.artists } : {}),
   };
 }
 
@@ -520,10 +577,16 @@ export async function itRelated(
       const title = runText(nav(item, "title")).trim();
       if (!title) continue;
       seen.add(id);
-      const bylineRuns = runsOf(nav(item, "longBylineText"));
-      const uploader = ((bylineRuns[0]?.text as string | undefined) ?? "").trim();
+      const parsed = parseArtistsFromRuns(runsOf(nav(item, "longBylineText")));
       const durationSeconds = durationToSeconds(runText(nav(item, "lengthText"))) ?? 0;
-      tracks.push({ videoId: id, title, uploader, thumbnailUrl: songThumb(id), durationSeconds });
+      tracks.push({
+        videoId: id,
+        title,
+        uploader: parsed.display,
+        thumbnailUrl: songThumb(id),
+        durationSeconds,
+        ...(parsed.artists.length > 0 ? { artists: parsed.artists } : {}),
+      });
       if (tracks.length >= 25) break;
     }
     return tracks.length > 0 ? tracks : undefined;
@@ -632,6 +695,7 @@ export async function itArtistPage(
     return {
       artist,
       topSongs,
+      latest: [],
       albums: albums.slice(0, 12),
       singles: singles.slice(0, 12),
       playlists: playlists.slice(0, 12),
@@ -708,14 +772,17 @@ export async function itHome(fetchImpl: typeof fetch): Promise<HomeFeed | undefi
             },
           });
         } else if (watchId && VIDEO_ID_RE.test(watchId)) {
+          const parsed = parseArtistsFromRuns(runsOf(nav(twoRow, "subtitle")));
           items.push({
             kind: "song",
             song: {
               videoId: watchId,
               title: itemName,
-              uploader: runText(nav(twoRow, "subtitle")).split("•")[0]?.trim() ?? "",
+              uploader:
+                parsed.display || (runText(nav(twoRow, "subtitle")).split("•")[0]?.trim() ?? ""),
               thumbnailUrl: songThumb(watchId),
               durationSeconds: 0,
+              ...(parsed.artists.length > 0 ? { artists: parsed.artists } : {}),
             },
           });
         }
@@ -736,105 +803,216 @@ const WEB_BASE = "https://www.youtube.com/youtubei/v1";
 const WEB_CONTEXT = {
   client: { clientName: "WEB", clientVersion: "2.20241126.01.00", hl: "de", gl: "DE" },
 } as const;
-/** browse-Param für den Videos-Tab einer Kanalseite. */
+/** browse-Params der Kanal-Tabs (protobuf-kodiert, sprachunabhängig). */
 const WEB_VIDEOS_TAB_PARAMS = "EgZ2aWRlb3PyBgQKAjoA";
+const WEB_PLAYLISTS_TAB_PARAMS = "EglwbGF5bGlzdHPyBgQKAkIA";
+/** Obergrenze der Kanal-Uploads: erste Seite + eine Continuation (~30+30). */
+const CHANNEL_VIDEOS_MAX = 60;
+
+/** POST an den WEB-Browse (Kanal-Tabs, Continuations); wirft bei HTTP-Fehlern. */
+async function webBrowse(fetchImpl: typeof fetch, payload: Dict): Promise<unknown> {
+  const res = await fetchImpl(`${WEB_BASE}/browse?prettyPrint=false`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      origin: "https://www.youtube.com",
+      "user-agent":
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+    },
+    body: JSON.stringify({ context: WEB_CONTEXT, ...payload }),
+    signal: AbortSignal.timeout(IT_TIMEOUT_MS),
+  });
+  if (!res.ok) throw new Error(`web browse -> ${res.status}`);
+  return (await res.json()) as unknown;
+}
+
+/** Kanalname aus einer WEB-Browse-Antwort (Continuations haben keinen). */
+function webChannelName(body: unknown): string {
+  return (
+    (nav(findAllByKey(body, "channelMetadataRenderer")[0], "title") as string | undefined) ??
+    (nav(findAllByKey(body, "microformatDataRenderer")[0], "title") as string | undefined) ??
+    ""
+  );
+}
+
+/** Erstes Continuation-Token einer WEB-Browse-Antwort (Kanal-Tab-Paging). */
+function webContinuationToken(body: unknown): string | undefined {
+  const token = findAllByKey(body, "continuationCommand")
+    .map((c) => nav(c, "token"))
+    .find((t): t is string => typeof t === "string" && t.length > 0);
+  return token;
+}
+
+/** Sammelt Video-Items beider Tab-Formate einer Antwort in `tracks` ein. */
+function collectChannelVideos(
+  body: unknown,
+  channelId: string,
+  channelName: string,
+  seen: Set<string>,
+  tracks: MusicTrack[],
+): void {
+  const push = (
+    videoId: unknown,
+    title: string,
+    durationSeconds: number | undefined,
+    views: number,
+  ) => {
+    if (typeof videoId !== "string" || !VIDEO_ID_RE.test(videoId) || seen.has(videoId)) return;
+    if (!title) return;
+    // ohne Dauer = Livestream/Premiere — als Audio-Track nicht abspielbar
+    if (durationSeconds === undefined || durationSeconds <= 0) return;
+    seen.add(videoId);
+    tracks.push({
+      videoId,
+      title,
+      uploader: channelName,
+      thumbnailUrl: songThumb(videoId),
+      durationSeconds,
+      uploaderUrl: `/channel/${channelId}`,
+      ...(views > 0 ? { views } : {}),
+      ...(channelName ? { artists: [{ name: channelName, channelId }] } : {}),
+    });
+  };
+
+  // Klassisches Format (videoRenderer) — ältere Antworten.
+  for (const item of findAllByKey(body, "videoRenderer")) {
+    if (tracks.length >= CHANNEL_VIDEOS_MAX) break;
+    const title =
+      runText(nav(item, "title")).trim() ||
+      ((nav(item, "title", "simpleText") as string | undefined) ?? "").trim();
+    const lengthText =
+      ((nav(item, "lengthText", "simpleText") as string | undefined) ?? "") ||
+      runText(nav(item, "lengthText"));
+    const views = fullNumberFrom(
+      (nav(item, "viewCountText", "simpleText") as string | undefined) ?? "",
+    );
+    push(nav(item, "videoId"), title, durationToSeconds(lengthText), views);
+  }
+
+  // Aktuelles Format (lockupViewModel) — Kanal-Tabs seit 2025.
+  for (const item of findAllByKey(body, "lockupViewModel")) {
+    if (tracks.length >= CHANNEL_VIDEOS_MAX) break;
+    if (nav(item, "contentType") !== "LOCKUP_CONTENT_TYPE_VIDEO") continue;
+    const title = (
+      (nav(item, "metadata", "lockupMetadataViewModel", "title", "content") as
+        | string
+        | undefined) ?? ""
+    ).trim();
+    // Dauer steht als Badge-Text auf dem Thumbnail ("9:40").
+    const durationSeconds = findAllByKey(item, "thumbnailBadgeViewModel")
+      .map((b) => nav(b, "text"))
+      .filter((t): t is string => typeof t === "string")
+      .map(durationToSeconds)
+      .find((d) => d !== undefined);
+    const viewText =
+      findAllByKey(item, "content")
+        .filter((c): c is string => typeof c === "string")
+        .find((c) => /aufruf|view/i.test(c)) ?? "";
+    push(nav(item, "contentId"), title, durationSeconds, fullNumberFrom(viewText));
+  }
+}
 
 /**
  * Uploads eines gewöhnlichen YouTube-Kanals (True-Crime, Podcasts …), dessen
  * WEB_REMIX-Browse keine Songs-Shelves hat. Reihenfolge wie auf der
  * Kanalseite (neueste zuerst) — bei episodischen Kanälen ist das die
- * erwartete Ordnung.
+ * erwartete Ordnung. Folgt EINER Continuation, damit die Kanalseite mehr als
+ * eine Tab-Seite (~30 Videos) Substanz hat.
  */
 export async function itChannelVideos(
   fetchImpl: typeof fetch,
   channelId: string,
 ): Promise<MusicTrack[] | undefined> {
   try {
-    const res = await fetchImpl(`${WEB_BASE}/browse?prettyPrint=false`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        origin: "https://www.youtube.com",
-        "user-agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
-      },
-      body: JSON.stringify({
-        context: WEB_CONTEXT,
-        browseId: channelId,
-        params: WEB_VIDEOS_TAB_PARAMS,
-      }),
-      signal: AbortSignal.timeout(IT_TIMEOUT_MS),
+    const body = await webBrowse(fetchImpl, {
+      browseId: channelId,
+      params: WEB_VIDEOS_TAB_PARAMS,
     });
-    if (!res.ok) throw new Error(`web browse -> ${res.status}`);
-    const body = (await res.json()) as unknown;
-
-    const channelName =
-      (nav(findAllByKey(body, "channelMetadataRenderer")[0], "title") as string | undefined) ??
-      (nav(findAllByKey(body, "microformatDataRenderer")[0], "title") as string | undefined) ??
-      "";
-
+    const channelName = webChannelName(body);
     const seen = new Set<string>();
     const tracks: MusicTrack[] = [];
-    const push = (
-      videoId: unknown,
-      title: string,
-      durationSeconds: number | undefined,
-      views: number,
-    ) => {
-      if (typeof videoId !== "string" || !VIDEO_ID_RE.test(videoId) || seen.has(videoId)) return;
-      if (!title) return;
-      // ohne Dauer = Livestream/Premiere — als Audio-Track nicht abspielbar
-      if (durationSeconds === undefined || durationSeconds <= 0) return;
-      seen.add(videoId);
-      tracks.push({
-        videoId,
-        title,
-        uploader: channelName,
-        thumbnailUrl: songThumb(videoId),
-        durationSeconds,
-        uploaderUrl: `/channel/${channelId}`,
-        ...(views > 0 ? { views } : {}),
+    collectChannelVideos(body, channelId, channelName, seen, tracks);
+
+    // Eine Continuation reicht: mehr Tiefe, ohne die Kanalseite zum Crawler zu machen.
+    const token = tracks.length > 0 ? webContinuationToken(body) : undefined;
+    if (token && tracks.length < CHANNEL_VIDEOS_MAX) {
+      try {
+        const more = await webBrowse(fetchImpl, { continuation: token });
+        collectChannelVideos(more, channelId, channelName, seen, tracks);
+      } catch {
+        // Continuation ist best-effort — die erste Seite steht bereits
+      }
+    }
+
+    return tracks.length > 0 ? tracks : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Playlists eines gewöhnlichen YouTube-Kanals über den Playlists-Tab.
+ * Parst das klassische gridPlaylistRenderer- und das aktuelle
+ * lockupViewModel-Format; liefert undefined, wenn der Tab leer/unlesbar ist.
+ */
+export async function itChannelPlaylists(
+  fetchImpl: typeof fetch,
+  channelId: string,
+): Promise<PlaylistSummary[] | undefined> {
+  try {
+    const body = await webBrowse(fetchImpl, {
+      browseId: channelId,
+      params: WEB_PLAYLISTS_TAB_PARAMS,
+    });
+    const channelName = webChannelName(body);
+    const seen = new Set<string>();
+    const playlists: PlaylistSummary[] = [];
+    const push = (playlistId: unknown, name: string, videoCount: number, thumbnail: string) => {
+      if (typeof playlistId !== "string" || playlistId.length < 2 || seen.has(playlistId)) return;
+      if (!name) return;
+      seen.add(playlistId);
+      playlists.push({
+        playlistId,
+        name,
+        thumbnailUrl: thumbnail,
+        videoCount,
+        uploaderName: channelName,
       });
     };
 
-    // Klassisches Format (videoRenderer) — ältere Antworten.
-    for (const item of findAllByKey(body, "videoRenderer")) {
-      if (tracks.length >= 20) break;
-      const title =
+    // Klassisches Format (gridPlaylistRenderer).
+    for (const item of findAllByKey(body, "gridPlaylistRenderer")) {
+      if (playlists.length >= 20) break;
+      const name =
         runText(nav(item, "title")).trim() ||
         ((nav(item, "title", "simpleText") as string | undefined) ?? "").trim();
-      const lengthText =
-        ((nav(item, "lengthText", "simpleText") as string | undefined) ?? "") ||
-        runText(nav(item, "lengthText"));
-      const views = fullNumberFrom(
-        (nav(item, "viewCountText", "simpleText") as string | undefined) ?? "",
-      );
-      push(nav(item, "videoId"), title, durationToSeconds(lengthText), views);
+      const countText =
+        ((nav(item, "videoCountText", "runs", 0, "text") as string | undefined) ?? "") ||
+        ((nav(item, "videoCountShortText", "simpleText") as string | undefined) ?? "");
+      const count = Number.parseInt(countText.replace(/\D/g, ""), 10);
+      push(nav(item, "playlistId"), name, Number.isFinite(count) ? count : 0, bestThumbnail(item));
     }
 
-    // Aktuelles Format (lockupViewModel) — Kanal-Tabs seit 2025.
+    // Aktuelles Format (lockupViewModel mit Playlist-Typ).
     for (const item of findAllByKey(body, "lockupViewModel")) {
-      if (tracks.length >= 20) break;
-      if (nav(item, "contentType") !== "LOCKUP_CONTENT_TYPE_VIDEO") continue;
-      const title = (
+      if (playlists.length >= 20) break;
+      const type = nav(item, "contentType");
+      if (type !== "LOCKUP_CONTENT_TYPE_PLAYLIST" && type !== "LOCKUP_CONTENT_TYPE_PODCAST")
+        continue;
+      const name = (
         (nav(item, "metadata", "lockupMetadataViewModel", "title", "content") as
           | string
           | undefined) ?? ""
       ).trim();
-      // Dauer steht als Badge-Text auf dem Thumbnail ("9:40").
-      const durationSeconds = findAllByKey(item, "thumbnailBadgeViewModel")
-        .map((b) => nav(b, "text"))
-        .filter((t): t is string => typeof t === "string")
-        .map(durationToSeconds)
-        .find((d) => d !== undefined);
-      const viewText =
-        findAllByKey(item, "content")
-          .filter((c): c is string => typeof c === "string")
-          .find((c) => /aufruf|view/i.test(c)) ?? "";
-      push(nav(item, "contentId"), title, durationSeconds, fullNumberFrom(viewText));
+      // Titelzahl steht als Badge auf dem Thumbnail ("19 Videos").
+      const badge =
+        findAllByKey(item, "thumbnailBadgeViewModel")
+          .map((b) => nav(b, "text"))
+          .find((t): t is string => typeof t === "string" && /\d/.test(t)) ?? "";
+      push(nav(item, "contentId"), name, trackCountFrom(badge), bestThumbnail(item));
     }
 
-    return tracks.length > 0 ? tracks : undefined;
+    return playlists.length > 0 ? playlists : undefined;
   } catch {
     return undefined;
   }

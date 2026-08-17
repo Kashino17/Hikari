@@ -248,20 +248,26 @@ fun GenreBrowseGrid(onOpenGenre: (title: String, query: String) -> Unit) {
     }
 }
 
-/** Ergebnisfilter der Musik-Suche, Stil wie die Modus-Chips darüber. */
+/**
+ * Ergebnisfilter der Smart-Search. [entries] und [labelFor] erlauben
+ * modusgerechte Untermengen und Beschriftungen (z. B. "Inhalte"/"Kanäle"
+ * statt "Songs"/"Künstler" außerhalb des Musik-Modus).
+ */
 @Composable
 fun ResultFilterChips(
     selected: MusicSearchFilter,
     onSelect: (MusicSearchFilter) -> Unit,
     modifier: Modifier = Modifier,
+    entries: List<MusicSearchFilter> = MusicSearchFilter.entries.toList(),
+    labelFor: (MusicSearchFilter) -> String = { it.label },
 ) {
     LazyRow(
         modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(MusicSearchFilter.entries, key = { it.name }) { filter ->
-            MuChip(filter.label, active = filter == selected, onClick = { onSelect(filter) })
+        items(entries, key = { it.name }) { filter ->
+            MuChip(labelFor(filter), active = filter == selected, onClick = { onSelect(filter) })
         }
     }
 }

@@ -100,7 +100,10 @@ interface HikariApi {
     suspend fun getSuggestions(@Query("q") q: String): List<String>
 
     @GET("music/search/full")
-    suspend fun searchFullMusic(@Query("q") q: String): FullSearchDto
+    suspend fun searchFullMusic(
+        @Query("q") q: String,
+        @Query("mode") mode: String = "music",
+    ): FullSearchDto
 
     /** Vier Methoden mit festem type-Query — gleicher Pfad, sauber typisiert. */
     @GET("music/search/typed?type=songs")

@@ -10,6 +10,18 @@ data class MusicSong(
     val views: Long,
     val addedAt: Long = System.currentTimeMillis(),
     val isFavorite: Boolean = false,
+    /**
+     * Alle beteiligten Artists (Kollaborationen). Nur bei frisch vom Backend
+     * geladenen Songs gefüllt — Room-Persistenz (Verlauf/Downloads) speichert
+     * weiterhin nur den zusammengesetzten [uploader]-String.
+     */
+    val artists: List<SongArtist> = emptyList(),
+)
+
+/** Ein einzelner Artist eines Songs — [channelId] öffnet dessen Seite. */
+data class SongArtist(
+    val name: String,
+    val channelId: String? = null,
 )
 
 data class MusicPlaylist(

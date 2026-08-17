@@ -1,11 +1,13 @@
 package com.hikari.app.ui.music
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -25,20 +27,17 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Snackbar
@@ -49,10 +48,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,13 +58,16 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.io.File
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.hikari.app.domain.model.HomeItem
@@ -76,7 +76,6 @@ import com.hikari.app.domain.model.MusicSearchResult
 import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.domain.repo.MusicSearchFilter
 import com.hikari.app.domain.repo.MusicSearchMode
-import com.hikari.app.domain.repo.PlaylistWithSongs
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariCardBg
 import com.hikari.app.ui.theme.HikariPrimary
@@ -85,32 +84,20 @@ import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 
-private const val TAB_DISCOVER = 0
-private const val TAB_PLAYLISTS = 1
-private const val TAB_DOWNLOADS = 2
-private const val TAB_FAVORITES = 3
-
 @Composable
 fun MusicScreen(
     onOpenNowPlaying: () -> Unit,
-    onOpenPlaylist: (Int) -> Unit,
+    onOpenProfile: () -> Unit,
     onOpenMix: (title: String, query: String, mode: String) -> Unit,
     onOpenGroup: (title: String, unit: String, query: String, mode: String) -> Unit,
     onOpenArtist: (channelId: String, name: String) -> Unit,
     onOpenCollection: (playlistId: String, name: String, isAlbum: Boolean) -> Unit,
     viewModel: MusicViewModel = hiltViewModel(),
 ) {
-    var tab by rememberSaveable { mutableIntStateOf(TAB_DISCOVER) }
-    // Der Verlauf lebt als Widget oben im Entdecken-Tab, nicht als eigene Seite.
-    val tabs = listOf("Entdecken", "Playlists", "Downloads", "Favoriten")
     val currentSong by viewModel.player.currentSong.collectAsState()
     val online by viewModel.isOnline.collectAsState()
     val snackbar = remember { SnackbarHostState() }
-
-    // Ohne Netz ist "Entdecken" sinnlos — automatisch zu den Downloads wechseln.
-    LaunchedEffect(online) {
-        if (!online && tab == TAB_DISCOVER) tab = TAB_DOWNLOADS
-    }
+    var showModeSheet by remember { mutableStateOf(false) }
 
     viewModel.message?.let { msg ->
         LaunchedEffect(msg) {
@@ -121,38 +108,20 @@ fun MusicScreen(
 
     Box(Modifier.fillMaxSize().background(HikariBg)) {
         Column(Modifier.fillMaxSize()) {
-            Text(
-                "Musik",
-                fontWeight = FontWeight.Black,
-                fontSize = 26.sp,
-                color = HikariText,
-                modifier = Modifier.padding(start = 20.dp, top = 20.dp, bottom = 6.dp),
+            MusicTopBar(
+                avatarPath = viewModel.avatarPath.collectAsState().value,
+                onOpenProfile = onOpenProfile,
             )
 
             if (!online) OfflineBanner()
 
-            // Tab-Leiste als Chip-Reihe mit Press-Feedback statt Material-TabRow.
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    MuChip(title, active = tab == index, onClick = { tab = index })
-                }
-            }
-
             Box(Modifier.weight(1f)) {
-                Crossfade(tab, animationSpec = tween(200), label = "musicTab") { t ->
-                    when (t) {
-                        TAB_DISCOVER -> DiscoverTab(viewModel, online, onOpenMix, onOpenGroup, onOpenArtist, onOpenCollection)
-                        TAB_PLAYLISTS -> PlaylistsTab(viewModel, onOpenPlaylist)
-                        TAB_DOWNLOADS -> DownloadsTab(viewModel)
-                        TAB_FAVORITES -> FavoritesTab(viewModel)
-                    }
-                }
+                DiscoverTab(
+                    viewModel, online,
+                    onOpenMix, onOpenGroup, onOpenArtist, onOpenCollection,
+                    onOpenProfile = onOpenProfile,
+                    onOpenModeSheet = { showModeSheet = true },
+                )
             }
 
             if (currentSong != null) {
@@ -169,6 +138,10 @@ fun MusicScreen(
                 shape = RoundedCornerShape(12.dp),
             )
         }
+
+        if (showModeSheet) {
+            ModeSheet(viewModel, onClose = { showModeSheet = false })
+        }
     }
 
     viewModel.addToPlaylistTarget?.let { song ->
@@ -182,6 +155,184 @@ fun MusicScreen(
     }
 }
 
+/**
+ * Kopfzeile des Musik-Bereichs: Titel mit dezentem Amber-Verlauf, rechts der
+ * Zugang zur eigenen Bibliothek — mit demselben Profilbild wie im App-Profil.
+ */
+@Composable
+private fun MusicTopBar(avatarPath: String?, onOpenProfile: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(start = 20.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            "Musik",
+            fontWeight = FontWeight.Black,
+            fontSize = 27.sp,
+            style = TextStyle(
+                brush = Brush.horizontalGradient(
+                    listOf(HikariText, HikariPrimary.copy(alpha = 0.85f)),
+                ),
+            ),
+        )
+        Spacer(Modifier.weight(1f))
+        MusicAvatarChip(avatarPath = avatarPath, onClick = onOpenProfile)
+    }
+}
+
+/** Rundes Profilbild mit Amber-Ring — Fallback ist ein Personen-Icon. */
+@Composable
+private fun MusicAvatarChip(avatarPath: String?, size: Dp = 38.dp, onClick: () -> Unit) {
+    // Legacy-"?v="-Suffix abschneiden wie auf der Profil-Seite; fehlt die
+    // Datei, bleibt der Icon-Fallback statt eines leeren Kreises.
+    val avatarFile = remember(avatarPath) {
+        avatarPath?.substringBefore("?")?.let(::File)?.takeIf { it.exists() }
+    }
+    Box(
+        Modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(HikariCardBg)
+            .border(
+                1.5.dp,
+                Brush.sweepGradient(
+                    listOf(HikariPrimary, HikariPrimary.copy(alpha = 0.25f), HikariPrimary),
+                ),
+                CircleShape,
+            )
+            .muPressable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (avatarFile != null) {
+            AsyncImage(
+                model = avatarFile,
+                contentDescription = "Deine Bibliothek",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize().clip(CircleShape),
+            )
+        } else {
+            Icon(
+                Icons.Default.Person, "Deine Bibliothek",
+                tint = HikariTextMuted,
+                modifier = Modifier.size(size * 0.55f),
+            )
+        }
+    }
+}
+
+/** Ein Modus-Eintrag des Auswahl-Sheets. */
+private data class ModeEntry(
+    val mode: MusicSearchMode,
+    val emoji: String,
+    val title: String,
+    val desc: String,
+)
+
+private val MODE_ENTRIES = listOf(
+    ModeEntry(MusicSearchMode.MUSIC, "🎵", "Musik", "Songs, Artists, Alben und Playlists"),
+    ModeEntry(MusicSearchMode.AUDIOBOOK, "📖", "Hörbücher", "Ganze Bücher und Kapitel zum Zuhören"),
+    ModeEntry(MusicSearchMode.PODCAST, "🎙️", "Podcasts", "Shows und Folgen aller Themen"),
+    ModeEntry(MusicSearchMode.TRUECRIME, "🕵️", "True Crime", "Echte Kriminalfälle als Audio"),
+)
+
+/**
+ * Modus-Sheet hinter dem Tune-Icon: wählt zwischen Musik, Hörbüchern,
+ * Podcasts und True Crime; im Musik-Modus wohnt hier auch der
+ * "Ohne Gesang"-Schalter.
+ */
+@Composable
+private fun ModeSheet(viewModel: MusicViewModel, onClose: () -> Unit) {
+    val instrumental by viewModel.instrumentalOnly.collectAsState()
+    MuSheet("Was möchtest du hören?", onClose = onClose) {
+        MODE_ENTRIES.forEach { entry ->
+            val active = viewModel.searchMode == entry.mode
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 3.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (active) HikariPrimary.copy(alpha = 0.12f) else Color.Transparent)
+                    .border(
+                        1.dp,
+                        if (active) HikariPrimary.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.05f),
+                        RoundedCornerShape(16.dp),
+                    )
+                    .muPressable {
+                        viewModel.selectSearchMode(entry.mode)
+                        onClose()
+                    }
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(entry.emoji, fontSize = 22.sp)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        entry.title,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (active) HikariPrimary else HikariText,
+                    )
+                    Text(entry.desc, fontSize = 12.sp, color = HikariTextMuted)
+                }
+                if (active) {
+                    Text("✓", fontSize = 16.sp, color = HikariPrimary, fontWeight = FontWeight.Black)
+                }
+            }
+        }
+        if (viewModel.searchMode == MusicSearchMode.MUSIC) {
+            Spacer(Modifier.height(8.dp))
+            InstrumentalToggle(
+                enabled = instrumental,
+                onToggle = { viewModel.toggleInstrumental() },
+            )
+            Spacer(Modifier.height(4.dp))
+        }
+    }
+}
+
+/**
+ * Minimalistisches Tune-Icon neben der Suchleiste — öffnet das Modus-Sheet.
+ * Läuft gerade ein anderer Modus als Musik (oder der Instrumental-Filter),
+ * zeigt ein Amber-Punkt den aktiven Eingriff an.
+ */
+@Composable
+private fun ModeButton(mode: MusicSearchMode, instrumental: Boolean, onClick: () -> Unit) {
+    val filtered = mode != MusicSearchMode.MUSIC || instrumental
+    Box {
+        Box(
+            Modifier
+                .size(50.dp)
+                .clip(CircleShape)
+                .background(if (filtered) HikariPrimary.copy(alpha = 0.14f) else HikariCardBg)
+                .border(
+                    1.dp,
+                    if (filtered) HikariPrimary.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.08f),
+                    CircleShape,
+                )
+                .muPressable(onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                Icons.Default.Tune, "Modus wählen",
+                tint = if (filtered) HikariPrimary else HikariTextMuted,
+                modifier = Modifier.size(22.dp),
+            )
+        }
+        if (filtered) {
+            Box(
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(3.dp)
+                    .size(9.dp)
+                    .clip(CircleShape)
+                    .background(HikariPrimary)
+                    .border(1.5.dp, HikariBg, CircleShape),
+            )
+        }
+    }
+}
+
 @Composable
 private fun DiscoverTab(
     viewModel: MusicViewModel,
@@ -190,9 +341,17 @@ private fun DiscoverTab(
     onOpenGroup: (title: String, unit: String, query: String, mode: String) -> Unit,
     onOpenArtist: (channelId: String, name: String) -> Unit,
     onOpenCollection: (playlistId: String, name: String, isAlbum: Boolean) -> Unit,
+    onOpenProfile: () -> Unit,
+    onOpenModeSheet: () -> Unit,
 ) {
     if (!online) {
-        EmptyHint(Icons.Outlined.CloudDownload, "Entdecken braucht Internet — deine Downloads findest du im Downloads-Tab.")
+        Column(
+            Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            EmptyHint(Icons.Outlined.CloudDownload, "Entdecken braucht Internet — deine Downloads warten in deiner Bibliothek.")
+            MuGhostButton("Zur Bibliothek", onClick = onOpenProfile)
+        }
         return
     }
 
@@ -212,48 +371,41 @@ private fun DiscoverTab(
         contentPadding = PaddingValues(bottom = 12.dp),
     ) {
         item(key = "search") {
-            MusicSearchField(
-                value = viewModel.searchQuery,
-                placeholder = when (searchMode) {
-                    MusicSearchMode.MUSIC -> "Songs, Artists suchen…"
-                    MusicSearchMode.AUDIOBOOK -> "Hörbücher suchen…"
-                    MusicSearchMode.PODCAST -> "Podcasts suchen…"
-                    MusicSearchMode.TRUECRIME -> "Fälle, Shows suchen…"
-                },
-                onValueChange = {
-                    viewModel.searchQuery = it
-                    viewModel.onSearchQueryChange(it)
-                },
-                onFocus = { viewModel.onSearchFocus() },
-                onClear = { viewModel.clearSearch() },
-                onSearch = { viewModel.search(viewModel.searchQuery) },
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp),
-            )
-        }
-
-        item(key = "mode-chips") {
-            SearchModeChips(
-                selected = searchMode,
-                onSelect = { viewModel.selectSearchMode(it) },
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 10.dp),
-            )
-        }
-
-        // "Ohne Gesang" ergibt nur bei Musik Sinn — Hörbuch und Podcast leben von der Stimme.
-        if (musicMode) {
-            item(key = "instrumental-toggle") {
-                Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 10.dp)) {
-                    InstrumentalToggle(
-                        enabled = instrumental,
-                        onToggle = { viewModel.toggleInstrumental() },
-                    )
-                }
+            // Suchleiste + Modus-Icon in einer Zeile — die Modus-Chips und der
+            // Gesang-Schalter wohnen jetzt im Sheet hinter dem Icon.
+            Row(
+                Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                MusicSearchField(
+                    value = viewModel.searchQuery,
+                    placeholder = when (searchMode) {
+                        MusicSearchMode.MUSIC -> "Songs, Artists, Alben suchen…"
+                        MusicSearchMode.AUDIOBOOK -> "Hörbücher suchen…"
+                        MusicSearchMode.PODCAST -> "Podcasts suchen…"
+                        MusicSearchMode.TRUECRIME -> "Fälle, Shows suchen…"
+                    },
+                    onValueChange = {
+                        viewModel.searchQuery = it
+                        viewModel.onSearchQueryChange(it)
+                    },
+                    onFocus = { viewModel.onSearchFocus() },
+                    onClear = { viewModel.clearSearch() },
+                    onSearch = { viewModel.search(viewModel.searchQuery) },
+                    modifier = Modifier.weight(1f),
+                )
+                Spacer(Modifier.width(10.dp))
+                ModeButton(
+                    mode = searchMode,
+                    instrumental = musicMode && instrumental,
+                    onClick = onOpenModeSheet,
+                )
             }
         }
 
-        // Musik-Modus mit aktivem Suchfeld: Verlauf und Genres bzw. Vorschläge
-        // statt der Entdecken-Inhalte.
-        if (musicMode && viewModel.searchActive && !searching) {
+        // Aktives Suchfeld: Verlauf (alle Modi) und Genres (nur Musik) bzw.
+        // Vorschläge statt der Entdecken-Inhalte.
+        if (viewModel.searchActive && !searching) {
             if (viewModel.searchQuery.isBlank()) {
                 if (searchHistory.isNotEmpty()) {
                     item(key = "search-history") {
@@ -268,10 +420,14 @@ private fun DiscoverTab(
                         )
                     }
                 }
-                item(key = "genre-browse") {
-                    GenreBrowseGrid(onOpenGenre = { title, query ->
-                        onOpenMix(title, query, MusicSearchMode.MUSIC.apiValue)
-                    })
+                // Die Genre-Kacheln sind Musik — in den anderen Modi bleibt
+                // unter dem leeren Suchfeld nur der Verlauf.
+                if (musicMode) {
+                    item(key = "genre-browse") {
+                        GenreBrowseGrid(onOpenGenre = { title, query ->
+                            onOpenMix(title, query, MusicSearchMode.MUSIC.apiValue)
+                        })
+                    }
                 }
             } else {
                 item(key = "suggestions") {
@@ -298,9 +454,11 @@ private fun DiscoverTab(
             }
         }
 
-        if (searching && musicMode) {
+        if (searching) {
+            // Smart-Search-Ergebnisse in allen Modi: Filter-Chips + Sektionen.
             smartSearchResults(
                 viewModel = viewModel,
+                mode = searchMode,
                 instrumental = instrumental,
                 currentVideoId = currentSong?.videoId,
                 downloadedIds = downloadedIds,
@@ -308,59 +466,8 @@ private fun DiscoverTab(
                 online = online,
                 onOpenArtist = onOpenArtist,
                 onOpenCollection = onOpenCollection,
+                onOpenGroup = onOpenGroup,
             )
-            return@LazyColumn
-        }
-
-        if (searching) {
-            when {
-                viewModel.searchLoading -> item(key = "search-loading") { CenteredLoader() }
-                viewModel.searchResults.isEmpty() && viewModel.searchGroups.isEmpty() -> item(key = "search-empty") {
-                    if (instrumental) {
-                        // Der Filter ist die wahrscheinlichste Ursache — also
-                        // gleich den Ausweg anbieten statt nur "nichts gefunden".
-                        FilteredEmptyHint(onDisableFilter = { viewModel.toggleInstrumental() })
-                    } else {
-                        EmptyHint(Icons.Default.Search, "Nichts gefunden — anderer Suchbegriff?")
-                    }
-                }
-                else -> {
-                    // Zuerst die erkannten Hörbücher/Shows als Gruppe, dann die
-                    // einzelnen Treffer, die keiner Gruppe zugeordnet werden konnten.
-                    items(viewModel.searchGroups, key = { "g-${it.uploader}" }) { group ->
-                        val unit = if (searchMode == MusicSearchMode.AUDIOBOOK) "Kapitel" else "Folgen"
-                        GroupRow(
-                            group = group,
-                            unitLabel = unit,
-                            badge = if (searchMode == MusicSearchMode.TRUECRIME) {
-                                viewModel.languageBadge(group.chapters.first())
-                            } else {
-                                null
-                            },
-                            onClick = {
-                                onOpenGroup(group.uploader, unit, viewModel.searchQuery, searchMode.apiValue)
-                            },
-                        )
-                    }
-                    items(viewModel.searchResults, key = { "s-${it.videoId}" }) { song ->
-                        SongRow(
-                            song,
-                            viewModel,
-                            viewModel.searchResults,
-                            isCurrent = currentSong?.videoId == song.videoId,
-                            isDownloaded = song.videoId in downloadedIds,
-                            progress = progressMap[song.videoId],
-                            online = online,
-                            badge = if (searchMode == MusicSearchMode.TRUECRIME) {
-                                viewModel.languageBadge(song)
-                            } else {
-                                null
-                            },
-                            onOpenArtist = onOpenArtist,
-                        )
-                    }
-                }
-            }
             return@LazyColumn
         }
 
@@ -513,13 +620,16 @@ private fun LazyListScope.homeContent(
 }
 
 /**
- * Ergebnisbereich der Musik-Smart-Search: Filter-Chips oben, darunter bei
- * „Alle“ die Vollsuche-Sektionen (Top-Ergebnis, Songs, Künstler, Alben,
- * Playlists) — leere Sektionen bleiben unsichtbar. Die anderen Filter zeigen
- * ihre lazy geladenen Trefferlisten.
+ * Ergebnisbereich der Smart-Search (alle Modi): Filter-Chips bleiben als
+ * Sticky-Header beim Scrollen sichtbar, darunter bei „Alle“ die
+ * Vollsuche-Sektionen — leere Sektionen bleiben unsichtbar. Im Musik-Modus
+ * laden die Filter ihre großen Trefferlisten lazy nach; in den anderen Modi
+ * filtern sie die schon geladene Vollsuche clientseitig.
  */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 private fun LazyListScope.smartSearchResults(
     viewModel: MusicViewModel,
+    mode: MusicSearchMode,
     instrumental: Boolean,
     currentVideoId: String?,
     downloadedIds: Set<String>,
@@ -527,18 +637,64 @@ private fun LazyListScope.smartSearchResults(
     online: Boolean,
     onOpenArtist: (channelId: String, name: String) -> Unit,
     onOpenCollection: (playlistId: String, name: String, isAlbum: Boolean) -> Unit,
+    onOpenGroup: (title: String, unit: String, query: String, mode: String) -> Unit,
 ) {
-    item(key = "filter-chips") {
-        ResultFilterChips(
-            selected = viewModel.activeFilter,
-            onSelect = { viewModel.selectFilter(it) },
-            modifier = Modifier.padding(top = 10.dp),
+    val musicMode = mode == MusicSearchMode.MUSIC
+    // Modusgerechte Chip-Beschriftung: außerhalb der Musik gibt es keine
+    // Alben, und "Songs/Künstler" heißen dort "Inhalte/Kanäle".
+    val filterEntries = if (musicMode) {
+        MusicSearchFilter.entries.toList()
+    } else {
+        listOf(
+            MusicSearchFilter.ALLE,
+            MusicSearchFilter.SONGS,
+            MusicSearchFilter.KUENSTLER,
+            MusicSearchFilter.PLAYLISTS,
         )
+    }
+    val labelFor: (MusicSearchFilter) -> String = { filter ->
+        when {
+            musicMode -> filter.label
+            filter == MusicSearchFilter.SONGS -> "Inhalte"
+            filter == MusicSearchFilter.KUENSTLER -> "Kanäle"
+            else -> filter.label
+        }
+    }
+    val songBadge: (MusicSong) -> String? = { song ->
+        if (mode == MusicSearchMode.TRUECRIME) viewModel.languageBadge(song) else null
+    }
+    val groupUnit = if (mode == MusicSearchMode.AUDIOBOOK) "Kapitel" else "Folgen"
+
+    stickyHeader(key = "filter-chips") {
+        // Eigener Grund hinter den Chips, damit beim Scrollen nichts durchscheint.
+        Box(Modifier.fillMaxWidth().background(HikariBg)) {
+            ResultFilterChips(
+                selected = viewModel.activeFilter,
+                entries = filterEntries,
+                labelFor = labelFor,
+                onSelect = { viewModel.selectFilter(it) },
+                modifier = Modifier.padding(vertical = 8.dp),
+            )
+        }
     }
 
     if (viewModel.searchLoading) {
         item(key = "search-loading") { CenteredLoader() }
         return
+    }
+
+    // Gruppen (Hörbücher/Shows) gibt es nur außerhalb des Musik-Modus.
+    fun LazyListScope.groupRows() {
+        items(viewModel.searchGroups, key = { "g-${it.uploader}" }) { group ->
+            GroupRow(
+                group = group,
+                unitLabel = groupUnit,
+                badge = songBadge(group.chapters.first()),
+                onClick = {
+                    onOpenGroup(group.uploader, groupUnit, viewModel.searchQuery, mode.apiValue)
+                },
+            )
+        }
     }
 
     when (viewModel.activeFilter) {
@@ -549,7 +705,7 @@ private fun LazyListScope.smartSearchResults(
                     full.albums.isEmpty() && full.playlists.isEmpty())
             if (nothingFound) {
                 item(key = "search-empty") {
-                    if (instrumental) {
+                    if (musicMode && instrumental) {
                         FilteredEmptyHint(onDisableFilter = { viewModel.toggleInstrumental() })
                     } else {
                         EmptyHint(Icons.Default.Search, "Nichts gefunden — anderer Suchbegriff?")
@@ -571,23 +727,31 @@ private fun LazyListScope.smartSearchResults(
                     })
                 }
             }
-            if (full.songs.isNotEmpty()) {
-                item(key = "songs-header") { SectionHeader("Songs") }
-                items(full.songs, key = { "s-${it.videoId}" }) { song ->
+            if (!musicMode && viewModel.searchGroups.isNotEmpty()) {
+                item(key = "groups-header") { SectionHeader(if (mode == MusicSearchMode.AUDIOBOOK) "Hörbücher" else "Shows") }
+                groupRows()
+            }
+            // Außerhalb der Musik zeigen die Song-Zeilen nur die Einzelgänger —
+            // alles Gruppierte steht schon oben bei den Shows.
+            val songList = if (musicMode) full.songs else viewModel.searchResults
+            if (songList.isNotEmpty()) {
+                item(key = "songs-header") { SectionHeader(if (musicMode) "Songs" else "Inhalte") }
+                items(songList, key = { "s-${it.videoId}" }) { song ->
                     SongRow(
                         song,
                         viewModel,
-                        full.songs,
+                        songList,
                         isCurrent = currentVideoId == song.videoId,
                         isDownloaded = song.videoId in downloadedIds,
                         progress = progressMap[song.videoId],
                         online = online,
+                        badge = songBadge(song),
                         onOpenArtist = onOpenArtist,
                     )
                 }
             }
             if (full.artists.isNotEmpty()) {
-                item(key = "artists-header") { SectionHeader("Künstler") }
+                item(key = "artists-header") { SectionHeader(if (musicMode) "Künstler" else "Kanäle") }
                 items(full.artists, key = { "a-${it.channelId}" }) { artist ->
                     ArtistResultRow(artist, onClick = { onOpenArtist(artist.channelId, artist.name) })
                 }
@@ -609,22 +773,29 @@ private fun LazyListScope.smartSearchResults(
             }
         }
         MusicSearchFilter.SONGS -> {
+            // Musik: lazy nachgeladene große Liste; sonst Gruppen + alle Inhalte
+            // aus der Vollsuche.
+            val songs = if (musicMode) viewModel.typedSongs else viewModel.searchResults
             when {
-                viewModel.typedLoading -> item(key = "typed-loading") { CenteredLoader() }
-                viewModel.typedSongs.isEmpty() -> item(key = "typed-empty") {
+                musicMode && viewModel.typedLoading -> item(key = "typed-loading") { CenteredLoader() }
+                songs.isEmpty() && (musicMode || viewModel.searchGroups.isEmpty()) -> item(key = "typed-empty") {
                     EmptyHint(Icons.Default.Search, "Nichts gefunden — anderer Suchbegriff?")
                 }
-                else -> items(viewModel.typedSongs, key = { "ts-${it.videoId}" }) { song ->
-                    SongRow(
-                        song,
-                        viewModel,
-                        viewModel.typedSongs,
-                        isCurrent = currentVideoId == song.videoId,
-                        isDownloaded = song.videoId in downloadedIds,
-                        progress = progressMap[song.videoId],
-                        online = online,
-                        onOpenArtist = onOpenArtist,
-                    )
+                else -> {
+                    if (!musicMode) groupRows()
+                    items(songs, key = { "ts-${it.videoId}" }) { song ->
+                        SongRow(
+                            song,
+                            viewModel,
+                            songs,
+                            isCurrent = currentVideoId == song.videoId,
+                            isDownloaded = song.videoId in downloadedIds,
+                            progress = progressMap[song.videoId],
+                            online = online,
+                            badge = songBadge(song),
+                            onOpenArtist = onOpenArtist,
+                        )
+                    }
                 }
             }
         }
@@ -640,23 +811,25 @@ private fun LazyListScope.smartSearchResults(
             }
         }
         MusicSearchFilter.KUENSTLER -> {
+            val artists = if (musicMode) viewModel.typedArtists else viewModel.fullResults?.artists.orEmpty()
             when {
-                viewModel.typedLoading -> item(key = "typed-loading") { CenteredLoader() }
-                viewModel.typedArtists.isEmpty() -> item(key = "typed-empty") {
+                musicMode && viewModel.typedLoading -> item(key = "typed-loading") { CenteredLoader() }
+                artists.isEmpty() -> item(key = "typed-empty") {
                     EmptyHint(Icons.Default.Search, "Nichts gefunden — anderer Suchbegriff?")
                 }
-                else -> items(viewModel.typedArtists, key = { "tk-${it.channelId}" }) { artist ->
+                else -> items(artists, key = { "tk-${it.channelId}" }) { artist ->
                     ArtistResultRow(artist, onClick = { onOpenArtist(artist.channelId, artist.name) })
                 }
             }
         }
         MusicSearchFilter.PLAYLISTS -> {
+            val playlists = if (musicMode) viewModel.typedPlaylists else viewModel.fullResults?.playlists.orEmpty()
             when {
-                viewModel.typedLoading -> item(key = "typed-loading") { CenteredLoader() }
-                viewModel.typedPlaylists.isEmpty() -> item(key = "typed-empty") {
+                musicMode && viewModel.typedLoading -> item(key = "typed-loading") { CenteredLoader() }
+                playlists.isEmpty() -> item(key = "typed-empty") {
                     EmptyHint(Icons.Default.Search, "Nichts gefunden — anderer Suchbegriff?")
                 }
-                else -> items(viewModel.typedPlaylists, key = { "tp-${it.playlistId}" }) { playlist ->
+                else -> items(playlists, key = { "tp-${it.playlistId}" }) { playlist ->
                     PlaylistResultRow(
                         playlist,
                         onClick = { onOpenCollection(playlist.playlistId, playlist.name, false) },
@@ -886,172 +1059,10 @@ private fun TileBound(
     )
 }
 
-@Composable
-private fun PlaylistsTab(viewModel: MusicViewModel, onOpenPlaylist: (Int) -> Unit) {
-    var showCreate by remember { mutableStateOf(false) }
-
-    Column(Modifier.fillMaxSize()) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                if (viewModel.playlists.size == 1) "1 Playlist" else "${viewModel.playlists.size} Playlists",
-                fontSize = 13.sp,
-                color = HikariTextMuted,
-                modifier = Modifier.weight(1f),
-            )
-            MuChip("Neue Playlist", active = true, icon = Icons.Default.Add, onClick = { showCreate = true })
-        }
-
-        if (viewModel.playlists.isEmpty()) {
-            EmptyHint(
-                Icons.AutoMirrored.Filled.PlaylistPlay,
-                "Noch keine Playlists — tippe auf „Neu“ oder lange auf einen Song.",
-            )
-        } else {
-            LazyColumn(
-                Modifier.fillMaxSize(),
-                state = viewModel.playlistsListState,
-                contentPadding = PaddingValues(bottom = 12.dp),
-            ) {
-                items(viewModel.playlists, key = { it.playlist.id }) { entry ->
-                    PlaylistCard(entry, onClick = { onOpenPlaylist(entry.playlist.id) })
-                }
-            }
-        }
-    }
-
-    if (showCreate) {
-        NamePlaylistDialog(
-            title = "Neue Playlist",
-            initial = "",
-            onDismiss = { showCreate = false },
-            onConfirm = { name ->
-                viewModel.createPlaylist(name)
-                showCreate = false
-            },
-        )
-    }
-}
-
-@Composable
-private fun PlaylistCard(entry: PlaylistWithSongs, onClick: () -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(HikariCardBg)
-            .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
-            .muPressable(onClick = onClick)
-            .padding(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(
-                    Brush.radialGradient(
-                        listOf(HikariPrimary.copy(alpha = 0.25f), HikariPrimary.copy(alpha = 0.08f))
-                    )
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null, tint = HikariPrimary, modifier = Modifier.size(26.dp))
-        }
-        Spacer(Modifier.width(14.dp))
-        Column(Modifier.weight(1f)) {
-            Text(entry.playlist.name, fontWeight = FontWeight.Medium, fontSize = 15.sp, color = HikariText, maxLines = 1)
-            val songLabel = if (entry.songs.size == 1) "1 Song" else "${entry.songs.size} Songs"
-            val offlineLabel = when {
-                entry.songs.isEmpty() -> ""
-                entry.downloadedCount == entry.songs.size -> "  ·  komplett offline"
-                entry.downloadedCount > 0 -> "  ·  ${entry.downloadedCount} offline"
-                else -> ""
-            }
-            Text("$songLabel$offlineLabel", fontSize = 12.sp, color = HikariTextMuted)
-        }
-    }
-}
-
-@Composable
-private fun DownloadsTab(viewModel: MusicViewModel) {
-    val songs by viewModel.downloadedSongs.collectAsState()
-    val currentSong by viewModel.player.currentSong.collectAsState()
-    val downloadedIds by viewModel.downloadedIds.collectAsState()
-    val progressMap by viewModel.downloadProgress.collectAsState()
-    val online by viewModel.isOnline.collectAsState()
-
-    if (songs.isEmpty()) {
-        EmptyHint(
-            Icons.Outlined.CloudDownload,
-            "Noch nichts heruntergeladen — tippe bei einem Song auf das Download-Symbol.",
-        )
-        return
-    }
-
-    Column(Modifier.fillMaxSize()) {
-        Text(
-            if (songs.size == 1) "1 Song offline verfügbar" else "${songs.size} Songs offline verfügbar",
-            fontSize = 13.sp,
-            color = HikariTextMuted,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-        )
-        LazyColumn(
-            Modifier.fillMaxSize(),
-            state = viewModel.downloadsListState,
-            contentPadding = PaddingValues(bottom = 12.dp),
-        ) {
-            items(songs, key = { it.videoId }) { song ->
-                SongRow(
-                    song,
-                    viewModel,
-                    songs,
-                    isCurrent = currentSong?.videoId == song.videoId,
-                    isDownloaded = song.videoId in downloadedIds,
-                    progress = progressMap[song.videoId],
-                    online = online,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun FavoritesTab(viewModel: MusicViewModel) {
-    val currentSong by viewModel.player.currentSong.collectAsState()
-    val downloadedIds by viewModel.downloadedIds.collectAsState()
-    val progressMap by viewModel.downloadProgress.collectAsState()
-    val online by viewModel.isOnline.collectAsState()
-
-    if (viewModel.favorites.isEmpty()) {
-        EmptyHint(Icons.Default.FavoriteBorder, "Tippe das Herz bei einem Song — er landet hier.")
-        return
-    }
-    LazyColumn(
-        Modifier.fillMaxSize(),
-        state = viewModel.favoritesListState,
-        contentPadding = PaddingValues(vertical = 8.dp),
-    ) {
-        items(viewModel.favorites, key = { it.videoId }) { song ->
-            SongRow(
-                song,
-                viewModel,
-                viewModel.favorites,
-                isCurrent = currentSong?.videoId == song.videoId,
-                isDownloaded = song.videoId in downloadedIds,
-                progress = progressMap[song.videoId],
-                online = online,
-            )
-        }
-    }
-}
-
 /**
- * Suchfeld als runde Pille mit animierter Amber-Border bei Fokus — ersetzt
- * das Material-OutlinedTextField. Feste Höhe, damit der Clear-Button beim
+ * Suchfeld als runde Glas-Pille: bei Fokus wächst sie minimal, die Border wird
+ * zum wandernden Amber-Verlauf und das Such-Icon färbt sich mit — das
+ * Herzstück des Entdecken-Kopfes. Feste Höhe, damit der Clear-Button beim
  * Tippen keinen Layout-Sprung verursacht.
  */
 @Composable
@@ -1066,16 +1077,34 @@ private fun MusicSearchField(
 ) {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
-    val borderColor by animateColorAsState(
-        if (focused) HikariPrimary else Color.White.copy(alpha = 0.08f),
-        tween(180),
-        label = "searchBorder",
+    val focusT by animateFloatAsState(if (focused) 1f else 0f, tween(220), label = "searchFocus")
+    // Wandernder Glanzpunkt auf der Border, nur solange das Feld fokussiert ist.
+    val sweep by rememberInfiniteTransition(label = "searchSweep").animateFloat(
+        0f, 1f,
+        infiniteRepeatable(tween(2600, easing = LinearEasing)),
+        label = "searchSweepT",
     )
+    val borderBrush = if (focused) {
+        Brush.sweepGradient(
+            0f to HikariPrimary.copy(alpha = 0.25f),
+            (sweep % 1f) to HikariPrimary,
+            1f to HikariPrimary.copy(alpha = 0.25f),
+        )
+    } else {
+        Brush.linearGradient(
+            listOf(Color.White.copy(alpha = 0.10f), Color.White.copy(alpha = 0.05f)),
+        )
+    }
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier
             .fillMaxWidth()
+            .graphicsLayer {
+                val s = 1f + 0.015f * focusT
+                scaleX = s
+                scaleY = s
+            }
             .onFocusChanged { if (it.isFocused) onFocus() },
         interactionSource = interaction,
         singleLine = true,
@@ -1089,14 +1118,14 @@ private fun MusicSearchField(
                     .fillMaxWidth()
                     .height(50.dp)
                     .clip(RoundedCornerShape(999.dp))
-                    .background(HikariCardBg)
-                    .border(1.dp, borderColor, RoundedCornerShape(999.dp))
+                    .background(HikariCardBg.copy(alpha = 0.92f))
+                    .border(if (focused) 1.5.dp else 1.dp, borderBrush, RoundedCornerShape(999.dp))
                     .padding(horizontal = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     Icons.Default.Search, null,
-                    tint = if (focused) HikariPrimary else HikariTextMuted,
+                    tint = androidx.compose.ui.graphics.lerp(HikariTextMuted, HikariPrimary, focusT),
                     modifier = Modifier.size(20.dp),
                 )
                 Spacer(Modifier.width(10.dp))

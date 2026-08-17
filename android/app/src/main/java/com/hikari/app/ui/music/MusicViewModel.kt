@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.db.LocalMusicDownloadEntity
 import com.hikari.app.data.net.ConnectivityObserver
+import com.hikari.app.data.prefs.ProfileStore
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.download.LocalMusicDownloadManager
 import com.hikari.app.domain.model.ArtistPage
@@ -48,11 +49,16 @@ class MusicViewModel @Inject constructor(
     private val repo: MusicRepository,
     private val downloads: LocalMusicDownloadManager,
     private val settings: SettingsStore,
+    profile: ProfileStore,
     connectivity: ConnectivityObserver,
     val player: MusicPlayerController,
 ) : ViewModel() {
 
     val isOnline: StateFlow<Boolean> = connectivity.isOnline
+
+    /** Profilbild der App — derselbe Avatar wie auf der Profil-Seite. */
+    val avatarPath: StateFlow<String?> = profile.avatarPath
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val instrumentalOnly: StateFlow<Boolean> = settings.instrumentalOnly
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
@@ -70,7 +76,7 @@ class MusicViewModel @Inject constructor(
     var searchGroups by mutableStateOf<List<ChapterGroup>>(emptyList())
         private set
 
-    // --- Smart-Search (nur Musik-Modus) ---
+    // --- Smart-Search (alle Modi) ---
 
     /** true, solange das Suchfeld aktiv ist und noch nicht abgeschickt wurde. */
     var searchActive by mutableStateOf(false)
@@ -207,15 +213,15 @@ class MusicViewModel @Inject constructor(
                 if (online && empty && !discoverLoading) loadDiscover()
             }
         }
-        // Vorschläge zur Eingabe mit kurzer Verzögerung nachladen — nur im
-        // Musik-Modus und nur, solange das Suchfeld aktiv ist. Das Repo
-        // mutiert den Query nicht, es komplettiert bloß.
+        // Vorschläge zur Eingabe mit kurzer Verzögerung nachladen — in allen
+        // Modi, solange das Suchfeld aktiv ist. Das Repo mutiert den Query
+        // nicht, es komplettiert bloß.
         viewModelScope.launch {
             snapshotFlow { searchQuery }
                 .debounce(250)
                 .distinctUntilChanged()
                 .collectLatest { q ->
-                    suggestions = if (searchMode == MusicSearchMode.MUSIC && searchActive && q.trim().length >= 2) {
+                    suggestions = if (searchActive && q.trim().length >= 2) {
                         repo.getSuggestions(q)
                     } else {
                         emptyList()
@@ -265,20 +271,20 @@ class MusicViewModel @Inject constructor(
         searchJob = viewModelScope.launch {
             searchLoading = true
             searchAttempted = true
+            // Smart-Search in allen Modi: Verlauf mitschreiben, Volltext über
+            // alle Kategorien (bei Hörbuch/Podcast: Inhalte, Kanäle, Playlists).
+            resetSmartSearch()
+            repo.recordSearch(q)
+            val full = repo.searchFullMusic(q, searchMode)
+            fullResults = full
             if (searchMode == MusicSearchMode.MUSIC) {
-                // Smart-Search: Verlauf mitschreiben, Volltext über alle Kategorien.
-                resetSmartSearch()
-                repo.recordSearch(q)
-                val full = repo.searchFullMusic(q)
-                fullResults = full
                 // searchResults bleibt der Play-Kontext der Song-Zeilen.
                 searchResults = full?.songs ?: emptyList()
                 searchGroups = emptyList()
             } else {
-                val results = repo.searchMusic(q, searchMode)
                 // Kapitel und Folgen desselben Kanals gehören in eine Gruppe —
                 // einzeln gelistet wäre ein Hörbuch Dutzende lose Zeilen.
-                val (groups, singles) = repo.groupIntoShows(results)
+                val (groups, singles) = repo.groupIntoShows(full?.songs ?: emptyList())
                 searchGroups = groups
                 searchResults = singles
             }
@@ -286,14 +292,14 @@ class MusicViewModel @Inject constructor(
         }
     }
 
-    /** Fokus aufs Suchfeld aktiviert die Smart-Search (nur Musik-Modus). */
+    /** Fokus aufs Suchfeld aktiviert die Smart-Search — in allen Modi. */
     fun onSearchFocus() {
-        if (searchMode == MusicSearchMode.MUSIC) searchActive = true
+        searchActive = true
     }
 
-    /** Tippen im Suchfeld aktiviert die Smart-Search (nur Musik-Modus). */
+    /** Tippen im Suchfeld aktiviert die Smart-Search — in allen Modi. */
     fun onSearchQueryChange(query: String) {
-        if (searchMode == MusicSearchMode.MUSIC && query.isNotEmpty()) searchActive = true
+        if (query.isNotEmpty()) searchActive = true
     }
 
     /** Wechselt den Ergebnisfilter und lädt dessen Treffer bei Bedarf nach. */
@@ -301,6 +307,9 @@ class MusicViewModel @Inject constructor(
         if (filter == activeFilter) return
         activeFilter = filter
         if (filter == MusicSearchFilter.ALLE) return
+        // Außerhalb des Musik-Modus filtern die Chips die schon geladene
+        // Vollsuche clientseitig — die typed-Endpunkte sind musikspezifisch.
+        if (searchMode != MusicSearchMode.MUSIC) return
         val q = searchQuery.trim()
         // Lazy laden: dieselbe Query wird pro Filter nur einmal geholt.
         if (q.isEmpty() || typedQueries[filter] == q) return
@@ -399,8 +408,8 @@ class MusicViewModel @Inject constructor(
     fun selectSearchMode(mode: MusicSearchMode) {
         if (mode == searchMode) return
         searchMode = mode
-        // Weg vom Musik-Modus: Smart-Search-Zustand mit zurücksetzen.
-        if (mode != MusicSearchMode.MUSIC) resetSmartSearch()
+        // Anderer Modus = andere Treffer: Smart-Search-Zustand zurücksetzen.
+        resetSmartSearch()
         discoverSections = emptyList()
         homeSections = emptyList()
         resetDiscoverScroll()

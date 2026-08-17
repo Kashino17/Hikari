@@ -13,6 +13,14 @@ data class MusicTrackDto(
     val durationSeconds: Int = 0,
     val uploaderUrl: String? = null,
     val views: Long? = null,
+    /** Alle beteiligten Artists (Kollaborationen) — uploader bleibt der Anzeige-String. */
+    val artists: List<SongArtistDto> = emptyList(),
+)
+
+@Serializable
+data class SongArtistDto(
+    val name: String,
+    val channelId: String? = null,
 )
 
 @Serializable
