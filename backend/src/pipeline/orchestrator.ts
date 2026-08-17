@@ -5,7 +5,6 @@ import { getActivePromptForChannel, getFilterForChannel } from "../scorer/filter
 import type { FilterConfig } from "../scorer/filter.js";
 import type { ScoredVideo, Scorer } from "../scorer/types.js";
 import type { SponsorSegment } from "../sponsorblock/client.js";
-import type { DownloadResult } from "../download/worker.js";
 import { enqueue } from "../clipper/queue.js";
 import { recalculateChannelScore } from "../discovery/discovery-repo.js";
 
@@ -74,7 +73,15 @@ export interface ProcessNewVideoDeps {
   fetchTranscript: (url: string) => Promise<string | null>;
   fetchSponsorSegments: (videoId: string) => Promise<SponsorSegment[] | null>;
   scorer: Scorer;
-  download: (videoId: string) => Promise<DownloadResult>;
+  /** Clipper-Maschinerie (clip_status + Queue) — Default aus seit Etappe 2. */
+  clipperEnabled?: boolean | undefined;
+  /** Karten-Teaser für Langvideos — best-effort, darf fehlen und darf werfen. */
+  summarize?: ((title: string, transcript: string) => Promise<string | null>) | undefined;
+}
+
+/** Native Shorts: Hochkant und maximal 3 Minuten (YouTube-Shorts-Limit). */
+function classifyFormat(meta: VideoMetadata): "short" | "long" {
+  return meta.aspectRatio === "9:16" && meta.durationSeconds <= 180 ? "short" : "long";
 }
 
 export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> {
@@ -87,6 +94,8 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
 
   if (meta.isLive) return;
 
+  const format = classifyFormat(meta);
+
   // Per-channel curation: resolve this channel's own filter (or the global
   // fallback) once and use it for duration gating, prompt, and thresholds.
   const filter = getFilterForChannel(db, channelId);
@@ -97,9 +106,12 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
     .prepare("SELECT auto_approve FROM channels WHERE id = ?")
     .get(channelId) as { auto_approve: number } | undefined;
   if ((channelRow?.auto_approve ?? 0) === 1) {
+    // Der Dauer-Range-Filter ist ein Langform-Kriterium — native Shorts sind
+    // per Definition kurz und würden sonst pauschal durchfallen.
     const inRange =
-      meta.durationSeconds >= filter.minDurationSec &&
-      meta.durationSeconds <= filter.maxDurationSec;
+      format === "short" ||
+      (meta.durationSeconds >= filter.minDurationSec &&
+        meta.durationSeconds <= filter.maxDurationSec);
     const now = Date.now();
 
     if (!inRange) {
@@ -108,7 +120,7 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
         `outside ${Math.round(filter.minDurationSec / 60)}–` +
         `${Math.round(filter.maxDurationSec / 60)}min range`;
       db.transaction(() => {
-        insertVideo(db, meta, null, channelId);
+        insertVideo(db, meta, null, channelId, format, null);
         insertScore(db, videoId, autoRejectScore(reasoning), "rejected", now);
       })();
       return;
@@ -118,14 +130,16 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
       meta.captionsUrl ? deps.fetchTranscript(meta.captionsUrl) : Promise.resolve(null),
       deps.fetchSponsorSegments(videoId),
     ]);
-    const dl = await deps.download(videoId);
+    const summary = await buildSummary(deps, format, meta.title, transcript);
     db.transaction(() => {
-      insertVideo(db, meta, transcript, channelId);
+      insertVideo(db, meta, transcript, channelId, format, summary);
       insertScore(db, videoId, autoApproveScore(), "approved", now);
       insertSponsors(db, videoId, sponsors);
-      insertDownload(db, videoId, dl, now);
-      db.prepare("UPDATE videos SET clip_status='pending' WHERE id=?").run(videoId);
-      enqueue(db, videoId);
+      insertFeedItem(db, videoId, now);
+      if (deps.clipperEnabled) {
+        db.prepare("UPDATE videos SET clip_status='pending' WHERE id=?").run(videoId);
+        enqueue(db, videoId);
+      }
     })();
     refreshChannelMatch(db, channelId);
     return;
@@ -148,22 +162,43 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
   const now = Date.now();
 
   if (decision === "approved") {
-    const dl = await deps.download(videoId);
+    const summary = await buildSummary(deps, format, meta.title, transcript);
     db.transaction(() => {
-      insertVideo(db, meta, transcript, channelId);
+      insertVideo(db, meta, transcript, channelId, format, summary);
       insertScore(db, videoId, scored, decision, now);
       insertSponsors(db, videoId, sponsors);
-      insertDownload(db, videoId, dl, now);
-      db.prepare("UPDATE videos SET clip_status='pending' WHERE id=?").run(videoId);
-      enqueue(db, videoId);
+      insertFeedItem(db, videoId, now);
+      if (deps.clipperEnabled) {
+        db.prepare("UPDATE videos SET clip_status='pending' WHERE id=?").run(videoId);
+        enqueue(db, videoId);
+      }
     })();
   } else {
     db.transaction(() => {
-      insertVideo(db, meta, transcript, channelId);
+      insertVideo(db, meta, transcript, channelId, format, null);
       insertScore(db, videoId, scored, decision, now);
     })();
   }
   refreshChannelMatch(db, channelId);
+}
+
+/**
+ * Karten-Teaser für Langvideos — läuft VOR der Transaktion (LLM-Call gehört
+ * nicht in eine SQLite-Transaktion) und ist best-effort: jeder Fehler wird zu
+ * null, der Approve läuft ungebremst weiter.
+ */
+async function buildSummary(
+  deps: ProcessNewVideoDeps,
+  format: "short" | "long",
+  title: string,
+  transcript: string | null,
+): Promise<string | null> {
+  if (format !== "long" || !transcript || !deps.summarize) return null;
+  try {
+    return (await deps.summarize(title, transcript)) ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function insertVideo(
@@ -171,12 +206,15 @@ function insertVideo(
   m: VideoMetadata,
   transcript: string | null,
   channelId: string,
+  format: "short" | "long",
+  summary: string | null,
 ): void {
   db.prepare(
     `INSERT OR IGNORE INTO videos
      (id, channel_id, title, description, published_at, duration_seconds,
-      aspect_ratio, default_language, thumbnail_url, transcript, discovered_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      aspect_ratio, default_language, thumbnail_url, transcript, discovered_at,
+      format, source, summary)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     m.id,
     channelId,
@@ -189,7 +227,17 @@ function insertVideo(
     m.thumbnailUrl,
     transcript,
     Date.now(),
+    format,
+    "subscription",
+    summary,
   );
+}
+
+/** Approve macht das Video sichtbar: eine feed_items-Row IST der Feed-Eintrag. */
+function insertFeedItem(db: Database.Database, videoId: string, now: number): void {
+  db.prepare(
+    "INSERT OR IGNORE INTO feed_items (video_id, added_to_feed_at, is_pre_clipper) VALUES (?, ?, 1)",
+  ).run(videoId, now);
 }
 
 function insertScore(
@@ -238,14 +286,3 @@ function insertSponsors(
   }
 }
 
-function insertDownload(
-  db: Database.Database,
-  videoId: string,
-  dl: DownloadResult,
-  now: number,
-): void {
-  db.prepare(
-    `INSERT OR IGNORE INTO downloaded_videos (video_id, file_path, file_size_bytes, downloaded_at)
-     VALUES (?, ?, ?, ?)`,
-  ).run(videoId, dl.filePath, dl.fileSizeBytes, now);
-}

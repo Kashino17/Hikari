@@ -10,13 +10,16 @@ import { processNewVideo } from "../pipeline/orchestrator.js";
 import { fetchVideoMetadata } from "../ingest/metadata.js";
 import { fetchTranscript } from "../ingest/transcript.js";
 import { fetchSponsorSegments } from "../sponsorblock/client.js";
-import { downloadVideo } from "../download/worker.js";
 import type { Scorer } from "../scorer/types.js";
 
 export interface ChannelsDeps {
   db: Database.Database;
   scorer?: Scorer;
   videoDir?: string;
+  /** Clipper-Maschinerie im Ingest — Default aus seit Etappe 2. */
+  clipperEnabled?: boolean;
+  /** Karten-Teaser für Langvideos — best-effort, darf fehlen. */
+  summarize?: (title: string, transcript: string) => Promise<string | null>;
 }
 
 export async function registerChannelsRoutes(
@@ -209,7 +212,8 @@ export async function registerChannelsRoutes(
             fetchTranscript,
             fetchSponsorSegments,
             scorer: deps.scorer!,
-            download: (id) => downloadVideo({ videoId: id, outDir: deps.videoDir! }),
+            clipperEnabled: deps.clipperEnabled,
+            summarize: deps.summarize,
           });
         } catch (err) {
           app.log.warn(

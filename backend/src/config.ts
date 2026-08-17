@@ -90,7 +90,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       model: env.LMSTUDIO_MODEL ?? "qwen3-27b",
     },
     clipper: {
-      enabled: env.CLIPPER_ENABLED !== "false",
+      // Seit Etappe 2 (native Shorts im Feed) ist der Clipper Opt-in.
+      enabled: env.CLIPPER_ENABLED === "true",
       provider: (env.CLIPPER_PROVIDER as "lmstudio" | "ollama") ?? "lmstudio",
       baseUrl: env.CLIPPER_BASE_URL ?? "http://localhost:1234",
       model: env.CLIPPER_MODEL ?? "qwen3.6-35b-a3b",

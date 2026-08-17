@@ -22,13 +22,13 @@ import { registerMangaRoutes } from "./api/manga.js";
 import { registerMusicRoutes } from "./api/music.js";
 import { itChannelShorts } from "./api/music-innertube.js";
 import { registerNewsRoutes } from "./api/news.js";
+import { summarizeVideoTranscript } from "./clipper/context-summarizer.js";
 import { registerStreamRoutes } from "./api/stream.js";
 import { registerClipperStatusRoutes } from "./api/clipper-status.js";
 import { registerVideoFullRoute } from "./api/video-full.js";
 import { loadConfig } from "./config.js";
 import { openDatabase } from "./db/connection.js";
 import { runCleanup } from "./download/cleanup.js";
-import { downloadVideo } from "./download/worker.js";
 import { fetchVideoMetadata } from "./ingest/metadata.js";
 import { fetchTranscript } from "./ingest/transcript.js";
 import { fetchChannelFeedConditional } from "./monitor/rss-poller.js";
@@ -119,7 +119,18 @@ await app.register(fastifyStatic, {
 const mockupsDir = new URL("../mockups", import.meta.url).pathname;
 await app.register(fastifyStatic, { root: mockupsDir, prefix: "/mockups/", decorateReply: false });
 await app.register(fastifyMultipart, { limits: { fileSize: 10 * 1024 * 1024 } });
-await registerChannelsRoutes(app, { db, scorer, videoDir: cfg.videoDir });
+const summarizeForFeed = (title: string, transcript: string) =>
+  summarizeVideoTranscript(title, transcript, {
+    baseUrl: cfg.clipper.baseUrl,
+    model: cfg.clipper.model,
+  });
+await registerChannelsRoutes(app, {
+  db,
+  scorer,
+  videoDir: cfg.videoDir,
+  clipperEnabled: cfg.clipper.enabled,
+  summarize: summarizeForFeed,
+});
 await registerFeedRoutes(app, { db, dailyBudget: cfg.dailyBudget });
 await registerFilterRoutes(app, { db });
 await registerDiscoverySettingsRoutes(app, { db });
@@ -242,7 +253,8 @@ async function drainIngestQueue(): Promise<void> {
           fetchTranscript,
           fetchSponsorSegments,
           scorer,
-          download: (id) => downloadVideo({ videoId: id, outDir: cfg.videoDir }),
+          clipperEnabled: cfg.clipper.enabled,
+          summarize: summarizeForFeed,
         });
         completeIngest(db, job.video_id);
       } catch (err) {
