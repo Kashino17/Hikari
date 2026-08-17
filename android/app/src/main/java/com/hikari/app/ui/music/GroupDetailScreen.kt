@@ -1,7 +1,6 @@
 package com.hikari.app.ui.music
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,8 +18,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.OfflinePin
 import androidx.compose.material3.Icon
@@ -43,10 +40,10 @@ import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 
 /**
- * Kapitel eines Hörbuchs bzw. Folgen einer Podcast-Show. Wie der Mix lädt die
- * Seite ihre Songs über die ursprüngliche Suche neu, weil sie ihr eigenes
- * ViewModel bekommt. Zufallswiedergabe fehlt bewusst: Kapitel haben eine
- * Reihenfolge.
+ * Kapitel eines Hörbuchs bzw. Folgen einer Podcast-Show — im selben
+ * Spotify-Look wie die Kanal-Seiten: großer Hero mit Titel im Bild, runder
+ * Play-Knopf, alles in EINER durchscrollenden Liste (nichts klebt oben fest).
+ * Zufallswiedergabe fehlt bewusst: Kapitel haben eine Reihenfolge.
  */
 @Composable
 fun GroupDetailScreen(
@@ -68,110 +65,113 @@ fun GroupDetailScreen(
 
     LaunchedEffect(query, mode) { viewModel.loadGroup(query, title, mode) }
 
-    Column(Modifier.fillMaxSize().background(HikariBg)) {
-        Box {
-            MuHeroHeader(
-                imageUrl = songs.firstOrNull()?.thumbnailUrl,
-                title = title,
-                subtitle = when {
-                    songs.isEmpty() -> null
-                    songs.size == 1 -> "1 $unitLabel"
-                    else -> "${songs.size} $unitLabel"
-                },
-                fallbackIcon = Icons.Default.MusicNote,
-                height = 220.dp,
-            )
-            MuIconButton(
-                Icons.AutoMirrored.Filled.ArrowBack,
-                "Zurück",
-                modifier = Modifier
-                    .statusBarsPadding()
-                    .padding(6.dp)
-                    .background(Color.Black.copy(alpha = 0.40f), CircleShape),
-                tint = HikariText,
-            ) { onBack() }
-        }
-
-        Column(Modifier.padding(horizontal = 16.dp)) {
-            Spacer(Modifier.height(10.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    if (allDownloaded) Icons.Outlined.OfflinePin else Icons.Outlined.CloudDownload,
-                    null,
-                    tint = if (allDownloaded) HikariPrimary else HikariTextFaint,
-                    modifier = Modifier.size(14.dp),
-                )
-                Spacer(Modifier.width(5.dp))
-                Text(
-                    when {
-                        viewModel.groupLoading && songs.isEmpty() -> "wird geladen"
-                        songs.isEmpty() -> "nicht gefunden"
-                        allDownloaded -> "komplett offline verfügbar"
-                        downloadedCount > 0 -> "$downloadedCount von ${songs.size} offline"
-                        else -> "noch nichts offline"
-                    },
-                    fontSize = 12.sp,
-                    color = HikariTextMuted,
-                )
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                MuPrimaryButton("Abspielen", Icons.Default.PlayArrow, Modifier.weight(1f)) {
-                    songs.firstOrNull()?.let { viewModel.play(it, songs); onOpenNowPlaying() }
-                }
-            }
-
-            if (songs.isNotEmpty()) {
-                Spacer(Modifier.height(10.dp))
-                val saved = viewModel.playlists.any { it.playlist.name.equals(title, ignoreCase = true) }
-                val downloading = songs.any { progressMap.containsKey(it.videoId) }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    CollectionSaveMenu(
-                        saved = saved,
-                        allOffline = allDownloaded,
-                        downloading = downloading,
-                        downloadedCount = downloadedCount,
-                        totalCount = songs.size,
-                        onSave = { viewModel.saveRemotePlaylist(title, songs) },
-                        onSaveAndDownload = { viewModel.saveRemotePlaylist(title, songs, thenDownload = true) },
-                        onCancelDownloads = { viewModel.cancelAllDownloads() },
+    Box(Modifier.fillMaxSize().background(HikariBg)) {
+        Column(Modifier.fillMaxSize()) {
+            Box(Modifier.weight(1f)) {
+                when {
+                    viewModel.groupLoading && songs.isEmpty() -> CenteredLoader()
+                    songs.isEmpty() -> EmptyHint(
+                        Icons.Outlined.CloudDownload,
+                        "Diese Gruppe ist gerade nicht erreichbar — später nochmal versuchen.",
                     )
-                }
-            }
+                    else -> LazyColumn(
+                        Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 12.dp),
+                    ) {
+                        item(key = "hero") {
+                            CollectionHero(
+                                imageUrl = songs.firstOrNull()?.thumbnailUrl,
+                                title = title,
+                                subtitle = if (songs.size == 1) "1 $unitLabel" else "${songs.size} $unitLabel",
+                                height = 280.dp,
+                            )
+                        }
 
-            Spacer(Modifier.height(8.dp))
-        }
+                        // Aktionszeile: Speichern-Menü links, runder Play rechts —
+                        // dazwischen der dezente Offline-Status.
+                        item(key = "actions") {
+                            Column(Modifier.padding(horizontal = 16.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        if (allDownloaded) Icons.Outlined.OfflinePin else Icons.Outlined.CloudDownload,
+                                        null,
+                                        tint = if (allDownloaded) HikariPrimary else HikariTextFaint,
+                                        modifier = Modifier.size(14.dp),
+                                    )
+                                    Spacer(Modifier.width(5.dp))
+                                    Text(
+                                        when {
+                                            allDownloaded -> "komplett offline verfügbar"
+                                            downloadedCount > 0 -> "$downloadedCount von ${songs.size} offline"
+                                            else -> "noch nichts offline"
+                                        },
+                                        fontSize = 12.sp,
+                                        color = HikariTextMuted,
+                                    )
+                                }
+                                Spacer(Modifier.height(10.dp))
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    val saved = viewModel.playlists.any {
+                                        it.playlist.name.equals(title, ignoreCase = true)
+                                    }
+                                    val downloading = songs.any { progressMap.containsKey(it.videoId) }
+                                    CollectionSaveMenu(
+                                        saved = saved,
+                                        allOffline = allDownloaded,
+                                        downloading = downloading,
+                                        downloadedCount = downloadedCount,
+                                        totalCount = songs.size,
+                                        onSave = { viewModel.saveRemotePlaylist(title, songs) },
+                                        onSaveAndDownload = {
+                                            viewModel.saveRemotePlaylist(title, songs, thenDownload = true)
+                                        },
+                                        onCancelDownloads = { viewModel.cancelAllDownloads() },
+                                    )
+                                    Spacer(Modifier.weight(1f))
+                                    PlayRoundButton {
+                                        songs.firstOrNull()?.let {
+                                            viewModel.play(it, songs)
+                                            onOpenNowPlaying()
+                                        }
+                                    }
+                                }
+                                Spacer(Modifier.height(6.dp))
+                            }
+                        }
 
-        Box(Modifier.weight(1f)) {
-            when {
-                viewModel.groupLoading && songs.isEmpty() -> CenteredLoader()
-                songs.isEmpty() -> EmptyHint(
-                    Icons.Outlined.CloudDownload,
-                    "Diese Gruppe ist gerade nicht erreichbar — später nochmal versuchen.",
-                )
-                else -> LazyColumn(
-                    Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 12.dp),
-                ) {
-                    items(songs, key = { it.videoId }) { song ->
-                        SongRow(
-                            song,
-                            viewModel,
-                            songs,
-                            isCurrent = currentSong?.videoId == song.videoId,
-                            isDownloaded = song.videoId in downloadedIds,
-                            progress = progressMap[song.videoId],
-                            online = online,
-                        )
+                        items(songs, key = { it.videoId }) { song ->
+                            SongRow(
+                                song,
+                                viewModel,
+                                songs,
+                                isCurrent = currentSong?.videoId == song.videoId,
+                                isDownloaded = song.videoId in downloadedIds,
+                                progress = progressMap[song.videoId],
+                                online = online,
+                            )
+                        }
                     }
                 }
             }
+
+            if (currentSong != null) {
+                MiniPlayerBar(controller = viewModel.player, onOpen = onOpenNowPlaying)
+            }
         }
 
-        if (currentSong != null) {
-            MiniPlayerBar(controller = viewModel.player, onOpen = onOpenNowPlaying)
-        }
+        // Schwebender Zurück-Chip — Overlay, kein Header-Balken.
+        MuIconButton(
+            Icons.AutoMirrored.Filled.ArrowBack,
+            "Zurück",
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .statusBarsPadding()
+                .padding(6.dp)
+                .background(Color.Black.copy(alpha = 0.40f), CircleShape),
+            tint = HikariText,
+        ) { onBack() }
     }
 }

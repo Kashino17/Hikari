@@ -1,10 +1,8 @@
 package com.hikari.app.ui.music
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -33,12 +31,16 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.CloudDownload
+import androidx.compose.material.icons.outlined.LocalPolice
+import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.Podcasts
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -55,10 +57,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -156,25 +158,16 @@ fun MusicScreen(
 }
 
 /**
- * Kopfzeile des Musik-Bereichs: Titel mit dezentem Amber-Verlauf, rechts der
- * Zugang zur eigenen Bibliothek — mit demselben Profilbild wie im App-Profil.
+ * Kopfzeile des Musik-Bereichs: ruhiger Titel ohne Effekte, rechts der Zugang
+ * zur eigenen Bibliothek — mit demselben Profilbild wie im App-Profil.
  */
 @Composable
 private fun MusicTopBar(avatarPath: String?, onOpenProfile: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().padding(start = 20.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
+        Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            "Musik",
-            fontWeight = FontWeight.Black,
-            fontSize = 27.sp,
-            style = TextStyle(
-                brush = Brush.horizontalGradient(
-                    listOf(HikariText, HikariPrimary.copy(alpha = 0.85f)),
-                ),
-            ),
-        )
+        Text("Musik", fontWeight = FontWeight.Black, fontSize = 26.sp, color = HikariText)
         Spacer(Modifier.weight(1f))
         MusicAvatarChip(avatarPath = avatarPath, onClick = onOpenProfile)
     }
@@ -193,13 +186,7 @@ private fun MusicAvatarChip(avatarPath: String?, size: Dp = 38.dp, onClick: () -
             .size(size)
             .clip(CircleShape)
             .background(HikariCardBg)
-            .border(
-                1.5.dp,
-                Brush.sweepGradient(
-                    listOf(HikariPrimary, HikariPrimary.copy(alpha = 0.25f), HikariPrimary),
-                ),
-                CircleShape,
-            )
+            .border(1.5.dp, HikariPrimary.copy(alpha = 0.55f), CircleShape)
             .muPressable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -220,25 +207,26 @@ private fun MusicAvatarChip(avatarPath: String?, size: Dp = 38.dp, onClick: () -
     }
 }
 
-/** Ein Modus-Eintrag des Auswahl-Sheets. */
+/** Ein Modus-Eintrag des Auswahl-Sheets — Material-Icon statt Emoji. */
 private data class ModeEntry(
     val mode: MusicSearchMode,
-    val emoji: String,
+    val icon: ImageVector,
     val title: String,
     val desc: String,
 )
 
 private val MODE_ENTRIES = listOf(
-    ModeEntry(MusicSearchMode.MUSIC, "🎵", "Musik", "Songs, Artists, Alben und Playlists"),
-    ModeEntry(MusicSearchMode.AUDIOBOOK, "📖", "Hörbücher", "Ganze Bücher und Kapitel zum Zuhören"),
-    ModeEntry(MusicSearchMode.PODCAST, "🎙️", "Podcasts", "Shows und Folgen aller Themen"),
-    ModeEntry(MusicSearchMode.TRUECRIME, "🕵️", "True Crime", "Echte Kriminalfälle als Audio"),
+    ModeEntry(MusicSearchMode.MUSIC, Icons.Default.MusicNote, "Musik", "Songs, Artists, Alben und Playlists"),
+    ModeEntry(MusicSearchMode.AUDIOBOOK, Icons.Outlined.MenuBook, "Hörbücher", "Ganze Bücher und Kapitel zum Zuhören"),
+    ModeEntry(MusicSearchMode.PODCAST, Icons.Outlined.Podcasts, "Podcasts", "Shows und Folgen aller Themen"),
+    ModeEntry(MusicSearchMode.TRUECRIME, Icons.Outlined.LocalPolice, "True Crime", "Echte Kriminalfälle als Audio"),
 )
 
 /**
- * Modus-Sheet hinter dem Tune-Icon: wählt zwischen Musik, Hörbüchern,
- * Podcasts und True Crime; im Musik-Modus wohnt hier auch der
- * "Ohne Gesang"-Schalter.
+ * Modus-Sheet hinter dem Tune-Icon in der Suchleiste: wählt zwischen Musik,
+ * Hörbüchern, Podcasts und True Crime; im Musik-Modus wohnt hier auch der
+ * "Ohne Gesang"-Schalter. Zurückhaltend: die aktive Zeile trägt nur einen
+ * feinen Amber-Border, keine Farbfläche.
  */
 @Composable
 private fun ModeSheet(viewModel: MusicViewModel, onClose: () -> Unit) {
@@ -251,7 +239,6 @@ private fun ModeSheet(viewModel: MusicViewModel, onClose: () -> Unit) {
                     .fillMaxWidth()
                     .padding(vertical = 3.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(if (active) HikariPrimary.copy(alpha = 0.12f) else Color.Transparent)
                     .border(
                         1.dp,
                         if (active) HikariPrimary.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.05f),
@@ -264,7 +251,16 @@ private fun ModeSheet(viewModel: MusicViewModel, onClose: () -> Unit) {
                     .padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(entry.emoji, fontSize = 22.sp)
+                Box(
+                    Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.05f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        entry.icon, null,
+                        tint = if (active) HikariPrimary else HikariTextMuted,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(
@@ -276,7 +272,7 @@ private fun ModeSheet(viewModel: MusicViewModel, onClose: () -> Unit) {
                     Text(entry.desc, fontSize = 12.sp, color = HikariTextMuted)
                 }
                 if (active) {
-                    Text("✓", fontSize = 16.sp, color = HikariPrimary, fontWeight = FontWeight.Black)
+                    Icon(Icons.Default.Check, null, tint = HikariPrimary, modifier = Modifier.size(18.dp))
                 }
             }
         }
@@ -287,48 +283,6 @@ private fun ModeSheet(viewModel: MusicViewModel, onClose: () -> Unit) {
                 onToggle = { viewModel.toggleInstrumental() },
             )
             Spacer(Modifier.height(4.dp))
-        }
-    }
-}
-
-/**
- * Minimalistisches Tune-Icon neben der Suchleiste — öffnet das Modus-Sheet.
- * Läuft gerade ein anderer Modus als Musik (oder der Instrumental-Filter),
- * zeigt ein Amber-Punkt den aktiven Eingriff an.
- */
-@Composable
-private fun ModeButton(mode: MusicSearchMode, instrumental: Boolean, onClick: () -> Unit) {
-    val filtered = mode != MusicSearchMode.MUSIC || instrumental
-    Box {
-        Box(
-            Modifier
-                .size(50.dp)
-                .clip(CircleShape)
-                .background(if (filtered) HikariPrimary.copy(alpha = 0.14f) else HikariCardBg)
-                .border(
-                    1.dp,
-                    if (filtered) HikariPrimary.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.08f),
-                    CircleShape,
-                )
-                .muPressable(onClick = onClick),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                Icons.Default.Tune, "Modus wählen",
-                tint = if (filtered) HikariPrimary else HikariTextMuted,
-                modifier = Modifier.size(22.dp),
-            )
-        }
-        if (filtered) {
-            Box(
-                Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(3.dp)
-                    .size(9.dp)
-                    .clip(CircleShape)
-                    .background(HikariPrimary)
-                    .border(1.5.dp, HikariBg, CircleShape),
-            )
         }
     }
 }
@@ -371,36 +325,34 @@ private fun DiscoverTab(
         contentPadding = PaddingValues(bottom = 12.dp),
     ) {
         item(key = "search") {
-            // Suchleiste + Modus-Icon in einer Zeile — die Modus-Chips und der
-            // Gesang-Schalter wohnen jetzt im Sheet hinter dem Icon.
-            Row(
-                Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                MusicSearchField(
-                    value = viewModel.searchQuery,
-                    placeholder = when (searchMode) {
-                        MusicSearchMode.MUSIC -> "Songs, Artists, Alben suchen…"
-                        MusicSearchMode.AUDIOBOOK -> "Hörbücher suchen…"
-                        MusicSearchMode.PODCAST -> "Podcasts suchen…"
-                        MusicSearchMode.TRUECRIME -> "Fälle, Shows suchen…"
-                    },
-                    onValueChange = {
-                        viewModel.searchQuery = it
-                        viewModel.onSearchQueryChange(it)
-                    },
-                    onFocus = { viewModel.onSearchFocus() },
-                    onClear = { viewModel.clearSearch() },
-                    onSearch = { viewModel.search(viewModel.searchQuery) },
-                    modifier = Modifier.weight(1f),
-                )
-                Spacer(Modifier.width(10.dp))
-                ModeButton(
-                    mode = searchMode,
-                    instrumental = musicMode && instrumental,
-                    onClick = onOpenModeSheet,
-                )
-            }
+            // Die Suchleiste ist das Hero-Element: großzügiger Freiraum oben
+            // und unten, Modus-Zugang wohnt IN der Pille. Sobald Verlauf,
+            // Vorschläge oder Filter andocken, flacht ihre Unterkante ab und
+            // der Abstand nach unten entfällt — Bar und Panel wirken als Einheit.
+            val docked = searching ||
+                (viewModel.searchActive &&
+                    (viewModel.searchQuery.isNotBlank() || searchHistory.isNotEmpty()))
+            val bottomGap by animateDpAsState(if (docked) 0.dp else 16.dp, tween(200), label = "searchGap")
+            MusicSearchField(
+                value = viewModel.searchQuery,
+                placeholder = when (searchMode) {
+                    MusicSearchMode.MUSIC -> "Songs, Artists, Alben suchen…"
+                    MusicSearchMode.AUDIOBOOK -> "Hörbücher suchen…"
+                    MusicSearchMode.PODCAST -> "Podcasts suchen…"
+                    MusicSearchMode.TRUECRIME -> "Fälle, Shows suchen…"
+                },
+                filtered = !musicMode || instrumental,
+                docked = docked,
+                onValueChange = {
+                    viewModel.searchQuery = it
+                    viewModel.onSearchQueryChange(it)
+                },
+                onFocus = { viewModel.onSearchFocus() },
+                onClear = { viewModel.clearSearch() },
+                onSearch = { viewModel.search(viewModel.searchQuery) },
+                onModeClick = onOpenModeSheet,
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = bottomGap),
+            )
         }
 
         // Aktives Suchfeld: Verlauf (alle Modi) und Genres (nur Musik) bzw.
@@ -666,14 +618,13 @@ private fun LazyListScope.smartSearchResults(
     val groupUnit = if (mode == MusicSearchMode.AUDIOBOOK) "Kapitel" else "Folgen"
 
     stickyHeader(key = "filter-chips") {
-        // Eigener Grund hinter den Chips, damit beim Scrollen nichts durchscheint.
-        Box(Modifier.fillMaxWidth().background(HikariBg)) {
+        // Eigener Grund hinter dem Panel, damit beim Scrollen nichts durchscheint.
+        Box(Modifier.fillMaxWidth().background(HikariBg).padding(bottom = 10.dp)) {
             ResultFilterChips(
                 selected = viewModel.activeFilter,
                 entries = filterEntries,
                 labelFor = labelFor,
                 onSelect = { viewModel.selectFilter(it) },
-                modifier = Modifier.padding(vertical = 8.dp),
             )
         }
     }
@@ -1060,51 +1011,42 @@ private fun TileBound(
 }
 
 /**
- * Suchfeld als runde Glas-Pille: bei Fokus wächst sie minimal, die Border wird
- * zum wandernden Amber-Verlauf und das Such-Icon färbt sich mit — das
- * Herzstück des Entdecken-Kopfes. Feste Höhe, damit der Clear-Button beim
- * Tippen keinen Layout-Sprung verursacht.
+ * Suchfeld als ruhige Glas-Pille — das Hero-Element des Entdecken-Kopfes.
+ * Der Modus-Zugang (Tune) sitzt als Trailing-Element IN der Pille hinter
+ * einem Hairline-Trenner; bei Fokus wechselt die Border in 200 ms von
+ * neutral zu dünnem Amber, ohne Effekt-Spektakel. Docken Panels unter der
+ * Bar an, flacht die Unterkante ab und beide wirken als eine Einheit.
  */
 @Composable
 private fun MusicSearchField(
     value: String,
     placeholder: String,
+    filtered: Boolean,
+    docked: Boolean,
     onValueChange: (String) -> Unit,
     onFocus: () -> Unit,
     onClear: () -> Unit,
     onSearch: () -> Unit,
+    onModeClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
-    val focusT by animateFloatAsState(if (focused) 1f else 0f, tween(220), label = "searchFocus")
-    // Wandernder Glanzpunkt auf der Border, nur solange das Feld fokussiert ist.
-    val sweep by rememberInfiniteTransition(label = "searchSweep").animateFloat(
-        0f, 1f,
-        infiniteRepeatable(tween(2600, easing = LinearEasing)),
-        label = "searchSweepT",
+    val focusT by animateFloatAsState(if (focused) 1f else 0f, tween(200), label = "searchFocus")
+    val borderColor by animateColorAsState(
+        if (focused) HikariPrimary.copy(alpha = 0.65f) else Color.White.copy(alpha = 0.08f),
+        tween(200), label = "searchBorder",
     )
-    val borderBrush = if (focused) {
-        Brush.sweepGradient(
-            0f to HikariPrimary.copy(alpha = 0.25f),
-            (sweep % 1f) to HikariPrimary,
-            1f to HikariPrimary.copy(alpha = 0.25f),
-        )
-    } else {
-        Brush.linearGradient(
-            listOf(Color.White.copy(alpha = 0.10f), Color.White.copy(alpha = 0.05f)),
-        )
-    }
+    val bottomRadius by animateDpAsState(if (docked) 0.dp else 27.dp, tween(200), label = "searchShape")
+    val shape = RoundedCornerShape(
+        topStart = 27.dp, topEnd = 27.dp,
+        bottomStart = bottomRadius, bottomEnd = bottomRadius,
+    )
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier
             .fillMaxWidth()
-            .graphicsLayer {
-                val s = 1f + 0.015f * focusT
-                scaleX = s
-                scaleY = s
-            }
             .onFocusChanged { if (it.isFocused) onFocus() },
         interactionSource = interaction,
         singleLine = true,
@@ -1116,16 +1058,16 @@ private fun MusicSearchField(
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(999.dp))
+                    .height(54.dp)
+                    .clip(shape)
                     .background(HikariCardBg.copy(alpha = 0.92f))
-                    .border(if (focused) 1.5.dp else 1.dp, borderBrush, RoundedCornerShape(999.dp))
-                    .padding(horizontal = 14.dp),
+                    .border(if (focused) 1.5.dp else 1.dp, borderColor, shape)
+                    .padding(start = 16.dp, end = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     Icons.Default.Search, null,
-                    tint = androidx.compose.ui.graphics.lerp(HikariTextMuted, HikariPrimary, focusT),
+                    tint = lerp(HikariTextMuted, HikariPrimary, focusT),
                     modifier = Modifier.size(20.dp),
                 )
                 Spacer(Modifier.width(10.dp))
@@ -1136,12 +1078,38 @@ private fun MusicSearchField(
                     inner()
                 }
                 if (value.isNotEmpty()) {
-                    Spacer(Modifier.width(6.dp))
                     MuIconButton(
                         Icons.Default.Close, "Löschen",
                         iconSize = 16.dp, touchSize = 36.dp,
                         onClick = onClear,
                     )
+                }
+                Spacer(Modifier.width(4.dp))
+                // Modus-Zugang IN der Leiste: Hairline-Trenner + Tune-Icon;
+                // aktiver Filter meldet sich nur über einen 6-dp-Amber-Punkt.
+                Box(Modifier.width(1.dp).height(20.dp).background(Color.White.copy(alpha = 0.08f)))
+                Box(
+                    Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .muPressable(onClick = onModeClick),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Default.Tune, "Modus wählen",
+                        tint = if (filtered) HikariPrimary else HikariTextMuted,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    if (filtered) {
+                        Box(
+                            Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(top = 8.dp, end = 8.dp)
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(HikariPrimary),
+                        )
+                    }
                 }
             }
         },

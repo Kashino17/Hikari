@@ -10,8 +10,11 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
@@ -102,6 +105,17 @@ class MusicPlayerController @Inject constructor(
     private val _videoMode = MutableStateFlow(false)
     val videoMode: StateFlow<Boolean> = _videoMode.asStateFlow()
 
+    /** true, sobald das erste Video-Frame auf der Surface steht — bis dahin
+     *  zeigt die UI das Thumbnail als Poster statt einer schwarzen Fläche. */
+    private val _videoFrameReady = MutableStateFlow(false)
+    val videoFrameReady: StateFlow<Boolean> = _videoFrameReady.asStateFlow()
+
+    /** Die UI hat eine (neue) TextureView angebunden — bis zum nächsten
+     *  gerenderten Frame wieder das Poster zeigen statt Schwarz. */
+    fun notifyVideoSurfaceChanged() {
+        _videoFrameReady.value = false
+    }
+
     private var queueIndex = -1
 
     private val listener = object : Player.Listener {
@@ -127,6 +141,10 @@ class MusicPlayerController @Inject constructor(
             // ihren State selbst.
             if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) onAutoAdvanced()
         }
+
+        override fun onRenderedFirstFrame() {
+            _videoFrameReady.value = true
+        }
     }
 
     /** After a load/playback failure move on, but never loop forever. */
@@ -135,26 +153,42 @@ class MusicPlayerController @Inject constructor(
     /** Wiederholversuche mit frischer Stream-URL für den aktuellen Song. */
     private var streamRetries = 0
 
+    /** Wiederholversuche des Video-Streams, bevor auf Audio zurückgefallen wird. */
+    private var videoRetries = 0
+
     /**
      * Stirbt die Wiedergabe mitten im Song (typisch: gecachte googlevideo-URL
      * wird vom CDN abgelehnt), bekommt derselbe Song bis zu zwei neue Chancen
      * mit frisch extrahierter URL — erst dann wird weitergeschaltet. Ein
      * sofortiges Überspringen wäre für den Hörer unverständlich.
+     *
+     * Wichtig: die Fehlermeldung IMMER erst nach loadAndPlay setzen —
+     * loadAndPlay räumt _error zu Beginn ab, eine vorher gesetzte Meldung
+     * wäre nie sichtbar (genau so blieb der stille Video-Fallback unbemerkt).
      */
     private fun retryOrSkip() {
         val current = _currentSong.value
-        // Zickt der Video-Stream, zuerst zurück zu Audio statt zu skippen —
-        // die Tonspur ist wichtiger als das Bild.
+        // Zickt der Video-Stream: erst ein zweiter Versuch (die Erstauflösung
+        // am Proxy kann träge sein), dann zurück zu Audio statt zu skippen —
+        // die Tonspur ist wichtiger als das Bild. Position bleibt erhalten.
         if (current != null && _videoMode.value) {
-            _videoMode.value = false
-            _error.value = "Video-Wiedergabe gestört — weiter mit Audio"
-            loadAndPlay(current, forceRefresh = true)
+            val resumeAt = player?.currentPosition?.coerceAtLeast(0) ?: 0
+            if (videoRetries < 1) {
+                videoRetries++
+                loadAndPlay(current, forceRefresh = true, startPositionMs = resumeAt)
+                _error.value = "Video stockt — neuer Versuch"
+            } else {
+                videoRetries = 0
+                _videoMode.value = false
+                loadAndPlay(current, forceRefresh = true, startPositionMs = resumeAt)
+                _error.value = "Video-Wiedergabe gestört — weiter mit Audio"
+            }
             return
         }
         if (current != null && streamRetries < 2) {
             streamRetries++
-            _error.value = "Verbindung unterbrochen — lade neu"
             loadAndPlay(current, forceRefresh = true)
+            _error.value = "Verbindung unterbrochen — lade neu"
             return
         }
         streamRetries = 0
@@ -164,7 +198,18 @@ class MusicPlayerController @Inject constructor(
 
     private fun ensurePlayer(): ExoPlayer {
         player?.let { return it }
+        // Großzügige HTTP-Timeouts: der Backend-Proxy löst Audio/Video erst
+        // beim ersten Byte über yt-dlp auf — das dauert bei kalten Videos
+        // deutlich länger als ExoPlayers 8-s-Defaults. Mit den Defaults flog
+        // der Video-Modus regelmäßig per Timeout in den Audio-Fallback.
+        val httpFactory = DefaultHttpDataSource.Factory()
+            .setConnectTimeoutMs(15_000)
+            .setReadTimeoutMs(30_000)
+            .setAllowCrossProtocolRedirects(true)
         val built = ExoPlayer.Builder(context)
+            .setMediaSourceFactory(
+                DefaultMediaSourceFactory(DefaultDataSource.Factory(context, httpFactory)),
+            )
             .setAudioAttributes(
                 AudioAttributes.Builder()
                     .setUsage(C.USAGE_MEDIA)
@@ -232,6 +277,7 @@ class MusicPlayerController @Inject constructor(
         autoplayJob?.cancel() // eigene Auswahl schlägt laufenden Nachschub
         consecutiveFailures = 0
         streamRetries = 0
+        videoRetries = 0
         earlyExtendDone = false
         resumeAfterExtend = false
         plannedNextIndex = null
@@ -302,6 +348,7 @@ class MusicPlayerController @Inject constructor(
      */
     fun toggleVideoMode() {
         val song = _currentSong.value ?: return
+        videoRetries = 0
         if (_videoMode.value) {
             _videoMode.value = false
             scope.launch {
@@ -347,6 +394,7 @@ class MusicPlayerController @Inject constructor(
         prefetchedFor = null
         prefetchedUrl = null
         _isBuffering.value = true
+        _videoFrameReady.value = false
         p.setMediaItem(mediaItemFor(song, uri), pos)
         p.prepare()
         p.playWhenReady = wasPlaying
@@ -362,6 +410,8 @@ class MusicPlayerController @Inject constructor(
         earlyExtendDone = false
         resumeAfterExtend = false
         _videoMode.value = false
+        _videoFrameReady.value = false
+        videoRetries = 0
         player?.stop()
         player?.clearMediaItems()
         _currentSong.value = null
@@ -387,14 +437,15 @@ class MusicPlayerController @Inject constructor(
             )
             .build()
 
-    private fun loadAndPlay(song: MusicSong, forceRefresh: Boolean = false) {
+    private fun loadAndPlay(song: MusicSong, forceRefresh: Boolean = false, startPositionMs: Long = 0) {
         loadJob?.cancel()
         plannedNextIndex = null // Playlist wird ersetzt — etwaige Planung ist hinfällig
         _currentSong.value = song
-        _positionMs.value = 0
+        _positionMs.value = startPositionMs
         _durationMs.value = 0
         _error.value = null
         _isBuffering.value = true
+        _videoFrameReady.value = false
         scope.launch { repo.recordPlayed(song) }
         loadJob = scope.launch {
             // Video-Modus: der nächste Titel läuft direkt als Video weiter.
@@ -410,7 +461,7 @@ class MusicPlayerController @Inject constructor(
                     val p = ensurePlayer()
                     syncRepeatMode(p)
                     ensureSessionConnection()
-                    p.setMediaItem(mediaItemFor(song, videoUri))
+                    p.setMediaItem(mediaItemFor(song, videoUri), startPositionMs)
                     p.prepare()
                     p.play()
                     return@launch
@@ -449,7 +500,7 @@ class MusicPlayerController @Inject constructor(
             ensureSessionConnection()
             // setMediaItem ersetzt die komplette Playlist — ein zuvor
             // eingeplantes nächstes Item gehört damit der Vergangenheit an.
-            p.setMediaItem(mediaItemFor(song, uri))
+            p.setMediaItem(mediaItemFor(song, uri), startPositionMs)
             p.prepare()
             p.play()
             if (prefetchedFor == song.videoId) {
@@ -759,6 +810,7 @@ class MusicPlayerController @Inject constructor(
                         if (it.currentPosition > 15_000) {
                             streamRetries = 0
                             consecutiveFailures = 0
+                            videoRetries = 0
                         }
                     }
                 }

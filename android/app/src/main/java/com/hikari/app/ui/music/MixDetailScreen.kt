@@ -64,85 +64,8 @@ fun MixDetailScreen(
     LaunchedEffect(query, mode) { viewModel.loadMix(query, mode) }
 
     Column(Modifier.fillMaxSize().background(HikariBg)) {
-        // Hero mit Cover des ersten Songs + Zurück-Chip darüber
-        Box {
-            MuHeroHeader(
-                imageUrl = songs.firstOrNull()?.thumbnailUrl,
-                title = title,
-                subtitle = when {
-                    songs.isEmpty() -> null
-                    songs.size == 1 -> "1 Song"
-                    else -> "${songs.size} Songs"
-                },
-                fallbackIcon = Icons.Default.MusicNote,
-                height = 220.dp,
-            )
-            MuIconButton(
-                Icons.AutoMirrored.Filled.ArrowBack,
-                "Zurück",
-                modifier = Modifier
-                    .statusBarsPadding()
-                    .padding(6.dp)
-                    .background(Color.Black.copy(alpha = 0.40f), CircleShape),
-                tint = HikariText,
-            ) { onBack() }
-        }
-
-        Column(Modifier.padding(horizontal = 16.dp)) {
-            Spacer(Modifier.height(10.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    if (allDownloaded) Icons.Outlined.OfflinePin else Icons.Outlined.CloudDownload,
-                    null,
-                    tint = if (allDownloaded) HikariPrimary else HikariTextFaint,
-                    modifier = Modifier.size(14.dp),
-                )
-                Spacer(Modifier.width(5.dp))
-                Text(
-                    when {
-                        songs.isEmpty() -> "wird geladen"
-                        allDownloaded -> "komplett offline verfügbar"
-                        downloadedCount > 0 -> "$downloadedCount von ${songs.size} offline"
-                        else -> "noch nichts offline"
-                    },
-                    fontSize = 12.sp,
-                    color = HikariTextMuted,
-                )
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                MuPrimaryButton("Abspielen", Icons.Default.PlayArrow, Modifier.weight(1f)) {
-                    songs.firstOrNull()?.let { viewModel.play(it, songs); onOpenNowPlaying() }
-                }
-                MuGhostButton("Zufällig", Icons.Default.Shuffle, Modifier.weight(1f)) {
-                    val shuffled = songs.shuffled()
-                    shuffled.firstOrNull()?.let { viewModel.play(it, shuffled); onOpenNowPlaying() }
-                }
-            }
-
-            if (songs.isNotEmpty()) {
-                Spacer(Modifier.height(10.dp))
-                val saved = viewModel.playlists.any { it.playlist.name.equals(title, ignoreCase = true) }
-                val downloading = songs.any { progressMap.containsKey(it.videoId) }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    CollectionSaveMenu(
-                        saved = saved,
-                        allOffline = allDownloaded,
-                        downloading = downloading,
-                        downloadedCount = downloadedCount,
-                        totalCount = songs.size,
-                        onSave = { viewModel.saveRemotePlaylist(title, songs) },
-                        onSaveAndDownload = { viewModel.saveRemotePlaylist(title, songs, thenDownload = true) },
-                        onCancelDownloads = { viewModel.cancelAllDownloads() },
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-        }
-
+        // Eine durchscrollende Liste: Hero und Aktionen scrollen mit weg,
+        // nichts klebt oben fest — nur der Zurück-Chip schwebt als Overlay.
         Box(Modifier.weight(1f)) {
             when {
                 viewModel.mixLoading && songs.isEmpty() -> CenteredLoader()
@@ -154,6 +77,67 @@ fun MixDetailScreen(
                     Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 12.dp),
                 ) {
+                    item {
+                        CollectionHero(
+                            imageUrl = songs.firstOrNull()?.thumbnailUrl,
+                            title = title,
+                            subtitle = if (songs.size == 1) "1 Song" else "${songs.size} Songs",
+                        )
+                    }
+                    item {
+                        Column(Modifier.padding(horizontal = 16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    if (allDownloaded) Icons.Outlined.OfflinePin else Icons.Outlined.CloudDownload,
+                                    null,
+                                    tint = if (allDownloaded) HikariPrimary else HikariTextFaint,
+                                    modifier = Modifier.size(14.dp),
+                                )
+                                Spacer(Modifier.width(5.dp))
+                                Text(
+                                    when {
+                                        allDownloaded -> "komplett offline verfügbar"
+                                        downloadedCount > 0 -> "$downloadedCount von ${songs.size} offline"
+                                        else -> "noch nichts offline"
+                                    },
+                                    fontSize = 12.sp,
+                                    color = HikariTextMuted,
+                                )
+                            }
+                            Spacer(Modifier.height(12.dp))
+                            val saved = viewModel.playlists.any { it.playlist.name.equals(title, ignoreCase = true) }
+                            val downloading = songs.any { progressMap.containsKey(it.videoId) }
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                CollectionSaveMenu(
+                                    saved = saved,
+                                    allOffline = allDownloaded,
+                                    downloading = downloading,
+                                    downloadedCount = downloadedCount,
+                                    totalCount = songs.size,
+                                    onSave = { viewModel.saveRemotePlaylist(title, songs) },
+                                    onSaveAndDownload = { viewModel.saveRemotePlaylist(title, songs, thenDownload = true) },
+                                    onCancelDownloads = { viewModel.cancelAllDownloads() },
+                                )
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    GhostIconChip(Icons.Default.Shuffle, "Zufällig") {
+                                        val shuffled = songs.shuffled()
+                                        shuffled.firstOrNull()?.let { viewModel.play(it, shuffled); onOpenNowPlaying() }
+                                    }
+                                    PlayRoundButton {
+                                        songs.firstOrNull()?.let { viewModel.play(it, songs); onOpenNowPlaying() }
+                                    }
+                                }
+                            }
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
                     items(songs, key = { it.videoId }) { song ->
                         SongRow(
                             song,
@@ -167,6 +151,16 @@ fun MixDetailScreen(
                     }
                 }
             }
+
+            MuIconButton(
+                Icons.AutoMirrored.Filled.ArrowBack,
+                "Zurück",
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(6.dp)
+                    .background(Color.Black.copy(alpha = 0.40f), CircleShape),
+                tint = HikariText,
+            ) { onBack() }
         }
 
         if (currentSong != null) {

@@ -1,8 +1,15 @@
 package com.hikari.app.ui.music
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -26,6 +33,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +63,38 @@ import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 
 /**
+ * Panel-Container für alles, was unter der Suchleiste andockt (Verlauf,
+ * Vorschläge, Ergebnisfilter): gleiche Breite wie die Pille, oben eckig
+ * anschließend, unten gerundet — fährt sanft aus der Bar aus. Der Grundton
+ * ist derselbe wie der der Pille, damit beide als eine Einheit wirken.
+ */
+@Composable
+internal fun SearchDockPanel(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val visible = remember { MutableTransitionState(false).apply { targetState = true } }
+    val shape = RoundedCornerShape(
+        topStart = 0.dp, topEnd = 0.dp,
+        bottomStart = 16.dp, bottomEnd = 16.dp,
+    )
+    AnimatedVisibility(
+        visibleState = visible,
+        enter = expandVertically(tween(200)) + fadeIn(tween(200)),
+    ) {
+        Column(
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .clip(shape)
+                .background(HikariCardBg.copy(alpha = 0.92f))
+                .border(1.dp, Color.White.copy(alpha = 0.06f), shape),
+            content = content,
+        )
+    }
+}
+
+/**
  * Gespeicherte Suchanfragen unter dem leeren Suchfeld: Antippen sucht erneut,
  * das X entfernt den Eintrag, der Footer räumt den ganzen Verlauf auf.
  */
@@ -64,23 +105,19 @@ fun SearchHistorySection(
     onRemove: (String) -> Unit,
     onClearAll: () -> Unit,
 ) {
-    Column(Modifier.fillMaxWidth().padding(top = 6.dp)) {
+    SearchDockPanel {
+        Spacer(Modifier.height(6.dp))
         history.forEach { query ->
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 1.dp)
+                    .padding(horizontal = 6.dp, vertical = 1.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .muPressable { onSelect(query) }
-                    .padding(start = 8.dp, top = 3.dp, bottom = 3.dp),
+                    .padding(start = 10.dp, top = 3.dp, bottom = 3.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(
-                    Modifier.size(32.dp).clip(CircleShape).background(HikariCardBg),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(Icons.Default.History, null, tint = HikariTextMuted, modifier = Modifier.size(16.dp))
-                }
+                Icon(Icons.Default.History, null, tint = HikariTextMuted, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(12.dp))
                 Text(
                     query,
@@ -104,13 +141,11 @@ fun SearchHistorySection(
             fontWeight = FontWeight.Medium,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
-                .padding(top = 4.dp)
                 .clip(RoundedCornerShape(999.dp))
-                .background(HikariCardBg)
-                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(999.dp))
                 .muPressable(onClick = onClearAll)
-                .padding(horizontal = 14.dp, vertical = 8.dp),
+                .padding(horizontal = 14.dp, vertical = 10.dp),
         )
+        Spacer(Modifier.height(2.dp))
     }
 }
 
@@ -124,11 +159,13 @@ fun SuggestionsList(
     suggestions: List<String>,
     onSelect: (String) -> Unit,
 ) {
-    Column(Modifier.fillMaxWidth().padding(top = 6.dp)) {
+    SearchDockPanel {
+        Spacer(Modifier.height(4.dp))
         SuggestionRow(text = query, typed = query, onClick = { onSelect(query) })
         suggestions.filter { !it.equals(query, ignoreCase = true) }.forEach { suggestion ->
             SuggestionRow(text = suggestion, typed = query, onClick = { onSelect(suggestion) })
         }
+        Spacer(Modifier.height(4.dp))
     }
 }
 
@@ -137,10 +174,10 @@ private fun SuggestionRow(text: String, typed: String, onClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 1.dp)
+            .padding(horizontal = 6.dp, vertical = 1.dp)
             .clip(RoundedCornerShape(12.dp))
             .muPressable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 11.dp),
+            .padding(horizontal = 10.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(Icons.Default.Search, null, tint = HikariTextMuted, modifier = Modifier.size(18.dp))
@@ -261,13 +298,43 @@ fun ResultFilterChips(
     entries: List<MusicSearchFilter> = MusicSearchFilter.entries.toList(),
     labelFor: (MusicSearchFilter) -> String = { it.label },
 ) {
-    LazyRow(
-        modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        items(entries, key = { it.name }) { filter ->
-            MuChip(labelFor(filter), active = filter == selected, onClick = { onSelect(filter) })
+    // Zurückhaltende Text-Tabs statt gefüllter Chips: Amber nur als Textfarbe
+    // und schmaler Unterstrich des aktiven Filters.
+    SearchDockPanel(modifier) {
+        LazyRow(
+            Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            items(entries, key = { it.name }) { filter ->
+                val active = filter == selected
+                val labelColor by animateColorAsState(
+                    if (active) HikariPrimary else HikariTextMuted,
+                    tween(180), label = "filterTab",
+                )
+                Column(
+                    Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .muPressable { onSelect(filter) }
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        labelFor(filter),
+                        fontSize = 13.sp,
+                        color = labelColor,
+                        fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Box(
+                        Modifier
+                            .width(16.dp)
+                            .height(3.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(if (active) HikariPrimary else Color.Transparent),
+                    )
+                }
+            }
         }
     }
 }
@@ -323,18 +390,8 @@ fun TopResultCard(result: MusicSearchResult, onClick: () -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.horizontalGradient(
-                    listOf(HikariPrimary.copy(alpha = 0.10f), HikariCardBg)
-                )
-            )
-            .border(
-                1.dp,
-                Brush.horizontalGradient(
-                    listOf(HikariPrimary.copy(alpha = 0.45f), Color.White.copy(alpha = 0.06f))
-                ),
-                RoundedCornerShape(16.dp),
-            )
+            .background(HikariCardBg)
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
             .muPressable(onClick = onClick)
             .padding(14.dp),
     ) {

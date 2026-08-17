@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
@@ -30,6 +31,9 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.OfflinePin
 import androidx.compose.material3.CircularProgressIndicator
@@ -46,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -59,9 +64,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.Dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.hikari.app.domain.model.MusicSong
+import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariCardBg
 import com.hikari.app.ui.theme.HikariPrimary
 import com.hikari.app.ui.theme.HikariSurfaceHigh
@@ -472,5 +479,103 @@ internal fun formatDurationUnits(seconds: Int): String {
         if (m > 0) "$h h $m m" else "$h h"
     } else {
         "$m m"
+    }
+}
+
+/**
+ * Großer Hero-Kopf für Kanal-, Artist- und Sammel-Seiten im Spotify-Stil:
+ * Bild läuft über den unteren Scrim direkt in den Seitenhintergrund aus,
+ * Name groß IM Bild statt darunter — der verifiziert-Haken sitzt dezent
+ * neben dem Namen statt in einer eigenen Zeile.
+ */
+@Composable
+internal fun CollectionHero(
+    imageUrl: String?,
+    title: String,
+    subtitle: String?,
+    height: Dp = 300.dp,
+    verified: Boolean = false,
+) {
+    Box(Modifier.fillMaxWidth().height(height)) {
+        if (!imageUrl.isNullOrEmpty()) {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+        } else {
+            Box(Modifier.fillMaxSize().background(HikariSurfaceHigh), contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.MusicNote, null, tint = HikariTextFaint, modifier = Modifier.size(72.dp))
+            }
+        }
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.verticalGradient(
+                    listOf(Color.Transparent, Color.Transparent, HikariBg.copy(alpha = 0.65f), HikariBg),
+                )
+            )
+        )
+        Column(Modifier.align(Alignment.BottomStart).padding(horizontal = 16.dp, vertical = 6.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    title,
+                    fontSize = 28.sp,
+                    color = HikariText,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                if (verified) {
+                    Spacer(Modifier.width(8.dp))
+                    Icon(Icons.Default.Verified, "Verifiziert", tint = HikariPrimary, modifier = Modifier.size(18.dp))
+                }
+            }
+            if (!subtitle.isNullOrEmpty()) {
+                Spacer(Modifier.height(2.dp))
+                Text(subtitle, fontSize = 13.sp, color = HikariTextMuted, maxLines = 1)
+            }
+        }
+    }
+}
+
+/** Runder Spotify-artiger Abspielen-Knopf — der eine Amber-Akzent der Seite. */
+@Composable
+internal fun PlayRoundButton(
+    size: Dp = 56.dp,
+    contentDesc: String = "Abspielen",
+    onClick: () -> Unit,
+) {
+    Box(
+        Modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(Brush.radialGradient(listOf(Color(0xFFFFD263), HikariPrimary)))
+            .muPressable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(Icons.Default.PlayArrow, contentDesc, tint = Color.Black, modifier = Modifier.size(30.dp))
+    }
+}
+
+/** Dezenter runder Geist-Chip (Zufällig etc.) neben dem Play-Knopf. */
+@Composable
+internal fun GhostIconChip(
+    icon: ImageVector,
+    contentDesc: String,
+    size: Dp = 48.dp,
+    onClick: () -> Unit,
+) {
+    Box(
+        Modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(HikariCardBg)
+            .border(1.dp, Color.White.copy(alpha = 0.10f), CircleShape)
+            .muPressable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, contentDesc, tint = HikariText, modifier = Modifier.size(22.dp))
     }
 }

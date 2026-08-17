@@ -27,11 +27,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Shuffle
-import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -128,65 +128,64 @@ fun ArtistScreen(
                         Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(bottom = 12.dp),
                     ) {
-                        // Hero: Künstlerfoto als großes Banner — bewusst ohne
-                        // Abo-/Aufruf-Zahlen, die tragen hier nichts bei.
+                        // Hero im Spotify-Stil: Name groß IM Bild, Verifiziert-
+                        // Haken dezent daneben — keine Abo-/Aufruf-Zahlen.
+                        // Scrollt komplett mit weg (nichts klebt oben fest).
                         item(key = "header") {
-                            MuHeroHeader(
+                            CollectionHero(
                                 imageUrl = artist?.avatarUrl,
                                 title = artist?.name ?: fallbackName,
                                 subtitle = null,
-                                fallbackIcon = Icons.Default.MusicNote,
-                                height = 260.dp,
+                                height = 300.dp,
+                                verified = artist?.verified == true,
                             )
                         }
 
-                        val verified = artist?.verified == true
                         val description = artist?.description.orEmpty()
-                        if (verified || description.isNotBlank()) {
+                        if (description.isNotBlank()) {
                             item(key = "about") {
-                                Column(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
-                                    if (verified) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                Icons.Default.Verified,
-                                                null,
-                                                tint = HikariPrimary,
-                                                modifier = Modifier.size(15.dp),
-                                            )
-                                            Spacer(Modifier.width(5.dp))
+                                // Aufklappbar statt hart abgeschnitten — der
+                                // volle Text ist sonst unerreichbar.
+                                Column(
+                                    Modifier
+                                        .padding(horizontal = 16.dp)
+                                        .animateContentSize()
+                                ) {
+                                    Text(
+                                        description,
+                                        fontSize = 13.sp,
+                                        color = HikariTextMuted,
+                                        lineHeight = 18.sp,
+                                        maxLines = if (aboutExpanded) Int.MAX_VALUE else 3,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    if (description.length > 120) {
+                                        val chevron by animateFloatAsState(
+                                            if (aboutExpanded) 180f else 0f,
+                                            tween(220),
+                                            label = "aboutChevron",
+                                        )
+                                        Row(
+                                            Modifier
+                                                .clip(RoundedCornerShape(999.dp))
+                                                .muPressable { aboutExpanded = !aboutExpanded }
+                                                .padding(vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
                                             Text(
-                                                "Verifizierter Künstler",
+                                                if (aboutExpanded) "Weniger anzeigen" else "Mehr anzeigen",
                                                 fontSize = 12.sp,
                                                 color = HikariPrimary,
                                                 fontWeight = FontWeight.Bold,
                                             )
-                                        }
-                                    }
-                                    if (description.isNotBlank()) {
-                                        Spacer(Modifier.height(6.dp))
-                                        // Aufklappbar statt hart abgeschnitten —
-                                        // der volle Text ist sonst unerreichbar.
-                                        Column(Modifier.animateContentSize()) {
-                                            Text(
-                                                description,
-                                                fontSize = 13.sp,
-                                                color = HikariTextMuted,
-                                                lineHeight = 18.sp,
-                                                maxLines = if (aboutExpanded) Int.MAX_VALUE else 3,
-                                                overflow = TextOverflow.Ellipsis,
+                                            Icon(
+                                                Icons.Default.ExpandMore,
+                                                null,
+                                                tint = HikariPrimary,
+                                                modifier = Modifier
+                                                    .size(16.dp)
+                                                    .graphicsLayer { rotationZ = chevron },
                                             )
-                                            if (description.length > 120) {
-                                                Text(
-                                                    if (aboutExpanded) "Weniger anzeigen" else "Mehr anzeigen",
-                                                    fontSize = 12.sp,
-                                                    color = HikariPrimary,
-                                                    fontWeight = FontWeight.Bold,
-                                                    modifier = Modifier
-                                                        .clip(RoundedCornerShape(999.dp))
-                                                        .muPressable { aboutExpanded = !aboutExpanded }
-                                                        .padding(vertical = 6.dp),
-                                                )
-                                            }
                                         }
                                     }
                                 }
@@ -199,35 +198,34 @@ fun ArtistScreen(
                         val isPlainChannel = page != null &&
                             page.albums.isEmpty() && page.singles.isEmpty() && page.related.isEmpty()
 
-                        // Abspielen/Zufällig starten die Top-Songs als Queue.
+                        // Aktionen im Spotify-Layout: rechtsbündig ein dezenter
+                        // Zufällig-Chip neben dem runden Amber-Play-Knopf.
                         if (topSongs.isNotEmpty()) {
                             item(key = "actions") {
                                 Row(
-                                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    MuPrimaryButton(
-                                        "Abspielen",
-                                        Icons.Default.PlayArrow,
-                                        Modifier.weight(1f),
-                                    ) { viewModel.play(topSongs.first(), topSongs) }
-                                    MuGhostButton(
-                                        "Zufällig",
-                                        Icons.Default.Shuffle,
-                                        Modifier.weight(1f),
-                                    ) {
+                                    Spacer(Modifier.weight(1f))
+                                    GhostIconChip(Icons.Default.Shuffle, "Zufällig") {
                                         val shuffled = topSongs.shuffled()
                                         viewModel.play(shuffled.first(), shuffled)
                                     }
+                                    Spacer(Modifier.width(12.dp))
+                                    PlayRoundButton { viewModel.play(topSongs.first(), topSongs) }
                                 }
                             }
-                            if (isPlainChannel && latest.isNotEmpty()) {
+                            if (isPlainChannel) {
                                 // Kanal-Ansicht: kompakte Top/Neuste-Auswahl statt
                                 // einer endlosen Liste — der Rest folgt in Sektionen.
-                                item(key = "channel-tabs") {
-                                    ChannelListTabs(channelTab) { channelTab = it }
+                                if (latest.isNotEmpty()) {
+                                    item(key = "channel-tabs") {
+                                        ChannelListTabs(channelTab) { channelTab = it }
+                                    }
+                                } else {
+                                    item(key = "top-header") { SectionHeader("Videos") }
                                 }
-                                val tabQueue = if (channelTab == 0) topSongs else latest
+                                val tabQueue = if (channelTab == 0 || latest.isEmpty()) topSongs else latest
                                 items(tabQueue.take(5), key = { "tab-${it.videoId}" }) { song ->
                                     SongRow(
                                         song,
@@ -241,9 +239,7 @@ fun ArtistScreen(
                                     )
                                 }
                             } else {
-                                item(key = "top-header") {
-                                    SectionHeader(if (isPlainChannel) "Videos" else "Top-Songs")
-                                }
+                                item(key = "top-header") { SectionHeader("Top-Songs") }
                                 items(topSongs, key = { "top-${it.videoId}" }) { song ->
                                     SongRow(
                                         song,
@@ -313,7 +309,7 @@ fun ArtistScreen(
 
                         // Kanal-Sektionen unter den Playlisten: die restlichen
                         // beliebten Videos und alles noch nicht Gehörte.
-                        if (isPlainChannel && latest.isNotEmpty()) {
+                        if (isPlainChannel) {
                             val popular = topSongs.drop(5).take(10)
                             if (popular.isNotEmpty()) {
                                 item(key = "popular-header") { SectionHeader("Beliebte Videos") }
@@ -405,29 +401,32 @@ fun ArtistScreen(
     }
 }
 
-/** Animierte Top/Neuste-Segmentpille der Kanal-Ansicht. */
+/** Prominente Top/Neuste-Segmentpille der Kanal-Ansicht — volle Breite. */
 @Composable
 private fun ChannelListTabs(selected: Int, onSelect: (Int) -> Unit) {
     val haptic = LocalHapticFeedback.current
     Row(
         Modifier
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .clip(RoundedCornerShape(999.dp))
             .background(HikariSurfaceHigh)
-            .padding(3.dp),
+            .padding(4.dp),
     ) {
         listOf("Top 5", "Neuste 5").forEachIndexed { i, label ->
             val active = i == selected
             val fill by animateFloatAsState(if (active) 1f else 0f, tween(180), label = "chTab$i")
             Box(
                 Modifier
+                    .weight(1f)
                     .clip(RoundedCornerShape(999.dp))
                     .background(HikariPrimary.copy(alpha = fill))
                     .clickable(remember { MutableInteractionSource() }, indication = null) {
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         onSelect(i)
                     }
-                    .padding(horizontal = 20.dp, vertical = 9.dp),
+                    .padding(vertical = 11.dp),
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     label,

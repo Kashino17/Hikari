@@ -975,9 +975,12 @@ export async function registerMusicRoutes(
         [
           "--no-playlist",
           "-f",
-          // muxed MP4 (Video+Audio in einer Datei), max 720p — ein einzelner
-          // Stream, den ExoPlayer ohne DASH-Manifest progressiv abspielen kann.
-          "best[height<=720][ext=mp4][vcodec!=none][acodec!=none]/best[height<=720][ext=mp4]/best[ext=mp4]/best",
+          // Muxed MP4 (Video+Audio in einer Datei), NUR progressives HTTPS:
+          // ohne [protocol=https] löst yt-dlp gern HLS-Manifeste (m3u8) auf,
+          // deren googlevideo-Segmente vom Handy aus nicht abspielbar sind —
+          // ExoPlayer zeigt dann nur das stehende Thumbnail. Format 18 ist
+          // YouTubes immer vorhandenes progressives 360p-MP4.
+          "best[height<=720][ext=mp4][vcodec!=none][acodec!=none][protocol=https]/18/best[ext=mp4][protocol=https]",
           "-g",
           `https://www.youtube.com/watch?v=${videoId}`,
         ],
@@ -985,6 +988,8 @@ export async function registerMusicRoutes(
       );
       const url = result.stdout.trim().split("\n")[0];
       if (!url?.startsWith("http")) return undefined;
+      // Sicherheitsnetz: Manifest-URLs (HLS/DASH) sind hier nie brauchbar.
+      if (url.includes(".m3u8") || url.includes("/manifest/")) return undefined;
       cachePut(videoStreamCache, videoId, url, now());
       return url;
     } catch {

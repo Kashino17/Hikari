@@ -200,6 +200,7 @@ fun NowPlayingScreen(
                     .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(20.dp)),
                 contentAlignment = Alignment.Center,
             ) {
+                val videoFrameReady by controller.videoFrameReady.collectAsState()
                 if (videoMode) {
                     // TextureView statt SurfaceView: respektiert das Compose-
                     // Clipping der runden Karte. Der Player rendert direkt hinein.
@@ -209,29 +210,38 @@ fun NowPlayingScreen(
                     DisposableEffect(Unit) {
                         val p = controller.playerForSession()
                         p.setVideoTextureView(textureView)
+                        // Frische Surface: bis zum ersten gerenderten Frame
+                        // wieder das Poster zeigen statt einer schwarzen Fläche.
+                        controller.notifyVideoSurfaceChanged()
                         onDispose { p.clearVideoTextureView(textureView) }
                     }
-                    if (isBuffering) {
-                        Box(
-                            Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.35f)),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            CircularProgressIndicator(
-                                color = HikariText,
-                                strokeWidth = 3.dp,
-                                modifier = Modifier.size(34.dp),
-                            )
-                        }
+                }
+                // Poster-Prinzip: das Thumbnail bleibt sichtbar, bis das erste
+                // Video-Frame wirklich steht — der Wechsel wirkt so nahtlos
+                // statt „lädt kurz und nichts passiert".
+                if (!videoMode || !videoFrameReady) {
+                    if (current.thumbnailUrl.isNotEmpty()) {
+                        AsyncImage(
+                            model = current.thumbnailUrl,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                        )
+                    } else {
+                        Icon(Icons.Default.MusicNote, null, tint = HikariTextFaint, modifier = Modifier.size(80.dp))
                     }
-                } else if (current.thumbnailUrl.isNotEmpty()) {
-                    AsyncImage(
-                        model = current.thumbnailUrl,
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                    )
-                } else {
-                    Icon(Icons.Default.MusicNote, null, tint = HikariTextFaint, modifier = Modifier.size(80.dp))
+                }
+                if (videoMode && (isBuffering || !videoFrameReady)) {
+                    Box(
+                        Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.35f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator(
+                            color = HikariText,
+                            strokeWidth = 3.dp,
+                            modifier = Modifier.size(34.dp),
+                        )
+                    }
                 }
             }
 
