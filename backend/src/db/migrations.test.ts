@@ -145,4 +145,29 @@ describe("clipper migrations", () => {
     insertClip.run("c-a", 0);
     expect(() => insertClip.run("c-b", 0)).toThrow(/UNIQUE/);
   });
+
+  it("videos hat format/source/summary und Bestand wird als short/long backfilled", () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    const cols = (db.prepare("PRAGMA table_info(videos)").all() as { name: string }[]).map(
+      (c) => c.name,
+    );
+    expect(cols).toEqual(expect.arrayContaining(["format", "source", "summary"]));
+
+    db.prepare("INSERT INTO channels (id,url,title,added_at) VALUES ('c1','x','c',0)").run();
+    db.prepare(`
+      INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, aspect_ratio, discovered_at)
+      VALUES ('v-short', 'c1', 't', 0, 45, '9:16', 0),
+             ('v-long',  'c1', 't', 0, 1200, '16:9', 0)
+    `).run();
+    db.prepare("UPDATE videos SET format = NULL, source = NULL").run();
+    applyMigrations(db); // idempotent — Backfill klassifiziert den Bestand
+    const rows = db
+      .prepare("SELECT id, format, source FROM videos ORDER BY id")
+      .all() as { id: string; format: string; source: string }[];
+    expect(rows).toEqual([
+      { id: "v-long", format: "long", source: "subscription" },
+      { id: "v-short", format: "short", source: "subscription" },
+    ]);
+  });
 });

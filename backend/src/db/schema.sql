@@ -38,7 +38,10 @@ CREATE TABLE IF NOT EXISTS videos (
   episode INTEGER,
   dub_language TEXT,
   sub_language TEXT,
-  is_movie INTEGER DEFAULT 0
+  is_movie INTEGER DEFAULT 0,
+  format TEXT,   -- 'short' | 'long'
+  source TEXT,   -- 'subscription' | 'probe' | 'topic' | 'backfill'
+  summary TEXT   -- KI-Kurzbeschreibung fuer Feed-Karten
 );
 
 CREATE TABLE IF NOT EXISTS scores (

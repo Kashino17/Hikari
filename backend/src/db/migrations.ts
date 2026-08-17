@@ -104,4 +104,17 @@ export function applyMigrations(db: Database.Database): void {
   // from the clip's Whisper-transcribed captions, not from the parent video
   // title. Displayed as a top overlay during the first ~6s of playback.
   addColumnIfMissing(db, "clips", "context", "TEXT");
+
+  // Etappe 2 (Feed-Streaming-Umbau): Format-/Quellen-/Zusammenfassungs-Spalten.
+  // aspect_ratio existiert auf Ur-DBs vor dem initialen Schema evtl. nicht —
+  // fuer den Format-Backfill unten absichern.
+  addColumnIfMissing(db, "videos", "aspect_ratio", "TEXT");
+  addColumnIfMissing(db, "videos", "format", "TEXT"); // 'short' | 'long'
+  addColumnIfMissing(db, "videos", "source", "TEXT"); // 'subscription' | 'probe' | 'topic' | 'backfill'
+  addColumnIfMissing(db, "videos", "summary", "TEXT"); // KI-Kurzbeschreibung fuer Feed-Karten
+  // Backfill: Bestandsvideos nach Heuristik klassifizieren (Hochkant + <=3 min = Short).
+  db.exec(`UPDATE videos SET format = CASE
+    WHEN aspect_ratio = '9:16' AND duration_seconds <= 180 THEN 'short' ELSE 'long' END
+    WHERE format IS NULL`);
+  db.exec("UPDATE videos SET source = 'subscription' WHERE source IS NULL");
 }
