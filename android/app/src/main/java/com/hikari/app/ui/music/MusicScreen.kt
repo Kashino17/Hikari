@@ -1,7 +1,13 @@
 package com.hikari.app.ui.music
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +25,9 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -31,17 +39,10 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.CloudDownload
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,6 +57,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -79,7 +84,6 @@ private const val TAB_PLAYLISTS = 1
 private const val TAB_DOWNLOADS = 2
 private const val TAB_FAVORITES = 3
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicScreen(
     onOpenNowPlaying: () -> Unit,
@@ -113,39 +117,35 @@ fun MusicScreen(
         Column(Modifier.fillMaxSize()) {
             Text(
                 "Musik",
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
+                fontWeight = FontWeight.Black,
+                fontSize = 26.sp,
                 color = HikariText,
-                modifier = Modifier.padding(start = 20.dp, top = 20.dp, bottom = 4.dp),
+                modifier = Modifier.padding(start = 20.dp, top = 20.dp, bottom = 6.dp),
             )
 
             if (!online) OfflineBanner()
 
-            ScrollableTabRow(
-                selectedTabIndex = tab,
-                containerColor = HikariBg,
-                contentColor = HikariPrimary,
-                edgePadding = 12.dp,
-                indicator = { },
-                divider = { },
+            // Tab-Leiste als Chip-Reihe mit Press-Feedback statt Material-TabRow.
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = tab == index,
-                        onClick = { tab = index },
-                        text = { Text(title, fontSize = 14.sp) },
-                        selectedContentColor = HikariPrimary,
-                        unselectedContentColor = HikariTextFaint,
-                    )
+                    MuChip(title, active = tab == index, onClick = { tab = index })
                 }
             }
 
             Box(Modifier.weight(1f)) {
-                when (tab) {
-                    TAB_DISCOVER -> DiscoverTab(viewModel, online, onOpenMix, onOpenGroup, onOpenArtist, onOpenCollection)
-                    TAB_PLAYLISTS -> PlaylistsTab(viewModel, onOpenPlaylist)
-                    TAB_DOWNLOADS -> DownloadsTab(viewModel)
-                    TAB_FAVORITES -> FavoritesTab(viewModel)
+                Crossfade(tab, animationSpec = tween(200), label = "musicTab") { t ->
+                    when (t) {
+                        TAB_DISCOVER -> DiscoverTab(viewModel, online, onOpenMix, onOpenGroup, onOpenArtist, onOpenCollection)
+                        TAB_PLAYLISTS -> PlaylistsTab(viewModel, onOpenPlaylist)
+                        TAB_DOWNLOADS -> DownloadsTab(viewModel)
+                        TAB_FAVORITES -> FavoritesTab(viewModel)
+                    }
                 }
             }
 
@@ -201,46 +201,22 @@ private fun DiscoverTab(
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 12.dp)) {
         item(key = "search") {
-            OutlinedTextField(
+            MusicSearchField(
                 value = viewModel.searchQuery,
+                placeholder = when (searchMode) {
+                    MusicSearchMode.MUSIC -> "Songs, Artists suchen…"
+                    MusicSearchMode.AUDIOBOOK -> "Hörbücher suchen…"
+                    MusicSearchMode.PODCAST -> "Podcasts suchen…"
+                    MusicSearchMode.TRUECRIME -> "Fälle, Shows suchen…"
+                },
                 onValueChange = {
                     viewModel.searchQuery = it
                     viewModel.onSearchQueryChange(it)
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 12.dp)
-                    .onFocusChanged { if (it.isFocused) viewModel.onSearchFocus() },
-                placeholder = {
-                    Text(
-                        when (searchMode) {
-                            MusicSearchMode.MUSIC -> "Songs, Artists suchen…"
-                            MusicSearchMode.AUDIOBOOK -> "Hörbücher suchen…"
-                            MusicSearchMode.PODCAST -> "Podcasts suchen…"
-                            MusicSearchMode.TRUECRIME -> "Fälle, Shows suchen…"
-                        },
-                        color = HikariTextFaint,
-                    )
-                },
-                leadingIcon = { Icon(Icons.Default.Search, null, tint = HikariTextMuted) },
-                trailingIcon = {
-                    if (viewModel.searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.clearSearch() }) {
-                            Icon(Icons.Default.Close, "Löschen", tint = HikariTextMuted)
-                        }
-                    }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(24.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = HikariPrimary,
-                    unfocusedBorderColor = HikariSurfaceHigh,
-                    focusedTextColor = HikariText,
-                    unfocusedTextColor = HikariText,
-                    cursorColor = HikariPrimary,
-                ),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { viewModel.search(viewModel.searchQuery) }),
+                onFocus = { viewModel.onSearchFocus() },
+                onClear = { viewModel.clearSearch() },
+                onSearch = { viewModel.search(viewModel.searchQuery) },
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp),
             )
         }
 
@@ -385,10 +361,8 @@ private fun DiscoverTab(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text("Musik-Server nicht erreichbar", color = HikariTextMuted, fontSize = 14.sp)
-                    Spacer(Modifier.height(12.dp))
-                    OutlinedButton(onClick = { viewModel.loadDiscover() }) {
-                        Text("Erneut versuchen", color = HikariPrimary)
-                    }
+                    Spacer(Modifier.height(14.dp))
+                    MuGhostButton("Erneut versuchen", onClick = { viewModel.loadDiscover() })
                 }
             }
             else -> discoverContent(
@@ -693,11 +667,7 @@ private fun PlaylistsTab(viewModel: MusicViewModel, onOpenPlaylist: (Int) -> Uni
                 color = HikariTextMuted,
                 modifier = Modifier.weight(1f),
             )
-            OutlinedButton(onClick = { showCreate = true }) {
-                Icon(Icons.Default.Add, null, tint = HikariPrimary, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Neu", color = HikariPrimary, fontSize = 13.sp)
-            }
+            MuChip("Neue Playlist", active = true, icon = Icons.Default.Add, onClick = { showCreate = true })
         }
 
         if (viewModel.playlists.isEmpty()) {
@@ -733,14 +703,22 @@ private fun PlaylistCard(entry: PlaylistWithSongs, onClick: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(HikariCardBg)
-            .clickable(onClick = onClick)
+            .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
+            .muPressable(onClick = onClick)
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(48.dp).clip(RoundedCornerShape(10.dp)).background(HikariSurfaceHigh),
+            Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(
+                    Brush.radialGradient(
+                        listOf(HikariPrimary.copy(alpha = 0.25f), HikariPrimary.copy(alpha = 0.08f))
+                    )
+                ),
             contentAlignment = Alignment.Center,
         ) {
             Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null, tint = HikariPrimary, modifier = Modifier.size(26.dp))
@@ -823,5 +801,75 @@ private fun FavoritesTab(viewModel: MusicViewModel) {
             )
         }
     }
+}
+
+/**
+ * Suchfeld als runde Pille mit animierter Amber-Border bei Fokus — ersetzt
+ * das Material-OutlinedTextField. Feste Höhe, damit der Clear-Button beim
+ * Tippen keinen Layout-Sprung verursacht.
+ */
+@Composable
+private fun MusicSearchField(
+    value: String,
+    placeholder: String,
+    onValueChange: (String) -> Unit,
+    onFocus: () -> Unit,
+    onClear: () -> Unit,
+    onSearch: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val focused by interaction.collectIsFocusedAsState()
+    val borderColor by animateColorAsState(
+        if (focused) HikariPrimary else Color.White.copy(alpha = 0.08f),
+        tween(180),
+        label = "searchBorder",
+    )
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier
+            .fillMaxWidth()
+            .onFocusChanged { if (it.isFocused) onFocus() },
+        interactionSource = interaction,
+        singleLine = true,
+        textStyle = TextStyle(color = HikariText, fontSize = 15.sp),
+        cursorBrush = SolidColor(HikariPrimary),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+        decorationBox = { inner ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(HikariCardBg)
+                    .border(1.dp, borderColor, RoundedCornerShape(999.dp))
+                    .padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Default.Search, null,
+                    tint = if (focused) HikariPrimary else HikariTextMuted,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(Modifier.width(10.dp))
+                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                    if (value.isEmpty()) {
+                        Text(placeholder, color = HikariTextFaint, fontSize = 15.sp, maxLines = 1)
+                    }
+                    inner()
+                }
+                if (value.isNotEmpty()) {
+                    Spacer(Modifier.width(6.dp))
+                    MuIconButton(
+                        Icons.Default.Close, "Löschen",
+                        iconSize = 16.dp, touchSize = 36.dp,
+                        onClick = onClear,
+                    )
+                }
+            }
+        },
+    )
 }
 

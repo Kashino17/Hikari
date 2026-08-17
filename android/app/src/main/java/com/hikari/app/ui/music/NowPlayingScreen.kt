@@ -1,7 +1,10 @@
 package com.hikari.app.ui.music
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,9 +17,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -29,11 +33,9 @@ import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.outlined.CloudDownload
+import androidx.compose.material.icons.outlined.OfflinePin
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,12 +44,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -55,12 +61,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.hikari.app.player.MusicPlayerController
-import com.hikari.app.ui.theme.HikariBg
-import com.hikari.app.ui.theme.HikariPrimary
+import com.hikari.app.ui.theme.HikariCardBg
 import com.hikari.app.ui.theme.HikariSurfaceHigh
 import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
+import kotlinx.coroutines.launch
 
 @Composable
 fun NowPlayingScreen(
@@ -87,160 +93,237 @@ fun NowPlayingScreen(
     val downloadProgress by viewModel.downloadProgress.collectAsState()
     val isDownloaded = current.videoId in downloadedIds
 
-    Column(
-        Modifier.fillMaxSize().background(HikariBg).statusBarsPadding(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.Default.KeyboardArrowDown, "Schließen", tint = HikariText, modifier = Modifier.size(30.dp))
+    // Swipe-down-to-close: der ganze Screen folgt dem Finger nach unten und
+    // schließt ab 30 % Höhe oder bei schnellem Wisch — wie bei den großen Playern.
+    val scope = rememberCoroutineScope()
+    val dragY = remember { Animatable(0f) }
+    var screenH by remember { mutableFloatStateOf(0f) }
+
+    Box(
+        Modifier
+            .fillMaxSize()
+            .onSizeChanged { screenH = it.height.toFloat() }
+            .graphicsLayer {
+                translationY = dragY.value
+                alpha = 1f - (dragY.value / screenH.coerceAtLeast(1f)) * 0.35f
             }
-            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+            .pointerInput(Unit) {
+                var lastDelta = 0f
+                detectVerticalDragGestures(
+                    onDragStart = { lastDelta = 0f },
+                    onVerticalDrag = { change, amount ->
+                        change.consume()
+                        lastDelta = amount
+                        val next = (dragY.value + amount).coerceAtLeast(0f)
+                        scope.launch { dragY.snapTo(next) }
+                    },
+                    onDragEnd = {
+                        if (dragY.value > screenH * 0.3f || lastDelta > 45f) {
+                            onBack()
+                        } else {
+                            scope.launch { dragY.animateTo(0f, spring(dampingRatio = 0.8f, stiffness = 420f)) }
+                        }
+                    },
+                    onDragCancel = {
+                        scope.launch { dragY.animateTo(0f, spring(dampingRatio = 0.8f, stiffness = 420f)) }
+                    },
+                )
+            },
+    ) {
+        // Ambient-Ebene: weichgezeichnetes Artwork + Scrim statt flachem Grund.
+        MuArtworkBackdrop(current.thumbnailUrl.ifEmpty { null })
+
+        Column(
+            Modifier.fillMaxSize().statusBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                MuIconButton(
+                    Icons.Default.KeyboardArrowDown, "Schließen",
+                    tint = HikariText, iconSize = 28.dp,
+                ) { onBack() }
                 Text(
                     if (isDownloaded) "Läuft gerade · offline" else "Läuft gerade",
                     fontSize = 13.sp,
                     color = HikariTextMuted,
                     textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f),
                 )
+                // Gleich breiter Platzhalter, damit der Titel mittig sitzt.
+                Spacer(Modifier.width(44.dp))
             }
-            DownloadStateButton(
-                isDownloaded = isDownloaded,
-                progress = downloadProgress[current.videoId],
-                onDownload = { viewModel.downloadSong(current) },
-                onDelete = { viewModel.deleteDownload(current.videoId) },
-            )
-            IconButton(onClick = { viewModel.addToPlaylistTarget = current }) {
-                Icon(Icons.Default.PlaylistAdd, "Zu Playlist hinzufügen", tint = HikariTextMuted)
-            }
-            IconButton(onClick = { viewModel.toggleFavorite(current) }) {
-                Icon(
-                    if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    "Favorit",
-                    tint = if (isFavorite) Color(0xFFFF5252) else HikariTextMuted,
-                )
-            }
-        }
 
-        // Aufbau wie bei den üblichen Playern: großes Cover im oberen Drittel,
-        // Titel direkt darunter, Fortschritt und Tasten am unteren Rand in
-        // Daumenreichweite. Der dehnbare Zwischenraum sitzt zwischen Titel
-        // und Slider — dort fällt er nicht als Loch auf.
-        Spacer(Modifier.height(16.dp))
+            // Aufbau wie bei den üblichen Playern: großes Cover im oberen Drittel,
+            // Titel direkt darunter, Fortschritt und Tasten am unteren Rand in
+            // Daumenreichweite. Der dehnbare Zwischenraum sitzt zwischen den
+            // Aktionen und dem Slider — dort fällt er nicht als Loch auf.
+            Spacer(Modifier.height(12.dp))
 
-        // Quellmaterial sind YouTube-Thumbnails (16:9) — ein quadratischer
-        // Zuschnitt würde die Seiten abstutzen, deshalb volle Breite in 16:9.
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .aspectRatio(16f / 9f)
-                .clip(RoundedCornerShape(16.dp))
-                .background(HikariSurfaceHigh),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (current.thumbnailUrl.isNotEmpty()) {
-                AsyncImage(
-                    model = current.thumbnailUrl,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
-            } else {
-                Icon(Icons.Default.MusicNote, null, tint = HikariTextFaint, modifier = Modifier.size(80.dp))
-            }
-        }
-
-        Spacer(Modifier.height(20.dp))
-
-        Text(
-            current.title,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = HikariText,
-            maxLines = 2,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 28.dp),
-        )
-        Spacer(Modifier.height(6.dp))
-        // Klick öffnet die Artist-Seite — nur wenn der Song eine Kanal-URL trägt.
-        val artistChannelId = current.uploaderUrl.substringAfterLast("/", "")
-        Text(
-            current.uploader,
-            fontSize = 14.sp,
-            color = HikariTextMuted,
-            maxLines = 1,
-            modifier = if (artistChannelId.isNotBlank()) {
-                Modifier.clickable { onOpenArtist(artistChannelId, current.uploader) }
-            } else {
-                Modifier
-            },
-        )
-
-        error?.let {
-            Spacer(Modifier.height(10.dp))
-            Text(it, fontSize = 12.sp, color = Color(0xFFF87171), textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 28.dp))
-        }
-
-        Spacer(Modifier.weight(1f))
-
-        // Eigenes Composable: der 500-ms-positionMs-Tick recomposed nur diese
-        // Sektion, nicht den ganzen Screen inklusive Cover-AsyncImage.
-        SeekSection(controller)
-
-        Spacer(Modifier.height(14.dp))
-
-        // --- transport controls ---
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = { controller.toggleShuffle() }) {
-                Icon(
-                    Icons.Default.Shuffle, "Zufallswiedergabe",
-                    tint = if (shuffle) HikariPrimary else HikariTextMuted,
-                )
-            }
-            IconButton(onClick = { controller.previous() }, modifier = Modifier.size(56.dp)) {
-                Icon(Icons.Default.SkipPrevious, "Zurück", tint = HikariText, modifier = Modifier.size(40.dp))
+            // Quellmaterial sind YouTube-Thumbnails (16:9) — ein quadratischer
+            // Zuschnitt würde die Seiten abstutzen, deshalb volle Breite in 16:9.
+            // Beim Songwechsel schiebt sich das neue Cover federnd ins Bild.
+            val coverAnim = remember { Animatable(1f) }
+            LaunchedEffect(current.videoId) {
+                coverAnim.snapTo(0.94f)
+                coverAnim.animateTo(1f, spring(dampingRatio = 0.7f, stiffness = 380f))
             }
             Box(
                 Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(HikariPrimary),
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .aspectRatio(16f / 9f)
+                    .graphicsLayer {
+                        scaleX = coverAnim.value
+                        scaleY = coverAnim.value
+                        alpha = ((coverAnim.value - 0.94f) / 0.06f).coerceIn(0f, 1f)
+                    }
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(HikariSurfaceHigh)
+                    .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(20.dp)),
                 contentAlignment = Alignment.Center,
             ) {
-                if (isBuffering) {
-                    CircularProgressIndicator(color = Color.Black, strokeWidth = 3.dp, modifier = Modifier.size(30.dp))
+                if (current.thumbnailUrl.isNotEmpty()) {
+                    AsyncImage(
+                        model = current.thumbnailUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
                 } else {
-                    IconButton(onClick = { controller.toggle() }, modifier = Modifier.size(72.dp)) {
-                        Icon(
-                            if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            if (isPlaying) "Pause" else "Abspielen",
-                            tint = Color.Black,
-                            modifier = Modifier.size(40.dp),
-                        )
-                    }
+                    Icon(Icons.Default.MusicNote, null, tint = HikariTextFaint, modifier = Modifier.size(80.dp))
                 }
             }
-            IconButton(onClick = { controller.next() }, modifier = Modifier.size(56.dp)) {
-                Icon(Icons.Default.SkipNext, "Weiter", tint = HikariText, modifier = Modifier.size(40.dp))
+
+            Spacer(Modifier.height(18.dp))
+
+            Text(
+                current.title,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = HikariText,
+                maxLines = 2,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 28.dp),
+            )
+            Spacer(Modifier.height(8.dp))
+
+            // Klick öffnet die Artist-Seite — als Pille mit Chevron, aber nur
+            // wenn der Song eine Kanal-URL trägt.
+            val artistChannelId = current.uploaderUrl.substringAfterLast("/", "")
+            if (artistChannelId.isNotBlank()) {
+                Row(
+                    Modifier
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(HikariCardBg.copy(alpha = 0.65f))
+                        .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(999.dp))
+                        .muPressable { onOpenArtist(artistChannelId, current.uploader) }
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(current.uploader, fontSize = 13.sp, color = HikariTextMuted, maxLines = 1)
+                    Spacer(Modifier.width(2.dp))
+                    Icon(Icons.Default.ChevronRight, null, tint = HikariTextFaint, modifier = Modifier.size(16.dp))
+                }
+            } else {
+                Text(current.uploader, fontSize = 14.sp, color = HikariTextMuted, maxLines = 1)
             }
-            IconButton(onClick = { controller.cycleRepeat() }) {
-                Icon(
-                    if (repeatMode == MusicPlayerController.REPEAT_ONE) Icons.Default.RepeatOne else Icons.Default.Repeat,
-                    "Wiederholen",
-                    tint = if (repeatMode != MusicPlayerController.REPEAT_OFF) HikariPrimary else HikariTextMuted,
+
+            Spacer(Modifier.height(14.dp))
+
+            // Song-Aktionen als beschriftete Pillen statt anonymer Icons oben.
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                MuActionPill(
+                    icon = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    label = if (isFavorite) "Gemerkt" else "Favorit",
+                    active = isFavorite,
+                    activeColor = Color(0xFFFF5252),
+                ) { viewModel.toggleFavorite(current) }
+
+                val progress = downloadProgress[current.videoId]
+                MuActionPill(
+                    icon = if (isDownloaded) Icons.Outlined.OfflinePin else Icons.Outlined.CloudDownload,
+                    label = when {
+                        isDownloaded -> "Offline ✓"
+                        progress != null && progress > 0f -> "${(progress * 100).toInt()} %"
+                        progress != null -> "Lädt …"
+                        else -> "Laden"
+                    },
+                    active = isDownloaded,
+                ) {
+                    when {
+                        isDownloaded -> viewModel.deleteDownload(current.videoId)
+                        progress == null -> viewModel.downloadSong(current)
+                    }
+                }
+
+                MuActionPill(
+                    icon = Icons.Default.PlaylistAdd,
+                    label = "Playlist",
+                    active = false,
+                ) { viewModel.addToPlaylistTarget = current }
+            }
+
+            error?.let {
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    it,
+                    fontSize = 12.sp,
+                    color = Color(0xFFF87171),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(horizontal = 28.dp)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(Color(0xFFF87171).copy(alpha = 0.14f))
+                        .border(1.dp, Color(0xFFF87171).copy(alpha = 0.35f), RoundedCornerShape(999.dp))
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
                 )
             }
-        }
 
-        Spacer(Modifier.height(36.dp))
+            Spacer(Modifier.weight(1f))
+
+            // Eigenes Composable: der 500-ms-positionMs-Tick recomposed nur diese
+            // Sektion, nicht den ganzen Screen inklusive Cover-AsyncImage.
+            SeekSection(controller)
+
+            Spacer(Modifier.height(14.dp))
+
+            // --- transport controls ---
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                MuIconButton(
+                    Icons.Default.Shuffle, "Zufallswiedergabe",
+                    active = shuffle,
+                ) { controller.toggleShuffle() }
+                MuIconButton(
+                    Icons.Default.SkipPrevious, "Zurück",
+                    tint = HikariText, iconSize = 38.dp, touchSize = 56.dp,
+                ) { controller.previous() }
+                MuPlayButton(
+                    isPlaying = isPlaying,
+                    isBuffering = isBuffering,
+                    playIcon = Icons.Default.PlayArrow,
+                    pauseIcon = Icons.Default.Pause,
+                    size = 72.dp,
+                ) { controller.toggle() }
+                MuIconButton(
+                    Icons.Default.SkipNext, "Weiter",
+                    tint = HikariText, iconSize = 38.dp, touchSize = 56.dp,
+                ) { controller.next() }
+                MuIconButton(
+                    if (repeatMode == MusicPlayerController.REPEAT_ONE) Icons.Default.RepeatOne else Icons.Default.Repeat,
+                    "Wiederholen",
+                    active = repeatMode != MusicPlayerController.REPEAT_OFF,
+                ) { controller.cycleRepeat() }
+            }
+
+            Spacer(Modifier.height(36.dp))
+        }
     }
 
     viewModel.addToPlaylistTarget?.let { song ->
@@ -255,35 +338,31 @@ fun NowPlayingScreen(
 }
 
 
-/** Slider + Zeitangaben — hört allein auf positionMs/durationMs, damit der
- *  500-ms-Tick nicht den ganzen Screen (inkl. Cover) recomposed. */
+/** Eigener Seekbar + Zeitangaben — hört allein auf positionMs/durationMs,
+ *  damit der 500-ms-Tick nicht den ganzen Screen (inkl. Cover) recomposed.
+ *  Beim Ziehen zeigt die linke Zeit die Vorschau-Position. */
 @Composable
 private fun SeekSection(controller: MusicPlayerController) {
     val position by controller.positionMs.collectAsState()
     val duration by controller.durationMs.collectAsState()
-    var dragging by remember { mutableStateOf(false) }
-    var dragValue by remember { mutableFloatStateOf(0f) }
-    val sliderValue = if (dragging) dragValue
-    else if (duration > 0) position.toFloat() / duration else 0f
+    var previewFrac by remember { mutableStateOf<Float?>(null) }
 
-    Slider(
-        value = sliderValue.coerceIn(0f, 1f),
-        onValueChange = { dragging = true; dragValue = it },
-        onValueChangeFinished = {
-            if (duration > 0) controller.seekTo((dragValue * duration).toLong())
-            dragging = false
-        },
-        colors = SliderDefaults.colors(
-            thumbColor = HikariPrimary,
-            activeTrackColor = HikariPrimary,
-            inactiveTrackColor = HikariSurfaceHigh,
-        ),
+    MuSeekBar(
+        progress = if (duration > 0) position.toFloat() / duration else 0f,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+        onSeekPreview = { previewFrac = it },
+        onSeek = { frac ->
+            if (duration > 0) controller.seekTo((frac * duration).toLong())
+            previewFrac = null
+        },
     )
-    Row(Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = 28.dp)) {
+        val preview = previewFrac
         Text(
-            formatDurationMs(if (dragging && duration > 0) (dragValue * duration).toLong() else position),
-            fontSize = 12.sp, color = HikariTextMuted,
+            formatDurationMs(if (preview != null && duration > 0) (preview * duration).toLong() else position),
+            fontSize = 12.sp,
+            color = if (preview != null) HikariText else HikariTextMuted,
+            fontWeight = if (preview != null) FontWeight.Bold else FontWeight.Normal,
         )
         Spacer(Modifier.weight(1f))
         Text(formatDurationMs(duration), fontSize = 12.sp, color = HikariTextMuted)

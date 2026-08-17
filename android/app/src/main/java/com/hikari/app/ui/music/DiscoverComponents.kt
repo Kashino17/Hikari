@@ -14,7 +14,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -33,14 +33,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,6 +53,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -89,22 +91,14 @@ fun MixCard(
     songs: List<MusicSong>,
     onClick: () -> Unit,
 ) {
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.96f else 1f,
-        animationSpec = spring(dampingRatio = 0.6f),
-        label = "mix-press",
-    )
-
     Box(
         Modifier
             .width(MIX_CARD_WIDTH)
             .height(MIX_CARD_HEIGHT)
-            .scale(scale)
             .clip(RoundedCornerShape(14.dp))
             .background(HikariSurfaceHigh)
-            .clickable(interactionSource = interaction, indication = null, onClick = onClick),
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(14.dp))
+            .muPressable(onClick = onClick),
     ) {
         CoverCollage(songs, Modifier.fillMaxSize())
 
@@ -122,10 +116,23 @@ fun MixCard(
                 ),
         )
 
+        // Play-Badge signalisiert: Antippen startet den Mix sofort.
+        Box(
+            Modifier
+                .align(Alignment.BottomEnd)
+                .padding(10.dp)
+                .size(30.dp)
+                .clip(CircleShape)
+                .background(HikariPrimary),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Default.PlayArrow, null, tint = Color.Black, modifier = Modifier.size(19.dp))
+        }
+
         Column(
             Modifier
                 .align(Alignment.BottomStart)
-                .padding(start = 12.dp, end = 12.dp, bottom = 11.dp),
+                .padding(start = 12.dp, end = 48.dp, bottom = 11.dp),
         ) {
             Text(
                 title,
@@ -214,20 +221,49 @@ fun SongTile(
                 modifier = Modifier
                     .width(TILE_WIDTH)
                     .height(TILE_HEIGHT)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(HikariSurfaceHigh),
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(HikariSurfaceHigh)
+                    .border(1.dp, Color.White.copy(alpha = 0.07f), RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop,
             )
+            // Unterer Scrim hält Dauer-Badge auch auf hellen Covern lesbar.
+            Box(
+                Modifier
+                    .width(TILE_WIDTH)
+                    .height(TILE_HEIGHT)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            0f to Color.Transparent,
+                            0.65f to Color.Transparent,
+                            1f to Color.Black.copy(alpha = 0.55f),
+                        ),
+                    ),
+            )
+            if (song.duration > 0) {
+                Text(
+                    formatDuration(song.duration),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = HikariText,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(6.dp)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(Color.Black.copy(alpha = 0.65f))
+                        .padding(horizontal = 7.dp, vertical = 2.dp),
+                )
+            }
             if (isCurrent) {
                 Box(
                     Modifier
                         .width(TILE_WIDTH)
                         .height(TILE_HEIGHT)
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(12.dp))
                         .background(Color.Black.copy(alpha = 0.5f)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Default.GraphicEq, "Läuft gerade", tint = HikariPrimary, modifier = Modifier.size(26.dp))
+                    MuEqualizerBars(playing = true, modifier = Modifier.size(24.dp))
                 }
             }
             if (isDownloaded) {
@@ -275,20 +311,27 @@ fun RankedSongRow(
     isDownloaded: Boolean,
     onClick: () -> Unit,
 ) {
+    // Podest-Farben: Gold, Silber, Bronze — danach zurückhaltend.
+    val rankColor = when (rank) {
+        1 -> Color(0xFFFFD263)
+        2 -> Color(0xFFCBD5E1)
+        3 -> Color(0xFFE8A16B)
+        else -> HikariTextFaint
+    }
     Row(
         Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .muPressable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             "$rank",
             fontFamily = FontFamily.Monospace,
-            fontSize = 15.sp,
-            fontWeight = if (rank <= 3) FontWeight.Bold else FontWeight.Normal,
-            color = if (rank <= 3) HikariPrimary else HikariTextFaint,
-            modifier = Modifier.width(26.dp),
+            fontSize = if (rank <= 3) 18.sp else 15.sp,
+            fontWeight = if (rank <= 3) FontWeight.Black else FontWeight.Normal,
+            color = rankColor,
+            modifier = Modifier.width(30.dp),
         )
         Box {
             AsyncImage(
@@ -305,10 +348,10 @@ fun RankedSongRow(
                     Modifier
                         .size(46.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color.Black.copy(alpha = 0.5f)),
+                        .background(Color.Black.copy(alpha = 0.6f)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Default.GraphicEq, null, tint = HikariPrimary, modifier = Modifier.size(20.dp))
+                    MuEqualizerBars(playing = true, modifier = Modifier.size(18.dp))
                 }
             }
         }
@@ -392,9 +435,14 @@ private fun HistoryChip(song: MusicSong, isCurrent: Boolean, onClick: () -> Unit
     Row(
         Modifier
             .width(196.dp)
-            .clip(RoundedCornerShape(9.dp))
-            .background(if (isCurrent) HikariSurfaceHigh else HikariCardBg)
-            .clickable(onClick = onClick)
+            .clip(RoundedCornerShape(10.dp))
+            .background(if (isCurrent) HikariPrimary.copy(alpha = 0.10f) else HikariCardBg)
+            .border(
+                1.dp,
+                if (isCurrent) HikariPrimary.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.06f),
+                RoundedCornerShape(10.dp),
+            )
+            .muPressable(onClick = onClick)
             .padding(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -415,10 +463,10 @@ private fun HistoryChip(song: MusicSong, isCurrent: Boolean, onClick: () -> Unit
                         .width(58.dp)
                         .height(33.dp)
                         .clip(RoundedCornerShape(5.dp))
-                        .background(Color.Black.copy(alpha = 0.5f)),
+                        .background(Color.Black.copy(alpha = 0.55f)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Default.GraphicEq, null, tint = HikariPrimary, modifier = Modifier.size(15.dp))
+                    MuEqualizerBars(playing = true, modifier = Modifier.size(14.dp))
                 }
             }
         }
@@ -460,19 +508,45 @@ fun GroupRow(
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(HikariCardBg)
-            .clickable(onClick = onClick)
+            .muPressable(onClick = onClick)
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AsyncImage(
-            model = group.chapters.firstOrNull { it.thumbnailUrl.isNotEmpty() }?.thumbnailUrl,
-            contentDescription = null,
-            modifier = Modifier
-                .size(46.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(HikariSurfaceHigh),
-            contentScale = ContentScale.Crop,
-        )
+        // Stapel-Optik: versetzte Karten hinter dem Cover deuten die
+        // Kapitelmenge an, ohne echte Zusatz-Cover zu laden.
+        Box {
+            Box(
+                Modifier
+                    .size(46.dp)
+                    .graphicsLayer {
+                        rotationZ = 5f
+                        translationX = 5.dp.toPx()
+                        alpha = 0.5f
+                    }
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(HikariSurfaceHigh),
+            )
+            Box(
+                Modifier
+                    .size(46.dp)
+                    .graphicsLayer {
+                        rotationZ = 2.5f
+                        translationX = 2.5.dp.toPx()
+                        alpha = 0.8f
+                    }
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(HikariSurfaceHigh),
+            )
+            AsyncImage(
+                model = group.chapters.firstOrNull { it.thumbnailUrl.isNotEmpty() }?.thumbnailUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(46.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(HikariSurfaceHigh),
+                contentScale = ContentScale.Crop,
+            )
+        }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(
@@ -492,7 +566,7 @@ fun GroupRow(
         Icon(
             Icons.AutoMirrored.Filled.KeyboardArrowRight,
             null,
-            tint = HikariTextFaint,
+            tint = HikariPrimary.copy(alpha = 0.8f),
             modifier = Modifier.size(18.dp),
         )
     }
@@ -513,17 +587,10 @@ fun SearchModeChips(
     )
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         MusicSearchMode.entries.forEach { mode ->
-            val isSelected = mode == selected
-            Text(
-                labels.getValue(mode),
-                fontSize = 13.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) Color.Black else HikariTextMuted,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(if (isSelected) HikariPrimary else HikariCardBg)
-                    .clickable { onSelect(mode) }
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
+            MuChip(
+                label = labels.getValue(mode),
+                active = mode == selected,
+                onClick = { onSelect(mode) },
             )
         }
     }
@@ -547,7 +614,8 @@ fun InstrumentalToggle(
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .background(HikariCardBg)
-            .clickable(onClick = onToggle)
+            .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
+            .muPressable(onClick = onToggle)
             .padding(start = 14.dp, end = 12.dp, top = 11.dp, bottom = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -616,9 +684,9 @@ fun FilteredEmptyHint(onDisableFilter: () -> Unit) {
         Spacer(Modifier.height(2.dp))
         Row(
             Modifier
-                .clip(RoundedCornerShape(20.dp))
+                .clip(RoundedCornerShape(999.dp))
                 .background(HikariPrimary)
-                .clickable(onClick = onDisableFilter)
+                .muPressable(onClick = onDisableFilter)
                 .padding(horizontal = 18.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -657,19 +725,23 @@ fun SectionHeader(
                 )
                 Spacer(Modifier.height(3.dp))
             }
-            Text(title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = HikariText)
+            Text(title, fontSize = 18.sp, fontWeight = FontWeight.Black, color = HikariText)
         }
         onSeeAll?.let {
             Row(
-                Modifier.clickable(onClick = it).padding(horizontal = 8.dp, vertical = 4.dp),
+                Modifier
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(HikariPrimary.copy(alpha = 0.12f))
+                    .muPressable(onClick = it)
+                    .padding(horizontal = 11.dp, vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("Alle", fontSize = 12.sp, color = HikariTextMuted)
+                Text("Alle", fontSize = 12.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
                 Icon(
                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     null,
-                    tint = HikariTextMuted,
-                    modifier = Modifier.size(16.dp),
+                    tint = HikariPrimary,
+                    modifier = Modifier.size(15.dp),
                 )
             }
         }
@@ -679,7 +751,8 @@ fun SectionHeader(
 /** Ruhige Platzhalter statt Spinner: die Seitenstruktur ist sofort sichtbar. */
 @Composable
 fun DiscoverSkeleton() {
-    Column(Modifier.fillMaxWidth()) {
+    val pulse = muShimmerAlpha()
+    Column(Modifier.fillMaxWidth().graphicsLayer { alpha = pulse }) {
         Box(
             Modifier
                 .padding(start = 16.dp, top = 22.dp, bottom = 12.dp)

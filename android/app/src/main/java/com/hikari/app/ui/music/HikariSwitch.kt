@@ -21,6 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.hikari.app.ui.theme.HikariPrimary
@@ -48,6 +50,7 @@ fun HikariSwitch(
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
+    val haptic = LocalHapticFeedback.current
 
     val progress by animateFloatAsState(
         targetValue = if (checked) 1f else 0f,
@@ -90,7 +93,10 @@ fun HikariSwitch(
                 interactionSource = interaction,
                 indication = null,
                 role = Role.Switch,
-                onClick = onCheckedChange,
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onCheckedChange()
+                },
             ),
         contentAlignment = Alignment.CenterStart,
     ) {

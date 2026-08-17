@@ -1,9 +1,15 @@
 package com.hikari.app.ui.music
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,7 +35,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,11 +45,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -85,14 +94,32 @@ fun SongRow(
 
     var menuOpen by remember { mutableStateOf(false) }
 
+    // Press-Scale wie muPressable, aber über combinedClickable — der
+    // Long-Click fürs Kontextmenü muss erhalten bleiben.
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val haptic = LocalHapticFeedback.current
+    val pressScale by animateFloatAsState(
+        if (pressed) 0.97f else 1f,
+        spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = 900f),
+        label = "songrow-press",
+    )
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
+            .graphicsLayer { scaleX = pressScale; scaleY = pressScale }
             .clip(RoundedCornerShape(12.dp))
-            .background(if (isCurrent) HikariSurfaceHigh else HikariCardBg)
+            .background(HikariCardBg)
+            .background(if (isCurrent) HikariPrimary.copy(alpha = 0.06f) else Color.Transparent)
             .combinedClickable(
-                onClick = { viewModel.play(song, contextQueue) },
+                interactionSource = interaction,
+                indication = null,
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    viewModel.play(song, contextQueue)
+                },
                 onLongClick = { menuOpen = true },
             )
             .padding(10.dp),
@@ -108,15 +135,15 @@ fun SongRow(
                     .size(thumbPx)
                     .build(),
                 contentDescription = null,
-                modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(HikariSurfaceHigh),
+                modifier = Modifier.size(48.dp).clip(RoundedCornerShape(10.dp)).background(HikariSurfaceHigh),
                 contentScale = ContentScale.Crop,
             )
             if (isCurrent) {
                 Box(
-                    Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(Color(0x66000000)),
+                    Modifier.size(48.dp).clip(RoundedCornerShape(10.dp)).background(Color(0x99000000)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Default.MusicNote, null, tint = HikariPrimary, modifier = Modifier.size(22.dp))
+                    MuEqualizerBars(playing = true, modifier = Modifier.size(20.dp))
                 }
             }
         }
@@ -171,18 +198,16 @@ fun SongRow(
             onDelete = { viewModel.deleteDownload(song.videoId) },
         )
 
-        IconButton(onClick = { viewModel.toggleFavorite(song) }) {
-            Icon(
-                if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                "Favorit",
-                tint = if (isFavorite) Color(0xFFFF5252) else HikariTextMuted,
-            )
-        }
+        MuIconButton(
+            icon = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+            contentDesc = "Favorit",
+            tint = if (isFavorite) Color(0xFFFF5252) else HikariTextMuted,
+            iconSize = 22.dp,
+            onClick = { viewModel.toggleFavorite(song) },
+        )
 
         Box {
-            IconButton(onClick = { menuOpen = true }) {
-                Icon(Icons.Default.MoreVert, "Mehr", tint = HikariTextMuted)
-            }
+            MuIconButton(Icons.Default.MoreVert, "Mehr", iconSize = 22.dp, onClick = { menuOpen = true })
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                 DropdownMenuItem(
                     text = { Text("Zu Playlist hinzufügen") },
@@ -230,24 +255,38 @@ fun DownloadStateButton(
     onDelete: () -> Unit,
 ) {
     when {
-        isDownloaded -> IconButton(onClick = onDelete) {
-            Icon(Icons.Outlined.OfflinePin, "Heruntergeladen", tint = HikariPrimary)
-        }
-        progress != null -> Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+        isDownloaded -> MuIconButton(
+            icon = Icons.Outlined.OfflinePin,
+            contentDesc = "Heruntergeladen",
+            tint = Color(0xFF4ADE80),
+            iconSize = 22.dp,
+            onClick = onDelete,
+        )
+        progress != null -> Box(Modifier.size(44.dp), contentAlignment = Alignment.Center) {
             if (progress <= 0f) {
-                CircularProgressIndicator(color = HikariPrimary, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
+                CircularProgressIndicator(color = HikariPrimary, strokeWidth = 2.5.dp, modifier = Modifier.size(30.dp))
             } else {
                 CircularProgressIndicator(
                     progress = { progress },
                     color = HikariPrimary,
-                    strokeWidth = 2.dp,
-                    modifier = Modifier.size(20.dp),
+                    trackColor = HikariSurfaceHigh,
+                    strokeWidth = 2.5.dp,
+                    modifier = Modifier.size(30.dp),
+                )
+                Text(
+                    "${(progress * 100).toInt()}",
+                    fontSize = 9.sp,
+                    color = HikariPrimary,
+                    fontWeight = FontWeight.Bold,
                 )
             }
         }
-        else -> IconButton(onClick = onDownload) {
-            Icon(Icons.Outlined.CloudDownload, "Herunterladen", tint = HikariTextMuted)
-        }
+        else -> MuIconButton(
+            icon = Icons.Outlined.CloudDownload,
+            contentDesc = "Herunterladen",
+            iconSize = 22.dp,
+            onClick = onDownload,
+        )
     }
 }
 
@@ -257,33 +296,54 @@ fun OfflineBanner(text: String = "Offline — du siehst deine Downloads") {
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(HikariSurfaceHigh)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .clip(RoundedCornerShape(999.dp))
+            .background(HikariPrimary.copy(alpha = 0.10f))
+            .border(1.dp, HikariPrimary.copy(alpha = 0.30f), RoundedCornerShape(999.dp))
+            .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(Icons.Default.CloudOff, null, tint = HikariPrimary, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(10.dp))
-        Text(text, fontSize = 13.sp, color = HikariText)
+        Text(text, fontSize = 13.sp, color = HikariText, fontWeight = FontWeight.Medium)
     }
 }
 
 @Composable
 fun CenteredLoader() {
+    val pulse = muShimmerAlpha()
     Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(color = HikariPrimary)
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                Icons.Default.MusicNote, null,
+                tint = HikariPrimary,
+                modifier = Modifier.size(34.dp).graphicsLayer { alpha = pulse },
+            )
+            Spacer(Modifier.height(14.dp))
+            CircularProgressIndicator(color = HikariPrimary, strokeWidth = 3.dp, modifier = Modifier.size(26.dp))
+        }
     }
 }
 
 @Composable
 fun EmptyHint(icon: ImageVector, text: String) {
+    val pulse = muShimmerAlpha()
     Box(Modifier.fillMaxSize().padding(48.dp), contentAlignment = Alignment.Center) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Icon(icon, null, tint = HikariTextFaint, modifier = Modifier.size(44.dp))
-            Text(text, color = HikariTextMuted, fontSize = 14.sp)
+            Icon(
+                icon, null,
+                tint = HikariTextFaint,
+                modifier = Modifier.size(56.dp).graphicsLayer { alpha = pulse },
+            )
+            Text(
+                text,
+                color = HikariTextMuted,
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center,
+                lineHeight = 20.sp,
+            )
         }
     }
 }

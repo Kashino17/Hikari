@@ -1,9 +1,12 @@
 package com.hikari.app.ui.music
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
@@ -15,13 +18,16 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Pause
@@ -33,6 +39,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,9 +47,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -54,6 +64,7 @@ import com.hikari.app.ui.theme.HikariPrimary
 import com.hikari.app.ui.theme.HikariSurfaceHigh
 import com.hikari.app.ui.theme.HikariText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -117,14 +128,78 @@ fun MiniMusicBubble(
             label = "sweep",
         )
 
-        Box(Modifier.size(66.dp), contentAlignment = Alignment.Center) {
+        // Die Blase lässt sich anstupsen/ziehen und federt beim Loslassen
+        // an ihren Ankerplatz zurück; währenddessen wächst sie leicht und glüht.
+        val scope = rememberCoroutineScope()
+        val dragOffset = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
+        var dragging by remember { mutableStateOf(false) }
+        val dragScale by animateFloatAsState(
+            if (dragging) 1.06f else 1f,
+            spring(dampingRatio = 0.6f, stiffness = 600f),
+            label = "bubbleDrag",
+        )
+
+        val pressInteraction = remember { MutableInteractionSource() }
+        val pressed by pressInteraction.collectIsPressedAsState()
+        val pressScale by animateFloatAsState(
+            if (pressed) 0.92f else 1f,
+            spring(dampingRatio = 0.6f, stiffness = 900f),
+            label = "bubblePress",
+        )
+
+        Box(
+            Modifier
+                .size(66.dp)
+                .graphicsLayer {
+                    translationX = dragOffset.value.x
+                    translationY = dragOffset.value.y
+                    scaleX = dragScale
+                    scaleY = dragScale
+                }
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = { dragging = true },
+                        onDrag = { change, amount ->
+                            change.consume()
+                            scope.launch { dragOffset.snapTo(dragOffset.value + amount) }
+                        },
+                        onDragEnd = {
+                            dragging = false
+                            scope.launch {
+                                dragOffset.animateTo(Offset.Zero, spring(dampingRatio = 0.6f, stiffness = 380f))
+                            }
+                        },
+                        onDragCancel = {
+                            dragging = false
+                            scope.launch {
+                                dragOffset.animateTo(Offset.Zero, spring(dampingRatio = 0.6f, stiffness = 380f))
+                            }
+                        },
+                    )
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            // Glüht beim Ziehen — signalisiert "ich hänge am Finger".
+            if (dragging) {
+                Box(
+                    Modifier
+                        .size(66.dp)
+                        .background(
+                            Brush.radialGradient(listOf(HikariPrimary.copy(alpha = 0.35f), Color.Transparent)),
+                            CircleShape,
+                        ),
+                )
+            }
+
             Box(
                 Modifier
                     .size(54.dp)
-                    .scale(pulse)
+                    .scale(pulse * pressScale)
                     .clip(CircleShape)
                     .background(HikariSurfaceHigh)
                     .combinedClickable(
+                        interactionSource = pressInteraction,
+                        indication = null,
                         onClick = { controller.toggle() },
                         onLongClick = onOpen,
                     ),
@@ -178,6 +253,24 @@ fun MiniMusicBubble(
                 }
             }
 
+            // Tanzende Balken machen den Spiel-Zustand auf einen Blick erkennbar.
+            if (isPlaying) {
+                Box(
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .offset(y = 1.dp)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(Color.Black.copy(alpha = 0.55f))
+                        .padding(horizontal = 5.dp, vertical = 2.dp),
+                ) {
+                    MuEqualizerBars(
+                        playing = true,
+                        modifier = Modifier.size(12.dp),
+                        barWidth = 2.dp,
+                    )
+                }
+            }
+
             // Schließen erst im pausierten Zustand: währenddessen wäre der
             // Knopf nur eine Stolperfalle neben dem Pause-Ziel.
             if (!isPlaying) {
@@ -188,7 +281,7 @@ fun MiniMusicBubble(
                         .size(22.dp)
                         .clip(CircleShape)
                         .background(HikariBg)
-                        .clickable { shown = false },
+                        .muPressable { shown = false },
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(

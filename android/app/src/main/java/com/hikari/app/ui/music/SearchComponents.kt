@@ -1,7 +1,7 @@
 package com.hikari.app.ui.music
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -20,9 +21,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -68,11 +69,18 @@ fun SearchHistorySection(
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .clickable { onSelect(query) }
-                    .padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
+                    .padding(horizontal = 8.dp, vertical = 1.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .muPressable { onSelect(query) }
+                    .padding(start = 8.dp, top = 3.dp, bottom = 3.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Default.History, null, tint = HikariTextMuted, modifier = Modifier.size(18.dp))
+                Box(
+                    Modifier.size(32.dp).clip(CircleShape).background(HikariCardBg),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Default.History, null, tint = HikariTextMuted, modifier = Modifier.size(16.dp))
+                }
                 Spacer(Modifier.width(12.dp))
                 Text(
                     query,
@@ -82,20 +90,26 @@ fun SearchHistorySection(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
                 )
-                IconButton(onClick = { onRemove(query) }, modifier = Modifier.size(36.dp)) {
-                    Icon(Icons.Default.Close, "Eintrag entfernen", tint = HikariTextMuted, modifier = Modifier.size(16.dp))
-                }
+                MuIconButton(
+                    Icons.Default.Close, "Eintrag entfernen",
+                    iconSize = 16.dp, touchSize = 40.dp,
+                    onClick = { onRemove(query) },
+                )
             }
         }
         Text(
             "Verlauf löschen",
             fontSize = 13.sp,
             color = HikariTextMuted,
+            fontWeight = FontWeight.Medium,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
-                .clip(RoundedCornerShape(8.dp))
-                .clickable(onClick = onClearAll)
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(top = 4.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(HikariCardBg)
+                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(999.dp))
+                .muPressable(onClick = onClearAll)
+                .padding(horizontal = 14.dp, vertical = 8.dp),
         )
     }
 }
@@ -123,8 +137,10 @@ private fun SuggestionRow(text: String, typed: String, onClick: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 11.dp),
+            .padding(horizontal = 8.dp, vertical = 1.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .muPressable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(Icons.Default.Search, null, tint = HikariTextMuted, modifier = Modifier.size(18.dp))
@@ -181,46 +197,52 @@ private val GENRES = listOf(
  */
 @Composable
 fun GenreBrowseGrid(onOpenGenre: (title: String, query: String) -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-        Text(
-            "Stöbern",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = HikariText,
-            modifier = Modifier.padding(top = 22.dp, bottom = 10.dp),
-        )
-        GENRES.chunked(2).forEach { pair ->
-            Row(
-                Modifier.fillMaxWidth().padding(bottom = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                pair.forEach { genre ->
-                    Box(
-                        Modifier
-                            .weight(1f)
-                            .height(64.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                Brush.horizontalGradient(
-                                    listOf(genre.color, genre.color.copy(alpha = 0.65f)),
-                                ),
+    Column(Modifier.fillMaxWidth().padding(top = 14.dp)) {
+        MuSectionTitle("Stöbern")
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            GENRES.chunked(2).forEach { pair ->
+                Row(
+                    Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    pair.forEach { genre ->
+                        Box(
+                            Modifier
+                                .weight(1f)
+                                .height(64.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(genre.color, genre.color.copy(alpha = 0.60f)),
+                                    ),
+                                )
+                                .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(14.dp))
+                                .muPressable { onOpenGenre(genre.title, genre.query) }
+                                .padding(horizontal = 14.dp),
+                            contentAlignment = Alignment.CenterStart,
+                        ) {
+                            // Dekorativer Glanzkreis, halb aus der Ecke ragend — gibt Tiefe.
+                            Box(
+                                Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .offset(x = 16.dp, y = 20.dp)
+                                    .size(56.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.10f)),
                             )
-                            .clickable { onOpenGenre(genre.title, genre.query) }
-                            .padding(horizontal = 14.dp),
-                        contentAlignment = Alignment.CenterStart,
-                    ) {
-                        Text(
-                            genre.title,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                            Text(
+                                genre.title,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color.White,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     }
+                    // Ungerade Anzahl: Platzhalter, damit die letzte Karte halb breit bleibt.
+                    if (pair.size == 1) Spacer(Modifier.weight(1f))
                 }
-                // Ungerade Anzahl: Platzhalter, damit die letzte Karte halb breit bleibt.
-                if (pair.size == 1) Spacer(Modifier.weight(1f))
             }
         }
     }
@@ -239,18 +261,7 @@ fun ResultFilterChips(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(MusicSearchFilter.entries, key = { it.name }) { filter ->
-            val isSelected = filter == selected
-            Text(
-                filter.label,
-                fontSize = 13.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) Color.Black else HikariTextMuted,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(if (isSelected) HikariPrimary else HikariCardBg)
-                    .clickable { onSelect(filter) }
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
-            )
+            MuChip(filter.label, active = filter == selected, onClick = { onSelect(filter) })
         }
     }
 }
@@ -305,9 +316,20 @@ fun TopResultCard(result: MusicSearchResult, onClick: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(HikariCardBg)
-            .clickable(onClick = onClick)
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                Brush.horizontalGradient(
+                    listOf(HikariPrimary.copy(alpha = 0.10f), HikariCardBg)
+                )
+            )
+            .border(
+                1.dp,
+                Brush.horizontalGradient(
+                    listOf(HikariPrimary.copy(alpha = 0.45f), Color.White.copy(alpha = 0.06f))
+                ),
+                RoundedCornerShape(16.dp),
+            )
+            .muPressable(onClick = onClick)
             .padding(14.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -323,24 +345,40 @@ fun TopResultCard(result: MusicSearchResult, onClick: () -> Unit) {
                 typeLabel,
                 fontSize = 10.sp,
                 color = HikariPrimary,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))
-                    .background(HikariSurfaceHigh)
+                    .background(HikariPrimary.copy(alpha = 0.14f))
                     .padding(horizontal = 6.dp, vertical = 2.dp),
             )
         }
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            AsyncImage(
-                model = thumbnailUrl.ifEmpty { null },
-                contentDescription = null,
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(if (isArtist) CircleShape else RoundedCornerShape(10.dp))
-                    .background(HikariSurfaceHigh),
-                contentScale = ContentScale.Crop,
-            )
+            Box {
+                AsyncImage(
+                    model = thumbnailUrl.ifEmpty { null },
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(if (isArtist) CircleShape else RoundedCornerShape(12.dp))
+                        .background(HikariSurfaceHigh),
+                    contentScale = ContentScale.Crop,
+                )
+                // Songs starten direkt — das Play-Overlay macht das sichtbar.
+                if (result is MusicSearchResult.Song) {
+                    Box(
+                        Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(3.dp)
+                            .size(22.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(alpha = 0.65f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.Default.PlayArrow, null, tint = HikariPrimary, modifier = Modifier.size(15.dp))
+                    }
+                }
+            }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
@@ -416,9 +454,10 @@ private fun SearchResultRow(
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(HikariCardBg)
-            .clickable(onClick = onClick)
+            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(14.dp))
+            .muPressable(onClick = onClick)
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -427,7 +466,7 @@ private fun SearchResultRow(
             contentDescription = null,
             modifier = Modifier
                 .size(48.dp)
-                .clip(if (round) CircleShape else RoundedCornerShape(8.dp))
+                .clip(if (round) CircleShape else RoundedCornerShape(10.dp))
                 .background(HikariSurfaceHigh),
             contentScale = ContentScale.Crop,
         )
