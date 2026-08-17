@@ -8,9 +8,9 @@ const DEFAULT_HEADER_TIMEOUT_MS = 12_000;
 const DEFAULT_RETRY_DELAYS_MS = [300, 1000];
 
 export interface ProxyOpts {
-  fetchImpl?: typeof fetch;
-  headerTimeoutMs?: number;
-  retryDelaysMs?: number[];
+  fetchImpl?: typeof fetch | undefined;
+  headerTimeoutMs?: number | undefined;
+  retryDelaysMs?: number[] | undefined;
 }
 
 /**
