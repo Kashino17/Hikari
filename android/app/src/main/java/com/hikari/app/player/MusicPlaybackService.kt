@@ -59,13 +59,10 @@ class MusicPlaybackService : MediaSessionService() {
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        // App weggewischt: weiterlaufen, solange gespielt wird oder der Player
-        // gerade lädt (playWhenReady bleibt beim Puffern an) — sonst aufräumen.
-        val player = session?.player
-        if (player == null || (!player.isPlaying && !player.playWhenReady)) {
-            controller.stop()
-            stopSelf()
-        }
+        // App weggewischt: Wiedergabe immer komplett beenden — ohne App soll
+        // kein Hintergrund-Player weiterlaufen (expliziter Wunsch).
+        controller.stop()
+        stopSelf()
     }
 
     override fun onDestroy() {

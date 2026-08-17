@@ -106,14 +106,17 @@ fun RemotePlaylistScreen(
                     icon = if (allOffline) Icons.Default.DownloadDone else Icons.Outlined.CloudDownload,
                     label = when {
                         allOffline -> "Offline"
-                        downloading -> "Lädt… $downloadedCount/${tracks.size}"
+                        downloading -> "✕ Abbrechen $downloadedCount/${tracks.size}"
                         else -> "Offline speichern"
                     },
                     active = allOffline,
                     activeColor = Color(0xFF4ADE80),
                 ) {
-                    if (!allOffline && !downloading && tracks.isNotEmpty()) {
-                        viewModel.saveRemotePlaylist(name, tracks, thenDownload = true)
+                    when {
+                        // Läuft: Tipp bricht alle ausstehenden Downloads ab
+                        downloading -> viewModel.cancelAllDownloads()
+                        !allOffline && tracks.isNotEmpty() ->
+                            viewModel.saveRemotePlaylist(name, tracks, thenDownload = true)
                     }
                 }
             }

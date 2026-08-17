@@ -375,7 +375,7 @@ class MusicViewModel @Inject constructor(
 
     /** Lädt alle noch fehlenden Kapitel/Folgen der offenen Gruppe herunter. */
     fun downloadGroup(title: String) {
-        viewModelScope.launch {
+        bulkDownloadJob = viewModelScope.launch {
             val missing = groupSongs.filter { it.videoId !in downloadedIds.value }
             if (missing.isEmpty()) {
                 message = "Alle Kapitel sind schon heruntergeladen"
@@ -445,7 +445,7 @@ class MusicViewModel @Inject constructor(
 
     /** Lädt alle noch fehlenden Songs des offenen Mixes herunter. */
     fun downloadMix(title: String) {
-        viewModelScope.launch {
+        bulkDownloadJob = viewModelScope.launch {
             val missing = mixSongs.filter { it.videoId !in downloadedIds.value }
             if (missing.isEmpty()) {
                 message = "Alle Songs sind schon heruntergeladen"
@@ -511,12 +511,31 @@ class MusicViewModel @Inject constructor(
 
     // --- Downloads ---
 
+    /** Laufende Massen-Downloads (Playlist/Mix/Gruppe) — für den Abbruch. */
+    private var bulkDownloadJob: Job? = null
+
     fun downloadSong(song: MusicSong) {
         viewModelScope.launch {
             downloads.download(song)
                 .onSuccess { message = "„${song.title}“ ist jetzt offline verfügbar" }
-                .onFailure { message = "Download fehlgeschlagen: ${it.message}" }
+                .onFailure {
+                    message = if (it.message == "Abgebrochen") "Download abgebrochen"
+                    else "Download fehlgeschlagen: ${it.message}"
+                }
         }
+    }
+
+    /** Bricht einen einzelnen laufenden Download ab. */
+    fun cancelDownload(videoId: String) {
+        downloads.cancel(videoId)
+    }
+
+    /** Bricht alle laufenden Downloads inklusive Massen-Download ab. */
+    fun cancelAllDownloads() {
+        bulkDownloadJob?.cancel()
+        bulkDownloadJob = null
+        downloads.cancelAll()
+        message = "Downloads abgebrochen"
     }
 
     fun deleteDownload(videoId: String) {
@@ -528,7 +547,7 @@ class MusicViewModel @Inject constructor(
 
     /** Lädt alle noch fehlenden Songs einer Playlist nacheinander herunter. */
     fun downloadPlaylist(entry: PlaylistWithSongs) {
-        viewModelScope.launch {
+        bulkDownloadJob = viewModelScope.launch {
             val missing = entry.songs.filter { it.videoId !in downloadedIds.value }
             if (missing.isEmpty()) {
                 message = "Alle Songs sind schon heruntergeladen"
@@ -557,7 +576,7 @@ class MusicViewModel @Inject constructor(
     fun saveRemotePlaylist(name: String, songs: List<MusicSong>, thenDownload: Boolean = false) {
         val trimmed = name.trim()
         if (trimmed.isEmpty() || songs.isEmpty()) return
-        viewModelScope.launch {
+        bulkDownloadJob = viewModelScope.launch {
             val existing = repo.getPlaylists()
                 .firstOrNull { it.playlist.name.equals(trimmed, ignoreCase = true) }
             val id = existing?.playlist?.id ?: repo.createPlaylist(trimmed)

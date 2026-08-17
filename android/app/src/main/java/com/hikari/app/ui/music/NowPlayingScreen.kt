@@ -156,11 +156,10 @@ fun NowPlayingScreen(
                 Spacer(Modifier.width(44.dp))
             }
 
-            // Aufbau wie bei den üblichen Playern: großes Cover im oberen Drittel,
-            // Titel direkt darunter, Fortschritt und Tasten am unteren Rand in
-            // Daumenreichweite. Der dehnbare Zwischenraum sitzt zwischen den
-            // Aktionen und dem Slider — dort fällt er nicht als Loch auf.
-            Spacer(Modifier.height(12.dp))
+            // Cover + Titel + Aktionen sitzen als Block MITTIG zwischen
+            // Kopfzeile und Slider (dehnbarer Raum oben UND unten) — kein
+            // Riesenloch mehr unter den Aktionen.
+            Spacer(Modifier.weight(1f))
 
             // Quellmaterial sind YouTube-Thumbnails (16:9) — ein quadratischer
             // Zuschnitt würde die Seiten abstutzen, deshalb volle Breite in 16:9.
@@ -247,15 +246,17 @@ fun NowPlayingScreen(
                     icon = if (isDownloaded) Icons.Outlined.OfflinePin else Icons.Outlined.CloudDownload,
                     label = when {
                         isDownloaded -> "Offline ✓"
-                        progress != null && progress > 0f -> "${(progress * 100).toInt()} %"
-                        progress != null -> "Lädt …"
+                        progress != null && progress > 0f -> "✕ ${(progress * 100).toInt()} %"
+                        progress != null -> "✕ Lädt …"
                         else -> "Laden"
                     },
                     active = isDownloaded,
                 ) {
                     when {
                         isDownloaded -> viewModel.deleteDownload(current.videoId)
-                        progress == null -> viewModel.downloadSong(current)
+                        // Läuft schon: Tipp bricht den Download ab
+                        progress != null -> viewModel.cancelDownload(current.videoId)
+                        else -> viewModel.downloadSong(current)
                     }
                 }
 

@@ -135,11 +135,15 @@ fun GroupDetailScreen(
                         active = saved,
                     ) { if (!saved) viewModel.saveRemotePlaylist(title, songs) }
                     if (!allDownloaded) {
+                        val downloading = songs.any { progressMap.containsKey(it.videoId) }
                         MuActionPill(
                             Icons.Outlined.CloudDownload,
-                            "Alle offline speichern",
+                            if (downloading) "✕ Abbrechen" else "Alle offline speichern",
                             active = false,
-                        ) { viewModel.downloadGroup(title) }
+                        ) {
+                            if (downloading) viewModel.cancelAllDownloads()
+                            else viewModel.downloadGroup(title)
+                        }
                     }
                 }
             }

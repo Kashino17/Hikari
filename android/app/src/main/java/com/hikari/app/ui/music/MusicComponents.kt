@@ -196,6 +196,7 @@ fun SongRow(
             progress = progress,
             onDownload = { viewModel.downloadSong(song) },
             onDelete = { viewModel.deleteDownload(song.videoId) },
+            onCancel = { viewModel.cancelDownload(song.videoId) },
         )
 
         MuIconButton(
@@ -253,6 +254,7 @@ fun DownloadStateButton(
     progress: Float?,
     onDownload: () -> Unit,
     onDelete: () -> Unit,
+    onCancel: (() -> Unit)? = null,
 ) {
     when {
         isDownloaded -> MuIconButton(
@@ -262,7 +264,13 @@ fun DownloadStateButton(
             iconSize = 22.dp,
             onClick = onDelete,
         )
-        progress != null -> Box(Modifier.size(44.dp), contentAlignment = Alignment.Center) {
+        // Lädt: Tipp auf den Ring bricht den Download ab (✕ statt Prozentzahl).
+        progress != null -> Box(
+            Modifier
+                .size(44.dp)
+                .let { if (onCancel != null) it.muPressable(onClick = onCancel) else it },
+            contentAlignment = Alignment.Center,
+        ) {
             if (progress <= 0f) {
                 CircularProgressIndicator(color = HikariPrimary, strokeWidth = 2.5.dp, modifier = Modifier.size(30.dp))
             } else {
@@ -273,6 +281,10 @@ fun DownloadStateButton(
                     strokeWidth = 2.5.dp,
                     modifier = Modifier.size(30.dp),
                 )
+            }
+            if (onCancel != null) {
+                Text("✕", fontSize = 11.sp, color = HikariTextMuted, fontWeight = FontWeight.Bold)
+            } else if (progress > 0f) {
                 Text(
                     "${(progress * 100).toInt()}",
                     fontSize = 9.sp,

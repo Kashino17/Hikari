@@ -39,6 +39,21 @@ class LocalMusicDownloadManager @Inject constructor(
     private val _progress = MutableStateFlow<Map<String, Float>>(emptyMap())
     val progress: StateFlow<Map<String, Float>> = _progress.asStateFlow()
 
+    /** Abbruch-Wünsche; die Download-Schleife prüft das Set pro Chunk. */
+    private val cancelRequests = java.util.Collections.synchronizedSet(mutableSetOf<String>())
+
+    /** Bricht einen laufenden (oder wartenden) Download ab. */
+    fun cancel(videoId: String) {
+        if (videoId in _progress.value) cancelRequests.add(videoId)
+    }
+
+    /** Bricht alle laufenden und wartenden Downloads ab. */
+    fun cancelAll() {
+        cancelRequests.addAll(_progress.value.keys)
+    }
+
+    private class DownloadCancelled : Exception("Abgebrochen")
+
     val downloadedIds: Flow<List<String>> = dao.observeIds()
     val downloads: Flow<List<LocalMusicDownloadEntity>> = dao.observeAll()
 
@@ -59,8 +74,11 @@ class LocalMusicDownloadManager @Inject constructor(
             slots.withPermit {
                 val target = File(musicDir, "${song.videoId}.m4a")
                 try {
+                    // Abbruch, der schon im Warteslot ankam
+                    if (song.videoId in cancelRequests) throw DownloadCancelled()
                     val url = repo.getAudioStream(song.videoId)
                         ?: return@withPermit fail(song.videoId, target, "Kein Audio-Stream gefunden")
+                    if (song.videoId in cancelRequests) throw DownloadCancelled()
 
                     val req = Request.Builder().url(url).build()
                     client.newCall(req).execute().use { resp ->
@@ -75,6 +93,7 @@ class LocalMusicDownloadManager @Inject constructor(
                                 val buf = ByteArray(64 * 1024)
                                 var written = 0L
                                 while (true) {
+                                    if (song.videoId in cancelRequests) throw DownloadCancelled()
                                     val n = input.read(buf)
                                     if (n == -1) break
                                     output.write(buf, 0, n)
@@ -107,10 +126,12 @@ class LocalMusicDownloadManager @Inject constructor(
                     // Song auch in der Bibliothek kennen (Favoriten/Playlists
                     // referenzieren music_songs per Fremdschlüssel).
                     runCatching { repo.recordPlayed(song, touchRecency = false) }
+                    cancelRequests.remove(song.videoId)
                     _progress.remove(song.videoId)
                     Result.success(entity)
                 } catch (e: Exception) {
                     target.delete()
+                    cancelRequests.remove(song.videoId)
                     _progress.remove(song.videoId)
                     Result.failure(e)
                 }
@@ -119,6 +140,7 @@ class LocalMusicDownloadManager @Inject constructor(
 
     private fun fail(videoId: String, target: File, message: String): Result<LocalMusicDownloadEntity> {
         target.delete()
+        cancelRequests.remove(videoId)
         _progress.remove(videoId)
         return Result.failure(IllegalStateException(message))
     }

@@ -175,11 +175,15 @@ fun PlaylistDetailScreen(
 
             if (!allDownloaded && songs.isNotEmpty()) {
                 Spacer(Modifier.height(10.dp))
+                val downloading = songs.any { progressMap.containsKey(it.videoId) }
                 MuActionPill(
                     Icons.Outlined.CloudDownload,
-                    "Alle offline speichern",
+                    if (downloading) "✕ Abbrechen" else "Alle offline speichern",
                     active = false,
-                ) { viewModel.downloadPlaylist(entry) }
+                ) {
+                    if (downloading) viewModel.cancelAllDownloads()
+                    else viewModel.downloadPlaylist(entry)
+                }
             }
 
             Spacer(Modifier.height(8.dp))
