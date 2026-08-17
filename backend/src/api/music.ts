@@ -1,7 +1,14 @@
-import { readFileSync, renameSync, writeFileSync } from "node:fs";
-import { rename, writeFile } from "node:fs/promises";
 import { Readable } from "node:stream";
 import type { FastifyInstance, FastifyReply } from "fastify";
+import {
+  type CacheEntry,
+  cacheGet,
+  cachePut,
+  dedupInflight,
+  loadStreamCache,
+  saveStreamCacheAsync,
+  saveStreamCacheSync,
+} from "../stream/url-cache.js";
 import { runYtDlp } from "../yt-dlp/client.js";
 import {
   type ArtistPage,
@@ -53,7 +60,6 @@ const PLAYLIST_CACHE_TTL_MS = 30 * 60 * 1000;
 const RELATED_CACHE_TTL_MS = 10 * 60 * 1000;
 const HOME_CACHE_TTL_MS = 30 * 60 * 1000;
 const STREAM_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // googlevideo-URLs leben ~6 h; bei 403/410 löst der Proxy ohnehin frisch auf
-const CACHE_MAX_ENTRIES = 200;
 const SEARCH_INSTANCE_TIMEOUT_MS = 6000;
 // Vorschläge müssen schnell da sein — kürzeres Timeout als die Suche.
 const SUGGESTIONS_TIMEOUT_MS = 4000;
@@ -118,51 +124,6 @@ function isTypedSearchType(value: string): value is TypedSearchType {
   return value in TYPED_SEARCH_FILTERS;
 }
 
-interface CacheEntry<T> {
-  at: number;
-  value: T;
-}
-
-function cacheGet<T>(
-  map: Map<string, CacheEntry<T>>,
-  key: string,
-  ttlMs: number,
-  now: number,
-): T | undefined {
-  const hit = map.get(key);
-  if (hit && now - hit.at < ttlMs) return hit.value;
-  if (hit) map.delete(key);
-  return undefined;
-}
-
-function cachePut<T>(map: Map<string, CacheEntry<T>>, key: string, value: T, now: number): void {
-  if (map.size >= CACHE_MAX_ENTRIES) {
-    const oldest = map.keys().next().value;
-    if (oldest !== undefined) map.delete(oldest);
-  }
-  map.set(key, { at: now, value });
-}
-
-/**
- * In-Flight-Dedup: gleichzeitige identische Anfragen (Prefetch + Play,
- * doppelt gerenderte App-Screens) teilen sich ein laufendes Promise.
- */
-async function dedupInflight<T>(
-  map: Map<string, Promise<T>>,
-  key: string,
-  run: () => Promise<T>,
-): Promise<T> {
-  const existing = map.get(key);
-  if (existing) return existing;
-  const pending = run();
-  map.set(key, pending);
-  try {
-    return await pending;
-  } finally {
-    if (map.get(key) === pending) map.delete(key);
-  }
-}
-
 /** Wartet `ms`, bricht aber sofort ab, sobald das Signal feuert (Staffel-Start). */
 function waitForStagger(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -176,54 +137,6 @@ function waitForStagger(ms: number, signal: AbortSignal): Promise<void> {
     }, ms);
     signal.addEventListener("abort", onAbort, { once: true });
   });
-}
-
-/** Lädt den persistierten Stream-URL-Cache; abgelaufene Einträge werden verworfen. */
-function loadStreamCache(path: string | undefined, ttlMs: number): Map<string, CacheEntry<string>> {
-  const map = new Map<string, CacheEntry<string>>();
-  if (!path) return map;
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as Record<string, CacheEntry<string>>;
-    const now = Date.now();
-    for (const [key, entry] of Object.entries(raw)) {
-      if (map.size >= CACHE_MAX_ENTRIES) break; // gleiche Obergrenze wie cachePut
-      if (
-        typeof entry?.at === "number" &&
-        typeof entry?.value === "string" &&
-        now - entry.at < ttlMs
-      ) {
-        map.set(key, entry);
-      }
-    }
-  } catch {
-    // keine oder korrupte Datei — mit leerem Cache starten
-  }
-  return map;
-}
-
-/** Schreibt den Stream-URL-Cache atomar (tmp + rename) — asynchron, für den Debounce-Timer. */
-async function saveStreamCacheAsync(
-  path: string,
-  map: Map<string, CacheEntry<string>>,
-): Promise<void> {
-  try {
-    const tmp = `${path}.tmp`;
-    await writeFile(tmp, JSON.stringify(Object.fromEntries(map)));
-    await rename(tmp, path);
-  } catch {
-    // Persistenz ist best-effort — ein Schreibfehler darf keinen Request brechen
-  }
-}
-
-/** Synchrone Variante für Prozess-Shutdown und Server-Close. */
-function saveStreamCacheSync(path: string, map: Map<string, CacheEntry<string>>): void {
-  try {
-    const tmp = `${path}.tmp`;
-    writeFileSync(tmp, JSON.stringify(Object.fromEntries(map)));
-    renameSync(tmp, path);
-  } catch {
-    // Persistenz ist best-effort — ein Schreibfehler darf keinen Request brechen
-  }
 }
 
 interface PipedSearchItem {
