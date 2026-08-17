@@ -3,7 +3,9 @@ package com.hikari.app.ui.games
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -21,6 +23,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -67,8 +70,9 @@ private enum class TttDifficulty(val label: String, val desc: String) {
 }
 
 private val TttSymbolSets = listOf("X" to "O", "⚡" to "🔥", "🌙" to "⭐", "🍣" to "🍜")
-private val TttStarterLabels = listOf("Du / Spieler 1", "KI / Spieler 2", "Abwechselnd", "Verlierer beginnt")
+private val TttStarterShort = listOf("Du", "Gegner", "Wechsel", "Verlierer")
 
+private val TttAccent = Color(0xFF60A5FA)
 private val TttP1Color = Color(0xFF60A5FA)
 private val TttP2Color = Color(0xFFFF8A65)
 
@@ -570,56 +574,59 @@ fun TicTacToeGame(onBack: () -> Unit) {
     }
 
     Box(Modifier.fillMaxSize().background(HikariBg)) {
-        when (screen) {
-            TttScreen.MENU -> TttMenuScreen(
-                mode = mode, onMode = { mode = it },
-                vsAI = vsAI, onVsAI = { vsAI = it },
-                diff = diff, onDiff = { diff = it },
-                bestOf = bestOf, onBestOf = { bestOf = it },
-                streakCur = streakCur, streakBest = streakBest,
-                onStart = {
-                    store.setStr("last_mode", mode.id)
-                    store.setStr("last_opp", if (vsAI) "ai" else "human")
-                    store.setInt("last_diff", diff.ordinal)
-                    store.setInt("last_bestof", bestOf)
-                    gameKey++
-                    screen = TttScreen.GAME
-                },
-                onStats = { screen = TttScreen.STATS },
-                onAch = { screen = TttScreen.ACHIEVEMENTS },
-                onSettings = { showSettings = true },
-                onBack = onBack,
-            )
-            TttScreen.GAME -> key(gameKey) {
-                TttPlayScreen(
-                    mode = mode, vsAI = vsAI, diff = diff, bestOf = bestOf,
-                    symbols = TttSymbolSets[symbolSet],
-                    showMoveNums = showMoveNums,
-                    starterRule = starterRule,
-                    adaptRate = adaptRate,
-                    aiFast = aiFast,
+        Crossfade(targetState = screen, animationSpec = tween(220), label = "tttScreen") { s ->
+            when (s) {
+                TttScreen.MENU -> TttMenuScreen(
                     store = store,
-                    streakCur = streakCur,
-                    sessionResults = sessionResults,
-                    buzz = { t -> buzz(t) },
-                    onRoundFinished = { r, fm -> roundFinished(r, fm) },
-                    onMatchFinished = { won, comeback -> if (won && comeback) unlock("comeback") },
-                    onExit = { screen = TttScreen.MENU },
+                    mode = mode, onMode = { mode = it },
+                    vsAI = vsAI, onVsAI = { vsAI = it },
+                    diff = diff, onDiff = { diff = it },
+                    bestOf = bestOf, onBestOf = { bestOf = it },
+                    streakCur = streakCur, streakBest = streakBest,
+                    onStart = {
+                        store.setStr("last_mode", mode.id)
+                        store.setStr("last_opp", if (vsAI) "ai" else "human")
+                        store.setInt("last_diff", diff.ordinal)
+                        store.setInt("last_bestof", bestOf)
+                        gameKey++
+                        screen = TttScreen.GAME
+                    },
+                    onStats = { screen = TttScreen.STATS },
+                    onAch = { screen = TttScreen.ACHIEVEMENTS },
+                    onSettings = { showSettings = true },
+                    onBack = onBack,
+                )
+                TttScreen.GAME -> key(gameKey) {
+                    TttPlayScreen(
+                        mode = mode, vsAI = vsAI, diff = diff, bestOf = bestOf,
+                        symbols = TttSymbolSets[symbolSet],
+                        showMoveNums = showMoveNums,
+                        starterRule = starterRule,
+                        adaptRate = adaptRate,
+                        aiFast = aiFast,
+                        store = store,
+                        streakCur = streakCur,
+                        sessionResults = sessionResults,
+                        buzz = { t -> buzz(t) },
+                        onRoundFinished = { r, fm -> roundFinished(r, fm) },
+                        onMatchFinished = { won, comeback -> if (won && comeback) unlock("comeback") },
+                        onExit = { screen = TttScreen.MENU },
+                    )
+                }
+                TttScreen.STATS -> TttStatsScreen(
+                    store = store,
+                    onResetStreaks = {
+                        streakCur = 0
+                        streakBest = 0
+                        adaptHist = ""
+                    },
+                    onBack = { screen = TttScreen.MENU },
+                )
+                TttScreen.ACHIEVEMENTS -> TttAchievementsScreen(
+                    store = store,
+                    onBack = { screen = TttScreen.MENU },
                 )
             }
-            TttScreen.STATS -> TttStatsScreen(
-                store = store,
-                onResetStreaks = {
-                    streakCur = 0
-                    streakBest = 0
-                    adaptHist = ""
-                },
-                onBack = { screen = TttScreen.MENU },
-            )
-            TttScreen.ACHIEVEMENTS -> TttAchievementsScreen(
-                store = store,
-                onBack = { screen = TttScreen.MENU },
-            )
         }
 
         if (showSettings) {
@@ -641,6 +648,7 @@ fun TicTacToeGame(onBack: () -> Unit) {
 
 @Composable
 private fun TttMenuScreen(
+    store: TttStore,
     mode: TttMode, onMode: (TttMode) -> Unit,
     vsAI: Boolean, onVsAI: (Boolean) -> Unit,
     diff: TttDifficulty, onDiff: (TttDifficulty) -> Unit,
@@ -649,145 +657,109 @@ private fun TttMenuScreen(
     onStart: () -> Unit, onStats: () -> Unit, onAch: () -> Unit,
     onSettings: () -> Unit, onBack: () -> Unit,
 ) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
-            Arrangement.SpaceBetween,
-            Alignment.CenterVertically,
-        ) {
-            TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
-            Text("Tic-Tac-Toe", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            TextButton(onClick = onSettings) { Text("⚙️", fontSize = 16.sp) }
+    var showRules by remember { mutableStateOf(false) }
+    BackHandler(enabled = showRules) { showRules = false }
+
+    Box(Modifier.fillMaxSize()) {
+        GxMenuBackground(TttAccent)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            GxHeader("Tic-Tac-Toe", TttAccent, onBack = onBack, right = {
+                GxIconChip("?") { showRules = true }
+            })
+
+            Column(Modifier.padding(horizontal = 16.dp)) {
+                if (streakCur >= 3 || streakBest >= 3) {
+                    GxAppear(0) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                            GxHudPill("🔥 Serie", "$streakCur · Best $streakBest", TttAccent)
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                }
+
+                TttSectionTitle("Modus")
+                TttMode.entries.forEachIndexed { i, m ->
+                    val w = store.getInt("stat_${m.id}_w", 0)
+                    val t = store.getInt("stat_${m.id}_t", 0)
+                    val l = store.getInt("stat_${m.id}_l", 0)
+                    GxAppear(i + 1) {
+                        GxModeCard(
+                            emoji = m.emoji,
+                            title = m.label,
+                            subtitle = m.desc,
+                            accent = TttAccent,
+                            highlighted = mode == m,
+                            badge = if (m != TttMode.CLASSIC && w + t + l == 0) "NEU" else null,
+                            best = if (w + t + l > 0) "Bilanz: $w S · $t U · $l N" else null,
+                            onClick = { onMode(m) },
+                        )
+                    }
+                    Spacer(Modifier.height(10.dp))
+                }
+
+                GxAppear(4) {
+                    Column {
+                        TttSectionTitle("Gegner")
+                        GxSegmented(listOf("🤖 KI", "👥 Zu zweit"), if (vsAI) 0 else 1, TttAccent) { onVsAI(it == 0) }
+                        if (vsAI) {
+                            Spacer(Modifier.height(14.dp))
+                            TttSectionTitle("Schwierigkeit")
+                            GxSegmented(
+                                listOf("Leicht", "Mittel", "Schwer", "Adaptiv"),
+                                diff.ordinal, TttAccent,
+                            ) { onDiff(TttDifficulty.entries[it]) }
+                            Spacer(Modifier.height(6.dp))
+                            Text(diff.desc, fontSize = 12.sp, color = HikariTextFaint, modifier = Modifier.padding(horizontal = 4.dp))
+                        }
+                        Spacer(Modifier.height(14.dp))
+                        TttSectionTitle("Match")
+                        GxSegmented(
+                            listOf("Einzel", "Best of 3", "Best of 5"),
+                            when (bestOf) { 3 -> 1; 5 -> 2; else -> 0 },
+                            TttAccent,
+                        ) { onBestOf(when (it) { 1 -> 3; 2 -> 5; else -> 1 }) }
+                    }
+                }
+
+                Spacer(Modifier.height(22.dp))
+                GxAppear(5) {
+                    GxPrimaryButton("Spielen", TttAccent, Modifier.fillMaxWidth(), onClick = onStart)
+                }
+                Spacer(Modifier.height(12.dp))
+                GxAppear(6) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        GxSmallAction("📊", "Statistik", Modifier.weight(1f), onStats)
+                        GxSmallAction("🏅", "Erfolge", Modifier.weight(1f), onAch)
+                        GxSmallAction("⚙️", "Optionen", Modifier.weight(1f), onSettings)
+                    }
+                }
+                Spacer(Modifier.height(28.dp))
+            }
         }
 
-        if (streakCur >= 3 || streakBest >= 3) {
-            Text(
-                "🔥 Serie: $streakCur · Best: $streakBest",
-                fontSize = 13.sp,
-                color = HikariPrimary,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 20.dp),
-            )
-            Spacer(Modifier.height(6.dp))
-        }
-
-        TttSectionTitle("Modus")
-        TttMode.entries.forEach { m ->
-            TttModeCard(m, selected = mode == m) { onMode(m) }
-        }
-
-        Spacer(Modifier.height(12.dp))
-        TttSectionTitle("Gegner")
-        Row(
-            Modifier.padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            TttPill("🤖 KI", selected = vsAI) { onVsAI(true) }
-            TttPill("👥 Zu zweit", selected = !vsAI) { onVsAI(false) }
-        }
-
-        if (vsAI) {
-            Spacer(Modifier.height(12.dp))
-            TttSectionTitle("Schwierigkeit")
-            TttDifficulty.entries.toList().chunked(3).forEach { row ->
-                Row(
-                    Modifier.padding(horizontal = 16.dp, vertical = 3.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    row.forEach { d -> TttPill(d.label, selected = diff == d) { onDiff(d) } }
+        if (showRules) {
+            GxSheet("Spielregeln", TttAccent, onClose = { showRules = false }) {
+                TttMode.entries.forEach { m ->
+                    Text("${m.emoji} ${m.label}", fontSize = 15.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(4.dp))
+                    Text(tttHelpText(m), fontSize = 12.sp, color = HikariTextMuted, lineHeight = 18.sp)
+                    Spacer(Modifier.height(14.dp))
                 }
             }
-            Text(
-                diff.desc,
-                fontSize = 12.sp,
-                color = HikariTextFaint,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 2.dp),
-            )
         }
-
-        Spacer(Modifier.height(12.dp))
-        TttSectionTitle("Match")
-        Row(
-            Modifier.padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            TttPill("Einzelrunde", selected = bestOf == 1) { onBestOf(1) }
-            TttPill("Best of 3", selected = bestOf == 3) { onBestOf(3) }
-            TttPill("Best of 5", selected = bestOf == 5) { onBestOf(5) }
-        }
-
-        Spacer(Modifier.height(24.dp))
-        Button(
-            onClick = onStart,
-            colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(52.dp),
-        ) {
-            Text("Spielen", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        }
-
-        Spacer(Modifier.height(8.dp))
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            TextButton(onClick = onStats) { Text("📊 Statistik", color = HikariTextMuted, fontSize = 13.sp) }
-            TextButton(onClick = onAch) { Text("🏅 Erfolge", color = HikariTextMuted, fontSize = 13.sp) }
-        }
-        Spacer(Modifier.height(24.dp))
     }
 }
 
 @Composable
 private fun TttSectionTitle(title: String) {
     Text(
-        title,
-        fontSize = 12.sp,
+        title.uppercase(),
+        fontSize = 11.sp,
         color = HikariTextFaint,
         fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+        letterSpacing = 1.2.sp,
+        modifier = Modifier.padding(vertical = 6.dp),
     )
-}
-
-@Composable
-private fun TttModeCard(m: TttMode, selected: Boolean, onClick: () -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(HikariCardBg)
-            .then(if (selected) Modifier.border(1.5.dp, HikariPrimary, RoundedCornerShape(14.dp)) else Modifier)
-            .clickable(onClick = onClick)
-            .padding(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(m.emoji, fontSize = 24.sp)
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(m.label, fontSize = 15.sp, color = HikariText, fontWeight = FontWeight.Bold)
-            Text(m.desc, fontSize = 12.sp, color = HikariTextMuted)
-        }
-        if (selected) Text("✓", color = HikariPrimary, fontWeight = FontWeight.Bold)
-    }
-}
-
-@Composable
-private fun TttPill(label: String, selected: Boolean, onClick: () -> Unit) {
-    Box(
-        Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(if (selected) HikariPrimary else HikariCardBg)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 7.dp)
-    ) {
-        Text(
-            label,
-            fontSize = 13.sp,
-            color = if (selected) Color.Black else HikariTextMuted,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-        )
-    }
 }
 
 // ————— Statistik —————
@@ -797,118 +769,141 @@ private fun TttStatsScreen(store: TttStore, onResetStreaks: () -> Unit, onBack: 
     var resetConfirm by remember { mutableStateOf(false) }
     var refresh by remember { mutableIntStateOf(0) }
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        refresh // nach Reset neu lesen
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
-            Arrangement.SpaceBetween,
-            Alignment.CenterVertically,
-        ) {
-            TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
-            Text("Statistik", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.width(64.dp))
-        }
+    Box(Modifier.fillMaxSize()) {
+        GxMenuBackground(TttAccent)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            refresh // nach Reset neu lesen
+            GxHeader("Statistik", TttAccent, onBack = onBack)
 
-        val total = store.getInt("games_total", 0)
-        val wins = store.getInt("wins_total", 0)
-        TttStatCard {
-            TttStatRow("Partien gesamt", "$total")
-            TttStatRow("Siege gesamt", "$wins")
-            TttStatRow("Aktuelle KI-Serie", "${store.getInt("streak_cur", 0)} 🔥")
-            TttStatRow("Beste KI-Serie", "${store.getInt("streak_best", 0)}")
-        }
-
-        TttSectionTitle("Pro Modus (S · U · N)")
-        TttStatCard {
-            TttMode.entries.forEach { m ->
-                TttStatRow(
-                    "${m.emoji} ${m.label}",
-                    "${store.getInt("stat_${m.id}_w", 0)} · " +
-                        "${store.getInt("stat_${m.id}_t", 0)} · " +
-                        "${store.getInt("stat_${m.id}_l", 0)}",
-                )
-            }
-        }
-
-        TttSectionTitle("Gegen die KI (S · U · N)")
-        TttStatCard {
-            TttDifficulty.entries.forEach { d ->
-                TttStatRow(
-                    d.label,
-                    "${store.getInt("stat_diff_${d.ordinal}_w", 0)} · " +
-                        "${store.getInt("stat_diff_${d.ordinal}_t", 0)} · " +
-                        "${store.getInt("stat_diff_${d.ordinal}_l", 0)}",
-                )
-            }
-        }
-
-        TttSectionTitle("Deine Eröffnung")
-        Text(
-            "Wo du am liebsten deinen ersten Zug setzt:",
-            fontSize = 12.sp,
-            color = HikariTextMuted,
-            modifier = Modifier.padding(horizontal = 20.dp),
-        )
-        Spacer(Modifier.height(8.dp))
-        val fm = IntArray(9) { store.getInt("fm_$it", 0) }
-        val maxFm = (fm.maxOrNull() ?: 0).coerceAtLeast(1)
-        Column(Modifier.padding(horizontal = 20.dp)) {
-            repeat(3) { r ->
-                Row {
-                    repeat(3) { c ->
-                        val i = r * 3 + c
-                        val strength = fm[i].toFloat() / maxFm
-                        Box(
-                            Modifier
-                                .size(52.dp)
-                                .padding(2.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(
-                                    if (fm[i] == 0) HikariCardBg
-                                    else HikariPrimary.copy(alpha = 0.10f + 0.55f * strength)
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            if (fm[i] > 0) Text("${fm[i]}", fontSize = 12.sp, color = HikariText)
+            Column(Modifier.padding(horizontal = 16.dp)) {
+                val total = store.getInt("games_total", 0)
+                val wins = store.getInt("wins_total", 0)
+                GxAppear(0) {
+                    Column {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            GxStatTile("$total", "Partien", TttAccent, Modifier.weight(1f))
+                            GxStatTile("$wins", "Siege", TttAccent, Modifier.weight(1f))
+                        }
+                        Spacer(Modifier.height(10.dp))
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            GxStatTile("${store.getInt("streak_cur", 0)} 🔥", "Aktuelle Serie", TttAccent, Modifier.weight(1f))
+                            GxStatTile("${store.getInt("streak_best", 0)}", "Beste Serie", TttAccent, Modifier.weight(1f))
                         }
                     }
                 }
-            }
-        }
 
-        Spacer(Modifier.height(20.dp))
-        TextButton(
-            onClick = { resetConfirm = true },
-            modifier = Modifier.padding(horizontal = 12.dp),
-        ) {
-            Text("Statistik zurücksetzen", color = HikariDanger, fontSize = 13.sp)
-        }
-        Spacer(Modifier.height(24.dp))
-    }
-
-    if (resetConfirm) {
-        TttOverlayCard(onDismiss = { resetConfirm = false }) {
-            Text("Statistik zurücksetzen?", fontSize = 17.sp, color = HikariText, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Bilanzen, Serien und Eröffnungs-Daten werden gelöscht. Erfolge und Einstellungen bleiben.",
-                fontSize = 13.sp, color = HikariTextMuted, textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.height(16.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                TextButton(onClick = { resetConfirm = false }) { Text("Abbrechen", color = HikariTextMuted) }
-                Button(
-                    onClick = {
-                        store.resetStats()
-                        onResetStreaks()
-                        resetConfirm = false
-                        refresh++
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = HikariDanger),
-                ) {
-                    Text("Löschen", color = Color.Black, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(16.dp))
+                GxAppear(1) {
+                    Column {
+                        TttSectionTitle("Pro Modus (S · U · N)")
+                        TttStatCard {
+                            TttMode.entries.forEach { m ->
+                                TttStatRow(
+                                    "${m.emoji} ${m.label}",
+                                    "${store.getInt("stat_${m.id}_w", 0)} · " +
+                                        "${store.getInt("stat_${m.id}_t", 0)} · " +
+                                        "${store.getInt("stat_${m.id}_l", 0)}",
+                                )
+                            }
+                        }
+                    }
                 }
+
+                Spacer(Modifier.height(12.dp))
+                GxAppear(2) {
+                    Column {
+                        TttSectionTitle("Gegen die KI (S · U · N)")
+                        TttStatCard {
+                            TttDifficulty.entries.forEach { d ->
+                                TttStatRow(
+                                    d.label,
+                                    "${store.getInt("stat_diff_${d.ordinal}_w", 0)} · " +
+                                        "${store.getInt("stat_diff_${d.ordinal}_t", 0)} · " +
+                                        "${store.getInt("stat_diff_${d.ordinal}_l", 0)}",
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+                GxAppear(3) {
+                    Column {
+                        TttSectionTitle("Deine Eröffnung")
+                        Text(
+                            "Wo du am liebsten deinen ersten Zug setzt:",
+                            fontSize = 12.sp,
+                            color = HikariTextMuted,
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        val fm = IntArray(9) { store.getInt("fm_$it", 0) }
+                        val maxFm = (fm.maxOrNull() ?: 0).coerceAtLeast(1)
+                        Column(Modifier.align(Alignment.CenterHorizontally)) {
+                            repeat(3) { r ->
+                                Row {
+                                    repeat(3) { c ->
+                                        val i = r * 3 + c
+                                        val strength = fm[i].toFloat() / maxFm
+                                        Box(
+                                            Modifier
+                                                .size(56.dp)
+                                                .padding(2.5.dp)
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(
+                                                    if (fm[i] == 0) HikariCardBg
+                                                    else TttAccent.copy(alpha = 0.10f + 0.55f * strength)
+                                                )
+                                                .border(
+                                                    1.dp,
+                                                    if (fm[i] == maxFm && fm[i] > 0) TttAccent.copy(alpha = 0.6f)
+                                                    else Color.White.copy(alpha = 0.05f),
+                                                    RoundedCornerShape(12.dp),
+                                                ),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            if (fm[i] > 0) Text("${fm[i]}", fontSize = 13.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(22.dp))
+                GxAppear(4) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(HikariDanger.copy(alpha = 0.10f))
+                            .border(1.dp, HikariDanger.copy(alpha = 0.30f), RoundedCornerShape(14.dp))
+                            .gxPressable { resetConfirm = true }
+                            .padding(vertical = 13.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("Statistik zurücksetzen", color = HikariDanger, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Spacer(Modifier.height(28.dp))
             }
+        }
+
+        if (resetConfirm) {
+            GxConfirmDialog(
+                title = "Statistik zurücksetzen?",
+                text = "Bilanzen, Serien und Eröffnungs-Daten werden gelöscht. Erfolge und Einstellungen bleiben.",
+                confirmLabel = "Löschen",
+                accent = TttAccent,
+                danger = true,
+                onConfirm = {
+                    store.resetStats()
+                    onResetStreaks()
+                    resetConfirm = false
+                    refresh++
+                },
+                onDismiss = { resetConfirm = false },
+            )
         }
     }
 }
@@ -941,52 +936,49 @@ private fun TttStatRow(label: String, value: String) {
 
 @Composable
 private fun TttAchievementsScreen(store: TttStore, onBack: () -> Unit) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
-            Arrangement.SpaceBetween,
-            Alignment.CenterVertically,
-        ) {
-            TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
-            Text("Erfolge", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.width(64.dp))
-        }
+    Box(Modifier.fillMaxSize()) {
+        GxMenuBackground(TttAccent)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            GxHeader("Erfolge", TttAccent, onBack = onBack)
 
-        val unlocked = TttAchievements.count { store.getBool("ach_${it.id}", false) }
-        Text(
-            "$unlocked / ${TttAchievements.size} freigeschaltet",
-            fontSize = 13.sp,
-            color = HikariTextMuted,
-            modifier = Modifier.padding(horizontal = 20.dp),
-        )
-        Spacer(Modifier.height(8.dp))
-
-        TttAchievements.forEach { a ->
-            val u = store.getBool("ach_${a.id}", false)
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(HikariCardBg)
-                    .padding(14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(if (u) a.emoji else "🔒", fontSize = 22.sp)
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        a.title,
-                        fontSize = 14.sp,
-                        color = if (u) HikariText else HikariTextFaint,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text(a.desc, fontSize = 12.sp, color = if (u) HikariTextMuted else HikariTextFaint)
+            Column(Modifier.padding(horizontal = 16.dp)) {
+                val unlocked = TttAchievements.count { store.getBool("ach_${it.id}", false) }
+                GxAppear(0) {
+                    Column {
+                        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
+                            Text("Freigeschaltet", fontSize = 13.sp, color = HikariTextMuted)
+                            Text(
+                                "$unlocked / ${TttAchievements.size}",
+                                fontSize = 13.sp, color = TttAccent, fontWeight = FontWeight.Bold,
+                            )
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Box(
+                            Modifier.fillMaxWidth().height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)).background(HikariSurfaceHigh)
+                        ) {
+                            Box(
+                                Modifier
+                                    .fillMaxWidth(unlocked.toFloat() / TttAchievements.size.coerceAtLeast(1))
+                                    .fillMaxHeight()
+                                    .clip(RoundedCornerShape(3.dp))
+                                    .background(TttAccent),
+                            )
+                        }
+                    }
                 }
-                if (u) Text("✓", color = HikariPrimary, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(14.dp))
+
+                TttAchievements.forEachIndexed { i, a ->
+                    val u = store.getBool("ach_${a.id}", false)
+                    GxAppear(i + 1) {
+                        GxAchRow(a.emoji, a.title, a.desc, TttAccent, unlocked = u)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+                Spacer(Modifier.height(20.dp))
             }
         }
-        Spacer(Modifier.height(24.dp))
     }
 }
 
@@ -1001,68 +993,48 @@ private fun TttSettingsOverlay(
     starterRule: Int, onStarterRule: (Int) -> Unit,
     onClose: () -> Unit,
 ) {
-    TttOverlayCard(onDismiss = onClose) {
-        Text("Einstellungen", fontSize = 18.sp, color = HikariText, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(14.dp))
-        TttSwitchRow("Vibration", hapticsOn, onHaptics)
-        TttSwitchRow("Schnelle KI-Züge", aiFast, onAiFast)
-        TttSwitchRow("Zug-Nummern anzeigen", showMoveNums, onMoveNums)
+    GxSheet("Einstellungen", TttAccent, onClose = onClose) {
+        GxToggle("Vibration", "Haptisches Feedback bei Zügen", TttAccent, hapticsOn, onHaptics)
+        GxToggle("Schnelle KI-Züge", "KI zieht ohne Denkpause", TttAccent, aiFast, onAiFast)
+        GxToggle("Zug-Nummern", "Zeigt die Zug-Reihenfolge in den Zellen", TttAccent, showMoveNums, onMoveNums)
 
-        Spacer(Modifier.height(12.dp))
-        Text("Symbole", fontSize = 12.sp, color = HikariTextFaint, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(10.dp))
+        TttSectionTitle("Symbole")
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TttSymbolSets.forEachIndexed { i, s ->
-                TttPill("${s.first} ${s.second}", selected = symbolSet == i) { onSymbolSet(i) }
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
-        Text("Wer beginnt?", fontSize = 12.sp, color = HikariTextFaint, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(6.dp))
-        TttStarterLabels.chunked(2).forEachIndexed { rowIdx, row ->
-            Row(
-                Modifier.padding(vertical = 3.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                row.forEachIndexed { colIdx, label ->
-                    val idx = rowIdx * 2 + colIdx
-                    TttPill(label, selected = starterRule == idx) { onStarterRule(idx) }
+                val sel = symbolSet == i
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .heightIn(min = 46.dp)
+                        .clip(RoundedCornerShape(13.dp))
+                        .background(if (sel) TttAccent.copy(alpha = 0.16f) else HikariSurfaceHigh)
+                        .border(
+                            if (sel) 1.5.dp else 1.dp,
+                            if (sel) TttAccent else Color.White.copy(alpha = 0.06f),
+                            RoundedCornerShape(13.dp),
+                        )
+                        .gxPressable { onSymbolSet(i) },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("${s.first} ${s.second}", fontSize = 15.sp, color = HikariText, fontWeight = FontWeight.Bold)
                 }
             }
         }
 
-        Spacer(Modifier.height(16.dp))
-        Button(
-            onClick = onClose,
-            colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-        ) {
-            Text("Fertig", color = Color.Black, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-private fun TttSwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().padding(vertical = 2.dp),
-        Arrangement.SpaceBetween,
-        Alignment.CenterVertically,
-    ) {
-        Text(label, fontSize = 14.sp, color = HikariText)
-        Switch(
-            checked = checked,
-            onCheckedChange = onChange,
-            colors = SwitchDefaults.colors(
-                checkedTrackColor = HikariPrimary,
-                checkedThumbColor = Color.Black,
-            ),
-        )
+        Spacer(Modifier.height(14.dp))
+        TttSectionTitle("Wer beginnt?")
+        GxSegmented(TttStarterShort, starterRule, TttAccent) { onStarterRule(it) }
+        Spacer(Modifier.height(6.dp))
     }
 }
 
 @Composable
 private fun TttOverlayCard(onDismiss: (() -> Unit)?, content: @Composable ColumnScope.() -> Unit) {
+    val appear = remember { Animatable(0.90f) }
+    LaunchedEffect(Unit) {
+        appear.animateTo(1f, spring(dampingRatio = 0.65f, stiffness = 600f))
+    }
     Box(
         Modifier
             .fillMaxSize()
@@ -1077,8 +1049,14 @@ private fun TttOverlayCard(onDismiss: (() -> Unit)?, content: @Composable Column
         Column(
             Modifier
                 .padding(28.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(HikariCardBg)
+                .graphicsLayer {
+                    scaleX = appear.value
+                    scaleY = appear.value
+                    alpha = ((appear.value - 0.90f) / 0.10f).coerceIn(0f, 1f)
+                }
+                .clip(RoundedCornerShape(24.dp))
+                .background(Color(0xFF232326))
+                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -1093,21 +1071,23 @@ private fun TttOverlayCard(onDismiss: (() -> Unit)?, content: @Composable Column
 
 @Composable
 private fun BoxScope.TttAchToast(a: TttAchievement) {
-    Row(
-        Modifier
-            .align(Alignment.BottomCenter)
-            .padding(bottom = 40.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(HikariSurfaceHigh)
-            .border(1.dp, HikariPrimary.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(a.emoji, fontSize = 20.sp)
-        Spacer(Modifier.width(10.dp))
-        Column {
-            Text("Erfolg freigeschaltet!", fontSize = 11.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            Text(a.title, fontSize = 13.sp, color = HikariText, fontWeight = FontWeight.Bold)
+    Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp)) {
+        GxAppear(0) {
+            Row(
+                Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(HikariSurfaceHigh)
+                    .border(1.dp, TttAccent.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(a.emoji, fontSize = 20.sp)
+                Spacer(Modifier.width(10.dp))
+                Column {
+                    Text("Erfolg freigeschaltet!", fontSize = 11.sp, color = TttAccent, fontWeight = FontWeight.Bold)
+                    Text(a.title, fontSize = 13.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                }
+            }
         }
     }
 }
@@ -1118,14 +1098,19 @@ private fun TttActionChip(label: String, enabled: Boolean, onClick: () -> Unit) 
         Modifier
             .clip(RoundedCornerShape(999.dp))
             .background(HikariCardBg)
-            .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .border(
+                1.dp,
+                if (enabled) TttAccent.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.05f),
+                RoundedCornerShape(999.dp),
+            )
+            .gxPressable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 18.dp, vertical = 10.dp)
     ) {
         Text(
             label,
             fontSize = 13.sp,
             color = if (enabled) HikariText else HikariTextFaint,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.Bold,
         )
     }
 }
@@ -1284,20 +1269,17 @@ private fun TttPlayScreen(
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             // Header
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
+                Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
                 Arrangement.SpaceBetween,
                 Alignment.CenterVertically,
             ) {
-                TextButton(onClick = { paused = true }) { Text("☰ Menü", color = HikariTextMuted) }
-                Text("${mode.emoji} ${mode.label}", fontSize = 17.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-                Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(end = 10.dp)) {
-                    Text(
-                        if (bestOf > 1) "Runde $roundIndex · Bo$bestOf" else "Einzelrunde",
-                        fontSize = 11.sp, color = HikariTextMuted,
-                    )
+                GxIconChip("☰", size = 38.dp) { paused = true }
+                Text("${mode.emoji} ${mode.label}", fontSize = 17.sp, color = TttAccent, fontWeight = FontWeight.Bold)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (vsAI && streakCur >= 3) {
-                        Text("🔥 Serie $streakCur", fontSize = 11.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+                        GxHudPill("🔥", "$streakCur", TttAccent)
                     }
+                    GxHudPill("Runde", if (bestOf > 1) "$roundIndex · Bo$bestOf" else "Einzel")
                 }
             }
 
@@ -1380,16 +1362,11 @@ private fun TttPlayScreen(
                             else -> HikariText
                         }
                         Text(msg, fontSize = 24.sp, color = col, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(8.dp))
-                        Button(
-                            onClick = {
-                                val ns = nextStarter(wnr)
-                                if (bestOf > 1) roundIndex++
-                                beginRound(ns)
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                        ) {
-                            Text(if (bestOf > 1) "Weiter" else "Nochmal", color = Color.Black, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(10.dp))
+                        GxPrimaryButton(if (bestOf > 1) "Weiter" else "Nochmal", TttAccent) {
+                            val ns = nextStarter(wnr)
+                            if (bestOf > 1) roundIndex++
+                            beginRound(ns)
                         }
                     }
                 } else if (game.moveCount == 0 && starter == "O" && vsAI) {
@@ -1445,86 +1422,64 @@ private fun TttPlayScreen(
         // Pause-Overlay
         if (paused && !matchOver) {
             TttOverlayCard(onDismiss = { paused = false }) {
-                Text("Pause", fontSize = 20.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(16.dp))
-                Button(
-                    onClick = { paused = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("Weiter", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text("Pause", fontSize = 22.sp, color = HikariText, fontWeight = FontWeight.Black)
+                Spacer(Modifier.height(18.dp))
+                GxPrimaryButton("Weiter", TttAccent, Modifier.fillMaxWidth()) { paused = false }
+                Spacer(Modifier.height(10.dp))
+                GxGhostButton("Regeln ansehen", Modifier.fillMaxWidth()) {
+                    paused = false
+                    showHelp = true
                 }
-                Spacer(Modifier.height(6.dp))
-                TextButton(
-                    onClick = {
+                Spacer(Modifier.height(10.dp))
+                GxGhostButton("Neustart", Modifier.fillMaxWidth()) {
+                    if (p1Score > 0 || p2Score > 0 || game.moveCount > 0) {
+                        restartConfirm = true
+                    } else {
+                        resetMatch()
                         paused = false
-                        showHelp = true
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text("Regeln ansehen", color = HikariTextMuted) }
-                TextButton(
-                    onClick = {
-                        if (p1Score > 0 || p2Score > 0 || game.moveCount > 0) {
-                            restartConfirm = true
-                        } else {
-                            resetMatch()
-                            paused = false
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text("Neustart", color = HikariTextMuted) }
-                TextButton(onClick = onExit, modifier = Modifier.fillMaxWidth()) {
-                    Text("Zum Menü", color = HikariTextMuted)
+                    }
                 }
+                Spacer(Modifier.height(10.dp))
+                GxGhostButton("Zum Menü", Modifier.fillMaxWidth(), onClick = onExit)
             }
         }
 
         // Neustart-Bestätigung (laufende Serie schützen)
         if (restartConfirm) {
-            TttOverlayCard(onDismiss = { restartConfirm = false }) {
-                Text("Match neu starten?", fontSize = 17.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "Der aktuelle Spielstand geht verloren.",
-                    fontSize = 13.sp, color = HikariTextMuted, textAlign = TextAlign.Center,
-                )
-                Spacer(Modifier.height(16.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    TextButton(onClick = { restartConfirm = false }) { Text("Abbrechen", color = HikariTextMuted) }
-                    Button(
-                        onClick = {
-                            restartConfirm = false
-                            paused = false
-                            resetMatch()
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                    ) {
-                        Text("Neustart", color = Color.Black, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
+            GxConfirmDialog(
+                title = "Match neu starten?",
+                text = "Der aktuelle Spielstand geht verloren.",
+                confirmLabel = "Neustart",
+                accent = TttAccent,
+                onConfirm = {
+                    restartConfirm = false
+                    paused = false
+                    resetMatch()
+                },
+                onDismiss = { restartConfirm = false },
+            )
         }
 
-        // Regel-/Hilfe-Overlay beim ersten Start eines Modus
+        // Regel-/Hilfe-Sheet beim ersten Start eines Modus
         if (showHelp) {
-            TttOverlayCard(onDismiss = null) {
-                Text("${mode.emoji} ${mode.label}", fontSize = 19.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(10.dp))
+            GxSheet(
+                "${mode.emoji} ${mode.label} — Regeln",
+                TttAccent,
+                onClose = {
+                    showHelp = false
+                    store.setBool("help_${mode.id}", true)
+                },
+            ) {
                 Text(
                     tttHelpText(mode),
                     fontSize = 13.sp,
                     color = HikariTextMuted,
-                    lineHeight = 19.sp,
+                    lineHeight = 20.sp,
                 )
-                Spacer(Modifier.height(16.dp))
-                Button(
-                    onClick = {
-                        showHelp = false
-                        store.setBool("help_${mode.id}", true)
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                ) {
-                    Text("Los geht's", color = Color.Black, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(18.dp))
+                GxPrimaryButton("Los geht's", TttAccent, Modifier.fillMaxWidth()) {
+                    showHelp = false
+                    store.setBool("help_${mode.id}", true)
                 }
             }
         }
@@ -1532,7 +1487,7 @@ private fun TttPlayScreen(
         // Match-Ende
         if (matchOver) {
             TttOverlayCard(onDismiss = null) {
-                Text(if (matchWon) "🏆" else "🤖", fontSize = 42.sp)
+                Text(if (matchWon) "🏆" else "🤖", fontSize = 44.sp)
                 Spacer(Modifier.height(8.dp))
                 val title = when {
                     vsAI && matchWon -> "Du gewinnst das Match!"
@@ -1540,25 +1495,17 @@ private fun TttPlayScreen(
                     matchWon -> "Spieler 1 gewinnt das Match!"
                     else -> "Spieler 2 gewinnt das Match!"
                 }
-                Text(title, fontSize = 18.sp, color = HikariText, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                Text(title, fontSize = 18.sp, color = HikariText, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(8.dp))
-                Text("$p1Score : $p2Score", fontSize = 26.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+                Text("$p1Score : $p2Score", fontSize = 30.sp, color = TttAccent, fontWeight = FontWeight.Black)
                 if (matchWon && wasDown02) {
                     Spacer(Modifier.height(4.dp))
-                    Text("Comeback nach 0:2! 🦅", fontSize = 13.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+                    Text("Comeback nach 0:2! 🦅", fontSize = 13.sp, color = TttAccent, fontWeight = FontWeight.Bold)
                 }
-                Spacer(Modifier.height(18.dp))
-                Button(
-                    onClick = { resetMatch() },
-                    colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("Nochmal", color = Color.Black, fontWeight = FontWeight.Bold)
-                }
-                Spacer(Modifier.height(4.dp))
-                TextButton(onClick = onExit, modifier = Modifier.fillMaxWidth()) {
-                    Text("Zum Menü", color = HikariTextMuted)
-                }
+                Spacer(Modifier.height(20.dp))
+                GxPrimaryButton("Nochmal", TttAccent, Modifier.fillMaxWidth()) { resetMatch() }
+                Spacer(Modifier.height(10.dp))
+                GxGhostButton("Zum Menü", Modifier.fillMaxWidth(), onClick = onExit)
             }
         }
     }
@@ -1578,12 +1525,20 @@ private fun tttThinkingDots(): String {
 
 @Composable
 private fun TttScoreDot(filled: Boolean, color: Color) {
+    // Gefüllte Dots bekommen einen weichen Glow-Ring
+    val fill by animateFloatAsState(if (filled) 1f else 0f, tween(320), label = "tttDot")
     Box(
         Modifier
-            .size(9.dp)
-            .clip(RoundedCornerShape(999.dp))
-            .background(if (filled) color else color.copy(alpha = 0.2f))
-    )
+            .size(14.dp)
+            .background(color.copy(alpha = 0.30f * fill), CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            Modifier
+                .size(8.dp + 1.5.dp * fill)
+                .background(if (filled) color else color.copy(alpha = 0.20f), CircleShape)
+        )
+    }
 }
 
 // ————— Bretter —————
@@ -1815,6 +1770,7 @@ private fun TttUltCell(
     hint: Boolean, moveNum: Int, invalidTick: Int, size: Dp, onTap: () -> Unit,
 ) {
     val shake = remember { Animatable(0f) }
+    val press = remember { Animatable(1f) }
     LaunchedEffect(invalidTick) {
         if (invalidTick > 0) {
             repeat(2) {
@@ -1841,6 +1797,8 @@ private fun TttUltCell(
             .padding(1.5.dp)
             .graphicsLayer {
                 translationX = shake.value
+                scaleX = press.value
+                scaleY = press.value
                 if (dimmed) alpha = 0.35f
             }
             .clip(RoundedCornerShape(6.dp))
@@ -1850,7 +1808,19 @@ private fun TttUltCell(
                 else Modifier
             )
             .then(hintMod)
-            .clickable(onClick = onTap),
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        press.snapTo(0.88f)
+                        try {
+                            awaitRelease()
+                        } finally {
+                            press.animateTo(1f, spring(stiffness = Spring.StiffnessHigh))
+                        }
+                    },
+                    onTap = { onTap() },
+                )
+            },
         contentAlignment = Alignment.Center,
     ) {
         TttCellSymbol(

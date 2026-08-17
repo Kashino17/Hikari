@@ -3,6 +3,7 @@ package com.hikari.app.ui.games
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -12,18 +13,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +27,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -73,7 +69,9 @@ private enum class SkyMode(val key: String, val label: String, val desc: String)
     CAMPAIGN("campaign", "Kampagne", "5 Sektoren mit eigenen Gefahren und Sternen"),
 }
 
-private enum class SkyScreen { MENU, GAME, SECTORS, HANGAR, STATS, ACHIEVEMENTS, SETTINGS }
+private enum class SkyScreen { MENU, GAME, SECTORS, HANGAR, STATS, ACHIEVEMENTS }
+
+private val SkyAccent = Color(0xFF22D3EE)
 
 // ————— Erfolge —————
 
@@ -1160,23 +1158,24 @@ fun SpaceShooterGame(onBack: () -> Unit) {
         }
     }
 
-    when (screen) {
-        SkyScreen.MENU -> SkyMenuScreen(
-            meta = meta,
-            onBack = onBack,
-            onPlay = { m -> if (m == SkyMode.CAMPAIGN) screen = SkyScreen.SECTORS else startRun(m) },
-            onNav = { screen = it },
-        )
-        SkyScreen.SECTORS -> SkySectorSelect(
-            meta = meta,
-            onBack = { screen = SkyScreen.MENU },
-            onPick = { startRun(SkyMode.CAMPAIGN, it) },
-        )
-        SkyScreen.HANGAR -> SkyHangarScreen(meta = meta, state = state, onBack = { screen = SkyScreen.MENU })
-        SkyScreen.STATS -> SkyStatsScreen(meta = meta, onBack = { screen = SkyScreen.MENU })
-        SkyScreen.ACHIEVEMENTS -> SkyAchievementsScreenUi(meta = meta, onBack = { screen = SkyScreen.MENU })
-        SkyScreen.SETTINGS -> SkySettingsScreen(meta = meta, onBack = { screen = SkyScreen.MENU })
-        SkyScreen.GAME -> SkyGameView(state = state, meta = meta, onMenu = { exitToMenu() })
+    Crossfade(targetState = screen, animationSpec = tween(220), label = "skyScreen") { s ->
+        when (s) {
+            SkyScreen.MENU -> SkyMenuScreen(
+                meta = meta,
+                onBack = onBack,
+                onPlay = { m -> if (m == SkyMode.CAMPAIGN) screen = SkyScreen.SECTORS else startRun(m) },
+                onNav = { screen = it },
+            )
+            SkyScreen.SECTORS -> SkySectorSelect(
+                meta = meta,
+                onBack = { screen = SkyScreen.MENU },
+                onPick = { startRun(SkyMode.CAMPAIGN, it) },
+            )
+            SkyScreen.HANGAR -> SkyHangarScreen(meta = meta, state = state, onBack = { screen = SkyScreen.MENU })
+            SkyScreen.STATS -> SkyStatsScreen(meta = meta, onBack = { screen = SkyScreen.MENU })
+            SkyScreen.ACHIEVEMENTS -> SkyAchievementsScreenUi(meta = meta, onBack = { screen = SkyScreen.MENU })
+            SkyScreen.GAME -> SkyGameView(state = state, meta = meta, onMenu = { exitToMenu() })
+        }
     }
 }
 
@@ -1189,131 +1188,86 @@ private fun SkyMenuScreen(
     onPlay: (SkyMode) -> Unit,
     onNav: (SkyScreen) -> Unit,
 ) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(HikariBg)
-            .verticalScroll(rememberScrollState()),
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            Arrangement.SpaceBetween,
-            Alignment.CenterVertically,
-        ) {
-            TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
-            SkyCoinPill(meta.coins)
-        }
+    var showSettings by remember { mutableStateOf(false) }
+    var showHelp by remember { mutableStateOf(false) }
 
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "Sky Strike",
-            fontSize = 30.sp, color = HikariPrimary, fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 20.dp),
-        )
-        Text(
-            "Wähle deinen Modus",
-            fontSize = 13.sp, color = HikariTextMuted,
-            modifier = Modifier.padding(horizontal = 20.dp),
-        )
-        Spacer(Modifier.height(16.dp))
+    Box(Modifier.fillMaxSize()) {
+        GxMenuBackground(SkyAccent)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            GxHeader("Sky Strike", SkyAccent, onBack, right = {
+                GxIconChip("?", onClick = { showHelp = true })
+            })
 
-        SkyMode.entries.forEach { m ->
-            val best = when (m) {
-                SkyMode.CLASSIC -> if (meta.highscore > 0) "Rekord: ${meta.highscore}" else "Noch kein Rekord"
-                SkyMode.BOSS_RUSH -> if (meta.rushBestBosses > 0) "Beste Serie: ${meta.rushBestBosses} Bosse" else "Noch nicht gespielt"
-                SkyMode.CAMPAIGN -> "Sterne: ${meta.sectorStars.sum()}/15"
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                Arrangement.SpaceBetween,
+                Alignment.CenterVertically,
+            ) {
+                Text("Wähle deinen Modus", fontSize = 13.sp, color = HikariTextMuted)
+                SkyCoinPill(meta.coins) { onNav(SkyScreen.HANGAR) }
             }
-            SkyModeCard(
-                title = m.label,
-                desc = m.desc,
-                best = best,
-                isLast = meta.lastMode == m.key,
-                onClick = { onPlay(m) },
-            )
-        }
+            Spacer(Modifier.height(14.dp))
 
-        Spacer(Modifier.height(16.dp))
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            SkySmallNav("🛠 Hangar", Modifier.weight(1f)) { onNav(SkyScreen.HANGAR) }
-            SkySmallNav("📊 Statistik", Modifier.weight(1f)) { onNav(SkyScreen.STATS) }
-        }
-        Spacer(Modifier.height(10.dp))
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            SkySmallNav("🏅 Erfolge", Modifier.weight(1f)) { onNav(SkyScreen.ACHIEVEMENTS) }
-            SkySmallNav("⚙️ Optionen", Modifier.weight(1f)) { onNav(SkyScreen.SETTINGS) }
-        }
-        Spacer(Modifier.height(32.dp))
-    }
-}
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                SkyMode.entries.forEachIndexed { i, m ->
+                    val best = when (m) {
+                        SkyMode.CLASSIC -> if (meta.highscore > 0) "Rekord: ${meta.highscore}" else null
+                        SkyMode.BOSS_RUSH -> if (meta.rushBestBosses > 0) "Beste Serie: ${meta.rushBestBosses} Bosse" else null
+                        SkyMode.CAMPAIGN -> "★ ${meta.sectorStars.sum()}/15 gesammelt"
+                    }
+                    val emoji = when (m) {
+                        SkyMode.CLASSIC -> "🚀"
+                        SkyMode.BOSS_RUSH -> "👑"
+                        SkyMode.CAMPAIGN -> "🗺️"
+                    }
+                    GxAppear(i) {
+                        GxModeCard(
+                            emoji = emoji,
+                            title = m.label,
+                            subtitle = m.desc,
+                            accent = SkyAccent,
+                            highlighted = meta.lastMode == m.key,
+                            best = best,
+                            onClick = { onPlay(m) },
+                        )
+                    }
+                }
 
-@Composable
-private fun SkyModeCard(title: String, desc: String, best: String, isLast: Boolean, onClick: () -> Unit) {
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(HikariCardBg)
-            .then(
-                if (isLast) Modifier.border(1.5.dp, HikariPrimary.copy(alpha = 0.7f), RoundedCornerShape(16.dp))
-                else Modifier
-            )
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(title, fontSize = 17.sp, color = HikariText, fontWeight = FontWeight.Bold)
-            if (isLast) {
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    "Zuletzt gespielt",
-                    fontSize = 10.sp, color = Color.Black, fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(HikariPrimary)
-                        .padding(horizontal = 8.dp, vertical = 2.dp),
-                )
+                GxAppear(3) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        GxSmallAction("🛠️", "Hangar", Modifier.weight(1f)) { onNav(SkyScreen.HANGAR) }
+                        GxSmallAction("📊", "Statistik", Modifier.weight(1f)) { onNav(SkyScreen.STATS) }
+                        GxSmallAction("🏅", "Erfolge", Modifier.weight(1f)) { onNav(SkyScreen.ACHIEVEMENTS) }
+                        GxSmallAction("⚙️", "Optionen", Modifier.weight(1f)) { showSettings = true }
+                    }
+                }
             }
+            Spacer(Modifier.height(32.dp))
         }
-        Spacer(Modifier.height(4.dp))
-        Text(desc, fontSize = 12.sp, color = HikariTextMuted)
-        Spacer(Modifier.height(6.dp))
-        Text(best, fontSize = 12.sp, color = HikariPrimary, fontWeight = FontWeight.Medium)
+
+        if (showSettings) SkySettingsSheet(meta) { showSettings = false }
+        if (showHelp) SkyHelpOverlay(onDismiss = { showHelp = false })
     }
 }
 
 @Composable
-private fun SkySmallNav(label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Box(
-        modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(HikariCardBg)
-            .clickable(onClick = onClick)
-            .padding(vertical = 14.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(label, fontSize = 13.sp, color = HikariText, fontWeight = FontWeight.Medium)
-    }
-}
-
-@Composable
-private fun SkyCoinPill(coins: Int) {
+private fun SkyCoinPill(coins: Int, onClick: (() -> Unit)? = null) {
+    val shown = gxAnimatedCount(coins, 500)
     Row(
         Modifier
             .clip(RoundedCornerShape(999.dp))
             .background(HikariCardBg)
+            .border(1.dp, HikariAmber.copy(alpha = 0.35f), RoundedCornerShape(999.dp))
+            .then(if (onClick != null) Modifier.gxPressable(onClick = onClick) else Modifier)
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text("🪙", fontSize = 13.sp)
         Spacer(Modifier.width(5.dp))
-        Text("$coins", fontSize = 13.sp, color = HikariText, fontWeight = FontWeight.Bold)
+        Text("$shown", fontSize = 13.sp, color = HikariAmber, fontWeight = FontWeight.Black)
     }
 }
 
@@ -1321,70 +1275,98 @@ private fun SkyCoinPill(coins: Int) {
 
 @Composable
 private fun SkySectorSelect(meta: SkyMeta, onBack: () -> Unit, onPick: (Int) -> Unit) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(HikariBg)
-            .verticalScroll(rememberScrollState()),
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            Arrangement.SpaceBetween,
-            Alignment.CenterVertically,
-        ) {
-            TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
-            Text("Kampagne", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            Text("${meta.sectorStars.sum()}/15 ★", fontSize = 13.sp, color = HikariTextMuted)
-        }
-        Spacer(Modifier.height(8.dp))
+    Box(Modifier.fillMaxSize()) {
+        GxMenuBackground(SkyAccent)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            GxHeader("Kampagne", SkyAccent, onBack, right = {
+                Text("${meta.sectorStars.sum()}/15", fontSize = 12.sp, color = HikariAmber, fontWeight = FontWeight.Black)
+            })
+            Text(
+                "Kämpfe dich durch 5 Sektoren — 3 Sterne gibt es für makellose Läufe",
+                fontSize = 12.sp, color = HikariTextMuted,
+                modifier = Modifier.padding(horizontal = 20.dp),
+            )
+            Spacer(Modifier.height(14.dp))
 
-        SkySectors.forEachIndexed { i, def ->
-            val unlocked = i == 0 || meta.sectorStars[i - 1] > 0
-            val stars = meta.sectorStars[i]
             Column(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(HikariCardBg)
-                    .clickable(enabled = unlocked) { onPick(i) }
-                    .padding(16.dp),
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(def.tint.copy(alpha = if (unlocked) 0.2f else 0.08f)),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(if (unlocked) "${i + 1}" else "🔒", fontSize = 15.sp, color = if (unlocked) def.tint else HikariTextFaint, fontWeight = FontWeight.Bold)
+                SkySectors.forEachIndexed { i, def ->
+                    val unlocked = i == 0 || meta.sectorStars[i - 1] > 0
+                    val stars = meta.sectorStars[i]
+                    GxAppear(i) {
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(
+                                            lerpColor(HikariCardBg, def.tint, if (unlocked) 0.09f else 0.02f),
+                                            HikariCardBg,
+                                        )
+                                    )
+                                )
+                                .border(
+                                    1.dp,
+                                    Brush.horizontalGradient(
+                                        listOf(
+                                            def.tint.copy(alpha = if (unlocked) 0.45f else 0.10f),
+                                            Color.White.copy(alpha = 0.05f),
+                                        )
+                                    ),
+                                    RoundedCornerShape(20.dp),
+                                )
+                                .gxPressable(enabled = unlocked) { onPick(i) }
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Box(
+                                Modifier
+                                    .size(46.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(
+                                        Brush.radialGradient(
+                                            listOf(
+                                                def.tint.copy(alpha = if (unlocked) 0.30f else 0.08f),
+                                                def.tint.copy(alpha = if (unlocked) 0.10f else 0.03f),
+                                            )
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    if (unlocked) "${i + 1}" else "🔒",
+                                    fontSize = 17.sp,
+                                    color = if (unlocked) def.tint else HikariTextFaint,
+                                    fontWeight = FontWeight.Black,
+                                )
+                            }
+                            Spacer(Modifier.width(13.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    def.name,
+                                    fontSize = 15.sp,
+                                    color = if (unlocked) HikariText else HikariTextFaint,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    if (unlocked) def.mech else "Schaffe Sektor $i zum Freischalten",
+                                    fontSize = 12.sp,
+                                    color = if (unlocked) HikariTextMuted else HikariTextFaint,
+                                    lineHeight = 16.sp,
+                                )
+                            }
+                            Spacer(Modifier.width(8.dp))
+                            GxStarRow(stars)
+                        }
                     }
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            def.name,
-                            fontSize = 15.sp,
-                            color = if (unlocked) HikariText else HikariTextFaint,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Text(
-                            if (unlocked) def.mech else "Schaffe Sektor $i zum Freischalten",
-                            fontSize = 12.sp,
-                            color = if (unlocked) HikariTextMuted else HikariTextFaint,
-                        )
-                    }
-                    Text(
-                        buildString {
-                            repeat(3) { s -> append(if (s < stars) "★" else "☆") }
-                        },
-                        fontSize = 15.sp,
-                        color = if (stars > 0) HikariPrimary else HikariTextFaint,
-                    )
                 }
             }
+            Spacer(Modifier.height(32.dp))
         }
-        Spacer(Modifier.height(32.dp))
     }
 }
 
@@ -1420,141 +1402,169 @@ private val SkySkinColors = listOf(HikariAmber, Color(0xFF22D3EE), Color(0xFFA78
 
 @Composable
 private fun SkyHangarScreen(meta: SkyMeta, state: SkyState, onBack: () -> Unit) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(HikariBg)
-            .verticalScroll(rememberScrollState()),
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            Arrangement.SpaceBetween,
-            Alignment.CenterVertically,
-        ) {
-            TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
-            Text("Hangar", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            SkyCoinPill(meta.coins)
-        }
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "Upgrades", fontSize = 14.sp, color = HikariText, fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 20.dp),
-        )
-        Spacer(Modifier.height(6.dp))
-
-        SkyUpgrades.forEach { up ->
-            val lvl = up.level(meta)
-            val maxed = lvl >= up.maxLevel
-            val cost = if (maxed) 0 else up.costs[lvl]
+    Box(Modifier.fillMaxSize()) {
+        GxMenuBackground(SkyAccent)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            GxHeader("Hangar", SkyAccent, onBack)
             Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 5.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(HikariCardBg)
-                    .padding(14.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                Arrangement.SpaceBetween,
+                Alignment.CenterVertically,
             ) {
-                Column(Modifier.weight(1f)) {
-                    Text(up.name, fontSize = 14.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                    Text(up.desc, fontSize = 11.sp, color = HikariTextMuted)
-                    Spacer(Modifier.height(5.dp))
-                    Row {
-                        repeat(up.maxLevel) { i ->
-                            Box(
-                                Modifier
-                                    .padding(end = 4.dp)
-                                    .size(width = 22.dp, height = 6.dp)
-                                    .clip(RoundedCornerShape(3.dp))
-                                    .background(if (i < lvl) HikariPrimary else HikariSurfaceHigh),
+                Text("Rüste dein Schiff dauerhaft auf", fontSize = 12.sp, color = HikariTextMuted)
+                SkyCoinPill(meta.coins)
+            }
+            Spacer(Modifier.height(14.dp))
+
+            Text(
+                "UPGRADES", fontSize = 11.sp, color = HikariTextFaint, fontWeight = FontWeight.Black,
+                letterSpacing = 2.sp,
+                modifier = Modifier.padding(horizontal = 20.dp),
+            )
+            Spacer(Modifier.height(8.dp))
+
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                SkyUpgrades.forEachIndexed { idx, up ->
+                    val lvl = up.level(meta)
+                    val maxed = lvl >= up.maxLevel
+                    val cost = if (maxed) 0 else up.costs[lvl]
+                    val affordable = meta.coins >= cost
+                    GxAppear(idx) {
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(HikariCardBg)
+                                .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(18.dp))
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            GxProgressRing(frac = lvl.toFloat() / up.maxLevel, accent = SkyAccent, size = 46.dp) {
+                                Text(
+                                    "$lvl/${up.maxLevel}",
+                                    fontSize = 11.sp, color = HikariText, fontWeight = FontWeight.Black,
+                                )
+                            }
+                            Spacer(Modifier.width(13.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(up.name, fontSize = 14.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.height(2.dp))
+                                Text(up.desc, fontSize = 11.sp, color = HikariTextMuted, lineHeight = 15.sp)
+                            }
+                            Spacer(Modifier.width(10.dp))
+                            if (maxed) {
+                                Text(
+                                    "MAX",
+                                    fontSize = 11.sp, color = Color.Black, fontWeight = FontWeight.Black,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(SkyAccent)
+                                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                                )
+                            } else {
+                                Box(
+                                    Modifier
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(
+                                            if (affordable)
+                                                Brush.horizontalGradient(listOf(HikariAmber, Color(0xFFFDE68A)))
+                                            else
+                                                Brush.horizontalGradient(listOf(HikariSurfaceHigh, HikariSurfaceHigh))
+                                        )
+                                        .gxPressable(enabled = affordable) {
+                                            if (meta.spendCoins(cost)) {
+                                                up.buy(meta)
+                                                state.award("shop1")
+                                            }
+                                        }
+                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        "🪙 $cost",
+                                        color = if (affordable) Color.Black else HikariTextFaint,
+                                        fontSize = 12.sp, fontWeight = FontWeight.Black,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(18.dp))
+            Text(
+                "SCHIFFE", fontSize = 11.sp, color = HikariTextFaint, fontWeight = FontWeight.Black,
+                letterSpacing = 2.sp,
+                modifier = Modifier.padding(horizontal = 20.dp),
+            )
+            Spacer(Modifier.height(8.dp))
+            GxAppear(3) {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    repeat(3) { i ->
+                        val unlocked = meta.skinUnlocked[i]
+                        val selected = meta.skin == i
+                        Column(
+                            Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(
+                                    if (selected) lerpColor(HikariCardBg, SkySkinColors[i], 0.08f)
+                                    else HikariCardBg
+                                )
+                                .border(
+                                    if (selected) 1.5.dp else 1.dp,
+                                    if (selected) SkySkinColors[i].copy(alpha = 0.8f)
+                                    else Color.White.copy(alpha = 0.06f),
+                                    RoundedCornerShape(18.dp),
+                                )
+                                .gxPressable {
+                                    if (unlocked) meta.selectSkin(i)
+                                    else if (meta.spendCoins(SkySkinCosts[i])) {
+                                        meta.unlockSkin(i)
+                                        meta.selectSkin(i)
+                                    }
+                                }
+                                .padding(vertical = 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Canvas(Modifier.size(56.dp)) {
+                                drawSkyShip(size.width / 2f, size.height / 2f + 6f, size.width / 44f, i, if (unlocked) 1f else 0.35f, 0f, false)
+                            }
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                SkySkinNames[i],
+                                fontSize = 12.sp,
+                                color = if (unlocked) HikariText else HikariTextMuted,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Spacer(Modifier.height(3.dp))
+                            Text(
+                                when {
+                                    selected -> "✓ Aktiv"
+                                    unlocked -> "Wählen"
+                                    else -> "🪙 ${SkySkinCosts[i]}"
+                                },
+                                fontSize = 11.sp,
+                                color = when {
+                                    selected -> SkySkinColors[i]
+                                    unlocked -> HikariTextMuted
+                                    else -> HikariAmber
+                                },
+                                fontWeight = if (selected) FontWeight.Black else FontWeight.Medium,
                             )
                         }
                     }
                 }
-                Spacer(Modifier.width(10.dp))
-                if (maxed) {
-                    Text("Max", fontSize = 13.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-                } else {
-                    Button(
-                        onClick = {
-                            if (meta.spendCoins(cost)) {
-                                up.buy(meta)
-                                state.award("shop1")
-                            }
-                        },
-                        enabled = meta.coins >= cost,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = HikariPrimary,
-                            disabledContainerColor = HikariSurfaceHigh,
-                        ),
-                        shape = RoundedCornerShape(10.dp),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                    ) {
-                        Text(
-                            "🪙 $cost",
-                            color = if (meta.coins >= cost) Color.Black else HikariTextFaint,
-                            fontSize = 12.sp, fontWeight = FontWeight.Bold,
-                        )
-                    }
-                }
             }
+            Spacer(Modifier.height(32.dp))
         }
-
-        Spacer(Modifier.height(16.dp))
-        Text(
-            "Schiffe", fontSize = 14.sp, color = HikariText, fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 20.dp),
-        )
-        Spacer(Modifier.height(6.dp))
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            repeat(3) { i ->
-                val unlocked = meta.skinUnlocked[i]
-                val selected = meta.skin == i
-                Column(
-                    Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(HikariCardBg)
-                        .then(
-                            if (selected) Modifier.border(1.5.dp, HikariPrimary, RoundedCornerShape(14.dp))
-                            else Modifier
-                        )
-                        .clickable {
-                            if (unlocked) meta.selectSkin(i)
-                            else if (meta.spendCoins(SkySkinCosts[i])) {
-                                meta.unlockSkin(i)
-                                meta.selectSkin(i)
-                            }
-                        }
-                        .padding(vertical = 12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Canvas(Modifier.size(56.dp)) {
-                        drawSkyShip(size.width / 2f, size.height / 2f + 6f, size.width / 44f, i, 1f, 0f, false)
-                    }
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        SkySkinNames[i],
-                        fontSize = 12.sp,
-                        color = if (unlocked) HikariText else HikariTextMuted,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text(
-                        when {
-                            selected -> "Aktiv"
-                            unlocked -> "Wählen"
-                            else -> "🪙 ${SkySkinCosts[i]}"
-                        },
-                        fontSize = 11.sp,
-                        color = if (selected) HikariPrimary else HikariTextMuted,
-                    )
-                }
-            }
-        }
-        Spacer(Modifier.height(32.dp))
     }
 }
 
@@ -1562,52 +1572,44 @@ private fun SkyHangarScreen(meta: SkyMeta, state: SkyState, onBack: () -> Unit) 
 
 @Composable
 private fun SkyStatsScreen(meta: SkyMeta, onBack: () -> Unit) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(HikariBg)
-            .verticalScroll(rememberScrollState()),
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            Arrangement.SpaceBetween,
-            Alignment.CenterVertically,
-        ) {
-            TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
-            Text("Statistik", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.width(64.dp))
-        }
-        Spacer(Modifier.height(8.dp))
+    Box(Modifier.fillMaxSize()) {
+        GxMenuBackground(SkyAccent)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            GxHeader("Statistik", SkyAccent, onBack)
+            Spacer(Modifier.height(6.dp))
 
-        val acc = if (meta.statShots > 0) (meta.statHits * 100 / meta.statShots) else 0
-        val pt = meta.statPlaytime
-        val playtime = if (pt >= 3600) "${pt / 3600}h ${(pt % 3600) / 60}m" else "${pt / 60}m ${pt % 60}s"
-        listOf(
-            "Runden gespielt" to "${meta.statGames}",
-            "Höchste Welle" to "${meta.statBestWave}",
-            "Abschüsse gesamt" to "${meta.statKills}",
-            "Bosse besiegt" to "${meta.statBosses}",
-            "Genauigkeit" to "$acc %",
-            "Münzen gesammelt" to "${meta.statCoinsTotal}",
-            "Spielzeit" to playtime,
-            "Klassik-Rekord" to "${meta.highscore}",
-            "Boss-Rush-Rekord" to "${meta.rushBestBosses} Bosse",
-            "Kampagnen-Sterne" to "${meta.sectorStars.sum()}/15",
-        ).forEach { (label, value) ->
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(HikariCardBg)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                Arrangement.SpaceBetween,
+            val acc = if (meta.statShots > 0) (meta.statHits * 100 / meta.statShots) else 0
+            val pt = meta.statPlaytime
+            val playtime = if (pt >= 3600) "${pt / 3600}h ${(pt % 3600) / 60}m" else "${pt / 60}m ${pt % 60}s"
+            val tiles = listOf(
+                "${meta.statGames}" to "Runden gespielt",
+                "${meta.statBestWave}" to "Höchste Welle",
+                "${meta.statKills}" to "Abschüsse gesamt",
+                "${meta.statBosses}" to "Bosse besiegt",
+                "$acc %" to "Genauigkeit",
+                "${meta.statCoinsTotal}" to "Münzen gesammelt",
+                playtime to "Spielzeit",
+                "${meta.highscore}" to "Klassik-Rekord",
+                "${meta.rushBestBosses}" to "Boss-Rush-Rekord",
+                "${meta.sectorStars.sum()}/15" to "Kampagnen-Sterne",
+            )
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Text(label, fontSize = 13.sp, color = HikariTextMuted)
-                Text(value, fontSize = 13.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                tiles.chunked(2).forEachIndexed { row, pair ->
+                    GxAppear(row) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            pair.forEach { (value, label) ->
+                                GxStatTile(value, label, SkyAccent, Modifier.weight(1f))
+                            }
+                            if (pair.size == 1) Spacer(Modifier.weight(1f))
+                        }
+                    }
+                }
             }
+            Spacer(Modifier.height(32.dp))
         }
-        Spacer(Modifier.height(32.dp))
     }
 }
 
@@ -1615,152 +1617,52 @@ private fun SkyStatsScreen(meta: SkyMeta, onBack: () -> Unit) {
 
 @Composable
 private fun SkyAchievementsScreenUi(meta: SkyMeta, onBack: () -> Unit) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(HikariBg)
-            .verticalScroll(rememberScrollState()),
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            Arrangement.SpaceBetween,
-            Alignment.CenterVertically,
-        ) {
-            TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
-            Text("Erfolge", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            Text(
-                "${SkyAchList.count { meta.unlockedAchs[it.id] == true }}/${SkyAchList.size}",
-                fontSize = 13.sp, color = HikariTextMuted,
-            )
-        }
-        Spacer(Modifier.height(8.dp))
+    Box(Modifier.fillMaxSize()) {
+        GxMenuBackground(SkyAccent)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            val unlockedCount = SkyAchList.count { meta.unlockedAchs[it.id] == true }
+            GxHeader("Erfolge", SkyAccent, onBack, right = {
+                Text(
+                    "$unlockedCount/${SkyAchList.size}",
+                    fontSize = 12.sp, color = SkyAccent, fontWeight = FontWeight.Black,
+                )
+            })
+            Spacer(Modifier.height(6.dp))
 
-        SkyAchList.forEach { ach ->
-            val unlocked = meta.unlockedAchs[ach.id] == true
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(HikariCardBg)
-                    .then(
-                        if (unlocked) Modifier.border(1.dp, HikariPrimary.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
-                        else Modifier
-                    )
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(ach.emoji, fontSize = 22.sp, modifier = Modifier.graphicsLayer { alpha = if (unlocked) 1f else 0.35f })
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        ach.title, fontSize = 14.sp,
-                        color = if (unlocked) HikariText else HikariTextMuted,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text(ach.desc, fontSize = 11.sp, color = if (unlocked) HikariTextMuted else HikariTextFaint)
+                SkyAchList.forEachIndexed { i, ach ->
+                    val unlocked = meta.unlockedAchs[ach.id] == true
+                    GxAppear(i.coerceAtMost(6)) {
+                        GxAchRow(ach.emoji, ach.title, ach.desc, SkyAccent, unlocked)
+                    }
                 }
-                if (unlocked) Text("✓", fontSize = 16.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
             }
+            Spacer(Modifier.height(32.dp))
         }
-        Spacer(Modifier.height(32.dp))
     }
 }
 
 // ————— Einstellungen —————
 
 @Composable
-private fun SkySettingsScreen(meta: SkyMeta, onBack: () -> Unit) {
-    var showHelp by remember { mutableStateOf(false) }
-    Box(Modifier.fillMaxSize().background(HikariBg)) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                Arrangement.SpaceBetween,
-                Alignment.CenterVertically,
-            ) {
-                TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
-                Text("Optionen", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.width(64.dp))
-            }
-            Spacer(Modifier.height(8.dp))
-
-            SkyToggleRow("Vibration", "Haptisches Feedback bei Treffern", meta.haptics) { meta.saveHaptics(it) }
-            SkyToggleRow("Weniger Effekte", "Reduziert Partikel für flüssigeres Spiel", meta.reducedFx) { meta.saveReducedFx(it) }
-
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 5.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(HikariCardBg)
-                    .padding(14.dp),
-            ) {
-                Text("Steuerungs-Empfindlichkeit", fontSize = 14.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("Präzise", "Normal", "Flott").forEachIndexed { i, label ->
-                        val selected = meta.sensitivity == i
-                        Box(
-                            Modifier
-                                .clip(RoundedCornerShape(999.dp))
-                                .background(if (selected) HikariPrimary else HikariSurfaceHigh)
-                                .clickable { meta.saveSensitivity(i) }
-                                .padding(horizontal = 14.dp, vertical = 7.dp),
-                        ) {
-                            Text(
-                                label, fontSize = 12.sp,
-                                color = if (selected) Color.Black else HikariTextMuted,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                            )
-                        }
-                    }
-                }
-            }
-
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 5.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(HikariCardBg)
-                    .clickable { showHelp = true }
-                    .padding(14.dp),
-                Arrangement.SpaceBetween,
-            ) {
-                Text("Spielhilfe anzeigen", fontSize = 14.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                Text("→", fontSize = 14.sp, color = HikariTextMuted)
-            }
-            Spacer(Modifier.height(32.dp))
-        }
-
-        if (showHelp) SkyHelpOverlay(onDismiss = { showHelp = false })
-    }
-}
-
-@Composable
-private fun SkyToggleRow(label: String, desc: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 5.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(HikariCardBg)
-            .padding(horizontal = 14.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(label, fontSize = 14.sp, color = HikariText, fontWeight = FontWeight.Bold)
-            Text(desc, fontSize = 11.sp, color = HikariTextMuted)
-        }
-        Switch(
-            checked = checked,
-            onCheckedChange = onChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.Black,
-                checkedTrackColor = HikariPrimary,
-            ),
-        )
+private fun SkySettingsSheet(meta: SkyMeta, onClose: () -> Unit) {
+    GxSheet("Optionen", SkyAccent, onClose) {
+        GxToggle("Vibration", "Haptisches Feedback bei Treffern", SkyAccent, meta.haptics) { meta.saveHaptics(it) }
+        GxToggle("Weniger Effekte", "Reduziert Partikel für flüssigeres Spiel", SkyAccent, meta.reducedFx) { meta.saveReducedFx(it) }
+        Spacer(Modifier.height(10.dp))
+        Text("Steuerungs-Empfindlichkeit", fontSize = 14.sp, color = HikariText, fontWeight = FontWeight.Medium)
+        Spacer(Modifier.height(8.dp))
+        GxSegmented(
+            options = listOf("Präzise", "Normal", "Flott"),
+            selected = meta.sensitivity,
+            accent = SkyAccent,
+            modifier = Modifier.fillMaxWidth(),
+        ) { meta.saveSensitivity(it) }
+        Spacer(Modifier.height(18.dp))
+        GxPrimaryButton("Fertig", SkyAccent, Modifier.fillMaxWidth(), onClick = onClose)
     }
 }
 
@@ -1768,40 +1670,24 @@ private fun SkyToggleRow(label: String, desc: String, checked: Boolean, onChange
 
 @Composable
 private fun SkyHelpOverlay(onDismiss: () -> Unit) {
-    Box(
-        Modifier.fillMaxSize().background(Color(0xE60A0A0A)),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            Modifier
-                .padding(24.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(HikariCardBg)
-                .padding(24.dp),
-        ) {
-            Text("So funktioniert's", fontSize = 20.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(12.dp))
-            listOf(
-                "👆  Wische, um dein Schiff zu steuern — es feuert automatisch",
-                "💠  D = Doppelschuss · T = Dreifach-Fächer",
-                "🛡  S = Schild (blockt genau einen Treffer)",
-                "💣  B = Bombe (räumt den Bildschirm leer)",
-                "♥  Herz = Extra-Leben",
-                "🪙  Münzen sammeln → im Hangar Upgrades kaufen",
-                "🔥  Schnelle Kills hintereinander = Combo bis ×5",
-            ).forEach {
-                Text(it, fontSize = 13.sp, color = HikariText, modifier = Modifier.padding(vertical = 3.dp))
-            }
-            Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Los geht's!", color = Color.Black, fontWeight = FontWeight.Bold)
+    GxSheet("So funktioniert's", SkyAccent, onDismiss) {
+        listOf(
+            "👆" to "Wische, um dein Schiff zu steuern — es feuert automatisch",
+            "💠" to "D = Doppelschuss · T = Dreifach-Fächer",
+            "🛡️" to "S = Schild (blockt genau einen Treffer)",
+            "💣" to "B = Bombe (räumt den Bildschirm leer)",
+            "❤️" to "Herz = Extra-Leben",
+            "🪙" to "Münzen sammeln → im Hangar Upgrades kaufen",
+            "🔥" to "Schnelle Kills hintereinander = Combo bis ×5",
+        ).forEach { (emoji, text) ->
+            Row(Modifier.padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(emoji, fontSize = 17.sp)
+                Spacer(Modifier.width(12.dp))
+                Text(text, fontSize = 13.sp, color = HikariText, lineHeight = 18.sp)
             }
         }
+        Spacer(Modifier.height(16.dp))
+        GxPrimaryButton("Los geht's!", SkyAccent, Modifier.fillMaxWidth(), onClick = onDismiss)
     }
 }
 
@@ -1841,23 +1727,21 @@ private fun SkyGameView(state: SkyState, meta: SkyMeta, onMenu: () -> Unit) {
     }
 
     Column(Modifier.fillMaxSize().background(HikariBg)) {
-        // Header: Pause-Button, Titel, Score
+        // Header: Pause-Chip, Titel, Score-Pille
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
             Arrangement.SpaceBetween,
             Alignment.CenterVertically,
         ) {
-            TextButton(onClick = {
+            GxIconChip(
+                if (state.gameOver || state.victory) "←" else "❚❚",
+                size = 38.dp,
+            ) {
                 if (state.gameOver || state.victory) onMenu()
                 else state.pauseGame()
-            }) {
-                Text(
-                    if (state.gameOver || state.victory) "← Zurück" else "❚❚ Pause",
-                    color = HikariTextMuted, fontSize = 13.sp,
-                )
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Sky Strike", fontSize = 16.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+                Text("Sky Strike", fontSize = 16.sp, color = SkyAccent, fontWeight = FontWeight.Black)
                 Text(
                     when (state.mode) {
                         SkyMode.CLASSIC -> "Klassisch"
@@ -1869,18 +1753,19 @@ private fun SkyGameView(state: SkyState, meta: SkyMeta, onMenu: () -> Unit) {
             }
             Column(horizontalAlignment = Alignment.End) {
                 val shownScore by animateIntAsState(targetValue = state.score, animationSpec = tween(250))
-                Text("$shownScore", fontSize = 16.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                when (state.mode) {
-                    SkyMode.CLASSIC -> {
-                        if (meta.highscore > 0 && state.score < meta.highscore) {
-                            Text("Noch ${meta.highscore - state.score} bis Rekord", fontSize = 10.sp, color = HikariTextMuted)
-                        } else {
-                            Text("Best: ${meta.highscore}", fontSize = 10.sp, color = HikariTextMuted)
-                        }
-                    }
-                    SkyMode.BOSS_RUSH -> Text("Best: ${meta.rushBestBosses} Bosse", fontSize = 10.sp, color = HikariTextMuted)
-                    SkyMode.CAMPAIGN -> Text("Welle ${state.waveInSector}/5", fontSize = 10.sp, color = HikariTextMuted)
-                }
+                GxHudPill("PKT", "$shownScore")
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    when (state.mode) {
+                        SkyMode.CLASSIC ->
+                            if (meta.highscore > 0 && state.score < meta.highscore)
+                                "Noch ${meta.highscore - state.score} bis Rekord"
+                            else "Best: ${meta.highscore}"
+                        SkyMode.BOSS_RUSH -> "Best: ${meta.rushBestBosses} Bosse"
+                        SkyMode.CAMPAIGN -> "Welle ${state.waveInSector}/5"
+                    },
+                    fontSize = 10.sp, color = HikariTextMuted,
+                )
             }
         }
 
@@ -1899,7 +1784,8 @@ private fun SkyGameView(state: SkyState, meta: SkyMeta, onMenu: () -> Unit) {
                     else -> HikariDanger
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("×${state.comboMult}", fontSize = 14.sp, color = comboColor, fontWeight = FontWeight.Bold)
+                    GxHudPill("COMBO", "×${state.comboMult}", accent = comboColor)
+                    Spacer(Modifier.height(2.dp))
                     Box(
                         Modifier
                             .width(36.dp)
@@ -1916,25 +1802,41 @@ private fun SkyGameView(state: SkyState, meta: SkyMeta, onMenu: () -> Unit) {
                     }
                 }
             }
-            Text(
+            GxHudPill(
                 when (state.mode) {
-                    SkyMode.CLASSIC -> "Welle ${state.wave}"
-                    SkyMode.BOSS_RUSH -> "Boss ${state.rushBosses + 1}"
-                    SkyMode.CAMPAIGN -> "Sektor ${state.sector + 1}"
+                    SkyMode.CLASSIC -> "WELLE"
+                    SkyMode.BOSS_RUSH -> "BOSS"
+                    SkyMode.CAMPAIGN -> "SEKTOR"
                 },
-                fontSize = 12.sp, color = HikariTextMuted,
+                when (state.mode) {
+                    SkyMode.CLASSIC -> "${state.wave}"
+                    SkyMode.BOSS_RUSH -> "${state.rushBosses + 1}"
+                    SkyMode.CAMPAIGN -> "${state.sector + 1}"
+                },
             )
         }
 
         // Aktive Power-ups mit Restzeit-Ringen
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 2.dp).height(26.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 3.dp).height(28.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (state.doubleTimer > 0f) SkyPowerRing("D", Color(0xFF22D3EE), state.doubleTimer / 12f)
-            if (state.tripleTimer > 0f) SkyPowerRing("T", HikariAmber, state.tripleTimer / 12f)
-            if (state.shield) SkyPowerRing("S", Color(0xFF4ADE80), 1f)
+            if (state.doubleTimer > 0f) {
+                GxProgressRing(state.doubleTimer / 12f, Color(0xFF22D3EE), size = 26.dp, stroke = 2.5.dp) {
+                    Text("D", fontSize = 10.sp, color = Color(0xFF22D3EE), fontWeight = FontWeight.Black)
+                }
+            }
+            if (state.tripleTimer > 0f) {
+                GxProgressRing(state.tripleTimer / 12f, HikariAmber, size = 26.dp, stroke = 2.5.dp) {
+                    Text("T", fontSize = 10.sp, color = HikariAmber, fontWeight = FontWeight.Black)
+                }
+            }
+            if (state.shield) {
+                GxProgressRing(1f, Color(0xFF4ADE80), size = 26.dp, stroke = 2.5.dp) {
+                    Text("S", fontSize = 10.sp, color = Color(0xFF4ADE80), fontWeight = FontWeight.Black)
+                }
+            }
         }
 
         Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -2218,80 +2120,47 @@ private fun SkyGameView(state: SkyState, meta: SkyMeta, onMenu: () -> Unit) {
 
             // Pause
             if (state.paused && !showHelp) {
-                Box(Modifier.fillMaxSize().background(Color(0xCC0A0A0A)), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxSize().background(Color(0xD90A0A0A)), contentAlignment = Alignment.Center) {
                     Column(
                         Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(HikariCardBg)
-                            .padding(horizontal = 32.dp, vertical = 28.dp),
+                            .padding(horizontal = 36.dp)
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(Color(0xFF232326))
+                            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+                            .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Text("Pause", fontSize = 24.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(16.dp))
-                        Button(
-                            onClick = { state.resumeGame() },
-                            colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text("Fortsetzen", color = Color.Black, fontWeight = FontWeight.Bold)
+                        Text("❚❚", fontSize = 20.sp, color = SkyAccent, fontWeight = FontWeight.Black)
+                        Spacer(Modifier.height(6.dp))
+                        Text("Pause", fontSize = 24.sp, color = HikariText, fontWeight = FontWeight.Black)
+                        Spacer(Modifier.height(18.dp))
+                        GxPrimaryButton("Weiter", SkyAccent, Modifier.fillMaxWidth()) { state.resumeGame() }
+                        Spacer(Modifier.height(10.dp))
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            GxGhostButton("Neu starten", Modifier.weight(1f)) { showRestartConfirm = true }
+                            GxGhostButton("Zum Menü", Modifier.weight(1f), onClick = onMenu)
                         }
-                        Spacer(Modifier.height(8.dp))
-                        TextButton(onClick = { showRestartConfirm = true }, modifier = Modifier.fillMaxWidth()) {
-                            Text("Neu starten", color = HikariTextMuted)
-                        }
-                        TextButton(onClick = onMenu, modifier = Modifier.fillMaxWidth()) {
-                            Text("Zum Menü", color = HikariTextMuted)
-                        }
-                        Spacer(Modifier.height(8.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Vibration", fontSize = 13.sp, color = HikariTextMuted)
-                            Spacer(Modifier.width(12.dp))
-                            Switch(
-                                checked = meta.haptics,
-                                onCheckedChange = { meta.saveHaptics(it) },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.Black,
-                                    checkedTrackColor = HikariPrimary,
-                                ),
-                            )
-                        }
+                        Spacer(Modifier.height(12.dp))
+                        GxToggle("Vibration", null, SkyAccent, meta.haptics) { meta.saveHaptics(it) }
                     }
                 }
             }
 
             // Neustart-Bestätigung
             if (showRestartConfirm) {
-                Box(Modifier.fillMaxSize().background(Color(0xCC0A0A0A)), contentAlignment = Alignment.Center) {
-                    Column(
-                        Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(HikariCardBg)
-                            .padding(horizontal = 28.dp, vertical = 24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Text("Neu starten?", fontSize = 18.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(6.dp))
-                        Text("Der aktuelle Lauf geht verloren.", fontSize = 13.sp, color = HikariTextMuted)
-                        Spacer(Modifier.height(16.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            TextButton(onClick = { showRestartConfirm = false }) {
-                                Text("Abbrechen", color = HikariTextMuted)
-                            }
-                            Button(
-                                onClick = {
-                                    showRestartConfirm = false
-                                    state.finishRun()
-                                    state.startRun(state.mode, state.sector)
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                                shape = RoundedCornerShape(12.dp),
-                            ) {
-                                Text("Neu starten", color = Color.Black, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                }
+                GxConfirmDialog(
+                    title = "Neu starten?",
+                    text = "Der aktuelle Lauf geht verloren.",
+                    confirmLabel = "Neu starten",
+                    accent = SkyAccent,
+                    onConfirm = {
+                        showRestartConfirm = false
+                        state.finishRun()
+                        state.startRun(state.mode, state.sector)
+                    },
+                    onDismiss = { showRestartConfirm = false },
+                )
             }
 
             // Hilfe beim ersten Start
@@ -2306,27 +2175,33 @@ private fun SkyGameView(state: SkyState, meta: SkyMeta, onMenu: () -> Unit) {
             // Sektor geschafft (Kampagne)
             if (state.victory) {
                 Box(Modifier.fillMaxSize().background(Color(0xE60A0A0A)), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Sektor geschafft!", fontSize = 26.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(10.dp))
+                    Column(
+                        Modifier
+                            .padding(horizontal = 32.dp)
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(Color(0xFF232326))
+                            .border(1.dp, SkyAccent.copy(alpha = 0.3f), RoundedCornerShape(24.dp))
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text("Sektor geschafft!", fontSize = 24.sp, color = SkyAccent, fontWeight = FontWeight.Black)
+                        Spacer(Modifier.height(12.dp))
+                        GxStarRow(state.victoryStars, size = 34.dp)
+                        Spacer(Modifier.height(12.dp))
                         Text(
-                            buildString { repeat(3) { s -> append(if (s < state.victoryStars) "★" else "☆") } },
-                            fontSize = 40.sp, color = HikariPrimary,
+                            "${gxAnimatedCount(state.score)}",
+                            fontSize = 34.sp, color = HikariText, fontWeight = FontWeight.Black,
                         )
-                        Spacer(Modifier.height(8.dp))
-                        Text("Punkte: ${state.score}", fontSize = 18.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                        Text("Punkte", fontSize = 12.sp, color = HikariTextMuted)
                         Spacer(Modifier.height(20.dp))
                         if (state.sector < 4) {
-                            Button(
-                                onClick = { state.startRun(SkyMode.CAMPAIGN, state.sector + 1) },
-                                colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                                shape = RoundedCornerShape(12.dp),
-                            ) {
-                                Text("Nächster Sektor", color = Color.Black, fontWeight = FontWeight.Bold)
+                            GxPrimaryButton("Nächster Sektor", SkyAccent, Modifier.fillMaxWidth()) {
+                                state.startRun(SkyMode.CAMPAIGN, state.sector + 1)
                             }
-                            Spacer(Modifier.height(8.dp))
+                            Spacer(Modifier.height(10.dp))
                         }
-                        TextButton(onClick = onMenu) { Text("Zum Menü", color = HikariTextMuted) }
+                        GxGhostButton("Zum Menü", Modifier.fillMaxWidth(), onClick = onMenu)
                     }
                 }
             }
@@ -2337,66 +2212,64 @@ private fun SkyGameView(state: SkyState, meta: SkyMeta, onMenu: () -> Unit) {
                     Modifier.fillMaxSize().background(Color(0xE60A0A0A)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Game Over", fontSize = 28.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(12.dp))
-                        Text("Punkte: ${state.score}", fontSize = 20.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(4.dp))
+                    Column(
+                        Modifier
+                            .padding(horizontal = 28.dp)
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(Color(0xFF232326))
+                            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+                            .padding(22.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text("Game Over", fontSize = 25.sp, color = HikariText, fontWeight = FontWeight.Black)
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            "${gxAnimatedCount(state.score)}",
+                            fontSize = 38.sp, color = SkyAccent, fontWeight = FontWeight.Black,
+                        )
                         when (state.mode) {
                             SkyMode.CLASSIC -> {
                                 if (state.newRecord) {
-                                    Text("Neuer Rekord!", fontSize = 16.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+                                    Text("🏆 Neuer Rekord!", fontSize = 14.sp, color = HikariAmber, fontWeight = FontWeight.Black)
                                 } else {
-                                    Text("Highscore: ${meta.highscore}", fontSize = 14.sp, color = HikariTextMuted)
+                                    Text("Rekord: ${meta.highscore}", fontSize = 12.sp, color = HikariTextMuted)
                                 }
                             }
                             SkyMode.BOSS_RUSH -> Text(
                                 "${state.rushBosses} Bosse besiegt · Best: ${meta.rushBestBosses}",
-                                fontSize = 14.sp, color = HikariTextMuted,
+                                fontSize = 12.sp, color = HikariTextMuted,
                             )
                             SkyMode.CAMPAIGN -> Text(
                                 "Sektor ${state.sector + 1} · Welle ${state.waveInSector}/5",
-                                fontSize = 14.sp, color = HikariTextMuted,
+                                fontSize = 12.sp, color = HikariTextMuted,
                             )
                         }
                         Spacer(Modifier.height(16.dp))
 
-                        // Runden-Stats
-                        Column(
-                            Modifier
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(HikariCardBg)
-                                .padding(horizontal = 24.dp, vertical = 14.dp),
-                        ) {
-                            val acc = if (state.runShots > 0) state.runHits * 100 / state.runShots else 0
-                            val secs = state.runTime.toInt()
-                            listOf(
-                                "Abschüsse" to "${state.runKills}",
-                                "Genauigkeit" to "$acc %",
-                                "Beste Combo" to "×${state.bestComboRun}",
-                                "Münzen" to "+${state.runCoins}",
-                                "Dauer" to "${secs / 60}:${(secs % 60).toString().padStart(2, '0')}",
-                            ).forEach { (label, value) ->
-                                Row(
-                                    Modifier.width(200.dp).padding(vertical = 3.dp),
-                                    Arrangement.SpaceBetween,
-                                ) {
-                                    Text(label, fontSize = 13.sp, color = HikariTextMuted)
-                                    Text(value, fontSize = 13.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                                }
-                            }
+                        val acc = if (state.runShots > 0) state.runHits * 100 / state.runShots else 0
+                        val secs = state.runTime.toInt()
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            GxStatTile("${state.runKills}", "Abschüsse", SkyAccent, Modifier.weight(1f))
+                            GxStatTile("$acc %", "Genauigkeit", SkyAccent, Modifier.weight(1f))
                         }
+                        Spacer(Modifier.height(8.dp))
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            GxStatTile("×${state.bestComboRun}", "Beste Combo", SkyAccent, Modifier.weight(1f))
+                            GxStatTile("+${state.runCoins}", "Münzen", HikariAmber, Modifier.weight(1f))
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "Dauer ${secs / 60}:${(secs % 60).toString().padStart(2, '0')}",
+                            fontSize = 11.sp, color = HikariTextFaint,
+                        )
 
-                        Spacer(Modifier.height(20.dp))
-                        Button(
-                            onClick = { state.startRun(state.mode, state.sector) },
-                            colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                            shape = RoundedCornerShape(12.dp),
-                        ) {
-                            Text("Nochmal", color = Color.Black, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(16.dp))
+                        GxPrimaryButton("Nochmal", SkyAccent, Modifier.fillMaxWidth()) {
+                            state.startRun(state.mode, state.sector)
                         }
-                        Spacer(Modifier.height(4.dp))
-                        TextButton(onClick = onMenu) { Text("Zum Menü", color = HikariTextMuted) }
+                        Spacer(Modifier.height(10.dp))
+                        GxGhostButton("Zum Menü", Modifier.fillMaxWidth(), onClick = onMenu)
                     }
                 }
             }
@@ -2428,25 +2301,6 @@ private fun SkyHeartsRow(lives: Int, maxLives: Int) {
                     .scale(if (i < lives) pulse else 1f),
             )
         }
-    }
-}
-
-@Composable
-private fun SkyPowerRing(label: String, color: Color, frac: Float) {
-    Box(contentAlignment = Alignment.Center) {
-        Canvas(Modifier.size(22.dp)) {
-            drawCircle(HikariSurfaceHigh, size.width / 2f)
-            drawArc(
-                color = color,
-                startAngle = -90f,
-                sweepAngle = 360f * frac.coerceIn(0f, 1f),
-                useCenter = false,
-                topLeft = Offset(2f, 2f),
-                size = Size(size.width - 4f, size.height - 4f),
-                style = Stroke(width = 3f),
-            )
-        }
-        Text(label, fontSize = 10.sp, color = color, fontWeight = FontWeight.Bold)
     }
 }
 

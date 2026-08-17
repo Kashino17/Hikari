@@ -3,6 +3,7 @@ package com.hikari.app.ui.games
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
@@ -12,7 +13,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -20,12 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -350,40 +345,42 @@ fun BlockBlastGame(onBack: () -> Unit) {
         screen = BbScreen.GAME
     }
 
-    when (screen) {
-        BbScreen.MENU -> BbMenu(
-            prefs = prefs,
-            haptics = haptics,
-            particlesOn = particlesOn,
-            onHaptics = setHaptics,
-            onParticles = setParticles,
-            lastMode = mode,
-            onBack = onBack,
-            onStart = { m, res -> startGame(m, res) },
-            onLevels = { screen = BbScreen.LEVELS },
-            onStats = { screen = BbScreen.STATS },
-            onAch = { screen = BbScreen.ACH },
-        )
-        BbScreen.LEVELS -> BbLevelSelect(
-            prefs = prefs,
-            onPlay = { i -> startGame(BbMode.ADVENTURE, level = i) },
-            onBack = { screen = BbScreen.MENU },
-        )
-        BbScreen.STATS -> BbStatsScreen(prefs, onBack = { screen = BbScreen.MENU })
-        BbScreen.ACH -> BbAchScreen(prefs, onBack = { screen = BbScreen.MENU })
-        BbScreen.GAME -> key(mode, advLevel, runToken) {
-            BbPlay(
+    Crossfade(targetState = screen, animationSpec = tween(220), label = "bbScreen") { s ->
+        when (s) {
+            BbScreen.MENU -> BbMenu(
                 prefs = prefs,
-                mode = mode,
-                levelIndex = advLevel,
-                resume = resume,
                 haptics = haptics,
                 particlesOn = particlesOn,
                 onHaptics = setHaptics,
                 onParticles = setParticles,
-                onExit = { screen = if (mode == BbMode.ADVENTURE) BbScreen.LEVELS else BbScreen.MENU },
-                onPlayLevel = { i -> startGame(BbMode.ADVENTURE, level = i) },
+                lastMode = mode,
+                onBack = onBack,
+                onStart = { m, res -> startGame(m, res) },
+                onLevels = { screen = BbScreen.LEVELS },
+                onStats = { screen = BbScreen.STATS },
+                onAch = { screen = BbScreen.ACH },
             )
+            BbScreen.LEVELS -> BbLevelSelect(
+                prefs = prefs,
+                onPlay = { i -> startGame(BbMode.ADVENTURE, level = i) },
+                onBack = { screen = BbScreen.MENU },
+            )
+            BbScreen.STATS -> BbStatsScreen(prefs, onBack = { screen = BbScreen.MENU })
+            BbScreen.ACH -> BbAchScreen(prefs, onBack = { screen = BbScreen.MENU })
+            BbScreen.GAME -> key(mode, advLevel, runToken) {
+                BbPlay(
+                    prefs = prefs,
+                    mode = mode,
+                    levelIndex = advLevel,
+                    resume = resume,
+                    haptics = haptics,
+                    particlesOn = particlesOn,
+                    onHaptics = setHaptics,
+                    onParticles = setParticles,
+                    onExit = { screen = if (mode == BbMode.ADVENTURE) BbScreen.LEVELS else BbScreen.MENU },
+                    onPlayLevel = { i -> startGame(BbMode.ADVENTURE, level = i) },
+                )
+            }
         }
     }
 }
@@ -419,222 +416,125 @@ private fun BbMenu(
     val advDone = remember { (BbLevels.indices).count { prefs.getInt("blockblast_adv_stars_$it", 0) > 0 } }
 
     Box(Modifier.fillMaxSize().background(HikariBg)) {
+        GxMenuBackground(HikariAmber)
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
         ) {
-            Row(
-                Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                Arrangement.SpaceBetween,
-                Alignment.CenterVertically,
-            ) {
-                TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
-                Text("Block Blast", fontSize = 20.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-                TextButton(onClick = { showHelp = true }) { Text("?", color = HikariTextMuted, fontSize = 16.sp) }
+            GxHeader("Block Blast", HikariAmber, onBack) {
+                GxIconChip("?") { showHelp = true }
             }
-
-            // Spielerlevel-Karte
-            Column(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(HikariCardBg).padding(16.dp),
-            ) {
-                Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                    Text("Spielerlevel $lvl", fontSize = 15.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                    Text("$xp / $lvlNext XP", fontSize = 11.sp, color = HikariTextMuted)
+            Column(Modifier.padding(horizontal = 16.dp)) {
+                GxAppear(0) {
+                    GxLevelCard(lvl, "$xp / $lvlNext XP", lvlFrac, HikariAmber)
                 }
-                Spacer(Modifier.height(8.dp))
-                Box(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)).background(HikariSurfaceHigh)) {
-                    Box(
-                        Modifier.fillMaxWidth(lvlFrac).fillMaxHeight()
-                            .clip(RoundedCornerShape(3.dp)).background(HikariPrimary)
+                Spacer(Modifier.height(14.dp))
+
+                if (save != null) {
+                    GxAppear(1) {
+                        GxModeCard(
+                            emoji = "▶️", title = "Weiterspielen",
+                            subtitle = "Deine klassische Runde wartet",
+                            accent = HikariAmber,
+                            highlighted = true,
+                            badge = "WEITER",
+                            best = "${save.score} Punkte",
+                            onClick = { onStart(BbMode.CLASSIC, save) },
+                        )
+                    }
+                    Spacer(Modifier.height(10.dp))
+                }
+
+                GxAppear(2) {
+                    GxModeCard(
+                        emoji = "🧩", title = "Klassisch",
+                        subtitle = "Endlos-Puzzle — der Klassiker",
+                        accent = HikariAmber,
+                        highlighted = lastMode == BbMode.CLASSIC && save == null,
+                        best = if (classicBest > 0) "Best: $classicBest" else null,
+                        onClick = { onStart(BbMode.CLASSIC, null) },
                     )
                 }
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            if (save != null) {
-                BbModeCard(
-                    emoji = "▶️", title = "Weiterspielen",
-                    subtitle = "Klassische Runde · ${save.score} Punkte",
-                    highlighted = true,
-                    onClick = { onStart(BbMode.CLASSIC, save) },
-                )
                 Spacer(Modifier.height(10.dp))
+                GxAppear(3) {
+                    GxModeCard(
+                        emoji = "📅", title = "Daily-Challenge",
+                        subtitle = "Heute dieselbe Steinfolge für alle Versuche",
+                        accent = HikariAmber,
+                        highlighted = lastMode == BbMode.DAILY,
+                        badge = "HEUTE",
+                        best = if (dailyBest > 0) "Best heute: $dailyBest" else null,
+                        onClick = { onStart(BbMode.DAILY, null) },
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+                GxAppear(4) {
+                    GxModeCard(
+                        emoji = "🗺️", title = "Abenteuer",
+                        subtitle = "20 Level-Karten mit Juwelen und Zuglimit",
+                        accent = HikariAmber,
+                        highlighted = lastMode == BbMode.ADVENTURE,
+                        best = "$advDone/${BbLevels.size} Level · $advStars ★",
+                        onClick = onLevels,
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+                GxAppear(5) {
+                    GxModeCard(
+                        emoji = "⏱️", title = "Zeitrausch",
+                        subtitle = "120 Sekunden — Linien geben Zeit zurück",
+                        accent = HikariAmber,
+                        highlighted = lastMode == BbMode.TIME,
+                        best = if (timeBest > 0) "Best: $timeBest" else null,
+                        onClick = { onStart(BbMode.TIME, null) },
+                    )
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                GxAppear(6) {
+                    Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(10.dp)) {
+                        GxSmallAction("📊", "Statistik", Modifier.weight(1f), onStats)
+                        GxSmallAction("🏅", "Erfolge", Modifier.weight(1f), onAch)
+                        GxSmallAction("⚙️", "Optionen", Modifier.weight(1f)) { showSettings = true }
+                    }
+                }
+                Spacer(Modifier.height(24.dp))
             }
-
-            BbModeCard(
-                emoji = "🧩", title = "Klassisch",
-                subtitle = if (classicBest > 0) "Endlos-Puzzle · Best: $classicBest" else "Endlos-Puzzle — der Klassiker",
-                highlighted = lastMode == BbMode.CLASSIC && save == null,
-                onClick = { onStart(BbMode.CLASSIC, null) },
-            )
-            Spacer(Modifier.height(10.dp))
-            BbModeCard(
-                emoji = "📅", title = "Daily-Challenge",
-                subtitle = if (dailyBest > 0) "Heutige Steinfolge · Best heute: $dailyBest" else "Jeden Tag dieselbe Steinfolge für alle Versuche",
-                highlighted = lastMode == BbMode.DAILY,
-                onClick = { onStart(BbMode.DAILY, null) },
-            )
-            Spacer(Modifier.height(10.dp))
-            BbModeCard(
-                emoji = "🗺️", title = "Abenteuer",
-                subtitle = "$advDone/${BbLevels.size} Level · $advStars ⭐ gesammelt",
-                highlighted = lastMode == BbMode.ADVENTURE,
-                onClick = onLevels,
-            )
-            Spacer(Modifier.height(10.dp))
-            BbModeCard(
-                emoji = "⏱️", title = "Zeitrausch",
-                subtitle = if (timeBest > 0) "120 Sekunden, Linien geben Zeit · Best: $timeBest" else "120 Sekunden — Linien geben Zeit zurück",
-                highlighted = lastMode == BbMode.TIME,
-                onClick = { onStart(BbMode.TIME, null) },
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(10.dp)) {
-                BbSmallButton("📊", "Statistik", Modifier.weight(1f), onStats)
-                BbSmallButton("🏅", "Erfolge", Modifier.weight(1f), onAch)
-                BbSmallButton("⚙️", "Optionen", Modifier.weight(1f)) { showSettings = true }
-            }
-
-            Spacer(Modifier.height(24.dp))
         }
 
         if (showSettings) {
-            BbSettingsOverlay(haptics, particlesOn, onHaptics, onParticles) { showSettings = false }
+            GxSheet("Einstellungen", HikariAmber, onClose = { showSettings = false }) {
+                GxToggle("Vibration", "Haptisches Feedback beim Spielen", HikariAmber, haptics, onHaptics)
+                GxToggle("Partikel-Effekte", "Feuerwerk, Funken & Glitzer", HikariAmber, particlesOn, onParticles)
+            }
         }
         if (showHelp) {
-            BbHelpOverlay { showHelp = false }
+            BbHelpSheet { showHelp = false }
         }
     }
 }
 
+// ————— Hilfe-Sheet —————
+
 @Composable
-private fun BbModeCard(emoji: String, title: String, subtitle: String, highlighted: Boolean, onClick: () -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(HikariCardBg)
-            .then(if (highlighted) Modifier.border(1.dp, HikariPrimary.copy(alpha = 0.6f), RoundedCornerShape(16.dp)) else Modifier)
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(emoji, fontSize = 26.sp)
-        Spacer(Modifier.width(14.dp))
-        Column(Modifier.weight(1f)) {
-            Text(title, fontSize = 16.sp, color = HikariText, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(2.dp))
-            Text(subtitle, fontSize = 12.sp, color = HikariTextMuted)
+private fun BbHelpSheet(onClose: () -> Unit) {
+    GxSheet("So funktioniert's", HikariAmber, onClose = onClose) {
+        val lines = listOf(
+            "🧩 Ziehe Steine aufs 8×8-Feld — volle Reihen und Spalten verschwinden.",
+            "🔥 Mehrere Linien nacheinander = Combo. Ab Combo ×3 zündet der Fieber-Modus: 10 s doppelte Punkte!",
+            "✨ Feld komplett leer geräumt = Perfect Clear (+300).",
+            "🔨 Hammer: entfernt eine einzelne Zelle. Lädt sich über gelöschte Linien auf.",
+            "🌀 Wirbel: würfelt deine drei Steine neu.",
+            "↩️ Undo: einmal pro Runde den letzten Zug zurücknehmen.",
+            "🗺️ Abenteuer: 20 Level mit eigenen Karten, Juwelen und Zuglimit.",
+            "⏱️ Zeitrausch: 120 s — jede Linie gibt +5 s.",
+        )
+        for (l in lines) {
+            Text(l, fontSize = 13.sp, color = HikariText, lineHeight = 19.sp)
+            Spacer(Modifier.height(9.dp))
         }
-        Text("›", fontSize = 20.sp, color = HikariTextFaint)
-    }
-}
-
-@Composable
-private fun BbSmallButton(emoji: String, label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Column(
-        modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(HikariCardBg)
-            .clickable(onClick = onClick)
-            .padding(vertical = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(emoji, fontSize = 20.sp)
-        Spacer(Modifier.height(4.dp))
-        Text(label, fontSize = 11.sp, color = HikariTextMuted)
-    }
-}
-
-// ————— Overlays (Settings / Hilfe) —————
-
-@Composable
-private fun BbSettingsOverlay(
-    haptics: Boolean,
-    particlesOn: Boolean,
-    onHaptics: (Boolean) -> Unit,
-    onParticles: (Boolean) -> Unit,
-    onClose: () -> Unit,
-) {
-    Box(
-        Modifier.fillMaxSize().background(Color(0xCC000000))
-            .pointerInput(Unit) { detectTapGestures { onClose() } },
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            Modifier
-                .padding(24.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(HikariCardBg)
-                .pointerInput(Unit) { detectTapGestures { } }
-                .padding(24.dp),
-        ) {
-            Text("Einstellungen", fontSize = 18.sp, color = HikariText, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(16.dp))
-            Row(Modifier.width(260.dp), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                Text("Vibration", fontSize = 14.sp, color = HikariText)
-                Switch(
-                    checked = haptics, onCheckedChange = onHaptics,
-                    colors = SwitchDefaults.colors(checkedTrackColor = HikariPrimary, checkedThumbColor = Color.Black),
-                )
-            }
-            Row(Modifier.width(260.dp), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                Text("Partikel-Effekte", fontSize = 14.sp, color = HikariText)
-                Switch(
-                    checked = particlesOn, onCheckedChange = onParticles,
-                    colors = SwitchDefaults.colors(checkedTrackColor = HikariPrimary, checkedThumbColor = Color.Black),
-                )
-            }
-            Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = onClose,
-                colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-            ) { Text("Fertig", color = Color.Black, fontWeight = FontWeight.Bold) }
-        }
-    }
-}
-
-@Composable
-private fun BbHelpOverlay(onClose: () -> Unit) {
-    Box(
-        Modifier.fillMaxSize().background(Color(0xE6000000))
-            .pointerInput(Unit) { detectTapGestures { } },
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            Modifier
-                .padding(24.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(HikariCardBg)
-                .padding(24.dp)
-                .verticalScroll(rememberScrollState()),
-        ) {
-            Text("So funktioniert's", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(12.dp))
-            val lines = listOf(
-                "🧩 Ziehe Steine aufs 8×8-Feld — volle Reihen und Spalten verschwinden.",
-                "🔥 Mehrere Linien nacheinander = Combo. Ab Combo ×3 zündet der Fieber-Modus: 10 s doppelte Punkte!",
-                "✨ Feld komplett leer geräumt = Perfect Clear (+300).",
-                "🔨 Hammer: entfernt eine einzelne Zelle. Lädt sich über gelöschte Linien auf.",
-                "🌀 Wirbel: würfelt deine drei Steine neu.",
-                "↩️ Undo: einmal pro Runde den letzten Zug zurücknehmen.",
-                "🗺️ Abenteuer: 20 Level mit eigenen Karten, Juwelen und Zuglimit.",
-                "⏱️ Zeitrausch: 120 s — jede Linie gibt +5 s.",
-            )
-            for (l in lines) {
-                Text(l, fontSize = 13.sp, color = HikariText, lineHeight = 19.sp)
-                Spacer(Modifier.height(8.dp))
-            }
-            Spacer(Modifier.height(8.dp))
-            Button(
-                onClick = onClose,
-                colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-            ) { Text("Los geht's", color = Color.Black, fontWeight = FontWeight.Bold) }
-        }
+        Spacer(Modifier.height(10.dp))
+        GxPrimaryButton("Los geht's", HikariAmber, Modifier.fillMaxWidth(), onClick = onClose)
     }
 }
 
@@ -644,67 +544,64 @@ private fun BbHelpOverlay(onClose: () -> Unit) {
 private fun BbLevelSelect(prefs: SharedPreferences, onPlay: (Int) -> Unit, onBack: () -> Unit) {
     BackHandler { onBack() }
     val stars = remember { BbLevels.indices.map { prefs.getInt("blockblast_adv_stars_$it", 0) } }
-    Column(Modifier.fillMaxSize().background(HikariBg).verticalScroll(rememberScrollState())) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            Arrangement.SpaceBetween,
-            Alignment.CenterVertically,
-        ) {
-            TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
-            Text("Abenteuer", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            Text("${stars.sum()} ⭐", fontSize = 13.sp, color = HikariTextMuted)
-        }
-        Text(
-            "Räume die Karte ab: Juwelen einsammeln oder Linien löschen — bevor die Züge ausgehen.",
-            fontSize = 12.sp, color = HikariTextMuted,
-            modifier = Modifier.padding(horizontal = 20.dp),
-        )
-        Spacer(Modifier.height(16.dp))
-        for (row in 0 until (BbLevels.size + 3) / 4) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                Arrangement.spacedBy(10.dp),
-            ) {
-                for (col in 0..3) {
-                    val i = row * 4 + col
-                    if (i >= BbLevels.size) {
-                        Spacer(Modifier.weight(1f))
-                        continue
-                    }
-                    val unlocked = i == 0 || stars[i - 1] > 0
-                    Column(
-                        Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(if (unlocked) HikariCardBg else HikariCardBg.copy(alpha = 0.5f))
-                            .then(
-                                if (unlocked) Modifier.clickable { onPlay(i) } else Modifier
-                            )
-                            .padding(vertical = 12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
+    Box(Modifier.fillMaxSize().background(HikariBg)) {
+        GxMenuBackground(HikariAmber)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            GxHeader("Abenteuer", HikariAmber, onBack) {
+                Text("${stars.sum()} ★", fontSize = 13.sp, color = HikariAmber, fontWeight = FontWeight.Bold)
+            }
+            Text(
+                "Räume die Karte ab: Juwelen einsammeln oder Linien löschen — bevor die Züge ausgehen.",
+                fontSize = 12.sp, color = HikariTextMuted, lineHeight = 17.sp,
+                modifier = Modifier.padding(horizontal = 20.dp),
+            )
+            Spacer(Modifier.height(16.dp))
+            for (row in 0 until (BbLevels.size + 3) / 4) {
+                GxAppear(row) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        Arrangement.spacedBy(10.dp),
                     ) {
-                        if (unlocked) {
-                            Text("${i + 1}", fontSize = 18.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(4.dp))
-                            Row {
-                                repeat(3) { s ->
-                                    Text(
-                                        "★", fontSize = 10.sp,
-                                        color = if (s < stars[i]) HikariPrimary else HikariTextFaint,
+                        for (col in 0..3) {
+                            val i = row * 4 + col
+                            if (i >= BbLevels.size) {
+                                Spacer(Modifier.weight(1f))
+                                continue
+                            }
+                            val unlocked = i == 0 || stars[i - 1] > 0
+                            Column(
+                                Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(
+                                        if (stars[i] > 0) lerpColor(HikariCardBg, HikariAmber, 0.08f) else HikariCardBg
                                     )
+                                    .border(
+                                        1.dp,
+                                        if (stars[i] > 0) HikariAmber.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.06f),
+                                        RoundedCornerShape(16.dp),
+                                    )
+                                    .gxPressable(enabled = unlocked) { onPlay(i) }
+                                    .padding(vertical = 12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                if (unlocked) {
+                                    Text("${i + 1}", fontSize = 18.sp, color = HikariText, fontWeight = FontWeight.Black)
+                                    Spacer(Modifier.height(4.dp))
+                                    GxStarRow(stars[i], size = 10.dp)
+                                } else {
+                                    Text("🔒", fontSize = 16.sp)
+                                    Spacer(Modifier.height(4.dp))
+                                    Text("${i + 1}", fontSize = 10.sp, color = HikariTextFaint)
                                 }
                             }
-                        } else {
-                            Text("🔒", fontSize = 16.sp)
-                            Spacer(Modifier.height(4.dp))
-                            Text("${i + 1}", fontSize = 10.sp, color = HikariTextFaint)
                         }
                     }
                 }
+                Spacer(Modifier.height(10.dp))
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(24.dp))
         }
-        Spacer(Modifier.height(24.dp))
     }
 }
 
@@ -714,16 +611,17 @@ private fun BbLevelSelect(prefs: SharedPreferences, onPlay: (Int) -> Unit, onBac
 private fun BbStatsScreen(prefs: SharedPreferences, onBack: () -> Unit) {
     BackHandler { onBack() }
     val xp = remember { prefs.getInt("blockblast_xp", 0) }
-    val rows = remember {
+    // Wert zuerst: wird als große Zahl in der Statistik-Kachel angezeigt
+    val tiles = remember {
         listOf(
-            "Runden gespielt" to "${prefs.getInt("blockblast_games_played", 0)}",
-            "Spielerlevel" to "${bbLevelFromXp(xp)} ($xp XP)",
-            "Beste Combo" to "×${prefs.getInt("blockblast_best_combo", 0)}",
-            "Linien gesamt" to "${prefs.getInt("blockblast_total_lines", 0)}",
-            "Punkte gesamt" to "${prefs.getInt("blockblast_total_score", 0)}",
-            "Perfect Clears" to "${prefs.getInt("blockblast_perfect_clears", 0)}",
-            "Abenteuer-Sterne" to "${BbLevels.indices.sumOf { prefs.getInt("blockblast_adv_stars_$it", 0) }}",
-            "Spielzeit" to bbFmtDuration(prefs.getInt("blockblast_playtime_sec", 0)),
+            "${prefs.getInt("blockblast_games_played", 0)}" to "Runden gespielt",
+            "${bbLevelFromXp(xp)}" to "Spielerlevel ($xp XP)",
+            "×${prefs.getInt("blockblast_best_combo", 0)}" to "Beste Combo",
+            "${prefs.getInt("blockblast_total_lines", 0)}" to "Linien gesamt",
+            "${prefs.getInt("blockblast_total_score", 0)}" to "Punkte gesamt",
+            "${prefs.getInt("blockblast_perfect_clears", 0)}" to "Perfect Clears",
+            "${BbLevels.indices.sumOf { prefs.getInt("blockblast_adv_stars_$it", 0) }} ★" to "Abenteuer-Sterne",
+            bbFmtDuration(prefs.getInt("blockblast_playtime_sec", 0)) to "Spielzeit",
         )
     }
     val history = remember {
@@ -735,54 +633,56 @@ private fun BbStatsScreen(prefs: SharedPreferences, onBack: () -> Unit) {
             }
             .sortedByDescending { it.first }
     }
-    Column(Modifier.fillMaxSize().background(HikariBg).verticalScroll(rememberScrollState())) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            Arrangement.SpaceBetween,
-            Alignment.CenterVertically,
-        ) {
-            TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
-            Text("Statistik", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.width(64.dp))
-        }
-        Column(
-            Modifier.padding(horizontal = 16.dp).fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp)).background(HikariCardBg).padding(16.dp),
-        ) {
-            for ((label, value) in rows) {
-                Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), Arrangement.SpaceBetween) {
-                    Text(label, fontSize = 13.sp, color = HikariTextMuted)
-                    Text(value, fontSize = 13.sp, color = HikariText, fontWeight = FontWeight.Bold)
+    Box(Modifier.fillMaxSize().background(HikariBg)) {
+        GxMenuBackground(HikariAmber)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            GxHeader("Statistik", HikariAmber, onBack)
+            tiles.chunked(2).forEachIndexed { rowIdx, pair ->
+                GxAppear(rowIdx) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        Arrangement.spacedBy(10.dp),
+                    ) {
+                        for ((value, label) in pair) {
+                            GxStatTile(value, label, HikariAmber, Modifier.weight(1f))
+                        }
+                        if (pair.size == 1) Spacer(Modifier.weight(1f))
+                    }
                 }
+                Spacer(Modifier.height(10.dp))
             }
-        }
-        Spacer(Modifier.height(16.dp))
-        Text(
-            "Top 5 — Klassisch", fontSize = 14.sp, color = HikariText, fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 20.dp),
-        )
-        Spacer(Modifier.height(8.dp))
-        if (history.isEmpty()) {
+            Spacer(Modifier.height(8.dp))
             Text(
-                "Noch keine Runden gespielt.", fontSize = 12.sp, color = HikariTextFaint,
+                "Top 5 — Klassisch", fontSize = 14.sp, color = HikariText, fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(horizontal = 20.dp),
             )
-        } else {
-            Column(
-                Modifier.padding(horizontal = 16.dp).fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp)).background(HikariCardBg).padding(16.dp),
-            ) {
-                history.forEachIndexed { i, (score, epochDay) ->
-                    val d = LocalDate.ofEpochDay(epochDay)
-                    Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), Arrangement.SpaceBetween) {
-                        Text("${i + 1}.", fontSize = 13.sp, color = HikariTextFaint)
-                        Text("$score", fontSize = 13.sp, color = if (i == 0) HikariPrimary else HikariText, fontWeight = FontWeight.Bold)
-                        Text("%02d.%02d.%d".format(d.dayOfMonth, d.monthValue, d.year), fontSize = 12.sp, color = HikariTextMuted)
+            Spacer(Modifier.height(8.dp))
+            if (history.isEmpty()) {
+                Text(
+                    "Noch keine Runden gespielt.", fontSize = 12.sp, color = HikariTextFaint,
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                )
+            } else {
+                GxAppear(5) {
+                    Column(
+                        Modifier.padding(horizontal = 16.dp).fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp)).background(HikariCardBg)
+                            .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(16.dp))
+                            .padding(16.dp),
+                    ) {
+                        history.forEachIndexed { i, (score, epochDay) ->
+                            val d = LocalDate.ofEpochDay(epochDay)
+                            Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), Arrangement.SpaceBetween) {
+                                Text(if (i == 0) "🏆" else "${i + 1}.", fontSize = 13.sp, color = HikariTextFaint)
+                                Text("$score", fontSize = 13.sp, color = if (i == 0) HikariPrimary else HikariText, fontWeight = FontWeight.Bold)
+                                Text("%02d.%02d.%d".format(d.dayOfMonth, d.monthValue, d.year), fontSize = 12.sp, color = HikariTextMuted)
+                            }
+                        }
                     }
                 }
             }
+            Spacer(Modifier.height(24.dp))
         }
-        Spacer(Modifier.height(24.dp))
     }
 }
 
@@ -793,35 +693,21 @@ private fun BbAchScreen(prefs: SharedPreferences, onBack: () -> Unit) {
     BackHandler { onBack() }
     val unlocked = remember { BbAchievements.associate { it.id to prefs.getBoolean("blockblast_ach_${it.id}", false) } }
     val count = unlocked.values.count { it }
-    Column(Modifier.fillMaxSize().background(HikariBg).verticalScroll(rememberScrollState())) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            Arrangement.SpaceBetween,
-            Alignment.CenterVertically,
-        ) {
-            TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
-            Text("Erfolge", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            Text("$count/${BbAchievements.size}", fontSize = 13.sp, color = HikariTextMuted)
-        }
-        for (a in BbAchievements) {
-            val got = unlocked[a.id] == true
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(if (got) HikariCardBg else HikariCardBg.copy(alpha = 0.55f))
-                    .padding(14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(a.icon, fontSize = 22.sp, modifier = Modifier.graphicsLayer { alpha = if (got) 1f else 0.35f })
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(a.title, fontSize = 14.sp, color = if (got) HikariText else HikariTextMuted, fontWeight = FontWeight.Bold)
-                    Text(a.desc, fontSize = 11.sp, color = HikariTextFaint)
-                }
-                if (got) Text("✓", fontSize = 16.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+    Box(Modifier.fillMaxSize().background(HikariBg)) {
+        GxMenuBackground(HikariAmber)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            GxHeader("Erfolge", HikariAmber, onBack) {
+                Text("$count/${BbAchievements.size}", fontSize = 13.sp, color = HikariAmber, fontWeight = FontWeight.Bold)
             }
+            BbAchievements.forEachIndexed { i, a ->
+                GxAppear(i) {
+                    Box(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                        GxAchRow(a.icon, a.title, a.desc, HikariAmber, unlocked[a.id] == true)
+                    }
+                }
+            }
+            Spacer(Modifier.height(24.dp))
         }
-        Spacer(Modifier.height(24.dp))
     }
 }
 
@@ -1334,7 +1220,7 @@ private fun BbPlay(
                 Arrangement.SpaceBetween,
                 Alignment.CenterVertically,
             ) {
-                TextButton(onClick = { paused = true }) { Text("❚❚", color = HikariTextMuted, fontSize = 14.sp) }
+                GxIconChip("❚❚") { paused = true }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         when (mode) {
@@ -1359,7 +1245,8 @@ private fun BbPlay(
                     }
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("$displayScore", fontSize = 16.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                    GxHudPill("PKT", "$displayScore", HikariPrimary)
+                    Spacer(Modifier.height(3.dp))
                     when {
                         mode == BbMode.ADVENTURE -> Text("Züge: $movesLeft", fontSize = 11.sp, color = if (movesLeft <= 3) HikariDanger else HikariTextMuted)
                         highscore > 0 && score < highscore -> Text("Noch ${highscore - score} bis Rekord", fontSize = 10.sp, color = HikariTextMuted)
@@ -1581,10 +1468,11 @@ private fun BbPlay(
                 val undoEnabled = undoSnap != null && !undoUsed && !gameOver && !won
                 Box(
                     Modifier
-                        .size(46.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
                         .background(HikariCardBg)
-                        .clickable(enabled = undoEnabled) { undo() },
+                        .border(1.dp, Color.White.copy(alpha = 0.08f), CircleShape)
+                        .gxPressable(enabled = undoEnabled) { undo() },
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -1774,93 +1662,53 @@ private fun BbPlay(
             ) {
                 Column(
                     Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(HikariCardBg)
-                        .padding(horizontal = 28.dp, vertical = 24.dp),
+                        .padding(horizontal = 32.dp)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Color(0xFF232326))
+                        .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+                        .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text("Pause", fontSize = 24.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        "Punkte: $score · Zeit: ${bbFmtTime(playSec.toInt())}",
-                        fontSize = 12.sp, color = HikariTextMuted,
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    Button(
-                        onClick = { paused = false },
-                        colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                        modifier = Modifier.width(200.dp),
-                    ) { Text("Fortsetzen", color = Color.Black, fontWeight = FontWeight.Bold) }
+                    Text("Pause", fontSize = 24.sp, color = HikariText, fontWeight = FontWeight.Black)
                     Spacer(Modifier.height(8.dp))
-                    Button(
-                        onClick = { showRestartConfirm = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = HikariSurfaceHigh),
-                        modifier = Modifier.width(200.dp),
-                    ) { Text("Neustart", color = HikariText) }
-                    Spacer(Modifier.height(8.dp))
-                    Button(
-                        onClick = {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        GxHudPill("PKT", "$score", HikariPrimary)
+                        GxHudPill("ZEIT", bbFmtTime(playSec.toInt()))
+                    }
+                    Spacer(Modifier.height(20.dp))
+                    GxPrimaryButton("Weiter", HikariPrimary, Modifier.fillMaxWidth()) { paused = false }
+                    Spacer(Modifier.height(10.dp))
+                    Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(10.dp)) {
+                        GxGhostButton("Neustart", Modifier.weight(1f)) { showRestartConfirm = true }
+                        GxGhostButton("Zum Menü", Modifier.weight(1f)) {
                             saveClassic()
                             onExit()
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = HikariSurfaceHigh),
-                        modifier = Modifier.width(200.dp),
-                    ) { Text("Zum Menü", color = HikariText) }
-                    Spacer(Modifier.height(16.dp))
-                    Row(Modifier.width(200.dp), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                        Text("Vibration", fontSize = 13.sp, color = HikariTextMuted)
-                        Switch(
-                            checked = haptics, onCheckedChange = onHaptics,
-                            colors = SwitchDefaults.colors(checkedTrackColor = HikariPrimary, checkedThumbColor = Color.Black),
-                        )
+                        }
                     }
-                    Row(Modifier.width(200.dp), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                        Text("Partikel", fontSize = 13.sp, color = HikariTextMuted)
-                        Switch(
-                            checked = particlesOn, onCheckedChange = onParticles,
-                            colors = SwitchDefaults.colors(checkedTrackColor = HikariPrimary, checkedThumbColor = Color.Black),
-                        )
-                    }
+                    Spacer(Modifier.height(14.dp))
+                    GxToggle("Vibration", null, HikariPrimary, haptics, onHaptics)
+                    GxToggle("Partikel-Effekte", null, HikariPrimary, particlesOn, onParticles)
                 }
             }
         }
 
         // Neustart-Bestätigung
         if (showRestartConfirm) {
-            Box(
-                Modifier.fillMaxSize().background(Color(0xCC000000))
-                    .pointerInput(Unit) { detectTapGestures { showRestartConfirm = false } },
-                contentAlignment = Alignment.Center,
-            ) {
-                Column(
-                    Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(HikariCardBg)
-                        .pointerInput(Unit) { detectTapGestures { } }
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text("Runde neu starten?", fontSize = 16.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(4.dp))
-                    Text("Der aktuelle Fortschritt geht verloren.", fontSize = 12.sp, color = HikariTextMuted)
-                    Spacer(Modifier.height(16.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Button(
-                            onClick = { showRestartConfirm = false },
-                            colors = ButtonDefaults.buttonColors(containerColor = HikariSurfaceHigh),
-                        ) { Text("Abbrechen", color = HikariText) }
-                        Button(
-                            onClick = { resetRound() },
-                            colors = ButtonDefaults.buttonColors(containerColor = HikariDanger),
-                        ) { Text("Neustart", color = Color.Black, fontWeight = FontWeight.Bold) }
-                    }
-                }
-            }
+            GxConfirmDialog(
+                title = "Runde neu starten?",
+                text = "Der aktuelle Fortschritt geht verloren.",
+                confirmLabel = "Neustart",
+                accent = HikariPrimary,
+                danger = true,
+                onConfirm = { resetRound() },
+                onDismiss = { showRestartConfirm = false },
+            )
         }
 
         // Hilfe beim ersten Start
         if (showHelp) {
-            BbHelpOverlay {
+            BbHelpSheet {
                 showHelp = false
                 prefs.edit().putBoolean("blockblast_help_seen", true).apply()
             }
@@ -1868,12 +1716,25 @@ private fun BbPlay(
 
         // Game-Over / Sieg-Overlay
         if (gameOver || won) {
+            // Erst nach dem ersten Frame aufs Ziel setzen, damit der Score hochzählt
+            var endTarget by remember { mutableIntStateOf(0) }
+            LaunchedEffect(Unit) { endTarget = score }
+            val endScore = gxAnimatedCount(endTarget, 900)
             Box(
                 Modifier.fillMaxSize().background(Color(0xE60A0A0A))
                     .pointerInput(Unit) { detectTapGestures { } },
                 contentAlignment = Alignment.Center,
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    Modifier
+                        .padding(horizontal = 28.dp)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(Color(0xFF232326))
+                        .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(28.dp))
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
                     Text(
                         when {
                             won -> "Level geschafft!"
@@ -1881,66 +1742,41 @@ private fun BbPlay(
                             mode == BbMode.ADVENTURE -> "Level gescheitert"
                             else -> "Game Over"
                         },
-                        fontSize = 28.sp,
+                        fontSize = 26.sp,
                         color = if (won) HikariPrimary else HikariText,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Black,
                     )
                     if (won) {
                         Spacer(Modifier.height(10.dp))
-                        Row {
-                            repeat(3) { s ->
-                                Text(
-                                    "★", fontSize = 34.sp,
-                                    color = if (s < wonStars) HikariPrimary else HikariTextFaint,
-                                )
-                            }
-                        }
+                        GxStarRow(wonStars, size = 32.dp)
                     }
-                    Spacer(Modifier.height(12.dp))
-                    Text("Punkte: $score", fontSize = 20.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(14.dp))
+                    Text("$endScore", fontSize = 40.sp, color = HikariPrimary, fontWeight = FontWeight.Black)
+                    Text("PUNKTE", fontSize = 10.sp, color = HikariTextFaint, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(6.dp))
                     if (newRecord) {
-                        Text("Neuer Rekord!", fontSize = 16.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+                        Text("🏆 Neuer Rekord!", fontSize = 15.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
                     } else if (hsKey != null) {
-                        Text("Highscore: $highscore", fontSize = 14.sp, color = HikariTextMuted)
+                        Text("Highscore: $highscore", fontSize = 13.sp, color = HikariTextMuted)
                     }
-                    Spacer(Modifier.height(12.dp))
-                    // Runden-Statistik
-                    Column(
-                        Modifier
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(HikariCardBg)
-                            .padding(horizontal = 24.dp, vertical = 12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Text("Dauer ${bbFmtTime(playSec.toInt())} · Beste Combo ×$bestComboRound · $linesRound Linien",
-                            fontSize = 12.sp, color = HikariTextMuted)
+                    Spacer(Modifier.height(16.dp))
+                    Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(8.dp)) {
+                        GxStatTile(bbFmtTime(playSec.toInt()), "Dauer", HikariPrimary, Modifier.weight(1f))
+                        GxStatTile("×$bestComboRound", "Beste Combo", HikariPrimary, Modifier.weight(1f))
+                        GxStatTile("$linesRound", "Linien", HikariPrimary, Modifier.weight(1f))
                     }
-                    Spacer(Modifier.height(20.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        if (won && levelIndex + 1 < BbLevels.size) {
-                            Button(
-                                onClick = { onPlayLevel(levelIndex + 1) },
-                                colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                                shape = RoundedCornerShape(12.dp),
-                            ) { Text("Weiter →", color = Color.Black, fontWeight = FontWeight.Bold) }
+                    Spacer(Modifier.height(18.dp))
+                    if (won && levelIndex + 1 < BbLevels.size) {
+                        GxPrimaryButton("Weiter →", HikariPrimary, Modifier.fillMaxWidth()) { onPlayLevel(levelIndex + 1) }
+                        Spacer(Modifier.height(10.dp))
+                        Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(10.dp)) {
+                            GxGhostButton("Nochmal", Modifier.weight(1f)) { resetRound() }
+                            GxGhostButton("Zum Menü", Modifier.weight(1f), onClick = onExit)
                         }
-                        Button(
-                            onClick = { resetRound() },
-                            colors = ButtonDefaults.buttonColors(containerColor = if (won) HikariSurfaceHigh else HikariPrimary),
-                            shape = RoundedCornerShape(12.dp),
-                        ) {
-                            Text(
-                                "Nochmal",
-                                color = if (won) HikariText else Color.Black,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
-                        Button(
-                            onClick = onExit,
-                            colors = ButtonDefaults.buttonColors(containerColor = HikariSurfaceHigh),
-                            shape = RoundedCornerShape(12.dp),
-                        ) { Text("Menü", color = HikariText) }
+                    } else {
+                        GxPrimaryButton("Nochmal", HikariPrimary, Modifier.fillMaxWidth()) { resetRound() }
+                        Spacer(Modifier.height(10.dp))
+                        GxGhostButton("Zum Menü", Modifier.fillMaxWidth(), onClick = onExit)
                     }
                 }
             }
@@ -1959,28 +1795,24 @@ private fun BbBoosterButton(
 ) {
     Box(
         Modifier
-            .size(54.dp)
+            .size(56.dp)
             .clip(CircleShape)
             .background(if (active) HikariAmberSoft else HikariCardBg)
             .then(if (active) Modifier.border(2.dp, HikariPrimary, CircleShape) else Modifier)
-            .clickable(enabled = enabled || active, onClick = onClick),
+            .gxPressable(enabled = enabled || active, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(Modifier.fillMaxSize().padding(3.dp)) {
-            val stroke = 3.dp.toPx()
-            drawArc(
-                HikariSurfaceHigh, -90f, 360f, useCenter = false,
-                style = Stroke(width = stroke),
-            )
-            drawArc(
-                HikariPrimary, -90f, 360f * progress.coerceIn(0f, 1f), useCenter = false,
-                style = Stroke(width = stroke),
+        // Voll aufgeladen = voller Ring; sonst Ladefortschritt zur nächsten Ladung
+        GxProgressRing(
+            frac = if (charges > 0) 1f else progress,
+            accent = HikariPrimary,
+            size = 50.dp,
+        ) {
+            Text(
+                emoji, fontSize = 20.sp,
+                modifier = Modifier.graphicsLayer { alpha = if (enabled || active) 1f else 0.35f },
             )
         }
-        Text(
-            emoji, fontSize = 20.sp,
-            modifier = Modifier.graphicsLayer { alpha = if (enabled || active) 1f else 0.35f },
-        )
         if (charges > 0) {
             Box(
                 Modifier

@@ -1,7 +1,7 @@
 package com.hikari.app.ui.games
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -27,7 +27,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -35,7 +34,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -123,9 +124,10 @@ fun GamesScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                items(games) { game ->
+                itemsIndexed(games) { index, game ->
                     GameCard(
                         game = game,
+                        index = index,
                         onClick = { onLaunchGame(game.id) },
                     )
                 }
@@ -135,22 +137,36 @@ fun GamesScreen(
 }
 
 @Composable
-private fun GameCard(game: GameInfo, onClick: () -> Unit) {
-    Surface(
-        modifier = Modifier.fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 4.dp),
-        color = HikariCardBg,
-        shape = RoundedCornerShape(16.dp),
-    ) {
+private fun GameCard(game: GameInfo, index: Int, onClick: () -> Unit) {
+    GxAppear(index) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier.fillMaxWidth()
+                .padding(vertical = 4.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(lerp(HikariCardBg, game.color, 0.06f), HikariCardBg)
+                    )
+                )
+                .border(
+                    1.dp,
+                    Brush.horizontalGradient(
+                        listOf(game.color.copy(alpha = 0.25f), Color.White.copy(alpha = 0.05f))
+                    ),
+                    RoundedCornerShape(20.dp),
+                )
+                .gxPressable(onClick = onClick)
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 modifier = Modifier.size(52.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(game.color.copy(alpha = 0.15f)),
+                    .clip(RoundedCornerShape(15.dp))
+                    .background(
+                        Brush.radialGradient(
+                            listOf(game.color.copy(alpha = 0.28f), game.color.copy(alpha = 0.10f))
+                        )
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
                 game.icon()
@@ -159,9 +175,9 @@ private fun GameCard(game: GameInfo, onClick: () -> Unit) {
             Column(Modifier.weight(1f)) {
                 Text(game.title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = HikariText)
                 Spacer(Modifier.height(4.dp))
-                Text(game.description, fontSize = 12.sp, color = HikariTextMuted, maxLines = 2)
+                Text(game.description, fontSize = 12.sp, color = HikariTextMuted, maxLines = 2, lineHeight = 16.sp)
             }
-            Icon(Icons.Default.ChevronRight, null, tint = HikariTextMuted)
+            Icon(Icons.Default.ChevronRight, null, tint = game.color.copy(alpha = 0.7f))
         }
     }
 }

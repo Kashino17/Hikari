@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Paint
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,6 +14,7 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -23,7 +26,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
@@ -56,6 +58,9 @@ import kotlinx.coroutines.delay
 private enum class HoleMode { KLASSIK, RUSH, WELTEN }
 private enum class HoleScreen { MENU, PLAY, WELTWAHL, STATS, ERFOLGE }
 private enum class HoleKind { FRUCHT, BOMBE, GOLD, HERZ, UHR, MAGNET, REGENBOGEN }
+
+// Akzentfarbe des Spiels (lila) — konsistent mit der Karte im GamesScreen
+private val HoleAccent = Color(0xFFA78BFA)
 
 // ————— Themen (Klassik wechselt alle 3 Level) —————
 
@@ -813,7 +818,8 @@ fun FruitHoleGame(onBack: () -> Unit) {
     // aktiven Screen liegen statt als lose Geschwister-Nodes.
     Box(Modifier.fillMaxSize()) {
 
-    when (screen) {
+    Crossfade(screen, animationSpec = tween(220), label = "holeScreen") { scr ->
+    when (scr) {
         HoleScreen.MENU -> HoleMenuInhalt(
             prefs = prefs,
             xp = xp,
@@ -840,42 +846,42 @@ fun FruitHoleGame(onBack: () -> Unit) {
         HoleScreen.ERFOLGE -> HoleErfolgeInhalt(prefs = prefs, onZurueck = { screen = HoleScreen.MENU })
 
         HoleScreen.PLAY -> Column(Modifier.fillMaxSize().background(HikariBg)) {
-            // Header
+            // Kopf: Pause-Chip · Modus · Punkte-Pille
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp),
                 Arrangement.SpaceBetween,
                 Alignment.CenterVertically,
             ) {
-                TextButton(onClick = { if (!gameOver) paused = true else screen = HoleScreen.MENU }) {
-                    Text(if (gameOver) "← Menü" else "⏸ Pause", color = HikariTextMuted)
+                GxIconChip(if (gameOver) "←" else "⏸", size = 44.dp) {
+                    if (!gameOver) paused = true else screen = HoleScreen.MENU
                 }
-                Text(modeLabel(), fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-                Column(horizontalAlignment = Alignment.End) {
-                    Text("$shownScore", fontSize = 16.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                    when {
-                        recordBroken -> Text("🏆 Rekord!", fontSize = 11.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-                        runRecord > 0 && score < runRecord ->
-                            Text("Noch ${runRecord - score} bis Rekord", fontSize = 11.sp, color = HikariTextMuted)
-                        runRecord > 0 -> Text("Rekord: $runRecord", fontSize = 11.sp, color = HikariTextMuted)
-                        else -> Text("Erste Runde!", fontSize = 11.sp, color = HikariTextFaint)
-                    }
-                }
+                Text(modeLabel(), fontSize = 18.sp, color = HoleAccent, fontWeight = FontWeight.Black)
+                GxHudPill("PKT", "$shownScore", accent = if (recordBroken) HoleAccent else null)
             }
+            Text(
+                when {
+                    recordBroken -> "🏆 Neuer Rekord!"
+                    runRecord > 0 && score < runRecord -> "Noch ${runRecord - score} bis Rekord"
+                    runRecord > 0 -> "Rekord: $runRecord"
+                    else -> "Erste Runde!"
+                },
+                fontSize = 11.sp,
+                color = if (recordBroken) HoleAccent else HikariTextFaint,
+                fontWeight = if (recordBroken) FontWeight.Bold else FontWeight.Normal,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
 
-            // Leben / Timer / Kombo / Level
+            Spacer(Modifier.height(4.dp))
+
+            // Leben / Timer · Kombo-Pille · Level/Welt
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 2.dp),
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 Arrangement.SpaceBetween,
                 Alignment.CenterVertically,
             ) {
                 if (mode == HoleMode.RUSH) {
                     val restSek = ceil(timeLeft).toInt()
-                    Text(
-                        "⏱ ${restSek}s",
-                        fontSize = 17.sp,
-                        color = if (timeLeft <= 10f) HikariDanger else HikariText,
-                        fontWeight = FontWeight.Bold,
-                    )
+                    GxHudPill("ZEIT", "${restSek}s", accent = if (timeLeft <= 10f) HikariDanger else null)
                 } else {
                     Row {
                         repeat(5) { i ->
@@ -888,20 +894,22 @@ fun FruitHoleGame(onBack: () -> Unit) {
                         }
                     }
                 }
-                Text(
-                    when {
-                        world.fever -> "🔥 Fieber ×2"
-                        multiplier > 1 -> "Kombo x$multiplier"
-                        else -> ""
-                    },
-                    fontSize = 14.sp,
-                    color = if (world.fever) Color(0xFFFFD54F) else HikariPrimary,
-                    fontWeight = FontWeight.Bold,
-                )
+                if (world.fever || multiplier > 1) {
+                    Text(
+                        if (world.fever) "🔥 Fieber ×2" else "Kombo x$multiplier",
+                        fontSize = 12.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Black,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(if (world.fever) Color(0xFFFFD54F) else HoleAccent)
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                    )
+                }
                 when (mode) {
-                    HoleMode.WELTEN -> Text(HoleWorlds[worldIdx].mechanik, fontSize = 12.sp, color = HikariTextMuted)
-                    HoleMode.RUSH -> Text("🔥 Dauerregen", fontSize = 12.sp, color = HikariTextMuted)
-                    else -> Text("Level $level", fontSize = 13.sp, color = HikariTextMuted)
+                    HoleMode.WELTEN -> GxHudPill("🌍", HoleWorlds[worldIdx].name)
+                    HoleMode.RUSH -> GxHudPill("🔥", "Dauerregen")
+                    else -> GxHudPill("LVL", "$level")
                 }
             }
 
@@ -910,12 +918,13 @@ fun FruitHoleGame(onBack: () -> Unit) {
             val prevAt = if (combo >= 8) 8 else if (combo >= 4) 4 else 0
             val comboFrac = if (combo >= 12) 1f else ((combo - prevAt).toFloat() / (nextAt - prevAt)).coerceIn(0f, 1f)
             Box(
-                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp)
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
                     .height(4.dp).clip(RoundedCornerShape(2.dp)).background(HikariSurfaceHigh)
             ) {
                 Box(
                     Modifier.fillMaxWidth(comboFrac).fillMaxHeight()
-                        .background(if (world.fever) Color(0xFFFFD54F) else HikariPrimary)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(if (world.fever) Color(0xFFFFD54F) else HoleAccent)
                 )
             }
 
@@ -1150,10 +1159,10 @@ fun FruitHoleGame(onBack: () -> Unit) {
                     Modifier.align(Alignment.TopStart).padding(10.dp),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    if (world.slowTimer > 0f) HoleEffectRing("⏰", world.slowTimer / 5f, Color(0xFF22D3EE))
-                    if (world.magnetTimer > 0f) HoleEffectRing("🌀", world.magnetTimer / 6f, Color(0xFF60A5FA))
-                    if (world.rainbowTimer > 0f) HoleEffectRing("🌈", world.rainbowTimer / 8f, Color(0xFFA78BFA))
-                    if (world.fever) HoleEffectRing("🔥", 1f, Color(0xFFFFD54F))
+                    if (world.slowTimer > 0f) GxProgressRing(world.slowTimer / 5f, Color(0xFF22D3EE), size = 38.dp) { Text("⏰", fontSize = 13.sp) }
+                    if (world.magnetTimer > 0f) GxProgressRing(world.magnetTimer / 6f, Color(0xFF60A5FA), size = 38.dp) { Text("🌀", fontSize = 13.sp) }
+                    if (world.rainbowTimer > 0f) GxProgressRing(world.rainbowTimer / 8f, HoleAccent, size = 38.dp) { Text("🌈", fontSize = 13.sp) }
+                    if (world.fever) GxProgressRing(1f, Color(0xFFFFD54F), size = 38.dp) { Text("🔥", fontSize = 13.sp) }
                 }
 
                 // Rekord-Banner
@@ -1163,10 +1172,10 @@ fun FruitHoleGame(onBack: () -> Unit) {
                             "🏆 Neuer Rekord!",
                             fontSize = 16.sp,
                             color = Color.Black,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clip(RoundedCornerShape(10.dp))
-                                .background(HikariPrimary)
-                                .padding(horizontal = 14.dp, vertical = 6.dp),
+                            fontWeight = FontWeight.Black,
+                            modifier = Modifier.clip(RoundedCornerShape(999.dp))
+                                .background(Brush.horizontalGradient(listOf(HoleAccent, Color(0xFFC4B5FD))))
+                                .padding(horizontal = 16.dp, vertical = 7.dp),
                         )
                     }
                 }
@@ -1174,94 +1183,120 @@ fun FruitHoleGame(onBack: () -> Unit) {
                 // Countdown nach Start / Pause
                 if (countdown > 0f && !paused && !gameOver) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            "${ceil(countdown).toInt()}",
-                            fontSize = 64.sp,
-                            color = HikariPrimary,
-                            fontWeight = FontWeight.Bold,
-                        )
+                        Box(
+                            Modifier.size(110.dp).clip(CircleShape)
+                                .background(Color.Black.copy(alpha = 0.45f))
+                                .border(2.dp, HoleAccent.copy(alpha = 0.6f), CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                "${ceil(countdown).toInt()}",
+                                fontSize = 56.sp,
+                                color = HoleAccent,
+                                fontWeight = FontWeight.Black,
+                            )
+                        }
                     }
                 }
 
                 // Pause-Overlay
                 if (paused && !gameOver) {
-                    HoleOverlayCard {
-                        Text("Pause", fontSize = 24.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(8.dp))
-                        Text("Punkte: $score · Kombo-Best: ${world.bestComboRun}", fontSize = 13.sp, color = HikariTextMuted)
-                        Spacer(Modifier.height(18.dp))
-                        Button(
-                            onClick = { paused = false; countdown = 3f },
-                            colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
+                    Box(
+                        Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.72f))
+                            .pointerInput(Unit) { detectTapGestures { } },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(
+                            Modifier.padding(28.dp)
+                                .widthIn(max = 340.dp)
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(Color(0xFF232326))
+                                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(24.dp))
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            Text("Fortsetzen", color = Color.Black, fontWeight = FontWeight.Bold)
-                        }
-                        Spacer(Modifier.height(8.dp))
-                        TextButton(onClick = { showRestart = true }) {
-                            Text("Neustart", color = HikariTextMuted)
-                        }
-                        TextButton(onClick = { paused = false; screen = HoleScreen.MENU }) {
-                            Text("Zum Menü", color = HikariTextMuted)
+                            Text("⏸", fontSize = 30.sp)
+                            Spacer(Modifier.height(4.dp))
+                            Text("Pause", fontSize = 22.sp, color = HikariText, fontWeight = FontWeight.Black)
+                            Spacer(Modifier.height(12.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                GxHudPill("PKT", "$score", accent = HoleAccent)
+                                GxHudPill("KOMBO", "${world.bestComboRun}")
+                                GxHudPill("🍎", "${world.eaten}")
+                            }
+                            Spacer(Modifier.height(20.dp))
+                            GxPrimaryButton("Weiter", HoleAccent, Modifier.fillMaxWidth()) {
+                                paused = false
+                                countdown = 3f
+                            }
+                            Spacer(Modifier.height(10.dp))
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                GxGhostButton("Neustart", Modifier.weight(1f)) { showRestart = true }
+                                GxGhostButton("Menü", Modifier.weight(1f)) {
+                                    paused = false
+                                    screen = HoleScreen.MENU
+                                }
+                            }
                         }
                     }
                 }
 
                 // Neustart-Bestätigung
                 if (showRestart) {
-                    HoleOverlayCard {
-                        Text("Neu starten?", fontSize = 20.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(6.dp))
-                        Text("Der aktuelle Lauf geht verloren.", fontSize = 13.sp, color = HikariTextMuted)
-                        Spacer(Modifier.height(16.dp))
-                        Button(
-                            onClick = { showRestart = false; startRun(mode, daily, worldIdx) },
-                            colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                        ) {
-                            Text("Ja, neu starten", color = Color.Black, fontWeight = FontWeight.Bold)
-                        }
-                        Spacer(Modifier.height(4.dp))
-                        TextButton(onClick = { showRestart = false }) {
-                            Text("Abbrechen", color = HikariTextMuted)
-                        }
-                    }
+                    GxConfirmDialog(
+                        title = "Neu starten?",
+                        text = "Der aktuelle Lauf geht verloren.",
+                        confirmLabel = "Neu starten",
+                        accent = HoleAccent,
+                        danger = true,
+                        onConfirm = { showRestart = false; startRun(mode, daily, worldIdx) },
+                        onDismiss = { showRestart = false },
+                    )
                 }
 
                 // Game-Over-Overlay mit Runden-Statistik
                 if (gameOver) {
+                    // Count-up: startet bei 0, LaunchedEffect setzt das Ziel nach dem ersten Frame
+                    var countTarget by remember { mutableIntStateOf(0) }
+                    LaunchedEffect(Unit) { countTarget = score }
+                    val displayScore = gxAnimatedCount(countTarget, 900)
                     Column(
-                        Modifier.fillMaxSize().background(Color(0xCC000000)),
+                        Modifier.fillMaxSize().background(Color(0xE0000000)),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Column(
                             Modifier
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(HikariCardBg)
-                                .padding(horizontal = 32.dp, vertical = 26.dp),
+                                .padding(horizontal = 24.dp)
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(28.dp))
+                                .background(Color(0xFF232326))
+                                .border(1.dp, HoleAccent.copy(alpha = 0.25f), RoundedCornerShape(28.dp))
+                                .padding(horizontal = 22.dp, vertical = 26.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             Text(
-                                if (mode == HoleMode.RUSH) "Zeit um!" else "Game Over",
-                                fontSize = 26.sp, color = HikariDanger, fontWeight = FontWeight.Bold,
+                                if (mode == HoleMode.RUSH) "⏱ Zeit um!" else "Game Over",
+                                fontSize = 24.sp, color = HikariText, fontWeight = FontWeight.Black,
                             )
-                            Spacer(Modifier.height(10.dp))
-                            Text("Punkte: $score", fontSize = 18.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(4.dp))
+                            Spacer(Modifier.height(8.dp))
+                            Text("$displayScore", fontSize = 44.sp, color = HoleAccent, fontWeight = FontWeight.Black)
                             if (newRecord) {
-                                Text("Neuer Rekord!", fontSize = 15.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
+                                Text("🏆 Neuer Rekord!", fontSize = 15.sp, color = HoleAccent, fontWeight = FontWeight.Bold)
                             } else {
                                 Text("Rekord: ${max(runRecord, score)}", fontSize = 13.sp, color = HikariTextMuted)
                             }
-                            Spacer(Modifier.height(12.dp))
+                            Spacer(Modifier.height(16.dp))
                             val dSek = world.runTime.toInt()
-                            Text(
-                                "⏱ ${dSek / 60}:${(dSek % 60).toString().padStart(2, '0')} · " +
-                                    "🍎 ${world.eaten} · 🔥 Kombo ${world.bestComboRun} · 🎁 ${world.powerupsRun}",
-                                fontSize = 12.sp,
-                                color = HikariTextMuted,
-                            )
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                GxStatTile("${dSek / 60}:${(dSek % 60).toString().padStart(2, '0')}", "Dauer", HoleAccent, Modifier.weight(1f))
+                                GxStatTile("${world.eaten}", "Früchte", HoleAccent, Modifier.weight(1f))
+                                GxStatTile("${world.bestComboRun}", "Kombo", HoleAccent, Modifier.weight(1f))
+                                GxStatTile("${world.powerupsRun}", "Extras", HoleAccent, Modifier.weight(1f))
+                            }
                             if (mode == HoleMode.WELTEN) {
-                                Spacer(Modifier.height(10.dp))
+                                Spacer(Modifier.height(12.dp))
                                 HoleWorlds[worldIdx].missions.forEachIndexed { i, m ->
                                     Text(
                                         "${if (missionDone[i]) "✅" else "⬜"} ${m.desc}",
@@ -1270,85 +1305,78 @@ fun FruitHoleGame(onBack: () -> Unit) {
                                     )
                                 }
                             }
-                            Spacer(Modifier.height(18.dp))
-                            Button(
-                                onClick = { startRun(mode, daily, worldIdx) },
-                                colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-                            ) {
-                                Text("Nochmal", color = Color.Black, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(20.dp))
+                            GxPrimaryButton("Nochmal", HoleAccent, Modifier.fillMaxWidth()) {
+                                startRun(mode, daily, worldIdx)
                             }
-                            Spacer(Modifier.height(4.dp))
-                            TextButton(onClick = { screen = HoleScreen.MENU }) {
-                                Text("Zum Menü", color = HikariTextMuted)
-                            }
+                            Spacer(Modifier.height(10.dp))
+                            GxGhostButton("Zum Menü", Modifier.fillMaxWidth()) { screen = HoleScreen.MENU }
                         }
                     }
                 }
             }
         }
     }
+    }
 
     // Erfolgs-/Missions-Toast (über allen Screens)
     achToasts.firstOrNull()?.let { toast ->
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-            Text(
-                toast,
-                fontSize = 14.sp,
-                color = HikariText,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .padding(top = 64.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(HikariSurfaceHigh)
-                    .border(1.dp, HikariPrimary.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
-            )
+            GxAppear(0) {
+                Text(
+                    toast,
+                    fontSize = 14.sp,
+                    color = HikariText,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .padding(top = 64.dp)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(Color(0xFF232326))
+                        .border(1.dp, HoleAccent.copy(alpha = 0.6f), RoundedCornerShape(999.dp))
+                        .padding(horizontal = 18.dp, vertical = 10.dp),
+                )
+            }
         }
     }
 
-    // Einstellungen (Overlay, aus dem Menü erreichbar)
+    // Einstellungen (Bottom-Sheet, aus dem Menü erreichbar)
     if (showSettings) {
-        HoleOverlayCard {
-            Text("Einstellungen", fontSize = 20.sp, color = HikariText, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(12.dp))
-            HoleToggleRow("Haptik", haptikOn) {
+        GxSheet("Einstellungen", HoleAccent, onClose = { showSettings = false }) {
+            GxToggle("Vibration", "Haptisches Feedback beim Fangen & bei Treffern", HoleAccent, haptikOn) {
                 haptikOn = it
                 prefs.edit().putBoolean("fruithole_set_haptik", it).apply()
             }
-            HoleToggleRow("Reduzierte Effekte", fxReduziert) {
+            GxToggle("Reduzierte Effekte", "Weniger Partikel für flüssigeres Spiel", HoleAccent, fxReduziert) {
                 fxReduziert = it
                 prefs.edit().putBoolean("fruithole_set_fx", it).apply()
             }
-            HoleToggleRow("Direkte Steuerung", direktSteuerung) {
-                direktSteuerung = it
-                prefs.edit().putBoolean("fruithole_set_direkt", it).apply()
-            }
-            Spacer(Modifier.height(8.dp))
-            Text("Empfindlichkeit", fontSize = 13.sp, color = HikariTextMuted, modifier = Modifier.align(Alignment.Start))
+            Spacer(Modifier.height(10.dp))
+            Text("Steuerung", fontSize = 12.sp, color = HikariTextFaint, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(6.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("Sanft", "Normal", "Flink").forEachIndexed { i, label ->
-                    HoleChip(label, sensIdx == i) {
-                        sensIdx = i
-                        prefs.edit().putInt("fruithole_set_sens", i).apply()
-                    }
-                }
+            GxSegmented(listOf("Relativ", "Direkt"), if (direktSteuerung) 1 else 0, HoleAccent) { i ->
+                direktSteuerung = i == 1
+                prefs.edit().putBoolean("fruithole_set_direkt", direktSteuerung).apply()
             }
-            Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = { showSettings = false },
-                colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-            ) {
-                Text("Fertig", color = Color.Black, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(14.dp))
+            Text("Empfindlichkeit", fontSize = 12.sp, color = HikariTextFaint, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(6.dp))
+            GxSegmented(listOf("Sanft", "Normal", "Flink"), sensIdx, HoleAccent) { i ->
+                sensIdx = i
+                prefs.edit().putInt("fruithole_set_sens", i).apply()
             }
+            Spacer(Modifier.height(6.dp))
         }
     }
 
-    // Hilfe (beim ersten Start automatisch)
+    // Hilfe (Bottom-Sheet, beim ersten Start automatisch)
     if (showHelp) {
-        HoleOverlayCard {
-            Text("So funktioniert's", fontSize = 20.sp, color = HikariText, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(12.dp))
+        GxSheet(
+            "So funktioniert's", HoleAccent,
+            onClose = {
+                showHelp = false
+                prefs.edit().putBoolean("fruithole_help_seen", true).apply()
+            },
+        ) {
             listOf(
                 "🕳️ Zieh das Loch unter fallende Früchte",
                 "💣 Bomben kosten ein Leben — oder tippe sie an: Entschärfen gibt +5",
@@ -1357,17 +1385,12 @@ fun FruitHoleGame(onBack: () -> Unit) {
                 "🔥 Combo 12 zündet den Fieber-Modus: alles ×2",
                 "🎯 Daily-Challenge: jeden Tag derselbe Frucht-Regen für alle Versuche",
             ).forEach {
-                Text(it, fontSize = 13.sp, color = HikariTextMuted, modifier = Modifier.padding(vertical = 3.dp))
+                Text(it, fontSize = 13.sp, color = HikariTextMuted, lineHeight = 19.sp, modifier = Modifier.padding(vertical = 4.dp))
             }
             Spacer(Modifier.height(14.dp))
-            Button(
-                onClick = {
-                    showHelp = false
-                    prefs.edit().putBoolean("fruithole_help_seen", true).apply()
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = HikariPrimary),
-            ) {
-                Text("Los geht's!", color = Color.Black, fontWeight = FontWeight.Bold)
+            GxPrimaryButton("Los geht's!", HoleAccent, Modifier.fillMaxWidth()) {
+                showHelp = false
+                prefs.edit().putBoolean("fruithole_help_seen", true).apply()
             }
         }
     }
@@ -1398,92 +1421,63 @@ private fun HoleMenuInhalt(
     val hsRush = prefs.getInt("fruithole_rush_highscore", 0)
     val sterneGesamt = (0..3).sumOf { wi -> (0..2).count { prefs.getBoolean("fruithole_w${wi}_m$it", false) } }
 
-    Column(
-        Modifier.fillMaxSize().background(HikariBg).verticalScroll(rememberScrollState()),
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-            Arrangement.SpaceBetween,
-            Alignment.CenterVertically,
-        ) {
-            TextButton(onClick = onBack) { Text("← Zurück", color = HikariTextMuted) }
-            Text("Hungry Hole", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            Text(
-                "Lv. $lvl",
-                fontSize = 13.sp,
-                color = Color.Black,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.clip(RoundedCornerShape(999.dp))
-                    .background(HikariPrimary)
-                    .padding(horizontal = 10.dp, vertical = 4.dp),
-            )
-        }
+    Box(Modifier.fillMaxSize().background(HikariBg)) {
+        GxMenuBackground(HoleAccent)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            GxHeader("Hungry Hole", HoleAccent, onBack = onBack, right = { GxIconChip("?", onClick = onHilfe) })
 
-        // XP-Fortschritt zum nächsten Spieler-Level
-        Box(
-            Modifier.fillMaxWidth().padding(horizontal = 20.dp)
-                .height(5.dp).clip(RoundedCornerShape(3.dp)).background(HikariSurfaceHigh)
-        ) {
-            Box(Modifier.fillMaxWidth(prog.coerceIn(0f, 1f)).fillMaxHeight().background(HikariPrimary))
-        }
-
-        Spacer(Modifier.height(18.dp))
-
-        Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            HoleModeCard(
-                emoji = "🕳️",
-                title = "Klassik",
-                sub = "Leben, Level & wechselnde Gebiete",
-                best = if (hsKlassik > 0) "Best: $hsKlassik" else "",
-                zuletzt = lastMode == HoleMode.KLASSIK,
-                onClick = onKlassik,
-                extra = {
-                    Box(
-                        Modifier.clip(RoundedCornerShape(999.dp))
-                            .background(HikariSurfaceHigh)
-                            .clickable(onClick = onDaily)
-                            .padding(horizontal = 14.dp, vertical = 7.dp)
-                    ) {
-                        Text(
-                            "🎯 Heutige Challenge" + if (hsDaily > 0) " · Best: $hsDaily" else "",
-                            fontSize = 12.sp,
-                            color = HikariPrimary,
-                            fontWeight = FontWeight.Bold,
-                        )
+            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                GxAppear(0) { GxLevelCard(lvl, "$xp XP", prog, HoleAccent) }
+                GxAppear(1) {
+                    GxModeCard(
+                        emoji = "🕳️", title = "Klassik",
+                        subtitle = "Leben, Level & wechselnde Gebiete",
+                        accent = HoleAccent,
+                        highlighted = lastMode == HoleMode.KLASSIK,
+                        best = if (hsKlassik > 0) "Best: $hsKlassik" else null,
+                        onClick = onKlassik,
+                    )
+                }
+                GxAppear(2) {
+                    GxModeCard(
+                        emoji = "🎯", title = "Daily-Challenge",
+                        subtitle = "Heute derselbe Frucht-Regen für alle Versuche",
+                        accent = HoleAccent,
+                        badge = "HEUTE",
+                        best = if (hsDaily > 0) "Best heute: $hsDaily" else null,
+                        onClick = onDaily,
+                    )
+                }
+                GxAppear(3) {
+                    GxModeCard(
+                        emoji = "⏱️", title = "Rush Hour",
+                        subtitle = "60 Sekunden Dauerregen — Bomben kosten Zeit",
+                        accent = HoleAccent,
+                        highlighted = lastMode == HoleMode.RUSH,
+                        best = if (hsRush > 0) "Best: $hsRush" else null,
+                        onClick = onRush,
+                    )
+                }
+                GxAppear(4) {
+                    GxModeCard(
+                        emoji = "🌍", title = "Welten-Reise",
+                        subtitle = "4 Welten mit eigenen Regeln & Missionen",
+                        accent = HoleAccent,
+                        highlighted = lastMode == HoleMode.WELTEN,
+                        best = "$sterneGesamt/12 ★ gesammelt",
+                        onClick = onWelten,
+                    )
+                }
+                GxAppear(5) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        GxSmallAction("📊", "Statistik", Modifier.weight(1f), onStats)
+                        GxSmallAction("🏅", "Erfolge", Modifier.weight(1f), onErfolge)
+                        GxSmallAction("⚙️", "Optionen", Modifier.weight(1f), onSettings)
                     }
-                },
-            )
-            HoleModeCard(
-                emoji = "⏱️",
-                title = "Rush Hour",
-                sub = "60 Sekunden Dauerregen — Bomben kosten Zeit",
-                best = if (hsRush > 0) "Best: $hsRush" else "",
-                zuletzt = lastMode == HoleMode.RUSH,
-                onClick = onRush,
-            )
-            HoleModeCard(
-                emoji = "🌍",
-                title = "Welten-Reise",
-                sub = "4 Welten mit eigenen Regeln & Missionen",
-                best = "$sterneGesamt/12 ★",
-                zuletzt = lastMode == HoleMode.WELTEN,
-                onClick = onWelten,
-            )
+                }
+            }
+            Spacer(Modifier.height(28.dp))
         }
-
-        Spacer(Modifier.height(18.dp))
-
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            HoleKleinButton("📊", "Statistik", Modifier.weight(1f), onStats)
-            HoleKleinButton("🏅", "Erfolge", Modifier.weight(1f), onErfolge)
-            HoleKleinButton("⚙️", "Optionen", Modifier.weight(1f), onSettings)
-            HoleKleinButton("❓", "Hilfe", Modifier.weight(1f), onHilfe)
-        }
-
-        Spacer(Modifier.height(28.dp))
     }
 }
 
@@ -1495,70 +1489,74 @@ private fun HoleWeltwahlInhalt(
     onZurueck: () -> Unit,
     onStart: (Int) -> Unit,
 ) {
-    Column(
-        Modifier.fillMaxSize().background(HikariBg).verticalScroll(rememberScrollState()),
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-            Arrangement.SpaceBetween,
-            Alignment.CenterVertically,
-        ) {
-            TextButton(onClick = onZurueck) { Text("← Zurück", color = HikariTextMuted) }
-            Text("Welten-Reise", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.width(64.dp))
-        }
+    Box(Modifier.fillMaxSize().background(HikariBg)) {
+        GxMenuBackground(HoleAccent)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            GxHeader("Welten-Reise", HoleAccent, onBack = onZurueck)
 
-        Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            HoleWorlds.forEachIndexed { i, welt ->
-                val sterne = (0..2).count { prefs.getBoolean("fruithole_w${i}_m$it", false) }
-                val vorherSterne = if (i == 0) 3 else (0..2).count { prefs.getBoolean("fruithole_w${i - 1}_m$it", false) }
-                val offen = i == 0 || vorherSterne >= 2
-                Column(
-                    Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(HikariCardBg)
-                        .clickable(enabled = offen) { onStart(i) }
-                        .padding(16.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(welt.emoji, fontSize = 26.sp)
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                welt.name,
-                                fontSize = 16.sp,
-                                color = if (offen) HikariText else HikariTextFaint,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Spacer(Modifier.height(2.dp))
-                            Text(
-                                if (offen) welt.mechanik else "🔒 ${HoleWorlds[i - 1].name}: 2 Missionen nötig",
-                                fontSize = 12.sp,
-                                color = HikariTextMuted,
-                            )
-                        }
-                        Text(
-                            buildString { repeat(3) { append(if (it < sterne) "★" else "☆") } },
-                            fontSize = 15.sp,
-                            color = if (sterne > 0) HikariPrimary else HikariTextFaint,
-                        )
-                    }
-                    if (offen) {
-                        Spacer(Modifier.height(8.dp))
-                        welt.missions.forEachIndexed { mi, m ->
-                            val done = prefs.getBoolean("fruithole_w${i}_m$mi", false)
-                            Text(
-                                "${if (done) "✅" else "⬜"} ${m.desc}",
-                                fontSize = 12.sp,
-                                color = if (done) HikariText else HikariTextMuted,
-                                modifier = Modifier.padding(vertical = 1.dp),
-                            )
+            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                HoleWorlds.forEachIndexed { i, welt ->
+                    val sterne = (0..2).count { prefs.getBoolean("fruithole_w${i}_m$it", false) }
+                    val vorherSterne = if (i == 0) 3 else (0..2).count { prefs.getBoolean("fruithole_w${i - 1}_m$it", false) }
+                    val offen = i == 0 || vorherSterne >= 2
+                    GxAppear(i) {
+                        Column(
+                            Modifier.fillMaxWidth()
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(welt.glow.copy(alpha = if (offen) 0.10f else 0.04f), HikariCardBg)
+                                    )
+                                )
+                                .border(
+                                    1.dp,
+                                    if (offen) welt.glow.copy(alpha = 0.30f) else Color.White.copy(alpha = 0.05f),
+                                    RoundedCornerShape(20.dp),
+                                )
+                                .gxPressable(enabled = offen) { onStart(i) }
+                                .padding(16.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    Modifier.size(48.dp).clip(RoundedCornerShape(14.dp))
+                                        .background(welt.glow.copy(alpha = if (offen) 0.20f else 0.08f)),
+                                    contentAlignment = Alignment.Center,
+                                ) { Text(if (offen) welt.emoji else "🔒", fontSize = 24.sp) }
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        welt.name,
+                                        fontSize = 16.sp,
+                                        color = if (offen) HikariText else HikariTextFaint,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(
+                                        if (offen) welt.mechanik else "🔒 ${HoleWorlds[i - 1].name}: 2 Missionen nötig",
+                                        fontSize = 12.sp,
+                                        color = HikariTextMuted,
+                                    )
+                                }
+                                GxStarRow(sterne)
+                            }
+                            if (offen) {
+                                Spacer(Modifier.height(10.dp))
+                                welt.missions.forEachIndexed { mi, m ->
+                                    val done = prefs.getBoolean("fruithole_w${i}_m$mi", false)
+                                    Text(
+                                        "${if (done) "✅" else "⬜"} ${m.desc}",
+                                        fontSize = 12.sp,
+                                        color = if (done) HikariText else HikariTextMuted,
+                                        modifier = Modifier.padding(vertical = 1.dp),
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
+            Spacer(Modifier.height(28.dp))
         }
-        Spacer(Modifier.height(28.dp))
     }
 }
 
@@ -1566,69 +1564,68 @@ private fun HoleWeltwahlInhalt(
 
 @Composable
 private fun HoleStatsInhalt(prefs: SharedPreferences, xp: Int, onZurueck: () -> Unit) {
-    Column(
-        Modifier.fillMaxSize().background(HikariBg).verticalScroll(rememberScrollState()),
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-            Arrangement.SpaceBetween,
-            Alignment.CenterVertically,
-        ) {
-            TextButton(onClick = onZurueck) { Text("← Zurück", color = HikariTextMuted) }
-            Text("Statistik", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.width(64.dp))
-        }
+    Box(Modifier.fillMaxSize().background(HikariBg)) {
+        GxMenuBackground(HoleAccent)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            GxHeader("Statistik", HoleAccent, onBack = onZurueck)
 
-        Column(
-            Modifier.padding(horizontal = 16.dp)
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(HikariCardBg)
-                .padding(16.dp)
-        ) {
-            val (lvl, _) = holeLevelFromXp(xp)
-            HoleStatRow("Spieler-Level", "Lv. $lvl ($xp XP)")
-            HoleStatRow("Runden gespielt", "${prefs.getInt("fruithole_stat_runden", 0)}")
-            HoleStatRow("Früchte gefressen", "${prefs.getInt("fruithole_stat_fruechte", 0)}")
-            HoleStatRow("Beste Kombo", "${prefs.getInt("fruithole_stat_combo", 0)}")
-            HoleStatRow("Bomben entschärft", "${prefs.getInt("fruithole_stat_entschaerft", 0)}")
-            HoleStatRow("Power-ups gesammelt", "${prefs.getInt("fruithole_stat_powerups", 0)}")
-            HoleStatRow("Goldene Früchte", "${prefs.getInt("fruithole_stat_gold", 0)}")
-            HoleStatRow("Höchstes Level", "${prefs.getInt("fruithole_stat_level", 0)}")
-            HoleStatRow("Spielzeit", holeZeitFmt(prefs.getInt("fruithole_stat_zeit", 0)))
-        }
-
-        Spacer(Modifier.height(14.dp))
-        Text(
-            "Top 5 Runden",
-            fontSize = 14.sp,
-            color = HikariText,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 20.dp),
-        )
-        Spacer(Modifier.height(6.dp))
-        val top = holeTop5(prefs)
-        if (top.isEmpty()) {
-            Text(
-                "Noch keine Runden — spiel eine!",
-                fontSize = 13.sp,
-                color = HikariTextFaint,
-                modifier = Modifier.padding(horizontal = 20.dp),
-            )
-        } else {
-            Column(
-                Modifier.padding(horizontal = 16.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(HikariCardBg)
-                    .padding(16.dp)
-            ) {
-                top.forEachIndexed { i, (pts, label) ->
-                    HoleStatRow("${i + 1}. $label", "$pts")
+            val (lvl, prog) = holeLevelFromXp(xp)
+            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                GxAppear(0) { GxLevelCard(lvl, "$xp XP", prog, HoleAccent) }
+                GxAppear(1) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        GxStatTile("${prefs.getInt("fruithole_stat_runden", 0)}", "Runden", HoleAccent, Modifier.weight(1f))
+                        GxStatTile("${prefs.getInt("fruithole_stat_fruechte", 0)}", "Früchte", HoleAccent, Modifier.weight(1f))
+                    }
+                }
+                GxAppear(2) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        GxStatTile("${prefs.getInt("fruithole_stat_combo", 0)}", "Beste Kombo", HoleAccent, Modifier.weight(1f))
+                        GxStatTile("${prefs.getInt("fruithole_stat_entschaerft", 0)}", "Entschärft", HoleAccent, Modifier.weight(1f))
+                    }
+                }
+                GxAppear(3) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        GxStatTile("${prefs.getInt("fruithole_stat_powerups", 0)}", "Power-ups", HoleAccent, Modifier.weight(1f))
+                        GxStatTile("${prefs.getInt("fruithole_stat_gold", 0)}", "Gold-Früchte", HoleAccent, Modifier.weight(1f))
+                    }
+                }
+                GxAppear(4) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        GxStatTile("${prefs.getInt("fruithole_stat_level", 0)}", "Höchstes Level", HoleAccent, Modifier.weight(1f))
+                        GxStatTile(holeZeitFmt(prefs.getInt("fruithole_stat_zeit", 0)), "Spielzeit", HoleAccent, Modifier.weight(1f))
+                    }
+                }
+                GxAppear(5) {
+                    Column(
+                        Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(HikariCardBg)
+                            .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(16.dp))
+                            .padding(16.dp)
+                    ) {
+                        Text("Top 5 Runden", fontSize = 14.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(8.dp))
+                        val top = holeTop5(prefs)
+                        if (top.isEmpty()) {
+                            Text("Noch keine Runden — spiel eine!", fontSize = 13.sp, color = HikariTextFaint)
+                        } else {
+                            top.forEachIndexed { i, (pts, label) ->
+                                Row(
+                                    Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                    Arrangement.SpaceBetween,
+                                    Alignment.CenterVertically,
+                                ) {
+                                    Text("${i + 1}. $label", fontSize = 13.sp, color = HikariTextMuted)
+                                    Text("$pts", fontSize = 13.sp, color = HoleAccent, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
                 }
             }
+            Spacer(Modifier.height(28.dp))
         }
-        Spacer(Modifier.height(28.dp))
     }
 }
 
@@ -1636,203 +1633,28 @@ private fun HoleStatsInhalt(prefs: SharedPreferences, xp: Int, onZurueck: () -> 
 
 @Composable
 private fun HoleErfolgeInhalt(prefs: SharedPreferences, onZurueck: () -> Unit) {
-    Column(
-        Modifier.fillMaxSize().background(HikariBg).verticalScroll(rememberScrollState()),
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-            Arrangement.SpaceBetween,
-            Alignment.CenterVertically,
-        ) {
-            TextButton(onClick = onZurueck) { Text("← Zurück", color = HikariTextMuted) }
-            Text("Erfolge", fontSize = 18.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.width(64.dp))
-        }
+    Box(Modifier.fillMaxSize().background(HikariBg)) {
+        GxMenuBackground(HoleAccent)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            GxHeader("Erfolge", HoleAccent, onBack = onZurueck)
 
-        val freigeschaltet = HoleAchs.count { prefs.getBoolean("fruithole_ach_${it.id}", false) }
-        Text(
-            "$freigeschaltet von ${HoleAchs.size} freigeschaltet",
-            fontSize = 13.sp,
-            color = HikariTextMuted,
-            modifier = Modifier.padding(horizontal = 20.dp),
-        )
-        Spacer(Modifier.height(10.dp))
+            val freigeschaltet = HoleAchs.count { prefs.getBoolean("fruithole_ach_${it.id}", false) }
+            Text(
+                "$freigeschaltet von ${HoleAchs.size} freigeschaltet",
+                fontSize = 13.sp,
+                color = HikariTextMuted,
+                modifier = Modifier.padding(horizontal = 20.dp),
+            )
+            Spacer(Modifier.height(12.dp))
 
-        Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            HoleAchs.forEach { a ->
-                val done = prefs.getBoolean("fruithole_ach_${a.id}", false)
-                Row(
-                    Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(HikariCardBg)
-                        .padding(horizontal = 14.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(
-                        Modifier.size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (done) HikariAmberSoft else HikariSurfaceHigh),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(if (done) a.emoji else "🔒", fontSize = 18.sp)
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            a.title,
-                            fontSize = 14.sp,
-                            color = if (done) HikariText else HikariTextMuted,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Text(a.desc, fontSize = 12.sp, color = HikariTextFaint)
-                    }
+            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                HoleAchs.forEachIndexed { i, a ->
+                    val done = prefs.getBoolean("fruithole_ach_${a.id}", false)
+                    GxAppear(i) { GxAchRow(a.emoji, a.title, a.desc, HoleAccent, done) }
                 }
             }
-        }
-        Spacer(Modifier.height(28.dp))
-    }
-}
-
-// ————— Kleine UI-Bausteine —————
-
-@Composable
-private fun HoleOverlayCard(content: @Composable ColumnScope.() -> Unit) {
-    Box(
-        Modifier.fillMaxSize()
-            .background(Color(0xCC000000))
-            .pointerInput(Unit) { detectTapGestures { } },
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            Modifier.padding(24.dp)
-                .widthIn(max = 340.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(HikariCardBg)
-                .padding(horizontal = 24.dp, vertical = 22.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            content = content,
-        )
-    }
-}
-
-@Composable
-private fun HoleChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    Box(
-        Modifier.clip(RoundedCornerShape(999.dp))
-            .background(if (selected) HikariPrimary else HikariSurfaceHigh)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 7.dp)
-    ) {
-        Text(
-            label,
-            fontSize = 13.sp,
-            color = if (selected) Color.Black else HikariTextMuted,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-        )
-    }
-}
-
-@Composable
-private fun HoleToggleRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().padding(vertical = 2.dp),
-        Arrangement.SpaceBetween,
-        Alignment.CenterVertically,
-    ) {
-        Text(label, fontSize = 14.sp, color = HikariText)
-        Switch(checked = checked, onCheckedChange = onChange)
-    }
-}
-
-@Composable
-private fun HoleModeCard(
-    emoji: String,
-    title: String,
-    sub: String,
-    best: String,
-    zuletzt: Boolean,
-    onClick: () -> Unit,
-    extra: (@Composable () -> Unit)? = null,
-) {
-    Column(
-        Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(HikariCardBg)
-            .then(
-                if (zuletzt) Modifier.border(1.dp, HikariPrimary.copy(alpha = 0.6f), RoundedCornerShape(16.dp))
-                else Modifier
-            )
-            .clickable(onClick = onClick)
-            .padding(16.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(emoji, fontSize = 26.sp)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(title, fontSize = 16.sp, color = HikariText, fontWeight = FontWeight.Bold)
-                    if (zuletzt) {
-                        Spacer(Modifier.width(8.dp))
-                        Text("Zuletzt gespielt", fontSize = 10.sp, color = HikariPrimary)
-                    }
-                }
-                Spacer(Modifier.height(2.dp))
-                Text(sub, fontSize = 12.sp, color = HikariTextMuted)
-            }
-            if (best.isNotEmpty()) Text(best, fontSize = 12.sp, color = HikariTextFaint)
-        }
-        if (extra != null) {
-            Spacer(Modifier.height(10.dp))
-            extra()
+            Spacer(Modifier.height(28.dp))
         }
     }
 }
 
-@Composable
-private fun HoleKleinButton(emoji: String, label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Column(
-        modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(HikariCardBg)
-            .clickable(onClick = onClick)
-            .padding(vertical = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(emoji, fontSize = 20.sp)
-        Spacer(Modifier.height(4.dp))
-        Text(label, fontSize = 11.sp, color = HikariTextMuted)
-    }
-}
-
-@Composable
-private fun HoleEffectRing(emoji: String, frac: Float, color: Color) {
-    Box(Modifier.size(36.dp), contentAlignment = Alignment.Center) {
-        Canvas(Modifier.fillMaxSize()) {
-            val inset = 3.dp.toPx()
-            val d = size.minDimension - inset * 2
-            drawArc(
-                HikariSurfaceHigh, -90f, 360f, false,
-                topLeft = Offset(inset, inset), size = Size(d, d),
-                style = Stroke(3.dp.toPx()),
-            )
-            drawArc(
-                color, -90f, 360f * frac.coerceIn(0f, 1f), false,
-                topLeft = Offset(inset, inset), size = Size(d, d),
-                style = Stroke(3.dp.toPx(), cap = StrokeCap.Round),
-            )
-        }
-        Text(emoji, fontSize = 13.sp)
-    }
-}
-
-@Composable
-private fun HoleStatRow(label: String, value: String) {
-    Row(
-        Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        Arrangement.SpaceBetween,
-        Alignment.CenterVertically,
-    ) {
-        Text(label, fontSize = 13.sp, color = HikariTextMuted)
-        Text(value, fontSize = 13.sp, color = HikariText, fontWeight = FontWeight.Bold)
-    }
-}
