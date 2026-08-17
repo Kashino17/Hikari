@@ -12,7 +12,7 @@ export interface FeedDeps {
 // ---------------------------------------------------------------------------
 
 export interface RawFeedRow {
-  kind: "clip" | "legacy";
+  kind: "short" | "video";
   id: string;
   parentVideoId: string;
   channelId: string;
@@ -100,29 +100,13 @@ export function rankCandidates(
 }
 
 /**
- * UNION over clips (new clipper-pipeline items) + legacy feed_items
- * (pre-clipper items kept around with is_pre_clipper=1). Sorted by recency.
- * Used as the candidate pool for the "new" feed mode before cooldown.
+ * Kandidaten-Pool des "new"-Feeds: approvte Videos direkt aus feed_items.
+ * Seit Etappe 2 sind gerenderte Clips kein Feed-Bestandteil mehr — der Feed
+ * zeigt native Shorts (kind 'short') und Langvideos (kind 'video', Karten).
  */
 export function listFeedRaw(db: Database.Database, limit: number): RawFeedRow[] {
   return db.prepare(`
-    SELECT 'clip' AS kind,
-           c.id AS id,
-           c.parent_video_id AS parentVideoId,
-           v.channel_id AS channelId,
-           s.category AS category,
-           c.added_to_feed_at AS addedToFeedAt,
-           (c.end_seconds - c.start_seconds) AS durationSec,
-           s.overall_score AS overallScore,
-           s.educational_value AS educationalValue,
-           cms.calculated_score AS channelMatch
-      FROM clips c
-      JOIN videos v ON v.id = c.parent_video_id
-      LEFT JOIN scores s ON s.video_id = c.parent_video_id
-      LEFT JOIN channel_match_scores cms ON cms.channel_id = v.channel_id
-     WHERE c.seen_at IS NULL AND c.playback_failed = 0
-    UNION ALL
-    SELECT 'legacy' AS kind,
+    SELECT CASE WHEN v.format = 'short' THEN 'short' ELSE 'video' END AS kind,
            f.video_id AS id,
            f.video_id AS parentVideoId,
            v.channel_id AS channelId,
@@ -275,72 +259,35 @@ export function interleaveByChannel(ranked: RawFeedRow[], rotation = 0): RawFeed
  */
 function hydrateFeedBatch(db: Database.Database, rows: RawFeedRow[]): unknown[] {
   if (rows.length === 0) return [];
-  const clipIds = rows.filter((r) => r.kind === "clip").map((r) => r.id);
-  const legacyIds = rows.filter((r) => r.kind === "legacy").map((r) => r.id);
-
+  const ids = rows.map((r) => r.id);
   const byId = new Map<string, any>();
 
-  if (clipIds.length > 0) {
-    const ph = clipIds.map(() => "?").join(",");
-    const clipRows = db
-      .prepare(`
-        SELECT 'clip' AS kind,
-               c.id AS videoId,
-               c.parent_video_id AS parentVideoId,
-               COALESCE(NULLIF(c.reason, ''), v.title) AS title,
-               v.title AS parentTitle,
-               v.aspect_ratio AS aspectRatio, v.thumbnail_url AS thumbnailUrl,
-               v.channel_id AS channelId, ch.title AS channelTitle,
-               s.category, s.reasoning, s.overall_score AS overallScore,
-               s.educational_value AS educationalValue,
-               c.start_seconds AS startSec, c.end_seconds AS endSec,
-               CAST(ROUND(c.end_seconds - c.start_seconds) AS INTEGER) AS durationSeconds,
-               c.added_to_feed_at AS addedAt, c.saved, c.seen_at AS seenAt,
-               c.captions AS captions, c.context AS context, c.file_path AS filePath
-          FROM clips c
-          JOIN videos v ON v.id = c.parent_video_id
-          JOIN channels ch ON ch.id = v.channel_id
-          LEFT JOIN scores s ON s.video_id = c.parent_video_id
-         WHERE c.id IN (${ph})
-      `)
-      .all(...clipIds) as any[];
-    for (const cr of clipRows) {
-      if (typeof cr.captions === "string") {
-        try {
-          cr.captions = JSON.parse(cr.captions);
-        } catch {
-          cr.captions = null;
-        }
-      }
-      byId.set(cr.videoId, cr);
-    }
-  }
-
-  if (legacyIds.length > 0) {
-    const ph = legacyIds.map(() => "?").join(",");
-    const legacyRows = db
-      .prepare(`
-        SELECT 'legacy' AS kind,
-               f.video_id AS videoId,
-               f.video_id AS parentVideoId,
-               v.title, v.duration_seconds AS durationSeconds,
-               v.aspect_ratio AS aspectRatio, v.thumbnail_url AS thumbnailUrl,
-               v.channel_id AS channelId, c.title AS channelTitle,
-               s.category, s.reasoning, s.overall_score AS overallScore,
-               s.educational_value AS educationalValue,
-               NULL AS startSec, NULL AS endSec,
-               f.added_to_feed_at AS addedAt, f.saved, f.seen_at AS seenAt,
-               dv.file_path AS filePath
-          FROM feed_items f
-          JOIN videos v ON v.id = f.video_id
-          JOIN channels c ON c.id = v.channel_id
-          JOIN scores s ON s.video_id = f.video_id
-          JOIN downloaded_videos dv ON dv.video_id = f.video_id
-         WHERE f.video_id IN (${ph})
-      `)
-      .all(...legacyIds) as any[];
-    for (const lr of legacyRows) byId.set(lr.videoId, lr);
-  }
+  const ph = ids.map(() => "?").join(",");
+  // downloaded_videos per LEFT JOIN: seit dem Streaming-Umbau existieren
+  // approvte Videos in der Regel OHNE Serverdatei (filePath = null).
+  const videoRows = db
+    .prepare(`
+      SELECT CASE WHEN v.format = 'short' THEN 'short' ELSE 'video' END AS kind,
+             f.video_id AS videoId,
+             f.video_id AS parentVideoId,
+             v.title, v.duration_seconds AS durationSeconds,
+             v.aspect_ratio AS aspectRatio, v.thumbnail_url AS thumbnailUrl,
+             v.channel_id AS channelId, c.title AS channelTitle,
+             s.category, s.reasoning, s.overall_score AS overallScore,
+             s.educational_value AS educationalValue,
+             NULL AS startSec, NULL AS endSec,
+             f.added_to_feed_at AS addedAt, f.saved, f.seen_at AS seenAt,
+             v.summary AS summary,
+             dv.file_path AS filePath
+        FROM feed_items f
+        JOIN videos v ON v.id = f.video_id
+        JOIN channels c ON c.id = v.channel_id
+        JOIN scores s ON s.video_id = f.video_id
+        LEFT JOIN downloaded_videos dv ON dv.video_id = f.video_id
+       WHERE f.video_id IN (${ph})
+    `)
+    .all(...ids) as any[];
+  for (const vr of videoRows) byId.set(vr.videoId, vr);
 
   // Reassemble in the ranked order; drop any row a JOIN couldn't resolve.
   return rows.map((r) => byId.get(r.id)).filter((x) => x != null);
@@ -373,17 +320,19 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
   // and can't structurally produce duplicates, future schema changes or
   // dev-state drift shouldn't be able to leak duplicate rows to the client.
   const BASE_SELECT = `
-    SELECT DISTINCT fi.video_id as videoId, v.title, v.duration_seconds as durationSeconds,
+    SELECT DISTINCT CASE WHEN v.format = 'short' THEN 'short' ELSE 'video' END AS kind,
+           fi.video_id as videoId, v.title, v.duration_seconds as durationSeconds,
            v.aspect_ratio as aspectRatio, v.thumbnail_url as thumbnailUrl,
            v.channel_id as channelId, c.title as channelTitle,
            s.category, s.reasoning, s.overall_score as overallScore,
            s.educational_value as educationalValue,
-           fi.added_to_feed_at as addedAt, fi.saved, fi.seen_at as seenAt
+           fi.added_to_feed_at as addedAt, fi.saved, fi.seen_at as seenAt,
+           v.summary AS summary
     FROM feed_items fi
     JOIN videos v ON v.id = fi.video_id
     JOIN channels c ON c.id = v.channel_id
     JOIN scores s ON s.video_id = fi.video_id
-    JOIN downloaded_videos dv ON dv.video_id = fi.video_id
+    LEFT JOIN downloaded_videos dv ON dv.video_id = fi.video_id
   `;
 
   app.get<{ Querystring: { mode?: string; rotation?: string } }>("/feed", async (req, reply) => {
@@ -575,13 +524,12 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
   });
 
   app.get("/feed/today-count", async () => {
+    // Seit Etappe 2 besteht der Feed nur noch aus feed_items (Videos/Shorts) —
+    // ungesehene Alt-Clips zählen nicht mehr mit.
     const row = deps.db
-      .prepare(`
-        SELECT
-          (SELECT COUNT(*) FROM clips WHERE seen_at IS NULL AND playback_failed = 0)
-          + (SELECT COUNT(*) FROM feed_items WHERE seen_at IS NULL AND playback_failed = 0 AND is_pre_clipper = 1)
-          AS c
-      `)
+      .prepare(
+        "SELECT COUNT(*) AS c FROM feed_items WHERE seen_at IS NULL AND playback_failed = 0 AND is_pre_clipper = 1",
+      )
       .get() as { c: number };
     const unseenCount = row.c;
     return {

@@ -239,8 +239,8 @@ describe("feed API", () => {
 // New helpers: listFeedRaw UNION + applyCooldown
 // ---------------------------------------------------------------------------
 
-describe("listFeedRaw UNION", () => {
-  it("returns clip rows with kind='clip' and parentVideoId of source video, plus legacy rows", () => {
+describe("listFeedRaw", () => {
+  it("liefert nur feed_items als kind video/short — Clips tauchen nicht mehr auf", () => {
     const db = new Database(":memory:");
     applyMigrations(db);
 
@@ -268,23 +268,35 @@ describe("listFeedRaw UNION", () => {
       VALUES ('legacy1', 1000, 1)
     `).run();
 
+    // Ein Short: Hochkant-Video mit format='short' und eigenem feed_item.
+    db.prepare(`
+      INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at, format)
+      VALUES ('short1', 'c1', 's', 0, 45, 0, 'short')
+    `).run();
+    db.prepare(`
+      INSERT INTO feed_items (video_id, added_to_feed_at, is_pre_clipper)
+      VALUES ('short1', 1500, 1)
+    `).run();
+
     const rows = listFeedRaw(db, 50);
 
-    const clip = rows.find((r) => r.id === "clip1");
-    expect(clip).toBeTruthy();
-    expect(clip!.kind).toBe("clip");
-    expect(clip!.parentVideoId).toBe("parent1");
+    // Clips sind kein Feed-Bestandteil mehr (Etappe 2).
+    expect(rows.find((r) => r.id === "clip1")).toBeUndefined();
 
-    const legacy = rows.find((r) => r.id === "legacy1");
-    expect(legacy).toBeTruthy();
-    expect(legacy!.kind).toBe("legacy");
-    expect(legacy!.parentVideoId).toBe("legacy1");
+    const video = rows.find((r) => r.id === "legacy1");
+    expect(video).toBeTruthy();
+    expect(video!.kind).toBe("video");
+    expect(video!.parentVideoId).toBe("legacy1");
+
+    const short = rows.find((r) => r.id === "short1");
+    expect(short).toBeTruthy();
+    expect(short!.kind).toBe("short");
   });
 });
 
 function row(id: string, parent: string, channel: string, cat: string, t: number): RawFeedRow {
   return {
-    kind: "clip", id, parentVideoId: parent, channelId: channel,
+    kind: "video", id, parentVideoId: parent, channelId: channel,
     category: cat, addedToFeedAt: t, durationSec: 60,
   };
 }
@@ -540,8 +552,8 @@ describe("feed mutation routes — clip handling", () => {
 // today-count UNION (C4)
 // ---------------------------------------------------------------------------
 
-describe("GET /feed/today-count — clip + legacy union", () => {
-  it("counts unseen clips AND unseen legacy items together", async () => {
+describe("GET /feed/today-count — nur feed_items", () => {
+  it("zählt nur ungesehene feed_items, Clips nicht mehr", async () => {
     const db = new Database(":memory:");
     applyMigrations(db);
 
@@ -559,8 +571,8 @@ describe("GET /feed/today-count — clip + legacy union", () => {
     const res = await app.inject({ method: "GET", url: "/feed/today-count" });
     expect(res.statusCode).toBe(200);
     const body = res.json() as { unseenCount: number; dailyBudget: number; capped: boolean };
-    // 2 unseen clips + 1 unseen legacy = 3
-    expect(body.unseenCount).toBe(3);
+    // Nur das eine feed_item zählt — die 2 ungesehenen Clips nicht mehr.
+    expect(body.unseenCount).toBe(1);
     expect(body.capped).toBe(false);
   });
 
@@ -568,8 +580,8 @@ describe("GET /feed/today-count — clip + legacy union", () => {
     const db = new Database(":memory:");
     applyMigrations(db);
 
-    seedClip(db, "tc2-clip1", "tc2-p1", 0);
-    seedClip(db, "tc2-clip2", "tc2-p2", 0);
+    seedFeedItem(db, "tc2-v1", Date.now());
+    seedFeedItem(db, "tc2-v2", Date.now() - 1000);
 
     const app = Fastify();
     await registerFeedRoutes(app, { db, dailyBudget: 2 });
@@ -634,24 +646,38 @@ describe("DELETE /feed/:id — clip cascade cleanup", () => {
 // ---------------------------------------------------------------------------
 
 describe("GET /feed (new) — batched hydration", () => {
-  it("hydrates clip AND legacy rows together with correct kind + shape", async () => {
+  it("liefert Videos mit kind/summary; Clips erscheinen nicht mehr in new", async () => {
     const db = new Database(":memory:");
     applyMigrations(db);
-    seedClip(db, "h-clip", "h-parent"); // unseen clip
-    seedFeedItem(db, "h-legacy", Date.now()); // unseen legacy item (downloaded)
+    seedClip(db, "h-clip", "h-parent"); // ungesehener Clip — darf nicht auftauchen
+    seedFeedItem(db, "h-video", Date.now());
+    db.prepare("UPDATE videos SET summary = 'Ein Teaser.' WHERE id = 'h-video'").run();
 
     const app = Fastify();
     await registerFeedRoutes(app, { db, dailyBudget: 15 });
     const res = await app.inject({ method: "GET", url: "/feed?mode=new" });
     expect(res.statusCode).toBe(200);
 
-    const body = res.json() as { videoId: string; kind: string; filePath: string }[];
-    const clip = body.find((x) => x.videoId === "h-clip");
-    const legacy = body.find((x) => x.videoId === "h-legacy");
+    const body = res.json() as { videoId: string; kind: string; summary: string | null }[];
+    expect(body.find((x) => x.videoId === "h-clip")).toBeUndefined();
+    const video = body.find((x) => x.videoId === "h-video");
+    expect(video?.kind).toBe("video");
+    expect(video?.summary).toBe("Ein Teaser.");
+  });
 
-    expect(clip?.kind).toBe("clip");
-    expect(clip?.filePath).toContain("/clips/h-clip.mp4");
-    expect(legacy?.kind).toBe("legacy");
+  it("Video OHNE downloaded_videos-Row erscheint trotzdem (Streaming-Welt)", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    seedFeedItem(db, "nodl", Date.now());
+    db.prepare("DELETE FROM downloaded_videos WHERE video_id = 'nodl'").run();
+
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+    const res = await app.inject({ method: "GET", url: "/feed?mode=new" });
+    const body = res.json() as { videoId: string; kind: string; filePath: string | null }[];
+    const video = body.find((x) => x.videoId === "nodl");
+    expect(video?.kind).toBe("video");
+    expect(video?.filePath ?? null).toBeNull();
   });
 
   it("returns an INTEGER durationSeconds for a clip with fractional bounds", async () => {
@@ -674,9 +700,11 @@ describe("GET /feed (new) — batched hydration", () => {
                0, 0, 1, 1, 'r', 1000, 1000)`,
     ).run();
 
+    db.prepare("UPDATE clips SET saved = 1 WHERE id = 'frac-clip'").run();
     const app = Fastify();
     await registerFeedRoutes(app, { db, dailyBudget: 15 });
-    const res = await app.inject({ method: "GET", url: "/feed?mode=new" });
+    // Clips leben nur noch in saved/old — dort muss die Dauer weiterhin ganzzahlig sein.
+    const res = await app.inject({ method: "GET", url: "/feed?mode=saved" });
     expect(res.statusCode).toBe(200);
     const body = res.json() as { videoId: string; durationSeconds: number }[];
     const clip = body.find((x) => x.videoId === "frac-clip");
@@ -684,21 +712,6 @@ describe("GET /feed (new) — batched hydration", () => {
     // 845.5 - 770 = 75.5 → must be rounded to an integer (76), not 75.5.
     expect(Number.isInteger(clip!.durationSeconds)).toBe(true);
     expect(clip!.durationSeconds).toBe(76);
-  });
-
-  it("returns clip captions parsed as an array, not a raw string", async () => {
-    const db = new Database(":memory:");
-    applyMigrations(db);
-    seedClip(db, "cap-clip", "cap-parent");
-    db.prepare("UPDATE clips SET captions = ? WHERE id = 'cap-clip'").run(
-      JSON.stringify([{ start: 0, end: 1, text: "hi" }]),
-    );
-    const app = Fastify();
-    await registerFeedRoutes(app, { db, dailyBudget: 15 });
-    const res = await app.inject({ method: "GET", url: "/feed?mode=new" });
-    const body = res.json() as { videoId: string; captions: unknown }[];
-    const clip = body.find((x) => x.videoId === "cap-clip");
-    expect(Array.isArray(clip?.captions)).toBe(true);
   });
 
   it("returns an empty array when nothing is unseen", async () => {

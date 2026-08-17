@@ -12,7 +12,7 @@ export function registerVideoFullRoute(app: FastifyInstance, db: Database.Databa
              dl.file_path AS filePath
         FROM videos v
         JOIN channels ch ON ch.id = v.channel_id
-        JOIN downloaded_videos dl ON dl.video_id = v.id
+        LEFT JOIN downloaded_videos dl ON dl.video_id = v.id
        WHERE v.id = ?
     `).get(id) as any;
     if (!row) return reply.status(404).send({ error: "video not found" });
@@ -23,8 +23,11 @@ export function registerVideoFullRoute(app: FastifyInstance, db: Database.Databa
       channelTitle: row.channelTitle,
       // The static-mount serves cfg.videoDir at /videos/. Earlier this was
       // wrongly /media/originals/ which 404-ed silently, leaving the
-      // FullscreenOriginalPlayer with a black screen.
-      fileUrl: `/videos/${encodeURIComponent(basename(row.filePath))}`,
+      // FullscreenOriginalPlayer with a black screen. Ohne Serverdatei
+      // (Streaming-Welt seit Etappe 2) zeigt fileUrl auf den Live-Proxy.
+      fileUrl: row.filePath
+        ? `/videos/${encodeURIComponent(basename(row.filePath))}`
+        : `/stream/video/${encodeURIComponent(id)}`,
     };
   });
 }
