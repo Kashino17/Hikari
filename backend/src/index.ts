@@ -24,6 +24,7 @@ import { itChannelShorts } from "./api/music-innertube.js";
 import { registerNewsRoutes } from "./api/news.js";
 import { summarizeVideoTranscript } from "./clipper/context-summarizer.js";
 import { registerStreamRoutes } from "./api/stream.js";
+import { registerWatchLaterRoutes } from "./api/watch-later.js";
 import { registerClipperStatusRoutes } from "./api/clipper-status.js";
 import { registerVideoFullRoute } from "./api/video-full.js";
 import { loadConfig } from "./config.js";
@@ -136,6 +137,7 @@ await registerChannelsRoutes(app, {
   summarize: summarizeForFeed,
 });
 await registerFeedRoutes(app, { db, dailyBudget: cfg.dailyBudget });
+await registerWatchLaterRoutes(app, { db });
 await registerFilterRoutes(app, { db });
 await registerDiscoverySettingsRoutes(app, { db });
 await registerDiscoveryRoutes(app, { db });

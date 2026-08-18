@@ -81,6 +81,12 @@ CREATE TABLE IF NOT EXISTS daily_mix_items (
 );
 CREATE INDEX IF NOT EXISTS idx_daily_mix_date ON daily_mix_items(mix_date, position);
 
+-- Etappe 5: "Später ansehen" — vom Karten-Wegswipe oder explizit befuellt.
+CREATE TABLE IF NOT EXISTS watch_later (
+  video_id TEXT PRIMARY KEY REFERENCES videos(id),
+  added_at INTEGER NOT NULL
+);
+
 -- Feed-Einstellungen (Singleton) — Zeitbudget des Tagesmixes in Minuten.
 CREATE TABLE IF NOT EXISTS feed_settings (
   id INTEGER PRIMARY KEY CHECK (id = 1),

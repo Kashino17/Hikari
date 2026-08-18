@@ -264,7 +264,10 @@ export function interleaveByChannel(ranked: RawFeedRow[], rotation = 0): RawFeed
  * synchronous SQLite round-trips per request, each blocking the event loop.
  * Output preserves the input order (the ranking + cooldown order).
  */
-function hydrateFeedBatch(db: Database.Database, rows: RawFeedRow[]): unknown[] {
+export function hydrateFeedBatch(
+  db: Database.Database,
+  rows: Pick<RawFeedRow, "id">[],
+): unknown[] {
   if (rows.length === 0) return [];
   const ids = rows.map((r) => r.id);
   const byId = new Map<string, any>();

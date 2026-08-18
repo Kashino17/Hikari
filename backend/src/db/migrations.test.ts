@@ -38,6 +38,7 @@ describe("applyMigrations", () => {
       "series",
       "sponsor_segments",
       "videos",
+      "watch_later",
     ]);
   });
 
