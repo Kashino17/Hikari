@@ -13,6 +13,8 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -76,6 +78,19 @@ private fun navTo(nav: NavController, route: String) {
     }
 }
 
+/**
+ * Wie [navTo], aber ohne den gespeicherten Zustand: der Tab startet auf seiner
+ * Hauptseite. Für Musik gewollt — ein Tab-Klick soll zur Übersicht führen,
+ * nicht auf die zuletzt geöffnete Artist-Seite.
+ */
+private fun navFresh(nav: NavController, route: String) {
+    nav.navigate(route) {
+        popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+        launchSingleTop = true
+        restoreState = false
+    }
+}
+
 fun playVideoRoute(videoId: String, title: String, channel: String): String {
     val t = URLEncoder.encode(title, "UTF-8")
     val c = URLEncoder.encode(channel, "UTF-8")
@@ -85,6 +100,9 @@ fun playVideoRoute(videoId: String, title: String, channel: String): String {
 @Composable
 fun HikariNavHost(deepLinkRoute: String? = null) {
     val nav = rememberNavController()
+    // Zählt Klicks auf den Feed-Tab; der Feed springt daraufhin nach oben
+    // und lädt neu — auch wenn er bereits sichtbar ist.
+    var feedResetTick by remember { mutableIntStateOf(0) }
     val backStack by nav.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
     var feedFullscreen by rememberSaveable { mutableStateOf(false) }
@@ -137,7 +155,18 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
                     hikariDestinations.forEach { d ->
                         NavigationBarItem(
                             selected = currentRoute == d.route,
-                            onClick = { navTo(nav, d.route) },
+                            onClick = {
+                                when (d.route) {
+                                    // Feed-Tab heißt immer: ganz nach oben und frisch laden.
+                                    "feed" -> {
+                                        feedResetTick++
+                                        navTo(nav, d.route)
+                                    }
+                                    // Musik-Tab heißt immer: zurück zur Übersicht.
+                                    "music" -> navFresh(nav, d.route)
+                                    else -> navTo(nav, d.route)
+                                }
+                            },
                             icon = { Icon(d.icon, d.label) },
                             label = { Text(d.label) },
                             colors = NavigationBarItemDefaults.colors(
@@ -226,6 +255,7 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
                     fullscreen = feedFullscreen,
                     onFullscreenChange = { feedFullscreen = it },
                     onNavigate = { route -> nav.navigate(route) },
+                    resetTick = feedResetTick,
                 )
             }
             composable("news") {

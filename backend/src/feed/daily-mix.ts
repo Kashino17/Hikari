@@ -9,13 +9,9 @@ const BUDGET_DEFAULT = 45;
 // Rhythmus: der Feed ist ein Kurzform-Feed — nach je 6 Shorts kommt eine
 // Langvideo-Karte als Abwechslung, nicht als Hauptgang.
 const SHORTS_PER_LONG = 6;
-// Höchstanteil Langvideos, SOLANGE Shorts verfügbar sind. Ohne Deckel füllt
-// sich der Feed mit Langform, sobald die Shorts ausgehen — und fühlt sich
-// falsch an.
-const MAX_LONG_SHARE = 0.25;
-// Gibt es gerade gar keine Shorts, füllen Langvideos auf — aber nur bis hier,
-// damit der Feed nicht zur Langform-Liste wird. Discovery zieht Shorts nach.
-const LONG_ONLY_TARGET = 12;
+// Höchstens so viele Langvideos am Stück. Gibt es keine Kurzform als Trenner,
+// endet der Mix lieber — Nachschub kommt, Blöcke bleiben aus.
+const LONG_RUN_MAX = 2;
 // Vorrat an ungesehenen Items, den der Feed bereithält. Kein Zeitdeckel mehr:
 // der Feed ist unendlich, seine Qualität kommt aus dem Filter, nicht aus einer
 // künstlichen Bremse. Das Zeitbudget bleibt reine Anzeige ("heute geschaut").
@@ -134,10 +130,10 @@ export function unseenMixCount(db: Database.Database, mixDate: string): number {
 
 export function buildDailyMix(db: Database.Database, now: number = Date.now()): void {
   const mixDate = mixDateFor(now);
-  // Ziel ist ein voller Vorrat, kein Zeitdeckel — der Feed hört nicht auf.
-  let count = unseenMixCount(db, mixDate);
-  if (count >= FEED_TARGET_UNSEEN) return;
 
+  // ALLE ungesehenen freigegebenen Videos sind Kandidaten — auch die, die
+  // bereits im Mix liegen. Die Reihenfolge wird bei jedem Lauf neu gedacht,
+  // sonst klebt später eingetroffene Kurzform hinter einer Langvideo-Schlange.
   const candidates = db
     .prepare(
       `SELECT f.video_id AS id, f.video_id AS parentVideoId, v.channel_id AS channelId,
@@ -151,13 +147,13 @@ export function buildDailyMix(db: Database.Database, now: number = Date.now()): 
          JOIN videos v ON v.id = f.video_id
          LEFT JOIN scores s ON s.video_id = f.video_id
          LEFT JOIN channel_match_scores cms ON cms.channel_id = v.channel_id
-        WHERE f.seen_at IS NULL AND f.playback_failed = 0 AND f.is_pre_clipper = 1
-          AND f.video_id NOT IN (SELECT video_id FROM daily_mix_items WHERE mix_date = ?)`,
+        WHERE f.seen_at IS NULL AND f.playback_failed = 0 AND f.is_pre_clipper = 1`,
     )
-    .all(mixDate) as MixCandidate[];
+    .all() as MixCandidate[];
   if (candidates.length === 0) return;
 
-  // Prioritaet nach Quelle, innerhalb einer Quelle das bestehende Ranking.
+  // Priorität nach Quelle, innerhalb einer Quelle das Kurations-Ranking,
+  // darüber Kanal-Round-Robin gegen Kanal-Blöcke.
   const byPriority = new Map<number, MixCandidate[]>();
   for (const c of candidates) {
     const prio = SOURCE_PRIORITY[c.source] ?? 9;
@@ -165,7 +161,7 @@ export function buildDailyMix(db: Database.Database, now: number = Date.now()): 
     bucket.push(c);
     byPriority.set(prio, bucket);
   }
-  const rotation = Number(mixDate.replaceAll("-", "")); // stabil pro Tag
+  const rotation = Number(mixDate.replaceAll("-", ""));
   const ordered: MixCandidate[] = [];
   for (const prio of [...byPriority.keys()].sort((a, b) => a - b)) {
     const ranked = rankCandidates(byPriority.get(prio) ?? [], now) as MixCandidate[];
@@ -175,55 +171,64 @@ export function buildDailyMix(db: Database.Database, now: number = Date.now()): 
   const shorts = ordered.filter((c) => c.kind === "short");
   const longs = ordered.filter((c) => c.kind === "video");
 
-  const existingCount = (
-    db
-      .prepare("SELECT COUNT(*) AS c FROM daily_mix_items WHERE mix_date = ?")
-      .get(mixDate) as { c: number }
-  ).c;
+  /** Nimmt das nächste Video, das nicht vom zuletzt gezeigten Kanal stammt. */
+  const pick = (pool: MixCandidate[], recent: string[]): MixCandidate | undefined => {
+    const idx = pool.findIndex((c) => !recent.includes(c.channelId));
+    return pool.splice(idx >= 0 ? idx : 0, 1)[0];
+  };
 
-  let position = (
-    db
-      .prepare("SELECT COALESCE(MAX(position), -1) AS p FROM daily_mix_items WHERE mix_date = ?")
-      .get(mixDate) as { p: number }
-  ).p;
-  const insert = db.prepare(
-    "INSERT OR IGNORE INTO daily_mix_items (mix_date, video_id, position, source, duration_seconds) VALUES (?, ?, ?, ?, ?)",
-  );
-
-  // Weben: SHORTS_PER_LONG Shorts, dann eine Langvideo-Karte; leerer Pool
-  // laesst den anderen weiterlaufen.
+  const result: MixCandidate[] = [];
   let shortRun = 0;
-  let added = 0;
-  let longCount = existingLongCount(db, mixDate);
-  while (count < FEED_TARGET_UNSEEN && (shorts.length > 0 || longs.length > 0)) {
-    // Langvideos nur bis zum Höchstanteil — lieber ein kleinerer Mix als ein
-    // Feed, der zur Langform-Liste wird. Ohne Shorts im Pool füllen sie bis
-    // LONG_ONLY_TARGET auf, damit nie Leere entsteht.
-    const longAllowed =
-      shorts.length > 0
-        ? longCount < Math.ceil((count + 1) * MAX_LONG_SHARE)
-        : count < LONG_ONLY_TARGET;
+  let longRun = 0;
+  while (result.length < FEED_TARGET_UNSEEN && (shorts.length > 0 || longs.length > 0)) {
+    const recent = result.slice(-2).map((r) => r.channelId);
+    const longTurn = shorts.length === 0 || shortRun >= SHORTS_PER_LONG;
     let next: MixCandidate | undefined;
-    if (shorts.length > 0 && (shortRun < SHORTS_PER_LONG || longs.length === 0 || !longAllowed)) {
-      next = shorts.shift();
-      shortRun++;
-    } else if (longs.length > 0 && longAllowed) {
-      next = longs.shift();
+    if (longTurn && longs.length > 0 && longRun < LONG_RUN_MAX) {
+      next = pick(longs, recent);
+      longRun++;
       shortRun = 0;
-      longCount++;
+    } else if (shorts.length > 0) {
+      next = pick(shorts, recent);
+      shortRun++;
+      longRun = 0;
+    } else {
+      // Nur noch Langvideos, aber der Block wäre zu lang: lieber hier enden —
+      // der Nachschub bringt Kurzform, statt eine Langform-Schlange zu bauen.
+      break;
     }
     if (!next) break;
-    position++;
-    insert.run(mixDate, next.id, position, next.source, next.durationSec);
-    count++;
-    added++;
+    result.push(next);
   }
+  if (result.length === 0) return;
 
-  // Notnagel: lieber ein einzelnes Video als ein leerer Feed.
-  const fallback = ordered[0];
-  if (existingCount === 0 && added === 0 && fallback) {
-    insert.run(mixDate, fallback.id, position + 1, fallback.source, fallback.durationSec);
-  }
+  // Gesehene Einträge behalten ihre Plätze; der ungesehene Rest wird ersetzt.
+  const maxSeenPos = (
+    db
+      .prepare(
+        `SELECT COALESCE(MAX(m.position), -1) AS p FROM daily_mix_items m
+           JOIN feed_items f ON f.video_id = m.video_id
+          WHERE m.mix_date = ? AND f.seen_at IS NOT NULL`,
+      )
+      .get(mixDate) as { p: number }
+  ).p;
+
+  const insert = db.prepare(
+    "INSERT OR REPLACE INTO daily_mix_items (mix_date, video_id, position, source, duration_seconds) VALUES (?, ?, ?, ?, ?)",
+  );
+  db.transaction(() => {
+    db.prepare(
+      `DELETE FROM daily_mix_items WHERE mix_date = ? AND video_id IN (
+         SELECT m.video_id FROM daily_mix_items m
+           JOIN feed_items f ON f.video_id = m.video_id
+          WHERE m.mix_date = ? AND f.seen_at IS NULL)`,
+    ).run(mixDate, mixDate);
+    let position = maxSeenPos;
+    for (const item of result) {
+      position++;
+      insert.run(mixDate, item.id, position, item.source, item.durationSec);
+    }
+  })();
 }
 
 export interface TodayMixStats {

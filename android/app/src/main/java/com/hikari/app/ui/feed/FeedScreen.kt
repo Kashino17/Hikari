@@ -87,6 +87,8 @@ fun FeedScreen(
     fullscreen: Boolean = false,
     onFullscreenChange: (Boolean) -> Unit = {},
     onNavigate: (String) -> Unit = {},
+    /** Erhöht sich bei jedem Tippen auf den Feed-Tab: nach oben + neu laden. */
+    resetTick: Int = 0,
 ) {
     val mode by vm.mode.collectAsState()
     val items by vm.items.collectAsState()
@@ -222,6 +224,14 @@ fun FeedScreen(
                 LaunchedEffect(items.size) {
                     if (items.isNotEmpty() && pagerState.currentPage > items.lastIndex) {
                         pagerState.scrollToPage(items.lastIndex)
+                    }
+                }
+
+                // Tippen auf den Feed-Tab: an den Anfang und frischen Nachschub holen.
+                LaunchedEffect(resetTick) {
+                    if (resetTick > 0) {
+                        pagerState.scrollToPage(0)
+                        vm.refresh(pull = true)
                     }
                 }
 

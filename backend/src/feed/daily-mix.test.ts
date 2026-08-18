@@ -48,16 +48,17 @@ describe("daily-mix", () => {
     expect(setTimeBudgetMinutes(db, 999)).toBe(240); // clamp oben
   });
 
-  it("nimmt alle verfügbaren Kandidaten auf — kein Zeitdeckel — und ist idempotent", () => {
+  it("kein Zeitdeckel: langes Material kommt rein, solange Kurzform es trennt", () => {
     setTimeBudgetMinutes(db, 10); // Budget ist nur noch Anzeige
-    for (let i = 0; i < 5; i++) seed(db, `v${i}`, { dur: 240, format: "long" });
+    for (let i = 0; i < 8; i++) seed(db, `sh${i}`, { dur: 45, format: "short" });
+    for (let i = 0; i < 2; i++) seed(db, `lang${i}`, { dur: 900, format: "long" });
     buildDailyMix(db, NOW);
     const rows = db
       .prepare("SELECT video_id FROM daily_mix_items WHERE mix_date = ?")
       .all(mixDateFor(NOW));
-    expect(rows).toHaveLength(5); // 20 min Material trotz 10-min-Budget
-    buildDailyMix(db, NOW); // keine Kandidaten mehr übrig
-    expect(db.prepare("SELECT COUNT(*) c FROM daily_mix_items").get()).toEqual({ c: 5 });
+    expect(rows).toHaveLength(10); // 38 min Material trotz 10-min-Budget
+    buildDailyMix(db, NOW); // erneuter Lauf ändert die Menge nicht
+    expect(db.prepare("SELECT COUNT(*) c FROM daily_mix_items").get()).toEqual({ c: 10 });
   });
 
   it("Quellen-Priorität: subscription vor probe vor topic", () => {
@@ -72,6 +73,77 @@ describe("daily-mix", () => {
       }[]
     ).map((r) => r.video_id);
     expect(order).toEqual(["s-abo", "p-probe", "t-topic"]);
+  });
+
+  it("mischt Kanäle durch — nie zweimal derselbe Kanal hintereinander", () => {
+    db.prepare("INSERT OR IGNORE INTO channels (id,url,title,added_at) VALUES ('cA','x','A',0)").run();
+    db.prepare("INSERT OR IGNORE INTO channels (id,url,title,added_at) VALUES ('cB','x','B',0)").run();
+    // Zwei Kanäle mit je 4 Shorts, blockweise eingespielt.
+    for (const ch of ["cA", "cB"]) {
+      for (let i = 0; i < 4; i++) {
+        const id = `${ch}-${i}`;
+        db.prepare(
+          `INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at, format, source)
+           VALUES (?, ?, ?, 0, 40, 0, 'short', 'subscription')`,
+        ).run(id, ch, id);
+        db.prepare(
+          `INSERT INTO scores (video_id, overall_score, category, clickbait_risk, educational_value,
+             emotional_manipulation, reasoning, model_used, scored_at, decision)
+           VALUES (?, 80, 'x', 1, 9, 0, 'ok', 'm', 0, 'approved')`,
+        ).run(id);
+        db.prepare(
+          "INSERT INTO feed_items (video_id, added_to_feed_at, is_pre_clipper) VALUES (?, ?, 1)",
+        ).run(id, NOW - 1000);
+      }
+    }
+    buildDailyMix(db, NOW);
+    const channels = (
+      db
+        .prepare(
+          `SELECT v.channel_id AS ch FROM daily_mix_items m
+             JOIN videos v ON v.id = m.video_id
+            WHERE m.mix_date = ? ORDER BY m.position`,
+        )
+        .all(mixDateFor(NOW)) as { ch: string }[]
+    ).map((r) => r.ch);
+    for (let i = 1; i < channels.length; i++) {
+      expect(channels[i]).not.toBe(channels[i - 1]);
+    }
+  });
+
+  it("nie mehr als zwei Langvideos am Stück", () => {
+    for (let i = 0; i < 8; i++) seed(db, `l${i}`, { dur: 900, format: "long" });
+    buildDailyMix(db, NOW);
+    const formats = (
+      db
+        .prepare(
+          `SELECT v.format AS f FROM daily_mix_items m JOIN videos v ON v.id = m.video_id
+            WHERE m.mix_date = ? ORDER BY m.position`,
+        )
+        .all(mixDateFor(NOW)) as { f: string }[]
+    ).map((r) => r.f);
+    let run = 0;
+    for (const f of formats) {
+      run = f === "long" ? run + 1 : 0;
+      expect(run).toBeLessThanOrEqual(2);
+    }
+  });
+
+  it("ordnet später dazugekommene Shorts mit ein, statt sie hinten anzuhängen", () => {
+    for (let i = 0; i < 4; i++) seed(db, `alt${i}`, { dur: 900, format: "long" });
+    buildDailyMix(db, NOW); // erst nur Langvideos verfügbar
+    for (let i = 0; i < 6; i++) seed(db, `neu${i}`, { dur: 40, format: "short" });
+    buildDailyMix(db, NOW); // Shorts kommen später dazu
+    const formats = (
+      db
+        .prepare(
+          `SELECT v.format AS f FROM daily_mix_items m JOIN videos v ON v.id = m.video_id
+            WHERE m.mix_date = ? ORDER BY m.position LIMIT 3`,
+        )
+        .all(mixDateFor(NOW)) as { f: string }[]
+    ).map((r) => r.f);
+    // Vorne im Feed steht jetzt Kurzform, nicht die alte Langvideo-Schlange.
+    expect(formats[0]).toBe("short");
   });
 
   it("Rhythmus: nach 6 Shorts kommt ein Langvideo", () => {

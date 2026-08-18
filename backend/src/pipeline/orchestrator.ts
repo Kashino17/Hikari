@@ -87,9 +87,14 @@ export interface ProcessNewVideoDeps {
   source?: string | undefined;
 }
 
-/** Native Shorts: Hochkant und maximal 3 Minuten (YouTube-Shorts-Limit). */
+/**
+ * Kurzform = bis 3 Minuten. Das Seitenverhältnis entscheidet bewusst NICHT:
+ * ein zweiminütiges Querformat-Video ist im Swipe-Feed genauso Kurzform wie
+ * ein natives Short — der Player zeigt es mit Rändern, statt es als Karte zu
+ * verstecken. So landet auch kurze Themen-Kost im Kurzform-Feed.
+ */
 function classifyFormat(meta: VideoMetadata): "short" | "long" {
-  return meta.aspectRatio === "9:16" && meta.durationSeconds <= 180 ? "short" : "long";
+  return meta.durationSeconds <= 180 ? "short" : "long";
 }
 
 export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> {

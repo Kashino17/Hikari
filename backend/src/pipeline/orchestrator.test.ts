@@ -23,6 +23,13 @@ const fakeShortMetadata = {
   aspectRatio: "9:16",
 };
 
+// Kurzes Querformat-Video — gehört ebenfalls in den Kurzform-Feed.
+const fakeShortLandscape = {
+  ...fakeMetadata,
+  durationSeconds: 120,
+  aspectRatio: "16:9",
+};
+
 function makeScorer(decision: "approve" | "reject"): Scorer {
   return {
     name: "mock",
@@ -171,6 +178,13 @@ describe("processNewVideo", () => {
     });
   });
 
+  it("kurzes Querformat-Video zählt als Kurzform", async () => {
+    await processNewVideo(baseDeps({ fetchMetadata: async () => fakeShortLandscape }));
+    expect(db.prepare("SELECT format FROM videos WHERE id='vid1'").get()).toEqual({
+      format: "short",
+    });
+  });
+
   it("Vorfilter lehnt fremdsprachige Titel ohne Scorer-Aufruf ab", async () => {
     let scorerCalls = 0;
     const zaehlScorer: Scorer = {
@@ -220,7 +234,12 @@ describe("processNewVideo", () => {
     db.prepare("UPDATE channels SET auto_approve = 1 WHERE id='UC1'").run();
     await processNewVideo(
       baseDeps({
-        fetchMetadata: async () => ({ ...fakeMetadata, durationSeconds: 30, aspectRatio: "16:9" }),
+        // Über der Höchstdauer des Filters — Kurzform-Bypass greift hier nicht.
+        fetchMetadata: async () => ({
+          ...fakeMetadata,
+          durationSeconds: 60 * 60 * 5,
+          aspectRatio: "16:9",
+        }),
       }),
     );
     const s = db.prepare("SELECT decision FROM scores WHERE video_id='vid1'").get() as {

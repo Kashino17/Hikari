@@ -138,6 +138,11 @@ export function applyMigrations(db: Database.Database): void {
        AND NOT EXISTS (SELECT 1 FROM feed_items f WHERE f.video_id = s.video_id)
   `);
 
+  // Kurzform-Feed: Länge entscheidet über das Format, nicht das Seitenverhältnis.
+  // Kurze Querformat-Videos gehörten bisher in die Langvideo-Schlange.
+  db.exec("UPDATE videos SET format = 'short' WHERE duration_seconds <= 180 AND format <> 'short'");
+  db.exec("UPDATE videos SET format = 'long' WHERE duration_seconds > 180 AND format <> 'long'");
+
   // Etappe 3 (Discovery): Kanal-Status + Ingest-Quelle.
   addColumnIfMissing(db, "channels", "is_active", "INTEGER DEFAULT 1"); // Ur-DB-Absicherung
   addColumnIfMissing(db, "channels", "status", "TEXT"); // 'subscribed' | 'probe' | 'blocked'
