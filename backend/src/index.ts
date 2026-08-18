@@ -266,8 +266,14 @@ cron.schedule("30 5,17 * * *", () => {
 // (attempts++) until the dead-letter cap, never blocking the rest.
 let isDraining = false;
 const DRAIN_BATCH = 20;
+// Nach einem transienten Infra-Fehler (Scorer-LLM aus) pausiert der Drain:
+// sonst wiederholt jede Minute derselbe Job seinen yt-dlp-Metadaten-Fetch —
+// Log-Spam und unnoetige YouTube-Requests von der Mac-IP (Rate-Limit-Risiko).
+const INFRA_COOLDOWN_MS = 10 * 60 * 1000;
+let infraCooldownUntil = 0;
 async function drainIngestQueue(): Promise<void> {
   if (isDraining) return;
+  if (Date.now() < infraCooldownUntil) return;
   isDraining = true;
   let processedAny = false;
   try {
@@ -293,9 +299,15 @@ async function drainIngestQueue(): Promise<void> {
         const msg = err instanceof Error ? err.message : String(err);
         if (isTransientInfraError(err)) {
           // Scorer-LLM aus / Netz weg: Job zurücklegen ohne attempts++ und den
-          // Tick beenden — ohne Infrastruktur scheitert der Rest genauso.
+          // Drain fuer INFRA_COOLDOWN_MS aussetzen — ohne Infrastruktur
+          // scheitert der Rest genauso, und Minuten-Retries hämmern nur
+          // yt-dlp/YouTube und das Log.
           requeueIngest(db, job.video_id, msg);
-          app.log.warn({ err, videoId: job.video_id }, "ingest paused — transient infra error");
+          infraCooldownUntil = Date.now() + INFRA_COOLDOWN_MS;
+          app.log.warn(
+            { err, videoId: job.video_id },
+            "ingest paused for 10min — transient infra error",
+          );
           break;
         }
         failIngest(db, job.video_id, msg);

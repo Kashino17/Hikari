@@ -34,7 +34,10 @@ data class LibraryVideoDto(
 data class LibraryResponse(
     val series: List<SeriesDto>,
     val recentlyAdded: List<LibraryVideoDto>,
-    val channels: List<ChannelDto>
+    val channels: List<ChannelDto>,
+    // Etappe 5: die Sammlung — optional, damit alte Server weiter parsen.
+    val watchLater: List<FeedItemDto> = emptyList(),
+    val history: List<FeedItemDto> = emptyList(),
 )
 
 @Serializable

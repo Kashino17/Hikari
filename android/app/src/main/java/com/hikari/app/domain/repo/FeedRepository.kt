@@ -95,6 +95,20 @@ class FeedRepository @Inject constructor(
         runCatching { api.deleteVideo(videoId) }
     }
 
+    suspend fun fetchWatchLater(): List<FeedItem> = api.getWatchLater().map { it.toDomain() }
+
+    suspend fun addWatchLater(videoId: String) {
+        runCatching { api.addWatchLater(videoId) }
+    }
+
+    suspend fun removeWatchLater(videoId: String) {
+        runCatching { api.removeWatchLater(videoId) }
+    }
+
+    /** "ready" | "queued" | null (Netzfehler) — der Server laedt on demand. */
+    suspend fun requestServerDownload(videoId: String): String? =
+        runCatching { api.requestServerDownload(videoId).status }.getOrNull()
+
     suspend fun getBudgetMinutes(): Int = api.getBudget().minutes
 
     suspend fun setBudgetMinutes(minutes: Int): Int = api.setBudget(BudgetBody(minutes)).minutes

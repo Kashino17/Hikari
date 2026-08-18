@@ -310,6 +310,7 @@ fun FeedScreen(
                         LongVideoCard(
                             item = item,
                             onOpen = {
+                                vm.onCardOpened(item.videoId)
                                 onNavigate(playVideoRoute(item.videoId, item.title, item.channelTitle))
                             },
                             onSubscribeChannel = { vm.onSubscribeChannel(item.channelId) },
@@ -320,7 +321,7 @@ fun FeedScreen(
                         LaunchedEffect(item.videoId, pagerState.settledPage) {
                             if (pagerState.settledPage == page) {
                                 kotlinx.coroutines.delay(1_500)
-                                vm.onSeen(item.videoId)
+                                vm.onCardSkipped(item.videoId)
                             }
                         }
                         return@VerticalPager

@@ -152,6 +152,19 @@ class FeedViewModel @Inject constructor(
             }
     }
     fun onUnplayable(id: String) = viewModelScope.launch { repo.markUnplayable(id) }
+    /** Langvideo-Karte weggeswiped ohne zu oeffnen: gesehen + Später ansehen. */
+    fun onCardSkipped(videoId: String) {
+        viewModelScope.launch {
+            runCatching { repo.addWatchLater(videoId) }
+            repo.markSeen(videoId)
+        }
+    }
+
+    /** Karte geoeffnet: gehoert in den Verlauf, nicht in Später ansehen. */
+    fun onCardOpened(videoId: String) {
+        viewModelScope.launch { repo.removeWatchLater(videoId) }
+    }
+
     fun onSubscribeChannel(channelId: String) {
         viewModelScope.launch { runCatching { repo.subscribeChannel(channelId) } }
     }

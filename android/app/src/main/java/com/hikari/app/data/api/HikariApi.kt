@@ -1,6 +1,7 @@
 package com.hikari.app.data.api
 
 import com.hikari.app.data.api.dto.BudgetBody
+import com.hikari.app.data.api.dto.ServerDownloadStatus
 import com.hikari.app.data.api.dto.AddChannelRequest
 import com.hikari.app.data.api.dto.AddChannelResponse
 import com.hikari.app.data.api.dto.ChannelDto
@@ -160,6 +161,18 @@ interface HikariApi {
 
     @POST("feed/{id}/seen")
     suspend fun markSeen(@Path("id") videoId: String)
+
+    @GET("watch-later")
+    suspend fun getWatchLater(): List<FeedItemDto>
+
+    @POST("watch-later/{id}")
+    suspend fun addWatchLater(@Path("id") videoId: String)
+
+    @DELETE("watch-later/{id}")
+    suspend fun removeWatchLater(@Path("id") videoId: String)
+
+    @POST("videos/{id}/download")
+    suspend fun requestServerDownload(@Path("id") videoId: String): ServerDownloadStatus
 
     @GET("feed/budget")
     suspend fun getBudget(): BudgetBody
