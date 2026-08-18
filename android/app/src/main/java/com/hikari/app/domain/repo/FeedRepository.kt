@@ -164,6 +164,7 @@ private fun FeedItemEntity.toDomain() = FeedItem(
     context = context,
     summary = summary,
     source = source,
+    channelId = channelId,
 )
 
 private fun FeedItemDto.toDomain() = FeedItem(
@@ -183,4 +184,5 @@ private fun FeedItemDto.toDomain() = FeedItem(
     context = context,
     summary = summary,
     source = source,
+    channelId = channelId,
 )

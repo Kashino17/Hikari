@@ -152,6 +152,14 @@ class FeedViewModel @Inject constructor(
             }
     }
     fun onUnplayable(id: String) = viewModelScope.launch { repo.markUnplayable(id) }
+    fun onSubscribeChannel(channelId: String) {
+        viewModelScope.launch { runCatching { repo.subscribeChannel(channelId) } }
+    }
+
+    fun onBlockChannel(channelId: String) {
+        viewModelScope.launch { runCatching { repo.blockChannel(channelId) } }
+    }
+
     fun onLessLikeThis(id: String) = viewModelScope.launch { repo.lessLikeThis(id) }
     fun onDelete(videoId: String) = viewModelScope.launch {
         repo.delete(videoId)

@@ -102,6 +102,8 @@ fun ReelPlayer(
     onToggleFullscreen: () -> Unit,
     /** Called when the user taps/double-taps so the parent can show its top chrome. */
     onShowControls: () -> Unit = {},
+    onSubscribeChannel: () -> Unit = {},
+    onBlockChannel: () -> Unit = {},
 ) {
     var playing by remember { mutableStateOf(true) }
     var showTrigger by remember { mutableIntStateOf(0) }
@@ -481,6 +483,14 @@ fun ReelPlayer(
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (item.isDiscovery()) {
+                    Spacer(Modifier.height(6.dp))
+                    DiscoveryActions(
+                        item = item,
+                        onSubscribe = onSubscribeChannel,
+                        onBlock = onBlockChannel,
                     )
                 }
                 Spacer(Modifier.height(6.dp))

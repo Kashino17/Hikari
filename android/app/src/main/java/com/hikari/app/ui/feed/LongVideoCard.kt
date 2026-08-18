@@ -39,6 +39,8 @@ fun LongVideoCard(
     item: FeedItem,
     onOpen: () -> Unit,
     modifier: Modifier = Modifier,
+    onSubscribeChannel: () -> Unit = {},
+    onBlockChannel: () -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -84,6 +86,10 @@ fun LongVideoCard(
             style = MaterialTheme.typography.labelMedium,
             color = HikariTextFaint,
         )
+        if (item.isDiscovery()) {
+            Spacer(Modifier.height(10.dp))
+            DiscoveryActions(item = item, onSubscribe = onSubscribeChannel, onBlock = onBlockChannel)
+        }
         val teaser = item.summary ?: item.reasoning
         if (teaser.isNotBlank()) {
             Spacer(Modifier.height(12.dp))

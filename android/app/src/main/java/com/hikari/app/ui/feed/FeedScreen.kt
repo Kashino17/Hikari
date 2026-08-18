@@ -298,6 +298,8 @@ fun FeedScreen(
                             onOpen = {
                                 onNavigate(playVideoRoute(item.videoId, item.title, item.channelTitle))
                             },
+                            onSubscribeChannel = { vm.onSubscribeChannel(item.channelId) },
+                            onBlockChannel = { vm.onBlockChannel(item.channelId) },
                         )
                         // Karten-„gesehen": 1,5 s Verweildauer statt 3 s Playback —
                         // Weiterswipen ohne Tap zählt bewusst als gesehen.
@@ -330,6 +332,8 @@ fun FeedScreen(
                         },
                         onToggleFullscreen = { onFullscreenChange(!fullscreen) },
                         onShowControls = { chromeVisible = true },
+                        onSubscribeChannel = { vm.onSubscribeChannel(item.channelId) },
+                        onBlockChannel = { vm.onBlockChannel(item.channelId) },
                     )
                 }
 
