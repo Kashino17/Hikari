@@ -36,7 +36,10 @@ export async function rescoreLegacyShorts(deps: RescoreDeps): Promise<number> {
         WHERE v.format = 'short'
           AND s.decision = 'rejected'
           AND s.model_used <> ?
-        ORDER BY v.published_at DESC
+        -- Abonnierte Kanäle zuerst: die hat der Nutzer bewusst gewählt,
+        -- ihre Shorts sind der wertvollste Rückstand.
+        ORDER BY CASE WHEN COALESCE(v.source, 'subscription') = 'subscription' THEN 0 ELSE 1 END,
+                 v.published_at DESC
         LIMIT ?`,
     )
     .all(RESCORE_MARKER, limit) as {
