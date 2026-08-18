@@ -7,12 +7,15 @@ import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { importDirectLink, fetchImportMetadata, ensureSeries, type ImportResult, type ManualMetadata } from "../import/manual-import.js";
 import type { MetadataExtractor } from "../scorer/metadata-extractor.js";
+import { downloadVideo } from "../download/worker.js";
 
 export interface VideosDeps {
   db: Database.Database;
   videoDir: string;
   coverDir: string;
   extractor: MetadataExtractor | null;
+  /** On-Demand-Server-Download (Test-Injection); Default: downloadVideo. */
+  download?: typeof downloadVideo | undefined;
 }
 
 interface SeriesRow {
@@ -158,6 +161,40 @@ export async function registerVideosRoutes(
       watchLater: hydrateFeedBatch(deps.db, watchLaterRows),
       history: hydrateFeedBatch(deps.db, historyRows),
     };
+  });
+
+  // Etappe 5: bewusster Offline-Flow. Der Server laedt die Datei on demand;
+  // die downloaded_videos-Row entsteht erst NACH der fertigen Datei (der
+  // Startup-Check loescht sonst Datei oder Row). In-Flight-Set gegen Doppelstarts.
+  const downloadsInFlight = new Set<string>();
+  const doDownload = deps.download ?? downloadVideo;
+  app.post<{ Params: { id: string } }>("/videos/:id/download", async (req, reply) => {
+    const videoId = req.params.id;
+    const known = deps.db.prepare("SELECT 1 FROM videos WHERE id = ?").get(videoId);
+    if (!known) return reply.code(404).send({ error: "video not found" });
+    const ready = deps.db
+      .prepare("SELECT 1 FROM downloaded_videos WHERE video_id = ?")
+      .get(videoId);
+    if (ready) return { status: "ready" };
+    if (!downloadsInFlight.has(videoId)) {
+      downloadsInFlight.add(videoId);
+      void doDownload({ videoId, outDir: deps.videoDir })
+        .then((dl) => {
+          deps.db
+            .prepare(
+              `INSERT OR IGNORE INTO downloaded_videos (video_id, file_path, file_size_bytes, downloaded_at)
+               VALUES (?, ?, ?, ?)`,
+            )
+            .run(videoId, dl.filePath, dl.fileSizeBytes, Date.now());
+        })
+        .catch((err) => {
+          app.log.warn({ err, videoId }, "on-demand download failed");
+        })
+        .finally(() => {
+          downloadsInFlight.delete(videoId);
+        });
+    }
+    return reply.code(202).send({ status: "queued" });
   });
 
   app.get("/series", async () => {
