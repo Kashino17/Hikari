@@ -88,6 +88,27 @@ describe("daily-mix", () => {
     expect(order.indexOf("long1")).toBe(5); // Position 5 = nach 5 Shorts
   });
 
+  it("überspringt Items, die das Budget massiv sprengen, und füllt mit passenden auf", () => {
+    setTimeBudgetMinutes(db, 10); // 600s, Toleranz bis 720s
+    for (let i = 0; i < 3; i++) seed(db, `sh${i}`, { dur: 60, format: "short" });
+    seed(db, "riesig", { dur: 5000, format: "long" }); // 83 min — passt nie
+    buildDailyMix(db, NOW);
+    const ids = (
+      db.prepare("SELECT video_id FROM daily_mix_items ORDER BY position").all() as {
+        video_id: string;
+      }[]
+    ).map((r) => r.video_id);
+    expect(ids).toEqual(["sh0", "sh1", "sh2"]);
+    expect(ids).not.toContain("riesig");
+  });
+
+  it("Garantie: gibt es NUR ein überlanges Video, kommt es trotzdem rein (kein leerer Feed)", () => {
+    setTimeBudgetMinutes(db, 10);
+    seed(db, "nur-lang", { dur: 5000, format: "long" });
+    buildDailyMix(db, NOW);
+    expect(db.prepare("SELECT COUNT(*) c FROM daily_mix_items").get()).toEqual({ c: 1 });
+  });
+
   it("todayMixStats: total zählt alles, remaining nur Ungesehenes", () => {
     setTimeBudgetMinutes(db, 10);
     seed(db, "a", { dur: 300, format: "long" });

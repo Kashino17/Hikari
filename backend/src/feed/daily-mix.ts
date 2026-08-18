@@ -8,6 +8,10 @@ const BUDGET_DEFAULT = 45;
 
 // Rhythmus des Mixes: nach je 5 Shorts eine Langvideo-Karte.
 const SHORTS_PER_LONG = 5;
+// Wie weit das letzte Item das Budget überziehen darf. Ohne diese Grenze frisst
+// ein einzelnes 85-Minuten-Video ein 45-Minuten-Budget komplett auf und
+// verdrängt alles andere — der Tag fühlt sich dann leer an.
+const BUDGET_OVERSHOOT = 1.2;
 
 // Quellen-Priorität: eigene Abos zuerst, dann Entdecktes, Backfill zuletzt.
 const SOURCE_PRIORITY: Record<string, number> = {
@@ -108,6 +112,12 @@ export function buildDailyMix(db: Database.Database, now: number = Date.now()): 
   const shorts = ordered.filter((c) => c.kind === "short");
   const longs = ordered.filter((c) => c.kind === "video");
 
+  const existingCount = (
+    db
+      .prepare("SELECT COUNT(*) AS c FROM daily_mix_items WHERE mix_date = ?")
+      .get(mixDate) as { c: number }
+  ).c;
+
   let position = (
     db
       .prepare("SELECT COALESCE(MAX(position), -1) AS p FROM daily_mix_items WHERE mix_date = ?")
@@ -119,7 +129,9 @@ export function buildDailyMix(db: Database.Database, now: number = Date.now()): 
 
   // Weben: SHORTS_PER_LONG Shorts, dann eine Langvideo-Karte; leerer Pool
   // laesst den anderen weiterlaufen.
+  const limit = budgetSeconds * BUDGET_OVERSHOOT;
   let shortRun = 0;
+  let added = 0;
   while (used < budgetSeconds && (shorts.length > 0 || longs.length > 0)) {
     let next: MixCandidate | undefined;
     if (shorts.length > 0 && (shortRun < SHORTS_PER_LONG || longs.length === 0)) {
@@ -130,9 +142,19 @@ export function buildDailyMix(db: Database.Database, now: number = Date.now()): 
       shortRun = 0;
     }
     if (!next) break;
+    // Passt das Item nicht mehr ins (tolerierte) Budget, wird es übersprungen
+    // statt den Mix zu beenden — kürzere Kandidaten füllen den Rest.
+    if (used + next.durationSec > limit) continue;
     position++;
     insert.run(mixDate, next.id, position, next.source, next.durationSec);
     used += next.durationSec;
+    added++;
+  }
+
+  // Notnagel: lieber ein überlanges Video als ein leerer Tag.
+  const fallback = ordered[0];
+  if (existingCount === 0 && added === 0 && fallback) {
+    insert.run(mixDate, fallback.id, position + 1, fallback.source, fallback.durationSec);
   }
 }
 
