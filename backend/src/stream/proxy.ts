@@ -6,7 +6,7 @@ import type { FastifyReply } from "fastify";
 const DEFAULT_HEADER_TIMEOUT_MS = 12_000;
 // googlevideo verlangt (rollierend erzwungen, beobachtet 2026-08) einen
 // browserartigen User-Agent — undici/fetch ohne UA bekommt 403.
-const BROWSER_UA =
+export const BROWSER_UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36";
 // Verzögerungen vor Retries derselben Upstream-URL, bevor teuer neu aufgelöst wird.
 const DEFAULT_RETRY_DELAYS_MS = [300, 1000];
