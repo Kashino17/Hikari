@@ -48,17 +48,16 @@ describe("daily-mix", () => {
     expect(setTimeBudgetMinutes(db, 999)).toBe(240); // clamp oben
   });
 
-  it("füllt bis zum Budget (letztes Item darf überziehen) und ist idempotent", () => {
-    setTimeBudgetMinutes(db, 10); // 600s
+  it("nimmt alle verfügbaren Kandidaten auf — kein Zeitdeckel — und ist idempotent", () => {
+    setTimeBudgetMinutes(db, 10); // Budget ist nur noch Anzeige
     for (let i = 0; i < 5; i++) seed(db, `v${i}`, { dur: 240, format: "long" });
     buildDailyMix(db, NOW);
     const rows = db
       .prepare("SELECT video_id FROM daily_mix_items WHERE mix_date = ?")
       .all(mixDateFor(NOW));
-    // 240+240 = 480 < 600 → drittes kommt noch rein (720 gesamt), viertes nicht
-    expect(rows).toHaveLength(3);
-    buildDailyMix(db, NOW); // Budget voll — nichts kommt dazu
-    expect(db.prepare("SELECT COUNT(*) c FROM daily_mix_items").get()).toEqual({ c: 3 });
+    expect(rows).toHaveLength(5); // 20 min Material trotz 10-min-Budget
+    buildDailyMix(db, NOW); // keine Kandidaten mehr übrig
+    expect(db.prepare("SELECT COUNT(*) c FROM daily_mix_items").get()).toEqual({ c: 5 });
   });
 
   it("Quellen-Priorität: subscription vor probe vor topic", () => {
@@ -75,8 +74,7 @@ describe("daily-mix", () => {
     expect(order).toEqual(["s-abo", "p-probe", "t-topic"]);
   });
 
-  it("Rhythmus: nach 5 Shorts kommt ein Langvideo", () => {
-    setTimeBudgetMinutes(db, 240);
+  it("Rhythmus: nach 3 Shorts kommt ein Langvideo", () => {
     for (let i = 0; i < 8; i++) seed(db, `sh${i}`, { dur: 30, format: "short" });
     seed(db, "long1", { dur: 600, format: "long" });
     buildDailyMix(db, NOW);
@@ -85,21 +83,21 @@ describe("daily-mix", () => {
         video_id: string;
       }[]
     ).map((r) => r.video_id);
-    expect(order.indexOf("long1")).toBe(5); // Position 5 = nach 5 Shorts
+    expect(order.indexOf("long1")).toBe(3); // Position 3 = nach 3 Shorts
   });
 
-  it("überspringt Items, die das Budget massiv sprengen, und füllt mit passenden auf", () => {
-    setTimeBudgetMinutes(db, 10); // 600s, Toleranz bis 720s
+  it("auch lange Videos kommen in den Feed — nichts wird wegen Dauer verworfen", () => {
+    setTimeBudgetMinutes(db, 10);
     for (let i = 0; i < 3; i++) seed(db, `sh${i}`, { dur: 60, format: "short" });
-    seed(db, "riesig", { dur: 5000, format: "long" }); // 83 min — passt nie
+    seed(db, "lang", { dur: 5000, format: "long" }); // 83 min
     buildDailyMix(db, NOW);
     const ids = (
       db.prepare("SELECT video_id FROM daily_mix_items ORDER BY position").all() as {
         video_id: string;
       }[]
     ).map((r) => r.video_id);
-    expect(ids).toEqual(["sh0", "sh1", "sh2"]);
-    expect(ids).not.toContain("riesig");
+    expect(ids).toContain("lang");
+    expect(ids).toHaveLength(4);
   });
 
   it("Garantie: gibt es NUR ein überlanges Video, kommt es trotzdem rein (kein leerer Feed)", () => {
@@ -142,17 +140,22 @@ describe("daily-mix", () => {
     expect(ids).toContain("neu"); // Nachschub kommt
   });
 
-  it("ist das Tagesbudget verbraucht, kommt kein Nachschub mehr", () => {
+  it("auch nach verbrauchtem Zeitbudget kommt Nachschub — der Feed endet nicht", () => {
     setTimeBudgetMinutes(db, 10); // 600s
     seed(db, "lang", { dur: 700, format: "long" });
     buildDailyMix(db, NOW);
-    // Komplett geschaut: 700s > Budget.
     db.prepare("UPDATE feed_items SET seen_at = ?, progress_seconds = 700 WHERE video_id = 'lang'").run(
       NOW,
     );
     seed(db, "neu", { dur: 60, format: "short" });
     buildDailyMix(db, NOW);
-    expect(db.prepare("SELECT COUNT(*) c FROM daily_mix_items").get()).toEqual({ c: 1 });
+    const ids = (
+      db.prepare("SELECT video_id FROM daily_mix_items ORDER BY position").all() as {
+        video_id: string;
+      }[]
+    ).map((r) => r.video_id);
+    expect(ids).toContain("neu"); // Nachschub trotz überschrittenem Budget
+    // Das Budget ist nur noch Information für die Anzeige.
     expect(todayMixStats(db, NOW).capped).toBe(true);
   });
 });

@@ -7,13 +7,21 @@ import {
   mixDateFor,
   setTimeBudgetMinutes,
   todayMixStats,
+  unseenMixCount,
 } from "../feed/daily-mix.js";
+
+/** Seitengröße des Endlos-Feeds; die App lädt beim Scrollen nach. */
+const FEED_PAGE_SIZE = 30;
+/** Ab so wenigen ungesehenen Items wird Discovery angestoßen. */
+const LOW_STOCK_THRESHOLD = 15;
 
 export interface FeedDeps {
   db: Database.Database;
   dailyBudget: number;
   /** Wärmt Stream-URLs vor, damit der Player nicht auf yt-dlp warten muss. */
   prefetchStreams?: ((videoIds: string[]) => void) | undefined;
+  /** Wird gerufen, wenn der Vorrat knapp wird — stößt Discovery an. */
+  onLowStock?: (() => void) | undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -348,7 +356,9 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
     LEFT JOIN downloaded_videos dv ON dv.video_id = fi.video_id
   `;
 
-  app.get<{ Querystring: { mode?: string; rotation?: string } }>("/feed", async (req, reply) => {
+  app.get<{ Querystring: { mode?: string; rotation?: string; offset?: string; limit?: string } }>(
+    "/feed",
+    async (req, reply) => {
     const mode = (req.query.mode ?? "new") as "new" | "saved" | "old";
     if (mode !== "new" && mode !== "saved" && mode !== "old") {
       return reply.code(400).send({ error: "mode must be new, saved, or old" });
@@ -360,14 +370,21 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
       // Request-Zeit-Pipeline (rank/interleave/cooldown) läuft jetzt im
       // Mix-Builder. Reihenfolge bleibt über App-Öffnungen hinweg identisch.
       buildDailyMix(deps.db);
+      const mixDate = mixDateFor(Date.now());
+      // Endlos-Feed: seitenweise ausliefern, die App lädt beim Scrollen nach.
+      const limit = Math.min(Math.max(Number(req.query.limit) || FEED_PAGE_SIZE, 1), 100);
+      const offset = Math.max(Number(req.query.offset) || 0, 0);
       const mixRows = deps.db
         .prepare(
           `SELECT m.video_id AS id FROM daily_mix_items m
             JOIN feed_items f ON f.video_id = m.video_id
            WHERE m.mix_date = ? AND f.seen_at IS NULL AND f.playback_failed = 0
-           ORDER BY m.position ASC`,
+           ORDER BY m.position ASC
+           LIMIT ? OFFSET ?`,
         )
-        .all(mixDateFor(Date.now())) as { id: string }[];
+        .all(mixDate, limit, offset) as { id: string }[];
+      // Geht der Vorrat zur Neige, sofort neue Kandidaten suchen lassen.
+      if (unseenMixCount(deps.db, mixDate) < LOW_STOCK_THRESHOLD) deps.onLowStock?.();
       // Die nächsten Videos vorwärmen, bevor der Player sie anfragt.
       deps.prefetchStreams?.(mixRows.map((r) => r.id));
       return hydrateFeedBatch(deps.db, mixRows as RawFeedRow[]);

@@ -140,7 +140,12 @@ const prefetchStreams = registerStreamRoutes(app, {
   streamCachePath: join(cfg.dataDir, "video-stream-cache.json"),
   videoDir: cfg.videoDir,
 });
-await registerFeedRoutes(app, { db, dailyBudget: cfg.dailyBudget, prefetchStreams });
+await registerFeedRoutes(app, {
+  db,
+  dailyBudget: cfg.dailyBudget,
+  prefetchStreams,
+  onLowStock: () => triggerDiscovery("feed low stock"),
+});
 await registerWatchLaterRoutes(app, { db });
 await registerFilterRoutes(app, { db });
 await registerDiscoverySettingsRoutes(app, { db });
@@ -238,6 +243,23 @@ cron.schedule("*/15 * * * *", () => {
   pollAllChannels().catch((err) => app.log.error({ err }, "channel poll crashed"));
 });
 
+// Discovery-Anstoß mit Cooldown: der Feed ruft ihn auch selbst, sobald der
+// Vorrat knapp wird — so entsteht nie ein leerer Feed.
+let discoveryRunning = false;
+let discoveryNextAllowed = 0;
+const DISCOVERY_COOLDOWN_MS = 20 * 60 * 1000;
+function triggerDiscovery(reason: string): void {
+  if (discoveryRunning || Date.now() < discoveryNextAllowed) return;
+  discoveryRunning = true;
+  discoveryNextAllowed = Date.now() + DISCOVERY_COOLDOWN_MS;
+  app.log.info({ reason }, "discovery cycle started");
+  runDiscoveryCycle(db)
+    .catch((err) => app.log.error({ err }, "discovery cycle crashed"))
+    .finally(() => {
+      discoveryRunning = false;
+    });
+}
+
 // Tagesmix: früh morgens frisch bauen; zusätzlich Top-up nach jedem Drain
 // (unten) und lazy beim ersten /feed-Abruf des Tages.
 cron.schedule("0 6 * * *", () => {
@@ -255,10 +277,9 @@ try {
 
 // Discovery: Probe-Kanäle, Themen-Suche, Backfill — zweimal täglich reicht,
 // die Quellen sind gedrosselt und der Scorer bleibt der Türsteher.
-cron.schedule("30 5,17 * * *", () => {
-  runDiscoveryCycle(db, { dailyBudget: cfg.dailyBudget }).catch((err) =>
-    app.log.error({ err }, "discovery cycle crashed"),
-  );
+// Alle 2 Stunden: der Feed ist unendlich, also braucht er stetigen Nachschub.
+cron.schedule("15 */2 * * *", () => {
+  triggerDiscovery("cron");
 });
 
 // Durable ingest drain: claim queued videos one at a time and run the full

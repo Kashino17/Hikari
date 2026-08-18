@@ -6,15 +6,15 @@ const BUDGET_MIN = 10;
 const BUDGET_MAX = 240;
 const BUDGET_DEFAULT = 45;
 
-// Rhythmus des Mixes: nach je 5 Shorts eine Langvideo-Karte.
-const SHORTS_PER_LONG = 5;
-// Vorrat, den der Feed bereithält, solange das Tagesbudget nicht verbraucht
-// ist — der Feed füllt also laufend nach, statt einmalig gedeckelt zu sein.
-const REFILL_TARGET_SECONDS = 20 * 60;
-// Wie weit das letzte Item das Budget überziehen darf. Ohne diese Grenze frisst
-// ein einzelnes 85-Minuten-Video ein 45-Minuten-Budget komplett auf und
-// verdrängt alles andere — der Tag fühlt sich dann leer an.
-const BUDGET_OVERSHOOT = 1.2;
+// Rhythmus des Mixes: nach je 3 Shorts eine Langvideo-Karte — Langform ist
+// gleichberechtigter Teil des Feeds, kein seltener Gast.
+const SHORTS_PER_LONG = 3;
+// Vorrat an ungesehenen Items, den der Feed bereithält. Kein Zeitdeckel mehr:
+// der Feed ist unendlich, seine Qualität kommt aus dem Filter, nicht aus einer
+// künstlichen Bremse. Das Zeitbudget bleibt reine Anzeige ("heute geschaut").
+const FEED_TARGET_UNSEEN = 40;
+// Ab diesem Restvorrat wird Discovery angestoßen, damit nie Leere entsteht.
+const REFILL_TRIGGER_UNSEEN = 15;
 
 // Quellen-Priorität: eigene Abos zuerst, dann Entdecktes, Backfill zuletzt.
 const SOURCE_PRIORITY: Record<string, number> = {
@@ -97,17 +97,24 @@ function unseenSeconds(db: Database.Database, mixDate: string): number {
   ).s;
 }
 
+/** Anzahl der ungesehenen Items im heutigen Mix. */
+export function unseenMixCount(db: Database.Database, mixDate: string): number {
+  return (
+    db
+      .prepare(
+        `SELECT COUNT(*) AS c FROM daily_mix_items m
+           JOIN feed_items f ON f.video_id = m.video_id
+          WHERE m.mix_date = ? AND f.seen_at IS NULL AND f.playback_failed = 0`,
+      )
+      .get(mixDate) as { c: number }
+  ).c;
+}
+
 export function buildDailyMix(db: Database.Database, now: number = Date.now()): void {
   const mixDate = mixDateFor(now);
-  const budgetSeconds = getTimeBudgetMinutes(db) * 60;
-
-  // Tagesbudget verbraucht? Dann kein Nachschub mehr — das ist das bewusste Ende.
-  const remainingBudget = budgetSeconds - consumedSeconds(db, mixDate);
-  if (remainingBudget <= 0) return;
-  // Vorrat auffüllen bis Zielgröße (aber nie über das Rest-Budget hinaus).
-  const target = Math.min(remainingBudget, REFILL_TARGET_SECONDS);
-  let used = unseenSeconds(db, mixDate);
-  if (used >= target) return;
+  // Ziel ist ein voller Vorrat, kein Zeitdeckel — der Feed hört nicht auf.
+  let count = unseenMixCount(db, mixDate);
+  if (count >= FEED_TARGET_UNSEEN) return;
 
   const candidates = db
     .prepare(
@@ -163,10 +170,9 @@ export function buildDailyMix(db: Database.Database, now: number = Date.now()): 
 
   // Weben: SHORTS_PER_LONG Shorts, dann eine Langvideo-Karte; leerer Pool
   // laesst den anderen weiterlaufen.
-  const limit = remainingBudget * BUDGET_OVERSHOOT;
   let shortRun = 0;
   let added = 0;
-  while (used < target && (shorts.length > 0 || longs.length > 0)) {
+  while (count < FEED_TARGET_UNSEEN && (shorts.length > 0 || longs.length > 0)) {
     let next: MixCandidate | undefined;
     if (shorts.length > 0 && (shortRun < SHORTS_PER_LONG || longs.length === 0)) {
       next = shorts.shift();
@@ -176,16 +182,13 @@ export function buildDailyMix(db: Database.Database, now: number = Date.now()): 
       shortRun = 0;
     }
     if (!next) break;
-    // Passt das Item nicht mehr ins (tolerierte) Budget, wird es übersprungen
-    // statt den Mix zu beenden — kürzere Kandidaten füllen den Rest.
-    if (used + next.durationSec > limit) continue;
     position++;
     insert.run(mixDate, next.id, position, next.source, next.durationSec);
-    used += next.durationSec;
+    count++;
     added++;
   }
 
-  // Notnagel: lieber ein überlanges Video als ein leerer Tag.
+  // Notnagel: lieber ein einzelnes Video als ein leerer Feed.
   const fallback = ordered[0];
   if (existingCount === 0 && added === 0 && fallback) {
     insert.run(mixDate, fallback.id, position + 1, fallback.source, fallback.durationSec);
@@ -229,6 +232,7 @@ export function todayMixStats(db: Database.Database, now: number = Date.now()): 
     consumedSeconds: consumed,
     remainingSeconds: Math.max(0, budgetSeconds - consumed),
     unseenCount: unseen.c,
+    // Nur noch Information für die Anzeige — der Feed wird davon nicht gestoppt.
     capped: consumed >= budgetSeconds,
   };
 }

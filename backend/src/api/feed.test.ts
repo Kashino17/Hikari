@@ -785,6 +785,43 @@ describe("GET /feed (new) — batched hydration", () => {
     ).toBe(400);
   });
 
+  it("liefert den Feed seitenweise — die App lädt beim Scrollen nach", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    for (let i = 0; i < 5; i++) seedFeedItem(db, `p${i}`, Date.now() - i * 1000);
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+    const seite1 = (
+      await app.inject({ method: "GET", url: "/feed?mode=new&limit=2&offset=0" })
+    ).json() as { videoId: string }[];
+    const seite2 = (
+      await app.inject({ method: "GET", url: "/feed?mode=new&limit=2&offset=2" })
+    ).json() as { videoId: string }[];
+    expect(seite1).toHaveLength(2);
+    expect(seite2).toHaveLength(2);
+    // Keine Überschneidung: Seite 2 setzt hinter Seite 1 fort.
+    expect(seite1.map((x) => x.videoId)).not.toEqual(
+      expect.arrayContaining(seite2.map((x) => x.videoId)),
+    );
+  });
+
+  it("stößt Discovery an, wenn der Vorrat knapp wird", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    seedFeedItem(db, "knapp1", Date.now());
+    let angestossen = 0;
+    const app = Fastify();
+    await registerFeedRoutes(app, {
+      db,
+      dailyBudget: 15,
+      onLowStock: () => {
+        angestossen++;
+      },
+    });
+    await app.inject({ method: "GET", url: "/feed?mode=new" });
+    expect(angestossen).toBe(1);
+  });
+
   it("wärmt die Stream-URLs des Tagesmixes vor", async () => {
     const db = new Database(":memory:");
     applyMigrations(db);

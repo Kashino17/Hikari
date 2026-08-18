@@ -62,7 +62,7 @@ describe("runDiscoveryCycle", () => {
     const rows = db
       .prepare("SELECT video_id, source FROM ingest_queue WHERE channel_id='UC-p' ORDER BY rowid")
       .all() as { video_id: string; source: string }[];
-    expect(rows).toHaveLength(3); // PROBE_PER_CYCLE
+    expect(rows).toHaveLength(5); // alle Kandidaten (unter der Quote von 8)
     expect(rows[0]).toEqual({ video_id: "sssssssssss", source: "probe" });
   });
 
@@ -92,15 +92,13 @@ describe("runDiscoveryCycle", () => {
       channelVideos,
       channelShorts: none as never,
       videoSearch: none as never,
-      dailyBudget: 15,
     });
     expect(
       db.prepare("SELECT source FROM ingest_queue WHERE video_id='bfbfbfbfbfb'").get(),
     ).toEqual({ source: "backfill" });
   });
 
-  it("KEIN Backfill wenn genug ungesehene Items da sind", async () => {
-    // 2 ungesehene feed_items seeden, Budget 1 → Backfill übersprungen.
+  it("Backfill füllt auch bei vorhandenem Vorrat nach — der Feed soll nie leerlaufen", async () => {
     db.prepare(
       `INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at)
        VALUES ('u1','UC-abo','t',0,60,0), ('u2','UC-abo','t',0,60,0)`,
@@ -114,8 +112,9 @@ describe("runDiscoveryCycle", () => {
       channelVideos,
       channelShorts: none as never,
       videoSearch: none as never,
-      dailyBudget: 1,
     });
-    expect(db.prepare("SELECT COUNT(*) c FROM ingest_queue").get()).toEqual({ c: 0 });
+    expect(db.prepare("SELECT source FROM ingest_queue WHERE video_id='bfbfbfbfbfb'").get()).toEqual({
+      source: "backfill",
+    });
   });
 });

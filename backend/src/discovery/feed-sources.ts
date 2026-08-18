@@ -6,10 +6,12 @@ import { getFilterState } from "../scorer/filter-repo.js";
 
 // Drosseln: Discovery erweitert die Kandidatenmenge, darf den Feed aber nicht
 // fluten — der Scorer bleibt der Türsteher, die Mengen bleiben überschaubar.
-const PROBE_POOL_MAX = 8; // gleichzeitig geführte Probe-Kanäle
-const PROBE_PER_CYCLE = 3; // neue Videos je Probe-Kanal je Lauf
-const TOPIC_PER_TAG = 5; // neue Videos je likeTag je Lauf
-const BACKFILL_MAX = 10; // Backfill-Videos gesamt je Lauf
+const PROBE_POOL_MAX = 15; // gleichzeitig geführte Probe-Kanäle
+const PROBE_PER_CYCLE = 8; // neue Videos je Probe-Kanal je Lauf
+const TOPIC_PER_TAG = 15; // neue Videos je likeTag je Lauf
+const BACKFILL_MAX = 40; // Backfill-Videos gesamt je Lauf
+// Bis zu diesem Vorrat an ungesehenen Videos wird nachgefüllt.
+const BACKFILL_UNTIL_UNSEEN = 120;
 
 /** Pseudo-Kanal für Themen-Treffer — die Suche liefert nur Video-IDs, keinen Kanal. */
 const TOPICS_CHANNEL_ID = "discovery-topics";
@@ -19,8 +21,6 @@ export interface FeedSourceDeps {
   channelVideos?: typeof itChannelVideos;
   channelShorts?: typeof itChannelShorts;
   videoSearch?: typeof itVideoSearch;
-  /** Backfill-Schwelle: nur auffüllen, wenn weniger ungesehene Items da sind. */
-  dailyBudget?: number;
 }
 
 /**
@@ -37,7 +37,6 @@ export async function runDiscoveryCycle(
   const channelVideos = deps.channelVideos ?? itChannelVideos;
   const channelShorts = deps.channelShorts ?? itChannelShorts;
   const videoSearch = deps.videoSearch ?? itVideoSearch;
-  const dailyBudget = deps.dailyBudget ?? 15;
 
   const isKnownVideo = db.prepare("SELECT 1 FROM videos WHERE id = ?");
 
@@ -112,7 +111,8 @@ export async function runDiscoveryCycle(
     // Themen sind best-effort
   }
 
-  // --- 4) Backfill: nur wenn der Feed unter dem Tagesbudget liegt ---
+  // --- 4) Backfill: die günstigste Quelle (bekannte Kanäle, kein Fremdrisiko).
+  // Läuft immer, solange der Vorrat nicht üppig ist — der Feed soll nie leerlaufen.
   try {
     const unseen = (
       db
@@ -121,7 +121,7 @@ export async function runDiscoveryCycle(
         )
         .get() as { c: number }
     ).c;
-    if (unseen < dailyBudget) {
+    if (unseen < BACKFILL_UNTIL_UNSEEN) {
       const subscribed = db.prepare("SELECT id FROM channels WHERE is_active = 1").all() as {
         id: string;
       }[];
