@@ -57,7 +57,9 @@ import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.LocalPolice
 import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Podcasts
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -390,6 +392,7 @@ private fun ModeSheet(viewModel: MusicViewModel, onClose: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DiscoverTab(
     viewModel: MusicViewModel,
@@ -420,6 +423,18 @@ private fun DiscoverTab(
     val searchMode = viewModel.searchMode
     val musicMode = searchMode == MusicSearchMode.MUSIC
 
+    // Beim Betreten der Seite nachladen: der 15-Minuten-Cache macht schnelle
+    // Wiederbesuche kostenlos, nach Ablauf gibt es frische Vorschläge.
+    LaunchedEffect(Unit) {
+        viewModel.loadDiscover()
+        viewModel.refreshLibrary()
+    }
+
+    PullToRefreshBox(
+        isRefreshing = viewModel.discoverRefreshing,
+        onRefresh = { viewModel.refreshDiscover() },
+        modifier = Modifier.fillMaxSize(),
+    ) {
     LazyColumn(
         Modifier.fillMaxSize(),
         // Zustand lebt im ViewModel: überlebt Tab-Crossfade und Rücknavigation.
@@ -559,6 +574,7 @@ private fun DiscoverTab(
                 onOpenMix = onOpenMix,
             )
         }
+    }
     }
 }
 

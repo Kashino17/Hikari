@@ -248,6 +248,35 @@ class MusicViewModel @Inject constructor(
         }
     }
 
+    /** Pull-to-Refresh auf der Entdecken-Seite läuft. */
+    var discoverRefreshing by mutableStateOf(false)
+        private set
+
+    /**
+     * Erzwungener Neuaufbau des Entdecken-Feeds (Pull-to-Refresh): umgeht den
+     * 15-Minuten-Cache und zieht Bibliothek + Schnellauswahl gleich mit nach.
+     */
+    fun refreshDiscover() {
+        if (discoverRefreshing) return
+        viewModelScope.launch {
+            discoverRefreshing = true
+            try {
+                refreshLibrary()
+                if (searchMode == MusicSearchMode.MUSIC) {
+                    val sections = repo.getPersonalizedHome(force = true)
+                    homeSections = sections
+                    discoverFailed = sections.isEmpty()
+                } else {
+                    val sections = repo.getDiscoverSections(searchMode)
+                    discoverSections = sections
+                    discoverFailed = sections.isEmpty()
+                }
+            } finally {
+                discoverRefreshing = false
+            }
+        }
+    }
+
     fun loadDiscover(force: Boolean = false) {
         if (discoverLoading && !force) return
         viewModelScope.launch {
