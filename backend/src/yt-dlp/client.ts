@@ -33,19 +33,25 @@ export const YT_EMBEDDED_CLIENT_ARGS = [
 ];
 
 /**
- * Stream-URL-Auflösung: erst mit web_embedded-Client (voll rangebare URLs),
- * bei Fehlschlag (z. B. Embed vom Uploader deaktiviert) mit den
- * Default-Clients. Nimmt den Runner als Parameter, damit injizierte
- * yt-dlp-Mocks (Tests) genauso funktionieren wie das echte Binary.
+ * Alles, was googlevideo-Bytes anfasst (URL-Auflösung ODER yt-dlps eigener
+ * Download): erst mit web_embedded-Client, bei Fehlschlag (z. B. Embed vom
+ * Uploader deaktiviert) mit den Default-Clients. Nimmt den Runner als
+ * Parameter, damit injizierte yt-dlp-Mocks (Tests) genauso funktionieren wie
+ * das echte Binary.
+ *
+ * `isUsable` prüft den Erfolg: bei `-g` muss eine URL auf stdout stehen, bei
+ * einem Download bleibt stdout ggf. leer — dort `() => true` übergeben, sonst
+ * liefe der teure Download zweimal.
  */
 export async function runPreferEmbedded(
   run: (args: string[], opts?: RunYtDlpOptions) => Promise<YtDlpResult>,
   args: string[],
   opts?: RunYtDlpOptions,
+  isUsable: (result: YtDlpResult) => boolean = (r) => r.stdout.trim().length > 0,
 ): Promise<YtDlpResult> {
   try {
     const result = await run([...YT_EMBEDDED_CLIENT_ARGS, ...args], opts);
-    if (result.stdout.trim()) return result;
+    if (isUsable(result)) return result;
   } catch {
     // weiter mit Default-Clients
   }

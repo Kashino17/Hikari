@@ -1,7 +1,7 @@
 import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type Database from "better-sqlite3";
-import { runYtDlp, YtDlpError } from "../yt-dlp/client.js";
+import { runPreferEmbedded, runYtDlp, YtDlpError } from "../yt-dlp/client.js";
 
 export const MANUAL_CHANNEL_ID = "manual";
 const MANUAL_CHANNEL_TITLE = "Manuell hinzugefügt";
@@ -312,7 +312,11 @@ export async function importDirectLink(
   // match our internal videoId.
   const filePath = join(videoDir, `${videoId}.mp4`);
   try {
-    await runYtDlp(
+    // web_embedded-first: yt-dlps eigener Download bekommt von googlevideo
+    // sonst 403 (siehe yt-dlp/client.ts). `() => true`, weil ein erfolgreicher
+    // Download nichts Verwertbares auf stdout schreibt — sonst liefe er zweimal.
+    await runPreferEmbedded(
+      runYtDlp,
       [
         "-f",
         "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720]/best",
@@ -324,6 +328,7 @@ export async function importDirectLink(
         downloadUrl,
       ],
       { timeoutMs: 30 * 60_000 }, // up to 30 min for big files
+      () => true,
     );
   } catch (err) {
     const msg = err instanceof YtDlpError ? err.message : String(err);

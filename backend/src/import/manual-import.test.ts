@@ -4,24 +4,12 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { importDirectLink } from "./manual-import.js";
 
-vi.mock("../yt-dlp/client.js", () => {
-  class YtDlpError extends Error {
-    stderr: string;
-    exitCode: number | undefined;
-
-    constructor(message: string, stderr = "", exitCode?: number) {
-      super(message);
-      this.name = "YtDlpError";
-      this.stderr = stderr;
-      this.exitCode = exitCode;
-    }
-  }
-
-  return {
-    runYtDlp: vi.fn(),
-    YtDlpError,
-  };
-});
+// Nur das Binary-Ausführen wird ersetzt — runPreferEmbedded (web_embedded-
+// Client + Fallback) läuft echt mit, damit der 403-Fix mitgetestet wird.
+vi.mock("../yt-dlp/client.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../yt-dlp/client.js")>()),
+  runYtDlp: vi.fn(),
+}));
 
 function rot13(input: string): string {
   let out = "";
@@ -373,6 +361,11 @@ describe("importDirectLink", () => {
     expect(db.scores.has("orderabc")).toBe(true);
     expect(db.downloadedVideos.has("orderabc")).toBe(true);
     expect(db.feedItems.has("orderabc")).toBe(true);
+
+    // Der Download MUSS über den web_embedded-Client laufen: googlevideo gibt
+    // yt-dlps eigenem Downloader mit den Default-Clients 403 (18.08.2026).
+    const downloadArgs = vi.mocked(runYtDlp).mock.calls.map((c) => c[0]).find((a) => a.includes("-o"));
+    expect(downloadArgs).toContain("youtube:player_client=web_embedded");
   });
 
   it("leaves no orphaned video/score rows when the download fails", async () => {

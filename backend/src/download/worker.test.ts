@@ -4,13 +4,11 @@ import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { downloadVideo } from "./worker.js";
 
-vi.mock("../yt-dlp/client.js", () => ({
+// Nur das Binary-Ausführen wird ersetzt — runPreferEmbedded (web_embedded-
+// Client + Fallback) läuft echt mit, damit der 403-Fix mitgetestet wird.
+vi.mock("../yt-dlp/client.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../yt-dlp/client.js")>()),
   runYtDlp: vi.fn(),
-  // delegiert an den übergebenen Runner — wie das Original bei Erfolg
-  runPreferEmbedded: vi.fn((run: (a: string[], o?: unknown) => unknown, args: string[], opts?: unknown) =>
-    run(args, opts),
-  ),
-  YtDlpError: class extends Error {},
 }));
 
 describe("downloadVideo", () => {
