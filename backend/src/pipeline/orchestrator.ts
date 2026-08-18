@@ -2,6 +2,7 @@ import type Database from "better-sqlite3";
 import type { VideoMetadata } from "../ingest/metadata.js";
 import { decide, type Thresholds } from "../scorer/decision.js";
 import { getActivePromptForChannel, getFilterForChannel } from "../scorer/filter-repo.js";
+import { prefilterReason } from "../scorer/prefilter.js";
 import type { FilterConfig } from "../scorer/filter.js";
 import type { ScoredVideo, Scorer } from "../scorer/types.js";
 import type { SponsorSegment } from "../sponsorblock/client.js";
@@ -149,6 +150,19 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
       }
     })();
     refreshChannelMatch(db, channelId);
+    return;
+  }
+
+  // Billiger Vorfilter: fremdsprachige Titel (Devanagari, Thai, …) lehnt der
+  // Scorer ohnehin ab — das braucht keinen LLM-Aufruf und spart bei
+  // Empfehlungswellen Stunden.
+  const preReason = prefilterReason(meta.title, meta.description, filter);
+  if (preReason) {
+    const now = Date.now();
+    db.transaction(() => {
+      insertVideo(db, meta, null, channelId, format, null, deps.source ?? "subscription");
+      insertScore(db, videoId, autoRejectScore(preReason), "rejected", now);
+    })();
     return;
   }
 

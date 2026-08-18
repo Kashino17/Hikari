@@ -171,6 +171,31 @@ describe("processNewVideo", () => {
     });
   });
 
+  it("Vorfilter lehnt fremdsprachige Titel ohne Scorer-Aufruf ab", async () => {
+    let scorerCalls = 0;
+    const zaehlScorer: Scorer = {
+      name: "zaehl",
+      async score() {
+        scorerCalls++;
+        return makeScorer("approve").score({} as never);
+      },
+    } as Scorer;
+    await processNewVideo(
+      baseDeps({
+        scorer: zaehlScorer,
+        fetchMetadata: async () => ({ ...fakeMetadata, title: "Keralam में बारिश बनी आफत!" }),
+      }),
+    );
+    expect(scorerCalls).toBe(0);
+    const s = db.prepare("SELECT decision, reasoning FROM scores WHERE video_id='vid1'").get() as {
+      decision: string;
+      reasoning: string;
+    };
+    expect(s.decision).toBe("rejected");
+    expect(s.reasoning).toContain("Vorfilter");
+    expect(db.prepare("SELECT COUNT(*) c FROM feed_items").get()).toEqual({ c: 0 });
+  });
+
   it("rejected: nur videos+scores, keine feed_items", async () => {
     await processNewVideo(baseDeps({ scorer: makeScorer("reject") }));
     const s = db.prepare("SELECT decision FROM scores WHERE video_id='vid1'").get() as {
