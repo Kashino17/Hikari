@@ -75,9 +75,77 @@ describe("daily-mix", () => {
     expect(order).toEqual(["s-abo", "p-probe", "t-topic"]);
   });
 
+  it("beim Neuwürfeln stehen Abos nicht mehr als Block ganz vorn", () => {
+    for (let i = 0; i < 3; i++) seed(db, `abo${i}`, { dur: 40, source: "subscription" });
+    for (let i = 0; i < 30; i++) seed(db, `thema${i}`, { dur: 40, source: "topic" });
+    buildDailyMix(db, NOW, { reshuffle: true, seed: 4242 });
+    const erste = (
+      db
+        .prepare(
+          `SELECT v.source AS s FROM daily_mix_items m JOIN videos v ON v.id = m.video_id
+            WHERE m.mix_date = ? ORDER BY m.position LIMIT 8`,
+        )
+        .all(mixDateFor(NOW)) as { s: string }[]
+    ).map((r) => r.s);
+    // Themen-Funde mischen sich unter die vorderen Plätze …
+    expect(erste).toContain("topic");
+    // … die Abos landen trotzdem früh, nicht irgendwo hinten.
+    const aboPos = (
+      db
+        .prepare(
+          `SELECT MAX(m.position) AS p FROM daily_mix_items m JOIN videos v ON v.id = m.video_id
+            WHERE m.mix_date = ? AND v.source = 'subscription'`,
+        )
+        .get(mixDateFor(NOW)) as { p: number }
+    ).p;
+    expect(aboPos).toBeLessThan(15);
+  });
+
+  it("beim Neuwürfeln kommt eine andere Reihenfolge heraus", () => {
+    for (let i = 0; i < 12; i++) seed(db, `sh${i}`, { dur: 40, format: "short" });
+    buildDailyMix(db, NOW);
+    const ersteRunde = (
+      db
+        .prepare("SELECT video_id FROM daily_mix_items WHERE mix_date = ? ORDER BY position")
+        .all(mixDateFor(NOW)) as { video_id: string }[]
+    ).map((r) => r.video_id);
+
+    buildDailyMix(db, NOW, { reshuffle: true, seed: 987654 });
+    const zweiteRunde = (
+      db
+        .prepare("SELECT video_id FROM daily_mix_items WHERE mix_date = ? ORDER BY position")
+        .all(mixDateFor(NOW)) as { video_id: string }[]
+    ).map((r) => r.video_id);
+
+    expect(zweiteRunde).toHaveLength(ersteRunde.length);
+    expect(zweiteRunde.slice().sort()).toEqual(ersteRunde.slice().sort()); // gleiche Menge
+    expect(zweiteRunde).not.toEqual(ersteRunde); // andere Reihenfolge
+  });
+
+  it("ohne Neuwürfeln bleibt die Reihenfolge stabil", () => {
+    for (let i = 0; i < 10; i++) seed(db, `st${i}`, { dur: 40, format: "short" });
+    buildDailyMix(db, NOW);
+    const a = (
+      db
+        .prepare("SELECT video_id FROM daily_mix_items WHERE mix_date = ? ORDER BY position")
+        .all(mixDateFor(NOW)) as { video_id: string }[]
+    ).map((r) => r.video_id);
+    buildDailyMix(db, NOW);
+    const b = (
+      db
+        .prepare("SELECT video_id FROM daily_mix_items WHERE mix_date = ? ORDER BY position")
+        .all(mixDateFor(NOW)) as { video_id: string }[]
+    ).map((r) => r.video_id);
+    expect(b).toEqual(a);
+  });
+
   it("mischt Kanäle durch — nie zweimal derselbe Kanal hintereinander", () => {
-    db.prepare("INSERT OR IGNORE INTO channels (id,url,title,added_at) VALUES ('cA','x','A',0)").run();
-    db.prepare("INSERT OR IGNORE INTO channels (id,url,title,added_at) VALUES ('cB','x','B',0)").run();
+    db.prepare(
+      "INSERT OR IGNORE INTO channels (id,url,title,added_at) VALUES ('cA','x','A',0)",
+    ).run();
+    db.prepare(
+      "INSERT OR IGNORE INTO channels (id,url,title,added_at) VALUES ('cB','x','B',0)",
+    ).run();
     // Zwei Kanäle mit je 4 Shorts, blockweise eingespielt.
     for (const ch of ["cA", "cB"]) {
       for (let i = 0; i < 4; i++) {
@@ -133,7 +201,7 @@ describe("daily-mix", () => {
     for (let i = 0; i < 4; i++) seed(db, `alt${i}`, { dur: 900, format: "long" });
     buildDailyMix(db, NOW); // erst nur Langvideos verfügbar
     for (let i = 0; i < 6; i++) seed(db, `neu${i}`, { dur: 40, format: "short" });
-    buildDailyMix(db, NOW); // Shorts kommen später dazu
+    buildDailyMix(db, NOW, { reshuffle: true }); // beim Neuladen wird einsortiert
     const formats = (
       db
         .prepare(
@@ -144,6 +212,28 @@ describe("daily-mix", () => {
     ).map((r) => r.f);
     // Vorne im Feed steht jetzt Kurzform, nicht die alte Langvideo-Schlange.
     expect(formats[0]).toBe("short");
+  });
+
+  it("ohne Neuwürfeln wird nur hinten ergänzt, nie umsortiert", () => {
+    for (let i = 0; i < 5; i++) seed(db, `erst${i}`, { dur: 40, format: "short" });
+    buildDailyMix(db, NOW);
+    const vorher = (
+      db
+        .prepare("SELECT video_id FROM daily_mix_items WHERE mix_date = ? ORDER BY position")
+        .all(mixDateFor(NOW)) as { video_id: string }[]
+    ).map((r) => r.video_id);
+
+    for (let i = 0; i < 5; i++) seed(db, `spaet${i}`, { dur: 40, format: "short" });
+    buildDailyMix(db, NOW);
+    const nachher = (
+      db
+        .prepare("SELECT video_id FROM daily_mix_items WHERE mix_date = ? ORDER BY position")
+        .all(mixDateFor(NOW)) as { video_id: string }[]
+    ).map((r) => r.video_id);
+
+    // Der bestehende Anfang bleibt Zeichen für Zeichen stehen, das Neue folgt.
+    expect(nachher.slice(0, vorher.length)).toEqual(vorher);
+    expect(nachher.length).toBeGreaterThan(vorher.length);
   });
 
   it("Rhythmus: nach 6 Shorts kommt ein Langvideo", () => {
@@ -185,9 +275,9 @@ describe("daily-mix", () => {
     seed(db, "b", { dur: 300, format: "long" });
     buildDailyMix(db, NOW);
     // 'a' wurde 120s geschaut, 'b' liegt unangetastet im Feed.
-    db.prepare("UPDATE feed_items SET seen_at = ?, progress_seconds = 120 WHERE video_id = 'a'").run(
-      NOW,
-    );
+    db.prepare(
+      "UPDATE feed_items SET seen_at = ?, progress_seconds = 120 WHERE video_id = 'a'",
+    ).run(NOW);
     const stats = todayMixStats(db, NOW);
     expect(stats.budgetMinutes).toBe(10);
     expect(stats.consumedSeconds).toBe(120);
@@ -216,9 +306,9 @@ describe("daily-mix", () => {
     setTimeBudgetMinutes(db, 10); // 600s
     seed(db, "lang", { dur: 700, format: "long" });
     buildDailyMix(db, NOW);
-    db.prepare("UPDATE feed_items SET seen_at = ?, progress_seconds = 700 WHERE video_id = 'lang'").run(
-      NOW,
-    );
+    db.prepare(
+      "UPDATE feed_items SET seen_at = ?, progress_seconds = 700 WHERE video_id = 'lang'",
+    ).run(NOW);
     seed(db, "neu", { dur: 60, format: "short" });
     buildDailyMix(db, NOW);
     const ids = (

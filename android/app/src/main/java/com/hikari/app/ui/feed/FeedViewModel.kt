@@ -92,7 +92,9 @@ class FeedViewModel @Inject constructor(
     private val _today = MutableStateFlow<TodayCountResponse?>(null)
     val today: StateFlow<TodayCountResponse?> = _today.asStateFlow()
 
-    init { refresh() }
+    // App-Start heißt: frischer Feed. Ohne pull bliebe die zuletzt gespeicherte
+    // Liste stehen und man bekäme beim Öffnen wieder dieselben Videos.
+    init { refresh(pull = true) }
 
     fun refresh(pull: Boolean = false) = viewModelScope.launch {
         exhausted = false

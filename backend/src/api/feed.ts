@@ -1,7 +1,6 @@
-import type { FastifyInstance } from "fastify";
-import type Database from "better-sqlite3";
 import fs from "node:fs";
-import { outdatedFeedItemCount } from "../pipeline/rescore-shorts.js";
+import type Database from "better-sqlite3";
+import type { FastifyInstance } from "fastify";
 import {
   buildDailyMix,
   getTimeBudgetMinutes,
@@ -10,6 +9,7 @@ import {
   todayMixStats,
   unseenMixCount,
 } from "../feed/daily-mix.js";
+import { outdatedFeedItemCount } from "../pipeline/rescore-shorts.js";
 
 /** Seitengröße des Endlos-Feeds; die App lädt beim Scrollen nach. */
 const FEED_PAGE_SIZE = 30;
@@ -123,7 +123,8 @@ export function rankCandidates(
  * zeigt native Shorts (kind 'short') und Langvideos (kind 'video', Karten).
  */
 export function listFeedRaw(db: Database.Database, limit: number): RawFeedRow[] {
-  return db.prepare(`
+  return db
+    .prepare(`
     SELECT CASE WHEN v.format = 'short' THEN 'short' ELSE 'video' END AS kind,
            f.video_id AS id,
            f.video_id AS parentVideoId,
@@ -141,7 +142,8 @@ export function listFeedRaw(db: Database.Database, limit: number): RawFeedRow[] 
      WHERE f.seen_at IS NULL AND f.playback_failed = 0 AND f.is_pre_clipper = 1
     ORDER BY addedToFeedAt DESC
     LIMIT ?
-  `).all(limit) as RawFeedRow[];
+  `)
+    .all(limit) as RawFeedRow[];
 }
 
 /**
@@ -158,17 +160,15 @@ export function applyCooldown(candidates: RawFeedRow[], pageSize: number): RawFe
     const window = remaining.slice(0, LOOKAHEAD);
     const last3 = out.slice(-COOLDOWN_WINDOW);
     const last3Parents = new Set(last3.map((r) => r.parentVideoId));
-    const channelCount = (chan: string) =>
-      last3.filter((r) => r.channelId === chan).length;
+    const channelCount = (chan: string) => last3.filter((r) => r.channelId === chan).length;
 
-    let pickIdx = window.findIndex((r) =>
-      !last3Parents.has(r.parentVideoId) &&
-      channelCount(r.channelId) < CHANNEL_MAX_IN_WINDOW
+    let pickIdx = window.findIndex(
+      (r) =>
+        !last3Parents.has(r.parentVideoId) && channelCount(r.channelId) < CHANNEL_MAX_IN_WINDOW,
     );
     if (pickIdx === -1) {
-      pickIdx = window.findIndex((r) =>
-        !last3Parents.has(r.parentVideoId) &&
-        channelCount(r.channelId) < 3
+      pickIdx = window.findIndex(
+        (r) => !last3Parents.has(r.parentVideoId) && channelCount(r.channelId) < 3,
       );
     }
     if (pickIdx === -1) {
@@ -186,11 +186,13 @@ export function applyCooldown(candidates: RawFeedRow[], pageSize: number): RawFe
 
     const lastOut = out[out.length - 1];
     if (lastOut && primary.category && lastOut.category === primary.category) {
-      const swapIdx = window.findIndex((r, i) =>
-        i !== pickIdx &&
-        !last3Parents.has(r.parentVideoId) &&
-        channelCount(r.channelId) < CHANNEL_MAX_IN_WINDOW &&
-        r.category && r.category !== lastOut.category
+      const swapIdx = window.findIndex(
+        (r, i) =>
+          i !== pickIdx &&
+          !last3Parents.has(r.parentVideoId) &&
+          channelCount(r.channelId) < CHANNEL_MAX_IN_WINDOW &&
+          r.category &&
+          r.category !== lastOut.category,
       );
       if (swapIdx !== -1) {
         const better = window[swapIdx]!;
@@ -275,10 +277,7 @@ export function interleaveByChannel(ranked: RawFeedRow[], rotation = 0): RawFeed
  * synchronous SQLite round-trips per request, each blocking the event loop.
  * Output preserves the input order (the ranking + cooldown order).
  */
-export function hydrateFeedBatch(
-  db: Database.Database,
-  rows: Pick<RawFeedRow, "id">[],
-): unknown[] {
+export function hydrateFeedBatch(db: Database.Database, rows: Pick<RawFeedRow, "id">[]): unknown[] {
   if (rows.length === 0) return [];
   const ids = rows.map((r) => r.id);
   const byId = new Map<string, any>();
@@ -322,12 +321,7 @@ export function hydrateFeedBatch(
 // a harmless no-op.
 // ---------------------------------------------------------------------------
 
-function updateFeedRow(
-  db: Database.Database,
-  id: string,
-  set: string,
-  ...params: unknown[]
-): void {
+function updateFeedRow(db: Database.Database, id: string, set: string, ...params: unknown[]): void {
   db.prepare(`UPDATE clips SET ${set} WHERE id = ?`).run(...params, id);
   db.prepare(`UPDATE feed_items SET ${set} WHERE video_id = ?`).run(...params, id);
 }
@@ -365,9 +359,7 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
       limit?: string;
       refresh?: string;
     };
-  }>(
-    "/feed",
-    async (req, reply) => {
+  }>("/feed", async (req, reply) => {
     const mode = (req.query.mode ?? "new") as "new" | "saved" | "old";
     if (mode !== "new" && mode !== "saved" && mode !== "old") {
       return reply.code(400).send({ error: "mode must be new, saved, or old" });
@@ -378,11 +370,16 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
       // Lazy-Top-up bei jedem Abruf (idempotent, budgetbegrenzt); die frühere
       // Request-Zeit-Pipeline (rank/interleave/cooldown) läuft jetzt im
       // Mix-Builder. Reihenfolge bleibt über App-Öffnungen hinweg identisch.
-      buildDailyMix(deps.db);
-      const mixDate = mixDateFor(Date.now());
       // Endlos-Feed: seitenweise ausliefern, die App lädt beim Scrollen nach.
       const limit = Math.min(Math.max(Number(req.query.limit) || FEED_PAGE_SIZE, 1), 100);
       const offset = Math.max(Number(req.query.offset) || 0, 0);
+      // Nach-oben-Ziehen, Tab-Tipp und App-Start schicken refresh=1: dann wird
+      // die Auswahl neu gewürfelt, sonst sieht man immer dieselben Videos aus
+      // dem Vorrat. Nur auf der ersten Seite — beim Nachladen darf sich die
+      // Reihenfolge unter dem Finger nicht ändern.
+      const forced = req.query.refresh === "1" || req.query.refresh === "true";
+      buildDailyMix(deps.db, Date.now(), { reshuffle: forced && offset === 0 });
+      const mixDate = mixDateFor(Date.now());
       const mixRows = deps.db
         .prepare(
           `SELECT m.video_id AS id FROM daily_mix_items m
@@ -392,15 +389,15 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
            LIMIT ? OFFSET ?`,
         )
         .all(mixDate, limit, offset) as { id: string }[];
-      // Nach-oben-Ziehen (refresh=1) heißt "gib mir Neues" — dann immer suchen;
-      // sonst nur, wenn der Vorrat zur Neige geht.
-      const forced = req.query.refresh === "1" || req.query.refresh === "true";
+      // Nach-oben-Ziehen heißt "gib mir Neues" — dann immer suchen; sonst nur,
+      // wenn der Vorrat zur Neige geht.
       if (forced || unseenMixCount(deps.db, mixDate) < LOW_STOCK_THRESHOLD) deps.onLowStock?.();
       // Die nächsten Videos vorwärmen, bevor der Player sie anfragt.
       deps.prefetchStreams?.(mixRows.map((r) => r.id));
       return hydrateFeedBatch(deps.db, mixRows as RawFeedRow[]);
     } else if (mode === "saved") {
-      const clipsRows = deps.db.prepare(`
+      const clipsRows = deps.db
+        .prepare(`
         SELECT 'clip' AS kind, c.id AS videoId, c.parent_video_id AS parentVideoId,
                v.title, v.aspect_ratio AS aspectRatio, v.thumbnail_url AS thumbnailUrl,
                v.channel_id AS channelId, ch.title AS channelTitle,
@@ -416,15 +413,22 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
           LEFT JOIN scores s ON s.video_id = c.parent_video_id
          WHERE c.saved = 1
          ORDER BY COALESCE(c.seen_at, c.added_to_feed_at) DESC
-      `).all();
-      const legacyRows = deps.db.prepare(BASE_SELECT + `
+      `)
+        .all();
+      const legacyRows = deps.db
+        .prepare(
+          BASE_SELECT +
+            `
         WHERE fi.saved = 1 AND fi.is_pre_clipper = 1
         ORDER BY COALESCE(fi.seen_at, fi.added_to_feed_at) DESC
-        LIMIT 100`).all();
+        LIMIT 100`,
+        )
+        .all();
       return [...clipsRows, ...legacyRows].slice(0, 100);
     } else {
       // mode === "old"
-      const clipsRows = deps.db.prepare(`
+      const clipsRows = deps.db
+        .prepare(`
         SELECT 'clip' AS kind, c.id AS videoId, c.parent_video_id AS parentVideoId,
                v.title, v.aspect_ratio AS aspectRatio, v.thumbnail_url AS thumbnailUrl,
                v.channel_id AS channelId, ch.title AS channelTitle,
@@ -441,29 +445,40 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
          WHERE c.seen_at IS NOT NULL
          ORDER BY c.seen_at DESC
          LIMIT 100
-      `).all();
-      const legacyRows = deps.db.prepare(BASE_SELECT + `
+      `)
+        .all();
+      const legacyRows = deps.db
+        .prepare(
+          BASE_SELECT +
+            `
         WHERE fi.seen_at IS NOT NULL AND fi.is_pre_clipper = 1
         ORDER BY fi.seen_at DESC
-        LIMIT 100`).all();
+        LIMIT 100`,
+        )
+        .all();
       return [...clipsRows, ...legacyRows].slice(0, 100);
     }
   });
 
   app.get("/queue", async () => {
     const explicit = deps.db
-      .prepare(BASE_SELECT + `
+      .prepare(
+        BASE_SELECT +
+          `
         WHERE fi.playback_failed = 0
           AND fi.queued_at IS NOT NULL
           AND fi.is_pre_clipper = 1
         ORDER BY COALESCE(fi.queue_order, fi.queued_at) ASC, fi.queued_at ASC
-        LIMIT 12`)
+        LIMIT 12`,
+      )
       .all();
 
     if (explicit.length > 0) return explicit;
 
     return deps.db
-      .prepare(BASE_SELECT + `
+      .prepare(
+        BASE_SELECT +
+          `
         WHERE fi.playback_failed = 0
           AND fi.is_pre_clipper = 1
         ORDER BY
@@ -477,12 +492,15 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
           s.overall_score DESC,
           v.duration_seconds ASC,
           fi.added_to_feed_at DESC
-        LIMIT 6`)
+        LIMIT 6`,
+      )
       .all();
   });
 
   app.post<{ Params: { id: string } }>("/queue/:id", async (req, reply) => {
-    const existing = deps.db.prepare("SELECT 1 FROM feed_items WHERE video_id = ?").get(req.params.id);
+    const existing = deps.db
+      .prepare("SELECT 1 FROM feed_items WHERE video_id = ?")
+      .get(req.params.id);
     if (!existing) return reply.code(404).send({ error: "video not found in feed" });
 
     const maxOrder = deps.db
@@ -513,11 +531,13 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
     updateFeedRow(deps.db, id, "seen_at = ?", now);
     // For clips, update last_served_at on the PARENT video; for legacy items, update
     // last_served_at on the video itself. A single UNION query resolves the right id.
-    const parent = deps.db.prepare(`
+    const parent = deps.db
+      .prepare(`
       SELECT parent_video_id AS parentVideoId FROM clips WHERE id = ?
       UNION
       SELECT video_id AS parentVideoId FROM feed_items WHERE video_id = ?
-    `).get(id, id) as { parentVideoId: string } | undefined;
+    `)
+      .get(id, id) as { parentVideoId: string } | undefined;
     const parentId = parent?.parentVideoId ?? id;
     deps.db
       .prepare("UPDATE downloaded_videos SET last_served_at = ? WHERE video_id = ?")
@@ -594,9 +614,7 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
   // Knopf "Feed neu bewerten": markiert den Bestand als veraltet, der
   // Hintergrund-Scorer arbeitet ihn dann Stück für Stück ab.
   app.post("/feed/rescore", async () => {
-    deps.db
-      .prepare("UPDATE filter_config SET updated_at = ? WHERE id = 1")
-      .run(Date.now());
+    deps.db.prepare("UPDATE filter_config SET updated_at = ? WHERE id = 1").run(Date.now());
     return { pending: outdatedFeedItemCount(deps.db) };
   });
 
