@@ -78,7 +78,10 @@ export function registerStreamRoutes(app: FastifyInstance, deps: StreamDeps = {}
   async function extract(videoId: string): Promise<string | undefined> {
     try {
       const result = await ytDlp(
-        ["--no-playlist", "-f", VIDEO_FORMAT, "-g", `https://www.youtube.com/watch?v=${videoId}`],
+        // -4: macOS rotiert IPv6-Privacy-Adressen — die googlevideo-URL wäre an
+        // eine Temporär-Adresse gebunden, der spätere Fetch ginge über eine
+        // andere raus → 403. Die NAT-IPv4 ist stabil (siehe music.ts).
+        ["--no-playlist", "-4", "-f", VIDEO_FORMAT, "-g", `https://www.youtube.com/watch?v=${videoId}`],
         { timeoutMs: 45_000, maxRetries: 1 },
       );
       const url = result.stdout.trim().split("\n")[0];
@@ -99,9 +102,30 @@ export function registerStreamRoutes(app: FastifyInstance, deps: StreamDeps = {}
     return dedupInflight(inflight, videoId, () => extract(videoId));
   };
 
+  // Wellen-Brecher (Defense-in-Depth zum -4-Fix): schlagen ≥3 verschiedene
+  // Videos binnen 30 s upstream fehl, drosselt googlevideo gerade — dann 60 s
+  // lang sofort 503 statt weiterer Auflösungen, die die Drossel füttern.
+  const upstreamFails = new Map<string, number>();
+  let breakerUntil = 0;
+  const noteUpstreamFail = (videoId: string) => {
+    const now = Date.now();
+    upstreamFails.set(videoId, now);
+    for (const [id, at] of upstreamFails) {
+      if (now - at > 30_000) upstreamFails.delete(id);
+    }
+    if (upstreamFails.size >= 3) {
+      breakerUntil = now + 60_000;
+      upstreamFails.clear();
+      app.log.warn("stream circuit breaker open — googlevideo throttling suspected (60s pause)");
+    }
+  };
+
   app.get<{ Params: { videoId: string } }>("/stream/video/:videoId", async (req, reply) => {
     const { videoId } = req.params;
     if (!VIDEO_ID_RE.test(videoId)) return reply.code(400).send({ error: "invalid videoId" });
+    if (Date.now() < breakerUntil) {
+      return reply.code(503).header("retry-after", "60").send({ error: "upstream throttled" });
+    }
 
     // Erst auflösen: scheitert YouTube komplett, aber der Server hat noch eine
     // heruntergeladene Datei, spielt die App diese über den statischen Mount.
@@ -109,9 +133,17 @@ export function registerStreamRoutes(app: FastifyInstance, deps: StreamDeps = {}
     if (!url && deps.videoDir && existsSync(join(deps.videoDir, `${videoId}.mp4`)))
       return reply.redirect(`/videos/${videoId}.mp4`, 302);
 
-    return proxyMediaStream(reply, req.headers.range, (force) => resolve(videoId, force), "video", {
-      fetchImpl: deps.fetchImpl,
-      retryDelaysMs: deps.retryDelaysMs,
-    });
+    const out = await proxyMediaStream(
+      reply,
+      req.headers.range,
+      (force) => resolve(videoId, force),
+      "video",
+      {
+        fetchImpl: deps.fetchImpl,
+        retryDelaysMs: deps.retryDelaysMs,
+      },
+    );
+    if (reply.statusCode === 502) noteUpstreamFail(videoId);
+    return out;
   });
 }

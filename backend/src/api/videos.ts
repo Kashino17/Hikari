@@ -167,6 +167,10 @@ export async function registerVideosRoutes(
   // die downloaded_videos-Row entsteht erst NACH der fertigen Datei (der
   // Startup-Check loescht sonst Datei oder Row). In-Flight-Set gegen Doppelstarts.
   const downloadsInFlight = new Set<string>();
+  // Nach einem Fehlschlag 15 min Ruhe pro Video: sofortige Retries (z. B. durch
+  // erneute POSTs) füttern sonst die googlevideo-Drossel im Sekundentakt.
+  const DOWNLOAD_BACKOFF_MS = 15 * 60 * 1000;
+  const downloadFailedUntil = new Map<string, number>();
   const doDownload = deps.download ?? downloadVideo;
   app.post<{ Params: { id: string } }>("/videos/:id/download", async (req, reply) => {
     const videoId = req.params.id;
@@ -176,6 +180,9 @@ export async function registerVideosRoutes(
       .prepare("SELECT 1 FROM downloaded_videos WHERE video_id = ?")
       .get(videoId);
     if (ready) return { status: "ready" };
+    if ((downloadFailedUntil.get(videoId) ?? 0) > Date.now()) {
+      return reply.code(202).send({ status: "backoff" });
+    }
     if (!downloadsInFlight.has(videoId)) {
       downloadsInFlight.add(videoId);
       void doDownload({ videoId, outDir: deps.videoDir })
@@ -188,7 +195,8 @@ export async function registerVideosRoutes(
             .run(videoId, dl.filePath, dl.fileSizeBytes, Date.now());
         })
         .catch((err) => {
-          app.log.warn({ err, videoId }, "on-demand download failed");
+          downloadFailedUntil.set(videoId, Date.now() + DOWNLOAD_BACKOFF_MS);
+          app.log.warn({ err, videoId }, "on-demand download failed — 15min backoff");
         })
         .finally(() => {
           downloadsInFlight.delete(videoId);

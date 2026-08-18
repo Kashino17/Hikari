@@ -28,6 +28,7 @@ export async function downloadVideo(opts: {
   const result = await runYtDlp(
     [
       "--no-playlist",
+      "-4", // stabile NAT-IPv4 statt rotierender IPv6-Privacy-Adresse (403-Ursache)
       "-f",
       VIDEO_FORMAT,
       "-g",
