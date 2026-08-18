@@ -37,9 +37,15 @@ export async function proxyMediaStream(
   const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
   let resolved = false;
+  // Fehler-Sammler: jeder verworfene Versuch landet hier — beim 502 wird die
+  // komplette Kette geloggt (vorher war jede Ursache unsichtbar).
+  const failures: string[] = [];
   for (const force of [false, true]) {
     const url = await resolveUrl(force);
-    if (!url) continue;
+    if (!url) {
+      failures.push(`resolve(force=${force}): keine URL`);
+      continue;
+    }
     resolved = true;
 
     let upstream: Response | undefined;
@@ -57,7 +63,11 @@ export async function proxyMediaStream(
           signal: headerAbort.signal,
         });
         break;
-      } catch {
+      } catch (err) {
+        const cause = (err as { cause?: { code?: string } })?.cause?.code ?? "";
+        failures.push(
+          `fetch#${attempt}(force=${force}): ${err instanceof Error ? err.message : String(err)}${cause ? ` [${cause}]` : ""}`,
+        );
         if (attempt >= retryDelays.length) break;
         await sleep(retryDelays[attempt] ?? 0);
       } finally {
@@ -66,8 +76,14 @@ export async function proxyMediaStream(
     }
     if (!upstream) continue;
     // 403/410 = abgelaufene oder netzfremde URL → einmal frisch auflösen
-    if (upstream.status === 403 || upstream.status === 410) continue;
-    if (!upstream.ok && upstream.status !== 206) continue;
+    if (upstream.status === 403 || upstream.status === 410) {
+      failures.push(`upstream ${upstream.status} (force=${force})`);
+      continue;
+    }
+    if (!upstream.ok && upstream.status !== 206) {
+      failures.push(`upstream ${upstream.status} (force=${force})`);
+      continue;
+    }
 
     reply.code(upstream.status);
     for (const name of ["content-type", "content-length", "content-range", "accept-ranges"]) {
@@ -77,6 +93,7 @@ export async function proxyMediaStream(
     if (!upstream.headers.get("accept-ranges")) reply.header("accept-ranges", "bytes");
     return reply.send(upstream.body ? Readable.fromWeb(upstream.body) : "");
   }
+  reply.log.warn({ kind, resolved, failures }, "media proxy failed");
   return reply
     .code(502)
     .send({ error: resolved ? `upstream ${kind} fetch failed` : `${kind} extraction failed` });

@@ -816,6 +816,11 @@ export async function registerMusicRoutes(
       const result = await ytDlp(
         [
           "--no-playlist",
+          // IPv4 erzwingen: macOS rotiert IPv6-Privacy-Adressen — die
+          // googlevideo-URL bindet an die Auflöser-Adresse, der Node-Fetch
+          // geht danach über eine ANDERE Temporär-Adresse raus → 403 → 502.
+          // Die IPv4 (hinter NAT) ist stabil, damit passt die Bindung immer.
+          "-4",
           "-f",
           "bestaudio[ext=m4a]/bestaudio/best",
           "-g",
@@ -879,6 +884,8 @@ export async function registerMusicRoutes(
       const result = await ytDlp(
         [
           "--no-playlist",
+          // IPv4 wie beim Audio-Pfad — Bindung an die stabile NAT-IPv4.
+          "-4",
           "-f",
           // Muxed MP4 (Video+Audio in einer Datei), NUR progressives HTTPS:
           // ohne [protocol=https] löst yt-dlp gern HLS-Manifeste (m3u8) auf,
