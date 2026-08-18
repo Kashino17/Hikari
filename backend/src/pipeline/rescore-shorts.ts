@@ -33,9 +33,14 @@ export async function rescoreLegacyShorts(deps: RescoreDeps): Promise<number> {
               v.duration_seconds AS durationSeconds
          FROM videos v
          JOIN scores s ON s.video_id = v.id
+         JOIN channels c ON c.id = v.channel_id
         WHERE v.format = 'short'
           AND s.decision = 'rejected'
           AND s.model_used <> ?
+          -- NUR aktuell abonnierte Kanäle: der Bestand enthält über tausend
+          -- Shorts längst entfernter Kanäle, die zu Recht abgelehnt sind —
+          -- die dürfen den Scorer nicht blockieren.
+          AND c.is_active = 1
         -- Abonnierte Kanäle zuerst: die hat der Nutzer bewusst gewählt,
         -- ihre Shorts sind der wertvollste Rückstand.
         ORDER BY CASE WHEN COALESCE(v.source, 'subscription') = 'subscription' THEN 0 ELSE 1 END,
