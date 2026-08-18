@@ -1,6 +1,7 @@
 package com.hikari.app.data.api
 
 import com.hikari.app.data.api.dto.BudgetBody
+import com.hikari.app.data.api.dto.RescoreStatus
 import com.hikari.app.data.api.dto.ServerDownloadStatus
 import com.hikari.app.data.api.dto.AddChannelRequest
 import com.hikari.app.data.api.dto.AddChannelResponse
@@ -178,6 +179,12 @@ interface HikariApi {
 
     @POST("videos/{id}/download")
     suspend fun requestServerDownload(@Path("id") videoId: String): ServerDownloadStatus
+
+    @POST("feed/rescore")
+    suspend fun rescoreFeed(): RescoreStatus
+
+    @GET("feed/rescore")
+    suspend fun rescoreStatus(): RescoreStatus
 
     @GET("feed/budget")
     suspend fun getBudget(): BudgetBody

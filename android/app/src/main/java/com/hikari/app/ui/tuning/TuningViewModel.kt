@@ -196,6 +196,18 @@ class TuningViewModel @Inject constructor(
 
     // ── Settings ─────────────────────────────────────────────────────────────
     fun setBackendUrl(url: String) = viewModelScope.launch { settings.setBackendUrl(url) }
+    private val _rescorePending = MutableStateFlow<Int?>(null)
+    val rescorePending: StateFlow<Int?> = _rescorePending.asStateFlow()
+
+    /** Stößt die Neubewertung des Feed-Bestands nach den aktuellen Vorgaben an. */
+    fun rescoreFeed() = viewModelScope.launch {
+        runCatching { api.rescoreFeed().pending }.onSuccess { _rescorePending.value = it }
+    }
+
+    fun loadRescoreStatus() = viewModelScope.launch {
+        runCatching { api.rescoreStatus().pending }.onSuccess { _rescorePending.value = it }
+    }
+
     fun loadBudgetMinutes() = viewModelScope.launch {
         runCatching { api.getBudget().minutes }.onSuccess { _budgetMinutes.value = it }
     }

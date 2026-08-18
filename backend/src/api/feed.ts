@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import type Database from "better-sqlite3";
 import fs from "node:fs";
+import { outdatedFeedItemCount } from "../pipeline/rescore-shorts.js";
 import {
   buildDailyMix,
   getTimeBudgetMinutes,
@@ -589,6 +590,17 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
       consumedSeconds: stats.consumedSeconds,
     };
   });
+
+  // Knopf "Feed neu bewerten": markiert den Bestand als veraltet, der
+  // Hintergrund-Scorer arbeitet ihn dann Stück für Stück ab.
+  app.post("/feed/rescore", async () => {
+    deps.db
+      .prepare("UPDATE filter_config SET updated_at = ? WHERE id = 1")
+      .run(Date.now());
+    return { pending: outdatedFeedItemCount(deps.db) };
+  });
+
+  app.get("/feed/rescore", async () => ({ pending: outdatedFeedItemCount(deps.db) }));
 
   app.get("/feed/budget", async () => ({ minutes: getTimeBudgetMinutes(deps.db) }));
 

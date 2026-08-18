@@ -49,6 +49,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -564,7 +565,11 @@ private fun SystemTab(vm: TuningViewModel) {
 
     var urlDraft by remember(backendUrl) { mutableStateOf(backendUrl) }
     var minutesDraft by remember(budgetMinutes) { mutableIntStateOf(budgetMinutes ?: 45) }
-    LaunchedEffect(Unit) { vm.loadBudgetMinutes() }
+    val rescorePending by vm.rescorePending.collectAsState()
+    LaunchedEffect(Unit) {
+        vm.loadBudgetMinutes()
+        vm.loadRescoreStatus()
+    }
 
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
         Section("Backend", "Server-URL.") {
@@ -587,6 +592,31 @@ private fun SystemTab(vm: TuningViewModel) {
                     .border(0.5.dp, HikariBorder, RoundedCornerShape(6.dp))
                     .padding(horizontal = 12.dp, vertical = 10.dp),
             )
+        }
+
+        Section(
+            "Feed neu bewerten",
+            if (rescorePending != null && rescorePending!! > 0) {
+                "$rescorePending Videos werden im Hintergrund geprüft — was nicht mehr passt, verschwindet."
+            } else {
+                "Prüft alle Videos im Feed noch einmal nach den aktuellen Vorgaben."
+            },
+        ) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(HikariAmber.copy(alpha = 0.14f))
+                    .border(1.dp, HikariAmber.copy(alpha = 0.45f), RoundedCornerShape(18.dp))
+                    .clickable { vm.rescoreFeed() }
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+            ) {
+                Text(
+                    "Jetzt neu bewerten",
+                    color = HikariAmber,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
         }
 
         Section("Zeitbudget", "Etwa $minutesDraft Minuten Feed pro Tag — danach ist bewusst Schluss.") {

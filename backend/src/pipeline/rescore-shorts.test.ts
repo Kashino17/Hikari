@@ -2,7 +2,8 @@ import Database from "better-sqlite3";
 import { beforeEach, describe, expect, it } from "vitest";
 import { applyMigrations } from "../db/migrations.js";
 import type { Scorer } from "../scorer/types.js";
-import { rescoreLegacyShorts } from "./rescore-shorts.js";
+import { getFilterState } from "../scorer/filter-repo.js";
+import { rescoreLegacyShorts, rescoreOutdatedFeedItems } from "./rescore-shorts.js";
 
 function scorerWith(overall: number, capture?: string[]): Scorer {
   return {
@@ -91,5 +92,69 @@ describe("rescoreLegacyShorts", () => {
     expect(db.prepare("SELECT decision FROM scores WHERE video_id='lang'").get()).toEqual({
       decision: "rejected",
     });
+  });
+});
+
+describe("rescoreOutdatedFeedItems", () => {
+  let db: Database.Database;
+  beforeEach(() => {
+    db = new Database(":memory:");
+    applyMigrations(db);
+    db.prepare(
+      "INSERT INTO channels (id,url,title,added_at,is_active) VALUES ('c1','x','C',0,1)",
+    ).run();
+  });
+
+  function seedApproved(id: string, scoredAt: number) {
+    db.prepare(
+      `INSERT INTO videos (id, channel_id, title, description, published_at, duration_seconds,
+         discovered_at, format, source)
+       VALUES (?, 'c1', ?, 'd', 0, 60, 0, 'short', 'subscription')`,
+    ).run(id, `t-${id}`);
+    db.prepare(
+      `INSERT INTO scores (video_id, overall_score, category, clickbait_risk, educational_value,
+         emotional_manipulation, reasoning, model_used, scored_at, decision)
+       VALUES (?, 80, 'x', 0, 8, 0, 'ok', 'alt', ?, 'approved')`,
+    ).run(id, scoredAt);
+    db.prepare(
+      "INSERT INTO feed_items (video_id, added_to_feed_at, is_pre_clipper) VALUES (?, 0, 1)",
+    ).run(id);
+  }
+
+  it("wirft Videos aus dem Feed, die den neuen Vorgaben nicht mehr genügen", async () => {
+    seedApproved("alt1", 1000);
+    // Filter wurde nach der Bewertung geändert.
+    getFilterState(db); // legt die Vorgaben-Zeile an
+    db.prepare("UPDATE filter_config SET updated_at = 5000 WHERE id = 1").run();
+    const n = await rescoreOutdatedFeedItems({ db, scorer: scorerWith(10), limit: 5 });
+    expect(n).toBe(1);
+    expect(db.prepare("SELECT COUNT(*) c FROM feed_items WHERE video_id='alt1'").get()).toEqual({
+      c: 0,
+    });
+    expect(db.prepare("SELECT decision FROM scores WHERE video_id='alt1'").get()).toEqual({
+      decision: "rejected",
+    });
+  });
+
+  it("lässt weiterhin passende Videos im Feed und bewertet nichts doppelt", async () => {
+    seedApproved("alt2", 1000);
+    getFilterState(db);
+    db.prepare("UPDATE filter_config SET updated_at = 5000 WHERE id = 1").run();
+    await rescoreOutdatedFeedItems({ db, scorer: scorerWith(90), limit: 5 });
+    expect(db.prepare("SELECT COUNT(*) c FROM feed_items WHERE video_id='alt2'").get()).toEqual({
+      c: 1,
+    });
+    // Zweiter Lauf: Bewertung ist jetzt jünger als die Filteränderung.
+    const zweiter = await rescoreOutdatedFeedItems({ db, scorer: scorerWith(90), limit: 5 });
+    expect(zweiter).toBe(0);
+  });
+
+  it("fasst bereits gesehene Videos nicht an", async () => {
+    seedApproved("gesehen", 1000);
+    db.prepare("UPDATE feed_items SET seen_at = 2000 WHERE video_id = 'gesehen'").run();
+    getFilterState(db);
+    db.prepare("UPDATE filter_config SET updated_at = 5000 WHERE id = 1").run();
+    const n = await rescoreOutdatedFeedItems({ db, scorer: scorerWith(10), limit: 5 });
+    expect(n).toBe(0);
   });
 });

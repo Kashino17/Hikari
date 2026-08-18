@@ -37,7 +37,11 @@ import { fetchTranscript } from "./ingest/transcript.js";
 import { fetchChannelFeedConditional } from "./monitor/rss-poller.js";
 import { computePollIntervalMs, isChannelDue } from "./monitor/cadence.js";
 import { processNewVideo } from "./pipeline/orchestrator.js";
-import { rescoreLegacyShorts } from "./pipeline/rescore-shorts.js";
+import {
+  outdatedFeedItemCount,
+  rescoreLegacyShorts,
+  rescoreOutdatedFeedItems,
+} from "./pipeline/rescore-shorts.js";
 import {
   enqueueIngest,
   claimNextIngest,
@@ -381,7 +385,23 @@ async function drainIngestQueue(): Promise<void> {
         )
         .get() as { c: number }
     ).c;
-    if (shortStock < SHORT_STOCK_TARGET) {
+    // Vorrang: Nach geänderten Vorgaben den Bestand aufräumen — sonst stehen
+    // Videos im Feed, die den neuen Regeln nicht mehr entsprechen.
+    let didRescore = false;
+    try {
+      if (outdatedFeedItemCount(db) > 0) {
+        const removed = await rescoreOutdatedFeedItems({ db, scorer, limit: 6 });
+        didRescore = true;
+        if (removed > 0) {
+          app.log.info({ removed }, "feed items dropped after re-evaluation");
+          buildDailyMix(db);
+        }
+      }
+    } catch (err) {
+      app.log.warn({ err }, "feed re-evaluation failed");
+    }
+
+    if (!didRescore && shortStock < SHORT_STOCK_TARGET) {
       try {
         const n = await rescoreLegacyShorts({ db, scorer, limit: 6 });
         if (n > 0) {
