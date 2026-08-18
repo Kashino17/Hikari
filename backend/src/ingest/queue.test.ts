@@ -128,6 +128,18 @@ describe("ingest queue", () => {
     expect(row.last_error.length).toBe(1000);
   });
 
+  it("enqueueIngest speichert die Quelle (Default subscription)", () => {
+    enqueueIngest(db, "v1", "c1");
+    enqueueIngest(db, "v2", "c1", "probe");
+    const rows = db
+      .prepare("SELECT video_id, source FROM ingest_queue ORDER BY video_id")
+      .all();
+    expect(rows).toEqual([
+      { video_id: "v1", source: "subscription" },
+      { video_id: "v2", source: "probe" },
+    ]);
+  });
+
   it("requeueIngest gibt den Lock frei OHNE attempts zu erhöhen", () => {
     enqueueIngest(db, "v1", "c1");
     const job = claimNextIngest(db);

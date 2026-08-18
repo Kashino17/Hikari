@@ -257,6 +257,7 @@ async function drainIngestQueue(): Promise<void> {
           scorer,
           clipperEnabled: cfg.clipper.enabled,
           summarize: summarizeForFeed,
+          source: job.source ?? undefined,
         });
         completeIngest(db, job.video_id);
       } catch (err) {

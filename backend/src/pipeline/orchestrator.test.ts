@@ -164,6 +164,13 @@ describe("processNewVideo", () => {
     expect(prompts[1] ?? "").not.toContain("natives YouTube-Short");
   });
 
+  it("source-Dep landet in videos.source", async () => {
+    await processNewVideo(baseDeps({ source: "topic" }));
+    expect(db.prepare("SELECT source FROM videos WHERE id='vid1'").get()).toEqual({
+      source: "topic",
+    });
+  });
+
   it("rejected: nur videos+scores, keine feed_items", async () => {
     await processNewVideo(baseDeps({ scorer: makeScorer("reject") }));
     const s = db.prepare("SELECT decision FROM scores WHERE video_id='vid1'").get() as {

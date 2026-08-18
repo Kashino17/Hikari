@@ -77,6 +77,8 @@ export interface ProcessNewVideoDeps {
   clipperEnabled?: boolean | undefined;
   /** Karten-Teaser für Langvideos — best-effort, darf fehlen und darf werfen. */
   summarize?: ((title: string, transcript: string) => Promise<string | null>) | undefined;
+  /** Herkunft des Kandidaten ('subscription' | 'probe' | 'topic' | 'backfill'). */
+  source?: string | undefined;
 }
 
 /** Native Shorts: Hochkant und maximal 3 Minuten (YouTube-Shorts-Limit). */
@@ -120,7 +122,7 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
         `outside ${Math.round(filter.minDurationSec / 60)}–` +
         `${Math.round(filter.maxDurationSec / 60)}min range`;
       db.transaction(() => {
-        insertVideo(db, meta, null, channelId, format, null);
+        insertVideo(db, meta, null, channelId, format, null, deps.source ?? "subscription");
         insertScore(db, videoId, autoRejectScore(reasoning), "rejected", now);
       })();
       return;
@@ -132,7 +134,7 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
     ]);
     const summary = await buildSummary(deps, format, meta.title, transcript);
     db.transaction(() => {
-      insertVideo(db, meta, transcript, channelId, format, summary);
+      insertVideo(db, meta, transcript, channelId, format, summary, deps.source ?? "subscription");
       insertScore(db, videoId, autoApproveScore(), "approved", now);
       insertSponsors(db, videoId, sponsors);
       insertFeedItem(db, videoId, now);
@@ -170,7 +172,7 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
   if (decision === "approved") {
     const summary = await buildSummary(deps, format, meta.title, transcript);
     db.transaction(() => {
-      insertVideo(db, meta, transcript, channelId, format, summary);
+      insertVideo(db, meta, transcript, channelId, format, summary, deps.source ?? "subscription");
       insertScore(db, videoId, scored, decision, now);
       insertSponsors(db, videoId, sponsors);
       insertFeedItem(db, videoId, now);
@@ -181,7 +183,7 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
     })();
   } else {
     db.transaction(() => {
-      insertVideo(db, meta, transcript, channelId, format, null);
+      insertVideo(db, meta, transcript, channelId, format, null, deps.source ?? "subscription");
       insertScore(db, videoId, scored, decision, now);
     })();
   }
@@ -214,6 +216,7 @@ function insertVideo(
   channelId: string,
   format: "short" | "long",
   summary: string | null,
+  source: string,
 ): void {
   db.prepare(
     `INSERT OR IGNORE INTO videos
@@ -234,7 +237,7 @@ function insertVideo(
     transcript,
     Date.now(),
     format,
-    "subscription",
+    source,
     summary,
   );
 }

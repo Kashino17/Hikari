@@ -7,6 +7,7 @@ export interface IngestQueueRow {
   attempts: number;
   last_error: string | null;
   locked_at: number | null;
+  source: string | null;
 }
 
 // A lock older than this is re-claimable (worker crashed mid-ingest).
@@ -24,12 +25,13 @@ export function enqueueIngest(
   db: Database.Database,
   videoId: string,
   channelId: string,
+  source = "subscription",
 ): void {
   const known = db.prepare("SELECT 1 FROM videos WHERE id = ?").get(videoId);
   if (known) return;
   db.prepare(
-    "INSERT OR IGNORE INTO ingest_queue (video_id, channel_id, queued_at) VALUES (?, ?, ?)",
-  ).run(videoId, channelId, Date.now());
+    "INSERT OR IGNORE INTO ingest_queue (video_id, channel_id, queued_at, source) VALUES (?, ?, ?, ?)",
+  ).run(videoId, channelId, Date.now(), source);
 }
 
 /**
