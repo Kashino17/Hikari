@@ -452,11 +452,15 @@ describe("GET /music/audio/:videoId", () => {
       );
       const app = await makeApp({ ytDlp, fetchImpl });
       const req = app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
-      // 3 Auflösungsrunden à 3 Versuche (1 + 2 Retries) mit je 12 s Header-Timeout
-      await vi.advanceTimersByTimeAsync(9 * 12_000 + 1_000);
+      // 3 Versuche (1 + 2 Retries) à 12 s Header-Timeout plus Retry-Pausen —
+      // großzügig durchlaufen lassen.
+      await vi.advanceTimersByTimeAsync(9 * 12_000 + 3 * 1_300 + 5_000);
       const res = await req;
       expect(res.statusCode).toBe(502);
-      expect(fetchImpl).toHaveBeenCalledTimes(9);
+      // Drei Auflösungsrunden, aber yt-dlp liefert immer dieselbe URL — die
+      // wird nur EINMAL durchprobiert statt dreimal ins Timeout zu laufen
+      // (spart dem Nutzer ~75 s Warten vor dem Fehler).
+      expect(fetchImpl).toHaveBeenCalledTimes(3);
       expect(ytDlp).toHaveBeenCalledTimes(3);
       await app.close();
     } finally {
@@ -1916,7 +1920,8 @@ describe("GET /music/video/:videoId", () => {
 
   it("caches video urls separately from audio urls", async () => {
     const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/media\n", stderr: "" });
-    const fetchImpl = vi.fn().mockResolvedValue(upstream(200, "X"));
+    // frische Response je Aufruf — ein Body lässt sich nur einmal lesen
+    const fetchImpl = vi.fn().mockImplementation(async () => upstream(200, "X"));
     const app = await makeApp({ ytDlp, fetchImpl });
     await app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
     await app.inject({ method: "GET", url: "/music/video/dQw4w9WgXcQ" });

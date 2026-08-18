@@ -318,6 +318,10 @@ export async function importDirectLink(
     await runPreferEmbedded(
       runYtDlp,
       [
+        // Blockweise laden: googlevideo drosselt ungebremste Downloads auf
+        // Abspieltempo (gemessen 18.08.2026: 22 s statt 12 s für 64 MB).
+        "--http-chunk-size",
+        "4M",
         "-f",
         "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720]/best",
         "--merge-output-format",

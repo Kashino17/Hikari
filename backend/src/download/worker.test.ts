@@ -35,6 +35,35 @@ describe("downloadVideo", () => {
     );
   });
 
+  it("laedt blockweise mit begrenzten Ranges statt in einem Rutsch", async () => {
+    const { runYtDlp } = await import("../yt-dlp/client.js");
+    vi.mocked(runYtDlp).mockResolvedValue({ stdout: "https://gv/video\n", stderr: "" });
+    const data = Buffer.alloc(2048, 0xab);
+    const seen: string[] = [];
+    const fetchImpl = (async (_url: unknown, init?: RequestInit) => {
+      const range = (init?.headers as Record<string, string> | undefined)?.range ?? "";
+      seen.push(range);
+      const m = /^bytes=(\d+)-(\d+)$/.exec(range);
+      if (!m) return new Response("kein Range", { status: 403 });
+      const from = Number(m[1]);
+      const to = Math.min(Number(m[2]), data.length - 1);
+      return new Response(data.subarray(from, to + 1), {
+        status: 206,
+        headers: { "content-range": `bytes ${from}-${to}/${data.length}` },
+      });
+    }) as typeof fetch;
+
+    const dir = mkdtempSync(join(tmpdir(), "hikari-dl-"));
+    const result = await downloadVideo({ videoId: "abc12345678", outDir: dir, fetchImpl });
+
+    expect(result.fileSizeBytes).toBe(2048);
+    expect(readFileSync(result.filePath).equals(data)).toBe(true);
+    // Ohne Range drosselt googlevideo auf Abspieltempo (18.08.: 32 KB/s statt
+    // 19 MB/s) — es darf nie ein offener oder fehlender Range rausgehen.
+    expect(seen.length).toBeGreaterThan(0);
+    for (const range of seen) expect(range).toMatch(/^bytes=\d+-\d+$/);
+  });
+
   it("wirft bei Manifest-URL und bei googlevideo-Fehlerstatus", async () => {
     const { runYtDlp } = await import("../yt-dlp/client.js");
     const dir = mkdtempSync(join(tmpdir(), "hikari-dl-"));

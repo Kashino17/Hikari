@@ -30,7 +30,9 @@ test("löst per yt-dlp auf, proxied mit Range und cached die URL (1x yt-dlp für
   const r2 = await app.inject({ url: `/stream/video/${VID}` });
   expect(r1.statusCode).toBe(206);
   expect(r1.headers["content-range"]).toBe("bytes 0-4/5");
-  expect(r2.statusCode).toBe(206);
+  // Client ohne Range bekommt 200 — upstream fragt der Proxy trotzdem mit
+  // bytes=0- an (ohne Range drosselt googlevideo auf Abspieltempo).
+  expect(r2.statusCode).toBe(200);
   expect(calls).toBe(1);
 });
 
@@ -95,6 +97,6 @@ test("persistiert aufgelöste URLs beim onClose in die Cache-Datei", async () =>
     retryDelaysMs: [],
   });
   const res = await app2.inject({ url: `/stream/video/${VID}` });
-  expect(res.statusCode).toBe(206);
+  expect(res.statusCode).toBe(200);
   expect(calls).toBe(0);
 });

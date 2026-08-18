@@ -3,7 +3,7 @@ import { unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { YT_FETCH_HEADERS } from "../stream/proxy.js";
+import { openMediaStream } from "../stream/proxy.js";
 import { runPreferEmbedded, runYtDlp } from "../yt-dlp/client.js";
 
 export interface DownloadResult {
@@ -43,18 +43,21 @@ export async function downloadVideo(opts: {
     throw new Error(`Download failed: no progressive URL for ${opts.videoId}`);
   }
 
-  const res = await fetchImpl(url, {
-    // Referer/Origin: web_embedded-URLs liefern ohne sie pauschal 403.
-    headers: { ...YT_FETCH_HEADERS },
-    signal: AbortSignal.timeout(opts.timeoutMs ?? 10 * 60_000),
-  });
-  if (!res.ok || !res.body) {
-    throw new Error(`Download failed: googlevideo ${res.status} for ${opts.videoId}`);
+  // Blockweise laden (openMediaStream): ein einzelner Request ohne Range wird
+  // von googlevideo auf Abspieltempo gedrosselt — gemessen 18.08.2026 32 KB/s
+  // statt 19 MB/s, ein 40-MB-Video hätte so 20 Minuten gebraucht. Nebeneffekt:
+  // Stillstände mitten in der Datei werden byte-genau übersprungen.
+  const notes: string[] = [];
+  const media = await openMediaStream(url, { fetchImpl, onNote: (m) => notes.push(m) });
+  if (!media) {
+    throw new Error(
+      `Download failed: googlevideo verweigert ${opts.videoId} (${notes.slice(-3).join("; ")})`,
+    );
   }
 
   const filePath = join(opts.outDir, `${opts.videoId}.mp4`);
   try {
-    await pipeline(Readable.fromWeb(res.body), createWriteStream(filePath));
+    await pipeline(Readable.from(media.chunks), createWriteStream(filePath));
   } catch (err) {
     await unlink(filePath).catch(() => undefined);
     throw err;
