@@ -75,6 +75,10 @@ const PLAYLIST_CACHE_TTL_MS = 30 * 60 * 1000;
 const RELATED_CACHE_TTL_MS = 10 * 60 * 1000;
 const HOME_CACHE_TTL_MS = 30 * 60 * 1000;
 const STREAM_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // googlevideo-URLs leben ~6 h; bei 403/410 löst der Proxy ohnehin frisch auf
+// Vorlauf, bevor die Video-URL eines laufenden Songs im Hintergrund aufgelöst
+// wird: erst soll das Audio sauber anlaufen, danach ist der Player-Umschalter
+// ohne Wartezeit bereit.
+const VIDEO_PREWARM_DELAY_MS = 3_000;
 const SEARCH_INSTANCE_TIMEOUT_MS = 6000;
 // Vorschläge müssen schnell da sein — kürzeres Timeout als die Suche.
 const SUGGESTIONS_TIMEOUT_MS = 4000;
@@ -318,6 +322,12 @@ export interface MusicDeps {
   retryDelaysMs?: number[];
   /** Staffelung der parallelen Instanz-Suche pro Instanz (ms); leer = alle sofort. */
   searchStaggerMs?: number[];
+  /**
+   * Vorlauf, nach dem beim Abspielen eines Songs die Video-URL im Hintergrund
+   * aufgelöst wird (ms). `null` schaltet das Vorwärmen ab — in Tests sinnvoll,
+   * sonst zählen die Prefetch-Aufrufe bei yt-dlp-Erwartungen mit.
+   */
+  videoPrewarmDelayMs?: number | null;
 }
 
 export async function registerMusicRoutes(
@@ -329,6 +339,8 @@ export async function registerMusicRoutes(
   const now = deps.now ?? Date.now;
   const retryDelays = deps.retryDelaysMs ?? AUDIO_RETRY_DELAYS_MS;
   const searchStagger = deps.searchStaggerMs ?? SEARCH_STAGGER_MS;
+  const videoPrewarmDelayMs =
+    deps.videoPrewarmDelayMs === undefined ? VIDEO_PREWARM_DELAY_MS : deps.videoPrewarmDelayMs;
 
   const searchCache = new Map<string, CacheEntry<MusicTrack[]>>();
   const streamCache = loadStreamCache(deps.streamCachePath, STREAM_CACHE_TTL_MS);
@@ -883,9 +895,14 @@ export async function registerMusicRoutes(
       reply.header("retry-after", String(retryAfterS));
       return reply.code(503).send({ error: "youtube throttling — retry later" });
     }
+    // Songstart (kein Range oder ab Byte 0) — kein Seek/Nachladen mitten drin:
+    // guter Moment, die Video-URL für den Player-Umschalter vorzuwärmen.
+    const range = req.headers.range;
+    if (!range || /^bytes=0-$/.test(range.trim())) prewarmVideoUrl(videoId);
+
     const result = await proxyMediaStream(
       reply,
-      req.headers.range,
+      range,
       (force) => resolveAudioUrl(videoId, force),
       "audio",
       proxyOpts,
@@ -911,6 +928,28 @@ export async function registerMusicRoutes(
       : cacheGet(videoStreamCache, videoId, STREAM_CACHE_TTL_MS, now());
     if (cached) return cached;
     return dedupInflight(inflightVideoResolutions, videoId, () => extractVideoUrl(videoId));
+  }
+
+  // Video-URL vorwärmen, während der Song läuft: das Auflösen dauert 4–10 s,
+  // und genau die wartet man sonst beim Umschalten Audio→Video im Player ab
+  // (Nutzerbeschwerde 18.08.2026: „teilweise 30+ Sekunden"). Höchstens ein
+  // Vorlauf gleichzeitig, nicht während einer Drossel-Welle — die Drossel
+  // soll nicht mit Extra-Auflösungen gefüttert werden.
+  let prewarmInFlight = false;
+  function prewarmVideoUrl(videoId: string): void {
+    if (videoPrewarmDelayMs === null || prewarmInFlight) return;
+    if (waveUntil > now()) return;
+    if (cacheGet(videoStreamCache, videoId, STREAM_CACHE_TTL_MS, now())) return;
+    prewarmInFlight = true;
+    const timer = setTimeout(() => {
+      void resolveVideoUrl(videoId, false)
+        .catch(() => undefined)
+        .finally(() => {
+          prewarmInFlight = false;
+        });
+    }, videoPrewarmDelayMs);
+    // Der Vorlauf darf den Prozess nicht am Beenden hindern.
+    timer.unref?.();
   }
 
   async function extractVideoUrl(videoId: string): Promise<string | undefined> {

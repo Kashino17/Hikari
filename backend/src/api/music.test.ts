@@ -43,6 +43,9 @@ async function makeApp(deps: MusicDeps, opts: { innertube?: boolean } = {}) {
   await registerMusicRoutes(app, {
     searchStaggerMs: [],
     retryDelaysMs: [0, 0],
+    // Video-Vorwärmen aus: es würde bei jedem Audio-Abruf eine zusätzliche
+    // yt-dlp-Auflösung starten und die Aufruf-Erwartungen verfälschen.
+    videoPrewarmDelayMs: null,
     ...deps,
     ...(routed ? { fetchImpl: routed } : {}),
   });
@@ -1930,6 +1933,40 @@ describe("GET /music/video/:videoId", () => {
     const formats = ytDlp.mock.calls.map((c) => (c[0] as string[]).join(" "));
     expect(formats[0]).toContain("bestaudio");
     expect(formats[1]).toContain("vcodec!=none");
+    await app.close();
+  });
+
+  it("wärmt die Video-URL beim Songstart vor, damit der Umschalter nicht wartet", async () => {
+    const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/media\n", stderr: "" });
+    const fetchImpl = vi.fn().mockImplementation(async () => upstream(200, "X"));
+    const app = await makeApp({ ytDlp, fetchImpl, videoPrewarmDelayMs: 0 });
+
+    await app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
+    // Vorlauf abwarten: Audio-Auflösung + vorgewärmte Video-Auflösung
+    await vi.waitFor(() => expect(ytDlp).toHaveBeenCalledTimes(2));
+    const formats = ytDlp.mock.calls.map((c) => (c[0] as string[]).join(" "));
+    expect(formats[1]).toContain("vcodec!=none");
+
+    // Der Umschalter trifft jetzt auf einen warmen Cache — kein drittes yt-dlp.
+    const res = await app.inject({ method: "GET", url: "/music/video/dQw4w9WgXcQ" });
+    expect(res.statusCode).toBe(200);
+    expect(ytDlp).toHaveBeenCalledTimes(2);
+    await app.close();
+  });
+
+  it("wärmt beim Seek NICHT vor — nur der Songstart löst den Vorlauf aus", async () => {
+    const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/media\n", stderr: "" });
+    const fetchImpl = vi.fn().mockImplementation(async () => upstream(206, "X", {
+      "content-range": "bytes 500-500/1000",
+    }));
+    const app = await makeApp({ ytDlp, fetchImpl, videoPrewarmDelayMs: 0 });
+    await app.inject({
+      method: "GET",
+      url: "/music/audio/dQw4w9WgXcQ",
+      headers: { range: "bytes=500-" },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(ytDlp).toHaveBeenCalledTimes(1);
     await app.close();
   });
 
