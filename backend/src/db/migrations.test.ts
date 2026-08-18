@@ -18,9 +18,11 @@ describe("applyMigrations", () => {
       "clipper_queue",
       "clipper_runtime",
       "clips",
+      "daily_mix_items",
       "discovery_settings",
       "downloaded_videos",
       "feed_items",
+      "feed_settings",
       "filter_config",
       "ingest_queue",
       "manga_arcs",
@@ -144,6 +146,21 @@ describe("clipper migrations", () => {
     `);
     insertClip.run("c-a", 0);
     expect(() => insertClip.run("c-b", 0)).toThrow(/UNIQUE/);
+  });
+
+  it("daily_mix_items und feed_settings existieren mit erwarteten Spalten", () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    const mixCols = (db.prepare("PRAGMA table_info(daily_mix_items)").all() as { name: string }[]).map(
+      (c) => c.name,
+    );
+    expect(mixCols).toEqual(
+      expect.arrayContaining(["mix_date", "video_id", "position", "source", "duration_seconds"]),
+    );
+    const fsCols = (db.prepare("PRAGMA table_info(feed_settings)").all() as { name: string }[]).map(
+      (c) => c.name,
+    );
+    expect(fsCols).toEqual(expect.arrayContaining(["daily_time_budget_minutes"]));
   });
 
   it("channels.status backfilled auf subscribed, ingest_queue hat source", () => {

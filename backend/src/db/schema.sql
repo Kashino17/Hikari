@@ -69,6 +69,25 @@ CREATE TABLE IF NOT EXISTS feed_items (
   queue_order INTEGER
 );
 
+-- Etappe 4: kuratierter Tagesmix mit Zeitbudget. Ein Eintrag = ein Slot des
+-- Tages; gesehene Items bleiben drin (konsumierte Zeit zaehlt gegen das Budget).
+CREATE TABLE IF NOT EXISTS daily_mix_items (
+  mix_date TEXT NOT NULL,           -- lokaler Kalendertag YYYY-MM-DD
+  video_id TEXT NOT NULL REFERENCES videos(id),
+  position INTEGER NOT NULL,        -- Reihenfolge im Tagesmix
+  source TEXT,                      -- Quelle zum Bau-Zeitpunkt (Anzeige/Debug)
+  duration_seconds INTEGER NOT NULL,
+  PRIMARY KEY (mix_date, video_id)
+);
+CREATE INDEX IF NOT EXISTS idx_daily_mix_date ON daily_mix_items(mix_date, position);
+
+-- Feed-Einstellungen (Singleton) — Zeitbudget des Tagesmixes in Minuten.
+CREATE TABLE IF NOT EXISTS feed_settings (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  daily_time_budget_minutes INTEGER NOT NULL DEFAULT 45,
+  updated_at INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS sponsor_segments (
   video_id TEXT NOT NULL REFERENCES videos(id),
   start_seconds REAL NOT NULL,
