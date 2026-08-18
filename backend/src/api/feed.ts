@@ -1,6 +1,13 @@
 import type { FastifyInstance } from "fastify";
 import type Database from "better-sqlite3";
 import fs from "node:fs";
+import {
+  buildDailyMix,
+  getTimeBudgetMinutes,
+  mixDateFor,
+  setTimeBudgetMinutes,
+  todayMixStats,
+} from "../feed/daily-mix.js";
 
 export interface FeedDeps {
   db: Database.Database;
@@ -343,24 +350,20 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
     }
 
     if (mode === "new") {
-      // Pipeline: large pool → curation rank → channel round-robin interleave
-      // (variety) → diversity cooldown → page. The rotation makes each app
-      // open / tab switch lead with a different channel, so the mix is fresh
-      // every time without ever reusing an already-seen clip.
-      const now = Date.now();
-      // rotation: explicit query param wins (tests/paging); else time-derived
-      // so consecutive calls reshuffle. 90s bucket = stable within a session
-      // burst but changes between opens.
-      const rotation =
-        req.query.rotation !== undefined
-          ? Number(req.query.rotation) || 0
-          : Math.floor(now / 90_000);
-      const candidates = listFeedRaw(deps.db, 200);
-      const ranked = rankCandidates(candidates, now);
-      const interleaved = interleaveByChannel(ranked, rotation);
-      const ordered = applyCooldown(interleaved, 50);
-      // Batched hydration (2 queries) instead of one query per row (N+1).
-      return hydrateFeedBatch(deps.db, ordered);
+      // Etappe 4: Der Feed IST der Tagesmix — einmal kuratiert, dann stabil.
+      // Lazy-Top-up bei jedem Abruf (idempotent, budgetbegrenzt); die frühere
+      // Request-Zeit-Pipeline (rank/interleave/cooldown) läuft jetzt im
+      // Mix-Builder. Reihenfolge bleibt über App-Öffnungen hinweg identisch.
+      buildDailyMix(deps.db);
+      const mixRows = deps.db
+        .prepare(
+          `SELECT m.video_id AS id FROM daily_mix_items m
+            JOIN feed_items f ON f.video_id = m.video_id
+           WHERE m.mix_date = ? AND f.seen_at IS NULL AND f.playback_failed = 0
+           ORDER BY m.position ASC`,
+        )
+        .all(mixDateFor(Date.now())) as { id: string }[];
+      return hydrateFeedBatch(deps.db, mixRows as RawFeedRow[]);
     } else if (mode === "saved") {
       const clipsRows = deps.db.prepare(`
         SELECT 'clip' AS kind, c.id AS videoId, c.parent_video_id AS parentVideoId,
@@ -525,19 +528,27 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
   });
 
   app.get("/feed/today-count", async () => {
-    // Seit Etappe 2 besteht der Feed nur noch aus feed_items (Videos/Shorts) —
-    // ungesehene Alt-Clips zählen nicht mehr mit.
-    const row = deps.db
-      .prepare(
-        "SELECT COUNT(*) AS c FROM feed_items WHERE seen_at IS NULL AND playback_failed = 0 AND is_pre_clipper = 1",
-      )
-      .get() as { c: number };
-    const unseenCount = row.c;
+    // Etappe 4: Zeitbudget statt Stückzahl. Alte Feldnamen bleiben gefüllt,
+    // damit ältere App-Versionen nicht brechen.
+    const stats = todayMixStats(deps.db);
     return {
-      dailyBudget: deps.dailyBudget,
-      unseenCount,
-      capped: unseenCount >= deps.dailyBudget,
+      dailyBudget: stats.budgetMinutes,
+      unseenCount: stats.unseenCount,
+      capped: stats.capped,
+      budgetMinutes: stats.budgetMinutes,
+      remainingSeconds: stats.remainingSeconds,
+      totalSeconds: stats.totalSeconds,
     };
+  });
+
+  app.get("/feed/budget", async () => ({ minutes: getTimeBudgetMinutes(deps.db) }));
+
+  app.put<{ Body: { minutes?: unknown } }>("/feed/budget", async (req, reply) => {
+    const minutes = req.body?.minutes;
+    if (typeof minutes !== "number" || !Number.isFinite(minutes)) {
+      return reply.code(400).send({ error: "minutes must be a number" });
+    }
+    return { minutes: setTimeBudgetMinutes(deps.db, minutes) };
   });
 
   app.delete<{ Params: { id: string } }>("/feed/:id", async (req, reply) => {

@@ -29,6 +29,7 @@ import { registerVideoFullRoute } from "./api/video-full.js";
 import { loadConfig } from "./config.js";
 import { openDatabase } from "./db/connection.js";
 import { runDiscoveryCycle } from "./discovery/feed-sources.js";
+import { buildDailyMix } from "./feed/daily-mix.js";
 import { runCleanup } from "./download/cleanup.js";
 import { fetchVideoMetadata } from "./ingest/metadata.js";
 import { fetchTranscript } from "./ingest/transcript.js";
@@ -234,6 +235,21 @@ cron.schedule("*/15 * * * *", () => {
   pollAllChannels().catch((err) => app.log.error({ err }, "channel poll crashed"));
 });
 
+// Tagesmix: früh morgens frisch bauen; zusätzlich Top-up nach jedem Drain
+// (unten) und lazy beim ersten /feed-Abruf des Tages.
+cron.schedule("0 6 * * *", () => {
+  try {
+    buildDailyMix(db);
+  } catch (err) {
+    app.log.error({ err }, "daily mix build crashed");
+  }
+});
+try {
+  buildDailyMix(db);
+} catch (err) {
+  app.log.error({ err }, "daily mix startup build crashed");
+}
+
 // Discovery: Probe-Kanäle, Themen-Suche, Backfill — zweimal täglich reicht,
 // die Quellen sind gedrosselt und der Scorer bleibt der Türsteher.
 cron.schedule("30 5,17 * * *", () => {
@@ -251,6 +267,7 @@ const DRAIN_BATCH = 20;
 async function drainIngestQueue(): Promise<void> {
   if (isDraining) return;
   isDraining = true;
+  let processedAny = false;
   try {
     for (let i = 0; i < DRAIN_BATCH; i++) {
       const job = claimNextIngest(db);
@@ -269,6 +286,7 @@ async function drainIngestQueue(): Promise<void> {
           source: job.source ?? undefined,
         });
         completeIngest(db, job.video_id);
+        processedAny = true;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         if (isTransientInfraError(err)) {
@@ -284,6 +302,14 @@ async function drainIngestQueue(): Promise<void> {
     }
   } finally {
     isDraining = false;
+  }
+  // Frisch approvte Videos sofort in den Tagesmix aufnehmen (budgetbegrenzt).
+  if (processedAny) {
+    try {
+      buildDailyMix(db);
+    } catch {
+      // best-effort — der 6-Uhr-Cron und der lazy Build fangen es auf
+    }
   }
 }
 

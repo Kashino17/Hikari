@@ -552,8 +552,8 @@ describe("feed mutation routes — clip handling", () => {
 // today-count UNION (C4)
 // ---------------------------------------------------------------------------
 
-describe("GET /feed/today-count — nur feed_items", () => {
-  it("zählt nur ungesehene feed_items, Clips nicht mehr", async () => {
+describe("GET /feed/today-count — Zeitbudget", () => {
+  it("zählt nur Mix-Items, Clips nicht mehr", async () => {
     const db = new Database(":memory:");
     applyMigrations(db);
 
@@ -568,27 +568,31 @@ describe("GET /feed/today-count — nur feed_items", () => {
     const app = Fastify();
     await registerFeedRoutes(app, { db, dailyBudget: 10 });
 
+    await app.inject({ method: "GET", url: "/feed?mode=new" }); // baut den Tagesmix
     const res = await app.inject({ method: "GET", url: "/feed/today-count" });
     expect(res.statusCode).toBe(200);
     const body = res.json() as { unseenCount: number; dailyBudget: number; capped: boolean };
-    // Nur das eine feed_item zählt — die 2 ungesehenen Clips nicht mehr.
+    // Nur das eine Mix-Item zählt — die 2 ungesehenen Clips nicht mehr.
     expect(body.unseenCount).toBe(1);
     expect(body.capped).toBe(false);
   });
 
-  it("returns capped=true when unseenCount >= dailyBudget", async () => {
+  it("capped=true sobald die Mix-Dauer das Zeitbudget erreicht", async () => {
     const db = new Database(":memory:");
     applyMigrations(db);
 
     seedFeedItem(db, "tc2-v1", Date.now());
-    seedFeedItem(db, "tc2-v2", Date.now() - 1000);
+    // Budget-Minimum ist 10 min — das Video auf 700s aufblasen, damit es capped.
+    db.prepare("UPDATE videos SET duration_seconds = 700 WHERE id = 'tc2-v1'").run();
 
     const app = Fastify();
     await registerFeedRoutes(app, { db, dailyBudget: 2 });
+    await app.inject({ method: "PUT", url: "/feed/budget", payload: { minutes: 10 } });
+    await app.inject({ method: "GET", url: "/feed?mode=new" }); // baut den Mix (700s > 600s)
 
     const res = await app.inject({ method: "GET", url: "/feed/today-count" });
     const body = res.json() as { unseenCount: number; capped: boolean };
-    expect(body.unseenCount).toBe(2);
+    expect(body.unseenCount).toBe(1);
     expect(body.capped).toBe(true);
   });
 });
@@ -712,6 +716,58 @@ describe("GET /feed (new) — batched hydration", () => {
     // 845.5 - 770 = 75.5 → must be rounded to an integer (76), not 75.5.
     expect(Number.isInteger(clip!.durationSeconds)).toBe(true);
     expect(clip!.durationSeconds).toBe(76);
+  });
+
+  it("mode=new liefert den stabilen Tagesmix in Mix-Reihenfolge", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    seedFeedItem(db, "m1", Date.now() - 3000);
+    seedFeedItem(db, "m2", Date.now() - 2000);
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+    const first = (await app.inject({ method: "GET", url: "/feed?mode=new" })).json() as {
+      videoId: string;
+    }[];
+    const second = (await app.inject({ method: "GET", url: "/feed?mode=new" })).json() as {
+      videoId: string;
+    }[];
+    expect(first.length).toBeGreaterThan(0);
+    expect(second.map((x) => x.videoId)).toEqual(first.map((x) => x.videoId)); // stabil
+  });
+
+  it("today-count meldet Zeitbudget und Restdauer", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    seedFeedItem(db, "tc-zeit", Date.now());
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+    await app.inject({ method: "GET", url: "/feed?mode=new" }); // baut den Mix
+    const body = (await app.inject({ method: "GET", url: "/feed/today-count" })).json() as Record<
+      string,
+      number | boolean
+    >;
+    expect(body.budgetMinutes).toBe(45);
+    expect(body.remainingSeconds).toBe(60); // Seed-Video hat 60s
+    expect(body.unseenCount).toBe(1);
+  });
+
+  it("GET/PUT /feed/budget liest und clamped", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+    expect((await app.inject({ method: "GET", url: "/feed/budget" })).json()).toEqual({
+      minutes: 45,
+    });
+    const put = await app.inject({ method: "PUT", url: "/feed/budget", payload: { minutes: 90 } });
+    expect(put.json()).toEqual({ minutes: 90 });
+    expect((await app.inject({ method: "GET", url: "/feed/budget" })).json()).toEqual({
+      minutes: 90,
+    });
+    expect(
+      (await app.inject({ method: "PUT", url: "/feed/budget", payload: { minutes: "x" } }))
+        .statusCode,
+    ).toBe(400);
   });
 
   it("liefert source im Feed-Item durch", async () => {
