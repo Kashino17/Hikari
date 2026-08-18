@@ -6,6 +6,10 @@ import { downloadVideo } from "./worker.js";
 
 vi.mock("../yt-dlp/client.js", () => ({
   runYtDlp: vi.fn(),
+  // delegiert an den übergebenen Runner — wie das Original bei Erfolg
+  runPreferEmbedded: vi.fn((run: (a: string[], o?: unknown) => unknown, args: string[], opts?: unknown) =>
+    run(args, opts),
+  ),
   YtDlpError: class extends Error {},
 }));
 

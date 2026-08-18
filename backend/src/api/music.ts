@@ -9,7 +9,7 @@ import {
   saveStreamCacheAsync,
   saveStreamCacheSync,
 } from "../stream/url-cache.js";
-import { runYtDlp } from "../yt-dlp/client.js";
+import { runPreferEmbedded, runYtDlp } from "../yt-dlp/client.js";
 import {
   type ArtistPage,
   type HomeFeed,
@@ -813,7 +813,10 @@ export async function registerMusicRoutes(
 
   async function extractAudioUrl(videoId: string): Promise<string | undefined> {
     try {
-      const result = await ytDlp(
+      // web_embedded-first (siehe runPreferEmbedded): nur diese URLs sind
+      // voll rangebar — alle anderen Clients kappt googlevideo nach ~768 KiB.
+      const result = await runPreferEmbedded(
+        ytDlp,
         [
           "--no-playlist",
           // IPv4 erzwingen: macOS rotiert IPv6-Privacy-Adressen — die
@@ -912,7 +915,9 @@ export async function registerMusicRoutes(
 
   async function extractVideoUrl(videoId: string): Promise<string | undefined> {
     try {
-      const result = await ytDlp(
+      // web_embedded-first wie beim Audio-Pfad (voll rangebare URLs).
+      const result = await runPreferEmbedded(
+        ytDlp,
         [
           "--no-playlist",
           // IPv4 wie beim Audio-Pfad — Bindung an die stabile NAT-IPv4.

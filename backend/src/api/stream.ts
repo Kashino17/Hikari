@@ -10,7 +10,7 @@ import {
   saveStreamCacheAsync,
   saveStreamCacheSync,
 } from "../stream/url-cache.js";
-import { runYtDlp } from "../yt-dlp/client.js";
+import { runPreferEmbedded, runYtDlp } from "../yt-dlp/client.js";
 
 const VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
 // googlevideo-URLs leben ~6 h; TTL knapp darunter, damit der Proxy nie mit
@@ -77,10 +77,12 @@ export function registerStreamRoutes(app: FastifyInstance, deps: StreamDeps = {}
 
   async function extract(videoId: string): Promise<string | undefined> {
     try {
-      const result = await ytDlp(
-        // -4: macOS rotiert IPv6-Privacy-Adressen — die googlevideo-URL wäre an
-        // eine Temporär-Adresse gebunden, der spätere Fetch ginge über eine
-        // andere raus → 403. Die NAT-IPv4 ist stabil (siehe music.ts).
+      // web_embedded-first: nur diese URLs sind voll rangebar (music.ts).
+      // -4: macOS rotiert IPv6-Privacy-Adressen — die googlevideo-URL wäre an
+      // eine Temporär-Adresse gebunden, der spätere Fetch ginge über eine
+      // andere raus → 403. Die NAT-IPv4 ist stabil (siehe music.ts).
+      const result = await runPreferEmbedded(
+        ytDlp,
         ["--no-playlist", "-4", "-f", VIDEO_FORMAT, "-g", `https://www.youtube.com/watch?v=${videoId}`],
         { timeoutMs: 45_000, maxRetries: 1 },
       );

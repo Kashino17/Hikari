@@ -373,10 +373,13 @@ describe("GET /music/audio/:videoId", () => {
       .fn()
       .mockResolvedValueOnce({ stdout: "https://cdn.example/stale.m4a", stderr: "" })
       .mockResolvedValueOnce({ stdout: "https://cdn.example/fresh.m4a", stderr: "" });
+    // URL-abhängig statt sequenziell: die stale URL 403t auch den
+    // Chunk-Fallback des Proxys, erst die frische URL liefert.
     const fetchImpl = vi
       .fn()
-      .mockResolvedValueOnce(upstream(403, "denied"))
-      .mockResolvedValueOnce(upstream(200, "FRESH"));
+      .mockImplementation(async (url: string) =>
+        url.includes("fresh") ? upstream(200, "FRESH") : upstream(403, "denied"),
+      );
     const app = await makeApp({ ytDlp, fetchImpl });
     const res = await app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
     expect(res.statusCode).toBe(200);
@@ -449,12 +452,12 @@ describe("GET /music/audio/:videoId", () => {
       );
       const app = await makeApp({ ytDlp, fetchImpl });
       const req = app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
-      // 2 Auflösungsrunden à 3 Versuche (1 + 2 Retries) mit je 12 s Header-Timeout
-      await vi.advanceTimersByTimeAsync(6 * 12_000 + 1_000);
+      // 3 Auflösungsrunden à 3 Versuche (1 + 2 Retries) mit je 12 s Header-Timeout
+      await vi.advanceTimersByTimeAsync(9 * 12_000 + 1_000);
       const res = await req;
       expect(res.statusCode).toBe(502);
-      expect(fetchImpl).toHaveBeenCalledTimes(6);
-      expect(ytDlp).toHaveBeenCalledTimes(2);
+      expect(fetchImpl).toHaveBeenCalledTimes(9);
+      expect(ytDlp).toHaveBeenCalledTimes(3);
       await app.close();
     } finally {
       vi.useRealTimers();

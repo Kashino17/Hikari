@@ -24,6 +24,34 @@ export interface RunYtDlpOptions {
   sleep?: (ms: number) => Promise<void>;
 }
 
+// Bevorzugter Player-Client fürs Stream-URL-Auflösen: WEB_EMBEDDED_PLAYER-URLs
+// erlauben (mit Referer/Origin-Headern) als einzige volle Range-Zugriffe —
+// googlevideo kappt URLs aller anderen Clients seit 08/2026 nach ~768 KiB (403).
+export const YT_EMBEDDED_CLIENT_ARGS = [
+  "--extractor-args",
+  "youtube:player_client=web_embedded",
+];
+
+/**
+ * Stream-URL-Auflösung: erst mit web_embedded-Client (voll rangebare URLs),
+ * bei Fehlschlag (z. B. Embed vom Uploader deaktiviert) mit den
+ * Default-Clients. Nimmt den Runner als Parameter, damit injizierte
+ * yt-dlp-Mocks (Tests) genauso funktionieren wie das echte Binary.
+ */
+export async function runPreferEmbedded(
+  run: (args: string[], opts?: RunYtDlpOptions) => Promise<YtDlpResult>,
+  args: string[],
+  opts?: RunYtDlpOptions,
+): Promise<YtDlpResult> {
+  try {
+    const result = await run([...YT_EMBEDDED_CLIENT_ARGS, ...args], opts);
+    if (result.stdout.trim()) return result;
+  } catch {
+    // weiter mit Default-Clients
+  }
+  return run(args, opts);
+}
+
 const DEFAULT_TIMEOUT_MS = 120_000;
 const defaultSleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));

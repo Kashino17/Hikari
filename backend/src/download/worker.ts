@@ -3,8 +3,8 @@ import { unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { BROWSER_UA } from "../stream/proxy.js";
-import { runYtDlp } from "../yt-dlp/client.js";
+import { YT_FETCH_HEADERS } from "../stream/proxy.js";
+import { runPreferEmbedded, runYtDlp } from "../yt-dlp/client.js";
 
 export interface DownloadResult {
   filePath: string;
@@ -25,7 +25,9 @@ export async function downloadVideo(opts: {
   fetchImpl?: typeof fetch;
 }): Promise<DownloadResult> {
   const fetchImpl = opts.fetchImpl ?? fetch;
-  const result = await runYtDlp(
+  // web_embedded-first: nur diese URLs sind voll rangebar (siehe yt-dlp/client.ts).
+  const result = await runPreferEmbedded(
+    runYtDlp,
     [
       "--no-playlist",
       "-4", // stabile NAT-IPv4 statt rotierender IPv6-Privacy-Adresse (403-Ursache)
@@ -42,7 +44,8 @@ export async function downloadVideo(opts: {
   }
 
   const res = await fetchImpl(url, {
-    headers: { "user-agent": BROWSER_UA },
+    // Referer/Origin: web_embedded-URLs liefern ohne sie pauschal 403.
+    headers: { ...YT_FETCH_HEADERS },
     signal: AbortSignal.timeout(opts.timeoutMs ?? 10 * 60_000),
   });
   if (!res.ok || !res.body) {
