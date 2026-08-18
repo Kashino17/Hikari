@@ -852,16 +852,47 @@ export async function registerMusicRoutes(
     retryDelaysMs: retryDelays,
   };
 
+  // Wellen-Brecher: googlevideo drosselt diese IP zeitweise komplett (403
+  // für ALLES, mehrere Minuten — Diagnose 18.08.). Scheitern ≥3 verschiedene
+  // Videos binnen 30 s upstream, ist die Welle da: 60 s lang sofort 503
+  // liefern statt mit weiteren yt-dlp-Läufen und Fetches die Drossel zu
+  // füttern. Retry-After sagt der App, wann es sich wieder lohnt.
+  const upstreamFails: { videoId: string; at: number }[] = [];
+  let waveUntil = 0;
+  const noteUpstreamFail = (videoId: string) => {
+    const t = now();
+    upstreamFails.push({ videoId, at: t });
+    while (upstreamFails.length > 0 && (upstreamFails[0]?.at ?? 0) < t - 30_000) {
+      upstreamFails.shift();
+    }
+    const distinct = new Set(upstreamFails.map((f) => f.videoId));
+    if (distinct.size >= 3) {
+      waveUntil = t + 60_000;
+      app.log.warn({ distinct: distinct.size }, "googlevideo wave detected — cooling down 60s");
+    }
+  };
+
   app.get<{ Params: { videoId: string } }>("/music/audio/:videoId", async (req, reply) => {
     const { videoId } = req.params;
     if (!VIDEO_ID_RE.test(videoId)) return reply.code(400).send({ error: "invalid videoId" });
-    return proxyMediaStream(
+    if (waveUntil > now()) {
+      const retryAfterS = Math.ceil((waveUntil - now()) / 1000);
+      reply.header("retry-after", String(retryAfterS));
+      return reply.code(503).send({ error: "youtube throttling — retry later" });
+    }
+    const result = await proxyMediaStream(
       reply,
       req.headers.range,
       (force) => resolveAudioUrl(videoId, force),
       "audio",
       proxyOpts,
     );
+    if (reply.statusCode === 502) {
+      // Auch Upstream-403 (nicht nur Auflösungsfehler) sperrt die videoId kurz.
+      resolveFailUntil.set(videoId, now() + RESOLVE_FAIL_COOLDOWN_MS);
+      noteUpstreamFail(videoId);
+    }
+    return result;
   });
 
   // --- Video-Stream (Audio↔Video-Umschalter im Player) ---
