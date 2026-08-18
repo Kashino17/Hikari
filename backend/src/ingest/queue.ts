@@ -74,6 +74,27 @@ export function failIngest(db: Database.Database, videoId: string, error: string
   ).run(error.slice(0, 1000), videoId);
 }
 
+/**
+ * Lock freigeben OHNE attempts zu erhöhen — für transiente Infrastruktur-
+ * Ausfälle (Scorer-LLM aus, Netz weg): der Job soll später einfach wieder
+ * drankommen, statt nach MAX_INGEST_ATTEMPTS Minuten als Dead-Letter zu enden.
+ */
+export function requeueIngest(db: Database.Database, videoId: string, error: string): void {
+  db.prepare(
+    "UPDATE ingest_queue SET locked_at = NULL, last_error = ? WHERE video_id = ?",
+  ).run(error.slice(0, 1000), videoId);
+}
+
+/**
+ * Verbindungs-/Infrastrukturfehler (LM Studio aus, DNS, Timeout) — im
+ * Gegensatz zu Inhaltsfehlern (Age-Gate, Parse-Fehler), die ein Retry nie
+ * heilt und die deshalb weiterhin attempts verbrauchen.
+ */
+export function isTransientInfraError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return /fetch failed|ECONNREFUSED|ECONNRESET|ETIMEDOUT|EAI_AGAIN|socket hang up/i.test(msg);
+}
+
 /** Reset stale locks on startup so a crash mid-ingest doesn't strand rows. */
 export function unlockStaleIngest(db: Database.Database): number {
   return db

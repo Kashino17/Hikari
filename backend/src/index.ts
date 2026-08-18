@@ -39,6 +39,8 @@ import {
   claimNextIngest,
   completeIngest,
   failIngest,
+  isTransientInfraError,
+  requeueIngest,
   unlockStaleIngest,
 } from "./ingest/queue.js";
 import { createScorer } from "./scorer/factory.js";
@@ -259,6 +261,13 @@ async function drainIngestQueue(): Promise<void> {
         completeIngest(db, job.video_id);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
+        if (isTransientInfraError(err)) {
+          // Scorer-LLM aus / Netz weg: Job zurücklegen ohne attempts++ und den
+          // Tick beenden — ohne Infrastruktur scheitert der Rest genauso.
+          requeueIngest(db, job.video_id, msg);
+          app.log.warn({ err, videoId: job.video_id }, "ingest paused — transient infra error");
+          break;
+        }
         failIngest(db, job.video_id, msg);
         app.log.warn({ err, videoId: job.video_id }, "ingest job failed (will retry)");
       }

@@ -6,6 +6,8 @@ import {
   claimNextIngest,
   completeIngest,
   failIngest,
+  isTransientInfraError,
+  requeueIngest,
   unlockStaleIngest,
   pendingIngestCount,
   deadIngestCount,
@@ -124,5 +126,26 @@ describe("ingest queue", () => {
       .prepare("SELECT last_error FROM ingest_queue WHERE video_id='v1'")
       .get() as { last_error: string };
     expect(row.last_error.length).toBe(1000);
+  });
+
+  it("requeueIngest gibt den Lock frei OHNE attempts zu erhöhen", () => {
+    enqueueIngest(db, "v1", "c1");
+    const job = claimNextIngest(db);
+    expect(job?.video_id).toBe("v1");
+    requeueIngest(db, "v1", "scorer unreachable");
+    const row = db
+      .prepare("SELECT attempts, locked_at, last_error FROM ingest_queue WHERE video_id='v1'")
+      .get() as { attempts: number; locked_at: number | null; last_error: string };
+    expect(row.attempts).toBe(0);
+    expect(row.locked_at).toBeNull();
+    expect(row.last_error).toBe("scorer unreachable");
+  });
+
+  it("isTransientInfraError erkennt Verbindungsfehler, aber keine Inhaltsfehler", () => {
+    expect(isTransientInfraError(new Error("fetch failed"))).toBe(true);
+    expect(isTransientInfraError(new Error("connect ECONNREFUSED 127.0.0.1:1234"))).toBe(true);
+    expect(isTransientInfraError(new Error("ETIMEDOUT"))).toBe(true);
+    expect(isTransientInfraError(new Error("ERROR: [youtube] xyz: Sign in to confirm your age"))).toBe(false);
+    expect(isTransientInfraError(new Error("scorer returned invalid JSON"))).toBe(false);
   });
 });
