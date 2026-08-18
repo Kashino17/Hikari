@@ -21,4 +21,5 @@ data class FeedItem(
     val captions: List<Caption>? = null,
     val context: String? = null,
     val summary: String? = null,
+    val source: String? = null,
 )

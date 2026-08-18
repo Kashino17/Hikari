@@ -19,7 +19,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         SearchHistoryEntity::class,
         MusicPlayEventEntity::class,
     ],
-    version = 16,
+    version = 17,
     exportSchema = false,
 )
 abstract class HikariDatabase : RoomDatabase() {
@@ -105,5 +105,12 @@ val MIGRATION_14_15 = object : Migration(14, 15) {
 val MIGRATION_15_16 = object : Migration(15, 16) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE feed_items ADD COLUMN summary TEXT DEFAULT NULL")
+    }
+}
+
+// Etappe 3 (Discovery): Herkunft des Feed-Items fuer das "Neu fuer dich"-Badge.
+val MIGRATION_16_17 = object : Migration(16, 17) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE feed_items ADD COLUMN source TEXT DEFAULT NULL")
     }
 }

@@ -94,6 +94,16 @@ class FeedRepository @Inject constructor(
         runCatching { api.deleteVideo(videoId) }
     }
 
+        suspend fun subscribeChannel(channelId: String) {
+        api.subscribeChannel(channelId)
+    }
+
+    /** Blockt den Kanal serverseitig und laedt den Feed neu — seine Items verschwinden. */
+    suspend fun blockChannel(channelId: String) {
+        api.blockChannel(channelId)
+        runCatching { refresh() }
+    }
+
     suspend fun todayCount(): TodayCountResponse = api.todayCount()
 
     suspend fun getLibrary(): LibraryResponse = api.getLibrary()
@@ -129,6 +139,7 @@ private fun FeedItemDto.toEntity(position: Int) = FeedItemEntity(
     captionsJson = captions?.let { runCatching { Json.encodeToString(it) }.getOrNull() },
     context = context,
     summary = summary,
+    source = source,
     position = position,
 )
 
@@ -152,6 +163,7 @@ private fun FeedItemEntity.toDomain() = FeedItem(
     },
     context = context,
     summary = summary,
+    source = source,
 )
 
 private fun FeedItemDto.toDomain() = FeedItem(
@@ -170,4 +182,5 @@ private fun FeedItemDto.toDomain() = FeedItem(
     },
     context = context,
     summary = summary,
+    source = source,
 )

@@ -160,6 +160,12 @@ interface HikariApi {
     @POST("feed/{id}/seen")
     suspend fun markSeen(@Path("id") videoId: String)
 
+    @POST("channels/{id}/subscribe")
+    suspend fun subscribeChannel(@Path("id") channelId: String)
+
+    @POST("channels/{id}/block")
+    suspend fun blockChannel(@Path("id") channelId: String)
+
     @POST("feed/{id}/save")
     suspend fun save(@Path("id") videoId: String)
 

@@ -32,6 +32,7 @@ data class FeedItemDto(
     val captions: List<CaptionDto>? = null,
     val context: String? = null,
     val summary: String? = null,
+    val source: String? = null,
 )
 
 @Serializable

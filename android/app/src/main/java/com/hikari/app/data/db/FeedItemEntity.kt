@@ -29,6 +29,8 @@ data class FeedItemEntity(
     @ColumnInfo(defaultValue = "NULL") val context: String? = null,
     // KI-Kurzbeschreibung fuer Langvideo-Vorschaukarten (Etappe 2).
     @ColumnInfo(defaultValue = "NULL") val summary: String? = null,
+    // Herkunft (subscription/probe/topic/backfill) fuer das "Neu fuer dich"-Badge.
+    @ColumnInfo(defaultValue = "NULL") val source: String? = null,
     // Server-assigned feed position. The backend curates + interleaves the
     // order for variety; we MUST render in that order, not re-sort by addedAt
     // (which clusters one channel and kills the variety). Set from the server
