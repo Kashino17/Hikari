@@ -785,12 +785,24 @@ export async function registerMusicRoutes(
     },
   );
 
+  // Negativ-Cache gegen yt-dlp-Stürme: schlägt die Auflösung fehl, hämmert
+  // die App im Sekundentakt nach — jeder Versuch ein frischer yt-dlp-Lauf,
+  // der YouTubes Rate-Limit weiter reizt und die Ausfall-Welle verlängert.
+  // 20 s Sperre pro videoId beruhigt das, ohne echte Retries zu verhindern.
+  const resolveFailUntil = new Map<string, number>();
+  const RESOLVE_FAIL_COOLDOWN_MS = 20_000;
+
   async function resolveAudioUrl(videoId: string, force: boolean): Promise<string | undefined> {
     const cached = force ? undefined : cacheGet(streamCache, videoId, STREAM_CACHE_TTL_MS, now());
     if (cached) return cached;
+    if (!force && (resolveFailUntil.get(videoId) ?? 0) > now()) return undefined;
     const existing = inflightResolutions.get(videoId);
     if (existing) return existing;
-    const pending = extractAudioUrl(videoId);
+    const pending = extractAudioUrl(videoId).then((url) => {
+      if (!url) resolveFailUntil.set(videoId, now() + RESOLVE_FAIL_COOLDOWN_MS);
+      else resolveFailUntil.delete(videoId);
+      return url;
+    });
     inflightResolutions.set(videoId, pending);
     try {
       return await pending;
