@@ -66,11 +66,13 @@ export async function recommendChannels(
   const tags = state.filter.likeTags.slice(0, MAX_TAGS);
   if (tags.length === 0) return [];
 
-  const subscribedIds = (db
-    .prepare("SELECT id FROM channels WHERE is_active=1")
+  // Ausschluss: Abos, laufende Proben und geblockte Kanäle — Letztere dürfen
+  // nie wieder als Empfehlung auftauchen (Etappe 3).
+  const excludedIds = (db
+    .prepare("SELECT id FROM channels WHERE is_active=1 OR status IN ('probe','blocked')")
     .all() as { id: string }[]).map((r) => r.id);
 
-  const key = cacheKey(tags, subscribedIds);
+  const key = cacheKey(tags, excludedIds);
   if (opts.bypassCache) {
     cache.delete(key);
   } else {
@@ -91,7 +93,7 @@ export async function recommendChannels(
   );
 
   // 2) Aggregate, dedupe, exclude subscribed
-  const subscribedSet = new Set(subscribedIds);
+  const subscribedSet = new Set(excludedIds);
   const seen = new Map<string, RecommendationResult>();
   for (const { tag, found } of perTagResults) {
     for (const ch of found) {

@@ -89,6 +89,35 @@ export async function registerChannelsRoutes(
     return { id: req.params.id, autoApprove: req.body.autoApprove };
   });
 
+  // Probe → Abo: der Kanal wandert in die reguläre Poll-Rotation.
+  app.post<{ Params: { id: string } }>("/channels/:id/subscribe", async (req, reply) => {
+    const row = deps.db.prepare("SELECT 1 FROM channels WHERE id = ?").get(req.params.id);
+    if (!row) return reply.code(404).send({ error: "channel not found" });
+    deps.db
+      .prepare("UPDATE channels SET status = 'subscribed', is_active = 1 WHERE id = ?")
+      .run(req.params.id);
+    return reply.code(204).send();
+  });
+
+  // Kanal dauerhaft blocken: taucht nie wieder als Empfehlung/Probe auf.
+  app.post<{ Params: { id: string } }>("/channels/:id/block", async (req, reply) => {
+    const row = deps.db.prepare("SELECT 1 FROM channels WHERE id = ?").get(req.params.id);
+    if (!row) return reply.code(404).send({ error: "channel not found" });
+    deps.db.transaction(() => {
+      deps.db
+        .prepare("UPDATE channels SET status = 'blocked', is_active = 0 WHERE id = ?")
+        .run(req.params.id);
+      // Geblockter Kanal verschwindet sofort aus dem Feed — weich (→ "Alt"), kein Löschen.
+      deps.db
+        .prepare(
+          `UPDATE feed_items SET seen_at = ? WHERE seen_at IS NULL AND video_id IN
+           (SELECT id FROM videos WHERE channel_id = ?)`,
+        )
+        .run(Date.now(), req.params.id);
+    })();
+    return reply.code(204).send();
+  });
+
   app.get<{ Querystring: { force?: string } }>(
     "/channels/recommendations",
     async (req, reply) => {
