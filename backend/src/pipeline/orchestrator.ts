@@ -184,7 +184,7 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
   // Billiger Vorfilter: fremdsprachige Titel (Devanagari, Thai, …) lehnt der
   // Scorer ohnehin ab — das braucht keinen LLM-Aufruf und spart bei
   // Empfehlungswellen Stunden.
-  const preReason = prefilterReason(meta.title, meta.description, filter);
+  const preReason = prefilterReason(meta.title, meta.description, filter, meta.defaultLanguage);
   if (preReason) {
     const now = Date.now();
     db.transaction(() => {

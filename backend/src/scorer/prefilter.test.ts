@@ -4,6 +4,20 @@ import { prefilterReason } from "./prefilter.js";
 
 const filter = { ...DEFAULT_FILTER, languages: ["de", "en"] };
 
+describe("prefilterReason — Sprachfeld", () => {
+  it("lehnt Videos ab, deren YouTube-Sprache nicht gewünscht ist", () => {
+    expect(prefilterReason("Latest Update Today", "", filter, "hi")).toMatch(/Sprache/);
+    expect(prefilterReason("Breaking News", "", filter, "ur")).toMatch(/Sprache/);
+    expect(prefilterReason("Anime Review", "", filter, "ja")).toMatch(/Sprache/);
+  });
+
+  it("lässt gewünschte Sprachen durch — auch mit Regionszusatz", () => {
+    expect(prefilterReason("Cool video about AI", "", filter, "en-US")).toBeNull();
+    expect(prefilterReason("Video über KI", "", filter, "de-DE")).toBeNull();
+    expect(prefilterReason("Ohne Sprachangabe", "", filter, null)).toBeNull();
+  });
+});
+
 describe("prefilterReason", () => {
   it("lehnt fremde Schriftsysteme ohne LLM-Aufruf ab", () => {
     expect(prefilterReason("Keralam में बारिश बनी आफत! #monsoon", "", filter)).toMatch(/Schrift/);

@@ -40,6 +40,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -191,7 +192,38 @@ fun ChannelsTab(
                         onClick = { onOpenChannel(channel.id) },
                         onLongClick = { unsubTarget = channel },
                         topEndBadge = {
-                            FollowPill(subscribed = true, onToggle = { unsubTarget = channel })
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                // Vertrauenskanal: Videos ohne KI-Pruefung sofort im Feed.
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (channel.autoApprove) HikariAmber.copy(alpha = 0.2f)
+                                            else Color.Black.copy(alpha = 0.45f),
+                                        )
+                                        .clickable {
+                                            vm.toggleTrusted(channel.id, !channel.autoApprove)
+                                        },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Star,
+                                        contentDescription = if (channel.autoApprove) {
+                                            "Vertrauenskanal aus"
+                                        } else {
+                                            "Vertrauenskanal an"
+                                        },
+                                        tint = if (channel.autoApprove) HikariAmber
+                                        else Color.White.copy(alpha = 0.55f),
+                                        modifier = Modifier.size(15.dp),
+                                    )
+                                }
+                                FollowPill(subscribed = true, onToggle = { unsubTarget = channel })
+                            }
                         },
                     )
                 }

@@ -85,6 +85,14 @@ class ChannelsViewModel @Inject constructor(
         _searchResults.value = emptyList()
     }
 
+    /** Vertrauenskanal: dessen Videos gehen ohne KI-Pruefung sofort in den Feed. */
+    fun toggleTrusted(channelId: String, trusted: Boolean) {
+        viewModelScope.launch {
+            runCatching { repo.setAutoApprove(channelId, trusted) }
+            load()
+        }
+    }
+
     fun load() = viewModelScope.launch {
         _busy.value = true
         runCatching { repo.listWithStats() }

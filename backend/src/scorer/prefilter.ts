@@ -31,15 +31,25 @@ export function prefilterReason(
   title: string,
   description: string,
   filter: FilterConfig,
+  videoLanguage?: string | null,
 ): string | null {
+  const allowedLangs = new Set(filter.languages.map((l) => l.toLowerCase()));
+  // YouTube nennt für viele Videos die Sprache — die genaueste und billigste
+  // Auskunft, die wir bekommen können.
+  if (videoLanguage) {
+    const base = videoLanguage.toLowerCase().split("-")[0] ?? "";
+    if (base && !allowedLangs.has(base)) {
+      return `Vorfilter: Sprache ${base} — gewünscht sind ${filter.languages.join(", ")}`;
+    }
+  }
+
   const text = `${title} ${description}`.trim();
   if (text.length === 0) return null;
   const letters = text.replace(/[^\p{L}]/gu, "");
   if (letters.length < 8) return null; // zu wenig Text für eine Aussage
 
-  const allowed = new Set(filter.languages.map((l) => l.toLowerCase()));
   for (const script of SCRIPTS) {
-    if (script.languages.some((l) => allowed.has(l))) continue;
+    if (script.languages.some((l) => allowedLangs.has(l))) continue;
     const hits = text.match(script.test)?.length ?? 0;
     if (hits / letters.length >= FOREIGN_SHARE) {
       return `Vorfilter: ${script.name}-Schrift — nicht in den gewünschten Sprachen (${filter.languages.join(", ")})`;
