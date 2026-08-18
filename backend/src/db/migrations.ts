@@ -137,4 +137,11 @@ export function applyMigrations(db: Database.Database): void {
      WHERE s.decision = 'approved'
        AND NOT EXISTS (SELECT 1 FROM feed_items f WHERE f.video_id = s.video_id)
   `);
+
+  // Etappe 3 (Discovery): Kanal-Status + Ingest-Quelle.
+  addColumnIfMissing(db, "channels", "is_active", "INTEGER DEFAULT 1"); // Ur-DB-Absicherung
+  addColumnIfMissing(db, "channels", "status", "TEXT"); // 'subscribed' | 'probe' | 'blocked'
+  addColumnIfMissing(db, "ingest_queue", "source", "TEXT"); // 'subscription' | 'probe' | 'topic' | 'backfill'
+  // Bestand: alle aktiven Kanaele sind Abos; inaktive bleiben statuslos (weiches Loeschen).
+  db.exec("UPDATE channels SET status = 'subscribed' WHERE status IS NULL AND is_active = 1");
 }

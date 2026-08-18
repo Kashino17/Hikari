@@ -146,6 +146,23 @@ describe("clipper migrations", () => {
     expect(() => insertClip.run("c-b", 0)).toThrow(/UNIQUE/);
   });
 
+  it("channels.status backfilled auf subscribed, ingest_queue hat source", () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    db.prepare(
+      "INSERT INTO channels (id,url,title,added_at,is_active) VALUES ('c1','x','c',0,1)",
+    ).run();
+    db.prepare("UPDATE channels SET status = NULL").run();
+    applyMigrations(db);
+    expect(db.prepare("SELECT status FROM channels WHERE id='c1'").get()).toEqual({
+      status: "subscribed",
+    });
+    const cols = (db.prepare("PRAGMA table_info(ingest_queue)").all() as { name: string }[]).map(
+      (c) => c.name,
+    );
+    expect(cols).toContain("source");
+  });
+
   it("backfillt feed_items für approvte Clip-Ära-Videos (seen erbt vom Clip)", () => {
     const db = new Database(":memory:");
     applyMigrations(db);

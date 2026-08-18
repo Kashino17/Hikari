@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS channels (
   subscribers INTEGER,
   thumbnail_url TEXT,
   banner_url TEXT,
-  auto_approve INTEGER DEFAULT 0
+  auto_approve INTEGER DEFAULT 0,
+  status TEXT   -- 'subscribed' | 'probe' | 'blocked'
 );
 
 CREATE TABLE IF NOT EXISTS videos (
@@ -277,7 +278,8 @@ CREATE TABLE IF NOT EXISTS ingest_queue (
   queued_at  INTEGER NOT NULL,
   attempts   INTEGER DEFAULT 0,
   last_error TEXT,
-  locked_at  INTEGER
+  locked_at  INTEGER,
+  source     TEXT   -- 'subscription' | 'probe' | 'topic' | 'backfill'
 );
 CREATE INDEX IF NOT EXISTS idx_ingest_queue_pending
   ON ingest_queue(queued_at) WHERE locked_at IS NULL;
