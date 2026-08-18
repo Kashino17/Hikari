@@ -278,6 +278,7 @@ function hydrateFeedBatch(db: Database.Database, rows: RawFeedRow[]): unknown[] 
              NULL AS startSec, NULL AS endSec,
              f.added_to_feed_at AS addedAt, f.saved, f.seen_at AS seenAt,
              v.summary AS summary,
+             v.source AS source,
              dv.file_path AS filePath
         FROM feed_items f
         JOIN videos v ON v.id = f.video_id
@@ -327,7 +328,7 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
            s.category, s.reasoning, s.overall_score as overallScore,
            s.educational_value as educationalValue,
            fi.added_to_feed_at as addedAt, fi.saved, fi.seen_at as seenAt,
-           v.summary AS summary
+           v.summary AS summary, v.source AS source
     FROM feed_items fi
     JOIN videos v ON v.id = fi.video_id
     JOIN channels c ON c.id = v.channel_id

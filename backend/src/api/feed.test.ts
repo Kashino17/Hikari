@@ -714,6 +714,20 @@ describe("GET /feed (new) — batched hydration", () => {
     expect(clip!.durationSeconds).toBe(76);
   });
 
+  it("liefert source im Feed-Item durch", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    seedFeedItem(db, "src-v", Date.now());
+    db.prepare("UPDATE videos SET source = 'probe' WHERE id = 'src-v'").run();
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+    const body = (await app.inject({ method: "GET", url: "/feed?mode=new" })).json() as {
+      videoId: string;
+      source: string;
+    }[];
+    expect(body.find((x) => x.videoId === "src-v")?.source).toBe("probe");
+  });
+
   it("returns an empty array when nothing is unseen", async () => {
     const db = new Database(":memory:");
     applyMigrations(db);
