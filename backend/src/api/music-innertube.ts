@@ -934,12 +934,15 @@ async function webBrowse(fetchImpl: typeof fetch, payload: Dict): Promise<unknow
 
 // Nur-Videos-Filter der YouTube-Suche (base64-Protobuf, empirisch verifiziert 2026-08).
 const WEB_VIDEO_SEARCH_PARAMS = "EgIQAQ%3D%3D";
+// Videos unter 4 Minuten — Kurzform-Nachschub für den Feed.
+const WEB_SHORT_SEARCH_PARAMS = "EgQQARgB";
 
 /** Video-IDs der YouTube-Suche — für die Themen-Discovery (likeTags → Kandidaten). */
 export async function itVideoSearch(
   fetchImpl: typeof fetch,
   query: string,
   max = 20,
+  shortOnly = false,
 ): Promise<string[] | undefined> {
   try {
     const res = await fetchImpl(`${WEB_BASE}/search?prettyPrint=false`, {
@@ -949,7 +952,11 @@ export async function itVideoSearch(
         origin: "https://www.youtube.com",
         "user-agent": WEB_UA,
       },
-      body: JSON.stringify({ context: WEB_CONTEXT, query, params: WEB_VIDEO_SEARCH_PARAMS }),
+      body: JSON.stringify({
+        context: WEB_CONTEXT,
+        query,
+        params: shortOnly ? WEB_SHORT_SEARCH_PARAMS : WEB_VIDEO_SEARCH_PARAMS,
+      }),
       signal: AbortSignal.timeout(IT_TIMEOUT_MS),
     });
     if (!res.ok) return undefined;

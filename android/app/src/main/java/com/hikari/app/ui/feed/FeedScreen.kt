@@ -183,7 +183,7 @@ fun FeedScreen(
     Box(Modifier.fillMaxSize().background(HikariBg)) {
         PullToRefreshBox(
             isRefreshing = refreshing,
-            onRefresh = { vm.refresh() },
+            onRefresh = { vm.refresh(pull = true) },
             modifier = Modifier.fillMaxSize(),
         ) {
             if (items.isEmpty()) {

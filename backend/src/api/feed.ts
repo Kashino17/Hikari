@@ -356,7 +356,15 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
     LEFT JOIN downloaded_videos dv ON dv.video_id = fi.video_id
   `;
 
-  app.get<{ Querystring: { mode?: string; rotation?: string; offset?: string; limit?: string } }>(
+  app.get<{
+    Querystring: {
+      mode?: string;
+      rotation?: string;
+      offset?: string;
+      limit?: string;
+      refresh?: string;
+    };
+  }>(
     "/feed",
     async (req, reply) => {
     const mode = (req.query.mode ?? "new") as "new" | "saved" | "old";
@@ -383,8 +391,10 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
            LIMIT ? OFFSET ?`,
         )
         .all(mixDate, limit, offset) as { id: string }[];
-      // Geht der Vorrat zur Neige, sofort neue Kandidaten suchen lassen.
-      if (unseenMixCount(deps.db, mixDate) < LOW_STOCK_THRESHOLD) deps.onLowStock?.();
+      // Nach-oben-Ziehen (refresh=1) heißt "gib mir Neues" — dann immer suchen;
+      // sonst nur, wenn der Vorrat zur Neige geht.
+      const forced = req.query.refresh === "1" || req.query.refresh === "true";
+      if (forced || unseenMixCount(deps.db, mixDate) < LOW_STOCK_THRESHOLD) deps.onLowStock?.();
       // Die nächsten Videos vorwärmen, bevor der Player sie anfragt.
       deps.prefetchStreams?.(mixRows.map((r) => r.id));
       return hydrateFeedBatch(deps.db, mixRows as RawFeedRow[]);

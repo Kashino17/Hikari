@@ -35,8 +35,14 @@ class FeedRepository @Inject constructor(
     fun newItems(): Flow<List<FeedItem>> =
         dao.newItems().map { rows -> rows.map { it.toDomain() } }
 
-    suspend fun refresh() {
-        val remote = api.getFeed(mode = "new", offset = 0, limit = PAGE_SIZE)
+    /** [pull] = per Geste ausgelöst: der Server sucht dann aktiv neue Inhalte. */
+    suspend fun refresh(pull: Boolean = false) {
+        val remote = api.getFeed(
+            mode = "new",
+            offset = 0,
+            limit = PAGE_SIZE,
+            refresh = if (pull) 1 else null,
+        )
         // Stamp each item with its server-curated position so the DAO renders
         // in the backend's interleaved/variety order, not re-sorted by addedAt.
         dao.upsertAll(remote.mapIndexed { index, dto -> dto.toEntity(index) })

@@ -16,7 +16,12 @@ const BASELINE_MAX_CLICKBAIT = 4;
 const BASELINE_MAX_MANIPULATION = 3;
 
 /** Decision thresholds for a (resolved, per-channel or global) filter. */
-function thresholdsForFilter(filter: FilterConfig): Thresholds {
+/** Kurzform-Hinweis für den Scorer — Mindestdauer-Regeln gelten für Shorts nicht. */
+export const SHORTS_PROMPT_HINT =
+  "\n\nHINWEIS: Dieses Video ist ein natives YouTube-Short (Hochkant-Kurzform, max. 3 Minuten). " +
+  "Mindestdauer-Regeln gelten hier NICHT — bewerte ausschließlich Inhalt, Clickbait-Risiko und Manipulation.";
+
+export function thresholdsForFilter(filter: FilterConfig): Thresholds {
   return {
     minOverall: filter.scoreThreshold,
     maxClickbait: BASELINE_MAX_CLICKBAIT,
@@ -153,7 +158,7 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
   // rejected der Scorer jedes native Short pauschal als "zu kurz".
   const systemPrompt =
     format === "short"
-      ? `${basePrompt}\n\nHINWEIS: Dieses Video ist ein natives YouTube-Short (Hochkant-Kurzform, max. 3 Minuten). Mindestdauer-Regeln gelten hier NICHT — bewerte ausschließlich Inhalt, Clickbait-Risiko und Manipulation.`
+      ? `${basePrompt}${SHORTS_PROMPT_HINT}`
       : basePrompt;
   const [scored, sponsors] = await Promise.all([
     deps.scorer.score({

@@ -16,8 +16,8 @@ function seedFeedItem(
     "INSERT OR IGNORE INTO channels (id, url, title, added_at) VALUES ('UC1','x','c',0)",
   ).run();
   db.prepare(
-    `INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at)
-     VALUES (?, 'UC1', ?, 0, 60, 0)`,
+    `INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at, format)
+     VALUES (?, 'UC1', ?, 0, 60, 0, 'short')`,
   ).run(id, `t-${id}`);
   db.prepare(
     `INSERT INTO scores (video_id, overall_score, category, clickbait_risk, educational_value,
@@ -668,7 +668,7 @@ describe("GET /feed (new) — batched hydration", () => {
     applyMigrations(db);
     seedClip(db, "h-clip", "h-parent"); // ungesehener Clip — darf nicht auftauchen
     seedFeedItem(db, "h-video", Date.now());
-    db.prepare("UPDATE videos SET summary = 'Ein Teaser.' WHERE id = 'h-video'").run();
+    db.prepare("UPDATE videos SET summary = 'Ein Teaser.', format = 'long' WHERE id = 'h-video'").run();
 
     const app = Fastify();
     await registerFeedRoutes(app, { db, dailyBudget: 15 });
@@ -686,6 +686,7 @@ describe("GET /feed (new) — batched hydration", () => {
     const db = new Database(":memory:");
     applyMigrations(db);
     seedFeedItem(db, "nodl", Date.now());
+    db.prepare("UPDATE videos SET format = 'long' WHERE id = 'nodl'").run();
     db.prepare("DELETE FROM downloaded_videos WHERE video_id = 'nodl'").run();
 
     const app = Fastify();

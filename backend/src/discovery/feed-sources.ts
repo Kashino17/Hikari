@@ -8,7 +8,8 @@ import { getFilterState } from "../scorer/filter-repo.js";
 // fluten — der Scorer bleibt der Türsteher, die Mengen bleiben überschaubar.
 const PROBE_POOL_MAX = 15; // gleichzeitig geführte Probe-Kanäle
 const PROBE_PER_CYCLE = 8; // neue Videos je Probe-Kanal je Lauf
-const TOPIC_PER_TAG = 15; // neue Videos je likeTag je Lauf
+const TOPIC_PER_TAG = 5; // neue Langvideos je likeTag je Lauf
+const TOPIC_SHORTS_PER_TAG = 20; // neue Kurzvideos je likeTag je Lauf
 const BACKFILL_MAX = 40; // Backfill-Videos gesamt je Lauf
 // Bis zu diesem Vorrat an ungesehenen Videos wird nachgefüllt.
 const BACKFILL_UNTIL_UNSEEN = 120;
@@ -95,15 +96,24 @@ export async function runDiscoveryCycle(
          VALUES (?, '', 'Themen-Entdeckung', ?, 0, 'probe')`,
       ).run(TOPICS_CHANNEL_ID, Date.now());
       for (const tag of tags) {
-        const ids = (await videoSearch(fetch, tag, 20)) ?? [];
-        let quota = TOPIC_PER_TAG;
-        for (const id of ids) {
-          if (quota <= 0) break;
+        // Kurzform zuerst: der Feed lebt von Shorts, Langvideos sind die Würze.
+        const shortIds = (await videoSearch(fetch, tag, 25, true)) ?? [];
+        const longIds = (await videoSearch(fetch, tag, 10)) ?? [];
+        let shortQuota = TOPIC_SHORTS_PER_TAG;
+        let longQuota = TOPIC_PER_TAG;
+        for (const id of shortIds) {
+          if (shortQuota <= 0) break;
           if (isKnownVideo.get(id)) continue;
           // Der echte Uploader-Kanal ist aus der Suche nicht bekannt — die
           // Items laufen unter dem Pseudo-Kanal (Anzeige: "Themen-Entdeckung").
           enqueueIngest(db, id, TOPICS_CHANNEL_ID, "topic");
-          quota--;
+          shortQuota--;
+        }
+        for (const id of longIds) {
+          if (longQuota <= 0) break;
+          if (isKnownVideo.get(id)) continue;
+          enqueueIngest(db, id, TOPICS_CHANNEL_ID, "topic");
+          longQuota--;
         }
       }
     }
@@ -128,8 +138,10 @@ export async function runDiscoveryCycle(
       let quota = BACKFILL_MAX;
       for (const ch of subscribed) {
         if (quota <= 0) break;
-        const ids = ((await channelVideos(fetch, ch.id)) ?? []).map((t) => t.videoId);
-        for (const id of ids) {
+        // Shorts zuerst: abonnierte Kanäle sind die beste Kurzform-Quelle.
+        const shortIds = (await channelShorts(fetch, ch.id)) ?? [];
+        const videoIds = ((await channelVideos(fetch, ch.id)) ?? []).map((t) => t.videoId);
+        for (const id of [...shortIds, ...videoIds]) {
           if (quota <= 0) break;
           if (isKnownVideo.get(id)) continue;
           enqueueIngest(db, id, ch.id, "backfill");

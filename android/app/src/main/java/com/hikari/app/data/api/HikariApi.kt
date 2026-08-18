@@ -161,6 +161,7 @@ interface HikariApi {
         @Query("mode") mode: String = "new",
         @Query("offset") offset: Int? = null,
         @Query("limit") limit: Int? = null,
+        @Query("refresh") refresh: Int? = null,
     ): List<FeedItemDto>
 
     @POST("feed/{id}/seen")

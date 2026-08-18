@@ -74,7 +74,7 @@ describe("daily-mix", () => {
     expect(order).toEqual(["s-abo", "p-probe", "t-topic"]);
   });
 
-  it("Rhythmus: nach 3 Shorts kommt ein Langvideo", () => {
+  it("Rhythmus: nach 6 Shorts kommt ein Langvideo", () => {
     for (let i = 0; i < 8; i++) seed(db, `sh${i}`, { dur: 30, format: "short" });
     seed(db, "long1", { dur: 600, format: "long" });
     buildDailyMix(db, NOW);
@@ -83,7 +83,7 @@ describe("daily-mix", () => {
         video_id: string;
       }[]
     ).map((r) => r.video_id);
-    expect(order.indexOf("long1")).toBe(3); // Position 3 = nach 3 Shorts
+    expect(order.indexOf("long1")).toBe(6); // Position 6 = nach 6 Shorts
   });
 
   it("auch lange Videos kommen in den Feed — nichts wird wegen Dauer verworfen", () => {

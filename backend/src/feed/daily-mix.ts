@@ -6,9 +6,16 @@ const BUDGET_MIN = 10;
 const BUDGET_MAX = 240;
 const BUDGET_DEFAULT = 45;
 
-// Rhythmus des Mixes: nach je 3 Shorts eine Langvideo-Karte — Langform ist
-// gleichberechtigter Teil des Feeds, kein seltener Gast.
-const SHORTS_PER_LONG = 3;
+// Rhythmus: der Feed ist ein Kurzform-Feed — nach je 6 Shorts kommt eine
+// Langvideo-Karte als Abwechslung, nicht als Hauptgang.
+const SHORTS_PER_LONG = 6;
+// Höchstanteil Langvideos, SOLANGE Shorts verfügbar sind. Ohne Deckel füllt
+// sich der Feed mit Langform, sobald die Shorts ausgehen — und fühlt sich
+// falsch an.
+const MAX_LONG_SHARE = 0.25;
+// Gibt es gerade gar keine Shorts, füllen Langvideos auf — aber nur bis hier,
+// damit der Feed nicht zur Langform-Liste wird. Discovery zieht Shorts nach.
+const LONG_ONLY_TARGET = 12;
 // Vorrat an ungesehenen Items, den der Feed bereithält. Kein Zeitdeckel mehr:
 // der Feed ist unendlich, seine Qualität kommt aus dem Filter, nicht aus einer
 // künstlichen Bremse. Das Zeitbudget bleibt reine Anzeige ("heute geschaut").
@@ -97,6 +104,21 @@ function unseenSeconds(db: Database.Database, mixDate: string): number {
   ).s;
 }
 
+/** Wie viele Langvideos schon im heutigen Mix liegen (für den Anteils-Deckel). */
+function existingLongCount(db: Database.Database, mixDate: string): number {
+  return (
+    db
+      .prepare(
+        `SELECT COUNT(*) AS c FROM daily_mix_items m
+           JOIN videos v ON v.id = m.video_id
+           JOIN feed_items f ON f.video_id = m.video_id
+          WHERE m.mix_date = ? AND v.format = 'long'
+            AND f.seen_at IS NULL AND f.playback_failed = 0`,
+      )
+      .get(mixDate) as { c: number }
+  ).c;
+}
+
 /** Anzahl der ungesehenen Items im heutigen Mix. */
 export function unseenMixCount(db: Database.Database, mixDate: string): number {
   return (
@@ -172,14 +194,23 @@ export function buildDailyMix(db: Database.Database, now: number = Date.now()): 
   // laesst den anderen weiterlaufen.
   let shortRun = 0;
   let added = 0;
+  let longCount = existingLongCount(db, mixDate);
   while (count < FEED_TARGET_UNSEEN && (shorts.length > 0 || longs.length > 0)) {
+    // Langvideos nur bis zum Höchstanteil — lieber ein kleinerer Mix als ein
+    // Feed, der zur Langform-Liste wird. Ohne Shorts im Pool füllen sie bis
+    // LONG_ONLY_TARGET auf, damit nie Leere entsteht.
+    const longAllowed =
+      shorts.length > 0
+        ? longCount < Math.ceil((count + 1) * MAX_LONG_SHARE)
+        : count < LONG_ONLY_TARGET;
     let next: MixCandidate | undefined;
-    if (shorts.length > 0 && (shortRun < SHORTS_PER_LONG || longs.length === 0)) {
+    if (shorts.length > 0 && (shortRun < SHORTS_PER_LONG || longs.length === 0 || !longAllowed)) {
       next = shorts.shift();
       shortRun++;
-    } else if (longs.length > 0) {
+    } else if (longs.length > 0 && longAllowed) {
       next = longs.shift();
       shortRun = 0;
+      longCount++;
     }
     if (!next) break;
     position++;

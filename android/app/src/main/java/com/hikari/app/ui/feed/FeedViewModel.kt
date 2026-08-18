@@ -94,12 +94,12 @@ class FeedViewModel @Inject constructor(
 
     init { refresh() }
 
-    fun refresh() = viewModelScope.launch {
+    fun refresh(pull: Boolean = false) = viewModelScope.launch {
         _refreshing.value = true
         when (_mode.value) {
             FeedMode.NEW -> {
                 runCatching {
-                    repo.refresh()
+                    repo.refresh(pull)
                     _today.value = repo.todayCount()
                 }.onSuccess {
                     _error.value = null

@@ -37,6 +37,7 @@ import { fetchTranscript } from "./ingest/transcript.js";
 import { fetchChannelFeedConditional } from "./monitor/rss-poller.js";
 import { computePollIntervalMs, isChannelDue } from "./monitor/cadence.js";
 import { processNewVideo } from "./pipeline/orchestrator.js";
+import { rescoreLegacyShorts } from "./pipeline/rescore-shorts.js";
 import {
   enqueueIngest,
   claimNextIngest,
@@ -288,6 +289,8 @@ cron.schedule("15 */2 * * *", () => {
 // (attempts++) until the dead-letter cap, never blocking the rest.
 let isDraining = false;
 const DRAIN_BATCH = 20;
+// So viele ungesehene Shorts soll der Feed mindestens vorrätig haben.
+const SHORT_STOCK_TARGET = 60;
 // Nach einem transienten Infra-Fehler (Scorer-LLM aus) pausiert der Drain:
 // sonst wiederholt jede Minute derselbe Job seinen yt-dlp-Metadaten-Fetch —
 // Log-Spam und unnoetige YouTube-Requests von der Mac-IP (Rate-Limit-Risiko).
@@ -339,12 +342,37 @@ async function drainIngestQueue(): Promise<void> {
   } finally {
     isDraining = false;
   }
-  // Frisch approvte Videos sofort in den Tagesmix aufnehmen (budgetbegrenzt).
+  // Frisch approvte Videos sofort in den Tagesmix aufnehmen.
   if (processedAny) {
     try {
       buildDailyMix(db);
     } catch {
       // best-effort — der 6-Uhr-Cron und der lazy Build fangen es auf
+    }
+  }
+
+  // Läuft gerade kein Ingest, arbeitet der Scorer den Short-Rückstand ab:
+  // vor dem Kurzform-Hinweis fielen native Shorts pauschal durch. Nur bei
+  // knappem Short-Vorrat, damit der Feed shortslastig bleibt.
+  if (!processedAny) {
+    const shortStock = (
+      db
+        .prepare(
+          `SELECT COUNT(*) AS c FROM feed_items f JOIN videos v ON v.id = f.video_id
+            WHERE f.seen_at IS NULL AND f.playback_failed = 0 AND v.format = 'short'`,
+        )
+        .get() as { c: number }
+    ).c;
+    if (shortStock < SHORT_STOCK_TARGET) {
+      try {
+        const n = await rescoreLegacyShorts({ db, scorer, limit: 6 });
+        if (n > 0) {
+          app.log.info({ approved: n }, "legacy shorts rescored");
+          buildDailyMix(db);
+        }
+      } catch (err) {
+        app.log.warn({ err }, "short rescore failed");
+      }
     }
   }
 }
