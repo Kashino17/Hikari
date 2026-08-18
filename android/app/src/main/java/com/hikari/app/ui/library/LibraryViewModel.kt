@@ -93,6 +93,13 @@ class LibraryViewModel @Inject constructor(
     private val _queueItems = MutableStateFlow<List<FeedItem>>(emptyList())
     val queueItems: StateFlow<List<FeedItem>> = _queueItems.asStateFlow()
 
+    // Etappe 5: die Sammlung — Später ansehen + Verlauf.
+    private val _watchLater = MutableStateFlow<List<FeedItem>>(emptyList())
+    val watchLater: StateFlow<List<FeedItem>> = _watchLater.asStateFlow()
+
+    private val _history = MutableStateFlow<List<FeedItem>>(emptyList())
+    val history: StateFlow<List<FeedItem>> = _history.asStateFlow()
+
     init {
         loadLibrary()
         observeConnectivity()
@@ -174,6 +181,21 @@ class LibraryViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { repo.fetchQueue() }
                 .onSuccess { _queueItems.value = it.distinctBy { item -> item.videoId } }
+        }
+        viewModelScope.launch {
+            runCatching { repo.fetchWatchLater() }
+                .onSuccess { _watchLater.value = it.distinctBy { item -> item.videoId } }
+        }
+        viewModelScope.launch {
+            runCatching { repo.fetchOld() }
+                .onSuccess { _history.value = it.distinctBy { item -> item.videoId } }
+        }
+    }
+
+    fun removeWatchLater(videoId: String) {
+        viewModelScope.launch {
+            repo.removeWatchLater(videoId)
+            _watchLater.value = _watchLater.value.filter { it.videoId != videoId }
         }
     }
 

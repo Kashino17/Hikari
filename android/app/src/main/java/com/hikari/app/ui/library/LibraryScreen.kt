@@ -51,6 +51,7 @@ import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.ChannelDto
 import com.hikari.app.data.api.dto.LibraryResponse
 import com.hikari.app.data.api.dto.LibraryVideoDto
+import com.hikari.app.domain.model.FeedItem
 import com.hikari.app.data.api.dto.SeriesDto
 import com.hikari.app.ui.library.components.CoverEditSheet
 import com.hikari.app.ui.theme.HikariAmber
@@ -69,6 +70,9 @@ fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+    val watchLater by viewModel.watchLater.collectAsState()
+    val savedItems by viewModel.savedItems.collectAsState()
+    val history by viewModel.history.collectAsState()
     val coverEdit by viewModel.coverEditState.collectAsState()
     var editingSeries by remember { mutableStateOf<SeriesDto?>(null) }
 
@@ -102,6 +106,10 @@ fun LibraryScreen(
                 onOpenChannel = onOpenChannel,
                 onPlayVideo = onPlayVideo,
                 onLongPressSeries = { editingSeries = it },
+                watchLater = watchLater,
+                saved = savedItems,
+                history = history,
+                onRemoveWatchLater = { viewModel.removeWatchLater(it) },
             )
         }
     }
@@ -131,6 +139,10 @@ private fun LibraryContent(
     onOpenChannel: (String) -> Unit,
     onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
     onLongPressSeries: (SeriesDto) -> Unit,
+    watchLater: List<FeedItem> = emptyList(),
+    saved: List<FeedItem> = emptyList(),
+    history: List<FeedItem> = emptyList(),
+    onRemoveWatchLater: (String) -> Unit = {},
 ) {
     fun play(v: LibraryVideoDto) = onPlayVideo(v.id, v.title, v.channelTitle ?: "")
 
@@ -151,6 +163,63 @@ private fun LibraryContent(
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item { HeroSection(video = heroVideo, onPlay = ::play) }
+
+        // ── Deine Sammlung (Etappe 5) ────────────────────────────────────────
+        if (watchLater.isNotEmpty()) {
+            item {
+                SectionHeader("Später ansehen", count = watchLater.size)
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(watchLater, key = { it.videoId }) { fi ->
+                        CollectionCard(
+                            item = fi,
+                            onPlay = {
+                                onRemoveWatchLater(fi.videoId)
+                                onPlayVideo(fi.videoId, fi.title, fi.channelTitle)
+                            },
+                            onRemove = { onRemoveWatchLater(fi.videoId) },
+                        )
+                    }
+                }
+                Spacer(Modifier.height(28.dp))
+            }
+        }
+        if (saved.isNotEmpty()) {
+            item {
+                SectionHeader("Gespeichert", count = saved.size)
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(saved, key = { it.videoId }) { fi ->
+                        CollectionCard(
+                            item = fi,
+                            onPlay = { onPlayVideo(fi.videoId, fi.title, fi.channelTitle) },
+                        )
+                    }
+                }
+                Spacer(Modifier.height(28.dp))
+            }
+        }
+        if (history.isNotEmpty()) {
+            item {
+                SectionHeader("Verlauf", count = history.size)
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(history, key = { it.videoId }) { fi ->
+                        CollectionCard(
+                            item = fi,
+                            onPlay = { onPlayVideo(fi.videoId, fi.title, fi.channelTitle) },
+                        )
+                    }
+                }
+                Spacer(Modifier.height(28.dp))
+            }
+        }
 
         if (continueWatching.isNotEmpty()) {
             item {
@@ -723,6 +792,60 @@ private fun ChannelCircle(channel: ChannelDto, onClick: () -> Unit) {
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 6.dp),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun CollectionCard(item: FeedItem, onPlay: () -> Unit, onRemove: (() -> Unit)? = null) {
+    Column(
+        modifier = Modifier
+            .width(200.dp)
+            .combinedClickable(onClick = onPlay, onLongClick = onRemove),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(6.dp))
+                .background(HikariSurface),
+        ) {
+            AsyncImage(
+                model = item.thumbnailUrl,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+            Text(
+                "${item.durationSeconds / 60}:${"%02d".format(item.durationSeconds % 60)}",
+                color = Color.White,
+                fontSize = 10.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(5.dp)
+                    .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(3.dp))
+                    .padding(horizontal = 5.dp, vertical = 2.dp),
+            )
+        }
+        Text(
+            text = item.title,
+            color = HikariText,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            lineHeight = 14.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 6.dp),
+        )
+        Text(
+            text = item.channelTitle,
+            color = HikariTextFaint,
+            fontSize = 10.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }

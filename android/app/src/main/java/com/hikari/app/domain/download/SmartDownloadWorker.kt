@@ -44,12 +44,19 @@ class SmartDownloadWorker @AssistedInject constructor(
         // reserved for genuinely-transient cases where a sooner re-attempt
         // actually helps.
         val saved = runCatching { feedRepo.fetchSaved() }.getOrNull() ?: return Result.success()
+        val watchLater = runCatching { feedRepo.fetchWatchLater() }.getOrDefault(emptyList())
+        val candidates = (saved + watchLater).distinctBy { it.videoId }
 
         var queued = 0
-        for (item in saved) {
+        for (item in candidates) {
             if (queued >= MAX_PER_FIRE) break
             if (localDownloads.isDownloaded(item.videoId)) continue
-            // Smart-Downloads ziehen "Saved"-Feed-Items — die haben Channel-Bezug,
+            // Streaming-Welt (Etappe 5): der Server hat die Datei meist NICHT
+            // mehr — erst on demand anstossen. "ready" → sofort ziehen;
+            // "queued" → der Server laedt gerade, der naechste 6-h-Lauf zieht;
+            // null → Netzfehler, skip.
+            if (feedRepo.requestServerDownload(item.videoId) != "ready") continue
+            // Smart-Downloads ziehen Saved+Später-Items — die haben Channel-Bezug,
             // aber keinen Series-Kontext. Daher CHANNEL als kind.
             val res = localDownloads.download(
                 LocalDownloadMetadata(
