@@ -18,6 +18,9 @@ const VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
 const STREAM_CACHE_TTL_MS = 5 * 60 * 60 * 1000;
 // Debounce für die Cache-Persistenz: bündelt Schreibzugriffe statt pro Request.
 const CACHE_SAVE_DEBOUNCE_MS = 5000;
+// So viele Videos werden pro Aufruf vorgewärmt (der Feed reicht die nächsten
+// Items durch; mehr bringt nichts, die URLs leben ohnehin nur ~5 h).
+const PREFETCH_MAX = 8;
 // Muxed MP4 (Video+Audio in einer Datei), NUR progressives HTTPS: ohne
 // [protocol=https] löst yt-dlp gern HLS-Manifeste (m3u8) auf, deren
 // googlevideo-Segmente vom Handy aus nicht abspielbar sind. Format 18 ist
@@ -42,7 +45,13 @@ export interface StreamDeps {
  * auf und proxied die Bytes — Videos sind damit sofort nach der Freigabe
  * anschaubar, ohne dass der Server sie herunterladen muss (Spec Etappe 1).
  */
-export function registerStreamRoutes(app: FastifyInstance, deps: StreamDeps = {}): void {
+/** Serielle Vorauflösung: wärmt Stream-URLs, bevor der Player sie braucht. */
+export type PrefetchStreams = (videoIds: string[]) => void;
+
+export function registerStreamRoutes(
+  app: FastifyInstance,
+  deps: StreamDeps = {},
+): PrefetchStreams {
   const ytDlp = deps.ytDlp ?? runYtDlp;
   const now = deps.now ?? Date.now;
   const cache = loadStreamCache(deps.streamCachePath, STREAM_CACHE_TTL_MS);
@@ -104,6 +113,36 @@ export function registerStreamRoutes(app: FastifyInstance, deps: StreamDeps = {}
     return dedupInflight(inflight, videoId, () => extract(videoId));
   };
 
+  // Vorauflösung: ohne sie kostet JEDES noch nicht angefragte Video 5–11 s
+  // yt-dlp-Lauf, bevor das erste Byte fließt — im Feed sieht das aus, als würde
+  // ab dem ersten kalten Video "nichts mehr laden". Seriell, damit nicht fünf
+  // yt-dlp-Prozesse gleichzeitig auf YouTube losgehen.
+  const prefetchQueue: string[] = [];
+  let prefetchRunning = false;
+  const drainPrefetch = async (): Promise<void> => {
+    if (prefetchRunning) return;
+    prefetchRunning = true;
+    try {
+      while (prefetchQueue.length > 0) {
+        const id = prefetchQueue.shift();
+        if (!id) continue;
+        if (cacheGet(cache, id, STREAM_CACHE_TTL_MS, now())) continue;
+        await resolve(id, false).catch(() => undefined);
+      }
+    } finally {
+      prefetchRunning = false;
+    }
+  };
+  const prefetch: PrefetchStreams = (videoIds) => {
+    for (const id of videoIds.slice(0, PREFETCH_MAX)) {
+      if (!VIDEO_ID_RE.test(id)) continue;
+      if (cacheGet(cache, id, STREAM_CACHE_TTL_MS, now())) continue;
+      if (prefetchQueue.includes(id)) continue;
+      prefetchQueue.push(id);
+    }
+    void drainPrefetch();
+  };
+
   // Wellen-Brecher (Defense-in-Depth zum -4-Fix): schlagen ≥3 verschiedene
   // Videos binnen 30 s upstream fehl, drosselt googlevideo gerade — dann 60 s
   // lang sofort 503 statt weiterer Auflösungen, die die Drossel füttern.
@@ -148,4 +187,6 @@ export function registerStreamRoutes(app: FastifyInstance, deps: StreamDeps = {}
     if (reply.statusCode === 502) noteUpstreamFail(videoId);
     return out;
   });
+
+  return prefetch;
 }

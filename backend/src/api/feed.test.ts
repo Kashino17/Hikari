@@ -577,23 +577,36 @@ describe("GET /feed/today-count — Zeitbudget", () => {
     expect(body.capped).toBe(false);
   });
 
-  it("capped=true sobald die Mix-Dauer das Zeitbudget erreicht", async () => {
+  it("capped=true erst, wenn das Tagesbudget wirklich GESCHAUT wurde", async () => {
     const db = new Database(":memory:");
     applyMigrations(db);
 
     seedFeedItem(db, "tc2-v1", Date.now());
-    // Budget-Minimum ist 10 min — das Video auf 700s aufblasen, damit es capped.
     db.prepare("UPDATE videos SET duration_seconds = 700 WHERE id = 'tc2-v1'").run();
 
     const app = Fastify();
     await registerFeedRoutes(app, { db, dailyBudget: 2 });
     await app.inject({ method: "PUT", url: "/feed/budget", payload: { minutes: 10 } });
-    await app.inject({ method: "GET", url: "/feed?mode=new" }); // baut den Mix (700s > 600s)
+    await app.inject({ method: "GET", url: "/feed?mode=new" }); // baut den Mix
 
-    const res = await app.inject({ method: "GET", url: "/feed/today-count" });
-    const body = res.json() as { unseenCount: number; capped: boolean };
-    expect(body.unseenCount).toBe(1);
-    expect(body.capped).toBe(true);
+    // Im Feed liegen 700s — aber ungeschaut zählt nichts gegen das Budget.
+    const vorher = (await app.inject({ method: "GET", url: "/feed/today-count" })).json() as {
+      capped: boolean;
+    };
+    expect(vorher.capped).toBe(false);
+
+    // Jetzt 700s wirklich abgespielt ⇒ Budget (600s) überschritten.
+    await app.inject({
+      method: "PUT",
+      url: "/feed/tc2-v1/progress",
+      payload: { seconds: 700 },
+    });
+    const nachher = (await app.inject({ method: "GET", url: "/feed/today-count" })).json() as {
+      capped: boolean;
+      consumedSeconds: number;
+    };
+    expect(nachher.consumedSeconds).toBe(700);
+    expect(nachher.capped).toBe(true);
   });
 });
 
@@ -747,7 +760,9 @@ describe("GET /feed (new) — batched hydration", () => {
       number | boolean
     >;
     expect(body.budgetMinutes).toBe(45);
-    expect(body.remainingSeconds).toBe(60); // Seed-Video hat 60s
+    // Noch nichts geschaut ⇒ das volle Tagesbudget steht zur Verfügung.
+    expect(body.remainingSeconds).toBe(2700);
+    expect(body.consumedSeconds).toBe(0);
     expect(body.unseenCount).toBe(1);
   });
 
@@ -768,6 +783,22 @@ describe("GET /feed (new) — batched hydration", () => {
       (await app.inject({ method: "PUT", url: "/feed/budget", payload: { minutes: "x" } }))
         .statusCode,
     ).toBe(400);
+  });
+
+  it("wärmt die Stream-URLs des Tagesmixes vor", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    seedFeedItem(db, "pf1", Date.now());
+    seedFeedItem(db, "pf2", Date.now() - 1000);
+    const prefetched: string[][] = [];
+    const app = Fastify();
+    await registerFeedRoutes(app, {
+      db,
+      dailyBudget: 15,
+      prefetchStreams: (ids) => prefetched.push(ids),
+    });
+    await app.inject({ method: "GET", url: "/feed?mode=new" });
+    expect(prefetched[0]).toEqual(expect.arrayContaining(["pf1", "pf2"]));
   });
 
   it("liefert source im Feed-Item durch", async () => {

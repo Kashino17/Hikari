@@ -136,7 +136,11 @@ await registerChannelsRoutes(app, {
   clipperEnabled: cfg.clipper.enabled,
   summarize: summarizeForFeed,
 });
-await registerFeedRoutes(app, { db, dailyBudget: cfg.dailyBudget });
+const prefetchStreams = registerStreamRoutes(app, {
+  streamCachePath: join(cfg.dataDir, "video-stream-cache.json"),
+  videoDir: cfg.videoDir,
+});
+await registerFeedRoutes(app, { db, dailyBudget: cfg.dailyBudget, prefetchStreams });
 await registerWatchLaterRoutes(app, { db });
 await registerFilterRoutes(app, { db });
 await registerDiscoverySettingsRoutes(app, { db });
@@ -147,10 +151,7 @@ await registerVideosRoutes(app, { db, videoDir: cfg.videoDir, coverDir: cfg.cove
 await registerDownloadsRoutes(app, { db, diskLimitBytes: cfg.diskLimitBytes });
 await registerMangaRoutes(app, { db, mangaDir: cfg.mangaDir });
 await registerMusicRoutes(app, { streamCachePath: join(cfg.dataDir, "music-stream-cache.json") });
-registerStreamRoutes(app, {
-  streamCachePath: join(cfg.dataDir, "video-stream-cache.json"),
-  videoDir: cfg.videoDir,
-});
+
 await registerNewsRoutes(app, { db, cfg });
 registerClipperStatusRoutes(app, db, {
   startHour: cfg.clipper.scheduleStartHour,

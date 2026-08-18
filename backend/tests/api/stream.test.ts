@@ -36,6 +36,32 @@ test("löst per yt-dlp auf, proxied mit Range und cached die URL (1x yt-dlp für
   expect(calls).toBe(1);
 });
 
+test("prefetch löst URLs seriell im Voraus auf und überspringt Cache-Treffer", async () => {
+  const resolved: string[] = [];
+  const ytDlp = (async (args: string[]) => {
+    const url = args[args.length - 1] ?? "";
+    resolved.push(url.split("v=")[1] ?? "");
+    return { stdout: "https://gv/video\n", stderr: "" };
+  }) as StreamDeps["ytDlp"];
+  const app = Fastify();
+  const prefetch = registerStreamRoutes(app, { ytDlp, fetchImpl: okFetch, retryDelaysMs: [] });
+
+  prefetch(["aaaaaaaaaaa", "bbbbbbbbbbb", "nix"]);
+  await new Promise((r) => setTimeout(r, 50));
+  expect(resolved).toEqual(["aaaaaaaaaaa", "bbbbbbbbbbb"]); // ungültige ID ignoriert
+
+  // Zweiter Lauf: beide bereits im Cache ⇒ kein weiterer yt-dlp-Aufruf.
+  prefetch(["aaaaaaaaaaa", "bbbbbbbbbbb"]);
+  await new Promise((r) => setTimeout(r, 50));
+  expect(resolved).toHaveLength(2);
+
+  // Und der Stream selbst nutzt die vorgewärmte URL ohne neue Auflösung
+  // (ohne Client-Range antwortet der Proxy 200 = gechunkter Voll-Stream).
+  const res = await app.inject({ url: "/stream/video/aaaaaaaaaaa" });
+  expect(res.statusCode).toBe(200);
+  expect(resolved).toHaveLength(2);
+});
+
 test("ungültige videoId ⇒ 400", async () => {
   const app = buildApp({});
   const res = await app.inject({ url: "/stream/video/nix!gut" });

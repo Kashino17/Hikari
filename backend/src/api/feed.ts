@@ -12,6 +12,8 @@ import {
 export interface FeedDeps {
   db: Database.Database;
   dailyBudget: number;
+  /** Wärmt Stream-URLs vor, damit der Player nicht auf yt-dlp warten muss. */
+  prefetchStreams?: ((videoIds: string[]) => void) | undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -366,6 +368,8 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
            ORDER BY m.position ASC`,
         )
         .all(mixDateFor(Date.now())) as { id: string }[];
+      // Die nächsten Videos vorwärmen, bevor der Player sie anfragt.
+      deps.prefetchStreams?.(mixRows.map((r) => r.id));
       return hydrateFeedBatch(deps.db, mixRows as RawFeedRow[]);
     } else if (mode === "saved") {
       const clipsRows = deps.db.prepare(`
@@ -490,6 +494,20 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
     deps.db
       .prepare("UPDATE downloaded_videos SET last_served_at = ? WHERE video_id = ?")
       .run(now, parentId);
+    // Nachschub vorwärmen: die nächsten ungesehenen Mix-Items auflösen, damit
+    // der Swipe nicht in einen kalten yt-dlp-Lauf läuft.
+    const prefetch = deps.prefetchStreams;
+    if (prefetch) {
+      const next = deps.db
+        .prepare(
+          `SELECT m.video_id AS id FROM daily_mix_items m
+             JOIN feed_items f ON f.video_id = m.video_id
+            WHERE m.mix_date = ? AND f.seen_at IS NULL AND f.playback_failed = 0
+            ORDER BY m.position ASC LIMIT 4`,
+        )
+        .all(mixDateFor(Date.now())) as { id: string }[];
+      prefetch(next.map((r) => r.id));
+    }
     return reply.code(204).send();
   });
 
@@ -541,6 +559,7 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
       budgetMinutes: stats.budgetMinutes,
       remainingSeconds: stats.remainingSeconds,
       totalSeconds: stats.totalSeconds,
+      consumedSeconds: stats.consumedSeconds,
     };
   });
 

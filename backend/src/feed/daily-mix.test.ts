@@ -109,27 +109,50 @@ describe("daily-mix", () => {
     expect(db.prepare("SELECT COUNT(*) c FROM daily_mix_items").get()).toEqual({ c: 1 });
   });
 
-  it("todayMixStats: total zählt alles, remaining nur Ungesehenes", () => {
-    setTimeBudgetMinutes(db, 10);
+  it("todayMixStats: Budget-Rest zählt nur tatsächlich Geschautes", () => {
+    setTimeBudgetMinutes(db, 10); // 600s
     seed(db, "a", { dur: 300, format: "long" });
     seed(db, "b", { dur: 300, format: "long" });
     buildDailyMix(db, NOW);
-    db.prepare("UPDATE feed_items SET seen_at = ? WHERE video_id = 'a'").run(NOW);
+    // 'a' wurde 120s geschaut, 'b' liegt unangetastet im Feed.
+    db.prepare("UPDATE feed_items SET seen_at = ?, progress_seconds = 120 WHERE video_id = 'a'").run(
+      NOW,
+    );
     const stats = todayMixStats(db, NOW);
     expect(stats.budgetMinutes).toBe(10);
-    expect(stats.totalSeconds).toBe(600);
-    expect(stats.remainingSeconds).toBe(300);
+    expect(stats.consumedSeconds).toBe(120);
+    expect(stats.remainingSeconds).toBe(480); // 600 - 120
     expect(stats.unseenCount).toBe(1);
-    expect(stats.capped).toBe(true);
+    expect(stats.capped).toBe(false);
   });
 
-  it("gesehene Items zählen weiter gegen das Budget — kein Nachfüllen", () => {
+  it("weggeswipte Karten (gesehen, aber nie abgespielt) blockieren den Nachschub NICHT", () => {
     setTimeBudgetMinutes(db, 10);
-    seed(db, "a", { dur: 700, format: "long" });
+    seed(db, "karte", { dur: 700, format: "long" });
     buildDailyMix(db, NOW);
-    db.prepare("UPDATE feed_items SET seen_at = ? WHERE video_id = 'a'").run(NOW);
-    seed(db, "b", { dur: 700, format: "long" });
-    buildDailyMix(db, NOW); // Budget (600s) durch 'a' (700s) bereits überzogen
+    // Weggeswiped: seen_at gesetzt, aber keine Sekunde abgespielt.
+    db.prepare("UPDATE feed_items SET seen_at = ? WHERE video_id = 'karte'").run(NOW);
+    seed(db, "neu", { dur: 300, format: "long" });
+    buildDailyMix(db, NOW);
+    const ids = (
+      db.prepare("SELECT video_id FROM daily_mix_items ORDER BY position").all() as {
+        video_id: string;
+      }[]
+    ).map((r) => r.video_id);
+    expect(ids).toContain("neu"); // Nachschub kommt
+  });
+
+  it("ist das Tagesbudget verbraucht, kommt kein Nachschub mehr", () => {
+    setTimeBudgetMinutes(db, 10); // 600s
+    seed(db, "lang", { dur: 700, format: "long" });
+    buildDailyMix(db, NOW);
+    // Komplett geschaut: 700s > Budget.
+    db.prepare("UPDATE feed_items SET seen_at = ?, progress_seconds = 700 WHERE video_id = 'lang'").run(
+      NOW,
+    );
+    seed(db, "neu", { dur: 60, format: "short" });
+    buildDailyMix(db, NOW);
     expect(db.prepare("SELECT COUNT(*) c FROM daily_mix_items").get()).toEqual({ c: 1 });
+    expect(todayMixStats(db, NOW).capped).toBe(true);
   });
 });

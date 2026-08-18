@@ -8,6 +8,9 @@ const BUDGET_DEFAULT = 45;
 
 // Rhythmus des Mixes: nach je 5 Shorts eine Langvideo-Karte.
 const SHORTS_PER_LONG = 5;
+// Vorrat, den der Feed bereithält, solange das Tagesbudget nicht verbraucht
+// ist — der Feed füllt also laufend nach, statt einmalig gedeckelt zu sein.
+const REFILL_TARGET_SECONDS = 20 * 60;
 // Wie weit das letzte Item das Budget überziehen darf. Ohne diese Grenze frisst
 // ein einzelnes 85-Minuten-Video ein 45-Minuten-Budget komplett auf und
 // verdrängt alles andere — der Tag fühlt sich dann leer an.
@@ -62,18 +65,49 @@ interface MixCandidate extends RawFeedRow {
  * Dauersumme das Zeitbudget erreicht (das letzte Item darf überziehen).
  * Gesehene Mix-Items zählen weiter gegen das Budget — konsumiert ist konsumiert.
  */
+/**
+ * Tatsächlich konsumierte Zeit des Tages: die abgespielten Sekunden der
+ * Mix-Items (gedeckelt auf die Videolänge). Eine weggeswipte Karte kostet
+ * damit NICHTS vom Tagesbudget — nur echtes Schauen zählt.
+ */
+function consumedSeconds(db: Database.Database, mixDate: string): number {
+  return (
+    db
+      .prepare(
+        `SELECT COALESCE(SUM(MIN(COALESCE(f.progress_seconds, 0), m.duration_seconds)), 0) AS s
+           FROM daily_mix_items m
+           JOIN feed_items f ON f.video_id = m.video_id
+          WHERE m.mix_date = ?`,
+      )
+      .get(mixDate) as { s: number }
+  ).s;
+}
+
+/** Dauer der noch ungesehenen Items im heutigen Mix — der aktuelle Vorrat. */
+function unseenSeconds(db: Database.Database, mixDate: string): number {
+  return (
+    db
+      .prepare(
+        `SELECT COALESCE(SUM(m.duration_seconds), 0) AS s
+           FROM daily_mix_items m
+           JOIN feed_items f ON f.video_id = m.video_id
+          WHERE m.mix_date = ? AND f.seen_at IS NULL AND f.playback_failed = 0`,
+      )
+      .get(mixDate) as { s: number }
+  ).s;
+}
+
 export function buildDailyMix(db: Database.Database, now: number = Date.now()): void {
   const mixDate = mixDateFor(now);
   const budgetSeconds = getTimeBudgetMinutes(db) * 60;
 
-  let used = (
-    db
-      .prepare(
-        "SELECT COALESCE(SUM(duration_seconds), 0) AS s FROM daily_mix_items WHERE mix_date = ?",
-      )
-      .get(mixDate) as { s: number }
-  ).s;
-  if (used >= budgetSeconds) return;
+  // Tagesbudget verbraucht? Dann kein Nachschub mehr — das ist das bewusste Ende.
+  const remainingBudget = budgetSeconds - consumedSeconds(db, mixDate);
+  if (remainingBudget <= 0) return;
+  // Vorrat auffüllen bis Zielgröße (aber nie über das Rest-Budget hinaus).
+  const target = Math.min(remainingBudget, REFILL_TARGET_SECONDS);
+  let used = unseenSeconds(db, mixDate);
+  if (used >= target) return;
 
   const candidates = db
     .prepare(
@@ -129,10 +163,10 @@ export function buildDailyMix(db: Database.Database, now: number = Date.now()): 
 
   // Weben: SHORTS_PER_LONG Shorts, dann eine Langvideo-Karte; leerer Pool
   // laesst den anderen weiterlaufen.
-  const limit = budgetSeconds * BUDGET_OVERSHOOT;
+  const limit = remainingBudget * BUDGET_OVERSHOOT;
   let shortRun = 0;
   let added = 0;
-  while (used < budgetSeconds && (shorts.length > 0 || longs.length > 0)) {
+  while (used < target && (shorts.length > 0 || longs.length > 0)) {
     let next: MixCandidate | undefined;
     if (shorts.length > 0 && (shortRun < SHORTS_PER_LONG || longs.length === 0)) {
       next = shorts.shift();
@@ -160,7 +194,11 @@ export function buildDailyMix(db: Database.Database, now: number = Date.now()): 
 
 export interface TodayMixStats {
   budgetMinutes: number;
+  /** Gesamtdauer aller heutigen Mix-Items (Angebot). */
   totalSeconds: number;
+  /** Tatsächlich geschaute Sekunden — nur die zählen gegen das Budget. */
+  consumedSeconds: number;
+  /** Verbleibendes Tagesbudget in Sekunden. */
   remainingSeconds: number;
   unseenCount: number;
   capped: boolean;
@@ -178,17 +216,19 @@ export function todayMixStats(db: Database.Database, now: number = Date.now()): 
   ).s;
   const unseen = db
     .prepare(
-      `SELECT COALESCE(SUM(m.duration_seconds), 0) AS s, COUNT(*) AS c
-         FROM daily_mix_items m
+      `SELECT COUNT(*) AS c FROM daily_mix_items m
          JOIN feed_items f ON f.video_id = m.video_id
         WHERE m.mix_date = ? AND f.seen_at IS NULL AND f.playback_failed = 0`,
     )
-    .get(mixDate) as { s: number; c: number };
+    .get(mixDate) as { c: number };
+  const consumed = consumedSeconds(db, mixDate);
+  const budgetSeconds = budgetMinutes * 60;
   return {
     budgetMinutes,
     totalSeconds: total,
-    remainingSeconds: unseen.s,
+    consumedSeconds: consumed,
+    remainingSeconds: Math.max(0, budgetSeconds - consumed),
     unseenCount: unseen.c,
-    capped: total >= budgetMinutes * 60,
+    capped: consumed >= budgetSeconds,
   };
 }
