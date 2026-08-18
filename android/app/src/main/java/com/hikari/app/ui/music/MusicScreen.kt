@@ -604,8 +604,9 @@ private fun LazyListScope.homeContent(
     }
 
     // Abwechslungs-Rhythmus wie früher: Kachelreihe und kompakte Liste im
-    // Wechsel — NUR "Ähnlich wie X" läuft als einrastendes Spalten-Karussell.
+    // Wechsel — "Ähnlich wie X" und die Charts laufen als Schnellauswahl-Karten.
     var songRowToggle = 0
+    var chartsShown = false
     sections.forEachIndexed { index, section ->
         item(key = "hh-$index") {
             when (section.kind) {
@@ -667,9 +668,27 @@ private fun LazyListScope.homeContent(
             }
         } else if (section.songs.isNotEmpty()) {
             if (section.kind == HomeSectionKind.SIMILAR) {
-                // Explizit gewünscht: "Ähnlich wie X" als einrastendes Karussell.
+                // Explizit gewünscht: "Ähnlich wie X" im Schnellauswahl-Stil —
+                // 2×2-Karte, 4 Songs pro Seite, Punkt-Navigation.
                 item(key = "hc-$index") {
-                    SongColumnCarousel(section.songs, viewModel)
+                    QuickPickPagerCard(
+                        songs = section.songs,
+                        currentVideoId = currentVideoId,
+                        showRanks = false,
+                        onPlay = { song -> viewModel.play(song, section.songs) },
+                    )
+                }
+            } else if (section.kind == HomeSectionKind.CURATED && !chartsShown) {
+                // Erste kuratierte Sektion ("Top Charts"): Schnellauswahl-Karte
+                // mit Rang-Nummern — ebenfalls explizit gewünscht.
+                chartsShown = true
+                item(key = "hcharts-$index") {
+                    QuickPickPagerCard(
+                        songs = section.songs,
+                        currentVideoId = currentVideoId,
+                        showRanks = true,
+                        onPlay = { song -> viewModel.play(song, section.songs) },
+                    )
                 }
             } else if (songRowToggle++ % 2 == 0) {
                 item(key = "hr-$index") {
@@ -961,15 +980,19 @@ private fun LazyListScope.discoverContent(
         }
     }
 
-    // Erste Sektion als Rangliste — hier sagt die Reihenfolge etwas aus;
-    // trotzdem seitlich wischbar (Spalten à 3, fortlaufend nummeriert).
-    val showDuration = viewModel.searchMode != MusicSearchMode.MUSIC
+    // Erste Sektion als Rangliste im Schnellauswahl-Stil: 2×2-Karte,
+    // 4 Songs pro Seite, Punkt-Navigation, fortlaufende Rang-Nummern.
     val charts = sections.first()
     item(key = "charts-header") {
         SectionHeader(charts.title, onSeeAll = { onOpenMix(charts.title, charts.query, mode) })
     }
-    item(key = "charts-carousel") {
-        SongColumnCarousel(charts.songs, viewModel, showRanks = true, showDuration = showDuration)
+    item(key = "charts-card") {
+        QuickPickPagerCard(
+            songs = charts.songs,
+            currentVideoId = currentVideoId,
+            showRanks = true,
+            onPlay = { song -> viewModel.play(song, charts.songs) },
+        )
     }
 
     // Restliche Sektionen im alten Abwechslungs-Rhythmus: Kachelreihe und

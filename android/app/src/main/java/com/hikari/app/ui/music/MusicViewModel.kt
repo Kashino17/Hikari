@@ -524,6 +524,11 @@ class MusicViewModel @Inject constructor(
         // Verlauf lokal nachziehen statt Komplett-Reload — das Schreiben in
         // die DB übernimmt repo.recordPlayed im Player-Controller.
         history = listOf(song) + history.filter { it.videoId != song.videoId }
+        // Schnellauswahl aktuell halten: das Play-Event ist gerade geschrieben
+        // worden — ohne Nachladen erschiene die Karte erst beim App-Neustart.
+        viewModelScope.launch {
+            runCatching { topWeekSongs = repo.getTopPlayedOfWeek() }
+        }
     }
 
     fun toggleFavorite(song: MusicSong) {

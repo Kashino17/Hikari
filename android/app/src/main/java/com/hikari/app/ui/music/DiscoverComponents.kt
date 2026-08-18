@@ -744,10 +744,28 @@ fun TopWeekQuickPicks(
     onPlay: (MusicSong) -> Unit,
 ) {
     if (songs.size < 4) return
+    Column {
+        MuSectionTitle("Deine Top-Songs")
+        QuickPickPagerCard(songs, currentVideoId, showRanks = true, onPlay = onPlay)
+    }
+}
+
+/**
+ * Die Schnellauswahl-Karte als wiederverwendbarer Baustein: 2×2-Grid,
+ * 4 Songs pro Seite, Punkt-Navigation — auch für "Ähnlich wie X" und
+ * "Top Charts" (dort mit Rang-Nummern).
+ */
+@Composable
+fun QuickPickPagerCard(
+    songs: List<MusicSong>,
+    currentVideoId: String?,
+    showRanks: Boolean,
+    onPlay: (MusicSong) -> Unit,
+) {
+    if (songs.isEmpty()) return
     val pages = (songs.size + 3) / 4
     val pagerState = rememberPagerState(pageCount = { pages })
     Column {
-        MuSectionTitle("Deine Top-Songs")
         Column(
             Modifier
                 .fillMaxWidth()
@@ -769,7 +787,7 @@ fun TopWeekQuickPicks(
                                 Box(Modifier.weight(1f)) {
                                     if (song != null) {
                                         QuickPickCell(
-                                            rank = index + 1,
+                                            rank = if (showRanks) index + 1 else null,
                                             song = song,
                                             isCurrent = song.videoId == currentVideoId,
                                             onClick = { onPlay(song) },
@@ -809,7 +827,7 @@ fun TopWeekQuickPicks(
 
 @Composable
 private fun QuickPickCell(
-    rank: Int,
+    rank: Int?,
     song: MusicSong,
     isCurrent: Boolean,
     onClick: () -> Unit,
@@ -822,7 +840,7 @@ private fun QuickPickCell(
             .padding(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
+        if (rank != null) Text(
             "$rank",
             fontSize = 12.sp,
             fontWeight = if (rank <= 3) FontWeight.Black else FontWeight.Medium,
@@ -873,123 +891,3 @@ private fun QuickPickCell(
     }
 }
 
-/**
- * Horizontales Song-Karussell im YouTube-Music-Stil: Spalten mit je drei
- * kompakten Zeilen, seitlich wischbar mit Einrasten pro Spalte. [showRanks]
- * nummeriert fortlaufend (Charts, Top 3 hervorgehoben), [showDuration] hängt
- * die Laufzeit an den Uploader (Hörbuch/Podcast/True Crime).
- */
-@Composable
-fun SongColumnCarousel(
-    songs: List<MusicSong>,
-    viewModel: MusicViewModel,
-    showRanks: Boolean = false,
-    showDuration: Boolean = false,
-) {
-    if (songs.isEmpty()) return
-    val currentSong by viewModel.player.currentSong.collectAsState()
-    val columns = songs.chunked(3)
-    // Pager statt LazyRow+SnapFling: der Pager rastet IMMER pro Spalte ein —
-    // auch nach langsamem Ziehen (SnapFling ließ die Liste dort einfach
-    // stehen, das fühlte sich nach nichts an).
-    val pagerState = rememberPagerState(pageCount = { columns.size })
-    HorizontalPager(
-        state = pagerState,
-        pageSize = PageSize.Fixed(300.dp),
-        pageSpacing = 12.dp,
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        beyondViewportPageCount = 1,
-    ) { colIndex ->
-        val column = columns[colIndex]
-        Column(
-            Modifier.width(300.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            column.forEachIndexed { rowIndex, song ->
-                CarouselSongCell(
-                    rank = if (showRanks) colIndex * 3 + rowIndex + 1 else null,
-                    song = song,
-                    isCurrent = currentSong?.videoId == song.videoId,
-                    showDuration = showDuration,
-                    onClick = { viewModel.play(song, songs) },
-                )
-            }
-        }
-    }
-}
-
-/** Kompakte Karussell-Zeile — gleiche Anmutung wie die Schnellauswahl-Zellen. */
-@Composable
-private fun CarouselSongCell(
-    rank: Int?,
-    song: MusicSong,
-    isCurrent: Boolean,
-    showDuration: Boolean,
-    onClick: () -> Unit,
-) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .muPressable(onClick = onClick)
-            .padding(4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (rank != null) {
-            Text(
-                "$rank",
-                fontSize = 13.sp,
-                fontWeight = if (rank <= 3) FontWeight.Black else FontWeight.Medium,
-                color = if (rank <= 3) HikariText else HikariTextFaint,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.width(26.dp),
-            )
-            Spacer(Modifier.width(2.dp))
-        }
-        Box {
-            AsyncImage(
-                model = song.thumbnailUrl.ifEmpty { null },
-                contentDescription = null,
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(HikariSurfaceHigh),
-                contentScale = ContentScale.Crop,
-            )
-            if (isCurrent) {
-                Box(
-                    Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0x99000000)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    MuEqualizerBars(playing = true, modifier = Modifier.size(18.dp))
-                }
-            }
-        }
-        Spacer(Modifier.width(10.dp))
-        Column(Modifier.weight(1f)) {
-            Text(
-                song.title,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                color = if (isCurrent) HikariPrimary else HikariText,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Spacer(Modifier.height(1.dp))
-            Text(
-                if (showDuration && song.duration > 0) {
-                    "${song.uploader} · ${formatDurationUnits(song.duration)}"
-                } else {
-                    song.uploader
-                },
-                fontSize = 11.sp,
-                color = HikariTextMuted,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
-}

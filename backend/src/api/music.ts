@@ -816,7 +816,13 @@ export async function registerMusicRoutes(
       cachePut(streamCache, videoId, url, now());
       scheduleStreamCachePersist();
       return url;
-    } catch {
+    } catch (err) {
+      // Grund sichtbar machen: yt-dlp-Fehler wurden hier bisher verschluckt —
+      // die 502-Welle vom 18.08. war deshalb nur per Raten diagnostizierbar.
+      app.log.warn(
+        { videoId, err: err instanceof Error ? err.message.slice(0, 500) : String(err) },
+        "audio resolve failed",
+      );
       return undefined;
     }
   }
@@ -879,7 +885,11 @@ export async function registerMusicRoutes(
       if (url.includes(".m3u8") || url.includes("/manifest/")) return undefined;
       cachePut(videoStreamCache, videoId, url, now());
       return url;
-    } catch {
+    } catch (err) {
+      app.log.warn(
+        { videoId, err: err instanceof Error ? err.message.slice(0, 500) : String(err) },
+        "video resolve failed",
+      );
       return undefined;
     }
   }
