@@ -28,6 +28,7 @@ import { registerClipperStatusRoutes } from "./api/clipper-status.js";
 import { registerVideoFullRoute } from "./api/video-full.js";
 import { loadConfig } from "./config.js";
 import { openDatabase } from "./db/connection.js";
+import { runDiscoveryCycle } from "./discovery/feed-sources.js";
 import { runCleanup } from "./download/cleanup.js";
 import { fetchVideoMetadata } from "./ingest/metadata.js";
 import { fetchTranscript } from "./ingest/transcript.js";
@@ -231,6 +232,14 @@ async function pollAllChannels(): Promise<void> {
 
 cron.schedule("*/15 * * * *", () => {
   pollAllChannels().catch((err) => app.log.error({ err }, "channel poll crashed"));
+});
+
+// Discovery: Probe-Kanäle, Themen-Suche, Backfill — zweimal täglich reicht,
+// die Quellen sind gedrosselt und der Scorer bleibt der Türsteher.
+cron.schedule("30 5,17 * * *", () => {
+  runDiscoveryCycle(db, { dailyBudget: cfg.dailyBudget }).catch((err) =>
+    app.log.error({ err }, "discovery cycle crashed"),
+  );
 });
 
 // Durable ingest drain: claim queued videos one at a time and run the full
