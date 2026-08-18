@@ -198,7 +198,6 @@ fun FeedScreen(
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                         horizontalArrangement = Arrangement.Center,
                     ) {
-                        FilterPills(mode = mode, onSelect = { vm.setMode(it) })
                     }
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
@@ -223,6 +222,15 @@ fun FeedScreen(
                 LaunchedEffect(items.size) {
                     if (items.isNotEmpty() && pagerState.currentPage > items.lastIndex) {
                         pagerState.scrollToPage(items.lastIndex)
+                    }
+                }
+
+                // Endlos-Feed: rechtzeitig vor dem Ende die nächste Seite holen.
+                LaunchedEffect(pagerState.currentPage, items.size) {
+                    if (showDonePage && items.isNotEmpty() &&
+                        pagerState.currentPage >= items.size - 5
+                    ) {
+                        vm.loadMore()
                     }
                 }
 
@@ -373,10 +381,6 @@ fun FeedScreen(
                         ) {
                             Spacer(Modifier.weight(1f))
                             if (!fullscreen) {
-                                FilterPills(
-                                    mode = mode,
-                                    onSelect = { vm.setMode(it) },
-                                )
                                 Spacer(Modifier.weight(1f))
                             }
                             current?.let {
@@ -409,40 +413,6 @@ fun FeedScreen(
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun FilterPills(mode: FeedMode, onSelect: (FeedMode) -> Unit) {
-    val items = listOf(
-        FeedMode.NEW to "Alle",
-        FeedMode.SAVED to "Gespeichert",
-        FeedMode.OLD to "Archiv",
-    )
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
-        modifier = Modifier
-            .background(HikariBg.copy(alpha = 0.6f), RoundedCornerShape(20.dp))
-            .padding(2.dp),
-    ) {
-        items.forEach { (m, label) ->
-            val active = mode == m
-            Box(
-                modifier = Modifier
-                    .clickable { onSelect(m) }
-                    .background(
-                        if (active) HikariAmber else androidx.compose.ui.graphics.Color.Transparent,
-                        RoundedCornerShape(18.dp),
-                    )
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
-            ) {
-                Text(
-                    label,
-                    color = if (active) androidx.compose.ui.graphics.Color.Black else HikariTextFaint,
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                )
             }
         }
     }

@@ -34,16 +34,17 @@ fun DailyDonePage(watchedMinutes: Int?, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Das war's für heute",
+            text = "Nachschub wird gesucht",
             style = MaterialTheme.typography.headlineSmall,
             color = HikariText,
         )
         Spacer(Modifier.height(12.dp))
         Text(
             text = if (watchedMinutes != null && watchedMinutes > 0) {
-                "Dein Tagesmix ist durch — rund $watchedMinutes Minuten kuratierte Inhalte."
+                "Du hast heute rund $watchedMinutes Minuten geschaut. " +
+                    "Neue Videos werden gerade geprüft — gleich nochmal hochziehen."
             } else {
-                "Dein Tagesmix ist durchgeschaut."
+                "Neue Videos werden gerade geprüft — gleich nochmal hochziehen."
             },
             style = MaterialTheme.typography.bodyMedium,
             color = HikariTextFaint,
@@ -51,7 +52,7 @@ fun DailyDonePage(watchedMinutes: Int?, modifier: Modifier = Modifier) {
         )
         Spacer(Modifier.height(20.dp))
         Text(
-            text = "Morgen gibt es frischen Nachschub.",
+            text = "Nur Geprüftes kommt in den Feed",
             style = MaterialTheme.typography.labelMedium,
             color = HikariAmber,
         )

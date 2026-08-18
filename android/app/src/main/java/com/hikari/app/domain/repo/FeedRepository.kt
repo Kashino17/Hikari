@@ -25,6 +25,8 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
+private const val PAGE_SIZE = 30
+
 @Singleton
 class FeedRepository @Inject constructor(
     private val api: HikariApi,
@@ -34,7 +36,7 @@ class FeedRepository @Inject constructor(
         dao.newItems().map { rows -> rows.map { it.toDomain() } }
 
     suspend fun refresh() {
-        val remote = api.getFeed(mode = "new")
+        val remote = api.getFeed(mode = "new", offset = 0, limit = PAGE_SIZE)
         // Stamp each item with its server-curated position so the DAO renders
         // in the backend's interleaved/variety order, not re-sorted by addedAt.
         dao.upsertAll(remote.mapIndexed { index, dto -> dto.toEntity(index) })
@@ -43,6 +45,17 @@ class FeedRepository @Inject constructor(
         } else {
             dao.pruneNotIn(remote.map { it.videoId })
         }
+    }
+
+    /**
+     * Endlos-Feed: hängt die nächste Seite an, ohne Bestehendes zu verwerfen.
+     * Gibt zurück, wie viele Videos dazugekommen sind (0 = gerade nichts mehr).
+     */
+    suspend fun loadMore(currentCount: Int): Int {
+        val remote = api.getFeed(mode = "new", offset = currentCount, limit = PAGE_SIZE)
+        if (remote.isEmpty()) return 0
+        dao.upsertAll(remote.mapIndexed { index, dto -> dto.toEntity(currentCount + index) })
+        return remote.size
     }
 
     suspend fun fetchSaved(): List<FeedItem> =

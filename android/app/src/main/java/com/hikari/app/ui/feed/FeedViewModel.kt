@@ -165,6 +165,22 @@ class FeedViewModel @Inject constructor(
         viewModelScope.launch { repo.removeWatchLater(videoId) }
     }
 
+    private val _loadingMore = MutableStateFlow(false)
+    val loadingMore: StateFlow<Boolean> = _loadingMore.asStateFlow()
+
+    /**
+     * Endlos-Feed: hängt die nächste Seite an, sobald das Ende in Sicht kommt.
+     * Der Server schiebt bei knappem Vorrat selbst neue Entdeckungen nach.
+     */
+    fun loadMore() {
+        if (_mode.value != FeedMode.NEW || _loadingMore.value) return
+        viewModelScope.launch {
+            _loadingMore.value = true
+            runCatching { repo.loadMore(items.value.size) }
+            _loadingMore.value = false
+        }
+    }
+
     fun onSubscribeChannel(channelId: String) {
         viewModelScope.launch { runCatching { repo.subscribeChannel(channelId) } }
     }

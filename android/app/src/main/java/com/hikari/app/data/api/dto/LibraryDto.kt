@@ -38,6 +38,7 @@ data class LibraryResponse(
     // Etappe 5: die Sammlung — optional, damit alte Server weiter parsen.
     val watchLater: List<FeedItemDto> = emptyList(),
     val history: List<FeedItemDto> = emptyList(),
+    val suggestions: List<FeedItemDto> = emptyList(),
 )
 
 @Serializable

@@ -203,6 +203,24 @@ private fun LibraryContent(
                 Spacer(Modifier.height(28.dp))
             }
         }
+        if (data.suggestions.isNotEmpty()) {
+            item {
+                SectionHeader("Vorschläge für dich", count = data.suggestions.size)
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(data.suggestions, key = { it.videoId }) { dto ->
+                        val fi = dto.toFeedItem()
+                        CollectionCard(
+                            item = fi,
+                            onPlay = { onPlayVideo(fi.videoId, fi.title, fi.channelTitle) },
+                        )
+                    }
+                }
+                Spacer(Modifier.height(28.dp))
+            }
+        }
         if (history.isNotEmpty()) {
             item {
                 SectionHeader("Verlauf", count = history.size)
@@ -795,6 +813,23 @@ private fun ChannelCircle(channel: ChannelDto, onClick: () -> Unit) {
         )
     }
 }
+
+/** Bibliotheks-Vorschläge kommen als Feed-DTO — hier auf das Kartenmodell mappen. */
+private fun com.hikari.app.data.api.dto.FeedItemDto.toFeedItem() = FeedItem(
+    videoId = videoId,
+    title = title,
+    durationSeconds = durationSeconds,
+    aspectRatio = aspectRatio,
+    thumbnailUrl = thumbnailUrl,
+    channelTitle = channelTitle,
+    category = category,
+    reasoning = reasoning,
+    saved = saved == 1,
+    kind = kind,
+    summary = summary,
+    source = source,
+    channelId = channelId,
+)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

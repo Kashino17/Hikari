@@ -157,7 +157,11 @@ interface HikariApi {
     ): List<NewsItemDto>
 
     @GET("feed")
-    suspend fun getFeed(@Query("mode") mode: String = "new"): List<FeedItemDto>
+    suspend fun getFeed(
+        @Query("mode") mode: String = "new",
+        @Query("offset") offset: Int? = null,
+        @Query("limit") limit: Int? = null,
+    ): List<FeedItemDto>
 
     @POST("feed/{id}/seen")
     suspend fun markSeen(@Path("id") videoId: String)

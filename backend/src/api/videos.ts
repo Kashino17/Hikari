@@ -154,12 +154,26 @@ export async function registerVideosRoutes(
       )
       .all() as { id: string }[];
 
+    // Entdeckte Langvideos als Vorschläge — dieselbe Kuration wie im Feed,
+    // aber zum Stöbern statt zum Durchswipen.
+    const suggestionRows = deps.db
+      .prepare(
+        `SELECT f.video_id AS id
+           FROM feed_items f
+           JOIN videos v ON v.id = f.video_id
+          WHERE f.seen_at IS NULL AND f.playback_failed = 0 AND f.is_pre_clipper = 1
+            AND v.format = 'long' AND COALESCE(v.source, 'subscription') <> 'subscription'
+          ORDER BY f.added_to_feed_at DESC LIMIT 20`,
+      )
+      .all() as { id: string }[];
+
     return {
       series,
       recentlyAdded,
       channels,
       watchLater: hydrateFeedBatch(deps.db, watchLaterRows),
       history: hydrateFeedBatch(deps.db, historyRows),
+      suggestions: hydrateFeedBatch(deps.db, suggestionRows),
     };
   });
 
