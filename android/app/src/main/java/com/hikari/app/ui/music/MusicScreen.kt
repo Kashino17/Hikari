@@ -46,6 +46,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MusicNote
@@ -172,6 +173,9 @@ fun MusicScreen(
                 onClear = { viewModel.clearSearch() },
                 onSearch = { viewModel.search(viewModel.searchQuery) },
                 onModeClick = { showModeSheet = true },
+                searchOpen = viewModel.searchActive || viewModel.searchQuery.isNotEmpty() ||
+                    viewModel.searchAttempted,
+                onBack = { viewModel.clearSearch() },
             )
 
             if (!online) OfflineBanner()
@@ -233,6 +237,8 @@ private fun MusicHeaderBar(
     onClear: () -> Unit,
     onSearch: () -> Unit,
     onModeClick: () -> Unit,
+    searchOpen: Boolean,
+    onBack: () -> Unit,
 ) {
     // Docken Panels unter dem Header an, schrumpft der Abstand nach unten —
     // Bar und Panel wirken als eine Einheit.
@@ -241,7 +247,20 @@ private fun MusicHeaderBar(
         Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = bottomGap),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        MusicAvatarChip(avatarPath = avatarPath, size = 40.dp, onClick = onOpenProfile)
+        // Offene Suche: das Profilbild morpht zum Zurück-Pfeil — ein Tipp
+        // führt zurück zur Entdecken-Seite (intuitiver Ausstieg aus der Suche).
+        Crossfade(searchOpen, animationSpec = tween(200), label = "avatarBack") { open ->
+            if (open) {
+                MuIconButton(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    "Zurück zum Entdecken",
+                    tint = HikariText,
+                    touchSize = 40.dp,
+                ) { onBack() }
+            } else {
+                MusicAvatarChip(avatarPath = avatarPath, size = 40.dp, onClick = onOpenProfile)
+            }
+        }
         Spacer(Modifier.width(10.dp))
         MusicSearchField(
             value = value,
@@ -563,6 +582,30 @@ private fun LazyListScope.homeContent(
     val sections = viewModel.homeSections
     if (sections.isEmpty()) return
 
+    // Kuratierte Mixe als Karten-Reihe — die Cover bringen Farbe und
+    // Abwechslung in den Feed (gleiche Optik wie im Genre-Entdecken).
+    val curated = sections.filter { it.kind == HomeSectionKind.CURATED && it.songs.isNotEmpty() }
+    if (curated.isNotEmpty()) {
+        item(key = "home-mixes-header") { SectionHeader("Mixe", eyebrow = "KURATIERT") }
+        item(key = "home-mixes-row") {
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                items(curated, key = { "hm-${it.title}" }) { section ->
+                    MixCard(
+                        title = section.title,
+                        songs = section.songs,
+                        onClick = { onOpenMix(section.title, section.query, MusicSearchMode.MUSIC.apiValue) },
+                    )
+                }
+            }
+        }
+    }
+
+    // Abwechslungs-Rhythmus wie früher: Kachelreihe und kompakte Liste im
+    // Wechsel — NUR "Ähnlich wie X" läuft als einrastendes Spalten-Karussell.
+    var songRowToggle = 0
     sections.forEachIndexed { index, section ->
         item(key = "hh-$index") {
             when (section.kind) {
@@ -623,9 +666,38 @@ private fun LazyListScope.homeContent(
                 }
             }
         } else if (section.songs.isNotEmpty()) {
-            // Song-Sektion als YT-Music-Karussell: Spalten à 3, mehr zum Erkunden.
-            item(key = "hc-$index") {
-                SongColumnCarousel(section.songs, viewModel)
+            if (section.kind == HomeSectionKind.SIMILAR) {
+                // Explizit gewünscht: "Ähnlich wie X" als einrastendes Karussell.
+                item(key = "hc-$index") {
+                    SongColumnCarousel(section.songs, viewModel)
+                }
+            } else if (songRowToggle++ % 2 == 0) {
+                item(key = "hr-$index") {
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(section.songs, key = { "ht-$index-${it.videoId}" }) { song ->
+                            TileBound(song, viewModel, section.songs)
+                        }
+                    }
+                }
+            } else {
+                items(
+                    section.songs.take(4),
+                    key = { "hl-$index-${it.videoId}" },
+                ) { song ->
+                    SongRow(
+                        song,
+                        viewModel,
+                        section.songs,
+                        isCurrent = currentVideoId == song.videoId,
+                        isDownloaded = song.videoId in downloadedIds,
+                        progress = progressMap[song.videoId],
+                        online = online,
+                        onOpenArtist = onOpenArtist,
+                    )
+                }
             }
         }
     }
@@ -900,12 +972,38 @@ private fun LazyListScope.discoverContent(
         SongColumnCarousel(charts.songs, viewModel, showRanks = true, showDuration = showDuration)
     }
 
-    sections.drop(1).forEach { section ->
+    // Restliche Sektionen im alten Abwechslungs-Rhythmus: Kachelreihe und
+    // kompakte Liste im Wechsel — nur die Charts oben laufen als Karussell.
+    sections.drop(1).forEachIndexed { index, section ->
         item(key = "h-${section.title}") {
             SectionHeader(section.title, onSeeAll = { onOpenMix(section.title, section.query, mode) })
         }
-        item(key = "car-${section.title}") {
-            SongColumnCarousel(section.songs, viewModel, showDuration = showDuration)
+        if (index % 2 == 0) {
+            item(key = "row-${section.title}") {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    items(section.songs, key = { "t-${section.title}-${it.videoId}" }) { song ->
+                        TileBound(song, viewModel, section.songs)
+                    }
+                }
+            }
+        } else {
+            items(
+                section.songs.take(4),
+                key = { "l-${section.title}-${it.videoId}" },
+            ) { song ->
+                SongRow(
+                    song,
+                    viewModel,
+                    section.songs,
+                    isCurrent = currentVideoId == song.videoId,
+                    isDownloaded = song.videoId in downloadedIds,
+                    progress = progressMap[song.videoId],
+                    online = online,
+                )
+            }
         }
     }
 }

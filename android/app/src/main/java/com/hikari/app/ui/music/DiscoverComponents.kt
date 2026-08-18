@@ -32,13 +32,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -889,27 +888,31 @@ fun SongColumnCarousel(
 ) {
     if (songs.isEmpty()) return
     val currentSong by viewModel.player.currentSong.collectAsState()
-    val listState = rememberLazyListState()
-    LazyRow(
-        state = listState,
-        flingBehavior = rememberSnapFlingBehavior(listState),
+    val columns = songs.chunked(3)
+    // Pager statt LazyRow+SnapFling: der Pager rastet IMMER pro Spalte ein —
+    // auch nach langsamem Ziehen (SnapFling ließ die Liste dort einfach
+    // stehen, das fühlte sich nach nichts an).
+    val pagerState = rememberPagerState(pageCount = { columns.size })
+    HorizontalPager(
+        state = pagerState,
+        pageSize = PageSize.Fixed(300.dp),
+        pageSpacing = 12.dp,
         contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        itemsIndexed(songs.chunked(3), key = { i, _ -> "col-$i" }) { colIndex, column ->
-            Column(
-                Modifier.width(300.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                column.forEachIndexed { rowIndex, song ->
-                    CarouselSongCell(
-                        rank = if (showRanks) colIndex * 3 + rowIndex + 1 else null,
-                        song = song,
-                        isCurrent = currentSong?.videoId == song.videoId,
-                        showDuration = showDuration,
-                        onClick = { viewModel.play(song, songs) },
-                    )
-                }
+        beyondViewportPageCount = 1,
+    ) { colIndex ->
+        val column = columns[colIndex]
+        Column(
+            Modifier.width(300.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            column.forEachIndexed { rowIndex, song ->
+                CarouselSongCell(
+                    rank = if (showRanks) colIndex * 3 + rowIndex + 1 else null,
+                    song = song,
+                    isCurrent = currentSong?.videoId == song.videoId,
+                    showDuration = showDuration,
+                    onClick = { viewModel.play(song, songs) },
+                )
             }
         }
     }
