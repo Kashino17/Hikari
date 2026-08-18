@@ -31,12 +31,28 @@ class FeedRepositoryTest {
         )
         repo.refresh()
         coVerify { dao.upsertAll(match { it.size == 1 && it[0].videoId == "v1" }) }
+        // Ohne Geste wird NICHT aufgeräumt: nachgeladene Seiten müssen bleiben,
+        // sonst schrumpft die Liste beim Wiedereintritt unter dem Finger.
+        coVerify(exactly = 0) { dao.pruneNotIn(any()) }
+    }
+
+    @Test fun refreshWithPull_replacesList() = runTest {
+        coEvery { api.getFeed(mode = "new", offset = 0, limit = 30, refresh = 1) } returns listOf(
+            FeedItemDto(
+                videoId = "v1", title = "t", durationSeconds = 60,
+                aspectRatio = "9:16", thumbnailUrl = "thumb",
+                channelId = "c1", channelTitle = "chan",
+                category = "science", reasoning = "r",
+                addedAt = 100L, saved = 0,
+            )
+        )
+        repo.refresh(pull = true)
         coVerify { dao.pruneNotIn(listOf("v1")) }
     }
 
     @Test fun refresh_whenApiReturnsNoItems_prunesUnseenUnsaved() = runTest {
-        coEvery { api.getFeed(mode = "new", offset = 0, limit = 30) } returns emptyList()
-        repo.refresh()
+        coEvery { api.getFeed(mode = "new", offset = 0, limit = 30, refresh = 1) } returns emptyList()
+        repo.refresh(pull = true)
         coVerify { dao.upsertAll(emptyList()) }
         coVerify { dao.pruneAll() }
     }

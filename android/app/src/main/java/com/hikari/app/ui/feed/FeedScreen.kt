@@ -225,7 +225,13 @@ fun FeedScreen(
                 val pageCount = items.size + if (showDonePage) 1 else 0
                 val pagerState = rememberPagerState(pageCount = { pageCount })
                 LaunchedEffect(items.size) {
-                    if (items.isNotEmpty() && pagerState.currentPage > items.lastIndex) {
+                    // Nur eingreifen, wenn die Position wirklich ungültig ist UND
+                    // gerade keine Wischbewegung läuft — sonst bleibt der Pager
+                    // zwischen zwei Seiten stehen.
+                    if (items.isNotEmpty() &&
+                        pagerState.currentPage > items.lastIndex &&
+                        !pagerState.isScrollInProgress
+                    ) {
                         pagerState.scrollToPage(items.lastIndex)
                     }
                 }
@@ -241,7 +247,8 @@ fun FeedScreen(
                 // Endlos-Feed: rechtzeitig vor dem Ende die nächste Seite holen.
                 LaunchedEffect(pagerState.currentPage, items.size) {
                     if (showDonePage && items.isNotEmpty() &&
-                        pagerState.currentPage >= items.size - 5
+                        pagerState.currentPage >= items.size - 3 &&
+                        !pagerState.isScrollInProgress
                     ) {
                         vm.loadMore()
                     }

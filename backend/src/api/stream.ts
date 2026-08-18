@@ -20,7 +20,11 @@ const STREAM_CACHE_TTL_MS = 5 * 60 * 60 * 1000;
 const CACHE_SAVE_DEBOUNCE_MS = 5000;
 // So viele Videos werden pro Aufruf vorgewärmt (der Feed reicht die nächsten
 // Items durch; mehr bringt nichts, die URLs leben ohnehin nur ~5 h).
-const PREFETCH_MAX = 8;
+const PREFETCH_MAX = 14;
+// Gleichzeitige Auflösungen. Eine kalte URL kostet ~5 s — seriell überholt
+// jeder normale Wisch-Rhythmus das Vorwärmen. Drei Läufe parallel halten den
+// Abstand, ohne YouTube mit Anfragen zu fluten.
+const PREFETCH_WORKERS = 3;
 // Muxed MP4 (Video+Audio in einer Datei), NUR progressives HTTPS: ohne
 // [protocol=https] löst yt-dlp gern HLS-Manifeste (m3u8) auf, deren
 // googlevideo-Segmente vom Handy aus nicht abspielbar sind. Format 18 ist
@@ -118,10 +122,10 @@ export function registerStreamRoutes(
   // ab dem ersten kalten Video "nichts mehr laden". Seriell, damit nicht fünf
   // yt-dlp-Prozesse gleichzeitig auf YouTube losgehen.
   const prefetchQueue: string[] = [];
-  let prefetchRunning = false;
+  let prefetchWorkers = 0;
   const drainPrefetch = async (): Promise<void> => {
-    if (prefetchRunning) return;
-    prefetchRunning = true;
+    if (prefetchWorkers >= PREFETCH_WORKERS) return;
+    prefetchWorkers++;
     try {
       while (prefetchQueue.length > 0) {
         const id = prefetchQueue.shift();
@@ -130,7 +134,7 @@ export function registerStreamRoutes(
         await resolve(id, false).catch(() => undefined);
       }
     } finally {
-      prefetchRunning = false;
+      prefetchWorkers--;
     }
   };
   const prefetch: PrefetchStreams = (videoIds) => {
@@ -140,7 +144,7 @@ export function registerStreamRoutes(
       if (prefetchQueue.includes(id)) continue;
       prefetchQueue.push(id);
     }
-    void drainPrefetch();
+    for (let i = 0; i < PREFETCH_WORKERS; i++) void drainPrefetch();
   };
 
   // Wellen-Brecher (Defense-in-Depth zum -4-Fix): schlagen ≥3 verschiedene

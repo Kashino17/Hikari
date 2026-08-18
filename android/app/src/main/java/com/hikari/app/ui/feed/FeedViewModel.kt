@@ -95,6 +95,7 @@ class FeedViewModel @Inject constructor(
     init { refresh() }
 
     fun refresh(pull: Boolean = false) = viewModelScope.launch {
+        exhausted = false
         _refreshing.value = true
         when (_mode.value) {
             FeedMode.NEW -> {
@@ -172,11 +173,15 @@ class FeedViewModel @Inject constructor(
      * Endlos-Feed: hängt die nächste Seite an, sobald das Ende in Sicht kommt.
      * Der Server schiebt bei knappem Vorrat selbst neue Entdeckungen nach.
      */
+    /** true, sobald der Server keine weitere Seite mehr liefert. */
+    private var exhausted = false
+
     fun loadMore() {
-        if (_mode.value != FeedMode.NEW || _loadingMore.value) return
+        if (_mode.value != FeedMode.NEW || _loadingMore.value || exhausted) return
         viewModelScope.launch {
             _loadingMore.value = true
-            runCatching { repo.loadMore(items.value.size) }
+            val added = runCatching { repo.loadMore(items.value.size) }.getOrDefault(0)
+            exhausted = added == 0
             _loadingMore.value = false
         }
     }

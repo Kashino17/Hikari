@@ -46,10 +46,12 @@ class FeedRepository @Inject constructor(
         // Stamp each item with its server-curated position so the DAO renders
         // in the backend's interleaved/variety order, not re-sorted by addedAt.
         dao.upsertAll(remote.mapIndexed { index, dto -> dto.toEntity(index) })
-        if (remote.isEmpty()) {
-            dao.pruneAll()
-        } else {
-            dao.pruneNotIn(remote.map { it.videoId })
+        // Aufräumen NUR beim bewussten Neuladen (Geste, Tab-Tipp). Beim
+        // Wiedereintritt in die App würden sonst alle nachgeladenen Seiten
+        // verschwinden — die Liste schrumpft unter dem Finger und der Pager
+        // bleibt zwischen zwei Videos hängen.
+        if (pull) {
+            if (remote.isEmpty()) dao.pruneAll() else dao.pruneNotIn(remote.map { it.videoId })
         }
     }
 

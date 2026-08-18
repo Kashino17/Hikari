@@ -531,7 +531,7 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
           `SELECT m.video_id AS id FROM daily_mix_items m
              JOIN feed_items f ON f.video_id = m.video_id
             WHERE m.mix_date = ? AND f.seen_at IS NULL AND f.playback_failed = 0
-            ORDER BY m.position ASC LIMIT 4`,
+            ORDER BY m.position ASC LIMIT 8`,
         )
         .all(mixDateFor(Date.now())) as { id: string }[];
       prefetch(next.map((r) => r.id));
