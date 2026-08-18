@@ -905,6 +905,8 @@ export async function itHome(fetchImpl: typeof fetch): Promise<HomeFeed | undefi
 
 /** WEB-Client (www.youtube.com) — für Kanal-Browse, den WEB_REMIX nicht kann. */
 const WEB_BASE = "https://www.youtube.com/youtubei/v1";
+const WEB_UA =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 const WEB_CONTEXT = {
   client: { clientName: "WEB", clientVersion: "2.20241126.01.00", hl: "de", gl: "DE" },
 } as const;
@@ -921,14 +923,50 @@ async function webBrowse(fetchImpl: typeof fetch, payload: Dict): Promise<unknow
     headers: {
       "content-type": "application/json",
       origin: "https://www.youtube.com",
-      "user-agent":
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+      "user-agent": WEB_UA,
     },
     body: JSON.stringify({ context: WEB_CONTEXT, ...payload }),
     signal: AbortSignal.timeout(IT_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`web browse -> ${res.status}`);
   return (await res.json()) as unknown;
+}
+
+// Nur-Videos-Filter der YouTube-Suche (base64-Protobuf, empirisch verifiziert 2026-08).
+const WEB_VIDEO_SEARCH_PARAMS = "EgIQAQ%3D%3D";
+
+/** Video-IDs der YouTube-Suche — für die Themen-Discovery (likeTags → Kandidaten). */
+export async function itVideoSearch(
+  fetchImpl: typeof fetch,
+  query: string,
+  max = 20,
+): Promise<string[] | undefined> {
+  try {
+    const res = await fetchImpl(`${WEB_BASE}/search?prettyPrint=false`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: "https://www.youtube.com",
+        "user-agent": WEB_UA,
+      },
+      body: JSON.stringify({ context: WEB_CONTEXT, query, params: WEB_VIDEO_SEARCH_PARAMS }),
+      signal: AbortSignal.timeout(IT_TIMEOUT_MS),
+    });
+    if (!res.ok) return undefined;
+    const body = (await res.json()) as unknown;
+    const ids: string[] = [];
+    const seen = new Set<string>();
+    for (const vr of findAllByKey(body, "videoRenderer")) {
+      const id = (vr as { videoId?: unknown }).videoId;
+      if (typeof id !== "string" || !VIDEO_ID_RE.test(id) || seen.has(id)) continue;
+      seen.add(id);
+      ids.push(id);
+      if (ids.length >= max) break;
+    }
+    return ids.length > 0 ? ids : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /** Kanalname aus einer WEB-Browse-Antwort (Continuations haben keinen). */
