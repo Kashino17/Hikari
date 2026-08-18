@@ -1,6 +1,7 @@
 package com.hikari.app.domain.repo
 
 import com.hikari.app.data.api.HikariApi
+import com.hikari.app.data.api.dto.BudgetBody
 import com.hikari.app.data.api.dto.CaptionDto
 import com.hikari.app.data.api.dto.FeedItemDto
 import com.hikari.app.data.api.dto.LibraryResponse
@@ -94,7 +95,11 @@ class FeedRepository @Inject constructor(
         runCatching { api.deleteVideo(videoId) }
     }
 
-        suspend fun subscribeChannel(channelId: String) {
+    suspend fun getBudgetMinutes(): Int = api.getBudget().minutes
+
+    suspend fun setBudgetMinutes(minutes: Int): Int = api.setBudget(BudgetBody(minutes)).minutes
+
+    suspend fun subscribeChannel(channelId: String) {
         api.subscribeChannel(channelId)
     }
 

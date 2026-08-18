@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.HikariApi
+import com.hikari.app.data.api.dto.BudgetBody
 import com.hikari.app.data.api.dto.ClipperStatusDto
 import com.hikari.app.data.api.dto.LlmHealthDto
 import com.hikari.app.data.prefs.SettingsStore
@@ -59,8 +60,9 @@ class TuningViewModel @Inject constructor(
     val backendUrl: StateFlow<String> = settings.backendUrl
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
-    val dailyBudget: StateFlow<Int> = settings.dailyBudget
-        .stateIn(viewModelScope, SharingStarted.Eagerly, 15)
+    // Etappe 4: Zeitbudget des Tagesmixes (Minuten) — lebt im Backend.
+    private val _budgetMinutes = MutableStateFlow<Int?>(null)
+    val budgetMinutes: StateFlow<Int?> = _budgetMinutes.asStateFlow()
 
     val sbBehaviors: StateFlow<Map<String, SegmentBehavior>> = sbPrefs.behaviors
         .stateIn(
@@ -194,7 +196,13 @@ class TuningViewModel @Inject constructor(
 
     // ── Settings ─────────────────────────────────────────────────────────────
     fun setBackendUrl(url: String) = viewModelScope.launch { settings.setBackendUrl(url) }
-    fun setDailyBudget(value: Int) = viewModelScope.launch { settings.setDailyBudget(value) }
+    fun loadBudgetMinutes() = viewModelScope.launch {
+        runCatching { api.getBudget().minutes }.onSuccess { _budgetMinutes.value = it }
+    }
+
+    fun setBudgetMinutes(minutes: Int) = viewModelScope.launch {
+        runCatching { api.setBudget(BudgetBody(minutes)).minutes }.onSuccess { _budgetMinutes.value = it }
+    }
 
     fun setSbBehavior(apiKey: String, behavior: SegmentBehavior) = viewModelScope.launch {
         sbPrefs.setBehavior(apiKey, behavior)

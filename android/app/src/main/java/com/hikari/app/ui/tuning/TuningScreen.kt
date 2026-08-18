@@ -559,11 +559,12 @@ private fun PromptAction(label: String, accent: Boolean = false, onClick: () -> 
 @Composable
 private fun SystemTab(vm: TuningViewModel) {
     val backendUrl by vm.backendUrl.collectAsState()
-    val dailyBudget by vm.dailyBudget.collectAsState()
+    val budgetMinutes by vm.budgetMinutes.collectAsState()
     val sb by vm.sbBehaviors.collectAsState()
 
     var urlDraft by remember(backendUrl) { mutableStateOf(backendUrl) }
-    var budgetDraft by remember(dailyBudget) { mutableIntStateOf(dailyBudget) }
+    var minutesDraft by remember(budgetMinutes) { mutableIntStateOf(budgetMinutes ?: 45) }
+    LaunchedEffect(Unit) { vm.loadBudgetMinutes() }
 
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
         Section("Backend", "Server-URL.") {
@@ -588,17 +589,17 @@ private fun SystemTab(vm: TuningViewModel) {
             )
         }
 
-        Section("Tagesbudget", "Bis zu $budgetDraft Videos pro Tag werden gescort.") {
+        Section("Zeitbudget", "Etwa $minutesDraft Minuten Feed pro Tag — danach ist bewusst Schluss.") {
             LabeledSlider(
                 label = null,
-                value = budgetDraft.toFloat(),
-                range = 5f..50f,
-                steps = 44,
-                valueLabel = budgetDraft.toString(),
+                value = minutesDraft.toFloat(),
+                range = 10f..240f,
+                steps = 22,
+                valueLabel = "$minutesDraft min",
                 accentLabel = true,
                 onValueChange = {
-                    budgetDraft = it.toInt()
-                    vm.setDailyBudget(budgetDraft)
+                    minutesDraft = it.toInt()
+                    vm.setBudgetMinutes(minutesDraft)
                 },
             )
         }

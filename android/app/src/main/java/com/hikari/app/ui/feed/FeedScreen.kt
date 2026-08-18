@@ -93,6 +93,7 @@ fun FeedScreen(
     val baseUrl by vm.backendUrl.collectAsState()
     val refreshing by vm.refreshing.collectAsState()
     val error by vm.error.collectAsState()
+    val today by vm.today.collectAsState()
     val ctx = LocalContext.current
     val activity = remember(ctx) { ctx.findActivity() }
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -214,7 +215,11 @@ fun FeedScreen(
                     }
                 }
             } else {
-                val pagerState = rememberPagerState(pageCount = { items.size })
+                // Etappe 4: Im NEW-Modus haengt eine Abschluss-Seite hinter dem
+                // letzten Item — bewusstes Tagesende statt leerem Weiterscrollen.
+                val showDonePage = mode == FeedMode.NEW
+                val pageCount = items.size + if (showDonePage) 1 else 0
+                val pagerState = rememberPagerState(pageCount = { pageCount })
                 LaunchedEffect(items.size) {
                     if (items.isNotEmpty() && pagerState.currentPage > items.lastIndex) {
                         pagerState.scrollToPage(items.lastIndex)
@@ -263,7 +268,12 @@ fun FeedScreen(
                 // Karten-Seiten (Langvideos) pausieren den Player nur.
                 LaunchedEffect(pagerState.currentPage, playlistKey) {
                     if (items.isEmpty()) return@LaunchedEffect
-                    val item = items.getOrNull(pagerState.currentPage) ?: return@LaunchedEffect
+                    val item = items.getOrNull(pagerState.currentPage)
+                    if (item == null) {
+                        // Abschluss-Seite — Wiedergabe ruht.
+                        player.pause()
+                        return@LaunchedEffect
+                    }
                     if (item.kind == "video") {
                         player.pause()
                         return@LaunchedEffect
@@ -288,9 +298,13 @@ fun FeedScreen(
 
                 VerticalPager(
                     state = pagerState,
-                    key = { items[it].videoId },
+                    key = { if (it < items.size) items[it].videoId else "daily-done" },
                     modifier = Modifier.fillMaxSize(),
                 ) { page ->
+                    if (page >= items.size) {
+                        DailyDonePage(watchedMinutes = today?.totalSeconds?.div(60))
+                        return@VerticalPager
+                    }
                     val item = items[page]
                     if (item.kind == "video") {
                         LongVideoCard(
@@ -357,7 +371,7 @@ fun FeedScreen(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                "${(pagerState.currentPage + 1).toString().padStart(2, '0')} / ${
+                                "${(pagerState.currentPage + 1).coerceAtMost(items.size).toString().padStart(2, '0')} / ${
                                     items.size.toString().padStart(2, '0')
                                 }",
                                 color = HikariTextFaint,

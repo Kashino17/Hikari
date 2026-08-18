@@ -1,5 +1,6 @@
 package com.hikari.app.data.api
 
+import com.hikari.app.data.api.dto.BudgetBody
 import com.hikari.app.data.api.dto.AddChannelRequest
 import com.hikari.app.data.api.dto.AddChannelResponse
 import com.hikari.app.data.api.dto.ChannelDto
@@ -159,6 +160,12 @@ interface HikariApi {
 
     @POST("feed/{id}/seen")
     suspend fun markSeen(@Path("id") videoId: String)
+
+    @GET("feed/budget")
+    suspend fun getBudget(): BudgetBody
+
+    @PUT("feed/budget")
+    suspend fun setBudget(@Body body: BudgetBody): BudgetBody
 
     @POST("channels/{id}/subscribe")
     suspend fun subscribeChannel(@Path("id") channelId: String)
