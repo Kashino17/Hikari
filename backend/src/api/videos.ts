@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { hydrateFeedBatch } from "./feed.js";
 import type Database from "better-sqlite3";
 import { createWriteStream } from "node:fs";
 import { unlink } from "node:fs/promises";
@@ -139,7 +140,24 @@ export async function registerVideosRoutes(
     `).all();
     const channels = deps.db.prepare("SELECT * FROM channels WHERE is_active = 1").all();
 
-    return { series, recentlyAdded, channels };
+    // Etappe 5: die Sammlung — Später ansehen + Verlauf, hydratisiert wie
+    // Feed-Items, damit die App dieselben Karten rendern kann.
+    const watchLaterRows = deps.db
+      .prepare("SELECT video_id AS id FROM watch_later ORDER BY added_at DESC LIMIT 50")
+      .all() as { id: string }[];
+    const historyRows = deps.db
+      .prepare(
+        "SELECT video_id AS id FROM feed_items WHERE seen_at IS NOT NULL ORDER BY seen_at DESC LIMIT 30",
+      )
+      .all() as { id: string }[];
+
+    return {
+      series,
+      recentlyAdded,
+      channels,
+      watchLater: hydrateFeedBatch(deps.db, watchLaterRows),
+      history: hydrateFeedBatch(deps.db, historyRows),
+    };
   });
 
   app.get("/series", async () => {
