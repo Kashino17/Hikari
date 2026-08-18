@@ -29,6 +29,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -44,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -390,6 +393,24 @@ fun FeedScreen(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Spacer(Modifier.weight(1f))
+                            // Direkter Weg zu den KI-Vorgaben: was hier
+                            // geändert wird, mischt den Feed sofort neu.
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(CircleShape)
+                                    .background(HikariBg.copy(alpha = 0.55f))
+                                    .clickable { onNavigate("tuning") },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "KI-Vorgaben",
+                                    tint = HikariTextFaint,
+                                    modifier = Modifier.size(17.dp),
+                                )
+                            }
+                            Spacer(Modifier.size(8.dp))
                             if (!fullscreen) {
                                 Spacer(Modifier.weight(1f))
                             }

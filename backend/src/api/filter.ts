@@ -17,6 +17,8 @@ import {
 
 export interface FilterDeps {
   db: Database.Database;
+  /** Wird nach jeder Filter-Änderung gerufen: Feed neu mischen, Suche anstoßen. */
+  onFilterChanged?: (() => void) | undefined;
 }
 
 interface PutBody {
@@ -69,6 +71,7 @@ export async function registerFilterRoutes(
     })();
 
     const state = getFilterState(deps.db);
+    deps.onFilterChanged?.();
     return {
       filter: state.filter,
       promptOverride: state.promptOverride,

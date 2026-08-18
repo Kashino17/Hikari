@@ -148,7 +148,25 @@ await registerFeedRoutes(app, {
   onLowStock: () => triggerDiscovery("feed low stock"),
 });
 await registerWatchLaterRoutes(app, { db });
-await registerFilterRoutes(app, { db });
+await registerFilterRoutes(app, {
+  db,
+  onFilterChanged: () => {
+    // Neue Vorgaben sollen sofort wirken: ungesehenen Mix verwerfen, neu
+    // mischen und passende Inhalte suchen.
+    try {
+      db.prepare(
+        `DELETE FROM daily_mix_items WHERE video_id IN (
+           SELECT m.video_id FROM daily_mix_items m
+             JOIN feed_items f ON f.video_id = m.video_id
+            WHERE f.seen_at IS NULL)`,
+      ).run();
+      buildDailyMix(db);
+    } catch (err) {
+      app.log.warn({ err }, "feed rebuild after filter change failed");
+    }
+    triggerDiscovery("filter changed");
+  },
+});
 await registerDiscoverySettingsRoutes(app, { db });
 await registerDiscoveryRoutes(app, { db });
 await registerHealthRoute(app, { db, videoDir: cfg.videoDir });

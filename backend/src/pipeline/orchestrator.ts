@@ -98,7 +98,8 @@ function classifyFormat(meta: VideoMetadata): "short" | "long" {
 }
 
 export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> {
-  const { db, videoId, channelId } = deps;
+  const { db, videoId } = deps;
+  let channelId = deps.channelId;
 
   const existing = db.prepare("SELECT 1 FROM videos WHERE id = ?").get(videoId);
   if (existing) return;
@@ -106,6 +107,28 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
   const meta = await deps.fetchMetadata(videoId);
 
   if (meta.isLive) return;
+
+  // Themen-Treffer kommen unter einem Sammel-Kanal herein; die Metadaten
+  // verraten den echten Uploader. Erst dadurch lässt sich der Kanal
+  // abonnieren oder blocken — und der Feed zeigt den richtigen Namen.
+  if (meta.channelId && meta.channelId !== channelId) {
+    const known = db.prepare("SELECT status FROM channels WHERE id = ?").get(meta.channelId) as
+      | { status: string | null }
+      | undefined;
+    if (known?.status === "blocked") return; // geblockter Kanal: nichts aufnehmen
+    if (!known) {
+      db.prepare(
+        `INSERT OR IGNORE INTO channels (id, url, title, added_at, is_active, status)
+         VALUES (?, ?, ?, ?, 0, 'probe')`,
+      ).run(
+        meta.channelId,
+        `https://www.youtube.com/channel/${meta.channelId}`,
+        meta.channelTitle ?? meta.channelId,
+        Date.now(),
+      );
+    }
+    channelId = meta.channelId;
+  }
 
   const format = classifyFormat(meta);
 

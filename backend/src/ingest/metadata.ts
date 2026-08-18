@@ -10,6 +10,9 @@ export interface VideoMetadata {
   aspectRatio: string;
   defaultLanguage: string | null;
   isLive: boolean;
+  /** Echter Uploader-Kanal — bei Themen-Treffern sonst unbekannt. */
+  channelId: string | null;
+  channelTitle: string | null;
   captionsUrl: string | null;
 }
 
@@ -25,6 +28,9 @@ interface YtDlpJson {
   language?: string;
   live_status?: string;
   automatic_captions?: Record<string, { url: string; ext: string }[]>;
+  channel_id?: string;
+  channel?: string;
+  uploader?: string;
 }
 
 export async function fetchVideoMetadata(videoId: string): Promise<VideoMetadata> {
@@ -49,6 +55,8 @@ export async function fetchVideoMetadata(videoId: string): Promise<VideoMetadata
     aspectRatio: classifyAspect(d.width, d.height),
     defaultLanguage: d.language ?? null,
     isLive: d.live_status !== "not_live" && d.live_status !== undefined,
+    channelId: d.channel_id ?? null,
+    channelTitle: d.channel ?? d.uploader ?? null,
     captionsUrl: pickCaptionsUrl(d.automatic_captions),
   };
 }

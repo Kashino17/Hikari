@@ -14,6 +14,8 @@ const fakeMetadata = {
   aspectRatio: "16:9",
   defaultLanguage: "en",
   isLive: false,
+  channelId: null,
+  channelTitle: null,
   captionsUrl: null,
 };
 
@@ -183,6 +185,44 @@ describe("processNewVideo", () => {
     expect(db.prepare("SELECT format FROM videos WHERE id='vid1'").get()).toEqual({
       format: "short",
     });
+  });
+
+  it("Themen-Treffer bekommen ihren echten Kanal — abonnierbar statt Sammel-Eintrag", async () => {
+    db.prepare(
+      "INSERT INTO channels (id,url,title,added_at,is_active,status) VALUES ('discovery-topics','','Themen',0,0,'probe')",
+    ).run();
+    await processNewVideo(
+      baseDeps({
+        channelId: "discovery-topics",
+        source: "topic",
+        fetchMetadata: async () => ({
+          ...fakeMetadata,
+          channelId: "UC-echt",
+          channelTitle: "Echter Kanal",
+        }),
+      }),
+    );
+    expect(db.prepare("SELECT channel_id FROM videos WHERE id='vid1'").get()).toEqual({
+      channel_id: "UC-echt",
+    });
+    expect(db.prepare("SELECT title, status FROM channels WHERE id='UC-echt'").get()).toEqual({
+      title: "Echter Kanal",
+      status: "probe",
+    });
+  });
+
+  it("Videos geblockter Kanäle werden gar nicht erst aufgenommen", async () => {
+    db.prepare(
+      "INSERT INTO channels (id,url,title,added_at,is_active,status) VALUES ('UC-block','','Geblockt',0,0,'blocked')",
+    ).run();
+    await processNewVideo(
+      baseDeps({
+        channelId: "discovery-topics",
+        source: "topic",
+        fetchMetadata: async () => ({ ...fakeMetadata, channelId: "UC-block" }),
+      }),
+    );
+    expect(db.prepare("SELECT COUNT(*) c FROM videos WHERE id='vid1'").get()).toEqual({ c: 0 });
   });
 
   it("Vorfilter lehnt fremdsprachige Titel ohne Scorer-Aufruf ab", async () => {

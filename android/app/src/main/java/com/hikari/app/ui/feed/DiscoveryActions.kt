@@ -63,9 +63,9 @@ fun DiscoveryActions(
             "sub" -> StatusPill(Icons.Default.Check, "Kanal abonniert", overVideo)
             "block" -> StatusPill(Icons.Default.Close, "Wird nicht mehr gezeigt", overVideo)
             else -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Themen-Treffer haben keinen echten Kanal (Sammel-Eintrag),
-                // deshalb dort nur das Ausblenden.
-                if (item.source == "probe") {
+                // Ohne echten Kanal (alter Sammel-Eintrag) gibt es nur das
+                // Ausblenden — sonst lässt sich jeder Fund abonnieren.
+                if (item.channelId.isNotBlank() && item.channelId != "discovery-topics") {
                     ActionPill(
                         icon = Icons.Default.Add,
                         label = "Abonnieren",
