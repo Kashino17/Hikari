@@ -90,8 +90,10 @@ fun LongVideoCard(
             Spacer(Modifier.height(10.dp))
             DiscoveryActions(item = item, onSubscribe = onSubscribeChannel, onBlock = onBlockChannel)
         }
-        val teaser = item.summary ?: item.reasoning
-        if (teaser.isNotBlank()) {
+        // Nur die echte KI-Kurzbeschreibung — reasoning ist interner Scorer-Text
+        // ("auto-approved (Green Card)...") und hat auf der Karte nichts verloren.
+        val teaser = item.summary
+        if (!teaser.isNullOrBlank()) {
             Spacer(Modifier.height(12.dp))
             Text(
                 text = teaser,
