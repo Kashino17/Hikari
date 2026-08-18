@@ -20,7 +20,7 @@ class FeedRepositoryTest {
     private val repo = FeedRepository(api, dao)
 
     @Test fun refresh_upsertsItemsFromApi() = runTest {
-        coEvery { api.getFeed(mode = "new") } returns listOf(
+        coEvery { api.getFeed(mode = "new", offset = 0, limit = 30) } returns listOf(
             FeedItemDto(
                 videoId = "v1", title = "t", durationSeconds = 60,
                 aspectRatio = "9:16", thumbnailUrl = "thumb",
@@ -35,7 +35,7 @@ class FeedRepositoryTest {
     }
 
     @Test fun refresh_whenApiReturnsNoItems_prunesUnseenUnsaved() = runTest {
-        coEvery { api.getFeed(mode = "new") } returns emptyList()
+        coEvery { api.getFeed(mode = "new", offset = 0, limit = 30) } returns emptyList()
         repo.refresh()
         coVerify { dao.upsertAll(emptyList()) }
         coVerify { dao.pruneAll() }
