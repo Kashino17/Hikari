@@ -1,7 +1,10 @@
 # Hikari 2.0 — Feed-Streaming-Umbau (Design)
 
 **Datum:** 2026-08-18
-**Status:** Vom User freigegeben (Chat-Session 2026-08-18)
+**Status:** GELIEFERT — alle 5 Etappen umgesetzt (2026-08-18, v0.59.0–v0.65.0).
+Abweichungen: Themen-Suche nutzt filter.likeTags statt eigener interest_topics-Tabelle;
+Budget-Speicher ist feed_settings statt discovery_settings; Verlauf aus feed_items.seen_at;
+kein expliziter Später-Button (Automatik: Wegswipe → rein, Öffnen → raus).
 
 ## 1. Ziel & Motivation
 
