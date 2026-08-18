@@ -11,4 +11,6 @@ data class TodayCountResponse(
     val budgetMinutes: Int? = null,
     val remainingSeconds: Int? = null,
     val totalSeconds: Int? = null,
+    /** Tatsächlich geschaute Sekunden — nur die zählen gegen das Tagesbudget. */
+    val consumedSeconds: Double? = null,
 )

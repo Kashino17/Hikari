@@ -302,7 +302,7 @@ fun FeedScreen(
                     modifier = Modifier.fillMaxSize(),
                 ) { page ->
                     if (page >= items.size) {
-                        DailyDonePage(watchedMinutes = today?.totalSeconds?.div(60))
+                        DailyDonePage(watchedMinutes = today?.consumedSeconds?.div(60)?.toInt())
                         return@VerticalPager
                     }
                     val item = items[page]
@@ -371,13 +371,6 @@ fun FeedScreen(
                                 .padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(
-                                "${(pagerState.currentPage + 1).coerceAtMost(items.size).toString().padStart(2, '0')} / ${
-                                    items.size.toString().padStart(2, '0')
-                                }",
-                                color = HikariTextFaint,
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                            )
                             Spacer(Modifier.weight(1f))
                             if (!fullscreen) {
                                 FilterPills(

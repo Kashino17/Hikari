@@ -491,6 +491,7 @@ fun ReelPlayer(
                         item = item,
                         onSubscribe = onSubscribeChannel,
                         onBlock = onBlockChannel,
+                        overVideo = true,
                     )
                 }
                 Spacer(Modifier.height(6.dp))
