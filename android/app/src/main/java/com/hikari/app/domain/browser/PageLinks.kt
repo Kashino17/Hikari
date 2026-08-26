@@ -109,3 +109,47 @@ object EpisodeLinkFilter {
     private fun hostOf(url: String): String? =
         runCatching { java.net.URI(url).host?.lowercase() }.getOrNull()
 }
+
+/**
+ * Prüft den Seitentitel, bevor er als Videotitel übernommen wird.
+ *
+ * Seiten hinter einem Bot-Schutz (Cloudflare, DDoS-Guard) tragen während der
+ * Prüfung einen Platzhaltertitel. Wird in genau dem Moment eingesammelt — und
+ * das ist der Normalfall, weil der Player erst nach der Prüfung startet —,
+ * landet dieser Platzhalter als Videotitel in der Bibliothek. Eine Folge
+ * Modern Family hieß deshalb "Security Check" und war unter dem Namen nicht
+ * wiederzufinden.
+ *
+ * Lieber gar kein Titel als ein falscher: Ohne Titel setzt die Übersicht
+ * Serie und Folgennummer ein, was ohnehin die bessere Beschriftung ist.
+ */
+object PageTitleFilter {
+
+    private val BLOCKED = listOf(
+        "security check",
+        "just a moment",
+        "attention required",
+        "ddos-guard",
+        "checking your browser",
+        "bitte warten",
+        "einen moment",
+        "access denied",
+        "cloudflare",
+        "verify you are human",
+        "captcha",
+        "403 forbidden",
+        "404 not found",
+    )
+
+    /** Maximale Titellänge — Seitentitel enthalten oft ganze Beschreibungen. */
+    private const val MAX_LENGTH = 200
+
+    /** Liefert den brauchbaren Titel oder null, wenn er nichts taugt. */
+    fun clean(raw: String?): String? {
+        val t = raw?.trim().orEmpty()
+        if (t.length < 3) return null
+        val lower = t.lowercase()
+        if (BLOCKED.any { it in lower }) return null
+        return if (t.length > MAX_LENGTH) t.take(MAX_LENGTH) else t
+    }
+}

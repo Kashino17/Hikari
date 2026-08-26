@@ -8,6 +8,7 @@ import com.hikari.app.domain.browser.EpisodeLinkFilter
 import com.hikari.app.domain.browser.MediaFinding
 import com.hikari.app.domain.browser.MediaSniffer
 import com.hikari.app.domain.browser.PageLink
+import com.hikari.app.domain.browser.PageTitleFilter
 import com.hikari.app.domain.repo.ChannelsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -98,9 +99,10 @@ class BrowserViewModel @Inject constructor(
         // <video src> direkt aus dem DOM zählt wie ein mitgelesener Request.
         for (v in domVideos) sniffer.onRequest(v, emptyMap())
         val episodes = EpisodeLinkFilter.extract(url, links)
+        val clean = PageTitleFilter.clean(title)
         _ui.update {
             it.copy(
-                pageTitle = title.ifBlank { it.pageTitle },
+                pageTitle = clean ?: it.pageTitle,
                 episodeLinks = episodes,
                 findings = sniffer.findings(),
             )
@@ -136,9 +138,14 @@ class BrowserViewModel @Inject constructor(
     }
 
     private fun addToBasket(pageUrl: String, title: String, finding: MediaFinding, episode: Int?) {
+        // Steht die Seite gerade hinter einem Bot-Schutz, traegt sie dessen
+        // Platzhaltertitel — und genau dann wird eingesammelt, weil der Player
+        // erst nach der Pruefung startet. Lieber kein Titel als "Security
+        // Check": Ohne ihn beschriftet die Uebersicht mit Serie und Folge.
+        val clean = PageTitleFilter.clean(title).orEmpty()
         _ui.update { st ->
             if (st.basket.any { it.pageUrl == pageUrl }) st
-            else st.copy(basket = st.basket + BasketItem(pageUrl, title, finding, episode))
+            else st.copy(basket = st.basket + BasketItem(pageUrl, clean, finding, episode))
         }
     }
 

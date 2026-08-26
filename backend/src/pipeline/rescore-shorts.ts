@@ -22,6 +22,19 @@ export interface RescoreDeps {
  * YouTube: Titel, Beschreibung und Transkript liegen bereits in der Datenbank.
  * Läuft in kleinen Portionen, damit der Scorer nebenher frische Videos schafft.
  */
+/**
+ * Der Archivkanal für alles, was der Nutzer selbst hinzugefügt hat.
+ *
+ * Diese Videos sind von jeder Neubewertung ausgenommen: Sie wurden bewusst
+ * ausgesucht und heruntergeladen, die Entscheidung ist damit gefallen. Weil
+ * ein manueller Import als `approved` mit feed_items-Zeile angelegt wird,
+ * erfüllte er zuvor exakt die Kandidatenbedingung — jede Änderung an den
+ * Vorgaben schickte ihn erneut durchs Modell, das ihn dann verwerfen konnte.
+ * So verschwand eine selbst geladene Folge aus dem Bestand und stand danach
+ * als abgelehnt da.
+ */
+export const MANUAL_CHANNEL_ID = "manual";
+
 export async function rescoreLegacyShorts(deps: RescoreDeps): Promise<number> {
   const { db, scorer } = deps;
   const now = deps.now ?? Date.now;
@@ -37,6 +50,8 @@ export async function rescoreLegacyShorts(deps: RescoreDeps): Promise<number> {
         WHERE v.format = 'short'
           AND s.decision = 'rejected'
           AND s.model_used <> ?
+          -- Selbst hinzugefügtes bleibt außen vor (siehe MANUAL_CHANNEL_ID).
+          AND v.channel_id <> ?
           -- NUR aktuell abonnierte Kanäle: der Bestand enthält über tausend
           -- Shorts längst entfernter Kanäle, die zu Recht abgelehnt sind —
           -- die dürfen den Scorer nicht blockieren.
@@ -47,7 +62,7 @@ export async function rescoreLegacyShorts(deps: RescoreDeps): Promise<number> {
                  v.published_at DESC
         LIMIT ?`,
     )
-    .all(RESCORE_MARKER, limit) as {
+    .all(RESCORE_MARKER, MANUAL_CHANNEL_ID, limit) as {
     id: string;
     channelId: string;
     title: string;
@@ -138,10 +153,12 @@ export async function rescoreOutdatedFeedItems(deps: RescoreDeps): Promise<numbe
         WHERE f.seen_at IS NULL AND f.playback_failed = 0
           AND s.decision = 'approved'
           AND s.scored_at < ?
+          -- Selbst hinzugefügtes bleibt außen vor (siehe MANUAL_CHANNEL_ID).
+          AND v.channel_id <> ?
         ORDER BY s.scored_at ASC
         LIMIT ?`,
     )
-    .all(filterChangedAt, limit) as {
+    .all(filterChangedAt, MANUAL_CHANNEL_ID, limit) as {
     id: string;
     channelId: string;
     title: string;
@@ -209,9 +226,13 @@ export function outdatedFeedItemCount(db: Database.Database): number {
       `SELECT COUNT(*) AS c
          FROM feed_items f
          JOIN scores s ON s.video_id = f.video_id
+         JOIN videos v ON v.id = f.video_id
         WHERE f.seen_at IS NULL AND f.playback_failed = 0 AND s.decision = 'approved'
-          AND s.scored_at < (SELECT COALESCE(updated_at, 0) FROM filter_config WHERE id = 1)`,
+          AND s.scored_at < (SELECT COALESCE(updated_at, 0) FROM filter_config WHERE id = 1)
+          -- Zählung muss zur Auswahl oben passen, sonst kündigt die App eine
+          -- Neubewertung an, die gar nicht stattfindet.
+          AND v.channel_id <> ?`,
     )
-    .get() as { c: number };
+    .get(MANUAL_CHANNEL_ID) as { c: number };
   return row.c;
 }

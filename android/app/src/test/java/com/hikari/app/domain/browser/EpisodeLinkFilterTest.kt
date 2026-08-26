@@ -1,6 +1,7 @@
 package com.hikari.app.domain.browser
 
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.Test
 
@@ -62,5 +63,57 @@ class EpisodeLinkFilterTest {
     fun schliesstDieAktuelleSeiteAus() {
         val links = listOf(PageLink("$page#top", "Diese Seite"))
         assertTrue(EpisodeLinkFilter.extract(page, links).isEmpty())
+    }
+
+}
+
+/**
+ * Seiten hinter einem Bot-Schutz tragen waehrend der Pruefung einen
+ * Platzhaltertitel. Wird in genau dem Moment eingesammelt, landet er als
+ * Videotitel in der Bibliothek — eine Folge Modern Family hiess deshalb
+ * "Security Check" und war unter dem Namen nicht wiederzufinden.
+ */
+class PageTitleFilterTest {
+
+    @Test
+    fun verwirftSchutzseitenTitel() {
+        for (t in listOf(
+            "Security Check",
+            "Just a moment...",
+            "Attention Required! | Cloudflare",
+            "DDoS-Guard",
+            "Bitte warten…",
+            "Checking your browser before accessing",
+            "Einen Moment bitte",
+            "  ACCESS DENIED  ",
+        )) {
+            assertNull(PageTitleFilter.clean(t), "haette verworfen werden muessen: $t")
+        }
+    }
+
+    @Test
+    fun behaeltEchteTitel() {
+        for (t in listOf(
+            "Modern Family Staffel 1 Folge 1",
+            "Interstellar jetzt streamen",
+            "Solo Leveling S01E03",
+        )) {
+            assertEquals(t, PageTitleFilter.clean(t))
+        }
+    }
+
+    @Test
+    fun verwirftLeereUndZuKurzeTitel() {
+        assertNull(PageTitleFilter.clean(""))
+        assertNull(PageTitleFilter.clean("   "))
+        assertNull(PageTitleFilter.clean("ab"))
+        assertNull(PageTitleFilter.clean(null))
+    }
+
+    @Test
+    fun kuerztUebermaessigLangeTitel() {
+        val lang = "x".repeat(400)
+        val out = PageTitleFilter.clean(lang)
+        assertEquals(200, out?.length)
     }
 }

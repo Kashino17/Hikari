@@ -3,7 +3,11 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { applyMigrations } from "../db/migrations.js";
 import type { Scorer } from "../scorer/types.js";
 import { getFilterState } from "../scorer/filter-repo.js";
-import { rescoreLegacyShorts, rescoreOutdatedFeedItems } from "./rescore-shorts.js";
+import {
+  outdatedFeedItemCount,
+  rescoreLegacyShorts,
+  rescoreOutdatedFeedItems,
+} from "./rescore-shorts.js";
 
 function scorerWith(overall: number, capture?: string[]): Scorer {
   return {
@@ -156,5 +160,54 @@ describe("rescoreOutdatedFeedItems", () => {
     db.prepare("UPDATE filter_config SET updated_at = 5000 WHERE id = 1").run();
     const n = await rescoreOutdatedFeedItems({ db, scorer: scorerWith(10), limit: 5 });
     expect(n).toBe(0);
+  });
+
+  // Manuell hinzugefuegte Videos hat der Nutzer bewusst selbst ausgewaehlt und
+  // heruntergeladen. Die KI darf nachtraeglich nicht darueber urteilen, ob das
+  // "passt" — genau so verschwand eine selbst geladene Folge aus dem Bestand
+  // und stand danach als abgelehnt da.
+  function seedManualImport(id: string, scoredAt: number) {
+    db.prepare(
+      `INSERT OR IGNORE INTO channels (id,url,title,added_at,is_active)
+       VALUES ('manual','manual:hikari','Manuell hinzugefügt',0,1)`,
+    ).run();
+    db.prepare(
+      `INSERT INTO videos (id, channel_id, title, description, published_at, duration_seconds,
+         discovered_at, format, source)
+       VALUES (?, 'manual', ?, 'd', 0, 60, 0, 'short', 'subscription')`,
+    ).run(id, `t-${id}`);
+    db.prepare(
+      `INSERT INTO scores (video_id, overall_score, category, clickbait_risk, educational_value,
+         emotional_manipulation, reasoning, model_used, scored_at, decision)
+       VALUES (?, 100, 'other', 0, 0, 0, 'Manuell hinzugefügt — Auto-Genehmigt', 'manual', ?, 'approved')`,
+    ).run(id, scoredAt);
+    db.prepare(
+      "INSERT INTO feed_items (video_id, added_to_feed_at, is_pre_clipper) VALUES (?, 0, 1)",
+    ).run(id);
+  }
+
+  it("laesst manuell hinzugefuegte Videos unangetastet", async () => {
+    seedManualImport("eigenes", 1000);
+    getFilterState(db);
+    db.prepare("UPDATE filter_config SET updated_at = 5000 WHERE id = 1").run();
+
+    // Ein Scorer, der alles ablehnen wuerde — er darf hier gar nicht erst
+    // gefragt werden.
+    const n = await rescoreOutdatedFeedItems({ db, scorer: scorerWith(0), limit: 5 });
+
+    expect(n).toBe(0);
+    expect(db.prepare("SELECT decision FROM scores WHERE video_id='eigenes'").get()).toEqual({
+      decision: "approved",
+    });
+    expect(db.prepare("SELECT COUNT(*) c FROM feed_items WHERE video_id='eigenes'").get()).toEqual({
+      c: 1,
+    });
+  });
+
+  it("zaehlt manuelle Importe nicht als neu zu bewerten", () => {
+    seedManualImport("eigenes", 1000);
+    getFilterState(db);
+    db.prepare("UPDATE filter_config SET updated_at = 5000 WHERE id = 1").run();
+    expect(outdatedFeedItemCount(db)).toBe(0);
   });
 });

@@ -65,6 +65,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hikari.app.domain.browser.PageScripts
+import com.hikari.app.domain.browser.PageTitleFilter
 import kotlinx.coroutines.delay
 import org.json.JSONObject
 import org.json.JSONTokener
@@ -197,7 +198,11 @@ fun BrowserScreen(
 
                             override fun onPageFinished(view: WebView?, url: String?) {
                                 val page = url ?: return
-                                vm.onPageFinished(page, view?.title.orEmpty(), view?.canGoBack() == true)
+                                vm.onPageFinished(
+                                    page,
+                                    PageTitleFilter.clean(view?.title).orEmpty(),
+                                    view?.canGoBack() == true,
+                                )
                                 view?.evaluateJavascript(PageScripts.AUTOPLAY, null)
                                 view?.evaluateJavascript(PageScripts.SCAN) { raw ->
                                     parseScan(raw)?.let { scan ->

@@ -30,6 +30,7 @@ import { registerVideoFullRoute } from "./api/video-full.js";
 import { loadConfig } from "./config.js";
 import { openDatabase } from "./db/connection.js";
 import { runDiscoveryCycle } from "./discovery/feed-sources.js";
+import { describeAiWindow, isAiWindowOpen } from "./pipeline/ai-window.js";
 import { buildDailyMix } from "./feed/daily-mix.js";
 import { runCleanup } from "./download/cleanup.js";
 import { fetchVideoMetadata } from "./ingest/metadata.js";
@@ -273,6 +274,12 @@ let discoveryNextAllowed = 0;
 const DISCOVERY_COOLDOWN_MS = 20 * 60 * 1000;
 function triggerDiscovery(reason: string): void {
   if (discoveryRunning || Date.now() < discoveryNextAllowed) return;
+  // Themensuche bewertet jeden Fund per Sprachmodell — außerhalb des Fensters
+  // wartet sie. Der Vorrat reicht ohnehin für Tage.
+  if (!isAiWindowOpen(new Date(), cfg.aiWindow)) {
+    app.log.debug({ reason }, "discovery verschoben — KI-Fenster geschlossen");
+    return;
+  }
   discoveryRunning = true;
   discoveryNextAllowed = Date.now() + DISCOVERY_COOLDOWN_MS;
   app.log.info({ reason }, "discovery cycle started");
@@ -417,7 +424,25 @@ async function drainIngestQueue(): Promise<void> {
 
 // Recover stale locks from a previous crash, then drain every minute.
 unlockStaleIngest(db);
+let aiWindowWasOpen = isAiWindowOpen(new Date(), cfg.aiWindow);
 cron.schedule("* * * * *", () => {
+  // Der Drain holt Metadaten, zieht Transkripte UND bewertet per Sprachmodell.
+  // Außerhalb des Fensters sammelt sich die Warteschlange einfach an; nichts
+  // geht verloren, es wird nur später abgearbeitet.
+  const open = isAiWindowOpen(new Date(), cfg.aiWindow);
+  if (open !== aiWindowWasOpen) {
+    aiWindowWasOpen = open;
+    app.log.info(
+      {
+        window: describeAiWindow(cfg.aiWindow),
+        queued: (
+          db.prepare("SELECT COUNT(*) AS c FROM ingest_queue").get() as { c: number }
+        ).c,
+      },
+      open ? "KI-Fenster geöffnet — Warteschlange wird abgearbeitet" : "KI-Fenster geschlossen",
+    );
+  }
+  if (!open) return;
   drainIngestQueue().catch((err) => app.log.error({ err }, "ingest drain crashed"));
 });
 

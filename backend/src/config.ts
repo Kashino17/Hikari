@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { type AiWindow, parseAiWindow } from "./pipeline/ai-window.js";
 
 export type LLMProvider = "claude" | "ollama" | "lmstudio";
 
@@ -36,6 +37,12 @@ export interface Config {
    * default. A browser client would set e.g. "https://app.example.com".
    */
   corsOrigins: string[];
+  /**
+   * Zeitfenster für KI-Hintergrundarbeit (HIKARI_AI_WINDOW, z. B. "22:00-02:00").
+   * null = jederzeit. Betrifft nur Hintergrundjobs (Bewerten, Themensuche,
+   * Neubewertung) — vom Nutzer angestoßene Aufrufe laufen immer.
+   */
+  aiWindow: AiWindow | null;
 }
 
 /**
@@ -69,6 +76,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
 
   return {
     port: num("PORT", env.PORT, 3939),
+    // Vorgabe: nachts. Das Bewerten lief zuvor im Minutentakt und hielt das
+    // Sprachmodell dauerhaft unter Volllast — auf einem Laptop hörbar und
+    // spürbar, für eine Aufgabe die niemand sofort braucht.
+    aiWindow: parseAiWindow(env.HIKARI_AI_WINDOW ?? "22:00-02:00"),
     dataDir,
     videoDir: join(dataDir, "videos"),
     mangaDir: join(dataDir, "manga"),
