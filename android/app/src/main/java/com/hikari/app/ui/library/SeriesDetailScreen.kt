@@ -168,7 +168,7 @@ private fun SeriesDetailContent(
         }
 
         items(episodesForSeason, key = { it.id }) { video ->
-            EpisodeRow(video) { onPlayVideo(video.id) }
+            EpisodeRow(video) { if (video.downloaded != 0) onPlayVideo(video.id) }
         }
 
         item { Spacer(Modifier.height(40.dp)) }
@@ -411,9 +411,10 @@ private fun EpisodeRow(video: LibraryVideoDto, onClick: () -> Unit) {
         }
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f).padding(top = 2.dp)) {
+            val missing = video.downloaded == 0
             Text(
                 text = video.episode?.let { "$it. ${video.title}" } ?: video.title,
-                color = HikariText,
+                color = if (missing) HikariTextFaint else HikariText,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
@@ -421,7 +422,9 @@ private fun EpisodeRow(video: LibraryVideoDto, onClick: () -> Unit) {
                 lineHeight = 16.sp,
             )
             Text(
-                text = "${video.duration_seconds / 60} min",
+                // Eine Folge ohne Datei als solche ausweisen, statt den Nutzer
+                // ins Leere tippen zu lassen.
+                text = if (missing) "Nicht heruntergeladen" else "${video.duration_seconds / 60} min",
                 color = HikariTextFaint,
                 fontSize = 11.sp,
                 modifier = Modifier.padding(top = 4.dp),

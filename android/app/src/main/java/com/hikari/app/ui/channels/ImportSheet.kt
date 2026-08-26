@@ -13,6 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -39,6 +40,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ImportSheet(
     onDismiss: () -> Unit,
+    onOpenBrowser: (() -> Unit)? = null,
     vm: ImportSheetViewModel = hiltViewModel(),
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -124,6 +126,14 @@ fun ImportSheet(
                         else -> "$readyCount Importieren"
                     },
                 )
+            }
+            if (onOpenBrowser != null) {
+                TextButton(
+                    onClick = onOpenBrowser,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Stattdessen im Browser suchen", fontSize = 13.sp)
+                }
             }
             Spacer(Modifier.height(16.dp))
         }

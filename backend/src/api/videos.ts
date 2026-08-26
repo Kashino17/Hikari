@@ -5,7 +5,8 @@ import { createWriteStream } from "node:fs";
 import { unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
-import { importDirectLink, fetchImportMetadata, ensureSeries, type ImportResult, type ManualMetadata } from "../import/manual-import.js";
+import { importDirectLink, importSniffedMedia, fetchImportMetadata, ensureSeries, type ImportResult, type ManualMetadata, type SniffedMedia } from "../import/manual-import.js";
+import { startBulkJob, recordBulkResult, finishBulkJob, getBulkJob, getLatestBulkJob } from "../import/bulk-job.js";
 import type { MetadataExtractor } from "../scorer/metadata-extractor.js";
 import { downloadVideo } from "../download/worker.js";
 
@@ -100,24 +101,127 @@ export async function registerVideosRoutes(
       return reply.code(400).send({ error: "no items" });
     }
 
-    const queue = [...items];
-    const max = 4;
-    const runners = Array.from({ length: max }, async () => {
-      while (queue.length > 0) {
-        const item = queue.shift();
-        if (!item) break;
+    // Pro Hoster seriell, verschiedene Hoster parallel. Ein Filehoster wie voe
+    // beantwortet mehrere gleichzeitige Downloads derselben IP mit 403/429 —
+    // vier parallele Runner ließen deshalb reihenweise Folgen scheitern,
+    // sichtbar wurde davon nichts (siehe unten).
+    const byHost = new Map<string, { url: string; metadata?: ManualMetadata }[]>();
+    for (const item of items) {
+      let host = "unknown";
+      try {
+        host = new URL(item.url).hostname;
+      } catch {
+        // Kaputte URL: importDirectLink meldet den Fehler sauber zurück.
+      }
+      const bucket = byHost.get(host);
+      if (bucket) bucket.push(item);
+      else byHost.set(host, [item]);
+    }
+
+    const job = startBulkJob(items.length);
+    void (async () => {
+      await Promise.all(
+        [...byHost.values()].map(async (bucket) => {
+          for (const item of bucket) {
+            // importDirectLink WIRFT nicht bei Misserfolg, es liefert
+            // { status: "failed", error } zurück. Der frühere try/catch lief
+            // deshalb nie an und der Rückgabewert wurde verworfen — ein
+            // fehlgeschlagener Bulk-Import hinterließ null Spuren: keine
+            // Logzeile, keine Rückmeldung an die App.
+            try {
+              const result = await importDirectLink(
+                deps.db,
+                item.url,
+                deps.videoDir,
+                item.metadata,
+              );
+              recordBulkResult(job, result);
+              if (result.status === "failed") {
+                app.log.error(
+                  { url: item.url, error: result.error },
+                  "bulk import item failed",
+                );
+              } else {
+                app.log.info(
+                  { url: item.url, status: result.status, videoId: result.videoId },
+                  "bulk import item done",
+                );
+              }
+            } catch (err) {
+              recordBulkResult(job, {
+                url: item.url,
+                status: "failed",
+                error: String(err).slice(0, 200),
+              });
+              app.log.error({ err, url: item.url }, "bulk import item threw");
+            }
+          }
+        }),
+      );
+      finishBulkJob(job);
+      app.log.info(
+        { total: job.total, ok: job.ok, duplicate: job.duplicate, failed: job.failed },
+        "bulk import finished",
+      );
+    })();
+
+    return reply.code(202).send({ queued: items.length, jobId: job.id });
+  });
+
+  // Import aus dem In-App-Browser: Der Stream wurde dort bereits mitgelesen,
+  // die Extraktion ist also schon passiert. Referer/Cookie/UA der Herkunftsseite
+  // werden mitgereicht, sonst verweigert der Hoster den Serverdownload.
+  app.post<{
+    Body: {
+      items?: (SniffedMedia & { metadata?: ManualMetadata })[];
+    };
+  }>("/videos/import/sniffed", async (req, reply) => {
+    const items = req.body?.items;
+    if (!Array.isArray(items) || items.length === 0) {
+      return reply.code(400).send({ error: "no items" });
+    }
+
+    const job = startBulkJob(items.length);
+    void (async () => {
+      // Seriell: Die Funde stammen fast immer von derselben Seite und damit
+      // demselben Hoster, der parallele Downloads mit 403 quittiert.
+      for (const item of items) {
         try {
-          await importDirectLink(deps.db, item.url, deps.videoDir, item.metadata);
+          const result = await importSniffedMedia(deps.db, item, deps.videoDir, item.metadata);
+          recordBulkResult(job, result);
+          if (result.status === "failed") {
+            app.log.error({ pageUrl: item.pageUrl, error: result.error }, "sniffed import failed");
+          } else {
+            app.log.info(
+              { pageUrl: item.pageUrl, status: result.status, videoId: result.videoId },
+              "sniffed import done",
+            );
+          }
         } catch (err) {
-          app.log.error({ err, url: item.url }, "bulk import item failed");
+          recordBulkResult(job, {
+            url: item.pageUrl,
+            status: "failed",
+            error: String(err).slice(0, 200),
+          });
+          app.log.error({ err, pageUrl: item.pageUrl }, "sniffed import threw");
         }
       }
-    });
-    Promise.all(runners).catch((err) =>
-      app.log.error({ err }, "bulk import runners crashed"),
-    );
+      finishBulkJob(job);
+      app.log.info(
+        { total: job.total, ok: job.ok, duplicate: job.duplicate, failed: job.failed },
+        "sniffed import finished",
+      );
+    })();
 
-    return reply.code(202).send({ queued: items.length });
+    return reply.code(202).send({ queued: items.length, jobId: job.id });
+  });
+
+  // Fortschritt/Ergebnis des zuletzt gestarteten Bulk-Imports. Ohne diesen
+  // Endpunkt bleibt ein 202-Fire-and-Forget-Import für die App eine Blackbox.
+  app.get<{ Querystring: { id?: string } }>("/videos/import/bulk/status", async (req, reply) => {
+    const job = req.query?.id ? getBulkJob(req.query.id) : getLatestBulkJob();
+    if (!job) return reply.code(404).send({ error: "no bulk job" });
+    return job;
   });
 
   app.get("/library", async () => {
@@ -245,10 +349,16 @@ export async function registerVideosRoutes(
     const row = deps.db.prepare("SELECT * FROM series WHERE id = ?").get(req.params.id) as SeriesRow | undefined;
     if (!row) return reply.code(404).send({ error: "series not found" });
 
+    // `downloaded` mitliefern: Eine videos-Zeile heißt nicht, dass die Datei
+    // existiert (fehlgeschlagener Import, weggeräumte Datei, abgebrochener
+    // Download). Ohne das Flag listete die Serienansicht Folgen, die beim
+    // Antippen ins Leere liefen — genau das „nichts lässt sich abspielen".
     const videos = deps.db.prepare(`
-      SELECT v.*, fi.progress_seconds
+      SELECT v.*, fi.progress_seconds,
+             CASE WHEN dv.video_id IS NULL THEN 0 ELSE 1 END AS downloaded
       FROM videos v
       LEFT JOIN feed_items fi ON fi.video_id = v.id
+      LEFT JOIN downloaded_videos dv ON dv.video_id = v.id
       WHERE v.series_id = ?
       ORDER BY v.season ASC, v.episode ASC
     `).all(req.params.id);

@@ -32,6 +32,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.hikari.app.ui.browser.BrowserScreen
 import com.hikari.app.ui.channels.ChannelDetailScreen
 import com.hikari.app.ui.channels.VideoEditScreen
 import com.hikari.app.ui.feed.FeedScreen
@@ -192,6 +193,9 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
             popEnterTransition = { EnterTransition.None },
             popExitTransition = { ExitTransition.None },
         ) {
+            composable("browser") {
+                BrowserScreen(onClose = { nav.popBackStack() })
+            }
             composable("library") {
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     LibraryScreen(

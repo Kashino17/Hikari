@@ -88,6 +88,14 @@ class ChannelsRepository @Inject constructor(
     suspend fun importVideosBulk(items: List<com.hikari.app.data.api.dto.BulkImportItem>): Int =
         api.importVideosBulk(com.hikari.app.data.api.dto.BulkImportRequest(items)).queued
 
+    /** Im In-App-Browser mitgelesene Streams zum Import einreichen. */
+    suspend fun importSniffed(items: List<com.hikari.app.data.api.dto.SniffedImportItem>): Int =
+        api.importSniffed(com.hikari.app.data.api.dto.SniffedImportRequest(items)).queued
+
+    /** Stand des zuletzt gestarteten Imports — Fortschritt und Fehlertexte. */
+    suspend fun bulkImportStatus(): com.hikari.app.data.api.dto.BulkJobStatusDto =
+        api.bulkImportStatus()
+
     suspend fun listSeries(): List<com.hikari.app.data.api.dto.SeriesItemDto> =
         api.listSeries()
 

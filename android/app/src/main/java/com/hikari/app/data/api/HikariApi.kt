@@ -19,6 +19,8 @@ import com.hikari.app.data.api.dto.AnalyzeResponse
 import com.hikari.app.data.api.dto.ArtistDto
 import com.hikari.app.data.api.dto.ArtistPlaylistDto
 import com.hikari.app.data.api.dto.BulkImportRequest
+import com.hikari.app.data.api.dto.BulkJobStatusDto
+import com.hikari.app.data.api.dto.SniffedImportRequest
 import com.hikari.app.data.api.dto.BulkImportResponse
 import com.hikari.app.data.api.dto.DiscoveryResponseDto
 import com.hikari.app.data.api.dto.DownloadsResponse
@@ -304,6 +306,12 @@ interface HikariApi {
 
     @POST("videos/import/bulk")
     suspend fun importVideosBulk(@Body req: BulkImportRequest): BulkImportResponse
+
+    @POST("videos/import/sniffed")
+    suspend fun importSniffed(@Body req: SniffedImportRequest): BulkImportResponse
+
+    @GET("videos/import/bulk/status")
+    suspend fun bulkImportStatus(): BulkJobStatusDto
 
     @GET("videos/{id}")
     suspend fun getVideo(@Path("id") videoId: String): VideoDetailDto

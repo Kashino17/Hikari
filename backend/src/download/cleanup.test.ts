@@ -67,4 +67,47 @@ describe("runCleanup", () => {
     expect(result.deletedCount).toBe(0);
     expect(existsSync(join(videoDir, "saved-1.mp4"))).toBe(true);
   });
+
+
+  // Regression: manuell importierte Serien/Filme sind Archiv, kein Feed-Material.
+  // importDirectLink schreibt für jede Folge eine feed_items-Zeile mit saved=0,
+  // wodurch 200-MB-Episoden als ganz normale Wegwerf-Kandidaten galten und beim
+  // ersten Limit-Überschreiten als Erstes flogen — die Serienansicht zeigte sie
+  // danach weiter an, das Abspielen lief ins Leere.
+  it("never deletes archive material (manual channel, series, movies)", () => {
+    db.prepare(
+      `INSERT OR IGNORE INTO channels (id, url, title, added_at) VALUES ('manual','manual:hikari','Manuell',0)`,
+    ).run();
+    db.prepare(`INSERT INTO series (id, title, added_at) VALUES ('solo-leveling','Solo Leveling',0)`).run();
+
+    const archive = [
+      { id: "episode", seriesId: "solo-leveling", isMovie: 0 },
+      { id: "movie", seriesId: null, isMovie: 1 },
+    ];
+    for (const a of archive) {
+      const p = join(videoDir, `${a.id}.mp4`);
+      writeFileSync(p, Buffer.alloc(4 * 1024 * 1024, 0));
+      db.prepare(
+        `INSERT INTO videos (id, channel_id, series_id, title, published_at, duration_seconds, discovered_at, is_movie)
+         VALUES (?, 'manual', ?, ?, 0, 0, 0, ?)`,
+      ).run(a.id, a.seriesId, `title-${a.id}`, a.isMovie);
+      db.prepare(`INSERT INTO feed_items (video_id, added_to_feed_at, saved) VALUES (?, 0, 0)`).run(a.id);
+      db.prepare(
+        `INSERT INTO downloaded_videos (video_id, file_path, file_size_bytes, downloaded_at, last_served_at)
+         VALUES (?, ?, ?, 0, 1000)`,
+      ).run(a.id, p, 4 * 1024 * 1024);
+    }
+
+    // Ein gewöhnliches Feed-Video, das neuer ist als das Archivmaterial.
+    const feedPath = join(videoDir, "feed-video.mp4");
+    writeFileSync(feedPath, Buffer.alloc(4 * 1024 * 1024, 0));
+    seedVideo(db, "feed-video", 4 * 1024 * 1024, 9000, 0, feedPath);
+
+    const result = runCleanup({ db, limitBytes: 6 * 1024 * 1024 });
+
+    // Nur das Feed-Video darf gehen, obwohl es das zuletzt gesehene ist.
+    expect(result.deletedVideoIds).toEqual(["feed-video"]);
+    expect(existsSync(join(videoDir, "episode.mp4"))).toBe(true);
+    expect(existsSync(join(videoDir, "movie.mp4"))).toBe(true);
+  });
 });

@@ -30,12 +30,23 @@ export function runCleanup(opts: {
     return { deletedCount: 0, deletedVideoIds: [], freedBytes: 0, finalBytes: currentBytes };
   }
 
+  // Archivmaterial ist tabu: manuell importierte Videos, alles was zu einer
+  // Serie gehört, und Filme. importDirectLink legt für jede importierte Folge
+  // eine feed_items-Zeile mit saved=0 an — ohne diesen Ausschluss galten
+  // bewusst archivierte 200-MB-Episoden als ganz gewöhnliche Wegwerf-
+  // Kandidaten und flogen wegen `ORDER BY ... ASC` sogar als Erstes raus.
+  // Die Serienansicht listete sie danach weiter (sie joint nicht gegen
+  // downloaded_videos), das Abspielen lief ins Leere.
   const candidates = opts.db
     .prepare(
       `SELECT dv.video_id, dv.file_path, dv.file_size_bytes
        FROM downloaded_videos dv
        JOIN feed_items fi ON fi.video_id = dv.video_id
+       JOIN videos v ON v.id = dv.video_id
        WHERE fi.saved = 0
+         AND v.channel_id != 'manual'
+         AND v.series_id IS NULL
+         AND COALESCE(v.is_movie, 0) = 0
        ORDER BY COALESCE(dv.last_served_at, dv.downloaded_at) ASC`,
     )
     .all() as CleanupCandidate[];

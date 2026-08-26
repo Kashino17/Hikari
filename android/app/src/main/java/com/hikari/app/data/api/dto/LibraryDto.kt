@@ -28,6 +28,13 @@ data class LibraryVideoDto(
     val channelTitle: String? = null,
     val progress_seconds: Float? = null,
     val overall_score: Int? = null,
+    /**
+     * 1, wenn die Datei tatsächlich auf dem Server liegt. Eine videos-Zeile
+     * allein heißt das nicht: Ein abgebrochener Import oder eine weggeräumte
+     * Datei hinterlässt eine Folge, die sich nicht abspielen lässt. Default 1,
+     * damit ältere Server (die das Feld nicht senden) unverändert wirken.
+     */
+    val downloaded: Int = 1,
 )
 
 @Serializable

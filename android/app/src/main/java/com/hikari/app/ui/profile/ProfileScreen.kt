@@ -262,7 +262,13 @@ fun ProfileScreen(
     }
 
     if (importOpen) {
-        ImportSheet(onDismiss = { importOpen = false })
+        ImportSheet(
+            onDismiss = { importOpen = false },
+            onOpenBrowser = {
+                importOpen = false
+                onOpenSection("browser")
+            },
+        )
     }
 
     when (editing) {

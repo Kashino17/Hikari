@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type Database from "better-sqlite3";
@@ -343,18 +344,49 @@ export async function importDirectLink(
     return { url, status: "failed", error: "download finished but file not found" };
   }
 
-  const size = statSync(filePath).size;
+  persistImportedVideo(db, {
+    videoId,
+    filePath,
+    title,
+    description,
+    duration,
+    thumbnail,
+    publishedAt,
+    manualMeta,
+  });
+
+  return { url, status: "ok", videoId, title };
+}
+
+
+interface PersistInput {
+  videoId: string;
+  filePath: string;
+  title: string;
+  description: string;
+  duration: number;
+  thumbnail: string | null;
+  publishedAt: number;
+  manualMeta?: ManualMetadata | undefined;
+}
+
+/**
+ * Schreibt alle Zeilen einer fertig heruntergeladenen Episode in einem Zug.
+ *
+ * Die INSERTs laufen synchron ohne await dazwischen, damit keine parallele
+ * Anfrage einen halb importierten Zustand sieht: Das Video erscheint
+ * vollständig, abspielbar und seiner Serie zugeordnet — oder gar nicht.
+ */
+function persistImportedVideo(db: Database.Database, input: PersistInput): void {
+  const size = statSync(input.filePath).size;
   const now = Date.now();
+  const manualMeta = input.manualMeta;
 
   let seriesId = manualMeta?.seriesId;
   if (!seriesId && manualMeta?.seriesTitle) {
     seriesId = ensureSeries(db, manualMeta.seriesTitle);
   }
 
-  // Step 3: publish all rows together. These INSERTs are synchronous with no
-  // await between them, so no concurrent request can observe a half-imported
-  // episode — it appears fully downloaded, playable, and grouped under its
-  // series in one atomic burst.
   db.prepare(
     `INSERT INTO videos
      (id, channel_id, series_id, title, description, published_at, duration_seconds,
@@ -362,16 +394,16 @@ export async function importDirectLink(
       season, episode, dub_language, sub_language, is_movie)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
-    videoId,
+    input.videoId,
     MANUAL_CHANNEL_ID,
     seriesId ?? null,
-    title,
-    description,
-    publishedAt,
-    duration,
+    input.title,
+    input.description,
+    input.publishedAt,
+    input.duration,
     null,
     null,
-    thumbnail,
+    input.thumbnail,
     null,
     now,
     manualMeta?.season ?? null,
@@ -381,15 +413,14 @@ export async function importDirectLink(
     manualMeta?.isMovie ? 1 : 0,
   );
 
-  // Insert auto-approved score — user-curated content, no LLM.
   db.prepare(
     `INSERT INTO scores
      (video_id, overall_score, category, clickbait_risk, educational_value,
       emotional_manipulation, reasoning, model_used, scored_at, decision)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
-    videoId,
-    100,                       // top score — user explicitly added this
+    input.videoId,
+    100,
     "other",
     0,
     0,
@@ -403,11 +434,103 @@ export async function importDirectLink(
   db.prepare(
     `INSERT INTO downloaded_videos (video_id, file_path, file_size_bytes, downloaded_at)
      VALUES (?, ?, ?, ?)`,
-  ).run(videoId, filePath, size, now);
+  ).run(input.videoId, input.filePath, size, now);
 
   db.prepare(
     `INSERT OR IGNORE INTO feed_items (video_id, added_to_feed_at) VALUES (?, ?)`,
-  ).run(videoId, now);
+  ).run(input.videoId, now);
+}
 
-  return { url, status: "ok", videoId, title };
+/** Im In-App-Browser mitgelesener Stream samt der Header seiner Herkunftsseite. */
+export interface SniffedMedia {
+  /** Die Seite, auf der der Nutzer stand — die dauerhafte Identität des Videos. */
+  pageUrl: string;
+  /** Die tatsächlich geladene Medien-URL (HLS-Playlist, DASH-Manifest, Datei). */
+  mediaUrl: string;
+  referer?: string;
+  cookie?: string;
+  userAgent?: string;
+  title?: string;
+}
+
+/**
+ * Importiert einen Stream, den der In-App-Browser mitgelesen hat.
+ *
+ * Unterschied zu importDirectLink: Hier ist die Extraktion bereits passiert —
+ * die Seite hat ihren Player selbst gestartet, wir kennen die echte Medien-URL
+ * schon. yt-dlp muss den Hoster also nicht mehr verstehen, sondern nur noch
+ * laden. Genau deshalb funktioniert dieser Weg auch bei Hostern, deren
+ * Extraktor kaputt oder gar nicht vorhanden ist.
+ *
+ * Die Herkunftsseite ([pageUrl]) dient als Identität, nicht die Medien-URL:
+ * Letztere trägt bei fast allen Hostern ein ablaufendes Token und sähe bei
+ * jedem Aufruf anders aus — die Duplikatserkennung würde nie greifen.
+ */
+export async function importSniffedMedia(
+  db: Database.Database,
+  input: SniffedMedia,
+  videoDir: string,
+  manualMeta?: ManualMetadata,
+): Promise<ImportResult> {
+  const pageUrl = input.pageUrl.trim();
+  const mediaUrl = input.mediaUrl.trim();
+  if (!mediaUrl) return { url: pageUrl, status: "failed", error: "empty media URL" };
+
+  ensureManualChannel(db);
+
+  const videoId = `sniff_${createHash("sha1").update(pageUrl || mediaUrl).digest("hex").slice(0, 16)}`;
+
+  const existing = db.prepare("SELECT 1 FROM videos WHERE id = ?").get(videoId);
+  if (existing) {
+    return { url: pageUrl, status: "duplicate", videoId, ...(input.title ? { title: input.title } : {}) };
+  }
+
+  const filePath = join(videoDir, `${videoId}.mp4`);
+  const headerArgs: string[] = [];
+  // Filehoster prüfen Referer und Cookie und antworten sonst mit 403. Der
+  // Browser kennt beide bereits — sie einfach durchzureichen ist der ganze
+  // Trick, warum der Serverdownload danach überhaupt beantwortet wird.
+  if (input.referer) headerArgs.push("--referer", input.referer);
+  if (input.cookie) headerArgs.push("--add-header", `Cookie:${input.cookie}`);
+  if (input.userAgent) headerArgs.push("--user-agent", input.userAgent);
+
+  try {
+    await runYtDlp(
+      [
+        ...headerArgs,
+        "--http-chunk-size",
+        "4M",
+        "-f",
+        "bestvideo[height<=720]+bestaudio/best[height<=720]/best",
+        "--merge-output-format",
+        "mp4",
+        "-o",
+        filePath,
+        "--no-warnings",
+        mediaUrl,
+      ],
+      { timeoutMs: 30 * 60_000 },
+    );
+  } catch (err) {
+    const msg = err instanceof YtDlpError ? err.message : String(err);
+    return { url: pageUrl, status: "failed", error: `download failed: ${msg.slice(0, 200)}` };
+  }
+
+  if (!existsSync(filePath)) {
+    return { url: pageUrl, status: "failed", error: "download finished but file not found" };
+  }
+
+  const title = manualMeta?.title ?? input.title ?? pageUrl;
+  persistImportedVideo(db, {
+    videoId,
+    filePath,
+    title,
+    description: "",
+    duration: 0,
+    thumbnail: null,
+    publishedAt: Date.now(),
+    manualMeta,
+  });
+
+  return { url: pageUrl, status: "ok", videoId, title };
 }
