@@ -12,7 +12,19 @@ import {
 } from "../stream/url-cache.js";
 import { runPreferEmbedded, runYtDlp } from "../yt-dlp/client.js";
 
-const VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
+// YouTube-IDs sind exakt 11 Zeichen — manuell importierte Videos tragen
+// dagegen eine praefixierte interne ID ("voe_q33qerdkmle2",
+// "sniff_5cc8d7cfdddfd747"). Das alte 11-Zeichen-Muster wies jedes davon mit
+// 400 ab, noch bevor der Datei-Fallback greifen konnte: Die Datei lag
+// einwandfrei auf der Platte, der Player zeigte trotzdem endlos
+// "Wird geladen…".
+//
+// Die ID landet in einem Dateipfad, deshalb bleiben Punkt und Schraegstrich
+// ausgeschlossen — ohne Punkte ist kein ".." und damit kein Ausbruch aus dem
+// Videoordner moeglich.
+const VIDEO_ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
+/** Nur YouTube-IDs lassen sich ueberhaupt per yt-dlp aufloesen. */
+const YOUTUBE_ID_RE = /^[A-Za-z0-9_-]{11}$/;
 // googlevideo-URLs leben ~6 h; TTL knapp darunter, damit der Proxy nie mit
 // einer sterbenden URL startet (bei 403/410 löst er ohnehin frisch auf).
 const STREAM_CACHE_TTL_MS = 5 * 60 * 60 * 1000;
@@ -139,7 +151,7 @@ export function registerStreamRoutes(
   };
   const prefetch: PrefetchStreams = (videoIds) => {
     for (const id of videoIds.slice(0, PREFETCH_MAX)) {
-      if (!VIDEO_ID_RE.test(id)) continue;
+      if (!YOUTUBE_ID_RE.test(id)) continue;
       if (cacheGet(cache, id, STREAM_CACHE_TTL_MS, now())) continue;
       if (prefetchQueue.includes(id)) continue;
       prefetchQueue.push(id);
@@ -172,11 +184,19 @@ export function registerStreamRoutes(
       return reply.code(503).header("retry-after", "60").send({ error: "upstream throttled" });
     }
 
+    // Eine interne Import-ID ist bei YouTube nicht aufloesbar — der Versuch
+    // kostet nur die gemessenen 5–11 s, die der Nutzer als "Wird geladen…"
+    // sieht. Fuer sie zaehlt allein die Datei auf der Platte.
+    const localFile =
+      deps.videoDir && existsSync(join(deps.videoDir, `${videoId}.mp4`))
+        ? `/videos/${videoId}.mp4`
+        : null;
+    if (localFile && !YOUTUBE_ID_RE.test(videoId)) return reply.redirect(localFile, 302);
+
     // Erst auflösen: scheitert YouTube komplett, aber der Server hat noch eine
     // heruntergeladene Datei, spielt die App diese über den statischen Mount.
     const url = await resolve(videoId, false);
-    if (!url && deps.videoDir && existsSync(join(deps.videoDir, `${videoId}.mp4`)))
-      return reply.redirect(`/videos/${videoId}.mp4`, 302);
+    if (!url && localFile) return reply.redirect(localFile, 302);
 
     const out = await proxyMediaStream(
       reply,

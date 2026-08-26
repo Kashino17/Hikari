@@ -126,3 +126,56 @@ test("persistiert aufgelöste URLs beim onClose in die Cache-Datei", async () =>
   expect(res.statusCode).toBe(200);
   expect(calls).toBe(0);
 });
+
+// Regression: Der Stream-Endpunkt liess ausschliesslich YouTube-IDs durch
+// (exakt 11 Zeichen). Jedes manuell importierte Video traegt aber eine
+// praefixierte interne ID — "voe_q33qerdkmle2", "sniff_5cc8d7cfdddfd747" —
+// und bekam deshalb 400 statt seiner Datei. Dass die Datei einwandfrei auf der
+// Platte lag, half nichts: Der Player kam nie bis zum Datei-Fallback und
+// zeigte dauerhaft "Wird geladen…".
+test("interne Import-IDs werden ausgeliefert, nicht mit 400 abgewiesen", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "videos-"));
+  const ytDlp = (async () => {
+    throw new Error("kein YouTube-Video");
+  }) as StreamDeps["ytDlp"];
+
+  for (const id of ["voe_q33qerdkmle2", "sniff_5cc8d7cfdddfd747", "manual_abc-123"]) {
+    writeFileSync(join(dir, `${id}.mp4`), "x");
+    const app = buildApp({ ytDlp, videoDir: dir, retryDelaysMs: [] });
+    const res = await app.inject({ url: `/stream/video/${id}` });
+    expect(res.statusCode, `${id} sollte ausgeliefert werden`).toBe(302);
+    expect(res.headers.location).toBe(`/videos/${id}.mp4`);
+  }
+});
+
+// Die ID landet in einem Dateipfad — Punkte und Schrägstriche muessen
+// weiterhin abgewiesen werden, sonst waere ein Ausbruch aus dem Videoordner
+// moeglich.
+test("Pfad-Ausbruchsversuche bleiben abgewiesen", async () => {
+  const app = buildApp({ ytDlp: (async () => ({ stdout: "", stderr: "" })) as StreamDeps["ytDlp"] });
+  for (const bad of ["..%2f..%2fetc%2fpasswd", "a.b", "..", "%2e%2e", "a%2Fb"]) {
+    const res = await app.inject({ url: `/stream/video/${bad}` });
+    // 400 aus der Validierung, 404 wenn Fastify den Pfad schon beim Routing
+    // verwirft — abgewiesen ist beides, und darauf kommt es hier an.
+    expect(res.statusCode, `${bad} durfte nicht durchgehen`).toBeGreaterThanOrEqual(400);
+    expect(res.statusCode).toBeLessThan(500);
+  }
+});
+
+// Fuer eine interne ID ist die YouTube-Aufloesung sinnlos und kostet laut
+// Messung 5–11 s — genau die Wartezeit, die als "Wird geladen…" sichtbar wird.
+test("liefert lokale Dateien ohne YouTube-Aufloesung aus", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "videos-"));
+  writeFileSync(join(dir, "sniff_abc123.mp4"), "x");
+  let resolveCalls = 0;
+  const ytDlp = (async () => {
+    resolveCalls++;
+    return { stdout: "https://gv/video\n", stderr: "" };
+  }) as StreamDeps["ytDlp"];
+
+  const app = buildApp({ ytDlp, videoDir: dir, retryDelaysMs: [] });
+  const res = await app.inject({ url: "/stream/video/sniff_abc123" });
+
+  expect(res.statusCode).toBe(302);
+  expect(resolveCalls, "yt-dlp darf für eine interne ID nicht bemüht werden").toBe(0);
+});
