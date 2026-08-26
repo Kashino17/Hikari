@@ -51,6 +51,9 @@ data class BrowserUiState(
     val season: Int? = null,
     val submitting: Boolean = false,
     val message: String? = null,
+    /** Diagnose: wie viele Requests der Interceptor auf dieser Seite sah. */
+    val inspected: Int = 0,
+    val recentUrls: List<String> = emptyList(),
 )
 
 @HiltViewModel
@@ -75,7 +78,14 @@ class BrowserViewModel @Inject constructor(
     fun onPageStarted(url: String) {
         sniffer.reset()
         _ui.update {
-            it.copy(currentUrl = url, loading = true, findings = emptyList(), episodeLinks = emptyList())
+            it.copy(
+                currentUrl = url,
+                loading = true,
+                findings = emptyList(),
+                episodeLinks = emptyList(),
+                inspected = 0,
+                recentUrls = emptyList(),
+            )
         }
     }
 
@@ -100,7 +110,13 @@ class BrowserViewModel @Inject constructor(
     /** Übernimmt, was der Interceptor inzwischen gesehen hat. */
     fun refreshFindings() {
         val found = sniffer.findings()
-        _ui.update { it.copy(findings = found) }
+        _ui.update {
+            it.copy(
+                findings = found,
+                inspected = sniffer.inspectedCount(),
+                recentUrls = sniffer.recentUrls(),
+            )
+        }
         // Im Auto-Durchlauf reicht der erste brauchbare Fund, dann weiter.
         if (found.isNotEmpty() && _ui.value.crawl != null) collectAndAdvance()
     }

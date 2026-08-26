@@ -36,8 +36,18 @@ class MediaSniffer {
 
     private val found = Collections.synchronizedMap(LinkedHashMap<String, MediaFinding>())
 
+    /**
+     * Diagnose: Wie viele Requests der Interceptor insgesamt gesehen hat, und
+     * die letzten davon. Ohne diese Zahlen ist bei "es wird nichts erkannt"
+     * nicht zu unterscheiden, ob der Interceptor überhaupt läuft oder ob der
+     * Filter zu streng greift.
+     */
+    private var inspected = 0
+    private val recent = ArrayDeque<String>()
+
     /** Aufruf für jeden Request der Seite (aus `shouldInterceptRequest`). */
     fun onRequest(url: String, headers: Map<String, String>) {
+        note(url)
         val kind = classify(url) ?: return
         if (isNoise(url)) return
         record(
@@ -88,8 +98,28 @@ class MediaSniffer {
         }
     }
 
+    /** Anzahl aller vom Interceptor gesehenen Requests seit dem Seitenwechsel. */
+    fun inspectedCount(): Int = synchronized(recent) { inspected }
+
+    /** Die zuletzt gesehenen URLs, neueste zuerst — für die Diagnoseanzeige. */
+    fun recentUrls(): List<String> = synchronized(recent) { recent.toList() }
+
     /** Beim Seitenwechsel leeren, sonst wandern Funde auf die nächste Seite. */
-    fun reset() = synchronized(found) { found.clear() }
+    fun reset() {
+        synchronized(found) { found.clear() }
+        synchronized(recent) {
+            inspected = 0
+            recent.clear()
+        }
+    }
+
+    private fun note(url: String) {
+        synchronized(recent) {
+            inspected += 1
+            recent.addFirst(url)
+            while (recent.size > MAX_RECENT) recent.removeLast()
+        }
+    }
 
     private fun record(f: MediaFinding) {
         synchronized(found) {
@@ -99,7 +129,8 @@ class MediaSniffer {
     }
 
     private fun classify(url: String): MediaKind? {
-        val path = url.substringBefore('?').substringBefore('#').lowercase()
+        val lower = url.lowercase()
+        val path = lower.substringBefore('?').substringBefore('#')
         return when {
             // Segmente zuerst ausschließen: Ein einziger HLS-Stream feuert
             // hunderte davon, und ein Segment allein ist unabspielbar.
@@ -107,6 +138,13 @@ class MediaSniffer {
             path.endsWith(".m3u8") -> MediaKind.HLS
             path.endsWith(".mpd") -> MediaKind.DASH
             PROGRESSIVE_SUFFIXES.any { path.endsWith(it) } -> MediaKind.PROGRESSIVE
+            // Der Interceptor sieht nur den Request, nie den Content-Type der
+            // Antwort — die Erkennung muss allein aus der URL kommen. Viele
+            // Hoster liefern ohne sprechende Endung aus, deshalb zusätzlich
+            // charakteristische Pfadmuster.
+            HLS_MARKERS.any { it in path } -> MediaKind.HLS
+            DASH_MARKERS.any { it in path } -> MediaKind.DASH
+            PROGRESSIVE_MARKERS.any { it in lower } -> MediaKind.PROGRESSIVE
             else -> null
         }
     }
@@ -120,7 +158,13 @@ class MediaSniffer {
         entries.firstOrNull { it.key.equals(key, ignoreCase = true) }?.value
 
     private companion object {
+        const val MAX_RECENT = 40
         val SEGMENT_SUFFIXES = listOf(".ts", ".m4s", ".m4v-seg", ".aac", ".vtt")
+        /** Pfadbestandteile, die einen HLS-Stream verraten, auch ohne Endung. */
+        val HLS_MARKERS = listOf("/hls/", "/hls2/", ".urlset", "/playlist", "/master")
+        val DASH_MARKERS = listOf("/dash/", "/manifest")
+        /** googlevideo & Co. tragen den Typ im Query-String statt im Pfad. */
+        val PROGRESSIVE_MARKERS = listOf("videoplayback", "mime=video")
         val PROGRESSIVE_SUFFIXES = listOf(".mp4", ".webm", ".mkv", ".m4v", ".mov", ".avi", ".flv")
         /** Werbe-/Trackingnetze — ihr Preroll lädt vor dem echten Video. */
         val AD_HOSTS = listOf(

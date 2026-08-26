@@ -131,6 +131,9 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
     // also auch ohne Bottom-Nav rendern (eigener Back-Button reicht).
     val isGearSubPage = currentRoute == "settings" || currentRoute?.startsWith("tuning") == true
     val isGameRoute = currentRoute?.startsWith("game/") == true
+    // Der Browser bringt eigene Leisten oben und unten mit; die Bottom-Nav
+    // würde die Fundanzeige verdecken.
+    val isBrowserRoute = currentRoute == "browser"
     val isNowPlaying = currentRoute == "nowplaying"
     val isPlaylistRoute = currentRoute?.startsWith("playlist/") == true
     val isMixRoute = currentRoute?.startsWith("mix/") == true
@@ -141,7 +144,8 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
         isArtistRoute || isCollectionRoute || isMusicProfileRoute
     val showsBottomBar = !(currentRoute == "feed" && feedFullscreen) && !isVideoRoute &&
         !isReaderRoute && !isGearSubPage && !isGameRoute && !isNowPlaying &&
-        !isPlaylistRoute && !isMixRoute && !isArtistRoute && !isCollectionRoute
+        !isPlaylistRoute && !isMixRoute && !isArtistRoute && !isCollectionRoute &&
+        !isBrowserRoute
 
     Scaffold(
         containerColor = HikariBg,

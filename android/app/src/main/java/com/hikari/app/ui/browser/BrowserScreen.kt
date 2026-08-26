@@ -8,6 +8,9 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +18,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -87,6 +92,7 @@ fun BrowserScreen(
     var webView by remember { mutableStateOf<WebView?>(null) }
     var addressField by remember { mutableStateOf(START_URL) }
     var showBasket by remember { mutableStateOf(false) }
+    var showDiagnostics by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     // Der Interceptor meldet Funde nicht selbst — er läuft auf einem
@@ -108,7 +114,13 @@ fun BrowserScreen(
 
     BackHandler(enabled = ui.canGoBack) { webView?.goBack() }
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
+            .navigationBarsPadding(),
+    ) {
 
         AddressBar(
             value = addressField,
@@ -137,6 +149,15 @@ fun BrowserScreen(
                         // Ohne das startet kein Player von selbst — und ohne
                         // laufenden Player gibt es keinen Stream mitzulesen.
                         settings.mediaPlaybackRequiresUserGesture = false
+                        settings.builtInZoomControls = true
+                        settings.displayZoomControls = false
+                        // Der Standard-WebView-Kennung steht ein "wv" im
+                        // User-Agent, an dem etliche Seiten den eingebetteten
+                        // Browser erkennen und abweisen. Ohne das verhalten sie
+                        // sich wie gegenüber Chrome.
+                        settings.userAgentString = settings.userAgentString
+                            ?.replace(" wv", "")
+                            ?.replace("Version/4.0 ", "")
                         CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
 
                         webViewClient = object : WebViewClient() {
@@ -149,7 +170,18 @@ fun BrowserScreen(
                                 // Stream-URL auf, sobald der Player startet.
                                 val url = request?.url?.toString()
                                 if (url != null) {
-                                    vm.sniffer.onRequest(url, request.requestHeaders ?: emptyMap())
+                                    val headers = HashMap(request.requestHeaders ?: emptyMap())
+                                    // Den Cookie setzt der Netzwerk-Stack erst
+                                    // nach diesem Aufruf, er fehlt hier also
+                                    // meistens — ohne ihn verweigert der Hoster
+                                    // den späteren Serverdownload. Der
+                                    // CookieManager kennt ihn bereits.
+                                    if (headers.keys.none { it.equals("Cookie", ignoreCase = true) }) {
+                                        CookieManager.getInstance().getCookie(url)
+                                            ?.takeIf { it.isNotBlank() }
+                                            ?.let { headers["Cookie"] = it }
+                                    }
+                                    vm.sniffer.onRequest(url, headers)
                                 }
                                 return null // nichts ersetzen, nur mitlesen
                             }
@@ -189,6 +221,8 @@ fun BrowserScreen(
 
         FindingBar(
             ui = ui,
+            diagnosticsOpen = showDiagnostics,
+            onToggleDiagnostics = { showDiagnostics = !showDiagnostics },
             onCollect = { vm.collectCurrent() },
             onCrawl = { vm.startCrawl(ui.episodeLinks) },
             onOpenBasket = { showBasket = true },
@@ -298,6 +332,8 @@ private fun CrawlBanner(crawl: CrawlState, onStop: () -> Unit) {
 @Composable
 private fun FindingBar(
     ui: BrowserUiState,
+    diagnosticsOpen: Boolean,
+    onToggleDiagnostics: () -> Unit,
     onCollect: () -> Unit,
     onCrawl: () -> Unit,
     onOpenBasket: () -> Unit,
@@ -333,11 +369,42 @@ private fun FindingBar(
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).clickable(onClick = onToggleDiagnostics),
+            )
+            // Antippbarer Zähler: Steht hier 0, läuft der Interceptor nicht.
+            // Steht hier eine große Zahl ohne Fund, ist der Filter zu streng.
+            Text(
+                "${ui.inspected}",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .clickable(onClick = onToggleDiagnostics)
+                    .padding(horizontal = 8.dp),
             )
             if (ui.basket.isNotEmpty()) {
                 TextButton(onClick = onOpenBasket) {
                     Text("${ui.basket.size} im Korb", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                }
+            }
+        }
+
+        if (diagnosticsOpen) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "${ui.inspected} Requests gesehen, ${ui.findings.size} als Video erkannt",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Column(Modifier.fillMaxWidth().height(120.dp).verticalScroll(rememberScrollState())) {
+                for (u in ui.recentUrls.take(20)) {
+                    Text(
+                        u,
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(vertical = 1.dp),
+                    )
                 }
             }
         }

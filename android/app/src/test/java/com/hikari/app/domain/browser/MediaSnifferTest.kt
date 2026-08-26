@@ -120,4 +120,52 @@ class MediaSnifferTest {
         s.reset()
         assertTrue(s.findings().isEmpty())
     }
+
+    // Der Interceptor kennt nur den Request, nie den Content-Type der Antwort —
+    // die Erkennung muss also allein aus der URL kommen. Viele Hoster liefern
+    // ihre Streams ohne sprechende Endung aus, weshalb Pfadmuster zusaetzlich
+    // zu Endungen geprueft werden.
+    @Test
+    fun erkenntStreamsOhneDateiendungAmPfadmuster() {
+        val faelle = listOf(
+            "https://delivery.voe-network.net/engine/hls2/01/00123/abc_,n,.urlset/master.txt",
+            "https://cdn.example/hls/playlist?token=abc",
+            "https://cdn.example/manifest/video.f4m?x=1",
+            "https://rr3---sn-x.googlevideo.com/videoplayback?expire=123&mime=video%2Fmp4",
+        )
+        for (u in faelle) {
+            val s = sniffer()
+            s.onRequest(u, emptyMap())
+            assertTrue(s.findings().isNotEmpty(), "nicht erkannt: $u")
+        }
+    }
+
+    @Test
+    fun zaehltAlleGesehenenRequestsFuerDieDiagnose() {
+        val s = sniffer()
+        s.onRequest("https://example.com/app.js", emptyMap())
+        s.onRequest("https://example.com/style.css", emptyMap())
+        s.onRequest("https://cdn.example/folge.mp4", emptyMap())
+        assertEquals(3, s.inspectedCount())
+        assertEquals(1, s.findings().size)
+    }
+
+    // Ohne diese Liste ist bei "es wird nichts erkannt" nicht zu unterscheiden,
+    // ob der Interceptor gar nicht laeuft oder ob der Filter zu streng ist.
+    @Test
+    fun merktSichDieZuletztGesehenenUrls() {
+        val s = sniffer()
+        for (i in 1..5) s.onRequest("https://example.com/datei$i.js", emptyMap())
+        val recent = s.recentUrls()
+        assertTrue(recent.isNotEmpty())
+        assertTrue(recent.first().contains("datei5"), "neueste zuerst: $recent")
+    }
+
+    @Test
+    fun zaehlerUeberlebtSeitenwechselNicht() {
+        val s = sniffer()
+        s.onRequest("https://example.com/a.js", emptyMap())
+        s.reset()
+        assertEquals(0, s.inspectedCount())
+    }
 }
