@@ -4,6 +4,7 @@ import { join } from "node:path";
 import type Database from "better-sqlite3";
 import { runPreferEmbedded, runYtDlp, YtDlpError } from "../yt-dlp/client.js";
 import { PROGRESS_ARGS, parseProgressLine } from "../download/progress.js";
+import { probeDurationSeconds } from "../download/probe.js";
 import {
   createPending,
   getPending,
@@ -605,12 +606,16 @@ export async function importSniffedMedia(
     ...Object.fromEntries(Object.entries(edited).filter(([, v]) => v !== null && v !== undefined)),
   };
   const title = finalMeta.title ?? input.title ?? pageUrl;
+  // Der Hoster liefert keine Metadaten — ohne diesen Schritt stuende eine
+  // Laufzeit von 0 in der Datenbank. Die App zeigte dann "0 min", und der
+  // Abspielfortschritt (position / duration) teilte durch null.
+  const duration = (await probeDurationSeconds(filePath)) ?? 0;
   persistImportedVideo(db, {
     videoId,
     filePath,
     title,
     description: "",
-    duration: 0,
+    duration,
     thumbnail: null,
     publishedAt: Date.now(),
     manualMeta: finalMeta,
