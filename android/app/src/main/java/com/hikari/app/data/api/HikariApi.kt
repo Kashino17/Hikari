@@ -20,6 +20,9 @@ import com.hikari.app.data.api.dto.ArtistDto
 import com.hikari.app.data.api.dto.ArtistPlaylistDto
 import com.hikari.app.data.api.dto.BulkImportRequest
 import com.hikari.app.data.api.dto.BulkJobStatusDto
+import com.hikari.app.data.api.dto.PendingImportDto
+import com.hikari.app.data.api.dto.PendingImportPatch
+import com.hikari.app.data.api.dto.PendingImportsResponse
 import com.hikari.app.data.api.dto.SniffedImportRequest
 import com.hikari.app.data.api.dto.BulkImportResponse
 import com.hikari.app.data.api.dto.DiscoveryResponseDto
@@ -312,6 +315,15 @@ interface HikariApi {
 
     @GET("videos/import/bulk/status")
     suspend fun bulkImportStatus(): BulkJobStatusDto
+
+    @GET("imports")
+    suspend fun listImports(): PendingImportsResponse
+
+    @PATCH("imports/{id}")
+    suspend fun updateImport(@Path("id") id: String, @Body patch: PendingImportPatch): PendingImportDto
+
+    @DELETE("imports/{id}")
+    suspend fun deleteImport(@Path("id") id: String)
 
     @GET("videos/{id}")
     suspend fun getVideo(@Path("id") videoId: String): VideoDetailDto

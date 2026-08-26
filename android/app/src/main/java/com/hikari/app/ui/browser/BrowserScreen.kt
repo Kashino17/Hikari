@@ -86,6 +86,7 @@ private const val START_URL = "https://www.google.com"
 @Composable
 fun BrowserScreen(
     onClose: () -> Unit,
+    onSubmitted: () -> Unit = {},
     vm: BrowserViewModel = hiltViewModel(),
 ) {
     val ui by vm.ui.collectAsStateWithLifecycle()
@@ -240,6 +241,7 @@ fun BrowserScreen(
                 onSubmit = {
                     vm.submit()
                     showBasket = false
+                    onSubmitted()
                 },
             )
         }

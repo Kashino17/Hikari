@@ -111,3 +111,54 @@ data class BulkJobStatusDto(
     val results: List<ImportResultDto> = emptyList(),
     @SerialName("finishedAt") val finishedAt: Long? = null,
 )
+
+/**
+ * Ein Import, der gerade läuft.
+ *
+ * Lebt im Backend bewusst getrennt von den fertigen Videos: Erst wenn die
+ * Datei vollständig auf der Platte liegt, wandert der Eintrag in die
+ * Bibliothek. Bis dahin sind Titel, Serie und Sprache hier frei änderbar —
+ * die Werte gewinnen beim Abschluss.
+ */
+@Serializable
+data class PendingImportDto(
+    val id: String,
+    @SerialName("pageUrl") val pageUrl: String,
+    val title: String? = null,
+    @SerialName("seriesId") val seriesId: String? = null,
+    @SerialName("seriesTitle") val seriesTitle: String? = null,
+    val season: Int? = null,
+    val episode: Int? = null,
+    @SerialName("dubLanguage") val dubLanguage: String? = null,
+    @SerialName("subLanguage") val subLanguage: String? = null,
+    @SerialName("isMovie") val isMovie: Boolean = false,
+    /** "queued" | "downloading" | "failed" */
+    val status: String,
+    @SerialName("downloadedBytes") val downloadedBytes: Long = 0,
+    @SerialName("totalBytes") val totalBytes: Long? = null,
+    @SerialName("speedBps") val speedBps: Long? = null,
+    @SerialName("etaSeconds") val etaSeconds: Int? = null,
+    @SerialName("fragmentIndex") val fragmentIndex: Int? = null,
+    @SerialName("fragmentCount") val fragmentCount: Int? = null,
+    /** 0…1, oder null solange sich der Anteil nicht bestimmen lässt. */
+    val progress: Float? = null,
+    val error: String? = null,
+    @SerialName("startedAt") val startedAt: Long = 0,
+)
+
+@Serializable
+data class PendingImportsResponse(
+    val items: List<PendingImportDto> = emptyList(),
+)
+
+/** Teil-Update: Nicht gesetzte Felder bleiben unverändert. */
+@Serializable
+data class PendingImportPatch(
+    val title: String? = null,
+    @SerialName("seriesTitle") val seriesTitle: String? = null,
+    val season: Int? = null,
+    val episode: Int? = null,
+    @SerialName("dubLanguage") val dubLanguage: String? = null,
+    @SerialName("subLanguage") val subLanguage: String? = null,
+    @SerialName("isMovie") val isMovie: Boolean? = null,
+)

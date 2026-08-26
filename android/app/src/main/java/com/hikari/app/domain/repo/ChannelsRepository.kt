@@ -96,6 +96,19 @@ class ChannelsRepository @Inject constructor(
     suspend fun bulkImportStatus(): com.hikari.app.data.api.dto.BulkJobStatusDto =
         api.bulkImportStatus()
 
+    /** Laufende Importe samt Fortschritt. */
+    suspend fun listImports(): List<com.hikari.app.data.api.dto.PendingImportDto> =
+        api.listImports().items
+
+    /** Angaben eines laufenden Imports ändern — gewinnt beim Abschluss. */
+    suspend fun updateImport(
+        id: String,
+        patch: com.hikari.app.data.api.dto.PendingImportPatch,
+    ): com.hikari.app.data.api.dto.PendingImportDto = api.updateImport(id, patch)
+
+    /** Einen gescheiterten Import aus der Liste entfernen. */
+    suspend fun deleteImport(id: String) = api.deleteImport(id)
+
     suspend fun listSeries(): List<com.hikari.app.data.api.dto.SeriesItemDto> =
         api.listSeries()
 

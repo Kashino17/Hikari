@@ -22,6 +22,14 @@ export interface RunYtDlpOptions {
   maxRetries?: number;
   /** Injectable delay so tests don't actually wait. */
   sleep?: (ms: number) => Promise<void>;
+  /**
+   * Wird für jede Ausgabezeile aufgerufen, während der Prozess läuft.
+   *
+   * Ohne das liefert execa die Ausgabe erst am Ende — bei einem Download, der
+   * Minuten dauert, wäre der Fortschritt damit genau dann verfügbar, wenn er
+   * niemanden mehr interessiert.
+   */
+  onLine?: (line: string) => void;
 }
 
 // Bevorzugter Player-Client fürs Stream-URL-Auflösen: WEB_EMBEDDED_PLAYER-URLs
@@ -123,7 +131,19 @@ export async function runYtDlp(
   let lastErr: unknown;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const result = await execa("yt-dlp", args, { timeout: timeoutMs });
+      const sub = execa("yt-dlp", args, { timeout: timeoutMs });
+      if (opts.onLine) {
+        // Zeilenweise auswerten: Ein data-Ereignis kann mehrere Zeilen
+        // enthalten oder mitten in einer enden, deshalb der Rest-Puffer.
+        let buffer = "";
+        sub.stdout?.on("data", (chunk: Buffer) => {
+          buffer += chunk.toString();
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+          for (const line of lines) opts.onLine?.(line);
+        });
+      }
+      const result = await sub;
       return { stdout: result.stdout, stderr: result.stderr };
     } catch (err) {
       lastErr = err;

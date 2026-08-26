@@ -3,6 +3,16 @@ import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type Database from "better-sqlite3";
 import { runPreferEmbedded, runYtDlp, YtDlpError } from "../yt-dlp/client.js";
+import { PROGRESS_ARGS, parseProgressLine } from "../download/progress.js";
+import {
+  createPending,
+  getPending,
+  markDownloading,
+  markFailed,
+  metadataForCompletion,
+  removePending,
+  updateProgress,
+} from "./pending-imports.js";
 
 export const MANUAL_CHANNEL_ID = "manual";
 const MANUAL_CHANNEL_TITLE = "Manuell hinzugefügt";
@@ -311,6 +321,24 @@ export async function importDirectLink(
   // and a mid-download crash leaves no orphaned, permanently-unplayable row.
   // yt-dlp writes the file using its own id template, so we override -o to
   // match our internal videoId.
+  // Sofort sichtbar machen — der Download laeuft gleich minutenlang.
+  createPending(db, {
+    id: videoId,
+    pageUrl: cleanUrl,
+    mediaUrl: downloadUrl,
+    metadata: {
+      title,
+      seriesId: manualMeta?.seriesId ?? null,
+      seriesTitle: manualMeta?.seriesTitle ?? null,
+      season: manualMeta?.season ?? null,
+      episode: manualMeta?.episode ?? null,
+      dubLanguage: manualMeta?.dubLanguage ?? null,
+      subLanguage: manualMeta?.subLanguage ?? null,
+      isMovie: manualMeta?.isMovie ?? null,
+    },
+  });
+  markDownloading(db, videoId);
+
   const filePath = join(videoDir, `${videoId}.mp4`);
   try {
     // web_embedded-first: yt-dlps eigener Download bekommt von googlevideo
@@ -319,6 +347,7 @@ export async function importDirectLink(
     await runPreferEmbedded(
       runYtDlp,
       [
+        ...PROGRESS_ARGS,
         // Blockweise laden: googlevideo drosselt ungebremste Downloads auf
         // Abspieltempo (gemessen 18.08.2026: 22 s statt 12 s für 64 MB).
         "--http-chunk-size",
@@ -332,30 +361,47 @@ export async function importDirectLink(
         "--no-warnings",
         downloadUrl,
       ],
-      { timeoutMs: 30 * 60_000 }, // up to 30 min for big files
+      {
+        timeoutMs: 30 * 60_000, // up to 30 min for big files
+        onLine: (line) => {
+          const p = parseProgressLine(line);
+          if (p) updateProgress(db, videoId, p);
+        },
+      },
       () => true,
     );
   } catch (err) {
     const msg = err instanceof YtDlpError ? err.message : String(err);
-    return { url, status: "failed", error: `download failed: ${msg.slice(0, 200)}` };
+    const error = `download failed: ${msg.slice(0, 200)}`;
+    markFailed(db, videoId, error);
+    return { url, status: "failed", error };
   }
 
   if (!existsSync(filePath)) {
-    return { url, status: "failed", error: "download finished but file not found" };
+    const error = "download finished but file not found";
+    markFailed(db, videoId, error);
+    return { url, status: "failed", error };
   }
 
+  // Waehrend des Downloads geaenderte Angaben gewinnen.
+  const edited = metadataForCompletion(getPending(db, videoId));
+  const finalMeta: ManualMetadata = {
+    ...manualMeta,
+    ...Object.fromEntries(Object.entries(edited).filter(([, v]) => v !== null && v !== undefined)),
+  };
   persistImportedVideo(db, {
     videoId,
     filePath,
-    title,
+    title: finalMeta.title ?? title,
     description,
     duration,
     thumbnail,
     publishedAt,
-    manualMeta,
+    manualMeta: finalMeta,
   });
+  removePending(db, videoId);
 
-  return { url, status: "ok", videoId, title };
+  return { url, status: "ok", videoId, title: finalMeta.title ?? title };
 }
 
 
@@ -485,6 +531,26 @@ export async function importSniffedMedia(
     return { url: pageUrl, status: "duplicate", videoId, ...(input.title ? { title: input.title } : {}) };
   }
 
+  // Sofort sichtbar machen, bevor der Download beginnt. Ein Serienimport dauert
+  // Minuten; ohne diesen Eintrag sieht der Nutzer bis zum Schluss nichts und
+  // weiss nicht einmal, ob ueberhaupt etwas gestartet ist.
+  createPending(db, {
+    id: videoId,
+    pageUrl,
+    mediaUrl,
+    metadata: {
+      title: manualMeta?.title ?? input.title ?? null,
+      seriesId: manualMeta?.seriesId ?? null,
+      seriesTitle: manualMeta?.seriesTitle ?? null,
+      season: manualMeta?.season ?? null,
+      episode: manualMeta?.episode ?? null,
+      dubLanguage: manualMeta?.dubLanguage ?? null,
+      subLanguage: manualMeta?.subLanguage ?? null,
+      isMovie: manualMeta?.isMovie ?? null,
+    },
+  });
+  markDownloading(db, videoId);
+
   const filePath = join(videoDir, `${videoId}.mp4`);
   const headerArgs: string[] = [];
   // Filehoster prüfen Referer und Cookie und antworten sonst mit 403. Der
@@ -498,6 +564,7 @@ export async function importSniffedMedia(
     await runYtDlp(
       [
         ...headerArgs,
+        ...PROGRESS_ARGS,
         "--http-chunk-size",
         "4M",
         "-f",
@@ -509,18 +576,35 @@ export async function importSniffedMedia(
         "--no-warnings",
         mediaUrl,
       ],
-      { timeoutMs: 30 * 60_000 },
+      {
+        timeoutMs: 30 * 60_000,
+        onLine: (line) => {
+          const p = parseProgressLine(line);
+          if (p) updateProgress(db, videoId, p);
+        },
+      },
     );
   } catch (err) {
     const msg = err instanceof YtDlpError ? err.message : String(err);
-    return { url: pageUrl, status: "failed", error: `download failed: ${msg.slice(0, 200)}` };
+    const error = `download failed: ${msg.slice(0, 200)}`;
+    markFailed(db, videoId, error);
+    return { url: pageUrl, status: "failed", error };
   }
 
   if (!existsSync(filePath)) {
-    return { url: pageUrl, status: "failed", error: "download finished but file not found" };
+    const error = "download finished but file not found";
+    markFailed(db, videoId, error);
+    return { url: pageUrl, status: "failed", error };
   }
 
-  const title = manualMeta?.title ?? input.title ?? pageUrl;
+  // Die Eingaben des Nutzers gewinnen: Hat er waehrend des Downloads Titel
+  // oder Sprache gesetzt, zaehlt das und nicht, was beim Einreihen mitkam.
+  const edited = metadataForCompletion(getPending(db, videoId));
+  const finalMeta: ManualMetadata = {
+    ...manualMeta,
+    ...Object.fromEntries(Object.entries(edited).filter(([, v]) => v !== null && v !== undefined)),
+  };
+  const title = finalMeta.title ?? input.title ?? pageUrl;
   persistImportedVideo(db, {
     videoId,
     filePath,
@@ -529,8 +613,9 @@ export async function importSniffedMedia(
     duration: 0,
     thumbnail: null,
     publishedAt: Date.now(),
-    manualMeta,
+    manualMeta: finalMeta,
   });
+  removePending(db, videoId);
 
   return { url: pageUrl, status: "ok", videoId, title };
 }

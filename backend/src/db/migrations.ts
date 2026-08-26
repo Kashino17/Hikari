@@ -149,4 +149,51 @@ export function applyMigrations(db: Database.Database): void {
   addColumnIfMissing(db, "ingest_queue", "source", "TEXT"); // 'subscription' | 'probe' | 'topic' | 'backfill'
   // Bestand: alle aktiven Kanaele sind Abos; inaktive bleiben statuslos (weiches Loeschen).
   db.exec("UPDATE channels SET status = 'subscribed' WHERE status IS NULL AND is_active = 1");
+
+  // Laufende Importe: sichtbar, solange sie laden.
+  //
+  // Ein Import dauert bei einer Serienfolge Minuten. Bis er fertig ist, hatte
+  // der Nutzer bisher keinerlei Anhaltspunkt, ob ueberhaupt etwas passiert.
+  // Die Zeile hier NICHT in `videos` zu schreiben ist Absicht: Genau das war
+  // der alte Fehler, der Folgen in der Bibliothek zeigte, die sich nicht
+  // abspielen liessen. Erst wenn die Datei vollstaendig auf der Platte liegt,
+  // wandert der Eintrag hinueber; bis dahin lebt er ausschliesslich hier.
+  //
+  // Die Metadatenfelder sind waehrend des Downloads editierbar — beim
+  // Abschluss werden sie von hier uebernommen, nicht die urspruenglich
+  // uebergebenen Werte.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS pending_imports (
+      id TEXT PRIMARY KEY,
+      page_url TEXT NOT NULL,
+      media_url TEXT,
+      title TEXT,
+      series_id TEXT,
+      series_title TEXT,
+      season INTEGER,
+      episode INTEGER,
+      dub_language TEXT,
+      sub_language TEXT,
+      is_movie INTEGER DEFAULT 0,
+      thumbnail_url TEXT,
+      status TEXT NOT NULL DEFAULT 'queued',
+      downloaded_bytes INTEGER DEFAULT 0,
+      total_bytes INTEGER,
+      speed_bps INTEGER,
+      eta_seconds INTEGER,
+      fragment_index INTEGER,
+      fragment_count INTEGER,
+      error TEXT,
+      started_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    )
+  `);
+  db.exec("CREATE INDEX IF NOT EXISTS idx_pending_imports_started ON pending_imports(started_at DESC)");
+  // Ein Neustart bricht jeden laufenden yt-dlp-Prozess ab. Zeilen, die noch
+  // 'downloading' sagen, sind danach Leichen — als abgebrochen markieren,
+  // statt einen Fortschritt vorzutaeuschen, der sich nie wieder bewegt.
+  db.exec(
+    "UPDATE pending_imports SET status = 'failed', error = 'Serverneustart wahrend des Downloads' " +
+      "WHERE status IN ('queued', 'downloading')",
+  );
 }

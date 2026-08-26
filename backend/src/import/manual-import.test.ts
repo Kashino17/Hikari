@@ -57,6 +57,8 @@ class MockDb {
   downloadedVideos = new Map<string, { video_id: string; file_path: string; file_size_bytes: number }>();
   feedItems = new Map<string, { video_id: string; added_to_feed_at: number }>();
 
+  pendingImports = new Map<string, { id: string; title: unknown }>();
+
   prepare(sql: string) {
     if (sql.includes("SELECT 1 FROM videos WHERE id = ?")) {
       return {
@@ -167,6 +169,24 @@ class MockDb {
             this.feedItems.set(videoId, { video_id: videoId, added_to_feed_at: addedToFeedAt });
           }
         },
+      };
+    }
+
+    // Die pending_imports-Zeilen machen einen laufenden Download sichtbar.
+    // Fuer diese Tests genuegt es, sie mitzuschreiben — geprueft wird der
+    // fertige Import, nicht die Fortschrittsanzeige (siehe
+    // pending-imports.test.ts).
+    if (sql.includes("pending_imports")) {
+      return {
+        run: (...args: unknown[]) => {
+          if (sql.includes("INSERT INTO pending_imports")) {
+            this.pendingImports.set(String(args[0]), { id: String(args[0]), title: args[3] ?? null });
+          } else if (sql.includes("DELETE FROM pending_imports")) {
+            this.pendingImports.delete(String(args[0]));
+          }
+        },
+        get: (id: string) => this.pendingImports.get(id),
+        all: () => [...this.pendingImports.values()],
       };
     }
 

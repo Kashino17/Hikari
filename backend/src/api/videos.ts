@@ -7,6 +7,13 @@ import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { importDirectLink, importSniffedMedia, fetchImportMetadata, ensureSeries, type ImportResult, type ManualMetadata, type SniffedMedia } from "../import/manual-import.js";
 import { startBulkJob, recordBulkResult, finishBulkJob, getBulkJob, getLatestBulkJob } from "../import/bulk-job.js";
+import {
+  getPending,
+  listPending,
+  removePending,
+  updatePendingMetadata,
+  type PendingMetadata,
+} from "../import/pending-imports.js";
 import type { MetadataExtractor } from "../scorer/metadata-extractor.js";
 import { downloadVideo } from "../download/worker.js";
 
@@ -214,6 +221,35 @@ export async function registerVideosRoutes(
     })();
 
     return reply.code(202).send({ queued: items.length, jobId: job.id });
+  });
+
+  // Laufende Importe samt Fortschritt. Das ist die Ansicht, die dem Nutzer
+  // waehrend eines minutenlangen Downloads ueberhaupt erst zeigt, dass etwas
+  // passiert — und wie lange es noch dauert.
+  app.get("/imports", async () => ({ items: listPending(deps.db) }));
+
+  // Titel, Sprache, Serie & Co. schon waehrend des Downloads aendern. Die
+  // Werte gewinnen beim Abschluss gegenueber dem, was beim Einreihen mitkam.
+  app.patch<{ Params: { id: string }; Body: PendingMetadata }>(
+    "/imports/:id",
+    async (req, reply) => {
+      const existing = getPending(deps.db, req.params.id);
+      if (!existing) return reply.code(404).send({ error: "import not found" });
+      return updatePendingMetadata(deps.db, req.params.id, req.body ?? {});
+    },
+  );
+
+  // Einen gescheiterten Eintrag wegraeumen. Laufende bleiben stehen — den
+  // yt-dlp-Prozess kann dieser Endpunkt nicht abbrechen, und ein
+  // verschwundener Eintrag bei weiterlaufendem Download waere irrefuehrend.
+  app.delete<{ Params: { id: string } }>("/imports/:id", async (req, reply) => {
+    const existing = getPending(deps.db, req.params.id);
+    if (!existing) return reply.code(404).send({ error: "import not found" });
+    if (existing.status === "downloading") {
+      return reply.code(409).send({ error: "download läuft noch" });
+    }
+    removePending(deps.db, req.params.id);
+    return { removed: req.params.id };
   });
 
   // Fortschritt/Ergebnis des zuletzt gestarteten Bulk-Imports. Ohne diesen

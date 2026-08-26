@@ -41,6 +41,7 @@ import kotlinx.coroutines.launch
 fun ImportSheet(
     onDismiss: () -> Unit,
     onOpenBrowser: (() -> Unit)? = null,
+    onSubmitted: (() -> Unit)? = null,
     vm: ImportSheetViewModel = hiltViewModel(),
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -112,7 +113,11 @@ fun ImportSheet(
                 onClick = {
                     scope.launch {
                         val n = vm.submit()
-                        if (n != null) onDismiss()
+                        if (n != null) {
+                            // Direkt zur Fortschrittsansicht, statt den Nutzer
+                            // im Ungewissen zu lassen, ob etwas gestartet ist.
+                            if (onSubmitted != null) onSubmitted() else onDismiss()
+                        }
                     }
                 },
                 enabled = readyCount > 0 && !anyLoading && !state.submitting,
