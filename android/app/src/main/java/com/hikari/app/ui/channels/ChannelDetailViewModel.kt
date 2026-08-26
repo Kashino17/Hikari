@@ -93,6 +93,10 @@ class ChannelDetailViewModel @Inject constructor(
                 // die Liste muss nachziehen, sonst verschwindet er einfach.
                 if (before.isNotEmpty() && items.none { it.id in before }) load()
             }
+            // Ohne diesen Zweig verschwand jeder Fehler hier spurlos: Beim
+            // Umbruch der Antwort scheiterte das Parsen, die Downloadliste
+            // blieb leer, und nichts deutete auf den Grund hin.
+            .onFailure { _error.value = "Downloads nicht abrufbar: ${it.message}" }
     }
 
     fun saveImport(id: String, patch: PendingImportPatch) {

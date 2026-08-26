@@ -134,10 +134,14 @@ data class PendingImportDto(
     @SerialName("isMovie") val isMovie: Boolean = false,
     /** "queued" | "downloading" | "failed" */
     val status: String,
-    @SerialName("downloadedBytes") val downloadedBytes: Long = 0,
-    @SerialName("totalBytes") val totalBytes: Long? = null,
-    @SerialName("speedBps") val speedBps: Long? = null,
-    @SerialName("etaSeconds") val etaSeconds: Int? = null,
+    // Bewusst Double statt Long/Int: yt-dlp liefert Groesse, Tempo und Restzeit
+    // als Fliesskommazahlen. Der Server rundet sie inzwischen, aber ein
+    // ganzzahliges Feld liesse die gesamte Antwort scheitern, sobald doch
+    // einmal ein Komma durchkommt — und mit ihr die ganze Downloadliste.
+    @SerialName("downloadedBytes") val downloadedBytes: Double = 0.0,
+    @SerialName("totalBytes") val totalBytes: Double? = null,
+    @SerialName("speedBps") val speedBps: Double? = null,
+    @SerialName("etaSeconds") val etaSeconds: Double? = null,
     @SerialName("fragmentIndex") val fragmentIndex: Int? = null,
     @SerialName("fragmentCount") val fragmentCount: Int? = null,
     /** 0…1, oder null solange sich der Anteil nicht bestimmen lässt. */

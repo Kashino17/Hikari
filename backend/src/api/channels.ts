@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { MANUAL_CHANNEL_ID } from "../import/manual-import.js";
 import type Database from "better-sqlite3";
 import { resolveChannel } from "../monitor/channel-resolver.js";
 import { validateYouTubeChannelUrl } from "../monitor/youtube-url.js";
@@ -179,6 +180,14 @@ export async function registerChannelsRoutes(
       .prepare("SELECT id, url FROM channels WHERE id = ? AND is_active = 1")
       .get(channelId) as { id: string; url: string } | undefined;
     if (!channel) return reply.code(404).send({ error: "channel not found or inactive" });
+
+    // Das Archiv der manuellen Importe ist kein echter Kanal — seine URL
+    // ("manual:hikari") ist kein RSS-Feed. Der Abruf endete deshalb in einem
+    // 500er, sobald jemand im Archiv auf Aktualisieren tippte. Es gibt hier
+    // schlicht nichts abzurufen: Der Bestand wächst nur durch eigene Importe.
+    if (channelId === MANUAL_CHANNEL_ID) {
+      return { added: 0, skipped: 0, message: "Manuelle Importe kennen keinen Abruf" };
+    }
 
     const isDeep = req.query.deep === "true" || req.query.deep === "1";
     const deepLimit = Math.min(Math.max(Number(req.query.limit ?? 50) || 50, 1), 200);

@@ -83,4 +83,26 @@ describe("channels API", () => {
       db.prepare("SELECT is_active FROM channels WHERE id='UC1'").get(),
     ).toEqual({ is_active: 0 });
   });
+
+  // Das Archiv der manuellen Importe ist kein echter Kanal — seine URL
+  // ("manual:hikari") ist kein RSS-Feed. Der Abruf endete deshalb in einem
+  // 500er, sobald jemand im Archiv auf Aktualisieren tippte.
+  it("beantwortet den Abruf des manuellen Archivs statt zu scheitern", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    db.prepare(
+      "INSERT INTO channels (id, url, title, added_at, is_active) VALUES ('manual','manual:hikari','Manuell',0,1)",
+    ).run();
+
+    const app = Fastify();
+    await registerChannelsRoutes(app, {
+      db,
+      scorer: {} as never,
+      videoDir: "/tmp",
+    });
+    const res = await app.inject({ method: "POST", url: "/channels/manual/poll" });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ added: 0 });
+  });
 });

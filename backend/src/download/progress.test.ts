@@ -43,7 +43,25 @@ describe("parseProgressLine", () => {
     // Marker + 7 Felder
     expect(template.split("|")).toHaveLength(8);
   });
+  // yt-dlp liefert Groesse, Tempo und Restzeit als Fliesskommazahlen
+  // ("239690509.7142857"). Als solche gespeichert brachen sie die App: Deren
+  // Felder sind ganzzahlig, das Parsen der Antwort scheiterte, und weil der
+  // Fehler verschluckt wurde, war die Downloadliste einfach leer. Bytes und
+  // Sekunden brauchen keine Nachkommastellen.
+  it("rundet Fliesskommawerte auf ganze Zahlen", () => {
+    const p = parseProgressLine(
+      "HKPROG|122978568|NA|239690509.7142857|2011712.0049568545|59.504575810593934|55|108",
+    );
+    expect(p?.downloadedBytes).toBe(122978568);
+    expect(p?.totalBytes).toBe(239690510);
+    expect(p?.speedBps).toBe(2011712);
+    expect(p?.etaSeconds).toBe(60);
+    expect(Number.isInteger(p?.totalBytes)).toBe(true);
+    expect(Number.isInteger(p?.speedBps)).toBe(true);
+    expect(Number.isInteger(p?.etaSeconds)).toBe(true);
+  });
 });
+
 
 describe("progressFraction", () => {
   const base = {

@@ -32,12 +32,15 @@ internal fun PendingImportDto.progressLine(): String {
     if (status == "queued") return "Wartet auf Start"
     val parts = buildList {
         progress?.let { add("${(it * 100).toInt()} %") }
-        add(formatBytes(downloadedBytes) + (totalBytes?.let { " von ${formatBytes(it)}" } ?: ""))
+        add(
+            formatBytes(downloadedBytes.toLong()) +
+                (totalBytes?.let { " von ${formatBytes(it.toLong())}" } ?: ""),
+        )
         fragmentCount?.let { total ->
             fragmentIndex?.let { idx -> add("Teil $idx/$total") }
         }
-        speedBps?.takeIf { it > 0 }?.let { add("${formatBytes(it)}/s") }
-        etaSeconds?.takeIf { it > 0 }?.let { add("noch ${formatDuration(it)}") }
+        speedBps?.takeIf { it > 0 }?.let { add("${formatBytes(it.toLong())}/s") }
+        etaSeconds?.takeIf { it > 0 }?.let { add("noch ${formatDuration(it.toInt())}") }
     }
     return parts.joinToString(" · ")
 }

@@ -40,11 +40,19 @@ export const PROGRESS_ARGS: string[] = [
   ].join("|"),
 ];
 
-/** yt-dlp schreibt "NA" für alles, was es (noch) nicht weiß. */
+/**
+ * yt-dlp schreibt "NA" für alles, was es (noch) nicht weiß — und liefert
+ * Größe, Tempo und Restzeit als Fließkommazahlen ("239690509.7142857").
+ *
+ * Es wird gerundet, weil Bytes und Sekunden keine Nachkommastellen haben. Als
+ * Fließkommazahl gespeichert brachen die Werte die App: Deren Felder sind
+ * ganzzahlig, das Parsen der Antwort scheiterte, und weil der Fehler dort
+ * verschluckt wurde, blieb die Downloadliste einfach leer.
+ */
 function num(raw: string | undefined): number | null {
   if (!raw || raw === "NA" || raw === "None") return null;
   const n = Number(raw);
-  return Number.isFinite(n) ? n : null;
+  return Number.isFinite(n) ? Math.round(n) : null;
 }
 
 /**

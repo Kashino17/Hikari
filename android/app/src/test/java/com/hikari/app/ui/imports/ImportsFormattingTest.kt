@@ -13,10 +13,10 @@ class ImportsFormattingTest {
         season: Int? = null,
         episode: Int? = null,
         status: String = "downloading",
-        downloadedBytes: Long = 0,
-        totalBytes: Long? = null,
-        speedBps: Long? = null,
-        etaSeconds: Int? = null,
+        downloadedBytes: Double = 0.0,
+        totalBytes: Double? = null,
+        speedBps: Double? = null,
+        etaSeconds: Double? = null,
         fragmentIndex: Int? = null,
         fragmentCount: Int? = null,
         progress: Float? = null,
@@ -62,10 +62,10 @@ class ImportsFormattingTest {
     @Test
     fun fortschrittszeileFasstAllesBekannteZusammen() {
         val line = item(
-            downloadedBytes = 104_857_600,
-            totalBytes = 209_715_200,
-            speedBps = 5_242_880,
-            etaSeconds = 20,
+            downloadedBytes = 104_857_600.0,
+            totalBytes = 209_715_200.0,
+            speedBps = 5_242_880.0,
+            etaSeconds = 20.0,
             progress = 0.5f,
         ).progressLine()
 
@@ -79,7 +79,7 @@ class ImportsFormattingTest {
     // Fragmentzählung die Information.
     @Test
     fun zeigtFragmenteWennDieGroesseFehlt() {
-        val line = item(downloadedBytes = 1024, fragmentIndex = 12, fragmentCount = 300).progressLine()
+        val line = item(downloadedBytes = 1024.0, fragmentIndex = 12, fragmentCount = 300).progressLine()
         assertTrue(line.contains("Teil 12/300"), line)
         assertTrue(!line.contains("von"), line)
     }
@@ -107,5 +107,23 @@ class ImportsFormattingTest {
         assertTrue(s.contains("Solo Leveling"), s)
         assertTrue(s.contains("Staffel 1"), s)
         assertTrue(s.contains("DE"), s)
+    }
+
+    // Der Server rundet inzwischen, aber die Anzeige muss auch mit einem
+    // Komma zurechtkommen — genau daran scheiterte zuvor die gesamte
+    // Downloadliste, weil das Parsen der Antwort abbrach.
+    @Test
+    fun vertraegtFliesskommawerteVomServer() {
+        val line = item(
+            downloadedBytes = 122_978_568.0,
+            totalBytes = 239_690_509.7142857,
+            speedBps = 2_011_712.0049568545,
+            etaSeconds = 59.504575810593934,
+            progress = 0.509f,
+        ).progressLine()
+
+        assertTrue(line.contains("50 %"), line)
+        assertTrue(line.contains("117 MB"), line)
+        assertTrue(line.contains("noch 59 s"), line)
     }
 }
