@@ -271,7 +271,7 @@ fun ProfileScreen(
             // Nach dem Absenden dorthin, wo der Download sichtbar ist.
             onSubmitted = {
                 importOpen = false
-                onOpenSection("imports")
+                onOpenSection("channel/manual")
             },
         )
     }

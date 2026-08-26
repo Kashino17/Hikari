@@ -33,7 +33,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.hikari.app.ui.browser.BrowserScreen
-import com.hikari.app.ui.imports.ImportsScreen
 import com.hikari.app.ui.channels.ChannelDetailScreen
 import com.hikari.app.ui.channels.VideoEditScreen
 import com.hikari.app.ui.feed.FeedScreen
@@ -203,16 +202,8 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
                     onClose = { nav.popBackStack() },
                     // Nach dem Absenden direkt dorthin, wo der Fortschritt
                     // sichtbar ist — sonst bleibt offen, ob etwas passiert.
-                    onSubmitted = { nav.navigate("imports") },
+                    onSubmitted = { nav.navigate("channel/manual") },
                 )
-            }
-            composable("imports") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    ImportsScreen(
-                        onClose = { nav.popBackStack() },
-                        onOpenSeries = { id -> nav.navigate("series/$id") },
-                    )
-                }
             }
             composable("library") {
                 Box(Modifier.fillMaxSize().padding(padding)) {

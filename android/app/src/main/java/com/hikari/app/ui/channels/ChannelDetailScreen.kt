@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.ChannelVideoDto
+import com.hikari.app.ui.imports.PendingImportRow
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariAmberSoft
 import com.hikari.app.ui.theme.HikariBg
@@ -91,6 +92,9 @@ fun ChannelDetailScreen(
     val syncing by vm.syncing.collectAsState()
     val syncMessage by vm.syncMessage.collectAsState()
     val removed by vm.removed.collectAsState()
+    val pending by vm.pending.collectAsState()
+    val editingImport by vm.editingImport.collectAsState()
+    val savingImport by vm.savingImport.collectAsState()
 
     // When the channel is unsubscribed, leave the now-empty detail screen.
     LaunchedEffect(removed) { if (removed) onBack() }
@@ -173,8 +177,10 @@ fun ChannelDetailScreen(
                 val approved = videos.count { it.decision == "approved" }
                 val rejected = videos.count { it.decision == "rejected" }
                 val processing = videos.count { it.decision == null }
+                val loadingCount = pending.count { it.status != "failed" }
                 val parts = buildList {
                     add("${videos.size} VIDEOS")
+                    if (loadingCount > 0) add("$loadingCount LÄDT")
                     if (approved > 0) add("$approved OK")
                     if (rejected > 0) add("$rejected ABG")
                     if (processing > 0) add("$processing IN ARBEIT")
@@ -210,6 +216,18 @@ fun ChannelDetailScreen(
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     )
                 }
+            }
+
+            items(pending, key = { "pending-${it.id}" }) { item ->
+                PendingImportRow(
+                    item = item,
+                    expanded = editingImport == item.id,
+                    saving = savingImport == item.id,
+                    onToggleEdit = { vm.toggleImportEdit(item.id) },
+                    onSave = { patch -> vm.saveImport(item.id, patch) },
+                    onDismiss = { vm.dismissImport(item.id) },
+                )
+                HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
             }
 
             items(videos, key = { it.videoId }) { video ->
