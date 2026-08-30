@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { importDirectLink } from "./manual-import.js";
+import { importDirectLink, importSniffedMedia } from "./manual-import.js";
 
 // Nur das Binary-Ausführen wird ersetzt — runPreferEmbedded (web_embedded-
 // Client + Fallback) läuft echt mit, damit der 403-Fix mitgetestet wird.
@@ -39,7 +39,10 @@ function encodeVoeConfig(config: Record<string, unknown>): string {
 }
 
 class MockDb {
-  channels = new Map<string, { id: string; url: string; title: string; added_at: number; is_active: number }>();
+  channels = new Map<
+    string,
+    { id: string; url: string; title: string; added_at: number; is_active: number }
+  >();
   videos = new Map<
     string,
     {
@@ -54,7 +57,10 @@ class MockDb {
     }
   >();
   scores = new Map<string, { video_id: string }>();
-  downloadedVideos = new Map<string, { video_id: string; file_path: string; file_size_bytes: number }>();
+  downloadedVideos = new Map<
+    string,
+    { video_id: string; file_path: string; file_size_bytes: number }
+  >();
   feedItems = new Map<string, { video_id: string; added_to_feed_at: number }>();
 
   pendingImports = new Map<string, { id: string; title: unknown }>();
@@ -126,6 +132,10 @@ class MockDb {
       };
     }
 
+    if (sql.includes("INSERT INTO series")) {
+      return { run: () => {} };
+    }
+
     if (sql.includes("INSERT INTO scores")) {
       return {
         run: (videoId: string) => {
@@ -180,7 +190,10 @@ class MockDb {
       return {
         run: (...args: unknown[]) => {
           if (sql.includes("INSERT INTO pending_imports")) {
-            this.pendingImports.set(String(args[0]), { id: String(args[0]), title: args[3] ?? null });
+            this.pendingImports.set(String(args[0]), {
+              id: String(args[0]),
+              title: args[3] ?? null,
+            });
           } else if (sql.includes("DELETE FROM pending_imports")) {
             this.pendingImports.delete(String(args[0]));
           }
@@ -255,17 +268,18 @@ describe("importDirectLink", () => {
 
     const result = await importDirectLink(db as never, pageUrl, dir);
 
+    // Der VOE-Uploader-Suffix ("by Dragonball-Tube") wird abgeschnitten.
     expect(result).toMatchObject({
       status: "ok",
       videoId: "voe_fsz0jl0y8u39",
-      title: "Dragonball Super 2 HD GER SUB by Dragonball-Tube",
+      title: "Dragonball Super 2 HD GER SUB",
     });
 
     const video = db.videos.get("voe_fsz0jl0y8u39");
     expect(video).toEqual({
       id: "voe_fsz0jl0y8u39",
       channel_id: "manual",
-      title: "Dragonball Super 2 HD GER SUB by Dragonball-Tube",
+      title: "Dragonball Super 2 HD GER SUB",
       description: "",
       published_at: expect.any(Number),
       duration_seconds: 1209,
@@ -319,12 +333,7 @@ describe("importDirectLink", () => {
 
     const dir = mkdtempSync(join(tmpdir(), "hikari-import-"));
     const db = new MockDb();
-    const result = await importDirectLink(
-      db as never,
-      url,
-      dir,
-      { title: "User Override Title" },
-    );
+    const result = await importDirectLink(db as never, url, dir, { title: "User Override Title" });
 
     expect(result.status).toBe("ok");
     const stored = db.videos.get("abc123");
@@ -384,7 +393,10 @@ describe("importDirectLink", () => {
 
     // Der Download MUSS über den web_embedded-Client laufen: googlevideo gibt
     // yt-dlps eigenem Downloader mit den Default-Clients 403 (18.08.2026).
-    const downloadArgs = vi.mocked(runYtDlp).mock.calls.map((c) => c[0]).find((a) => a.includes("-o"));
+    const downloadArgs = vi
+      .mocked(runYtDlp)
+      .mock.calls.map((c) => c[0])
+      .find((a) => a.includes("-o"));
     expect(downloadArgs).toContain("youtube:player_client=web_embedded");
   });
 
@@ -461,5 +473,183 @@ describe("importDirectLink", () => {
       videoId: "voe_fsz0jl0y8u39",
     });
     expect(db.channels.get("manual")?.is_active).toBe(1);
+  });
+
+  it("erkennt einen parallel laufenden Import als Duplikat statt doppelt zu laden", async () => {
+    // Bulk-Import: landet dasselbe Video über zwei verschiedene Host-URLs in
+    // zwei parallelen Buckets, liefen früher zwei Downloads auf dieselbe Datei
+    // und der zweite INSERT scheiterte als "failed". Muss "duplicate" sein.
+    const url = "https://example.com/race-test";
+    const { runYtDlp } = await import("../yt-dlp/client.js");
+
+    let releaseDownload!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      releaseDownload = resolve;
+    });
+    let downloadCount = 0;
+
+    vi.mocked(runYtDlp).mockImplementation(async (args: string[]) => {
+      if (args.includes("--dump-single-json")) {
+        return {
+          stdout: JSON.stringify({
+            id: "race1",
+            extractor: "youtube",
+            title: "Race Test",
+            duration: 60,
+            upload_date: "20240101",
+            webpage_url: url,
+          }),
+          stderr: "",
+        };
+      }
+      if (args.includes("-o")) {
+        downloadCount++;
+        await gate;
+        writeFileSync(args[args.indexOf("-o") + 1], Buffer.alloc(1024, 0xff));
+        return { stdout: "", stderr: "" };
+      }
+      throw new Error(`Unexpected yt-dlp args: ${JSON.stringify(args)}`);
+    });
+
+    const dir = mkdtempSync(join(tmpdir(), "hikari-import-"));
+    const db = new MockDb();
+
+    const first = importDirectLink(db as never, url, dir);
+    await vi.waitFor(() => expect(downloadCount).toBe(1));
+
+    const second = await importDirectLink(db as never, url, dir);
+    expect(second).toMatchObject({ status: "duplicate", videoId: "race1" });
+
+    releaseDownload();
+    expect((await first).status).toBe("ok");
+    expect(downloadCount).toBe(1);
+  });
+
+  it("zieht den Seriennamen aus dem Episodentitel ab", async () => {
+    const url = "https://example.com/series-prefix-test";
+    const { runYtDlp } = await import("../yt-dlp/client.js");
+
+    vi.mocked(runYtDlp).mockImplementation(async (args: string[]) => {
+      if (args.includes("--dump-single-json")) {
+        return {
+          stdout: JSON.stringify({
+            id: "prefix1",
+            extractor: "youtube",
+            title: "Solo Leveling - Folge 3",
+            duration: 100,
+            upload_date: "20240101",
+            webpage_url: url,
+          }),
+          stderr: "",
+        };
+      }
+      if (args.includes("-o")) {
+        writeFileSync(args[args.indexOf("-o") + 1], Buffer.alloc(1024, 0xff));
+        return { stdout: "", stderr: "" };
+      }
+      throw new Error(`Unexpected yt-dlp args: ${JSON.stringify(args)}`);
+    });
+
+    const dir = mkdtempSync(join(tmpdir(), "hikari-import-"));
+    const db = new MockDb();
+    const result = await importDirectLink(db as never, url, dir, {
+      seriesTitle: "Solo Leveling",
+    });
+
+    expect(result.status).toBe("ok");
+    expect(db.videos.get("prefix1")?.title).toBe("Folge 3");
+  });
+});
+
+describe("importSniffedMedia", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("räumt den document.title des Browsers auf statt ihn roh zu speichern", async () => {
+    const { runYtDlp } = await import("../yt-dlp/client.js");
+    vi.mocked(runYtDlp).mockImplementation(async (args: string[]) => {
+      if (args.includes("-o")) {
+        writeFileSync(args[args.indexOf("-o") + 1], Buffer.alloc(1024, 0xff));
+        return { stdout: "", stderr: "" };
+      }
+      throw new Error(`Unexpected yt-dlp args: ${JSON.stringify(args)}`);
+    });
+
+    const dir = mkdtempSync(join(tmpdir(), "hikari-import-"));
+    const db = new MockDb();
+    const result = await importSniffedMedia(
+      db as never,
+      {
+        pageUrl: "https://aniworld.to/serie/stream/solo-leveling/staffel-1/episode-3",
+        mediaUrl: "https://cdn.example.com/x/master.m3u8?token=abc",
+        title: "Solo Leveling Folge 3 - AniWorld",
+      },
+      dir,
+    );
+
+    expect(result.status).toBe("ok");
+    // Serie/Staffel/Folge kommen aus der Seiten-URL; der Serienname wird
+    // aus dem Episodentitel abgezogen, damit er nicht doppelt steht.
+    expect(result.title).toBe("Folge 3");
+    expect(db.videos.get(result.videoId as string)?.title).toBe("Folge 3");
+  });
+
+  it("fällt auf die humanisierte URL zurück statt auf die rohe URL", async () => {
+    const { runYtDlp } = await import("../yt-dlp/client.js");
+    vi.mocked(runYtDlp).mockImplementation(async (args: string[]) => {
+      if (args.includes("-o")) {
+        writeFileSync(args[args.indexOf("-o") + 1], Buffer.alloc(1024, 0xff));
+        return { stdout: "", stderr: "" };
+      }
+      throw new Error(`Unexpected yt-dlp args: ${JSON.stringify(args)}`);
+    });
+
+    const dir = mkdtempSync(join(tmpdir(), "hikari-import-"));
+    const db = new MockDb();
+    const result = await importSniffedMedia(
+      db as never,
+      {
+        pageUrl: "https://serien.test/serie/stream/solo-leveling/staffel-1/episode-3",
+        mediaUrl: "https://cdn.example.com/x/master.m3u8?token=abc",
+      },
+      dir,
+    );
+
+    expect(result.status).toBe("ok");
+    expect(result.title).toBe("Staffel 1 Episode 3");
+    expect(result.title).not.toContain("http");
+  });
+});
+
+describe("ensureSeries", () => {
+  it("normalisiert Schreibvarianten auf dieselbe Serie", async () => {
+    const Database = (await import("better-sqlite3")).default;
+    const { applyMigrations } = await import("../db/migrations.js");
+    const { ensureSeries } = await import("./manual-import.js");
+    const db = new Database(":memory:");
+    applyMigrations(db);
+
+    const a = ensureSeries(db, "Solo Leveling");
+    const b = ensureSeries(db, "Solo  Leveling");
+    const c = ensureSeries(db, "Sólo Leveling");
+    expect(a).toBe(b);
+    expect(b).toBe(c);
+    expect(a).toBe("solo-leveling");
+
+    // Genau eine Zeile, egal wie viele Varianten ankamen.
+    const count = db.prepare("SELECT COUNT(*) AS n FROM series").get() as { n: number };
+    expect(count.n).toBe(1);
+  });
+
+  it("fällt bei nicht-lateinischen Titeln auf einen Hash zurück", async () => {
+    const Database = (await import("better-sqlite3")).default;
+    const { applyMigrations } = await import("../db/migrations.js");
+    const { ensureSeries } = await import("./manual-import.js");
+    const db = new Database(":memory:");
+    applyMigrations(db);
+
+    const id = ensureSeries(db, "ソロレベリング");
+    expect(id).toMatch(/^series-[0-9a-f]{10}$/);
   });
 });

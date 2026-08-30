@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.LibraryResponse
 import com.hikari.app.data.api.dto.SeriesDetailResponse
+import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.data.api.dto.TodayCountResponse
 import com.hikari.app.data.db.LocalDownloadDao
 import com.hikari.app.data.db.LocalDownloadEntity
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 /**
  * Zustand der Bibliothek.
@@ -99,6 +101,10 @@ class LibraryViewModel @Inject constructor(
 
     private val _history = MutableStateFlow<List<FeedItem>>(emptyList())
     val history: StateFlow<List<FeedItem>> = _history.asStateFlow()
+
+    /** Alle Serien — Auswahlliste für den Merge-Dialog im Serien-Detail. */
+    private val _allSeries = MutableStateFlow<List<SeriesItemDto>>(emptyList())
+    val allSeries: StateFlow<List<SeriesItemDto>> = _allSeries.asStateFlow()
 
     init {
         loadLibrary()
@@ -209,6 +215,42 @@ class LibraryViewModel @Inject constructor(
             }.onFailure {
                 _seriesState.value = SeriesUiState.Error(it.message ?: "Unbekannter Fehler")
             }
+        }
+    }
+
+    fun loadAllSeries() {
+        viewModelScope.launch {
+            runCatching { repo.listSeries() }
+                .onSuccess { _allSeries.value = it }
+        }
+    }
+
+    /**
+     * Führt die aktuelle Serie (source) in eine andere (target) zusammen.
+     * Bei Erfolg meldet der Screen sich über [onSuccess] zurück und navigiert
+     * weg — die Quell-Serie existiert danach nicht mehr.
+     */
+    fun mergeSeries(
+        sourceId: String,
+        targetId: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        viewModelScope.launch {
+            runCatching { repo.mergeSeries(sourceId, targetId) }
+                .onSuccess {
+                    loadLibrary()
+                    onSuccess()
+                }
+                .onFailure { e ->
+                    val msg = when {
+                        e is HttpException && e.code() == 404 -> "Serie nicht gefunden"
+                        e is HttpException && e.code() == 400 ->
+                            "Quelle und Ziel dürfen nicht identisch sein"
+                        else -> e.message ?: "Zusammenführen fehlgeschlagen"
+                    }
+                    onError(msg)
+                }
         }
     }
 

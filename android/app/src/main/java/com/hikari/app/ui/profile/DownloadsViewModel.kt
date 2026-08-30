@@ -3,8 +3,10 @@ package com.hikari.app.ui.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.DownloadsResponse
+import com.hikari.app.data.api.dto.PendingImportDto
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.download.SmartDownloadScheduler
+import com.hikari.app.domain.repo.ChannelsRepository
 import com.hikari.app.domain.repo.DownloadsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -46,6 +48,7 @@ data class MusicSummary(
 @HiltViewModel
 class DownloadsViewModel @Inject constructor(
     private val downloadsRepo: DownloadsRepository,
+    private val channelsRepo: ChannelsRepository,
     private val settings: SettingsStore,
     private val scheduler: SmartDownloadScheduler,
     localDownloadDao: com.hikari.app.data.db.LocalDownloadDao,
@@ -55,6 +58,16 @@ class DownloadsViewModel @Inject constructor(
 
     private val _state = MutableStateFlow<DownloadsUiState>(DownloadsUiState.Loading)
     val state: StateFlow<DownloadsUiState> = _state.asStateFlow()
+
+    /** Gerade laufende Importe — der Tab pollt sie, solange er sichtbar ist. */
+    private val _transfers = MutableStateFlow<List<PendingImportDto>>(emptyList())
+    val transfers: StateFlow<List<PendingImportDto>> = _transfers.asStateFlow()
+
+    /** Ein Abruf fürs Polling; bei Fehler bleibt der letzte Stand stehen. */
+    suspend fun loadTransfers() {
+        runCatching { channelsRepo.listImports() }
+            .onSuccess { _transfers.value = it }
+    }
 
     val smartDownloads: StateFlow<Boolean> = settings.smartDownloads
         .stateIn(viewModelScope, SharingStarted.Eagerly, true)

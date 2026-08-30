@@ -127,6 +127,20 @@ describe("pending imports", () => {
     expect(listPending(db)).toHaveLength(0);
   });
 
+  // Die Spalte thumbnail_url existierte im Schema, wurde aber nie geschrieben —
+  // die Fortschrittszeile zeigte selbst bei bekanntem Vorschaubild nichts.
+  it("zeigt ein schon beim Einreihen bekanntes Thumbnail sofort", () => {
+    createPending(db, {
+      id: "voe_x",
+      pageUrl: "https://x.test/1",
+      metadata: { title: "Folge 1" },
+      thumbnailUrl: "https://hoster.test/thumb.jpg",
+    });
+
+    expect(getPending(db, "voe_x")?.thumbnailUrl).toBe("https://hoster.test/thumb.jpg");
+    expect(listPending(db)[0]?.thumbnailUrl).toBe("https://hoster.test/thumb.jpg");
+  });
+
   // Ein zweiter Anlauf auf dieselbe Seite darf keinen doppelten Eintrag
   // erzeugen, sondern den alten Fehlversuch zurücksetzen.
   it("setzt einen erneuten Anlauf zurück statt zu doppeln", () => {

@@ -114,15 +114,22 @@ function toPending(r: PendingRow): PendingImport {
 /** Legt den Eintrag an, bevor der Download startet — sofort sichtbar. */
 export function createPending(
   db: Database.Database,
-  input: { id: string; pageUrl: string; mediaUrl?: string | null; metadata?: PendingMetadata },
+  input: {
+    id: string;
+    pageUrl: string;
+    mediaUrl?: string | null;
+    metadata?: PendingMetadata;
+    /** Schon beim Einreihen bekannt (yt-dlp-Metadaten) — die Zeile zeigt sofort ein Bild. */
+    thumbnailUrl?: string | null;
+  },
 ): void {
   const now = Date.now();
   const m = input.metadata ?? {};
   db.prepare(
     `INSERT INTO pending_imports
      (id, page_url, media_url, title, series_id, series_title, season, episode,
-      dub_language, sub_language, is_movie, status, started_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'queued', ?, ?)
+      dub_language, sub_language, is_movie, thumbnail_url, status, started_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'queued', ?, ?)
      ON CONFLICT(id) DO UPDATE SET
        status = 'queued', error = NULL, updated_at = excluded.updated_at`,
   ).run(
@@ -137,6 +144,7 @@ export function createPending(
     m.dubLanguage ?? null,
     m.subLanguage ?? null,
     m.isMovie ? 1 : 0,
+    input.thumbnailUrl ?? null,
     now,
     now,
   );

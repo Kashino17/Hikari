@@ -2,9 +2,10 @@ import { createHash } from "node:crypto";
 import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type Database from "better-sqlite3";
-import { runPreferEmbedded, runYtDlp, YtDlpError } from "../yt-dlp/client.js";
-import { PROGRESS_ARGS, parseProgressLine } from "../download/progress.js";
 import { probeDurationSeconds } from "../download/probe.js";
+import { PROGRESS_ARGS, parseProgressLine } from "../download/progress.js";
+import { YtDlpError, runPreferEmbedded, runYtDlp } from "../yt-dlp/client.js";
+import { fillMissingEpisodeInfo } from "./episode-parser.js";
 import {
   createPending,
   getPending,
@@ -14,6 +15,27 @@ import {
   removePending,
   updateProgress,
 } from "./pending-imports.js";
+import { ensureImportThumbnail } from "./thumbnails.js";
+import { cleanImportTitle, fallbackTitleFromUrl, stripSeriesPrefix } from "./titles.js";
+
+/**
+ * videoIds, deren Download gerade läuft. Der Bulk-Import verteilt URLs nach
+ * Hostname auf parallele Buckets — landet dasselbe Video über zwei
+ * verschiedene Host-URLs (z. B. voe + Redirect) in zwei Buckets, liefen sonst
+ * zwei yt-dlp-Prozesse parallel auf dieselbe Zieldatei, und der zweite INSERT
+ * scheiterte am PRIMARY KEY: im Ergebnis ein falsches "failed" statt
+ * "duplicate".
+ */
+const inFlight = new Set<string>();
+
+function hostOf(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return undefined;
+  }
+}
 
 export const MANUAL_CHANNEL_ID = "manual";
 const MANUAL_CHANNEL_TITLE = "Manuell hinzugefügt";
@@ -152,10 +174,9 @@ function decodeVoeConfig(encoded: string): VoeConfig {
 }
 
 async function resolveViaYtDlp(url: string): Promise<ResolvedImportSource> {
-  const result = await runYtDlp(
-    ["--dump-single-json", "--no-warnings", "--no-playlist", url],
-    { timeoutMs: 30_000 },
-  );
+  const result = await runYtDlp(["--dump-single-json", "--no-warnings", "--no-playlist", url], {
+    timeoutMs: 30_000,
+  });
   const metadata = JSON.parse(result.stdout) as YtDlpVideoMeta;
   if (!metadata.id) {
     throw new Error("yt-dlp returned no video id");
@@ -211,7 +232,7 @@ async function resolveVoePage(url: string): Promise<ResolvedImportSource | null>
       extractor_key: "VOE",
       title: config.title ?? metadata.title ?? config.file_code,
       webpage_url: url,
-      ...(config.thumbnail ?? metadata.thumbnail
+      ...((config.thumbnail ?? metadata.thumbnail)
         ? { thumbnail: config.thumbnail ?? metadata.thumbnail }
         : {}),
     },
@@ -231,14 +252,16 @@ async function resolveImportSource(url: string): Promise<ResolvedImportSource> {
   if (voe) return voe;
 
   throw primaryError ?? new Error(`Could not resolve import source for ${url}`);
-  }
+}
 
-  export async function fetchImportMetadata(url: string): Promise<YtDlpVideoMeta & { downloadUrl: string }> {
+export async function fetchImportMetadata(
+  url: string,
+): Promise<YtDlpVideoMeta & { downloadUrl: string }> {
   const resolved = await resolveImportSource(url);
   return { ...resolved.metadata, downloadUrl: resolved.downloadUrl };
-  }
+}
 
-  function ensureManualChannel(db: Database.Database): void {
+function ensureManualChannel(db: Database.Database): void {
   db.prepare(
     `INSERT INTO channels (id, url, title, added_at, is_active)
      VALUES (?, ?, ?, ?, 1)
@@ -247,19 +270,29 @@ async function resolveImportSource(url: string): Promise<ResolvedImportSource> {
        title = excluded.title,
        is_active = 1`,
   ).run(MANUAL_CHANNEL_ID, "manual:hikari", MANUAL_CHANNEL_TITLE, Date.now());
-  }
+}
 
-  export function ensureSeries(db: Database.Database, title: string): string {
-  const id = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+export function ensureSeries(db: Database.Database, title: string): string {
+  // Normalisieren, damit Schreibvarianten nicht als Dubletten aufreihen:
+  // "Solo Leveling", "Solo  Leveling" und "Sólo Leveling" sind eine Serie.
+  // NFKD löst Umlaute in Grundbuchstabe + Akzent auf, den wir wegwerfen.
+  let id = title
+    .normalize("NFKD")
+    .replace(/\p{Mark}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  // Titel ohne lateinische Zeichen (z. B. japanisch) würden sonst leer laufen.
+  if (!id) id = `series-${createHash("sha1").update(title).digest("hex").slice(0, 10)}`;
   db.prepare(
     `INSERT INTO series (id, title, added_at)
      VALUES (?, ?, ?)
      ON CONFLICT(id) DO NOTHING`,
   ).run(id, title, Date.now());
   return id;
-  }
+}
 
-  /**
+/**
   * Import a single URL: extract metadata via yt-dlp, auto-approve (no LLM
 
  * call), download via yt-dlp, write all rows. Returns status per URL so
@@ -270,6 +303,7 @@ export async function importDirectLink(
   url: string,
   videoDir: string,
   manualMeta?: ManualMetadata,
+  coverDir?: string,
 ): Promise<ImportResult> {
   const cleanUrl = url.trim();
   if (!cleanUrl) return { url, status: "failed", error: "empty URL" };
@@ -307,12 +341,32 @@ export async function importDirectLink(
     };
   }
 
-  const title = manualMeta?.title ?? meta.title ?? meta.id;
+  // Läuft dasselbe Video gerade in einem anderen Host-Bucket, ist es ein
+  // Duplikat — nicht erst nach einem doppelten Download auf dieselbe Datei
+  // am PRIMARY KEY scheitern (das wurde im Bulk-Ergebnis zu Unrecht "failed").
+  if (inFlight.has(videoId)) {
+    return {
+      url,
+      status: "duplicate",
+      videoId,
+      ...(meta.title ? { title: meta.title } : {}),
+    };
+  }
+
+  const title =
+    manualMeta?.title ??
+    cleanImportTitle(meta.title, hostOf(meta.webpage_url ?? cleanUrl)) ??
+    fallbackTitleFromUrl(cleanUrl);
   const description = meta.description ?? "";
   const duration = Math.round(meta.duration ?? 0);
-  const thumbnail = fixProtocol(meta.thumbnail ?? meta.thumbnails?.[meta.thumbnails.length - 1]?.url);
+  const remoteThumbnail = fixProtocol(
+    meta.thumbnail ?? meta.thumbnails?.[meta.thumbnails.length - 1]?.url,
+  );
   const publishedAt = parseUploadDate(meta.upload_date);
 
+  // Serie/Staffel/Folge regelbasiert aus URL und Titel ergänzen — nur Lücken,
+  // die Eingaben des Nutzers bleiben unangetastet.
+  const effectiveMeta: ManualMetadata = fillMissingEpisodeInfo(manualMeta ?? {}, cleanUrl, title);
   // Step 2: download FIRST, before writing any DB rows. The episode must only
   // become visible once its file is actually on disk. Previously we inserted
   // the videos + scores rows up front, so for the minutes-long download of a
@@ -329,16 +383,18 @@ export async function importDirectLink(
     mediaUrl: downloadUrl,
     metadata: {
       title,
-      seriesId: manualMeta?.seriesId ?? null,
-      seriesTitle: manualMeta?.seriesTitle ?? null,
-      season: manualMeta?.season ?? null,
-      episode: manualMeta?.episode ?? null,
-      dubLanguage: manualMeta?.dubLanguage ?? null,
-      subLanguage: manualMeta?.subLanguage ?? null,
-      isMovie: manualMeta?.isMovie ?? null,
+      seriesId: effectiveMeta.seriesId ?? null,
+      seriesTitle: effectiveMeta.seriesTitle ?? null,
+      season: effectiveMeta.season ?? null,
+      episode: effectiveMeta.episode ?? null,
+      dubLanguage: effectiveMeta.dubLanguage ?? null,
+      subLanguage: effectiveMeta.subLanguage ?? null,
+      isMovie: effectiveMeta.isMovie ?? null,
     },
+    thumbnailUrl: remoteThumbnail,
   });
   markDownloading(db, videoId);
+  inFlight.add(videoId);
 
   const filePath = join(videoDir, `${videoId}.mp4`);
   try {
@@ -372,6 +428,7 @@ export async function importDirectLink(
       () => true,
     );
   } catch (err) {
+    inFlight.delete(videoId);
     const msg = err instanceof YtDlpError ? err.message : String(err);
     const error = `download failed: ${msg.slice(0, 200)}`;
     markFailed(db, videoId, error);
@@ -379,6 +436,7 @@ export async function importDirectLink(
   }
 
   if (!existsSync(filePath)) {
+    inFlight.delete(videoId);
     const error = "download finished but file not found";
     markFailed(db, videoId, error);
     return { url, status: "failed", error };
@@ -387,24 +445,39 @@ export async function importDirectLink(
   // Waehrend des Downloads geaenderte Angaben gewinnen.
   const edited = metadataForCompletion(getPending(db, videoId));
   const finalMeta: ManualMetadata = {
-    ...manualMeta,
+    ...effectiveMeta,
     ...Object.fromEntries(Object.entries(edited).filter(([, v]) => v !== null && v !== undefined)),
   };
-  persistImportedVideo(db, {
-    videoId,
-    filePath,
-    title: finalMeta.title ?? title,
-    description,
-    duration,
-    thumbnail,
-    publishedAt,
-    manualMeta: finalMeta,
-  });
-  removePending(db, videoId);
+  // Lokal ablegen — Remote-Thumbnail-URLs der Hoster verfallen oder blocken
+  // ohne Referer. Schlägt auch der ffmpeg-Standbild-Fallback fehl, bleibt die
+  // Remote-URL als letzte Rettung in der Datenbank.
+  const thumbnail = coverDir
+    ? ((await ensureImportThumbnail(videoId, filePath, remoteThumbnail, coverDir, {
+        referer: cleanUrl,
+      })) ?? remoteThumbnail)
+    : remoteThumbnail;
 
-  return { url, status: "ok", videoId, title: finalMeta.title ?? title };
+  const finalTitle = stripSeriesPrefix(finalMeta.title ?? title, finalMeta.seriesTitle);
+  // persist wirft bei einem DB-Konflikt — die In-Flight-Markierung muss
+  // trotzdem fallen, sonst bliebe jede Wiederholung für immer "duplicate".
+  try {
+    persistImportedVideo(db, {
+      videoId,
+      filePath,
+      title: finalTitle,
+      description,
+      duration,
+      thumbnail,
+      publishedAt,
+      manualMeta: finalMeta,
+    });
+    removePending(db, videoId);
+  } finally {
+    inFlight.delete(videoId);
+  }
+
+  return { url, status: "ok", videoId, title: finalTitle };
 }
-
 
 interface PersistInput {
   videoId: string;
@@ -483,9 +556,10 @@ function persistImportedVideo(db: Database.Database, input: PersistInput): void 
      VALUES (?, ?, ?, ?)`,
   ).run(input.videoId, input.filePath, size, now);
 
-  db.prepare(
-    `INSERT OR IGNORE INTO feed_items (video_id, added_to_feed_at) VALUES (?, ?)`,
-  ).run(input.videoId, now);
+  db.prepare("INSERT OR IGNORE INTO feed_items (video_id, added_to_feed_at) VALUES (?, ?)").run(
+    input.videoId,
+    now,
+  );
 }
 
 /** Im In-App-Browser mitgelesener Stream samt der Header seiner Herkunftsseite. */
@@ -518,6 +592,7 @@ export async function importSniffedMedia(
   input: SniffedMedia,
   videoDir: string,
   manualMeta?: ManualMetadata,
+  coverDir?: string,
 ): Promise<ImportResult> {
   const pageUrl = input.pageUrl.trim();
   const mediaUrl = input.mediaUrl.trim();
@@ -525,12 +600,44 @@ export async function importSniffedMedia(
 
   ensureManualChannel(db);
 
-  const videoId = `sniff_${createHash("sha1").update(pageUrl || mediaUrl).digest("hex").slice(0, 16)}`;
+  const videoId = `sniff_${createHash("sha1")
+    .update(pageUrl || mediaUrl)
+    .digest("hex")
+    .slice(0, 16)}`;
 
   const existing = db.prepare("SELECT 1 FROM videos WHERE id = ?").get(videoId);
   if (existing) {
-    return { url: pageUrl, status: "duplicate", videoId, ...(input.title ? { title: input.title } : {}) };
+    return {
+      url: pageUrl,
+      status: "duplicate",
+      videoId,
+      ...(input.title ? { title: input.title } : {}),
+    };
   }
+
+  if (inFlight.has(videoId)) {
+    return {
+      url: pageUrl,
+      status: "duplicate",
+      videoId,
+      ...(input.title ? { title: input.title } : {}),
+    };
+  }
+
+  // Der Browser schickt den document.title der Seite mit — der trägt oft den
+  // Seitennamen ("… - AniWorld") oder ist ein Platzhalter. Einmal aufgeräumt
+  // sieht die Warteschlange von Anfang an lesbar aus.
+  const cleanTitle = cleanImportTitle(input.title, hostOf(pageUrl));
+  const initialTitle = manualMeta?.title ?? cleanTitle ?? fallbackTitleFromUrl(pageUrl, mediaUrl);
+
+  // Serie/Staffel/Folge aus Seiten-URL und Titel ergänzen — das ist die
+  // eigentliche Stärke des Browser-Imports, dessen Hostermuster die Info
+  // längst in der URL tragen. Nur Lücken: Nutzereingaben gewinnen.
+  const effectiveMeta: ManualMetadata = fillMissingEpisodeInfo(
+    manualMeta ?? {},
+    pageUrl,
+    cleanTitle ?? input.title,
+  );
 
   // Sofort sichtbar machen, bevor der Download beginnt. Ein Serienimport dauert
   // Minuten; ohne diesen Eintrag sieht der Nutzer bis zum Schluss nichts und
@@ -540,17 +647,18 @@ export async function importSniffedMedia(
     pageUrl,
     mediaUrl,
     metadata: {
-      title: manualMeta?.title ?? input.title ?? null,
-      seriesId: manualMeta?.seriesId ?? null,
-      seriesTitle: manualMeta?.seriesTitle ?? null,
-      season: manualMeta?.season ?? null,
-      episode: manualMeta?.episode ?? null,
-      dubLanguage: manualMeta?.dubLanguage ?? null,
-      subLanguage: manualMeta?.subLanguage ?? null,
-      isMovie: manualMeta?.isMovie ?? null,
+      title: initialTitle,
+      seriesId: effectiveMeta.seriesId ?? null,
+      seriesTitle: effectiveMeta.seriesTitle ?? null,
+      season: effectiveMeta.season ?? null,
+      episode: effectiveMeta.episode ?? null,
+      dubLanguage: effectiveMeta.dubLanguage ?? null,
+      subLanguage: effectiveMeta.subLanguage ?? null,
+      isMovie: effectiveMeta.isMovie ?? null,
     },
   });
   markDownloading(db, videoId);
+  inFlight.add(videoId);
 
   const filePath = join(videoDir, `${videoId}.mp4`);
   const headerArgs: string[] = [];
@@ -586,6 +694,7 @@ export async function importSniffedMedia(
       },
     );
   } catch (err) {
+    inFlight.delete(videoId);
     const msg = err instanceof YtDlpError ? err.message : String(err);
     const error = `download failed: ${msg.slice(0, 200)}`;
     markFailed(db, videoId, error);
@@ -593,6 +702,7 @@ export async function importSniffedMedia(
   }
 
   if (!existsSync(filePath)) {
+    inFlight.delete(videoId);
     const error = "download finished but file not found";
     markFailed(db, videoId, error);
     return { url: pageUrl, status: "failed", error };
@@ -602,25 +712,37 @@ export async function importSniffedMedia(
   // oder Sprache gesetzt, zaehlt das und nicht, was beim Einreihen mitkam.
   const edited = metadataForCompletion(getPending(db, videoId));
   const finalMeta: ManualMetadata = {
-    ...manualMeta,
+    ...effectiveMeta,
     ...Object.fromEntries(Object.entries(edited).filter(([, v]) => v !== null && v !== undefined)),
   };
-  const title = finalMeta.title ?? input.title ?? pageUrl;
+  const title = stripSeriesPrefix(finalMeta.title ?? initialTitle, finalMeta.seriesTitle);
   // Der Hoster liefert keine Metadaten — ohne diesen Schritt stuende eine
   // Laufzeit von 0 in der Datenbank. Die App zeigte dann "0 min", und der
   // Abspielfortschritt (position / duration) teilte durch null.
   const duration = (await probeDurationSeconds(filePath)) ?? 0;
-  persistImportedVideo(db, {
-    videoId,
-    filePath,
-    title,
-    description: "",
-    duration,
-    thumbnail: null,
-    publishedAt: Date.now(),
-    manualMeta: finalMeta,
-  });
-  removePending(db, videoId);
+  // Der mitgelesene Stream kennt kein Vorschaubild — ohne diesen Schritt kam
+  // jeder Browser-Import als dunkle Flaeche an. ffmpeg schneidet ein Standbild
+  // aus der fertigen Datei.
+  const thumbnail = coverDir
+    ? await ensureImportThumbnail(videoId, filePath, null, coverDir, {
+        referer: input.referer ?? pageUrl,
+      })
+    : null;
+  try {
+    persistImportedVideo(db, {
+      videoId,
+      filePath,
+      title,
+      description: "",
+      duration,
+      thumbnail,
+      publishedAt: Date.now(),
+      manualMeta: finalMeta,
+    });
+    removePending(db, videoId);
+  } finally {
+    inFlight.delete(videoId);
+  }
 
   return { url: pageUrl, status: "ok", videoId, title };
 }

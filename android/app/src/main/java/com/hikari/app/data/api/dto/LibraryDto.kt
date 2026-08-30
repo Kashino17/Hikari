@@ -65,6 +65,22 @@ data class UpdateSeriesRequest(
 )
 
 @Serializable
+data class MergeSeriesRequest(
+    val sourceId: String,
+    val targetId: String,
+)
+
+/** Antwort von GET /videos/{id}/next — die nächste Folge derselben Serie. */
+@Serializable
+data class NextVideoDto(
+    val id: String,
+    val title: String,
+    val season: Int? = null,
+    val episode: Int? = null,
+    val thumbnailUrl: String? = null,
+)
+
+@Serializable
 data class VideoDetailDto(
     val id: String,
     val channel_id: String,

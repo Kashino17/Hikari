@@ -32,11 +32,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.PendingImportDto
 import com.hikari.app.data.api.dto.PendingImportPatch
 import com.hikari.app.ui.theme.HikariAmber
@@ -77,6 +80,17 @@ fun PendingImportRow(
                     .background(HikariBorder),
                 contentAlignment = Alignment.Center,
             ) {
+                // Vorschaubild hinter dem Fortschritt — abgedunkelt, damit
+                // Prozent und Spinner lesbar bleiben.
+                if (item.thumbnailUrl != null) {
+                    AsyncImage(
+                        model = item.thumbnailUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f)))
+                }
                 when {
                     failed -> Text("FEHLER", color = HikariTextFaint, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                     item.progress != null -> Text(

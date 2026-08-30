@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,13 +23,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -50,8 +55,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.LibraryVideoDto
 import com.hikari.app.data.api.dto.SeriesDetailResponse
+import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
+import com.hikari.app.ui.theme.HikariDanger
 import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
@@ -65,6 +72,11 @@ fun SeriesDetailScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.seriesState.collectAsState()
+    val allSeries by viewModel.allSeries.collectAsState()
+
+    var showMergePicker by remember { mutableStateOf(false) }
+    var mergeTarget by remember { mutableStateOf<SeriesItemDto?>(null) }
+    var mergeError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(seriesId) {
         seriesId?.let { viewModel.loadSeries(it) }
@@ -84,7 +96,93 @@ fun SeriesDetailScreen(
                     modifier = Modifier.align(Alignment.Center).padding(20.dp),
                 )
             is SeriesUiState.Success ->
-                SeriesDetailContent(s.data, onBack, onPlayVideo)
+                SeriesDetailContent(
+                    data = s.data,
+                    onBack = onBack,
+                    onPlayVideo = onPlayVideo,
+                    onMergeClick = {
+                        viewModel.loadAllSeries()
+                        mergeError = null
+                        showMergePicker = true
+                    },
+                )
+        }
+    }
+
+    // ── Merge: Ziel-Serie wählen ─────────────────────────────────────────
+    if (showMergePicker) {
+        val currentId = (state as? SeriesUiState.Success)?.data?.id
+        AlertDialog(
+            onDismissRequest = { showMergePicker = false },
+            title = { Text("Mit anderer Serie zusammenführen") },
+            text = {
+                if (allSeries.isEmpty()) {
+                    Text("Keine weiteren Serien vorhanden", color = HikariTextMuted)
+                } else {
+                    LazyColumn(modifier = Modifier.heightIn(max = 320.dp)) {
+                        items(allSeries, key = { it.id }) { series ->
+                            val isCurrent = series.id == currentId
+                            Text(
+                                text = series.title,
+                                color = if (isCurrent) HikariTextFaint else HikariText,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(enabled = !isCurrent) {
+                                        showMergePicker = false
+                                        mergeTarget = series
+                                    }
+                                    .padding(vertical = 12.dp, horizontal = 4.dp),
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showMergePicker = false }) { Text("Abbrechen") }
+            },
+        )
+    }
+
+    // ── Merge: Bestätigung ───────────────────────────────────────────────
+    mergeTarget?.let { target ->
+        val data = (state as? SeriesUiState.Success)?.data
+        if (data != null) {
+            AlertDialog(
+                onDismissRequest = { mergeTarget = null; mergeError = null },
+                title = { Text("Serien zusammenführen?") },
+                text = {
+                    Column {
+                        Text("${data.videos.size} Folgen wandern zu ‚${target.title}'")
+                        mergeError?.let {
+                            Text(
+                                text = it,
+                                color = HikariDanger,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(top = 8.dp),
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        viewModel.mergeSeries(
+                            sourceId = data.id,
+                            targetId = target.id,
+                            onSuccess = {
+                                mergeTarget = null
+                                mergeError = null
+                                onBack()
+                            },
+                            onError = { mergeError = it },
+                        )
+                    }) { Text("Bestätigen") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { mergeTarget = null; mergeError = null }) {
+                        Text("Abbrechen")
+                    }
+                },
+            )
         }
     }
 }
@@ -94,6 +192,7 @@ private fun SeriesDetailContent(
     data: SeriesDetailResponse,
     onBack: () -> Unit,
     onPlayVideo: (String) -> Unit,
+    onMergeClick: () -> Unit,
 ) {
     val seasons = remember(data.videos) {
         data.videos.mapNotNull { it.season }.distinct().sorted()
@@ -131,6 +230,7 @@ private fun SeriesDetailContent(
                 resumeVideo = resumeVideo,
                 onBack = onBack,
                 onPlay = { resumeVideo?.let { onPlayVideo(it.id) } },
+                onMergeClick = onMergeClick,
             )
         }
 
@@ -184,6 +284,7 @@ private fun HeroSection(
     resumeVideo: LibraryVideoDto?,
     onBack: () -> Unit,
     onPlay: () -> Unit,
+    onMergeClick: () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxWidth().aspectRatio(16f / 10f)) {
         AsyncImage(
@@ -228,6 +329,36 @@ private fun HeroSection(
                 .background(Color.Black.copy(alpha = 0.4f)),
         ) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, "Zurück", tint = Color.White)
+        }
+
+        // Serien-Aktionen (z. B. Merge) — gleiche Optik wie der Zurück-Button.
+        var menuOpen by remember { mutableStateOf(false) }
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 40.dp, end = 10.dp),
+        ) {
+            IconButton(
+                onClick = { menuOpen = true },
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color.Black.copy(alpha = 0.4f)),
+            ) {
+                Icon(Icons.Default.MoreVert, "Serien-Aktionen", tint = Color.White)
+            }
+            DropdownMenu(
+                expanded = menuOpen,
+                onDismissRequest = { menuOpen = false },
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Mit anderer Serie zusammenführen…") },
+                    onClick = {
+                        menuOpen = false
+                        onMergeClick()
+                    },
+                )
+            }
         }
 
         Column(

@@ -3,6 +3,7 @@ package com.hikari.app.ui.channels
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hikari.app.data.api.dto.BulkJobStatusDto
 import com.hikari.app.data.api.dto.ChannelVideoDto
 import com.hikari.app.data.api.dto.PendingImportDto
 import com.hikari.app.data.api.dto.PendingImportPatch
@@ -67,6 +68,22 @@ class ChannelDetailViewModel @Inject constructor(
     /** Nur das manuelle Archiv kennt laufende Importe. */
     val showsImports: Boolean get() = channelId == MANUAL_CHANNEL_ID
 
+    // ---- Bulk-Job-Zusammenfassung ------------------------------------------
+    //
+    // Das Import-Sheet und der Browser schicken oft mehrere URLs auf einmal.
+    // Der Server fasst sie zu einem Job zusammen; diese Karte zeigt dessen
+    // Gesamtergebnis, während die einzelnen Zeilen unten den Fortschritt
+    // pro Import tragen.
+
+    private val _bulkJob = MutableStateFlow<BulkJobStatusDto?>(null)
+    val bulkJob: StateFlow<BulkJobStatusDto?> = _bulkJob.asStateFlow()
+
+    /** Weggewischt heißt: bis zum nächsten Job ausgeblendet. */
+    private val _bulkJobDismissed = MutableStateFlow(false)
+    val bulkJobDismissed: StateFlow<Boolean> = _bulkJobDismissed.asStateFlow()
+
+    fun dismissBulkJob() { _bulkJobDismissed.value = true }
+
     fun toggleImportEdit(id: String) {
         _editingImport.value = if (_editingImport.value == id) null else id
     }
@@ -77,11 +94,31 @@ class ChannelDetailViewModel @Inject constructor(
         pendingPoller = viewModelScope.launch {
             while (true) {
                 loadPending()
+                loadBulkJob()
                 // Zwei Sekunden: Der Balken läuft sichtbar weiter, ohne den
                 // Server mit Anfragen zu überziehen.
                 delay(PENDING_POLL_MS)
             }
         }
+    }
+
+    /**
+     * Stand des letzten Bulk-Jobs nachziehen. Nur solange nötig: Hat der Job
+     * sein Ende gemeldet und läuft kein Import mehr, liegt das Ergebnis fest
+     * und das Polling kann ruhen.
+     */
+    private suspend fun loadBulkJob() {
+        val current = _bulkJob.value
+        val busy = _pending.value.isNotEmpty() || (current != null && current.finishedAt == null)
+        if (!busy) return
+        runCatching { repo.bulkImportStatus() }
+            .onSuccess { job ->
+                // Ein neuer Job macht die Karte wieder sichtbar.
+                if (job.id != current?.id) _bulkJobDismissed.value = false
+                _bulkJob.value = job
+            }
+        // Fehler (z. B. 404, weil es noch nie einen Job gab) heißen einfach:
+        // keine Karte.
     }
 
     private suspend fun loadPending() {

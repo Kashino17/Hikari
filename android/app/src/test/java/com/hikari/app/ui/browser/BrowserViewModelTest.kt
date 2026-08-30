@@ -190,4 +190,42 @@ class BrowserViewModelTest {
         assertEquals("https://serien.test", normalizeUrl("serien.test"))
         assertTrue(normalizeUrl("solo leveling stream").startsWith("https://www.google.com/search?q="))
     }
+
+    @Test
+    fun fuelltSerieUndStaffelAusDerUrlVor() = runTest(dispatcher) {
+        vm.onPageStarted("https://aniworld.to/serie/stream/solo-leveling/staffel-2/episode-7")
+        assertEquals("Solo Leveling", vm.ui.value.seriesTitle)
+        assertEquals(2, vm.ui.value.season)
+    }
+
+    // Wer den Seriennamen selbst eingetippt hat, will ihn nicht von der
+    // nächsten Seiten-URL überschreiben lassen.
+    @Test
+    fun vorbefuellungUeberschreibtKeineManuelleEingabe() = runTest(dispatcher) {
+        vm.onPageStarted("https://aniworld.to/serie/stream/solo-leveling/staffel-1/episode-1")
+        vm.setSeriesTitle("Meine Serie")
+        vm.setSeason(5)
+        vm.onPageStarted("https://aniworld.to/serie/stream/arcane/staffel-2/episode-1")
+
+        assertEquals("Meine Serie", vm.ui.value.seriesTitle)
+        assertEquals(5, vm.ui.value.season)
+    }
+
+    // Nach dem Einsammeln von Folge 1 ist der naechste Korb-Eintrag Folge 2 —
+    // aber nur, wenn eine Serie eingetragen ist.
+    @Test
+    fun zaehltDieFolgennummerBeimSammelnHoch() = runTest(dispatcher) {
+        vm.onPageStarted("https://aniworld.to/serie/stream/solo-leveling/staffel-1/episode-1")
+        vm.sniffer.onRequest("https://cdn.test/1.m3u8", emptyMap())
+        vm.refreshFindings()
+        vm.collectCurrent()
+
+        vm.onPageStarted("https://aniworld.to/serie/stream/solo-leveling/staffel-1/episode-2")
+        vm.sniffer.onRequest("https://cdn.test/2.m3u8", emptyMap())
+        vm.refreshFindings()
+        vm.collectCurrent()
+
+        val episodes = vm.ui.value.basket.map { it.episode }
+        assertEquals(listOf(1, 2), episodes)
+    }
 }

@@ -126,4 +126,27 @@ class ImportSheetViewModelTest {
         assertEquals("One Piece", item.metadata?.seriesTitle)
         assertEquals("de", item.metadata?.dubLanguage)
     }
+
+    // Karte 2 hat keine Folge, gehoert aber zur selben Serie (Groß-/Klein-
+    // schreibung egal) wie Karte 1 — sie bekommt die naechste Nummer.
+    @Test(timeout = 10_000) fun fillsMissingEpisodeFromPreviousCard() = runTest {
+        coEvery { repo.analyzeVideo("https://x.test/1") } returns AnalyzeResponse(
+            url = "https://x.test/1", title = "T1",
+            aiMeta = AiMeta(seriesTitle = "X", season = 1, episode = 5),
+        )
+        coEvery { repo.analyzeVideo("https://x.test/2") } returns AnalyzeResponse(
+            url = "https://x.test/2", title = "T2",
+            aiMeta = AiMeta(seriesTitle = "x", season = 1),
+        )
+        val vm = ImportSheetViewModel(repo)
+        advanceUntilIdle()
+        vm.onInputChanged("https://x.test/1\nhttps://x.test/2")
+        advanceTimeBy(700)
+        advanceUntilIdle()
+
+        val cards = vm.uiState.value.cards.filterIsInstance<ImportCardState.Ready>()
+        assertEquals(2, cards.size)
+        assertEquals(5, cards[0].episode)
+        assertEquals(6, cards[1].episode)
+    }
 }

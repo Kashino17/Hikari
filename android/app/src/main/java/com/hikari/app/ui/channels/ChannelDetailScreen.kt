@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
@@ -38,6 +39,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -54,12 +56,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.hikari.app.data.api.dto.BulkJobStatusDto
 import com.hikari.app.data.api.dto.ChannelVideoDto
+import com.hikari.app.data.api.dto.ImportResultDto
 import com.hikari.app.ui.imports.PendingImportRow
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariAmberSoft
@@ -95,6 +100,8 @@ fun ChannelDetailScreen(
     val pending by vm.pending.collectAsState()
     val editingImport by vm.editingImport.collectAsState()
     val savingImport by vm.savingImport.collectAsState()
+    val bulkJob by vm.bulkJob.collectAsState()
+    val bulkJobDismissed by vm.bulkJobDismissed.collectAsState()
 
     // When the channel is unsubscribed, leave the now-empty detail screen.
     LaunchedEffect(removed) { if (removed) onBack() }
@@ -102,6 +109,7 @@ fun ChannelDetailScreen(
     var deleteTarget by remember { mutableStateOf<ChannelVideoDto?>(null) }
     var expandedVideo by remember { mutableStateOf<String?>(null) }
     var showUnsubscribe by remember { mutableStateOf(false) }
+    var bulkExpanded by remember { mutableStateOf(false) }
 
     if (showUnsubscribe) {
         AlertDialog(
@@ -192,6 +200,18 @@ fun ChannelDetailScreen(
                             fontSize = 10.sp, letterSpacing = 1.5.sp, fontFamily = FontFamily.Monospace,
                         ),
                         color = HikariTextFaint,
+                    )
+                }
+            }
+
+            // Ergebnis-Karte des letzten Bulk-Imports (Sheet/Browser).
+            bulkJob?.takeIf { !bulkJobDismissed }?.let { job ->
+                item {
+                    BulkJobCard(
+                        job = job,
+                        expanded = bulkExpanded,
+                        onToggle = { bulkExpanded = !bulkExpanded },
+                        onDismiss = { vm.dismissBulkJob() },
                     )
                 }
             }
@@ -558,3 +578,95 @@ private fun DecisionBadge(decision: String?, score: Int?) {
 }
 
 private data class Quad(val a: String, val b: Color, val c: Color, val d: Color)
+
+/**
+ * Kompakte Zusammenfassung des letzten Bulk-Imports über der Liste.
+ * Antippen klappt das Ergebnis pro URL auf; das X blendet die Karte bis zum
+ * nächsten Job aus.
+ */
+@Composable
+private fun BulkJobCard(
+    job: BulkJobStatusDto,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val finished = job.finishedAt != null
+    val done = job.ok + job.duplicate + job.failed
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(HikariSurface)
+            .border(0.5.dp, HikariBorder, RoundedCornerShape(10.dp))
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (!finished) {
+                CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp, color = HikariAmber)
+                Spacer(Modifier.size(8.dp))
+            }
+            Text(
+                if (finished) {
+                    buildList {
+                        add("${job.ok} OK")
+                        if (job.duplicate > 0) add("${job.duplicate} Duplikate")
+                        if (job.failed > 0) add("${job.failed} fehlgeschlagen")
+                    }.joinToString(" · ", prefix = "Fertig: ")
+                } else {
+                    "Import läuft: $done von ${job.total}"
+                },
+                color = HikariText,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = "Ausblenden",
+                    tint = HikariTextFaint,
+                    modifier = Modifier.size(14.dp),
+                )
+            }
+        }
+        if (expanded) {
+            Spacer(Modifier.height(6.dp))
+            job.results.forEach { BulkResultRow(it) }
+        }
+    }
+}
+
+@Composable
+private fun BulkResultRow(result: ImportResultDto) {
+    val (icon, tint) = when (result.status) {
+        "ok" -> Icons.Default.Check to HikariAmber
+        "duplicate" -> Icons.Default.ContentCopy to HikariTextMuted
+        "failed" -> Icons.Default.Close to HikariDanger
+        else -> Icons.Default.Refresh to HikariTextMuted
+    }
+    Row(Modifier.padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, contentDescription = result.status, tint = tint, modifier = Modifier.size(13.dp))
+        Spacer(Modifier.size(6.dp))
+        Column {
+            Text(
+                result.title ?: result.url,
+                color = HikariText,
+                fontSize = 11.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (result.status == "failed" && result.error != null) {
+                Text(
+                    result.error,
+                    color = HikariTextFaint,
+                    fontSize = 10.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}

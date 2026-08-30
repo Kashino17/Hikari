@@ -1,6 +1,7 @@
 package com.hikari.app.domain.repo
 
 import com.hikari.app.data.api.HikariApi
+import com.hikari.app.data.api.dto.NextVideoDto
 import com.hikari.app.data.api.dto.ProgressBody
 import com.hikari.app.data.db.PlaybackPositionDao
 import com.hikari.app.data.db.PlaybackPositionEntity
@@ -23,4 +24,8 @@ class PlaybackRepository @Inject constructor(
         dao.put(PlaybackPositionEntity(videoId, positionMs, System.currentTimeMillis()))
         runCatching { api.setProgress(videoId, ProgressBody(seconds = positionMs / 1000f)) }
     }
+
+    /** Nächste Folge derselben Serie — null bei 404 (kein Nachfolger) oder Fehler. */
+    suspend fun nextVideo(videoId: String): NextVideoDto? =
+        runCatching { api.getNextVideo(videoId) }.getOrNull()
 }

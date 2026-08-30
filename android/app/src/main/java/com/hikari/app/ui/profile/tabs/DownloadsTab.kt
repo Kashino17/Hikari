@@ -2,6 +2,7 @@ package com.hikari.app.ui.profile.tabs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,11 +23,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -37,12 +40,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.DownloadsResponse
+import com.hikari.app.data.api.dto.PendingImportDto
+import com.hikari.app.ui.imports.displayTitle
 import com.hikari.app.ui.profile.DownloadsUiState
 import com.hikari.app.ui.profile.DownloadsViewModel
 import com.hikari.app.ui.profile.MangaSummary
@@ -58,12 +66,15 @@ import com.hikari.app.ui.theme.HikariSurfaceHigh
 import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 enum class DownloadCategory { SERIES, CHANNELS, MOVIES, MANGAS, MUSIC }
 
 @Composable
 fun DownloadsTab(
     onOpenCategory: (DownloadCategory) -> Unit,
+    onOpenTransfers: () -> Unit,
     vm: DownloadsViewModel = hiltViewModel(),
 ) {
     val state by vm.state.collectAsState()
@@ -71,6 +82,7 @@ fun DownloadsTab(
     val localSummary by vm.localSummary.collectAsState()
     val mangaSummary by vm.mangaSummary.collectAsState()
     val musicSummary by vm.musicSummary.collectAsState()
+    val transfers by vm.transfers.collectAsState()
 
     // Reload when the user returns to this tab (e.g. after deleting items in
     // DownloadCategoryScreen). Without this, storage-strip + counts go stale.
@@ -81,6 +93,17 @@ fun DownloadsTab(
         }
         lifecycleOwner.lifecycle.addObserver(obs)
         onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
+    }
+
+    // Laufende Importe im 2-Sekunden-Takt, aber nur solange der Tab (und die
+    // App) im Vordergrund ist — das gleiche Resume-Signal wie oben.
+    LaunchedEffect(lifecycleOwner) {
+        while (isActive) {
+            if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                vm.loadTransfers()
+            }
+            delay(2_000)
+        }
     }
 
     when (val s = state) {
@@ -101,8 +124,10 @@ fun DownloadsTab(
             localTotalBytes = localSummary.totalBytes,
             mangaSummary = mangaSummary,
             musicSummary = musicSummary,
+            transfers = transfers,
             onSmartChange = vm::setSmartDownloads,
             onOpenCategory = onOpenCategory,
+            onOpenTransfers = onOpenTransfers,
         )
     }
 }
@@ -115,8 +140,10 @@ private fun DownloadsContent(
     localTotalBytes: Long,
     mangaSummary: MangaSummary,
     musicSummary: MusicSummary,
+    transfers: List<PendingImportDto>,
     onSmartChange: (Boolean) -> Unit,
     onOpenCategory: (DownloadCategory) -> Unit,
+    onOpenTransfers: () -> Unit,
 ) {
     val totalCount = data.series.sumOf { it.episode_count } +
         data.channels.sumOf { it.video_count } +
@@ -126,6 +153,11 @@ private fun DownloadsContent(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 96.dp),
     ) {
+        if (transfers.isNotEmpty()) {
+            item {
+                ActiveTransfersCard(transfers = transfers, onClick = onOpenTransfers)
+            }
+        }
         item {
             StorageStrip(
                 totalBytes = data.total_bytes,
@@ -219,6 +251,92 @@ private fun DownloadsContent(
                 enabled = smartEnabled,
                 onToggle = onSmartChange,
             )
+        }
+    }
+}
+
+/**
+ * Laufende Importe — nur sichtbar, solange der Server welche meldet.
+ * Ein Tippen führt ins Archiv "Manuell hinzugefügt", wo die Übertragungen
+ * im Detail stehen.
+ */
+@Composable
+private fun ActiveTransfersCard(
+    transfers: List<PendingImportDto>,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 14.dp, vertical = 6.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(HikariSurface)
+            .border(0.5.dp, HikariBorder, RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+    ) {
+        Text(
+            "AKTIVE ÜBERTRAGUNGEN",
+            color = HikariAmber,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 1.sp,
+            fontFamily = FontFamily.Monospace,
+        )
+        Spacer(Modifier.height(10.dp))
+        transfers.forEach { TransferRow(it) }
+    }
+}
+
+@Composable
+private fun TransferRow(item: PendingImportDto) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        if (item.thumbnailUrl != null) {
+            AsyncImage(
+                model = item.thumbnailUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .width(64.dp)
+                    .height(36.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+            )
+            Spacer(Modifier.width(10.dp))
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                item.displayTitle(),
+                color = HikariText,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(6.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val progress = item.progress
+                if (progress != null) {
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier.weight(1f).height(3.dp),
+                        color = HikariAmber,
+                        trackColor = HikariBorder,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "${(progress * 100).toInt()} %",
+                        color = HikariAmber,
+                        fontSize = 10.sp,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                } else {
+                    LinearProgressIndicator(
+                        modifier = Modifier.weight(1f).height(3.dp),
+                        color = HikariAmber,
+                        trackColor = HikariBorder,
+                    )
+                }
+            }
         }
     }
 }

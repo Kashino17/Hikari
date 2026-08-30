@@ -147,6 +147,8 @@ data class PendingImportDto(
     /** 0…1, oder null solange sich der Anteil nicht bestimmen lässt. */
     val progress: Float? = null,
     val error: String? = null,
+    /** Vorschaubild, oft als relativer Pfad ("/covers/vid_…jpg") — auflösen übernimmt der ImageLoader. */
+    @SerialName("thumbnailUrl") val thumbnailUrl: String? = null,
     @SerialName("startedAt") val startedAt: Long = 0,
 )
 

@@ -4,3 +4,10 @@
 
 # macOS/iCloud-Sync-Duplikate ("Datei 2")
 * 2.*
+
+# Lokale Artefakte
+node_modules/
+.serena/
+android/.kotlin/
+backend/.env
+backend/.env.*

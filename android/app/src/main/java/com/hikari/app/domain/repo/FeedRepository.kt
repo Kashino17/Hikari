@@ -8,6 +8,8 @@ import com.hikari.app.data.api.dto.LibraryResponse
 import com.hikari.app.data.api.dto.LibraryVideoDto
 import com.hikari.app.data.api.dto.SeriesDetailResponse
 import com.hikari.app.data.api.dto.SeriesDto
+import com.hikari.app.data.api.dto.SeriesItemDto
+import com.hikari.app.data.api.dto.MergeSeriesRequest
 import com.hikari.app.data.api.dto.TodayCountResponse
 import com.hikari.app.data.api.dto.UpdateSeriesRequest
 import okhttp3.MediaType.Companion.toMediaType
@@ -152,6 +154,12 @@ class FeedRepository @Inject constructor(
         api.getDownloads()
 
     suspend fun getSeries(id: String): SeriesDetailResponse = api.getSeries(id)
+
+    suspend fun listSeries(): List<SeriesItemDto> = api.listSeries()
+
+    suspend fun mergeSeries(sourceId: String, targetId: String) {
+        api.mergeSeries(MergeSeriesRequest(sourceId = sourceId, targetId = targetId))
+    }
 
     suspend fun updateSeries(id: String, thumbnailUrl: String?, description: String?): SeriesDto =
         api.updateSeries(id, UpdateSeriesRequest(thumbnail_url = thumbnailUrl, description = description))

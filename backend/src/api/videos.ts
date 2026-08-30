@@ -6,6 +6,7 @@ import { unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { importDirectLink, importSniffedMedia, fetchImportMetadata, ensureSeries, type ImportResult, type ManualMetadata, type SniffedMedia } from "../import/manual-import.js";
+import { parseEpisodeInfo } from "../import/episode-parser.js";
 import { startBulkJob, recordBulkResult, finishBulkJob, getBulkJob, getLatestBulkJob } from "../import/bulk-job.js";
 import {
   getPending,
@@ -68,9 +69,17 @@ export async function registerVideosRoutes(
 
     try {
       const meta = await fetchImportMetadata(url);
-      let aiMeta = {};
+      // Regelbasiert vorbelegen — funktioniert immer, auch ohne LLM-Key.
+      // Der Extractor darf danach einzelne Felder verfeinern; undefined
+      // Felder des LLM überschreiben die Regel-Treffer nicht.
+      const ruleMeta = parseEpisodeInfo(url, meta.title);
+      let aiMeta: Record<string, unknown> = { ...ruleMeta };
       if (deps.extractor) {
-        aiMeta = await deps.extractor.extract(meta.title ?? "", meta.description ?? "");
+        const llmMeta = await deps.extractor.extract(meta.title ?? "", meta.description ?? "");
+        aiMeta = {
+          ...ruleMeta,
+          ...Object.fromEntries(Object.entries(llmMeta).filter(([, v]) => v !== undefined)),
+        };
       }
       return {
         url,
@@ -90,7 +99,7 @@ export async function registerVideosRoutes(
 
     (async () => {
       try {
-        const r = await importDirectLink(deps.db, url, deps.videoDir, metadata);
+        const r = await importDirectLink(deps.db, url, deps.videoDir, metadata, deps.coverDir);
         app.log.info({ url, result: r }, "manual import");
       } catch (err) {
         app.log.error({ err, url }, "manual import threw");
@@ -141,6 +150,7 @@ export async function registerVideosRoutes(
                 item.url,
                 deps.videoDir,
                 item.metadata,
+                deps.coverDir,
               );
               recordBulkResult(job, result);
               if (result.status === "failed") {
@@ -194,7 +204,7 @@ export async function registerVideosRoutes(
       // demselben Hoster, der parallele Downloads mit 403 quittiert.
       for (const item of items) {
         try {
-          const result = await importSniffedMedia(deps.db, item, deps.videoDir, item.metadata);
+          const result = await importSniffedMedia(deps.db, item, deps.videoDir, item.metadata, deps.coverDir);
           recordBulkResult(job, result);
           if (result.status === "failed") {
             app.log.error({ pageUrl: item.pageUrl, error: result.error }, "sniffed import failed");
@@ -429,6 +439,37 @@ export async function registerVideosRoutes(
     return withCoverFallback(deps.db, updated);
   });
 
+  // Zwei versehentlich getrennt angelegte Serien ("Solo Leveling" vs. Tipp-
+  // variante) wieder zu einer zusammenführen: Die Folgen der Quelle wandern
+  // zum Ziel, danach verschwindet die Quelle.
+  app.post<{ Body: { sourceId?: string; targetId?: string } }>(
+    "/series/merge",
+    async (req, reply) => {
+      const { sourceId, targetId } = req.body ?? {};
+      if (!sourceId || !targetId) return reply.code(400).send({ error: "sourceId and targetId required" });
+      if (sourceId === targetId) return reply.code(400).send({ error: "source and target must differ" });
+
+      const source = deps.db.prepare("SELECT * FROM series WHERE id = ?").get(sourceId) as SeriesRow | undefined;
+      const target = deps.db.prepare("SELECT * FROM series WHERE id = ?").get(targetId) as SeriesRow | undefined;
+      if (!source || !target) return reply.code(404).send({ error: "series not found" });
+
+      const moved = deps.db
+        .prepare("UPDATE videos SET series_id = ? WHERE series_id = ?")
+        .run(targetId, sourceId).changes;
+
+      // Cover/Beschreibung des Ziels ergänzen, falls es selbst keine hat.
+      if (!target.thumbnail_url && source.thumbnail_url) {
+        deps.db.prepare("UPDATE series SET thumbnail_url = ? WHERE id = ?").run(source.thumbnail_url, targetId);
+      }
+      if (!target.description && source.description) {
+        deps.db.prepare("UPDATE series SET description = ? WHERE id = ?").run(source.description, targetId);
+      }
+      deps.db.prepare("DELETE FROM series WHERE id = ?").run(sourceId);
+
+      return { merged: moved, into: targetId };
+    },
+  );
+
   app.post<{ Params: { id: string } }>("/series/:id/cover", async (req, reply) => {
     const row = deps.db.prepare("SELECT id FROM series WHERE id = ?").get(req.params.id);
     if (!row) return reply.code(404).send({ error: "series not found" });
@@ -483,6 +524,45 @@ export async function registerVideosRoutes(
     `).get(req.params.id);
     if (!row) return reply.code(404).send({ error: "video not found" });
     return row;
+  });
+
+  // "Nächste Folge" für den Player: dieselbe Serie, nächste (season, episode),
+  // nur mit Datei auf der Platte — eine Folge ohne Download würde beim
+  // Autoplay ins Leere laufen.
+  app.get<{ Params: { id: string } }>("/videos/:id/next", async (req, reply) => {
+    const current = deps.db
+      .prepare("SELECT id, series_id, season, episode FROM videos WHERE id = ?")
+      .get(req.params.id) as
+      | { id: string; series_id: string | null; season: number | null; episode: number | null }
+      | undefined;
+    if (!current) return reply.code(404).send({ error: "video not found" });
+    if (!current.series_id) return reply.code(404).send({ error: "no series" });
+
+    const season = current.season ?? 1;
+    const episode = current.episode ?? 0;
+    const next = deps.db
+      .prepare(
+        `SELECT v.id, v.title, v.season, v.episode, v.thumbnail_url
+         FROM videos v
+         JOIN downloaded_videos dv ON dv.video_id = v.id
+         WHERE v.series_id = ?
+           AND (COALESCE(v.season, 1) > ?
+             OR (COALESCE(v.season, 1) = ? AND COALESCE(v.episode, 0) > ?))
+         ORDER BY COALESCE(v.season, 1), COALESCE(v.episode, 0)
+         LIMIT 1`,
+      )
+      .get(current.series_id, season, season, episode) as
+      | { id: string; title: string; season: number | null; episode: number | null; thumbnail_url: string | null }
+      | undefined;
+    if (!next) return reply.code(404).send({ error: "no next episode" });
+
+    return {
+      id: next.id,
+      title: next.title,
+      season: next.season,
+      episode: next.episode,
+      thumbnailUrl: next.thumbnail_url,
+    };
   });
 
   app.patch<{

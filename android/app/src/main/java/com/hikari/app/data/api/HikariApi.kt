@@ -56,6 +56,8 @@ import com.hikari.app.data.api.dto.UpdateFilterRequest
 import com.hikari.app.data.api.dto.WeeklyStatsDto
 import com.hikari.app.data.api.dto.ArtistPageDto
 import com.hikari.app.data.api.dto.HomeFeedDto
+import com.hikari.app.data.api.dto.MergeSeriesRequest
+import com.hikari.app.data.api.dto.NextVideoDto
 import com.hikari.app.data.api.dto.MusicStreamDto
 import com.hikari.app.data.api.dto.MusicTrackDto
 import com.hikari.app.data.api.dto.FullSearchDto
@@ -293,6 +295,12 @@ interface HikariApi {
 
     @PATCH("series/{id}")
     suspend fun updateSeries(@Path("id") seriesId: String, @Body req: UpdateSeriesRequest): SeriesDto
+
+    @POST("series/merge")
+    suspend fun mergeSeries(@Body req: MergeSeriesRequest)
+
+    @GET("videos/{id}/next")
+    suspend fun getNextVideo(@Path("id") videoId: String): NextVideoDto
 
     @Multipart
     @POST("series/{id}/cover")

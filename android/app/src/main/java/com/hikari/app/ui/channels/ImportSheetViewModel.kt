@@ -143,6 +143,43 @@ class ImportSheetViewModel @Inject constructor(
                 }
             }.awaitAll()
         }
+        fillMissingEpisodes()
+    }
+
+    /**
+     * Füllt fehlende Folgennummern aus dem Vorgänger auf: Gehören zwei
+     * aufeinanderfolgende Ready-Karten zur selben Serie und nur die zweite
+     * hat keine Folge, bekommt sie die nächste Nummer (Ketten-Auffüllung,
+     * damit auch drei Lücken hintereinander greifen).
+     */
+    private fun fillMissingEpisodes() {
+        _uiState.update { state ->
+            val cards = state.cards.toMutableList()
+            var prevSeries: String? = null
+            var prevEpisode: Int? = null
+            for (i in cards.indices) {
+                val card = cards[i] as? ImportCardState.Ready
+                if (card == null) {
+                    prevSeries = null
+                    prevEpisode = null
+                    continue
+                }
+                val series = card.seriesTitle ?: state.defaults.seriesTitle
+                if (card.episode == null &&
+                    prevEpisode != null &&
+                    series != null && prevSeries != null &&
+                    series.equals(prevSeries, ignoreCase = true)
+                ) {
+                    val filled = prevEpisode + 1
+                    cards[i] = card.copy(episode = filled)
+                    prevEpisode = filled
+                } else {
+                    prevEpisode = card.episode
+                }
+                prevSeries = series
+            }
+            state.copy(cards = cards)
+        }
     }
 
     private fun replaceCard(url: String, transform: (ImportCardState) -> ImportCardState) {
@@ -193,6 +230,7 @@ class ImportSheetViewModel @Inject constructor(
                     },
                 )
             }
+            fillMissingEpisodes()
         }
     }
 

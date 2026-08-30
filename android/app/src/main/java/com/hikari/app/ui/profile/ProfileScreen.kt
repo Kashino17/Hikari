@@ -255,6 +255,9 @@ fun ProfileScreen(
                     )
                     ProfileTab.DOWNLOADS -> DownloadsTab(
                         onOpenCategory = onOpenDownloadCategory,
+                        // Die Übertragungs-Karte führt dorthin, wo die
+                        // Downloads im Detail laufen.
+                        onOpenTransfers = { onOpenSection("channel/manual") },
                     )
                 }
             }

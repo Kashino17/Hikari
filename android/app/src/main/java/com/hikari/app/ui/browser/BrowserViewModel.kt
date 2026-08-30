@@ -8,6 +8,7 @@ import com.hikari.app.domain.browser.EpisodeLinkFilter
 import com.hikari.app.domain.browser.MediaFinding
 import com.hikari.app.domain.browser.MediaSniffer
 import com.hikari.app.domain.browser.PageLink
+import com.hikari.app.domain.browser.PageMetaParser
 import com.hikari.app.domain.browser.PageTitleFilter
 import com.hikari.app.domain.repo.ChannelsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,6 +51,9 @@ data class BrowserUiState(
     val crawl: CrawlState? = null,
     val seriesTitle: String = "",
     val season: Int? = null,
+    /** true, sobald der Nutzer das Feld selbst angefasst hat — die URL-Vorbefüllung überschreibt dann nicht mehr. */
+    val seriesEdited: Boolean = false,
+    val seasonEdited: Boolean = false,
     val submitting: Boolean = false,
     val message: String? = null,
     /** Diagnose: wie viele Requests der Interceptor auf dieser Seite sah. */
@@ -88,6 +92,7 @@ class BrowserViewModel @Inject constructor(
                 recentUrls = emptyList(),
             )
         }
+        prefillFromUrl(url)
     }
 
     fun onPageFinished(url: String, title: String, canGoBack: Boolean) {
@@ -105,6 +110,22 @@ class BrowserViewModel @Inject constructor(
                 pageTitle = clean ?: it.pageTitle,
                 episodeLinks = episodes,
                 findings = sniffer.findings(),
+            )
+        }
+        prefillFromUrl(url)
+    }
+
+    /**
+     * Füllt Serie und Staffel aus der URL vor — aber nur solange der Nutzer
+     * das Feld nicht selbst bearbeitet hat ([BrowserUiState.seriesEdited] /
+     * [BrowserUiState.seasonEdited]).
+     */
+    private fun prefillFromUrl(url: String) {
+        val meta = PageMetaParser.parse(url)
+        _ui.update { st ->
+            st.copy(
+                seriesTitle = if (!st.seriesEdited && meta.seriesTitle != null) meta.seriesTitle else st.seriesTitle,
+                season = if (!st.seasonEdited && meta.season != null) meta.season else st.season,
             )
         }
     }
@@ -129,13 +150,21 @@ class BrowserViewModel @Inject constructor(
     fun collectCurrent(episode: Int? = null) {
         val s = _ui.value
         val best = sniffer.best() ?: return
-        addToBasket(s.currentUrl, s.pageTitle, best, episode)
+        addToBasket(s.currentUrl, s.pageTitle, best, episode ?: nextEpisode(s))
     }
 
     fun collectSpecific(finding: MediaFinding) {
         val s = _ui.value
-        addToBasket(s.currentUrl, s.pageTitle, finding, null)
+        addToBasket(s.currentUrl, s.pageTitle, finding, nextEpisode(s))
     }
+
+    /**
+     * Nächste freie Folgennummer im Korb — nur wenn eine Serie eingetragen
+     * ist, sonst bleibt das Feld leer (kein Raten ohne Kontext).
+     */
+    private fun nextEpisode(s: BrowserUiState): Int? =
+        if (s.seriesTitle.isBlank()) null
+        else (s.basket.mapNotNull { it.episode }.maxOrNull() ?: 0) + 1
 
     private fun addToBasket(pageUrl: String, title: String, finding: MediaFinding, episode: Int?) {
         // Steht die Seite gerade hinter einem Bot-Schutz, traegt sie dessen
@@ -155,9 +184,9 @@ class BrowserViewModel @Inject constructor(
 
     fun clearBasket() = _ui.update { it.copy(basket = emptyList()) }
 
-    fun setSeriesTitle(v: String) = _ui.update { it.copy(seriesTitle = v) }
+    fun setSeriesTitle(v: String) = _ui.update { it.copy(seriesTitle = v, seriesEdited = true) }
 
-    fun setSeason(v: Int?) = _ui.update { it.copy(season = v) }
+    fun setSeason(v: Int?) = _ui.update { it.copy(season = v, seasonEdited = true) }
 
     fun dismissMessage() = _ui.update { it.copy(message = null) }
 

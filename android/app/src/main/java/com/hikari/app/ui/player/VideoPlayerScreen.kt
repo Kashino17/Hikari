@@ -26,13 +26,17 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Forward10
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -48,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -66,6 +71,8 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import coil.compose.AsyncImage
+import com.hikari.app.data.api.dto.NextVideoDto
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.repo.PlaybackRepository
 import com.hikari.app.player.HikariPlayerFactory
@@ -92,6 +99,7 @@ interface VideoPlayerEntryPoint {
 
 private const val SEEK_STEP_MS = 10_000L
 private const val CHROME_AUTO_HIDE_MS = 4_000L
+private const val NEXT_COUNTDOWN_S = 8
 
 /**
  * Standalone fullscreen video player — opened from the Library hero
@@ -143,18 +151,47 @@ fun VideoPlayerScreen(
         chromeBumpToken++
     }
 
-    // ── Lifecycle: prepare once, save position on dispose ────────────────────
-    LaunchedEffect(videoId) {
-        val savedPos = playbackRepo.getPosition(videoId)
-        val localPath = localDl.localFile(videoId)?.absolutePath
-        player.setMediaItem(factory.mediaItemFor(baseUrl, videoId, localPath), savedPos)
+    // ── Nächste Folge ────────────────────────────────────────────────────
+    // Aktuelles Video als State: beim Sprung zur nächsten Folge bleibt der
+    // Screen (und sein Player) bestehen, nur das MediaItem wechselt.
+    var currentVideoId by remember { mutableStateOf(videoId) }
+    var currentTitle by remember { mutableStateOf(title) }
+    var nextVideo by remember { mutableStateOf<NextVideoDto?>(null) }
+    var nextDismissed by remember { mutableStateOf(false) }
+    var showNextOverlay by remember { mutableStateOf(false) }
+    var nextCountdown by remember { mutableIntStateOf(NEXT_COUNTDOWN_S) }
+
+    fun playNext() {
+        val next = nextVideo ?: return
+        if (player.currentPosition > 0) {
+            runBlocking { playbackRepo.savePosition(currentVideoId, player.currentPosition) }
+        }
+        player.stop()
+        val nextLocalPath = runBlocking { localDl.localFile(next.id)?.absolutePath }
+        player.setMediaItem(factory.mediaItemFor(baseUrl, next.id, nextLocalPath), 0L)
         player.prepare()
         player.playWhenReady = true
+        currentVideoId = next.id
+        currentTitle = next.title
+        showNextOverlay = false
+        nextDismissed = false
+    }
+
+    // ── Lifecycle: prepare once, save position on dispose ────────────────────
+    LaunchedEffect(currentVideoId) {
+        val savedPos = playbackRepo.getPosition(currentVideoId)
+        val localPath = localDl.localFile(currentVideoId)?.absolutePath
+        player.setMediaItem(factory.mediaItemFor(baseUrl, currentVideoId, localPath), savedPos)
+        player.prepare()
+        player.playWhenReady = true
+        nextVideo = playbackRepo.nextVideo(currentVideoId)
+        nextDismissed = false
+        showNextOverlay = false
     }
     DisposableEffect(Unit) {
         onDispose {
             val pos = player.currentPosition
-            if (pos > 0L) runBlocking { playbackRepo.savePosition(videoId, pos) }
+            if (pos > 0L) runBlocking { playbackRepo.savePosition(currentVideoId, pos) }
             player.release()
         }
     }
@@ -168,7 +205,7 @@ fun VideoPlayerScreen(
                 Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
                     player.playWhenReady = false
                     val pos = player.currentPosition
-                    if (pos > 0L) runBlocking { playbackRepo.savePosition(videoId, pos) }
+                    if (pos > 0L) runBlocking { playbackRepo.savePosition(currentVideoId, pos) }
                 }
                 Lifecycle.Event.ON_RESUME -> { player.playWhenReady = true }
                 else -> Unit
@@ -210,13 +247,25 @@ fun VideoPlayerScreen(
     var duration by remember { mutableLongStateOf(1L) }
     var isScrubbing by remember { mutableStateOf(false) }
     val wasPlayingBeforeScrub = remember { mutableStateOf(true) }
-    LaunchedEffect(videoId) {
+    LaunchedEffect(currentVideoId) {
         while (true) {
             kotlinx.coroutines.delay(500)
             if (!isScrubbing) {
                 position = player.currentPosition
                 duration = player.duration.coerceAtLeast(1L)
             }
+        }
+    }
+
+    // Countdown fürs „Nächste Folge"-Overlay: 8 s, dann automatisch weiter.
+    LaunchedEffect(showNextOverlay) {
+        if (showNextOverlay) {
+            nextCountdown = NEXT_COUNTDOWN_S
+            while (nextCountdown > 0) {
+                kotlinx.coroutines.delay(1_000)
+                nextCountdown--
+            }
+            playNext()
         }
     }
 
@@ -248,7 +297,7 @@ fun VideoPlayerScreen(
             .fillMaxSize()
             .background(HikariBg)
             .onGloballyPositioned { boxWidthPx = it.size.width }
-            .pointerInput(videoId) {
+            .pointerInput(currentVideoId) {
                 detectTapGestures(
                     onTap = {
                         // Netflix-style: a tap *only* toggles the chrome,
@@ -382,7 +431,7 @@ fun VideoPlayerScreen(
                         Spacer(Modifier.height(2.dp))
                     }
                     Text(
-                        text = title.ifBlank { "Wird geladen…" },
+                        text = currentTitle.ifBlank { "Wird geladen…" },
                         color = Color.White,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
@@ -391,6 +440,17 @@ fun VideoPlayerScreen(
                     )
                 }
                 Spacer(Modifier.width(8.dp))
+                if (nextVideo != null) {
+                    CircleControl(
+                        icon = Icons.Default.SkipNext,
+                        contentDescription = "Nächste Folge",
+                        size = 40.dp,
+                        iconSize = 20.dp,
+                        background = Color.Black.copy(alpha = 0.45f),
+                        onClick = { playNext() },
+                    )
+                    Spacer(Modifier.width(8.dp))
+                }
                 CircleControl(
                     icon = if (landscape) HikariIcons.FullscreenExit else HikariIcons.Fullscreen,
                     contentDescription = if (landscape) "Vollbild beenden" else "Vollbild",
@@ -464,12 +524,34 @@ fun VideoPlayerScreen(
                 SeekBadge(dir)
             }
         }
+
+        // „Nächste Folge"-Overlay — unabhängig vom Chrome sichtbar ──────────
+        val next = nextVideo
+        if (showNextOverlay && next != null) {
+            NextEpisodeCard(
+                next = next,
+                countdown = nextCountdown,
+                onCancel = {
+                    nextDismissed = true
+                    showNextOverlay = false
+                },
+                onPlayNow = { playNext() },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 96.dp),
+            )
+        }
     }
 
     // Mirror player state into our `playing` flag (handles end-of-stream too)
     DisposableEffect(player) {
         val listener = object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) { playing = isPlaying }
+            override fun onPlaybackStateChanged(state: Int) {
+                if (state == Player.STATE_ENDED && nextVideo != null && !nextDismissed) {
+                    showNextOverlay = true
+                }
+            }
         }
         player.addListener(listener)
         onDispose { player.removeListener(listener) }
@@ -477,6 +559,72 @@ fun VideoPlayerScreen(
 }
 
 private enum class SeekDir { Backward, Forward }
+
+@Composable
+private fun NextEpisodeCard(
+    next: NextVideoDto,
+    countdown: Int,
+    onCancel: () -> Unit,
+    onPlayNow: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .width(320.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color.Black.copy(alpha = 0.75f))
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (next.thumbnailUrl != null) {
+            AsyncImage(
+                model = next.thumbnailUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .width(96.dp)
+                    .height(54.dp)
+                    .clip(RoundedCornerShape(6.dp)),
+                contentScale = ContentScale.Crop,
+            )
+            Spacer(Modifier.width(12.dp))
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "NÄCHSTE FOLGE",
+                color = HikariAmber,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.5.sp,
+            )
+            Spacer(Modifier.height(2.dp))
+            val se = buildString {
+                if (next.season != null) append("S${next.season} ")
+                if (next.episode != null) append("F${next.episode}")
+            }.trim()
+            Text(
+                text = if (se.isNotEmpty()) "$se — ${next.title}" else next.title,
+                color = Color.White,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "in $countdown s",
+                color = Color.White.copy(alpha = 0.6f),
+                fontSize = 11.sp,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TextButton(onClick = onCancel) { Text("Abbrechen") }
+                Button(onClick = onPlayNow) { Text("Jetzt abspielen") }
+            }
+        }
+    }
+}
 
 @Composable
 private fun SeekBadge(dir: SeekDir) {
