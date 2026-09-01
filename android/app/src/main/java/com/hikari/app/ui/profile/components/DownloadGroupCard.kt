@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.hikari.app.ui.components.FallbackArtwork
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBorder
 import com.hikari.app.ui.theme.HikariSurfaceHigh
@@ -78,7 +79,7 @@ fun DownloadGroupCard(
                 .padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            CoverThumb(coverShape, coverUrl, fallbackInitial)
+            CoverThumb(coverShape, coverUrl, fallbackInitial, fallbackTitle = title)
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -145,7 +146,12 @@ fun DownloadGroupCard(
 }
 
 @Composable
-private fun CoverThumb(shape: GroupCoverShape, url: String?, fallbackInitial: String?) {
+private fun CoverThumb(
+    shape: GroupCoverShape,
+    url: String?,
+    fallbackInitial: String?,
+    fallbackTitle: String? = null,
+) {
     when (shape) {
         GroupCoverShape.SQUARE -> Box(
             modifier = Modifier
@@ -153,6 +159,8 @@ private fun CoverThumb(shape: GroupCoverShape, url: String?, fallbackInitial: St
                 .clip(RoundedCornerShape(6.dp))
                 .background(HikariSurfaceHigh),
         ) {
+            // Unterlage: fehlendes/fehlerhaftes Cover wirkt gewollt statt grau.
+            FallbackArtwork(title = fallbackTitle ?: fallbackInitial.orEmpty())
             if (!url.isNullOrBlank()) {
                 AsyncImage(
                     url, null, modifier = Modifier.fillMaxSize(),
@@ -185,6 +193,7 @@ private fun CoverThumb(shape: GroupCoverShape, url: String?, fallbackInitial: St
                 .clip(RoundedCornerShape(4.dp))
                 .background(HikariSurfaceHigh),
         ) {
+            FallbackArtwork(title = fallbackTitle ?: fallbackInitial.orEmpty())
             if (!url.isNullOrBlank()) {
                 AsyncImage(
                     url, null, modifier = Modifier.fillMaxSize(),
@@ -230,6 +239,7 @@ fun EpisodeRow(
                 .clip(RoundedCornerShape(4.dp))
                 .background(HikariSurfaceHigh),
         ) {
+            FallbackArtwork(title = title)
             if (!thumbnailUrl.isNullOrBlank()) {
                 AsyncImage(
                     thumbnailUrl, null,

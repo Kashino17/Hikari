@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.hikari.app.domain.model.FeedItem
+import com.hikari.app.ui.components.FallbackArtwork
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariSurface
@@ -75,6 +76,7 @@ fun LongVideoCard(
                 .background(HikariSurface)
                 .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(16.dp)),
         ) {
+            FallbackArtwork(title = item.title)
             AsyncImage(
                 model = item.thumbnailUrl,
                 contentDescription = null,

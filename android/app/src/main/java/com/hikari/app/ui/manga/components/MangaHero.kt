@@ -42,10 +42,9 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.MangaContinueDto
 import com.hikari.app.data.api.dto.MangaSeriesDto
+import com.hikari.app.ui.components.FallbackArtwork
 import com.hikari.app.ui.theme.HikariBg
-import com.hikari.app.ui.theme.HikariCardBg
 import com.hikari.app.ui.theme.HikariPrimary
-import com.hikari.app.ui.theme.HikariSurfaceHigh
 
 @Composable
 fun MangaHero(
@@ -64,20 +63,9 @@ fun MangaHero(
                 modifier = Modifier.fillMaxSize(),
             )
         } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                HikariPrimary.copy(alpha = 0.12f),
-                                HikariSurfaceHigh,
-                                HikariCardBg,
-                                HikariBg,
-                            )
-                        )
-                    ),
-            )
+            // Der Hero blendet den Titel selbst groß ein — hier nur das
+            // gestaltete Artwork ohne doppelten Text.
+            FallbackArtwork(title = series.title, showTitle = false)
         }
         // Scrim: Titel und CTA müssen auch auf hellen Covern stehen (Muster: MixCard).
         Box(

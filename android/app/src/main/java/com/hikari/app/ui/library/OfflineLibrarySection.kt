@@ -44,6 +44,7 @@ import coil.compose.AsyncImage
 import com.hikari.app.data.db.LocalDownloadEntity
 import com.hikari.app.data.db.LocalMangaArcEntity
 import com.hikari.app.domain.model.MusicSong
+import com.hikari.app.ui.components.FallbackArtwork
 import com.hikari.app.ui.profile.formatBytes
 import com.hikari.app.ui.profile.formatDuration
 import com.hikari.app.ui.theme.HikariAmber
@@ -235,8 +236,9 @@ private fun OfflineVideoCard(video: LocalDownloadEntity, onClick: () -> Unit) {
                 .background(HikariSurface),
         ) {
             // Heruntergeladene Videos haben kein lokales Standbild — die
-            // Thumbnail-URL kommt offline aus Coils Disk-Cache, sonst bleibt
-            // die Fläche neutral dunkel.
+            // Thumbnail-URL kommt offline aus Coils Disk-Cache; liegt nichts
+            // im Cache, trägt das Fallback-Artwork die Fläche.
+            FallbackArtwork(title = video.title)
             AsyncImage(
                 model = video.thumbnailUrl,
                 contentDescription = null,
@@ -324,7 +326,8 @@ private fun OfflineMangaCard(arc: LocalMangaArcEntity) {
                 .background(HikariSurface),
         ) {
             // Cover liegt als Datei auf dem Gerät — Coil lädt File-Modelle
-            // direkt, ohne Netz.
+            // direkt, ohne Netz. Fehlt die Datei, trägt das Fallback-Artwork.
+            FallbackArtwork(title = arc.seriesTitle)
             AsyncImage(
                 model = remember(arc.seriesCoverPath) { arc.seriesCoverPath?.let(::File) },
                 contentDescription = null,

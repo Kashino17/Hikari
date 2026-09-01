@@ -50,6 +50,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.DownloadsResponse
 import com.hikari.app.data.api.dto.PendingImportDto
+import com.hikari.app.ui.components.FallbackArtwork
 import com.hikari.app.ui.imports.displayTitle
 import com.hikari.app.ui.profile.DownloadsUiState
 import com.hikari.app.ui.profile.DownloadsViewModel
@@ -296,6 +297,16 @@ private fun TransferRow(item: PendingImportDto) {
                 model = item.thumbnailUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .width(64.dp)
+                    .height(36.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+            )
+            Spacer(Modifier.width(10.dp))
+        } else {
+            // Ohne Vorschaubild: kleines Artwork, damit die Zeile nicht leer startet.
+            FallbackArtwork(
+                title = item.displayTitle(),
                 modifier = Modifier
                     .width(64.dp)
                     .height(36.dp)

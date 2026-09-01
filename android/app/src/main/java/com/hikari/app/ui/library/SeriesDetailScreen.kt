@@ -56,6 +56,7 @@ import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.LibraryVideoDto
 import com.hikari.app.data.api.dto.SeriesDetailResponse
 import com.hikari.app.data.api.dto.SeriesItemDto
+import com.hikari.app.ui.components.FallbackArtwork
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariDanger
@@ -287,6 +288,8 @@ private fun HeroSection(
     onMergeClick: () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxWidth().aspectRatio(16f / 10f)) {
+        // Titel steht im Hero bereits groß unten — hier nur das Artwork.
+        FallbackArtwork(title = data.title, showTitle = false)
         AsyncImage(
             model = data.thumbnail_url,
             contentDescription = null,
@@ -514,6 +517,7 @@ private fun EpisodeRow(video: LibraryVideoDto, onClick: () -> Unit) {
                 .clip(RoundedCornerShape(4.dp))
                 .background(Color.DarkGray),
         ) {
+            FallbackArtwork(title = video.title)
             AsyncImage(
                 model = video.thumbnail_url,
                 contentDescription = null,

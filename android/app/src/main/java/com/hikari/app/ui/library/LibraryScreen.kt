@@ -54,6 +54,7 @@ import com.hikari.app.data.api.dto.LibraryVideoDto
 import com.hikari.app.domain.model.FeedItem
 import com.hikari.app.data.api.dto.SeriesDto
 import com.hikari.app.ui.library.components.CoverEditSheet
+import com.hikari.app.ui.components.FallbackArtwork
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariSurface
@@ -325,6 +326,9 @@ private fun RecommendedCard(video: LibraryVideoDto, onClick: () -> Unit) {
                 .clip(RoundedCornerShape(6.dp))
                 .background(HikariSurface),
         ) {
+            // Fallback-Artwork als Unterlage: fehlendes oder fehlerhaftes
+            // Thumbnail wirkt gewollt statt leer (und dient als Lade-Hintergrund).
+            FallbackArtwork(title = video.title)
             AsyncImage(
                 model = video.thumbnail_url,
                 contentDescription = null,
@@ -431,6 +435,8 @@ private fun HeroSection(video: LibraryVideoDto?, onPlay: (LibraryVideoDto) -> Un
     }
 
     Box(modifier = Modifier.fillMaxWidth().height(580.dp)) {
+        // Der Hero blendet den Titel selbst groß ein — nur Artwork, kein Text.
+        FallbackArtwork(title = video.title, showTitle = false)
         AsyncImage(
             model = video.thumbnail_url,
             contentDescription = null,
@@ -636,6 +642,9 @@ private fun ContinueCard(video: LibraryVideoDto, onClick: () -> Unit) {
                 .clip(RoundedCornerShape(6.dp))
                 .background(HikariSurface),
         ) {
+            // Fallback-Artwork als Unterlage: fehlendes oder fehlerhaftes
+            // Thumbnail wirkt gewollt statt leer (und dient als Lade-Hintergrund).
+            FallbackArtwork(title = video.title)
             AsyncImage(
                 model = video.thumbnail_url,
                 contentDescription = null,
@@ -740,6 +749,7 @@ private fun SeriesPosterCard(
             .background(HikariSurface)
             .combinedClickable(onClick = onClick, onLongClick = onLongClick),
     ) {
+        FallbackArtwork(title = series.title)
         AsyncImage(
             model = series.thumbnail_url,
             contentDescription = null,
@@ -846,6 +856,7 @@ private fun CollectionCard(item: FeedItem, onPlay: () -> Unit, onRemove: (() -> 
                 .clip(RoundedCornerShape(6.dp))
                 .background(HikariSurface),
         ) {
+            FallbackArtwork(title = item.title)
             AsyncImage(
                 model = item.thumbnailUrl,
                 contentDescription = null,
@@ -895,6 +906,9 @@ private fun RecentVideoCard(video: LibraryVideoDto, onClick: () -> Unit) {
                 .clip(RoundedCornerShape(6.dp))
                 .background(HikariSurface),
         ) {
+            // Fallback-Artwork als Unterlage: fehlendes oder fehlerhaftes
+            // Thumbnail wirkt gewollt statt leer (und dient als Lade-Hintergrund).
+            FallbackArtwork(title = video.title)
             AsyncImage(
                 model = video.thumbnail_url,
                 contentDescription = null,

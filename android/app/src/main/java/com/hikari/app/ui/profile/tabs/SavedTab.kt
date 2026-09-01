@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.hikari.app.domain.model.FeedItem
+import com.hikari.app.ui.components.FallbackArtwork
 import com.hikari.app.ui.profile.ProfileViewModel
 import com.hikari.app.ui.theme.HikariSurface
 import com.hikari.app.ui.theme.HikariTextFaint
@@ -85,6 +86,9 @@ private fun SavedCell(item: FeedItem, onClick: () -> Unit) {
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
             )
+        } else {
+            // Kein Thumbnail: gestaltetes Artwork statt grauer Zelle.
+            FallbackArtwork(title = item.title)
         }
         Box(
             modifier = Modifier

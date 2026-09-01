@@ -62,6 +62,7 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import com.hikari.app.data.prefs.SponsorBlockPrefs
+import com.hikari.app.ui.components.FallbackArtwork
 import com.hikari.app.data.sponsor.SegmentCategories
 import com.hikari.app.data.sponsor.SegmentCategory
 import com.hikari.app.data.sponsor.SponsorBlockClient
@@ -293,12 +294,17 @@ fun ReelPlayer(
         // bleeding through the player's letterbox bars when the thumbnail's
         // aspect ratio differs from the video's (common with YouTube thumbnails).
         if (!isCurrent || !firstFrameRendered) {
-            AsyncImage(
-                model = item.thumbnailUrl,
-                contentDescription = item.title,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize(),
-            )
+            if (item.thumbnailUrl.isNullOrBlank()) {
+                // Kein Thumbnail vorhanden: gestaltetes Artwork statt schwarzer Fläche.
+                FallbackArtwork(title = item.title)
+            } else {
+                AsyncImage(
+                    model = item.thumbnailUrl,
+                    contentDescription = item.title,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
         // PlayerView only mounts for the current page — non-current pages show
         // the thumbnail above and don't need a Surface in the tree. Avoids

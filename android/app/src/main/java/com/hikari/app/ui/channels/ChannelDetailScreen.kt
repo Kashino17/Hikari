@@ -66,6 +66,7 @@ import com.hikari.app.data.api.dto.BulkJobStatusDto
 import com.hikari.app.data.api.dto.ChannelVideoDto
 import com.hikari.app.data.api.dto.ImportResultDto
 import com.hikari.app.ui.imports.PendingImportRow
+import com.hikari.app.ui.components.FallbackArtwork
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariAmberSoft
 import com.hikari.app.ui.theme.HikariBg
@@ -457,6 +458,8 @@ private fun VideoRow(
                     .clip(RoundedCornerShape(6.dp))
                     .background(HikariSurfaceHigh),
             ) {
+                // Unterlage: fehlendes/fehlerhaftes Thumbnail wirkt gewollt.
+                FallbackArtwork(title = video.title)
                 AsyncImage(
                     model = video.thumbnailUrl,
                     contentDescription = null,

@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.PendingImportDto
 import com.hikari.app.data.api.dto.PendingImportPatch
+import com.hikari.app.ui.components.FallbackArtwork
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
@@ -81,7 +82,8 @@ fun PendingImportRow(
                 contentAlignment = Alignment.Center,
             ) {
                 // Vorschaubild hinter dem Fortschritt — abgedunkelt, damit
-                // Prozent und Spinner lesbar bleiben.
+                // Prozent und Spinner lesbar bleiben. Fehlt es, trägt das
+                // Fallback-Artwork die Fläche (gleiches Muster: Scrim darüber).
                 if (item.thumbnailUrl != null) {
                     AsyncImage(
                         model = item.thumbnailUrl,
@@ -89,6 +91,9 @@ fun PendingImportRow(
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),
                     )
+                    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f)))
+                } else {
+                    FallbackArtwork(title = item.displayTitle())
                     Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f)))
                 }
                 when {

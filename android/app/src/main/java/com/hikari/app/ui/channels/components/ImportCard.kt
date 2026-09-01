@@ -38,6 +38,7 @@ import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.ui.channels.ImportCardState
 import com.hikari.app.ui.channels.SharedDefaults
+import com.hikari.app.ui.components.FallbackArtwork
 
 private val Accent = Color(0xFFFBBF24)
 private val FailedRed = Color(0xFFEF4444)
@@ -114,11 +115,12 @@ fun ImportCard(
                                 .background(Color(0xFF1A1A1A)),
                         )
                     } else {
-                        Box(
+                        // Kein Vorschaubild: gestaltetes Artwork statt dunkler Box.
+                        FallbackArtwork(
+                            title = card.title,
                             modifier = Modifier
                                 .size(width = 40.dp, height = 60.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(Color(0xFF1A1A1A)),
+                                .clip(RoundedCornerShape(4.dp)),
                         )
                     }
                     Spacer(Modifier.width(12.dp))
