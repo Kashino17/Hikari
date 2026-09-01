@@ -1,3 +1,6 @@
+import java.io.File
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -7,6 +10,27 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// Stabile Release-Signierung für In-Place-Updates. Lokal liegen Keystore und
+// Passwörter unter keystore/ (gitignored), in der CI kommen sie aus GitHub-
+// Secrets per Env-Variablen. Ohne vollständige Konfiguration fällt der
+// Release-Build auf den Debug-Key zurück (nur für lokale Builds — niemals
+// für veröffentlichte APKs, sonst brechen Updates wieder).
+// Hinweis: kein `java.util.Properties`/`java.io.File` vollqualifiziert — das
+// `java`-Extension-Objekt des angewendeten Java-Plugins überdeckt hier das
+// Package, deshalb Import + kurze Namen.
+val releaseSigningProps = Properties().apply {
+    val propsFile = rootProject.file("keystore/signing.properties")
+    if (propsFile.exists()) propsFile.inputStream().use { load(it) }
+}
+val releaseStoreFile = (System.getenv("HIKARI_RELEASE_KEYSTORE")?.let { File(it) }
+    ?: rootProject.file("keystore/hikari-release.jks")).takeIf { it.exists() }
+val releaseStorePassword = System.getenv("HIKARI_RELEASE_STORE_PASSWORD")
+    ?: releaseSigningProps.getProperty("storePassword")
+val releaseKeyPassword = System.getenv("HIKARI_RELEASE_KEY_PASSWORD")
+    ?: releaseSigningProps.getProperty("keyPassword")
+val useReleaseSigning = releaseStoreFile != null &&
+    !releaseStorePassword.isNullOrBlank() && !releaseKeyPassword.isNullOrBlank()
+
 android {
     namespace = "com.hikari.app"
     compileSdk = 34   // was 36 in plan — deviation due to only android-34 installed
@@ -15,9 +39,20 @@ android {
         applicationId = "com.hikari.app"
         minSdk = 26
         targetSdk = 34   // was 36 in plan — same deviation
-        versionCode = 133
-        versionName = "0.77.1"
+        versionCode = 134
+        versionName = "0.78.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        if (useReleaseSigning) {
+            create("release") {
+                storeFile = releaseStoreFile
+                storePassword = releaseStorePassword
+                keyAlias = "hikari"
+                keyPassword = releaseKeyPassword
+            }
+        }
     }
 
     buildTypes {
@@ -26,7 +61,11 @@ android {
         }
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (useReleaseSigning) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }

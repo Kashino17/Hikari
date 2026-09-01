@@ -4,10 +4,13 @@ import androidx.room.*
 
 @Dao
 interface MusicSongDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    // Upsert statt REPLACE-Insert: REPLACE ist intern DELETE+INSERT und würde
+    // über den CASCADE-Fremdschlüssel die Zeilen in music_playlist_songs
+    // mitlöschen. Upsert macht ein echtes UPDATE ohne Delete.
+    @Upsert
     suspend fun insert(song: MusicSongEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertAll(songs: List<MusicSongEntity>)
 
     @Update

@@ -762,16 +762,22 @@ class MusicRepository(
      */
     suspend fun recordPlayed(song: MusicSong, touchRecency: Boolean = true) {
         val existing = songDao.getByName(song.videoId)
-        songDao.insert(
-            song.toEntity().copy(
-                isFavorite = existing?.isFavorite ?: song.isFavorite,
-                addedAt = if (touchRecency) {
-                    System.currentTimeMillis()
-                } else {
-                    existing?.addedAt ?: song.addedAt
-                },
-            ),
+        val entity = song.toEntity().copy(
+            isFavorite = existing?.isFavorite ?: song.isFavorite,
+            addedAt = if (touchRecency) {
+                System.currentTimeMillis()
+            } else {
+                existing?.addedAt ?: song.addedAt
+            },
         )
+        // Wichtig: kein REPLACE-Insert für bekannte Songs — SQLite ersetzt die
+        // Zeile per DELETE+INSERT, und der CASCADE-Fremdschlüssel in
+        // music_playlist_songs würde alle Playlist-Verknüpfungen mitreißen.
+        if (existing == null) {
+            songDao.insert(entity)
+        } else {
+            songDao.update(entity)
+        }
         // Nur echte Wiedergaben zählen (touchRecency=false sind Downloads/
         // Playlist-Verknüpfungen); alte Ereignisse gleich mit wegräumen.
         if (touchRecency) {

@@ -25,10 +25,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -42,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -51,10 +55,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.hikari.app.BuildConfig
+import com.hikari.app.domain.update.ApkInstaller
 import com.hikari.app.ui.profile.formatBytes
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
+import com.hikari.app.ui.theme.HikariDanger
 import com.hikari.app.ui.theme.HikariSurface
 import com.hikari.app.ui.theme.HikariSurfaceHigh
 import com.hikari.app.ui.theme.HikariText
@@ -73,6 +80,8 @@ fun SettingsScreen(
     val smart by vm.smartDownloads.collectAsState(initial = true)
     val disk by vm.diskUsage.collectAsState()
     val authToken by vm.authToken.collectAsState(initial = "")
+    val updateState by vm.updateState.collectAsState()
+    val context = LocalContext.current
     var draft by remember(backendUrl) { mutableStateOf(backendUrl) }
     var authDraft by remember(authToken) { mutableStateOf(authToken) }
     var budgetDraft by remember(budget) { mutableStateOf(budget.toString()) }
@@ -350,9 +359,39 @@ fun SettingsScreen(
                 }
             }
 
+            // ── App-Updates ─────────────────────────────────────────────────
+            SectionLabel("APP-UPDATES")
+            SettingsCard {
+                Text("App-Version", color = HikariText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    "Installiert: v${BuildConfig.VERSION_NAME} · Updates kommen direkt aus dem GitHub-Release.",
+                    color = HikariTextMuted,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
+                )
+                AmberButton(
+                    if (updateState is UpdateUiState.Checking) "Suche …" else "Nach Updates suchen",
+                ) {
+                    vm.checkForUpdate()
+                }
+                when (val state = updateState) {
+                    is UpdateUiState.UpToDate -> Text(
+                        "App ist aktuell.",
+                        color = HikariTextMuted,
+                        fontSize = 11.sp,
+                    )
+                    is UpdateUiState.Error -> Text(
+                        state.message,
+                        color = HikariDanger,
+                        fontSize = 11.sp,
+                    )
+                    else -> Unit
+                }
+            }
+
             Spacer(Modifier.height(12.dp))
             Text(
-                "Hikari · v0.25.0",
+                "Hikari · v${BuildConfig.VERSION_NAME}",
                 color = HikariTextFaint,
                 fontSize = 10.sp,
                 fontFamily = FontFamily.Monospace,
@@ -360,6 +399,21 @@ fun SettingsScreen(
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
             )
             Spacer(Modifier.height(48.dp))
+        }
+
+        // Update-Dialog: erscheint, sobald ein neueres Release gefunden wurde,
+        // und bleibt über Download und Installation sichtbar.
+        when (val state = updateState) {
+            is UpdateUiState.Available,
+            is UpdateUiState.Downloading,
+            is UpdateUiState.Downloaded,
+            -> UpdateDialog(
+                state = state,
+                onDownload = vm::downloadUpdate,
+                onInstall = { apk -> ApkInstaller.install(context, apk) },
+                onDismiss = vm::resetUpdateState,
+            )
+            else -> Unit
         }
     }
 }
@@ -405,4 +459,85 @@ private fun AmberButton(label: String, onClick: () -> Unit) {
     ) {
         Text(label, color = HikariBg, fontSize = 13.sp, fontWeight = FontWeight.Bold)
     }
+}
+
+@Composable
+private fun UpdateDialog(
+    state: UpdateUiState,
+    onDownload: (version: String, url: String) -> Unit,
+    onInstall: (java.io.File) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val version = when (state) {
+        is UpdateUiState.Available -> state.version
+        is UpdateUiState.Downloading -> state.version
+        is UpdateUiState.Downloaded -> state.version
+        else -> ""
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = HikariSurface,
+        title = {
+            Text(
+                "Update verfügbar: v$version",
+                color = HikariText,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                when (state) {
+                    is UpdateUiState.Available -> Text(
+                        "Version v$version kann direkt aus dem GitHub-Release geladen und installiert werden.",
+                        color = HikariTextMuted,
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp,
+                    )
+                    is UpdateUiState.Downloading -> {
+                        Text(
+                            if (state.percent >= 0) "Wird heruntergeladen … ${state.percent} %"
+                            else "Wird heruntergeladen …",
+                            color = HikariTextMuted,
+                            fontSize = 12.sp,
+                        )
+                        LinearProgressIndicator(
+                            progress = {
+                                if (state.percent >= 0) state.percent / 100f else 0f
+                            },
+                            color = HikariAmber,
+                            trackColor = HikariSurfaceHigh,
+                        )
+                    }
+                    is UpdateUiState.Downloaded -> Text(
+                        "Download abgeschlossen. Der Paket-Installer startet — dort das Update bestätigen.",
+                        color = HikariTextMuted,
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp,
+                    )
+                    else -> Unit
+                }
+            }
+        },
+        confirmButton = {
+            when (state) {
+                is UpdateUiState.Available -> TextButton(
+                    onClick = { onDownload(state.version, state.downloadUrl) },
+                ) {
+                    Text("Herunterladen", color = HikariAmber, fontWeight = FontWeight.Bold)
+                }
+                is UpdateUiState.Downloaded -> TextButton(
+                    onClick = { onInstall(state.apk) },
+                ) {
+                    Text("Installieren", color = HikariAmber, fontWeight = FontWeight.Bold)
+                }
+                else -> Unit
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Später", color = HikariTextMuted)
+            }
+        },
+    )
 }

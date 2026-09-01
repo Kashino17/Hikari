@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -21,7 +22,9 @@ interface LocalMangaDao {
     @Query("SELECT arc_id FROM local_manga_arcs")
     fun observeArcIds(): Flow<List<String>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    // Upsert statt REPLACE: REPLACE ist DELETE+INSERT und würde über den
+    // CASCADE-Fremdschlüssel alle Pages des Arcs mitlöschen.
+    @Upsert
     suspend fun upsertArc(arc: LocalMangaArcEntity)
 
     @Query("DELETE FROM local_manga_arcs WHERE arc_id = :id")
