@@ -25,7 +25,12 @@ const videos = db
     `SELECT v.id, d.file_path AS filePath
        FROM videos v
        JOIN downloaded_videos d ON d.video_id = v.id
-      WHERE v.thumbnail_url IS NULL OR v.thumbnail_url = ''`,
+      -- Nur manuelle Importe: YouTube-Kanalvideos haben frische Remote-Thumbs.
+      -- Nicht-lokale Thumbnails der Importe (Hoster-URLs verfallen,
+      -- VOE-Domains rotieren) werden durch einen eigenen Frame ersetzt.
+      WHERE v.channel_id = 'manual'
+        AND (v.thumbnail_url IS NULL OR v.thumbnail_url = ''
+          OR v.thumbnail_url NOT LIKE '/covers/%')`,
   )
   .all() as { id: string; filePath: string }[];
 
