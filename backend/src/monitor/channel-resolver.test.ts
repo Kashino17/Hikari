@@ -131,3 +131,40 @@ describe("resolveChannel", () => {
     expect(result.banner).toBeNull();
   });
 });
+
+describe("refreshChannelMetadata", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("schreibt die aufgelösten Metadaten in die channels-Zeile", async () => {
+    const { runYtDlp } = await import("../yt-dlp/client.js");
+    vi.mocked(runYtDlp).mockResolvedValue({
+      stdout: JSON.stringify({
+        channel_id: "UC1",
+        channel: "TEDx Talks",
+        uploader_id: "@TEDx",
+        channel_follower_count: 44600000,
+        thumbnails: [
+          { url: "https://yt3.example/banner.jpg", width: 2560, height: 424 },
+          { url: "https://yt3.example/avatar.jpg", width: 900, height: 900 },
+        ],
+      }),
+      stderr: "",
+    });
+
+    const updates: unknown[][] = [];
+    const db = {
+      prepare: (sql: string) => ({
+        run: (...args: unknown[]) => {
+          if (sql.includes("UPDATE channels")) updates.push(args);
+        },
+      }),
+    };
+
+    const { refreshChannelMetadata } = await import("./channel-resolver.js");
+    await refreshChannelMetadata(db as never, "UC1", "https://www.youtube.com/channel/UC1");
+
+    expect(updates).toEqual([
+      ["@TEDx", null, 44600000, "https://yt3.example/avatar.jpg", "https://yt3.example/banner.jpg", "UC1"],
+    ]);
+  });
+});

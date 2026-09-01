@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { MANUAL_CHANNEL_ID } from "../import/manual-import.js";
 import type Database from "better-sqlite3";
-import { resolveChannel } from "../monitor/channel-resolver.js";
+import { refreshChannelMetadata, resolveChannel } from "../monitor/channel-resolver.js";
 import { validateYouTubeChannelUrl } from "../monitor/youtube-url.js";
 import { searchChannels } from "../monitor/channel-search.js";
 import { fetchChannelDeepScan } from "../monitor/deep-scan.js";
@@ -218,21 +218,7 @@ export async function registerChannelsRoutes(
     // because metadata refresh is best-effort.
     (async () => {
       try {
-        const refreshed = await resolveChannel(channel.url);
-        deps.db
-          .prepare(
-            `UPDATE channels SET handle = ?, description = ?, subscribers = ?,
-                                  thumbnail_url = ?, banner_url = ?
-             WHERE id = ?`,
-          )
-          .run(
-            refreshed.handle,
-            refreshed.description,
-            refreshed.subscribers,
-            refreshed.thumbnail,
-            refreshed.banner,
-            channelId,
-          );
+        await refreshChannelMetadata(deps.db, channelId, channel.url);
       } catch (err) {
         app.log.debug({ err, channelId }, "channel metadata refresh failed (non-fatal)");
       }

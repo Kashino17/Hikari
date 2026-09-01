@@ -37,6 +37,7 @@ import { fetchVideoMetadata } from "./ingest/metadata.js";
 import { fetchTranscript } from "./ingest/transcript.js";
 import { fetchChannelFeedConditional } from "./monitor/rss-poller.js";
 import { computePollIntervalMs, isChannelDue } from "./monitor/cadence.js";
+import { refreshChannelMetadata } from "./monitor/channel-resolver.js";
 import { processNewVideo } from "./pipeline/orchestrator.js";
 import {
   outdatedFeedItemCount,
@@ -203,15 +204,17 @@ async function pollAllChannels(): Promise<void> {
     const now = Date.now();
     const channels = db
       .prepare(
-        `SELECT id, last_polled_at AS lastPolledAt, rss_etag AS rssEtag,
-                rss_last_modified AS rssLastModified
+        `SELECT id, url, last_polled_at AS lastPolledAt, rss_etag AS rssEtag,
+                rss_last_modified AS rssLastModified, thumbnail_url AS thumbnailUrl
            FROM channels WHERE is_active = 1`,
       )
       .all() as {
       id: string;
+      url: string;
       lastPolledAt: number | null;
       rssEtag: string | null;
       rssLastModified: string | null;
+      thumbnailUrl: string | null;
     }[];
     const recentPublished = db.prepare(
       "SELECT published_at AS publishedAt FROM videos WHERE channel_id = ? ORDER BY published_at DESC LIMIT 10",
@@ -256,6 +259,15 @@ async function pollAllChannels(): Promise<void> {
         // Always advance the watermark — even on RSS failure — so a channel
         // whose newest video keeps failing doesn't freeze last_polled_at forever.
         db.prepare("UPDATE channels SET last_polled_at = ? WHERE id = ?").run(Date.now(), c.id);
+      }
+
+      // Kanäle aus der Zeit vor den Karten-Metadaten haben kein Avatar/Banner.
+      // Einmal nachziehen, wenn die Karte leer ist — fire-and-forget, damit der
+      // Poll nicht pro Kanal zehn Sekunden auf yt-dlp wartet.
+      if (!c.thumbnailUrl) {
+        refreshChannelMetadata(db, c.id, c.url).catch((err) =>
+          app.log.debug({ err, channelId: c.id }, "channel metadata backfill failed"),
+        );
       }
     }
   } finally {

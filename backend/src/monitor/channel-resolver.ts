@@ -1,3 +1,4 @@
+import type Database from "better-sqlite3";
 import { runYtDlp } from "../yt-dlp/client.js";
 
 export interface ResolvedChannel {
@@ -100,4 +101,31 @@ export async function resolveChannel(url: string): Promise<ResolvedChannel> {
     thumbnail: pickAvatar(parsed.thumbnails) ?? fixProtocol(parsed.thumbnail),
     banner: pickBanner(parsed.thumbnails),
   };
+}
+
+/**
+ * Liest Avatar/Banner/Handle/Subs eines Kanals neu ein und schreibt sie in die
+ * channels-Zeile. Kanäle, die vor der Metadaten-Ära abonniert wurden, haben
+ * dort NULLs stehen — ohne gelegentlichen Refresh blieben sie für immer leer.
+ * Wirft bei yt-dlp-Fehlern; der Aufrufer entscheidet, ob er das ignoriert
+ * (best-effort im Poll) oder an den Nutzer meldet.
+ */
+export async function refreshChannelMetadata(
+  db: Database.Database,
+  channelId: string,
+  channelUrl: string,
+): Promise<void> {
+  const refreshed = await resolveChannel(channelUrl);
+  db.prepare(
+    `UPDATE channels SET handle = ?, description = ?, subscribers = ?,
+                          thumbnail_url = ?, banner_url = ?
+     WHERE id = ?`,
+  ).run(
+    refreshed.handle,
+    refreshed.description,
+    refreshed.subscribers,
+    refreshed.thumbnail,
+    refreshed.banner,
+    channelId,
+  );
 }
