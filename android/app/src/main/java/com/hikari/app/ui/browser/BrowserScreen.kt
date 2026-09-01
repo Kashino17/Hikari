@@ -64,8 +64,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.hikari.app.domain.browser.AdHosts
 import com.hikari.app.domain.browser.PageScripts
 import com.hikari.app.domain.browser.PageTitleFilter
+import java.io.ByteArrayInputStream
 import kotlinx.coroutines.delay
 import org.json.JSONObject
 import org.json.JSONTokener
@@ -131,6 +133,9 @@ fun BrowserScreen(
             onGo = {
                 val url = normalizeUrl(addressField)
                 addressField = url
+                // Als bewusst angesteuert merken, sonst blockiert der
+                // Ad-Schutz auch einen absichtlichen Besuch dieser Domain.
+                vm.onAddressBarGo(url)
                 webView?.loadUrl(url)
             },
             onClose = onClose,
@@ -172,6 +177,27 @@ fun BrowserScreen(
                                 // Stream-URL auf, sobald der Player startet.
                                 val url = request?.url?.toString()
                                 if (url != null) {
+                                    // Ad-/Tracker-Hosts werden ganz blockiert:
+                                    // Ihre Subrequests braucht niemand, und ein
+                                    // Ad-Redirect ins Hauptfenster (z. B.
+                                    // s.lazada.co.th/s.…) würde die eigentliche
+                                    // Seite verdrängen. Durchgelassen wird ein
+                                    // Hauptframe-Aufruf nur mit Nutzer-Geste
+                                    // (angeklickter Link) oder wenn die URL
+                                    // bewusst angesteuert wurde (Adressleiste,
+                                    // Auto-Durchlauf) — letzteres darüber, dass
+                                    // das ViewModel sie als intendedNavigation
+                                    // hält. Die Unterscheidung "absichtlich vs.
+                                    // automatisch" ist damit nur näherungsweise
+                                    // möglich; die einfachere Variante wurde
+                                    // gewählt, weil shouldOverrideUrlLoading
+                                    // bewusst nicht gesetzt ist.
+                                    if (AdHosts.isAdUrl(url) &&
+                                        !(request.isForMainFrame &&
+                                            (request.hasGesture() || url == vm.intendedNavigation))
+                                    ) {
+                                        return emptyResponse()
+                                    }
                                     val headers = HashMap(request.requestHeaders ?: emptyMap())
                                     // Den Cookie setzt der Netzwerk-Stack erst
                                     // nach diesem Aufruf, er fehlt hier also
@@ -206,7 +232,13 @@ fun BrowserScreen(
                                 view?.evaluateJavascript(PageScripts.AUTOPLAY, null)
                                 view?.evaluateJavascript(PageScripts.SCAN) { raw ->
                                     parseScan(raw)?.let { scan ->
-                                        vm.onPageScanned(scan.url.ifBlank { page }, scan.title, scan.videos, scan.links)
+                                        vm.onPageScanned(
+                                            scan.url.ifBlank { page },
+                                            scan.title,
+                                            scan.videos,
+                                            scan.links,
+                                            scan.description,
+                                        )
                                     }
                                 }
                             }
@@ -548,6 +580,7 @@ private fun BasketSheet(
 private data class ScanResult(
     val url: String,
     val title: String,
+    val description: String?,
     val videos: List<String>,
     val links: List<com.hikari.app.domain.browser.PageLink>,
 )
@@ -571,9 +604,19 @@ private fun parseScan(raw: String?): ScanResult? {
                 com.hikari.app.domain.browser.PageLink(url, l.optString("label"))
             }
         }.orEmpty()
-        ScanResult(o.optString("url"), o.optString("title"), videos, links)
+        ScanResult(
+            o.optString("url"),
+            o.optString("title"),
+            BrowserViewModel.cleanDescription(o.optString("description")),
+            videos,
+            links,
+        )
     }.getOrNull()
 }
+
+/** Antwort-Ersatz für blockierte Ad-/Tracker-Requests: leer, aber gültig. */
+private fun emptyResponse() =
+    WebResourceResponse("text/plain", "utf-8", ByteArrayInputStream(ByteArray(0)))
 
 /** Adressleisten-Eingabe: URL übernehmen, alles andere als Suche behandeln. */
 internal fun normalizeUrl(input: String): String {

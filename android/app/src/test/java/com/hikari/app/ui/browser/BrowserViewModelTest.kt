@@ -228,4 +228,98 @@ class BrowserViewModelTest {
         val episodes = vm.ui.value.basket.map { it.episode }
         assertEquals(listOf(1, 2), episodes)
     }
+
+    // Genau der beobachtete Fehler: Eine Lazada-Ad hat das Hauptfenster
+    // umgeleitet, danach galt die Ad-Seite als "aktuelle Seite" und der
+    // eingesammelte Stream trug ihre URL.
+    @Test
+    fun adRedirectUeberschreibtDieAktuelleSeiteNicht() = runTest(dispatcher) {
+        vm.onPageStarted("https://serien.test/folge-1")
+        vm.onPageFinished("https://serien.test/folge-1", "Folge 1", false)
+
+        vm.onPageStarted("https://s.lazada.co.th/s.ZRRUaS?t=abc")
+        vm.onPageFinished("https://s.lazada.co.th/s.ZRRUaS?t=abc", "Lazada", false)
+
+        assertEquals("https://serien.test/folge-1", vm.ui.value.currentUrl)
+        assertEquals("Folge 1", vm.ui.value.pageTitle)
+    }
+
+    // Der Ad-Redirect darf auch die bisher mitgelesenen Funde nicht verwerfen —
+    // sie gehören zur echten Seite, die gleich wieder eingesammelt wird.
+    @Test
+    fun adRedirectLaesstDieFundeDerSeiteStehen() = runTest(dispatcher) {
+        vm.onPageStarted("https://serien.test/folge-1")
+        vm.sniffer.onRequest("https://cdn.test/master.m3u8", emptyMap())
+        vm.refreshFindings()
+
+        vm.onPageStarted("https://s.lazada.co.th/s.ZRRUaS?t=abc")
+
+        assertTrue(vm.ui.value.findings.isNotEmpty())
+        assertEquals("https://cdn.test/master.m3u8", vm.sniffer.best()?.url)
+    }
+
+    @Test
+    fun adScanUeberschreibtSeitendatenNicht() = runTest(dispatcher) {
+        vm.onPageStarted("https://serien.test/folge-1")
+        vm.onPageScanned("https://serien.test/folge-1", "Folge 1", emptyList(), emptyList(), "echte Beschreibung")
+
+        vm.onPageScanned("https://s.lazada.co.th/s.ZRRUaS", "Lazada Sale", emptyList(), emptyList(), "Werbetext")
+
+        assertEquals("Folge 1", vm.ui.value.pageTitle)
+        assertEquals("echte Beschreibung", vm.ui.value.pageDescription)
+    }
+
+    @Test
+    fun uebernimmtDieBeschreibungAusDemSeitenScan() = runTest(dispatcher) {
+        vm.onPageStarted("https://serien.test/folge-1")
+        vm.onPageScanned("https://serien.test/folge-1", "Folge 1", emptyList(), emptyList(), "Sie rettet die Welt.")
+        assertEquals("Sie rettet die Welt.", vm.ui.value.pageDescription)
+    }
+
+    @Test
+    fun seitenwechselLeertDieBeschreibung() = runTest(dispatcher) {
+        vm.onPageStarted("https://serien.test/folge-1")
+        vm.onPageScanned("https://serien.test/folge-1", "Folge 1", emptyList(), emptyList(), "Text")
+        vm.onPageStarted("https://serien.test/folge-2")
+        assertEquals("", vm.ui.value.pageDescription)
+    }
+
+    @Test
+    fun schicktDieBeschreibungBeimImportMit() = runTest(dispatcher) {
+        val captured = slot<List<SniffedImportItem>>()
+        coEvery { repo.importSniffed(capture(captured)) } returns 1
+
+        vm.onPageStarted("https://serien.test/folge-1")
+        vm.sniffer.onRequest("https://cdn.test/a.mp4", emptyMap())
+        vm.refreshFindings()
+        vm.onPageScanned("https://serien.test/folge-1", "Folge 1", emptyList(), emptyList(), "Beschreibungstext")
+        vm.collectCurrent()
+        vm.submit()
+        advanceUntilIdle()
+
+        assertEquals("Beschreibungstext", captured.captured.single().description)
+    }
+
+    @Test
+    fun importOhneBeschreibungSchicktNull() = runTest(dispatcher) {
+        val captured = slot<List<SniffedImportItem>>()
+        coEvery { repo.importSniffed(capture(captured)) } returns 1
+
+        vm.onPageStarted("https://serien.test/folge-1")
+        vm.sniffer.onRequest("https://cdn.test/a.mp4", emptyMap())
+        vm.refreshFindings()
+        vm.collectCurrent()
+        vm.submit()
+        advanceUntilIdle()
+
+        assertNull(captured.captured.single().description)
+    }
+
+    @Test
+    fun bereinigtDieBeschreibung() {
+        assertEquals("a b c", BrowserViewModel.cleanDescription("  a\n b\t c  "))
+        assertNull(BrowserViewModel.cleanDescription("   "))
+        assertNull(BrowserViewModel.cleanDescription(null))
+        assertEquals(5000, BrowserViewModel.cleanDescription("x".repeat(9000))?.length)
+    }
 }

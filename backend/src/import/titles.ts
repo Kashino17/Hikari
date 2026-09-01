@@ -51,12 +51,16 @@ function stripSiteSuffix(title: string, hostHint?: string): string {
   if (!hostHint) return title;
   const host = hostHint.toLowerCase().replace(/^www\./, "");
   const hostName = host.split(".")[0] ?? host;
+  // Kurzdomains wie "s.to" taugen als hostName ("s") nicht zum Matchen — der
+  // Seitenname im Suffix ("SerienStream (S.to)") enthält aber die Domain selbst.
+  const hostNorm = host.replace(/[^a-z0-9]+/g, "");
   const match = /^(.*?)\s[-|–—]\s([^-|–—]{1,30})$/.exec(title);
   if (!match) return title;
   const [, head, tail] = match as unknown as [string, string, string];
   const tailNorm = tail.toLowerCase().replace(/[^a-z0-9]+/g, "");
   const belongsToSite =
     (hostName.length >= 3 && tailNorm.includes(hostName)) ||
+    (hostNorm.length >= 3 && tailNorm.includes(hostNorm)) ||
     (tailNorm.length >= 3 && hostName.includes(tailNorm));
   if (!belongsToSite) return title;
   if (head.trim().length < 3) return title;
@@ -79,6 +83,12 @@ export function cleanImportTitle(raw: string | null | undefined, hostHint?: stri
 
   if (!title) return null;
   if (GENERIC_TITLES.has(title.toLowerCase())) return null;
+  // Kein Titel, sondern eine URL: passiert, wenn der Browser beim Einsammeln
+  // schon auf einer Ad-/Tracking-Weiterleitung stand — deren document.title
+  // ist schlicht die eigene URL. Lieber null und den URL-Fallback der
+  // Herkunftsseite nehmen.
+  if (/^(https?:\/\/|www\.)\S+$/i.test(title)) return null;
+  if (/^[\w-]+(\.[a-z0-9-]{2,})+\/\S*$/i.test(title) && !title.includes(" ")) return null;
   // Reine Dateinamen ("abc123.mp4") sind keine Titel.
   if (/^[\w-]{1,40}\.(mp4|mkv|webm|m3u8|mpd|ts)$/i.test(title) && !title.includes(" ")) {
     return null;

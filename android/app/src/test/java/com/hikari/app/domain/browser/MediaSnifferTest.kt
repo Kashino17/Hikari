@@ -71,6 +71,9 @@ class MediaSnifferTest {
         val s = sniffer()
         s.onRequest("https://googleads.g.doubleclick.net/pagead/ads/spot.mp4", emptyMap())
         s.onRequest("https://imasdk.googleapis.com/preroll.mp4", emptyMap())
+        // Die Ad-Kurzlinks, die das Hauptfenster umleiten, laden mitunter
+        // selbst Werbevideos — auch die dürfen nicht als Fund landen.
+        s.onRequest("https://s.lazada.co.th/s.ZRRUaS/werbespot.mp4", emptyMap())
         s.onRequest("https://cdn.example/echte-folge.mp4", emptyMap())
         val found = s.findings()
         assertEquals(1, found.size)

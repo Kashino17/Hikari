@@ -469,6 +469,7 @@ export async function importDirectLink(
       duration,
       thumbnail,
       publishedAt,
+      sourceUrl: cleanUrl,
       manualMeta: finalMeta,
     });
     removePending(db, videoId);
@@ -487,6 +488,8 @@ interface PersistInput {
   duration: number;
   thumbnail: string | null;
   publishedAt: number;
+  /** Herkunfts-URL des Imports (Seiten- oder Direktlink), nur zur Dokumentation. */
+  sourceUrl?: string | null;
   manualMeta?: ManualMetadata | undefined;
 }
 
@@ -511,8 +514,8 @@ function persistImportedVideo(db: Database.Database, input: PersistInput): void 
     `INSERT INTO videos
      (id, channel_id, series_id, title, description, published_at, duration_seconds,
       aspect_ratio, default_language, thumbnail_url, transcript, discovered_at,
-      season, episode, dub_language, sub_language, is_movie)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      season, episode, dub_language, sub_language, is_movie, source_url)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     input.videoId,
     MANUAL_CHANNEL_ID,
@@ -531,6 +534,7 @@ function persistImportedVideo(db: Database.Database, input: PersistInput): void 
     manualMeta?.dubLanguage ?? null,
     manualMeta?.subLanguage ?? null,
     manualMeta?.isMovie ? 1 : 0,
+    input.sourceUrl ?? null,
   );
 
   db.prepare(
@@ -572,6 +576,8 @@ export interface SniffedMedia {
   cookie?: string;
   userAgent?: string;
   title?: string;
+  /** og:description/meta description der Herkunftsseite, sofern die Seite eine hat. */
+  description?: string;
 }
 
 /**
@@ -733,10 +739,13 @@ export async function importSniffedMedia(
       videoId,
       filePath,
       title,
-      description: "",
+      // Der mitgelesene Stream kennt keine Metadaten — die Beschreibung kommt
+      // aus dem og:description/meta-Tag der Herkunftsseite, sonst bleibt sie leer.
+      description: input.description?.trim() ?? "",
       duration,
       thumbnail,
       publishedAt: Date.now(),
+      sourceUrl: pageUrl,
       manualMeta: finalMeta,
     });
     removePending(db, videoId);

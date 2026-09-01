@@ -43,6 +43,11 @@ export function applyMigrations(db: Database.Database): void {
   addColumnIfMissing(db, "videos", "sub_language", "TEXT");
   addColumnIfMissing(db, "videos", "is_movie", "INTEGER DEFAULT 0");
 
+  // Herkunft des Imports (Seiten- bzw. Quell-URL). Ohne sie war nach dem
+  // Abschluss nicht mehr nachvollziehbar, woher ein Video stammt — weder für
+  // den Nutzer noch für Re-Tests des Scrapers.
+  addColumnIfMissing(db, "videos", "source_url", "TEXT");
+
   addColumnIfMissing(db, "feed_items", "progress_seconds", "REAL DEFAULT 0");
   addColumnIfMissing(db, "feed_items", "queued_at", "INTEGER");
   addColumnIfMissing(db, "feed_items", "queue_order", "INTEGER");

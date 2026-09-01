@@ -149,10 +149,9 @@ class MediaSniffer {
         }
     }
 
-    private fun isNoise(url: String): Boolean {
-        val host = runCatching { java.net.URI(url).host }.getOrNull()?.lowercase() ?: return false
-        return AD_HOSTS.any { host == it || host.endsWith(".$it") }
-    }
+    // Ad-/Tracker-Hosts verwirft der Interceptor schon vorher ganz (AdHosts);
+    // der Filter hier bleibt als zweite Stufe, falls doch etwas durchkommt.
+    private fun isNoise(url: String): Boolean = AdHosts.isAdUrl(url)
 
     private fun Map<String, String>.entryIgnoreCase(key: String): String? =
         entries.firstOrNull { it.key.equals(key, ignoreCase = true) }?.value
@@ -166,16 +165,5 @@ class MediaSniffer {
         /** googlevideo & Co. tragen den Typ im Query-String statt im Pfad. */
         val PROGRESSIVE_MARKERS = listOf("videoplayback", "mime=video")
         val PROGRESSIVE_SUFFIXES = listOf(".mp4", ".webm", ".mkv", ".m4v", ".mov", ".avi", ".flv")
-        /** Werbe-/Trackingnetze — ihr Preroll lädt vor dem echten Video. */
-        val AD_HOSTS = listOf(
-            "doubleclick.net",
-            "googleadservices.com",
-            "googlesyndication.com",
-            "imasdk.googleapis.com",
-            "adsystem.com",
-            "adnxs.com",
-            "scorecardresearch.com",
-            "moatads.com",
-        )
     }
 }

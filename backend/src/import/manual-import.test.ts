@@ -54,6 +54,7 @@ class MockDb {
       duration_seconds: number;
       thumbnail_url: string | null;
       discovered_at: number;
+      source_url: string | null;
     }
   >();
   scores = new Map<string, { video_id: string }>();
@@ -117,6 +118,7 @@ class MockDb {
           _dubLanguage: string | null,
           _subLanguage: string | null,
           _isMovie: number,
+          sourceUrl: string | null,
         ) => {
           this.videos.set(id, {
             id,
@@ -127,6 +129,7 @@ class MockDb {
             duration_seconds: duration,
             thumbnail_url: thumbnailUrl,
             discovered_at: discoveredAt,
+            source_url: sourceUrl,
           });
         },
       };
@@ -285,6 +288,7 @@ describe("importDirectLink", () => {
       duration_seconds: 1209,
       thumbnail_url: thumbnailUrl,
       discovered_at: expect.any(Number),
+      source_url: pageUrl,
     });
 
     expect(runYtDlp).toHaveBeenCalledWith(
@@ -619,6 +623,36 @@ describe("importSniffedMedia", () => {
     expect(result.status).toBe("ok");
     expect(result.title).toBe("Staffel 1 Episode 3");
     expect(result.title).not.toContain("http");
+  });
+
+  it("speichert Beschreibung und Quell-URL der Herkunftsseite mit", async () => {
+    const { runYtDlp } = await import("../yt-dlp/client.js");
+    vi.mocked(runYtDlp).mockImplementation(async (args: string[]) => {
+      if (args.includes("-o")) {
+        writeFileSync(args[args.indexOf("-o") + 1], Buffer.alloc(1024, 0xff));
+        return { stdout: "", stderr: "" };
+      }
+      throw new Error(`Unexpected yt-dlp args: ${JSON.stringify(args)}`);
+    });
+
+    const dir = mkdtempSync(join(tmpdir(), "hikari-import-"));
+    const db = new MockDb();
+    const pageUrl = "https://serien.test/serie/stream/ted/staffel-1/episode-7";
+    const result = await importSniffedMedia(
+      db as never,
+      {
+        pageUrl,
+        mediaUrl: "https://cdn.example.com/x/master.m3u8?token=abc",
+        title: "Ted S01E07 | SerienTest",
+        description: "  Ted muss mitreden.  ",
+      },
+      dir,
+    );
+
+    expect(result.status).toBe("ok");
+    const row = db.videos.get(result.videoId as string);
+    expect(row?.description).toBe("Ted muss mitreden.");
+    expect(row?.source_url).toBe(pageUrl);
   });
 });
 

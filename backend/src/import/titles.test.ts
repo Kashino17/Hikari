@@ -33,6 +33,24 @@ describe("cleanImportTitle", () => {
     expect(cleanImportTitle("Tom &amp; Jerry   Folge  1")).toBe("Tom & Jerry Folge 1");
   });
 
+  it("entfernt den Seitennamen auch bei Kurzdomains wie s.to", () => {
+    expect(cleanImportTitle("Ted S01E07 | SerienStream (S.to)", "s.to")).toBe("Ted S01E07");
+    expect(cleanImportTitle("Ted S01E07 | SerienStream (S.to)", "serienstream.to")).toBe(
+      "Ted S01E07",
+    );
+  });
+
+  it("verwirft Titel, die in Wahrheit URLs sind (Ad-Redirect-Seiten)", () => {
+    expect(
+      cleanImportTitle("s.lazada.co.th/s.ZRRUaS?t=p-i2eLCtz&sub_aff_id=104882", "serienstream.to"),
+    ).toBeNull();
+    expect(cleanImportTitle("https://tracker.example.com/click?id=1")).toBeNull();
+    // Release-Namen mit Punkten, aber ohne Pfad, sind keine URLs.
+    expect(cleanImportTitle("Solo.Leveling.S01E01.German.Dub.720p")).toBe(
+      "Solo.Leveling.S01E01.German.Dub.720p",
+    );
+  });
+
   it("liefert null bei leerem Input", () => {
     expect(cleanImportTitle(null)).toBeNull();
     expect(cleanImportTitle("   ")).toBeNull();

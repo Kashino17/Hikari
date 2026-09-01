@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.ImportItemMetadata
 import com.hikari.app.data.api.dto.SniffedImportItem
+import com.hikari.app.domain.browser.AdHosts
 import com.hikari.app.domain.browser.EpisodeLinkFilter
 import com.hikari.app.domain.browser.MediaFinding
 import com.hikari.app.domain.browser.MediaSniffer
@@ -30,6 +31,8 @@ data class BasketItem(
     val pageTitle: String,
     val finding: MediaFinding,
     val episode: Int? = null,
+    /** Beschreibung der Fundseite (og:description), null wenn keine da war. */
+    val description: String? = null,
 )
 
 /** Stand eines automatischen Durchlaufs durch mehrere Folgenseiten. */
@@ -43,6 +46,8 @@ data class CrawlState(
 data class BrowserUiState(
     val currentUrl: String = "",
     val pageTitle: String = "",
+    /** Seitenbeschreibung aus den Meta-Tags (og:description, sonst description). */
+    val pageDescription: String = "",
     val loading: Boolean = false,
     val canGoBack: Boolean = false,
     val findings: List<MediaFinding> = emptyList(),
@@ -81,10 +86,16 @@ class BrowserViewModel @Inject constructor(
     // ---- Seiten-Ereignisse aus dem WebView -------------------------------
 
     fun onPageStarted(url: String) {
+        // Ad-Redirect ins Hauptfenster (z. B. s.lazada.co.th/s.…): Die Ad-Seite
+        // ist nicht "die aktuelle Seite" — würden wir sie übernehmen, landete
+        // der mitgelesene Stream im Korb unter ihrer URL und ihrem Titel.
+        // Deshalb ignoriert: Sniffer und Funde der echten Seite bleiben stehen.
+        if (AdHosts.isAdUrl(url)) return
         sniffer.reset()
         _ui.update {
             it.copy(
                 currentUrl = url,
+                pageDescription = "",
                 loading = true,
                 findings = emptyList(),
                 episodeLinks = emptyList(),
@@ -96,11 +107,23 @@ class BrowserViewModel @Inject constructor(
     }
 
     fun onPageFinished(url: String, title: String, canGoBack: Boolean) {
+        // Derselbe Schutz wie in onPageStarted — Ad-Redirects setzen weder
+        // URL noch Titel der aktuellen Seite.
+        if (AdHosts.isAdUrl(url)) return
         _ui.update { it.copy(currentUrl = url, pageTitle = title, loading = false, canGoBack = canGoBack) }
     }
 
     /** Ergebnis des injizierten Scan-Scripts. */
-    fun onPageScanned(url: String, title: String, domVideos: List<String>, links: List<PageLink>) {
+    fun onPageScanned(
+        url: String,
+        title: String,
+        domVideos: List<String>,
+        links: List<PageLink>,
+        description: String? = null,
+    ) {
+        // Der Scan einer umgeleiteten Ad-Seite darf die echten Seitendaten
+        // nicht überschreiben.
+        if (AdHosts.isAdUrl(url)) return
         // <video src> direkt aus dem DOM zählt wie ein mitgelesener Request.
         for (v in domVideos) sniffer.onRequest(v, emptyMap())
         val episodes = EpisodeLinkFilter.extract(url, links)
@@ -108,6 +131,7 @@ class BrowserViewModel @Inject constructor(
         _ui.update {
             it.copy(
                 pageTitle = clean ?: it.pageTitle,
+                pageDescription = description?.takeIf(String::isNotBlank) ?: it.pageDescription,
                 episodeLinks = episodes,
                 findings = sniffer.findings(),
             )
@@ -150,12 +174,12 @@ class BrowserViewModel @Inject constructor(
     fun collectCurrent(episode: Int? = null) {
         val s = _ui.value
         val best = sniffer.best() ?: return
-        addToBasket(s.currentUrl, s.pageTitle, best, episode ?: nextEpisode(s))
+        addToBasket(s.currentUrl, s.pageTitle, best, episode ?: nextEpisode(s), s.pageDescription)
     }
 
     fun collectSpecific(finding: MediaFinding) {
         val s = _ui.value
-        addToBasket(s.currentUrl, s.pageTitle, finding, nextEpisode(s))
+        addToBasket(s.currentUrl, s.pageTitle, finding, nextEpisode(s), s.pageDescription)
     }
 
     /**
@@ -166,15 +190,22 @@ class BrowserViewModel @Inject constructor(
         if (s.seriesTitle.isBlank()) null
         else (s.basket.mapNotNull { it.episode }.maxOrNull() ?: 0) + 1
 
-    private fun addToBasket(pageUrl: String, title: String, finding: MediaFinding, episode: Int?) {
+    private fun addToBasket(
+        pageUrl: String,
+        title: String,
+        finding: MediaFinding,
+        episode: Int?,
+        description: String? = null,
+    ) {
         // Steht die Seite gerade hinter einem Bot-Schutz, traegt sie dessen
         // Platzhaltertitel — und genau dann wird eingesammelt, weil der Player
         // erst nach der Pruefung startet. Lieber kein Titel als "Security
         // Check": Ohne ihn beschriftet die Uebersicht mit Serie und Folge.
         val clean = PageTitleFilter.clean(title).orEmpty()
+        val desc = description?.takeIf { it.isNotBlank() }
         _ui.update { st ->
             if (st.basket.any { it.pageUrl == pageUrl }) st
-            else st.copy(basket = st.basket + BasketItem(pageUrl, clean, finding, episode))
+            else st.copy(basket = st.basket + BasketItem(pageUrl, clean, finding, episode, desc))
         }
     }
 
@@ -189,6 +220,28 @@ class BrowserViewModel @Inject constructor(
     fun setSeason(v: Int?) = _ui.update { it.copy(season = v, seasonEdited = true) }
 
     fun dismissMessage() = _ui.update { it.copy(message = null) }
+
+    // ---- Absichtlich angesteuerte Navigation (Adressleiste/Durchlauf) ----
+
+    /**
+     * Die zuletzt bewusst angeforderte Hauptframe-URL (Adressleiste, Suche,
+     * Auto-Durchlauf). Der WebView-Client lässt einen Ad-/Tracker-Host im
+     * Hauptframe durch, wenn er genau dieser URL entspricht — automatische
+     * Ad-Redirects tragen kein Nutzer-Geste und stimmen nicht hiermit
+     * überein, werden also blockiert.
+     */
+    var intendedNavigation: String? = null
+        private set
+
+    /** Aufruf aus der Adressleiste, bevor die eingegebene URL geladen wird. */
+    fun onAddressBarGo(url: String) {
+        intendedNavigation = url
+    }
+
+    private fun navigateTo(url: String) {
+        intendedNavigation = url
+        viewModelScope.launch { _navigate.emit(url) }
+    }
 
     // ---- Automatischer Durchlauf ----------------------------------------
 
@@ -223,7 +276,7 @@ class BrowserViewModel @Inject constructor(
             return
         }
         _ui.update { it.copy(crawl = crawl.copy(index = index)) }
-        viewModelScope.launch { _navigate.emit(crawl.queue[index].url) }
+        navigateTo(crawl.queue[index].url)
 
         // Ohne Zeitlimit bliebe der Durchlauf an einer Seite hängen, deren
         // Player nie startet (Captcha, toter Hoster, Geoblock).
@@ -246,6 +299,7 @@ class BrowserViewModel @Inject constructor(
             _ui.value.pageTitle,
             best,
             link?.episode,
+            _ui.value.pageDescription,
         )
         _ui.update { st -> st.copy(crawl = st.crawl?.copy(collected = st.crawl.collected + 1)) }
         crawlTimeout?.cancel()
@@ -271,6 +325,7 @@ class BrowserViewModel @Inject constructor(
                     cookie = b.finding.cookie,
                     userAgent = b.finding.userAgent,
                     title = b.pageTitle.ifBlank { null },
+                    description = b.description,
                     metadata = ImportItemMetadata(
                         seriesTitle = s.seriesTitle.ifBlank { null },
                         season = s.season,
@@ -292,8 +347,21 @@ class BrowserViewModel @Inject constructor(
         }
     }
 
-    private companion object {
+    companion object {
         /** Wartezeit je Seite im Auto-Durchlauf, bevor übersprungen wird. */
-        const val PAGE_TIMEOUT_MS = 20_000L
+        private const val PAGE_TIMEOUT_MS = 20_000L
+
+        /** Maximale Länge der mitgeschickten Seitenbeschreibung. */
+        private const val MAX_DESCRIPTION_LENGTH = 5000
+
+        /**
+         * Macht aus dem Meta-Tag-Inhalt eine einzeilige, begrenzte
+         * Beschreibung: Zeilenumbrüche und Mehrfach-Leerzeichen raus,
+         * auf [MAX_DESCRIPTION_LENGTH] gekürzt.
+         */
+        internal fun cleanDescription(raw: String?): String? =
+            raw?.replace(Regex("\\s+"), " ")?.trim()
+                ?.takeIf { it.isNotEmpty() }
+                ?.take(MAX_DESCRIPTION_LENGTH)
     }
 }

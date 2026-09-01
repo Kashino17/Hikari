@@ -17,10 +17,14 @@ data class PageLink(
  */
 object PageScripts {
 
-    /** Liefert Titel, direkte <video>-Quellen und alle Links als JSON. */
+    /** Liefert Titel, Beschreibung, direkte <video>-Quellen und alle Links als JSON. */
     val SCAN = """
         (function () {
           function abs(u) { try { return new URL(u, location.href).href } catch (e) { return null } }
+          function meta(sel) {
+            var el = document.querySelector(sel);
+            return el ? (el.getAttribute('content') || '') : '';
+          }
           var videos = [];
           document.querySelectorAll('video').forEach(function (v) {
             if (v.currentSrc) videos.push(abs(v.currentSrc));
@@ -34,9 +38,13 @@ object PageScripts {
             var text = (a.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 120);
             links.push({ url: href, label: text });
           });
+          // og:description ist das gepflegtere Feld; die klassische
+          // description ist der Fallback, leer wenn nichts da ist.
+          var description = meta('meta[property="og:description"]') || meta('meta[name="description"]');
           return JSON.stringify({
             title: document.title || '',
             url: location.href,
+            description: description,
             videos: videos.filter(Boolean),
             links: links
           });

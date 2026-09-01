@@ -83,6 +83,8 @@ data class SniffedImportItem(
     val cookie: String? = null,
     @SerialName("userAgent") val userAgent: String? = null,
     val title: String? = null,
+    /** Seitenbeschreibung aus den Meta-Tags der Fundseite (og:description). */
+    val description: String? = null,
     val metadata: ImportItemMetadata? = null,
 )
 
