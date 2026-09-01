@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { importDirectLink, importSniffedMedia, fetchImportMetadata, ensureSeries, type ImportResult, type ManualMetadata, type SniffedMedia } from "../import/manual-import.js";
 import { parseEpisodeInfo } from "../import/episode-parser.js";
+import { ensureFrame } from "../import/frames.js";
 import { startBulkJob, recordBulkResult, finishBulkJob, getBulkJob, getLatestBulkJob } from "../import/bulk-job.js";
 import {
   getPending,
@@ -525,6 +526,32 @@ export async function registerVideosRoutes(
     if (!row) return reply.code(404).send({ error: "video not found" });
     return row;
   });
+
+  // Einzelbild aus der Videodatei an einer beliebigen Sekunde — Grundlage der
+  // Resume-Thumbnails (Netflix-Stil): Die App fragt den Frame an der letzten
+  // Abspielposition an, der Server schneidet ihn einmalig und cached ihn auf
+  // der Platte (Redirect auf die statische /covers/-Auslieferung). ffmpeg
+  // springt per -ss vor -i per Keyframe, ein Cache-Miss kostet nur Bruchteile
+  // einer Sekunde.
+  app.get<{ Params: { id: string }; Querystring: { at?: string } }>(
+    "/videos/:id/frame",
+    async (req, reply) => {
+      const at = Number(req.query.at ?? "0");
+      if (!Number.isFinite(at) || at < 0) return reply.code(400).send({ error: "invalid at" });
+      const row = deps.db
+        .prepare(
+          `SELECT v.duration_seconds AS duration, d.file_path AS filePath
+             FROM videos v JOIN downloaded_videos d ON d.video_id = v.id
+            WHERE v.id = ?`,
+        )
+        .get(req.params.id) as { duration: number | null; filePath: string } | undefined;
+      if (!row) return reply.code(404).send({ error: "video not found" });
+      const seconds = Math.min(at, Math.max(1, (row.duration ?? 1) - 1));
+      const filename = await ensureFrame(req.params.id, row.filePath, seconds, deps.coverDir);
+      if (!filename) return reply.code(404).send({ error: "frame unavailable" });
+      return reply.redirect(`/covers/frames/${filename}`);
+    },
+  );
 
   // "Nächste Folge" für den Player: dieselbe Serie, nächste (season, episode),
   // nur mit Datei auf der Platte — eine Folge ohne Download würde beim

@@ -564,6 +564,14 @@ function persistImportedVideo(db: Database.Database, input: PersistInput): void 
     input.videoId,
     now,
   );
+
+  // Serien-Cover: die erste Folge mit lokalem Bild stiftet der Serie ihr
+  // Poster — einmalig, ein manuell gesetztes Cover wird nie überschrieben.
+  if (seriesId && input.thumbnail?.startsWith("/covers/")) {
+    db.prepare(
+      "UPDATE series SET thumbnail_url = ? WHERE id = ? AND (thumbnail_url IS NULL OR thumbnail_url = '')",
+    ).run(input.thumbnail, seriesId);
+  }
 }
 
 /** Im In-App-Browser mitgelesener Stream samt der Header seiner Herkunftsseite. */

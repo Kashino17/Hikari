@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -44,6 +45,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -55,6 +57,7 @@ import com.hikari.app.domain.model.FeedItem
 import com.hikari.app.data.api.dto.SeriesDto
 import com.hikari.app.ui.library.components.CoverEditSheet
 import com.hikari.app.ui.components.FallbackArtwork
+import com.hikari.app.ui.components.resumeAwareThumbnail
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariSurface
@@ -316,8 +319,45 @@ private fun LibraryContent(
     }
 }
 
+/**
+ * Netflix-Look für Karten mit geladenem Bild: dunkler Scrim am unteren Rand,
+ * darauf der Titel weiß (1–2 Zeilen). Nur einblenden, wenn das Bild wirklich
+ * geladen ist — ohne Bild zeigt das FallbackArtwork den Titel bereits groß,
+ * ein Overlay würde ihn doppeln. [bottomPadding] lässt Raum für eine
+ * Fortschrittsleiste am unteren Kartenrand (z. B. ContinueCard).
+ */
+@Composable
+private fun BoxScope.ImageTitleOverlay(title: String, bottomPadding: Dp = 6.dp) {
+    Box(
+        modifier = Modifier
+            .align(Alignment.BottomStart)
+            .fillMaxWidth()
+            .fillMaxHeight(0.5f)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f)),
+                ),
+            ),
+    )
+    Text(
+        text = title,
+        color = Color.White,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Black,
+        lineHeight = 14.sp,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier
+            .align(Alignment.BottomStart)
+            .padding(start = 8.dp, end = 8.dp, bottom = bottomPadding),
+    )
+}
+
 @Composable
 private fun RecommendedCard(video: LibraryVideoDto, onClick: () -> Unit) {
+    // Erst wenn das Bild wirklich da ist, wandert der Titel als Overlay aufs
+    // Bild — sonst zeigt das FallbackArtwork den Titel (nicht doppelt).
+    var imageLoaded by remember(video.thumbnail_url) { mutableStateOf(false) }
     Column(modifier = Modifier.width(200.dp).clickable(onClick = onClick)) {
         Box(
             modifier = Modifier
@@ -330,21 +370,14 @@ private fun RecommendedCard(video: LibraryVideoDto, onClick: () -> Unit) {
             // Thumbnail wirkt gewollt statt leer (und dient als Lade-Hintergrund).
             FallbackArtwork(title = video.title)
             AsyncImage(
-                model = video.thumbnail_url,
+                model = video.resumeAwareThumbnail(),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
+                onSuccess = { imageLoaded = true },
+                onError = { imageLoaded = false },
             )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f)),
-                            startY = 100f,
-                        ),
-                    ),
-            )
+            if (imageLoaded) ImageTitleOverlay(video.title)
             // Match% badge top-left
             video.overall_score?.let { score ->
                 Text(
@@ -388,16 +421,8 @@ private fun RecommendedCard(video: LibraryVideoDto, onClick: () -> Unit) {
                 )
             }
         }
-        Text(
-            text = video.title,
-            color = HikariText,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            lineHeight = 14.sp,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 7.dp),
-        )
+        // Der Titel liegt bei geladenem Bild als Overlay auf dem Bild; ohne
+        // Bild trägt ihn das FallbackArtwork — hier nur noch der Kanal.
         if (!video.channelTitle.isNullOrBlank()) {
             Text(
                 text = video.channelTitle.uppercase(),
@@ -634,6 +659,9 @@ private fun SectionHeader(title: String, count: Int) {
 
 @Composable
 private fun ContinueCard(video: LibraryVideoDto, onClick: () -> Unit) {
+    // Erst wenn das Bild wirklich da ist, wandert der Titel als Overlay aufs
+    // Bild — sonst zeigt das FallbackArtwork den Titel (nicht doppelt).
+    var imageLoaded by remember(video.thumbnail_url) { mutableStateOf(false) }
     Column(modifier = Modifier.width(200.dp).clickable(onClick = onClick)) {
         Box(
             modifier = Modifier
@@ -645,22 +673,18 @@ private fun ContinueCard(video: LibraryVideoDto, onClick: () -> Unit) {
             // Fallback-Artwork als Unterlage: fehlendes oder fehlerhaftes
             // Thumbnail wirkt gewollt statt leer (und dient als Lade-Hintergrund).
             FallbackArtwork(title = video.title)
+            // Angefangenes Video: Frame an der Stopp-Position statt Poster.
             AsyncImage(
-                model = video.thumbnail_url,
+                model = video.resumeAwareThumbnail(),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
+                onSuccess = { imageLoaded = true },
+                onError = { imageLoaded = false },
             )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f)),
-                            startY = 100f,
-                        ),
-                    ),
-            )
+            // Titel-Overlay oberhalb der Fortschrittsleiste (daher mehr
+            // Abstand zum unteren Rand).
+            if (imageLoaded) ImageTitleOverlay(video.title, bottomPadding = 10.dp)
             Text(
                 "${video.duration_seconds / 60}:${"%02d".format(video.duration_seconds % 60)}",
                 color = Color.White,
@@ -706,16 +730,8 @@ private fun ContinueCard(video: LibraryVideoDto, onClick: () -> Unit) {
                 }
             }
         }
-        Text(
-            text = video.title,
-            color = HikariText,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            lineHeight = 14.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 7.dp),
-        )
+        // Titel sitzt bei geladenem Bild im Overlay, sonst im FallbackArtwork —
+        // unter der Karte bleibt nur die Restlaufzeit bzw. der Kanal.
         val sub = video.progress_seconds?.let {
             val left = video.duration_seconds - it.toInt()
             "noch ${left / 60} min"
@@ -741,6 +757,10 @@ private fun SeriesPosterCard(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
+    // Erst wenn das Bild wirklich da ist, kommen Scrim + Titel als Overlay
+    // aufs Poster — ohne Bild trägt das FallbackArtwork den Titel bereits
+    // groß, ein Overlay würde ihn doppeln.
+    var imageLoaded by remember(series.thumbnail_url) { mutableStateOf(false) }
     Box(
         modifier = Modifier
             .width(122.dp)
@@ -755,29 +775,33 @@ private fun SeriesPosterCard(
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
+            onSuccess = { imageLoaded = true },
+            onError = { imageLoaded = false },
         )
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f)),
-                        startY = 200f,
+        if (imageLoaded) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f)),
+                            startY = 200f,
+                        ),
                     ),
-                ),
-        )
-        Text(
-            text = series.title,
-            color = Color.White,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Black,
-            lineHeight = 13.sp,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 7.dp, end = 7.dp, bottom = 6.dp),
-        )
+            )
+            Text(
+                text = series.title,
+                color = Color.White,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Black,
+                lineHeight = 15.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 7.dp, end = 7.dp, bottom = 6.dp),
+            )
+        }
     }
 }
 
@@ -844,6 +868,9 @@ private fun com.hikari.app.data.api.dto.FeedItemDto.toFeedItem() = FeedItem(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CollectionCard(item: FeedItem, onPlay: () -> Unit, onRemove: (() -> Unit)? = null) {
+    // Erst wenn das Bild wirklich da ist, wandert der Titel als Overlay aufs
+    // Bild — sonst zeigt das FallbackArtwork den Titel (nicht doppelt).
+    var imageLoaded by remember(item.thumbnailUrl) { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .width(200.dp)
@@ -862,7 +889,10 @@ private fun CollectionCard(item: FeedItem, onPlay: () -> Unit, onRemove: (() -> 
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
+                onSuccess = { imageLoaded = true },
+                onError = { imageLoaded = false },
             )
+            if (imageLoaded) ImageTitleOverlay(item.title)
             Text(
                 "${item.durationSeconds / 60}:${"%02d".format(item.durationSeconds % 60)}",
                 color = Color.White,
@@ -876,28 +906,24 @@ private fun CollectionCard(item: FeedItem, onPlay: () -> Unit, onRemove: (() -> 
                     .padding(horizontal = 5.dp, vertical = 2.dp),
             )
         }
-        Text(
-            text = item.title,
-            color = HikariText,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            lineHeight = 14.sp,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 6.dp),
-        )
+        // Titel sitzt bei geladenem Bild im Overlay, sonst im FallbackArtwork —
+        // unter der Karte bleibt nur der Kanal.
         Text(
             text = item.channelTitle,
             color = HikariTextFaint,
             fontSize = 10.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 6.dp),
         )
     }
 }
 
 @Composable
 private fun RecentVideoCard(video: LibraryVideoDto, onClick: () -> Unit) {
+    // Erst wenn das Bild wirklich da ist, wandert der Titel als Overlay aufs
+    // Bild — sonst zeigt das FallbackArtwork den Titel (nicht doppelt).
+    var imageLoaded by remember(video.thumbnail_url) { mutableStateOf(false) }
     Column(modifier = Modifier.width(200.dp).clickable(onClick = onClick)) {
         Box(
             modifier = Modifier
@@ -909,22 +935,16 @@ private fun RecentVideoCard(video: LibraryVideoDto, onClick: () -> Unit) {
             // Fallback-Artwork als Unterlage: fehlendes oder fehlerhaftes
             // Thumbnail wirkt gewollt statt leer (und dient als Lade-Hintergrund).
             FallbackArtwork(title = video.title)
+            // Angefangenes Video: Frame an der Stopp-Position statt Poster.
             AsyncImage(
-                model = video.thumbnail_url,
+                model = video.resumeAwareThumbnail(),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
+                onSuccess = { imageLoaded = true },
+                onError = { imageLoaded = false },
             )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.5f)),
-                            startY = 120f,
-                        ),
-                    ),
-            )
+            if (imageLoaded) ImageTitleOverlay(video.title)
             Text(
                 "${video.duration_seconds / 60}:${"%02d".format(video.duration_seconds % 60)}",
                 color = Color.White,
@@ -953,16 +973,8 @@ private fun RecentVideoCard(video: LibraryVideoDto, onClick: () -> Unit) {
                 )
             }
         }
-        Text(
-            text = video.title,
-            color = HikariText,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            lineHeight = 14.sp,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 7.dp),
-        )
+        // Der Titel liegt bei geladenem Bild als Overlay auf dem Bild; ohne
+        // Bild trägt ihn das FallbackArtwork — hier nur noch der Kanal.
         if (!video.channelTitle.isNullOrBlank()) {
             Text(
                 text = video.channelTitle.uppercase(),

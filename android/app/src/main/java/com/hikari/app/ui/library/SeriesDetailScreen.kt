@@ -57,6 +57,7 @@ import com.hikari.app.data.api.dto.LibraryVideoDto
 import com.hikari.app.data.api.dto.SeriesDetailResponse
 import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.ui.components.FallbackArtwork
+import com.hikari.app.ui.components.resumeAwareThumbnail
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariDanger
@@ -518,8 +519,10 @@ private fun EpisodeRow(video: LibraryVideoDto, onClick: () -> Unit) {
                 .background(Color.DarkGray),
         ) {
             FallbackArtwork(title = video.title)
+            // Angefangene Folge: Frame an der Stopp-Position statt Poster
+            // (Netflix-Stil). Der Server klemmt/rundet die Sekunden selbst.
             AsyncImage(
-                model = video.thumbnail_url,
+                model = video.resumeAwareThumbnail(),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,

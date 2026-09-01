@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { execa } from "execa";
 import { probeDurationSeconds } from "../download/probe.js";
+import { pickSeekSeconds } from "./frames.js";
 
 /**
  * Sorgt dafür, dass ein importiertes Video ein Thumbnail hat.
@@ -70,7 +71,8 @@ async function downloadRemoteThumbnail(
 
 /**
  * Standbild aus der fertigen Datei. Nicht bei Sekunde 0 (oft schwarz oder
- * Intro), sondern bei 10 % der Laufzeit — das trifft eher Inhalt.
+ * Intro), sondern zufällig zwischen Minute 3 und 7 — das trifft eher Inhalt
+ * und gibt jeder Folge ein eigenes Bild statt überall derselben Intro-Phase.
  */
 async function extractFrame(
   filePath: string,
@@ -79,7 +81,7 @@ async function extractFrame(
 ): Promise<string | null> {
   try {
     const duration = await probeDurationSeconds(filePath);
-    const seek = Math.max(1, Math.round((duration ?? 30) * 0.1));
+    const seek = pickSeekSeconds(duration ?? 30);
     const filename = `${destBase}.jpg`;
     await execa(
       "ffmpeg",
