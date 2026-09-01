@@ -45,10 +45,16 @@ describe("cleanImportTitle", () => {
       cleanImportTitle("s.lazada.co.th/s.ZRRUaS?t=p-i2eLCtz&sub_aff_id=104882", "serienstream.to"),
     ).toBeNull();
     expect(cleanImportTitle("https://tracker.example.com/click?id=1")).toBeNull();
-    // Release-Namen mit Punkten, aber ohne Pfad, sind keine URLs.
-    expect(cleanImportTitle("Solo.Leveling.S01E01.German.Dub.720p")).toBe(
-      "Solo.Leveling.S01E01.German.Dub.720p",
-    );
+    // Release-Namen mit Punkten werden lesbar, nicht als URL verworfen.
+    expect(cleanImportTitle("Solo.Leveling.S01E01.German.Dub.720p")).toBe("Solo Leveling S01E01");
+  });
+
+  it("macht Scene-Release-Dateinamen als Titel lesbar", () => {
+    expect(
+      cleanImportTitle("Solo.Leveling.S01E01.German.Dub.HARDSUB.AAC.720p.CR.WEB.h264-DK.mkv", "voe.sx"),
+    ).toBe("Solo Leveling S01E01");
+    // Normale Titel mit Punkt bleiben unangetastet.
+    expect(cleanImportTitle("Lupin III. Der Film")).toBe("Lupin III. Der Film");
   });
 
   it("liefert null bei leerem Input", () => {

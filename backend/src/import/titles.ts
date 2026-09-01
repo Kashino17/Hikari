@@ -81,6 +81,21 @@ export function cleanImportTitle(raw: string | null | undefined, hostHint?: stri
 
   title = stripSiteSuffix(title, hostHint);
 
+  // Scene-Release-Namen als Titel: "Solo.Leveling.S01E01.German.Dub.720p.WEB.h264-DK"
+  // — Punkte/Unterstriche sind Leerzeichen, alles ab dem ersten Qualitäts-Tag
+  // ist Ballast. Nur anfassen, wenn der Titel sonst keine Leerzeichen hat
+  // und ein SxxEyy-Muster trägt, sonst gingen normale Titel mit Punkt kaputt.
+  if (!title.includes(" ") && /[._]/.test(title) && /s\d{1,2}e\d{1,4}/i.test(title)) {
+    title = title
+      .replace(/\.(mp4|mkv|webm|avi|m4v)$/i, "")
+      .replace(/[._]+/g, " ")
+      .replace(
+        /(\s+(?:german|deutsch|ger|jpn|eng|dub|sub|hardsub|multi|ml|dl|aac|ac3|dts|ddp\d?(?:\.\d)?|480p|576p|720p|1080p|2160p|web(?:-?(?:rip|dl))?|hdtv|hd|sd|x\.?26[45]|h\.?26[45]|hevc|avc|cr|amzn|nf|dsnp|bluray|bdrip|remux|proper|repack|internal))+\s*(-\s*\w+)?$/i,
+        "",
+      )
+      .trim();
+  }
+
   if (!title) return null;
   if (GENERIC_TITLES.has(title.toLowerCase())) return null;
   // Kein Titel, sondern eine URL: passiert, wenn der Browser beim Einsammeln
