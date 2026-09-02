@@ -15,12 +15,15 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.ByteArrayInputStream
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.resume
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONTokener
 
@@ -149,12 +152,83 @@ class HeadlessSniffer @Inject constructor(
             }
         }
 
+        /**
+         * Besucht die Seite und, falls dort kein Player eingebettet ist, die
+         * Hoster-Seiten dahinter.
+         *
+         * Viele Streaming-Seiten (serienstream/aniworld & Co.) betten das Video
+         * NICHT direkt ein — die Episoden-Seite trägt nur eine Liste von
+         * Hoster-Weiterleitungen (`/redirect/…`, voe/filemoon/…). Findet der
+         * erste Besuch keinen Stream, sammeln wir diese Links und laden sie der
+         * Reihe nach, bis einer einen abspielbaren Stream liefert. Tote Hoster
+         * werden so einfach übersprungen.
+         */
         suspend fun run(): HeadlessResult? {
-            webView.loadUrl(pageUrl)
+            val visited = HashSet<String>()
+            val queue = ArrayDeque<String>()
+            queue.add(pageUrl)
+            var expanded = false
+            var pageTitle: String? = null
+            var pageDescription: String? = null
+
+            while (queue.isNotEmpty()) {
+                val target = queue.removeFirst()
+                if (!visited.add(target)) continue
+                if (target != pageUrl) {
+                    // Frischer Kontext je Hoster-Embed, damit Funde nicht
+                    // fälschlich der Vorseite zugeschrieben werden.
+                    sniffer.reset()
+                    // Referer = Episoden-Seite: manche Redirect-Endpunkte
+                    // (serienstream/aniworld) leiten ohne ihn auf die Startseite
+                    // um statt zum Hoster.
+                    navigate(target, referer = pageUrl)
+                }
+
+                val best = pollTarget(if (target == pageUrl) FIRST_PAGE_MS else EMBED_MS)
+
+                // Titel/Beschreibung stammen von der Episoden-Seite, nicht vom
+                // nichtssagenden Hoster-Embed ("VOE", "Filemoon").
+                if (target == pageUrl) {
+                    pageTitle = PageTitleFilter.clean(scan?.title ?: webView.title)
+                    pageDescription = scan?.description
+                }
+
+                if (best != null) {
+                    return HeadlessResult(
+                        pageUrl = pageUrl,
+                        title = pageTitle ?: PageTitleFilter.clean(scan?.title ?: webView.title),
+                        description = pageDescription,
+                        finding = best,
+                    )
+                }
+
+                // Nach dem ersten (erfolglosen) Besuch die Hoster-Links der
+                // Seite in die Warteschlange stellen — nur einmal.
+                if (!expanded) {
+                    expanded = true
+                    for (link in collectHosterLinks()) if (link !in visited) queue.add(link)
+                }
+            }
+            return null
+        }
+
+        /** Lädt [url] (optional mit Referer) und setzt den Seiten-Status zurück. */
+        private fun navigate(url: String, referer: String? = null) {
+            pageFinished = false
+            scan = null
+            if (referer != null) webView.loadUrl(url, mapOf("Referer" to referer))
+            else webView.loadUrl(url)
+        }
+
+        /**
+         * Pollt bis zu [budgetMs] auf einen abspielbaren Stream und stößt den
+         * Player dabei wiederholt an. Liefert den Fund oder null bei Zeitablauf.
+         */
+        private suspend fun pollTarget(budgetMs: Long): MediaFinding? {
+            val start = System.currentTimeMillis()
             var firstHit = -1L
             var lastPoke = 0L
-            val start = System.currentTimeMillis()
-            while (true) {
+            while (System.currentTimeMillis() - start < budgetMs) {
                 delay(POLL_MS)
                 val now = System.currentTimeMillis()
                 val best = sniffer.best()
@@ -162,14 +236,7 @@ class HeadlessSniffer @Inject constructor(
                     if (firstHit < 0) firstHit = now
                     // Kurz nachwarten: Nach der ersten Datei taucht oft noch
                     // die HLS-Playlist auf, die alle Qualitäten enthält.
-                    if (best.kind == MediaKind.HLS || now - firstHit >= GRACE_MS) {
-                        return HeadlessResult(
-                            pageUrl = pageUrl,
-                            title = PageTitleFilter.clean(scan?.title ?: webView.title),
-                            description = scan?.description,
-                            finding = best,
-                        )
-                    }
+                    if (best.kind == MediaKind.HLS || now - firstHit >= GRACE_MS) return best
                 }
                 // Den Player alle paar Sekunden erneut anstoßen: Der erste
                 // Klick öffnet bei vielen Hostern nur ein Werbe-Overlay,
@@ -177,18 +244,26 @@ class HeadlessSniffer @Inject constructor(
                 if (pageFinished && now - lastPoke >= POKE_MS) {
                     lastPoke = now
                     webView.evaluateJavascript(PageScripts.AUTOPLAY, null)
-                    // Nachgeladene <video src> und Titel nach Bot-Prüfung.
-                    if (now - start >= POKE_MS) {
-                        webView.evaluateJavascript(PageScripts.SCAN) { raw ->
-                            parseScan(raw)?.let { s ->
-                                for (v in s.videos) sniffer.onRequest(v, emptyMap())
-                                scan = s
-                            }
+                    webView.evaluateJavascript(PageScripts.SCAN) { raw ->
+                        parseScan(raw)?.let { s ->
+                            for (v in s.videos) sniffer.onRequest(v, emptyMap())
+                            scan = s
                         }
                     }
                 }
             }
+            return null
         }
+
+        /** Hoster-/Embed-Links der aktuellen Seite (leer, wenn keine da sind). */
+        private suspend fun collectHosterLinks(): List<String> =
+            parseStringArray(evalString(HOSTER_LINKS))
+
+        /** [WebView.evaluateJavascript] als suspend-Aufruf. */
+        private suspend fun evalString(script: String): String? =
+            suspendCancellableCoroutine { cont ->
+                webView.evaluateJavascript(script) { raw -> if (cont.isActive) cont.resume(raw) }
+            }
 
         fun destroy() {
             runCatching {
@@ -200,6 +275,16 @@ class HeadlessSniffer @Inject constructor(
     }
 
     private data class Scan(val title: String, val description: String?, val videos: List<String>)
+
+    /** JSON-Array-im-JSON-String (wie [parseScan]) zu einer Liste von Strings. */
+    private fun parseStringArray(raw: String?): List<String> {
+        if (raw.isNullOrBlank() || raw == "null") return emptyList()
+        return runCatching {
+            val inner = JSONTokener(raw).nextValue() as? String ?: return emptyList()
+            val arr = JSONArray(inner)
+            (0 until arr.length()).mapNotNull { arr.optString(it).takeIf(String::isNotBlank) }
+        }.getOrDefault(emptyList())
+    }
 
     /** `evaluateJavascript` liefert JSON-im-JSON — zweimal auspacken. */
     private fun parseScan(raw: String?): Scan? {
@@ -224,12 +309,41 @@ class HeadlessSniffer @Inject constructor(
         WebResourceResponse("text/plain", "utf-8", ByteArrayInputStream(ByteArray(0)))
 
     private companion object {
-        const val DEFAULT_TIMEOUT_MS = 35_000L
+        // Reicht für die Episoden-Seite plus zwei, drei Hoster-Versuche.
+        const val DEFAULT_TIMEOUT_MS = 55_000L
         const val POLL_MS = 400L
         const val POKE_MS = 3_000L
         const val GRACE_MS = 2_000L
+        /** Zeit für die erste Seite: hier steht meist nur die Hoster-Liste. */
+        const val FIRST_PAGE_MS = 7_000L
+        /** Zeit je Hoster-Embed, bis zum nächsten Kandidaten gewechselt wird. */
+        const val EMBED_MS = 13_000L
         const val WIDTH = 1280
         const val HEIGHT = 720
         const val MAX_DESCRIPTION = 5000
+
+        /**
+         * Sammelt Hoster-/Embed-Links einer Seite, die den Player nicht direkt
+         * einbettet. Reihenfolge: erst die typischen Streaming-Weiterleitungen
+         * (serienstream/aniworld `/redirect/…`), dann eingebettete Frames, dann
+         * jeder Link auf eine bekannte Hoster-Domain.
+         */
+        val HOSTER_LINKS = """
+            (function () {
+              function abs(u) { try { return new URL(u, location.href).href } catch (e) { return null } }
+              var out = [], seen = {};
+              function add(h) { if (h && !seen[h]) { seen[h] = 1; out.push(h) } }
+              document.querySelectorAll(
+                'a[href*="/redirect/"], a.watchEpisode, .hosterSiteVideo a[href], a[href*="/out/"], a[href*="/goto/"]'
+              ).forEach(function (a) { add(abs(a.getAttribute('href'))) });
+              document.querySelectorAll('iframe[src]').forEach(function (f) { add(abs(f.getAttribute('src'))) });
+              var re = /(voe\.|filemoon|filelions|streamtape|dood|vidoza|upstream|mixdrop|vidmoly|luluvdo|supervideo|streamlare|savefiles|vinovo|streamvid|vidhide|streamwish)/i;
+              document.querySelectorAll('a[href]').forEach(function (a) {
+                var h = abs(a.getAttribute('href'));
+                if (h && re.test(h)) add(h);
+              });
+              return JSON.stringify(out.slice(0, 10));
+            })();
+        """.trimIndent()
     }
 }
