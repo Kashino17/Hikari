@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.hikari.app.ui.channels.components.ImportCard
 import com.hikari.app.ui.channels.components.SharedDefaultsBlock
+import com.hikari.app.ui.navigation.SharedImport
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariText
 import kotlinx.coroutines.launch
@@ -42,11 +44,17 @@ fun ImportSheet(
     onDismiss: () -> Unit,
     onOpenBrowser: (() -> Unit)? = null,
     onSubmitted: (() -> Unit)? = null,
+    /** Per Teilen-Menü geschickter Link — wird sofort eingetragen und analysiert. */
+    seed: SharedImport? = null,
     vm: ImportSheetViewModel = hiltViewModel(),
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val state by vm.uiState.collectAsState()
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(seed?.nonce) {
+        seed?.let { vm.addUrl(it.url) }
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -70,7 +78,7 @@ fun ImportSheet(
             OutlinedTextField(
                 value = state.rawInput,
                 onValueChange = vm::onInputChanged,
-                placeholder = { Text("URLs hier einfügen (eine pro Zeile)…") },
+                placeholder = { Text("URLs einfügen (eine pro Zeile) — oder Link an Hikari teilen…") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp),

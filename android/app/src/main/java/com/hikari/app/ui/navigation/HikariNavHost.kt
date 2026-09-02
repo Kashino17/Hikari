@@ -99,7 +99,7 @@ fun playVideoRoute(videoId: String, title: String, channel: String): String {
 }
 
 @Composable
-fun HikariNavHost(deepLinkRoute: String? = null) {
+fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = null) {
     val nav = rememberNavController()
     // Zählt Klicks auf den Feed-Tab; der Feed springt daraufhin nach oben
     // und lädt neu — auch wenn er bereits sichtbar ist.
@@ -122,6 +122,12 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
         ) {
             navTo(nav, deepLinkRoute)
         }
+    }
+
+    // Geteilter Link (Android-Teilen-Menü): ins Profil, wo das Import-Sheet
+    // ihn entgegennimmt und im Hintergrund nach dem Stream sucht.
+    LaunchedEffect(sharedImport?.nonce) {
+        if (sharedImport != null) navTo(nav, "profile")
     }
 
     val isVideoRoute = currentRoute?.startsWith("video/") == true ||
@@ -493,6 +499,7 @@ fun HikariNavHost(deepLinkRoute: String? = null) {
                         },
                         // Hub-Bereiche als Push — System-Zurück führt ins Profil.
                         onOpenSection = { route -> nav.navigate(route) },
+                        pendingImport = sharedImport,
                     )
                 }
             }

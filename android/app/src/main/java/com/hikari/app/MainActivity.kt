@@ -14,6 +14,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import com.hikari.app.ui.navigation.HikariNavHost
+import com.hikari.app.ui.navigation.SharedImport
+import com.hikari.app.ui.navigation.extractSharedUrl
 import com.hikari.app.ui.theme.HikariTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -23,6 +25,9 @@ class MainActivity : ComponentActivity() {
     /** Ziel-Route aus Intent-Extras (z.B. navigate_to=news aus der News-Notification). */
     private var deepLinkRoute by mutableStateOf<String?>(null)
 
+    /** Per Teilen-Menü geschickter Link (ACTION_SEND text/plain). */
+    private var sharedImport by mutableStateOf<SharedImport?>(null)
+
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
@@ -30,6 +35,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         deepLinkRoute = intent.deepLinkRoute()
+        sharedImport = intent.sharedImport()
         // Ohne diese Permission zeigt Android 13+ keinerlei Notifications an —
         // weder die Media-Steuerung beim Musikhören noch den Tagesbericht.
         if (Build.VERSION.SDK_INT >= 33 &&
@@ -40,7 +46,7 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             HikariTheme {
-                HikariNavHost(deepLinkRoute = deepLinkRoute)
+                HikariNavHost(deepLinkRoute = deepLinkRoute, sharedImport = sharedImport)
             }
         }
     }
@@ -48,6 +54,13 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         deepLinkRoute = intent.deepLinkRoute()
+        intent.sharedImport()?.let { sharedImport = it }
+    }
+
+    private fun Intent?.sharedImport(): SharedImport? {
+        if (this?.action != Intent.ACTION_SEND) return null
+        val url = extractSharedUrl(getStringExtra(Intent.EXTRA_TEXT)) ?: return null
+        return SharedImport(url = url, nonce = System.currentTimeMillis())
     }
 
     private fun Intent?.deepLinkRoute(): String? =

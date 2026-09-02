@@ -105,7 +105,7 @@ object EpisodeLinkFilter {
         return out.sortedBy { it.episode ?: Int.MAX_VALUE }
     }
 
-    private fun episodeNumber(text: String): Int? {
+    fun episodeNumber(text: String): Int? {
         for (p in EPISODE_PATTERNS) {
             val m = p.find(text) ?: continue
             val n = m.groupValues.getOrNull(1)?.toIntOrNull() ?: continue

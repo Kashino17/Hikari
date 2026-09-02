@@ -5,6 +5,7 @@ import com.hikari.app.data.api.dto.AnalyzeResponse
 import com.hikari.app.data.api.dto.BulkImportItem
 import com.hikari.app.data.api.dto.LanguagesResponse
 import com.hikari.app.data.api.dto.SeriesItemDto
+import com.hikari.app.domain.browser.HeadlessSniffer
 import com.hikari.app.domain.repo.ChannelsRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -28,6 +29,12 @@ import kotlin.test.assertTrue
 class ImportSheetViewModelTest {
     private val repo = mockk<ChannelsRepository>(relaxUnitFun = true)
 
+    // Der Headless-Sniffer greift nur, wenn die yt-dlp-Analyse scheitert; die
+    // Tests hier stubben analyzeVideo auf Erfolg, der Sniff liefert also nie.
+    private val sniffer = mockk<HeadlessSniffer> {
+        coEvery { sniff(any(), any()) } returns null
+    }
+
     @Before fun setUp() {
         Dispatchers.setMain(StandardTestDispatcher())
         coEvery { repo.listSeries() } returns listOf(SeriesItemDto("s1", "One Piece"))
@@ -39,7 +46,7 @@ class ImportSheetViewModelTest {
     @After fun tearDown() { Dispatchers.resetMain() }
 
     @Test(timeout = 5_000) fun init_loadsSeriesList() = runTest {
-        val vm = ImportSheetViewModel(repo)
+        val vm = ImportSheetViewModel(repo, sniffer)
         advanceUntilIdle()
         val s = vm.uiState.value
         assertEquals(1, s.allSeries.size)
@@ -50,7 +57,7 @@ class ImportSheetViewModelTest {
         coEvery { repo.analyzeVideo(any()) } returns AnalyzeResponse(
             url = "https://x.test/1", title = "T",
         )
-        val vm = ImportSheetViewModel(repo)
+        val vm = ImportSheetViewModel(repo, sniffer)
         advanceUntilIdle()
         vm.onInputChanged("https://x.test/1")
         advanceTimeBy(200) // less than 500ms debounce
@@ -67,7 +74,7 @@ class ImportSheetViewModelTest {
             thumbnailUrl = "https://x.test/t.jpg",
             aiMeta = AiMeta(seriesTitle = "One Piece", season = 1, episode = 7),
         )
-        val vm = ImportSheetViewModel(repo)
+        val vm = ImportSheetViewModel(repo, sniffer)
         advanceUntilIdle()
         vm.onInputChanged("https://x.test/1")
         advanceTimeBy(700)
@@ -82,7 +89,7 @@ class ImportSheetViewModelTest {
 
     @Test(timeout = 10_000) fun analyze_failure_marksCardFailed() = runTest {
         coEvery { repo.analyzeVideo("https://x.test/1") } throws RuntimeException("yt-dlp failed")
-        val vm = ImportSheetViewModel(repo)
+        val vm = ImportSheetViewModel(repo, sniffer)
         advanceUntilIdle()
         vm.onInputChanged("https://x.test/1")
         advanceTimeBy(700)
@@ -93,7 +100,7 @@ class ImportSheetViewModelTest {
 
     @Test(timeout = 10_000) fun removeCard_removesFromCardsAndRawInput() = runTest {
         coEvery { repo.analyzeVideo(any()) } returns AnalyzeResponse(url = "x", title = "T")
-        val vm = ImportSheetViewModel(repo)
+        val vm = ImportSheetViewModel(repo, sniffer)
         advanceUntilIdle()
         vm.onInputChanged("https://x.test/1\nhttps://x.test/2")
         advanceTimeBy(700)
@@ -111,7 +118,7 @@ class ImportSheetViewModelTest {
         )
         val captured = slot<List<BulkImportItem>>()
         coEvery { repo.importVideosBulk(capture(captured)) } returns 1
-        val vm = ImportSheetViewModel(repo)
+        val vm = ImportSheetViewModel(repo, sniffer)
         advanceUntilIdle()
         vm.onInputChanged("https://x.test/1")
         advanceTimeBy(700)
@@ -138,7 +145,7 @@ class ImportSheetViewModelTest {
             url = "https://x.test/2", title = "T2",
             aiMeta = AiMeta(seriesTitle = "x", season = 1),
         )
-        val vm = ImportSheetViewModel(repo)
+        val vm = ImportSheetViewModel(repo, sniffer)
         advanceUntilIdle()
         vm.onInputChanged("https://x.test/1\nhttps://x.test/2")
         advanceTimeBy(700)

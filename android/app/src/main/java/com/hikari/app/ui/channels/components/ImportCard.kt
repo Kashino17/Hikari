@@ -75,7 +75,7 @@ fun ImportCard(
                     )
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Analysiere…", color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
+                        Text(card.hint ?: "Analysiere…", color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
                         Text(
                             card.url,
                             color = Color.White.copy(alpha = 0.3f),
@@ -143,6 +143,16 @@ fun ImportCard(
                             Text(
                                 "S${effSeason ?: '-'} · E${card.episode}",
                                 color = Accent,
+                                fontSize = 10.sp,
+                            )
+                        }
+                        if (card.sniffed != null) {
+                            // Der Stream kam nicht von yt-dlp, sondern aus dem
+                            // unsichtbaren Seitenbesuch — sichtbar machen,
+                            // damit ein späterer 403 einzuordnen ist.
+                            Text(
+                                "Stream von der Seite erkannt",
+                                color = Accent.copy(alpha = 0.8f),
                                 fontSize = 10.sp,
                             )
                         }

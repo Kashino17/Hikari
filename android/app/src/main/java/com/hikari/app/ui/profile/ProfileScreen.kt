@@ -86,6 +86,8 @@ fun ProfileScreen(
     onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
     onOpenDownloadCategory: (com.hikari.app.ui.profile.tabs.DownloadCategory) -> Unit,
     onOpenSection: (route: String) -> Unit,
+    /** Per Teilen-Menü eingegangener Link: öffnet das Import-Sheet mit ihm vorbefüllt. */
+    pendingImport: com.hikari.app.ui.navigation.SharedImport? = null,
     vm: ProfileViewModel = hiltViewModel(),
 ) {
     val name by vm.name.collectAsState()
@@ -103,6 +105,13 @@ fun ProfileScreen(
     var editing by remember { mutableStateOf<EditField?>(null) }
     var tab by remember { mutableStateOf(ProfileTab.SAVED) }
     var importOpen by remember { mutableStateOf(false) }
+    var importSeed by remember { mutableStateOf<com.hikari.app.ui.navigation.SharedImport?>(null) }
+    LaunchedEffect(pendingImport?.nonce) {
+        if (pendingImport != null) {
+            importSeed = pendingImport
+            importOpen = true
+        }
+    }
 
     // Refresh stats + saved list + continue-watching when returning to the
     // Profile tab — covers cases like deleting downloads, saving a video from
@@ -266,16 +275,22 @@ fun ProfileScreen(
 
     if (importOpen) {
         ImportSheet(
-            onDismiss = { importOpen = false },
+            onDismiss = {
+                importOpen = false
+                importSeed = null
+            },
             onOpenBrowser = {
                 importOpen = false
+                importSeed = null
                 onOpenSection("browser")
             },
             // Nach dem Absenden dorthin, wo der Download sichtbar ist.
             onSubmitted = {
                 importOpen = false
+                importSeed = null
                 onOpenSection("channel/manual")
             },
+            seed = importSeed,
         )
     }
 
