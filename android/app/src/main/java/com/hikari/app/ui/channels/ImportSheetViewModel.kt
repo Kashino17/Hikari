@@ -7,7 +7,9 @@ import com.hikari.app.data.api.dto.BulkImportItem
 import com.hikari.app.data.api.dto.ImportItemMetadata
 import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.data.api.dto.SniffedImportItem
+import com.hikari.app.domain.browser.EpisodeDiscovery
 import com.hikari.app.domain.browser.EpisodeLinkFilter
+import com.hikari.app.domain.browser.EpisodeRef
 import com.hikari.app.domain.browser.HeadlessResult
 import com.hikari.app.domain.browser.HeadlessSniffer
 import com.hikari.app.domain.browser.PageMetaParser
@@ -107,6 +109,26 @@ internal object DirectHosts {
     }
 }
 
+/**
+ * Erkennt, ob eine URL eine Staffel-/Übersichtsseite ist (mehrere Folgen) statt
+ * einer einzelnen Folge. Bewusst konservativ: Im Zweifel Einzelvideo, denn eine
+ * fälschlich aufgeteilte Einzelseite wäre ärgerlicher als eine nicht erkannte
+ * Staffel (die man dann Folge für Folge schickt).
+ */
+internal object SeasonPage {
+    fun looksLikeMultiEpisode(url: String): Boolean {
+        val lower = url.lowercase()
+        // Zeigt die URL auf eine konkrete Folge, ist es keine Übersicht.
+        val hasEpisode = lower.contains("episode") || lower.contains("/folge") ||
+            Regex("""[/\-_]ep[-_]?\d""").containsMatchIn(lower) ||
+            Regex("""s\d{1,2}e\d{1,3}""").containsMatchIn(lower)
+        if (hasEpisode) return false
+        return lower.contains("staffel") || lower.contains("season") ||
+            Regex("""/serie[ns]?/[^/]+/?(\?.*)?$""").containsMatchIn(lower) ||
+            Regex("""/anime/stream/[^/]+/?(\?.*)?$""").containsMatchIn(lower)
+    }
+}
+
 @HiltViewModel
 class ImportSheetViewModel @Inject constructor(
     private val repo: ChannelsRepository,
@@ -117,6 +139,16 @@ class ImportSheetViewModel @Inject constructor(
     val uiState: StateFlow<ImportSheetUiState> = _uiState.asStateFlow()
 
     private var inputDebounceJob: Job? = null
+
+    /** Staffel-Seiten, die bereits in Folgen aufgeteilt wurden — nicht erneut. */
+    private val expandedSeasons = mutableSetOf<String>()
+
+    /**
+     * Karten-URLs, die aus einer Staffel-Seite entstanden sind (nicht selbst im
+     * Eingabetext). Ohne sie würde die Abgleich-Logik sie beim nächsten
+     * Tastendruck wieder wegräumen, weil sie nicht im Textfeld stehen.
+     */
+    private val derivedUrls = mutableSetOf<String>()
 
     init {
         viewModelScope.launch {
@@ -165,25 +197,83 @@ class ImportSheetViewModel @Inject constructor(
 
     private suspend fun reconcileUrls(newUrls: List<String>) {
         val current = _uiState.value.cards
-        val keep = current.filter { it.url in newUrls }
+        // Karten behalten, die noch im Text stehen ODER aus einer Staffel
+        // abgeleitet wurden.
+        val keep = current.filter { it.url in newUrls || it.url in derivedUrls }
         val keepUrls = keep.map { it.url }.toSet()
-        val fresh = newUrls.filterNot { it in keepUrls }
+        val fresh = newUrls.filterNot { it in keepUrls || it in expandedSeasons }
         val withLoaders = keep + fresh.map { ImportCardState.Loading(it) }
         _uiState.update { it.copy(cards = withLoaders) }
 
         coroutineScope {
             val sem = Semaphore(4)
             fresh.map { url ->
-                async {
-                    sem.withPermit {
-                        val card = analyzeCard(url)
-                        replaceCard(url) { card }
-                    }
-                }
+                async { sem.withPermit { processFreshUrl(url) } }
             }.awaitAll()
         }
         fillMissingEpisodes()
     }
+
+    /**
+     * Eine neu eingegangene URL: Ist es eine Staffel-/Übersichtsseite, wird sie
+     * in ihre Folgen aufgeteilt; sonst als einzelnes Video analysiert.
+     */
+    private suspend fun processFreshUrl(url: String) {
+        if (looksLikeMultiEpisode(url)) {
+            expandSeason(url)
+        } else {
+            val card = analyzeCard(url)
+            replaceCard(url) { card }
+        }
+    }
+
+    /**
+     * Liest die Folgen einer Staffel-Seite aus und legt pro Folge eine Karte an
+     * — jede bekommt Serie, Staffel und Folgennummer, und wird danach einzeln
+     * gesnifft. Genau das, was der Nutzer wollte: eine Staffel schicken, alle
+     * Folgen landen fertig beschriftet in Hikari.
+     */
+    private suspend fun expandSeason(url: String) {
+        replaceCard(url) {
+            ImportCardState.Loading(url, hint = "Staffel wird gelesen — Folgen werden gesucht…")
+        }
+        val disc = runCatching { sniffer.discoverEpisodes(url) }.getOrNull()
+        val episodes = disc?.episodes.orEmpty()
+        if (episodes.isEmpty()) {
+            // Doch keine Folgen erkannt — wie Einzelseite behandeln.
+            val card = analyzeCard(url)
+            replaceCard(url) { card }
+            return
+        }
+        expandedSeasons.add(url)
+        // Staffel-Karte durch je eine Karte pro Folge ersetzen.
+        _uiState.update { st ->
+            val withoutSeason = st.cards.filterNot { it.url == url }
+            val epCards = episodes.map { ImportCardState.Loading(it.url, hint = "Folge ${it.episode ?: "?"} …") }
+            st.copy(cards = withoutSeason + epCards)
+        }
+        // Eingabetext um die Staffel-URL bereinigen, damit sie nicht als
+        // gescheiterte Einzelkarte zurückkommt.
+        _uiState.update { st ->
+            st.copy(rawInput = st.rawInput.lines().filter { it.trim() != url }.joinToString("\n"))
+        }
+
+        coroutineScope {
+            val sem = Semaphore(2)
+            episodes.map { ep ->
+                async {
+                    sem.withPermit {
+                        derivedUrls.add(ep.url)
+                        val card = analyzeCard(ep.url, seed = ep, discovery = disc)
+                        replaceCard(ep.url) { card }
+                    }
+                }
+            }.awaitAll()
+        }
+    }
+
+    /** Grobe Erkennung einer Staffel-/Übersichtsseite (keine einzelne Folge). */
+    private fun looksLikeMultiEpisode(url: String): Boolean = SeasonPage.looksLikeMultiEpisode(url)
 
     /**
      * Zwei Wege gleichzeitig: yt-dlp fragt das Backend, und für unbekannte
@@ -191,28 +281,62 @@ class ImportSheetViewModel @Inject constructor(
      * yt-dlp, wird der Seitenbesuch abgebrochen; scheitert es, steht der
      * mitgelesene Stream meist schon bereit. So dauert ein Filehoster-Link
      * nicht Analyse PLUS Seitenbesuch, sondern nur das Längere von beidem.
+     *
+     * [seed]/[discovery] tragen die Metadaten einer aus einer Staffel-Seite
+     * abgeleiteten Folge (Serie/Staffel/Folge), damit die Karte sie behält,
+     * auch wenn der Sniff sie nicht aus der URL ablesen kann.
      */
-    private suspend fun analyzeCard(url: String): ImportCardState = coroutineScope {
+    private suspend fun analyzeCard(
+        url: String,
+        seed: EpisodeRef? = null,
+        discovery: EpisodeDiscovery? = null,
+    ): ImportCardState = coroutineScope {
         val sniffJob = if (DirectHosts.isWellSupported(url)) null
-        else async { runCatching { sniffer.sniff(url) }.getOrNull() }
+        else async { runCatching { sniffer.sniffDetailed(url) }.getOrNull() }
 
         val analyzed = runCatching { repo.analyzeVideo(url) }
         analyzed.fold(
             onSuccess = { r ->
                 sniffJob?.cancel()
-                readyFromAnalyze(url, r)
+                readyFromAnalyze(url, r).mergeSeed(seed, discovery)
             },
             onFailure = { e ->
                 if (sniffJob == null) {
                     return@fold ImportCardState.Failed(url, e.message ?: "Analyze fehlgeschlagen")
                 }
                 replaceCard(url) {
-                    ImportCardState.Loading(url, hint = "Kein direkter Link — Seite wird nach dem Player durchsucht…")
+                    ImportCardState.Loading(
+                        url,
+                        hint = seed?.let { "Folge ${it.episode ?: "?"} — Player wird gesucht…" }
+                            ?: "Kein direkter Link — Seite wird nach dem Player durchsucht…",
+                    )
                 }
-                val found = sniffJob.await()
-                if (found != null) readyFromSniff(url, found)
-                else ImportCardState.Failed(url, "Kein Video auf der Seite gefunden (${e.message ?: "Analyze fehlgeschlagen"})")
+                val outcome = sniffJob.await()
+                val found = outcome?.result
+                if (found != null) {
+                    readyFromSniff(url, found).mergeSeed(seed, discovery)
+                } else {
+                    // Diagnose sichtbar machen, sonst ist von außen nicht zu
+                    // sehen, woran der Seitenbesuch scheiterte.
+                    val diag = outcome?.diagnostics?.takeIf { it.isNotBlank() }
+                    ImportCardState.Failed(
+                        url,
+                        diag?.let { "Kein Stream gefunden — $it" }
+                            ?: "Kein Video auf der Seite gefunden (${e.message ?: "Analyze fehlgeschlagen"})",
+                    )
+                }
             },
+        )
+    }
+
+    /** Übernimmt Serie/Staffel/Folge aus der Staffel-Erkennung, wo die Karte selbst keine hat. */
+    private fun ImportCardState.mergeSeed(seed: EpisodeRef?, discovery: EpisodeDiscovery?): ImportCardState {
+        if (this !is ImportCardState.Ready || seed == null) return this
+        return copy(
+            seriesTitle = seriesTitle ?: discovery?.seriesTitle,
+            season = season ?: discovery?.season,
+            episode = episode ?: seed.episode,
+            title = title.ifBlank { seed.label },
         )
     }
 
@@ -304,6 +428,7 @@ class ImportSheetViewModel @Inject constructor(
         updateCard(url) { copy(expanded = !expanded) }
 
     fun removeCard(url: String) {
+        derivedUrls.remove(url)
         _uiState.update { state ->
             state.copy(
                 cards = state.cards.filterNot { it.url == url },

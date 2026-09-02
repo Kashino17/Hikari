@@ -36,6 +36,31 @@ data class HeadlessResult(
 )
 
 /**
+ * Ergebnis eines Sniff-Versuchs samt Diagnose-Spur. Die Spur landet bei
+ * Misserfolg im Fehlertext der Import-Karte — nur so ist von außen zu sehen,
+ * wo es hakte (Seite blockiert? keine Hoster? toter Hoster?), ohne Logcat.
+ */
+data class HeadlessOutcome(
+    val result: HeadlessResult?,
+    val diagnostics: String,
+)
+
+/** Eine auf einer Staffel-/Serienseite gefundene Folge. */
+data class EpisodeRef(
+    val url: String,
+    val episode: Int?,
+    val label: String,
+)
+
+/** Was ein Besuch einer Staffel-/Übersichtsseite ergab. */
+data class EpisodeDiscovery(
+    val seriesTitle: String?,
+    val season: Int?,
+    val episodes: List<EpisodeRef>,
+    val diagnostics: String,
+)
+
+/**
  * Besucht eine Seite mit eingebettetem Player unsichtbar und liest den Stream
  * mit — dieselbe Technik wie der In-App-Browser, nur ohne Bildschirm.
  *
@@ -57,14 +82,39 @@ class HeadlessSniffer @Inject constructor(
 
     /**
      * Liefert den besten Stream der Seite oder null, wenn innerhalb von
-     * [timeoutMs] keiner auftauchte (Captcha, toter Hoster, DRM).
+     * [timeoutMs] keiner auftauchte (Captcha, toter Hoster, DRM) — plus eine
+     * Diagnose-Spur, die im Fehlerfall sichtbar macht, woran es lag.
      */
-    suspend fun sniff(pageUrl: String, timeoutMs: Long = DEFAULT_TIMEOUT_MS): HeadlessResult? =
+    suspend fun sniffDetailed(pageUrl: String, timeoutMs: Long = DEFAULT_TIMEOUT_MS): HeadlessOutcome =
         lock.withLock {
             withContext(Dispatchers.Main.immediate) {
                 val session = Session(pageUrl)
                 try {
-                    withTimeoutOrNull(timeoutMs) { session.run() }
+                    val result = withTimeoutOrNull(timeoutMs) { session.run() }
+                    HeadlessOutcome(result, session.diagnostics())
+                } finally {
+                    session.destroy()
+                }
+            }
+        }
+
+    /** Bequemer Kurzaufruf ohne Diagnose. */
+    suspend fun sniff(pageUrl: String, timeoutMs: Long = DEFAULT_TIMEOUT_MS): HeadlessResult? =
+        sniffDetailed(pageUrl, timeoutMs).result
+
+    /**
+     * Öffnet eine Staffel-/Übersichtsseite und liest die Folgen-Links daraus
+     * aus (serienstream/aniworld: die Episoden-Liste im Seitenmenü). Damit kann
+     * der Nutzer eine ganze Staffel schicken; jede Folge wird danach einzeln
+     * gesnifft.
+     */
+    suspend fun discoverEpisodes(pageUrl: String, timeoutMs: Long = DISCOVER_TIMEOUT_MS): EpisodeDiscovery =
+        lock.withLock {
+            withContext(Dispatchers.Main.immediate) {
+                val session = Session(pageUrl)
+                try {
+                    withTimeoutOrNull(timeoutMs) { session.discover() }
+                        ?: EpisodeDiscovery(null, null, emptyList(), session.diagnostics())
                 } finally {
                     session.destroy()
                 }
@@ -75,6 +125,14 @@ class HeadlessSniffer @Inject constructor(
         private val sniffer = MediaSniffer()
         @Volatile private var pageFinished = false
         @Volatile private var scan: Scan? = null
+
+        /** Kurze, für den Nutzer lesbare Spur, was der Besuch tat. */
+        private val trail = ArrayList<String>()
+        private fun note(msg: String) { if (trail.size < 12) trail.add(msg) }
+        fun diagnostics(): String = trail.joinToString(" · ")
+
+        private fun shortHost(url: String): String =
+            runCatching { java.net.URI(url).host ?: url }.getOrDefault(url).removePrefix("www.")
 
         private val webView: WebView = WebView(context).apply {
             settings.javaScriptEnabled = true
@@ -182,6 +240,7 @@ class HeadlessSniffer @Inject constructor(
                     // (serienstream/aniworld) leiten ohne ihn auf die Startseite
                     // um statt zum Hoster.
                     navigate(target, referer = pageUrl)
+                    note("Hoster ${shortHost(target)}")
                 }
 
                 val best = pollTarget(if (target == pageUrl) FIRST_PAGE_MS else EMBED_MS)
@@ -191,25 +250,60 @@ class HeadlessSniffer @Inject constructor(
                 if (target == pageUrl) {
                     pageTitle = PageTitleFilter.clean(scan?.title ?: webView.title)
                     pageDescription = scan?.description
+                    note(
+                        "Seite: ${PageTitleFilter.clean(webView.title) ?: shortHost(pageUrl)}" +
+                            " (${sniffer.inspectedCount()} Requests)",
+                    )
                 }
 
                 if (best != null) {
+                    note("Stream gefunden: ${best.kind}")
                     return HeadlessResult(
                         pageUrl = pageUrl,
                         title = pageTitle ?: PageTitleFilter.clean(scan?.title ?: webView.title),
                         description = pageDescription,
                         finding = best,
                     )
+                } else if (target != pageUrl) {
+                    note("kein Stream (${sniffer.inspectedCount()} Req.)")
                 }
 
                 // Nach dem ersten (erfolglosen) Besuch die Hoster-Links der
                 // Seite in die Warteschlange stellen — nur einmal.
                 if (!expanded) {
                     expanded = true
-                    for (link in collectHosterLinks()) if (link !in visited) queue.add(link)
+                    val links = collectHosterLinks()
+                    note("${links.size} Hoster-Links")
+                    for (link in links) if (link !in visited) queue.add(link)
                 }
             }
             return null
+        }
+
+        /**
+         * Lädt eine Staffel-/Übersichtsseite und liest die Folgen-Links aus.
+         * Nutzt denselben DOM-Scan wie der Browser plus [EpisodeLinkFilter].
+         */
+        suspend fun discover(): EpisodeDiscovery {
+            navigate(pageUrl)
+            // Auf pageFinished warten, dann das DOM auslesen.
+            val start = System.currentTimeMillis()
+            while (!pageFinished && System.currentTimeMillis() - start < FIRST_PAGE_MS) delay(POLL_MS)
+            delay(POLL_MS)
+            val scanRaw = evalString(PageScripts.SCAN)
+            val parsed = parseFullScan(scanRaw)
+            val links = parsed?.links.orEmpty()
+            val episodes = EpisodeLinkFilter.extract(pageUrl, links).map {
+                EpisodeRef(url = it.url, episode = it.episode, label = it.label)
+            }
+            val meta = PageMetaParser.parse(pageUrl)
+            note("${PageTitleFilter.clean(webView.title) ?: shortHost(pageUrl)}: ${episodes.size} Folgen")
+            return EpisodeDiscovery(
+                seriesTitle = meta.seriesTitle,
+                season = meta.season,
+                episodes = episodes,
+                diagnostics = diagnostics(),
+            )
         }
 
         /** Lädt [url] (optional mit Referer) und setzt den Seiten-Status zurück. */
@@ -276,6 +370,25 @@ class HeadlessSniffer @Inject constructor(
 
     private data class Scan(val title: String, val description: String?, val videos: List<String>)
 
+    /** Wie [Scan], aber mit den Links der Seite — für die Staffel-Erkennung. */
+    private data class FullScan(val links: List<PageLink>)
+
+    private fun parseFullScan(raw: String?): FullScan? {
+        if (raw.isNullOrBlank() || raw == "null") return null
+        return runCatching {
+            val inner = JSONTokener(raw).nextValue() as? String ?: return null
+            val o = JSONObject(inner)
+            val links = o.optJSONArray("links")?.let { arr ->
+                (0 until arr.length()).mapNotNull { i ->
+                    val l = arr.optJSONObject(i) ?: return@mapNotNull null
+                    val url = l.optString("url").takeIf(String::isNotBlank) ?: return@mapNotNull null
+                    PageLink(url, l.optString("label"))
+                }
+            }.orEmpty()
+            FullScan(links)
+        }.getOrNull()
+    }
+
     /** JSON-Array-im-JSON-String (wie [parseScan]) zu einer Liste von Strings. */
     private fun parseStringArray(raw: String?): List<String> {
         if (raw.isNullOrBlank() || raw == "null") return emptyList()
@@ -311,6 +424,8 @@ class HeadlessSniffer @Inject constructor(
     private companion object {
         // Reicht für die Episoden-Seite plus zwei, drei Hoster-Versuche.
         const val DEFAULT_TIMEOUT_MS = 55_000L
+        /** Staffelseite laden und Folgen-Links auslesen — kein Player nötig. */
+        const val DISCOVER_TIMEOUT_MS = 20_000L
         const val POLL_MS = 400L
         const val POKE_MS = 3_000L
         const val GRACE_MS = 2_000L

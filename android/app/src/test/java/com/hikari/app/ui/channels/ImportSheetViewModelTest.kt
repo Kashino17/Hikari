@@ -5,6 +5,7 @@ import com.hikari.app.data.api.dto.AnalyzeResponse
 import com.hikari.app.data.api.dto.BulkImportItem
 import com.hikari.app.data.api.dto.LanguagesResponse
 import com.hikari.app.data.api.dto.SeriesItemDto
+import com.hikari.app.domain.browser.HeadlessOutcome
 import com.hikari.app.domain.browser.HeadlessSniffer
 import com.hikari.app.domain.repo.ChannelsRepository
 import io.mockk.coEvery
@@ -31,8 +32,9 @@ class ImportSheetViewModelTest {
 
     // Der Headless-Sniffer greift nur, wenn die yt-dlp-Analyse scheitert; die
     // Tests hier stubben analyzeVideo auf Erfolg, der Sniff liefert also nie.
-    private val sniffer = mockk<HeadlessSniffer> {
+    private val sniffer = mockk<HeadlessSniffer>(relaxed = true) {
         coEvery { sniff(any(), any()) } returns null
+        coEvery { sniffDetailed(any(), any()) } returns HeadlessOutcome(null, "")
     }
 
     @Before fun setUp() {
