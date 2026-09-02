@@ -102,7 +102,7 @@ fun GamesScreen(
         ),
         GameInfo(
             "2048", "2048",
-            "Wischen, verschmelzen, verdoppeln — auf 3×3, 4×4 oder 5×5. Mit Rückgängig und Auto-Speichern.",
+            "Wischen, verschmelzen, verdoppeln — 3×3 bis 5×5 oder relaxed auf 8×8. Mit Rückgängig und Auto-Speichern.",
             { Icon(Icons.Default.Grid4x4, null, tint = Color(0xFFFB923C), modifier = Modifier.size(28.dp)) },
             Color(0xFFFB923C),
         ),

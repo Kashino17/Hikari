@@ -52,6 +52,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -76,7 +77,21 @@ private enum class G2Screen { MENU, GAME }
 private enum class G2Mode(val id: String, val label: String, val emoji: String, val desc: String, val size: Int) {
     CLASSIC("classic", "Klassisch", "🔢", "4×4 — das Original. Schieben, verschmelzen, die 2048 erreichen.", 4),
     BIG("big", "Groß", "🧱", "5×5 — mehr Luft, längere Partien, riesige Kacheln möglich.", 5),
+    RELAXED("relaxed", "Relaxed", "🌿", "8×8 — riesiges Brett, kein Druck. Zum Abschalten und Zahlen stapeln.", 8),
     TINY("tiny", "Winzig", "🔥", "3×3 — brutal eng. Jeder Wisch will überlegt sein.", 3),
+}
+
+// Abstand und Eckenradius schrumpfen mit der Brettgröße, sonst bleibt bei 8×8 kaum Kachel übrig.
+private fun g2Gap(n: Int): Dp = when {
+    n >= 8 -> 3.dp
+    n >= 5 -> 6.dp
+    else -> 8.dp
+}
+
+private fun g2Corner(n: Int): Dp = when {
+    n >= 8 -> 5.dp
+    n >= 5 -> 8.dp
+    else -> 10.dp
 }
 
 private val G2Accent = Color(0xFFFB923C)
@@ -601,7 +616,7 @@ private fun G2BoardView(board: G2Board, onSwipe: (G2Dir) -> Unit, modifier: Modi
     val density = LocalDensity.current
     var px by remember { mutableIntStateOf(0) }
     val n = board.size
-    val gapPx = with(density) { (if (n >= 5) 6.dp else 8.dp).toPx() }
+    val gapPx = with(density) { g2Gap(n).toPx() }
     val cellPx = if (px == 0) 0f else (px - gapPx * (n + 1)) / n
     val threshold = with(density) { 36.dp.toPx() }
 
@@ -609,9 +624,9 @@ private fun G2BoardView(board: G2Board, onSwipe: (G2Dir) -> Unit, modifier: Modi
         modifier
             .aspectRatio(1f)
             .onSizeChanged { px = it.width }
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(if (n >= 8) 14.dp else 18.dp))
             .background(HikariCardBg)
-            .border(1.dp, Color.White.copy(alpha = 0.07f), RoundedCornerShape(18.dp))
+            .border(1.dp, Color.White.copy(alpha = 0.07f), RoundedCornerShape(if (n >= 8) 14.dp else 18.dp))
             .pointerInput(Unit) {
                 var acc = Offset.Zero
                 var fired = false
@@ -648,7 +663,7 @@ private fun G2BoardView(board: G2Board, onSwipe: (G2Dir) -> Unit, modifier: Modi
                             )
                         }
                         .size(cellDp)
-                        .clip(RoundedCornerShape(if (n >= 5) 8.dp else 10.dp))
+                        .clip(RoundedCornerShape(g2Corner(n)))
                         .background(HikariSurfaceHigh.copy(alpha = 0.55f)),
                 )
             }
@@ -696,12 +711,12 @@ private fun G2TileView(t: G2Tile, cellPx: Float, gapPx: Float, n: Int) {
             .offset { pos }
             .size(cellDp)
             .graphicsLayer { scaleX = scale.value; scaleY = scale.value }
-            .clip(RoundedCornerShape(if (n >= 5) 8.dp else 10.dp))
+            .clip(RoundedCornerShape(g2Corner(n)))
             .background(
                 Brush.verticalGradient(listOf(lerp(color, Color.White, 0.10f), color))
             )
             .then(
-                if (t.v >= 2048) Modifier.border(2.dp, Color.White.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
+                if (t.v >= 2048) Modifier.border(2.dp, Color.White.copy(alpha = 0.6f), RoundedCornerShape(g2Corner(n)))
                 else Modifier
             ),
         contentAlignment = Alignment.Center,
