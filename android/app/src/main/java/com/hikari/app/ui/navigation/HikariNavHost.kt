@@ -66,6 +66,10 @@ import com.hikari.app.ui.music.RemotePlaylistScreen
 import com.hikari.app.ui.news.NewsScreen
 import com.hikari.app.ui.games.GamesScreen
 import com.hikari.app.ui.games.BlockBlastGame
+import com.hikari.app.ui.games.ColorSortGame
+import com.hikari.app.ui.games.SnakeGame
+import com.hikari.app.ui.games.SudokuGame
+import com.hikari.app.ui.games.TwentyFortyEightGame
 import com.hikari.app.ui.games.FruitHoleGame
 import com.hikari.app.ui.games.FruitMergeGame
 import com.hikari.app.ui.games.SpaceShooterGame
@@ -479,6 +483,10 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                         "spaceshooter" -> SpaceShooterGame(onBack = { nav.popBackStack() })
                         "fruithole" -> FruitHoleGame(onBack = { nav.popBackStack() })
                         "fruitmerge" -> FruitMergeGame(onBack = { nav.popBackStack() })
+                        "colorsort" -> ColorSortGame(onBack = { nav.popBackStack() })
+                        "2048" -> TwentyFortyEightGame(onBack = { nav.popBackStack() })
+                        "sudoku" -> SudokuGame(onBack = { nav.popBackStack() })
+                        "snake" -> SnakeGame(onBack = { nav.popBackStack() })
                         else -> GamesScreen(
                             onBack = { nav.popBackStack() },
                             onLaunchGame = { id -> nav.navigate("game/$id") },

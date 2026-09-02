@@ -22,7 +22,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Extension
+import androidx.compose.material.icons.filled.Grid3x3
+import androidx.compose.material.icons.filled.Grid4x4
 import androidx.compose.material.icons.filled.RocketLaunch
+import androidx.compose.material.icons.filled.Science
+import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -90,6 +94,30 @@ fun GamesScreen(
             { Icon(Icons.Default.Close, null, tint = Color(0xFF60A5FA), modifier = Modifier.size(28.dp)) },
             Color(0xFF60A5FA),
         ),
+        GameInfo(
+            "colorsort", "Color Sort",
+            "Farbschichten zwischen Röhren umschütten, bis jede Röhre einfarbig ist — Level-Reise und Zufallsrätsel.",
+            { Icon(Icons.Default.Science, null, tint = Color(0xFFF472B6), modifier = Modifier.size(28.dp)) },
+            Color(0xFFF472B6),
+        ),
+        GameInfo(
+            "2048", "2048",
+            "Wischen, verschmelzen, verdoppeln — auf 3×3, 4×4 oder 5×5. Mit Rückgängig und Auto-Speichern.",
+            { Icon(Icons.Default.Grid4x4, null, tint = Color(0xFFFB923C), modifier = Modifier.size(28.dp)) },
+            Color(0xFFFB923C),
+        ),
+        GameInfo(
+            "sudoku", "Sudoku",
+            "Vier Schwierigkeiten mit eindeutigen Rätseln, Notizen, Hinweisen, Timer und Fortsetzen.",
+            { Icon(Icons.Default.Grid3x3, null, tint = Color(0xFF2DD4BF), modifier = Modifier.size(28.dp)) },
+            Color(0xFF2DD4BF),
+        ),
+        GameInfo(
+            "snake", "Snake",
+            "Der Klassiker mit Wischsteuerung, Bonus-Früchten, Portal-Rand und Blitz-Modus.",
+            { Icon(Icons.Default.Timeline, null, tint = Color(0xFFA3E635), modifier = Modifier.size(28.dp)) },
+            Color(0xFFA3E635),
+        ),
     )
 
     Scaffold(
@@ -114,7 +142,7 @@ fun GamesScreen(
             Text("Mini-Spiele", fontWeight = FontWeight.Bold, fontSize = 24.sp, color = HikariText,
                 modifier = Modifier.padding(horizontal = 20.dp))
             Spacer(Modifier.height(4.dp))
-            Text("5 Spiele, je 3 Modi — mit Leveln, Erfolgen und Statistiken", fontSize = 14.sp, color = HikariTextMuted,
+            Text("9 Spiele mit Modi, Leveln und Statistiken — alle offline", fontSize = 14.sp, color = HikariTextMuted,
                 modifier = Modifier.padding(horizontal = 20.dp))
 
             Spacer(Modifier.height(20.dp))

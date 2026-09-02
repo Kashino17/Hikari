@@ -684,3 +684,109 @@ internal fun GxLevelCard(level: Int, xpText: String, frac: Float, accent: Color)
         }
     }
 }
+
+// Abschnitts-Überschrift im Menü (Versalien, gesperrt) — gleiche Optik in allen Spielen.
+@Composable
+internal fun GxSectionTitle(title: String) {
+    Text(
+        title.uppercase(),
+        fontSize = 11.sp,
+        color = HikariTextFaint,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 1.2.sp,
+        modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
+    )
+}
+
+// Ergebnis-Overlay (Game Over / Level geschafft / Rekord): Scrim, Karte mit
+// Scale-In, optionales Badge, Stat-Zeilen und bis zu zwei Aktionen.
+@Composable
+internal fun GxResultOverlay(
+    title: String,
+    subtitle: String?,
+    accent: Color,
+    stats: List<Pair<String, String>>,
+    primaryLabel: String,
+    onPrimary: () -> Unit,
+    secondaryLabel: String? = null,
+    onSecondary: (() -> Unit)? = null,
+    badge: String? = null,
+) {
+    val appear = remember { Animatable(0.86f) }
+    LaunchedEffect(Unit) { appear.animateTo(1f, spring(dampingRatio = 0.62f, stiffness = 520f)) }
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.74f))
+            .clickable(remember { MutableInteractionSource() }, indication = null) {},
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            Modifier
+                .padding(horizontal = 28.dp)
+                .graphicsLayer { scaleX = appear.value; scaleY = appear.value }
+                .clip(RoundedCornerShape(26.dp))
+                .background(Color(0xFF232326))
+                .border(1.dp, accent.copy(alpha = 0.25f), RoundedCornerShape(26.dp))
+                .padding(horizontal = 22.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            if (badge != null) {
+                Text(
+                    badge,
+                    fontSize = 10.sp,
+                    color = Color.Black,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.sp,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(accent)
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                )
+                Spacer(Modifier.height(12.dp))
+            }
+            Text(
+                title,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Black,
+                textAlign = TextAlign.Center,
+                style = TextStyle(brush = Brush.horizontalGradient(listOf(accent, lerp(accent, Color.White, 0.45f)))),
+            )
+            if (subtitle != null) {
+                Spacer(Modifier.height(6.dp))
+                Text(subtitle, fontSize = 13.sp, color = HikariTextMuted, textAlign = TextAlign.Center, lineHeight = 18.sp)
+            }
+            if (stats.isNotEmpty()) {
+                Spacer(Modifier.height(18.dp))
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(HikariCardBg)
+                        .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(16.dp))
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                ) {
+                    stats.forEachIndexed { i, (label, value) ->
+                        Row(
+                            Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                            Arrangement.SpaceBetween,
+                            Alignment.CenterVertically,
+                        ) {
+                            Text(label, fontSize = 13.sp, color = HikariTextMuted)
+                            Text(value, fontSize = 15.sp, color = if (i == 0) accent else HikariText, fontWeight = FontWeight.Black)
+                        }
+                        if (i < stats.lastIndex) {
+                            Box(Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.05f)))
+                        }
+                    }
+                }
+            }
+            Spacer(Modifier.height(20.dp))
+            GxPrimaryButton(primaryLabel, accent, Modifier.fillMaxWidth(), onClick = onPrimary)
+            if (secondaryLabel != null && onSecondary != null) {
+                Spacer(Modifier.height(10.dp))
+                GxGhostButton(secondaryLabel, Modifier.fillMaxWidth(), onClick = onSecondary)
+            }
+        }
+    }
+}

@@ -284,7 +284,7 @@ private fun BoxScope.GamesCardContent() {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomStart) {
         CardLabel(
             name = "Spiele",
-            subtitle = "5 Spiele · Highscore jagen",
+            subtitle = "9 Spiele · Highscore jagen",
             icon = Icons.Default.Star,
         )
     }
