@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -211,6 +212,11 @@ class MusicViewModel @Inject constructor(
     init {
         loadDiscover()
         refreshLibrary()
+        // Der Server wartet bei einer YouTube-Drossel, statt aufzugeben —
+        // das einmal sagen, sonst sieht der stehende Balken wie ein Hänger aus.
+        viewModelScope.launch {
+            downloads.throttleNotice.filterNotNull().distinctUntilChanged().collect { message = it }
+        }
         // Kommt das Netz zurück, sind die Entdecken-Vorschläge nachholbar.
         viewModelScope.launch {
             isOnline.collect { online ->

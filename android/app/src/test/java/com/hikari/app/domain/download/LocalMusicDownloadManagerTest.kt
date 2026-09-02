@@ -61,6 +61,10 @@ class LocalMusicDownloadManagerTest {
         every { dao.observeAll() } returns flowOf(emptyList())
         coEvery { dao.get(any()) } returns null
         coEvery { repo.recordPlayed(any(), any()) } just Runs
+        // Ohne Backend läuft der direkte Fallback (getAudioStream) — der Pfad,
+        // den die vorhandenen Invarianten-Tests absichern. Der Server-Queue-
+        // Pfad hat seinen eigenen Test unten.
+        coEvery { repo.backendBase() } returns null
     }
 
     @After fun tearDown() {
@@ -133,6 +137,30 @@ class LocalMusicDownloadManagerTest {
         assertTrue(result.isSuccess)
         coVerify(exactly = 0) { repo.getAudioStream(any()) }
         coVerify(exactly = 0) { dao.upsert(any()) }
+    }
+
+    @Test fun download_usesServerQueue_whenBackendPresent() = runTest {
+        val base = server.url("/").toString().trimEnd('/')
+        coEvery { repo.backendBase() } returns base
+        // 1) POST enqueue → 202, 2) GET status → done, 3) GET Datei → 200.
+        server.enqueue(MockResponse().setResponseCode(202).setBody("{\"status\":\"queued\"}"))
+        server.enqueue(MockResponse().setResponseCode(200).setBody("{\"status\":\"done\"}"))
+        server.enqueue(
+            MockResponse().setResponseCode(200)
+                .setBody(Buffer().apply { write(ByteArray(2048) { 3 }) }),
+        )
+        val saved = slot<LocalMusicDownloadEntity>()
+        coEvery { dao.upsert(capture(saved)) } just Runs
+
+        val result = manager().download(song)
+
+        assertTrue(result.isSuccess, "Server-Download sollte erfolgreich sein")
+        assertEquals(2048L, saved.captured.byteSize)
+        // Kein direkter googlevideo-Griff mehr, wenn ein Backend da ist.
+        coVerify(exactly = 0) { repo.getAudioStream(any()) }
+        val recorded = server.takeRequest()
+        assertEquals("POST", recorded.method)
+        assertTrue(recorded.path!!.endsWith("/music/download/${song.videoId}"))
     }
 
     @Test fun localFile_dropsStaleRow_whenFileMissing() = runTest {

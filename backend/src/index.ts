@@ -180,7 +180,11 @@ await registerStatsRoutes(app, { db });
 await registerVideosRoutes(app, { db, videoDir: cfg.videoDir, coverDir: cfg.coverDir, extractor });
 await registerDownloadsRoutes(app, { db, diskLimitBytes: cfg.diskLimitBytes });
 await registerMangaRoutes(app, { db, mangaDir: cfg.mangaDir });
-await registerMusicRoutes(app, { streamCachePath: join(cfg.dataDir, "music-stream-cache.json") });
+await mkdir(join(cfg.dataDir, "music"), { recursive: true });
+await registerMusicRoutes(app, {
+  streamCachePath: join(cfg.dataDir, "music-stream-cache.json"),
+  audioDir: join(cfg.dataDir, "music"),
+});
 
 await registerNewsRoutes(app, { db, cfg });
 registerClipperStatusRoutes(app, db, {

@@ -1,4 +1,6 @@
-import type { FastifyInstance } from "fastify";
+import { createReadStream, statSync } from "node:fs";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import { AudioDownloadQueue } from "../music/audio-download-queue.js";
 import { proxyMediaStream } from "../stream/proxy.js";
 import {
   type CacheEntry,
@@ -328,6 +330,16 @@ export interface MusicDeps {
    * sonst zählen die Prefetch-Aufrufe bei yt-dlp-Erwartungen mit.
    */
   videoPrewarmDelayMs?: number | null;
+  /**
+   * Verzeichnis für serverseitig heruntergeladene Songs (`<videoId>.m4a`).
+   * Ohne Verzeichnis gibt es keine Download-Warteschlange (Tests, die sie
+   * nicht brauchen).
+   */
+  audioDir?: string;
+  /** Wartezeiten der Download-Warteschlange nach Fehlschlägen (Tests: kurz). */
+  audioQueueBackoffMs?: number[];
+  /** Pause zwischen zwei Songs in der Warteschlange (Tests: 0). */
+  audioQueueGapMs?: number;
 }
 
 export async function registerMusicRoutes(
@@ -887,9 +899,84 @@ export async function registerMusicRoutes(
     }
   };
 
+  // --- Serverseitige Download-Warteschlange (Offline-Musik) ---
+  // Die App lud Songs bisher live durch den Proxy — nach ~9 Songs sperrte
+  // googlevideo die Server-IP (403 auf alles), der Rest der Playlist scheiterte
+  // binnen Sekunden. Jetzt lädt der Server seriell mit Atempause, sitzt Wellen
+  // geduldig aus und legt die Datei ab; die App holt sie fertig ab.
+  const audioQueue = deps.audioDir
+    ? new AudioDownloadQueue({
+        dir: deps.audioDir,
+        resolve: (videoId, force) => resolveAudioUrl(videoId, force),
+        fetchImpl,
+        throttledForMs: () => Math.max(0, waveUntil - now()),
+        onUpstreamFail: noteUpstreamFail,
+        now,
+        log: app.log,
+        ...(deps.audioQueueBackoffMs ? { backoffMs: deps.audioQueueBackoffMs } : {}),
+        ...(deps.audioQueueGapMs !== undefined ? { gapMs: deps.audioQueueGapMs } : {}),
+      })
+    : undefined;
+
+  app.post<{ Params: { videoId: string } }>("/music/download/:videoId", async (req, reply) => {
+    const { videoId } = req.params;
+    if (!VIDEO_ID_RE.test(videoId)) return reply.code(400).send({ error: "invalid videoId" });
+    if (!audioQueue) return reply.code(503).send({ error: "audio downloads not configured" });
+    const job = audioQueue.enqueue(videoId);
+    return reply.code(job.status === "done" ? 200 : 202).send(job);
+  });
+
+  app.get<{ Params: { videoId: string } }>("/music/download/:videoId", async (req, reply) => {
+    const { videoId } = req.params;
+    if (!VIDEO_ID_RE.test(videoId)) return reply.code(400).send({ error: "invalid videoId" });
+    if (!audioQueue) return reply.code(503).send({ error: "audio downloads not configured" });
+    const job = audioQueue.get(videoId);
+    if (!job) return reply.code(404).send({ error: "not queued" });
+    return job;
+  });
+
+  app.delete<{ Params: { videoId: string } }>("/music/download/:videoId", async (req, reply) => {
+    const { videoId } = req.params;
+    if (!VIDEO_ID_RE.test(videoId)) return reply.code(400).send({ error: "invalid videoId" });
+    if (!audioQueue) return reply.code(503).send({ error: "audio downloads not configured" });
+    return { removed: audioQueue.remove(videoId) };
+  });
+
+  /**
+   * Fertige Datei von der Platte, mit Range-Support (ExoPlayer seekt, die
+   * App lädt in einem Stück). Kein googlevideo mehr im Spiel.
+   */
+  const sendLocalAudio = (req: FastifyRequest, reply: FastifyReply, path: string) => {
+    const size = statSync(path).size;
+    reply.header("accept-ranges", "bytes");
+    reply.header("content-type", "audio/mp4");
+    reply.header("cache-control", "private, max-age=3600");
+    const range = req.headers.range;
+    const m = range ? /^bytes=(\d*)-(\d*)$/.exec(range.trim()) : null;
+    if (range && !m) return reply.code(416).header("content-range", `bytes */${size}`).send();
+    if (m) {
+      const start = m[1] ? Number(m[1]) : 0;
+      const end = m[2] ? Math.min(Number(m[2]), size - 1) : size - 1;
+      if (Number.isNaN(start) || Number.isNaN(end) || start > end || start >= size) {
+        return reply.code(416).header("content-range", `bytes */${size}`).send();
+      }
+      reply.code(206);
+      reply.header("content-range", `bytes ${start}-${end}/${size}`);
+      reply.header("content-length", String(end - start + 1));
+      return reply.send(createReadStream(path, { start, end }));
+    }
+    reply.header("content-length", String(size));
+    return reply.send(createReadStream(path));
+  };
+
   app.get<{ Params: { videoId: string } }>("/music/audio/:videoId", async (req, reply) => {
     const { videoId } = req.params;
     if (!VIDEO_ID_RE.test(videoId)) return reply.code(400).send({ error: "invalid videoId" });
+    // Liegt der Song schon fertig auf der Platte, kommt er von dort — auch
+    // während einer Drossel-Welle.
+    if (audioQueue?.isDone(videoId)) {
+      return sendLocalAudio(req, reply, audioQueue.filePath(videoId));
+    }
     if (waveUntil > now()) {
       const retryAfterS = Math.ceil((waveUntil - now()) / 1000);
       reply.header("retry-after", String(retryAfterS));

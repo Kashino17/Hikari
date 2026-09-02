@@ -720,6 +720,14 @@ class MusicRepository(
     }
 
     /**
+     * Backend-Basis-URL ohne Slash am Ende — null, wenn keine konfiguriert ist.
+     * Der Download-Manager entscheidet damit zwischen serverseitiger
+     * Warteschlange und direktem Fallback.
+     */
+    suspend fun backendBase(): String? =
+        runCatching { settings.backendUrl.first().trimEnd('/') }.getOrNull()?.takeIf { it.isNotBlank() }
+
+    /**
      * Video-Variante für den Audio↔Video-Umschalter (Podcast/True Crime):
      * muxed MP4 über den Backend-Proxy mit Range-Support. Ohne Backend-URL
      * gibt es kein Video — der Player bleibt dann im Audio-Modus.
