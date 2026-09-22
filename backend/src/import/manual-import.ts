@@ -16,7 +16,12 @@ import {
   updateProgress,
 } from "./pending-imports.js";
 import { ensureImportThumbnail } from "./thumbnails.js";
-import { cleanImportTitle, fallbackTitleFromUrl, stripSeriesPrefix } from "./titles.js";
+import {
+  canonicalEpisodeTitle,
+  cleanImportTitle,
+  fallbackTitleFromUrl,
+  looksLikeMovieUrl,
+} from "./titles.js";
 
 /**
  * videoIds, deren Download gerade läuft. Der Bulk-Import verteilt URLs nach
@@ -38,6 +43,8 @@ function hostOf(url: string | null | undefined): string | undefined {
 }
 
 export const MANUAL_CHANNEL_ID = "manual";
+/** Ab dieser Laufzeit gilt ein Video ohne Serienzuordnung als Film. */
+export const MOVIE_MIN_SECONDS = 60 * 60;
 const MANUAL_CHANNEL_TITLE = "Manuell hinzugefügt";
 const MANUAL_IMPORT_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36";
@@ -192,6 +199,9 @@ async function resolveVoePage(url: string): Promise<ResolvedImportSource | null>
         "User-Agent": MANUAL_IMPORT_UA,
       },
       redirect: "follow",
+      // Ohne Limit hing /videos/analyze an einem stummen Host fest — die App
+      // lief in ihr 60-s-Timeout, der Server werkelte weiter.
+      signal: AbortSignal.timeout(20_000),
     });
   } catch {
     return null;
@@ -272,7 +282,7 @@ function ensureManualChannel(db: Database.Database): void {
   ).run(MANUAL_CHANNEL_ID, "manual:hikari", MANUAL_CHANNEL_TITLE, Date.now());
 }
 
-export function ensureSeries(db: Database.Database, title: string): string {
+export function seriesSlug(title: string): string {
   // Normalisieren, damit Schreibvarianten nicht als Dubletten aufreihen:
   // "Solo Leveling", "Solo  Leveling" und "Sólo Leveling" sind eine Serie.
   // NFKD löst Umlaute in Grundbuchstabe + Akzent auf, den wir wegwerfen.
@@ -284,12 +294,82 @@ export function ensureSeries(db: Database.Database, title: string): string {
     .replace(/^-+|-+$/g, "");
   // Titel ohne lateinische Zeichen (z. B. japanisch) würden sonst leer laufen.
   if (!id) id = `series-${createHash("sha1").update(title).digest("hex").slice(0, 10)}`;
+  return id;
+}
+
+/**
+ * Findet eine bestehende Serie, deren Slug ein Präfix des neuen ist (oder
+ * umgekehrt): "american-horror-story" ↔ "american-horror-story-die-dunkle-
+ * seite-in-dir". Der kürzere Slug muss mindestens zwei Wörter und zehn
+ * Zeichen haben, sonst würde "ted" auch "ted-lasso" schlucken.
+ */
+function findRelatedSeries(
+  db: Database.Database,
+  slug: string,
+): { id: string; title: string } | undefined {
+  const rows = db.prepare("SELECT id, title FROM series").all() as { id: string; title: string }[];
+  const qualifies = (short: string) => short.length >= 10 && short.split("-").length >= 2;
+  for (const row of rows) {
+    if (row.id === slug) return row;
+    if (slug.startsWith(`${row.id}-`) && qualifies(row.id)) return row;
+    if (row.id.startsWith(`${slug}-`) && qualifies(slug)) return row;
+  }
+  return undefined;
+}
+
+/** Bestehende Serie zu einem Titel — ohne etwas anzulegen. */
+export function resolveSeriesId(
+  db: Database.Database,
+  title: string | null | undefined,
+): string | undefined {
+  if (!title?.trim()) return undefined;
+  return findRelatedSeries(db, seriesSlug(title.trim()))?.id;
+}
+
+export function ensureSeries(db: Database.Database, title: string): string {
+  const clean = title.trim();
+  const id = seriesSlug(clean);
+  const related = findRelatedSeries(db, id);
+  if (related) {
+    // Der kürzere Name ist fast immer der echte Serienname (der lange trägt
+    // einen Untertitel aus dem URL-Slug). Anzeige nachziehen, Id bleibt.
+    if (clean.length < related.title.length && clean.length >= 3 && id.length < related.id.length) {
+      db.prepare("UPDATE series SET title = ? WHERE id = ?").run(clean, related.id);
+    }
+    return related.id;
+  }
   db.prepare(
     `INSERT INTO series (id, title, added_at)
      VALUES (?, ?, ?)
      ON CONFLICT(id) DO NOTHING`,
-  ).run(id, title, Date.now());
+  ).run(id, clean, Date.now());
   return id;
+}
+
+/**
+ * Dieselbe Folge (Serie + Staffel + Folge, gleiche Synchro) ist schon da —
+ * egal über welche Seiten-URL sie kam. Vorher reihten sich "S01E07" zweimal
+ * auf, weil zwei Hoster-Links zwei Identitäten ergaben.
+ */
+export function findEpisodeDuplicate(
+  db: Database.Database,
+  meta: ManualMetadata | undefined,
+): string | undefined {
+  if (!meta || meta.episode === undefined || meta.episode === null) return undefined;
+  const seriesId = meta.seriesId ?? resolveSeriesId(db, meta.seriesTitle);
+  if (!seriesId) return undefined;
+  const row = db
+    .prepare(
+      `SELECT v.id FROM videos v
+        JOIN downloaded_videos dv ON dv.video_id = v.id
+       WHERE v.series_id = ? AND COALESCE(v.season, 1) = ? AND v.episode = ?
+         AND LOWER(COALESCE(v.dub_language, '')) = LOWER(?)
+       LIMIT 1`,
+    )
+    .get(seriesId, meta.season ?? 1, meta.episode, meta.dubLanguage ?? "") as
+    | { id: string }
+    | undefined;
+  return row?.id;
 }
 
 /**
@@ -367,6 +447,17 @@ export async function importDirectLink(
   // Serie/Staffel/Folge regelbasiert aus URL und Titel ergänzen — nur Lücken,
   // die Eingaben des Nutzers bleiben unangetastet.
   const effectiveMeta: ManualMetadata = fillMissingEpisodeInfo(manualMeta ?? {}, cleanUrl, title);
+  if (
+    !effectiveMeta.isMovie &&
+    looksLikeMovieUrl(cleanUrl) &&
+    effectiveMeta.episode === undefined
+  ) {
+    effectiveMeta.isMovie = true;
+  }
+  const dupEpisode = findEpisodeDuplicate(db, effectiveMeta);
+  if (dupEpisode) {
+    return { url, status: "duplicate", videoId: dupEpisode, title };
+  }
   // Step 2: download FIRST, before writing any DB rows. The episode must only
   // become visible once its file is actually on disk. Previously we inserted
   // the videos + scores rows up front, so for the minutes-long download of a
@@ -457,7 +548,8 @@ export async function importDirectLink(
       })) ?? remoteThumbnail)
     : remoteThumbnail;
 
-  const finalTitle = stripSeriesPrefix(finalMeta.title ?? title, finalMeta.seriesTitle);
+  const finalTitle =
+    canonicalEpisodeTitle(finalMeta.title ?? title, finalMeta) ?? fallbackTitleFromUrl(cleanUrl);
   // persist wirft bei einem DB-Konflikt — die In-Flight-Markierung muss
   // trotzdem fallen, sonst bliebe jede Wiederholung für immer "duplicate".
   try {
@@ -641,8 +733,13 @@ export async function importSniffedMedia(
   // Der Browser schickt den document.title der Seite mit — der trägt oft den
   // Seitennamen ("… - AniWorld") oder ist ein Platzhalter. Einmal aufgeräumt
   // sieht die Warteschlange von Anfang an lesbar aus.
-  const cleanTitle = cleanImportTitle(input.title, hostOf(pageUrl));
-  const initialTitle = manualMeta?.title ?? cleanTitle ?? fallbackTitleFromUrl(pageUrl, mediaUrl);
+  // Auch ein von der App gesetzter Titel läuft durch die Bereinigung: Die
+  // Import-Karte übernimmt den document.title ungefiltert, sonst hieße
+  // dieselbe Folge je nach Weg "Folge 5 - AniWorld" oder "Folge 5".
+  const cleanTitle =
+    cleanImportTitle(manualMeta?.title, hostOf(pageUrl)) ??
+    cleanImportTitle(input.title, hostOf(pageUrl));
+  const initialTitle = cleanTitle ?? fallbackTitleFromUrl(pageUrl, mediaUrl);
 
   // Serie/Staffel/Folge aus Seiten-URL und Titel ergänzen — das ist die
   // eigentliche Stärke des Browser-Imports, dessen Hostermuster die Info
@@ -652,6 +749,13 @@ export async function importSniffedMedia(
     pageUrl,
     cleanTitle ?? input.title,
   );
+  if (!effectiveMeta.isMovie && looksLikeMovieUrl(pageUrl) && effectiveMeta.episode === undefined) {
+    effectiveMeta.isMovie = true;
+  }
+  const dupEpisode = findEpisodeDuplicate(db, effectiveMeta);
+  if (dupEpisode) {
+    return { url: pageUrl, status: "duplicate", videoId: dupEpisode, title: initialTitle };
+  }
 
   // Sofort sichtbar machen, bevor der Download beginnt. Ein Serienimport dauert
   // Minuten; ohne diesen Eintrag sieht der Nutzer bis zum Schluss nichts und
@@ -669,6 +773,11 @@ export async function importSniffedMedia(
       dubLanguage: effectiveMeta.dubLanguage ?? null,
       subLanguage: effectiveMeta.subLanguage ?? null,
       isMovie: effectiveMeta.isMovie ?? null,
+    },
+    headers: {
+      referer: input.referer ?? null,
+      cookie: input.cookie ?? null,
+      userAgent: input.userAgent ?? null,
     },
   });
   markDownloading(db, videoId);
@@ -729,11 +838,33 @@ export async function importSniffedMedia(
     ...effectiveMeta,
     ...Object.fromEntries(Object.entries(edited).filter(([, v]) => v !== null && v !== undefined)),
   };
-  const title = stripSeriesPrefix(finalMeta.title ?? initialTitle, finalMeta.seriesTitle);
   // Der Hoster liefert keine Metadaten — ohne diesen Schritt stuende eine
   // Laufzeit von 0 in der Datenbank. Die App zeigte dann "0 min", und der
   // Abspielfortschritt (position / duration) teilte durch null.
   const duration = (await probeDurationSeconds(filePath)) ?? 0;
+  // Film-Erkennung: keine Folge, keine Serie, aber Spielfilmlänge — das ist
+  // ein Film, kein "S1" ohne Folgennummer. (Die pending-Zeile liefert
+  // is_movie=0 auch dann, wenn nie jemand etwas gesetzt hat — "false" ist
+  // hier kein Nein, nur ein Nicht-Wissen.)
+  if (
+    !finalMeta.isMovie &&
+    (finalMeta.episode === undefined || finalMeta.episode === null) &&
+    !finalMeta.seriesTitle &&
+    !finalMeta.seriesId &&
+    duration >= MOVIE_MIN_SECONDS
+  ) {
+    finalMeta.isMovie = true;
+  }
+  const persistMeta: ManualMetadata = finalMeta.isMovie
+    ? {
+        ...(finalMeta.title !== undefined ? { title: finalMeta.title } : {}),
+        ...(finalMeta.dubLanguage !== undefined ? { dubLanguage: finalMeta.dubLanguage } : {}),
+        ...(finalMeta.subLanguage !== undefined ? { subLanguage: finalMeta.subLanguage } : {}),
+        isMovie: true,
+      }
+    : finalMeta;
+  const title =
+    canonicalEpisodeTitle(persistMeta.title ?? initialTitle, persistMeta) ?? initialTitle;
   // Der mitgelesene Stream kennt kein Vorschaubild — ohne diesen Schritt kam
   // jeder Browser-Import als dunkle Flaeche an. ffmpeg schneidet ein Standbild
   // aus der fertigen Datei.
@@ -754,7 +885,7 @@ export async function importSniffedMedia(
       thumbnail,
       publishedAt: Date.now(),
       sourceUrl: pageUrl,
-      manualMeta: finalMeta,
+      manualMeta: persistMeta,
     });
     removePending(db, videoId);
   } finally {
@@ -762,4 +893,55 @@ export async function importSniffedMedia(
   }
 
   return { url: pageUrl, status: "ok", videoId, title };
+}
+
+/**
+ * Serverseitiger Neuversuch eines gescheiterten Imports — mit den beim
+ * Einreihen gespeicherten Daten. Bei mitgelesenen Streams läuft die Medien-URL
+ * samt Header erneut, sonst der Direktlink über yt-dlp. Läuft der Eintrag
+ * gerade, passiert nichts.
+ */
+export async function retryPendingImport(
+  db: Database.Database,
+  id: string,
+  videoDir: string,
+  coverDir?: string,
+): Promise<ImportResult | undefined> {
+  const pending = getPending(db, id);
+  if (!pending) return undefined;
+  if (pending.status === "downloading" || inFlight.has(id)) {
+    return {
+      url: pending.pageUrl,
+      status: "duplicate",
+      videoId: id,
+      ...(pending.title ? { title: pending.title } : {}),
+    };
+  }
+  const meta: ManualMetadata = {
+    ...(pending.title ? { title: pending.title } : {}),
+    ...(pending.seriesId ? { seriesId: pending.seriesId } : {}),
+    ...(pending.seriesTitle ? { seriesTitle: pending.seriesTitle } : {}),
+    ...(pending.season !== null ? { season: pending.season } : {}),
+    ...(pending.episode !== null ? { episode: pending.episode } : {}),
+    ...(pending.dubLanguage ? { dubLanguage: pending.dubLanguage } : {}),
+    ...(pending.subLanguage ? { subLanguage: pending.subLanguage } : {}),
+    ...(pending.isMovie ? { isMovie: true } : {}),
+  };
+  if (id.startsWith("sniff_") && pending.mediaUrl) {
+    return importSniffedMedia(
+      db,
+      {
+        pageUrl: pending.pageUrl,
+        mediaUrl: pending.mediaUrl,
+        ...(pending.referer ? { referer: pending.referer } : {}),
+        ...(pending.cookie ? { cookie: pending.cookie } : {}),
+        ...(pending.userAgent ? { userAgent: pending.userAgent } : {}),
+        ...(pending.title ? { title: pending.title } : {}),
+      },
+      videoDir,
+      meta,
+      coverDir,
+    );
+  }
+  return importDirectLink(db, pending.pageUrl, videoDir, meta, coverDir);
 }

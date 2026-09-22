@@ -15,16 +15,49 @@ data class ImportItemMetadata(
     @SerialName("isMovie")      val isMovie: Boolean? = null,
 )
 
+/**
+ * Ein Eintrag des Bulk-Imports. Zwei Formen in einem Typ, weil der Server
+ * beide in EINEM Job abarbeitet (eine Statusabfrage statt zwei):
+ *  - Direktlink: nur [url] gesetzt (yt-dlp löst auf und lädt).
+ *  - Mitgelesener Stream: [pageUrl] + [mediaUrl] samt Request-Headern.
+ * Nicht gesetzte Felder werden nicht serialisiert (encodeDefaults=false).
+ */
 @Serializable
 data class BulkImportItem(
-    val url: String,
+    val url: String? = null,
     val metadata: ImportItemMetadata? = null,
-)
+    @SerialName("pageUrl")   val pageUrl: String? = null,
+    @SerialName("mediaUrl")  val mediaUrl: String? = null,
+    val referer: String? = null,
+    val cookie: String? = null,
+    @SerialName("userAgent") val userAgent: String? = null,
+    val title: String? = null,
+    val description: String? = null,
+) {
+    companion object {
+        fun direct(url: String, metadata: ImportItemMetadata? = null) =
+            BulkImportItem(url = url, metadata = metadata)
+
+        fun sniffed(item: SniffedImportItem) = BulkImportItem(
+            pageUrl = item.pageUrl,
+            mediaUrl = item.mediaUrl,
+            referer = item.referer,
+            cookie = item.cookie,
+            userAgent = item.userAgent,
+            title = item.title,
+            description = item.description,
+            metadata = item.metadata,
+        )
+    }
+}
 
 @Serializable
 data class BulkImportRequest(
     val items: List<BulkImportItem>,
 )
+
+@Serializable
+data class ImportRetryResponse(val status: String = "queued", val id: String? = null)
 
 @Serializable
 data class BulkImportResponse(

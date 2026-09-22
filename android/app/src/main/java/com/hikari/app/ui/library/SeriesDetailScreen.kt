@@ -551,7 +551,7 @@ private fun EpisodeRow(video: LibraryVideoDto, onClick: () -> Unit) {
         Column(modifier = Modifier.weight(1f).padding(top = 2.dp)) {
             val missing = video.downloaded == 0
             Text(
-                text = video.episode?.let { "$it. ${video.title}" } ?: video.title,
+                text = com.hikari.app.ui.library.EpisodeTitles.listTitle(video.episode, video.title),
                 color = if (missing) HikariTextFaint else HikariText,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,

@@ -159,3 +159,124 @@ class ImportSheetViewModelTest {
         assertEquals(6, cards[1].episode)
     }
 }
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class ImportSheetViewModelSniffTest {
+    private val repo = mockk<ChannelsRepository>(relaxUnitFun = true)
+    private val sniffer = mockk<HeadlessSniffer>(relaxed = true)
+
+    @Before fun setUp() {
+        Dispatchers.setMain(StandardTestDispatcher())
+        coEvery { repo.listSeries() } returns emptyList()
+        coEvery { repo.listLanguages() } returns LanguagesResponse()
+    }
+    @After fun tearDown() { Dispatchers.resetMain() }
+
+    private fun finding(url: String) = com.hikari.app.domain.browser.MediaFinding(
+        url = url, kind = com.hikari.app.domain.browser.MediaKind.HLS,
+        referer = "https://s.to/e", cookie = null, userAgent = "UA", contentType = null,
+    )
+
+    // Direktlink + gesniffter Stream gehen in EINEM Bulk-Request raus.
+    @Test(timeout = 10_000) fun submit_sendsDirectAndSniffedInOneRequest() = runTest {
+        coEvery { repo.analyzeVideo("https://youtube.com/watch?v=1") } returns AnalyzeResponse(
+            url = "https://youtube.com/watch?v=1", title = "YT",
+        )
+        coEvery { repo.analyzeVideo("https://s.to/serie/ted/staffel-1/episode-7") } throws RuntimeException("500")
+        coEvery { sniffer.sniffDetailed("https://s.to/serie/ted/staffel-1/episode-7", any()) } returns HeadlessOutcome(
+            com.hikari.app.domain.browser.HeadlessResult(
+                pageUrl = "https://s.to/serie/ted/staffel-1/episode-7",
+                title = "Ted S01E07 | SerienStream",
+                description = null,
+                finding = finding("https://cdn.voe/master.m3u8?t=1"),
+                meta = com.hikari.app.domain.browser.PageMetaParser.parse("https://s.to/serie/ted/staffel-1/episode-7")
+                    .mergedWith(com.hikari.app.domain.browser.PageMetaParser.PageMeta(seriesTitle = "Ted", episodeTitle = "Der Gänsebraten")),
+            ),
+            "",
+        )
+        val captured = slot<List<BulkImportItem>>()
+        coEvery { repo.importVideosBulk(capture(captured)) } returns 2
+
+        val vm = ImportSheetViewModel(repo, sniffer)
+        advanceUntilIdle()
+        vm.onInputChanged("https://youtube.com/watch?v=1\nhttps://s.to/serie/ted/staffel-1/episode-7")
+        advanceTimeBy(700)
+        advanceUntilIdle()
+
+        val ready = vm.uiState.value.cards.filterIsInstance<ImportCardState.Ready>()
+        assertEquals(2, ready.size)
+        val sniffedCard = ready.first { it.sniffed != null }
+        // DOM-Metadaten gewinnen: Serienname und echter Folgentitel von der Seite.
+        assertEquals("Ted", sniffedCard.seriesTitle)
+        assertEquals(1, sniffedCard.season)
+        assertEquals(7, sniffedCard.episode)
+        assertEquals("Der Gänsebraten", sniffedCard.title)
+
+        val n = vm.submit()
+        advanceUntilIdle()
+        assertEquals(2, n)
+        coVerify(exactly = 1) { repo.importVideosBulk(any()) }
+        coVerify(exactly = 0) { repo.importSniffed(any()) }
+        val items = captured.captured
+        assertEquals(2, items.size)
+        val direct = items.first { it.url != null }
+        val sniffed = items.first { it.pageUrl != null }
+        assertEquals("https://youtube.com/watch?v=1", direct.url)
+        assertEquals("https://cdn.voe/master.m3u8?t=1", sniffed.mediaUrl)
+        assertEquals("https://s.to/e", sniffed.referer)
+        assertEquals(7, sniffed.metadata?.episode)
+    }
+
+    // Staffel erkannt, Folgen werden noch analysiert — ein Tastendruck im
+    // Eingabefeld darf die wartenden Folgenkarten nicht wegräumen.
+    @Test(timeout = 10_000) fun expandSeason_keepsPendingEpisodeCardsAcrossInputChanges() = runTest {
+        val season = "https://s.to/serie/ted/staffel-1"
+        val eps = (1..3).map { "https://s.to/serie/ted/staffel-1/episode-$it" }
+        coEvery { sniffer.discoverEpisodes(season, any()) } returns com.hikari.app.domain.browser.EpisodeDiscovery(
+            seriesTitle = "Ted", season = 1,
+            episodes = eps.mapIndexed { i, u -> com.hikari.app.domain.browser.EpisodeRef(u, i + 1, "Folge ${i + 1}") },
+            diagnostics = "",
+        )
+        eps.forEach { u ->
+            coEvery { repo.analyzeVideo(u) } coAnswers {
+                kotlinx.coroutines.delay(2_000)
+                AnalyzeResponse(url = u, title = "Folge")
+            }
+        }
+        val vm = ImportSheetViewModel(repo, sniffer)
+        advanceUntilIdle()
+        vm.onInputChanged(season)
+        advanceTimeBy(600)
+        // Staffel wurde aufgeteilt, Analysen laufen (2 parallel, 1 wartet).
+        assertEquals(3, vm.uiState.value.cards.size)
+        // Nutzer tippt weiter — früher verschwand hier die dritte Karte.
+        vm.onInputChanged("https://other.test/x")
+        coEvery { repo.analyzeVideo("https://other.test/x") } returns AnalyzeResponse(url = "https://other.test/x", title = "X")
+        advanceUntilIdle()
+        val urls = vm.uiState.value.cards.map { it.url }.toSet()
+        assertTrue(eps.all { it in urls }, "Folgenkarten verloren: $urls")
+        assertEquals(3, vm.uiState.value.cards.count { it is ImportCardState.Ready && it.url in eps })
+    }
+
+    // Kein Folgenlink ließ sich einlesen: Die Staffel-URL bleibt als
+    // Fehlerkarte mit Neuversuch — nicht spurlos weg.
+    @Test(timeout = 10_000) fun expandSeason_allFailed_keepsSeasonCard() = runTest {
+        val season = "https://s.to/serie/ted/staffel-1"
+        val eps = listOf("https://s.to/serie/ted/staffel-1/episode-1")
+        coEvery { sniffer.discoverEpisodes(season, any()) } returns com.hikari.app.domain.browser.EpisodeDiscovery(
+            "Ted", 1, eps.map { com.hikari.app.domain.browser.EpisodeRef(it, 1, "Folge 1") }, "",
+        )
+        coEvery { repo.analyzeVideo(any()) } throws RuntimeException("500")
+        coEvery { sniffer.sniffDetailed(any(), any()) } returns HeadlessOutcome(null, "WAF")
+        val vm = ImportSheetViewModel(repo, sniffer)
+        advanceUntilIdle()
+        vm.onInputChanged(season)
+        advanceTimeBy(700)
+        advanceUntilIdle()
+        val cards = vm.uiState.value.cards
+        assertEquals(1, cards.size)
+        val failed = cards.single() as ImportCardState.Failed
+        assertEquals(season, failed.url)
+        assertTrue(failed.error.contains("1 Folgen erkannt"), failed.error)
+    }
+}

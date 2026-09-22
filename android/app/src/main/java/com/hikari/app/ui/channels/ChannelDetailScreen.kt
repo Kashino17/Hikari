@@ -101,6 +101,7 @@ fun ChannelDetailScreen(
     val pending by vm.pending.collectAsState()
     val editingImport by vm.editingImport.collectAsState()
     val savingImport by vm.savingImport.collectAsState()
+    val retryingImport by vm.retryingImport.collectAsState()
     val bulkJob by vm.bulkJob.collectAsState()
     val bulkJobDismissed by vm.bulkJobDismissed.collectAsState()
 
@@ -244,9 +245,11 @@ fun ChannelDetailScreen(
                     item = item,
                     expanded = editingImport == item.id,
                     saving = savingImport == item.id,
+                    retrying = retryingImport == item.id,
                     onToggleEdit = { vm.toggleImportEdit(item.id) },
                     onSave = { patch -> vm.saveImport(item.id, patch) },
                     onDismiss = { vm.dismissImport(item.id) },
+                    onRetry = { vm.retryImport(item) },
                 )
                 HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
             }

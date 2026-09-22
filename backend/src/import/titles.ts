@@ -163,3 +163,88 @@ export function fallbackTitleFromUrl(pageUrl: string, mediaUrl?: string): string
   }
   return "Unbenanntes Video";
 }
+
+// ── Einheitliche Folgentitel ────────────────────────────────────────────────
+
+/** Am Titelende hängende Sprach-/Qualitäts-Tags, die keine Aussage tragen. */
+const TRAILING_TAGS =
+  /(?:\s*[-–—|·]?\s*\b(?:ger(?:man)?|deutsch|eng(?:lish)?|jap(?:anese)?|jpn|sub(?:bed)?|dub(?:bed)?|omu|hardsub|hd|sd|480p|720p|1080p|2160p|web(?:-?dl)?|x26[45]|h26[45])\b)+\s*$/i;
+
+/** Nummerierungs-Token, die in Serienlisten redundant sind. */
+const EPISODE_TOKENS: RegExp[] = [
+  /\bs\d{1,2}\s*[._-]?\s*e\d{1,4}\b/gi,
+  /\b\d{1,2}x\d{1,4}\b/gi,
+  /\b(?:staffel|season)\s*\d{1,3}\b/gi,
+  /\b(?:folge|episode|ep\.?|epis\.?)\s*\d{1,4}\b/gi,
+];
+
+function trimSeparators(input: string): string {
+  return input
+    .replace(/^[\s\-:–—|·.,]+/, "")
+    .replace(/[\s\-:–—|·,]+$/, "")
+    .trim();
+}
+
+/**
+ * Bringt Folgentitel auf eine Form: Serienname raus, Nummerierung raus,
+ * Sprach-Tags raus — übrig bleibt der eigentliche Folgentitel. Bleibt nichts
+ * Brauchbares, heißt die Folge schlicht „Folge N", damit die Bibliothek
+ * nie mehr "S01E01" neben "Folge 1" neben "Ted" zeigt.
+ *
+ * Filme und Videos ohne Folgennummer behalten ihren bereinigten Titel.
+ */
+export function canonicalEpisodeTitle(
+  rawTitle: string | null | undefined,
+  meta: {
+    seriesTitle?: string | null;
+    season?: number | null;
+    episode?: number | null;
+    isMovie?: boolean | null;
+  },
+): string | null {
+  const base = rawTitle
+    ? stripSeriesPrefix(rawTitle.replace(/\s+/g, " ").trim(), meta.seriesTitle)
+    : "";
+  const episode = meta.episode ?? null;
+  if (meta.isMovie || episode === null) {
+    const cleaned = trimSeparators(base.replace(TRAILING_TAGS, ""));
+    return cleaned.length >= 2 ? cleaned : base || null;
+  }
+
+  let rest = base;
+  for (const re of EPISODE_TOKENS) rest = rest.replace(re, " ");
+  // Führende Nummer ("3. Der Anfang", "03 - Der Anfang")
+  rest = rest.replace(/^\s*\d{1,4}\s*[.:\-–—|)]\s*/, "");
+  rest = rest.replace(TRAILING_TAGS, "");
+  rest = trimSeparators(rest.replace(/\s+/g, " "));
+
+  const series = meta.seriesTitle?.trim().toLowerCase();
+  const restLower = rest.toLowerCase();
+  const generic =
+    rest.length < 3 ||
+    GENERIC_TITLES.has(restLower) ||
+    // Rest ist der Serienname — oder dessen Anfang ("American Horror Story"
+    // bei Serie "American Horror Story Die Dunkle Seite In Dir"): keine Aussage.
+    (series !== undefined &&
+      series.length > 0 &&
+      (restLower === series ||
+        series.startsWith(`${restLower} `) ||
+        restLower.startsWith(`${series} `))) ||
+    /^\d+$/.test(rest);
+  return generic ? `Folge ${episode}` : rest;
+}
+
+/** Ist der Titel nur die Standardform „Folge N"? (Für Listen, die N ohnehin zeigen.) */
+export function isPlainEpisodeTitle(title: string): boolean {
+  return /^(?:folge|episode)\s+\d{1,4}$/i.test(title.trim());
+}
+
+/** Film-Hinweis in der Seiten-URL (/film/, /filme/, /movie/, /movies/). */
+export function looksLikeMovieUrl(url: string): boolean {
+  try {
+    const path = new URL(url).pathname.toLowerCase();
+    return /(?:^|\/)(?:film|filme|movie|movies|kinofilm|kinofilme)(?:\/|$)/.test(path);
+  } catch {
+    return false;
+  }
+}

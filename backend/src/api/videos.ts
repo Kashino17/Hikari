@@ -1,23 +1,30 @@
-import type { FastifyInstance } from "fastify";
-import { hydrateFeedBatch } from "./feed.js";
-import type Database from "better-sqlite3";
 import { createWriteStream } from "node:fs";
 import { unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
-import { importDirectLink, importSniffedMedia, fetchImportMetadata, ensureSeries, type ImportResult, type ManualMetadata, type SniffedMedia } from "../import/manual-import.js";
+import type Database from "better-sqlite3";
+import type { FastifyInstance } from "fastify";
+import { downloadVideo } from "../download/worker.js";
+import { getBulkJob, getLatestBulkJob } from "../import/bulk-job.js";
+import { type BulkItem, isSniffedItem, itemUrl, runBulkImport } from "../import/bulk-runner.js";
 import { parseEpisodeInfo } from "../import/episode-parser.js";
 import { ensureFrame } from "../import/frames.js";
-import { startBulkJob, recordBulkResult, finishBulkJob, getBulkJob, getLatestBulkJob } from "../import/bulk-job.js";
 import {
+  type ManualMetadata,
+  ensureSeries,
+  fetchImportMetadata,
+  importDirectLink,
+  retryPendingImport,
+} from "../import/manual-import.js";
+import {
+  type PendingMetadata,
   getPending,
   listPending,
   removePending,
   updatePendingMetadata,
-  type PendingMetadata,
 } from "../import/pending-imports.js";
 import type { MetadataExtractor } from "../scorer/metadata-extractor.js";
-import { downloadVideo } from "../download/worker.js";
+import { hydrateFeedBatch } from "./feed.js";
 
 export interface VideosDeps {
   db: Database.Database;
@@ -40,10 +47,7 @@ interface SeriesRow {
  * If series has no manual cover, fall back to the first episode's thumbnail.
  * Mutates by returning a new object — does not write to DB.
  */
-function withCoverFallback(
-  db: Database.Database,
-  s: SeriesRow,
-): SeriesRow {
+function withCoverFallback(db: Database.Database, s: SeriesRow): SeriesRow {
   if (s.thumbnail_url) return s;
   const fallback = db
     .prepare(
@@ -60,10 +64,7 @@ interface ImportBody {
 
 // @fastify/static with { prefix: "/videos/", root: VIDEO_DIR } handles Range,
 // Content-Type, and ETag automatically. Direct-link import lives here too.
-export async function registerVideosRoutes(
-  app: FastifyInstance,
-  deps: VideosDeps,
-): Promise<void> {
+export async function registerVideosRoutes(app: FastifyInstance, deps: VideosDeps): Promise<void> {
   app.post<{ Body: { url: string } }>("/videos/analyze", async (req, reply) => {
     const { url } = req.body;
     if (!url) return reply.code(400).send({ error: "no url" });
@@ -110,129 +111,35 @@ export async function registerVideosRoutes(
     return reply.code(202).send({ status: "queued" });
   });
 
-  app.post<{
-    Body: { items?: { url: string; metadata?: ManualMetadata }[] };
-  }>("/videos/import/bulk", async (req, reply) => {
+  // Bulk-Import: Direktlinks (yt-dlp) und mitgelesene Streams (In-App-Browser /
+  // Headless-Sniffer) in EINEM Job. Die App bekommt eine jobId und fragt
+  // GET /videos/import/bulk/status?id=… ab. Verteilung und Neuversuche:
+  // siehe import/bulk-runner.ts.
+  const bulkHandler = async (
+    req: { body?: { items?: BulkItem[] } },
+    reply: { code: (c: number) => { send: (b: unknown) => unknown } },
+  ) => {
     const items = req.body?.items;
     if (!Array.isArray(items) || items.length === 0) {
       return reply.code(400).send({ error: "no items" });
     }
-
-    // Pro Hoster seriell, verschiedene Hoster parallel. Ein Filehoster wie voe
-    // beantwortet mehrere gleichzeitige Downloads derselben IP mit 403/429 —
-    // vier parallele Runner ließen deshalb reihenweise Folgen scheitern,
-    // sichtbar wurde davon nichts (siehe unten).
-    const byHost = new Map<string, { url: string; metadata?: ManualMetadata }[]>();
-    for (const item of items) {
-      let host = "unknown";
-      try {
-        host = new URL(item.url).hostname;
-      } catch {
-        // Kaputte URL: importDirectLink meldet den Fehler sauber zurück.
-      }
-      const bucket = byHost.get(host);
-      if (bucket) bucket.push(item);
-      else byHost.set(host, [item]);
-    }
-
-    const job = startBulkJob(items.length);
-    void (async () => {
-      await Promise.all(
-        [...byHost.values()].map(async (bucket) => {
-          for (const item of bucket) {
-            // importDirectLink WIRFT nicht bei Misserfolg, es liefert
-            // { status: "failed", error } zurück. Der frühere try/catch lief
-            // deshalb nie an und der Rückgabewert wurde verworfen — ein
-            // fehlgeschlagener Bulk-Import hinterließ null Spuren: keine
-            // Logzeile, keine Rückmeldung an die App.
-            try {
-              const result = await importDirectLink(
-                deps.db,
-                item.url,
-                deps.videoDir,
-                item.metadata,
-                deps.coverDir,
-              );
-              recordBulkResult(job, result);
-              if (result.status === "failed") {
-                app.log.error(
-                  { url: item.url, error: result.error },
-                  "bulk import item failed",
-                );
-              } else {
-                app.log.info(
-                  { url: item.url, status: result.status, videoId: result.videoId },
-                  "bulk import item done",
-                );
-              }
-            } catch (err) {
-              recordBulkResult(job, {
-                url: item.url,
-                status: "failed",
-                error: String(err).slice(0, 200),
-              });
-              app.log.error({ err, url: item.url }, "bulk import item threw");
-            }
-          }
-        }),
-      );
-      finishBulkJob(job);
-      app.log.info(
-        { total: job.total, ok: job.ok, duplicate: job.duplicate, failed: job.failed },
-        "bulk import finished",
-      );
-    })();
-
-    return reply.code(202).send({ queued: items.length, jobId: job.id });
-  });
-
-  // Import aus dem In-App-Browser: Der Stream wurde dort bereits mitgelesen,
-  // die Extraktion ist also schon passiert. Referer/Cookie/UA der Herkunftsseite
-  // werden mitgereicht, sonst verweigert der Hoster den Serverdownload.
-  app.post<{
-    Body: {
-      items?: (SniffedMedia & { metadata?: ManualMetadata })[];
-    };
-  }>("/videos/import/sniffed", async (req, reply) => {
-    const items = req.body?.items;
-    if (!Array.isArray(items) || items.length === 0) {
-      return reply.code(400).send({ error: "no items" });
-    }
-
-    const job = startBulkJob(items.length);
-    void (async () => {
-      // Seriell: Die Funde stammen fast immer von derselben Seite und damit
-      // demselben Hoster, der parallele Downloads mit 403 quittiert.
-      for (const item of items) {
-        try {
-          const result = await importSniffedMedia(deps.db, item, deps.videoDir, item.metadata, deps.coverDir);
-          recordBulkResult(job, result);
-          if (result.status === "failed") {
-            app.log.error({ pageUrl: item.pageUrl, error: result.error }, "sniffed import failed");
-          } else {
-            app.log.info(
-              { pageUrl: item.pageUrl, status: result.status, videoId: result.videoId },
-              "sniffed import done",
-            );
-          }
-        } catch (err) {
-          recordBulkResult(job, {
-            url: item.pageUrl,
-            status: "failed",
-            error: String(err).slice(0, 200),
-          });
-          app.log.error({ err, pageUrl: item.pageUrl }, "sniffed import threw");
-        }
-      }
-      finishBulkJob(job);
-      app.log.info(
-        { total: job.total, ok: job.ok, duplicate: job.duplicate, failed: job.failed },
-        "sniffed import finished",
-      );
-    })();
-
-    return reply.code(202).send({ queued: items.length, jobId: job.id });
-  });
+    const valid = items.filter(
+      (it) => isSniffedItem(it) || typeof (it as { url?: unknown }).url === "string",
+    );
+    if (valid.length === 0) return reply.code(400).send({ error: "no valid items" });
+    const job = runBulkImport(
+      { db: deps.db, videoDir: deps.videoDir, coverDir: deps.coverDir, log: app.log },
+      valid,
+    );
+    app.log.info(
+      { jobId: job.id, total: valid.length, urls: valid.map(itemUrl).slice(0, 50) },
+      "bulk import started",
+    );
+    return reply.code(202).send({ queued: valid.length, jobId: job.id });
+  };
+  app.post<{ Body: { items?: BulkItem[] } }>("/videos/import/bulk", bulkHandler);
+  // Historischer Endpunkt des In-App-Browsers — gleicher Runner.
+  app.post<{ Body: { items?: BulkItem[] } }>("/videos/import/sniffed", bulkHandler);
 
   // Laufende Importe samt Fortschritt. Das ist die Ansicht, die dem Nutzer
   // waehrend eines minutenlangen Downloads ueberhaupt erst zeigt, dass etwas
@@ -263,6 +170,25 @@ export async function registerVideosRoutes(
     return { removed: req.params.id };
   });
 
+  // Gescheiterten Import erneut anstoßen — mit den gespeicherten Daten
+  // (Medien-URL, Referer, Cookie). Läuft er noch, passiert nichts (409).
+  app.post<{ Params: { id: string } }>("/imports/:id/retry", async (req, reply) => {
+    const existing = getPending(deps.db, req.params.id);
+    if (!existing) return reply.code(404).send({ error: "import not found" });
+    if (existing.status === "downloading") {
+      return reply.code(409).send({ error: "download läuft noch" });
+    }
+    void (async () => {
+      try {
+        const r = await retryPendingImport(deps.db, req.params.id, deps.videoDir, deps.coverDir);
+        app.log.info({ id: req.params.id, result: r }, "import retry");
+      } catch (err) {
+        app.log.error({ err, id: req.params.id }, "import retry threw");
+      }
+    })();
+    return reply.code(202).send({ status: "queued", id: req.params.id });
+  });
+
   // Fortschritt/Ergebnis des zuletzt gestarteten Bulk-Imports. Ohne diesen
   // Endpunkt bleibt ein 202-Fire-and-Forget-Import für die App eine Blackbox.
   app.get<{ Querystring: { id?: string } }>("/videos/import/bulk/status", async (req, reply) => {
@@ -272,8 +198,9 @@ export async function registerVideosRoutes(
   });
 
   app.get("/library", async () => {
-    const series = (deps.db.prepare("SELECT * FROM series ORDER BY added_at DESC").all() as SeriesRow[])
-      .map((s) => withCoverFallback(deps.db, s));
+    const series = (
+      deps.db.prepare("SELECT * FROM series ORDER BY added_at DESC").all() as SeriesRow[]
+    ).map((s) => withCoverFallback(deps.db, s));
     // Home/Library "recently added". MUST surface videos from BOTH pipelines:
     // legacy pre-clipper items live in feed_items, but the current auto-clipper
     // pipeline downloads approved videos WITHOUT a feed_items row (their clips
@@ -281,7 +208,8 @@ export async function registerVideosRoutes(
     // approved video — Home was frozen on month-old legacy items. We now key on
     // downloaded_videos (every approved video, both paths, gets one) and pull
     // progress_seconds from feed_items if present.
-    const recentlyAdded = deps.db.prepare(`
+    const recentlyAdded = deps.db
+      .prepare(`
       SELECT v.*, c.title as channelTitle, fi.progress_seconds,
              s.overall_score as overall_score
       FROM videos v
@@ -291,7 +219,8 @@ export async function registerVideosRoutes(
       LEFT JOIN scores s ON s.video_id = v.id
       ORDER BY v.discovered_at DESC
       LIMIT 20
-    `).all();
+    `)
+      .all();
     const channels = deps.db.prepare("SELECT * FROM channels WHERE is_active = 1").all();
 
     // Etappe 5: die Sammlung — Später ansehen + Verlauf, hydratisiert wie
@@ -371,9 +300,7 @@ export async function registerVideosRoutes(
   });
 
   app.get("/series", async () => {
-    return deps.db
-      .prepare("SELECT id, title FROM series ORDER BY title")
-      .all();
+    return deps.db.prepare("SELECT id, title FROM series ORDER BY title").all();
   });
 
   app.get("/languages", async () => {
@@ -393,14 +320,17 @@ export async function registerVideosRoutes(
   });
 
   app.get<{ Params: { id: string } }>("/series/:id", async (req, reply) => {
-    const row = deps.db.prepare("SELECT * FROM series WHERE id = ?").get(req.params.id) as SeriesRow | undefined;
+    const row = deps.db.prepare("SELECT * FROM series WHERE id = ?").get(req.params.id) as
+      | SeriesRow
+      | undefined;
     if (!row) return reply.code(404).send({ error: "series not found" });
 
     // `downloaded` mitliefern: Eine videos-Zeile heißt nicht, dass die Datei
     // existiert (fehlgeschlagener Import, weggeräumte Datei, abgebrochener
     // Download). Ohne das Flag listete die Serienansicht Folgen, die beim
     // Antippen ins Leere liefen — genau das „nichts lässt sich abspielen".
-    const videos = deps.db.prepare(`
+    const videos = deps.db
+      .prepare(`
       SELECT v.*, fi.progress_seconds,
              CASE WHEN dv.video_id IS NULL THEN 0 ELSE 1 END AS downloaded
       FROM videos v
@@ -408,7 +338,8 @@ export async function registerVideosRoutes(
       LEFT JOIN downloaded_videos dv ON dv.video_id = v.id
       WHERE v.series_id = ?
       ORDER BY v.season ASC, v.episode ASC
-    `).all(req.params.id);
+    `)
+      .all(req.params.id);
 
     const series = withCoverFallback(deps.db, row);
     return { ...series, videos };
@@ -416,13 +347,17 @@ export async function registerVideosRoutes(
 
   app.patch<{
     Params: { id: string };
-    Body: { thumbnail_url?: string | null; description?: string | null };
+    Body: { thumbnail_url?: string | null; description?: string | null; title?: string };
   }>("/series/:id", async (req, reply) => {
     const row = deps.db.prepare("SELECT id FROM series WHERE id = ?").get(req.params.id);
     if (!row) return reply.code(404).send({ error: "series not found" });
 
     const fields: string[] = [];
     const values: unknown[] = [];
+    if (typeof req.body.title === "string" && req.body.title.trim().length >= 2) {
+      fields.push("title = ?");
+      values.push(req.body.title.trim());
+    }
     if ("thumbnail_url" in req.body) {
       fields.push("thumbnail_url = ?");
       values.push(req.body.thumbnail_url || null);
@@ -436,7 +371,9 @@ export async function registerVideosRoutes(
     values.push(req.params.id);
     deps.db.prepare(`UPDATE series SET ${fields.join(", ")} WHERE id = ?`).run(...values);
 
-    const updated = deps.db.prepare("SELECT * FROM series WHERE id = ?").get(req.params.id) as SeriesRow;
+    const updated = deps.db
+      .prepare("SELECT * FROM series WHERE id = ?")
+      .get(req.params.id) as SeriesRow;
     return withCoverFallback(deps.db, updated);
   });
 
@@ -447,11 +384,17 @@ export async function registerVideosRoutes(
     "/series/merge",
     async (req, reply) => {
       const { sourceId, targetId } = req.body ?? {};
-      if (!sourceId || !targetId) return reply.code(400).send({ error: "sourceId and targetId required" });
-      if (sourceId === targetId) return reply.code(400).send({ error: "source and target must differ" });
+      if (!sourceId || !targetId)
+        return reply.code(400).send({ error: "sourceId and targetId required" });
+      if (sourceId === targetId)
+        return reply.code(400).send({ error: "source and target must differ" });
 
-      const source = deps.db.prepare("SELECT * FROM series WHERE id = ?").get(sourceId) as SeriesRow | undefined;
-      const target = deps.db.prepare("SELECT * FROM series WHERE id = ?").get(targetId) as SeriesRow | undefined;
+      const source = deps.db.prepare("SELECT * FROM series WHERE id = ?").get(sourceId) as
+        | SeriesRow
+        | undefined;
+      const target = deps.db.prepare("SELECT * FROM series WHERE id = ?").get(targetId) as
+        | SeriesRow
+        | undefined;
       if (!source || !target) return reply.code(404).send({ error: "series not found" });
 
       const moved = deps.db
@@ -460,10 +403,14 @@ export async function registerVideosRoutes(
 
       // Cover/Beschreibung des Ziels ergänzen, falls es selbst keine hat.
       if (!target.thumbnail_url && source.thumbnail_url) {
-        deps.db.prepare("UPDATE series SET thumbnail_url = ? WHERE id = ?").run(source.thumbnail_url, targetId);
+        deps.db
+          .prepare("UPDATE series SET thumbnail_url = ? WHERE id = ?")
+          .run(source.thumbnail_url, targetId);
       }
       if (!target.description && source.description) {
-        deps.db.prepare("UPDATE series SET description = ? WHERE id = ?").run(source.description, targetId);
+        deps.db
+          .prepare("UPDATE series SET description = ? WHERE id = ?")
+          .run(source.description, targetId);
       }
       deps.db.prepare("DELETE FROM series WHERE id = ?").run(sourceId);
 
@@ -504,7 +451,9 @@ export async function registerVideosRoutes(
 
     deps.db.prepare("UPDATE series SET thumbnail_url = ? WHERE id = ?").run(url, req.params.id);
 
-    const updated = deps.db.prepare("SELECT * FROM series WHERE id = ?").get(req.params.id) as SeriesRow;
+    const updated = deps.db
+      .prepare("SELECT * FROM series WHERE id = ?")
+      .get(req.params.id) as SeriesRow;
     return updated;
   });
 
@@ -517,12 +466,14 @@ export async function registerVideosRoutes(
     if (req.params.id.endsWith(".mp4")) {
       return reply.sendFile(req.params.id);
     }
-    const row = deps.db.prepare(`
+    const row = deps.db
+      .prepare(`
       SELECT v.*, s.title AS series_title
       FROM videos v
       LEFT JOIN series s ON s.id = v.series_id
       WHERE v.id = ?
-    `).get(req.params.id);
+    `)
+      .get(req.params.id);
     if (!row) return reply.code(404).send({ error: "video not found" });
     return row;
   });
@@ -547,7 +498,9 @@ export async function registerVideosRoutes(
         .get(req.params.id) as { duration: number | null; filePath: string } | undefined;
       if (!row) return reply.code(404).send({ error: "video not found" });
       const seconds = Math.min(at, Math.max(1, (row.duration ?? 1) - 1));
-      const filename = await ensureFrame(req.params.id, row.filePath, seconds, deps.coverDir);
+      const filename = await ensureFrame(req.params.id, row.filePath, seconds, deps.coverDir, {
+        transient: true,
+      });
       if (!filename) return reply.code(404).send({ error: "frame unavailable" });
       return reply.redirect(`/covers/frames/${filename}`);
     },
@@ -579,7 +532,13 @@ export async function registerVideosRoutes(
          LIMIT 1`,
       )
       .get(current.series_id, season, season, episode) as
-      | { id: string; title: string; season: number | null; episode: number | null; thumbnail_url: string | null }
+      | {
+          id: string;
+          title: string;
+          season: number | null;
+          episode: number | null;
+          thumbnail_url: string | null;
+        }
       | undefined;
     if (!next) return reply.code(404).send({ error: "no next episode" });
 
@@ -642,7 +601,7 @@ export async function registerVideosRoutes(
 
     // If movie is being set true, force-clear series_id (any incoming or existing)
     if (newIsMovie === 1) {
-      newSeriesId = null
+      newSeriesId = null;
     }
     // If a non-null series_id is being set, force-clear is_movie
     if (newSeriesId != null && newSeriesId !== undefined) {
@@ -658,11 +617,7 @@ export async function registerVideosRoutes(
     deps.db.prepare(`UPDATE videos SET ${fields.join(", ")} WHERE id = ?`).run(...values);
 
     // Auto-delete old series if it was changed and is now empty
-    if (
-      newSeriesId !== undefined &&
-      existing.series_id &&
-      existing.series_id !== newSeriesId
-    ) {
+    if (newSeriesId !== undefined && existing.series_id && existing.series_id !== newSeriesId) {
       const remaining = deps.db
         .prepare("SELECT COUNT(*) AS n FROM videos WHERE series_id = ?")
         .get(existing.series_id) as { n: number };
@@ -671,12 +626,14 @@ export async function registerVideosRoutes(
       }
     }
 
-    const updated = deps.db.prepare(`
+    const updated = deps.db
+      .prepare(`
       SELECT v.*, s.title AS series_title
       FROM videos v
       LEFT JOIN series s ON s.id = v.series_id
       WHERE v.id = ?
-    `).get(req.params.id);
+    `)
+      .get(req.params.id);
     return updated;
   });
 
@@ -712,12 +669,14 @@ export async function registerVideosRoutes(
 
     deps.db.prepare("UPDATE videos SET thumbnail_url = ? WHERE id = ?").run(url, req.params.id);
 
-    const updated = deps.db.prepare(`
+    const updated = deps.db
+      .prepare(`
       SELECT v.*, s.title AS series_title
       FROM videos v
       LEFT JOIN series s ON s.id = v.series_id
       WHERE v.id = ?
-    `).get(req.params.id);
+    `)
+      .get(req.params.id);
     return updated;
   });
 }

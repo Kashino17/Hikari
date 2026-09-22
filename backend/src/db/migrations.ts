@@ -194,6 +194,12 @@ export function applyMigrations(db: Database.Database): void {
     )
   `);
   db.exec("CREATE INDEX IF NOT EXISTS idx_pending_imports_started ON pending_imports(started_at DESC)");
+  // Request-Header des mitgelesenen Streams, damit ein gescheiterter Import
+  // per POST /imports/:id/retry ohne die App erneut geladen werden kann.
+  addColumnIfMissing(db, "pending_imports", "referer", "TEXT");
+  addColumnIfMissing(db, "pending_imports", "cookie", "TEXT");
+  addColumnIfMissing(db, "pending_imports", "user_agent", "TEXT");
+  addColumnIfMissing(db, "pending_imports", "attempts", "INTEGER DEFAULT 0");
   // Ein Neustart bricht jeden laufenden yt-dlp-Prozess ab. Zeilen, die noch
   // 'downloading' sagen, sind danach Leichen — als abgebrochen markieren,
   // statt einen Fortschritt vorzutaeuschen, der sich nie wieder bewegt.

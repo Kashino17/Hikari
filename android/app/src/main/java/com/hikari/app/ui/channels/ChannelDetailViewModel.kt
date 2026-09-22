@@ -7,6 +7,10 @@ import com.hikari.app.data.api.dto.BulkJobStatusDto
 import com.hikari.app.data.api.dto.ChannelVideoDto
 import com.hikari.app.data.api.dto.PendingImportDto
 import com.hikari.app.data.api.dto.PendingImportPatch
+import com.hikari.app.data.api.dto.BulkImportItem
+import com.hikari.app.data.api.dto.ImportItemMetadata
+import com.hikari.app.data.api.dto.SniffedImportItem
+import com.hikari.app.domain.browser.HeadlessSniffer
 import com.hikari.app.domain.model.Channel
 import com.hikari.app.domain.repo.ChannelsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,6 +26,7 @@ import kotlinx.coroutines.launch
 class ChannelDetailViewModel @Inject constructor(
     private val repo: ChannelsRepository,
     savedStateHandle: SavedStateHandle,
+    private val sniffer: HeadlessSniffer,
 ) : ViewModel() {
 
     private val channelId: String = checkNotNull(savedStateHandle["channelId"])
@@ -107,10 +112,16 @@ class ChannelDetailViewModel @Inject constructor(
      * sein Ende gemeldet und läuft kein Import mehr, liegt das Ergebnis fest
      * und das Polling kann ruhen.
      */
+    private var bulkJobFetchedOnce = false
+
     private suspend fun loadBulkJob() {
         val current = _bulkJob.value
-        val busy = _pending.value.isNotEmpty() || (current != null && current.finishedAt == null)
+        // Einmal immer abfragen: Ein Job, der nur Duplikate meldete (oder schon
+        // fertig war, bevor die Ansicht aufging), hinterlässt keine laufenden
+        // Importe — ohne diesen ersten Abruf blieb sein Ergebnis unsichtbar.
+        val busy = !bulkJobFetchedOnce || _pending.value.isNotEmpty() || (current != null && current.finishedAt == null)
         if (!busy) return
+        bulkJobFetchedOnce = true
         runCatching { repo.bulkImportStatus() }
             .onSuccess { job ->
                 // Ein neuer Job macht die Karte wieder sichtbar.
@@ -147,6 +158,61 @@ class ChannelDetailViewModel @Inject constructor(
                 }
                 .onFailure { _error.value = "Speichern fehlgeschlagen: ${it.message}" }
             _savingImport.value = null
+        }
+    }
+
+    private val _retryingImport = MutableStateFlow<String?>(null)
+    val retryingImport: StateFlow<String?> = _retryingImport.asStateFlow()
+
+    /**
+     * Gescheiterten Import erneut versuchen.
+     *
+     * Mitgelesene Streams tragen ein ablaufendes Token in der Medien-URL — der
+     * verlässlichste Weg ist, die Seite auf dem Gerät frisch zu sniffen (echter
+     * Browser, Nutzer-IP) und mit neuer URL einzureichen. Klappt das nicht,
+     * stößt der Server den Download mit den gespeicherten Daten erneut an.
+     */
+    fun retryImport(item: PendingImportDto) {
+        if (_retryingImport.value != null) return
+        _retryingImport.value = item.id
+        viewModelScope.launch {
+            val fresh = if (item.id.startsWith("sniff_")) {
+                runCatching { sniffer.sniff(item.pageUrl) }.getOrNull()
+            } else null
+            val result = runCatching {
+                if (fresh != null) {
+                    repo.importVideosBulk(
+                        listOf(
+                            BulkImportItem.sniffed(
+                                SniffedImportItem(
+                                    pageUrl = item.pageUrl,
+                                    mediaUrl = fresh.finding.url,
+                                    referer = fresh.finding.referer ?: item.pageUrl,
+                                    cookie = fresh.finding.cookie,
+                                    userAgent = fresh.finding.userAgent,
+                                    title = item.title,
+                                    description = fresh.description,
+                                    metadata = ImportItemMetadata(
+                                        title = item.title,
+                                        seriesId = item.seriesId,
+                                        seriesTitle = item.seriesTitle,
+                                        season = item.season,
+                                        episode = item.episode,
+                                        dubLanguage = item.dubLanguage,
+                                        subLanguage = item.subLanguage,
+                                        isMovie = item.isMovie.takeIf { it },
+                                    ),
+                                ),
+                            ),
+                        ),
+                    )
+                } else {
+                    repo.retryImport(item.id)
+                }
+            }
+            result.onFailure { _error.value = "Neuversuch fehlgeschlagen: ${it.message}" }
+            _retryingImport.value = null
+            loadPending()
         }
     }
 

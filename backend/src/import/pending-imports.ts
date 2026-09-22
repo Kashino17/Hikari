@@ -37,6 +37,12 @@ export interface PendingImport {
   error: string | null;
   startedAt: number;
   updatedAt: number;
+  /** Header des mitgelesenen Streams — nur für den serverseitigen Neuversuch. */
+  referer: string | null;
+  cookie: string | null;
+  userAgent: string | null;
+  /** Wie oft der Download schon angestoßen wurde (inkl. Neuversuche). */
+  attempts: number;
 }
 
 export interface PendingMetadata {
@@ -73,6 +79,10 @@ interface PendingRow {
   error: string | null;
   started_at: number;
   updated_at: number;
+  referer?: string | null;
+  cookie?: string | null;
+  user_agent?: string | null;
+  attempts?: number | null;
 }
 
 function toPending(r: PendingRow): PendingImport {
@@ -108,6 +118,10 @@ function toPending(r: PendingRow): PendingImport {
     error: r.error,
     startedAt: r.started_at,
     updatedAt: r.updated_at,
+    referer: r.referer ?? null,
+    cookie: r.cookie ?? null,
+    userAgent: r.user_agent ?? null,
+    attempts: r.attempts ?? 0,
   };
 }
 
@@ -121,17 +135,25 @@ export function createPending(
     metadata?: PendingMetadata;
     /** Schon beim Einreihen bekannt (yt-dlp-Metadaten) — die Zeile zeigt sofort ein Bild. */
     thumbnailUrl?: string | null;
+    headers?: { referer?: string | null; cookie?: string | null; userAgent?: string | null };
   },
 ): void {
   const now = Date.now();
   const m = input.metadata ?? {};
+  const h = input.headers ?? {};
   db.prepare(
     `INSERT INTO pending_imports
      (id, page_url, media_url, title, series_id, series_title, season, episode,
-      dub_language, sub_language, is_movie, thumbnail_url, status, started_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'queued', ?, ?)
+      dub_language, sub_language, is_movie, thumbnail_url, status, started_at, updated_at,
+      referer, cookie, user_agent, attempts)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, 1)
      ON CONFLICT(id) DO UPDATE SET
-       status = 'queued', error = NULL, updated_at = excluded.updated_at`,
+       status = 'queued', error = NULL, updated_at = excluded.updated_at,
+       media_url = COALESCE(excluded.media_url, pending_imports.media_url),
+       referer = COALESCE(excluded.referer, pending_imports.referer),
+       cookie = COALESCE(excluded.cookie, pending_imports.cookie),
+       user_agent = COALESCE(excluded.user_agent, pending_imports.user_agent),
+       attempts = pending_imports.attempts + 1`,
   ).run(
     input.id,
     input.pageUrl,
@@ -147,6 +169,9 @@ export function createPending(
     input.thumbnailUrl ?? null,
     now,
     now,
+    h.referer ?? null,
+    h.cookie ?? null,
+    h.userAgent ?? null,
   );
 }
 

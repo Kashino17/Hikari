@@ -1,6 +1,7 @@
 package com.hikari.app.data.api
 
 import com.hikari.app.data.api.dto.BudgetBody
+import com.hikari.app.data.api.dto.ImportRetryResponse
 import com.hikari.app.data.api.dto.RescoreStatus
 import com.hikari.app.data.api.dto.ServerDownloadStatus
 import com.hikari.app.data.api.dto.AddChannelRequest
@@ -323,6 +324,10 @@ interface HikariApi {
 
     @GET("videos/import/bulk/status")
     suspend fun bulkImportStatus(): BulkJobStatusDto
+
+    /** Gescheiterten Import serverseitig erneut anstoßen (gespeicherte Medien-URL + Header). */
+    @POST("imports/{id}/retry")
+    suspend fun retryImport(@Path("id") id: String): ImportRetryResponse
 
     @GET("imports")
     suspend fun listImports(): PendingImportsResponse

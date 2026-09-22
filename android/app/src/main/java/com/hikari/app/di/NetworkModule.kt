@@ -77,9 +77,21 @@ object NetworkModule {
                 HttpLoggingInterceptor.Level.NONE
             }
         }
+        // /videos/analyze lässt yt-dlp bis zu dreimal 30 s lang eine Seite
+        // auflösen — mit dem 60-s-Standard lief die App in ihr Timeout, während
+        // der Server noch arbeitete, und die Karte fiel grundlos auf "Fehler".
+        val slowCallInterceptor = Interceptor { chain ->
+            val path = chain.request().url.encodedPath
+            if (path.endsWith("/videos/analyze")) {
+                chain.withReadTimeout(150, TimeUnit.SECONDS).proceed(chain.request())
+            } else {
+                chain.proceed(chain.request())
+            }
+        }
         return OkHttpClient.Builder()
             .addInterceptor(baseUrlInterceptor)
             .addInterceptor(authInterceptor)
+            .addInterceptor(slowCallInterceptor)
             .addInterceptor(logging)
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)

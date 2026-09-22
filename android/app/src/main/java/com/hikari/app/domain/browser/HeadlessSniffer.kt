@@ -33,6 +33,8 @@ data class HeadlessResult(
     val title: String?,
     val description: String?,
     val finding: MediaFinding,
+    /** Serie/Staffel/Folge/Film: Seiten-DOM (JSON-LD, h1) über URL-Ableitung gelegt. */
+    val meta: PageMetaParser.PageMeta = PageMetaParser.parse(pageUrl),
 )
 
 /**
@@ -228,6 +230,7 @@ class HeadlessSniffer @Inject constructor(
             var expanded = false
             var pageTitle: String? = null
             var pageDescription: String? = null
+            var pageMeta: PageMetaParser.PageMeta? = null
 
             while (queue.isNotEmpty()) {
                 val target = queue.removeFirst()
@@ -250,6 +253,7 @@ class HeadlessSniffer @Inject constructor(
                 if (target == pageUrl) {
                     pageTitle = PageTitleFilter.clean(scan?.title ?: webView.title)
                     pageDescription = scan?.description
+                    pageMeta = PageMetaParser.parse(pageUrl).mergedWith(scan?.dom)
                     note(
                         "Seite: ${PageTitleFilter.clean(webView.title) ?: shortHost(pageUrl)}" +
                             " (${sniffer.inspectedCount()} Requests)",
@@ -263,6 +267,7 @@ class HeadlessSniffer @Inject constructor(
                         title = pageTitle ?: PageTitleFilter.clean(scan?.title ?: webView.title),
                         description = pageDescription,
                         finding = best,
+                        meta = pageMeta ?: PageMetaParser.parse(pageUrl),
                     )
                 } else if (target != pageUrl) {
                     note("kein Stream (${sniffer.inspectedCount()} Req.)")
@@ -296,7 +301,8 @@ class HeadlessSniffer @Inject constructor(
             val episodes = EpisodeLinkFilter.extract(pageUrl, links).map {
                 EpisodeRef(url = it.url, episode = it.episode, label = it.label)
             }
-            val meta = PageMetaParser.parse(pageUrl)
+            // Serienname aus dem DOM (h1/JSON-LD) schlägt den URL-Slug.
+            val meta = PageMetaParser.parse(pageUrl).mergedWith(parseScan(scanRaw)?.dom)
             note("${PageTitleFilter.clean(webView.title) ?: shortHost(pageUrl)}: ${episodes.size} Folgen")
             return EpisodeDiscovery(
                 seriesTitle = meta.seriesTitle,
@@ -368,7 +374,12 @@ class HeadlessSniffer @Inject constructor(
         }
     }
 
-    private data class Scan(val title: String, val description: String?, val videos: List<String>)
+    private data class Scan(
+        val title: String,
+        val description: String?,
+        val videos: List<String>,
+        val dom: PageMetaParser.PageMeta? = null,
+    )
 
     /** Wie [Scan], aber mit den Links der Seite — für die Staffel-Erkennung. */
     private data class FullScan(val links: List<PageLink>)
@@ -414,6 +425,7 @@ class HeadlessSniffer @Inject constructor(
                     .replace(Regex("\\s+"), " ").trim()
                     .takeIf { it.isNotEmpty() }?.take(MAX_DESCRIPTION),
                 videos = videos,
+                dom = runCatching { PageMetaParser.fromScan(o) }.getOrNull(),
             )
         }.getOrNull()
     }

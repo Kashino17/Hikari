@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -66,6 +67,8 @@ fun PendingImportRow(
     onToggleEdit: () -> Unit,
     onSave: (PendingImportPatch) -> Unit,
     onDismiss: () -> Unit,
+    retrying: Boolean = false,
+    onRetry: (() -> Unit)? = null,
 ) {
     val failed = item.status == "failed"
 
@@ -158,11 +161,31 @@ fun PendingImportRow(
                 }
 
                 Spacer(Modifier.height(4.dp))
-                TextButton(
-                    onClick = onToggleEdit,
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
-                ) {
-                    Text(if (expanded) "Schließen" else "Angaben bearbeiten", fontSize = 12.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(
+                        onClick = onToggleEdit,
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                    ) {
+                        Text(if (expanded) "Schließen" else "Angaben bearbeiten", fontSize = 12.sp)
+                    }
+                    if (failed && onRetry != null) {
+                        Spacer(Modifier.width(14.dp))
+                        TextButton(
+                            onClick = onRetry,
+                            enabled = !retrying,
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                        ) {
+                            if (retrying) {
+                                CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = HikariAmber)
+                                Spacer(Modifier.width(6.dp))
+                                Text("Wird neu eingelesen…", fontSize = 12.sp, color = HikariAmber)
+                            } else {
+                                Icon(Icons.Outlined.Refresh, null, tint = HikariAmber, modifier = Modifier.size(14.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("Erneut versuchen", fontSize = 12.sp, color = HikariAmber)
+                            }
+                        }
+                    }
                 }
             }
 

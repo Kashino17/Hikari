@@ -41,12 +41,55 @@ object PageScripts {
           // og:description ist das gepflegtere Feld; die klassische
           // description ist der Fallback, leer wenn nichts da ist.
           var description = meta('meta[property="og:description"]') || meta('meta[name="description"]');
+          // Was die Seite selbst über Serie/Folge/Film sagt — verlässlicher als
+          // der URL-Slug ("american-horror-story-die-dunkle-seite-in-dir").
+          function text(sel) {
+            var el = document.querySelector(sel);
+            return el ? (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 200) : '';
+          }
+          var ld = { series: '', episode: '', season: null, number: null, movie: false, name: '' };
+          document.querySelectorAll('script[type="application/ld+json"]').forEach(function (s) {
+            try {
+              var data = JSON.parse(s.textContent || '');
+              var list = Array.isArray(data) ? data : (data['@graph'] || [data]);
+              list.forEach(function (d) {
+                if (!d || typeof d !== 'object') return;
+                var t = String(d['@type'] || '').toLowerCase();
+                if (t === 'tvepisode' || t === 'episode') {
+                  if (d.partOfSeries && d.partOfSeries.name && !ld.series) ld.series = String(d.partOfSeries.name);
+                  if (d.partOfSeason && d.partOfSeason.seasonNumber != null && ld.season == null) ld.season = Number(d.partOfSeason.seasonNumber);
+                  if (d.episodeNumber != null && ld.number == null) ld.number = Number(d.episodeNumber);
+                  if (d.name && !ld.episode) ld.episode = String(d.name);
+                } else if (t === 'tvseries' || t === 'tvseason') {
+                  if (d.name && !ld.series) ld.series = String(d.name);
+                } else if (t === 'movie') {
+                  ld.movie = true;
+                  if (d.name && !ld.name) ld.name = String(d.name);
+                }
+              });
+            } catch (e) {}
+          });
+          var seriesName = ld.series || text(
+            '.series-title h1 span, .series-title h1, h1[itemprop="name"] span, h1[itemprop="name"], ' +
+            '.seriesTitle, .anime-title h1, [data-series-title], .show-title h1'
+          );
+          var episodeName = ld.episode || text(
+            '.episodeGermanTitle, .episodeEnglishTitle, .episode-title, h2.episodeTitle, [itemprop="episodeTitle"], .episode-name'
+          );
           return JSON.stringify({
             title: document.title || '',
             url: location.href,
             description: description,
             videos: videos.filter(Boolean),
-            links: links
+            links: links,
+            ogTitle: meta('meta[property="og:title"]'),
+            h1: text('h1'),
+            seriesName: seriesName,
+            episodeName: episodeName,
+            season: ld.season,
+            episode: ld.number,
+            isMovie: ld.movie,
+            movieName: ld.name
           });
         })();
     """.trimIndent()

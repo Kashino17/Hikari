@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { cleanImportTitle, fallbackTitleFromUrl, stripSeriesPrefix } from "./titles.js";
+import {
+  canonicalEpisodeTitle,
+  cleanImportTitle,
+  fallbackTitleFromUrl,
+  looksLikeMovieUrl,
+  stripSeriesPrefix,
+} from "./titles.js";
 
 describe("cleanImportTitle", () => {
   it("entfernt den VOE-Uploader-Suffix", () => {
@@ -51,7 +57,10 @@ describe("cleanImportTitle", () => {
 
   it("macht Scene-Release-Dateinamen als Titel lesbar", () => {
     expect(
-      cleanImportTitle("Solo.Leveling.S01E01.German.Dub.HARDSUB.AAC.720p.CR.WEB.h264-DK.mkv", "voe.sx"),
+      cleanImportTitle(
+        "Solo.Leveling.S01E01.German.Dub.HARDSUB.AAC.720p.CR.WEB.h264-DK.mkv",
+        "voe.sx",
+      ),
     ).toBe("Solo Leveling S01E01");
     // Normale Titel mit Punkt bleiben unangetastet.
     expect(cleanImportTitle("Lupin III. Der Film")).toBe("Lupin III. Der Film");
@@ -100,5 +109,55 @@ describe("fallbackTitleFromUrl", () => {
   it("fällt nie auf die rohe URL zurück", () => {
     expect(fallbackTitleFromUrl("https://x.test/")).toBe("Unbenanntes Video");
     expect(fallbackTitleFromUrl("keine url")).toBe("Unbenanntes Video");
+  });
+});
+
+describe("canonicalEpisodeTitle", () => {
+  const meta = { seriesTitle: "American Horror Story", season: 1, episode: 2 };
+
+  it("macht aus SxxEyy-Titeln ohne Folgennamen „Folge N“", () => {
+    expect(canonicalEpisodeTitle("American Horror Story S01E01", meta)).toBe("Folge 2");
+    expect(canonicalEpisodeTitle("S01E02", meta)).toBe("Folge 2");
+    expect(canonicalEpisodeTitle("Ted", { seriesTitle: "Ted", season: 1, episode: 7 })).toBe(
+      "Folge 7",
+    );
+    expect(canonicalEpisodeTitle("", meta)).toBe("Folge 2");
+    expect(canonicalEpisodeTitle(null, meta)).toBe("Folge 2");
+    // Serie mit Untertitel-Slug: Der Rest ist nur der Anfang des Seriennamens.
+    expect(
+      canonicalEpisodeTitle("American Horror Story S01E01", {
+        seriesTitle: "American Horror Story Die Dunkle Seite In Dir",
+        season: 1,
+        episode: 2,
+      }),
+    ).toBe("Folge 2");
+  });
+
+  it("behält den echten Folgentitel und wirft Nummerierung/Tags weg", () => {
+    expect(canonicalEpisodeTitle("American Horror Story S01E02 - Home Invasion", meta)).toBe(
+      "Home Invasion",
+    );
+    expect(canonicalEpisodeTitle("Folge 2: Home Invasion Ger Sub", meta)).toBe("Home Invasion");
+    expect(canonicalEpisodeTitle("2. Home Invasion", meta)).toBe("Home Invasion");
+    expect(canonicalEpisodeTitle("Staffel 1 Folge 2 – Home Invasion (1080p)", meta)).toBe(
+      "Home Invasion (1080p)",
+    );
+  });
+
+  it("lässt Filme und Videos ohne Folgennummer in Ruhe", () => {
+    expect(canonicalEpisodeTitle("Interstellar", { isMovie: true })).toBe("Interstellar");
+    expect(canonicalEpisodeTitle("Interstellar German Dub", { isMovie: true })).toBe(
+      "Interstellar",
+    );
+    expect(canonicalEpisodeTitle("Ein langes Video", {})).toBe("Ein langes Video");
+  });
+});
+
+describe("looksLikeMovieUrl", () => {
+  it("erkennt Film-Pfade", () => {
+    expect(looksLikeMovieUrl("https://x.to/filme/interstellar")).toBe(true);
+    expect(looksLikeMovieUrl("https://x.to/movie/interstellar/stream")).toBe(true);
+    expect(looksLikeMovieUrl("https://x.to/serie/ted/staffel-1/episode-1")).toBe(false);
+    expect(looksLikeMovieUrl("not a url")).toBe(false);
   });
 });

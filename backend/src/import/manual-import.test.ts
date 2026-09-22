@@ -11,6 +11,13 @@ vi.mock("../yt-dlp/client.js", async (importOriginal) => ({
   runYtDlp: vi.fn(),
 }));
 
+// ffprobe auf die 1-KB-Dummy-Dateien liefert ohnehin nichts — gemockt, damit
+// die Film-Erkennung (Laufzeit ≥ 60 min) testbar ist.
+vi.mock("../download/probe.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../download/probe.js")>()),
+  probeDurationSeconds: vi.fn(async () => null),
+}));
+
 function rot13(input: string): string {
   let out = "";
   for (const ch of input) {
@@ -55,6 +62,7 @@ class MockDb {
       thumbnail_url: string | null;
       discovered_at: number;
       source_url: string | null;
+      is_movie?: number;
     }
   >();
   scores = new Map<string, { video_id: string }>();
@@ -65,6 +73,7 @@ class MockDb {
   feedItems = new Map<string, { video_id: string; added_to_feed_at: number }>();
 
   pendingImports = new Map<string, { id: string; title: unknown }>();
+  series = new Map<string, { id: string; title: string }>();
 
   prepare(sql: string) {
     if (sql.includes("SELECT 1 FROM videos WHERE id = ?")) {
@@ -117,7 +126,7 @@ class MockDb {
           _episode: number | null,
           _dubLanguage: string | null,
           _subLanguage: string | null,
-          _isMovie: number,
+          isMovie: number,
           sourceUrl: string | null,
         ) => {
           this.videos.set(id, {
@@ -130,13 +139,34 @@ class MockDb {
             thumbnail_url: thumbnailUrl,
             discovered_at: discoveredAt,
             source_url: sourceUrl,
+            is_movie: isMovie,
           });
         },
       };
     }
 
     if (sql.includes("INSERT INTO series")) {
-      return { run: () => {} };
+      return {
+        run: (id: string, title: string) => {
+          if (!this.series.has(id)) this.series.set(id, { id, title });
+        },
+      };
+    }
+    if (sql.includes("SELECT id, title FROM series")) {
+      return { all: () => [...this.series.values()] };
+    }
+    if (sql.includes("UPDATE series SET title")) {
+      return {
+        run: (title: string, id: string) => {
+          const row = this.series.get(id);
+          if (row) row.title = title;
+        },
+      };
+    }
+    // Folgen-Dedupe (Serie + Staffel + Folge): Der Mock kennt keine
+    // Staffel-/Folgenspalten — die Suche findet hier nie etwas.
+    if (sql.includes("JOIN downloaded_videos dv ON dv.video_id = v.id")) {
+      return { get: () => undefined };
     }
 
     if (sql.includes("INSERT INTO scores")) {
@@ -271,24 +301,25 @@ describe("importDirectLink", () => {
 
     const result = await importDirectLink(db as never, pageUrl, dir);
 
-    // Der VOE-Uploader-Suffix ("by Dragonball-Tube") wird abgeschnitten.
+    // Der VOE-Uploader-Suffix ("by Dragonball-Tube") und die Sprach-/Qualitäts-Tags (HD GER SUB) werden abgeschnitten.
     expect(result).toMatchObject({
       status: "ok",
       videoId: "voe_fsz0jl0y8u39",
-      title: "Dragonball Super 2 HD GER SUB",
+      title: "Dragonball Super 2",
     });
 
     const video = db.videos.get("voe_fsz0jl0y8u39");
     expect(video).toEqual({
       id: "voe_fsz0jl0y8u39",
       channel_id: "manual",
-      title: "Dragonball Super 2 HD GER SUB",
+      title: "Dragonball Super 2",
       description: "",
       published_at: expect.any(Number),
       duration_seconds: 1209,
       thumbnail_url: thumbnailUrl,
       discovered_at: expect.any(Number),
       source_url: pageUrl,
+      is_movie: 0,
     });
 
     expect(runYtDlp).toHaveBeenCalledWith(
@@ -621,7 +652,8 @@ describe("importSniffedMedia", () => {
     );
 
     expect(result.status).toBe("ok");
-    expect(result.title).toBe("Staffel 1 Episode 3");
+    // Folge aus der URL erkannt → einheitlich "Folge N", nicht der URL-Pfad.
+    expect(result.title).toBe("Folge 3");
     expect(result.title).not.toContain("http");
   });
 
@@ -685,5 +717,154 @@ describe("ensureSeries", () => {
 
     const id = ensureSeries(db, "ソロレベリング");
     expect(id).toMatch(/^series-[0-9a-f]{10}$/);
+  });
+});
+
+describe("ensureSeries – Untertitel-Slugs", () => {
+  it("führt einen längeren Slug mit Untertitel auf die bestehende Serie zurück", async () => {
+    const Database = (await import("better-sqlite3")).default;
+    const { applyMigrations } = await import("../db/migrations.js");
+    const { ensureSeries } = await import("./manual-import.js");
+    const db = new Database(":memory:");
+    applyMigrations(db);
+
+    const a = ensureSeries(db, "American Horror Story");
+    const b = ensureSeries(db, "American Horror Story Die Dunkle Seite In Dir");
+    expect(b).toBe(a);
+    const count = db.prepare("SELECT COUNT(*) AS n FROM series").get() as { n: number };
+    expect(count.n).toBe(1);
+  });
+
+  it("übernimmt den kürzeren, echten Seriennamen als Anzeige, wenn der lange zuerst kam", async () => {
+    const Database = (await import("better-sqlite3")).default;
+    const { applyMigrations } = await import("../db/migrations.js");
+    const { ensureSeries } = await import("./manual-import.js");
+    const db = new Database(":memory:");
+    applyMigrations(db);
+
+    const longId = ensureSeries(db, "American Horror Story Die Dunkle Seite In Dir");
+    const shortId = ensureSeries(db, "American Horror Story");
+    expect(shortId).toBe(longId);
+    const row = db.prepare("SELECT title FROM series WHERE id = ?").get(longId) as {
+      title: string;
+    };
+    expect(row.title).toBe("American Horror Story");
+  });
+
+  it("schluckt kurze Namen nicht: Ted bleibt getrennt von Ted Lasso", async () => {
+    const Database = (await import("better-sqlite3")).default;
+    const { applyMigrations } = await import("../db/migrations.js");
+    const { ensureSeries } = await import("./manual-import.js");
+    const db = new Database(":memory:");
+    applyMigrations(db);
+
+    expect(ensureSeries(db, "Ted")).not.toBe(ensureSeries(db, "Ted Lasso"));
+  });
+});
+
+describe("findEpisodeDuplicate", () => {
+  it("erkennt dieselbe Folge trotz anderer Seiten-URL", async () => {
+    const Database = (await import("better-sqlite3")).default;
+    const { applyMigrations } = await import("../db/migrations.js");
+    const { ensureSeries, findEpisodeDuplicate } = await import("./manual-import.js");
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    const sid = ensureSeries(db, "Ted");
+    db.prepare(
+      "INSERT INTO channels (id, url, title, added_at, is_active) VALUES ('manual','x','m',0,1)",
+    ).run();
+    db.prepare(
+      `INSERT INTO videos (id, channel_id, series_id, title, published_at, duration_seconds, discovered_at, season, episode, dub_language)
+       VALUES ('v1','manual',?, 'Folge 7', 0, 100, 0, 1, 7, 'de')`,
+    ).run(sid);
+    db.prepare(
+      "INSERT INTO downloaded_videos (video_id, file_path, file_size_bytes, downloaded_at) VALUES ('v1','/x',1,0)",
+    ).run();
+
+    expect(
+      findEpisodeDuplicate(db, { seriesTitle: "Ted", season: 1, episode: 7, dubLanguage: "de" }),
+    ).toBe("v1");
+    expect(findEpisodeDuplicate(db, { seriesTitle: "ted", episode: 7, dubLanguage: "DE" })).toBe(
+      "v1",
+    );
+    // Andere Synchro = eigenes Video.
+    expect(
+      findEpisodeDuplicate(db, { seriesTitle: "Ted", season: 1, episode: 7, dubLanguage: "ja" }),
+    ).toBeUndefined();
+    expect(findEpisodeDuplicate(db, { seriesTitle: "Ted", season: 1, episode: 8 })).toBeUndefined();
+    expect(
+      findEpisodeDuplicate(db, { seriesTitle: "Unbekannt", season: 1, episode: 7 }),
+    ).toBeUndefined();
+  });
+});
+
+describe("importSniffedMedia – Film-Erkennung und einheitliche Titel", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  async function mockDownload() {
+    const { runYtDlp } = await import("../yt-dlp/client.js");
+    vi.mocked(runYtDlp).mockImplementation(async (args: string[]) => {
+      if (args.includes("-o")) {
+        writeFileSync(args[args.indexOf("-o") + 1], Buffer.alloc(1024, 0xff));
+        return { stdout: "", stderr: "" };
+      }
+      throw new Error(`Unexpected yt-dlp args: ${JSON.stringify(args)}`);
+    });
+  }
+
+  it("stuft ein Video ohne Serie mit Spielfilmlänge als Film ein", async () => {
+    await mockDownload();
+    const { probeDurationSeconds } = await import("../download/probe.js");
+    vi.mocked(probeDurationSeconds).mockResolvedValueOnce(2 * 60 * 60);
+
+    const dir = mkdtempSync(join(tmpdir(), "hikari-import-"));
+    const db = new MockDb();
+    const result = await importSniffedMedia(
+      db as never,
+      {
+        pageUrl: "https://filme.test/watch/interstellar",
+        mediaUrl: "https://cdn.example.com/x/master.m3u8",
+        title: "Interstellar German Dub | Filme.Test",
+      },
+      dir,
+    );
+    expect(result.status).toBe("ok");
+    expect(result.title).toBe("Interstellar");
+    expect(db.videos.get(result.videoId as string)?.is_movie).toBe(1);
+  });
+
+  it("nimmt einen von der App gesetzten Titel trotzdem durch die Bereinigung", async () => {
+    await mockDownload();
+    const dir = mkdtempSync(join(tmpdir(), "hikari-import-"));
+    const db = new MockDb();
+    const result = await importSniffedMedia(
+      db as never,
+      {
+        pageUrl: "https://s.to/serie/ted/staffel-1/episode-7",
+        mediaUrl: "https://cdn.example.com/x/master.m3u8",
+      },
+      dir,
+      { title: "Ted S01E07 | SerienStream (S.to)", seriesTitle: "Ted" },
+    );
+    expect(result.status).toBe("ok");
+    expect(result.title).toBe("Folge 7");
+  });
+
+  it("behält echte Folgentitel", async () => {
+    await mockDownload();
+    const dir = mkdtempSync(join(tmpdir(), "hikari-import-"));
+    const db = new MockDb();
+    const result = await importSniffedMedia(
+      db as never,
+      {
+        pageUrl: "https://s.to/serie/ted/staffel-1/episode-7",
+        mediaUrl: "https://cdn.example.com/x/master.m3u8",
+        title: "Ted S01E07 - Der Gänsebraten",
+      },
+      dir,
+    );
+    expect(result.title).toBe("Der Gänsebraten");
   });
 });

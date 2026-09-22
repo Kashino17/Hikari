@@ -205,14 +205,26 @@ class ImportSheetViewModel @Inject constructor(
         val withLoaders = keep + fresh.map { ImportCardState.Loading(it) }
         _uiState.update { it.copy(cards = withLoaders) }
 
-        coroutineScope {
-            val sem = Semaphore(4)
-            fresh.map { url ->
-                async { sem.withPermit { processFreshUrl(url) } }
-            }.awaitAll()
+        // Jede URL bekommt einen EIGENEN Job im viewModelScope — nicht als Kind
+        // des Debounce-Jobs. Der wird beim nächsten Tastendruck abgebrochen und
+        // riss vorher sämtliche laufenden Analysen mit (eine erkannte Staffel
+        // blieb dann ewig bei "Folge 1 …" und nichts war absendbar).
+        for (url in fresh) {
+            analysisJobs[url]?.cancel()
+            analysisJobs[url] = viewModelScope.launch {
+                try {
+                    analysisSemaphore.withPermit { processFreshUrl(url) }
+                    fillMissingEpisodes()
+                } finally {
+                    analysisJobs.remove(url)
+                }
+            }
         }
-        fillMissingEpisodes()
     }
+
+    /** Laufende Analysen je Eingabe-URL (Staffel-URLs decken ihre Folgen mit ab). */
+    private val analysisJobs = mutableMapOf<String, Job>()
+    private val analysisSemaphore = Semaphore(4)
 
     /**
      * Eine neu eingegangene URL: Ist es eine Staffel-/Übersichtsseite, wird sie
@@ -246,6 +258,11 @@ class ImportSheetViewModel @Inject constructor(
             return
         }
         expandedSeasons.add(url)
+        // Abgeleitete URLs SOFORT registrieren — nicht erst, wenn ihre Analyse
+        // an der Reihe ist. Sonst räumte ein Tastendruck im Eingabefeld die
+        // noch wartenden Folgenkarten wieder weg (sie stehen nicht im Text),
+        // und die Staffel kam "erkannt, aber nichts importiert" an.
+        episodes.forEach { derivedUrls.add(it.url) }
         // Staffel-Karte durch je eine Karte pro Folge ersetzen.
         _uiState.update { st ->
             val withoutSeason = st.cards.filterNot { it.url == url }
@@ -263,12 +280,34 @@ class ImportSheetViewModel @Inject constructor(
             episodes.map { ep ->
                 async {
                     sem.withPermit {
-                        derivedUrls.add(ep.url)
+                        // Karte inzwischen entfernt (Nutzer hat sie weggewischt)? Dann nicht mehr anfassen.
+                        if (ep.url !in derivedUrls) return@withPermit
                         val card = analyzeCard(ep.url, seed = ep, discovery = disc)
                         replaceCard(ep.url) { card }
                     }
                 }
             }.awaitAll()
+        }
+
+        // Ist KEINE Folge brauchbar geworden, darf die Staffel nicht spurlos
+        // verschwinden: eine Karte für die Staffel-URL mit Fehler + Neuversuch.
+        val anyReady = _uiState.value.cards.any { it.url in episodes.map { e -> e.url }.toSet() && it is ImportCardState.Ready }
+        if (!anyReady) {
+            val firstError = _uiState.value.cards
+                .filterIsInstance<ImportCardState.Failed>()
+                .firstOrNull { f -> episodes.any { it.url == f.url } }?.error
+            episodes.forEach { derivedUrls.remove(it.url) }
+            expandedSeasons.remove(url)
+            _uiState.update { st ->
+                st.copy(
+                    cards = st.cards.filterNot { c -> episodes.any { it.url == c.url } } +
+                        ImportCardState.Failed(
+                            url,
+                            "${episodes.size} Folgen erkannt, aber keine ließ sich einlesen" +
+                                (firstError?.let { " — $it" } ?: ""),
+                        ),
+                )
+            }
         }
     }
 
@@ -357,13 +396,16 @@ class ImportSheetViewModel @Inject constructor(
      * Staffel und Folge — dieselben Regeln wie im In-App-Browser.
      */
     private fun readyFromSniff(url: String, found: HeadlessResult): ImportCardState.Ready {
-        val meta = PageMetaParser.parse(url)
+        // Seiten-DOM (JSON-LD, h1, Folgentitel) über die URL-Ableitung gelegt —
+        // "American Horror Story" statt "American Horror Story Die Dunkle Seite In Dir".
+        val meta = found.meta
         return ImportCardState.Ready(
             url = url,
-            title = found.title.orEmpty(),
+            title = meta.episodeTitle ?: found.title.orEmpty(),
             seriesTitle = meta.seriesTitle,
             season = meta.season,
-            episode = EpisodeLinkFilter.episodeNumber(url),
+            episode = meta.episode ?: EpisodeLinkFilter.episodeNumber(url),
+            isMovie = meta.isMovie,
             sniffed = SniffedSource(
                 mediaUrl = found.finding.url,
                 // Ohne Referer aus dem Interceptor ist die Seite selbst die
@@ -429,6 +471,7 @@ class ImportSheetViewModel @Inject constructor(
 
     fun removeCard(url: String) {
         derivedUrls.remove(url)
+        analysisJobs.remove(url)?.cancel()
         _uiState.update { state ->
             state.copy(
                 cards = state.cards.filterNot { it.url == url },
@@ -439,10 +482,15 @@ class ImportSheetViewModel @Inject constructor(
 
     fun retryCard(url: String) {
         replaceCard(url) { ImportCardState.Loading(url) }
-        viewModelScope.launch {
-            val card = analyzeCard(url)
-            replaceCard(url) { card }
-            fillMissingEpisodes()
+        analysisJobs[url]?.cancel()
+        analysisJobs[url] = viewModelScope.launch {
+            try {
+                // Über processFreshUrl, damit eine Staffel-Seite erneut aufgeteilt wird.
+                analysisSemaphore.withPermit { processFreshUrl(url) }
+                fillMissingEpisodes()
+            } finally {
+                analysisJobs.remove(url)
+            }
         }
     }
 
@@ -466,30 +514,31 @@ class ImportSheetViewModel @Inject constructor(
             isMovie = card.isMovie.takeIf { it },
         )
 
-        val direct = ready.filter { it.sniffed == null }.map { card ->
-            BulkImportItem(url = card.url, metadata = metadataOf(card))
-        }
-        val sniffed = ready.mapNotNull { card ->
-            val s = card.sniffed ?: return@mapNotNull null
-            SniffedImportItem(
-                pageUrl = card.url,
-                mediaUrl = s.mediaUrl,
-                referer = s.referer,
-                cookie = s.cookie,
-                userAgent = s.userAgent,
-                title = card.title.takeIf { it.isNotBlank() },
-                description = s.description,
-                metadata = metadataOf(card),
-            )
+        // Direktlinks und mitgelesene Streams in EINEM Request: Der Server
+        // führt sie als einen Job, und die Kanalansicht sieht Fortschritt und
+        // Fehler aller Karten — vorher war nur der zweite von zwei Jobs sichtbar.
+        val items = ready.map { card ->
+            val s = card.sniffed
+            if (s == null) {
+                BulkImportItem.direct(card.url, metadataOf(card))
+            } else {
+                BulkImportItem.sniffed(
+                    SniffedImportItem(
+                        pageUrl = card.url,
+                        mediaUrl = s.mediaUrl,
+                        referer = s.referer,
+                        cookie = s.cookie,
+                        userAgent = s.userAgent,
+                        title = card.title.takeIf { it.isNotBlank() },
+                        description = s.description,
+                        metadata = metadataOf(card),
+                    ),
+                )
+            }
         }
 
         _uiState.update { it.copy(submitting = true, submitError = null) }
-        val n = runCatching {
-            var total = 0
-            if (direct.isNotEmpty()) total += repo.importVideosBulk(direct)
-            if (sniffed.isNotEmpty()) total += repo.importSniffed(sniffed)
-            total
-        }
+        val n = runCatching { repo.importVideosBulk(items) }
             .onFailure { e ->
                 _uiState.update {
                     it.copy(submitting = false, submitError = e.message ?: "Import fehlgeschlagen")

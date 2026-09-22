@@ -32,9 +32,8 @@ interface FullscreenOriginalEntryPoint {
 /**
  * "Original ansehen"-Action im Feed öffnet diesen Screen für Clips. Holt
  * Title/Channel via /videos/:id/full und delegiert dann komplett an
- * VideoPlayerScreen mit startInLandscape=true — so kriegt der User exakt
- * die gleiche Player-UX wie aus der Library/Series-Detail (gestures,
- * scrubber, sponsorblock, alles).
+ * VideoPlayerScreen — so kriegt der User exakt die gleiche Player-UX wie
+ * aus der Library/Series-Detail (Gesten, Seekbar, Sperre, Tempo, Auto-Vollbild).
  */
 @Composable
 fun FullscreenOriginalPlayer(
