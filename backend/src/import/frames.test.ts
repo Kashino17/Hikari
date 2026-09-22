@@ -64,11 +64,24 @@ describe("ensureFrame", () => {
     expect(execaMock).toHaveBeenCalledTimes(1);
   });
 
-  it("räumt überholte Frames desselben Videos weg", async () => {
+  it("räumt überholte Resume-Frames weg, persistente Thumbnails bleiben liegen", async () => {
+    await ensureFrame("vid1", filePath, 100, coverDir, { transient: true });
+    await ensureFrame("vid1", filePath, 900, coverDir, { transient: true });
+    const files = readdirSync(join(coverDir, "frames")).filter((f) => f.startsWith("r_vid1_"));
+    expect(files).toEqual(["r_vid1_900.jpg"]);
+  });
+
+  it("löscht persistente Thumbnails niemals — sie sind in der DB referenziert", async () => {
     await ensureFrame("vid1", filePath, 100, coverDir);
     await ensureFrame("vid1", filePath, 900, coverDir);
     const files = readdirSync(join(coverDir, "frames")).filter((f) => f.startsWith("f_vid1_"));
-    expect(files).toEqual(["f_vid1_900.jpg"]);
+    expect(files.sort()).toEqual(["f_vid1_100.jpg", "f_vid1_900.jpg"]);
+
+    // Resume-Frames räumen nur ihresgleichen weg, nicht die Thumbnails.
+    await ensureFrame("vid1", filePath, 500, coverDir, { transient: true });
+    expect(existsSync(join(coverDir, "frames", "f_vid1_100.jpg"))).toBe(true);
+    expect(existsSync(join(coverDir, "frames", "f_vid1_900.jpg"))).toBe(true);
+    expect(existsSync(join(coverDir, "frames", "r_vid1_500.jpg"))).toBe(true);
   });
 
   it("gibt null zurück statt zu werfen, wenn ffmpeg scheitert", async () => {

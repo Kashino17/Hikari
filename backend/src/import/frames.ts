@@ -8,11 +8,14 @@ import { probeDurationSeconds } from "../download/probe.js";
  * Einzelbilder aus fertigen Videodateien — schnell und gecacht.
  *
  * Zwei Anwendungen:
- *  - Import-Thumbnail: zufälliger Frame zwischen Minute 3 und 7 (Intro und
- *    Abspann bleiben außen vor, die Mitte trifft eher Inhalt).
- *  - Resume-Frame: das Standbild an der Sekunde, an der der Nutzer aufgehört
- *    hat zu schauen (Netflix-Stil). Wird lazily über GET /videos/:id/frame
- *    erzeugt und liegt danach als Datei im Cache.
+ *  - Import-Thumbnail (persistent, Prefix `f_`): zufälliger Frame zwischen
+ *    Minute 3 und 7 (Intro und Abspann bleiben außen vor). Die Datei wird
+ *    von videos.thumbnail_url / series.thumbnail_url referenziert und darf
+ *    deshalb NIE automatisch gelöscht werden.
+ *  - Resume-Frame (flüchtig, Prefix `r_`): das Standbild an der Sekunde, an
+ *    der der Nutzer aufgehört hat zu schauen (Netflix-Stil). Wird lazily
+ *    über GET /videos/:id/frame erzeugt; überholte Positionen desselben
+ *    Videos werden weggeräumt.
  *
  * Tempo: `-ss` steht VOR `-i` (Keyframe-Sprung statt Decodieren ab Sekunde 0),
  * dazu nur ein Frame und 640px Breite — ein Cache-Miss kostet typischerweise
@@ -41,8 +44,8 @@ function bucketOf(seconds: number): number {
   return Math.max(0, Math.floor(seconds / BUCKET_SECONDS) * BUCKET_SECONDS);
 }
 
-function frameFilename(videoId: string, bucket: number): string {
-  return `f_${videoId}_${bucket}.jpg`;
+function frameFilename(videoId: string, bucket: number, transient: boolean): string {
+  return `${transient ? "r" : "f"}_${videoId}_${bucket}.jpg`;
 }
 
 /** Schneidet genau einen Frame. Wirft bei ffmpeg-Fehlern — Aufrufer fängt ab. */
@@ -75,8 +78,14 @@ async function extractFrameAt(
 
 /**
  * Liefert den Dateinamen des gecachten Frames für [seconds] (relativ zu
- * coverDir/frames), erzeugt ihn bei Bedarf. Alte Frames desselben Videos
- * werden weggeräumt — Resume-Positionen wandern, sonst sammelt sich Müll.
+ * coverDir/frames), erzeugt ihn bei Bedarf.
+ *
+ * transient = true kennzeichnet flüchtige Resume-Frames (`r_`): überholte
+ * Resume-Positionen desselben Videos werden weggeräumt, sonst sammelt sich
+ * Müll. Persistente Thumbnails (`f_`) werden dagegen nie angefasst — sie
+ * werden von videos/series in der DB referenziert, ein Löschen liefe auf
+ * 404s und leere Cover hinaus.
+ *
  * Gibt null zurück, wenn die Extraktion scheitert.
  */
 export async function ensureFrame(
@@ -84,18 +93,22 @@ export async function ensureFrame(
   filePath: string,
   seconds: number,
   coverDir: string,
+  opts: { transient?: boolean } = {},
 ): Promise<string | null> {
   try {
+    const transient = opts.transient ?? false;
     const dir = join(coverDir, FRAMES_DIR);
     await mkdir(dir, { recursive: true });
     const bucket = bucketOf(seconds);
-    const filename = frameFilename(videoId, bucket);
+    const filename = frameFilename(videoId, bucket, transient);
     if (existsSync(join(dir, filename))) return filename;
 
-    // Aufräumen: andere Frames desselben Videos sind überholte Positionen.
-    for (const f of await readdir(dir)) {
-      if (f.startsWith(`f_${videoId}_`) && f !== filename) {
-        await unlink(join(dir, f)).catch(() => {});
+    if (transient) {
+      // Aufräumen: ältere Resume-Frames desselben Videos sind überholt.
+      for (const f of await readdir(dir)) {
+        if (f.startsWith(`r_${videoId}_`) && f !== filename) {
+          await unlink(join(dir, f)).catch(() => {});
+        }
       }
     }
 

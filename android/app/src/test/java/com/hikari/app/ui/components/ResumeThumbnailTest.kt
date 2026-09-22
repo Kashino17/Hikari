@@ -28,6 +28,20 @@ class ResumeThumbnailTest {
     }
 
     @Test
+    fun unter30SekundenBleibtDasNormaleThumbnail() {
+        // Intro/Fade-in: ein Frame aus den ersten Sekunden ist fast immer
+        // schwarz und wirkt in der Übersicht kaputt.
+        assertEquals(
+            "/covers/v1.jpg",
+            resumeAwareThumbnail("v1", "/covers/v1.jpg", 18f, 1200),
+        )
+        assertEquals(
+            "/videos/v1/frame?at=30",
+            resumeAwareThumbnail("v1", "/covers/v1.jpg", 30f, 1200),
+        )
+    }
+
+    @Test
     fun angefangenesVideoLiefertFrameAnDerStoppPosition() {
         assertEquals(
             "/videos/v1/frame?at=300",

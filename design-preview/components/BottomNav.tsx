@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Play, Hash, Sliders, LayoutGrid, BookOpen, Compass } from 'lucide-react'
+import { Play, Hash, Sliders, LayoutGrid, BookOpen, Compass, User } from 'lucide-react'
 
 const items = [
   { href: '/library', label: 'Bibliothek', Icon: LayoutGrid },
@@ -11,6 +11,7 @@ const items = [
   { href: '/manga', label: 'Manga', Icon: BookOpen },
   { href: '/channels', label: 'Kanäle', Icon: Hash },
   { href: '/tuning', label: 'Tuning', Icon: Sliders },
+  { href: '/profile-v2', label: 'Profil', Icon: User },
 ]
 
 export function BottomNav() {
