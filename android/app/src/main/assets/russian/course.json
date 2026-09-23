@@ -1,0 +1,602 @@
+{
+  "version": 1,
+  "days": [
+    {
+      "day": 1,
+      "title": "Hallo, Danke, Tschüss",
+      "goal": "Du kannst grüßen, dich bedanken und dich verabschieden — locker und höflich.",
+      "sound": {
+        "title": "Betonung ist alles",
+        "text": "Jedes russische Wort hat genau eine betonte Silbe. Sie wird kräftig und lang gesprochen, alle anderen Vokale kurz und schwach. In der Umschrift ist sie hervorgehoben, im Kyrillischen trägt sie einen kleinen Akzent (´). Ein unbetontes o klingt wie a: Пока́ spricht man »paká«, nicht »poká«.",
+        "examples": ["d01_poka", "d01_spasibo", "d01_dobroe_utro"]
+      },
+      "grammar": "Russisch unterscheidet wie das Deutsche zwischen du und Sie. Здра́вствуйте und Извини́те sind die höflichen Formen, Приве́т und Пока́ sagst du Freunden.",
+      "items": [
+        {"id": "d01_privet", "ru": "Прив+ет!", "de": "Hallo! (locker)", "note": "Für Freunde und Gleichaltrige."},
+        {"id": "d01_zdravstvuyte", "ru": "Здр+авствуйте!", "de": "Guten Tag! / Hallo! (höflich)", "note": "Die sichere Begrüßung für Fremde und Ältere. Das erste в wird verschluckt: »sdrástwujte«."},
+        {"id": "d01_dobroe_utro", "ru": "Д+оброе +утро!", "de": "Guten Morgen!"},
+        {"id": "d01_dobryy_den", "ru": "Д+обрый день!", "de": "Guten Tag!"},
+        {"id": "d01_dobryy_vecher", "ru": "Д+обрый в+ечер!", "de": "Guten Abend!"},
+        {"id": "d01_poka", "ru": "Пок+а!", "de": "Tschüss! (locker)"},
+        {"id": "d01_do_svidaniya", "ru": "До свид+ания!", "de": "Auf Wiedersehen!", "note": "Wird in einem Zug gesprochen: dasswidánija."},
+        {"id": "d01_spasibo", "ru": "Спас+ибо!", "de": "Danke!", "replies": ["d01_pozhaluysta"]},
+        {"id": "d01_spasibo_bolshoe", "ru": "Спас+ибо больш+ое!", "de": "Vielen Dank!", "replies": ["d01_pozhaluysta"]},
+        {"id": "d01_pozhaluysta", "ru": "Пож+алуйста!", "de": "Bitte! / Gern geschehen!", "note": "Heißt »bitte« beim Bitten und »gern geschehen« als Antwort auf Danke. Im Alltag oft verschluckt: »pazhálsta«."},
+        {"id": "d01_da", "ru": "Да.", "de": "Ja."},
+        {"id": "d01_net", "ru": "Нет.", "de": "Nein."},
+        {"id": "d01_izvinite", "ru": "Извин+ите!", "de": "Entschuldigung! (höflich)", "note": "Zum Ansprechen und zum Entschuldigen."}
+      ],
+      "dialog": {
+        "id": "d01_dlg",
+        "title": "Im Café",
+        "scene": "Du bestellst morgens in einem Café in Moskau.", "partner": "Barista",
+        "lines": [
+          {"id": "d01_dlg_1", "who": "P", "ru": "Д+оброе +утро!", "de": "Guten Morgen!"},
+          {"id": "d01_dlg_2", "who": "U", "ru": "Здр+авствуйте! Д+оброе +утро!", "de": "Hallo! Guten Morgen!"},
+          {"id": "d01_dlg_3", "who": "P", "ru": "Вот, пож+алуйста.", "de": "Hier, bitte.", "gloss": "вот = hier (ist)"},
+          {"id": "d01_dlg_4", "who": "U", "ru": "Спас+ибо больш+ое!", "de": "Vielen Dank!"},
+          {"id": "d01_dlg_5", "who": "P", "ru": "Пож+алуйста! До свид+ания!", "de": "Gern geschehen! Auf Wiedersehen!"},
+          {"id": "d01_dlg_6", "who": "U", "ru": "До свид+ания!", "de": "Auf Wiedersehen!"}
+        ]
+      }
+    },
+    {
+      "day": 2,
+      "title": "Sich vorstellen",
+      "goal": "Du kannst sagen, wie du heißt, woher du kommst und wo du wohnst — und danach fragen.",
+      "sound": {
+        "title": "Das ы — ein i mit Gänsehaut",
+        "text": "ы (Umschrift: y) gibt es im Deutschen nicht. Sag ein i und zieh die Zunge dabei nach hinten, die Lippen bleiben entspannt, nicht gerundet. Es ist KEIN ü! Vergleiche вы (Sie) mit и́ли (oder) — dort ist es ein ganz normales i.",
+        "examples": ["d02_vy", "d02_ty", "d02_ochen_priyatno"]
+      },
+      "grammar": "Im Präsens gibt es kein »sein«: Я из Герма́нии heißt wörtlich »Ich aus Deutschland«. Das Verb lässt man einfach weg.",
+      "items": [
+        {"id": "d02_ya", "ru": "я", "de": "ich"},
+        {"id": "d02_ty", "ru": "ты", "de": "du"},
+        {"id": "d02_vy", "ru": "вы", "de": "Sie / ihr"},
+        {"id": "d02_menya_zovut", "ru": "Мен+я зов+ут Кад+ир.", "de": "Ich heiße Kadir.", "lit": "Mich nennt man Kadir."},
+        {"id": "d02_kak_tebya_zovut", "ru": "Как теб+я зов+ут?", "de": "Wie heißt du?", "replies": ["d02_menya_zovut"]},
+        {"id": "d02_kak_vas_zovut", "ru": "Как вас зов+ут?", "de": "Wie heißen Sie?", "replies": ["d02_menya_zovut"]},
+        {"id": "d02_ochen_priyatno", "ru": "+Очень при+ятно!", "de": "Freut mich!", "lit": "Sehr angenehm!", "replies": ["d02_mne_tozhe"]},
+        {"id": "d02_priyatno_poznakomitsya", "ru": "При+ятно познак+омиться!", "de": "Schön, dich kennenzulernen!", "replies": ["d02_mne_tozhe"]},
+        {"id": "d02_mne_tozhe", "ru": "Мне т+оже.", "de": "Mich auch. / Ebenfalls."},
+        {"id": "d02_otkuda_ty", "ru": "Отк+уда ты?", "de": "Woher kommst du?", "replies": ["d02_ya_iz_germanii", "d02_ya_iz_rossii"]},
+        {"id": "d02_ya_iz_germanii", "ru": "Я из Герм+ании.", "de": "Ich komme aus Deutschland."},
+        {"id": "d02_ya_iz_rossii", "ru": "Я из Росс+ии.", "de": "Ich komme aus Russland."},
+        {"id": "d02_a_ty", "ru": "А ты?", "de": "Und du?"},
+        {"id": "d02_gde_ty_zhivyosh", "ru": "Где ты живёшь?", "de": "Wo wohnst du?", "replies": ["d02_ya_zhivu_v_germanii"]},
+        {"id": "d02_ya_zhivu_v_germanii", "ru": "Я жив+у в Герм+ании.", "de": "Ich wohne in Deutschland."}
+      ],
+      "dialog": {
+        "id": "d02_dlg",
+        "title": "Neue Bekanntschaft",
+        "scene": "Auf einer Party lernst du Anja kennen.",
+        "lines": [
+          {"id": "d02_dlg_1", "who": "P", "ru": "Прив+ет! Мен+я зов+ут +Аня. Как теб+я зов+ут?", "de": "Hi! Ich heiße Anja. Wie heißt du?"},
+          {"id": "d02_dlg_2", "who": "U", "ru": "Прив+ет! Мен+я зов+ут Кад+ир.", "de": "Hi! Ich heiße Kadir."},
+          {"id": "d02_dlg_3", "who": "P", "ru": "+Очень при+ятно!", "de": "Freut mich!"},
+          {"id": "d02_dlg_4", "who": "U", "ru": "Мне т+оже. Отк+уда ты?", "de": "Mich auch. Woher kommst du?"},
+          {"id": "d02_dlg_5", "who": "P", "ru": "Я из Росс+ии. А ты?", "de": "Aus Russland. Und du?"},
+          {"id": "d02_dlg_6", "who": "U", "ru": "Я из Герм+ании. А где ты живёшь?", "de": "Aus Deutschland. Und wo wohnst du?"},
+          {"id": "d02_dlg_7", "who": "P", "ru": "Я жив+у в Москв+е.", "de": "Ich wohne in Moskau.", "gloss": "в Москве́ = in Moskau"}
+        ]
+      }
+    },
+    {
+      "day": 3,
+      "title": "Wie geht's?",
+      "goal": "Du kannst fragen, wie es jemandem geht, und ehrlich antworten.",
+      "sound": {
+        "title": "Weiche Konsonanten",
+        "text": "Vor е, ё, и, ю, я und vor dem Weichheitszeichen ь werden Konsonanten »weich«: Der Zungenrücken hebt sich zum Gaumen, als klänge ein leises j mit. In der Umschrift steht dafür j oder ein Apostroph: нет = njet, день = djen'. Hör genau hin bei теб+я (tibjá).",
+        "examples": ["d03_a_u_tebya", "d01_net", "d01_dobryy_den"]
+      },
+      "grammar": "Bei »Und du?« kommt es auf die Frage an: А ты? (Und du?) oder А у тебя́? (Und bei dir?) — nach Как дела́? passt beides.",
+      "items": [
+        {"id": "d03_kak_dela", "ru": "Как дел+а?", "de": "Wie geht's?", "lit": "Wie (stehen die) Sachen?", "replies": ["d03_horosho", "d03_otlichno", "d03_normalno", "d03_tak_sebe", "d03_ploho", "d03_spasibo_horosho", "d03_vsyo_horosho"]},
+        {"id": "d03_kak_u_tebya_dela", "ru": "Как у теб+я дел+а?", "de": "Wie geht es dir?", "replies": ["d03_horosho", "d03_otlichno", "d03_normalno", "d03_tak_sebe", "d03_ploho", "d03_spasibo_horosho", "d03_vsyo_horosho"]},
+        {"id": "d03_kak_ty", "ru": "Как ты?", "de": "Wie geht's dir? (vertraut)", "replies": ["d03_horosho", "d03_otlichno", "d03_normalno", "d03_tak_sebe", "d03_ya_ustal"]},
+        {"id": "d03_horosho", "ru": "Хорош+о.", "de": "Gut."},
+        {"id": "d03_otlichno", "ru": "Отл+ично!", "de": "Super! / Ausgezeichnet!"},
+        {"id": "d03_normalno", "ru": "Норм+ально.", "de": "Ganz okay."},
+        {"id": "d03_tak_sebe", "ru": "Так себ+е.", "de": "Geht so."},
+        {"id": "d03_ploho", "ru": "Пл+охо.", "de": "Schlecht."},
+        {"id": "d03_vsyo_horosho", "ru": "Всё хорош+о.", "de": "Alles gut."},
+        {"id": "d03_spasibo_horosho", "ru": "Спас+ибо, хорош+о.", "de": "Danke, gut."},
+        {"id": "d03_a_u_tebya", "ru": "А у теб+я?", "de": "Und bei dir?"},
+        {"id": "d03_tozhe_horosho", "ru": "Т+оже хорош+о.", "de": "Auch gut."},
+        {"id": "d03_chto_novogo", "ru": "Что н+ового?", "de": "Was gibt's Neues?", "replies": ["d03_nichego_novogo"]},
+        {"id": "d03_nichego_novogo", "ru": "Ничег+о н+ового.", "de": "Nichts Neues."},
+        {"id": "d03_ya_ustal", "ru": "Я уст+ал.", "ruF": "Я уст+ала.", "de": "Ich bin müde.", "note": "Männer sagen уста́л, Frauen уста́ла."}
+      ],
+      "dialog": {
+        "id": "d03_dlg",
+        "title": "Kurzer Plausch",
+        "scene": "Du triffst Anja zufällig auf der Straße.",
+        "lines": [
+          {"id": "d03_dlg_1", "who": "P", "ru": "Прив+ет, Кад+ир! Как дел+а?", "de": "Hi Kadir! Wie geht's?"},
+          {"id": "d03_dlg_2", "who": "U", "ru": "Прив+ет! Спас+ибо, хорош+о. А у теб+я?", "de": "Hi! Danke, gut. Und bei dir?"},
+          {"id": "d03_dlg_3", "who": "P", "ru": "Т+оже хорош+о. Что н+ового?", "de": "Auch gut. Was gibt's Neues?"},
+          {"id": "d03_dlg_4", "who": "U", "ru": "Ничег+о н+ового. Я уст+ал.", "ruF": "Ничег+о н+ового. Я уст+ала.", "de": "Nichts Neues. Ich bin müde."},
+          {"id": "d03_dlg_5", "who": "P", "ru": "Пон+ятно. Ну, пок+а!", "de": "Verstehe. Na dann, tschüss!", "gloss": "поня́тно = verstehe · ну = na"},
+          {"id": "d03_dlg_6", "who": "U", "ru": "Пок+а!", "de": "Tschüss!"}
+        ]
+      }
+    },
+    {
+      "day": 4,
+      "title": "Zahlen & Alter",
+      "goal": "Du zählst bis zehn, nennst dein Alter und fragst nach Preisen.",
+      "sound": {
+        "title": "Das gerollte R",
+        "text": "Das russische р ist ein Zungenspitzen-R: Die Zungenspitze tippt ein- bis zweimal kurz hinter die oberen Schneidezähne — wie im Italienischen, nie hinten im Rachen. Übe mit три und четы́ре.",
+        "examples": ["d04_tri", "d04_chetyre", "d04_tridtsat"]
+      },
+      "grammar": "Alter sagt man mit »mir«: Мне три́дцать лет = wörtlich »Mir (sind) dreißig Jahre«. Nach 1 (21, 31 …) sagt man год, nach 2–4 го́да, sonst лет.",
+      "items": [
+        {"id": "d04_odin", "ru": "од+ин", "de": "eins"},
+        {"id": "d04_dva", "ru": "два", "de": "zwei"},
+        {"id": "d04_tri", "ru": "три", "de": "drei"},
+        {"id": "d04_chetyre", "ru": "чет+ыре", "de": "vier"},
+        {"id": "d04_pyat", "ru": "пять", "de": "fünf"},
+        {"id": "d04_shest", "ru": "шесть", "de": "sechs"},
+        {"id": "d04_sem", "ru": "семь", "de": "sieben"},
+        {"id": "d04_vosem", "ru": "в+осемь", "de": "acht"},
+        {"id": "d04_devyat", "ru": "д+евять", "de": "neun"},
+        {"id": "d04_desyat", "ru": "д+есять", "de": "zehn"},
+        {"id": "d04_dvadtsat", "ru": "дв+адцать", "de": "zwanzig"},
+        {"id": "d04_tridtsat", "ru": "тр+идцать", "de": "dreißig"},
+        {"id": "d04_sorok", "ru": "с+орок", "de": "vierzig"},
+        {"id": "d04_skolko_tebe_let", "ru": "Ск+олько теб+е лет?", "de": "Wie alt bist du?", "lit": "Wie viele dir Jahre?", "replies": ["d04_mne_tridtsat_let"]},
+        {"id": "d04_mne_tridtsat_let", "ru": "Мне тр+идцать лет.", "de": "Ich bin dreißig.", "note": "Muster: Мне + Zahl + лет."},
+        {"id": "d04_skolko_stoit", "ru": "Ск+олько ст+оит?", "de": "Wie viel kostet das?"}
+      ],
+      "dialog": {
+        "id": "d04_dlg",
+        "title": "Alter und Preise",
+        "scene": "Mit Anja auf dem Flohmarkt.",
+        "lines": [
+          {"id": "d04_dlg_1", "who": "P", "ru": "Кад+ир, ск+олько теб+е лет?", "de": "Kadir, wie alt bist du?"},
+          {"id": "d04_dlg_2", "who": "U", "ru": "Мне тр+идцать лет. А теб+е?", "de": "Ich bin dreißig. Und du?"},
+          {"id": "d04_dlg_3", "who": "P", "ru": "Мне дв+адцать шесть.", "de": "Ich bin sechsundzwanzig."},
+          {"id": "d04_dlg_4", "who": "U", "ru": "Извин+ите, ск+олько ст+оит?", "de": "Entschuldigung, wie viel kostet das?"},
+          {"id": "d04_dlg_5", "who": "P", "ru": "Сто рубл+ей.", "de": "Hundert Rubel.", "gloss": "сто = hundert · рубле́й = Rubel"},
+          {"id": "d04_dlg_6", "who": "U", "ru": "Спас+ибо!", "de": "Danke!"}
+        ]
+      }
+    },
+    {
+      "day": 5,
+      "title": "Nachfragen & Verstehen",
+      "goal": "Du hältst jedes Gespräch am Laufen — auch wenn du nicht alles verstehst.",
+      "sound": {
+        "title": "Zischlaute: ш, ж, ч, щ",
+        "text": "ш (sch) ist ein hartes, dunkles sch. ж (zh) ist derselbe Laut mit Stimme — wie das g in »Garage«. ч (tsch) klingt weich wie in »Tschüss«. щ ist ein langes, weiches sch mit der Zunge weit vorn: ещё (jischó). Und что spricht man schto!",
+        "examples": ["d05_eshyo_raz", "d05_chto", "d05_konechno"]
+      },
+      "grammar": "по-ру́сски, по-неме́цки, по-англи́йски = »auf Russisch/Deutsch/Englisch«. Diese Form brauchst du nach »sprechen« und »verstehen«.",
+      "items": [
+        {"id": "d05_ya_ne_ponimayu", "ru": "Я не поним+аю.", "de": "Ich verstehe nicht."},
+        {"id": "d05_ya_ponimayu", "ru": "Я поним+аю.", "de": "Ich verstehe."},
+        {"id": "d05_ty_ponimaesh", "ru": "Ты поним+аешь?", "de": "Verstehst du?", "replies": ["d05_ya_ponimayu", "d05_ya_ne_ponimayu"]},
+        {"id": "d05_povtorite", "ru": "Повтор+ите, пож+алуйста.", "de": "Wiederholen Sie bitte."},
+        {"id": "d05_medlennee", "ru": "Говор+ите м+едленнее, пож+алуйста.", "de": "Sprechen Sie bitte langsamer."},
+        {"id": "d05_eshyo_raz", "ru": "Ещё раз, пож+алуйста.", "de": "Noch einmal, bitte."},
+        {"id": "d05_ya_govoryu_nemnogo", "ru": "Я говор+ю немн+ого по-р+усски.", "de": "Ich spreche ein bisschen Russisch."},
+        {"id": "d05_ya_uchu_russkiy", "ru": "Я уч+у р+усский яз+ык.", "de": "Ich lerne Russisch."},
+        {"id": "d05_ty_govorish_po_russki", "ru": "Ты говор+ишь по-р+усски?", "de": "Sprichst du Russisch?", "replies": ["d05_ya_govoryu_nemnogo", "d05_ya_uchu_russkiy"]},
+        {"id": "d05_ty_govorish_po_angliyski", "ru": "Ты говор+ишь по-англ+ийски?", "de": "Sprichst du Englisch?", "replies": ["d05_konechno"]},
+        {"id": "d05_po_nemetski", "ru": "по-нем+ецки", "de": "auf Deutsch"},
+        {"id": "d05_kak_skazat", "ru": "Как сказ+ать +это по-р+усски?", "de": "Wie sagt man das auf Russisch?"},
+        {"id": "d05_chto_eto_znachit", "ru": "Что +это зн+ачит?", "de": "Was bedeutet das?"},
+        {"id": "d05_chto", "ru": "Что?", "de": "Was?", "note": "Gesprochen mit sch: schto!"},
+        {"id": "d05_ya_ne_znayu", "ru": "Я не зн+аю.", "de": "Ich weiß nicht."},
+        {"id": "d05_konechno", "ru": "Кон+ечно!", "de": "Natürlich! / Klar!", "note": "Gesprochen mit sch: kanjéschna."}
+      ],
+      "dialog": {
+        "id": "d05_dlg",
+        "title": "Sprachen",
+        "scene": "Eine ältere Dame spricht dich im Park an.", "partner": "Dame im Park",
+        "lines": [
+          {"id": "d05_dlg_1", "who": "P", "ru": "Вы говор+ите по-р+усски?", "de": "Sprechen Sie Russisch?"},
+          {"id": "d05_dlg_2", "who": "U", "ru": "Да, немн+ого. Я уч+у р+усский яз+ык.", "de": "Ja, ein bisschen. Ich lerne Russisch."},
+          {"id": "d05_dlg_3", "who": "P", "ru": "Отл+ично! А по-англ+ийски?", "de": "Super! Und Englisch?"},
+          {"id": "d05_dlg_4", "who": "U", "ru": "Да, кон+ечно.", "de": "Ja, natürlich."},
+          {"id": "d05_dlg_5", "who": "P", "ru": "А я немн+ого говор+ю по-нем+ецки, в шк+оле уч+ила.", "de": "Und ich spreche ein bisschen Deutsch, hab's in der Schule gelernt.", "gloss": "в шко́ле учи́ла = in der Schule gelernt"},
+          {"id": "d05_dlg_6", "who": "U", "ru": "Извин+ите, я не поним+аю. Повтор+ите, пож+алуйста.", "de": "Entschuldigung, ich verstehe nicht. Wiederholen Sie bitte."},
+          {"id": "d05_dlg_7", "who": "P", "ru": "Я говор+ю по-нем+ецки. Немн+ого.", "de": "Ich spreche Deutsch. Ein bisschen."},
+          {"id": "d05_dlg_8", "who": "U", "ru": "Отл+ично!", "de": "Super!"}
+        ]
+      }
+    },
+    {
+      "day": 6,
+      "title": "Arbeit & Alltag",
+      "goal": "Du kannst erzählen, was du beruflich machst, und danach fragen.",
+      "sound": {
+        "title": "Satzmelodie bei Fragen",
+        "text": "Fragen mit Fragewort (Кем? Где? Как?) klingen wie ein normaler Satz: Die Stimme geht auf dem Fragewort hoch und fällt dann. Ja/Nein-Fragen haben KEINE eigene Wortstellung — Ты рабо́таешь? und Ты рабо́таешь. sind dieselben Wörter! Den Unterschied macht nur die Melodie: steil nach oben auf der betonten Silbe, danach sofort runter.",
+        "examples": ["d06_kem_ty_rabotaesh", "d06_gde_ty_rabotaesh", "d05_ty_ponimaesh"]
+      },
+      "grammar": "Berufe stehen ohne Artikel und ohne »bin«: Я врач = Ich (bin) Arzt. Viele Berufe haben eine weibliche Form: студе́нт → студе́нтка.",
+      "items": [
+        {"id": "d06_kem_ty_rabotaesh", "ru": "Кем ты раб+отаешь?", "de": "Was machst du beruflich?", "lit": "Als wer arbeitest du?", "replies": ["d06_ya_programmist", "d06_ya_student"]},
+        {"id": "d06_chem_ty_zanimaeshsya", "ru": "Чем ты заним+аешься?", "de": "Was machst du so? (beruflich)", "replies": ["d06_ya_programmist", "d06_ya_student", "d06_ya_rabotayu_doma"]},
+        {"id": "d06_ya_programmist", "ru": "Я программ+ист.", "ruF": "Я программ+истка.", "de": "Ich bin Programmierer.", "deF": "Ich bin Programmiererin."},
+        {"id": "d06_ya_student", "ru": "Я студ+ент.", "ruF": "Я студ+ентка.", "de": "Ich bin Student.", "deF": "Ich bin Studentin."},
+        {"id": "d06_vrach", "ru": "врач", "de": "Arzt / Ärztin"},
+        {"id": "d06_uchitel", "ru": "уч+итель", "de": "Lehrer"},
+        {"id": "d06_inzhener", "ru": "инжен+ер", "de": "Ingenieur"},
+        {"id": "d06_gde_ty_rabotaesh", "ru": "Где ты раб+отаешь?", "de": "Wo arbeitest du?", "replies": ["d06_ya_rabotayu_doma", "d06_ya_rabotayu_v_ofise"]},
+        {"id": "d06_ya_rabotayu_doma", "ru": "Я раб+отаю д+ома.", "de": "Ich arbeite von zu Hause."},
+        {"id": "d06_ya_rabotayu_v_ofise", "ru": "Я раб+отаю в +офисе.", "de": "Ich arbeite im Büro."},
+        {"id": "d06_ya_mnogo_rabotayu", "ru": "Я мн+ого раб+отаю.", "de": "Ich arbeite viel."},
+        {"id": "d06_mne_nravitsya_rabota", "ru": "Мне нр+авится мо+я раб+ота.", "de": "Meine Arbeit gefällt mir."},
+        {"id": "d06_eto_interesno", "ru": "+Это интер+есно!", "de": "Das ist interessant!"},
+        {"id": "d06_eto_trudno", "ru": "+Это тр+удно.", "de": "Das ist schwer."},
+        {"id": "d06_eto_legko", "ru": "+Это легк+о.", "de": "Das ist leicht.", "note": "Das г wird hier wie ch gesprochen: lichkó."}
+      ],
+      "dialog": {
+        "id": "d06_dlg",
+        "title": "Und beruflich?",
+        "scene": "Anja will wissen, was du arbeitest.",
+        "lines": [
+          {"id": "d06_dlg_1", "who": "P", "ru": "Кем ты раб+отаешь?", "de": "Was machst du beruflich?"},
+          {"id": "d06_dlg_2", "who": "U", "ru": "Я программ+ист. А ты?", "ruF": "Я программ+истка. А ты?", "de": "Ich bin Programmierer. Und du?", "deF": "Ich bin Programmiererin. Und du?"},
+          {"id": "d06_dlg_3", "who": "P", "ru": "Я врач.", "de": "Ich bin Ärztin."},
+          {"id": "d06_dlg_4", "who": "U", "ru": "+Это интер+есно! +Это тр+удно?", "de": "Das ist interessant! Ist das schwer?"},
+          {"id": "d06_dlg_5", "who": "P", "ru": "Иногд+а. А где ты раб+отаешь?", "de": "Manchmal. Und wo arbeitest du?", "gloss": "иногда́ = manchmal"},
+          {"id": "d06_dlg_6", "who": "U", "ru": "Я раб+отаю д+ома. Мне нр+авится мо+я раб+ота.", "de": "Ich arbeite von zu Hause. Meine Arbeit gefällt mir."}
+        ]
+      }
+    },
+    {
+      "day": 7,
+      "title": "Familie & Freunde",
+      "goal": "Du kannst über Familie und Freunde sprechen und danach fragen.",
+      "sound": {
+        "title": "Auslautverhärtung — kennst du schon!",
+        "text": "Wie im Deutschen (Rad klingt wie »Rat«) werden stimmhafte Konsonanten am Wortende stimmlos: б→p, в→f, г→k, д→t, з→s, ж→sch. друг spricht man also »druk«. Die Umschrift zeigt dir immer, was man wirklich hört.",
+        "examples": ["d07_drug", "d07_eto_moy_drug", "d07_brat"]
+      },
+      "grammar": "»Ich habe« heißt У меня́ есть — wörtlich »Bei mir ist«. Verneint: У меня́ нет … (Ich habe kein …). мой = mein (männlich), моя́ = meine (weiblich).",
+      "items": [
+        {"id": "d07_semya", "ru": "семь+я", "de": "Familie"},
+        {"id": "d07_mama", "ru": "м+ама", "de": "Mama"},
+        {"id": "d07_papa", "ru": "п+апа", "de": "Papa"},
+        {"id": "d07_brat", "ru": "брат", "de": "Bruder"},
+        {"id": "d07_sestra", "ru": "сестр+а", "de": "Schwester"},
+        {"id": "d07_drug", "ru": "друг", "de": "Freund (Kumpel)"},
+        {"id": "d07_podruga", "ru": "подр+уга", "de": "Freundin (Kumpelin)"},
+        {"id": "d07_u_menya_est_brat", "ru": "У мен+я есть брат.", "de": "Ich habe einen Bruder.", "lit": "Bei mir ist Bruder."},
+        {"id": "d07_u_menya_est_sestra", "ru": "У мен+я есть сестр+а.", "de": "Ich habe eine Schwester."},
+        {"id": "d07_u_tebya_est_bratya", "ru": "У теб+я есть бр+атья +или сёстры?", "de": "Hast du Geschwister?", "lit": "Hast du Brüder oder Schwestern?", "replies": ["d07_u_menya_est_brat", "d07_u_menya_est_sestra"]},
+        {"id": "d07_u_tebya_est_deti", "ru": "У теб+я есть д+ети?", "de": "Hast du Kinder?", "replies": ["d07_u_menya_net_detey"]},
+        {"id": "d07_u_menya_net_detey", "ru": "Нет, у мен+я нет дет+ей.", "de": "Nein, ich habe keine Kinder."},
+        {"id": "d07_ty_zhenat", "ru": "Ты жен+ат?", "de": "Bist du verheiratet? (an einen Mann)", "replies": ["d07_ya_ne_zhenat"]},
+        {"id": "d07_ty_zamuzhem", "ru": "Ты з+амужем?", "de": "Bist du verheiratet? (an eine Frau)"},
+        {"id": "d07_ya_ne_zhenat", "ru": "Я не жен+ат.", "ruF": "Я не з+амужем.", "de": "Ich bin nicht verheiratet.", "note": "Männer: жена́т, Frauen: за́мужем."},
+        {"id": "d07_eto_moy_drug", "ru": "+Это мой друг.", "de": "Das ist mein Freund."},
+        {"id": "d07_eto_moya_mama", "ru": "+Это мо+я м+ама.", "de": "Das ist meine Mama."},
+        {"id": "d07_kak_ego_zovut", "ru": "Как ег+о зов+ут?", "de": "Wie heißt er?", "note": "г spricht man hier wie w: jiwó."},
+        {"id": "d07_kak_eyo_zovut", "ru": "Как её зов+ут?", "de": "Wie heißt sie?"}
+      ],
+      "dialog": {
+        "id": "d07_dlg",
+        "title": "Familienfotos",
+        "scene": "Anja zeigt dir Fotos auf ihrem Handy.",
+        "lines": [
+          {"id": "d07_dlg_1", "who": "P", "ru": "Смотр+и, +это мо+я семь+я.", "de": "Schau, das ist meine Familie.", "gloss": "смотри́ = schau"},
+          {"id": "d07_dlg_2", "who": "U", "ru": "+Это тво+я м+ама?", "de": "Ist das deine Mama?", "gloss": "твоя́ = deine"},
+          {"id": "d07_dlg_3", "who": "P", "ru": "Да. А +это мой брат.", "de": "Ja. Und das ist mein Bruder."},
+          {"id": "d07_dlg_4", "who": "U", "ru": "Как ег+о зов+ут?", "de": "Wie heißt er?"},
+          {"id": "d07_dlg_5", "who": "P", "ru": "Серг+ей. У теб+я есть бр+атья +или сёстры?", "de": "Sergej. Hast du Geschwister?"},
+          {"id": "d07_dlg_6", "who": "U", "ru": "Да, у мен+я есть сестр+а.", "de": "Ja, ich habe eine Schwester."},
+          {"id": "d07_dlg_7", "who": "P", "ru": "А ты жен+ат?", "ruF": "А ты з+амужем?", "de": "Und bist du verheiratet?"},
+          {"id": "d07_dlg_8", "who": "U", "ru": "Нет, я не жен+ат.", "ruF": "Нет, я не з+амужем.", "de": "Nein, ich bin nicht verheiratet."}
+        ]
+      }
+    },
+    {
+      "day": 8,
+      "title": "Hobbys & Vorlieben",
+      "goal": "Du kannst sagen, was du magst und was du in deiner Freizeit machst.",
+      "sound": {
+        "title": "Hartes und weiches Л",
+        "text": "Das harte л klingt dunkel wie im englischen »full«: Zungenspitze an die oberen Zähne, der Zungenrücken senkt sich wie ein Löffel. Das weiche ль ist ein helles deutsches L wie in »Liebe«. люблю́ (ljubljú) ist ganz hell, пло́хо ganz dunkel.",
+        "examples": ["d08_ya_lyublyu_muzyku", "d03_ploho", "d08_klassno"]
+      },
+      "grammar": "Zwei Wege, »mögen« zu sagen: Я люблю́ + Tätigkeit (Я люблю́ чита́ть) und Мне нра́вится + Sache (Мне нра́вится му́зыка = Mir gefällt Musik).",
+      "items": [
+        {"id": "d08_ya_lyublyu_muzyku", "ru": "Я любл+ю м+узыку.", "de": "Ich liebe Musik."},
+        {"id": "d08_mne_nravitsya_muzyka", "ru": "Мне нр+авится м+узыка.", "de": "Mir gefällt Musik."},
+        {"id": "d08_chto_ty_lyubish_delat", "ru": "Что ты л+юбишь д+елать?", "de": "Was machst du gern?", "replies": ["d08_ya_lyublyu_chitat", "d08_ya_lyublyu_puteshestvovat", "d08_ya_lyublyu_smotret_filmy", "d08_ya_lyublyu_igrat"]},
+        {"id": "d08_svobodnoe_vremya", "ru": "Что ты д+елаешь в своб+одное вр+емя?", "de": "Was machst du in deiner Freizeit?", "replies": ["d08_ya_smotryu_anime", "d08_ya_chitayu_mangu", "d08_ya_zanimayus_sportom", "d08_ya_lyublyu_chitat"]},
+        {"id": "d08_ya_lyublyu_chitat", "ru": "Я любл+ю чит+ать.", "de": "Ich lese gern."},
+        {"id": "d08_ya_lyublyu_puteshestvovat", "ru": "Я любл+ю путеш+ествовать.", "de": "Ich reise gern."},
+        {"id": "d08_ya_lyublyu_smotret_filmy", "ru": "Я любл+ю смотр+еть ф+ильмы.", "de": "Ich schaue gern Filme."},
+        {"id": "d08_ya_lyublyu_igrat", "ru": "Я любл+ю игр+ать в +игры.", "de": "Ich spiele gern Videospiele."},
+        {"id": "d08_ya_smotryu_anime", "ru": "Я смотр+ю аним+е.", "de": "Ich schaue Anime."},
+        {"id": "d08_ya_chitayu_mangu", "ru": "Я чит+аю м+ангу.", "de": "Ich lese Manga."},
+        {"id": "d08_ya_zanimayus_sportom", "ru": "Я заним+аюсь сп+ортом.", "de": "Ich mache Sport."},
+        {"id": "d08_i", "ru": "и", "de": "und"},
+        {"id": "d08_ya_tozhe", "ru": "Я т+оже!", "de": "Ich auch!"},
+        {"id": "d08_mne_ne_nravitsya", "ru": "Мне не нр+авится.", "de": "Das gefällt mir nicht."},
+        {"id": "d08_klassno", "ru": "Кл+ассно!", "de": "Cool!"},
+        {"id": "d08_kruto", "ru": "Кр+уто!", "de": "Krass! / Stark!"}
+      ],
+      "dialog": {
+        "id": "d08_dlg",
+        "title": "Freizeit",
+        "scene": "Beim Kaffee redet ihr über Hobbys.",
+        "lines": [
+          {"id": "d08_dlg_1", "who": "P", "ru": "Что ты д+елаешь в своб+одное вр+емя?", "de": "Was machst du in deiner Freizeit?"},
+          {"id": "d08_dlg_2", "who": "U", "ru": "Я любл+ю чит+ать и смотр+еть аним+е.", "de": "Ich lese gern und schaue Anime."},
+          {"id": "d08_dlg_3", "who": "P", "ru": "Кр+уто! Я т+оже любл+ю аним+е.", "de": "Krass! Ich mag Anime auch."},
+          {"id": "d08_dlg_4", "who": "U", "ru": "Кл+ассно! А что ты л+юбишь д+елать?", "de": "Cool! Und was machst du gern?"},
+          {"id": "d08_dlg_5", "who": "P", "ru": "Я любл+ю путеш+ествовать. А ты л+юбишь спорт?", "de": "Ich reise gern. Und magst du Sport?"},
+          {"id": "d08_dlg_6", "who": "U", "ru": "Нет, мне не нр+авится спорт.", "de": "Nein, Sport gefällt mir nicht."}
+        ]
+      }
+    },
+    {
+      "day": 9,
+      "title": "Essen & Trinken",
+      "goal": "Du bestellst im Café, bezahlst und redest übers Essen.",
+      "sound": {
+        "title": "Unbetontes е und я klingen wie i",
+        "text": "Stehen е oder я NICHT in der betonten Silbe, werden sie zu einem kurzen i: сестра́ → sistrá, меню́ → minjú, язы́к → jisýk. Nur betont klingen sie voll: нет (njet), я (ja). Das ist der zweitwichtigste Trick nach dem o→a.",
+        "examples": ["d07_sestra", "d09_menyu", "d09_priyatnogo_appetita"]
+      },
+      "grammar": "Мо́жно …? ist der einfachste Weg, um etwas zu bitten: Мо́жно чай? = Kann ich einen Tee haben? Я бу́ду … = Ich nehme …",
+      "items": [
+        {"id": "d09_ya_hochu_kofe", "ru": "Я хоч+у к+офе.", "de": "Ich möchte einen Kaffee."},
+        {"id": "d09_mozhno_chay", "ru": "М+ожно чай, пож+алуйста?", "de": "Einen Tee, bitte?", "lit": "Darf (ich) Tee, bitte?"},
+        {"id": "d09_kofe", "ru": "к+офе", "de": "Kaffee"},
+        {"id": "d09_chay", "ru": "чай", "de": "Tee"},
+        {"id": "d09_voda", "ru": "вод+а", "de": "Wasser"},
+        {"id": "d09_pivo", "ru": "п+иво", "de": "Bier"},
+        {"id": "d09_menyu", "ru": "мен+ю", "de": "Speisekarte"},
+        {"id": "d09_chto_ty_budesh", "ru": "Что ты б+удешь?", "de": "Was nimmst du?", "replies": ["d09_ya_budu_chay", "d09_ya_hochu_kofe"]},
+        {"id": "d09_ya_budu_chay", "ru": "Я б+уду чай.", "de": "Ich nehme Tee."},
+        {"id": "d09_ya_hochu_est", "ru": "Я хоч+у есть.", "de": "Ich habe Hunger.", "lit": "Ich will essen."},
+        {"id": "d09_ya_hochu_pit", "ru": "Я хоч+у пить.", "de": "Ich habe Durst.", "lit": "Ich will trinken."},
+        {"id": "d09_vkusno", "ru": "Вк+усно!", "de": "Lecker!"},
+        {"id": "d09_schyot", "ru": "Счёт, пож+алуйста.", "de": "Die Rechnung, bitte."},
+        {"id": "d09_priyatnogo_appetita", "ru": "При+ятного аппет+ита!", "de": "Guten Appetit!", "replies": ["d01_spasibo"]},
+        {"id": "d09_za_zdorovye", "ru": "За здор+овье!", "de": "Prost!", "lit": "Auf die Gesundheit!"}
+      ],
+      "dialog": {
+        "id": "d09_dlg",
+        "title": "Im Restaurant",
+        "scene": "Du gehst mit Anja essen.",
+        "lines": [
+          {"id": "d09_dlg_1", "who": "P", "ru": "Я хоч+у есть! Что ты б+удешь?", "de": "Ich hab Hunger! Was nimmst du?"},
+          {"id": "d09_dlg_2", "who": "U", "ru": "Я б+уду чай. А ты?", "de": "Ich nehme Tee. Und du?"},
+          {"id": "d09_dlg_3", "who": "P", "ru": "Я б+уду к+офе и п+иццу.", "de": "Ich nehme Kaffee und Pizza."},
+          {"id": "d09_dlg_4", "who": "U", "ru": "Извин+ите! М+ожно чай и к+офе, пож+алуйста?", "de": "Entschuldigung! Einen Tee und einen Kaffee, bitte?"},
+          {"id": "d09_dlg_5", "who": "P", "ru": "При+ятного аппет+ита!", "de": "Guten Appetit!"},
+          {"id": "d09_dlg_6", "who": "U", "ru": "Спас+ибо! Вк+усно!", "de": "Danke! Lecker!"},
+          {"id": "d09_dlg_7", "who": "U", "ru": "Счёт, пож+алуйста.", "de": "Die Rechnung, bitte."}
+        ]
+      }
+    },
+    {
+      "day": 10,
+      "title": "Zeit & Wetter",
+      "goal": "Du plauderst über heute, morgen, das Wochenende und das Wetter.",
+      "sound": {
+        "title": "Konsonanten passen sich an",
+        "text": "Russische Konsonanten färben sich nach ihrem rechten Nachbarn: в vor einem stimmlosen Laut wird zu f — вчера́ (ftschirá), всё (fsjo), за́втра (sáftra). Und in сего́дня spricht man das г als w: siwódnja.",
+        "examples": ["d10_vchera", "d10_zavtra", "d10_segodnya"]
+      },
+      "grammar": "Wetter ohne »es ist«: Хо́лодно = (Es ist) kalt. Сего́дня тепло́ = Heute (ist es) warm.",
+      "items": [
+        {"id": "d10_segodnya", "ru": "сег+одня", "de": "heute"},
+        {"id": "d10_zavtra", "ru": "з+автра", "de": "morgen"},
+        {"id": "d10_vchera", "ru": "вчер+а", "de": "gestern"},
+        {"id": "d10_seychas", "ru": "сейч+ас", "de": "jetzt"},
+        {"id": "d10_kotoryy_chas", "ru": "Кот+орый час?", "de": "Wie spät ist es?"},
+        {"id": "d10_vyhodnye", "ru": "выходн+ые", "de": "Wochenende"},
+        {"id": "d10_chto_v_vyhodnye", "ru": "Что ты д+елаешь в выходн+ые?", "de": "Was machst du am Wochenende?", "replies": ["d08_ya_smotryu_anime", "d08_ya_chitayu_mangu", "d06_ya_mnogo_rabotayu"]},
+        {"id": "d10_kakaya_pogoda", "ru": "Как+ая сег+одня пог+ода?", "de": "Wie ist das Wetter heute?", "replies": ["d10_teplo", "d10_holodno", "d10_zharko", "d10_idyot_dozhd", "d10_solnechno"]},
+        {"id": "d10_teplo", "ru": "Сег+одня тепл+о.", "de": "Heute ist es warm."},
+        {"id": "d10_holodno", "ru": "Х+олодно.", "de": "Es ist kalt."},
+        {"id": "d10_zharko", "ru": "Ж+арко.", "de": "Es ist heiß."},
+        {"id": "d10_idyot_dozhd", "ru": "Идёт дождь.", "de": "Es regnet.", "lit": "Es geht Regen."},
+        {"id": "d10_solnechno", "ru": "С+олнечно.", "de": "Es ist sonnig."},
+        {"id": "d10_utrom", "ru": "+утром", "de": "morgens"},
+        {"id": "d10_vecherom", "ru": "в+ечером", "de": "abends"},
+        {"id": "d10_kazhdyy_den", "ru": "К+аждый день.", "de": "Jeden Tag."}
+      ],
+      "dialog": {
+        "id": "d10_dlg",
+        "title": "Videoanruf",
+        "scene": "Anja ruft dich aus Moskau an.",
+        "lines": [
+          {"id": "d10_dlg_1", "who": "P", "ru": "Прив+ет! Как+ая у вас сег+одня пог+ода?", "de": "Hi! Wie ist das Wetter heute bei euch?", "gloss": "у вас = bei euch"},
+          {"id": "d10_dlg_2", "who": "U", "ru": "Х+олодно. Идёт дождь. А у теб+я?", "de": "Kalt. Es regnet. Und bei dir?"},
+          {"id": "d10_dlg_3", "who": "P", "ru": "У нас тепл+о и с+олнечно!", "de": "Bei uns ist es warm und sonnig!", "gloss": "у нас = bei uns"},
+          {"id": "d10_dlg_4", "who": "U", "ru": "Кл+ассно! Что ты д+елаешь в выходн+ые?", "de": "Cool! Was machst du am Wochenende?"},
+          {"id": "d10_dlg_5", "who": "P", "ru": "Не зн+аю. А ты?", "de": "Weiß nicht. Und du?"},
+          {"id": "d10_dlg_6", "who": "U", "ru": "Я чит+аю м+ангу и смотр+ю аним+е.", "de": "Ich lese Manga und schaue Anime."}
+        ]
+      }
+    },
+    {
+      "day": 11,
+      "title": "Verabreden",
+      "goal": "Du schlägst ein Treffen vor, machst Zeit und Ort aus — oder sagst höflich ab.",
+      "sound": {
+        "title": "Kleine Wörter kleben am nächsten",
+        "text": "Einsilbige Wörter wie в, во, на, не tragen keine eigene Betonung — sie verschmelzen mit dem folgenden Wort und passen sich ihm an: в семь → »fsjem'«, в кафе́ → »fkafé«. Und die Endung -тся/-ться spricht man »za«: нра́вится → nráwiza.",
+        "examples": ["d11_v_sem", "d11_poydyom_v_kafe", "d08_mne_nravitsya_muzyka"]
+      },
+      "grammar": "Дава́й + Verb = »Lass uns …«: Дава́й встре́тимся! (Lass uns treffen!). Пойдём? = Gehen wir?",
+      "items": [
+        {"id": "d11_davay_vstretimsya", "ru": "Дав+ай встр+етимся!", "de": "Lass uns treffen!", "replies": ["d11_horoshaya_ideya", "d11_ne_mogu"]},
+        {"id": "d11_u_tebya_est_vremya", "ru": "У теб+я есть вр+емя?", "de": "Hast du Zeit?", "replies": ["d11_da_konechno", "d11_ne_mogu", "d11_ya_zanyat"]},
+        {"id": "d11_da_konechno", "ru": "Да, кон+ечно.", "de": "Ja, klar."},
+        {"id": "d11_kogda", "ru": "Когд+а?", "de": "Wann?"},
+        {"id": "d11_gde", "ru": "Где?", "de": "Wo?"},
+        {"id": "d11_vo_skolko", "ru": "Во ск+олько?", "de": "Um wie viel Uhr?", "replies": ["d11_v_sem"]},
+        {"id": "d11_v_sem", "ru": "В семь.", "de": "Um sieben."},
+        {"id": "d11_zavtra_vecherom", "ru": "З+автра в+ечером.", "de": "Morgen Abend."},
+        {"id": "d11_poydyom_v_kafe", "ru": "Пойдём в каф+е?", "de": "Gehen wir ins Café?", "replies": ["d11_horoshaya_ideya", "d11_mozhet_byt"]},
+        {"id": "d11_horoshaya_ideya", "ru": "Хор+ошая ид+ея!", "de": "Gute Idee!"},
+        {"id": "d11_ne_mogu", "ru": "Не мог+у.", "de": "Ich kann nicht."},
+        {"id": "d11_ya_zanyat", "ru": "Я з+анят.", "ruF": "Я занят+а.", "de": "Ich habe keine Zeit.", "lit": "Ich bin beschäftigt.", "note": "Männer: за́нят, Frauen: занята́."},
+        {"id": "d11_mozhet_byt", "ru": "М+ожет быть.", "de": "Vielleicht."},
+        {"id": "d11_dogovorilis", "ru": "Договор+ились!", "de": "Abgemacht!"},
+        {"id": "d11_napishi_mne", "ru": "Напиш+и мне!", "de": "Schreib mir!"},
+        {"id": "d11_sozvonimsya", "ru": "Созвон+имся!", "de": "Wir telefonieren!"}
+      ],
+      "dialog": {
+        "id": "d11_dlg",
+        "title": "Ein Treffen ausmachen",
+        "scene": "Anja will sich mit dir treffen.",
+        "lines": [
+          {"id": "d11_dlg_1", "who": "P", "ru": "Кад+ир, у теб+я есть вр+емя з+автра?", "de": "Kadir, hast du morgen Zeit?"},
+          {"id": "d11_dlg_2", "who": "U", "ru": "З+автра не мог+у. Я з+анят.", "ruF": "З+автра не мог+у. Я занят+а.", "de": "Morgen kann ich nicht. Ich habe keine Zeit."},
+          {"id": "d11_dlg_3", "who": "P", "ru": "А в субб+оту?", "de": "Und am Samstag?", "gloss": "в суббо́ту = am Samstag"},
+          {"id": "d11_dlg_4", "who": "U", "ru": "Да, кон+ечно! Пойдём в каф+е?", "de": "Ja, klar! Gehen wir ins Café?"},
+          {"id": "d11_dlg_5", "who": "P", "ru": "Хор+ошая ид+ея! Во ск+олько?", "de": "Gute Idee! Um wie viel Uhr?"},
+          {"id": "d11_dlg_6", "who": "U", "ru": "В семь?", "de": "Um sieben?"},
+          {"id": "d11_dlg_7", "who": "P", "ru": "Договор+ились! Напиш+и мне.", "de": "Abgemacht! Schreib mir."},
+          {"id": "d11_dlg_8", "who": "U", "ru": "Хорош+о. Пок+а!", "de": "Okay. Tschüss!"}
+        ]
+      }
+    },
+    {
+      "day": 12,
+      "title": "Fragen & Meinung",
+      "goal": "Du fragst nach, reagierst und sagst deine Meinung.",
+      "sound": {
+        "title": "Der Ach-Laut und г als w",
+        "text": "х ist immer das deutsche ch aus »Bach« — auch nach e und i, nie wie in »ich«: хорошо́, пло́хо. Und in den Endungen -ого und -его wird г wie w gesprochen: ничего́ (nitschiwó), что но́вого (schto nówawa).",
+        "examples": ["d03_horosho", "d03_chto_novogo", "d07_kak_ego_zovut"]
+      },
+      "grammar": "Bei не́ был (war nicht) springt die Betonung auf das не. Frauen sagen не была́ — dort bleibt sie hinten.",
+      "items": [
+        {"id": "d12_kto", "ru": "Кто?", "de": "Wer?"},
+        {"id": "d12_kak", "ru": "Как?", "de": "Wie?"},
+        {"id": "d12_pochemu", "ru": "Почем+у?", "de": "Warum?"},
+        {"id": "d12_potomu_chto", "ru": "Потом+у что +это интер+есно.", "de": "Weil das interessant ist."},
+        {"id": "d12_kakoy", "ru": "Как+ой?", "de": "Welcher? / Was für ein?"},
+        {"id": "d12_ya_dumayu", "ru": "Я д+умаю, что +это хорош+о.", "de": "Ich denke, dass das gut ist."},
+        {"id": "d12_po_moemu", "ru": "По-м+оему, +это хор+ошая ид+ея.", "de": "Ich finde, das ist eine gute Idee.", "lit": "Meiner Meinung nach ist das eine gute Idee."},
+        {"id": "d12_kak_ty_dumaesh", "ru": "Как ты д+умаешь?", "de": "Was meinst du?"},
+        {"id": "d12_pravda", "ru": "Пр+авда?", "de": "Wirklich?"},
+        {"id": "d12_seryozno", "ru": "Серьёзно?", "de": "Im Ernst?"},
+        {"id": "d12_ya_soglasen", "ru": "Я согл+асен.", "ruF": "Я согл+асна.", "de": "Da stimme ich zu.", "note": "Männer: согла́сен, Frauen: согла́сна."},
+        {"id": "d12_ty_prav", "ru": "Ты прав!", "de": "Du hast recht! (zu einem Mann)", "note": "Zu einer Frau: Ты права́!"},
+        {"id": "d12_ty_prava", "ru": "Ты прав+а!", "de": "Du hast recht! (zu einer Frau)"},
+        {"id": "d12_no", "ru": "но", "de": "aber"},
+        {"id": "d12_nikogda_ne_byl", "ru": "Я никогд+а н+е был в Росс+ии.", "ruF": "Я никогд+а не был+а в Росс+ии.", "de": "Ich war noch nie in Russland."},
+        {"id": "d12_zdorovo", "ru": "Зд+орово!", "de": "Toll!", "note": "Betonung vorn! здоро́во (hinten betont) wäre ein lockeres »Hallo«."}
+      ],
+      "dialog": {
+        "id": "d12_dlg",
+        "title": "Warum Russisch?",
+        "scene": "Anja ist neugierig.",
+        "lines": [
+          {"id": "d12_dlg_1", "who": "P", "ru": "Почем+у ты +учишь р+усский?", "de": "Warum lernst du Russisch?", "gloss": "у́чишь = lernst"},
+          {"id": "d12_dlg_2", "who": "U", "ru": "Потом+у что +это интер+есно!", "de": "Weil das interessant ist!"},
+          {"id": "d12_dlg_3", "who": "P", "ru": "Пр+авда? А ты был в Росс+ии?", "ruF": "Пр+авда? А ты был+а в Росс+ии?", "de": "Wirklich? Und warst du schon in Russland?"},
+          {"id": "d12_dlg_4", "who": "U", "ru": "Нет, я никогд+а н+е был в Росс+ии.", "ruF": "Нет, я никогд+а не был+а в Росс+ии.", "de": "Nein, ich war noch nie in Russland."},
+          {"id": "d12_dlg_5", "who": "P", "ru": "Как ты д+умаешь, р+усский тр+удный?", "de": "Was meinst du, ist Russisch schwer?", "gloss": "тру́дный = schwer"},
+          {"id": "d12_dlg_6", "who": "U", "ru": "По-м+оему, +это тр+удно, но интер+есно.", "de": "Ich finde, es ist schwer, aber interessant."},
+          {"id": "d12_dlg_7", "who": "P", "ru": "Ты прав!", "ruF": "Ты прав+а!", "de": "Du hast recht!"}
+        ]
+      }
+    },
+    {
+      "day": 13,
+      "title": "Reagieren & Gefühle",
+      "goal": "Du reagierst natürlich: loben, trösten, dich freuen, dich entschuldigen.",
+      "sound": {
+        "title": "э, е und ё",
+        "text": "э ist ein offenes e wie in »Bett«: э́то (éta). е bringt ein j mit und macht den Konsonanten davor weich: нет (njet). ё (jo) ist IMMER betont — es trägt die Betonung automatisch: всё, ещё, её.",
+        "examples": ["d06_eto_interesno", "d03_vsyo_horosho", "d07_kak_eyo_zovut"]
+      },
+      "grammar": "Мне + Zustand beschreibt, wie es dir geht: Мне ску́чно (mir ist langweilig), Мне ве́село (ich habe Spaß), Мне жаль (es tut mir leid).",
+      "items": [
+        {"id": "d13_ya_rad", "ru": "Я рад!", "ruF": "Я р+ада!", "de": "Ich freue mich!", "note": "Männer: рад, Frauen: ра́да."},
+        {"id": "d13_molodets", "ru": "Молод+ец!", "de": "Gut gemacht! / Bravo!"},
+        {"id": "d13_kak_krasivo", "ru": "Как крас+иво!", "de": "Wie schön!"},
+        {"id": "d13_ne_za_chto", "ru": "Н+е за что.", "de": "Keine Ursache.", "note": "Die Antwort auf Спаси́бо. Die Betonung liegt auf не: »nje sa schta«."},
+        {"id": "d13_nichego_strashnogo", "ru": "Ничег+о стр+ашного.", "de": "Nicht schlimm."},
+        {"id": "d13_izvini", "ru": "Извин+и!", "de": "Entschuldige! (du)", "replies": ["d13_nichego_strashnogo", "d13_vsyo_v_poryadke"]},
+        {"id": "d13_mne_zhal", "ru": "Мне жаль.", "de": "Tut mir leid.", "replies": ["d13_nichego_strashnogo", "d13_vsyo_v_poryadke"]},
+        {"id": "d13_vsyo_v_poryadke", "ru": "Всё в пор+ядке.", "de": "Alles in Ordnung."},
+        {"id": "d13_mne_skuchno", "ru": "Мне ск+учно.", "de": "Mir ist langweilig.", "note": "чн spricht man hier wie schn: skúschna."},
+        {"id": "d13_mne_veselo", "ru": "Мне в+есело.", "de": "Ich habe Spaß."},
+        {"id": "d13_udachi", "ru": "Уд+ачи!", "de": "Viel Glück!", "replies": ["d01_spasibo"]},
+        {"id": "d13_ty_horosho_govorish", "ru": "Ты хорош+о говор+ишь по-р+усски!", "de": "Du sprichst gut Russisch!", "replies": ["d13_ya_eshyo_uchus"]},
+        {"id": "d13_ya_eshyo_uchus", "ru": "Спас+ибо, я ещё уч+усь.", "de": "Danke, ich lerne noch."},
+        {"id": "d13_ne_perezhivay", "ru": "Не пережив+ай!", "de": "Mach dir keine Sorgen!"}
+      ],
+      "dialog": {
+        "id": "d13_dlg",
+        "title": "Zu spät",
+        "scene": "Anja kommt zu spät ins Café.",
+        "lines": [
+          {"id": "d13_dlg_1", "who": "P", "ru": "Ой, извин+и! Я опозд+ала.", "de": "Oh, entschuldige! Ich bin zu spät.", "gloss": "ой = oh · опозда́ла = bin zu spät"},
+          {"id": "d13_dlg_2", "who": "U", "ru": "Ничег+о стр+ашного! Всё в пор+ядке.", "de": "Nicht schlimm! Alles in Ordnung."},
+          {"id": "d13_dlg_3", "who": "P", "ru": "Сл+ушай, ты хорош+о говор+ишь по-р+усски!", "de": "Hör mal, du sprichst gut Russisch!", "gloss": "слу́шай = hör mal"},
+          {"id": "d13_dlg_4", "who": "U", "ru": "Спас+ибо, я ещё уч+усь.", "de": "Danke, ich lerne noch."},
+          {"id": "d13_dlg_5", "who": "P", "ru": "Молод+ец!", "de": "Bravo!"},
+          {"id": "d13_dlg_6", "who": "U", "ru": "Спас+ибо! Я рад.", "ruF": "Спас+ибо! Я р+ада.", "de": "Danke! Das freut mich."},
+          {"id": "d13_dlg_7", "who": "P", "ru": "Н+е за что!", "de": "Keine Ursache!"}
+        ]
+      }
+    },
+    {
+      "day": 14,
+      "title": "Abschied & großes Gespräch",
+      "goal": "Du führst ein ganzes Small-Talk-Gespräch — vom Hallo bis zum Tschüss.",
+      "sound": {
+        "title": "Rhythmus: lang, kurz, kurz",
+        "text": "Russisch hat einen starken Rhythmus: Die betonte Silbe ist lang und laut, alles andere huscht vorbei, kleine Wörter hängen am Nachbarn. Sprich lieber langsam mit richtiger Betonung als schnell mit falscher — dann versteht man dich sofort.",
+        "examples": ["d14_bylo_priyatno", "d14_vsego_horoshego", "d14_do_vstrechi"]
+      },
+      "grammar": "Viele Abschiedsformeln beginnen mit До (bis): До за́втра (bis morgen), До встре́чи (bis zum Treffen). Хоро́шего дня! ist wörtlich »(Ich wünsche) einen guten Tag!«",
+      "items": [
+        {"id": "d14_bylo_priyatno", "ru": "Б+ыло +очень при+ятно познак+омиться!", "de": "Es war sehr schön, dich kennenzulernen!", "replies": ["d02_mne_tozhe"]},
+        {"id": "d14_mne_pora", "ru": "Мне пор+а.", "de": "Ich muss los."},
+        {"id": "d14_uvidimsya", "ru": "Ув+идимся!", "de": "Wir sehen uns!"},
+        {"id": "d14_do_zavtra", "ru": "До з+автра!", "de": "Bis morgen!"},
+        {"id": "d14_do_vstrechi", "ru": "До встр+ечи!", "de": "Bis dann!", "lit": "Bis zum Treffen!"},
+        {"id": "d14_vsego_horoshego", "ru": "Всег+о хор+ошего!", "de": "Alles Gute!"},
+        {"id": "d14_spokoynoy_nochi", "ru": "Спок+ойной н+очи!", "de": "Gute Nacht!"},
+        {"id": "d14_horoshego_dnya", "ru": "Хор+ошего дня!", "de": "Schönen Tag noch!", "replies": ["d01_spasibo"]},
+        {"id": "d14_beregi_sebya", "ru": "Берег+и себ+я!", "de": "Pass auf dich auf!"},
+        {"id": "d14_mozhno_tvoy_nomer", "ru": "М+ожно твой н+омер?", "de": "Kann ich deine Nummer haben?", "replies": ["d11_da_konechno"]},
+        {"id": "d14_napishi_v_telegram", "ru": "Напиш+и мне в Телегр+ам.", "de": "Schreib mir auf Telegram."},
+        {"id": "d14_priezzhay", "ru": "Приезж+ай в Герм+анию!", "de": "Komm nach Deutschland!", "replies": ["d14_obyazatelno"]},
+        {"id": "d14_obyazatelno", "ru": "Обяз+ательно!", "de": "Unbedingt!"},
+        {"id": "d14_ya_budu_skuchat", "ru": "Я б+уду скуч+ать.", "de": "Ich werde dich vermissen."}
+      ],
+      "dialog": {
+        "id": "d14_dlg",
+        "title": "Das große Gespräch",
+        "scene": "Du triffst Anja zum letzten Mal vor ihrer Heimreise — alles, was du gelernt hast, in einem Gespräch.",
+        "lines": [
+          {"id": "d14_dlg_1", "who": "P", "ru": "Прив+ет! Как дел+а?", "de": "Hi! Wie geht's?"},
+          {"id": "d14_dlg_2", "who": "U", "ru": "Прив+ет! Отл+ично, спас+ибо. А у теб+я?", "de": "Hi! Super, danke. Und bei dir?"},
+          {"id": "d14_dlg_3", "who": "P", "ru": "Т+оже хорош+о. Ты хорош+о говор+ишь по-р+усски!", "de": "Auch gut. Du sprichst gut Russisch!"},
+          {"id": "d14_dlg_4", "who": "U", "ru": "Спас+ибо, я ещё уч+усь.", "de": "Danke, ich lerne noch."},
+          {"id": "d14_dlg_5", "who": "P", "ru": "А что ты л+юбишь д+елать?", "de": "Und was machst du gern?"},
+          {"id": "d14_dlg_6", "who": "U", "ru": "Я любл+ю аним+е и м+узыку. А ты?", "de": "Ich mag Anime und Musik. Und du?"},
+          {"id": "d14_dlg_7", "who": "P", "ru": "Я любл+ю путеш+ествовать. Ты был в Росс+ии?", "ruF": "Я любл+ю путеш+ествовать. Ты был+а в Росс+ии?", "de": "Ich reise gern. Warst du schon in Russland?"},
+          {"id": "d14_dlg_8", "who": "U", "ru": "Нет, я никогд+а н+е был в Росс+ии.", "ruF": "Нет, я никогд+а не был+а в Росс+ии.", "de": "Nein, ich war noch nie in Russland."},
+          {"id": "d14_dlg_9", "who": "P", "ru": "Приезж+ай! Ой, мне пор+а.", "de": "Komm doch! Oh, ich muss los."},
+          {"id": "d14_dlg_10", "who": "U", "ru": "Б+ыло +очень при+ятно познак+омиться!", "de": "Es war sehr schön, dich kennenzulernen!"},
+          {"id": "d14_dlg_11", "who": "P", "ru": "Мне т+оже! Напиш+и мне.", "de": "Mich auch! Schreib mir."},
+          {"id": "d14_dlg_12", "who": "U", "ru": "Обяз+ательно! Пок+а!", "de": "Unbedingt! Tschüss!"},
+          {"id": "d14_dlg_13", "who": "P", "ru": "Пок+а! Всег+о хор+ошего!", "de": "Tschüss! Alles Gute!"}
+        ]
+      }
+    }
+  ]
+}

@@ -27,9 +27,11 @@ import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -44,7 +46,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.hikari.app.ui.russian.RussianHomeViewModel
 import com.hikari.app.domain.model.NewsItem
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariCardBg
@@ -58,7 +62,7 @@ private val CARD_WIDTH = 252.dp
 private val CARD_HEIGHT = 148.dp
 
 /**
- * Bereichs-Hub im Profil: Tagesbericht, Manga und Spiele als inhaltsreiche
+ * Bereichs-Hub im Profil: Tagesbericht, Manga, Russisch und Spiele als inhaltsreiche
  * Karten mit echten Bildern (aktuelles News-Bild, echte Manga-Cover) statt
  * generischer Icon-Kacheln — ein Tap öffnet die Section.
  */
@@ -92,6 +96,11 @@ fun AreaHub(
             item {
                 HubCard(onClick = { onOpenSection("manga") }) {
                     MangaCardContent(mangaCovers, mangaLabel)
+                }
+            }
+            item {
+                HubCard(onClick = { onOpenSection("russian") }) {
+                    RussianCardContent()
                 }
             }
             item {
@@ -286,6 +295,46 @@ private fun BoxScope.GamesCardContent() {
             name = "Spiele",
             subtitle = "9 Spiele · Highscore jagen",
             icon = Icons.Default.Star,
+        )
+    }
+}
+
+@Composable
+private fun BoxScope.RussianCardContent() {
+    val vm: RussianHomeViewModel = hiltViewModel()
+    val p by vm.progress.collectAsState()
+    val done = p.dayStars.size
+    val total = vm.index.days.size
+    Box(
+        Modifier.fillMaxSize().background(
+            Brush.linearGradient(listOf(HikariSurfaceHigh, HikariCardBg, HikariBg)),
+        ),
+    )
+    // Schrift als Textur: das erste Wort des Kurses, groß und leise.
+    Text(
+        "Привет",
+        color = HikariText.copy(alpha = 0.07f),
+        fontSize = 64.sp,
+        fontWeight = FontWeight.Bold,
+        maxLines = 1,
+        modifier = Modifier.align(Alignment.TopStart).padding(start = 12.dp, top = 4.dp),
+    )
+    Text(
+        "Прив\u0435\u0301т · priwjét",
+        color = HikariPrimary.copy(alpha = 0.75f),
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Medium,
+        modifier = Modifier.align(Alignment.TopEnd).padding(14.dp),
+    )
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomStart) {
+        CardLabel(
+            name = "Russisch",
+            subtitle = when {
+                done >= total -> "Kurs geschafft · weiter wiederholen"
+                done == 0 -> "In 14 Tagen zum Small Talk"
+                else -> "Tag ${done + 1} von $total · ${p.streak} Tage Serie"
+            },
+            icon = Icons.Default.Translate,
         )
     }
 }

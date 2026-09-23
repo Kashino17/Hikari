@@ -1,0 +1,93 @@
+[
+ {
+  "name": "d06_dlg_2_m_m",
+  "text": "Я программ+ист. А ты?",
+  "expected_o": 0,
+  "observed_o": 1,
+  "fixed": false
+ },
+ {
+  "name": "d06_dlg_6_m_f",
+  "text": "Я раб+отаю д+ома. Мне нр+авится мо+я раб+ота.",
+  "expected_o": 3,
+  "observed_o": 2,
+  "fixed": true
+ },
+ {
+  "name": "d06_ya_programmist_m",
+  "text": "Я программ+ист.",
+  "expected_o": 0,
+  "observed_o": 1,
+  "fixed": true
+ },
+ {
+  "name": "d08_dlg_1_m_p",
+  "text": "Что ты д+елаешь в своб+одное вр+емя?",
+  "expected_o": 2,
+  "observed_o": 1,
+  "fixed": false
+ },
+ {
+  "name": "d08_dlg_5_m_p",
+  "text": "Я любл+ю путеш+ествовать. А ты л+юбишь спорт?",
+  "expected_o": 1,
+  "observed_o": 2,
+  "fixed": true
+ },
+ {
+  "name": "d08_ya_lyublyu_puteshestvovat_m",
+  "text": "Я любл+ю путеш+ествовать.",
+  "expected_o": 0,
+  "observed_o": 1,
+  "fixed": true
+ },
+ {
+  "name": "d09_dlg_5_m_p",
+  "text": "При+ятного аппет+ита!",
+  "expected_o": 0,
+  "observed_o": 1,
+  "fixed": true
+ },
+ {
+  "name": "d09_kofe_f",
+  "text": "к+офе",
+  "expected_o": 1,
+  "observed_o": 0,
+  "fixed": false
+ },
+ {
+  "name": "d11_dlg_5_m_p",
+  "text": "Хор+ошая ид+ея! Во ск+олько?",
+  "expected_o": 2,
+  "observed_o": 1,
+  "fixed": false
+ },
+ {
+  "name": "d11_horoshaya_ideya_m",
+  "text": "Хор+ошая ид+ея!",
+  "expected_o": 1,
+  "observed_o": 0,
+  "fixed": true
+ },
+ {
+  "name": "d12_dlg_1_m_p",
+  "text": "Почем+у ты +учишь р+усский?",
+  "expected_o": 0,
+  "observed_o": 1,
+  "fixed": true
+ },
+ {
+  "name": "d12_po_moemu_m",
+  "text": "По-м+оему, +это хор+ошая ид+ея.",
+  "expected_o": 2,
+  "observed_o": 3,
+  "fixed": true
+ },
+ {
+  "name": "d14_dlg_6_m_f",
+  "text": "Я любл+ю аним+е и м+узыку. А ты?",
+  "expected_o": 0,
+  "observed_o": 1,
+  "fixed": false
+ }
+]

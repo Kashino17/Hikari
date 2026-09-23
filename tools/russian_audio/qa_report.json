@@ -1,0 +1,70 @@
+{
+ "summary": {
+  "0": {
+   "n": 112,
+   "ok_rate": 1.0,
+   "mean_logprob": -0.144
+  },
+  "1": {
+   "n": 530,
+   "ok_rate": 0.987,
+   "mean_logprob": -0.184
+  },
+  "4": {
+   "n": 530,
+   "ok_rate": 1.0,
+   "mean_logprob": -0.212
+  }
+ },
+ "failures": [
+  {
+   "file": "d02_ty_f.ogg",
+   "expected": "ты",
+   "got": "Три.",
+   "ok": false,
+   "logprob": -0.539
+  },
+  {
+   "file": "d02_ty_f_slow.ogg",
+   "expected": "ты",
+   "got": "Три.",
+   "ok": false,
+   "logprob": -0.336
+  },
+  {
+   "file": "d06_kem_ty_rabotaesh_f.ogg",
+   "expected": "Кем ты работаешь?",
+   "got": "С кем ты работаешь?",
+   "ok": false,
+   "logprob": -0.16
+  },
+  {
+   "file": "d11_dlg_6_m_f.ogg",
+   "expected": "В семь?",
+   "got": "Семь.",
+   "ok": false,
+   "logprob": -0.303
+  },
+  {
+   "file": "d11_kogda_f_slow.ogg",
+   "expected": "Когда?",
+   "got": "Как дела?",
+   "ok": false,
+   "logprob": -0.311
+  },
+  {
+   "file": "d11_v_sem_f.ogg",
+   "expected": "В семь.",
+   "got": "Семь.",
+   "ok": false,
+   "logprob": -0.354
+  },
+  {
+   "file": "d12_no_f.ogg",
+   "expected": "но",
+   "got": "Два, три, четыре.",
+   "ok": false,
+   "logprob": -0.276
+  }
+ ]
+}

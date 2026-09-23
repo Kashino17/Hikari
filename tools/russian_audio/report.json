@@ -1,0 +1,217 @@
+{
+ "best_of": {
+  "first_try": 1029,
+  "retried_ok": 111,
+  "unresolved": [
+   {
+    "name": "d02_ty_f",
+    "o_ok": true,
+    "text": "ты",
+    "whisper_ok": false
+   },
+   {
+    "name": "d06_kem_ty_rabotaesh_f",
+    "o_ok": true,
+    "text": "Кем ты раб+отаешь?",
+    "whisper_ok": false
+   },
+   {
+    "name": "d06_ya_programmist_m",
+    "o_ok": false,
+    "text": "Я программ+ист.",
+    "whisper_ok": true
+   },
+   {
+    "name": "d06_dlg_2_m_m",
+    "o_ok": false,
+    "text": "Я программ+ист. А ты?",
+    "whisper_ok": true
+   },
+   {
+    "name": "d06_dlg_6_m_f",
+    "o_ok": false,
+    "text": "Я раб+отаю д+ома. Мне нр+авится мо+я раб+ота.",
+    "whisper_ok": true
+   },
+   {
+    "name": "d08_ya_lyublyu_puteshestvovat_m",
+    "o_ok": false,
+    "text": "Я любл+ю путеш+ествовать.",
+    "whisper_ok": true
+   },
+   {
+    "name": "d08_dlg_1_m_p",
+    "o_ok": false,
+    "text": "Что ты д+елаешь в своб+одное вр+емя?",
+    "whisper_ok": true
+   },
+   {
+    "name": "d08_dlg_5_m_p",
+    "o_ok": false,
+    "text": "Я любл+ю путеш+ествовать. А ты л+юбишь спорт?",
+    "whisper_ok": true
+   },
+   {
+    "name": "d09_kofe_f",
+    "o_ok": false,
+    "text": "к+офе",
+    "whisper_ok": true
+   },
+   {
+    "name": "d09_dlg_5_m_p",
+    "o_ok": false,
+    "text": "При+ятного аппет+ита!",
+    "whisper_ok": true
+   },
+   {
+    "name": "d11_v_sem_f",
+    "o_ok": true,
+    "text": "В семь.",
+    "whisper_ok": false
+   },
+   {
+    "name": "d11_horoshaya_ideya_m",
+    "o_ok": false,
+    "text": "Хор+ошая ид+ея!",
+    "whisper_ok": true
+   },
+   {
+    "name": "d11_dlg_5_m_p",
+    "o_ok": false,
+    "text": "Хор+ошая ид+ея! Во ск+олько?",
+    "whisper_ok": true
+   },
+   {
+    "name": "d11_dlg_6_m_f",
+    "o_ok": true,
+    "text": "В семь?",
+    "whisper_ok": false
+   },
+   {
+    "name": "d12_po_moemu_m",
+    "o_ok": false,
+    "text": "По-м+оему, +это хор+ошая ид+ея.",
+    "whisper_ok": true
+   },
+   {
+    "name": "d12_no_f",
+    "o_ok": true,
+    "text": "но",
+    "whisper_ok": false
+   },
+   {
+    "name": "d12_dlg_1_m_p",
+    "o_ok": false,
+    "text": "Почем+у ты +учишь р+усский?",
+    "whisper_ok": true
+   },
+   {
+    "name": "d14_dlg_6_m_f",
+    "o_ok": false,
+    "text": "Я любл+ю аним+е и м+узыку. А ты?",
+    "whisper_ok": true
+   },
+   {
+    "name": "d02_ty_f_slow",
+    "o_ok": true,
+    "text": "ты",
+    "whisper_ok": false
+   },
+   {
+    "name": "d05_eshyo_raz_m_slow",
+    "o_ok": false,
+    "text": "Ещё раз, пож+алуйста.",
+    "whisper_ok": true
+   },
+   {
+    "name": "d05_dlg_6_m_f_slow",
+    "o_ok": false,
+    "text": "Извин+ите, я не поним+аю. Повтор+ите, пож+алуйста.",
+    "whisper_ok": true
+   },
+   {
+    "name": "d06_ya_rabotayu_v_ofise_m_slow",
+    "o_ok": false,
+    "text": "Я раб+отаю в +офисе.",
+    "whisper_ok": true
+   },
+   {
+    "name": "d08_ya_chitayu_mangu_m_slow",
+    "o_ok": false,
+    "text": "Я чит+аю м+ангу.",
+    "whisper_ok": true
+   },
+   {
+    "name": "d09_kofe_m_slow",
+    "o_ok": false,
+    "text": "к+офе",
+    "whisper_ok": true
+   },
+   {
+    "name": "d09_kofe_f_slow",
+    "o_ok": false,
+    "text": "к+офе",
+    "whisper_ok": true
+   },
+   {
+    "name": "d10_dlg_5_m_p_slow",
+    "o_ok": false,
+    "text": "Не зн+аю. А ты?",
+    "whisper_ok": true
+   },
+   {
+    "name": "d11_kogda_f_slow",
+    "o_ok": true,
+    "text": "Когд+а?",
+    "whisper_ok": false
+   },
+   {
+    "name": "d12_potomu_chto_m_slow",
+    "o_ok": false,
+    "text": "Потом+у что +это интер+есно.",
+    "whisper_ok": true
+   },
+   {
+    "name": "d12_po_moemu_m_slow",
+    "o_ok": false,
+    "text": "По-м+оему, +это хор+ошая ид+ея.",
+    "whisper_ok": true
+   },
+   {
+    "name": "d12_dlg_2_m_m_slow",
+    "o_ok": false,
+    "text": "Потом+у что +это интер+есно!",
+    "whisper_ok": true
+   },
+   {
+    "name": "d12_dlg_3_f_p_slow",
+    "o_ok": false,
+    "text": "Пр+авда? А ты был+а в Росс+ии?",
+    "whisper_ok": true
+   },
+   {
+    "name": "d12_dlg_6_m_m_slow",
+    "o_ok": false,
+    "text": "По-м+оему, +это тр+удно, но интер+есно.",
+    "whisper_ok": true
+   }
+  ]
+ },
+ "dict_disagrees": {
+  "кадир": {
+   "dict": [
+    "0"
+   ],
+   "ours": 1,
+   "text": "Кад+ир, у теб+я есть вр+емя з+автра?"
+  },
+  "офисе": {
+   "dict": [
+    "1"
+   ],
+   "ours": 0,
+   "text": "Я раб+отаю в +офисе."
+  }
+ },
+ "no_dict_match": {}
+}

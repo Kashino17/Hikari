@@ -1,0 +1,7034 @@
+{
+ "d01_da_f": {
+  "hash": "c8d021d03cd840b6",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Да."
+ },
+ "d01_da_f_slow": {
+  "hash": "fea6b458018455bd",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Да."
+ },
+ "d01_da_m": {
+  "hash": "e286e8f7e2118b06",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Да."
+ },
+ "d01_da_m_slow": {
+  "hash": "bcce716562ebcd44",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Да."
+ },
+ "d01_dlg_1_m_p": {
+  "hash": "46d55b300dc559d2",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Д+оброе +утро!"
+ },
+ "d01_dlg_1_m_p_slow": {
+  "hash": "e88407affa1e82ba",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Д+оброе +утро!"
+ },
+ "d01_dlg_2_m_f": {
+  "hash": "ad19a9578d0066be",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Здр+авствуйте! Д+оброе +утро!"
+ },
+ "d01_dlg_2_m_f_slow": {
+  "hash": "3568a689f0e30ee4",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Здр+авствуйте! Д+оброе +утро!"
+ },
+ "d01_dlg_2_m_m": {
+  "hash": "dedac4b226e48065",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Здр+авствуйте! Д+оброе +утро!"
+ },
+ "d01_dlg_2_m_m_slow": {
+  "hash": "ee6cc2462469e53f",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Здр+авствуйте! Д+оброе +утро!"
+ },
+ "d01_dlg_3_m_p": {
+  "hash": "ed25b4f8ed2f88bc",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Вот, пож+алуйста."
+ },
+ "d01_dlg_3_m_p_slow": {
+  "hash": "988818d8ffe0ef28",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Вот, пож+алуйста."
+ },
+ "d01_dlg_4_m_f": {
+  "hash": "cdb729e482b829ed",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Спас+ибо больш+ое!"
+ },
+ "d01_dlg_4_m_f_slow": {
+  "hash": "5ef7e06dcdfa5867",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Спас+ибо больш+ое!"
+ },
+ "d01_dlg_4_m_m": {
+  "hash": "36f11a482b0dac63",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Спас+ибо больш+ое!"
+ },
+ "d01_dlg_4_m_m_slow": {
+  "hash": "8a256d4ebe5a8cea",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Спас+ибо больш+ое!"
+ },
+ "d01_dlg_5_m_p": {
+  "hash": "47ff0920591a0c18",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Пож+алуйста! До свид+ания!"
+ },
+ "d01_dlg_5_m_p_slow": {
+  "hash": "2d9cead3df916db4",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Пож+алуйста! До свид+ания!"
+ },
+ "d01_dlg_6_m_f": {
+  "hash": "a8d4a51a937e8ed6",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "До свид+ания!"
+ },
+ "d01_dlg_6_m_f_slow": {
+  "hash": "0fad102839f53ce3",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "До свид+ания!"
+ },
+ "d01_dlg_6_m_m": {
+  "hash": "4fdc44c117a51c78",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "До свид+ания!"
+ },
+ "d01_dlg_6_m_m_slow": {
+  "hash": "c7779e059c6d7869",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "До свид+ания!"
+ },
+ "d01_do_svidaniya_f": {
+  "hash": "a8d4a51a937e8ed6",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "До свид+ания!"
+ },
+ "d01_do_svidaniya_f_slow": {
+  "hash": "0fad102839f53ce3",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "До свид+ания!"
+ },
+ "d01_do_svidaniya_m": {
+  "hash": "4fdc44c117a51c78",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "До свид+ания!"
+ },
+ "d01_do_svidaniya_m_slow": {
+  "hash": "c7779e059c6d7869",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "До свид+ания!"
+ },
+ "d01_dobroe_utro_f": {
+  "hash": "a04c0f09708cbc40",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Д+оброе +утро!"
+ },
+ "d01_dobroe_utro_f_slow": {
+  "hash": "fc340248e1068143",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Д+оброе +утро!"
+ },
+ "d01_dobroe_utro_m": {
+  "hash": "fa8690e6c5bdd5e1",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Д+оброе +утро!"
+ },
+ "d01_dobroe_utro_m_slow": {
+  "hash": "f3516d5a55ff44f5",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Д+оброе +утро!"
+ },
+ "d01_dobryy_den_f": {
+  "hash": "98136b7fe0446295",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Д+обрый день!"
+ },
+ "d01_dobryy_den_f_slow": {
+  "hash": "e0c85121d6f23583",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Д+обрый день!"
+ },
+ "d01_dobryy_den_m": {
+  "hash": "0fa96b6f1ae00375",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Д+обрый день!"
+ },
+ "d01_dobryy_den_m_slow": {
+  "hash": "a69ac1406101b017",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Д+обрый день!"
+ },
+ "d01_dobryy_vecher_f": {
+  "hash": "fb9beb45c5b7c502",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Д+обрый в+ечер!"
+ },
+ "d01_dobryy_vecher_f_slow": {
+  "hash": "92b3fb4479e9a624",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Д+обрый в+ечер!"
+ },
+ "d01_dobryy_vecher_m": {
+  "hash": "2fae1b7bb56d0de8",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Д+обрый в+ечер!"
+ },
+ "d01_dobryy_vecher_m_slow": {
+  "hash": "ac21ec80083adfe0",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Д+обрый в+ечер!"
+ },
+ "d01_izvinite_f": {
+  "hash": "19d277647c615c28",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Извин+ите!"
+ },
+ "d01_izvinite_f_slow": {
+  "hash": "ccd3d0c0ddd30b99",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Извин+ите!"
+ },
+ "d01_izvinite_m": {
+  "hash": "20ac8bb7c156d16c",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Извин+ите!"
+ },
+ "d01_izvinite_m_slow": {
+  "hash": "82319e0b4d96c57a",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Извин+ите!"
+ },
+ "d01_net_f": {
+  "hash": "ba673af782cb56d9",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Нет."
+ },
+ "d01_net_f_slow": {
+  "hash": "a3c13b219f4567ba",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Нет."
+ },
+ "d01_net_m": {
+  "hash": "a277b0a87a079821",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Нет."
+ },
+ "d01_net_m_slow": {
+  "hash": "31f599528d62e417",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Нет."
+ },
+ "d01_poka_f": {
+  "hash": "6034193526b857a0",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Пок+а!"
+ },
+ "d01_poka_f_slow": {
+  "hash": "98d1149e3ea72bf8",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Пок+а!"
+ },
+ "d01_poka_m": {
+  "hash": "52e1d479ed4a1a34",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Пок+а!"
+ },
+ "d01_poka_m_slow": {
+  "hash": "b6606a693194a84f",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Пок+а!"
+ },
+ "d01_pozhaluysta_f": {
+  "hash": "a65d03910b8ac707",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Пож+алуйста!"
+ },
+ "d01_pozhaluysta_f_slow": {
+  "hash": "3ce7ed6897e99bef",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Пож+алуйста!"
+ },
+ "d01_pozhaluysta_m": {
+  "hash": "aad832db10e1f576",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Пож+алуйста!"
+ },
+ "d01_pozhaluysta_m_slow": {
+  "hash": "c0c25890c041a70f",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Пож+алуйста!"
+ },
+ "d01_privet_f": {
+  "hash": "626922dea9462a03",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Прив+ет!"
+ },
+ "d01_privet_f_slow": {
+  "hash": "0c136e6829780549",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Прив+ет!"
+ },
+ "d01_privet_m": {
+  "hash": "62197b80b29edd52",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Прив+ет!"
+ },
+ "d01_privet_m_slow": {
+  "hash": "2e7001aef69cfd9d",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Прив+ет!"
+ },
+ "d01_spasibo_bolshoe_f": {
+  "hash": "cdb729e482b829ed",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Спас+ибо больш+ое!"
+ },
+ "d01_spasibo_bolshoe_f_slow": {
+  "hash": "5ef7e06dcdfa5867",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Спас+ибо больш+ое!"
+ },
+ "d01_spasibo_bolshoe_m": {
+  "hash": "36f11a482b0dac63",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Спас+ибо больш+ое!"
+ },
+ "d01_spasibo_bolshoe_m_slow": {
+  "hash": "8a256d4ebe5a8cea",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Спас+ибо больш+ое!"
+ },
+ "d01_spasibo_f": {
+  "hash": "d8b00ea0c5d64334",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Спас+ибо!"
+ },
+ "d01_spasibo_f_slow": {
+  "hash": "f747ace0db2b6170",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Спас+ибо!"
+ },
+ "d01_spasibo_m": {
+  "hash": "81632f0150c8ff21",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Спас+ибо!"
+ },
+ "d01_spasibo_m_slow": {
+  "hash": "4e11e181de2dc82b",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Спас+ибо!"
+ },
+ "d01_zdravstvuyte_f": {
+  "hash": "beb719384298ce5b",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Здр+авствуйте!"
+ },
+ "d01_zdravstvuyte_f_slow": {
+  "hash": "5ce2275e9b22ee8f",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Здр+авствуйте!"
+ },
+ "d01_zdravstvuyte_m": {
+  "hash": "ded6bb7c5eab7700",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Здр+авствуйте!"
+ },
+ "d01_zdravstvuyte_m_slow": {
+  "hash": "ca08e727be76b179",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Здр+авствуйте!"
+ },
+ "d02_a_ty_f": {
+  "hash": "e809a2e33f9a78af",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "А ты?"
+ },
+ "d02_a_ty_f_slow": {
+  "hash": "e4226515a64073c3",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "А ты?"
+ },
+ "d02_a_ty_m": {
+  "hash": "fa4275abd076fc6e",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "А ты?"
+ },
+ "d02_a_ty_m_slow": {
+  "hash": "e140c0e42de189d4",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "А ты?"
+ },
+ "d02_dlg_1_m_p": {
+  "hash": "3dcaaa1bea7853f0",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Прив+ет! Мен+я зов+ут +Аня. Как теб+я зов+ут?"
+ },
+ "d02_dlg_1_m_p_slow": {
+  "hash": "56bdde59b9dd08a5",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Прив+ет! Мен+я зов+ут +Аня. Как теб+я зов+ут?"
+ },
+ "d02_dlg_2_m_f": {
+  "hash": "190578ab4396a4da",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Прив+ет! Мен+я зов+ут Кад+ир."
+ },
+ "d02_dlg_2_m_f_slow": {
+  "hash": "8bc0cd55fdb9e13f",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Прив+ет! Мен+я зов+ут Кад+ир."
+ },
+ "d02_dlg_2_m_m": {
+  "hash": "dba98811af1019a7",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Прив+ет! Мен+я зов+ут Кад+ир."
+ },
+ "d02_dlg_2_m_m_slow": {
+  "hash": "9cea690cef0b551e",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Прив+ет! Мен+я зов+ут Кад+ир."
+ },
+ "d02_dlg_3_m_p": {
+  "hash": "4cb97307c6eb82ec",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "+Очень при+ятно!"
+ },
+ "d02_dlg_3_m_p_slow": {
+  "hash": "752fe8b8859ec075",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "+Очень при+ятно!"
+ },
+ "d02_dlg_4_m_f": {
+  "hash": "7e09df9e8af411a0",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Мне т+оже. Отк+уда ты?"
+ },
+ "d02_dlg_4_m_f_slow": {
+  "hash": "46f1e41a2ce38858",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Мне т+оже. Отк+уда ты?"
+ },
+ "d02_dlg_4_m_m": {
+  "hash": "7313fc30b98358f4",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Мне т+оже. Отк+уда ты?"
+ },
+ "d02_dlg_4_m_m_slow": {
+  "hash": "5bdb21e9cb4f8b92",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Мне т+оже. Отк+уда ты?"
+ },
+ "d02_dlg_5_m_p": {
+  "hash": "e2185e779b95d369",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Я из Росс+ии. А ты?"
+ },
+ "d02_dlg_5_m_p_slow": {
+  "hash": "2240b94faf3b69a9",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Я из Росс+ии. А ты?"
+ },
+ "d02_dlg_6_m_f": {
+  "hash": "168c5c416812994f",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я из Герм+ании. А где ты живёшь?"
+ },
+ "d02_dlg_6_m_f_slow": {
+  "hash": "3858fd93a3d81b22",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я из Герм+ании. А где ты живёшь?"
+ },
+ "d02_dlg_6_m_m": {
+  "hash": "96ac89d7ba45c89c",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я из Герм+ании. А где ты живёшь?"
+ },
+ "d02_dlg_6_m_m_slow": {
+  "hash": "ed37a161e0c2cce1",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я из Герм+ании. А где ты живёшь?"
+ },
+ "d02_dlg_7_m_p": {
+  "hash": "e4d8d49648b1c3d8",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Я жив+у в Москв+е."
+ },
+ "d02_dlg_7_m_p_slow": {
+  "hash": "35535d2808aaa498",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Я жив+у в Москв+е."
+ },
+ "d02_gde_ty_zhivyosh_f": {
+  "hash": "cdd27f6eca83c49c",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Где ты живёшь?"
+ },
+ "d02_gde_ty_zhivyosh_f_slow": {
+  "hash": "56790fadedb0fff3",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Где ты живёшь?"
+ },
+ "d02_gde_ty_zhivyosh_m": {
+  "hash": "77b0ecdb5c7e9d55",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Где ты живёшь?"
+ },
+ "d02_gde_ty_zhivyosh_m_slow": {
+  "hash": "8388784e5b9c2f01",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Где ты живёшь?"
+ },
+ "d02_kak_tebya_zovut_f": {
+  "hash": "af2cc72d6d1cd519",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Как теб+я зов+ут?"
+ },
+ "d02_kak_tebya_zovut_f_slow": {
+  "hash": "c29c3cb4873bccc8",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Как теб+я зов+ут?"
+ },
+ "d02_kak_tebya_zovut_m": {
+  "hash": "ea3c10bd7f365e32",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Как теб+я зов+ут?"
+ },
+ "d02_kak_tebya_zovut_m_slow": {
+  "hash": "638447a3968837b2",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Как теб+я зов+ут?"
+ },
+ "d02_kak_vas_zovut_f": {
+  "hash": "dd03dd6b8a952ef3",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Как вас зов+ут?"
+ },
+ "d02_kak_vas_zovut_f_slow": {
+  "hash": "360acc8c645590a3",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Как вас зов+ут?"
+ },
+ "d02_kak_vas_zovut_m": {
+  "hash": "ed9a4442b5ac94a2",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Как вас зов+ут?"
+ },
+ "d02_kak_vas_zovut_m_slow": {
+  "hash": "6c338c85fc972686",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Как вас зов+ут?"
+ },
+ "d02_menya_zovut_f": {
+  "hash": "5c8fb2cc8393073b",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Мен+я зов+ут Кад+ир."
+ },
+ "d02_menya_zovut_f_slow": {
+  "hash": "ec5280c56c6c6a4d",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Мен+я зов+ут Кад+ир."
+ },
+ "d02_menya_zovut_m": {
+  "hash": "2b276e296828f357",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Мен+я зов+ут Кад+ир."
+ },
+ "d02_menya_zovut_m_slow": {
+  "hash": "47a38bc89fde232b",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Мен+я зов+ут Кад+ир."
+ },
+ "d02_mne_tozhe_f": {
+  "hash": "6d90db8903a5e026",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Мне т+оже."
+ },
+ "d02_mne_tozhe_f_slow": {
+  "hash": "e520bd03852f0276",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Мне т+оже."
+ },
+ "d02_mne_tozhe_m": {
+  "hash": "32b1dbdadb80e17a",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Мне т+оже."
+ },
+ "d02_mne_tozhe_m_slow": {
+  "hash": "8d0f010351764f26",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Мне т+оже."
+ },
+ "d02_ochen_priyatno_f": {
+  "hash": "5b001ec3d1b730a9",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "+Очень при+ятно!"
+ },
+ "d02_ochen_priyatno_f_slow": {
+  "hash": "6b80f18c35054afe",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "+Очень при+ятно!"
+ },
+ "d02_ochen_priyatno_m": {
+  "hash": "fe865febe25f44a5",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "+Очень при+ятно!"
+ },
+ "d02_ochen_priyatno_m_slow": {
+  "hash": "3be7e139e0ca31f8",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "+Очень при+ятно!"
+ },
+ "d02_otkuda_ty_f": {
+  "hash": "bbb55237276a1952",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Отк+уда ты?"
+ },
+ "d02_otkuda_ty_f_slow": {
+  "hash": "337f4dd29230571b",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Отк+уда ты?"
+ },
+ "d02_otkuda_ty_m": {
+  "hash": "44617a0fc8fbd004",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Отк+уда ты?"
+ },
+ "d02_otkuda_ty_m_slow": {
+  "hash": "261706347e5afb15",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Отк+уда ты?"
+ },
+ "d02_priyatno_poznakomitsya_f": {
+  "hash": "34ffeb9e9766cdea",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "При+ятно познак+омиться!"
+ },
+ "d02_priyatno_poznakomitsya_f_slow": {
+  "hash": "f8c5847c215cf3ec",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "При+ятно познак+омиться!"
+ },
+ "d02_priyatno_poznakomitsya_m": {
+  "hash": "a9722590220de9b9",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "При+ятно познак+омиться!"
+ },
+ "d02_priyatno_poznakomitsya_m_slow": {
+  "hash": "3be6e5939b1dd2df",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "При+ятно познак+омиться!"
+ },
+ "d02_ty_f": {
+  "hash": "fdc484e0c3a8c5d2",
+  "rate": 1.0,
+  "speaker": 2,
+  "text": "ты"
+ },
+ "d02_ty_f_slow": {
+  "hash": "48b4e114d42d30c6",
+  "rate": 0.7,
+  "speaker": 2,
+  "text": "ты"
+ },
+ "d02_ty_m": {
+  "hash": "5af3a761abe20d41",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "ты"
+ },
+ "d02_ty_m_slow": {
+  "hash": "b40f71bdbe87bd53",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "ты"
+ },
+ "d02_vy_f": {
+  "hash": "353feef67f27cb78",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "вы"
+ },
+ "d02_vy_f_slow": {
+  "hash": "41fe23bb833b376b",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "вы"
+ },
+ "d02_vy_m": {
+  "hash": "47c209d15effac38",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "вы"
+ },
+ "d02_vy_m_slow": {
+  "hash": "fe76a95dee1fe61f",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "вы"
+ },
+ "d02_ya_f": {
+  "hash": "d04c77113c7302cb",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "я"
+ },
+ "d02_ya_f_slow": {
+  "hash": "ff6a538f418af09b",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "я"
+ },
+ "d02_ya_iz_germanii_f": {
+  "hash": "33b77359e228632d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я из Герм+ании."
+ },
+ "d02_ya_iz_germanii_f_slow": {
+  "hash": "b035fce070bfae33",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я из Герм+ании."
+ },
+ "d02_ya_iz_germanii_m": {
+  "hash": "4a60fc623ad34fc0",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я из Герм+ании."
+ },
+ "d02_ya_iz_germanii_m_slow": {
+  "hash": "3a2043d1bd2beeba",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я из Герм+ании."
+ },
+ "d02_ya_iz_rossii_f": {
+  "hash": "ff504ed35e307327",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я из Росс+ии."
+ },
+ "d02_ya_iz_rossii_f_slow": {
+  "hash": "692e340076108c45",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я из Росс+ии."
+ },
+ "d02_ya_iz_rossii_m": {
+  "hash": "9af5edd8dd573137",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я из Росс+ии."
+ },
+ "d02_ya_iz_rossii_m_slow": {
+  "hash": "41ca8a9c3aa54599",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я из Росс+ии."
+ },
+ "d02_ya_m": {
+  "hash": "03a3f0bae2207faa",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "я"
+ },
+ "d02_ya_m_slow": {
+  "hash": "a65444a984824d4e",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "я"
+ },
+ "d02_ya_zhivu_v_germanii_f": {
+  "hash": "ee6d654e41dbba8c",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я жив+у в Герм+ании."
+ },
+ "d02_ya_zhivu_v_germanii_f_slow": {
+  "hash": "f229d47847282ec9",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я жив+у в Герм+ании."
+ },
+ "d02_ya_zhivu_v_germanii_m": {
+  "hash": "62234a1cfa3a1e36",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я жив+у в Герм+ании."
+ },
+ "d02_ya_zhivu_v_germanii_m_slow": {
+  "hash": "1aeb55dfb28d3069",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я жив+у в Герм+ании."
+ },
+ "d03_a_u_tebya_f": {
+  "hash": "635681b5b6b5ebae",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "А у теб+я?"
+ },
+ "d03_a_u_tebya_f_slow": {
+  "hash": "892107453b43d307",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "А у теб+я?"
+ },
+ "d03_a_u_tebya_m": {
+  "hash": "0f8cc8f371dcf38c",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "А у теб+я?"
+ },
+ "d03_a_u_tebya_m_slow": {
+  "hash": "d93d5a66f6b33ad0",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "А у теб+я?"
+ },
+ "d03_chto_novogo_f": {
+  "hash": "a828b89f9dac7996",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Что н+ового?"
+ },
+ "d03_chto_novogo_f_slow": {
+  "hash": "299250f099854f07",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Что н+ового?"
+ },
+ "d03_chto_novogo_m": {
+  "hash": "727c3f1e73d3bceb",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Что н+ового?"
+ },
+ "d03_chto_novogo_m_slow": {
+  "hash": "8b792f2c94b3ceff",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Что н+ового?"
+ },
+ "d03_dlg_1_m_p": {
+  "hash": "ef603e1e96736092",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Прив+ет, Кад+ир! Как дел+а?"
+ },
+ "d03_dlg_1_m_p_slow": {
+  "hash": "3b8e5dfb2958a1bc",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Прив+ет, Кад+ир! Как дел+а?"
+ },
+ "d03_dlg_2_m_f": {
+  "hash": "8fa0bd47c6d7b7d7",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Прив+ет! Спас+ибо, хорош+о. А у теб+я?"
+ },
+ "d03_dlg_2_m_f_slow": {
+  "hash": "20f552fbde82f240",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Прив+ет! Спас+ибо, хорош+о. А у теб+я?"
+ },
+ "d03_dlg_2_m_m": {
+  "hash": "d097eba8bb54ba13",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Прив+ет! Спас+ибо, хорош+о. А у теб+я?"
+ },
+ "d03_dlg_2_m_m_slow": {
+  "hash": "7b01a76cbf8eebc7",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Прив+ет! Спас+ибо, хорош+о. А у теб+я?"
+ },
+ "d03_dlg_3_m_p": {
+  "hash": "2a7a8eaa1c7dc02f",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Т+оже хорош+о. Что н+ового?"
+ },
+ "d03_dlg_3_m_p_slow": {
+  "hash": "b036364ea53e933a",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Т+оже хорош+о. Что н+ового?"
+ },
+ "d03_dlg_4_f_f": {
+  "hash": "8c037ad3617c21cc",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Ничег+о н+ового. Я уст+ала."
+ },
+ "d03_dlg_4_f_f_slow": {
+  "hash": "a2fa0b75d7b0fbd7",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Ничег+о н+ового. Я уст+ала."
+ },
+ "d03_dlg_4_m_m": {
+  "hash": "e77809023eb8db10",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Ничег+о н+ового. Я уст+ал."
+ },
+ "d03_dlg_4_m_m_slow": {
+  "hash": "9267356cbf27fb8c",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Ничег+о н+ового. Я уст+ал."
+ },
+ "d03_dlg_5_m_p": {
+  "hash": "374d57446191f53f",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Пон+ятно. Ну, пок+а!"
+ },
+ "d03_dlg_5_m_p_slow": {
+  "hash": "51330e7f443454ed",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Пон+ятно. Ну, пок+а!"
+ },
+ "d03_dlg_6_m_f": {
+  "hash": "6034193526b857a0",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Пок+а!"
+ },
+ "d03_dlg_6_m_f_slow": {
+  "hash": "98d1149e3ea72bf8",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Пок+а!"
+ },
+ "d03_dlg_6_m_m": {
+  "hash": "52e1d479ed4a1a34",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Пок+а!"
+ },
+ "d03_dlg_6_m_m_slow": {
+  "hash": "b6606a693194a84f",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Пок+а!"
+ },
+ "d03_horosho_f": {
+  "hash": "37a475b9a10fd460",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Хорош+о."
+ },
+ "d03_horosho_f_slow": {
+  "hash": "4fb3b3450489c69f",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Хорош+о."
+ },
+ "d03_horosho_m": {
+  "hash": "1735f99cc4c898e1",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Хорош+о."
+ },
+ "d03_horosho_m_slow": {
+  "hash": "7a5576a6812bac59",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Хорош+о."
+ },
+ "d03_kak_dela_f": {
+  "hash": "04076da0ec177fc0",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Как дел+а?"
+ },
+ "d03_kak_dela_f_slow": {
+  "hash": "7536f38fc06d1e19",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Как дел+а?"
+ },
+ "d03_kak_dela_m": {
+  "hash": "7f318da33f0a0bc1",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Как дел+а?"
+ },
+ "d03_kak_dela_m_slow": {
+  "hash": "bab1fe1304b79978",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Как дел+а?"
+ },
+ "d03_kak_ty_f": {
+  "hash": "09a25108a1c325b4",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Как ты?"
+ },
+ "d03_kak_ty_f_slow": {
+  "hash": "ad54c9ecd4fb4cb7",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Как ты?"
+ },
+ "d03_kak_ty_m": {
+  "hash": "1257ab55fc922661",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Как ты?"
+ },
+ "d03_kak_ty_m_slow": {
+  "hash": "63c7bf23470224b7",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Как ты?"
+ },
+ "d03_kak_u_tebya_dela_f": {
+  "hash": "8598a1e2152cbd67",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Как у теб+я дел+а?"
+ },
+ "d03_kak_u_tebya_dela_f_slow": {
+  "hash": "a4b7d428c239c6a9",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Как у теб+я дел+а?"
+ },
+ "d03_kak_u_tebya_dela_m": {
+  "hash": "c200ead225a802b4",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Как у теб+я дел+а?"
+ },
+ "d03_kak_u_tebya_dela_m_slow": {
+  "hash": "d7a32b58ad844a55",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Как у теб+я дел+а?"
+ },
+ "d03_nichego_novogo_f": {
+  "hash": "34f97ea8e7fee18f",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Ничег+о н+ового."
+ },
+ "d03_nichego_novogo_f_slow": {
+  "hash": "4968015d8e9bd92d",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Ничег+о н+ового."
+ },
+ "d03_nichego_novogo_m": {
+  "hash": "079db789c561c207",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Ничег+о н+ового."
+ },
+ "d03_nichego_novogo_m_slow": {
+  "hash": "bd696b3d993a3c48",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Ничег+о н+ового."
+ },
+ "d03_normalno_f": {
+  "hash": "4671819fa0bc5827",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Норм+ально."
+ },
+ "d03_normalno_f_slow": {
+  "hash": "cd4597cf0fb801c4",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Норм+ально."
+ },
+ "d03_normalno_m": {
+  "hash": "9e214168629100cf",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Норм+ально."
+ },
+ "d03_normalno_m_slow": {
+  "hash": "7312e154467b3188",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Норм+ально."
+ },
+ "d03_otlichno_f": {
+  "hash": "55e041e0cba45676",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Отл+ично!"
+ },
+ "d03_otlichno_f_slow": {
+  "hash": "ab8732495a14bc1c",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Отл+ично!"
+ },
+ "d03_otlichno_m": {
+  "hash": "c7f8ebda986b1851",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Отл+ично!"
+ },
+ "d03_otlichno_m_slow": {
+  "hash": "0a9e15a8e9da7144",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Отл+ично!"
+ },
+ "d03_ploho_f": {
+  "hash": "bca11dc6de79aead",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Пл+охо."
+ },
+ "d03_ploho_f_slow": {
+  "hash": "68d91d3b03eac4f6",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Пл+охо."
+ },
+ "d03_ploho_m": {
+  "hash": "ecbbe2ee1796b0d5",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Пл+охо."
+ },
+ "d03_ploho_m_slow": {
+  "hash": "3336822975c58b7d",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Пл+охо."
+ },
+ "d03_spasibo_horosho_f": {
+  "hash": "11565d3b58a64e49",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Спас+ибо, хорош+о."
+ },
+ "d03_spasibo_horosho_f_slow": {
+  "hash": "f1d06c6bb28dd4bc",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Спас+ибо, хорош+о."
+ },
+ "d03_spasibo_horosho_m": {
+  "hash": "a747b0f931eca975",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Спас+ибо, хорош+о."
+ },
+ "d03_spasibo_horosho_m_slow": {
+  "hash": "6d6014b8ca96a5db",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Спас+ибо, хорош+о."
+ },
+ "d03_tak_sebe_f": {
+  "hash": "77c61a368154b849",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Так себ+е."
+ },
+ "d03_tak_sebe_f_slow": {
+  "hash": "dcf2fc9bd73c4a2c",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Так себ+е."
+ },
+ "d03_tak_sebe_m": {
+  "hash": "d41fe86783c1d3eb",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Так себ+е."
+ },
+ "d03_tak_sebe_m_slow": {
+  "hash": "6526f1dab7cac9e6",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Так себ+е."
+ },
+ "d03_tozhe_horosho_f": {
+  "hash": "350892894ed2e489",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Т+оже хорош+о."
+ },
+ "d03_tozhe_horosho_f_slow": {
+  "hash": "b21f9c3a3b4676bc",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Т+оже хорош+о."
+ },
+ "d03_tozhe_horosho_m": {
+  "hash": "1fd507cb1ec2f52c",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Т+оже хорош+о."
+ },
+ "d03_tozhe_horosho_m_slow": {
+  "hash": "2b10d9a39d9108f2",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Т+оже хорош+о."
+ },
+ "d03_vsyo_horosho_f": {
+  "hash": "d55390cd64c46d53",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Всё хорош+о."
+ },
+ "d03_vsyo_horosho_f_slow": {
+  "hash": "0b2495df02c9f38d",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Всё хорош+о."
+ },
+ "d03_vsyo_horosho_m": {
+  "hash": "9ad3f9465e474232",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Всё хорош+о."
+ },
+ "d03_vsyo_horosho_m_slow": {
+  "hash": "d84a8e5d02ed1af3",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Всё хорош+о."
+ },
+ "d03_ya_ustal_f": {
+  "hash": "cfb45d96de94e9a4",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я уст+ала."
+ },
+ "d03_ya_ustal_f_slow": {
+  "hash": "ffbac25eeef7c299",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я уст+ала."
+ },
+ "d03_ya_ustal_m": {
+  "hash": "668c4b4c2b464901",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я уст+ал."
+ },
+ "d03_ya_ustal_m_slow": {
+  "hash": "f18d957f5e544804",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я уст+ал."
+ },
+ "d04_chetyre_f": {
+  "hash": "5d4b0d28c4d18bd1",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "чет+ыре"
+ },
+ "d04_chetyre_f_slow": {
+  "hash": "1a7dff824d498e2d",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "чет+ыре"
+ },
+ "d04_chetyre_m": {
+  "hash": "718e7fe17900812b",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "чет+ыре"
+ },
+ "d04_chetyre_m_slow": {
+  "hash": "6554c803a11d26dc",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "чет+ыре"
+ },
+ "d04_desyat_f": {
+  "hash": "9d7743b00b7df508",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "д+есять"
+ },
+ "d04_desyat_f_slow": {
+  "hash": "9f4c9daadc43b49f",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "д+есять"
+ },
+ "d04_desyat_m": {
+  "hash": "3f74ddbd7b1a58c2",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "д+есять"
+ },
+ "d04_desyat_m_slow": {
+  "hash": "95265399d4687fb9",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "д+есять"
+ },
+ "d04_devyat_f": {
+  "hash": "5042370b3b2781f5",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "д+евять"
+ },
+ "d04_devyat_f_slow": {
+  "hash": "97415cf39796e31e",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "д+евять"
+ },
+ "d04_devyat_m": {
+  "hash": "129f007211a33652",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "д+евять"
+ },
+ "d04_devyat_m_slow": {
+  "hash": "d81bbbef6207f02b",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "д+евять"
+ },
+ "d04_dlg_1_m_p": {
+  "hash": "b77d6985aa850daf",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Кад+ир, ск+олько теб+е лет?"
+ },
+ "d04_dlg_1_m_p_slow": {
+  "hash": "27d29d7ed110f88c",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Кад+ир, ск+олько теб+е лет?"
+ },
+ "d04_dlg_2_m_f": {
+  "hash": "29c6a956aa05046e",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Мне тр+идцать лет. А теб+е?"
+ },
+ "d04_dlg_2_m_f_slow": {
+  "hash": "8b338e83283ef265",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Мне тр+идцать лет. А теб+е?"
+ },
+ "d04_dlg_2_m_m": {
+  "hash": "570133594831cb96",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Мне тр+идцать лет. А теб+е?"
+ },
+ "d04_dlg_2_m_m_slow": {
+  "hash": "8e5e50162ae75eaa",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Мне тр+идцать лет. А теб+е?"
+ },
+ "d04_dlg_3_m_p": {
+  "hash": "23e93ab782b87245",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Мне дв+адцать шесть."
+ },
+ "d04_dlg_3_m_p_slow": {
+  "hash": "2e5239d57725a900",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Мне дв+адцать шесть."
+ },
+ "d04_dlg_4_m_f": {
+  "hash": "7e38caa99c870cae",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Извин+ите, ск+олько ст+оит?"
+ },
+ "d04_dlg_4_m_f_slow": {
+  "hash": "789b78179dda72d4",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Извин+ите, ск+олько ст+оит?"
+ },
+ "d04_dlg_4_m_m": {
+  "hash": "a20f3f091d2bfedd",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Извин+ите, ск+олько ст+оит?"
+ },
+ "d04_dlg_4_m_m_slow": {
+  "hash": "410906a2731dd878",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Извин+ите, ск+олько ст+оит?"
+ },
+ "d04_dlg_5_m_p": {
+  "hash": "1b1fe58ac95b5bc8",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Сто рубл+ей."
+ },
+ "d04_dlg_5_m_p_slow": {
+  "hash": "1bacd5a2ecd461a2",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Сто рубл+ей."
+ },
+ "d04_dlg_6_m_f": {
+  "hash": "d8b00ea0c5d64334",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Спас+ибо!"
+ },
+ "d04_dlg_6_m_f_slow": {
+  "hash": "f747ace0db2b6170",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Спас+ибо!"
+ },
+ "d04_dlg_6_m_m": {
+  "hash": "81632f0150c8ff21",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Спас+ибо!"
+ },
+ "d04_dlg_6_m_m_slow": {
+  "hash": "4e11e181de2dc82b",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Спас+ибо!"
+ },
+ "d04_dva_f": {
+  "hash": "b80b8191aa8b67fe",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "два"
+ },
+ "d04_dva_f_slow": {
+  "hash": "0bd24793d9923847",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "два"
+ },
+ "d04_dva_m": {
+  "hash": "c3b793e98dc4b39d",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "два"
+ },
+ "d04_dva_m_slow": {
+  "hash": "74d8cf477a7640f4",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "два"
+ },
+ "d04_dvadtsat_f": {
+  "hash": "0cd9b53b05576646",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "дв+адцать"
+ },
+ "d04_dvadtsat_f_slow": {
+  "hash": "ff0546d59e6dc96e",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "дв+адцать"
+ },
+ "d04_dvadtsat_m": {
+  "hash": "46ba15a8aa8a7a9e",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "дв+адцать"
+ },
+ "d04_dvadtsat_m_slow": {
+  "hash": "a19bf51c9980c313",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "дв+адцать"
+ },
+ "d04_mne_tridtsat_let_f": {
+  "hash": "2f47750e2354847e",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Мне тр+идцать лет."
+ },
+ "d04_mne_tridtsat_let_f_slow": {
+  "hash": "69356c7ac4524dc8",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Мне тр+идцать лет."
+ },
+ "d04_mne_tridtsat_let_m": {
+  "hash": "2a37f294040e5e56",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Мне тр+идцать лет."
+ },
+ "d04_mne_tridtsat_let_m_slow": {
+  "hash": "f812868a7f14c752",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Мне тр+идцать лет."
+ },
+ "d04_odin_f": {
+  "hash": "4f72a9d64449e6b8",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "од+ин"
+ },
+ "d04_odin_f_slow": {
+  "hash": "5c8b9d346d4a3a53",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "од+ин"
+ },
+ "d04_odin_m": {
+  "hash": "eeab45355af11029",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "од+ин"
+ },
+ "d04_odin_m_slow": {
+  "hash": "a6e1e290b796ce57",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "од+ин"
+ },
+ "d04_pyat_f": {
+  "hash": "c99cc8b157b300e7",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "пять"
+ },
+ "d04_pyat_f_slow": {
+  "hash": "7abe2b0cbcd9d6c7",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "пять"
+ },
+ "d04_pyat_m": {
+  "hash": "1bf1ed6a5cf70315",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "пять"
+ },
+ "d04_pyat_m_slow": {
+  "hash": "fdef952c42bb0e04",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "пять"
+ },
+ "d04_sem_f": {
+  "hash": "b0dc881e6ae78a19",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "семь"
+ },
+ "d04_sem_f_slow": {
+  "hash": "51e41f10796b2191",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "семь"
+ },
+ "d04_sem_m": {
+  "hash": "eeabb47dfdb08adf",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "семь"
+ },
+ "d04_sem_m_slow": {
+  "hash": "4e8ad02a6473e45a",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "семь"
+ },
+ "d04_shest_f": {
+  "hash": "d8777b8d9d55e13a",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "шесть"
+ },
+ "d04_shest_f_slow": {
+  "hash": "b51b79c045488630",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "шесть"
+ },
+ "d04_shest_m": {
+  "hash": "d3717a33f042a941",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "шесть"
+ },
+ "d04_shest_m_slow": {
+  "hash": "ef2039442f795ebe",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "шесть"
+ },
+ "d04_skolko_stoit_f": {
+  "hash": "3552145710098167",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Ск+олько ст+оит?"
+ },
+ "d04_skolko_stoit_f_slow": {
+  "hash": "a4e9829ed3783dd3",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Ск+олько ст+оит?"
+ },
+ "d04_skolko_stoit_m": {
+  "hash": "04f6269b05b5ffe1",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Ск+олько ст+оит?"
+ },
+ "d04_skolko_stoit_m_slow": {
+  "hash": "8b25bc4c8007228c",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Ск+олько ст+оит?"
+ },
+ "d04_skolko_tebe_let_f": {
+  "hash": "973181c28bd11ed0",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Ск+олько теб+е лет?"
+ },
+ "d04_skolko_tebe_let_f_slow": {
+  "hash": "7a14c19536f2b848",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Ск+олько теб+е лет?"
+ },
+ "d04_skolko_tebe_let_m": {
+  "hash": "258d5652bafd1959",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Ск+олько теб+е лет?"
+ },
+ "d04_skolko_tebe_let_m_slow": {
+  "hash": "cb75342971904647",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Ск+олько теб+е лет?"
+ },
+ "d04_sorok_f": {
+  "hash": "12f7e7d8ed606c73",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "с+орок"
+ },
+ "d04_sorok_f_slow": {
+  "hash": "3f7c965e30a85780",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "с+орок"
+ },
+ "d04_sorok_m": {
+  "hash": "ba05f44b675e8291",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "с+орок"
+ },
+ "d04_sorok_m_slow": {
+  "hash": "12366f9bf9a59b7f",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "с+орок"
+ },
+ "d04_tri_f": {
+  "hash": "eaa839ae2744e298",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "три"
+ },
+ "d04_tri_f_slow": {
+  "hash": "b96398d14bcef875",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "три"
+ },
+ "d04_tri_m": {
+  "hash": "c8bc607a49b5465e",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "три"
+ },
+ "d04_tri_m_slow": {
+  "hash": "1f279ba9306ff5d7",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "три"
+ },
+ "d04_tridtsat_f": {
+  "hash": "03d24b6b1545a3a3",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "тр+идцать"
+ },
+ "d04_tridtsat_f_slow": {
+  "hash": "09a132a8cc766f12",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "тр+идцать"
+ },
+ "d04_tridtsat_m": {
+  "hash": "0e224dfbdd14e037",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "тр+идцать"
+ },
+ "d04_tridtsat_m_slow": {
+  "hash": "41bf0b4a15afed58",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "тр+идцать"
+ },
+ "d04_vosem_f": {
+  "hash": "97ea5234eaa2ff87",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "в+осемь"
+ },
+ "d04_vosem_f_slow": {
+  "hash": "53edb7a02060135d",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "в+осемь"
+ },
+ "d04_vosem_m": {
+  "hash": "f216f58ee6862944",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "в+осемь"
+ },
+ "d04_vosem_m_slow": {
+  "hash": "d4917ed365c8e248",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "в+осемь"
+ },
+ "d05_chto_eto_znachit_f": {
+  "hash": "5c426c3f2137b180",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Что +это зн+ачит?"
+ },
+ "d05_chto_eto_znachit_f_slow": {
+  "hash": "d9f428a2a721facb",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Что +это зн+ачит?"
+ },
+ "d05_chto_eto_znachit_m": {
+  "hash": "df5d3799952cb2e6",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Что +это зн+ачит?"
+ },
+ "d05_chto_eto_znachit_m_slow": {
+  "hash": "2876e512f27dface",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Что +это зн+ачит?"
+ },
+ "d05_chto_f": {
+  "hash": "29ec815d8cd8be94",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Что?"
+ },
+ "d05_chto_f_slow": {
+  "hash": "b70a96689a9e5744",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Что?"
+ },
+ "d05_chto_m": {
+  "hash": "45b25e8e57c8ef67",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Что?"
+ },
+ "d05_chto_m_slow": {
+  "hash": "ac3f00d33ae207da",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Что?"
+ },
+ "d05_dlg_1_m_p": {
+  "hash": "d4a2cd93f0993b95",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Вы говор+ите по-р+усски?"
+ },
+ "d05_dlg_1_m_p_slow": {
+  "hash": "0fccb8d1d32b616f",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Вы говор+ите по-р+усски?"
+ },
+ "d05_dlg_2_m_f": {
+  "hash": "b3388abaf842426d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Да, немн+ого. Я уч+у р+усский яз+ык."
+ },
+ "d05_dlg_2_m_f_slow": {
+  "hash": "d2d43582cd245039",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Да, немн+ого. Я уч+у р+усский яз+ык."
+ },
+ "d05_dlg_2_m_m": {
+  "hash": "9929d5d58156e8da",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Да, немн+ого. Я уч+у р+усский яз+ык."
+ },
+ "d05_dlg_2_m_m_slow": {
+  "hash": "772d4cf72b2cdfb1",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Да, немн+ого. Я уч+у р+усский яз+ык."
+ },
+ "d05_dlg_3_m_p": {
+  "hash": "6f354ff38a6cd623",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Отл+ично! А по-англ+ийски?"
+ },
+ "d05_dlg_3_m_p_slow": {
+  "hash": "4783cf506f4b0f44",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Отл+ично! А по-англ+ийски?"
+ },
+ "d05_dlg_4_m_f": {
+  "hash": "7dffde71eded326d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Да, кон+ечно."
+ },
+ "d05_dlg_4_m_f_slow": {
+  "hash": "b1ece5f45739a952",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Да, кон+ечно."
+ },
+ "d05_dlg_4_m_m": {
+  "hash": "c200500d9df99fda",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Да, кон+ечно."
+ },
+ "d05_dlg_4_m_m_slow": {
+  "hash": "70127d32e158341b",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Да, кон+ечно."
+ },
+ "d05_dlg_5_m_p": {
+  "hash": "0e325fbe9a709c1d",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "А я немн+ого говор+ю по-нем+ецки, в шк+оле уч+ила."
+ },
+ "d05_dlg_5_m_p_slow": {
+  "hash": "b92158e06fb4048a",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "А я немн+ого говор+ю по-нем+ецки, в шк+оле уч+ила."
+ },
+ "d05_dlg_6_m_f": {
+  "hash": "0d762eb2ade51cc2",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Извин+ите, я не поним+аю. Повтор+ите, пож+алуйста."
+ },
+ "d05_dlg_6_m_f_slow": {
+  "hash": "c7bb177838b2a639",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Извин+ите, я не поним+аю. Повтор+ите, пож+алуйста."
+ },
+ "d05_dlg_6_m_m": {
+  "hash": "7cc9af8fa539fcf4",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Извин+ите, я не поним+аю. Повтор+ите, пож+алуйста."
+ },
+ "d05_dlg_6_m_m_slow": {
+  "hash": "1e82ca02de044621",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Извин+ите, я не поним+аю. Повтор+ите, пож+алуйста."
+ },
+ "d05_dlg_7_m_p": {
+  "hash": "24d1e6c8b922dc01",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Я говор+ю по-нем+ецки. Немн+ого."
+ },
+ "d05_dlg_7_m_p_slow": {
+  "hash": "9fba2f7ace92ddf7",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Я говор+ю по-нем+ецки. Немн+ого."
+ },
+ "d05_dlg_8_m_f": {
+  "hash": "55e041e0cba45676",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Отл+ично!"
+ },
+ "d05_dlg_8_m_f_slow": {
+  "hash": "ab8732495a14bc1c",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Отл+ично!"
+ },
+ "d05_dlg_8_m_m": {
+  "hash": "c7f8ebda986b1851",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Отл+ично!"
+ },
+ "d05_dlg_8_m_m_slow": {
+  "hash": "0a9e15a8e9da7144",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Отл+ично!"
+ },
+ "d05_eshyo_raz_f": {
+  "hash": "6dc9a439de08d5f2",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Ещё раз, пож+алуйста."
+ },
+ "d05_eshyo_raz_f_slow": {
+  "hash": "0e84aaf57a25d1e7",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Ещё раз, пож+алуйста."
+ },
+ "d05_eshyo_raz_m": {
+  "hash": "57c12ab859dd828b",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Ещё раз, пож+алуйста."
+ },
+ "d05_eshyo_raz_m_slow": {
+  "hash": "108630e72fc4173f",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Ещё раз, пож+алуйста."
+ },
+ "d05_kak_skazat_f": {
+  "hash": "bf3308f325c18aa1",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Как сказ+ать +это по-р+усски?"
+ },
+ "d05_kak_skazat_f_slow": {
+  "hash": "ed41e5f2f03c5542",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Как сказ+ать +это по-р+усски?"
+ },
+ "d05_kak_skazat_m": {
+  "hash": "ae66c49f7f36952c",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Как сказ+ать +это по-р+усски?"
+ },
+ "d05_kak_skazat_m_slow": {
+  "hash": "1a6faa38ab2904f1",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Как сказ+ать +это по-р+усски?"
+ },
+ "d05_konechno_f": {
+  "hash": "9bb39dfb292e9c50",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Кон+ечно!"
+ },
+ "d05_konechno_f_slow": {
+  "hash": "b7ac3bb01f52b811",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Кон+ечно!"
+ },
+ "d05_konechno_m": {
+  "hash": "6d79620eef067a5b",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Кон+ечно!"
+ },
+ "d05_konechno_m_slow": {
+  "hash": "788e12704b63c0bf",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Кон+ечно!"
+ },
+ "d05_medlennee_f": {
+  "hash": "0fae8cca7d78a0d9",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Говор+ите м+едленнее, пож+алуйста."
+ },
+ "d05_medlennee_f_slow": {
+  "hash": "343f8447d9303a32",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Говор+ите м+едленнее, пож+алуйста."
+ },
+ "d05_medlennee_m": {
+  "hash": "74804e497c2af203",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Говор+ите м+едленнее, пож+алуйста."
+ },
+ "d05_medlennee_m_slow": {
+  "hash": "740739bb03f6f163",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Говор+ите м+едленнее, пож+алуйста."
+ },
+ "d05_po_nemetski_f": {
+  "hash": "6312b0a3ef361dc6",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "по-нем+ецки"
+ },
+ "d05_po_nemetski_f_slow": {
+  "hash": "f152309a10bc4b87",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "по-нем+ецки"
+ },
+ "d05_po_nemetski_m": {
+  "hash": "0b2d1718dfe9a4d3",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "по-нем+ецки"
+ },
+ "d05_po_nemetski_m_slow": {
+  "hash": "314a04be379892ab",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "по-нем+ецки"
+ },
+ "d05_povtorite_f": {
+  "hash": "efb8173221f51206",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Повтор+ите, пож+алуйста."
+ },
+ "d05_povtorite_f_slow": {
+  "hash": "db6563fcb5995e31",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Повтор+ите, пож+алуйста."
+ },
+ "d05_povtorite_m": {
+  "hash": "353c0146a9874755",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Повтор+ите, пож+алуйста."
+ },
+ "d05_povtorite_m_slow": {
+  "hash": "29f67bac8296f070",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Повтор+ите, пож+алуйста."
+ },
+ "d05_ty_govorish_po_angliyski_f": {
+  "hash": "567a4b9d5471ba65",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Ты говор+ишь по-англ+ийски?"
+ },
+ "d05_ty_govorish_po_angliyski_f_slow": {
+  "hash": "b4dca89b488ba256",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Ты говор+ишь по-англ+ийски?"
+ },
+ "d05_ty_govorish_po_angliyski_m": {
+  "hash": "4d86241fe5586f0d",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Ты говор+ишь по-англ+ийски?"
+ },
+ "d05_ty_govorish_po_angliyski_m_slow": {
+  "hash": "bce236dce66a35db",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Ты говор+ишь по-англ+ийски?"
+ },
+ "d05_ty_govorish_po_russki_f": {
+  "hash": "86da465075cc287e",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Ты говор+ишь по-р+усски?"
+ },
+ "d05_ty_govorish_po_russki_f_slow": {
+  "hash": "939d3dc00c72c271",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Ты говор+ишь по-р+усски?"
+ },
+ "d05_ty_govorish_po_russki_m": {
+  "hash": "e8cc1e1eaf7ba3d0",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Ты говор+ишь по-р+усски?"
+ },
+ "d05_ty_govorish_po_russki_m_slow": {
+  "hash": "c52f664f112771bc",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Ты говор+ишь по-р+усски?"
+ },
+ "d05_ty_ponimaesh_f": {
+  "hash": "5e4c8971dd3ac9d7",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Ты поним+аешь?"
+ },
+ "d05_ty_ponimaesh_f_slow": {
+  "hash": "aa90feb74357b2be",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Ты поним+аешь?"
+ },
+ "d05_ty_ponimaesh_m": {
+  "hash": "4fc8252b81536b97",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Ты поним+аешь?"
+ },
+ "d05_ty_ponimaesh_m_slow": {
+  "hash": "f09943dbfb85b507",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Ты поним+аешь?"
+ },
+ "d05_ya_govoryu_nemnogo_f": {
+  "hash": "0407fdd46bbd82f1",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я говор+ю немн+ого по-р+усски."
+ },
+ "d05_ya_govoryu_nemnogo_f_slow": {
+  "hash": "e9e95dd4f73cde0c",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я говор+ю немн+ого по-р+усски."
+ },
+ "d05_ya_govoryu_nemnogo_m": {
+  "hash": "7b8eaf3286869b89",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я говор+ю немн+ого по-р+усски."
+ },
+ "d05_ya_govoryu_nemnogo_m_slow": {
+  "hash": "99462e6906c9ab32",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я говор+ю немн+ого по-р+усски."
+ },
+ "d05_ya_ne_ponimayu_f": {
+  "hash": "90c9ac76c59b9237",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я не поним+аю."
+ },
+ "d05_ya_ne_ponimayu_f_slow": {
+  "hash": "7c59f103be043daa",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я не поним+аю."
+ },
+ "d05_ya_ne_ponimayu_m": {
+  "hash": "2c790823a812c2d0",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я не поним+аю."
+ },
+ "d05_ya_ne_ponimayu_m_slow": {
+  "hash": "20851922516eb9fe",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я не поним+аю."
+ },
+ "d05_ya_ne_znayu_f": {
+  "hash": "780f4a9ba6cd72d1",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я не зн+аю."
+ },
+ "d05_ya_ne_znayu_f_slow": {
+  "hash": "1adfabcf5cf240f2",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я не зн+аю."
+ },
+ "d05_ya_ne_znayu_m": {
+  "hash": "d7aa105ae661752e",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я не зн+аю."
+ },
+ "d05_ya_ne_znayu_m_slow": {
+  "hash": "c7729a1e28b4fddf",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я не зн+аю."
+ },
+ "d05_ya_ponimayu_f": {
+  "hash": "08e2e0c3dc202279",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я поним+аю."
+ },
+ "d05_ya_ponimayu_f_slow": {
+  "hash": "38292f9ae8e4e84d",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я поним+аю."
+ },
+ "d05_ya_ponimayu_m": {
+  "hash": "368901c92f7ef038",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я поним+аю."
+ },
+ "d05_ya_ponimayu_m_slow": {
+  "hash": "f171362cff8f69bc",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я поним+аю."
+ },
+ "d05_ya_uchu_russkiy_f": {
+  "hash": "22b5f0aa8ffe4090",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я уч+у р+усский яз+ык."
+ },
+ "d05_ya_uchu_russkiy_f_slow": {
+  "hash": "65bbf4d5850399f4",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я уч+у р+усский яз+ык."
+ },
+ "d05_ya_uchu_russkiy_m": {
+  "hash": "577a6585b17750dc",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я уч+у р+усский яз+ык."
+ },
+ "d05_ya_uchu_russkiy_m_slow": {
+  "hash": "ff1e0fb694e8a65e",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я уч+у р+усский яз+ык."
+ },
+ "d06_chem_ty_zanimaeshsya_f": {
+  "hash": "324f32c50bb31e03",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Чем ты заним+аешься?"
+ },
+ "d06_chem_ty_zanimaeshsya_f_slow": {
+  "hash": "70d589779c0dec1c",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Чем ты заним+аешься?"
+ },
+ "d06_chem_ty_zanimaeshsya_m": {
+  "hash": "7ae1418dc634fc5a",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Чем ты заним+аешься?"
+ },
+ "d06_chem_ty_zanimaeshsya_m_slow": {
+  "hash": "1062cdc91cfeebdb",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Чем ты заним+аешься?"
+ },
+ "d06_dlg_1_m_p": {
+  "hash": "8b97dd3ec05bf5e8",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Кем ты раб+отаешь?"
+ },
+ "d06_dlg_1_m_p_slow": {
+  "hash": "0b12c0752ec64bad",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Кем ты раб+отаешь?"
+ },
+ "d06_dlg_2_f_f": {
+  "hash": "19201317178f4df3",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я программ+истка. А ты?"
+ },
+ "d06_dlg_2_f_f_slow": {
+  "hash": "f867907e0ef250fe",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я программ+истка. А ты?"
+ },
+ "d06_dlg_2_m_m": {
+  "hash": "efe9b368bd288156",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я программ+ист. А ты?"
+ },
+ "d06_dlg_2_m_m_slow": {
+  "hash": "7739c7987a18ecc7",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я программ+ист. А ты?"
+ },
+ "d06_dlg_3_m_p": {
+  "hash": "a7d6b978f459e7b9",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Я врач."
+ },
+ "d06_dlg_3_m_p_slow": {
+  "hash": "f6c36c2d95774187",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Я врач."
+ },
+ "d06_dlg_4_m_f": {
+  "hash": "5dd0b452844c8e2a",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "+Это интер+есно! +Это тр+удно?"
+ },
+ "d06_dlg_4_m_f_slow": {
+  "hash": "e271b8ec6365b665",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "+Это интер+есно! +Это тр+удно?"
+ },
+ "d06_dlg_4_m_m": {
+  "hash": "933b597ffd362638",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "+Это интер+есно! +Это тр+удно?"
+ },
+ "d06_dlg_4_m_m_slow": {
+  "hash": "2318c5b1ebdb0047",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "+Это интер+есно! +Это тр+удно?"
+ },
+ "d06_dlg_5_m_p": {
+  "hash": "7045a6e820821457",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Иногд+а. А где ты раб+отаешь?"
+ },
+ "d06_dlg_5_m_p_slow": {
+  "hash": "a72aa6399d303fa8",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Иногд+а. А где ты раб+отаешь?"
+ },
+ "d06_dlg_6_m_f": {
+  "hash": "763a035faf70072b",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я раб+отаю д+ома. Мне нр+авится мо+я раб+ота."
+ },
+ "d06_dlg_6_m_f_slow": {
+  "hash": "1ae52af673a023f6",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я раб+отаю д+ома. Мне нр+авится мо+я раб+ота."
+ },
+ "d06_dlg_6_m_m": {
+  "hash": "8b02d4b9d94f9192",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я раб+отаю д+ома. Мне нр+авится мо+я раб+ота."
+ },
+ "d06_dlg_6_m_m_slow": {
+  "hash": "dae320fd04cfb5c4",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я раб+отаю д+ома. Мне нр+авится мо+я раб+ота."
+ },
+ "d06_eto_interesno_f": {
+  "hash": "7e6c0b96b6949291",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "+Это интер+есно!"
+ },
+ "d06_eto_interesno_f_slow": {
+  "hash": "5d6ca9b154e3f9c3",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "+Это интер+есно!"
+ },
+ "d06_eto_interesno_m": {
+  "hash": "1f9f382b4d87f15b",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "+Это интер+есно!"
+ },
+ "d06_eto_interesno_m_slow": {
+  "hash": "e1ca2a781a1f4b1b",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "+Это интер+есно!"
+ },
+ "d06_eto_legko_f": {
+  "hash": "9f297baf7f7ba51b",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "+Это легк+о."
+ },
+ "d06_eto_legko_f_slow": {
+  "hash": "1c5869ee68aba0a1",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "+Это легк+о."
+ },
+ "d06_eto_legko_m": {
+  "hash": "58b7a492c644e8f0",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "+Это легк+о."
+ },
+ "d06_eto_legko_m_slow": {
+  "hash": "e5f3eb8ab1a5f4fc",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "+Это легк+о."
+ },
+ "d06_eto_trudno_f": {
+  "hash": "30b8b7292ce3989b",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "+Это тр+удно."
+ },
+ "d06_eto_trudno_f_slow": {
+  "hash": "054b692714db7d69",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "+Это тр+удно."
+ },
+ "d06_eto_trudno_m": {
+  "hash": "4227403d98d58eb1",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "+Это тр+удно."
+ },
+ "d06_eto_trudno_m_slow": {
+  "hash": "e371e7e6e9fb849a",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "+Это тр+удно."
+ },
+ "d06_gde_ty_rabotaesh_f": {
+  "hash": "176a9fd7f6a2e39d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Где ты раб+отаешь?"
+ },
+ "d06_gde_ty_rabotaesh_f_slow": {
+  "hash": "1bbf7011e3f03fcb",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Где ты раб+отаешь?"
+ },
+ "d06_gde_ty_rabotaesh_m": {
+  "hash": "c5412b9f22d47403",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Где ты раб+отаешь?"
+ },
+ "d06_gde_ty_rabotaesh_m_slow": {
+  "hash": "96fb926c824956db",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Где ты раб+отаешь?"
+ },
+ "d06_inzhener_f": {
+  "hash": "f524e49f0b53fefb",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "инжен+ер"
+ },
+ "d06_inzhener_f_slow": {
+  "hash": "b54657a8a3aa9768",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "инжен+ер"
+ },
+ "d06_inzhener_m": {
+  "hash": "9000049184272e81",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "инжен+ер"
+ },
+ "d06_inzhener_m_slow": {
+  "hash": "fc282bb40061a648",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "инжен+ер"
+ },
+ "d06_kem_ty_rabotaesh_f": {
+  "hash": "a9d63e3baa1ab9b7",
+  "rate": 1.0,
+  "speaker": 2,
+  "text": "Кем ты раб+отаешь?"
+ },
+ "d06_kem_ty_rabotaesh_f_slow": {
+  "hash": "5b5939544407cdf7",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Кем ты раб+отаешь?"
+ },
+ "d06_kem_ty_rabotaesh_m": {
+  "hash": "938a6ed2d10a816b",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Кем ты раб+отаешь?"
+ },
+ "d06_kem_ty_rabotaesh_m_slow": {
+  "hash": "59ea09373ddf8764",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Кем ты раб+отаешь?"
+ },
+ "d06_mne_nravitsya_rabota_f": {
+  "hash": "0593fbc026d59ace",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Мне нр+авится мо+я раб+ота."
+ },
+ "d06_mne_nravitsya_rabota_f_slow": {
+  "hash": "6dc34ef1d7e7b12b",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Мне нр+авится мо+я раб+ота."
+ },
+ "d06_mne_nravitsya_rabota_m": {
+  "hash": "edfccb20791e18db",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Мне нр+авится мо+я раб+ота."
+ },
+ "d06_mne_nravitsya_rabota_m_slow": {
+  "hash": "47d9d095d125876f",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Мне нр+авится мо+я раб+ота."
+ },
+ "d06_uchitel_f": {
+  "hash": "877a4c347cbc8ca9",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "уч+итель"
+ },
+ "d06_uchitel_f_slow": {
+  "hash": "a16e0f43cb847cf0",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "уч+итель"
+ },
+ "d06_uchitel_m": {
+  "hash": "fb922ece816c8ea7",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "уч+итель"
+ },
+ "d06_uchitel_m_slow": {
+  "hash": "5bdfa69389bbee47",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "уч+итель"
+ },
+ "d06_vrach_f": {
+  "hash": "9d5f97c727595e06",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "врач"
+ },
+ "d06_vrach_f_slow": {
+  "hash": "5a0f82756c2acd9b",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "врач"
+ },
+ "d06_vrach_m": {
+  "hash": "9a3394e102d4220b",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "врач"
+ },
+ "d06_vrach_m_slow": {
+  "hash": "c760655b66a679aa",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "врач"
+ },
+ "d06_ya_mnogo_rabotayu_f": {
+  "hash": "7095a2dd348b629e",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я мн+ого раб+отаю."
+ },
+ "d06_ya_mnogo_rabotayu_f_slow": {
+  "hash": "11dc57c8b8c59361",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я мн+ого раб+отаю."
+ },
+ "d06_ya_mnogo_rabotayu_m": {
+  "hash": "e540e709d0150278",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я мн+ого раб+отаю."
+ },
+ "d06_ya_mnogo_rabotayu_m_slow": {
+  "hash": "a2afd889f981083d",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я мн+ого раб+отаю."
+ },
+ "d06_ya_programmist_f": {
+  "hash": "85fdd5866bf578fc",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я программ+истка."
+ },
+ "d06_ya_programmist_f_slow": {
+  "hash": "8276ed12dd118647",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я программ+истка."
+ },
+ "d06_ya_programmist_m": {
+  "hash": "59e71f9813bd252c",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я программ+ист."
+ },
+ "d06_ya_programmist_m_slow": {
+  "hash": "242e94931c491ccd",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я программ+ист."
+ },
+ "d06_ya_rabotayu_doma_f": {
+  "hash": "2ab92f3c261ea3c1",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я раб+отаю д+ома."
+ },
+ "d06_ya_rabotayu_doma_f_slow": {
+  "hash": "7d27c10decc33be5",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я раб+отаю д+ома."
+ },
+ "d06_ya_rabotayu_doma_m": {
+  "hash": "aadf3cbdb65aac47",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я раб+отаю д+ома."
+ },
+ "d06_ya_rabotayu_doma_m_slow": {
+  "hash": "85d7d43a35448f3a",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я раб+отаю д+ома."
+ },
+ "d06_ya_rabotayu_v_ofise_f": {
+  "hash": "1d592bda77489d73",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я раб+отаю в +офисе."
+ },
+ "d06_ya_rabotayu_v_ofise_f_slow": {
+  "hash": "ef20f4ae107ba2f5",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я раб+отаю в +офисе."
+ },
+ "d06_ya_rabotayu_v_ofise_m": {
+  "hash": "286cf1bf32735b9b",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я раб+отаю в +офисе."
+ },
+ "d06_ya_rabotayu_v_ofise_m_slow": {
+  "hash": "2f1677ce6698a05e",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я раб+отаю в +офисе."
+ },
+ "d06_ya_student_f": {
+  "hash": "e6351e913351be4d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я студ+ентка."
+ },
+ "d06_ya_student_f_slow": {
+  "hash": "9b7190c7adb8daea",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я студ+ентка."
+ },
+ "d06_ya_student_m": {
+  "hash": "f0f964a413a76d8f",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я студ+ент."
+ },
+ "d06_ya_student_m_slow": {
+  "hash": "9c2988464ac368d2",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я студ+ент."
+ },
+ "d07_brat_f": {
+  "hash": "83709f46dd6e2514",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "брат"
+ },
+ "d07_brat_f_slow": {
+  "hash": "946fa1fbbe37b1bd",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "брат"
+ },
+ "d07_brat_m": {
+  "hash": "2d604436e9c51c86",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "брат"
+ },
+ "d07_brat_m_slow": {
+  "hash": "7904489db0fae63d",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "брат"
+ },
+ "d07_dlg_1_m_p": {
+  "hash": "a33770bf55ac6d31",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Смотр+и, +это мо+я семь+я."
+ },
+ "d07_dlg_1_m_p_slow": {
+  "hash": "528efb83496f4938",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Смотр+и, +это мо+я семь+я."
+ },
+ "d07_dlg_2_m_f": {
+  "hash": "be22095dadd9111c",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "+Это тво+я м+ама?"
+ },
+ "d07_dlg_2_m_f_slow": {
+  "hash": "a5ec30af7973324a",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "+Это тво+я м+ама?"
+ },
+ "d07_dlg_2_m_m": {
+  "hash": "7f49d319fb1992d7",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "+Это тво+я м+ама?"
+ },
+ "d07_dlg_2_m_m_slow": {
+  "hash": "52fa2e1cb2cb5770",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "+Это тво+я м+ама?"
+ },
+ "d07_dlg_3_m_p": {
+  "hash": "c659d1dc3dd2377c",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Да. А +это мой брат."
+ },
+ "d07_dlg_3_m_p_slow": {
+  "hash": "4ac250ff1dae3bac",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Да. А +это мой брат."
+ },
+ "d07_dlg_4_m_f": {
+  "hash": "e4c9a884e16c2e01",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Как ег+о зов+ут?"
+ },
+ "d07_dlg_4_m_f_slow": {
+  "hash": "e0b5840c07cbe251",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Как ег+о зов+ут?"
+ },
+ "d07_dlg_4_m_m": {
+  "hash": "e6ee1df8c7b4222f",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Как ег+о зов+ут?"
+ },
+ "d07_dlg_4_m_m_slow": {
+  "hash": "256e0db7820239e8",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Как ег+о зов+ут?"
+ },
+ "d07_dlg_5_m_p": {
+  "hash": "ff5684d28403c36f",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Серг+ей. У теб+я есть бр+атья +или сёстры?"
+ },
+ "d07_dlg_5_m_p_slow": {
+  "hash": "b54c9d6e4fb139d3",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Серг+ей. У теб+я есть бр+атья +или сёстры?"
+ },
+ "d07_dlg_6_m_f": {
+  "hash": "ba55db9edacb64d0",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Да, у мен+я есть сестр+а."
+ },
+ "d07_dlg_6_m_f_slow": {
+  "hash": "2a9bb173d6a5fdc9",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Да, у мен+я есть сестр+а."
+ },
+ "d07_dlg_6_m_m": {
+  "hash": "9681d8664d024fb1",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Да, у мен+я есть сестр+а."
+ },
+ "d07_dlg_6_m_m_slow": {
+  "hash": "9bebde0e6d41ae9e",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Да, у мен+я есть сестр+а."
+ },
+ "d07_dlg_7_f_p": {
+  "hash": "3bd221b6af94249d",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "А ты з+амужем?"
+ },
+ "d07_dlg_7_f_p_slow": {
+  "hash": "3391f4c4739bed66",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "А ты з+амужем?"
+ },
+ "d07_dlg_7_m_p": {
+  "hash": "e3f984f6bc88e657",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "А ты жен+ат?"
+ },
+ "d07_dlg_7_m_p_slow": {
+  "hash": "f8d76325f09deb0f",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "А ты жен+ат?"
+ },
+ "d07_dlg_8_f_f": {
+  "hash": "80adf6486f52de44",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Нет, я не з+амужем."
+ },
+ "d07_dlg_8_f_f_slow": {
+  "hash": "37ee72774bc44043",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Нет, я не з+амужем."
+ },
+ "d07_dlg_8_m_m": {
+  "hash": "6bbd8390a4ea21f6",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Нет, я не жен+ат."
+ },
+ "d07_dlg_8_m_m_slow": {
+  "hash": "ed1a51d50c70cb1f",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Нет, я не жен+ат."
+ },
+ "d07_drug_f": {
+  "hash": "6b87bf3b4603850d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "друг"
+ },
+ "d07_drug_f_slow": {
+  "hash": "52610e73b54744bf",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "друг"
+ },
+ "d07_drug_m": {
+  "hash": "ccc9767365086d17",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "друг"
+ },
+ "d07_drug_m_slow": {
+  "hash": "55bc79c6aee12cb5",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "друг"
+ },
+ "d07_eto_moy_drug_f": {
+  "hash": "aa7ddf4964031ced",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "+Это мой друг."
+ },
+ "d07_eto_moy_drug_f_slow": {
+  "hash": "86097cb8f97de07b",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "+Это мой друг."
+ },
+ "d07_eto_moy_drug_m": {
+  "hash": "2d4017d28afb6ec2",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "+Это мой друг."
+ },
+ "d07_eto_moy_drug_m_slow": {
+  "hash": "7609f1c79d9142fe",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "+Это мой друг."
+ },
+ "d07_eto_moya_mama_f": {
+  "hash": "f3547598054ad0ed",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "+Это мо+я м+ама."
+ },
+ "d07_eto_moya_mama_f_slow": {
+  "hash": "6f597b7cd153ef78",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "+Это мо+я м+ама."
+ },
+ "d07_eto_moya_mama_m": {
+  "hash": "895fc202d7e918b5",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "+Это мо+я м+ама."
+ },
+ "d07_eto_moya_mama_m_slow": {
+  "hash": "68ce079c9fba3661",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "+Это мо+я м+ама."
+ },
+ "d07_kak_ego_zovut_f": {
+  "hash": "e4c9a884e16c2e01",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Как ег+о зов+ут?"
+ },
+ "d07_kak_ego_zovut_f_slow": {
+  "hash": "e0b5840c07cbe251",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Как ег+о зов+ут?"
+ },
+ "d07_kak_ego_zovut_m": {
+  "hash": "e6ee1df8c7b4222f",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Как ег+о зов+ут?"
+ },
+ "d07_kak_ego_zovut_m_slow": {
+  "hash": "256e0db7820239e8",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Как ег+о зов+ут?"
+ },
+ "d07_kak_eyo_zovut_f": {
+  "hash": "9e3663e3e61282f5",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Как её зов+ут?"
+ },
+ "d07_kak_eyo_zovut_f_slow": {
+  "hash": "eac813944a9e8284",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Как её зов+ут?"
+ },
+ "d07_kak_eyo_zovut_m": {
+  "hash": "f1cde6456ba30d68",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Как её зов+ут?"
+ },
+ "d07_kak_eyo_zovut_m_slow": {
+  "hash": "a1197fc8d1e75197",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Как её зов+ут?"
+ },
+ "d07_mama_f": {
+  "hash": "bdd576152645e202",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "м+ама"
+ },
+ "d07_mama_f_slow": {
+  "hash": "5a20953852b6e740",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "м+ама"
+ },
+ "d07_mama_m": {
+  "hash": "12be061c7c808a3b",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "м+ама"
+ },
+ "d07_mama_m_slow": {
+  "hash": "a2c421c11d4a2779",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "м+ама"
+ },
+ "d07_papa_f": {
+  "hash": "ab932963d9a0d5df",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "п+апа"
+ },
+ "d07_papa_f_slow": {
+  "hash": "3495ea42fa6293d1",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "п+апа"
+ },
+ "d07_papa_m": {
+  "hash": "ba510ab41af345e4",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "п+апа"
+ },
+ "d07_papa_m_slow": {
+  "hash": "08de028d13b366e7",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "п+апа"
+ },
+ "d07_podruga_f": {
+  "hash": "2375f3249413ed22",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "подр+уга"
+ },
+ "d07_podruga_f_slow": {
+  "hash": "53e3b44fc6f113c2",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "подр+уга"
+ },
+ "d07_podruga_m": {
+  "hash": "7dbf97906861b7ab",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "подр+уга"
+ },
+ "d07_podruga_m_slow": {
+  "hash": "66e3a91c41c0261b",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "подр+уга"
+ },
+ "d07_semya_f": {
+  "hash": "bf1e01454e48f2f5",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "семь+я"
+ },
+ "d07_semya_f_slow": {
+  "hash": "493f2f3c711d180f",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "семь+я"
+ },
+ "d07_semya_m": {
+  "hash": "3fb3362196f40b27",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "семь+я"
+ },
+ "d07_semya_m_slow": {
+  "hash": "542759888bf18932",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "семь+я"
+ },
+ "d07_sestra_f": {
+  "hash": "c3c81c80d8f42210",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "сестр+а"
+ },
+ "d07_sestra_f_slow": {
+  "hash": "d5b99f03af580d21",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "сестр+а"
+ },
+ "d07_sestra_m": {
+  "hash": "580e73bc16c9f613",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "сестр+а"
+ },
+ "d07_sestra_m_slow": {
+  "hash": "8e7bb5cdd03c4baf",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "сестр+а"
+ },
+ "d07_ty_zamuzhem_f": {
+  "hash": "a2fa9c5718393519",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Ты з+амужем?"
+ },
+ "d07_ty_zamuzhem_f_slow": {
+  "hash": "311148b8dafdf905",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Ты з+амужем?"
+ },
+ "d07_ty_zamuzhem_m": {
+  "hash": "dfc9b8442f6ef176",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Ты з+амужем?"
+ },
+ "d07_ty_zamuzhem_m_slow": {
+  "hash": "034141b57c4c67c0",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Ты з+амужем?"
+ },
+ "d07_ty_zhenat_f": {
+  "hash": "9b175181b3edfb05",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Ты жен+ат?"
+ },
+ "d07_ty_zhenat_f_slow": {
+  "hash": "d0e22f4b3fcb4aa7",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Ты жен+ат?"
+ },
+ "d07_ty_zhenat_m": {
+  "hash": "52dc2c46f977e997",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Ты жен+ат?"
+ },
+ "d07_ty_zhenat_m_slow": {
+  "hash": "d69253e2a0365782",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Ты жен+ат?"
+ },
+ "d07_u_menya_est_brat_f": {
+  "hash": "30b5910f5b0f3c15",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "У мен+я есть брат."
+ },
+ "d07_u_menya_est_brat_f_slow": {
+  "hash": "c640e9700b654e8c",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "У мен+я есть брат."
+ },
+ "d07_u_menya_est_brat_m": {
+  "hash": "78f64c033fed1390",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "У мен+я есть брат."
+ },
+ "d07_u_menya_est_brat_m_slow": {
+  "hash": "de99d1907283d7dc",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "У мен+я есть брат."
+ },
+ "d07_u_menya_est_sestra_f": {
+  "hash": "4a844fb2deac03ac",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "У мен+я есть сестр+а."
+ },
+ "d07_u_menya_est_sestra_f_slow": {
+  "hash": "b405b565a21ad7a6",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "У мен+я есть сестр+а."
+ },
+ "d07_u_menya_est_sestra_m": {
+  "hash": "552b6fb1deb3120e",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "У мен+я есть сестр+а."
+ },
+ "d07_u_menya_est_sestra_m_slow": {
+  "hash": "2a8b26bc6087b8f1",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "У мен+я есть сестр+а."
+ },
+ "d07_u_menya_net_detey_f": {
+  "hash": "d1f5c6309a9afde9",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Нет, у мен+я нет дет+ей."
+ },
+ "d07_u_menya_net_detey_f_slow": {
+  "hash": "2654dca6dff6f067",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Нет, у мен+я нет дет+ей."
+ },
+ "d07_u_menya_net_detey_m": {
+  "hash": "4c7096b4b74d7479",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Нет, у мен+я нет дет+ей."
+ },
+ "d07_u_menya_net_detey_m_slow": {
+  "hash": "45f2eae8d9a3f230",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Нет, у мен+я нет дет+ей."
+ },
+ "d07_u_tebya_est_bratya_f": {
+  "hash": "4b72974de4abbbb1",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "У теб+я есть бр+атья +или сёстры?"
+ },
+ "d07_u_tebya_est_bratya_f_slow": {
+  "hash": "a0def7cce6c3d54e",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "У теб+я есть бр+атья +или сёстры?"
+ },
+ "d07_u_tebya_est_bratya_m": {
+  "hash": "0648e90ea7fef110",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "У теб+я есть бр+атья +или сёстры?"
+ },
+ "d07_u_tebya_est_bratya_m_slow": {
+  "hash": "0e2574e6a8a44b18",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "У теб+я есть бр+атья +или сёстры?"
+ },
+ "d07_u_tebya_est_deti_f": {
+  "hash": "ce6dd6a31aba71e9",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "У теб+я есть д+ети?"
+ },
+ "d07_u_tebya_est_deti_f_slow": {
+  "hash": "871b257032371495",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "У теб+я есть д+ети?"
+ },
+ "d07_u_tebya_est_deti_m": {
+  "hash": "4806599ced2c2de5",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "У теб+я есть д+ети?"
+ },
+ "d07_u_tebya_est_deti_m_slow": {
+  "hash": "bdde40a61cf0bd3c",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "У теб+я есть д+ети?"
+ },
+ "d07_ya_ne_zhenat_f": {
+  "hash": "45933c3285d2abd7",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я не з+амужем."
+ },
+ "d07_ya_ne_zhenat_f_slow": {
+  "hash": "804b4b76c1ea4654",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я не з+амужем."
+ },
+ "d07_ya_ne_zhenat_m": {
+  "hash": "5a151218b8bf6c70",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я не жен+ат."
+ },
+ "d07_ya_ne_zhenat_m_slow": {
+  "hash": "974ac0851747595f",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я не жен+ат."
+ },
+ "d08_chto_ty_lyubish_delat_f": {
+  "hash": "9a6e9c058c8b43d1",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Что ты л+юбишь д+елать?"
+ },
+ "d08_chto_ty_lyubish_delat_f_slow": {
+  "hash": "48f1e2671de81556",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Что ты л+юбишь д+елать?"
+ },
+ "d08_chto_ty_lyubish_delat_m": {
+  "hash": "7148a68396af993f",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Что ты л+юбишь д+елать?"
+ },
+ "d08_chto_ty_lyubish_delat_m_slow": {
+  "hash": "036b80879caffa88",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Что ты л+юбишь д+елать?"
+ },
+ "d08_dlg_1_m_p": {
+  "hash": "95647a37abe862f0",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Что ты д+елаешь в своб+одное вр+емя?"
+ },
+ "d08_dlg_1_m_p_slow": {
+  "hash": "c40492edc071d80b",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Что ты д+елаешь в своб+одное вр+емя?"
+ },
+ "d08_dlg_2_m_f": {
+  "hash": "2d7253855be6c91d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я любл+ю чит+ать и смотр+еть аним+е."
+ },
+ "d08_dlg_2_m_f_slow": {
+  "hash": "31485b276890efbf",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я любл+ю чит+ать и смотр+еть аним+е."
+ },
+ "d08_dlg_2_m_m": {
+  "hash": "56759fa402bb7c81",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я любл+ю чит+ать и смотр+еть аним+е."
+ },
+ "d08_dlg_2_m_m_slow": {
+  "hash": "26a8b3b983c8a4f4",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я любл+ю чит+ать и смотр+еть аним+е."
+ },
+ "d08_dlg_3_m_p": {
+  "hash": "906c821ce81bd473",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Кр+уто! Я т+оже любл+ю аним+е."
+ },
+ "d08_dlg_3_m_p_slow": {
+  "hash": "ae88823a689e819b",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Кр+уто! Я т+оже любл+ю аним+е."
+ },
+ "d08_dlg_4_m_f": {
+  "hash": "c36a0d398ba8988c",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Кл+ассно! А что ты л+юбишь д+елать?"
+ },
+ "d08_dlg_4_m_f_slow": {
+  "hash": "f004ea239ecff872",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Кл+ассно! А что ты л+юбишь д+елать?"
+ },
+ "d08_dlg_4_m_m": {
+  "hash": "116542782542dea9",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Кл+ассно! А что ты л+юбишь д+елать?"
+ },
+ "d08_dlg_4_m_m_slow": {
+  "hash": "52aaac7f6b8482d2",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Кл+ассно! А что ты л+юбишь д+елать?"
+ },
+ "d08_dlg_5_m_p": {
+  "hash": "5c5e5f6a11e6bb99",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Я любл+ю путеш+ествовать. А ты л+юбишь спорт?"
+ },
+ "d08_dlg_5_m_p_slow": {
+  "hash": "26b4b2f47ca31f10",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Я любл+ю путеш+ествовать. А ты л+юбишь спорт?"
+ },
+ "d08_dlg_6_m_f": {
+  "hash": "e52bb50e39b0fb7f",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Нет, мне не нр+авится спорт."
+ },
+ "d08_dlg_6_m_f_slow": {
+  "hash": "30677b237c96130f",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Нет, мне не нр+авится спорт."
+ },
+ "d08_dlg_6_m_m": {
+  "hash": "b79c10d7f56fd11f",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Нет, мне не нр+авится спорт."
+ },
+ "d08_dlg_6_m_m_slow": {
+  "hash": "044caaacc70e241b",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Нет, мне не нр+авится спорт."
+ },
+ "d08_i_f": {
+  "hash": "20691ec663f7ff6f",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "и"
+ },
+ "d08_i_f_slow": {
+  "hash": "60deb5ec18a209c7",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "и"
+ },
+ "d08_i_m": {
+  "hash": "fc44eaf131ada9eb",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "и"
+ },
+ "d08_i_m_slow": {
+  "hash": "2cf8e708d63d5a48",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "и"
+ },
+ "d08_klassno_f": {
+  "hash": "8ef9a60821f26267",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Кл+ассно!"
+ },
+ "d08_klassno_f_slow": {
+  "hash": "02e2a610c6053363",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Кл+ассно!"
+ },
+ "d08_klassno_m": {
+  "hash": "5d773fb6699c7459",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Кл+ассно!"
+ },
+ "d08_klassno_m_slow": {
+  "hash": "68d0531ba40057ac",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Кл+ассно!"
+ },
+ "d08_kruto_f": {
+  "hash": "0da5f6615bc100c3",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Кр+уто!"
+ },
+ "d08_kruto_f_slow": {
+  "hash": "e9c122dd4182aa41",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Кр+уто!"
+ },
+ "d08_kruto_m": {
+  "hash": "b91258cf33dd17f4",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Кр+уто!"
+ },
+ "d08_kruto_m_slow": {
+  "hash": "4d0929506cadf16e",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Кр+уто!"
+ },
+ "d08_mne_ne_nravitsya_f": {
+  "hash": "e4ac5bc1ee3c2a5e",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Мне не нр+авится."
+ },
+ "d08_mne_ne_nravitsya_f_slow": {
+  "hash": "b5378142ced4f001",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Мне не нр+авится."
+ },
+ "d08_mne_ne_nravitsya_m": {
+  "hash": "bbc0e05626563382",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Мне не нр+авится."
+ },
+ "d08_mne_ne_nravitsya_m_slow": {
+  "hash": "cfad1f32ebbaab31",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Мне не нр+авится."
+ },
+ "d08_mne_nravitsya_muzyka_f": {
+  "hash": "88aeb010bfe382d7",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Мне нр+авится м+узыка."
+ },
+ "d08_mne_nravitsya_muzyka_f_slow": {
+  "hash": "72463052c55cd804",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Мне нр+авится м+узыка."
+ },
+ "d08_mne_nravitsya_muzyka_m": {
+  "hash": "4d49561ea9fd8fce",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Мне нр+авится м+узыка."
+ },
+ "d08_mne_nravitsya_muzyka_m_slow": {
+  "hash": "247198f048ecf655",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Мне нр+авится м+узыка."
+ },
+ "d08_svobodnoe_vremya_f": {
+  "hash": "903c2a5148129629",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Что ты д+елаешь в своб+одное вр+емя?"
+ },
+ "d08_svobodnoe_vremya_f_slow": {
+  "hash": "486d2c36e9c3a3bd",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Что ты д+елаешь в своб+одное вр+емя?"
+ },
+ "d08_svobodnoe_vremya_m": {
+  "hash": "0d8ef784f1b1c101",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Что ты д+елаешь в своб+одное вр+емя?"
+ },
+ "d08_svobodnoe_vremya_m_slow": {
+  "hash": "593bb828e57b6373",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Что ты д+елаешь в своб+одное вр+емя?"
+ },
+ "d08_ya_chitayu_mangu_f": {
+  "hash": "9610707fec5a3784",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я чит+аю м+ангу."
+ },
+ "d08_ya_chitayu_mangu_f_slow": {
+  "hash": "c97d200ca920e92c",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я чит+аю м+ангу."
+ },
+ "d08_ya_chitayu_mangu_m": {
+  "hash": "68d24643835addb5",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я чит+аю м+ангу."
+ },
+ "d08_ya_chitayu_mangu_m_slow": {
+  "hash": "b8ac798c2f92283d",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я чит+аю м+ангу."
+ },
+ "d08_ya_lyublyu_chitat_f": {
+  "hash": "dc9d40e277a5c6db",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я любл+ю чит+ать."
+ },
+ "d08_ya_lyublyu_chitat_f_slow": {
+  "hash": "85ac58a0a761ffa2",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я любл+ю чит+ать."
+ },
+ "d08_ya_lyublyu_chitat_m": {
+  "hash": "a28623474293b392",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я любл+ю чит+ать."
+ },
+ "d08_ya_lyublyu_chitat_m_slow": {
+  "hash": "5ceb5f65d8695a01",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я любл+ю чит+ать."
+ },
+ "d08_ya_lyublyu_igrat_f": {
+  "hash": "a72a2a0d6788252c",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я любл+ю игр+ать в +игры."
+ },
+ "d08_ya_lyublyu_igrat_f_slow": {
+  "hash": "05d1e364000800ca",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я любл+ю игр+ать в +игры."
+ },
+ "d08_ya_lyublyu_igrat_m": {
+  "hash": "ea4e5c3d4433286c",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я любл+ю игр+ать в +игры."
+ },
+ "d08_ya_lyublyu_igrat_m_slow": {
+  "hash": "0df9069abe5ac45c",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я любл+ю игр+ать в +игры."
+ },
+ "d08_ya_lyublyu_muzyku_f": {
+  "hash": "11c736aa6893e472",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я любл+ю м+узыку."
+ },
+ "d08_ya_lyublyu_muzyku_f_slow": {
+  "hash": "d83f259342d74faf",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я любл+ю м+узыку."
+ },
+ "d08_ya_lyublyu_muzyku_m": {
+  "hash": "536e1f4efd7e5df6",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я любл+ю м+узыку."
+ },
+ "d08_ya_lyublyu_muzyku_m_slow": {
+  "hash": "4f079ee674a74f29",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я любл+ю м+узыку."
+ },
+ "d08_ya_lyublyu_puteshestvovat_f": {
+  "hash": "d00df8bd8f66502c",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я любл+ю путеш+ествовать."
+ },
+ "d08_ya_lyublyu_puteshestvovat_f_slow": {
+  "hash": "58c5bc8a074f6641",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я любл+ю путеш+ествовать."
+ },
+ "d08_ya_lyublyu_puteshestvovat_m": {
+  "hash": "d639e33a15440e29",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я любл+ю путеш+ествовать."
+ },
+ "d08_ya_lyublyu_puteshestvovat_m_slow": {
+  "hash": "6151e8239d646794",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я любл+ю путеш+ествовать."
+ },
+ "d08_ya_lyublyu_smotret_filmy_f": {
+  "hash": "5306216b010604ad",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я любл+ю смотр+еть ф+ильмы."
+ },
+ "d08_ya_lyublyu_smotret_filmy_f_slow": {
+  "hash": "ad781e96fd577fe5",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я любл+ю смотр+еть ф+ильмы."
+ },
+ "d08_ya_lyublyu_smotret_filmy_m": {
+  "hash": "a26d1422c4e5108d",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я любл+ю смотр+еть ф+ильмы."
+ },
+ "d08_ya_lyublyu_smotret_filmy_m_slow": {
+  "hash": "c32cb5531ffe82ea",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я любл+ю смотр+еть ф+ильмы."
+ },
+ "d08_ya_smotryu_anime_f": {
+  "hash": "d76dac4b64182ec6",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я смотр+ю аним+е."
+ },
+ "d08_ya_smotryu_anime_f_slow": {
+  "hash": "462b2414de775e0b",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я смотр+ю аним+е."
+ },
+ "d08_ya_smotryu_anime_m": {
+  "hash": "034aab3ecba67d6f",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я смотр+ю аним+е."
+ },
+ "d08_ya_smotryu_anime_m_slow": {
+  "hash": "097917280194654b",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я смотр+ю аним+е."
+ },
+ "d08_ya_tozhe_f": {
+  "hash": "226607b4717748e3",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я т+оже!"
+ },
+ "d08_ya_tozhe_f_slow": {
+  "hash": "daf2e679e2fb412b",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я т+оже!"
+ },
+ "d08_ya_tozhe_m": {
+  "hash": "ec578dcbbfdfc956",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я т+оже!"
+ },
+ "d08_ya_tozhe_m_slow": {
+  "hash": "8f733c3820dcda78",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я т+оже!"
+ },
+ "d08_ya_zanimayus_sportom_f": {
+  "hash": "aeb4e4f2390a773a",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я заним+аюсь сп+ортом."
+ },
+ "d08_ya_zanimayus_sportom_f_slow": {
+  "hash": "2264571ed0d963bc",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я заним+аюсь сп+ортом."
+ },
+ "d08_ya_zanimayus_sportom_m": {
+  "hash": "60c0c250b3c0c76a",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я заним+аюсь сп+ортом."
+ },
+ "d08_ya_zanimayus_sportom_m_slow": {
+  "hash": "57654914ca12b042",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я заним+аюсь сп+ортом."
+ },
+ "d09_chay_f": {
+  "hash": "9ca4e1d2ebc7abd7",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "чай"
+ },
+ "d09_chay_f_slow": {
+  "hash": "520f60a8158870ac",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "чай"
+ },
+ "d09_chay_m": {
+  "hash": "9a87ee10e5ce1eaf",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "чай"
+ },
+ "d09_chay_m_slow": {
+  "hash": "fdc5b53e17ac0612",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "чай"
+ },
+ "d09_chto_ty_budesh_f": {
+  "hash": "5da69a994002d9f2",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Что ты б+удешь?"
+ },
+ "d09_chto_ty_budesh_f_slow": {
+  "hash": "430101072ddd0f4e",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Что ты б+удешь?"
+ },
+ "d09_chto_ty_budesh_m": {
+  "hash": "f5f0cdbde9a52144",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Что ты б+удешь?"
+ },
+ "d09_chto_ty_budesh_m_slow": {
+  "hash": "3e074ba29698d507",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Что ты б+удешь?"
+ },
+ "d09_dlg_1_m_p": {
+  "hash": "52f97cdc20b03a7f",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Я хоч+у есть! Что ты б+удешь?"
+ },
+ "d09_dlg_1_m_p_slow": {
+  "hash": "5264f61cbb490276",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Я хоч+у есть! Что ты б+удешь?"
+ },
+ "d09_dlg_2_m_f": {
+  "hash": "24a1d20c02f3d93a",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я б+уду чай. А ты?"
+ },
+ "d09_dlg_2_m_f_slow": {
+  "hash": "092f761a41fa39ab",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я б+уду чай. А ты?"
+ },
+ "d09_dlg_2_m_m": {
+  "hash": "cc7677750912825b",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я б+уду чай. А ты?"
+ },
+ "d09_dlg_2_m_m_slow": {
+  "hash": "379ae77b7e879612",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я б+уду чай. А ты?"
+ },
+ "d09_dlg_3_m_p": {
+  "hash": "e47b27cc4018df08",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Я б+уду к+офе и п+иццу."
+ },
+ "d09_dlg_3_m_p_slow": {
+  "hash": "a874af55052aaec6",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Я б+уду к+офе и п+иццу."
+ },
+ "d09_dlg_4_m_f": {
+  "hash": "dd5e786a3e30a5fa",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Извин+ите! М+ожно чай и к+офе, пож+алуйста?"
+ },
+ "d09_dlg_4_m_f_slow": {
+  "hash": "c937f4932f853759",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Извин+ите! М+ожно чай и к+офе, пож+алуйста?"
+ },
+ "d09_dlg_4_m_m": {
+  "hash": "efa3bd4076c53918",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Извин+ите! М+ожно чай и к+офе, пож+алуйста?"
+ },
+ "d09_dlg_4_m_m_slow": {
+  "hash": "5262bed1a3e9f26d",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Извин+ите! М+ожно чай и к+офе, пож+алуйста?"
+ },
+ "d09_dlg_5_m_p": {
+  "hash": "7d4d568d05f26451",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "При+ятного аппет+ита!"
+ },
+ "d09_dlg_5_m_p_slow": {
+  "hash": "e9f0d48dcf481bcb",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "При+ятного аппет+ита!"
+ },
+ "d09_dlg_6_m_f": {
+  "hash": "a3176b3cf9a7ca37",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Спас+ибо! Вк+усно!"
+ },
+ "d09_dlg_6_m_f_slow": {
+  "hash": "83f350dd5d5c7edf",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Спас+ибо! Вк+усно!"
+ },
+ "d09_dlg_6_m_m": {
+  "hash": "154fafef686b24fa",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Спас+ибо! Вк+усно!"
+ },
+ "d09_dlg_6_m_m_slow": {
+  "hash": "9b6024ac591ce8c9",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Спас+ибо! Вк+усно!"
+ },
+ "d09_dlg_7_m_f": {
+  "hash": "6489317c472583b8",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Счёт, пож+алуйста."
+ },
+ "d09_dlg_7_m_f_slow": {
+  "hash": "4b2d97e0ee0ad9bc",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Счёт, пож+алуйста."
+ },
+ "d09_dlg_7_m_m": {
+  "hash": "2587308216db2848",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Счёт, пож+алуйста."
+ },
+ "d09_dlg_7_m_m_slow": {
+  "hash": "dd65e5e42c3a5a8f",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Счёт, пож+алуйста."
+ },
+ "d09_kofe_f": {
+  "hash": "0dd3bbdaa47e587b",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "к+офе"
+ },
+ "d09_kofe_f_slow": {
+  "hash": "6c05bfaee5adf74b",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "к+офе"
+ },
+ "d09_kofe_m": {
+  "hash": "d382dcd2fa4b4343",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "к+офе"
+ },
+ "d09_kofe_m_slow": {
+  "hash": "07d1c888c3d6f0a1",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "к+офе"
+ },
+ "d09_menyu_f": {
+  "hash": "6b366df0bba7bb0e",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "мен+ю"
+ },
+ "d09_menyu_f_slow": {
+  "hash": "a4697d8fefdf2ad0",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "мен+ю"
+ },
+ "d09_menyu_m": {
+  "hash": "f4bcca91afbf567f",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "мен+ю"
+ },
+ "d09_menyu_m_slow": {
+  "hash": "44441a519b104c46",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "мен+ю"
+ },
+ "d09_mozhno_chay_f": {
+  "hash": "240893102584a111",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "М+ожно чай, пож+алуйста?"
+ },
+ "d09_mozhno_chay_f_slow": {
+  "hash": "44786a759e86f66a",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "М+ожно чай, пож+алуйста?"
+ },
+ "d09_mozhno_chay_m": {
+  "hash": "778f9311a96d35dd",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "М+ожно чай, пож+алуйста?"
+ },
+ "d09_mozhno_chay_m_slow": {
+  "hash": "3cb90743b1eab70f",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "М+ожно чай, пож+алуйста?"
+ },
+ "d09_pivo_f": {
+  "hash": "20dd01fef2458586",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "п+иво"
+ },
+ "d09_pivo_f_slow": {
+  "hash": "acadfdefb4e76f7d",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "п+иво"
+ },
+ "d09_pivo_m": {
+  "hash": "0db280582f163c55",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "п+иво"
+ },
+ "d09_pivo_m_slow": {
+  "hash": "e020a7daa8b7dd7a",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "п+иво"
+ },
+ "d09_priyatnogo_appetita_f": {
+  "hash": "3408b03b910bf64c",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "При+ятного аппет+ита!"
+ },
+ "d09_priyatnogo_appetita_f_slow": {
+  "hash": "09409d2bc32fbae4",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "При+ятного аппет+ита!"
+ },
+ "d09_priyatnogo_appetita_m": {
+  "hash": "d37092dd4bbe01f7",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "При+ятного аппет+ита!"
+ },
+ "d09_priyatnogo_appetita_m_slow": {
+  "hash": "bff8f88cb966ea9d",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "При+ятного аппет+ита!"
+ },
+ "d09_schyot_f": {
+  "hash": "6489317c472583b8",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Счёт, пож+алуйста."
+ },
+ "d09_schyot_f_slow": {
+  "hash": "4b2d97e0ee0ad9bc",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Счёт, пож+алуйста."
+ },
+ "d09_schyot_m": {
+  "hash": "2587308216db2848",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Счёт, пож+алуйста."
+ },
+ "d09_schyot_m_slow": {
+  "hash": "dd65e5e42c3a5a8f",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Счёт, пож+алуйста."
+ },
+ "d09_vkusno_f": {
+  "hash": "13046e00e5f782c9",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Вк+усно!"
+ },
+ "d09_vkusno_f_slow": {
+  "hash": "a819a9da7a749333",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Вк+усно!"
+ },
+ "d09_vkusno_m": {
+  "hash": "1e8936ec17205a13",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Вк+усно!"
+ },
+ "d09_vkusno_m_slow": {
+  "hash": "b1bdd3910e444c86",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Вк+усно!"
+ },
+ "d09_voda_f": {
+  "hash": "405300aa92c2a2eb",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "вод+а"
+ },
+ "d09_voda_f_slow": {
+  "hash": "d127beb206b76032",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "вод+а"
+ },
+ "d09_voda_m": {
+  "hash": "2cfc3c69fc54a221",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "вод+а"
+ },
+ "d09_voda_m_slow": {
+  "hash": "bced41acb1bd2a9a",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "вод+а"
+ },
+ "d09_ya_budu_chay_f": {
+  "hash": "aee3176b6cbf237c",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я б+уду чай."
+ },
+ "d09_ya_budu_chay_f_slow": {
+  "hash": "c5fd8236625f794a",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я б+уду чай."
+ },
+ "d09_ya_budu_chay_m": {
+  "hash": "c98dd66457666f90",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я б+уду чай."
+ },
+ "d09_ya_budu_chay_m_slow": {
+  "hash": "4db10fc84bae64f1",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я б+уду чай."
+ },
+ "d09_ya_hochu_est_f": {
+  "hash": "955abccc4c0c8ac7",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я хоч+у есть."
+ },
+ "d09_ya_hochu_est_f_slow": {
+  "hash": "d71443f7fd4c9273",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я хоч+у есть."
+ },
+ "d09_ya_hochu_est_m": {
+  "hash": "24cf10ae72ebef64",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я хоч+у есть."
+ },
+ "d09_ya_hochu_est_m_slow": {
+  "hash": "91a35bddf8b80cde",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я хоч+у есть."
+ },
+ "d09_ya_hochu_kofe_f": {
+  "hash": "a08288bc58f730b6",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я хоч+у к+офе."
+ },
+ "d09_ya_hochu_kofe_f_slow": {
+  "hash": "722f68b03cc3dcdc",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я хоч+у к+офе."
+ },
+ "d09_ya_hochu_kofe_m": {
+  "hash": "faf1d03f2c9103f4",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я хоч+у к+офе."
+ },
+ "d09_ya_hochu_kofe_m_slow": {
+  "hash": "2eb6c15d85ef815a",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я хоч+у к+офе."
+ },
+ "d09_ya_hochu_pit_f": {
+  "hash": "4ff2f7e009d59148",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я хоч+у пить."
+ },
+ "d09_ya_hochu_pit_f_slow": {
+  "hash": "3dd75a73378c179a",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я хоч+у пить."
+ },
+ "d09_ya_hochu_pit_m": {
+  "hash": "5782ea3214352c0f",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я хоч+у пить."
+ },
+ "d09_ya_hochu_pit_m_slow": {
+  "hash": "569f5dab7557a98f",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я хоч+у пить."
+ },
+ "d09_za_zdorovye_f": {
+  "hash": "630060e6f0827053",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "За здор+овье!"
+ },
+ "d09_za_zdorovye_f_slow": {
+  "hash": "891e6a9f7f76c87b",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "За здор+овье!"
+ },
+ "d09_za_zdorovye_m": {
+  "hash": "f5981808d6cfe40a",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "За здор+овье!"
+ },
+ "d09_za_zdorovye_m_slow": {
+  "hash": "ba8e0a98b98ee47a",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "За здор+овье!"
+ },
+ "d10_chto_v_vyhodnye_f": {
+  "hash": "55cc0fb151444b69",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Что ты д+елаешь в выходн+ые?"
+ },
+ "d10_chto_v_vyhodnye_f_slow": {
+  "hash": "3445f43abb9da680",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Что ты д+елаешь в выходн+ые?"
+ },
+ "d10_chto_v_vyhodnye_m": {
+  "hash": "009655f10399dd88",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Что ты д+елаешь в выходн+ые?"
+ },
+ "d10_chto_v_vyhodnye_m_slow": {
+  "hash": "1cb175994a0fdd18",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Что ты д+елаешь в выходн+ые?"
+ },
+ "d10_dlg_1_m_p": {
+  "hash": "aab7be4d81fe3b83",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Прив+ет! Как+ая у вас сег+одня пог+ода?"
+ },
+ "d10_dlg_1_m_p_slow": {
+  "hash": "7208580abea7f39a",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Прив+ет! Как+ая у вас сег+одня пог+ода?"
+ },
+ "d10_dlg_2_m_f": {
+  "hash": "5d5c8d786d163b75",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Х+олодно. Идёт дождь. А у теб+я?"
+ },
+ "d10_dlg_2_m_f_slow": {
+  "hash": "ac906c5ffb0af976",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Х+олодно. Идёт дождь. А у теб+я?"
+ },
+ "d10_dlg_2_m_m": {
+  "hash": "46432b2b1ad68a91",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Х+олодно. Идёт дождь. А у теб+я?"
+ },
+ "d10_dlg_2_m_m_slow": {
+  "hash": "6f188b5859c187fc",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Х+олодно. Идёт дождь. А у теб+я?"
+ },
+ "d10_dlg_3_m_p": {
+  "hash": "de18b2fdd1e9157e",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "У нас тепл+о и с+олнечно!"
+ },
+ "d10_dlg_3_m_p_slow": {
+  "hash": "73c56c0514b7a23e",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "У нас тепл+о и с+олнечно!"
+ },
+ "d10_dlg_4_m_f": {
+  "hash": "c305fe738c8a9280",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Кл+ассно! Что ты д+елаешь в выходн+ые?"
+ },
+ "d10_dlg_4_m_f_slow": {
+  "hash": "cd34549daf4ba152",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Кл+ассно! Что ты д+елаешь в выходн+ые?"
+ },
+ "d10_dlg_4_m_m": {
+  "hash": "b89692f96bd137ef",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Кл+ассно! Что ты д+елаешь в выходн+ые?"
+ },
+ "d10_dlg_4_m_m_slow": {
+  "hash": "a92172df2a30a1e9",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Кл+ассно! Что ты д+елаешь в выходн+ые?"
+ },
+ "d10_dlg_5_m_p": {
+  "hash": "dbb6bf8f470bee68",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Не зн+аю. А ты?"
+ },
+ "d10_dlg_5_m_p_slow": {
+  "hash": "8a7420b74362d910",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Не зн+аю. А ты?"
+ },
+ "d10_dlg_6_m_f": {
+  "hash": "16b14c5dd66f315d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я чит+аю м+ангу и смотр+ю аним+е."
+ },
+ "d10_dlg_6_m_f_slow": {
+  "hash": "d45cd215ffd736c9",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я чит+аю м+ангу и смотр+ю аним+е."
+ },
+ "d10_dlg_6_m_m": {
+  "hash": "04a49d6bb853fa99",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я чит+аю м+ангу и смотр+ю аним+е."
+ },
+ "d10_dlg_6_m_m_slow": {
+  "hash": "723802be70c35548",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я чит+аю м+ангу и смотр+ю аним+е."
+ },
+ "d10_holodno_f": {
+  "hash": "a2ca46890456d1f1",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Х+олодно."
+ },
+ "d10_holodno_f_slow": {
+  "hash": "fb8ce83300cfe8f9",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Х+олодно."
+ },
+ "d10_holodno_m": {
+  "hash": "e526e01ec029e358",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Х+олодно."
+ },
+ "d10_holodno_m_slow": {
+  "hash": "10c15e4ad7eb40be",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Х+олодно."
+ },
+ "d10_idyot_dozhd_f": {
+  "hash": "7d936d35dbffe29f",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Идёт дождь."
+ },
+ "d10_idyot_dozhd_f_slow": {
+  "hash": "de88f6769c18303a",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Идёт дождь."
+ },
+ "d10_idyot_dozhd_m": {
+  "hash": "72fcf58a396f5863",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Идёт дождь."
+ },
+ "d10_idyot_dozhd_m_slow": {
+  "hash": "af4b4fc5ebdb0671",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Идёт дождь."
+ },
+ "d10_kakaya_pogoda_f": {
+  "hash": "0ad800eb21c91a58",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Как+ая сег+одня пог+ода?"
+ },
+ "d10_kakaya_pogoda_f_slow": {
+  "hash": "5fa2cdcee94f878f",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Как+ая сег+одня пог+ода?"
+ },
+ "d10_kakaya_pogoda_m": {
+  "hash": "9bd209fa1a89bce7",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Как+ая сег+одня пог+ода?"
+ },
+ "d10_kakaya_pogoda_m_slow": {
+  "hash": "a7985f61beb00fc5",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Как+ая сег+одня пог+ода?"
+ },
+ "d10_kazhdyy_den_f": {
+  "hash": "cfaa7ce87cb39d5b",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "К+аждый день."
+ },
+ "d10_kazhdyy_den_f_slow": {
+  "hash": "2402718cd028a0da",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "К+аждый день."
+ },
+ "d10_kazhdyy_den_m": {
+  "hash": "575b029eb90ac65e",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "К+аждый день."
+ },
+ "d10_kazhdyy_den_m_slow": {
+  "hash": "8db1cb158379c940",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "К+аждый день."
+ },
+ "d10_kotoryy_chas_f": {
+  "hash": "85b67a7fdb0e3309",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Кот+орый час?"
+ },
+ "d10_kotoryy_chas_f_slow": {
+  "hash": "712348a270089e11",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Кот+орый час?"
+ },
+ "d10_kotoryy_chas_m": {
+  "hash": "93a120e98e3efaaa",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Кот+орый час?"
+ },
+ "d10_kotoryy_chas_m_slow": {
+  "hash": "0aba06304dabdf89",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Кот+орый час?"
+ },
+ "d10_segodnya_f": {
+  "hash": "67acea85140b7db0",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "сег+одня"
+ },
+ "d10_segodnya_f_slow": {
+  "hash": "bcc26da43f2b42f7",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "сег+одня"
+ },
+ "d10_segodnya_m": {
+  "hash": "adf88d4f307b7b8b",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "сег+одня"
+ },
+ "d10_segodnya_m_slow": {
+  "hash": "eb68f7fa844ccd7b",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "сег+одня"
+ },
+ "d10_seychas_f": {
+  "hash": "3b4bc43cabf9c7e2",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "сейч+ас"
+ },
+ "d10_seychas_f_slow": {
+  "hash": "036a18be9a202f03",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "сейч+ас"
+ },
+ "d10_seychas_m": {
+  "hash": "cb48c93a9b7bc2c8",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "сейч+ас"
+ },
+ "d10_seychas_m_slow": {
+  "hash": "659c2eeaefd69413",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "сейч+ас"
+ },
+ "d10_solnechno_f": {
+  "hash": "123f0e5105fcdda0",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "С+олнечно."
+ },
+ "d10_solnechno_f_slow": {
+  "hash": "32685e8c9b567ab7",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "С+олнечно."
+ },
+ "d10_solnechno_m": {
+  "hash": "28423c8d1552b06a",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "С+олнечно."
+ },
+ "d10_solnechno_m_slow": {
+  "hash": "20f79f96b3c7cb8f",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "С+олнечно."
+ },
+ "d10_teplo_f": {
+  "hash": "5183faf34356bdd8",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Сег+одня тепл+о."
+ },
+ "d10_teplo_f_slow": {
+  "hash": "e0f621c235cdbcfb",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Сег+одня тепл+о."
+ },
+ "d10_teplo_m": {
+  "hash": "68566b4d629301fd",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Сег+одня тепл+о."
+ },
+ "d10_teplo_m_slow": {
+  "hash": "43d9e8ab5783f8e4",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Сег+одня тепл+о."
+ },
+ "d10_utrom_f": {
+  "hash": "02ece9822fab467b",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "+утром"
+ },
+ "d10_utrom_f_slow": {
+  "hash": "5d3a43d968a0920b",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "+утром"
+ },
+ "d10_utrom_m": {
+  "hash": "9c867c5b91e1275d",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "+утром"
+ },
+ "d10_utrom_m_slow": {
+  "hash": "64793d73bf4b646a",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "+утром"
+ },
+ "d10_vchera_f": {
+  "hash": "7e2e95ed482b689c",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "вчер+а"
+ },
+ "d10_vchera_f_slow": {
+  "hash": "3c992204e1decad9",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "вчер+а"
+ },
+ "d10_vchera_m": {
+  "hash": "81c9862bf22957b6",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "вчер+а"
+ },
+ "d10_vchera_m_slow": {
+  "hash": "7167fa70b59faaf8",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "вчер+а"
+ },
+ "d10_vecherom_f": {
+  "hash": "db3d94b3d00573ca",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "в+ечером"
+ },
+ "d10_vecherom_f_slow": {
+  "hash": "a213d122041fe53b",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "в+ечером"
+ },
+ "d10_vecherom_m": {
+  "hash": "fbe400d865f964f1",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "в+ечером"
+ },
+ "d10_vecherom_m_slow": {
+  "hash": "ff56dc24b4dc3649",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "в+ечером"
+ },
+ "d10_vyhodnye_f": {
+  "hash": "8813abad12ce8d80",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "выходн+ые"
+ },
+ "d10_vyhodnye_f_slow": {
+  "hash": "89d82f00581248d4",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "выходн+ые"
+ },
+ "d10_vyhodnye_m": {
+  "hash": "6c6a8a6207011447",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "выходн+ые"
+ },
+ "d10_vyhodnye_m_slow": {
+  "hash": "0070f8cbff456ba0",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "выходн+ые"
+ },
+ "d10_zavtra_f": {
+  "hash": "4b9411a430ba36d8",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "з+автра"
+ },
+ "d10_zavtra_f_slow": {
+  "hash": "07e21a17357339b2",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "з+автра"
+ },
+ "d10_zavtra_m": {
+  "hash": "76b55942e6271f48",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "з+автра"
+ },
+ "d10_zavtra_m_slow": {
+  "hash": "1fb4c89d8464d52f",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "з+автра"
+ },
+ "d10_zharko_f": {
+  "hash": "4cfbcaa0434656e1",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Ж+арко."
+ },
+ "d10_zharko_f_slow": {
+  "hash": "1811322aef9bfd6e",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Ж+арко."
+ },
+ "d10_zharko_m": {
+  "hash": "37464cbb1e257c42",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Ж+арко."
+ },
+ "d10_zharko_m_slow": {
+  "hash": "f3e386aedb0a1397",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Ж+арко."
+ },
+ "d11_da_konechno_f": {
+  "hash": "7dffde71eded326d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Да, кон+ечно."
+ },
+ "d11_da_konechno_f_slow": {
+  "hash": "b1ece5f45739a952",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Да, кон+ечно."
+ },
+ "d11_da_konechno_m": {
+  "hash": "c200500d9df99fda",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Да, кон+ечно."
+ },
+ "d11_da_konechno_m_slow": {
+  "hash": "70127d32e158341b",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Да, кон+ечно."
+ },
+ "d11_davay_vstretimsya_f": {
+  "hash": "084e133d47f13281",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Дав+ай встр+етимся!"
+ },
+ "d11_davay_vstretimsya_f_slow": {
+  "hash": "792fcc313b97a7d9",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Дав+ай встр+етимся!"
+ },
+ "d11_davay_vstretimsya_m": {
+  "hash": "efcb867cccb56e0f",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Дав+ай встр+етимся!"
+ },
+ "d11_davay_vstretimsya_m_slow": {
+  "hash": "8f371e4d1829b8a6",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Дав+ай встр+етимся!"
+ },
+ "d11_dlg_1_m_p": {
+  "hash": "ce7c1e036e2cbab9",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Кад+ир, у теб+я есть вр+емя з+автра?"
+ },
+ "d11_dlg_1_m_p_slow": {
+  "hash": "d3fb9f33bcb7d7c5",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Кад+ир, у теб+я есть вр+емя з+автра?"
+ },
+ "d11_dlg_2_f_f": {
+  "hash": "49700f1c8b777540",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "З+автра не мог+у. Я занят+а."
+ },
+ "d11_dlg_2_f_f_slow": {
+  "hash": "38503fa88c0687a7",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "З+автра не мог+у. Я занят+а."
+ },
+ "d11_dlg_2_m_m": {
+  "hash": "c59331fb9ce2fc15",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "З+автра не мог+у. Я з+анят."
+ },
+ "d11_dlg_2_m_m_slow": {
+  "hash": "43086a9e596f3887",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "З+автра не мог+у. Я з+анят."
+ },
+ "d11_dlg_3_m_p": {
+  "hash": "5ccd18452613bee8",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "А в субб+оту?"
+ },
+ "d11_dlg_3_m_p_slow": {
+  "hash": "f479f5b00bc4aa69",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "А в субб+оту?"
+ },
+ "d11_dlg_4_m_f": {
+  "hash": "6583d68826baa1af",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Да, кон+ечно! Пойдём в каф+е?"
+ },
+ "d11_dlg_4_m_f_slow": {
+  "hash": "381977c6c046d3df",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Да, кон+ечно! Пойдём в каф+е?"
+ },
+ "d11_dlg_4_m_m": {
+  "hash": "bef18099af79ab8d",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Да, кон+ечно! Пойдём в каф+е?"
+ },
+ "d11_dlg_4_m_m_slow": {
+  "hash": "575c09cad945d230",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Да, кон+ечно! Пойдём в каф+е?"
+ },
+ "d11_dlg_5_m_p": {
+  "hash": "77ae71a42dcaf7f5",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Хор+ошая ид+ея! Во ск+олько?"
+ },
+ "d11_dlg_5_m_p_slow": {
+  "hash": "04f4c00005e53fa1",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Хор+ошая ид+ея! Во ск+олько?"
+ },
+ "d11_dlg_6_m_f": {
+  "hash": "82349655a2c7d508",
+  "rate": 1.0,
+  "speaker": 2,
+  "text": "В семь?"
+ },
+ "d11_dlg_6_m_f_slow": {
+  "hash": "39c743a5e9119cc3",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "В семь?"
+ },
+ "d11_dlg_6_m_m": {
+  "hash": "95ec3224d02d1e66",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "В семь?"
+ },
+ "d11_dlg_6_m_m_slow": {
+  "hash": "a670735876b8ba6a",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "В семь?"
+ },
+ "d11_dlg_7_m_p": {
+  "hash": "97fb38f69fda8916",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Договор+ились! Напиш+и мне."
+ },
+ "d11_dlg_7_m_p_slow": {
+  "hash": "ef4820d813d64655",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Договор+ились! Напиш+и мне."
+ },
+ "d11_dlg_8_m_f": {
+  "hash": "6089e087ed12a2dc",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Хорош+о. Пок+а!"
+ },
+ "d11_dlg_8_m_f_slow": {
+  "hash": "7700cda5825b3e6d",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Хорош+о. Пок+а!"
+ },
+ "d11_dlg_8_m_m": {
+  "hash": "fcc360c02c2f95eb",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Хорош+о. Пок+а!"
+ },
+ "d11_dlg_8_m_m_slow": {
+  "hash": "a82116a5e8ff1af0",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Хорош+о. Пок+а!"
+ },
+ "d11_dogovorilis_f": {
+  "hash": "578a2589c7356ea7",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Договор+ились!"
+ },
+ "d11_dogovorilis_f_slow": {
+  "hash": "db07dfd19a20e496",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Договор+ились!"
+ },
+ "d11_dogovorilis_m": {
+  "hash": "81d5f2f03517e221",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Договор+ились!"
+ },
+ "d11_dogovorilis_m_slow": {
+  "hash": "84be326561588235",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Договор+ились!"
+ },
+ "d11_gde_f": {
+  "hash": "5a2edd2565bf92ad",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Где?"
+ },
+ "d11_gde_f_slow": {
+  "hash": "00c104426d629623",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Где?"
+ },
+ "d11_gde_m": {
+  "hash": "df0a95c5721effe1",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Где?"
+ },
+ "d11_gde_m_slow": {
+  "hash": "929502b985abcf60",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Где?"
+ },
+ "d11_horoshaya_ideya_f": {
+  "hash": "f90b613bdbae51f3",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Хор+ошая ид+ея!"
+ },
+ "d11_horoshaya_ideya_f_slow": {
+  "hash": "e352bf791335343b",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Хор+ошая ид+ея!"
+ },
+ "d11_horoshaya_ideya_m": {
+  "hash": "41bbb7b702e1dfd7",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Хор+ошая ид+ея!"
+ },
+ "d11_horoshaya_ideya_m_slow": {
+  "hash": "d0dd621a62362924",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Хор+ошая ид+ея!"
+ },
+ "d11_kogda_f": {
+  "hash": "d3be8a7ecd9f55bf",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Когд+а?"
+ },
+ "d11_kogda_f_slow": {
+  "hash": "a2c9c31dd4bd5898",
+  "rate": 0.7,
+  "speaker": 2,
+  "text": "Когд+а?"
+ },
+ "d11_kogda_m": {
+  "hash": "2b633173dbb552e1",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Когд+а?"
+ },
+ "d11_kogda_m_slow": {
+  "hash": "c77bc1fbf54da9dc",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Когд+а?"
+ },
+ "d11_mozhet_byt_f": {
+  "hash": "f5ac1c84759c0bb5",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "М+ожет быть."
+ },
+ "d11_mozhet_byt_f_slow": {
+  "hash": "2ba24ac1d2d709d7",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "М+ожет быть."
+ },
+ "d11_mozhet_byt_m": {
+  "hash": "34f20de2bfd99fbe",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "М+ожет быть."
+ },
+ "d11_mozhet_byt_m_slow": {
+  "hash": "5cb5eaca3eda13fd",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "М+ожет быть."
+ },
+ "d11_napishi_mne_f": {
+  "hash": "ef2bee554dfe0fc6",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Напиш+и мне!"
+ },
+ "d11_napishi_mne_f_slow": {
+  "hash": "7ed5a2141fed0a3f",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Напиш+и мне!"
+ },
+ "d11_napishi_mne_m": {
+  "hash": "3e8feb09cfe19dc4",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Напиш+и мне!"
+ },
+ "d11_napishi_mne_m_slow": {
+  "hash": "ef052f4fd6248de0",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Напиш+и мне!"
+ },
+ "d11_ne_mogu_f": {
+  "hash": "0b445cedf4f80e17",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Не мог+у."
+ },
+ "d11_ne_mogu_f_slow": {
+  "hash": "a2ede972732ac79c",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Не мог+у."
+ },
+ "d11_ne_mogu_m": {
+  "hash": "34d3bb20f7d7c274",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Не мог+у."
+ },
+ "d11_ne_mogu_m_slow": {
+  "hash": "aa5fbc6aab798922",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Не мог+у."
+ },
+ "d11_poydyom_v_kafe_f": {
+  "hash": "7ab691c0c4c0265d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Пойдём в каф+е?"
+ },
+ "d11_poydyom_v_kafe_f_slow": {
+  "hash": "3f37adaaad9c9904",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Пойдём в каф+е?"
+ },
+ "d11_poydyom_v_kafe_m": {
+  "hash": "031923789aea88c5",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Пойдём в каф+е?"
+ },
+ "d11_poydyom_v_kafe_m_slow": {
+  "hash": "6011e2ed07ee984d",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Пойдём в каф+е?"
+ },
+ "d11_sozvonimsya_f": {
+  "hash": "8335c2c4bc67b15a",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Созвон+имся!"
+ },
+ "d11_sozvonimsya_f_slow": {
+  "hash": "75bcb15cca0a1cb0",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Созвон+имся!"
+ },
+ "d11_sozvonimsya_m": {
+  "hash": "89e66b43c0d25ac3",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Созвон+имся!"
+ },
+ "d11_sozvonimsya_m_slow": {
+  "hash": "2f55127ba3a2646e",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Созвон+имся!"
+ },
+ "d11_u_tebya_est_vremya_f": {
+  "hash": "2b439d5c3a1725b3",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "У теб+я есть вр+емя?"
+ },
+ "d11_u_tebya_est_vremya_f_slow": {
+  "hash": "348816da2c45da9c",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "У теб+я есть вр+емя?"
+ },
+ "d11_u_tebya_est_vremya_m": {
+  "hash": "37a1a7c3a241ad65",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "У теб+я есть вр+емя?"
+ },
+ "d11_u_tebya_est_vremya_m_slow": {
+  "hash": "7efc5dd3cbe8abfc",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "У теб+я есть вр+емя?"
+ },
+ "d11_v_sem_f": {
+  "hash": "2338e3a5b6928226",
+  "rate": 1.0,
+  "speaker": 2,
+  "text": "В семь."
+ },
+ "d11_v_sem_f_slow": {
+  "hash": "216fdc7111318e73",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "В семь."
+ },
+ "d11_v_sem_m": {
+  "hash": "fbf125260856fc87",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "В семь."
+ },
+ "d11_v_sem_m_slow": {
+  "hash": "3f067c88ad4d3f68",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "В семь."
+ },
+ "d11_vo_skolko_f": {
+  "hash": "1d6d8c95f0fc814b",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Во ск+олько?"
+ },
+ "d11_vo_skolko_f_slow": {
+  "hash": "6a4d72d0bee7bdfa",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Во ск+олько?"
+ },
+ "d11_vo_skolko_m": {
+  "hash": "e1f04c207b704aad",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Во ск+олько?"
+ },
+ "d11_vo_skolko_m_slow": {
+  "hash": "3bb2a4964894cba2",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Во ск+олько?"
+ },
+ "d11_ya_zanyat_f": {
+  "hash": "f9c3c961ba045a83",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я занят+а."
+ },
+ "d11_ya_zanyat_f_slow": {
+  "hash": "e2f3262fa9c5e99b",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я занят+а."
+ },
+ "d11_ya_zanyat_m": {
+  "hash": "d1cba8e6da895306",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я з+анят."
+ },
+ "d11_ya_zanyat_m_slow": {
+  "hash": "9b03fe5e33fedb56",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я з+анят."
+ },
+ "d11_zavtra_vecherom_f": {
+  "hash": "b58c42350e86a50f",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "З+автра в+ечером."
+ },
+ "d11_zavtra_vecherom_f_slow": {
+  "hash": "c6c5ecaabcfaaae5",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "З+автра в+ечером."
+ },
+ "d11_zavtra_vecherom_m": {
+  "hash": "ba7d5b8436287937",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "З+автра в+ечером."
+ },
+ "d11_zavtra_vecherom_m_slow": {
+  "hash": "0d72dd85bd10a35e",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "З+автра в+ечером."
+ },
+ "d12_dlg_1_m_p": {
+  "hash": "bacf6697d605a7be",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Почем+у ты +учишь р+усский?"
+ },
+ "d12_dlg_1_m_p_slow": {
+  "hash": "423436aed4ab8844",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Почем+у ты +учишь р+усский?"
+ },
+ "d12_dlg_2_m_f": {
+  "hash": "36a497cbf4b00ef4",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Потом+у что +это интер+есно!"
+ },
+ "d12_dlg_2_m_f_slow": {
+  "hash": "f59bda018d5fa7d6",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Потом+у что +это интер+есно!"
+ },
+ "d12_dlg_2_m_m": {
+  "hash": "868b264eeda2cb8d",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Потом+у что +это интер+есно!"
+ },
+ "d12_dlg_2_m_m_slow": {
+  "hash": "94a0e63d33c2a224",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Потом+у что +это интер+есно!"
+ },
+ "d12_dlg_3_f_p": {
+  "hash": "6a2409b8743385b6",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Пр+авда? А ты был+а в Росс+ии?"
+ },
+ "d12_dlg_3_f_p_slow": {
+  "hash": "065e188bb59acc1d",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Пр+авда? А ты был+а в Росс+ии?"
+ },
+ "d12_dlg_3_m_p": {
+  "hash": "078216a7422d8964",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Пр+авда? А ты был в Росс+ии?"
+ },
+ "d12_dlg_3_m_p_slow": {
+  "hash": "0e1893c24e2be6bd",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Пр+авда? А ты был в Росс+ии?"
+ },
+ "d12_dlg_4_f_f": {
+  "hash": "4aed7b8a7283ba01",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Нет, я никогд+а не был+а в Росс+ии."
+ },
+ "d12_dlg_4_f_f_slow": {
+  "hash": "a3b075b02aa65f5c",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Нет, я никогд+а не был+а в Росс+ии."
+ },
+ "d12_dlg_4_m_m": {
+  "hash": "5f0a6ebbf10d2aa1",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Нет, я никогд+а н+е был в Росс+ии."
+ },
+ "d12_dlg_4_m_m_slow": {
+  "hash": "bc8902fa4b4f0d34",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Нет, я никогд+а н+е был в Росс+ии."
+ },
+ "d12_dlg_5_m_p": {
+  "hash": "8fdb7da549ea77d6",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Как ты д+умаешь, р+усский тр+удный?"
+ },
+ "d12_dlg_5_m_p_slow": {
+  "hash": "46a9b06cef2f6324",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Как ты д+умаешь, р+усский тр+удный?"
+ },
+ "d12_dlg_6_m_f": {
+  "hash": "6e3cb08ecd5faf1e",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "По-м+оему, +это тр+удно, но интер+есно."
+ },
+ "d12_dlg_6_m_f_slow": {
+  "hash": "e3ab24bd4ccf29af",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "По-м+оему, +это тр+удно, но интер+есно."
+ },
+ "d12_dlg_6_m_m": {
+  "hash": "bd4d1ef1b02b7789",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "По-м+оему, +это тр+удно, но интер+есно."
+ },
+ "d12_dlg_6_m_m_slow": {
+  "hash": "b13539311960831b",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "По-м+оему, +это тр+удно, но интер+есно."
+ },
+ "d12_dlg_7_f_p": {
+  "hash": "30d2c074f537a0aa",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Ты прав+а!"
+ },
+ "d12_dlg_7_f_p_slow": {
+  "hash": "99862495721793b7",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Ты прав+а!"
+ },
+ "d12_dlg_7_m_p": {
+  "hash": "11a63d5567b13ebd",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Ты прав!"
+ },
+ "d12_dlg_7_m_p_slow": {
+  "hash": "535ba90e7ef21800",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Ты прав!"
+ },
+ "d12_kak_f": {
+  "hash": "faffdb8626784f29",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Как?"
+ },
+ "d12_kak_f_slow": {
+  "hash": "705e2987f89ea307",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Как?"
+ },
+ "d12_kak_m": {
+  "hash": "14325ab5d2295a0f",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Как?"
+ },
+ "d12_kak_m_slow": {
+  "hash": "ac25294dfc4bbb70",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Как?"
+ },
+ "d12_kak_ty_dumaesh_f": {
+  "hash": "c6cfe9336406741e",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Как ты д+умаешь?"
+ },
+ "d12_kak_ty_dumaesh_f_slow": {
+  "hash": "baabc21774d1bd30",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Как ты д+умаешь?"
+ },
+ "d12_kak_ty_dumaesh_m": {
+  "hash": "f7da516c6aaf85f2",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Как ты д+умаешь?"
+ },
+ "d12_kak_ty_dumaesh_m_slow": {
+  "hash": "2c52cbcff198c486",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Как ты д+умаешь?"
+ },
+ "d12_kakoy_f": {
+  "hash": "9ad92c981cc49410",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Как+ой?"
+ },
+ "d12_kakoy_f_slow": {
+  "hash": "18fd4f2f04df0bfc",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Как+ой?"
+ },
+ "d12_kakoy_m": {
+  "hash": "137664019ce9df1f",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Как+ой?"
+ },
+ "d12_kakoy_m_slow": {
+  "hash": "846e3795528f6af6",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Как+ой?"
+ },
+ "d12_kto_f": {
+  "hash": "e2b390a9cd317900",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Кто?"
+ },
+ "d12_kto_f_slow": {
+  "hash": "0b99fe2da9e19a09",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Кто?"
+ },
+ "d12_kto_m": {
+  "hash": "b4b8c266faf3a583",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Кто?"
+ },
+ "d12_kto_m_slow": {
+  "hash": "dcfd335d9f582601",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Кто?"
+ },
+ "d12_nikogda_ne_byl_f": {
+  "hash": "1727c8cb99ad9514",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я никогд+а не был+а в Росс+ии."
+ },
+ "d12_nikogda_ne_byl_f_slow": {
+  "hash": "ecabc53db9ad7525",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я никогд+а не был+а в Росс+ии."
+ },
+ "d12_nikogda_ne_byl_m": {
+  "hash": "e31205f6d1883fd3",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я никогд+а н+е был в Росс+ии."
+ },
+ "d12_nikogda_ne_byl_m_slow": {
+  "hash": "6fbf0328bdd1a324",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я никогд+а н+е был в Росс+ии."
+ },
+ "d12_no_f": {
+  "hash": "148d649210f21886",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "но"
+ },
+ "d12_no_f_slow": {
+  "hash": "87af9f508190bc21",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "но"
+ },
+ "d12_no_m": {
+  "hash": "e4f572898d1e1c18",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "но"
+ },
+ "d12_no_m_slow": {
+  "hash": "3a600bb8032ddde2",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "но"
+ },
+ "d12_po_moemu_f": {
+  "hash": "fd62acc2bd0331ab",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "По-м+оему, +это хор+ошая ид+ея."
+ },
+ "d12_po_moemu_f_slow": {
+  "hash": "95f409e6f72e60f6",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "По-м+оему, +это хор+ошая ид+ея."
+ },
+ "d12_po_moemu_m": {
+  "hash": "bc24f1e65e3d4711",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "По-м+оему, +это хор+ошая ид+ея."
+ },
+ "d12_po_moemu_m_slow": {
+  "hash": "21dcd9344443c717",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "По-м+оему, +это хор+ошая ид+ея."
+ },
+ "d12_pochemu_f": {
+  "hash": "9f3c9f07bf3f3b1f",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Почем+у?"
+ },
+ "d12_pochemu_f_slow": {
+  "hash": "1fc01b05385b8fb7",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Почем+у?"
+ },
+ "d12_pochemu_m": {
+  "hash": "3d99b46e8192bb8d",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Почем+у?"
+ },
+ "d12_pochemu_m_slow": {
+  "hash": "d2eac53596d75a5a",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Почем+у?"
+ },
+ "d12_potomu_chto_f": {
+  "hash": "6fe8fca71d0ab148",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Потом+у что +это интер+есно."
+ },
+ "d12_potomu_chto_f_slow": {
+  "hash": "c16c9d0f696d5d88",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Потом+у что +это интер+есно."
+ },
+ "d12_potomu_chto_m": {
+  "hash": "e30ffa35145ce841",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Потом+у что +это интер+есно."
+ },
+ "d12_potomu_chto_m_slow": {
+  "hash": "0c03483631b17a9c",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Потом+у что +это интер+есно."
+ },
+ "d12_pravda_f": {
+  "hash": "c6b5352917bb498d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Пр+авда?"
+ },
+ "d12_pravda_f_slow": {
+  "hash": "a795adc871e9533d",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Пр+авда?"
+ },
+ "d12_pravda_m": {
+  "hash": "2bf42a9f83e02327",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Пр+авда?"
+ },
+ "d12_pravda_m_slow": {
+  "hash": "c6e72bea184e1072",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Пр+авда?"
+ },
+ "d12_seryozno_f": {
+  "hash": "aab597725a52253d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Серьёзно?"
+ },
+ "d12_seryozno_f_slow": {
+  "hash": "95b23a84dbbf0ae8",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Серьёзно?"
+ },
+ "d12_seryozno_m": {
+  "hash": "7916691164cf2c17",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Серьёзно?"
+ },
+ "d12_seryozno_m_slow": {
+  "hash": "02d939c6151bc332",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Серьёзно?"
+ },
+ "d12_ty_prav_f": {
+  "hash": "11d27a7ca8fa633d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Ты прав!"
+ },
+ "d12_ty_prav_f_slow": {
+  "hash": "8c127cf7c11d696a",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Ты прав!"
+ },
+ "d12_ty_prav_m": {
+  "hash": "b0843d6d310648d0",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Ты прав!"
+ },
+ "d12_ty_prav_m_slow": {
+  "hash": "235041319d6b7e04",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Ты прав!"
+ },
+ "d12_ty_prava_f": {
+  "hash": "6b39469525c8edf7",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Ты прав+а!"
+ },
+ "d12_ty_prava_f_slow": {
+  "hash": "9ac28e9de185d048",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Ты прав+а!"
+ },
+ "d12_ty_prava_m": {
+  "hash": "f8cc8f112a644110",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Ты прав+а!"
+ },
+ "d12_ty_prava_m_slow": {
+  "hash": "ccf53c98e1f93d8d",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Ты прав+а!"
+ },
+ "d12_ya_dumayu_f": {
+  "hash": "c1f2694a4b3c2329",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я д+умаю, что +это хорош+о."
+ },
+ "d12_ya_dumayu_f_slow": {
+  "hash": "d42f1b167d3e257e",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я д+умаю, что +это хорош+о."
+ },
+ "d12_ya_dumayu_m": {
+  "hash": "7bf50cf5eeb8de5b",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я д+умаю, что +это хорош+о."
+ },
+ "d12_ya_dumayu_m_slow": {
+  "hash": "abc7c671d777873a",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я д+умаю, что +это хорош+о."
+ },
+ "d12_ya_soglasen_f": {
+  "hash": "b0efcc32651e0ce5",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я согл+асна."
+ },
+ "d12_ya_soglasen_f_slow": {
+  "hash": "ad81e273b5ee13d5",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я согл+асна."
+ },
+ "d12_ya_soglasen_m": {
+  "hash": "5bdf743d747d2382",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я согл+асен."
+ },
+ "d12_ya_soglasen_m_slow": {
+  "hash": "f985b78cb7b06ef2",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я согл+асен."
+ },
+ "d12_zdorovo_f": {
+  "hash": "f890f3c295a061f8",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Зд+орово!"
+ },
+ "d12_zdorovo_f_slow": {
+  "hash": "ced11a7c9692cdc0",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Зд+орово!"
+ },
+ "d12_zdorovo_m": {
+  "hash": "6179d1260bdf70ec",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Зд+орово!"
+ },
+ "d12_zdorovo_m_slow": {
+  "hash": "4a2bf076a9cd06df",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Зд+орово!"
+ },
+ "d13_dlg_1_m_p": {
+  "hash": "8ca4be6b930c5afc",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Ой, извин+и! Я опозд+ала."
+ },
+ "d13_dlg_1_m_p_slow": {
+  "hash": "a034a6b92d9b68ea",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Ой, извин+и! Я опозд+ала."
+ },
+ "d13_dlg_2_m_f": {
+  "hash": "30796480c309cf58",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Ничег+о стр+ашного! Всё в пор+ядке."
+ },
+ "d13_dlg_2_m_f_slow": {
+  "hash": "e203c57c62ece988",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Ничег+о стр+ашного! Всё в пор+ядке."
+ },
+ "d13_dlg_2_m_m": {
+  "hash": "ce8e30637fa54911",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Ничег+о стр+ашного! Всё в пор+ядке."
+ },
+ "d13_dlg_2_m_m_slow": {
+  "hash": "e1f342d15c007e39",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Ничег+о стр+ашного! Всё в пор+ядке."
+ },
+ "d13_dlg_3_m_p": {
+  "hash": "74b63a4f221e325c",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Сл+ушай, ты хорош+о говор+ишь по-р+усски!"
+ },
+ "d13_dlg_3_m_p_slow": {
+  "hash": "4593b9368362346c",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Сл+ушай, ты хорош+о говор+ишь по-р+усски!"
+ },
+ "d13_dlg_4_m_f": {
+  "hash": "62f9cfe0d9e19a9d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Спас+ибо, я ещё уч+усь."
+ },
+ "d13_dlg_4_m_f_slow": {
+  "hash": "f0f0191c48483334",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Спас+ибо, я ещё уч+усь."
+ },
+ "d13_dlg_4_m_m": {
+  "hash": "0642173a5be0518b",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Спас+ибо, я ещё уч+усь."
+ },
+ "d13_dlg_4_m_m_slow": {
+  "hash": "23eefb2eae38ca70",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Спас+ибо, я ещё уч+усь."
+ },
+ "d13_dlg_5_m_p": {
+  "hash": "82e6ab85bc368998",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Молод+ец!"
+ },
+ "d13_dlg_5_m_p_slow": {
+  "hash": "90fb1080077d0cb4",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Молод+ец!"
+ },
+ "d13_dlg_6_f_f": {
+  "hash": "22dc5736453fbec9",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Спас+ибо! Я р+ада."
+ },
+ "d13_dlg_6_f_f_slow": {
+  "hash": "dbec9a57f963f5d2",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Спас+ибо! Я р+ада."
+ },
+ "d13_dlg_6_m_m": {
+  "hash": "c02054a351211198",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Спас+ибо! Я рад."
+ },
+ "d13_dlg_6_m_m_slow": {
+  "hash": "91993af70db94bf0",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Спас+ибо! Я рад."
+ },
+ "d13_dlg_7_m_p": {
+  "hash": "391de6ae4e5ba13c",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Н+е за что!"
+ },
+ "d13_dlg_7_m_p_slow": {
+  "hash": "bb2855e86923c672",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Н+е за что!"
+ },
+ "d13_izvini_f": {
+  "hash": "464d9ef360c87d56",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Извин+и!"
+ },
+ "d13_izvini_f_slow": {
+  "hash": "babb9bbd842dce35",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Извин+и!"
+ },
+ "d13_izvini_m": {
+  "hash": "5364854e92e8a958",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Извин+и!"
+ },
+ "d13_izvini_m_slow": {
+  "hash": "ea0e56ae348ea16f",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Извин+и!"
+ },
+ "d13_kak_krasivo_f": {
+  "hash": "38724144e55f9dad",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Как крас+иво!"
+ },
+ "d13_kak_krasivo_f_slow": {
+  "hash": "b1fa2dc9d2ce281f",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Как крас+иво!"
+ },
+ "d13_kak_krasivo_m": {
+  "hash": "fa62bb41be1a15ac",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Как крас+иво!"
+ },
+ "d13_kak_krasivo_m_slow": {
+  "hash": "93462f7d50e303ab",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Как крас+иво!"
+ },
+ "d13_mne_skuchno_f": {
+  "hash": "24197d453780f84e",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Мне ск+учно."
+ },
+ "d13_mne_skuchno_f_slow": {
+  "hash": "a78674a8c681a8b6",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Мне ск+учно."
+ },
+ "d13_mne_skuchno_m": {
+  "hash": "fc1932a2e5c9b77f",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Мне ск+учно."
+ },
+ "d13_mne_skuchno_m_slow": {
+  "hash": "3cd60e09d41d37fa",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Мне ск+учно."
+ },
+ "d13_mne_veselo_f": {
+  "hash": "12475f29aaccefce",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Мне в+есело."
+ },
+ "d13_mne_veselo_f_slow": {
+  "hash": "0c6e43a6c3a233be",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Мне в+есело."
+ },
+ "d13_mne_veselo_m": {
+  "hash": "16e394c72e73f425",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Мне в+есело."
+ },
+ "d13_mne_veselo_m_slow": {
+  "hash": "a9ca4a638069bb32",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Мне в+есело."
+ },
+ "d13_mne_zhal_f": {
+  "hash": "53a2246413ac8359",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Мне жаль."
+ },
+ "d13_mne_zhal_f_slow": {
+  "hash": "dd1750e0c1238df0",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Мне жаль."
+ },
+ "d13_mne_zhal_m": {
+  "hash": "292acfdba4bcb5bf",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Мне жаль."
+ },
+ "d13_mne_zhal_m_slow": {
+  "hash": "6fe28bce94b61400",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Мне жаль."
+ },
+ "d13_molodets_f": {
+  "hash": "9e709a43703a551f",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Молод+ец!"
+ },
+ "d13_molodets_f_slow": {
+  "hash": "389652b58595e71c",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Молод+ец!"
+ },
+ "d13_molodets_m": {
+  "hash": "59521700424fb109",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Молод+ец!"
+ },
+ "d13_molodets_m_slow": {
+  "hash": "722ad24c2fe77c95",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Молод+ец!"
+ },
+ "d13_ne_perezhivay_f": {
+  "hash": "8db983d1e5cdec05",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Не пережив+ай!"
+ },
+ "d13_ne_perezhivay_f_slow": {
+  "hash": "b2a448f6ed1aa2e1",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Не пережив+ай!"
+ },
+ "d13_ne_perezhivay_m": {
+  "hash": "5eabeb73800e9fe1",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Не пережив+ай!"
+ },
+ "d13_ne_perezhivay_m_slow": {
+  "hash": "38d9328d3a592814",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Не пережив+ай!"
+ },
+ "d13_ne_za_chto_f": {
+  "hash": "b4f3c16f999c6f58",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Н+е за что."
+ },
+ "d13_ne_za_chto_f_slow": {
+  "hash": "810a611ae25e90ba",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Н+е за что."
+ },
+ "d13_ne_za_chto_m": {
+  "hash": "d31384cc22d708c3",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Н+е за что."
+ },
+ "d13_ne_za_chto_m_slow": {
+  "hash": "4d13f223a4221d47",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Н+е за что."
+ },
+ "d13_nichego_strashnogo_f": {
+  "hash": "f6c16e5ee7077809",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Ничег+о стр+ашного."
+ },
+ "d13_nichego_strashnogo_f_slow": {
+  "hash": "0eabb045b814e978",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Ничег+о стр+ашного."
+ },
+ "d13_nichego_strashnogo_m": {
+  "hash": "974ef1796414feb6",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Ничег+о стр+ашного."
+ },
+ "d13_nichego_strashnogo_m_slow": {
+  "hash": "97c8075ed66442df",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Ничег+о стр+ашного."
+ },
+ "d13_ty_horosho_govorish_f": {
+  "hash": "30df8605416acf2a",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Ты хорош+о говор+ишь по-р+усски!"
+ },
+ "d13_ty_horosho_govorish_f_slow": {
+  "hash": "9150f3cf47263d64",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Ты хорош+о говор+ишь по-р+усски!"
+ },
+ "d13_ty_horosho_govorish_m": {
+  "hash": "fd84584291301ec2",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Ты хорош+о говор+ишь по-р+усски!"
+ },
+ "d13_ty_horosho_govorish_m_slow": {
+  "hash": "dcb7de108bd8627d",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Ты хорош+о говор+ишь по-р+усски!"
+ },
+ "d13_udachi_f": {
+  "hash": "5e07ee4ed25ae170",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Уд+ачи!"
+ },
+ "d13_udachi_f_slow": {
+  "hash": "4faf2806711653fb",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Уд+ачи!"
+ },
+ "d13_udachi_m": {
+  "hash": "a2d99b7c459df059",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Уд+ачи!"
+ },
+ "d13_udachi_m_slow": {
+  "hash": "46d2a7c3a6396d00",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Уд+ачи!"
+ },
+ "d13_vsyo_v_poryadke_f": {
+  "hash": "e7d019c54c974590",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Всё в пор+ядке."
+ },
+ "d13_vsyo_v_poryadke_f_slow": {
+  "hash": "bc21e12023868d62",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Всё в пор+ядке."
+ },
+ "d13_vsyo_v_poryadke_m": {
+  "hash": "de4c75ccff518c43",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Всё в пор+ядке."
+ },
+ "d13_vsyo_v_poryadke_m_slow": {
+  "hash": "6e0e5effe97a030b",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Всё в пор+ядке."
+ },
+ "d13_ya_eshyo_uchus_f": {
+  "hash": "62f9cfe0d9e19a9d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Спас+ибо, я ещё уч+усь."
+ },
+ "d13_ya_eshyo_uchus_f_slow": {
+  "hash": "f0f0191c48483334",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Спас+ибо, я ещё уч+усь."
+ },
+ "d13_ya_eshyo_uchus_m": {
+  "hash": "0642173a5be0518b",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Спас+ибо, я ещё уч+усь."
+ },
+ "d13_ya_eshyo_uchus_m_slow": {
+  "hash": "23eefb2eae38ca70",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Спас+ибо, я ещё уч+усь."
+ },
+ "d13_ya_rad_f": {
+  "hash": "659388d7314d84a9",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я р+ада!"
+ },
+ "d13_ya_rad_f_slow": {
+  "hash": "0cc941bb08d9070c",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я р+ада!"
+ },
+ "d13_ya_rad_m": {
+  "hash": "3650229026397a04",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я рад!"
+ },
+ "d13_ya_rad_m_slow": {
+  "hash": "171f0a6ddde2c177",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я рад!"
+ },
+ "d14_beregi_sebya_f": {
+  "hash": "d1907ed8c2897257",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Берег+и себ+я!"
+ },
+ "d14_beregi_sebya_f_slow": {
+  "hash": "a1b67dda70337e67",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Берег+и себ+я!"
+ },
+ "d14_beregi_sebya_m": {
+  "hash": "6b61b845b18b2a41",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Берег+и себ+я!"
+ },
+ "d14_beregi_sebya_m_slow": {
+  "hash": "21218e7a19112b9d",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Берег+и себ+я!"
+ },
+ "d14_bylo_priyatno_f": {
+  "hash": "c45d91cdb58a229b",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Б+ыло +очень при+ятно познак+омиться!"
+ },
+ "d14_bylo_priyatno_f_slow": {
+  "hash": "6a7e1656380cc5bd",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Б+ыло +очень при+ятно познак+омиться!"
+ },
+ "d14_bylo_priyatno_m": {
+  "hash": "36d3e4c6f0201f5c",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Б+ыло +очень при+ятно познак+омиться!"
+ },
+ "d14_bylo_priyatno_m_slow": {
+  "hash": "294e238b7fe0bfec",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Б+ыло +очень при+ятно познак+омиться!"
+ },
+ "d14_dlg_10_m_f": {
+  "hash": "c45d91cdb58a229b",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Б+ыло +очень при+ятно познак+омиться!"
+ },
+ "d14_dlg_10_m_f_slow": {
+  "hash": "6a7e1656380cc5bd",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Б+ыло +очень при+ятно познак+омиться!"
+ },
+ "d14_dlg_10_m_m": {
+  "hash": "36d3e4c6f0201f5c",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Б+ыло +очень при+ятно познак+омиться!"
+ },
+ "d14_dlg_10_m_m_slow": {
+  "hash": "294e238b7fe0bfec",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Б+ыло +очень при+ятно познак+омиться!"
+ },
+ "d14_dlg_11_m_p": {
+  "hash": "e3f38fce5c120d09",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Мне т+оже! Напиш+и мне."
+ },
+ "d14_dlg_11_m_p_slow": {
+  "hash": "2536680c34e85df0",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Мне т+оже! Напиш+и мне."
+ },
+ "d14_dlg_12_m_f": {
+  "hash": "43de3ddabd45c03d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Обяз+ательно! Пок+а!"
+ },
+ "d14_dlg_12_m_f_slow": {
+  "hash": "7d572dba00beacfb",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Обяз+ательно! Пок+а!"
+ },
+ "d14_dlg_12_m_m": {
+  "hash": "0b001862ffe92251",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Обяз+ательно! Пок+а!"
+ },
+ "d14_dlg_12_m_m_slow": {
+  "hash": "5d94cf535d1d7b08",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Обяз+ательно! Пок+а!"
+ },
+ "d14_dlg_13_m_p": {
+  "hash": "b9419e3c4450dac3",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Пок+а! Всег+о хор+ошего!"
+ },
+ "d14_dlg_13_m_p_slow": {
+  "hash": "4f33ef2bc8acc189",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Пок+а! Всег+о хор+ошего!"
+ },
+ "d14_dlg_1_m_p": {
+  "hash": "c8ae41871217d3fb",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Прив+ет! Как дел+а?"
+ },
+ "d14_dlg_1_m_p_slow": {
+  "hash": "257b1969944fe6ef",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Прив+ет! Как дел+а?"
+ },
+ "d14_dlg_2_m_f": {
+  "hash": "46b4dd991b3603f4",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Прив+ет! Отл+ично, спас+ибо. А у теб+я?"
+ },
+ "d14_dlg_2_m_f_slow": {
+  "hash": "8f23cbef93f6d4c8",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Прив+ет! Отл+ично, спас+ибо. А у теб+я?"
+ },
+ "d14_dlg_2_m_m": {
+  "hash": "43382e938b39f33d",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Прив+ет! Отл+ично, спас+ибо. А у теб+я?"
+ },
+ "d14_dlg_2_m_m_slow": {
+  "hash": "893af2c6bb9d6382",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Прив+ет! Отл+ично, спас+ибо. А у теб+я?"
+ },
+ "d14_dlg_3_m_p": {
+  "hash": "3c25c35947cbe454",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Т+оже хорош+о. Ты хорош+о говор+ишь по-р+усски!"
+ },
+ "d14_dlg_3_m_p_slow": {
+  "hash": "402c9483c23196d7",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Т+оже хорош+о. Ты хорош+о говор+ишь по-р+усски!"
+ },
+ "d14_dlg_4_m_f": {
+  "hash": "62f9cfe0d9e19a9d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Спас+ибо, я ещё уч+усь."
+ },
+ "d14_dlg_4_m_f_slow": {
+  "hash": "f0f0191c48483334",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Спас+ибо, я ещё уч+усь."
+ },
+ "d14_dlg_4_m_m": {
+  "hash": "0642173a5be0518b",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Спас+ибо, я ещё уч+усь."
+ },
+ "d14_dlg_4_m_m_slow": {
+  "hash": "23eefb2eae38ca70",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Спас+ибо, я ещё уч+усь."
+ },
+ "d14_dlg_5_m_p": {
+  "hash": "10993d14fb42a787",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "А что ты л+юбишь д+елать?"
+ },
+ "d14_dlg_5_m_p_slow": {
+  "hash": "78d280a26ec3d3e9",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "А что ты л+юбишь д+елать?"
+ },
+ "d14_dlg_6_m_f": {
+  "hash": "6ba4520b8c4418ae",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я любл+ю аним+е и м+узыку. А ты?"
+ },
+ "d14_dlg_6_m_f_slow": {
+  "hash": "581e0e52fd04f0d4",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я любл+ю аним+е и м+узыку. А ты?"
+ },
+ "d14_dlg_6_m_m": {
+  "hash": "fc6de37e03d55d55",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я любл+ю аним+е и м+узыку. А ты?"
+ },
+ "d14_dlg_6_m_m_slow": {
+  "hash": "2f9f62ef64e5eb97",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я любл+ю аним+е и м+узыку. А ты?"
+ },
+ "d14_dlg_7_f_p": {
+  "hash": "0099569b35395730",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Я любл+ю путеш+ествовать. Ты был+а в Росс+ии?"
+ },
+ "d14_dlg_7_f_p_slow": {
+  "hash": "ec757d97548bf0df",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Я любл+ю путеш+ествовать. Ты был+а в Росс+ии?"
+ },
+ "d14_dlg_7_m_p": {
+  "hash": "dd6f97a3e3135beb",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Я любл+ю путеш+ествовать. Ты был в Росс+ии?"
+ },
+ "d14_dlg_7_m_p_slow": {
+  "hash": "ccde48276e401c67",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Я любл+ю путеш+ествовать. Ты был в Росс+ии?"
+ },
+ "d14_dlg_8_f_f": {
+  "hash": "4aed7b8a7283ba01",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Нет, я никогд+а не был+а в Росс+ии."
+ },
+ "d14_dlg_8_f_f_slow": {
+  "hash": "a3b075b02aa65f5c",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Нет, я никогд+а не был+а в Росс+ии."
+ },
+ "d14_dlg_8_m_m": {
+  "hash": "5f0a6ebbf10d2aa1",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Нет, я никогд+а н+е был в Росс+ии."
+ },
+ "d14_dlg_8_m_m_slow": {
+  "hash": "bc8902fa4b4f0d34",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Нет, я никогд+а н+е был в Росс+ии."
+ },
+ "d14_dlg_9_m_p": {
+  "hash": "6b65dabb59d6bf9b",
+  "rate": 1.0,
+  "speaker": 0,
+  "text": "Приезж+ай! Ой, мне пор+а."
+ },
+ "d14_dlg_9_m_p_slow": {
+  "hash": "b7d2970b69283a4e",
+  "rate": 0.7,
+  "speaker": 0,
+  "text": "Приезж+ай! Ой, мне пор+а."
+ },
+ "d14_do_vstrechi_f": {
+  "hash": "74f7d24575ea297c",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "До встр+ечи!"
+ },
+ "d14_do_vstrechi_f_slow": {
+  "hash": "e79ad42a95b98844",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "До встр+ечи!"
+ },
+ "d14_do_vstrechi_m": {
+  "hash": "20b549a5dc94d1aa",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "До встр+ечи!"
+ },
+ "d14_do_vstrechi_m_slow": {
+  "hash": "1e2029195caa6ed6",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "До встр+ечи!"
+ },
+ "d14_do_zavtra_f": {
+  "hash": "f370d3282849aa7c",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "До з+автра!"
+ },
+ "d14_do_zavtra_f_slow": {
+  "hash": "ffcfaa764fb53c0c",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "До з+автра!"
+ },
+ "d14_do_zavtra_m": {
+  "hash": "e200b9c387f724eb",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "До з+автра!"
+ },
+ "d14_do_zavtra_m_slow": {
+  "hash": "5f1d16cbc56cc482",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "До з+автра!"
+ },
+ "d14_horoshego_dnya_f": {
+  "hash": "137e4dbe5d595913",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Хор+ошего дня!"
+ },
+ "d14_horoshego_dnya_f_slow": {
+  "hash": "7e738e3677d4c955",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Хор+ошего дня!"
+ },
+ "d14_horoshego_dnya_m": {
+  "hash": "7d60e760d2544485",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Хор+ошего дня!"
+ },
+ "d14_horoshego_dnya_m_slow": {
+  "hash": "d72fa85c827b3412",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Хор+ошего дня!"
+ },
+ "d14_mne_pora_f": {
+  "hash": "565a6e0ee8d30773",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Мне пор+а."
+ },
+ "d14_mne_pora_f_slow": {
+  "hash": "feb5fefd233dafbc",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Мне пор+а."
+ },
+ "d14_mne_pora_m": {
+  "hash": "bf2eb84428f91c07",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Мне пор+а."
+ },
+ "d14_mne_pora_m_slow": {
+  "hash": "6e16ff95682bafbc",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Мне пор+а."
+ },
+ "d14_mozhno_tvoy_nomer_f": {
+  "hash": "4c67ddbc787b4d92",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "М+ожно твой н+омер?"
+ },
+ "d14_mozhno_tvoy_nomer_f_slow": {
+  "hash": "b58edd90e0e51244",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "М+ожно твой н+омер?"
+ },
+ "d14_mozhno_tvoy_nomer_m": {
+  "hash": "aca40c304a8f4dd6",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "М+ожно твой н+омер?"
+ },
+ "d14_mozhno_tvoy_nomer_m_slow": {
+  "hash": "184c466b1e2a0976",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "М+ожно твой н+омер?"
+ },
+ "d14_napishi_v_telegram_f": {
+  "hash": "f384e2edc2f48c1c",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Напиш+и мне в Телегр+ам."
+ },
+ "d14_napishi_v_telegram_f_slow": {
+  "hash": "6efa5ef7f87338c8",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Напиш+и мне в Телегр+ам."
+ },
+ "d14_napishi_v_telegram_m": {
+  "hash": "cd9892ae95bdef2c",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Напиш+и мне в Телегр+ам."
+ },
+ "d14_napishi_v_telegram_m_slow": {
+  "hash": "a7eb6d9ef7f6d761",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Напиш+и мне в Телегр+ам."
+ },
+ "d14_obyazatelno_f": {
+  "hash": "dd33da9ef685c726",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Обяз+ательно!"
+ },
+ "d14_obyazatelno_f_slow": {
+  "hash": "076f118133d7c390",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Обяз+ательно!"
+ },
+ "d14_obyazatelno_m": {
+  "hash": "69bd56c1b2a6ca08",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Обяз+ательно!"
+ },
+ "d14_obyazatelno_m_slow": {
+  "hash": "f5991e9cdb710af4",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Обяз+ательно!"
+ },
+ "d14_priezzhay_f": {
+  "hash": "5cb5e6c176a69adc",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Приезж+ай в Герм+анию!"
+ },
+ "d14_priezzhay_f_slow": {
+  "hash": "2c6a8ec0ad2802b3",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Приезж+ай в Герм+анию!"
+ },
+ "d14_priezzhay_m": {
+  "hash": "c3e4f5c2afc40e73",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Приезж+ай в Герм+анию!"
+ },
+ "d14_priezzhay_m_slow": {
+  "hash": "f9426b00c286929a",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Приезж+ай в Герм+анию!"
+ },
+ "d14_spokoynoy_nochi_f": {
+  "hash": "06e9eaf43af0f484",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Спок+ойной н+очи!"
+ },
+ "d14_spokoynoy_nochi_f_slow": {
+  "hash": "b0d4746293b21d34",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Спок+ойной н+очи!"
+ },
+ "d14_spokoynoy_nochi_m": {
+  "hash": "cc7e9dedf67931ad",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Спок+ойной н+очи!"
+ },
+ "d14_spokoynoy_nochi_m_slow": {
+  "hash": "289203f3f50c0c27",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Спок+ойной н+очи!"
+ },
+ "d14_uvidimsya_f": {
+  "hash": "86d2a49db8f5218e",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Ув+идимся!"
+ },
+ "d14_uvidimsya_f_slow": {
+  "hash": "bdf5e56e925044f5",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Ув+идимся!"
+ },
+ "d14_uvidimsya_m": {
+  "hash": "388b8b8711bb812b",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Ув+идимся!"
+ },
+ "d14_uvidimsya_m_slow": {
+  "hash": "aa5d530119d2618e",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Ув+идимся!"
+ },
+ "d14_vsego_horoshego_f": {
+  "hash": "1aa870c40928638d",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Всег+о хор+ошего!"
+ },
+ "d14_vsego_horoshego_f_slow": {
+  "hash": "c38a72ee4f7c1cce",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Всег+о хор+ошего!"
+ },
+ "d14_vsego_horoshego_m": {
+  "hash": "e1cfab8f0aceec53",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Всег+о хор+ошего!"
+ },
+ "d14_vsego_horoshego_m_slow": {
+  "hash": "6e0b1115e69e83cc",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Всег+о хор+ошего!"
+ },
+ "d14_ya_budu_skuchat_f": {
+  "hash": "fe7bca40da0c6811",
+  "rate": 1.0,
+  "speaker": 1,
+  "text": "Я б+уду скуч+ать."
+ },
+ "d14_ya_budu_skuchat_f_slow": {
+  "hash": "885ed0cc0b1f9b20",
+  "rate": 0.7,
+  "speaker": 1,
+  "text": "Я б+уду скуч+ать."
+ },
+ "d14_ya_budu_skuchat_m": {
+  "hash": "7cdc8c4aefff0383",
+  "rate": 1.0,
+  "speaker": 4,
+  "text": "Я б+уду скуч+ать."
+ },
+ "d14_ya_budu_skuchat_m_slow": {
+  "hash": "2f0a09ecbd1ce3d5",
+  "rate": 0.7,
+  "speaker": 4,
+  "text": "Я б+уду скуч+ать."
+ }
+}

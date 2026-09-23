@@ -65,6 +65,11 @@ import com.hikari.app.ui.music.PlaylistDetailScreen
 import com.hikari.app.ui.music.RemotePlaylistScreen
 import com.hikari.app.ui.news.NewsScreen
 import com.hikari.app.ui.games.GamesScreen
+import com.hikari.app.ui.russian.RussianBlitzScreen
+import com.hikari.app.ui.russian.RussianHomeScreen
+import com.hikari.app.ui.russian.RussianPairsScreen
+import com.hikari.app.ui.russian.RussianPhrasebookScreen
+import com.hikari.app.ui.russian.RussianSessionScreen
 import com.hikari.app.ui.games.BlockBlastGame
 import com.hikari.app.ui.games.ColorSortGame
 import com.hikari.app.ui.games.SnakeGame
@@ -140,7 +145,8 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
     // Settings + Tuning sind ab v0.25.0 nur über Profil-Gear erreichbar — sub-pages,
     // also auch ohne Bottom-Nav rendern (eigener Back-Button reicht).
     val isGearSubPage = currentRoute == "settings" || currentRoute?.startsWith("tuning") == true
-    val isGameRoute = currentRoute?.startsWith("game/") == true
+    val isGameRoute = currentRoute?.startsWith("game/") == true ||
+        currentRoute?.startsWith("russian/") == true
     // Der Browser bringt eigene Leisten oben und unten mit; die Bottom-Nav
     // würde die Fundanzeige verdecken.
     val isBrowserRoute = currentRoute == "browser"
@@ -462,6 +468,49 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                     onBack = { nav.popBackStack() },
                     onOpenNowPlaying = { nav.navigate("nowplaying") },
                 )
+            }
+            composable("russian") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    RussianHomeScreen(
+                        onBack = { nav.popBackStack() },
+                        onOpen = { route -> nav.navigate(route) },
+                    )
+                }
+            }
+            // Lektion und Rollenspiel: russian/lesson/3, russian/dialog/3
+            composable(
+                route = "russian/{mode}/{day}",
+                arguments = listOf(
+                    navArgument("mode") { type = NavType.StringType },
+                    navArgument("day") { type = NavType.StringType },
+                ),
+            ) {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    RussianSessionScreen(onClose = { nav.popBackStack() })
+                }
+            }
+            composable(
+                route = "russian/review",
+                arguments = listOf(navArgument("mode") { type = NavType.StringType; defaultValue = "review" }),
+            ) {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    RussianSessionScreen(onClose = { nav.popBackStack() })
+                }
+            }
+            composable("russian/blitz") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    RussianBlitzScreen(onClose = { nav.popBackStack() })
+                }
+            }
+            composable("russian/pairs") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    RussianPairsScreen(onClose = { nav.popBackStack() })
+                }
+            }
+            composable("russian/phrases") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    RussianPhrasebookScreen(onBack = { nav.popBackStack() })
+                }
             }
             composable("games") {
                 Box(Modifier.fillMaxSize().padding(padding)) {
