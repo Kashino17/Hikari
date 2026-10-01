@@ -117,6 +117,7 @@ fun MusicScreen(
     onOpenGroup: (title: String, unit: String, query: String, mode: String) -> Unit,
     onOpenArtist: (channelId: String, name: String) -> Unit,
     onOpenCollection: (playlistId: String, name: String, isAlbum: Boolean) -> Unit,
+    onNavigateBack: (() -> Unit)? = null,
     viewModel: MusicViewModel = hiltViewModel(),
 ) {
     val currentSong by viewModel.player.currentSong.collectAsState()
@@ -124,15 +125,16 @@ fun MusicScreen(
     val snackbar = remember { SnackbarHostState() }
     var showModeSheet by remember { mutableStateOf(false) }
 
-    // Zurück-Geste auf der Musik-Übersicht: NIE zum Bibliothek-Tab
-    // zurückfallen — erst offene Zustände schließen, dann die App in den
-    // Hintergrund schicken (wie bei YouTube Music).
+    // Zurück-Geste auf der Musik-Übersicht: Wenn aus einem Bereich (z.B. Profil)
+    // aufgerufen, führt Zurück dorthin zurück. Andernfalls App in den Hintergrund
+    // schicken (wie bei YouTube Music).
     val backContext = LocalContext.current
     BackHandler {
         when {
             showModeSheet -> showModeSheet = false
             viewModel.searchActive || viewModel.searchQuery.isNotEmpty() || viewModel.searchAttempted ->
                 viewModel.clearSearch()
+            onNavigateBack != null -> onNavigateBack()
             else -> (backContext as? android.app.Activity)?.moveTaskToBack(true)
         }
     }
@@ -158,6 +160,7 @@ fun MusicScreen(
             MusicHeaderBar(
                 avatarPath = viewModel.avatarPath.collectAsState().value,
                 onOpenProfile = onOpenProfile,
+                onNavigateBack = onNavigateBack,
                 value = viewModel.searchQuery,
                 placeholder = when (searchMode) {
                     MusicSearchMode.MUSIC -> "Songs, Artists, Alben suchen…"
@@ -222,6 +225,7 @@ fun MusicScreen(
 private fun MusicHeaderBar(
     avatarPath: String?,
     onOpenProfile: () -> Unit,
+    onNavigateBack: (() -> Unit)? = null,
     value: String,
     placeholder: String,
     filtered: Boolean,
@@ -241,8 +245,8 @@ private fun MusicHeaderBar(
         Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = bottomGap),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Offene Suche: das Profilbild morpht zum Zurück-Pfeil — ein Tipp
-        // führt zurück zur Entdecken-Seite (intuitiver Ausstieg aus der Suche).
+        // Offene Suche oder Navigiert aus anderem Tab (z.B. Profil):
+        // Zurück-Pfeil anbieten — sonst regulär das Profilbild.
         Crossfade(searchOpen, animationSpec = tween(200), label = "avatarBack") { open ->
             if (open) {
                 MuIconButton(
@@ -251,6 +255,13 @@ private fun MusicHeaderBar(
                     tint = HikariText,
                     touchSize = 40.dp,
                 ) { onBack() }
+            } else if (onNavigateBack != null) {
+                MuIconButton(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    "Zurück",
+                    tint = HikariText,
+                    touchSize = 40.dp,
+                ) { onNavigateBack() }
             } else {
                 MusicAvatarChip(avatarPath = avatarPath, size = 40.dp, onClick = onOpenProfile)
             }

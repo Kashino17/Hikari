@@ -156,7 +156,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
     val isArtistRoute = currentRoute?.startsWith("artist/") == true
     val isCollectionRoute = currentRoute?.startsWith("music/collection/") == true
     val isMusicProfileRoute = currentRoute == "music/profile"
-    val inMusicSection = currentRoute == "music" || isNowPlaying || isPlaylistRoute || isMixRoute ||
+    val inMusicSection = currentRoute == "music" || currentRoute?.startsWith("music?") == true || isNowPlaying || isPlaylistRoute || isMixRoute ||
         isArtistRoute || isCollectionRoute || isMusicProfileRoute
     val showsBottomBar = !(currentRoute == "feed" && feedFullscreen) && !isVideoRoute &&
         !isReaderRoute && !isGearSubPage && !isGameRoute && !isNowPlaying &&
@@ -175,7 +175,8 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                 ) {
                     hikariDestinations.forEach { d ->
                         NavigationBarItem(
-                            selected = currentRoute == d.route,
+                            selected = currentRoute == d.route ||
+                                (d.route == "music" && (currentRoute == "music" || currentRoute?.startsWith("music?") == true)),
                             onClick = {
                                 when (d.route) {
                                     // Feed-Tab heißt immer: ganz nach oben und frisch laden.
@@ -333,7 +334,16 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                     TuningScreen(onBack = { nav.popBackStack() })
                 }
             }
-            composable("music") {
+            composable(
+                route = "music?from={from}",
+                arguments = listOf(
+                    navArgument("from") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    },
+                ),
+            ) { backStackEntry ->
+                val from = backStackEntry.arguments?.getString("from").orEmpty()
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     MusicScreen(
                         onOpenNowPlaying = { nav.navigate("nowplaying") },
@@ -356,6 +366,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                             val n = URLEncoder.encode(name, "UTF-8")
                             nav.navigate("music/collection/$playlistId?name=$n&isAlbum=$isAlbum")
                         },
+                        onNavigateBack = if (from.isNotBlank()) { { nav.popBackStack() } } else null,
                     )
                 }
             }

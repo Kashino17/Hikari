@@ -95,7 +95,7 @@ import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 import java.io.File
 
-private enum class ProfileTab { SAVED, CHANNELS, DOWNLOADS, BEREICHE }
+private enum class ProfileTab { BEREICHE, CHANNELS, DOWNLOADS, SAVED }
 
 @Composable
 fun ProfileScreen(
@@ -121,7 +121,7 @@ fun ProfileScreen(
     val hubMangaLabel by vm.hubMangaLabel.collectAsState()
 
     var showEditSheet by remember { mutableStateOf(false) }
-    var tab by remember { mutableStateOf(ProfileTab.SAVED) }
+    var tab by remember { mutableStateOf(ProfileTab.BEREICHE) }
     var importOpen by remember { mutableStateOf(false) }
     var importSeed by remember { mutableStateOf<SharedImport?>(null) }
 
@@ -446,11 +446,11 @@ private fun ProfileTabsRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TabChip(
-            icon = Icons.Default.Bookmark,
-            label = "Gespeichert",
-            count = savedCount,
-            selected = active == ProfileTab.SAVED,
-            onClick = { onTabSelected(ProfileTab.SAVED) },
+            icon = Icons.Default.Apps,
+            label = "Bereiche",
+            count = 6,
+            selected = active == ProfileTab.BEREICHE,
+            onClick = { onTabSelected(ProfileTab.BEREICHE) },
         )
         TabChip(
             icon = Icons.Default.Public,
@@ -467,11 +467,11 @@ private fun ProfileTabsRow(
             onClick = { onTabSelected(ProfileTab.DOWNLOADS) },
         )
         TabChip(
-            icon = Icons.Default.Apps,
-            label = "Bereiche",
-            count = 6,
-            selected = active == ProfileTab.BEREICHE,
-            onClick = { onTabSelected(ProfileTab.BEREICHE) },
+            icon = Icons.Default.Bookmark,
+            label = "Gespeichert",
+            count = savedCount,
+            selected = active == ProfileTab.SAVED,
+            onClick = { onTabSelected(ProfileTab.SAVED) },
         )
     }
 }
