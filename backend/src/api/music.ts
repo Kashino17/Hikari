@@ -982,11 +982,8 @@ export async function registerMusicRoutes(
       reply.header("retry-after", String(retryAfterS));
       return reply.code(503).send({ error: "youtube throttling — retry later" });
     }
-    // Songstart (kein Range oder ab Byte 0) — kein Seek/Nachladen mitten drin:
-    // guter Moment, die Video-URL für den Player-Umschalter vorzuwärmen.
-    const range = req.headers.range;
-    if (!range || /^bytes=0-$/.test(range.trim())) prewarmVideoUrl(videoId);
 
+    const range = req.headers.range;
     const result = await proxyMediaStream(
       reply,
       range,

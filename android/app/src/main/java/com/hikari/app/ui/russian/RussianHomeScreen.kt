@@ -1,5 +1,6 @@
 package com.hikari.app.ui.russian
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,25 +13,22 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Replay
-import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -47,7 +45,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -74,6 +74,7 @@ import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import com.hikari.app.R
 
 @HiltViewModel
 class RussianHomeViewModel @Inject constructor(
@@ -170,28 +171,38 @@ fun RussianHomeScreen(
 
         item {
             RuOverline("Üben & spielen", Modifier.padding(start = 16.dp, top = 26.dp, bottom = 12.dp))
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            // Homescreen-Stil: jedes Spiel eine „App" mit Icon, Rekord als Badge.
+            val apps = listOf(
+                GameApp(
+                    "Hör-Blitz",
+                    R.drawable.ic_app_blitz,
+                    listOf(Color(0xFFF9A825), Color(0xFFE2711D)),
+                    if (p.bestBlitz > 0) "★${p.bestBlitz}" else null,
+                ) { onOpen("russian/blitz") },
+                GameApp(
+                    "Paare finden",
+                    R.drawable.ic_app_pairs,
+                    listOf(Color(0xFF4F7BD9), Color(0xFF2A4A9E)),
+                    if (p.bestPairsSeconds > 0) "★${p.bestPairsSeconds}s" else null,
+                ) { onOpen("russian/pairs") },
+                GameApp(
+                    "Gespräche",
+                    R.drawable.ic_app_dialog,
+                    listOf(Color(0xFF2FBF9B), Color(0xFF1D8A70)),
+                    null,
+                ) { onOpen("russian/dialog/${p.dayStars.keys.randomOrNull() ?: 1}") },
+                GameApp(
+                    "Satzbuch",
+                    R.drawable.ic_app_book,
+                    listOf(Color(0xFF9B6DD9), Color(0xFF6B3FB0)),
+                    null,
+                ) { onOpen("russian/phrases") },
+            )
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                item {
-                    PracticeCard("Hör-Blitz", "60 Sekunden hören und verstehen", Icons.Outlined.Timer,
-                        if (p.bestBlitz > 0) "Rekord ${p.bestBlitz}" else null) { onOpen("russian/blitz") }
-                }
-                item {
-                    PracticeCard("Paare finden", "Russisch und Deutsch verbinden", Icons.Outlined.Extension,
-                        if (p.bestPairsSeconds > 0) "Bestzeit ${p.bestPairsSeconds} s" else null) { onOpen("russian/pairs") }
-                }
-                item {
-                    PracticeCard("Gespräche", "Ein zufälliges Rollenspiel aus deinen Tagen", Icons.Outlined.Forum, null) {
-                        onOpen("russian/dialog/${p.dayStars.keys.randomOrNull() ?: 1}")
-                    }
-                }
-                item {
-                    PracticeCard("Satzbuch", "Alles Gelernte zum Anhören", Icons.AutoMirrored.Outlined.MenuBook, null) {
-                        onOpen("russian/phrases")
-                    }
-                }
+                apps.forEach { app -> AppIcon(app, Modifier.weight(1f)) }
             }
         }
 
@@ -358,23 +369,54 @@ private fun ReviewCard(due: Int, learned: Int, enabled: Boolean, onStart: () -> 
     }
 }
 
+private data class GameApp(
+    val title: String,
+    val icon: Int,
+    val gradient: List<Color>,
+    val badge: String?,
+    val onClick: () -> Unit,
+)
+
 @Composable
-private fun PracticeCard(title: String, subtitle: String, icon: ImageVector, badge: String?, onClick: () -> Unit) {
+private fun AppIcon(app: GameApp, modifier: Modifier = Modifier) {
     Column(
-        Modifier
-            .width(168.dp)
-            .height(132.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(HikariCardBg)
-            .border(1.dp, HikariBorder, RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick)
-            .padding(14.dp),
+        modifier.clip(RoundedCornerShape(12.dp)).clickable(onClick = app.onClick).padding(vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(icon, null, tint = HikariAmber, modifier = Modifier.size(22.dp))
-        Spacer(Modifier.weight(1f))
-        Text(title, color = HikariText, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-        Text(subtitle, color = HikariTextMuted, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
-        if (badge != null) Text(badge, color = HikariAmber.copy(alpha = 0.85f), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+        Box {
+            Box(
+                Modifier
+                    .size(62.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Brush.verticalGradient(app.gradient))
+                    .border(1.dp, Color.White.copy(alpha = 0.14f), RoundedCornerShape(16.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(painterResource(app.icon), contentDescription = null, modifier = Modifier.size(38.dp))
+            }
+            if (app.badge != null) {
+                Box(
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 8.dp, y = (-5).dp)
+                        .clip(RoundedCornerShape(9.dp))
+                        .background(HikariAmber)
+                        .padding(horizontal = 5.dp, vertical = 2.dp),
+                ) {
+                    Text(app.badge, color = Color.Black, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+        Spacer(Modifier.height(7.dp))
+        Text(
+            app.title,
+            color = HikariText,
+            fontSize = 11.5.sp,
+            lineHeight = 14.sp,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 

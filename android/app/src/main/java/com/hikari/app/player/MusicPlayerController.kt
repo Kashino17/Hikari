@@ -17,6 +17,8 @@ import androidx.media3.datasource.HttpDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
+import androidx.media3.datasource.okhttp.OkHttpDataSource
+import okhttp3.OkHttpClient
 import android.media.audiofx.LoudnessEnhancer
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
@@ -50,11 +52,13 @@ import kotlinx.coroutines.launch
  * navigation because it is a @Singleton, not tied to any screen's ViewModel.
  */
 @Singleton
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 class MusicPlayerController @Inject constructor(
     @ApplicationContext private val context: Context,
     private val repo: MusicRepository,
     private val downloads: LocalMusicDownloadManager,
     private val connectivity: ConnectivityObserver,
+    private val okHttpClient: OkHttpClient,
 ) {
     companion object {
         const val REPEAT_OFF = 0
@@ -359,10 +363,8 @@ class MusicPlayerController @Inject constructor(
         // beim ersten Byte über yt-dlp auf und hält die Antwort-Header so
         // lange zurück — kalt bis zu ~45 s. Zu kurze Timeouts verwandelten
         // „startet langsam" in „schlägt fehl" (Retry-Sturm, Audio-Fallback).
-        val httpFactory = DefaultHttpDataSource.Factory()
-            .setConnectTimeoutMs(20_000)
-            .setReadTimeoutMs(60_000)
-            .setAllowCrossProtocolRedirects(true)
+        val httpFactory = OkHttpDataSource.Factory(okHttpClient)
+            .setUserAgent("Hikari-Music/1.0")
         // HTTP läuft durch den Disk-Cache: schon gehörte Songs starten sofort
         // aus dem Cache statt wieder durch den Proxy. DefaultDataSource wendet
         // den Cache nur auf http(s) an — lokale Downloads bleiben direkt.
@@ -382,17 +384,15 @@ class MusicPlayerController @Inject constructor(
                 /* handleAudioFocus = */ true,
             )
             .setHandleAudioBecomingNoisy(true)
-            // Großzügiger Puffer: das nächste Playlist-Item wird schon während
-            // der laufenden Wiedergabe vorgeladen — dafür muss maxBuffer über
-            // die Default-50 s hinaus reichen (ein ganzer Song).
             .setLoadControl(
                 DefaultLoadControl.Builder()
                     .setBufferDurationsMs(
-                        DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
+                        /* minBufferMs = */ 15_000,
                         /* maxBufferMs = */ 5 * 60_000,
-                        /* bufferForPlaybackMs = */ 1_000,
-                        /* bufferForPlaybackAfterRebufferMs = */ 2_000,
+                        /* bufferForPlaybackMs = */ 500,
+                        /* bufferForPlaybackAfterRebufferMs = */ 1_000,
                     )
+                    .setPrioritizeTimeOverSizeThresholds(true)
                     .build(),
             )
             .setWakeMode(C.WAKE_MODE_NETWORK)
@@ -445,12 +445,15 @@ class MusicPlayerController @Inject constructor(
         consecutiveFailures = 0
         streamRetries = 0
         videoRetries = 0
+        _videoMode.value = false
+        _videoFrameReady.value = false
         earlyExtendDone = false
         resumeAfterExtend = false
         plannedNextIndex = null
         val newQueue = if (contextQueue.isNotEmpty()) contextQueue else listOf(song)
         _queue.value = newQueue
         queueIndex = newQueue.indexOfFirst { it.videoId == song.videoId }.coerceAtLeast(0)
+        scope.launch { repo.prewarmAudio(song.videoId) }
         loadAndPlay(song)
     }
 
@@ -592,6 +595,9 @@ class MusicPlayerController @Inject constructor(
         val q = _queue.value
         if (index !in q.indices) return
         queueIndex = index
+        _videoMode.value = false
+        _videoFrameReady.value = false
+        videoRetries = 0
         clearPlannedNext()
         loadAndPlay(q[index])
     }
@@ -891,6 +897,9 @@ class MusicPlayerController @Inject constructor(
                 plannedNextIndex = null
                 prefetchedFor = null
                 prefetchedUrl = null
+                _videoMode.value = false
+                _videoFrameReady.value = false
+                videoRetries = 0
                 _currentSong.value = q[nextIndex]
                 _positionMs.value = 0
                 _isEnded.value = false
@@ -904,6 +913,9 @@ class MusicPlayerController @Inject constructor(
             }
         }
         queueIndex = nextIndex
+        _videoMode.value = false
+        _videoFrameReady.value = false
+        videoRetries = 0
         loadAndPlay(q[nextIndex])
     }
 
@@ -931,6 +943,9 @@ class MusicPlayerController @Inject constructor(
         prefetchedFor = null
         prefetchedUrl = null
         queueIndex = nextIndex
+        _videoMode.value = false
+        _videoFrameReady.value = false
+        videoRetries = 0
         val song = q[nextIndex]
         _currentSong.value = song
         _positionMs.value = 0

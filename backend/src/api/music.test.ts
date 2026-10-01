@@ -1936,37 +1936,22 @@ describe("GET /music/video/:videoId", () => {
     await app.close();
   });
 
-  it("wärmt die Video-URL beim Songstart vor, damit der Umschalter nicht wartet", async () => {
+  it("lädt die Video-URL nur bei explizitem Video-Aufruf, NICHT beim Audio-Start", async () => {
     const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/media\n", stderr: "" });
     const fetchImpl = vi.fn().mockImplementation(async () => upstream(200, "X"));
-    const app = await makeApp({ ytDlp, fetchImpl, videoPrewarmDelayMs: 0 });
+    const app = await makeApp({ ytDlp, fetchImpl });
 
     await app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
-    // Vorlauf abwarten: Audio-Auflösung + vorgewärmte Video-Auflösung
-    await vi.waitFor(() => expect(ytDlp).toHaveBeenCalledTimes(2));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(ytDlp).toHaveBeenCalledTimes(1);
     const formats = ytDlp.mock.calls.map((c) => (c[0] as string[]).join(" "));
-    expect(formats[1]).toContain("vcodec!=none");
+    expect(formats[0]).toContain("bestaudio");
 
-    // Der Umschalter trifft jetzt auf einen warmen Cache — kein drittes yt-dlp.
+    // Erst bei echtem Video-Klick wird das Video aufgelöst
     const res = await app.inject({ method: "GET", url: "/music/video/dQw4w9WgXcQ" });
     expect(res.statusCode).toBe(200);
     expect(ytDlp).toHaveBeenCalledTimes(2);
-    await app.close();
-  });
-
-  it("wärmt beim Seek NICHT vor — nur der Songstart löst den Vorlauf aus", async () => {
-    const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/media\n", stderr: "" });
-    const fetchImpl = vi.fn().mockImplementation(async () => upstream(206, "X", {
-      "content-range": "bytes 500-500/1000",
-    }));
-    const app = await makeApp({ ytDlp, fetchImpl, videoPrewarmDelayMs: 0 });
-    await app.inject({
-      method: "GET",
-      url: "/music/audio/dQw4w9WgXcQ",
-      headers: { range: "bytes=500-" },
-    });
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(ytDlp).toHaveBeenCalledTimes(1);
+    expect(ytDlp.mock.calls[1][0].join(" ")).toContain("vcodec!=none");
     await app.close();
   });
 

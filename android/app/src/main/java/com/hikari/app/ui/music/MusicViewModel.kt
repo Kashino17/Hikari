@@ -329,6 +329,23 @@ class MusicViewModel @Inject constructor(
                 searchResults = singles
             }
             searchLoading = false
+            prewarmSongs(searchResults)
+        }
+    }
+
+    fun prewarm(videoId: String) {
+        viewModelScope.launch {
+            repo.prewarmAudio(videoId)
+        }
+    }
+
+    fun prewarmSongs(songs: List<MusicSong>, count: Int = 2) {
+        viewModelScope.launch {
+            songs.take(count).forEach { song ->
+                if (song.videoId !in downloadedIds.value) {
+                    repo.prewarmAudio(song.videoId)
+                }
+            }
         }
     }
 
@@ -405,6 +422,7 @@ class MusicViewModel @Inject constructor(
             remotePlaylistLoading = true
             remotePlaylistTracks = repo.getRemotePlaylistTracks(playlistId)
             remotePlaylistLoading = false
+            prewarmSongs(remotePlaylistTracks)
         }
     }
 
@@ -439,6 +457,7 @@ class MusicViewModel @Inject constructor(
             groupSongs = groups.firstOrNull { it.uploader.equals(uploader, ignoreCase = true) }?.chapters
                 ?: singles.filter { it.uploader.equals(uploader, ignoreCase = true) }
             groupLoading = false
+            prewarmSongs(groupSongs)
         }
     }
 
@@ -489,8 +508,12 @@ class MusicViewModel @Inject constructor(
             // zweite Aufruf kostet praktisch nichts extra).
             mixSongs = repo.getMixSongs(query, mode)
             mixLoading = false
+            prewarmSongs(mixSongs)
             val expanded = repo.getMixSongs(query, mode, expand = true)
-            if (expanded.size > mixSongs.size) mixSongs = expanded
+            if (expanded.size > mixSongs.size) {
+                mixSongs = expanded
+                prewarmSongs(mixSongs)
+            }
         }
     }
 
@@ -514,6 +537,7 @@ class MusicViewModel @Inject constructor(
                 artistFailed = true
             }
             artistLoading = false
+            artistPage?.topSongs?.let { prewarmSongs(it) }
         }
     }
 

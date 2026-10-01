@@ -42,12 +42,15 @@ import com.hikari.app.domain.model.SongArtist
 import com.hikari.app.domain.model.SuggestionKind
 import java.net.URLEncoder
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
@@ -132,6 +135,25 @@ class MusicRepository(
     private val json: Json,
     private val settings: SettingsStore,
 ) {
+    private val repoScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    @Volatile
+    private var cachedBackendUrl: String? = null
+
+    init {
+        repoScope.launch {
+            settings.backendUrl.collect {
+                cachedBackendUrl = it.trimEnd('/')
+            }
+        }
+    }
+
+    private suspend fun resolveBackendUrl(): String? {
+        cachedBackendUrl?.takeIf { it.isNotBlank() }?.let { return it }
+        return runCatching { settings.backendUrl.first().trimEnd('/') }.getOrNull()?.also {
+            cachedBackendUrl = it
+        }
+    }
+
     companion object {
         /** Gültigkeit des personalisierten Home-Feeds im Speicher. */
         private const val HOME_CACHE_TTL_MS = 15 * 60 * 1000L
@@ -709,13 +731,7 @@ class MusicRepository(
     }
 
     suspend fun getAudioStream(videoId: String, forceRefresh: Boolean = false): String? {
-        // Audio läuft über den Backend-Proxy statt direkt gegen googlevideo:
-        // deren URLs sind an das Netz gebunden, das sie aufgelöst hat, und
-        // spielen vom Handy aus fremden Netzen nicht ab. Abgelaufene URLs
-        // löst der Proxy serverseitig selbst neu auf; forceRefresh bleibt für
-        // die Retry-Semantik der Aufrufer ohne eigene Wirkung.
-        val backend = runCatching { settings.backendUrl.first().trimEnd('/') }.getOrNull()
-            ?: return pipedStreamFallback(videoId)
+        val backend = resolveBackendUrl() ?: return pipedStreamFallback(videoId)
         return "$backend/music/audio/$videoId"
     }
 
@@ -724,7 +740,7 @@ class MusicRepository(
      * damit der Übergang zum nächsten Track ohne 5-15 s Wartezeit lückenlos startet.
      */
     suspend fun prewarmAudio(videoId: String) {
-        val backend = runCatching { settings.backendUrl.first().trimEnd('/') }.getOrNull()
+        val backend = resolveBackendUrl()
         if (backend.isNullOrBlank()) return
         withContext(Dispatchers.IO) {
             runCatching {
@@ -739,7 +755,7 @@ class MusicRepository(
      * Warteschlange und direktem Fallback.
      */
     suspend fun backendBase(): String? =
-        runCatching { settings.backendUrl.first().trimEnd('/') }.getOrNull()?.takeIf { it.isNotBlank() }
+        resolveBackendUrl()?.takeIf { it.isNotBlank() }
 
     /**
      * Video-Variante für den Audio↔Video-Umschalter (Podcast/True Crime):
@@ -747,8 +763,7 @@ class MusicRepository(
      * gibt es kein Video — der Player bleibt dann im Audio-Modus.
      */
     suspend fun getVideoStream(videoId: String): String? {
-        val backend = runCatching { settings.backendUrl.first().trimEnd('/') }.getOrNull()
-            ?: return null
+        val backend = resolveBackendUrl() ?: return null
         return "$backend/music/video/$videoId"
     }
 
