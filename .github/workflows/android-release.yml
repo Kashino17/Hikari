@@ -75,4 +75,9 @@ jobs:
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$GITHUB_REF_NAME" release-artifacts/*.apk --clobber
+        run: |
+          for f in release-artifacts/*.apk; do
+            asset_name="$(basename "$f")"
+            gh release delete-asset "$GITHUB_REF_NAME" "$asset_name" --yes 2>/dev/null || true
+          done
+          gh release upload "$GITHUB_REF_NAME" release-artifacts/*.apk --clobber

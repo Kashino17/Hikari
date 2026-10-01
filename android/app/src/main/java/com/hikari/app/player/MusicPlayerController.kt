@@ -10,8 +10,14 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.HttpDataSource
+import androidx.media3.datasource.cache.CacheDataSource
+import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
+import androidx.media3.datasource.cache.SimpleCache
+import android.media.audiofx.LoudnessEnhancer
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
@@ -23,6 +29,7 @@ import com.hikari.app.domain.download.LocalMusicDownloadManager
 import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.domain.repo.MusicRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
@@ -58,8 +65,37 @@ class MusicPlayerController @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var player: ExoPlayer? = null
     private var loadJob: Job? = null
+
+    /** Verzögerter Fehler-Retry (Backoff) — läuft außerhalb von loadJob, damit
+     *  die Wartezeit nicht den nächsten regulären Ladevorgang blockiert. */
+    private var retryJob: Job? = null
     private var progressJob: Job? = null
     private var autoplayJob: Job? = null
+
+    /** Disk-Cache für gestreamte Songs: schon gehörte Titel starten sofort
+     *  aus dem Cache statt erneut durch den Backend-Proxy (yt-dlp-Wartezeit). */
+    private val musicCache: SimpleCache by lazy {
+        SimpleCache(
+            File(context.cacheDir, "music-streams"),
+            LeastRecentlyUsedCacheEvictor(256L * 1024 * 1024),
+            StandaloneDatabaseProvider(context),
+        )
+    }
+
+    /** Audioeffekt zur Lautstärke-Angleichung (Spotify-artiges Loudness Normalization):
+     *  hebt leise Tracks sanft an (+2 dB) und schützt vor Lautstärkesprüngen zwischen Videos. */
+    private var loudnessEnhancer: LoudnessEnhancer? = null
+
+    private fun attachLoudnessEnhancer(sessionId: Int) {
+        if (sessionId == C.AUDIO_SESSION_ID_UNSET) return
+        runCatching {
+            loudnessEnhancer?.release()
+            loudnessEnhancer = LoudnessEnhancer(sessionId).apply {
+                setTargetGain(200) // +200 mB = +2 dB
+                enabled = true
+            }
+        }
+    }
 
     /** Vorausgeladene Stream-URL des nächsten Songs (siehe maybePrefetchNext). */
     private var prefetchJob: Job? = null
@@ -82,6 +118,9 @@ class MusicPlayerController @Inject constructor(
 
     private val _isBuffering = MutableStateFlow(false)
     val isBuffering: StateFlow<Boolean> = _isBuffering.asStateFlow()
+
+    private val _isEnded = MutableStateFlow(false)
+    val isEnded: StateFlow<Boolean> = _isEnded.asStateFlow()
 
     private val _positionMs = MutableStateFlow(0L)
     val positionMs: StateFlow<Long> = _positionMs.asStateFlow()
@@ -125,6 +164,7 @@ class MusicPlayerController @Inject constructor(
 
         override fun onPlaybackStateChanged(state: Int) {
             _isBuffering.value = state == Player.STATE_BUFFERING
+            _isEnded.value = state == Player.STATE_ENDED
             if (state == Player.STATE_READY) {
                 _durationMs.value = player?.duration?.coerceAtLeast(0) ?: 0
             }
@@ -132,7 +172,7 @@ class MusicPlayerController @Inject constructor(
         }
 
         override fun onPlayerError(e: PlaybackException) {
-            retryOrSkip()
+            retryOrSkip(e)
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
@@ -142,8 +182,35 @@ class MusicPlayerController @Inject constructor(
             if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) onAutoAdvanced()
         }
 
+        override fun onPositionDiscontinuity(
+            oldPosition: Player.PositionInfo,
+            newPosition: Player.PositionInfo,
+            reason: Int,
+        ) {
+            _positionMs.value = newPosition.positionMs.coerceAtLeast(0)
+        }
+
+        override fun onAudioSessionIdChanged(audioSessionId: Int) {
+            attachLoudnessEnhancer(audioSessionId)
+        }
+
         override fun onRenderedFirstFrame() {
             _videoFrameReady.value = true
+        }
+    }
+
+    init {
+        scope.launch {
+            connectivity.isOnline.collect { online ->
+                if (online) {
+                    val song = _currentSong.value
+                    if (song != null && _error.value != null && !_isPlaying.value) {
+                        loadAndPlay(song, forceRefresh = true, startPositionMs = _positionMs.value)
+                    } else if (_isPlaying.value && prefetchedUrl == null) {
+                        maybePrefetchNext()
+                    }
+                }
+            }
         }
     }
 
@@ -158,21 +225,23 @@ class MusicPlayerController @Inject constructor(
 
     /**
      * Stirbt die Wiedergabe mitten im Song (typisch: gecachte googlevideo-URL
-     * wird vom CDN abgelehnt), bekommt derselbe Song bis zu zwei neue Chancen
-     * mit frisch extrahierter URL — erst dann wird weitergeschaltet. Ein
-     * sofortiges Überspringen wäre für den Hörer unverständlich.
+     * wird vom CDN abgelehnt), bekommt derselbe Song neue Chancen mit frisch
+     * extrahierter URL — erst dann wird weitergeschaltet. Ein sofortiges
+     * Überspringen wäre für den Hörer unverständlich.
      *
-     * Wichtig: die Fehlermeldung IMMER erst nach loadAndPlay setzen —
-     * loadAndPlay räumt _error zu Beginn ab, eine vorher gesetzte Meldung
-     * wäre nie sichtbar (genau so blieb der stille Video-Fallback unbemerkt).
+     * Retries laufen mit wachsender Pause statt sofort: bei einer Drossel-Welle
+     * antwortet das Backend ~60 s lang mit 503 — sofortige Retries verbrannten
+     * alle Chancen binnen einer Sekunde und kaskadierten als Song-Skips durch
+     * die Queue. Bei 429/503 wird der Retry-After-Header des Servers gelesen.
      */
-    private fun retryOrSkip() {
+    private fun retryOrSkip(cause: PlaybackException? = null) {
+        syncCurrentFromPlayer()
         val current = _currentSong.value
         // Zickt der Video-Stream: erst ein zweiter Versuch (die Erstauflösung
         // am Proxy kann träge sein), dann zurück zu Audio statt zu skippen —
         // die Tonspur ist wichtiger als das Bild. Position bleibt erhalten.
         if (current != null && _videoMode.value) {
-            val resumeAt = player?.currentPosition?.coerceAtLeast(0) ?: 0
+            val resumeAt = player?.currentPosition?.takeIf { it > 0 } ?: _positionMs.value
             if (videoRetries < 1) {
                 videoRetries++
                 loadAndPlay(current, forceRefresh = true, startPositionMs = resumeAt)
@@ -185,10 +254,32 @@ class MusicPlayerController @Inject constructor(
             }
             return
         }
-        if (current != null && streamRetries < 2) {
+        val throttled = httpErrorCode(cause) in listOf(429, 503)
+        val maxRetries = if (throttled) 3 else 2
+        if (current != null && streamRetries < maxRetries) {
             streamRetries++
-            loadAndPlay(current, forceRefresh = true)
-            _error.value = "Verbindung unterbrochen — lade neu"
+            val resumeAt = player?.currentPosition?.takeIf { it > 0 } ?: _positionMs.value
+            val waitMs = retryAfterMs(cause)
+                ?: (if (throttled) 5_000L * streamRetries else 1_500L * streamRetries)
+            // Fehlertext JETZT setzen: loadAndPlay räumt _error beim
+            // tatsächlichen Neuladen wieder ab — in der Wartezeit sieht der
+            // Hörer so, was los ist, statt einem stummen Spinner.
+            _error.value = if (throttled) {
+                "Server gedrosselt — neuer Versuch in ${waitMs / 1000} s"
+            } else {
+                "Verbindung unterbrochen — lade neu"
+            }
+            _isBuffering.value = true
+            retryJob?.cancel()
+            retryJob = scope.launch {
+                delay(waitMs)
+                ensureActive()
+                retryJob = null
+                // In der Wartezeit hat der Hörer evtl. selbst weitergeschaltet.
+                if (_currentSong.value?.videoId == current.videoId) {
+                    loadAndPlay(current, forceRefresh = true, startPositionMs = resumeAt)
+                }
+            }
             return
         }
         streamRetries = 0
@@ -196,19 +287,70 @@ class MusicPlayerController @Inject constructor(
         skipAfterFailure()
     }
 
+    /** HTTP-Status aus der Fehlerkette (z. B. 503 der Drossel-Welle). */
+    private fun httpErrorCode(t: Throwable?): Int? {
+        var cur = t
+        while (cur != null) {
+            if (cur is HttpDataSource.InvalidResponseCodeException) return cur.responseCode
+            cur = cur.cause
+        }
+        return null
+    }
+
+    /** Retry-After-Header des Backends (Sekunden) als Millisekunden, gedeckelt. */
+    private fun retryAfterMs(t: Throwable?): Long? {
+        var cur = t
+        while (cur != null) {
+            if (cur is HttpDataSource.InvalidResponseCodeException) {
+                val raw = cur.headerFields.entries
+                    .firstOrNull { it.key.equals("retry-after", ignoreCase = true) }
+                    ?.value?.firstOrNull()
+                val seconds = raw?.trim()?.toLongOrNull() ?: return null
+                return (seconds * 1_000).coerceIn(1_000, 60_000)
+            }
+            cur = cur.cause
+        }
+        return null
+    }
+
+    /**
+     * Schlägt das vorgebufferte Folge-Item beim AUTO-Übergang fehl, zeigt
+     * _currentSong noch auf den eben beendeten Song — ein Retry würde sonst
+     * den alten Titel neu laden (wirkt wie übersprungen/doppelt). Hier den
+     * State am tatsächlich spielenden Item ausrichten.
+     */
+    private fun syncCurrentFromPlayer() {
+        val p = player ?: return
+        val mediaId = p.currentMediaItem?.mediaId ?: return
+        if (mediaId == _currentSong.value?.videoId) return
+        val q = _queue.value
+        val idx = q.indexOfFirst { it.videoId == mediaId }
+        if (idx >= 0) {
+            queueIndex = idx
+            _currentSong.value = q[idx]
+        }
+    }
+
     private fun ensurePlayer(): ExoPlayer {
         player?.let { return it }
         // Großzügige HTTP-Timeouts: der Backend-Proxy löst Audio/Video erst
-        // beim ersten Byte über yt-dlp auf — das dauert bei kalten Videos
-        // deutlich länger als ExoPlayers 8-s-Defaults. Mit den Defaults flog
-        // der Video-Modus regelmäßig per Timeout in den Audio-Fallback.
+        // beim ersten Byte über yt-dlp auf und hält die Antwort-Header so
+        // lange zurück — kalt bis zu ~45 s. Zu kurze Timeouts verwandelten
+        // „startet langsam" in „schlägt fehl" (Retry-Sturm, Audio-Fallback).
         val httpFactory = DefaultHttpDataSource.Factory()
-            .setConnectTimeoutMs(15_000)
-            .setReadTimeoutMs(30_000)
+            .setConnectTimeoutMs(20_000)
+            .setReadTimeoutMs(60_000)
             .setAllowCrossProtocolRedirects(true)
+        // HTTP läuft durch den Disk-Cache: schon gehörte Songs starten sofort
+        // aus dem Cache statt wieder durch den Proxy. DefaultDataSource wendet
+        // den Cache nur auf http(s) an — lokale Downloads bleiben direkt.
+        val cachedHttp = CacheDataSource.Factory()
+            .setCache(musicCache)
+            .setUpstreamDataSourceFactory(httpFactory)
+            .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
         val built = ExoPlayer.Builder(context)
             .setMediaSourceFactory(
-                DefaultMediaSourceFactory(DefaultDataSource.Factory(context, httpFactory)),
+                DefaultMediaSourceFactory(DefaultDataSource.Factory(context, cachedHttp)),
             )
             .setAudioAttributes(
                 AudioAttributes.Builder()
@@ -217,6 +359,7 @@ class MusicPlayerController @Inject constructor(
                     .build(),
                 /* handleAudioFocus = */ true,
             )
+            .setHandleAudioBecomingNoisy(true)
             // Großzügiger Puffer: das nächste Playlist-Item wird schon während
             // der laufenden Wiedergabe vorgeladen — dafür muss maxBuffer über
             // die Default-50 s hinaus reichen (ein ganzer Song).
@@ -225,14 +368,15 @@ class MusicPlayerController @Inject constructor(
                     .setBufferDurationsMs(
                         DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
                         /* maxBufferMs = */ 5 * 60_000,
-                        /* bufferForPlaybackMs = */ 2_500,
-                        /* bufferForPlaybackAfterRebufferMs = */ 5_000,
+                        /* bufferForPlaybackMs = */ 1_000,
+                        /* bufferForPlaybackAfterRebufferMs = */ 2_000,
                     )
                     .build(),
             )
             .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
         built.addListener(listener)
+        attachLoudnessEnhancer(built.audioSessionId)
         player = built
         startProgressUpdates()
         return built
@@ -275,6 +419,7 @@ class MusicPlayerController @Inject constructor(
 
     fun play(song: MusicSong, contextQueue: List<MusicSong> = emptyList()) {
         autoplayJob?.cancel() // eigene Auswahl schlägt laufenden Nachschub
+        retryJob?.cancel()
         consecutiveFailures = 0
         streamRetries = 0
         videoRetries = 0
@@ -288,8 +433,28 @@ class MusicPlayerController @Inject constructor(
     }
 
     fun toggle() {
-        val p = player ?: return
-        if (p.isPlaying) p.pause() else p.play()
+        val current = _currentSong.value
+        val p = player
+        if (p == null || p.currentMediaItem == null) {
+            if (current != null) {
+                loadAndPlay(current)
+            }
+            return
+        }
+        if (p.isPlaying) {
+            p.pause()
+        } else {
+            // Replay: Ist der Song am Ende angekommen, muss der Player an den
+            // Anfang (seekTo 0) zurückgesetzt werden, damit ExoPlayer die
+            // Wiedergabe erneut startet statt im STATE_ENDED zu verharren.
+            if (p.playbackState == Player.STATE_ENDED ||
+                (p.duration > 0 && p.currentPosition >= p.duration)
+            ) {
+                p.seekTo(0)
+            }
+            _isEnded.value = false
+            p.play()
+        }
     }
 
     fun next() = advance(forward = true, manual = true)
@@ -299,6 +464,8 @@ class MusicPlayerController @Inject constructor(
         // First 3 s of a track: go to the previous song, otherwise restart.
         if (p != null && p.currentPosition > 3_000) {
             p.seekTo(0)
+            _isEnded.value = false
+            if (!p.isPlaying) p.play()
             return
         }
         advance(forward = false, manual = true)
@@ -307,6 +474,7 @@ class MusicPlayerController @Inject constructor(
     fun seekTo(ms: Long) {
         player?.seekTo(ms)
         _positionMs.value = ms
+        _isEnded.value = false
     }
 
     fun toggleShuffle() {
@@ -316,6 +484,23 @@ class MusicPlayerController @Inject constructor(
 
     fun cycleRepeat() {
         _repeatMode.value = (_repeatMode.value + 1) % 3
+        player?.let { syncRepeatMode(it) }
+        clearPlannedNext()
+    }
+
+    /**
+     * Repeat-Umschaltung aus dem System-Widget (Sperrbildschirm, Bluetooth,
+     * Android Auto): läuft über den Controller, damit _repeatMode und
+     * ExoPlayer synchron bleiben. Direkt am Player gesetzt würde ein
+     * systemseitiges REPEAT_ALL die Queue-Logik (Prefetch, Autoplay-Extend,
+     * Fehler-Skip) aushebeln — der Repeat-Button wirkte dann „kaputt".
+     */
+    fun setRepeatModeFromSystem(mode: Int) {
+        _repeatMode.value = when (mode) {
+            Player.REPEAT_MODE_ONE -> REPEAT_ONE
+            Player.REPEAT_MODE_ALL -> REPEAT_ALL
+            else -> REPEAT_OFF
+        }
         player?.let { syncRepeatMode(it) }
         clearPlannedNext()
     }
@@ -402,6 +587,7 @@ class MusicPlayerController @Inject constructor(
 
     fun stop() {
         loadJob?.cancel()
+        retryJob?.cancel()
         autoplayJob?.cancel()
         prefetchJob?.cancel()
         prefetchedFor = null
@@ -416,8 +602,11 @@ class MusicPlayerController @Inject constructor(
         player?.clearMediaItems()
         _currentSong.value = null
         _isPlaying.value = false
+        _isEnded.value = false
         _positionMs.value = 0
         _durationMs.value = 0
+        runCatching { loudnessEnhancer?.release() }
+        loudnessEnhancer = null
     }
 
     /** Baut das MediaItem samt Titel/Artist/Cover — daraus erstellt das System
@@ -426,6 +615,7 @@ class MusicPlayerController @Inject constructor(
         MediaItem.Builder()
             .setUri(uri)
             .setMediaId(song.videoId)
+            .setCustomCacheKey(song.videoId)
             .setMediaMetadata(
                 MediaMetadata.Builder()
                     .setTitle(song.title)
@@ -439,6 +629,14 @@ class MusicPlayerController @Inject constructor(
 
     private fun loadAndPlay(song: MusicSong, forceRefresh: Boolean = false, startPositionMs: Long = 0) {
         loadJob?.cancel()
+        retryJob?.cancel()
+        // Neuer Song = neue Chancen: blieben die Retry-Zähler vom Vorgänger
+        // stehen, bekam der nächste Titel null Versuche und wurde beim ersten
+        // Fehler sofort weitergeschaltet (Skip-Kaskade bei Netzflackern).
+        if (_currentSong.value?.videoId != song.videoId) {
+            streamRetries = 0
+            videoRetries = 0
+        }
         plannedNextIndex = null // Playlist wird ersetzt — etwaige Planung ist hinfällig
         _currentSong.value = song
         _positionMs.value = startPositionMs
@@ -446,6 +644,7 @@ class MusicPlayerController @Inject constructor(
         _error.value = null
         _isBuffering.value = true
         _videoFrameReady.value = false
+        _isEnded.value = false
         scope.launch { repo.recordPlayed(song) }
         loadJob = scope.launch {
             // Video-Modus: der nächste Titel läuft direkt als Video weiter.
@@ -512,8 +711,10 @@ class MusicPlayerController @Inject constructor(
 
     private fun onTrackEnded() {
         if (_repeatMode.value == REPEAT_ONE) {
-            player?.seekTo(0)
-            player?.play()
+            val p = player
+            p?.seekTo(0)
+            _isEnded.value = false
+            p?.play()
             return
         }
         advance(forward = true, manual = false)
@@ -523,6 +724,7 @@ class MusicPlayerController @Inject constructor(
         consecutiveFailures++
         if (consecutiveFailures >= 3 || _queue.value.size <= 1) {
             consecutiveFailures = 0
+            _isBuffering.value = false
             _isPlaying.value = false
             return
         }
@@ -535,6 +737,7 @@ class MusicPlayerController @Inject constructor(
         if (manual) {
             consecutiveFailures = 0
             streamRetries = 0
+            retryJob?.cancel()
         }
 
         val nextIndex = QueueNavigator.advanceIndex(
@@ -552,6 +755,18 @@ class MusicPlayerController @Inject constructor(
             extendQueueAndContinue()
             return
         }
+        // Einzeltitel-Wiederholung (Repeat All bei Queue-Länge 1): direkt an den
+        // Anfang springen und abspielen statt unnötigem Netzwerk-Neuladen.
+        if (nextIndex == queueIndex && q.size == 1) {
+            val p = player
+            if (p != null && p.currentMediaItem?.mediaId == q[nextIndex].videoId) {
+                _positionMs.value = 0
+                _isEnded.value = false
+                p.seekTo(0)
+                p.play()
+                return
+            }
+        }
         // Manuelles Weiterschalten nimmt den vorgebufferten nächsten Song mit,
         // wenn er schon als Item in der ExoPlayer-Playlist liegt — kein erneutes
         // Laden, keine Hörlücke. Der Player meldet den Wechsel als REASON_SEEK,
@@ -567,9 +782,11 @@ class MusicPlayerController @Inject constructor(
                 prefetchedUrl = null
                 _currentSong.value = q[nextIndex]
                 _positionMs.value = 0
+                _isEnded.value = false
                 _error.value = null
                 scope.launch { repo.recordPlayed(q[nextIndex]) }
                 p.seekToNextMediaItem()
+                if (p.currentMediaItemIndex > 0) p.removeMediaItem(0)
                 // Gleich den übernächsten Song vorbereiten.
                 maybePrefetchNext()
                 return
@@ -698,6 +915,7 @@ class MusicPlayerController @Inject constructor(
                         queueIndex = 0
                         loadAndPlay(current[0])
                     } else {
+                        _error.value = "Keine passenden Autoplay-Titel gefunden"
                         _isPlaying.value = false
                     }
                 }
@@ -741,7 +959,12 @@ class MusicPlayerController @Inject constructor(
             val localFile = downloads.localFile(next.videoId)
             val uri = when {
                 localFile != null -> "file://${localFile.absolutePath}" // lokale Datei braucht kein Netz
-                else -> runCatching { repo.getAudioStream(next.videoId) }.getOrNull()
+                else -> {
+                    // Backend-Stream vorwärmen (yt-dlp im Hintergrund auflösen, damit
+                    // der Wechsel zum nächsten Song sofort und ohne Verzögerung startet).
+                    repo.prewarmAudio(next.videoId)
+                    runCatching { repo.getAudioStream(next.videoId) }.getOrNull()
+                }
             }
             // Auch ein Fehlschlag wird vermerkt — sonst hämmert der 500-ms-Tick
             // bei totem Netz immer wieder dieselbe Auflösung. loadAndPlay löst

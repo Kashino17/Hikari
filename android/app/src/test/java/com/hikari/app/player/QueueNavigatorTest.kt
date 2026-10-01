@@ -80,6 +80,16 @@ class QueueNavigatorTest {
         )
     }
 
+    @Test fun `advance vorwaerts mit Ein-Song-Queue und Repeat-All bleibt auf Index 0`() {
+        assertEquals(
+            0,
+            QueueNavigator.advanceIndex(
+                queueSize = 1, currentIndex = 0, forward = true,
+                shuffle = false, repeatAll = true, plannedNextIndex = null,
+            ),
+        )
+    }
+
     @Test fun `advance vorwaerts am Ende ohne Repeat-All meldet EXTEND`() {
         assertEquals(
             QueueNavigator.EXTEND,

@@ -1,5 +1,6 @@
 package com.hikari.app.ui.music
 
+import android.widget.Toast
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
@@ -24,10 +25,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.outlined.Replay
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -41,6 +44,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -64,9 +68,19 @@ fun MiniPlayerBar(
     val song by controller.currentSong.collectAsState()
     val isPlaying by controller.isPlaying.collectAsState()
     val isBuffering by controller.isBuffering.collectAsState()
+    val isEnded by controller.isEnded.collectAsState()
     val position by controller.positionMs.collectAsState()
     val duration by controller.durationMs.collectAsState()
     val current = song ?: return
+
+    // Wiedergabefehler auch außerhalb des Now-Playing-Screens sichtbar machen —
+    // sonst wirkt ein fehlgeschlagener Songstart wie „nichts passiert".
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        controller.error.collect { msg ->
+            if (msg != null) Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
@@ -156,8 +170,8 @@ fun MiniPlayerBar(
                     } else {
                         Crossfade(isPlaying, animationSpec = tween(160), label = "miniPlay") { playing ->
                             Icon(
-                                if (playing) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                if (playing) "Pause" else "Abspielen",
+                                if (playing) Icons.Default.Pause else if (isEnded) Icons.Outlined.Replay else Icons.Default.PlayArrow,
+                                if (playing) "Pause" else if (isEnded) "Wiederholen" else "Abspielen",
                                 tint = HikariText,
                                 modifier = Modifier.size(26.dp),
                             )

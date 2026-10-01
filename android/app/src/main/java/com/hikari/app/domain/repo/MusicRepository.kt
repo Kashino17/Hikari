@@ -720,6 +720,20 @@ class MusicRepository(
     }
 
     /**
+     * Wärmt den Audio-Stream auf dem Backend vor (yt-dlp-Auflösung + Stream-Cache),
+     * damit der Übergang zum nächsten Track ohne 5-15 s Wartezeit lückenlos startet.
+     */
+    suspend fun prewarmAudio(videoId: String) {
+        val backend = runCatching { settings.backendUrl.first().trimEnd('/') }.getOrNull()
+        if (backend.isNullOrBlank()) return
+        withContext(Dispatchers.IO) {
+            runCatching {
+                api.getMusicStream(videoId)
+            }
+        }
+    }
+
+    /**
      * Backend-Basis-URL ohne Slash am Ende — null, wenn keine konfiguriert ist.
      * Der Download-Manager entscheidet damit zwischen serverseitiger
      * Warteschlange und direktem Fallback.

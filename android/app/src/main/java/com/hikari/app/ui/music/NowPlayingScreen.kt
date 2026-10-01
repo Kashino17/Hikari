@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.outlined.Audiotrack
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.OfflinePin
+import androidx.compose.material.icons.outlined.Replay
 import androidx.compose.material.icons.outlined.SmartDisplay
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -88,6 +89,7 @@ fun NowPlayingScreen(
     val song by controller.currentSong.collectAsState()
     val isPlaying by controller.isPlaying.collectAsState()
     val isBuffering by controller.isBuffering.collectAsState()
+    val isEnded by controller.isEnded.collectAsState()
     val shuffle by controller.shuffle.collectAsState()
     val repeatMode by controller.repeatMode.collectAsState()
     val error by controller.error.collectAsState()
@@ -365,7 +367,7 @@ fun NowPlayingScreen(
                 MuPlayButton(
                     isPlaying = isPlaying,
                     isBuffering = isBuffering,
-                    playIcon = Icons.Default.PlayArrow,
+                    playIcon = if (isEnded) Icons.Outlined.Replay else Icons.Default.PlayArrow,
                     pauseIcon = Icons.Default.Pause,
                     size = 72.dp,
                 ) { controller.toggle() }
