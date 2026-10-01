@@ -155,7 +155,25 @@ class MusicPlayerController @Inject constructor(
         _videoFrameReady.value = false
     }
 
+    private val _queueIndex = MutableStateFlow(-1)
+    val queueIndexFlow: StateFlow<Int> = _queueIndex.asStateFlow()
+
+    private val _autoplayEnabled = MutableStateFlow(true)
+    val autoplayEnabled: StateFlow<Boolean> = _autoplayEnabled.asStateFlow()
+
+    fun toggleAutoplay() {
+        _autoplayEnabled.value = !_autoplayEnabled.value
+        if (!_autoplayEnabled.value) {
+            autoplayJob?.cancel()
+            earlyExtendDone = false
+        }
+    }
+
     private var queueIndex = -1
+        set(value) {
+            field = value
+            _queueIndex.value = value
+        }
 
     private val listener = object : Player.Listener {
         override fun onIsPlayingChanged(playing: Boolean) {
@@ -180,6 +198,10 @@ class MusicPlayerController @Inject constructor(
             // Song gewechselt; andere Gründe (setMediaItem, Seek) pflegen
             // ihren State selbst.
             if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) onAutoAdvanced()
+            if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT) {
+                _positionMs.value = 0
+                _isEnded.value = false
+            }
         }
 
         override fun onPositionDiscontinuity(
@@ -445,12 +467,13 @@ class MusicPlayerController @Inject constructor(
             p.pause()
         } else {
             // Replay: Ist der Song am Ende angekommen, muss der Player an den
-            // Anfang (seekTo 0) zurückgesetzt werden, damit ExoPlayer die
-            // Wiedergabe erneut startet statt im STATE_ENDED zu verharren.
+            // Anfang (seekTo 0) zurückgesetzt und vorbereitet werden, damit
+            // ExoPlayer die Wiedergabe erneut startet statt im STATE_ENDED zu verharren.
             if (p.playbackState == Player.STATE_ENDED ||
                 (p.duration > 0 && p.currentPosition >= p.duration)
             ) {
                 p.seekTo(0)
+                p.prepare()
             }
             _isEnded.value = false
             p.play()
@@ -464,6 +487,7 @@ class MusicPlayerController @Inject constructor(
         // First 3 s of a track: go to the previous song, otherwise restart.
         if (p != null && p.currentPosition > 3_000) {
             p.seekTo(0)
+            if (p.playbackState == Player.STATE_ENDED) p.prepare()
             _isEnded.value = false
             if (!p.isPlaying) p.play()
             return
@@ -472,7 +496,9 @@ class MusicPlayerController @Inject constructor(
     }
 
     fun seekTo(ms: Long) {
-        player?.seekTo(ms)
+        val p = player
+        p?.seekTo(ms)
+        if (p?.playbackState == Player.STATE_ENDED) p.prepare()
         _positionMs.value = ms
         _isEnded.value = false
     }
@@ -506,6 +532,81 @@ class MusicPlayerController @Inject constructor(
     }
 
     /**
+     * Hängt einen Song als nächsten Titel direkt hinter den aktuellen Song ein.
+     */
+    fun playNext(song: MusicSong) {
+        val q = _queue.value.toMutableList()
+        val insertIndex = (queueIndex + 1).coerceIn(0, q.size)
+        val existingIndex = q.indexOfFirst { it.videoId == song.videoId }
+        if (existingIndex == queueIndex) return
+        if (existingIndex in q.indices) {
+            q.removeAt(existingIndex)
+            val adjustedInsert = if (existingIndex < insertIndex) insertIndex - 1 else insertIndex
+            q.add(adjustedInsert.coerceIn(0, q.size), song)
+        } else {
+            q.add(insertIndex, song)
+        }
+        _queue.value = q
+        clearPlannedNext()
+        maybePrefetchNext()
+    }
+
+    /**
+     * Hängt einen Song an das Ende der aktuellen Queue an.
+     */
+    fun addToQueue(song: MusicSong) {
+        val q = _queue.value.toMutableList()
+        val existingIndex = q.indexOfFirst { it.videoId == song.videoId }
+        if (existingIndex == queueIndex) return
+        if (existingIndex in q.indices) {
+            q.removeAt(existingIndex)
+        }
+        q.add(song)
+        _queue.value = q
+        maybePrefetchNext()
+    }
+
+    /**
+     * Entfernt einen Song an [index] aus der Queue.
+     */
+    fun removeFromQueue(index: Int) {
+        val q = _queue.value.toMutableList()
+        if (index !in q.indices) return
+        if (index == queueIndex) {
+            advance(forward = true, manual = true)
+            return
+        }
+        q.removeAt(index)
+        if (index < queueIndex) {
+            queueIndex--
+        }
+        _queue.value = q
+        clearPlannedNext()
+        maybePrefetchNext()
+    }
+
+    /**
+     * Springt direkt zu einem Index in der Queue.
+     */
+    fun jumpToQueueIndex(index: Int) {
+        val q = _queue.value
+        if (index !in q.indices) return
+        queueIndex = index
+        clearPlannedNext()
+        loadAndPlay(q[index])
+    }
+
+    /**
+     * Leert alle kommenden Titel der Queue.
+     */
+    fun clearUpcomingQueue() {
+        val q = _queue.value
+        if (queueIndex !in q.indices) return
+        _queue.value = q.take(queueIndex + 1)
+        clearPlannedNext()
+    }
+
+    /**
      * Shuffle/Repeat wurde mitten im Song umgeschaltet — ein bereits
      * eingeplantes Folge-Item (Prefetch-URL + an die ExoPlayer-Playlist
      * angehängtes MediaItem) passt nicht mehr zur Auswahl. Verwerfen, damit
@@ -514,12 +615,15 @@ class MusicPlayerController @Inject constructor(
      */
     private fun clearPlannedNext() {
         prefetchJob?.cancel()
+        autoplayJob?.cancel()
         prefetchedFor = null
         prefetchedUrl = null
         plannedNextIndex = null
+        earlyExtendDone = false
         val p = player ?: return
-        val nextSlot = p.currentMediaItemIndex + 1
-        if (p.mediaItemCount > nextSlot) p.removeMediaItem(nextSlot)
+        while (p.mediaItemCount > p.currentMediaItemIndex + 1) {
+            p.removeMediaItem(p.currentMediaItemIndex + 1)
+        }
     }
 
     fun clearError() {
@@ -713,6 +817,7 @@ class MusicPlayerController @Inject constructor(
         if (_repeatMode.value == REPEAT_ONE) {
             val p = player
             p?.seekTo(0)
+            p?.prepare()
             _isEnded.value = false
             p?.play()
             return
@@ -751,8 +856,13 @@ class MusicPlayerController @Inject constructor(
             plannedNextIndex = if (forward) plannedNextIndex else null,
         )
         if (nextIndex == QueueNavigator.EXTEND) {
-            // Ende der Liste: passende Stücke nachladen, statt einfach zu verstummen.
-            extendQueueAndContinue()
+            if (_autoplayEnabled.value && _repeatMode.value == REPEAT_OFF) {
+                extendQueueAndContinue()
+            } else {
+                _isBuffering.value = false
+                _isPlaying.value = false
+                _isEnded.value = true
+            }
             return
         }
         // Einzeltitel-Wiederholung (Repeat All bei Queue-Länge 1): direkt an den
@@ -763,6 +873,7 @@ class MusicPlayerController @Inject constructor(
                 _positionMs.value = 0
                 _isEnded.value = false
                 p.seekTo(0)
+                p.prepare()
                 p.play()
                 return
             }
@@ -846,8 +957,12 @@ class MusicPlayerController @Inject constructor(
      * Startet die Autoplay-Suche früh, damit die Suchkaskade (Backend-Suche +
      * Retries) nicht erst in der Hörlücke am Queue-Ende beginnt: sobald der
      * vorletzte Song läuft oder der letzte über die Hälfte hinaus ist.
+     * Wenn Repeat aktiv ist oder Autoplay deaktiviert wurde, darf kein
+     * Autoplay nachgefordert werden, damit die Wiederholung sauber greift.
      */
     private fun maybeExtendQueueEarly() {
+        if (!_autoplayEnabled.value) return
+        if (_repeatMode.value != REPEAT_OFF) return
         if (earlyExtendDone || autoplayJob?.isActive == true) return
         val q = _queue.value
         if (q.isEmpty() || queueIndex !in q.indices) return

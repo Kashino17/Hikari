@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -94,6 +95,7 @@ fun NowPlayingScreen(
     val repeatMode by controller.repeatMode.collectAsState()
     val error by controller.error.collectAsState()
     val videoMode by controller.videoMode.collectAsState()
+    var showQueue by remember { mutableStateOf(false) }
 
     // Nichts spielend (z. B. Prozess-Neustart) — nichts anzuzeigen. Der
     // Sprung zurück gehört in einen Effekt, nicht mitten in die Composition.
@@ -165,6 +167,10 @@ fun NowPlayingScreen(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.weight(1f),
                 )
+                MuIconButton(
+                    Icons.AutoMirrored.Filled.QueueMusic, "Warteschlange",
+                    iconSize = 24.dp,
+                ) { showQueue = true }
                 // Audio ↔ Video: bei Podcasts/True Crime läuft das Bild
                 // nahtlos an der aktuellen Position weiter.
                 MuIconButton(
@@ -386,15 +392,11 @@ fun NowPlayingScreen(
         }
     }
 
-    viewModel.addToPlaylistTarget?.let { song ->
-        AddToPlaylistSheet(
-            song = song,
-            playlists = viewModel.playlists,
-            onDismiss = { viewModel.addToPlaylistTarget = null },
-            onSelect = { playlistId -> viewModel.addToPlaylist(playlistId, song) },
-            onCreate = { name -> viewModel.createPlaylist(name, addAfterwards = song) },
-        )
+    if (showQueue) {
+        QueueSheet(controller = controller, onDismiss = { showQueue = false })
     }
+
+    AddToPlaylistHost(viewModel)
 }
 
 

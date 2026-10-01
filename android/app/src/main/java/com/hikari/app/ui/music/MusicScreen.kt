@@ -210,15 +210,7 @@ fun MusicScreen(
         }
     }
 
-    viewModel.addToPlaylistTarget?.let { song ->
-        AddToPlaylistSheet(
-            song = song,
-            playlists = viewModel.playlists,
-            onDismiss = { viewModel.addToPlaylistTarget = null },
-            onSelect = { playlistId -> viewModel.addToPlaylist(playlistId, song) },
-            onCreate = { name -> viewModel.createPlaylist(name, addAfterwards = song) },
-        )
-    }
+    AddToPlaylistHost(viewModel)
 }
 
 /**

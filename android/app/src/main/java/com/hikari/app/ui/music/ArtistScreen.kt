@@ -412,6 +412,8 @@ fun ArtistScreen(
                 .background(Color.Black.copy(alpha = 0.40f), CircleShape),
             tint = HikariText,
         ) { onBack() }
+
+        AddToPlaylistHost(viewModel)
     }
 }
 

@@ -248,3 +248,19 @@ fun NamePlaylistDialog(
         }
     }
 }
+
+/**
+ * Hostet das [AddToPlaylistSheet] einheitlich für jeden Screen, der ein MusicViewModel hält.
+ */
+@Composable
+fun AddToPlaylistHost(viewModel: MusicViewModel) {
+    viewModel.addToPlaylistTarget?.let { song ->
+        AddToPlaylistSheet(
+            song = song,
+            playlists = viewModel.playlists,
+            onDismiss = { viewModel.addToPlaylistTarget = null },
+            onSelect = { playlistId -> viewModel.addToPlaylist(playlistId, song) },
+            onCreate = { name -> viewModel.createPlaylist(name, addAfterwards = song) },
+        )
+    }
+}

@@ -152,4 +152,6 @@ fun RemotePlaylistScreen(
             MiniPlayerBar(controller = viewModel.player, onOpen = onOpenNowPlaying)
         }
     }
+
+    AddToPlaylistHost(viewModel)
 }

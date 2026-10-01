@@ -882,10 +882,11 @@ class MusicRepository(
     }
 
     /** Song muss in `music_songs` existieren — der Fremdschlüssel verlangt das. */
-    suspend fun addToPlaylist(playlistId: Int, song: MusicSong) {
+    suspend fun addToPlaylist(playlistId: Int, song: MusicSong): Boolean {
         recordPlayed(song, touchRecency = false)
         val nextPos = playlistSongDao.maxPosition(playlistId) + 1
-        playlistSongDao.insert(MusicPlaylistSongEntity(playlistId, song.videoId, position = nextPos))
+        val rowId = playlistSongDao.insert(MusicPlaylistSongEntity(playlistId, song.videoId, position = nextPos))
+        return rowId != -1L
     }
 
     /** Persistiert die manuelle Reihenfolge aus dem Bearbeiten-Modus. */

@@ -332,6 +332,16 @@ class MusicViewModel @Inject constructor(
         }
     }
 
+    suspend fun searchForPicker(query: String): List<MusicSong> {
+        val q = query.trim()
+        if (q.isBlank()) return emptyList()
+        return try {
+            repo.searchFullMusic(q, MusicSearchMode.MUSIC)?.songs ?: emptyList()
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
     /** Fokus aufs Suchfeld aktiviert die Smart-Search — in allen Modi. */
     fun onSearchFocus() {
         searchActive = true
@@ -683,6 +693,7 @@ class MusicViewModel @Inject constructor(
             val id = repo.createPlaylist(trimmed)
             addAfterwards?.let { repo.addToPlaylist(id, it) }
             refreshLibrary()
+            addToPlaylistTarget = null
             message = "Playlist „$trimmed“ erstellt"
         }
     }
@@ -715,10 +726,9 @@ class MusicViewModel @Inject constructor(
 
     fun addToPlaylist(playlistId: Int, song: MusicSong) {
         viewModelScope.launch {
-            repo.addToPlaylist(playlistId, song)
+            val added = repo.addToPlaylist(playlistId, song)
             refreshLibrary()
-            addToPlaylistTarget = null
-            message = "Zur Playlist hinzugefügt"
+            message = if (added) "Zur Playlist hinzugefügt" else "Bereits in der Playlist"
         }
     }
 

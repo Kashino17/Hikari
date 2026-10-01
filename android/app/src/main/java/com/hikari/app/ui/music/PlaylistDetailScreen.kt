@@ -2,6 +2,7 @@ package com.hikari.app.ui.music
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -92,6 +94,7 @@ fun PlaylistDetailScreen(
     val online by viewModel.isOnline.collectAsState()
     var menuOpen by remember { mutableStateOf(false) }
     var showRename by remember { mutableStateOf(false) }
+    var showAddSongs by remember { mutableStateOf(false) }
 
     // Bearbeiten-Modus: Reihenfolge per Drag & Drop auf einer lokalen Kopie,
     // gespeichert wird erst beim Verlassen ("Fertig" oder Zurück-Geste).
@@ -250,6 +253,11 @@ fun PlaylistDetailScreen(
                                     GhostIconChip(Icons.Default.MoreVert, "Mehr") { menuOpen = true }
                                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                                         DropdownMenuItem(
+                                            text = { Text("Songs hinzufügen") },
+                                            leadingIcon = { Icon(Icons.Default.Add, null) },
+                                            onClick = { menuOpen = false; showAddSongs = true },
+                                        )
+                                        DropdownMenuItem(
                                             text = { Text("Umbenennen") },
                                             leadingIcon = { Icon(Icons.Default.Edit, null) },
                                             onClick = { menuOpen = false; showRename = true },
@@ -271,10 +279,28 @@ fun PlaylistDetailScreen(
                     }
                     if (songs.isEmpty()) {
                         item(key = "empty") {
-                            EmptyHint(
-                                Icons.AutoMirrored.Filled.PlaylistPlay,
-                                "Diese Playlist ist leer — füge Songs über das Menü eines Songs hinzu.",
-                            )
+                            Column(
+                                Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 20.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                EmptyHint(
+                                    Icons.AutoMirrored.Filled.PlaylistPlay,
+                                    "Diese Playlist ist leer — füge direkt deine Lieblingssongs hinzu.",
+                                )
+                                Spacer(Modifier.height(16.dp))
+                                Row(
+                                    Modifier
+                                        .clip(RoundedCornerShape(999.dp))
+                                        .background(HikariPrimary)
+                                        .clickable { showAddSongs = true }
+                                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Icon(Icons.Default.Add, null, tint = Color.Black, modifier = Modifier.size(18.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Songs hinzufügen", fontSize = 14.sp, color = Color.Black, fontWeight = FontWeight.Bold)
+                                }
+                            }
                         }
                     } else {
                         itemsIndexed(songs, key = { _, s -> s.videoId }) { i, song ->
@@ -321,6 +347,18 @@ fun PlaylistDetailScreen(
             },
         )
     }
+
+    if (showAddSongs) {
+        AddSongsToPlaylistSheet(
+            playlistId = playlistId,
+            playlistName = entry?.playlist?.name.orEmpty(),
+            existingSongIds = entry?.songs?.map { it.videoId }?.toSet().orEmpty(),
+            viewModel = viewModel,
+            onDismiss = { showAddSongs = false },
+        )
+    }
+
+    AddToPlaylistHost(viewModel)
 }
 
 /**

@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudOff
@@ -241,6 +242,22 @@ fun SongRow(
         Box {
             MuIconButton(Icons.Default.MoreVert, "Mehr", iconSize = 22.dp, onClick = { menuOpen = true })
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                DropdownMenuItem(
+                    text = { Text("Als Nächstes spielen") },
+                    onClick = {
+                        menuOpen = false
+                        viewModel.player.playNext(song)
+                        viewModel.message = "Wird als Nächstes gespielt"
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text("In Warteschlange einreihen") },
+                    onClick = {
+                        menuOpen = false
+                        viewModel.player.addToQueue(song)
+                        viewModel.message = "Zur Warteschlange hinzugefügt"
+                    },
+                )
                 DropdownMenuItem(
                     text = { Text("Zu Playlist hinzufügen") },
                     onClick = {

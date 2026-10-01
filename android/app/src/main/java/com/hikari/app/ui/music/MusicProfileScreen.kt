@@ -146,6 +146,8 @@ fun MusicProfileScreen(
                 shape = RoundedCornerShape(12.dp),
             )
         }
+
+        AddToPlaylistHost(viewModel)
     }
 }
 
