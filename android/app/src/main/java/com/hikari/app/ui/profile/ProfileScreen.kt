@@ -1,11 +1,15 @@
 package com.hikari.app.ui.profile
 
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,14 +23,21 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,6 +47,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -45,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -53,21 +66,26 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import android.widget.Toast
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import com.hikari.app.ui.channels.ImportSheet
-import java.io.File
-import com.hikari.app.ui.profile.components.AreaHub
+import com.hikari.app.ui.navigation.SharedImport
+import com.hikari.app.ui.profile.components.AreaHubShowcase
 import com.hikari.app.ui.profile.tabs.ChannelsTab
+import com.hikari.app.ui.profile.tabs.DownloadCategory
 import com.hikari.app.ui.profile.tabs.DownloadsTab
 import com.hikari.app.ui.profile.tabs.SavedTab
 import com.hikari.app.ui.theme.HikariAmber
+import com.hikari.app.ui.theme.HikariAmberSoft
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
+import com.hikari.app.ui.theme.HikariBorderStrong
 import com.hikari.app.ui.theme.HikariCardBg
 import com.hikari.app.ui.theme.HikariDanger
 import com.hikari.app.ui.theme.HikariSurface
@@ -75,19 +93,19 @@ import com.hikari.app.ui.theme.HikariSurfaceHigh
 import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
+import java.io.File
 
-private enum class EditField { NAME, NICKNAME, BIO }
-private enum class ProfileTab { SAVED, CHANNELS, DOWNLOADS }
+private enum class ProfileTab { SAVED, CHANNELS, DOWNLOADS, BEREICHE }
 
 @Composable
 fun ProfileScreen(
     onOpenSettings: () -> Unit,
     onOpenChannel: (String) -> Unit,
     onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
-    onOpenDownloadCategory: (com.hikari.app.ui.profile.tabs.DownloadCategory) -> Unit,
+    onOpenDownloadCategory: (DownloadCategory) -> Unit,
     onOpenSection: (route: String) -> Unit,
     /** Per Teilen-Menü eingegangener Link: öffnet das Import-Sheet mit ihm vorbefüllt. */
-    pendingImport: com.hikari.app.ui.navigation.SharedImport? = null,
+    pendingImport: SharedImport? = null,
     vm: ProfileViewModel = hiltViewModel(),
 ) {
     val name by vm.name.collectAsState()
@@ -102,10 +120,11 @@ fun ProfileScreen(
     val hubMangaCovers by vm.hubMangaCovers.collectAsState()
     val hubMangaLabel by vm.hubMangaLabel.collectAsState()
 
-    var editing by remember { mutableStateOf<EditField?>(null) }
+    var showEditSheet by remember { mutableStateOf(false) }
     var tab by remember { mutableStateOf(ProfileTab.SAVED) }
     var importOpen by remember { mutableStateOf(false) }
-    var importSeed by remember { mutableStateOf<com.hikari.app.ui.navigation.SharedImport?>(null) }
+    var importSeed by remember { mutableStateOf<SharedImport?>(null) }
+
     LaunchedEffect(pendingImport?.nonce) {
         if (pendingImport != null) {
             importSeed = pendingImport
@@ -113,13 +132,11 @@ fun ProfileScreen(
         }
     }
 
-    // Refresh stats + saved list + continue-watching when returning to the
-    // Profile tab — covers cases like deleting downloads, saving a video from
-    // the Feed tab, or following a new channel.
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
-        val obs = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) vm.refreshAll()
+    // Refresh stats when returning to the screen
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val obs = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) vm.refreshAll()
         }
         lifecycleOwner.lifecycle.addObserver(obs)
         onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
@@ -129,7 +146,7 @@ fun ProfileScreen(
         ActivityResultContracts.PickVisualMedia(),
     ) { uri -> if (uri != null) vm.pickAvatar(uri) }
 
-    // Surface avatar-save failures (previously swallowed silently).
+    // Surface avatar-save failures
     val toastCtx = LocalContext.current
     LaunchedEffect(Unit) {
         vm.events.collect { msg ->
@@ -139,27 +156,60 @@ fun ProfileScreen(
 
     Box(Modifier.fillMaxSize().background(HikariBg)) {
         Column(Modifier.fillMaxSize()) {
-            // ── Top bar: title left, gear right ──────────────────────────────
+            // ── Top Bar: Profil Label links, Quick Actions rechts ────────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.statusBars)
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    "PROFIL",
-                    color = HikariTextFaint,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 1.5.sp,
-                    fontFamily = FontFamily.Monospace,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f),
-                )
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(HikariAmber),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = if (nickname.isNotBlank()) "@$nickname" else "PROFIL",
+                        color = HikariTextMuted,
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 1.sp,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                }
+
+                // Quick Import Action
                 Box(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
+                        .background(HikariSurfaceHigh.copy(alpha = 0.6f))
+                        .clickable { importOpen = true },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Link importieren",
+                        tint = HikariAmber,
+                        modifier = Modifier.size(19.dp),
+                    )
+                }
+
+                Spacer(Modifier.width(8.dp))
+
+                // Settings Action
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(HikariSurfaceHigh.copy(alpha = 0.6f))
                         .clickable { onOpenSettings() },
                     contentAlignment = Alignment.Center,
                 ) {
@@ -167,92 +217,143 @@ fun ProfileScreen(
                         Icons.Default.Settings,
                         contentDescription = "Einstellungen",
                         tint = HikariTextMuted,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(18.dp),
                     )
                 }
             }
 
-            // ── Header: avatar left + 3-stat row ────────────────────────────
-            Row(
+            // ── Hero Profile Identity Card (Modern Streaming Profile) ───────────
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Avatar(
-                    avatarPath = avatarPath,
-                    fallbackChar = name.firstOrNull()?.uppercaseChar(),
-                    onClick = {
-                        pickPhoto.launch(
-                            PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageOnly,
-                            ),
-                        )
-                    },
-                )
-                Spacer(Modifier.size(20.dp))
-                Row(
-                    modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.SpaceAround,
-                ) {
-                    Stat(value = savedCount, label = "VIDEOS")
-                    Stat(value = channelsCount, label = "KANÄLE")
-                    Stat(value = downloadsCount, label = "DOWNLOADS")
-                }
-            }
-
-            // ── Name + Nick + Bio (click → edit) ─────────────────────────────
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
-                ProfileLine(
-                    value = name,
-                    placeholder = "Dein Name",
-                    style = MaterialTheme.typography.headlineMedium.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
-                    color = HikariText,
-                    onClick = { editing = EditField.NAME },
-                    align = TextAlign.Start,
-                )
-                ProfileLine(
-                    value = if (nickname.isEmpty()) "" else "@$nickname",
-                    placeholder = "@nickname",
-                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
-                    color = HikariAmber,
-                    onClick = { editing = EditField.NICKNAME },
-                    align = TextAlign.Start,
-                )
-                Spacer(Modifier.height(6.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { editing = EditField.BIO },
-                ) {
-                    Text(
-                        text = bio.ifEmpty { "Bio hinzufügen" },
-                        color = if (bio.isEmpty()) HikariTextFaint else HikariText.copy(alpha = 0.85f),
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 12.sp,
-                            lineHeight = 17.sp,
+                    .padding(horizontal = 16.dp, vertical = 6.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(
+                        Brush.linearGradient(
+                            listOf(HikariCardBg, HikariSurface),
                         ),
                     )
+                    .border(0.5.dp, HikariBorderStrong, RoundedCornerShape(20.dp))
+                    .clickable { showEditSheet = true }
+                    .padding(14.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // Avatar mit Glowing Accent Ring & Kamera-Badge
+                    Box(
+                        modifier = Modifier.size(62.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        ProfileAvatar(
+                            avatarPath = avatarPath,
+                            fallbackChar = name.firstOrNull()?.uppercaseChar() ?: 'H',
+                            size = 60.dp,
+                            onClick = { showEditSheet = true },
+                        )
+                        // Mini Edit Badge
+                        Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .align(Alignment.BottomEnd)
+                                .clip(CircleShape)
+                                .background(HikariAmber)
+                                .border(1.5.dp, HikariCardBg, CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = null,
+                                tint = Color.Black,
+                                modifier = Modifier.size(11.dp),
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.width(14.dp))
+
+                    // Name, Handle & Bio / Motto
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = name.ifBlank { "Hikari Nutzer" },
+                            color = HikariText,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+
+                        Spacer(Modifier.height(2.dp))
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = if (nickname.isNotBlank()) "@$nickname" else "@hikari",
+                                color = HikariAmber,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = FontFamily.Monospace,
+                            )
+                        }
+
+                        Spacer(Modifier.height(3.dp))
+
+                        Text(
+                            text = bio.ifBlank { "Tippe hier, um dein Profil anzupassen" },
+                            color = if (bio.isBlank()) HikariTextFaint else HikariTextMuted,
+                            fontSize = 11.5.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            lineHeight = 15.sp,
+                        )
+                    }
+
+                    Spacer(Modifier.width(8.dp))
+
+                    // Bearbeiten Button
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(HikariSurfaceHigh)
+                            .border(0.5.dp, HikariBorderStrong, RoundedCornerShape(20.dp))
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Text(
+                                "Bearbeiten",
+                                color = HikariText,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                            )
+                            Icon(
+                                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = HikariTextMuted,
+                                modifier = Modifier.size(12.dp),
+                            )
+                        }
+                    }
                 }
             }
 
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(6.dp))
 
-            // ── Bereichs-Hub: News, Manga, Spiele mit echten Inhalten ──────
-            AreaHub(
-                news = hubNews,
-                newsCount = hubNewsCount,
-                mangaCovers = hubMangaCovers,
-                mangaLabel = hubMangaLabel,
-                onOpenSection = onOpenSection,
+            // ── Unified Modern Tab Switcher mit Zählern ─────────────────────────
+            ProfileTabsRow(
+                active = tab,
+                savedCount = savedCount,
+                channelsCount = channelsCount,
+                downloadsCount = downloadsCount,
+                onTabSelected = { tab = it },
             )
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(4.dp))
 
-            // ── Tab bar ──────────────────────────────────────────────────────
-            TabBar(active = tab, onChange = { tab = it })
-
-            // ── Tab content ──────────────────────────────────────────────────
+            // ── Tab Content: Volle Höhe für maximale UX ─────────────────────────
             Box(modifier = Modifier.fillMaxSize()) {
                 when (tab) {
                     ProfileTab.SAVED -> SavedTab(
@@ -264,9 +365,14 @@ fun ProfileScreen(
                     )
                     ProfileTab.DOWNLOADS -> DownloadsTab(
                         onOpenCategory = onOpenDownloadCategory,
-                        // Die Übertragungs-Karte führt dorthin, wo die
-                        // Downloads im Detail laufen.
                         onOpenTransfers = { onOpenSection("channel/manual") },
+                    )
+                    ProfileTab.BEREICHE -> AreaHubShowcase(
+                        news = hubNews,
+                        newsCount = hubNewsCount,
+                        mangaCovers = hubMangaCovers,
+                        mangaLabel = hubMangaLabel,
+                        onOpenSection = onOpenSection,
                     )
                 }
             }
@@ -284,7 +390,6 @@ fun ProfileScreen(
                 importSeed = null
                 onOpenSection("browser")
             },
-            // Nach dem Absenden dorthin, wo der Download sichtbar ist.
             onSubmitted = {
                 importOpen = false
                 importSeed = null
@@ -294,135 +399,163 @@ fun ProfileScreen(
         )
     }
 
-    when (editing) {
-        EditField.NAME -> EditSheet(
-            title = "Name",
-            initial = name,
-            singleLine = true,
-            maxLength = 40,
-            onDismiss = { editing = null },
-            onSave = {
-                vm.setName(it)
-                editing = null
+    if (showEditSheet) {
+        UnifiedProfileEditSheet(
+            initialName = name,
+            initialNickname = nickname,
+            initialBio = bio,
+            avatarPath = avatarPath,
+            bioMax = vm.bioMax,
+            onDismiss = { showEditSheet = false },
+            onPickPhoto = {
+                pickPhoto.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                )
             },
-        )
-        EditField.NICKNAME -> NicknameEditSheet(
-            initial = nickname,
-            onDismiss = { editing = null },
-            onSave = { value ->
-                val err = vm.trySetNickname(value)
-                if (err == null) editing = null
-                err
+            onSave = { newName, newNick, newBio ->
+                vm.setName(newName)
+                val nickErr = if (newNick.isNotBlank() && newNick != nickname) {
+                    vm.trySetNickname(newNick)
+                } else null
+                vm.setBio(newBio)
+                if (nickErr == null) {
+                    showEditSheet = false
+                }
+                nickErr?.msg
             },
-        )
-        EditField.BIO -> EditSheet(
-            title = "Bio",
-            initial = bio,
-            singleLine = false,
-            maxLength = vm.bioMax,
-            onDismiss = { editing = null },
-            onSave = {
-                vm.setBio(it)
-                editing = null
-            },
-        )
-        null -> Unit
-    }
-}
-
-@Composable
-private fun Stat(value: Int, label: String, muted: Boolean = false) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            value.toString(),
-            color = if (muted) HikariTextMuted else HikariText,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-        )
-        Spacer(Modifier.height(2.dp))
-        Text(
-            label,
-            color = HikariTextFaint,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = 1.sp,
-            fontFamily = FontFamily.Monospace,
         )
     }
 }
 
 @Composable
-private fun TabBar(active: ProfileTab, onChange: (ProfileTab) -> Unit) {
+private fun ProfileTabsRow(
+    active: ProfileTab,
+    savedCount: Int,
+    channelsCount: Int,
+    downloadsCount: Int,
+    onTabSelected: (ProfileTab) -> Unit,
+) {
+    val scrollState = rememberScrollState()
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(HikariBg)
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+            .horizontalScroll(scrollState)
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        TabPill(Icons.Default.Bookmark, "Gespeichert", active == ProfileTab.SAVED) {
-            onChange(ProfileTab.SAVED)
-        }
-        TabPill(Icons.Default.Public, "Kanäle", active == ProfileTab.CHANNELS) {
-            onChange(ProfileTab.CHANNELS)
-        }
-        TabPill(Icons.Default.Download, "Downloads", active == ProfileTab.DOWNLOADS) {
-            onChange(ProfileTab.DOWNLOADS)
-        }
+        TabChip(
+            icon = Icons.Default.Bookmark,
+            label = "Gespeichert",
+            count = savedCount,
+            selected = active == ProfileTab.SAVED,
+            onClick = { onTabSelected(ProfileTab.SAVED) },
+        )
+        TabChip(
+            icon = Icons.Default.Public,
+            label = "Kanäle",
+            count = channelsCount,
+            selected = active == ProfileTab.CHANNELS,
+            onClick = { onTabSelected(ProfileTab.CHANNELS) },
+        )
+        TabChip(
+            icon = Icons.Default.Download,
+            label = "Downloads",
+            count = downloadsCount,
+            selected = active == ProfileTab.DOWNLOADS,
+            onClick = { onTabSelected(ProfileTab.DOWNLOADS) },
+        )
+        TabChip(
+            icon = Icons.Default.Apps,
+            label = "Bereiche",
+            count = 6,
+            selected = active == ProfileTab.BEREICHE,
+            onClick = { onTabSelected(ProfileTab.BEREICHE) },
+        )
     }
 }
 
 @Composable
-private fun androidx.compose.foundation.layout.RowScope.TabPill(
+private fun TabChip(
     icon: ImageVector,
     label: String,
-    active: Boolean,
+    count: Int,
+    selected: Boolean,
     onClick: () -> Unit,
 ) {
+    val bgColor by animateColorAsState(
+        targetValue = if (selected) HikariSurfaceHigh else HikariCardBg,
+        animationSpec = tween(180),
+        label = "tab-bg",
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (selected) HikariAmber else HikariBorder,
+        animationSpec = tween(180),
+        label = "tab-border",
+    )
+
     Row(
         modifier = Modifier
-            .weight(1f)
             .clip(RoundedCornerShape(12.dp))
-            .background(if (active) HikariSurfaceHigh else HikariCardBg)
+            .background(bgColor)
+            .border(
+                width = if (selected) 1.2.dp else 0.5.dp,
+                color = borderColor,
+                shape = RoundedCornerShape(12.dp),
+            )
             .clickable(onClick = onClick)
-            .padding(vertical = 10.dp),
-        horizontalArrangement = Arrangement.Center,
+            .padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Icon(
             icon,
             contentDescription = label,
-            tint = if (active) HikariAmber else HikariTextFaint,
-            modifier = Modifier.size(16.dp),
+            tint = if (selected) HikariAmber else HikariTextFaint,
+            modifier = Modifier.size(15.dp),
         )
-        Spacer(Modifier.size(7.dp))
         Text(
-            label,
-            color = if (active) HikariText else HikariTextFaint,
+            text = label,
+            color = if (selected) HikariText else HikariTextFaint,
             fontSize = 12.5.sp,
-            fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
         )
+        // Count Pill
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(6.dp))
+                .background(if (selected) HikariAmberSoft else HikariSurface)
+                .padding(horizontal = 5.dp, vertical = 1.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = count.toString(),
+                color = if (selected) HikariAmber else HikariTextMuted,
+                fontSize = 10.5.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
     }
 }
 
 @Composable
-private fun Avatar(
+private fun ProfileAvatar(
     avatarPath: String?,
-    fallbackChar: Char?,
+    fallbackChar: Char,
+    size: androidx.compose.ui.unit.Dp,
     onClick: () -> Unit,
 ) {
     Box(
         modifier = Modifier
-            .size(84.dp)
+            .size(size)
             .clip(CircleShape)
             .background(HikariSurfaceHigh)
-            .border(0.5.dp, HikariBorder, CircleShape)
-            .clickable { onClick() },
+            .border(1.5.dp, HikariAmber.copy(alpha = 0.7f), CircleShape)
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        // Resolve to a real File, stripping any legacy "?v=<ts>" cache-bust
-        // suffix that an older build may have persisted. Falling back to the
-        // letter when the file is missing avoids a blank circle.
         val avatarFile = remember(avatarPath) {
             avatarPath?.substringBefore("?")?.let(::File)?.takeIf { it.exists() }
         }
@@ -433,59 +566,32 @@ private fun Avatar(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize().clip(CircleShape),
             )
-        } else if (fallbackChar != null) {
+        } else {
             Text(
                 fallbackChar.toString(),
                 color = HikariAmber,
-                style = TextStyle(fontSize = 36.sp, fontWeight = FontWeight.Black),
-            )
-        } else {
-            Icon(
-                Icons.Default.Person,
-                contentDescription = null,
-                tint = HikariTextFaint,
-                modifier = Modifier.size(36.dp),
+                style = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Black),
             )
         }
     }
 }
 
-@Composable
-private fun ProfileLine(
-    value: String,
-    placeholder: String,
-    style: TextStyle,
-    color: Color,
-    onClick: () -> Unit,
-    align: TextAlign = TextAlign.Center,
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(vertical = 2.dp),
-        contentAlignment = if (align == TextAlign.Center) Alignment.Center else Alignment.CenterStart,
-    ) {
-        Text(
-            text = value.ifEmpty { placeholder },
-            color = if (value.isEmpty()) HikariTextFaint else color,
-            style = style,
-            textAlign = align,
-        )
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EditSheet(
-    title: String,
-    initial: String,
-    singleLine: Boolean,
-    maxLength: Int,
+private fun UnifiedProfileEditSheet(
+    initialName: String,
+    initialNickname: String,
+    initialBio: String,
+    avatarPath: String?,
+    bioMax: Int,
     onDismiss: () -> Unit,
-    onSave: (String) -> Unit,
+    onPickPhoto: () -> Unit,
+    onSave: (name: String, nickname: String, bio: String) -> String?,
 ) {
-    var draft by remember { mutableStateOf(initial) }
+    var draftName by remember { mutableStateOf(initialName) }
+    var draftNick by remember { mutableStateOf(initialNickname) }
+    var draftBio by remember { mutableStateOf(initialBio) }
+    var errorText by remember { mutableStateOf<String?>(null) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
@@ -494,131 +600,211 @@ private fun EditSheet(
         containerColor = HikariSurface,
         dragHandle = null,
     ) {
-        SheetHeader(title = title, onCancel = onDismiss, onSave = { onSave(draft) })
-
-        BasicTextField(
-            value = draft,
-            onValueChange = { if (it.length <= maxLength) draft = it },
-            singleLine = singleLine,
-            textStyle = TextStyle(color = HikariText, fontSize = 14.sp, lineHeight = 20.sp),
-            cursorBrush = SolidColor(HikariAmber),
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .heightIn(min = if (singleLine) 44.dp else 96.dp),
-        )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.End,
+                .padding(horizontal = 20.dp, vertical = 14.dp),
         ) {
-            Text(
-                "${draft.length}/$maxLength",
-                color = HikariTextFaint,
-                style = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 11.sp),
-            )
-        }
-        Spacer(Modifier.height(8.dp))
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun NicknameEditSheet(
-    initial: String,
-    onDismiss: () -> Unit,
-    onSave: (String) -> NicknameError?,
-) {
-    var draft by remember { mutableStateOf(initial) }
-    var error by remember { mutableStateOf<String?>(null) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = HikariSurface,
-        dragHandle = null,
-    ) {
-        SheetHeader(
-            title = "Nickname",
-            onCancel = onDismiss,
-            onSave = {
-                val sanitized = draft.lowercase()
-                val err = onSave(sanitized)
-                error = err?.msg
-            },
-        )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                "@",
-                color = HikariTextMuted,
-                style = TextStyle(fontSize = 14.sp, fontFamily = FontFamily.Monospace),
-            )
-            Spacer(Modifier.size(2.dp))
-            BasicTextField(
-                value = draft,
-                onValueChange = {
-                    draft = it.lowercase().take(20)
-                    error = null
-                },
-                singleLine = true,
-                textStyle = TextStyle(
-                    color = HikariText,
-                    fontSize = 14.sp,
-                    fontFamily = FontFamily.Monospace,
-                ),
-                cursorBrush = SolidColor(HikariAmber),
+            // Header
+            Row(
                 modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    "Abbrechen",
+                    color = HikariTextMuted,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
+                    modifier = Modifier.clickable { onDismiss() },
+                )
+                Text(
+                    "Profil bearbeiten",
+                    color = HikariText,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                )
+                Text(
+                    "Fertig",
+                    color = HikariAmber,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold),
+                    modifier = Modifier.clickable {
+                        val err = onSave(draftName.trim(), draftNick.trim().lowercase(), draftBio.trim())
+                        errorText = err
+                    },
+                )
+            }
+
+            Spacer(Modifier.height(18.dp))
+
+            // Avatar Change Section
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                ProfileAvatar(
+                    avatarPath = avatarPath,
+                    fallbackChar = draftName.firstOrNull()?.uppercaseChar() ?: 'H',
+                    size = 72.dp,
+                    onClick = onPickPhoto,
+                )
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(HikariSurfaceHigh)
+                        .clickable { onPickPhoto() }
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Icon(
+                        Icons.Default.PhotoCamera,
+                        contentDescription = null,
+                        tint = HikariAmber,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Text(
+                        "Foto ändern",
+                        color = HikariAmber,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            // Field: Name
+            Text(
+                "NAME",
+                color = HikariTextFaint,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 1.2.sp,
+                fontFamily = FontFamily.Monospace,
             )
+            Spacer(Modifier.height(6.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(HikariCardBg)
+                    .border(0.5.dp, HikariBorder, RoundedCornerShape(10.dp))
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+            ) {
+                BasicTextField(
+                    value = draftName,
+                    onValueChange = { if (it.length <= 40) draftName = it },
+                    singleLine = true,
+                    textStyle = TextStyle(color = HikariText, fontSize = 14.sp),
+                    cursorBrush = SolidColor(HikariAmber),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (draftName.isEmpty()) {
+                    Text("Dein Anzeigename", color = HikariTextFaint, fontSize = 14.sp)
+                }
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            // Field: Nickname (@handle)
+            Text(
+                "NICKNAME (@HANDLE)",
+                color = HikariTextFaint,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 1.2.sp,
+                fontFamily = FontFamily.Monospace,
+            )
+            Spacer(Modifier.height(6.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(HikariCardBg)
+                    .border(0.5.dp, if (errorText != null) HikariDanger else HikariBorder, RoundedCornerShape(10.dp))
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "@",
+                        color = HikariAmber,
+                        fontSize = 14.sp,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    BasicTextField(
+                        value = draftNick,
+                        onValueChange = {
+                            draftNick = it.lowercase().take(20)
+                            errorText = null
+                        },
+                        singleLine = true,
+                        textStyle = TextStyle(
+                            color = HikariText,
+                            fontSize = 14.sp,
+                            fontFamily = FontFamily.Monospace,
+                        ),
+                        cursorBrush = SolidColor(HikariAmber),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+            if (errorText != null) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    errorText!!,
+                    color = HikariDanger,
+                    fontSize = 11.sp,
+                )
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            // Field: Bio
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    "BIO / MOTTO",
+                    color = HikariTextFaint,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.2.sp,
+                    fontFamily = FontFamily.Monospace,
+                )
+                Text(
+                    "${draftBio.length}/$bioMax",
+                    color = HikariTextFaint,
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace,
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 72.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(HikariCardBg)
+                    .border(0.5.dp, HikariBorder, RoundedCornerShape(10.dp))
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+            ) {
+                BasicTextField(
+                    value = draftBio,
+                    onValueChange = { if (it.length <= bioMax) draftBio = it },
+                    singleLine = false,
+                    textStyle = TextStyle(color = HikariText, fontSize = 13.5.sp, lineHeight = 18.sp),
+                    cursorBrush = SolidColor(HikariAmber),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (draftBio.isEmpty()) {
+                    Text("Ein kurzer Satz über dich...", color = HikariTextFaint, fontSize = 13.5.sp)
+                }
+            }
+
+            Spacer(Modifier.height(28.dp))
         }
-
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = error ?: "a–z, 0–9, _ und . — 3 bis 20 Zeichen.",
-            color = if (error != null) HikariDanger else HikariTextFaint,
-            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
-            modifier = Modifier.padding(horizontal = 20.dp),
-        )
-        Spacer(Modifier.height(20.dp))
-    }
-}
-
-@Composable
-private fun SheetHeader(title: String, onCancel: () -> Unit, onSave: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 14.dp),
-    ) {
-        Text(
-            "Abbrechen",
-            color = HikariTextMuted,
-            style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .clickable { onCancel() },
-        )
-        Text(
-            title,
-            color = HikariText,
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.align(Alignment.Center),
-        )
-        Text(
-            "Speichern",
-            color = HikariAmber,
-            style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .clickable { onSave() },
-        )
     }
 }
