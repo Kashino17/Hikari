@@ -110,6 +110,15 @@ class RussianCourseTest {
     }
 
     @Test
+    fun sprechUebungenTretenHaeufigAuf() {
+        for (d in index.days) {
+            val steps = RuLessonBuilder.lesson(index, d.day, male, speechAvailable = true, rng = Random(42))
+            val speakSteps = steps.count { it is RuExercise.Speak }
+            assertTrue(speakSteps >= d.items.size / 2, "Tag ${d.day}: mind. 50% Sprechuebungen erwartet, hatte $speakSteps von ${d.items.size}")
+        }
+    }
+
+    @Test
     fun wiederholungBautAusFaelligenKarten() {
         val due = index.days.take(5).flatMap { it.items }.map { it.id }
         val steps = RuLessonBuilder.review(index, due, 5, male, speechAvailable = true, rng = Random(3))

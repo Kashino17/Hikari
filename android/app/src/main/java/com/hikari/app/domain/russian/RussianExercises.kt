@@ -109,8 +109,10 @@ object RuLessonBuilder {
         }
 
         // 2) Übungsrunde: jede Karte in einem anderen Format.
+        // Sprechübungen mit Aussprachekontrolle deutlich häufiger anbieten (mind. 50-60 % aller Phrasen):
         val practice = phrases.shuffled(rng).mapIndexed { i, p ->
-            practiceFor(index, p, pool, settings, speechAvailable && i % 3 == 0, i, rng)
+            val speak = (i % 2 == 0) || (phrases.size <= 4)
+            practiceFor(index, p, pool, settings, speak, i, rng)
         }
         out += practice
 
@@ -131,7 +133,10 @@ object RuLessonBuilder {
     ): List<RuExercise> {
         val pool = index.phrasesUpTo(maxDay, settings)
         return dueIds.take(limit).mapNotNull { index.phrase(it, settings) }.shuffled(rng)
-            .mapIndexed { i, p -> practiceFor(index, p, pool, settings, speechAvailable && i % 4 == 1, i + 1, rng) }
+            .mapIndexed { i, p ->
+                val speak = (i % 2 == 0)
+                practiceFor(index, p, pool, settings, speak, i + 1, rng)
+            }
     }
 
     private fun practiceFor(

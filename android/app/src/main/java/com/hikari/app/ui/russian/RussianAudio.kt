@@ -232,12 +232,18 @@ class RussianSpeechRecognizer(private val context: Context) {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ru-RU")
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "ru-RU")
-            putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, true)
+            putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+            }
         }
         _state.value = RuListenState.Listening
-        r.startListening(intent)
+        runCatching { r.startListening(intent) }.onFailure { e ->
+            Log.w("RussianSpeechRecognizer", "startListening failed", e)
+            _state.value = RuListenState.Failed("Spracherkennung konnte nicht gestartet werden.")
+        }
     }
 
     fun stopListening() {

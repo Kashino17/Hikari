@@ -95,6 +95,7 @@ fun RussianSessionScreen(
                     }
                 }
                 // Untere Leiste: Weiter bei Lernkarten, Feedback nach Antworten.
+                // SpeakStep verwaltet eigene Aktionsleiste mit unbegrenzten Versuchen & Weiter-Knopf.
                 val fb = ui.feedback
                 when {
                     step is RuExercise.SoundTip || step is RuExercise.Intro ->
@@ -103,6 +104,7 @@ fun RussianSessionScreen(
                             modifier = Modifier.padding(16.dp),
                             onClick = vm::next,
                         )
+                    step is RuExercise.Speak -> Unit
                     fb != null -> RuFeedbackBar(fb, solutionFor(step), onNext = vm::next)
                 }
             }
