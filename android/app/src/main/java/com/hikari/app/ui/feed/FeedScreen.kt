@@ -12,6 +12,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,9 +23,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -43,12 +46,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Spa
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -61,6 +69,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -212,6 +221,9 @@ fun FeedScreen(
             enabledModules = enabledModules,
             selectedLanguage = selectedLanguage,
             moduleRanks = moduleRanks,
+            streak = streak,
+            completedCount = cards.count { it.id in completedCardIds },
+            totalCount = cards.size,
             onToggleModule = { module, enabled -> vm.toggleModule(module, enabled) },
             onSetModuleRank = { module, rank -> vm.setModuleRank(module, rank) },
             onSelectLanguage = { vm.setLearningLanguage(it) },
@@ -337,11 +349,21 @@ private fun FeedCardSlide(
                                 overflow = TextOverflow.Ellipsis,
                             )
                             if (card.rank == ModuleRank.RANK_1) {
-                                Spacer(Modifier.width(5.dp))
-                                Text("⭐", fontSize = 10.sp)
-                            } else if (card.rank == ModuleRank.RANK_2) {
-                                Spacer(Modifier.width(5.dp))
-                                Text("🔷", fontSize = 10.sp)
+                                Spacer(Modifier.width(6.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(HikariAmber.copy(alpha = 0.20f))
+                                        .padding(horizontal = 5.dp, vertical = 1.dp),
+                                ) {
+                                    Text(
+                                        text = "FOKUS",
+                                        color = HikariAmber,
+                                        fontSize = 8.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 0.8.sp,
+                                    )
+                                }
                             }
                         }
                     }
@@ -1611,12 +1633,27 @@ private fun FeedEmptyState(onOpenSettings: () -> Unit) {
 
 // ── Feed Settings Sheet ───────────────────────────────────────────────────────
 
+private enum class SettingsTab(val title: String, val icon: ImageVector) {
+    TOPICS("Themen & Fokus", Icons.Outlined.Tune),
+    LANGUAGES("Sprachen", Icons.Default.Translate),
+    SYSTEM("Verwaltung", Icons.Default.Settings),
+}
+
+private enum class TopicFilter(val label: String) {
+    ALL("Alle"),
+    ACTIVE("Aktiv"),
+    FOCUS("Top-Fokus"),
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FeedSettingsSheet(
     enabledModules: Set<MindfulModuleType>,
     selectedLanguage: LearningLanguage,
     moduleRanks: Map<MindfulModuleType, ModuleRank>,
+    streak: Int,
+    completedCount: Int,
+    totalCount: Int,
     onToggleModule: (MindfulModuleType, Boolean) -> Unit,
     onSetModuleRank: (MindfulModuleType, ModuleRank) -> Unit,
     onSelectLanguage: (LearningLanguage) -> Unit,
@@ -1624,217 +1661,762 @@ private fun FeedSettingsSheet(
     onResetLanguage: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    var selectedTab by remember { mutableStateOf(SettingsTab.TOPICS) }
+    var topicFilter by remember { mutableStateOf(TopicFilter.ALL) }
+    var toastMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(toastMessage) {
+        if (toastMessage != null) {
+            delay(2200)
+            toastMessage = null
+        }
+    }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = HikariCardBg,
+        containerColor = HikariBg,
+        dragHandle = {
+            BottomSheetDefaults.DragHandle(
+                color = Color.White.copy(alpha = 0.22f),
+                width = 38.dp,
+                height = 4.dp,
+            )
+        },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
+                .fillMaxHeight(0.88f)
+                .navigationBarsPadding()
+                .padding(horizontal = 20.dp),
         ) {
+            // ── Header Bar ───────────────────────────────────────────────
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = "Feed-Einstellungen & Ranking",
-                    color = HikariText,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = "Fertig",
-                    color = HikariAmber,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onDismiss() },
-                )
+                Column {
+                    Text(
+                        text = "Feed anpassen",
+                        color = Color.White,
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.3).sp,
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = "Personalisiere Wissensbereiche & Prioritäten",
+                        color = HikariTextMuted,
+                        fontSize = 12.sp,
+                    )
+                }
+
+                Surface(
+                    onClick = onDismiss,
+                    shape = CircleShape,
+                    color = Color.White.copy(alpha = 0.08f),
+                    border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
+                    modifier = Modifier.size(32.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Schließen",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                }
             }
 
-            Spacer(Modifier.height(14.dp))
+            // ── Segmented Tab Switcher (iOS / Linear Style) ──────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(HikariSurface)
+                    .border(0.5.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+                    .padding(3.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                SettingsTab.entries.forEach { tab ->
+                    val isTabSelected = tab == selectedTab
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(9.dp))
+                            .background(if (isTabSelected) HikariCardBg else Color.Transparent)
+                            .then(
+                                if (isTabSelected) {
+                                    Modifier.border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(9.dp))
+                                } else Modifier,
+                            )
+                            .clickable { selectedTab = tab }
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            Icon(
+                                imageVector = tab.icon,
+                                contentDescription = null,
+                                tint = if (isTabSelected) HikariAmber else HikariTextMuted,
+                                modifier = Modifier.size(14.dp),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = tab.title,
+                                color = if (isTabSelected) Color.White else HikariTextMuted,
+                                fontSize = 12.sp,
+                                fontWeight = if (isTabSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            )
+                        }
+                    }
+                }
+            }
 
+            Spacer(Modifier.height(12.dp))
+
+            // Toast feedback
+            AnimatedVisibility(visible = toastMessage != null) {
+                toastMessage?.let { msg ->
+                    Surface(
+                        color = HikariAmber.copy(alpha = 0.15f),
+                        border = BorderStroke(0.5.dp, HikariAmber.copy(alpha = 0.45f)),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("✓", color = HikariAmber, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Spacer(Modifier.width(8.dp))
+                            Text(msg, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                        }
+                    }
+                }
+            }
+
+            // ── Tab Content ──────────────────────────────────────────────
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                when (selectedTab) {
+                    SettingsTab.TOPICS -> TopicsTabContent(
+                        enabledModules = enabledModules,
+                        moduleRanks = moduleRanks,
+                        topicFilter = topicFilter,
+                        onSelectFilter = { topicFilter = it },
+                        onToggleModule = onToggleModule,
+                        onSetModuleRank = onSetModuleRank,
+                    )
+                    SettingsTab.LANGUAGES -> LanguagesTabContent(
+                        selectedLanguage = selectedLanguage,
+                        onSelectLanguage = onSelectLanguage,
+                        onResetLanguage = {
+                            onResetLanguage()
+                            toastMessage = "Sprach-Fortschritt wurde zurückgesetzt"
+                        },
+                    )
+                    SettingsTab.SYSTEM -> SystemTabContent(
+                        streak = streak,
+                        completedCount = completedCount,
+                        totalCount = totalCount,
+                        onResetDaily = {
+                            onResetDaily()
+                            toastMessage = "Tagesfortschritt zurückgesetzt"
+                        },
+                        onResetLanguage = {
+                            onResetLanguage()
+                            toastMessage = "Sprach-Fortschritt zurückgesetzt"
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ── Tab 1: Themen & Fokus ────────────────────────────────────────────────────
+
+@Composable
+private fun TopicsTabContent(
+    enabledModules: Set<MindfulModuleType>,
+    moduleRanks: Map<MindfulModuleType, ModuleRank>,
+    topicFilter: TopicFilter,
+    onSelectFilter: (TopicFilter) -> Unit,
+    onToggleModule: (MindfulModuleType, Boolean) -> Unit,
+    onSetModuleRank: (MindfulModuleType, ModuleRank) -> Unit,
+) {
+    val activeCount = enabledModules.size
+    val focusCount = MindfulModuleType.entries.count {
+        it in enabledModules && (moduleRanks[it] ?: ModuleRank.RANK_3) == ModuleRank.RANK_1
+    }
+
+    val filteredModules = remember(enabledModules, moduleRanks, topicFilter) {
+        when (topicFilter) {
+            TopicFilter.ALL -> MindfulModuleType.entries
+            TopicFilter.ACTIVE -> MindfulModuleType.entries.filter { it in enabledModules }
+            TopicFilter.FOCUS -> MindfulModuleType.entries.filter {
+                it in enabledModules && (moduleRanks[it] ?: ModuleRank.RANK_3) == ModuleRank.RANK_1
+            }
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Minimalist Info & Filter Bar
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TopicFilter.entries.forEach { f ->
+                val count = when (f) {
+                    TopicFilter.ALL -> MindfulModuleType.entries.size
+                    TopicFilter.ACTIVE -> activeCount
+                    TopicFilter.FOCUS -> focusCount
+                }
+                val isSelected = f == topicFilter
+                Surface(
+                    onClick = { onSelectFilter(f) },
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (isSelected) HikariAmber.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.05f),
+                    border = BorderStroke(
+                        0.5.dp,
+                        if (isSelected) HikariAmber.copy(alpha = 0.65f) else Color.White.copy(alpha = 0.08f),
+                    ),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = f.label,
+                            color = if (isSelected) HikariAmber else HikariTextMuted,
+                            fontSize = 11.5.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        )
+                        Spacer(Modifier.width(5.dp))
+                        Text(
+                            text = "$count",
+                            color = if (isSelected) HikariAmber.copy(alpha = 0.8f) else HikariTextFaint,
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+            }
+        }
+
+        if (filteredModules.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("🔍", fontSize = 28.sp)
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = if (topicFilter == TopicFilter.FOCUS) "Noch kein Thema im Top-Fokus" else "Keine aktiven Themen",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "Wähle bei einem Thema „Top-Fokus“, um es zu priorisieren.",
+                        color = HikariTextMuted,
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+        } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(520.dp),
+                    .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(bottom = 24.dp),
             ) {
-                // Section: Zielsprache
-                item {
-                    Text(
-                        "ZIELSPRACHE FÜR LERN-EINHEITEN",
-                        color = HikariAmber,
-                        fontSize = 10.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.2.sp,
-                    )
-                    Spacer(Modifier.height(6.dp))
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        LearningLanguage.entries.forEach { lang ->
-                            val isSelected = lang == selectedLanguage
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(if (isSelected) HikariAmber else HikariSurfaceHigh)
-                                    .clickable { onSelectLanguage(lang) }
-                                    .padding(horizontal = 10.dp, vertical = 6.dp),
-                            ) {
-                                Text(
-                                    text = "${lang.flagEmoji} ${lang.title}",
-                                    color = if (isSelected) Color.Black else HikariText,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                )
-                            }
-                        }
-                    }
-                    Spacer(Modifier.height(14.dp))
-                }
-
-                // Section: Modul-Toggles & Ranking
-                item {
-                    Text(
-                        "MODULE, RANKING & FREQUENZ",
-                        color = HikariAmber,
-                        fontSize = 10.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.2.sp,
-                    )
-                    Spacer(Modifier.height(4.dp))
-                }
-
-                items(MindfulModuleType.entries) { module ->
+                items(filteredModules, key = { it.name }) { module ->
                     val isChecked = module in enabledModules
                     val currentRank = moduleRanks[module] ?: ModuleRank.RANK_3
                     val isCappedModule = module == MindfulModuleType.QUOTE || module == MindfulModuleType.BRAIN_PUZZLE
+                    val isTopFocus = isChecked && currentRank == ModuleRank.RANK_1
 
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(HikariSurfaceHigh.copy(alpha = 0.6f))
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (isTopFocus) HikariSurfaceHigh.copy(alpha = 0.7f) else HikariSurface)
                             .border(
-                                width = if (isChecked && currentRank == ModuleRank.RANK_1) 1.dp else 0.5.dp,
-                                color = if (isChecked && currentRank == ModuleRank.RANK_1) HikariAmber.copy(alpha = 0.5f) else HikariBorder,
-                                shape = RoundedCornerShape(12.dp),
+                                width = if (isTopFocus) 1.dp else 0.5.dp,
+                                color = if (isTopFocus) HikariAmber.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.08f),
+                                shape = RoundedCornerShape(14.dp),
                             )
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                Text(module.iconEmoji, fontSize = 18.sp)
-                                Spacer(Modifier.width(10.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = if (isTopFocus) HikariAmber.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.05f),
+                                    border = BorderStroke(
+                                        0.5.dp,
+                                        if (isTopFocus) HikariAmber.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.08f),
+                                    ),
+                                    modifier = Modifier.size(38.dp),
+                                ) {
+                                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                        Text(module.iconEmoji, fontSize = 18.sp)
+                                    }
+                                }
+
+                                Spacer(Modifier.width(12.dp))
+
                                 Column {
-                                    Text(module.title, color = HikariText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                                    Text(module.subtitle, color = HikariTextFaint, fontSize = 10.sp)
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = module.title,
+                                            color = if (isChecked) Color.White else HikariTextMuted,
+                                            fontSize = 13.5.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                        )
+                                        if (isTopFocus) {
+                                            Spacer(Modifier.width(6.dp))
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .background(HikariAmber.copy(alpha = 0.20f))
+                                                    .padding(horizontal = 5.dp, vertical = 1.dp),
+                                            ) {
+                                                Text(
+                                                    text = "FOKUS",
+                                                    color = HikariAmber,
+                                                    fontSize = 8.5.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    letterSpacing = 0.6.sp,
+                                                )
+                                            }
+                                        }
+                                    }
+                                    Spacer(Modifier.height(1.dp))
+                                    Text(
+                                        text = if (isChecked) module.subtitle else "Deaktiviert",
+                                        color = HikariTextMuted,
+                                        fontSize = 11.sp,
+                                    )
                                 }
                             }
+
                             Switch(
                                 checked = isChecked,
                                 onCheckedChange = { onToggleModule(module, it) },
                                 colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.White,
+                                    checkedThumbColor = Color.Black,
                                     checkedTrackColor = HikariAmber,
                                     uncheckedThumbColor = HikariTextFaint,
-                                    uncheckedTrackColor = HikariSurface,
+                                    uncheckedTrackColor = HikariSurfaceHigh,
+                                    checkedBorderColor = Color.Transparent,
+                                    uncheckedBorderColor = Color.Transparent,
                                 ),
+                                modifier = Modifier.scale(0.85f),
                             )
                         }
 
                         if (isChecked) {
-                            Spacer(Modifier.height(8.dp))
+                            Spacer(Modifier.height(10.dp))
+
+                            // ── Sleek 3-Stufiger Segmented Slider ──────────────
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(9.dp))
+                                    .background(Color(0xFF141416))
+                                    .border(0.5.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(9.dp))
+                                    .padding(2.5.dp),
+                                horizontalArrangement = Arrangement.spacedBy(3.dp),
                             ) {
-                                ModuleRank.entries.forEach { rank ->
+                                val rankOptions = listOf(
+                                    Triple(ModuleRank.RANK_3, "Standard", "1x täglich"),
+                                    Triple(ModuleRank.RANK_2, "Erhöht", "2x täglich"),
+                                    Triple(
+                                        ModuleRank.RANK_1,
+                                        "Top-Fokus",
+                                        if (isCappedModule) "2x & oben" else "3x & oben",
+                                    ),
+                                )
+
+                                rankOptions.forEach { (rank, title, sub) ->
                                     val isSelected = currentRank == rank
-                                    val rankLabel = when (rank) {
-                                        ModuleRank.RANK_1 -> if (isCappedModule) "⭐ R1 (2x)" else "⭐ R1 (3x)"
-                                        ModuleRank.RANK_2 -> "🔷 R2 (2x)"
-                                        ModuleRank.RANK_3 -> "R3 (1x)"
-                                    }
                                     val bg = when {
                                         isSelected && rank == ModuleRank.RANK_1 -> HikariAmber
-                                        isSelected && rank == ModuleRank.RANK_2 -> Color(0xFF3B82F6)
                                         isSelected -> HikariSurfaceHigh
-                                        else -> HikariSurface.copy(alpha = 0.5f)
+                                        else -> Color.Transparent
                                     }
-                                    val textColor = when {
+                                    val titleColor = when {
                                         isSelected && rank == ModuleRank.RANK_1 -> Color.Black
                                         isSelected -> Color.White
                                         else -> HikariTextMuted
+                                    }
+                                    val subColor = when {
+                                        isSelected && rank == ModuleRank.RANK_1 -> Color.Black.copy(alpha = 0.75f)
+                                        isSelected -> Color.White.copy(alpha = 0.65f)
+                                        else -> HikariTextFaint
                                     }
 
                                     Box(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .clip(RoundedCornerShape(8.dp))
+                                            .clip(RoundedCornerShape(7.dp))
                                             .background(bg)
+                                            .then(
+                                                if (isSelected && rank != ModuleRank.RANK_1) {
+                                                    Modifier.border(0.5.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(7.dp))
+                                                } else Modifier,
+                                            )
                                             .clickable { onSetModuleRank(module, rank) }
-                                            .padding(vertical = 6.dp),
+                                            .padding(vertical = 5.dp),
                                         contentAlignment = Alignment.Center,
                                     ) {
-                                        Text(
-                                            text = rankLabel,
-                                            color = textColor,
-                                            fontSize = 10.5.sp,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        )
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Text(
+                                                text = title,
+                                                color = titleColor,
+                                                fontSize = 11.sp,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            )
+                                            Text(
+                                                text = sub,
+                                                color = subColor,
+                                                fontSize = 9.sp,
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+}
 
-                // Section: Aktionen & Reset
-                item {
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        "FORTSCHRITT & GRENZEN",
-                        color = HikariAmber,
-                        fontSize = 10.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.2.sp,
-                    )
-                    Spacer(Modifier.height(6.dp))
+// ── Tab 2: Sprachen ──────────────────────────────────────────────────────────
+
+@Composable
+private fun LanguagesTabContent(
+    selectedLanguage: LearningLanguage,
+    onSelectLanguage: (LearningLanguage) -> Unit,
+    onResetLanguage: () -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        contentPadding = PaddingValues(bottom = 24.dp),
+    ) {
+        item {
+            Text(
+                text = "Wähle die Sprache, deren Vokabeln, Grammatik und Lerneinheiten in deinen täglichen Feed einfließen.",
+                color = HikariTextMuted,
+                fontSize = 12.sp,
+                lineHeight = 17.sp,
+                modifier = Modifier.padding(bottom = 4.dp),
+            )
+        }
+
+        items(LearningLanguage.entries) { lang ->
+            val isSelected = lang == selectedLanguage
+            val subtitle = when (lang) {
+                LearningLanguage.RUSSIAN -> "A1–B2 · Kyrillisch, Vokabeln & Aussprache"
+                LearningLanguage.SPANISH -> "A1–C1 · Konversation, Redewendungen & Grammatik"
+                LearningLanguage.ENGLISH -> "Business Englisch · Verhandlung, Pitch & Karriere"
+                LearningLanguage.JAPANESE -> "Romaji & Kanji · N5–N3 Grammatik & Phrasen"
+                LearningLanguage.FRENCH -> "A1–B2 · Alltagskonversation & Wortschatz"
+                LearningLanguage.ITALIAN -> "A1–B2 · Sprachgefühl & Satzstrukturen"
+                LearningLanguage.GERMAN_ADVANCED -> "Gehobenes Deutsch · Rhetorik, Fremdwörter & Eloquenz"
+            }
+
+            Surface(
+                onClick = { onSelectLanguage(lang) },
+                shape = RoundedCornerShape(14.dp),
+                color = if (isSelected) HikariAmber.copy(alpha = 0.08f) else HikariSurface,
+                border = BorderStroke(
+                    width = if (isSelected) 1.5.dp else 0.5.dp,
+                    color = if (isSelected) HikariAmber else Color.White.copy(alpha = 0.08f),
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                        Surface(
+                            shape = CircleShape,
+                            color = Color.White.copy(alpha = 0.06f),
+                            modifier = Modifier.size(40.dp),
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(lang.flagEmoji, fontSize = 20.sp)
+                            }
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = lang.title,
+                                color = if (isSelected) HikariAmber else Color.White,
+                                fontSize = 13.5.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                            )
+                            Spacer(Modifier.height(1.dp))
+                            Text(
+                                text = subtitle,
+                                color = HikariTextMuted,
+                                fontSize = 11.sp,
+                            )
+                        }
+                    }
+
+                    if (isSelected) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(HikariAmber),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = Color.Black,
+                                modifier = Modifier.size(15.dp),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            Spacer(Modifier.height(6.dp))
+            Surface(
+                color = HikariSurface,
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Vokabel-Fortschritt zurücksetzen", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Spacer(Modifier.height(2.dp))
+                        Text("Startet die Vokabelabfolge wieder ab Tag 1", color = HikariTextMuted, fontSize = 11.sp)
+                    }
+                    Spacer(Modifier.width(10.dp))
+                    Surface(
+                        onClick = onResetLanguage,
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color.White.copy(alpha = 0.08f),
+                        border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
+                    ) {
+                        Text(
+                            text = "Reset",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── Tab 3: Verwaltung & Philosophie ──────────────────────────────────────────
+
+@Composable
+private fun SystemTabContent(
+    streak: Int,
+    completedCount: Int,
+    totalCount: Int,
+    onResetDaily: () -> Unit,
+    onResetLanguage: () -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(bottom = 24.dp),
+    ) {
+        // Mindful Philosophie
+        item {
+            Surface(
+                color = Color(0xFF10B981).copy(alpha = 0.08f),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(0.5.dp, Color(0xFF10B981).copy(alpha = 0.25f)),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.Top) {
+                    Text("🌱", fontSize = 22.sp)
+                    Spacer(Modifier.width(10.dp))
+                    Column {
+                        Text("Mindful Philosophie", color = Color(0xFFA7F3D0), fontSize = 13.5.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(3.dp))
+                        Text(
+                            "Hikari schützt deinen Geist vor Reizüberflutung. Nach Abschluss deiner Tageseinheiten stoppt der Feed bewusst, damit dein Gehirn das Gelernte festigen kann, anstatt in endlosem Scrollen zu versinken.",
+                            color = Color(0xFFD1FAE5),
+                            fontSize = 11.5.sp,
+                            lineHeight = 16.5.sp,
+                        )
+                    }
+                }
+            }
+        }
+
+        // Statistik-Kachel
+        item {
+            Surface(
+                color = HikariSurface,
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Serie", color = HikariTextMuted, fontSize = 10.5.sp)
+                        Spacer(Modifier.height(2.dp))
+                        Text("🔥 $streak Tage", color = HikariAmber, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    Box(modifier = Modifier.width(1.dp).height(24.dp).background(Color.White.copy(alpha = 0.10f)))
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Heute", color = HikariTextMuted, fontSize = 10.5.sp)
+                        Spacer(Modifier.height(2.dp))
+                        Text("$completedCount / $totalCount", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    Box(modifier = Modifier.width(1.dp).height(24.dp).background(Color.White.copy(alpha = 0.10f)))
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Status", color = HikariTextMuted, fontSize = 10.5.sp)
+                        Spacer(Modifier.height(2.dp))
+                        val isFinished = completedCount >= totalCount && totalCount > 0
+                        Text(
+                            if (isFinished) "Gemeistert ✓" else "Aktiv",
+                            color = if (isFinished) Color(0xFF10B981) else Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
+        }
+
+        // Aktionen
+        item {
+            Text(
+                "AKTIONEN",
+                color = HikariAmber,
+                fontSize = 10.5.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.2.sp,
+                modifier = Modifier.padding(top = 4.dp, bottom = 2.dp),
+            )
+
+            Surface(
+                color = HikariSurface,
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Tages-Fortschritt zurücksetzen", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Spacer(Modifier.height(2.dp))
+                            Text("Erledigte Karten von heute zurücksetzen", color = HikariTextMuted, fontSize = 11.sp)
+                        }
+                        Spacer(Modifier.width(10.dp))
+                        Surface(
+                            onClick = onResetDaily,
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color.White.copy(alpha = 0.08f),
+                            border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(Icons.Default.Refresh, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("Reset", color = Color.White, fontSize = 11.5.sp, fontWeight = FontWeight.Medium)
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+                    Box(modifier = Modifier.fillMaxWidth().height(0.5.dp).background(Color.White.copy(alpha = 0.08f)))
+                    Spacer(Modifier.height(12.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        Button(
-                            onClick = { onResetDaily() },
-                            colors = ButtonDefaults.buttonColors(containerColor = HikariSurfaceHigh),
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Text("Tages-Karten zurücksetzen", fontSize = 11.sp, color = HikariText)
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Sprach-Lernstand zurücksetzen", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Spacer(Modifier.height(2.dp))
+                            Text("Vokabeln der gewählten Sprache ab Tag 1 starten", color = HikariTextMuted, fontSize = 11.sp)
                         }
-
-                        Button(
-                            onClick = { onResetLanguage() },
-                            colors = ButtonDefaults.buttonColors(containerColor = HikariSurfaceHigh),
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.weight(1f),
+                        Spacer(Modifier.width(10.dp))
+                        Surface(
+                            onClick = onResetLanguage,
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color.White.copy(alpha = 0.08f),
+                            border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
                         ) {
-                            Text("Sprachen-Reset", fontSize = 11.sp, color = HikariText)
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(Icons.Default.Refresh, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("Reset", color = Color.White, fontSize = 11.5.sp, fontWeight = FontWeight.Medium)
+                            }
                         }
                     }
-                    Spacer(Modifier.height(24.dp))
                 }
             }
         }

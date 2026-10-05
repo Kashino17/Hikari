@@ -129,9 +129,9 @@ enum class ModuleRank(
     val frequencyLabel: String,
     val badgeColor: Color,
 ) {
-    RANK_1(1, "Rang 1 · Top-Fokus", "Rang 1", "3x täglich & ganz oben", Color(0xFF10B981)),
-    RANK_2(2, "Rang 2 · Erhöht", "Rang 2", "2x täglich", Color(0xFF3B82F6)),
-    RANK_3(3, "Rang 3 · Standard", "Rang 3", "1x täglich", Color(0xFF6B7280));
+    RANK_1(1, "Top-Fokus", "Fokus", "3x täglich & an erster Stelle", Color(0xFFFBBF24)),
+    RANK_2(2, "Erhöht", "Erhöht", "2x täglich", Color(0xFF60A5FA)),
+    RANK_3(3, "Standard", "Standard", "1x täglich", Color(0xFF9CA3AF));
 
     companion object {
         fun fromNumber(num: Int): ModuleRank = entries.firstOrNull { it.rankNumber == num } ?: RANK_3
