@@ -83,6 +83,7 @@ import com.hikari.app.domain.feed.LearningLanguage
 import com.hikari.app.domain.feed.MentalModelCardItem
 import com.hikari.app.domain.feed.MindfulCard
 import com.hikari.app.domain.feed.MindfulModuleType
+import com.hikari.app.domain.feed.ModuleRank
 import com.hikari.app.domain.feed.PhilosophyCardItem
 import com.hikari.app.domain.feed.QuoteCardItem
 import com.hikari.app.domain.feed.ScienceCardItem
@@ -120,6 +121,7 @@ fun FeedScreen(
     val isGoalCompleted by vm.isGoalCompleted.collectAsState()
     val enabledModules by vm.enabledModules.collectAsState()
     val selectedLanguage by vm.selectedLanguage.collectAsState()
+    val moduleRanks by vm.moduleRanks.collectAsState()
     val streak = remember(completedCardIds) { vm.getStreak() }
 
     var showSettingsSheet by remember { mutableStateOf(false) }
@@ -256,20 +258,22 @@ fun FeedScreen(
 
                 items(cards, key = { it.id }) { card ->
                     val isDone = card.id in completedCardIds
+                    val onDone = { vm.markCardCompleted(card.id) }
+                    val onSkip = { vm.markCardCompleted(card.id) }
                     when (card) {
-                        is QuoteCardItem -> QuoteCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
-                        is BrainPuzzleCardItem -> BrainPuzzleCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
-                        is LanguageCardItem -> LanguageCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
-                        is HistoryCardItem -> HistoryCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
-                        is MentalModelCardItem -> MentalModelCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
-                        is BreathworkCardItem -> BreathworkCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
-                        is ScienceCardItem -> ScienceCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
-                        is FinanceCardItem -> FinanceCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
-                        is GeographyCardItem -> GeographyCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
-                        is SpeedMathCardItem -> SpeedMathCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
-                        is ArtCultureCardItem -> ArtCultureCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
-                        is VocabularyCardItem -> VocabularyCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
-                        is PhilosophyCardItem -> PhilosophyCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
+                        is QuoteCardItem -> QuoteCard(card, isDone, onDone = onDone, onSkip = onSkip)
+                        is BrainPuzzleCardItem -> BrainPuzzleCard(card, isDone, onDone = onDone, onSkip = onSkip)
+                        is LanguageCardItem -> LanguageCard(card, isDone, onDone = onDone, onSkip = onSkip)
+                        is HistoryCardItem -> HistoryCard(card, isDone, onDone = onDone, onSkip = onSkip)
+                        is MentalModelCardItem -> MentalModelCard(card, isDone, onDone = onDone, onSkip = onSkip)
+                        is BreathworkCardItem -> BreathworkCard(card, isDone, onDone = onDone, onSkip = onSkip)
+                        is ScienceCardItem -> ScienceCard(card, isDone, onDone = onDone, onSkip = onSkip)
+                        is FinanceCardItem -> FinanceCard(card, isDone, onDone = onDone, onSkip = onSkip)
+                        is GeographyCardItem -> GeographyCard(card, isDone, onDone = onDone, onSkip = onSkip)
+                        is SpeedMathCardItem -> SpeedMathCard(card, isDone, onDone = onDone, onSkip = onSkip)
+                        is ArtCultureCardItem -> ArtCultureCard(card, isDone, onDone = onDone, onSkip = onSkip)
+                        is VocabularyCardItem -> VocabularyCard(card, isDone, onDone = onDone, onSkip = onSkip)
+                        is PhilosophyCardItem -> PhilosophyCard(card, isDone, onDone = onDone, onSkip = onSkip)
                     }
                 }
             }
@@ -281,7 +285,9 @@ fun FeedScreen(
         FeedSettingsSheet(
             enabledModules = enabledModules,
             selectedLanguage = selectedLanguage,
+            moduleRanks = moduleRanks,
             onToggleModule = { module, enabled -> vm.toggleModule(module, enabled) },
+            onSetModuleRank = { module, rank -> vm.setModuleRank(module, rank) },
             onSelectLanguage = { vm.setLearningLanguage(it) },
             onResetDaily = { vm.resetDailyProgress() },
             onResetLanguage = { vm.resetLanguageProgress() },
@@ -364,22 +370,29 @@ private fun ModuleCardHeader(
     emoji: String,
     title: String,
     badgeText: String? = null,
+    rank: ModuleRank = ModuleRank.RANK_3,
     isDone: Boolean,
     onDone: () -> Unit,
+    onSkip: (() -> Unit)? = null,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f, fill = false),
+        ) {
             Text(emoji, fontSize = 16.sp)
             Spacer(Modifier.width(8.dp))
             Text(
                 text = title,
                 color = HikariText,
-                fontSize = 13.sp,
+                fontSize = 12.5.sp,
                 fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             if (badgeText != null) {
                 Spacer(Modifier.width(6.dp))
@@ -389,27 +402,66 @@ private fun ModuleCardHeader(
                         .background(HikariSurfaceHigh)
                         .padding(horizontal = 5.dp, vertical = 2.dp),
                 ) {
-                    Text(badgeText, color = HikariAmber, fontSize = 9.5.sp, fontWeight = FontWeight.Bold)
+                    Text(badgeText, color = HikariAmber, fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                }
+            }
+            if (rank == ModuleRank.RANK_1) {
+                Spacer(Modifier.width(6.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0xFF10B981).copy(alpha = 0.2f))
+                        .border(0.5.dp, Color(0xFF10B981).copy(alpha = 0.6f), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 5.dp, vertical = 2.dp),
+                ) {
+                    Text("⭐ R1 · TOP", color = Color(0xFF10B981), fontSize = 8.5.sp, fontWeight = FontWeight.Bold)
+                }
+            } else if (rank == ModuleRank.RANK_2) {
+                Spacer(Modifier.width(6.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0xFF3B82F6).copy(alpha = 0.16f))
+                        .border(0.5.dp, Color(0xFF3B82F6).copy(alpha = 0.5f), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 5.dp, vertical = 2.dp),
+                ) {
+                    Text("🔷 R2", color = Color(0xFF60A5FA), fontSize = 8.5.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
 
-        IconButton(
-            onClick = onDone,
-            modifier = Modifier.size(28.dp),
-        ) {
-            Icon(
-                imageVector = if (isDone) Icons.Default.CheckCircle else Icons.Default.Check,
-                contentDescription = "Erledigt",
-                tint = if (isDone) Color(0xFF10B981) else HikariTextFaint,
-                modifier = Modifier.size(18.dp),
-            )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (!isDone && onSkip != null) {
+                Text(
+                    text = "Überspringen ⏩",
+                    color = HikariTextMuted,
+                    fontSize = 10.5.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable { onSkip() }
+                        .padding(horizontal = 6.dp, vertical = 4.dp),
+                )
+                Spacer(Modifier.width(2.dp))
+            }
+
+            IconButton(
+                onClick = onDone,
+                modifier = Modifier.size(28.dp),
+            ) {
+                Icon(
+                    imageVector = if (isDone) Icons.Default.CheckCircle else Icons.Default.Check,
+                    contentDescription = "Erledigt",
+                    tint = if (isDone) Color(0xFF10B981) else HikariTextFaint,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun QuoteCard(item: QuoteCardItem, isDone: Boolean, onDone: () -> Unit) {
+private fun QuoteCard(item: QuoteCardItem, isDone: Boolean, onDone: () -> Unit, onSkip: () -> Unit = onDone) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -423,7 +475,7 @@ private fun QuoteCard(item: QuoteCardItem, isDone: Boolean, onDone: () -> Unit) 
             .padding(14.dp),
     ) {
         Column {
-            ModuleCardHeader("📜", "LEBENSWEISHEIT", "Stoiker", isDone, onDone)
+            ModuleCardHeader("📜", "LEBENSWEISHEIT", "Stoiker", rank = item.rank, isDone = isDone, onDone = onDone, onSkip = onSkip)
             Spacer(Modifier.height(10.dp))
             Text(
                 text = "„${item.quote}“",
@@ -460,7 +512,7 @@ private fun QuoteCard(item: QuoteCardItem, isDone: Boolean, onDone: () -> Unit) 
 }
 
 @Composable
-private fun BrainPuzzleCard(item: BrainPuzzleCardItem, isDone: Boolean, onDone: () -> Unit) {
+private fun BrainPuzzleCard(item: BrainPuzzleCardItem, isDone: Boolean, onDone: () -> Unit, onSkip: () -> Unit = onDone) {
     var selectedOption by remember { mutableStateOf<Int?>(null) }
     val answered = selectedOption != null
 
@@ -477,7 +529,7 @@ private fun BrainPuzzleCard(item: BrainPuzzleCardItem, isDone: Boolean, onDone: 
             .padding(14.dp),
     ) {
         Column {
-            ModuleCardHeader("🧩", item.title.uppercase(), item.category, isDone, onDone)
+            ModuleCardHeader("🧩", item.title.uppercase(), item.category, rank = item.rank, isDone = isDone, onDone = onDone, onSkip = onSkip)
             Spacer(Modifier.height(8.dp))
             Text(item.question, color = HikariText, fontSize = 13.5.sp, fontWeight = FontWeight.Medium)
             Spacer(Modifier.height(12.dp))
@@ -541,7 +593,7 @@ private fun BrainPuzzleCard(item: BrainPuzzleCardItem, isDone: Boolean, onDone: 
 }
 
 @Composable
-private fun LanguageCard(item: LanguageCardItem, isDone: Boolean, onDone: () -> Unit) {
+private fun LanguageCard(item: LanguageCardItem, isDone: Boolean, onDone: () -> Unit, onSkip: () -> Unit = onDone) {
     var revealed by remember { mutableStateOf(false) }
     var selectedReply by remember { mutableStateOf<Int?>(null) }
 
@@ -558,7 +610,7 @@ private fun LanguageCard(item: LanguageCardItem, isDone: Boolean, onDone: () -> 
             .padding(14.dp),
     ) {
         Column {
-            ModuleCardHeader("🗣️", "SPRACHEN LERNEN", item.language.title, isDone, onDone)
+            ModuleCardHeader("🗣️", "SPRACHEN LERNEN", item.language.title, rank = item.rank, isDone = isDone, onDone = onDone, onSkip = onSkip)
             Spacer(Modifier.height(10.dp))
 
             // Flashcard
@@ -650,7 +702,7 @@ private fun LanguageCard(item: LanguageCardItem, isDone: Boolean, onDone: () -> 
 }
 
 @Composable
-private fun HistoryCard(item: HistoryCardItem, isDone: Boolean, onDone: () -> Unit) {
+private fun HistoryCard(item: HistoryCardItem, isDone: Boolean, onDone: () -> Unit, onSkip: () -> Unit = onDone) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -664,7 +716,7 @@ private fun HistoryCard(item: HistoryCardItem, isDone: Boolean, onDone: () -> Un
             .padding(14.dp),
     ) {
         Column {
-            ModuleCardHeader("🏛️", "HEUTE IN DER GESCHICHTE", item.dateLabel, isDone, onDone)
+            ModuleCardHeader("🏛️", "HEUTE IN DER GESCHICHTE", item.dateLabel, rank = item.rank, isDone = isDone, onDone = onDone, onSkip = onSkip)
             Spacer(Modifier.height(8.dp))
             Text(item.eventTitle, color = HikariText, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(4.dp))
@@ -684,7 +736,7 @@ private fun HistoryCard(item: HistoryCardItem, isDone: Boolean, onDone: () -> Un
 }
 
 @Composable
-private fun MentalModelCard(item: MentalModelCardItem, isDone: Boolean, onDone: () -> Unit) {
+private fun MentalModelCard(item: MentalModelCardItem, isDone: Boolean, onDone: () -> Unit, onSkip: () -> Unit = onDone) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -698,7 +750,7 @@ private fun MentalModelCard(item: MentalModelCardItem, isDone: Boolean, onDone: 
             .padding(14.dp),
     ) {
         Column {
-            ModuleCardHeader("💡", "KRITISCHES DENKEN", item.category, isDone, onDone)
+            ModuleCardHeader("💡", "KRITISCHES DENKEN", item.category, rank = item.rank, isDone = isDone, onDone = onDone, onSkip = onSkip)
             Spacer(Modifier.height(8.dp))
             Text(item.modelName, color = HikariText, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(4.dp))
@@ -721,7 +773,7 @@ private fun MentalModelCard(item: MentalModelCardItem, isDone: Boolean, onDone: 
 }
 
 @Composable
-private fun BreathworkCard(item: BreathworkCardItem, isDone: Boolean, onDone: () -> Unit) {
+private fun BreathworkCard(item: BreathworkCardItem, isDone: Boolean, onDone: () -> Unit, onSkip: () -> Unit = onDone) {
     var active by remember { mutableStateOf(false) }
     var phase by remember { mutableStateOf("Bereit") }
     var secondsRemaining by remember { mutableIntStateOf(4) }
@@ -753,7 +805,7 @@ private fun BreathworkCard(item: BreathworkCardItem, isDone: Boolean, onDone: ()
             .padding(14.dp),
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            ModuleCardHeader("🫁", "1-MINUTEN-ATEMÜBUNG", "Box Breathing", isDone, onDone)
+            ModuleCardHeader("🫁", "1-MINUTEN-ATEMÜBUNG", "Box Breathing", rank = item.rank, isDone = isDone, onDone = onDone, onSkip = onSkip)
             Spacer(Modifier.height(10.dp))
             Text(item.scientificBenefit, color = HikariTextMuted, fontSize = 11.5.sp, textAlign = TextAlign.Center)
             Spacer(Modifier.height(12.dp))
@@ -790,7 +842,7 @@ private fun BreathworkCard(item: BreathworkCardItem, isDone: Boolean, onDone: ()
 }
 
 @Composable
-private fun ScienceCard(item: ScienceCardItem, isDone: Boolean, onDone: () -> Unit) {
+private fun ScienceCard(item: ScienceCardItem, isDone: Boolean, onDone: () -> Unit, onSkip: () -> Unit = onDone) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -804,7 +856,7 @@ private fun ScienceCard(item: ScienceCardItem, isDone: Boolean, onDone: () -> Un
             .padding(14.dp),
     ) {
         Column {
-            ModuleCardHeader("🔬", "WISSENSCHAFTS-HAPPEN", item.phenomenon, isDone, onDone)
+            ModuleCardHeader("🔬", "WISSENSCHAFTS-HAPPEN", item.phenomenon, rank = item.rank, isDone = isDone, onDone = onDone, onSkip = onSkip)
             Spacer(Modifier.height(8.dp))
             Text(item.question, color = HikariAmber, fontSize = 13.5.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(4.dp))
@@ -824,7 +876,7 @@ private fun ScienceCard(item: ScienceCardItem, isDone: Boolean, onDone: () -> Un
 }
 
 @Composable
-private fun FinanceCard(item: FinanceCardItem, isDone: Boolean, onDone: () -> Unit) {
+private fun FinanceCard(item: FinanceCardItem, isDone: Boolean, onDone: () -> Unit, onSkip: () -> Unit = onDone) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -838,7 +890,7 @@ private fun FinanceCard(item: FinanceCardItem, isDone: Boolean, onDone: () -> Un
             .padding(14.dp),
     ) {
         Column {
-            ModuleCardHeader("💰", "FINANZIELLE BILDUNG", "Life Skill", isDone, onDone)
+            ModuleCardHeader("💰", "FINANZIELLE BILDUNG", "Life Skill", rank = item.rank, isDone = isDone, onDone = onDone, onSkip = onSkip)
             Spacer(Modifier.height(8.dp))
             Text(item.title, color = HikariText, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(4.dp))
@@ -861,7 +913,7 @@ private fun FinanceCard(item: FinanceCardItem, isDone: Boolean, onDone: () -> Un
 }
 
 @Composable
-private fun GeographyCard(item: GeographyCardItem, isDone: Boolean, onDone: () -> Unit) {
+private fun GeographyCard(item: GeographyCardItem, isDone: Boolean, onDone: () -> Unit, onSkip: () -> Unit = onDone) {
     var selectedIdx by remember { mutableStateOf<Int?>(null) }
     val answered = selectedIdx != null
 
@@ -878,7 +930,7 @@ private fun GeographyCard(item: GeographyCardItem, isDone: Boolean, onDone: () -
             .padding(14.dp),
     ) {
         Column {
-            ModuleCardHeader("🌍", "WELTATLAS-QUIZ", "Geografie", isDone, onDone)
+            ModuleCardHeader("🌍", "WELTATLAS-QUIZ", "Geografie", rank = item.rank, isDone = isDone, onDone = onDone, onSkip = onSkip)
             Spacer(Modifier.height(8.dp))
             Text(item.question, color = HikariText, fontSize = 13.5.sp, fontWeight = FontWeight.Medium)
             Spacer(Modifier.height(10.dp))
@@ -917,7 +969,7 @@ private fun GeographyCard(item: GeographyCardItem, isDone: Boolean, onDone: () -
 }
 
 @Composable
-private fun SpeedMathCard(item: SpeedMathCardItem, isDone: Boolean, onDone: () -> Unit) {
+private fun SpeedMathCard(item: SpeedMathCardItem, isDone: Boolean, onDone: () -> Unit, onSkip: () -> Unit = onDone) {
     var revealed by remember { mutableStateOf(false) }
 
     Box(
@@ -933,7 +985,7 @@ private fun SpeedMathCard(item: SpeedMathCardItem, isDone: Boolean, onDone: () -
             .padding(14.dp),
     ) {
         Column {
-            ModuleCardHeader("🔢", "KOPFRECHNEN-TRICK", item.trickTitle, isDone, onDone)
+            ModuleCardHeader("🔢", "KOPFRECHNEN-TRICK", item.trickTitle, rank = item.rank, isDone = isDone, onDone = onDone, onSkip = onSkip)
             Spacer(Modifier.height(8.dp))
             Text(item.formulaShortcut, color = HikariAmber, fontSize = 13.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(4.dp))
@@ -962,7 +1014,7 @@ private fun SpeedMathCard(item: SpeedMathCardItem, isDone: Boolean, onDone: () -
 }
 
 @Composable
-private fun ArtCultureCard(item: ArtCultureCardItem, isDone: Boolean, onDone: () -> Unit) {
+private fun ArtCultureCard(item: ArtCultureCardItem, isDone: Boolean, onDone: () -> Unit, onSkip: () -> Unit = onDone) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -976,7 +1028,7 @@ private fun ArtCultureCard(item: ArtCultureCardItem, isDone: Boolean, onDone: ()
             .padding(14.dp),
     ) {
         Column {
-            ModuleCardHeader("🎨", "KUNST & KULTUR", "Meisterwerk", isDone, onDone)
+            ModuleCardHeader("🎨", "KUNST & KULTUR", "Meisterwerk", rank = item.rank, isDone = isDone, onDone = onDone, onSkip = onSkip)
             Spacer(Modifier.height(8.dp))
             Text("„${item.masterpieceTitle}“", color = HikariText, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             Text("${item.artist} (${item.yearAndOrigin})", color = HikariAmber, fontSize = 11.5.sp)
@@ -987,7 +1039,7 @@ private fun ArtCultureCard(item: ArtCultureCardItem, isDone: Boolean, onDone: ()
 }
 
 @Composable
-private fun VocabularyCard(item: VocabularyCardItem, isDone: Boolean, onDone: () -> Unit) {
+private fun VocabularyCard(item: VocabularyCardItem, isDone: Boolean, onDone: () -> Unit, onSkip: () -> Unit = onDone) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -1001,7 +1053,7 @@ private fun VocabularyCard(item: VocabularyCardItem, isDone: Boolean, onDone: ()
             .padding(14.dp),
     ) {
         Column {
-            ModuleCardHeader("📚", "WORTSCHATZ-MEISTER", "Wort des Tages", isDone, onDone)
+            ModuleCardHeader("📚", "WORTSCHATZ-MEISTER", "Wort des Tages", rank = item.rank, isDone = isDone, onDone = onDone, onSkip = onSkip)
             Spacer(Modifier.height(8.dp))
             Text(item.word, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             Text(item.wordType, color = HikariTextFaint, fontSize = 10.5.sp)
@@ -1016,7 +1068,7 @@ private fun VocabularyCard(item: VocabularyCardItem, isDone: Boolean, onDone: ()
 }
 
 @Composable
-private fun PhilosophyCard(item: PhilosophyCardItem, isDone: Boolean, onDone: () -> Unit) {
+private fun PhilosophyCard(item: PhilosophyCardItem, isDone: Boolean, onDone: () -> Unit, onSkip: () -> Unit = onDone) {
     var votedOption by remember { mutableStateOf<String?>(null) }
 
     Box(
@@ -1032,7 +1084,7 @@ private fun PhilosophyCard(item: PhilosophyCardItem, isDone: Boolean, onDone: ()
             .padding(14.dp),
     ) {
         Column {
-            ModuleCardHeader("⚖️", "GEDANKENEXPERIMENT", "Ethik", isDone, onDone)
+            ModuleCardHeader("⚖️", "GEDANKENEXPERIMENT", "Ethik", rank = item.rank, isDone = isDone, onDone = onDone, onSkip = onSkip)
             Spacer(Modifier.height(8.dp))
             Text(item.dilemmaTitle, color = HikariText, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(4.dp))
@@ -1092,7 +1144,9 @@ private fun PhilosophyCard(item: PhilosophyCardItem, isDone: Boolean, onDone: ()
 private fun FeedSettingsSheet(
     enabledModules: Set<MindfulModuleType>,
     selectedLanguage: LearningLanguage,
+    moduleRanks: Map<MindfulModuleType, ModuleRank>,
     onToggleModule: (MindfulModuleType, Boolean) -> Unit,
+    onSetModuleRank: (MindfulModuleType, ModuleRank) -> Unit,
     onSelectLanguage: (LearningLanguage) -> Unit,
     onResetDaily: () -> Unit,
     onResetLanguage: () -> Unit,
@@ -1114,7 +1168,7 @@ private fun FeedSettingsSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Feed-Einstellungen",
+                    text = "Feed-Einstellungen & Ranking",
                     color = HikariText,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
@@ -1133,7 +1187,7 @@ private fun FeedSettingsSheet(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(480.dp),
+                    .height(520.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 // Section: Zielsprache
@@ -1173,10 +1227,10 @@ private fun FeedSettingsSheet(
                     Spacer(Modifier.height(14.dp))
                 }
 
-                // Section: Modul-Toggles (alle 13 Module)
+                // Section: Modul-Toggles & Ranking
                 item {
                     Text(
-                        "AKTIVE MODULE (INHALTS-KONTROLLE)",
+                        "MODULE, RANKING & FREQUENZ",
                         color = HikariAmber,
                         fontSize = 10.5.sp,
                         fontWeight = FontWeight.Bold,
@@ -1187,33 +1241,90 @@ private fun FeedSettingsSheet(
 
                 items(MindfulModuleType.entries) { module ->
                     val isChecked = module in enabledModules
-                    Row(
+                    val currentRank = moduleRanks[module] ?: ModuleRank.RANK_3
+                    val isCappedModule = module == MindfulModuleType.QUOTE || module == MindfulModuleType.BRAIN_PUZZLE
+
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(12.dp))
                             .background(HikariSurfaceHigh.copy(alpha = 0.6f))
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
+                            .border(
+                                width = if (isChecked && currentRank == ModuleRank.RANK_1) 1.dp else 0.5.dp,
+                                color = if (isChecked && currentRank == ModuleRank.RANK_1) HikariAmber.copy(alpha = 0.5f) else HikariBorder,
+                                shape = RoundedCornerShape(12.dp),
+                            )
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                            Text(module.iconEmoji, fontSize = 18.sp)
-                            Spacer(Modifier.width(10.dp))
-                            Column {
-                                Text(module.title, color = HikariText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                                Text(module.subtitle, color = HikariTextFaint, fontSize = 10.sp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                Text(module.iconEmoji, fontSize = 18.sp)
+                                Spacer(Modifier.width(10.dp))
+                                Column {
+                                    Text(module.title, color = HikariText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                    Text(module.subtitle, color = HikariTextFaint, fontSize = 10.sp)
+                                }
+                            }
+                            Switch(
+                                checked = isChecked,
+                                onCheckedChange = { onToggleModule(module, it) },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = HikariAmber,
+                                    uncheckedThumbColor = HikariTextFaint,
+                                    uncheckedTrackColor = HikariSurface,
+                                ),
+                            )
+                        }
+
+                        if (isChecked) {
+                            Spacer(Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                ModuleRank.entries.forEach { rank ->
+                                    val isSelected = currentRank == rank
+                                    val rankLabel = when (rank) {
+                                        ModuleRank.RANK_1 -> if (isCappedModule) "⭐ R1 (2x)" else "⭐ R1 (3x)"
+                                        ModuleRank.RANK_2 -> "🔷 R2 (2x)"
+                                        ModuleRank.RANK_3 -> "R3 (1x)"
+                                    }
+                                    val bg = when {
+                                        isSelected && rank == ModuleRank.RANK_1 -> HikariAmber
+                                        isSelected && rank == ModuleRank.RANK_2 -> Color(0xFF3B82F6)
+                                        isSelected -> HikariSurfaceHigh
+                                        else -> HikariSurface.copy(alpha = 0.5f)
+                                    }
+                                    val textColor = when {
+                                        isSelected && rank == ModuleRank.RANK_1 -> Color.Black
+                                        isSelected -> Color.White
+                                        else -> HikariTextMuted
+                                    }
+
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(bg)
+                                            .clickable { onSetModuleRank(module, rank) }
+                                            .padding(vertical = 6.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            text = rankLabel,
+                                            color = textColor,
+                                            fontSize = 10.5.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        )
+                                    }
+                                }
                             }
                         }
-                        Switch(
-                            checked = isChecked,
-                            onCheckedChange = { onToggleModule(module, it) },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
-                                checkedTrackColor = HikariAmber,
-                                uncheckedThumbColor = HikariTextFaint,
-                                uncheckedTrackColor = HikariSurface,
-                            ),
-                        )
                     }
                 }
 

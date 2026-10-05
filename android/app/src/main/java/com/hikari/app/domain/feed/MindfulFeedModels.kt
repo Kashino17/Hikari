@@ -122,11 +122,28 @@ enum class LearningLanguage(
     }
 }
 
+enum class ModuleRank(
+    val rankNumber: Int,
+    val title: String,
+    val shortLabel: String,
+    val frequencyLabel: String,
+    val badgeColor: Color,
+) {
+    RANK_1(1, "Rang 1 · Top-Fokus", "Rang 1", "3x täglich & ganz oben", Color(0xFF10B981)),
+    RANK_2(2, "Rang 2 · Erhöht", "Rang 2", "2x täglich", Color(0xFF3B82F6)),
+    RANK_3(3, "Rang 3 · Standard", "Rang 3", "1x täglich", Color(0xFF6B7280));
+
+    companion object {
+        fun fromNumber(num: Int): ModuleRank = entries.firstOrNull { it.rankNumber == num } ?: RANK_3
+    }
+}
+
 // ── Modul-Datenstrukturen ───────────────────────────────────────────────────
 
 sealed interface MindfulCard {
     val id: String
     val type: MindfulModuleType
+    val rank: ModuleRank get() = ModuleRank.RANK_3
 }
 
 data class QuoteCardItem(
@@ -135,6 +152,7 @@ data class QuoteCardItem(
     val author: String,
     val contextEra: String,
     val reflectionPrompt: String,
+    override val rank: ModuleRank = ModuleRank.RANK_2,
 ) : MindfulCard {
     override val type = MindfulModuleType.QUOTE
 }
@@ -148,6 +166,7 @@ data class BrainPuzzleCardItem(
     val correctIndex: Int,
     val explanation: String,
     val brainRegionTrained: String,
+    override val rank: ModuleRank = ModuleRank.RANK_2,
 ) : MindfulCard {
     override val type = MindfulModuleType.BRAIN_PUZZLE
 }
@@ -165,6 +184,7 @@ data class LanguageCardItem(
     val dialoguePrompt: String,
     val dialogueReplies: List<String>,
     val correctReplyIndex: Int,
+    override val rank: ModuleRank = ModuleRank.RANK_1,
 ) : MindfulCard {
     override val type = MindfulModuleType.LANGUAGE
 }
@@ -175,6 +195,7 @@ data class HistoryCardItem(
     val eventTitle: String,
     val description: String,
     val whyItMatters: String,
+    override val rank: ModuleRank = ModuleRank.RANK_3,
 ) : MindfulCard {
     override val type = MindfulModuleType.HISTORY
 }
@@ -186,6 +207,7 @@ data class MentalModelCardItem(
     val explanation: String,
     val realLifeExample: String,
     val actionableDefense: String,
+    override val rank: ModuleRank = ModuleRank.RANK_3,
 ) : MindfulCard {
     override val type = MindfulModuleType.MENTAL_MODEL
 }
@@ -198,6 +220,7 @@ data class BreathworkCardItem(
     val exhaleSeconds: Int = 4,
     val holdOutSeconds: Int = 4,
     val scientificBenefit: String,
+    override val rank: ModuleRank = ModuleRank.RANK_3,
 ) : MindfulCard {
     override val type = MindfulModuleType.BREATHWORK
 }
@@ -208,6 +231,7 @@ data class ScienceCardItem(
     val question: String,
     val coreExplanation: String,
     val fascinatingDetail: String,
+    override val rank: ModuleRank = ModuleRank.RANK_3,
 ) : MindfulCard {
     override val type = MindfulModuleType.SCIENCE
 }
@@ -218,6 +242,7 @@ data class FinanceCardItem(
     val corePrinciple: String,
     val practicalExample: String,
     val takeawayRule: String,
+    override val rank: ModuleRank = ModuleRank.RANK_3,
 ) : MindfulCard {
     override val type = MindfulModuleType.FINANCE
 }
@@ -228,6 +253,7 @@ data class GeographyCardItem(
     val options: List<String>,
     val correctIndex: Int,
     val interestingFact: String,
+    override val rank: ModuleRank = ModuleRank.RANK_3,
 ) : MindfulCard {
     override val type = MindfulModuleType.GEOGRAPHY
 }
@@ -239,6 +265,7 @@ data class SpeedMathCardItem(
     val explanation: String,
     val practiceChallenge: String,
     val challengeResult: String,
+    override val rank: ModuleRank = ModuleRank.RANK_3,
 ) : MindfulCard {
     override val type = MindfulModuleType.SPEED_MATH
 }
@@ -249,6 +276,7 @@ data class ArtCultureCardItem(
     val artist: String,
     val yearAndOrigin: String,
     val backStory: String,
+    override val rank: ModuleRank = ModuleRank.RANK_3,
 ) : MindfulCard {
     override val type = MindfulModuleType.ART_CULTURE
 }
@@ -260,6 +288,7 @@ data class VocabularyCardItem(
     val definition: String,
     val etymology: String,
     val sampleSentence: String,
+    override val rank: ModuleRank = ModuleRank.RANK_3,
 ) : MindfulCard {
     override val type = MindfulModuleType.VOCABULARY
 }
@@ -273,6 +302,7 @@ data class PhilosophyCardItem(
     val schoolA: String,
     val schoolB: String,
     val philosophicalInsight: String,
+    override val rank: ModuleRank = ModuleRank.RANK_3,
 ) : MindfulCard {
     override val type = MindfulModuleType.PHILOSOPHY
 }

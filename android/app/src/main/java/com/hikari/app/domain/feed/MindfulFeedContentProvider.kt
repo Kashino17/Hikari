@@ -8,99 +8,160 @@ object MindfulFeedContentProvider {
         calendar: Calendar = Calendar.getInstance(),
         enabledModules: Set<MindfulModuleType>,
         language: LearningLanguage,
+        moduleRanks: Map<MindfulModuleType, ModuleRank> = emptyMap(),
     ): List<MindfulCard> {
         val dayOfYear = calendar.get(Calendar.DAY_OF_YEAR)
-        val cards = mutableListOf<MindfulCard>()
 
-        // 1. ZITATE & LEBENSWEISHEITEN (Exakt max 2 / Tag)
-        if (MindfulModuleType.QUOTE in enabledModules) {
-            val q1Index = (dayOfYear * 2) % QUOTE_POOL.size
-            val q2Index = (dayOfYear * 2 + 1) % QUOTE_POOL.size
-            cards.add(QUOTE_POOL[q1Index].copy(id = "quote-1-$dayOfYear"))
-            cards.add(QUOTE_POOL[q2Index].copy(id = "quote-2-$dayOfYear"))
+        // Ermittle für jedes Modul den effektiven Rang
+        fun rankFor(module: MindfulModuleType): ModuleRank {
+            return moduleRanks[module] ?: when (module) {
+                MindfulModuleType.LANGUAGE -> ModuleRank.RANK_1 // Standard: Top-Fokus
+                MindfulModuleType.BRAIN_PUZZLE, MindfulModuleType.QUOTE -> ModuleRank.RANK_2 // Erhöht
+                else -> ModuleRank.RANK_3
+            }
         }
 
-        // 2. GEHIRNJOGGING & KOGNITION (Exakt max 2 / Tag)
-        if (MindfulModuleType.BRAIN_PUZZLE in enabledModules) {
-            val p1Index = (dayOfYear * 2) % PUZZLE_POOL.size
-            val p2Index = (dayOfYear * 2 + 1) % PUZZLE_POOL.size
-            cards.add(PUZZLE_POOL[p1Index].copy(id = "puzzle-1-$dayOfYear"))
-            cards.add(PUZZLE_POOL[p2Index].copy(id = "puzzle-2-$dayOfYear"))
+        // Karten pro Modul generieren (entsprechend der Frequenz des Rangs)
+        val moduleBuckets = mutableMapOf<MindfulModuleType, MutableList<MindfulCard>>()
+
+        for (module in enabledModules) {
+            val rank = rankFor(module)
+            val bucket = mutableListOf<MindfulCard>()
+
+            when (module) {
+                MindfulModuleType.QUOTE -> {
+                    // Zitate: max. 2 / Tag (Anti-Dopamin-Limit)
+                    val count = if (rank == ModuleRank.RANK_3) 1 else 2
+                    for (i in 0 until count) {
+                        val qIndex = (dayOfYear * 2 + i) % QUOTE_POOL.size
+                        bucket.add(QUOTE_POOL[qIndex].copy(id = "quote-${i + 1}-$dayOfYear", rank = rank))
+                    }
+                }
+                MindfulModuleType.BRAIN_PUZZLE -> {
+                    // Rätsel: max. 2 / Tag (Anti-Dopamin-Limit)
+                    val count = if (rank == ModuleRank.RANK_3) 1 else 2
+                    for (i in 0 until count) {
+                        val pIndex = (dayOfYear * 2 + i) % PUZZLE_POOL.size
+                        bucket.add(PUZZLE_POOL[pIndex].copy(id = "puzzle-${i + 1}-$dayOfYear", rank = rank))
+                    }
+                }
+                MindfulModuleType.LANGUAGE -> {
+                    // Sprachen: Rank 1 = 3x täglich, Rank 2 = 2x, Rank 3 = 1x
+                    val count = when (rank) {
+                        ModuleRank.RANK_1 -> 3
+                        ModuleRank.RANK_2 -> 2
+                        ModuleRank.RANK_3 -> 1
+                    }
+                    val pool = LANGUAGE_POOLS[language] ?: LANGUAGE_POOLS[LearningLanguage.RUSSIAN]!!
+                    for (i in 0 until count) {
+                        val lIndex = (dayOfYear * 3 + i) % pool.size
+                        bucket.add(pool[lIndex].copy(id = "lang-$dayOfYear-${language.code}-${i + 1}", rank = rank))
+                    }
+                }
+                MindfulModuleType.HISTORY -> {
+                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(HISTORY_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    for (i in 0 until count) {
+                        val idx = (dayOfYear * 2 + i) % HISTORY_POOL.size
+                        bucket.add(HISTORY_POOL[idx].copy(id = "hist-$dayOfYear-${i + 1}", rank = rank))
+                    }
+                }
+                MindfulModuleType.MENTAL_MODEL -> {
+                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(MENTAL_MODEL_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    for (i in 0 until count) {
+                        val idx = (dayOfYear * 2 + i) % MENTAL_MODEL_POOL.size
+                        bucket.add(MENTAL_MODEL_POOL[idx].copy(id = "model-$dayOfYear-${i + 1}", rank = rank))
+                    }
+                }
+                MindfulModuleType.BREATHWORK -> {
+                    bucket.add(
+                        BreathworkCardItem(
+                            id = "breath-$dayOfYear",
+                            title = "Box Breathing (4-4-4-4)",
+                            scientificBenefit = "Aktiviert den Parasympathikus, senkt nachweislich den Cortisolspiegel im Blut und steigert den mentalen Fokus innerhalb von 60 Sekunden.",
+                            rank = rank,
+                        )
+                    )
+                }
+                MindfulModuleType.SCIENCE -> {
+                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(SCIENCE_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    for (i in 0 until count) {
+                        val idx = (dayOfYear * 2 + i) % SCIENCE_POOL.size
+                        bucket.add(SCIENCE_POOL[idx].copy(id = "sci-$dayOfYear-${i + 1}", rank = rank))
+                    }
+                }
+                MindfulModuleType.FINANCE -> {
+                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(FINANCE_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    for (i in 0 until count) {
+                        val idx = (dayOfYear * 2 + i) % FINANCE_POOL.size
+                        bucket.add(FINANCE_POOL[idx].copy(id = "fin-$dayOfYear-${i + 1}", rank = rank))
+                    }
+                }
+                MindfulModuleType.GEOGRAPHY -> {
+                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(GEOGRAPHY_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    for (i in 0 until count) {
+                        val idx = (dayOfYear * 2 + i) % GEOGRAPHY_POOL.size
+                        bucket.add(GEOGRAPHY_POOL[idx].copy(id = "geo-$dayOfYear-${i + 1}", rank = rank))
+                    }
+                }
+                MindfulModuleType.SPEED_MATH -> {
+                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(SPEED_MATH_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    for (i in 0 until count) {
+                        val idx = (dayOfYear * 2 + i) % SPEED_MATH_POOL.size
+                        bucket.add(SPEED_MATH_POOL[idx].copy(id = "math-$dayOfYear-${i + 1}", rank = rank))
+                    }
+                }
+                MindfulModuleType.ART_CULTURE -> {
+                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(ART_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    for (i in 0 until count) {
+                        val idx = (dayOfYear * 2 + i) % ART_POOL.size
+                        bucket.add(ART_POOL[idx].copy(id = "art-$dayOfYear-${i + 1}", rank = rank))
+                    }
+                }
+                MindfulModuleType.VOCABULARY -> {
+                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(VOCABULARY_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    for (i in 0 until count) {
+                        val idx = (dayOfYear * 2 + i) % VOCABULARY_POOL.size
+                        bucket.add(VOCABULARY_POOL[idx].copy(id = "vocab-$dayOfYear-${i + 1}", rank = rank))
+                    }
+                }
+                MindfulModuleType.PHILOSOPHY -> {
+                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(PHILOSOPHY_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    for (i in 0 until count) {
+                        val idx = (dayOfYear * 2 + i) % PHILOSOPHY_POOL.size
+                        bucket.add(PHILOSOPHY_POOL[idx].copy(id = "phil-$dayOfYear-${i + 1}", rank = rank))
+                    }
+                }
+            }
+            moduleBuckets[module] = bucket
         }
 
-        // 3. SPRACHEN LERNEN (Interaktiv nach ausgewählter Sprache)
-        if (MindfulModuleType.LANGUAGE in enabledModules) {
-            val langPool = LANGUAGE_POOLS[language] ?: LANGUAGE_POOLS[LearningLanguage.RUSSIAN]!!
-            val langIndex = dayOfYear % langPool.size
-            cards.add(langPool[langIndex].copy(id = "lang-$dayOfYear-${language.code}"))
-        }
+        // ── Prioritäts-Sortierung & Interleaving ────────────────────────────────
+        // Module nach Rang sortieren (Rank 1 zuerst, dann Rank 2, dann Rank 3)
+        val rank1Modules = enabledModules.filter { rankFor(it) == ModuleRank.RANK_1 }
+        val rank2Modules = enabledModules.filter { rankFor(it) == ModuleRank.RANK_2 }
+        val rank3Modules = enabledModules.filter { rankFor(it) == ModuleRank.RANK_3 }
 
-        // 4. HEUTE IN DER GESCHICHTE
-        if (MindfulModuleType.HISTORY in enabledModules) {
-            val hIndex = dayOfYear % HISTORY_POOL.size
-            cards.add(HISTORY_POOL[hIndex].copy(id = "hist-$dayOfYear"))
-        }
+        val result = mutableListOf<MindfulCard>()
 
-        // 5. KRITISCHES DENKEN & DENKFEHLER
-        if (MindfulModuleType.MENTAL_MODEL in enabledModules) {
-            val mIndex = dayOfYear % MENTAL_MODEL_POOL.size
-            cards.add(MENTAL_MODEL_POOL[mIndex].copy(id = "model-$dayOfYear"))
-        }
+        // Runde 1 (Kopf des Feeds · Primäre Impulse):
+        // 1. Zuerst alle Rank 1 Karten (Einheit 1) ganz oben!
+        rank1Modules.forEach { m -> moduleBuckets[m]?.getOrNull(0)?.let { result.add(it) } }
+        // 2. Dann Rank 2 Karten (Einheit 1)
+        rank2Modules.forEach { m -> moduleBuckets[m]?.getOrNull(0)?.let { result.add(it) } }
+        // 3. Dann Rank 3 Karten (Einheit 1)
+        rank3Modules.forEach { m -> moduleBuckets[m]?.getOrNull(0)?.let { result.add(it) } }
 
-        // 6. 1-MINUTEN-ATEMÜBUNG (Box Breathing)
-        if (MindfulModuleType.BREATHWORK in enabledModules) {
-            cards.add(
-                BreathworkCardItem(
-                    id = "breath-$dayOfYear",
-                    title = "Box Breathing (4-4-4-4)",
-                    scientificBenefit = "Aktiviert den Parasympathikus, senkt nachweislich den Cortisolspiegel im Blut und steigert den mentalen Fokus innerhalb von 60 Sekunden.",
-                )
-            )
-        }
+        // Runde 2 (Mitte des Feeds · Vertiefung):
+        // 4. Zweite Einheit der Rank 1 Module (z.B. Aussprache/Sprechen)
+        rank1Modules.forEach { m -> moduleBuckets[m]?.getOrNull(1)?.let { result.add(it) } }
+        // 5. Zweite Einheit der Rank 2 Module (z.B. zweites Zitat / zweites Rätsel)
+        rank2Modules.forEach { m -> moduleBuckets[m]?.getOrNull(1)?.let { result.add(it) } }
 
-        // 7. WISSENSCHAFTS-HAPPEN
-        if (MindfulModuleType.SCIENCE in enabledModules) {
-            val sIndex = dayOfYear % SCIENCE_POOL.size
-            cards.add(SCIENCE_POOL[sIndex].copy(id = "sci-$dayOfYear"))
-        }
+        // Runde 3 (Später im Feed · Meisterung & Transfer):
+        // 6. Dritte Einheit der Rank 1 Module (z.B. Mini-Dialog)
+        rank1Modules.forEach { m -> moduleBuckets[m]?.getOrNull(2)?.let { result.add(it) } }
 
-        // 8. FINANZIELLE BILDUNG & LIFE SKILLS
-        if (MindfulModuleType.FINANCE in enabledModules) {
-            val fIndex = dayOfYear % FINANCE_POOL.size
-            cards.add(FINANCE_POOL[fIndex].copy(id = "fin-$dayOfYear"))
-        }
-
-        // 9. WELTATLAS & GEOGRAFIE-QUIZ
-        if (MindfulModuleType.GEOGRAPHY in enabledModules) {
-            val gIndex = dayOfYear % GEOGRAPHY_POOL.size
-            cards.add(GEOGRAPHY_POOL[gIndex].copy(id = "geo-$dayOfYear"))
-        }
-
-        // 10. KOPFRECHNEN & MATHE-TRICKS
-        if (MindfulModuleType.SPEED_MATH in enabledModules) {
-            val smIndex = dayOfYear % SPEED_MATH_POOL.size
-            cards.add(SPEED_MATH_POOL[smIndex].copy(id = "math-$dayOfYear"))
-        }
-
-        // 11. KUNST & KULTUR
-        if (MindfulModuleType.ART_CULTURE in enabledModules) {
-            val aIndex = dayOfYear % ART_POOL.size
-            cards.add(ART_POOL[aIndex].copy(id = "art-$dayOfYear"))
-        }
-
-        // 12. WORTSCHATZ-MEISTER (Wort des Tages)
-        if (MindfulModuleType.VOCABULARY in enabledModules) {
-            val vIndex = dayOfYear % VOCABULARY_POOL.size
-            cards.add(VOCABULARY_POOL[vIndex].copy(id = "vocab-$dayOfYear"))
-        }
-
-        // 13. PHILOSOPHISCHES DILEMMA
-        if (MindfulModuleType.PHILOSOPHY in enabledModules) {
-            val pIndex = dayOfYear % PHILOSOPHY_POOL.size
-            cards.add(PHILOSOPHY_POOL[pIndex].copy(id = "phil-$dayOfYear"))
-        }
-
-        return cards
+        return result
     }
 
     // ── POOLS ───────────────────────────────────────────────────────────────────
@@ -223,6 +284,34 @@ object MindfulFeedContentProvider {
                 dialogueReplies = listOf("Спасибо большое. (Vielen Dank.)", "Нет, я не знаю. (Nein, ich weiß nicht.)"),
                 correctReplyIndex = 0,
             ),
+            LanguageCardItem(
+                id = "ru-3",
+                language = LearningLanguage.RUSSIAN,
+                foreignWord = "Извините, где метро? (Iswiníti, gde metrό?)",
+                nativeTranslation = "Entschuldigen Sie, wo ist die Metro?",
+                phonetic = "[iz-vi-ni-tje g-dje me-tro]",
+                exampleForeign = "Извините, пожалуйста, где здесь метро?",
+                exampleTranslation = "Entschuldigen Sie bitte, wo ist hier die Metro?",
+                dialogueScenario = "Orientierung in der Stadt",
+                dialoguePartner = "Passant",
+                dialoguePrompt = "Passant: „Прямо и направо.“ (Geradeaus und rechts.)",
+                dialogueReplies = listOf("Большое спасибо! (Vielen Dank!)", "Меня зовут Иван. (Ich heiße Ivan.)"),
+                correctReplyIndex = 0,
+            ),
+            LanguageCardItem(
+                id = "ru-4",
+                language = LearningLanguage.RUSSIAN,
+                foreignWord = "Приятного аппетита (Priyátnawa appetíta)",
+                nativeTranslation = "Guten Appetit",
+                phonetic = "[pri-jat-na-va a-pe-ti-ta]",
+                exampleForeign = "Приятного аппетита всем за столом!",
+                exampleTranslation = "Guten Appetit allen am Tisch!",
+                dialogueScenario = "Am Esstisch",
+                dialoguePartner = "Gastgeber",
+                dialoguePrompt = "Gastgeber serviert das Essen: „Угощайтесь!“ (Bedient euch!)",
+                dialogueReplies = listOf("Спасибо, приятного аппетита! (Danke, guten Appetit!)", "Спокойной ночи! (Gute Nacht!)"),
+                correctReplyIndex = 0,
+            ),
         ),
         LearningLanguage.ENGLISH to listOf(
             LanguageCardItem(
@@ -253,6 +342,20 @@ object MindfulFeedContentProvider {
                 dialogueReplies = listOf("Total serendipity! I took a wrong turn and stumbled upon it.", "No, I haven't seen it yet."),
                 correctReplyIndex = 0,
             ),
+            LanguageCardItem(
+                id = "en-3",
+                language = LearningLanguage.ENGLISH,
+                foreignWord = "Ubiquitous",
+                nativeTranslation = "Allgegenwärtig / Überall anzutreffen",
+                phonetic = "[juːˈbɪk.wɪ.təs]",
+                exampleForeign = "Smartphones have become ubiquitous in modern society.",
+                exampleTranslation = "Smartphones sind in der modernen Gesellschaft allgegenwärtig geworden.",
+                dialogueScenario = "Technologie-Diskussion",
+                dialoguePartner = "Sarah",
+                dialoguePrompt = "Sarah: „Why is cloud computing so essential today?“",
+                dialogueReplies = listOf("Because cloud services are ubiquitous and allow instant access.", "Because it is completely obsolete."),
+                correctReplyIndex = 0,
+            ),
         ),
         LearningLanguage.SPANISH to listOf(
             LanguageCardItem(
@@ -267,6 +370,34 @@ object MindfulFeedContentProvider {
                 dialoguePartner = "Carlos",
                 dialoguePrompt = "Carlos: „¡Hola! Todo está fresco hoy.“ (Hallo! Alles ist frisch heute.)",
                 dialogueReplies = listOf("¿Cuánto cuesta un kilo de manzanas?", "No me gusta dormir."),
+                correctReplyIndex = 0,
+            ),
+            LanguageCardItem(
+                id = "es-2",
+                language = LearningLanguage.SPANISH,
+                foreignWord = "Muchas gracias / De nada",
+                nativeTranslation = "Vielen Dank / Gern geschehen",
+                phonetic = "[mu-tshas gra-thjas / de na-da]",
+                exampleForeign = "Muchas gracias por tu valiosa ayuda.",
+                exampleTranslation = "Vielen Dank für deine wertvolle Hilfe.",
+                dialogueScenario = "Im Tapas-Restaurant",
+                dialoguePartner = "Camarero",
+                dialoguePrompt = "Camarero bringt die Spezialität: „¡Buen provecho!“",
+                dialogueReplies = listOf("¡Muchas gracias, se ve delicioso!", "¿Dónde está el aeropuerto?"),
+                correctReplyIndex = 0,
+            ),
+            LanguageCardItem(
+                id = "es-3",
+                language = LearningLanguage.SPANISH,
+                foreignWord = "¿Dónde está la estación?",
+                nativeTranslation = "Wo ist der Bahnhof?",
+                phonetic = "[don-de es-ta la es-ta-thjon]",
+                exampleForeign = "¿Disculpe, dónde está la estación central?",
+                exampleTranslation = "Entschuldigen Sie, wo ist der Hauptbahnhof?",
+                dialogueScenario = "Unterwegs in Madrid",
+                dialoguePartner = "Policía",
+                dialoguePrompt = "Policía: „¿Le puedo ayudar en algo?“",
+                dialogueReplies = listOf("Sí, ¿dónde está la estación de metro más cercana?", "Tengo diez años."),
                 correctReplyIndex = 0,
             ),
         ),
@@ -285,6 +416,34 @@ object MindfulFeedContentProvider {
                 dialogueReplies = listOf("乾杯！ (Kanpai!)", "おはようございます (Guten Morgen)"),
                 correctReplyIndex = 0,
             ),
+            LanguageCardItem(
+                id = "ja-2",
+                language = LearningLanguage.JAPANESE,
+                foreignWord = "ありがとうございます (Arigatou gozaimasu)",
+                nativeTranslation = "Vielen herzlichen Dank (höflich)",
+                phonetic = "[a-ri-ga-to-o go-zai-mas]",
+                exampleForeign = "親切にしていただき、ありがとうございます。",
+                exampleTranslation = "Vielen Dank für Ihre Freundlichkeit.",
+                dialogueScenario = "Im Konbini (Convenience Store)",
+                dialoguePartner = "Kassierer",
+                dialoguePrompt = "Kassierer überreicht die Quittung: „ありがとうございました。“",
+                dialogueReplies = listOf("どうも、ありがとうございます！", "さようなら、明日！"),
+                correctReplyIndex = 0,
+            ),
+            LanguageCardItem(
+                id = "ja-3",
+                language = LearningLanguage.JAPANESE,
+                foreignWord = "すみません (Sumimasen)",
+                nativeTranslation = "Entschuldigung / Verzeihung / Bitte",
+                phonetic = "[su-mi-ma-sen]",
+                exampleForeign = "すみません、駅はどこですか？",
+                exampleTranslation = "Entschuldigung, wo ist der Bahnhof?",
+                dialogueScenario = "In der U-Bahn-Station Shinjuku",
+                dialoguePartner = "Stationsbeamter",
+                dialoguePrompt = "Beamter: „何かお困りですか？“ (Kann ich Ihnen helfen?)",
+                dialogueReplies = listOf("すみません、JR線への乗り換えはどちらですか？", "おやすみなさい。"),
+                correctReplyIndex = 0,
+            ),
         ),
         LearningLanguage.FRENCH to listOf(
             LanguageCardItem(
@@ -299,6 +458,34 @@ object MindfulFeedContentProvider {
                 dialoguePartner = "Boulanger",
                 dialoguePrompt = "Boulanger: „Bonjour! Que désirez-vous?“",
                 dialogueReplies = listOf("Une baguette tradition, s'il vous plaît.", "Au revoir, monsieur."),
+                correctReplyIndex = 0,
+            ),
+            LanguageCardItem(
+                id = "fr-2",
+                language = LearningLanguage.FRENCH,
+                foreignWord = "Merci beaucoup / De rien",
+                nativeTranslation = "Vielen Dank / Keine Ursache",
+                phonetic = "[mɛʁ.si bo.ku / də ʁjɛ̃]",
+                exampleForeign = "Merci beaucoup pour votre accueil chaleureux.",
+                exampleTranslation = "Vielen Dank für Ihren herzlichen Empfang.",
+                dialogueScenario = "Im Bistro",
+                dialoguePartner = "Serveur",
+                dialoguePrompt = "Serveur serviert das Dessert: „Voilà votre crème brûlée.“",
+                dialogueReplies = listOf("Merci beaucoup, c'est parfait!", "Je ne sais pas."),
+                correctReplyIndex = 0,
+            ),
+            LanguageCardItem(
+                id = "fr-3",
+                language = LearningLanguage.FRENCH,
+                foreignWord = "Où est la gare?",
+                nativeTranslation = "Wo ist der Bahnhof?",
+                phonetic = "[u ɛ la ɡaʁ]",
+                exampleForeign = "Pardon madame, où est la gare Saint-Lazare?",
+                exampleTranslation = "Verzeihung Madame, wo ist der Bahnhof Saint-Lazare?",
+                dialogueScenario = "Unterwegs in Paris",
+                dialoguePartner = "Passante",
+                dialoguePrompt = "Passante: „Vous cherchez une direction?“",
+                dialogueReplies = listOf("Oui, où est la station de métro la plus proche?", "J'aime les pommes."),
                 correctReplyIndex = 0,
             ),
         ),
@@ -317,6 +504,34 @@ object MindfulFeedContentProvider {
                 dialogueReplies = listOf("Volentieri, godiamoci il sole!", "No, fa troppo freddo a mezzogiorno."),
                 correctReplyIndex = 0,
             ),
+            LanguageCardItem(
+                id = "it-2",
+                language = LearningLanguage.ITALIAN,
+                foreignWord = "Buongiorno, un caffè per favore",
+                nativeTranslation = "Guten Tag, einen Espresso bitte",
+                phonetic = "[bwon-djor-no, un kaf-fe per fa-vo-re]",
+                exampleForeign = "Buongiorno! Un espresso doppio al banco, per favore.",
+                exampleTranslation = "Guten Morgen! Einen doppelten Espresso an der Bar, bitte.",
+                dialogueScenario = "In einer Bar in Florenz",
+                dialoguePartner = "Barista",
+                dialoguePrompt = "Barista: „Cosa posso portarle?“",
+                dialogueReplies = listOf("Un caffè macchiato e un cornetto, grazie!", "Buonanotte."),
+                correctReplyIndex = 0,
+            ),
+            LanguageCardItem(
+                id = "it-3",
+                language = LearningLanguage.ITALIAN,
+                foreignWord = "Dov'è il centro storico?",
+                nativeTranslation = "Wo ist die Altstadt / das Zentrum?",
+                phonetic = "[do-ve il tschen-tro sto-ri-ko]",
+                exampleForeign = "Scusi, dov'è il Duomo?",
+                exampleTranslation = "Entschuldigen Sie, wo ist der Dom?",
+                dialogueScenario = "Orientierung in Venedig",
+                dialoguePartner = "Gondoliere",
+                dialoguePrompt = "Gondoliere: „Serve aiuto con la strada?“",
+                dialogueReplies = listOf("Sì, dov'è Piazza San Marco, per favore?", "Non ho sonno."),
+                correctReplyIndex = 0,
+            ),
         ),
         LearningLanguage.GERMAN_ADVANCED to listOf(
             LanguageCardItem(
@@ -331,6 +546,34 @@ object MindfulFeedContentProvider {
                 dialoguePartner = "Professor",
                 dialoguePrompt = "Professor: „Wie würden Sie den Stil dieses Gebäudes treffend beschreiben?“",
                 dialogueReplies = listOf("Als äußerst eklektisch, da Gotik und Moderne harmonieren.", "Das Gebäude ist einfach nur groß."),
+                correctReplyIndex = 0,
+            ),
+            LanguageCardItem(
+                id = "de-2",
+                language = LearningLanguage.GERMAN_ADVANCED,
+                foreignWord = "Ephemer (Adjektiv)",
+                nativeTranslation = "Flüchtig, nur einen Tag dauernd, vergänglich",
+                phonetic = "[eˈfeːmɐ]",
+                exampleForeign = "Trends in den sozialen Medien sind oft ephemer und schnell vergessen.",
+                exampleTranslation = "Wahres Wissen überdauert, während bloße Trends verblassen.",
+                dialogueScenario = "Diskussion über Kunst",
+                dialoguePartner = "Kritikerin",
+                dialoguePrompt = "Kritikerin: „Was zeichnet diese Street-Art-Installation aus?“",
+                dialogueReplies = listOf("Ihr ephemerer Charakter verleiht ihr besondere Dringlichkeit.", "Dass man sie kaufen kann."),
+                correctReplyIndex = 0,
+            ),
+            LanguageCardItem(
+                id = "de-3",
+                language = LearningLanguage.GERMAN_ADVANCED,
+                foreignWord = "Serenität (Substantiv, feminin)",
+                nativeTranslation = "Innere Heiterkeit, vollkommene Gemütsruhe",
+                phonetic = "[zeʁeniˈtɛːt]",
+                exampleForeign = "Trotz des Sturms um ihn herum bewahrte er eine unerschütterliche Serenität.",
+                exampleTranslation = "Stoische Gelassenheit angesichts unkontrollierbarer äußerer Umstände.",
+                dialogueScenario = "Führungs-Coaching",
+                dialoguePartner = "Mentor",
+                dialoguePrompt = "Mentor: „Wie begegnest du unvorhergesehenen Krisensituationen?“",
+                dialogueReplies = listOf("Mit bewusster Serenität und klarem Fokus auf das Machbare.", "Mit Panik und Beschuldigungen."),
                 correctReplyIndex = 0,
             ),
         ),
@@ -351,6 +594,13 @@ object MindfulFeedContentProvider {
             description = "Jean-François Champollion gelingt der Durchbruch: Nach über 1.000 Jahren Schweigen können altägyptische Hieroglyphen wieder gelesen werden.",
             whyItMatters = "Es bewies, dass Hieroglyphen phonetische Laute darstellten, und öffnete das Tor zu 3.000 Jahren verloren geglaubter menschlicher Zivilisationsgeschichte.",
         ),
+        HistoryCardItem(
+            id = "h-3",
+            dateLabel = "Meilenstein der Medizin",
+            eventTitle = "Die Entdeckung des Penicillins (1928)",
+            description = "Alexander Fleming bemerkt in einer vergessenen Petrischale, dass der Schimmelpilz Penicillium notatum das Wachstum von Staphylokokken stoppt.",
+            whyItMatters = "Die Geburt der Antibiotika rettete bis heute schätzungsweise über 200 Millionen Menschen das Leben und veränderte die moderne Medizin für immer.",
+        ),
     )
 
     private val MENTAL_MODEL_POOL = listOf(
@@ -370,6 +620,14 @@ object MindfulFeedContentProvider {
             realLifeExample = "Einen schlechten Film bis zum Ende schauen oder an einem gescheiterten Projekt festhalten, weil man schon Monate investiert hat.",
             actionableDefense = "Frage dich: 'Wenn ich heute völlig neu und unbelastet entscheiden müsste – würde ich jetzt einsteigen?' Wenn nein: Aussteigen!",
         ),
+        MentalModelCardItem(
+            id = "mm-3",
+            modelName = "Hanlon's Razor (Hanlons Gesetz)",
+            category = "Soziale Interaktion & Gelassenheit",
+            explanation = "Schreibe niemals der Bosheit zu, was durch bloße Unachtsamkeit, Überlastung oder Unwissenheit hinreichend erklärt werden kann.",
+            realLifeExample = "Jemand antwortet dir 2 Tage nicht auf WhatsApp. Ist er absichtlich respektlos? Meistens war er einfach nur gestresst oder abgelenkt.",
+            actionableDefense = "Nimm Dinge seltener persönlich. Es erspart dir 90 % allen unnötigen zwischenmenschlichen Ärgers.",
+        ),
     )
 
     private val SCIENCE_POOL = listOf(
@@ -379,6 +637,20 @@ object MindfulFeedContentProvider {
             question = "Kann sich das erwachsene Gehirn noch physisch verändern?",
             coreExplanation = "Ja! Jedes Mal, wenn du etwas Neues lernst oder eine Gewohnheit änderst, bilden Synapsen neue physische Verästelungen. Das Gehirn ist wie ein Muskel verformbar bis ins hohe Alter.",
             fascinatingDetail = "Londoner Taxifahrer haben nach dem Auswendiglernen des Stadtplans ('The Knowledge') einen messbar vergrößerten Hippocampus.",
+        ),
+        ScienceCardItem(
+            id = "sci-2",
+            phenomenon = "Gravitationswellen",
+            question = "Können wir den Raum selbst zittern hören?",
+            coreExplanation = "Wenn zwei gigantische schwarze Löcher im All kollidieren, stauchen und dehnen sie die Raumzeit selbst wie Wellen auf einem Teich. 2015 gelang mit LIGO der erste direkte Nachweis.",
+            fascinatingDetail = "Die gemessene Verschiebung der LIGO-Laserarme betrug ein Tausendstel des Durchmessers eines einzigen Protons!",
+        ),
+        ScienceCardItem(
+            id = "sci-3",
+            phenomenon = "Die Mitochondrien-Symbiose",
+            question = "Woher stammt die Energie in all deinen Zellen?",
+            coreExplanation = "Vor rund 1,5 Milliarden Jahren verschluckte eine Urzelle ein Bakterium, verdautes es aber nicht, sondern lebte mit ihm in Symbiose. Daraus wurden unsere Zellkraftwerke (Mitochondrien).",
+            fascinatingDetail = "Mitochondrien besitzen bis heute ihre eigene, separate DNA – und werden ausschließlich über die Mutterlinie vererbt.",
         ),
     )
 
@@ -390,6 +662,20 @@ object MindfulFeedContentProvider {
             practicalExample = "Bei 7 % jährlicher Rendite: 72 ÷ 7 ≈ 10,2 Jahre. Aus 10.000 € werden in 10 Jahren 20.000 €, in 20 Jahren 40.000 € – ganz ohne Nachzahlung.",
             takeawayRule = "Zeit im Markt schlägt Timing des Marktes. Je früher du beginnst, desto exponentieller arbeitet die Zinseszins-Kurve für dich.",
         ),
+        FinanceCardItem(
+            id = "fin-2",
+            title = "Der Notgroschen (3–6 Monatsausgaben)",
+            corePrinciple = "Liquidität schützt vor Schuldenfallen und emotionalen Fehlentscheidungen in Krisenzeiten.",
+            practicalExample = "Wenn deine monatlichen Fixkosten 1.500 € betragen, gehören 4.500 € bis 9.000 € auf ein hochverzinstes Tagesgeldkonto – nicht in volatile Aktien.",
+            takeawayRule = "Der Notgroschen ist keine Renditeanlage, sondern eine psychologische Friedensversicherung gegen Stress.",
+        ),
+        FinanceCardItem(
+            id = "fin-3",
+            title = "Breite Diversifikation (Welt-Portfolio)",
+            corePrinciple = "Wer in einzelne Aktien wettet, geht unsystematisches Risiko ein. Ein breit gestreuter All-World-ETF partizipiert an der gesamten globalen Wertschöpfung.",
+            practicalExample = "Über 1.500 Unternehmen aus Industrie- und Schwellenländern federn Einbrüche einzelner Branchen zuverlässig ab.",
+            takeawayRule = "Suche nicht nach der Nadel im Heuhaufen. Kaufe einfach den gesamten Heuhaufen!",
+        ),
     )
 
     private val GEOGRAPHY_POOL = listOf(
@@ -399,6 +685,20 @@ object MindfulFeedContentProvider {
             options = listOf("Russland", "Kanada", "Finnland", "Brasilien"),
             correctIndex = 1,
             interestingFact = "Kanada besitzt über 60 % aller natürlichen Seen der Erde (über 2 Millionen Seen). Mehr als der gesamte Rest der Welt zusammen!",
+        ),
+        GeographyCardItem(
+            id = "geo-2",
+            question = "Welcher dieser Staaten ist flächenmäßig der größte Binnenstaat der Welt (ohne Meereszugang)?",
+            options = listOf("Mongolei", "Kasachstan", "Tschad", "Bolivien"),
+            correctIndex = 1,
+            interestingFact = "Kasachstan ist mit über 2,7 Millionen Quadratkilometern der mit Abstand größte Binnenstaat der Erde und das neuntgrößte Land der Welt.",
+        ),
+        GeographyCardItem(
+            id = "geo-3",
+            question = "In welcher Stadt liegt der tiefste natürliche Punkt auf dem Festland der Erde (-430 m)?",
+            options = listOf("Totes Meer (Jordanien/Israel)", "Death Valley (USA)", "Assalsee (Dschibuti)", "Turpan-Senke (China)"),
+            correctIndex = 0,
+            interestingFact = "Das Ufer des Toten Meeres liegt über 430 Meter unter dem Meeresspiegel. Der extrem hohe Salzgehalt (ca. 33 %) lässt Menschen mühelos treiben.",
         ),
     )
 
@@ -411,6 +711,22 @@ object MindfulFeedContentProvider {
             practiceChallenge = "Was ist 43 × 11?",
             challengeResult = "473 (da 4 + 3 = 7)",
         ),
+        SpeedMathCardItem(
+            id = "math-2",
+            trickTitle = "Quadrieren von Zahlen, die auf 5 enden",
+            formulaShortcut = "Erste Ziffer × (nächste Ziffer) rechnen und '25' anhängen!",
+            explanation = "Beispiel: 65². Nimm die 6, rechne 6 × 7 = 42. Hänge 25 an ➔ 4225!",
+            practiceChallenge = "Was ist 35²?",
+            challengeResult = "1225 (da 3 × 4 = 12, dann 25)",
+        ),
+        SpeedMathCardItem(
+            id = "math-3",
+            trickTitle = "Schnell 15 % Trinkgeld im Kopf berechnen",
+            formulaShortcut = "10 % berechnen (Komma um eins nach links) und die Hälfte davon addieren!",
+            explanation = "Beispiel: 48,00 € Rechnung. 10 % sind 4,80 €. Die Hälfte davon sind 2,40 €. 4,80 + 2,40 = 7,20 € Trinkgeld!",
+            practiceChallenge = "Was sind 15 % von 60,00 €?",
+            challengeResult = "9,00 € (6,00 € + 3,00 €)",
+        ),
     )
 
     private val ART_POOL = listOf(
@@ -420,6 +736,20 @@ object MindfulFeedContentProvider {
             artist = "Raffael (Raffaello Sanzio)",
             yearAndOrigin = "1509–1511 • Apostolischer Palast, Rom",
             backStory = "Im Zentrum stehen Platon (zeigt zum Himmel, Ideenlehre) und Aristoteles (zeigt zur Erde, Empirie). Raffael vereinte das antike Denken mit der humanistischen Renaissance.",
+        ),
+        ArtCultureCardItem(
+            id = "art-2",
+            masterpieceTitle = "Sternennacht",
+            artist = "Vincent van Gogh",
+            yearAndOrigin = "1889 • Saint-Rémy-de-Provence",
+            backStory = "Gemalt aus dem Fenster seiner Zelle in der Heilanstalt. Van Gogh visualisierte die turbulente Himmelsströmung mit einer mathematischen Präzision, die modernen Strömungsmodellen gleicht.",
+        ),
+        ArtCultureCardItem(
+            id = "art-3",
+            masterpieceTitle = "Die große Welle vor Kanagawa",
+            artist = "Katsushika Hokusai",
+            yearAndOrigin = "ca. 1831 • Edo-Zeit, Japan",
+            backStory = "Dieser Farbholzschnitt verbindet traditionelle japanische Komposition mit dem damals neuartigen Pigment 'Preußisch Blau' aus Europa. Der heilige Berg Fuji ruht friedlich im tosenden Wellental.",
         ),
     )
 
@@ -431,6 +761,22 @@ object MindfulFeedContentProvider {
             definition = "Eine zufällige Beobachtung von etwas, das man ursprünglich gar nicht gesucht hat, die sich als fruchtbare Entdeckung erweist.",
             etymology = "Zurückgehend auf das persische Märchen 'Die drei Prinzen von Serendip'. Bekanntestes Beispiel: Die Entdeckung des Penicillins durch Alexander Fleming.",
             sampleSentence = "Dass wir uns auf der Konferenz trafen, war reine Serendipität und legte den Grundstein unseres Erfolgs.",
+        ),
+        VocabularyCardItem(
+            id = "voc-2",
+            word = "Resilienz (Substantiv, feminin)",
+            wordType = "Aus dem Lateinischen 'resilire' (zurückspringen)",
+            definition = "Die psychische Widerstandskraft, Krisen, Rückschläge und Traumata zu bewältigen und gestärkt daraus hervorzugehen.",
+            etymology = "Ursprünglich aus der Materialkunde (ein Stoff, der nach starker Verformung in seine Ausgangsgestalt zurückkehrt).",
+            sampleSentence = "Emotionale Resilienz ist keine angeborene Eigenschaft, sondern eine trainierbare Geistesgewohnheit.",
+        ),
+        VocabularyCardItem(
+            id = "voc-3",
+            word = "Kakophonie (Substantiv, feminin)",
+            wordType = "Aus dem Altgriechischen 'kakos' (schlecht) & 'phone' (Laut/Klang)",
+            definition = "Ein unangenehmer, schriller Missklang aus widersprüchlichen Geräuschen oder unvereinbaren Meinungen.",
+            etymology = "Gegenteil von Euphemismus oder Harmonie.",
+            sampleSentence = "In der heutigen Kakophonie aus Push-Nachrichten und Social-Media-Lärm wird gezielte Stille zum wertvollsten Luxus.",
         ),
     )
 
@@ -444,6 +790,26 @@ object MindfulFeedContentProvider {
             schoolA = "Strukturalismus & Kontinuitätstheorie",
             schoolB = "Materialistischer Reduktionismus",
             philosophicalInsight = "Fast alle Zellen deines eigenen Körpers erneuern sich alle 7 bis 10 Jahre. Bist du heute noch dieselbe Person wie vor 10 Jahren? Was macht deine Identität wirklich aus?",
+        ),
+        PhilosophyCardItem(
+            id = "phil-2",
+            dilemmaTitle = "Das Trolley-Problem",
+            scenario = "Eine führerlose Bahn rollt auf 5 Gleisarbeiter zu. Du kannst eine Weiche umlegen, wodurch die Bahn auf ein Nebengleis fährt – dort arbeitet jedoch 1 Gleisarbeiter.",
+            optionA = "Weiche umlegen (1 Leben opfern, um 5 Leben zu retten)",
+            optionB = "Nicht eingreifen (Man darf kein unbeteiligtes Leben aktiv opfern)",
+            schoolA = "Utilitarismus (Das größte Wohl für die größte Zahl)",
+            schoolB = "Deontologie / Pflichtenethik (Kant: Der Mensch ist Zweck, kein Mittel)",
+            philosophicalInsight = "Entscheidungen im echten Leben (z. B. Algorithmen für autonomes Fahren oder Triage im Krankenhaus) verlangen täglich den Spagat zwischen utilitaristischer Schadensminimierung und moralischen Grundrechten.",
+        ),
+        PhilosophyCardItem(
+            id = "phil-3",
+            dilemmaTitle = "Der Schleier des Nichtwissens",
+            scenario = "Stelle dir vor, du sollst die Gesetze einer gerechten Gesellschaft entwerfen – weißt aber vorher nicht, ob du darin reich, arm, gesund, krank oder begabt sein wirst.",
+            optionA = "Maximale Chancengleichheit & starkes soziales Sicherheitsnetz",
+            optionB = "Minimalstaat mit absolutem Vorrang für individuelle Freiheit",
+            schoolA = "John Rawls' Theorie der Gerechtigkeit",
+            schoolB = "Libertarismus (Robert Nozick)",
+            philosophicalInsight = "Wahre Fairness entsteht, wenn die Mächtigen sich vorstellen müssen, morgen die Schwächsten im System zu sein.",
         ),
     )
 }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.hikari.app.domain.feed.LearningLanguage
 import com.hikari.app.domain.feed.MindfulModuleType
+import com.hikari.app.domain.feed.ModuleRank
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -44,6 +45,33 @@ class FeedPreferences @Inject constructor(
     fun setModuleEnabled(module: MindfulModuleType, enabled: Boolean) {
         prefs.edit().putBoolean("module_enabled_${module.id}", enabled).apply()
         _enabledModules.value = loadEnabledModules()
+    }
+
+    // ── Module Ranks & Frequency ───────────────────────────────────────────────
+
+    private val _moduleRanks = MutableStateFlow(loadModuleRanks())
+    val moduleRanks: StateFlow<Map<MindfulModuleType, ModuleRank>> = _moduleRanks.asStateFlow()
+
+    private fun loadModuleRanks(): Map<MindfulModuleType, ModuleRank> {
+        return MindfulModuleType.entries.associateWith { module ->
+            val defaultRank = when (module) {
+                MindfulModuleType.LANGUAGE -> ModuleRank.RANK_1 // Standard: Top-Fokus & 3x täglich
+                MindfulModuleType.BRAIN_PUZZLE -> ModuleRank.RANK_2 // Erhöht (2x)
+                MindfulModuleType.QUOTE -> ModuleRank.RANK_2 // Erhöht (2x)
+                else -> ModuleRank.RANK_3 // Standard (1x)
+            }
+            val savedNumber = prefs.getInt("module_rank_${module.id}", defaultRank.rankNumber)
+            ModuleRank.fromNumber(savedNumber)
+        }
+    }
+
+    fun setModuleRank(module: MindfulModuleType, rank: ModuleRank) {
+        prefs.edit().putInt("module_rank_${module.id}", rank.rankNumber).apply()
+        _moduleRanks.value = loadModuleRanks()
+    }
+
+    fun getModuleRank(module: MindfulModuleType): ModuleRank {
+        return _moduleRanks.value[module] ?: ModuleRank.RANK_3
     }
 
     // ── Learning Language ───────────────────────────────────────────────────────

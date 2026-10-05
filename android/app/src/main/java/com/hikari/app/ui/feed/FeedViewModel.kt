@@ -9,6 +9,7 @@ import com.hikari.app.domain.feed.LearningLanguage
 import com.hikari.app.domain.feed.MindfulCard
 import com.hikari.app.domain.feed.MindfulFeedContentProvider
 import com.hikari.app.domain.feed.MindfulModuleType
+import com.hikari.app.domain.feed.ModuleRank
 import com.hikari.app.domain.model.FeedItem
 import com.hikari.app.domain.repo.FeedRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -46,14 +47,30 @@ class FeedViewModel @Inject constructor(
     val selectedLanguage: StateFlow<LearningLanguage> =
         feedPrefs?.selectedLanguage ?: MutableStateFlow(LearningLanguage.RUSSIAN)
 
+    val moduleRanks: StateFlow<Map<MindfulModuleType, ModuleRank>> =
+        feedPrefs?.moduleRanks ?: MutableStateFlow(
+            MindfulModuleType.entries.associateWith {
+                when (it) {
+                    MindfulModuleType.LANGUAGE -> ModuleRank.RANK_1
+                    MindfulModuleType.BRAIN_PUZZLE, MindfulModuleType.QUOTE -> ModuleRank.RANK_2
+                    else -> ModuleRank.RANK_3
+                }
+            }
+        )
+
     val completedCards: StateFlow<Set<String>> =
         feedPrefs?.completedCards ?: MutableStateFlow(emptySet())
 
-    val mindfulCards: StateFlow<List<MindfulCard>> = combine(enabledModules, selectedLanguage) { modules, lang ->
+    val mindfulCards: StateFlow<List<MindfulCard>> = combine(
+        enabledModules,
+        selectedLanguage,
+        moduleRanks,
+    ) { modules, lang, ranks ->
         MindfulFeedContentProvider.getDailyCards(
             calendar = Calendar.getInstance(),
             enabledModules = modules,
             language = lang,
+            moduleRanks = ranks,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
@@ -77,6 +94,10 @@ class FeedViewModel @Inject constructor(
 
     fun toggleModule(module: MindfulModuleType, enabled: Boolean) {
         feedPrefs?.setModuleEnabled(module, enabled)
+    }
+
+    fun setModuleRank(module: MindfulModuleType, rank: ModuleRank) {
+        feedPrefs?.setModuleRank(module, rank)
     }
 
     fun setLearningLanguage(language: LearningLanguage) {
