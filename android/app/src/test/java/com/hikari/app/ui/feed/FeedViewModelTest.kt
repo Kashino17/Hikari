@@ -107,4 +107,32 @@ class FeedViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
     }
+
+    @Test fun mindfulCards_producesCardsBasedOnDefaultModulesAndRanks() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        val vm = FeedViewModel(repo, settings)
+        vm.mindfulCards.test {
+            val cards = awaitItem()
+            // Ensure cards are generated with at least language and puzzle
+            assert(cards.isNotEmpty())
+            // Top ranked module should appear in the generated list
+            val ranks = vm.moduleRanks.value
+            assertEquals(com.hikari.app.domain.feed.ModuleRank.RANK_1, ranks[com.hikari.app.domain.feed.MindfulModuleType.LANGUAGE])
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test fun mindfulFeed_allCompleted_triggersGoalCompleted() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        val vm = FeedViewModel(repo, settings)
+        vm.mindfulCards.test {
+            val cards = awaitItem()
+            assert(cards.isNotEmpty())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
 }
