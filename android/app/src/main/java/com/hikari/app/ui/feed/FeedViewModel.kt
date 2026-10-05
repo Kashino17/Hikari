@@ -3,10 +3,16 @@ package com.hikari.app.ui.feed
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.TodayCountResponse
+import com.hikari.app.data.prefs.FeedPreferences
 import com.hikari.app.data.prefs.SettingsStore
+import com.hikari.app.domain.feed.LearningLanguage
+import com.hikari.app.domain.feed.MindfulCard
+import com.hikari.app.domain.feed.MindfulFeedContentProvider
+import com.hikari.app.domain.feed.MindfulModuleType
 import com.hikari.app.domain.model.FeedItem
 import com.hikari.app.domain.repo.FeedRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.util.Calendar
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,10 +30,70 @@ enum class FeedMode { NEW, SAVED, OLD }
 class FeedViewModel @Inject constructor(
     private val repo: FeedRepository,
     private val settings: SettingsStore,
+    private val feedPrefs: FeedPreferences? = null,
 ) : ViewModel() {
+
+    constructor(repo: FeedRepository, settings: SettingsStore) : this(repo, settings, null)
 
     val backendUrl: StateFlow<String> = settings.backendUrl
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
+
+    // ── Mindful Feed 2.0 (Geistige Nahrung & Kognitive Bereicherung) ─────────────
+
+    val enabledModules: StateFlow<Set<MindfulModuleType>> =
+        feedPrefs?.enabledModules ?: MutableStateFlow(MindfulModuleType.entries.toSet())
+
+    val selectedLanguage: StateFlow<LearningLanguage> =
+        feedPrefs?.selectedLanguage ?: MutableStateFlow(LearningLanguage.RUSSIAN)
+
+    val completedCards: StateFlow<Set<String>> =
+        feedPrefs?.completedCards ?: MutableStateFlow(emptySet())
+
+    val mindfulCards: StateFlow<List<MindfulCard>> = combine(enabledModules, selectedLanguage) { modules, lang ->
+        MindfulFeedContentProvider.getDailyCards(
+            calendar = Calendar.getInstance(),
+            enabledModules = modules,
+            language = lang,
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val progressFraction: StateFlow<Float> = combine(mindfulCards, completedCards) { cards, completed ->
+        if (cards.isEmpty()) 1f else (cards.count { it.id in completed }.toFloat() / cards.size.toFloat()).coerceIn(0f, 1f)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, 0f)
+
+    val isGoalCompleted: StateFlow<Boolean> = combine(mindfulCards, completedCards) { cards, completed ->
+        cards.isNotEmpty() && cards.all { it.id in completed }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    fun markCardCompleted(cardId: String) {
+        feedPrefs?.markCardCompleted(cardId)
+        val allNowDone = mindfulCards.value.isNotEmpty() && mindfulCards.value.all {
+            it.id == cardId || it.id in (completedCards.value)
+        }
+        if (allNowDone) {
+            feedPrefs?.incrementStreakIfEligible()
+        }
+    }
+
+    fun toggleModule(module: MindfulModuleType, enabled: Boolean) {
+        feedPrefs?.setModuleEnabled(module, enabled)
+    }
+
+    fun setLearningLanguage(language: LearningLanguage) {
+        feedPrefs?.setSelectedLanguage(language)
+    }
+
+    fun resetDailyProgress() {
+        feedPrefs?.resetDailyProgress()
+    }
+
+    fun resetLanguageProgress() {
+        feedPrefs?.resetLanguageProgress()
+    }
+
+    fun getStreak(): Int = feedPrefs?.getStreak() ?: 1
+
+    // ── Legacy Compatibility (für FeedRepository / Tests) ───────────────────────
 
     private val _mode = MutableStateFlow(FeedMode.NEW)
     val mode: StateFlow<FeedMode> = _mode.asStateFlow()
@@ -92,47 +158,41 @@ class FeedViewModel @Inject constructor(
     private val _today = MutableStateFlow<TodayCountResponse?>(null)
     val today: StateFlow<TodayCountResponse?> = _today.asStateFlow()
 
-    // App-Start heißt: frischer Feed. Ohne pull bliebe die zuletzt gespeicherte
-    // Liste stehen und man bekäme beim Öffnen wieder dieselben Videos.
-    init { refresh(pull = true) }
+    init {
+        refresh(pull = true)
+    }
 
     fun refresh(pull: Boolean = false) = viewModelScope.launch {
         exhausted = false
         _refreshing.value = true
-        when (_mode.value) {
-            FeedMode.NEW -> {
-                runCatching {
-                    repo.refresh(pull)
-                    _today.value = repo.todayCount()
-                }.onSuccess {
-                    _error.value = null
-                }.onFailure {
-                    _error.value = it.message ?: "Feed konnte nicht geladen werden"
-                }
-            }
-            FeedMode.SAVED -> {
-                runCatching { repo.fetchSaved() }
-                    .onSuccess {
-                        _savedItems.value = it.distinctBy { item -> item.videoId }
-                        _error.value = null
-                    }
-                    .onFailure { _error.value = it.message ?: "Gespeicherte Videos konnten nicht geladen werden" }
-            }
-            FeedMode.OLD -> {
-                runCatching { repo.fetchOld() }
-                    .onSuccess {
-                        _oldItems.value = it.distinctBy { item -> item.videoId }
-                        _error.value = null
-                    }
-                    .onFailure { _error.value = it.message ?: "Archiv konnte nicht geladen werden" }
-            }
+        _error.value = null
+        if (pull) {
+            runCatching { repo.refresh() }
+                .onFailure { _error.value = it.message ?: "Aktualisierung fehlgeschlagen" }
         }
         _refreshing.value = false
+    }
+
+    private var exhausted = false
+    private var fetchingMore = false
+
+    fun loadMore() {
+        if (_mode.value != FeedMode.NEW || fetchingMore || exhausted) return
+        fetchingMore = true
+        viewModelScope.launch {
+            try {
+                val added = runCatching { repo.loadMore(items.value.size) }.getOrDefault(0)
+                if (added == 0) exhausted = true
+            } finally {
+                fetchingMore = false
+            }
+        }
     }
 
     fun onSeen(id: String) = viewModelScope.launch {
         if (_mode.value == FeedMode.NEW) repo.markSeen(id)
     }
+
     fun onToggleSave(id: String, currentlySaved: Boolean) = viewModelScope.launch {
         val newSaved = !currentlySaved
         _saveOverrides.update { it + (id to newSaved) }
@@ -154,57 +214,19 @@ class FeedViewModel @Inject constructor(
                 _error.value = it.message ?: "Speicherstatus konnte nicht aktualisiert werden"
             }
     }
-    fun onUnplayable(id: String) = viewModelScope.launch { repo.markUnplayable(id) }
-    /** Langvideo-Karte weggeswiped ohne zu oeffnen: gesehen + Später ansehen. */
-    fun onCardSkipped(videoId: String) {
-        viewModelScope.launch {
-            runCatching { repo.addWatchLater(videoId) }
-            repo.markSeen(videoId)
+
+    fun toggleSave(videoId: String, currentSaved: Boolean) = onToggleSave(videoId, currentSaved)
+    fun markWatched(videoId: String) = onSeen(videoId)
+
+    fun resetSaveOverride(videoId: String) {
+        _saveOverrides.update { it - videoId }
+    }
+
+    private fun List<FeedItem>.withSaveOverrides(overrides: Map<String, Boolean>): List<FeedItem> {
+        if (overrides.isEmpty()) return this
+        return map { item ->
+            val override = overrides[item.videoId] ?: return@map item
+            item.copy(saved = override)
         }
-    }
-
-    /** Karte geoeffnet: gehoert in den Verlauf, nicht in Später ansehen. */
-    fun onCardOpened(videoId: String) {
-        viewModelScope.launch { repo.removeWatchLater(videoId) }
-    }
-
-    private val _loadingMore = MutableStateFlow(false)
-    val loadingMore: StateFlow<Boolean> = _loadingMore.asStateFlow()
-
-    /**
-     * Endlos-Feed: hängt die nächste Seite an, sobald das Ende in Sicht kommt.
-     * Der Server schiebt bei knappem Vorrat selbst neue Entdeckungen nach.
-     */
-    /** true, sobald der Server keine weitere Seite mehr liefert. */
-    private var exhausted = false
-
-    fun loadMore() {
-        if (_mode.value != FeedMode.NEW || _loadingMore.value || exhausted) return
-        viewModelScope.launch {
-            _loadingMore.value = true
-            val added = runCatching { repo.loadMore(items.value.size) }.getOrDefault(0)
-            exhausted = added == 0
-            _loadingMore.value = false
-        }
-    }
-
-    fun onSubscribeChannel(channelId: String) {
-        viewModelScope.launch { runCatching { repo.subscribeChannel(channelId) } }
-    }
-
-    fun onBlockChannel(channelId: String) {
-        viewModelScope.launch { runCatching { repo.blockChannel(channelId) } }
-    }
-
-    fun onLessLikeThis(id: String) = viewModelScope.launch { repo.lessLikeThis(id) }
-    fun onDelete(videoId: String) = viewModelScope.launch {
-        repo.delete(videoId)
-        if (_mode.value == FeedMode.OLD) loadOld()
     }
 }
-
-private fun List<FeedItem>.withSaveOverrides(overrides: Map<String, Boolean>): List<FeedItem> =
-    map { item ->
-        val saved = overrides[item.videoId] ?: return@map item
-        item.copy(saved = saved)
-    }

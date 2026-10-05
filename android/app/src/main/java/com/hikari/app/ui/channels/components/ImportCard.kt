@@ -156,6 +156,28 @@ fun ImportCard(
                                 fontSize = 10.sp,
                             )
                         }
+                        val detectedGenres = androidx.compose.runtime.remember(card.title, card.seriesTitle) {
+                            com.hikari.app.domain.genre.GenreClassifier.classify(card.title, card.seriesTitle)
+                                .filter { it != com.hikari.app.domain.genre.Genre.ALL }
+                        }
+                        if (detectedGenres.isNotEmpty()) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.padding(top = 2.dp),
+                            ) {
+                                detectedGenres.take(3).forEach { g ->
+                                    Text(
+                                        "${g.emoji} ${g.title}",
+                                        color = g.accentColor,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        modifier = Modifier
+                                            .background(g.accentColor.copy(alpha = 0.15f), RoundedCornerShape(3.dp))
+                                            .padding(horizontal = 4.dp, vertical = 1.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
                     Icon(
                         imageVector = if (card.expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,

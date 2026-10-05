@@ -1,454 +1,538 @@
 package com.hikari.app.ui.feed
 
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
-import android.content.pm.ActivityInfo
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.pager.VerticalPager
-import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Spa
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.hikari.app.data.prefs.SponsorBlockPrefs
-import com.hikari.app.data.sponsor.SponsorBlockClient
-import com.hikari.app.domain.repo.PlaybackRepository
-import com.hikari.app.player.HikariPlayerFactory
-import com.hikari.app.ui.navigation.playVideoRoute
+import com.hikari.app.domain.feed.ArtCultureCardItem
+import com.hikari.app.domain.feed.BrainPuzzleCardItem
+import com.hikari.app.domain.feed.BreathworkCardItem
+import com.hikari.app.domain.feed.FinanceCardItem
+import com.hikari.app.domain.feed.GeographyCardItem
+import com.hikari.app.domain.feed.HistoryCardItem
+import com.hikari.app.domain.feed.LanguageCardItem
+import com.hikari.app.domain.feed.LearningLanguage
+import com.hikari.app.domain.feed.MentalModelCardItem
+import com.hikari.app.domain.feed.MindfulCard
+import com.hikari.app.domain.feed.MindfulModuleType
+import com.hikari.app.domain.feed.PhilosophyCardItem
+import com.hikari.app.domain.feed.QuoteCardItem
+import com.hikari.app.domain.feed.ScienceCardItem
+import com.hikari.app.domain.feed.SpeedMathCardItem
+import com.hikari.app.domain.feed.VocabularyCardItem
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
+import com.hikari.app.ui.theme.HikariBorderStrong
+import com.hikari.app.ui.theme.HikariCardBg
+import com.hikari.app.ui.theme.HikariDanger
+import com.hikari.app.ui.theme.HikariPrimary
+import com.hikari.app.ui.theme.HikariSurface
+import com.hikari.app.ui.theme.HikariSurfaceHigh
 import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.launch
+import com.hikari.app.ui.theme.HikariTextMuted
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import kotlinx.coroutines.delay
 
-@EntryPoint
-@InstallIn(SingletonComponent::class)
-interface FeedEntryPoint {
-    fun playerFactory(): HikariPlayerFactory
-    fun sponsorBlockClient(): SponsorBlockClient
-    fun playbackRepository(): PlaybackRepository
-    fun sponsorBlockPrefs(): SponsorBlockPrefs
-}
-
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedScreen(
     vm: FeedViewModel = hiltViewModel(),
     fullscreen: Boolean = false,
     onFullscreenChange: (Boolean) -> Unit = {},
     onNavigate: (String) -> Unit = {},
-    /** Erhöht sich bei jedem Tippen auf den Feed-Tab: nach oben + neu laden. */
     resetTick: Int = 0,
 ) {
-    val mode by vm.mode.collectAsState()
-    val items by vm.items.collectAsState()
-    val baseUrl by vm.backendUrl.collectAsState()
-    val refreshing by vm.refreshing.collectAsState()
-    val error by vm.error.collectAsState()
-    val today by vm.today.collectAsState()
-    val ctx = LocalContext.current
-    val activity = remember(ctx) { ctx.findActivity() }
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val scope = rememberCoroutineScope()
+    val cards by vm.mindfulCards.collectAsState()
+    val completedCardIds by vm.completedCards.collectAsState()
+    val progressFraction by vm.progressFraction.collectAsState()
+    val isGoalCompleted by vm.isGoalCompleted.collectAsState()
+    val enabledModules by vm.enabledModules.collectAsState()
+    val selectedLanguage by vm.selectedLanguage.collectAsState()
+    val streak = remember(completedCardIds) { vm.getStreak() }
 
-    var chromeVisible by remember { mutableStateOf(true) }
-    var showDeleteConfirm by remember { mutableStateOf(false) }
-    var deleteTargetId by remember { mutableStateOf<String?>(null) }
+    var showSettingsSheet by remember { mutableStateOf(false) }
 
-    LaunchedEffect(chromeVisible) {
-        if (chromeVisible) {
-            kotlinx.coroutines.delay(2_500)
-            chromeVisible = false
-        }
-    }
-    LaunchedEffect(items.isEmpty(), fullscreen) {
-        if (fullscreen && items.isEmpty()) onFullscreenChange(false)
-    }
+    val dateFormat = remember { SimpleDateFormat("EEEE, d. MMMM", Locale.GERMAN) }
+    val todayFormatted = remember { dateFormat.format(Date()) }
 
-    val entryPoint = remember {
-        EntryPointAccessors.fromApplication(ctx, FeedEntryPoint::class.java)
-    }
-    val factory = remember { entryPoint.playerFactory() }
-    val sponsorBlock = remember { entryPoint.sponsorBlockClient() }
-    val playbackRepo = remember { entryPoint.playbackRepository() }
-    val sponsorBlockPrefs = remember { entryPoint.sponsorBlockPrefs() }
-    val player = remember { factory.create() }
-
-    DisposableEffect(Unit) { onDispose { player.release() } }
-    DisposableEffect(activity, fullscreen) {
-        val window = activity?.window
-        val controller = window?.let { WindowCompat.getInsetsController(it, it.decorView) }
-        if (fullscreen) {
-            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-            controller?.systemBarsBehavior =
-                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            controller?.hide(WindowInsetsCompat.Type.systemBars())
-        } else {
-            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            controller?.show(WindowInsetsCompat.Type.systemBars())
-        }
-        onDispose {
-            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            controller?.show(WindowInsetsCompat.Type.systemBars())
-        }
-    }
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                // Backgrounding must stop audio + the active clip immediately.
-                // ON_PAUSE fires before the app loses foreground; flushing
-                // playWhenReady here prevents background audio + battery drain.
-                Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
-                    player.playWhenReady = false
-                }
-                // On return, refresh the feed and resume only the current page.
-                Lifecycle.Event.ON_RESUME -> {
-                    vm.refresh()
-                    player.playWhenReady = true
-                }
-                else -> Unit
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
-
-    if (showDeleteConfirm && deleteTargetId != null) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            containerColor = HikariBg,
-            title = { Text("Video löschen?") },
-            text = { Text("Das Video wird unwiderruflich entfernt.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    vm.onDelete(deleteTargetId!!)
-                    showDeleteConfirm = false
-                    deleteTargetId = null
-                }) { Text("Löschen", color = MaterialTheme.colorScheme.error) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text("Abbrechen") }
-            },
-        )
-    }
-
-    Box(Modifier.fillMaxSize().background(HikariBg)) {
-        PullToRefreshBox(
-            isRefreshing = refreshing,
-            onRefresh = { vm.refresh(pull = true) },
-            modifier = Modifier.fillMaxSize(),
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(HikariBg),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
-            if (items.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .windowInsetsPadding(WindowInsets.statusBars),
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                    }
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            // ── Header Bar ──────────────────────────────────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            error ?: when (mode) {
-                                FeedMode.NEW -> "Keine neuen Reels heute.\nTipp auf Archiv für ältere Videos."
-                                FeedMode.SAVED -> "Noch nichts gespeichert."
-                                FeedMode.OLD -> "Archiv ist leer."
-                            },
-                            color = HikariTextFaint,
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                            modifier = Modifier.padding(24.dp),
+                            text = "TAGESFOKUS",
+                            color = HikariAmber,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.8.sp,
                         )
-                    }
-                }
-            } else {
-                // Etappe 4: Im NEW-Modus haengt eine Abschluss-Seite hinter dem
-                // letzten Item — bewusstes Tagesende statt leerem Weiterscrollen.
-                val showDonePage = mode == FeedMode.NEW
-                val pageCount = items.size + if (showDonePage) 1 else 0
-                val pagerState = rememberPagerState(pageCount = { pageCount })
-                LaunchedEffect(items.size) {
-                    // Nur eingreifen, wenn die Position wirklich ungültig ist UND
-                    // gerade keine Wischbewegung läuft — sonst bleibt der Pager
-                    // zwischen zwei Seiten stehen.
-                    if (items.isNotEmpty() &&
-                        pagerState.currentPage > items.lastIndex &&
-                        !pagerState.isScrollInProgress
-                    ) {
-                        pagerState.scrollToPage(items.lastIndex)
-                    }
-                }
-
-                // Tippen auf den Feed-Tab: an den Anfang und frischen Nachschub holen.
-                LaunchedEffect(resetTick) {
-                    if (resetTick > 0) {
-                        pagerState.scrollToPage(0)
-                        vm.refresh(pull = true)
-                    }
-                }
-
-                // Endlos-Feed: rechtzeitig vor dem Ende die nächste Seite holen.
-                LaunchedEffect(pagerState.currentPage, items.size) {
-                    if (showDonePage && items.isNotEmpty() &&
-                        pagerState.currentPage >= items.size - 3 &&
-                        !pagerState.isScrollInProgress
-                    ) {
-                        vm.loadMore()
-                    }
-                }
-
-                // Langvideos erscheinen als Vorschau-Karte (kind "video") und
-                // spielen NICHT im Pager — nur die abspielbaren Items (Shorts,
-                // Clips, Legacy) bilden die Player-Playlist. Das Mapping ersetzt
-                // die frühere 1:1-Kopplung Pager-Seite == Playlist-Index.
-                val playableItems = remember(items) { items.filter { it.kind != "video" } }
-                val playlistIndexByVideoId = remember(playableItems) {
-                    playableItems.withIndex().associate { (i, it) -> it.videoId to i }
-                }
-
-                // Build the player playlist ONCE per items change. ExoPlayer
-                // keeps already-buffered windows when the list overlaps, so a
-                // refresh that re-orders or appends videos won't re-prepare the
-                // currently-playing one.
-                val playlistKey = remember(playableItems, baseUrl) {
-                    playableItems.joinToString("|") { it.videoId }
-                }
-                LaunchedEffect(playlistKey) {
-                    if (playableItems.isEmpty()) return@LaunchedEffect
-                    val mediaItems =
-                        playableItems.map { factory.mediaItemFor(baseUrl, it.videoId, kind = it.kind) }
-                    val currentId = items.getOrNull(pagerState.currentPage)?.videoId
-                    val targetIdx = (currentId?.let { playlistIndexByVideoId[it] } ?: 0)
-                        .coerceIn(0, playableItems.lastIndex)
-                    player.setMediaItems(mediaItems, targetIdx, 0L)
-                    // Anti-doomscroll: NO infinite loop. We pause at the end of
-                    // each clip instead of auto-looping (REPEAT_MODE_ONE) or
-                    // auto-advancing (which de-synced the pager from the player —
-                    // wrong captions over wrong audio). The clip plays once; the
-                    // user gets a calm tap-to-replay end-state and scrolls on
-                    // their own intent. REPEAT_MODE_OFF keeps the pager and the
-                    // player on the same item index.
-                    player.repeatMode = androidx.media3.common.Player.REPEAT_MODE_OFF
-                    player.pauseAtEndOfMediaItems = true
-                    player.prepare()
-                    player.playWhenReady = true
-                }
-
-                // Page wechsel = nur seekTo, kein setMediaItems / prepare. Decoder
-                // bleibt warm, Buffer bleiben gefüllt → smoother swipe.
-                // Karten-Seiten (Langvideos) pausieren den Player nur.
-                LaunchedEffect(pagerState.currentPage, playlistKey) {
-                    if (items.isEmpty()) return@LaunchedEffect
-                    val item = items.getOrNull(pagerState.currentPage)
-                    if (item == null) {
-                        // Abschluss-Seite — Wiedergabe ruht.
-                        player.pause()
-                        return@LaunchedEffect
-                    }
-                    if (item.kind == "video") {
-                        player.pause()
-                        return@LaunchedEffect
-                    }
-                    val idx = playlistIndexByVideoId[item.videoId] ?: return@LaunchedEffect
-                    if (idx != player.currentMediaItemIndex) {
-                        player.seekTo(idx, 0L)
-                        // A clip that ran to its end leaves the player STATE_ENDED;
-                        // re-prepare so the freshly-swiped clip starts from frame 0.
-                        if (player.playbackState == androidx.media3.common.Player.STATE_ENDED) {
-                            player.prepare()
+                        Spacer(Modifier.width(8.dp))
+                        // Streak Badge
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(HikariSurfaceHigh)
+                                .border(0.5.dp, HikariBorderStrong, RoundedCornerShape(10.dp))
+                                .padding(horizontal = 7.dp, vertical = 2.dp),
+                        ) {
+                            Text(
+                                text = "🔥 $streak ${if (streak == 1) "Tag" else "Tage"}",
+                                color = HikariText,
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                            )
                         }
-                        player.playWhenReady = true
-                    } else if (!player.isPlaying) {
-                        // Rückkehr von einer Karten-Seite auf dasselbe abspielbare Item.
-                        if (player.playbackState == androidx.media3.common.Player.STATE_ENDED) {
-                            player.prepare()
-                        }
-                        player.playWhenReady = true
                     }
-                }
-
-                VerticalPager(
-                    state = pagerState,
-                    key = { if (it < items.size) items[it].videoId else "daily-done" },
-                    modifier = Modifier.fillMaxSize(),
-                ) { page ->
-                    if (page >= items.size) {
-                        DailyDonePage(watchedMinutes = today?.consumedSeconds?.div(60)?.toInt())
-                        return@VerticalPager
-                    }
-                    val item = items[page]
-                    if (item.kind == "video") {
-                        LongVideoCard(
-                            item = item,
-                            onOpen = {
-                                vm.onCardOpened(item.videoId)
-                                onNavigate(playVideoRoute(item.videoId, item.title, item.channelTitle))
-                            },
-                            onSubscribeChannel = { vm.onSubscribeChannel(item.channelId) },
-                            onBlockChannel = { vm.onBlockChannel(item.channelId) },
-                        )
-                        // Karten-„gesehen": 1,5 s Verweildauer statt 3 s Playback —
-                        // Weiterswipen ohne Tap zählt bewusst als gesehen.
-                        LaunchedEffect(item.videoId, pagerState.settledPage) {
-                            if (pagerState.settledPage == page) {
-                                kotlinx.coroutines.delay(1_500)
-                                vm.onCardSkipped(item.videoId)
-                            }
-                        }
-                        return@VerticalPager
-                    }
-                    ReelPlayer(
-                        item = item,
-                        player = player,
-                        isCurrent = page == pagerState.currentPage,
-                        fullscreen = fullscreen,
-                        sponsorBlock = sponsorBlock,
-                        playbackRepo = playbackRepo,
-                        sponsorBlockPrefs = sponsorBlockPrefs,
-                        onSeen = { vm.onSeen(item.videoId) },
-                        onToggleSave = { vm.onToggleSave(item.videoId, item.saved) },
-                        onLessLikeThis = { vm.onLessLikeThis(item.videoId) },
-                        onUnplayable = {
-                            vm.onUnplayable(item.videoId)
-                            scope.launch {
-                                if (page + 1 < items.size) {
-                                    pagerState.animateScrollToPage(page + 1)
-                                }
-                            }
-                        },
-                        onToggleFullscreen = { onFullscreenChange(!fullscreen) },
-                        onShowControls = { chromeVisible = true },
-                        onSubscribeChannel = { vm.onSubscribeChannel(item.channelId) },
-                        onBlockChannel = { vm.onBlockChannel(item.channelId) },
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = todayFormatted,
+                        color = HikariTextMuted,
+                        fontSize = 13.sp,
                     )
                 }
 
-                // Top chrome — counter + save (overlaid above the player)
-                AnimatedVisibility(
-                    visible = chromeVisible,
-                    enter = fadeIn(tween(200)),
-                    exit = fadeOut(tween(150)),
+                // Settings Button
+                IconButton(
+                    onClick = { showSettingsSheet = true },
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(HikariSurfaceHigh.copy(alpha = 0.6f)),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Tune,
+                        contentDescription = "Feed-Einstellungen",
+                        tint = HikariText,
+                        modifier = Modifier.size(19.dp),
+                    )
+                }
+            }
+
+            // ── Mindful Progress Bar ────────────────────────────────────────────────
+            Spacer(Modifier.height(8.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(HikariCardBg)
+                    .border(0.5.dp, HikariBorder, RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 9.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = if (isGoalCompleted) "Tagesziel erreicht! 🌱" else "Dein täglicher Geist-Fokus",
+                        color = if (isGoalCompleted) Color(0xFF10B981) else HikariText,
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = "${cards.count { it.id in completedCardIds }} / ${cards.size}",
+                        color = HikariAmber,
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+                LinearProgressIndicator(
+                    progress = { progressFraction },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .align(Alignment.TopStart)
-                        .windowInsetsPadding(WindowInsets.statusBars),
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = if (isGoalCompleted) Color(0xFF10B981) else HikariAmber,
+                    trackColor = HikariSurfaceHigh,
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // ── Feed Cards List ─────────────────────────────────────────────────────
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 96.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                // Bei Tagesabschluss: Feierliche Mindful Completion Card oben
+                if (isGoalCompleted) {
+                    item(key = "completion-banner") {
+                        MindfulCompletionBanner(
+                            onReset = { vm.resetDailyProgress() },
+                            onOpenSettings = { showSettingsSheet = true },
+                        )
+                    }
+                }
+
+                items(cards, key = { it.id }) { card ->
+                    val isDone = card.id in completedCardIds
+                    when (card) {
+                        is QuoteCardItem -> QuoteCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
+                        is BrainPuzzleCardItem -> BrainPuzzleCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
+                        is LanguageCardItem -> LanguageCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
+                        is HistoryCardItem -> HistoryCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
+                        is MentalModelCardItem -> MentalModelCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
+                        is BreathworkCardItem -> BreathworkCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
+                        is ScienceCardItem -> ScienceCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
+                        is FinanceCardItem -> FinanceCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
+                        is GeographyCardItem -> GeographyCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
+                        is SpeedMathCardItem -> SpeedMathCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
+                        is ArtCultureCardItem -> ArtCultureCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
+                        is VocabularyCardItem -> VocabularyCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
+                        is PhilosophyCardItem -> PhilosophyCard(card, isDone, onDone = { vm.markCardCompleted(card.id) })
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Settings Bottom Sheet ───────────────────────────────────────────────────
+    if (showSettingsSheet) {
+        FeedSettingsSheet(
+            enabledModules = enabledModules,
+            selectedLanguage = selectedLanguage,
+            onToggleModule = { module, enabled -> vm.toggleModule(module, enabled) },
+            onSelectLanguage = { vm.setLearningLanguage(it) },
+            onResetDaily = { vm.resetDailyProgress() },
+            onResetLanguage = { vm.resetLanguageProgress() },
+            onDismiss = { showSettingsSheet = false },
+        )
+    }
+}
+
+// ── Completion Banner ─────────────────────────────────────────────────────────
+
+@Composable
+private fun MindfulCompletionBanner(onReset: () -> Unit, onOpenSettings: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(Color(0xFF064E3B), Color(0xFF022C22)),
+                ),
+            )
+            .border(1.dp, Color(0xFF10B981).copy(alpha = 0.5f), RoundedCornerShape(18.dp))
+            .padding(16.dp),
+    ) {
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("🌱", fontSize = 24.sp)
+                Spacer(Modifier.width(10.dp))
+                Column {
+                    Text(
+                        "Du bist für heute komplett!",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        "Dein Gehirn hat wertvolle Impulse erhalten.",
+                        color = Color(0xFFA7F3D0),
+                        fontSize = 12.sp,
+                    )
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+            Text(
+                "Kein endloses Scrollen, kein billiges Dopamin. Nimm diese Weisheiten und Fähigkeiten mit in deinen Tag!",
+                color = Color.White.copy(alpha = 0.85f),
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+            )
+            Spacer(Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Button(
+                    onClick = onReset,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981).copy(alpha = 0.35f)),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                 ) {
-                    val current = items.getOrNull(pagerState.currentPage)
-                    Column(Modifier.fillMaxWidth()) {
-                        // Top row: counter / pills / save
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Spacer(Modifier.weight(1f))
-                            // Direkter Weg zu den KI-Vorgaben: was hier
-                            // geändert wird, mischt den Feed sofort neu.
-                            Box(
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .clip(CircleShape)
-                                    .background(HikariBg.copy(alpha = 0.55f))
-                                    .clickable { onNavigate("tuning") },
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Settings,
-                                    contentDescription = "KI-Vorgaben",
-                                    tint = HikariTextFaint,
-                                    modifier = Modifier.size(17.dp),
-                                )
+                    Text("Tag neu starten", color = Color.White, fontSize = 11.sp)
+                }
+                Button(
+                    onClick = onOpenSettings,
+                    colors = ButtonDefaults.buttonColors(containerColor = HikariSurfaceHigh),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                ) {
+                    Text("Module anpassen", color = HikariText, fontSize = 11.sp)
+                }
+            }
+        }
+    }
+}
+
+// ── Modul-Karten ─────────────────────────────────────────────────────────────
+
+@Composable
+private fun ModuleCardHeader(
+    emoji: String,
+    title: String,
+    badgeText: String? = null,
+    isDone: Boolean,
+    onDone: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(emoji, fontSize = 16.sp)
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = title,
+                color = HikariText,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            if (badgeText != null) {
+                Spacer(Modifier.width(6.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(HikariSurfaceHigh)
+                        .padding(horizontal = 5.dp, vertical = 2.dp),
+                ) {
+                    Text(badgeText, color = HikariAmber, fontSize = 9.5.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        IconButton(
+            onClick = onDone,
+            modifier = Modifier.size(28.dp),
+        ) {
+            Icon(
+                imageVector = if (isDone) Icons.Default.CheckCircle else Icons.Default.Check,
+                contentDescription = "Erledigt",
+                tint = if (isDone) Color(0xFF10B981) else HikariTextFaint,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuoteCard(item: QuoteCardItem, isDone: Boolean, onDone: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(HikariCardBg)
+            .border(
+                0.5.dp,
+                if (isDone) Color(0xFF10B981).copy(alpha = 0.5f) else HikariBorderStrong,
+                RoundedCornerShape(16.dp),
+            )
+            .padding(14.dp),
+    ) {
+        Column {
+            ModuleCardHeader("📜", "LEBENSWEISHEIT", "Stoiker", isDone, onDone)
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = "„${item.quote}“",
+                color = HikariText,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                fontStyle = FontStyle.Italic,
+                lineHeight = 21.sp,
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "— ${item.author} (${item.contextEra})",
+                color = HikariAmber,
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.Medium,
+            )
+            Spacer(Modifier.height(10.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(HikariSurfaceHigh.copy(alpha = 0.6f))
+                    .padding(10.dp),
+            ) {
+                Text(
+                    text = "Reflexion: ${item.reflectionPrompt}",
+                    color = HikariTextMuted,
+                    fontSize = 11.5.sp,
+                    lineHeight = 15.sp,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BrainPuzzleCard(item: BrainPuzzleCardItem, isDone: Boolean, onDone: () -> Unit) {
+    var selectedOption by remember { mutableStateOf<Int?>(null) }
+    val answered = selectedOption != null
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(HikariCardBg)
+            .border(
+                0.5.dp,
+                if (isDone) Color(0xFF10B981).copy(alpha = 0.5f) else HikariBorderStrong,
+                RoundedCornerShape(16.dp),
+            )
+            .padding(14.dp),
+    ) {
+        Column {
+            ModuleCardHeader("🧩", item.title.uppercase(), item.category, isDone, onDone)
+            Spacer(Modifier.height(8.dp))
+            Text(item.question, color = HikariText, fontSize = 13.5.sp, fontWeight = FontWeight.Medium)
+            Spacer(Modifier.height(12.dp))
+
+            // Options
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                item.options.forEachIndexed { index, opt ->
+                    val isCorrect = index == item.correctIndex
+                    val isSelected = selectedOption == index
+                    val bgColor = when {
+                        !answered -> HikariSurfaceHigh
+                        isCorrect -> Color(0xFF065F46)
+                        isSelected -> Color(0xFF991B1B)
+                        else -> HikariSurfaceHigh.copy(alpha = 0.5f)
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(bgColor)
+                            .clickable(enabled = !answered) {
+                                selectedOption = index
+                                onDone()
                             }
-                            Spacer(Modifier.size(8.dp))
-                            if (!fullscreen) {
-                                Spacer(Modifier.weight(1f))
-                            }
-                            current?.let {
-                                BookmarkButton(
-                                    saved = it.saved,
-                                    onClick = { vm.onToggleSave(it.videoId, it.saved) },
-                                )
-                            } ?: Box(Modifier.size(36.dp))
-                        }
-                        // "Original ansehen" — only for clip items
-                        if (current?.kind == "clip" && current.parentVideoId.isNotEmpty()) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.End,
-                            ) {
-                                TextButton(
-                                    onClick = {
-                                        onNavigate("original/${current.parentVideoId}")
-                                    },
-                                ) {
-                                    Text(
-                                        "Original ansehen",
-                                        color = HikariAmber,
-                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                                    )
-                                }
-                            }
-                        }
+                            .padding(horizontal = 12.dp, vertical = 9.dp),
+                    ) {
+                        Text(
+                            text = opt,
+                            color = Color.White,
+                            fontSize = 12.5.sp,
+                            fontWeight = if (isSelected || (answered && isCorrect)) FontWeight.Bold else FontWeight.Normal,
+                        )
+                    }
+                }
+            }
+
+            if (answered) {
+                Spacer(Modifier.height(10.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(HikariSurfaceHigh)
+                        .padding(10.dp),
+                ) {
+                    Column {
+                        Text(item.explanation, color = HikariText, fontSize = 11.5.sp, lineHeight = 15.sp)
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "🧠 Trainiert: ${item.brainRegionTrained}",
+                            color = HikariAmber,
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
                     }
                 }
             }
@@ -457,24 +541,719 @@ fun FeedScreen(
 }
 
 @Composable
-private fun BookmarkButton(saved: Boolean, onClick: () -> Unit) {
+private fun LanguageCard(item: LanguageCardItem, isDone: Boolean, onDone: () -> Unit) {
+    var revealed by remember { mutableStateOf(false) }
+    var selectedReply by remember { mutableStateOf<Int?>(null) }
+
     Box(
         modifier = Modifier
-            .size(36.dp)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(HikariCardBg)
+            .border(
+                0.5.dp,
+                if (isDone) Color(0xFF10B981).copy(alpha = 0.5f) else HikariBorderStrong,
+                RoundedCornerShape(16.dp),
+            )
+            .padding(14.dp),
     ) {
-        Icon(
-            imageVector = if (saved) HikariIcons.Bookmark else HikariIcons.BookmarkOutline,
-            contentDescription = if (saved) "Gespeichert" else "Speichern",
-            tint = if (saved) HikariAmber else HikariText,
-            modifier = Modifier.size(18.dp),
-        )
+        Column {
+            ModuleCardHeader("🗣️", "SPRACHEN LERNEN", item.language.title, isDone, onDone)
+            Spacer(Modifier.height(10.dp))
+
+            // Flashcard
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        Brush.linearGradient(listOf(Color(0xFF0F2027), Color(0xFF203A43))),
+                    )
+                    .clickable { revealed = !revealed; onDone() }
+                    .padding(14.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = item.foreignWord,
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = item.phonetic,
+                        color = HikariAmber,
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    if (revealed) {
+                        Text(
+                            text = item.nativeTranslation,
+                            color = Color(0xFFA7F3D0),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "„${item.exampleForeign}“\n(${item.exampleTranslation})",
+                            color = Color.White.copy(alpha = 0.75f),
+                            fontSize = 11.sp,
+                            textAlign = TextAlign.Center,
+                        )
+                    } else {
+                        Text(
+                            text = "Tippen zum Aufdecken & Sprechen",
+                            color = HikariTextFaint,
+                            fontSize = 10.5.sp,
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            // Mini Dialogue
+            Text("Mini-Dialog: ${item.dialogueScenario}", color = HikariAmber, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text(item.dialoguePrompt, color = HikariText, fontSize = 12.sp)
+            Spacer(Modifier.height(6.dp))
+
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                item.dialogueReplies.forEachIndexed { i, reply ->
+                    val isChosen = selectedReply == i
+                    val isCorrect = i == item.correctReplyIndex
+                    val btnBg = when {
+                        selectedReply == null -> HikariSurfaceHigh
+                        isCorrect -> Color(0xFF065F46)
+                        isChosen -> Color(0xFF991B1B)
+                        else -> HikariSurfaceHigh.copy(alpha = 0.5f)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(btnBg)
+                            .clickable {
+                                selectedReply = i
+                                onDone()
+                            }
+                            .padding(8.dp),
+                    ) {
+                        Text(reply, color = Color.White, fontSize = 11.5.sp)
+                    }
+                }
+            }
+        }
     }
 }
 
-private tailrec fun Context.findActivity(): Activity? = when (this) {
-    is Activity -> this
-    is ContextWrapper -> baseContext.findActivity()
-    else -> null
+@Composable
+private fun HistoryCard(item: HistoryCardItem, isDone: Boolean, onDone: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(HikariCardBg)
+            .border(
+                0.5.dp,
+                if (isDone) Color(0xFF10B981).copy(alpha = 0.5f) else HikariBorderStrong,
+                RoundedCornerShape(16.dp),
+            )
+            .padding(14.dp),
+    ) {
+        Column {
+            ModuleCardHeader("🏛️", "HEUTE IN DER GESCHICHTE", item.dateLabel, isDone, onDone)
+            Spacer(Modifier.height(8.dp))
+            Text(item.eventTitle, color = HikariText, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text(item.description, color = HikariTextMuted, fontSize = 12.sp, lineHeight = 16.sp)
+            Spacer(Modifier.height(8.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(HikariSurfaceHigh)
+                    .padding(8.dp),
+            ) {
+                Text("Bedeutung heute: ${item.whyItMatters}", color = HikariAmber, fontSize = 11.sp, lineHeight = 14.sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun MentalModelCard(item: MentalModelCardItem, isDone: Boolean, onDone: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(HikariCardBg)
+            .border(
+                0.5.dp,
+                if (isDone) Color(0xFF10B981).copy(alpha = 0.5f) else HikariBorderStrong,
+                RoundedCornerShape(16.dp),
+            )
+            .padding(14.dp),
+    ) {
+        Column {
+            ModuleCardHeader("💡", "KRITISCHES DENKEN", item.category, isDone, onDone)
+            Spacer(Modifier.height(8.dp))
+            Text(item.modelName, color = HikariText, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text(item.explanation, color = HikariTextMuted, fontSize = 12.sp, lineHeight = 16.sp)
+            Spacer(Modifier.height(6.dp))
+            Text("Alltagsfalle: ${item.realLifeExample}", color = Color.White.copy(alpha = 0.8f), fontSize = 11.5.sp)
+            Spacer(Modifier.height(6.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFF8B5CF6).copy(alpha = 0.2f))
+                    .border(0.5.dp, Color(0xFF8B5CF6).copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                    .padding(8.dp),
+            ) {
+                Text("Gegenstrategie: ${item.actionableDefense}", color = Color(0xFFDDD6FE), fontSize = 11.sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun BreathworkCard(item: BreathworkCardItem, isDone: Boolean, onDone: () -> Unit) {
+    var active by remember { mutableStateOf(false) }
+    var phase by remember { mutableStateOf("Bereit") }
+    var secondsRemaining by remember { mutableIntStateOf(4) }
+
+    LaunchedEffect(active) {
+        if (!active) return@LaunchedEffect
+        val phases = listOf("Einatmen", "Halten", "Ausatmen", "Halten")
+        var pIdx = 0
+        while (active) {
+            phase = phases[pIdx]
+            for (sec in 4 downTo 1) {
+                secondsRemaining = sec
+                delay(1000)
+            }
+            pIdx = (pIdx + 1) % phases.size
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(HikariCardBg)
+            .border(
+                0.5.dp,
+                if (isDone) Color(0xFF10B981).copy(alpha = 0.5f) else HikariBorderStrong,
+                RoundedCornerShape(16.dp),
+            )
+            .padding(14.dp),
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            ModuleCardHeader("🫁", "1-MINUTEN-ATEMÜBUNG", "Box Breathing", isDone, onDone)
+            Spacer(Modifier.height(10.dp))
+            Text(item.scientificBenefit, color = HikariTextMuted, fontSize = 11.5.sp, textAlign = TextAlign.Center)
+            Spacer(Modifier.height(12.dp))
+
+            // Breathing Circle Animation
+            Box(
+                modifier = Modifier
+                    .size(90.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (active) Brush.radialGradient(listOf(Color(0xFF06B6D4), Color(0xFF0891B2), Color.Transparent))
+                        else Brush.radialGradient(listOf(HikariSurfaceHigh, HikariCardBg)),
+                    )
+                    .clickable {
+                        active = !active
+                        if (active) onDone()
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = if (active) "$secondsRemaining" else "Start",
+                        color = Color.White,
+                        fontSize = if (active) 22.sp else 14.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    if (active) {
+                        Text(phase, color = Color.White.copy(alpha = 0.8f), fontSize = 10.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScienceCard(item: ScienceCardItem, isDone: Boolean, onDone: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(HikariCardBg)
+            .border(
+                0.5.dp,
+                if (isDone) Color(0xFF10B981).copy(alpha = 0.5f) else HikariBorderStrong,
+                RoundedCornerShape(16.dp),
+            )
+            .padding(14.dp),
+    ) {
+        Column {
+            ModuleCardHeader("🔬", "WISSENSCHAFTS-HAPPEN", item.phenomenon, isDone, onDone)
+            Spacer(Modifier.height(8.dp))
+            Text(item.question, color = HikariAmber, fontSize = 13.5.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text(item.coreExplanation, color = HikariText, fontSize = 12.sp, lineHeight = 16.sp)
+            Spacer(Modifier.height(8.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(HikariSurfaceHigh)
+                    .padding(8.dp),
+            ) {
+                Text("Erstaunlich: ${item.fascinatingDetail}", color = HikariTextMuted, fontSize = 11.sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun FinanceCard(item: FinanceCardItem, isDone: Boolean, onDone: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(HikariCardBg)
+            .border(
+                0.5.dp,
+                if (isDone) Color(0xFF10B981).copy(alpha = 0.5f) else HikariBorderStrong,
+                RoundedCornerShape(16.dp),
+            )
+            .padding(14.dp),
+    ) {
+        Column {
+            ModuleCardHeader("💰", "FINANZIELLE BILDUNG", "Life Skill", isDone, onDone)
+            Spacer(Modifier.height(8.dp))
+            Text(item.title, color = HikariText, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text(item.corePrinciple, color = HikariTextMuted, fontSize = 12.sp, lineHeight = 16.sp)
+            Spacer(Modifier.height(6.dp))
+            Text("Beispiel: ${item.practicalExample}", color = Color.White.copy(alpha = 0.85f), fontSize = 11.5.sp)
+            Spacer(Modifier.height(6.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFFFBBF24).copy(alpha = 0.15f))
+                    .border(0.5.dp, Color(0xFFFBBF24).copy(alpha = 0.35f), RoundedCornerShape(8.dp))
+                    .padding(8.dp),
+            ) {
+                Text("Regel: ${item.takeawayRule}", color = HikariAmber, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+            }
+        }
+    }
+}
+
+@Composable
+private fun GeographyCard(item: GeographyCardItem, isDone: Boolean, onDone: () -> Unit) {
+    var selectedIdx by remember { mutableStateOf<Int?>(null) }
+    val answered = selectedIdx != null
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(HikariCardBg)
+            .border(
+                0.5.dp,
+                if (isDone) Color(0xFF10B981).copy(alpha = 0.5f) else HikariBorderStrong,
+                RoundedCornerShape(16.dp),
+            )
+            .padding(14.dp),
+    ) {
+        Column {
+            ModuleCardHeader("🌍", "WELTATLAS-QUIZ", "Geografie", isDone, onDone)
+            Spacer(Modifier.height(8.dp))
+            Text(item.question, color = HikariText, fontSize = 13.5.sp, fontWeight = FontWeight.Medium)
+            Spacer(Modifier.height(10.dp))
+
+            Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                item.options.forEachIndexed { i, opt ->
+                    val isCorrect = i == item.correctIndex
+                    val isChosen = selectedIdx == i
+                    val bg = when {
+                        !answered -> HikariSurfaceHigh
+                        isCorrect -> Color(0xFF065F46)
+                        isChosen -> Color(0xFF991B1B)
+                        else -> HikariSurfaceHigh.copy(alpha = 0.5f)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(bg)
+                            .clickable(enabled = !answered) {
+                                selectedIdx = i
+                                onDone()
+                            }
+                            .padding(8.dp),
+                    ) {
+                        Text(opt, color = Color.White, fontSize = 12.sp)
+                    }
+                }
+            }
+            if (answered) {
+                Spacer(Modifier.height(8.dp))
+                Text(item.interestingFact, color = Color(0xFFA7F3D0), fontSize = 11.sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpeedMathCard(item: SpeedMathCardItem, isDone: Boolean, onDone: () -> Unit) {
+    var revealed by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(HikariCardBg)
+            .border(
+                0.5.dp,
+                if (isDone) Color(0xFF10B981).copy(alpha = 0.5f) else HikariBorderStrong,
+                RoundedCornerShape(16.dp),
+            )
+            .padding(14.dp),
+    ) {
+        Column {
+            ModuleCardHeader("🔢", "KOPFRECHNEN-TRICK", item.trickTitle, isDone, onDone)
+            Spacer(Modifier.height(8.dp))
+            Text(item.formulaShortcut, color = HikariAmber, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text(item.explanation, color = HikariTextMuted, fontSize = 12.sp)
+            Spacer(Modifier.height(8.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(HikariSurfaceHigh)
+                    .clickable { revealed = !revealed; onDone() }
+                    .padding(10.dp),
+            ) {
+                Column {
+                    Text("Aufgabe: ${item.practiceChallenge}", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    if (revealed) {
+                        Spacer(Modifier.height(4.dp))
+                        Text("Lösung: ${item.challengeResult}", color = Color(0xFF34D399), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    } else {
+                        Text("Tippen zum Auflösen", color = HikariTextFaint, fontSize = 10.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ArtCultureCard(item: ArtCultureCardItem, isDone: Boolean, onDone: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(HikariCardBg)
+            .border(
+                0.5.dp,
+                if (isDone) Color(0xFF10B981).copy(alpha = 0.5f) else HikariBorderStrong,
+                RoundedCornerShape(16.dp),
+            )
+            .padding(14.dp),
+    ) {
+        Column {
+            ModuleCardHeader("🎨", "KUNST & KULTUR", "Meisterwerk", isDone, onDone)
+            Spacer(Modifier.height(8.dp))
+            Text("„${item.masterpieceTitle}“", color = HikariText, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Text("${item.artist} (${item.yearAndOrigin})", color = HikariAmber, fontSize = 11.5.sp)
+            Spacer(Modifier.height(6.dp))
+            Text(item.backStory, color = HikariTextMuted, fontSize = 12.sp, lineHeight = 16.sp)
+        }
+    }
+}
+
+@Composable
+private fun VocabularyCard(item: VocabularyCardItem, isDone: Boolean, onDone: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(HikariCardBg)
+            .border(
+                0.5.dp,
+                if (isDone) Color(0xFF10B981).copy(alpha = 0.5f) else HikariBorderStrong,
+                RoundedCornerShape(16.dp),
+            )
+            .padding(14.dp),
+    ) {
+        Column {
+            ModuleCardHeader("📚", "WORTSCHATZ-MEISTER", "Wort des Tages", isDone, onDone)
+            Spacer(Modifier.height(8.dp))
+            Text(item.word, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(item.wordType, color = HikariTextFaint, fontSize = 10.5.sp)
+            Spacer(Modifier.height(6.dp))
+            Text("Bedeutung: ${item.definition}", color = HikariText, fontSize = 12.sp)
+            Spacer(Modifier.height(4.dp))
+            Text("Herkunft: ${item.etymology}", color = HikariTextMuted, fontSize = 11.sp)
+            Spacer(Modifier.height(6.dp))
+            Text("Beispiel: „${item.sampleSentence}“", color = HikariAmber, fontSize = 11.sp, fontStyle = FontStyle.Italic)
+        }
+    }
+}
+
+@Composable
+private fun PhilosophyCard(item: PhilosophyCardItem, isDone: Boolean, onDone: () -> Unit) {
+    var votedOption by remember { mutableStateOf<String?>(null) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(HikariCardBg)
+            .border(
+                0.5.dp,
+                if (isDone) Color(0xFF10B981).copy(alpha = 0.5f) else HikariBorderStrong,
+                RoundedCornerShape(16.dp),
+            )
+            .padding(14.dp),
+    ) {
+        Column {
+            ModuleCardHeader("⚖️", "GEDANKENEXPERIMENT", "Ethik", isDone, onDone)
+            Spacer(Modifier.height(8.dp))
+            Text(item.dilemmaTitle, color = HikariText, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text(item.scenario, color = HikariTextMuted, fontSize = 12.sp, lineHeight = 16.sp)
+            Spacer(Modifier.height(10.dp))
+
+            // Voting Options
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (votedOption == "A") Color(0xFF1E3A8A) else HikariSurfaceHigh)
+                        .clickable { votedOption = "A"; onDone() }
+                        .padding(9.dp),
+                ) {
+                    Text(item.optionA, color = Color.White, fontSize = 11.5.sp)
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (votedOption == "B") Color(0xFF581C87) else HikariSurfaceHigh)
+                        .clickable { votedOption = "B"; onDone() }
+                        .padding(9.dp),
+                ) {
+                    Text(item.optionB, color = Color.White, fontSize = 11.5.sp)
+                }
+            }
+
+            if (votedOption != null) {
+                Spacer(Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(HikariSurfaceHigh)
+                        .padding(8.dp),
+                ) {
+                    Text(
+                        "Philosophischer Einblick: ${item.philosophicalInsight}",
+                        color = HikariAmber,
+                        fontSize = 11.sp,
+                        lineHeight = 14.sp,
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ── Feed Settings Sheet ───────────────────────────────────────────────────────
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FeedSettingsSheet(
+    enabledModules: Set<MindfulModuleType>,
+    selectedLanguage: LearningLanguage,
+    onToggleModule: (MindfulModuleType, Boolean) -> Unit,
+    onSelectLanguage: (LearningLanguage) -> Unit,
+    onResetDaily: () -> Unit,
+    onResetLanguage: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = HikariCardBg,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 8.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Feed-Einstellungen",
+                    color = HikariText,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = "Fertig",
+                    color = HikariAmber,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable { onDismiss() },
+                )
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(480.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                // Section: Zielsprache
+                item {
+                    Text(
+                        "ZIELSPRACHE FÜR LERN-EINHEITEN",
+                        color = HikariAmber,
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.2.sp,
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        LearningLanguage.entries.forEach { lang ->
+                            val isSelected = lang == selectedLanguage
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(if (isSelected) HikariAmber else HikariSurfaceHigh)
+                                    .clickable { onSelectLanguage(lang) }
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                            ) {
+                                Text(
+                                    text = "${lang.flagEmoji} ${lang.title}",
+                                    color = if (isSelected) Color.Black else HikariText,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(14.dp))
+                }
+
+                // Section: Modul-Toggles (alle 13 Module)
+                item {
+                    Text(
+                        "AKTIVE MODULE (INHALTS-KONTROLLE)",
+                        color = HikariAmber,
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.2.sp,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                }
+
+                items(MindfulModuleType.entries) { module ->
+                    val isChecked = module in enabledModules
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(HikariSurfaceHigh.copy(alpha = 0.6f))
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Text(module.iconEmoji, fontSize = 18.sp)
+                            Spacer(Modifier.width(10.dp))
+                            Column {
+                                Text(module.title, color = HikariText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                Text(module.subtitle, color = HikariTextFaint, fontSize = 10.sp)
+                            }
+                        }
+                        Switch(
+                            checked = isChecked,
+                            onCheckedChange = { onToggleModule(module, it) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = HikariAmber,
+                                uncheckedThumbColor = HikariTextFaint,
+                                uncheckedTrackColor = HikariSurface,
+                            ),
+                        )
+                    }
+                }
+
+                // Section: Aktionen & Reset
+                item {
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        "FORTSCHRITT & GRENZEN",
+                        color = HikariAmber,
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.2.sp,
+                    )
+                    Spacer(Modifier.height(6.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Button(
+                            onClick = { onResetDaily() },
+                            colors = ButtonDefaults.buttonColors(containerColor = HikariSurfaceHigh),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text("Tages-Karten zurücksetzen", fontSize = 11.sp, color = HikariText)
+                        }
+
+                        Button(
+                            onClick = { onResetLanguage() },
+                            colors = ButtonDefaults.buttonColors(containerColor = HikariSurfaceHigh),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text("Sprachen-Reset", fontSize = 11.sp, color = HikariText)
+                        }
+                    }
+                    Spacer(Modifier.height(24.dp))
+                }
+            }
+        }
+    }
 }

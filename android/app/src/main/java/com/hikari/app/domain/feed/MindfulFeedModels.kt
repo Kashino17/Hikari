@@ -1,0 +1,278 @@
+package com.hikari.app.domain.feed
+
+import androidx.compose.ui.graphics.Color
+
+enum class MindfulModuleType(
+    val id: String,
+    val title: String,
+    val subtitle: String,
+    val iconEmoji: String,
+    val accentColor: Color,
+    val defaultEnabled: Boolean = true,
+) {
+    QUOTE(
+        id = "quote",
+        title = "Zitate & Lebensweisheiten",
+        subtitle = "Tägliche Stoiker & Denker (Max 2 / Tag)",
+        iconEmoji = "📜",
+        accentColor = Color(0xFFF59E0B),
+    ),
+    BRAIN_PUZZLE(
+        id = "brain_puzzle",
+        title = "Gehirnjogging & Kognition",
+        subtitle = "Wissenschaftliche Mini-Rätsel (Max 2 / Tag)",
+        iconEmoji = "🧩",
+        accentColor = Color(0xFF3B82F6),
+    ),
+    LANGUAGE(
+        id = "language",
+        title = "Sprachen lernen",
+        subtitle = "Vokabeln, Sprechen & Mini-Dialoge",
+        iconEmoji = "🗣️",
+        accentColor = Color(0xFF10B981),
+    ),
+    HISTORY(
+        id = "history",
+        title = "Heute in der Geschichte",
+        subtitle = "Schlüsselereignisse des Tages",
+        iconEmoji = "🏛️",
+        accentColor = Color(0xFFEC4899),
+    ),
+    MENTAL_MODEL(
+        id = "mental_model",
+        title = "Kritisches Denken",
+        subtitle = "Denkfehler & kognitive Verzerrungen",
+        iconEmoji = "💡",
+        accentColor = Color(0xFF8B5CF6),
+    ),
+    BREATHWORK(
+        id = "breathwork",
+        title = "1-Minuten-Atemübung",
+        subtitle = "Box Breathing zur Cortisolsenkung",
+        iconEmoji = "🫁",
+        accentColor = Color(0xFF06B6D4),
+    ),
+    SCIENCE(
+        id = "science",
+        title = "Wissenschafts-Happen",
+        subtitle = "Wie funktioniert die Welt?",
+        iconEmoji = "🔬",
+        accentColor = Color(0xFF14B8A6),
+    ),
+    FINANCE(
+        id = "finance",
+        title = "Finanzielle Bildung",
+        subtitle = "Praktische Geld- & Lebenskompetenzen",
+        iconEmoji = "💰",
+        accentColor = Color(0xFFFBBF24),
+    ),
+    GEOGRAPHY(
+        id = "geography",
+        title = "Weltatlas & Geografie-Quiz",
+        subtitle = "Länder, Flaggen & Hauptstädte",
+        iconEmoji = "🌍",
+        accentColor = Color(0xFF6366F1),
+    ),
+    SPEED_MATH(
+        id = "speed_math",
+        title = "Kopfrechnen-Tricks",
+        subtitle = "Geniale mathematische Shortcuts",
+        iconEmoji = "🔢",
+        accentColor = Color(0xFFEF4444),
+    ),
+    ART_CULTURE(
+        id = "art_culture",
+        title = "Kunst & Kultur",
+        subtitle = "Meisterwerk & Entstehungsgeschichte",
+        iconEmoji = "🎨",
+        accentColor = Color(0xFFA855F7),
+    ),
+    VOCABULARY(
+        id = "vocabulary",
+        title = "Wortschatz-Meister",
+        subtitle = "Eloquentes Wort des Tages & Etymologie",
+        iconEmoji = "📚",
+        accentColor = Color(0xFFF97316),
+    ),
+    PHILOSOPHY(
+        id = "philosophy",
+        title = "Philosophisches Dilemma",
+        subtitle = "Gedankenexperimente & ethische Fragen",
+        iconEmoji = "⚖️",
+        accentColor = Color(0xFFE11D48),
+    );
+}
+
+enum class LearningLanguage(
+    val code: String,
+    val title: String,
+    val flagEmoji: String,
+) {
+    RUSSIAN("ru", "Russisch", "🇷🇺"),
+    ENGLISH("en", "Englisch", "🇬🇧"),
+    SPANISH("es", "Spanisch", "🇪🇸"),
+    JAPANESE("ja", "Japanisch", "🇯🇵"),
+    FRENCH("fr", "Französisch", "🇫🇷"),
+    ITALIAN("it", "Italienisch", "🇮🇹"),
+    GERMAN_ADVANCED("de", "Gehobenes Deutsch", "🇩🇪");
+
+    companion object {
+        fun fromCode(code: String?): LearningLanguage =
+            entries.firstOrNull { it.code.equals(code, ignoreCase = true) } ?: RUSSIAN
+    }
+}
+
+// ── Modul-Datenstrukturen ───────────────────────────────────────────────────
+
+sealed interface MindfulCard {
+    val id: String
+    val type: MindfulModuleType
+}
+
+data class QuoteCardItem(
+    override val id: String,
+    val quote: String,
+    val author: String,
+    val contextEra: String,
+    val reflectionPrompt: String,
+) : MindfulCard {
+    override val type = MindfulModuleType.QUOTE
+}
+
+data class BrainPuzzleCardItem(
+    override val id: String,
+    val title: String,
+    val category: String,
+    val question: String,
+    val options: List<String>,
+    val correctIndex: Int,
+    val explanation: String,
+    val brainRegionTrained: String,
+) : MindfulCard {
+    override val type = MindfulModuleType.BRAIN_PUZZLE
+}
+
+data class LanguageCardItem(
+    override val id: String,
+    val language: LearningLanguage,
+    val foreignWord: String,
+    val nativeTranslation: String,
+    val phonetic: String,
+    val exampleForeign: String,
+    val exampleTranslation: String,
+    val dialogueScenario: String,
+    val dialoguePartner: String,
+    val dialoguePrompt: String,
+    val dialogueReplies: List<String>,
+    val correctReplyIndex: Int,
+) : MindfulCard {
+    override val type = MindfulModuleType.LANGUAGE
+}
+
+data class HistoryCardItem(
+    override val id: String,
+    val dateLabel: String,
+    val eventTitle: String,
+    val description: String,
+    val whyItMatters: String,
+) : MindfulCard {
+    override val type = MindfulModuleType.HISTORY
+}
+
+data class MentalModelCardItem(
+    override val id: String,
+    val modelName: String,
+    val category: String,
+    val explanation: String,
+    val realLifeExample: String,
+    val actionableDefense: String,
+) : MindfulCard {
+    override val type = MindfulModuleType.MENTAL_MODEL
+}
+
+data class BreathworkCardItem(
+    override val id: String,
+    val title: String,
+    val inhaleSeconds: Int = 4,
+    val holdInSeconds: Int = 4,
+    val exhaleSeconds: Int = 4,
+    val holdOutSeconds: Int = 4,
+    val scientificBenefit: String,
+) : MindfulCard {
+    override val type = MindfulModuleType.BREATHWORK
+}
+
+data class ScienceCardItem(
+    override val id: String,
+    val phenomenon: String,
+    val question: String,
+    val coreExplanation: String,
+    val fascinatingDetail: String,
+) : MindfulCard {
+    override val type = MindfulModuleType.SCIENCE
+}
+
+data class FinanceCardItem(
+    override val id: String,
+    val title: String,
+    val corePrinciple: String,
+    val practicalExample: String,
+    val takeawayRule: String,
+) : MindfulCard {
+    override val type = MindfulModuleType.FINANCE
+}
+
+data class GeographyCardItem(
+    override val id: String,
+    val question: String,
+    val options: List<String>,
+    val correctIndex: Int,
+    val interestingFact: String,
+) : MindfulCard {
+    override val type = MindfulModuleType.GEOGRAPHY
+}
+
+data class SpeedMathCardItem(
+    override val id: String,
+    val trickTitle: String,
+    val formulaShortcut: String,
+    val explanation: String,
+    val practiceChallenge: String,
+    val challengeResult: String,
+) : MindfulCard {
+    override val type = MindfulModuleType.SPEED_MATH
+}
+
+data class ArtCultureCardItem(
+    override val id: String,
+    val masterpieceTitle: String,
+    val artist: String,
+    val yearAndOrigin: String,
+    val backStory: String,
+) : MindfulCard {
+    override val type = MindfulModuleType.ART_CULTURE
+}
+
+data class VocabularyCardItem(
+    override val id: String,
+    val word: String,
+    val wordType: String,
+    val definition: String,
+    val etymology: String,
+    val sampleSentence: String,
+) : MindfulCard {
+    override val type = MindfulModuleType.VOCABULARY
+}
+
+data class PhilosophyCardItem(
+    override val id: String,
+    val dilemmaTitle: String,
+    val scenario: String,
+    val optionA: String,
+    val optionB: String,
+    val schoolA: String,
+    val schoolB: String,
+    val philosophicalInsight: String,
+) : MindfulCard {
+    override val type = MindfulModuleType.PHILOSOPHY
+}

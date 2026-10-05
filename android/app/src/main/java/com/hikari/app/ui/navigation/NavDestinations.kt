@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Spa
 import androidx.compose.ui.graphics.vector.ImageVector
 
 data class NavDest(val route: String, val label: String, val icon: ImageVector)
@@ -14,7 +15,7 @@ data class NavDest(val route: String, val label: String, val icon: ImageVector)
 // Bereiche im Profil-Hub. Tuning via Profil-Gear → Settings.
 val hikariDestinations = listOf(
     NavDest("library", "Bibliothek", Icons.Default.GridView),
-    NavDest("feed", "Feed", Icons.Default.PlayArrow),
+    NavDest("feed", "Feed", Icons.Default.Spa),
     NavDest("music", "Musik", Icons.Default.MusicNote),
     NavDest("profile", "Profil", Icons.Default.Person),
 )
