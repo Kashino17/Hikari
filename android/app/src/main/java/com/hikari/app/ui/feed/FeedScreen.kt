@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -167,9 +168,15 @@ fun FeedScreen(
         if (cards.isEmpty()) {
             FeedEmptyState(onOpenSettings = { showSettingsSheet = true })
         } else {
+            val flingBehavior = PagerDefaults.flingBehavior(
+                state = pagerState,
+                snapPositionalThreshold = 0.20f,
+                snapAnimationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
+            )
             VerticalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
+                flingBehavior = flingBehavior,
                 key = { page ->
                     if (page < cards.size) cards[page].id else "zen_completion_slide"
                 },
@@ -261,116 +268,134 @@ private fun FeedCardSlide(
                 .padding(horizontal = 20.dp)
                 .padding(top = 8.dp, bottom = 84.dp), // Aussparung für Statusbar & Bottom-Nav-Bar
         ) {
-            // ── Top Story Progress & Header Overlay ──────────────────────────────
+            // ── Top Story Progress Bar (Ganz oben, dezent & präzise) ───────────────
             val progress by animateFloatAsState(
                 targetValue = (pageIndex + 1).toFloat() / totalCount.toFloat(),
-                animationSpec = tween(300, easing = FastOutSlowInEasing),
+                animationSpec = tween(280, easing = FastOutSlowInEasing),
                 label = "feed-slide-progress",
             )
             LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(3.dp)
+                    .height(2.5.dp)
                     .clip(RoundedCornerShape(1.5.dp)),
-                color = ambientColor,
-                trackColor = HikariSurfaceHigh.copy(alpha = 0.4f),
+                color = HikariAmber,
+                trackColor = Color.White.copy(alpha = 0.10f),
             )
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(12.dp))
 
+            // ── Header Bar: HIKARI Brand + Kategorie + Streak + Settings ────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                // Topic Pill + Rank Badge + Index
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                // Linke Seite: Brand "HIKARI" in Gold + Kategorie-Pill + Zähler
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f, fill = false),
+                ) {
+                    Text(
+                        text = "HIKARI",
+                        color = HikariAmber,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 2.sp,
+                    )
+
+                    Spacer(Modifier.width(8.dp))
+
+                    Text(
+                        text = "•",
+                        color = Color.White.copy(alpha = 0.35f),
+                        fontSize = 12.sp,
+                    )
+
+                    Spacer(Modifier.width(8.dp))
+
+                    // Minimalist Frosted Category Chip
                     Surface(
-                        color = HikariCardBg.copy(alpha = 0.85f),
-                        shape = RoundedCornerShape(16.dp),
-                        border = androidx.compose.foundation.BorderStroke(0.5.dp, HikariBorderStrong),
+                        color = Color.White.copy(alpha = 0.08f),
+                        shape = RoundedCornerShape(20.dp),
+                        border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
                         ) {
-                            Text(getCardEmoji(card), fontSize = 14.sp)
-                            Spacer(Modifier.width(6.dp))
+                            Text(getCardEmoji(card), fontSize = 12.sp)
+                            Spacer(Modifier.width(5.dp))
                             Text(
                                 text = getCardCategoryLabel(card),
-                                color = HikariText,
+                                color = Color.White,
                                 fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                letterSpacing = 0.5.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            if (card.rank == ModuleRank.RANK_1) {
+                                Spacer(Modifier.width(5.dp))
+                                Text("⭐", fontSize = 10.sp)
+                            } else if (card.rank == ModuleRank.RANK_2) {
+                                Spacer(Modifier.width(5.dp))
+                                Text("🔷", fontSize = 10.sp)
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.width(8.dp))
+
+                    Text(
+                        text = "${pageIndex + 1}/$totalCount",
+                        color = HikariTextFaint,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+
+                // Rechte Seite: Streak Badge + Edler Frosted Settings Button
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        color = Color.White.copy(alpha = 0.08f),
+                        shape = RoundedCornerShape(16.dp),
+                        border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        ) {
+                            Text("🔥", fontSize = 12.sp)
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = "$streak",
+                                color = HikariAmber,
+                                fontSize = 11.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.8.sp,
                             )
                         }
                     }
 
-                    if (card.rank == ModuleRank.RANK_1) {
-                        Spacer(Modifier.width(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF10B981).copy(alpha = 0.2f))
-                                .border(0.5.dp, Color(0xFF10B981).copy(alpha = 0.6f), RoundedCornerShape(12.dp))
-                                .padding(horizontal = 7.dp, vertical = 4.dp),
-                        ) {
-                            Text("⭐ TOP", color = Color(0xFF10B981), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                        }
-                    } else if (card.rank == ModuleRank.RANK_2) {
-                        Spacer(Modifier.width(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF3B82F6).copy(alpha = 0.2f))
-                                .border(0.5.dp, Color(0xFF3B82F6).copy(alpha = 0.6f), RoundedCornerShape(12.dp))
-                                .padding(horizontal = 7.dp, vertical = 4.dp),
-                        ) {
-                            Text("🔷 R2", color = Color(0xFF60A5FA), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
+                    Spacer(Modifier.width(10.dp))
 
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = "${pageIndex + 1} / $totalCount",
-                        color = HikariTextFaint,
-                        fontSize = 11.sp,
-                    )
-                }
-
-                // Streak + Settings Tune Icon
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(HikariSurfaceHigh.copy(alpha = 0.7f))
-                            .border(0.5.dp, HikariBorderStrong, RoundedCornerShape(14.dp))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                    ) {
-                        Text(
-                            text = "🔥 $streak",
-                            color = HikariText,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-
-                    Spacer(Modifier.width(8.dp))
-
-                    IconButton(
+                    // Premium Frosted Glass Settings Button
+                    Surface(
                         onClick = onOpenSettings,
-                        modifier = Modifier
-                            .size(34.dp)
-                            .clip(CircleShape)
-                            .background(HikariSurfaceHigh.copy(alpha = 0.7f)),
+                        shape = CircleShape,
+                        color = Color.White.copy(alpha = 0.10f),
+                        border = androidx.compose.foundation.BorderStroke(0.8.dp, Color.White.copy(alpha = 0.20f)),
+                        modifier = Modifier.size(36.dp),
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Tune,
-                            contentDescription = "Einstellungen",
-                            tint = HikariText,
-                            modifier = Modifier.size(17.dp),
-                        )
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Icon(
+                                imageVector = Icons.Default.Tune,
+                                contentDescription = "Feed-Einstellungen",
+                                tint = HikariText,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
                     }
                 }
             }

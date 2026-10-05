@@ -218,7 +218,7 @@ private fun LibraryContent(
             ) {
                 Text(
                     text = "HIKARI",
-                    color = Color(0xFFE50914), // Netflix Signature Red
+                    color = HikariAmber, // Hikari Signature Gold/Yellow
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Black,
                     letterSpacing = 2.sp,

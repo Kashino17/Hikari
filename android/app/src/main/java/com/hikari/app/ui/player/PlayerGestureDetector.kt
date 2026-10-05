@@ -53,6 +53,10 @@ suspend fun PointerInputScope.detectPlayerGestures(
         val downPos = down.position
         val downAt = down.uptimeMillis
         val width = size.width.toFloat()
+        val height = size.height.toFloat()
+        val topExclusionPx = topExclusionZone.toPx()
+        val bottomExclusionPx = bottomExclusionZone.toPx()
+        val isInsideSafeVerticalZone = downPos.y >= topExclusionPx && downPos.y <= (height - bottomExclusionPx)
 
         var mode = Mode.Undecided
         var side = DragSide.Right
@@ -89,10 +93,16 @@ suspend fun PointerInputScope.detectPlayerGestures(
                     val dx = change.position.x - downPos.x
                     val dy = change.position.y - downPos.y
                     if (abs(dy) > slopPx && abs(dy) > abs(dx) * 1.5f) {
-                        mode = Mode.VerticalDrag
-                        side = if (downPos.x < width / 2f) DragSide.Left else DragSide.Right
-                        onVerticalDragStart(side)
-                        change.consume()
+                        if (isInsideSafeVerticalZone) {
+                            mode = Mode.VerticalDrag
+                            side = if (downPos.x < width / 2f) DragSide.Left else DragSide.Right
+                            onVerticalDragStart(side)
+                            change.consume()
+                        } else {
+                            // Touch startete im oberen Bereich (z.B. Notifications/Statusleiste herunterziehen)
+                            // oder unteren Bereich (System-Gesten). Geste für Player ignorieren!
+                            mode = Mode.Ignored
+                        }
                     } else if (abs(dx) > slopPx * 2f) {
                         // Horizontales Wischen ist bewusst KEINE Spul-Geste
                         // (zu leicht ausgelöst). Geste beenden.
@@ -153,4 +163,11 @@ suspend fun PointerInputScope.detectPlayerGestures(
 
 private enum class Mode { Undecided, VerticalDrag, Pinch, Ignored }
 
-private val dragSlop = 14.dp
+/** Schwellenwert: Nicht zu sensibel, verhindert versehentliche Auslösung. */
+private val dragSlop = 26.dp
+
+/** Oben 72dp Sicherheitszone: Schützt das Herunterziehen der Android-Statusleiste/Benachrichtigungen. */
+private val topExclusionZone = 72.dp
+
+/** Unten 48dp Sicherheitszone: Schützt System-Navigationsgesten. */
+private val bottomExclusionZone = 48.dp

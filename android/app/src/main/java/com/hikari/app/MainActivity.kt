@@ -28,8 +28,16 @@ class MainActivity : ComponentActivity() {
     /** Per Teilen-Menü geschickter Link (ACTION_SEND text/plain). */
     private var sharedImport by mutableStateOf<SharedImport?>(null)
 
+    /** Callback für Video-Player: Bild-im-Bild bei Home-Geste/App-Wechsel (Android 8+). */
+    var onUserLeaveHintListener: (() -> Unit)? = null
+
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        onUserLeaveHintListener?.invoke()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

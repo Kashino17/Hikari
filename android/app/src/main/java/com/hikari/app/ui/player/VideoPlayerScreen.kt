@@ -1,13 +1,20 @@
 package com.hikari.app.ui.player
 
 import android.app.Activity
+import android.app.PictureInPictureParams
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
 import android.media.AudioManager
+import android.os.Build
 import android.provider.Settings
+import android.util.Rational
 import android.view.WindowManager
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
+import androidx.core.app.PictureInPictureModeChangedInfo
+import androidx.core.util.Consumer
+import com.hikari.app.MainActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -40,6 +47,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Forward10
+import androidx.compose.material.icons.filled.PictureInPictureAlt
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.outlined.FitScreen
@@ -282,13 +290,81 @@ fun VideoPlayerScreen(
         }
     }
 
+    var inPipMode by remember { mutableStateOf(activity?.isInPictureInPictureMode == true) }
+
+    fun enterPip() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && activity != null) {
+            val rational = if (videoW > 0 && videoH > 0) {
+                val aspect = (videoW.toFloat() / videoH.toFloat()).coerceIn(0.42f, 2.38f)
+                Rational((aspect * 1000).toInt(), 1000)
+            } else {
+                Rational(16, 9)
+            }
+            val builder = PictureInPictureParams.Builder().setAspectRatio(rational)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                builder.setAutoEnterEnabled(true)
+                builder.setSeamlessResizeEnabled(true)
+            }
+            val success = runCatching { activity.enterPictureInPictureMode(builder.build()) }.getOrDefault(false)
+            if (!success) {
+                showToast("Bild-im-Bild konnte nicht gestartet werden")
+            }
+        } else {
+            showToast("Bild-im-Bild erfordert Android 8.0+")
+        }
+    }
+
+    LaunchedEffect(videoW, videoH, playing) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && activity != null) {
+            val rational = if (videoW > 0 && videoH > 0) {
+                val aspect = (videoW.toFloat() / videoH.toFloat()).coerceIn(0.42f, 2.38f)
+                Rational((aspect * 1000).toInt(), 1000)
+            } else {
+                Rational(16, 9)
+            }
+            val builder = PictureInPictureParams.Builder()
+                .setAspectRatio(rational)
+                .setAutoEnterEnabled(playing)
+                .setSeamlessResizeEnabled(true)
+            runCatching { activity.setPictureInPictureParams(builder.build()) }
+        }
+    }
+
+    DisposableEffect(activity) {
+        val mainAct = activity as? MainActivity
+        val consumer = Consumer<PictureInPictureModeChangedInfo> { info ->
+            inPipMode = info.isInPictureInPictureMode
+        }
+        mainAct?.addOnPictureInPictureModeChangedListener(consumer)
+        mainAct?.onUserLeaveHintListener = {
+            if (playing) {
+                enterPip()
+            }
+        }
+        onDispose {
+            mainAct?.removeOnPictureInPictureModeChangedListener(consumer)
+            if (mainAct?.onUserLeaveHintListener != null) {
+                mainAct.onUserLeaveHintListener = null
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && activity != null) {
+                runCatching {
+                    activity.setPictureInPictureParams(
+                        PictureInPictureParams.Builder().setAutoEnterEnabled(false).build()
+                    )
+                }
+            }
+        }
+    }
+
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
-                    player.playWhenReady = false
-                    savePositionAsync(currentVideoId, player.currentPosition)
+                    if (activity?.isInPictureInPictureMode != true) {
+                        player.playWhenReady = false
+                        savePositionAsync(currentVideoId, player.currentPosition)
+                    }
                 }
                 Lifecycle.Event.ON_RESUME -> { player.playWhenReady = true }
                 else -> Unit
@@ -458,7 +534,7 @@ fun VideoPlayerScreen(
         showToast(if (locked) "Bildschirm gesperrt" else "Entsperrt")
     }
 
-    BackHandler {
+    BackHandler(enabled = !inPipMode) {
         when {
             locked -> lockHintVisible = true
             sheet != Sheet.None -> sheet = Sheet.None
@@ -503,7 +579,8 @@ fun VideoPlayerScreen(
                 .fillMaxSize()
                 .background(Color.Black)
                 .onGloballyPositioned { boxWidthPx = it.size.width; boxHeightPx = it.size.height }
-                .pointerInput(currentVideoId, locked) {
+                .pointerInput(currentVideoId, locked, inPipMode) {
+                    if (inPipMode) return@pointerInput
                     detectPlayerGestures(
                         onTap = {
                             if (locked) {
@@ -554,7 +631,7 @@ fun VideoPlayerScreen(
                 modifier = Modifier.fillMaxSize(),
             )
 
-            val chrome = controlsVisible && !locked && sheet == Sheet.None
+            val chrome = controlsVisible && !locked && sheet == Sheet.None && !inPipMode
 
             // Mitte: Replay / Play-Pause / Forward
             AnimatedVisibility(
@@ -574,7 +651,7 @@ fun VideoPlayerScreen(
                 }
             }
 
-            // Oben: Scrim + Zurück + Titel + Drehen
+            // Oben: Scrim + Zurück + Titel + Drehen + Bild-im-Bild
             AnimatedVisibility(
                 visible = chrome,
                 enter = fadeIn(tween(180)),
@@ -633,6 +710,12 @@ fun VideoPlayerScreen(
                         if (orientation == PlayerOrientation.Landscape) "Hochformat" else "Querformat",
                         40.dp, 20.dp, Color.Black.copy(alpha = 0.45f),
                     ) { toggleOrientation() }
+                    Spacer(Modifier.width(8.dp))
+                    CircleControl(
+                        Icons.Default.PictureInPictureAlt,
+                        "Bild-im-Bild (Pop-up)",
+                        40.dp, 20.dp, Color.Black.copy(alpha = 0.45f),
+                    ) { enterPip() }
                 }
             }
 
@@ -696,84 +779,86 @@ fun VideoPlayerScreen(
                 }
             }
 
-            // Sperre: kleiner Knopf oben rechts, wenn gesperrt und Hinweis sichtbar
-            LockedHint(
-                visible = locked && lockHintVisible,
-                onUnlock = { toggleLock() },
-                modifier = Modifier.align(Alignment.Center),
-            )
-
-            // Doppeltipp-Badge
-            seekBadge?.let { (forward, total) ->
-                StackedSeekBadge(
-                    forward = forward,
-                    totalMs = total,
-                    modifier = Modifier.align(if (forward) Alignment.CenterEnd else Alignment.CenterStart).padding(horizontal = 36.dp),
+            if (!inPipMode) {
+                // Sperre: kleiner Knopf oben rechts, wenn gesperrt und Hinweis sichtbar
+                LockedHint(
+                    visible = locked && lockHintVisible,
+                    onUnlock = { toggleLock() },
+                    modifier = Modifier.align(Alignment.Center),
                 )
-            }
 
-            // Pegel
-            LevelIndicator(
-                kind = levelKind,
-                level = if (levelKind == LevelKind.Brightness) brightness else volume,
-                modifier = Modifier.align(if (levelKind == LevelKind.Brightness) Alignment.CenterStart else Alignment.CenterEnd)
-                    .padding(horizontal = 28.dp),
-            )
+                // Doppeltipp-Badge
+                seekBadge?.let { (forward, total) ->
+                    StackedSeekBadge(
+                        forward = forward,
+                        totalMs = total,
+                        modifier = Modifier.align(if (forward) Alignment.CenterEnd else Alignment.CenterStart).padding(horizontal = 36.dp),
+                    )
+                }
 
-            PlayerToast(toast, modifier = Modifier.align(Alignment.TopCenter).padding(top = if (panelMode) 56.dp else 72.dp))
-
-            // Nächste Folge
-            val next = nextVideo
-            if (showNextOverlay && next != null && !locked) {
-                NextEpisodeCard(
-                    next = next,
-                    countdown = nextCountdown,
-                    onCancel = { nextDismissed = true; showNextOverlay = false },
-                    onPlayNow = { playNext() },
-                    modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = if (panelMode) 24.dp else 120.dp),
+                // Pegel
+                LevelIndicator(
+                    kind = levelKind,
+                    level = if (levelKind == LevelKind.Brightness) brightness else volume,
+                    modifier = Modifier.align(if (levelKind == LevelKind.Brightness) Alignment.CenterStart else Alignment.CenterEnd)
+                        .padding(horizontal = 28.dp),
                 )
-            }
 
-            // Auswahl-Flächen (Tempo / Spuren / Folgen) als eingebettete Panels
-            if (!panelMode && sheet != Sheet.None) {
-                Box(
-                    Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f))
-                        .pointerInput(Unit) { detectTapGestures(onTap = { sheet = Sheet.None }) },
-                )
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .windowInsetsPadding(WindowInsets.displayCutout)
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(HikariBg)
-                        .pointerInput(Unit) { detectTapGestures(onTap = { }) },
-                ) {
-                    when (sheet) {
-                        Sheet.Speed -> SpeedChooser(speed, ::setSpeed)
-                        Sheet.Tracks -> TracksChooser(
-                            audio = audioChoices,
-                            subtitles = subtitleChoices,
-                            onPickAudio = { pickTrack(C.TRACK_TYPE_AUDIO, it) },
-                            onPickSubtitle = { pickTrack(C.TRACK_TYPE_TEXT, it) },
-                        )
-                        Sheet.Episodes -> Column(Modifier.fillMaxWidth().fillMaxHeight(0.72f)) {
-                            Text(
-                                detail?.series_title ?: "Folgen",
-                                color = Color.White,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
+                PlayerToast(toast, modifier = Modifier.align(Alignment.TopCenter).padding(top = if (panelMode) 56.dp else 72.dp))
+
+                // Nächste Folge
+                val next = nextVideo
+                if (showNextOverlay && next != null && !locked) {
+                    NextEpisodeCard(
+                        next = next,
+                        countdown = nextCountdown,
+                        onCancel = { nextDismissed = true; showNextOverlay = false },
+                        onPlayNow = { playNext() },
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = if (panelMode) 24.dp else 120.dp),
+                    )
+                }
+
+                // Auswahl-Flächen (Tempo / Spuren / Folgen) als eingebettete Panels
+                if (!panelMode && sheet != Sheet.None) {
+                    Box(
+                        Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f))
+                            .pointerInput(Unit) { detectTapGestures(onTap = { sheet = Sheet.None }) },
+                    )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .windowInsetsPadding(WindowInsets.displayCutout)
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(HikariBg)
+                            .pointerInput(Unit) { detectTapGestures(onTap = { }) },
+                    ) {
+                        when (sheet) {
+                            Sheet.Speed -> SpeedChooser(speed, ::setSpeed)
+                            Sheet.Tracks -> TracksChooser(
+                                audio = audioChoices,
+                                subtitles = subtitleChoices,
+                                onPickAudio = { pickTrack(C.TRACK_TYPE_AUDIO, it) },
+                                onPickSubtitle = { pickTrack(C.TRACK_TYPE_TEXT, it) },
                             )
-                            EpisodeList(
-                                episodes = episodes,
-                                currentId = currentVideoId,
-                                onPick = { ep -> switchTo(ep.id, ep.title) },
-                                modifier = Modifier.fillMaxWidth(),
-                            )
+                            Sheet.Episodes -> Column(Modifier.fillMaxWidth().fillMaxHeight(0.72f)) {
+                                Text(
+                                    detail?.series_title ?: "Folgen",
+                                    color = Color.White,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
+                                )
+                                EpisodeList(
+                                    episodes = episodes,
+                                    currentId = currentVideoId,
+                                    onPick = { ep -> switchTo(ep.id, ep.title) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
+                            Sheet.None -> Unit
                         }
-                        Sheet.None -> Unit
                     }
                 }
             }
@@ -781,7 +866,7 @@ fun VideoPlayerScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize().background(HikariBg)) {
-        if (!panelMode) {
+        if (!panelMode || inPipMode) {
             Box(Modifier.fillMaxSize(), content = surface)
         } else {
             Column(Modifier.fillMaxSize()) {
