@@ -29,6 +29,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
@@ -36,8 +38,12 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -167,16 +173,16 @@ private fun LibraryContent(
 ) {
     fun play(v: LibraryVideoDto) = onPlayVideo(v.id, v.title, v.channelTitle ?: "")
 
+    var isSearchActive by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    var selectedType by remember { mutableStateOf(NetflixContentType.ALL) }
     var selectedGenre by remember { mutableStateOf(Genre.ALL) }
+    var showCategorySheet by remember { mutableStateOf(false) }
 
     val continueWatching = data.recentlyAdded.filter {
         val p = it.progress_seconds ?: 0f
         p > 0f && p < it.duration_seconds.toFloat() * 0.95f
     }
-    // "Empfohlen für dich" = top-scored Videos (immer Inhalt sobald
-    // recentlyAdded nicht leer). Sortiert by overall_score desc, gefiltert
-    // gegen Items die schon im Continue-Watching sind damit's nicht doppelt.
     val cwIds = continueWatching.map { it.id }.toSet()
     val recommended = data.recentlyAdded
         .filter { it.id !in cwIds }
@@ -184,53 +190,112 @@ private fun LibraryContent(
         .take(10)
 
     val heroVideo = continueWatching.firstOrNull() ?: data.recentlyAdded.firstOrNull()
-    val isFiltering = searchQuery.isNotBlank() || selectedGenre != Genre.ALL
+    val isCategoryFiltering = selectedType != NetflixContentType.ALL || selectedGenre != Genre.ALL
 
-    val genreCounts = remember(data) {
-        Genre.entries.associateWith { g ->
-            if (g == Genre.ALL) {
-                data.series.size + data.recentlyAdded.size
-            } else {
-                data.series.count { g in it.detectGenres() } +
-                    data.recentlyAdded.count { g in it.detectGenres() }
-            }
-        }
-    }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        // ── Suchleiste ────────────────────────────────────────────────────────
-        LibrarySearchBar(
-            query = searchQuery,
+    if (isSearchActive) {
+        NetflixSearchView(
+            data = data,
+            searchQuery = searchQuery,
             onQueryChange = { searchQuery = it },
-            onClear = { searchQuery = "" },
+            onCloseSearch = {
+                searchQuery = ""
+                isSearchActive = false
+            },
+            onOpenSeries = onOpenSeries,
+            onOpenChannel = onOpenChannel,
+            onPlayVideo = onPlayVideo,
+            onLongPressSeries = onLongPressSeries,
         )
+    } else {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // ── Netflix Header & Brand Bar ────────────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 18.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "HIKARI",
+                    color = Color(0xFFE50914), // Netflix Signature Red
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 2.sp,
+                    fontFamily = FontFamily.SansSerif,
+                )
+                IconButton(onClick = { isSearchActive = true }) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Suchen",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+            }
 
-        // ── Netflix-Style Genre Filter ────────────────────────────────────────
-        LibraryGenreFilterRow(
-            selectedGenre = selectedGenre,
-            onSelectGenre = { selectedGenre = it },
-            genreCounts = genreCounts,
-        )
+            // ── Netflix Filter Pills ──────────────────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Pill: Serien
+                val isSeriesActive = selectedType == NetflixContentType.SERIES
+                NetflixPill(
+                    text = if (isSeriesActive) "Serien ✕" else "Serien",
+                    isActive = isSeriesActive,
+                    onClick = {
+                        selectedType = if (isSeriesActive) NetflixContentType.ALL else NetflixContentType.SERIES
+                    },
+                )
 
-        Spacer(Modifier.height(4.dp))
+                // Pill: Filme
+                val isVideosActive = selectedType == NetflixContentType.VIDEOS
+                NetflixPill(
+                    text = if (isVideosActive) "Filme ✕" else "Filme",
+                    isActive = isVideosActive,
+                    onClick = {
+                        selectedType = if (isVideosActive) NetflixContentType.ALL else NetflixContentType.VIDEOS
+                    },
+                )
 
-        if (isFiltering) {
-            FilteredLibraryContent(
-                data = data,
-                searchQuery = searchQuery,
-                selectedGenre = selectedGenre,
-                onOpenSeries = onOpenSeries,
-                onOpenChannel = onOpenChannel,
-                onPlayVideo = onPlayVideo,
-                onLongPressSeries = onLongPressSeries,
-                onResetFilter = {
-                    searchQuery = ""
-                    selectedGenre = Genre.ALL
-                },
-            )
-        } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                item { HeroSection(video = heroVideo, onPlay = ::play) }
+                // Pill: Kategorien
+                val isGenreActive = selectedGenre != Genre.ALL
+                NetflixPill(
+                    text = if (isGenreActive) "${selectedGenre.title} ✕" else "Kategorien ▾",
+                    isActive = isGenreActive,
+                    onClick = {
+                        if (isGenreActive) {
+                            selectedGenre = Genre.ALL
+                        } else {
+                            showCategorySheet = true
+                        }
+                    },
+                )
+            }
+
+            Spacer(Modifier.height(6.dp))
+
+            if (isCategoryFiltering) {
+                FilteredNetflixLibraryContent(
+                    data = data,
+                    selectedType = selectedType,
+                    selectedGenre = selectedGenre,
+                    onOpenSeries = onOpenSeries,
+                    onOpenChannel = onOpenChannel,
+                    onPlayVideo = onPlayVideo,
+                    onLongPressSeries = onLongPressSeries,
+                    onResetFilter = {
+                        selectedType = NetflixContentType.ALL
+                        selectedGenre = Genre.ALL
+                    },
+                )
+            } else {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    item { HeroSection(video = heroVideo, onPlay = ::play) }
 
         // ── Deine Sammlung (Etappe 5) ────────────────────────────────────────
         if (watchLater.isNotEmpty()) {
@@ -383,6 +448,15 @@ private fun LibraryContent(
         }
     }
 }
+}
+
+    if (showCategorySheet) {
+        NetflixCategorySheet(
+            selectedGenre = selectedGenre,
+            onSelectGenre = { selectedGenre = it },
+            onDismiss = { showCategorySheet = false },
+        )
+    }
 }
 
 /**
@@ -1070,117 +1144,116 @@ private fun channelGradient(title: String): Brush {
     return Brush.linearGradient(listOf(start, end))
 }
 
+private enum class NetflixContentType {
+    ALL,
+    SERIES,
+    VIDEOS,
+}
+
 @Composable
-private fun LibrarySearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    onClear: () -> Unit,
+private fun NetflixPill(
+    text: String,
+    isActive: Boolean,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(HikariSurfaceHigh)
-            .border(0.5.dp, HikariBorder, RoundedCornerShape(12.dp))
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .clip(RoundedCornerShape(50))
+            .background(if (isActive) Color.White else Color.White.copy(alpha = 0.08f))
+            .border(
+                width = if (isActive) 1.dp else 0.8.dp,
+                color = if (isActive) Color.White else Color.White.copy(alpha = 0.25f),
+                shape = RoundedCornerShape(50),
+            )
+            .clickable { onClick() }
+            .padding(horizontal = 14.dp, vertical = 7.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Suchen",
-                tint = if (query.isNotBlank()) HikariAmber else HikariTextFaint,
-                modifier = Modifier.size(18.dp),
-            )
-            Spacer(Modifier.width(8.dp))
-            BasicTextField(
-                value = query,
-                onValueChange = onQueryChange,
-                singleLine = true,
-                textStyle = TextStyle(
-                    color = HikariText,
-                    fontSize = 13.5.sp,
-                    fontWeight = FontWeight.Normal,
-                ),
-                cursorBrush = SolidColor(HikariAmber),
-                modifier = Modifier.weight(1f),
-                decorationBox = { innerTextField ->
-                    if (query.isEmpty()) {
-                        Text(
-                            text = "Serien, Filme, Kanäle durchsuchen…",
-                            color = HikariTextFaint,
-                            fontSize = 13.sp,
-                        )
-                    }
-                    innerTextField()
-                },
-            )
-            if (query.isNotEmpty()) {
-                Spacer(Modifier.width(6.dp))
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Löschen",
-                    tint = HikariTextMuted,
-                    modifier = Modifier
-                        .size(16.dp)
-                        .clickable { onClear() },
-                )
-            }
-        }
+        Text(
+            text = text,
+            color = if (isActive) Color.Black else Color.White,
+            fontSize = 12.5.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LibraryGenreFilterRow(
+private fun NetflixCategorySheet(
     selectedGenre: Genre,
     onSelectGenre: (Genre) -> Unit,
-    genreCounts: Map<Genre, Int>,
-    modifier: Modifier = Modifier,
+    onDismiss: () -> Unit,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF141414),
+        scrimColor = Color.Black.copy(alpha = 0.75f),
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
-        Genre.entries.forEach { genre ->
-            val isSelected = genre == selectedGenre
-            val count = genreCounts[genre] ?: 0
-            val bg = if (isSelected) genre.accentColor.copy(alpha = 0.25f) else HikariSurfaceHigh
-            val border = if (isSelected) genre.accentColor else HikariBorder
-
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(bg)
-                    .border(0.75.dp, border, RoundedCornerShape(10.dp))
-                    .clickable { onSelectGenre(genre) }
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 8.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(5.dp),
-                ) {
-                    Text(genre.emoji, fontSize = 12.sp)
-                    Text(
-                        text = genre.title,
-                        color = if (isSelected) Color.White else HikariText,
-                        fontSize = 11.5.sp,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    )
-                    if (count > 0 && genre != Genre.ALL) {
+                Text(
+                    text = "Kategorien",
+                    color = Color.White,
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = "✕",
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .clickable { onDismiss() }
+                        .padding(4.dp),
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(440.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                items(Genre.entries) { genre ->
+                    val isSelected = genre == selectedGenre
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isSelected) Color.White.copy(alpha = 0.12f) else Color.Transparent)
+                            .clickable {
+                                onSelectGenre(genre)
+                                onDismiss()
+                            }
+                            .padding(horizontal = 12.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         Text(
-                            text = "$count",
-                            color = if (isSelected) genre.accentColor else HikariTextFaint,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
+                            text = if (genre == Genre.ALL) "Alle Kategorien" else genre.title,
+                            color = if (isSelected) Color.White else Color(0xFFB3B3B3),
+                            fontSize = 15.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                         )
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
                     }
                 }
             }
@@ -1189,9 +1262,9 @@ private fun LibraryGenreFilterRow(
 }
 
 @Composable
-private fun FilteredLibraryContent(
+private fun FilteredNetflixLibraryContent(
     data: LibraryResponse,
-    searchQuery: String,
+    selectedType: NetflixContentType,
     selectedGenre: Genre,
     onOpenSeries: (String) -> Unit,
     onOpenChannel: (String) -> Unit,
@@ -1201,153 +1274,422 @@ private fun FilteredLibraryContent(
 ) {
     fun play(v: LibraryVideoDto) = onPlayVideo(v.id, v.title, v.channelTitle ?: "")
 
-    val matchingSeries = remember(data.series, searchQuery, selectedGenre) {
-        data.series.filter { s ->
-            val matchesGenre = selectedGenre == Genre.ALL || selectedGenre in s.detectGenres()
-            val matchesQuery = searchQuery.isBlank() ||
-                s.title.contains(searchQuery, ignoreCase = true) ||
-                (s.description?.contains(searchQuery, ignoreCase = true) == true)
-            matchesGenre && matchesQuery
+    val matchingSeries = remember(data.series, selectedType, selectedGenre) {
+        if (selectedType == NetflixContentType.VIDEOS) emptyList()
+        else data.series.filter { s ->
+            selectedGenre == Genre.ALL || selectedGenre in s.detectGenres()
         }
     }
 
-    val matchingVideos = remember(data.recentlyAdded, searchQuery, selectedGenre) {
-        data.recentlyAdded.filter { v ->
-            val matchesGenre = selectedGenre == Genre.ALL || selectedGenre in v.detectGenres()
-            val matchesQuery = searchQuery.isBlank() ||
-                v.title.contains(searchQuery, ignoreCase = true) ||
+    val matchingVideos = remember(data.recentlyAdded, selectedType, selectedGenre) {
+        if (selectedType == NetflixContentType.SERIES) emptyList()
+        else data.recentlyAdded.filter { v ->
+            selectedGenre == Genre.ALL || selectedGenre in v.detectGenres()
+        }
+    }
+
+    val filterTitle = when {
+        selectedGenre != Genre.ALL -> selectedGenre.title
+        selectedType == NetflixContentType.SERIES -> "Alle Serien"
+        selectedType == NetflixContentType.VIDEOS -> "Alle Filme & Videos"
+        else -> "Alle Inhalte"
+    }
+
+    val totalCount = matchingSeries.size + matchingVideos.size
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(top = 10.dp, bottom = 96.dp),
+    ) {
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column {
+                    Text(
+                        text = filterTitle,
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = "$totalCount Titel verfügbar",
+                        color = Color(0xFF8C8C8C),
+                        fontSize = 12.sp,
+                    )
+                }
+                Text(
+                    text = "Zurücksetzen",
+                    color = HikariAmber,
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable { onResetFilter() }
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                )
+            }
+            Spacer(Modifier.height(12.dp))
+        }
+
+        if (totalCount == 0) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 60.dp, horizontal = 24.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Keine Titel in dieser Kategorie",
+                            color = Color.White,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Wähle eine andere Kategorie oder setze den Filter zurück.",
+                            color = HikariTextMuted,
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+            }
+        }
+
+        if (matchingSeries.isNotEmpty()) {
+            item {
+                SectionHeader("Serien", count = matchingSeries.size)
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(matchingSeries, key = { "filter-s-${it.id}" }) { s ->
+                        SeriesPosterCard(
+                            series = s,
+                            onClick = { onOpenSeries(s.id) },
+                            onLongClick = { onLongPressSeries(s) },
+                        )
+                    }
+                }
+                Spacer(Modifier.height(24.dp))
+            }
+        }
+
+        if (matchingVideos.isNotEmpty()) {
+            item {
+                SectionHeader("Filme & Videos", count = matchingVideos.size)
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(matchingVideos, key = { "filter-v-${it.id}" }) { v ->
+                        RecommendedCard(video = v, onClick = { play(v) })
+                    }
+                }
+                Spacer(Modifier.height(24.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun NetflixSearchView(
+    data: LibraryResponse,
+    searchQuery: String,
+    onQueryChange: (String) -> Unit,
+    onCloseSearch: () -> Unit,
+    onOpenSeries: (String) -> Unit,
+    onOpenChannel: (String) -> Unit,
+    onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
+    onLongPressSeries: (SeriesDto) -> Unit,
+) {
+    fun play(v: LibraryVideoDto) = onPlayVideo(v.id, v.title, v.channelTitle ?: "")
+
+    val isBlank = searchQuery.isBlank()
+
+    val matchingSeries = remember(data.series, searchQuery) {
+        if (isBlank) emptyList()
+        else data.series.filter { s ->
+            s.title.contains(searchQuery, ignoreCase = true) ||
+                (s.description?.contains(searchQuery, ignoreCase = true) == true) ||
+                s.detectGenres().any { it.title.contains(searchQuery, ignoreCase = true) }
+        }
+    }
+
+    val matchingVideos = remember(data.recentlyAdded, searchQuery) {
+        if (isBlank) emptyList()
+        else data.recentlyAdded.filter { v ->
+            v.title.contains(searchQuery, ignoreCase = true) ||
                 (v.channelTitle?.contains(searchQuery, ignoreCase = true) == true) ||
-                (v.description?.contains(searchQuery, ignoreCase = true) == true)
-            matchesGenre && matchesQuery
+                (v.description?.contains(searchQuery, ignoreCase = true) == true) ||
+                v.detectGenres().any { it.title.contains(searchQuery, ignoreCase = true) }
         }
     }
 
     val matchingChannels = remember(data.channels, searchQuery) {
-        if (searchQuery.isBlank()) emptyList()
+        if (isBlank) emptyList()
         else data.channels.filter { it.title.contains(searchQuery, ignoreCase = true) }
     }
 
-    val isEmpty = matchingSeries.isEmpty() && matchingVideos.isEmpty() && matchingChannels.isEmpty()
+    // Top trending / recommended for empty search state (Netflix style)
+    val topSearches = remember(data) {
+        (data.recentlyAdded.take(8).map { TopSearchItem.Video(it) } +
+            data.series.take(4).map { TopSearchItem.Series(it) })
+            .distinctBy { it.title }
+    }
 
-    if (isEmpty) {
-        Box(
-            modifier = Modifier.fillMaxSize().padding(32.dp),
-            contentAlignment = Alignment.Center,
+    Column(modifier = Modifier.fillMaxSize()) {
+        // ── Search App Bar ────────────────────────────────────────────────────
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("🔍", fontSize = 42.sp)
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    "Keine Treffer gefunden",
-                    color = HikariText,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
+            IconButton(onClick = onCloseSearch) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Zurück",
+                    tint = Color.White,
                 )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    "Keine Serien oder Videos passen zu deiner Auswahl.",
-                    color = HikariTextMuted,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center,
-                )
-                Spacer(Modifier.height(16.dp))
-                Button(
-                    onClick = onResetFilter,
-                    colors = ButtonDefaults.buttonColors(containerColor = HikariSurfaceHigh),
-                    shape = RoundedCornerShape(10.dp),
-                ) {
-                    Text("Filter zurücksetzen", color = HikariAmber, fontSize = 12.sp)
-                }
             }
-        }
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = 8.dp, bottom = 96.dp),
-        ) {
-            // Genre-Banner if selected
-            if (selectedGenre != Genre.ALL) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 6.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(selectedGenre.accentColor.copy(alpha = 0.15f))
-                            .border(0.5.dp, selectedGenre.accentColor.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
-                            .padding(12.dp),
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(selectedGenre.emoji, fontSize = 20.sp)
-                            Spacer(Modifier.width(8.dp))
-                            Column {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(Color(0xFF262626))
+                    .padding(horizontal = 10.dp, vertical = 9.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null,
+                        tint = Color(0xFF8C8C8C),
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    BasicTextField(
+                        value = searchQuery,
+                        onValueChange = onQueryChange,
+                        singleLine = true,
+                        textStyle = TextStyle(
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                        ),
+                        cursorBrush = SolidColor(Color.White),
+                        modifier = Modifier.weight(1f),
+                        decorationBox = { inner ->
+                            if (searchQuery.isEmpty()) {
                                 Text(
-                                    selectedGenre.title,
-                                    color = Color.White,
+                                    text = "Serien, Filme, Genres...",
+                                    color = Color(0xFF8C8C8C),
                                     fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                                Text(
-                                    "${matchingSeries.size + matchingVideos.size} Inhalte verfügbar",
-                                    color = selectedGenre.accentColor,
-                                    fontSize = 11.sp,
                                 )
                             }
-                        }
+                            inner()
+                        },
+                    )
+                    if (searchQuery.isNotEmpty()) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Löschen",
+                            tint = Color(0xFF8C8C8C),
+                            modifier = Modifier
+                                .size(18.dp)
+                                .clickable { onQueryChange("") },
+                        )
                     }
-                    Spacer(Modifier.height(12.dp))
                 }
             }
+            Spacer(Modifier.width(8.dp))
+        }
 
-            if (matchingSeries.isNotEmpty()) {
+        if (isBlank) {
+            // ── Netflix "Top-Suchanfragen" ────────────────────────────────────
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(top = 10.dp, bottom = 96.dp),
+            ) {
                 item {
-                    SectionHeader("Serien", count = matchingSeries.size)
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    Text(
+                        text = "Top-Suchanfragen",
+                        color = Color.White,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    )
+                }
+
+                items(topSearches, key = { it.uniqueKey }) { item ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                when (item) {
+                                    is TopSearchItem.Video -> play(item.video)
+                                    is TopSearchItem.Series -> onOpenSeries(item.series.id)
+                                }
+                            }
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        items(matchingSeries, key = { "match-s-${it.id}" }) { s ->
-                            SeriesPosterCard(
-                                series = s,
-                                onClick = { onOpenSeries(s.id) },
-                                onLongClick = { onLongPressSeries(s) },
+                        Box(
+                            modifier = Modifier
+                                .width(120.dp)
+                                .height(68.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(HikariSurface),
+                        ) {
+                            FallbackArtwork(title = item.title)
+                            AsyncImage(
+                                model = item.thumbnailUrl,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
                             )
                         }
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = item.title,
+                                color = Color.White,
+                                fontSize = 13.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                text = item.subtitle,
+                                color = Color(0xFF8C8C8C),
+                                fontSize = 11.5.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Abspielen",
+                            tint = Color.White,
+                            modifier = Modifier
+                                .size(28.dp)
+                                .border(1.dp, Color.White.copy(alpha = 0.6f), CircleShape)
+                                .padding(4.dp),
+                        )
                     }
-                    Spacer(Modifier.height(24.dp))
                 }
             }
-
-            if (matchingChannels.isNotEmpty()) {
-                item {
-                    SectionHeader("Kanäle", count = matchingChannels.size)
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        items(matchingChannels, key = { "match-c-${it.id}" }) { c ->
-                            ChannelCircle(channel = c, onClick = { onOpenChannel(c.id) })
-                        }
+        } else {
+            val totalMatches = matchingSeries.size + matchingVideos.size + matchingChannels.size
+            if (totalMatches == 0) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 32.dp, vertical = 60.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Keine Treffer für „$searchQuery“",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            text = "Versuche es mit einem anderen Begriff oder überprüfe die Schreibweise.",
+                            color = HikariTextMuted,
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center,
+                        )
                     }
-                    Spacer(Modifier.height(24.dp))
                 }
-            }
-
-            if (matchingVideos.isNotEmpty()) {
-                item {
-                    SectionHeader("Videos & Filme", count = matchingVideos.size)
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        items(matchingVideos, key = { "match-v-${it.id}" }) { v ->
-                            RecommendedCard(video = v, onClick = { play(v) })
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(top = 10.dp, bottom = 96.dp),
+                ) {
+                    if (matchingSeries.isNotEmpty()) {
+                        item {
+                            SectionHeader("Serien", count = matchingSeries.size)
+                            LazyRow(
+                                contentPadding = PaddingValues(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                items(matchingSeries, key = { "search-s-${it.id}" }) { s ->
+                                    SeriesPosterCard(
+                                        series = s,
+                                        onClick = { onOpenSeries(s.id) },
+                                        onLongClick = { onLongPressSeries(s) },
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(20.dp))
                         }
                     }
-                    Spacer(Modifier.height(24.dp))
+
+                    if (matchingVideos.isNotEmpty()) {
+                        item {
+                            SectionHeader("Videos", count = matchingVideos.size)
+                            LazyRow(
+                                contentPadding = PaddingValues(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                items(matchingVideos, key = { "search-v-${it.id}" }) { v ->
+                                    RecommendedCard(video = v, onClick = { play(v) })
+                                }
+                            }
+                            Spacer(Modifier.height(20.dp))
+                        }
+                    }
+
+                    if (matchingChannels.isNotEmpty()) {
+                        item {
+                            SectionHeader("Kanäle", count = matchingChannels.size)
+                            LazyRow(
+                                contentPadding = PaddingValues(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                items(matchingChannels, key = { "search-c-${it.id}" }) { c ->
+                                    ChannelCircle(channel = c, onClick = { onOpenChannel(c.id) })
+                                }
+                            }
+                            Spacer(Modifier.height(20.dp))
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+private sealed interface TopSearchItem {
+    val uniqueKey: String
+    val title: String
+    val subtitle: String
+    val thumbnailUrl: String?
+
+    data class Video(val video: LibraryVideoDto) : TopSearchItem {
+        override val uniqueKey: String = "v-${video.id}"
+        override val title: String = video.title
+        override val subtitle: String = video.channelTitle ?: "${video.duration_seconds / 60} min"
+        override val thumbnailUrl: String? = video.thumbnail_url
+    }
+
+    data class Series(val series: SeriesDto) : TopSearchItem {
+        override val uniqueKey: String = "s-${series.id}"
+        override val title: String = series.title
+        override val subtitle: String = "Serie"
+        override val thumbnailUrl: String? = series.thumbnail_url
     }
 }
 
