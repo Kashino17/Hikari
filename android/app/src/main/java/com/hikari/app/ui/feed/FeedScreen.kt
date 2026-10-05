@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -256,8 +257,9 @@ private fun FeedCardSlide(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .statusBarsPadding()
                 .padding(horizontal = 20.dp)
-                .padding(top = 12.dp, bottom = 84.dp), // Aussparung für Bottom-Nav-Bar
+                .padding(top = 8.dp, bottom = 84.dp), // Aussparung für Statusbar & Bottom-Nav-Bar
         ) {
             // ── Top Story Progress & Header Overlay ──────────────────────────────
             val progress by animateFloatAsState(
@@ -1471,8 +1473,9 @@ private fun MindfulCompletionSlide(
                     radius = 900f,
                 ),
             )
+            .statusBarsPadding()
             .padding(horizontal = 24.dp)
-            .padding(bottom = 84.dp),
+            .padding(top = 8.dp, bottom = 84.dp),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -1554,6 +1557,7 @@ private fun FeedEmptyState(onOpenSettings: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .padding(24.dp),
         contentAlignment = Alignment.Center,
     ) {
