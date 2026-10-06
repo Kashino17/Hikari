@@ -103,7 +103,7 @@ class FeedPreferences @Inject constructor(
         val today = getTodayDateString()
         val savedDate = prefs.getString("last_feed_date", "")
         if (savedDate != today) {
-            // Neuer Tag ➔ abgeschlossene Karten des Tages leeren
+            // Neuer Tag -> abgeschlossene Karten des Tages leeren
             return emptySet()
         }
         return prefs.getStringSet("completed_cards_$today", emptySet()) ?: emptySet()

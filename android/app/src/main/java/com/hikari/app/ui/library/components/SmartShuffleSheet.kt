@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -119,12 +120,14 @@ fun SmartShuffleSheet(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text(
-                        text = "🎲",
-                        fontSize = 22.sp,
+                    Icon(
+                        imageVector = Icons.Outlined.Shuffle,
+                        contentDescription = null,
+                        tint = HikariAmber,
+                        modifier = Modifier.size(22.dp),
                     )
                     Text(
-                        text = "Zufalls-Banger",
+                        text = "Smart Shuffle",
                         color = Color.White,
                         fontSize = 19.sp,
                         fontWeight = FontWeight.Bold,
@@ -231,7 +234,7 @@ fun SmartShuffleSheet(
                         modifier = Modifier.size(18.dp),
                     )
                     Spacer(Modifier.width(6.dp))
-                    Text(text = "Würfeln", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                    Text(text = "Neu mischen", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                 }
 
                 // Play / Open Button

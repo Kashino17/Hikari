@@ -167,7 +167,7 @@ fun ImportCard(
                             ) {
                                 detectedGenres.take(3).forEach { g ->
                                     Text(
-                                        "${g.emoji} ${g.title}",
+                                        g.title,
                                         color = g.accentColor,
                                         fontSize = 9.sp,
                                         fontWeight = FontWeight.Medium,

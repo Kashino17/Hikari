@@ -1,12 +1,27 @@
 package com.hikari.app.domain.feed
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountBalance
+import androidx.compose.material.icons.outlined.Air
+import androidx.compose.material.icons.outlined.Balance
+import androidx.compose.material.icons.outlined.Calculate
+import androidx.compose.material.icons.outlined.FormatQuote
+import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.MonetizationOn
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.Public
+import androidx.compose.material.icons.outlined.Science
+import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 
 enum class MindfulModuleType(
     val id: String,
     val title: String,
     val subtitle: String,
-    val iconEmoji: String,
+    val icon: ImageVector,
     val accentColor: Color,
     val defaultEnabled: Boolean = true,
 ) {
@@ -14,107 +29,112 @@ enum class MindfulModuleType(
         id = "quote",
         title = "Zitate & Lebensweisheiten",
         subtitle = "Tägliche Stoiker & Denker (Max 2 / Tag)",
-        iconEmoji = "📜",
+        icon = Icons.Outlined.FormatQuote,
         accentColor = Color(0xFFF59E0B),
     ),
     BRAIN_PUZZLE(
         id = "brain_puzzle",
         title = "Gehirnjogging & Kognition",
         subtitle = "Wissenschaftliche Mini-Rätsel (Max 2 / Tag)",
-        iconEmoji = "🧩",
+        icon = Icons.Outlined.Psychology,
         accentColor = Color(0xFF3B82F6),
     ),
     LANGUAGE(
         id = "language",
         title = "Sprachen lernen",
         subtitle = "Vokabeln, Sprechen & Mini-Dialoge",
-        iconEmoji = "🗣️",
+        icon = Icons.Outlined.Translate,
         accentColor = Color(0xFF10B981),
     ),
     HISTORY(
         id = "history",
         title = "Heute in der Geschichte",
         subtitle = "Schlüsselereignisse des Tages",
-        iconEmoji = "🏛️",
+        icon = Icons.Outlined.AccountBalance,
         accentColor = Color(0xFFEC4899),
     ),
     MENTAL_MODEL(
         id = "mental_model",
         title = "Kritisches Denken",
         subtitle = "Denkfehler & kognitive Verzerrungen",
-        iconEmoji = "💡",
+        icon = Icons.Outlined.Lightbulb,
         accentColor = Color(0xFF8B5CF6),
     ),
     BREATHWORK(
         id = "breathwork",
         title = "1-Minuten-Atemübung",
         subtitle = "Box Breathing zur Cortisolsenkung",
-        iconEmoji = "🫁",
+        icon = Icons.Outlined.Air,
         accentColor = Color(0xFF06B6D4),
     ),
     SCIENCE(
         id = "science",
         title = "Wissenschafts-Happen",
         subtitle = "Wie funktioniert die Welt?",
-        iconEmoji = "🔬",
+        icon = Icons.Outlined.Science,
         accentColor = Color(0xFF14B8A6),
     ),
     FINANCE(
         id = "finance",
         title = "Finanzielle Bildung",
         subtitle = "Praktische Geld- & Lebenskompetenzen",
-        iconEmoji = "💰",
+        icon = Icons.Outlined.MonetizationOn,
         accentColor = Color(0xFFFBBF24),
     ),
     GEOGRAPHY(
         id = "geography",
         title = "Weltatlas & Geografie-Quiz",
         subtitle = "Länder, Flaggen & Hauptstädte",
-        iconEmoji = "🌍",
+        icon = Icons.Outlined.Public,
         accentColor = Color(0xFF6366F1),
     ),
     SPEED_MATH(
         id = "speed_math",
         title = "Kopfrechnen-Tricks",
         subtitle = "Geniale mathematische Shortcuts",
-        iconEmoji = "🔢",
+        icon = Icons.Outlined.Calculate,
         accentColor = Color(0xFFEF4444),
     ),
     ART_CULTURE(
         id = "art_culture",
         title = "Kunst & Kultur",
         subtitle = "Meisterwerk & Entstehungsgeschichte",
-        iconEmoji = "🎨",
+        icon = Icons.Outlined.Palette,
         accentColor = Color(0xFFA855F7),
     ),
     VOCABULARY(
         id = "vocabulary",
         title = "Wortschatz-Meister",
         subtitle = "Eloquentes Wort des Tages & Etymologie",
-        iconEmoji = "📚",
+        icon = Icons.Outlined.MenuBook,
         accentColor = Color(0xFFF97316),
     ),
     PHILOSOPHY(
         id = "philosophy",
         title = "Philosophisches Dilemma",
         subtitle = "Gedankenexperimente & ethische Fragen",
-        iconEmoji = "⚖️",
+        icon = Icons.Outlined.Balance,
         accentColor = Color(0xFFE11D48),
     );
+
+    val iconEmoji: String get() = ""
 }
 
 enum class LearningLanguage(
     val code: String,
     val title: String,
-    val flagEmoji: String,
+    val shortCode: String,
 ) {
-    RUSSIAN("ru", "Russisch", "🇷🇺"),
-    ENGLISH("en", "Englisch", "🇬🇧"),
-    SPANISH("es", "Spanisch", "🇪🇸"),
-    JAPANESE("ja", "Japanisch", "🇯🇵"),
-    FRENCH("fr", "Französisch", "🇫🇷"),
-    ITALIAN("it", "Italienisch", "🇮🇹"),
-    GERMAN_ADVANCED("de", "Gehobenes Deutsch", "🇩🇪");
+    RUSSIAN("ru", "Russisch", "RU"),
+    ENGLISH("en", "Englisch", "EN"),
+    SPANISH("es", "Spanisch", "ES"),
+    JAPANESE("ja", "Japanisch", "JA"),
+    FRENCH("fr", "Französisch", "FR"),
+    ITALIAN("it", "Italienisch", "IT"),
+    GERMAN_ADVANCED("de", "Gehobenes Deutsch", "DE");
+
+    /** Kompatibilität für Aufrufer ohne Emojis */
+    val flagEmoji: String get() = ""
 
     companion object {
         fun fromCode(code: String?): LearningLanguage =
@@ -453,7 +473,7 @@ fun MindfulCard.resolveDeepDive(): DeepDiveContent = when (this) {
         subtitle = trickTitle,
         keyInsight = "Shortcut: $formulaShortcut",
         fullContext = explanation,
-        practicalApplication = "Übungsaufgabe: $practiceChallenge ➔ Ergebnis: $challengeResult",
+        practicalApplication = "Übungsaufgabe: $practiceChallenge · Ergebnis: $challengeResult",
         originOrEtymology = "Algebra & Arithmetik-Shortcuts",
         relatedTakeaways = listOf(
             "Zahlen zerlegen macht Rechnen mühelos.",

@@ -17,7 +17,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -76,15 +80,27 @@ fun MoodDiscoverySection(
             }
 
             if (selectedGenre != Genre.ALL) {
-                Text(
-                    text = "Zurücksetzen ✕",
-                    color = com.hikari.app.ui.theme.HikariAmber,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
                         .clickable { onSelectGenre(Genre.ALL) }
-                        .padding(4.dp),
-                )
+                        .padding(horizontal = 6.dp, vertical = 3.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Zurücksetzen",
+                        tint = com.hikari.app.ui.theme.HikariAmber,
+                        modifier = Modifier.size(13.dp),
+                    )
+                    Text(
+                        text = "Zurücksetzen",
+                        color = com.hikari.app.ui.theme.HikariAmber,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
             }
         }
 
@@ -149,12 +165,22 @@ fun MoodGenreTile(
                 .background(gradientBrush)
                 .padding(10.dp),
         ) {
-            // Emoji Icon oben rechts
-            Text(
-                text = genre.emoji,
-                fontSize = 24.sp,
-                modifier = Modifier.align(Alignment.TopEnd),
-            )
+            // Minimalistisches SVG Vektor-Icon oben rechts
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = if (isSelected) 0.18f else 0.08f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = genre.icon,
+                    contentDescription = null,
+                    tint = if (isSelected) Color.White else genre.accentColor,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
 
             // Titel & Zähler unten links
             Column(

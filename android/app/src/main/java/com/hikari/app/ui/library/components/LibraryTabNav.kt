@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -68,11 +70,13 @@ fun LibraryTabNav(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
-                        Text(
-                            text = tab.icon,
-                            fontSize = 13.sp,
+                        Icon(
+                            imageVector = tab.icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = textColor,
                         )
                         Text(
                             text = tab.label,

@@ -53,9 +53,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -66,8 +68,53 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.outlined.AccountBalance
+import androidx.compose.material.icons.outlined.Air
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Balance
 import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.Bookmarks
+import androidx.compose.material.icons.outlined.Calculate
+import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.FormatQuote
+import androidx.compose.material.icons.outlined.Forum
+import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.Headphones
+import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material.icons.outlined.LocalFireDepartment
+import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.MonetizationOn
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Psychology
+import androidx.compose.material.icons.outlined.Public
+import androidx.compose.material.icons.outlined.Replay
+import androidx.compose.material.icons.outlined.Science
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.AccountTree
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.CompareArrows
+import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.QuestionAnswer
+import androidx.compose.material.icons.outlined.RecordVoiceOver
+import androidx.compose.material.icons.outlined.SlowMotionVideo
+import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.TouchApp
+import androidx.compose.material.icons.outlined.TrackChanges
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material.icons.outlined.VpnKey
+import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material.icons.outlined.Spa
+import androidx.compose.material.icons.outlined.Stop
+import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -78,13 +125,6 @@ import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.GraphicEq
-import androidx.compose.material.icons.outlined.Mic
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Replay
-import androidx.compose.material.icons.outlined.Stop
-import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -207,7 +247,7 @@ fun FeedScreen(
         snapshotFlow { pagerState.settledPage }.collect { settledPage = it }
     }
 
-    // 🎧 Smart-Modus für unterwegs (Pendler- / Hands-Free-Modus):
+    // Smart-Modus für unterwegs (Pendler- / Hands-Free-Modus):
     // Spielt 400ms nach dem Erreichen einer Vokabelkarte automatisch das Muttersprachler-Audio ab
     LaunchedEffect(settledPage, commuterMode) {
         if (commuterMode && settledPage < cards.size) {
@@ -292,6 +332,7 @@ fun FeedScreen(
                         } else {
                             DeepDiveSlide(
                                 card = card,
+                                audioPlayer = vm.audio,
                                 onBack = {
                                     coroutineScope.launch {
                                         horizontalPagerState.animateScrollToPage(0)
@@ -441,129 +482,94 @@ private fun FeedCardSlide(
 
             Spacer(Modifier.height(12.dp))
 
-            // ── Header Bar: HIKARI Brand + Kategorie + Commuter + Brain + Streak + Settings ────────
+            // ── Top Bar: HIKARI Brand + Slide Indicator (Left) & Minimal Controls (Right) ────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                // Linke Seite: Brand "HIKARI" in Gold + Kategorie-Pill + Zähler
+                // Linke Seite: Brand "HIKARI" in Gold + Zähler
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f, fill = false),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
                         text = "HIKARI",
                         color = HikariAmber,
-                        fontSize = 13.sp,
+                        fontSize = 13.5.sp,
                         fontWeight = FontWeight.Black,
                         letterSpacing = 2.sp,
                     )
-
-                    Spacer(Modifier.width(8.dp))
-
                     Text(
-                        text = "•",
-                        color = Color.White.copy(alpha = 0.35f),
-                        fontSize = 12.sp,
+                        text = "·",
+                        color = Color.White.copy(alpha = 0.30f),
+                        fontSize = 13.sp,
                     )
-
-                    Spacer(Modifier.width(8.dp))
-
-                    // Minimalist Frosted Category Chip
-                    Surface(
-                        color = Color.White.copy(alpha = 0.08f),
-                        shape = RoundedCornerShape(20.dp),
-                        border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
-                        ) {
-                            Text(getCardEmoji(card), fontSize = 12.sp)
-                            Spacer(Modifier.width(5.dp))
-                            Text(
-                                text = getCardCategoryLabel(card),
-                                color = Color.White,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                letterSpacing = 0.5.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            if (card.rank == ModuleRank.RANK_3) {
-                                Spacer(Modifier.width(6.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(HikariAmber.copy(alpha = 0.20f))
-                                        .padding(horizontal = 5.dp, vertical = 1.dp),
-                                ) {
-                                    Text(
-                                        text = "TOP-FOKUS",
-                                        color = HikariAmber,
-                                        fontSize = 8.5.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = 0.8.sp,
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(Modifier.width(8.dp))
-
                     Text(
-                        text = "${pageIndex + 1}/$totalCount",
+                        text = "${pageIndex + 1} / $totalCount",
                         color = HikariTextFaint,
-                        fontSize = 11.sp,
+                        fontSize = 11.5.sp,
                         fontWeight = FontWeight.Medium,
                     )
                 }
 
-                // Rechte Seite: 🎧 Smart/Pendler + 🧠 Archiv + 🔥 Streak + ⚙️ Settings
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // 1. 🎧 Commuter Mode (Hands-Free) Toggle
+                // Rechte Seite: 4 dezente Icon-Buttons (32dp, Vektoren, Null Emojis)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    // 1. Commuter Mode (Hands-Free) Toggle
                     Surface(
                         onClick = onToggleCommuterMode,
                         shape = CircleShape,
-                        color = if (isCommuterMode) HikariAmber.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.08f),
-                        border = BorderStroke(0.8.dp, if (isCommuterMode) HikariAmber else Color.White.copy(alpha = 0.15f)),
-                        modifier = Modifier.size(34.dp),
+                        color = if (isCommuterMode) HikariAmber.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.06f),
+                        border = BorderStroke(0.6.dp, if (isCommuterMode) HikariAmber else Color.White.copy(alpha = 0.12f)),
+                        modifier = Modifier.size(32.dp),
                     ) {
                         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text("🎧", fontSize = 13.sp)
+                            Icon(
+                                imageVector = Icons.Outlined.Headphones,
+                                contentDescription = "Pendler-Modus",
+                                tint = if (isCommuterMode) HikariAmber else HikariTextMuted,
+                                modifier = Modifier.size(15.dp),
+                            )
                         }
                     }
 
-                    Spacer(Modifier.width(7.dp))
-
-                    // 2. 🧠 Mein Gehirn Wissens-Archiv
+                    // 2. Mein Gehirn Wissens-Archiv
                     Surface(
                         onClick = onOpenArchive,
                         shape = CircleShape,
-                        color = Color.White.copy(alpha = 0.08f),
-                        border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.15f)),
-                        modifier = Modifier.size(34.dp),
+                        color = Color.White.copy(alpha = 0.06f),
+                        border = BorderStroke(0.6.dp, Color.White.copy(alpha = 0.12f)),
+                        modifier = Modifier.size(32.dp),
                     ) {
                         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text("🧠", fontSize = 13.sp)
+                            Icon(
+                                imageVector = Icons.Outlined.Bookmarks,
+                                contentDescription = "Mein Gehirn",
+                                tint = HikariTextMuted,
+                                modifier = Modifier.size(15.dp),
+                            )
                         }
                     }
 
-                    Spacer(Modifier.width(7.dp))
-
-                    // 3. Streak Badge
+                    // 3. Streak Pill
                     Surface(
-                        color = Color.White.copy(alpha = 0.08f),
+                        color = Color.White.copy(alpha = 0.06f),
                         shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
+                        border = BorderStroke(0.6.dp, Color.White.copy(alpha = 0.12f)),
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp),
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 5.dp),
                         ) {
-                            Text("🔥", fontSize = 11.sp)
+                            Icon(
+                                imageVector = Icons.Outlined.LocalFireDepartment,
+                                contentDescription = null,
+                                tint = HikariAmber,
+                                modifier = Modifier.size(13.dp),
+                            )
                             Spacer(Modifier.width(3.dp))
                             Text(
                                 text = "$streak",
@@ -574,29 +580,72 @@ private fun FeedCardSlide(
                         }
                     }
 
-                    Spacer(Modifier.width(7.dp))
-
                     // 4. Settings Button
                     Surface(
                         onClick = onOpenSettings,
                         shape = CircleShape,
-                        color = Color.White.copy(alpha = 0.08f),
-                        border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.15f)),
-                        modifier = Modifier.size(34.dp),
+                        color = Color.White.copy(alpha = 0.06f),
+                        border = BorderStroke(0.6.dp, Color.White.copy(alpha = 0.12f)),
+                        modifier = Modifier.size(32.dp),
                     ) {
                         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                             Icon(
-                                imageVector = Icons.Default.Tune,
+                                imageVector = Icons.Outlined.Tune,
                                 contentDescription = "Feed-Einstellungen",
-                                tint = HikariText,
-                                modifier = Modifier.size(16.dp),
+                                tint = HikariTextMuted,
+                                modifier = Modifier.size(15.dp),
                             )
                         }
                     }
                 }
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(10.dp))
+
+            // ── Zeile 2: Kategorie-Chip (Vollständig entzerrt, eigene prominente Zeile) ──
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start,
+            ) {
+                Surface(
+                    color = ambientColor.copy(alpha = 0.10f),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(0.6.dp, ambientColor.copy(alpha = 0.35f)),
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+                    ) {
+                        Icon(
+                            imageVector = getCardIcon(card),
+                            contentDescription = null,
+                            tint = ambientColor,
+                            modifier = Modifier.size(12.dp),
+                        )
+                        Spacer(Modifier.width(5.dp))
+                        Text(
+                            text = getCardCategoryLabel(card),
+                            color = Color.White,
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.8.sp,
+                        )
+                        if (card.rank == ModuleRank.RANK_3) {
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = "·  TOP-FOKUS",
+                                color = HikariAmber,
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.8.sp,
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
 
             // ── Center Content Box (Fokus auf genau 1 Thema, Zero-Scroll-Garantie) ──
             Box(
@@ -634,121 +683,111 @@ private fun FeedCardSlide(
                     }
                 }
             }
-        }
 
-        // ── Deep Dive Teaser Pill (Unten links, Apple Cupertino Aesthetic) ────
-        Surface(
-            onClick = onOpenDeepDive,
-            shape = RoundedCornerShape(20.dp),
-            color = Color.Black.copy(alpha = 0.50f),
-            border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.18f)),
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 20.dp, bottom = 96.dp),
-        ) {
+            Spacer(Modifier.height(10.dp))
+
+            // ── Ultra-Sleek Cupertino Bottom Bar (Deep Dive + Actions in 1 Row) ──
             Row(
-                modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text("🔍", fontSize = 11.sp)
-                Spacer(Modifier.width(5.dp))
-                Text(
-                    "Deep Dive ›",
-                    color = Color.White.copy(alpha = 0.90f),
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.4.sp,
-                )
-            }
-        }
-
-        // ── Floating Action Sidebar (Rechte Seite) ───────────────────────────
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 96.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            // 1. "Merken" / "Mein Gehirn" Bookmark Button
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                // Linke Seite: Deep Dive Button
                 Surface(
-                    onClick = onToggleSave,
-                    shape = CircleShape,
-                    color = if (isSaved) HikariAmber.copy(alpha = 0.22f) else HikariSurfaceHigh,
-                    border = BorderStroke(1.dp, if (isSaved) HikariAmber else HikariBorderStrong),
-                    modifier = Modifier.size(50.dp),
+                    onClick = onOpenDeepDive,
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color.White.copy(alpha = 0.08f),
+                    border = BorderStroke(0.6.dp, Color.White.copy(alpha = 0.15f)),
                 ) {
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         Icon(
-                            imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                            contentDescription = if (isSaved) "Gespeichert" else "Merken",
-                            tint = if (isSaved) HikariAmber else HikariText,
-                            modifier = Modifier.size(22.dp),
-                        )
-                    }
-                }
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = if (isSaved) "Gemerkt ★" else "Merken",
-                    color = if (isSaved) HikariAmber else HikariTextMuted,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-
-            // 2. "Erledigt" / "Gelernt" Button
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Surface(
-                    onClick = onDone,
-                    shape = CircleShape,
-                    color = if (isDone) Color(0xFF10B981).copy(alpha = 0.25f) else HikariSurfaceHigh,
-                    border = BorderStroke(1.dp, if (isDone) Color(0xFF10B981) else HikariBorderStrong),
-                    modifier = Modifier.size(50.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                        Icon(
-                            imageVector = if (isDone) Icons.Default.CheckCircle else Icons.Default.Check,
-                            contentDescription = if (isDone) "Erledigt" else "Als gelernt markieren",
-                            tint = if (isDone) Color(0xFF34D399) else HikariText,
-                            modifier = Modifier.size(22.dp),
-                        )
-                    }
-                }
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = if (isDone) "Gelernt ✓" else "Lernen",
-                    color = if (isDone) Color(0xFF34D399) else HikariTextMuted,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-
-            // 3. "Teilen" / "Poster" Share Button
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Surface(
-                    onClick = onSharePoster,
-                    shape = CircleShape,
-                    color = HikariSurfaceHigh,
-                    border = BorderStroke(1.dp, HikariBorderStrong),
-                    modifier = Modifier.size(50.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = "Poster teilen",
+                            imageVector = Icons.Outlined.AutoAwesome,
+                            contentDescription = null,
                             tint = HikariAmber,
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(13.dp),
+                        )
+                        Spacer(Modifier.width(5.dp))
+                        Text(
+                            text = "Deep Dive",
+                            color = Color.White.copy(alpha = 0.90f),
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 0.3.sp,
+                        )
+                        Spacer(Modifier.width(3.dp))
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            tint = Color.White.copy(alpha = 0.5f),
+                            modifier = Modifier.size(11.dp),
                         )
                     }
                 }
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "Teilen ↑",
-                    color = HikariTextMuted,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
+
+                // Rechte Seite: 3 minimalistische 36dp Frosted Glass Buttons (Teilen, Merken, Gelernt)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    // 1. Poster / Teilen Button
+                    Surface(
+                        onClick = onSharePoster,
+                        shape = CircleShape,
+                        color = Color.White.copy(alpha = 0.08f),
+                        border = BorderStroke(0.6.dp, Color.White.copy(alpha = 0.15f)),
+                        modifier = Modifier.size(36.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Icon(
+                                imageVector = Icons.Outlined.Share,
+                                contentDescription = "Als Poster teilen",
+                                tint = Color.White.copy(alpha = 0.85f),
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
+
+                    // 2. Merken / Bookmark Button
+                    Surface(
+                        onClick = onToggleSave,
+                        shape = CircleShape,
+                        color = if (isSaved) HikariAmber.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.08f),
+                        border = BorderStroke(0.6.dp, if (isSaved) HikariAmber else Color.White.copy(alpha = 0.15f)),
+                        modifier = Modifier.size(36.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Icon(
+                                imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                                contentDescription = if (isSaved) "Gemerkt" else "Merken",
+                                tint = if (isSaved) HikariAmber else Color.White.copy(alpha = 0.85f),
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
+
+                    // 3. Gelernt / Erledigt Button
+                    Surface(
+                        onClick = onDone,
+                        shape = CircleShape,
+                        color = if (isDone) Color(0xFF10B981).copy(alpha = 0.25f) else Color.White.copy(alpha = 0.08f),
+                        border = BorderStroke(0.6.dp, if (isDone) Color(0xFF10B981) else Color.White.copy(alpha = 0.15f)),
+                        modifier = Modifier.size(36.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Icon(
+                                imageVector = if (isDone) Icons.Filled.CheckCircle else Icons.Outlined.Check,
+                                contentDescription = if (isDone) "Gelernt" else "Lernen",
+                                tint = if (isDone) Color(0xFF34D399) else Color.White.copy(alpha = 0.85f),
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -767,7 +806,12 @@ private fun FeedCardSlide(
             ) {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("🧠", fontSize = 28.sp)
+                        Icon(
+                            imageVector = Icons.Outlined.Bookmarks,
+                            contentDescription = null,
+                            tint = HikariAmber,
+                            modifier = Modifier.size(26.dp),
+                        )
                         Spacer(Modifier.height(3.dp))
                         Text("Gemerkt", color = HikariAmber, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
                     }
@@ -815,20 +859,20 @@ private fun FeedCardSlide(
 }
 
 
-private fun getCardEmoji(card: MindfulCard): String = when (card) {
-    is QuoteCardItem -> "📜"
-    is BrainPuzzleCardItem -> "🧩"
-    is LanguageCardItem -> "🗣️"
-    is HistoryCardItem -> "🏛️"
-    is MentalModelCardItem -> "💡"
-    is BreathworkCardItem -> "🫁"
-    is ScienceCardItem -> "🔬"
-    is FinanceCardItem -> "💰"
-    is GeographyCardItem -> "🌍"
-    is SpeedMathCardItem -> "🔢"
-    is ArtCultureCardItem -> "🎨"
-    is VocabularyCardItem -> "📚"
-    is PhilosophyCardItem -> "⚖️"
+private fun getCardIcon(card: MindfulCard): ImageVector = when (card) {
+    is QuoteCardItem -> Icons.Outlined.FormatQuote
+    is BrainPuzzleCardItem -> Icons.Outlined.Psychology
+    is LanguageCardItem -> Icons.Outlined.Translate
+    is HistoryCardItem -> Icons.Outlined.AccountBalance
+    is MentalModelCardItem -> Icons.Outlined.Lightbulb
+    is BreathworkCardItem -> Icons.Outlined.Air
+    is ScienceCardItem -> Icons.Outlined.Science
+    is FinanceCardItem -> Icons.Outlined.MonetizationOn
+    is GeographyCardItem -> Icons.Outlined.Public
+    is SpeedMathCardItem -> Icons.Outlined.Calculate
+    is ArtCultureCardItem -> Icons.Outlined.Palette
+    is VocabularyCardItem -> Icons.Outlined.MenuBook
+    is PhilosophyCardItem -> Icons.Outlined.Balance
 }
 
 private fun getCardCategoryLabel(card: MindfulCard): String = when (card) {
@@ -897,7 +941,12 @@ private fun QuoteSlideContent(item: QuoteCardItem, isDone: Boolean, onDone: () -
         ) {
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("💡", fontSize = 16.sp)
+                    Icon(
+                        imageVector = Icons.Outlined.Lightbulb,
+                        contentDescription = null,
+                        tint = HikariAmber,
+                        modifier = Modifier.size(15.dp),
+                    )
                     Spacer(Modifier.width(8.dp))
                     Text(
                         "Reflexionsimpuls für heute",
@@ -940,12 +989,24 @@ private fun BrainPuzzleSlideContent(item: BrainPuzzleCardItem, isDone: Boolean, 
                 color = HikariSurfaceHigh,
                 shape = RoundedCornerShape(12.dp),
             ) {
-                Text(
-                    "🧠 ${item.brainRegionTrained}",
-                    color = Color(0xFFA7F3D0),
-                    fontSize = 10.5.sp,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                )
+                ) {
+                    Icon(
+                        Icons.Outlined.Psychology,
+                        contentDescription = null,
+                        tint = Color(0xFFA7F3D0),
+                        modifier = Modifier.size(13.dp),
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        item.brainRegionTrained,
+                        color = Color(0xFFA7F3D0),
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
             }
         }
 
@@ -1003,12 +1064,37 @@ private fun BrainPuzzleSlideContent(item: BrainPuzzleCardItem, isDone: Boolean, 
                             fontWeight = if (isSelected || (answered && isCorrect)) FontWeight.Bold else FontWeight.Normal,
                         )
                         if (answered) {
-                            Text(
-                                text = if (isCorrect) "✓ Richtig" else if (isSelected) "✕ Falsch" else "",
-                                color = if (isCorrect) Color(0xFF34D399) else Color(0xFFFCA5A5),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (isCorrect) {
+                                    Icon(
+                                        Icons.Outlined.Check,
+                                        contentDescription = null,
+                                        tint = Color(0xFF34D399),
+                                        modifier = Modifier.size(14.dp),
+                                    )
+                                    Spacer(Modifier.width(4.dp))
+                                    Text(
+                                        text = "Richtig",
+                                        color = Color(0xFF34D399),
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                } else if (isSelected) {
+                                    Icon(
+                                        Icons.Outlined.Close,
+                                        contentDescription = null,
+                                        tint = Color(0xFFFCA5A5),
+                                        modifier = Modifier.size(14.dp),
+                                    )
+                                    Spacer(Modifier.width(4.dp))
+                                    Text(
+                                        text = "Falsch",
+                                        color = Color(0xFFFCA5A5),
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -1025,11 +1111,69 @@ private fun BrainPuzzleSlideContent(item: BrainPuzzleCardItem, isDone: Boolean, 
                     .padding(14.dp),
             ) {
                 Column {
-                    Text("💡 Auflösung:", color = HikariAmber, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Outlined.Lightbulb,
+                            contentDescription = null,
+                            tint = HikariAmber,
+                            modifier = Modifier.size(14.dp),
+                        )
+                        Spacer(Modifier.width(5.dp))
+                        Text("Auflösung:", color = HikariAmber, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                    }
                     Spacer(Modifier.height(4.dp))
                     Text(item.explanation, color = HikariText, fontSize = 13.sp, lineHeight = 18.sp)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun AudiovisualEqualizer(
+    isActive: Boolean,
+    tint: Color = HikariAmber,
+    barCount: Int = 5,
+    modifier: Modifier = Modifier,
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "equalizer")
+    val animFractions = List(barCount) { index ->
+        val duration = 300 + (index * 110) % 280
+        val minH = 0.22f
+        val maxH = when (index % 4) {
+            0 -> 1.0f
+            1 -> 0.65f
+            2 -> 0.90f
+            else -> 0.50f
+        }
+        if (isActive) {
+            infiniteTransition.animateFloat(
+                initialValue = minH,
+                targetValue = maxH,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(duration, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse,
+                ),
+                label = "bar_$index",
+            ).value
+        } else {
+            remember { mutableFloatStateOf(minH) }.floatValue
+        }
+    }
+
+    Row(
+        modifier = modifier.height(18.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        animFractions.forEach { frac ->
+            Box(
+                modifier = Modifier
+                    .width(3.dp)
+                    .fillMaxHeight(fraction = frac)
+                    .clip(RoundedCornerShape(1.5.dp))
+                    .background(tint),
+            )
         }
     }
 }
@@ -1171,13 +1315,24 @@ private fun LanguageSlideContent(
                     color = if (isTab0) HikariAmber.copy(alpha = 0.22f) else Color.Transparent,
                     border = if (isTab0) BorderStroke(0.5.dp, HikariAmber.copy(alpha = 0.6f)) else null,
                 ) {
-                    Text(
-                        text = "🗣️ Aussprache & Audio",
-                        color = if (isTab0) HikariAmber else HikariTextMuted,
-                        fontSize = 11.5.sp,
-                        fontWeight = if (isTab0) FontWeight.Bold else FontWeight.Medium,
+                    Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                    )
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.RecordVoiceOver,
+                            contentDescription = null,
+                            tint = if (isTab0) HikariAmber else HikariTextMuted,
+                            modifier = Modifier.size(13.dp),
+                        )
+                        Spacer(Modifier.width(5.dp))
+                        Text(
+                            text = "Aussprache & Audio",
+                            color = if (isTab0) HikariAmber else HikariTextMuted,
+                            fontSize = 11.5.sp,
+                            fontWeight = if (isTab0) FontWeight.Bold else FontWeight.Medium,
+                        )
+                    }
                 }
 
                 val isTab1 = selectedSegment == 1
@@ -1187,13 +1342,24 @@ private fun LanguageSlideContent(
                     color = if (isTab1) HikariAmber.copy(alpha = 0.22f) else Color.Transparent,
                     border = if (isTab1) BorderStroke(0.5.dp, HikariAmber.copy(alpha = 0.6f)) else null,
                 ) {
-                    Text(
-                        text = "💬 Mini-Dialog",
-                        color = if (isTab1) HikariAmber else HikariTextMuted,
-                        fontSize = 11.5.sp,
-                        fontWeight = if (isTab1) FontWeight.Bold else FontWeight.Medium,
+                    Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                    )
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Forum,
+                            contentDescription = null,
+                            tint = if (isTab1) HikariAmber else HikariTextMuted,
+                            modifier = Modifier.size(13.dp),
+                        )
+                        Spacer(Modifier.width(5.dp))
+                        Text(
+                            text = "Mini-Dialog",
+                            color = if (isTab1) HikariAmber else HikariTextMuted,
+                            fontSize = 11.5.sp,
+                            fontWeight = if (isTab1) FontWeight.Bold else FontWeight.Medium,
+                        )
+                    }
                 }
             }
         }
@@ -1214,8 +1380,22 @@ private fun LanguageSlideContent(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = HikariAmber.copy(alpha = 0.18f),
+                            border = BorderStroke(0.5.dp, HikariAmber.copy(alpha = 0.40f)),
+                        ) {
+                            Text(
+                                text = item.language.shortCode,
+                                color = HikariAmber,
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                            )
+                        }
+                        Spacer(Modifier.width(6.dp))
                         Text(
-                            text = "Tag ${item.dayNumber} · ${item.dayTitle ?: "Russisch"}",
+                            text = "Tag ${item.dayNumber} · ${item.dayTitle ?: item.language.title}",
                             color = Color.White,
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -1237,16 +1417,39 @@ private fun LanguageSlideContent(
                             }
                         }
                     }
-                    Text(
-                        text = "🔥 ${item.currentStreak} d · ⚡ ${item.totalXp} XP",
-                        color = HikariAmber,
-                        fontSize = 10.5.sp,
-                        fontWeight = FontWeight.Medium,
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Outlined.LocalFireDepartment,
+                            contentDescription = null,
+                            tint = HikariAmber,
+                            modifier = Modifier.size(13.dp),
+                        )
+                        Spacer(Modifier.width(3.dp))
+                        Text(
+                            text = "${item.currentStreak} d",
+                            color = HikariAmber,
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Icon(
+                            Icons.Default.Bolt,
+                            contentDescription = null,
+                            tint = HikariAmber,
+                            modifier = Modifier.size(13.dp),
+                        )
+                        Spacer(Modifier.width(3.dp))
+                        Text(
+                            text = "${item.totalXp} XP",
+                            color = HikariAmber,
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
                 }
             }
 
-            // 2. Elegante Vokabel-Karte (Kompakt für Zero-Scroll)
+            // 2. Elegante Vokabel-Karte (Kompakt für Zero-Scroll, Didaktisch sauber)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1259,7 +1462,7 @@ private fun LanguageSlideContent(
                     .border(1.dp, Color(0xFF38EF7D).copy(alpha = 0.35f), RoundedCornerShape(16.dp))
                     .clickable {
                         revealed = !revealed
-                        onDone()
+                        // onDone() hier bewusst NICHT aufrufen, damit Aufdecken nicht voreilig als gemeistert zählt!
                     }
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 contentAlignment = Alignment.Center,
@@ -1273,12 +1476,19 @@ private fun LanguageSlideContent(
                         textAlign = TextAlign.Center,
                     )
                     Spacer(Modifier.height(3.dp))
-                    Text(
-                        text = item.phonetic,
-                        color = HikariAmber,
-                        fontSize = 13.5.sp,
-                        fontFamily = FontFamily.Monospace,
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color.White.copy(alpha = 0.08f),
+                        border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
+                    ) {
+                        Text(
+                            text = "[${item.phonetic}]",
+                            color = HikariAmber,
+                            fontSize = 12.5.sp,
+                            fontFamily = FontFamily.Monospace,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                        )
+                    }
 
                     Spacer(Modifier.height(8.dp))
 
@@ -1299,27 +1509,68 @@ private fun LanguageSlideContent(
                                 fontStyle = FontStyle.Italic,
                             )
                         }
+                        if (item.exampleForeign.isNotBlank()) {
+                            Spacer(Modifier.height(8.dp))
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color.Black.copy(alpha = 0.30f),
+                                border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.06f)),
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                                    Text(
+                                        text = "„${item.exampleForeign}“",
+                                        color = Color.White.copy(alpha = 0.90f),
+                                        fontSize = 11.5.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
+                                    Text(
+                                        text = item.exampleTranslation,
+                                        color = HikariTextMuted,
+                                        fontSize = 10.5.sp,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
+                                }
+                            }
+                        }
                     } else {
                         Surface(
                             color = Color.Black.copy(alpha = 0.35f),
                             shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.10f)),
                         ) {
-                            Text(
-                                text = "👉 Tippen zum Aufdecken",
-                                color = HikariTextMuted,
-                                fontSize = 11.sp,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            )
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Visibility,
+                                    contentDescription = null,
+                                    tint = HikariTextMuted,
+                                    modifier = Modifier.size(13.dp),
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    text = "Bedeutung & Beispielsatz aufdecken",
+                                    color = HikariTextMuted,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium,
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            // 3. Muttersprachler-Audio
+            // 3. Muttersprachler-Audio mit Equalizer
             if (!item.audioRes.isNullOrBlank() && audioPlayer != null) {
                 val audioRes = item.audioRes
                 val isPlayingNormal = playingTrack == audioRes
                 val isPlayingSlow = playingTrack == "${audioRes}_slow"
+                val isAnyPlaying = isPlayingNormal || isPlayingSlow
 
                 Row(
                     modifier = Modifier
@@ -1381,16 +1632,29 @@ private fun LanguageSlideContent(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text("🐢", fontSize = 12.sp)
+                            Icon(
+                                if (isPlayingSlow) Icons.Default.Pause else Icons.Outlined.SlowMotionVideo,
+                                contentDescription = "Langsam",
+                                tint = if (isPlayingSlow) HikariAmber else Color.White,
+                                modifier = Modifier.size(15.dp),
+                            )
                             Spacer(Modifier.width(5.dp))
                             Text(
-                                text = if (isPlayingSlow) "Langsam..." else "Langsam",
+                                text = if (isPlayingSlow) "0.7× ..." else "0.7× Langsam",
                                 color = if (isPlayingSlow) HikariAmber else Color.White,
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.Medium,
                             )
                         }
                     }
+
+                    // Audiovisual Equalizer Bars
+                    AudiovisualEqualizer(
+                        isActive = isAnyPlaying,
+                        tint = HikariAmber,
+                        barCount = 4,
+                        modifier = Modifier.padding(end = 4.dp),
+                    )
                 }
             }
 
@@ -1433,7 +1697,7 @@ private fun LanguageSlideContent(
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                text = if (isRecording) "Stopp & Vergleichen" else "🎙️ Nachsprechen",
+                                text = if (isRecording) "Stopp & Vergleichen" else "Nachsprechen",
                                 color = Color.White,
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.SemiBold,
@@ -1484,7 +1748,7 @@ private fun LanguageSlideContent(
                         ) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                                 Icon(
-                                    Icons.Outlined.Replay,
+                                    Icons.Outlined.CompareArrows,
                                     contentDescription = "A/B-Vergleich",
                                     tint = if (isComparing) HikariAmber else HikariText,
                                     modifier = Modifier.size(16.dp),
@@ -1523,8 +1787,8 @@ private fun LanguageSlideContent(
                         Text(
                             text = when {
                                 isListening -> "Ich höre zu … Sprich jetzt!"
-                                speechScore != null -> "🔄 Aussprache erneut prüfen"
-                                else -> "🎯 KI-Ausspracheprüfung starten"
+                                speechScore != null -> "Aussprache erneut prüfen"
+                                else -> "KI-Ausspracheprüfung starten"
                             },
                             color = if (isListening) HikariAmber else Color.White,
                             fontSize = 11.5.sp,
@@ -1558,8 +1822,15 @@ private fun LanguageSlideContent(
                             .border(0.5.dp, if (sc.passed) Color(0xFF10B981) else Color(0xFFF59E0B), RoundedCornerShape(8.dp))
                             .padding(horizontal = 10.dp, vertical = 4.dp),
                     ) {
+                        Icon(
+                            imageVector = if (sc.passed) Icons.Outlined.CheckCircle else Icons.Outlined.Replay,
+                            contentDescription = null,
+                            tint = if (sc.passed) Color(0xFF6EE7B7) else HikariAmber,
+                            modifier = Modifier.size(13.dp),
+                        )
+                        Spacer(Modifier.width(5.dp))
                         Text(
-                            text = if (sc.passed) "🎉 $scorePct % · Exzellent! (+15 XP)" else "⚡ $scorePct % · Nochmal versuchen",
+                            text = if (sc.passed) "$scorePct % · Exzellente Aussprache (+15 XP)" else "$scorePct % · Nochmal versuchen",
                             color = if (sc.passed) Color(0xFF6EE7B7) else HikariAmber,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
@@ -1584,12 +1855,32 @@ private fun LanguageSlideContent(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(
-                            text = if (item.isDueReview) "🇷🇺 SRS-Wiederholung im Kurs starten" else "🇷🇺 Volle Lektion (Tag ${item.dayNumber})",
-                            color = HikariTextMuted,
-                            fontSize = 11.sp,
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = HikariAmber.copy(alpha = 0.15f),
+                            ) {
+                                Text(
+                                    text = item.language.shortCode,
+                                    color = HikariAmber,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                                )
+                            }
+                            Spacer(Modifier.width(7.dp))
+                            Text(
+                                text = if (item.isDueReview) "SRS-Wiederholung im Kurs starten" else "Volle Lektion (Tag ${item.dayNumber})",
+                                color = HikariTextMuted,
+                                fontSize = 11.sp,
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            tint = HikariAmber,
+                            modifier = Modifier.size(13.dp),
                         )
-                        Text("→", color = HikariAmber, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -1604,7 +1895,12 @@ private fun LanguageSlideContent(
                     .padding(14.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("💬", fontSize = 13.sp)
+                    Icon(
+                        imageVector = Icons.Outlined.QuestionAnswer,
+                        contentDescription = null,
+                        tint = HikariAmber,
+                        modifier = Modifier.size(14.dp),
+                    )
                     Spacer(Modifier.width(6.dp))
                     Text(
                         text = "Szenario: ${item.dialogueScenario}",
@@ -1786,13 +2082,24 @@ private fun HistorySlideContent(item: HistoryCardItem, isDone: Boolean, onDone: 
             shape = RoundedCornerShape(12.dp),
             border = androidx.compose.foundation.BorderStroke(0.5.dp, HikariAmber.copy(alpha = 0.4f)),
         ) {
-            Text(
-                "📅 ${item.dateLabel}",
-                color = HikariAmber,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-            )
+            ) {
+                Icon(
+                    Icons.Outlined.CalendarToday,
+                    contentDescription = null,
+                    tint = HikariAmber,
+                    modifier = Modifier.size(13.dp),
+                )
+                Spacer(Modifier.width(5.dp))
+                Text(
+                    item.dateLabel,
+                    color = HikariAmber,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
         }
 
         Spacer(Modifier.height(14.dp))
@@ -1825,7 +2132,16 @@ private fun HistorySlideContent(item: HistoryCardItem, isDone: Boolean, onDone: 
                 .padding(16.dp),
         ) {
             Column {
-                Text("💡 Warum es heute zählt:", color = HikariAmber, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Outlined.Lightbulb,
+                        contentDescription = null,
+                        tint = HikariAmber,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text("Warum es heute zählt:", color = HikariAmber, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
                 Spacer(Modifier.height(6.dp))
                 Text(item.whyItMatters, color = Color.White.copy(alpha = 0.9f), fontSize = 13.5.sp, lineHeight = 19.sp)
             }
@@ -1872,7 +2188,16 @@ private fun MentalModelSlideContent(item: MentalModelCardItem, isDone: Boolean, 
                 .padding(12.dp),
         ) {
             Column {
-                Text("⚠️ Alltagsfalle:", color = HikariAmber, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Outlined.WarningAmber,
+                        contentDescription = null,
+                        tint = HikariAmber,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Spacer(Modifier.width(5.dp))
+                    Text("Alltagsfalle:", color = HikariAmber, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                }
                 Spacer(Modifier.height(3.dp))
                 Text(item.realLifeExample, color = Color.White.copy(alpha = 0.9f), fontSize = 13.sp)
             }
@@ -1889,7 +2214,16 @@ private fun MentalModelSlideContent(item: MentalModelCardItem, isDone: Boolean, 
                 .padding(12.dp),
         ) {
             Column {
-                Text("🛡️ Gegenstrategie:", color = Color(0xFFDDD6FE), fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Outlined.Shield,
+                        contentDescription = null,
+                        tint = Color(0xFFDDD6FE),
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Spacer(Modifier.width(5.dp))
+                    Text("Gegenstrategie:", color = Color(0xFFDDD6FE), fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                }
                 Spacer(Modifier.height(3.dp))
                 Text(item.actionableDefense, color = Color.White, fontSize = 13.sp)
             }
@@ -1943,7 +2277,16 @@ private fun ScienceSlideContent(item: ScienceCardItem, isDone: Boolean, onDone: 
                 .padding(14.dp),
         ) {
             Column {
-                Text("✨ Faszinierendes Detail:", color = Color(0xFFA5B4FC), fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Outlined.AutoAwesome,
+                        contentDescription = null,
+                        tint = Color(0xFFA5B4FC),
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Spacer(Modifier.width(5.dp))
+                    Text("Faszinierendes Detail:", color = Color(0xFFA5B4FC), fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                }
                 Spacer(Modifier.height(4.dp))
                 Text(item.fascinatingDetail, color = HikariText, fontSize = 13.sp, lineHeight = 18.sp)
             }
@@ -1997,7 +2340,16 @@ private fun FinanceSlideContent(item: FinanceCardItem, isDone: Boolean, onDone: 
                 .padding(14.dp),
         ) {
             Column {
-                Text("🔑 Takeaway-Regel:", color = HikariAmber, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Outlined.VpnKey,
+                        contentDescription = null,
+                        tint = HikariAmber,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Spacer(Modifier.width(5.dp))
+                    Text("Takeaway-Regel:", color = HikariAmber, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                }
                 Spacer(Modifier.height(4.dp))
                 Text(item.takeawayRule, color = Color.White, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold)
             }
@@ -2057,7 +2409,16 @@ private fun GeographySlideContent(item: GeographyCardItem, isDone: Boolean, onDo
                     .background(HikariSurfaceHigh)
                     .padding(12.dp),
             ) {
-                Text("🌍 Wissenswert: ${item.interestingFact}", color = Color(0xFFA7F3D0), fontSize = 12.5.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Outlined.Public,
+                        contentDescription = null,
+                        tint = Color(0xFFA7F3D0),
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text("Wissenswert: ${item.interestingFact}", color = Color(0xFFA7F3D0), fontSize = 12.5.sp)
+                }
             }
         }
     }
@@ -2111,7 +2472,16 @@ private fun SpeedMathCardSlideContent(item: SpeedMathCardItem, isDone: Boolean, 
                 if (revealed) {
                     Text("Ergebnis: ${item.challengeResult}", color = Color(0xFF34D399), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 } else {
-                    Text("👉 Tippen zum Auflösen", color = HikariTextMuted, fontSize = 11.5.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Outlined.TouchApp,
+                            contentDescription = null,
+                            tint = HikariTextMuted,
+                            modifier = Modifier.size(13.dp),
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text("Tippen zum Auflösen", color = HikariTextMuted, fontSize = 11.5.sp)
+                    }
                 }
             }
         }
@@ -2270,12 +2640,21 @@ private fun PhilosophySlideContent(item: PhilosophyCardItem, isDone: Boolean, on
                     .background(HikariSurfaceHigh)
                     .padding(14.dp),
             ) {
-                Text(
-                    "⚖️ Philosophische Einordnung: ${item.philosophicalInsight}",
-                    color = Color(0xFFDDD6FE),
-                    fontSize = 12.5.sp,
-                    lineHeight = 17.sp,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Outlined.Balance,
+                        contentDescription = null,
+                        tint = Color(0xFFDDD6FE),
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "Philosophische Einordnung: ${item.philosophicalInsight}",
+                        color = Color(0xFFDDD6FE),
+                        fontSize = 12.5.sp,
+                        lineHeight = 17.sp,
+                    )
+                }
             }
         }
     }
@@ -2309,7 +2688,21 @@ private fun MindfulCompletionSlide(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Text("🌱", fontSize = 64.sp)
+            Surface(
+                shape = CircleShape,
+                color = Color(0xFF10B981).copy(alpha = 0.15f),
+                border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.40f)),
+                modifier = Modifier.size(72.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(
+                        imageVector = Icons.Outlined.CheckCircle,
+                        contentDescription = null,
+                        tint = Color(0xFF34D399),
+                        modifier = Modifier.size(40.dp),
+                    )
+                }
+            }
 
             Spacer(Modifier.height(16.dp))
 
@@ -2342,7 +2735,14 @@ private fun MindfulCompletionSlide(
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("🔥 $streak Tage Serie", color = HikariAmber, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Icon(
+                        imageVector = Icons.Outlined.LocalFireDepartment,
+                        contentDescription = null,
+                        tint = HikariAmber,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(Modifier.width(5.dp))
+                    Text("$streak Tage Serie", color = HikariAmber, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.width(16.dp))
                     Text("•", color = HikariTextFaint)
                     Spacer(Modifier.width(16.dp))
@@ -2389,7 +2789,21 @@ private fun FeedEmptyState(onOpenSettings: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("🌱", fontSize = 48.sp)
+            Surface(
+                shape = CircleShape,
+                color = Color.White.copy(alpha = 0.06f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.12f)),
+                modifier = Modifier.size(64.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(
+                        imageVector = Icons.Outlined.Spa,
+                        contentDescription = null,
+                        tint = HikariAmber,
+                        modifier = Modifier.size(32.dp),
+                    )
+                }
+            }
             Spacer(Modifier.height(12.dp))
             Text("Keine Module aktiv", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(6.dp))
@@ -2416,8 +2830,216 @@ private fun FeedEmptyState(onOpenSettings: () -> Unit) {
 // ── Deep Dive Slide (Horizontaler Wisch nach links) ──────────────────────────
 
 @Composable
+private fun LanguageDeepDiveAudioPlayer(
+    card: LanguageCardItem,
+    audioPlayer: RussianAudioPlayer?,
+) {
+    val playingTrack by (audioPlayer?.playing?.collectAsState() ?: remember { mutableStateOf(null) })
+    val audioRes = card.audioRes
+    val isPlayingNormal = !audioRes.isNullOrBlank() && playingTrack == audioRes
+    val isPlayingSlow = !audioRes.isNullOrBlank() && playingTrack == "${audioRes}_slow"
+    val isAnyPlaying = isPlayingNormal || isPlayingSlow
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        Color(0xFF0F2027),
+                        Color(0xFF1B3039),
+                        Color(0xFF244452),
+                    ),
+                ),
+            )
+            .border(1.dp, Color(0xFF38EF7D).copy(alpha = 0.35f), RoundedCornerShape(18.dp))
+            .padding(16.dp),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            // Header: Audiovisuelles Hör-Studio & Equalizer
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color(0xFF38EF7D).copy(alpha = 0.18f),
+                        border = BorderStroke(0.5.dp, Color(0xFF38EF7D).copy(alpha = 0.50f)),
+                    ) {
+                        Text(
+                            text = card.language.shortCode,
+                            color = Color(0xFFA7F3D0),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "AUDIOVISUELLES HÖR-STUDIO",
+                        color = Color(0xFFA7F3D0),
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp,
+                    )
+                }
+
+                // Live Equalizer Visualizer
+                AudiovisualEqualizer(
+                    isActive = isAnyPlaying,
+                    tint = if (isAnyPlaying) Color(0xFF38EF7D) else Color.White.copy(alpha = 0.25f),
+                )
+            }
+
+            // Target Word + Phonetics + Translation
+            Column {
+                Text(
+                    text = card.foreignWord,
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(Modifier.height(3.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = Color.White.copy(alpha = 0.08f),
+                    ) {
+                        Text(
+                            text = "[${card.phonetic}]",
+                            color = HikariAmber,
+                            fontSize = 12.sp,
+                            fontFamily = FontFamily.Monospace,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "·",
+                        color = Color.White.copy(alpha = 0.3f),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = card.nativeTranslation,
+                        color = Color(0xFFA7F3D0),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+
+            // Beispielsatz im Kontext (falls vorhanden)
+            if (card.exampleForeign.isNotBlank()) {
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = Color.Black.copy(alpha = 0.30f),
+                    border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
+                        Text(
+                            text = "„${card.exampleForeign}“",
+                            color = Color.White,
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = card.exampleTranslation,
+                            color = HikariTextMuted,
+                            fontSize = 11.5.sp,
+                        )
+                    }
+                }
+            }
+
+            // Audiowiedergabe Controls (1.0x & 0.7x Slow)
+            if (!audioRes.isNullOrBlank() && audioPlayer != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // 1.0x Normal Audio
+                    Surface(
+                        onClick = {
+                            if (isPlayingNormal) audioPlayer.stop() else audioPlayer.play(audioRes)
+                        },
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (isPlayingNormal) Color(0xFF38EF7D).copy(alpha = 0.20f) else Color.White.copy(alpha = 0.08f),
+                        border = BorderStroke(
+                            0.6.dp,
+                            if (isPlayingNormal) Color(0xFF38EF7D) else Color.White.copy(alpha = 0.15f),
+                        ),
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(vertical = 9.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = if (isPlayingNormal) Icons.Default.Pause else Icons.AutoMirrored.Outlined.VolumeUp,
+                                contentDescription = "Muttersprachler 1.0x",
+                                tint = if (isPlayingNormal) Color(0xFF38EF7D) else Color.White,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = if (isPlayingNormal) "Stopp" else "1.0× Original",
+                                color = if (isPlayingNormal) Color(0xFF38EF7D) else Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
+                    }
+
+                    // 0.7x Slow Audio
+                    Surface(
+                        onClick = {
+                            if (isPlayingSlow) audioPlayer.stop() else audioPlayer.play(audioRes, slow = true)
+                        },
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (isPlayingSlow) HikariAmber.copy(alpha = 0.20f) else Color.White.copy(alpha = 0.08f),
+                        border = BorderStroke(
+                            0.6.dp,
+                            if (isPlayingSlow) HikariAmber else Color.White.copy(alpha = 0.15f),
+                        ),
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(vertical = 9.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = if (isPlayingSlow) Icons.Default.Pause else Icons.Outlined.SlowMotionVideo,
+                                contentDescription = "Verlangsamt 0.7x",
+                                tint = if (isPlayingSlow) HikariAmber else Color.White,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = if (isPlayingSlow) "Stopp" else "0.7× Verlangsamt",
+                                color = if (isPlayingSlow) HikariAmber else Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun DeepDiveSlide(
     card: MindfulCard,
+    audioPlayer: RussianAudioPlayer? = null,
     onBack: () -> Unit,
 ) {
     val deepDive = remember(card.id) { card.resolveDeepDive() }
@@ -2496,7 +3118,12 @@ private fun DeepDiveSlide(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text("🔍", fontSize = 11.sp)
+                        Icon(
+                            imageVector = Icons.Outlined.AutoAwesome,
+                            contentDescription = null,
+                            tint = ambientColor,
+                            modifier = Modifier.size(12.dp),
+                        )
                         Spacer(Modifier.width(4.dp))
                         Text(
                             "DEEP DIVE",
@@ -2519,6 +3146,14 @@ private fun DeepDiveSlide(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
+                // Audiovisuelles Hör-Studio bei Sprachkarten ganz oben
+                if (card is LanguageCardItem) {
+                    LanguageDeepDiveAudioPlayer(
+                        card = card,
+                        audioPlayer = audioPlayer,
+                    )
+                }
+
                 // Titel & Subtitel
                 Column {
                     Text(
@@ -2548,7 +3183,12 @@ private fun DeepDiveSlide(
                 ) {
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("⚡", fontSize = 14.sp)
+                            Icon(
+                                imageVector = Icons.Default.Bolt,
+                                contentDescription = null,
+                                tint = HikariAmber,
+                                modifier = Modifier.size(15.dp),
+                            )
                             Spacer(Modifier.width(6.dp))
                             Text(
                                 "KERNERKENNTNIS",
@@ -2608,7 +3248,12 @@ private fun DeepDiveSlide(
                     ) {
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("🎯", fontSize = 13.sp)
+                                Icon(
+                                    imageVector = Icons.Outlined.TrackChanges,
+                                    contentDescription = null,
+                                    tint = Color(0xFFA7F3D0),
+                                    modifier = Modifier.size(14.dp),
+                                )
                                 Spacer(Modifier.width(6.dp))
                                 Text(
                                     "ANWENDUNG & TRANSFER",
@@ -2641,7 +3286,12 @@ private fun DeepDiveSlide(
                             modifier = Modifier.padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text("🌱", fontSize = 14.sp)
+                            Icon(
+                                imageVector = Icons.Outlined.AccountTree,
+                                contentDescription = null,
+                                tint = HikariTextFaint,
+                                modifier = Modifier.size(14.dp),
+                            )
                             Spacer(Modifier.width(8.dp))
                             Column {
                                 Text(
@@ -2776,8 +3426,15 @@ private fun KnowledgeArchiveSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Outlined.Bookmarks,
+                        contentDescription = null,
+                        tint = HikariAmber,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
                     Text(
-                        "🧠 Mein Gehirn",
+                        "Mein Gehirn",
                         color = Color.White,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
@@ -2912,7 +3569,12 @@ private fun KnowledgeArchiveSheet(
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Text(mod.iconEmoji, fontSize = 11.sp)
+                                Icon(
+                                    imageVector = mod.icon,
+                                    contentDescription = null,
+                                    tint = if (active) Color.White else mod.accentColor,
+                                    modifier = Modifier.size(12.dp),
+                                )
                                 Spacer(Modifier.width(4.dp))
                                 Text(
                                     "${mod.title.substringBefore(" ")} ($count)",
@@ -2940,7 +3602,21 @@ private fun KnowledgeArchiveSheet(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(32.dp),
                     ) {
-                        Text("🧠", fontSize = 42.sp)
+                        Surface(
+                            shape = CircleShape,
+                            color = Color.White.copy(alpha = 0.06f),
+                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.12f)),
+                            modifier = Modifier.size(64.dp),
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Bookmarks,
+                                    contentDescription = null,
+                                    tint = HikariAmber,
+                                    modifier = Modifier.size(32.dp),
+                                )
+                            }
+                        }
                         Spacer(Modifier.height(12.dp))
                         Text(
                             if (savedCards.isEmpty()) "Dein Geist ist noch frei" else "Keine Treffer",
@@ -2993,8 +3669,22 @@ private fun SavedCardItemRow(
     onRemove: () -> Unit,
 ) {
     val deepDive = remember(card.id) { card.resolveDeepDive() }
-    val emoji = getCardEmoji(card)
     val catLabel = getCardCategoryLabel(card)
+    val catIcon = when (card.type) {
+        MindfulModuleType.QUOTE -> Icons.Outlined.FormatQuote
+        MindfulModuleType.LANGUAGE -> Icons.Outlined.Translate
+        MindfulModuleType.BRAIN_PUZZLE -> Icons.Outlined.Psychology
+        MindfulModuleType.MENTAL_MODEL -> Icons.Outlined.Lightbulb
+        MindfulModuleType.HISTORY -> Icons.Default.History
+        MindfulModuleType.SCIENCE -> Icons.Outlined.Science
+        MindfulModuleType.FINANCE -> Icons.Outlined.AccountBalance
+        MindfulModuleType.PHILOSOPHY -> Icons.Outlined.AutoAwesome
+        MindfulModuleType.GEOGRAPHY -> Icons.Outlined.Public
+        MindfulModuleType.SPEED_MATH -> Icons.Outlined.Calculate
+        MindfulModuleType.ART_CULTURE -> Icons.Outlined.Palette
+        MindfulModuleType.VOCABULARY -> Icons.Outlined.MenuBook
+        MindfulModuleType.BREATHWORK -> Icons.Outlined.Spa
+    }
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -3010,7 +3700,12 @@ private fun SavedCardItemRow(
             ) {
                 // Category Chip
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(emoji, fontSize = 12.sp)
+                    Icon(
+                        catIcon,
+                        contentDescription = null,
+                        tint = HikariAmber,
+                        modifier = Modifier.size(13.dp),
+                    )
                     Spacer(Modifier.width(5.dp))
                     Text(
                         catLabel,
@@ -3280,7 +3975,12 @@ private fun FeedSettingsSheet(
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text("✓", color = HikariAmber, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Icon(
+                                Icons.Outlined.Check,
+                                contentDescription = null,
+                                tint = HikariAmber,
+                                modifier = Modifier.size(15.dp),
+                            )
                             Spacer(Modifier.width(8.dp))
                             Text(msg, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                         }
@@ -3407,7 +4107,21 @@ private fun TopicsTabContent(
                 contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("🔍", fontSize = 28.sp)
+                    Surface(
+                        shape = CircleShape,
+                        color = Color.White.copy(alpha = 0.06f),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.12f)),
+                        modifier = Modifier.size(48.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = null,
+                                tint = HikariAmber,
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
+                    }
                     Spacer(Modifier.height(8.dp))
                     Text(
                         text = if (topicFilter == TopicFilter.FOCUS) "Noch kein Thema im Top-Fokus" else "Keine aktiven Themen",
@@ -3764,7 +4478,12 @@ private fun SystemTabContent(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.Top) {
-                    Text("🌱", fontSize = 22.sp)
+                    Icon(
+                        Icons.Outlined.Spa,
+                        contentDescription = null,
+                        tint = Color(0xFFA7F3D0),
+                        modifier = Modifier.size(20.dp),
+                    )
                     Spacer(Modifier.width(10.dp))
                     Column {
                         Text("Mindful Philosophie", color = Color(0xFFA7F3D0), fontSize = 13.5.sp, fontWeight = FontWeight.Bold)
@@ -3796,7 +4515,16 @@ private fun SystemTabContent(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Serie", color = HikariTextMuted, fontSize = 10.5.sp)
                         Spacer(Modifier.height(2.dp))
-                        Text("🔥 $streak Tage", color = HikariAmber, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Outlined.LocalFireDepartment,
+                                contentDescription = null,
+                                tint = HikariAmber,
+                                modifier = Modifier.size(15.dp),
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text("$streak Tage", color = HikariAmber, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
 
                     Box(modifier = Modifier.width(1.dp).height(24.dp).background(Color.White.copy(alpha = 0.10f)))
@@ -3813,12 +4541,23 @@ private fun SystemTabContent(
                         Text("Status", color = HikariTextMuted, fontSize = 10.5.sp)
                         Spacer(Modifier.height(2.dp))
                         val isFinished = completedCount >= totalCount && totalCount > 0
-                        Text(
-                            if (isFinished) "Gemeistert ✓" else "Aktiv",
-                            color = if (isFinished) Color(0xFF10B981) else Color.White,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (isFinished) {
+                                Icon(
+                                    Icons.Outlined.Check,
+                                    contentDescription = null,
+                                    tint = Color(0xFF10B981),
+                                    modifier = Modifier.size(14.dp),
+                                )
+                                Spacer(Modifier.width(4.dp))
+                            }
+                            Text(
+                                if (isFinished) "Gemeistert" else "Aktiv",
+                                color = if (isFinished) Color(0xFF10B981) else Color.White,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                     }
                 }
             }

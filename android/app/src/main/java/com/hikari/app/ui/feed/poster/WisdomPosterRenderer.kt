@@ -112,7 +112,7 @@ object WisdomPosterRenderer {
         canvas.drawText("MINDFUL ARCHIVE · TÄGLICHE KLARHEIT", 96f, 162f, subHeaderPaint)
 
         // Category Badge Pill
-        val badgeText = "${poster.categoryEmoji}  ${poster.categoryLabel.uppercase()}"
+        val badgeText = poster.categoryLabel.uppercase()
         val badgeTextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             color = poster.accentColor.toInt()
             textSize = 22f
@@ -200,7 +200,7 @@ object WisdomPosterRenderer {
         canvas.drawRoundRect(cardRect, 32f, 32f, cardBorderPaint)
 
         // Card Header Badge
-        val takeawayBadgeText = "💡  SCHLÜSSEL-ERKENNTNIS & REFLEXION"
+        val takeawayBadgeText = "SCHLÜSSEL-ERKENNTNIS & REFLEXION"
         val takeawayBadgePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             color = poster.accentColor.toInt()
             textSize = 21f

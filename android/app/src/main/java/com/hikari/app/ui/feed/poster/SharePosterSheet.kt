@@ -205,13 +205,18 @@ fun SharePosterSheet(
                                     horizontalArrangement = Arrangement.Center,
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Text(lang.flagEmoji, fontSize = 14.sp)
-                                    Spacer(Modifier.width(4.dp))
+                                    Text(
+                                        text = lang.shortCode,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) HikariAmber else HikariTextMuted,
+                                    )
+                                    Spacer(Modifier.width(6.dp))
                                     Text(
                                         lang.displayName,
                                         fontSize = 12.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (isSelected) HikariAmber else HikariTextMuted,
+                                        color = if (isSelected) Color.White else HikariTextMuted,
                                     )
                                 }
                             }
@@ -297,7 +302,7 @@ fun SharePosterSheet(
                                 if (saved) {
                                     Toast.makeText(
                                         context,
-                                        "Poster in Fotos gespeichert ✓",
+                                        "Poster in Fotos gespeichert",
                                         Toast.LENGTH_SHORT,
                                     ).show()
                                 } else {

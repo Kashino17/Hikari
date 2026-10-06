@@ -167,7 +167,7 @@ fun DockedVideoMiniPlayer(
                     )
                 }
 
-                // Close Button (✕)
+                // Close Button
                 IconButton(
                     onClick = { dockManager.closeAndRelease() },
                     modifier = Modifier.size(40.dp),

@@ -21,12 +21,14 @@ import com.hikari.app.domain.feed.resolveDeepDive
 enum class PosterLanguage(
     val code: String,
     val displayName: String,
-    val flagEmoji: String,
+    val shortCode: String,
 ) {
-    GERMAN("de", "Deutsch", "🇩🇪"),
-    ENGLISH("en", "English", "🇬🇧"),
-    RUSSIAN("ru", "Русский", "🇷🇺"),
-    SPANISH("es", "Español", "🇪🇸");
+    GERMAN("de", "Deutsch", "DE"),
+    ENGLISH("en", "English", "EN"),
+    RUSSIAN("ru", "Русский", "RU"),
+    SPANISH("es", "Español", "ES");
+
+    val flagEmoji: String get() = ""
 
     companion object {
         fun fromCode(code: String): PosterLanguage =
@@ -71,21 +73,7 @@ object PosterContentResolver {
             MindfulModuleType.BREATHWORK -> Quad(0xFF06B6D4, 0xFF04161C, 0xFF082C38, 0xFF030D10)
         }
 
-        val categoryEmoji = when (card.type) {
-            MindfulModuleType.QUOTE -> "📜"
-            MindfulModuleType.LANGUAGE -> "🗣️"
-            MindfulModuleType.BRAIN_PUZZLE -> "🧩"
-            MindfulModuleType.MENTAL_MODEL -> "💡"
-            MindfulModuleType.HISTORY -> "🏛️"
-            MindfulModuleType.SCIENCE -> "🔬"
-            MindfulModuleType.FINANCE -> "💰"
-            MindfulModuleType.PHILOSOPHY -> "⚖️"
-            MindfulModuleType.GEOGRAPHY -> "🌍"
-            MindfulModuleType.SPEED_MATH -> "🔢"
-            MindfulModuleType.ART_CULTURE -> "🎨"
-            MindfulModuleType.VOCABULARY -> "📚"
-            MindfulModuleType.BREATHWORK -> "🫁"
-        }
+        val categoryEmoji = ""
 
         val categoryLabel = when (targetLang) {
             PosterLanguage.GERMAN -> when (card.type) {
@@ -206,7 +194,7 @@ object PosterContentResolver {
                     headline = "SPRACHE DES TAGES",
                     primaryText = card.foreignWord,
                     secondaryText = "${card.phonetic}  ·  $translationText",
-                    takeawayText = "$exampleText\n\n💡 Kontext: ${deepDive.keyInsight}",
+                    takeawayText = "$exampleText\n\nKontext: ${deepDive.keyInsight}",
                     attribution = "${card.language.title} · Hikari Language Mastery",
                     moduleType = card.type,
                     language = targetLang,

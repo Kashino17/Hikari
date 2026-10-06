@@ -35,6 +35,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -297,7 +299,7 @@ private fun LibraryContent(
         )
     } else {
         Column(modifier = Modifier.fillMaxSize()) {
-            // ── Top Bar: HIKARI Brand + Shuffle 🎲 + Search 🔍 ────────────────
+            // ── Top Bar: HIKARI Brand + Shuffle + Search ─────────────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -315,7 +317,12 @@ private fun LibraryContent(
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { showShuffleSheet = true }) {
-                        Text(text = "🎲", fontSize = 20.sp)
+                        Icon(
+                            imageVector = Icons.Outlined.Shuffle,
+                            contentDescription = "Zufallsauswahl",
+                            tint = Color.White.copy(alpha = 0.85f),
+                            modifier = Modifier.size(21.dp),
+                        )
                     }
                     IconButton(onClick = { isSearchActive = true }) {
                         Icon(
@@ -377,7 +384,7 @@ private fun LibraryContent(
                                 }
                             }
 
-                            // 🏆 TOP 10 SERIEN (Letzte 30 Tage)
+                            // ── TOP 10 SERIEN (Letzte 30 Tage) ─────────────────────────
                             if (topCharts.topSeries.isNotEmpty()) {
                                 item {
                                     NetflixTopTenSection(
@@ -393,7 +400,7 @@ private fun LibraryContent(
                                 }
                             }
 
-                            // 🍿 TOP 10 FILME (Letzte 30 Tage)
+                            // ── TOP 10 FILME (Letzte 30 Tage) ──────────────────────────
                             if (topCharts.topMovies.isNotEmpty()) {
                                 item {
                                     NetflixTopTenSection(
@@ -408,7 +415,7 @@ private fun LibraryContent(
                                 }
                             }
 
-                            // 🧭 THEMEN & GENRES ENTDECKEN (Apple Music Style Kacheln)
+                            // ── THEMEN & GENRES ENTDECKEN ──────────────────────────────
                             item {
                                 MoodDiscoverySection(
                                     selectedGenre = selectedGenre,
@@ -560,7 +567,7 @@ private fun LibraryContent(
                                 item { HeroSection(video = heroSeriesVideo, onPlay = ::play) }
                             }
 
-                            // 🏆 TOP 10 SERIEN (Meistgesehen)
+                            // ── TOP 10 SERIEN (Meistgesehen) ──────────────────────────
                             if (topCharts.topSeries.isNotEmpty()) {
                                 item {
                                     NetflixTopTenSection(
@@ -613,7 +620,7 @@ private fun LibraryContent(
                             val animeSeries = data.series.filter { Genre.ANIME in it.detectGenres() }
                             if (animeSeries.isNotEmpty()) {
                                 item {
-                                    SectionHeader("⛩️ Anime-Serien", count = animeSeries.size)
+                                    SectionHeader("Anime-Serien", count = animeSeries.size)
                                     LazyRow(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -645,7 +652,7 @@ private fun LibraryContent(
                                 item { HeroSection(video = heroMovie, onPlay = ::play) }
                             }
 
-                            // 🍿 TOP 10 FILME (Meistgesehen)
+                            // ── TOP 10 FILME (Meistgesehen) ───────────────────────────
                             if (topCharts.topMovies.isNotEmpty()) {
                                 item {
                                     NetflixTopTenSection(
@@ -708,7 +715,7 @@ private fun LibraryContent(
                             val dokuMovies = allMovies.filter { Genre.DOCS in it.detectGenres() }
                             if (dokuMovies.isNotEmpty()) {
                                 item {
-                                    SectionHeader("🧠 Doku & Wissen", count = dokuMovies.size)
+                                    SectionHeader("Doku & Wissen", count = dokuMovies.size)
                                     LazyRow(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -753,7 +760,7 @@ private fun LibraryContent(
                                 val total = genreSeries.size + genreVideos.size
                                 if (total > 0) {
                                     item {
-                                        SectionHeader("${genre.emoji} ${genre.title}", count = total)
+                                        SectionHeader(genre.title, count = total)
                                         LazyRow(
                                             contentPadding = PaddingValues(horizontal = 16.dp),
                                             horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -1001,14 +1008,23 @@ private fun HeroSection(video: LibraryVideoDto?, onPlay: (LibraryVideoDto) -> Un
                 .fillMaxWidth()
                 .padding(start = 18.dp, end = 18.dp, bottom = 24.dp),
         ) {
-            Text(
-                text = if (isResume) "▶ WEITERSCHAUEN" else "★ NEU IN DER BIBLIOTHEK",
-                color = HikariAmber,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 1.5.sp,
-                fontFamily = FontFamily.Monospace,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = if (isResume) Icons.Default.PlayArrow else Icons.Outlined.AutoAwesome,
+                    contentDescription = null,
+                    tint = HikariAmber,
+                    modifier = Modifier.size(12.dp),
+                )
+                Spacer(Modifier.width(5.dp))
+                Text(
+                    text = if (isResume) "WEITERSCHAUEN" else "NEU IN DER BIBLIOTHEK",
+                    color = HikariAmber,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.5.sp,
+                    fontFamily = FontFamily.Monospace,
+                )
+            }
             Spacer(Modifier.height(6.dp))
             Text(
                 text = video.title,
@@ -1570,15 +1586,17 @@ private fun NetflixCategorySheet(
                     fontSize = 19.sp,
                     fontWeight = FontWeight.Bold,
                 )
-                Text(
-                    text = "✕",
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .clickable { onDismiss() }
-                        .padding(4.dp),
-                )
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.size(28.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Schließen",
+                        tint = Color.White.copy(alpha = 0.7f),
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
             }
             Spacer(Modifier.height(16.dp))
             LazyColumn(

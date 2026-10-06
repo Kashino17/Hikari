@@ -1,5 +1,12 @@
 package com.hikari.app.ui.library.components
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.Movie
+import androidx.compose.material.icons.outlined.Tv
+import androidx.compose.ui.graphics.vector.ImageVector
+
 data class TopTenItem(
     val rank: Int, // 1 .. 10
     val id: String,
@@ -20,9 +27,10 @@ data class TopTenCharts(
     val topMovies: List<TopTenItem> = emptyList(),
 )
 
-enum class LibraryTab(val label: String, val icon: String) {
-    FOR_YOU("Für dich", "🌟"),
-    SERIES("Serien", "📺"),
-    MOVIES("Filme", "🎬"),
-    DISCOVER("Stöbern", "🧭"),
+enum class LibraryTab(val label: String, val icon: ImageVector) {
+    FOR_YOU("Für dich", Icons.Outlined.AutoAwesome),
+    SERIES("Serien", Icons.Outlined.Tv),
+    MOVIES("Filme", Icons.Outlined.Movie),
+    DISCOVER("Stöbern", Icons.Outlined.Explore),
 }
+
