@@ -47,6 +47,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Forward10
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.PictureInPictureAlt
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
@@ -109,6 +110,7 @@ import com.hikari.app.data.api.dto.VideoDetailDto
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.repo.PlaybackRepository
 import com.hikari.app.player.HikariPlayerFactory
+import com.hikari.app.player.VideoDockManager
 import com.hikari.app.ui.feed.HikariIcons
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
@@ -134,6 +136,7 @@ interface VideoPlayerEntryPoint {
     fun settingsStore(): SettingsStore
     fun localDownloadManager(): com.hikari.app.domain.download.LocalDownloadManager
     fun hikariApi(): HikariApi
+    fun videoDockManager(): VideoDockManager
 }
 
 private const val SEEK_STEP_MS = 10_000L
@@ -176,8 +179,18 @@ fun VideoPlayerScreen(
     val settingsStore = remember { ep.settingsStore() }
     val localDl = remember { ep.localDownloadManager() }
     val api = remember { ep.hikariApi() }
+    val dockManager = remember { ep.videoDockManager() }
     val baseUrl = remember { runBlocking { settingsStore.backendUrl.first() } }
-    val player = remember { factory.create() }
+
+    val existingPlayer = remember { dockManager.getPlayer() }
+    val isReusing = remember { dockManager.activeVideo.value?.videoId == videoId && existingPlayer != null }
+    val player = remember {
+        if (isReusing) {
+            existingPlayer!!
+        } else {
+            factory.create()
+        }
+    }
 
     KeepScreenOn()
 
@@ -187,7 +200,7 @@ fun VideoPlayerScreen(
     var detail by remember { mutableStateOf<VideoDetailDto?>(null) }
     var episodes by remember { mutableStateOf<List<LibraryVideoDto>>(emptyList()) }
 
-    var playing by remember { mutableStateOf(true) }
+    var playing by remember { mutableStateOf(player.isPlaying) }
     var controlsVisible by remember { mutableStateOf(true) }
     var chromeBumpToken by remember { mutableIntStateOf(0) }
     var locked by remember { mutableStateOf(false) }
@@ -197,15 +210,15 @@ fun VideoPlayerScreen(
     var toastToken by remember { mutableIntStateOf(0) }
 
     var orientationMode by remember { mutableStateOf(OrientationMode.Auto) }
-    var videoW by remember { mutableIntStateOf(0) }
-    var videoH by remember { mutableIntStateOf(0) }
+    var videoW by remember { mutableIntStateOf(player.videoSize.width.coerceAtLeast(0)) }
+    var videoH by remember { mutableIntStateOf(player.videoSize.height.coerceAtLeast(0)) }
     var zoomed by remember { mutableStateOf(false) }
     var speed by remember { mutableFloatStateOf(1f) }
-    var tracks by remember { mutableStateOf<Tracks>(Tracks.EMPTY) }
+    var tracks by remember { mutableStateOf(player.currentTracks) }
 
-    var position by remember { mutableLongStateOf(0L) }
-    var buffered by remember { mutableLongStateOf(0L) }
-    var duration by remember { mutableLongStateOf(1L) }
+    var position by remember { mutableLongStateOf(player.currentPosition.coerceAtLeast(0L)) }
+    var buffered by remember { mutableLongStateOf(player.bufferedPosition.coerceAtLeast(0L)) }
+    var duration by remember { mutableLongStateOf(player.duration.coerceAtLeast(1L)) }
     var isScrubbing by remember { mutableStateOf(false) }
     val wasPlayingBeforeScrub = remember { mutableStateOf(true) }
 
@@ -240,6 +253,12 @@ fun VideoPlayerScreen(
         toastToken++
     }
 
+    fun minimizeAndBack() {
+        dockManager.setActivePlayer(currentVideoId, currentTitle, channel, player)
+        dockManager.dock()
+        onBack()
+    }
+
     fun savePositionAsync(id: String, pos: Long) {
         if (pos > 0L) ioScope.launch { runCatching { playbackRepo.savePosition(id, pos) } }
     }
@@ -250,6 +269,7 @@ fun VideoPlayerScreen(
         player.stop()
         currentVideoId = id
         currentTitle = newTitle
+        dockManager.setActivePlayer(id, newTitle, channel, player)
         showNextOverlay = false
         nextDismissed = false
         sheet = Sheet.None
@@ -263,18 +283,25 @@ fun VideoPlayerScreen(
 
     // ── Laden + Position sichern ─────────────────────────────────────────
     LaunchedEffect(currentVideoId) {
-        val savedPos = playbackRepo.getPosition(currentVideoId)
-        val localPath = localDl.localFile(currentVideoId)?.absolutePath
-        player.setMediaItem(factory.mediaItemFor(baseUrl, currentVideoId, localPath), savedPos)
-        player.prepare()
-        player.playWhenReady = true
-        player.setPlaybackSpeed(speed)
+        val isAlreadyPrepared = isReusing && currentVideoId == videoId && player.playbackState != Player.STATE_IDLE
+        if (!isAlreadyPrepared) {
+            val savedPos = playbackRepo.getPosition(currentVideoId)
+            val localPath = localDl.localFile(currentVideoId)?.absolutePath
+            player.setMediaItem(factory.mediaItemFor(baseUrl, currentVideoId, localPath), savedPos)
+            player.prepare()
+            player.playWhenReady = true
+            player.setPlaybackSpeed(speed)
+        }
+        dockManager.setActivePlayer(currentVideoId, currentTitle, channel, player)
         nextVideo = playbackRepo.nextVideo(currentVideoId)
         nextDismissed = false
         showNextOverlay = false
         val d = runCatching { api.getVideo(currentVideoId) }.getOrNull()
         detail = d
-        if (d != null && currentTitle.isBlank()) currentTitle = d.title
+        if (d != null && currentTitle.isBlank()) {
+            currentTitle = d.title
+            dockManager.setActivePlayer(currentVideoId, currentTitle, channel, player)
+        }
         val sid = d?.series_id
         episodes = if (sid != null) {
             runCatching { api.getSeries(sid).videos }.getOrDefault(emptyList())
@@ -285,7 +312,11 @@ fun VideoPlayerScreen(
         onDispose {
             val pos = player.currentPosition
             val id = currentVideoId
-            player.release()
+            val isDocked = dockManager.isDocked.value
+            val isCurrentDocked = isDocked && dockManager.activeVideo.value?.videoId == id
+            if (!isCurrentDocked) {
+                player.release()
+            }
             if (pos > 0L) ioScope.launch { runCatching { playbackRepo.savePosition(id, pos) } }
         }
     }
@@ -538,7 +569,7 @@ fun VideoPlayerScreen(
         when {
             locked -> lockHintVisible = true
             sheet != Sheet.None -> sheet = Sheet.None
-            else -> onBack()
+            else -> minimizeAndBack()
         }
     }
 
@@ -573,6 +604,7 @@ fun VideoPlayerScreen(
     val surface: @Composable BoxScope.() -> Unit = {
         var boxWidthPx by remember { mutableIntStateOf(0) }
         var boxHeightPx by remember { mutableIntStateOf(0) }
+        var centerDragAccumulator by remember { mutableFloatStateOf(0f) }
 
         Box(
             modifier = Modifier
@@ -595,16 +627,32 @@ fun VideoPlayerScreen(
                         onDoubleTap = { offset -> if (!locked) onDoubleTap(offset.x, boxWidthPx.toFloat()) },
                         onVerticalDragStart = { side ->
                             if (!locked) {
-                                levelKind = if (side == DragSide.Left) LevelKind.Brightness else LevelKind.Volume
+                                when (side) {
+                                    DragSide.CenterDown -> centerDragAccumulator = 0f
+                                    DragSide.Left -> levelKind = LevelKind.Brightness
+                                    DragSide.Right -> levelKind = LevelKind.Volume
+                                }
                             }
                         },
                         onVerticalDrag = { side, dy ->
                             if (locked) return@detectPlayerGestures
                             val h = boxHeightPx.toFloat()
-                            if (side == DragSide.Left) applyBrightness(adjustLevel(brightness, dy, h))
-                            else applyVolume(adjustLevel(volume, dy, h))
+                            when (side) {
+                                DragSide.CenterDown -> {
+                                    centerDragAccumulator += dy
+                                    if (centerDragAccumulator > 100f) {
+                                        centerDragAccumulator = 0f
+                                        minimizeAndBack()
+                                    }
+                                }
+                                DragSide.Left -> applyBrightness(adjustLevel(brightness, dy, h))
+                                DragSide.Right -> applyVolume(adjustLevel(volume, dy, h))
+                            }
                         },
-                        onVerticalDragEnd = { levelHideToken++ },
+                        onVerticalDragEnd = { side ->
+                            centerDragAccumulator = 0f
+                            levelHideToken++
+                        },
                         onPinch = { scale ->
                             if (locked) return@detectPlayerGestures
                             val wantZoom = pinchDecision(scale) ?: return@detectPlayerGestures
@@ -674,7 +722,9 @@ fun VideoPlayerScreen(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    CircleControl(Icons.AutoMirrored.Filled.ArrowBack, "Zurück", 40.dp, 22.dp, Color.Black.copy(alpha = 0.45f), onBack)
+                    CircleControl(Icons.Default.KeyboardArrowDown, "Minimieren", 40.dp, 24.dp, Color.Black.copy(alpha = 0.45f)) {
+                        minimizeAndBack()
+                    }
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         if (seriesLabel.isNotBlank()) {

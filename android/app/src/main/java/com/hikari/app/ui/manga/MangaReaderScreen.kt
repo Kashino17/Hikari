@@ -119,18 +119,22 @@ private fun ReaderContent(
             reverseLayout = true,   // RTL: forward = swipe left
             beyondViewportPageCount = 1,
             userScrollEnabled = pagerScrollEnabled,
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectTapGestures(onTap = { chromeVisible = !chromeVisible })
-                },
+            modifier = Modifier.fillMaxSize(),
         ) { pageIdx ->
             if (pageIdx == pages.size) {
-                ChapterEndPage(
-                    nextChapterId = nextChapterId,
-                    onNextChapter = { nextChapterId?.let(onOpenChapter) },
-                    onBackToOverview = onBack,
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            detectTapGestures(onTap = { chromeVisible = !chromeVisible })
+                        },
+                ) {
+                    ChapterEndPage(
+                        nextChapterId = nextChapterId,
+                        onNextChapter = { nextChapterId?.let(onOpenChapter) },
+                        onBackToOverview = onBack,
+                    )
+                }
             } else {
                 val page = pages[pageIdx]
                 ZoomablePage(
@@ -139,6 +143,7 @@ private fun ReaderContent(
                     pagerState = pagerState,
                     pageIdx = pageIdx,
                     onZoomChange = { isZoomed -> pagerScrollEnabled = !isZoomed },
+                    onTap = { chromeVisible = !chromeVisible },
                     onError = {
                         failedPages.value = failedPages.value + page.id
                     },

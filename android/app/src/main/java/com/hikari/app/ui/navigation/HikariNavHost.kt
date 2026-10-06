@@ -13,6 +13,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.LaunchedEffect
@@ -23,7 +24,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
+import com.hikari.app.player.VideoDockManager
+import com.hikari.app.ui.player.DockedVideoMiniPlayer
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -101,6 +109,12 @@ private fun navFresh(nav: NavController, route: String) {
     }
 }
 
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface NavHostEntryPoint {
+    fun videoDockManager(): VideoDockManager
+}
+
 fun playVideoRoute(videoId: String, title: String, channel: String): String {
     val t = URLEncoder.encode(title, "UTF-8")
     val c = URLEncoder.encode(channel, "UTF-8")
@@ -110,6 +124,12 @@ fun playVideoRoute(videoId: String, title: String, channel: String): String {
 @Composable
 fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = null) {
     val nav = rememberNavController()
+    val ctx = LocalContext.current
+    val navEntryPoint = remember { EntryPointAccessors.fromApplication(ctx, NavHostEntryPoint::class.java) }
+    val videoDockManager = remember { navEntryPoint.videoDockManager() }
+    val isVideoDocked by videoDockManager.isDocked.collectAsState()
+    val activeVideo by videoDockManager.activeVideo.collectAsState()
+
     // Zählt Klicks auf den Feed-Tab; der Feed springt daraufhin nach oben
     // und lädt neu — auch wenn er bereits sichtbar ist.
     var feedResetTick by remember { mutableIntStateOf(0) }
@@ -655,6 +675,23 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
             }
         }
 
+        val isVideoDockVisible = !isVideoRoute && isVideoDocked && activeVideo != null
+
+        // Angedockter Mini-Videoplayer (Apple-/YouTube-Lösung) direkt über der Bottom-Bar
+        if (isVideoDockVisible) {
+            DockedVideoMiniPlayer(
+                dockManager = videoDockManager,
+                onExpand = { videoId, title, channel ->
+                    nav.navigate(playVideoRoute(videoId, title, channel))
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(
+                        bottom = if (showsBottomBar) padding.calculateBottomPadding() + 6.dp else 12.dp,
+                    ),
+            )
+        }
+
         // Schnellzugriff auf die laufende Musik — sitzt über der Bottom-Bar
         // im Daumenbereich und nur dort, wo die Leiste ohnehin sichtbar ist.
         if (showsBottomBar) {
@@ -664,7 +701,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(
-                        bottom = padding.calculateBottomPadding() + 8.dp,
+                        bottom = padding.calculateBottomPadding() + 8.dp + (if (isVideoDockVisible) 68.dp else 0.dp),
                         end = 12.dp,
                     ),
             )

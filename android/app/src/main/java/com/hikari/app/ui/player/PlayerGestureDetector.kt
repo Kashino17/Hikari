@@ -11,8 +11,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.abs
 import kotlin.math.hypot
 
-/** Vertikaler Wisch: links Helligkeit, rechts Lautstärke. */
-enum class DragSide { Left, Right }
+/** Vertikaler Wisch: links Helligkeit, rechts Lautstärke, Mitte nach unten = Minimieren / Docken. */
+enum class DragSide { Left, Right, CenterDown }
 
 /**
  * Ein einziger Detektor für die Videofläche, damit Tipp, Doppeltipp,
@@ -30,7 +30,7 @@ suspend fun PointerInputScope.detectPlayerGestures(
     onDoubleTap: (Offset) -> Unit,
     onVerticalDragStart: (DragSide) -> Unit,
     onVerticalDrag: (side: DragSide, deltaY: Float) -> Unit,
-    onVerticalDragEnd: () -> Unit,
+    onVerticalDragEnd: (side: DragSide) -> Unit,
     onPinch: (scale: Float) -> Unit,
     doubleTapWindowMs: Long = 260L,
 ) {
@@ -95,7 +95,12 @@ suspend fun PointerInputScope.detectPlayerGestures(
                     if (abs(dy) > slopPx && abs(dy) > abs(dx) * 1.5f) {
                         if (isInsideSafeVerticalZone) {
                             mode = Mode.VerticalDrag
-                            side = if (downPos.x < width / 2f) DragSide.Left else DragSide.Right
+                            side = when {
+                                downPos.x < width * 0.28f -> DragSide.Left
+                                downPos.x > width * 0.72f -> DragSide.Right
+                                dy > 0 -> DragSide.CenterDown // Wisch nach unten in der Mitte = Minimieren
+                                else -> DragSide.CenterDown
+                            }
                             onVerticalDragStart(side)
                             change.consume()
                         } else {
@@ -121,7 +126,7 @@ suspend fun PointerInputScope.detectPlayerGestures(
         }
 
         when (mode) {
-            Mode.VerticalDrag -> onVerticalDragEnd()
+            Mode.VerticalDrag -> onVerticalDragEnd(side)
             Mode.Pinch -> onPinch(pinchScale)
             Mode.Ignored -> Unit
             Mode.Undecided -> {
@@ -163,11 +168,11 @@ suspend fun PointerInputScope.detectPlayerGestures(
 
 private enum class Mode { Undecided, VerticalDrag, Pinch, Ignored }
 
-/** Schwellenwert: Nicht zu sensibel, verhindert versehentliche Auslösung. */
-private val dragSlop = 26.dp
+/** Schwellenwert: Nicht zu sensibel, verhindert versehentliche Auslösung von Lautstärke & Helligkeit. */
+private val dragSlop = 32.dp
 
-/** Oben 72dp Sicherheitszone: Schützt das Herunterziehen der Android-Statusleiste/Benachrichtigungen. */
-private val topExclusionZone = 72.dp
+/** Oben 88dp Sicherheitszone: Schützt das Herunterziehen der Android-Statusleiste/Benachrichtigungen vollständig. */
+private val topExclusionZone = 88.dp
 
-/** Unten 48dp Sicherheitszone: Schützt System-Navigationsgesten. */
-private val bottomExclusionZone = 48.dp
+/** Unten 56dp Sicherheitszone: Schützt System-Navigationsgesten. */
+private val bottomExclusionZone = 56.dp

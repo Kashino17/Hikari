@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import coil.request.ImageRequest
+import me.saket.telephoto.zoomable.ZoomSpec
 import me.saket.telephoto.zoomable.coil.ZoomableAsyncImage
 import me.saket.telephoto.zoomable.rememberZoomableImageState
 import me.saket.telephoto.zoomable.rememberZoomableState
@@ -28,16 +29,26 @@ fun ZoomablePage(
     pagerState: PagerState,
     pageIdx: Int,
     onZoomChange: (isZoomed: Boolean) -> Unit,
+    onTap: () -> Unit,
     onError: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val zoomableState = rememberZoomableState()
+    val zoomableState = rememberZoomableState(
+        zoomSpec = ZoomSpec(maxZoomFactor = 6.0f, preventOverOrUnderZoom = false),
+    )
     val imageState = rememberZoomableImageState(zoomableState)
     val isZoomed by remember {
-        derivedStateOf { (zoomableState.zoomFraction ?: 0f) > 0.05f }
+        derivedStateOf { (zoomableState.zoomFraction ?: 0f) > 0.005f }
     }
     LaunchedEffect(isZoomed) { onZoomChange(isZoomed) }
+
+    // Reset zoom when navigating to another page
+    LaunchedEffect(pagerState.currentPage) {
+        if (pagerState.currentPage != pageIdx && isZoomed) {
+            zoomableState.resetZoom(false)
+        }
+    }
 
     val imageRequest = remember(pageImageUrl) {
         ImageRequest.Builder(context)
@@ -62,19 +73,23 @@ fun ZoomablePage(
                 alpha = fadeAlpha
                 val offset = pagerState.getOffsetDistanceInPages(pageIdx).coerceIn(-1f, 1f)
                 cameraDistance = 16f * density
-                rotationY = offset * 75f
+                // Only apply 3D page flip rotation during page transitions, never when reading or zoomed
+                val applyRotation = !isZoomed && offset != 0f
+                rotationY = if (applyRotation) offset * 75f else 0f
                 transformOrigin = TransformOrigin(
                     pivotFractionX = if (offset < 0f) 0f else 1f,
                     pivotFractionY = 1f,
                 )
-                shadowElevation = 24f
+                shadowElevation = if (applyRotation) 24f else 0f
             },
     ) {
         ZoomableAsyncImage(
             model = imageRequest,
             contentDescription = "Page $pageNumber",
             state = imageState,
+            onClick = { onTap() },
             modifier = Modifier.fillMaxSize(),
         )
     }
 }
+

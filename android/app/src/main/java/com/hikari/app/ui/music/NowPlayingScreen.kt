@@ -71,7 +71,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.Surface
 import com.hikari.app.player.MusicPlayerController
+import com.hikari.app.ui.theme.HikariAmber
+import com.hikari.app.ui.theme.HikariBorderStrong
 import com.hikari.app.ui.theme.HikariCardBg
 import com.hikari.app.ui.theme.HikariSurfaceHigh
 import com.hikari.app.ui.theme.HikariText
@@ -95,7 +100,9 @@ fun NowPlayingScreen(
     val repeatMode by controller.repeatMode.collectAsState()
     val error by controller.error.collectAsState()
     val videoMode by controller.videoMode.collectAsState()
+    val crossfadeSec by controller.crossfadeSeconds.collectAsState()
     var showQueue by remember { mutableStateOf(false) }
+    var showCrossfadeSheet by remember { mutableStateOf(false) }
 
     // Nichts spielend (z. B. Prozess-Neustart) — nichts anzuzeigen. Der
     // Sprung zurück gehört in einen Effekt, nicht mitten in die Composition.
@@ -145,8 +152,8 @@ fun NowPlayingScreen(
                 )
             },
     ) {
-        // Ambient-Ebene: weichgezeichnetes Artwork + Scrim statt flachem Grund.
-        MuArtworkBackdrop(current.thumbnailUrl.ifEmpty { null })
+        // Cupertino Glass-Visualizer: organischer, beruhigender Ambient-Glow pulsierend im Takt der Musik.
+        CupertinoGlassVisualizer(isPlaying = isPlaying, imageUrl = current.thumbnailUrl.ifEmpty { null })
 
         Column(
             Modifier.fillMaxSize().statusBarsPadding(),
@@ -167,6 +174,33 @@ fun NowPlayingScreen(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.weight(1f),
                 )
+                // Crossfade Chip
+                Surface(
+                    onClick = { showCrossfadeSheet = true },
+                    shape = RoundedCornerShape(999.dp),
+                    color = if (crossfadeSec > 0) HikariAmber.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.06f),
+                    border = BorderStroke(0.5.dp, if (crossfadeSec > 0) HikariAmber.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.12f)),
+                    modifier = Modifier.padding(end = 4.dp),
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    ) {
+                        Icon(
+                            Icons.Outlined.Tune,
+                            contentDescription = "Crossfade",
+                            tint = if (crossfadeSec > 0) HikariAmber else HikariTextMuted,
+                            modifier = Modifier.size(13.dp),
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            if (crossfadeSec > 0) "${crossfadeSec}s" else "Aus",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (crossfadeSec > 0) HikariAmber else HikariTextMuted,
+                        )
+                    }
+                }
                 MuIconButton(
                     Icons.AutoMirrored.Filled.QueueMusic, "Warteschlange",
                     iconSize = 24.dp,
@@ -396,6 +430,14 @@ fun NowPlayingScreen(
         QueueSheet(controller = controller, onDismiss = { showQueue = false })
     }
 
+    if (showCrossfadeSheet) {
+        CrossfadeSheet(
+            currentSeconds = crossfadeSec,
+            onSecondsChanged = { controller.setCrossfadeSeconds(it) },
+            onClose = { showCrossfadeSheet = false },
+        )
+    }
+
     AddToPlaylistHost(viewModel)
 }
 
@@ -448,5 +490,121 @@ private fun SeekSection(controller: MusicPlayerController) {
         )
         Spacer(Modifier.weight(1f))
         Text(formatDurationMs(duration), fontSize = 12.sp, color = HikariTextMuted)
+    }
+}
+
+@Composable
+private fun CrossfadeSheet(
+    currentSeconds: Int,
+    onSecondsChanged: (Int) -> Unit,
+    onClose: () -> Unit,
+) {
+    MuSheet(title = "Audio & Crossfade", onClose = onClose) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                "Weiches Überblenden (Crossfade)",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Verhindert abrupte Pausen zwischen Musiktiteln durch sanftes Ein- und Ausblenden.",
+                fontSize = 12.5.sp,
+                color = HikariTextMuted,
+                textAlign = TextAlign.Center,
+                lineHeight = 17.sp,
+            )
+
+            Spacer(Modifier.height(20.dp))
+
+            // Aktueller Wert
+            Text(
+                if (currentSeconds == 0) "Ausgeschaltet" else "$currentSeconds Sekunden",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (currentSeconds > 0) HikariAmber else HikariTextFaint,
+            )
+
+            Spacer(Modifier.height(18.dp))
+
+            // Quick Preset Chips
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                listOf(0 to "Aus", 2 to "2s", 4 to "4s", 6 to "6s", 8 to "8s").forEach { (sec, label) ->
+                    val selected = currentSeconds == sec
+                    Surface(
+                        onClick = { onSecondsChanged(sec) },
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (selected) HikariAmber.copy(alpha = 0.22f) else HikariSurfaceHigh,
+                        border = BorderStroke(1.dp, if (selected) HikariAmber else HikariBorderStrong),
+                    ) {
+                        Text(
+                            label,
+                            color = if (selected) HikariAmber else HikariText,
+                            fontSize = 13.sp,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(22.dp))
+
+            // Slider
+            androidx.compose.material3.Slider(
+                value = currentSeconds.toFloat(),
+                onValueChange = { onSecondsChanged(it.toInt()) },
+                valueRange = 0f..8f,
+                steps = 7,
+                colors = androidx.compose.material3.SliderDefaults.colors(
+                    thumbColor = HikariAmber,
+                    activeTrackColor = HikariAmber,
+                    inactiveTrackColor = Color.White.copy(alpha = 0.15f),
+                ),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // Ambient Glass Visualizer Info Card
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = Color(0xFF8B5CF6).copy(alpha = 0.12f),
+                border = BorderStroke(0.5.dp, Color(0xFF8B5CF6).copy(alpha = 0.35f)),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("✨", fontSize = 18.sp)
+                    Spacer(Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            "Cupertino Glass-Visualizer aktiv",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFFC4B5FD),
+                        )
+                        Text(
+                            "Atmosphärischer Ambient-Glow pulsiert sanft im Hintergrund.",
+                            fontSize = 11.5.sp,
+                            color = HikariTextMuted,
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+        }
     }
 }

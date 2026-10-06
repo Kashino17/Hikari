@@ -62,6 +62,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Tune
@@ -72,6 +73,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.runtime.rememberCoroutineScope
 import com.hikari.app.domain.feed.resolveDeepDive
+import com.hikari.app.ui.feed.poster.SharePosterSheet
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -194,6 +196,7 @@ fun FeedScreen(
 
     var showSettingsSheet by remember { mutableStateOf(false) }
     var showArchiveSheet by remember { mutableStateOf(false) }
+    var sharePosterCard by remember { mutableStateOf<MindfulCard?>(null) }
 
     // Gesamte Pager-Seiten: Kartenanzahl + 1 finale Mindful-Abschlusskarte
     val totalPages = if (cards.isEmpty()) 0 else cards.size + 1
@@ -278,6 +281,7 @@ fun FeedScreen(
                                 onDone = { vm.markCardCompleted(card.id) },
                                 onOpenSettings = { showSettingsSheet = true },
                                 onOpenArchive = { showArchiveSheet = true },
+                                onSharePoster = { sharePosterCard = card },
                                 isCommuterMode = commuterMode,
                                 onToggleCommuterMode = {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -317,7 +321,15 @@ fun FeedScreen(
                 vm.toggleSavedCard(cardId)
             },
             audioPlayer = vm.audio,
+            onSharePoster = { card -> sharePosterCard = card },
             onDismiss = { showArchiveSheet = false },
+        )
+    }
+
+    sharePosterCard?.let { card ->
+        SharePosterSheet(
+            card = card,
+            onDismiss = { sharePosterCard = null },
         )
     }
 
@@ -357,6 +369,7 @@ private fun FeedCardSlide(
     onDone: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenArchive: () -> Unit,
+    onSharePoster: () -> Unit = {},
     isCommuterMode: Boolean,
     onToggleCommuterMode: () -> Unit,
     showSwipeHint: Boolean,
@@ -706,6 +719,33 @@ private fun FeedCardSlide(
                 Text(
                     text = if (isDone) "Gelernt ✓" else "Lernen",
                     color = if (isDone) Color(0xFF34D399) else HikariTextMuted,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+
+            // 3. "Teilen" / "Poster" Share Button
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Surface(
+                    onClick = onSharePoster,
+                    shape = CircleShape,
+                    color = HikariSurfaceHigh,
+                    border = BorderStroke(1.dp, HikariBorderStrong),
+                    modifier = Modifier.size(50.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Poster teilen",
+                            tint = HikariAmber,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Teilen ↑",
+                    color = HikariTextMuted,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -2683,6 +2723,7 @@ private fun KnowledgeArchiveSheet(
     savedCards: List<MindfulCard>,
     onToggleSave: (String) -> Unit,
     audioPlayer: RussianAudioPlayer? = null,
+    onSharePoster: (MindfulCard) -> Unit = {},
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -2933,6 +2974,7 @@ private fun KnowledgeArchiveSheet(
                             card = card,
                             audioPlayer = audioPlayer,
                             playingTrack = playingTrack,
+                            onShare = { onSharePoster(card) },
                             onRemove = { onToggleSave(card.id) },
                         )
                     }
@@ -2947,6 +2989,7 @@ private fun SavedCardItemRow(
     card: MindfulCard,
     audioPlayer: RussianAudioPlayer?,
     playingTrack: String?,
+    onShare: () -> Unit,
     onRemove: () -> Unit,
 ) {
     val deepDive = remember(card.id) { card.resolveDeepDive() }
@@ -2978,20 +3021,41 @@ private fun SavedCardItemRow(
                     )
                 }
 
-                // Delete / Unsave button
-                Surface(
-                    onClick = onRemove,
-                    shape = CircleShape,
-                    color = Color.White.copy(alpha = 0.05f),
-                    modifier = Modifier.size(28.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = "Aus Archiv entfernen",
-                            tint = HikariTextFaint,
-                            modifier = Modifier.size(14.dp),
-                        )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Share Poster button (↑)
+                    Surface(
+                        onClick = onShare,
+                        shape = CircleShape,
+                        color = Color.White.copy(alpha = 0.08f),
+                        modifier = Modifier.size(28.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Icon(
+                                Icons.Default.Share,
+                                contentDescription = "Poster teilen",
+                                tint = HikariAmber,
+                                modifier = Modifier.size(13.dp),
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.width(8.dp))
+
+                    // Delete / Unsave button
+                    Surface(
+                        onClick = onRemove,
+                        shape = CircleShape,
+                        color = Color.White.copy(alpha = 0.05f),
+                        modifier = Modifier.size(28.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Aus Archiv entfernen",
+                                tint = HikariTextFaint,
+                                modifier = Modifier.size(14.dp),
+                            )
+                        }
                     }
                 }
             }

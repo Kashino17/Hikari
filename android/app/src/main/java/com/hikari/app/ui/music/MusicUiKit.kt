@@ -266,9 +266,89 @@ internal fun MuSeekBar(
 // Ambient-Backdrop für den Player: aufgeblasenes, weichgezeichnetes Artwork
 // hinter dem Inhalt + Scrim nach unten ins HikariBg (blur ab API 31,
 // darunter greift das kräftige Scrim allein — deshalb niedrige Alpha).
+// Cupertino Glass-Visualizer: beruhigender, organischer Ambient-Glow im Hintergrund,
+// der sanft im Takt der Musik pulsiert und ein elegantes Glas-Ambiente erzeugt.
 @Composable
-internal fun MuArtworkBackdrop(imageUrl: String?, modifier: Modifier = Modifier) {
+internal fun CupertinoGlassVisualizer(
+    isPlaying: Boolean,
+    imageUrl: String?,
+    modifier: Modifier = Modifier,
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "glassVisualizer")
+    val pulse1 by infiniteTransition.animateFloat(
+        initialValue = 0.90f,
+        targetValue = 1.15f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "pulse1",
+    )
+    val pulse2 by infiniteTransition.animateFloat(
+        initialValue = 1.12f,
+        targetValue = 0.88f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "pulse2",
+    )
+    val alphaAnim by animateFloatAsState(
+        targetValue = if (isPlaying) 0.65f else 0.35f,
+        animationSpec = tween(1200),
+        label = "glassAlpha",
+    )
+
     Box(modifier.fillMaxSize().background(HikariBg)) {
+        // Organischer Ambient-Glow Orb 1: Warmes Gold / Amber
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 40.dp)
+                .size(340.dp)
+                .graphicsLayer {
+                    scaleX = if (isPlaying) pulse1 else 1.0f
+                    scaleY = if (isPlaying) pulse1 else 1.0f
+                    alpha = alphaAnim
+                }
+                .blur(72.dp)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFFFBBF24).copy(alpha = 0.45f),
+                            Color(0xFFD97706).copy(alpha = 0.20f),
+                            Color.Transparent,
+                        ),
+                    ),
+                    shape = CircleShape,
+                ),
+        )
+
+        // Organischer Ambient-Glow Orb 2: Beruhigendes Violett / Cyan
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(top = 100.dp)
+                .size(400.dp)
+                .graphicsLayer {
+                    scaleX = if (isPlaying) pulse2 else 1.0f
+                    scaleY = if (isPlaying) pulse2 else 1.0f
+                    alpha = alphaAnim * 0.80f
+                }
+                .blur(80.dp)
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFF8B5CF6).copy(alpha = 0.35f),
+                            Color(0xFF3B82F6).copy(alpha = 0.18f),
+                            Color.Transparent,
+                        ),
+                    ),
+                    shape = CircleShape,
+                ),
+        )
+
+        // Artwork Blur Layer
         if (!imageUrl.isNullOrEmpty()) {
             AsyncImage(
                 model = imageUrl,
@@ -276,22 +356,32 @@ internal fun MuArtworkBackdrop(imageUrl: String?, modifier: Modifier = Modifier)
                 modifier = Modifier
                     .fillMaxSize()
                     .blur(64.dp)
-                    .graphicsLayer { scaleX = 1.35f; scaleY = 1.35f; alpha = 0.45f },
+                    .graphicsLayer { scaleX = 1.35f; scaleY = 1.35f; alpha = 0.40f },
                 contentScale = ContentScale.Crop,
             )
         }
+
+        // Frosted Cupertino Scrim
         Box(
             Modifier.fillMaxSize().background(
                 Brush.verticalGradient(
                     listOf(
-                        HikariBg.copy(alpha = 0.30f),
+                        HikariBg.copy(alpha = 0.35f),
                         HikariBg.copy(alpha = 0.72f),
                         HikariBg,
-                    )
-                )
-            )
+                    ),
+                ),
+            ),
         )
     }
+}
+
+// Ambient-Backdrop für den Player: aufgeblasenes, weichgezeichnetes Artwork
+// hinter dem Inhalt + Scrim nach unten ins HikariBg (blur ab API 31,
+// darunter greift das kräftige Scrim allein — deshalb niedrige Alpha).
+@Composable
+internal fun MuArtworkBackdrop(imageUrl: String?, modifier: Modifier = Modifier) {
+    CupertinoGlassVisualizer(isPlaying = true, imageUrl = imageUrl, modifier = modifier)
 }
 
 // Bottom-Sheet im Musik-Look: Scrim, Slide-up, Drag-Handle, runde obere Ecken.

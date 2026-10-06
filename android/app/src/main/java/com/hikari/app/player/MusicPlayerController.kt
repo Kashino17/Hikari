@@ -153,6 +153,45 @@ class MusicPlayerController @Inject constructor(
     private val _videoFrameReady = MutableStateFlow(false)
     val videoFrameReady: StateFlow<Boolean> = _videoFrameReady.asStateFlow()
 
+    private val musicPrefs by lazy {
+        context.getSharedPreferences("hikari_music_prefs", Context.MODE_PRIVATE)
+    }
+
+    private val _crossfadeSeconds = MutableStateFlow(
+        musicPrefs.getInt("crossfade_seconds", 3).coerceIn(0, 8),
+    )
+    val crossfadeSeconds: StateFlow<Int> = _crossfadeSeconds.asStateFlow()
+
+    fun setCrossfadeSeconds(sec: Int) {
+        val clamped = sec.coerceIn(0, 8)
+        _crossfadeSeconds.value = clamped
+        musicPrefs.edit().putInt("crossfade_seconds", clamped).apply()
+    }
+
+    private var volumeFadeJob: Job? = null
+
+    fun rampVolume(targetVolume: Float, durationMs: Long, onComplete: (() -> Unit)? = null) {
+        val p = player ?: return
+        volumeFadeJob?.cancel()
+        if (durationMs <= 0L) {
+            p.volume = targetVolume
+            onComplete?.invoke()
+            return
+        }
+        val startVol = p.volume
+        val steps = (durationMs / 40L).coerceAtLeast(1L).toInt()
+        volumeFadeJob = scope.launch {
+            for (i in 1..steps) {
+                val progress = i.toFloat() / steps
+                val currentVol = startVol + (targetVolume - startVol) * progress
+                player?.volume = currentVol.coerceIn(0f, 1f)
+                delay(40L)
+            }
+            player?.volume = targetVolume
+            onComplete?.invoke()
+        }
+    }
+
     /** Die UI hat eine (neue) TextureView angebunden — bis zum nächsten
      *  gerenderten Frame wieder das Poster zeigen statt Schwarz. */
     fun notifyVideoSurfaceChanged() {
@@ -811,7 +850,15 @@ class MusicPlayerController @Inject constructor(
             // eingeplantes nächstes Item gehört damit der Vergangenheit an.
             p.setMediaItem(mediaItemFor(song, uri), startPositionMs)
             p.prepare()
-            p.play()
+            val crossSec = _crossfadeSeconds.value
+            if (crossSec > 0 && startPositionMs == 0L) {
+                p.volume = 0.05f
+                p.play()
+                rampVolume(1f, (crossSec * 1000L).coerceAtMost(3000L))
+            } else {
+                p.volume = 1f
+                p.play()
+            }
             if (prefetchedFor == song.videoId) {
                 prefetchedFor = null
                 prefetchedUrl = null
@@ -949,6 +996,13 @@ class MusicPlayerController @Inject constructor(
         val song = q[nextIndex]
         _currentSong.value = song
         _positionMs.value = 0
+        val crossSec = _crossfadeSeconds.value
+        if (crossSec > 0) {
+            p?.volume = 0.05f
+            rampVolume(1f, crossSec * 1000L)
+        } else {
+            p?.volume = 1f
+        }
         scope.launch { repo.recordPlayed(song) }
         // Gleich den übernächsten Song vorbereiten.
         maybePrefetchNext()
@@ -1147,11 +1201,26 @@ class MusicPlayerController @Inject constructor(
         if (progressJob?.isActive == true) return
         progressJob = scope.launch {
             while (isActive) {
+                var nextDelay = 500L
                 player?.let {
                     if (it.isPlaying) {
-                        _positionMs.value = it.currentPosition.coerceAtLeast(0)
+                        val pos = it.currentPosition.coerceAtLeast(0)
                         val d = it.duration
+                        _positionMs.value = pos
                         if (d > 0) _durationMs.value = d
+
+                        // Weiches Überblenden (Crossfade): zum Songende hin sanft ausblenden
+                        val crossSec = _crossfadeSeconds.value
+                        if (crossSec > 0 && d > 12_000L) {
+                            val crossMs = crossSec * 1000L
+                            val remaining = d - pos
+                            if (remaining in 1..crossMs) {
+                                val fadeOutVol = (remaining.toFloat() / crossMs).coerceIn(0.05f, 1f)
+                                it.volume = fadeOutVol
+                                nextDelay = 100L // feine Abstufung während des Fade-Outs
+                            }
+                        }
+
                         // Kurz nach Songstart den nächsten Übergang vorbereiten
                         // (URL auflösen + Item in die ExoPlayer-Playlist hängen).
                         if (it.currentPosition > 5_000) maybePrefetchNext()
@@ -1167,7 +1236,7 @@ class MusicPlayerController @Inject constructor(
                         }
                     }
                 }
-                delay(500)
+                delay(nextDelay)
             }
         }
     }
