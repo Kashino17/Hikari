@@ -19,6 +19,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 
@@ -134,5 +135,40 @@ class FeedViewModelTest {
             assert(cards.isNotEmpty())
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    @Test fun mindfulFeed_languageTopRank_interleavesFrequently() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        val vm = FeedViewModel(repo, settings)
+        vm.mindfulCards.test {
+            val cards = awaitItem()
+            val languageCards = cards.filterIsInstance<com.hikari.app.domain.feed.LanguageCardItem>()
+            println("Total cards: ${cards.size}, Language cards: ${languageCards.size}")
+            println("Cards order: " + cards.map { it.type.name })
+            assertEquals(7, languageCards.size)
+            assertEquals(com.hikari.app.domain.feed.MindfulModuleType.LANGUAGE, cards.first().type)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test fun recordRussianPractice_updatesStoreAndAwardsXp() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        val store = mockk<com.hikari.app.domain.russian.RussianProgressStore>(relaxed = true)
+        every { store.today() } returns 100L
+        val vm = FeedViewModel(
+            repo = repo,
+            settings = settings,
+            feedPrefs = null,
+            audio = null,
+            russianRepo = null,
+            russianProgress = store,
+        )
+
+        vm.recordRussianPractice("p1", spokenCorrect = true)
+        io.mockk.verify { store.update(any()) }
     }
 }
