@@ -247,7 +247,7 @@ class RussianSpeechRecognizer(private val context: Context) {
     }
 
     fun stopListening() {
-        recognizer?.stopListening()
+        runCatching { recognizer?.stopListening() }
     }
 
     fun reset() {
@@ -255,7 +255,7 @@ class RussianSpeechRecognizer(private val context: Context) {
     }
 
     fun destroy() {
-        recognizer?.destroy()
+        runCatching { recognizer?.destroy() }
         recognizer = null
     }
 }

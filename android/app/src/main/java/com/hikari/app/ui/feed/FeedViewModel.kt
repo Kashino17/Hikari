@@ -12,6 +12,12 @@ import com.hikari.app.domain.feed.MindfulModuleType
 import com.hikari.app.domain.feed.ModuleRank
 import com.hikari.app.domain.model.FeedItem
 import com.hikari.app.domain.repo.FeedRepository
+import com.hikari.app.domain.russian.RuProgress
+import com.hikari.app.domain.russian.RuSessionResult
+import com.hikari.app.domain.russian.RussianCourseRepository
+import com.hikari.app.domain.russian.RussianProgressStore
+import com.hikari.app.domain.russian.apply
+import com.hikari.app.ui.russian.RussianAudioPlayer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Calendar
 import javax.inject.Inject
@@ -32,9 +38,12 @@ class FeedViewModel @Inject constructor(
     private val repo: FeedRepository,
     private val settings: SettingsStore,
     private val feedPrefs: FeedPreferences? = null,
+    val audio: RussianAudioPlayer? = null,
+    val russianRepo: RussianCourseRepository? = null,
+    val russianProgress: RussianProgressStore? = null,
 ) : ViewModel() {
 
-    constructor(repo: FeedRepository, settings: SettingsStore) : this(repo, settings, null)
+    constructor(repo: FeedRepository, settings: SettingsStore) : this(repo, settings, null, null, null, null)
 
     val backendUrl: StateFlow<String> = settings.backendUrl
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
@@ -51,9 +60,9 @@ class FeedViewModel @Inject constructor(
         feedPrefs?.moduleRanks ?: MutableStateFlow(
             MindfulModuleType.entries.associateWith {
                 when (it) {
-                    MindfulModuleType.LANGUAGE -> ModuleRank.RANK_1
+                    MindfulModuleType.LANGUAGE -> ModuleRank.RANK_3
                     MindfulModuleType.BRAIN_PUZZLE, MindfulModuleType.QUOTE -> ModuleRank.RANK_2
-                    else -> ModuleRank.RANK_3
+                    else -> ModuleRank.RANK_1
                 }
             }
         )
@@ -65,12 +74,15 @@ class FeedViewModel @Inject constructor(
         enabledModules,
         selectedLanguage,
         moduleRanks,
-    ) { modules, lang, ranks ->
+        russianProgress?.state ?: MutableStateFlow(RuProgress()),
+    ) { modules, lang, ranks, _ ->
         MindfulFeedContentProvider.getDailyCards(
             calendar = Calendar.getInstance(),
             enabledModules = modules,
             language = lang,
             moduleRanks = ranks,
+            russianRepo = russianRepo,
+            russianProgress = russianProgress,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
@@ -113,6 +125,22 @@ class FeedViewModel @Inject constructor(
     }
 
     fun getStreak(): Int = feedPrefs?.getStreak() ?: 1
+
+    fun recordRussianPractice(phraseId: String?, spokenCorrect: Boolean) {
+        val store = russianProgress ?: return
+        val today = store.today()
+        store.update { current ->
+            val graded = if (phraseId != null) mapOf(phraseId to spokenCorrect) else emptyMap()
+            current.apply(
+                RuSessionResult(
+                    xp = if (spokenCorrect) 15 else 5,
+                    graded = graded,
+                    spokenOk = if (spokenCorrect) 1 else 0,
+                ),
+                today = today,
+            )
+        }
+    }
 
     // ── Legacy Compatibility (für FeedRepository / Tests) ───────────────────────
 

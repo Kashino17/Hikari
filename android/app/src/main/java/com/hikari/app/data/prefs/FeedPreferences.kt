@@ -55,13 +55,18 @@ class FeedPreferences @Inject constructor(
     private fun loadModuleRanks(): Map<MindfulModuleType, ModuleRank> {
         return MindfulModuleType.entries.associateWith { module ->
             val defaultRank = when (module) {
-                MindfulModuleType.LANGUAGE -> ModuleRank.RANK_1 // Standard: Top-Fokus & 3x täglich
-                MindfulModuleType.BRAIN_PUZZLE -> ModuleRank.RANK_2 // Erhöht (2x)
-                MindfulModuleType.QUOTE -> ModuleRank.RANK_2 // Erhöht (2x)
-                else -> ModuleRank.RANK_3 // Standard (1x)
+                MindfulModuleType.LANGUAGE -> ModuleRank.RANK_3 // Standard: Stufe 3 (Top-Fokus & 6-8x täglich)
+                MindfulModuleType.BRAIN_PUZZLE -> ModuleRank.RANK_2 // Erhöht (Stufe 2)
+                MindfulModuleType.QUOTE -> ModuleRank.RANK_2 // Erhöht (Stufe 2)
+                else -> ModuleRank.RANK_1 // Standard (Stufe 1)
             }
             val savedNumber = prefs.getInt("module_rank_${module.id}", defaultRank.rankNumber)
-            ModuleRank.fromNumber(savedNumber)
+            // Wenn Sprache auf 1 (altes Top-Fokus) oder 3 (neues Top-Fokus) stand: immer Stufe 3
+            if (module == MindfulModuleType.LANGUAGE && (savedNumber == 1 || savedNumber == 3)) {
+                ModuleRank.RANK_3
+            } else {
+                ModuleRank.fromNumber(savedNumber)
+            }
         }
     }
 
@@ -71,7 +76,7 @@ class FeedPreferences @Inject constructor(
     }
 
     fun getModuleRank(module: MindfulModuleType): ModuleRank {
-        return _moduleRanks.value[module] ?: ModuleRank.RANK_3
+        return _moduleRanks.value[module] ?: ModuleRank.RANK_1
     }
 
     // ── Learning Language ───────────────────────────────────────────────────────

@@ -129,12 +129,17 @@ enum class ModuleRank(
     val frequencyLabel: String,
     val badgeColor: Color,
 ) {
-    RANK_1(1, "Top-Fokus", "Fokus", "3x täglich & an erster Stelle", Color(0xFFFBBF24)),
-    RANK_2(2, "Erhöht", "Erhöht", "2x täglich", Color(0xFF60A5FA)),
-    RANK_3(3, "Standard", "Standard", "1x täglich", Color(0xFF9CA3AF));
+    RANK_1(1, "Stufe 1 · Standard", "Standard", "1x täglich", Color(0xFF9CA3AF)),
+    RANK_2(2, "Stufe 2 · Erhöht", "Erhöht", "3–4x täglich", Color(0xFF60A5FA)),
+    RANK_3(3, "Stufe 3 · Top-Fokus", "Top-Fokus", "6–8x täglich (alle 2–3 Karten)", Color(0xFFFBBF24));
 
     companion object {
-        fun fromNumber(num: Int): ModuleRank = entries.firstOrNull { it.rankNumber == num } ?: RANK_3
+        fun fromNumber(num: Int): ModuleRank = when (num) {
+            1 -> RANK_1
+            2 -> RANK_2
+            3 -> RANK_3
+            else -> RANK_1
+        }
     }
 }
 
@@ -143,7 +148,7 @@ enum class ModuleRank(
 sealed interface MindfulCard {
     val id: String
     val type: MindfulModuleType
-    val rank: ModuleRank get() = ModuleRank.RANK_3
+    val rank: ModuleRank get() = ModuleRank.RANK_1
 }
 
 data class QuoteCardItem(
@@ -184,7 +189,17 @@ data class LanguageCardItem(
     val dialoguePrompt: String,
     val dialogueReplies: List<String>,
     val correctReplyIndex: Int,
-    override val rank: ModuleRank = ModuleRank.RANK_1,
+    override val rank: ModuleRank = ModuleRank.RANK_3,
+    // Echte Sprachkurs-Anbindung:
+    val audioRes: String? = null,
+    val dayNumber: Int? = null,
+    val dayTitle: String? = null,
+    val isDueReview: Boolean = false,
+    val currentStreak: Int = 0,
+    val totalXp: Int = 0,
+    val phraseId: String? = null,
+    val note: String? = null,
+    val literalTranslation: String? = null,
 ) : MindfulCard {
     override val type = MindfulModuleType.LANGUAGE
 }

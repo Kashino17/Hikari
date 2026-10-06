@@ -1,5 +1,15 @@
 package com.hikari.app.domain.feed
 
+import com.hikari.app.domain.russian.RuCourseIndex
+import com.hikari.app.domain.russian.RuDay
+import com.hikari.app.domain.russian.RuPhrase
+import com.hikari.app.domain.russian.RuProgress
+import com.hikari.app.domain.russian.RuSettings
+import com.hikari.app.domain.russian.RuSrs
+import com.hikari.app.domain.russian.RussianCourseRepository
+import com.hikari.app.domain.russian.RussianPhonetics
+import com.hikari.app.domain.russian.RussianProgressStore
+import java.util.ArrayDeque
 import java.util.Calendar
 
 object MindfulFeedContentProvider {
@@ -9,15 +19,17 @@ object MindfulFeedContentProvider {
         enabledModules: Set<MindfulModuleType>,
         language: LearningLanguage,
         moduleRanks: Map<MindfulModuleType, ModuleRank> = emptyMap(),
+        russianRepo: RussianCourseRepository? = null,
+        russianProgress: RussianProgressStore? = null,
     ): List<MindfulCard> {
         val dayOfYear = calendar.get(Calendar.DAY_OF_YEAR)
 
-        // Ermittle für jedes Modul den effektiven Rang
+        // Ermittle für jedes Modul den effektiven Rang: Stufe 3 (Top-Fokus), Stufe 2 (Erhöht), Stufe 1 (Standard)
         fun rankFor(module: MindfulModuleType): ModuleRank {
             return moduleRanks[module] ?: when (module) {
-                MindfulModuleType.LANGUAGE -> ModuleRank.RANK_1 // Standard: Top-Fokus
+                MindfulModuleType.LANGUAGE -> ModuleRank.RANK_3 // Standard: Stufe 3 (Top-Fokus)
                 MindfulModuleType.BRAIN_PUZZLE, MindfulModuleType.QUOTE -> ModuleRank.RANK_2 // Erhöht
-                else -> ModuleRank.RANK_3
+                else -> ModuleRank.RANK_1 // Standard
             }
         }
 
@@ -31,7 +43,7 @@ object MindfulFeedContentProvider {
             when (module) {
                 MindfulModuleType.QUOTE -> {
                     // Zitate: max. 2 / Tag (Anti-Dopamin-Limit)
-                    val count = if (rank == ModuleRank.RANK_3) 1 else 2
+                    val count = if (rank == ModuleRank.RANK_1) 1 else 2
                     for (i in 0 until count) {
                         val qIndex = (dayOfYear * 2 + i) % QUOTE_POOL.size
                         bucket.add(QUOTE_POOL[qIndex].copy(id = "quote-${i + 1}-$dayOfYear", rank = rank))
@@ -39,34 +51,48 @@ object MindfulFeedContentProvider {
                 }
                 MindfulModuleType.BRAIN_PUZZLE -> {
                     // Rätsel: max. 2 / Tag (Anti-Dopamin-Limit)
-                    val count = if (rank == ModuleRank.RANK_3) 1 else 2
+                    val count = if (rank == ModuleRank.RANK_1) 1 else 2
                     for (i in 0 until count) {
                         val pIndex = (dayOfYear * 2 + i) % PUZZLE_POOL.size
                         bucket.add(PUZZLE_POOL[pIndex].copy(id = "puzzle-${i + 1}-$dayOfYear", rank = rank))
                     }
                 }
                 MindfulModuleType.LANGUAGE -> {
-                    // Sprachen: Rank 1 = 3x täglich, Rank 2 = 2x, Rank 3 = 1x
+                    // Sprachen: Stufe 3 (Top-Fokus) = 6-8x täglich, Stufe 2 = 3-4x, Stufe 1 = 1-2x
                     val count = when (rank) {
-                        ModuleRank.RANK_1 -> 3
-                        ModuleRank.RANK_2 -> 2
-                        ModuleRank.RANK_3 -> 1
+                        ModuleRank.RANK_3 -> 7
+                        ModuleRank.RANK_2 -> 4
+                        ModuleRank.RANK_1 -> 2
                     }
-                    val pool = LANGUAGE_POOLS[language] ?: LANGUAGE_POOLS[LearningLanguage.RUSSIAN]!!
-                    for (i in 0 until count) {
-                        val lIndex = (dayOfYear * 3 + i) % pool.size
-                        bucket.add(pool[lIndex].copy(id = "lang-$dayOfYear-${language.code}-${i + 1}", rank = rank))
+
+                    if (language == LearningLanguage.RUSSIAN && russianRepo != null && russianProgress != null) {
+                        // Echte Anbindung an das russische Lernsystem & den Kursfortschritt
+                        val realCards = generateRussianCards(
+                            repo = russianRepo,
+                            store = russianProgress,
+                            count = count,
+                            dayOfYear = dayOfYear,
+                            rank = rank,
+                        )
+                        bucket.addAll(realCards)
+                    } else {
+                        // Fallback für andere Sprachen
+                        val pool = LANGUAGE_POOLS[language] ?: LANGUAGE_POOLS[LearningLanguage.RUSSIAN]!!
+                        for (i in 0 until count) {
+                            val lIndex = (dayOfYear * 3 + i) % pool.size
+                            bucket.add(pool[lIndex].copy(id = "lang-$dayOfYear-${language.code}-${i + 1}", rank = rank))
+                        }
                     }
                 }
                 MindfulModuleType.HISTORY -> {
-                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(HISTORY_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    val count = if (rank == ModuleRank.RANK_3) 3.coerceAtMost(HISTORY_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
                     for (i in 0 until count) {
                         val idx = (dayOfYear * 2 + i) % HISTORY_POOL.size
                         bucket.add(HISTORY_POOL[idx].copy(id = "hist-$dayOfYear-${i + 1}", rank = rank))
                     }
                 }
                 MindfulModuleType.MENTAL_MODEL -> {
-                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(MENTAL_MODEL_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    val count = if (rank == ModuleRank.RANK_3) 3.coerceAtMost(MENTAL_MODEL_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
                     for (i in 0 until count) {
                         val idx = (dayOfYear * 2 + i) % MENTAL_MODEL_POOL.size
                         bucket.add(MENTAL_MODEL_POOL[idx].copy(id = "model-$dayOfYear-${i + 1}", rank = rank))
@@ -83,49 +109,49 @@ object MindfulFeedContentProvider {
                     )
                 }
                 MindfulModuleType.SCIENCE -> {
-                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(SCIENCE_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    val count = if (rank == ModuleRank.RANK_3) 3.coerceAtMost(SCIENCE_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
                     for (i in 0 until count) {
                         val idx = (dayOfYear * 2 + i) % SCIENCE_POOL.size
                         bucket.add(SCIENCE_POOL[idx].copy(id = "sci-$dayOfYear-${i + 1}", rank = rank))
                     }
                 }
                 MindfulModuleType.FINANCE -> {
-                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(FINANCE_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    val count = if (rank == ModuleRank.RANK_3) 3.coerceAtMost(FINANCE_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
                     for (i in 0 until count) {
                         val idx = (dayOfYear * 2 + i) % FINANCE_POOL.size
                         bucket.add(FINANCE_POOL[idx].copy(id = "fin-$dayOfYear-${i + 1}", rank = rank))
                     }
                 }
                 MindfulModuleType.GEOGRAPHY -> {
-                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(GEOGRAPHY_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    val count = if (rank == ModuleRank.RANK_3) 3.coerceAtMost(GEOGRAPHY_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
                     for (i in 0 until count) {
                         val idx = (dayOfYear * 2 + i) % GEOGRAPHY_POOL.size
                         bucket.add(GEOGRAPHY_POOL[idx].copy(id = "geo-$dayOfYear-${i + 1}", rank = rank))
                     }
                 }
                 MindfulModuleType.SPEED_MATH -> {
-                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(SPEED_MATH_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    val count = if (rank == ModuleRank.RANK_3) 3.coerceAtMost(SPEED_MATH_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
                     for (i in 0 until count) {
                         val idx = (dayOfYear * 2 + i) % SPEED_MATH_POOL.size
                         bucket.add(SPEED_MATH_POOL[idx].copy(id = "math-$dayOfYear-${i + 1}", rank = rank))
                     }
                 }
                 MindfulModuleType.ART_CULTURE -> {
-                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(ART_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    val count = if (rank == ModuleRank.RANK_3) 3.coerceAtMost(ART_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
                     for (i in 0 until count) {
                         val idx = (dayOfYear * 2 + i) % ART_POOL.size
                         bucket.add(ART_POOL[idx].copy(id = "art-$dayOfYear-${i + 1}", rank = rank))
                     }
                 }
                 MindfulModuleType.VOCABULARY -> {
-                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(VOCABULARY_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    val count = if (rank == ModuleRank.RANK_3) 3.coerceAtMost(VOCABULARY_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
                     for (i in 0 until count) {
                         val idx = (dayOfYear * 2 + i) % VOCABULARY_POOL.size
                         bucket.add(VOCABULARY_POOL[idx].copy(id = "vocab-$dayOfYear-${i + 1}", rank = rank))
                     }
                 }
                 MindfulModuleType.PHILOSOPHY -> {
-                    val count = if (rank == ModuleRank.RANK_1) 3.coerceAtMost(PHILOSOPHY_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
+                    val count = if (rank == ModuleRank.RANK_3) 3.coerceAtMost(PHILOSOPHY_POOL.size) else if (rank == ModuleRank.RANK_2) 2 else 1
                     for (i in 0 until count) {
                         val idx = (dayOfYear * 2 + i) % PHILOSOPHY_POOL.size
                         bucket.add(PHILOSOPHY_POOL[idx].copy(id = "phil-$dayOfYear-${i + 1}", rank = rank))
@@ -135,33 +161,233 @@ object MindfulFeedContentProvider {
             moduleBuckets[module] = bucket
         }
 
-        // ── Prioritäts-Sortierung & Interleaving ────────────────────────────────
-        // Module nach Rang sortieren (Rank 1 zuerst, dann Rank 2, dann Rank 3)
-        val rank1Modules = enabledModules.filter { rankFor(it) == ModuleRank.RANK_1 }
-        val rank2Modules = enabledModules.filter { rankFor(it) == ModuleRank.RANK_2 }
-        val rank3Modules = enabledModules.filter { rankFor(it) == ModuleRank.RANK_3 }
+        // ── Dynamisches Interleaving & Ranking-Priorisierung ────────────────────────
+        // Stufe 3 (Top-Fokus): Höchste Frequenz, taucht alle 2-3 Karten auf und wird nie verdrängt!
+        val topFocusCards = mutableListOf<MindfulCard>()
+        val otherCards = mutableListOf<MindfulCard>()
 
+        for (module in enabledModules) {
+            val cards = moduleBuckets[module].orEmpty()
+            if (rankFor(module) == ModuleRank.RANK_3) {
+                topFocusCards.addAll(cards)
+            } else {
+                otherCards.addAll(cards)
+            }
+        }
+
+        val topFocusQueue = ArrayDeque(topFocusCards)
+        val otherQueue = ArrayDeque(otherCards)
         val result = mutableListOf<MindfulCard>()
 
-        // Runde 1 (Kopf des Feeds · Primäre Impulse):
-        // 1. Zuerst alle Rank 1 Karten (Einheit 1) ganz oben!
-        rank1Modules.forEach { m -> moduleBuckets[m]?.getOrNull(0)?.let { result.add(it) } }
-        // 2. Dann Rank 2 Karten (Einheit 1)
-        rank2Modules.forEach { m -> moduleBuckets[m]?.getOrNull(0)?.let { result.add(it) } }
-        // 3. Dann Rank 3 Karten (Einheit 1)
-        rank3Modules.forEach { m -> moduleBuckets[m]?.getOrNull(0)?.let { result.add(it) } }
+        // 1. Erste Karte im Feed ist IMMER Top-Fokus (wenn vorhanden)!
+        if (topFocusQueue.isNotEmpty()) {
+            result.add(topFocusQueue.removeFirst())
+        } else if (otherQueue.isNotEmpty()) {
+            result.add(otherQueue.removeFirst())
+        }
 
-        // Runde 2 (Mitte des Feeds · Vertiefung):
-        // 4. Zweite Einheit der Rank 1 Module (z.B. Aussprache/Sprechen)
-        rank1Modules.forEach { m -> moduleBuckets[m]?.getOrNull(1)?.let { result.add(it) } }
-        // 5. Zweite Einheit der Rank 2 Module (z.B. zweites Zitat / zweites Rätsel)
-        rank2Modules.forEach { m -> moduleBuckets[m]?.getOrNull(1)?.let { result.add(it) } }
-
-        // Runde 3 (Später im Feed · Meisterung & Transfer):
-        // 6. Dritte Einheit der Rank 1 Module (z.B. Mini-Dialog)
-        rank1Modules.forEach { m -> moduleBuckets[m]?.getOrNull(2)?.let { result.add(it) } }
+        // 2. Webe Top-Fokus-Karten nahtlos alle 2 reguläre Karten ein:
+        while (topFocusQueue.isNotEmpty() || otherQueue.isNotEmpty()) {
+            repeat(2) {
+                if (otherQueue.isNotEmpty()) {
+                    result.add(otherQueue.removeFirst())
+                }
+            }
+            if (topFocusQueue.isNotEmpty()) {
+                result.add(topFocusQueue.removeFirst())
+            }
+        }
 
         return result
+    }
+
+    private fun generateRussianCards(
+        repo: RussianCourseRepository,
+        store: RussianProgressStore,
+        count: Int,
+        dayOfYear: Int,
+        rank: ModuleRank,
+    ): List<LanguageCardItem> {
+        val progress = store.state.value
+        val settings = progress.settings
+        val unlockedDay = progress.unlockedDay(14)
+        val courseDay = repo.index.day(unlockedDay) ?: repo.index.days.first()
+        val dayPhrases = repo.index.dayPhrases(courseDay, settings)
+        val todayEpoch = store.today()
+        val dueIds = RuSrs.dueIds(progress.cards, todayEpoch)
+        val duePhrases = dueIds.mapNotNull { repo.index.phrase(it, settings) }
+        val dialogPairs = repo.index.dialog(courseDay, settings)
+        val allLearned = repo.index.phrasesUpTo(unlockedDay, settings)
+
+        val cards = mutableListOf<LanguageCardItem>()
+
+        // 1. Primäre Tagesvokabel (Fokus des Tages mit Audio)
+        if (dayPhrases.isNotEmpty()) {
+            val p0 = dayPhrases[dayOfYear % dayPhrases.size]
+            cards.add(
+                LanguageCardItem(
+                    id = "ru-day-$unlockedDay-${p0.id}",
+                    language = LearningLanguage.RUSSIAN,
+                    foreignWord = p0.display,
+                    nativeTranslation = p0.de,
+                    phonetic = RussianPhonetics.transliterateFlat(p0.ru),
+                    exampleForeign = p0.ru,
+                    exampleTranslation = p0.de,
+                    dialogueScenario = "Tag ${courseDay.day}: ${courseDay.title}",
+                    dialoguePartner = courseDay.dialog.partner,
+                    dialoguePrompt = "Höre dir das russische Original an und sprich es nach.",
+                    dialogueReplies = listOf("Verstanden!", "Nochmal hören", "Weiter"),
+                    correctReplyIndex = 0,
+                    rank = rank,
+                    audioRes = p0.audio,
+                    dayNumber = courseDay.day,
+                    dayTitle = courseDay.title,
+                    isDueReview = false,
+                    currentStreak = progress.streak,
+                    totalXp = progress.xp,
+                    phraseId = p0.id,
+                    note = p0.note,
+                    literalTranslation = p0.lit,
+                )
+            )
+        }
+
+        // 2. SRS Wiederholungskarte (wenn fällig, sonst 2. Tagesphrase)
+        if (cards.size < count) {
+            val reviewPhrase = duePhrases.firstOrNull() ?: dayPhrases.getOrNull(1)
+            if (reviewPhrase != null) {
+                val isDue = duePhrases.isNotEmpty()
+                val originDay = repo.index.dayOfItem[reviewPhrase.id] ?: courseDay.day
+                cards.add(
+                    LanguageCardItem(
+                        id = "ru-review-$unlockedDay-${reviewPhrase.id}",
+                        language = LearningLanguage.RUSSIAN,
+                        foreignWord = reviewPhrase.display,
+                        nativeTranslation = reviewPhrase.de,
+                        phonetic = RussianPhonetics.transliterateFlat(reviewPhrase.ru),
+                        exampleForeign = reviewPhrase.ru,
+                        exampleTranslation = reviewPhrase.de,
+                        dialogueScenario = if (isDue) "SRS-Wiederholung (Tag $originDay)" else "Wortschatz-Erweiterung",
+                        dialoguePartner = "System",
+                        dialoguePrompt = if (isDue) "Erinnerst du dich an die Bedeutung und Aussprache?" else "Sprich die Phrase laut nach.",
+                        dialogueReplies = listOf("Ich kenne es!", "Aussprache prüfen", "Lösung anzeigen"),
+                        correctReplyIndex = 0,
+                        rank = rank,
+                        audioRes = reviewPhrase.audio,
+                        dayNumber = originDay,
+                        dayTitle = repo.index.day(originDay)?.title ?: courseDay.title,
+                        isDueReview = isDue,
+                        currentStreak = progress.streak,
+                        totalXp = progress.xp,
+                        phraseId = reviewPhrase.id,
+                        note = reviewPhrase.note,
+                        literalTranslation = reviewPhrase.lit,
+                    )
+                )
+            }
+        }
+
+        // 3. Aussprache & Sprech-Challenge
+        if (cards.size < count && dayPhrases.size > 2) {
+            val pSpeak = dayPhrases[(dayOfYear + 2) % dayPhrases.size]
+            cards.add(
+                LanguageCardItem(
+                    id = "ru-speak-$unlockedDay-${pSpeak.id}",
+                    language = LearningLanguage.RUSSIAN,
+                    foreignWord = pSpeak.display,
+                    nativeTranslation = pSpeak.de,
+                    phonetic = RussianPhonetics.transliterateFlat(pSpeak.ru),
+                    exampleForeign = pSpeak.ru,
+                    exampleTranslation = pSpeak.de,
+                    dialogueScenario = "Sprech- & Aussprache-Fokus",
+                    dialoguePartner = courseDay.dialog.partner,
+                    dialoguePrompt = "Teste deine Aussprache mit der KI-Sprachkontrolle oder vergleiche deine Stimme.",
+                    dialogueReplies = listOf("Aussprache geprüft", "Nochmal üben", "Weiter"),
+                    correctReplyIndex = 0,
+                    rank = rank,
+                    audioRes = pSpeak.audio,
+                    dayNumber = courseDay.day,
+                    dayTitle = courseDay.title,
+                    isDueReview = false,
+                    currentStreak = progress.streak,
+                    totalXp = progress.xp,
+                    phraseId = pSpeak.id,
+                    note = pSpeak.note,
+                    literalTranslation = pSpeak.lit,
+                )
+            )
+        }
+
+        // 4. Interaktiver Mini-Dialog des Tages
+        if (cards.size < count && dialogPairs.size >= 2) {
+            val partnerLine = dialogPairs[0].second
+            val myLine = dialogPairs.getOrNull(1)?.second ?: dayPhrases.last()
+            val distractors = allLearned.filter { it.id != myLine.id }.shuffled().take(2)
+            val allOptions = (distractors + myLine).shuffled()
+            val correctIdx = allOptions.indexOfFirst { it.id == myLine.id }.coerceAtLeast(0)
+
+            cards.add(
+                LanguageCardItem(
+                    id = "ru-dlg-$unlockedDay-${partnerLine.id}",
+                    language = LearningLanguage.RUSSIAN,
+                    foreignWord = partnerLine.display,
+                    nativeTranslation = partnerLine.de,
+                    phonetic = RussianPhonetics.transliterateFlat(partnerLine.ru),
+                    exampleForeign = myLine.ru,
+                    exampleTranslation = myLine.de,
+                    dialogueScenario = "${courseDay.dialog.title} (${courseDay.dialog.scene})",
+                    dialoguePartner = courseDay.dialog.partner,
+                    dialoguePrompt = "${courseDay.dialog.partner}: »${partnerLine.display}« — Wie antwortest du?",
+                    dialogueReplies = allOptions.map { it.display },
+                    correctReplyIndex = correctIdx,
+                    rank = rank,
+                    audioRes = partnerLine.audio,
+                    dayNumber = courseDay.day,
+                    dayTitle = courseDay.title,
+                    isDueReview = false,
+                    currentStreak = progress.streak,
+                    totalXp = progress.xp,
+                    phraseId = partnerLine.id,
+                    note = partnerLine.note,
+                    literalTranslation = partnerLine.lit,
+                )
+            )
+        }
+
+        // 5..N. Weitere Phrasen des Tages bis count erreicht ist
+        var phraseIndex = 3
+        while (cards.size < count && dayPhrases.isNotEmpty()) {
+            val pExtra = dayPhrases[(dayOfYear + phraseIndex) % dayPhrases.size]
+            cards.add(
+                LanguageCardItem(
+                    id = "ru-extra-$unlockedDay-${pExtra.id}-$phraseIndex",
+                    language = LearningLanguage.RUSSIAN,
+                    foreignWord = pExtra.display,
+                    nativeTranslation = pExtra.de,
+                    phonetic = RussianPhonetics.transliterateFlat(pExtra.ru),
+                    exampleForeign = pExtra.ru,
+                    exampleTranslation = pExtra.de,
+                    dialogueScenario = "Wortschatz-Meisterung",
+                    dialoguePartner = courseDay.dialog.partner,
+                    dialoguePrompt = "Höre dir die Betonung an und sprich mit.",
+                    dialogueReplies = listOf("Verstanden", "Nochmal sprechen", "Weiter"),
+                    correctReplyIndex = 0,
+                    rank = rank,
+                    audioRes = pExtra.audio,
+                    dayNumber = courseDay.day,
+                    dayTitle = courseDay.title,
+                    isDueReview = false,
+                    currentStreak = progress.streak,
+                    totalXp = progress.xp,
+                    phraseId = pExtra.id,
+                    note = pExtra.note,
+                    literalTranslation = pExtra.lit,
+                )
+            )
+            phraseIndex++
+        }
+
+        return cards
     }
 
     // ── POOLS ───────────────────────────────────────────────────────────────────

@@ -119,7 +119,7 @@ class FeedViewModelTest {
             assert(cards.isNotEmpty())
             // Top ranked module should appear in the generated list
             val ranks = vm.moduleRanks.value
-            assertEquals(com.hikari.app.domain.feed.ModuleRank.RANK_1, ranks[com.hikari.app.domain.feed.MindfulModuleType.LANGUAGE])
+            assertEquals(com.hikari.app.domain.feed.ModuleRank.RANK_3, ranks[com.hikari.app.domain.feed.MindfulModuleType.LANGUAGE])
             cancelAndIgnoreRemainingEvents()
         }
     }
