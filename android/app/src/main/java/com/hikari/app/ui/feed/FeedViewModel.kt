@@ -70,6 +70,14 @@ class FeedViewModel @Inject constructor(
     val completedCards: StateFlow<Set<String>> =
         feedPrefs?.completedCards ?: MutableStateFlow(emptySet())
 
+    val savedCardIds: StateFlow<Set<String>> =
+        feedPrefs?.savedCardIds ?: MutableStateFlow(emptySet())
+
+    val commuterMode: StateFlow<Boolean> =
+        feedPrefs?.commuterMode ?: MutableStateFlow(false)
+
+    private val cardCache = mutableMapOf<String, MindfulCard>()
+
     val mindfulCards: StateFlow<List<MindfulCard>> = combine(
         enabledModules,
         selectedLanguage,
@@ -83,7 +91,19 @@ class FeedViewModel @Inject constructor(
             moduleRanks = ranks,
             russianRepo = russianRepo,
             russianProgress = russianProgress,
-        )
+        ).also { cards ->
+            cards.forEach { cardCache[it.id] = it }
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val savedCards: StateFlow<List<MindfulCard>> = combine(
+        savedCardIds,
+        mindfulCards,
+    ) { savedIds, currentCards ->
+        currentCards.forEach { cardCache[it.id] = it }
+        savedIds.mapNotNull { id ->
+            cardCache[id] ?: MindfulFeedContentProvider.findCardById(id)
+        }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val progressFraction: StateFlow<Float> = combine(mindfulCards, completedCards) { cards, completed ->
@@ -103,6 +123,19 @@ class FeedViewModel @Inject constructor(
             feedPrefs?.incrementStreakIfEligible()
         }
     }
+
+    fun toggleSavedCard(cardId: String): Boolean {
+        return feedPrefs?.toggleSavedCard(cardId) ?: false
+    }
+
+    fun toggleCommuterMode(): Boolean {
+        return feedPrefs?.toggleCommuterMode() ?: false
+    }
+
+    fun setCommuterMode(enabled: Boolean) {
+        feedPrefs?.setCommuterMode(enabled)
+    }
+
 
     fun toggleModule(module: MindfulModuleType, enabled: Boolean) {
         feedPrefs?.setModuleEnabled(module, enabled)

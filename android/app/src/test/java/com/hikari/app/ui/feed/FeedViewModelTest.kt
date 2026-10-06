@@ -20,6 +20,7 @@ import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import com.hikari.app.domain.feed.resolveDeepDive
 
 @OptIn(ExperimentalCoroutinesApi::class)
 
@@ -171,4 +172,35 @@ class FeedViewModelTest {
         vm.recordRussianPractice("p1", spokenCorrect = true)
         io.mockk.verify { store.update(any()) }
     }
+
+    @Test fun resolveDeepDive_allCardTypes_produceValidDeepDiveContent() {
+        val allCards = com.hikari.app.domain.feed.MindfulFeedContentProvider.getAllMasterCards()
+        assertTrue(allCards.isNotEmpty(), "Master cards should not be empty")
+
+        for (card in allCards) {
+            val deepDive = card.resolveDeepDive()
+            assertTrue(deepDive.title.isNotBlank(), "Title must not be blank for card ${card.id}")
+            assertTrue(deepDive.subtitle.isNotBlank(), "Subtitle must not be blank for card ${card.id}")
+            assertTrue(deepDive.keyInsight.isNotBlank(), "Key insight must not be blank for card ${card.id}")
+            assertTrue(deepDive.fullContext.isNotBlank(), "Full context must not be blank for card ${card.id}")
+        }
+    }
+
+    @Test fun toggleSavedCard_and_commuterMode_flowVerification() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        val vm = FeedViewModel(repo, settings)
+        assertEquals(false, vm.commuterMode.value)
+        assertEquals(emptySet(), vm.savedCardIds.value)
+
+        val cards = vm.mindfulCards.value
+        if (cards.isNotEmpty()) {
+            val cardId = cards.first().id
+            val isSavedNow = vm.toggleSavedCard(cardId)
+            // Even without feedPrefs (null), it safely returns false and does not crash
+            assertEquals(false, isSavedNow)
+        }
+    }
 }
+

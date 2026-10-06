@@ -321,3 +321,177 @@ data class PhilosophyCardItem(
 ) : MindfulCard {
     override val type = MindfulModuleType.PHILOSOPHY
 }
+
+// ── Deep-Dive Datenmodell (Wisch nach links) ──────────────────────────────────
+
+data class DeepDiveContent(
+    val title: String,
+    val subtitle: String,
+    val keyInsight: String,
+    val fullContext: String,
+    val practicalApplication: String? = null,
+    val originOrEtymology: String? = null,
+    val relatedTakeaways: List<String> = emptyList(),
+)
+
+fun MindfulCard.resolveDeepDive(): DeepDiveContent = when (this) {
+    is QuoteCardItem -> DeepDiveContent(
+        title = "Philosophischer Tiefgang",
+        subtitle = "$author · $contextEra",
+        keyInsight = "»$quote«",
+        fullContext = "Dieser Gedanke entstammt der Epoche $contextEra. $author hinterfragt hier die menschliche Neigung, sich von äußeren Umständen überwältigen zu lassen. Wahre Gelassenheit entsteht, wenn wir unsere Aufmerksamkeit auf das richten, was in unserer eigenen Kontrolle liegt.",
+        practicalApplication = "Tägliche Reflexion: $reflectionPrompt",
+        originOrEtymology = "Lebensphilosophie & geistige Klarheit",
+        relatedTakeaways = listOf(
+            "Urteile bestimmen unser Empfinden, nicht die Dinge selbst.",
+            "Mentale Ruhe ist trainierbar wie ein Muskel.",
+        ),
+    )
+    is LanguageCardItem -> DeepDiveContent(
+        title = "Sprach- & Grammatik-Deep-Dive",
+        subtitle = "$foreignWord · $phonetic",
+        keyInsight = "Bedeutung: $nativeTranslation",
+        fullContext = buildString {
+            append("Russischer Ausdruck ")
+            if (dayTitle != null) append("aus Lektion »$dayTitle« (Tag $dayNumber). ") else append("aus dem Alltag. ")
+            if (!literalTranslation.isNullOrBlank()) append("\n\n• Wörtlich: „$literalTranslation“")
+            if (!note.isNullOrBlank()) append("\n• Grammatik/Kontext: $note")
+            append("\n• Betonung & Phonetik: $phonetic. Im Russischen führt die dynamische Betonung zu Akanje (unbetontes 'o' wird [a] gesprochen).")
+        },
+        practicalApplication = "Typische Verwendung: „$exampleForeign“ ($exampleTranslation)",
+        originOrEtymology = "Russischer Sprachraum · Kurs Tag ${dayNumber ?: 1}",
+        relatedTakeaways = listOf(
+            "Szenario: $dialogueScenario",
+            "Antwort: ${dialogueReplies.getOrNull(correctReplyIndex) ?: "Verstanden"}",
+        ),
+    )
+    is BrainPuzzleCardItem -> DeepDiveContent(
+        title = "Logik & Beweisführung",
+        subtitle = "$category · Kognitives Training",
+        keyInsight = "Korrekte Antwort: ${options.getOrNull(correctIndex) ?: ""}",
+        fullContext = explanation,
+        practicalApplication = "Aktiviertes Gehirnareal: $brainRegionTrained. Schärft die analytische Denkfähigkeit und schützt vor mentaler Trägheit.",
+        originOrEtymology = "Kognitive Psychologie & Lateral-Denken",
+        relatedTakeaways = listOf(
+            "Erste Intuition kritisch hinterfragen.",
+            "Aufgaben zerlegen statt vorschnell raten.",
+        ),
+    )
+    is HistoryCardItem -> DeepDiveContent(
+        title = "Historischer Deep Dive",
+        subtitle = "$eventTitle ($dateLabel)",
+        keyInsight = whyItMatters,
+        fullContext = description,
+        practicalApplication = "Historische Kausalität: Wie vergangene Ereignisse moderne Institutionen, Gesetze und Denkweisen bis heute prägen.",
+        originOrEtymology = "Weltgeschichte & Kulturkreis",
+        relatedTakeaways = listOf(
+            "Wer die Geschichte nicht kennt, versteht die Gegenwart nicht.",
+            "Wendepunkt mit langfristigen Folgen.",
+        ),
+    )
+    is MentalModelCardItem -> DeepDiveContent(
+        title = "Kritisches Denken & Modell",
+        subtitle = modelName,
+        keyInsight = category,
+        fullContext = explanation,
+        practicalApplication = "Alltags-Beispiel: $realLifeExample\n\nAbwehr-Strategie: $actionableDefense",
+        originOrEtymology = "Kognitionswissenschaften & Entscheidungsfindung",
+        relatedTakeaways = listOf(
+            "Denkfallen frühzeitig erkennen.",
+            "Zweite-Ordnung-Denken anwenden.",
+        ),
+    )
+    is BreathworkCardItem -> DeepDiveContent(
+        title = "Neurologische Wirkungsweise",
+        subtitle = title,
+        keyInsight = "Parasympathikus-Aktivierung & Cortisol-Senkung",
+        fullContext = scientificBenefit,
+        practicalApplication = "Einsatz: 4 Sekunden Einatmen, 4 Sekunden Halten, 4 Sekunden Ausatmen, 4 Sekunden Halten. Ideal vor stressigen Aufgaben, Meetings oder zum schnellen Runterfahren.",
+        originOrEtymology = "Autonomes Nervensystem & Stressphysiologie",
+        relatedTakeaways = listOf(
+            "Der Atem ist die direkte Fernbedienung für den Herzschlag.",
+            "60 Sekunden reichen für messbare physiologische Effekte.",
+        ),
+    )
+    is ScienceCardItem -> DeepDiveContent(
+        title = "Wissenschaftliche Hintergründe",
+        subtitle = phenomenon,
+        keyInsight = question,
+        fullContext = coreExplanation,
+        practicalApplication = "Faszinierendes Detail: $fascinatingDetail",
+        originOrEtymology = "Naturwissenschaften & empirische Forschung",
+        relatedTakeaways = listOf(
+            "Naturgesetze wirken universell.",
+            "Wissenschaftliches Denken basiert auf Nachprüfbarkeit.",
+        ),
+    )
+    is FinanceCardItem -> DeepDiveContent(
+        title = "Finanzielle Bildung & Hebel",
+        subtitle = title,
+        keyInsight = corePrinciple,
+        fullContext = practicalExample,
+        practicalApplication = "Goldene Regel: $takeawayRule",
+        originOrEtymology = "Finanzökonomie & Vermögensaufbau",
+        relatedTakeaways = listOf(
+            "Geld folgt festen mathematischen Gesetzen.",
+            "Früh anfangen und exponentiellen Zinseszins nutzen.",
+        ),
+    )
+    is GeographyCardItem -> DeepDiveContent(
+        title = "Geopolitischer Steckbrief",
+        subtitle = question,
+        keyInsight = "Antwort: ${options.getOrNull(correctIndex) ?: ""}",
+        fullContext = interestingFact,
+        practicalApplication = "Kulturelles Wissen über Geografie, Wirtschaft und globale Handelsrouten.",
+        originOrEtymology = "Weltatlas & Völkerkunde",
+        relatedTakeaways = listOf(
+            "Lage und Topografie prägen Kultur und Wirtschaft.",
+        ),
+    )
+    is SpeedMathCardItem -> DeepDiveContent(
+        title = "Mathematische Beweisführung",
+        subtitle = trickTitle,
+        keyInsight = "Shortcut: $formulaShortcut",
+        fullContext = explanation,
+        practicalApplication = "Übungsaufgabe: $practiceChallenge ➔ Ergebnis: $challengeResult",
+        originOrEtymology = "Algebra & Arithmetik-Shortcuts",
+        relatedTakeaways = listOf(
+            "Zahlen zerlegen macht Rechnen mühelos.",
+            "Muster erkennen statt stur multiplizieren.",
+        ),
+    )
+    is ArtCultureCardItem -> DeepDiveContent(
+        title = "Kunsthistorische Analyse",
+        subtitle = "$masterpieceTitle · $artist",
+        keyInsight = "Entstehung & Epoche: $yearAndOrigin",
+        fullContext = backStory,
+        practicalApplication = "Blick für Symbolik, Komposition und kunstgeschichtliche Meilensteine schärfen.",
+        originOrEtymology = "Europäische & globale Kulturgeschichte",
+        relatedTakeaways = listOf(
+            "Jedes Kunstwerk ist ein Spiegel seiner Epoche.",
+        ),
+    )
+    is VocabularyCardItem -> DeepDiveContent(
+        title = "Wortursprung & Etymologie",
+        subtitle = "$word ($wordType)",
+        keyInsight = definition,
+        fullContext = etymology,
+        practicalApplication = "Anwendungsbeispiel: „$sampleSentence“",
+        originOrEtymology = "Sprachgeschichte & Rhetorik",
+        relatedTakeaways = listOf(
+            "Präzise Sprache schärft das Denken.",
+        ),
+    )
+    is PhilosophyCardItem -> DeepDiveContent(
+        title = "Ethisches Gedankenexperiment",
+        subtitle = dilemmaTitle,
+        keyInsight = philosophicalInsight,
+        fullContext = "$scenario\n\nSchule A ($schoolA): $optionA\n\nSchule B ($schoolB): $optionB",
+        practicalApplication = "Wie bewerten wir Handlungen: Nach ihren Konsequenzen (Utilitarismus) oder nach festen moralischen Pflichten (Deontologie)?",
+        originOrEtymology = "Moralphilosophie & Ethik",
+        relatedTakeaways = listOf(
+            "Dilemmata zeigen die Grenzen einfacher Regeln auf.",
+            "Schult das moralische Urteilsvermögen.",
+        ),
+    )
+}

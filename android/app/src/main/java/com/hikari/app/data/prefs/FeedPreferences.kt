@@ -156,4 +156,52 @@ class FeedPreferences @Inject constructor(
             .putInt("feed_streak_count", currentStreak + 1)
             .apply()
     }
+
+    // ── Saved Cards ("Mein Gehirn" Wissens-Archiv) ──────────────────────────────
+
+    private val _savedCardIds = MutableStateFlow(loadSavedCardIds())
+    val savedCardIds: StateFlow<Set<String>> = _savedCardIds.asStateFlow()
+
+    private fun loadSavedCardIds(): Set<String> {
+        return prefs.getStringSet("feed_saved_cards", emptySet()) ?: emptySet()
+    }
+
+    fun toggleSavedCard(cardId: String): Boolean {
+        val current = loadSavedCardIds().toMutableSet()
+        val isNowSaved = if (cardId in current) {
+            current.remove(cardId)
+            false
+        } else {
+            current.add(cardId)
+            true
+        }
+        prefs.edit().putStringSet("feed_saved_cards", current).apply()
+        _savedCardIds.value = current
+        return isNowSaved
+    }
+
+    fun isCardSaved(cardId: String): Boolean {
+        return cardId in _savedCardIds.value
+    }
+
+    // ── Commuter Mode (Hands-Free Pendler-Modus) ─────────────────────────────────
+
+    private val _commuterMode = MutableStateFlow(loadCommuterMode())
+    val commuterMode: StateFlow<Boolean> = _commuterMode.asStateFlow()
+
+    private fun loadCommuterMode(): Boolean {
+        return prefs.getBoolean("feed_commuter_mode", false)
+    }
+
+    fun setCommuterMode(enabled: Boolean) {
+        prefs.edit().putBoolean("feed_commuter_mode", enabled).apply()
+        _commuterMode.value = enabled
+    }
+
+    fun toggleCommuterMode(): Boolean {
+        val next = !_commuterMode.value
+        setCommuterMode(next)
+        return next
+    }
 }
+

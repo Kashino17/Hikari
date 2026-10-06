@@ -37,8 +37,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -47,7 +49,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
@@ -55,10 +60,19 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.Headphones
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.runtime.rememberCoroutineScope
+import com.hikari.app.domain.feed.resolveDeepDive
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
@@ -166,14 +180,20 @@ fun FeedScreen(
 ) {
     val cards by vm.mindfulCards.collectAsState()
     val completedCardIds by vm.completedCards.collectAsState()
+    val savedCardIds by vm.savedCardIds.collectAsState()
+    val savedCards by vm.savedCards.collectAsState()
+    val commuterMode by vm.commuterMode.collectAsState()
     val progressFraction by vm.progressFraction.collectAsState()
     val isGoalCompleted by vm.isGoalCompleted.collectAsState()
     val enabledModules by vm.enabledModules.collectAsState()
     val selectedLanguage by vm.selectedLanguage.collectAsState()
     val moduleRanks by vm.moduleRanks.collectAsState()
     val streak = remember(completedCardIds) { vm.getStreak() }
+    val haptic = LocalHapticFeedback.current
+    val coroutineScope = rememberCoroutineScope()
 
     var showSettingsSheet by remember { mutableStateOf(false) }
+    var showArchiveSheet by remember { mutableStateOf(false) }
 
     // Gesamte Pager-Seiten: Kartenanzahl + 1 finale Mindful-Abschlusskarte
     val totalPages = if (cards.isEmpty()) 0 else cards.size + 1
@@ -182,6 +202,18 @@ fun FeedScreen(
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.settledPage }.collect { settledPage = it }
+    }
+
+    // 🎧 Smart-Modus für unterwegs (Pendler- / Hands-Free-Modus):
+    // Spielt 400ms nach dem Erreichen einer Vokabelkarte automatisch das Muttersprachler-Audio ab
+    LaunchedEffect(settledPage, commuterMode) {
+        if (commuterMode && settledPage < cards.size) {
+            val currentCard = cards[settledPage]
+            if (currentCard is LanguageCardItem && !currentCard.audioRes.isNullOrBlank()) {
+                delay(400)
+                vm.audio?.play(currentCard.audioRes)
+            }
+        }
     }
 
     LaunchedEffect(resetTick) {
@@ -214,19 +246,56 @@ fun FeedScreen(
                 if (page < cards.size) {
                     val card = cards[page]
                     val isDone = card.id in completedCardIds
-                    FeedCardSlide(
-                        card = card,
-                        pageIndex = page,
-                        totalCount = cards.size,
-                        streak = streak,
-                        isDone = isDone,
-                        audioPlayer = vm.audio,
-                        onRecordPractice = { phraseId, correct -> vm.recordRussianPractice(phraseId, correct) },
-                        onNavigate = onNavigate,
-                        onDone = { vm.markCardCompleted(card.id) },
-                        onOpenSettings = { showSettingsSheet = true },
-                        showSwipeHint = page == 0,
-                    )
+                    val isSaved = card.id in savedCardIds
+
+                    // 2D-Gesten: Horizontaler Pager für Deep Dive (Page 0 = Hauptkarte, Page 1 = Deep Dive)
+                    val horizontalPagerState = rememberPagerState(pageCount = { 2 })
+
+                    HorizontalPager(
+                        state = horizontalPagerState,
+                        modifier = Modifier.fillMaxSize(),
+                    ) { hPage ->
+                        if (hPage == 0) {
+                            FeedCardSlide(
+                                card = card,
+                                pageIndex = page,
+                                totalCount = cards.size,
+                                streak = streak,
+                                isDone = isDone,
+                                isSaved = isSaved,
+                                onToggleSave = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    vm.toggleSavedCard(card.id)
+                                },
+                                onOpenDeepDive = {
+                                    coroutineScope.launch {
+                                        horizontalPagerState.animateScrollToPage(1)
+                                    }
+                                },
+                                audioPlayer = vm.audio,
+                                onRecordPractice = { phraseId, correct -> vm.recordRussianPractice(phraseId, correct) },
+                                onNavigate = onNavigate,
+                                onDone = { vm.markCardCompleted(card.id) },
+                                onOpenSettings = { showSettingsSheet = true },
+                                onOpenArchive = { showArchiveSheet = true },
+                                isCommuterMode = commuterMode,
+                                onToggleCommuterMode = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    vm.toggleCommuterMode()
+                                },
+                                showSwipeHint = page == 0,
+                            )
+                        } else {
+                            DeepDiveSlide(
+                                card = card,
+                                onBack = {
+                                    coroutineScope.launch {
+                                        horizontalPagerState.animateScrollToPage(0)
+                                    }
+                                },
+                            )
+                        }
+                    }
                 } else {
                     MindfulCompletionSlide(
                         streak = streak,
@@ -238,6 +307,18 @@ fun FeedScreen(
                 }
             }
         }
+    }
+
+    if (showArchiveSheet) {
+        KnowledgeArchiveSheet(
+            savedCards = savedCards,
+            onToggleSave = { cardId ->
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                vm.toggleSavedCard(cardId)
+            },
+            audioPlayer = vm.audio,
+            onDismiss = { showArchiveSheet = false },
+        )
     }
 
     if (showSettingsSheet) {
@@ -258,7 +339,7 @@ fun FeedScreen(
     }
 }
 
-// ── Einzelne Slide (Full-Screen Focus) ──────────────────────────────────────────
+// ── Einzelne Slide (Full-Screen Focus, Zero-Scroll-Garantie) ──────────────────
 
 @Composable
 private fun FeedCardSlide(
@@ -267,11 +348,17 @@ private fun FeedCardSlide(
     totalCount: Int,
     streak: Int,
     isDone: Boolean,
+    isSaved: Boolean,
+    onToggleSave: () -> Unit,
+    onOpenDeepDive: () -> Unit,
     audioPlayer: RussianAudioPlayer? = null,
     onRecordPractice: (String?, Boolean) -> Unit = { _, _ -> },
     onNavigate: (String) -> Unit = {},
     onDone: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenArchive: () -> Unit,
+    isCommuterMode: Boolean,
+    onToggleCommuterMode: () -> Unit,
     showSwipeHint: Boolean,
 ) {
     val ambientColor = when (card) {
@@ -290,9 +377,25 @@ private fun FeedCardSlide(
         is PhilosophyCardItem -> Color(0xFF7C3AED)
     }
 
+    var showSavePop by remember { mutableStateOf(false) }
+    LaunchedEffect(isSaved) {
+        if (isSaved) {
+            showSavePop = true
+            delay(850)
+            showSavePop = false
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .pointerInput(card.id) {
+                detectTapGestures(
+                    onDoubleTap = {
+                        onToggleSave()
+                    },
+                )
+            }
             .background(
                 Brush.radialGradient(
                     colors = listOf(ambientColor.copy(alpha = 0.10f), Color.Transparent),
@@ -325,7 +428,7 @@ private fun FeedCardSlide(
 
             Spacer(Modifier.height(12.dp))
 
-            // ── Header Bar: HIKARI Brand + Kategorie + Streak + Settings ────────
+            // ── Header Bar: HIKARI Brand + Kategorie + Commuter + Brain + Streak + Settings ────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -358,7 +461,7 @@ private fun FeedCardSlide(
                     Surface(
                         color = Color.White.copy(alpha = 0.08f),
                         shape = RoundedCornerShape(20.dp),
-                        border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
+                        border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -405,44 +508,75 @@ private fun FeedCardSlide(
                     )
                 }
 
-                // Rechte Seite: Streak Badge + Edler Frosted Settings Button
+                // Rechte Seite: 🎧 Smart/Pendler + 🧠 Archiv + 🔥 Streak + ⚙️ Settings
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    // 1. 🎧 Commuter Mode (Hands-Free) Toggle
+                    Surface(
+                        onClick = onToggleCommuterMode,
+                        shape = CircleShape,
+                        color = if (isCommuterMode) HikariAmber.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.08f),
+                        border = BorderStroke(0.8.dp, if (isCommuterMode) HikariAmber else Color.White.copy(alpha = 0.15f)),
+                        modifier = Modifier.size(34.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Text("🎧", fontSize = 13.sp)
+                        }
+                    }
+
+                    Spacer(Modifier.width(7.dp))
+
+                    // 2. 🧠 Mein Gehirn Wissens-Archiv
+                    Surface(
+                        onClick = onOpenArchive,
+                        shape = CircleShape,
+                        color = Color.White.copy(alpha = 0.08f),
+                        border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.15f)),
+                        modifier = Modifier.size(34.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Text("🧠", fontSize = 13.sp)
+                        }
+                    }
+
+                    Spacer(Modifier.width(7.dp))
+
+                    // 3. Streak Badge
                     Surface(
                         color = Color.White.copy(alpha = 0.08f),
                         shape = RoundedCornerShape(16.dp),
-                        border = androidx.compose.foundation.BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
+                        border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp),
                         ) {
-                            Text("🔥", fontSize = 12.sp)
-                            Spacer(Modifier.width(4.dp))
+                            Text("🔥", fontSize = 11.sp)
+                            Spacer(Modifier.width(3.dp))
                             Text(
                                 text = "$streak",
                                 color = HikariAmber,
-                                fontSize = 11.5.sp,
+                                fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                             )
                         }
                     }
 
-                    Spacer(Modifier.width(10.dp))
+                    Spacer(Modifier.width(7.dp))
 
-                    // Premium Frosted Glass Settings Button
+                    // 4. Settings Button
                     Surface(
                         onClick = onOpenSettings,
                         shape = CircleShape,
-                        color = Color.White.copy(alpha = 0.10f),
-                        border = androidx.compose.foundation.BorderStroke(0.8.dp, Color.White.copy(alpha = 0.20f)),
-                        modifier = Modifier.size(36.dp),
+                        color = Color.White.copy(alpha = 0.08f),
+                        border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.15f)),
+                        modifier = Modifier.size(34.dp),
                     ) {
                         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                             Icon(
                                 imageVector = Icons.Default.Tune,
                                 contentDescription = "Feed-Einstellungen",
                                 tint = HikariText,
-                                modifier = Modifier.size(18.dp),
+                                modifier = Modifier.size(16.dp),
                             )
                         }
                     }
@@ -451,7 +585,7 @@ private fun FeedCardSlide(
 
             Spacer(Modifier.height(14.dp))
 
-            // ── Center Content Box (Fokus auf genau 1 Thema) ─────────────────────
+            // ── Center Content Box (Fokus auf genau 1 Thema, Zero-Scroll-Garantie) ──
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -459,9 +593,7 @@ private fun FeedCardSlide(
                 contentAlignment = Alignment.Center,
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
@@ -491,44 +623,116 @@ private fun FeedCardSlide(
             }
         }
 
-        // ── Floating TikTok/Reels Style Action Sidebar (Rechte Seite) ─────────────
+        // ── Deep Dive Teaser Pill (Unten links, Apple Cupertino Aesthetic) ────
+        Surface(
+            onClick = onOpenDeepDive,
+            shape = RoundedCornerShape(20.dp),
+            color = Color.Black.copy(alpha = 0.50f),
+            border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.18f)),
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 20.dp, bottom = 96.dp),
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("🔍", fontSize = 11.sp)
+                Spacer(Modifier.width(5.dp))
+                Text(
+                    "Deep Dive ›",
+                    color = Color.White.copy(alpha = 0.90f),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.4.sp,
+                )
+            }
+        }
+
+        // ── Floating Action Sidebar (Rechte Seite) ───────────────────────────
         Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 96.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            // "Erledigt" / "Gelernt" Button
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (isDone) Brush.linearGradient(listOf(Color(0xFF10B981), Color(0xFF059669)))
-                        else Brush.linearGradient(listOf(HikariSurfaceHigh, HikariCardBg)),
-                    )
-                    .border(
-                        1.dp,
-                        if (isDone) Color(0xFF34D399) else HikariBorderStrong,
-                        CircleShape,
-                    )
-                    .clickable { onDone() },
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = if (isDone) Icons.Default.CheckCircle else Icons.Default.Check,
-                    contentDescription = if (isDone) "Erledigt" else "Als gelernt markieren",
-                    tint = if (isDone) Color.White else HikariText,
-                    modifier = Modifier.size(24.dp),
+            // 1. "Merken" / "Mein Gehirn" Bookmark Button
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Surface(
+                    onClick = onToggleSave,
+                    shape = CircleShape,
+                    color = if (isSaved) HikariAmber.copy(alpha = 0.22f) else HikariSurfaceHigh,
+                    border = BorderStroke(1.dp, if (isSaved) HikariAmber else HikariBorderStrong),
+                    modifier = Modifier.size(50.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                            imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                            contentDescription = if (isSaved) "Gespeichert" else "Merken",
+                            tint = if (isSaved) HikariAmber else HikariText,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = if (isSaved) "Gemerkt ★" else "Merken",
+                    color = if (isSaved) HikariAmber else HikariTextMuted,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
                 )
             }
-            Text(
-                text = if (isDone) "Gelernt ✓" else "Lernen",
-                color = if (isDone) Color(0xFF34D399) else HikariTextMuted,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
+
+            // 2. "Erledigt" / "Gelernt" Button
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Surface(
+                    onClick = onDone,
+                    shape = CircleShape,
+                    color = if (isDone) Color(0xFF10B981).copy(alpha = 0.25f) else HikariSurfaceHigh,
+                    border = BorderStroke(1.dp, if (isDone) Color(0xFF10B981) else HikariBorderStrong),
+                    modifier = Modifier.size(50.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                            imageVector = if (isDone) Icons.Default.CheckCircle else Icons.Default.Check,
+                            contentDescription = if (isDone) "Erledigt" else "Als gelernt markieren",
+                            tint = if (isDone) Color(0xFF34D399) else HikariText,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = if (isDone) "Gelernt ✓" else "Lernen",
+                    color = if (isDone) Color(0xFF34D399) else HikariTextMuted,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+        }
+
+        // ── Double-Tap Animated Pop Feedback ─────────────────────────────────
+        AnimatedVisibility(
+            visible = showSavePop,
+            enter = fadeIn(tween(150)) + androidx.compose.animation.scaleIn(tween(250)),
+            exit = androidx.compose.animation.fadeOut(tween(300)) + androidx.compose.animation.scaleOut(tween(300)),
+            modifier = Modifier.align(Alignment.Center),
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = Color.Black.copy(alpha = 0.80f),
+                border = BorderStroke(1.5.dp, HikariAmber),
+                modifier = Modifier.size(92.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("🧠", fontSize = 28.sp)
+                        Spacer(Modifier.height(3.dp))
+                        Text("Gemerkt", color = HikariAmber, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
         }
 
         // ── Swipe Up Hint (nur auf erster Slide) ──────────────────────────────
@@ -569,6 +773,7 @@ private fun FeedCardSlide(
         }
     }
 }
+
 
 private fun getCardEmoji(card: MindfulCard): String = when (card) {
     is QuoteCardItem -> "📜"
@@ -814,6 +1019,9 @@ private fun LanguageSlideContent(
     var speechAttempts by remember(item.id) { mutableIntStateOf(0) }
     var pendingMicAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
+    // 0 = Aussprache & Audio, 1 = Mini-Dialog (Zero-Scroll Segment-Wechsel)
+    var selectedSegment by remember(item.id) { mutableIntStateOf(0) }
+
     DisposableEffect(item.id) {
         onDispose {
             runCatching { recorder.stop() }
@@ -904,481 +1112,449 @@ private fun LanguageSlideContent(
             .fillMaxWidth()
             .padding(horizontal = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        // ── Kurs-Header & Fortschritts-Status ──────────────────────────
-        if (item.dayNumber != null) {
+        // ── 2-Segment Control (Zero-Scroll Garantie: Aussprache vs Mini-Dialog) ──
+        if (item.dialogueReplies.isNotEmpty()) {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White.copy(alpha = 0.05f))
-                    .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(12.dp))
-                    .padding(horizontal = 12.dp, vertical = 7.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                    .background(Color.White.copy(alpha = 0.08f))
+                    .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                    .padding(3.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                val isTab0 = selectedSegment == 0
+                Surface(
+                    onClick = { selectedSegment = 0 },
+                    shape = RoundedCornerShape(9.dp),
+                    color = if (isTab0) HikariAmber.copy(alpha = 0.22f) else Color.Transparent,
+                    border = if (isTab0) BorderStroke(0.5.dp, HikariAmber.copy(alpha = 0.6f)) else null,
+                ) {
                     Text(
-                        text = "Tag ${item.dayNumber} · ${item.dayTitle ?: "Russisch Kurs"}",
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
+                        text = "🗣️ Aussprache & Audio",
+                        color = if (isTab0) HikariAmber else HikariTextMuted,
+                        fontSize = 11.5.sp,
+                        fontWeight = if (isTab0) FontWeight.Bold else FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                     )
-                    if (item.isDueReview) {
-                        Spacer(Modifier.width(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(HikariAmber.copy(alpha = 0.20f))
-                                .padding(horizontal = 5.dp, vertical = 1.dp),
+                }
+
+                val isTab1 = selectedSegment == 1
+                Surface(
+                    onClick = { selectedSegment = 1 },
+                    shape = RoundedCornerShape(9.dp),
+                    color = if (isTab1) HikariAmber.copy(alpha = 0.22f) else Color.Transparent,
+                    border = if (isTab1) BorderStroke(0.5.dp, HikariAmber.copy(alpha = 0.6f)) else null,
+                ) {
+                    Text(
+                        text = "💬 Mini-Dialog",
+                        color = if (isTab1) HikariAmber else HikariTextMuted,
+                        fontSize = 11.5.sp,
+                        fontWeight = if (isTab1) FontWeight.Bold else FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    )
+                }
+            }
+        }
+
+        if (selectedSegment == 0 || item.dialogueReplies.isEmpty()) {
+            // ── SEGMENT 0: AUSSPRACHE, AUDIO & SHADOWING ──
+
+            // 1. Kurs-Header & Fortschritt
+            if (item.dayNumber != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color.White.copy(alpha = 0.05f))
+                        .border(0.5.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(10.dp))
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Tag ${item.dayNumber} · ${item.dayTitle ?: "Russisch"}",
+                            color = Color.White,
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        if (item.isDueReview) {
+                            Spacer(Modifier.width(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(HikariAmber.copy(alpha = 0.20f))
+                                    .padding(horizontal = 4.dp, vertical = 1.dp),
+                            ) {
+                                Text(
+                                    text = "SRS",
+                                    color = HikariAmber,
+                                    fontSize = 8.sp,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                        }
+                    }
+                    Text(
+                        text = "🔥 ${item.currentStreak} d · ⚡ ${item.totalXp} XP",
+                        color = HikariAmber,
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+            }
+
+            // 2. Elegante Vokabel-Karte (Kompakt für Zero-Scroll)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(
+                        Brush.linearGradient(
+                            listOf(Color(0xFF0F2027), Color(0xFF1B3039), Color(0xFF244452)),
+                        ),
+                    )
+                    .border(1.dp, Color(0xFF38EF7D).copy(alpha = 0.35f), RoundedCornerShape(16.dp))
+                    .clickable {
+                        revealed = !revealed
+                        onDone()
+                    }
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = item.foreignWord,
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                    )
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        text = item.phonetic,
+                        color = HikariAmber,
+                        fontSize = 13.5.sp,
+                        fontFamily = FontFamily.Monospace,
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    if (revealed) {
+                        Text(
+                            text = item.nativeTranslation,
+                            color = Color(0xFFA7F3D0),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                        )
+                        if (!item.literalTranslation.isNullOrBlank()) {
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                text = "Wörtlich: „${item.literalTranslation}“",
+                                color = HikariTextMuted,
+                                fontSize = 11.sp,
+                                fontStyle = FontStyle.Italic,
+                            )
+                        }
+                    } else {
+                        Surface(
+                            color = Color.Black.copy(alpha = 0.35f),
+                            shape = RoundedCornerShape(10.dp),
                         ) {
                             Text(
-                                text = "SRS FÄLLIG",
-                                color = HikariAmber,
-                                fontSize = 8.5.sp,
-                                fontWeight = FontWeight.Bold,
+                                text = "👉 Tippen zum Aufdecken",
+                                color = HikariTextMuted,
+                                fontSize = 11.sp,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                             )
                         }
                     }
                 }
-                Text(
-                    text = "🔥 ${item.currentStreak} d · ⚡ ${item.totalXp} XP",
-                    color = HikariAmber,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
-                )
             }
-        }
 
-        // ── Große Vokabel-Karte (Klar & Edel) ───────────────────────────
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .background(
-                    Brush.linearGradient(
-                        listOf(Color(0xFF0F2027), Color(0xFF1B3039), Color(0xFF244452)),
-                    ),
-                )
-                .border(1.dp, Color(0xFF38EF7D).copy(alpha = 0.35f), RoundedCornerShape(20.dp))
-                .clickable {
-                    revealed = !revealed
-                    onDone()
-                }
-                .padding(20.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = item.foreignWord,
-                    color = Color.White,
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                )
-                Spacer(Modifier.height(5.dp))
-                Text(
-                    text = item.phonetic,
-                    color = HikariAmber,
-                    fontSize = 14.5.sp,
-                    fontFamily = FontFamily.Monospace,
-                )
+            // 3. Muttersprachler-Audio
+            if (!item.audioRes.isNullOrBlank() && audioPlayer != null) {
+                val audioRes = item.audioRes
+                val isPlayingNormal = playingTrack == audioRes
+                val isPlayingSlow = playingTrack == "${audioRes}_slow"
 
-                Spacer(Modifier.height(12.dp))
-
-                if (revealed) {
-                    Text(
-                        text = item.nativeTranslation,
-                        color = Color(0xFFA7F3D0),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                    )
-                    if (!item.literalTranslation.isNullOrBlank()) {
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = "Wörtlich: „${item.literalTranslation}“",
-                            color = HikariTextMuted,
-                            fontSize = 11.5.sp,
-                            fontStyle = FontStyle.Italic,
-                        )
-                    }
-                    if (!item.note.isNullOrBlank()) {
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = item.note,
-                            color = HikariAmber.copy(alpha = 0.9f),
-                            fontSize = 11.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                    if (item.exampleForeign.isNotBlank()) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = "„${item.exampleForeign}“\n(${item.exampleTranslation})",
-                            color = Color.White.copy(alpha = 0.85f),
-                            fontSize = 12.sp,
-                            textAlign = TextAlign.Center,
-                            lineHeight = 16.sp,
-                        )
-                    }
-                } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(HikariSurfaceHigh)
+                        .border(0.5.dp, HikariBorder, RoundedCornerShape(12.dp))
+                        .padding(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Surface(
-                        color = Color.Black.copy(alpha = 0.35f),
-                        shape = RoundedCornerShape(12.dp),
+                        onClick = {
+                            if (isPlayingNormal) audioPlayer.stop() else audioPlayer.play(audioRes)
+                        },
+                        shape = RoundedCornerShape(9.dp),
+                        color = if (isPlayingNormal) HikariAmber.copy(alpha = 0.20f) else Color.White.copy(alpha = 0.06f),
+                        border = BorderStroke(
+                            0.5.dp,
+                            if (isPlayingNormal) HikariAmber else Color.White.copy(alpha = 0.12f),
+                        ),
+                        modifier = Modifier.weight(1f),
                     ) {
-                        Text(
-                            text = "👉 Tippen zum Aufdecken",
-                            color = HikariTextMuted,
-                            fontSize = 11.5.sp,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
-                        )
+                        Row(
+                            modifier = Modifier.padding(vertical = 7.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                if (isPlayingNormal) Icons.Default.Pause else Icons.AutoMirrored.Outlined.VolumeUp,
+                                contentDescription = "Anhören",
+                                tint = if (isPlayingNormal) HikariAmber else Color.White,
+                                modifier = Modifier.size(15.dp),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = if (isPlayingNormal) "Spielt..." else "Muttersprachler",
+                                color = if (isPlayingNormal) HikariAmber else Color.White,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                    }
+
+                    Surface(
+                        onClick = {
+                            if (isPlayingSlow) audioPlayer.stop() else audioPlayer.play(audioRes, slow = true)
+                        },
+                        shape = RoundedCornerShape(9.dp),
+                        color = if (isPlayingSlow) HikariAmber.copy(alpha = 0.20f) else Color.White.copy(alpha = 0.06f),
+                        border = BorderStroke(
+                            0.5.dp,
+                            if (isPlayingSlow) HikariAmber else Color.White.copy(alpha = 0.12f),
+                        ),
+                        modifier = Modifier.weight(0.85f),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(vertical = 7.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("🐢", fontSize = 12.sp)
+                            Spacer(Modifier.width(5.dp))
+                            Text(
+                                text = if (isPlayingSlow) "Langsam..." else "Langsam",
+                                color = if (isPlayingSlow) HikariAmber else Color.White,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
                     }
                 }
             }
-        }
 
-        // ── Muttersprachler-Audio (Offline-Originalstimme) ───────────────
-        if (!item.audioRes.isNullOrBlank() && audioPlayer != null) {
-            val audioRes = item.audioRes
-            val isPlayingNormal = playingTrack == audioRes
-            val isPlayingSlow = playingTrack == "${audioRes}_slow"
-
-            Row(
+            // 4. Aussprache & Sprach-Praxis Studio (kompakt)
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .background(HikariSurfaceHigh)
+                    .background(HikariCardBg)
                     .border(0.5.dp, HikariBorder, RoundedCornerShape(14.dp))
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                    .padding(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                // Button 1: Normal Audio
-                Surface(
-                    onClick = {
-                        if (isPlayingNormal) audioPlayer.stop() else audioPlayer.play(audioRes)
-                    },
-                    shape = RoundedCornerShape(10.dp),
-                    color = if (isPlayingNormal) HikariAmber.copy(alpha = 0.20f) else Color.White.copy(alpha = 0.06f),
-                    border = BorderStroke(
-                        0.5.dp,
-                        if (isPlayingNormal) HikariAmber else Color.White.copy(alpha = 0.12f),
-                    ),
-                    modifier = Modifier.weight(1f),
+                // Aufnahme Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Row(
-                        modifier = Modifier.padding(vertical = 9.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
+                    Surface(
+                        onClick = { toggleRecord() },
+                        shape = RoundedCornerShape(9.dp),
+                        color = if (isRecording) Color(0xFFDC2626) else HikariSurfaceHigh,
+                        border = BorderStroke(
+                            1.dp,
+                            if (isRecording) Color(0xFFEF4444) else HikariBorderStrong,
+                        ),
+                        modifier = Modifier.weight(1f),
                     ) {
-                        Icon(
-                            if (isPlayingNormal) Icons.Default.Pause else Icons.AutoMirrored.Outlined.VolumeUp,
-                            contentDescription = "Anhören",
-                            tint = if (isPlayingNormal) HikariAmber else Color.White,
-                            modifier = Modifier.size(16.dp),
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            text = if (isPlayingNormal) "Spielt..." else "Muttersprachler",
-                            color = if (isPlayingNormal) HikariAmber else Color.White,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                        )
+                        Row(
+                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 10.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                if (isRecording) Icons.Outlined.Stop else Icons.Outlined.Mic,
+                                contentDescription = "Aufnahme",
+                                tint = Color.White,
+                                modifier = Modifier.size(15.dp),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = if (isRecording) "Stopp & Vergleichen" else "🎙️ Nachsprechen",
+                                color = Color.White,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
+                    }
+
+                    if (hasRecording && !isRecording) {
+                        Surface(
+                            onClick = {
+                                audioPlayer?.stop()
+                                audioPlayer?.playFile(recorder.file)
+                            },
+                            shape = CircleShape,
+                            color = HikariSurfaceHigh,
+                            border = BorderStroke(0.5.dp, HikariBorderStrong),
+                            modifier = Modifier.size(34.dp),
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Icon(
+                                    Icons.Outlined.Person,
+                                    contentDescription = "Meine Stimme",
+                                    tint = HikariText,
+                                    modifier = Modifier.size(16.dp),
+                                )
+                            }
+                        }
+
+                        Surface(
+                            onClick = {
+                                audioPlayer?.stop()
+                                isComparing = true
+                                audioPlayer?.playFile(recorder.file) {
+                                    val audioRes = item.audioRes
+                                    if (!audioRes.isNullOrBlank()) {
+                                        audioPlayer.play(audioRes) {
+                                            isComparing = false
+                                        }
+                                    } else {
+                                        isComparing = false
+                                    }
+                                }
+                            },
+                            shape = CircleShape,
+                            color = if (isComparing) HikariAmber.copy(alpha = 0.25f) else HikariSurfaceHigh,
+                            border = BorderStroke(1.dp, if (isComparing) HikariAmber else HikariBorderStrong),
+                            modifier = Modifier.size(34.dp),
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Icon(
+                                    Icons.Outlined.Replay,
+                                    contentDescription = "A/B-Vergleich",
+                                    tint = if (isComparing) HikariAmber else HikariText,
+                                    modifier = Modifier.size(16.dp),
+                                )
+                            }
+                        }
                     }
                 }
 
-                // Button 2: Slow Audio
+                Spacer(Modifier.height(8.dp))
+
+                // KI Aussprache-Prüfung Button
+                val isListening = speechState is RuListenState.Listening || speechState is RuListenState.Partial
                 Surface(
-                    onClick = {
-                        if (isPlayingSlow) audioPlayer.stop() else audioPlayer.play(audioRes, slow = true)
-                    },
-                    shape = RoundedCornerShape(10.dp),
-                    color = if (isPlayingSlow) HikariAmber.copy(alpha = 0.20f) else Color.White.copy(alpha = 0.06f),
-                    border = BorderStroke(
-                        0.5.dp,
-                        if (isPlayingSlow) HikariAmber else Color.White.copy(alpha = 0.12f),
-                    ),
-                    modifier = Modifier.weight(0.9f),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(vertical = 9.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text("🐢", fontSize = 14.sp)
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            text = if (isPlayingSlow) "Spielt langsam..." else "Langsam",
-                            color = if (isPlayingSlow) HikariAmber else Color.White,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
-                }
-            }
-        }
-
-        // ── Interaktive Aussprache & Sprach-Praxis ───────────────────────
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(HikariCardBg)
-                .border(0.5.dp, HikariBorder, RoundedCornerShape(16.dp))
-                .padding(14.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "Aussprache & Sprachkontrolle",
-                    color = HikariAmber,
-                    fontSize = 11.5.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.5.sp,
-                )
-                if (speechAttempts > 0) {
-                    Text(
-                        text = "$speechAttempts Versuche",
-                        color = HikariTextMuted,
-                        fontSize = 10.5.sp,
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(10.dp))
-
-            // 1. Aufnahme & Nachsprechen Studio (A/B)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                // Record / Stop Button
-                Surface(
-                    onClick = { toggleRecord() },
-                    shape = RoundedCornerShape(10.dp),
-                    color = if (isRecording) Color(0xFFDC2626) else HikariSurfaceHigh,
+                    onClick = { toggleSpeechCheck() },
+                    shape = RoundedCornerShape(9.dp),
+                    color = if (isListening) HikariAmber.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.05f),
                     border = BorderStroke(
                         1.dp,
-                        if (isRecording) Color(0xFFEF4444) else HikariBorderStrong,
+                        if (isListening) HikariAmber else Color.White.copy(alpha = 0.15f),
                     ),
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Row(
-                        modifier = Modifier.padding(vertical = 9.dp, horizontal = 10.dp),
+                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 10.dp),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
-                            if (isRecording) Icons.Outlined.Stop else Icons.Outlined.Mic,
-                            contentDescription = "Aufnahme",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp),
+                            if (isListening) Icons.Outlined.GraphicEq else Icons.Outlined.CheckCircle,
+                            contentDescription = "KI-Prüfung",
+                            tint = if (isListening) HikariAmber else Color.White,
+                            modifier = Modifier.size(15.dp),
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            text = if (isRecording) "Stopp & Vergleichen" else "🎙️ Nachsprechen",
-                            color = Color.White,
-                            fontSize = 12.sp,
+                            text = when {
+                                isListening -> "Ich höre zu … Sprich jetzt!"
+                                speechScore != null -> "🔄 Aussprache erneut prüfen"
+                                else -> "🎯 KI-Ausspracheprüfung starten"
+                            },
+                            color = if (isListening) HikariAmber else Color.White,
+                            fontSize = 11.5.sp,
                             fontWeight = FontWeight.SemiBold,
                         )
                     }
                 }
 
-                // If recording exists: Play own take & A/B Replay
-                if (hasRecording && !isRecording) {
-                    Surface(
-                        onClick = {
-                            audioPlayer?.stop()
-                            audioPlayer?.playFile(recorder.file)
-                        },
-                        shape = CircleShape,
-                        color = HikariSurfaceHigh,
-                        border = BorderStroke(0.5.dp, HikariBorderStrong),
-                        modifier = Modifier.size(38.dp),
-                    ) {
-                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Icon(
-                                Icons.Outlined.Person,
-                                contentDescription = "Meine Stimme",
-                                tint = HikariText,
-                                modifier = Modifier.size(18.dp),
-                            )
-                        }
-                    }
-
-                    Surface(
-                        onClick = {
-                            audioPlayer?.stop()
-                            isComparing = true
-                            audioPlayer?.playFile(recorder.file) {
-                                val audioRes = item.audioRes
-                                if (!audioRes.isNullOrBlank()) {
-                                    audioPlayer.play(audioRes) {
-                                        isComparing = false
-                                    }
-                                } else {
-                                    isComparing = false
-                                }
-                            }
-                        },
-                        shape = CircleShape,
-                        color = if (isComparing) HikariAmber.copy(alpha = 0.25f) else HikariSurfaceHigh,
-                        border = BorderStroke(1.dp, if (isComparing) HikariAmber else HikariBorderStrong),
-                        modifier = Modifier.size(38.dp),
-                    ) {
-                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Icon(
-                                Icons.Outlined.Replay,
-                                contentDescription = "A/B-Vergleich",
-                                tint = if (isComparing) HikariAmber else HikariText,
-                                modifier = Modifier.size(18.dp),
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(10.dp))
-
-            // 2. KI Aussprache-Prüfung (Spracherkennung & Bewertung)
-            val isListening = speechState is RuListenState.Listening || speechState is RuListenState.Partial
-            Surface(
-                onClick = { toggleSpeechCheck() },
-                shape = RoundedCornerShape(10.dp),
-                color = if (isListening) HikariAmber.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.05f),
-                border = BorderStroke(
-                    1.dp,
-                    if (isListening) HikariAmber else Color.White.copy(alpha = 0.15f),
-                ),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Row(
-                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 12.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        if (isListening) Icons.Outlined.GraphicEq else Icons.Outlined.CheckCircle,
-                        contentDescription = "KI-Prüfung",
-                        tint = if (isListening) HikariAmber else Color.White,
-                        modifier = Modifier.size(17.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
+                // Live Partial Text
+                if (speechState is RuListenState.Partial) {
+                    val partial = (speechState as RuListenState.Partial).text
+                    Spacer(Modifier.height(4.dp))
                     Text(
-                        text = when {
-                            isListening -> "Ich höre zu … Sprich jetzt!"
-                            speechScore != null -> "🔄 Aussprache erneut prüfen"
-                            else -> "🎯 KI-Ausspracheprüfung starten"
-                        },
-                        color = if (isListening) HikariAmber else Color.White,
-                        fontSize = 12.5.sp,
-                        fontWeight = FontWeight.SemiBold,
+                        text = "»$partial«",
+                        color = HikariAmber,
+                        fontSize = 12.sp,
+                        fontStyle = FontStyle.Italic,
+                        textAlign = TextAlign.Center,
                     )
                 }
-            }
 
-            // Live Partial Heard Text
-            if (speechState is RuListenState.Partial) {
-                val partial = (speechState as RuListenState.Partial).text
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = "»$partial«",
-                    color = HikariAmber,
-                    fontSize = 13.sp,
-                    fontStyle = FontStyle.Italic,
-                    textAlign = TextAlign.Center,
-                )
-            }
-
-            // Failure message if recognition had an issue
-            if (speechState is RuListenState.Failed) {
-                val failed = speechState as RuListenState.Failed
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = failed.message,
-                    color = Color(0xFFFCA5A5),
-                    fontSize = 11.5.sp,
-                    textAlign = TextAlign.Center,
-                )
-            }
-
-            // Detailed Score Card after KI Evaluation
-            speechScore?.let { sc ->
-                val scorePct = (sc.score * 100).toInt()
-                Spacer(Modifier.height(10.dp))
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            if (sc.passed) Color(0xFF064E3B).copy(alpha = 0.5f) else Color(0xFF78350F).copy(alpha = 0.5f),
-                        )
-                        .border(
-                            1.dp,
-                            if (sc.passed) Color(0xFF10B981) else Color(0xFFF59E0B),
-                            RoundedCornerShape(12.dp),
-                        )
-                        .padding(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
+                // Score Badge
+                speechScore?.let { sc ->
+                    val scorePct = (sc.score * 100).toInt()
+                    Spacer(Modifier.height(6.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (sc.passed) Color(0xFF064E3B).copy(alpha = 0.6f) else Color(0xFF78350F).copy(alpha = 0.6f))
+                            .border(0.5.dp, if (sc.passed) Color(0xFF10B981) else Color(0xFFF59E0B), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
                     ) {
                         Text(
-                            text = if (sc.passed) "🎉 $scorePct % · Exzellent! (+15 XP)" else "⚡ $scorePct % · Fast geschafft!",
+                            text = if (sc.passed) "🎉 $scorePct % · Exzellent! (+15 XP)" else "⚡ $scorePct % · Nochmal versuchen",
                             color = if (sc.passed) Color(0xFF6EE7B7) else HikariAmber,
-                            fontSize = 13.sp,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                         )
                     }
+                }
+            }
 
-                    Spacer(Modifier.height(8.dp))
-
-                    // Word-by-word visual highlight chips
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
+            // 5. Kurs-Shortcut
+            if (item.dayNumber != null) {
+                Surface(
+                    onClick = {
+                        onNavigate(if (item.isDueReview) "russian/review" else "russian/lesson/${item.dayNumber}")
+                    },
+                    shape = RoundedCornerShape(10.dp),
+                    color = Color.White.copy(alpha = 0.04f),
+                    border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.10f)),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(vertical = 7.dp, horizontal = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        sc.words.forEach { (word, ok) ->
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(if (ok) Color(0xFF065F46) else Color(0xFF991B1B).copy(alpha = 0.8f))
-                                    .border(0.5.dp, if (ok) Color(0xFF34D399) else Color(0xFFF87171), RoundedCornerShape(6.dp))
-                                    .padding(horizontal = 7.dp, vertical = 3.dp),
-                            ) {
-                                Text(
-                                    text = word,
-                                    color = Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                            }
-                        }
-                    }
-
-                    if (sc.heard.isNotBlank()) {
-                        Spacer(Modifier.height(6.dp))
                         Text(
-                            text = "Erkannt: »${sc.heard}«",
-                            color = Color.White.copy(alpha = 0.8f),
-                            fontSize = 11.5.sp,
+                            text = if (item.isDueReview) "🇷🇺 SRS-Wiederholung im Kurs starten" else "🇷🇺 Volle Lektion (Tag ${item.dayNumber})",
+                            color = HikariTextMuted,
+                            fontSize = 11.sp,
                         )
+                        Text("→", color = HikariAmber, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
-        }
-
-        // ── Mini-Dialog Szenario (Optionale Vertiefung) ──────────────────
-        if (item.dialogueReplies.isNotEmpty()) {
+        } else {
+            // ── SEGMENT 1: MINI-DIALOG SZENARIO ──
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1387,22 +1563,27 @@ private fun LanguageSlideContent(
                     .border(0.5.dp, HikariBorder, RoundedCornerShape(16.dp))
                     .padding(14.dp),
             ) {
-                Text(
-                    text = "Szenario: ${item.dialogueScenario}",
-                    color = HikariAmber,
-                    fontSize = 11.5.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                Spacer(Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("💬", fontSize = 13.sp)
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = "Szenario: ${item.dialogueScenario}",
+                        color = HikariAmber,
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
                 Text(
                     text = item.dialoguePrompt,
                     color = Color.White,
-                    fontSize = 13.sp,
+                    fontSize = 13.5.sp,
                     fontWeight = FontWeight.Medium,
+                    lineHeight = 19.sp,
                 )
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(12.dp))
 
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     item.dialogueReplies.forEachIndexed { i, reply ->
                         val isChosen = selectedReply == i
                         val isCorrect = i == item.correctReplyIndex
@@ -1426,47 +1607,17 @@ private fun LanguageSlideContent(
                                     selectedReply = i
                                     if (isCorrect) onDone()
                                 }
-                                .padding(horizontal = 12.dp, vertical = 9.dp),
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
                         ) {
-                            Text(reply, color = Color.White, fontSize = 12.sp)
+                            Text(reply, color = Color.White, fontSize = 12.5.sp)
                         }
                     }
                 }
             }
         }
-
-        // ── Kurs-Shortcut (Direkter Sprung in die volle Lektion) ─────────
-        if (item.dayNumber != null) {
-            Surface(
-                onClick = {
-                    onNavigate(if (item.isDueReview) "russian/review" else "russian/lesson/${item.dayNumber}")
-                },
-                shape = RoundedCornerShape(12.dp),
-                color = Color.White.copy(alpha = 0.04f),
-                border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.12f)),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Row(
-                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 14.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("🇷🇺", fontSize = 15.sp)
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = if (item.isDueReview) "SRS-Wiederholung im Kurs starten" else "Volle Lektion (Tag ${item.dayNumber}) öffnen",
-                            color = HikariText,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
-                    Text("→", color = HikariAmber, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-        }
     }
 }
+
 
 @Composable
 private fun BreathworkSlideContent(item: BreathworkCardItem, isDone: Boolean, onDone: () -> Unit) {
@@ -2221,6 +2372,686 @@ private fun FeedEmptyState(onOpenSettings: () -> Unit) {
 }
 
 // ── Feed Settings Sheet ───────────────────────────────────────────────────────
+
+// ── Deep Dive Slide (Horizontaler Wisch nach links) ──────────────────────────
+
+@Composable
+private fun DeepDiveSlide(
+    card: MindfulCard,
+    onBack: () -> Unit,
+) {
+    val deepDive = remember(card.id) { card.resolveDeepDive() }
+    val ambientColor = when (card) {
+        is QuoteCardItem -> Color(0xFFF59E0B)
+        is BrainPuzzleCardItem -> Color(0xFF10B981)
+        is LanguageCardItem -> Color(0xFF3B82F6)
+        is BreathworkCardItem -> Color(0xFF06B6D4)
+        is HistoryCardItem -> Color(0xFFD97706)
+        is MentalModelCardItem -> Color(0xFF8B5CF6)
+        is ScienceCardItem -> Color(0xFF6366F1)
+        is FinanceCardItem -> Color(0xFFEAB308)
+        is GeographyCardItem -> Color(0xFF14B8A6)
+        is SpeedMathCardItem -> Color(0xFFF43F5E)
+        is ArtCultureCardItem -> Color(0xFFEC4899)
+        is VocabularyCardItem -> Color(0xFFF59E0B)
+        is PhilosophyCardItem -> Color(0xFF7C3AED)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(HikariBg)
+            .background(
+                Brush.radialGradient(
+                    colors = listOf(ambientColor.copy(alpha = 0.15f), Color.Transparent),
+                    radius = 900f,
+                ),
+            ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .padding(horizontal = 20.dp)
+                .padding(top = 10.dp, bottom = 84.dp),
+        ) {
+            // Header Bar mit Zurück-Button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Surface(
+                    onClick = onBack,
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color.White.copy(alpha = 0.08f),
+                    border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Zurück",
+                            tint = HikariAmber,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "Zurück zur Karte",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = ambientColor.copy(alpha = 0.15f),
+                    border = BorderStroke(0.5.dp, ambientColor.copy(alpha = 0.35f)),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("🔍", fontSize = 11.sp)
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            "DEEP DIVE",
+                            color = ambientColor,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp,
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            // Scrollable Deep Dive Content
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                // Titel & Subtitel
+                Column {
+                    Text(
+                        text = deepDive.title,
+                        color = Color.White,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 28.sp,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = deepDive.subtitle,
+                        color = HikariAmber,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+
+                // 1. Kernaussage / Key Insight Glass Card
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(HikariSurfaceHigh)
+                        .border(1.dp, ambientColor.copy(alpha = 0.40f), RoundedCornerShape(18.dp))
+                        .padding(16.dp),
+                ) {
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("⚡", fontSize = 14.sp)
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                "KERNERKENNTNIS",
+                                color = HikariAmber,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp,
+                            )
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = deepDive.keyInsight,
+                            color = Color.White,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            lineHeight = 22.sp,
+                        )
+                    }
+                }
+
+                // 2. Ausführlicher Kontext & Hintergründe
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(HikariCardBg)
+                        .border(0.5.dp, HikariBorderStrong, RoundedCornerShape(18.dp))
+                        .padding(16.dp),
+                ) {
+                    Column {
+                        Text(
+                            "HINTERGRUND & KONTEXT",
+                            color = HikariTextMuted,
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = deepDive.fullContext,
+                            color = HikariText,
+                            fontSize = 13.5.sp,
+                            lineHeight = 21.sp,
+                        )
+                    }
+                }
+
+                // 3. Praktische Anwendung im Alltag (falls vorhanden)
+                deepDive.practicalApplication?.let { app ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(HikariCardBg)
+                            .border(0.5.dp, HikariBorder, RoundedCornerShape(18.dp))
+                            .padding(16.dp),
+                    ) {
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("🎯", fontSize = 13.sp)
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    "ANWENDUNG & TRANSFER",
+                                    color = Color(0xFFA7F3D0),
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.sp,
+                                )
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = app,
+                                color = HikariText,
+                                fontSize = 13.sp,
+                                lineHeight = 19.sp,
+                            )
+                        }
+                    }
+                }
+
+                // 4. Herkunft & Ursprung (falls vorhanden)
+                deepDive.originOrEtymology?.let { origin ->
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Color.White.copy(alpha = 0.04f),
+                        shape = RoundedCornerShape(14.dp),
+                        border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("🌱", fontSize = 14.sp)
+                            Spacer(Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    "HERKUNFT / SYSTEM",
+                                    color = HikariTextFaint,
+                                    fontSize = 9.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.8.sp,
+                                )
+                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    text = origin,
+                                    color = HikariTextMuted,
+                                    fontSize = 12.sp,
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // 5. Takeaways
+                if (deepDive.relatedTakeaways.isNotEmpty()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            "SCHLÜSSELERKENNTNISSE",
+                            color = HikariTextMuted,
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp,
+                        )
+                        deepDive.relatedTakeaways.forEach { takeaway ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(HikariSurfaceHigh.copy(alpha = 0.5f))
+                                    .padding(horizontal = 12.dp, vertical = 9.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text("•", color = ambientColor, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = takeaway,
+                                    color = HikariText,
+                                    fontSize = 12.5.sp,
+                                    lineHeight = 18.sp,
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                // Wisch-Hinweis unten
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "← Nach rechts wischen für die Hauptkarte",
+                        color = HikariTextFaint,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ── Persönliches Wissens-Archiv („Mein Gehirn“) ───────────────────────────────
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun KnowledgeArchiveSheet(
+    savedCards: List<MindfulCard>,
+    onToggleSave: (String) -> Unit,
+    audioPlayer: RussianAudioPlayer? = null,
+    onDismiss: () -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedCategoryFilter by remember { mutableStateOf<MindfulModuleType?>(null) }
+    val playingTrack = audioPlayer?.playing?.collectAsState()?.value
+
+    val filteredCards = remember(savedCards, searchQuery, selectedCategoryFilter) {
+        savedCards.filter { card ->
+            val matchesCategory = selectedCategoryFilter == null || card.type == selectedCategoryFilter
+            val matchesSearch = if (searchQuery.isBlank()) true else {
+                val q = searchQuery.trim().lowercase()
+                when (card) {
+                    is QuoteCardItem -> card.quote.lowercase().contains(q) || card.author.lowercase().contains(q)
+                    is BrainPuzzleCardItem -> card.question.lowercase().contains(q) || card.category.lowercase().contains(q)
+                    is LanguageCardItem -> card.foreignWord.lowercase().contains(q) || card.nativeTranslation.lowercase().contains(q) || card.exampleForeign.lowercase().contains(q)
+                    is HistoryCardItem -> card.eventTitle.lowercase().contains(q) || card.description.lowercase().contains(q)
+                    is MentalModelCardItem -> card.modelName.lowercase().contains(q) || card.explanation.lowercase().contains(q)
+                    is BreathworkCardItem -> card.title.lowercase().contains(q) || card.scientificBenefit.lowercase().contains(q)
+                    is ScienceCardItem -> card.phenomenon.lowercase().contains(q) || card.question.lowercase().contains(q) || card.coreExplanation.lowercase().contains(q)
+                    is FinanceCardItem -> card.title.lowercase().contains(q) || card.corePrinciple.lowercase().contains(q)
+                    is GeographyCardItem -> card.question.lowercase().contains(q) || card.interestingFact.lowercase().contains(q)
+                    is SpeedMathCardItem -> card.trickTitle.lowercase().contains(q) || card.explanation.lowercase().contains(q)
+                    is ArtCultureCardItem -> card.masterpieceTitle.lowercase().contains(q) || card.artist.lowercase().contains(q)
+                    is VocabularyCardItem -> card.word.lowercase().contains(q) || card.definition.lowercase().contains(q)
+                    is PhilosophyCardItem -> card.dilemmaTitle.lowercase().contains(q) || card.philosophicalInsight.lowercase().contains(q)
+                }
+            }
+            matchesCategory && matchesSearch
+        }
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = HikariBg,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = HikariBorderStrong) },
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.90f)
+                .padding(horizontal = 20.dp)
+                .navigationBarsPadding(),
+        ) {
+            // Header: Titel + Zähler + Fertig-Button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "🧠 Mein Gehirn",
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = HikariAmber.copy(alpha = 0.15f),
+                        border = BorderStroke(0.5.dp, HikariAmber.copy(alpha = 0.4f)),
+                    ) {
+                        Text(
+                            "${savedCards.size}",
+                            color = HikariAmber,
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                        )
+                    }
+                }
+
+                Surface(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.White.copy(alpha = 0.08f),
+                    border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
+                ) {
+                    Text(
+                        "Fertig",
+                        color = HikariAmber,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            // Cupertino Style Suchfeld
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                color = HikariSurfaceHigh,
+                border = BorderStroke(0.5.dp, HikariBorderStrong),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = "Suchen",
+                        tint = HikariTextMuted,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    androidx.compose.foundation.text.BasicTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        textStyle = androidx.compose.ui.text.TextStyle(
+                            color = Color.White,
+                            fontSize = 13.5.sp,
+                        ),
+                        decorationBox = { innerTextField ->
+                            if (searchQuery.isEmpty()) {
+                                Text(
+                                    "Archiv durchsuchen (Wort, Zitat, Thema)…",
+                                    color = HikariTextFaint,
+                                    fontSize = 13.sp,
+                                )
+                            }
+                            innerTextField()
+                        },
+                    )
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(
+                            onClick = { searchQuery = "" },
+                            modifier = Modifier.size(20.dp),
+                        ) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Löschen",
+                                tint = HikariTextMuted,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // Horizontale Kategorie-Filter-Pills
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                // "Alle" Pill
+                val allActive = selectedCategoryFilter == null
+                Surface(
+                    onClick = { selectedCategoryFilter = null },
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (allActive) HikariAmber.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.05f),
+                    border = BorderStroke(0.5.dp, if (allActive) HikariAmber else Color.White.copy(alpha = 0.12f)),
+                ) {
+                    Text(
+                        "Alle (${savedCards.size})",
+                        color = if (allActive) HikariAmber else HikariTextMuted,
+                        fontSize = 11.5.sp,
+                        fontWeight = if (allActive) FontWeight.Bold else FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    )
+                }
+
+                MindfulModuleType.entries.forEach { mod ->
+                    val count = savedCards.count { it.type == mod }
+                    if (count > 0) {
+                        val active = selectedCategoryFilter == mod
+                        Surface(
+                            onClick = { selectedCategoryFilter = if (active) null else mod },
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (active) mod.accentColor.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.05f),
+                            border = BorderStroke(0.5.dp, if (active) mod.accentColor else Color.White.copy(alpha = 0.12f)),
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(mod.iconEmoji, fontSize = 11.sp)
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    "${mod.title.substringBefore(" ")} ($count)",
+                                    color = if (active) Color.White else HikariTextMuted,
+                                    fontSize = 11.5.sp,
+                                    fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            // Saved Items List
+            if (filteredCards.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(32.dp),
+                    ) {
+                        Text("🧠", fontSize = 42.sp)
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            if (savedCards.isEmpty()) "Dein Geist ist noch frei" else "Keine Treffer",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            if (savedCards.isEmpty())
+                                "Doppeltippe auf eine beliebige Karte im Feed oder tippe auf das Lesezeichen, um wertvolle Erkenntnisse hier dauerhaft abzulegen."
+                            else
+                                "Für deine Suche »$searchQuery« wurden in deinen gespeicherten Karten keine Einträge gefunden.",
+                            color = HikariTextMuted,
+                            fontSize = 12.5.sp,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 18.sp,
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = PaddingValues(bottom = 24.dp),
+                ) {
+                    items(filteredCards, key = { it.id }) { card ->
+                        SavedCardItemRow(
+                            card = card,
+                            audioPlayer = audioPlayer,
+                            playingTrack = playingTrack,
+                            onRemove = { onToggleSave(card.id) },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SavedCardItemRow(
+    card: MindfulCard,
+    audioPlayer: RussianAudioPlayer?,
+    playingTrack: String?,
+    onRemove: () -> Unit,
+) {
+    val deepDive = remember(card.id) { card.resolveDeepDive() }
+    val emoji = getCardEmoji(card)
+    val catLabel = getCardCategoryLabel(card)
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = HikariSurfaceHigh,
+        border = BorderStroke(0.5.dp, HikariBorderStrong),
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Category Chip
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(emoji, fontSize = 12.sp)
+                    Spacer(Modifier.width(5.dp))
+                    Text(
+                        catLabel,
+                        color = HikariAmber,
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.8.sp,
+                    )
+                }
+
+                // Delete / Unsave button
+                Surface(
+                    onClick = onRemove,
+                    shape = CircleShape,
+                    color = Color.White.copy(alpha = 0.05f),
+                    modifier = Modifier.size(28.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Aus Archiv entfernen",
+                            tint = HikariTextFaint,
+                            modifier = Modifier.size(14.dp),
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // Main Text / Insight
+            Text(
+                text = deepDive.subtitle,
+                color = Color.White,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+            )
+
+            Spacer(Modifier.height(4.dp))
+
+            Text(
+                text = deepDive.keyInsight,
+                color = HikariText,
+                fontSize = 12.5.sp,
+                lineHeight = 17.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            // Audio button if it's a language card with audio
+            if (card is LanguageCardItem && !card.audioRes.isNullOrBlank() && audioPlayer != null) {
+                val isPlaying = playingTrack == card.audioRes
+                Spacer(Modifier.height(10.dp))
+                Surface(
+                    onClick = {
+                        if (isPlaying) audioPlayer.stop() else audioPlayer.play(card.audioRes)
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (isPlaying) HikariAmber.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.06f),
+                    border = BorderStroke(0.5.dp, if (isPlaying) HikariAmber else Color.White.copy(alpha = 0.12f)),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            if (isPlaying) Icons.Default.Pause else Icons.AutoMirrored.Outlined.VolumeUp,
+                            contentDescription = null,
+                            tint = if (isPlaying) HikariAmber else Color.White,
+                            modifier = Modifier.size(14.dp),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = if (isPlaying) "Spielt..." else "Audio anhören",
+                            color = if (isPlaying) HikariAmber else Color.White,
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
 
 private enum class SettingsTab(val title: String, val icon: ImageVector) {
     TOPICS("Themen & Fokus", Icons.Outlined.Tune),

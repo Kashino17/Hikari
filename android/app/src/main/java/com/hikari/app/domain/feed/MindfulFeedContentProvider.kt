@@ -1038,4 +1038,43 @@ object MindfulFeedContentProvider {
             philosophicalInsight = "Wahre Fairness entsteht, wenn die Mächtigen sich vorstellen müssen, morgen die Schwächsten im System zu sein.",
         ),
     )
+
+    fun getAllMasterCards(): List<MindfulCard> {
+        val list = mutableListOf<MindfulCard>()
+        list.addAll(QUOTE_POOL)
+        list.addAll(PUZZLE_POOL)
+        LANGUAGE_POOLS.values.forEach { list.addAll(it) }
+        list.addAll(HISTORY_POOL)
+        list.addAll(MENTAL_MODEL_POOL)
+        list.add(
+            BreathworkCardItem(
+                id = "breath-1",
+                title = "Box Breathing (4-4-4-4)",
+                scientificBenefit = "Aktiviert den Parasympathikus, senkt nachweislich den Cortisolspiegel im Blut und steigert den mentalen Fokus innerhalb von 60 Sekunden.",
+            )
+        )
+        list.addAll(SCIENCE_POOL)
+        list.addAll(FINANCE_POOL)
+        list.addAll(GEOGRAPHY_POOL)
+        list.addAll(SPEED_MATH_POOL)
+        list.addAll(ART_POOL)
+        list.addAll(VOCABULARY_POOL)
+        list.addAll(PHILOSOPHY_POOL)
+        return list
+    }
+
+    fun findCardById(id: String): MindfulCard? {
+        val all = getAllMasterCards()
+        // 1. Exact match
+        all.find { it.id == id }?.let { return it }
+
+        // 2. Prefix match (z.B. "quote-1-123" -> match "quote-1")
+        val parts = id.split("-")
+        if (parts.size >= 2) {
+            val prefix = "${parts[0]}-${parts[1]}"
+            all.find { it.id == prefix || it.id.startsWith(prefix) }?.let { return it }
+        }
+        return null
+    }
 }
+
