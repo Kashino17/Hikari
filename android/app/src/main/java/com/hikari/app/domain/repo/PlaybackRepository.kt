@@ -15,6 +15,9 @@ class PlaybackRepository @Inject constructor(
 ) {
     suspend fun getPosition(videoId: String): Long = dao.get(videoId)?.positionMs ?: 0L
 
+    /** Liefert alle Wiedergaben der letzten X Millisekunden (z.B. 30 Tage für Top 10 Charts). */
+    suspend fun getRecentPositions(sinceMs: Long): List<PlaybackPositionEntity> = dao.getRecentSince(sinceMs)
+
     /**
      * Persist locally for instant resume (Room) AND push to backend so
      * /library Continue-Watching populates. Backend write is best-effort —

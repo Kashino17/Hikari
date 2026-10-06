@@ -15,7 +15,11 @@ import com.hikari.app.domain.model.FeedItem
 import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.domain.repo.FeedRepository
 import com.hikari.app.domain.repo.MusicRepository
+import com.hikari.app.domain.repo.PlaybackRepository
 import com.hikari.app.player.MusicPlayerController
+import com.hikari.app.ui.library.components.TopTenCharts
+import com.hikari.app.ui.library.components.TopTenItem
+import com.hikari.app.data.api.dto.LibraryVideoDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -75,10 +79,14 @@ class LibraryViewModel @Inject constructor(
     private val mangaDao: LocalMangaDao,
     private val musicRepo: MusicRepository,
     private val musicPlayer: MusicPlayerController,
+    private val playbackRepo: PlaybackRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<LibraryUiState>(LibraryUiState.Loading)
     val uiState: StateFlow<LibraryUiState> = _uiState.asStateFlow()
+
+    private val _topCharts = MutableStateFlow(TopTenCharts())
+    val topCharts: StateFlow<TopTenCharts> = _topCharts.asStateFlow()
 
     private val _seriesState = MutableStateFlow<SeriesUiState>(SeriesUiState.Loading)
     val seriesState: StateFlow<SeriesUiState> = _seriesState.asStateFlow()
@@ -141,6 +149,7 @@ class LibraryViewModel @Inject constructor(
             }.onSuccess {
                 _uiState.value = LibraryUiState.Success(it)
                 loadBriefingExtras()
+                updateTopCharts(it)
             }.onFailure {
                 // Netz da, aber Backend antwortet nicht → trotzdem Offline-Modus
                 // statt technischem Fehlertext.
@@ -195,6 +204,112 @@ class LibraryViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { repo.fetchOld() }
                 .onSuccess { _history.value = it.distinctBy { item -> item.videoId } }
+        }
+    }
+
+    /**
+     * Berechnet die TOP 10 Serien und TOP 10 Filme der letzten 30 Tage
+     * basierend auf realen Wiedergabepositionen und Historie.
+     * Füllt bei weniger als 10 Einträgen automatisch mit den höchstbewerteten Titeln auf.
+     */
+    private fun updateTopCharts(data: LibraryResponse) {
+        viewModelScope.launch {
+            val thirtyDaysAgo = System.currentTimeMillis() - 30L * 24 * 3600 * 1000L
+            val recentPositions = runCatching { playbackRepo.getRecentPositions(thirtyDaysAgo) }.getOrDefault(emptyList())
+            val recentWatchedVideoIds = recentPositions.map { it.videoId }.toSet()
+
+            // ── TOP 10 SERIEN (Letzte 30 Tage) ──────────────────────────────
+            val watchedSeriesCount = mutableMapOf<String, Int>()
+            data.recentlyAdded.forEach { v ->
+                val sId = v.series_id
+                if (sId != null && v.id in recentWatchedVideoIds) {
+                    watchedSeriesCount[sId] = (watchedSeriesCount[sId] ?: 0) + 1
+                }
+            }
+
+            val seriesById = data.series.associateBy { it.id }
+            val rankedWatchedSeries = watchedSeriesCount.entries
+                .sortedByDescending { it.value }
+                .mapNotNull { seriesById[it.key] }
+
+            val remainingSeries = data.series
+                .filter { it !in rankedWatchedSeries }
+                .sortedByDescending { it.added_at }
+
+            val finalTopSeries = (rankedWatchedSeries + remainingSeries)
+                .take(10)
+                .mapIndexed { idx, s ->
+                    TopTenItem(
+                        rank = idx + 1,
+                        id = s.id,
+                        title = s.title,
+                        subtitle = s.description ?: "Serie",
+                        thumbnailUrl = s.thumbnail_url,
+                        isSeries = true,
+                        seriesId = s.id,
+                    )
+                }
+
+            // ── TOP 10 FILME (Letzte 30 Tage) ───────────────────────────────
+            fun isMovieVideo(v: LibraryVideoDto): Boolean {
+                if (v.is_movie == 1) return true
+                if (v.series_id != null) return false
+                val t = v.title.lowercase()
+                val isFilmWord = t.contains("film") || t.contains("movie") || t.contains("spielfilm") || t.contains("doku") || t.contains("cinema")
+                return isFilmWord || v.duration_seconds >= 2400
+            }
+
+            val allMovies = data.recentlyAdded.filter { isMovieVideo(it) }
+            val watchedMovies = allMovies
+                .filter { it.id in recentWatchedVideoIds }
+                .sortedByDescending { it.progress_seconds ?: 0f }
+
+            val unwatchedMovies = allMovies
+                .filter { it !in watchedMovies }
+                .sortedWith(compareByDescending<LibraryVideoDto> { it.overall_score ?: 0 }.thenByDescending { it.duration_seconds })
+
+            val fallbackStandalone = data.recentlyAdded
+                .filter { it.series_id == null && it !in watchedMovies && it !in unwatchedMovies }
+                .sortedByDescending { it.duration_seconds }
+
+            val finalTopMovies = (watchedMovies + unwatchedMovies + fallbackStandalone)
+                .take(10)
+                .mapIndexed { idx, v ->
+                    val min = v.duration_seconds / 60
+                    val durStr = if (min >= 60) "${min / 60}h ${min % 60}m" else "${min}m"
+                    TopTenItem(
+                        rank = idx + 1,
+                        id = v.id,
+                        title = v.title,
+                        subtitle = "$durStr · ${v.channelTitle ?: "Film"}",
+                        thumbnailUrl = v.thumbnail_url,
+                        isSeries = false,
+                        channelTitle = v.channelTitle ?: "",
+                        durationSeconds = v.duration_seconds,
+                        matchScore = v.overall_score,
+                        isMovie = true,
+                        progressSeconds = v.progress_seconds,
+                    )
+                }
+
+            _topCharts.value = TopTenCharts(
+                topSeries = finalTopSeries,
+                topMovies = finalTopMovies,
+            )
+        }
+    }
+
+    fun toggleWatchLater(videoId: String, isCurrentlySaved: Boolean) {
+        viewModelScope.launch {
+            if (isCurrentlySaved) {
+                repo.removeWatchLater(videoId)
+                _watchLater.value = _watchLater.value.filter { it.videoId != videoId }
+            } else {
+                repo.addWatchLater(videoId)
+                runCatching { repo.fetchWatchLater() }.onSuccess { list ->
+                    _watchLater.value = list.distinctBy { it.videoId }
+                }
+            }
         }
     }
 

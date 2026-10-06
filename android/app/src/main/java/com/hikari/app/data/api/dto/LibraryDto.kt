@@ -35,6 +35,7 @@ data class LibraryVideoDto(
      * damit ältere Server (die das Feld nicht senden) unverändert wirken.
      */
     val downloaded: Int = 1,
+    val is_movie: Int = 0,
 )
 
 @Serializable
