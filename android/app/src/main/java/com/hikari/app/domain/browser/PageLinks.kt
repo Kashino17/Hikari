@@ -76,7 +76,16 @@ object PageScripts {
           var episodeName = ld.episode || text(
             '.episodeGermanTitle, .episodeEnglishTitle, .episode-title, h2.episodeTitle, [itemprop="episodeTitle"], .episode-name'
           );
+          // Überschriften der Seite (h1–h3): viele Seiten nennen den Folgentitel
+          // nur dort ("S01E02: Schulanfang (2)"), ohne JSON-LD und ohne feste
+          // CSS-Klasse. Die Auswertung passiert in Kotlin (PageMetaParser).
+          var headings = [];
+          document.querySelectorAll('h1, h2, h3').forEach(function (h) {
+            var t = (h.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 200);
+            if (t && headings.length < 12) headings.push(t);
+          });
           return JSON.stringify({
+            headings: headings,
             title: document.title || '',
             url: location.href,
             description: description,
@@ -91,6 +100,22 @@ object PageScripts {
             isMovie: ld.movie && !ld.series && !ld.episode && ld.number == null,
             movieName: ld.name
           });
+        })();
+    """.trimIndent()
+
+    /**
+     * true, wenn die Seite gerade eine Bot-Prüfung zeigt (Cloudflare Turnstile,
+     * ALTCHA "I'm not a robot", "Just a moment"). Gemessen an serienstream.to:
+     * Vor jedem Stream öffnet sich "Video wird vorbereitet … Schließe den Schritt
+     * ab und tippe auf Weiter". Das ist gewollt nur für Menschen lösbar — die App
+     * umgeht es nicht, sie erkennt es nur, um sauber zu warten oder abzubrechen.
+     */
+    val GATE_CHECK = """
+        (function () {
+          if (document.querySelector('#playerPrepareModal.show')) return true;
+          if (document.querySelector('altcha-widget, .cf-turnstile, iframe[src*="challenges.cloudflare.com"]')) return true;
+          var t = ((document.body && document.body.innerText) || '').slice(0, 3000);
+          return /verify you are human|ich bin kein roboter|i.m not a robot|just a moment|bitte warten, bis wir deinen browser/i.test(t);
         })();
     """.trimIndent()
 

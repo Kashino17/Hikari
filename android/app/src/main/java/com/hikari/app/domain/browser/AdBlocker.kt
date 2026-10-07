@@ -129,22 +129,23 @@ class AdBlocker {
               var style = document.createElement('style');
               style.textContent = css + '{display:none!important;visibility:hidden!important;}';
               (document.head || document.documentElement).appendChild(style);
+              // Billiger Check statt alle Elemente durchzurechnen: Was liegt
+              // mitten auf dem Bildschirm? Ist es ein riesiges, leeres,
+              // fixiertes Overlay ohne Medien, ist es die Klick-Falle.
               function sweep() {
-                var w = window.innerWidth, h = window.innerHeight;
-                var nodes = document.querySelectorAll('div,a,iframe');
-                for (var i = 0; i < nodes.length; i++) {
-                  var el = nodes[i];
-                  var cs = getComputedStyle(el);
-                  if (cs.position !== 'fixed' && cs.position !== 'absolute') continue;
-                  var r = el.getBoundingClientRect();
-                  var big = r.width >= w * 0.9 && r.height >= h * 0.9;
-                  var z = parseInt(cs.zIndex, 10) || 0;
-                  var invisible = parseFloat(cs.opacity) < 0.05 || cs.backgroundColor === 'rgba(0, 0, 0, 0)';
-                  var hasMedia = el.querySelector('video,canvas,iframe[src*="embed"],iframe[src*="player"]');
-                  if (big && z > 999 && invisible && !hasMedia && !el.innerText.trim()) el.remove();
-                }
+                if (document.hidden) return;
+                var el = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+                if (!el || el === document.body || el === document.documentElement) return;
+                var cs = getComputedStyle(el);
+                if (cs.position !== 'fixed' && cs.position !== 'absolute') return;
+                var r = el.getBoundingClientRect();
+                var big = r.width >= window.innerWidth * 0.9 && r.height >= window.innerHeight * 0.9;
+                var z = parseInt(cs.zIndex, 10) || 0;
+                var invisible = parseFloat(cs.opacity) < 0.05 || cs.backgroundColor === 'rgba(0, 0, 0, 0)';
+                var hasMedia = el.querySelector('video,canvas,iframe');
+                if (big && z > 999 && invisible && !hasMedia && !(el.innerText || '').trim()) el.remove();
               }
-              setInterval(sweep, 1500);
+              setInterval(sweep, 2500);
             })();
         """.trimIndent()
     }

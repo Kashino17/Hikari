@@ -44,6 +44,8 @@ data class CrawlState(
     val index: Int,
     val collected: Int,
     val skipped: Int,
+    /** Die Seite zeigt eine Bot-Prüfung — der Nutzer muss sie abschließen. */
+    val waitingForHuman: Boolean = false,
 )
 
 data class BrowserUiState(
@@ -51,6 +53,8 @@ data class BrowserUiState(
     val pageTitle: String = "",
     /** Seitenbeschreibung aus den Meta-Tags (og:description, sonst description). */
     val pageDescription: String = "",
+    /** Folgennummer, die die Seite selbst nennt (Überschrift/JSON-LD), sonst null. */
+    val pageEpisode: Int? = null,
     val loading: Boolean = false,
     val canGoBack: Boolean = false,
     val findings: List<MediaFinding> = emptyList(),
@@ -111,6 +115,7 @@ class BrowserViewModel @Inject constructor(
                 currentUrl = url,
                 blockedCount = 0,
                 pageDescription = "",
+                pageEpisode = null,
                 loading = true,
                 findings = emptyList(),
                 episodeLinks = emptyList(),
@@ -135,6 +140,7 @@ class BrowserViewModel @Inject constructor(
         domVideos: List<String>,
         links: List<PageLink>,
         description: String? = null,
+        meta: PageMetaParser.PageMeta? = null,
     ) {
         // Der Scan einer umgeleiteten Ad-Seite darf die echten Seitendaten
         // nicht überschreiben.
@@ -142,9 +148,12 @@ class BrowserViewModel @Inject constructor(
         // <video src> direkt aus dem DOM zählt wie ein mitgelesener Request.
         for (v in domVideos) sniffer.onRequest(v, emptyMap())
         val episodes = EpisodeLinkFilter.extract(url, links)
-        val clean = PageTitleFilter.clean(title)
+        // Der echte Folgentitel aus den Überschriften schlägt document.title —
+        // der ist oft nur "Serie S01E02 | Seitenname".
+        val clean = meta?.episodeTitle?.let { PageTitleFilter.clean(it) } ?: PageTitleFilter.clean(title)
         _ui.update {
             it.copy(
+                pageEpisode = meta?.episode,
                 pageTitle = clean ?: it.pageTitle,
                 pageDescription = description?.takeIf(String::isNotBlank) ?: it.pageDescription,
                 episodeLinks = episodes,
@@ -190,12 +199,12 @@ class BrowserViewModel @Inject constructor(
     fun collectCurrent(episode: Int? = null) {
         val s = _ui.value
         val best = sniffer.best() ?: return
-        addToBasket(s.currentUrl, s.pageTitle, best, episode ?: nextEpisode(s), s.pageDescription)
+        addToBasket(s.currentUrl, s.pageTitle, best, episode ?: s.pageEpisode ?: nextEpisode(s), s.pageDescription)
     }
 
     fun collectSpecific(finding: MediaFinding) {
         val s = _ui.value
-        addToBasket(s.currentUrl, s.pageTitle, finding, nextEpisode(s), s.pageDescription)
+        addToBasket(s.currentUrl, s.pageTitle, finding, s.pageEpisode ?: nextEpisode(s), s.pageDescription)
     }
 
     /**
@@ -263,7 +272,8 @@ class BrowserViewModel @Inject constructor(
                     if (lastActive < 0 || active < lastActive) loadHistory()
                     lastActive = active
                 }
-                delay(DOWNLOAD_POLL_MS)
+                val busy = _ui.value.transfers.any { it.status != "failed" }
+                delay(if (busy) DOWNLOAD_POLL_MS else IDLE_POLL_MS)
             }
         }
     }
@@ -333,6 +343,29 @@ class BrowserViewModel @Inject constructor(
         _ui.update { it.copy(crawl = null) }
     }
 
+    /**
+     * Meldung des Seiten-Checks ([com.hikari.app.domain.browser.PageScripts.GATE_CHECK]).
+     * Steht im Durchlauf eine Bot-Prüfung an, läuft das 20-s-Limit nicht ab:
+     * Es wird einmal je Seite durch ein langes ersetzt, damit der Nutzer Haken
+     * und "Weiter" in Ruhe erledigen kann.
+     */
+    fun onGate(present: Boolean) {
+        val crawl = _ui.value.crawl ?: return
+        if (present == crawl.waitingForHuman) return
+        _ui.update { st -> st.copy(crawl = st.crawl?.copy(waitingForHuman = present)) }
+        if (present) {
+            val index = crawl.index
+            crawlTimeout?.cancel()
+            crawlTimeout = viewModelScope.launch {
+                delay(GATE_TIMEOUT_MS)
+                if (_ui.value.crawl?.index == index) {
+                    _ui.update { st -> st.copy(crawl = st.crawl?.copy(skipped = st.crawl.skipped + 1)) }
+                    goToCrawlPage(index + 1)
+                }
+            }
+        }
+    }
+
     private fun goToCrawlPage(index: Int) {
         val crawl = _ui.value.crawl ?: return
         if (index >= crawl.queue.size) {
@@ -345,7 +378,7 @@ class BrowserViewModel @Inject constructor(
             }
             return
         }
-        _ui.update { it.copy(crawl = crawl.copy(index = index)) }
+        _ui.update { it.copy(crawl = crawl.copy(index = index, waitingForHuman = false)) }
         navigateTo(crawl.queue[index].url)
 
         // Ohne Zeitlimit bliebe der Durchlauf an einer Seite hängen, deren
@@ -421,7 +454,11 @@ class BrowserViewModel @Inject constructor(
         /** Wartezeit je Seite im Auto-Durchlauf, bevor übersprungen wird. */
         private const val PAGE_TIMEOUT_MS = 20_000L
 
-        private const val DOWNLOAD_POLL_MS = 2_000L
+        /** Wartezeit je Seite, solange eine Bot-Prüfung auf den Nutzer wartet. */
+        private const val GATE_TIMEOUT_MS = 120_000L
+
+        private const val DOWNLOAD_POLL_MS = 1_500L
+        private const val IDLE_POLL_MS = 6_000L
         private const val HISTORY_LIMIT = 30
         private const val MANUAL_CHANNEL_ID = "manual"
 
@@ -434,8 +471,7 @@ class BrowserViewModel @Inject constructor(
          * auf [MAX_DESCRIPTION_LENGTH] gekürzt.
          */
         internal fun cleanDescription(raw: String?): String? =
-            raw?.replace(Regex("\\s+"), " ")?.trim()
-                ?.takeIf { it.isNotEmpty() }
+            com.hikari.app.domain.browser.DescriptionCleaner.clean(raw)
                 ?.take(MAX_DESCRIPTION_LENGTH)
     }
 }

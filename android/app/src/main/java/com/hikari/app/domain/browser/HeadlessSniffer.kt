@@ -160,6 +160,9 @@ class HeadlessSniffer @Inject constructor(
 
         /** Kurze, für den Nutzer lesbare Spur, was der Besuch tat. */
         private val trail = ArrayList<String>()
+        /** Die Seite verlangt eine Bot-Prüfung (Captcha), die nur ein Mensch löst. */
+        private var gateDetected = false
+
         private fun note(msg: String) { if (trail.size < 12) trail.add(msg) }
         fun diagnostics(): String = trail.joinToString(" · ")
 
@@ -285,6 +288,11 @@ class HeadlessSniffer @Inject constructor(
                     )
                 }
 
+                if (best == null && gateDetected) {
+                    note("Bot-Prüfung der Seite (Captcha) — nur im Browser lösbar, dort Folgen sammeln")
+                    return null
+                }
+
                 if (best != null) {
                     note("Stream gefunden: ${best.kind}")
                     return HeadlessResult(
@@ -377,6 +385,12 @@ class HeadlessSniffer @Inject constructor(
                 // erst der zweite startet das Video.
                 if (pageFinished && now - lastPoke >= POKE_MS) {
                     lastPoke = now
+                    // Steht eine Bot-Prüfung vor dem Player, kommt nie ein Stream:
+                    // sofort abbrechen statt das ganze Zeitbudget zu verbrennen.
+                    if (evalString(PageScripts.GATE_CHECK) == "true") {
+                        gateDetected = true
+                        return null
+                    }
                     webView.evaluateJavascript(PageScripts.AUTOPLAY, null)
                     // Ab dem zweiten Anlauf zusätzlich ein echter Tipp: der
                     // erste Klick trifft oft nur das Werbe-Overlay.
@@ -454,9 +468,8 @@ class HeadlessSniffer @Inject constructor(
             }.orEmpty()
             Scan(
                 title = o.optString("title"),
-                description = o.optString("description")
-                    .replace(Regex("\\s+"), " ").trim()
-                    .takeIf { it.isNotEmpty() }?.take(MAX_DESCRIPTION),
+                description = DescriptionCleaner.clean(o.optString("description"))
+                    ?.take(MAX_DESCRIPTION),
                 videos = videos,
                 dom = runCatching { PageMetaParser.fromScan(o) }.getOrNull(),
             )

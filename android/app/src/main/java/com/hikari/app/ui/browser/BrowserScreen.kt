@@ -9,6 +9,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
@@ -61,6 +62,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
@@ -115,15 +117,17 @@ fun BrowserScreen(
     var showShield by remember { mutableStateOf(false) }
     var showDiagnostics by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val downloadsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val shieldSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val downloadsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val shieldSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
 
     // Der Interceptor meldet Funde nicht selbst — er läuft auf einem
     // Hintergrund-Thread. Kurzes Nachfassen hält die Anzeige aktuell und
     // treibt zugleich den Auto-Durchlauf voran.
     LaunchedEffect(Unit) {
         while (true) {
-            delay(700)
+            // Beim Laden/Durchlauf zügig, sonst ruhig — jede Runde kostet
+            // eine Neuzusammensetzung der Leiste.
+            delay(if (ui.loading || ui.crawl != null) 700 else 1500)
             vm.refreshFindings()
         }
     }
@@ -339,6 +343,7 @@ fun BrowserScreen(
                                             scan.videos,
                                             scan.links,
                                             scan.description,
+                                            scan.meta,
                                         )
                                     }
                                 }
@@ -444,57 +449,87 @@ private fun AddressBar(
     onClose: () -> Unit,
     onReload: () -> Unit,
 ) {
-    var focused by remember { mutableStateOf(false) }
+    var editing by remember { mutableStateOf(false) }
+    val focusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    val pill = MaterialTheme.colorScheme.surfaceVariant
+
     Row(
         Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 4.dp, vertical = 4.dp),
+            .padding(horizontal = 2.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = onClose) {
+        IconButton(onClick = onClose, modifier = Modifier.size(40.dp)) {
             Icon(Icons.Default.ArrowBack, "Schließen", tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        OutlinedTextField(
-            value = value,
-            onValueChange = { new ->
-                // Doppeltipp/Langdruck markiert im Textfeld nur ein Wort. In der
-                // Adresszeile will man die ganze URL: Entsteht aus einem Cursor
-                // eine Teilmarkierung, wird sie auf alles erweitert. Ziehen an den
-                // Markierungsgriffen (alte Markierung nicht leer) bleibt frei.
-                val newlyPartial = value.selection.collapsed && !new.selection.collapsed &&
-                    new.text == value.text &&
-                    new.selection.length < new.text.length
-                onValueChange(
-                    if (newlyPartial) new.copy(selection = TextRange(0, new.text.length)) else new,
-                )
-            },
-            modifier = Modifier
+
+        Box(
+            Modifier
                 .weight(1f)
-                .onFocusChanged {
-                    focused = it.isFocused
-                    onFocusChange(it.isFocused)
-                },
-            singleLine = true,
-            textStyle = MaterialTheme.typography.bodySmall,
-            placeholder = { Text("Adresse oder Suche", fontSize = 13.sp) },
-            trailingIcon = if (focused && value.text.isNotEmpty()) {
-                {
-                    IconButton(onClick = { onValueChange(TextFieldValue("")) }) {
-                        Icon(
-                            Icons.Default.Close,
-                            "Löschen",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp),
+                .height(40.dp)
+                .background(pill, RoundedCornerShape(20.dp))
+                .padding(horizontal = 14.dp),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            if (editing) {
+                androidx.compose.foundation.text.BasicTextField(
+                    value = value,
+                    onValueChange = { new ->
+                        // Teilmarkierung aus Doppeltipp/Langdruck -> ganze URL.
+                        val newlyPartial = value.selection.collapsed && !new.selection.collapsed &&
+                            new.text == value.text && new.selection.length < new.text.length
+                        onValueChange(
+                            if (newlyPartial) new.copy(selection = TextRange(0, new.text.length)) else new,
                         )
-                    }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester)
+                        .onFocusChanged {
+                            onFocusChange(it.isFocused)
+                            if (!it.isFocused) editing = false
+                        },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 14.sp,
+                    ),
+                    cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+                    keyboardActions = KeyboardActions(onGo = {
+                        onGo()
+                        focusManager.clearFocus()
+                    }),
+                )
+                LaunchedEffect(Unit) { focusRequester.requestFocus() }
+                if (value.text.isNotEmpty()) {
+                    Icon(
+                        Icons.Default.Close,
+                        "Löschen",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .size(18.dp)
+                            .clickable { onValueChange(TextFieldValue("")) },
+                    )
                 }
-            } else null,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
-            keyboardActions = KeyboardActions(onGo = { onGo() }),
-            shape = RoundedCornerShape(10.dp),
-        )
-        IconButton(onClick = onOpenShield) {
+            } else {
+                Text(
+                    displayHost(value.text),
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { editing = true },
+                )
+            }
+        }
+
+        IconButton(onClick = onOpenShield, modifier = Modifier.size(40.dp)) {
             BadgedBox(badge = {
                 if (shieldOn && blocked > 0) {
                     Badge { Text(if (blocked > 99) "99+" else blocked.toString(), fontSize = 9.sp) }
@@ -503,22 +538,39 @@ private fun AddressBar(
                 Icon(
                     Icons.Outlined.Shield,
                     "Werbeschutz",
+                    modifier = Modifier.size(22.dp),
                     tint = if (shieldOn) MaterialTheme.colorScheme.primary
                     else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                 )
             }
         }
-        IconButton(onClick = onOpenDownloads) {
+        IconButton(onClick = onOpenDownloads, modifier = Modifier.size(40.dp)) {
             BadgedBox(badge = {
                 if (activeDownloads > 0) Badge { Text(activeDownloads.toString(), fontSize = 9.sp) }
             }) {
-                Icon(Icons.Default.Download, "Downloads", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(
+                    Icons.Default.Download,
+                    "Downloads",
+                    modifier = Modifier.size(22.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
-        IconButton(onClick = onReload, enabled = !loading) {
-            Icon(Icons.Default.Refresh, "Neu laden", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        IconButton(onClick = onReload, enabled = !loading, modifier = Modifier.size(40.dp)) {
+            Icon(
+                Icons.Default.Refresh,
+                "Neu laden",
+                modifier = Modifier.size(22.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
+}
+
+/** Ohne Fokus zeigt die Leiste nur den Host ("aniworld.to") — ruhiger, wie im Browser. */
+internal fun displayHost(url: String): String {
+    val host = runCatching { java.net.URI(url).host }.getOrNull()?.removePrefix("www.")
+    return host?.takeIf { it.isNotBlank() } ?: url
 }
 
 @Composable
@@ -711,7 +763,11 @@ private fun CrawlBanner(crawl: CrawlState, onStop: () -> Unit) {
         )
         Spacer(Modifier.width(12.dp))
         Text(
-            "Folge ${crawl.index + 1} von ${crawl.queue.size} — ${crawl.collected} gefunden",
+            if (crawl.waitingForHuman) {
+                "Folge ${crawl.index + 1} von ${crawl.queue.size} — Bitte Haken setzen und auf Weiter tippen"
+            } else {
+                "Folge ${crawl.index + 1} von ${crawl.queue.size} — ${crawl.collected} gefunden"
+            },
             fontSize = 13.sp,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f),
@@ -735,12 +791,16 @@ private fun FindingBar(
 ) {
     val hasFinding = ui.findings.isNotEmpty()
     val episodes = ui.episodeLinks.size
+    val idle = !hasFinding && episodes == 0 && ui.basket.isEmpty()
 
+    // Ohne Fund gibt es nichts zu tun: Die Leiste schrumpft auf eine
+    // Statuszeile statt zwei große Buttons dauerhaft zu zeigen.
     Column(
         Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .animateContentSize()
+            .padding(horizontal = 12.dp, vertical = if (idle) 6.dp else 8.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -755,26 +815,16 @@ private fun FindingBar(
             Spacer(Modifier.width(10.dp))
             Text(
                 when {
-                    hasFinding && episodes > 0 -> "Video erkannt · $episodes Folgen auf der Seite"
+                    hasFinding && episodes > 0 -> "Video erkannt · $episodes Folgen"
                     hasFinding -> "Video erkannt"
                     episodes > 0 -> "$episodes Folgen auf der Seite"
-                    else -> "Kein Video erkannt — Wiedergabe starten"
+                    else -> "Kein Video erkannt"
                 },
                 fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = if (idle) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f).clickable(onClick = onToggleDiagnostics),
-            )
-            // Antippbarer Zähler: Steht hier 0, läuft der Interceptor nicht.
-            // Steht hier eine große Zahl ohne Fund, ist der Filter zu streng.
-            Text(
-                "${ui.inspected}",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .clickable(onClick = onToggleDiagnostics)
-                    .padding(horizontal = 8.dp),
             )
             if (ui.basket.isNotEmpty()) {
                 TextButton(onClick = onOpenBasket) {
@@ -784,13 +834,13 @@ private fun FindingBar(
         }
 
         if (diagnosticsOpen) {
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
             Text(
                 "${ui.inspected} Requests gesehen, ${ui.findings.size} als Video erkannt",
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Column(Modifier.fillMaxWidth().height(120.dp).verticalScroll(rememberScrollState())) {
+            Column(Modifier.fillMaxWidth().height(110.dp).verticalScroll(rememberScrollState())) {
                 for (u in ui.recentUrls.take(20)) {
                     Text(
                         u,
@@ -804,26 +854,29 @@ private fun FindingBar(
             }
         }
 
-        Spacer(Modifier.height(8.dp))
+        if (!idle) {
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = onCollect,
+                    enabled = hasFinding && ui.crawl == null,
+                    modifier = Modifier.weight(1f).height(40.dp),
+                    shape = RoundedCornerShape(20.dp),
+                ) { Text("Diese Folge", fontSize = 13.sp) }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(
-                onClick = onCollect,
-                enabled = hasFinding && ui.crawl == null,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(10.dp),
-            ) { Text("Diese Folge", fontSize = 13.sp) }
-
-            Button(
-                onClick = onCrawl,
-                enabled = episodes > 0 && ui.crawl == null,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                ),
-            ) { Text("Alle $episodes", fontSize = 13.sp) }
+                if (episodes > 0) {
+                    Button(
+                        onClick = onCrawl,
+                        enabled = ui.crawl == null,
+                        modifier = Modifier.weight(1f).height(40.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                        ),
+                    ) { Text("Alle $episodes", fontSize = 13.sp) }
+                }
+            }
         }
     }
 }
@@ -939,6 +992,8 @@ private data class ScanResult(
     val description: String?,
     val videos: List<String>,
     val links: List<com.hikari.app.domain.browser.PageLink>,
+    /** Was die Seite selbst über Serie/Staffel/Folge/Titel sagt (Überschriften, JSON-LD). */
+    val meta: com.hikari.app.domain.browser.PageMetaParser.PageMeta? = null,
 )
 
 /**
@@ -966,6 +1021,7 @@ private fun parseScan(raw: String?): ScanResult? {
             BrowserViewModel.cleanDescription(o.optString("description")),
             videos,
             links,
+            runCatching { com.hikari.app.domain.browser.PageMetaParser.fromScan(o) }.getOrNull(),
         )
     }.getOrNull()
 }

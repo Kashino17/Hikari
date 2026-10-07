@@ -33,6 +33,10 @@ object AdHosts {
         "popcash.net",
         "exoclick.com",
         "adsco.re",
+        // Gemessen auf serienstream.to-Folgenseiten (Pop-under/Click-Netze)
+        "255md.com",
+        "jhnwr.com",
+        "al5sm.com",
         "propellerads.com",
         "propellerclick.com",
         "onclickads.net",
