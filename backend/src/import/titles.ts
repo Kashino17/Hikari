@@ -248,3 +248,30 @@ export function looksLikeMovieUrl(url: string): boolean {
     return false;
   }
 }
+
+/**
+ * Trägt der Titel eine ausdrückliche Folgen-/Staffelnummer, die der bekannten
+ * Zuordnung widerspricht? Dann gehört er zu einer anderen Seite — typisch,
+ * wenn der Browser den document.title der VORHERIGEN Folge mitschickt, weil
+ * die neue Seite noch lud. Ein solcher Titel darf nie übernommen werden: er
+ * ergäbe "Folge 3" auf einer Folge 5 und vermischte die Staffel.
+ */
+export function titleConflictsWithEpisode(
+  title: string | null | undefined,
+  meta: { season?: number | null; episode?: number | null },
+): boolean {
+  if (!title) return false;
+  const episode = meta.episode ?? null;
+  const season = meta.season ?? null;
+  const se = /\bs(\d{1,2})\s*[._-]?\s*e(\d{1,4})\b/i.exec(title);
+  if (se?.[1] && se[2]) {
+    if (episode !== null && Number(se[2]) !== episode) return true;
+    if (season !== null && Number(se[1]) !== season) return true;
+    return false;
+  }
+  const ep = /\b(?:folge|episode|ep\.?)\s*(\d{1,4})\b/i.exec(title);
+  if (ep?.[1] && episode !== null && Number(ep[1]) !== episode) return true;
+  const sea = /\b(?:staffel|season)\s*(\d{1,3})\b/i.exec(title);
+  if (sea?.[1] && season !== null && Number(sea[1]) !== season) return true;
+  return false;
+}

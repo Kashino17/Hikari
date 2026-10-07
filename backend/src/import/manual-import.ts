@@ -21,6 +21,7 @@ import {
   cleanImportTitle,
   fallbackTitleFromUrl,
   looksLikeMovieUrl,
+  titleConflictsWithEpisode,
 } from "./titles.js";
 
 /**
@@ -55,6 +56,8 @@ export interface ImportResult {
   videoId?: string;
   title?: string;
   error?: string;
+  /** Bei "duplicate": warum — damit ein Fake-Duplikat in der Statusabfrage erkennbar ist. */
+  reason?: string;
 }
 
 export interface ManualMetadata {
@@ -112,9 +115,23 @@ function parseUploadDate(d: string | undefined): number {
  * Stable internal video id from extractor + extractor's id. Prevents
  * collision if voe.sx and YouTube both used "abc123".
  */
-function makeVideoId(extractor: string | undefined, id: string | undefined): string {
+export function makeVideoId(
+  extractor: string | undefined,
+  id: string | undefined,
+  sourceUrl?: string,
+): string {
   const ex = (extractor ?? "manual").toLowerCase().replace(/[^a-z0-9]+/g, "");
-  const safeId = (id ?? "unknown").replace(/[^a-zA-Z0-9_-]+/g, "");
+  let safeId = (id ?? "unknown").replace(/[^a-zA-Z0-9_-]+/g, "");
+  // Der generische Extraktor nimmt den Dateinamen als id ("master", "index",
+  // "playlist"). Hunderte Folgen verschiedener Hoster teilten sich so dieselbe
+  // videoId, und alle bis auf die erste galten als "duplicate" -> Lücken in
+  // der Staffel. Dort (und bei leeren ids) identifiziert die Quell-URL.
+  if (
+    sourceUrl &&
+    (ex === "generic" || ex === "html5" || ex === "manual" || !safeId || safeId === "unknown")
+  ) {
+    safeId = createHash("sha1").update(sourceUrl).digest("hex").slice(0, 16);
+  }
   // Keep YouTube IDs unprefixed (so the existing flow stays identical) — only
   // prefix non-YouTube extractors.
   if (ex === "youtube") return safeId;
@@ -303,16 +320,36 @@ export function seriesSlug(title: string): string {
  * seite-in-dir". Der kürzere Slug muss mindestens zwei Wörter und zehn
  * Zeichen haben, sonst würde "ted" auch "ted-lasso" schlucken.
  */
+const SEQUEL_TOKENS = new Set([
+  "super", "z", "gt", "kai", "shippuden", "shippuuden", "boruto", "brotherhood", "junior",
+  "high", "ii", "iii", "iv", "remake", "reboot", "new", "next", "generations", "evolution",
+  "origins", "legacy", "resurrection", "revolution", "rebirth", "final", "movie", "film",
+  "ova", "oad", "special", "specials", "spin", "off", "prequel", "sequel", "returns",
+  "reloaded", "revolutions", "classic", "heroes", "universe", "after", "before",
+]);
+
 function findRelatedSeries(
   db: Database.Database,
   slug: string,
 ): { id: string; title: string } | undefined {
   const rows = db.prepare("SELECT id, title FROM series").all() as { id: string; title: string }[];
   const qualifies = (short: string) => short.length >= 10 && short.split("-").length >= 2;
+  // Der überschüssige Teil darf keine Fortsetzung/Variante sein ("dragon-ball"
+  // + "super" ist eine ANDERE Serie, "american-horror-story" + "die-dunkle-
+  // seite-in-dir" nur ein Untertitel).
+  const isSubtitleOnly = (longer: string, shorter: string) =>
+    !longer
+      .slice(shorter.length + 1)
+      .split("-")
+      .some((tok) => SEQUEL_TOKENS.has(tok) || /\d/.test(tok));
   for (const row of rows) {
     if (row.id === slug) return row;
-    if (slug.startsWith(`${row.id}-`) && qualifies(row.id)) return row;
-    if (row.id.startsWith(`${slug}-`) && qualifies(slug)) return row;
+    if (slug.startsWith(`${row.id}-`) && qualifies(row.id) && isSubtitleOnly(slug, row.id)) {
+      return row;
+    }
+    if (row.id.startsWith(`${slug}-`) && qualifies(slug) && isSubtitleOnly(row.id, slug)) {
+      return row;
+    }
   }
   return undefined;
 }
@@ -356,6 +393,13 @@ export function findEpisodeDuplicate(
   meta: ManualMetadata | undefined,
 ): string | undefined {
   if (!meta || meta.episode === undefined || meta.episode === null) return undefined;
+  // Ohne bekannte Staffel ist "Folge 5" mehrdeutig (S1E5 oder S3E5?) — dann
+  // entscheidet allein die Quellen-Identität (videoId), nie die Nummer. Vorher
+  // galt eine unbekannte Staffel als 1 und schluckte fremde Folgen.
+  if (meta.season === undefined || meta.season === null) return undefined;
+  // Verwandtschaft nur über Untertitel, nie über Fortsetzungen: "Dragon Ball"
+  // und "Dragon Ball Super" sind verschiedene Serien mit eigenem Folge 1..n
+  // (siehe findRelatedSeries).
   const seriesId = meta.seriesId ?? resolveSeriesId(db, meta.seriesTitle);
   if (!seriesId) return undefined;
   const row = db
@@ -364,9 +408,11 @@ export function findEpisodeDuplicate(
         JOIN downloaded_videos dv ON dv.video_id = v.id
        WHERE v.series_id = ? AND COALESCE(v.season, 1) = ? AND v.episode = ?
          AND LOWER(COALESCE(v.dub_language, '')) = LOWER(?)
+         AND LOWER(COALESCE(v.sub_language, '')) = LOWER(?)
+         AND COALESCE(v.is_movie, 0) = 0
        LIMIT 1`,
     )
-    .get(seriesId, meta.season ?? 1, meta.episode, meta.dubLanguage ?? "") as
+    .get(seriesId, meta.season, meta.episode, meta.dubLanguage ?? "", meta.subLanguage ?? "") as
     | { id: string }
     | undefined;
   return row?.id;
@@ -408,7 +454,7 @@ export async function importDirectLink(
     return { url, status: "failed", error: "yt-dlp returned no video id" };
   }
 
-  const videoId = makeVideoId(meta.extractor, meta.id);
+  const videoId = makeVideoId(meta.extractor, meta.id, meta.webpage_url ?? cleanUrl);
 
   // Already in DB? Skip.
   const existing = db.prepare("SELECT 1 FROM videos WHERE id = ?").get(videoId);
@@ -416,6 +462,7 @@ export async function importDirectLink(
     return {
       url,
       status: "duplicate",
+      reason: "gleiche Quelle bereits importiert",
       videoId,
       ...(meta.title ? { title: meta.title } : {}),
     };
@@ -428,15 +475,20 @@ export async function importDirectLink(
     return {
       url,
       status: "duplicate",
+      reason: "gleiche Quelle wird gerade geladen",
       videoId,
       ...(meta.title ? { title: meta.title } : {}),
     };
   }
 
+  const hostHint = hostOf(meta.webpage_url ?? cleanUrl);
+  const candidates = [manualMeta?.title, cleanImportTitle(meta.title, hostHint)];
   const title =
-    manualMeta?.title ??
-    cleanImportTitle(meta.title, hostOf(meta.webpage_url ?? cleanUrl)) ??
-    fallbackTitleFromUrl(cleanUrl);
+    candidates.find(
+      (t): t is string =>
+        !!t?.trim() &&
+        !titleConflictsWithEpisode(t, fillMissingEpisodeInfo(manualMeta ?? {}, cleanUrl, null)),
+    ) ?? fallbackTitleFromUrl(cleanUrl);
   const description = meta.description ?? "";
   const duration = Math.round(meta.duration ?? 0);
   const remoteThumbnail = fixProtocol(
@@ -456,7 +508,13 @@ export async function importDirectLink(
   }
   const dupEpisode = findEpisodeDuplicate(db, effectiveMeta);
   if (dupEpisode) {
-    return { url, status: "duplicate", videoId: dupEpisode, title };
+    return {
+      url,
+      status: "duplicate",
+      reason: `S${effectiveMeta.season}E${effectiveMeta.episode} existiert schon (${dupEpisode})`,
+      videoId: dupEpisode,
+      title,
+    };
   }
   // Step 2: download FIRST, before writing any DB rows. The episode must only
   // become visible once its file is actually on disk. Previously we inserted
@@ -716,6 +774,7 @@ export async function importSniffedMedia(
     return {
       url: pageUrl,
       status: "duplicate",
+      reason: "gleiche Seite bereits importiert",
       videoId,
       ...(input.title ? { title: input.title } : {}),
     };
@@ -725,6 +784,7 @@ export async function importSniffedMedia(
     return {
       url: pageUrl,
       status: "duplicate",
+      reason: "gleiche Seite wird gerade geladen",
       videoId,
       ...(input.title ? { title: input.title } : {}),
     };
@@ -736,10 +796,9 @@ export async function importSniffedMedia(
   // Auch ein von der App gesetzter Titel läuft durch die Bereinigung: Die
   // Import-Karte übernimmt den document.title ungefiltert, sonst hieße
   // dieselbe Folge je nach Weg "Folge 5 - AniWorld" oder "Folge 5".
-  const cleanTitle =
+  const cleanTitleRaw =
     cleanImportTitle(manualMeta?.title, hostOf(pageUrl)) ??
     cleanImportTitle(input.title, hostOf(pageUrl));
-  const initialTitle = cleanTitle ?? fallbackTitleFromUrl(pageUrl, mediaUrl);
 
   // Serie/Staffel/Folge aus Seiten-URL und Titel ergänzen — das ist die
   // eigentliche Stärke des Browser-Imports, dessen Hostermuster die Info
@@ -747,14 +806,26 @@ export async function importSniffedMedia(
   const effectiveMeta: ManualMetadata = fillMissingEpisodeInfo(
     manualMeta ?? {},
     pageUrl,
-    cleanTitle ?? input.title,
+    cleanTitleRaw ?? input.title,
   );
+  // Ein Titel mit anderer Folgennummer als die Zuordnung stammt von einer
+  // anderen Seite (Vorgänger-Titel, Race beim Seitenwechsel) -> verwerfen.
+  const cleanTitle =
+    cleanTitleRaw && titleConflictsWithEpisode(cleanTitleRaw, effectiveMeta) ? null : cleanTitleRaw;
+  if (cleanTitleRaw && !cleanTitle && effectiveMeta.title) delete effectiveMeta.title;
+  const initialTitle = cleanTitle ?? fallbackTitleFromUrl(pageUrl, mediaUrl);
   if (!effectiveMeta.isMovie && looksLikeMovieUrl(pageUrl) && effectiveMeta.episode === undefined) {
     effectiveMeta.isMovie = true;
   }
   const dupEpisode = findEpisodeDuplicate(db, effectiveMeta);
   if (dupEpisode) {
-    return { url: pageUrl, status: "duplicate", videoId: dupEpisode, title: initialTitle };
+    return {
+      url: pageUrl,
+      status: "duplicate",
+      reason: `S${effectiveMeta.season}E${effectiveMeta.episode} existiert schon (${dupEpisode})`,
+      videoId: dupEpisode,
+      title: initialTitle,
+    };
   }
 
   // Sofort sichtbar machen, bevor der Download beginnt. Ein Serienimport dauert

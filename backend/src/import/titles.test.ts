@@ -5,6 +5,7 @@ import {
   fallbackTitleFromUrl,
   looksLikeMovieUrl,
   stripSeriesPrefix,
+  titleConflictsWithEpisode,
 } from "./titles.js";
 
 describe("cleanImportTitle", () => {
@@ -159,5 +160,20 @@ describe("looksLikeMovieUrl", () => {
     expect(looksLikeMovieUrl("https://x.to/movie/interstellar/stream")).toBe(true);
     expect(looksLikeMovieUrl("https://x.to/serie/ted/staffel-1/episode-1")).toBe(false);
     expect(looksLikeMovieUrl("not a url")).toBe(false);
+  });
+});
+
+describe("titleConflictsWithEpisode", () => {
+  it("erkennt Titel einer anderen Folge", () => {
+    expect(titleConflictsWithEpisode("Folge 3 - Der Anfang", { episode: 5 })).toBe(true);
+    expect(titleConflictsWithEpisode("Ted S01E03", { season: 1, episode: 5 })).toBe(true);
+    expect(titleConflictsWithEpisode("Ted S02E05", { season: 1, episode: 5 })).toBe(true);
+    expect(titleConflictsWithEpisode("Staffel 2 Folge 5", { season: 1, episode: 5 })).toBe(true);
+  });
+  it("lässt passende und nummernlose Titel durch", () => {
+    expect(titleConflictsWithEpisode("Folge 5 - Finale", { episode: 5 })).toBe(false);
+    expect(titleConflictsWithEpisode("Der Anfang", { episode: 5 })).toBe(false);
+    expect(titleConflictsWithEpisode("Folge 3", {})).toBe(false);
+    expect(titleConflictsWithEpisode(null, { episode: 1 })).toBe(false);
   });
 });

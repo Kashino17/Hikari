@@ -207,4 +207,55 @@ describe("isRetryableImportError", () => {
     expect(isRetryableImportError("download finished but file not found")).toBe(false);
     expect(isRetryableImportError(undefined)).toBe(false);
   });
+
+  it("ein werfender Import kippt weder den Bucket noch den Job", async () => {
+    const importSniffed = vi.fn(async (_db: unknown, item: { pageUrl: string }) => {
+      if (item.pageUrl.endsWith("2")) throw new Error("kaputt");
+      return { url: item.pageUrl, status: "ok" as const, videoId: item.pageUrl };
+    });
+    const job = await runBulkImportAndWait(
+      {
+        db: {} as never,
+        videoDir: "/tmp",
+        log,
+        importSniffed: importSniffed as never,
+        sleep: noSleep,
+        retryDelaysMs: [],
+      },
+      [1, 2, 3].map((n) => ({
+        pageUrl: `https://s.to/serie/x/staffel-1/episode-${n}`,
+        mediaUrl: `https://cdn.voe/${n}/master.m3u8`,
+      })),
+    );
+    expect(job.ok).toBe(2);
+    expect(job.failed).toBe(1);
+    expect(job.results.find((r) => r.status === "failed")?.error).toContain("kaputt");
+    expect(job.finishedAt).not.toBeNull();
+  });
+
+  it("überlebt einen werfenden Logger und schließt den Job ab", async () => {
+    const badLog = {
+      info: vi.fn(() => {
+        throw new Error("log kaputt");
+      }),
+      error: vi.fn(),
+    };
+    const importDirect = vi.fn(async (_db: unknown, url: string) => ({
+      url,
+      status: "ok" as const,
+      videoId: "d",
+    }));
+    const job = await runBulkImportAndWait(
+      {
+        db: {} as never,
+        videoDir: "/tmp",
+        log: badLog,
+        importDirect: importDirect as never,
+        sleep: noSleep,
+      },
+      [{ url: "https://youtube.com/watch?v=1" }, { url: "https://youtube.com/watch?v=2" }],
+    );
+    expect(job.ok).toBe(2);
+    expect(job.finishedAt).not.toBeNull();
+  });
 });

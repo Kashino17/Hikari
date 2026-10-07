@@ -9,6 +9,7 @@ import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.data.api.dto.SniffedImportItem
 import com.hikari.app.domain.browser.EpisodeDiscovery
 import com.hikari.app.domain.browser.EpisodeLinkFilter
+import com.hikari.app.domain.browser.EpisodeTitleCleaner
 import com.hikari.app.domain.browser.EpisodeRef
 import com.hikari.app.domain.browser.HeadlessResult
 import com.hikari.app.domain.browser.HeadlessSniffer
@@ -89,6 +90,8 @@ data class ImportSheetUiState(
     val allSubLanguages: List<String> = emptyList(),
     val submitting: Boolean = false,
     val submitError: String? = null,
+    /** Hinweis nach einem Teil-Import ("12 eingereiht — Rest wird noch analysiert"). */
+    val submitInfo: String? = null,
 )
 
 /**
@@ -149,6 +152,13 @@ class ImportSheetViewModel @Inject constructor(
      * Tastendruck wieder wegräumen, weil sie nicht im Textfeld stehen.
      */
     private val derivedUrls = mutableSetOf<String>()
+
+    /**
+     * Folgen-Vorgaben aus der Staffel-Erkennung je Karten-URL. Ein Neuversuch
+     * braucht sie wieder — ohne sie verlor die Karte Folgennummer/Serie und
+     * wurde als gewöhnliche Einzelseite analysiert.
+     */
+    private val seeds = mutableMapOf<String, Pair<EpisodeRef, EpisodeDiscovery>>()
 
     init {
         viewModelScope.launch {
@@ -249,7 +259,12 @@ class ImportSheetViewModel @Inject constructor(
         replaceCard(url) {
             ImportCardState.Loading(url, hint = "Staffel wird gelesen — Folgen werden gesucht…")
         }
-        val disc = runCatching { sniffer.discoverEpisodes(url) }.getOrNull()
+        var disc = runCatching { sniffer.discoverEpisodes(url) }.getOrNull()
+        // Cloudflare-Wartezeit oder spät gerenderte Liste: einmal wiederholen,
+        // bevor die Staffel als Einzelseite durchgeht.
+        if (disc?.episodes.isNullOrEmpty()) {
+            disc = runCatching { sniffer.discoverEpisodes(url) }.getOrNull() ?: disc
+        }
         val episodes = disc?.episodes.orEmpty()
         if (episodes.isEmpty()) {
             // Doch keine Folgen erkannt — wie Einzelseite behandeln.
@@ -263,6 +278,8 @@ class ImportSheetViewModel @Inject constructor(
         // noch wartenden Folgenkarten wieder weg (sie stehen nicht im Text),
         // und die Staffel kam "erkannt, aber nichts importiert" an.
         episodes.forEach { derivedUrls.add(it.url) }
+        val discovery = disc!!
+        episodes.forEach { seeds[it.url] = it to discovery }
         // Staffel-Karte durch je eine Karte pro Folge ersetzen.
         _uiState.update { st ->
             val withoutSeason = st.cards.filterNot { it.url == url }
@@ -282,7 +299,7 @@ class ImportSheetViewModel @Inject constructor(
                     sem.withPermit {
                         // Karte inzwischen entfernt (Nutzer hat sie weggewischt)? Dann nicht mehr anfassen.
                         if (ep.url !in derivedUrls) return@withPermit
-                        val card = analyzeCard(ep.url, seed = ep, discovery = disc)
+                        val card = analyzeCard(ep.url, seed = ep, discovery = discovery)
                         replaceCard(ep.url) { card }
                     }
                 }
@@ -296,7 +313,7 @@ class ImportSheetViewModel @Inject constructor(
             val firstError = _uiState.value.cards
                 .filterIsInstance<ImportCardState.Failed>()
                 .firstOrNull { f -> episodes.any { it.url == f.url } }?.error
-            episodes.forEach { derivedUrls.remove(it.url) }
+            episodes.forEach { derivedUrls.remove(it.url); seeds.remove(it.url) }
             expandedSeasons.remove(url)
             _uiState.update { st ->
                 st.copy(
@@ -331,7 +348,17 @@ class ImportSheetViewModel @Inject constructor(
         discovery: EpisodeDiscovery? = null,
     ): ImportCardState = coroutineScope {
         val sniffJob = if (DirectHosts.isWellSupported(url)) null
-        else async { runCatching { sniffer.sniffDetailed(url) }.getOrNull() }
+        else async {
+            // Folgen einer erkannten Staffel bekommen einen zweiten, längeren
+            // Anlauf: Ein einzelner Fehlversuch (Werbe-Overlay, Cloudflare,
+            // langsamer Hoster) ist selten ein Urteil über die Folge.
+            var outcome = runCatching { sniffer.sniffDetailed(url) }.getOrNull()
+            if (seed != null && outcome?.result == null) {
+                val second = runCatching { sniffer.sniffDetailed(url, RETRY_TIMEOUT_MS) }.getOrNull()
+                if (second?.result != null || outcome == null) outcome = second
+            }
+            outcome
+        }
 
         val analyzed = runCatching { repo.analyzeVideo(url) }
         analyzed.fold(
@@ -368,14 +395,22 @@ class ImportSheetViewModel @Inject constructor(
         )
     }
 
-    /** Übernimmt Serie/Staffel/Folge aus der Staffel-Erkennung, wo die Karte selbst keine hat. */
+    /**
+     * Übernimmt Serie/Staffel/Folge aus der Staffel-Erkennung. Die Vorgaben
+     * aus der Linkliste sind verbindlich: Die Folgennummer steht im Link selbst,
+     * und eine KI-/Seitenvermutung darf sie nicht überschreiben — sonst landen
+     * zwei Karten auf derselben Nummer und eine fällt als "Duplikat" weg.
+     */
     private fun ImportCardState.mergeSeed(seed: EpisodeRef?, discovery: EpisodeDiscovery?): ImportCardState {
         if (this !is ImportCardState.Ready || seed == null) return this
+        val series = discovery?.seriesTitle ?: seriesTitle
         return copy(
-            seriesTitle = seriesTitle ?: discovery?.seriesTitle,
-            season = season ?: discovery?.season,
-            episode = episode ?: seed.episode,
-            title = title.ifBlank { seed.label },
+            seriesTitle = series,
+            season = EpisodeLinkFilter.seasonOf(url) ?: discovery?.season ?: season,
+            episode = seed.episode ?: episode,
+            // Eine Folge einer Staffel ist nie ein Film.
+            isMovie = false,
+            title = title.ifBlank { EpisodeTitleCleaner.clean(seed.label, series, url).orEmpty() },
         )
     }
 
@@ -401,7 +436,8 @@ class ImportSheetViewModel @Inject constructor(
         val meta = found.meta
         return ImportCardState.Ready(
             url = url,
-            title = meta.episodeTitle ?: found.title.orEmpty(),
+            title = meta.episodeTitle
+                ?: EpisodeTitleCleaner.clean(found.title, meta.seriesTitle, url).orEmpty(),
             seriesTitle = meta.seriesTitle,
             season = meta.season,
             episode = meta.episode ?: EpisodeLinkFilter.episodeNumber(url),
@@ -418,39 +454,10 @@ class ImportSheetViewModel @Inject constructor(
         )
     }
 
-    /**
-     * Füllt fehlende Folgennummern aus dem Vorgänger auf: Gehören zwei
-     * aufeinanderfolgende Ready-Karten zur selben Serie und nur die zweite
-     * hat keine Folge, bekommt sie die nächste Nummer (Ketten-Auffüllung,
-     * damit auch drei Lücken hintereinander greifen).
-     */
+    /** Siehe [fillMissingEpisodeNumbers]. */
     private fun fillMissingEpisodes() {
         _uiState.update { state ->
-            val cards = state.cards.toMutableList()
-            var prevSeries: String? = null
-            var prevEpisode: Int? = null
-            for (i in cards.indices) {
-                val card = cards[i] as? ImportCardState.Ready
-                if (card == null) {
-                    prevSeries = null
-                    prevEpisode = null
-                    continue
-                }
-                val series = card.seriesTitle ?: state.defaults.seriesTitle
-                if (card.episode == null &&
-                    prevEpisode != null &&
-                    series != null && prevSeries != null &&
-                    series.equals(prevSeries, ignoreCase = true)
-                ) {
-                    val filled = prevEpisode + 1
-                    cards[i] = card.copy(episode = filled)
-                    prevEpisode = filled
-                } else {
-                    prevEpisode = card.episode
-                }
-                prevSeries = series
-            }
-            state.copy(cards = cards)
+            state.copy(cards = fillMissingEpisodeNumbers(state.cards, state.defaults.seriesTitle))
         }
     }
 
@@ -471,6 +478,7 @@ class ImportSheetViewModel @Inject constructor(
 
     fun removeCard(url: String) {
         derivedUrls.remove(url)
+        seeds.remove(url)
         analysisJobs.remove(url)?.cancel()
         _uiState.update { state ->
             state.copy(
@@ -485,8 +493,17 @@ class ImportSheetViewModel @Inject constructor(
         analysisJobs[url]?.cancel()
         analysisJobs[url] = viewModelScope.launch {
             try {
-                // Über processFreshUrl, damit eine Staffel-Seite erneut aufgeteilt wird.
-                analysisSemaphore.withPermit { processFreshUrl(url) }
+                val seeded = seeds[url]
+                if (seeded != null) {
+                    // Folge einer Staffel: mit ihren Vorgaben neu analysieren.
+                    analysisSemaphore.withPermit {
+                        val card = analyzeCard(url, seed = seeded.first, discovery = seeded.second)
+                        replaceCard(url) { card }
+                    }
+                } else {
+                    // Über processFreshUrl, damit eine Staffel-Seite erneut aufgeteilt wird.
+                    analysisSemaphore.withPermit { processFreshUrl(url) }
+                }
                 fillMissingEpisodes()
             } finally {
                 analysisJobs.remove(url)
@@ -501,7 +518,7 @@ class ImportSheetViewModel @Inject constructor(
     suspend fun submit(): Int? {
         val state = _uiState.value
         val ready = state.cards.filterIsInstance<ImportCardState.Ready>()
-        if (ready.isEmpty()) return null
+        if (ready.isEmpty() || state.submitting) return null
 
         fun metadataOf(card: ImportCardState.Ready) = ImportItemMetadata(
             title = card.title.takeIf { it.isNotBlank() },
@@ -513,6 +530,11 @@ class ImportSheetViewModel @Inject constructor(
             subLanguage = card.subLanguage ?: state.defaults.subLanguage,
             isMovie = card.isMovie.takeIf { it },
         )
+
+        // Eine Beschreibung, die mehrere Folgen gleichzeitig tragen, ist der
+        // Seiten-Standardtext ("Alle Folgen von … online ansehen"), keine
+        // Folgenbeschreibung — die gehört dann keiner Folge.
+        val descriptionCounts = ready.mapNotNull { it.sniffed?.description }.groupingBy { it }.eachCount()
 
         // Direktlinks und mitgelesene Streams in EINEM Request: Der Server
         // führt sie als einen Job, und die Kanalansicht sieht Fortschritt und
@@ -530,14 +552,14 @@ class ImportSheetViewModel @Inject constructor(
                         cookie = s.cookie,
                         userAgent = s.userAgent,
                         title = card.title.takeIf { it.isNotBlank() },
-                        description = s.description,
+                        description = s.description?.takeIf { (descriptionCounts[it] ?: 0) <= 1 },
                         metadata = metadataOf(card),
                     ),
                 )
             }
         }
 
-        _uiState.update { it.copy(submitting = true, submitError = null) }
+        _uiState.update { it.copy(submitting = true, submitError = null, submitInfo = null) }
         val n = runCatching { repo.importVideosBulk(items) }
             .onFailure { e ->
                 _uiState.update {
@@ -546,14 +568,76 @@ class ImportSheetViewModel @Inject constructor(
             }
             .getOrNull()
         if (n != null) {
+            // Nur die abgeschickten Karten verschwinden. Laufende Analysen und
+            // gescheiterte Folgen (mit Neuversuch) bleiben stehen — früher
+            // wurde alles verworfen, und der Absenden-Knopf blieb bis zur
+            // letzten Folge gesperrt.
+            val sent = ready.map { it.url }.toSet()
+            sent.forEach { derivedUrls.remove(it); seeds.remove(it) }
             _uiState.update { s ->
-                ImportSheetUiState(
-                    allSeries = s.allSeries,
-                    allDubLanguages = s.allDubLanguages,
-                    allSubLanguages = s.allSubLanguages,
-                )
+                val remaining = s.cards.filterNot { it.url in sent }
+                if (remaining.isEmpty()) {
+                    ImportSheetUiState(
+                        allSeries = s.allSeries,
+                        allDubLanguages = s.allDubLanguages,
+                        allSubLanguages = s.allSubLanguages,
+                    )
+                } else {
+                    s.copy(
+                        cards = remaining,
+                        rawInput = s.rawInput.lines().filter { it.trim() !in sent }.joinToString("\n"),
+                        submitting = false,
+                        submitInfo = "$n eingereiht — ${remaining.size} weitere noch offen",
+                    )
+                }
             }
         }
         return n
     }
+
+    private companion object {
+        /** Zweiter Sniff-Anlauf für Staffel-Folgen. */
+        const val RETRY_TIMEOUT_MS = 75_000L
+    }
+}
+
+/**
+ * Füllt fehlende Folgennummern aus dem Vorgänger auf: Gehören zwei
+ * aufeinanderfolgende Ready-Karten zur selben Serie UND Staffel und nur die
+ * zweite hat keine Folge, bekommt sie die nächste Nummer (Ketten-Auffüllung).
+ *
+ * Eine Nummer, die in derselben Serie/Staffel schon vergeben ist, wird nie
+ * erneut vergeben — sonst entstehen echte Duplikate, und Lücken (gescheiterte
+ * Folgen mitten in der Staffel) werden falsch zugedeckt.
+ */
+internal fun fillMissingEpisodeNumbers(
+    cards: List<ImportCardState>,
+    defaultSeries: String?,
+): List<ImportCardState> {
+    val out = cards.toMutableList()
+    fun key(c: ImportCardState.Ready) = (c.seriesTitle ?: defaultSeries)?.lowercase() to c.season
+    val taken = out.filterIsInstance<ImportCardState.Ready>()
+        .mapNotNull { c -> c.episode?.let { key(c) to it } }
+        .toMutableSet()
+    var prev: ImportCardState.Ready? = null
+    for (i in out.indices) {
+        val card = out[i] as? ImportCardState.Ready
+        if (card == null) {
+            prev = null
+            continue
+        }
+        var current = card
+        val k = key(card)
+        val p = prev
+        if (card.episode == null && p?.episode != null && k.first != null && key(p) == k) {
+            val filled = p.episode + 1
+            if ((k to filled) !in taken) {
+                current = card.copy(episode = filled)
+                taken.add(k to filled)
+                out[i] = current
+            }
+        }
+        prev = current
+    }
+    return out
 }

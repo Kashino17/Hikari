@@ -168,25 +168,50 @@ export async function runBulkImportAndWait(
       const bucket = queue.shift();
       if (!bucket) return;
       for (const item of bucket) {
-        const result = await runOne(item);
-        recordBulkResult(job, result);
-        if (result.status === "failed") {
-          deps.log.error({ url: result.url, error: result.error }, "bulk import item failed");
-        } else {
-          deps.log.info(
-            { url: result.url, status: result.status, videoId: result.videoId },
-            "bulk import item done",
-          );
+        // Nichts darf einen Worker beenden: Ein unerwarteter Fehler (auch im
+        // Protokollieren) kippt nur diese Folge, nie den Rest des Buckets.
+        let result: ImportResult;
+        try {
+          result = await runOne(item);
+        } catch (err) {
+          result = { url: itemUrl(item), status: "failed", error: String(err).slice(0, 200) };
+        }
+        try {
+          recordBulkResult(job, result);
+          if (result.status === "failed") {
+            deps.log.error({ url: result.url, error: result.error }, "bulk import item failed");
+          } else {
+            deps.log.info(
+              {
+                url: result.url,
+                status: result.status,
+                videoId: result.videoId,
+                ...(result.reason ? { reason: result.reason } : {}),
+              },
+              "bulk import item done",
+            );
+          }
+        } catch {
+          // Logging darf den Job nicht abbrechen.
         }
       }
     }
   };
-  await Promise.all(Array.from({ length: Math.min(maxParallel, queue.length) }, () => worker()));
-
-  finishBulkJob(job);
-  deps.log.info(
-    { total: job.total, ok: job.ok, duplicate: job.duplicate, failed: job.failed },
-    "bulk import finished",
-  );
+  try {
+    await Promise.all(
+      Array.from({ length: Math.min(maxParallel, queue.length) }, () => worker()),
+    );
+  } finally {
+    // Immer abschließen — sonst hinge die App ewig an "läuft noch".
+    finishBulkJob(job);
+  }
+  try {
+    deps.log.info(
+      { total: job.total, ok: job.ok, duplicate: job.duplicate, failed: job.failed },
+      "bulk import finished",
+    );
+  } catch {
+    // Logging darf das Ergebnis nicht verwerfen.
+  }
   return job;
 }

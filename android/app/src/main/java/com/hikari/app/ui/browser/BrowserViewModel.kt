@@ -2,8 +2,11 @@ package com.hikari.app.ui.browser
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hikari.app.data.api.dto.ChannelVideoDto
 import com.hikari.app.data.api.dto.ImportItemMetadata
+import com.hikari.app.data.api.dto.PendingImportDto
 import com.hikari.app.data.api.dto.SniffedImportItem
+import com.hikari.app.domain.browser.AdBlocker
 import com.hikari.app.domain.browser.AdHosts
 import com.hikari.app.domain.browser.EpisodeLinkFilter
 import com.hikari.app.domain.browser.MediaFinding
@@ -64,6 +67,13 @@ data class BrowserUiState(
     /** Diagnose: wie viele Requests der Interceptor auf dieser Seite sah. */
     val inspected: Int = 0,
     val recentUrls: List<String> = emptyList(),
+    /** Werbeschutz an/aus und wie viele Requests/Pop-ups er gestoppt hat. */
+    val shieldEnabled: Boolean = true,
+    val blockedCount: Int = 0,
+    /** Laufende, wartende und gescheiterte Downloads (Server-Importliste). */
+    val transfers: List<PendingImportDto> = emptyList(),
+    /** Zuletzt fertig gewordene Downloads des Archivs "Manuell hinzugefügt". */
+    val history: List<ChannelVideoDto> = emptyList(),
 )
 
 @HiltViewModel
@@ -73,6 +83,9 @@ class BrowserViewModel @Inject constructor(
 
     /** Der Sniffer lebt im ViewModel, damit er einen Rotationswechsel überlebt. */
     val sniffer = MediaSniffer()
+
+    /** Werbe-/Pop-up-Blocker — ebenfalls hier, damit der Zähler eine Rotation überlebt. */
+    val adBlocker = AdBlocker()
 
     private val _ui = MutableStateFlow(BrowserUiState())
     val ui: StateFlow<BrowserUiState> = _ui.asStateFlow()
@@ -92,9 +105,11 @@ class BrowserViewModel @Inject constructor(
         // Deshalb ignoriert: Sniffer und Funde der echten Seite bleiben stehen.
         if (AdHosts.isAdUrl(url)) return
         sniffer.reset()
+        adBlocker.resetCount()
         _ui.update {
             it.copy(
                 currentUrl = url,
+                blockedCount = 0,
                 pageDescription = "",
                 loading = true,
                 findings = emptyList(),
@@ -162,6 +177,7 @@ class BrowserViewModel @Inject constructor(
                 findings = found,
                 inspected = sniffer.inspectedCount(),
                 recentUrls = sniffer.recentUrls(),
+                blockedCount = adBlocker.blockedCount,
             )
         }
         // Im Auto-Durchlauf reicht der erste brauchbare Fund, dann weiter.
@@ -220,6 +236,60 @@ class BrowserViewModel @Inject constructor(
     fun setSeason(v: Int?) = _ui.update { it.copy(season = v, seasonEdited = true) }
 
     fun dismissMessage() = _ui.update { it.copy(message = null) }
+
+    fun setShield(enabled: Boolean) {
+        adBlocker.enabled = enabled
+        _ui.update { it.copy(shieldEnabled = enabled) }
+    }
+
+    // ---- Downloads im Browser ---------------------------------------------
+
+    private var downloadPoller: Job? = null
+
+    /**
+     * Hält die Downloadliste aktuell, solange der Browser offen ist. Der
+     * Aufrufer startet das (statt init), damit Tests ohne Main-Dispatcher laufen.
+     */
+    fun startDownloadPolling() {
+        if (downloadPoller?.isActive == true) return
+        downloadPoller = viewModelScope.launch {
+            var lastActive = -1
+            while (true) {
+                val items = runCatching { repo.listImports() }.getOrNull()
+                if (items != null) {
+                    val active = items.count { it.status != "failed" }
+                    _ui.update { it.copy(transfers = items) }
+                    // Ein fertig gewordener Download wandert in den Verlauf.
+                    if (lastActive < 0 || active < lastActive) loadHistory()
+                    lastActive = active
+                }
+                delay(DOWNLOAD_POLL_MS)
+            }
+        }
+    }
+
+    fun loadHistory() {
+        viewModelScope.launch {
+            runCatching { repo.listVideos(MANUAL_CHANNEL_ID) }.onSuccess { vids ->
+                val recent = vids.sortedByDescending { it.discoveredAt ?: it.addedToFeedAt ?: 0L }.take(HISTORY_LIMIT)
+                _ui.update { it.copy(history = recent) }
+            }
+        }
+    }
+
+    fun retryTransfer(id: String) {
+        viewModelScope.launch {
+            runCatching { repo.retryImport(id) }
+                .onFailure { e -> _ui.update { it.copy(message = "Neuversuch fehlgeschlagen: ${e.message}") } }
+        }
+    }
+
+    fun dismissTransfer(id: String) {
+        viewModelScope.launch {
+            runCatching { repo.deleteImport(id) }
+                .onSuccess { _ui.update { st -> st.copy(transfers = st.transfers.filterNot { it.id == id }) } }
+        }
+    }
 
     // ---- Absichtlich angesteuerte Navigation (Adressleiste/Durchlauf) ----
 
@@ -339,7 +409,7 @@ class BrowserViewModel @Inject constructor(
                     submitting = false,
                     basket = if (result.isSuccess) emptyList() else it.basket,
                     message = result.fold(
-                        onSuccess = { n -> "$n zum Download eingereiht" },
+                        onSuccess = { n -> "$n zum Download eingereiht — Fortschritt unter Downloads" },
                         onFailure = { e -> "Fehlgeschlagen: ${e.message}" },
                     ),
                 )
@@ -350,6 +420,10 @@ class BrowserViewModel @Inject constructor(
     companion object {
         /** Wartezeit je Seite im Auto-Durchlauf, bevor übersprungen wird. */
         private const val PAGE_TIMEOUT_MS = 20_000L
+
+        private const val DOWNLOAD_POLL_MS = 2_000L
+        private const val HISTORY_LIMIT = 30
+        private const val MANUAL_CHANNEL_ID = "manual"
 
         /** Maximale Länge der mitgeschickten Seitenbeschreibung. */
         private const val MAX_DESCRIPTION_LENGTH = 5000

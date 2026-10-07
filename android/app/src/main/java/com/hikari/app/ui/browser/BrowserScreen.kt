@@ -1,7 +1,9 @@
 package com.hikari.app.ui.browser
 
 import android.annotation.SuppressLint
+import android.os.Message
 import android.webkit.CookieManager
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -20,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -33,7 +36,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -53,6 +61,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -64,6 +75,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.hikari.app.data.api.dto.ChannelVideoDto
+import com.hikari.app.data.api.dto.PendingImportDto
+import com.hikari.app.domain.browser.AdBlocker
 import com.hikari.app.domain.browser.AdHosts
 import com.hikari.app.domain.browser.PageScripts
 import com.hikari.app.domain.browser.PageTitleFilter
@@ -94,10 +108,15 @@ fun BrowserScreen(
 ) {
     val ui by vm.ui.collectAsStateWithLifecycle()
     var webView by remember { mutableStateOf<WebView?>(null) }
-    var addressField by remember { mutableStateOf(START_URL) }
+    var addressField by remember { mutableStateOf(TextFieldValue(START_URL)) }
+    var addressFocused by remember { mutableStateOf(false) }
     var showBasket by remember { mutableStateOf(false) }
+    var showDownloads by remember { mutableStateOf(false) }
+    var showShield by remember { mutableStateOf(false) }
     var showDiagnostics by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val downloadsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val shieldSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     // Der Interceptor meldet Funde nicht selbst — er läuft auf einem
     // Hintergrund-Thread. Kurzes Nachfassen hält die Anzeige aktuell und
@@ -109,10 +128,20 @@ fun BrowserScreen(
         }
     }
 
+    LaunchedEffect(Unit) { vm.startDownloadPolling() }
+
     LaunchedEffect(Unit) {
         vm.navigate.collect { url ->
-            addressField = url
+            addressField = TextFieldValue(url)
             webView?.loadUrl(url)
+        }
+    }
+
+    // Die Adresszeile folgt der echten Seite (Links, Weiterleitungen, Zurück) —
+    // nur nicht, solange der Nutzer gerade selbst tippt.
+    LaunchedEffect(ui.currentUrl) {
+        if (!addressFocused && ui.currentUrl.isNotBlank() && ui.currentUrl != addressField.text) {
+            addressField = TextFieldValue(ui.currentUrl)
         }
     }
 
@@ -129,10 +158,23 @@ fun BrowserScreen(
         AddressBar(
             value = addressField,
             loading = ui.loading,
+            shieldOn = ui.shieldEnabled,
+            blocked = ui.blockedCount,
+            activeDownloads = ui.transfers.count { it.status != "failed" },
             onValueChange = { addressField = it },
+            onFocusChange = { focused ->
+                addressFocused = focused
+                // Wie im Browser: Antippen markiert die ganze Adresse.
+                if (focused) addressField = addressField.copy(selection = TextRange(0, addressField.text.length))
+            },
+            onOpenShield = { showShield = true },
+            onOpenDownloads = {
+                vm.loadHistory()
+                showDownloads = true
+            },
             onGo = {
-                val url = normalizeUrl(addressField)
-                addressField = url
+                val url = normalizeUrl(addressField.text)
+                addressField = TextFieldValue(url)
                 // Als bewusst angesteuert merken, sonst blockiert der
                 // Ad-Schutz auch einen absichtlichen Besuch dieser Domain.
                 vm.onAddressBarGo(url)
@@ -166,8 +208,63 @@ fun BrowserScreen(
                             ?.replace(" wv", "")
                             ?.replace("Version/4.0 ", "")
                         CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                        // Neue Fenster (window.open, target=_blank) laufen über
+                        // onCreateWindow, wo der Blocker sie prüft; ohne diese
+                        // Einstellung würden sie stumm verschluckt oder
+                        // ungeprüft geöffnet.
+                        settings.setSupportMultipleWindows(true)
+                        settings.javaScriptCanOpenWindowsAutomatically = false
+
+                        webChromeClient = object : WebChromeClient() {
+                            override fun onCreateWindow(
+                                view: WebView,
+                                isDialog: Boolean,
+                                isUserGesture: Boolean,
+                                resultMsg: Message,
+                            ): Boolean {
+                                if (vm.adBlocker.shouldBlockPopup(null, isUserGesture)) return false
+                                // Erlaubtes Pop-up (echter Klick): im selben Tab laden
+                                // statt ein Fenster zu stapeln — Ad-Ziele fängt der
+                                // Blocker erst hier ab, weil die URL vorher fehlt.
+                                val carrier = WebView(view.context)
+                                carrier.webViewClient = object : WebViewClient() {
+                                    override fun shouldOverrideUrlLoading(
+                                        v: WebView,
+                                        request: WebResourceRequest,
+                                    ): Boolean {
+                                        val target = request.url.toString()
+                                        if (!vm.adBlocker.shouldBlockPopup(target, true) &&
+                                            !vm.adBlocker.shouldBlockNavigation(target, true, false)
+                                        ) {
+                                            view.post { view.loadUrl(target) }
+                                        }
+                                        v.post { v.destroy() }
+                                        return true
+                                    }
+                                }
+                                (resultMsg.obj as WebView.WebViewTransport).webView = carrier
+                                resultMsg.sendToTarget()
+                                return true
+                            }
+                        }
 
                         webViewClient = object : WebViewClient() {
+                            override fun shouldOverrideUrlLoading(
+                                view: WebView?,
+                                request: WebResourceRequest?,
+                            ): Boolean {
+                                val req = request ?: return false
+                                if (!req.isForMainFrame) return false
+                                val target = req.url.toString()
+                                // true = blockiert: Ad-Weiterleitungen ohne Klick
+                                // und App-Sprünge (intent://, market://).
+                                return vm.adBlocker.shouldBlockNavigation(
+                                    target,
+                                    req.hasGesture(),
+                                    target == vm.intendedNavigation,
+                                )
+                            }
+
                             override fun shouldInterceptRequest(
                                 view: WebView?,
                                 request: WebResourceRequest?,
@@ -192,9 +289,11 @@ fun BrowserScreen(
                                     // möglich; die einfachere Variante wurde
                                     // gewählt, weil shouldOverrideUrlLoading
                                     // bewusst nicht gesetzt ist.
-                                    if (AdHosts.isAdUrl(url) &&
-                                        !(request.isForMainFrame &&
-                                            (request.hasGesture() || url == vm.intendedNavigation))
+                                    if (vm.adBlocker.shouldBlockRequest(
+                                            url,
+                                            request.isForMainFrame,
+                                            request.hasGesture() || url == vm.intendedNavigation,
+                                        )
                                     ) {
                                         return emptyResponse()
                                     }
@@ -220,6 +319,7 @@ fun BrowserScreen(
                                 favicon: android.graphics.Bitmap?,
                             ) {
                                 url?.let { vm.onPageStarted(it) }
+                                if (vm.adBlocker.enabled) view?.evaluateJavascript(AdBlocker.COSMETIC_SCRIPT, null)
                             }
 
                             override fun onPageFinished(view: WebView?, url: String?) {
@@ -229,6 +329,7 @@ fun BrowserScreen(
                                     PageTitleFilter.clean(view?.title).orEmpty(),
                                     view?.canGoBack() == true,
                                 )
+                                if (vm.adBlocker.enabled) view?.evaluateJavascript(AdBlocker.COSMETIC_SCRIPT, null)
                                 view?.evaluateJavascript(PageScripts.AUTOPLAY, null)
                                 view?.evaluateJavascript(PageScripts.SCAN) { raw ->
                                     parseScan(raw)?.let { scan ->
@@ -278,8 +379,33 @@ fun BrowserScreen(
                 onSubmit = {
                     vm.submit()
                     showBasket = false
+                    // Der Fortschritt erscheint direkt hier im Browser — kein
+                    // Wechsel in die Kanalansicht.
+                    showDownloads = true
                     onSubmitted()
                 },
+            )
+        }
+    }
+
+    if (showDownloads) {
+        ModalBottomSheet(onDismissRequest = { showDownloads = false }, sheetState = downloadsSheetState) {
+            DownloadsSheet(
+                transfers = ui.transfers,
+                history = ui.history,
+                onRetry = vm::retryTransfer,
+                onDismiss = vm::dismissTransfer,
+            )
+        }
+    }
+
+    if (showShield) {
+        ModalBottomSheet(onDismissRequest = { showShield = false }, sheetState = shieldSheetState) {
+            ShieldSheet(
+                enabled = ui.shieldEnabled,
+                blocked = ui.blockedCount,
+                onToggle = vm::setShield,
+                onReload = { webView?.reload() },
             )
         }
     }
@@ -305,13 +431,20 @@ fun BrowserScreen(
 
 @Composable
 private fun AddressBar(
-    value: String,
+    value: TextFieldValue,
     loading: Boolean,
-    onValueChange: (String) -> Unit,
+    shieldOn: Boolean,
+    blocked: Int,
+    activeDownloads: Int,
+    onValueChange: (TextFieldValue) -> Unit,
+    onFocusChange: (Boolean) -> Unit,
+    onOpenShield: () -> Unit,
+    onOpenDownloads: () -> Unit,
     onGo: () -> Unit,
     onClose: () -> Unit,
     onReload: () -> Unit,
 ) {
+    var focused by remember { mutableStateOf(false) }
     Row(
         Modifier
             .fillMaxWidth()
@@ -324,17 +457,240 @@ private fun AddressBar(
         }
         OutlinedTextField(
             value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.weight(1f),
+            onValueChange = { new ->
+                // Doppeltipp/Langdruck markiert im Textfeld nur ein Wort. In der
+                // Adresszeile will man die ganze URL: Entsteht aus einem Cursor
+                // eine Teilmarkierung, wird sie auf alles erweitert. Ziehen an den
+                // Markierungsgriffen (alte Markierung nicht leer) bleibt frei.
+                val newlyPartial = value.selection.collapsed && !new.selection.collapsed &&
+                    new.text == value.text &&
+                    new.selection.length < new.text.length
+                onValueChange(
+                    if (newlyPartial) new.copy(selection = TextRange(0, new.text.length)) else new,
+                )
+            },
+            modifier = Modifier
+                .weight(1f)
+                .onFocusChanged {
+                    focused = it.isFocused
+                    onFocusChange(it.isFocused)
+                },
             singleLine = true,
             textStyle = MaterialTheme.typography.bodySmall,
             placeholder = { Text("Adresse oder Suche", fontSize = 13.sp) },
+            trailingIcon = if (focused && value.text.isNotEmpty()) {
+                {
+                    IconButton(onClick = { onValueChange(TextFieldValue("")) }) {
+                        Icon(
+                            Icons.Default.Close,
+                            "Löschen",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                }
+            } else null,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
             keyboardActions = KeyboardActions(onGo = { onGo() }),
             shape = RoundedCornerShape(10.dp),
         )
+        IconButton(onClick = onOpenShield) {
+            BadgedBox(badge = {
+                if (shieldOn && blocked > 0) {
+                    Badge { Text(if (blocked > 99) "99+" else blocked.toString(), fontSize = 9.sp) }
+                }
+            }) {
+                Icon(
+                    Icons.Outlined.Shield,
+                    "Werbeschutz",
+                    tint = if (shieldOn) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                )
+            }
+        }
+        IconButton(onClick = onOpenDownloads) {
+            BadgedBox(badge = {
+                if (activeDownloads > 0) Badge { Text(activeDownloads.toString(), fontSize = 9.sp) }
+            }) {
+                Icon(Icons.Default.Download, "Downloads", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
         IconButton(onClick = onReload, enabled = !loading) {
             Icon(Icons.Default.Refresh, "Neu laden", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun ShieldSheet(
+    enabled: Boolean,
+    blocked: Int,
+    onToggle: (Boolean) -> Unit,
+    onReload: () -> Unit,
+) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 28.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    "Werbeschutz",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    if (enabled) "$blocked auf dieser Seite blockiert" else "Aus — Werbung und Pop-ups laufen durch",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(checked = enabled, onCheckedChange = {
+                onToggle(it)
+                onReload()
+            })
+        }
+        Spacer(Modifier.height(14.dp))
+        Text(
+            "Blockiert Werbe- und Tracker-Hosts, Pop-ups und Pop-unders ohne Klick, " +
+                "Weiterleitungen in andere Apps und unsichtbare Klick-Overlays. " +
+                "Videostreams bleiben davon unberührt.",
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** Downloadliste im Browser: laufende oben mit Fortschritt, darunter der Verlauf. */
+@Composable
+private fun DownloadsSheet(
+    transfers: List<PendingImportDto>,
+    history: List<ChannelVideoDto>,
+    onRetry: (String) -> Unit,
+    onDismiss: (String) -> Unit,
+) {
+    LazyColumn(
+        Modifier.fillMaxWidth().heightIn(max = 520.dp).padding(horizontal = 20.dp),
+    ) {
+        item {
+            Text(
+                "Downloads",
+                fontSize = 17.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+        }
+        if (transfers.isEmpty() && history.isEmpty()) {
+            item {
+                Text(
+                    "Noch keine Downloads.",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 16.dp),
+                )
+            }
+        }
+        items(transfers, key = { "t_" + it.id }) { t -> TransferItem(t, onRetry, onDismiss) }
+        if (history.isNotEmpty()) {
+            item {
+                Text(
+                    "Verlauf",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp),
+                )
+            }
+            items(history, key = { "h_" + it.videoId }) { v ->
+                Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Check,
+                        null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        v.title,
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        }
+        item { Spacer(Modifier.height(28.dp)) }
+    }
+}
+
+@Composable
+private fun TransferItem(
+    t: PendingImportDto,
+    onRetry: (String) -> Unit,
+    onDismiss: (String) -> Unit,
+) {
+    val failed = t.status == "failed"
+    val title = t.title?.takeIf { it.isNotBlank() }
+        ?: listOfNotNull(
+            t.seriesTitle?.takeIf { it.isNotBlank() },
+            t.season?.let { "S$it" },
+            t.episode?.let { "E$it" },
+        ).joinToString(" ").ifBlank { t.pageUrl }
+    Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                title,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            val pct = t.progress?.let { "${(it * 100).toInt()} %" }
+            Text(
+                when {
+                    failed -> "Fehler"
+                    t.status == "queued" -> "Wartet"
+                    else -> pct ?: "…"
+                },
+                fontSize = 12.sp,
+                color = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+            )
+            if (failed) {
+                IconButton(onClick = { onRetry(t.id) }, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.Refresh, "Neu versuchen", modifier = Modifier.size(16.dp))
+                }
+                IconButton(onClick = { onDismiss(t.id) }, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Default.Close, "Entfernen", modifier = Modifier.size(16.dp))
+                }
+            }
+        }
+        if (failed) {
+            Text(
+                t.error ?: "Unbekannter Fehler",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        } else {
+            Spacer(Modifier.height(6.dp))
+            val progress = t.progress
+            if (progress != null) {
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.fillMaxWidth().height(3.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            } else {
+                LinearProgressIndicator(
+                    Modifier.fillMaxWidth().height(3.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
     }
 }

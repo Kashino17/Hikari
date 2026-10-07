@@ -784,9 +784,27 @@ describe("findEpisodeDuplicate", () => {
     expect(
       findEpisodeDuplicate(db, { seriesTitle: "Ted", season: 1, episode: 7, dubLanguage: "de" }),
     ).toBe("v1");
-    expect(findEpisodeDuplicate(db, { seriesTitle: "ted", episode: 7, dubLanguage: "DE" })).toBe(
-      "v1",
-    );
+    expect(
+      findEpisodeDuplicate(db, { seriesTitle: "ted", season: 1, episode: 7, dubLanguage: "DE" }),
+    ).toBe("v1");
+    // Staffel unbekannt: "Folge 7" ist mehrdeutig — kein Duplikat nach Nummer.
+    expect(
+      findEpisodeDuplicate(db, { seriesTitle: "ted", episode: 7, dubLanguage: "DE" }),
+    ).toBeUndefined();
+    // Andere Staffel, gleiche Folgennummer: eigene Folge.
+    expect(
+      findEpisodeDuplicate(db, { seriesTitle: "Ted", season: 2, episode: 7, dubLanguage: "de" }),
+    ).toBeUndefined();
+    // Andere Untertitel-Sprache = eigenes Video.
+    expect(
+      findEpisodeDuplicate(db, {
+        seriesTitle: "Ted",
+        season: 1,
+        episode: 7,
+        dubLanguage: "de",
+        subLanguage: "en",
+      }),
+    ).toBeUndefined();
     // Andere Synchro = eigenes Video.
     expect(
       findEpisodeDuplicate(db, { seriesTitle: "Ted", season: 1, episode: 7, dubLanguage: "ja" }),
@@ -866,5 +884,36 @@ describe("importSniffedMedia – Film-Erkennung und einheitliche Titel", () => {
       dir,
     );
     expect(result.title).toBe("Der Gänsebraten");
+  });
+});
+
+describe("Fake-Duplikate", () => {
+  it("Dragon Ball und Dragon Ball Super sind getrennte Serien", async () => {
+    const Database = (await import("better-sqlite3")).default;
+    const { applyMigrations } = await import("../db/migrations.js");
+    const { ensureSeries, resolveSeriesId } = await import("./manual-import.js");
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    const a = ensureSeries(db, "Dragon Ball");
+    const b = ensureSeries(db, "Dragon Ball Super");
+    expect(b).not.toBe(a);
+    expect(resolveSeriesId(db, "Dragon Ball Super")).toBe(b);
+    // Untertitel-Verwandtschaft bleibt erhalten.
+    ensureSeries(db, "American Horror Story");
+    expect(ensureSeries(db, "American Horror Story Die Dunkle Seite In Dir")).toBe(
+      resolveSeriesId(db, "American Horror Story"),
+    );
+  });
+
+  it("makeVideoId: generische ids ('master') kollidieren nicht mehr", async () => {
+    const { makeVideoId } = await import("./manual-import.js");
+    const a = makeVideoId("generic", "master", "https://x.to/serie/a/staffel-1/episode-1");
+    const b = makeVideoId("generic", "master", "https://x.to/serie/a/staffel-1/episode-2");
+    expect(a).not.toBe(b);
+    expect(makeVideoId("generic", "master", "https://x.to/a")).toBe(
+      makeVideoId("generic", "master", "https://x.to/a"),
+    );
+    expect(makeVideoId("youtube", "abc123", "https://youtube.com/watch?v=abc123")).toBe("abc123");
+    expect(makeVideoId("voe", "xyz", "https://voe.sx/xyz")).toBe("voe_xyz");
   });
 });

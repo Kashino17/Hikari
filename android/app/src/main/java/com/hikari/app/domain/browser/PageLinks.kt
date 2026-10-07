@@ -88,7 +88,7 @@ object PageScripts {
             episodeName: episodeName,
             season: ld.season,
             episode: ld.number,
-            isMovie: ld.movie,
+            isMovie: ld.movie && !ld.series && !ld.episode && ld.number == null,
             movieName: ld.name
           });
         })();
@@ -133,6 +133,10 @@ object EpisodeLinkFilter {
 
     fun extract(pageUrl: String, links: List<PageLink>): List<PageLink> {
         val host = hostOf(pageUrl) ?: return emptyList()
+        // Steht die Staffel in der Seiten-URL, gehören Links in eine ANDERE
+        // Staffel nicht dazu — sonst fallen Folge 3 aus Staffel 1 und Folge 3
+        // aus Staffel 2 unter dieselbe Nummer zusammen.
+        val pageSeason = seasonOf(pageUrl)
         val seen = HashSet<String>()
         val out = ArrayList<PageLink>()
 
@@ -140,12 +144,25 @@ object EpisodeLinkFilter {
             if (hostOf(link.url) != host) continue
             // Die aktuelle Seite selbst ist keine weitere Folge.
             if (link.url.substringBefore('#') == pageUrl.substringBefore('#')) continue
+            val linkSeason = seasonOf(link.url)
+            if (pageSeason != null && linkSeason != null && linkSeason != pageSeason) continue
             val episode = episodeNumber(link.url) ?: episodeNumber(link.label) ?: continue
             val key = link.url.substringBefore('#')
             if (!seen.add(key)) continue
             out.add(link.copy(url = key, episode = episode))
         }
         return out.sortedBy { it.episode ?: Int.MAX_VALUE }
+    }
+
+    private val SEASON_IN_URL = Regex(
+        """(?:^|[/\-_])(?:staffel|season|s)[\-_]?(\d{1,3})(?:$|[/\-_.?])""",
+        RegexOption.IGNORE_CASE,
+    )
+
+    /** Staffelnummer aus dem URL-PFAD, null wenn keine genannt ist. */
+    internal fun seasonOf(url: String): Int? {
+        val path = runCatching { java.net.URI(url).path }.getOrNull() ?: return null
+        return SEASON_IN_URL.find(path)?.groupValues?.getOrNull(1)?.toIntOrNull()
     }
 
     fun episodeNumber(text: String): Int? {
@@ -202,5 +219,52 @@ object PageTitleFilter {
         val lower = t.lowercase()
         if (BLOCKED.any { it in lower }) return null
         return if (t.length > MAX_LENGTH) t.take(MAX_LENGTH) else t
+    }
+}
+
+/**
+ * Macht aus einem Seitentitel einen reinen Folgen-/Filmtitel.
+ *
+ * Seitentitel von Streaming-Seiten sind Mischtitel ("Ted Staffel 1 Episode 2 -
+ * Serienstream"). Daraus wurde vorher der Folgentitel — mit Serienname und
+ * Seitenname drin, und je nach Seite quer durcheinander. Hier fliegen Serienname,
+ * Staffel-/Folgen-Angaben und der Seitenname raus; bleibt nichts übrig, gibt es
+ * keinen Titel (die Übersicht beschriftet dann mit Serie + Folge).
+ */
+object EpisodeTitleCleaner {
+
+    private val SEPARATORS = Regex("""\s+[-–—|·»:]\s+|\s*\|\s*""")
+    private val NUMBERING = Regex(
+        """(?i)\b(?:staffel|season|folge|episode|ep\.?)\s*\d{1,4}\b|\bs\d{1,2}\s*e\d{1,4}\b""",
+    )
+    private val SITE_NOISE = Regex(
+        """(?i)\b(?:stream(?:en)?|online|kostenlos|anschauen|ansehen|gucken|deutsch|german|ger-?sub|ger-?dub|hd|free|watch)\b""",
+    )
+
+    fun clean(raw: String?, seriesTitle: String?, pageUrl: String? = null): String? {
+        val siteLabel = pageUrl?.let { siteLabelOf(it) }
+        val text = raw?.trim().orEmpty()
+        if (text.isEmpty()) return null
+        val parts = text.split(SEPARATORS).map { it.trim() }.filter { it.isNotEmpty() }
+        val series = seriesTitle?.trim()?.lowercase()
+        val kept = parts.mapNotNull { part ->
+            // Der Seitenname ("Serienstream") ist nie der Folgentitel.
+            if (siteLabel != null && part.lowercase().replace(" ", "").contains(siteLabel)) return@mapNotNull null
+            var p = part
+            if (series != null) p = p.replace(Regex(Regex.escape(series), RegexOption.IGNORE_CASE), " ")
+            p = p.replace(NUMBERING, " ").replace(SITE_NOISE, " ")
+                .replace(Regex("""[\s\-–—|·:]+"""), " ").trim()
+            p.takeIf { it.length >= 2 && it.any(Char::isLetter) }
+        }
+        // Mehrere übrige Teile = der Seitenname hängt dran; der Folgentitel steht vorn.
+        return kept.firstOrNull()?.take(200)
+    }
+
+    /** "serienstream" aus "www.serienstream.to". */
+    private fun siteLabelOf(url: String): String? {
+        val host = runCatching { java.net.URI(url).host?.lowercase() }.getOrNull() ?: return null
+        val labels = host.removePrefix("www.").split('.')
+        return (if (labels.size >= 2) labels[labels.size - 2] else labels.firstOrNull())
+            ?.takeIf { it.length >= 3 }
     }
 }

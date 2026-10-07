@@ -238,9 +238,6 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
             composable("browser") {
                 BrowserScreen(
                     onClose = { nav.popBackStack() },
-                    // Nach dem Absenden direkt dorthin, wo der Fortschritt
-                    // sichtbar ist — sonst bleibt offen, ob etwas passiert.
-                    onSubmitted = { nav.navigate("channel/manual") },
                 )
             }
             composable("library") {

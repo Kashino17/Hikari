@@ -128,6 +128,36 @@ class HeadlessSniffer @Inject constructor(
         @Volatile private var pageFinished = false
         @Volatile private var scan: Scan? = null
 
+        /**
+         * Zählt Seitenwechsel. Ein Scan-Callback, der erst nach dem nächsten
+         * navigate() eintrifft, gehört zur VORHERIGEN Seite — ohne diese Sperre
+         * landete deren Titel/Beschreibung bei der falschen Folge.
+         */
+        @Volatile private var generation = 0
+
+        private fun requestScan() {
+            val gen = generation
+            webView.evaluateJavascript(PageScripts.SCAN) { raw ->
+                if (gen != generation) return@evaluateJavascript
+                parseScan(raw)?.let { s ->
+                    for (v in s.videos) sniffer.onRequest(v, emptyMap())
+                    scan = s
+                }
+            }
+        }
+
+        /** Echter Fingertipp in die Mitte: manche Player reagieren nur auf Eingabeereignisse, nicht auf JS-click(). */
+        private fun tapCenter() {
+            runCatching {
+                val now = android.os.SystemClock.uptimeMillis()
+                for (action in intArrayOf(android.view.MotionEvent.ACTION_DOWN, android.view.MotionEvent.ACTION_UP)) {
+                    val ev = android.view.MotionEvent.obtain(now, now + 60, action, WIDTH / 2f, HEIGHT / 2f, 0)
+                    webView.dispatchTouchEvent(ev)
+                    ev.recycle()
+                }
+            }
+        }
+
         /** Kurze, für den Nutzer lesbare Spur, was der Besuch tat. */
         private val trail = ArrayList<String>()
         private fun note(msg: String) { if (trail.size < 12) trail.add(msg) }
@@ -202,12 +232,7 @@ class HeadlessSniffer @Inject constructor(
                 override fun onPageFinished(view: WebView?, url: String?) {
                     pageFinished = true
                     view?.evaluateJavascript(PageScripts.AUTOPLAY, null)
-                    view?.evaluateJavascript(PageScripts.SCAN) { raw ->
-                        parseScan(raw)?.let { s ->
-                            for (v in s.videos) sniffer.onRequest(v, emptyMap())
-                            scan = s
-                        }
-                    }
+                    requestScan()
                 }
             }
         }
@@ -264,7 +289,8 @@ class HeadlessSniffer @Inject constructor(
                     note("Stream gefunden: ${best.kind}")
                     return HeadlessResult(
                         pageUrl = pageUrl,
-                        title = pageTitle ?: PageTitleFilter.clean(scan?.title ?: webView.title),
+                        // Nur der Titel der Episoden-Seite — der des Hoster-Embeds ("VOE") wäre falsch.
+                        title = pageTitle,
                         description = pageDescription,
                         finding = best,
                         meta = pageMeta ?: PageMetaParser.parse(pageUrl),
@@ -291,15 +317,21 @@ class HeadlessSniffer @Inject constructor(
          */
         suspend fun discover(): EpisodeDiscovery {
             navigate(pageUrl)
-            // Auf pageFinished warten, dann das DOM auslesen.
+            // Auf pageFinished warten, dann das DOM auslesen. Folgenlisten werden
+            // oft erst nach dem Laden per JS gerendert — bei leerem Ergebnis
+            // mehrfach neu lesen, statt sofort "keine Folgen" zu melden.
             val start = System.currentTimeMillis()
-            while (!pageFinished && System.currentTimeMillis() - start < FIRST_PAGE_MS) delay(POLL_MS)
-            delay(POLL_MS)
-            val scanRaw = evalString(PageScripts.SCAN)
-            val parsed = parseFullScan(scanRaw)
-            val links = parsed?.links.orEmpty()
-            val episodes = EpisodeLinkFilter.extract(pageUrl, links).map {
-                EpisodeRef(url = it.url, episode = it.episode, label = it.label)
+            while (!pageFinished && System.currentTimeMillis() - start < DISCOVER_LOAD_MS) delay(POLL_MS)
+            var scanRaw: String? = null
+            var episodes: List<EpisodeRef> = emptyList()
+            for (attempt in 0 until DISCOVER_SCANS) {
+                delay(if (attempt == 0) POLL_MS else DISCOVER_RESCAN_MS)
+                scanRaw = evalString(PageScripts.SCAN)
+                val links = parseFullScan(scanRaw)?.links.orEmpty()
+                episodes = EpisodeLinkFilter.extract(pageUrl, links).map {
+                    EpisodeRef(url = it.url, episode = it.episode, label = it.label)
+                }
+                if (episodes.isNotEmpty()) break
             }
             // Serienname aus dem DOM (h1/JSON-LD) schlägt den URL-Slug.
             val meta = PageMetaParser.parse(pageUrl).mergedWith(parseScan(scanRaw)?.dom)
@@ -314,6 +346,7 @@ class HeadlessSniffer @Inject constructor(
 
         /** Lädt [url] (optional mit Referer) und setzt den Seiten-Status zurück. */
         private fun navigate(url: String, referer: String? = null) {
+            generation++
             pageFinished = false
             scan = null
             if (referer != null) webView.loadUrl(url, mapOf("Referer" to referer))
@@ -328,6 +361,7 @@ class HeadlessSniffer @Inject constructor(
             val start = System.currentTimeMillis()
             var firstHit = -1L
             var lastPoke = 0L
+            var pokes = 0
             while (System.currentTimeMillis() - start < budgetMs) {
                 delay(POLL_MS)
                 val now = System.currentTimeMillis()
@@ -344,12 +378,11 @@ class HeadlessSniffer @Inject constructor(
                 if (pageFinished && now - lastPoke >= POKE_MS) {
                     lastPoke = now
                     webView.evaluateJavascript(PageScripts.AUTOPLAY, null)
-                    webView.evaluateJavascript(PageScripts.SCAN) { raw ->
-                        parseScan(raw)?.let { s ->
-                            for (v in s.videos) sniffer.onRequest(v, emptyMap())
-                            scan = s
-                        }
-                    }
+                    // Ab dem zweiten Anlauf zusätzlich ein echter Tipp: der
+                    // erste Klick trifft oft nur das Werbe-Overlay.
+                    pokes++
+                    if (pokes >= 2) tapCenter()
+                    requestScan()
                 }
             }
             return null
@@ -437,7 +470,10 @@ class HeadlessSniffer @Inject constructor(
         // Reicht für die Episoden-Seite plus zwei, drei Hoster-Versuche.
         const val DEFAULT_TIMEOUT_MS = 55_000L
         /** Staffelseite laden und Folgen-Links auslesen — kein Player nötig. */
-        const val DISCOVER_TIMEOUT_MS = 20_000L
+        const val DISCOVER_TIMEOUT_MS = 40_000L
+        const val DISCOVER_LOAD_MS = 15_000L
+        const val DISCOVER_SCANS = 4
+        const val DISCOVER_RESCAN_MS = 2_000L
         const val POLL_MS = 400L
         const val POKE_MS = 3_000L
         const val GRACE_MS = 2_000L

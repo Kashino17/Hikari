@@ -114,6 +114,9 @@ fun ImportSheet(
             state.submitError?.let { err ->
                 Text(err, color = Color(0xFFEF4444), fontSize = 12.sp)
             }
+            state.submitInfo?.let { info ->
+                Text(info, color = HikariText, fontSize = 12.sp)
+            }
 
             val readyCount = state.cards.count { it is ImportCardState.Ready }
             val anyLoading = state.cards.any { it is ImportCardState.Loading }
@@ -121,21 +124,25 @@ fun ImportSheet(
                 onClick = {
                     scope.launch {
                         val n = vm.submit()
-                        if (n != null) {
-                            // Direkt zur Fortschrittsansicht, statt den Nutzer
-                            // im Ungewissen zu lassen, ob etwas gestartet ist.
+                        // Direkt zur Fortschrittsansicht, statt den Nutzer im
+                        // Ungewissen zu lassen — aber nur, wenn nichts mehr
+                        // analysiert wird. Sonst bliebe der Rest unbeachtet.
+                        if (n != null && vm.uiState.value.cards.isEmpty()) {
                             if (onSubmitted != null) onSubmitted() else onDismiss()
                         }
                     }
                 },
-                enabled = readyCount > 0 && !anyLoading && !state.submitting,
+                // Fertige Karten sind sofort absendbar — auch während andere Folgen
+                // noch analysiert werden (bei 20+ Folgen dauert das Minuten).
+                enabled = readyCount > 0 && !state.submitting,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
                     when {
                         state.submitting -> "Importiere…"
-                        anyLoading -> "Analysiere $readyCount von ${state.cards.size}…"
+                        readyCount == 0 && anyLoading -> "Analysiere…"
                         readyCount == 0 -> "Keine URLs"
+                        anyLoading -> "$readyCount jetzt importieren (${state.cards.size - readyCount} noch offen)"
                         else -> "$readyCount Importieren"
                     },
                 )
