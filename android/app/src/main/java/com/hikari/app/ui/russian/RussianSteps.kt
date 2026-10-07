@@ -292,7 +292,7 @@ internal fun RuRecordCompare(p: RuPhrase, env: RuStepEnv) {
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        if (isListening) "Höre zu …" else "KI-Check",
+                        if (isListening) "Höre zu … (Fertig)" else "KI-Check",
                         color = if (isListening) HikariAmber else HikariText,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
@@ -670,392 +670,141 @@ internal fun SpeakStep(step: RuExercise.Speak, env: RuStepEnv) {
     val context = LocalContext.current
     val recognizer = remember { RussianSpeechRecognizer(context) }
     DisposableEffect(Unit) { onDispose { recognizer.destroy() } }
-    val recognizerState by recognizer.state.collectAsState()
-
-    val recorder = remember { RussianRecorder(context) }
-    DisposableEffect(Unit) { onDispose { recorder.stop() } }
-
-    var isRecordingVoice by remember { mutableStateOf(false) }
-    var hasRecordedVoice by remember { mutableStateOf(false) }
-    var isComparingAudio by remember { mutableStateOf(false) }
-
+    val state by recognizer.state.collectAsState()
     var attempts by remember { mutableIntStateOf(0) }
-    var currentScore by remember { mutableStateOf<RuAnswerCheck.SpeechScore?>(null) }
-    var bestScore by remember { mutableDoubleStateOf(0.0) }
-    var hasPassed by remember { mutableStateOf(false) }
-    var advanced by remember { mutableStateOf(false) }
-    var pendingAudioAction by remember { mutableStateOf<(() -> Unit)?>(null) }
-
+    var score by remember { mutableStateOf<RuAnswerCheck.SpeechScore?>(null) }
+    var selfCheck by remember { mutableStateOf(!env.speechAvailable) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) {
-            val act = pendingAudioAction
-            pendingAudioAction = null
-            act?.invoke()
+            env.audio.stop()
+            recognizer.start()
         } else {
-            pendingAudioAction = null
+            selfCheck = true
         }
     }
-
-    fun withMicPermission(action: () -> Unit) {
+    LaunchedEffect(state) {
+        val s = state
+        if (s is RuListenState.Done) {
+            val sc = RuAnswerCheck.speech(p.plain, s.hypotheses)
+            score = sc
+            attempts++
+            if (sc.passed && !env.answered) {
+                env.onSpokenOk()
+                env.onAnswer(true)
+            }
+        }
+        if (s is RuListenState.Failed) selfCheck = true
+    }
+    fun listen() {
+        score = null
+        recognizer.reset()
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-            action()
+            env.audio.stop()
+            recognizer.start()
         } else {
-            pendingAudioAction = action
             launcher.launch(Manifest.permission.RECORD_AUDIO)
         }
     }
 
-    fun startListening() {
-        withMicPermission {
-            env.audio.stop()
-            if (isRecordingVoice) {
-                recorder.stop()
-                isRecordingVoice = false
-            }
-            recognizer.reset()
-            recognizer.start()
-        }
-    }
-
-    fun toggleVoiceRecording() {
-        withMicPermission {
-            if (isRecordingVoice) {
-                recorder.stop()
-                isRecordingVoice = false
-                hasRecordedVoice = true
-                isComparingAudio = true
-                // Direkt vergleichen: erst deine Aufnahme, dann Muttersprachler
-                env.audio.playFile(recorder.file) {
-                    env.audio.play(p.audio) {
-                        isComparingAudio = false
-                    }
-                }
-            } else {
-                env.audio.stop()
-                recognizer.stopListening()
-                isRecordingVoice = recorder.start()
-            }
-        }
-    }
-
-    LaunchedEffect(recognizerState) {
-        when (val s = recognizerState) {
-            is RuListenState.Done -> {
-                val sc = RuAnswerCheck.speech(p.plain, s.hypotheses)
-                currentScore = sc
-                attempts++
-                if (sc.score > bestScore) {
-                    bestScore = sc.score
-                }
-                if (sc.passed) {
-                    hasPassed = true
-                }
-            }
-            else -> Unit
-        }
-    }
-
-    fun advance(correct: Boolean) {
-        if (advanced) return
-        advanced = true
-        recognizer.destroy()
-        recorder.stop()
-        if (correct) {
-            env.onSpokenOk()
-            env.onAnswer(true)
-        } else {
-            env.onSkip()
-        }
-        env.onNext()
-    }
-
     Column(Modifier.fillMaxSize()) {
         Column(
-            Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            RuStepTitle("Sprechen", "Sag es laut auf Russisch")
+            RuStepTitle("Sprechen", "Sag es laut")
             RuPhraseBlock(p, cyrillicSize = 28.sp)
-            Spacer(Modifier.height(16.dp))
-
-            // Original Audio Player
+            Spacer(Modifier.height(18.dp))
             RuPlayRow(
                 playingNow = env.playing == p.audio,
                 onPlay = { env.audio.play(p.audio) },
                 onSlow = { env.audio.play(p.audio, slow = true) },
                 size = 56.dp,
             )
-
-            Spacer(Modifier.height(26.dp))
-
-            // ── 1. KI Aussprache-Prüfung ──────────────────────────────
-            val listening = recognizerState is RuListenState.Listening || recognizerState is RuListenState.Partial
-            val listeningPulse by animateFloatAsState(if (listening) 1.12f else 1f, tween(250), label = "mic-pulse")
-
-            Box(
-                Modifier
-                    .size(86.dp)
-                    .scale(listeningPulse)
-                    .clip(CircleShape)
-                    .background(if (listening) HikariAmber else Color.White)
-                    .border(2.dp, if (listening) HikariAmber.copy(alpha = 0.5f) else Color.Transparent, CircleShape)
-                    .clickable { if (listening) recognizer.stopListening() else startListening() },
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    if (listening) Icons.Outlined.GraphicEq else Icons.Outlined.Mic,
-                    contentDescription = if (listening) "Stoppen" else "Sprechen",
-                    tint = Color.Black,
-                    modifier = Modifier.size(38.dp),
-                )
-            }
-
-            Spacer(Modifier.height(10.dp))
-
-            Text(
-                when (val s = recognizerState) {
-                    is RuListenState.Listening -> "Ich höre zu … Sprich jetzt"
-                    is RuListenState.Partial -> "»${s.text}«"
-                    else -> if (currentScore == null) "Tippen & auf Russisch sprechen" else "Tippen für weiteren Versuch"
-                },
-                color = if (listening) HikariAmber else HikariTextMuted,
-                fontSize = 14.sp,
-                fontWeight = if (listening) FontWeight.Medium else FontWeight.Normal,
-                textAlign = TextAlign.Center,
-            )
-
-            // Auswertung der Spracherkennung
-            currentScore?.let { sc ->
-                Spacer(Modifier.height(14.dp))
-                Column(
+            Spacer(Modifier.height(30.dp))
+            if (!selfCheck) {
+                val listening = state is RuListenState.Listening || state is RuListenState.Partial
+                Box(
                     Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(HikariCardBg)
-                        .border(
-                            1.dp,
-                            if (sc.passed) RuGood.copy(alpha = 0.4f) else HikariAmber.copy(alpha = 0.3f),
-                            RoundedCornerShape(16.dp),
-                        )
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                        .size(88.dp)
+                        .scale(animateFloatAsState(if (listening) 1.12f else 1f, tween(250), label = "mic-pulse").value)
+                        .clip(CircleShape)
+                        .background(if (listening) HikariAmber else Color.White)
+                        .clickable(enabled = !env.answered) { if (listening) recognizer.stopListening() else listen() },
+                    contentAlignment = Alignment.Center,
                 ) {
-                    val scorePct = (sc.score * 100).toInt()
-                    val badgeColor = if (sc.passed) RuGood else if (scorePct >= 50) HikariAmber else RuBad
-                    val badgeText = when {
-                        scorePct >= 95 -> "Ausgezeichnet! 100 %"
-                        sc.passed -> "Sehr gut! $scorePct %"
-                        scorePct > 0 -> "Fast da: $scorePct %"
-                        else -> "Noch nicht verstanden"
-                    }
-
-                    Row(
-                        Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(badgeColor.copy(alpha = 0.15f))
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            if (sc.passed) Icons.Outlined.CheckCircle else Icons.Outlined.Replay,
-                            contentDescription = null,
-                            tint = badgeColor,
-                            modifier = Modifier.size(16.dp),
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(badgeText, color = badgeColor, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                    }
-
-                    Spacer(Modifier.height(12.dp))
-
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        sc.words.forEach { (word, ok) ->
-                            Box(
-                                Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(if (ok) RuGood.copy(alpha = 0.12f) else RuBad.copy(alpha = 0.12f))
-                                    .border(1.dp, if (ok) RuGood.copy(alpha = 0.4f) else RuBad.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                            ) {
-                                Text(
-                                    word,
-                                    color = if (ok) RuGood else RuBad,
-                                    fontSize = 17.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                            }
+                    Icon(
+                        if (listening) Icons.Outlined.GraphicEq else Icons.Outlined.Mic,
+                        contentDescription = "Sprechen",
+                        tint = Color.Black,
+                        modifier = Modifier.size(38.dp),
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    when (val s = state) {
+                        is RuListenState.Listening -> "Ich höre zu … Tippe nochmal, wenn du fertig bist"
+                        is RuListenState.Partial -> "»${s.text}«\nTippe nochmal, wenn du fertig bist"
+                        else -> if (score == null) "Tippen und auf Russisch sprechen" else "Tippen für einen weiteren Versuch"
+                    },
+                    color = if (listening) HikariAmber else HikariTextMuted,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center,
+                )
+                score?.let { sc ->
+                    Spacer(Modifier.height(8.dp))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
+                        sc.words.forEach { (w, ok) ->
+                            Text(w, color = if (ok) RuGood else RuBad, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
-
-                    Spacer(Modifier.height(8.dp))
-
+                    Spacer(Modifier.height(6.dp))
                     Text(
-                        if (sc.heard.isNotBlank()) "Gehört: »${sc.heard}«" else "Nichts gehört — sprich etwas lauter und näher ans Mikrofon.",
-                        color = HikariTextMuted,
-                        fontSize = 12.5.sp,
+                        when {
+                            sc.passed -> "Verstanden!"
+                            sc.heard.isBlank() -> "Ich habe nichts verstanden — noch mal, etwas lauter."
+                            else -> "Gehört: »${sc.heard}«"
+                        },
+                        color = if (sc.passed) RuGood else HikariTextMuted,
+                        fontSize = 13.5.sp,
                         textAlign = TextAlign.Center,
                     )
-
-                    Spacer(Modifier.height(6.dp))
-
-                    Text(
-                        "Versuch $attempts · Bester Score: ${(bestScore * 100).toInt()} %",
-                        color = HikariTextFaint,
-                        fontSize = 11.5.sp,
-                    )
-                }
-            }
-
-            // Fehlerhinweis bei Spracherkennung
-            val failed = recognizerState as? RuListenState.Failed
-            if (failed != null) {
-                Spacer(Modifier.height(12.dp))
-                RuHintCard(
-                    "Hinweis zur Spracherkennung",
-                    failed.message + if (failed.missingLanguage) {
-                        " Du kannst in den Android-Einstellungen unter »Sprache & Eingabe ➔ Spracherkennung« das russische Offline-Sprachpaket herunterladen."
-                    } else {
-                        ""
-                    },
-                )
-            }
-
-            Spacer(Modifier.height(20.dp))
-
-            // ── 2. Nachsprechen & Audio-Vergleich (Gleichzeitig da!) ──────
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(HikariSurfaceHigh.copy(alpha = 0.5f))
-                    .border(1.dp, HikariBorder, RoundedCornerShape(16.dp))
-                    .padding(14.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RuOverline("Eigenaufnahme & Audio-Vergleich")
-                    if (hasRecordedVoice) {
-                        Text("Aufnahme bereit", color = RuGood, fontSize = 11.5.sp, fontWeight = FontWeight.Medium)
-                    }
-                }
-
-                Spacer(Modifier.height(10.dp))
-
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RuMicBadge(
-                        if (isRecordingVoice) "Stopp & Vergleichen" else "Stimme aufnehmen",
-                        active = isRecordingVoice,
-                        onClick = { toggleVoiceRecording() },
-                    )
-
-                    if (hasRecordedVoice && !isRecordingVoice) {
-                        Spacer(Modifier.width(10.dp))
-
-                        Box(
-                            Modifier
-                                .size(42.dp)
-                                .clip(CircleShape)
-                                .background(HikariCardBg)
-                                .border(1.dp, HikariBorderStrong, CircleShape)
-                                .clickable {
-                                    env.audio.stop()
-                                    env.audio.playFile(recorder.file)
-                                },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                Icons.Outlined.Person,
-                                contentDescription = "Meine Aufnahme anhören",
-                                tint = HikariText,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
-
-                        Spacer(Modifier.width(8.dp))
-
-                        Box(
-                            Modifier
-                                .size(42.dp)
-                                .clip(CircleShape)
-                                .background(if (isComparingAudio) HikariAmber.copy(alpha = 0.2f) else HikariCardBg)
-                                .border(1.dp, if (isComparingAudio) HikariAmber else HikariBorderStrong, CircleShape)
-                                .clickable {
-                                    env.audio.stop()
-                                    isComparingAudio = true
-                                    env.audio.playFile(recorder.file) {
-                                        env.audio.play(p.audio) {
-                                            isComparingAudio = false
-                                        }
-                                    }
-                                },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                Icons.Outlined.Replay,
-                                contentDescription = "Direkter Vergleich (Ich ➔ Original)",
-                                tint = if (isComparingAudio) HikariAmber else HikariText,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        }
-                    }
-                }
-
-                Spacer(Modifier.height(8.dp))
-
-                Text(
-                    if (hasRecordedVoice)
-                        "Höre deine Aufnahme (👤) oder starte den direkten A/B-Vergleich (🔁)."
-                    else
-                        "Nimm deine Stimme auf und vergleiche Melodie & Betonung direkt mit dem Original.",
-                    color = HikariTextMuted,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 16.sp,
-                )
-            }
-        }
-
-        // ── Untere Steuerleiste (User behält volle Kontrolle, beliebig viele Versuche) ──
-        Column(Modifier.padding(16.dp)) {
-            if (hasPassed) {
-                RuPrimaryButton("Weiter ✓") {
-                    advance(correct = true)
-                }
-                Spacer(Modifier.height(8.dp))
-                RuGhostButton("Nochmal sprechen 🔄", Modifier.fillMaxWidth()) {
-                    startListening()
-                }
-            } else if (attempts > 0 || hasRecordedVoice) {
-                RuPrimaryButton("Klingt gut & weiter") {
-                    advance(correct = true)
-                }
-                Spacer(Modifier.height(8.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    RuGhostButton("Nochmal sprechen 🔄", Modifier.weight(1f)) {
-                        startListening()
-                    }
-                    RuGhostButton("Überspringen", Modifier.weight(1f)) {
-                        advance(correct = false)
-                    }
                 }
             } else {
-                RuGhostButton("Überspringen", Modifier.fillMaxWidth()) {
-                    advance(correct = false)
+                val failed = state as? RuListenState.Failed
+                if (failed != null) {
+                    RuHintCard(
+                        "Spracherkennung",
+                        failed.message + if (failed.missingLanguage) {
+                            " Du kannst in den Android-Einstellungen unter »Spracherkennung« Russisch als Offline-Sprache laden."
+                        } else {
+                            ""
+                        },
+                    )
+                    Spacer(Modifier.height(14.dp))
+                }
+                Text(
+                    "Nimm dich auf und vergleiche selbst mit dem Original.",
+                    color = HikariTextMuted,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(Modifier.height(12.dp))
+                RuRecordCompare(p, env)
+            }
+        }
+        if (!env.answered) {
+            Column(Modifier.padding(16.dp)) {
+                if (selfCheck) {
+                    RuPrimaryButton("Klingt wie das Original") {
+                        env.onAnswer(true)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (!selfCheck && attempts >= 2) {
+                        RuGhostButton("Selbst vergleichen", Modifier.weight(1f)) { selfCheck = true }
+                    }
+                    RuGhostButton("Überspringen", Modifier.weight(1f)) { env.onSkip() }
                 }
             }
         }

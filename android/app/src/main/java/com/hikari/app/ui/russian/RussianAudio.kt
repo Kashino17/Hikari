@@ -5,6 +5,8 @@ import android.content.Intent
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -185,8 +187,18 @@ class RussianSpeechRecognizer(private val context: Context) {
     private val _state = MutableStateFlow<RuListenState>(RuListenState.Idle)
     val state: StateFlow<RuListenState> = _state.asStateFlow()
     private var recognizer: SpeechRecognizer? = null
+    private var userStopped: Boolean = false
+    private var lastHypotheses: List<String> = emptyList()
+    private var lastPartialText: String? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var stopWatchdog: Runnable? = null
 
     val available: Boolean get() = SpeechRecognizer.isRecognitionAvailable(context)
+
+    private fun clearWatchdog() {
+        stopWatchdog?.let { mainHandler.removeCallbacks(it) }
+        stopWatchdog = null
+    }
 
     fun start() {
         if (!available) {
@@ -194,9 +206,20 @@ class RussianSpeechRecognizer(private val context: Context) {
             return
         }
         destroy()
-        val r = SpeechRecognizer.createSpeechRecognizer(context)
+        userStopped = false
+        lastHypotheses = emptyList()
+        lastPartialText = null
+
+        val r = runCatching { SpeechRecognizer.createSpeechRecognizer(context) }.getOrNull()
+        if (r == null) {
+            _state.value = RuListenState.Failed("Spracherkennung konnte nicht initialisiert werden.")
+            return
+        }
+
         r.setRecognitionListener(object : RecognitionListener {
-            override fun onReadyForSpeech(params: Bundle?) { _state.value = RuListenState.Listening }
+            override fun onReadyForSpeech(params: Bundle?) {
+                _state.value = RuListenState.Listening
+            }
             override fun onBeginningOfSpeech() {}
             override fun onRmsChanged(rmsdB: Float) {}
             override fun onBufferReceived(buffer: ByteArray?) {}
@@ -204,18 +227,50 @@ class RussianSpeechRecognizer(private val context: Context) {
             override fun onEvent(eventType: Int, params: Bundle?) {}
 
             override fun onPartialResults(partialResults: Bundle?) {
-                val t = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
-                if (!t.isNullOrBlank()) _state.value = RuListenState.Partial(t)
+                val list = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION).orEmpty()
+                val t = list.firstOrNull()
+                if (!t.isNullOrBlank()) {
+                    lastPartialText = t
+                    lastHypotheses = list
+                    _state.value = RuListenState.Partial(t)
+                }
             }
 
             override fun onResults(results: Bundle?) {
+                clearWatchdog()
                 val list = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION).orEmpty()
-                _state.value = RuListenState.Done(list)
+                val finalResults = if (list.isNotEmpty()) {
+                    list
+                } else if (lastHypotheses.isNotEmpty()) {
+                    lastHypotheses
+                } else if (!lastPartialText.isNullOrBlank()) {
+                    listOf(lastPartialText!!)
+                } else {
+                    emptyList()
+                }
+                _state.value = RuListenState.Done(finalResults)
             }
 
             override fun onError(error: Int) {
+                clearWatchdog()
+                // Wenn der User auf Stopp/Absenden getippt hat oder bereits Text gehört wurde:
+                if (userStopped || !lastPartialText.isNullOrBlank() || lastHypotheses.isNotEmpty()) {
+                    val fallback = if (lastHypotheses.isNotEmpty()) {
+                        lastHypotheses
+                    } else if (!lastPartialText.isNullOrBlank()) {
+                        listOf(lastPartialText!!)
+                    } else {
+                        emptyList()
+                    }
+                    _state.value = RuListenState.Done(fallback)
+                    return
+                }
+
+                // Bei manuellem Client-Stopp oder No-Match ohne Sprache: als Done(leer) werten, nie abbrechen!
                 _state.value = when (error) {
-                    SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT ->
+                    SpeechRecognizer.ERROR_CLIENT,
+                    SpeechRecognizer.ERROR_NO_MATCH,
+                    SpeechRecognizer.ERROR_SPEECH_TIMEOUT ->
                         RuListenState.Done(emptyList())
                     SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ->
                         RuListenState.Failed("Mikrofon-Berechtigung fehlt.")
@@ -232,12 +287,12 @@ class RussianSpeechRecognizer(private val context: Context) {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ru-RU")
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "ru-RU")
-            putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
+            putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, true)
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
-            }
+            // Stille-Erkennung für automatisches Fertigstellen
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1500L)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1200L)
         }
         _state.value = RuListenState.Listening
         runCatching { r.startListening(intent) }.onFailure { e ->
@@ -247,15 +302,54 @@ class RussianSpeechRecognizer(private val context: Context) {
     }
 
     fun stopListening() {
-        runCatching { recognizer?.stopListening() }
+        userStopped = true
+        val partial = lastPartialText
+        val hypotheses = lastHypotheses
+
+        // Watchdog: Falls das OS nach stopListening() weder onResults noch onError aufruft,
+        // nach 2.5s garantiert mit den bisherigen Erkenntnissen abschließen.
+        clearWatchdog()
+        val watchdog = Runnable {
+            if (_state.value is RuListenState.Listening || _state.value is RuListenState.Partial) {
+                val fallback = if (lastHypotheses.isNotEmpty()) {
+                    lastHypotheses
+                } else if (!lastPartialText.isNullOrBlank()) {
+                    listOf(lastPartialText!!)
+                } else {
+                    emptyList()
+                }
+                _state.value = RuListenState.Done(fallback)
+            }
+        }
+        stopWatchdog = watchdog
+        mainHandler.postDelayed(watchdog, 2500L)
+
+        runCatching { recognizer?.stopListening() }.onFailure {
+            clearWatchdog()
+            if (hypotheses.isNotEmpty()) {
+                _state.value = RuListenState.Done(hypotheses)
+            } else if (!partial.isNullOrBlank()) {
+                _state.value = RuListenState.Done(listOf(partial))
+            } else {
+                _state.value = RuListenState.Done(emptyList())
+            }
+        }
     }
 
     fun reset() {
+        clearWatchdog()
+        userStopped = false
+        lastHypotheses = emptyList()
+        lastPartialText = null
         _state.value = RuListenState.Idle
     }
 
     fun destroy() {
+        clearWatchdog()
         runCatching { recognizer?.destroy() }
         recognizer = null
+        userStopped = false
+        lastHypotheses = emptyList()
+        lastPartialText = null
     }
 }
