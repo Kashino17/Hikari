@@ -32,6 +32,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -168,6 +171,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -219,7 +223,12 @@ fun FeedScreen(
     onFullscreenChange: (Boolean) -> Unit = {},
     onNavigate: (String) -> Unit = {},
     resetTick: Int = 0,
+    bottomPadding: Dp = 100.dp,
 ) {
+    val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val effectiveBottomPadding = remember(bottomPadding, navBarBottom) {
+        if (bottomPadding > 0.dp) bottomPadding + 10.dp else (navBarBottom + 16.dp)
+    }
     val cards by vm.mindfulCards.collectAsState()
     val completedCardIds by vm.completedCards.collectAsState()
     val savedCardIds by vm.savedCardIds.collectAsState()
@@ -328,6 +337,7 @@ fun FeedScreen(
                                     vm.toggleCommuterMode()
                                 },
                                 showSwipeHint = page == 0,
+                                bottomPadding = effectiveBottomPadding,
                             )
                         } else {
                             DeepDiveSlide(
@@ -338,6 +348,7 @@ fun FeedScreen(
                                         horizontalPagerState.animateScrollToPage(0)
                                     }
                                 },
+                                bottomPadding = effectiveBottomPadding,
                             )
                         }
                     }
@@ -348,6 +359,7 @@ fun FeedScreen(
                         totalCount = cards.size,
                         onReset = { vm.resetDailyProgress() },
                         onOpenSettings = { showSettingsSheet = true },
+                        bottomPadding = effectiveBottomPadding,
                     )
                 }
             }
@@ -414,6 +426,7 @@ private fun FeedCardSlide(
     isCommuterMode: Boolean,
     onToggleCommuterMode: () -> Unit,
     showSwipeHint: Boolean,
+    bottomPadding: Dp,
 ) {
     val ambientColor = when (card) {
         is QuoteCardItem -> Color(0xFFF59E0B)
@@ -462,7 +475,7 @@ private fun FeedCardSlide(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .padding(horizontal = 20.dp)
-                .padding(top = 8.dp, bottom = 84.dp), // Aussparung für Statusbar & Bottom-Nav-Bar
+                .padding(top = 8.dp, bottom = bottomPadding),
         ) {
             // ── Top Story Progress Bar (Ganz oben, dezent & präzise) ───────────────
             val progress by animateFloatAsState(
@@ -729,10 +742,10 @@ private fun FeedCardSlide(
                     }
                 }
 
-                // Rechte Seite: 3 minimalistische 36dp Frosted Glass Buttons (Teilen, Merken, Gelernt)
+                // Rechte Seite: 2 minimalistische 38dp Frosted Glass Buttons (Teilen, Gelernt)
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     // 1. Poster / Teilen Button
                     Surface(
@@ -740,7 +753,7 @@ private fun FeedCardSlide(
                         shape = CircleShape,
                         color = Color.White.copy(alpha = 0.08f),
                         border = BorderStroke(0.6.dp, Color.White.copy(alpha = 0.15f)),
-                        modifier = Modifier.size(36.dp),
+                        modifier = Modifier.size(38.dp),
                     ) {
                         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                             Icon(
@@ -752,38 +765,20 @@ private fun FeedCardSlide(
                         }
                     }
 
-                    // 2. Merken / Bookmark Button
-                    Surface(
-                        onClick = onToggleSave,
-                        shape = CircleShape,
-                        color = if (isSaved) HikariAmber.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.08f),
-                        border = BorderStroke(0.6.dp, if (isSaved) HikariAmber else Color.White.copy(alpha = 0.15f)),
-                        modifier = Modifier.size(36.dp),
-                    ) {
-                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Icon(
-                                imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                                contentDescription = if (isSaved) "Gemerkt" else "Merken",
-                                tint = if (isSaved) HikariAmber else Color.White.copy(alpha = 0.85f),
-                                modifier = Modifier.size(16.dp),
-                            )
-                        }
-                    }
-
-                    // 3. Gelernt / Erledigt Button
+                    // 2. Gelernt / Erledigt Button
                     Surface(
                         onClick = onDone,
                         shape = CircleShape,
                         color = if (isDone) Color(0xFF10B981).copy(alpha = 0.25f) else Color.White.copy(alpha = 0.08f),
                         border = BorderStroke(0.6.dp, if (isDone) Color(0xFF10B981) else Color.White.copy(alpha = 0.15f)),
-                        modifier = Modifier.size(36.dp),
+                        modifier = Modifier.size(38.dp),
                     ) {
                         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                             Icon(
                                 imageVector = if (isDone) Icons.Filled.CheckCircle else Icons.Outlined.Check,
                                 contentDescription = if (isDone) "Gelernt" else "Lernen",
                                 tint = if (isDone) Color(0xFF34D399) else Color.White.copy(alpha = 0.85f),
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(17.dp),
                             )
                         }
                     }
@@ -835,7 +830,7 @@ private fun FeedCardSlide(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .offset(y = translateY.dp)
-                    .padding(bottom = 88.dp)
+                    .padding(bottom = bottomPadding + 44.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color.Black.copy(alpha = 0.5f))
                     .padding(horizontal = 10.dp, vertical = 4.dp),
@@ -2669,6 +2664,7 @@ private fun MindfulCompletionSlide(
     totalCount: Int,
     onReset: () -> Unit,
     onOpenSettings: () -> Unit,
+    bottomPadding: Dp,
 ) {
     Box(
         modifier = Modifier
@@ -2681,7 +2677,7 @@ private fun MindfulCompletionSlide(
             )
             .statusBarsPadding()
             .padding(horizontal = 24.dp)
-            .padding(top = 8.dp, bottom = 84.dp),
+            .padding(top = 8.dp, bottom = bottomPadding),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -3041,6 +3037,7 @@ private fun DeepDiveSlide(
     card: MindfulCard,
     audioPlayer: RussianAudioPlayer? = null,
     onBack: () -> Unit,
+    bottomPadding: Dp,
 ) {
     val deepDive = remember(card.id) { card.resolveDeepDive() }
     val ambientColor = when (card) {
@@ -3075,7 +3072,7 @@ private fun DeepDiveSlide(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .padding(horizontal = 20.dp)
-                .padding(top = 10.dp, bottom = 84.dp),
+                .padding(top = 10.dp, bottom = bottomPadding),
         ) {
             // Header Bar mit Zurück-Button
             Row(

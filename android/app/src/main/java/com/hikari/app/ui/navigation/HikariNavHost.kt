@@ -182,6 +182,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
         !isReaderRoute && !isGearSubPage && !isGameRoute && !isNowPlaying &&
         !isPlaylistRoute && !isMixRoute && !isArtistRoute && !isCollectionRoute &&
         !isBrowserRoute
+    val isVideoDockVisible = !isVideoRoute && isVideoDocked && activeVideo != null
 
     Scaffold(
         containerColor = HikariBg,
@@ -306,6 +307,11 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                     onFullscreenChange = { feedFullscreen = it },
                     onNavigate = { route -> nav.navigate(route) },
                     resetTick = feedResetTick,
+                    bottomPadding = if (showsBottomBar) {
+                        padding.calculateBottomPadding() + (if (isVideoDockVisible) 68.dp else 0.dp)
+                    } else {
+                        0.dp
+                    },
                 )
             }
             composable("news") {
@@ -674,8 +680,6 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                 )
             }
         }
-
-        val isVideoDockVisible = !isVideoRoute && isVideoDocked && activeVideo != null
 
         // Angedockter Mini-Videoplayer (Apple-/YouTube-Lösung) direkt über der Bottom-Bar
         if (isVideoDockVisible) {
