@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -54,7 +55,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -674,6 +677,8 @@ internal fun SpeakStep(step: RuExercise.Speak, env: RuStepEnv) {
     var attempts by remember { mutableIntStateOf(0) }
     var score by remember { mutableStateOf<RuAnswerCheck.SpeechScore?>(null) }
     var selfCheck by remember { mutableStateOf(!env.speechAvailable) }
+    var evaluating by remember { mutableStateOf(false) }
+    val haptic = LocalHapticFeedback.current
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) {
             env.audio.stop()
@@ -684,10 +689,12 @@ internal fun SpeakStep(step: RuExercise.Speak, env: RuStepEnv) {
     }
     LaunchedEffect(state) {
         val s = state
+        if (s is RuListenState.Done || s is RuListenState.Failed) evaluating = false
         if (s is RuListenState.Done) {
             val sc = RuAnswerCheck.speech(p.plain, s.hypotheses)
             score = sc
             attempts++
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             if (sc.passed && !env.answered) {
                 env.onSpokenOk()
                 env.onAnswer(true)
@@ -697,6 +704,7 @@ internal fun SpeakStep(step: RuExercise.Speak, env: RuStepEnv) {
     }
     fun listen() {
         score = null
+        evaluating = false
         recognizer.reset()
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             env.audio.stop()
@@ -708,7 +716,7 @@ internal fun SpeakStep(step: RuExercise.Speak, env: RuStepEnv) {
 
     Column(Modifier.fillMaxSize()) {
         Column(
-            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp),
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp).animateContentSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             RuStepTitle("Sprechen", "Sag es laut")
@@ -729,7 +737,15 @@ internal fun SpeakStep(step: RuExercise.Speak, env: RuStepEnv) {
                         .scale(animateFloatAsState(if (listening) 1.12f else 1f, tween(250), label = "mic-pulse").value)
                         .clip(CircleShape)
                         .background(if (listening) HikariAmber else Color.White)
-                        .clickable(enabled = !env.answered) { if (listening) recognizer.stopListening() else listen() },
+                        .clickable(enabled = !env.answered && !evaluating) {
+                            if (listening) {
+                                evaluating = true
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                recognizer.stopListening()
+                            } else {
+                                listen()
+                            }
+                        },
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -744,7 +760,7 @@ internal fun SpeakStep(step: RuExercise.Speak, env: RuStepEnv) {
                     when (val s = state) {
                         is RuListenState.Listening -> "Ich höre zu … Tippe nochmal, wenn du fertig bist"
                         is RuListenState.Partial -> "»${s.text}«\nTippe nochmal, wenn du fertig bist"
-                        else -> if (score == null) "Tippen und auf Russisch sprechen" else "Tippen für einen weiteren Versuch"
+                        else -> if (evaluating) "Wird ausgewertet …" else if (score == null) "Tippen und auf Russisch sprechen" else "Tippen für einen weiteren Versuch"
                     },
                     color = if (listening) HikariAmber else HikariTextMuted,
                     fontSize = 14.sp,
