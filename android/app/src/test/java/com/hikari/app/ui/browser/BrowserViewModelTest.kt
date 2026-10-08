@@ -322,4 +322,51 @@ class BrowserViewModelTest {
         assertNull(BrowserViewModel.cleanDescription(null))
         assertEquals(5000, BrowserViewModel.cleanDescription("x".repeat(9000))?.length)
     }
+
+    // Der gemeldete Fehler: Staffel 2 Folge 3 wurde nicht erkannt, alle bekamen Folge 1.
+    @Test
+    fun uebernimmtStaffelUndFolgeAusDerUrl() = runTest(dispatcher) {
+        vm.onPageStarted("https://aniworld.to/serie/stream/arcane/staffel-2/episode-3")
+        vm.sniffer.onRequest("https://cdn.test/3.m3u8", emptyMap())
+        vm.refreshFindings()
+        vm.collectCurrent()
+
+        val item = vm.ui.value.basket.single()
+        assertEquals(2, item.season)
+        assertEquals(3, item.episode)
+    }
+
+    // Eine Folgenliste in den Überschriften darf die URL nicht überstimmen.
+    @Test
+    fun urlSchlaegtUeberschriftenMitFolgenliste() = runTest(dispatcher) {
+        val url = "https://aniworld.to/serie/stream/arcane/staffel-2/episode-3"
+        vm.onPageStarted(url)
+        val dom = com.hikari.app.domain.browser.PageMetaParser.PageMeta(season = 1, episode = 1)
+        vm.onPageScanned(url, "Arcane", emptyList(), emptyList(), null, dom)
+        vm.sniffer.onRequest("https://cdn.test/3.m3u8", emptyMap())
+        vm.refreshFindings()
+        vm.collectCurrent()
+
+        val item = vm.ui.value.basket.single()
+        assertEquals(2, item.season)
+        assertEquals(3, item.episode)
+    }
+
+    @Test
+    fun staffelUndFolgeProEintragAenderbar() = runTest(dispatcher) {
+        val captured = slot<List<SniffedImportItem>>()
+        coEvery { repo.importSniffed(capture(captured)) } returns 1
+        vm.onPageStarted("https://serien.test/watch/abc")
+        vm.sniffer.onRequest("https://cdn.test/a.mp4", emptyMap())
+        vm.refreshFindings()
+        vm.collectCurrent()
+        vm.setItemSeason("https://serien.test/watch/abc", 2)
+        vm.setItemEpisode("https://serien.test/watch/abc", 9)
+        vm.submit()
+        advanceUntilIdle()
+
+        val meta = captured.captured.single().metadata
+        assertEquals(2, meta?.season)
+        assertEquals(9, meta?.episode)
+    }
 }

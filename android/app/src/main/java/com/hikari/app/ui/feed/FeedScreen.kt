@@ -1196,6 +1196,9 @@ private fun LanguageSlideContent(
     var isComparing by remember(item.id) { mutableStateOf(false) }
     var speechScore by remember(item.id) { mutableStateOf<RuAnswerCheck.SpeechScore?>(null) }
     var speechAttempts by remember(item.id) { mutableIntStateOf(0) }
+    // Zwischen "Fertig"-Tipp und Ergebnis (bis ~2,5 s): Knopf sperren, Status zeigen.
+    var evaluating by remember(item.id) { mutableStateOf(false) }
+    val speechHaptic = LocalHapticFeedback.current
     var pendingMicAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     // 0 = Aussprache & Audio, 1 = Mini-Dialog (Zero-Scroll Segment-Wechsel)
@@ -1258,9 +1261,12 @@ private fun LanguageSlideContent(
     fun toggleSpeechCheck() {
         withMic {
             if (speechState is RuListenState.Listening || speechState is RuListenState.Partial) {
+                evaluating = true
+                speechHaptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 recognizer.stopListening()
             } else {
                 audioPlayer?.stop()
+                speechScore = null
                 if (isRecording) {
                     recorder.stop()
                     isRecording = false
@@ -1272,8 +1278,10 @@ private fun LanguageSlideContent(
     }
 
     LaunchedEffect(speechState) {
+        if (speechState is RuListenState.Done || speechState is RuListenState.Failed) evaluating = false
         when (val s = speechState) {
             is RuListenState.Done -> {
+                speechHaptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 val sc = RuAnswerCheck.speech(item.foreignWord, s.hypotheses)
                 speechScore = sc
                 speechAttempts++
@@ -1455,11 +1463,7 @@ private fun LanguageSlideContent(
                         ),
                     )
                     .border(1.dp, Color(0xFF38EF7D).copy(alpha = 0.35f), RoundedCornerShape(16.dp))
-                    .clickable {
-                        revealed = !revealed
-                        // onDone() hier bewusst NICHT aufrufen, damit Aufdecken nicht voreilig als gemeistert zählt!
-                    }
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -1485,74 +1489,49 @@ private fun LanguageSlideContent(
                         )
                     }
 
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(6.dp))
 
-                    if (revealed) {
+                    Text(
+                        text = item.nativeTranslation,
+                        color = Color(0xFFA7F3D0),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                    )
+
+                    if (!item.literalTranslation.isNullOrBlank()) {
+                        Spacer(Modifier.height(2.dp))
                         Text(
-                            text = item.nativeTranslation,
-                            color = Color(0xFFA7F3D0),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
+                            text = "Wörtlich: „${item.literalTranslation}“",
+                            color = HikariTextMuted,
+                            fontSize = 11.sp,
+                            fontStyle = FontStyle.Italic,
                         )
-                        if (!item.literalTranslation.isNullOrBlank()) {
-                            Spacer(Modifier.height(2.dp))
-                            Text(
-                                text = "Wörtlich: „${item.literalTranslation}“",
-                                color = HikariTextMuted,
-                                fontSize = 11.sp,
-                                fontStyle = FontStyle.Italic,
-                            )
-                        }
-                        if (item.exampleForeign.isNotBlank()) {
-                            Spacer(Modifier.height(8.dp))
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = Color.Black.copy(alpha = 0.30f),
-                                border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.06f)),
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
-                                    Text(
-                                        text = "„${item.exampleForeign}“",
-                                        color = Color.White.copy(alpha = 0.90f),
-                                        fontSize = 11.5.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.fillMaxWidth(),
-                                    )
-                                    Text(
-                                        text = item.exampleTranslation,
-                                        color = HikariTextMuted,
-                                        fontSize = 10.5.sp,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.fillMaxWidth(),
-                                    )
-                                }
-                            }
-                        }
-                    } else {
+                    }
+
+                    if (item.exampleForeign.isNotBlank()) {
+                        Spacer(Modifier.height(6.dp))
                         Surface(
-                            color = Color.Black.copy(alpha = 0.35f),
-                            shape = RoundedCornerShape(10.dp),
-                            border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.10f)),
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color.Black.copy(alpha = 0.30f),
+                            border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.06f)),
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Visibility,
-                                    contentDescription = null,
-                                    tint = HikariTextMuted,
-                                    modifier = Modifier.size(13.dp),
-                                )
-                                Spacer(Modifier.width(6.dp))
+                            Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)) {
                                 Text(
-                                    text = "Bedeutung & Beispielsatz aufdecken",
-                                    color = HikariTextMuted,
-                                    fontSize = 11.sp,
+                                    text = "„${item.exampleForeign}“",
+                                    color = Color.White.copy(alpha = 0.90f),
+                                    fontSize = 11.5.sp,
                                     fontWeight = FontWeight.Medium,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                                Text(
+                                    text = item.exampleTranslation,
+                                    color = HikariTextMuted,
+                                    fontSize = 10.5.sp,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth(),
                                 )
                             }
                         }
@@ -1653,7 +1632,7 @@ private fun LanguageSlideContent(
                 }
             }
 
-            // 4. Aussprache & Sprach-Praxis Studio (kompakt)
+            // 4. Aussprache & Sprach-Praxis Studio
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1663,44 +1642,194 @@ private fun LanguageSlideContent(
                     .padding(10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                // Aufnahme Row
+                // KI Aussprache-Prüfung Button (Primary Action)
+                val isListening = speechState is RuListenState.Listening || speechState is RuListenState.Partial
+                val listeningPulse by animateFloatAsState(if (isListening) 1.02f else 1f, tween(250), label = "pulse")
+                Surface(
+                    onClick = { if (!evaluating) toggleSpeechCheck() },
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (isListening) HikariAmber.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.08f),
+                    border = BorderStroke(
+                        1.dp,
+                        if (isListening) HikariAmber else Color.White.copy(alpha = 0.18f),
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .scale(listeningPulse),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(vertical = 9.dp, horizontal = 12.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            if (isListening) Icons.Outlined.GraphicEq else Icons.Outlined.Mic,
+                            contentDescription = if (isListening) "Fertigstellen & Prüfen" else "KI-Prüfung",
+                            tint = if (isListening) HikariAmber else Color.White,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = when {
+                                evaluating -> "Wird ausgewertet …"
+                                isListening -> "Ich höre zu … (Tippen zum Fertigstellen)"
+                                speechScore != null -> "Aussprache erneut prüfen"
+                                else -> "Aussprache mit KI prüfen"
+                            },
+                            color = if (isListening) HikariAmber else Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+
+                // Live Partial Text
+                if (speechState is RuListenState.Partial) {
+                    val partial = (speechState as RuListenState.Partial).text
+                    Spacer(Modifier.height(5.dp))
+                    Text(
+                        text = "»$partial« (Tippen zum Fertigstellen)",
+                        color = HikariAmber,
+                        fontSize = 12.sp,
+                        fontStyle = FontStyle.Italic,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+
+                // Fehlerhinweis bei Spracherkennung
+                (speechState as? RuListenState.Failed)?.let { failed ->
+                    Spacer(Modifier.height(5.dp))
+                    Text(
+                        text = failed.message + if (failed.missingLanguage) {
+                            " Lade in den Android-Einstellungen unter »Spracherkennung« Russisch als Offline-Sprache."
+                        } else {
+                            ""
+                        },
+                        color = Color(0xFFF87171),
+                        fontSize = 11.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+
+                // Score Card mit Wort-für-Wort Hervorhebung
+                speechScore?.let { sc ->
+                    val scorePct = (sc.score * 100).toInt()
+                    Spacer(Modifier.height(8.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(
+                                if (sc.passed) Color(0xFF064E3B).copy(alpha = 0.5f) else Color(0xFF78350F).copy(alpha = 0.5f),
+                            )
+                            .border(
+                                0.5.dp,
+                                if (sc.passed) Color(0xFF10B981) else Color(0xFFF59E0B),
+                                RoundedCornerShape(10.dp),
+                            )
+                            .padding(horizontal = 10.dp, vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            Icon(
+                                imageVector = if (sc.passed) Icons.Outlined.CheckCircle else Icons.Outlined.Replay,
+                                contentDescription = null,
+                                tint = if (sc.passed) Color(0xFF6EE7B7) else HikariAmber,
+                                modifier = Modifier.size(14.dp),
+                            )
+                            Spacer(Modifier.width(5.dp))
+                            Text(
+                                text = when {
+                                    sc.passed -> "$scorePct % · Exzellente Aussprache (+15 XP)"
+                                    sc.heard.isBlank() -> "Nichts verstanden — nochmal, etwas lauter"
+                                    else -> "$scorePct % · Fast geschafft — Nochmal versuchen"
+                                },
+                                color = if (sc.passed) Color(0xFF6EE7B7) else HikariAmber,
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+
+                        Spacer(Modifier.height(6.dp))
+
+                        // Word-by-word visual highlight chips (green = correct, red = missed)
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            sc.words.forEach { (word, ok) ->
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(if (ok) Color(0xFF065F46) else Color(0xFF991B1B).copy(alpha = 0.8f))
+                                        .border(0.5.dp, if (ok) Color(0xFF34D399) else Color(0xFFF87171), RoundedCornerShape(6.dp))
+                                        .padding(horizontal = 7.dp, vertical = 2.dp),
+                                ) {
+                                    Text(
+                                        text = word,
+                                        color = Color.White,
+                                        fontSize = 11.5.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                }
+                            }
+                        }
+
+                        if (sc.heard.isNotBlank()) {
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = "Gehört: »${sc.heard}«",
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontSize = 11.sp,
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                // Shadowing / Audio-Vergleich Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Surface(
                         onClick = { toggleRecord() },
-                        shape = RoundedCornerShape(9.dp),
+                        shape = RoundedCornerShape(8.dp),
                         color = if (isRecording) Color(0xFFDC2626) else HikariSurfaceHigh,
                         border = BorderStroke(
-                            1.dp,
+                            0.5.dp,
                             if (isRecording) Color(0xFFEF4444) else HikariBorderStrong,
                         ),
                         modifier = Modifier.weight(1f),
                     ) {
                         Row(
-                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 10.dp),
+                            modifier = Modifier.padding(vertical = 7.dp, horizontal = 10.dp),
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
-                                if (isRecording) Icons.Outlined.Stop else Icons.Outlined.Mic,
+                                if (isRecording) Icons.Outlined.Stop else Icons.Outlined.GraphicEq,
                                 contentDescription = "Aufnahme",
                                 tint = Color.White,
-                                modifier = Modifier.size(15.dp),
+                                modifier = Modifier.size(14.dp),
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                text = if (isRecording) "Stopp & Vergleichen" else "Nachsprechen",
+                                text = if (isRecording) "Stopp & Vergleichen" else "Selbst aufnehmen",
                                 color = Color.White,
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
                             )
                         }
                     }
 
                     if (hasRecording && !isRecording) {
+                        Spacer(Modifier.width(8.dp))
                         Surface(
                             onClick = {
                                 audioPlayer?.stop()
@@ -1709,18 +1838,19 @@ private fun LanguageSlideContent(
                             shape = CircleShape,
                             color = HikariSurfaceHigh,
                             border = BorderStroke(0.5.dp, HikariBorderStrong),
-                            modifier = Modifier.size(34.dp),
+                            modifier = Modifier.size(32.dp),
                         ) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                                 Icon(
                                     Icons.Outlined.Person,
                                     contentDescription = "Meine Stimme",
                                     tint = HikariText,
-                                    modifier = Modifier.size(16.dp),
+                                    modifier = Modifier.size(15.dp),
                                 )
                             }
                         }
 
+                        Spacer(Modifier.width(6.dp))
                         Surface(
                             onClick = {
                                 audioPlayer?.stop()
@@ -1739,97 +1869,17 @@ private fun LanguageSlideContent(
                             shape = CircleShape,
                             color = if (isComparing) HikariAmber.copy(alpha = 0.25f) else HikariSurfaceHigh,
                             border = BorderStroke(1.dp, if (isComparing) HikariAmber else HikariBorderStrong),
-                            modifier = Modifier.size(34.dp),
+                            modifier = Modifier.size(32.dp),
                         ) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                                 Icon(
                                     Icons.Outlined.CompareArrows,
                                     contentDescription = "A/B-Vergleich",
                                     tint = if (isComparing) HikariAmber else HikariText,
-                                    modifier = Modifier.size(16.dp),
+                                    modifier = Modifier.size(15.dp),
                                 )
                             }
                         }
-                    }
-                }
-
-                Spacer(Modifier.height(8.dp))
-
-                // KI Aussprache-Prüfung Button
-                val isListening = speechState is RuListenState.Listening || speechState is RuListenState.Partial
-                Surface(
-                    onClick = { toggleSpeechCheck() },
-                    shape = RoundedCornerShape(9.dp),
-                    color = if (isListening) HikariAmber.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.05f),
-                    border = BorderStroke(
-                        1.dp,
-                        if (isListening) HikariAmber else Color.White.copy(alpha = 0.15f),
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 10.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            if (isListening) Icons.Outlined.GraphicEq else Icons.Outlined.CheckCircle,
-                            contentDescription = "KI-Prüfung",
-                            tint = if (isListening) HikariAmber else Color.White,
-                            modifier = Modifier.size(15.dp),
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            text = when {
-                                isListening -> "Ich höre zu … Sprich jetzt!"
-                                speechScore != null -> "Aussprache erneut prüfen"
-                                else -> "KI-Ausspracheprüfung starten"
-                            },
-                            color = if (isListening) HikariAmber else Color.White,
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-                }
-
-                // Live Partial Text
-                if (speechState is RuListenState.Partial) {
-                    val partial = (speechState as RuListenState.Partial).text
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = "»$partial«",
-                        color = HikariAmber,
-                        fontSize = 12.sp,
-                        fontStyle = FontStyle.Italic,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-
-                // Score Badge
-                speechScore?.let { sc ->
-                    val scorePct = (sc.score * 100).toInt()
-                    Spacer(Modifier.height(6.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (sc.passed) Color(0xFF064E3B).copy(alpha = 0.6f) else Color(0xFF78350F).copy(alpha = 0.6f))
-                            .border(0.5.dp, if (sc.passed) Color(0xFF10B981) else Color(0xFFF59E0B), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
-                    ) {
-                        Icon(
-                            imageVector = if (sc.passed) Icons.Outlined.CheckCircle else Icons.Outlined.Replay,
-                            contentDescription = null,
-                            tint = if (sc.passed) Color(0xFF6EE7B7) else HikariAmber,
-                            modifier = Modifier.size(13.dp),
-                        )
-                        Spacer(Modifier.width(5.dp))
-                        Text(
-                            text = if (sc.passed) "$scorePct % · Exzellente Aussprache (+15 XP)" else "$scorePct % · Nochmal versuchen",
-                            color = if (sc.passed) Color(0xFF6EE7B7) else HikariAmber,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
                     }
                 }
             }

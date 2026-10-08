@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.hikari.app.domain.russian.RuExercise
 import com.hikari.app.domain.russian.RuLessonBuilder
 import com.hikari.app.domain.russian.RuSessionResult
+import com.hikari.app.domain.russian.RuSessionSnapshot
 import com.hikari.app.domain.russian.RuSettings
 import com.hikari.app.domain.russian.RuSrs
 import com.hikari.app.domain.russian.RussianCourseRepository
@@ -78,13 +79,20 @@ class RussianSessionViewModel @Inject constructor(
     private var correct = 0
     private var total = 0
     private var spokenOk = 0
+    /** Einfügestellen der Wiederholungs-Kopien in Reihenfolge — zum Nachspielen beim Fortsetzen. */
+    private val inserts = mutableListOf<Int>()
+    private var seed = System.nanoTime()
+    private var baseSize = 0
 
     init {
         viewModelScope.launch { audio.warmUp() }
         val index = repo.index
         val progress = store.state.value
-        val rng = Random(System.nanoTime())
-        val steps = when (mode) {
+        // Abgebrochene Lektion fortsetzen: gleicher Seed → gleiche Übungen.
+        val saved = if (mode == RuSessionMode.LESSON) store.loadSession(day) else null
+        if (saved != null) seed = saved.seed
+        val rng = Random(seed)
+        var steps = when (mode) {
             RuSessionMode.LESSON -> RuLessonBuilder.lesson(index, day, settings, speechAvailable, rng)
             RuSessionMode.REVIEW -> RuLessonBuilder.review(
                 index,
@@ -96,10 +104,31 @@ class RussianSessionViewModel @Inject constructor(
             )
             RuSessionMode.DIALOG -> index.day(day)?.let { listOf(RuExercise.Dialog(it, index.dialog(it, settings))) }.orEmpty()
         }
+        baseSize = steps.size
+        var startPos = 0
+        if (saved != null) {
+            if (saved.baseSize == steps.size && saved.pos < steps.size + saved.inserts.size) {
+                val list = steps.toMutableList()
+                // Jede Wiederholungs-Kopie war die Übung an der Stelle, die beim Einreihen gerade dran war.
+                saved.inserts.forEachIndexed { i, at ->
+                    val from = saved.retried.sorted().getOrNull(i) ?: return@forEachIndexed
+                    list.getOrNull(from)?.let { list.add(at.coerceAtMost(list.size), it) }
+                }
+                steps = list
+                startPos = saved.pos
+                inserts += saved.inserts
+                firstTry += saved.firstTry
+                retried += saved.retried
+                retriedPositions += saved.retriedPositions
+                xp = saved.xp; correct = saved.correct; total = saved.total; spokenOk = saved.spokenOk
+            } else {
+                store.clearSession()
+            }
+        }
         _ui.value = if (steps.isEmpty()) {
             RuSessionUi(summary = RuSummary(mode, day, 0, 0, 0, 0, progress.streak, empty = true))
         } else {
-            RuSessionUi(steps = steps)
+            RuSessionUi(steps = steps, pos = startPos)
         }
     }
 
@@ -126,6 +155,7 @@ class RussianSessionViewModel @Inject constructor(
             val dialogAt = steps.indexOfLast { it is RuExercise.Dialog }
             val insertAt = if (dialogAt > state.pos) dialogAt else steps.size
             steps = steps.toMutableList().apply { add(insertAt, step) }
+            inserts += insertAt
             // Positionen hinter der Einfügestelle rücken eins weiter.
             val shifted = retriedPositions.map { if (it >= insertAt) it + 1 else it }
             retriedPositions.clear()
@@ -158,10 +188,29 @@ class RussianSessionViewModel @Inject constructor(
         audio.stop()
         val state = _ui.value
         val pos = state.pos + 1
-        if (pos >= state.steps.size) finish() else _ui.value = state.copy(pos = pos, feedback = null)
+        if (pos >= state.steps.size) {
+            finish()
+        } else {
+            _ui.value = state.copy(pos = pos, feedback = null)
+            saveSnapshot(pos)
+        }
+    }
+
+    /** Nur zwischen zwei Übungen speichern — so zählt eine halb beantwortete Übung nie doppelt. */
+    private fun saveSnapshot(pos: Int) {
+        if (mode != RuSessionMode.LESSON) return
+        store.saveSession(
+            RuSessionSnapshot(
+                day = day, seed = seed, baseSize = baseSize, pos = pos,
+                inserts = inserts.toList(), firstTry = firstTry.toMap(),
+                retried = retried.toSet(), retriedPositions = retriedPositions.toSet(),
+                xp = xp, correct = correct, total = total, spokenOk = spokenOk,
+            ),
+        )
     }
 
     private fun finish() {
+        store.clearSession()
         val index = repo.index
         val today = store.today()
         val stars = RuSrs.stars(correct, total)

@@ -57,6 +57,24 @@ function withCoverFallback(db: Database.Database, s: SeriesRow): SeriesRow {
   return fallback ? { ...s, thumbnail_url: fallback.thumbnail_url } : s;
 }
 
+/**
+ * Regel-Treffer aus der URL und LLM-Vermutung zusammenführen. Staffel/Folge
+ * aus der URL ("/staffel-2/episode-3") sind eindeutig — das Modell rät sie nur
+ * aus Titel/Beschreibung (oft "1") und darf sie nicht überschreiben. Serienname
+ * & Co. darf es verfeinern.
+ */
+export function mergeAnalyzeMeta(
+  ruleMeta: Record<string, unknown>,
+  llmMeta: Record<string, unknown>,
+): Record<string, unknown> {
+  return {
+    ...ruleMeta,
+    ...Object.fromEntries(Object.entries(llmMeta).filter(([, v]) => v !== undefined)),
+    ...(ruleMeta.season !== undefined ? { season: ruleMeta.season } : {}),
+    ...(ruleMeta.episode !== undefined ? { episode: ruleMeta.episode } : {}),
+  };
+}
+
 interface ImportBody {
   url?: string;
   metadata?: ManualMetadata;
@@ -78,10 +96,7 @@ export async function registerVideosRoutes(app: FastifyInstance, deps: VideosDep
       let aiMeta: Record<string, unknown> = { ...ruleMeta };
       if (deps.extractor) {
         const llmMeta = await deps.extractor.extract(meta.title ?? "", meta.description ?? "");
-        aiMeta = {
-          ...ruleMeta,
-          ...Object.fromEntries(Object.entries(llmMeta).filter(([, v]) => v !== undefined)),
-        };
+        aiMeta = mergeAnalyzeMeta({ ...ruleMeta }, { ...llmMeta });
       }
       return {
         url,

@@ -27,13 +27,18 @@ object PageMetaParser {
         val episodeTitle: String? = null,
         val isMovie: Boolean = false,
     ) {
-        /** DOM-Angaben (aus dem Seiten-Scan) gewinnen über URL-Ableitungen. */
+        /**
+         * DOM-Angaben (aus dem Seiten-Scan) gewinnen bei Namen und Titeln über
+         * URL-Ableitungen. Staffel und Folge dagegen kommen zuerst aus der URL:
+         * "/staffel-2/episode-3" ist eindeutig, Überschriften können Teaser oder
+         * Folgenlisten erwischen.
+         */
         fun mergedWith(dom: PageMeta?): PageMeta {
             if (dom == null) return this
             return PageMeta(
                 seriesTitle = dom.seriesTitle?.takeIf { it.isNotBlank() } ?: seriesTitle,
-                season = dom.season ?: season,
-                episode = dom.episode ?: episode,
+                season = season ?: dom.season,
+                episode = episode ?: dom.episode,
                 episodeTitle = dom.episodeTitle?.takeIf { it.isNotBlank() } ?: episodeTitle,
                 isMovie = dom.isMovie || (isMovie && dom.episode == null && dom.seriesTitle.isNullOrBlank()),
             )
@@ -159,6 +164,14 @@ object HeadingEpisode {
 
     fun find(headings: List<String>): Found? {
         val clean = headings.map { it.trim().replace(Regex("\\s+"), " ") }.filter { it.isNotEmpty() }
+        // Nennen mehrere Überschriften verschiedene Folgen, ist es eine Folgenliste
+        // oder ein Teaser — dann ist "die erste" nur Zufall (daher überall Folge 1).
+        val numbers = clean.mapNotNull { h ->
+            (SE_HEADING.matchEntire(h) ?: EP_HEADING.matchEntire(h))?.let { m ->
+                m.groupValues[1] to m.groupValues[2]
+            }
+        }.distinct()
+        if (numbers.size > 1) return null
         for ((i, h) in clean.withIndex()) {
             val se = SE_HEADING.matchEntire(h)
             val ep = if (se == null) EP_HEADING.matchEntire(h) else null

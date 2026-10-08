@@ -138,10 +138,11 @@ fun ImportCard(
                             fontSize = 10.sp,
                             maxLines = 1,
                         )
-                        if (card.episode != null) {
+                        if (!card.isMovie) {
                             val effSeason = card.season ?: defaults.season
                             Text(
-                                "S${effSeason ?: '-'} · E${card.episode}",
+                                "S${effSeason ?: '–'} · E${card.episode ?: '–'}" +
+                                    if (card.season == null || card.episode == null) " · zum Ergänzen antippen" else "",
                                 color = Accent,
                                 fontSize = 10.sp,
                             )

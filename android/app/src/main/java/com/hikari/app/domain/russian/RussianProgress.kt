@@ -146,6 +146,27 @@ fun RuProgress.apply(result: RuSessionResult, today: Long): RuProgress {
 }
 
 /**
+ * Zwischenstand einer abgebrochenen Lektion. Die Übungen werden aus [seed]
+ * identisch neu gebaut; [inserts] spielt die Wiederholungs-Einreihungen nach.
+ */
+@Serializable
+data class RuSessionSnapshot(
+    val day: Int,
+    val seed: Long,
+    /** Anzahl der Übungen direkt nach dem Bauen — Schutz gegen geänderte Einstellungen. */
+    val baseSize: Int,
+    val pos: Int,
+    val inserts: List<Int> = emptyList(),
+    val firstTry: Map<String, Boolean> = emptyMap(),
+    val retried: Set<Int> = emptySet(),
+    val retriedPositions: Set<Int> = emptySet(),
+    val xp: Int = 0,
+    val correct: Int = 0,
+    val total: Int = 0,
+    val spokenOk: Int = 0,
+)
+
+/**
  * Persistenz in SharedPreferences als JSON — bewusst NICHT in Room: kein
  * Migrationsrisiko für die übrige App, und der Zustand ist klein.
  */
@@ -170,7 +191,21 @@ class RussianProgressStore @Inject constructor(
 
     fun today(): Long = LocalDate.now().toEpochDay()
 
+    fun loadSession(day: Int): RuSessionSnapshot? =
+        prefs.getString(SESSION_KEY, null)?.let {
+            runCatching { ruJson.decodeFromString(RuSessionSnapshot.serializer(), it) }.getOrNull()
+        }?.takeIf { it.day == day }
+
+    fun saveSession(snapshot: RuSessionSnapshot) {
+        prefs.edit().putString(SESSION_KEY, ruJson.encodeToString(RuSessionSnapshot.serializer(), snapshot)).apply()
+    }
+
+    fun clearSession() {
+        prefs.edit().remove(SESSION_KEY).apply()
+    }
+
     private companion object {
         const val KEY = "progress_v1"
+        const val SESSION_KEY = "lesson_session_v1"
     }
 }

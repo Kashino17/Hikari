@@ -414,17 +414,26 @@ class ImportSheetViewModel @Inject constructor(
         )
     }
 
-    private fun readyFromAnalyze(url: String, r: AnalyzeResponse) = ImportCardState.Ready(
-        url = url,
-        title = r.title.orEmpty(),
-        thumbnailUrl = r.thumbnailUrl,
-        seriesTitle = r.aiMeta?.seriesTitle,
-        season = r.aiMeta?.season,
-        episode = r.aiMeta?.episode,
-        dubLanguage = r.aiMeta?.dubLanguage,
-        subLanguage = r.aiMeta?.subLanguage,
-        isMovie = r.aiMeta?.isMovie ?: false,
-    )
+    private fun readyFromAnalyze(url: String, r: AnalyzeResponse): ImportCardState.Ready {
+        // Staffel/Folge aus der URL schlagen die (KI-)Vermutung des Servers.
+        val urlMeta = PageMetaParser.parse(url)
+        val season = urlMeta.season ?: r.aiMeta?.season
+        val episode = urlMeta.episode ?: r.aiMeta?.episode
+        val isMovie = r.aiMeta?.isMovie ?: false
+        return ImportCardState.Ready(
+            url = url,
+            title = r.title.orEmpty(),
+            thumbnailUrl = r.thumbnailUrl,
+            seriesTitle = r.aiMeta?.seriesTitle ?: urlMeta.seriesTitle,
+            season = season,
+            episode = episode,
+            dubLanguage = r.aiMeta?.dubLanguage,
+            subLanguage = r.aiMeta?.subLanguage,
+            isMovie = isMovie,
+            // Fehlt etwas, gleich aufklappen — dort lässt es sich ausfüllen.
+            expanded = !isMovie && (season == null || episode == null),
+        )
+    }
 
     /**
      * Ohne yt-dlp-Metadaten bleibt die URL selbst die beste Quelle für Serie,
@@ -442,6 +451,7 @@ class ImportSheetViewModel @Inject constructor(
             season = meta.season,
             episode = meta.episode ?: EpisodeLinkFilter.episodeNumber(url),
             isMovie = meta.isMovie,
+            expanded = !meta.isMovie && (meta.season == null || (meta.episode ?: EpisodeLinkFilter.episodeNumber(url)) == null),
             sniffed = SniffedSource(
                 mediaUrl = found.finding.url,
                 // Ohne Referer aus dem Interceptor ist die Seite selbst die

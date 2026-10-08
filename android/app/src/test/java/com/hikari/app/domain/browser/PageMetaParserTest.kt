@@ -106,4 +106,12 @@ class PageMetaParserTest {
         )
         assertTrue(merged.isMovie)
     }
+
+    @Test
+    fun folgenlisteInUeberschriftenIstKeineFolgenangabe() {
+        val found = HeadingEpisode.find(
+            listOf("Arcane", "S01E01: Willkommen", "S01E02: Zwei", "S01E03: Drei"),
+        )
+        assertNull(found)
+    }
 }

@@ -36,6 +36,9 @@ data class BasketItem(
     val episode: Int? = null,
     /** Beschreibung der Fundseite (og:description), null wenn keine da war. */
     val description: String? = null,
+    /** Pro Eintrag, damit Folgen aus verschiedenen Staffeln/Serien im selben Korb stimmen. */
+    val seriesTitle: String? = null,
+    val season: Int? = null,
 )
 
 /** Stand eines automatischen Durchlaufs durch mehrere Folgenseiten. */
@@ -55,6 +58,8 @@ data class BrowserUiState(
     val pageDescription: String = "",
     /** Folgennummer, die die Seite selbst nennt (Überschrift/JSON-LD), sonst null. */
     val pageEpisode: Int? = null,
+    /** Staffel der aktuellen Seite (URL vor Überschrift), sonst null. */
+    val pageSeason: Int? = null,
     val loading: Boolean = false,
     val canGoBack: Boolean = false,
     val findings: List<MediaFinding> = emptyList(),
@@ -110,12 +115,14 @@ class BrowserViewModel @Inject constructor(
         if (AdHosts.isAdUrl(url)) return
         sniffer.reset()
         adBlocker.resetCount()
+        val urlMeta = PageMetaParser.parse(url)
         _ui.update {
             it.copy(
                 currentUrl = url,
                 blockedCount = 0,
                 pageDescription = "",
-                pageEpisode = null,
+                pageEpisode = urlMeta.episode,
+                pageSeason = urlMeta.season,
                 loading = true,
                 findings = emptyList(),
                 episodeLinks = emptyList(),
@@ -151,16 +158,20 @@ class BrowserViewModel @Inject constructor(
         // Der echte Folgentitel aus den Überschriften schlägt document.title —
         // der ist oft nur "Serie S01E02 | Seitenname".
         val clean = meta?.episodeTitle?.let { PageTitleFilter.clean(it) } ?: PageTitleFilter.clean(title)
+        // Zahlen: die URL ("/staffel-2/episode-3") ist eindeutig, Überschriften
+        // sind es nicht (Folgenlisten, Teaser) — deshalb URL zuerst.
+        val urlMeta = PageMetaParser.parse(url)
         _ui.update {
             it.copy(
-                pageEpisode = meta?.episode,
+                pageEpisode = urlMeta.episode ?: meta?.episode,
+                pageSeason = urlMeta.season ?: meta?.season,
                 pageTitle = clean ?: it.pageTitle,
                 pageDescription = description?.takeIf(String::isNotBlank) ?: it.pageDescription,
                 episodeLinks = episodes,
                 findings = sniffer.findings(),
             )
         }
-        prefillFromUrl(url)
+        prefillFromUrl(url, meta)
     }
 
     /**
@@ -168,12 +179,14 @@ class BrowserViewModel @Inject constructor(
      * das Feld nicht selbst bearbeitet hat ([BrowserUiState.seriesEdited] /
      * [BrowserUiState.seasonEdited]).
      */
-    private fun prefillFromUrl(url: String) {
+    private fun prefillFromUrl(url: String, dom: PageMetaParser.PageMeta? = null) {
         val meta = PageMetaParser.parse(url)
+        val series = dom?.seriesTitle?.takeIf { it.isNotBlank() } ?: meta.seriesTitle
+        val season = meta.season ?: dom?.season
         _ui.update { st ->
             st.copy(
-                seriesTitle = if (!st.seriesEdited && meta.seriesTitle != null) meta.seriesTitle else st.seriesTitle,
-                season = if (!st.seasonEdited && meta.season != null) meta.season else st.season,
+                seriesTitle = if (!st.seriesEdited && series != null) series else st.seriesTitle,
+                season = if (!st.seasonEdited && season != null) season else st.season,
             )
         }
     }
@@ -199,12 +212,12 @@ class BrowserViewModel @Inject constructor(
     fun collectCurrent(episode: Int? = null) {
         val s = _ui.value
         val best = sniffer.best() ?: return
-        addToBasket(s.currentUrl, s.pageTitle, best, episode ?: s.pageEpisode ?: nextEpisode(s), s.pageDescription)
+        addToBasket(s.currentUrl, s.pageTitle, best, episode, s.pageDescription)
     }
 
     fun collectSpecific(finding: MediaFinding) {
         val s = _ui.value
-        addToBasket(s.currentUrl, s.pageTitle, finding, s.pageEpisode ?: nextEpisode(s), s.pageDescription)
+        addToBasket(s.currentUrl, s.pageTitle, finding, null, s.pageDescription)
     }
 
     /**
@@ -229,8 +242,26 @@ class BrowserViewModel @Inject constructor(
         val clean = PageTitleFilter.clean(title).orEmpty()
         val desc = description?.takeIf { it.isNotBlank() }
         _ui.update { st ->
-            if (st.basket.any { it.pageUrl == pageUrl }) st
-            else st.copy(basket = st.basket + BasketItem(pageUrl, clean, finding, episode, desc))
+            if (st.basket.any { it.pageUrl == pageUrl }) return@update st
+            val urlMeta = PageMetaParser.parse(pageUrl)
+            val onPage = pageUrl == st.currentUrl
+            // Staffel: Eingabe des Nutzers > URL des Eintrags > Seiten-Scan > Feld.
+            val season = (if (st.seasonEdited) st.season else null)
+                ?: urlMeta.season
+                ?: (if (onPage) st.pageSeason else null)
+                ?: st.season
+            // Folge: übergebene > Seite (URL vor Überschrift) > URL des Eintrags > Zählen.
+            val ep = episode
+                ?: (if (onPage) st.pageEpisode else null)
+                ?: urlMeta.episode
+                ?: nextEpisode(st)
+            st.copy(
+                basket = st.basket + BasketItem(
+                    pageUrl, clean, finding, ep, desc,
+                    seriesTitle = st.seriesTitle.ifBlank { null },
+                    season = season,
+                ),
+            )
         }
     }
 
@@ -238,11 +269,30 @@ class BrowserViewModel @Inject constructor(
         _ui.update { it.copy(basket = it.basket.filterNot { b -> b.pageUrl == pageUrl }) }
     }
 
-    fun clearBasket() = _ui.update { it.copy(basket = emptyList()) }
+    /** Leerer Korb = neue Runde: die Vorbefüllung aus der Seite darf wieder greifen. */
+    fun clearBasket() = _ui.update { it.copy(basket = emptyList(), seriesEdited = false, seasonEdited = false) }
 
-    fun setSeriesTitle(v: String) = _ui.update { it.copy(seriesTitle = v, seriesEdited = true) }
+    /** Serie/Staffel im Kopf des Korbs gelten für alle Einträge … */
+    fun setSeriesTitle(v: String) = _ui.update {
+        it.copy(
+            seriesTitle = v,
+            seriesEdited = true,
+            basket = it.basket.map { b -> b.copy(seriesTitle = v.ifBlank { null }) },
+        )
+    }
 
-    fun setSeason(v: Int?) = _ui.update { it.copy(season = v, seasonEdited = true) }
+    fun setSeason(v: Int?) = _ui.update {
+        it.copy(season = v, seasonEdited = true, basket = it.basket.map { b -> b.copy(season = v) })
+    }
+
+    /** … und lassen sich pro Eintrag nachträglich überschreiben. */
+    fun setItemSeason(pageUrl: String, v: Int?) = updateItem(pageUrl) { it.copy(season = v) }
+
+    fun setItemEpisode(pageUrl: String, v: Int?) = updateItem(pageUrl) { it.copy(episode = v) }
+
+    private fun updateItem(pageUrl: String, change: (BasketItem) -> BasketItem) = _ui.update {
+        it.copy(basket = it.basket.map { b -> if (b.pageUrl == pageUrl) change(b) else b })
+    }
 
     fun dismissMessage() = _ui.update { it.copy(message = null) }
 
@@ -430,8 +480,8 @@ class BrowserViewModel @Inject constructor(
                     title = b.pageTitle.ifBlank { null },
                     description = b.description,
                     metadata = ImportItemMetadata(
-                        seriesTitle = s.seriesTitle.ifBlank { null },
-                        season = s.season,
+                        seriesTitle = b.seriesTitle ?: s.seriesTitle.ifBlank { null },
+                        season = b.season,
                         episode = b.episode,
                     ),
                 )
@@ -441,6 +491,8 @@ class BrowserViewModel @Inject constructor(
                 it.copy(
                     submitting = false,
                     basket = if (result.isSuccess) emptyList() else it.basket,
+                    seriesEdited = if (result.isSuccess) false else it.seriesEdited,
+                    seasonEdited = if (result.isSuccess) false else it.seasonEdited,
                     message = result.fold(
                         onSuccess = { n -> "$n zum Download eingereiht — Fortschritt unter Downloads" },
                         onFailure = { e -> "Fehlgeschlagen: ${e.message}" },

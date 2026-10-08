@@ -379,6 +379,8 @@ fun BrowserScreen(
                 ui = ui,
                 onSeriesTitle = vm::setSeriesTitle,
                 onSeason = vm::setSeason,
+                onItemSeason = vm::setItemSeason,
+                onItemEpisode = vm::setItemEpisode,
                 onRemove = vm::removeFromBasket,
                 onClear = vm::clearBasket,
                 onSubmit = {
@@ -886,6 +888,8 @@ private fun BasketSheet(
     ui: BrowserUiState,
     onSeriesTitle: (String) -> Unit,
     onSeason: (Int?) -> Unit,
+    onItemSeason: (String, Int?) -> Unit,
+    onItemEpisode: (String, Int?) -> Unit,
     onRemove: (String) -> Unit,
     onClear: () -> Unit,
     onSubmit: () -> Unit,
@@ -899,7 +903,7 @@ private fun BasketSheet(
         )
         Spacer(Modifier.height(4.dp))
         Text(
-            "Serie und Staffel gelten für alle — die Folgennummer kommt aus dem Link.",
+            "Serie und Staffel oben gelten für alle. Staffel und Folge kannst du pro Video darunter ändern.",
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -934,7 +938,7 @@ private fun BasketSheet(
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text(
-                            item.episode?.let { "Folge $it" } ?: item.pageTitle.ifBlank { "Unbenannt" },
+                            item.pageTitle.ifBlank { "Unbenannt" },
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
@@ -948,6 +952,9 @@ private fun BasketSheet(
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
+                    NumberField(item.season, "S", Modifier.width(58.dp)) { onItemSeason(item.pageUrl, it) }
+                    Spacer(Modifier.width(6.dp))
+                    NumberField(item.episode, "E", Modifier.width(66.dp)) { onItemEpisode(item.pageUrl, it) }
                     IconButton(onClick = { onRemove(item.pageUrl) }) {
                         Icon(
                             Icons.Default.Close,
@@ -982,6 +989,23 @@ private fun BasketSheet(
             }
         }
     }
+}
+
+/** Kleines Zahlenfeld für Staffel/Folge; leer = unbekannt (der Server liest dann die URL). */
+@Composable
+private fun NumberField(value: Int?, label: String, modifier: Modifier, onChange: (Int?) -> Unit) {
+    OutlinedTextField(
+        value = value?.toString().orEmpty(),
+        onValueChange = { onChange(it.filter(Char::isDigit).take(4).toIntOrNull()) },
+        label = { Text(label, fontSize = 11.sp) },
+        singleLine = true,
+        textStyle = androidx.compose.ui.text.TextStyle(fontSize = 13.sp),
+        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
+        ),
+        modifier = modifier,
+        shape = RoundedCornerShape(8.dp),
+    )
 }
 
 // ---- Hilfsfunktionen ----------------------------------------------------
