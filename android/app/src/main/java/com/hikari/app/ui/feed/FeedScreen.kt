@@ -1713,80 +1713,8 @@ private fun LanguageSlideContent(
 
                 // Score Card mit Wort-für-Wort Hervorhebung
                 speechScore?.let { sc ->
-                    val scorePct = (sc.score * 100).toInt()
                     Spacer(Modifier.height(8.dp))
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(
-                                if (sc.passed) Color(0xFF064E3B).copy(alpha = 0.5f) else Color(0xFF78350F).copy(alpha = 0.5f),
-                            )
-                            .border(
-                                0.5.dp,
-                                if (sc.passed) Color(0xFF10B981) else Color(0xFFF59E0B),
-                                RoundedCornerShape(10.dp),
-                            )
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                        ) {
-                            Icon(
-                                imageVector = if (sc.passed) Icons.Outlined.CheckCircle else Icons.Outlined.Replay,
-                                contentDescription = null,
-                                tint = if (sc.passed) Color(0xFF6EE7B7) else HikariAmber,
-                                modifier = Modifier.size(14.dp),
-                            )
-                            Spacer(Modifier.width(5.dp))
-                            Text(
-                                text = when {
-                                    sc.passed -> "$scorePct % · Exzellente Aussprache (+15 XP)"
-                                    sc.heard.isBlank() -> "Nichts verstanden — nochmal, etwas lauter"
-                                    else -> "$scorePct % · Fast geschafft — Nochmal versuchen"
-                                },
-                                color = if (sc.passed) Color(0xFF6EE7B7) else HikariAmber,
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
-
-                        Spacer(Modifier.height(6.dp))
-
-                        // Word-by-word visual highlight chips (green = correct, red = missed)
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            sc.words.forEach { (word, ok) ->
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(if (ok) Color(0xFF065F46) else Color(0xFF991B1B).copy(alpha = 0.8f))
-                                        .border(0.5.dp, if (ok) Color(0xFF34D399) else Color(0xFFF87171), RoundedCornerShape(6.dp))
-                                        .padding(horizontal = 7.dp, vertical = 2.dp),
-                                ) {
-                                    Text(
-                                        text = word,
-                                        color = Color.White,
-                                        fontSize = 11.5.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                    )
-                                }
-                            }
-                        }
-
-                        if (sc.heard.isNotBlank()) {
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                text = "Gehört: »${sc.heard}«",
-                                color = Color.White.copy(alpha = 0.85f),
-                                fontSize = 11.sp,
-                            )
-                        }
-                    }
+                    com.hikari.app.ui.russian.RuSpeechScoreCard(sc, xpHint = "+15 XP")
                 }
 
                 Spacer(Modifier.height(8.dp))

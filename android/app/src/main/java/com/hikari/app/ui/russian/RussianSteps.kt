@@ -343,28 +343,7 @@ internal fun RuRecordCompare(p: RuPhrase, env: RuStepEnv) {
         // Mini AI Score Anzeige falls in Intro geprüft wurde
         miniScore?.let { sc ->
             Spacer(Modifier.height(8.dp))
-            val pct = (sc.score * 100).toInt()
-            Row(
-                Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(if (sc.passed) RuGood.copy(alpha = 0.12f) else HikariAmber.copy(alpha = 0.12f))
-                    .padding(horizontal = 10.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    if (sc.passed) Icons.Outlined.CheckCircle else Icons.Outlined.Replay,
-                    null,
-                    tint = if (sc.passed) RuGood else HikariAmber,
-                    modifier = Modifier.size(14.dp),
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    if (sc.passed) "Sehr gut! $pct %" else "Fast: $pct % (Nochmal versuchen)",
-                    color = if (sc.passed) RuGood else HikariAmber,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
+            RuSpeechScoreCard(sc)
         }
     }
 }
@@ -767,23 +746,8 @@ internal fun SpeakStep(step: RuExercise.Speak, env: RuStepEnv) {
                     textAlign = TextAlign.Center,
                 )
                 score?.let { sc ->
-                    Spacer(Modifier.height(8.dp))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
-                        sc.words.forEach { (w, ok) ->
-                            Text(w, color = if (ok) RuGood else RuBad, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
-                        }
-                    }
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        when {
-                            sc.passed -> "Verstanden!"
-                            sc.heard.isBlank() -> "Ich habe nichts verstanden — noch mal, etwas lauter."
-                            else -> "Gehört: »${sc.heard}«"
-                        },
-                        color = if (sc.passed) RuGood else HikariTextMuted,
-                        fontSize = 13.5.sp,
-                        textAlign = TextAlign.Center,
-                    )
+                    Spacer(Modifier.height(10.dp))
+                    RuSpeechScoreCard(sc, large = true)
                 }
             } else {
                 val failed = state as? RuListenState.Failed

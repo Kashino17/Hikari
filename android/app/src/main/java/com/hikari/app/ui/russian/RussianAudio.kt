@@ -200,7 +200,15 @@ class RussianSpeechRecognizer(private val context: Context) {
         stopWatchdog = null
     }
 
+    private var retries = 0
+    private var retryRun: Runnable? = null
+
     fun start() {
+        retries = 0
+        begin()
+    }
+
+    private fun begin() {
         if (!available) {
             _state.value = RuListenState.Failed("Keine Spracherkennung auf diesem Gerät gefunden.")
             return
@@ -266,6 +274,17 @@ class RussianSpeechRecognizer(private val context: Context) {
                     return
                 }
 
+                // Der Erkennungsdienst hat die Verbindung verloren (11), ist noch
+                // belegt (8) oder drosselt (10) — typisch direkt nach einem
+                // Versuch. Mit frischer Instanz still nochmal starten.
+                if ((error == 8 || error == 10 || error == 11) && retries < 2) {
+                    retries++
+                    destroy()
+                    _state.value = RuListenState.Listening
+                    retryRun = Runnable { begin() }.also { mainHandler.postDelayed(it, 450L) }
+                    return
+                }
+
                 // Bei manuellem Client-Stopp oder No-Match ohne Sprache: als Done(leer) werten, nie abbrechen!
                 _state.value = when (error) {
                     SpeechRecognizer.ERROR_CLIENT,
@@ -278,6 +297,7 @@ class RussianSpeechRecognizer(private val context: Context) {
                         RuListenState.Failed("Die Spracherkennung braucht Internet oder das russische Offline-Sprachpaket.", missingLanguage = true)
                     12, 13 -> // ERROR_LANGUAGE_NOT_SUPPORTED / ERROR_LANGUAGE_UNAVAILABLE (API 31)
                         RuListenState.Failed("Russisch ist in der Spracherkennung nicht installiert.", missingLanguage = true)
+                    8, 10, 11 -> RuListenState.Failed("Die Spracherkennung ist gerade nicht erreichbar — bitte gleich nochmal versuchen.")
                     else -> RuListenState.Failed("Spracherkennung fehlgeschlagen (Code $error).")
                 }
             }
@@ -346,6 +366,8 @@ class RussianSpeechRecognizer(private val context: Context) {
 
     fun destroy() {
         clearWatchdog()
+        retryRun?.let { mainHandler.removeCallbacks(it) }
+        retryRun = null
         runCatching { recognizer?.destroy() }
         recognizer = null
         userStopped = false
