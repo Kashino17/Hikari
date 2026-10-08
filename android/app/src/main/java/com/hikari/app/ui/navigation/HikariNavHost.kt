@@ -256,7 +256,9 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                 arguments = listOf(navArgument("seriesId") { type = NavType.StringType }),
             ) { backStackEntry ->
                 val seriesId = backStackEntry.arguments?.getString("seriesId")
-                Box(Modifier.fillMaxSize()) {
+                // Oben bewusst randlos (Hero unter der Statusleiste), unten aber
+                // über der Navigationsleiste enden, sonst wird die letzte Folge verdeckt.
+                Box(Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding())) {
                     SeriesDetailScreen(
                         seriesId = seriesId,
                         onBack = { nav.popBackStack() },

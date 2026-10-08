@@ -2,6 +2,8 @@ package com.hikari.app.ui.player
 
 import android.app.Activity
 import android.app.PictureInPictureParams
+import android.content.Intent
+import androidx.core.content.ContextCompat
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
@@ -323,6 +325,28 @@ fun VideoPlayerScreen(
 
     var inPipMode by remember { mutableStateOf(activity?.isInPictureInPictureMode == true) }
 
+    /** Pause/Play sowie 10 s zurück/vor als Fernbedienung im Bild-im-Bild-Fenster. */
+    fun pipActions(isPlaying: Boolean): List<android.app.RemoteAction> {
+        val act = activity ?: return emptyList()
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return emptyList()
+        fun action(code: Int, icon: Int, title: String): android.app.RemoteAction {
+            val pi = android.app.PendingIntent.getBroadcast(
+                act, code,
+                Intent(PIP_ACTION).setPackage(act.packageName).putExtra(PIP_EXTRA, code),
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
+            )
+            return android.app.RemoteAction(
+                android.graphics.drawable.Icon.createWithResource(act, icon), title, title, pi,
+            )
+        }
+        return listOf(
+            action(PIP_BACK, android.R.drawable.ic_media_rew, "10 Sekunden zurück"),
+            if (isPlaying) action(PIP_TOGGLE, android.R.drawable.ic_media_pause, "Pause")
+            else action(PIP_TOGGLE, android.R.drawable.ic_media_play, "Wiedergabe"),
+            action(PIP_FWD, android.R.drawable.ic_media_ff, "10 Sekunden vor"),
+        )
+    }
+
     fun enterPip() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && activity != null) {
             val rational = if (videoW > 0 && videoH > 0) {
@@ -332,6 +356,7 @@ fun VideoPlayerScreen(
                 Rational(16, 9)
             }
             val builder = PictureInPictureParams.Builder().setAspectRatio(rational)
+                .setActions(pipActions(player.isPlaying))
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 builder.setAutoEnterEnabled(true)
                 builder.setSeamlessResizeEnabled(true)
@@ -346,7 +371,7 @@ fun VideoPlayerScreen(
     }
 
     LaunchedEffect(videoW, videoH, playing) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && activity != null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && activity != null) {
             val rational = if (videoW > 0 && videoH > 0) {
                 val aspect = (videoW.toFloat() / videoH.toFloat()).coerceIn(0.42f, 2.38f)
                 Rational((aspect * 1000).toInt(), 1000)
@@ -355,10 +380,35 @@ fun VideoPlayerScreen(
             }
             val builder = PictureInPictureParams.Builder()
                 .setAspectRatio(rational)
-                .setAutoEnterEnabled(playing)
-                .setSeamlessResizeEnabled(true)
+                .setActions(pipActions(playing))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                builder.setAutoEnterEnabled(playing).setSeamlessResizeEnabled(true)
+            }
             runCatching { activity.setPictureInPictureParams(builder.build()) }
         }
+    }
+
+    // Antworten auf die Knöpfe im Bild-im-Bild-Fenster.
+    DisposableEffect(activity) {
+        val act = activity
+        val receiver = object : android.content.BroadcastReceiver() {
+            override fun onReceive(c: android.content.Context?, i: Intent?) {
+                when (i?.getIntExtra(PIP_EXTRA, -1)) {
+                    PIP_BACK -> player.seekTo((player.currentPosition - 10_000L).coerceAtLeast(0L))
+                    PIP_FWD -> {
+                        val dur = player.duration.takeIf { it > 0 } ?: Long.MAX_VALUE
+                        player.seekTo((player.currentPosition + 10_000L).coerceAtMost(dur))
+                    }
+                    PIP_TOGGLE -> player.playWhenReady = !player.isPlaying
+                }
+            }
+        }
+        if (act != null) {
+            ContextCompat.registerReceiver(
+                act, receiver, android.content.IntentFilter(PIP_ACTION), ContextCompat.RECEIVER_NOT_EXPORTED,
+            )
+        }
+        onDispose { if (act != null) runCatching { act.unregisterReceiver(receiver) } }
     }
 
     DisposableEffect(activity) {
@@ -1164,3 +1214,9 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     is ContextWrapper -> baseContext.findActivity()
     else -> null
 }
+
+private const val PIP_ACTION = "com.hikari.app.PIP_CONTROL"
+private const val PIP_EXTRA = "pip_code"
+private const val PIP_BACK = 1
+private const val PIP_TOGGLE = 2
+private const val PIP_FWD = 3
