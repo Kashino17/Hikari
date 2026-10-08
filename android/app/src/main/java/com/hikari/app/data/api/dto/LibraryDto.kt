@@ -38,6 +38,15 @@ data class LibraryVideoDto(
     val is_movie: Int = 0,
 )
 
+/**
+ * channel_id "manual" = selbst importiert (Browser/Teilen), sonst YouTube-Kanal.
+ * Film = ausdrücklich als Film markiert, oder ein eigener Import ohne Serie.
+ * YouTube-Videos sind nie Filme — egal wie lang oder wie der Titel lautet.
+ */
+fun LibraryVideoDto.isFilm(): Boolean =
+    series_id == null && (is_movie == 1 || channel_id == "manual")
+
+
 @Serializable
 data class LibraryResponse(
     val series: List<SeriesDto>,

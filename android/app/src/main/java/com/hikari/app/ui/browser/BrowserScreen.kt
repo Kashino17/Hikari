@@ -379,6 +379,7 @@ fun BrowserScreen(
                 ui = ui,
                 onSeriesTitle = vm::setSeriesTitle,
                 onSeason = vm::setSeason,
+                onItemTitle = vm::setItemTitle,
                 onItemSeason = vm::setItemSeason,
                 onItemEpisode = vm::setItemEpisode,
                 onRemove = vm::removeFromBasket,
@@ -896,6 +897,7 @@ private fun BasketSheet(
     ui: BrowserUiState,
     onSeriesTitle: (String) -> Unit,
     onSeason: (Int?) -> Unit,
+    onItemTitle: (String, String) -> Unit,
     onItemSeason: (String, Int?) -> Unit,
     onItemEpisode: (String, Int?) -> Unit,
     onRemove: (String) -> Unit,
@@ -938,37 +940,41 @@ private fun BasketSheet(
 
         Spacer(Modifier.height(12.dp))
 
-        LazyColumn(Modifier.fillMaxWidth().height(240.dp)) {
+        LazyColumn(Modifier.fillMaxWidth().height(300.dp)) {
             items(ui.basket, key = { it.pageUrl }) { item ->
-                Row(
-                    Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            item.pageTitle.ifBlank { "Unbenannt" },
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = item.pageTitle,
+                            onValueChange = { onItemTitle(item.pageUrl, it) },
+                            label = { Text("Titel", fontSize = 11.sp) },
+                            singleLine = true,
+                            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 13.sp),
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp),
                         )
+                        IconButton(onClick = { onRemove(item.pageUrl) }) {
+                            Icon(
+                                Icons.Default.Close,
+                                "Entfernen",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        NumberField(item.season, "S", Modifier.width(58.dp)) { onItemSeason(item.pageUrl, it) }
+                        Spacer(Modifier.width(6.dp))
+                        NumberField(item.episode, "E", Modifier.width(66.dp)) { onItemEpisode(item.pageUrl, it) }
+                        Spacer(Modifier.width(10.dp))
                         Text(
                             "${item.finding.kind.name} · ${item.pageUrl}",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    NumberField(item.season, "S", Modifier.width(58.dp)) { onItemSeason(item.pageUrl, it) }
-                    Spacer(Modifier.width(6.dp))
-                    NumberField(item.episode, "E", Modifier.width(66.dp)) { onItemEpisode(item.pageUrl, it) }
-                    IconButton(onClick = { onRemove(item.pageUrl) }) {
-                        Icon(
-                            Icons.Default.Close,
-                            "Entfernen",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.weight(1f),
                         )
                     }
                 }

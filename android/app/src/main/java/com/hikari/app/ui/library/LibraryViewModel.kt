@@ -20,6 +20,7 @@ import com.hikari.app.player.MusicPlayerController
 import com.hikari.app.ui.library.components.TopTenCharts
 import com.hikari.app.ui.library.components.TopTenItem
 import com.hikari.app.data.api.dto.LibraryVideoDto
+import com.hikari.app.data.api.dto.isFilm
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -251,15 +252,7 @@ class LibraryViewModel @Inject constructor(
                 }
 
             // ── TOP 10 FILME (Letzte 30 Tage) ───────────────────────────────
-            fun isMovieVideo(v: LibraryVideoDto): Boolean {
-                if (v.is_movie == 1) return true
-                if (v.series_id != null) return false
-                val t = v.title.lowercase()
-                val isFilmWord = t.contains("film") || t.contains("movie") || t.contains("spielfilm") || t.contains("doku") || t.contains("cinema")
-                return isFilmWord || v.duration_seconds >= 2400
-            }
-
-            val allMovies = data.recentlyAdded.filter { isMovieVideo(it) }
+            val allMovies = data.recentlyAdded.filter { it.isFilm() }
             val watchedMovies = allMovies
                 .filter { it.id in recentWatchedVideoIds }
                 .sortedByDescending { it.progress_seconds ?: 0f }
@@ -268,11 +261,7 @@ class LibraryViewModel @Inject constructor(
                 .filter { it !in watchedMovies }
                 .sortedWith(compareByDescending<LibraryVideoDto> { it.overall_score ?: 0 }.thenByDescending { it.duration_seconds })
 
-            val fallbackStandalone = data.recentlyAdded
-                .filter { it.series_id == null && it !in watchedMovies && it !in unwatchedMovies }
-                .sortedByDescending { it.duration_seconds }
-
-            val finalTopMovies = (watchedMovies + unwatchedMovies + fallbackStandalone)
+            val finalTopMovies = (watchedMovies + unwatchedMovies)
                 .take(10)
                 .mapIndexed { idx, v ->
                     val min = v.duration_seconds / 60

@@ -286,6 +286,8 @@ class BrowserViewModel @Inject constructor(
     }
 
     /** … und lassen sich pro Eintrag nachträglich überschreiben. */
+    fun setItemTitle(pageUrl: String, v: String) = updateItem(pageUrl) { it.copy(pageTitle = v) }
+
     fun setItemSeason(pageUrl: String, v: Int?) = updateItem(pageUrl) { it.copy(season = v) }
 
     fun setItemEpisode(pageUrl: String, v: Int?) = updateItem(pageUrl) { it.copy(episode = v) }

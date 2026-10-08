@@ -71,6 +71,7 @@ import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.ChannelDto
 import com.hikari.app.data.api.dto.LibraryResponse
 import com.hikari.app.data.api.dto.LibraryVideoDto
+import com.hikari.app.data.api.dto.isFilm
 import com.hikari.app.domain.genre.Genre
 import com.hikari.app.domain.genre.detectGenres
 import com.hikari.app.domain.model.FeedItem
@@ -196,12 +197,7 @@ private fun LibraryContent(
     var showShuffleSheet by remember { mutableStateOf(false) }
     var quickLookItem by remember { mutableStateOf<QuickLookItem?>(null) }
 
-    fun isMovie(v: LibraryVideoDto): Boolean {
-        if (v.is_movie == 1) return true
-        if (v.series_id != null) return false
-        val t = v.title.lowercase()
-        return t.contains("film") || t.contains("movie") || t.contains("spielfilm") || t.contains("doku") || t.contains("cinema") || v.duration_seconds >= 2400
-    }
+    fun isMovie(v: LibraryVideoDto): Boolean = v.isFilm()
 
     fun formatDuration(seconds: Int): String {
         val min = seconds / 60
