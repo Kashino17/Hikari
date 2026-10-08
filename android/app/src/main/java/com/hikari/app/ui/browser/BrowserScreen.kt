@@ -452,6 +452,7 @@ private fun AddressBar(
     onReload: () -> Unit,
 ) {
     var editing by remember { mutableStateOf(false) }
+    var hadFocus by remember { mutableStateOf(false) }
     val focusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
     val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     val pill = MaterialTheme.colorScheme.surfaceVariant
@@ -490,8 +491,15 @@ private fun AddressBar(
                         .fillMaxWidth()
                         .focusRequester(focusRequester)
                         .onFocusChanged {
-                            onFocusChange(it.isFocused)
-                            if (!it.isFocused) editing = false
+                            // onFocusChanged feuert schon beim Einblenden mit
+                            // "nicht fokussiert" — das darf das Feld nicht
+                            // sofort wieder schließen (Eingabe war unmöglich).
+                            if (it.isFocused) hadFocus = true
+                            if (hadFocus) onFocusChange(it.isFocused)
+                            if (hadFocus && !it.isFocused) {
+                                hadFocus = false
+                                editing = false
+                            }
                         },
                     singleLine = true,
                     textStyle = MaterialTheme.typography.bodyMedium.copy(
