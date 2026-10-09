@@ -223,8 +223,9 @@ export async function registerVideosRoutes(app: FastifyInstance, deps: VideosDep
     // approved video — Home was frozen on month-old legacy items. We now key on
     // downloaded_videos (every approved video, both paths, gets one) and pull
     // progress_seconds from feed_items if present.
-    const recentlyAdded = deps.db
-      .prepare(`
+    const libraryRows = (where: string, limit: number) =>
+      deps.db
+        .prepare(`
       SELECT v.*, c.title as channelTitle, fi.progress_seconds,
              s.overall_score as overall_score
       FROM videos v
@@ -232,10 +233,23 @@ export async function registerVideosRoutes(app: FastifyInstance, deps: VideosDep
       JOIN downloaded_videos dv ON dv.video_id = v.id
       LEFT JOIN feed_items fi ON fi.video_id = v.id
       LEFT JOIN scores s ON s.video_id = v.id
+      ${where}
       ORDER BY v.discovered_at DESC
-      LIMIT 20
+      LIMIT ${limit}
     `)
-      .all();
+        .all() as { id: string }[];
+    // Filme (eigene Importe ohne Serie) gehoeren immer in die Bibliothek —
+    // sonst faellt ein aelterer Film aus den 20 juengsten Eintraegen heraus
+    // und taucht unter "Filme" nie auf.
+    const recentlyAdded = (() => {
+      const latest = libraryRows("", 20);
+      const seen = new Set(latest.map((r) => r.id));
+      const movies = libraryRows(
+        "WHERE v.series_id IS NULL AND (v.is_movie = 1 OR v.channel_id = 'manual')",
+        200,
+      ).filter((r) => !seen.has(r.id));
+      return [...latest, ...movies];
+    })();
     const channels = deps.db.prepare("SELECT * FROM channels WHERE is_active = 1").all();
 
     // Etappe 5: die Sammlung — Später ansehen + Verlauf, hydratisiert wie
