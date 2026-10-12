@@ -30,6 +30,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hikari.app.domain.russian.RuAnswerCheck
+import com.hikari.app.domain.russian.RuSoundCoach
+import androidx.compose.runtime.remember
 
 private val Good = Color(0xFF6EE7B7)
 private val Amber = Color(0xFFF59E0B)
@@ -110,6 +112,26 @@ fun RuSpeechScoreCard(
         if (sc.heard.isNotBlank()) {
             Spacer(Modifier.height(4.dp))
             Text("Gehört: »${sc.heard}«", color = Color.White.copy(alpha = 0.85f), fontSize = small)
+        }
+        val hints = remember(sc) { if (sc.passed) emptyList() else RuSoundCoach.hints(sc) }
+        hints.forEach { h ->
+            Spacer(Modifier.height(8.dp))
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.Black.copy(alpha = 0.25f))
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
+            ) {
+                Text(
+                    "»${h.target}« klang wie »${h.heard}«",
+                    color = Amber,
+                    fontSize = small,
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(h.tip, color = Color.White.copy(alpha = 0.9f), fontSize = small)
+            }
         }
     }
 }

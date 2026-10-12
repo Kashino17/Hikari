@@ -192,6 +192,12 @@ fun RussianHomeScreen(
                     null,
                 ) { onOpen("russian/dialog/${p.dayStars.keys.randomOrNull() ?: 1}") },
                 GameApp(
+                    "Lautlabor",
+                    R.drawable.ic_app_dialog,
+                    listOf(Color(0xFFD9684F), Color(0xFFA03A28)),
+                    p.labBest.values.maxOrNull()?.let { "★$it%" },
+                ) { onOpen("russian/sounds") },
+                GameApp(
                     "Satzbuch",
                     R.drawable.ic_app_book,
                     listOf(Color(0xFF9B6DD9), Color(0xFF6B3FB0)),

@@ -1,0 +1,325 @@
+{
+ "version": 1,
+ "groups": [
+  {
+   "id": "yi",
+   "title": "ы oder и?",
+   "tip": "ы ist dunkel: Zunge nach hinten ziehen, Lippen locker lassen. и ist hell wie deutsches »ie«.",
+   "pairs": [
+    {
+     "id": "yi1",
+     "a": {
+      "ru": "бы+ть",
+      "de": "sein"
+     },
+     "b": {
+      "ru": "би+ть",
+      "de": "schlagen"
+     }
+    },
+    {
+     "id": "yi2",
+     "a": {
+      "ru": "мы+ло",
+      "de": "Seife"
+     },
+     "b": {
+      "ru": "ми+ло",
+      "de": "nett"
+     }
+    },
+    {
+     "id": "yi3",
+     "a": {
+      "ru": "бы+л",
+      "de": "war"
+     },
+     "b": {
+      "ru": "би+л",
+      "de": "schlug"
+     }
+    }
+   ]
+  },
+  {
+   "id": "soft",
+   "title": "hart oder weich?",
+   "tip": "Weiche Konsonanten: Zungenmitte hebt sich zum Gaumen, wie ein kleines »j« danach.",
+   "pairs": [
+    {
+     "id": "soft1",
+     "a": {
+      "ru": "ма+т",
+      "de": "Matt"
+     },
+     "b": {
+      "ru": "ма+ть",
+      "de": "Mutter"
+     }
+    },
+    {
+     "id": "soft2",
+     "a": {
+      "ru": "у+гол",
+      "de": "Ecke"
+     },
+     "b": {
+      "ru": "у+голь",
+      "de": "Kohle"
+     }
+    },
+    {
+     "id": "soft3",
+     "a": {
+      "ru": "бра+т",
+      "de": "Bruder"
+     },
+     "b": {
+      "ru": "бра+ть",
+      "de": "nehmen"
+     }
+    },
+    {
+     "id": "soft4",
+     "a": {
+      "ru": "лу+к",
+      "de": "Zwiebel"
+     },
+     "b": {
+      "ru": "лю+к",
+      "de": "Luke"
+     }
+    },
+    {
+     "id": "soft5",
+     "a": {
+      "ru": "ко+н",
+      "de": "Einsatz"
+     },
+     "b": {
+      "ru": "ко+нь",
+      "de": "Pferd"
+     }
+    }
+   ]
+  },
+  {
+   "id": "rl",
+   "title": "р oder л?",
+   "tip": "р ist gerollt, die Zungenspitze schwingt am Gaumen. л ist hart, die Zunge drückt gegen die Zähne.",
+   "pairs": [
+    {
+     "id": "rl1",
+     "a": {
+      "ru": "ра+к",
+      "de": "Krebs"
+     },
+     "b": {
+      "ru": "ла+к",
+      "de": "Lack"
+     }
+    },
+    {
+     "id": "rl2",
+     "a": {
+      "ru": "ро+за",
+      "de": "Rose"
+     },
+     "b": {
+      "ru": "лоза+",
+      "de": "Rebe"
+     }
+    },
+    {
+     "id": "rl3",
+     "a": {
+      "ru": "ро+жь",
+      "de": "Roggen"
+     },
+     "b": {
+      "ru": "ло+жь",
+      "de": "Lüge"
+     }
+    }
+   ]
+  },
+  {
+   "id": "zhsh",
+   "title": "ж, ш oder з?",
+   "tip": "ж ist stimmhaft (wie französisch »j«), ш stimmlos. з ist ein weiches Summen wie deutsches »s« in »Sonne«.",
+   "pairs": [
+    {
+     "id": "zhsh1",
+     "a": {
+      "ru": "жа+р",
+      "de": "Hitze"
+     },
+     "b": {
+      "ru": "ша+р",
+      "de": "Kugel"
+     }
+    },
+    {
+     "id": "zhsh2",
+     "a": {
+      "ru": "жи+ть",
+      "de": "leben"
+     },
+     "b": {
+      "ru": "ши+ть",
+      "de": "nähen"
+     }
+    },
+    {
+     "id": "zhsh3",
+     "a": {
+      "ru": "жа+л",
+      "de": "stach"
+     },
+     "b": {
+      "ru": "за+л",
+      "de": "Saal"
+     }
+    }
+   ]
+  },
+  {
+   "id": "chsh",
+   "title": "ч oder ш?",
+   "tip": "ч ist hart-weich wie »tsch« mit der Zungenmitte oben. ш ist ein tiefes, dickes »sch«.",
+   "pairs": [
+    {
+     "id": "chsh1",
+     "a": {
+      "ru": "ча+шка",
+      "de": "Tasse"
+     },
+     "b": {
+      "ru": "ша+шка",
+      "de": "Damestein"
+     }
+    },
+    {
+     "id": "chsh2",
+     "a": {
+      "ru": "ча+йка",
+      "de": "Möwe"
+     },
+     "b": {
+      "ru": "ша+йка",
+      "de": "Bande"
+     }
+    }
+   ]
+  },
+  {
+   "id": "cs",
+   "title": "ц oder с?",
+   "tip": "ц ist ein schnelles »ts« wie in »Zahl«. с ist ein glattes, stimmloses »s«.",
+   "pairs": [
+    {
+     "id": "cs1",
+     "a": {
+      "ru": "ли+ца",
+      "de": "Gesichter"
+     },
+     "b": {
+      "ru": "лиса+",
+      "de": "Fuchs"
+     }
+    },
+    {
+     "id": "cs2",
+     "a": {
+      "ru": "це+ль",
+      "de": "Ziel"
+     },
+     "b": {
+      "ru": "се+ль",
+      "de": "Schlammlawine"
+     }
+    }
+   ]
+  },
+  {
+   "id": "shs",
+   "title": "ш oder с?",
+   "tip": "ш: Zunge zurück, Lippen leicht gerundet. с: Zunge vorn hinter den Zähnen, Lippen flach.",
+   "pairs": [
+    {
+     "id": "shs1",
+     "a": {
+      "ru": "шо+к",
+      "de": "Schock"
+     },
+     "b": {
+      "ru": "со+к",
+      "de": "Saft"
+     }
+    },
+    {
+     "id": "shs2",
+     "a": {
+      "ru": "у+ши",
+      "de": "Ohren"
+     },
+     "b": {
+      "ru": "усы+",
+      "de": "Schnurrbart"
+     }
+    }
+   ]
+  },
+  {
+   "id": "stress",
+   "title": "Betonung ändert die Bedeutung",
+   "tip": "Im Russischen wandert die Betonung frei. Der betonte Vokal ist lauter, länger und klarer — die anderen werden schwach.",
+   "pairs": [
+    {
+     "id": "stress1",
+     "a": {
+      "ru": "за+мок",
+      "de": "Burg"
+     },
+     "b": {
+      "ru": "замо+к",
+      "de": "Schloss"
+     }
+    },
+    {
+     "id": "stress2",
+     "a": {
+      "ru": "му+ка",
+      "de": "Qual"
+     },
+     "b": {
+      "ru": "мука+",
+      "de": "Mehl"
+     }
+    },
+    {
+     "id": "stress3",
+     "a": {
+      "ru": "а+тлас",
+      "de": "Atlas"
+     },
+     "b": {
+      "ru": "атла+с",
+      "de": "Satin"
+     }
+    },
+    {
+     "id": "stress4",
+     "a": {
+      "ru": "хло+пок",
+      "de": "Baumwolle"
+     },
+     "b": {
+      "ru": "хлопо+к",
+      "de": "Klatschen"
+     }
+    }
+   ]
+  }
+ ]
+}

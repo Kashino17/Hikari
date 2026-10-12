@@ -39,6 +39,8 @@ data class RuProgress(
     val bestPairsSeconds: Int = 0,
     /** Gesprochene Sätze, die die Spracherkennung akzeptiert hat. */
     val spokenOk: Int = 0,
+    /** Lautlabor: Gruppen-ID → bestes Ergebnis in Prozent (0–100). */
+    val labBest: Map<String, Int> = emptyMap(),
 ) {
     val settings: RuSettings
         get() = RuSettings(gender ?: RuGender.MALE, voice ?: gender ?: RuGender.MALE)

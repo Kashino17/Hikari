@@ -1249,7 +1249,7 @@ private fun LanguageSlideContent(
                         isComparing = false
                     }
                 }
-                onRecordPractice(item.phraseId, false)
+                onRecordPractice(null, false) // Eigenaufnahme vergleichen ist Üben, kein Fehlversuch
             } else {
                 audioPlayer?.stop()
                 recognizer.stopListening()
@@ -1913,6 +1913,7 @@ private fun LanguageSlideContent(
                                     RoundedCornerShape(10.dp),
                                 )
                                 .clickable {
+                                    if (selectedReply == null) onRecordPractice(null, false)
                                     selectedReply = i
                                     if (isCorrect) onDone()
                                 }
