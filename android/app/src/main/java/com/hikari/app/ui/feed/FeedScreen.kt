@@ -1193,6 +1193,7 @@ private fun LanguageSlideContent(
 
     var isRecording by remember(item.id) { mutableStateOf(false) }
     var hasRecording by remember(item.id) { mutableStateOf(false) }
+    var takeStamp by remember(item.id) { mutableStateOf(0L) }
     var isComparing by remember(item.id) { mutableStateOf(false) }
     var speechScore by remember(item.id) { mutableStateOf<RuAnswerCheck.SpeechScore?>(null) }
     var speechAttempts by remember(item.id) { mutableIntStateOf(0) }
@@ -1237,6 +1238,7 @@ private fun LanguageSlideContent(
                 recorder.stop()
                 isRecording = false
                 hasRecording = true
+                takeStamp = System.currentTimeMillis()
                 isComparing = true
                 // Sofort A/B-Vergleich abspielen: erst deine Stimme, danach Muttersprachler
                 audioPlayer?.playFile(recorder.file) {
@@ -1715,6 +1717,14 @@ private fun LanguageSlideContent(
                 speechScore?.let { sc ->
                     Spacer(Modifier.height(8.dp))
                     com.hikari.app.ui.russian.RuSpeechScoreCard(sc, xpHint = "+15 XP")
+                }
+
+                val clip = item.audioRes
+                if (hasRecording && !isRecording && !clip.isNullOrBlank()) {
+                    Spacer(Modifier.height(8.dp))
+                    com.hikari.app.ui.russian.RuProsodyCard(clip, recorder.file, takeStamp)
+                    Spacer(Modifier.height(8.dp))
+                    com.hikari.app.ui.russian.RuPhonemeCard(clip, recorder.file, takeStamp)
                 }
 
                 Spacer(Modifier.height(8.dp))

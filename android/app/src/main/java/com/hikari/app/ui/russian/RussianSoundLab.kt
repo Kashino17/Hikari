@@ -344,6 +344,7 @@ private fun SpeakPhase(
     var evaluating by remember(word.ru) { mutableStateOf(false) }
     var recording by remember(word.ru) { mutableStateOf(false) }
     var countedOnce by remember(word.ru) { mutableStateOf(false) }
+    var takeStamp by remember(word.ru) { mutableStateOf(0L) }
     // Spracherkennung kann Betonungspaare nicht unterscheiden → hier Aufnahme & Vergleich.
     val useRecorder = group.isStress
 
@@ -419,6 +420,7 @@ private fun SpeakPhase(
                             if (recording) {
                                 recorder.stop()
                                 recording = false
+                                takeStamp = System.currentTimeMillis()
                                 if (!countedOnce) { countedOnce = true; onResult(true) }
                                 passed = true
                                 verdict = "Erst du, dann das Original — hörst du den Unterschied?"
@@ -465,6 +467,12 @@ private fun SpeakPhase(
             textAlign = TextAlign.Center,
             lineHeight = 20.sp,
         )
+        if (useRecorder && takeStamp > 0L && !recording) {
+            Spacer(Modifier.height(16.dp))
+            RuProsodyCard(word.clip, recorder.file, takeStamp)
+            Spacer(Modifier.height(8.dp))
+            RuPhonemeCard(word.clip, recorder.file, takeStamp)
+        }
         Spacer(Modifier.height(24.dp))
         RuPrimaryButton(if (passed) "Weiter" else "Überspringen") {
             vm.audio.stop()

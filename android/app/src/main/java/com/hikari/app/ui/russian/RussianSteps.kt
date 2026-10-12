@@ -189,6 +189,7 @@ internal fun RuRecordCompare(p: RuPhrase, env: RuStepEnv) {
     val recognizer = remember { RussianSpeechRecognizer(context) }
     var recording by remember { mutableStateOf(false) }
     var hasTake by remember { mutableStateOf(false) }
+    var takeStamp by remember { mutableStateOf(0L) }
     var isComparing by remember { mutableStateOf(false) }
     val speechState by recognizer.state.collectAsState()
     var miniScore by remember { mutableStateOf<RuAnswerCheck.SpeechScore?>(null) }
@@ -226,6 +227,7 @@ internal fun RuRecordCompare(p: RuPhrase, env: RuStepEnv) {
                 recorder.stop()
                 recording = false
                 hasTake = true
+                takeStamp = System.currentTimeMillis()
                 isComparing = true
                 // Direkt vergleichen: erst du, dann das Original.
                 env.audio.playFile(recorder.file) {
@@ -344,6 +346,13 @@ internal fun RuRecordCompare(p: RuPhrase, env: RuStepEnv) {
         miniScore?.let { sc ->
             Spacer(Modifier.height(8.dp))
             RuSpeechScoreCard(sc)
+        }
+
+        if (hasTake && !recording) {
+            Spacer(Modifier.height(8.dp))
+            RuProsodyCard(p.audio, recorder.file, takeStamp)
+            Spacer(Modifier.height(8.dp))
+            RuPhonemeCard(p.audio, recorder.file, takeStamp)
         }
     }
 }

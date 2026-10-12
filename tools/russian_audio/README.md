@@ -32,3 +32,26 @@ hört, wie betonte о/ё im Text stehen (unbetontes о muss zu [a] reduziert sei
 
 Der App-Test `RussianCourseTest.audiosPassenZumAktuellenText` schlägt fehl, sobald ein
 Text in `course.json` geändert wurde, ohne die Audios neu zu erzeugen.
+
+
+## Lautlabor-Clips
+
+`generate_sounds.py` erzeugt aus `assets/russian/sounds.json` die Einzelwort-Clips
+(`audio/lab_<sha1(ru)[:10]>.ogg`, normal + `_slow`) für Minimalpaare:
+
+```bash
+python generate_sounds.py --model models/vosk
+```
+
+## Phonem-Aussprachebewertung (Server)
+
+Der Hikari-Server vergleicht die Aufnahme des Lernenden mit dem Muttersprachler-Clip
+auf Phonem-Ebene (wav2vec2-xlsr-53-espeak, IPA). Einmalig einrichten:
+
+```bash
+./setup_phoneme_server.sh        # legt ~/.hikari/phoneme-env an (~2 GB inkl. Modell)
+```
+
+Danach startet `backend/src/api/russian.ts` `phoneme_server.py` bei Bedarf selbst
+(Port 3940, nach 15 Min Leerlauf beendet). Ohne Einrichtung antwortet
+`POST /russian/pronunciation` mit 503 und die App zeigt einen Hinweis.

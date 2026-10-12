@@ -25,6 +25,7 @@ import { registerNewsRoutes } from "./api/news.js";
 import { summarizeVideoTranscript } from "./clipper/context-summarizer.js";
 import { registerStreamRoutes } from "./api/stream.js";
 import { registerWatchLaterRoutes } from "./api/watch-later.js";
+import { registerRussianRoutes } from "./api/russian.js";
 import { registerClipperStatusRoutes } from "./api/clipper-status.js";
 import { registerVideoFullRoute } from "./api/video-full.js";
 import { loadConfig } from "./config.js";
@@ -154,6 +155,7 @@ await registerFeedRoutes(app, {
   onLowStock: () => triggerDiscovery("feed low stock"),
 });
 await registerWatchLaterRoutes(app, { db });
+await registerRussianRoutes(app);
 await registerFilterRoutes(app, {
   db,
   onFilterChanged: () => {

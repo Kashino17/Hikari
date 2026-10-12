@@ -78,6 +78,7 @@ import com.hikari.app.ui.russian.RussianHomeScreen
 import com.hikari.app.ui.russian.RussianPairsScreen
 import com.hikari.app.ui.russian.RussianPhrasebookScreen
 import com.hikari.app.ui.russian.RussianSoundLabScreen
+import com.hikari.app.ui.russian.RussianTalkScreen
 import com.hikari.app.ui.russian.RussianSessionScreen
 import com.hikari.app.ui.games.BlockBlastGame
 import com.hikari.app.ui.games.ColorSortGame
@@ -542,6 +543,11 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
             composable("russian/pairs") {
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     RussianPairsScreen(onClose = { nav.popBackStack() })
+                }
+            }
+            composable("russian/talk") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    RussianTalkScreen(onClose = { nav.popBackStack() })
                 }
             }
             composable("russian/sounds") {

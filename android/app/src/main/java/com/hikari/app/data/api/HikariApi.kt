@@ -310,6 +310,17 @@ interface HikariApi {
         @Part cover: MultipartBody.Part,
     ): SeriesDto
 
+    @GET("russian/pronunciation/status")
+    suspend fun russianPronunciationStatus(): com.hikari.app.data.api.dto.PronunciationStatusDto
+
+    /** Phonem-Aussprachecheck (Feld "clip" MUSS vor der Datei kommen). */
+    @Multipart
+    @POST("russian/pronunciation")
+    suspend fun checkRussianPronunciation(
+        @Part("clip") clip: okhttp3.RequestBody,
+        @Part file: MultipartBody.Part,
+    ): com.hikari.app.data.api.dto.PronunciationDto
+
     @GET("stats/weekly")
     suspend fun getWeeklyStats(): WeeklyStatsDto
 

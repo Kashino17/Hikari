@@ -192,6 +192,12 @@ fun RussianHomeScreen(
                     null,
                 ) { onOpen("russian/dialog/${p.dayStars.keys.randomOrNull() ?: 1}") },
                 GameApp(
+                    "Sprich frei",
+                    R.drawable.ic_app_dialog,
+                    listOf(Color(0xFF3FA9D9), Color(0xFF1F6F9E)),
+                    null,
+                ) { onOpen("russian/talk") },
+                GameApp(
                     "Lautlabor",
                     R.drawable.ic_app_dialog,
                     listOf(Color(0xFFD9684F), Color(0xFFA03A28)),
@@ -204,11 +210,15 @@ fun RussianHomeScreen(
                     null,
                 ) { onOpen("russian/phrases") },
             )
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                apps.forEach { app -> AppIcon(app, Modifier.weight(1f)) }
+            apps.chunked(3).forEachIndexed { rowIndex, rowApps ->
+                if (rowIndex > 0) Spacer(Modifier.height(10.dp))
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    rowApps.forEach { app -> AppIcon(app, Modifier.weight(1f)) }
+                    repeat(3 - rowApps.size) { Spacer(Modifier.weight(1f)) }
+                }
             }
         }
 
