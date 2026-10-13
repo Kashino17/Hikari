@@ -11,11 +11,11 @@ weibliche Stimme, alle anderen die männliche (wie im Kurs).
 import argparse, hashlib, json, pathlib, re, sys, tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent / "deepdive_src"))
-import part1, part2
+import part1, part2, part3
 import generate as g
 
 OUT_JSON = g.ROOT / "android/app/src/main/assets/russian/deepdive.json"
-ENTRIES = {**part1.ENTRIES, **part2.ENTRIES}
+ENTRIES = {**part1.ENTRIES, **part2.ENTRIES, **part3.ENTRIES}
 
 
 def clip_name(ru):
@@ -24,7 +24,7 @@ def clip_name(ru):
 
 def speakable(ru):
     """Der Clip-Name hängt am Originaltext; gesprochen wird er ohne Schrägstrich/Auslassungspunkte."""
-    return ru.replace(" / ", ", ").replace("/", ", ").replace("…", ".")
+    return ru.replace(" / ", ", ").replace("/", ", ").replace("…", ".").replace("«", "").replace("»", "").replace("„", "").replace("“", "")
 
 
 def is_female(de):

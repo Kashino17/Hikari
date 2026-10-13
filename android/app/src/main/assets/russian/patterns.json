@@ -891,6 +891,1219 @@
      "why": ""
     }
    }
+  },
+  {
+   "id": "p09_ne",
+   "week": 2,
+   "title": "Nein, das stimmt nicht — Widerspruch und Verneinung",
+   "formula": "Я не + Verb · Нет, +это не …",
+   "emotion": "Widerspruch",
+   "hook": "Tiefe Gespräche brauchen Widerspruch. Wer freundlich Nein sagen kann, muss nicht schweigen — und nicht streiten.",
+   "scene": {
+    "title": "Das stimmt nicht!",
+    "setting": "Ein Missverständnis wird laut. Du fühlst dich ungerecht behandelt, willst aber nicht explodieren.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "Ты никогд+а не сл+ушаешь!",
+      "de": "Du hörst nie zu!",
+      "how": "vorwurfsvoll"
+     },
+     {
+      "who": "U",
+      "ru": "Нет, +это непр+авда! Я сл+ушаю.",
+      "de": "Nein, das stimmt nicht! Ich höre zu.",
+      "how": "aufgebracht, aber ruhig"
+     },
+     {
+      "who": "P",
+      "ru": "Но ты не отвеч+аешь.",
+      "de": "Aber du antwortest nicht.",
+      "how": "müde, leiser"
+     },
+     {
+      "who": "U",
+      "ru": "Я не хоч+у сп+орить. Я хоч+у пон+ять теб+я.",
+      "de": "Ich will nicht streiten. Ich will dich verstehen.",
+      "how": "ruhiger werdend, weich"
+     },
+     {
+      "who": "P",
+      "ru": "Хорош+о. Дав+ай говор+ить спок+ойно.",
+      "de": "Gut. Lass uns ruhig reden.",
+      "how": "erleichtert"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Я не зн+аю.",
+     "de": "Ich weiß nicht.",
+     "why": "Не steht direkt vor dem Verb, das du verneinst."
+    },
+    {
+     "ru": "Я ничег+о не зн+аю.",
+     "de": "Ich weiß gar nichts.",
+     "why": "Doppelte Verneinung ist Pflicht: ничего + не."
+    },
+    {
+     "ru": "Нет, я не хоч+у.",
+     "de": "Nein, ich will nicht.",
+     "why": "Нет antwortet, не verneint das Verb — beides darf zusammenstehen."
+    }
+   ],
+   "explain": "Не verneint das Wort danach, meist ein Verb: Я не знаю. Нет ist die Antwort 'nein'. Im Russischen verstärken sich Verneinungen statt sich aufzuheben: Я никогд+а не … (ich … nie), Я ничег+о не … (ich … nichts), Я никого не … (ich … niemanden). Das ist nicht falsch, sondern Regel.",
+   "template": {
+    "ru": "Я {0}.",
+    "de": "Ich {0}."
+   },
+   "slots": [
+    {
+     "label": "Was verneinst du?",
+     "options": [
+      {
+       "ru": "не зн+аю",
+       "de": "weiß nicht"
+      },
+      {
+       "ru": "не хоч+у сп+орить",
+       "de": "will nicht streiten"
+      },
+      {
+       "ru": "не поним+аю",
+       "de": "verstehe nicht"
+      },
+      {
+       "ru": "не любл+ю ждать",
+       "de": "warte nicht gern"
+      },
+      {
+       "ru": "не мог+у прийт+и",
+       "de": "kann nicht kommen"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Jemand wirft dir vor: „Du hörst nie zu!“ — widersprich ruhig und freundlich.",
+    "model": {
+     "ru": "Нет, +это непр+авда! Я сл+ушаю.",
+     "de": "Nein, das stimmt nicht! Ich höre zu.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p10_voprosy",
+   "week": 2,
+   "title": "Erzähl mir von dir — Fragen stellen",
+   "formula": "Где? К+огда? Как? Почем+у? + ты + Verb",
+   "emotion": "Neugier",
+   "hook": "Wer gute Fragen stellt, schenkt dem anderen Aufmerksamkeit. Das ist der schnellste Weg zu echten Gesprächen.",
+   "scene": {
+    "title": "Ich will mehr über dich wissen",
+    "setting": "Ihr sitzt am Fluss. Alle Smalltalk-Fragen sind durch, jetzt wird es persönlich.",
+    "lines": [
+     {
+      "who": "U",
+      "ru": "Расскаж+и мне о себ+е. Где ты в+ырос?",
+      "de": "Erzähl mir von dir. Wo bist du aufgewachsen?",
+      "how": "neugierig, nah"
+     },
+     {
+      "who": "P",
+      "ru": "В Москв+е. Я любл+ю м+ой г+ород.",
+      "de": "In Moskau. Ich liebe meine Stadt.",
+      "how": "stolz, warm"
+     },
+     {
+      "who": "U",
+      "ru": "Что ты д+елаешь в своб+одное вр+емя?",
+      "de": "Was machst du in deiner Freizeit?",
+      "how": "interessiert"
+     },
+     {
+      "who": "P",
+      "ru": "Я гул+яю и чит+аю. А ты?",
+      "de": "Ich gehe spazieren und lese. Und du?",
+      "how": "locker, zurückfragend"
+     },
+     {
+      "who": "U",
+      "ru": "Расскаж+и ещё!",
+      "de": "Erzähl mehr!",
+      "how": "gespannt"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Где ты живёшь?",
+     "de": "Wo wohnst du?",
+     "why": "Fragewort + ты + Verb: die Wortstellung ändert sich nicht."
+    },
+    {
+     "ru": "Почем+у ты +учишь р+усский?",
+     "de": "Warum lernst du Russisch?",
+     "why": "Почему fragt nach dem Grund."
+    },
+    {
+     "ru": "Расскаж+и мне о себ+е.",
+     "de": "Erzähl mir von dir.",
+     "why": "Расскажи ist der Du-Befehl — freundlich-direkt."
+    }
+   ],
+   "explain": "Russische Fragen ändern die Satzstellung kaum: Fragewort + ты + Verb. Bei Ja/Nein-Fragen gibt es kein Hilfsverb — nur die Melodie steigt auf dem Wort, nach dem du fragst: Ты живёшь в Берл+ине? Die wichtigsten Fragewörter: Кто? Что? Где? К+огда? Как? Почем+у? Ск+олько?",
+   "template": {
+    "ru": "{0}",
+    "de": "{0}"
+   },
+   "slots": [
+    {
+     "label": "Welche Frage?",
+     "options": [
+      {
+       "ru": "Где ты живёшь?",
+       "de": "Wo wohnst du?"
+      },
+      {
+       "ru": "Когд+а ты раб+отаешь?",
+       "de": "Wann arbeitest du?"
+      },
+      {
+       "ru": "Как ты пров+одишь вр+емя?",
+       "de": "Wie verbringst du deine Zeit?"
+      },
+      {
+       "ru": "Почем+у ты +учишь р+усский?",
+       "de": "Warum lernst du Russisch?"
+      },
+      {
+       "ru": "Что ты л+юбишь д+елать?",
+       "de": "Was machst du gern?"
+      },
+      {
+       "ru": "Отк+уда ты?",
+       "de": "Woher kommst du?"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Stelle jemandem zwei Fragen, um ihn besser kennenzulernen.",
+    "model": {
+     "ru": "Где ты живёшь? Что ты д+елаешь в своб+одное вр+емя?",
+     "de": "Wo wohnst du? Was machst du in deiner Freizeit?",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p11_povelitelnoe",
+   "week": 2,
+   "title": "Bleib bei mir! — Bitten und Drängen",
+   "formula": "Befehl: Stamm + -и (du) · -ите (Sie)",
+   "emotion": "Bitten und Drängen",
+   "hook": "Bitten sind nicht Befehle — mit der richtigen Form klingen sie nach Nähe, nicht nach Druck.",
+   "scene": {
+    "title": "Geh noch nicht!",
+    "setting": "Bahnhof am Abend. Der Zug wartet, aber keiner von euch will wirklich Abschied nehmen.",
+    "lines": [
+     {
+      "who": "U",
+      "ru": "Не уход+и! Ост+анься ещё немн+ого.",
+      "de": "Geh nicht! Bleib noch ein bisschen.",
+      "how": "bittend, leise"
+     },
+     {
+      "who": "P",
+      "ru": "Я не мог+у. М+ой п+оезд ск+оро.",
+      "de": "Ich kann nicht. Mein Zug fährt gleich.",
+      "how": "traurig, sanft"
+     },
+     {
+      "who": "U",
+      "ru": "Тогд+а позвон+и мне, когд+а придёшь.",
+      "de": "Dann ruf mich an, wenn du ankommst.",
+      "how": "weich"
+     },
+     {
+      "who": "P",
+      "ru": "Хорош+о. Я напиш+у теб+е.",
+      "de": "Gut. Ich schreibe dir.",
+      "how": "tröstend"
+     },
+     {
+      "who": "U",
+      "ru": "Берег+и себ+я!",
+      "de": "Pass auf dich auf!",
+      "how": "mit Wärme"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Позвон+и мне!",
+     "de": "Ruf mich an!",
+     "why": "Du-Befehl: Stamm + и (betont)."
+    },
+    {
+     "ru": "Подожд+и мен+я!",
+     "de": "Warte auf mich!",
+     "why": "Подожди — Befehl von ждать mit Vorsilbe."
+    },
+    {
+     "ru": "Не волн+уйся!",
+     "de": "Reg dich nicht auf!",
+     "why": "Verneinter Befehl: не + unvollendetes Verb."
+    }
+   ],
+   "explain": "Du-Befehl: Stamm der Präsensform + -и (betont: позвон+и) oder -й nach Vokal (дав+ай). An mehrere Personen und beim Siezen kommt -те dazu: позвон+ите. Verneint wird mit dem unvollendeten Verb: Не звон+и! Mit пож+алуйста klingt jeder Befehl freundlich. Bei reflexiven Verben wird -ся zu -сь nach Vokal: Ост+анься.",
+   "template": {
+    "ru": "{0}!",
+    "de": "{0}!"
+   },
+   "slots": [
+    {
+     "label": "Welche Bitte?",
+     "options": [
+      {
+       "ru": "Позвон+и мне",
+       "de": "Ruf mich an"
+      },
+      {
+       "ru": "Напиш+и мне",
+       "de": "Schreib mir"
+      },
+      {
+       "ru": "Подожд+и мен+я",
+       "de": "Warte auf mich"
+      },
+      {
+       "ru": "Скаж+и мне пр+авду",
+       "de": "Sag mir die Wahrheit"
+      },
+      {
+       "ru": "Приход+и з+автра",
+       "de": "Komm morgen"
+      },
+      {
+       "ru": "Не волн+уйся",
+       "de": "Reg dich nicht auf"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Bitte jemanden, dich anzurufen — freundlich, aber deutlich.",
+    "model": {
+     "ru": "Позвон+и мне, пож+алуйста!",
+     "de": "Ruf mich bitte an!",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p12_by",
+   "week": 3,
+   "title": "Ich würde gern … — Träume und Wünsche",
+   "formula": "Я бы + Vergangenheitsform",
+   "emotion": "Träumen",
+   "hook": "Träume machen Gespräche weit. Mit бы sprichst du darüber, was du tun würdest — unabhängig davon, ob es möglich ist.",
+   "scene": {
+    "title": "Wovon träumst du?",
+    "setting": "Spätabends, ihr lasst die Gedanken treiben. Alles scheint möglich.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "О чём ты мечт+аешь?",
+      "de": "Wovon träumst du?",
+      "how": "weich, neugierig"
+     },
+     {
+      "who": "U",
+      "ru": "Я бы хот+ел жить у м+оря.",
+      "de": "Ich würde gern am Meer leben.",
+      "how": "verträumt",
+      "ruF": "Я бы хот+ела жить у м+оря."
+     },
+     {
+      "who": "P",
+      "ru": "А что ты б+удешь д+елать там?",
+      "de": "Und was wirst du dort machen?",
+      "how": "lächelnd"
+     },
+     {
+      "who": "U",
+      "ru": "Я бы чит+ал кн+иги и пил чай.",
+      "de": "Ich würde Bücher lesen und Tee trinken.",
+      "how": "mit ruhiger Stimme",
+      "ruF": "Я бы чит+ала кн+иги и пил+а чай."
+     },
+     {
+      "who": "P",
+      "ru": "Звуч+ит прекр+асно!",
+      "de": "Das klingt wunderbar!",
+      "how": "begeistert"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Я бы хот+ел отдохн+уть.",
+     "de": "Ich würde mich gern ausruhen.",
+     "why": "Frau: Я бы хот+ела отдохн+уть."
+    },
+    {
+     "ru": "Я бы с удов+ольствием!",
+     "de": "Ich würde sehr gern!",
+     "why": "Mit удовольствием = mit Vergnügen — eine warme Zusage."
+    },
+    {
+     "ru": "Я бы пошёл с тоб+ой.",
+     "de": "Ich würde mit dir gehen.",
+     "why": "Frau: Я бы пошл+а с тоб+ой."
+    }
+   ],
+   "explain": "бы + Vergangenheitsform = Konjunktiv ('würde'): Я бы пошёл (m) / Я бы пошл+а (f) = ich würde gehen. Die Form richtet sich nach deinem Geschlecht. Mit +если бы + Vergangenheit bildest du Bedingungen, die nicht real sind: +Если бы я мог, я бы приех+ал.",
+   "template": {
+    "ru": "Я бы {0}.",
+    "de": "Ich würde {0}."
+   },
+   "slots": [
+    {
+     "label": "Was würdest du tun?",
+     "options": [
+      {
+       "ru": "хот+ел жить у м+оря",
+       "de": "gern am Meer leben",
+       "ruF": "хот+ела жить у м+оря"
+      },
+      {
+       "ru": "чит+ал кн+иги",
+       "de": "Bücher lesen",
+       "ruF": "чит+ала кн+иги"
+      },
+      {
+       "ru": "пошёл с тоб+ой",
+       "de": "mit dir gehen",
+       "ruF": "пошл+а с тоб+ой"
+      },
+      {
+       "ru": "отдохн+ул",
+       "de": "mich ausruhen",
+       "ruF": "отдохн+ула"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Wovon träumst du? Sag, was du tun würdest, wenn du alle Zeit der Welt hättest.",
+    "model": {
+     "ru": "Я бы хот+ел путеш+ествовать.",
+     "de": "Ich würde gern reisen.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p13_sravnenie",
+   "week": 3,
+   "title": "Lieber als … — Vergleichen und Vorlieben",
+   "formula": "Мне б+ольше нр+авится …, чем …",
+   "emotion": "Spielerisch",
+   "hook": "Vergleiche machen Vorlieben sichtbar — und sind die Grundlage für neckische Gespräche zwischen Menschen, die sich mögen.",
+   "scene": {
+    "title": "Wen magst du lieber?",
+    "setting": "Ihr albert herum. Hinter jeder Frage steckt ein Augenzwinkern — und ein bisschen Ernst.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "Скаж+и пр+авду: ты л+юбишь мен+я б+ольше, чем к+офе?",
+      "de": "Sag die Wahrheit: Liebst du mich mehr als Kaffee?",
+      "how": "spielerisch, mit Augenzwinkern"
+     },
+     {
+      "who": "U",
+      "ru": "Кон+ечно! Я любл+ю теб+я б+ольше всег+о.",
+      "de": "Natürlich! Ich liebe dich mehr als alles.",
+      "how": "lachend, aber ehrlich"
+     },
+     {
+      "who": "P",
+      "ru": "А что л+учше: ч+ай +или к+офе?",
+      "de": "Und was ist besser: Tee oder Kaffee?",
+      "how": "neckend"
+     },
+     {
+      "who": "U",
+      "ru": "Мне б+ольше нр+авится ч+ай.",
+      "de": "Mir gefällt Tee besser.",
+      "how": "gelassen"
+     },
+     {
+      "who": "P",
+      "ru": "Пред+атель!",
+      "de": "Verräter!",
+      "how": "gespielt empört, lachend"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "+Это л+учше, чем вчер+а.",
+     "de": "Das ist besser als gestern.",
+     "why": "лучше = besser, чем = als."
+    },
+    {
+     "ru": "Мне б+ольше нр+авится ч+ай, чем к+офе.",
+     "de": "Mir gefällt Tee mehr als Kaffee.",
+     "why": "больше + нравится: mehr mögen, lieber mögen."
+    },
+    {
+     "ru": "Ты мой л+учший друг.",
+     "de": "Du bist mein bester Freund.",
+     "why": "лучший = der beste."
+    }
+   ],
+   "explain": "Komparative: б+ольше (mehr), л+учше (besser), х+уже (schlechter), м+еньше (weniger). Der Vergleichspartner steht nach чем (als): Ч+ай л+учше, чем к+офе. Мне б+ольше нр+авится … heißt 'ich mag lieber'. Der Superlativ лучший (der beste) ist ein Adjektiv und passt sich dem Nomen an: л+учший друг, л+учшая подр+уга.",
+   "template": {
+    "ru": "Мне б+ольше нр+авится {0}.",
+    "de": "Mir gefällt {0}."
+   },
+   "slots": [
+    {
+     "label": "Was gefällt dir lieber?",
+     "options": [
+      {
+       "ru": "ч+ай, чем к+офе",
+       "de": "Tee mehr als Kaffee"
+      },
+      {
+       "ru": "л+ето, чем зим+а",
+       "de": "der Sommer mehr als der Winter"
+      },
+      {
+       "ru": "м+оре, чем г+ород",
+       "de": "das Meer mehr als die Stadt"
+      },
+      {
+       "ru": "р+усский, чем англ+ийский",
+       "de": "Russisch mehr als Englisch"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Sag, was dir besser gefällt: Sommer oder Winter, Tee oder Kaffee.",
+    "model": {
+     "ru": "Мне б+ольше нр+авится л+ето, чем зим+а.",
+     "de": "Mir gefällt der Sommer mehr als der Winter.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p14_nuzhen",
+   "week": 3,
+   "title": "Ich brauche … — Hilfe und Nähe zulassen",
+   "formula": "Мне н+ужен / нужн+а / н+ужно / нужн+ы + Ding",
+   "emotion": "Verletzlichkeit",
+   "hook": "Zu sagen, was man braucht, ist mutig. Dieses Muster hilft dir dabei — und zeigt nebenbei, wie Russisch Geschlecht und Zahl anpasst.",
+   "scene": {
+    "title": "Ich brauche dich",
+    "setting": "Ein schlechter Moment. Du bist stolz, aber heute geht es nicht allein.",
+    "lines": [
+     {
+      "who": "U",
+      "ru": "Мне нужн+а тво+я п+омощь.",
+      "de": "Ich brauche deine Hilfe.",
+      "how": "leise, ehrlich"
+     },
+     {
+      "who": "P",
+      "ru": "Что случ+илось?",
+      "de": "Was ist passiert?",
+      "how": "besorgt"
+     },
+     {
+      "who": "U",
+      "ru": "Я не зн+аю, что д+елать. Мне стр+ашно.",
+      "de": "Ich weiß nicht, was ich tun soll. Ich habe Angst.",
+      "how": "die Stimme bricht fast"
+     },
+     {
+      "who": "P",
+      "ru": "Я здесь. Скаж+и мне всё.",
+      "de": "Ich bin hier. Sag mir alles.",
+      "how": "ruhig, nah"
+     },
+     {
+      "who": "U",
+      "ru": "Ты мне +очень нужн+а.",
+      "de": "Ich brauche dich sehr.",
+      "how": "warm, verletzlich"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Мне н+ужен врач.",
+     "de": "Ich brauche einen Arzt.",
+     "why": "врач ist männlich → нужен."
+    },
+    {
+     "ru": "Мне нужн+а п+омощь.",
+     "de": "Ich brauche Hilfe.",
+     "why": "помощь ist weiblich → нужна."
+    },
+    {
+     "ru": "Мне н+ужно вр+емя.",
+     "de": "Ich brauche Zeit.",
+     "why": "время ist sächlich → нужно."
+    }
+   ],
+   "explain": "Мне нужен / нужна / нужно / нужны: Das Gebrauchte ist das Subjekt und bestimmt die Form — männlich нужен, weiblich нужна (Betonung wandert!), sächlich нужно, Mehrzahl нужны. Die Person steht im Dativ (мне). Auch Menschen: Ты мне нужен (zu einem Mann) / Ты мне нужна (zu einer Frau) = 'ich brauche dich'.",
+   "template": {
+    "ru": "Мне {0}.",
+    "de": "Ich {0}."
+   },
+   "slots": [
+    {
+     "label": "Was brauchst du?",
+     "options": [
+      {
+       "ru": "н+ужен врач",
+       "de": "brauche einen Arzt"
+      },
+      {
+       "ru": "нужн+а п+омощь",
+       "de": "brauche Hilfe"
+      },
+      {
+       "ru": "н+ужно вр+емя",
+       "de": "brauche Zeit"
+      },
+      {
+       "ru": "нужн+ы друзь+я",
+       "de": "brauche Freunde"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Bitte jemanden um Hilfe — und sag klar, was du brauchst.",
+    "model": {
+     "ru": "Мне нужн+а тво+я п+омощь.",
+     "de": "Ich brauche deine Hilfe.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p15_u_menya",
+   "week": 3,
+   "title": "Ich habe … / ich habe keine … — Besitz und Mangel",
+   "formula": "У мен+я есть + Nominativ · У мен+я нет + Genitiv",
+   "emotion": "Einsamkeit und Stolz",
+   "hook": "Was jemand hat — und was ihm fehlt — erzählt viel über sein Leben. Mit diesem Muster teilst du beides.",
+   "scene": {
+    "title": "Neu in der Stadt",
+    "setting": "Du bist erst vor Kurzem hergezogen. Anja fragt behutsam, wie du dich eingelebt hast.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "У теб+я есть друзь+я здесь?",
+      "de": "Hast du hier Freunde?",
+      "how": "freundlich, behutsam"
+     },
+     {
+      "who": "U",
+      "ru": "Пок+а нет. У мен+я нет вр+емени, и я не зн+аю люд+ей.",
+      "de": "Noch nicht. Ich habe keine Zeit, und ich kenne keine Leute.",
+      "how": "bedrückt"
+     },
+     {
+      "who": "P",
+      "ru": "Ничег+о! У мен+я есть др+уг. Он теб+е пом+ожет.",
+      "de": "Macht nichts! Ich habe einen Freund. Er hilft dir.",
+      "how": "aufmunternd"
+     },
+     {
+      "who": "U",
+      "ru": "Пр+авда? У мен+я нет сл+ов. Спас+ибо!",
+      "de": "Wirklich? Mir fehlen die Worte. Danke!",
+      "how": "gerührt"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "У мен+я есть брат.",
+     "de": "Ich habe einen Bruder.",
+     "why": "У меня есть + Nominativ = haben."
+    },
+    {
+     "ru": "У мен+я нет вр+емени.",
+     "de": "Ich habe keine Zeit.",
+     "why": "Nach нет steht der Genitiv: времени."
+    },
+    {
+     "ru": "У мен+я нет д+енег.",
+     "de": "Ich habe kein Geld.",
+     "why": "Genitiv Plural: денег."
+    }
+   ],
+   "explain": "Haben wird ausgedrückt als 'bei mir ist': У мен+я есть + Nominativ. Fehlt etwas, folgt нет + Genitiv: У мен+я нет вр+емени (nicht Nominativ!). In der Vergangenheit: У мен+я был / был+а / б+ыло + Nominativ, verneint: не б+ыло + Genitiv.",
+   "template": {
+    "ru": "У мен+я {0}.",
+    "de": "Ich habe {0}."
+   },
+   "slots": [
+    {
+     "label": "Was hast du — oder nicht?",
+     "options": [
+      {
+       "ru": "есть брат",
+       "de": "einen Bruder"
+      },
+      {
+       "ru": "есть сестр+а",
+       "de": "eine Schwester"
+      },
+      {
+       "ru": "нет вр+емени",
+       "de": "keine Zeit"
+      },
+      {
+       "ru": "нет д+енег",
+       "de": "kein Geld"
+      },
+      {
+       "ru": "есть план",
+       "de": "einen Plan"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Erzähle, was du hast — und was dir fehlt.",
+    "model": {
+     "ru": "У мен+я есть мечт+а, но нет вр+емени.",
+     "de": "Ich habe einen Traum, aber keine Zeit.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p16_pomnyu",
+   "week": 3,
+   "title": "Ich erinnere mich — Nostalgie und Erinnerungen",
+   "formula": "Я п+омню + Akkusativ · Я п+омню, к+ак …",
+   "emotion": "Nostalgie",
+   "hook": "Erinnerungen verbinden Menschen. Wer sagt, woran er sich erinnert, zeigt, was ihm wichtig war.",
+   "scene": {
+    "title": "Ein altes Foto",
+    "setting": "Beim Aufräumen fällt euch ein Foto in die Hände. Plötzlich seid ihr wieder dort.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "Смотр+и, +это ст+арое ф+ото!",
+      "de": "Schau, das ist ein altes Foto!",
+      "how": "aufgeregt"
+     },
+     {
+      "who": "U",
+      "ru": "Я п+омню +этот день! Мы гул+яли весь в+ечер.",
+      "de": "Ich erinnere mich an diesen Tag! Wir sind den ganzen Abend spaziert.",
+      "how": "verträumt, lächelnd"
+     },
+     {
+      "who": "P",
+      "ru": "А ты п+омнишь, к+ак мы п+ервый раз встр+етились?",
+      "de": "Und erinnerst du dich, wie wir uns zum ersten Mal trafen?",
+      "how": "sanft, neckend"
+     },
+     {
+      "who": "U",
+      "ru": "Кон+ечно, я не заб+ыл. Ты опозд+ала на час!",
+      "de": "Natürlich habe ich nicht vergessen. Du bist eine Stunde zu spät gekommen!",
+      "how": "lachend",
+      "ruF": "Кон+ечно, я не заб+ыла. Ты опозд+ала на час!"
+     },
+     {
+      "who": "P",
+      "ru": "+Это непр+авда!",
+      "de": "Das stimmt nicht!",
+      "how": "gespielt empört"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Я п+омню +этот день.",
+     "de": "Ich erinnere mich an diesen Tag.",
+     "why": "помнить + Akkusativ — ohne Präposition ('an')."
+    },
+    {
+     "ru": "Я п+омню, к+ак мы встр+етились.",
+     "de": "Ich erinnere mich, wie wir uns trafen.",
+     "why": "помню, как + Satz."
+    },
+    {
+     "ru": "Я не заб+ыл теб+я.",
+     "de": "Ich habe dich nicht vergessen.",
+     "why": "Frau: заб+ыла."
+    }
+   ],
+   "explain": "Помнить (sich erinnern) braucht keine Präposition: Я п+омню +этот день. Mit как beschreibst du den Moment: Я п+омню, к+ак … Das Gegenteil ist заб+ыть (vergessen, vollendet): Я заб+ыл (m) / Я заб+ыла (f) телеф+он.",
+   "template": {
+    "ru": "Я п+омню {0}.",
+    "de": "Ich erinnere mich an {0}."
+   },
+   "slots": [
+    {
+     "label": "Woran erinnerst du dich?",
+     "options": [
+      {
+       "ru": "+этот день",
+       "de": "diesen Tag"
+      },
+      {
+       "ru": "твой г+олос",
+       "de": "deine Stimme"
+      },
+      {
+       "ru": "наш п+ервый день",
+       "de": "unseren ersten Tag"
+      },
+      {
+       "ru": "т+от в+ечер",
+       "de": "jenen Abend"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Erinnere dich an einen Moment mit jemandem, der dir wichtig ist, und sag ihn laut.",
+    "model": {
+     "ru": "Я п+омню т+от в+ечер.",
+     "de": "Ich erinnere mich an jenen Abend.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p17_kogda",
+   "week": 4,
+   "title": "Wenn ich dich sehe … — Verliebtheit in Nebensätzen",
+   "formula": "Когд+а …, … (Wenn / Als …, …)",
+   "emotion": "Verliebtheit",
+   "hook": "Nebensätze machen aus kurzen Aussagen echte Geschichten: Wenn das passiert, dann fühle ich das.",
+   "scene": {
+    "title": "Wenn ich dich sehe",
+    "setting": "Ein Spaziergang am Abend. Anja bemerkt, wie du lächelst, und fragt nach dem Grund.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "Почем+у ты всегд+а улыб+аешься?",
+      "de": "Warum lächelst du immer?",
+      "how": "neckend"
+     },
+     {
+      "who": "U",
+      "ru": "Когд+а я в+ижу теб+я, я сч+астлив.",
+      "de": "Wenn ich dich sehe, bin ich glücklich.",
+      "how": "mit rotem Kopf, leise",
+      "ruF": "Когд+а я в+ижу теб+я, я сч+астлива."
+     },
+     {
+      "who": "P",
+      "ru": "И я. Когд+а ты р+ядом, мне спок+ойно.",
+      "de": "Mir auch. Wenn du da bist, bin ich ruhig.",
+      "how": "warm"
+     },
+     {
+      "who": "U",
+      "ru": "Когд+а ты ух+одишь, мне гр+устно.",
+      "de": "Wenn du gehst, bin ich traurig.",
+      "how": "leiser"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Когд+а я раб+отаю, я сл+ушаю м+узыку.",
+     "de": "Wenn ich arbeite, höre ich Musik.",
+     "why": "Beide Teile stehen im Präsens; dazwischen steht ein Komma."
+    },
+    {
+     "ru": "Когд+а мне гр+устно, я звон+ю м+аме.",
+     "de": "Wenn ich traurig bin, rufe ich Mama an.",
+     "why": "Мне грустно bleibt auch im когда-Satz unverändert."
+    }
+   ],
+   "explain": "Когд+а leitet einen Zeitsatz ein (wenn / als). Zwischen den beiden Sätzen steht immer ein Komma. Für Gewohnheiten nimmst du beide Verben im Präsens: Когд+а я в+ижу теб+я, я улыб+аюсь. Erzählst du von früher, stehen beide in der Vergangenheit: Когд+а я был ребёнком …",
+   "template": {
+    "ru": "Когд+а {0}, {1}.",
+    "de": "Wenn {0}, {1}."
+   },
+   "slots": [
+    {
+     "label": "Wann?",
+     "options": [
+      {
+       "ru": "я в+ижу теб+я",
+       "de": "ich dich sehe"
+      },
+      {
+       "ru": "ты р+ядом",
+       "de": "du da bist"
+      },
+      {
+       "ru": "мне гр+устно",
+       "de": "ich traurig bin"
+      },
+      {
+       "ru": "я раб+отаю",
+       "de": "ich arbeite"
+      }
+     ]
+    },
+    {
+     "label": "Was passiert?",
+     "options": [
+      {
+       "ru": "я улыб+аюсь",
+       "de": "lächle ich"
+      },
+      {
+       "ru": "я сл+ушаю м+узыку",
+       "de": "höre ich Musik"
+      },
+      {
+       "ru": "я звон+ю м+аме",
+       "de": "rufe ich Mama an"
+      },
+      {
+       "ru": "я сч+астлив",
+       "de": "bin ich glücklich",
+       "ruF": "я сч+астлива"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Beende den Satz mit einem echten Gefühl: Wenn ich …, dann …",
+    "model": {
+     "ru": "Когд+а я говор+ю по-р+усски, я сч+астлив.",
+     "de": "Wenn ich Russisch spreche, bin ich glücklich.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p18_esli",
+   "week": 4,
+   "title": "Wenn du willst … — Angebote und Hoffnung",
+   "formula": "+Если … (то) …",
+   "emotion": "Hoffnung",
+   "hook": "Mit если baust du Angebote, Hoffnungen und Pläne: Wenn das passiert, dann tue ich das.",
+   "scene": {
+    "title": "Wenn du willst, komme ich",
+    "setting": "Du bietest an zu kommen, obwohl der Tag lang war. Anja zögert, weil sie sich sorgt.",
+    "lines": [
+     {
+      "who": "U",
+      "ru": "+Если ты х+очешь, я прид+у.",
+      "de": "Wenn du willst, komme ich.",
+      "how": "ruhig, verbindlich"
+     },
+     {
+      "who": "P",
+      "ru": "Пр+авда? Я бо+юсь, что ты уст+анешь.",
+      "de": "Wirklich? Ich fürchte, du wirst müde.",
+      "how": "zögernd, besorgt"
+     },
+     {
+      "who": "U",
+      "ru": "+Если я уст+ану, я отдохн+у у теб+я.",
+      "de": "Wenn ich müde werde, ruhe ich mich bei dir aus.",
+      "how": "lächelnd"
+     },
+     {
+      "who": "P",
+      "ru": "Договор+ились! +Если б+удет д+ождь, мы ост+анемся д+ома.",
+      "de": "Abgemacht! Wenn es regnet, bleiben wir zu Hause.",
+      "how": "froh, entspannt"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "+Если ты х+очешь, я пом+огу.",
+     "de": "Wenn du willst, helfe ich dir.",
+     "why": "если = wenn (Bedingung)."
+    },
+    {
+     "ru": "+Если у теб+я есть вр+емя, позвон+и мне.",
+     "de": "Wenn du Zeit hast, ruf mich an.",
+     "why": "Im Hauptsatz kann ein Befehl stehen."
+    },
+    {
+     "ru": "+Если б+удет д+ождь, мы ост+анемся д+ома.",
+     "de": "Wenn es regnet, bleiben wir zu Hause.",
+     "why": "Achtung: Russisch nutzt hier die Zukunft (будет), obwohl Deutsch das Präsens verwendet."
+    }
+   ],
+   "explain": "+Если = wenn / falls (Bedingung). Wichtig: Der Russe sagt ehrlich, was in der Zukunft passiert, darum steht im если-Satz die Zukunft: +Если б+удет д+ождь, … (wörtlich 'Wenn es Regen geben wird'). Bei vollendeten Verben genügt die Präsensform mit Zukunftsbedeutung (я прид+у, я пом+огу).",
+   "template": {
+    "ru": "+Если {0}, {1}.",
+    "de": "Wenn {0}, {1}."
+   },
+   "slots": [
+    {
+     "label": "Wenn …",
+     "options": [
+      {
+       "ru": "ты х+очешь",
+       "de": "du willst"
+      },
+      {
+       "ru": "у теб+я есть вр+емя",
+       "de": "du Zeit hast"
+      },
+      {
+       "ru": "б+удет д+ождь",
+       "de": "es regnet"
+      },
+      {
+       "ru": "я уст+ану",
+       "de": "ich müde werde"
+      }
+     ]
+    },
+    {
+     "label": "… dann",
+     "options": [
+      {
+       "ru": "я прид+у",
+       "de": "komme ich"
+      },
+      {
+       "ru": "мы ост+анемся д+ома",
+       "de": "bleiben wir zu Hause"
+      },
+      {
+       "ru": "я пом+огу",
+       "de": "helfe ich"
+      },
+      {
+       "ru": "я позвон+ю",
+       "de": "rufe ich an"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Mach jemandem ein Angebot: Wenn du Zeit hast oder wenn du willst, dann …",
+    "model": {
+     "ru": "+Если у теб+я есть вр+емя, дав+ай встр+етимся.",
+     "de": "Wenn du Zeit hast, lass uns treffen.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p19_chtoby",
+   "week": 4,
+   "title": "Ich will, dass es dir gut geht — Wünsche für andere",
+   "formula": "Я хоч+у, чт+обы ты + Vergangenheitsform",
+   "emotion": "Liebe und Sorge",
+   "hook": "Der schönste Wunsch gilt dem anderen. Mit чтобы sagst du, was du dir für ihn oder sie wünschst.",
+   "scene": {
+    "title": "Ich mache mir Sorgen um dich",
+    "setting": "Anja arbeitet seit Wochen zu viel. Heute sagst du, was du dir für sie wünschst.",
+    "lines": [
+     {
+      "who": "U",
+      "ru": "Ты уст+ала. Ты мн+ого раб+отаешь.",
+      "de": "Du bist müde. Du arbeitest viel.",
+      "how": "besorgt"
+     },
+     {
+      "who": "P",
+      "ru": "Я зн+аю. Но мне н+ужно раб+отать.",
+      "de": "Ich weiß. Aber ich muss arbeiten.",
+      "how": "seufzend"
+     },
+     {
+      "who": "U",
+      "ru": "Я хоч+у, чт+обы ты отдохн+ула.",
+      "de": "Ich will, dass du dich ausruhst.",
+      "how": "sanft, bestimmt"
+     },
+     {
+      "who": "P",
+      "ru": "Ты прав. Я отдохн+у з+автра.",
+      "de": "Du hast recht. Ich ruhe mich morgen aus.",
+      "how": "nachgebend, lächelnd",
+      "ruF": "Ты прав+а. Я отдохн+у з+автра."
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Я хоч+у, чт+обы ты был сч+астлив.",
+     "de": "Ich will, dass du glücklich bist. (zu einem Mann)",
+     "why": "чтобы + Vergangenheitsform ohne echte Vergangenheit."
+    },
+    {
+     "ru": "Я хоч+у, чт+обы ты был+а сч+астлива.",
+     "de": "Ich will, dass du glücklich bist. (zu einer Frau)",
+     "why": "Das Geschlecht der angesprochenen Person bestimmt die Endung."
+    },
+    {
+     "ru": "Я хоч+у, чт+обы ты позвон+ил.",
+     "de": "Ich will, dass du anrufst. (zu einem Mann)",
+     "why": "Frau: позвон+ила."
+    }
+   ],
+   "explain": "Wenn das Subjekt wechselt (ich will — du sollst), nimmst du чт+обы + Vergangenheitsform: Я хоч+у, чт+обы ты отдохн+ул (m) / отдохн+ула (f). Die Vergangenheitsform steht hier für Wunsch, nicht für Zeit. Bleibt das Subjekt gleich, nutzt du die Grundform: Я хоч+у отдохн+уть.",
+   "template": {
+    "ru": "Я хоч+у, чт+обы ты {0}.",
+    "de": "Ich will, dass du {0}."
+   },
+   "slots": [
+    {
+     "label": "Was wünschst du ihm oder ihr?",
+     "options": [
+      {
+       "ru": "был сч+астлив",
+       "de": "glücklich bist (zu einem Mann)"
+      },
+      {
+       "ru": "был+а сч+астлива",
+       "de": "glücklich bist (zu einer Frau)"
+      },
+      {
+       "ru": "позвон+ил",
+       "de": "anrufst (zu einem Mann)"
+      },
+      {
+       "ru": "позвон+ила",
+       "de": "anrufst (zu einer Frau)"
+      },
+      {
+       "ru": "отдохн+ул",
+       "de": "dich ausruhst (zu einem Mann)"
+      },
+      {
+       "ru": "отдохн+ула",
+       "de": "dich ausruhst (zu einer Frau)"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Sag jemandem, den du magst, was du dir für ihn oder sie wünschst.",
+    "model": {
+     "ru": "Я хоч+у, чт+обы ты был сч+астлив.",
+     "de": "Ich will, dass du glücklich bist.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p20_vazhno",
+   "week": 4,
+   "title": "Für mich ist wichtig … — Werte und Überzeugungen",
+   "formula": "Для мен+я в+ажно + Grundform · Для мен+я важн+а / в+ажен + Nomen",
+   "emotion": "Überzeugung",
+   "hook": "Wer seine Werte aussprechen kann, führt Gespräche in die Tiefe — und zeigt, wer er wirklich ist.",
+   "scene": {
+    "title": "Was ist dir wichtig?",
+    "setting": "Später Abend, Kerzenlicht. Ihr habt über Banales geredet. Jetzt wird es persönlich.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "Что для теб+я в+ажно в ж+изни?",
+      "de": "Was ist dir wichtig im Leben?",
+      "how": "ernst, interessiert"
+     },
+     {
+      "who": "U",
+      "ru": "Для мен+я важн+а семь+я. И ч+естность.",
+      "de": "Für mich ist die Familie wichtig. Und Ehrlichkeit.",
+      "how": "ruhig, überzeugt"
+     },
+     {
+      "who": "P",
+      "ru": "Мне т+оже. А ещё для мен+я в+ажно вр+емя.",
+      "de": "Mir auch. Und für mich ist auch Zeit wichtig.",
+      "how": "nachdenklich"
+     },
+     {
+      "who": "U",
+      "ru": "Дав+ай б+удем б+ольше говор+ить.",
+      "de": "Lass uns mehr reden.",
+      "how": "weich, ernst"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Для мен+я важн+а семь+я.",
+     "de": "Für mich ist die Familie wichtig.",
+     "why": "семья ist weiblich → важна."
+    },
+    {
+     "ru": "Для мен+я в+ажно вр+емя.",
+     "de": "Für mich ist Zeit wichtig.",
+     "why": "время ist sächlich → важно."
+    },
+    {
+     "ru": "Для мен+я в+ажно быть с тоб+ой.",
+     "de": "Für mich ist es wichtig, bei dir zu sein.",
+     "why": "Vor einer Grundform steht в+ажно (sächlich)."
+    }
+   ],
+   "explain": "Для мен+я = für mich (для + Genitiv: для теб+я, для н+его). Важно heißt 'wichtig'. Vor Nomen passt es sich an: в+ажен (m), важн+а (f), в+ажно (n), важн+ы (pl). Vor einer Grundform steht immer в+ажно: Для мен+я в+ажно говор+ить пр+авду.",
+   "template": {
+    "ru": "Для мен+я в+ажно {0}.",
+    "de": "Für mich ist es wichtig, {0}."
+   },
+   "slots": [
+    {
+     "label": "Was ist dir wichtig?",
+     "options": [
+      {
+       "ru": "говор+ить пр+авду",
+       "de": "die Wahrheit zu sagen"
+      },
+      {
+       "ru": "быть с семьёй",
+       "de": "bei der Familie zu sein"
+      },
+      {
+       "ru": "уч+иться к+аждый день",
+       "de": "jeden Tag zu lernen"
+      },
+      {
+       "ru": "сл+ушать друг др+уга",
+       "de": "einander zuzuhören"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Sag, was dir im Leben am wichtigsten ist.",
+    "model": {
+     "ru": "Для мен+я важн+а семь+я.",
+     "de": "Für mich ist die Familie wichtig.",
+     "why": ""
+    }
+   }
   }
  ]
 }

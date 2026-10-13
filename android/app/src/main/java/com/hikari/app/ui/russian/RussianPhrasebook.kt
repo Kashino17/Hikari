@@ -211,6 +211,7 @@ fun RussianPhrasebookScreen(
                             if (openId == p.id) vm.audio.play(p.audio)
                         },
                         onFavorite = { vm.toggleFavorite(p.id) },
+                        hasDeep = p.id in vm.deepIds,
                         onDeepdive = { onDeepdive(p.id) },
                         onPlay = { vm.audio.play(p.audio) },
                         onSlow = { vm.audio.play(p.audio, slow = true) },
@@ -285,6 +286,7 @@ private fun PhraseRow(
     query: String,
     onToggleOpen: () -> Unit,
     onFavorite: () -> Unit,
+    hasDeep: Boolean,
     onDeepdive: () -> Unit,
     onPlay: () -> Unit,
     onSlow: () -> Unit,
@@ -333,7 +335,7 @@ private fun PhraseRow(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     PbChip(if (playing) "Spielt …" else "Anhören", playing, onPlay)
                     PbChip("Langsam", false, onSlow)
-                    PbChip("Vertiefen ›", false, onDeepdive)
+                    PbChip(if (hasDeep) "Vertiefen ›" else "Mehr ›", hasDeep, onDeepdive)
                 }
                 p.lit?.let {
                     Spacer(Modifier.height(10.dp))

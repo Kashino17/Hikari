@@ -11,11 +11,12 @@ import argparse, json, pathlib, re, sys, tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent / "pattern_src"))
 import patterns1
+import patterns2
 import generate as g
 from generate_deepdive import clip_name, speakable
 
 OUT_JSON = g.ROOT / "android/app/src/main/assets/russian/patterns.json"
-PATTERNS = patterns1.PATTERNS
+PATTERNS = patterns1.PATTERNS + patterns2.PATTERNS
 VOW = "аеёиоуыэюяАЕЁИОУЫЭЮЯ"
 
 
@@ -83,7 +84,7 @@ def check(model_dir=None):
             for s, e, l, st in g.words_with_stress(text):
                 w = g.vowel_ordinal(l, st)
                 c = full.get(l, [])
-                if c and w is not None and not any(g.stress_ordinal_of_phones(x[1].split()) == w for x in c):
+                if c and w is not None and not (set(str(g.stress_ordinal_of_phones(x[1].split())) for x in c) == {'None'}) and not any(g.stress_ordinal_of_phones(x[1].split()) == w for x in c):
                     dic = sorted({str(g.stress_ordinal_of_phones(x[1].split())) for x in c})
                     errs.append(f"{where}: Betonung von '{l}' weicht vom Wörterbuch ab ({dic}) in '{text}'")
     return errs

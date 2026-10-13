@@ -1917,6 +1917,1420 @@
     }
    ],
    "grammar": "Wünsche stehen im Genitiv, weil darunter gedacht ist: '(Ich wünsche dir) ...': спокойной ночи, хорошего дня, всего хорошего, удачи, счастья."
+  },
+  {
+   "id": "d01_do_svidaniya",
+   "register": "höflich · förmlich",
+   "summary": "До свид+ания ('bis zum Wiedersehen') ist der höfliche Standard-Abschied. Unter Freunden reicht Пок+а; wer Wärme zeigen will, wählt Всег+о хор+ошего oder До ск+орого.",
+   "variants": [
+    {
+     "ru": "Пок+а!",
+     "de": "Tschüss!",
+     "use": "Nur unter Freunden und Bekannten."
+    },
+    {
+     "ru": "Всег+о д+обрего!",
+     "de": "Alles Gute! (höflich)",
+     "use": "Freundlich-förmlich, auch am Telefon."
+    },
+    {
+     "ru": "До встр+ечи!",
+     "de": "Bis zum Treffen!",
+     "use": "Wenn ihr euch bald wiederseht."
+    },
+    {
+     "ru": "До ск+орого!",
+     "de": "Bis bald!",
+     "use": "Herzlich und vertraut."
+    },
+    {
+     "ru": "Счастл+иво!",
+     "de": "Mach's gut!",
+     "use": "Locker, wie 'bleib gesund' — beliebt unter Freunden."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "До свид+ания! Хор+ошего дня!",
+     "de": "Auf Wiedersehen! Einen schönen Tag noch!",
+     "why": "Förmlicher Abschied mit Wunsch (Genitiv)."
+    },
+    {
+     "ru": "Пок+а, до з+автра!",
+     "de": "Tschüss, bis morgen!",
+     "why": "До + Genitiv = 'bis (zu)'."
+    },
+    {
+     "ru": "Всег+о д+обрего, до ск+орого!",
+     "de": "Alles Gute, bis bald!",
+     "why": "Zwei warme Formeln hintereinander."
+    }
+   ],
+   "grammar": "До + Genitiv heißt 'bis': до свид+ания, до встр+ечи, до з+автра, до в+ечера. Die Wörter nach до stehen im Genitiv."
+  },
+  {
+   "id": "d02_ochen_priyatno",
+   "register": "neutral · höflich",
+   "summary": "Beim Kennenlernen sagst du +Очень при+ятно. Wer wärmer klingen will, ergänzt Р+ад познак+омиться — mit Geschlechtsform: р+ад (m), р+ада (f).",
+   "variants": [
+    {
+     "ru": "Р+ад познак+омиться!",
+     "de": "Ich freue mich, Sie kennenzulernen. (Mann)",
+     "use": "Etwas gehobener als Очень приятно."
+    },
+    {
+     "ru": "Р+ада познак+омиться!",
+     "de": "Ich freue mich, Sie kennenzulernen. (Frau)",
+     "use": "Weibliche Form."
+    },
+    {
+     "ru": "Мне т+оже.",
+     "de": "Mir auch.",
+     "use": "Standard-Antwort auf Очень приятно."
+    },
+    {
+     "ru": "Вза+имно!",
+     "de": "Gleichfalls!",
+     "use": "Kurz, höflich, gern im Berufsleben."
+    },
+    {
+     "ru": "+Очень рад теб+я в+идеть!",
+     "de": "Ich freue mich sehr, dich zu sehen! (Mann)",
+     "use": "Wenn ihr euch schon kennt."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Мен+я зов+ут Кад+ир. +Очень при+ятно!",
+     "de": "Ich heiße Kadir. Freut mich!",
+     "why": "Namen und Höflichkeit in einem Atemzug."
+    },
+    {
+     "ru": "Р+ада познак+омиться. — Вза+имно!",
+     "de": "Freut mich, Sie kennenzulernen. — Gleichfalls!",
+     "why": "Ein höflicher Mini-Dialog."
+    }
+   ],
+   "gender": {
+    "title": "р+ад / р+ада",
+    "text": "Wer sagt Р+ад познак+омиться, ist ein Mann; eine Frau sagt Р+ада познак+омиться. Das Gegenüber ändert nichts an deiner Form — nur dein eigenes Geschlecht zählt."
+   },
+   "grammar": "Рад ist ein Kurzadjektiv und richtet sich nach dem Sprecher: рад / рада / рады. Danach folgt eine Grundform: Рад познакомиться, Рада тебя видеть."
+  },
+  {
+   "id": "d02_a_ty",
+   "register": "neutral",
+   "summary": "А ты? gibt die Frage zurück: 'Und du?' Die kleinen Wörter и, а und но klingen ähnlich, sagen aber Verschiedenes: и verbindet, а stellt gegenüber, но widerspricht.",
+   "variants": [
+    {
+     "ru": "А вы?",
+     "de": "Und Sie?",
+     "use": "Höfliche Variante."
+    },
+    {
+     "ru": "А у теб+я?",
+     "de": "Und bei dir?",
+     "use": "Passt zu Как у тебя дела?"
+    },
+    {
+     "ru": "И ты?",
+     "de": "Du auch?",
+     "use": "Frage nach Übereinstimmung."
+    },
+    {
+     "ru": "А как у вас?",
+     "de": "Und wie ist es bei Ihnen?",
+     "use": "Höflich, freundlich."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Я из Герм+ании, а ты?",
+     "de": "Ich komme aus Deutschland, und du?",
+     "why": "А stellt zwei Personen gegenüber."
+    },
+    {
+     "ru": "Я жив+у в Берл+ине, и я раб+отаю там.",
+     "de": "Ich wohne in Berlin, und ich arbeite dort.",
+     "why": "И verbindet zwei Dinge, die zusammenpassen."
+    },
+    {
+     "ru": "Я хоч+у, но не мог+у.",
+     "de": "Ich will, aber ich kann nicht.",
+     "why": "Но zeigt einen Widerspruch."
+    }
+   ],
+   "grammar": "и = und (verbindend), а = und/aber (Gegenüberstellung, Kontrast), но = aber (Einwand). Merke: А ты? gibt immer die Frage zurück."
+  },
+  {
+   "id": "d03_chto_novogo",
+   "register": "locker",
+   "summary": "Что н+ового? ist die Frage nach Neuigkeiten. Die Antwort sagt viel über die Stimmung: Von Ничег+о н+ового bis Мн+ого всег+о.",
+   "variants": [
+    {
+     "ru": "Как усп+ехи?",
+     "de": "Wie läuft's (mit dem, woran du arbeitest)?",
+     "use": "Fragt nach Fortschritten, z. B. beim Lernen."
+    },
+    {
+     "ru": "Что сл+ышно?",
+     "de": "Was gibt's?",
+     "use": "Locker, wie 'was hört man?'."
+    },
+    {
+     "ru": "Ничег+о н+ового.",
+     "de": "Nichts Neues.",
+     "use": "Normale, ruhige Antwort."
+    },
+    {
+     "ru": "Всё по-ст+арому.",
+     "de": "Alles beim Alten.",
+     "use": "Gelassene Antwort."
+    },
+    {
+     "ru": "Мн+ого всег+о!",
+     "de": "Viel los!",
+     "use": "Wenn viel passiert ist."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Что н+ового? — Ничег+о н+ового. А у теб+я?",
+     "de": "Was gibt's Neues? — Nichts Neues. Und bei dir?",
+     "why": "Genitiv nach что: н+ового."
+    },
+    {
+     "ru": "Как усп+ехи? — Хорош+о, я уч+усь.",
+     "de": "Wie läuft's? — Gut, ich lerne.",
+     "why": "Ideal für Lernende."
+    }
+   ],
+   "grammar": "Nach что und ничег+о steht der Genitiv: что н+ового, ничег+о н+ового ('was an Neuem'). Ähnlich: что интер+есного? (was Interessantes?)"
+  },
+  {
+   "id": "d04_skolko_stoit",
+   "register": "neutral",
+   "summary": "Preise gehören zu jedem Alltag. Wichtig: Nach Zahlen steht рубль, рубля oder рублей — dieselbe Regel wie bei год, года, лет.",
+   "variants": [
+    {
+     "ru": "Ск+олько +это ст+оит?",
+     "de": "Wie viel kostet das?",
+     "use": "Mit +это klingt es natürlicher."
+    },
+    {
+     "ru": "Как+ая цен+а?",
+     "de": "Was ist der Preis?",
+     "use": "Etwas gehobener."
+    },
+    {
+     "ru": "Почём?",
+     "de": "Wie viel (pro Stück / Kilo)?",
+     "use": "Locker, auf dem Markt."
+    },
+    {
+     "ru": "Ск+олько с мен+я?",
+     "de": "Wie viel schulde ich?",
+     "use": "Beim Bezahlen."
+    },
+    {
+     "ru": "+Это д+орого.",
+     "de": "Das ist teuer.",
+     "use": "Zum Verhandeln oder Kommentieren."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Ск+олько ст+оит? — Сто рубл+ей.",
+     "de": "Wie viel kostet das? — Hundert Rubel.",
+     "why": "Ab fünf steht рублей (Genitiv Plural)."
+    },
+    {
+     "ru": "Два рубл+я, три рубл+я, пять рубл+ей.",
+     "de": "Zwei, drei, fünf Rubel.",
+     "why": "1 рубль, 2–4 рубля, ab 5 рублей."
+    },
+    {
+     "ru": "+Это д+орого. М+ожно деш+евле?",
+     "de": "Das ist teuer. Geht es günstiger?",
+     "why": "Дешев+ле ist der Komparativ von дёшево."
+    }
+   ],
+   "grammar": "Zahl + Nomen: 1 → Nominativ Singular (рубль), 2–4 → Genitiv Singular (рубля), ab 5 → Genitiv Plural (рублей). Dasselbe Muster gilt für год, часа, часов."
+  },
+  {
+   "id": "d05_ya_govoryu_nemnogo",
+   "register": "neutral",
+   "summary": "Wie gut du Russisch sprichst, kannst du fein abstufen — vom Anfänger bis zum Fließenden. Das hilft, das Gespräch auf dein Niveau zu bringen.",
+   "variants": [
+    {
+     "ru": "Я т+олько уч+усь.",
+     "de": "Ich lerne erst.",
+     "use": "Bescheiden und freundlich."
+    },
+    {
+     "ru": "Я говор+ю немн+ого по-р+усски.",
+     "de": "Ich spreche ein bisschen Russisch.",
+     "use": "Neutral."
+    },
+    {
+     "ru": "Я поним+аю л+учше, чем говор+ю.",
+     "de": "Ich verstehe besser, als ich spreche.",
+     "use": "Ehrlich — typisch für Lernende."
+    },
+    {
+     "ru": "Я говор+ю своб+одно.",
+     "de": "Ich spreche fließend.",
+     "use": "Wenn du es kannst."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Я говор+ю немн+ого по-р+усски. Говор+ите м+едленнее!",
+     "de": "Ich spreche ein bisschen Russisch. Sprechen Sie langsamer!",
+     "why": "Natürlich und höflich."
+    },
+    {
+     "ru": "Я поним+аю л+учше, чем говор+ю.",
+     "de": "Ich verstehe besser, als ich spreche.",
+     "why": "Чем = als. л+учше = besser."
+    }
+   ],
+   "grammar": "по-р+усски (mit Bindestrich) bedeutet 'auf Russisch' und ist ein Adverb; formeller sagst du на р+усском яз+ыке. Beide sind richtig."
+  },
+  {
+   "id": "d05_kak_skazat",
+   "register": "neutral",
+   "summary": "Wörter zu erfragen ist die wichtigste Lernstrategie. Diese Fragen sind dein Werkzeugkasten: wie sagt man, wie schreibt man, wie spricht man aus.",
+   "variants": [
+    {
+     "ru": "Как +это назыв+ается?",
+     "de": "Wie heißt das?",
+     "use": "Du zeigst auf einen Gegenstand."
+    },
+    {
+     "ru": "Как п+ишется?",
+     "de": "Wie schreibt man das?",
+     "use": "Zur Schreibweise."
+    },
+    {
+     "ru": "Как произн+осится?",
+     "de": "Wie spricht man das aus?",
+     "use": "Zur Aussprache."
+    },
+    {
+     "ru": "Что +это зн+ачит?",
+     "de": "Was bedeutet das?",
+     "use": "Zur Bedeutung."
+    },
+    {
+     "ru": "Как сказ+ать …?",
+     "de": "Wie sagt man …?",
+     "use": "Das Allzweck-Muster."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Как сказ+ать «ч+ай» по-нем+ецки?",
+     "de": "Wie sagt man »Tee« auf Deutsch?",
+     "why": "So fragst du ein Gegenüber, das Deutsch lernt — und lernst selbst mit."
+    },
+    {
+     "ru": "Как +это назыв+ается по-р+усски?",
+     "de": "Wie heißt das auf Russisch?",
+     "why": "Gegenstand zeigen, fragen."
+    }
+   ],
+   "grammar": "Die Formen auf -ся (называется, пишется, произносится) sind das Passiv: 'wird genannt', 'wird geschrieben', 'wird ausgesprochen'. Dieses Muster nutzt du in vielen Alltagsfragen."
+  },
+  {
+   "id": "d05_konechno",
+   "register": "neutral",
+   "summary": "Zustimmung gibt es in Graden: von absolut sicher bis eher unwahrscheinlich. Wer die Skala kennt, kann Gewissheit genau ausdrücken.",
+   "variants": [
+    {
+     "ru": "Безусл+овно!",
+     "de": "Unbedingt! / Ohne Zweifel!",
+     "use": "Förmlich, sehr sicher."
+    },
+    {
+     "ru": "Разум+еется!",
+     "de": "Selbstverständlich!",
+     "use": "Gehoben, höflich."
+    },
+    {
+     "ru": "Нав+ерное.",
+     "de": "Wahrscheinlich.",
+     "use": "Wahrscheinlicher als nicht."
+    },
+    {
+     "ru": "М+ожет быть.",
+     "de": "Vielleicht.",
+     "use": "Offen."
+    },
+    {
+     "ru": "Вряд ли.",
+     "de": "Eher nicht.",
+     "use": "Unwahrscheinlich."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Ты придёшь? — Кон+ечно!",
+     "de": "Kommst du? — Natürlich!",
+     "why": "Eine klare Zusage."
+    },
+    {
+     "ru": "Ты придёшь? — Нав+ерное.",
+     "de": "Kommst du? — Wahrscheinlich.",
+     "why": "Offene Zusage."
+    },
+    {
+     "ru": "Ты придёшь? — Вряд ли.",
+     "de": "Kommst du? — Eher nicht.",
+     "why": "Höfliche Absage."
+    }
+   ]
+  },
+  {
+   "id": "d06_kem_ty_rabotaesh",
+   "register": "neutral",
+   "summary": "Kem ty rabotaesh? hat einen grammatischen Schatz: den Instrumental. Nach работать steht der Beruf im Instrumental: Я раб+отаю врач+ом (wörtlich 'ich arbeite als Arzt').",
+   "variants": [
+    {
+     "ru": "Кто ты по проф+ессии?",
+     "de": "Was bist du von Beruf?",
+     "use": "Fragt direkt nach dem Beruf."
+    },
+    {
+     "ru": "Чем ты заним+аешься?",
+     "de": "Was machst du (beruflich)?",
+     "use": "Offener, auch für Studium oder Hobbys."
+    },
+    {
+     "ru": "Я раб+отаю врач+ом.",
+     "de": "Ich arbeite als Arzt.",
+     "use": "Instrumental auf -ом."
+    },
+    {
+     "ru": "Я раб+отаю уч+ителем.",
+     "de": "Ich arbeite als Lehrer.",
+     "use": "Instrumental auf -ем."
+    },
+    {
+     "ru": "Я раб+отаю уч+ительницей.",
+     "de": "Ich arbeite als Lehrerin.",
+     "use": "Weibliche Form im Instrumental: -ей."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Кем ты раб+отаешь? — Я раб+отаю программ+истом.",
+     "de": "Als was arbeitest du? — Ich arbeite als Programmierer.",
+     "why": "Кем ist der Instrumental von кто."
+    },
+    {
+     "ru": "Я раб+отаю врач+ом.",
+     "de": "Ich arbeite als Arzt.",
+     "why": "Auch eine Frau sagt врачом."
+    }
+   ],
+   "gender": {
+    "title": "Beruf im Instrumental",
+    "text": "Männliche Berufe enden im Instrumental auf -ом/-ем (врач → врачом, учитель → учителем), weibliche auf -ой/-ей (учительница → учительницей). Viele Frauen nutzen die männliche Form: Я работаю врачом — das ist völlig normal."
+   },
+   "grammar": "Instrumental = Wer? Womit? Als wer? Endungen: -ом/-ем (m, n), -ой/-ей (f), -ами/-ями (Mehrzahl). Nach работать und быть steht der Beruf im Instrumental."
+  },
+  {
+   "id": "d06_eto_interesno",
+   "register": "neutral",
+   "summary": "+Это интер+есно ('das ist interessant') und Мне интер+есно ('ich bin interessiert') klingen ähnlich, sagen aber Verschiedenes: das erste beschreibt die Sache, das zweite dein Gefühl.",
+   "variants": [
+    {
+     "ru": "Мне интер+есно.",
+     "de": "Ich bin interessiert / Mich interessiert es.",
+     "use": "Dein Gefühl, mit Dativ мне."
+    },
+    {
+     "ru": "+Это увлек+ательно!",
+     "de": "Das ist fesselnd!",
+     "use": "Stärker als интересно."
+    },
+    {
+     "ru": "+Это ск+учно.",
+     "de": "Das ist langweilig.",
+     "use": "Umgekehrt."
+    },
+    {
+     "ru": "+Это +очень интер+есно!",
+     "de": "Das ist sehr interessant!",
+     "use": "Mit очень verstärkt."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "+Это интер+есно! Расскаж+и ещё.",
+     "de": "Das ist interessant! Erzähl mehr.",
+     "why": "Schönes Echo auf die Erzählung des anderen."
+    },
+    {
+     "ru": "Мне интер+есно, как +это раб+отает.",
+     "de": "Mich interessiert, wie das funktioniert.",
+     "why": "Мне + Zustand zeigt dein Interesse."
+    }
+   ],
+   "grammar": "+Это интер+есно beschreibt die Sache (+это = das). Мне интер+есно beschreibt dein Gefühl (Dativ мне). Dieselbe Idee gilt für скучно, весело, страшно."
+  },
+  {
+   "id": "d07_u_menya_est_brat",
+   "register": "neutral",
+   "summary": "Familienwörter werden schnell vielfältig: ст+арший und мл+адший zeigen, wer älter oder jünger ist. Das Adjektiv richtet sich nach dem Geschlecht des Wortes.",
+   "variants": [
+    {
+     "ru": "У мен+я есть ст+арший брат.",
+     "de": "Ich habe einen älteren Bruder.",
+     "use": "ст+арший = älterer (m)."
+    },
+    {
+     "ru": "У мен+я есть ст+аршая сестр+а.",
+     "de": "Ich habe eine ältere Schwester.",
+     "use": "ст+аршая = ältere (f)."
+    },
+    {
+     "ru": "У мен+я есть мл+адший брат.",
+     "de": "Ich habe einen jüngeren Bruder.",
+     "use": "мл+адший = jüngerer."
+    },
+    {
+     "ru": "У мен+я есть дво+юродный брат.",
+     "de": "Ich habe einen Cousin.",
+     "use": "Wörtlich 'doppelt-geborener Bruder'."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "У мен+я есть ст+арший брат и мл+адшая сестр+а.",
+     "de": "Ich habe einen älteren Bruder und eine jüngere Schwester.",
+     "why": "Брат ist männlich → старший. Сестра ist weiblich → младшая."
+    },
+    {
+     "ru": "Мо+я ст+аршая сестр+а раб+отает в Берл+ине.",
+     "de": "Meine ältere Schwester arbeitet in Berlin.",
+     "why": "Alles in weiblicher Form: моя, старшая, сестра."
+    }
+   ],
+   "grammar": "Adjektive passen sich an: ст+арший брат (m), ст+аршая сестр+а (f), ст+арший реб+ёнок (m, Kind). Endungen -ый/-ий (m), -ая (f), -ое (n)."
+  },
+  {
+   "id": "d08_klassno",
+   "register": "locker · jung",
+   "summary": "Begeisterung hat viele Stufen und Töne. Кл+ассно, Кр+уто und Прик+ольно klingen jung und locker; Прекр+асно und Замеч+ательно sind gehobener.",
+   "variants": [
+    {
+     "ru": "Кл+ассно!",
+     "de": "Klasse!",
+     "use": "Locker, überall."
+    },
+    {
+     "ru": "Кр+уто!",
+     "de": "Krass! / Cool!",
+     "use": "Jugendsprache."
+    },
+    {
+     "ru": "Прик+ольно!",
+     "de": "Witzig! / Cool!",
+     "use": "Sehr jung, spielerisch."
+    },
+    {
+     "ru": "Прекр+асно!",
+     "de": "Wunderbar!",
+     "use": "Gehoben, höflich."
+    },
+    {
+     "ru": "Потряс+ающе!",
+     "de": "Atemberaubend!",
+     "use": "Starke Begeisterung."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Мы идём в кин+о! — Кр+уто!",
+     "de": "Wir gehen ins Kino! — Cool!",
+     "why": "Kurz und begeistert."
+    },
+    {
+     "ru": "+Это прекр+асная ид+ея!",
+     "de": "Das ist eine wunderbare Idee!",
+     "why": "Прекрасная ist ein Adjektiv (weiblich, passt zu идея)."
+    }
+   ]
+  },
+  {
+   "id": "d09_vkusno",
+   "register": "neutral · herzlich",
+   "summary": "Wer isst, verdient ein Kompliment. Das macht Gastgeber glücklich — und es gibt sehr schöne Ausdrücke dafür.",
+   "variants": [
+    {
+     "ru": "+Очень вк+усно!",
+     "de": "Sehr lecker!",
+     "use": "Der Klassiker."
+    },
+    {
+     "ru": "Объед+ение!",
+     "de": "Ein Gedicht! / Köstlich!",
+     "use": "Sehr begeistert, fast schwärmerisch."
+    },
+    {
+     "ru": "П+альчики обл+ижешь!",
+     "de": "Zum Finger-Ablecken!",
+     "use": "Eine bildhafte Redewendung — lecker!"
+    },
+    {
+     "ru": "Спас+ибо, б+ыло +очень вк+усно.",
+     "de": "Danke, es war sehr lecker.",
+     "use": "Beim Abschied vom Essen."
+    },
+    {
+     "ru": "Невк+усно.",
+     "de": "Nicht lecker.",
+     "use": "Höflich lieber vermeiden."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Вк+усно! Кто +это пригот+овил?",
+     "de": "Lecker! Wer hat das gekocht?",
+     "why": "Ein Kompliment mit Neugier."
+    },
+    {
+     "ru": "Объед+ение! Спас+ибо!",
+     "de": "Köstlich! Danke!",
+     "why": "Doppelt freundlich."
+    }
+   ]
+  },
+  {
+   "id": "d09_priyatnogo_appetita",
+   "register": "höflich · warm",
+   "summary": "Bei Tisch gibt es feste Formeln. Wer sie kennt, wirkt sofort höflich und herzlich — besonders bei Einladungen.",
+   "variants": [
+    {
+     "ru": "При+ятного аппет+ита!",
+     "de": "Guten Appetit!",
+     "use": "Zu allen am Tisch."
+    },
+    {
+     "ru": "Спас+ибо, вза+имно!",
+     "de": "Danke, gleichfalls!",
+     "use": "Die höfliche Antwort."
+    },
+    {
+     "ru": "Н+а здор+овье!",
+     "de": "Gern geschehen! (nach dem Essen)",
+     "use": "Antwort auf Спасибо за обед."
+    },
+    {
+     "ru": "Будь как д+ома!",
+     "de": "Fühl dich wie zu Hause!",
+     "use": "Gastgeber-Satz."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "При+ятного аппет+ита! — Спас+ибо, вза+имно!",
+     "de": "Guten Appetit! — Danke, gleichfalls!",
+     "why": "Ein kleines Ritual."
+    },
+    {
+     "ru": "Спас+ибо за +ужин, б+ыло вк+усно!",
+     "de": "Danke für das Abendessen, es war lecker!",
+     "why": "За + Akkusativ = 'für'."
+    }
+   ],
+   "grammar": "Wünsche stehen im Genitiv: приятного аппетита, здоровья. Dahinter steht die Idee '(ich wünsche dir) …'."
+  },
+  {
+   "id": "d09_za_zdorovye",
+   "register": "festlich",
+   "summary": "Toasts sind in Russland wichtig und werden mit Gefühl gesprochen. Jede Runde hat ihr Thema: Gesundheit, Begegnung, Liebe, Frieden.",
+   "variants": [
+    {
+     "ru": "За встр+ечу!",
+     "de": "Auf das Wiedersehen!",
+     "use": "Auf eure Begegnung."
+    },
+    {
+     "ru": "За люб+овь!",
+     "de": "Auf die Liebe!",
+     "use": "Sehr emotional."
+    },
+    {
+     "ru": "Б+удем здор+овы!",
+     "de": "Bleiben wir gesund!",
+     "use": "Wörtlich 'Lasst uns gesund sein!'"
+    },
+    {
+     "ru": "В+аше здор+овье!",
+     "de": "Auf Ihr Wohl!",
+     "use": "Förmlich, mit Respekt."
+    },
+    {
+     "ru": "За вас!",
+     "de": "Auf Sie / euch!",
+     "use": "Kurz und herzlich."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "За здор+овье! За встр+ечу!",
+     "de": "Auf die Gesundheit! Auf das Wiedersehen!",
+     "why": "Mehrere Toasts nacheinander."
+    },
+    {
+     "ru": "За теб+я! Б+удем здор+овы!",
+     "de": "Auf dich! Bleiben wir gesund!",
+     "why": "Persönlich und warm."
+    }
+   ],
+   "grammar": "За + Akkusativ = 'auf, für': за здоровье, за встречу, за тебя. Der Toast sagt, worauf getrunken wird."
+  },
+  {
+   "id": "d09_schyot",
+   "register": "höflich · praktisch",
+   "summary": "Am Tisch fertig? Mit diesen Sätzen bezahlst du wie ein Muttersprachler — ob zusammen, getrennt oder mit Karte.",
+   "variants": [
+    {
+     "ru": "М+ожно счёт?",
+     "de": "Kann ich die Rechnung haben?",
+     "use": "Höflich, mit М+ожно."
+    },
+    {
+     "ru": "Принес+ите, пож+алуйста, счёт.",
+     "de": "Bringen Sie bitte die Rechnung.",
+     "use": "Etwas förmlicher."
+    },
+    {
+     "ru": "Отд+ельно, пож+алуйста.",
+     "de": "Getrennt, bitte.",
+     "use": "Wenn jeder für sich bezahlt."
+    },
+    {
+     "ru": "Вм+есте.",
+     "de": "Zusammen.",
+     "use": "Eine gemeinsame Rechnung."
+    },
+    {
+     "ru": "М+ожно к+артой?",
+     "de": "Kann ich mit Karte zahlen?",
+     "use": "Karten sind überall üblich."
+    },
+    {
+     "ru": "Сд+ачи не н+адо.",
+     "de": "Stimmt so (kein Wechselgeld).",
+     "use": "Trinkgeld geben."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "М+ожно счёт? — Вм+есте +или отд+ельно?",
+     "de": "Kann ich die Rechnung haben? — Zusammen oder getrennt?",
+     "why": "Eine typische Rückfrage."
+    },
+    {
+     "ru": "Отд+ельно. М+ожно к+артой?",
+     "de": "Getrennt. Kann ich mit Karte zahlen?",
+     "why": "Schnell und klar."
+    }
+   ],
+   "grammar": "Картой ist der Instrumental von карта ('mit der Karte'): bezahlen mit = Instrumental ohne Präposition."
+  },
+  {
+   "id": "d10_kotoryy_chas",
+   "register": "neutral",
+   "summary": "Die Uhrzeit ist ein Alltagsklassiker. Wichtig: час, часа, часов — dieselbe Regel wie bei год, года, лет.",
+   "variants": [
+    {
+     "ru": "Ск+олько вр+емени?",
+     "de": "Wie viel Uhr ist es? (wörtlich 'Wie viel Zeit?')",
+     "use": "Sehr üblich im Alltag."
+    },
+    {
+     "ru": "Вы не подск+ажете, кот+орый час?",
+     "de": "Können Sie mir sagen, wie spät es ist?",
+     "use": "Höflich, an Fremde."
+    },
+    {
+     "ru": "Сейч+ас три час+а.",
+     "de": "Es ist drei Uhr.",
+     "use": "Nach 2–4 steht часа."
+    },
+    {
+     "ru": "Сейч+ас пять час+ов.",
+     "de": "Es ist fünf Uhr.",
+     "use": "Ab 5 steht часов."
+    },
+    {
+     "ru": "Сейч+ас од+ин час.",
+     "de": "Es ist ein Uhr.",
+     "use": "Eins: час."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Кот+орый час? — Сейч+ас пять час+ов.",
+     "de": "Wie spät ist es? — Es ist fünf Uhr.",
+     "why": "Часов nach Zahlen ab 5."
+    },
+    {
+     "ru": "Вы не подск+ажете, кот+орый час?",
+     "de": "Können Sie mir sagen, wie spät es ist?",
+     "why": "Подсказать = 'einen Hinweis geben' — sehr höflich."
+    }
+   ],
+   "grammar": "Zahlen 2–4 + Nomen → Genitiv Singular (часа), ab 5 → Genitiv Plural (часов). Das ist dieselbe Regel wie bei рубль, год, минута."
+  },
+  {
+   "id": "d10_kakaya_pogoda",
+   "register": "neutral",
+   "summary": "Das Wetter ist ein Standard-Gesprächsthema. Russen sagen oft, was passiert (идёт дождь) oder wie es ist (х+олодно).",
+   "variants": [
+    {
+     "ru": "Хор+ошая пог+ода.",
+     "de": "Schönes Wetter.",
+     "use": "Positives Wetter."
+    },
+    {
+     "ru": "Плох+ая пог+ода.",
+     "de": "Schlechtes Wetter.",
+     "use": "Negatives Wetter."
+    },
+    {
+     "ru": "Идёт снег.",
+     "de": "Es schneit.",
+     "use": "Wörtlich 'Der Schnee geht'."
+    },
+    {
+     "ru": "Св+етит с+олнце.",
+     "de": "Die Sonne scheint.",
+     "use": "Das л in солнце wird nicht gesprochen."
+    },
+    {
+     "ru": "Сег+одня п+асмурно.",
+     "de": "Heute ist es bedeckt.",
+     "use": "Graue Wolken."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Как+ая сег+одня пог+ода? — Сег+одня х+олодно и идёт снег.",
+     "de": "Wie ist das Wetter heute? — Heute ist es kalt und es schneit.",
+     "why": "Mit и zwei Beobachtungen verbinden."
+    },
+    {
+     "ru": "Хор+ошая пог+ода! Дав+ай гул+ять!",
+     "de": "Schönes Wetter! Lass uns spazieren gehen!",
+     "why": "Das Wetter als Anlass."
+    }
+   ],
+   "grammar": "Идёт дождь / идёт снег: Die Verben gehen mit Niederschlag (идти). Wettersätze ohne Subjekt: Хол+одно, Тепл+о, Жарко."
+  },
+  {
+   "id": "d11_vo_skolko",
+   "register": "neutral",
+   "summary": "Um Zeiten zu vereinbaren, nutzt du в + Zahl (в семь), +около + Genitiv ('gegen') oder р+овно ('punkt').",
+   "variants": [
+    {
+     "ru": "В семь.",
+     "de": "Um sieben.",
+     "use": "Standard."
+    },
+    {
+     "ru": "Р+овно в семь.",
+     "de": "Punkt sieben.",
+     "use": "Genau."
+    },
+    {
+     "ru": "+Около сем+и.",
+     "de": "Gegen sieben.",
+     "use": "Ungefähr, mit Genitiv."
+    },
+    {
+     "ru": "К сем+и.",
+     "de": "Bis sieben / zu sieben.",
+     "use": "Wenn du bis dahin da sein sollst."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Во ск+олько встр+етимся? — В семь.",
+     "de": "Um wie viel Uhr treffen wir uns? — Um sieben.",
+     "why": "Во сколько = 'um wie viel (Uhr)'."
+    },
+    {
+     "ru": "Я б+уду р+овно в семь.",
+     "de": "Ich bin punkt sieben da.",
+     "why": "Б+уду = Zukunft von быть ('ich werde sein')."
+    }
+   ],
+   "grammar": "В + Akkusativ der Uhrzeit: в семь, в восемь. +Около + Genitiv: около семи. К + Dativ: к семи ('bis'). Dieselben Präpositionen zeigen Zeit und Ort."
+  },
+  {
+   "id": "d11_dogovorilis",
+   "register": "locker",
+   "summary": "Abmachungen werden mit kurzen, kräftigen Ausrufen besiegelt. Je nach Ton klingen sie freundlich, entschlossen oder festlich.",
+   "variants": [
+    {
+     "ru": "Идёт!",
+     "de": "Abgemacht! / Gilt!",
+     "use": "Locker."
+    },
+    {
+     "ru": "По рук+ам!",
+     "de": "Handschlag drauf!",
+     "use": "Sinnbild des Versprechens."
+    },
+    {
+     "ru": "Решен+о!",
+     "de": "Beschlossen!",
+     "use": "Entschieden."
+    },
+    {
+     "ru": "Отл+ичная ид+ея!",
+     "de": "Tolle Idee!",
+     "use": "Zustimmung zum Plan."
+    },
+    {
+     "ru": "Почем+у бы и нет?",
+     "de": "Warum eigentlich nicht?",
+     "use": "Offen, spielerisch."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Дав+ай встр+етимся з+автра! — Договор+ились!",
+     "de": "Lass uns morgen treffen! — Abgemacht!",
+     "why": "Договорились = 'wir haben uns geeinigt'."
+    },
+    {
+     "ru": "Пойдём в каф+е? — Почем+у бы и нет?",
+     "de": "Gehen wir ins Café? — Warum nicht?",
+     "why": "Eine einladende Zustimmung."
+    }
+   ],
+   "grammar": "Договор+ились ist die Vergangenheit (Mehrzahl): 'wir haben uns geeinigt'. Das ли markiert die Mehrzahl und gilt für alle Geschlechter."
+  },
+  {
+   "id": "d12_pochemu",
+   "register": "neutral",
+   "summary": "Russisch hat drei Fragewörter für 'warum': Почем+у (allgemein, Grund), Зач+ем (wozu, Ziel), Отчег+о (aus welchem Anlass, oft emotional).",
+   "variants": [
+    {
+     "ru": "Зач+ем?",
+     "de": "Wozu? / Weshalb?",
+     "use": "Fragt nach dem Zweck."
+    },
+    {
+     "ru": "Отчег+о?",
+     "de": "Weshalb? / Wieso?",
+     "use": "Fragt nach dem Anlass, oft gefühlsbetont."
+    },
+    {
+     "ru": "Почем+у?",
+     "de": "Warum?",
+     "use": "Der Standard."
+    },
+    {
+     "ru": "Из-за чег+о?",
+     "de": "Wegen was?",
+     "use": "Fragt, was der Auslöser war."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Почем+у ты гр+устный?",
+     "de": "Warum bist du traurig?",
+     "why": "Neutrale Frage nach dem Grund."
+    },
+    {
+     "ru": "Зач+ем ты +это д+елаешь?",
+     "de": "Wozu machst du das?",
+     "why": "Fragt nach dem Ziel."
+    },
+    {
+     "ru": "Отчег+о ты пл+ачешь?",
+     "de": "Weshalb weinst du?",
+     "why": "Fühlbarer, nah."
+    }
+   ],
+   "grammar": "Почему → Ursache (потому что). Зачем → Ziel (чтобы). Отчего → Anlass (оттого что). So wählst du die Frage, die zur Antwort passt."
+  },
+  {
+   "id": "d12_nikogda_ne_byl",
+   "register": "neutral",
+   "summary": "Erfahrungen erzählt man mit никогд+а не (nie), ещё не (noch nicht) und уж+е (schon). Die Vergangenheit richtet sich nach deinem Geschlecht: был (m) / была (f).",
+   "variants": [
+    {
+     "ru": "Я ещё не был в Росс+ии.",
+     "de": "Ich war noch nicht in Russland. (Mann)",
+     "use": "Noch nicht, aber vielleicht bald."
+    },
+    {
+     "ru": "Я ещё не был+а в Росс+ии.",
+     "de": "Ich war noch nicht in Russland. (Frau)",
+     "use": "Weibliche Form."
+    },
+    {
+     "ru": "Я уж+е был в Москв+е.",
+     "de": "Ich war schon in Moskau. (Mann)",
+     "use": "Schon passiert."
+    },
+    {
+     "ru": "Ты когд+а-нибудь был в Росс+ии?",
+     "de": "Warst du schon mal in Russland? (zu einem Mann)",
+     "use": "Frage nach Erfahrung."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Я никогд+а не был в Росс+ии.",
+     "de": "Ich war noch nie in Russland.",
+     "why": "Doppelte Verneinung: никогда + не."
+    },
+    {
+     "ru": "Ты когд+а-нибудь был в Берл+ине?",
+     "de": "Warst du schon mal in Berlin?",
+     "why": "Когда-нибудь = jemals."
+    }
+   ],
+   "gender": {
+    "title": "был / была",
+    "text": "Die Vergangenheit von быть: Mann был, Frau была (Betonung am Ende: был+а), Mehrzahl были. Wer fragt, richtet das Verb nach dem Gegenüber: Ты был (zu einem Mann) / Ты была (zu einer Frau)."
+   },
+   "grammar": "Ort: в + Präpositiv: в Росс+ии, в Берл+ине. Verneinung: никогд+а + не (doppelt, Pflicht)."
+  },
+  {
+   "id": "d13_nichego_strashnogo",
+   "register": "locker · tröstend",
+   "summary": "Wenn jemand sich entschuldigt oder etwas schiefgeht, hilft ein kurzer, warmer Satz. Diese Antworten nehmen Druck raus — und machen Gespräche leicht.",
+   "variants": [
+    {
+     "ru": "Всё в пор+ядке.",
+     "de": "Alles in Ordnung.",
+     "use": "Beruhigend, neutral."
+    },
+    {
+     "ru": "Не стр+ашно.",
+     "de": "Nicht schlimm.",
+     "use": "Kurz."
+    },
+    {
+     "ru": "Быв+ает.",
+     "de": "Kann passieren.",
+     "use": "Locker und verständnisvoll."
+    },
+    {
+     "ru": "Ерунд+а!",
+     "de": "Quatsch! / Halb so wild!",
+     "use": "Sehr locker, unter Freunden."
+    },
+    {
+     "ru": "Н+е за что.",
+     "de": "Keine Ursache.",
+     "use": "Auf Entschuldigung oder Dank."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Извин+и! — Ерунд+а, быв+ает.",
+     "de": "Entschuldige! — Halb so wild, kann passieren.",
+     "why": "Zwei lockere Antworten."
+    },
+    {
+     "ru": "Всё в пор+ядке? — Да, всё в пор+ядке.",
+     "de": "Alles in Ordnung? — Ja, alles in Ordnung.",
+     "why": "Frage und Bestätigung."
+    }
+   ]
+  },
+  {
+   "id": "d13_mne_zhal",
+   "register": "persönlich · mitfühlend",
+   "summary": "Mitgefühl zeigst du mit wenigen, ehrlichen Sätzen. Dabei unterscheiden sich Männer und Frauen in der Anrede: Б+едный (zu einem Mann) / Б+едная (zu einer Frau).",
+   "variants": [
+    {
+     "ru": "Мне +очень жаль.",
+     "de": "Es tut mir sehr leid.",
+     "use": "Aufrichtiges Bedauern."
+    },
+    {
+     "ru": "Соч+увствую.",
+     "de": "Ich fühle mit dir. (förmlich-warm)",
+     "use": "Wirkt anteilnehmend, etwas gehoben."
+    },
+    {
+     "ru": "Б+едный!",
+     "de": "Du Armer!",
+     "use": "Zu einem Mann."
+    },
+    {
+     "ru": "Б+едная!",
+     "de": "Du Arme!",
+     "use": "Zu einer Frau."
+    },
+    {
+     "ru": "Держ+ись!",
+     "de": "Halt durch!",
+     "use": "Ermutigung, sehr vertraut."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Мне +очень жаль. Я с тоб+ой.",
+     "de": "Es tut mir sehr leid. Ich bin bei dir.",
+     "why": "Mitgefühl + Nähe."
+    },
+    {
+     "ru": "Б+едная! Держ+ись!",
+     "de": "Du Arme! Halt durch!",
+     "why": "Zu einer Frau."
+    }
+   ],
+   "gender": {
+    "title": "Б+едный / Б+едная",
+    "text": "Wenn du jemanden bemitleidest, richtet sich das Adjektiv nach dem Geschlecht der Person: Б+едный (m), Б+едная (f), Б+едные (pl). Dasselbe gilt für Anreden wie Дорог+ой / Дорог+ая.",
+    "forms": [
+     {
+      "ru": "Б+едный!",
+      "de": "Du Armer!",
+      "use": "Zu einem Mann."
+     },
+     {
+      "ru": "Б+едная!",
+      "de": "Du Arme!",
+      "use": "Zu einer Frau."
+     }
+    ]
+   }
+  },
+  {
+   "id": "d13_udachi",
+   "register": "herzlich",
+   "summary": "Wünsche stehen im Genitiv, Glückwünsche mit с + Instrumental: Уд+ачи! (Genitiv) aber С днём рожд+ения! (с + Instrumental). So erkennst du beide Typen.",
+   "variants": [
+    {
+     "ru": "Усп+ехов!",
+     "de": "Viel Erfolg!",
+     "use": "Genitiv Plural."
+    },
+    {
+     "ru": "Счастл+ивого пут+и!",
+     "de": "Gute Reise!",
+     "use": "Wörtlich 'glücklichen Weg'."
+    },
+    {
+     "ru": "Выздор+авливай!",
+     "de": "Gute Besserung!",
+     "use": "Befehl: werde gesund."
+    },
+    {
+     "ru": "С днём рожд+ения!",
+     "de": "Alles Gute zum Geburtstag!",
+     "use": "С + Instrumental für Glückwünsche."
+    },
+    {
+     "ru": "С пр+аздником!",
+     "de": "Frohes Fest!",
+     "use": "Zu Feiertagen."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Уд+ачи! Усп+ехов!",
+     "de": "Viel Glück! Viel Erfolg!",
+     "why": "Zwei Wünsche im Genitiv."
+    },
+    {
+     "ru": "С днём рожд+ения! Всег+о хор+ошего!",
+     "de": "Alles Gute zum Geburtstag! Alles Gute!",
+     "why": "Glückwunsch + Wunsch."
+    }
+   ],
+   "grammar": "Wünsche (Genitiv): удачи, успехов, счастья, здоровья. Glückwünsche (с + Instrumental): с днём рождения, с праздником, с Новым годом."
+  },
+  {
+   "id": "d13_ty_horosho_govorish",
+   "register": "neutral · bescheiden",
+   "summary": "Auf ein Kompliment antwortest du nicht mit 'Danke, ich weiß', sondern mit Bescheidenheit — das gehört zur russischen Höflichkeit. Wer gelobt wird, spielt es oft herunter.",
+   "variants": [
+    {
+     "ru": "Н+у что ты!",
+     "de": "Ach was!",
+     "use": "Bescheidene Abwehr."
+    },
+    {
+     "ru": "Спас+ибо, я ещё уч+усь.",
+     "de": "Danke, ich lerne noch.",
+     "use": "Dankbar und lernbereit."
+    },
+    {
+     "ru": "Мне при+ятно.",
+     "de": "Das freut mich.",
+     "use": "Ehrlich dankbar."
+    },
+    {
+     "ru": "Ты мен+я смущ+аешь.",
+     "de": "Du bringst mich in Verlegenheit.",
+     "use": "Scherzhaft-verlegen."
+    },
+    {
+     "ru": "У теб+я отл+ичный р+усский.",
+     "de": "Du hast ein ausgezeichnetes Russisch.",
+     "use": "Ein Kompliment mit Nomen."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Ты хорош+о говор+ишь по-р+усски! — Спас+ибо, я ещё уч+усь.",
+     "de": "Du sprichst gut Russisch! — Danke, ich lerne noch.",
+     "why": "Die beste Antwort."
+    },
+    {
+     "ru": "У теб+я отл+ичный р+усский! — Н+у что ты!",
+     "de": "Dein Russisch ist ausgezeichnet! — Ach was!",
+     "why": "Bescheidenheit als Höflichkeit."
+    }
+   ],
+   "grammar": "Bei хорош+о говор+ишь ist хорош+о ein Adverb (wie?). Bei отл+ичный р+усский ist отл+ичный ein Adjektiv (welcher?) — beides loben, aber unterschiedlich gebaut."
+  },
+  {
+   "id": "d14_bylo_priyatno",
+   "register": "höflich · warm",
+   "summary": "Б+ыло при+ятно ('es war angenehm') ist unpersönlich und bleibt immer sächlich — egal wer spricht. Р+ад был dagegen richtet sich nach deinem Geschlecht.",
+   "variants": [
+    {
+     "ru": "Р+ад был познак+омиться.",
+     "de": "Ich habe mich gefreut, dich kennenzulernen. (Mann)",
+     "use": "Männlich."
+    },
+    {
+     "ru": "Р+ада был+а познак+омиться.",
+     "de": "Ich habe mich gefreut, dich kennenzulernen. (Frau)",
+     "use": "Weiblich, beide Wörter in Frauenform."
+    },
+    {
+     "ru": "Спас+ибо за встр+ечу!",
+     "de": "Danke für das Treffen!",
+     "use": "Freundlich zum Abschied."
+    },
+    {
+     "ru": "Б+ыло зд+орово!",
+     "de": "Es war toll!",
+     "use": "Locker und ehrlich."
+    },
+    {
+     "ru": "Спас+ибо за в+ечер!",
+     "de": "Danke für den Abend!",
+     "use": "Nach einer Einladung."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Б+ыло +очень при+ятно познак+омиться!",
+     "de": "Es war sehr schön, dich kennenzulernen!",
+     "why": "Gleich für alle Geschlechter."
+    },
+    {
+     "ru": "Спас+ибо за в+ечер! Б+ыло зд+орово!",
+     "de": "Danke für den Abend! Es war toll!",
+     "why": "Zwei warme Sätze."
+    }
+   ],
+   "gender": {
+    "title": "Б+ыло bleibt gleich — р+ад ändert sich",
+    "text": "Б+ыло при+ятно ist unpersönlich: immer sächlich (было), egal ob du Mann oder Frau bist. Р+ад был (m) / Р+ада был+а (f) dagegen richtet sich nach dir. Merke: Unpersönliche Sätze (было, надо, можно) kennen kein Geschlecht."
+   }
+  },
+  {
+   "id": "d14_uvidimsya",
+   "register": "locker",
+   "summary": "Abschiede mit Plan klingen besser als nur 'Tschüss': Du sagst, wann ihr euch wiederseht — und freust dich darauf.",
+   "variants": [
+    {
+     "ru": "До встр+ечи!",
+     "de": "Bis bald!",
+     "use": "Ohne festen Termin."
+    },
+    {
+     "ru": "До з+автра!",
+     "de": "Bis morgen!",
+     "use": "Mit festem Termin."
+    },
+    {
+     "ru": "До понед+ельника!",
+     "de": "Bis Montag!",
+     "use": "До + Genitiv."
+    },
+    {
+     "ru": "До ск+орого!",
+     "de": "Bis bald!",
+     "use": "Herzlich."
+    },
+    {
+     "ru": "Созвон+имся!",
+     "de": "Wir telefonieren!",
+     "use": "Locker, unter Freunden."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Ув+идимся в п+ятницу! До п+ятницы!",
+     "de": "Wir sehen uns Freitag! Bis Freitag!",
+     "why": "В + Akkusativ für Zeit, до + Genitiv für 'bis'."
+    },
+    {
+     "ru": "Созвон+имся в выходн+ые! Пок+а!",
+     "de": "Wir telefonieren am Wochenende! Tschüss!",
+     "why": "Ein lockerer Abschied."
+    }
+   ],
+   "grammar": "До + Genitiv: до завтра, до встречи, до понедельника. В + Akkusativ für Wochentage: в пятницу, в субботу."
+  },
+  {
+   "id": "d14_beregi_sebya",
+   "register": "herzlich · nah",
+   "summary": "Sorge um andere ausdrücken ist ein Zeichen von Nähe. Russen verabschieden sich oft mit einem Wunsch für das Wohlergehen des anderen.",
+   "variants": [
+    {
+     "ru": "Будь остор+ожен!",
+     "de": "Sei vorsichtig! (zu einem Mann)",
+     "use": "Männlich."
+    },
+    {
+     "ru": "Будь остор+ожна!",
+     "de": "Sei vorsichtig! (zu einer Frau)",
+     "use": "Weiblich."
+    },
+    {
+     "ru": "Не бол+ей!",
+     "de": "Werd nicht krank!",
+     "use": "Fürsorglich."
+    },
+    {
+     "ru": "В+ыспись!",
+     "de": "Schlaf dich aus!",
+     "use": "Praktischer Wunsch."
+    },
+    {
+     "ru": "Отдых+ай!",
+     "de": "Ruh dich aus!",
+     "use": "Freundlicher Rat."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Берег+и себ+я! Будь остор+ожен!",
+     "de": "Pass auf dich auf! Sei vorsichtig!",
+     "why": "Zu einem Mann."
+    },
+    {
+     "ru": "Берег+и себ+я! Будь остор+ожна!",
+     "de": "Pass auf dich auf! Sei vorsichtig!",
+     "why": "Zu einer Frau."
+    }
+   ],
+   "gender": {
+    "title": "Будь остор+ожен / остор+ожна",
+    "text": "Das Kurzadjektiv richtet sich nach dem Angesprochenen: остор+ожен (m), остор+ожна (f). Die Betonung wandert bei der Frauenform ans Ende — hör dir beides an."
+   },
+   "grammar": "Будь + Kurzadjektiv ist der Befehl 'sei …': Будь здор+ов (m) / здор+ова (f), Будь счастл+ив (m) / счастл+ива (f)."
+  },
+  {
+   "id": "d14_mozhno_tvoy_nomer",
+   "register": "locker · höflich",
+   "summary": "Kontakte austauschen ist heute selbstverständlich. Je nach Nähe wählst du ты (твой) oder вы (ваш) und eine passende Form.",
+   "variants": [
+    {
+     "ru": "М+ожно ваш н+омер?",
+     "de": "Kann ich Ihre Nummer haben?",
+     "use": "Höflich, an Fremde."
+    },
+    {
+     "ru": "Дашь мне св+ой н+омер?",
+     "de": "Gibst du mir deine Nummer?",
+     "use": "Locker, unter Gleichaltrigen."
+    },
+    {
+     "ru": "Ты есть в Телегр+аме?",
+     "de": "Bist du auf Telegram?",
+     "use": "Heute der übliche Weg."
+    },
+    {
+     "ru": "Дав+ай обмен+яемся конт+актами!",
+     "de": "Lass uns Kontakte austauschen!",
+     "use": "Freundlich, ohne Druck."
+    },
+    {
+     "ru": "Напиш+у теб+е.",
+     "de": "Ich schreibe dir.",
+     "use": "Zum Abschluss."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "М+ожно твой н+омер? — Кон+ечно, запиш+и.",
+     "de": "Kann ich deine Nummer haben? — Klar, schreib auf.",
+     "why": "Запиши = 'schreib auf'."
+    },
+    {
+     "ru": "Ты есть в Телегр+аме? Напиш+и мне!",
+     "de": "Bist du auf Telegram? Schreib mir!",
+     "why": "Kurz und modern."
+    }
+   ]
+  },
+  {
+   "id": "d14_priezzhay",
+   "register": "herzlich",
+   "summary": "Einladungen gehören zur russischen Gastfreundschaft. Приезж+ай lädt jemanden von weit her ein, Приход+и zu dir nach Hause, Заход+и auf einen kurzen Besuch.",
+   "variants": [
+    {
+     "ru": "Приход+и в г+ости!",
+     "de": "Komm zu Besuch!",
+     "use": "Du lädst jemanden zu dir ein."
+    },
+    {
+     "ru": "Заход+и!",
+     "de": "Komm vorbei!",
+     "use": "Locker, kurz."
+    },
+    {
+     "ru": "Добр+о пож+аловать!",
+     "de": "Herzlich willkommen!",
+     "use": "Beim Empfang."
+    },
+    {
+     "ru": "Будь как д+ома!",
+     "de": "Fühl dich wie zu Hause!",
+     "use": "Gastgeber-Satz."
+    },
+    {
+     "ru": "Мы теб+я ждём.",
+     "de": "Wir erwarten dich.",
+     "use": "Warm und verbindlich."
+    }
+   ],
+   "examples": [
+    {
+     "ru": "Приезж+ай в Герм+анию! Мы теб+я ждём.",
+     "de": "Komm nach Deutschland! Wir erwarten dich.",
+     "why": "Приезжать = anreisen (mit Verkehrsmittel)."
+    },
+    {
+     "ru": "Приход+и в г+ости! Будь как д+ома.",
+     "de": "Komm zu Besuch! Fühl dich wie zu Hause.",
+     "why": "Gastfreundschaft in zwei Sätzen."
+    }
+   ],
+   "grammar": "Приезж+ай (anreisen, mit Verkehrsmittel) vs Приход+и (zu Fuß kommen). В + Akkusativ nach Richtung: в Герм+анию, в Москв+у."
   }
  ]
 }

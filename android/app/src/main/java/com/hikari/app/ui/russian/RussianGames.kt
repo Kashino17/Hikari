@@ -94,6 +94,9 @@ class RussianGamesViewModel @Inject constructor(
 
     val phrasebookMeta = repo.phrasebook
 
+    /** Sätze, zu denen es eine ausgearbeitete Vertiefung gibt. */
+    val deepIds: Set<String> = repo.deepdive.keys
+
     /** Legt fest, welche Sätze der Vokabeltest abfragt. */
     fun prepareTest(ids: List<String>) { testSelection.ids = ids }
 
