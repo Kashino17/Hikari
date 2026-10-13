@@ -56,6 +56,9 @@ data class LibraryResponse(
     val watchLater: List<FeedItemDto> = emptyList(),
     val history: List<FeedItemDto> = emptyList(),
     val suggestions: List<FeedItemDto> = emptyList(),
+    // Empfehlungen aus abonnierten Kanälen — optional wie suggestions,
+    // damit ältere Server (ohne das Feld) weiter parsen.
+    val subscriptionPicks: List<FeedItemDto> = emptyList(),
 )
 
 @Serializable

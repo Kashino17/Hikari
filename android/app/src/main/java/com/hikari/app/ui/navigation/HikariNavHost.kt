@@ -250,6 +250,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                         onPlayVideo = { videoId, title, channel ->
                             nav.navigate(playVideoRoute(videoId, title, channel))
                         },
+                        onOpenTuning = { nav.navigate("tuning") },
                     )
                 }
             }
@@ -640,7 +641,6 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                 Box(Modifier.fillMaxSize()) {
                     SettingsScreen(
                         onBack = { nav.popBackStack() },
-                        onOpenTuning = { nav.navigate("tuning") },
                     )
                 }
             }

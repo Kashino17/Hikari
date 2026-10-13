@@ -1,5 +1,6 @@
 import type Database from "better-sqlite3";
 import { type RawFeedRow, interleaveByChannel, rankCandidates } from "../api/feed.js";
+import { dailySeed, mulberry32 } from "./daily-seed.js";
 
 // Zeitbudget-Grenzen (Minuten) — der Tuning-Regler bewegt sich hierin.
 const BUDGET_MIN = 10;
@@ -53,20 +54,6 @@ export function setTimeBudgetMinutes(db: Database.Database, minutes: number): nu
     "UPDATE feed_settings SET daily_time_budget_minutes = ?, updated_at = ? WHERE id = 1",
   ).run(clamped, Date.now());
   return clamped;
-}
-
-/**
- * Kleiner deterministischer Zufallsgenerator (mulberry32). Gleicher Startwert →
- * gleiche Folge, damit sich Mixe in Tests reproduzieren lassen.
- */
-function rng(seed: number): () => number {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
 }
 
 export interface MixOptions {
@@ -217,10 +204,9 @@ export function buildDailyMix(
   // Mix. Beim Neuladen bekommt sie einen frischen Startwert, sonst bliebe der
   // Vorrat hinter den immer gleichen Bestplatzierten verborgen.
   const seed =
-    options.seed ??
-    (reshuffle ? Math.floor(Math.random() * 0x7fffffff) : Number(mixDate.replaceAll("-", "")));
+    options.seed ?? (reshuffle ? Math.floor(Math.random() * 0x7fffffff) : dailySeed(mixDate));
   const rotation = seed;
-  const random = reshuffle || options.seed !== undefined ? rng(seed) : null;
+  const random = reshuffle || options.seed !== undefined ? mulberry32(seed) : null;
   const groups = [...byPriority.keys()]
     .sort((a, b) => a - b)
     .map(

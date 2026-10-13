@@ -5,6 +5,7 @@ import { pipeline } from "node:stream/promises";
 import type Database from "better-sqlite3";
 import type { FastifyInstance } from "fastify";
 import { downloadVideo } from "../download/worker.js";
+import { mixDateFor } from "../feed/daily-mix.js";
 import { getBulkJob, getLatestBulkJob } from "../import/bulk-job.js";
 import { type BulkItem, isSniffedItem, itemUrl, runBulkImport } from "../import/bulk-runner.js";
 import { parseEpisodeInfo } from "../import/episode-parser.js";
@@ -25,6 +26,11 @@ import {
 } from "../import/pending-imports.js";
 import type { MetadataExtractor } from "../scorer/metadata-extractor.js";
 import { hydrateFeedBatch } from "./feed.js";
+import {
+  SUGGESTIONS_POOL_LIMIT,
+  pickDailySuggestions,
+  pickSubscriptionMix,
+} from "./library-picks.js";
 
 export interface VideosDeps {
   db: Database.Database;
@@ -264,17 +270,37 @@ export async function registerVideosRoutes(app: FastifyInstance, deps: VideosDep
       .all() as { id: string }[];
 
     // Entdeckte Langvideos als Vorschläge — dieselbe Kuration wie im Feed,
-    // aber zum Stöbern statt zum Durchswipen.
-    const suggestionRows = deps.db
+    // aber zum Stöbern statt zum Durchswipen. Aus einem Pool der 120 Neuesten
+    // wird pro Kalendertag gewürfelt: innerhalb des Tages stabil, morgen neu.
+    const mixDate = mixDateFor(Date.now());
+    const suggestionPool = deps.db
       .prepare(
         `SELECT f.video_id AS id
            FROM feed_items f
            JOIN videos v ON v.id = f.video_id
           WHERE f.seen_at IS NULL AND f.playback_failed = 0 AND f.is_pre_clipper = 1
             AND v.format = 'long' AND COALESCE(v.source, 'subscription') <> 'subscription'
-          ORDER BY f.added_to_feed_at DESC LIMIT 20`,
+          ORDER BY f.added_to_feed_at DESC LIMIT ${SUGGESTIONS_POOL_LIMIT}`,
       )
       .all() as { id: string }[];
+    const suggestionRows = pickDailySuggestions(suggestionPool, mixDate);
+
+    // „Von deinen Kanälen": ungesehene Langvideos der abonnierten Kanäle —
+    // genau die Quelle, die suggestions ausschließt. Tagesgedreht und per
+    // Round-Robin über die Kanäle gemischt, damit kein Kanal dominiert.
+    const subscriptionPool = deps.db
+      .prepare(
+        `SELECT f.video_id AS id, v.channel_id AS channelId
+           FROM feed_items f
+           JOIN videos v ON v.id = f.video_id
+           JOIN channels c ON c.id = v.channel_id
+          WHERE f.seen_at IS NULL AND f.playback_failed = 0 AND f.is_pre_clipper = 1
+            AND v.format = 'long' AND COALESCE(v.source, 'subscription') = 'subscription'
+            AND c.is_active = 1
+          ORDER BY f.added_to_feed_at DESC LIMIT ${SUGGESTIONS_POOL_LIMIT}`,
+      )
+      .all() as { id: string; channelId: string }[];
+    const subscriptionRows = pickSubscriptionMix(subscriptionPool, mixDate);
 
     return {
       series,
@@ -283,6 +309,7 @@ export async function registerVideosRoutes(app: FastifyInstance, deps: VideosDep
       watchLater: hydrateFeedBatch(deps.db, watchLaterRows),
       history: hydrateFeedBatch(deps.db, historyRows),
       suggestions: hydrateFeedBatch(deps.db, suggestionRows),
+      subscriptionPicks: hydrateFeedBatch(deps.db, subscriptionRows),
     };
   });
 

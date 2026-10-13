@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Shuffle
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -106,6 +107,7 @@ fun LibraryScreen(
     onOpenSeries: (String) -> Unit,
     onOpenChannel: (String) -> Unit,
     onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
+    onOpenTuning: () -> Unit = {},
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -146,6 +148,7 @@ fun LibraryScreen(
                 onOpenSeries = onOpenSeries,
                 onOpenChannel = onOpenChannel,
                 onPlayVideo = onPlayVideo,
+                onOpenTuning = onOpenTuning,
                 onLongPressSeries = { editingSeries = it },
                 watchLater = watchLater,
                 saved = savedItems,
@@ -181,6 +184,7 @@ private fun LibraryContent(
     onOpenSeries: (String) -> Unit,
     onOpenChannel: (String) -> Unit,
     onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
+    onOpenTuning: () -> Unit,
     onLongPressSeries: (SeriesDto) -> Unit,
     watchLater: List<FeedItem> = emptyList(),
     saved: List<FeedItem> = emptyList(),
@@ -325,6 +329,14 @@ private fun LibraryContent(
                             contentDescription = "Suchen",
                             tint = Color.White,
                             modifier = Modifier.size(24.dp),
+                        )
+                    }
+                    IconButton(onClick = onOpenTuning) {
+                        Icon(
+                            imageVector = Icons.Outlined.Tune,
+                            contentDescription = "Tuning",
+                            tint = Color.White.copy(alpha = 0.85f),
+                            modifier = Modifier.size(21.dp),
                         )
                     }
                 }
@@ -500,6 +512,17 @@ private fun LibraryContent(
                                             )
                                         }
                                     }
+                                    Spacer(Modifier.height(20.dp))
+                                }
+                            }
+
+                            // ── Von deinen Kanälen (Picks aus abonnierten Kanälen) ───
+                            if (data.subscriptionPicks.isNotEmpty()) {
+                                item {
+                                    SubscriptionPicksSection(
+                                        picks = data.subscriptionPicks,
+                                        onPlayVideo = onPlayVideo,
+                                    )
                                     Spacer(Modifier.height(20.dp))
                                 }
                             }
@@ -745,6 +768,17 @@ private fun LibraryContent(
                                     genreCounts = genreCounts,
                                 )
                                 Spacer(Modifier.height(20.dp))
+                            }
+
+                            // ── Von deinen Kanälen (Picks aus abonnierten Kanälen) ───
+                            if (data.subscriptionPicks.isNotEmpty()) {
+                                item {
+                                    SubscriptionPicksSection(
+                                        picks = data.subscriptionPicks,
+                                        onPlayVideo = onPlayVideo,
+                                    )
+                                    Spacer(Modifier.height(20.dp))
+                                }
                             }
 
                             // Curated shelves for each genre
@@ -1354,56 +1388,85 @@ private fun com.hikari.app.data.api.dto.FeedItemDto.toFeedItem() = FeedItem(
     channelId = channelId,
 )
 
+/**
+ * „Von deinen Kanälen" — Empfehlungen aus abonnierten Kanälen
+ * (LibraryResponse.subscriptionPicks). Wird im Tab „Für dich" und im Tab
+ * „Stöbern" genutzt.
+ */
+@Composable
+private fun SubscriptionPicksSection(
+    picks: List<com.hikari.app.data.api.dto.FeedItemDto>,
+    onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
+) {
+    SectionHeader("Von deinen Kanälen", count = picks.size)
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(picks, key = { it.videoId }) { dto ->
+            val fi = dto.toFeedItem()
+            CollectionCard(
+                item = fi,
+                onPlay = { onPlayVideo(fi.videoId, fi.title, fi.channelTitle) },
+            )
+        }
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CollectionCard(item: FeedItem, onPlay: () -> Unit, onRemove: (() -> Unit)? = null) {
-    // Erst wenn das Bild wirklich da ist, wandert der Titel als Overlay aufs
-    // Bild — sonst zeigt das FallbackArtwork den Titel (nicht doppelt).
-    var imageLoaded by remember(item.thumbnailUrl) { mutableStateOf(false) }
+    // YouTube-Look: Thumbnail oben, Titel und Kanal darunter — kein
+    // Text-Overlay im Bild.
     Column(
         modifier = Modifier
-            .width(200.dp)
+            .width(300.dp)
             .combinedClickable(onClick = onPlay, onLongClick = onRemove),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(16f / 9f)
-                .clip(RoundedCornerShape(6.dp))
+                .clip(RoundedCornerShape(12.dp))
                 .background(HikariSurface),
         ) {
+            // Fallback-Artwork als Unterlage: fehlendes oder fehlerhaftes
+            // Thumbnail wirkt gewollt statt leer (und dient als Lade-Hintergrund).
             FallbackArtwork(title = item.title)
             AsyncImage(
                 model = item.thumbnailUrl,
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
-                onSuccess = { imageLoaded = true },
-                onError = { imageLoaded = false },
             )
-            if (imageLoaded) ImageTitleOverlay(item.title)
             Text(
                 "${item.durationSeconds / 60}:${"%02d".format(item.durationSeconds % 60)}",
                 color = Color.White,
                 fontSize = 10.sp,
-                fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(5.dp)
-                    .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(3.dp))
+                    .align(Alignment.BottomEnd)
+                    .padding(6.dp)
+                    .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(4.dp))
                     .padding(horizontal = 5.dp, vertical = 2.dp),
             )
         }
-        // Titel sitzt bei geladenem Bild im Overlay, sonst im FallbackArtwork —
-        // unter der Karte bleibt nur der Kanal.
+        Text(
+            text = item.title,
+            color = HikariText,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 8.dp),
+        )
         Text(
             text = item.channelTitle,
-            color = HikariTextFaint,
-            fontSize = 10.sp,
+            color = HikariTextMuted,
+            fontSize = 11.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 6.dp),
+            modifier = Modifier.padding(top = 2.dp),
         )
     }
 }
