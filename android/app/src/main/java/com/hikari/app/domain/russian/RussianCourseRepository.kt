@@ -15,6 +15,33 @@ class RussianCourseRepository @Inject constructor(
     }
 
     val index: RuCourseIndex by lazy { RuCourseIndex(course) }
+
+    /** Vertiefungen (assets/russian/deepdive.json), nach Satz-ID; fehlt die Datei, bleibt es leer. */
+    val deepdive: Map<String, RuDeepEntry> by lazy {
+        runCatching {
+            context.assets.open("russian/deepdive.json").bufferedReader().use {
+                ruJson.decodeFromString(RuDeepdive.serializer(), it.readText())
+            }.entries.associateBy { it.id }
+        }.getOrDefault(emptyMap())
+    }
+
+    /** Grammatik-Muster (assets/russian/patterns.json). */
+    val patterns: List<RuPattern> by lazy {
+        runCatching {
+            context.assets.open("russian/patterns.json").bufferedReader().use {
+                ruJson.decodeFromString(RuPatterns.serializer(), it.readText()).patterns
+            }
+        }.getOrDefault(emptyList())
+    }
+
+    /** Themen-Tags fürs Satzbuch (assets/russian/phrasebook.json); fehlt die Datei, bleibt es leer. */
+    val phrasebook: RuPhrasebookMeta by lazy {
+        runCatching {
+            context.assets.open("russian/phrasebook.json").bufferedReader().use {
+                ruJson.decodeFromString(RuPhrasebookMeta.serializer(), it.readText())
+            }
+        }.getOrDefault(RuPhrasebookMeta())
+    }
 }
 
 /** Nachschlage-Strukturen über dem Kurs (pure, testbar). */

@@ -55,3 +55,20 @@ auf Phonem-Ebene (wav2vec2-xlsr-53-espeak, IPA). Einmalig einrichten:
 Danach startet `backend/src/api/russian.ts` `phoneme_server.py` bei Bedarf selbst
 (Port 3940, nach 15 Min Leerlauf beendet). Ohne Einrichtung antwortet
 `POST /russian/pronunciation` mit 503 und die App zeigt einen Hinweis.
+
+## Vertiefung (Deepdive) und Satzbau-Muster
+
+Inhalte stehen als Python-Quellen in `deepdive_src/` (Satz-Vertiefungen) und `pattern_src/` (Satzbau-Muster);
+die JSON-Dateien in `assets/russian/` werden daraus gebaut — nie von Hand bearbeiten.
+
+```bash
+python validate_deepdive.py                                   # Schreibung und Betonung der Deepdive-Quellen
+python generate_deepdive.py --model ~/.hikari/tts/models/vosk  # deepdive.json + fehlende Clips (dd_<sha1>)
+python generate_patterns.py --check --model ~/.hikari/tts/models/vosk   # Betonung gegen das Wörterbuch
+python generate_patterns.py --model ~/.hikari/tts/models/vosk           # patterns.json + fehlende Clips
+```
+
+Clip-Name = `dd_` + sha1(Text mit "+")[:10]; Partnerinnen-Zeilen hashen `"p|" + Text`. Die Tests
+`RussianDeepdiveTest` und `RussianPatternsTest` schlagen fehl, wenn ein Clip fehlt.
+Einrichtung des Werkzeugs: `uv venv -p 3.12 ~/.hikari/tts/ttsenv`, dort `numpy soundfile vosk-tts huggingface_hub`
+installieren und das Modell `drakulavich/vosk-tts-ru-0.9-multi` nach `~/.hikari/tts/models/vosk` laden.

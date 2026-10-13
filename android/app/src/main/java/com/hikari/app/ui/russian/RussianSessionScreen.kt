@@ -189,6 +189,7 @@ private fun RuSummaryView(s: RuSummary, onClose: () -> Unit) {
                 RuSessionMode.LESSON -> "Tag ${s.day} geschafft"
                 RuSessionMode.REVIEW -> "Wiederholung fertig"
                 RuSessionMode.DIALOG -> "Gespräch geschafft"
+                RuSessionMode.TEST -> "Test geschafft"
             },
             color = HikariAmber,
         )

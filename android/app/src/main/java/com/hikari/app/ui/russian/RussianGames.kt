@@ -75,6 +75,7 @@ import kotlinx.coroutines.launch
 class RussianGamesViewModel @Inject constructor(
     repo: RussianCourseRepository,
     private val store: RussianProgressStore,
+    private val testSelection: com.hikari.app.domain.russian.RuTestSelection,
     val audio: RussianAudioPlayer,
 ) : ViewModel() {
     init {
@@ -89,6 +90,17 @@ class RussianGamesViewModel @Inject constructor(
     val pool: List<RuPhrase> = run {
         val learned = store.state.value.cards.keys.mapNotNull { index.phrase(it, settings) }
         if (learned.size >= 8) learned else index.phrasesUpTo(store.state.value.unlockedDay(index.days.size), settings)
+    }
+
+    val phrasebookMeta = repo.phrasebook
+
+    /** Legt fest, welche Sätze der Vokabeltest abfragt. */
+    fun prepareTest(ids: List<String>) { testSelection.ids = ids }
+
+    fun removeSentence(ru: String) = store.update { it.copy(mySentences = it.mySentences.filterNot { x -> x.ru == ru }) }
+
+    fun toggleFavorite(id: String) = store.update {
+        it.copy(favorites = if (id in it.favorites) it.favorites - id else it.favorites + id)
     }
 
     /** Alle Sätze der freigeschalteten Tage — für das Satzbuch. */
@@ -390,72 +402,6 @@ fun RussianPairsScreen(onClose: () -> Unit, vm: RussianGamesViewModel = hiltView
                             }
                         } else {
                             Text(c.phrase.de, color = HikariText.copy(alpha = 0.85f), fontSize = 14.5.sp, textAlign = TextAlign.Center)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// ── Satzbuch ─────────────────────────────────────────────────────────────────
-
-@Composable
-fun RussianPhrasebookScreen(onBack: () -> Unit, vm: RussianGamesViewModel = hiltViewModel()) {
-    val playing by vm.audio.playing.collectAsState()
-    val progress by vm.progress.collectAsState()
-    val days = remember { vm.unlockedDays() }
-    LazyColumn(
-        Modifier.fillMaxSize().background(HikariBg),
-        contentPadding = PaddingValues(bottom = 32.dp),
-    ) {
-        item {
-            Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onBack), contentAlignment = Alignment.Center) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Zurück", tint = HikariText)
-                }
-                Column(Modifier.padding(start = 4.dp)) {
-                    Text("Satzbuch", color = HikariText, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
-                    Text("Tippen zum Anhören · Balken zeigen, wie gut es sitzt", color = HikariTextMuted, fontSize = 12.5.sp)
-                }
-            }
-        }
-        days.forEach { d ->
-            item(key = "h${d.day}") {
-                RuOverline("Tag ${d.day} · ${d.title}", Modifier.padding(start = 16.dp, top = 20.dp, bottom = 8.dp))
-            }
-            items(vm.dayPhrases(d.day), key = { it.id }) { p ->
-                val box = progress.cards[p.id]?.box ?: 0
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .clickable { vm.audio.play(p.audio) }
-                        .padding(horizontal = 16.dp, vertical = 9.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(p.display, color = HikariText, fontSize = 16.5.sp, fontWeight = FontWeight.SemiBold)
-                        Text(translitAnnotated(p.ru), color = HikariTextMuted, fontSize = 13.sp)
-                        Text(p.de, color = HikariTextFaint, fontSize = 12.5.sp)
-                    }
-                    Spacer(Modifier.width(10.dp))
-                    Column(horizontalAlignment = Alignment.End) {
-                        Icon(
-                            Icons.AutoMirrored.Outlined.VolumeUp,
-                            null,
-                            tint = if (playing == p.audio) HikariAmber else HikariTextMuted,
-                            modifier = Modifier.size(20.dp),
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                            repeat(6) { i ->
-                                Box(
-                                    Modifier
-                                        .size(width = 6.dp, height = 3.dp)
-                                        .clip(RoundedCornerShape(1.dp))
-                                        .background(if (i < box) HikariAmber else HikariBorderStrong),
-                                )
-                            }
                         }
                     }
                 }

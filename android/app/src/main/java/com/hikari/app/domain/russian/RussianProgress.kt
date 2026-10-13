@@ -41,6 +41,12 @@ data class RuProgress(
     val spokenOk: Int = 0,
     /** Lautlabor: Gruppen-ID → bestes Ergebnis in Prozent (0–100). */
     val labBest: Map<String, Int> = emptyMap(),
+    /** Satzbuch: mit Stern markierte Sätze (Item-IDs). */
+    val favorites: Set<String> = emptySet(),
+    /** Abgeschlossene Grammatik-Muster (Pattern-IDs). */
+    val patternsDone: Set<String> = emptySet(),
+    /** Selbst gebaute Sätze aus den Grammatik-Mustern. */
+    val mySentences: List<RuMySentence> = emptyList(),
 ) {
     val settings: RuSettings
         get() = RuSettings(gender ?: RuGender.MALE, voice ?: gender ?: RuGender.MALE)

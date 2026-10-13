@@ -204,6 +204,12 @@ fun RussianHomeScreen(
                     p.labBest.values.maxOrNull()?.let { "★$it%" },
                 ) { onOpen("russian/sounds") },
                 GameApp(
+                    "Satzbau",
+                    R.drawable.ic_app_book,
+                    listOf(Color(0xFFE0A030), Color(0xFFB26B12)),
+                    if (p.patternsDone.isNotEmpty()) "${p.patternsDone.size}" else null,
+                ) { onOpen("russian-patterns") },
+                GameApp(
                     "Satzbuch",
                     R.drawable.ic_app_book,
                     listOf(Color(0xFF9B6DD9), Color(0xFF6B3FB0)),

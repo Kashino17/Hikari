@@ -1,0 +1,896 @@
+{
+ "version": 1,
+ "patterns": [
+  {
+   "id": "p01_hochu",
+   "week": 1,
+   "title": "Ich will … — Wünsche sagen",
+   "formula": "Я хоч+у + Grundform",
+   "emotion": "Sehnsucht",
+   "hook": "Wer sagt, was er will, wird verstanden — und kommt dem anderen näher. Mit diesem Muster sprichst du über Wünsche, Hunger, Heimweh und Pläne.",
+   "scene": {
+    "title": "Heimweh am Telefon",
+    "setting": "Es ist spät am Abend. Du bist weit weg von zu Hause, Anja ruft an und merkt sofort, dass etwas nicht stimmt.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "Что случ+илось? Ты гр+устный.",
+      "de": "Was ist los? Du bist traurig.",
+      "how": "besorgt, weich",
+      "ruF": "Что случ+илось? Ты гр+устная."
+     },
+     {
+      "who": "U",
+      "ru": "Я скуч+аю по д+ому.",
+      "de": "Ich vermisse mein Zuhause.",
+      "how": "leise, müde"
+     },
+     {
+      "who": "P",
+      "ru": "Чег+о ты х+очешь?",
+      "de": "Was möchtest du?",
+      "how": "sanft nachfragen"
+     },
+     {
+      "who": "U",
+      "ru": "Я хоч+у дом+ой! Я хоч+у в+идеть м+аму.",
+      "de": "Ich will nach Hause! Ich will meine Mama sehen.",
+      "how": "mit Nachdruck, die Stimme zittert"
+     },
+     {
+      "who": "P",
+      "ru": "Я теб+я поним+аю. Дав+ай позвон+им м+аме!",
+      "de": "Ich verstehe dich. Lass uns Mama anrufen!",
+      "how": "warm, aufmunternd"
+     },
+     {
+      "who": "U",
+      "ru": "Дав+ай! Спас+ибо!",
+      "de": "Ja, lass uns! Danke!",
+      "how": "erleichtert"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Я хоч+у спать.",
+     "de": "Ich will schlafen.",
+     "why": "Direkt nach я хочу folgt die Grundform des Verbs — ohne 'zu'."
+    },
+    {
+     "ru": "Я хоч+у говор+ить по-р+усски.",
+     "de": "Ich will Russisch sprechen.",
+     "why": "Mehrere Wörter dürfen folgen; das Verb steht trotzdem in der Grundform."
+    },
+    {
+     "ru": "Я хоч+у к+офе.",
+     "de": "Ich möchte einen Kaffee.",
+     "why": "Mit einem Nomen steht das Gewünschte im Akkusativ (hier unverändert)."
+    }
+   ],
+   "explain": "Хотеть (wollen) gehört zu den wichtigsten Verben: я хоч+у, ты х+очешь, он х+очет, мы хот+им, вы хот+ите, он+и хот+ят. Danach kommt direkt die Grundform: Я хочу спать. Wer höflicher klingen will, sagt Я хот+ел бы (m) / Я хот+ела бы (f) = ich hätte gern.",
+   "template": {
+    "ru": "Я хоч+у {0}.",
+    "de": "Ich will {0}."
+   },
+   "slots": [
+    {
+     "label": "Was willst du?",
+     "options": [
+      {
+       "ru": "спать",
+       "de": "schlafen"
+      },
+      {
+       "ru": "есть",
+       "de": "essen"
+      },
+      {
+       "ru": "дом+ой",
+       "de": "nach Hause"
+      },
+      {
+       "ru": "говор+ить по-р+усски",
+       "de": "Russisch sprechen"
+      },
+      {
+       "ru": "путеш+ествовать",
+       "de": "reisen"
+      },
+      {
+       "ru": "отдохн+уть",
+       "de": "mich ausruhen"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Sag deinem besten Freund oder deiner besten Freundin, was du dir gerade am meisten wünschst.",
+    "model": {
+     "ru": "Я хоч+у путеш+ествовать.",
+     "de": "Ich will reisen.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p02_nravitsya",
+   "week": 1,
+   "title": "Mir gefällt … — Begeisterung zeigen",
+   "formula": "Мне нр+авится + Nominativ · Я любл+ю + Grundform",
+   "emotion": "Begeisterung",
+   "hook": "Wer zeigt, was ihn begeistert, wirkt lebendig — und gibt dem anderen etwas, woran er anknüpfen kann.",
+   "scene": {
+    "title": "Erstes Date im Café",
+    "setting": "Ihr kennt euch kaum. Es kribbelt ein bisschen — und jeder will herausfinden, was der andere mag.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "Что ты л+юбишь д+елать?",
+      "de": "Was machst du gern?",
+      "how": "neugierig, lächelnd"
+     },
+     {
+      "who": "U",
+      "ru": "Я любл+ю смотр+еть аним+е. А ты?",
+      "de": "Ich schaue gern Anime. Und du?",
+      "how": "begeistert"
+     },
+     {
+      "who": "P",
+      "ru": "Я любл+ю м+узыку. Мне нр+авится рок.",
+      "de": "Ich liebe Musik. Mir gefällt Rock.",
+      "how": "stolz"
+     },
+     {
+      "who": "U",
+      "ru": "Мне с тоб+ой интер+есно.",
+      "de": "Mit dir ist es spannend.",
+      "how": "mit einem kleinen Lächeln"
+     },
+     {
+      "who": "P",
+      "ru": "Мне т+оже.",
+      "de": "Mir auch.",
+      "how": "leise, froh"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Мне нр+авится м+узыка.",
+     "de": "Mir gefällt Musik.",
+     "why": "Die Person steht im Dativ (мне); das, was gefällt, ist das Subjekt."
+    },
+    {
+     "ru": "Я любл+ю чит+ать.",
+     "de": "Ich lese gern.",
+     "why": "Я люблю + Grundform = etwas gern tun."
+    },
+    {
+     "ru": "Ты мне нр+авишься.",
+     "de": "Du gefällst mir.",
+     "why": "Ты ist hier Subjekt: 'du gefällst mir' — vorsichtig verliebt."
+    }
+   ],
+   "explain": "Zwei Wege: Мне нр+авится + Sache (es gefällt mir) und Я любл+ю + Tätigkeit/Sache (ich liebe). Merke: нравится passt sich dem Gefallenden an — Singular нравится, Plural нравятся: Мне нр+авятся ф+ильмы. Die Stärke steigt: нравится → люблю → обожаю.",
+   "template": {
+    "ru": "Мне нр+авится {0}.",
+    "de": "Mir gefällt {0}."
+   },
+   "slots": [
+    {
+     "label": "Was gefällt dir?",
+     "options": [
+      {
+       "ru": "м+узыка",
+       "de": "die Musik"
+      },
+      {
+       "ru": "р+усский яз+ык",
+       "de": "die russische Sprache"
+      },
+      {
+       "ru": "+этот г+ород",
+       "de": "diese Stadt"
+      },
+      {
+       "ru": "твой смех",
+       "de": "dein Lachen"
+      },
+      {
+       "ru": "+эта п+есня",
+       "de": "dieses Lied"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Erzähle, was dir an Russisch am meisten gefällt — oder was du an einem Menschen magst.",
+    "model": {
+     "ru": "Мне нр+авится р+усский яз+ык.",
+     "de": "Mir gefällt die russische Sprache.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p03_chuvstvuyu",
+   "week": 1,
+   "title": "Ich fühle mich … — Gefühle benennen",
+   "formula": "Я ч+увствую себ+я + Adverb",
+   "emotion": "Trost",
+   "hook": "Gefühle in Worte zu fassen, macht sie kleiner. Mit diesem Muster sagst du, wie es dir wirklich geht — und der andere kann dich auffangen.",
+   "scene": {
+    "title": "Ein schwerer Tag",
+    "setting": "Du kommst erschöpft nach Hause. Anja fragt nicht nach Zahlen, sondern nach dir.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "К+ак ты себ+я ч+увствуешь?",
+      "de": "Wie fühlst du dich?",
+      "how": "ruhig, aufmerksam"
+     },
+     {
+      "who": "U",
+      "ru": "Я ч+увствую себ+я уж+асно. Я +очень уст+ал.",
+      "de": "Ich fühle mich schrecklich. Ich bin sehr müde.",
+      "how": "schwer, ausatmend",
+      "ruF": "Я ч+увствую себ+я уж+асно. Я +очень уст+ала."
+     },
+     {
+      "who": "P",
+      "ru": "Не пережив+ай. Я с тоб+ой.",
+      "de": "Mach dir keine Sorgen. Ich bin bei dir.",
+      "how": "beruhigend, warm"
+     },
+     {
+      "who": "U",
+      "ru": "Спас+ибо. Мне л+учше, когд+а ты р+ядом.",
+      "de": "Danke. Mir geht es besser, wenn du da bist.",
+      "how": "leise, dankbar"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Я ч+увствую себ+я хорош+о.",
+     "de": "Ich fühle mich gut.",
+     "why": "Nach чувствую себя steht ein Adverb auf -о (хорошо), kein Adjektiv."
+    },
+    {
+     "ru": "Я ч+увствую себ+я сч+астливо.",
+     "de": "Ich fühle mich glücklich.",
+     "why": "Auch hier -о: счастливо."
+    },
+    {
+     "ru": "Я ч+увствую себ+я один+око.",
+     "de": "Ich fühle mich einsam.",
+     "why": "Ein Gefühl, das man aussprechen darf."
+    }
+   ],
+   "explain": "Чувствовать себя = 'sich fühlen' (wörtlich 'fühlen sich selbst'). Danach steht ein Adverb auf -о: хорошо, плохо, ужасно, спокойно. Alternativ sagst du Мне + Zustand (Мне грустно) — beides drückt Gefühle aus; das erste ist ausführlicher, das zweite kürzer.",
+   "template": {
+    "ru": "Я ч+увствую себ+я {0}.",
+    "de": "Ich fühle mich {0}."
+   },
+   "slots": [
+    {
+     "label": "Wie fühlst du dich?",
+     "options": [
+      {
+       "ru": "хорош+о",
+       "de": "gut"
+      },
+      {
+       "ru": "пл+охо",
+       "de": "schlecht"
+      },
+      {
+       "ru": "уж+асно",
+       "de": "schrecklich"
+      },
+      {
+       "ru": "отл+ично",
+       "de": "super"
+      },
+      {
+       "ru": "сч+астливо",
+       "de": "glücklich"
+      },
+      {
+       "ru": "один+око",
+       "de": "einsam"
+      },
+      {
+       "ru": "спок+ойно",
+       "de": "ruhig"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Sag ehrlich, wie du dich gerade fühlst.",
+    "model": {
+     "ru": "Я ч+увствую себ+я хорош+о.",
+     "de": "Ich fühle mich gut.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p04_potomu_chto",
+   "week": 1,
+   "title": "Weil … — Gründe nennen",
+   "formula": "…, потом+у что + Satz",
+   "emotion": "Rechtfertigung",
+   "hook": "In jedem emotionalen Gespräch kommt irgendwann das Warum. Wer Gründe nennen kann, kann sich erklären — und Streit entschärfen.",
+   "scene": {
+    "title": "Warum hast du nicht angerufen?",
+    "setting": "Anja hat den ganzen Abend gewartet. Sie ist nicht wütend, aber verletzt.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "Почем+у ты не позвон+ил?",
+      "de": "Warum hast du nicht angerufen?",
+      "how": "enttäuscht, ruhig",
+      "ruF": "Почем+у ты не позвон+ила?"
+     },
+     {
+      "who": "U",
+      "ru": "Я не мог говор+ить, потом+у что я раб+отал.",
+      "de": "Ich konnte nicht sprechen, weil ich gearbeitet habe.",
+      "how": "angespannt, erklärend",
+      "ruF": "Я не могл+а говор+ить, потом+у что я раб+отала."
+     },
+     {
+      "who": "P",
+      "ru": "Мне об+идно.",
+      "de": "Ich bin gekränkt.",
+      "how": "leise, verletzt"
+     },
+     {
+      "who": "U",
+      "ru": "Прост+и. Я не хот+ел теб+я об+идеть.",
+      "de": "Verzeih. Ich wollte dich nicht kränken.",
+      "how": "aufrichtig, warm",
+      "ruF": "Прост+и. Я не хот+ела теб+я об+идеть."
+     },
+     {
+      "who": "P",
+      "ru": "Ничег+о стр+ашного.",
+      "de": "Nicht schlimm.",
+      "how": "milder werdend"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Я д+ома, потом+у что я уст+ал.",
+     "de": "Ich bin zu Hause, weil ich müde bin.",
+     "why": "потому что leitet den Grund ein; davor steht ein Komma."
+    },
+    {
+     "ru": "Я уч+у р+усский, потом+у что +это интер+есно.",
+     "de": "Ich lerne Russisch, weil das interessant ist.",
+     "why": "Die Reihenfolge ist wie im Deutschen: Aussage, Komma, Grund."
+    }
+   ],
+   "explain": "Почем+у? (Warum?) beantwortest du mit Потом+у что … (Weil …). Wichtig: Das Komma steht immer davor, und потому что bleibt zusammen: In Gesprächen betonst du die Antwort (потом+у). Kurz geht auch nur Потому что …",
+   "template": {
+    "ru": "{0}, потом+у что {1}.",
+    "de": "{0}, weil {1}."
+   },
+   "slots": [
+    {
+     "label": "Was tust du?",
+     "options": [
+      {
+       "ru": "Я уч+у р+усский",
+       "de": "Ich lerne Russisch"
+      },
+      {
+       "ru": "Я не пойд+у в каф+е",
+       "de": "Ich gehe nicht ins Café"
+      },
+      {
+       "ru": "Я вст+ану р+ано",
+       "de": "Ich stehe früh auf"
+      }
+     ]
+    },
+    {
+     "label": "Warum?",
+     "options": [
+      {
+       "ru": "мне +это нр+авится",
+       "de": "es mir gefällt"
+      },
+      {
+       "ru": "я уст+ал",
+       "de": "ich müde bin",
+       "ruF": "я уст+ала"
+      },
+      {
+       "ru": "мне н+ужно раб+отать",
+       "de": "ich arbeiten muss"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Beantworte ehrlich: Warum lernst du Russisch?",
+    "model": {
+     "ru": "Я уч+у р+усский, потом+у что мне нр+авится р+усский яз+ык.",
+     "de": "Ich lerne Russisch, weil mir die russische Sprache gefällt.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p05_kazhetsya",
+   "week": 2,
+   "title": "Mir scheint, dass … — Meinung und Zweifel",
+   "formula": "Мне к+ажется, что … · Я д+умаю, что …",
+   "emotion": "Zweifel",
+   "hook": "Tiefe Gespräche leben von Meinungen — und davon, sie vorsichtig oder fest auszusprechen. Die Wahl des Einstiegs verrät schon, wie sicher du bist.",
+   "scene": {
+    "title": "Ist das eine gute Idee?",
+    "setting": "Du erzählst von einem großen Plan. Anja ist nicht sicher, ob sie dich bremsen oder anfeuern soll.",
+    "lines": [
+     {
+      "who": "U",
+      "ru": "Я хоч+у пож+ить в Росс+ии.",
+      "de": "Ich will eine Zeit in Russland leben.",
+      "how": "aufgeregt, hoffnungsvoll"
+     },
+     {
+      "who": "P",
+      "ru": "Серьёзно? Мне к+ажется, что +это тр+удно.",
+      "de": "Ernsthaft? Mir scheint, das ist schwer.",
+      "how": "zweifelnd, nachdenklich"
+     },
+     {
+      "who": "U",
+      "ru": "Я д+умаю, что я смог+у.",
+      "de": "Ich denke, ich schaffe das.",
+      "how": "fest, entschlossen"
+     },
+     {
+      "who": "P",
+      "ru": "По-м+оему, +это хор+ошая ид+ея!",
+      "de": "Ich finde, das ist eine gute Idee!",
+      "how": "überzeugt, lachend"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Мне к+ажется, что +это хорош+о.",
+     "de": "Mir scheint, das ist gut.",
+     "why": "Behutsam: nimmt dem Satz die Härte."
+    },
+    {
+     "ru": "Я д+умаю, что ты прав.",
+     "de": "Ich denke, du hast recht.",
+     "why": "Ein klares, persönliches Urteil."
+    },
+    {
+     "ru": "По-м+оему, +это тр+удно.",
+     "de": "Ich finde, das ist schwer.",
+     "why": "Kurz und neutral."
+    }
+   ],
+   "explain": "Meinungen haben Abstufungen: Мне к+ажется, что … (mir scheint — vorsichtig), Я д+умаю, что … (ich denke), Я счит+аю, что … (ich bin überzeugt), По-м+оему … (meiner Meinung nach). Vor что steht immer ein Komma.",
+   "template": {
+    "ru": "{0} {1}.",
+    "de": "{0} {1}."
+   },
+   "slots": [
+    {
+     "label": "Wie vorsichtig?",
+     "options": [
+      {
+       "ru": "Мне к+ажется, что",
+       "de": "Mir scheint:"
+      },
+      {
+       "ru": "Я д+умаю, что",
+       "de": "Ich denke:"
+      },
+      {
+       "ru": "Я счит+аю, что",
+       "de": "Ich bin überzeugt:"
+      },
+      {
+       "ru": "По-м+оему,",
+       "de": "Meiner Meinung nach:"
+      }
+     ]
+    },
+    {
+     "label": "Was meinst du?",
+     "options": [
+      {
+       "ru": "+это хор+ошая ид+ея",
+       "de": "das ist eine gute Idee"
+      },
+      {
+       "ru": "+это тр+удно",
+       "de": "das ist schwer"
+      },
+      {
+       "ru": "ты прав",
+       "de": "du hast recht",
+       "ruF": "ты прав+а"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Gib deine Meinung: Wie findest du Russisch — schwer oder leicht?",
+    "model": {
+     "ru": "Мне к+ажется, что р+усский яз+ык тр+удный, но интер+есный.",
+     "de": "Mir scheint, die russische Sprache ist schwer, aber interessant.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p06_nuzhno",
+   "week": 2,
+   "title": "Ich muss / ich kann nicht — Druck und Grenzen",
+   "formula": "Мне н+ужно + Grundform · Я не мог+у + Grundform",
+   "emotion": "Frust",
+   "hook": "Nein sagen und Grenzen setzen gehört zu jedem tiefen Gespräch. Mit diesem Muster sagst du, was du musst — und was gerade nicht geht.",
+   "scene": {
+    "title": "Zu viel zu tun",
+    "setting": "Du bist gestresst, Anja möchte dich sehen. Zwischen Verständnis und Enttäuschung liegt nur ein Satz.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "Дав+ай встр+етимся з+автра в+ечером!",
+      "de": "Lass uns morgen Abend treffen!",
+      "how": "freundlich, hoffnungsvoll"
+     },
+     {
+      "who": "U",
+      "ru": "Не мог+у. Мне н+ужно раб+отать.",
+      "de": "Ich kann nicht. Ich muss arbeiten.",
+      "how": "gestresst, seufzend"
+     },
+     {
+      "who": "P",
+      "ru": "Ты всегд+а раб+отаешь!",
+      "de": "Du arbeitest immer!",
+      "how": "enttäuscht"
+     },
+     {
+      "who": "U",
+      "ru": "Я зн+аю. Мне +очень жаль. Дав+ай в выходн+ые?",
+      "de": "Ich weiß. Es tut mir sehr leid. Wie wäre es am Wochenende?",
+      "how": "weich, bittend"
+     },
+     {
+      "who": "P",
+      "ru": "Хорош+о. Договор+ились!",
+      "de": "Gut. Abgemacht!",
+      "how": "versöhnt"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Мне н+ужно раб+отать.",
+     "de": "Ich muss arbeiten.",
+     "why": "Мне нужно: die Person im Dativ, wörtlich 'mir ist nötig'."
+    },
+    {
+     "ru": "Я не мог+у говор+ить.",
+     "de": "Ich kann nicht sprechen.",
+     "why": "Не мог+у = 'ich kann nicht'; danach die Grundform."
+    },
+    {
+     "ru": "Я д+олжен идт+и.",
+     "de": "Ich muss gehen.",
+     "why": "Должен: persönliche Pflicht; Frau: должн+а."
+    }
+   ],
+   "explain": "Drei Wege für Notwendigkeit: Мне н+ужно / Мне н+адо + Grundform (es ist nötig), Я д+олжен (m) / Я должн+а (f) + Grundform (ich bin verpflichtet). Können: мочь — я мог+у, ты м+ожешь, он м+ожет, мы м+ожем, вы м+ожете, он+и м+огут.",
+   "template": {
+    "ru": "{0} {1}.",
+    "de": "{0} {1}."
+   },
+   "slots": [
+    {
+     "label": "Muss oder kann nicht?",
+     "options": [
+      {
+       "ru": "Мне н+ужно",
+       "de": "Ich muss"
+      },
+      {
+       "ru": "Я не мог+у",
+       "de": "Ich kann nicht"
+      },
+      {
+       "ru": "Я д+олжен",
+       "de": "Ich muss",
+       "ruF": "Я должн+а"
+      }
+     ]
+    },
+    {
+     "label": "Was?",
+     "options": [
+      {
+       "ru": "раб+отать",
+       "de": "arbeiten"
+      },
+      {
+       "ru": "уч+ить р+усский",
+       "de": "Russisch lernen"
+      },
+      {
+       "ru": "идт+и дом+ой",
+       "de": "nach Hause gehen"
+      },
+      {
+       "ru": "спать",
+       "de": "schlafen"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Lade jemanden ein — und sage dann ehrlich, warum du heute nicht kannst.",
+    "model": {
+     "ru": "Не мог+у. Мне н+ужно раб+отать.",
+     "de": "Ich kann nicht. Ich muss arbeiten.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p07_proshloe",
+   "week": 2,
+   "title": "Gestern war ich … — Erzählen, was passiert ist",
+   "formula": "Vergangenheit: Stamm + -л / -ла",
+   "emotion": "Peinlichkeit und Stolz",
+   "hook": "Geschichten aus deinem Leben verbinden. Mit der Vergangenheit erzählst du, was dich geprägt hat — Peinliches wie Stolzes.",
+   "scene": {
+    "title": "Das war mir so peinlich",
+    "setting": "Du erzählst Anja von einem Tag, an dem alles schiefging — und lachst jetzt darüber.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "Что случ+илось вчер+а?",
+      "de": "Was ist gestern passiert?",
+      "how": "neugierig"
+     },
+     {
+      "who": "U",
+      "ru": "Я заб+ыл телеф+он, и я опозд+ал на раб+оту.",
+      "de": "Ich habe mein Handy vergessen, und ich bin zu spät zur Arbeit gekommen.",
+      "how": "peinlich berührt, lachend",
+      "ruF": "Я заб+ыла телеф+он, и я опозд+ала на раб+оту."
+     },
+     {
+      "who": "P",
+      "ru": "Ой! И что б+ыло д+альше?",
+      "de": "Oh! Und was war dann?",
+      "how": "gespannt"
+     },
+     {
+      "who": "U",
+      "ru": "Нач+альник ничег+о не сказ+ал.",
+      "de": "Der Chef hat nichts gesagt.",
+      "how": "erleichtert"
+     },
+     {
+      "who": "P",
+      "ru": "В+от и хорош+о!",
+      "de": "Na also, gut!",
+      "how": "lachend"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Вчер+а я был в каф+е.",
+     "de": "Gestern war ich im Café.",
+     "why": "Mann: был, Frau: была. Die Endung zeigt dein Geschlecht."
+    },
+    {
+     "ru": "Я сд+елал +это!",
+     "de": "Ich habe es geschafft!",
+     "why": "Frau: Я сд+елала +это!"
+    },
+    {
+     "ru": "Я смотр+ел ф+ильм.",
+     "de": "Ich habe einen Film geschaut.",
+     "why": "смотр+ел / смотр+ела — Stamm + -л / -ла."
+    }
+   ],
+   "explain": "Die Vergangenheit hat nur eine Form pro Geschlecht: Infinitivstamm + -л (er), -ла (sie), -ло (es), -ли (wir/sie, alle). Wer spricht, bestimmt die Endung: ein Mann sagt я смотр+ел, eine Frau я смотр+ела. Es gibt keinen Unterschied zwischen 'habe gesehen' und 'sah'.",
+   "template": {
+    "ru": "{0} {1}.",
+    "de": "{0} {1}."
+   },
+   "slots": [
+    {
+     "label": "Wann?",
+     "options": [
+      {
+       "ru": "Вчер+а",
+       "de": "Gestern"
+      },
+      {
+       "ru": "Сег+одня +утром",
+       "de": "Heute Morgen"
+      },
+      {
+       "ru": "Вчер+а в+ечером",
+       "de": "Gestern Abend"
+      }
+     ]
+    },
+    {
+     "label": "Was hast du getan?",
+     "options": [
+      {
+       "ru": "я был в каф+е",
+       "de": "war ich im Café",
+       "ruF": "я был+а в каф+е"
+      },
+      {
+       "ru": "я смотр+ел ф+ильм",
+       "de": "habe ich einen Film geschaut",
+       "ruF": "я смотр+ела ф+ильм"
+      },
+      {
+       "ru": "я чит+ал кн+игу",
+       "de": "habe ich ein Buch gelesen",
+       "ruF": "я чит+ала кн+игу"
+      },
+      {
+       "ru": "я раб+отал",
+       "de": "habe ich gearbeitet",
+       "ruF": "я раб+отала"
+      },
+      {
+       "ru": "я сд+елал +это",
+       "de": "habe ich es geschafft",
+       "ruF": "я сд+елала +это"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Erzähle von deinem Tag: Was hast du gestern gemacht?",
+    "model": {
+     "ru": "Вчер+а я раб+отал, а в+ечером смотр+ел ф+ильм.",
+     "de": "Gestern habe ich gearbeitet, und abends habe ich einen Film geschaut.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p08_budushchee",
+   "week": 2,
+   "title": "Ich werde … — Pläne und Vorfreude",
+   "formula": "б+уду + Grundform",
+   "emotion": "Vorfreude",
+   "hook": "Wer von der Zukunft spricht, öffnet Türen: für Einladungen, Pläne und gemeinsame Träume.",
+   "scene": {
+    "title": "Wir fahren zusammen weg",
+    "setting": "Das Wochenende steht an, und Anja hat eine Idee, bei der dir das Herz höher schlägt.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "Что ты б+удешь д+елать в выходн+ые?",
+      "de": "Was wirst du am Wochenende machen?",
+      "how": "locker, neugierig"
+     },
+     {
+      "who": "U",
+      "ru": "Я б+уду отдых+ать и чит+ать.",
+      "de": "Ich werde mich ausruhen und lesen.",
+      "how": "gelassen"
+     },
+     {
+      "who": "P",
+      "ru": "А х+очешь по+ехать со мн+ой в Москв+у?",
+      "de": "Und willst du mit mir nach Moskau fahren?",
+      "how": "aufgeregt, mit Herzklopfen"
+     },
+     {
+      "who": "U",
+      "ru": "Да! Я +очень р+ад! Когд+а?",
+      "de": "Ja! Ich freue mich sehr! Wann?",
+      "how": "begeistert",
+      "ruF": "Да! Я +очень р+ада! Когд+а?"
+     },
+     {
+      "who": "P",
+      "ru": "В субб+оту.",
+      "de": "Am Samstag.",
+      "how": "strahlend"
+     },
+     {
+      "who": "U",
+      "ru": "Я уж+е жду!",
+      "de": "Ich warte schon!",
+      "how": "lachend, ungeduldig"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Я б+уду раб+отать.",
+     "de": "Ich werde arbeiten.",
+     "why": "Zukunft = Form von быть + Grundform."
+    },
+    {
+     "ru": "Мы б+удем отдых+ать.",
+     "de": "Wir werden uns ausruhen.",
+     "why": "Мы будем: 'wir werden'."
+    },
+    {
+     "ru": "Я по+еду в Росс+ию.",
+     "de": "Ich werde nach Russland fahren.",
+     "why": "Bei einmaligen Handlungen genügt die 'ich'-Form des vollendeten Verbs."
+    }
+   ],
+   "explain": "Zukunft mit unvollendeten Verben: я б+уду, ты б+удешь, он б+удет, мы б+удем, вы б+удете, он+и б+удут + Grundform. Bei vollendeten Verben (einmalige, abgeschlossene Handlung) steht die einfache Präsensform mit Zukunftsbedeutung: я по+еду, я сд+елаю.",
+   "template": {
+    "ru": "{0} {1}.",
+    "de": "{0} {1}."
+   },
+   "slots": [
+    {
+     "label": "Wer?",
+     "options": [
+      {
+       "ru": "Я б+уду",
+       "de": "Ich werde"
+      },
+      {
+       "ru": "Мы б+удем",
+       "de": "Wir werden"
+      }
+     ]
+    },
+    {
+     "label": "Was?",
+     "options": [
+      {
+       "ru": "изуч+ать р+усский",
+       "de": "Russisch lernen"
+      },
+      {
+       "ru": "отдых+ать",
+       "de": "Pause machen"
+      },
+      {
+       "ru": "раб+отать",
+       "de": "arbeiten"
+      },
+      {
+       "ru": "гот+овить",
+       "de": "kochen"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Was wirst du in den nächsten vier Wochen für dein Russisch tun?",
+    "model": {
+     "ru": "Я б+уду уч+ить р+усский к+аждый день.",
+     "de": "Ich werde jeden Tag Russisch lernen.",
+     "why": ""
+    }
+   }
+  }
+ ]
+}

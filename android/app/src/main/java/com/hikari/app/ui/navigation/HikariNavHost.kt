@@ -168,7 +168,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
     // also auch ohne Bottom-Nav rendern (eigener Back-Button reicht).
     val isGearSubPage = currentRoute == "settings" || currentRoute?.startsWith("tuning") == true
     val isGameRoute = currentRoute?.startsWith("game/") == true ||
-        currentRoute?.startsWith("russian/") == true
+        currentRoute?.startsWith("russian") == true
     // Der Browser bringt eigene Leisten oben und unten mit; die Bottom-Nav
     // würde die Fundanzeige verdecken.
     val isBrowserRoute = currentRoute == "browser"
@@ -555,9 +555,37 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                     RussianSoundLabScreen(onClose = { nav.popBackStack() })
                 }
             }
+            composable(
+                route = "russian-deep/{id}",
+                arguments = listOf(navArgument("id") { type = NavType.StringType }),
+            ) {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    com.hikari.app.ui.russian.RussianDeepdiveScreen(onBack = { nav.popBackStack() })
+                }
+            }
+            composable("russian-patterns") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    com.hikari.app.ui.russian.RussianPatternListScreen(
+                        onBack = { nav.popBackStack() },
+                        onOpen = { id -> nav.navigate("russian-pattern/$id") },
+                    )
+                }
+            }
+            composable(
+                route = "russian-pattern/{id}",
+                arguments = listOf(navArgument("id") { type = NavType.StringType }),
+            ) {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    com.hikari.app.ui.russian.RussianPatternScreen(onBack = { nav.popBackStack() })
+                }
+            }
             composable("russian/phrases") {
                 Box(Modifier.fillMaxSize().padding(padding)) {
-                    RussianPhrasebookScreen(onBack = { nav.popBackStack() })
+                    RussianPhrasebookScreen(
+                        onBack = { nav.popBackStack() },
+                        onTest = { nav.navigate("russian/test/0") },
+                        onDeepdive = { id -> nav.navigate("russian-deep/$id") },
+                    )
                 }
             }
             composable("games") {

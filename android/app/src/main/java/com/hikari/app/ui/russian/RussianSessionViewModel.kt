@@ -10,6 +10,7 @@ import com.hikari.app.domain.russian.RuLessonBuilder
 import com.hikari.app.domain.russian.RuSessionResult
 import com.hikari.app.domain.russian.RuSessionSnapshot
 import com.hikari.app.domain.russian.RuSettings
+import com.hikari.app.domain.russian.RuTestSelection
 import com.hikari.app.domain.russian.RuSrs
 import com.hikari.app.domain.russian.RussianCourseRepository
 import com.hikari.app.domain.russian.RussianProgressStore
@@ -23,7 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-enum class RuSessionMode { LESSON, REVIEW, DIALOG }
+enum class RuSessionMode { LESSON, REVIEW, DIALOG, TEST }
 
 data class RuFeedback(val correct: Boolean, val skipped: Boolean = false, val requeued: Boolean = false)
 
@@ -53,6 +54,7 @@ class RussianSessionViewModel @Inject constructor(
     savedState: SavedStateHandle,
     private val repo: RussianCourseRepository,
     private val store: RussianProgressStore,
+    private val testSelection: RuTestSelection,
     val audio: RussianAudioPlayer,
     @ApplicationContext context: Context,
 ) : ViewModel() {
@@ -60,6 +62,7 @@ class RussianSessionViewModel @Inject constructor(
     val mode: RuSessionMode = when (savedState.get<String>("mode")) {
         "review" -> RuSessionMode.REVIEW
         "dialog" -> RuSessionMode.DIALOG
+        "test" -> RuSessionMode.TEST
         else -> RuSessionMode.LESSON
     }
     val day: Int = savedState.get<String>("day")?.toIntOrNull() ?: 1
@@ -103,6 +106,16 @@ class RussianSessionViewModel @Inject constructor(
                 rng = rng,
             )
             RuSessionMode.DIALOG -> index.day(day)?.let { listOf(RuExercise.Dialog(it, index.dialog(it, settings))) }.orEmpty()
+            // Vokabeltest: die im Satzbuch gewählten Sätze, Wackeligstes zuerst.
+            RuSessionMode.TEST -> RuLessonBuilder.review(
+                index,
+                testSelection.ids.sortedBy { progress.cards[it]?.box ?: 0 },
+                progress.unlockedDay(index.days.size),
+                settings,
+                speechAvailable,
+                limit = 15,
+                rng = rng,
+            )
         }
         baseSize = steps.size
         var startPos = 0
@@ -218,6 +231,7 @@ class RussianSessionViewModel @Inject constructor(
             RuSessionMode.LESSON -> 30
             RuSessionMode.REVIEW -> 10
             RuSessionMode.DIALOG -> 0
+            RuSessionMode.TEST -> 10
         }
         val dayItems = index.day(day)?.items?.map { it.id }?.toSet().orEmpty()
         val result = RuSessionResult(

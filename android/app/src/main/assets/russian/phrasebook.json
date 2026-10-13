@@ -1,0 +1,779 @@
+{
+ "themes": [
+  {
+   "id": "greet",
+   "title": "Begrüßen & Verabschieden"
+  },
+  {
+   "id": "intro",
+   "title": "Vorstellen"
+  },
+  {
+   "id": "smalltalk",
+   "title": "Smalltalk"
+  },
+  {
+   "id": "numbers",
+   "title": "Zahlen & Alter"
+  },
+  {
+   "id": "understand",
+   "title": "Verstehen & Nachfragen"
+  },
+  {
+   "id": "work",
+   "title": "Arbeit & Alltag"
+  },
+  {
+   "id": "family",
+   "title": "Familie & Freunde"
+  },
+  {
+   "id": "hobby",
+   "title": "Hobbys & Vorlieben"
+  },
+  {
+   "id": "food",
+   "title": "Essen & Trinken"
+  },
+  {
+   "id": "time",
+   "title": "Zeit & Wetter"
+  },
+  {
+   "id": "plans",
+   "title": "Verabreden"
+  },
+  {
+   "id": "opinion",
+   "title": "Fragen & Meinung"
+  },
+  {
+   "id": "feel",
+   "title": "Gefühle & Reaktionen"
+  },
+  {
+   "id": "polite",
+   "title": "Höflich & förmlich"
+  },
+  {
+   "id": "question",
+   "title": "Fragen"
+  }
+ ],
+ "items": {
+  "d01_privet": [
+   "greet"
+  ],
+  "d01_zdravstvuyte": [
+   "greet",
+   "polite"
+  ],
+  "d01_dobroe_utro": [
+   "greet"
+  ],
+  "d01_dobryy_den": [
+   "greet"
+  ],
+  "d01_dobryy_vecher": [
+   "greet"
+  ],
+  "d01_poka": [
+   "greet"
+  ],
+  "d01_do_svidaniya": [
+   "greet"
+  ],
+  "d01_spasibo": [
+   "greet"
+  ],
+  "d01_spasibo_bolshoe": [
+   "greet"
+  ],
+  "d01_pozhaluysta": [
+   "greet",
+   "polite"
+  ],
+  "d01_da": [
+   "greet"
+  ],
+  "d01_net": [
+   "greet"
+  ],
+  "d01_izvinite": [
+   "greet",
+   "polite"
+  ],
+  "d02_ya": [
+   "intro"
+  ],
+  "d02_ty": [
+   "intro"
+  ],
+  "d02_vy": [
+   "intro",
+   "polite"
+  ],
+  "d02_menya_zovut": [
+   "intro"
+  ],
+  "d02_kak_tebya_zovut": [
+   "intro",
+   "question"
+  ],
+  "d02_kak_vas_zovut": [
+   "intro",
+   "question",
+   "polite"
+  ],
+  "d02_ochen_priyatno": [
+   "intro"
+  ],
+  "d02_priyatno_poznakomitsya": [
+   "intro"
+  ],
+  "d02_mne_tozhe": [
+   "intro"
+  ],
+  "d02_otkuda_ty": [
+   "intro",
+   "question"
+  ],
+  "d02_ya_iz_germanii": [
+   "intro"
+  ],
+  "d02_ya_iz_rossii": [
+   "intro"
+  ],
+  "d02_a_ty": [
+   "intro",
+   "question"
+  ],
+  "d02_gde_ty_zhivyosh": [
+   "intro",
+   "question"
+  ],
+  "d02_ya_zhivu_v_germanii": [
+   "intro"
+  ],
+  "d03_kak_dela": [
+   "smalltalk",
+   "question"
+  ],
+  "d03_kak_u_tebya_dela": [
+   "smalltalk",
+   "question"
+  ],
+  "d03_kak_ty": [
+   "smalltalk",
+   "question"
+  ],
+  "d03_horosho": [
+   "smalltalk"
+  ],
+  "d03_otlichno": [
+   "smalltalk"
+  ],
+  "d03_normalno": [
+   "smalltalk"
+  ],
+  "d03_tak_sebe": [
+   "smalltalk"
+  ],
+  "d03_ploho": [
+   "smalltalk"
+  ],
+  "d03_vsyo_horosho": [
+   "smalltalk"
+  ],
+  "d03_spasibo_horosho": [
+   "smalltalk"
+  ],
+  "d03_a_u_tebya": [
+   "smalltalk",
+   "question"
+  ],
+  "d03_tozhe_horosho": [
+   "smalltalk"
+  ],
+  "d03_chto_novogo": [
+   "smalltalk",
+   "question"
+  ],
+  "d03_nichego_novogo": [
+   "smalltalk"
+  ],
+  "d03_ya_ustal": [
+   "smalltalk",
+   "feel"
+  ],
+  "d04_odin": [
+   "numbers"
+  ],
+  "d04_dva": [
+   "numbers"
+  ],
+  "d04_tri": [
+   "numbers"
+  ],
+  "d04_chetyre": [
+   "numbers"
+  ],
+  "d04_pyat": [
+   "numbers"
+  ],
+  "d04_shest": [
+   "numbers"
+  ],
+  "d04_sem": [
+   "numbers"
+  ],
+  "d04_vosem": [
+   "numbers"
+  ],
+  "d04_devyat": [
+   "numbers"
+  ],
+  "d04_desyat": [
+   "numbers"
+  ],
+  "d04_dvadtsat": [
+   "numbers"
+  ],
+  "d04_tridtsat": [
+   "numbers"
+  ],
+  "d04_sorok": [
+   "numbers"
+  ],
+  "d04_skolko_tebe_let": [
+   "numbers",
+   "question"
+  ],
+  "d04_mne_tridtsat_let": [
+   "numbers"
+  ],
+  "d04_skolko_stoit": [
+   "numbers",
+   "question"
+  ],
+  "d05_ya_ne_ponimayu": [
+   "understand"
+  ],
+  "d05_ya_ponimayu": [
+   "understand"
+  ],
+  "d05_ty_ponimaesh": [
+   "understand",
+   "question"
+  ],
+  "d05_povtorite": [
+   "understand",
+   "polite"
+  ],
+  "d05_medlennee": [
+   "understand",
+   "polite"
+  ],
+  "d05_eshyo_raz": [
+   "understand",
+   "polite"
+  ],
+  "d05_ya_govoryu_nemnogo": [
+   "understand"
+  ],
+  "d05_ya_uchu_russkiy": [
+   "understand"
+  ],
+  "d05_ty_govorish_po_russki": [
+   "understand",
+   "question"
+  ],
+  "d05_ty_govorish_po_angliyski": [
+   "understand",
+   "question"
+  ],
+  "d05_po_nemetski": [
+   "understand"
+  ],
+  "d05_kak_skazat": [
+   "understand",
+   "question"
+  ],
+  "d05_chto_eto_znachit": [
+   "understand",
+   "question"
+  ],
+  "d05_chto": [
+   "understand",
+   "question"
+  ],
+  "d05_ya_ne_znayu": [
+   "understand"
+  ],
+  "d05_konechno": [
+   "understand"
+  ],
+  "d06_kem_ty_rabotaesh": [
+   "work",
+   "question"
+  ],
+  "d06_chem_ty_zanimaeshsya": [
+   "work",
+   "question"
+  ],
+  "d06_ya_programmist": [
+   "work"
+  ],
+  "d06_ya_student": [
+   "work"
+  ],
+  "d06_vrach": [
+   "work"
+  ],
+  "d06_uchitel": [
+   "work"
+  ],
+  "d06_inzhener": [
+   "work"
+  ],
+  "d06_gde_ty_rabotaesh": [
+   "work",
+   "question"
+  ],
+  "d06_ya_rabotayu_doma": [
+   "work"
+  ],
+  "d06_ya_rabotayu_v_ofise": [
+   "work"
+  ],
+  "d06_ya_mnogo_rabotayu": [
+   "work"
+  ],
+  "d06_mne_nravitsya_rabota": [
+   "work"
+  ],
+  "d06_eto_interesno": [
+   "work"
+  ],
+  "d06_eto_trudno": [
+   "work"
+  ],
+  "d06_eto_legko": [
+   "work"
+  ],
+  "d07_semya": [
+   "family"
+  ],
+  "d07_mama": [
+   "family"
+  ],
+  "d07_papa": [
+   "family"
+  ],
+  "d07_brat": [
+   "family"
+  ],
+  "d07_sestra": [
+   "family"
+  ],
+  "d07_drug": [
+   "family"
+  ],
+  "d07_podruga": [
+   "family"
+  ],
+  "d07_u_menya_est_brat": [
+   "family"
+  ],
+  "d07_u_menya_est_sestra": [
+   "family"
+  ],
+  "d07_u_tebya_est_bratya": [
+   "family",
+   "question"
+  ],
+  "d07_u_tebya_est_deti": [
+   "family",
+   "question"
+  ],
+  "d07_u_menya_net_detey": [
+   "family"
+  ],
+  "d07_ty_zhenat": [
+   "family",
+   "question"
+  ],
+  "d07_ty_zamuzhem": [
+   "family",
+   "question"
+  ],
+  "d07_ya_ne_zhenat": [
+   "family"
+  ],
+  "d07_eto_moy_drug": [
+   "family"
+  ],
+  "d07_eto_moya_mama": [
+   "family"
+  ],
+  "d07_kak_ego_zovut": [
+   "family",
+   "question"
+  ],
+  "d07_kak_eyo_zovut": [
+   "family",
+   "question",
+   "polite"
+  ],
+  "d08_ya_lyublyu_muzyku": [
+   "hobby",
+   "feel"
+  ],
+  "d08_mne_nravitsya_muzyka": [
+   "hobby"
+  ],
+  "d08_chto_ty_lyubish_delat": [
+   "hobby",
+   "question"
+  ],
+  "d08_svobodnoe_vremya": [
+   "hobby",
+   "question"
+  ],
+  "d08_ya_lyublyu_chitat": [
+   "hobby",
+   "feel"
+  ],
+  "d08_ya_lyublyu_puteshestvovat": [
+   "hobby",
+   "feel"
+  ],
+  "d08_ya_lyublyu_smotret_filmy": [
+   "hobby",
+   "feel"
+  ],
+  "d08_ya_lyublyu_igrat": [
+   "hobby",
+   "feel"
+  ],
+  "d08_ya_smotryu_anime": [
+   "hobby"
+  ],
+  "d08_ya_chitayu_mangu": [
+   "hobby"
+  ],
+  "d08_ya_zanimayus_sportom": [
+   "hobby"
+  ],
+  "d08_i": [
+   "hobby"
+  ],
+  "d08_ya_tozhe": [
+   "hobby"
+  ],
+  "d08_mne_ne_nravitsya": [
+   "hobby"
+  ],
+  "d08_klassno": [
+   "hobby"
+  ],
+  "d08_kruto": [
+   "hobby"
+  ],
+  "d09_ya_hochu_kofe": [
+   "food"
+  ],
+  "d09_mozhno_chay": [
+   "food",
+   "question",
+   "polite"
+  ],
+  "d09_kofe": [
+   "food"
+  ],
+  "d09_chay": [
+   "food"
+  ],
+  "d09_voda": [
+   "food"
+  ],
+  "d09_pivo": [
+   "food"
+  ],
+  "d09_menyu": [
+   "food"
+  ],
+  "d09_chto_ty_budesh": [
+   "food",
+   "question"
+  ],
+  "d09_ya_budu_chay": [
+   "food"
+  ],
+  "d09_ya_hochu_est": [
+   "food"
+  ],
+  "d09_ya_hochu_pit": [
+   "food"
+  ],
+  "d09_vkusno": [
+   "food"
+  ],
+  "d09_schyot": [
+   "food",
+   "polite"
+  ],
+  "d09_priyatnogo_appetita": [
+   "food"
+  ],
+  "d09_za_zdorovye": [
+   "food"
+  ],
+  "d10_segodnya": [
+   "time"
+  ],
+  "d10_zavtra": [
+   "time"
+  ],
+  "d10_vchera": [
+   "time"
+  ],
+  "d10_seychas": [
+   "time"
+  ],
+  "d10_kotoryy_chas": [
+   "time",
+   "question"
+  ],
+  "d10_vyhodnye": [
+   "time"
+  ],
+  "d10_chto_v_vyhodnye": [
+   "time",
+   "question"
+  ],
+  "d10_kakaya_pogoda": [
+   "time",
+   "question"
+  ],
+  "d10_teplo": [
+   "time"
+  ],
+  "d10_holodno": [
+   "time"
+  ],
+  "d10_zharko": [
+   "time"
+  ],
+  "d10_idyot_dozhd": [
+   "time"
+  ],
+  "d10_solnechno": [
+   "time"
+  ],
+  "d10_utrom": [
+   "time"
+  ],
+  "d10_vecherom": [
+   "time"
+  ],
+  "d10_kazhdyy_den": [
+   "time"
+  ],
+  "d11_davay_vstretimsya": [
+   "plans"
+  ],
+  "d11_u_tebya_est_vremya": [
+   "plans",
+   "question"
+  ],
+  "d11_da_konechno": [
+   "plans"
+  ],
+  "d11_kogda": [
+   "plans",
+   "question"
+  ],
+  "d11_gde": [
+   "plans",
+   "question"
+  ],
+  "d11_vo_skolko": [
+   "plans",
+   "question"
+  ],
+  "d11_v_sem": [
+   "plans"
+  ],
+  "d11_zavtra_vecherom": [
+   "plans"
+  ],
+  "d11_poydyom_v_kafe": [
+   "plans",
+   "question"
+  ],
+  "d11_horoshaya_ideya": [
+   "plans"
+  ],
+  "d11_ne_mogu": [
+   "plans"
+  ],
+  "d11_ya_zanyat": [
+   "plans"
+  ],
+  "d11_mozhet_byt": [
+   "plans"
+  ],
+  "d11_dogovorilis": [
+   "plans"
+  ],
+  "d11_napishi_mne": [
+   "plans"
+  ],
+  "d11_sozvonimsya": [
+   "plans"
+  ],
+  "d12_kto": [
+   "opinion",
+   "question"
+  ],
+  "d12_kak": [
+   "opinion",
+   "question"
+  ],
+  "d12_pochemu": [
+   "opinion",
+   "question"
+  ],
+  "d12_potomu_chto": [
+   "opinion"
+  ],
+  "d12_kakoy": [
+   "opinion",
+   "question"
+  ],
+  "d12_ya_dumayu": [
+   "opinion"
+  ],
+  "d12_po_moemu": [
+   "opinion"
+  ],
+  "d12_kak_ty_dumaesh": [
+   "opinion",
+   "question"
+  ],
+  "d12_pravda": [
+   "opinion",
+   "question"
+  ],
+  "d12_seryozno": [
+   "opinion",
+   "question"
+  ],
+  "d12_ya_soglasen": [
+   "opinion"
+  ],
+  "d12_ty_prav": [
+   "opinion"
+  ],
+  "d12_ty_prava": [
+   "opinion"
+  ],
+  "d12_no": [
+   "opinion"
+  ],
+  "d12_nikogda_ne_byl": [
+   "opinion"
+  ],
+  "d12_zdorovo": [
+   "opinion"
+  ],
+  "d13_ya_rad": [
+   "feel"
+  ],
+  "d13_molodets": [
+   "feel"
+  ],
+  "d13_kak_krasivo": [
+   "feel"
+  ],
+  "d13_ne_za_chto": [
+   "feel"
+  ],
+  "d13_nichego_strashnogo": [
+   "feel"
+  ],
+  "d13_izvini": [
+   "feel"
+  ],
+  "d13_mne_zhal": [
+   "feel"
+  ],
+  "d13_vsyo_v_poryadke": [
+   "feel"
+  ],
+  "d13_mne_skuchno": [
+   "feel"
+  ],
+  "d13_mne_veselo": [
+   "feel"
+  ],
+  "d13_udachi": [
+   "feel"
+  ],
+  "d13_ty_horosho_govorish": [
+   "feel"
+  ],
+  "d13_ya_eshyo_uchus": [
+   "feel"
+  ],
+  "d13_ne_perezhivay": [
+   "feel"
+  ],
+  "d14_bylo_priyatno": [
+   "greet"
+  ],
+  "d14_mne_pora": [
+   "greet"
+  ],
+  "d14_uvidimsya": [
+   "greet"
+  ],
+  "d14_do_zavtra": [
+   "greet"
+  ],
+  "d14_do_vstrechi": [
+   "greet"
+  ],
+  "d14_vsego_horoshego": [
+   "greet"
+  ],
+  "d14_spokoynoy_nochi": [
+   "greet"
+  ],
+  "d14_horoshego_dnya": [
+   "greet"
+  ],
+  "d14_beregi_sebya": [
+   "greet"
+  ],
+  "d14_mozhno_tvoy_nomer": [
+   "greet",
+   "question"
+  ],
+  "d14_napishi_v_telegram": [
+   "greet"
+  ],
+  "d14_priezzhay": [
+   "greet"
+  ],
+  "d14_obyazatelno": [
+   "greet"
+  ],
+  "d14_ya_budu_skuchat": [
+   "greet",
+   "feel"
+  ]
+ }
+}
