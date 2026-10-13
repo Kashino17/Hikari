@@ -1,5 +1,10 @@
 package com.hikari.app.ui.library
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -200,6 +205,25 @@ private fun LibraryContent(
     var selectedGenre by remember { mutableStateOf(Genre.ALL) }
     var showShuffleSheet by remember { mutableStateOf(false) }
     var quickLookItem by remember { mutableStateOf<QuickLookItem?>(null) }
+    var allView by remember { mutableStateOf<AllViewState?>(null) }
+
+    fun LibraryVideoDto.toAllViewItem(onClick: () -> Unit) = AllViewItem(
+        id = id,
+        title = title,
+        channel = channelTitle,
+        durationSeconds = duration_seconds,
+        thumbnailUrl = thumbnail_url,
+        onClick = onClick,
+    )
+
+    fun FeedItem.toAllViewItem(onClick: () -> Unit) = AllViewItem(
+        id = videoId,
+        title = title,
+        channel = channelTitle,
+        durationSeconds = durationSeconds,
+        thumbnailUrl = thumbnailUrl,
+        onClick = onClick,
+    )
 
     fun isMovie(v: LibraryVideoDto): Boolean = v.isFilm()
 
@@ -378,7 +402,16 @@ private fun LibraryContent(
 
                             if (continueWatching.isNotEmpty()) {
                                 item {
-                                    SectionHeader("Weiterschauen", count = continueWatching.size)
+                                    SectionHeader(
+                                        "Weiterschauen",
+                                        count = continueWatching.size,
+                                        onShowAll = {
+                                            allView = AllViewState(
+                                                title = "Weiterschauen",
+                                                items = continueWatching.map { v -> v.toAllViewItem { play(v) } },
+                                            )
+                                        },
+                                    )
                                     LazyRow(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -435,7 +468,21 @@ private fun LibraryContent(
                             // ── Deine Sammlung ──────────────────────────────
                             if (watchLater.isNotEmpty()) {
                                 item {
-                                    SectionHeader("Später ansehen", count = watchLater.size)
+                                    SectionHeader(
+                                        "Später ansehen",
+                                        count = watchLater.size,
+                                        onShowAll = {
+                                            allView = AllViewState(
+                                                title = "Später ansehen",
+                                                items = watchLater.map { fi ->
+                                                    fi.toAllViewItem {
+                                                        onRemoveWatchLater(fi.videoId)
+                                                        onPlayVideo(fi.videoId, fi.title, fi.channelTitle)
+                                                    }
+                                                },
+                                            )
+                                        },
+                                    )
                                     LazyRow(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -458,7 +505,16 @@ private fun LibraryContent(
                             // Wochenend-Kino (> 75 Min)
                             if (weekendMovies.isNotEmpty()) {
                                 item {
-                                    SectionHeader("Wochenend-Kino (> 75 Min)", count = weekendMovies.size)
+                                    SectionHeader(
+                                        "Wochenend-Kino (> 75 Min)",
+                                        count = weekendMovies.size,
+                                        onShowAll = {
+                                            allView = AllViewState(
+                                                title = "Wochenend-Kino",
+                                                items = weekendMovies.map { m -> m.toAllViewItem { play(m) } },
+                                            )
+                                        },
+                                    )
                                     LazyRow(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -481,7 +537,18 @@ private fun LibraryContent(
 
                             if (saved.isNotEmpty()) {
                                 item {
-                                    SectionHeader("Gespeichert", count = saved.size)
+                                    SectionHeader(
+                                        "Gespeichert",
+                                        count = saved.size,
+                                        onShowAll = {
+                                            allView = AllViewState(
+                                                title = "Gespeichert",
+                                                items = saved.map { fi ->
+                                                    fi.toAllViewItem { onPlayVideo(fi.videoId, fi.title, fi.channelTitle) }
+                                                },
+                                            )
+                                        },
+                                    )
                                     LazyRow(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -499,7 +566,19 @@ private fun LibraryContent(
 
                             if (data.suggestions.isNotEmpty()) {
                                 item {
-                                    SectionHeader("Vorschläge für dich", count = data.suggestions.size)
+                                    SectionHeader(
+                                        "Vorschläge für dich",
+                                        count = data.suggestions.size,
+                                        onShowAll = {
+                                            allView = AllViewState(
+                                                title = "Vorschläge für dich",
+                                                items = data.suggestions.map { dto ->
+                                                    val fi = dto.toFeedItem()
+                                                    fi.toAllViewItem { onPlayVideo(fi.videoId, fi.title, fi.channelTitle) }
+                                                },
+                                            )
+                                        },
+                                    )
                                     LazyRow(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -522,6 +601,15 @@ private fun LibraryContent(
                                     SubscriptionPicksSection(
                                         picks = data.subscriptionPicks,
                                         onPlayVideo = onPlayVideo,
+                                        onShowAll = {
+                                            allView = AllViewState(
+                                                title = "Von deinen Kanälen",
+                                                items = data.subscriptionPicks.map { dto ->
+                                                    val fi = dto.toFeedItem()
+                                                    fi.toAllViewItem { onPlayVideo(fi.videoId, fi.title, fi.channelTitle) }
+                                                },
+                                            )
+                                        },
                                     )
                                     Spacer(Modifier.height(20.dp))
                                 }
@@ -544,7 +632,18 @@ private fun LibraryContent(
 
                             if (history.isNotEmpty()) {
                                 item {
-                                    SectionHeader("Verlauf", count = history.size)
+                                    SectionHeader(
+                                        "Verlauf",
+                                        count = history.size,
+                                        onShowAll = {
+                                            allView = AllViewState(
+                                                title = "Verlauf",
+                                                items = history.map { fi ->
+                                                    fi.toAllViewItem { onPlayVideo(fi.videoId, fi.title, fi.channelTitle) }
+                                                },
+                                            )
+                                        },
+                                    )
                                     LazyRow(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -561,7 +660,16 @@ private fun LibraryContent(
                             }
 
                             item {
-                                SectionHeader("Neu hinzugefügt", count = data.recentlyAdded.size)
+                                SectionHeader(
+                                    "Neu hinzugefügt",
+                                    count = data.recentlyAdded.size,
+                                    onShowAll = {
+                                        allView = AllViewState(
+                                            title = "Neu hinzugefügt",
+                                            items = data.recentlyAdded.map { v -> v.toAllViewItem { play(v) } },
+                                        )
+                                    },
+                                )
                                 LazyRow(
                                     contentPadding = PaddingValues(horizontal = 16.dp),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -854,6 +962,17 @@ private fun LibraryContent(
             },
             onDismiss = { quickLookItem = null },
         )
+    }
+
+    // „Alle"-Vollbildansicht über dem gesamten Bibliotheks-Content.
+    AnimatedVisibility(
+        visible = allView != null,
+        enter = fadeIn() + slideInVertically { it / 24 },
+        exit = fadeOut(),
+    ) {
+        allView?.let { state ->
+            AllVideosOverlay(state = state, onDismiss = { allView = null })
+        }
     }
 }
 
@@ -1153,7 +1272,7 @@ private fun HeroSection(video: LibraryVideoDto?, onPlay: (LibraryVideoDto) -> Un
 }
 
 @Composable
-private fun SectionHeader(title: String, count: Int) {
+private fun SectionHeader(title: String, count: Int, onShowAll: (() -> Unit)? = null) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1169,14 +1288,140 @@ private fun SectionHeader(title: String, count: Int) {
             fontFamily = FontFamily.Monospace,
         )
         Spacer(Modifier.weight(1f))
-        Text(
-            "ALLE ›",
-            color = HikariAmber,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Black,
-            letterSpacing = 0.5.sp,
-            fontFamily = FontFamily.Monospace,
-        )
+        if (onShowAll != null) {
+            Text(
+                "ALLE ›",
+                color = HikariAmber,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 0.5.sp,
+                fontFamily = FontFamily.Monospace,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .clickable(onClick = onShowAll)
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+            )
+        }
+    }
+}
+
+// ─── „Alle"-Vollbildansicht (YouTube-Stil) ───────────────────────────────────
+
+private data class AllViewItem(
+    val id: String,
+    val title: String,
+    val channel: String?,
+    val durationSeconds: Int,
+    val thumbnailUrl: String?,
+    val onClick: () -> Unit,
+)
+
+private data class AllViewState(val title: String, val items: List<AllViewItem>)
+
+@Composable
+private fun AllVideosOverlay(state: AllViewState, onDismiss: () -> Unit) {
+    BackHandler(onBack = onDismiss)
+    Column(modifier = Modifier.fillMaxSize().background(HikariBg)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onDismiss) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Zurück",
+                    tint = Color.White,
+                )
+            }
+            Column {
+                Text(
+                    text = state.title,
+                    color = HikariText,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = "${state.items.size} Videos",
+                    color = HikariTextMuted,
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                )
+            }
+        }
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(top = 4.dp, bottom = 96.dp),
+        ) {
+            items(state.items, key = { it.id }) { item ->
+                AllVideosRow(
+                    item = item,
+                    onClick = {
+                        item.onClick()
+                        onDismiss()
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AllVideosRow(item: AllViewItem, onClick: () -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
+        // Thumbnail Edge-to-Edge, fast eckig — wie im YouTube-Feed.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(2.dp))
+                .background(HikariSurface),
+        ) {
+            FallbackArtwork(title = item.title)
+            AsyncImage(
+                model = item.thumbnailUrl,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+            Text(
+                "${item.durationSeconds / 60}:${"%02d".format(item.durationSeconds % 60)}",
+                color = Color.White,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp)
+                    .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 5.dp, vertical = 2.dp),
+            )
+        }
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+            Text(
+                text = item.title,
+                color = HikariText,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            val subtitle = listOfNotNull(
+                item.channel?.takeIf { it.isNotBlank() },
+                "${item.durationSeconds / 60}:${"%02d".format(item.durationSeconds % 60)}",
+            ).joinToString(" · ")
+            Text(
+                text = subtitle,
+                color = HikariTextMuted,
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
     }
 }
 
@@ -1397,8 +1642,9 @@ private fun com.hikari.app.data.api.dto.FeedItemDto.toFeedItem() = FeedItem(
 private fun SubscriptionPicksSection(
     picks: List<com.hikari.app.data.api.dto.FeedItemDto>,
     onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
+    onShowAll: (() -> Unit)? = null,
 ) {
-    SectionHeader("Von deinen Kanälen", count = picks.size)
+    SectionHeader("Von deinen Kanälen", count = picks.size, onShowAll = onShowAll)
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
