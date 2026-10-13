@@ -69,6 +69,7 @@ import com.hikari.app.data.api.dto.SuggestionDto
 import com.hikari.app.data.api.dto.NewsItemDto
 import com.hikari.app.data.api.dto.NewsTopicDto
 import okhttp3.MultipartBody
+import com.hikari.app.data.api.dto.CastInfoDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -287,6 +288,10 @@ interface HikariApi {
 
     @GET("library")
     suspend fun getLibrary(): LibraryResponse
+
+    /** LAN-Adressen des Servers — nur darüber erreicht ein Fernseher den Stream. */
+    @GET("cast/info")
+    suspend fun castInfo(): CastInfoDto
 
     @GET("downloads")
     suspend fun getDownloads(): DownloadsResponse

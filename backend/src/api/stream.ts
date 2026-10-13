@@ -180,6 +180,10 @@ export function registerStreamRoutes(
   app.get<{ Params: { videoId: string } }>("/stream/video/:videoId", async (req, reply) => {
     const { videoId } = req.params;
     if (!VIDEO_ID_RE.test(videoId)) return reply.code(400).send({ error: "invalid videoId" });
+    // Der Cast-Empfaenger (Chromecast/Smart-TV) ist ein Browser und holt den
+    // Stream cross-origin — ohne diese Header lehnt er ihn ab.
+    reply.header("access-control-allow-origin", "*");
+    reply.header("access-control-expose-headers", "content-length, content-range, accept-ranges");
     if (Date.now() < breakerUntil) {
       return reply.code(503).header("retry-after", "60").send({ error: "upstream throttled" });
     }

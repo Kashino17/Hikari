@@ -101,7 +101,6 @@ import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
 import androidx.media3.common.VideoSize
-import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
@@ -113,6 +112,10 @@ import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.repo.PlaybackRepository
 import com.hikari.app.player.HikariPlayerFactory
 import com.hikari.app.player.VideoDockManager
+import androidx.compose.material.icons.filled.Cast
+import androidx.compose.material.icons.filled.CastConnected
+import androidx.media3.common.util.UnstableApi
+import com.hikari.app.cast.CastController
 import com.hikari.app.ui.feed.HikariIcons
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
@@ -183,6 +186,12 @@ fun VideoPlayerScreen(
     val api = remember { ep.hikariApi() }
     val dockManager = remember { ep.videoDockManager() }
     val baseUrl = remember { runBlocking { settingsStore.backendUrl.first() } }
+    val cast = remember { CastController(ctx) }
+    DisposableEffect(Unit) { onDispose { cast.release() } }
+    var showCastPicker by remember { mutableStateOf(false) }
+    var castPos by remember { mutableLongStateOf(0L) }
+    var castDur by remember { mutableLongStateOf(0L) }
+    var castPlaying by remember { mutableStateOf(true) }
 
     val existingPlayer = remember { dockManager.getPlayer() }
     val isReusing = remember { dockManager.activeVideo.value?.videoId == videoId && existingPlayer != null }
@@ -255,6 +264,22 @@ fun VideoPlayerScreen(
         toastToken++
     }
 
+    /** Schickt das aktuelle Video über die LAN-Adresse des Servers an den Fernseher. */
+    fun castCurrent(startMs: Long) {
+        scope.launch {
+            val lan = runCatching { api.castInfo().lanBaseUrls.firstOrNull() }.getOrNull()
+            val base = lan ?: baseUrl
+            if (lan == null && !isLanUrl(baseUrl)) {
+                showToast("Server im WLAN nicht gefunden — der Fernseher kommt evtl. nicht ran")
+            }
+            player.pause()
+            val streamUrl = factory.mediaItemFor(base, currentVideoId, null).localConfiguration?.uri?.toString()
+                ?: return@launch
+            val thumb = detail?.thumbnail_url?.let { if (it.startsWith("http")) it else base + it }
+            cast.load(streamUrl, currentTitle, detail?.series_title ?: channel.takeIf { it.isNotBlank() }, thumb, startMs)
+        }
+    }
+
     fun minimizeAndBack() {
         dockManager.setActivePlayer(currentVideoId, currentTitle, channel, player)
         dockManager.dock()
@@ -291,8 +316,9 @@ fun VideoPlayerScreen(
             val localPath = localDl.localFile(currentVideoId)?.absolutePath
             player.setMediaItem(factory.mediaItemFor(baseUrl, currentVideoId, localPath), savedPos)
             player.prepare()
-            player.playWhenReady = true
+            player.playWhenReady = !cast.casting
             player.setPlaybackSpeed(speed)
+            if (cast.casting) castCurrent(savedPos)
         }
         dockManager.setActivePlayer(currentVideoId, currentTitle, channel, player)
         nextVideo = playbackRepo.nextVideo(currentVideoId)
@@ -312,7 +338,7 @@ fun VideoPlayerScreen(
     }
     DisposableEffect(Unit) {
         onDispose {
-            val pos = player.currentPosition
+            val pos = if (cast.casting) castPos else player.currentPosition
             val id = currentVideoId
             val isDocked = dockManager.isDocked.value
             val isCurrentDocked = isDocked && dockManager.activeVideo.value?.videoId == id
@@ -320,6 +346,27 @@ fun VideoPlayerScreen(
                 player.release()
             }
             if (pos > 0L) ioScope.launch { runCatching { playbackRepo.savePosition(id, pos) } }
+        }
+    }
+
+    var wasCasting by remember { mutableStateOf(false) }
+    LaunchedEffect(cast.casting) {
+        if (cast.casting) {
+            wasCasting = true
+            castCurrent(player.currentPosition)
+            while (true) {
+                cast.activePlayer?.let {
+                    castPos = it.currentPosition.coerceAtLeast(0L)
+                    castDur = it.duration.coerceAtLeast(0L)
+                    castPlaying = it.isPlaying
+                }
+                kotlinx.coroutines.delay(500)
+            }
+        } else if (wasCasting) {
+            wasCasting = false
+            // Zurück aufs Handy: an der Stelle weiter, wo der Fernseher stand.
+            player.seekTo(castPos)
+            showToast("Cast beendet")
         }
     }
 
@@ -447,7 +494,7 @@ fun VideoPlayerScreen(
                         savePositionAsync(currentVideoId, player.currentPosition)
                     }
                 }
-                Lifecycle.Event.ON_RESUME -> { player.playWhenReady = true }
+                Lifecycle.Event.ON_RESUME -> { if (!cast.casting) player.playWhenReady = true }
                 else -> Unit
             }
         }
@@ -811,6 +858,14 @@ fun VideoPlayerScreen(
                         40.dp, 20.dp, Color.Black.copy(alpha = 0.45f),
                     ) { toggleOrientation() }
                     Spacer(Modifier.width(8.dp))
+                    if (cast.supported) {
+                        CircleControl(
+                            if (cast.casting) Icons.Default.CastConnected else Icons.Default.Cast,
+                            "Auf Fernseher streamen",
+                            40.dp, 20.dp, Color.Black.copy(alpha = 0.45f),
+                        ) { showCastPicker = true; showChrome() }
+                        Spacer(Modifier.width(8.dp))
+                    }
                     CircleControl(
                         Icons.Default.PictureInPictureAlt,
                         "Bild-im-Bild (Pop-up)",
@@ -903,6 +958,22 @@ fun VideoPlayerScreen(
                     modifier = Modifier.align(if (levelKind == LevelKind.Brightness) Alignment.CenterStart else Alignment.CenterEnd)
                         .padding(horizontal = 28.dp),
                 )
+
+                if (cast.casting) {
+                    CastRemoteOverlay(
+                        deviceName = cast.deviceName,
+                        title = currentTitle,
+                        positionMs = castPos,
+                        durationMs = castDur,
+                        playing = castPlaying,
+                        onTogglePlay = { cast.activePlayer?.let { if (it.isPlaying) it.pause() else it.play() } },
+                        onSeekBy = { d -> cast.activePlayer?.let { it.seekTo((it.currentPosition + d).coerceAtLeast(0L)) } },
+                        onSeekTo = { ms -> cast.activePlayer?.seekTo(ms) },
+                        onStop = { cast.disconnect() },
+                        onBack = { minimizeAndBack() },
+                    )
+                }
+                if (showCastPicker) CastPickerDialog(cast, onDismiss = { showCastPicker = false })
 
                 PlayerToast(toast, modifier = Modifier.align(Alignment.TopCenter).padding(top = if (panelMode) 56.dp else 72.dp))
 
@@ -1220,3 +1291,12 @@ private const val PIP_EXTRA = "pip_code"
 private const val PIP_BACK = 1
 private const val PIP_TOGGLE = 2
 private const val PIP_FWD = 3
+
+/** Private LAN-Adresse (oder .local)? Nur dann erreicht ein Fernseher den Server direkt. */
+private fun isLanUrl(url: String): Boolean {
+    val host = runCatching { android.net.Uri.parse(url).host }.getOrNull().orEmpty()
+    if (host.endsWith(".local")) return true
+    val p = host.split(".").mapNotNull { it.toIntOrNull() }
+    if (p.size != 4) return false
+    return p[0] == 10 || (p[0] == 192 && p[1] == 168) || (p[0] == 172 && p[1] in 16..31)
+}

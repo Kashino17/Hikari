@@ -18,6 +18,8 @@ datastore = "1.1.1"
 work = "2.9.1"
 hiltWork = "1.2.0"
 media3 = "1.4.1"
+mediarouter = "1.7.0"
+castFramework = "21.5.0"
 coil = "2.7.0"
 telephoto = "0.13.0"
 junit = "4.13.2"
@@ -59,6 +61,9 @@ media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3" }
 media3-datasource-okhttp = { module = "androidx.media3:media3-datasource-okhttp", version.ref = "media3" }
 media3-database = { module = "androidx.media3:media3-database", version.ref = "media3" }
 media3-session = { module = "androidx.media3:media3-session", version.ref = "media3" }
+media3-cast = { module = "androidx.media3:media3-cast", version.ref = "media3" }
+mediarouter = { module = "androidx.mediarouter:mediarouter", version.ref = "mediarouter" }
+cast-framework = { module = "com.google.android.gms:play-services-cast-framework", version.ref = "castFramework" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 telephoto-zoomable-image-coil = { module = "me.saket.telephoto:zoomable-image-coil", version.ref = "telephoto" }
 junit = { module = "junit:junit", version.ref = "junit" }

@@ -122,6 +122,9 @@ dependencies {
     implementation(libs.media3.datasource.okhttp)
     implementation(libs.media3.database)
     implementation(libs.media3.session)
+    implementation(libs.media3.cast)
+    implementation(libs.mediarouter)
+    implementation(libs.cast.framework)
 
     implementation(libs.coil.compose)
     implementation(libs.telephoto.zoomable.image.coil)

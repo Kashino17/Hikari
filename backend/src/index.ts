@@ -28,6 +28,7 @@ import { registerWatchLaterRoutes } from "./api/watch-later.js";
 import { registerRussianRoutes } from "./api/russian.js";
 import { registerClipperStatusRoutes } from "./api/clipper-status.js";
 import { registerVideoFullRoute } from "./api/video-full.js";
+import { registerCastRoutes } from "./api/cast.js";
 import { loadConfig } from "./config.js";
 import { openDatabase } from "./db/connection.js";
 import { runDiscoveryCycle } from "./discovery/feed-sources.js";
@@ -194,6 +195,7 @@ registerClipperStatusRoutes(app, db, {
   endHour:   cfg.clipper.scheduleEndHour,
 }, cfg.clipper);
 registerVideoFullRoute(app, db);
+registerCastRoutes(app, cfg.port);
 
 // 15-min channel polling.
 // Reentrancy guard: a slow poll (dozens of yt-dlp downloads) can outlast the

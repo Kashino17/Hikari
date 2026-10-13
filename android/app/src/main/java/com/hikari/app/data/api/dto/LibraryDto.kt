@@ -121,3 +121,6 @@ data class UpdateVideoRequest(
     val series_id: String? = null,
     val series_title: String? = null,
 )
+
+@Serializable
+data class CastInfoDto(val lanBaseUrls: List<String> = emptyList())
