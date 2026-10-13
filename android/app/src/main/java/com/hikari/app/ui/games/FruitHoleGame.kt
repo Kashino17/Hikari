@@ -1503,11 +1503,7 @@ private fun HoleWeltwahlInhalt(
                         Column(
                             Modifier.fillMaxWidth()
                                 .clip(RoundedCornerShape(20.dp))
-                                .background(
-                                    Brush.horizontalGradient(
-                                        listOf(welt.glow.copy(alpha = if (offen) 0.10f else 0.04f), HikariCardBg)
-                                    )
-                                )
+                                .background(welt.glow.copy(alpha = if (offen) 0.08f else 0.03f))
                                 .border(
                                     1.dp,
                                     if (offen) welt.glow.copy(alpha = 0.30f) else Color.White.copy(alpha = 0.05f),

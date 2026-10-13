@@ -3,17 +3,12 @@ package com.hikari.app.ui.games
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -43,6 +38,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.EmojiEvents
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -52,14 +52,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -72,8 +70,6 @@ import com.hikari.app.ui.theme.HikariSurfaceHigh
 import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
-import kotlin.math.cos
-import kotlin.math.sin
 
 // ————— Gemeinsames UI-Kit für alle Spiele —————
 // Ziel: Menüs/Overlays/Controls fühlen sich wie ein poliertes Spiel an,
@@ -110,41 +106,17 @@ internal fun GxAppear(index: Int, content: @Composable () -> Unit) {
     ) { content() }
 }
 
-// Animierter Menü-Hintergrund: driftender Akzent-Glow + schwebende Punkte.
+// Flacher Menü-Hintergrund. `accent` bleibt aus Signatur-Kompatibilität erhalten.
+@Suppress("UNUSED_PARAMETER")
 @Composable
 internal fun GxMenuBackground(accent: Color, modifier: Modifier = Modifier) {
-    val t by rememberInfiniteTransition(label = "gxBg").animateFloat(
-        0f, 1f, infiniteRepeatable(tween(16000, easing = LinearEasing)), label = "gxBgT",
-    )
     Canvas(modifier.fillMaxSize()) {
         drawRect(HikariBg)
-        val a = t * 2f * Math.PI.toFloat()
-        val c1 = Offset(size.width * (0.5f + 0.28f * sin(a)), size.height * (0.18f + 0.06f * cos(a * 1.3f)))
-        val c2 = Offset(size.width * (0.5f - 0.3f * cos(a * 0.8f)), size.height * (0.85f + 0.05f * sin(a)))
-        drawCircle(
-            Brush.radialGradient(listOf(accent.copy(alpha = 0.10f), Color.Transparent), c1, size.width * 0.75f),
-            radius = size.width * 0.75f, center = c1,
-        )
-        drawCircle(
-            Brush.radialGradient(listOf(accent.copy(alpha = 0.06f), Color.Transparent), c2, size.width * 0.6f),
-            radius = size.width * 0.6f, center = c2,
-        )
-        // Schwebende Glanzpunkte (deterministisch, kein Random → ruhig)
-        for (i in 0 until 14) {
-            val fx = (i * 61 % 100) / 100f
-            val fy = ((i * 37 + 13) % 100) / 100f
-            val drift = sin(a * (1f + i % 3 * 0.3f) + i) * 14f
-            val alpha = 0.05f + 0.05f * ((i * 17 % 10) / 10f) * (0.6f + 0.4f * sin(a * 2 + i))
-            drawCircle(
-                accent.copy(alpha = alpha.coerceIn(0.02f, 0.12f)),
-                radius = 2.dp.toPx() + (i % 3),
-                center = Offset(size.width * fx + drift, size.height * fy - drift * 0.6f),
-            )
-        }
     }
 }
 
-// Kopfzeile im Menü: runder Zurück-Chip, Gradient-Titel, rechter Slot.
+// Kopfzeile im Menü: runder Zurück-Chip, flacher Titel, rechter Slot.
+@Suppress("UNUSED_PARAMETER")
 @Composable
 internal fun GxHeader(
     title: String,
@@ -160,9 +132,9 @@ internal fun GxHeader(
         GxIconChip("←", onClick = onBack)
         Text(
             title,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Black,
-            style = TextStyle(brush = Brush.horizontalGradient(listOf(accent, lerp(accent, Color.White, 0.45f)))),
+            fontSize = 20.sp,
+            color = HikariText,
+            fontWeight = FontWeight.Bold,
         )
         Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) { right?.invoke() }
     }
@@ -184,7 +156,7 @@ internal fun GxIconChip(glyph: String, size: Dp = 40.dp, onClick: () -> Unit) {
     }
 }
 
-// Große Modus-Karte: Emoji-Badge mit Glow, Titel, Untertitel, Best-Wert,
+// Große Modus-Karte: Emoji-Badge, Titel, Untertitel, Best-Wert,
 // optional Badge ("NEU"), Schloss und Hervorhebung des zuletzt gespielten Modus.
 @Composable
 internal fun GxModeCard(
@@ -198,61 +170,50 @@ internal fun GxModeCard(
     best: String? = null,
     onClick: () -> Unit,
 ) {
-    val borderBrush = if (highlighted) {
-        Brush.horizontalGradient(listOf(accent.copy(alpha = 0.9f), accent.copy(alpha = 0.25f)))
+    val borderColor = if (highlighted) {
+        accent.copy(alpha = 0.5f)
     } else {
-        Brush.horizontalGradient(listOf(Color.White.copy(alpha = 0.08f), Color.White.copy(alpha = 0.04f)))
+        Color.White.copy(alpha = 0.07f)
     }
     Row(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(
-                Brush.horizontalGradient(
-                    listOf(
-                        lerp(HikariCardBg, accent, if (highlighted) 0.10f else 0.04f),
-                        HikariCardBg,
-                    )
-                )
-            )
-            .border(if (highlighted) 1.5.dp else 1.dp, borderBrush, RoundedCornerShape(20.dp))
+            .background(HikariCardBg)
+            .border(if (highlighted) 1.dp else 0.5.dp, borderColor, RoundedCornerShape(20.dp))
             .gxPressable(enabled = !locked, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 15.dp),
+            .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             Modifier
-                .size(50.dp)
-                .clip(RoundedCornerShape(15.dp))
-                .background(
-                    Brush.radialGradient(
-                        listOf(accent.copy(alpha = 0.30f), accent.copy(alpha = 0.10f))
-                    )
-                ),
+                .size(44.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(accent.copy(alpha = 0.10f)),
             contentAlignment = Alignment.Center,
         ) {
-            Text(if (locked) "🔒" else emoji, fontSize = 25.sp)
+            Text(if (locked) "🔒" else emoji, fontSize = 21.sp)
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(title, fontSize = 16.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                Text(title, fontSize = 15.sp, color = HikariText, fontWeight = FontWeight.Bold)
                 if (badge != null) {
                     Spacer(Modifier.width(8.dp))
                     Text(
                         badge,
                         fontSize = 9.sp,
-                        color = Color.Black,
-                        fontWeight = FontWeight.Black,
+                        color = accent,
+                        fontWeight = FontWeight.Bold,
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
-                            .background(accent)
+                            .background(accent.copy(alpha = 0.15f))
                             .padding(horizontal = 6.dp, vertical = 2.dp),
                     )
                 }
             }
             Spacer(Modifier.height(3.dp))
-            Text(subtitle, fontSize = 12.sp, color = HikariTextMuted, lineHeight = 16.sp)
+            Text(subtitle, fontSize = 11.5.sp, color = HikariTextMuted, lineHeight = 16.sp)
             if (best != null) {
                 Spacer(Modifier.height(3.dp))
                 Text(best, fontSize = 11.sp, color = accent.copy(alpha = 0.9f), fontWeight = FontWeight.Bold)
@@ -266,16 +227,26 @@ internal fun GxModeCard(
 // Sekundäre Menü-Aktion (Statistik/Erfolge/Optionen) als kompakte Kachel.
 @Composable
 internal fun GxSmallAction(emoji: String, label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val icon = when (emoji) {
+        "📊" -> Icons.Outlined.BarChart
+        "🏅" -> Icons.Outlined.EmojiEvents
+        "⚙️" -> Icons.Outlined.Settings
+        else -> null
+    }
     Column(
         modifier
             .clip(RoundedCornerShape(16.dp))
             .background(HikariCardBg)
             .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(16.dp))
             .gxPressable(onClick = onClick)
-            .padding(vertical = 12.dp),
+            .padding(vertical = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(emoji, fontSize = 20.sp)
+        if (icon != null) {
+            Icon(icon, contentDescription = null, tint = HikariTextMuted, modifier = Modifier.size(20.dp))
+        } else {
+            Text(emoji, fontSize = 20.sp)
+        }
         Spacer(Modifier.height(4.dp))
         Text(label, fontSize = 11.sp, color = HikariTextMuted, fontWeight = FontWeight.Medium)
     }
@@ -429,7 +400,7 @@ internal fun GxSegmented(
     }
 }
 
-// Primärer Spiel-Button: Akzent-Gradient, groß, federndes Press-Feedback.
+// Primärer Spiel-Button: flacher Akzent, groß, federndes Press-Feedback.
 @Composable
 internal fun GxPrimaryButton(
     label: String,
@@ -442,7 +413,7 @@ internal fun GxPrimaryButton(
         modifier
             .heightIn(min = 52.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(Brush.horizontalGradient(listOf(accent, lerp(accent, Color.White, 0.22f))))
+            .background(accent)
             .gxPressable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 28.dp),
         contentAlignment = Alignment.Center,
@@ -652,14 +623,14 @@ internal fun GxLevelCard(level: Int, xpText: String, frac: Float, accent: Color)
             .clip(RoundedCornerShape(18.dp))
             .background(HikariCardBg)
             .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(18.dp))
-            .padding(14.dp),
+            .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             Modifier
                 .size(44.dp)
                 .clip(CircleShape)
-                .background(Brush.radialGradient(listOf(accent.copy(alpha = 0.35f), accent.copy(alpha = 0.10f)))),
+                .background(accent.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center,
         ) {
             Text("$level", fontSize = 17.sp, color = accent, fontWeight = FontWeight.Black)
@@ -678,7 +649,7 @@ internal fun GxLevelCard(level: Int, xpText: String, frac: Float, accent: Color)
                 Box(
                     Modifier.fillMaxWidth(animFrac).fillMaxHeight()
                         .clip(RoundedCornerShape(4.dp))
-                        .background(Brush.horizontalGradient(listOf(accent, lerp(accent, Color.White, 0.3f)))),
+                        .background(accent),
                 )
             }
         }
@@ -727,7 +698,7 @@ internal fun GxResultOverlay(
                 .graphicsLayer { scaleX = appear.value; scaleY = appear.value }
                 .clip(RoundedCornerShape(26.dp))
                 .background(Color(0xFF232326))
-                .border(1.dp, accent.copy(alpha = 0.25f), RoundedCornerShape(26.dp))
+                .border(1.dp, Color.White.copy(alpha = 0.10f), RoundedCornerShape(26.dp))
                 .padding(horizontal = 22.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -747,10 +718,10 @@ internal fun GxResultOverlay(
             }
             Text(
                 title,
-                fontSize = 24.sp,
+                fontSize = 22.sp,
+                color = HikariText,
                 fontWeight = FontWeight.Black,
                 textAlign = TextAlign.Center,
-                style = TextStyle(brush = Brush.horizontalGradient(listOf(accent, lerp(accent, Color.White, 0.45f)))),
             )
             if (subtitle != null) {
                 Spacer(Modifier.height(6.dp))

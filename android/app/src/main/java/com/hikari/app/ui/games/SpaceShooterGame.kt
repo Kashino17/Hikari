@@ -27,7 +27,6 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -1300,22 +1299,11 @@ private fun SkySectorSelect(meta: SkyMeta, onBack: () -> Unit, onPick: (Int) -> 
                             Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(20.dp))
-                                .background(
-                                    Brush.horizontalGradient(
-                                        listOf(
-                                            lerpColor(HikariCardBg, def.tint, if (unlocked) 0.09f else 0.02f),
-                                            HikariCardBg,
-                                        )
-                                    )
-                                )
+                                .background(HikariCardBg)
                                 .border(
-                                    1.dp,
-                                    Brush.horizontalGradient(
-                                        listOf(
-                                            def.tint.copy(alpha = if (unlocked) 0.45f else 0.10f),
-                                            Color.White.copy(alpha = 0.05f),
-                                        )
-                                    ),
+                                    if (unlocked) 1.dp else 0.5.dp,
+                                    if (unlocked) def.tint.copy(alpha = 0.5f)
+                                    else Color.White.copy(alpha = 0.07f),
                                     RoundedCornerShape(20.dp),
                                 )
                                 .gxPressable(enabled = unlocked) { onPick(i) }
@@ -1326,14 +1314,7 @@ private fun SkySectorSelect(meta: SkyMeta, onBack: () -> Unit, onPick: (Int) -> 
                                 Modifier
                                     .size(46.dp)
                                     .clip(RoundedCornerShape(14.dp))
-                                    .background(
-                                        Brush.radialGradient(
-                                            listOf(
-                                                def.tint.copy(alpha = if (unlocked) 0.30f else 0.08f),
-                                                def.tint.copy(alpha = if (unlocked) 0.10f else 0.03f),
-                                            )
-                                        )
-                                    ),
+                                    .background(def.tint.copy(alpha = if (unlocked) 0.10f else 0.04f)),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Text(
@@ -1469,10 +1450,7 @@ private fun SkyHangarScreen(meta: SkyMeta, state: SkyState, onBack: () -> Unit) 
                                     Modifier
                                         .clip(RoundedCornerShape(12.dp))
                                         .background(
-                                            if (affordable)
-                                                Brush.horizontalGradient(listOf(HikariAmber, Color(0xFFFDE68A)))
-                                            else
-                                                Brush.horizontalGradient(listOf(HikariSurfaceHigh, HikariSurfaceHigh))
+                                            if (affordable) HikariAmber else HikariSurfaceHigh
                                         )
                                         .gxPressable(enabled = affordable) {
                                             if (meta.spendCoins(cost)) {
