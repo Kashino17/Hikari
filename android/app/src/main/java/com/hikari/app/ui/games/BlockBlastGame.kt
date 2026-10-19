@@ -2,12 +2,20 @@ package com.hikari.app.ui.games
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.media.AudioFormat
+import android.media.AudioManager
+import android.media.AudioTrack
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -28,9 +36,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp as lerpColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -51,6 +62,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.hikari.app.ui.theme.*
 import kotlinx.coroutines.delay
 import java.time.LocalDate
+import java.util.concurrent.ArrayBlockingQueue
+import kotlin.math.exp
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -141,9 +154,34 @@ private class BbParticle(
     var life: Float, val maxLife: Float, val color: Color, val r: Float,
 )
 
+// Langsam aufsteigendes Hintergrund-Bokeh
+private class BbBokeh(var x: Float, var y: Float, val r: Float, val speed: Float, val alpha: Float)
+
 private class BbFxHolder {
     var t = 0f
     val parts = ArrayList<BbParticle>()
+    val bokeh = ArrayList<BbBokeh>()
+    var bokehW = 0f
+    var bokehH = 0f
+
+    // Gecachte Block-Verläufe (Licht von oben-links), gruppiert nach Zellwert
+    val blockBrushes = HashMap<Int, Brush>()
+    var brushCellPx = 0f
+
+    fun brushFor(v: Int, cell: Float): Brush {
+        if (brushCellPx != cell) {
+            blockBrushes.clear()
+            brushCellPx = cell
+        }
+        return blockBrushes.getOrPut(v) {
+            val col = bbCellColor(v)
+            Brush.linearGradient(
+                listOf(lerpColor(col, Color.White, 0.38f), col, lerpColor(col, Color.Black, 0.28f)),
+                start = Offset.Zero,
+                end = Offset(cell * 0.9f, cell),
+            )
+        }
+    }
 }
 
 private var bbNextId = 0
@@ -224,7 +262,7 @@ private fun bbParseLayout(rows: List<String>): IntArray {
     return g
 }
 
-// ————— Achievements —————
+// ————— Achievements (String-Keys; alte Keys unverändert, neue nur ergänzt) —————
 
 private class BbAchievement(val id: String, val icon: String, val title: String, val desc: String)
 
@@ -241,6 +279,8 @@ private val BbAchievements = listOf(
     BbAchievement("rush1500", "⏱️", "Zeitrausch-Profi", "1500 Punkte im Zeitrausch"),
     BbAchievement("adv5", "🗺️", "Abenteurer", "Schaffe 5 Abenteuer-Level"),
     BbAchievement("adv20", "👑", "Weltenbummler", "Schaffe alle 20 Abenteuer-Level"),
+    BbAchievement("bombe", "💣", "Bombenleger", "Setze die Bombe ein"),
+    BbAchievement("combo8", "🚀", "Unaufhaltsam", "Erreiche Combo ×8"),
 )
 
 // ————— XP / Spielerlevel —————
@@ -254,6 +294,7 @@ private fun bbLevelFromXp(xp: Int): Int {
 }
 
 // ————— Spielstand (Autosave + Undo-Snapshot) —————
+// Format-Kompatibilität: 13 Felder = Altstand (Bombe=0), 15 Felder = neu.
 
 private class BbSave(
     val grid: IntArray,
@@ -269,6 +310,8 @@ private class BbSave(
     val moves: Int,
     val playSec: Int,
     val undoUsed: Boolean,
+    val bomb: Int = 0,
+    val bProg: Int = 0,
 )
 
 private fun bbSerialize(s: BbSave): String {
@@ -278,6 +321,7 @@ private fun bbSerialize(s: BbSave): String {
     return listOf(
         g.toString(), t, s.score, s.combo, s.hammer, s.wirbel, s.hProg, s.wProg,
         s.lines, s.bestCombo, s.moves, s.playSec, if (s.undoUsed) 1 else 0,
+        s.bomb, s.bProg,
     ).joinToString("|")
 }
 
@@ -285,7 +329,8 @@ private fun bbParseSave(str: String?): BbSave? {
     if (str == null) return null
     return try {
         val p = str.split("|")
-        if (p.size != 13 || p[0].length != 64) return null
+        if (p.size != 13 && p.size != 15) return null
+        if (p[0].length != 64) return null
         val grid = IntArray(64) { i -> if (p[0][i] == '.') -1 else p[0][i] - '0' }
         val tray = p[1].split("~").map { t ->
             if (t == "-") null else {
@@ -299,6 +344,8 @@ private fun bbParseSave(str: String?): BbSave? {
             grid, tray, p[2].toInt(), p[3].toInt(), p[4].toInt(), p[5].toInt(),
             p[6].toInt(), p[7].toInt(), p[8].toInt(), p[9].toInt(), p[10].toInt(),
             p[11].toInt(), p[12] == "1",
+            bomb = if (p.size == 15) p[13].toInt() else 0,
+            bProg = if (p.size == 15) p[14].toInt() else 0,
         )
     } catch (e: Exception) {
         null
@@ -312,6 +359,131 @@ private fun bbFmtDuration(sec: Int): String =
 
 private fun bbNewRng(mode: BbMode): Random =
     if (mode == BbMode.DAILY) Random(LocalDate.now().toEpochDay()) else Random(System.nanoTime())
+
+// ————— Prozeduraler Mini-Synth via AudioTrack (keine Assets) —————
+// Kurze generierte PCM-Samples (Sine/Chirp + Hüllkurve) auf Daemon-Thread in
+// einen MODE_STREAM-AudioTrack geschrieben. Bei Fehlern bleibt das Spiel stumm.
+
+private class BlastSound {
+    private val sr = 22050
+    @Volatile private var running = false
+    @Volatile private var failed = false
+    private var track: AudioTrack? = null
+    private var thread: Thread? = null
+    private val queue = ArrayBlockingQueue<ShortArray>(24)
+
+    private fun ensureStarted() {
+        if (failed || track != null) return
+        try {
+            val minBuf = AudioTrack.getMinBufferSize(sr, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
+            val t = AudioTrack(
+                AudioManager.STREAM_MUSIC, sr,
+                AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT,
+                max(minBuf, sr / 2), AudioTrack.MODE_STREAM,
+            )
+            t.play()
+            track = t
+            running = true
+            val th = Thread {
+                while (running) {
+                    val s = try { queue.take() } catch (_: InterruptedException) { null }
+                    if (s != null) try { track?.write(s, 0, s.size) } catch (_: Throwable) {}
+                }
+            }
+            th.isDaemon = true
+            thread = th
+            th.start()
+        } catch (t: Throwable) {
+            failed = true
+        }
+    }
+
+    private fun play(samples: ShortArray) {
+        if (failed) return
+        try {
+            ensureStarted()
+            if (track != null) queue.offer(samples)
+        } catch (_: Throwable) {
+        }
+    }
+
+    fun release() {
+        running = false
+        queue.clear()
+        try { thread?.interrupt() } catch (_: Throwable) {}
+        try {
+            track?.let {
+                try { it.pause() } catch (_: Throwable) {}
+                try { it.flush() } catch (_: Throwable) {}
+                try { it.release() } catch (_: Throwable) {}
+            }
+        } catch (_: Throwable) {
+        }
+        track = null
+        thread = null
+    }
+
+    private fun synth(dur: Float, vol: Float = 0.30f, wave: (Float) -> Double): ShortArray {
+        val n = max(1, (sr * dur).toInt())
+        val out = ShortArray(n)
+        for (i in 0 until n) {
+            val t = i.toFloat() / sr
+            out[i] = (wave(t).coerceIn(-1.0, 1.0) * vol * 32767.0).toInt().toShort()
+        }
+        return out
+    }
+
+    private fun concat(vararg parts: ShortArray): ShortArray {
+        val total = parts.sumOf { it.size }
+        val out = ShortArray(total)
+        var o = 0
+        for (p in parts) {
+            p.copyInto(out, o)
+            o += p.size
+        }
+        return out
+    }
+
+    private fun note(freq: Double, dur: Float, vol: Float = 0.30f): ShortArray =
+        synth(dur, vol) { t ->
+            val env = exp(-t * 18.0)
+            (sin(2 * kotlin.math.PI * freq * t) * 0.72 + sin(2 * kotlin.math.PI * freq * 2 * t) * 0.28) * env
+        }
+
+    // Place-Klick: kurzer, tiefer Thock
+    fun place() = play(synth(0.08f, 0.22f) { t ->
+        val f = 190.0 - t * 800.0
+        sin(2 * kotlin.math.PI * f * t) * exp(-t * 44.0)
+    })
+
+    // Ungültiger Drop: tiefer Blip
+    fun bad() = play(synth(0.10f, 0.18f) { t ->
+        sin(2 * kotlin.math.PI * 120.0 * t) * exp(-t * 30.0)
+    })
+
+    // Clear-Pling: Pitch steigt mit Combo-Stufe
+    fun clear(combo: Int) = play(note(320.0 + min(combo, 10) * 55.0, 0.17f, 0.30f))
+
+    // Fanfare (Perfect Clear, Fieber): kurzes Arpeggio
+    fun fanfare() = play(concat(note(523.0, 0.09f, 0.22f), note(659.0, 0.09f, 0.22f), note(784.0, 0.15f, 0.26f)))
+
+    // Bombe / großes Clear: tiefer Sine-Drop + Rauschen
+    fun boom() = play(synth(0.5f, 0.38f) { t ->
+        val env = exp(-t * 9.0)
+        val noise = (Random.nextDouble() * 2.0 - 1.0) * exp(-t * 16.0) * 0.5
+        (sin(2 * kotlin.math.PI * (70.0 - t * 60.0) * t) * 0.9 + noise) * env
+    })
+
+    // Power-up-Aktivierung: schneller Up-Chirp
+    fun power() = play(synth(0.14f, 0.26f) { t ->
+        val f = 320.0 + t * 3200.0
+        sin(2 * kotlin.math.PI * f * t) * exp(-t * 14.0)
+    })
+
+    fun gameOver() = play(concat(note(392.0, 0.16f, 0.24f), note(311.0, 0.16f, 0.24f), note(233.0, 0.30f, 0.26f)))
+
+    fun win() = play(concat(note(523.0, 0.11f, 0.24f), note(659.0, 0.11f, 0.24f), note(784.0, 0.11f, 0.24f), note(1046.0, 0.24f, 0.28f)))
+}
 
 // ————— Root —————
 
@@ -333,8 +505,10 @@ fun BlockBlastGame(onBack: () -> Unit) {
 
     var haptics by remember { mutableStateOf(prefs.getBoolean("blockblast_haptics", true)) }
     var particlesOn by remember { mutableStateOf(prefs.getBoolean("blockblast_particles", true)) }
+    var soundOn by remember { mutableStateOf(prefs.getBoolean("blockblast_sound", true)) }
     val setHaptics: (Boolean) -> Unit = { haptics = it; prefs.edit().putBoolean("blockblast_haptics", it).apply() }
     val setParticles: (Boolean) -> Unit = { particlesOn = it; prefs.edit().putBoolean("blockblast_particles", it).apply() }
+    val setSound: (Boolean) -> Unit = { soundOn = it; prefs.edit().putBoolean("blockblast_sound", it).apply() }
 
     fun startGame(m: BbMode, res: BbSave? = null, level: Int = 0) {
         mode = m
@@ -351,8 +525,10 @@ fun BlockBlastGame(onBack: () -> Unit) {
                 prefs = prefs,
                 haptics = haptics,
                 particlesOn = particlesOn,
+                soundOn = soundOn,
                 onHaptics = setHaptics,
                 onParticles = setParticles,
+                onSound = setSound,
                 lastMode = mode,
                 onBack = onBack,
                 onStart = { m, res -> startGame(m, res) },
@@ -375,8 +551,10 @@ fun BlockBlastGame(onBack: () -> Unit) {
                     resume = resume,
                     haptics = haptics,
                     particlesOn = particlesOn,
+                    soundOn = soundOn,
                     onHaptics = setHaptics,
                     onParticles = setParticles,
+                    onSound = setSound,
                     onExit = { screen = if (mode == BbMode.ADVENTURE) BbScreen.LEVELS else BbScreen.MENU },
                     onPlayLevel = { i -> startGame(BbMode.ADVENTURE, level = i) },
                 )
@@ -392,8 +570,10 @@ private fun BbMenu(
     prefs: SharedPreferences,
     haptics: Boolean,
     particlesOn: Boolean,
+    soundOn: Boolean,
     onHaptics: (Boolean) -> Unit,
     onParticles: (Boolean) -> Unit,
+    onSound: (Boolean) -> Unit,
     lastMode: BbMode,
     onBack: () -> Unit,
     onStart: (BbMode, BbSave?) -> Unit,
@@ -415,6 +595,19 @@ private fun BbMenu(
     val advStars = remember { (BbLevels.indices).sumOf { prefs.getInt("blockblast_adv_stars_$it", 0) } }
     val advDone = remember { (BbLevels.indices).count { prefs.getInt("blockblast_adv_stars_$it", 0) > 0 } }
 
+    // Animierte Titel-Figur: schwebender Block über Glow
+    val heroInf = rememberInfiniteTransition(label = "bbHero")
+    val heroFloat by heroInf.animateFloat(
+        -7f, 7f,
+        infiniteRepeatable(tween(1700, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "bbHeroY",
+    )
+    val heroGlow by heroInf.animateFloat(
+        0.10f, 0.22f,
+        infiniteRepeatable(tween(1700, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "bbHeroGlow",
+    )
+
     Box(Modifier.fillMaxSize().background(HikariBg)) {
         GxMenuBackground(HikariAmber)
         Column(
@@ -423,6 +616,24 @@ private fun BbMenu(
             GxHeader("Block Blast", HikariAmber, onBack) {
                 GxIconChip("?") { showHelp = true }
             }
+
+            Box(Modifier.fillMaxWidth().height(92.dp), contentAlignment = Alignment.Center) {
+                Canvas(Modifier.size(92.dp)) {
+                    drawCircle(
+                        Brush.radialGradient(
+                            listOf(HikariAmber.copy(alpha = heroGlow), Color.Transparent),
+                            center = center,
+                            radius = size.minDimension / 2f,
+                        )
+                    )
+                }
+                Text(
+                    "🧱",
+                    fontSize = 46.sp,
+                    modifier = Modifier.graphicsLayer { translationY = heroFloat.dp.toPx() },
+                )
+            }
+
             Column(Modifier.padding(horizontal = 16.dp)) {
                 GxAppear(0) {
                     GxLevelCard(lvl, "$xp / $lvlNext XP", lvlFrac, HikariAmber)
@@ -505,6 +716,7 @@ private fun BbMenu(
         if (showSettings) {
             GxSheet("Einstellungen", HikariAmber, onClose = { showSettings = false }) {
                 GxToggle("Vibration", "Haptisches Feedback beim Spielen", HikariAmber, haptics, onHaptics)
+                GxToggle("Sound", "Prozedural erzeugte Effektgeräusche", HikariAmber, soundOn, onSound)
                 GxToggle("Partikel-Effekte", "Feuerwerk, Funken & Glitzer", HikariAmber, particlesOn, onParticles)
             }
         }
@@ -524,6 +736,7 @@ private fun BbHelpSheet(onClose: () -> Unit) {
             "🔥 Mehrere Linien nacheinander = Combo. Ab Combo ×3 zündet der Fieber-Modus: 10 s doppelte Punkte!",
             "✨ Feld komplett leer geräumt = Perfect Clear (+300).",
             "🔨 Hammer: entfernt eine einzelne Zelle. Lädt sich über gelöschte Linien auf.",
+            "💣 Bombe: räumt ein 3×3-Feld um die gewählte Zelle. Lädt sich über Linien auf.",
             "🌀 Wirbel: würfelt deine drei Steine neu.",
             "↩️ Undo: einmal pro Runde den letzten Zug zurücknehmen.",
             "🗺️ Abenteuer: 20 Level mit eigenen Karten, Juwelen und Zuglimit.",
@@ -721,13 +934,21 @@ private fun BbPlay(
     resume: BbSave?,
     haptics: Boolean,
     particlesOn: Boolean,
+    soundOn: Boolean,
     onHaptics: (Boolean) -> Unit,
     onParticles: (Boolean) -> Unit,
+    onSound: (Boolean) -> Unit,
     onExit: () -> Unit,
     onPlayLevel: (Int) -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
     val levelDef = if (mode == BbMode.ADVENTURE) BbLevels[levelIndex] else null
+
+    // Sound-Synth (prozedural, kein Asset); sauberes Release beim Verlassen
+    val sound = remember { BlastSound() }
+    DisposableEffect(Unit) {
+        onDispose { sound.release() }
+    }
 
     fun buzz(t: HapticFeedbackType) {
         if (haptics) haptic.performHapticFeedback(t)
@@ -756,9 +977,12 @@ private fun BbPlay(
     // Booster
     var hammerCharges by remember { mutableIntStateOf(resume?.hammer ?: 0) }
     var wirbelCharges by remember { mutableIntStateOf(resume?.wirbel ?: 0) }
+    var bombCharges by remember { mutableIntStateOf(resume?.bomb ?: 0) }
     var hammerProg by remember { mutableIntStateOf(resume?.hProg ?: 0) }
     var wirbelProg by remember { mutableIntStateOf(resume?.wProg ?: 0) }
+    var bombProg by remember { mutableIntStateOf(resume?.bProg ?: 0) }
     var hammerActive by remember { mutableStateOf(false) }
+    var bombActive by remember { mutableStateOf(false) }
 
     // Fieber / Zeit
     var feverTime by remember { mutableFloatStateOf(0f) }
@@ -817,6 +1041,7 @@ private fun BbPlay(
     fun snapshot(): BbSave = BbSave(
         grid.copyOf(), tray.toList(), score, combo, hammerCharges, wirbelCharges,
         hammerProg, wirbelProg, linesRound, bestComboRound, movesLeft, playSec.toInt(), undoUsed,
+        bomb = bombCharges, bProg = bombProg,
     )
 
     fun saveClassic() {
@@ -875,6 +1100,9 @@ private fun BbPlay(
             gameOver = true
         }
         buzz(HapticFeedbackType.LongPress)
+        if (soundOn) {
+            if (won) sound.win() else sound.gameOver()
+        }
     }
 
     fun resetRound() {
@@ -891,9 +1119,12 @@ private fun BbPlay(
         recordBanner = false
         hammerCharges = 0
         wirbelCharges = 0
+        bombCharges = 0
         hammerProg = 0
         wirbelProg = 0
+        bombProg = 0
         hammerActive = false
+        bombActive = false
         feverTime = 0f
         timeLeft = 120f
         playSec = 0f
@@ -917,14 +1148,17 @@ private fun BbPlay(
         combo = s.combo
         hammerCharges = s.hammer
         wirbelCharges = s.wirbel
+        bombCharges = s.bomb
         hammerProg = s.hProg
         wirbelProg = s.wProg
+        bombProg = s.bProg
         linesRound = s.lines
         bestComboRound = s.bestCombo
         movesLeft = s.moves
         undoUsed = true
         undoSnap = null
         buzz(HapticFeedbackType.TextHandleMove)
+        if (soundOn) sound.power()
         saveClassic()
     }
 
@@ -948,18 +1182,60 @@ private fun BbPlay(
 
     var clearFx by remember { mutableStateOf<BbClearFx?>(null) }
     val clearAnim = remember { Animatable(1f) }
-    LaunchedEffect(clearFx?.key) {
-        if (clearFx != null) {
-            clearAnim.snapTo(0f)
-            clearAnim.animateTo(1f, tween(340))
-            clearFx = null
-        }
-    }
 
     var popup by remember { mutableStateOf<Pair<Int, String>?>(null) }
 
     val fx = remember { BbFxHolder() }
     var tick by remember { mutableLongStateOf(0L) }
+
+    // Kamera-Shake / Flash / Placement-Pop
+    var shakeAmp by remember { mutableFloatStateOf(0f) }
+    var flashAmp by remember { mutableFloatStateOf(0f) }
+    var popCells by remember { mutableStateOf<List<Pair<Int, Int>>>(emptyList()) }
+    var popKey by remember { mutableIntStateOf(0) }
+    val popAnim = remember { Animatable(1f) }
+    LaunchedEffect(popKey) {
+        if (popKey > 0) {
+            popAnim.snapTo(0f)
+            popAnim.animateTo(1f, tween(220, easing = FastOutSlowInEasing))
+        }
+    }
+
+    // Combo-Pop für die große Anzeige
+    val comboScale = remember { Animatable(1f) }
+    LaunchedEffect(combo) {
+        if (combo >= 2) {
+            comboScale.snapTo(1.7f)
+            comboScale.animateTo(1f, spring(dampingRatio = 0.5f, stiffness = 600f))
+        }
+    }
+
+    // Clear-FX: Partikel-Schauer in Blockfarbe beim Start der Clear-Phase
+    LaunchedEffect(clearFx?.key) {
+        val cfx = clearFx ?: return@LaunchedEffect
+        if (gridSizePx > 0f && particlesOn) {
+            val cellPx = gridSizePx / 8f
+            for ((r, c, ci) in cfx.cells) {
+                val col = bbCellColor(ci.coerceAtLeast(0))
+                repeat(3) {
+                    val a = Random.nextFloat() * 6.2832f
+                    val sp = cellPx * (2f + Random.nextFloat() * 3.5f)
+                    fx.parts.add(
+                        BbParticle(
+                            c * cellPx + cellPx / 2f, r * cellPx + cellPx / 2f,
+                            kotlin.math.cos(a) * sp, kotlin.math.sin(a) * sp - cellPx * 1.5f,
+                            0.4f + Random.nextFloat() * 0.4f, 0.8f,
+                            if (Random.nextFloat() < 0.25f) Color.White else col,
+                            cellPx * (0.05f + Random.nextFloat() * 0.07f),
+                        )
+                    )
+                }
+            }
+        }
+        clearAnim.snapTo(0f)
+        clearAnim.animateTo(1f, tween(300))
+        clearFx = null
+    }
 
     val density = LocalDensity.current
     val liftPx = with(density) { 90.dp.toPx() }
@@ -986,7 +1262,15 @@ private fun BbPlay(
         if (timeUp && !gameOver && !won) finishRound(win = false)
     }
 
-    // Ticker: Fieber, Zeit, Partikel, Puls-Effekte
+    // Rekord-Banner blendet sich selbst wieder aus
+    LaunchedEffect(recordBanner) {
+        if (recordBanner) {
+            delay(2500)
+            recordBanner = false
+        }
+    }
+
+    // Ticker: Fieber, Zeit, Partikel, Bokeh, Juice-Decay
     LaunchedEffect(paused, gameOver, won, runId, showHelp) {
         if (paused || gameOver || won || showHelp) return@LaunchedEffect
         var last = 0L
@@ -998,6 +1282,8 @@ private fun BbPlay(
                     fx.t += dt
                     playSec += dt
                     if (feverTime > 0f) feverTime = max(0f, feverTime - dt)
+                    if (shakeAmp > 0f) shakeAmp = max(0f, shakeAmp * (1f - 7f * dt) - dt * 2f)
+                    if (flashAmp > 0f) flashAmp = max(0f, flashAmp - dt * 3f)
                     if (mode == BbMode.TIME && !timeUp) {
                         timeLeft = max(0f, timeLeft - dt)
                         if (timeLeft <= 0f) timeUp = true
@@ -1010,6 +1296,14 @@ private fun BbPlay(
                         p.y += p.vy * dt
                         p.life -= dt
                         if (p.life <= 0f) it.remove()
+                    }
+                    // Hintergrund-Bokeh steigt langsam auf
+                    for (b in fx.bokeh) {
+                        b.y -= b.speed * dt
+                        if (b.y < -12f) {
+                            b.y = fx.bokehH + 12f
+                            b.x = Random.nextFloat() * fx.bokehW
+                        }
                     }
                 }
                 tick++
@@ -1039,6 +1333,7 @@ private fun BbPlay(
             }
             showRestartConfirm -> showRestartConfirm = false
             hammerActive -> hammerActive = false
+            bombActive -> bombActive = false
             gameOver || won -> {
                 saveClassic()
                 onExit()
@@ -1082,6 +1377,16 @@ private fun BbPlay(
         undoSnap = snapshot()
         val newGrid = grid.copyOf()
         for ((r, c) in piece.cells) newGrid[(row + r) * 8 + (col + c)] = piece.colorIndex
+        // Snap-Effekt: gesetzte Zellen poppen kurz auf + Staub
+        popCells = piece.cells.map { (row + it.first) to (col + it.second) }
+        popKey++
+        if (gridSizePx > 0f) {
+            val cellPx = gridSizePx / 8f
+            spawnBurst(
+                (col + piece.cols / 2f) * cellPx, (row + piece.rows / 2f) * cellPx,
+                listOf(BbColors[piece.colorIndex], Color.White), 5, cellPx * 3f,
+            )
+        }
         var gained = piece.cells.size
         var jewelsGot = 0
         val (fullRows, fullCols) = bbFullLines(newGrid)
@@ -1091,7 +1396,15 @@ private fun BbPlay(
             combo += 1
             if (combo > bestComboRound) bestComboRound = combo
             if (combo >= 5) unlockAch("combo5")
-            buzz(HapticFeedbackType.LongPress)
+            if (combo >= 8) unlockAch("combo8")
+            // Haptik gestuft: kräftiger bei Multi-Line / hoher Combo
+            if (lineCount >= 2 || combo >= 3) buzz(HapticFeedbackType.LongPress) else buzz(HapticFeedbackType.TextHandleMove)
+            if (soundOn) sound.clear(combo)
+            // Shake + Flash skalieren mit der Clear-Größe
+            if (particlesOn) {
+                if (lineCount >= 2) shakeAmp = min(14f, lineCount * 4f)
+                if (lineCount >= 2) flashAmp = min(1f, 0.3f + lineCount * 0.15f)
+            }
             val bonus = lineCount * (lineCount + 1) / 2 * 100 * combo
             gained += bonus
             val fxCells = ArrayList<Triple<Int, Int, Int>>()
@@ -1104,6 +1417,7 @@ private fun BbPlay(
             linesRound += lineCount
             hammerProg += lineCount
             wirbelProg += lineCount
+            bombProg += lineCount
             while (hammerProg >= 10) {
                 hammerProg -= 10
                 if (hammerCharges < 3) {
@@ -1118,6 +1432,13 @@ private fun BbPlay(
                     pushToast("🌀 Wirbel aufgeladen!")
                 }
             }
+            while (bombProg >= 14) {
+                bombProg -= 14
+                if (bombCharges < 2) {
+                    bombCharges++
+                    pushToast("💣 Bombe aufgeladen!")
+                }
+            }
             if (mode == BbMode.TIME) timeLeft = min(180f, timeLeft + 5f * lineCount)
             if (newGrid.all { it < 0 }) {
                 perfect = true
@@ -1125,15 +1446,24 @@ private fun BbPlay(
                 addStat("blockblast_perfect_clears", 1)
                 unlockAch("perfect")
                 spawnBurst(gridSizePx / 2f, gridSizePx / 2f, BbColors, 40, gridSizePx * 0.9f)
+                if (particlesOn) {
+                    flashAmp = 1f
+                    shakeAmp = 10f
+                }
+                if (soundOn) sound.fanfare()
             }
         } else {
             combo = 0
             buzz(HapticFeedbackType.TextHandleMove)
+            if (soundOn) sound.place()
         }
         val fever = feverTime > 0f
         if (fever) gained *= 2
         if (lineCount > 0 && combo >= 3) {
-            if (feverTime <= 0f) pushToast("⚡ Fieber-Modus!")
+            if (feverTime <= 0f) {
+                pushToast("⚡ Fieber-Modus!")
+                if (soundOn) sound.fanfare()
+            }
             feverTime = 10f
             unlockAch("fever")
         }
@@ -1177,8 +1507,44 @@ private fun BbPlay(
         hammerActive = false
         unlockAch("hammer")
         buzz(HapticFeedbackType.LongPress)
+        if (soundOn) sound.power()
         val cellPx = gridSizePx / 8f
         spawnBurst(c * cellPx + cellPx / 2f, r * cellPx + cellPx / 2f, listOf(bbCellColor(v), Color.White), 10, cellPx * 5f)
+        if (mode == BbMode.ADVENTURE && levelDef != null && levelDef.hasJewels &&
+            newGrid.count { it == BbJewel } == 0
+        ) {
+            finishRound(win = true)
+        }
+        saveClassic()
+    }
+
+    // Bombe: räumt ein 3×3-Feld um die gewählte Zelle
+    fun useBomb(r: Int, c: Int) {
+        if (!bombActive || bombCharges <= 0) return
+        val newGrid = grid.copyOf()
+        val fxCells = ArrayList<Triple<Int, Int, Int>>()
+        for (rr in r - 1..r + 1) for (cc in c - 1..c + 1) {
+            if (rr in 0..7 && cc in 0..7) {
+                val v = newGrid[rr * 8 + cc]
+                if (v >= 0) {
+                    fxCells.add(Triple(rr, cc, v))
+                    newGrid[rr * 8 + cc] = -1
+                }
+            }
+        }
+        if (fxCells.isEmpty()) return
+        grid = newGrid
+        bombCharges -= 1
+        bombActive = false
+        unlockAch("bombe")
+        clearFx = BbClearFx(fxCells, (clearFx?.key ?: 0) + 1)
+        if (particlesOn) {
+            flashAmp = 0.6f
+            shakeAmp = 9f
+        }
+        buzz(HapticFeedbackType.LongPress)
+        if (soundOn) sound.boom()
+        popup = ((popup?.first ?: 0) + 1) to "💥 Boom!"
         if (mode == BbMode.ADVENTURE && levelDef != null && levelDef.hasJewels &&
             newGrid.count { it == BbJewel } == 0
         ) {
@@ -1194,6 +1560,7 @@ private fun BbPlay(
         wirbelCharges -= 1
         unlockAch("wirbel")
         buzz(HapticFeedbackType.TextHandleMove)
+        if (soundOn) sound.power()
         saveClassic()
     }
 
@@ -1205,6 +1572,26 @@ private fun BbPlay(
         else -> HikariText
     }
 
+    // Modus-Palette für den Hintergrund
+    val bgTop = when (mode) {
+        BbMode.CLASSIC -> Color(0xFF1B1710)
+        BbMode.DAILY -> Color(0xFF121A1E)
+        BbMode.ADVENTURE -> Color(0xFF171422)
+        BbMode.TIME -> Color(0xFF1E1214)
+    }
+    val bgBot = when (mode) {
+        BbMode.CLASSIC -> Color(0xFF12100C)
+        BbMode.DAILY -> Color(0xFF0D1214)
+        BbMode.ADVENTURE -> Color(0xFF100E18)
+        BbMode.TIME -> Color(0xFF140D0E)
+    }
+    val blobAccent = when (mode) {
+        BbMode.CLASSIC -> HikariAmber
+        BbMode.DAILY -> Color(0xFF22D3EE)
+        BbMode.ADVENTURE -> Color(0xFFA78BFA)
+        BbMode.TIME -> Color(0xFFFF7043)
+    }
+
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
@@ -1213,6 +1600,46 @@ private fun BbPlay(
     ) {
         val gridDp = if (maxWidth - 32.dp < 340.dp) maxWidth - 32.dp else 340.dp
         val cellDp = gridDp / 8
+
+        // Hintergrund: Verlauf + driftende Glow-Blobs + Bokeh
+        Canvas(Modifier.matchParentSize()) {
+            if (tick < 0) return@Canvas
+            val w = size.width
+            val h = size.height
+            drawRect(Brush.verticalGradient(listOf(bgTop, bgBot)))
+            val blobFx = floatArrayOf(0.20f, 0.85f, 0.45f)
+            val blobFy = floatArrayOf(0.15f, 0.45f, 0.88f)
+            val blobCols = arrayOf(blobAccent, HikariAmber, blobAccent)
+            for (bi in 0 until 3) {
+                val bx = w * blobFx[bi] + sin(fx.t * 0.11f + bi * 2.2f) * w * 0.07f
+                val by = h * blobFy[bi] + kotlin.math.cos(fx.t * 0.09f + bi * 1.7f) * h * 0.05f
+                drawRect(
+                    Brush.radialGradient(
+                        listOf(blobCols[bi].copy(alpha = if (bi == 1) 0.05f else 0.08f), Color.Transparent),
+                        center = Offset(bx, by),
+                        radius = w * 0.5f,
+                    )
+                )
+            }
+            if (fx.bokeh.isEmpty() || fx.bokehW != w) {
+                fx.bokehW = w
+                fx.bokehH = h
+                fx.bokeh.clear()
+                repeat(if (particlesOn) 12 else 6) {
+                    fx.bokeh.add(
+                        BbBokeh(
+                            Random.nextFloat() * w, Random.nextFloat() * h,
+                            2.5f + Random.nextFloat() * 5f,
+                            8f + Random.nextFloat() * 20f,
+                            0.04f + Random.nextFloat() * 0.07f,
+                        )
+                    )
+                }
+            }
+            for (b in fx.bokeh) {
+                drawCircle(Color.White.copy(alpha = b.alpha), b.r, Offset(b.x, b.y))
+            }
+        }
 
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             Row(
@@ -1255,7 +1682,7 @@ private fun BbPlay(
                 }
             }
 
-            // Statuszeile: Combo / Ziel / Fieber
+            // Statuszeile: Combo (groß, mit Pop) / Ziel / Fieber
             if (mode == BbMode.ADVENTURE && levelDef != null) {
                 val goalText = if (levelDef.hasJewels) {
                     "💎 ${grid.count { it == BbJewel }} übrig"
@@ -1265,10 +1692,14 @@ private fun BbPlay(
                 Text(goalText, fontSize = 13.sp, color = HikariPrimary, fontWeight = FontWeight.Bold)
             } else {
                 Text(
-                    if (combo >= 2) "Combo x$combo" else " ",
-                    fontSize = 13.sp,
+                    if (combo >= 2) "🔥 Combo x$combo" else " ",
+                    fontSize = 15.sp,
                     color = comboColor,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.graphicsLayer {
+                        scaleX = comboScale.value
+                        scaleY = comboScale.value
+                    },
                 )
             }
 
@@ -1287,17 +1718,24 @@ private fun BbPlay(
             Canvas(
                 Modifier
                     .size(gridDp)
+                    .graphicsLayer {
+                        if (shakeAmp > 0.01f) {
+                            val tt = tick // State lesen → Layer-Update pro Frame
+                            translationX = sin(tt * 1.7f) * shakeAmp
+                            translationY = kotlin.math.cos(tt * 2.3f) * shakeAmp * 0.7f
+                        }
+                    }
                     .onGloballyPositioned {
                         gridOrigin = it.positionInRoot()
                         gridSizePx = it.size.width.toFloat()
                     }
-                    .pointerInput(hammerActive) {
-                        if (hammerActive) {
+                    .pointerInput(hammerActive, bombActive) {
+                        if (hammerActive || bombActive) {
                             detectTapGestures { pos ->
                                 val cellPx = size.width / 8f
                                 val c = (pos.x / cellPx).toInt().coerceIn(0, 7)
                                 val r = (pos.y / cellPx).toInt().coerceIn(0, 7)
-                                useHammer(r, c)
+                                if (bombActive) useBomb(r, c) else useHammer(r, c)
                             }
                         }
                     }
@@ -1306,6 +1744,29 @@ private fun BbPlay(
                 val cell = size.width / 8f
                 val pad = cell * 0.06f
                 val corner = CornerRadius(cell * 0.18f, cell * 0.18f)
+                val panelCorner = CornerRadius(cell * 0.26f, cell * 0.26f)
+
+                // Panel: Premium-Look — Verlauf, Innenschatten, Kontur, Glow
+                drawRoundRect(
+                    Brush.verticalGradient(listOf(Color(0xFF26262C), Color(0xFF16161A))),
+                    Offset.Zero, Size(size.width, size.height), panelCorner,
+                )
+                drawRoundRect(
+                    HikariAmber.copy(alpha = 0.07f + 0.03f * sin(fx.t * 2f)),
+                    Offset.Zero, Size(size.width, size.height), panelCorner,
+                    style = Stroke(width = cell * 0.10f),
+                )
+                drawRoundRect(
+                    Color.White.copy(alpha = 0.06f),
+                    Offset.Zero, Size(size.width, size.height), panelCorner,
+                    style = Stroke(width = max(1.5f, cell * 0.03f)),
+                )
+                // Innenschatten oben
+                drawRect(
+                    Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.28f), Color.Transparent), startY = 0f, endY = cell * 0.9f),
+                    topLeft = Offset(cell * 0.1f, 0f),
+                    size = Size(size.width - cell * 0.2f, cell * 0.9f),
+                )
 
                 // Fast-volle Linien subtil schimmern lassen
                 val shimmer = 0.05f + 0.04f * sin(fx.t * 3f)
@@ -1314,33 +1775,39 @@ private fun BbPlay(
 
                 for (r in 0..7) for (c in 0..7) {
                     val v = grid[r * 8 + c]
-                    val topLeft = Offset(c * cell + pad, r * cell + pad)
-                    val sz = Size(cell - pad * 2, cell - pad * 2)
+                    val cx = c * cell
+                    val cy = r * cell
                     if (v < 0) {
-                        drawRoundRect(HikariSurfaceHigh, topLeft, sz, corner)
+                        // Leere Zelle: dunkle Inset-Optik mit feiner Kontur
+                        drawRoundRect(
+                            Color(0xFF1C1C21),
+                            Offset(cx + pad, cy + pad),
+                            Size(cell - pad * 2, cell - pad * 2), corner,
+                        )
+                        drawRoundRect(
+                            Color.White.copy(alpha = 0.045f),
+                            Offset(cx + pad, cy + pad),
+                            Size(cell - pad * 2, cell - pad * 2), corner,
+                            style = Stroke(width = 1f),
+                        )
                         if (r in nearRows || c in nearCols) {
-                            drawRoundRect(HikariAmber.copy(alpha = shimmer), topLeft, sz, corner)
+                            drawRoundRect(
+                                HikariAmber.copy(alpha = shimmer),
+                                Offset(cx + pad, cy + pad),
+                                Size(cell - pad * 2, cell - pad * 2), corner,
+                            )
                         }
                     } else {
-                        val col = bbCellColor(v)
-                        drawRoundRect(col, topLeft, sz, corner)
-                        drawRoundRect(
-                            lerpColor(col, Color.Black, 0.45f), topLeft, sz, corner,
-                            style = Stroke(width = cell * 0.06f),
+                        // Placement-Pop: frisch gesetzte Zellen skalieren kurz auf
+                        val popS = if (popCells.contains(r to c)) 1f + 0.22f * (1f - popAnim.value) else 1f
+                        bbBlock(
+                            cx, cy, cell,
+                            col = bbCellColor(v),
+                            brush = fx.brushFor(v, cell),
+                            scale = popS,
+                            jewel = v == BbJewel,
+                            jewelPulse = 0.75f + 0.25f * sin(fx.t * 5f),
                         )
-                        if (v == BbJewel) {
-                            val cx = c * cell + cell / 2f
-                            val cy = r * cell + cell / 2f
-                            val d = cell * 0.2f
-                            val jp = Path().apply {
-                                moveTo(cx, cy - d)
-                                lineTo(cx + d, cy)
-                                lineTo(cx, cy + d)
-                                lineTo(cx - d, cy)
-                                close()
-                            }
-                            drawPath(jp, Color.White.copy(alpha = 0.92f))
-                        }
                     }
                 }
 
@@ -1355,21 +1822,31 @@ private fun BbPlay(
                             val sim = grid.copyOf()
                             for ((r, c) in dPiece.cells) sim[(row + r) * 8 + (colBase + c)] = dPiece.colorIndex
                             val (fr, fc) = bbFullLines(sim)
+                            // Vorab-Markierung der clearenden Linien mit Highlight-Pulse
+                            val pulseA = 0.16f + 0.10f * (0.5f + 0.5f * sin(fx.t * 6f))
                             for (r in fr) for (c in 0..7) drawRoundRect(
-                                gcol.copy(alpha = 0.22f),
+                                gcol.copy(alpha = pulseA),
                                 Offset(c * cell + pad, r * cell + pad),
                                 Size(cell - pad * 2, cell - pad * 2), corner,
                             )
                             for (c in fc) for (r in 0..7) drawRoundRect(
-                                gcol.copy(alpha = 0.22f),
+                                gcol.copy(alpha = pulseA),
                                 Offset(c * cell + pad, r * cell + pad),
                                 Size(cell - pad * 2, cell - pad * 2), corner,
                             )
-                            for ((r, c) in dPiece.cells) drawRoundRect(
-                                gcol.copy(alpha = 0.45f),
-                                Offset((colBase + c) * cell + pad, (row + r) * cell + pad),
-                                Size(cell - pad * 2, cell - pad * 2), corner,
-                            )
+                            for ((r, c) in dPiece.cells) {
+                                drawRoundRect(
+                                    gcol.copy(alpha = 0.38f),
+                                    Offset((colBase + c) * cell + pad, (row + r) * cell + pad),
+                                    Size(cell - pad * 2, cell - pad * 2), corner,
+                                )
+                                drawRoundRect(
+                                    gcol.copy(alpha = 0.7f),
+                                    Offset((colBase + c) * cell + pad, (row + r) * cell + pad),
+                                    Size(cell - pad * 2, cell - pad * 2), corner,
+                                    style = Stroke(width = max(1.5f, cell * 0.04f)),
+                                )
+                            }
                         } else {
                             // ungültige Position: rote Andeutung auf den Zellen im Feld
                             var any = false
@@ -1395,15 +1872,15 @@ private fun BbPlay(
                     }
                 }
 
-                // Clear-Animation (Blink/Fade)
+                // Clear-Animation: Zellen leuchten weiß auf und schrumpfen dann weg
                 val cfx = clearFx
                 if (cfx != null) {
                     val p = clearAnim.value
                     for ((r, c, ci) in cfx.cells) {
-                        val col = lerpColor(bbCellColor(ci.coerceAtLeast(0)), Color.White, 0.5f)
-                        val shrink = cell * 0.5f * p
+                        val col = lerpColor(bbCellColor(ci.coerceAtLeast(0)), Color.White, 0.35f + 0.55f * (1f - p))
+                        val shrink = cell * 0.5f * p * p
                         drawRoundRect(
-                            col.copy(alpha = 1f - p),
+                            col.copy(alpha = 1f - p * 0.9f),
                             Offset(c * cell + pad + shrink / 2, r * cell + pad + shrink / 2),
                             Size(cell - pad * 2 - shrink, cell - pad * 2 - shrink),
                             corner,
@@ -1411,12 +1888,29 @@ private fun BbPlay(
                     }
                 }
 
-                // Partikel (Perfect Clear, Hammer)
+                // Partikel (Clears, Perfect, Booster)
                 for (p in fx.parts) {
                     drawCircle(p.color.copy(alpha = (p.life / p.maxLife).coerceIn(0f, 1f)), p.r, Offset(p.x, p.y))
                 }
 
-                // Fieber-Glühen + Hammer-Rahmen
+                // Weißer Flash bei großen Clears
+                if (flashAmp > 0f) {
+                    drawRoundRect(
+                        Color.White.copy(alpha = flashAmp * 0.22f),
+                        Offset.Zero, Size(size.width, size.height), panelCorner,
+                    )
+                }
+
+                // Vignette über dem Feld
+                drawRect(
+                    Brush.radialGradient(
+                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.20f)),
+                        center = center,
+                        radius = size.width * 0.72f,
+                    )
+                )
+
+                // Fieber-Glühen + Hammer-/Bomben-Rahmen
                 if (feverTime > 0f) {
                     val glow = 0.10f + 0.06f * sin(fx.t * 6f)
                     drawRoundRect(
@@ -1425,9 +1919,9 @@ private fun BbPlay(
                         CornerRadius(cell * 0.2f, cell * 0.2f),
                     )
                 }
-                if (hammerActive) {
+                if (hammerActive || bombActive) {
                     drawRoundRect(
-                        HikariAmber,
+                        if (bombActive) HikariDanger else HikariAmber,
                         Offset.Zero, Size(size.width, size.height),
                         CornerRadius(cell * 0.2f, cell * 0.2f),
                         style = Stroke(width = 3.dp.toPx()),
@@ -1444,17 +1938,18 @@ private fun BbPlay(
                 }
             }
 
-            if (hammerActive) {
+            if (hammerActive || bombActive) {
                 Text(
-                    "🔨 Zelle antippen — erneut auf den Hammer tippen bricht ab",
-                    fontSize = 11.sp, color = HikariPrimary,
+                    if (bombActive) "💣 Zelle antippen — 3×3 wird geräumt, erneut tippen bricht ab"
+                    else "🔨 Zelle antippen — erneut auf den Hammer tippen bricht ab",
+                    fontSize = 11.sp, color = if (bombActive) HikariDanger else HikariPrimary,
                     modifier = Modifier.padding(top = 6.dp),
                 )
             }
 
             Spacer(Modifier.weight(0.3f))
 
-            // Booster-Leiste
+            // Booster-Leiste: Hammer · Bombe · Undo · Wirbel
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                 Arrangement.SpaceEvenly,
@@ -1463,7 +1958,17 @@ private fun BbPlay(
                 BbBoosterButton(
                     emoji = "🔨", charges = hammerCharges, progress = hammerProg / 10f,
                     active = hammerActive, enabled = hammerCharges > 0 && !gameOver && !won,
-                ) { hammerActive = !hammerActive }
+                ) {
+                    hammerActive = !hammerActive
+                    if (hammerActive) bombActive = false
+                }
+                BbBoosterButton(
+                    emoji = "💣", charges = bombCharges, progress = bombProg / 14f,
+                    active = bombActive, enabled = bombCharges > 0 && !gameOver && !won,
+                ) {
+                    bombActive = !bombActive
+                    if (bombActive) hammerActive = false
+                }
                 // Undo
                 val undoEnabled = undoSnap != null && !undoUsed && !gameOver && !won
                 Box(
@@ -1490,7 +1995,7 @@ private fun BbPlay(
 
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp).height(108.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 for (slot in 0..2) {
@@ -1499,6 +2004,9 @@ private fun BbPlay(
                         Modifier
                             .weight(1f)
                             .fillMaxHeight()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(HikariCardBg)
+                            .border(1.dp, Color.White.copy(alpha = 0.07f), RoundedCornerShape(16.dp))
                             .onGloballyPositioned {
                                 slotCenters[slot] = it.positionInRoot() +
                                     Offset(it.size.width / 2f, it.size.height / 2f)
@@ -1519,6 +2027,7 @@ private fun BbPlay(
                                                 place(piece, t.first, t.second, slot)
                                             } else {
                                                 buzz(HapticFeedbackType.TextHandleMove)
+                                                if (soundOn) sound.bad()
                                                 returnFx = BbReturnFx(piece, slot, dragPos)
                                             }
                                         }
@@ -1569,8 +2078,13 @@ private fun BbPlay(
             }
         }
 
-        // Gezogenes Piece — ~90dp über dem Finger, leicht vergrößert
+        // Gezogenes Piece — ~90dp über dem Finger, federnd vergrößert
         val dragPiece = if (dragSlot >= 0) tray.getOrNull(dragSlot) else null
+        val dragScale by animateFloatAsState(
+            if (dragPiece != null) 1.09f else 1f,
+            spring(dampingRatio = 0.55f, stiffness = 500f),
+            label = "bbDragScale",
+        )
         if (dragPiece != null && gridSizePx > 0f) {
             val cellPx = gridSizePx / 8f
             val w = dragPiece.cols * cellPx
@@ -1581,7 +2095,7 @@ private fun BbPlay(
                 cellSize = cellDp,
                 modifier = Modifier
                     .offset { IntOffset(tl.x.roundToInt(), tl.y.roundToInt()) }
-                    .graphicsLayer { scaleX = 1.07f; scaleY = 1.07f },
+                    .graphicsLayer { scaleX = dragScale; scaleY = dragScale },
             )
         }
 
@@ -1604,13 +2118,17 @@ private fun BbPlay(
             )
         }
 
-        // Punkte-Popup
+        // Punkte-Popup: Overshoot-Scale-In + Aufsteigen + Fade
         popup?.let { (pkey, text) ->
             val anim = remember(pkey) { Animatable(0f) }
             LaunchedEffect(pkey) {
                 anim.animateTo(1f, tween(800))
                 popup = null
             }
+            val t = anim.value
+            val inT = (t / 0.2f).coerceIn(0f, 1f)
+            val u = inT - 1f
+            val popScale = 1f + 2.70158f * u * u * u + 1.70158f * u * u
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     text,
@@ -1620,6 +2138,8 @@ private fun BbPlay(
                     modifier = Modifier.graphicsLayer {
                         translationY = -140f - anim.value * 90f
                         alpha = 1f - anim.value * anim.value
+                        scaleX = popScale
+                        scaleY = popScale
                     },
                 )
             }
@@ -1688,6 +2208,7 @@ private fun BbPlay(
                     }
                     Spacer(Modifier.height(14.dp))
                     GxToggle("Vibration", null, HikariPrimary, haptics, onHaptics)
+                    GxToggle("Sound", null, HikariPrimary, soundOn, onSound)
                     GxToggle("Partikel-Effekte", null, HikariPrimary, particlesOn, onParticles)
                 }
             }
@@ -1828,6 +2349,71 @@ private fun BbBoosterButton(
     }
 }
 
+// Block (AA-Rendering): Verlauf mit Licht von oben-links, Bevel-Kante, Rim, Schatten.
+// `brush` kommt aus dem Cache in BbFxHolder (pro Farbe, Einheitszelle).
+private fun DrawScope.bbBlock(
+    x: Float,
+    y: Float,
+    cell: Float,
+    col: Color,
+    brush: Brush,
+    alpha: Float = 1f,
+    scale: Float = 1f,
+    jewel: Boolean = false,
+    jewelPulse: Float = 1f,
+) {
+    val pad = cell * 0.06f
+    val corner = CornerRadius(cell * 0.18f, cell * 0.18f)
+    val bodyTl = Offset(x + pad, y + pad)
+    val bodySz = Size(cell - pad * 2, cell - pad * 2)
+    fun DrawScope.body() {
+        // Kontaktschatten
+        drawRoundRect(
+            Color.Black.copy(alpha = 0.28f * alpha),
+            Offset(bodyTl.x, bodyTl.y + cell * 0.03f), bodySz, corner,
+        )
+        // Körper mit Verlauf
+        drawRoundRect(brush, bodyTl, bodySz, corner, alpha = alpha)
+        // Bevel: Lichtkante oben-links
+        drawRoundRect(
+            Color.White.copy(alpha = 0.20f * alpha),
+            Offset(bodyTl.x + cell * 0.04f, bodyTl.y + cell * 0.04f),
+            Size(bodySz.width - cell * 0.12f, bodySz.height * 0.28f),
+            CornerRadius(cell * 0.12f, cell * 0.12f),
+        )
+        // Rim
+        drawRoundRect(
+            lerpColor(col, Color.Black, 0.5f).copy(alpha = alpha),
+            bodyTl, bodySz, corner,
+            style = Stroke(width = cell * 0.05f),
+        )
+        if (jewel) {
+            val jcx = x + cell / 2f
+            val jcy = y + cell / 2f
+            val d = cell * 0.2f
+            val jp = Path().apply {
+                moveTo(jcx, jcy - d)
+                lineTo(jcx + d, jcy)
+                lineTo(jcx, jcy + d)
+                lineTo(jcx - d, jcy)
+                close()
+            }
+            drawPath(jp, Color.White.copy(alpha = 0.92f * jewelPulse * alpha))
+        }
+    }
+    if (scale != 1f) {
+        val cx = x + cell / 2f
+        val cy = y + cell / 2f
+        withTransform({
+            translate(cx, cy)
+            scale(scale, scale, Offset.Zero)
+            translate(-cx, -cy)
+        }) { body() }
+    } else {
+        body()
+    }
+}
+
 @Composable
 private fun BbPieceView(
     piece: BbPiece,
@@ -1838,18 +2424,14 @@ private fun BbPieceView(
 ) {
     Canvas(modifier.size(cellSize * piece.cols, cellSize * piece.rows)) {
         val cell = size.width / piece.cols
-        val pad = cell * 0.07f
-        val corner = CornerRadius(cell * 0.2f, cell * 0.2f)
         val base = tint ?: BbColors[piece.colorIndex]
+        val brush = Brush.linearGradient(
+            listOf(lerpColor(base, Color.White, 0.38f), base, lerpColor(base, Color.Black, 0.28f)),
+            start = Offset.Zero,
+            end = Offset(cell * 0.9f, cell),
+        )
         for ((r, c) in piece.cells) {
-            val topLeft = Offset(c * cell + pad, r * cell + pad)
-            val sz = Size(cell - pad * 2, cell - pad * 2)
-            drawRoundRect(base.copy(alpha = alpha), topLeft, sz, corner)
-            drawRoundRect(
-                lerpColor(base, Color.Black, 0.45f).copy(alpha = alpha),
-                topLeft, sz, corner,
-                style = Stroke(width = cell * 0.07f),
-            )
+            bbBlock(c * cell, r * cell, cell, base, brush, alpha)
         }
     }
 }
