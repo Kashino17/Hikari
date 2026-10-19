@@ -73,12 +73,12 @@ import kotlin.random.Random
 // ————— Daten —————
 
 private val BbColors = listOf(
-    Color(0xFFFBBF24), // Amber
-    Color(0xFF60A5FA), // Blau
-    Color(0xFFEC4899), // Pink
-    Color(0xFF4ADE80), // Grün
-    Color(0xFF22D3EE), // Cyan
-    Color(0xFFA78BFA), // Lila
+    Color(0xFFF59E0B), // Amber
+    Color(0xFF3B82F6), // Blau
+    Color(0xFFDB2777), // Pink
+    Color(0xFF22C55E), // Grün
+    Color(0xFF06B6D4), // Cyan
+    Color(0xFF8B5CF6), // Lila
 )
 
 // Grid-Zellwerte: -1 leer, 0..5 Steinfarben, 6 Hindernis (Abenteuer), 7 Juwel-Block
@@ -176,7 +176,7 @@ private class BbFxHolder {
         return blockBrushes.getOrPut(v) {
             val col = bbCellColor(v)
             Brush.linearGradient(
-                listOf(lerpColor(col, Color.White, 0.38f), col, lerpColor(col, Color.Black, 0.28f)),
+                listOf(lerpColor(col, Color.White, 0.22f), col, lerpColor(col, Color.Black, 0.34f)),
                 start = Offset.Zero,
                 end = Offset(cell * 0.9f, cell),
             )
@@ -2376,7 +2376,7 @@ private fun DrawScope.bbBlock(
         drawRoundRect(brush, bodyTl, bodySz, corner, alpha = alpha)
         // Bevel: Lichtkante oben-links
         drawRoundRect(
-            Color.White.copy(alpha = 0.20f * alpha),
+            Color.White.copy(alpha = 0.14f * alpha),
             Offset(bodyTl.x + cell * 0.04f, bodyTl.y + cell * 0.04f),
             Size(bodySz.width - cell * 0.12f, bodySz.height * 0.28f),
             CornerRadius(cell * 0.12f, cell * 0.12f),
@@ -2426,7 +2426,7 @@ private fun BbPieceView(
         val cell = size.width / piece.cols
         val base = tint ?: BbColors[piece.colorIndex]
         val brush = Brush.linearGradient(
-            listOf(lerpColor(base, Color.White, 0.38f), base, lerpColor(base, Color.Black, 0.28f)),
+            listOf(lerpColor(base, Color.White, 0.22f), base, lerpColor(base, Color.Black, 0.34f)),
             start = Offset.Zero,
             end = Offset(cell * 0.9f, cell),
         )
