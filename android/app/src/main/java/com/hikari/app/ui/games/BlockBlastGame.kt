@@ -73,12 +73,12 @@ import kotlin.random.Random
 // ————— Daten —————
 
 private val BbColors = listOf(
-    Color(0xFFF59E0B), // Amber
-    Color(0xFF3B82F6), // Blau
-    Color(0xFFDB2777), // Pink
-    Color(0xFF22C55E), // Grün
-    Color(0xFF06B6D4), // Cyan
-    Color(0xFF8B5CF6), // Lila
+    Color(0xFFFFB020), // Amber
+    Color(0xFF3D9BFF), // Blau
+    Color(0xFFFF4D8D), // Pink
+    Color(0xFF3DDC6E), // Grün
+    Color(0xFF2FD8EF), // Cyan
+    Color(0xFF9F7BFF), // Lila
 )
 
 // Grid-Zellwerte: -1 leer, 0..5 Steinfarben, 6 Hindernis (Abenteuer), 7 Juwel-Block
@@ -176,7 +176,7 @@ private class BbFxHolder {
         return blockBrushes.getOrPut(v) {
             val col = bbCellColor(v)
             Brush.linearGradient(
-                listOf(lerpColor(col, Color.White, 0.22f), col, lerpColor(col, Color.Black, 0.34f)),
+                listOf(lerpColor(col, Color.White, 0.30f), col, lerpColor(col, Color.Black, 0.16f)),
                 start = Offset.Zero,
                 end = Offset(cell * 0.9f, cell),
             )
@@ -1574,16 +1574,16 @@ private fun BbPlay(
 
     // Modus-Palette für den Hintergrund
     val bgTop = when (mode) {
-        BbMode.CLASSIC -> Color(0xFF4A3A1C)
-        BbMode.DAILY -> Color(0xFF274453)
-        BbMode.ADVENTURE -> Color(0xFF3A3166)
-        BbMode.TIME -> Color(0xFF57262E)
+        BbMode.CLASSIC -> Color(0xFF1B1710)
+        BbMode.DAILY -> Color(0xFF121A1E)
+        BbMode.ADVENTURE -> Color(0xFF171422)
+        BbMode.TIME -> Color(0xFF1E1214)
     }
     val bgBot = when (mode) {
-        BbMode.CLASSIC -> Color(0xFF2C2413)
-        BbMode.DAILY -> Color(0xFF182A33)
-        BbMode.ADVENTURE -> Color(0xFF241E3D)
-        BbMode.TIME -> Color(0xFF33171C)
+        BbMode.CLASSIC -> Color(0xFF12100C)
+        BbMode.DAILY -> Color(0xFF0D1214)
+        BbMode.ADVENTURE -> Color(0xFF100E18)
+        BbMode.TIME -> Color(0xFF140D0E)
     }
     val blobAccent = when (mode) {
         BbMode.CLASSIC -> HikariAmber
@@ -1615,7 +1615,7 @@ private fun BbPlay(
                 val by = h * blobFy[bi] + kotlin.math.cos(fx.t * 0.09f + bi * 1.7f) * h * 0.05f
                 drawRect(
                     Brush.radialGradient(
-                        listOf(blobCols[bi].copy(alpha = if (bi == 1) 0.13f else 0.18f), Color.Transparent),
+                        listOf(blobCols[bi].copy(alpha = if (bi == 1) 0.05f else 0.08f), Color.Transparent),
                         center = Offset(bx, by),
                         radius = w * 0.5f,
                     )
@@ -1748,7 +1748,7 @@ private fun BbPlay(
 
                 // Panel: Premium-Look — Verlauf, Innenschatten, Kontur, Glow
                 drawRoundRect(
-                    Brush.verticalGradient(listOf(Color(0xFF3C3C48), Color(0xFF2A2A33))),
+                    Brush.verticalGradient(listOf(Color(0xFF26262C), Color(0xFF16161A))),
                     Offset.Zero, Size(size.width, size.height), panelCorner,
                 )
                 drawRoundRect(
@@ -1763,7 +1763,7 @@ private fun BbPlay(
                 )
                 // Innenschatten oben
                 drawRect(
-                    Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.18f), Color.Transparent), startY = 0f, endY = cell * 0.9f),
+                    Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.28f), Color.Transparent), startY = 0f, endY = cell * 0.9f),
                     topLeft = Offset(cell * 0.1f, 0f),
                     size = Size(size.width - cell * 0.2f, cell * 0.9f),
                 )
@@ -1780,12 +1780,12 @@ private fun BbPlay(
                     if (v < 0) {
                         // Leere Zelle: dunkle Inset-Optik mit feiner Kontur
                         drawRoundRect(
-                            Color(0xFF2E2E3A),
+                            Color(0xFF1C1C21),
                             Offset(cx + pad, cy + pad),
                             Size(cell - pad * 2, cell - pad * 2), corner,
                         )
                         drawRoundRect(
-                            Color.White.copy(alpha = 0.09f),
+                            Color.White.copy(alpha = 0.045f),
                             Offset(cx + pad, cy + pad),
                             Size(cell - pad * 2, cell - pad * 2), corner,
                             style = Stroke(width = 1f),
@@ -1904,7 +1904,7 @@ private fun BbPlay(
                 // Vignette über dem Feld
                 drawRect(
                     Brush.radialGradient(
-                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.10f)),
+                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.20f)),
                         center = center,
                         radius = size.width * 0.72f,
                     )
@@ -2005,8 +2005,8 @@ private fun BbPlay(
                             .weight(1f)
                             .fillMaxHeight()
                             .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFF35353F))
-                            .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(16.dp))
+                            .background(HikariCardBg)
+                            .border(1.dp, Color.White.copy(alpha = 0.07f), RoundedCornerShape(16.dp))
                             .onGloballyPositioned {
                                 slotCenters[slot] = it.positionInRoot() +
                                     Offset(it.size.width / 2f, it.size.height / 2f)
@@ -2376,14 +2376,14 @@ private fun DrawScope.bbBlock(
         drawRoundRect(brush, bodyTl, bodySz, corner, alpha = alpha)
         // Bevel: Lichtkante oben-links
         drawRoundRect(
-            Color.White.copy(alpha = 0.14f * alpha),
+            Color.White.copy(alpha = 0.18f * alpha),
             Offset(bodyTl.x + cell * 0.04f, bodyTl.y + cell * 0.04f),
             Size(bodySz.width - cell * 0.12f, bodySz.height * 0.28f),
             CornerRadius(cell * 0.12f, cell * 0.12f),
         )
         // Rim
         drawRoundRect(
-            lerpColor(col, Color.Black, 0.5f).copy(alpha = alpha),
+            lerpColor(col, Color.Black, 0.35f).copy(alpha = alpha),
             bodyTl, bodySz, corner,
             style = Stroke(width = cell * 0.05f),
         )
@@ -2426,7 +2426,7 @@ private fun BbPieceView(
         val cell = size.width / piece.cols
         val base = tint ?: BbColors[piece.colorIndex]
         val brush = Brush.linearGradient(
-            listOf(lerpColor(base, Color.White, 0.22f), base, lerpColor(base, Color.Black, 0.34f)),
+            listOf(lerpColor(base, Color.White, 0.30f), base, lerpColor(base, Color.Black, 0.16f)),
             start = Offset.Zero,
             end = Offset(cell * 0.9f, cell),
         )
