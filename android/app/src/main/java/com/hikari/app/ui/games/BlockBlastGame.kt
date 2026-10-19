@@ -1904,7 +1904,7 @@ private fun BbPlay(
                 // Vignette über dem Feld
                 drawRect(
                     Brush.radialGradient(
-                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.20f)),
+                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.08f)),
                         center = center,
                         radius = size.width * 0.72f,
                     )
@@ -2364,7 +2364,7 @@ private fun DrawScope.bbBlock(
 ) {
     val pad = cell * 0.06f
     val corner = CornerRadius(cell * 0.18f, cell * 0.18f)
-    val bodyTl = Offset(x + pad, y + pad)
+    val bodyTl = Offset(pad, pad)
     val bodySz = Size(cell - pad * 2, cell - pad * 2)
     fun DrawScope.body() {
         // Kontaktschatten
@@ -2388,8 +2388,8 @@ private fun DrawScope.bbBlock(
             style = Stroke(width = cell * 0.05f),
         )
         if (jewel) {
-            val jcx = x + cell / 2f
-            val jcy = y + cell / 2f
+            val jcx = cell / 2f
+            val jcy = cell / 2f
             val d = cell * 0.2f
             val jp = Path().apply {
                 moveTo(jcx, jcy - d)
@@ -2401,17 +2401,12 @@ private fun DrawScope.bbBlock(
             drawPath(jp, Color.White.copy(alpha = 0.92f * jewelPulse * alpha))
         }
     }
-    if (scale != 1f) {
-        val cx = x + cell / 2f
-        val cy = y + cell / 2f
-        withTransform({
-            translate(cx, cy)
-            scale(scale, scale, Offset.Zero)
-            translate(-cx, -cy)
-        }) { body() }
-    } else {
-        body()
-    }
+    // Alles lokal ab (0,0) zeichnen, damit der gecachte Verlauf pro Zelle greift
+    // (sonst bekommen Zellen weiter rechts/unten nur das dunkle Verlaufsende ab)
+    withTransform({
+        translate(x, y)
+        if (scale != 1f) scale(scale, scale, Offset(cell / 2f, cell / 2f))
+    }) { body() }
 }
 
 @Composable
