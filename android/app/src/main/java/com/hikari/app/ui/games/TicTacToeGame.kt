@@ -1490,7 +1490,10 @@ private fun TttPlayScreen(
 
         val wide = maxWidth >= 600.dp
         val boardSize = if (wide) {
-            minOf(560.dp, maxHeight - 72.dp)
+            // Tatsächlich verfügbare Breite der linken Spalte beachten
+            // (330 dp Steuer-Spalte + 2×18 dp Padding + Luft), sonst quetscht
+            // das Brett auf fast quadratischen Fold-Screens.
+            minOf(560.dp, maxWidth - 330.dp - 60.dp, maxHeight - 72.dp)
         } else {
             minOf(maxWidth - 40.dp, 430.dp)
         }
