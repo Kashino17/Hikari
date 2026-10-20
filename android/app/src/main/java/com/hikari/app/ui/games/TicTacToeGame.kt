@@ -2,6 +2,9 @@ package com.hikari.app.ui.games
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.media.AudioFormat
+import android.media.AudioManager
+import android.media.AudioTrack
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
@@ -34,10 +37,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp as lerpColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -49,8 +55,14 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hikari.app.ui.theme.*
-import kotlinx.coroutines.delay
+import java.util.concurrent.ArrayBlockingQueue
+import kotlin.math.exp
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.sin
 import kotlin.random.Random
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 // ————— Modi, Schwierigkeiten, Symbole —————
 
@@ -73,8 +85,8 @@ private val TttSymbolSets = listOf("X" to "O", "⚡" to "🔥", "🌙" to "⭐",
 private val TttStarterShort = listOf("Du", "Gegner", "Wechsel", "Verlierer")
 
 private val TttAccent = Color(0xFF60A5FA)
-private val TttP1Color = Color(0xFF60A5FA)
-private val TttP2Color = Color(0xFFFF8A65)
+private val TttP1Color = Color(0xFF22D3EE) // Cyan — Spieler 1 / X
+private val TttP2Color = Color(0xFFEC4899) // Pink — Spieler 2 / O
 
 private class TttAchievement(val id: String, val emoji: String, val title: String, val desc: String)
 
@@ -88,6 +100,7 @@ private val TttAchievements = listOf(
     TttAchievement("bolt_hard", "⚡", "Blitzdenker", "Gewinne Bolt gegen die KI auf Schwer."),
     TttAchievement("hotseat", "🤝", "Duell", "Beende eine Partie zu zweit am Gerät."),
     TttAchievement("games50", "🎖️", "Stammgast", "Spiele 50 Partien."),
+    TttAchievement("duell5", "👑", "Duell-Champion", "Gewinne ein Best-of-5 zu zweit am Gerät."),
 )
 
 // ————— Persistenz —————
@@ -113,6 +126,118 @@ private class TttStore(val p: SharedPreferences) {
         }
         e.apply()
     }
+}
+
+// ————— Prozeduraler Mini-Synth via AudioTrack (keine Assets) —————
+
+private class TttSound {
+    private val sr = 22050
+    @Volatile private var running = false
+    @Volatile private var failed = false
+    private var track: AudioTrack? = null
+    private var thread: Thread? = null
+    private val queue = ArrayBlockingQueue<ShortArray>(24)
+
+    private fun ensureStarted() {
+        if (failed || track != null) return
+        try {
+            val minBuf = AudioTrack.getMinBufferSize(sr, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
+            val t = AudioTrack(
+                AudioManager.STREAM_MUSIC, sr,
+                AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT,
+                max(minBuf, sr / 2), AudioTrack.MODE_STREAM,
+            )
+            t.play()
+            track = t
+            running = true
+            val th = Thread {
+                while (running) {
+                    val s = try { queue.take() } catch (_: InterruptedException) { null }
+                    if (s != null) try { track?.write(s, 0, s.size) } catch (_: Throwable) {}
+                }
+            }
+            th.isDaemon = true
+            thread = th
+            th.start()
+        } catch (t: Throwable) {
+            failed = true
+        }
+    }
+
+    private fun play(samples: ShortArray) {
+        if (failed) return
+        try {
+            ensureStarted()
+            if (track != null) queue.offer(samples)
+        } catch (_: Throwable) {
+        }
+    }
+
+    fun release() {
+        running = false
+        queue.clear()
+        try { thread?.interrupt() } catch (_: Throwable) {}
+        try {
+            track?.let {
+                try { it.pause() } catch (_: Throwable) {}
+                try { it.flush() } catch (_: Throwable) {}
+                try { it.release() } catch (_: Throwable) {}
+            }
+        } catch (_: Throwable) {
+        }
+        track = null
+        thread = null
+    }
+
+    private fun synth(dur: Float, vol: Float = 0.30f, wave: (Float) -> Double): ShortArray {
+        val n = max(1, (sr * dur).toInt())
+        val out = ShortArray(n)
+        for (i in 0 until n) {
+            val t = i.toFloat() / sr
+            out[i] = (wave(t).coerceIn(-1.0, 1.0) * vol * 32767.0).toInt().toShort()
+        }
+        return out
+    }
+
+    private fun concat(vararg parts: ShortArray): ShortArray {
+        val total = parts.sumOf { it.size }
+        val out = ShortArray(total)
+        var o = 0
+        for (p in parts) {
+            p.copyInto(out, o)
+            o += p.size
+        }
+        return out
+    }
+
+    private fun note(freq: Double, dur: Float, vol: Float = 0.30f): ShortArray =
+        synth(dur, vol) { t ->
+            val env = exp(-t * 16.0)
+            (sin(2 * kotlin.math.PI * freq * t) * 0.72 + sin(2 * kotlin.math.PI * freq * 2 * t) * 0.28) * env
+        }
+
+    // Setz-Klick Spieler 1 (X): heller Tick
+    fun placeX() = play(synth(0.07f, 0.24f) { t ->
+        val f = 540.0 - t * 2200.0
+        sin(2 * kotlin.math.PI * f * t) * exp(-t * 42.0)
+    })
+
+    // Setz-Klick Spieler 2 (O): tieferer, runderer Tick
+    fun placeO() = play(synth(0.08f, 0.24f) { t ->
+        val f = 340.0 - t * 1400.0
+        sin(2 * kotlin.math.PI * f * t) * exp(-t * 38.0)
+    })
+
+    // Ungültiger Zug: kurzer tiefer Blip
+    fun invalid() = play(synth(0.10f, 0.18f) { t ->
+        sin(2 * kotlin.math.PI * 130.0 * t) * exp(-t * 30.0)
+    })
+
+    fun win() = play(concat(note(523.0, 0.11f, 0.24f), note(659.0, 0.11f, 0.24f), note(784.0, 0.11f, 0.24f), note(1046.0, 0.24f, 0.28f)))
+
+    fun tie() = play(concat(note(392.0, 0.14f, 0.20f), note(392.0, 0.20f, 0.16f)))
+
+    fun lose() = play(concat(note(392.0, 0.14f, 0.22f), note(311.0, 0.14f, 0.22f), note(233.0, 0.26f, 0.24f)))
 }
 
 // ————— Klassik-Logik (Minimax bleibt unangetastet) —————
@@ -484,10 +609,17 @@ fun TicTacToeGame(onBack: () -> Unit) {
 
     // Einstellungen (persistiert)
     var hapticsOn by remember { mutableStateOf(store.getBool("haptics", true)) }
+    var soundOn by remember { mutableStateOf(store.getBool("sound", true)) }
     var aiFast by remember { mutableStateOf(store.getBool("ai_fast", false)) }
     var symbolSet by remember { mutableIntStateOf(store.getInt("symbols", 0).coerceIn(0, TttSymbolSets.size - 1)) }
     var showMoveNums by remember { mutableStateOf(store.getBool("move_nums", false)) }
     var starterRule by remember { mutableIntStateOf(store.getInt("starter", 2).coerceIn(0, 3)) }
+
+    // Sound-Synth (prozedural, kein Asset); sauberes Release beim Verlassen
+    val tttSound = remember { TttSound() }
+    DisposableEffect(Unit) {
+        onDispose { tttSound.release() }
+    }
 
     // Match-Auswahl — zuletzt gespielte Kombination vorgewählt
     var mode by remember {
@@ -607,9 +739,17 @@ fun TicTacToeGame(onBack: () -> Unit) {
                         store = store,
                         streakCur = streakCur,
                         sessionResults = sessionResults,
+                        sound = tttSound,
+                        soundOn = soundOn,
+                        onSoundToggle = { soundOn = it; store.setBool("sound", it) },
+                        hapticsOn = hapticsOn,
+                        onHapticsToggle = { hapticsOn = it; store.setBool("haptics", it) },
                         buzz = { t -> buzz(t) },
                         onRoundFinished = { r, fm -> roundFinished(r, fm) },
-                        onMatchFinished = { won, comeback -> if (won && comeback) unlock("comeback") },
+                        onMatchFinished = { won, comeback ->
+                            if (won && comeback) unlock("comeback")
+                            if (!vsAI && bestOf == 5) unlock("duell5")
+                        },
                         onExit = { screen = TttScreen.MENU },
                     )
                 }
@@ -632,6 +772,7 @@ fun TicTacToeGame(onBack: () -> Unit) {
         if (showSettings) {
             TttSettingsOverlay(
                 hapticsOn = hapticsOn, onHaptics = { hapticsOn = it; store.setBool("haptics", it) },
+                soundOn = soundOn, onSound = { soundOn = it; store.setBool("sound", it) },
                 aiFast = aiFast, onAiFast = { aiFast = it; store.setBool("ai_fast", it) },
                 symbolSet = symbolSet, onSymbolSet = { symbolSet = it; store.setInt("symbols", it) },
                 showMoveNums = showMoveNums, onMoveNums = { showMoveNums = it; store.setBool("move_nums", it) },
@@ -644,7 +785,7 @@ fun TicTacToeGame(onBack: () -> Unit) {
     }
 }
 
-// ————— Menü —————
+// ————— Menü (max. Content-Breite, zentriert — Fold-tauglich) —————
 
 @Composable
 private fun TttMenuScreen(
@@ -660,6 +801,19 @@ private fun TttMenuScreen(
     var showRules by remember { mutableStateOf(false) }
     BackHandler(enabled = showRules) { showRules = false }
 
+    // Menü-Hero: gezeichnetes X und O über pulsierendem Glow
+    val heroInf = rememberInfiniteTransition(label = "tttHero")
+    val heroGlow by heroInf.animateFloat(
+        0.10f, 0.22f,
+        infiniteRepeatable(tween(1700, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "tttHeroGlow",
+    )
+    val heroFloat by heroInf.animateFloat(
+        -5f, 5f,
+        infiniteRepeatable(tween(1700, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "tttHeroY",
+    )
+
     Box(Modifier.fillMaxSize()) {
         GxMenuBackground(TttAccent)
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
@@ -667,73 +821,106 @@ private fun TttMenuScreen(
                 GxIconChip("?") { showRules = true }
             })
 
-            Column(Modifier.padding(horizontal = 16.dp)) {
-                if (streakCur >= 3 || streakBest >= 3) {
-                    GxAppear(0) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                            GxHudPill("🔥 Serie", "$streakCur · Best $streakBest", TttAccent)
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Column(Modifier.widthIn(max = 520.dp).fillMaxWidth().padding(horizontal = 16.dp)) {
+                    Box(Modifier.fillMaxWidth().height(84.dp), contentAlignment = Alignment.Center) {
+                        Canvas(Modifier.size(84.dp)) {
+                            drawCircle(
+                                Brush.radialGradient(
+                                    listOf(TttAccent.copy(alpha = heroGlow), Color.Transparent),
+                                    center = center,
+                                    radius = size.minDimension / 2f,
+                                )
+                            )
+                            val sw = size.minDimension * 0.09f
+                            val s = size.minDimension * 0.16f
+                            val cx1 = center.x - size.minDimension * 0.16f
+                            val cy = center.y + heroFloat * density * 0.4f
+                            // X (Cyan)
+                            drawLine(TttP1Color.copy(alpha = 0.25f), Offset(cx1 - s, cy - s), Offset(cx1 + s, cy + s), strokeWidth = sw * 1.8f, cap = StrokeCap.Round)
+                            drawLine(TttP1Color.copy(alpha = 0.25f), Offset(cx1 + s, cy - s), Offset(cx1 - s, cy + s), strokeWidth = sw * 1.8f, cap = StrokeCap.Round)
+                            drawLine(TttP1Color, Offset(cx1 - s, cy - s), Offset(cx1 + s, cy + s), strokeWidth = sw, cap = StrokeCap.Round)
+                            drawLine(TttP1Color, Offset(cx1 + s, cy - s), Offset(cx1 - s, cy + s), strokeWidth = sw, cap = StrokeCap.Round)
+                            // O (Pink)
+                            val cx2 = center.x + size.minDimension * 0.20f
+                            drawCircle(TttP2Color.copy(alpha = 0.25f), s * 1.05f, Offset(cx2, cy), style = Stroke(sw * 1.8f))
+                            drawCircle(TttP2Color, s * 1.05f, Offset(cx2, cy), style = Stroke(sw))
                         }
                     }
-                    Spacer(Modifier.height(10.dp))
-                }
 
-                TttSectionTitle("Modus")
-                TttMode.entries.forEachIndexed { i, m ->
-                    val w = store.getInt("stat_${m.id}_w", 0)
-                    val t = store.getInt("stat_${m.id}_t", 0)
-                    val l = store.getInt("stat_${m.id}_l", 0)
-                    GxAppear(i + 1) {
-                        GxModeCard(
-                            emoji = m.emoji,
-                            title = m.label,
-                            subtitle = m.desc,
-                            accent = TttAccent,
-                            highlighted = mode == m,
-                            badge = if (m != TttMode.CLASSIC && w + t + l == 0) "NEU" else null,
-                            best = if (w + t + l > 0) "Bilanz: $w S · $t U · $l N" else null,
-                            onClick = { onMode(m) },
-                        )
+                    if (streakCur >= 3 || streakBest >= 3) {
+                        GxAppear(0) {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                                GxHudPill("🔥 Serie", "$streakCur · Best $streakBest", TttAccent)
+                            }
+                        }
+                        Spacer(Modifier.height(10.dp))
                     }
-                    Spacer(Modifier.height(10.dp))
-                }
 
-                GxAppear(4) {
-                    Column {
-                        TttSectionTitle("Gegner")
-                        GxSegmented(listOf("🤖 KI", "👥 Zu zweit"), if (vsAI) 0 else 1, TttAccent) { onVsAI(it == 0) }
-                        if (vsAI) {
+                    TttSectionTitle("Modus")
+                    TttMode.entries.forEachIndexed { i, m ->
+                        val w = store.getInt("stat_${m.id}_w", 0)
+                        val t = store.getInt("stat_${m.id}_t", 0)
+                        val l = store.getInt("stat_${m.id}_l", 0)
+                        GxAppear(i + 1) {
+                            GxModeCard(
+                                emoji = m.emoji,
+                                title = m.label,
+                                subtitle = m.desc,
+                                accent = TttAccent,
+                                highlighted = mode == m,
+                                badge = if (m != TttMode.CLASSIC && w + t + l == 0) "NEU" else null,
+                                best = if (w + t + l > 0) "Bilanz: $w S · $t U · $l N" else null,
+                                onClick = { onMode(m) },
+                            )
+                        }
+                        Spacer(Modifier.height(10.dp))
+                    }
+
+                    GxAppear(4) {
+                        Column {
+                            TttSectionTitle("Gegner")
+                            GxSegmented(listOf("🤖 KI", "👥 Zu zweit"), if (vsAI) 0 else 1, TttAccent) { onVsAI(it == 0) }
+                            if (vsAI) {
+                                Spacer(Modifier.height(14.dp))
+                                TttSectionTitle("Schwierigkeit")
+                                GxSegmented(
+                                    listOf("Leicht", "Mittel", "Schwer", "Adaptiv"),
+                                    diff.ordinal, TttAccent,
+                                ) { onDiff(TttDifficulty.entries[it]) }
+                                Spacer(Modifier.height(6.dp))
+                                Text(diff.desc, fontSize = 12.sp, color = HikariTextFaint, modifier = Modifier.padding(horizontal = 4.dp))
+                            } else {
+                                Spacer(Modifier.height(6.dp))
+                                Text(
+                                    "Abwechselnd am selben Gerät — Punktestand über die Serie, Rematch inklusive.",
+                                    fontSize = 12.sp, color = HikariTextFaint, modifier = Modifier.padding(horizontal = 4.dp),
+                                )
+                            }
                             Spacer(Modifier.height(14.dp))
-                            TttSectionTitle("Schwierigkeit")
+                            TttSectionTitle("Match")
                             GxSegmented(
-                                listOf("Leicht", "Mittel", "Schwer", "Adaptiv"),
-                                diff.ordinal, TttAccent,
-                            ) { onDiff(TttDifficulty.entries[it]) }
-                            Spacer(Modifier.height(6.dp))
-                            Text(diff.desc, fontSize = 12.sp, color = HikariTextFaint, modifier = Modifier.padding(horizontal = 4.dp))
+                                listOf("Einzel", "Best of 3", "Best of 5"),
+                                when (bestOf) { 3 -> 1; 5 -> 2; else -> 0 },
+                                TttAccent,
+                            ) { onBestOf(when (it) { 1 -> 3; 2 -> 5; else -> 1 }) }
                         }
-                        Spacer(Modifier.height(14.dp))
-                        TttSectionTitle("Match")
-                        GxSegmented(
-                            listOf("Einzel", "Best of 3", "Best of 5"),
-                            when (bestOf) { 3 -> 1; 5 -> 2; else -> 0 },
-                            TttAccent,
-                        ) { onBestOf(when (it) { 1 -> 3; 2 -> 5; else -> 1 }) }
                     }
-                }
 
-                Spacer(Modifier.height(22.dp))
-                GxAppear(5) {
-                    GxPrimaryButton("Spielen", TttAccent, Modifier.fillMaxWidth(), onClick = onStart)
-                }
-                Spacer(Modifier.height(12.dp))
-                GxAppear(6) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        GxSmallAction("📊", "Statistik", Modifier.weight(1f), onStats)
-                        GxSmallAction("🏅", "Erfolge", Modifier.weight(1f), onAch)
-                        GxSmallAction("⚙️", "Optionen", Modifier.weight(1f), onSettings)
+                    Spacer(Modifier.height(22.dp))
+                    GxAppear(5) {
+                        GxPrimaryButton("Spielen", TttAccent, Modifier.fillMaxWidth(), onClick = onStart)
                     }
+                    Spacer(Modifier.height(12.dp))
+                    GxAppear(6) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            GxSmallAction("📊", "Statistik", Modifier.weight(1f), onStats)
+                            GxSmallAction("🏅", "Erfolge", Modifier.weight(1f), onAch)
+                            GxSmallAction("⚙️", "Optionen", Modifier.weight(1f), onSettings)
+                        }
+                    }
+                    Spacer(Modifier.height(28.dp))
                 }
-                Spacer(Modifier.height(28.dp))
             }
         }
 
@@ -745,6 +932,15 @@ private fun TttMenuScreen(
                     Text(tttHelpText(m), fontSize = 12.sp, color = HikariTextMuted, lineHeight = 18.sp)
                     Spacer(Modifier.height(14.dp))
                 }
+                Text("👥 Zu zweit", fontSize = 15.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Ihr spielt abwechselnd am selben Gerät. Die Farben zeigen, wer dran ist; " +
+                        "der Punktestand läuft über die ganze Serie (Einzel, Bo3, Bo5). " +
+                        "Wer beginnt, stellt ihr in den Optionen ein.",
+                    fontSize = 12.sp, color = HikariTextMuted, lineHeight = 18.sp,
+                )
+                Spacer(Modifier.height(14.dp))
             }
         }
     }
@@ -762,7 +958,7 @@ private fun TttSectionTitle(title: String) {
     )
 }
 
-// ————— Statistik —————
+// ————— Statistik (max. Breite, zentriert) —————
 
 @Composable
 private fun TttStatsScreen(store: TttStore, onResetStreaks: () -> Unit, onBack: () -> Unit) {
@@ -775,117 +971,119 @@ private fun TttStatsScreen(store: TttStore, onResetStreaks: () -> Unit, onBack: 
             refresh // nach Reset neu lesen
             GxHeader("Statistik", TttAccent, onBack = onBack)
 
-            Column(Modifier.padding(horizontal = 16.dp)) {
-                val total = store.getInt("games_total", 0)
-                val wins = store.getInt("wins_total", 0)
-                GxAppear(0) {
-                    Column {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            GxStatTile("$total", "Partien", TttAccent, Modifier.weight(1f))
-                            GxStatTile("$wins", "Siege", TttAccent, Modifier.weight(1f))
-                        }
-                        Spacer(Modifier.height(10.dp))
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            GxStatTile("${store.getInt("streak_cur", 0)} 🔥", "Aktuelle Serie", TttAccent, Modifier.weight(1f))
-                            GxStatTile("${store.getInt("streak_best", 0)}", "Beste Serie", TttAccent, Modifier.weight(1f))
-                        }
-                    }
-                }
-
-                Spacer(Modifier.height(16.dp))
-                GxAppear(1) {
-                    Column {
-                        TttSectionTitle("Pro Modus (S · U · N)")
-                        TttStatCard {
-                            TttMode.entries.forEach { m ->
-                                TttStatRow(
-                                    "${m.emoji} ${m.label}",
-                                    "${store.getInt("stat_${m.id}_w", 0)} · " +
-                                        "${store.getInt("stat_${m.id}_t", 0)} · " +
-                                        "${store.getInt("stat_${m.id}_l", 0)}",
-                                )
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Column(Modifier.widthIn(max = 520.dp).fillMaxWidth().padding(horizontal = 16.dp)) {
+                    val total = store.getInt("games_total", 0)
+                    val wins = store.getInt("wins_total", 0)
+                    GxAppear(0) {
+                        Column {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                GxStatTile("$total", "Partien", TttAccent, Modifier.weight(1f))
+                                GxStatTile("$wins", "Siege", TttAccent, Modifier.weight(1f))
+                            }
+                            Spacer(Modifier.height(10.dp))
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                GxStatTile("${store.getInt("streak_cur", 0)} 🔥", "Aktuelle Serie", TttAccent, Modifier.weight(1f))
+                                GxStatTile("${store.getInt("streak_best", 0)}", "Beste Serie", TttAccent, Modifier.weight(1f))
                             }
                         }
                     }
-                }
 
-                Spacer(Modifier.height(12.dp))
-                GxAppear(2) {
-                    Column {
-                        TttSectionTitle("Gegen die KI (S · U · N)")
-                        TttStatCard {
-                            TttDifficulty.entries.forEach { d ->
-                                TttStatRow(
-                                    d.label,
-                                    "${store.getInt("stat_diff_${d.ordinal}_w", 0)} · " +
-                                        "${store.getInt("stat_diff_${d.ordinal}_t", 0)} · " +
-                                        "${store.getInt("stat_diff_${d.ordinal}_l", 0)}",
-                                )
+                    Spacer(Modifier.height(16.dp))
+                    GxAppear(1) {
+                        Column {
+                            TttSectionTitle("Pro Modus (S · U · N)")
+                            TttStatCard {
+                                TttMode.entries.forEach { m ->
+                                    TttStatRow(
+                                        "${m.emoji} ${m.label}",
+                                        "${store.getInt("stat_${m.id}_w", 0)} · " +
+                                            "${store.getInt("stat_${m.id}_t", 0)} · " +
+                                            "${store.getInt("stat_${m.id}_l", 0)}",
+                                    )
+                                }
                             }
                         }
                     }
-                }
 
-                Spacer(Modifier.height(12.dp))
-                GxAppear(3) {
-                    Column {
-                        TttSectionTitle("Deine Eröffnung")
-                        Text(
-                            "Wo du am liebsten deinen ersten Zug setzt:",
-                            fontSize = 12.sp,
-                            color = HikariTextMuted,
-                        )
-                        Spacer(Modifier.height(10.dp))
-                        val fm = IntArray(9) { store.getInt("fm_$it", 0) }
-                        val maxFm = (fm.maxOrNull() ?: 0).coerceAtLeast(1)
-                        Column(Modifier.align(Alignment.CenterHorizontally)) {
-                            repeat(3) { r ->
-                                Row {
-                                    repeat(3) { c ->
-                                        val i = r * 3 + c
-                                        val strength = fm[i].toFloat() / maxFm
-                                        Box(
-                                            Modifier
-                                                .size(56.dp)
-                                                .padding(2.5.dp)
-                                                .clip(RoundedCornerShape(12.dp))
-                                                .background(
-                                                    if (fm[i] == 0) HikariCardBg
-                                                    else TttAccent.copy(alpha = 0.10f + 0.55f * strength)
-                                                )
-                                                .border(
-                                                    1.dp,
-                                                    if (fm[i] == maxFm && fm[i] > 0) TttAccent.copy(alpha = 0.6f)
-                                                    else Color.White.copy(alpha = 0.05f),
-                                                    RoundedCornerShape(12.dp),
-                                                ),
-                                            contentAlignment = Alignment.Center,
-                                        ) {
-                                            if (fm[i] > 0) Text("${fm[i]}", fontSize = 13.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(12.dp))
+                    GxAppear(2) {
+                        Column {
+                            TttSectionTitle("Gegen die KI (S · U · N)")
+                            TttStatCard {
+                                TttDifficulty.entries.forEach { d ->
+                                    TttStatRow(
+                                        d.label,
+                                        "${store.getInt("stat_diff_${d.ordinal}_w", 0)} · " +
+                                            "${store.getInt("stat_diff_${d.ordinal}_t", 0)} · " +
+                                            "${store.getInt("stat_diff_${d.ordinal}_l", 0)}",
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+                    GxAppear(3) {
+                        Column {
+                            TttSectionTitle("Deine Eröffnung")
+                            Text(
+                                "Wo du am liebsten deinen ersten Zug setzt:",
+                                fontSize = 12.sp,
+                                color = HikariTextMuted,
+                            )
+                            Spacer(Modifier.height(10.dp))
+                            val fm = IntArray(9) { store.getInt("fm_$it", 0) }
+                            val maxFm = (fm.maxOrNull() ?: 0).coerceAtLeast(1)
+                            Column(Modifier.align(Alignment.CenterHorizontally)) {
+                                repeat(3) { r ->
+                                    Row {
+                                        repeat(3) { c ->
+                                            val i = r * 3 + c
+                                            val strength = fm[i].toFloat() / maxFm
+                                            Box(
+                                                Modifier
+                                                    .size(56.dp)
+                                                    .padding(2.5.dp)
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .background(
+                                                        if (fm[i] == 0) HikariCardBg
+                                                        else TttAccent.copy(alpha = 0.10f + 0.55f * strength)
+                                                    )
+                                                    .border(
+                                                        1.dp,
+                                                        if (fm[i] == maxFm && fm[i] > 0) TttAccent.copy(alpha = 0.6f)
+                                                        else Color.White.copy(alpha = 0.05f),
+                                                        RoundedCornerShape(12.dp),
+                                                    ),
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                if (fm[i] > 0) Text("${fm[i]}", fontSize = 13.sp, color = HikariText, fontWeight = FontWeight.Bold)
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-                Spacer(Modifier.height(22.dp))
-                GxAppear(4) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(HikariDanger.copy(alpha = 0.10f))
-                            .border(1.dp, HikariDanger.copy(alpha = 0.30f), RoundedCornerShape(14.dp))
-                            .gxPressable { resetConfirm = true }
-                            .padding(vertical = 13.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text("Statistik zurücksetzen", color = HikariDanger, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(22.dp))
+                    GxAppear(4) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(HikariDanger.copy(alpha = 0.10f))
+                                .border(1.dp, HikariDanger.copy(alpha = 0.30f), RoundedCornerShape(14.dp))
+                                .gxPressable { resetConfirm = true }
+                                .padding(vertical = 13.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text("Statistik zurücksetzen", color = HikariDanger, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
+                    Spacer(Modifier.height(28.dp))
                 }
-                Spacer(Modifier.height(28.dp))
             }
         }
 
@@ -932,7 +1130,7 @@ private fun TttStatRow(label: String, value: String) {
     }
 }
 
-// ————— Erfolge —————
+// ————— Erfolge (max. Breite, zentriert) —————
 
 @Composable
 private fun TttAchievementsScreen(store: TttStore, onBack: () -> Unit) {
@@ -941,42 +1139,44 @@ private fun TttAchievementsScreen(store: TttStore, onBack: () -> Unit) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             GxHeader("Erfolge", TttAccent, onBack = onBack)
 
-            Column(Modifier.padding(horizontal = 16.dp)) {
-                val unlocked = TttAchievements.count { store.getBool("ach_${it.id}", false) }
-                GxAppear(0) {
-                    Column {
-                        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
-                            Text("Freigeschaltet", fontSize = 13.sp, color = HikariTextMuted)
-                            Text(
-                                "$unlocked / ${TttAchievements.size}",
-                                fontSize = 13.sp, color = TttAccent, fontWeight = FontWeight.Bold,
-                            )
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Column(Modifier.widthIn(max = 520.dp).fillMaxWidth().padding(horizontal = 16.dp)) {
+                    val unlocked = TttAchievements.count { store.getBool("ach_${it.id}", false) }
+                    GxAppear(0) {
+                        Column {
+                            Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
+                                Text("Freigeschaltet", fontSize = 13.sp, color = HikariTextMuted)
+                                Text(
+                                    "$unlocked / ${TttAchievements.size}",
+                                    fontSize = 13.sp, color = TttAccent, fontWeight = FontWeight.Bold,
+                                )
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Box(
+                                Modifier.fillMaxWidth().height(6.dp)
+                                    .clip(RoundedCornerShape(3.dp)).background(HikariSurfaceHigh)
+                            ) {
+                                Box(
+                                    Modifier
+                                        .fillMaxWidth(unlocked.toFloat() / TttAchievements.size.coerceAtLeast(1))
+                                        .fillMaxHeight()
+                                        .clip(RoundedCornerShape(3.dp))
+                                        .background(TttAccent),
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(14.dp))
+
+                    TttAchievements.forEachIndexed { i, a ->
+                        val u = store.getBool("ach_${a.id}", false)
+                        GxAppear(i + 1) {
+                            GxAchRow(a.emoji, a.title, a.desc, TttAccent, unlocked = u)
                         }
                         Spacer(Modifier.height(8.dp))
-                        Box(
-                            Modifier.fillMaxWidth().height(6.dp)
-                                .clip(RoundedCornerShape(3.dp)).background(HikariSurfaceHigh)
-                        ) {
-                            Box(
-                                Modifier
-                                    .fillMaxWidth(unlocked.toFloat() / TttAchievements.size.coerceAtLeast(1))
-                                    .fillMaxHeight()
-                                    .clip(RoundedCornerShape(3.dp))
-                                    .background(TttAccent),
-                            )
-                        }
                     }
+                    Spacer(Modifier.height(20.dp))
                 }
-                Spacer(Modifier.height(14.dp))
-
-                TttAchievements.forEachIndexed { i, a ->
-                    val u = store.getBool("ach_${a.id}", false)
-                    GxAppear(i + 1) {
-                        GxAchRow(a.emoji, a.title, a.desc, TttAccent, unlocked = u)
-                    }
-                    Spacer(Modifier.height(8.dp))
-                }
-                Spacer(Modifier.height(20.dp))
             }
         }
     }
@@ -987,6 +1187,7 @@ private fun TttAchievementsScreen(store: TttStore, onBack: () -> Unit) {
 @Composable
 private fun TttSettingsOverlay(
     hapticsOn: Boolean, onHaptics: (Boolean) -> Unit,
+    soundOn: Boolean, onSound: (Boolean) -> Unit,
     aiFast: Boolean, onAiFast: (Boolean) -> Unit,
     symbolSet: Int, onSymbolSet: (Int) -> Unit,
     showMoveNums: Boolean, onMoveNums: (Boolean) -> Unit,
@@ -995,6 +1196,7 @@ private fun TttSettingsOverlay(
 ) {
     GxSheet("Einstellungen", TttAccent, onClose = onClose) {
         GxToggle("Vibration", "Haptisches Feedback bei Zügen", TttAccent, hapticsOn, onHaptics)
+        GxToggle("Sound", "Prozedural erzeugte Effektgeräusche", TttAccent, soundOn, onSound)
         GxToggle("Schnelle KI-Züge", "KI zieht ohne Denkpause", TttAccent, aiFast, onAiFast)
         GxToggle("Zug-Nummern", "Zeigt die Zug-Reihenfolge in den Zellen", TttAccent, showMoveNums, onMoveNums)
 
@@ -1049,6 +1251,7 @@ private fun TttOverlayCard(onDismiss: (() -> Unit)?, content: @Composable Column
         Column(
             Modifier
                 .padding(28.dp)
+                .widthIn(max = 420.dp)
                 .graphicsLayer {
                     scaleX = appear.value
                     scaleY = appear.value
@@ -1115,7 +1318,7 @@ private fun TttActionChip(label: String, enabled: Boolean, onClick: () -> Unit) 
     }
 }
 
-// ————— Spiel-Screen (alle Modi) —————
+// ————— Spiel-Screen (alle Modi, Fold-tauglich) —————
 
 @Composable
 private fun TttPlayScreen(
@@ -1123,6 +1326,8 @@ private fun TttPlayScreen(
     symbols: Pair<String, String>, showMoveNums: Boolean, starterRule: Int,
     adaptRate: Float, aiFast: Boolean, store: TttStore, streakCur: Int,
     sessionResults: List<Char>,
+    sound: TttSound, soundOn: Boolean, onSoundToggle: (Boolean) -> Unit,
+    hapticsOn: Boolean, onHapticsToggle: (Boolean) -> Unit,
     buzz: (HapticFeedbackType) -> Unit,
     onRoundFinished: (Char, Int) -> Unit,
     onMatchFinished: (Boolean, Boolean) -> Unit,
@@ -1192,13 +1397,18 @@ private fun TttPlayScreen(
         if (!tttLegal(game, b, c)) {
             invalidAt = Triple(b, c, invalidAt.third + 1)
             buzz(HapticFeedbackType.TextHandleMove)
+            if (soundOn) sound.invalid()
             return
         }
         if (vsAI) undoSnap = game
-        if (firstMove < 0 && game.turn == "X") firstMove = c
+        val mover = game.turn
+        if (firstMove < 0 && mover == "X") firstMove = c
         hintCell = null
         game = tttApply(game, b, c)
         buzz(HapticFeedbackType.TextHandleMove)
+        if (soundOn) {
+            if (mover == "X") sound.placeX() else sound.placeO()
+        }
     }
 
     fun useUndo() {
@@ -1208,12 +1418,14 @@ private fun TttPlayScreen(
         undoSnap = null
         undoUsed = true
         hintCell = null
+        if (soundOn) sound.placeO()
     }
 
     fun useHint() {
         if (hintUsed || !vsAI || game.winner != null || game.turn != "X") return
         hintCell = tttAiPick(game, TttDifficulty.SCHWER, 1f)
         hintUsed = true
+        if (soundOn) sound.placeX()
     }
 
     // KI-Zug mit natürlichem Delay (nicht blockierend)
@@ -1222,9 +1434,10 @@ private fun TttPlayScreen(
         delay(if (aiFast) 240L else 620L)
         val mv = tttAiPick(game, diff, adaptRate)
         game = tttApply(game, mv.first, mv.second)
+        if (soundOn) sound.placeO()
     }
 
-    // Runden-Ende: Serie, Stats, Haptik, Konfetti — genau einmal
+    // Runden-Ende: Serie, Stats, Haptik, Sound, Konfetti — genau einmal
     LaunchedEffect(game.winner, roundKey) {
         val wnr = game.winner ?: return@LaunchedEffect
         if (processed) return@LaunchedEffect
@@ -1242,6 +1455,13 @@ private fun TttPlayScreen(
                 buzz(HapticFeedbackType.LongPress)
             }
             else -> buzz(HapticFeedbackType.TextHandleMove)
+        }
+        if (soundOn) {
+            when {
+                wnr == "Tie" -> sound.tie()
+                vsAI && wnr == "O" -> sound.lose()
+                else -> sound.win()
+            }
         }
         if (p1Score >= target || p2Score >= target) {
             matchWon = p1Score >= target
@@ -1265,155 +1485,108 @@ private fun TttPlayScreen(
 
     val aiThinking = vsAI && game.winner == null && game.turn == "O"
 
-    Box(Modifier.fillMaxSize().background(HikariBg)) {
-        Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-            // Header
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
-                Arrangement.SpaceBetween,
-                Alignment.CenterVertically,
-            ) {
-                GxIconChip("☰", size = 38.dp) { paused = true }
-                Text("${mode.emoji} ${mode.label}", fontSize = 17.sp, color = TttAccent, fontWeight = FontWeight.Bold)
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    if (vsAI && streakCur >= 3) {
-                        GxHudPill("🔥", "$streakCur", TttAccent)
-                    }
-                    GxHudPill("Runde", if (bestOf > 1) "$roundIndex · Bo$bestOf" else "Einzel")
-                }
-            }
+    BoxWithConstraints(Modifier.fillMaxSize().background(HikariBg)) {
+        TttBackdrop()
 
-            // Matchstand als Punkte-Dots (bei Serien immer sichtbar)
-            if (bestOf > 1) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(5.dp),
-                ) {
-                    Text(if (vsAI) "Du" else "Spieler 1", fontSize = 12.sp, color = TttP1Color, fontWeight = FontWeight.Bold)
-                    repeat(target) { i -> TttScoreDot(filled = i < p1Score, color = TttP1Color) }
-                    Text("–", fontSize = 12.sp, color = HikariTextFaint)
-                    repeat(target) { i -> TttScoreDot(filled = i < p2Score, color = TttP2Color) }
-                    Text(if (vsAI) "KI" else "Spieler 2", fontSize = 12.sp, color = TttP2Color, fontWeight = FontWeight.Bold)
-                }
-                Spacer(Modifier.height(4.dp))
-            }
+        val wide = maxWidth >= 600.dp
+        val boardSize = if (wide) {
+            minOf(560.dp, maxHeight - 72.dp)
+        } else {
+            minOf(maxWidth - 40.dp, 430.dp)
+        }
 
-            // Wer ist dran? — inkl. animierter KI-Denk-Punkte
-            if (game.winner == null) {
-                val turnIsP1 = game.turn == "X"
-                val pillColor = if (turnIsP1) TttP1Color else TttP2Color
-                val label = when {
-                    aiThinking -> "KI denkt" + tttThinkingDots()
-                    vsAI -> "Du bist ${symbols.first}"
-                    turnIsP1 -> "Spieler 1 ist dran  ${symbols.first}"
-                    else -> "Spieler 2 ist dran  ${symbols.second}"
-                }
-                Box(
-                    Modifier
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(pillColor.copy(alpha = 0.15f))
-                        .padding(horizontal = 14.dp, vertical = 5.dp)
-                ) {
-                    Text(label, fontSize = 13.sp, color = pillColor, fontWeight = FontWeight.Bold)
-                }
-            } else {
-                Spacer(Modifier.height(28.dp))
-            }
-
-            // Session-Historie (letzte 10 Runden)
-            if (sessionResults.isNotEmpty()) {
-                Spacer(Modifier.height(4.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                    sessionResults.forEach { r ->
-                        Text(
-                            when (r) {
-                                'W' -> "✓"
-                                'L' -> "✗"
-                                else -> "–"
-                            },
-                            fontSize = 12.sp,
-                            color = when (r) {
-                                'W' -> Color(0xFF4ADE80)
-                                'L' -> HikariDanger
-                                else -> HikariTextFaint
-                            },
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.weight(1f))
-
-            // Ergebnis-Bereich (feste Höhe, damit das Brett nicht springt)
-            Box(Modifier.height(112.dp), contentAlignment = Alignment.Center) {
-                val wnr = game.winner
-                if (wnr != null && !matchOver) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        val msg = when {
-                            wnr == "Tie" -> "Unentschieden!"
-                            wnr == "X" && vsAI -> "Du gewinnst!"
-                            wnr == "O" && vsAI -> "KI gewinnt!"
-                            wnr == "X" -> "Spieler 1 gewinnt!"
-                            else -> "Spieler 2 gewinnt!"
-                        }
-                        val col = when (wnr) {
-                            "X" -> Color(0xFF4ADE80)
-                            "O" -> if (vsAI) HikariDanger else Color(0xFF4ADE80)
-                            else -> HikariText
-                        }
-                        Text(msg, fontSize = 24.sp, color = col, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(10.dp))
-                        GxPrimaryButton(if (bestOf > 1) "Weiter" else "Nochmal", TttAccent) {
-                            val ns = nextStarter(wnr)
-                            if (bestOf > 1) roundIndex++
-                            beginRound(ns)
-                        }
-                    }
-                } else if (game.moveCount == 0 && starter == "O" && vsAI) {
-                    Text("KI beginnt diese Runde", fontSize = 13.sp, color = HikariTextFaint)
-                }
-            }
-
-            // Brett
-            if (mode == TttMode.ULTIMATE) {
-                TttUltimateBoard(
-                    game = game, symbols = symbols, showMoveNums = showMoveNums,
-                    hintCell = hintCell, invalidAt = invalidAt, roundKey = roundKey,
-                    onTap = { b, c -> tap(b, c) },
-                )
-                if (game.winner == null) {
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        if (game.active == -1) "Freie Brett-Wahl" else "Spiel im markierten Brett",
-                        fontSize = 11.sp, color = HikariTextFaint,
+        if (wide) {
+            // Fold aufgeklappt: links großes Brett, rechts Steuerung/Info
+            Row(Modifier.fillMaxSize()) {
+                Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                    TttBoardArea(
+                        mode = mode, game = game, symbols = symbols, showMoveNums = showMoveNums,
+                        hintCell = hintCell, invalidAt = invalidAt, roundKey = roundKey,
+                        boardSize = boardSize,
+                        onTap = { b, c -> tap(b, c) },
                     )
                 }
-            } else {
-                TttBigBoard(
-                    game = game, symbols = symbols, showMoveNums = showMoveNums,
-                    hintCell = hintCell, invalidAt = invalidAt, roundKey = roundKey,
-                    onTap = { c -> tap(0, c) },
-                )
-            }
-
-            Spacer(Modifier.height(14.dp))
-
-            // Aktionen (nur gegen die KI sinnvoll)
-            if (vsAI) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    TttActionChip(
-                        "↶ Undo",
-                        enabled = undoSnap != null && !undoUsed && game.winner == null &&
-                            game.turn == "X" && game.moveCount >= 2,
-                    ) { useUndo() }
-                    TttActionChip(
-                        "💡 Hinweis",
-                        enabled = !hintUsed && game.winner == null && game.turn == "X",
-                    ) { useHint() }
+                Column(
+                    Modifier
+                        .width(330.dp)
+                        .fillMaxHeight()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 18.dp, vertical = 10.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    TttPlayHeader(mode, vsAI, streakCur, bestOf, roundIndex) { paused = true }
+                    Spacer(Modifier.height(14.dp))
+                    TttPlayerPanel(vsAI, diff, symbols, p1Score, p2Score, target, bestOf, game.turn, game.winner)
+                    Spacer(Modifier.height(10.dp))
+                    TttTurnPill(vsAI, aiThinking, game.turn, game.winner, symbols)
+                    TttSessionDots(sessionResults)
+                    Spacer(Modifier.height(10.dp))
+                    TttResultArea(
+                        game = game, vsAI = vsAI, bestOf = bestOf, roundIndex = roundIndex,
+                        matchOver = matchOver, symbols = symbols, starter = starter,
+                        onNext = {
+                            val ns = nextStarter(game.winner)
+                            if (bestOf > 1) roundIndex++
+                            beginRound(ns)
+                        },
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    TttActionRow(
+                        vsAI = vsAI,
+                        undoEnabled = undoSnap != null && !undoUsed && game.winner == null && game.turn == "X" && game.moveCount >= 2,
+                        hintEnabled = !hintUsed && game.winner == null && game.turn == "X",
+                        onUndo = { useUndo() },
+                        onHint = { useHint() },
+                    )
+                    Spacer(Modifier.height(20.dp))
                 }
             }
+        } else {
+            // Kompakt: klassische einspaltige Ansicht, adaptives Brett
+            Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+                TttPlayHeader(mode, vsAI, streakCur, bestOf, roundIndex) { paused = true }
 
-            Spacer(Modifier.height(36.dp))
+                Spacer(Modifier.height(2.dp))
+                TttPlayerPanel(
+                    vsAI, diff, symbols, p1Score, p2Score, target, bestOf, game.turn, game.winner,
+                    modifier = Modifier.padding(horizontal = 28.dp),
+                )
+                Spacer(Modifier.height(8.dp))
+                TttTurnPill(vsAI, aiThinking, game.turn, game.winner, symbols)
+                TttSessionDots(sessionResults)
+
+                Spacer(Modifier.weight(1f))
+
+                // Ergebnis-Bereich (feste Höhe, damit das Brett nicht springt)
+                Box(Modifier.height(104.dp), contentAlignment = Alignment.Center) {
+                    TttResultArea(
+                        game = game, vsAI = vsAI, bestOf = bestOf, roundIndex = roundIndex,
+                        matchOver = matchOver, symbols = symbols, starter = starter,
+                        onNext = {
+                            val ns = nextStarter(game.winner)
+                            if (bestOf > 1) roundIndex++
+                            beginRound(ns)
+                        },
+                    )
+                }
+
+                TttBoardArea(
+                    mode = mode, game = game, symbols = symbols, showMoveNums = showMoveNums,
+                    hintCell = hintCell, invalidAt = invalidAt, roundKey = roundKey,
+                    boardSize = boardSize,
+                    onTap = { b, c -> tap(b, c) },
+                )
+
+                Spacer(Modifier.height(12.dp))
+                TttActionRow(
+                    vsAI = vsAI,
+                    undoEnabled = undoSnap != null && !undoUsed && game.winner == null && game.turn == "X" && game.moveCount >= 2,
+                    hintEnabled = !hintUsed && game.winner == null && game.turn == "X",
+                    onUndo = { useUndo() },
+                    onHint = { useHint() },
+                )
+                Spacer(Modifier.height(24.dp))
+            }
         }
 
         // Konfetti bei Sieg
@@ -1441,6 +1614,9 @@ private fun TttPlayScreen(
                 }
                 Spacer(Modifier.height(10.dp))
                 GxGhostButton("Zum Menü", Modifier.fillMaxWidth(), onClick = onExit)
+                Spacer(Modifier.height(12.dp))
+                GxToggle("Vibration", null, TttAccent, hapticsOn, onHapticsToggle)
+                GxToggle("Sound", null, TttAccent, soundOn, onSoundToggle)
             }
         }
 
@@ -1460,7 +1636,7 @@ private fun TttPlayScreen(
             )
         }
 
-        // Regel-/Hilfe-Sheet beim ersten Start eines Modus
+        // Regel-/Hilfe-Sheet beim ersten Start eines Modus (ausführlich, inkl. KI-Stärken)
         if (showHelp) {
             GxSheet(
                 "${mode.emoji} ${mode.label} — Regeln",
@@ -1473,9 +1649,33 @@ private fun TttPlayScreen(
                 Text(
                     tttHelpText(mode),
                     fontSize = 13.sp,
-                    color = HikariTextMuted,
+                    color = HikariText,
                     lineHeight = 20.sp,
                 )
+                Spacer(Modifier.height(14.dp))
+                if (vsAI) {
+                    TttSectionTitle("KI-Stärken")
+                    TttDifficulty.entries.forEach { d ->
+                        Row(Modifier.padding(vertical = 3.dp)) {
+                            Text("${d.label}: ", fontSize = 12.sp, color = TttAccent, fontWeight = FontWeight.Bold)
+                            Text(d.desc, fontSize = 12.sp, color = HikariTextMuted, lineHeight = 16.sp)
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        "Die KI braucht einen Moment zum Nachdenken — in den Optionen geht es schneller.",
+                        fontSize = 11.sp, color = HikariTextFaint, lineHeight = 15.sp,
+                    )
+                } else {
+                    TttSectionTitle("Zu zweit spielen")
+                    Text(
+                        "Ihr setzt abwechselnd am selben Gerät — Cyan (${symbols.first}) ist Spieler 1, " +
+                            "Pink (${symbols.second}) ist Spieler 2. Die Karten oben zeigen, wer dran ist, " +
+                            "und der Punktestand läuft über die ganze Serie. Wer beginnt, wechselt nach der " +
+                            "Regel aus den Optionen (Standard: abwechselnd).",
+                        fontSize = 12.sp, color = HikariTextMuted, lineHeight = 17.sp,
+                    )
+                }
                 Spacer(Modifier.height(18.dp))
                 GxPrimaryButton("Los geht's", TttAccent, Modifier.fillMaxWidth()) {
                     showHelp = false
@@ -1484,10 +1684,10 @@ private fun TttPlayScreen(
             }
         }
 
-        // Match-Ende
+        // Match-Ende (mit Rematch)
         if (matchOver) {
             TttOverlayCard(onDismiss = null) {
-                Text(if (matchWon) "🏆" else "🤖", fontSize = 44.sp)
+                Text(if (matchWon || !vsAI) "🏆" else "🤖", fontSize = 44.sp)
                 Spacer(Modifier.height(8.dp))
                 val title = when {
                     vsAI && matchWon -> "Du gewinnst das Match!"
@@ -1503,10 +1703,250 @@ private fun TttPlayScreen(
                     Text("Comeback nach 0:2! 🦅", fontSize = 13.sp, color = TttAccent, fontWeight = FontWeight.Bold)
                 }
                 Spacer(Modifier.height(20.dp))
-                GxPrimaryButton("Nochmal", TttAccent, Modifier.fillMaxWidth()) { resetMatch() }
+                GxPrimaryButton("🔁 Rematch", TttAccent, Modifier.fillMaxWidth()) { resetMatch() }
                 Spacer(Modifier.height(10.dp))
                 GxGhostButton("Zum Menü", Modifier.fillMaxWidth(), onClick = onExit)
             }
+        }
+    }
+}
+
+// ————— Spiel-Screen-Bausteine —————
+
+@Composable
+private fun TttPlayHeader(mode: TttMode, vsAI: Boolean, streakCur: Int, bestOf: Int, roundIndex: Int, onPause: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+        Arrangement.SpaceBetween,
+        Alignment.CenterVertically,
+    ) {
+        GxIconChip("☰", size = 38.dp) { onPause() }
+        Text("${mode.emoji} ${mode.label}", fontSize = 17.sp, color = TttAccent, fontWeight = FontWeight.Bold)
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (vsAI && streakCur >= 3) {
+                GxHudPill("🔥", "$streakCur", TttAccent)
+            }
+            GxHudPill("Runde", if (bestOf > 1) "$roundIndex · Bo$bestOf" else "Einzel")
+        }
+    }
+}
+
+@Composable
+private fun TttPlayerPanel(
+    vsAI: Boolean, diff: TttDifficulty, symbols: Pair<String, String>,
+    p1Score: Int, p2Score: Int, target: Int, bestOf: Int,
+    turn: String, winner: String?,
+    modifier: Modifier = Modifier,
+) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        TttPlayerCard(
+            name = if (vsAI) "Du" else "Spieler 1",
+            symbol = symbols.first,
+            color = TttP1Color,
+            score = p1Score,
+            target = target,
+            showScore = bestOf > 1,
+            active = winner == null && turn == "X",
+            won = winner == "X",
+            modifier = Modifier.weight(1f),
+        )
+        TttPlayerCard(
+            name = if (vsAI) "KI · ${diff.label}" else "Spieler 2",
+            symbol = symbols.second,
+            color = TttP2Color,
+            score = p2Score,
+            target = target,
+            showScore = bestOf > 1,
+            active = winner == null && turn == "O",
+            won = winner == "O",
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun TttPlayerCard(
+    name: String, symbol: String, color: Color,
+    score: Int, target: Int, showScore: Boolean,
+    active: Boolean, won: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val glow by animateFloatAsState(if (active) 1f else 0f, tween(280), label = "tttCard")
+    Row(
+        modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(lerpColor(HikariCardBg, color, 0.07f * glow + if (won) 0.12f else 0f))
+            .border(
+                if (active || won) 1.5.dp else 1.dp,
+                color.copy(alpha = if (won) 0.8f else 0.15f + 0.55f * glow),
+                RoundedCornerShape(14.dp),
+            )
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TttMiniSymbol(symbol, color, 16.dp)
+        Spacer(Modifier.width(8.dp))
+        Column {
+            Text(name, fontSize = 12.sp, color = if (active) color else HikariTextMuted, fontWeight = FontWeight.Bold)
+            if (showScore) {
+                Spacer(Modifier.height(3.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    repeat(target) { i -> TttScoreDot(filled = i < score, color = color) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TttMiniSymbol(symbol: String, color: Color, dim: Dp) {
+    if (symbol == "X" || symbol == "O") {
+        Canvas(Modifier.size(dim)) {
+            val w = size.minDimension * 0.16f
+            if (symbol == "X") {
+                val m = size.minDimension * 0.20f
+                drawLine(color, Offset(m, m), Offset(size.width - m, size.height - m), strokeWidth = w, cap = StrokeCap.Round)
+                drawLine(color, Offset(size.width - m, m), Offset(m, size.height - m), strokeWidth = w, cap = StrokeCap.Round)
+            } else {
+                val r = size.minDimension * 0.32f
+                drawCircle(color, r, center, style = Stroke(w))
+            }
+        }
+    } else {
+        Text(symbol, fontSize = (dim.value * 0.8f).sp)
+    }
+}
+
+@Composable
+private fun TttTurnPill(vsAI: Boolean, aiThinking: Boolean, turn: String, winner: String?, symbols: Pair<String, String>) {
+    if (winner != null) {
+        Spacer(Modifier.height(26.dp))
+        return
+    }
+    val turnIsP1 = turn == "X"
+    val pillColor = if (turnIsP1) TttP1Color else TttP2Color
+    val label = when {
+        aiThinking -> "KI denkt" + tttThinkingDots()
+        vsAI -> "Du bist dran (${symbols.first})"
+        turnIsP1 -> "Spieler 1 ist dran (${symbols.first})"
+        else -> "Spieler 2 ist dran (${symbols.second})"
+    }
+    Box(
+        Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(pillColor.copy(alpha = 0.15f))
+            .border(1.dp, pillColor.copy(alpha = 0.4f), RoundedCornerShape(999.dp))
+            .padding(horizontal = 14.dp, vertical = 5.dp)
+    ) {
+        Text(label, fontSize = 13.sp, color = pillColor, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun TttSessionDots(sessionResults: List<Char>) {
+    if (sessionResults.isEmpty()) return
+    Spacer(Modifier.height(5.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        sessionResults.forEach { r ->
+            Text(
+                when (r) {
+                    'W' -> "✓"
+                    'L' -> "✗"
+                    else -> "–"
+                },
+                fontSize = 12.sp,
+                color = when (r) {
+                    'W' -> Color(0xFF4ADE80)
+                    'L' -> HikariDanger
+                    else -> HikariTextFaint
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun TttResultArea(
+    game: TttGame, vsAI: Boolean, bestOf: Int, roundIndex: Int, matchOver: Boolean,
+    symbols: Pair<String, String>, starter: String,
+    onNext: () -> Unit,
+) {
+    val wnr = game.winner
+    if (wnr != null && !matchOver) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            val msg = when {
+                wnr == "Tie" -> "Unentschieden!"
+                wnr == "X" && vsAI -> "Du gewinnst!"
+                wnr == "O" && vsAI -> "KI gewinnt!"
+                wnr == "X" -> "Spieler 1 gewinnt!"
+                else -> "Spieler 2 gewinnt!"
+            }
+            val col = when (wnr) {
+                "X" -> TttP1Color
+                "O" -> TttP2Color
+                else -> HikariText
+            }
+            Text(msg, fontSize = 24.sp, color = col, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(10.dp))
+            GxPrimaryButton(if (bestOf > 1) "Weiter" else "Nochmal", TttAccent, onClick = onNext)
+        }
+    } else if (game.moveCount == 0 && wnr == null) {
+        Text(
+            when {
+                vsAI && starter == "O" -> "KI beginnt diese Runde"
+                vsAI -> "Du beginnst (${symbols.first})"
+                starter == "X" -> "Runde $roundIndex · Spieler 1 beginnt (${symbols.first})"
+                else -> "Runde $roundIndex · Spieler 2 beginnt (${symbols.second})"
+            },
+            fontSize = 13.sp,
+            color = HikariTextFaint,
+        )
+    }
+}
+
+@Composable
+private fun TttActionRow(vsAI: Boolean, undoEnabled: Boolean, hintEnabled: Boolean, onUndo: () -> Unit, onHint: () -> Unit) {
+    if (!vsAI) return
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        TttActionChip("↶ Undo", enabled = undoEnabled) { onUndo() }
+        TttActionChip("💡 Hinweis", enabled = hintEnabled) { onHint() }
+    }
+}
+
+// Edler Hintergrund: Verlauf + driftende Glow-Blobs + aufsteigendes Bokeh
+@Composable
+private fun TttBackdrop() {
+    val inf = rememberInfiniteTransition(label = "tttBg")
+    val t by inf.animateFloat(
+        0f, 6.2832f,
+        infiniteRepeatable(tween(36000, easing = LinearEasing)),
+        label = "tttBgT",
+    )
+    Canvas(Modifier.fillMaxSize()) {
+        drawRect(Brush.verticalGradient(listOf(Color(0xFF14161C), Color(0xFF0D0F14))))
+        val cols = arrayOf(TttP1Color, TttAccent, TttP2Color)
+        val fx = floatArrayOf(0.18f, 0.85f, 0.5f)
+        val fy = floatArrayOf(0.2f, 0.45f, 0.85f)
+        for (i in 0 until 3) {
+            val bx = size.width * fx[i] + sin(t + i * 2.1f) * size.width * 0.06f
+            val by = size.height * fy[i] + kotlin.math.cos(t * 0.8f + i * 1.7f) * size.height * 0.04f
+            drawRect(
+                Brush.radialGradient(
+                    listOf(cols[i].copy(alpha = 0.05f), Color.Transparent),
+                    center = Offset(bx, by),
+                    radius = size.minDimension * 0.5f,
+                )
+            )
+        }
+        for (i in 0 until 12) {
+            val s1 = (i * 0.618f) % 1f
+            val s2 = (i * 0.317f + 0.13f) % 1f
+            val yy = ((s2 - t * (0.02f + s1 * 0.02f)) % 1f + 1f) % 1f
+            drawCircle(
+                Color.White.copy(alpha = 0.03f + s1 * 0.05f),
+                2f + s1 * 5f,
+                Offset(s1 * size.width, yy * size.height),
+            )
         }
     }
 }
@@ -1544,12 +1984,56 @@ private fun TttScoreDot(filled: Boolean, color: Color) {
 // ————— Bretter —————
 
 @Composable
+private fun TttBoardArea(
+    mode: TttMode, game: TttGame, symbols: Pair<String, String>, showMoveNums: Boolean,
+    hintCell: Pair<Int, Int>?, invalidAt: Triple<Int, Int, Int>, roundKey: Int,
+    boardSize: Dp,
+    onTap: (Int, Int) -> Unit,
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        // Premium-Panel: Verlauf, Kontur, Glow
+        Box(
+            Modifier
+                .clip(RoundedCornerShape(22.dp))
+                .background(Brush.verticalGradient(listOf(Color(0xFF27272E), Color(0xFF17171C))))
+                .border(1.dp, Color.White.copy(alpha = 0.09f), RoundedCornerShape(22.dp))
+                .border(3.dp, TttAccent.copy(alpha = 0.05f), RoundedCornerShape(22.dp))
+                .padding(10.dp)
+        ) {
+            if (mode == TttMode.ULTIMATE) {
+                TttUltimateBoard(
+                    game = game, symbols = symbols, showMoveNums = showMoveNums,
+                    hintCell = hintCell, invalidAt = invalidAt, roundKey = roundKey,
+                    boardSize = boardSize - 20.dp,
+                    onTap = onTap,
+                )
+            } else {
+                TttBigBoard(
+                    game = game, symbols = symbols, showMoveNums = showMoveNums,
+                    hintCell = hintCell, invalidAt = invalidAt, roundKey = roundKey,
+                    boardSize = boardSize - 20.dp,
+                    onTap = { c -> onTap(0, c) },
+                )
+            }
+        }
+        if (mode == TttMode.ULTIMATE && game.winner == null) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                if (game.active == -1) "Freie Brett-Wahl" else "Spiel im markierten Brett",
+                fontSize = 11.sp, color = HikariTextFaint,
+            )
+        }
+    }
+}
+
+@Composable
 private fun TttBigBoard(
     game: TttGame, symbols: Pair<String, String>, showMoveNums: Boolean,
     hintCell: Pair<Int, Int>?, invalidAt: Triple<Int, Int, Int>, roundKey: Int,
+    boardSize: Dp,
     onTap: (Int) -> Unit,
 ) {
-    val cellSize = 96.dp
+    val cellSize = boardSize / 3
     // Bolt: der älteste Stein des Spielers am Zug pulsiert als Decay-Warnung
     val fadingIdx = if (game.mode == TttMode.BOLT && game.winner == null) {
         val q = if (game.turn == "X") game.xq else game.oq
@@ -1562,17 +2046,19 @@ private fun TttBigBoard(
                 Row {
                     repeat(3) { c ->
                         val i = r * 3 + c
+                        val cellVal = game.boards[0][i]
                         TttBoardCell(
-                            symbol = game.boards[0][i],
+                            symbol = cellVal,
                             symbols = symbols,
                             highlight = game.winLine?.contains(i) == true,
-                            lastMove = game.lastMove == (0 to i) && game.boards[0][i].isNotEmpty(),
+                            lastMoveColor = if (game.lastMove == (0 to i) && cellVal.isNotEmpty())
+                                (if (cellVal == "X") TttP1Color else TttP2Color) else null,
                             hint = hintCell == (0 to i),
                             fading = i == fadingIdx,
                             moveNum = if (showMoveNums) game.moveNumbers[0][i] else 0,
                             invalidTick = if (invalidAt.first == 0 && invalidAt.second == i) invalidAt.third else 0,
                             cellSize = cellSize,
-                            fontSize = 36.sp,
+                            fontSize = (cellSize.value * 0.38f).sp,
                             onTap = { onTap(i) },
                         )
                     }
@@ -1586,7 +2072,7 @@ private fun TttBigBoard(
 
 @Composable
 private fun TttBoardCell(
-    symbol: String, symbols: Pair<String, String>, highlight: Boolean, lastMove: Boolean,
+    symbol: String, symbols: Pair<String, String>, highlight: Boolean, lastMoveColor: Color?,
     hint: Boolean, fading: Boolean, moveNum: Int, invalidTick: Int,
     cellSize: Dp, fontSize: TextUnit, onTap: () -> Unit,
 ) {
@@ -1624,6 +2110,19 @@ private fun TttBoardCell(
         )
         symbolAlpha = a
     }
+    // Gewinner-Zellen pulsieren sanft in Spielerfarbe
+    var winMod: Modifier = Modifier
+    if (highlight) {
+        val t = rememberInfiniteTransition(label = "winPulse")
+        val a by t.animateFloat(
+            initialValue = 0.35f,
+            targetValue = 0.75f,
+            animationSpec = infiniteRepeatable(tween(650), RepeatMode.Reverse),
+            label = "wp",
+        )
+        val wc = if (symbol == "X") TttP1Color else TttP2Color
+        winMod = Modifier.border(2.dp, wc.copy(alpha = a), RoundedCornerShape(12.dp))
+    }
 
     Box(
         Modifier
@@ -1635,11 +2134,17 @@ private fun TttBoardCell(
                 scaleY = press.value
             }
             .clip(RoundedCornerShape(12.dp))
-            .background(if (highlight) HikariPrimary.copy(alpha = 0.25f) else HikariCardBg)
+            .background(
+                when {
+                    highlight -> (if (symbol == "X") TttP1Color else TttP2Color).copy(alpha = 0.22f)
+                    else -> lerpColor(Color(0xFF1E1E24), Color.White, (1f - press.value) * 0.10f)
+                }
+            )
             .then(
-                if (lastMove) Modifier.border(1.dp, HikariPrimary.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                if (lastMoveColor != null) Modifier.border(1.5.dp, lastMoveColor.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
                 else Modifier
             )
+            .then(winMod)
             .then(hintBorder)
             .pointerInput(Unit) {
                 detectTapGestures(
@@ -1659,9 +2164,9 @@ private fun TttBoardCell(
         TttCellSymbol(
             cell = symbol,
             display = if (symbol == "X") symbols.first else symbols.second,
-            highlight = highlight,
             extraAlpha = symbolAlpha,
             fontSize = fontSize,
+            dim = cellSize * 0.60f,
         )
         if (moveNum > 0 && symbol.isNotEmpty()) {
             Text(
@@ -1678,9 +2183,10 @@ private fun TttBoardCell(
 private fun TttUltimateBoard(
     game: TttGame, symbols: Pair<String, String>, showMoveNums: Boolean,
     hintCell: Pair<Int, Int>?, invalidAt: Triple<Int, Int, Int>, roundKey: Int,
+    boardSize: Dp,
     onTap: (Int, Int) -> Unit,
 ) {
-    val cell = 34.dp
+    val cell = (boardSize - 20.dp) / 9
     Box {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             repeat(3) { br ->
@@ -1699,7 +2205,7 @@ private fun TttUltimateBoard(
                                     }
                                 }
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(if (playable) HikariSurfaceHigh else HikariCardBg)
+                                .background(if (playable) HikariSurfaceHigh else Color(0xFF1B1B20))
                                 .then(
                                     when {
                                         isActive -> Modifier.border(2.dp, HikariPrimary, RoundedCornerShape(10.dp))
@@ -1716,11 +2222,13 @@ private fun TttUltimateBoard(
                                     Row {
                                         repeat(3) { c ->
                                             val i = r * 3 + c
+                                            val cellVal = game.boards[b][i]
                                             TttUltCell(
-                                                symbol = game.boards[b][i],
+                                                symbol = cellVal,
                                                 symbols = symbols,
                                                 dimmed = game.macro[b].isNotEmpty(),
-                                                lastMove = game.lastMove == (b to i),
+                                                lastMoveColor = if (game.lastMove == (b to i) && cellVal.isNotEmpty())
+                                                    (if (cellVal == "X") TttP1Color else TttP2Color) else null,
                                                 hint = hintCell == (b to i),
                                                 moveNum = if (showMoveNums) game.moveNumbers[b][i] else 0,
                                                 invalidTick = if (invalidAt.first == b && invalidAt.second == i) invalidAt.third else 0,
@@ -1739,11 +2247,12 @@ private fun TttUltimateBoard(
                                         .background(HikariBg.copy(alpha = 0.55f), RoundedCornerShape(8.dp)),
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    Text(
-                                        if (m == "X") symbols.first else symbols.second,
-                                        fontSize = 40.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (m == "X") TttP1Color else TttP2Color,
+                                    TttCellSymbol(
+                                        cell = m,
+                                        display = if (m == "X") symbols.first else symbols.second,
+                                        extraAlpha = 1f,
+                                        fontSize = (cell.value * 1.2f).sp,
+                                        dim = cell * 1.9f,
                                     )
                                 }
                                 "T" -> Box(
@@ -1752,7 +2261,7 @@ private fun TttUltimateBoard(
                                         .background(HikariBg.copy(alpha = 0.45f), RoundedCornerShape(8.dp)),
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    Text("–", fontSize = 30.sp, color = HikariTextFaint)
+                                    Text("–", fontSize = (cell.value).sp, color = HikariTextFaint)
                                 }
                             }
                         }
@@ -1766,7 +2275,7 @@ private fun TttUltimateBoard(
 
 @Composable
 private fun TttUltCell(
-    symbol: String, symbols: Pair<String, String>, dimmed: Boolean, lastMove: Boolean,
+    symbol: String, symbols: Pair<String, String>, dimmed: Boolean, lastMoveColor: Color?,
     hint: Boolean, moveNum: Int, invalidTick: Int, size: Dp, onTap: () -> Unit,
 ) {
     val shake = remember { Animatable(0f) }
@@ -1804,7 +2313,7 @@ private fun TttUltCell(
             .clip(RoundedCornerShape(6.dp))
             .background(HikariBg.copy(alpha = 0.55f))
             .then(
-                if (lastMove) Modifier.border(1.dp, HikariPrimary.copy(alpha = 0.5f), RoundedCornerShape(6.dp))
+                if (lastMoveColor != null) Modifier.border(1.dp, lastMoveColor.copy(alpha = 0.55f), RoundedCornerShape(6.dp))
                 else Modifier
             )
             .then(hintMod)
@@ -1826,9 +2335,9 @@ private fun TttUltCell(
         TttCellSymbol(
             cell = symbol,
             display = if (symbol == "X") symbols.first else symbols.second,
-            highlight = false,
             extraAlpha = 1f,
-            fontSize = 15.sp,
+            fontSize = (size.value * 0.44f).sp,
+            dim = size * 0.58f,
         )
         if (moveNum > 0 && symbol.isNotEmpty()) {
             Text(
@@ -1841,34 +2350,97 @@ private fun TttUltCell(
     }
 }
 
+// X als zwei sich zeichnende Striche, O als sich zeichnender Kreis — mit Glow.
+// Emoji-Symbol-Sets fallen weiter auf Text zurück.
 @Composable
-private fun TttCellSymbol(cell: String, display: String, highlight: Boolean, extraAlpha: Float, fontSize: TextUnit) {
-    val anim = remember { Animatable(0f) }
+private fun TttCellSymbol(cell: String, display: String, extraAlpha: Float, fontSize: TextUnit, dim: Dp) {
+    val drawn = display == "X" || display == "O"
+    val pop = remember { Animatable(1f) }
+    val draw = remember { Animatable(1f) }
     LaunchedEffect(cell) {
         if (cell.isEmpty()) {
-            anim.snapTo(0f)
+            pop.snapTo(1f)
+            draw.snapTo(1f)
         } else {
-            anim.snapTo(0.3f)
-            anim.animateTo(
-                1f,
-                spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
-            )
+            pop.snapTo(0.55f)
+            draw.snapTo(0f)
+            launch { draw.animateTo(1f, tween(260, easing = FastOutSlowInEasing)) }
+            pop.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium))
         }
     }
-    Text(
-        if (cell.isEmpty()) "" else display,
-        fontSize = fontSize,
-        fontWeight = FontWeight.Bold,
-        color = when {
-            cell.isEmpty() -> Color.Transparent
-            highlight -> HikariPrimary
-            cell == "X" -> TttP1Color
-            else -> TttP2Color
-        },
-        modifier = Modifier
-            .scale(anim.value)
-            .graphicsLayer { alpha = extraAlpha },
-    )
+    if (cell.isEmpty()) return
+    val col = if (cell == "X") TttP1Color else TttP2Color
+    if (drawn) {
+        Canvas(
+            Modifier
+                .size(dim)
+                .graphicsLayer {
+                    scaleX = pop.value
+                    scaleY = pop.value
+                    alpha = extraAlpha
+                }
+        ) {
+            val w = size.minDimension * 0.15f
+            if (display == "X") {
+                val m = size.minDimension * 0.16f
+                val pA = (draw.value * 2f).coerceIn(0f, 1f)
+                val pB = (draw.value * 2f - 1f).coerceIn(0f, 1f)
+                // Glow
+                if (pA > 0f) drawLine(
+                    col.copy(alpha = 0.22f),
+                    Offset(m, m),
+                    Offset(m + (size.width - 2 * m) * pA, m + (size.height - 2 * m) * pA),
+                    strokeWidth = w * 2.1f, cap = StrokeCap.Round,
+                )
+                if (pB > 0f) drawLine(
+                    col.copy(alpha = 0.22f),
+                    Offset(size.width - m, m),
+                    Offset(size.width - m - (size.width - 2 * m) * pB, m + (size.height - 2 * m) * pB),
+                    strokeWidth = w * 2.1f, cap = StrokeCap.Round,
+                )
+                // Haupt-Striche
+                if (pA > 0f) drawLine(
+                    col,
+                    Offset(m, m),
+                    Offset(m + (size.width - 2 * m) * pA, m + (size.height - 2 * m) * pA),
+                    strokeWidth = w, cap = StrokeCap.Round,
+                )
+                if (pB > 0f) drawLine(
+                    col,
+                    Offset(size.width - m, m),
+                    Offset(size.width - m - (size.width - 2 * m) * pB, m + (size.height - 2 * m) * pB),
+                    strokeWidth = w, cap = StrokeCap.Round,
+                )
+            } else {
+                val r = size.minDimension * 0.33f
+                val sweep = 360f * draw.value
+                val tl = Offset(center.x - r, center.y - r)
+                val sz = Size(r * 2f, r * 2f)
+                drawArc(
+                    col.copy(alpha = 0.22f),
+                    startAngle = -90f, sweepAngle = sweep, useCenter = false,
+                    topLeft = tl, size = sz,
+                    style = Stroke(w * 2.1f, cap = StrokeCap.Round),
+                )
+                drawArc(
+                    col,
+                    startAngle = -90f, sweepAngle = sweep, useCenter = false,
+                    topLeft = tl, size = sz,
+                    style = Stroke(w, cap = StrokeCap.Round),
+                )
+            }
+        }
+    } else {
+        Text(
+            display,
+            fontSize = fontSize,
+            fontWeight = FontWeight.Bold,
+            color = col,
+            modifier = Modifier
+                .scale(pop.value)
+                .graphicsLayer { alpha = extraAlpha },
+        )
+    }
 }
 
 // ————— Sieg-Effekte —————
@@ -1876,12 +2448,15 @@ private fun TttCellSymbol(cell: String, display: String, highlight: Boolean, ext
 @Composable
 private fun TttWinLineOverlay(winner: String?, winLine: List<Int>?, roundKey: Int, modifier: Modifier) {
     val progress = remember(roundKey) { Animatable(0f) }
+    val ring = remember(roundKey) { Animatable(0f) }
     LaunchedEffect(winner, roundKey) {
         if (winner != null && winLine != null) {
             progress.animateTo(1f, tween(420, easing = FastOutSlowInEasing))
+            ring.animateTo(1f, tween(550, easing = FastOutSlowInEasing))
         }
     }
     if (winLine == null) return
+    val col = if (winner == "O") TttP2Color else TttP1Color
     Canvas(modifier) {
         val cell = size.width / 3f
         val cellH = size.height / 3f
@@ -1889,13 +2464,16 @@ private fun TttWinLineOverlay(winner: String?, winLine: List<Int>?, roundKey: In
         val b = Offset((winLine[2] % 3 + 0.5f) * cell, (winLine[2] / 3 + 0.5f) * cellH)
         val p = progress.value
         if (p > 0f) {
-            drawLine(
-                HikariPrimary.copy(alpha = 0.85f),
-                a,
-                Offset(a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p),
-                strokeWidth = cell * 0.09f,
-                cap = StrokeCap.Round,
-            )
+            val bp = Offset(a.x + (b.x - a.x) * p, a.y + (b.y - a.y) * p)
+            // Glow-Unterlage + Kernlinie in Spielerfarbe
+            drawLine(col.copy(alpha = 0.28f), a, bp, strokeWidth = cell * 0.22f, cap = StrokeCap.Round)
+            drawLine(col, a, bp, strokeWidth = cell * 0.09f, cap = StrokeCap.Round)
+        }
+        // Partikel-Ringe an beiden Enden
+        if (ring.value > 0f) {
+            val rr = ring.value
+            drawCircle(col.copy(alpha = 0.5f * (1f - rr)), cell * 0.38f * rr, a)
+            drawCircle(col.copy(alpha = 0.5f * (1f - rr)), cell * 0.38f * rr, b)
         }
     }
 }
@@ -1922,7 +2500,7 @@ private fun TttConfetti(trigger: Int, modifier: Modifier = Modifier) {
     val parts = remember { ArrayList<TttConfettiP>() }
     LaunchedEffect(trigger) {
         if (trigger == 0) return@LaunchedEffect
-        val colors = listOf(HikariAmber, Color(0xFF60A5FA), Color(0xFF4ADE80), Color(0xFFEC4899), Color(0xFFFF8A65))
+        val colors = listOf(HikariAmber, TttP1Color, Color(0xFF4ADE80), TttP2Color, Color(0xFFFF8A65))
         parts.clear()
         repeat(64) {
             parts.add(
