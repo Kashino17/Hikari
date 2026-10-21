@@ -1489,16 +1489,17 @@ private fun TttPlayScreen(
         TttBackdrop()
 
         val wide = maxWidth >= 600.dp
-        val boardSize = if (wide) {
-            // Tatsächlich verfügbare Breite der linken Spalte beachten
-            // (330 dp Steuer-Spalte + 2×18 dp Padding + Luft), sonst quetscht
-            // das Brett auf fast quadratischen Fold-Screens.
-            minOf(560.dp, maxWidth - 330.dp - 60.dp, maxHeight - 72.dp)
-        } else {
-            minOf(maxWidth - 40.dp, 430.dp)
+        // Seite-an-Seite nur bei echtem Querformat. Auf fast quadratischen
+        // Screens (Fold aufgeklappt) frisst die Steuer-Spalte zu viel Breite —
+        // dort stapelt das Layout und das Brett füllt die volle Breite.
+        val sideBySide = wide && maxWidth > maxHeight * 1.12f
+        val boardSize = when {
+            sideBySide -> minOf(600.dp, maxWidth - 330.dp - 60.dp, maxHeight - 72.dp)
+            wide -> minOf(620.dp, maxWidth - 48.dp, maxHeight - 330.dp)
+            else -> minOf(maxWidth - 40.dp, 430.dp)
         }
 
-        if (wide) {
+        if (sideBySide) {
             // Fold aufgeklappt: links großes Brett, rechts Steuerung/Info
             Row(Modifier.fillMaxSize()) {
                 Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) {
