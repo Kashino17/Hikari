@@ -29,6 +29,7 @@ class RussianConversationViewModel @Inject constructor(
     var error by mutableStateOf<String?>(null); private set
     var available by mutableStateOf<Boolean?>(null); private set
     var repair by mutableStateOf(false); private set
+    var page by mutableStateOf("home"); private set
     private var request: Job? = null
     private var lastActivity = SystemClock.elapsedRealtime()
     private var pendingSeconds = 0L
@@ -36,6 +37,52 @@ class RussianConversationViewModel @Inject constructor(
     init { refreshStatus() }
     fun today() = LocalDate.now().toEpochDay()
     fun touch() { lastActivity = SystemClock.elapsedRealtime() }
+    fun navigate(value: String) { flushTime(); page = value; error = null; touch() }
+    fun beginLesson(id: String) {
+        if (!RuJourney.available(progress.value.foundation, id)) return
+        store.update { it.copy(foundation = RuJourney.start(it.foundation, id, UUID.randomUUID().toString())) }
+        navigate("lesson")
+    }
+    fun resumeLesson() { if (progress.value.foundation.run != null) navigate("lesson") }
+    fun foundationDraft(text: String, spoken: Boolean = false) {
+        touch()
+        store.update { p -> p.copy(foundation = p.foundation.copy(run = p.foundation.run?.copy(
+            draft = text.take(180), spoken = spoken, result = "",
+        ))) }
+    }
+    fun foundationHelp() {
+        touch()
+        store.update { p -> p.copy(foundation = p.foundation.copy(run = p.foundation.run?.copy(helped = true))) }
+    }
+    fun checkFoundation() {
+        val run = progress.value.foundation.run ?: return
+        if (run.phase !in listOf("guided", "recall") || run.result == "correct" || run.draft.isBlank()) return
+        val correct = RuJourney.matches(run, run.draft)
+        val independent = run.phase == "recall" && !run.helped
+        store.update { p ->
+            val next = p.copy(foundation = p.foundation.copy(run = run.copy(
+                result = if (correct) "correct" else "retry",
+                recalled = run.recalled + if (correct && independent) 1 else 0,
+                spokenAnswers = run.spokenAnswers + if (correct && run.spoken) 1 else 0,
+            )))
+            if (correct && run.phase == "recall") RuChatLearning.record(next, RuChatObservation(
+                "${run.id}:${run.phase}:${run.index}", today(), 0, RuJourney.lesson(run.lessonId).scenario,
+                run.draft, true, independent, run.spoken,
+            )) else next
+        }
+        touch()
+    }
+    fun nextFoundation() {
+        store.update { p ->
+            val foundation = RuJourney.nextStep(p.foundation)
+            var next = p.copy(foundation = foundation)
+            if (foundation.run?.phase == "complete") {
+                RuJourney.lesson(foundation.run.lessonId).words.forEach { next = RuChatLearning.saveCard(next, it.phrase, today()) }
+            }
+            next
+        }
+        touch()
+    }
     fun refreshStatus() { viewModelScope.launch {
         available = try { api.russianConversationStatus().available } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
     } }
@@ -53,11 +100,23 @@ class RussianConversationViewModel @Inject constructor(
         session?.let { save(it.copy(hint = (it.hint + 1).coerceAtMost(4), helped = true)) }
     }
     fun assistance() { session?.let { save(it.copy(helped = true)) }; touch() }
+    fun learnTurnWords() {
+        val words = session?.turns?.lastOrNull()?.reply?.words ?: return
+        store.update { p ->
+            var next = p.copy(conversationVocabulary = (p.conversationVocabulary + words)
+                .distinctBy { RuJourney.normalize(it.ru) }.takeLast(100))
+            words.forEach { next = RuChatLearning.saveCard(next, it, today()) }
+            next
+        }
+        touch()
+    }
     fun start(confidence: Int = 2) {
         if (busy) return
+        if (!RuJourney.freeReady(progress.value.foundation)) { navigate("home"); return }
         flushTime()
         save(RuChatSession(UUID.randomUUID().toString(), settings, RuChatLearning.supportStage(progress.value), confidenceBefore = confidence))
         touch()
+        page = "chat"
         send("start")
     }
     fun send(action: String = if (repair) "repair" else "reply") {
@@ -75,6 +134,8 @@ class RussianConversationViewModel @Inject constructor(
                     interest = current.settings.interest, mood = current.settings.mood, goal = current.settings.goal,
                     action = action, message = if (answering) current.draft.trim() else "", history = history,
                     review = RuChatLearning.due(progress.value, today()).take(3).map { it.phrase.ru },
+                    knownWords = (RuJourney.known(progress.value.foundation).map { it.phrase } + progress.value.conversationVocabulary)
+                        .distinctBy { RuJourney.normalize(it.ru) }.take(120),
                 ))
                 val turnId = UUID.randomUUID().toString()
                 val turn = RuChatTurn(turnId, response, if (answering) current.draft.trim() else "",
@@ -94,7 +155,7 @@ class RussianConversationViewModel @Inject constructor(
             catch (e: Exception) {
                 error = if (e is HttpException && e.code() == 429)
                     "Anja ist gerade beschäftigt. Deine Antwort bleibt erhalten — versuch es gleich erneut."
-                else "Gesprächs-KI nicht erreichbar oder Antwort unvollständig. Starte LM Studio mit einem Chatmodell und dem lokalen Server. Deine Antwort bleibt erhalten."
+                else "Anja konnte gerade keine passende Antwort vorbereiten. Dein Text bleibt erhalten. Versuche es erneut. Falls es wieder nicht klappt, prüfe die Verbindung zu deinem KI-Server."
             } finally { busy = false }
         }
     }
@@ -117,11 +178,13 @@ class RussianConversationViewModel @Inject constructor(
     fun confidence(value: Int) { session?.let { save(it.copy(confidenceAfter = value)) } }
     fun setup() { request?.cancel(); busy = false; flushTime(); session = null; store.clearSession(); repair = false; error = null }
     fun tick() {
-        val s = session ?: return
-        if (s.finished || busy || SystemClock.elapsedRealtime() - lastActivity > 90_000) return
+        val s = session
+        val foundationActive = page == "lesson" && progress.value.foundation.run?.phase in listOf("learn", "guided", "recall")
+        val chatActive = page == "chat" && s?.finished == false
+        if ((!foundationActive && !chatActive) || busy || SystemClock.elapsedRealtime() - lastActivity > 90_000) return
         if (pendingDay != today()) { flushTime(); pendingDay = today() }
         pendingSeconds++
-        session = s.copy(activeSeconds = s.activeSeconds + 1)
+        if (chatActive && s != null) session = s.copy(activeSeconds = s.activeSeconds + 1)
         if (pendingSeconds >= 15) flushTime()
     }
     fun flushTime() {

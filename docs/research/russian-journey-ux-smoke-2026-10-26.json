@@ -1,0 +1,70 @@
+{
+  "seconds": 39.76,
+  "first": {
+    "partnerRu": "Ты любишь кофе?",
+    "partnerDe": "Magst du Kaffee?",
+    "cue": "Antworte mit Ja oder Nein.",
+    "words": [
+      {
+        "ru": "любишь",
+        "de": "magst / liebst"
+      }
+    ],
+    "starter": "Да, я ...",
+    "examples": [
+      {
+        "ru": "Да.",
+        "de": "Ja."
+      },
+      {
+        "ru": "Нет, я люблю чай.",
+        "de": "Nein, ich mag Tee."
+      }
+    ],
+    "feedback": null,
+    "chunk": {
+      "ru": "Ты любишь...?",
+      "de": "Magst du...?"
+    },
+    "mission": "Ein einfaches Ja/Nein oder eine Vorliebe ausdrücken."
+  },
+  "second": {
+    "partnerRu": "А ты любишь чай?",
+    "partnerDe": "Und magst du Tee?",
+    "cue": "Antworte mit Ja oder Nein.",
+    "words": [
+      {
+        "ru": "не",
+        "de": "nicht"
+      },
+      {
+        "ru": "чай",
+        "de": "Tee"
+      }
+    ],
+    "starter": "Я ... чай.",
+    "examples": [
+      {
+        "ru": "Да, я люблю чай.",
+        "de": "Ja, ich mag Tee."
+      },
+      {
+        "ru": "Нет, я не люблю чай.",
+        "de": "Nein, ich mag keinen Tee."
+      }
+    ],
+    "feedback": {
+      "meaning": "clear",
+      "praise": "Sehr gut! Du hast den Satz perfekt gebildet.",
+      "focus": "",
+      "repairCue": "",
+      "correctedRu": "",
+      "explanationDe": ""
+    },
+    "chunk": {
+      "ru": "Я люблю кофе.",
+      "de": "Ich liebe Kaffee."
+    },
+    "mission": "Ein einfaches Getränk bestätigen oder verneinen."
+  }
+}

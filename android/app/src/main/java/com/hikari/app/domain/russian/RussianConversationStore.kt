@@ -14,6 +14,16 @@ class RussianConversationStore @Inject constructor(@ApplicationContext context: 
         ruJson.decodeFromString<RuChatProgress>(prefs.getString("progress", null) ?: "{}")
     }.getOrDefault(RuChatProgress()))
     val state = mutable.asStateFlow()
+    init {
+        if (prefs.getInt("journeyUxVersion", 0) < 2) {
+            update { it.copy(settings = it.settings.copy(autoPlay = false, audioFirst = false)) }
+            // Keep the old transcript as an archive; a pre-curriculum prompt must not become the new entry point.
+            prefs.getString("session", null)?.let { previous ->
+                prefs.edit().putString("preJourneySession", previous).remove("session").apply()
+            }
+            prefs.edit().putInt("journeyUxVersion", 2).apply()
+        }
+    }
     @Synchronized fun update(transform: (RuChatProgress) -> RuChatProgress) {
         mutable.value = transform(mutable.value)
         prefs.edit().putString("progress", ruJson.encodeToString(RuChatProgress.serializer(), mutable.value)).apply()

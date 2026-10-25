@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 import { registerRussianConversationRoutes } from "../api/russian-conversation.js";
 import {
   conversationMessages,
+  validateBeginnerVocabulary,
+  prepareBeginnerVocabulary,
   conversationRequest,
   LocalConversationProvider,
   parseConversationReply,
@@ -35,6 +37,61 @@ const reply: ConversationReply = {
 };
 
 describe("conversation boundary", () => {
+  it("fills a missing common gloss without guessing arbitrary translations", () => {
+    const input = conversationRequest.parse({
+      scenario: "Café",
+      action: "start",
+      knownWords: [{ ru: "ты чай я люблю кофе", de: "bekannt" }],
+    });
+    const prepared = prepareBeginnerVocabulary(reply, input);
+    expect(prepared.words).toContainEqual({ ru: "любишь", de: "du magst · du liebst" });
+    expect(() => validateBeginnerVocabulary(prepared, input)).not.toThrow();
+    const negative = prepareBeginnerVocabulary({ ...reply, partnerRu: "Ты не любишь чай?" }, input);
+    expect(negative.words).toContainEqual({ ru: "не", de: "nicht" });
+    expect(() => validateBeginnerVocabulary(negative, input)).not.toThrow();
+    const arbitrary = prepareBeginnerVocabulary({ ...reply, partnerRu: "Молоко?" }, input);
+    expect(() => validateBeginnerVocabulary(arbitrary, input)).toThrow();
+  });
+  it("rejects unexplained beginner word forms and too many new forms", () => {
+    const input = conversationRequest.parse({
+      scenario: "Café",
+      action: "start",
+      knownWords: [{ ru: "ты чай я люблю кофе", de: "bekannt" }],
+    });
+    expect(() => validateBeginnerVocabulary(reply, input)).toThrow(
+      "beginner_vocabulary_not_prepared",
+    );
+    const prepared = { ...reply, words: [{ ru: "любишь", de: "du magst" }] };
+    expect(() => validateBeginnerVocabulary(prepared, input)).not.toThrow();
+    expect(() =>
+      validateBeginnerVocabulary({ ...prepared, partnerRu: "Ты любишь молоко?" }, input),
+    ).toThrow();
+    expect(() =>
+      validateBeginnerVocabulary(
+        {
+          ...prepared,
+          examples: [{ ru: "Нет, я не люблю чай", de: "Nein" }, ...prepared.examples],
+        },
+        input,
+      ),
+    ).toThrow();
+    expect(() => validateBeginnerVocabulary(reply, { ...input, stage: 2 })).not.toThrow();
+  });
+  it("passes learned vocabulary as bounded learner data, with a gradual input policy", () => {
+    const knownWords = [{ ru: "чай", de: "Tee" }];
+    const input = conversationRequest.parse({ scenario: "Café", action: "start", knownWords });
+    const messages = conversationMessages(input);
+    expect(JSON.parse(messages.at(-1)!.content).knownWords).toEqual(knownWords);
+    expect(messages[0]!.content).toContain("at most ONE new lexical item");
+    expect(messages[0]!.content).not.toContain('"de":"Tee"');
+    expect(
+      conversationRequest.safeParse({
+        scenario: "Café",
+        action: "start",
+        knownWords: Array(121).fill(knownWords[0]),
+      }).success,
+    ).toBe(false);
+  });
   it("starts at absolute beginner and rejects invalid stages, roles and blank replies", () => {
     expect(conversationRequest.parse({ scenario: "Café", action: "start" }).stage).toBe(0);
     expect(

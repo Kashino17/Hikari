@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    id("app.cash.paparazzi") version "1.3.5"
 }
 
 // Stabile Release-Signierung für In-Place-Updates. Lokal liegen Keystore und
@@ -39,8 +40,8 @@ android {
         applicationId = "com.hikari.app"
         minSdk = 26
         targetSdk = 34   // was 36 in plan — same deviation
-        versionCode = 194
-        versionName = "0.89.43"
+        versionCode = 195
+        versionName = "0.89.44"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

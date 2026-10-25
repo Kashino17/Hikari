@@ -19,12 +19,13 @@ import kotlinx.serialization.Serializable
     val stage: Int = 0, val scenario: String, val interest: String = "", val mood: String = "calm",
     val goal: String = "everyday", val action: String, val message: String = "",
     val history: List<RuChatMessage> = emptyList(), val review: List<String> = emptyList(),
+    val knownWords: List<RuChatPhrase> = emptyList(),
 )
 @Serializable data class RuChatStatus(val available: Boolean = false, val model: String? = null)
 @Serializable data class RuChatSettings(
     val scenario: String = "cafe", val interest: String = "", val mood: String = "calm",
     val goal: String = "everyday", val turns: Int = 12, val audioFirst: Boolean = false,
-    val autoPlay: Boolean = true, val speed: Float = 0.85f,
+    val autoPlay: Boolean = false, val speed: Float = 0.85f,
     val targetDate: String = "", val daysPerWeek: Int = 5, val minutesPerDay: Int = 30,
     val blockMinutes: Int = 10,
 )
@@ -68,6 +69,8 @@ object RuChatCurriculum {
     val stage: Int = 0, val observations: List<RuChatObservation> = emptyList(),
     val cards: List<RuChatCard> = emptyList(), val settings: RuChatSettings = RuChatSettings(),
     val activeSecondsByDay: Map<Long, Long> = emptyMap(),
+    val foundation: RuFoundationProgress = RuFoundationProgress(),
+    val conversationVocabulary: List<RuChatPhrase> = emptyList(),
 )
 
 /** Conservative app scaffolding, not a validated CEFR/fluency assessment. See research report. */

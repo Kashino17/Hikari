@@ -17,13 +17,14 @@ class RussianConversationVoice(context: Context) {
     var error by mutableStateOf<String?>(null); private set
     private val main = Handler(Looper.getMainLooper())
     private var closed = false
+    private var initialized = false
     private var tts: TextToSpeech? = null
     init {
         tts = TextToSpeech(context.applicationContext) { status ->
             main.post {
                 if (!closed) {
+                    initialized = true
                     ready = status == TextToSpeech.SUCCESS && (tts?.setLanguage(Locale("ru", "RU")) ?: -1) >= 0
-                    if (!ready) error = "Russische Sprachausgabe fehlt. Installiere eine russische TTS-Stimme in Android; der Text bleibt nutzbar."
                 }
             }
         }
@@ -31,12 +32,17 @@ class RussianConversationVoice(context: Context) {
             override fun onStart(id: String?) { main.post { if (!closed) speaking = true } }
             override fun onDone(id: String?) { main.post { if (!closed) speaking = false } }
             @Deprecated("Android callback") override fun onError(id: String?) { main.post {
-                if (!closed) { speaking = false; error = "Sprachausgabe fehlgeschlagen. Du kannst den Text aufdecken." }
+                if (!closed) { speaking = false; error = "Vorlesen hat gerade nicht geklappt. Du kannst es erneut versuchen oder mit dem Text weiterüben." }
             } }
         })
     }
     fun speak(text: String, speed: Float) {
-        if (!ready || closed) return
+        if (closed) return
+        if (!ready) {
+            error = if (initialized) "Die russische Stimme fehlt. Aktiviere Russisch in den Android-Einstellungen zur Sprachausgabe. Du kannst auch mit dem Text üben."
+                else "Die Stimme wird noch vorbereitet. Tippe gleich noch einmal auf Anhören."
+            return
+        }
         error = null
         tts?.setSpeechRate(speed.coerceIn(0.6f, 1.1f))
         speaking = true
