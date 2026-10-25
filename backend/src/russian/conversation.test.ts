@@ -37,6 +37,28 @@ const reply: ConversationReply = {
 };
 
 describe("conversation boundary", () => {
+  it("accepts a fully familiar question without inventing new vocabulary or a sentence stem", () => {
+    const parsed = parseConversationReply(
+      JSON.stringify({
+        ...reply,
+        partnerRu: "Кофе или чай?",
+        words: [],
+        starter: "...",
+        examples: [
+          { ru: "Кофе.", de: "Kaffee." },
+          { ru: "Чай.", de: "Tee." },
+        ],
+      }),
+    );
+    expect(parsed.words).toEqual([]);
+    expect(parsed.starter).toBe("");
+    const input = conversationRequest.parse({
+      action: "start",
+      scenario: "Café",
+      knownWords: [{ ru: "кофе или чай", de: "bekannt" }],
+    });
+    expect(() => validateBeginnerVocabulary(parsed, input)).not.toThrow();
+  });
   it("fills a missing common gloss without guessing arbitrary translations", () => {
     const input = conversationRequest.parse({
       scenario: "Café",

@@ -43,6 +43,16 @@ class RussianJourneySecondaryRenderTest {
             ConversationPlan(vm, RuChatProgress())
         } } }
     }
+    @Test fun fullyKnownQuestion() {
+        val vm = model()
+        val reply = RuChatReply(partnerRu = "Кофе или чай?", partnerDe = "Kaffee oder Tee?", cue = "Wähle ein Getränk.",
+            words = emptyList(), starter = "", examples = listOf(RuChatPhrase("Кофе.", "Kaffee."), RuChatPhrase("Чай.", "Tee.")),
+            feedback = null, chunk = RuChatPhrase("Кофе или чай?", "Kaffee oder Tee?"), mission = "Ein Getränk wählen")
+        every { vm.session } returns RuChatSession("test", RuChatSettings(), 0, turns = listOf(RuChatTurn("turn", reply)))
+        paparazzi.snapshot { JourneyTheme { JourneyScaffold("Mit Anja sprechen", "Dein Tempo. Deine Geschichten.", {}, {}) {
+            JourneyFreeChat(vm, RuChatProgress(), false, "", {}, {}, {}, {}, {}, {}, {})
+        } } }
+    }
     @Test fun newVocabularyBeforeFreeAnswer() {
         val vm = model()
         val reply = RuChatReply(partnerRu = "Ты любишь кофе?", partnerDe = "Magst du Kaffee?", cue = "Antworte mit Ja oder Nein.",

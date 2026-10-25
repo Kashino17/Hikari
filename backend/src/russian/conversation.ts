@@ -44,9 +44,14 @@ export const conversationReply = z.object({
   cue: text(240),
   words: z
     .array(z.object({ ru: russian(80), de: text(100) }))
-    .min(1)
+    .min(0)
     .max(4),
-  starter: russian(160),
+  starter: z
+    .string()
+    .trim()
+    .max(160)
+    .transform((s) => (/^[. …]*$/.test(s) ? "" : s))
+    .refine((s) => !s || /[а-яё]/i.test(s), "Russian stem or empty required"),
   examples: z
     .array(z.object({ ru: russian(220), de: text(260) }))
     .min(2)
@@ -94,8 +99,11 @@ export const conversationJsonSchema = objectSchema({
   partnerRu: russianSchema,
   partnerDe: stringSchema,
   cue: stringSchema,
-  words: { type: "array", minItems: 1, maxItems: 4, items: phraseSchema },
-  starter: russianSchema,
+  words: { type: "array", minItems: 0, maxItems: 4, items: phraseSchema },
+  starter: {
+    type: "string",
+    description: "Russian sentence stem, or empty when a single word is enough",
+  },
   examples: { type: "array", minItems: 2, maxItems: 3, items: phraseSchema },
   feedback: {
     anyOf: [
@@ -154,7 +162,7 @@ Keep the learner's intended meaning in any correction. If already fine, focus/re
 For start and control actions, feedback MUST be null. For reply or repair, provide feedback on message.
 Never demand a private or traumatic story. Offer fictional stories as an equally valid alternative.
 Use Russian for partnerRu, starter, words.ru, examples.ru, chunk.ru and correctedRu. Use German in other text fields.
-Support ladder: cue = semantic clue, words = 2–4 useful bilingual words, starter = incomplete sentence stem,
+Support ladder: cue = semantic clue, words = 0–4 useful bilingual words (empty is correct when everything is already known), starter = incomplete Russian sentence stem or empty when a single word answers the question,
 examples = 2 different plausible responses with translations, hidden until requested. words and cue are visible preparation.
 chunk = one short useful expression FROM this exchange, with an accurate German translation.
 mission = one concrete communicative objective appropriate to stage, not a proficiency judgement.
@@ -315,7 +323,7 @@ export class LocalConversationProvider implements ConversationProvider {
       const messages = conversationMessages(input);
       if (attempt)
         messages[0]!.content +=
-          "\nYour previous response failed validation. Fill EVERY field completely. All Russian fields, including starter, must contain Russian Cyrillic, not German. At stage 0 keep partnerRu and examples inside knownWords wherever possible. Any unfamiliar form must appear in words with German meaning, at most TWO unfamiliar forms total. Return complete JSON within the token budget." +
+          "\nYour previous response failed validation. Include EVERY field. Russian text fields must contain Cyrillic, except starter may be empty for a one-word answer. words may be empty when no new words occur. At stage 0 keep partnerRu and examples inside knownWords wherever possible. Any unfamiliar form must appear in words with German meaning, at most TWO unfamiliar forms total. Return complete JSON within the token budget." +
           vocabularyRepair;
       const response = await this.request(
         `${this.base}${native ? "/api/v1/chat" : "/v1/chat/completions"}`,

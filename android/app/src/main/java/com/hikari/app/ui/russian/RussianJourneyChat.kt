@@ -110,7 +110,8 @@ import com.hikari.app.domain.russian.*
                         IconButton(onClick = { onPlay(word.ru) }) { Icon(Icons.Rounded.VolumeUp, "${word.de} anhören", tint = JourneyGreen) }
                     }
                 }
-                JourneySmall("Diese Wörter können dir helfen. Die Antwort darf ganz deine eigene sein.")
+                JourneySmall(if (r.words.isEmpty()) "Diese Wörter kennst du schon. Eine kurze Antwort reicht."
+                    else "Diese Wörter und Ausdrücke können dir helfen. Die Antwort darf ganz deine eigene sein.")
                 JourneyButton("Bereit für meine Antwort") { vm.learnTurnWords(); prepared = true }
             }
         } else if (!vm.busy) {
@@ -122,8 +123,8 @@ import com.hikari.app.domain.russian.*
                 JourneyLabel("EIN BISSCHEN RÜCKENWIND")
                 JourneyBody(r.cue)
                 if (s.hint >= 2) r.words.forEach { JourneyBody("${it.ru} — ${it.de}") }
-                if (s.hint >= 3) { JourneyBody(r.starter); TextButton(onClick = { vm.draft(r.starter); vm.assistance() }) { Text("Diesen Anfang benutzen") } }
-                if (s.hint >= 4) r.examples.forEach { example ->
+                if (s.hint >= 3 && r.starter.isNotBlank()) { JourneyBody(r.starter); TextButton(onClick = { vm.draft(r.starter); vm.assistance() }) { Text("Diesen Anfang benutzen") } }
+                if (s.hint >= (if (r.starter.isBlank()) 3 else 4)) r.examples.forEach { example ->
                     JourneyBody(example.ru); JourneySmall(example.de)
                     Row {
                         TextButton(onClick = { onPlay(example.ru) }) { Text("Anhören") }
@@ -138,7 +139,7 @@ import com.hikari.app.domain.russian.*
                 onClick = if (listening) onStop else onListen)
             if (s.draft.isNotBlank()) JourneyButton("Meine Antwort senden", Icons.Rounded.Send, enabled = !listening) { onSend(if (vm.repair) "repair" else "reply") }
             if (!typing && s.draft.isBlank()) TextButton(onClick = { typing = true }) { Text("Heute lieber tippen") }
-            TextButton(onClick = vm::hint, enabled = s.hint < 4) { Icon(Icons.Rounded.Lightbulb, null); Spacer(Modifier.width(8.dp)); Text(if (s.hint == 0) "Ein kleiner Tipp" else "Mehr Starthilfe") }
+            TextButton(onClick = vm::hint, enabled = s.hint < (if (r.starter.isBlank()) 3 else 4)) { Icon(Icons.Rounded.Lightbulb, null); Spacer(Modifier.width(8.dp)); Text(if (s.hint == 0) "Ein kleiner Tipp" else "Mehr Starthilfe") }
             JourneySmall("KI-Rückmeldung zu deinem bestätigten Text. Kein Aussprachetest. Andere Formulierungen sind willkommen.")
         }
         if (!vm.busy) {

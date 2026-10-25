@@ -66,5 +66,37 @@
       "de": "Ich liebe Kaffee."
     },
     "mission": "Ein einfaches Getränk bestätigen oder verneinen."
+  },
+  "httpEndpointCheck": {
+    "status": 200,
+    "seconds": 13.648,
+    "body": {
+      "partnerRu": "Ты любишь кофе?",
+      "partnerDe": "Magst du Kaffee?",
+      "cue": "Antworte mit Ja oder Nein.",
+      "words": [
+        {
+          "ru": "любишь",
+          "de": "du magst · du liebst"
+        }
+      ],
+      "starter": "",
+      "examples": [
+        {
+          "ru": "Да",
+          "de": "Ja"
+        },
+        {
+          "ru": "Нет",
+          "de": "Nein"
+        }
+      ],
+      "feedback": null,
+      "chunk": {
+        "ru": "Ты любишь...?",
+        "de": "Magst du...?"
+      },
+      "mission": "Ein einfaches Ja/Nein auf eine Vorliebe antworten."
+    }
   }
 }
