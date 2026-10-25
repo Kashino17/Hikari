@@ -218,7 +218,7 @@ start_backend() {
     if wait_for_health; then
         echo "${GREEN}Backend läuft${RESET} (PID $pid, Port $PORT)"
     else
-        echo "${RED}Backend reagiert nicht binnen 5s.${RESET}"
+        echo "${RED}Backend reagiert nicht binnen 10s.${RESET}"
         if ! kill -0 "$pid" 2>/dev/null; then
             rm -f "$PID_FILE"
         fi

@@ -318,6 +318,12 @@ interface HikariApi {
     @GET("russian/pronunciation/status")
     suspend fun russianPronunciationStatus(): com.hikari.app.data.api.dto.PronunciationStatusDto
 
+    @GET("russian/conversation/status")
+    suspend fun russianConversationStatus(): com.hikari.app.domain.russian.RuChatStatus
+
+    @POST("russian/conversation/turn")
+    suspend fun russianConversationTurn(@Body request: com.hikari.app.domain.russian.RuChatRequest): com.hikari.app.domain.russian.RuChatReply
+
     /** Phonem-Aussprachecheck (Feld "clip" MUSS vor der Datei kommen). */
     @Multipart
     @POST("russian/pronunciation")

@@ -1,0 +1,263 @@
+{
+  "date": "2026-10-26",
+  "syntheticTestData": true,
+  "model": "google/gemma-4-31b",
+  "api": "LM Studio native, reasoning off",
+  "results": [
+    {
+      "action": "start",
+      "message": "",
+      "status": 200,
+      "ms": 9926,
+      "partnerRu": "Что ты хочешь?",
+      "partnerDe": "Was möchtest du?",
+      "cue": "Bestelle ein Getränk.",
+      "words": [
+        {
+          "ru": "кофе",
+          "de": "Kaffee"
+        },
+        {
+          "ru": "чай",
+          "de": "Tee"
+        },
+        {
+          "ru": "вода",
+          "de": "Wasser"
+        }
+      ],
+      "starter": "Я хочу …",
+      "examples": [
+        {
+          "ru": "Кофе, пожалуйста.",
+          "de": "Kaffee, bitte."
+        },
+        {
+          "ru": "Чай.",
+          "de": "Tee."
+        }
+      ],
+      "feedback": null,
+      "chunk": {
+        "ru": "Я хочу...",
+        "de": "Ich möchte..."
+      },
+      "mission": "Ein Getränk bestellen."
+    },
+    {
+      "action": "reply",
+      "message": "Чай",
+      "status": 200,
+      "ms": 12446,
+      "partnerRu": "А я хочу кофе. А ты?",
+      "partnerDe": "Und ich möchte Kaffee. Und du?",
+      "cue": "Nenne ein weiteres Getränk oder Lebensmittel.",
+      "words": [
+        {
+          "ru": "кофе",
+          "de": "Kaffee"
+        },
+        {
+          "ru": "вода",
+          "de": "Wasser"
+        },
+        {
+          "ru": "сок",
+          "de": "Saft"
+        }
+      ],
+      "starter": "Я хочу ...",
+      "examples": [
+        {
+          "ru": "Воду, пожалуйста.",
+          "de": "Wasser, bitte."
+        },
+        {
+          "ru": "Я хочу сок.",
+          "de": "Ich möchte Saft."
+        }
+      ],
+      "feedback": {
+        "meaning": "clear",
+        "praise": "Ein perfektes, kurzes Wort!",
+        "focus": "",
+        "repairCue": "",
+        "correctedRu": "",
+        "explanationDe": ""
+      },
+      "chunk": {
+        "ru": "Я хочу...",
+        "de": "Ich möchte..."
+      },
+      "mission": "Ein einfaches Getränk bestellen."
+    },
+    {
+      "action": "reply",
+      "message": "Я любить чай",
+      "status": 200,
+      "ms": 16120,
+      "partnerRu": "Ты любишь сахар?",
+      "partnerDe": "Magst du Zucker?",
+      "cue": "Ja oder Nein",
+      "words": [
+        {
+          "ru": "да",
+          "de": "ja"
+        },
+        {
+          "ru": "нет",
+          "de": "nein"
+        },
+        {
+          "ru": "сахар",
+          "de": "Zucker"
+        }
+      ],
+      "starter": "Я ...",
+      "examples": [
+        {
+          "ru": "Да.",
+          "de": "Ja."
+        },
+        {
+          "ru": "Нет, спасибо.",
+          "de": "Nein, danke."
+        }
+      ],
+      "feedback": {
+        "meaning": "clear",
+        "praise": "Das Wort 'чай' hast du richtig benutzt!",
+        "focus": "Verbform",
+        "repairCue": "Das Verb 'lieben' muss an die Person 'ich' angepasst werden.",
+        "correctedRu": "Я люблю чай",
+        "explanationDe": "Im Russischen ändern sich die Endungen der Verben je nach Person. Für 'ich' endet das Wort hier auf -ю."
+      },
+      "chunk": {
+        "ru": "Я люблю...",
+        "de": "Ich liebe/mag..."
+      },
+      "mission": "Ein einfaches Getränk bestellen und Vorlieben ausdrücken."
+    },
+    {
+      "action": "deeper",
+      "message": "",
+      "status": 200,
+      "ms": 10573,
+      "partnerRu": "А молоко?",
+      "partnerDe": "Und Milch?",
+      "cue": "Sag ja oder nein.",
+      "words": [
+        {
+          "ru": "да",
+          "de": "ja"
+        },
+        {
+          "ru": "нет",
+          "de": "nein"
+        },
+        {
+          "ru": "молоко",
+          "de": "Milch"
+        }
+      ],
+      "starter": "Да, ...",
+      "examples": [
+        {
+          "ru": "Да, пожалуйста.",
+          "de": "Ja, bitte."
+        },
+        {
+          "ru": "Нет, спасибо.",
+          "de": "Nein, danke."
+        }
+      ],
+      "feedback": null,
+      "chunk": {
+        "ru": "Я хочу",
+        "de": "Ich möchte"
+      },
+      "mission": "Einfache Vorlieben im Café ausdrücken."
+    },
+    {
+      "test": "personal_context",
+      "status": 200,
+      "ms": 21729,
+      "partnerRu": "Ха-ха, ты меня проверяешь? Твою кошку зовут Луна!",
+      "partnerDe": "Haha, du testest mich? Deine Katze heißt Luna!",
+      "cue": "Erzähl mir mehr über ihr Verhalten.",
+      "words": [
+        {
+          "ru": "озорная",
+          "de": "verspielt/frech"
+        },
+        {
+          "ru": "спокойная",
+          "de": "ruhig"
+        }
+      ],
+      "starter": "Она очень …",
+      "examples": [
+        {
+          "ru": "Она очень озорная.",
+          "de": "Sie ist sehr verspielt."
+        },
+        {
+          "ru": "Она спокойная кошка.",
+          "de": "Sie ist eine ruhige Katze."
+        }
+      ],
+      "feedback": {
+        "meaning": "clear",
+        "praise": "Du hast die Frage grammatikalisch völlig richtig gestellt!",
+        "focus": "",
+        "repairCue": "",
+        "correctedRu": "",
+        "explanationDe": ""
+      },
+      "chunk": {
+        "ru": "ты меня проверяешь?",
+        "de": "testest du mich?"
+      },
+      "mission": "Informationen über das Haustier austauschen."
+    },
+    {
+      "test": "media_listening",
+      "status": 200,
+      "ms": 30521,
+      "partnerRu": "Послушай: в фильме была сцена, где двое старых друзей встретились в пустом концертном зале. Один из них начал играть на пианино старую песню, и второй вдруг запел вместе с ним. Это было очень трогательно. Как ты думаешь, почему они молчали в начале сцены?",
+      "partnerDe": "Hör mal: Im Film gab es eine Szene, in der sich zwei alte Freunde in einem leeren Konzertsaal trafen. Einer von ihnen begann eine alte Melodie auf dem Klavier zu spielen, und der andere fing plötzlich an, mitzusingen. Das war sehr berührend. Warum haben sie deiner Meinung nach am Anfang der Szene geschwiegen?",
+      "cue": "Vielleicht waren sie nervös oder überrascht.",
+      "words": [
+        {
+          "ru": "наверное",
+          "de": "wahrscheinlich"
+        },
+        {
+          "ru": "смущённый",
+          "de": "verlegen"
+        },
+        {
+          "ru": "долго не виделись",
+          "de": "sich lange nicht gesehen haben"
+        }
+      ],
+      "starter": "Наверное, они...",
+      "examples": [
+        {
+          "ru": "Наверное, они были очень смущены.",
+          "de": "Wahrscheinlich waren sie sehr verlegen."
+        },
+        {
+          "ru": "Они долго не виделись и не знали, что сказать.",
+          "de": "Sie hatten sich lange nicht gesehen und wussten nicht, was sie sagen sollten."
+        }
+      ],
+      "feedback": null,
+      "chunk": {
+        "ru": "очень трогательно",
+        "de": "sehr berührend"
+      },
+      "mission": "Eine Vermutung über die Gefühle der Charaktere äußern."
+    }
+  ]
+}

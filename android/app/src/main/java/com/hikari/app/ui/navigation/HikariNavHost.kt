@@ -551,6 +551,11 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                     RussianTalkScreen(onClose = { nav.popBackStack() })
                 }
             }
+            composable("russian/conversation") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    com.hikari.app.ui.russian.RussianConversationScreen(onClose = { nav.popBackStack() })
+                }
+            }
             composable("russian/sounds") {
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     RussianSoundLabScreen(onClose = { nav.popBackStack() })

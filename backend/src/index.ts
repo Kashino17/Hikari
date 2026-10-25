@@ -26,6 +26,7 @@ import { summarizeVideoTranscript } from "./clipper/context-summarizer.js";
 import { registerStreamRoutes } from "./api/stream.js";
 import { registerWatchLaterRoutes } from "./api/watch-later.js";
 import { registerRussianRoutes } from "./api/russian.js";
+import { registerRussianConversationRoutes } from "./api/russian-conversation.js";
 import { registerClipperStatusRoutes } from "./api/clipper-status.js";
 import { registerVideoFullRoute } from "./api/video-full.js";
 import { registerCastRoutes } from "./api/cast.js";
@@ -157,6 +158,7 @@ await registerFeedRoutes(app, {
 });
 await registerWatchLaterRoutes(app, { db });
 await registerRussianRoutes(app);
+await registerRussianConversationRoutes(app);
 await registerFilterRoutes(app, {
   db,
   onFilterChanged: () => {

@@ -198,6 +198,12 @@ fun RussianHomeScreen(
                     null,
                 ) { onOpen("russian/talk") },
                 GameApp(
+                    "Gesprächsreise",
+                    R.drawable.ic_app_dialog,
+                    listOf(Color(0xFFE0A030), Color(0xFF9D4C85)),
+                    "NEU",
+                ) { onOpen("russian/conversation") },
+                GameApp(
                     "Lautlabor",
                     R.drawable.ic_app_dialog,
                     listOf(Color(0xFFD9684F), Color(0xFFA03A28)),
