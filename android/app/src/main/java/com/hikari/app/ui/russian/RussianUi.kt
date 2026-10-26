@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,6 +38,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -175,6 +177,7 @@ internal fun RuPrimaryButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     container: Color = Color.White,
+    trailingIcon: ImageVector? = null,
     onClick: () -> Unit,
 ) {
     val interaction = remember { MutableInteractionSource() }
@@ -183,19 +186,24 @@ internal fun RuPrimaryButton(
     Box(
         modifier
             .fillMaxWidth()
-            .height(54.dp)
+            .heightIn(min = 54.dp)
             .scale(scale)
             .clip(RoundedCornerShape(16.dp))
             .background(if (enabled) container else HikariSurfaceHigh)
             .clickable(interactionSource = interaction, indication = null, enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text,
-            color = if (enabled) Color.Black else HikariTextFaint,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
+        Row(Modifier.padding(horizontal = 18.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                text,
+                modifier = if (trailingIcon != null) Modifier.weight(1f) else Modifier,
+                color = if (enabled) Color.Black else HikariTextFaint,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            trailingIcon?.let { Icon(it, null, tint = if (enabled) Color.Black else HikariTextFaint, modifier = Modifier.size(20.dp)) }
+        }
     }
 }
 

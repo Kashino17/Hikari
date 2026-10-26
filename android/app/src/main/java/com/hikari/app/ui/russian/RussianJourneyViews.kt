@@ -1,5 +1,6 @@
 package com.hikari.app.ui.russian
 
+import com.hikari.app.ui.theme.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,20 +33,20 @@ import com.hikari.app.domain.russian.*
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val compact = LocalConfiguration.current.let { it.screenWidthDp < 360 || it.fontScale > 1.15f }
-    Column(Modifier.fillMaxSize().background(JourneyPaper).imePadding(), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.fillMaxSize().background(HikariBg).imePadding(), horizontalAlignment = Alignment.CenterHorizontally) {
         Row(Modifier.widthIn(max = 640.dp).fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.Rounded.ArrowBack, "Zurück", tint = JourneyInk) }
+            IconButton(onClick = onBack) { Icon(Icons.Rounded.ArrowBack, "Zurück", tint = HikariText) }
             Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
-                Text(title, color = JourneyInk, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-                Text(subtitle, color = JourneyMuted, fontSize = 12.sp)
+                Text(title, color = HikariText, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                Text(subtitle, color = HikariTextMuted, fontSize = 12.sp)
             }
-            IconButton(onClick = onMore) { Icon(Icons.Rounded.MoreHoriz, "Weitere Möglichkeiten", tint = JourneyInk) }
+            IconButton(onClick = onMore) { Icon(Icons.Rounded.MoreHoriz, "Weitere Möglichkeiten", tint = HikariText) }
         }
         key(contentKey) {
-            Column(Modifier.weight(1f).widthIn(max = 640.dp).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 12.dp),
+            Column(Modifier.weight(1f).widthIn(max = 640.dp).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(if (compact) 14.dp else 20.dp), content = content)
         }
-        if (footer != null) Column(Modifier.widthIn(max = 640.dp).fillMaxWidth().background(JourneyPaper).padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 14.dp),
+        if (footer != null) Column(Modifier.widthIn(max = 640.dp).fillMaxWidth().background(HikariBg).padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally, content = footer)
     }
 }
@@ -59,30 +60,29 @@ import com.hikari.app.domain.russian.*
     val next = if (resumable) RuJourney.lesson(f.run!!.lessonId) else RuJourney.next(f)
     val allDone = f.completed.size == RuJourney.lessons.size
     JourneyLabel(if (f.completed.isEmpty()) "DEIN ERSTER RUSSISCH-MOMENT" else "SCHÖN, DASS DU WIEDER DA BIST")
-    JourneyTitle(if (f.completed.isEmpty()) "Ein kleines Hallo.\nEin guter Anfang." else "Ein bisschen mehr\nvon dir erzählen.")
+    JourneyTitle(if (f.completed.isEmpty()) "Dein erstes Gespräch" else "Deine Gesprächsreise")
     JourneyBody(if (f.completed.isEmpty()) "Du musst noch nichts können. Wir lernen die Wörter zuerst — und benutzen sie dann zusammen." else "Deine Wörter reisen mit. Heute kommt ein kleiner neuer Gesprächsmoment dazu.", muted = true)
-    JourneyArtwork("cafe", Modifier.fillMaxWidth().height(174.dp))
     JourneyCard {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Box(Modifier.size(36.dp).background(JourneySage, CircleShape), contentAlignment = Alignment.Center) {
-                Icon(Icons.Rounded.LocalCafe, null, Modifier.size(20.dp), tint = JourneyGreen)
+            Box(Modifier.size(36.dp).background(HikariSurfaceHigh, CircleShape), contentAlignment = Alignment.Center) {
+                Icon(Icons.Rounded.LocalCafe, null, Modifier.size(20.dp), tint = HikariAmber)
             }
             Column(Modifier.weight(1f)) {
-                Text(if (allDone && !resumable) "Bereit für deine Geschichten" else next.title, color = JourneyInk, fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
-                Text(if (allDone && !resumable) "Mit deinen Wörtern frei sprechen" else "${next.words.size} Wörter · ein kleines Gespräch", color = JourneyMuted, fontSize = 13.sp)
+                Text(if (allDone && !resumable) "Bereit für deine Geschichten" else next.title, color = HikariText, fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
+                Text(if (allDone && !resumable) "Mit deinen Wörtern frei sprechen" else "${next.words.size} Wörter · ein kleines Gespräch", color = HikariTextMuted, fontSize = 13.sp)
             }
         }
         JourneyButton(if (resumable) "Hier weitermachen" else if (allDone) "Mein eigenes Gespräch" else if (f.completed.isEmpty()) "Meine ersten 4 Wörter" else "Nächsten Moment entdecken") {
             if (resumable) onResume() else if (allDone) onFree() else onStart(next.id)
         }
-        Text("Du startest den Ton selbst. Alles wird auf Deutsch erklärt.", color = JourneyMuted, fontSize = 12.sp, lineHeight = 17.sp)
+        Text("Du startest den Ton selbst. Alles wird auf Deutsch erklärt.", color = HikariTextMuted, fontSize = 12.sp, lineHeight = 17.sp)
     }
     val due = RuChatLearning.due(progress, today).size
-    if (due > 0) Surface(color = JourneyPeach.copy(alpha = .6f), shape = RoundedCornerShape(18.dp), onClick = onReview) {
+    if (due > 0) Surface(color = HikariSurfaceHigh.copy(alpha = .6f), shape = RoundedCornerShape(18.dp), onClick = onReview) {
         Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Rounded.Replay, null, tint = JourneyCoral); Spacer(Modifier.width(12.dp))
-            Text("$due Wörter warten auf ein Wiedersehen", fontSize = 14.sp, color = JourneyInk, modifier = Modifier.weight(1f))
-            Icon(Icons.Rounded.ChevronRight, null, tint = JourneyCoral)
+            Icon(Icons.Rounded.Replay, null, tint = HikariAmber); Spacer(Modifier.width(12.dp))
+            Text("$due Wörter warten auf ein Wiedersehen", fontSize = 14.sp, color = HikariText, modifier = Modifier.weight(1f))
+            Icon(Icons.Rounded.ChevronRight, null, tint = HikariAmber)
         }
     }
     JourneyLabel("DEINE KLEINE REISE")
@@ -92,26 +92,26 @@ import com.hikari.app.domain.russian.*
             val available = RuJourney.available(f, lesson.id)
             Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable(enabled = available) { onStart(lesson.id) }.padding(vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(38.dp).background(if (done) JourneyGreen else if (available) JourneyPeach else JourneyLine, CircleShape), contentAlignment = Alignment.Center) {
-                    if (done) Icon(Icons.Rounded.Check, "Abgeschlossen", tint = Color.White, modifier = Modifier.size(19.dp))
-                    else if (!available) Icon(Icons.Rounded.Lock, "Später", tint = JourneyMuted, modifier = Modifier.size(16.dp))
-                    else Text("${index + 1}", color = JourneyCoral, fontWeight = FontWeight.Bold)
+                Box(Modifier.size(38.dp).background(if (done) HikariAmber else if (available) HikariSurfaceHigh else HikariBorderStrong, CircleShape), contentAlignment = Alignment.Center) {
+                    if (done) Icon(Icons.Rounded.Check, "Abgeschlossen", tint = Color.Black, modifier = Modifier.size(19.dp))
+                    else if (!available) Icon(Icons.Rounded.Lock, "Später", tint = HikariTextMuted, modifier = Modifier.size(16.dp))
+                    else Text("${index + 1}", color = HikariAmber, fontWeight = FontWeight.Bold)
                 }
                 Column(Modifier.weight(1f)) {
-                    Text(lesson.title, color = if (available) JourneyInk else JourneyMuted, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                    Text(if (done) "Noch einmal erleben" else if (available) "Bereit, wenn du es bist" else "Nach dem vorherigen Gespräch", color = JourneyMuted, fontSize = 12.sp)
+                    Text(lesson.title, color = if (available) HikariText else HikariTextMuted, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                    Text(if (done) "Noch einmal erleben" else if (available) "Bereit, wenn du es bist" else "Nach dem vorherigen Gespräch", color = HikariTextMuted, fontSize = 12.sp)
                 }
-                if (available) Icon(Icons.Rounded.ChevronRight, null, tint = JourneyMuted)
+                if (available) Icon(Icons.Rounded.ChevronRight, null, tint = HikariTextMuted)
             }
         }
     }
-    if (RuJourney.freeReady(f)) JourneyCard(color = JourneySage) {
+    if (RuJourney.freeReady(f)) JourneyCard(color = HikariSurfaceHigh) {
         JourneyLabel("DEINE WÖRTER. DEINE GESCHICHTEN.")
         JourneyTitle("Worüber reden wir?", small = true)
         JourneyBody("Mit Anja frei sprechen. Neue Formulierungen schaust du dir vorher in Ruhe an.")
         JourneyButton("Mein eigenes Gespräch", Icons.Rounded.ChatBubbleOutline, onClick = onFree)
     } else JourneySmall("Freie Gespräche kommen nach deinen ersten drei Mini-Gesprächen. Bis dahin üben wir alles gemeinsam.")
-    HorizontalDivider(color = JourneyLine)
+    HorizontalDivider(color = HikariBorderStrong)
     JourneyLink("Mein Wortschatz · ${RuJourney.known(f).size} kennengelernt", Icons.Rounded.AutoStories, onReview)
     JourneyLink("Mein Lernplan", Icons.Rounded.CalendarToday, onPlan)
 }
@@ -124,8 +124,8 @@ import com.hikari.app.domain.russian.*
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         labels.forEachIndexed { index, label ->
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(Modifier.fillMaxWidth().height(4.dp).clip(CircleShape).background(if (index <= active) JourneyGreen else JourneyLine))
-                if (!compact) Text(label, color = if (index == active) JourneyInk else JourneyMuted, fontSize = 11.sp,
+                Box(Modifier.fillMaxWidth().height(4.dp).clip(CircleShape).background(if (index <= active) HikariAmber else HikariBorderStrong))
+                if (!compact) Text(label, color = if (index == active) HikariText else HikariTextMuted, fontSize = 11.sp,
                     fontWeight = if (index == active) FontWeight.Bold else FontWeight.Normal)
             }
         }
@@ -140,12 +140,12 @@ import com.hikari.app.domain.russian.*
     JourneyLabel("WORT ${run.index + 1} VON ${lesson.words.size}")
     if (!compact) JourneyTitle(if (run.index == 0) "Lernen wir uns\nkennen." else "Noch ein kleines\nStück Russisch.", small = true)
     JourneyCard {
-        JourneyArtwork(word.art, Modifier.fillMaxWidth().height(if (compact) 92.dp else 162.dp))
+        JourneyArtwork(word.art, Modifier.fillMaxWidth().height(if (compact) 64.dp else 88.dp))
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(word.display, color = JourneyInk, fontSize = 40.sp, lineHeight = 48.sp, fontWeight = FontWeight.SemiBold)
-            Text(word.de, color = JourneyMuted, fontSize = 20.sp, lineHeight = 26.sp)
-            Surface(color = JourneyPaper, shape = RoundedCornerShape(50)) {
-                Text("${word.reading} · Lesehilfe", Modifier.padding(horizontal = 14.dp, vertical = 8.dp), color = JourneyGreen, fontSize = 13.sp)
+            Text(word.display, color = HikariText, fontSize = 40.sp, lineHeight = 48.sp, fontWeight = FontWeight.SemiBold)
+            Text(word.de, color = HikariTextMuted, fontSize = 20.sp, lineHeight = 26.sp)
+            Surface(color = HikariBg, shape = RoundedCornerShape(50)) {
+                Text("${word.reading} · Lesehilfe", Modifier.padding(horizontal = 14.dp, vertical = 8.dp), color = HikariAmber, fontSize = 13.sp)
             }
             Spacer(Modifier.height(4.dp))
             JourneyAudio("So klingt das Wort") { onPlay(word.plain) }
@@ -158,16 +158,16 @@ import com.hikari.app.domain.russian.*
 @Composable internal fun JourneyPartnerBubble(ru: String, de: String, onPlay: () -> Unit) {
     val compact = LocalConfiguration.current.let { it.screenWidthDp < 360 || it.fontScale > 1.15f }
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
-        Box(Modifier.size(42.dp).clip(CircleShape).background(JourneyPeach), contentAlignment = Alignment.Center) {
-            JourneyArtwork("hello", Modifier.size(58.dp))
+        Box(Modifier.size(42.dp).clip(CircleShape).background(HikariSurfaceHigh), contentAlignment = Alignment.Center) {
+            Icon(Icons.Rounded.ChatBubbleOutline, null, Modifier.size(22.dp), tint = HikariAmber)
         }
-        Column(Modifier.weight(1f).clip(RoundedCornerShape(4.dp, 24.dp, 24.dp, 24.dp)).background(Color.White).padding(20.dp),
+        Column(Modifier.weight(1f).clip(RoundedCornerShape(4.dp, 18.dp, 18.dp, 18.dp)).background(HikariCardBg).padding(if (compact) 14.dp else 20.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (compact) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 JourneyLabel("ANJA")
-                IconButton(onClick = onPlay, modifier = Modifier.size(48.dp)) { Icon(Icons.Rounded.VolumeUp, "Anja anhören", tint = JourneyGreen) }
+                IconButton(onClick = onPlay, modifier = Modifier.size(48.dp)) { Icon(Icons.Rounded.VolumeUp, "Anja anhören", tint = HikariAmber) }
             } else JourneyLabel("ANJA")
-            Text(ru, color = JourneyInk, fontSize = 26.sp, lineHeight = 34.sp, fontWeight = FontWeight.Medium)
+            Text(ru, color = HikariText, fontSize = 26.sp, lineHeight = 34.sp, fontWeight = FontWeight.Medium)
             JourneyBody(de, muted = true)
             if (!compact) JourneyAudio(onClick = onPlay)
         }
@@ -192,18 +192,18 @@ import com.hikari.app.domain.russian.*
     if (!compact) JourneyBody(line.situation, muted = true)
     JourneyPartnerBubble(line.ru, line.de) { onPlay(line.ru) }
     if (run.result == "correct") {
-        JourneyCard(modifier = Modifier.bringIntoViewRequester(answerPosition), color = JourneySage) {
+        JourneyCard(modifier = Modifier.bringIntoViewRequester(answerPosition), color = HikariSurfaceHigh) {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Rounded.CheckCircle, null, tint = JourneyGreen)
-                Text(line.success, color = JourneyGreen, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                Icon(Icons.Rounded.CheckCircle, null, tint = HikariAmber)
+                Text(line.success, color = HikariAmber, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
             }
             JourneyBody("Deine Antwort: ${run.draft}")
             JourneySmall(if (guided || run.helped) "Mit Unterstützung geübt. Genau dafür ist sie da." else "Aus dem Kopf — diesen Versuch merken wir uns für deinen Fortschritt.")
         }
     } else {
         JourneyBody(line.instruction)
-        if (listening) JourneyCard(color = JourneySage) {
-            Text("Ich höre zu …", color = JourneyGreen, fontSize = 19.sp)
+        if (listening) JourneyCard(color = HikariSurfaceHigh) {
+            Text("Ich höre zu …", color = HikariAmber, fontSize = 19.sp)
             if (partial.isNotBlank()) JourneyBody(partial) else JourneySmall("Ein Wort reicht. Du kannst die Aufnahme jederzeit beenden.")
         }
         if (typing || run.draft.isNotBlank()) {
@@ -211,15 +211,21 @@ import com.hikari.app.domain.russian.*
                 shape = RoundedCornerShape(18.dp), label = { Text(if (run.spoken) "So wurde es verstanden" else "Deine russische Antwort") })
             JourneySmall("Prüfe den Text vor dem Weitergehen. Hier wird der Inhalt erkannt, nicht dein Akzent benotet.")
         }
-        if (run.result == "retry") JourneyCard(color = JourneyPeach.copy(alpha = .65f)) {
+        if (run.result == "retry") JourneyCard(color = HikariSurfaceHigh.copy(alpha = .65f)) {
             JourneyBody("Das passt noch nicht ganz zur Aufgabe.")
             JourneySmall("Vielleicht hat die Spracherkennung etwas anderes verstanden. Du kannst den Text ändern, noch einmal sprechen oder die Starthilfe öffnen.")
         }
-        if (guided || run.helped) JourneyCard(color = JourneySage) {
-            JourneyLabel(if (guided) "DEINE ANTWORT" else "DEINE STARTHILFE")
-            Text(line.answers.first(), color = JourneyInk, fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.Medium)
+        if (guided || run.helped) JourneyCard(color = HikariSurfaceHigh) {
+            if (compact) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(if (guided) "DEINE ANTWORT" else "DEINE STARTHILFE", modifier = Modifier.weight(1f),
+                    color = HikariTextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                IconButton(onClick = { onPlay(line.answers.first()) }, modifier = Modifier.size(48.dp)) {
+                    Icon(Icons.Rounded.VolumeUp, "Antwort anhören", tint = HikariAmber)
+                }
+            } else JourneyLabel(if (guided) "DEINE ANTWORT" else "DEINE STARTHILFE")
+            Text(line.answers.first(), color = HikariText, fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.Medium)
             JourneyBody(line.answerDe, muted = true)
-            JourneyAudio("Antwort anhören") { onPlay(line.answers.first()) }
+            if (!compact) JourneyAudio("Antwort anhören") { onPlay(line.answers.first()) }
             if (run.helped || typing) TextButton(onClick = { onHelp(); onText(line.answers.first()) }) { Text("Als Starthilfe einsetzen") }
         } else TextButton(onClick = onHelp) {
             Icon(Icons.Rounded.Lightbulb, null, Modifier.size(20.dp)); Spacer(Modifier.width(8.dp)); Text("Ein kleiner Tipp")
@@ -234,7 +240,7 @@ import com.hikari.app.domain.russian.*
     val lesson = RuJourney.lesson(run.lessonId)
     JourneyLabel("EIN KLEINER MOMENT. EIN ECHTER ANFANG.")
     JourneyTitle(if (lesson.id == "hello") "Dein erstes\nGespräch." else "Das hast du\nselbst gesagt.")
-    JourneyArtwork("cafe", Modifier.fillMaxWidth().height(165.dp))
+    JourneyArtwork("cafe", Modifier.fillMaxWidth().height(72.dp))
     JourneyBody(when (lesson.id) {
         "hello" -> "Du hast Anja begrüßt, einen Tee angenommen und Danke gesagt. Mit vier Wörtern."
         "choice" -> "Du hast abgelehnt, selbst gewählt und bestellt. Deine Worte machen einen Unterschied."
@@ -242,12 +248,12 @@ import com.hikari.app.domain.russian.*
         else -> "Du hast von dir erzählt und zurückgefragt. So entsteht ein Gespräch."
     })
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Column(Modifier.weight(1f).clip(RoundedCornerShape(20.dp)).background(JourneySage).padding(18.dp)) {
-            Text("${lesson.words.size}", color = JourneyGreen, fontSize = 32.sp, fontWeight = FontWeight.SemiBold)
+        Column(Modifier.weight(1f).clip(RoundedCornerShape(20.dp)).background(HikariSurfaceHigh).padding(18.dp)) {
+            Text("${lesson.words.size}", color = HikariAmber, fontSize = 32.sp, fontWeight = FontWeight.SemiBold)
             JourneySmall("Wörter kennengelernt")
         }
-        Column(Modifier.weight(1f).clip(RoundedCornerShape(20.dp)).background(JourneyPeach.copy(alpha = .65f)).padding(18.dp)) {
-            Text("${run.recalled}", color = JourneyCoral, fontSize = 32.sp, fontWeight = FontWeight.SemiBold)
+        Column(Modifier.weight(1f).clip(RoundedCornerShape(20.dp)).background(HikariSurfaceHigh.copy(alpha = .65f)).padding(18.dp)) {
+            Text("${run.recalled}", color = HikariAmber, fontSize = 32.sp, fontWeight = FontWeight.SemiBold)
             JourneySmall("Antworten ohne Hilfe")
         }
     }
@@ -256,10 +262,10 @@ import com.hikari.app.domain.russian.*
         lesson.words.forEach { word ->
             Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onPlay(word.plain) }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(word.display, color = JourneyInk, fontSize = 19.sp)
+                    Text(word.display, color = HikariText, fontSize = 19.sp)
                     JourneySmall(word.de)
                 }
-                Icon(Icons.Rounded.VolumeUp, "${word.de} anhören", tint = JourneyGreen)
+                Icon(Icons.Rounded.VolumeUp, "${word.de} anhören", tint = HikariAmber)
             }
         }
         JourneySmall("Automatisch in deinem Wortschatz. Morgen begegnen dir die Wörter wieder — dann zeigt sich, was geblieben ist.")

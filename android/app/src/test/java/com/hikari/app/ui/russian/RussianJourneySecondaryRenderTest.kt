@@ -10,11 +10,12 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.Rule
 import org.junit.Test
+import java.time.LocalDate
 
 class RussianJourneySecondaryRenderTest {
-    @get:Rule val paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_5, theme = "android:Theme.Material.Light.NoActionBar", showSystemUi = false)
+    @get:Rule val paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_5, theme = "Theme.Hikari", showSystemUi = false)
     @Test fun artworkGallery() = paparazzi.snapshot {
-        JourneyTheme { Column {
+        HikariScreenTest { Column {
             listOf("hello", "tea", "coffee", "yes", "no", "thanks", "choice").chunked(2).forEach { row ->
                 Row { row.forEach { kind -> Column(Modifier.weight(1f).padding(8.dp)) {
                     JourneySmall(kind)
@@ -29,17 +30,38 @@ class RussianJourneySecondaryRenderTest {
         every { it.available } returns true
         every { it.busy } returns false
         every { it.error } returns null
-        every { it.today() } returns 0L
+        every { it.today() } returns LocalDate.of(2026, 10, 26).toEpochDay()
     }
     @Test fun personalConversationSetup() {
         val vm = model()
-        paparazzi.snapshot { JourneyTheme { JourneyScaffold("Gesprächsreise", "Deine Wörter. Deine Geschichten.", {}, {}) {
+        paparazzi.snapshot { HikariScreenTest { JourneyScaffold("Gesprächsreise", "Deine Wörter. Deine Geschichten.", {}, {}) {
+            JourneyFreeSetup(vm, RuChatProgress(foundation = RuFoundationProgress(completed = setOf("hello", "choice", "likes"))), {})
+        } } }
+    }
+    @Test fun personalConversationSavedTopic() {
+        val vm = model()
+        every { vm.settings } returns RuChatSettings(interest = "Meine Katze und mein Lieblingsfilm")
+        paparazzi.snapshot { HikariScreenTest { JourneyScaffold("Gesprächsreise", "Deine Wörter. Deine Geschichten.", {}, {}) {
             JourneyFreeSetup(vm, RuChatProgress(foundation = RuFoundationProgress(completed = setOf("hello", "choice", "likes"))), {})
         } } }
     }
     @Test fun learningPlan() {
         val vm = model()
-        paparazzi.snapshot { JourneyTheme { JourneyScaffold("Dein Lernplan", "Russisch · Schritt für Schritt", {}, {}) {
+        paparazzi.snapshot { HikariScreenTest { JourneyScaffold("Dein Lernplan", "Russisch · Schritt für Schritt", {}, {}) {
+            ConversationPlan(vm, RuChatProgress())
+        } } }
+    }
+    @Test fun learningPlanWithSavedInput() {
+        val vm = model()
+        every { vm.settings } returns RuChatSettings(targetDate = "2027-04-26", minutesPerDay = 45, daysPerWeek = 7, blockMinutes = 30)
+        paparazzi.snapshot { HikariScreenTest { JourneyScaffold("Dein Lernplan", "Russisch · Schritt für Schritt", {}, {}) {
+            ConversationPlan(vm, RuChatProgress())
+        } } }
+    }
+    @Test fun learningPlanInvalidDate() {
+        val vm = model()
+        every { vm.settings } returns RuChatSettings(targetDate = "2027-99-99")
+        paparazzi.snapshot { HikariScreenTest { JourneyScaffold("Dein Lernplan", "Russisch · Schritt für Schritt", {}, {}) {
             ConversationPlan(vm, RuChatProgress())
         } } }
     }
@@ -49,7 +71,7 @@ class RussianJourneySecondaryRenderTest {
             words = emptyList(), starter = "", examples = listOf(RuChatPhrase("Кофе.", "Kaffee."), RuChatPhrase("Чай.", "Tee.")),
             feedback = null, chunk = RuChatPhrase("Кофе или чай?", "Kaffee oder Tee?"), mission = "Ein Getränk wählen")
         every { vm.session } returns RuChatSession("test", RuChatSettings(), 0, turns = listOf(RuChatTurn("turn", reply)))
-        paparazzi.snapshot { JourneyTheme { JourneyScaffold("Mit Anja sprechen", "Dein Tempo. Deine Geschichten.", {}, {}) {
+        paparazzi.snapshot { HikariScreenTest { JourneyScaffold("Mit Anja sprechen", "Dein Tempo. Deine Geschichten.", {}, {}) {
             JourneyFreeChat(vm, RuChatProgress(), false, "", {}, {}, {}, {}, {}, {}, {})
         } } }
     }
@@ -59,7 +81,7 @@ class RussianJourneySecondaryRenderTest {
             words = listOf(RuChatPhrase("любишь", "du magst")), starter = "Я …", examples = listOf(RuChatPhrase("Да.", "Ja."), RuChatPhrase("Нет.", "Nein.")),
             feedback = null, chunk = RuChatPhrase("Ты любишь кофе?", "Magst du Kaffee?"), mission = "Eine Vorliebe nennen")
         every { vm.session } returns RuChatSession("test", RuChatSettings(), 0, turns = listOf(RuChatTurn("turn", reply)))
-        paparazzi.snapshot { JourneyTheme { JourneyScaffold("Mit Anja sprechen", "Dein Tempo. Deine Geschichten.", {}, {}) {
+        paparazzi.snapshot { HikariScreenTest { JourneyScaffold("Mit Anja sprechen", "Dein Tempo. Deine Geschichten.", {}, {}) {
             JourneyFreeChat(vm, RuChatProgress(), false, "", {}, {}, {}, {}, {}, {}, {})
         } } }
     }

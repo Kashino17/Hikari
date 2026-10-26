@@ -1,5 +1,6 @@
 package com.hikari.app.ui.russian
 
+import com.hikari.app.ui.theme.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,8 +20,7 @@ import com.hikari.app.domain.russian.*
     JourneyLabel("DEINE WÖRTER. DEIN GESPRÄCH.")
     JourneyTitle("Was bewegt\ndich heute?")
     JourneyBody("Anja knüpft an das an, was du schon gelernt hast. Neue Wörter schauen wir uns vor deiner Antwort gemeinsam an.", muted = true)
-    JourneyArtwork("hello", Modifier.fillMaxWidth().height(155.dp))
-    if (vm.session?.finished == false) JourneyCard(color = JourneySage) {
+    if (vm.session?.finished == false) JourneyCard(color = HikariSurfaceHigh) {
         JourneyBody("Euer letztes Gespräch wartet noch auf dich.")
         JourneyButton("Gespräch fortsetzen", onClick = onResume)
     }
@@ -28,7 +28,7 @@ import com.hikari.app.domain.russian.*
     OutlinedTextField(s.interest, { vm.configure(s.copy(interest = it.take(300))) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp),
         label = { Text("Dein Thema, wenn du magst") }, placeholder = { Text("Meine Katze, eine Reise, mein Lieblingsfilm …") })
     JourneyButton("Ein neues Gespräch beginnen", Icons.Rounded.ChatBubbleOutline, enabled = !vm.busy && RuJourney.freeReady(p.foundation)) { vm.start() }
-    if (vm.available == false) JourneyCard(color = JourneyPeach) {
+    if (vm.available == false) JourneyCard(color = HikariSurfaceHigh) {
         JourneyBody("Anja ist gerade nicht verbunden.")
         JourneySmall("Für das freie Gespräch muss dein KI-Server erreichbar sein. Deine Mini-Gespräche und dein Wortschatz funktionieren weiterhin.")
         TextButton(onClick = vm::refreshStatus) { Text("Verbindung erneut prüfen") }
@@ -58,7 +58,7 @@ import com.hikari.app.domain.russian.*
     if (s.finished) {
         JourneyLabel("DEIN GESPRÄCHSMOMENT")
         JourneyTitle("Du hast etwas\nzu sagen.")
-        JourneyArtwork("heart", Modifier.fillMaxWidth().height(150.dp))
+        JourneyArtwork("heart", Modifier.fillMaxWidth().height(72.dp))
         JourneyBody("${s.answers.size} eigene Antworten. ${s.answers.count { it.spoken }} davon gesprochen. ${s.answers.count { !it.helped }} ohne aufgedeckte Hilfe.")
         JourneySmall("Dein Fortschritt wächst über mehrere Tage. Eine einzelne gute Runde ist ein Anfang, noch kein Beleg für sicheres Beherrschen.")
         ConversationChoices("Wie fühlst du dich jetzt?", listOf("1" to "Unsicher", "2" to "Okay", "3" to "Mutig"), s.confidenceAfter?.toString().orEmpty()) { vm.confidence(it.toInt()) }
@@ -77,12 +77,12 @@ import com.hikari.app.domain.russian.*
     JourneyLabel("${RuChatCurriculum.scenario(s.settings.scenario).title} · ${s.answers.size} EIGENE ANTWORTEN")
     if (turn == null) {
         JourneyTitle("Anja ist gleich da.", small = true)
-        JourneyArtwork("hello", Modifier.fillMaxWidth().height(170.dp))
+        JourneyArtwork("hello", Modifier.fillMaxWidth().height(72.dp))
         JourneyBody("Du startest mit einer kurzen Frage. Erst anschauen, dann antworten.", muted = true)
         if (!vm.busy) JourneyButton("Noch einmal verbinden") { onSend("start") }
     } else {
         val r = turn.reply
-        if (turn.answer.isNotBlank()) JourneyCard(color = JourneySage) {
+        if (turn.answer.isNotBlank()) JourneyCard(color = HikariSurfaceHigh) {
             JourneyLabel("DU")
             JourneyBody(turn.answer)
             r.feedback?.let { f ->
@@ -104,10 +104,10 @@ import com.hikari.app.domain.russian.*
                 r.words.forEach { word ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Column(Modifier.weight(1f)) {
-                            Text(word.ru, fontSize = 21.sp, color = JourneyInk, fontWeight = FontWeight.Medium)
+                            Text(word.ru, fontSize = 21.sp, color = HikariText, fontWeight = FontWeight.Medium)
                             JourneySmall(word.de)
                         }
-                        IconButton(onClick = { onPlay(word.ru) }) { Icon(Icons.Rounded.VolumeUp, "${word.de} anhören", tint = JourneyGreen) }
+                        IconButton(onClick = { onPlay(word.ru) }) { Icon(Icons.Rounded.VolumeUp, "${word.de} anhören", tint = HikariAmber) }
                     }
                 }
                 JourneySmall(if (r.words.isEmpty()) "Diese Wörter kennst du schon. Eine kurze Antwort reicht."
@@ -119,7 +119,7 @@ import com.hikari.app.domain.russian.*
                 JourneyBody("Dein neuer Versuch — ändere nur die eine Stelle.")
                 TextButton(onClick = vm::cancelRepair) { Text("Lieber weiterreden") }
             }
-            if (s.hint > 0) JourneyCard(color = JourneySage) {
+            if (s.hint > 0) JourneyCard(color = HikariSurfaceHigh) {
                 JourneyLabel("EIN BISSCHEN RÜCKENWIND")
                 JourneyBody(r.cue)
                 if (s.hint >= 2) r.words.forEach { JourneyBody("${it.ru} — ${it.de}") }
@@ -132,7 +132,7 @@ import com.hikari.app.domain.russian.*
                     }
                 }
             }
-            if (listening) JourneyCard(color = JourneySage) { JourneyBody("Ich höre zu …"); if (partial.isNotBlank()) JourneySmall(partial) }
+            if (listening) JourneyCard(color = HikariSurfaceHigh) { JourneyBody("Ich höre zu …"); if (partial.isNotBlank()) JourneySmall(partial) }
             if (typing || s.draft.isNotBlank()) OutlinedTextField(s.draft, { vm.draft(it) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), minLines = 2, maxLines = 5,
                 label = { Text(if (s.draftSpoken) "So wurde es verstanden" else "Deine russische Antwort") })
             JourneyButton(if (listening) "Aufnahme beenden" else if (s.draft.isBlank()) "Ich antworte" else "Neu aufnehmen", if (listening) Icons.Rounded.Stop else Icons.Rounded.Mic,
@@ -144,7 +144,7 @@ import com.hikari.app.domain.russian.*
         }
         if (!vm.busy) {
             TextButton(onClick = { vm.savePhrase(r.chunk) }, enabled = p.cards.none { it.phrase.ru == r.chunk.ru }) { Text(if (p.cards.any { it.phrase.ru == r.chunk.ru }) "Ausdruck gemerkt" else "Diesen Ausdruck für später merken") }
-            if (s.answers.size >= s.settings.turns) JourneyCard(color = JourneyPeach) { JourneyBody("Dein Gesprächsziel für heute ist erreicht. Ein guter Moment für eine Pause."); JourneyButton("Mein Rückblick", onClick = onFinish) }
+            if (s.answers.size >= s.settings.turns) JourneyCard(color = HikariSurfaceHigh) { JourneyBody("Dein Gesprächsziel für heute ist erreicht. Ein guter Moment für eine Pause."); JourneyButton("Mein Rückblick", onClick = onFinish) }
             if (s.activeSeconds >= s.settings.blockMinutes * 60) JourneySmall("Dein geplanter Übungsblock ist vorbei. Du kannst jederzeit Pause machen; dein Gespräch bleibt gespeichert.")
             TextButton(onClick = { ideas = !ideas }) { Text("Das Gespräch gestalten") }
             if (ideas) listOf("simplify" to "Einfacher fragen", "deeper" to "Tiefer nachfragen", "twist" to "Eine kleine Überraschung", "roles" to "Jetzt frage ich", "retell" to "Aus dem Kopf erzählen", "listen" to "Eine Szene verstehen").forEach { (action, label) ->

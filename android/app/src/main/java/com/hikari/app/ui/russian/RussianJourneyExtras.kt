@@ -1,5 +1,6 @@
 package com.hikari.app.ui.russian
 
+import com.hikari.app.ui.theme.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,6 +9,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,7 +32,7 @@ import java.util.Locale
     } else {
         ConversationPanel {
             ChatSmall("Wie sagst du das auf Russisch?")
-            Text(card.phrase.de, color = JourneyInk, fontSize = 23.sp)
+            Text(card.phrase.de, color = HikariText, fontSize = 23.sp)
             if (revealed || checked != null) {
                 ChatBody(card.phrase.ru)
                 TextButton(onClick = { onPlay(card.phrase.ru) }) { Text("Ausdruck anhören") }
@@ -61,7 +64,7 @@ import java.util.Locale
 
 @Composable internal fun ConversationPlan(vm: RussianConversationViewModel, p: RuChatProgress) {
     val s = vm.settings
-    val today = LocalDate.now()
+    val today = LocalDate.ofEpochDay(vm.today())
     val target = runCatching { LocalDate.parse(s.targetDate) }.getOrNull()
     val plan = target?.let { RuStudyPlanner.calculate(today, it, s.daysPerWeek, s.minutesPerDay, s.blockMinutes) }
     val uri = LocalUriHandler.current
@@ -71,8 +74,12 @@ import java.util.Locale
     JourneyTitle("Ein guter Rhythmus\nfür dich.")
     JourneyBody("Wann möchtest du sicherer sprechen? Wir planen deine verfügbare Zeit und schauen, was du später wirklich erinnerst.", muted = true)
     JourneyCard {
-        ConversationChoices("Mein Wunschzeitraum", listOf("3" to "3 Monate", "6" to "6 Monate", "12" to "1 Jahr"), "") { vm.configure(s.copy(targetDate = today.plusMonths(it.toLong()).toString())) }
-        OutlinedTextField(s.targetDate, { vm.configure(s.copy(targetDate = it.take(10))) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), label = { Text("Wunschdatum · JJJJ-MM-TT") }, isError = s.targetDate.isNotEmpty() && plan == null)
+        val selectedPeriod = listOf(3L, 6L, 12L).firstOrNull { today.plusMonths(it) == target }?.toString().orEmpty()
+        ConversationChoices("Mein Wunschzeitraum", listOf("3" to "3 Monate", "6" to "6 Monate", "12" to "1 Jahr"), selectedPeriod) { vm.configure(s.copy(targetDate = today.plusMonths(it.toLong()).toString())) }
+        OutlinedTextField(s.targetDate, { vm.configure(s.copy(targetDate = it.take(10))) }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp),
+            label = { Text("Wunschdatum") }, placeholder = { Text("JJJJ-MM-TT") }, singleLine = true,
+            isError = s.targetDate.isNotEmpty() && plan == null,
+            supportingText = if (s.targetDate.isNotEmpty() && plan == null) ({ Text("Bitte ein zukünftiges Datum eingeben, z. B. ${today.plusMonths(6)}.", color = HikariDanger) }) else null)
         ConversationChoices("Zeit pro Lerntag", listOf("15" to "15 Min", "30" to "30 Min", "45" to "45 Min", "60" to "1 Stunde"), s.minutesPerDay.toString()) { vm.configure(s.copy(minutesPerDay = it.toInt())) }
         TextButton(onClick = { custom = !custom }) { Text("Eigenes Zeitbudget") }
         if (custom) {
@@ -86,7 +93,7 @@ import java.util.Locale
         ConversationChoices("Eine kleine Übungsrunde", listOf("5" to "5 Min", "10" to "10 Min", "20" to "20 Min", "30" to "30 Min"), s.blockMinutes.toString()) { vm.configure(s.copy(blockMinutes = it.toInt())) }
     }
     plan?.let {
-        JourneyCard(color = JourneySage) {
+        JourneyCard(color = HikariSurfaceHigh) {
             JourneyLabel("DEIN ZEITBUDGET BIS ZUM WUNSCHDATUM")
             JourneyTitle("${String.format(Locale.GERMAN, "%.1f", it.availableHours)} Stunden", small = true)
             JourneyBody("${it.studyDays} Lerntage mit je ${s.minutesPerDay} Minuten. Verteile deine ${it.blocksPerDay} Übungsblöcke nach Möglichkeit über den Tag.")
@@ -123,7 +130,7 @@ import java.util.Locale
 
 @Composable internal fun ConversationEvidence() {
     val uri = LocalUriHandler.current
-    Text("Weniger raten. Mehr erinnern.", color = JourneyInk, fontSize = 26.sp, fontWeight = FontWeight.SemiBold)
+    Text("Weniger raten. Mehr erinnern.", color = HikariText, fontSize = 26.sp, fontWeight = FontWeight.SemiBold)
     ChatBody("Die Lernprinzipien sind erforscht. Genau diese App, ihre KI und ihre Stufenschwellen sind noch nicht durch eine Wirksamkeitsstudie validiert.")
     val evidence = listOf(
         Triple("Erst ein Beispiel, dann selbst antworten", "Du lernst zuerst die Wörter, übst mit einer sichtbaren Vorlage und versuchst es danach selbst. Forschung zu schrittweise reduzierter Beispielhilfe stützt diesen Ansatz beim Fertigkeitserwerb; sie beweist nicht die optimale Russisch-Lektion oder eine feste Wortzahl.", "https://doi.org/10.1037/0022-0663.95.4.774"),
@@ -138,7 +145,7 @@ import java.util.Locale
         Triple("Verteilen statt nur anhäufen", "Eine Metaanalyse von 2025 unterstützt verteilte Übung. Daraus folgt keine universelle Tagesobergrenze und keine Formel für eine persönliche Fließend-Frist.", "https://doi.org/10.3390/bs15060771"),
     )
     evidence.forEach { (title, explanation, url) -> ConversationPanel {
-        Text(title, color = JourneyGreen, fontWeight = FontWeight.SemiBold)
+        Text(title, color = HikariAmber, fontWeight = FontWeight.SemiBold)
         ChatBody(explanation)
         TextButton(onClick = { uri.openUri(url) }) { Text("Studie öffnen") }
     } }
@@ -148,14 +155,20 @@ import java.util.Locale
 @Composable internal fun ConversationChoices(title: String, values: List<Pair<String, String>>, selected: String, onSelect: (String) -> Unit) {
     ChatSmall(title)
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        values.chunked(2).forEach { row -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            row.forEach { (id, label) -> FilterChip(selected == id, onClick = { onSelect(id) }, label = { Text(label) }, modifier = Modifier.weight(1f)) }
+        values.chunked(2).forEach { row -> Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            row.forEach { (id, label) ->
+                val chosen = selected == id
+                RuOptionCard(if (chosen) RuOptionState.Selected else RuOptionState.Idle,
+                    onClick = { onSelect(id) }, modifier = Modifier.weight(1f).fillMaxHeight().heightIn(min = 48.dp).semantics { this.selected = chosen }) {
+                    Text(label, color = if (chosen) HikariAmber else HikariText, fontSize = 14.sp)
+                }
+            }
         } }
     }
 }
 @Composable internal fun ConversationPanel(learner: Boolean = false, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Column(modifier.fillMaxWidth().background(if (learner) JourneySage else androidx.compose.ui.graphics.Color.White, RoundedCornerShape(20.dp)).padding(16.dp),
+    Column(modifier.fillMaxWidth().background(if (learner) HikariSurfaceHigh else HikariCardBg, RoundedCornerShape(20.dp)).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
 }
-@Composable internal fun ChatBody(text: String) { Text(text, color = JourneyInk, fontSize = 15.sp, lineHeight = 22.sp) }
-@Composable internal fun ChatSmall(text: String) { Text(text, color = JourneyMuted, fontSize = 12.sp, lineHeight = 18.sp) }
+@Composable internal fun ChatBody(text: String) { Text(text, color = HikariText, fontSize = 15.sp, lineHeight = 22.sp) }
+@Composable internal fun ChatSmall(text: String) { Text(text, color = HikariTextMuted, fontSize = 12.sp, lineHeight = 18.sp) }

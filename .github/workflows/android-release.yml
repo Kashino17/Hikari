@@ -42,9 +42,9 @@ jobs:
       - name: Make Gradle executable
         run: chmod +x android/gradlew
 
-      - name: Run Android tests
+      - name: Run Android tests and verify UI snapshots
         working-directory: android
-        run: ./gradlew test
+        run: ./gradlew test verifyPaparazziDebug
 
       - name: Build release APK
         working-directory: android

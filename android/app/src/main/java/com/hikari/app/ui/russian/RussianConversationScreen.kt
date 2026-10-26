@@ -1,5 +1,6 @@
 package com.hikari.app.ui.russian
 
+import com.hikari.app.ui.theme.*
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.BackHandler
@@ -86,7 +87,7 @@ fun RussianConversationScreen(onClose: () -> Unit, vm: RussianConversationViewMo
             else -> Unit
         }
     }
-    JourneyTheme {
+    HikariTheme {
         val lesson = run?.let { RuJourney.lesson(it.lessonId) }
         JourneyScaffold(
             title = when (vm.page) { "lesson" -> lesson?.title ?: "Dein Einstieg"; "review" -> "Dein Wortschatz"; "plan" -> "Dein Lernplan"; "evidence" -> "Warum wir so üben"; "chat" -> "Mit Anja sprechen"; else -> "Gesprächsreise" },
@@ -124,15 +125,15 @@ fun RussianConversationScreen(onClose: () -> Unit, vm: RussianConversationViewMo
                 else -> JourneyHome(progress, vm.today(), onStart = { stopMedia(); vm.beginLesson(it) }, onResume = { stopMedia(); vm.resumeLesson() },
                     onReview = { go("review") }, onPlan = { go("plan") }, onFree = { go("free") })
             }
-            vm.error?.let { JourneyCard(color = JourneyPeach) { JourneyBody(it) } }
+            vm.error?.let { JourneyCard(color = HikariSurfaceHigh) { JourneyBody(it) } }
             if (vm.page != "lesson") {
-                micError?.let { JourneyCard(color = JourneyPeach) { JourneyBody(it) } }
+                micError?.let { JourneyCard(color = HikariSurfaceHigh) { JourneyBody(it) } }
                 voice.error?.let { JourneySmall(it) }
             }
             if (voice.speaking) TextButton(onClick = voice::stop) { Text("Ton stoppen") }
             Spacer(Modifier.height(8.dp))
         }
-        if (more) ModalBottomSheet(onDismissRequest = { more = false }, containerColor = JourneyPaper) {
+        if (more) ModalBottomSheet(onDismissRequest = { more = false }, containerColor = HikariBg) {
             Column(Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp)) {
                 JourneyTitle("Dein Platz zum Lernen", small = true)
                 listOf(Triple("home", "Meine Reise", Icons.Rounded.Home), Triple("review", "Mein Wortschatz", Icons.Rounded.AutoStories),

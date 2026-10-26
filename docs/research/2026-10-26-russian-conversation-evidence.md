@@ -188,3 +188,13 @@ Noch erforderlich für eine Gerätefreigabe: Gesprächsreise öffnen, eine Aufna
 
 
 Nachprüfung am echten HTTP-Endpunkt: Ein vollständig bekannter Ein-Wort-Dialog darf eine leere neue Wortliste und keinen Satzanfang benötigen. Der reale Aufruf deckte diese unnötige Schemaanforderung auf; sie wurde vor der APK-Auslieferung entfernt und mit einem zusätzlichen Backend-Test sowie einem eigenen Android-Renderfall abgesichert. Der erneut geprüfte App-Aufruf antwortete mit HTTP 200 in etwa 14 Sekunden. Fehlende neue Vokabeln sind damit kein Fehler mehr; nicht erklärte tatsächlich neue Formen werden weiterhin geprüft.
+
+## Korrektur der Theme-Integration (v0.89.45)
+
+Der Gerätescreenshot des Nutzers zeigte einen realen Fehler, den die vorherigen isolierten Renderfälle nicht erfasst hatten: `JourneyTheme` setzte eine helle Farbpalette, erbte innerhalb der App aber `HikariTypography` mit explizit weißer Textfarbe. Dadurch wurden insbesondere Auswahlfelder, Eingaben und Textaktionen auf hellen Flächen unlesbar. Die vorherige Aussage zu konsistenten Auswahlfarben war für die tatsächliche App-Einbettung unzureichend geprüft.
+
+Das separate helle Theme, die Serifenschrift und die großflächigen Café-Illustrationen sind entfernt. Die Gesprächsreise verwendet jetzt `HikariTheme`, die bestehenden dunklen Hikari-Flächen, Amber-Akzente, `RuPrimaryButton` und `RuOptionCard`. Auswahltexte und Beschriftungen der weißen Hauptschaltflächen erhalten ihre passenden expliziten Farben. Die Hauptschaltfläche kann bei großer Schrift mitwachsen. Bei schmalen Dialogen sitzt die Audiohilfe unmittelbar neben der Beschriftung der Antwortkarte.
+
+20 Renderfälle wurden mit der tatsächlichen Android-Ressource `Theme.Hikari`, `HikariTheme`, dessen Typografie und einem dunklen `Surface` erzeugt und visuell geprüft. Enthalten sind leere und gespeicherte Planereingaben, ein ungültiges Datum, alle Planerfelder samt Stundenbudget in einem verlängerten Prüf-Viewport, 320 dp mit 130 % Schrift, persönliche Texteingaben sowie Anfänger-, Dialog- und Abschlussansichten. Der Planer nutzt dieselbe Tagesquelle wie das ViewModel; Tests fixieren sie auf den 26.10.2026. Gewählte Zeiträume werden nun markiert und ein ungültiges Datum erhält eine sichtbare Erläuterung.
+
+Der Android-Release-Workflow prüft die gespeicherten Referenzbilder mit `verifyPaparazziDebug` zusätzlich zu den JVM-Tests, statt sie nur neu zu rendern. Die Lernregeln und wissenschaftlichen Einschränkungen bleiben unverändert. Diese Prüfung belegt die gerenderten Zustände, nicht das Mikrofon-, Tastatur- oder TTS-Verhalten auf dem Nutzergerät.
