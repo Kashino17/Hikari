@@ -5,6 +5,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -32,6 +33,7 @@ import com.hikari.app.domain.whatsapp.WhatsAppRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -45,10 +47,9 @@ import javax.inject.Inject
  * Sobald der Nutzer in den Android-Systemeinstellungen den Benachrichtigungszugriff
  * für Hikari aktiviert hat, empfängt dieser Dienst alle eingehenden WhatsApp-Push-
  * Benachrichtigungen in Echtzeit:
- * - Neue Nachrichten werden lokal in Room gesichert.
+ * - Normale Nachrichten werden kurzzeitig im flüchtigen Puffer gemerkt (nicht in der DB).
  * - Wird eine Nachricht später "Für alle gelöscht" (WhatsApp postet "Diese Nachricht
- *   wurde gelöscht"), markiert Hikari die ursprüngliche Nachricht als gelöscht und
- *   behält den Originaltext.
+ *   wurde gelöscht"), sichert Hikari den Originaltext in Room (7 Tage Aufbewahrung).
  * - Wird eine Nachricht bearbeitet, sichert Hikari den Vorher-/Nachher-Verlauf.
  */
 @AndroidEntryPoint
@@ -60,19 +61,40 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
     @Inject
     lateinit var mediaVault: WhatsAppMediaVault
 
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val alertScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    // Strikt sequenzielle Verarbeitung (FIFO), damit eine schnelle Löschnachricht
+    // niemals die vorangehende Originalnachricht während des Avatar-Speicherns überholt!
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val processingScope = CoroutineScope(
+        SupervisorJob() + Dispatchers.IO.limitedParallelism(1),
+    )
 
     override fun onCreate() {
         super.onCreate()
-        serviceScope.launch {
+        alertScope.launch {
             repository.guardAlerts.collect { alert ->
                 showGuardNotification(alert)
             }
         }
     }
 
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        // Bestehende aktive WhatsApp-Benachrichtigungen in der Statusleiste sofort einlesen,
+        // damit auch bereits vor dem Verbinden eingetroffene Nachrichten bei Löschung gerettet werden.
+        runCatching {
+            activeNotifications?.forEach { sbn ->
+                if (sbn != null && WhatsAppNotificationParser.isSupportedPackage(sbn.packageName.orEmpty())) {
+                    enqueueNotification(sbn)
+                }
+            }
+        }
+    }
+
     override fun onDestroy() {
-        serviceScope.cancel()
+        processingScope.cancel()
+        alertScope.cancel()
         super.onDestroy()
     }
 
@@ -80,13 +102,17 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
         if (sbn == null) return
         val pkg = sbn.packageName ?: return
         if (!WhatsAppNotificationParser.isSupportedPackage(pkg)) return
+        enqueueNotification(sbn)
+    }
 
+    private fun enqueueNotification(sbn: StatusBarNotification) {
+        val pkg = sbn.packageName ?: return
         val notification = sbn.notification ?: return
         val extras = notification.extras ?: Bundle.EMPTY
 
         val isSummary = (notification.flags and Notification.FLAG_GROUP_SUMMARY) != 0
         val isOngoing = sbn.isOngoing || (notification.flags and Notification.FLAG_ONGOING_EVENT) != 0
-        if (isSummary || isOngoing) return
+        if (isOngoing) return
 
         val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()
         val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString()
@@ -95,6 +121,7 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
         val convTitle = extras.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE)?.toString()
         val isGroupConv = extras.getBoolean(Notification.EXTRA_IS_GROUP_CONVERSATION, false)
         val messagingItems = extractMessagingItems(notification, extras)
+        val textLines = extractTextLines(extras)
 
         val payload = RawNotificationPayload(
             packageName = pkg,
@@ -111,15 +138,16 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
             category = notification.category,
             postTime = sbn.postTime,
             messagingStyleItems = messagingItems,
+            textLines = textLines,
         )
 
         val rawChatName = convTitle?.takeIf { it.isNotBlank() } ?: title.orEmpty()
         val cleanChat = WhatsAppNotificationParser.cleanChatTitle(rawChatName.substringBefore(":"))
 
-        serviceScope.launch {
+        processingScope.launch {
             val avatarPath = saveAvatarIfPresent(notification, pkg, cleanChat)
             val detectedMedia = WhatsAppNotificationParser.detectMediaType(
-                (bigText ?: text).orEmpty(),
+                (text ?: bigText).orEmpty(),
             )
             val mediaPreviewPath = saveMediaPictureIfPresent(extras, sbn.postTime)
                 ?: mediaVault.backupLatestIncomingMedia(detectedMedia, sbn.postTime)
@@ -137,11 +165,34 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
         reason: Int,
     ) {
         if (sbn == null) return
-        if (!WhatsAppNotificationParser.isSupportedPackage(sbn.packageName.orEmpty())) return
-        // Wenn der Nutzer die Benachrichtigung selbst wegwischt oder antippt, Stack leeren
-        if (reason == REASON_CANCEL || reason == REASON_CANCEL_ALL || reason == REASON_CLICK) {
-            repository.onNotificationCleared(sbn.key)
+        val pkg = sbn.packageName.orEmpty()
+        if (!WhatsAppNotificationParser.isSupportedPackage(pkg)) return
+
+        // Falls WhatsApp die Benachrichtigung beim Löschen kurz aktualisiert und sofort entfernt:
+        val extras = sbn.notification?.extras
+        if (extras != null) {
+            val removedText = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString().orEmpty()
+            val removedBigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString().orEmpty()
+            if (WhatsAppNotificationParser.isDeletedPlaceholder(removedText) ||
+                removedBigText.lines().any { WhatsAppNotificationParser.isDeletedPlaceholder(it) }
+            ) {
+                enqueueNotification(sbn)
+            }
         }
+
+        // Sobald die Benachrichtigung aus der Statusleiste verschwindet (angetippt, weggewischt
+        // oder durch Öffnen von WhatsApp geschlossen), aktiven Statusleisten-Snapshot leeren,
+        // damit eine spätere neue Einzelnachricht niemals als Bearbeitung gewertet wird.
+        // (Der flüchtige Puffer `transientRamCache` bleibt für Löschungen voll erhalten!)
+        val key = sbn.key
+        processingScope.launch {
+            repository.onNotificationCleared(key)
+        }
+    }
+
+    private fun extractTextLines(extras: Bundle): List<String> {
+        val rawLines = extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES) ?: return emptyList()
+        return rawLines.mapNotNull { it?.toString()?.trim()?.takeIf { s -> s.isNotEmpty() } }
     }
 
     @Suppress("DEPRECATION")
@@ -317,6 +368,18 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
                 "enabled_notification_listeners",
             ).orEmpty()
             return flat.contains(context.packageName)
+        }
+
+        /**
+         * Stellt nach einem App-Update oder beim Öffnen der WhatsApp-Ecke sicher,
+         * dass Android den NotificationListenerService sofort wieder aktiv bindet.
+         */
+        fun ensureServiceBound(context: Context) {
+            if (!isNotificationAccessGranted(context)) return
+            runCatching {
+                val cn = ComponentName(context, WhatsAppNotificationListenerService::class.java)
+                requestRebind(cn)
+            }
         }
     }
 }

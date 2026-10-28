@@ -46,9 +46,12 @@ class WhatsAppGuardTest {
     }
 
     @Test
-    fun `parser detects deleted message placeholders in multiple languages`() {
+    fun `parser detects deleted message placeholders in multiple languages and with unicode marks`() {
         assertTrue(WhatsAppNotificationParser.isDeletedPlaceholder("Diese Nachricht wurde gelöscht"))
         assertTrue(WhatsAppNotificationParser.isDeletedPlaceholder("🚫 Diese Nachricht wurde gelöscht."))
+        assertTrue(WhatsAppNotificationParser.isDeletedPlaceholder("\u200E🚫\uFE0F Diese Nachricht wurde gelöscht."))
+        assertTrue(WhatsAppNotificationParser.isDeletedPlaceholder("\u200EDiese Nachricht wurde gelöscht\u200F"))
+        assertTrue(WhatsAppNotificationParser.isDeletedPlaceholder("Anna: \u200E🚫\uFE0F Diese Nachricht wurde gelöscht"))
         assertTrue(WhatsAppNotificationParser.isDeletedPlaceholder("This message was deleted"))
         assertTrue(WhatsAppNotificationParser.isDeletedPlaceholder("🚫 This message was deleted."))
         assertTrue(WhatsAppNotificationParser.isDeletedPlaceholder("Bu mesaj silindi"))
@@ -132,6 +135,52 @@ class WhatsAppGuardTest {
     }
 
     @Test
+    fun `rescues deleted message when WhatsApp uses invisible LRM marks, summary flags or top-level text`() = runTest {
+        val t0 = System.currentTimeMillis() - 45_000L
+
+        // 1. Eingehende Nachricht mit Unicode-Bidi-Markierungen im Namen
+        val incoming = RawNotificationPayload(
+            packageName = "com.whatsapp",
+            notificationKey = "0|com.whatsapp|1|49176@s.whatsapp.net|101",
+            notificationTag = "49176@s.whatsapp.net",
+            title = "\u200EMax (2 neue Nachrichten)",
+            text = "Diesen Satz lösche ich gleich wieder!",
+            bigText = "Hallo\nDiesen Satz lösche ich gleich wieder!",
+            subText = null,
+            conversationTitle = null,
+            isGroupConversation = false,
+            isSummary = false,
+            isOngoing = false,
+            category = "msg",
+            postTime = t0,
+            messagingStyleItems = listOf(
+                RawMessagingItem(sender = "\u200EMax", text = "Hallo", timestamp = t0 - 10_000L),
+                RawMessagingItem(sender = "\u200EMax", text = "Diesen Satz lösche ich gleich wieder!", timestamp = t0),
+            ),
+        )
+        repository.processNotification(incoming)
+        assertTrue(repository.allMessages.first().isEmpty())
+
+        // 2. Max löscht die 2. Nachricht:
+        //    WhatsApp entfernt die 2. Nachricht aus EXTRA_MESSAGES (nur "Hallo" bleibt drin)
+        //    und setzt EXTRA_TEXT auf "\u200E🚫\uFE0F Diese Nachricht wurde gelöscht"
+        val deletionPayload = incoming.copy(
+            title = "Max",
+            text = "\u200E🚫\uFE0F Diese Nachricht wurde gelöscht",
+            bigText = "Hallo\n\u200E🚫\uFE0F Diese Nachricht wurde gelöscht",
+            postTime = t0 + 5_000L,
+            messagingStyleItems = listOf(
+                RawMessagingItem(sender = "Max", text = "Hallo", timestamp = t0 - 10_000L),
+            ),
+        )
+        repository.processNotification(deletionPayload)
+
+        val deletedList = repository.deletedMessages.first()
+        assertEquals(1, deletedList.size)
+        assertEquals("Diesen Satz lösche ich gleich wieder!", deletedList.first().text)
+    }
+
+    @Test
     fun `repository detects edited message from RAM cache and persists only when edited`() = runTest {
         val t0 = System.currentTimeMillis() - 120_000L
 
@@ -161,7 +210,7 @@ class WhatsAppGuardTest {
         repository.processNotification(initialPayload)
         assertTrue(repository.allMessages.first().isEmpty())
 
-        // 2. Lukas bearbeitet die Nachricht innerhalb des 15-Minuten-Fensters
+        // 2. Lukas bearbeitet die Nachricht (MessagingStyle behält den Original-Timestamp t0)
         val editedPayload = initialPayload.copy(
             text = "Treffen um 20:30 Uhr vorm Kino",
             postTime = t0 + 60_000L,
@@ -169,7 +218,7 @@ class WhatsAppGuardTest {
                 RawMessagingItem(
                     sender = "Lukas",
                     text = "Treffen um 20:30 Uhr vorm Kino",
-                    timestamp = t0 + 60_000L,
+                    timestamp = t0,
                 ),
             ),
         )
@@ -181,6 +230,67 @@ class WhatsAppGuardTest {
         assertTrue(msg.isEdited)
         assertEquals("Treffen um 19:00 Uhr vorm Kino", msg.originalText)
         assertEquals("Treffen um 20:30 Uhr vorm Kino", msg.text)
+    }
+
+    @Test
+    fun `separate photo and audio messages or separate single messages are NEVER falsely marked as edited`() = runTest {
+        val t0 = System.currentTimeMillis() - 90_000L
+
+        // 1. Freund schickt ein Bild ("📷 Foto")
+        val photoPayload = RawNotificationPayload(
+            packageName = "com.whatsapp",
+            notificationKey = "notif_friend",
+            notificationTag = "friend",
+            title = "Kumpel",
+            text = "📷 Foto",
+            bigText = null,
+            subText = null,
+            conversationTitle = null,
+            isGroupConversation = false,
+            isSummary = false,
+            isOngoing = false,
+            category = "msg",
+            postTime = t0,
+            messagingStyleItems = listOf(
+                RawMessagingItem(sender = "Kumpel", text = "📷 Foto", timestamp = t0),
+            ),
+        )
+        repository.processNotification(photoPayload)
+
+        // 2. Freund schickt danach eine Sprachnachricht ("🎤 Sprachnachricht (0:07)")
+        val audioPayload = photoPayload.copy(
+            text = "🎤 Sprachnachricht (0:07)",
+            postTime = t0 + 20_000L,
+            messagingStyleItems = listOf(
+                RawMessagingItem(sender = "Kumpel", text = "🎤 Sprachnachricht (0:07)", timestamp = t0 + 20_000L),
+            ),
+        )
+        repository.processNotification(audioPayload)
+
+        // 3. Freund schickt danach noch zwei einzelne Textnachrichten zu unterschiedlichen Zeiten
+        val text1 = photoPayload.copy(
+            text = "Hast du das gesehen?",
+            postTime = t0 + 35_000L,
+            messagingStyleItems = listOf(
+                RawMessagingItem(sender = "Kumpel", text = "Hast du das gesehen?", timestamp = t0 + 35_000L),
+            ),
+        )
+        repository.processNotification(text1)
+
+        val text2 = photoPayload.copy(
+            text = "Gib mir Bescheid!",
+            postTime = t0 + 50_000L,
+            messagingStyleItems = listOf(
+                RawMessagingItem(sender = "Kumpel", text = "Gib mir Bescheid!", timestamp = t0 + 50_000L),
+            ),
+        )
+        repository.processNotification(text2)
+
+        assertTrue(
+            "Einzelne Bild-, Audio- oder Folgeschrichten dürfen NIEMALS als Bearbeitet gespeichert werden",
+            repository.editedMessages.first().isEmpty(),
+        )
+        assertTrue(repository.allMessages.first().isEmpty())
     }
 
     @Test

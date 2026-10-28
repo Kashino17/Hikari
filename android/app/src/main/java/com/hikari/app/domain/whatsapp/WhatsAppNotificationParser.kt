@@ -15,6 +15,7 @@ data class ParsedWhatsAppMessage(
     val mediaType: String?,
     val timestamp: Long,
     val notificationKey: String?,
+    val notificationTag: String? = null,
 )
 
 /**
@@ -35,6 +36,7 @@ data class RawNotificationPayload(
     val category: String?,
     val postTime: Long,
     val messagingStyleItems: List<RawMessagingItem> = emptyList(),
+    val textLines: List<String> = emptyList(),
 )
 
 data class RawMessagingItem(
@@ -50,26 +52,43 @@ object WhatsAppNotificationParser {
         "com.whatsapp.w4b",
     )
 
-    // Muster für "Nachricht wurde für alle gelöscht" in DE, EN und weiteren verbreiteten Sprachen
-    private val DELETED_PATTERNS = listOf(
-        Regex("""^(?:🚫\s*)?diese nachricht wurde gelöscht\.?$""", RegexOption.IGNORE_CASE),
-        Regex("""^(?:🚫\s*)?du hast diese nachricht gelöscht\.?$""", RegexOption.IGNORE_CASE),
-        Regex("""^(?:🚫\s*)?this message was deleted\.?$""", RegexOption.IGNORE_CASE),
-        Regex("""^(?:🚫\s*)?you deleted this message\.?$""", RegexOption.IGNORE_CASE),
-        Regex("""^(?:🚫\s*)?este mensaje fue eliminado\.?$""", RegexOption.IGNORE_CASE),
-        Regex("""^(?:🚫\s*)?ce message a été supprimé\.?$""", RegexOption.IGNORE_CASE),
-        Regex("""^(?:🚫\s*)?questo messaggio è stato eliminato\.?$""", RegexOption.IGNORE_CASE),
-        Regex("""^(?:🚫\s*)?bu mesaj silindi\.?$""", RegexOption.IGNORE_CASE),
-        Regex("""^(?:🚫\s*)?это сообщение было удалено\.?$""", RegexOption.IGNORE_CASE),
-        Regex("""^(?:🚫\s*)?esta mensagem foi apagada\.?$""", RegexOption.IGNORE_CASE),
-        Regex("""^(?:🚫\s*)?dit bericht is verwijderd\.?$""", RegexOption.IGNORE_CASE),
-        Regex("""^(?:🚫\s*)?ta wiadomość została usunięta\.?$""", RegexOption.IGNORE_CASE),
+    /**
+     * Unsichtbare Unicode-Steuerzeichen, die WhatsApp regelmäßig in Push-Benachrichtigungen
+     * vor Emojis (z. B. `\u200E` vor `🚫`, `\uFE0F` nach `🚫`) oder um Telefonnummern/Namen
+     * (`\u202A`..`\u202C`, `\u2066`..`\u2069`) einfügt.
+     * Normales `.trim()` in Kotlin entfernt diese Zeichen NICHT!
+     */
+    private val INVISIBLE_MARKS_REGEX = Regex(
+        """[\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFE00-\uFE0F\uFEFF]""",
+    )
+
+    // Muster für "Nachricht wurde für alle gelöscht" in DE, EN und weiteren verbreiteten Sprachen.
+    // Erlaubt optional auch ein vorangestelltes "Absender: " sowie "🚫".
+    private val DELETED_REGEX = Regex(
+        """^(?:[^:\n]{1,60}:\s*)?(?:🚫\s*)?(?:""" +
+            """diese nachricht wurde (?:für alle |vom absender )?gelöscht|""" +
+            """du hast diese nachricht gelöscht|""" +
+            """nachricht wurde gelöscht|""" +
+            """this message was deleted|""" +
+            """you deleted this message|""" +
+            """message was deleted|""" +
+            """este mensaje fue eliminado|eliminaste este mensaje|""" +
+            """ce message a été supprimé|vous avez supprimé ce message|""" +
+            """questo messaggio è stato eliminato|hai eliminato questo messaggio|""" +
+            """bu mesaj silindi|bu mesajı sildiniz|""" +
+            """это сообщение было удалено|вы удалили это сообщение|""" +
+            """esta mensagem foi apagada|mensagem apagada|""" +
+            """dit bericht is verwijderd|je hebt dit bericht verwijderd|""" +
+            """ta wiadomość została usunięta|usunięto wiadomość|""" +
+            """تم حذف هذه الرسالة""" +
+            """)\.?\s*$""",
+        RegexOption.IGNORE_CASE,
     )
 
     // System-/Hintergrund-Meldungen von WhatsApp, die keine echten Chat-Nachrichten sind
     private val SYSTEM_NOISE_PATTERNS = listOf(
-        Regex("""^\d+\s+neue\s+nachrichten?$""", RegexOption.IGNORE_CASE),
-        Regex("""^\d+\s+new\s+messages?$""", RegexOption.IGNORE_CASE),
+        Regex("""^\d+\s+(?:neue\s+|ungelesene\s+)?nachrichten?$""", RegexOption.IGNORE_CASE),
+        Regex("""^\d+\s+(?:new\s+|unread\s+)?messages?$""", RegexOption.IGNORE_CASE),
         Regex("""^\d+\s+nachrichten?\s+aus\s+\d+\s+chats?$""", RegexOption.IGNORE_CASE),
         Regex("""^\d+\s+messages?\s+from\s+\d+\s+chats?$""", RegexOption.IGNORE_CASE),
         Regex("""^suche nach neuen nachrichten\.{0,3}$""", RegexOption.IGNORE_CASE),
@@ -81,30 +100,63 @@ object WhatsAppNotificationParser {
         Regex("""^nachrichten werden (wiederhergestellt|entschlüsselt).*""", RegexOption.IGNORE_CASE),
     )
 
-    // Entfernt "(3 Nachrichten)" oder "(4 messages)" am Ende von Gruppennamen
+    // Entfernt "(3 Nachrichten)", "(2 neue Nachrichten)" oder "(4 messages)" am Ende von Chatnamen
     private val GROUP_COUNT_SUFFIX = Regex(
-        """\s*\(\d+\s*(?:nachrichten?|messages?|новые?\s*сообщения?|mensajes?)\)\s*$""",
+        """\s*\(\d+\s*(?:(?:neue|ungelesene|new|unread)\s+)?(?:nachrichten?|messages?|новые?\s*сообщения?|mensajes?|mesaj|wiadomości|chats?)\)\s*$""",
         RegexOption.IGNORE_CASE,
     )
 
     // Explizite Bearbeitungs-Kennzeichnungen im Text
-    private val EXPLICIT_EDIT_PREFIX = Regex("""^(?:✏️\s*)?(?:bearbeitet|edited)\s*:\s*(.+)$""", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
-    private val EXPLICIT_EDIT_SUFFIX = Regex("""^(.+?)\s*\((?:bearbeitet|edited|изменено)\)\s*$""", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+    private val EXPLICIT_EDIT_PREFIX = Regex(
+        """^(?:✏️\s*)?(?:bearbeitet|edited)\s*:\s*(.+)$""",
+        setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL),
+    )
+    private val EXPLICIT_EDIT_SUFFIX = Regex(
+        """^(.+?)\s*\((?:bearbeitet|edited|изменено)\)\s*$""",
+        setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL),
+    )
+
+    fun stripInvisibleMarks(raw: String): String =
+        raw.replace(INVISIBLE_MARKS_REGEX, "").trim()
 
     fun isSupportedPackage(packageName: String): Boolean =
         packageName in SUPPORTED_PACKAGES
 
     fun isDeletedPlaceholder(rawText: String): Boolean {
-        val trimmed = rawText.trim()
-        if (trimmed.isEmpty()) return false
-        return DELETED_PATTERNS.any { it.matches(trimmed) }
+        val cleaned = stripInvisibleMarks(rawText)
+        if (cleaned.isEmpty()) return false
+        return DELETED_REGEX.matches(cleaned)
+    }
+
+    /**
+     * Falls eine Zeile wie `"Sarah: 🚫 Diese Nachricht wurde gelöscht"` aufgebaut ist,
+     * extrahiert diese Funktion den vorangestellten Absender `"Sarah"`.
+     */
+    fun extractSenderPrefixFromDeletedLine(rawText: String): String? {
+        val cleaned = stripInvisibleMarks(rawText)
+        if (!cleaned.contains(":")) return null
+        val prefix = cleaned.substringBefore(":").trim()
+        val rest = cleaned.substringAfter(":").trim()
+        if (prefix.isNotEmpty() && prefix.length <= 60 && isDeletedPlaceholder(rest)) {
+            return cleanChatTitle(prefix)
+        }
+        return null
+    }
+
+    fun isGenericAppTitle(title: String): Boolean {
+        val t = stripInvisibleMarks(title)
+        return t.equals("WhatsApp", ignoreCase = true) ||
+            t.equals("WhatsApp Business", ignoreCase = true)
     }
 
     fun isSystemNoise(title: String, text: String): Boolean {
-        val t = title.trim()
-        val m = text.trim()
-        if (t.isEmpty() || m.isEmpty()) return true
-        if (t.equals("WhatsApp", ignoreCase = true) || t.equals("WhatsApp Business", ignoreCase = true)) {
+        val t = stripInvisibleMarks(title)
+        val m = stripInvisibleMarks(text)
+        if (m.isEmpty()) return true
+        // Eine Löschnachricht ist NIEMALS System-Noise!
+        if (isDeletedPlaceholder(m)) return false
+        if (t.isEmpty()) return true
+        if (isGenericAppTitle(t)) {
             if (SYSTEM_NOISE_PATTERNS.any { it.matches(m) }) return true
         }
         return SYSTEM_NOISE_PATTERNS.any { it.matches(m) || it.matches(t) }
@@ -114,14 +166,14 @@ object WhatsAppNotificationParser {
      * Bereinigt Gruppentitel wie "WG Gruppe (3 Nachrichten)" -> "WG Gruppe".
      */
     fun cleanChatTitle(rawTitle: String): String =
-        rawTitle.trim().replace(GROUP_COUNT_SUFFIX, "").trim()
+        stripInvisibleMarks(rawTitle).replace(GROUP_COUNT_SUFFIX, "").trim()
 
     /**
      * Prüft, ob der Text eine explizite "(Bearbeitet)"-Markierung trägt, und gibt
      * das Paar `(bereinigterText, isExplicitEdit)` zurück.
      */
     fun extractExplicitEdit(rawText: String): Pair<String, Boolean> {
-        val trimmed = rawText.trim()
+        val trimmed = stripInvisibleMarks(rawText)
         EXPLICIT_EDIT_PREFIX.matchEntire(trimmed)?.let { match ->
             return match.groupValues[1].trim() to true
         }
@@ -135,7 +187,7 @@ object WhatsAppNotificationParser {
      * Erkennt anhand des typischen WhatsApp-Präfixes den Medientyp.
      */
     fun detectMediaType(text: String): String? {
-        val t = text.trim()
+        val t = stripInvisibleMarks(text)
         return when {
             t.startsWith("📷") || t.equals("Foto", ignoreCase = true) || t.equals("Photo", ignoreCase = true) || t.equals("Bild", ignoreCase = true) -> "photo"
             t.startsWith("🎤") || t.contains("Sprachnachricht", ignoreCase = true) || t.contains("Voice message", ignoreCase = true) -> "voice"
@@ -149,17 +201,52 @@ object WhatsAppNotificationParser {
     }
 
     /**
+     * Prüft, ob eine Nachricht überhaupt in WhatsApp bearbeitbar ist.
+     * Sprachnachrichten, Audios, Sticker, GIFs, Dokumente sowie reine Medien-Platzhalter
+     * ohne Bildunterschrift ("📷 Foto", "🎥 Video") können in WhatsApp NICHT bearbeitet werden
+     * und dürfen niemals als Vorher/Nachher einer Bearbeitung gewertet werden!
+     */
+    fun isEditableMessage(text: String, mediaType: String?): Boolean {
+        if (mediaType in setOf("voice", "audio", "sticker", "gif", "document")) return false
+        val cleaned = stripInvisibleMarks(text)
+            .removePrefix("📷")
+            .removePrefix("🎥")
+            .trim()
+        if (cleaned.isEmpty()) return false
+        if (cleaned.equals("Foto", ignoreCase = true) ||
+            cleaned.equals("Photo", ignoreCase = true) ||
+            cleaned.equals("Bild", ignoreCase = true) ||
+            cleaned.equals("Video", ignoreCase = true)
+        ) {
+            return false
+        }
+        return true
+    }
+
+    /**
      * Extrahiert alle einzelnen Nachrichten aus einem [RawNotificationPayload].
      */
     fun parse(payload: RawNotificationPayload): List<ParsedWhatsAppMessage> {
         if (!isSupportedPackage(payload.packageName)) return emptyList()
-        if (payload.isSummary || payload.isOngoing) return emptyList()
+        if (payload.isOngoing) return emptyList()
         if (payload.category in setOf("call", "service", "progress", "status", "sys")) return emptyList()
 
-        val rawTitle = payload.title?.trim().orEmpty()
-        val rawConvTitle = payload.conversationTitle?.trim().orEmpty()
+        val rawTitle = stripInvisibleMarks(payload.title.orEmpty())
+        val rawConvTitle = stripInvisibleMarks(payload.conversationTitle.orEmpty())
+        val topText = stripInvisibleMarks(payload.text.orEmpty())
+        val topBigText = stripInvisibleMarks(payload.bigText.orEmpty())
 
-        // Wenn MessagingStyle-Einträge vorhanden sind (Standard ab Android 7+ bei WhatsApp)
+        // Summary-Notifications ("2 neue Nachrichten aus 2 Chats") ignorieren wir für normale
+        // Nachrichten, ABER wenn darin eine Löschnachricht ("Diese Nachricht wurde gelöscht")
+        // steckt, werten wir diese trotzdem aus!
+        if (payload.isSummary && payload.messagingStyleItems.isEmpty()) {
+            val hasDeletionInTop = isDeletedPlaceholder(topText) ||
+                topBigText.lines().any { isDeletedPlaceholder(it) } ||
+                payload.textLines.any { isDeletedPlaceholder(it) }
+            if (!hasDeletionInTop) return emptyList()
+        }
+
+        // 1. Wenn MessagingStyle-Einträge vorhanden sind (Standard ab Android 7+ bei WhatsApp)
         if (payload.messagingStyleItems.isNotEmpty()) {
             val baseGroupTitle = when {
                 rawConvTitle.isNotEmpty() -> cleanChatTitle(rawConvTitle)
@@ -172,12 +259,14 @@ object WhatsAppNotificationParser {
 
             val chatKey = buildChatKey(payload.packageName, resolvedChatTitle)
 
-            return payload.messagingStyleItems.mapNotNull { item ->
-                val body = item.text.trim()
+            val parsedItems = payload.messagingStyleItems.mapNotNull { item ->
+                val body = stripInvisibleMarks(item.text)
                 if (body.isEmpty() || isSystemNoise(resolvedChatTitle, body)) return@mapNotNull null
 
-                val sender = item.sender?.trim()?.takeIf { it.isNotEmpty() }
-                    ?: if (rawTitle.contains(":")) rawTitle.substringAfter(":").trim() else resolvedChatTitle
+                val rawSender = stripInvisibleMarks(item.sender.orEmpty())
+                val sender = rawSender.takeIf { it.isNotEmpty() }
+                    ?: extractSenderPrefixFromDeletedLine(body)
+                    ?: if (rawTitle.contains(":")) cleanChatTitle(rawTitle.substringAfter(":")) else resolvedChatTitle
 
                 val isDel = isDeletedPlaceholder(body)
                 val (cleanedText, explicitEdit) = if (isDel) body to false else extractExplicitEdit(body)
@@ -194,47 +283,100 @@ object WhatsAppNotificationParser {
                     mediaType = if (isDel) null else detectMediaType(cleanedText),
                     timestamp = if (item.timestamp > 0L) item.timestamp else payload.postTime,
                     notificationKey = payload.notificationKey,
+                    notificationTag = payload.notificationTag,
                 )
+            }.toMutableList()
+
+            // WICHTIG: Bei manchen WhatsApp-Versionen wird die gelöschte Nachricht aus
+            // EXTRA_MESSAGES entfernt und "🚫 Diese Nachricht wurde gelöscht" steht NUR
+            // in EXTRA_TEXT / EXTRA_BIG_TEXT / EXTRA_TEXT_LINES!
+            val alreadyHasDeletion = parsedItems.any { it.isDeletionNotice }
+            if (!alreadyHasDeletion) {
+                val deletionLine = listOfNotNull(
+                    topText.takeIf { isDeletedPlaceholder(it) },
+                    topBigText.lines().map { stripInvisibleMarks(it) }.lastOrNull { isDeletedPlaceholder(it) },
+                    payload.textLines.map { stripInvisibleMarks(it) }.lastOrNull { isDeletedPlaceholder(it) },
+                ).firstOrNull()
+
+                if (deletionLine != null) {
+                    val fallbackSender = extractSenderPrefixFromDeletedLine(deletionLine)
+                        ?: if (rawTitle.contains(":")) cleanChatTitle(rawTitle.substringAfter(":")) else resolvedChatTitle
+                    parsedItems.add(
+                        ParsedWhatsAppMessage(
+                            chatKey = chatKey,
+                            chatTitle = resolvedChatTitle,
+                            senderName = fallbackSender.ifEmpty { resolvedChatTitle },
+                            isGroup = isGroup,
+                            packageName = payload.packageName,
+                            text = deletionLine,
+                            isDeletionNotice = true,
+                            isExplicitEdit = false,
+                            mediaType = null,
+                            timestamp = payload.postTime,
+                            notificationKey = payload.notificationKey,
+                            notificationTag = payload.notificationTag,
+                        ),
+                    )
+                }
             }
+
+            return parsedItems
         }
 
-        // Fallback für klassische Einzel-Benachrichtigungen ohne EXTRA_MESSAGES
-        val rawBody = (payload.bigText?.takeIf { it.isNotBlank() } ?: payload.text)?.trim().orEmpty()
-        if (isSystemNoise(rawTitle, rawBody)) return emptyList()
-
-        val isGroup: Boolean
-        val chatTitle: String
-        val senderName: String
-
-        when {
-            rawConvTitle.isNotEmpty() -> {
-                isGroup = true
-                chatTitle = cleanChatTitle(rawConvTitle)
-                senderName = cleanChatTitle(rawTitle).ifEmpty { chatTitle }
-            }
-            rawTitle.contains(":") && !rawTitle.startsWith("http", ignoreCase = true) -> {
-                isGroup = true
-                chatTitle = cleanChatTitle(rawTitle.substringBefore(":"))
-                senderName = rawTitle.substringAfter(":").trim().ifEmpty { chatTitle }
-            }
-            else -> {
-                isGroup = payload.isGroupConversation
-                chatTitle = cleanChatTitle(rawTitle)
-                senderName = chatTitle
-            }
+        // 2. Fallback für klassische Einzel-/Inbox-Benachrichtigungen ohne EXTRA_MESSAGES
+        //    Prüfe zuerst, ob EXTRA_TEXT direkt eine Löschnachricht ist (bevorzugt vor mehrzeiligem bigText!).
+        val candidateBodies: List<String> = when {
+            isDeletedPlaceholder(topText) -> listOf(topText)
+            payload.textLines.isNotEmpty() -> payload.textLines.map { stripInvisibleMarks(it) }.filter { it.isNotEmpty() }
+            topBigText.contains("\n") && topBigText.lines().any { isDeletedPlaceholder(it) } ->
+                topBigText.lines().map { stripInvisibleMarks(it) }.filter { it.isNotEmpty() }
+            else -> listOfNotNull((topBigText.takeIf { it.isNotEmpty() } ?: topText).takeIf { it.isNotEmpty() })
         }
 
-        if (chatTitle.isEmpty()) return emptyList()
+        if (candidateBodies.isEmpty()) return emptyList()
 
-        val isDel = isDeletedPlaceholder(rawBody)
-        val (cleanedText, explicitEdit) = if (isDel) rawBody to false else extractExplicitEdit(rawBody)
-        val chatKey = buildChatKey(payload.packageName, chatTitle)
+        return candidateBodies.mapNotNull { rawBody ->
+            if (isSystemNoise(rawTitle, rawBody)) return@mapNotNull null
 
-        return listOf(
+            val isDel = isDeletedPlaceholder(rawBody)
+            val prefixSender = if (isDel) extractSenderPrefixFromDeletedLine(rawBody) else null
+
+            val isGroup: Boolean
+            val chatTitle: String
+            val senderName: String
+
+            when {
+                rawConvTitle.isNotEmpty() && !isGenericAppTitle(rawConvTitle) -> {
+                    isGroup = true
+                    chatTitle = cleanChatTitle(rawConvTitle)
+                    senderName = prefixSender ?: cleanChatTitle(rawTitle).takeIf { !isGenericAppTitle(it) } ?: chatTitle
+                }
+                rawTitle.contains(":") && !rawTitle.startsWith("http", ignoreCase = true) -> {
+                    isGroup = true
+                    chatTitle = cleanChatTitle(rawTitle.substringBefore(":"))
+                    senderName = prefixSender ?: cleanChatTitle(rawTitle.substringAfter(":")).ifEmpty { chatTitle }
+                }
+                isGenericAppTitle(rawTitle) && prefixSender != null -> {
+                    isGroup = payload.isGroupConversation
+                    chatTitle = prefixSender
+                    senderName = prefixSender
+                }
+                else -> {
+                    isGroup = payload.isGroupConversation
+                    chatTitle = cleanChatTitle(rawTitle).ifEmpty { prefixSender.orEmpty() }
+                    senderName = prefixSender ?: chatTitle
+                }
+            }
+
+            if (chatTitle.isEmpty()) return@mapNotNull null
+
+            val (cleanedText, explicitEdit) = if (isDel) rawBody to false else extractExplicitEdit(rawBody)
+            val chatKey = buildChatKey(payload.packageName, chatTitle)
+
             ParsedWhatsAppMessage(
                 chatKey = chatKey,
                 chatTitle = chatTitle,
-                senderName = senderName,
+                senderName = senderName.ifEmpty { chatTitle },
                 isGroup = isGroup,
                 packageName = payload.packageName,
                 text = cleanedText,
@@ -243,10 +385,11 @@ object WhatsAppNotificationParser {
                 mediaType = if (isDel) null else detectMediaType(cleanedText),
                 timestamp = payload.postTime,
                 notificationKey = payload.notificationKey,
-            ),
-        )
+                notificationTag = payload.notificationTag,
+            )
+        }
     }
 
     fun buildChatKey(packageName: String, cleanChatTitle: String): String =
-        "$packageName:${cleanChatTitle.lowercase().trim()}"
+        "$packageName:${stripInvisibleMarks(cleanChatTitle).lowercase().trim()}"
 }

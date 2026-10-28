@@ -127,10 +127,7 @@ fun WhatsAppScreen(
     val editedMessages by vm.editedMessages.collectAsState()
     val stats by vm.stats.collectAsState()
     val alertsEnabled by vm.alertsEnabled.collectAsState()
-    val directChatHistory by vm.directChatHistory.collectAsState()
     val searchQuery by vm.searchQuery.collectAsState()
-    val hasMediaFolderAccess by vm.hasMediaFolderAccess.collectAsState()
-    val statusItems by vm.statusItems.collectAsState()
     val chatAnalysis by vm.chatAnalysis.collectAsState()
 
     var activeTab by remember { mutableStateOf(WhatsAppTab.DELETED) }
@@ -146,6 +143,7 @@ fun WhatsAppScreen(
             if (event == Lifecycle.Event.ON_RESUME) {
                 hasNotificationAccess =
                     WhatsAppNotificationListenerService.isNotificationAccessGranted(context)
+                WhatsAppNotificationListenerService.ensureServiceBound(context)
                 vm.pruneNow()
             }
         }
@@ -270,20 +268,6 @@ fun WhatsAppScreen(
 
                     WhatsAppTab.TOOLS -> {
                         WhatsAppToolsTab(
-                            hasMediaFolderAccess = hasMediaFolderAccess,
-                            statusItems = statusItems,
-                            initialMediaTreeUri = remember { vm.buildInitialMediaTreeUri() },
-                            onMediaFolderGranted = vm::onMediaFolderGranted,
-                            onRefreshStatuses = vm::refreshStatuses,
-                            onSaveStatus = { item ->
-                                vm.saveStatusToGallery(item) { ok ->
-                                    Toast.makeText(
-                                        context,
-                                        if (ok) "Status in Galerie gespeichert!" else "Speichern fehlgeschlagen",
-                                        Toast.LENGTH_SHORT,
-                                    ).show()
-                                }
-                            },
                             chatAnalysis = chatAnalysis,
                             onAnalyzeChatUri = { uri ->
                                 vm.analyzeExportedChatUri(context, uri) {
@@ -296,9 +280,6 @@ fun WhatsAppScreen(
                             },
                             onRunSampleAnalysis = vm::runSampleChatAnalysis,
                             onClearAnalysis = vm::clearChatAnalysis,
-                            directChatHistory = directChatHistory,
-                            onRecordDirectChat = vm::recordDirectChat,
-                            onClearDirectHistory = vm::clearDirectChatHistory,
                         )
                     }
                 }
@@ -634,7 +615,7 @@ private fun WhatsAppTabsRow(
         WhatsAppTabChip(
             icon = Icons.Default.Build,
             label = "Tools",
-            count = 6,
+            count = 2,
             selected = activeTab == WhatsAppTab.TOOLS,
             accentColor = WhatsAppGreen,
             onClick = { onSelect(WhatsAppTab.TOOLS) },

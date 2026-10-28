@@ -10,6 +10,7 @@ import com.hikari.app.data.prefs.DEFAULT_BACKEND_URL
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.download.SmartDownloadScheduler
 import com.hikari.app.domain.news.NewsBriefingScheduler
+import com.hikari.app.whatsapp.WhatsAppNotificationListenerService
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -42,6 +43,7 @@ class HikariApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        WhatsAppNotificationListenerService.ensureServiceBound(this)
         // Always schedule the periodic Smart-Downloads job. The worker itself
         // checks the user's preference each fire and short-circuits if off.
         scheduler.schedulePeriodicSync()
