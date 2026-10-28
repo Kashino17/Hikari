@@ -181,6 +181,126 @@ class WhatsAppGuardTest {
     }
 
     @Test
+    fun `rescues deleted messages when stack shrinks without placeholder or when testing identical text repeatedly`() = runTest {
+        val t0 = System.currentTimeMillis() - 60_000L
+
+        // 1. Zwei ungelesene Nachrichten im Chat: "Erste Nachricht" und "Zweite geheime Nachricht"
+        val twoMsgs = RawNotificationPayload(
+            packageName = "com.whatsapp",
+            notificationKey = "notif_shrink",
+            notificationTag = "shrink",
+            title = "Tom",
+            text = "Zweite geheime Nachricht",
+            bigText = "Erste Nachricht\nZweite geheime Nachricht",
+            subText = null,
+            conversationTitle = null,
+            isGroupConversation = false,
+            isSummary = false,
+            isOngoing = false,
+            category = "msg",
+            postTime = t0,
+            messagingStyleItems = listOf(
+                RawMessagingItem(sender = "Tom", text = "Erste Nachricht", timestamp = t0 - 5_000L),
+                RawMessagingItem(sender = "Tom", text = "Zweite geheime Nachricht", timestamp = t0),
+            ),
+        )
+        repository.processNotification(twoMsgs)
+
+        // Selbst wenn previousSnapshot zwischendurch geleert wurde (z. B. durch Cancel+Repost):
+        repository.onNotificationCleared("notif_shrink")
+
+        // Tom löscht "Zweite geheime Nachricht", WhatsApp schickt nur noch ["Erste Nachricht"] ohne Platzhaltertext!
+        val shrunkPayload = twoMsgs.copy(
+            text = "Erste Nachricht",
+            bigText = "Erste Nachricht",
+            postTime = t0 + 4_000L,
+            messagingStyleItems = listOf(
+                RawMessagingItem(sender = "Tom", text = "Erste Nachricht", timestamp = t0 - 5_000L),
+            ),
+        )
+        repository.processNotification(shrunkPayload)
+
+        val deletedAfterShrink = repository.deletedMessages.first()
+        assertEquals(1, deletedAfterShrink.size)
+        assertEquals("Zweite geheime Nachricht", deletedAfterShrink.first().text)
+
+        // 2. Wiederholter Test mit exakt demselben Wort ("Test") innerhalb von 15 Sekunden:
+        val test1 = twoMsgs.copy(
+            notificationKey = "notif_repeat",
+            title = "Lisa",
+            text = "Test",
+            postTime = t0 + 10_000L,
+            messagingStyleItems = listOf(
+                RawMessagingItem(sender = "Lisa", text = "Test", timestamp = t0 + 10_000L),
+            ),
+        )
+        repository.processNotification(test1)
+        repository.processNotification(
+            test1.copy(
+                text = "🚫 Diese Nachricht wurde gelöscht",
+                postTime = t0 + 12_000L,
+                messagingStyleItems = listOf(
+                    RawMessagingItem(sender = "Lisa", text = "🚫 Diese Nachricht wurde gelöscht", timestamp = t0 + 10_000L),
+                ),
+            ),
+        )
+
+        val test2 = test1.copy(
+            text = "Test",
+            postTime = t0 + 20_000L,
+            messagingStyleItems = listOf(
+                RawMessagingItem(sender = "Lisa", text = "Test", timestamp = t0 + 20_000L),
+            ),
+        )
+        repository.processNotification(test2)
+        repository.processNotification(
+            test2.copy(
+                text = "🚫 Diese Nachricht wurde gelöscht",
+                postTime = t0 + 22_000L,
+                messagingStyleItems = listOf(
+                    RawMessagingItem(sender = "Lisa", text = "🚫 Diese Nachricht wurde gelöscht", timestamp = t0 + 20_000L),
+                ),
+            ),
+        )
+
+        val lisaDeleted = repository.deletedMessages.first().filter { it.senderName == "Lisa" }
+        assertEquals("Beide 'Test'-Nachrichten müssen gerettet werden", 2, lisaDeleted.size)
+    }
+
+    @Test
+    fun `rescues single message when retracted by WhatsApp via REASON_APP_CANCEL or summary notification`() = runTest {
+        val t0 = System.currentTimeMillis() - 30_000L
+
+        val singleMsg = RawNotificationPayload(
+            packageName = "com.whatsapp",
+            notificationKey = "notif_retract",
+            notificationTag = "retract_tag",
+            title = "Paul",
+            text = "Kurz geschickt und sofort zurückgezogen",
+            bigText = null,
+            subText = null,
+            conversationTitle = null,
+            isGroupConversation = false,
+            isSummary = false,
+            isOngoing = false,
+            category = "msg",
+            postTime = t0,
+            messagingStyleItems = listOf(
+                RawMessagingItem(sender = "Paul", text = "Kurz geschickt und sofort zurückgezogen", timestamp = t0),
+            ),
+        )
+        repository.processNotification(singleMsg)
+        assertTrue(repository.deletedMessages.first().isEmpty())
+
+        // WhatsApp zieht die Benachrichtigung komplett zurück (REASON_APP_CANCEL):
+        repository.onNotificationRetractedByApp("notif_retract", nowMs = t0 + 3_000L)
+
+        val deletedList = repository.deletedMessages.first()
+        assertEquals(1, deletedList.size)
+        assertEquals("Kurz geschickt und sofort zurückgezogen", deletedList.first().text)
+    }
+
+    @Test
     fun `repository detects edited message from RAM cache and persists only when edited`() = runTest {
         val t0 = System.currentTimeMillis() - 120_000L
 

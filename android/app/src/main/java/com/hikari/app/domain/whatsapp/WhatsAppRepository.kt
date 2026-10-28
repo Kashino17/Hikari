@@ -196,6 +196,66 @@ class WhatsAppRepository @Inject constructor(
     }
 
     /**
+     * Wird aufgerufen, wenn der Nutzer aktiv auf die Benachrichtigung getippt hat
+     * (`REASON_CLICK`), um den Chat in WhatsApp zu öffnen und zu lesen.
+     */
+    suspend fun onNotificationClicked(notificationKey: String?) = mutex.withLock {
+        if (notificationKey.isNullOrBlank()) return@withLock
+        val affectedChatKeys = activeSnapshots.entries
+            .filter { (_, list) -> list.any { it.notificationKey == notificationKey } }
+            .map { it.key }
+        affectedChatKeys.forEach { chatKey ->
+            activeSnapshots.remove(chatKey)
+            transientRamCache.remove(chatKey)
+        }
+        for ((chatKey, list) in transientRamCache) {
+            list.removeAll { it.notificationKey == notificationKey }
+            if (list.isEmpty()) {
+                transientRamCache.remove(chatKey)
+            }
+        }
+        persistTransientCacheToPrefs()
+    }
+
+    /**
+     * Wird aufgerufen, wenn WhatsApp selbst eine aktive Chat-Benachrichtigung zurückzieht
+     * (`REASON_APP_CANCEL`), ohne dass in den nächsten 1,5 Sekunden eine neue Benachrichtigung
+     * für diesen Chat gepostet wurde, während das Gerät gesperrt/ausgeschaltet oder Hikari
+     * aktiv im Vordergrund ist (stilles „Für alle löschen“ einer einzelnen Nachricht).
+     */
+    suspend fun onNotificationRetractedByApp(
+        notificationKey: String?,
+        nowMs: Long = System.currentTimeMillis(),
+    ) = mutex.withLock {
+        if (notificationKey.isNullOrBlank()) return@withLock
+        val matchingChats = activeSnapshots.entries
+            .filter { (_, list) -> list.any { it.notificationKey == notificationKey && !it.isDeletionNotice } }
+            .map { it.key to it.value }
+
+        for ((chatKey, snapshotItems) in matchingChats) {
+            val ramList = transientRamCache[chatKey] ?: continue
+            val savedInDb = dao.getRecentMessagesForChat(chatKey, limit = 25).toMutableList()
+            for (snap in snapshotItems.filter { !it.isDeletionNotice }) {
+                val ramMatch = ramList.firstOrNull {
+                    it.text == snap.text && it.senderName.equals(snap.senderName, ignoreCase = true)
+                }
+                if (ramMatch != null) {
+                    removeFromTransientCache(ramMatch)
+                    saveRescuedDeletion(
+                        ramTarget = ramMatch,
+                        now = nowMs,
+                        mediaPreviewPath = ramMatch.mediaPreviewPath,
+                        avatarPath = ramMatch.avatarPath,
+                        savedInDb = savedInDb,
+                    )
+                }
+            }
+            activeSnapshots.remove(chatKey)
+        }
+        persistTransientCacheToPrefs()
+    }
+
+    /**
      * Bereinigt:
      * 1. Alle normalen (nicht gelöschten & nicht bearbeiteten) Altlasten aus der DB.
      * 2. Alle gelöschten/bearbeiteten Nachrichten in der DB, die älter als 7 Tage sind.
@@ -289,32 +349,75 @@ class WhatsAppRepository @Inject constructor(
         val previousSnapshot = activeSnapshots[chatKey].orEmpty()
         val ramList = transientRamCache.getOrPut(chatKey) { mutableListOf() }
         val savedInDb = dao.getRecentMessagesForChat(chatKey, limit = 25).toMutableList()
-        val stillActiveTexts = parsedList
-            .filter { !it.isDeletionNotice }
-            .map { it.text }
-            .toSet()
+        val nonDeletedParsed = parsedList.filter { !it.isDeletionNotice }
+        val hasMessagingStyle = payload.messagingStyleItems.isNotEmpty()
 
-        // ── SPEZIALFALL: EXTRA_MESSAGES ist geschrumpft (Nachricht verschwand aus Stack) ──
-        // Wenn ein Chat mehrere ungelesene Nachrichten im Stack hatte (z. B. [Msg1, Msg2])
-        // und WhatsApp bei „Für alle löschen“ von Msg2 ein Update schickt, in dem Msg1 noch
-        // ungelesen ist, Msg2 aber ohne Platzhaltertext aus EXTRA_MESSAGES entfernt wurde:
+        // ── SPEZIALFALL A: Nachricht verschwand aus aktivem ungelesenen Stack ohne Platzhalter ──
+        // 1) Vergleich mit previousSnapshot: Wenn mindestens eine Nachricht aus previousSnapshot
+        //    weiterhin ungelesen in parsedList steht, aber eine andere Nachricht aus
+        //    previousSnapshot (egal ob älter oder neuer!) plötzlich fehlt, wurde sie für alle gelöscht!
         if (previousSnapshot.size > parsedList.size &&
-            parsedList.isNotEmpty() &&
+            nonDeletedParsed.isNotEmpty() &&
             parsedList.none { it.isDeletionNotice }
         ) {
-            val oldestStillPresentTime = parsedList.minOf { it.timestamp }
-            val vanishedItems = previousSnapshot.filter { prev ->
-                !prev.isDeletionNotice &&
-                    prev.timestamp >= oldestStillPresentTime &&
-                    parsedList.none { cur -> cur.text == prev.text && cur.senderName == prev.senderName }
-            }
-            for (vanished in vanishedItems) {
-                val ramMatch = ramList.firstOrNull {
-                    it.text == vanished.text && it.senderName.equals(vanished.senderName, ignoreCase = true)
+            val sharesUnreadWithPrevious = nonDeletedParsed.any { cur ->
+                previousSnapshot.any { prev ->
+                    !prev.isDeletionNotice &&
+                        prev.text == cur.text &&
+                        prev.senderName.equals(cur.senderName, ignoreCase = true)
                 }
-                if (ramMatch != null) {
-                    ramList.remove(ramMatch)
-                    saveRescuedDeletion(ramMatch, now, mediaPreviewPath, avatarPath, savedInDb)
+            }
+            if (sharesUnreadWithPrevious) {
+                val vanishedFromSnapshot = filterUnconsumedSnapshotItems(previousSnapshot, nonDeletedParsed)
+                for (vanished in vanishedFromSnapshot) {
+                    val ramMatch = ramList.firstOrNull {
+                        it.text == vanished.text &&
+                            it.senderName.equals(vanished.senderName, ignoreCase = true)
+                    }
+                    if (ramMatch != null) {
+                        removeFromTransientCache(ramMatch)
+                        saveRescuedDeletion(ramMatch, now, mediaPreviewPath, avatarPath, savedInDb)
+                    }
+                }
+            }
+        }
+
+        // 2) Direkter Vergleich mit ramList (funktioniert selbst dann, wenn previousSnapshot
+        //    durch Service-Neustart oder Notification-Cancel leer war!):
+        //    Da ramList neueste Nachrichten zuerst speichert (Index 0 = neueste), gilt:
+        //    Wenn eine ÄLTERE Nachricht (Index `oldestUnreadIdx > 0` in ramList) noch immer
+        //    ungelesen im MessagingStyle-Stack steht, eine NEUERE Nachricht (`0 until oldestUnreadIdx`)
+        //    aber nicht mehr im Stack ist (und auch kein Edit ist), wurde die neuere Nachricht
+        //    zu 100 % für alle gelöscht!
+        if (hasMessagingStyle &&
+            nonDeletedParsed.isNotEmpty() &&
+            parsedList.none { it.isDeletionNotice } &&
+            ramList.size >= 2
+        ) {
+            val unconsumedInRam = buildEligibleRamCandidates(ramList, nonDeletedParsed)
+            val oldestStillUnreadInRamIdx = ramList.indexOfLast { ramItem ->
+                nonDeletedParsed.any { cur ->
+                    cur.text == ramItem.text &&
+                        cur.senderName.equals(ramItem.senderName, ignoreCase = true)
+                }
+            }
+            if (oldestStillUnreadInRamIdx > 0) {
+                val newerVanishedCandidates = ramList
+                    .subList(0, oldestStillUnreadInRamIdx)
+                    .filter { it in unconsumedInRam }
+                    .toList()
+                for (vanishedRam in newerVanishedCandidates) {
+                    // Nicht als gelöscht werten, falls eine der Nachrichten in parsedList ein Edit davon ist
+                    val isBeingEditedNow = nonDeletedParsed.any { cur ->
+                        cur.isExplicitEdit ||
+                            (cur.senderName.equals(vanishedRam.senderName, ignoreCase = true) &&
+                                cur.timestamp == vanishedRam.timestamp &&
+                                cur.text != vanishedRam.text)
+                    }
+                    if (!isBeingEditedNow) {
+                        removeFromTransientCache(vanishedRam)
+                        saveRescuedDeletion(vanishedRam, now, mediaPreviewPath, avatarPath, savedInDb)
+                    }
                 }
             }
         }
@@ -354,8 +457,9 @@ class WhatsAppRepository @Inject constructor(
                 val ramTarget = findRamDeletionTarget(
                     parsed = parsed,
                     prevAtSlot = prevAtSlot,
+                    previousSnapshot = previousSnapshot,
                     ramList = ramList,
-                    stillActiveTexts = stillActiveTexts,
+                    nonDeletedParsed = nonDeletedParsed,
                 )
                 if (ramTarget != null) {
                     removeFromTransientCache(ramTarget)
@@ -365,8 +469,6 @@ class WhatsAppRepository @Inject constructor(
             }
 
             // ── FALL 2: Wurde eine bestehende Nachricht BEARBEITET? ────────────────
-            val hasMessagingStyle = payload.messagingStyleItems.isNotEmpty()
-
             // 2a) Wurde eine bereits als "Bearbeitet" in der DB liegende Nachricht nochmals editiert?
             val dbEditTarget = findDbEditTarget(
                 parsed = parsed,
@@ -461,11 +563,25 @@ class WhatsAppRepository @Inject constructor(
             }
 
             // ── FALL 3: Reguläre Nachricht -> NUR im flüchtigen Puffer merken! ──
-            val alreadyInRam = ramList.any {
+            val occurrencesInPayloadUpToHere = parsedList
+                .subList(0, index + 1)
+                .count {
+                    !it.isDeletionNotice &&
+                        it.senderName.equals(parsed.senderName, ignoreCase = true) &&
+                        it.text == parsed.text
+                }
+            val matchingInRam = ramList.count {
+                it.senderName.equals(parsed.senderName, ignoreCase = true) &&
+                    it.text == parsed.text
+            }
+            val hasExactTimestampInRam = ramList.any {
                 it.senderName.equals(parsed.senderName, ignoreCase = true) &&
                     it.text == parsed.text &&
-                    abs(it.timestamp - parsed.timestamp) < 120_000L
+                    abs(it.timestamp - parsed.timestamp) <= 1_500L
             }
+            val alreadyInRam = matchingInRam >= occurrencesInPayloadUpToHere &&
+                (hasExactTimestampInRam || (hasMessagingStyle && matchingInRam >= occurrencesInPayloadUpToHere))
+
             if (!alreadyInRam) {
                 ramList.add(
                     0,
@@ -491,7 +607,7 @@ class WhatsAppRepository @Inject constructor(
         }
 
         persistTransientCacheToPrefs()
-        if (!WhatsAppNotificationParser.isGenericAppTitle(parsedList.first().chatTitle)) {
+        if (!WhatsAppNotificationParser.isGenericOrSummaryTitle(parsedList.first().chatTitle)) {
             activeSnapshots[chatKey] = parsedList
         }
     }
@@ -507,7 +623,7 @@ class WhatsAppRepository @Inject constructor(
             it.isDeleted &&
                 it.senderName.equals(ramTarget.senderName, ignoreCase = true) &&
                 it.text == ramTarget.text &&
-                abs(it.timestamp - ramTarget.timestamp) < 60_000L
+                abs(it.timestamp - ramTarget.timestamp) <= 1_000L
         }
         if (alreadySaved) return
 
@@ -551,11 +667,67 @@ class WhatsAppRepository @Inject constructor(
         }
     }
 
+    /**
+     * Gibt alle Einträge aus `previousSnapshot` zurück, die nicht mehr durch `nonDeletedParsed`
+     * abgedeckt sind (unter Berücksichtigung mehrfach identischer Nachrichtentexte).
+     */
+    private fun filterUnconsumedSnapshotItems(
+        previousSnapshot: List<ParsedWhatsAppMessage>,
+        nonDeletedParsed: List<ParsedWhatsAppMessage>,
+    ): List<ParsedWhatsAppMessage> {
+        val remainingActive = nonDeletedParsed.toMutableList()
+        val vanished = mutableListOf<ParsedWhatsAppMessage>()
+        for (prev in previousSnapshot) {
+            if (prev.isDeletionNotice) continue
+            val matchIdx = remainingActive.indexOfFirst {
+                it.text == prev.text && it.senderName.equals(prev.senderName, ignoreCase = true)
+            }
+            if (matchIdx >= 0) {
+                remainingActive.removeAt(matchIdx)
+            } else {
+                vanished.add(prev)
+            }
+        }
+        return vanished
+    }
+
+    /**
+     * Gibt alle Kandidaten aus `ramList` zurück, die NICHT mehr im aktuellen ungelesenen
+     * Notification-Stack (`nonDeletedParsed`) stehen.
+     */
+    private fun buildEligibleRamCandidates(
+        ramList: List<TransientCandidate>,
+        nonDeletedParsed: List<ParsedWhatsAppMessage>,
+    ): List<TransientCandidate> {
+        if (nonDeletedParsed.isEmpty()) return ramList
+        val remainingRam = ramList.toMutableList()
+        for (active in nonDeletedParsed) {
+            val exactIdx = remainingRam.indexOfFirst {
+                it.senderName.equals(active.senderName, ignoreCase = true) &&
+                    it.text == active.text &&
+                    abs(it.timestamp - active.timestamp) <= 2_000L
+            }
+            if (exactIdx >= 0) {
+                remainingRam.removeAt(exactIdx)
+                continue
+            }
+            val fallbackIdx = remainingRam.indexOfLast {
+                it.senderName.equals(active.senderName, ignoreCase = true) &&
+                    it.text == active.text
+            }
+            if (fallbackIdx >= 0) {
+                remainingRam.removeAt(fallbackIdx)
+            }
+        }
+        return remainingRam
+    }
+
     private fun findRamDeletionTarget(
         parsed: ParsedWhatsAppMessage,
         prevAtSlot: ParsedWhatsAppMessage?,
+        previousSnapshot: List<ParsedWhatsAppMessage>,
         ramList: List<TransientCandidate>,
-        stillActiveTexts: Set<String>,
+        nonDeletedParsed: List<ParsedWhatsAppMessage>,
     ): TransientCandidate? {
         // 1. Exakter Slot-Treffer aus dem vorherigen Notification-Snapshot
         if (prevAtSlot != null && !prevAtSlot.isDeletionNotice) {
@@ -565,8 +737,18 @@ class WhatsAppRepository @Inject constructor(
             }?.let { return it }
         }
 
+        // 1b. Falls sich die Slot-Position verschoben hat: Prüfe Einträge aus previousSnapshot,
+        //     die jetzt nicht mehr in nonDeletedParsed vorkommen
+        val vanishedFromSnapshot = filterUnconsumedSnapshotItems(previousSnapshot, nonDeletedParsed)
+        for (vanished in vanishedFromSnapshot) {
+            ramList.firstOrNull {
+                it.senderName.equals(vanished.senderName, ignoreCase = true) &&
+                    it.text == vanished.text
+            }?.let { return it }
+        }
+
         // Kandidaten im aktuellen Chat, die NICHT mehr im aktiven Notification-Stack stehen
-        val eligibleInChat = ramList.filter { it.text !in stillActiveTexts }.ifEmpty { ramList }
+        val eligibleInChat = buildEligibleRamCandidates(ramList, nonDeletedParsed).ifEmpty { ramList }
 
         // 2. Gleicher Absender + fast identischer Timestamp
         eligibleInChat.firstOrNull {
@@ -600,7 +782,7 @@ class WhatsAppRepository @Inject constructor(
         }
 
         // 5b. Gleicher Absendername oder Chat-Titel über alle Chats hinweg
-        if (!WhatsAppNotificationParser.isGenericAppTitle(parsed.senderName)) {
+        if (!WhatsAppNotificationParser.isGenericOrSummaryTitle(parsed.senderName)) {
             allCandidates.firstOrNull {
                 it.senderName.equals(parsed.senderName, ignoreCase = true) ||
                     it.chatTitle.equals(parsed.senderName, ignoreCase = true) ||

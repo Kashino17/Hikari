@@ -1,6 +1,8 @@
 package com.hikari.app.whatsapp
 
 import android.Manifest
+import android.app.ActivityManager
+import android.app.KeyguardManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -16,6 +18,7 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
+import android.os.PowerManager
 import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
@@ -34,11 +37,14 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 /**
@@ -69,6 +75,8 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
     private val processingScope = CoroutineScope(
         SupervisorJob() + Dispatchers.IO.limitedParallelism(1),
     )
+
+    private val pendingRetractionJobs = ConcurrentHashMap<String, Job>()
 
     override fun onCreate() {
         super.onCreate()
@@ -110,6 +118,10 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
         val notification = sbn.notification ?: return
         val extras = notification.extras ?: Bundle.EMPTY
 
+        sbn.key?.let { key ->
+            pendingRetractionJobs.remove(key)?.cancel()
+        }
+
         val isSummary = (notification.flags and Notification.FLAG_GROUP_SUMMARY) != 0
         val isOngoing = sbn.isOngoing || (notification.flags and Notification.FLAG_ONGOING_EVENT) != 0
         if (isOngoing) return
@@ -118,6 +130,8 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
         val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString()
         val bigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString()
         val subText = extras.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString()
+        val summaryText = extras.getCharSequence(Notification.EXTRA_SUMMARY_TEXT)?.toString()
+        val tickerText = notification.tickerText?.toString()
         val convTitle = extras.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE)?.toString()
         val isGroupConv = extras.getBoolean(Notification.EXTRA_IS_GROUP_CONVERSATION, false)
         val messagingItems = extractMessagingItems(notification, extras)
@@ -131,6 +145,8 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
             text = text,
             bigText = bigText,
             subText = subText,
+            summaryText = summaryText,
+            tickerText = tickerText,
             conversationTitle = convTitle,
             isGroupConversation = isGroupConv,
             isSummary = isSummary,
@@ -168,26 +184,94 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
         val pkg = sbn.packageName.orEmpty()
         if (!WhatsAppNotificationParser.isSupportedPackage(pkg)) return
 
-        // Falls WhatsApp die Benachrichtigung beim Löschen kurz aktualisiert und sofort entfernt:
-        val extras = sbn.notification?.extras
-        if (extras != null) {
+        val notification = sbn.notification
+        val extras = notification?.extras
+        val isSummary = notification != null && (notification.flags and Notification.FLAG_GROUP_SUMMARY) != 0
+
+        // 1. Falls WhatsApp die Benachrichtigung beim Löschen kurz aktualisiert und sofort entfernt:
+        if (notification != null && extras != null) {
             val removedText = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString().orEmpty()
             val removedBigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString().orEmpty()
-            if (WhatsAppNotificationParser.isDeletedPlaceholder(removedText) ||
-                removedBigText.lines().any { WhatsAppNotificationParser.isDeletedPlaceholder(it) }
-            ) {
+            val removedSummary = extras.getCharSequence(Notification.EXTRA_SUMMARY_TEXT)?.toString().orEmpty()
+            val removedTicker = notification.tickerText?.toString().orEmpty()
+            val removedLines = extractTextLines(extras)
+            val removedItems = extractMessagingItems(notification, extras)
+
+            val hasDeletionPlaceholder = WhatsAppNotificationParser.isDeletedPlaceholder(removedText) ||
+                WhatsAppNotificationParser.isDeletedPlaceholder(removedSummary) ||
+                WhatsAppNotificationParser.isDeletedPlaceholder(removedTicker) ||
+                removedBigText.lines().any { WhatsAppNotificationParser.isDeletedPlaceholder(it) } ||
+                removedLines.any { WhatsAppNotificationParser.isDeletedPlaceholder(it) } ||
+                removedItems.any { WhatsAppNotificationParser.isDeletedPlaceholder(it.text) }
+
+            if (hasDeletionPlaceholder) {
                 enqueueNotification(sbn)
+                return
             }
         }
 
-        // Sobald die Benachrichtigung aus der Statusleiste verschwindet (angetippt, weggewischt
-        // oder durch Öffnen von WhatsApp geschlossen), aktiven Statusleisten-Snapshot leeren,
-        // damit eine spätere neue Einzelnachricht niemals als Bearbeitung gewertet wird.
-        // (Der flüchtige Puffer `transientRamCache` bleibt für Löschungen voll erhalten!)
-        val key = sbn.key
-        processingScope.launch {
-            repository.onNotificationCleared(key)
+        val key = sbn.key ?: return
+
+        when (reason) {
+            // Nutzer hat aktiv auf die Benachrichtigung getippt -> Chat wird in WhatsApp geöffnet/gelesen
+            REASON_CLICK -> {
+                pendingRetractionJobs.remove(key)?.cancel()
+                processingScope.launch {
+                    repository.onNotificationClicked(key)
+                }
+            }
+
+            // Nutzer hat die Benachrichtigung manuell weggewischt -> Snapshot leeren, RAM-Puffer behalten
+            REASON_CANCEL, REASON_CANCEL_ALL -> {
+                pendingRetractionJobs.remove(key)?.cancel()
+                processingScope.launch {
+                    repository.onNotificationCleared(key)
+                }
+            }
+
+            // WhatsApp selbst hat die Benachrichtigung gecancelt (z. B. REASON_APP_CANCEL = 8):
+            // Entweder aktualisiert WhatsApp gerade die Notification (Cancel + Repost binnen Millisekunden),
+            // ODER der Absender hat die einzige ungelesene Nachricht für alle gelöscht und WhatsApp
+            // hat die Notification komplett zurückgezogen!
+            else -> {
+                val shouldRescueSilentRetraction =
+                    !isSummary &&
+                        reason == REASON_APP_CANCEL &&
+                        (isDeviceLockedOrScreenOff() || isHikariInForeground())
+
+                pendingRetractionJobs.remove(key)?.cancel()
+                val job = alertScope.launch {
+                    delay(1_500L)
+                    pendingRetractionJobs.remove(key)
+                    processingScope.launch {
+                        if (shouldRescueSilentRetraction) {
+                            repository.onNotificationRetractedByApp(key)
+                        } else {
+                            repository.onNotificationCleared(key)
+                        }
+                    }
+                }
+                pendingRetractionJobs[key] = job
+            }
         }
+    }
+
+    private fun isDeviceLockedOrScreenOff(): Boolean {
+        return runCatching {
+            val pm = getSystemService(PowerManager::class.java)
+            val km = getSystemService(KeyguardManager::class.java)
+            val interactive = pm?.isInteractive ?: true
+            val locked = km?.isKeyguardLocked ?: false
+            !interactive || locked
+        }.getOrDefault(false)
+    }
+
+    private fun isHikariInForeground(): Boolean {
+        return runCatching {
+            val info = ActivityManager.RunningAppProcessInfo()
+            ActivityManager.getMyMemoryState(info)
+            info.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
+        }.getOrDefault(false)
     }
 
     private fun extractTextLines(extras: Bundle): List<String> {

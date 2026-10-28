@@ -1273,6 +1273,11 @@ private fun HowItWorksBottomSheet(
                 title = "Automatische Löschung nach 7 Tagen",
                 desc = "Alle geretteten Nachrichten und zugehörigen Medien-Vorschauen werden nach 7 Tagen vollautomatisch aus der Datenbank und vom Speicher gelöscht, damit dein Speicher immer frei bleibt.",
             )
+            InfoStepRow(
+                step = "4",
+                title = "Wichtig beim Testen (Push-Prinzip)",
+                desc = "Der jeweilige WhatsApp-Chat darf beim Empfang und beim Löschen NICHT offen auf dem Bildschirm sein (und der Chat darf nicht stummgeschaltet sein), da WhatsApp sonst gar keine Push-Benachrichtigung an Android sendet.",
+            )
 
             Spacer(Modifier.height(4.dp))
 
