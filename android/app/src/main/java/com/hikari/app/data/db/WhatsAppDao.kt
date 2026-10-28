@@ -16,7 +16,7 @@ interface WhatsAppDao {
     @Update
     suspend fun update(message: WhatsAppMessageEntity)
 
-    @Query("SELECT * FROM whatsapp_messages ORDER BY timestamp DESC")
+    @Query("SELECT * FROM whatsapp_messages WHERE isDeleted = 1 OR isEdited = 1 ORDER BY COALESCE(deletedAt, editedAt, timestamp) DESC")
     fun observeAllMessages(): Flow<List<WhatsAppMessageEntity>>
 
     @Query("SELECT * FROM whatsapp_messages WHERE isDeleted = 1 ORDER BY COALESCE(deletedAt, timestamp) DESC")
@@ -25,40 +25,18 @@ interface WhatsAppDao {
     @Query("SELECT * FROM whatsapp_messages WHERE isEdited = 1 ORDER BY COALESCE(editedAt, timestamp) DESC")
     fun observeEditedMessages(): Flow<List<WhatsAppMessageEntity>>
 
-    @Query("SELECT * FROM whatsapp_messages WHERE chatKey = :chatKey ORDER BY timestamp ASC")
-    fun observeChatMessages(chatKey: String): Flow<List<WhatsAppMessageEntity>>
-
     @Query(
         """
         SELECT * FROM whatsapp_messages
-        WHERE chatKey = :chatKey
+        WHERE chatKey = :chatKey AND (isDeleted = 1 OR isEdited = 1)
         ORDER BY timestamp DESC
         LIMIT :limit
         """,
     )
     suspend fun getRecentMessagesForChat(chatKey: String, limit: Int = 25): List<WhatsAppMessageEntity>
 
-    @Query(
-        """
-        SELECT * FROM whatsapp_messages
-        WHERE notificationKey = :notificationKey
-        ORDER BY timestamp DESC
-        LIMIT :limit
-        """,
-    )
-    suspend fun getRecentMessagesByNotificationKey(
-        notificationKey: String,
-        limit: Int = 15,
-    ): List<WhatsAppMessageEntity>
-
     @Query("SELECT * FROM whatsapp_messages WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): WhatsAppMessageEntity?
-
-    @Query("UPDATE whatsapp_messages SET isReadInHikari = 1 WHERE chatKey = :chatKey AND isReadInHikari = 0")
-    suspend fun markChatRead(chatKey: String)
-
-    @Query("UPDATE whatsapp_messages SET isReadInHikari = 1 WHERE isReadInHikari = 0")
-    suspend fun markAllRead()
 
     @Query("DELETE FROM whatsapp_messages WHERE id = :id")
     suspend fun deleteById(id: Long)
@@ -69,9 +47,32 @@ interface WhatsAppDao {
     @Query("DELETE FROM whatsapp_messages")
     suspend fun deleteAll()
 
+    /**
+     * Entfernt alle regulären (nicht gelöschten und nicht bearbeiteten) Nachrichten,
+     * falls aus einer älteren Version noch welche in der DB liegen.
+     */
+    @Query("DELETE FROM whatsapp_messages WHERE isDeleted = 0 AND isEdited = 0")
+    suspend fun deleteNormalMessages()
+
+    /**
+     * Liefert alle Einträge, die älter als [cutoffTimestamp] (z.B. 7 Tage) sind,
+     * damit vor dem DB-Löschen auch deren Mediendateien bereinigt werden können.
+     */
+    @Query("SELECT * FROM whatsapp_messages WHERE COALESCE(deletedAt, editedAt, timestamp) < :cutoffTimestamp")
+    suspend fun getExpiredMessages(cutoffTimestamp: Long): List<WhatsAppMessageEntity>
+
+    /**
+     * Automatische Bereinigung: Löscht alle Einträge, die älter als [cutoffTimestamp] (7 Tage) sind.
+     */
+    @Query("DELETE FROM whatsapp_messages WHERE COALESCE(deletedAt, editedAt, timestamp) < :cutoffTimestamp")
+    suspend fun deleteExpiredMessages(cutoffTimestamp: Long): Int
+
     @Query("SELECT COUNT(*) FROM whatsapp_messages WHERE isDeleted = 1")
     fun observeDeletedCount(): Flow<Int>
 
     @Query("SELECT COUNT(*) FROM whatsapp_messages WHERE isEdited = 1")
     fun observeEditedCount(): Flow<Int>
+
+    @Query("SELECT mediaPreviewPath FROM whatsapp_messages WHERE (isDeleted = 1 OR isEdited = 1) AND mediaPreviewPath IS NOT NULL")
+    suspend fun getActiveMediaPaths(): List<String>
 }

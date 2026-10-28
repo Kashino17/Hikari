@@ -18,6 +18,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.io.File
 
 class WhatsAppGuardTest {
 
@@ -39,6 +40,7 @@ class WhatsAppGuardTest {
         }
         val context = mockk<Context>(relaxed = true) {
             every { getSharedPreferences(any<String>(), any<Int>()) } returns prefs
+            every { filesDir } returns File(System.getProperty("java.io.tmpdir"))
         }
         repository = WhatsAppRepository(context, fakeDao)
     }
@@ -76,10 +78,10 @@ class WhatsAppGuardTest {
     }
 
     @Test
-    fun `repository preserves original message when sender deletes for everyone`() = runTest {
-        val t0 = 1_700_000_000_000L
+    fun `normal messages are NOT saved to database, only deleted messages are persisted`() = runTest {
+        val t0 = System.currentTimeMillis() - 60_000L
 
-        // 1. Eingehende Nachricht von Anna
+        // 1. Eingehende Nachricht von Anna -> darf NICHT in der Datenbank landen!
         val incoming = RawNotificationPayload(
             packageName = "com.whatsapp",
             notificationKey = "notif_anna",
@@ -105,11 +107,9 @@ class WhatsAppGuardTest {
         repository.processNotification(incoming)
 
         val savedBeforeDelete = repository.allMessages.first()
-        assertEquals(1, savedBeforeDelete.size)
-        assertEquals("Hier ist der geheime Code: 9481", savedBeforeDelete.first().text)
-        assertFalse(savedBeforeDelete.first().isDeleted)
+        assertTrue("Normale Nachrichten dürfen nicht in der DB gespeichert werden", savedBeforeDelete.isEmpty())
 
-        // 2. Anna löscht die Nachricht für alle -> WhatsApp aktualisiert die Benachrichtigung
+        // 2. Anna löscht die Nachricht für alle -> JETZT wird sie aus dem RAM-Puffer in die DB gerettet!
         val deletionUpdate = incoming.copy(
             text = "🚫 Diese Nachricht wurde gelöscht.",
             postTime = t0 + 15_000L,
@@ -123,7 +123,6 @@ class WhatsAppGuardTest {
         )
         repository.processNotification(deletionUpdate)
 
-        // 3. Originaltext muss erhalten bleiben und isDeleted = true gesetzt sein!
         val deletedList = repository.deletedMessages.first()
         assertEquals(1, deletedList.size)
         val preserved = deletedList.first()
@@ -133,10 +132,10 @@ class WhatsAppGuardTest {
     }
 
     @Test
-    fun `repository detects edited message and preserves originalText`() = runTest {
-        val t0 = 1_700_000_100_000L
+    fun `repository detects edited message from RAM cache and persists only when edited`() = runTest {
+        val t0 = System.currentTimeMillis() - 120_000L
 
-        // 1. Ursprüngliche Nachricht von Lukas
+        // 1. Ursprüngliche Nachricht von Lukas -> nur im RAM, DB bleibt leer
         val initialPayload = RawNotificationPayload(
             packageName = "com.whatsapp",
             notificationKey = "notif_lukas",
@@ -160,6 +159,7 @@ class WhatsAppGuardTest {
             ),
         )
         repository.processNotification(initialPayload)
+        assertTrue(repository.allMessages.first().isEmpty())
 
         // 2. Lukas bearbeitet die Nachricht innerhalb des 15-Minuten-Fensters
         val editedPayload = initialPayload.copy(
@@ -181,10 +181,42 @@ class WhatsAppGuardTest {
         assertTrue(msg.isEdited)
         assertEquals("Treffen um 19:00 Uhr vorm Kino", msg.originalText)
         assertEquals("Treffen um 20:30 Uhr vorm Kino", msg.text)
+    }
 
-        val history = repository.decodeEditHistory(msg.editHistoryJson)
-        assertEquals(1, history.size)
-        assertEquals("Treffen um 19:00 Uhr vorm Kino", history.first().text)
+    @Test
+    fun `pruneExpiredData automatically deletes messages older than 7 days`() = runTest {
+        val now = System.currentTimeMillis()
+        val eightDaysAgo = now - (8L * 24L * 60L * 60L * 1000L)
+        val twoDaysAgo = now - (2L * 24L * 60L * 60L * 1000L)
+
+        fakeDao.insert(
+            WhatsAppMessageEntity(
+                chatKey = "com.whatsapp:alt",
+                chatTitle = "Alt",
+                senderName = "Alt",
+                text = "Nachricht von vor 8 Tagen",
+                isDeleted = true,
+                deletedAt = eightDaysAgo,
+                timestamp = eightDaysAgo,
+            ),
+        )
+        fakeDao.insert(
+            WhatsAppMessageEntity(
+                chatKey = "com.whatsapp:frisch",
+                chatTitle = "Frisch",
+                senderName = "Frisch",
+                text = "Nachricht von vor 2 Tagen",
+                isDeleted = true,
+                deletedAt = twoDaysAgo,
+                timestamp = twoDaysAgo,
+            ),
+        )
+
+        repository.pruneExpiredData(nowMs = now)
+
+        val remaining = repository.deletedMessages.first()
+        assertEquals(1, remaining.size)
+        assertEquals("Nachricht von vor 2 Tagen", remaining.first().text)
     }
 
     @Test
@@ -244,7 +276,7 @@ private class FakeWhatsAppDao : WhatsAppDao {
     }
 
     override fun observeAllMessages(): Flow<List<WhatsAppMessageEntity>> =
-        items.map { list -> list.sortedByDescending { it.timestamp } }
+        items.map { list -> list.filter { it.isDeleted || it.isEdited }.sortedByDescending { it.timestamp } }
 
     override fun observeDeletedMessages(): Flow<List<WhatsAppMessageEntity>> =
         items.map { list -> list.filter { it.isDeleted }.sortedByDescending { it.deletedAt ?: it.timestamp } }
@@ -252,30 +284,13 @@ private class FakeWhatsAppDao : WhatsAppDao {
     override fun observeEditedMessages(): Flow<List<WhatsAppMessageEntity>> =
         items.map { list -> list.filter { it.isEdited }.sortedByDescending { it.editedAt ?: it.timestamp } }
 
-    override fun observeChatMessages(chatKey: String): Flow<List<WhatsAppMessageEntity>> =
-        items.map { list -> list.filter { it.chatKey == chatKey }.sortedBy { it.timestamp } }
-
     override suspend fun getRecentMessagesForChat(chatKey: String, limit: Int): List<WhatsAppMessageEntity> =
-        items.value.filter { it.chatKey == chatKey }.sortedByDescending { it.timestamp }.take(limit)
-
-    override suspend fun getRecentMessagesByNotificationKey(
-        notificationKey: String,
-        limit: Int,
-    ): List<WhatsAppMessageEntity> =
-        items.value.filter { it.notificationKey == notificationKey }.sortedByDescending { it.timestamp }.take(limit)
+        items.value.filter { it.chatKey == chatKey && (it.isDeleted || it.isEdited) }
+            .sortedByDescending { it.timestamp }
+            .take(limit)
 
     override suspend fun getById(id: Long): WhatsAppMessageEntity? =
         items.value.firstOrNull { it.id == id }
-
-    override suspend fun markChatRead(chatKey: String) {
-        items.value = items.value.map {
-            if (it.chatKey == chatKey) it.copy(isReadInHikari = true) else it
-        }
-    }
-
-    override suspend fun markAllRead() {
-        items.value = items.value.map { it.copy(isReadInHikari = true) }
-    }
 
     override suspend fun deleteById(id: Long) {
         items.value = items.value.filterNot { it.id == id }
@@ -289,9 +304,25 @@ private class FakeWhatsAppDao : WhatsAppDao {
         items.value = emptyList()
     }
 
+    override suspend fun deleteNormalMessages() {
+        items.value = items.value.filter { it.isDeleted || it.isEdited }
+    }
+
+    override suspend fun getExpiredMessages(cutoffTimestamp: Long): List<WhatsAppMessageEntity> =
+        items.value.filter { (it.deletedAt ?: it.editedAt ?: it.timestamp) < cutoffTimestamp }
+
+    override suspend fun deleteExpiredMessages(cutoffTimestamp: Long): Int {
+        val before = items.value.size
+        items.value = items.value.filterNot { (it.deletedAt ?: it.editedAt ?: it.timestamp) < cutoffTimestamp }
+        return before - items.value.size
+    }
+
     override fun observeDeletedCount(): Flow<Int> =
         items.map { list -> list.count { it.isDeleted } }
 
     override fun observeEditedCount(): Flow<Int> =
         items.map { list -> list.count { it.isEdited } }
+
+    override suspend fun getActiveMediaPaths(): List<String> =
+        items.value.filter { it.isDeleted || it.isEdited }.mapNotNull { it.mediaPreviewPath }
 }

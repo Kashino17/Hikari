@@ -8,7 +8,6 @@ import com.hikari.app.data.db.WhatsAppMessageEntity
 import com.hikari.app.domain.whatsapp.DirectChatHistoryItem
 import com.hikari.app.domain.whatsapp.WhatsAppChatAnalysis
 import com.hikari.app.domain.whatsapp.WhatsAppChatAnalyzer
-import com.hikari.app.domain.whatsapp.WhatsAppChatSummary
 import com.hikari.app.domain.whatsapp.WhatsAppEditVersion
 import com.hikari.app.domain.whatsapp.WhatsAppMediaVault
 import com.hikari.app.domain.whatsapp.WhatsAppRepository
@@ -16,13 +15,10 @@ import com.hikari.app.domain.whatsapp.WhatsAppStats
 import com.hikari.app.domain.whatsapp.WhatsAppStatusItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -40,17 +36,11 @@ class WhatsAppViewModel @Inject constructor(
     val editedMessages: StateFlow<List<WhatsAppMessageEntity>> = repository.editedMessages
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val chatSummaries: StateFlow<List<WhatsAppChatSummary>> = repository.chatSummaries
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
     val stats: StateFlow<WhatsAppStats> = repository.stats
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), WhatsAppStats())
 
     val alertsEnabled: StateFlow<Boolean> = repository.alertsEnabled
     val directChatHistory: StateFlow<List<DirectChatHistoryItem>> = repository.directChatHistory
-
-    private val _selectedChatKey = MutableStateFlow<String?>(null)
-    val selectedChatKey: StateFlow<String?> = _selectedChatKey.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -64,16 +54,19 @@ class WhatsAppViewModel @Inject constructor(
     private val _chatAnalysis = MutableStateFlow<WhatsAppChatAnalysis?>(null)
     val chatAnalysis: StateFlow<WhatsAppChatAnalysis?> = _chatAnalysis.asStateFlow()
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val selectedChatMessages: StateFlow<List<WhatsAppMessageEntity>> = _selectedChatKey
-        .flatMapLatest { key ->
-            if (key == null) flowOf(emptyList()) else repository.observeChat(key)
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
     init {
+        // Beim Öffnen sofort normale Altlasten und Nachrichten > 7 Tage bereinigen
+        viewModelScope.launch {
+            repository.pruneExpiredData()
+        }
         if (_hasMediaFolderAccess.value) {
             refreshStatuses()
+        }
+    }
+
+    fun pruneNow() {
+        viewModelScope.launch {
+            repository.pruneExpiredData()
         }
     }
 
@@ -128,17 +121,6 @@ class WhatsAppViewModel @Inject constructor(
         _chatAnalysis.value = null
     }
 
-    fun openChat(chatKey: String) {
-        _selectedChatKey.value = chatKey
-        viewModelScope.launch {
-            repository.markChatRead(chatKey)
-        }
-    }
-
-    fun closeChat() {
-        _selectedChatKey.value = null
-    }
-
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
     }
@@ -153,17 +135,7 @@ class WhatsAppViewModel @Inject constructor(
         }
     }
 
-    fun deleteChat(chatKey: String) {
-        if (_selectedChatKey.value == chatKey) {
-            _selectedChatKey.value = null
-        }
-        viewModelScope.launch {
-            repository.deleteChat(chatKey)
-        }
-    }
-
     fun clearAllMessages() {
-        _selectedChatKey.value = null
         viewModelScope.launch {
             repository.clearAll()
         }
