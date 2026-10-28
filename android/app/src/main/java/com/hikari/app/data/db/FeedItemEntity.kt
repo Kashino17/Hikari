@@ -36,4 +36,6 @@ data class FeedItemEntity(
     // (which clusters one channel and kills the variety). Set from the server
     // response index on each refresh.
     @ColumnInfo(defaultValue = "0") val position: Int = 0,
+    // Veroeffentlichungsdatum (Epoch ms) fuer die Datumszeile auf den Karten.
+    @ColumnInfo(defaultValue = "NULL") val publishedAt: Long? = null,
 )

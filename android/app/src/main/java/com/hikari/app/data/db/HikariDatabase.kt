@@ -18,8 +18,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         LocalMusicDownloadEntity::class,
         SearchHistoryEntity::class,
         MusicPlayEventEntity::class,
+        WhatsAppMessageEntity::class,
     ],
-    version = 17,
+    version = 19,
     exportSchema = false,
 )
 abstract class HikariDatabase : RoomDatabase() {
@@ -33,6 +34,7 @@ abstract class HikariDatabase : RoomDatabase() {
     abstract fun localMusicDownloadDao(): LocalMusicDownloadDao
     abstract fun searchHistoryDao(): SearchHistoryDao
     abstract fun musicPlayEventDao(): MusicPlayEventDao
+    abstract fun whatsAppDao(): WhatsAppDao
 }
 
 /**
@@ -112,5 +114,47 @@ val MIGRATION_15_16 = object : Migration(15, 16) {
 val MIGRATION_16_17 = object : Migration(16, 17) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE feed_items ADD COLUMN source TEXT DEFAULT NULL")
+    }
+}
+
+// Veroeffentlichungsdatum der Feed-Items fuer die Datumszeile auf den Karten.
+val MIGRATION_17_18 = object : Migration(17, 18) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE feed_items ADD COLUMN publishedAt INTEGER DEFAULT NULL")
+    }
+}
+
+// WhatsApp-Ecke: Nachrichten-Tresor fuer geloeschte & bearbeitete WhatsApp-Nachrichten.
+val MIGRATION_18_19 = object : Migration(18, 19) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `whatsapp_messages` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `chatKey` TEXT NOT NULL,
+                `chatTitle` TEXT NOT NULL,
+                `senderName` TEXT NOT NULL,
+                `isGroup` INTEGER NOT NULL DEFAULT 0,
+                `packageName` TEXT NOT NULL DEFAULT 'com.whatsapp',
+                `text` TEXT NOT NULL,
+                `originalText` TEXT DEFAULT NULL,
+                `editHistoryJson` TEXT DEFAULT NULL,
+                `isDeleted` INTEGER NOT NULL DEFAULT 0,
+                `deletedAt` INTEGER DEFAULT NULL,
+                `isEdited` INTEGER NOT NULL DEFAULT 0,
+                `editedAt` INTEGER DEFAULT NULL,
+                `mediaType` TEXT DEFAULT NULL,
+                `mediaPreviewPath` TEXT DEFAULT NULL,
+                `avatarPath` TEXT DEFAULT NULL,
+                `timestamp` INTEGER NOT NULL,
+                `notificationKey` TEXT DEFAULT NULL,
+                `isReadInHikari` INTEGER NOT NULL DEFAULT 0
+            )
+            """.trimIndent(),
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_whatsapp_messages_chatKey` ON `whatsapp_messages` (`chatKey`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_whatsapp_messages_timestamp` ON `whatsapp_messages` (`timestamp`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_whatsapp_messages_isDeleted` ON `whatsapp_messages` (`isDeleted`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_whatsapp_messages_isEdited` ON `whatsapp_messages` (`isEdited`)")
     }
 }

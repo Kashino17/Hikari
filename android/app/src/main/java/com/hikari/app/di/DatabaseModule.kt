@@ -12,11 +12,14 @@ import com.hikari.app.data.db.MIGRATION_13_14
 import com.hikari.app.data.db.MIGRATION_14_15
 import com.hikari.app.data.db.MIGRATION_15_16
 import com.hikari.app.data.db.MIGRATION_16_17
+import com.hikari.app.data.db.MIGRATION_17_18
+import com.hikari.app.data.db.MIGRATION_18_19
 import com.hikari.app.data.db.MusicPlayEventDao
 import com.hikari.app.data.db.MusicPlaylistDao
 import com.hikari.app.data.db.MusicPlaylistSongDao
 import com.hikari.app.data.db.PlaybackPositionDao
 import com.hikari.app.data.db.SearchHistoryDao
+import com.hikari.app.data.db.WhatsAppDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,7 +33,15 @@ object DatabaseModule {
     @Provides @Singleton
     fun provideDatabase(@ApplicationContext ctx: Context): HikariDatabase =
         Room.databaseBuilder(ctx, HikariDatabase::class.java, "hikari.db")
-            .addMigrations(MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17)
+            .addMigrations(
+                MIGRATION_12_13,
+                MIGRATION_13_14,
+                MIGRATION_14_15,
+                MIGRATION_15_16,
+                MIGRATION_16_17,
+                MIGRATION_17_18,
+                MIGRATION_18_19,
+            )
             .fallbackToDestructiveMigration()
             .build()
 
@@ -68,4 +79,8 @@ object DatabaseModule {
     @Provides @Singleton
     fun provideMusicPlayEventDao(db: HikariDatabase): MusicPlayEventDao =
         db.musicPlayEventDao()
+
+    @Provides @Singleton
+    fun provideWhatsAppDao(db: HikariDatabase): WhatsAppDao =
+        db.whatsAppDao()
 }

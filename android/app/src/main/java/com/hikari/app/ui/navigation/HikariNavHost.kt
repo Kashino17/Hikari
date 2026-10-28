@@ -89,6 +89,7 @@ import com.hikari.app.ui.games.FruitHoleGame
 import com.hikari.app.ui.games.FruitMergeGame
 import com.hikari.app.ui.games.SpaceShooterGame
 import com.hikari.app.ui.games.TicTacToeGame
+import com.hikari.app.ui.whatsapp.WhatsAppScreen
 
 private fun navTo(nav: NavController, route: String) {
     nav.navigate(route) {
@@ -168,7 +169,8 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
     // also auch ohne Bottom-Nav rendern (eigener Back-Button reicht).
     val isGearSubPage = currentRoute == "settings" || currentRoute?.startsWith("tuning") == true
     val isGameRoute = currentRoute?.startsWith("game/") == true ||
-        currentRoute?.startsWith("russian") == true
+        currentRoute?.startsWith("russian") == true ||
+        currentRoute == "whatsapp"
     // Der Browser bringt eigene Leisten oben und unten mit; die Bottom-Nav
     // würde die Fundanzeige verdecken.
     val isBrowserRoute = currentRoute == "browser"
@@ -599,6 +601,13 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                     GamesScreen(
                         onBack = { nav.popBackStack() },
                         onLaunchGame = { gameId -> nav.navigate("game/$gameId") },
+                    )
+                }
+            }
+            composable("whatsapp") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    WhatsAppScreen(
+                        onBack = { nav.popBackStack() },
                     )
                 }
             }

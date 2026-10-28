@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.automirrored.filled.MenuBook
@@ -127,6 +128,11 @@ fun AreaHub(
                     BrowserCardContent()
                 }
             }
+            item {
+                HubCard(onClick = { onOpenSection("whatsapp") }) {
+                    WhatsAppCardContent()
+                }
+            }
         }
     }
 }
@@ -172,7 +178,7 @@ fun AreaHubShowcase(
                     .padding(horizontal = 8.dp, vertical = 3.dp),
             ) {
                 Text(
-                    "6 Bereiche",
+                    "7 Bereiche",
                     color = HikariAmber,
                     fontSize = 10.5.sp,
                     fontWeight = FontWeight.Bold,
@@ -280,6 +286,31 @@ fun AreaHubShowcase(
                     onClick = { onOpenSection("browser") },
                 )
             }
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        // Row 3: WhatsApp-Ecke (Gelöschte & bearbeitete Nachrichten + Tools)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                AreaAppTile(
+                    title = "WhatsApp",
+                    subtitle = "Gelöscht & Tools",
+                    icon = Icons.AutoMirrored.Filled.Chat,
+                    gradient = Brush.linearGradient(
+                        listOf(Color(0xFF075E54), Color(0xFF128C7E), Color(0xFF25D366)),
+                    ),
+                    badgeText = "Wächter",
+                    badgeColor = Color(0xFF25D366),
+                    badgeTextColor = Color.Black,
+                    onClick = { onOpenSection("whatsapp") },
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(1f))
         }
 
         Spacer(Modifier.height(26.dp))
@@ -803,6 +834,30 @@ private fun BoxScope.RussianCardContent() {
                 else -> "Tag ${done + 1} von $total · ${p.streak} Tage Serie"
             },
             icon = Icons.Default.Translate,
+        )
+    }
+}
+
+@Composable
+private fun BoxScope.WhatsAppCardContent() {
+    Box(
+        Modifier.fillMaxSize().background(
+            Brush.linearGradient(
+                listOf(Color(0xFF075E54), Color(0xFF128C7E), Color(0xFF052E28)),
+            ),
+        ),
+    )
+    Icon(
+        Icons.AutoMirrored.Filled.Chat,
+        contentDescription = null,
+        tint = Color.White.copy(alpha = 0.15f),
+        modifier = Modifier.align(Alignment.TopEnd).padding(10.dp).size(54.dp),
+    )
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomStart) {
+        CardLabel(
+            name = "WhatsApp-Ecke",
+            subtitle = "Gelöschte & bearbeitete Nachrichten · Tools",
+            icon = Icons.AutoMirrored.Filled.Chat,
         )
     }
 }

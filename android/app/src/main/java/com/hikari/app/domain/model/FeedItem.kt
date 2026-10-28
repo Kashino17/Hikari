@@ -23,4 +23,5 @@ data class FeedItem(
     val summary: String? = null,
     val source: String? = null,
     val channelId: String = "",
+    val publishedAt: Long? = null,
 )

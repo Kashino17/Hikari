@@ -448,7 +448,7 @@ private fun ProfileTabsRow(
         TabChip(
             icon = Icons.Default.Apps,
             label = "Bereiche",
-            count = 6,
+            count = 7,
             selected = active == ProfileTab.BEREICHE,
             onClick = { onTabSelected(ProfileTab.BEREICHE) },
         )

@@ -27,6 +27,7 @@ data class FeedItemDto(
     val overallScore: Int? = null,
     val educationalValue: Int? = null,
     val addedAt: Long,
+    val publishedAt: Long? = null,
     val saved: Int,
     val seenAt: Long? = null,  // only present in mode=old responses
     val captions: List<CaptionDto>? = null,

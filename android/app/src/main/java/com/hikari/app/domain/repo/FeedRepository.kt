@@ -189,6 +189,7 @@ private fun FeedItemDto.toEntity(position: Int) = FeedItemEntity(
     summary = summary,
     source = source,
     position = position,
+    publishedAt = publishedAt,
 )
 
 private fun FeedItemEntity.toDomain() = FeedItem(
@@ -213,6 +214,7 @@ private fun FeedItemEntity.toDomain() = FeedItem(
     summary = summary,
     source = source,
     channelId = channelId,
+    publishedAt = publishedAt,
 )
 
 private fun FeedItemDto.toDomain() = FeedItem(
@@ -233,4 +235,5 @@ private fun FeedItemDto.toDomain() = FeedItem(
     summary = summary,
     source = source,
     channelId = channelId,
+    publishedAt = publishedAt,
 )
