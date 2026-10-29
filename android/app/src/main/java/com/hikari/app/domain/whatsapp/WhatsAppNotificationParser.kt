@@ -89,7 +89,7 @@ object WhatsAppNotificationParser {
 
     private val DELETED_CONTAINS_REGEX = Regex(
         """(?:""" +
-            """diese nachricht wurde (?:für alle |vom absender )?gelöscht|""" +
+            """diese nachricht wurde (?:für alle |vom absender |von [^\n.]{1,50} )?gelöscht|""" +
             """du hast diese nachricht gelöscht|""" +
             """this message was deleted|""" +
             """you deleted this message|""" +
@@ -286,13 +286,22 @@ object WhatsAppNotificationParser {
 
         // 1. Wenn MessagingStyle-Einträge vorhanden sind (Standard ab Android 7+ bei WhatsApp)
         if (payload.messagingStyleItems.isNotEmpty()) {
+            val firstSender = payload.messagingStyleItems
+                .firstNotNullOfOrNull { item ->
+                    cleanChatTitle(stripInvisibleMarks(item.sender.orEmpty())).takeIf {
+                        it.isNotEmpty() && !isGenericOrSummaryTitle(it)
+                    }
+                }
             val baseGroupTitle = when {
-                rawConvTitle.isNotEmpty() -> cleanChatTitle(rawConvTitle)
+                rawConvTitle.isNotEmpty() && !isGenericOrSummaryTitle(rawConvTitle) -> cleanChatTitle(rawConvTitle)
                 rawTitle.contains(":") -> cleanChatTitle(rawTitle.substringBefore(":"))
                 else -> cleanChatTitle(rawTitle)
             }
             val isGroup = payload.isGroupConversation || rawConvTitle.isNotEmpty() || rawTitle.contains(":")
-            val resolvedChatTitle = baseGroupTitle.ifEmpty { cleanChatTitle(rawTitle) }
+            val resolvedChatTitle = baseGroupTitle
+                .takeIf { it.isNotEmpty() && !isGenericOrSummaryTitle(it) }
+                ?: firstSender
+                ?: cleanChatTitle(rawTitle)
             if (resolvedChatTitle.isEmpty()) return emptyList()
 
             val chatKey = buildChatKey(payload.packageName, resolvedChatTitle)
@@ -301,12 +310,22 @@ object WhatsAppNotificationParser {
                 val body = stripInvisibleMarks(item.text)
                 if (body.isEmpty() || isSystemNoise(resolvedChatTitle, body)) return@mapNotNull null
 
-                val rawSender = stripInvisibleMarks(item.sender.orEmpty())
-                val sender = rawSender.takeIf { it.isNotEmpty() }
-                    ?: extractSenderPrefixFromDeletedLine(body)
-                    ?: if (rawTitle.contains(":")) cleanChatTitle(rawTitle.substringAfter(":")) else resolvedChatTitle
-
                 val isDel = isDeletedPlaceholder(body)
+                val rawSender = stripInvisibleMarks(item.sender.orEmpty())
+                val prefixFromDeleted = if (isDel) extractSenderPrefixFromDeletedLine(body) else null
+                val sender = when {
+                    prefixFromDeleted != null && (rawSender.isEmpty() || rawSender.equals(resolvedChatTitle, ignoreCase = true) || isGenericOrSummaryTitle(rawSender)) ->
+                        prefixFromDeleted
+                    rawSender.isNotEmpty() && !isGenericOrSummaryTitle(rawSender) ->
+                        cleanChatTitle(rawSender)
+                    prefixFromDeleted != null ->
+                        prefixFromDeleted
+                    rawTitle.contains(":") ->
+                        cleanChatTitle(rawTitle.substringAfter(":"))
+                    else ->
+                        resolvedChatTitle
+                }
+
                 val (cleanedText, explicitEdit) = if (isDel) body to false else extractExplicitEdit(body)
 
                 ParsedWhatsAppMessage(

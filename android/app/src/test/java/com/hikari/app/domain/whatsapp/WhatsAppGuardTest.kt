@@ -301,6 +301,87 @@ class WhatsAppGuardTest {
     }
 
     @Test
+    fun `deleted message is NEVER swallowed as edited when multiple messages share the same timestamp or when an edited message is later deleted`() = runTest {
+        val t0 = System.currentTimeMillis() - 60_000L
+
+        // Fall A: Zwei Nachrichten mit identischem Timestamp t0 ("Hallo" und "Geheimnis"),
+        // danach wird "Geheimnis" gelöscht -> darf NIEMALS als Bearbeitet ("Geheimnis" -> "Hallo")
+        // gewertet werden, sondern muss unter Gelöscht landen!
+        val batchPayload = RawNotificationPayload(
+            packageName = "com.whatsapp",
+            notificationKey = "notif_batch",
+            notificationTag = "batch_tag",
+            title = "Jonas",
+            text = "Geheimnis",
+            bigText = "Hallo\nGeheimnis",
+            subText = null,
+            conversationTitle = null,
+            isGroupConversation = false,
+            isSummary = false,
+            isOngoing = false,
+            category = "msg",
+            postTime = t0,
+            messagingStyleItems = listOf(
+                RawMessagingItem(sender = "Jonas", text = "Hallo", timestamp = t0),
+                RawMessagingItem(sender = "Jonas", text = "Geheimnis", timestamp = t0),
+            ),
+        )
+        repository.processNotification(batchPayload)
+
+        val batchDeleteUpdate = batchPayload.copy(
+            text = "🚫 Diese Nachricht wurde gelöscht",
+            postTime = t0 + 15_000L,
+            messagingStyleItems = listOf(
+                RawMessagingItem(sender = "Jonas", text = "Hallo", timestamp = t0),
+                RawMessagingItem(sender = "Jonas", text = "🚫 Diese Nachricht wurde gelöscht", timestamp = t0),
+            ),
+        )
+        repository.processNotification(batchDeleteUpdate)
+
+        assertTrue(
+            "Gelöschte Nachricht darf nicht fälschlicherweise als Bearbeitet gewertet werden",
+            repository.editedMessages.first().none { it.senderName == "Jonas" },
+        )
+        val jonasDeleted = repository.deletedMessages.first().filter { it.senderName == "Jonas" }
+        assertEquals(1, jonasDeleted.size)
+        assertEquals("Geheimnis", jonasDeleted.first().text)
+
+        // Fall B: Nachricht wird erst bearbeitet und 30 Sekunden später für alle gelöscht!
+        val msg1 = batchPayload.copy(
+            notificationKey = "notif_edit_then_del",
+            title = "Nina",
+            text = "Ursprungstext",
+            postTime = t0,
+            messagingStyleItems = listOf(
+                RawMessagingItem(sender = "Nina", text = "Ursprungstext", timestamp = t0),
+            ),
+        )
+        repository.processNotification(msg1)
+
+        val msgEdited = msg1.copy(
+            text = "Bearbeiteter Text",
+            postTime = t0 + 10_000L,
+            messagingStyleItems = listOf(
+                RawMessagingItem(sender = "Nina", text = "Bearbeiteter Text", timestamp = t0),
+            ),
+        )
+        repository.processNotification(msgEdited)
+        assertEquals(1, repository.editedMessages.first().count { it.senderName == "Nina" })
+
+        // 30 Sekunden später löscht Nina die bearbeitete Nachricht (ohne EXTRA_MESSAGES)
+        val msgDeleted = msg1.copy(
+            text = "🚫 Diese Nachricht wurde gelöscht",
+            postTime = t0 + 40_000L,
+            messagingStyleItems = emptyList(),
+        )
+        repository.processNotification(msgDeleted)
+
+        val ninaDeleted = repository.deletedMessages.first().filter { it.senderName == "Nina" }
+        assertEquals("Bearbeitete und danach gelöschte Nachricht muss auch in Gelöscht erscheinen", 1, ninaDeleted.size)
+        assertEquals("Bearbeiteter Text", ninaDeleted.first().text)
+    }
+
+    @Test
     fun `repository detects edited message from RAM cache and persists only when edited`() = runTest {
         val t0 = System.currentTimeMillis() - 120_000L
 
