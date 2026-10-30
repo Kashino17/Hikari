@@ -37,6 +37,8 @@ data class RuProgress(
     val xpByDay: Map<Long, Int> = emptyMap(),
     val bestBlitz: Int = 0,
     val bestPairsSeconds: Int = 0,
+    val bestReflex: Int = 0,
+    val bestKombi: Int = 0,
     /** Gesprochene Sätze, die die Spracherkennung akzeptiert hat. */
     val spokenOk: Int = 0,
     /** Lautlabor: Gruppen-ID → bestes Ergebnis in Prozent (0–100). */

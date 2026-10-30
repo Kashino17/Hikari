@@ -666,9 +666,26 @@ internal fun SpeakStep(step: RuExercise.Speak, env: RuStepEnv) {
     var score by remember { mutableStateOf<RuAnswerCheck.SpeechScore?>(null) }
     var selfCheck by remember { mutableStateOf(!env.speechAvailable) }
     var evaluating by remember { mutableStateOf(false) }
+
+    // Ablese-Sperre (Gedächtnis-Modus): Text wird 2,5 Sekunden zum Einprägen gezeigt und
+    // verschwindet danach (oder sofort beim Mikrofon-Start), damit du frei aus dem Kopf sprichst!
+    var textMasked by remember(p.id) { mutableStateOf(false) }
+    var peekFirstWord by remember(p.id) { mutableStateOf(false) }
+    var peekFullTrigger by remember(p.id) { mutableIntStateOf(0) }
+    var usedFullPeek by remember(p.id) { mutableStateOf(false) }
+
+    LaunchedEffect(p.id, peekFullTrigger) {
+        textMasked = false
+        delay(2_600L)
+        if (!env.answered) {
+            textMasked = true
+        }
+    }
+
     val haptic = LocalHapticFeedback.current
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) {
+            textMasked = true
             env.audio.stop()
             recognizer.start()
         } else {
@@ -684,6 +701,7 @@ internal fun SpeakStep(step: RuExercise.Speak, env: RuStepEnv) {
             attempts++
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             if (sc.passed && !env.answered) {
+                textMasked = false
                 env.onSpokenOk()
                 env.onAnswer(true)
             }
@@ -693,6 +711,7 @@ internal fun SpeakStep(step: RuExercise.Speak, env: RuStepEnv) {
     fun listen() {
         score = null
         evaluating = false
+        textMasked = true
         recognizer.reset()
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             env.audio.stop()
@@ -702,13 +721,98 @@ internal fun SpeakStep(step: RuExercise.Speak, env: RuStepEnv) {
         }
     }
 
+    val firstWordDisplay = remember(p.display) { p.display.trim().substringBefore(" ") }
+    val firstWordRu = remember(p.ru) { p.ru.trim().substringBefore(" ") }
+
     Column(Modifier.fillMaxSize()) {
         Column(
             Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp).animateContentSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            RuStepTitle("Sprechen", "Sag es laut")
-            RuPhraseBlock(p, cyrillicSize = 28.sp)
+            RuStepTitle("Sprechen (Aus dem Kopf)", "Präg es dir kurz ein & sprich frei")
+
+            if (!textMasked || env.answered) {
+                if (!env.answered) {
+                    Text(
+                        "👀 Kurz einprägen — Text blendet gleich aus …",
+                        color = HikariAmber,
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                } else if (!usedFullPeek) {
+                    Text(
+                        "🧠 Stark! Frei aus dem Gedächtnis gesprochen",
+                        color = HikariAmber,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                }
+                RuPhraseBlock(p, cyrillicSize = 28.sp)
+            } else {
+                // Ablese-Sperre aktiv: Nur der deutsche Gedanke ist sichtbar!
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(HikariCardBg)
+                        .border(1.dp, HikariAmber.copy(alpha = 0.45f), RoundedCornerShape(18.dp))
+                        .padding(18.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    RuOverline("🙈 Ohne Ablesen — sag auf Russisch:", color = HikariAmber)
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        p.de,
+                        color = HikariText,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center,
+                    )
+                    if (peekFirstWord) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            "$firstWordDisplay …",
+                            color = HikariAmber,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            translitAnnotated(firstWordRu),
+                            color = HikariTextMuted,
+                            fontSize = 14.sp,
+                        )
+                    }
+                    Spacer(Modifier.height(14.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        if (!peekFirstWord) {
+                            Box(
+                                Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(HikariSurfaceHigh)
+                                    .clickable { peekFirstWord = true }
+                                    .padding(horizontal = 12.dp, vertical = 7.dp),
+                            ) {
+                                Text("💡 1. Wort als Starthilfe", color = HikariText, fontSize = 12.5.sp)
+                            }
+                        }
+                        Box(
+                            Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(HikariSurfaceHigh)
+                                .clickable {
+                                    usedFullPeek = true
+                                    peekFullTrigger++
+                                }
+                                .padding(horizontal = 12.dp, vertical = 7.dp),
+                        ) {
+                            Text("👁️ Kurz spicken (2,5s)", color = HikariTextMuted, fontSize = 12.5.sp)
+                        }
+                    }
+                }
+            }
+
             Spacer(Modifier.height(18.dp))
             RuPlayRow(
                 playingNow = env.playing == p.audio,

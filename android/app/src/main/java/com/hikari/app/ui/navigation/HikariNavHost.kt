@@ -553,6 +553,21 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                     RussianTalkScreen(onClose = { nav.popBackStack() })
                 }
             }
+            composable("russian/reflex") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    com.hikari.app.ui.russian.RussianReflexScreen(onClose = { nav.popBackStack() })
+                }
+            }
+            composable("russian/kombi") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    com.hikari.app.ui.russian.RussianKombiScreen(onClose = { nav.popBackStack() })
+                }
+            }
+            composable("russian/blind") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    com.hikari.app.ui.russian.RussianBlindCoachScreen(onClose = { nav.popBackStack() })
+                }
+            }
             composable("russian/conversation") {
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     com.hikari.app.ui.russian.RussianConversationScreen(onClose = { nav.popBackStack() })

@@ -174,6 +174,24 @@ fun RussianHomeScreen(
             // Homescreen-Stil: jedes Spiel eine „App" mit Icon, Rekord als Badge.
             val apps = listOf(
                 GameApp(
+                    "Sprech-Reflex",
+                    R.drawable.ic_app_blitz,
+                    listOf(Color(0xFFFFB300), Color(0xFFD84315)),
+                    if (p.bestReflex > 0) "★${p.bestReflex}" else "NEU",
+                ) { onOpen("russian/reflex") },
+                GameApp(
+                    "Kombi-Meister",
+                    R.drawable.ic_app_pairs,
+                    listOf(Color(0xFF00ACC1), Color(0xFF005B9F)),
+                    if (p.bestKombi > 0) "★${p.bestKombi}" else "NEU",
+                ) { onOpen("russian/kombi") },
+                GameApp(
+                    "Blind-Coach",
+                    R.drawable.ic_app_dialog,
+                    listOf(Color(0xFF8E24AA), Color(0xFF4A148C)),
+                    "AUDIO",
+                ) { onOpen("russian/blind") },
+                GameApp(
                     "Hör-Blitz",
                     R.drawable.ic_app_blitz,
                     listOf(Color(0xFFF9A825), Color(0xFFE2711D)),
@@ -201,7 +219,7 @@ fun RussianHomeScreen(
                     "Gesprächsreise",
                     R.drawable.ic_app_dialog,
                     listOf(Color(0xFFE0A030), Color(0xFF9D4C85)),
-                    "NEU",
+                    null,
                 ) { onOpen("russian/conversation") },
                 GameApp(
                     "Lautlabor",
