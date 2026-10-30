@@ -196,25 +196,14 @@ class WhatsAppRepository @Inject constructor(
     }
 
     /**
-     * Wird aufgerufen, wenn der Nutzer aktiv auf die Benachrichtigung getippt hat
-     * (`REASON_CLICK`), um den Chat in WhatsApp zu öffnen und zu lesen.
+     * Wird aufgerufen, wenn der Nutzer auf die Benachrichtigung getippt hat (`REASON_CLICK`).
+     * WICHTIG: Wir leeren NUR den aktiven Statusleisten-Snapshot (`activeSnapshots`),
+     * löschen aber NIEMALS die Zwischenspeicher-Nachrichten in SQLite oder RAM!
+     * Denn wenn der Absender die Nachricht kurz nach dem Antippen „Für alle löscht“,
+     * muss der Originaltext weiterhin in SQLite bereitstehen!
      */
     suspend fun onNotificationClicked(notificationKey: String?) = mutex.withLock {
-        if (notificationKey.isNullOrBlank()) return@withLock
-        val affectedChatKeys = activeSnapshots.entries
-            .filter { (_, list) -> list.any { it.notificationKey == notificationKey } }
-            .map { it.key }
-        affectedChatKeys.forEach { chatKey ->
-            activeSnapshots.remove(chatKey)
-            transientRamCache.remove(chatKey)
-        }
-        for ((chatKey, list) in transientRamCache) {
-            list.removeAll { it.notificationKey == notificationKey }
-            if (list.isEmpty()) {
-                transientRamCache.remove(chatKey)
-            }
-        }
-        persistTransientCacheToPrefs()
+        onNotificationCleared(notificationKey)
     }
 
     /**
@@ -255,11 +244,16 @@ class WhatsAppRepository @Inject constructor(
         for (resolvedChatKey in affectedChatKeys) {
             val snapshotItems = activeSnapshots[resolvedChatKey].orEmpty().filter { !it.isDeletionNotice }
             val ramList = transientRamCache[resolvedChatKey].orEmpty().toMutableList()
-            val savedInDb = dao.getRecentMessagesForChat(resolvedChatKey, limit = 25).toMutableList()
+            val savedInDb = dao.getRecentMessagesForChat(resolvedChatKey, limit = 40).toMutableList()
             var rescuedAny = false
 
-            // 1. Prüfe zuerst, ob eine bereits bearbeitete Nachricht in der DB jetzt zurückgezogen wurde
+            // 1. Prüfe alle noch nicht als gelöscht markierten Nachrichten in SQLite (Staging + Bearbeitet)
             for (dbMsg in savedInDb.filter { !it.isDeleted && abs(nowMs - (it.editedAt ?: it.timestamp)) <= retractWindowMs }) {
+                val matchesSnapshot = snapshotItems.isEmpty() || snapshotItems.any {
+                    it.text == dbMsg.text && it.senderName.equals(dbMsg.senderName, ignoreCase = true)
+                }
+                if (!matchesSnapshot) continue
+
                 val updated = dbMsg.copy(
                     isDeleted = true,
                     deletedAt = nowMs,
@@ -281,23 +275,25 @@ class WhatsAppRepository @Inject constructor(
                 }
             }
 
-            // 2. Prüfe aktive Snapshot-Nachrichten im RAM-Puffer
-            for (snap in snapshotItems) {
-                val ramMatch = ramList.firstOrNull {
-                    it.text == snap.text &&
-                        it.senderName.equals(snap.senderName, ignoreCase = true) &&
-                        abs(nowMs - it.timestamp) <= retractWindowMs
-                }
-                if (ramMatch != null) {
-                    removeFromTransientCache(ramMatch)
-                    saveRescuedDeletion(
-                        ramTarget = ramMatch,
-                        now = nowMs,
-                        mediaPreviewPath = ramMatch.mediaPreviewPath,
-                        avatarPath = ramMatch.avatarPath,
-                        savedInDb = savedInDb,
-                    )
-                    rescuedAny = true
+            // 2. Prüfe aktive Snapshot-Nachrichten im RAM-Puffer (falls noch nicht in SQLite)
+            if (!rescuedAny) {
+                for (snap in snapshotItems) {
+                    val ramMatch = ramList.firstOrNull {
+                        it.text == snap.text &&
+                            it.senderName.equals(snap.senderName, ignoreCase = true) &&
+                            abs(nowMs - it.timestamp) <= retractWindowMs
+                    }
+                    if (ramMatch != null) {
+                        removeFromTransientCache(ramMatch)
+                        saveRescuedDeletion(
+                            ramTarget = ramMatch,
+                            now = nowMs,
+                            mediaPreviewPath = ramMatch.mediaPreviewPath,
+                            avatarPath = ramMatch.avatarPath,
+                            savedInDb = savedInDb,
+                        )
+                        rescuedAny = true
+                    }
                 }
             }
 
@@ -323,7 +319,7 @@ class WhatsAppRepository @Inject constructor(
 
     /**
      * Bereinigt:
-     * 1. Alle normalen (nicht gelöschten & nicht bearbeiteten) Altlasten aus der DB.
+     * 1. Reguläre Zwischenspeicher-Nachrichten (`isDeleted = 0 AND isEdited = 0`), die älter als 24h sind.
      * 2. Alle gelöschten/bearbeiteten Nachrichten in der DB, die älter als 7 Tage sind.
      * 3. Alle lokalen Medien- & Avatar-Dateien, die älter als 7 Tage sind oder zu keiner
      *    gespeicherten Nachricht mehr gehören.
@@ -334,8 +330,9 @@ class WhatsAppRepository @Inject constructor(
     }
 
     private suspend fun pruneInternal(nowMs: Long) {
-        // 1. Sicherstellen, dass keinerlei normale Nachrichten in der DB liegen
-        dao.deleteNormalMessages()
+        // 1. Normale Zwischenspeicher-Nachrichten (nicht gelöscht & nicht bearbeitet) nach 24h entfernen
+        val stagingCutoff = nowMs - STAGING_RETENTION_MS
+        dao.deleteExpiredNormalMessages(stagingCutoff)
 
         // 2. Alles älter als 7 Tage (RETENTION_MS) aus der DB + Disk löschen
         val cutoff = nowMs - RETENTION_MS
@@ -414,7 +411,7 @@ class WhatsAppRepository @Inject constructor(
         val chatKey = parsedList.first().chatKey
         val previousSnapshot = activeSnapshots[chatKey].orEmpty()
         val ramList = transientRamCache.getOrPut(chatKey) { mutableListOf() }
-        val savedInDb = dao.getRecentMessagesForChat(chatKey, limit = 25).toMutableList()
+        val savedInDb = dao.getRecentMessagesForChat(chatKey, limit = 40).toMutableList()
         val nonDeletedParsed = parsedList.filter { !it.isDeletionNotice }
         val hasMessagingStyle = payload.messagingStyleItems.isNotEmpty()
 
@@ -524,14 +521,18 @@ class WhatsAppRepository @Inject constructor(
             if (!parsed.isDeletionNotice) continue
             val prevAtSlot = previousSnapshot.getOrNull(index)
 
-            // Zuerst prüfen, ob eine bereits bearbeitete Nachricht in der DB gelöscht wurde
+            // 1. Zuerst in SQLite (Chat-spezifisch + Cross-Chat-Fallback) nach der Originalnachricht suchen
             val existingDbMatch = findDbDeletionTarget(
                 parsed = parsed,
                 prevAtSlot = prevAtSlot,
                 previousSnapshot = previousSnapshot,
                 nonDeletedParsed = nonDeletedParsed,
                 savedInDb = savedInDb,
+            ) ?: findCrossChatDbDeletionTarget(
+                parsed = parsed,
+                now = now,
             )
+
             if (existingDbMatch != null) {
                 if (!existingDbMatch.isDeleted) {
                     val updated = existingDbMatch.copy(
@@ -559,8 +560,7 @@ class WhatsAppRepository @Inject constructor(
                 continue
             }
 
-            // Sonst aus dem flüchtigen RAM-Puffer holen (inkl. Cross-Chat/Tag-Fallback)
-            // und JETZT in der DB sichern!
+            // 2. Zweiter Fallback: Aus dem flüchtigen RAM-Puffer holen (inkl. Cross-Chat/Tag-Fallback)
             val ramTarget = findRamDeletionTarget(
                 parsed = parsed,
                 prevAtSlot = prevAtSlot,
@@ -571,6 +571,32 @@ class WhatsAppRepository @Inject constructor(
             if (ramTarget != null) {
                 removeFromTransientCache(ramTarget)
                 saveRescuedDeletion(ramTarget, now, mediaPreviewPath, avatarPath, savedInDb)
+                continue
+            }
+
+            // 3. Letzter Fallback (wie in v0.89.46): Falls die Originalnachricht bei geöffnetem
+            //    WhatsApp-Chat (ohne Push-Benachrichtigung) oder vor Aktivierung des Wächters
+            //    empfangen wurde und WhatsApp nun „🚫 Diese Nachricht wurde gelöscht“ meldet:
+            val alreadyLoggedRecent = savedInDb.any {
+                it.isDeleted && abs((it.deletedAt ?: it.timestamp) - now) < 15_000L
+            }
+            if (!alreadyLoggedRecent && !WhatsAppNotificationParser.isGenericOrSummaryTitle(parsed.chatTitle)) {
+                val fallback = WhatsAppMessageEntity(
+                    chatKey = parsed.chatKey,
+                    chatTitle = parsed.chatTitle,
+                    senderName = parsed.senderName,
+                    isGroup = parsed.isGroup,
+                    packageName = parsed.packageName,
+                    text = "Nachricht wurde gelöscht (Original bei geöffnetem Chat oder vor Wächter-Start empfangen)",
+                    isDeleted = true,
+                    deletedAt = now,
+                    avatarPath = avatarPath,
+                    timestamp = parsed.timestamp,
+                    notificationKey = parsed.notificationKey,
+                    isReadInHikari = false,
+                )
+                val newId = dao.insert(fallback)
+                savedInDb.add(0, fallback.copy(id = newId))
             }
         }
 
@@ -689,7 +715,7 @@ class WhatsAppRepository @Inject constructor(
                 continue
             }
 
-            // ── FALL 3: Reguläre Nachricht -> NUR im flüchtigen Puffer merken! ──
+            // ── FALL 3: Reguläre Nachricht -> im unsichtbaren SQLite-Staging + RAM-Puffer sichern ──
             val occurrencesInPayloadUpToHere = parsedList
                 .subList(0, index + 1)
                 .count {
@@ -697,6 +723,60 @@ class WhatsAppRepository @Inject constructor(
                         it.senderName.equals(parsed.senderName, ignoreCase = true) &&
                         it.text == parsed.text
                 }
+
+            val nonDeletedInDb = savedInDb.filter { !it.isDeleted }
+            val matchingInDb = nonDeletedInDb.count {
+                it.senderName.equals(parsed.senderName, ignoreCase = true) &&
+                    it.text == parsed.text
+            }
+            val hasExactTimestampInDb = nonDeletedInDb.any {
+                it.senderName.equals(parsed.senderName, ignoreCase = true) &&
+                    it.text == parsed.text &&
+                    abs(it.timestamp - parsed.timestamp) <= 1_500L
+            }
+            val alreadyInDb = matchingInDb >= occurrencesInPayloadUpToHere &&
+                (hasExactTimestampInDb || (hasMessagingStyle && matchingInDb >= occurrencesInPayloadUpToHere))
+
+            if (!alreadyInDb) {
+                val stagingEntity = WhatsAppMessageEntity(
+                    chatKey = parsed.chatKey,
+                    chatTitle = parsed.chatTitle,
+                    senderName = parsed.senderName,
+                    isGroup = parsed.isGroup,
+                    packageName = parsed.packageName,
+                    text = parsed.text,
+                    originalText = if (parsed.isExplicitEdit) parsed.text else null,
+                    isEdited = parsed.isExplicitEdit,
+                    editedAt = if (parsed.isExplicitEdit) now else null,
+                    isDeleted = false,
+                    mediaType = parsed.mediaType,
+                    mediaPreviewPath = mediaPreviewPath,
+                    avatarPath = avatarPath,
+                    timestamp = parsed.timestamp,
+                    notificationKey = parsed.notificationKey,
+                    isReadInHikari = false,
+                )
+                val insertedId = dao.insert(stagingEntity)
+                savedInDb.add(0, stagingEntity.copy(id = insertedId))
+            } else {
+                // Optional Avatar oder MediaPreview an bestehendem Staging-Eintrag ergänzen
+                val existing = nonDeletedInDb.firstOrNull {
+                    it.senderName.equals(parsed.senderName, ignoreCase = true) &&
+                        it.text == parsed.text
+                }
+                if (existing != null &&
+                    ((avatarPath != null && existing.avatarPath == null) ||
+                        (mediaPreviewPath != null && existing.mediaPreviewPath == null))
+                ) {
+                    val enriched = existing.copy(
+                        avatarPath = avatarPath ?: existing.avatarPath,
+                        mediaPreviewPath = mediaPreviewPath ?: existing.mediaPreviewPath,
+                    )
+                    dao.update(enriched)
+                    replaceInList(savedInDb, enriched)
+                }
+            }
+
             val matchingInRam = ramList.count {
                 it.senderName.equals(parsed.senderName, ignoreCase = true) &&
                     it.text == parsed.text
@@ -746,13 +826,47 @@ class WhatsAppRepository @Inject constructor(
         avatarPath: String?,
         savedInDb: MutableList<WhatsAppMessageEntity>,
     ) {
-        val alreadySaved = savedInDb.any {
+        val alreadySavedDeleted = savedInDb.any {
             it.isDeleted &&
                 it.senderName.equals(ramTarget.senderName, ignoreCase = true) &&
                 it.text == ramTarget.text &&
                 abs(it.timestamp - ramTarget.timestamp) <= 1_000L
         }
-        if (alreadySaved) return
+        if (alreadySavedDeleted) return
+
+        // Falls die Nachricht bereits als unsichtbarer Staging-Eintrag in SQLite liegt -> in-place auf isDeleted = true setzen!
+        val existingUnmarked = savedInDb.firstOrNull {
+            !it.isDeleted &&
+                it.senderName.equals(ramTarget.senderName, ignoreCase = true) &&
+                it.text == ramTarget.text &&
+                abs(it.timestamp - ramTarget.timestamp) <= 5_000L
+        } ?: savedInDb.firstOrNull {
+            !it.isDeleted &&
+                it.senderName.equals(ramTarget.senderName, ignoreCase = true) &&
+                it.text == ramTarget.text
+        }
+
+        if (existingUnmarked != null) {
+            val updated = existingUnmarked.copy(
+                isDeleted = true,
+                deletedAt = now,
+                mediaPreviewPath = existingUnmarked.mediaPreviewPath ?: ramTarget.mediaPreviewPath ?: mediaPreviewPath,
+                avatarPath = existingUnmarked.avatarPath ?: ramTarget.avatarPath ?: avatarPath,
+            )
+            dao.update(updated)
+            replaceInList(savedInDb, updated)
+            if (_alertsEnabled.value) {
+                _guardAlerts.tryEmit(
+                    WhatsAppGuardAlert.MessageDeleted(
+                        chatTitle = updated.chatTitle,
+                        senderName = updated.senderName,
+                        preservedText = updated.text,
+                        isGroup = updated.isGroup,
+                    ),
+                )
+            }
+            return
+        }
 
         val rescuedEntity = WhatsAppMessageEntity(
             chatKey = ramTarget.chatKey,
@@ -922,6 +1036,33 @@ class WhatsAppRepository @Inject constructor(
         return allCandidates.firstOrNull { abs(parsed.timestamp - it.timestamp) <= thirtyMinMs }
     }
 
+    private fun buildEligibleDbCandidates(
+        nonDeletedDb: List<WhatsAppMessageEntity>,
+        nonDeletedParsed: List<ParsedWhatsAppMessage>,
+    ): List<WhatsAppMessageEntity> {
+        if (nonDeletedParsed.isEmpty()) return nonDeletedDb
+        val remainingDb = nonDeletedDb.toMutableList()
+        for (active in nonDeletedParsed) {
+            val exactIdx = remainingDb.indexOfFirst {
+                it.senderName.equals(active.senderName, ignoreCase = true) &&
+                    it.text == active.text &&
+                    abs(it.timestamp - active.timestamp) <= 2_000L
+            }
+            if (exactIdx >= 0) {
+                remainingDb.removeAt(exactIdx)
+                continue
+            }
+            val fallbackIdx = remainingDb.indexOfLast {
+                it.senderName.equals(active.senderName, ignoreCase = true) &&
+                    it.text == active.text
+            }
+            if (fallbackIdx >= 0) {
+                remainingDb.removeAt(fallbackIdx)
+            }
+        }
+        return remainingDb
+    }
+
     private fun findDbDeletionTarget(
         parsed: ParsedWhatsAppMessage,
         prevAtSlot: ParsedWhatsAppMessage?,
@@ -947,8 +1088,7 @@ class WhatsAppRepository @Inject constructor(
             }?.let { return it }
         }
 
-        val activeTexts = nonDeletedParsed.map { it.text }.toSet()
-        val eligibleDb = nonDeletedDb.filter { it.text !in activeTexts }.ifEmpty { nonDeletedDb }
+        val eligibleDb = buildEligibleDbCandidates(nonDeletedDb, nonDeletedParsed).ifEmpty { nonDeletedDb }
 
         eligibleDb.firstOrNull {
             it.senderName.equals(parsed.senderName, ignoreCase = true) &&
@@ -960,6 +1100,33 @@ class WhatsAppRepository @Inject constructor(
         }?.let { return it }
 
         return eligibleDb.firstOrNull()
+    }
+
+    private suspend fun findCrossChatDbDeletionTarget(
+        parsed: ParsedWhatsAppMessage,
+        now: Long,
+    ): WhatsAppMessageEntity? {
+        val candidates = dao.getRecentUnmarkedMessages(
+            packageName = parsed.packageName,
+            sinceTimestamp = now - STAGING_RETENTION_MS,
+            limit = 40,
+        )
+        if (candidates.isEmpty()) return null
+
+        if (!parsed.notificationKey.isNullOrBlank()) {
+            candidates.firstOrNull { it.notificationKey == parsed.notificationKey }?.let { return it }
+        }
+
+        if (!WhatsAppNotificationParser.isGenericOrSummaryTitle(parsed.senderName)) {
+            candidates.firstOrNull {
+                it.senderName.equals(parsed.senderName, ignoreCase = true) ||
+                    it.chatTitle.equals(parsed.senderName, ignoreCase = true) ||
+                    it.chatTitle.equals(parsed.chatTitle, ignoreCase = true)
+            }?.let { return it }
+        }
+
+        val thirtyMinMs = 30L * 60L * 1000L
+        return candidates.firstOrNull { abs(parsed.timestamp - it.timestamp) <= thirtyMinMs }
     }
 
     private fun findRamEditTarget(
@@ -1270,6 +1437,9 @@ class WhatsAppRepository @Inject constructor(
         /** Aufbewahrungsdauer für gelöschte & bearbeitete Nachrichten: exakt 7 Tage. */
         const val RETENTION_DAYS = 7
         const val RETENTION_MS = 7L * 24L * 60L * 60L * 1000L
+
+        /** Aufbewahrungsdauer für unsichtbare Zwischenspeicher-Nachrichten in SQLite: 24 Stunden. */
+        const val STAGING_RETENTION_MS = 24L * 60L * 60L * 1000L
 
         /** Flüchtige Vorhaltezeit im RAM für noch nicht gelöschte Nachrichten: 6 Stunden. */
         private const val TRANSIENT_RAM_TTL_MS = 6L * 60L * 60L * 1000L

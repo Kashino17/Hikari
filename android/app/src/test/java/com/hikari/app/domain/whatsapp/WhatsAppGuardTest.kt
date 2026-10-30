@@ -112,7 +112,9 @@ class WhatsAppGuardTest {
         val savedBeforeDelete = repository.allMessages.first()
         assertTrue("Normale Nachrichten dürfen nicht in der DB gespeichert werden", savedBeforeDelete.isEmpty())
 
-        // 2. Anna löscht die Nachricht für alle -> JETZT wird sie aus dem RAM-Puffer in die DB gerettet!
+        // 2. Anna löscht die Nachricht für alle (selbst wenn die Benachrichtigung vorher angetippt/geschlossen wurde!)
+        repository.onNotificationClicked("notif_anna")
+
         val deletionUpdate = incoming.copy(
             text = "🚫 Diese Nachricht wurde gelöscht.",
             postTime = t0 + 15_000L,
@@ -596,7 +598,16 @@ private class FakeWhatsAppDao : WhatsAppDao {
         items.map { list -> list.filter { it.isEdited }.sortedByDescending { it.editedAt ?: it.timestamp } }
 
     override suspend fun getRecentMessagesForChat(chatKey: String, limit: Int): List<WhatsAppMessageEntity> =
-        items.value.filter { it.chatKey == chatKey && (it.isDeleted || it.isEdited) }
+        items.value.filter { it.chatKey == chatKey }
+            .sortedByDescending { it.timestamp }
+            .take(limit)
+
+    override suspend fun getRecentUnmarkedMessages(
+        packageName: String,
+        sinceTimestamp: Long,
+        limit: Int,
+    ): List<WhatsAppMessageEntity> =
+        items.value.filter { it.packageName == packageName && !it.isDeleted && it.timestamp >= sinceTimestamp }
             .sortedByDescending { it.timestamp }
             .take(limit)
 
@@ -615,8 +626,10 @@ private class FakeWhatsAppDao : WhatsAppDao {
         items.value = emptyList()
     }
 
-    override suspend fun deleteNormalMessages() {
-        items.value = items.value.filter { it.isDeleted || it.isEdited }
+    override suspend fun deleteExpiredNormalMessages(stagingCutoffTimestamp: Long): Int {
+        val before = items.value.size
+        items.value = items.value.filterNot { !it.isDeleted && !it.isEdited && it.timestamp < stagingCutoffTimestamp }
+        return before - items.value.size
     }
 
     override suspend fun getExpiredMessages(cutoffTimestamp: Long): List<WhatsAppMessageEntity> =

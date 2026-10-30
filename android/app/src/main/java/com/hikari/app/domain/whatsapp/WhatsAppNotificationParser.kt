@@ -273,15 +273,16 @@ object WhatsAppNotificationParser {
         val topTickerText = stripInvisibleMarks(payload.tickerText.orEmpty())
 
         // Summary-Notifications ("2 neue Nachrichten aus 2 Chats") ignorieren wir für normale
-        // Nachrichten, ABER wenn darin eine Löschnachricht ("Diese Nachricht wurde gelöscht")
+        // Nachrichten komplett, ABER wenn darin eine Löschnachricht ("Diese Nachricht wurde gelöscht")
         // steckt, werten wir diese trotzdem aus!
-        if (payload.isSummary && payload.messagingStyleItems.isEmpty()) {
-            val hasDeletionInTop = isDeletedPlaceholder(topText) ||
+        if (payload.isSummary) {
+            val hasDeletionInSummary = isDeletedPlaceholder(topText) ||
                 isDeletedPlaceholder(topSummaryText) ||
                 isDeletedPlaceholder(topTickerText) ||
                 topBigText.lines().any { isDeletedPlaceholder(it) } ||
-                payload.textLines.any { isDeletedPlaceholder(it) }
-            if (!hasDeletionInTop) return emptyList()
+                payload.textLines.any { isDeletedPlaceholder(it) } ||
+                payload.messagingStyleItems.any { isDeletedPlaceholder(it.text) }
+            if (!hasDeletionInSummary) return emptyList()
         }
 
         // 1. Wenn MessagingStyle-Einträge vorhanden sind (Standard ab Android 7+ bei WhatsApp)
@@ -383,28 +384,14 @@ object WhatsAppNotificationParser {
         }
 
         // 2. Fallback für klassische Einzel-/Inbox-/Summary-Benachrichtigungen ohne EXTRA_MESSAGES
+        val deletionLinesInExtras = (payload.textLines + topBigText.lines() + listOf(topText, topSummaryText, topTickerText))
+            .map { stripInvisibleMarks(it) }
+            .filter { it.isNotEmpty() && isDeletedPlaceholder(it) }
+            .distinct()
+
         val candidateBodies: List<String> = when {
-            payload.isSummary -> {
-                (payload.textLines + topBigText.lines() + listOf(topText, topSummaryText, topTickerText))
-                    .map { stripInvisibleMarks(it) }
-                    .filter { it.isNotEmpty() && isDeletedPlaceholder(it) }
-                    .distinct()
-            }
-            payload.textLines.isNotEmpty() -> {
-                val lines = payload.textLines
-                    .map { stripInvisibleMarks(it) }
-                    .filter { it.isNotEmpty() }
-                    .toMutableList()
-                if (isDeletedPlaceholder(topText) && lines.none { isDeletedPlaceholder(it) }) {
-                    lines.add(topText)
-                }
-                lines
-            }
-            topBigText.contains("\n") && topBigText.lines().any { isDeletedPlaceholder(it) } ->
-                topBigText.lines().map { stripInvisibleMarks(it) }.filter { it.isNotEmpty() }
-            isDeletedPlaceholder(topText) -> listOf(topText)
-            isDeletedPlaceholder(topTickerText) -> listOf(topTickerText)
-            isDeletedPlaceholder(topSummaryText) -> listOf(topSummaryText)
+            deletionLinesInExtras.isNotEmpty() -> deletionLinesInExtras
+            payload.isSummary -> emptyList()
             else -> listOfNotNull((topBigText.takeIf { it.isNotEmpty() } ?: topText).takeIf { it.isNotEmpty() })
         }
 
@@ -424,7 +411,10 @@ object WhatsAppNotificationParser {
                 rawConvTitle.isNotEmpty() && !isGenericOrSummaryTitle(rawConvTitle) -> {
                     isGroup = true
                     chatTitle = cleanChatTitle(rawConvTitle)
-                    senderName = prefixSender ?: cleanChatTitle(rawTitle).takeIf { !isGenericOrSummaryTitle(it) } ?: chatTitle
+                    val titleSender = if (rawTitle.contains(":")) rawTitle.substringAfter(":") else rawTitle
+                    senderName = prefixSender
+                        ?: cleanChatTitle(titleSender).takeIf { it.isNotEmpty() && !isGenericOrSummaryTitle(it) }
+                        ?: chatTitle
                 }
                 rawTitle.contains(":") && !rawTitle.startsWith("http", ignoreCase = true) -> {
                     isGroup = true

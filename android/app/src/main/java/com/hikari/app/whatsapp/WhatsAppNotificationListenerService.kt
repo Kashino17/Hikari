@@ -133,6 +133,18 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
         val messagingItems = extractMessagingItems(notification, extras)
         val textLines = extractTextLines(extras)
 
+        // Summary-Notifications ("2 neue Nachrichten aus 2 Chats") ignorieren wir sofort (wie in v0.89.46),
+        // AUSSER sie enthalten explizit "Diese Nachricht wurde gelöscht".
+        if (isSummary) {
+            val hasDeletionPlaceholder = WhatsAppNotificationParser.isDeletedPlaceholder(text.orEmpty()) ||
+                WhatsAppNotificationParser.isDeletedPlaceholder(summaryText.orEmpty()) ||
+                WhatsAppNotificationParser.isDeletedPlaceholder(tickerText.orEmpty()) ||
+                bigText.orEmpty().lines().any { WhatsAppNotificationParser.isDeletedPlaceholder(it) } ||
+                textLines.any { WhatsAppNotificationParser.isDeletedPlaceholder(it) } ||
+                messagingItems.any { WhatsAppNotificationParser.isDeletedPlaceholder(it.text) }
+            if (!hasDeletionPlaceholder) return null
+        }
+
         return RawNotificationPayload(
             packageName = pkg,
             notificationKey = sbn.key,

@@ -28,12 +28,26 @@ interface WhatsAppDao {
     @Query(
         """
         SELECT * FROM whatsapp_messages
-        WHERE chatKey = :chatKey AND (isDeleted = 1 OR isEdited = 1)
-        ORDER BY timestamp DESC
+        WHERE chatKey = :chatKey
+        ORDER BY timestamp DESC, id DESC
         LIMIT :limit
         """,
     )
-    suspend fun getRecentMessagesForChat(chatKey: String, limit: Int = 25): List<WhatsAppMessageEntity>
+    suspend fun getRecentMessagesForChat(chatKey: String, limit: Int = 40): List<WhatsAppMessageEntity>
+
+    @Query(
+        """
+        SELECT * FROM whatsapp_messages
+        WHERE packageName = :packageName AND isDeleted = 0 AND timestamp >= :sinceTimestamp
+        ORDER BY timestamp DESC, id DESC
+        LIMIT :limit
+        """,
+    )
+    suspend fun getRecentUnmarkedMessages(
+        packageName: String,
+        sinceTimestamp: Long,
+        limit: Int = 40,
+    ): List<WhatsAppMessageEntity>
 
     @Query("SELECT * FROM whatsapp_messages WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): WhatsAppMessageEntity?
@@ -48,14 +62,14 @@ interface WhatsAppDao {
     suspend fun deleteAll()
 
     /**
-     * Entfernt alle regulären (nicht gelöschten und nicht bearbeiteten) Nachrichten,
-     * falls aus einer älteren Version noch welche in der DB liegen.
+     * Entfernt reguläre Zwischenspeicher-Nachrichten (nicht gelöscht & nicht bearbeitet),
+     * die älter als [stagingCutoffTimestamp] (24 Stunden) sind.
      */
-    @Query("DELETE FROM whatsapp_messages WHERE isDeleted = 0 AND isEdited = 0")
-    suspend fun deleteNormalMessages()
+    @Query("DELETE FROM whatsapp_messages WHERE isDeleted = 0 AND isEdited = 0 AND timestamp < :stagingCutoffTimestamp")
+    suspend fun deleteExpiredNormalMessages(stagingCutoffTimestamp: Long): Int
 
     /**
-     * Liefert alle Einträge, die älter als [cutoffTimestamp] (z.B. 7 Tage) sind,
+     * Liefert alle Einträge, die älter als [cutoffTimestamp] (7 Tage) sind,
      * damit vor dem DB-Löschen auch deren Mediendateien bereinigt werden können.
      */
     @Query("SELECT * FROM whatsapp_messages WHERE COALESCE(deletedAt, editedAt, timestamp) < :cutoffTimestamp")
@@ -73,6 +87,6 @@ interface WhatsAppDao {
     @Query("SELECT COUNT(*) FROM whatsapp_messages WHERE isEdited = 1")
     fun observeEditedCount(): Flow<Int>
 
-    @Query("SELECT mediaPreviewPath FROM whatsapp_messages WHERE (isDeleted = 1 OR isEdited = 1) AND mediaPreviewPath IS NOT NULL")
+    @Query("SELECT mediaPreviewPath FROM whatsapp_messages WHERE mediaPreviewPath IS NOT NULL")
     suspend fun getActiveMediaPaths(): List<String>
 }
