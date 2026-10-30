@@ -125,7 +125,7 @@ fun RussianHomeScreen(
                 RoundIcon(Icons.AutoMirrored.Filled.ArrowBack, "Zurück", onBack)
                 Column(Modifier.weight(1f).padding(start = 4.dp)) {
                     Text("Russisch", color = HikariText, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
-                    Text("In 14 Tagen zum ersten Small Talk", color = HikariTextMuted, fontSize = 12.5.sp)
+                    Text("Vom Smalltalk bis zu tiefen Gesprächen (20 Tage)", color = HikariTextMuted, fontSize = 12.5.sp)
                 }
                 RoundIcon(Icons.Outlined.Tune, "Einstellungen") { settingsOpen = true }
             }
@@ -237,7 +237,7 @@ fun RussianHomeScreen(
                     "Satzbuch",
                     R.drawable.ic_app_book,
                     listOf(Color(0xFF9B6DD9), Color(0xFF6B3FB0)),
-                    null,
+                    if (p.cards.isNotEmpty() || p.mySentences.isNotEmpty()) "${p.cards.size + p.mySentences.size}" else null,
                 ) { onOpen("russian/phrases") },
             )
             apps.chunked(3).forEachIndexed { rowIndex, rowApps ->
@@ -322,7 +322,7 @@ private fun HeroCard(day: RuDay?, done: Int, total: Int, allDone: Boolean, enabl
         if (allDone || day == null) {
             RuOverline("Kurs abgeschlossen", color = HikariAmber)
             Spacer(Modifier.height(8.dp))
-            Text("Молоде́ц! Alle 14 Tage geschafft.", color = HikariText, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
+            Text("Молоде́ц! Alle $total Tage geschafft.", color = HikariText, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(6.dp))
             Text(
                 "Halte es frisch: täglich wiederholen, Rollenspiele laut mitsprechen, Hör-Blitz spielen.",
@@ -480,7 +480,7 @@ private fun DayRow(
     Row(
         Modifier
             .fillMaxWidth()
-            .clickable(enabled = enabled && !locked, onClick = onLesson)
+            .clickable(enabled = enabled, onClick = onLesson)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

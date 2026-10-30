@@ -74,29 +74,31 @@ import com.hikari.app.ui.theme.HikariTextMuted
 
 private sealed interface PbFilter {
     data object All : PbFilter
+    data object Learned : PbFilter
     data object Favorites : PbFilter
     data object Weak : PbFilter
     data object Mine : PbFilter
     data class Theme(val id: String) : PbFilter
 }
 
-/** Satzbuch: alle gelernten Sätze — durchsuchbar (Deutsch, Russisch, Umschrift), nach Tag oder Thema. */
+/** Satzbuch: zentrale Wissens- & Fortschrittszentrale für alle Modi — durchsuchbar nach Tag, Thema & Lernstand. */
 @Composable
 fun RussianPhrasebookScreen(
     onBack: () -> Unit,
     onTest: () -> Unit = {},
+    onReflex: () -> Unit = {},
     onDeepdive: (String) -> Unit = {},
     vm: RussianGamesViewModel = hiltViewModel(),
 ) {
     val playing by vm.audio.playing.collectAsState()
     val progress by vm.progress.collectAsState()
-    val days = remember { vm.unlockedDays() }
+    val days = remember { vm.allDays() }
     val meta = vm.phrasebookMeta
     val all = remember(days) { days.flatMap { d -> vm.dayPhrases(d.day) } }
     val dayTitle = remember(days) { days.associate { it.day to it.title } }
 
     var query by remember { mutableStateOf("") }
-    var byTheme by remember { mutableStateOf(false) }
+    var byTheme by remember { mutableStateOf(true) }
     var filter by remember { mutableStateOf<PbFilter>(PbFilter.All) }
     var openId by remember { mutableStateOf<String?>(null) }
 
@@ -104,8 +106,9 @@ fun RussianPhrasebookScreen(
         all.filter { p ->
             RuPhrasebookSearch.matches(p, query) && when (val f = filter) {
                 PbFilter.All -> true
+                PbFilter.Learned -> p.id in progress.cards
                 PbFilter.Favorites -> p.id in progress.favorites
-                PbFilter.Weak -> (progress.cards[p.id]?.box ?: 0) in 0..2
+                PbFilter.Weak -> (progress.cards[p.id]?.box ?: 0) in 1..2
                 is PbFilter.Theme -> f.id in meta.items[p.id].orEmpty()
                 PbFilter.Mine -> false
             }
@@ -132,8 +135,13 @@ fun RussianPhrasebookScreen(
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, "Zurück", tint = HikariText)
             }
             Column(Modifier.padding(start = 4.dp).weight(1f)) {
-                Text("Satzbuch", color = HikariText, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
-                Text("${shown.size} von ${all.size} Sätzen", color = HikariTextMuted, fontSize = 12.5.sp)
+                Text("Satzbuch & Lernstand", color = HikariText, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                val knownCount = com.hikari.app.domain.russian.RuSrs.knownCount(progress.cards)
+                Text(
+                    "${progress.cards.size}/${all.size} geübt · $knownCount sitzen sicher · ${progress.mySentences.size} eigene",
+                    color = HikariTextMuted,
+                    fontSize = 12.sp,
+                )
             }
             PbChip(if (byTheme) "Nach Thema" else "Nach Tag", selected = false) { byTheme = !byTheme }
         }
@@ -144,13 +152,17 @@ fun RussianPhrasebookScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            item { PbChip("Alle", filter == PbFilter.All) { filter = PbFilter.All } }
+            item { PbChip("Alle (${all.size})", filter == PbFilter.All) { filter = PbFilter.All } }
+            item { PbChip("Geübt (${progress.cards.size})", filter == PbFilter.Learned) { filter = PbFilter.Learned } }
+            item {
+                val weakCount = progress.cards.values.count { it.box in 1..2 }
+                PbChip("Wackelig ($weakCount)", filter == PbFilter.Weak) { filter = PbFilter.Weak }
+            }
             item {
                 PbChip("★ Favoriten (${progress.favorites.count { id -> all.any { it.id == id } }})", filter == PbFilter.Favorites) {
                     filter = PbFilter.Favorites
                 }
             }
-            item { PbChip("Wackelig", filter == PbFilter.Weak) { filter = PbFilter.Weak } }
             item { PbChip("Meine Sätze (${progress.mySentences.size})", filter == PbFilter.Mine) { filter = PbFilter.Mine } }
             items(meta.themes) { t ->
                 PbChip(t.title, (filter as? PbFilter.Theme)?.id == t.id) { filter = PbFilter.Theme(t.id) }
@@ -158,25 +170,53 @@ fun RussianPhrasebookScreen(
         }
 
         if (filter != PbFilter.Mine && shown.isNotEmpty()) {
-            Box(
+            Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(HikariAmber)
-                    .clickable {
-                        vm.prepareTest(shown.map { it.id })
-                        onTest()
-                    }
-                    .padding(vertical = 12.dp),
-                contentAlignment = Alignment.Center,
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(
-                    "Diese ${minOf(shown.size, 15)} Sätze testen",
-                    color = Color.Black,
-                    fontSize = 14.5.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(HikariAmber)
+                        .clickable {
+                            vm.prepareTest(shown.map { it.id })
+                            onReflex()
+                        }
+                        .padding(vertical = 11.dp, horizontal = 8.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        "⚡ Sprech-Reflex (${minOf(shown.size, 10)})",
+                        color = Color.Black,
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                    )
+                }
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(HikariCardBg)
+                        .border(1.dp, HikariAmber.copy(alpha = 0.6f), RoundedCornerShape(14.dp))
+                        .clickable {
+                            vm.prepareTest(shown.map { it.id })
+                            onTest()
+                        }
+                        .padding(vertical = 11.dp, horizontal = 8.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        "Sätze testen (${minOf(shown.size, 15)})",
+                        color = HikariAmber,
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                    )
+                }
             }
         }
 
@@ -215,6 +255,9 @@ fun RussianPhrasebookScreen(
                         onDeepdive = { onDeepdive(p.id) },
                         onPlay = { vm.audio.play(p.audio) },
                         onSlow = { vm.audio.play(p.audio, slow = true) },
+                        onSpokenEvaluated = { passed ->
+                            vm.gradeCard(p.id, correct = passed, xp = if (passed) 5 else 1, spokenOk = if (passed) 1 else 0)
+                        },
                     )
                 }
             }
@@ -290,7 +333,20 @@ private fun PhraseRow(
     onDeepdive: () -> Unit,
     onPlay: () -> Unit,
     onSlow: () -> Unit,
+    onSpokenEvaluated: (Boolean) -> Unit = {},
 ) {
+    val statusLabel = when {
+        box >= 4 -> "Sitzt"
+        box == 3 -> "Aktiv"
+        box in 1..2 -> "Wackelig"
+        else -> "Neu"
+    }
+    val statusColor = when {
+        box >= 4 -> Color(0xFF34D399)
+        box == 3 -> HikariAmber
+        box in 1..2 -> Color(0xFFFBBF24)
+        else -> HikariTextFaint
+    }
     Column(Modifier.fillMaxWidth().animateContentSize()) {
         Row(
             Modifier.fillMaxWidth().clickable(onClick = onToggleOpen).padding(horizontal = 16.dp, vertical = 9.dp),
@@ -303,12 +359,15 @@ private fun PhraseRow(
             }
             Spacer(Modifier.width(10.dp))
             Column(horizontalAlignment = Alignment.End) {
-                Icon(
-                    if (favorite) Icons.Default.Star else Icons.Outlined.StarBorder,
-                    if (favorite) "Favorit entfernen" else "Als Favorit markieren",
-                    tint = if (favorite) HikariAmber else HikariTextMuted,
-                    modifier = Modifier.size(22.dp).clickable(onClick = onFavorite),
-                )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(statusLabel, color = statusColor, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                    Icon(
+                        if (favorite) Icons.Default.Star else Icons.Outlined.StarBorder,
+                        if (favorite) "Favorit entfernen" else "Als Favorit markieren",
+                        tint = if (favorite) HikariAmber else HikariTextMuted,
+                        modifier = Modifier.size(20.dp).clickable(onClick = onFavorite),
+                    )
+                }
                 Spacer(Modifier.height(6.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                     repeat(6) { i ->
@@ -352,16 +411,16 @@ private fun PhraseRow(
                     Text(tags.joinToString(" · "), color = HikariTextFaint, fontSize = 12.sp)
                 }
                 Spacer(Modifier.height(12.dp))
-                PhraseSpeakCheck(p)
+                PhraseSpeakCheck(p, onEvaluated = onSpokenEvaluated)
             }
             Spacer(Modifier.height(8.dp))
         }
     }
 }
 
-/** Nachsprechen mit KI-Auswertung: jedes Wort grün oder rot, dazu was gehört wurde. */
+/** Nachsprechen mit KI-Auswertung: jedes Wort grün oder rot, dazu was gehört wurde — aktualisiert den Lernstand im Satzbuch! */
 @Composable
-internal fun PhraseSpeakCheck(p: RuPhrase) {
+internal fun PhraseSpeakCheck(p: RuPhrase, onEvaluated: (Boolean) -> Unit = {}) {
     val context = LocalContext.current
     val recognizer = remember(p.id) { RussianSpeechRecognizer(context) }
     DisposableEffect(recognizer) { onDispose { recognizer.destroy() } }
@@ -373,7 +432,13 @@ internal fun PhraseSpeakCheck(p: RuPhrase) {
     LaunchedEffect(state) {
         val s = state
         if (s is RuListenState.Done || s is RuListenState.Failed) evaluating = false
-        if (s is RuListenState.Done) score = RuAnswerCheck.speech(p.plain, s.hypotheses)
+        if (s is RuListenState.Done) {
+            val sc = RuAnswerCheck.speech(p.plain, s.hypotheses)
+            score = sc
+            if (s.hypotheses.isNotEmpty()) {
+                onEvaluated(sc.passed)
+            }
+        }
     }
 
     fun start() {

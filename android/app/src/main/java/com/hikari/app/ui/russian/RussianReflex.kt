@@ -112,6 +112,7 @@ data class RuKombiChallenge(
 class RussianActiveRecallViewModel @Inject constructor(
     private val repo: RussianCourseRepository,
     private val store: RussianProgressStore,
+    private val testSelection: com.hikari.app.domain.russian.RuTestSelection,
     val audio: RussianAudioPlayer,
 ) : ViewModel() {
 
@@ -125,20 +126,37 @@ class RussianActiveRecallViewModel @Inject constructor(
 
     /**
      * Liefert die Sätze für das aktive Blind-Sprechtraining („Sprech-Reflex“ & „Blind-Coach“).
-     * Bevorzugt fällige und bereits gelernte Sätze; falls noch wenige gelernt wurden,
-     * werden die Sätze der bisher freigeschalteten Tage genutzt.
+     * Falls aus dem Satzbuch gezielt ein Thema oder Filter ausgewählt wurde ([testSelection]),
+     * werden genau diese Sätze trainiert. Sonst priorisiert das System automatisch fällige
+     * und wackelige Karten aus dem Satzbuch vor bereits sicheren Sätzen.
      */
     fun buildReflexQueue(count: Int = 8): List<RuPhrase> {
         val rng = Random(System.nanoTime())
-        val unlocked = store.state.value.unlockedDay(index.days.size)
-        val learnedIds = store.state.value.cards.keys
-        val learnedPhrases = learnedIds.mapNotNull { index.phrase(it, settings) }
-        val pool = if (learnedPhrases.size >= 6) {
-            learnedPhrases
-        } else {
-            index.phrasesUpTo(unlocked, settings)
+        val selectedIds = testSelection.ids
+        if (selectedIds.isNotEmpty()) {
+            testSelection.ids = emptyList()
+            val selected = selectedIds.mapNotNull { index.phrase(it, settings) }
+            if (selected.isNotEmpty()) {
+                return selected.shuffled(rng).take(count.coerceAtLeast(10))
+            }
         }
-        return pool.shuffled(rng).take(count)
+        val state = store.state.value
+        val today = store.today()
+        val unlocked = state.unlockedDay(index.days.size)
+        val dueIds = com.hikari.app.domain.russian.RuSrs.dueIds(state.cards, today)
+        val weakIds = state.cards.entries.filter { it.value.box <= 2 }.map { it.key }
+        val otherLearnedIds = state.cards.keys.filter { it !in dueIds && it !in weakIds }
+
+        val prioritized = (dueIds.shuffled(rng) + weakIds.shuffled(rng) + otherLearnedIds.shuffled(rng))
+            .distinct()
+            .mapNotNull { index.phrase(it, settings) }
+
+        val pool = if (prioritized.size >= count) {
+            prioritized
+        } else {
+            (prioritized + index.phrasesUpTo(unlocked, settings).shuffled(rng)).distinctBy { it.id }
+        }
+        return pool.take(count)
     }
 
     /**
@@ -221,6 +239,21 @@ class RussianActiveRecallViewModel @Inject constructor(
                 today,
             )
         }
+    }
+
+    /**
+     * Speichert einen im Kombi-Meister frei zusammengesetzten Satz direkt im Satzbuch
+     * unter „Meine Sätze“, damit alle gelernten Kombinationen zentral erhalten bleiben.
+     */
+    fun recordKombiSentence(item: RuKombiChallenge) {
+        store.saveMySentence(
+            com.hikari.app.domain.russian.RuMySentence(
+                ru = item.russianTarget,
+                de = item.germanPrompt,
+                patternId = item.id,
+                note = "Kombi-Meister · ${item.title}",
+            ),
+        )
     }
 
     fun finishReflexSession(score: Int): Boolean {
@@ -821,6 +854,7 @@ fun RussianKombiScreen(
                         speechScore = sc
                         if (sc.passed) {
                             solved = true
+                            vm.recordKombiSentence(item)
                             playTargetAudio()
                         }
                     }

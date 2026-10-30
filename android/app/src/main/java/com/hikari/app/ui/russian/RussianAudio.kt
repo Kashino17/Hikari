@@ -10,6 +10,8 @@ import android.os.Looper
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
@@ -17,9 +19,16 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import com.hikari.app.domain.russian.RuDeepdiveLogic
+import com.hikari.app.domain.russian.RuGender
+import com.hikari.app.domain.russian.RuPatternLogic
+import com.hikari.app.domain.russian.RuSettings
+import com.hikari.app.domain.russian.RussianCourseRepository
+import com.hikari.app.domain.russian.RussianPhonetics
 import com.hikari.app.player.MusicPlayerController
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -38,9 +47,13 @@ import kotlinx.coroutines.withContext
 class RussianAudioPlayer @Inject constructor(
     @ApplicationContext private val context: Context,
     private val music: MusicPlayerController,
+    private val repo: RussianCourseRepository,
 ) {
     private var player: ExoPlayer? = null
     private var onDone: (() -> Unit)? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var tts: TextToSpeech? = null
+    private var ttsReady = false
 
     private val _playing = MutableStateFlow<String?>(null)
     /** Name des gerade laufenden Clips (für Animationen), sonst null. */
@@ -51,16 +64,93 @@ class RussianAudioPlayer @Inject constructor(
     }
 
     /**
+     * Zuordnung aller Clip-Namen zum russischen Klartext, damit neue Lektionen (Tage 15–20),
+     * neue Satzbau-Muster und selbst gebaute Sätze im Satzbuch nahtlos per russischer
+     * Sprachausgabe (TTS) gesprochen werden, falls keine .ogg-Datei im Asset-Ordner liegt.
+     */
+    private val clipTextIndex: Map<String, String> by lazy {
+        buildMap {
+            val idx = repo.index
+            val combos = listOf(
+                RuSettings(RuGender.MALE, RuGender.MALE),
+                RuSettings(RuGender.FEMALE, RuGender.FEMALE),
+                RuSettings(RuGender.MALE, RuGender.FEMALE),
+                RuSettings(RuGender.FEMALE, RuGender.MALE),
+            )
+            for (s in combos) {
+                for (d in idx.days) {
+                    for (p in idx.dayPhrases(d, s)) {
+                        put(p.audio, p.plain)
+                    }
+                    for ((_, p) in idx.dialog(d, s)) {
+                        put(p.audio, p.plain)
+                    }
+                }
+            }
+            for (p in repo.patterns) {
+                for (l in p.scene.lines) {
+                    put(RuPatternLogic.lineClip(l, RuGender.MALE), RussianPhonetics.plain(l.ru))
+                    if (l.ruF != null) {
+                        put(RuPatternLogic.lineClip(l, RuGender.FEMALE), RussianPhonetics.plain(l.ruF))
+                    }
+                }
+                for (c in p.core + p.free.model) {
+                    put(RuDeepdiveLogic.clipName(c.ru), RussianPhonetics.plain(c.ru))
+                }
+            }
+            for (e in repo.deepdive.values) {
+                val strings = e.variants.map { it.ru } + e.examples.map { it.ru } + e.gender?.forms.orEmpty().map { it.ru }
+                for (ru in strings) {
+                    put(RuDeepdiveLogic.clipName(ru), RussianPhonetics.plain(ru))
+                }
+            }
+        }
+    }
+
+    private fun resolveTtsText(name: String): String? {
+        val base = name.removeSuffix("_slow")
+        if (base.startsWith("tts|")) return RussianPhonetics.plain(base.removePrefix("tts|")).takeIf { it.isNotBlank() }
+        return clipTextIndex[base] ?: RuDeepdiveLogic.textForClip(base)
+    }
+
+    private fun ensureTts() {
+        if (tts != null) return
+        tts = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                tts?.language = Locale("ru", "RU")
+                tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                    override fun onStart(utteranceId: String?) {}
+                    override fun onDone(utteranceId: String?) {
+                        mainHandler.post { finish() }
+                    }
+                    @Deprecated("Deprecated in Java")
+                    override fun onError(utteranceId: String?) {
+                        mainHandler.post { finish() }
+                    }
+                    override fun onError(utteranceId: String?, errorCode: Int) {
+                        mainHandler.post { finish() }
+                    }
+                })
+                ttsReady = true
+            }
+        }
+    }
+
+    /**
      * Beim Öffnen des Bereichs aufrufen: Dateiliste im Hintergrund lesen und
      * den Player bauen, bevor der erste Tipp kommt — sonst hängt der erste
      * Klick spürbar (Player-Aufbau ~0,5 s auf langsamen Geräten).
      */
     suspend fun warmUp() {
-        withContext(Dispatchers.IO) { available.size }
+        withContext(Dispatchers.IO) {
+            available.size
+            clipTextIndex.size
+        }
         ensure()
+        ensureTts()
     }
 
-    fun has(name: String): Boolean = "$name.ogg" in available
+    fun has(name: String): Boolean = "$name.ogg" in available || resolveTtsText(name) != null
 
     private fun ensure(): ExoPlayer = player ?: buildPlayer()
 
@@ -93,20 +183,55 @@ class RussianAudioPlayer @Inject constructor(
         cb?.invoke()
     }
 
-    /** Clip abspielen; [slow] nimmt die langsam gesprochene Aufnahme. */
+    /** Clip abspielen; [slow] nimmt die langsam gesprochene Aufnahme (oder langsames russisches TTS). */
     fun play(name: String, slow: Boolean = false, onComplete: (() -> Unit)? = null) {
-        val file = if (slow && has("${name}_slow")) "${name}_slow" else name
-        if (!has(file)) {
-            Log.w(TAG, "Audio fehlt: $file")
-            onComplete?.invoke()
+        val file = if (slow && "$name.ogg" in available && "${name}_slow.ogg" in available) "${name}_slow" else name
+        if ("$file.ogg" in available) {
+            tts?.stop()
+            playUri("asset:///russian/audio/$file.ogg", name, onComplete)
             return
         }
-        playUri("asset:///russian/audio/$file.ogg", name, onComplete)
+        val ruText = resolveTtsText(name)
+        if (ruText != null) {
+            playTts(ruText, name, slow, onComplete)
+            return
+        }
+        Log.w(TAG, "Audio fehlt: $file")
+        onComplete?.invoke()
+    }
+
+    private fun playTts(text: String, tag: String, slow: Boolean, onComplete: (() -> Unit)?) {
+        if (music.isPlaying.value) music.toggle()
+        player?.stop()
+        ensureTts()
+        onDone = onComplete
+        _playing.value = tag
+        val engine = tts
+        if (engine != null && ttsReady) {
+            engine.setSpeechRate(if (slow) 0.72f else 0.96f)
+            val res = engine.speak(text, TextToSpeech.QUEUE_FLUSH, null, "ru_tts_${System.nanoTime()}")
+            if (res == TextToSpeech.ERROR) {
+                finish()
+            }
+        } else {
+            // Falls die Engine gerade erst initialisiert wird, kurz verzögert sprechen oder sauber beenden
+            mainHandler.postDelayed({
+                val readyEngine = tts
+                if (readyEngine != null && ttsReady) {
+                    readyEngine.setSpeechRate(if (slow) 0.72f else 0.96f)
+                    val res = readyEngine.speak(text, TextToSpeech.QUEUE_FLUSH, null, "ru_tts_${System.nanoTime()}")
+                    if (res == TextToSpeech.ERROR) finish()
+                } else {
+                    finish()
+                }
+            }, 350L)
+        }
     }
 
     /** Eigene Aufnahme abspielen. */
     fun playFile(file: File, onComplete: (() -> Unit)? = null) {
         if (!file.exists()) return
+        tts?.stop()
         playUri(file.toURI().toString(), "recording", onComplete)
     }
 
@@ -126,6 +251,7 @@ class RussianAudioPlayer @Inject constructor(
     fun stop() {
         onDone = null
         player?.stop()
+        tts?.stop()
         _playing.value = null
     }
 

@@ -21,7 +21,12 @@ import retrofit2.HttpException
 class RussianConversationViewModel @Inject constructor(
     private val api: HikariApi,
     private val store: RussianConversationStore,
+    private val mainStore: RussianProgressStore?,
 ) : ViewModel() {
+    constructor(
+        api: HikariApi,
+        store: RussianConversationStore,
+    ) : this(api, store, null)
     val progress = store.state
     var session by mutableStateOf(store.loadSession()); private set
     var settings by mutableStateOf(store.state.value.settings); private set
@@ -73,13 +78,21 @@ class RussianConversationViewModel @Inject constructor(
         touch()
     }
     fun nextFoundation() {
+        var completedLessonId: String? = null
         store.update { p ->
             val foundation = RuJourney.nextStep(p.foundation)
             var next = p.copy(foundation = foundation)
             if (foundation.run?.phase == "complete") {
+                completedLessonId = foundation.run.lessonId
                 RuJourney.lesson(foundation.run.lessonId).words.forEach { next = RuChatLearning.saveCard(next, it.phrase, today()) }
             }
             next
+        }
+        completedLessonId?.let { lessonId ->
+            val lesson = RuJourney.lesson(lessonId)
+            lesson.words.forEach { w ->
+                mainStore?.saveMySentence(RuMySentence(ru = w.phrase.ru, de = w.phrase.de, patternId = "journey_$lessonId", note = "Gesprächsreise · ${lesson.title}"))
+            }
         }
         touch()
     }
@@ -107,6 +120,9 @@ class RussianConversationViewModel @Inject constructor(
                 .distinctBy { RuJourney.normalize(it.ru) }.takeLast(100))
             words.forEach { next = RuChatLearning.saveCard(next, it, today()) }
             next
+        }
+        words.forEach { w ->
+            mainStore?.saveMySentence(RuMySentence(ru = w.ru, de = w.de, patternId = "conversation", note = "Gesprächsreise · KI-Dialog"))
         }
         touch()
     }
@@ -167,7 +183,10 @@ class RussianConversationViewModel @Inject constructor(
         assistance()
     }
     fun cancelRepair() { repair = false; draft("") }
-    fun savePhrase(phrase: RuChatPhrase) { store.update { RuChatLearning.saveCard(it, phrase, today()) } }
+    fun savePhrase(phrase: RuChatPhrase) {
+        store.update { RuChatLearning.saveCard(it, phrase, today()) }
+        mainStore?.saveMySentence(RuMySentence(ru = phrase.ru, de = phrase.de, patternId = "conversation", note = "Gesprächsreise"))
+    }
     fun gradeReview(card: RuChatCard, correct: Boolean) {
         store.update { p -> p.copy(cards = p.cards.map { if (it.phrase.ru == card.phrase.ru) RuChatLearning.grade(it, correct, today()) else it }) }
     }

@@ -86,10 +86,19 @@ class RussianGamesViewModel @Inject constructor(
     val progress = store.state
     private val settings = store.state.value.settings
 
-    /** Gelernte Karten; zu Beginn (noch nichts gelernt) die Sätze von Tag 1. */
+    /**
+     * Pool für Hör-Blitz & Paare finden: kombiniert alle bisher im Satzbuch gelernten Sätze
+     * (fällige und wackelige Karten zuerst) mit den freigeschalteten Tagen.
+     */
     val pool: List<RuPhrase> = run {
-        val learned = store.state.value.cards.keys.mapNotNull { index.phrase(it, settings) }
-        if (learned.size >= 8) learned else index.phrasesUpTo(store.state.value.unlockedDay(index.days.size), settings)
+        val state = store.state.value
+        val today = store.today()
+        val dueIds = com.hikari.app.domain.russian.RuSrs.dueIds(state.cards, today)
+        val weakIds = state.cards.entries.filter { it.value.box <= 2 }.map { it.key }
+        val learnedIds = (dueIds + weakIds + state.cards.keys).distinct()
+        val learned = learnedIds.mapNotNull { index.phrase(it, settings) }
+        val unlockedPhrases = index.phrasesUpTo(state.unlockedDay(index.days.size), settings)
+        (learned + unlockedPhrases).distinctBy { it.id }
     }
 
     val phrasebookMeta = repo.phrasebook
@@ -97,8 +106,12 @@ class RussianGamesViewModel @Inject constructor(
     /** Sätze, zu denen es eine ausgearbeitete Vertiefung gibt. */
     val deepIds: Set<String> = repo.deepdive.keys
 
-    /** Legt fest, welche Sätze der Vokabeltest abfragt. */
+    /** Legt fest, welche Sätze der Vokabeltest oder Sprech-Reflex abfragt. */
     fun prepareTest(ids: List<String>) { testSelection.ids = ids }
+
+    fun gradeCard(id: String, correct: Boolean, xp: Int = 0, spokenOk: Int = 0) {
+        store.gradeSingleCard(id, correct, xp = xp, spokenOk = spokenOk)
+    }
 
     fun removeSentence(ru: String) = store.update { it.copy(mySentences = it.mySentences.filterNot { x -> x.ru == ru }) }
 
@@ -106,8 +119,11 @@ class RussianGamesViewModel @Inject constructor(
         it.copy(favorites = if (id in it.favorites) it.favorites - id else it.favorites + id)
     }
 
-    /** Alle Sätze der freigeschalteten Tage — für das Satzbuch. */
+    /** Alle Sätze der freigeschalteten Tage. */
     fun unlockedDays() = index.days.filter { it.day <= store.state.value.unlockedDay(index.days.size) }
+
+    /** Alle 20 Tage des Kurses (inkl. Psyche, Depressionen, Ernährung, Business, Alltag & Deep Talk) für das Satzbuch. */
+    fun allDays() = index.days
 
     fun dayPhrases(day: Int) = index.day(day)?.let { index.dayPhrases(it, settings) }.orEmpty()
 
@@ -239,7 +255,9 @@ fun RussianBlitzScreen(onClose: () -> Unit, vm: RussianGamesViewModel = hiltView
                     RuOptionCard(state, onClick = {
                         if (picked == null) {
                             picked = o.id
-                            if (o.id == question.first.id) {
+                            val isCorrect = o.id == question.first.id
+                            vm.gradeCard(question.first.id, correct = isCorrect)
+                            if (isCorrect) {
                                 combo++
                                 score += 10 * multiplier(combo)
                             } else {
@@ -386,10 +404,12 @@ fun RussianPairsScreen(onClose: () -> Unit, vm: RussianGamesViewModel = hiltView
                                     cards[s].russian == c.russian -> selected = i
                                     cards[s].phrase.id == c.phrase.id -> {
                                         matched += c.phrase.id
+                                        vm.gradeCard(c.phrase.id, correct = true)
                                         selected = null
                                     }
                                     else -> {
                                         wrong = s to i
+                                        vm.gradeCard(cards[s].phrase.id, correct = false)
                                         penalty += 3
                                         selected = null
                                     }

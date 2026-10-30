@@ -59,6 +59,30 @@
   {
    "id": "question",
    "title": "Fragen"
+  },
+  {
+   "id": "mental",
+   "title": "Seele & Depressionen"
+  },
+  {
+   "id": "psyche",
+   "title": "Psyche & Charakter"
+  },
+  {
+   "id": "nutrition",
+   "title": "Ernährung & Fitness"
+  },
+  {
+   "id": "business",
+   "title": "Business & Strategie"
+  },
+  {
+   "id": "routine",
+   "title": "Alltag & Aufgaben"
+  },
+  {
+   "id": "deep_talk",
+   "title": "Tiefe Gespräche"
   }
  ],
  "items": {
@@ -774,6 +798,341 @@
   "d14_ya_budu_skuchat": [
    "greet",
    "feel"
+  ],
+  "d15_mne_tyazhelo": [
+   "mental",
+   "feel"
+  ],
+  "d15_u_menya_depressiya": [
+   "mental",
+   "feel"
+  ],
+  "d15_net_sil": [
+   "mental",
+   "feel"
+  ],
+  "d15_vnutri_pustota": [
+   "mental",
+   "feel"
+  ],
+  "d15_vygoranie": [
+   "mental",
+   "feel"
+  ],
+  "d15_trudno_vstat": [
+   "mental",
+   "feel"
+  ],
+  "d15_slishkom_mnogo_mysley": [
+   "mental",
+   "psyche"
+  ],
+  "d15_trevoga": [
+   "mental",
+   "feel"
+  ],
+  "d15_nuzhna_pauza": [
+   "mental",
+   "feel"
+  ],
+  "d15_rabotayu_nad_soboy": [
+   "mental",
+   "psyche"
+  ],
+  "d15_kak_ty_sebya_chuvstvuesh": [
+   "mental",
+   "question",
+   "deep_talk"
+  ],
+  "d15_ya_ryadom": [
+   "mental",
+   "feel"
+  ],
+  "d15_spasibo_za_podderzhku": [
+   "mental",
+   "feel"
+  ],
+  "d15_uzhe_luchshe": [
+   "mental",
+   "feel"
+  ],
+  "d16_psihologiya": [
+   "psyche",
+   "deep_talk"
+  ],
+  "d16_podsoznanie": [
+   "psyche",
+   "deep_talk"
+  ],
+  "d16_privychki": [
+   "psyche",
+   "routine"
+  ],
+  "d16_strahi": [
+   "psyche",
+   "mental"
+  ],
+  "d16_detstvo": [
+   "psyche",
+   "family"
+  ],
+  "d16_samootsenka": [
+   "psyche",
+   "mental"
+  ],
+  "d16_emotsii": [
+   "psyche",
+   "feel"
+  ],
+  "d16_granitsy": [
+   "psyche",
+   "deep_talk"
+  ],
+  "d16_myshlenie": [
+   "psyche",
+   "deep_talk"
+  ],
+  "d16_doverie": [
+   "psyche",
+   "deep_talk"
+  ],
+  "d16_pochemu_lyudi": [
+   "psyche",
+   "question",
+   "deep_talk"
+  ],
+  "d16_refleksiya": [
+   "psyche",
+   "mental"
+  ],
+  "d16_iskrennost": [
+   "psyche",
+   "deep_talk"
+  ],
+  "d16_starye_shablony": [
+   "psyche"
+  ],
+  "d17_pravilnoe_pitanie": [
+   "nutrition",
+   "food"
+  ],
+  "d17_mnogo_belka": [
+   "nutrition",
+   "food"
+  ],
+  "d17_bez_sahara": [
+   "nutrition",
+   "food"
+  ],
+  "d17_intervalnoe": [
+   "nutrition",
+   "routine"
+  ],
+  "d17_gotovlyu_sam": [
+   "nutrition",
+   "food"
+  ],
+  "d17_ovoshi_i_myaso": [
+   "nutrition",
+   "food"
+  ],
+  "d17_voda_i_son": [
+   "nutrition",
+   "routine"
+  ],
+  "d17_energiya_ot_edy": [
+   "nutrition",
+   "feel"
+  ],
+  "d17_schitayu_kalorii": [
+   "nutrition"
+  ],
+  "d17_trenirovki": [
+   "nutrition",
+   "hobby"
+  ],
+  "d17_vitaminy": [
+   "nutrition"
+  ],
+  "d17_tyazhelaya_eda": [
+   "nutrition",
+   "food"
+  ],
+  "d17_kak_ty_pitaeshsya": [
+   "nutrition",
+   "question"
+  ],
+  "d17_disciplina_v_ede": [
+   "nutrition",
+   "psyche"
+  ],
+  "d18_svoy_biznes": [
+   "business",
+   "work"
+  ],
+  "d18_klienty": [
+   "business",
+   "work"
+  ],
+  "d18_peregovory": [
+   "business",
+   "work"
+  ],
+  "d18_strategiya": [
+   "business",
+   "work"
+  ],
+  "d18_avtomatizatsiya": [
+   "business",
+   "work"
+  ],
+  "d18_pribyl": [
+   "business"
+  ],
+  "d18_otvetstvennost": [
+   "business",
+   "deep_talk"
+  ],
+  "d18_resheniya": [
+   "business",
+   "routine"
+  ],
+  "d18_komanda": [
+   "business",
+   "work"
+  ],
+  "d18_rynok": [
+   "business"
+  ],
+  "d18_investitsii": [
+   "business"
+  ],
+  "d18_masshtabirovanie": [
+   "business"
+  ],
+  "d18_v_kakoy_sfere": [
+   "business",
+   "question",
+   "work"
+  ],
+  "d18_svoboda_v_biznese": [
+   "business",
+   "deep_talk"
+  ],
+  "d19_planiruyu_den": [
+   "routine",
+   "work"
+  ],
+  "d19_moi_zadachi": [
+   "routine",
+   "work"
+  ],
+  "d19_prioritety": [
+   "routine",
+   "work"
+  ],
+  "d19_fokus": [
+   "routine",
+   "work"
+  ],
+  "d19_zvonki_i_vstrechi": [
+   "routine",
+   "work",
+   "business"
+  ],
+  "d19_vecherom_otdyh": [
+   "routine"
+  ],
+  "d19_kak_prohodit_den": [
+   "routine",
+   "question",
+   "work"
+  ],
+  "d19_kakie_zadachi": [
+   "routine",
+   "question",
+   "work"
+  ],
+  "d19_v_chem_rabota": [
+   "routine",
+   "question",
+   "work"
+  ],
+  "d19_chto_samoe_slozhnoe": [
+   "routine",
+   "question",
+   "deep_talk"
+  ],
+  "d19_chto_nravitsya_v_rabote": [
+   "routine",
+   "question",
+   "work"
+  ],
+  "d19_skolko_vremeni": [
+   "routine",
+   "question"
+  ],
+  "d19_balans": [
+   "routine",
+   "mental"
+  ],
+  "d19_raspisanie": [
+   "routine",
+   "work"
+  ],
+  "d20_na_samom_dele": [
+   "deep_talk",
+   "opinion"
+  ],
+  "d20_glubokie_razgovory": [
+   "deep_talk"
+  ],
+  "d20_lichnyy_rost": [
+   "deep_talk",
+   "psyche"
+  ],
+  "d20_smysl_zhizni": [
+   "deep_talk",
+   "opinion"
+  ],
+  "d20_trudnosti_delalut_silnee": [
+   "deep_talk",
+   "mental"
+  ],
+  "d20_nastoyashie_otnosheniya": [
+   "deep_talk",
+   "family"
+  ],
+  "d20_ne_boyus_budushego": [
+   "deep_talk",
+   "business"
+  ],
+  "d20_vremya_tsenno": [
+   "deep_talk",
+   "time"
+  ],
+  "d20_okruzhenie": [
+   "deep_talk",
+   "psyche"
+  ],
+  "d20_blagodarnost": [
+   "deep_talk",
+   "feel"
+  ],
+  "d20_o_chem_mechtaesh": [
+   "deep_talk",
+   "question"
+  ],
+  "d20_chto_delaet_schastlivym": [
+   "deep_talk",
+   "question"
+  ],
+  "d20_svobodno_govoryu": [
+   "deep_talk",
+   "understand"
+  ],
+  "d20_tolko_nachalo": [
+   "deep_talk"
   ]
  }
 }

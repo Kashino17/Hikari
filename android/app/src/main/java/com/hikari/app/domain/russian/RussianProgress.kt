@@ -126,7 +126,7 @@ fun RuProgress.apply(result: RuSessionResult, today: Long): RuProgress {
     val cards = cards.toMutableMap()
     for (id in result.introduced) cards[id] = RuSrs.introduce(cards[id], today)
     for ((id, ok) in result.graded) {
-        val c = cards[id] ?: continue
+        val c = cards[id] ?: RuSrs.introduce(null, today)
         // Frisch eingeführte Karten: richtig beantwortet bleiben sie bei "morgen";
         // falsch → heute noch einmal.
         cards[id] = if (id in result.introduced) {
@@ -200,6 +200,37 @@ class RussianProgressStore @Inject constructor(
     }
 
     fun today(): Long = LocalDate.now().toEpochDay()
+
+    /**
+     * Bewertet eine einzelne Karte aus jedem beliebigen Lernmodus (Hör-Blitz, Paare,
+     * Satzbuch-Nachsprechen, Sprech-Reflex, Blind-Coach) und trägt sie ins Satzbuch ein.
+     */
+    fun gradeSingleCard(id: String, correct: Boolean, xp: Int = 0, spokenOk: Int = 0) {
+        if (id.isBlank() || id.startsWith("dd:")) return
+        val today = today()
+        update {
+            it.apply(
+                RuSessionResult(
+                    xp = xp,
+                    graded = mapOf(id to correct),
+                    spokenOk = spokenOk,
+                ),
+                today,
+            )
+        }
+    }
+
+    /**
+     * Fügt einen neu gelernten oder frei kombinierten Satz in „Meine Sätze“ im Satzbuch ein.
+     */
+    fun saveMySentence(sentence: RuMySentence) {
+        if (sentence.ru.isBlank() || sentence.de.isBlank()) return
+        val normRu = RussianPhonetics.plain(sentence.ru).trim().lowercase()
+        update { p ->
+            val filtered = p.mySentences.filterNot { RussianPhonetics.plain(it.ru).trim().lowercase() == normRu }
+            p.copy(mySentences = (filtered + sentence).takeLast(200))
+        }
+    }
 
     fun loadSession(day: Int): RuSessionSnapshot? =
         prefs.getString(SESSION_KEY, null)?.let {

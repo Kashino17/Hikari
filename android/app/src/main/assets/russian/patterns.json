@@ -2104,6 +2104,548 @@
      "why": ""
     }
    }
+  },
+  {
+   "id": "p21_chuvstvuyu",
+   "week": 5,
+   "title": "Innere Zustände & Depressionen ehrlich erklären",
+   "formula": "Я ч+увствую + Akkusativ, когд+а … · У мен+я сейч+ас …",
+   "emotion": "Offenheit",
+   "hook": "Wer aussprechen kann, wie es in ihm aussieht — auch bei Überforderung, Leere oder Depressionen — schafft echte Nähe statt oberflächlichem Smalltalk.",
+   "scene": {
+    "title": "Ohne Maske",
+    "setting": "Ein ruhiger Abend. Du musst nicht so tun, als wäre alles perfekt, sondern erklärst ehrlich, wie du dich fühlst.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "Ты м+ожешь сказ+ать мн+е ч+естно: как ты себ+я ч+увствуешь?",
+      "de": "Du kannst es mir ehrlich sagen: Wie fühlst du dich?",
+      "how": "warm, aufmerksam"
+     },
+     {
+      "who": "U",
+      "ru": "Я ч+увствую пустот+у внутр+и, когд+а сл+ишком д+олго раб+отаю без п+аузы.",
+      "de": "Ich fühle eine innere Leere, wenn ich zu lange ohne Pause arbeite.",
+      "how": "ruhig, ehrlich"
+     },
+     {
+      "who": "P",
+      "ru": "Я поним+аю теб+я. Ин+огда нужн+а тишин+а.",
+      "de": "Ich verstehe dich. Manchmal braucht man Stille.",
+      "how": "mitfühlend"
+     },
+     {
+      "who": "U",
+      "ru": "Да, но я раб+отаю над соб+ой и ск+оро мн+е б+удет л+учше.",
+      "de": "Ja, aber ich arbeite an mir selbst und bald wird es mir besser gehen.",
+      "how": "gefasst, zuversichtlich"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Я ч+увствую пустот+у внутр+и.",
+     "de": "Ich fühle eine innere Leere.",
+     "why": "чувствовать + Akkusativ (-у bei weiblichen Nomen auf -а)."
+    },
+    {
+     "ru": "У мен+я сейч+ас депр+ессия и нет сил.",
+     "de": "Ich habe gerade eine Depression und keine Kraft.",
+     "why": "У меня + Zustand beschreibt ehrlich, was du gerade durchmachst."
+    },
+    {
+     "ru": "Мне тяж+ело на душ+е, но я не сд+аюсь.",
+     "de": "Mir ist schwer ums Herz, aber ich gebe nicht auf.",
+     "why": "Мне тяжело на душе = idiomatisch für seelischen Druck."
+    }
+   ],
+   "explain": "Mit Я ч+увствую + Akkusativ benennst du dein Gefühl direkt: пустот+у (Leere), уст+алость (Erschöpfung), трев+огу (innere Unruhe), спок+ойствие (Ruhe). Mit когд+а (wenn/immer wenn) erklärst du den Auslöser.",
+   "template": {
+    "ru": "Я ч+увствую {0}, когд+а {1}.",
+    "de": "Ich fühle {0}, wenn {1}."
+   },
+   "slots": [
+    {
+     "label": "Was fühlst du innerlich?",
+     "options": [
+      {
+       "ru": "пустот+у внутр+и",
+       "de": "eine innere Leere"
+      },
+      {
+       "ru": "с+ильную уст+алость",
+       "de": "starke Erschöpfung"
+      },
+      {
+       "ru": "вн+утреннюю трев+огу",
+       "de": "innere Unruhe"
+      },
+      {
+       "ru": "глубок+ое спок+ойствие",
+       "de": "tiefe innere Ruhe"
+      }
+     ]
+    },
+    {
+     "label": "Wann passiert das?",
+     "options": [
+      {
+       "ru": "в голов+е сл+ишком мн+ого м+ыслей",
+       "de": "zu viele Gedanken im Kopf sind"
+      },
+      {
+       "ru": "я д+олго раб+отаю без +отдыха",
+       "de": "ich lange ohne Erholung arbeite"
+      },
+      {
+       "ru": "я ост+аюсь наедин+е с соб+ой",
+       "de": "ich allein mit mir selbst bin"
+      },
+      {
+       "ru": "говор+ю с тоб+ой открыто",
+       "de": "ich offen mit dir spreche"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Beschreibe ehrlich auf Russisch, wie du dich fühlst, wenn alles zu viel wird — oder was dir Ruhe gibt.",
+    "model": {
+     "ru": "Я ч+увствую с+ильную уст+алость, когд+а в голов+е сл+ишком мн+ого м+ыслей.",
+     "de": "Ich fühle starke Erschöpfung, wenn zu viele Gedanken im Kopf sind.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p22_psihologiya",
+   "week": 5,
+   "title": "Menschliche Psyche, Gewohnheiten & Einfluss",
+   "formula": "{0} с+ильно вли+яет на {1}",
+   "emotion": "Tiefgang",
+   "hook": "Über Psychologie, Mindset und Gewohnheiten zu sprechen hebt dein Russisch sofort auf ein erwachsenes, intellektuelles Niveau.",
+   "scene": {
+    "title": "Wie der Mensch tickt",
+    "setting": "Ein langes Gespräch im Café über Psychologie, das Unterbewusstsein und wie Gewohnheiten unser Leben formen.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "Как ты д+умаешь, что с+ильнее всег+о мен+яет челов+ека?",
+      "de": "Was denkst du, was verändert einen Menschen am stärksten?",
+      "how": "neugierig, nachdenklich"
+     },
+     {
+      "who": "U",
+      "ru": "Н+аше мысл+ение с+ильно вли+яет на к+ачество ж+изни.",
+      "de": "Unsere Denkweise beeinflusst stark die Lebensqualität.",
+      "how": "überzeugt"
+     },
+     {
+      "who": "P",
+      "ru": "А прив+ычки? Мн+огие д+аже не замеч+ают их.",
+      "de": "Und Gewohnheiten? Viele bemerken sie nicht einmal.",
+      "how": "zustimmend"
+     },
+     {
+      "who": "U",
+      "ru": "Точно. Подсозн+ание с+ильно вли+яет на н+аши реш+ения к+аждый день.",
+      "de": "Genau. Das Unterbewusstsein beeinflusst jeden Tag stark unsere Entscheidungen.",
+      "how": "klar, ruhig"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Н+аше мысл+ение с+ильно вли+яет на к+ачество ж+изни.",
+     "de": "Unsere Denkweise beeinflusst stark die Lebensqualität.",
+     "why": "влиять на + Akkusativ = Einfluss haben auf."
+    },
+    {
+     "ru": "Прив+ычки формир+уют наш хар+актер.",
+     "de": "Gewohnheiten formen unseren Charakter.",
+     "why": "формировать + Akkusativ."
+    },
+    {
+     "ru": "Саморефл+ексия помог+ает поним+ать сво+и стр+ахи.",
+     "de": "Selbstreflexion hilft, die eigenen Ängste zu verstehen.",
+     "why": "помогать + Grundform."
+    }
+   ],
+   "explain": "Вли+ять на + Akkusativ heißt »Einfluss haben auf / beeinflussen«. Damit kannst du Ursache und Wirkung in Psychologie, Gesundheit und Business glasklar ausdrücken.",
+   "template": {
+    "ru": "{0} с+ильно вли+яет на {1}.",
+    "de": "{0} beeinflusst stark {1}."
+   },
+   "slots": [
+    {
+     "label": "Was wirkt im Hintergrund?",
+     "options": [
+      {
+       "ru": "Н+аше подсозн+ание",
+       "de": "Unser Unterbewusstsein"
+      },
+      {
+       "ru": "Н+аше мысл+ение",
+       "de": "Unsere Denkweise"
+      },
+      {
+       "ru": "Н+аше окруж+ение",
+       "de": "Unser Umfeld"
+      },
+      {
+       "ru": "Дисципл+ина",
+       "de": "Disziplin"
+      }
+     ]
+    },
+    {
+     "label": "Worauf hat es Einfluss?",
+     "options": [
+      {
+       "ru": "н+аши реш+ения",
+       "de": "unsere Entscheidungen"
+      },
+      {
+       "ru": "н+аше б+удущее",
+       "de": "unsere Zukunft"
+      },
+      {
+       "ru": "вн+утреннее сост+ояние",
+       "de": "den inneren Zustand"
+      },
+      {
+       "ru": "к+ачество ж+изни",
+       "de": "die Lebensqualität"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Erkläre auf Russisch, was deiner Meinung nach den größten Einfluss auf die Psyche oder das Leben hat.",
+    "model": {
+     "ru": "Н+аше подсозн+ание с+ильно вли+яет на н+аши реш+ения.",
+     "de": "Unser Unterbewusstsein beeinflusst stark unsere Entscheidungen.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p23_pitanie",
+   "week": 5,
+   "title": "Ernährung, Gesundheit & Energie erklären",
+   "formula": "Я слеж+у за + Instrumental, чт+обы …",
+   "emotion": "Energie",
+   "hook": "Mit diesem Muster erklärst du präzise, wie du dich ernährst, warum du auf Zucker verzichtest oder viel Eiweiß isst — und welches Ziel dahintersteht.",
+   "scene": {
+    "title": "Bewusste Ernährung",
+    "setting": "Beim gemeinsamen Kochen erklärst du, warum dir Ernährung, Proteine und guter Schlaf so wichtig sind.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "Ты так вним+ательно выбир+аешь прод+укты! Почем+у +это так в+ажно для теб+я?",
+      "de": "Du wählst die Lebensmittel so aufmerksam aus! Warum ist dir das so wichtig?",
+      "how": "interessiert"
+     },
+     {
+      "who": "U",
+      "ru": "Я слеж+у за пит+анием, чт+обы им+еть мн+ого эн+ергии к+аждый день.",
+      "de": "Ich achte auf die Ernährung, um jeden Tag viel Energie zu haben.",
+      "how": "ruhig, klar"
+     },
+     {
+      "who": "P",
+      "ru": "А что ты ст+араешься есть к+аждый день?",
+      "de": "Und was versuchst du jeden Tag zu essen?",
+      "how": "neugierig"
+     },
+     {
+      "who": "U",
+      "ru": "Я ем мн+ого белк+а и овощ+ей, и я п+олностью отказ+ался от с+ахара.",
+      "de": "Ich esse viel Eiweiß und Gemüse, und ich habe komplett auf Zucker verzichtet.",
+      "how": "selbstbewusst",
+      "ruF": "Я ем мн+ого белк+а и овощ+ей, и я п+олностью отказ+алась от с+ахара."
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Я слеж+у за пит+анием и сн+ом.",
+     "de": "Ich achte auf Ernährung und Schlaf.",
+     "why": "следить за + Instrumental (-ем / -ом)."
+    },
+    {
+     "ru": "Я стар+аюсь есть б+ольше белк+а без с+ахара.",
+     "de": "Ich versuche, mehr Eiweiß ohne Zucker zu essen.",
+     "why": "белок → белка (Genitiv nach больше)."
+    },
+    {
+     "ru": "Пр+авильное пит+ание даёт ясн+ость в голов+е.",
+     "de": "Richtige Ernährung gibt Klarheit im Kopf.",
+     "why": "даёт = gibt."
+    }
+   ],
+   "explain": "След+ить за + Instrumental heißt »achten auf«: за пит+анием (auf die Ernährung), за здор+овьем (auf die Gesundheit), за сн+ом (auf den Schlaf). Mit чт+обы + Grundform (»um … zu«) nennst du den Grund.",
+   "template": {
+    "ru": "Я слеж+у за {0}, чт+обы {1}.",
+    "de": "Ich achte auf {0}, um {1}."
+   },
+   "slots": [
+    {
+     "label": "Worauf achtest du?",
+     "options": [
+      {
+       "ru": "сво+им пит+анием",
+       "de": "meine Ernährung"
+      },
+      {
+       "ru": "норм+ой белк+а и вод+ы",
+       "de": "meinen Eiweiß- und Wasserbedarf"
+      },
+      {
+       "ru": "к+ачеством сн+а",
+       "de": "die Schlafqualität"
+      },
+      {
+       "ru": "сво+им здор+овьем",
+       "de": "meine Gesundheit"
+      }
+     ]
+    },
+    {
+     "label": "Was ist dein Ziel?",
+     "options": [
+      {
+       "ru": "им+еть мн+ого эн+ергии",
+       "de": "viel Energie zu haben"
+      },
+      {
+       "ru": "сохран+ять ясн+ость в голов+е",
+       "de": "Klarheit im Kopf zu behalten"
+      },
+      {
+       "ru": "ч+увствовать себ+я с+ильным",
+       "de": "mich stark zu fühlen",
+       "ruF": "ч+увствовать себ+я с+ильной"
+      },
+      {
+       "ru": "продуктивно раб+отать весь день",
+       "de": "den ganzen Tag produktiv zu arbeiten"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Erkläre auf Russisch, worauf du bei deiner Ernährung und deiner Gesundheit achtest.",
+    "model": {
+     "ru": "Я слеж+у за сво+им пит+анием, чт+обы им+еть мн+ого эн+ергии.",
+     "de": "Ich achte auf meine Ernährung, um viel Energie zu haben.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p24_biznes",
+   "week": 5,
+   "title": "Business, Aufgaben & Verantwortung erklären",
+   "formula": "Я развив+аю {0} и мо+я зад+ача — {1}",
+   "emotion": "Fokus",
+   "hook": "Ob eigenes Business, komplexe Projekte oder tägliche Verantwortung: Mit dieser Struktur erklärst du souverän, was genau du machst.",
+   "scene": {
+    "title": "Was genau machst du?",
+    "setting": "Man fragt dich nicht nur nach deinem Berufstitel, sondern was du im Alltag wirklich aufbaust und entscheidest.",
+    "lines": [
+     {
+      "who": "P",
+      "ru": "Расскаж+и, в чём им+енно заключ+ается тво+я раб+ота?",
+      "de": "Erzähl mal, worin genau besteht deine Arbeit?",
+      "how": "gespannt"
+     },
+     {
+      "who": "U",
+      "ru": "Я развив+аю свой б+изнес и мо+я зад+ача — наход+ить реш+ения сл+ожных пробл+ем.",
+      "de": "Ich baue mein eigenes Business auf und meine Aufgabe ist es, Lösungen für komplexe Probleme zu finden.",
+      "how": "klar, souverän"
+     },
+     {
+      "who": "P",
+      "ru": "Звуч+ит масштабн+о! Ты раб+отаешь од+ин +или с ком+андой?",
+      "de": "Klingt groß! Arbeitest du allein oder mit einem Team?",
+      "how": "beeindruckt"
+     },
+     {
+      "who": "U",
+      "ru": "Я раб+отаю с кли+ентами и партн+ёрами, и я сам приним+аю гл+авные реш+ения.",
+      "de": "Ich arbeite mit Kunden und Partnern, und ich treffe die wichtigsten Entscheidungen selbst.",
+      "how": "ruhig, bestimmt",
+      "ruF": "Я раб+отаю с кли+ентами и партн+ёрами, и я сам+а приним+аю гл+авные реш+ения."
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Я развив+аю свой б+изнес и н+овые про+екты.",
+     "de": "Ich baue mein eigenes Business und neue Projekte auf.",
+     "why": "развивать + Akkusativ = aufbauen, entwickeln."
+    },
+    {
+     "ru": "Мо+я зад+ача — управл+ять проц+ессами и страт+егией.",
+     "de": "Meine Aufgabe ist es, Prozesse und Strategie zu steuern.",
+     "why": "Моя задача — + Grundform."
+    },
+    {
+     "ru": "Я отв+ечаю за результ+ат и раб+оту с кли+ентами.",
+     "de": "Ich bin verantwortlich für das Ergebnis und die Arbeit mit Kunden.",
+     "why": "отвечать за + Akkusativ = verantwortlich sein für."
+    }
+   ],
+   "explain": "Statt nur einen Berufsbegriff zu nennen, kombinierst du Я развив+аю … (Ich baue … auf) oder Я отв+ечаю за … (Ich verantworte …) mit и мо+я зад+ача — + Grundform (und meine Aufgabe ist es, …). So klingst du sofort wie ein Muttersprachler im Geschäftsleben.",
+   "template": {
+    "ru": "Я развив+аю {0}, и мо+я зад+ача — {1}.",
+    "de": "Ich baue {0} auf, und meine Aufgabe ist es, {1}."
+   },
+   "slots": [
+    {
+     "label": "Was baust du auf?",
+     "options": [
+      {
+       "ru": "свой б+изнес",
+       "de": "mein eigenes Business"
+      },
+      {
+       "ru": "н+овые про+екты",
+       "de": "neue Projekte"
+      },
+      {
+       "ru": "цифров+ые прод+укты",
+       "de": "digitale Produkte"
+      },
+      {
+       "ru": "долгоср+очные партн+ёрства",
+       "de": "langfristige Partnerschaften"
+      }
+     ]
+    },
+    {
+     "label": "Was ist deine konkrete Aufgabe?",
+     "options": [
+      {
+       "ru": "наход+ить реш+ения сл+ожных пробл+ем",
+       "de": "Lösungen für komplexe Probleme zu finden"
+      },
+      {
+       "ru": "вест+и перегов+оры с кли+ентами",
+       "de": "Verhandlungen mit Kunden zu führen"
+      },
+      {
+       "ru": "автоматиз+ировать раб+очие проц+ессы",
+       "de": "Arbeitsprozesse zu automatisieren"
+      },
+      {
+       "ru": "приним+ать стратегические реш+ения",
+       "de": "strategische Entscheidungen zu treffen"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Erkläre auf Russisch, woran du arbeitest und was deine wichtigste Aufgabe im Alltag ist.",
+    "model": {
+     "ru": "Я развив+аю свой б+изнес, и мо+я зад+ача — наход+ить реш+ения сл+ожных пробл+ем.",
+     "de": "Ich baue mein eigenes Business auf, und meine Aufgabe ist es, Lösungen für komplexe Probleme zu finden.",
+     "why": ""
+    }
+   }
+  },
+  {
+   "id": "p25_glubokiy_vopros",
+   "week": 5,
+   "title": "Gezielt nach Alltag, Aufgaben & Werten fragen",
+   "formula": "Расскаж+и, {0}?",
+   "emotion": "Interesse",
+   "hook": "Ein fließendes Gespräch lebt davon, dass du nicht nur von dir erzählst, sondern tiefgehende Fragen an dein Gegenüber stellst.",
+   "scene": {
+    "title": "Echtes Interesse zeigen",
+    "setting": "Du lenkst das Gespräch aktiv und fragst dein Gegenüber nach seinem Alltag, seinen Aufgaben und seinen Zielen.",
+    "lines": [
+     {
+      "who": "U",
+      "ru": "Расскаж+и, как об+ычно прох+одит твой день с утр+а до в+ечера?",
+      "de": "Erzähl mal, wie sieht dein Tag normalerweise von morgens bis abends aus?",
+      "how": "warm, interessiert"
+     },
+     {
+      "who": "P",
+      "ru": "С утр+а я раб+отаю над про+ектами, а в+ечером хож+у на тренир+овку.",
+      "de": "Morgens arbeite ich an Projekten, und abends gehe ich zum Training.",
+      "how": "lebendig"
+     },
+     {
+      "who": "U",
+      "ru": "Зд+орово! А расскаж+и, что теб+е б+ольше всег+о нр+авится в тво+ём д+еле?",
+      "de": "Super! Und erzähl mal, was gefällt dir am meisten an deiner Tätigkeit?",
+      "how": "aufmerksam"
+     },
+     {
+      "who": "P",
+      "ru": "Мне нр+авится созд+авать чт+о-то н+овое и в+идеть результ+ат!",
+      "de": "Mir gefällt es, etwas Neues zu erschaffen und das Ergebnis zu sehen!",
+      "how": "begeistert"
+     }
+    ]
+   },
+   "core": [
+    {
+     "ru": "Расскаж+и, как об+ычно прох+одит твой день?",
+     "de": "Erzähl mal, wie sieht dein Tag normalerweise aus?",
+     "why": "Расскажи (Erzähl mal) macht jede Frage warm und natürlich."
+    },
+    {
+     "ru": "Расскаж+и, как+ие у теб+я сейч+ас гл+авные зад+ачи?",
+     "de": "Erzähl mal, was sind gerade deine wichtigsten Aufgaben?",
+     "why": "какие задачи = welche Aufgaben."
+    },
+    {
+     "ru": "Расскаж+и, о чём ты мечт+аешь в б+удущем?",
+     "de": "Erzähl mal, wovon träumst du in der Zukunft?",
+     "why": "о чём ты мечтаешь = wovon träumst du."
+    }
+   ],
+   "explain": "Mit Расскаж+и, … (Erzähl mal, …) leitest du offene Gesprächsfragen ein. Dein Gegenüber antwortet dann nicht nur mit Ja oder Nein, sondern erzählt ausführlich — und du führst mühelos ein echtes Gespräch.",
+   "template": {
+    "ru": "Расскаж+и, {0}?",
+    "de": "Erzähl mal, {0}?"
+   },
+   "slots": [
+    {
+     "label": "Wonach möchtest du dein Gegenüber fragen?",
+     "options": [
+      {
+       "ru": "как об+ычно прох+одит твой день",
+       "de": "wie dein Tag normalerweise aussieht"
+      },
+      {
+       "ru": "в чём заключ+ается тво+я раб+ота",
+       "de": "worin deine Arbeit genau besteht"
+      },
+      {
+       "ru": "что теб+е б+ольше всег+о нр+авится в тво+ём д+еле",
+       "de": "was dir an deiner Tätigkeit am meisten gefällt"
+      },
+      {
+       "ru": "как ты себ+я ч+увствуешь на с+амом д+еле",
+       "de": "wie du dich in Wirklichkeit fühlst"
+      }
+     ]
+    }
+   ],
+   "free": {
+    "prompt": "Stelle deinem Gesprächspartner laut eine offene Frage über seinen Alltag oder seine Ziele.",
+    "model": {
+     "ru": "Расскаж+и, как об+ычно прох+одит твой день?",
+     "de": "Erzähl mal, wie sieht dein Tag normalerweise aus?",
+     "why": ""
+    }
+   }
   }
  ]
 }

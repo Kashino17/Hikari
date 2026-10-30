@@ -607,6 +607,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                     RussianPhrasebookScreen(
                         onBack = { nav.popBackStack() },
                         onTest = { nav.navigate("russian/test/0") },
+                        onReflex = { nav.navigate("russian/reflex") },
                         onDeepdive = { id -> nav.navigate("russian-deep/$id") },
                     )
                 }

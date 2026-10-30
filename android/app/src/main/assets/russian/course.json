@@ -597,6 +597,258 @@
           {"id": "d14_dlg_13", "who": "P", "ru": "Пок+а! Всег+о хор+ошего!", "de": "Tschüss! Alles Gute!"}
         ]
       }
+    },
+    {
+      "day": 15,
+      "title": "Gefühle, Seelenleben & Depressionen",
+      "goal": "Du kannst ehrlich erklären, wie du dich innerlich fühlst — auch bei Überforderung, innerer Leere oder Depressionen.",
+      "sound": {
+        "title": "Sanfter Tonfall bei persönlichen Themen",
+        "text": "Wenn Russen über echte Sorgen oder seelischen Schmerz sprechen, sinkt die Stimme am Satzende ruhig ab. Wörter wie тяж+ело (schwer) oder пустот+а (Leere) tragen die Betonung auf der letzten Silbe.",
+        "examples": ["d15_mne_tyazhelo", "d15_u_menya_depressiya", "d15_vnutri_pustota"]
+      },
+      "grammar": "Tiefe innere Zustände drückst du im Russischen meist mit Мне + Adverb (Мне тяж+ело на душ+е = Mir ist schwer ums Herz) oder Я ч+увствую + Akkusativ (Я ч+увствую пустот+у = Ich fühle eine Leere) aus.",
+      "items": [
+        {"id": "d15_mne_tyazhelo", "ru": "Мне сейч+ас тяж+ело на душ+е.", "de": "Mir ist gerade schwer ums Herz.", "lit": "Mir jetzt schwer auf der Seele.", "note": "Sehr natürlicher russischer Ausdruck für seelischen Druck."},
+        {"id": "d15_u_menya_depressiya", "ru": "У мен+я сейч+ас депр+ессия.", "de": "Ich habe gerade eine Depression.", "replies": ["d15_ya_ryadom"]},
+        {"id": "d15_net_sil", "ru": "У мен+я совсем нет сил.", "de": "Ich habe überhaupt keine Kraft mehr.", "lit": "Bei mir gar keine Kräfte."},
+        {"id": "d15_vnutri_pustota", "ru": "Я ч+увствую пустот+у внутр+и.", "de": "Ich fühle eine innere Leere.", "lit": "Ich fühle Leere drinnen."},
+        {"id": "d15_vygoranie", "ru": "Каж+ется, у мен+я эмоцион+альное выгор+ание.", "de": "Ich glaube, ich habe ein emotionales Burnout."},
+        {"id": "d15_trudno_vstat", "ru": "Ин+огда мне тр+удно пр+осто встать с кров+ати.", "de": "Manchmal fällt es mir schwer, einfach aus dem Bett aufzustehen."},
+        {"id": "d15_slishkom_mnogo_mysley", "ru": "В голов+е сл+ишком мн+ого м+ыслей.", "de": "In meinem Kopf sind viel zu viele Gedanken."},
+        {"id": "d15_trevoga", "ru": "Я ч+асто ч+увствую с+ильную трев+огу.", "de": "Ich spüre oft starke innere Unruhe und Angst."},
+        {"id": "d15_nuzhna_pauza", "ru": "Мне нужн+а п+ауза и тишин+а.", "de": "Ich brauche eine Pause und Stille."},
+        {"id": "d15_rabotayu_nad_soboy", "ru": "Я раб+отаю над соб+ой шаг за ш+агом.", "de": "Ich arbeite Schritt für Schritt an mir selbst."},
+        {"id": "d15_kak_ty_sebya_chuvstvuesh", "ru": "Как ты себ+я ч+увствуешь на с+амом д+еле?", "de": "Wie fühlst du dich in Wirklichkeit?", "replies": ["d15_mne_tyazhelo", "d15_uzhe_luchshe"]},
+        {"id": "d15_ya_ryadom", "ru": "Я р+ядом, ты м+ожешь вс+ё мне рассказ+ать.", "de": "Ich bin für dich da, du kannst mir alles erzählen."},
+        {"id": "d15_spasibo_za_podderzhku", "ru": "Спас+ибо теб+е за подд+ержку и поним+ание.", "de": "Danke dir für deine Unterstützung und dein Verständnis."},
+        {"id": "d15_uzhe_luchshe", "ru": "Сег+одня мне уж+е немн+ого л+учше.", "de": "Heute geht es mir schon etwas besser."}
+      ],
+      "dialog": {
+        "id": "d15_dlg",
+        "title": "Ehrliches Gespräch über Gefühle",
+        "scene": "Anja merkt, dass du heute still bist, und fragt ehrlich nach, wie es dir wirklich geht.",
+        "lines": [
+          {"id": "d15_dlg_1", "who": "P", "ru": "Ты сег+одня +очень т+ихий. Как ты себ+я ч+увствуешь на с+амом д+еле?", "ruF": "Ты сег+одня +очень т+ихая. Как ты себ+я ч+увствуешь на с+амом д+еле?", "de": "Du bist heute sehr still. Wie fühlst du dich in Wirklichkeit?"},
+          {"id": "d15_dlg_2", "who": "U", "ru": "Если ч+естно, мне сейч+ас тяж+ело на душ+е.", "de": "Um ehrlich zu sein, ist mir gerade schwer ums Herz."},
+          {"id": "d15_dlg_3", "who": "P", "ru": "Что случ+илось? +Это из-за раб+оты?", "de": "Was ist los? Liegt es an der Arbeit?"},
+          {"id": "d15_dlg_4", "who": "U", "ru": "Не т+олько. У мен+я сейч+ас депр+ессия и совсем нет сил.", "de": "Nicht nur. Ich habe gerade eine Depression und überhaupt keine Kraft mehr."},
+          {"id": "d15_dlg_5", "who": "P", "ru": "Я р+ядом, ты м+ожешь вс+ё мне рассказ+ать.", "de": "Ich bin für dich da, du kannst mir alles erzählen."},
+          {"id": "d15_dlg_6", "who": "U", "ru": "Я ч+увствую пустот+у внутр+и, но я раб+отаю над соб+ой шаг за ш+агом.", "de": "Ich fühle eine innere Leere, aber ich arbeite Schritt für Schritt an mir selbst."},
+          {"id": "d15_dlg_7", "who": "P", "ru": "Ты спр+авишься. Дав+ай пр+осто посид+им в тишин+е.", "de": "Du schaffst das. Lass uns einfach in Ruhe zusammensitzen."},
+          {"id": "d15_dlg_8", "who": "U", "ru": "Спас+ибо теб+е за подд+ержку и поним+ание.", "de": "Danke dir für deine Unterstützung und dein Verständnis."}
+        ]
+      }
+    },
+    {
+      "day": 16,
+      "title": "Menschliche Psyche & Charakter",
+      "goal": "Du sprichst über Psychologie, das Unterbewusstsein, Gewohnheiten, Ängste und warum Menschen so handeln, wie sie handeln.",
+      "sound": {
+        "title": "Психоло́гия — das п vor с wird mitgesprochen",
+        "text": "Anders als im Englischen wird das п in психол+огия und псих+ика im Russischen deutlich ausgesprochen: psichalógija.",
+        "examples": ["d16_psihologiya", "d16_podsoznanie", "d16_privychki"]
+      },
+      "grammar": "Mit Зави́сеть от + Genitiv sagst du, wovon etwas abhängt: Мн+огое зав+исит от мысл+ения (Vieles hängt vom Mindset ab). Mit Влия́ть на + Akkusativ sagst du, worauf etwas Einfluss hat.",
+      "items": [
+        {"id": "d16_psihologiya", "ru": "Мен+я +очень интерес+ует психол+огия челов+ека.", "de": "Mich interessiert die Psychologie des Menschen sehr."},
+        {"id": "d16_podsoznanie", "ru": "Н+аше подсозн+ание управл+яет мн+огими реш+ениями.", "de": "Unser Unterbewusstsein steuert viele Entscheidungen."},
+        {"id": "d16_privychki", "ru": "Прив+ычки формир+уют наш хар+актер и б+удущее.", "de": "Gewohnheiten formen unseren Charakter und unsere Zukunft."},
+        {"id": "d16_strahi", "ru": "В+ажно поним+ать сво+и вн+утренние стр+ахи.", "de": "Es ist wichtig, seine eigenen inneren Ängste zu verstehen."},
+        {"id": "d16_detstvo", "ru": "Мн+огие пробл+емы ид+ут из д+етства.", "de": "Viele Probleme stammen aus der Kindheit."},
+        {"id": "d16_samootsenka", "ru": "Здор+овая самооц+енка даёт спок+ойствие.", "de": "Ein gesundes Selbstwertgefühl gibt innere Ruhe."},
+        {"id": "d16_emotsii", "ru": "Я уч+усь не подавл+ять сво+и эм+оции.", "de": "Ich lerne, meine Emotionen nicht zu unterdrücken."},
+        {"id": "d16_granitsy", "ru": "Н+ужно ум+еть ст+авить л+ичные гран+ицы.", "de": "Man muss persönliche Grenzen setzen können."},
+        {"id": "d16_myshlenie", "ru": "Мн+огое в ж+изни зав+исит от мысл+ения.", "de": "Vieles im Leben hängt von der Denkweise ab."},
+        {"id": "d16_doverie", "ru": "Дов+ерие стр+оится д+олго, а тер+яется б+ыстро.", "de": "Vertrauen baut sich langsam auf und geht schnell verloren."},
+        {"id": "d16_pochemu_lyudi", "ru": "Как ты д+умаешь, почем+у л+юди бо+ятся перем+ен?", "de": "Was denkst du, warum haben Menschen Angst vor Veränderung?", "replies": ["d16_podsoznanie", "d16_strahi"]},
+        {"id": "d16_refleksiya", "ru": "Саморефл+ексия помог+ает мн+е л+учше поним+ать себ+я.", "de": "Selbstreflexion hilft mir, mich selbst besser zu verstehen."},
+        {"id": "d16_iskrennost", "ru": "Я цен+ю в л+юдях +искренность и глубин+у.", "de": "Ich schätze an Menschen Aufrichtigkeit und Tiefgang."},
+        {"id": "d16_starye_shablony", "ru": "Тр+удно мен+ять ст+арые шабл+оны повед+ения.", "de": "Es ist schwer, alte Verhaltensmuster zu ändern."}
+      ],
+      "dialog": {
+        "id": "d16_dlg",
+        "title": "Gespräch über die menschliche Psyche",
+        "scene": "Ihr sprecht darüber, warum Menschen in alten Gewohnheiten feststecken und wie man sich verändert.",
+        "lines": [
+          {"id": "d16_dlg_1", "who": "P", "ru": "Ты ч+асто д+умаешь о том, почем+у л+юди п+оступают т+ак, а не ин+аче?", "de": "Denkst du oft darüber nach, warum Menschen so und nicht anders handeln?"},
+          {"id": "d16_dlg_2", "who": "U", "ru": "Да, мен+я +очень интерес+ует психол+огия челов+ека.", "de": "Ja, mich interessiert die Psychologie des Menschen sehr."},
+          {"id": "d16_dlg_3", "who": "P", "ru": "Как ты д+умаешь, почем+у л+юди бо+ятся перем+ен?", "de": "Was denkst du, warum haben Menschen Angst vor Veränderung?"},
+          {"id": "d16_dlg_4", "who": "U", "ru": "Н+аше подсозн+ание управл+яет мн+огими реш+ениями, и тр+удно мен+ять ст+арые шабл+оны повед+ения.", "de": "Unser Unterbewusstsein steuert viele Entscheidungen, und es ist schwer, alte Verhaltensmuster zu ändern."},
+          {"id": "d16_dlg_5", "who": "P", "ru": "Согл+асна! А что помог+ает теб+е мен+яться?", "de": "Stimmt! Und was hilft dir, dich zu verändern?"},
+          {"id": "d16_dlg_6", "who": "U", "ru": "Саморефл+ексия помог+ает мн+е л+учше поним+ать себ+я, а прив+ычки формир+уют наш хар+актер и б+удущее.", "de": "Selbstreflexion hilft mir, mich besser zu verstehen, und Gewohnheiten formen unseren Charakter und unsere Zukunft."},
+          {"id": "d16_dlg_7", "who": "P", "ru": "С тоб+ой т+ак интер+есно говор+ить о глуб+оких вещ+ах!", "de": "Mit dir ist es so interessant, über tiefgründige Dinge zu sprechen!"},
+          {"id": "d16_dlg_8", "who": "U", "ru": "Я цен+ю в л+юдях +искренность и глубин+у.", "de": "Ich schätze an Menschen Aufrichtigkeit und Tiefgang."}
+        ]
+      }
+    },
+    {
+      "day": 17,
+      "title": "Ernährung, Körper & Energie",
+      "goal": "Du kannst genau erklären, wie du dich ernährst, worauf du achtest und wie Ernährung, Schlaf und Sport deine Energie beeinflussen.",
+      "sound": {
+        "title": "Бело́к (Eiweiß) vs. бе́лка (Eichhörnchen)",
+        "text": "Aufgepasst bei der Betonung: бел+ок (mit Betonung auf о!) heißt Eiweiß/Protein. Betont man das е (б+елка), heißt es Eichhörnchen!",
+        "examples": ["d17_mnogo_belka", "d17_pravilnoe_pitanie", "d17_bez_sahara"]
+      },
+      "grammar": "Следи́ть за + Instrumental heißt »achten auf«: Я слеж+у за пит+анием (Ich achte auf die Ernährung). Отказ+аться от + Genitiv heißt »verzichten auf«: Я отказ+ался от с+ахара (Ich verzichte auf Zucker).",
+      "items": [
+        {"id": "d17_pravilnoe_pitanie", "ru": "Я слеж+у за сво+им пит+анием и здор+овьем.", "de": "Ich achte auf meine Ernährung und meine Gesundheit."},
+        {"id": "d17_mnogo_belka", "ru": "Я стар+аюсь есть б+ольше белк+а к+аждый день.", "de": "Ich versuche, jeden Tag mehr Eiweiß zu essen."},
+        {"id": "d17_bez_sahara", "ru": "Я п+олностью отказ+ался от с+ахара и фастф+уда.", "ruF": "Я п+олностью отказ+алась от с+ахара и фастф+уда.", "de": "Ich habe komplett auf Zucker und Fastfood verzichtet."},
+        {"id": "d17_intervalnoe", "ru": "Я практик+ую интерв+альное голод+ание.", "de": "Ich praktiziere Intervallfasten."},
+        {"id": "d17_gotovlyu_sam", "ru": "Я гот+овлю свеж+ую ед+у сам д+ома.", "ruF": "Я гот+овлю свеж+ую ед+у сам+а д+ома.", "de": "Ich koche frisches Essen selbst zu Hause."},
+        {"id": "d17_ovoshi_i_myaso", "ru": "В моём раци+оне мн+ого овощ+ей, р+ыбы и м+яса.", "de": "In meinem Speiseplan sind viel Gemüse, Fisch und Fleisch."},
+        {"id": "d17_voda_i_son", "ru": "Я пью мн+ого вод+ы и сплю в+осемь час+ов.", "de": "Ich trinke viel Wasser und schlafe acht Stunden."},
+        {"id": "d17_energiya_ot_edy", "ru": "Пит+ание напрям+ую вли+яет на мо+ю эн+ергию и настр+оение.", "de": "Die Ernährung beeinflusst direkt meine Energie und meine Stimmung."},
+        {"id": "d17_schitayu_kalorii", "ru": "Я зн+аю сво+ю н+орму кал+орий и белк+ов.", "de": "Ich kenne meinen Bedarf an Kalorien und Proteinen."},
+        {"id": "d17_trenirovki", "ru": "Я тренир+уюсь чет+ыре р+аза в нед+елю в з+але.", "de": "Ich trainiere viermal pro Woche im Fitnessstudio."},
+        {"id": "d17_vitaminy", "ru": "Зим+ой я приним+аю витам+ины и м+агний.", "de": "Im Winter nehme ich Vitamine und Magnesium."},
+        {"id": "d17_tyazhelaya_eda", "ru": "П+осле тяж+ёлой ед+ы я ч+увствую уст+алость.", "de": "Nach schwerem Essen fühle ich mich müde."},
+        {"id": "d17_kak_ty_pitaeshsya", "ru": "А как ты об+ычно пит+аешься в теч+ение дня?", "de": "Und wie ernährst du dich normalerweise über den Tag?", "replies": ["d17_pravilnoe_pitanie", "d17_gotovlyu_sam"]},
+        {"id": "d17_disciplina_v_ede", "ru": "Дисципл+ина в пит+ании даёт ясн+ость в голов+е.", "de": "Disziplin bei der Ernährung sorgt für Klarheit im Kopf."}
+      ],
+      "dialog": {
+        "id": "d17_dlg",
+        "title": "Gespräch über Ernährung & Energie",
+        "scene": "Beim Essen sprecht ihr über gesunde Ernährung, Proteine, Zuckerverzicht und wie der Körper Energie bekommt.",
+        "lines": [
+          {"id": "d17_dlg_1", "who": "P", "ru": "Ты не б+удешь дес+ерт? Как ты об+ычно пит+аешься в теч+ение дня?", "de": "Nimmst du kein Dessert? Wie ernährst du dich normalerweise über den Tag?"},
+          {"id": "d17_dlg_2", "who": "U", "ru": "Я слеж+у за сво+им пит+анием и здор+овьем. Я п+олностью отказ+ался от с+ахара и фастф+уда.", "ruF": "Я слеж+у за сво+им пит+анием и здор+овьем. Я п+олностью отказ+алась от с+ахара и фастф+уда.", "de": "Ich achte auf meine Ernährung und Gesundheit. Ich habe komplett auf Zucker und Fastfood verzichtet."},
+          {"id": "d17_dlg_3", "who": "P", "ru": "Ого, +это сильная дисципл+ина! А что ты об+ычно ешь?", "de": "Wow, das ist starke Disziplin! Und was isst du normalerweise?"},
+          {"id": "d17_dlg_4", "who": "U", "ru": "Я стар+аюсь есть б+ольше белк+а к+аждый день. В моём раци+оне мн+ого овощ+ей, р+ыбы и м+яса.", "de": "Ich versuche, jeden Tag mehr Eiweiß zu essen. In meinem Speiseplan sind viel Gemüse, Fisch und Fleisch."},
+          {"id": "d17_dlg_5", "who": "P", "ru": "И ты чувствуешь р+азницу?", "de": "Und spürst du einen Unterschied?"},
+          {"id": "d17_dlg_6", "who": "U", "ru": "Да! Пит+ание напрям+ую вли+яет на мо+ю эн+ергию и настр+оение.", "de": "Ja! Die Ernährung beeinflusst direkt meine Energie und meine Stimmung."},
+          {"id": "d17_dlg_7", "who": "P", "ru": "А ты ещё и тренир+уешься?", "de": "Und trainierst du auch noch?"},
+          {"id": "d17_dlg_8", "who": "U", "ru": "Да, я тренир+уюсь чет+ыре р+аза в нед+елю в з+але и пью мн+ого вод+ы.", "de": "Ja, ich trainiere viermal pro Woche im Studio und trinke viel Wasser."}
+        ]
+      }
+    },
+    {
+      "day": 18,
+      "title": "Business, Geschäfte & Strategie",
+      "goal": "Du kannst über Business, Unternehmertum, Kunden, Projekte, Finanzen und strategische Entscheidungen sprechen.",
+      "sound": {
+        "title": "Бизне́с vs. би́знес",
+        "text": "Auf Russisch liegt die Betonung in б+изнес immer auf der ersten Silbe (bísnes) und in кли+ент auf dem е (klijént).",
+        "examples": ["d18_svoy_biznes", "d18_klienty", "d18_strategiya"]
+      },
+      "grammar": "Развив+ать + Akkusativ heißt »aufbauen / weiterentwickeln«: Я развив+аю свой б+изнес (Ich baue mein eigenes Business auf). Управл+ять + Instrumental heißt »leiten / steuern«: управл+ять про+ектами (Projekte leiten).",
+      "items": [
+        {"id": "d18_svoy_biznes", "ru": "Я развив+аю свой б+изнес и н+овые про+екты.", "de": "Ich baue mein eigenes Business und neue Projekte auf."},
+        {"id": "d18_klienty", "ru": "Я раб+отаю напрям+ую с кли+ентами и партн+ёрами.", "de": "Ich arbeite direkt mit Kunden und Partnern zusammen."},
+        {"id": "d18_peregovory", "ru": "Сег+одня у мен+я в+ажные дел+овые перегов+оры.", "de": "Heute habe ich wichtige Geschäftsverhandlungen."},
+        {"id": "d18_strategiya", "ru": "Я отв+ечаю за страт+егию и разв+итие комп+ании.", "de": "Ich bin verantwortlich für die Strategie und die Unternehmensentwicklung."},
+        {"id": "d18_avtomatizatsiya", "ru": "Мы автоматиз+ируем проц+ессы с п+омощью технол+огий.", "de": "Wir automatisieren Prozesse mit Hilfe von Technologie."},
+        {"id": "d18_pribyl", "ru": "Н+аша цель — увел+ичить пр+ибыль и к+ачество с+ервиса.", "de": "Unser Ziel ist es, den Gewinn und die Servicequalität zu steigern."},
+        {"id": "d18_otvetstvennost", "ru": "Свой б+изнес — +это больш+ая отв+етственность и риск.", "de": "Ein eigenes Business bedeutet große Verantwortung und Risiko."},
+        {"id": "d18_resheniya", "ru": "Мне н+ужно приним+ать б+ыстрые и т+очные реш+ения.", "de": "Ich muss schnelle und präzise Entscheidungen treffen."},
+        {"id": "d18_komanda", "ru": "С+ильная ком+анда — +это осн+ова люб+ого усп+еха.", "de": "Ein starkes Team ist die Grundlage jedes Erfolgs."},
+        {"id": "d18_rynok", "ru": "Мы анал+изируем р+ынок и потр+ебности кли+ентов.", "de": "Wir analysieren den Markt und die Bedürfnisse der Kunden."},
+        {"id": "d18_investitsii", "ru": "Я инвест+ирую вр+емя и д+еньги в долгоср+очный рост.", "de": "Ich investiere Zeit und Geld in langfristiges Wachstum."},
+        {"id": "d18_masshtabirovanie", "ru": "Сейч+ас мы гот+овимся масштабир+овать наш про+ект.", "de": "Gerade bereiten wir uns darauf vor, unser Projekt zu skalieren."},
+        {"id": "d18_v_kakoy_sfere", "ru": "В как+ой сф+ере ты развив+аешь свой про+ект?", "de": "In welcher Branche baust du dein Projekt auf?", "replies": ["d18_svoy_biznes", "d18_avtomatizatsiya"]},
+        {"id": "d18_svoboda_v_biznese", "ru": "Предприним+ательство даёт мн+е своб+оду д+ействий.", "de": "Unternehmertum gibt mir Handlungsfreiheit."}
+      ],
+      "dialog": {
+        "id": "d18_dlg",
+        "title": "Gespräch über Business & Strategie",
+        "scene": "Du erklärst, wie dein Business funktioniert, woran du arbeitest und welche Ziele du verfolgst.",
+        "lines": [
+          {"id": "d18_dlg_1", "who": "P", "ru": "Расскаж+и подр+обнее, в как+ой сф+ере ты развив+аешь свой про+ект?", "de": "Erzähl genauer, in welcher Branche baust du dein Projekt auf?"},
+          {"id": "d18_dlg_2", "who": "U", "ru": "Я развив+аю свой б+изнес и н+овые про+екты. Мы автоматиз+ируем проц+ессы с п+омощью технол+огий.", "de": "Ich baue mein eigenes Business und neue Projekte auf. Wir automatisieren Prozesse mit Hilfe von Technologie."},
+          {"id": "d18_dlg_3", "who": "P", "ru": "Звуч+ит серьёзно! За что им+енно ты отв+ечаешь?", "de": "Klingt seriös! Wofür genau bist du verantwortlich?"},
+          {"id": "d18_dlg_4", "who": "U", "ru": "Я отв+ечаю за страт+егию и разв+итие комп+ании, и я раб+отаю напрям+ую с кли+ентами и партн+ёрами.", "de": "Ich bin verantwortlich für die Strategie und Unternehmensentwicklung, und ich arbeite direkt mit Kunden und Partnern."},
+          {"id": "d18_dlg_5", "who": "P", "ru": "Нав+ерное, +это нелегк+о?", "de": "Das ist bestimmt nicht leicht, oder?"},
+          {"id": "d18_dlg_6", "who": "U", "ru": "Да, свой б+изнес — +это больш+ая отв+етственность и риск, но предприним+ательство даёт мн+е своб+оду д+ействий.", "de": "Ja, ein eigenes Business ist große Verantwortung und Risiko, aber Unternehmertum gibt mir Handlungsfreiheit."},
+          {"id": "d18_dlg_7", "who": "P", "ru": "Как+ая у вас сейч+ас гл+авная цель?", "de": "Was ist gerade euer Hauptziel?"},
+          {"id": "d18_dlg_8", "who": "U", "ru": "Н+аша цель — увел+ичить пр+ибыль и к+ачество с+ервиса. Сейч+ас мы гот+овимся масштабир+овать наш про+ект.", "de": "Unser Ziel ist es, Gewinn und Servicequalität zu steigern. Gerade bereiten wir uns darauf vor, unser Projekt zu skalieren."}
+        ]
+      }
+    },
+    {
+      "day": 19,
+      "title": "Alltag, Aufgaben & gezielt nachfragen",
+      "goal": "Du erklärst deinen genauen Tagesablauf und deine Aufgaben — und fragst aktiv nach dem Alltag deines Gegenübers.",
+      "sound": {
+        "title": "Зад+ачи (Aufgaben) & Расскаж+и (Erzähl mal)",
+        "text": "Mit Расскаж+и! (Erzähl mal!) öffnest du jedes Gespräch und bringst dein Gegenüber zum Reden.",
+        "examples": ["d19_moi_zadachi", "d19_kak_prohodit_den", "d19_prioritety"]
+      },
+      "grammar": "Мо+я зад+ача — + Grundform heißt »Meine Aufgabe ist es, … zu tun«. Um den anderen nach seinem Alltag zu fragen, nutzt du: Как прох+одит твой об+ычный день? (Wie verläuft dein normaler Tag?) und В чём заключ+ается тво+я раб+ота? (Worin besteht deine Arbeit?).",
+      "items": [
+        {"id": "d19_planiruyu_den", "ru": "К+аждое +утро я план+ирую сво+и гл+авные зад+ачи.", "de": "Jeden Morgen plane ich meine wichtigsten Aufgaben."},
+        {"id": "d19_moi_zadachi", "ru": "Мо+я зад+ача — наход+ить реш+ения сл+ожных пробл+ем.", "de": "Meine Aufgabe ist es, Lösungen für komplexe Probleme zu finden."},
+        {"id": "d19_prioritety", "ru": "Снач+ала я д+елаю с+амое в+ажное и сл+ожное.", "de": "Zuerst erledige ich das Wichtigste und Schwierigste."},
+        {"id": "d19_fokus", "ru": "Днём я раб+отаю в п+олном ф+окусе без телеф+она.", "de": "Tagsüber arbeite ich in vollem Fokus ohne Telefon."},
+        {"id": "d19_zvonki_i_vstrechi", "ru": "П+осле об+еда у мен+я об+ычно звонк+и и встр+ечи.", "de": "Nach dem Mittagessen habe ich meistens Telefonate und Meetings."},
+        {"id": "d19_vecherom_otdyh", "ru": "В+ечером я подвож+у ит+оги дня и отдых+аю.", "de": "Abends ziehe ich Bilanz für den Tag und ruhe mich aus."},
+        {"id": "d19_kak_prohodit_den", "ru": "А как об+ычно прох+одит твой день с утр+а до в+ечера?", "de": "Und wie sieht dein Tag normalerweise von morgens bis abends aus?", "replies": ["d19_planiruyu_den", "d19_vecherom_otdyh"]},
+        {"id": "d19_kakie_zadachi", "ru": "Как+ие зад+ачи ты об+ычно выполняешь на раб+оте?", "de": "Welche Aufgaben erledigst du normalerweise bei der Arbeit?", "replies": ["d19_moi_zadachi", "d19_zvonki_i_vstrechi"]},
+        {"id": "d19_v_chem_rabota", "ru": "Расскаж+и, в чём им+енно заключ+ается тво+я раб+ота?", "de": "Erzähl mal, worin genau besteht deine Arbeit?", "replies": ["d19_moi_zadachi"]},
+        {"id": "d19_chto_samoe_slozhnoe", "ru": "Что для теб+я с+амое сл+ожное в тво+ём д+еле?", "de": "Was ist für dich das Schwierigste an deiner Tätigkeit?"},
+        {"id": "d19_chto_nravitsya_v_rabote", "ru": "А что теб+е б+ольше всег+о нр+авится в тво+их будн+ях?", "de": "Und was gefällt dir am meisten an deinem Alltag?"},
+        {"id": "d19_skolko_vremeni", "ru": "Ск+олько вр+емени у теб+я ух+одит на +эту зад+ачу?", "de": "Wie viel Zeit brauchst du für diese Aufgabe?"},
+        {"id": "d19_balans", "ru": "Я стар+аюсь держ+ать бал+анс м+ежду раб+отой и ж+изнью.", "de": "Ich versuche, die Balance zwischen Arbeit und Leben zu halten."},
+        {"id": "d19_raspisanie", "ru": "У мен+я пл+отный гр+афик, но я сам управл+яю сво+им вр+еменем.", "ruF": "У мен+я пл+отный гр+афик, но я сам+а управл+яю сво+им вр+еменем.", "de": "Ich habe einen vollen Zeitplan, aber ich teile mir meine Zeit selbst ein."}
+      ],
+      "dialog": {
+        "id": "d19_dlg",
+        "title": "Alltag & Aufgaben austauschen",
+        "scene": "Du beschreibst deinen strukturierten Alltag und fragst Anja gezielt nach ihrem Tagesablauf und ihren Aufgaben.",
+        "lines": [
+          {"id": "d19_dlg_1", "who": "P", "ru": "У теб+я так+ая насыщенная ж+изнь! Как об+ычно прох+одит твой день с утр+а до в+ечера?", "de": "Du hast so ein erfülltes Leben! Wie sieht dein Tag normalerweise von morgens bis abends aus?"},
+          {"id": "d19_dlg_2", "who": "U", "ru": "К+аждое +утро я план+ирую сво+и гл+авные зад+ачи. Снач+ала я д+елаю с+амое в+ажное и сл+ожное.", "de": "Jeden Morgen plane ich meine wichtigsten Aufgaben. Zuerst erledige ich das Wichtigste und Schwierigste."},
+          {"id": "d19_dlg_3", "who": "P", "ru": "А что ты д+елаешь п+осле об+еда?", "de": "Und was machst du nach dem Mittagessen?"},
+          {"id": "d19_dlg_4", "who": "U", "ru": "П+осле об+еда у мен+я об+ычно звонк+и и встр+ечи. А расскаж+и, в чём им+енно заключ+ается тво+я раб+ота?", "de": "Nach dem Mittagessen habe ich meistens Telefonate und Meetings. Und erzähl mal, worin genau besteht deine Arbeit?"},
+          {"id": "d19_dlg_5", "who": "P", "ru": "Я вед+у диз+айн-про+екты и общ+аюсь с зак+азчиками.", "de": "Ich leite Design-Projekte und kommuniziere mit Auftraggebern."},
+          {"id": "d19_dlg_6", "who": "U", "ru": "Интер+есно! А что для теб+я с+амое сл+ожное в тво+ём д+еле?", "de": "Interessant! Und was ist für dich das Schwierigste an deiner Tätigkeit?"},
+          {"id": "d19_dlg_7", "who": "P", "ru": "Когд+а вс+ё н+ужно сд+елать ср+очно! А как ты отдых+аешь?", "de": "Wenn alles dringend fertig werden muss! Und wie erholst du dich?"},
+          {"id": "d19_dlg_8", "who": "U", "ru": "В+ечером я подвож+у ит+оги дня и отдых+аю. Я стар+аюсь держ+ать бал+анс м+ежду раб+отой и ж+изнью.", "de": "Abends ziehe ich Bilanz für den Tag und ruhe mich aus. Ich versuche, die Balance zwischen Arbeit und Leben zu halten."}
+        ]
+      }
+    },
+    {
+      "day": 20,
+      "title": "Tiefe Gespräche, Werte & Lebensziele",
+      "goal": "Du führst fließende, tiefgründige Gespräche über Lebenssinn, Werte, Beziehungen, Träume und persönliche Entwicklung.",
+      "sound": {
+        "title": "Satzmelodie beim freien Erzählen",
+        "text": "Fließendes Russisch entsteht durch Verbindungs-Brücken wie На с+амом д+еле (Eigentlich / In Wirklichkeit) oder С одн+ой сторон+ы (Einerseits). Sie geben deinem Gehirn eine Sekunde Denkzeit, während du schon flüssig sprichst!",
+        "examples": ["d20_na_samom_dele", "d20_smysl_zhizni", "d20_lichnyy_rost"]
+      },
+      "grammar": "Mit На с+амом д+еле (In Wirklichkeit), Я уб+еждён, что … (Ich bin überzeugt, dass …) und Т+о, что … (Das, was …) verbindest du komplexe Gedanken zu fließenden Sätzen.",
+      "items": [
+        {"id": "d20_na_samom_dele", "ru": "На с+амом д+еле для мен+я гл+авное — +это своб+ода и ч+естность.", "de": "In Wirklichkeit sind für mich Freiheit und Ehrlichkeit das Wichtigste."},
+        {"id": "d20_glubokie_razgovory", "ru": "Я любл+ю глуб+окие разгов+оры о ж+изни и б+удущем.", "de": "Ich liebe tiefgründige Gespräche über das Leben und die Zukunft."},
+        {"id": "d20_lichnyy_rost", "ru": "Я посто+янно уч+усь и стремл+юсь к л+ичному р+осту.", "de": "Ich lerne ständig dazu und strebe nach persönlichem Wachstum."},
+        {"id": "d20_smysl_zhizni", "ru": "К+аждый челов+ек сам созд+аёт смысл сво+ей ж+изни.", "de": "Jeder Mensch erschafft den Sinn seines Lebens selbst."},
+        {"id": "d20_trudnosti_delalut_silnee", "ru": "Тр+удности и ош+ибки д+елают нас сильн+ее и мудр+ее.", "de": "Schwierigkeiten und Fehler machen uns stärker und weiser."},
+        {"id": "d20_nastoyashie_otnosheniya", "ru": "В отнош+ениях для мен+я важн+ы уваж+ение и верн+ость.", "de": "In Beziehungen sind mir Respekt und Treue wichtig."},
+        {"id": "d20_ne_boyus_budushego", "ru": "Я зн+аю, чег+о хоч+у, и ид+у к сво+ей ц+ели.", "de": "Ich weiß, was ich will, und gehe meinen Weg zu meinem Ziel."},
+        {"id": "d20_vremya_tsenno", "ru": "Вр+емя — +это с+амый ц+енный рес+урс в н+ашей ж+изни.", "de": "Zeit ist die wertvollste Ressource in unserem Leben."},
+        {"id": "d20_okruzhenie", "ru": "Н+аше окруж+ение с+ильно вли+яет на т+о, к+ем мы стан+овимся.", "de": "Unser Umfeld beeinflusst stark, zu wem wir werden."},
+        {"id": "d20_blagodarnost", "ru": "Я благод+арен за вс+ё, чт+о прош+ёл на своём пут+и.", "ruF": "Я благод+арна за вс+ё, чт+о прошл+а на своём пут+и.", "de": "Ich bin dankbar für alles, was ich auf meinem Weg durchlebt habe."},
+        {"id": "d20_o_chem_mechtaesh", "ru": "О чём ты мечт+аешь, когд+а д+умаешь о сл+едующих пят+и год+ах?", "de": "Wovon träumst du, wenn du an die nächsten fünf Jahre denkst?", "replies": ["d20_lichnyy_rost", "d20_ne_boyus_budushego"]},
+        {"id": "d20_chto_delaet_schastlivym", "ru": "Что д+елает теб+я по-насто+ящему счастл+ивым челов+еком?", "de": "Was macht dich zu einem wahrhaft glücklichen Menschen?", "replies": ["d20_na_samom_dele", "d20_nastoyashie_otnosheniya"]},
+        {"id": "d20_svobodno_govoryu", "ru": "Теп+ерь я мог+у своб+одно выраж+ать сво+и м+ысли по-р+усски!", "de": "Jetzt kann ich meine Gedanken frei auf Russisch ausdrücken!"},
+        {"id": "d20_tolko_nachalo", "ru": "+Это т+олько нач+ало н+ашей больш+ой ист+ории.", "de": "Das ist erst der Anfang unserer großen Geschichte."}
+      ],
+      "dialog": {
+        "id": "d20_dlg",
+        "title": "Tiefes Gespräch über das Leben",
+        "scene": "Ein langer Abendspaziergang über die Stadt. Ihr sprecht frei und tiefgründig über Werte, schwere Zeiten und Zukunftspläne.",
+        "lines": [
+          {"id": "d20_dlg_1", "who": "P", "ru": "Зн+аешь, мне т+ак нр+авится, что мы м+ожем говор+ить обо всём без мас+ок.", "de": "Weißt du, mir gefällt es so sehr, dass wir ohne Masken über alles reden können."},
+          {"id": "d20_dlg_2", "who": "U", "ru": "Мне т+оже. Я любл+ю глуб+окие разгов+оры о ж+изни и б+удущем.", "de": "Mir auch. Ich liebe tiefgründige Gespräche über das Leben und die Zukunft."},
+          {"id": "d20_dlg_3", "who": "P", "ru": "Что д+елает теб+я по-насто+ящему счастл+ивым челов+еком?", "de": "Was macht dich zu einem wahrhaft glücklichen Menschen?"},
+          {"id": "d20_dlg_4", "who": "U", "ru": "На с+амом д+еле для мен+я гл+авное — +это своб+ода и ч+естность. А в отнош+ениях для мен+я важн+ы уваж+ение и верн+ость.", "de": "In Wirklichkeit sind für mich Freiheit und Ehrlichkeit das Wichtigste. Und in Beziehungen sind mir Respekt und Treue wichtig."},
+          {"id": "d20_dlg_5", "who": "P", "ru": "А как ты отн+осишься к тр+удностям, когд+а в ж+изни наст+упает тёмная полос+а?", "de": "Und wie gehst du mit Schwierigkeiten um, wenn im Leben eine dunkle Phase kommt?"},
+          {"id": "d20_dlg_6", "who": "U", "ru": "Тр+удности и ош+ибки д+елают нас сильн+ее и мудр+ее. Я благод+арен за вс+ё, чт+о прош+ёл на своём пут+и.", "ruF": "Тр+удности и ош+ибки д+елают нас сильн+ее и мудр+ее. Я благод+арна за вс+ё, чт+о прошл+а на своём пут+и.", "de": "Schwierigkeiten und Fehler machen uns stärker und weiser. Ich bin dankbar für alles, was ich auf meinem Weg durchlebt habe."},
+          {"id": "d20_dlg_7", "who": "P", "ru": "Невероятно! Ты говор+ишь об +этом по-р+усски так своб+одно!", "de": "Unglaublich! Du sprichst darüber auf Russisch so frei und fließend!"},
+          {"id": "d20_dlg_8", "who": "U", "ru": "Теп+ерь я мог+у своб+одно выраж+ать сво+и м+ысли по-р+усски! +Это т+олько нач+ало н+ашей больш+ой ист+ории.", "de": "Jetzt kann ich meine Gedanken frei auf Russisch ausdrücken! Das ist erst der Anfang unserer großen Geschichte."}
+        ]
+      }
     }
   ]
 }

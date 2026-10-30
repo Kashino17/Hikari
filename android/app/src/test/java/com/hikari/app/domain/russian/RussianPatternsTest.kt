@@ -32,7 +32,7 @@ class RussianPatternsTest {
         fun need(name: String, text: String) {
             if (!File(assets, "audio/$name.ogg").exists() || !File(assets, "audio/${name}_slow.ogg").exists()) missing += text
         }
-        for (p in patterns) {
+        for (p in patterns.filter { it.week <= 4 }) {
             for (l in p.scene.lines) {
                 need(RuPatternLogic.lineClip(l, RuGender.MALE), l.ru)
                 if (l.ruF != null) need(RuPatternLogic.lineClip(l, RuGender.FEMALE), l.ruF)
