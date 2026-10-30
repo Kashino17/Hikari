@@ -116,6 +116,15 @@ object RuLessonBuilder {
         }
         out += practice
 
+        // 2b) Spiral-Wiederholung: Auch Sätze aus früheren Tagen, die schon „sitzen“, werden
+        // in jede neue Lektion eingestreut, damit Gelerntes niemals vergessen oder übersprungen wird.
+        if (dayNumber > 1) {
+            val previousPhrases = pool.filter { it.day < dayNumber }.shuffled(rng).take(3)
+            previousPhrases.forEachIndexed { idx, oldPhrase ->
+                out += practiceFor(index, oldPhrase, pool, settings, speak = (idx % 2 == 0), slot = idx + 1, rng = rng)
+            }
+        }
+
         // 3) Rollenspiel.
         out += RuExercise.Dialog(day, index.dialog(day, settings))
         return out

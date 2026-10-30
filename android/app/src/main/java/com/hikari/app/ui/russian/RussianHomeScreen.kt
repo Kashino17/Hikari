@@ -387,31 +387,29 @@ private fun ReviewCard(due: Int, learned: Int, enabled: Boolean, onStart: () -> 
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(HikariCardBg)
-            .border(1.dp, if (due > 0) HikariAmber.copy(alpha = 0.35f) else HikariBorder, RoundedCornerShape(16.dp))
-            .clickable(enabled = enabled && due > 0, onClick = onStart)
+            .border(1.dp, if (due > 0 || learned > 0) HikariAmber.copy(alpha = 0.35f) else HikariBorder, RoundedCornerShape(16.dp))
+            .clickable(enabled = enabled, onClick = onStart)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(Icons.Outlined.Replay, null, tint = if (due > 0) HikariAmber else HikariTextMuted, modifier = Modifier.size(24.dp))
+        Icon(Icons.Outlined.Replay, null, tint = if (due > 0 || learned > 0) HikariAmber else HikariTextMuted, modifier = Modifier.size(24.dp))
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
-            Text("Wiederholen", color = HikariText, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            Text("Wiederholen & Festigen", color = HikariText, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             Text(
                 when {
-                    learned == 0 -> "Nach deiner ersten Lektion geht's hier weiter."
-                    due == 0 -> "Alles frisch — neue Karten werden morgen fällig."
-                    due == 1 -> "1 Karte ist fällig"
-                    else -> "$due Karten sind fällig"
+                    learned == 0 -> "Startet einen Mix zum aktiven Wiederholen."
+                    due == 0 -> "Alle $learned Sätze (inkl. »Sitzt«) aktiv im Mix wiederholen"
+                    due == 1 -> "1 fällige Karte + Mix aus gelernten Sätzen"
+                    else -> "$due fällige Karten + sichere Sätze wiederholen"
                 },
                 color = HikariTextMuted,
                 fontSize = 13.sp,
             )
         }
-        if (due > 0) {
-            Box(
-                Modifier.clip(RoundedCornerShape(10.dp)).background(Color.White).padding(horizontal = 12.dp, vertical = 7.dp),
-            ) { Text("Los", color = Color.Black, fontSize = 13.sp, fontWeight = FontWeight.SemiBold) }
-        }
+        Box(
+            Modifier.clip(RoundedCornerShape(10.dp)).background(if (due > 0) Color.White else HikariAmber).padding(horizontal = 12.dp, vertical = 7.dp),
+        ) { Text(if (due > 0) "Los" else "Mix", color = Color.Black, fontSize = 13.sp, fontWeight = FontWeight.SemiBold) }
     }
 }
 

@@ -75,6 +75,7 @@ import com.hikari.app.ui.theme.HikariTextMuted
 private sealed interface PbFilter {
     data object All : PbFilter
     data object Learned : PbFilter
+    data object Mastered : PbFilter
     data object Favorites : PbFilter
     data object Weak : PbFilter
     data object Mine : PbFilter
@@ -87,6 +88,7 @@ fun RussianPhrasebookScreen(
     onBack: () -> Unit,
     onTest: () -> Unit = {},
     onReflex: () -> Unit = {},
+    onKombi: () -> Unit = {},
     onDeepdive: (String) -> Unit = {},
     vm: RussianGamesViewModel = hiltViewModel(),
 ) {
@@ -107,6 +109,7 @@ fun RussianPhrasebookScreen(
             RuPhrasebookSearch.matches(p, query) && when (val f = filter) {
                 PbFilter.All -> true
                 PbFilter.Learned -> p.id in progress.cards
+                PbFilter.Mastered -> (progress.cards[p.id]?.box ?: 0) >= 3
                 PbFilter.Favorites -> p.id in progress.favorites
                 PbFilter.Weak -> (progress.cards[p.id]?.box ?: 0) in 1..2
                 is PbFilter.Theme -> f.id in meta.items[p.id].orEmpty()
@@ -155,6 +158,10 @@ fun RussianPhrasebookScreen(
             item { PbChip("Alle (${all.size})", filter == PbFilter.All) { filter = PbFilter.All } }
             item { PbChip("Geübt (${progress.cards.size})", filter == PbFilter.Learned) { filter = PbFilter.Learned } }
             item {
+                val masteredCount = com.hikari.app.domain.russian.RuSrs.knownCount(progress.cards)
+                PbChip("Sitzt ($masteredCount)", filter == PbFilter.Mastered) { filter = PbFilter.Mastered }
+            }
+            item {
                 val weakCount = progress.cards.values.count { it.box in 1..2 }
                 PbChip("Wackelig ($weakCount)", filter == PbFilter.Weak) { filter = PbFilter.Weak }
             }
@@ -169,36 +176,82 @@ fun RussianPhrasebookScreen(
             }
         }
 
-        if (filter != PbFilter.Mine && shown.isNotEmpty()) {
+        if (filter == PbFilter.Mine && progress.mySentences.isNotEmpty()) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(HikariAmber)
+                    .clickable {
+                        val myIds = progress.mySentences.map {
+                            com.hikari.app.domain.russian.RuDeepdiveLogic.asPhrase(it.ru, it.de, it.note).id
+                        }
+                        vm.prepareTest(myIds)
+                        onReflex()
+                    }
+                    .padding(vertical = 11.dp, horizontal = 12.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    "⚡ Meine ${minOf(progress.mySentences.size, 10)} Sätze blind im Sprech-Reflex wiederholen",
+                    color = Color.Black,
+                    fontSize = 13.5.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                )
+            }
+        } else if (filter != PbFilter.Mine && shown.isNotEmpty()) {
             Row(
                 Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Box(
                     Modifier
-                        .weight(1f)
+                        .weight(1.1f)
                         .clip(RoundedCornerShape(14.dp))
                         .background(HikariAmber)
                         .clickable {
                             vm.prepareTest(shown.map { it.id })
                             onReflex()
                         }
-                        .padding(vertical = 11.dp, horizontal = 8.dp),
+                        .padding(vertical = 11.dp, horizontal = 6.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        "⚡ Sprech-Reflex (${minOf(shown.size, 10)})",
+                        "⚡ Reflex (${minOf(shown.size, 10)})",
                         color = Color.Black,
-                        fontSize = 13.5.sp,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                     )
                 }
                 Box(
                     Modifier
-                        .weight(1f)
+                        .weight(1.1f)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(HikariCardBg)
+                        .border(1.dp, Color(0xFF00ACC1), RoundedCornerShape(14.dp))
+                        .clickable {
+                            vm.prepareTest(shown.map { it.id })
+                            onKombi()
+                        }
+                        .padding(vertical = 11.dp, horizontal = 6.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        "🧩 Kombinieren",
+                        color = Color(0xFF4DD0E1),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                    )
+                }
+                Box(
+                    Modifier
+                        .weight(0.95f)
                         .clip(RoundedCornerShape(14.dp))
                         .background(HikariCardBg)
                         .border(1.dp, HikariAmber.copy(alpha = 0.6f), RoundedCornerShape(14.dp))
@@ -206,13 +259,13 @@ fun RussianPhrasebookScreen(
                             vm.prepareTest(shown.map { it.id })
                             onTest()
                         }
-                        .padding(vertical = 11.dp, horizontal = 8.dp),
+                        .padding(vertical = 11.dp, horizontal = 6.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        "Sätze testen (${minOf(shown.size, 15)})",
+                        "Testen (${minOf(shown.size, 15)})",
                         color = HikariAmber,
-                        fontSize = 13.5.sp,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                     )

@@ -106,6 +106,7 @@ data class RuKombiChallenge(
     val buildingBlocksDe: List<String>,
     val buildingBlocksRu: List<String>,
     val audioClip: String? = null,
+    val sourceIds: List<String> = emptyList(),
 )
 
 @HiltViewModel
@@ -126,50 +127,170 @@ class RussianActiveRecallViewModel @Inject constructor(
 
     /**
      * Liefert die Sätze für das aktive Blind-Sprechtraining („Sprech-Reflex“ & „Blind-Coach“).
-     * Falls aus dem Satzbuch gezielt ein Thema oder Filter ausgewählt wurde ([testSelection]),
-     * werden genau diese Sätze trainiert. Sonst priorisiert das System automatisch fällige
-     * und wackelige Karten aus dem Satzbuch vor bereits sicheren Sätzen.
+     * WICHTIG: Auch Sätze, die schon „sitzen“ (Box ≥ 3), werden niemals übersprungen!
+     * Jede Runde mischt gezielt:
+     *  - ca. 45 % fällige & wackelige Sätze (Box 1–2)
+     *  - ca. 35 % bereits sichere Sätze („Sitzt“, Box 3–6), damit sie durch Wiederholung aktiv bleiben
+     *  - ca. 20 % eigene Sätze („Meine Sätze“) & frische Sätze
      */
     fun buildReflexQueue(count: Int = 8): List<RuPhrase> {
         val rng = Random(System.nanoTime())
+        val state = store.state.value
+        val myPhrases = state.mySentences.map {
+            com.hikari.app.domain.russian.RuDeepdiveLogic.asPhrase(it.ru, it.de, it.note.ifBlank { "Eigener Satz" })
+        }
+        val myById = myPhrases.associateBy { it.id }
+
         val selectedIds = testSelection.ids
         if (selectedIds.isNotEmpty()) {
             testSelection.ids = emptyList()
-            val selected = selectedIds.mapNotNull { index.phrase(it, settings) }
-            if (selected.isNotEmpty()) {
-                return selected.shuffled(rng).take(count.coerceAtLeast(10))
+            val targetCount = count.coerceAtLeast(10)
+            val resolved = selectedIds.mapNotNull { id -> index.phrase(id, settings) ?: myById[id] }.shuffled(rng)
+            if (resolved.isNotEmpty()) {
+                val weakOrNew = resolved.filter { (state.cards[it.id]?.box ?: 0) <= 2 }
+                val mastered = resolved.filter { (state.cards[it.id]?.box ?: 0) >= 3 }
+                // Selbst bei vielen wackeligen Sätzen immer auch bereits sichere Sätze („Sitzt“) einstreuen!
+                val weakQuota = (targetCount * 0.6).toInt().coerceAtLeast(1)
+                val masteredQuota = (targetCount - weakQuota).coerceAtLeast(3)
+                return (weakOrNew.take(weakQuota) + mastered.take(masteredQuota) + resolved)
+                    .distinctBy { it.id }
+                    .shuffled(rng)
+                    .take(targetCount)
             }
         }
-        val state = store.state.value
+
         val today = store.today()
         val unlocked = state.unlockedDay(index.days.size)
         val dueIds = com.hikari.app.domain.russian.RuSrs.dueIds(state.cards, today)
         val weakIds = state.cards.entries.filter { it.value.box <= 2 }.map { it.key }
-        val otherLearnedIds = state.cards.keys.filter { it !in dueIds && it !in weakIds }
+        val masteredIds = state.cards.entries.filter { it.value.box >= 3 }.map { it.key }
 
-        val prioritized = (dueIds.shuffled(rng) + weakIds.shuffled(rng) + otherLearnedIds.shuffled(rng))
+        val dueAndWeak = (dueIds.shuffled(rng) + weakIds.shuffled(rng))
             .distinct()
             .mapNotNull { index.phrase(it, settings) }
+        val masteredPhrases = masteredIds.shuffled(rng)
+            .mapNotNull { index.phrase(it, settings) }
+        val customAndFresh = (myPhrases.shuffled(rng).take(2) + index.phrasesUpTo(unlocked, settings).shuffled(rng))
+            .distinctBy { it.id }
 
-        val pool = if (prioritized.size >= count) {
-            prioritized
-        } else {
-            (prioritized + index.phrasesUpTo(unlocked, settings).shuffled(rng)).distinctBy { it.id }
-        }
-        return pool.take(count)
+        val weakQuota = (count * 0.45).toInt().coerceAtLeast(2)
+        val masteredQuota = (count * 0.35).toInt().coerceAtLeast(2)
+
+        val mix = (dueAndWeak.take(weakQuota) + masteredPhrases.take(masteredQuota) + customAndFresh)
+            .distinctBy { it.id }
+            .take(count)
+            .shuffled(rng)
+
+        return mix
     }
 
     /**
      * Erzeugt abwechslungsreiche Kombi-Aufgaben („Kombi-Meister“) nach der Michel-Thomas- /
-     * Natulang-Methode: Bausteine werden live neu kombiniert!
+     * Natulang-Methode:
+     * Nutzt gezielt auch bereits gelernte Sätze aus dem Satzbuch (insbesondere solche, die
+     * schon „sitzen“!) und baut sie in NEUE Sätze, Begründungen, Meinungen und Gegenfragen ein,
+     * damit du Gelerntes flexibel im Kopf neu kombinierst und Dinge frei erklären kannst.
      */
     fun buildKombiChallenges(count: Int = 8): List<RuKombiChallenge> {
         val rng = Random(System.nanoTime())
+        val state = store.state.value
         val gender = settings.gender
         val results = mutableListOf<RuKombiChallenge>()
 
-        // 1. Aus den Satzbau-Mustern zufällige Slot-Kombinationen würfeln
-        for (pattern in repo.patterns.shuffled(rng)) {
+        // Alle gelernten Sätze aus dem Satzbuch (bevorzugt Sätze, die schon geübt wurden / „sitzen“)
+        val selectedIds = testSelection.ids.also { testSelection.ids = emptyList() }
+        val learnedIds = if (selectedIds.isNotEmpty()) {
+            selectedIds
+        } else {
+            val mastered = state.cards.entries.filter { it.value.box >= 3 }.map { it.key }.shuffled(rng)
+            val practiced = state.cards.keys.shuffled(rng)
+            (mastered + practiced).distinct()
+        }
+        val unlocked = state.unlockedDay(index.days.size)
+        val basePhrases = (learnedIds.mapNotNull { index.phrase(it, settings) } + index.phrasesUpTo(unlocked, settings).shuffled(rng))
+            .distinctBy { it.id }
+
+        val statements = basePhrases.filter { it.wordCount in 2..7 && !it.plain.trim().endsWith("?") && !it.plain.trim().endsWith("!") }
+        val questions = basePhrases.filter { it.wordCount in 2..7 && it.plain.trim().endsWith("?") }
+        val shortReactions = basePhrases.filter { it.wordCount in 1..2 && !it.plain.trim().endsWith("?") }
+
+        // 1. SATZBUCH-TRANSFER: Bereits gelernte Sätze (auch was schon „sitzt“) in neuem Gesprächsrahmen verwenden!
+        val connectors = listOf(
+            Triple("Честно говоря", "Ч+естно говор+я", "Ehrlich gesagt"),
+            Triple("На самом деле", "На с+амом д+еле", "In Wirklichkeit"),
+            Triple("Я думаю, что", "Я д+умаю, что", "Ich denke, dass"),
+            Triple("Для меня главное", "Для мен+я гл+авное —", "Für mich ist das Wichtigste:"),
+        )
+        statements.shuffled(rng).take(3).forEachIndexed { idx, st ->
+            val conn = connectors[(idx + rng.nextInt(connectors.size)) % connectors.size]
+            val lowerRu = st.ru.replaceFirstChar { c -> c.lowercase() }
+            val combinedDe = "${conn.third}: ${st.de}"
+            val combinedRu = "${conn.second}, $lowerRu"
+            results.add(
+                RuKombiChallenge(
+                    id = "transfer_${st.id}_$idx",
+                    title = "Gelerntes neu einbetten (Satzbuch-Transfer)",
+                    formulaHint = "${RussianPhonetics.display(conn.second)} + ${st.display.substringBefore(" ")} …",
+                    germanPrompt = combinedDe,
+                    russianTarget = combinedRu,
+                    russianPlain = "${conn.first} ${st.plain}",
+                    buildingBlocksDe = listOf(conn.third, st.de),
+                    buildingBlocksRu = listOf(RussianPhonetics.display(conn.second), st.display),
+                    audioClip = null,
+                    sourceIds = listOf(st.id),
+                ),
+            )
+        }
+
+        // 2. ERKLÄRUNG & GEGENFRAGE IM KOPF BAUEN: Eigene Aussage aus dem Satzbuch + Rückfrage an den Partner
+        statements.shuffled(rng).take(2).forEachIndexed { idx, st ->
+            val q = questions.firstOrNull { it.id != st.id }
+            val followDe = q?.de ?: "Und wie ist es bei dir?"
+            val followRu = q?.ru ?: "А к+ак у теб+я?"
+            val followPlain = q?.plain ?: "А как у тебя?"
+            val combinedDe = "${st.de} — $followDe"
+            val combinedRu = "${st.ru} $followRu"
+            results.add(
+                RuKombiChallenge(
+                    id = "explain_ask_${st.id}_$idx",
+                    title = "Erklären + Gegenfrage stellen",
+                    formulaHint = "${st.display.substringBefore(" ")} … + ${RussianPhonetics.display(followRu).substringBefore(" ")} …?",
+                    germanPrompt = combinedDe,
+                    russianTarget = combinedRu,
+                    russianPlain = "${st.plain} $followPlain",
+                    buildingBlocksDe = listOf(st.de, followDe),
+                    buildingBlocksRu = listOf(st.display, RussianPhonetics.display(followRu)),
+                    audioClip = null,
+                    sourceIds = listOfNotNull(st.id, q?.id),
+                ),
+            )
+        }
+
+        // 3. URSACHE & GEGENSATZ („но“ / „потому что“): Zwei gelernte Sätze im Kopf verbinden
+        if (statements.size >= 4) {
+            val shuffledSt = statements.shuffled(rng)
+            val a = shuffledSt[0]
+            val b = shuffledSt[1]
+            val combinedDe = "${a.de.removeSuffix(".")}, aber ${b.de}"
+            val combinedRu = "${a.ru.removeSuffix(".")}, но ${b.ru.replaceFirstChar { it.lowercase() }}"
+            results.add(
+                RuKombiChallenge(
+                    id = "contrast_${a.id}_${b.id}",
+                    title = "Zwei Gedanken mit »но« (aber) verbinden",
+                    formulaHint = "${a.display.substringBefore(" ")} … + но + ${b.display.substringBefore(" ")} …",
+                    germanPrompt = combinedDe,
+                    russianTarget = combinedRu,
+                    russianPlain = "${a.plain} но ${b.plain}",
+                    buildingBlocksDe = listOf(a.de, "aber", b.de),
+                    buildingBlocksRu = listOf(a.display, "но", b.display),
+                    audioClip = null,
+                    sourceIds = listOf(a.id, b.id),
+                ),
+            )
+        }
+
+        // 4. SATZBAU-BAUKASTEN: Aus den 25 Satzbau-Mustern (Woche 1–5) zufällige Slot-Kombinationen würfeln
+        for (pattern in repo.patterns.shuffled(rng).take(4)) {
             if (pattern.slots.isEmpty()) continue
             val randomChoices = pattern.slots.map { slot -> rng.nextInt(slot.options.size) }
             val built = RuPatternLogic.build(pattern, randomChoices, gender)
@@ -196,15 +317,10 @@ class RussianActiveRecallViewModel @Inject constructor(
             )
         }
 
-        // 2. Zusätzlich 2-teilige Gesprächs-Kombis (Reaktion + Aussage) aus gelernten Sätzen bauen
-        val unlocked = store.state.value.unlockedDay(index.days.size)
-        val allPhrases = index.phrasesUpTo(unlocked, settings)
-        val shortReactions = allPhrases.filter { it.wordCount in 1..2 && !it.plain.endsWith("?") }
-        val statements = allPhrases.filter { it.wordCount in 2..5 && !it.plain.endsWith("?") }
-
-        repeat(4) { idx ->
+        // 5. REAKTION + GEDANKE VERBINDEN
+        repeat(2) { idx ->
             val r = shortReactions.randomOrNull(rng)
-            val s = statements.firstOrNull { it.id != r?.id }
+            val s = statements.randomOrNull(rng)?.takeIf { it.id != r?.id }
             if (r != null && s != null) {
                 val combinedDe = "${r.de.removeSuffix(".")} — ${s.de}"
                 val combinedRu = "${r.ru.removeSuffix(".")}, ${s.ru.replaceFirstChar { c -> c.lowercase() }}"
@@ -218,7 +334,7 @@ class RussianActiveRecallViewModel @Inject constructor(
                         russianPlain = "${r.plain} ${s.plain}",
                         buildingBlocksDe = listOf(r.de, s.de),
                         buildingBlocksRu = listOf(r.display, s.display),
-                        audioClip = s.audio,
+                        audioClip = null,
                     ),
                 )
             }
@@ -243,9 +359,13 @@ class RussianActiveRecallViewModel @Inject constructor(
 
     /**
      * Speichert einen im Kombi-Meister frei zusammengesetzten Satz direkt im Satzbuch
-     * unter „Meine Sätze“, damit alle gelernten Kombinationen zentral erhalten bleiben.
+     * unter „Meine Sätze“ UND verbucht die verwendeten Ausgangssätze als erfolgreiche
+     * Wiederholung im Satzbuch.
      */
     fun recordKombiSentence(item: RuKombiChallenge) {
+        item.sourceIds.forEach { id ->
+            store.gradeSingleCard(id, correct = true, xp = 2, spokenOk = 0)
+        }
         store.saveMySentence(
             com.hikari.app.domain.russian.RuMySentence(
                 ru = item.russianTarget,

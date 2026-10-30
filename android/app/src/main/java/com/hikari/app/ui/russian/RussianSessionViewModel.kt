@@ -97,25 +97,42 @@ class RussianSessionViewModel @Inject constructor(
         val rng = Random(seed)
         var steps = when (mode) {
             RuSessionMode.LESSON -> RuLessonBuilder.lesson(index, day, settings, speechAvailable, rng)
-            RuSessionMode.REVIEW -> RuLessonBuilder.review(
-                index,
-                RuSrs.dueIds(progress.cards, store.today()),
-                progress.unlockedDay(index.days.size),
-                settings,
-                speechAvailable,
-                rng = rng,
-            )
+            RuSessionMode.REVIEW -> {
+                val due = RuSrs.dueIds(progress.cards, store.today())
+                val strong = progress.cards.entries.filter { it.value.box >= 3 && it.key !in due }.map { it.key }.shuffled(rng)
+                val weak = progress.cards.entries.filter { it.value.box <= 2 && it.key !in due }.map { it.key }.shuffled(rng)
+                // Selbst wenn Sätze schon „sitzen“, werden sie niemals übersprungen, sondern
+                // gezielt in jede Wiederholung eingemischt (Interleaving).
+                val reviewIds = (due.take(12) + weak.take(4) + strong.take(8)).distinct().ifEmpty {
+                    index.phrasesUpTo(progress.unlockedDay(index.days.size), settings).shuffled(rng).take(12).map { it.id }
+                }
+                RuLessonBuilder.review(
+                    index,
+                    reviewIds,
+                    index.days.size,
+                    settings,
+                    speechAvailable,
+                    rng = rng,
+                )
+            }
             RuSessionMode.DIALOG -> index.day(day)?.let { listOf(RuExercise.Dialog(it, index.dialog(it, settings))) }.orEmpty()
-            // Vokabeltest: die im Satzbuch gewählten Sätze, Wackeligstes zuerst.
-            RuSessionMode.TEST -> RuLessonBuilder.review(
-                index,
-                testSelection.ids.sortedBy { progress.cards[it]?.box ?: 0 },
-                progress.unlockedDay(index.days.size),
-                settings,
-                speechAvailable,
-                limit = 15,
-                rng = rng,
-            )
+            // Vokabeltest aus dem Satzbuch: mischt wackelige/neue Sätze UND bereits sichere Sätze („Sitzt“),
+            // damit auch gelernte Sätze durch kontinuierliche Wiederholung aktiv im Kopf bleiben.
+            RuSessionMode.TEST -> {
+                val allSel = testSelection.ids.shuffled(rng)
+                val weakOrNew = allSel.filter { (progress.cards[it]?.box ?: 0) <= 2 }
+                val mastered = allSel.filter { (progress.cards[it]?.box ?: 0) >= 3 }
+                val mixedIds = (weakOrNew.take(9) + mastered.take(6) + allSel).distinct().take(15)
+                RuLessonBuilder.review(
+                    index,
+                    mixedIds,
+                    index.days.size,
+                    settings,
+                    speechAvailable,
+                    limit = 15,
+                    rng = rng,
+                )
+            }
         }
         baseSize = steps.size
         var startPos = 0

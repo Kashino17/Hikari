@@ -608,6 +608,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                         onBack = { nav.popBackStack() },
                         onTest = { nav.navigate("russian/test/0") },
                         onReflex = { nav.navigate("russian/reflex") },
+                        onKombi = { nav.navigate("russian/kombi") },
                         onDeepdive = { id -> nav.navigate("russian-deep/$id") },
                     )
                 }
