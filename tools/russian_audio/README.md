@@ -72,3 +72,15 @@ Clip-Name = `dd_` + sha1(Text mit "+")[:10]; Partnerinnen-Zeilen hashen `"p|" + 
 `RussianDeepdiveTest` und `RussianPatternsTest` schlagen fehl, wenn ein Clip fehlt.
 Einrichtung des Werkzeugs: `uv venv -p 3.12 ~/.hikari/tts/ttsenv`, dort `numpy soundfile vosk-tts huggingface_hub`
 installieren und das Modell `drakulavich/vosk-tts-ru-0.9-multi` nach `~/.hikari/tts/models/vosk` laden.
+
+## Podcastkurs (100 Lektionen)
+
+`build_podcast_course.py` erzeugt `assets/russian/podcast.json` aus den 100 öffentlichen
+RusslandJournal-Lektionsseiten und den nummerierten YouTube-Folgen. Pro Lektion enthält das
+Asset Video-ID, Quellenlink, Lernziel, kompakte Notizen und geprüfte russisch-deutsche
+Lernphrasen. Die App spricht diese Phrasen über den vorhandenen russischen TTS-Fallback.
+
+```bash
+python3 build_podcast_course.py          # Asset neu aufbauen (Netz + yt-dlp erforderlich)
+python3 build_podcast_course.py --check  # vorhandenes Asset offline validieren
+```

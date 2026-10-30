@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hikari.app.domain.russian.RuDay
 import com.hikari.app.domain.russian.RuLessonBuilder
 import com.hikari.app.domain.russian.RuPhrase
 import com.hikari.app.domain.russian.RussianCourseRepository
@@ -73,7 +74,7 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class RussianGamesViewModel @Inject constructor(
-    repo: RussianCourseRepository,
+    private val repo: RussianCourseRepository,
     private val store: RussianProgressStore,
     private val testSelection: com.hikari.app.domain.russian.RuTestSelection,
     val audio: RussianAudioPlayer,
@@ -96,7 +97,7 @@ class RussianGamesViewModel @Inject constructor(
         val dueIds = com.hikari.app.domain.russian.RuSrs.dueIds(state.cards, today)
         val weakIds = state.cards.entries.filter { it.value.box <= 2 }.map { it.key }
         val learnedIds = (dueIds + weakIds + state.cards.keys).distinct()
-        val learned = learnedIds.mapNotNull { index.phrase(it, settings) }
+        val learned = learnedIds.mapNotNull { repo.phrase(it, settings) }
         val unlockedPhrases = index.phrasesUpTo(state.unlockedDay(index.days.size), settings)
         (learned + unlockedPhrases).distinctBy { it.id }
     }
@@ -122,10 +123,10 @@ class RussianGamesViewModel @Inject constructor(
     /** Alle Sätze der freigeschalteten Tage. */
     fun unlockedDays() = index.days.filter { it.day <= store.state.value.unlockedDay(index.days.size) }
 
-    /** Alle 20 Tage des Kurses (inkl. Psyche, Depressionen, Ernährung, Business, Alltag & Deep Talk) für das Satzbuch. */
-    fun allDays() = index.days
+    fun allDays() = index.days + repo.podcastIndex.days
 
-    fun dayPhrases(day: Int) = index.day(day)?.let { index.dayPhrases(it, settings) }.orEmpty()
+    fun dayPhrases(day: RuDay): List<RuPhrase> =
+        if (day.media != null) repo.podcastIndex.dayPhrases(day, settings) else index.dayPhrases(day, settings)
 
     fun finishBlitz(score: Int): Boolean {
         val best = store.state.value.bestBlitz

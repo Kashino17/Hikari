@@ -232,6 +232,35 @@ class RussianSrsTest {
     }
 
     @Test
+    fun podcastUndHauptkursTeilenLernstandAberNichtFreischaltung() {
+        var p = RuProgress(gender = RuGender.MALE)
+        p = p.apply(
+            RuSessionResult(
+                xp = 60,
+                graded = mapOf("rj001_01" to true),
+                introduced = setOf("rj001_01"),
+                completedPodcastDay = 1,
+                stars = 3,
+            ),
+            300,
+        )
+        assertEquals(1, p.streak)
+        assertEquals(60, p.xp)
+        assertEquals(2, p.unlockedPodcastDay(100))
+        assertEquals(1, p.unlockedDay(20))
+        assertTrue(p.dayStars.isEmpty())
+        assertEquals(3, p.podcastDayStars[1])
+        assertEquals(300, p.podcastLastCompletedDay)
+        assertTrue("rj001_01" in p.cards)
+        p = p.apply(RuSessionResult(10, emptyMap(), completedPodcastDay = 1, stars = 1), 300)
+        assertEquals(1, p.streak)
+        assertEquals(3, p.podcastDayStars[1])
+        p = p.apply(RuSessionResult(10, emptyMap(), completedPodcastDay = 2, stars = 2), 301)
+        assertEquals(2, p.streak)
+        assertEquals(3, p.unlockedPodcastDay(100))
+    }
+
+    @Test
     fun sterne() {
         assertEquals(3, RuSrs.stars(9, 10))
         assertEquals(2, RuSrs.stars(7, 10))

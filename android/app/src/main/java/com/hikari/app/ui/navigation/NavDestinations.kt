@@ -21,4 +21,4 @@ val hikariDestinations = listOf(
 )
 
 /** Sections ohne Bottom-Tab — erreichbar über den Profil-Hub und Deep-Links. */
-val hubSectionRoutes = setOf("news", "manga", "games", "russian", "whatsapp")
+val hubSectionRoutes = setOf("news", "manga", "games", "russian", "russian/podcast", "whatsapp")

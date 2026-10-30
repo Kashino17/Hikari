@@ -187,6 +187,7 @@ private fun RuSummaryView(s: RuSummary, onClose: () -> Unit) {
         RuOverline(
             when (s.mode) {
                 RuSessionMode.LESSON -> "Tag ${s.day} geschafft"
+                RuSessionMode.PODCAST -> "Podcast-Lektion ${s.day} geschafft"
                 RuSessionMode.REVIEW -> "Wiederholung fertig"
                 RuSessionMode.DIALOG -> "Gespräch geschafft"
                 RuSessionMode.TEST -> "Test geschafft"

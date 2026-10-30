@@ -16,6 +16,15 @@ class RussianCourseRepository @Inject constructor(
 
     val index: RuCourseIndex by lazy { RuCourseIndex(course) }
 
+    val podcast: RuCourse by lazy {
+        context.assets.open("russian/podcast.json").bufferedReader().use { parseRuCourse(it.readText()) }
+    }
+
+    val podcastIndex: RuCourseIndex by lazy { RuCourseIndex(podcast) }
+
+    fun phrase(id: String, settings: RuSettings): RuPhrase? =
+        index.phrase(id, settings) ?: podcastIndex.phrase(id, settings)
+
     /** Vertiefungen (assets/russian/deepdive.json), nach Satz-ID; fehlt die Datei, bleibt es leer. */
     val deepdive: Map<String, RuDeepEntry> by lazy {
         runCatching {

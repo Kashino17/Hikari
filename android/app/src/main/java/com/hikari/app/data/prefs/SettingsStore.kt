@@ -27,11 +27,14 @@ private val NEWS_TOPICS_KEY = stringPreferencesKey("news_topics")
 private val NEWS_LOCATION_ENABLED_KEY = booleanPreferencesKey("news_location_enabled")
 private val NEWS_CITY_KEY = stringPreferencesKey("news_city")
 private val NEWS_LANG_KEY = stringPreferencesKey("news_lang")
+private val RUSSIAN_PODCAST_REMINDER_ENABLED_KEY = booleanPreferencesKey("russian_podcast_reminder_enabled")
+private val RUSSIAN_PODCAST_REMINDER_MINUTES_KEY = intPreferencesKey("russian_podcast_reminder_minutes")
 
 const val DEFAULT_BACKEND_URL = "http://macbook-pro.taile64a95.ts.net:3939"
 const val DEFAULT_DAILY_BUDGET = 15
 const val DEFAULT_NEWS_TIME_MINUTES = 450 // 7:30 Uhr
 const val DEFAULT_NEWS_TOPICS = "politik,technologie,wissen"
+const val DEFAULT_RUSSIAN_PODCAST_REMINDER_MINUTES = 1080
 
 @Singleton
 class SettingsStore @Inject constructor(
@@ -77,6 +80,14 @@ class SettingsStore @Inject constructor(
         it[NEWS_TIME_MINUTES_KEY] ?: DEFAULT_NEWS_TIME_MINUTES
     }
 
+    val russianPodcastReminderEnabled: Flow<Boolean> = ctx.dataStore.data.map {
+        it[RUSSIAN_PODCAST_REMINDER_ENABLED_KEY] ?: false
+    }
+
+    val russianPodcastReminderMinutes: Flow<Int> = ctx.dataStore.data.map {
+        it[RUSSIAN_PODCAST_REMINDER_MINUTES_KEY] ?: DEFAULT_RUSSIAN_PODCAST_REMINDER_MINUTES
+    }
+
     /** Gewählte News-Themen — gespeichert als kommagetrennter String. */
     val newsTopics: Flow<Set<String>> = ctx.dataStore.data.map {
         (it[NEWS_TOPICS_KEY] ?: DEFAULT_NEWS_TOPICS)
@@ -107,6 +118,14 @@ class SettingsStore @Inject constructor(
 
     suspend fun setNewsTimeMinutes(minutes: Int) {
         ctx.dataStore.edit { it[NEWS_TIME_MINUTES_KEY] = minutes.coerceIn(0, 1439) }
+    }
+
+    suspend fun setRussianPodcastReminderEnabled(enabled: Boolean) {
+        ctx.dataStore.edit { it[RUSSIAN_PODCAST_REMINDER_ENABLED_KEY] = enabled }
+    }
+
+    suspend fun setRussianPodcastReminderMinutes(minutes: Int) {
+        ctx.dataStore.edit { it[RUSSIAN_PODCAST_REMINDER_MINUTES_KEY] = minutes.coerceIn(0, 1439) }
     }
 
     suspend fun setNewsTopics(topics: Set<String>) {

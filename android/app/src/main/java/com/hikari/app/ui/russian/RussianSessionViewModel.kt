@@ -24,7 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-enum class RuSessionMode { LESSON, REVIEW, DIALOG, TEST }
+enum class RuSessionMode { LESSON, REVIEW, DIALOG, TEST, PODCAST }
 
 data class RuFeedback(val correct: Boolean, val skipped: Boolean = false, val requeued: Boolean = false)
 
@@ -63,6 +63,7 @@ class RussianSessionViewModel @Inject constructor(
         "review" -> RuSessionMode.REVIEW
         "dialog" -> RuSessionMode.DIALOG
         "test" -> RuSessionMode.TEST
+        "podcastPractice" -> RuSessionMode.PODCAST
         else -> RuSessionMode.LESSON
     }
     val day: Int = savedState.get<String>("day")?.toIntOrNull() ?: 1
@@ -89,14 +90,28 @@ class RussianSessionViewModel @Inject constructor(
 
     init {
         viewModelScope.launch { audio.warmUp() }
-        val index = repo.index
+        val index = if (mode == RuSessionMode.PODCAST) repo.podcastIndex else repo.index
         val progress = store.state.value
         // Abgebrochene Lektion fortsetzen: gleicher Seed → gleiche Übungen.
-        val saved = if (mode == RuSessionMode.LESSON) store.loadSession(day) else null
+        val saved = if (mode == RuSessionMode.LESSON || mode == RuSessionMode.PODCAST) {
+            store.loadSession(day, podcast = mode == RuSessionMode.PODCAST)
+        } else null
         if (saved != null) seed = saved.seed
         val rng = Random(seed)
+        fun review(ids: List<String>, limit: Int): List<RuExercise> {
+            val main = RuLessonBuilder.review(
+                repo.index, ids.filter { it in repo.index.itemById }, repo.index.days.size,
+                settings, speechAvailable, limit = limit, rng = rng,
+            )
+            val podcast = RuLessonBuilder.review(
+                repo.podcastIndex, ids.filter { it in repo.podcastIndex.itemById }, repo.podcastIndex.days.size,
+                settings, speechAvailable, limit = limit, rng = rng,
+            )
+            return (main + podcast).shuffled(rng).take(limit)
+        }
         var steps = when (mode) {
             RuSessionMode.LESSON -> RuLessonBuilder.lesson(index, day, settings, speechAvailable, rng)
+            RuSessionMode.PODCAST -> RuLessonBuilder.podcastLesson(index, day, settings, speechAvailable, rng)
             RuSessionMode.REVIEW -> {
                 val due = RuSrs.dueIds(progress.cards, store.today())
                 val strong = progress.cards.entries.filter { it.value.box >= 3 && it.key !in due }.map { it.key }.shuffled(rng)
@@ -104,16 +119,9 @@ class RussianSessionViewModel @Inject constructor(
                 // Selbst wenn Sätze schon „sitzen“, werden sie niemals übersprungen, sondern
                 // gezielt in jede Wiederholung eingemischt (Interleaving).
                 val reviewIds = (due.take(12) + weak.take(4) + strong.take(8)).distinct().ifEmpty {
-                    index.phrasesUpTo(progress.unlockedDay(index.days.size), settings).shuffled(rng).take(12).map { it.id }
+                    repo.index.phrasesUpTo(progress.unlockedDay(repo.index.days.size), settings).shuffled(rng).take(12).map { it.id }
                 }
-                RuLessonBuilder.review(
-                    index,
-                    reviewIds,
-                    index.days.size,
-                    settings,
-                    speechAvailable,
-                    rng = rng,
-                )
+                review(reviewIds, 20)
             }
             RuSessionMode.DIALOG -> index.day(day)?.let { listOf(RuExercise.Dialog(it, index.dialog(it, settings))) }.orEmpty()
             // Vokabeltest aus dem Satzbuch: mischt wackelige/neue Sätze UND bereits sichere Sätze („Sitzt“),
@@ -123,15 +131,7 @@ class RussianSessionViewModel @Inject constructor(
                 val weakOrNew = allSel.filter { (progress.cards[it]?.box ?: 0) <= 2 }
                 val mastered = allSel.filter { (progress.cards[it]?.box ?: 0) >= 3 }
                 val mixedIds = (weakOrNew.take(9) + mastered.take(6) + allSel).distinct().take(15)
-                RuLessonBuilder.review(
-                    index,
-                    mixedIds,
-                    index.days.size,
-                    settings,
-                    speechAvailable,
-                    limit = 15,
-                    rng = rng,
-                )
+                review(mixedIds, 15)
             }
         }
         baseSize = steps.size
@@ -228,7 +228,7 @@ class RussianSessionViewModel @Inject constructor(
 
     /** Nur zwischen zwei Übungen speichern — so zählt eine halb beantwortete Übung nie doppelt. */
     private fun saveSnapshot(pos: Int) {
-        if (mode != RuSessionMode.LESSON) return
+        if (mode != RuSessionMode.LESSON && mode != RuSessionMode.PODCAST) return
         store.saveSession(
             RuSessionSnapshot(
                 day = day, seed = seed, baseSize = baseSize, pos = pos,
@@ -236,16 +236,17 @@ class RussianSessionViewModel @Inject constructor(
                 retried = retried.toSet(), retriedPositions = retriedPositions.toSet(),
                 xp = xp, correct = correct, total = total, spokenOk = spokenOk,
             ),
+            podcast = mode == RuSessionMode.PODCAST,
         )
     }
 
     private fun finish() {
-        store.clearSession()
-        val index = repo.index
+        store.clearSession(podcast = mode == RuSessionMode.PODCAST)
+        val index = if (mode == RuSessionMode.PODCAST) repo.podcastIndex else repo.index
         val today = store.today()
         val stars = RuSrs.stars(correct, total)
         val bonus = when (mode) {
-            RuSessionMode.LESSON -> 30
+            RuSessionMode.LESSON, RuSessionMode.PODCAST -> 30
             RuSessionMode.REVIEW -> 10
             RuSessionMode.DIALOG -> 0
             RuSessionMode.TEST -> 10
@@ -254,8 +255,9 @@ class RussianSessionViewModel @Inject constructor(
         val result = RuSessionResult(
             xp = xp + bonus,
             graded = firstTry.toMap(),
-            introduced = if (mode == RuSessionMode.LESSON) dayItems else emptySet(),
+            introduced = if (mode == RuSessionMode.LESSON || mode == RuSessionMode.PODCAST) dayItems else emptySet(),
             completedDay = if (mode == RuSessionMode.LESSON) day else null,
+            completedPodcastDay = if (mode == RuSessionMode.PODCAST) day else null,
             stars = stars,
             spokenOk = spokenOk,
         )

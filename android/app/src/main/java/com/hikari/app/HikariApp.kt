@@ -26,6 +26,7 @@ class HikariApp : Application(), Configuration.Provider {
     @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var scheduler: SmartDownloadScheduler
     @Inject lateinit var newsScheduler: NewsBriefingScheduler
+    @Inject lateinit var podcastScheduler: com.hikari.app.domain.russian.RussianPodcastReminderScheduler
     @Inject lateinit var settings: SettingsStore
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -52,6 +53,11 @@ class HikariApp : Application(), Configuration.Provider {
         appScope.launch {
             if (runCatching { settings.newsEnabled.first() }.getOrDefault(false)) {
                 newsScheduler.schedule(settings.newsTimeMinutes.first())
+            }
+        }
+        appScope.launch {
+            if (runCatching { settings.russianPodcastReminderEnabled.first() }.getOrDefault(false)) {
+                podcastScheduler.schedule(settings.russianPodcastReminderMinutes.first())
             }
         }
         appScope.launch { settings.backendUrl.collect { imageBackendUrl = it } }

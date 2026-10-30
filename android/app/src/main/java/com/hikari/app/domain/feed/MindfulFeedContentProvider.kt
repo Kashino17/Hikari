@@ -215,7 +215,7 @@ object MindfulFeedContentProvider {
         val dayPhrases = repo.index.dayPhrases(courseDay, settings)
         val todayEpoch = store.today()
         val dueIds = RuSrs.dueIds(progress.cards, todayEpoch)
-        val duePhrases = dueIds.mapNotNull { repo.index.phrase(it, settings) }
+        val duePhrases = dueIds.mapNotNull { repo.phrase(it, settings) }
         val dialogPairs = repo.index.dialog(courseDay, settings)
         val allLearned = repo.index.phrasesUpTo(unlockedDay, settings)
 
@@ -257,7 +257,13 @@ object MindfulFeedContentProvider {
             val reviewPhrase = duePhrases.firstOrNull() ?: dayPhrases.getOrNull(1)
             if (reviewPhrase != null) {
                 val isDue = duePhrases.isNotEmpty()
-                val originDay = repo.index.dayOfItem[reviewPhrase.id] ?: courseDay.day
+                val podcastOrigin = repo.podcastIndex.dayOfItem[reviewPhrase.id]
+                val originDay = repo.index.dayOfItem[reviewPhrase.id] ?: podcastOrigin ?: courseDay.day
+                val originTitle = if (podcastOrigin != null) {
+                    "Podcast $podcastOrigin: ${repo.podcastIndex.day(podcastOrigin)?.title.orEmpty()}"
+                } else {
+                    repo.index.day(originDay)?.title ?: courseDay.title
+                }
                 cards.add(
                     LanguageCardItem(
                         id = "ru-review-$unlockedDay-${reviewPhrase.id}",
@@ -267,7 +273,7 @@ object MindfulFeedContentProvider {
                         phonetic = RussianPhonetics.transliterateFlat(reviewPhrase.ru),
                         exampleForeign = reviewPhrase.ru,
                         exampleTranslation = reviewPhrase.de,
-                        dialogueScenario = if (isDue) "SRS-Wiederholung (Tag $originDay)" else "Wortschatz-Erweiterung",
+                        dialogueScenario = if (isDue) "SRS-Wiederholung · $originTitle" else "Wortschatz-Erweiterung",
                         dialoguePartner = "System",
                         dialoguePrompt = if (isDue) "Erinnerst du dich an die Bedeutung und Aussprache?" else "Sprich die Phrase laut nach.",
                         dialogueReplies = listOf("Ich kenne es!", "Aussprache prüfen", "Lösung anzeigen"),
@@ -275,7 +281,7 @@ object MindfulFeedContentProvider {
                         rank = rank,
                         audioRes = reviewPhrase.audio,
                         dayNumber = originDay,
-                        dayTitle = repo.index.day(originDay)?.title ?: courseDay.title,
+                        dayTitle = originTitle,
                         isDueReview = isDue,
                         currentStreak = progress.streak,
                         totalXp = progress.xp,

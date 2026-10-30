@@ -96,8 +96,13 @@ fun RussianPhrasebookScreen(
     val progress by vm.progress.collectAsState()
     val days = remember { vm.allDays() }
     val meta = vm.phrasebookMeta
-    val all = remember(days) { days.flatMap { d -> vm.dayPhrases(d.day) } }
-    val dayTitle = remember(days) { days.associate { it.day to it.title } }
+    val all = remember(days) { days.flatMap(vm::dayPhrases) }
+    val dayTitle = remember(days) {
+        days.flatMap { day ->
+            val label = if (day.media != null) "Podcast · Lektion ${day.day}" else "Tag ${day.day}"
+            vm.dayPhrases(day).map { it.id to "$label · ${day.title}" }
+        }.toMap()
+    }
 
     var query by remember { mutableStateOf("") }
     var byTheme by remember { mutableStateOf(true) }
@@ -127,8 +132,7 @@ fun RussianPhrasebookScreen(
             val order = meta.themes.map { it.title } + "Sonstiges"
             shown.groupBy { themeOf(it) }.toList().sortedBy { order.indexOf(it.first) }
         } else {
-            shown.groupBy { it.day }.toList().sortedBy { it.first }
-                .map { (d, list) -> "Tag $d · ${dayTitle[d].orEmpty()}" to list }
+            shown.groupBy { dayTitle[it.id].orEmpty() }.toList()
         }
     }
 

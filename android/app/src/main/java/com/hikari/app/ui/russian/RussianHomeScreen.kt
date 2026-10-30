@@ -84,7 +84,7 @@ class RussianHomeViewModel @Inject constructor(
 ) : ViewModel() {
     val index = repo.index
     val progress = store.state
-    val totalItems = index.itemById.size
+    val totalItems = index.itemById.size + repo.podcastIndex.itemById.size
 
     fun today(): Long = store.today()
 
@@ -239,6 +239,12 @@ fun RussianHomeScreen(
                     listOf(Color(0xFF9B6DD9), Color(0xFF6B3FB0)),
                     if (p.cards.isNotEmpty() || p.mySentences.isNotEmpty()) "${p.cards.size + p.mySentences.size}" else null,
                 ) { onOpen("russian/phrases") },
+                GameApp(
+                    "Podcast-Kurs",
+                    R.drawable.ic_app_dialog,
+                    listOf(Color(0xFF4F7BD9), Color(0xFF6B3FB0)),
+                    if (p.podcastDayStars.isNotEmpty()) "${p.podcastDayStars.size}/100" else "NEU",
+                ) { onOpen("russian/podcast") },
             )
             apps.chunked(3).forEachIndexed { rowIndex, rowApps ->
                 if (rowIndex > 0) Spacer(Modifier.height(10.dp))

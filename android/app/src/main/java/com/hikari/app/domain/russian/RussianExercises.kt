@@ -130,6 +130,35 @@ object RuLessonBuilder {
         return out
     }
 
+    /** Podcast: ohne Zusatzdialog, dafür direkt mit den Phrasen der gehörten Folge. */
+    fun podcastLesson(
+        index: RuCourseIndex,
+        dayNumber: Int,
+        settings: RuSettings,
+        speechAvailable: Boolean,
+        rng: Random = Random.Default,
+    ): List<RuExercise> {
+        val day = index.day(dayNumber) ?: return emptyList()
+        val phrases = index.dayPhrases(day, settings)
+        val pool = index.phrasesUpTo(dayNumber, settings)
+        val out = mutableListOf<RuExercise>()
+        phrases.chunked(3).forEach { group ->
+            group.forEach { out += RuExercise.Intro(it) }
+            group.shuffled(rng).forEachIndexed { i, p ->
+                out += if (i % 2 == 0) listenChoose(p, pool, rng) else meaningChoose(p, pool, rng)
+            }
+        }
+        phrases.shuffled(rng).forEachIndexed { i, p ->
+            out += practiceFor(index, p, pool, settings, speak = i % 2 == 0, slot = i, rng = rng)
+        }
+        if (dayNumber > 1) {
+            pool.filter { it.day < dayNumber }.shuffled(rng).take(3).forEachIndexed { i, p ->
+                out += practiceFor(index, p, pool, settings, speak = i % 2 == 0, slot = i + 1, rng = rng)
+            }
+        }
+        return out
+    }
+
     /** Wiederholung fälliger Karten — eine Übung je Karte, Format je nach Karte. */
     fun review(
         index: RuCourseIndex,

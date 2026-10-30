@@ -64,7 +64,7 @@ class RussianDeepdiveViewModel @Inject constructor(
 ) : ViewModel() {
     private val settings = store.state.value.settings
     val id: String = savedState.get<String>("id").orEmpty()
-    val phrase: RuPhrase? = repo.index.phrase(id, settings)
+    val phrase: RuPhrase? = repo.phrase(id, settings)
     val entry = repo.deepdive[id]
     val related: List<RuPhrase> = phrase?.let {
         RuDeepdiveLogic.related(it, repo.index.phrasesUpTo(store.state.value.unlockedDay(repo.index.days.size), settings))

@@ -518,6 +518,31 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                     )
                 }
             }
+            composable("russian/podcast") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    com.hikari.app.ui.russian.RussianPodcastHomeScreen(
+                        onBack = { nav.popBackStack() },
+                        onOpenLesson = { day -> nav.navigate("russian/podcast/$day") },
+                        onOpenReminder = { nav.navigate("russian/podcast/reminder") },
+                    )
+                }
+            }
+            composable("russian/podcast/reminder") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    com.hikari.app.ui.russian.RussianPodcastReminderScreen(onBack = { nav.popBackStack() })
+                }
+            }
+            composable(
+                route = "russian/podcast/{day}",
+                arguments = listOf(navArgument("day") { type = NavType.StringType }),
+            ) {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    com.hikari.app.ui.russian.RussianPodcastLessonScreen(
+                        onBack = { nav.popBackStack() },
+                        onPractice = { day -> nav.navigate("russian/podcastPractice/$day") },
+                    )
+                }
+            }
             // Lektion und Rollenspiel: russian/lesson/3, russian/dialog/3
             composable(
                 route = "russian/{mode}/{day}",

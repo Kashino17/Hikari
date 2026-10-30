@@ -32,6 +32,10 @@ data class RuProgress(
     val lastActiveDay: Long = -1,
     /** Abgeschlossene Tage → Sterne (1–3). */
     val dayStars: Map<Int, Int> = emptyMap(),
+    /** Podcastkurs: separater Abschluss und Hörstatus, gemeinsame Karten/XP/Streak. */
+    val podcastDayStars: Map<Int, Int> = emptyMap(),
+    val podcastListened: Set<Int> = emptySet(),
+    val podcastLastCompletedDay: Long = -1,
     val cards: Map<String, RuCard> = emptyMap(),
     /** XP pro Kalendertag (epochDay) — für "heute" und den Wochenverlauf. */
     val xpByDay: Map<Long, Int> = emptyMap(),
@@ -56,6 +60,9 @@ data class RuProgress(
     /** Höchster freigeschalteter Tag: nächster nach dem letzten abgeschlossenen. */
     fun unlockedDay(totalDays: Int): Int =
         ((dayStars.keys.maxOrNull() ?: 0) + 1).coerceAtMost(totalDays)
+
+    fun unlockedPodcastDay(totalDays: Int): Int =
+        ((podcastDayStars.keys.maxOrNull() ?: 0) + 1).coerceAtMost(totalDays)
 
     fun xpOn(epochDay: Long): Int = xpByDay[epochDay] ?: 0
 }
@@ -118,6 +125,7 @@ data class RuSessionResult(
     /** Neu eingeführte Items (Lektion). */
     val introduced: Set<String> = emptySet(),
     val completedDay: Int? = null,
+    val completedPodcastDay: Int? = null,
     val stars: Int = 0,
     val spokenOk: Int = 0,
 )
@@ -141,6 +149,11 @@ fun RuProgress.apply(result: RuSessionResult, today: Long): RuProgress {
     } else {
         dayStars
     }
+    val podcastStars = if (result.completedPodcastDay != null) {
+        podcastDayStars + (result.completedPodcastDay to maxOf(result.stars, podcastDayStars[result.completedPodcastDay] ?: 0))
+    } else {
+        podcastDayStars
+    }
     // Nur die letzten 30 Tage XP-Verlauf behalten.
     val xpDays = (xpByDay + (today to xpOn(today) + result.xp)).filterKeys { it > today - 30 }
     return copy(
@@ -149,6 +162,8 @@ fun RuProgress.apply(result: RuSessionResult, today: Long): RuProgress {
         bestStreak = maxOf(bestStreak, streak),
         lastActiveDay = last,
         dayStars = stars,
+        podcastDayStars = podcastStars,
+        podcastLastCompletedDay = if (result.completedPodcastDay != null) today else podcastLastCompletedDay,
         cards = cards,
         xpByDay = xpDays,
         spokenOk = spokenOk + result.spokenOk,
@@ -232,21 +247,23 @@ class RussianProgressStore @Inject constructor(
         }
     }
 
-    fun loadSession(day: Int): RuSessionSnapshot? =
-        prefs.getString(SESSION_KEY, null)?.let {
+    fun loadSession(day: Int, podcast: Boolean = false): RuSessionSnapshot? =
+        prefs.getString(if (podcast) PODCAST_SESSION_KEY else SESSION_KEY, null)?.let {
             runCatching { ruJson.decodeFromString(RuSessionSnapshot.serializer(), it) }.getOrNull()
         }?.takeIf { it.day == day }
 
-    fun saveSession(snapshot: RuSessionSnapshot) {
-        prefs.edit().putString(SESSION_KEY, ruJson.encodeToString(RuSessionSnapshot.serializer(), snapshot)).apply()
+    fun saveSession(snapshot: RuSessionSnapshot, podcast: Boolean = false) {
+        val key = if (podcast) PODCAST_SESSION_KEY else SESSION_KEY
+        prefs.edit().putString(key, ruJson.encodeToString(RuSessionSnapshot.serializer(), snapshot)).apply()
     }
 
-    fun clearSession() {
-        prefs.edit().remove(SESSION_KEY).apply()
+    fun clearSession(podcast: Boolean = false) {
+        prefs.edit().remove(if (podcast) PODCAST_SESSION_KEY else SESSION_KEY).apply()
     }
 
     private companion object {
         const val KEY = "progress_v1"
         const val SESSION_KEY = "lesson_session_v1"
+        const val PODCAST_SESSION_KEY = "podcast_session_v1"
     }
 }

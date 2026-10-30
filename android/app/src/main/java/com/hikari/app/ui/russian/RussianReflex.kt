@@ -145,7 +145,7 @@ class RussianActiveRecallViewModel @Inject constructor(
         if (selectedIds.isNotEmpty()) {
             testSelection.ids = emptyList()
             val targetCount = count.coerceAtLeast(10)
-            val resolved = selectedIds.mapNotNull { id -> index.phrase(id, settings) ?: myById[id] }.shuffled(rng)
+            val resolved = selectedIds.mapNotNull { id -> repo.phrase(id, settings) ?: myById[id] }.shuffled(rng)
             if (resolved.isNotEmpty()) {
                 val weakOrNew = resolved.filter { (state.cards[it.id]?.box ?: 0) <= 2 }
                 val mastered = resolved.filter { (state.cards[it.id]?.box ?: 0) >= 3 }
@@ -167,9 +167,9 @@ class RussianActiveRecallViewModel @Inject constructor(
 
         val dueAndWeak = (dueIds.shuffled(rng) + weakIds.shuffled(rng))
             .distinct()
-            .mapNotNull { index.phrase(it, settings) }
+            .mapNotNull { repo.phrase(it, settings) }
         val masteredPhrases = masteredIds.shuffled(rng)
-            .mapNotNull { index.phrase(it, settings) }
+            .mapNotNull { repo.phrase(it, settings) }
         val customAndFresh = (myPhrases.shuffled(rng).take(2) + index.phrasesUpTo(unlocked, settings).shuffled(rng))
             .distinctBy { it.id }
 
@@ -207,7 +207,7 @@ class RussianActiveRecallViewModel @Inject constructor(
             (mastered + practiced).distinct()
         }
         val unlocked = state.unlockedDay(index.days.size)
-        val basePhrases = (learnedIds.mapNotNull { index.phrase(it, settings) } + index.phrasesUpTo(unlocked, settings).shuffled(rng))
+        val basePhrases = (learnedIds.mapNotNull { repo.phrase(it, settings) } + index.phrasesUpTo(unlocked, settings).shuffled(rng))
             .distinctBy { it.id }
 
         val statements = basePhrases.filter { it.wordCount in 2..7 && !it.plain.trim().endsWith("?") && !it.plain.trim().endsWith("!") }

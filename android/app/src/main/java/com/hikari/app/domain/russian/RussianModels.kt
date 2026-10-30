@@ -20,6 +20,15 @@ data class RuDay(
     val grammar: String? = null,
     val items: List<RuItem>,
     val dialog: RuDialog,
+    val media: RuMedia? = null,
+)
+
+@Serializable
+data class RuMedia(
+    val videoId: String,
+    val sourceUrl: String,
+    val summary: String,
+    val notes: List<String>,
 )
 
 @Serializable

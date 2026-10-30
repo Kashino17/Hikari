@@ -70,20 +70,21 @@ class RussianAudioPlayer @Inject constructor(
      */
     private val clipTextIndex: Map<String, String> by lazy {
         buildMap {
-            val idx = repo.index
             val combos = listOf(
                 RuSettings(RuGender.MALE, RuGender.MALE),
                 RuSettings(RuGender.FEMALE, RuGender.FEMALE),
                 RuSettings(RuGender.MALE, RuGender.FEMALE),
                 RuSettings(RuGender.FEMALE, RuGender.MALE),
             )
-            for (s in combos) {
-                for (d in idx.days) {
-                    for (p in idx.dayPhrases(d, s)) {
-                        put(p.audio, p.plain)
-                    }
-                    for ((_, p) in idx.dialog(d, s)) {
-                        put(p.audio, p.plain)
+            for (idx in listOf(repo.index, repo.podcastIndex)) {
+                for (s in combos) {
+                    for (d in idx.days) {
+                        for (p in idx.dayPhrases(d, s)) {
+                            put(p.audio, p.plain)
+                        }
+                        for ((_, p) in idx.dialog(d, s)) {
+                            put(p.audio, p.plain)
+                        }
                     }
                 }
             }
