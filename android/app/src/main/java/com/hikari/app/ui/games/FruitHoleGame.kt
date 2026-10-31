@@ -72,7 +72,7 @@ private enum class HoleScreen { MENU, PLAY, WELTWAHL, STATS, ERFOLGE }
 private enum class HoleKind { FRUCHT, BOMBE, GOLD, HERZ, UHR, MAGNET, REGENBOGEN }
 
 // Pseudo-3D-Formen der Map-Objekte
-private enum class HoleShape { BALL, TOWER, PYRAMID, BOX, TREE, SPECIAL }
+private enum class HoleShape { DONUT, DONUTSTACK, CUPCAKE, CAKE, CAN, LOLLI, CANDY, BUILDING, TREE, SPECIAL }
 
 // Akzentfarbe des Spiels (lila) — konsistent mit der Karte im GamesScreen
 private val HoleAccent = Color(0xFFA78BFA)
@@ -96,7 +96,7 @@ private class HoleTheme(
 
 private val HoleThemes = listOf(
     HoleTheme(
-        "Süßigkeitenland", Color(0xFF8BC34A), Color(0xFF7CB342),
+        "Süßigkeitenland", Color(0xFFA2D149), Color(0xFF8CC63F),
         listOf(Color(0xFFEC4899), Color(0xFFFBBF24), Color(0xFF60A5FA), Color(0xFF4ADE80), Color(0xFFA78BFA)),
         listOf("🍩", "🧁", "🍬", "🍰", "🍭"),
         Color(0xFFF472B6),
@@ -108,7 +108,7 @@ private val HoleThemes = listOf(
         Color(0xFFEF5350),
     ),
     HoleTheme(
-        "Kleinstadt", Color(0xFF66BB6A), Color(0xFF57A85C),
+        "Kleinstadt", Color(0xFF95CC7E), Color(0xFF7CB56A),
         listOf(Color(0xFF90A4AE), Color(0xFFFFB74D), Color(0xFF4FC3F7), Color(0xFFE57373), Color(0xFF81C784)),
         listOf("🏠", "🚗", "🌳", "📦", "⛲"),
         Color(0xFF4FC3F7),
@@ -134,7 +134,7 @@ private class HoleWorldDef(
 private val HoleWorlds = listOf(
     HoleWorldDef(
         "Wiese", "🌿", "Sanfter Einstieg",
-        Color(0xFF8BC34A), Color(0xFF7CB342),
+        Color(0xFFA2D149), Color(0xFF8CC63F),
         listOf(Color(0xFFEF5350), Color(0xFF4ADE80), Color(0xFFFBBF24), Color(0xFF60A5FA)),
         listOf("🍎", "🍓", "🍇", "🍉"),
         Color(0xFF86EFAC),
@@ -202,6 +202,22 @@ private val HoleAchs = listOf(
 )
 
 private val HoleSens = floatArrayOf(0.8f, 1.15f, 1.6f)
+
+// Süßigkeiten-Palette: Teig, Frosting-Varianten, Streusel
+private val HoleDough = Color(0xFFD9A066)
+private val HoleFrostings = listOf(
+    Color(0xFFF48FB1), // Pink
+    Color(0xFFFFF3E0), // Creme
+    Color(0xFF6D4C41), // Schoko
+    Color(0xFF80CBC4), // Minze
+    Color(0xFFFFF176), // Zitrone
+    Color(0xFF90CAF9), // Blau
+)
+private val HoleSprinkles = listOf(
+    Color(0xFFEF5350), Color(0xFF42A5F5), Color(0xFF66BB6A),
+    Color(0xFFFFEE58), Color(0xFFAB47BC), Color(0xFFFFFFFF),
+)
+private val HoleCanLabels = listOf(Color(0xFFEF5350), Color(0xFF42A5F5), Color(0xFF66BB6A), Color(0xFFFFA726))
 
 // Loch-Größenstufen: nötige Wachstums-Punkte (kumuliert) → Radius-Multiplikator
 private val HoleGrowNeed = intArrayOf(8, 20, 40, 70, 110, 160)
@@ -402,6 +418,54 @@ private class HolePaintCache {
             )
         }
     }
+
+    private val solid = HashMap<Int, Paint>()
+    fun solidFor(c: Color): Paint = solid.getOrPut(c.toArgb()) {
+        Paint(Paint.ANTI_ALIAS_FLAG).apply { color = c.toArgb() }
+    }
+}
+
+// Gecachte Unit-Pfade für Spezial-Symbole (Stern, Herz)
+private val HoleStarPath = android.graphics.Path().apply {
+    for (i in 0 until 10) {
+        val ang = -kotlin.math.PI / 2 + i * kotlin.math.PI / 5
+        val rad = if (i % 2 == 0) 1f else 0.45f
+        val px = (cos(ang) * rad).toFloat()
+        val py = (sin(ang) * rad).toFloat()
+        if (i == 0) moveTo(px, py) else lineTo(px, py)
+    }
+    close()
+}
+
+private val HoleHeartPath = android.graphics.Path().apply {
+    moveTo(0f, 0.35f)
+    cubicTo(-1.1f, -0.35f, -0.55f, -1.15f, 0f, -0.55f)
+    cubicTo(0.55f, -1.15f, 1.1f, -0.35f, 0f, 0.35f)
+    close()
+}
+
+// Weitere gecachte Unit-Pfade + geteilter Stroke-Paint (Farbe/Breite vor jedem Aufruf gesetzt)
+private val HoleStrokeP = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    style = Paint.Style.STROKE
+    strokeCap = Paint.Cap.ROUND
+}
+
+private val HoleTrapezPath = android.graphics.Path().apply {
+    moveTo(-0.62f, 0.05f); lineTo(0.62f, 0.05f); lineTo(0.85f, -1.05f); lineTo(-0.85f, -1.05f); close()
+}
+
+private val HoleCandyEndL = android.graphics.Path().apply {
+    moveTo(-0.75f, -0.60f); lineTo(-1.18f, -0.82f); lineTo(-1.18f, -0.38f); close()
+}
+private val HoleCandyEndR = android.graphics.Path().apply {
+    moveTo(0.75f, -0.60f); lineTo(1.18f, -0.82f); lineTo(1.18f, -0.38f); close()
+}
+
+private val HoleBuildSidePath = android.graphics.Path().apply {
+    moveTo(0.85f, -2.0f); lineTo(1.25f, -1.7f); lineTo(1.25f, 0.40f); lineTo(0.85f, 0.10f); close()
+}
+private val HoleBuildRoofPath = android.graphics.Path().apply {
+    moveTo(-0.85f, -2.0f); lineTo(0.85f, -2.0f); lineTo(1.25f, -1.7f); lineTo(-0.45f, -1.7f); close()
 }
 
 // ————— Entities —————
@@ -417,6 +481,8 @@ private class HoleItem(
     val kind: HoleKind,
     val shape: HoleShape,
     val color: Color,
+    val variant: Int = 0,   // Frosting-/Label-Farbe (deterministisch)
+    val seed: Int = 0,      // Streusel-/Detail-Seed (deterministisch, kein Random pro Frame)
 ) {
     var swallowing = false
     var swallow = 0f
@@ -487,6 +553,7 @@ private class HoleWorld(val den: Float) {
     var sogFx = 0f
     var tooBigCd = 0f
     var comboTimer = 0f
+    var swallowPulse = 0f
     var rng: Random = Random.Default
 
     // HUD-sichtbare Zustände (Compose-States, damit die Anzeige live folgt)
@@ -506,12 +573,12 @@ private class HoleWorld(val den: Float) {
 
 private fun holeItem(
     x: Float, y: Float, cls: Int, shape: HoleShape, color: Color,
-    emoji: String, kind: HoleKind = HoleKind.FRUCHT, den: Float,
+    kind: HoleKind = HoleKind.FRUCHT, den: Float, variant: Int = 0, seed: Int = 0,
 ): HoleItem {
     val r = when (cls) {
         0 -> 15f; 1 -> 20f; 2 -> 26f; 3 -> 34f; 4 -> 44f; else -> 56f
     } * den
-    return HoleItem(x, y, r = r, cls = cls, emoji = emoji, kind = kind, shape = shape, color = color)
+    return HoleItem(x, y, r = r, cls = cls, emoji = "", kind = kind, shape = shape, color = color, variant = variant, seed = seed)
 }
 
 private fun holeGenMap(world: HoleWorld, theme: HoleTheme, mode: HoleMode, weltIdx: Int) {
@@ -527,111 +594,145 @@ private fun holeGenMap(world: HoleWorld, theme: HoleTheme, mode: HoleMode, weltI
     val mw = world.mapW
     val mh = world.mapH
     val pal = theme.palette
-    val fruits = theme.fruits
 
-    fun fruit(cls: Int, x: Float, y: Float) =
-        holeItem(x, y, cls, HoleShape.BALL, pal[rng.nextInt(pal.size)], fruits[rng.nextInt(fruits.size)], den = den)
-
-    fun tower(cls: Int, x: Float, y: Float) =
-        holeItem(x, y, cls, HoleShape.TOWER, pal[rng.nextInt(pal.size)], fruits[rng.nextInt(fruits.size)], den = den)
-
-    fun pyramid(x: Float, y: Float) =
-        holeItem(x, y, 3, HoleShape.PYRAMID, pal[rng.nextInt(pal.size)], fruits[rng.nextInt(fruits.size)], den = den)
-
-    fun building(cls: Int, x: Float, y: Float) =
-        holeItem(x, y, cls, HoleShape.BOX, pal[rng.nextInt(pal.size)], "🏠", den = den)
-
-    fun tree(x: Float, y: Float) =
-        holeItem(x, y, 2, HoleShape.TREE, Color(0xFF388E3C), "🌳", den = den)
-
-    // Ring aus kleinen Objekten
-    fun ring(cx: Float, cy: Float, rad: Float, n: Int, cls: Int) {
-        for (i in 0 until n) {
-            val a = i.toFloat() / n * 6.2832f
-            world.items.add(fruit(cls, cx + cos(a) * rad, cy + sin(a) * rad))
-        }
+    fun add(cls: Int, shape: HoleShape, color: Color, x: Float, y: Float, variant: Int) {
+        world.items.add(
+            holeItem(x, y, cls, shape, color, den = den, variant = variant, seed = rng.nextInt(100000))
+        )
     }
 
-    // Spirale ("oddly satisfying")
-    fun spiral(cx: Float, cy: Float, n: Int) {
-        for (i in 0 until n) {
-            val a = i * 0.55f
-            val rad = (i * 9f + 20f) * den
-            world.items.add(fruit(if (i % 5 == 4) 1 else 0, cx + cos(a) * rad, cy + sin(a) * rad))
-        }
-    }
-
-    // Kuchen-Pyramide (Dreiecksgitter)
-    fun cakePile(cx: Float, cy: Float, rows: Int) {
-        for (r in 0 until rows) {
-            for (i in 0..r) {
-                val x = cx + (i - r / 2f) * 34f * den
-                val y = cy + r * 30f * den
-                world.items.add(tower(if (r == 0) 1 else 0, x, y))
+    // Konzentrische Donut-Ringe — eine Farbfamilie pro Formation
+    fun donutRing(cx: Float, cy: Float, color: Color, variant: Int) {
+        val rings = 2 + rng.nextInt(2)
+        for (ring in 0 until rings) {
+            val rad = (34f + ring * 30f) * den
+            val n = 7 + ring * 4
+            for (i in 0 until n) {
+                val a = i.toFloat() / n * 6.2832f + ring * 0.3f
+                add(0, HoleShape.DONUT, color, cx + cos(a) * rad, cy + sin(a) * rad, variant)
             }
         }
     }
 
-    // Stadtviertel (Gebäude-Raster + Bäume am Rand)
-    fun district(cx: Float, cy: Float, cols: Int, rows: Int) {
+    // Bonbon-Spirale
+    fun candySpiral(cx: Float, cy: Float, color: Color, variant: Int) {
+        val n = 18 + rng.nextInt(8)
+        for (i in 0 until n) {
+            val a = i * 0.55f
+            val rad = (i * 8f + 18f) * den
+            add(0, if (i % 3 == 2) HoleShape.CANDY else HoleShape.DONUT, color, cx + cos(a) * rad, cy + sin(a) * rad, variant)
+        }
+    }
+
+    // Donut-Turm-Gruppe
+    fun towerGroup(cx: Float, cy: Float, color: Color, variant: Int) {
+        val n = 3 + rng.nextInt(3)
+        for (i in 0 until n) {
+            val a = i.toFloat() / n * 6.2832f
+            add(2, HoleShape.DONUTSTACK, color, cx + cos(a) * 48f * den, cy + sin(a) * 48f * den, variant + i)
+        }
+    }
+
+    // Kuchen-Pyramide (Cupcakes um eine Torte)
+    fun cakePile(cx: Float, cy: Float, color: Color, variant: Int) {
+        add(3, HoleShape.CAKE, color, cx, cy, variant)
+        val rows = 3
+        for (r in 1 until rows) {
+            for (i in 0 until r * 3) {
+                val x = cx + (i - (r * 3 - 1) / 2f) * 42f * den
+                val y = cy + r * 40f * den
+                add(1, HoleShape.CUPCAKE, color, x, y, variant + i)
+            }
+        }
+    }
+
+    // Dosen-Allee (zwei versetzte Reihen)
+    fun canAllee(cx: Float, cy: Float, color: Color, variant: Int) {
+        val n = 5 + rng.nextInt(3)
+        for (i in 0 until n) {
+            add(2, HoleShape.CAN, color, cx + (i - n / 2f) * 54f * den, cy - 28f * den, variant)
+            add(2, HoleShape.CAN, color, cx + (i - n / 2f) * 54f * den + 27f * den, cy + 28f * den, variant + 1)
+        }
+    }
+
+    // Lollipop-Garten
+    fun lolliGarden(cx: Float, cy: Float, color: Color, variant: Int) {
+        val n = 8 + rng.nextInt(5)
+        for (i in 0 until n) {
+            val a = rng.nextFloat() * 6.2832f
+            val rad = rng.nextFloat() * 90f * den
+            add(1, HoleShape.LOLLI, color, cx + cos(a) * rad, cy + sin(a) * rad, variant + i)
+        }
+    }
+
+    // Stadtviertel (Gebäude-Raster + Bäume)
+    fun district(cx: Float, cy: Float, color: Color) {
+        val cols = 2 + rng.nextInt(2)
+        val rows = 2 + rng.nextInt(2)
         for (r in 0 until rows) {
             for (c in 0 until cols) {
                 val x = cx + (c - (cols - 1) / 2f) * 120f * den
                 val y = cy + (r - (rows - 1) / 2f) * 130f * den
-                if ((r + c) % 3 == 2) world.items.add(tree(x + 40f * den, y + 45f * den))
-                world.items.add(building(if ((r + c) % 2 == 0) 4 else 5, x, y))
+                if ((r + c) % 3 == 2) add(2, HoleShape.TREE, Color(0xFF388E3C), x + 48f * den, y + 52f * den, 0)
+                add(if ((r + c) % 2 == 0) 4 else 5, HoleShape.BUILDING, color, x, y, rng.nextInt(4))
             }
         }
     }
 
-    // Mischung je nach Modus
-    val clusters = if (mode == HoleMode.RUSH) 5 else 4
-    for (k in 0 until clusters) {
-        val cx = mw * (0.18f + rng.nextFloat() * 0.64f)
-        val cy = mh * (0.15f + rng.nextFloat() * 0.7f)
-        when (rng.nextInt(4)) {
-            0 -> ring(cx, cy, (60f + rng.nextFloat() * 60f) * den, 8 + rng.nextInt(6), rng.nextInt(2))
-            1 -> spiral(cx, cy, 12 + rng.nextInt(8))
-            2 -> cakePile(cx, cy, 3 + rng.nextInt(2))
-            else -> district(cx, cy, 2 + rng.nextInt(2), 2 + rng.nextInt(2))
+    // 7–8 große Formationen, jede in einer Farbfamilie
+    val formations = if (mode == HoleMode.RUSH) 8 else 7
+    for (k in 0 until formations) {
+        val cx = mw * (0.15f + rng.nextFloat() * 0.70f)
+        val cy = mh * (0.12f + rng.nextFloat() * 0.74f)
+        val color = pal[rng.nextInt(pal.size)]
+        val variant = rng.nextInt(HoleFrostings.size)
+        when (rng.nextInt(6)) {
+            0 -> donutRing(cx, cy, color, variant)
+            1 -> candySpiral(cx, cy, color, variant)
+            2 -> towerGroup(cx, cy, color, variant)
+            3 -> cakePile(cx, cy, color, variant)
+            4 -> canAllee(cx, cy, color, variant)
+            else -> lolliGarden(cx, cy, color, variant)
         }
     }
-    // Lose Streuung
-    val loose = if (mode == HoleMode.RUSH) 60 else 42
+    district(mw * 0.5f, mh * 0.86f, pal[rng.nextInt(pal.size)])
+    district(mw * (0.2f + rng.nextFloat() * 0.6f), mh * (0.10f + rng.nextFloat() * 0.15f), pal[rng.nextInt(pal.size)])
+
+    // Lose Streuung: Donuts, Bonbons, Lollis
+    val loose = if (mode == HoleMode.RUSH) 120 else 100
     repeat(loose) {
-        world.items.add(
-            fruit(
-                if (rng.nextFloat() < 0.15f) 1 else 0,
-                mw * (0.06f + rng.nextFloat() * 0.88f),
-                mh * (0.06f + rng.nextFloat() * 0.88f),
-            )
+        val color = pal[rng.nextInt(pal.size)]
+        add(
+            if (rng.nextFloat() < 0.2f) 1 else 0,
+            when (rng.nextInt(5)) { 0 -> HoleShape.CANDY; 1 -> HoleShape.LOLLI; 2 -> HoleShape.CUPCAKE; else -> HoleShape.DONUT },
+            color,
+            mw * (0.05f + rng.nextFloat() * 0.9f),
+            mh * (0.05f + rng.nextFloat() * 0.9f),
+            rng.nextInt(HoleFrostings.size),
         )
     }
-    repeat(if (mode == HoleMode.RUSH) 6 else 8) {
-        world.items.add(tree(mw * rng.nextFloat(), mh * rng.nextFloat()))
-    }
-    repeat(3) {
-        world.items.add(pyramid(mw * (0.15f + rng.nextFloat() * 0.7f), mh * (0.15f + rng.nextFloat() * 0.7f)))
+    repeat(10) {
+        add(2, HoleShape.TREE, Color(0xFF388E3C), mw * rng.nextFloat(), mh * rng.nextFloat(), 0)
     }
 
     // Spezial-Objekte
-    fun special(kind: HoleKind, emoji: String, color: Color, n: Int) {
+    fun special(kind: HoleKind, color: Color, n: Int) {
         repeat(n) {
             world.items.add(
                 holeItem(
                     mw * (0.08f + rng.nextFloat() * 0.84f),
                     mh * (0.08f + rng.nextFloat() * 0.84f),
-                    1, HoleShape.SPECIAL, color, emoji, kind, den,
+                    1, HoleShape.SPECIAL, color, kind, den,
                 )
             )
         }
     }
-    special(HoleKind.BOMBE, "💣", Color(0xFF37474F), if (mode == HoleMode.RUSH) 8 else 6)
-    special(HoleKind.GOLD, "🌟", Color(0xFFFBBF24), 3)
-    if (mode != HoleMode.RUSH) special(HoleKind.HERZ, "❤️", Color(0xFFEF5350), 2)
-    special(HoleKind.UHR, "⏰", Color(0xFF22D3EE), 2)
-    special(HoleKind.MAGNET, "🌀", Color(0xFF60A5FA), 2)
-    special(HoleKind.REGENBOGEN, "🌈", Color(0xFFA78BFA), 2)
+    special(HoleKind.BOMBE, Color(0xFF37474F), if (mode == HoleMode.RUSH) 8 else 6)
+    special(HoleKind.GOLD, Color(0xFFFBBF24), 3)
+    if (mode != HoleMode.RUSH) special(HoleKind.HERZ, Color(0xFFEF5350), 2)
+    special(HoleKind.UHR, Color(0xFF22D3EE), 2)
+    special(HoleKind.MAGNET, Color(0xFF60A5FA), 2)
+    special(HoleKind.REGENBOGEN, Color(0xFFA78BFA), 2)
 
     // Loch startet in der Map-Mitte
     world.holeX = mw / 2f
@@ -667,15 +768,16 @@ private fun holeRegen(world: HoleWorld, theme: HoleTheme) {
         }
     }
     val pal = theme.palette
-    val fruits = theme.fruits
-    val n = 12 + rng.nextInt(6)
+    val color = pal[rng.nextInt(pal.size)]
+    val variant = rng.nextInt(HoleFrostings.size)
+    val n = 14 + rng.nextInt(6)
     when (rng.nextInt(3)) {
         0 -> for (i in 0 until n) {
             val a = i.toFloat() / n * 6.2832f
             world.items.add(
                 holeItem(
-                    cx + cos(a) * 70f * den, cy + sin(a) * 70f * den, rng.nextInt(2), HoleShape.BALL,
-                    pal[rng.nextInt(pal.size)], fruits[rng.nextInt(fruits.size)], den = den,
+                    cx + cos(a) * 70f * den, cy + sin(a) * 70f * den, rng.nextInt(2), HoleShape.DONUT,
+                    color, den = den, variant = variant, seed = rng.nextInt(100000),
                 )
             )
         }
@@ -684,8 +786,9 @@ private fun holeRegen(world: HoleWorld, theme: HoleTheme) {
             val rad = (i * 9f + 20f) * den
             world.items.add(
                 holeItem(
-                    cx + cos(a) * rad, cy + sin(a) * rad, if (i % 5 == 4) 1 else 0, HoleShape.BALL,
-                    pal[rng.nextInt(pal.size)], fruits[rng.nextInt(fruits.size)], den = den,
+                    cx + cos(a) * rad, cy + sin(a) * rad, if (i % 5 == 4) 1 else 0,
+                    if (i % 3 == 2) HoleShape.CANDY else HoleShape.DONUT,
+                    color, den = den, variant = variant, seed = rng.nextInt(100000),
                 )
             )
         }
@@ -693,8 +796,8 @@ private fun holeRegen(world: HoleWorld, theme: HoleTheme) {
             world.items.add(
                 holeItem(
                     cx + (rng.nextFloat() - 0.5f) * 180f * den, cy + (rng.nextFloat() - 0.5f) * 180f * den,
-                    rng.nextInt(2), HoleShape.BALL, pal[rng.nextInt(pal.size)],
-                    fruits[rng.nextInt(fruits.size)], den = den,
+                    rng.nextInt(2), if (rng.nextFloat() < 0.3f) HoleShape.CUPCAKE else HoleShape.DONUT,
+                    color, den = den, variant = variant, seed = rng.nextInt(100000),
                 )
             )
         }
@@ -758,7 +861,6 @@ fun FruitHoleGame(onBack: () -> Unit) {
         onDispose { holeSound.release() }
     }
     val paints = remember { HolePaintCache() }
-    val emojiPaint = remember { Paint().apply { textAlign = Paint.Align.CENTER; isAntiAlias = true } }
     val popPaint = remember { Paint().apply { textAlign = Paint.Align.CENTER; isAntiAlias = true; isFakeBoldText = true } }
 
     // Kombo-Fenster: schnelle Fress-Serien halten die Kombo (Timer in der World)
@@ -827,6 +929,7 @@ fun FruitHoleGame(onBack: () -> Unit) {
         world.sogFx = 0f
         world.tooBigCd = 0f
         world.comboTimer = 0f
+        world.swallowPulse = 0f
         world.rng = if (isDaily) Random(LocalDate.now().toEpochDay()) else Random.Default
         score = 0
         shownScore = 0
@@ -1111,6 +1214,7 @@ fun FruitHoleGame(onBack: () -> Unit) {
                         if (world.rainbowTimer > 0f) world.rainbowTimer = max(0f, world.rainbowTimer - rdt)
                         world.flash = max(0f, world.flash - rdt * 2.4f)
                         world.shake = max(0f, world.shake - rdt * 3.2f)
+                        world.swallowPulse = max(0f, world.swallowPulse - rdt * 3f)
                         if (world.tooBigCd > 0f) world.tooBigCd -= rdt
 
                         // Rush: Countdown der Rundenzeit
@@ -1158,9 +1262,9 @@ fun FruitHoleGame(onBack: () -> Unit) {
                         // Loch wächst weich zur Zielgröße
                         world.holeR += (world.holeTargetR - world.holeR) * min(1f, sdt * 4f)
 
-                        // Kamera: Smooth-Follow + Zoom abhängig von der Lochgröße
-                        val viewW = world.mapW * (0.52f + 0.55f * ((world.holeR - world.baseR) / world.baseR).coerceIn(0f, 1.6f))
-                        val zoomT = (world.w / viewW).coerceIn(world.w / world.mapW, world.w / (world.baseR * 16f))
+                        // Kamera: Smooth-Follow + Zoom abhängig von der Lochgröße (nah dran)
+                        val viewW = world.mapW * (0.38f + 0.45f * ((world.holeR - world.baseR) / world.baseR).coerceIn(0f, 1.6f))
+                        val zoomT = (world.w / viewW).coerceIn(world.w / world.mapW, world.w / (world.baseR * 13f))
                         world.zoom += (zoomT - world.zoom) * min(1f, rdt * 2.2f)
                         world.camX += (world.holeX - world.camX) * min(1f, rdt * 4.5f)
                         world.camY += (world.holeY - world.camY) * min(1f, rdt * 4.5f)
@@ -1214,6 +1318,7 @@ fun FruitHoleGame(onBack: () -> Unit) {
                                         item.swallowing = true
                                         item.sinkX = item.x
                                         item.sinkY = item.y
+                                        world.swallowPulse = 1f
                                     }
                                 } else if (d < world.holeR + item.r * 0.7f) {
                                     // Zu groß: wackelt und blockt leicht
@@ -1563,66 +1668,71 @@ fun FruitHoleGame(onBack: () -> Unit) {
                     val holeScreenY = wy(world.holeY)
                     for (item in world.items) {
                         if (wy(item.y) < holeScreenY) {
-                            holeDrawItem(item, world, w, h, paints, emojiPaint, den, fxReduziert)
+                            holeDrawItem(item, world, w, h, paints, den, fxReduziert)
                         }
                     }
 
-                    // ——— Das Loch ———
+                    // ——— Das Loch: schwarz mit WEISSEM Rand, Sog-Wirbel, Schluck-Puls ———
                     val hx = wx(world.holeX) + shakeX
                     val hy = wy(world.holeY) + shakeY
                     val hr = world.holeR * zm
+                    val pulse = 1f + world.swallowPulse * 0.22f
                     val rimCol = when {
                         world.rainbowTimer > 0f -> Color.hsv((world.time * 140f) % 360f, 0.65f, 1f)
                         world.fever -> Color(0xFFFFD54F)
                         else -> glowCol
                     }
-                    // Glow
+                    // Glow in Akzentfarbe
                     drawCircle(
                         brush = Brush.radialGradient(
-                            listOf(rimCol.copy(alpha = 0.40f), Color.Transparent),
+                            listOf(rimCol.copy(alpha = 0.35f), Color.Transparent),
                             center = Offset(hx, hy),
-                            radius = hr * 1.9f,
+                            radius = hr * 1.9f * pulse,
                         ),
-                        radius = hr * 1.9f,
+                        radius = hr * 1.9f * pulse,
                         center = Offset(hx, hy),
                     )
-                    // Schwarzes Loch (Ellipse, perspektivisch flach)
-                    drawOval(
-                        Color.Black,
-                        topLeft = Offset(hx - hr, hy - hr * 0.62f),
-                        size = Size(hr * 2f, hr * 1.24f),
-                    )
-                    // Innentiefe
+                    // Schwarze Ellipse mit innerem Verlauf (Mitte tiefschwarz → Rand dunkelgrau)
                     drawOval(
                         brush = Brush.radialGradient(
-                            listOf(Color(0xFF000000), Color(0xFF20202C)),
+                            listOf(Color(0xFF000000), Color(0xFF050508), Color(0xFF23232E)),
                             center = Offset(hx, hy),
                             radius = hr,
                         ),
                         topLeft = Offset(hx - hr, hy - hr * 0.62f),
                         size = Size(hr * 2f, hr * 1.24f),
                     )
-                    // Heller Rand + rotierender Wirbel-Arc
+                    // Sog-Wirbel: zwei langsam rotierende Spiral-Striche im Inneren
+                    for (arm in 0..1) {
+                        drawArc(
+                            Color.White.copy(alpha = 0.10f),
+                            startAngle = (world.time * 90f + arm * 180f) % 360f,
+                            sweepAngle = 110f,
+                            useCenter = false,
+                            topLeft = Offset(hx - hr * 0.62f, hy - hr * 0.38f),
+                            size = Size(hr * 1.24f, hr * 0.76f),
+                            style = Stroke(width = 2.5f * den, cap = androidx.compose.ui.graphics.StrokeCap.Round),
+                        )
+                    }
+                    // Weißer Randring (Referenz-Look) — pulsiert beim Schlucken
                     drawOval(
-                        rimCol,
-                        topLeft = Offset(hx - hr, hy - hr * 0.62f),
-                        size = Size(hr * 2f, hr * 1.24f),
-                        style = Stroke(width = 3.5f * den),
+                        Color.White,
+                        topLeft = Offset(hx - hr * pulse, hy - hr * 0.62f * pulse),
+                        size = Size(hr * 2f * pulse, hr * 1.24f * pulse),
+                        style = Stroke(width = (4.5f + world.swallowPulse * 2f) * den),
                     )
-                    drawArc(
-                        rimCol.copy(alpha = 0.5f),
-                        startAngle = (world.time * 160f) % 360f,
-                        sweepAngle = 100f,
-                        useCenter = false,
-                        topLeft = Offset(hx - hr * 0.66f, hy - hr * 0.41f),
-                        size = Size(hr * 1.32f, hr * 0.82f),
-                        style = Stroke(width = 2f * den, cap = androidx.compose.ui.graphics.StrokeCap.Round),
+                    // Äußerer Akzent-Saum
+                    drawOval(
+                        rimCol.copy(alpha = 0.55f),
+                        topLeft = Offset(hx - hr * 1.05f, hy - hr * 0.65f),
+                        size = Size(hr * 2.1f, hr * 1.30f),
+                        style = Stroke(width = 1.5f * den),
                     )
 
                     // ——— Objekte vor/über dem Loch (fallen sichtbar hinein) ———
                     for (item in world.items) {
                         if (wy(item.y) >= holeScreenY) {
-                            holeDrawItem(item, world, w, h, paints, emojiPaint, den, fxReduziert)
+                            holeDrawItem(item, world, w, h, paints, den, fxReduziert)
                         }
                     }
 
@@ -1943,7 +2053,6 @@ private fun DrawScope.holeDrawItem(
     w: Float,
     h: Float,
     paints: HolePaintCache,
-    emojiPaint: Paint,
     den: Float,
     fxReduziert: Boolean,
 ) {
@@ -1951,7 +2060,7 @@ private fun DrawScope.holeDrawItem(
     val sx = (item.x - world.camX) * zm + w / 2f
     val sy = (item.y - world.camY) * zm + h / 2f
     val sr = item.r * zm
-    val cull = sr * 4f
+    val cull = sr * 4.5f
     if (sx < -cull || sx > w + cull || sy < -cull || sy > h + cull) return
 
     // Wackeln bei "zu groß", Kippen/Schrumpfen beim Sinken
@@ -2000,88 +2109,250 @@ private fun DrawScope.holeDrawItem(
         nc.scale(sr * sc, sr * sc)
         val alphaInt = (alpha * 255).toInt().coerceIn(0, 255)
         when (item.shape) {
-            HoleShape.BALL -> {
-                val p = paints.ballFor(item.color)
-                p.alpha = alphaInt
-                nc.drawCircle(0f, -0.9f, 1f, p)
-                emojiPaint.alpha = alphaInt
-                emojiPaint.textSize = 1.1f
-                val yOff = (emojiPaint.ascent() + emojiPaint.descent()) / 2f
-                nc.drawText(item.emoji, 0f, -0.9f - yOff, emojiPaint)
-                emojiPaint.alpha = 255
-            }
-            HoleShape.TOWER -> {
-                val sp = paints.sideFor(item.color)
-                sp.alpha = alphaInt
-                nc.drawRoundRect(-0.75f, -2.6f, 0.75f, 0.1f, 0.22f, 0.22f, sp)
-                val tp = paints.topFor(item.color)
-                tp.alpha = alphaInt
-                nc.drawOval(-0.75f, -3.0f, 0.75f, -2.2f, tp)
-                emojiPaint.alpha = alphaInt
-                emojiPaint.textSize = 1.2f
-                val yOff = (emojiPaint.ascent() + emojiPaint.descent()) / 2f
-                nc.drawText(item.emoji, 0f, -2.6f - yOff, emojiPaint)
-                emojiPaint.alpha = 255
-            }
-            HoleShape.PYRAMID -> {
-                val sp = paints.sideFor(item.color)
-                sp.alpha = alphaInt
-                val tp = paints.topFor(item.color)
-                tp.alpha = alphaInt
-                var hw = 1.0f
-                var y0 = 0.05f
-                repeat(3) {
-                    nc.drawRoundRect(-hw, y0 - 0.72f, hw, y0, 0.14f, 0.14f, sp)
-                    nc.drawRect(-hw, y0 - 0.72f, hw, y0 - 0.56f, tp)
-                    hw -= 0.3f
-                    y0 -= 0.72f
-                }
-                emojiPaint.alpha = alphaInt
-                emojiPaint.textSize = 1.0f
-                val yOff = (emojiPaint.ascent() + emojiPaint.descent()) / 2f
-                nc.drawText(item.emoji, 0f, y0 + 0.25f - yOff, emojiPaint)
-                emojiPaint.alpha = 255
-            }
-            HoleShape.BOX -> {
-                val sp = paints.sideFor(item.color)
-                sp.alpha = alphaInt
-                nc.drawRoundRect(-0.85f, -1.9f, 0.85f, 0.1f, 0.10f, 0.10f, sp)
-                val tp = paints.topFor(item.color)
-                tp.alpha = alphaInt
-                nc.drawRect(-0.85f, -1.9f, 0.85f, -1.55f, tp)
-                // Fenster
-                emojiPaint.alpha = (alphaInt * 0.85f).toInt().coerceIn(0, 255)
-                emojiPaint.textSize = 0.55f
-                nc.drawText("▪", -0.4f, -0.9f, emojiPaint)
-                nc.drawText("▪", 0.4f, -0.5f, emojiPaint)
-                emojiPaint.alpha = 255
-                emojiPaint.textSize = 0.9f
-                val yOff = (emojiPaint.ascent() + emojiPaint.descent()) / 2f
-                emojiPaint.alpha = alphaInt
-                nc.drawText(item.emoji, 0f, -2.0f - yOff, emojiPaint)
-                emojiPaint.alpha = 255
-            }
-            HoleShape.TREE -> {
-                val trunk = paints.sideFor(Color(0xFF6D4C41))
-                trunk.alpha = alphaInt
-                nc.drawRect(-0.14f, -0.9f, 0.14f, 0.1f, trunk)
-                val fol = paints.ballFor(Color(0xFF388E3C))
-                fol.alpha = alphaInt
-                nc.drawCircle(0f, -1.2f, 0.85f, fol)
-                nc.drawCircle(0.4f, -0.75f, 0.55f, fol)
-            }
-            HoleShape.SPECIAL -> {
-                val p = paints.ballFor(item.color)
-                p.alpha = alphaInt
-                nc.drawCircle(0f, -0.9f, 1f, p)
-                emojiPaint.alpha = alphaInt
-                emojiPaint.textSize = 1.5f
-                val yOff = (emojiPaint.ascent() + emojiPaint.descent()) / 2f
-                nc.drawText(item.emoji, 0f, -0.9f - yOff, emojiPaint)
-                emojiPaint.alpha = 255
-            }
+            HoleShape.DONUT -> holeNcDonut(nc, paints, item.color, item.variant, item.seed, alphaInt)
+            HoleShape.DONUTSTACK -> holeNcDonutStack(nc, paints, item.color, item.variant, item.seed, alphaInt)
+            HoleShape.CUPCAKE -> holeNcCupcake(nc, paints, item.color, item.variant, alphaInt)
+            HoleShape.CAKE -> holeNcCake(nc, paints, item.color, alphaInt)
+            HoleShape.CAN -> holeNcCan(nc, paints, item.color, item.variant, alphaInt)
+            HoleShape.LOLLI -> holeNcLolli(nc, paints, item.color, alphaInt)
+            HoleShape.CANDY -> holeNcCandy(nc, paints, item.color, alphaInt)
+            HoleShape.BUILDING -> holeNcBuilding(nc, paints, item.color, alphaInt)
+            HoleShape.TREE -> holeNcTree(nc, paints, alphaInt)
+            HoleShape.SPECIAL -> holeNcSpecial(nc, paints, item.kind, world.time, alphaInt)
         }
         nc.restore()
+    }
+}
+
+// ————— Detail-Objekte im Unit-Space (r = 1, Bodenkontakt bei y = 0) —————
+
+// Donut: Teig-Körper + Frosting in Formationsfarbe + Tropfen + Loch + Streusel
+private fun holeNcDonut(nc: android.graphics.Canvas, paints: HolePaintCache, frost: Color, variant: Int, seed: Int, alpha: Int) {
+    val sp = paints.sideFor(HoleDough); sp.alpha = alpha
+    nc.drawOval(-1f, -0.95f, 1f, 0.05f, sp)
+    val tp = paints.topFor(HoleDough); tp.alpha = alpha
+    nc.drawOval(-0.98f, -1.35f, 0.98f, -0.45f, tp)
+    val fp = paints.ballFor(frost); fp.alpha = alpha
+    nc.drawOval(-0.82f, -1.26f, 0.82f, -0.52f, fp)
+    // Tropfen am Frosting-Rand
+    for (k in 0 until 5) {
+        val a = ((seed * 29 + k * 72) % 360) * 0.01745f
+        nc.drawCircle(cos(a) * 0.80f, -0.89f + sin(a) * 0.34f, 0.09f, fp)
+    }
+    // Loch in der Mitte
+    val hp = paints.solidFor(holeShade(HoleDough, 0.30f)); hp.alpha = alpha
+    nc.drawOval(-0.27f, -1.02f, 0.27f, -0.76f, hp)
+    // Streusel (deterministisch aus seed — kein Random pro Frame)
+    for (k in 0 until 7) {
+        val a = ((seed * 31 + k * 137) % 360) * 0.01745f
+        val rr = 0.40f + ((seed * 17 + k * 73) % 100) / 100f * 0.34f
+        val px = cos(a) * rr
+        val py = -0.89f + sin(a) * rr * 0.32f
+        if (px * px + (py + 0.89f) * (py + 0.89f) < 0.10f) continue
+        val spr = paints.solidFor(HoleSprinkles[(seed + k + variant).mod(HoleSprinkles.size)]); spr.alpha = alpha
+        nc.save()
+        nc.translate(px, py)
+        nc.rotate(((seed * 13 + k * 97) % 90 - 45).toFloat())
+        nc.drawRect(-0.07f, -0.025f, 0.07f, 0.025f, spr)
+        nc.restore()
+    }
+}
+
+// Donut-Stapel: 3 versetzte Donuts übereinander
+private fun holeNcDonutStack(nc: android.graphics.Canvas, paints: HolePaintCache, frost: Color, variant: Int, seed: Int, alpha: Int) {
+    repeat(3) { i ->
+        nc.save()
+        nc.translate(if (i % 2 == 0) -0.05f else 0.05f, -i * 0.60f)
+        val s = 1f - i * 0.07f
+        nc.scale(s, s)
+        holeNcDonut(nc, paints, frost, variant + i, seed + i * 13, alpha)
+        nc.restore()
+    }
+}
+
+// Cupcake: geriffelte Tüte + 3 Frosting-Bälle + Kirsche
+private fun holeNcCupcake(nc: android.graphics.Canvas, paints: HolePaintCache, frost: Color, variant: Int, alpha: Int) {
+    val wp = paints.sideFor(Color(0xFFF5E0C8)); wp.alpha = alpha
+    nc.drawPath(HoleTrapezPath, wp)
+    // Riffelung (auf die Tüte geclippt)
+    val stripe = paints.solidFor(Color(0xFFD9BFA0)); stripe.alpha = alpha
+    nc.save()
+    nc.clipPath(HoleTrapezPath)
+    for (k in 0 until 4) {
+        val x = -0.48f + k * 0.32f
+        nc.drawRect(x, -1.05f, x + 0.09f, 0.05f, stripe)
+    }
+    nc.restore()
+    // Frosting-Haube
+    val fp = paints.ballFor(frost); fp.alpha = alpha
+    nc.drawCircle(0f, -1.30f, 0.62f, fp)
+    nc.drawCircle(0f, -1.78f, 0.45f, fp)
+    nc.drawCircle(0f, -2.14f, 0.28f, fp)
+    // Kirsche mit Glanzpunkt
+    val ch = paints.ballFor(Color(0xFFE53935)); ch.alpha = alpha
+    nc.drawCircle(0.10f, -2.42f, 0.16f, ch)
+    val wh = paints.solidFor(Color.White); wh.alpha = (alpha * 0.85f).toInt()
+    nc.drawCircle(0.05f, -2.47f, 0.05f, wh)
+}
+
+// Torte: 3 Zylinder-Etagen + Creme-Ringe + Kirsche
+private fun holeNcCake(nc: android.graphics.Canvas, paints: HolePaintCache, color: Color, alpha: Int) {
+    val sp = paints.sideFor(color); sp.alpha = alpha
+    val tp = paints.topFor(color); tp.alpha = alpha
+    val cream = paints.solidFor(Color(0xFFFFF8F0)); cream.alpha = alpha
+    var hw = 1.0f
+    var y0 = 0.05f
+    repeat(3) { i ->
+        nc.drawRoundRect(-hw, y0 - 0.62f, hw, y0, 0.10f, 0.10f, sp)
+        nc.drawOval(-hw, y0 - 0.90f, hw, y0 - 0.50f, tp)
+        if (i < 2) nc.drawOval(-hw * 0.96f, y0 - 1.02f, hw * 0.96f, y0 - 0.84f, cream)
+        hw *= 0.72f
+        y0 -= 0.78f
+    }
+    val ch = paints.ballFor(Color(0xFFE53935)); ch.alpha = alpha
+    nc.drawCircle(0f, y0 - 0.55f, 0.18f, ch)
+    val wh = paints.solidFor(Color.White); wh.alpha = (alpha * 0.85f).toInt()
+    nc.drawCircle(-0.05f, y0 - 0.61f, 0.05f, wh)
+}
+
+// Dose: Zylinder + Label-Band + Deckel + Glanzstreifen
+private fun holeNcCan(nc: android.graphics.Canvas, paints: HolePaintCache, color: Color, variant: Int, alpha: Int) {
+    val sp = paints.sideFor(color); sp.alpha = alpha
+    nc.drawRoundRect(-0.70f, -1.9f, 0.70f, 0.08f, 0.10f, 0.10f, sp)
+    val lp = paints.solidFor(HoleCanLabels[variant.mod(HoleCanLabels.size)]); lp.alpha = alpha
+    nc.drawRect(-0.70f, -1.25f, 0.70f, -0.75f, lp)
+    val tp = paints.topFor(Color(0xFFECEFF1)); tp.alpha = alpha
+    nc.drawOval(-0.70f, -2.12f, 0.70f, -1.72f, tp)
+    val wh = paints.solidFor(Color.White); wh.alpha = (alpha * 0.30f).toInt()
+    nc.drawRect(-0.48f, -1.85f, -0.34f, 0.0f, wh)
+}
+
+// Lollipop: Stiel + Kugel + Wirbel
+private fun holeNcLolli(nc: android.graphics.Canvas, paints: HolePaintCache, color: Color, alpha: Int) {
+    val st = paints.solidFor(Color(0xFFFFF8F0)); st.alpha = alpha
+    nc.drawRect(-0.06f, -0.9f, 0.06f, 0.05f, st)
+    val bp = paints.ballFor(color); bp.alpha = alpha
+    nc.drawCircle(0f, -1.25f, 0.72f, bp)
+    HoleStrokeP.color = Color.White.toArgb()
+    HoleStrokeP.alpha = (alpha * 0.75f).toInt()
+    HoleStrokeP.strokeWidth = 0.10f
+    nc.drawArc(-0.45f, -1.70f, 0.45f, -0.80f, -60f, 160f, false, HoleStrokeP)
+}
+
+// Bonbon: Körper + zwei gedrehte Enden + Streifen
+private fun holeNcCandy(nc: android.graphics.Canvas, paints: HolePaintCache, color: Color, alpha: Int) {
+    val ep = paints.sideFor(holeShade(color, 0.7f)); ep.alpha = alpha
+    nc.drawPath(HoleCandyEndL, ep)
+    nc.drawPath(HoleCandyEndR, ep)
+    val bp = paints.ballFor(color); bp.alpha = alpha
+    nc.drawOval(-0.80f, -1.05f, 0.80f, -0.15f, bp)
+    HoleStrokeP.color = Color.White.toArgb()
+    HoleStrokeP.alpha = (alpha * 0.5f).toInt()
+    HoleStrokeP.strokeWidth = 0.09f
+    nc.drawLine(-0.30f, -1.0f, -0.05f, -0.2f, HoleStrokeP)
+    nc.drawLine(0.05f, -1.0f, 0.30f, -0.2f, HoleStrokeP)
+}
+
+// Gebäude: Quader mit zwei Seitenflächen + Dach + Fenster-Raster
+private fun holeNcBuilding(nc: android.graphics.Canvas, paints: HolePaintCache, color: Color, alpha: Int) {
+    val side = paints.sideFor(holeShade(color, 0.60f)); side.alpha = alpha
+    nc.drawPath(HoleBuildSidePath, side)
+    val front = paints.sideFor(holeTint(color, 0.15f)); front.alpha = alpha
+    nc.drawRect(-0.85f, -2.0f, 0.85f, 0.10f, front)
+    val roof = paints.topFor(holeShade(color, 0.8f)); roof.alpha = alpha
+    nc.drawPath(HoleBuildRoofPath, roof)
+    val win = paints.solidFor(Color(0xFFFFF9C4)); win.alpha = (alpha * 0.9f).toInt()
+    for (r in 0 until 3) {
+        for (c in 0 until 2) {
+            nc.drawRect(-0.55f + c * 0.75f, -1.75f + r * 0.55f, -0.15f + c * 0.75f, -1.40f + r * 0.55f, win)
+        }
+    }
+}
+
+// Baum: Stamm + 3 schattierte Laub-Bälle
+private fun holeNcTree(nc: android.graphics.Canvas, paints: HolePaintCache, alpha: Int) {
+    val trunk = paints.sideFor(Color(0xFF6D4C41)); trunk.alpha = alpha
+    nc.drawRect(-0.14f, -0.9f, 0.14f, 0.1f, trunk)
+    val f1 = paints.ballFor(Color(0xFF2E7D32)); f1.alpha = alpha
+    nc.drawCircle(0f, -1.3f, 0.78f, f1)
+    val f2 = paints.ballFor(Color(0xFF43A047)); f2.alpha = alpha
+    nc.drawCircle(-0.5f, -0.85f, 0.52f, f2)
+    val f3 = paints.ballFor(Color(0xFF66BB6A)); f3.alpha = alpha
+    nc.drawCircle(0.48f, -0.8f, 0.55f, f3)
+}
+
+// Spezial-Objekte: gezeichnet statt Emoji
+private fun holeNcSpecial(nc: android.graphics.Canvas, paints: HolePaintCache, kind: HoleKind, time: Float, alpha: Int) {
+    when (kind) {
+        HoleKind.BOMBE -> {
+            val bp = paints.ballFor(Color(0xFF263238)); bp.alpha = alpha
+            nc.drawCircle(0f, -0.85f, 0.90f, bp)
+            val wh = paints.solidFor(Color.White); wh.alpha = (alpha * 0.5f).toInt()
+            nc.drawCircle(-0.28f, -1.15f, 0.16f, wh)
+            // Lunte + flackernder Funke
+            HoleStrokeP.color = Color(0xFF8D6E63).toArgb()
+            HoleStrokeP.alpha = alpha
+            HoleStrokeP.strokeWidth = 0.09f
+            nc.drawLine(0f, -1.72f, 0.15f, -2.0f, HoleStrokeP)
+            val spark = paints.solidFor(if (sin(time * 20f) > 0f) Color(0xFFFFD54F) else Color(0xFFFF7043))
+            spark.alpha = alpha
+            nc.drawCircle(0.15f, -2.02f, 0.12f + 0.04f * sin(time * 26f), spark)
+        }
+        HoleKind.GOLD -> {
+            val gp = paints.topFor(Color(0xFFFBBF24)); gp.alpha = alpha
+            nc.save()
+            nc.translate(0f, -0.95f)
+            nc.drawPath(HoleStarPath, gp)
+            HoleStrokeP.color = Color(0xFF92650B).toArgb()
+            HoleStrokeP.alpha = alpha
+            HoleStrokeP.strokeWidth = 0.07f
+            nc.drawPath(HoleStarPath, HoleStrokeP)
+            nc.restore()
+        }
+        HoleKind.HERZ -> {
+            val hp = paints.ballFor(Color(0xFFEF5350)); hp.alpha = alpha
+            nc.save()
+            nc.translate(0f, -0.55f)
+            nc.drawPath(HoleHeartPath, hp)
+            nc.restore()
+            val wh = paints.solidFor(Color.White); wh.alpha = (alpha * 0.6f).toInt()
+            nc.drawCircle(-0.25f, -1.0f, 0.12f, wh)
+        }
+        HoleKind.UHR -> {
+            val face = paints.solidFor(Color(0xFFFDFDF8)); face.alpha = alpha
+            nc.drawCircle(0f, -0.9f, 0.85f, face)
+            HoleStrokeP.color = Color(0xFF22D3EE).toArgb()
+            HoleStrokeP.alpha = alpha
+            HoleStrokeP.strokeWidth = 0.12f
+            nc.drawCircle(0f, -0.9f, 0.85f, HoleStrokeP)
+            // Zeiger
+            HoleStrokeP.color = Color(0xFF37474F).toArgb()
+            HoleStrokeP.strokeWidth = 0.08f
+            nc.drawLine(0f, -0.9f, 0f, -1.45f, HoleStrokeP)
+            nc.drawLine(0f, -0.9f, 0.38f, -0.75f, HoleStrokeP)
+        }
+        HoleKind.MAGNET -> {
+            // Hufeisen (∩-Bogen) + weiße Pole
+            HoleStrokeP.color = Color(0xFFE53935).toArgb()
+            HoleStrokeP.alpha = alpha
+            HoleStrokeP.strokeWidth = 0.34f
+            nc.drawArc(-0.7f, -1.6f, 0.7f, -0.2f, 180f, 180f, false, HoleStrokeP)
+            val tip = paints.solidFor(Color(0xFFFDFDF8)); tip.alpha = alpha
+            nc.drawRect(-0.87f, -1.05f, -0.53f, -0.55f, tip)
+            nc.drawRect(0.53f, -1.05f, 0.87f, -0.55f, tip)
+        }
+        HoleKind.REGENBOGEN -> {
+            // 3 Farbbögen
+            HoleStrokeP.alpha = alpha
+            HoleStrokeP.strokeWidth = 0.20f
+            val cols = intArrayOf(Color(0xFFEF5350).toArgb(), Color(0xFFFBBF24).toArgb(), Color(0xFF42A5F5).toArgb())
+            for (i in 0 until 3) {
+                HoleStrokeP.color = cols[i]
+                val e = 0.90f - i * 0.22f
+                nc.drawArc(-e, -0.85f - e, e, -0.85f + e, 180f, 180f, false, HoleStrokeP)
+            }
+        }
+        else -> {}
     }
 }
 
