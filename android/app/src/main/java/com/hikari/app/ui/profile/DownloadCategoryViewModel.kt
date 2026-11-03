@@ -168,6 +168,22 @@ class DownloadCategoryViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Wählt alle Folgen einer Serie auf einmal aus bzw. ab. In der
+     * Serienübersicht gibt es keine aufgeklappten Einzelfolgen mehr — damit
+     * „Bearbeiten“ dort trotzdem funktioniert, schaltet ein Tipp die ganze
+     * Serie um.
+     */
+    fun toggleGroupSelection(episodeIds: List<String>) {
+        if (episodeIds.isEmpty()) return
+        _state.update {
+            val s = it.selectedVideoIds.toMutableSet()
+            if (s.containsAll(episodeIds)) s.removeAll(episodeIds.toSet())
+            else s.addAll(episodeIds)
+            it.copy(selectedVideoIds = s, editMode = true)
+        }
+    }
+
     fun clearSelection() {
         _state.update { it.copy(selectedVideoIds = emptySet()) }
     }

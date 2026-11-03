@@ -21,14 +21,20 @@ import com.hikari.app.ui.library.components.TopTenCharts
 import com.hikari.app.ui.library.components.TopTenItem
 import com.hikari.app.data.api.dto.LibraryVideoDto
 import com.hikari.app.data.api.dto.isFilm
+import com.hikari.app.data.db.LocalDownloadKind
+import com.hikari.app.domain.download.LocalDownloadManager
+import com.hikari.app.domain.download.LocalDownloadMetadata
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import retrofit2.HttpException
@@ -82,6 +88,7 @@ class LibraryViewModel @Inject constructor(
     private val musicRepo: MusicRepository,
     private val musicPlayer: MusicPlayerController,
     private val playbackRepo: PlaybackRepository,
+    private val localDownloads: LocalDownloadManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<LibraryUiState>(LibraryUiState.Loading)
@@ -115,6 +122,20 @@ class LibraryViewModel @Inject constructor(
     /** Alle Serien — Auswahlliste für den Merge-Dialog im Serien-Detail. */
     private val _allSeries = MutableStateFlow<List<SeriesItemDto>>(emptyList())
     val allSeries: StateFlow<List<SeriesItemDto>> = _allSeries.asStateFlow()
+
+    /** videoIds, die tatsächlich auf dem Gerät liegen — für das Download-Icon. */
+    val localIds: StateFlow<Set<String>> = localDownloads.downloadedIds
+        .map { it.toSet() }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+
+    /** Laufender Download pro videoId (0f..1f), absent = kein Download. */
+    val downloadProgress: StateFlow<Map<String, Float>> = localDownloads.progress
+
+    private val _seriesBulkDownloading = MutableStateFlow(false)
+    val seriesBulkDownloading: StateFlow<Boolean> = _seriesBulkDownloading.asStateFlow()
+
+    private val _downloadActionError = MutableStateFlow<String?>(null)
+    val downloadActionError: StateFlow<String?> = _downloadActionError.asStateFlow()
 
     init {
         loadLibrary()
@@ -339,6 +360,63 @@ class LibraryViewModel @Inject constructor(
                 .onSuccess { _allSeries.value = it }
         }
     }
+
+    /**
+     * Lädt eine einzelne Folge der gerade offenen Serie auf das Gerät.
+     * Die Metadaten der Serie wandern mit, damit der Offline-Fallback in
+     * Downloads die Folge später korrekt gruppieren kann.
+     */
+    fun downloadEpisode(series: SeriesDetailResponse, video: LibraryVideoDto) {
+        viewModelScope.launch {
+            _downloadActionError.value = null
+            localDownloads.download(video.toDownloadMetadata(series))
+                .onFailure {
+                    _downloadActionError.value =
+                        "Download fehlgeschlagen — ist das Gerät online?"
+                }
+        }
+    }
+
+    /** Lädt alle noch fehlenden Folgen nacheinander — für „Staffel laden“. */
+    fun downloadEpisodes(series: SeriesDetailResponse, episodes: List<LibraryVideoDto>) {
+        if (_seriesBulkDownloading.value) return
+        viewModelScope.launch {
+            _seriesBulkDownloading.value = true
+            _downloadActionError.value = null
+            for (video in episodes) {
+                if (localDownloads.isDownloaded(video.id)) continue
+                val result = localDownloads.download(video.toDownloadMetadata(series))
+                if (result.isFailure) {
+                    _downloadActionError.value =
+                        "Download fehlgeschlagen — ist das Gerät online?"
+                    break
+                }
+            }
+            _seriesBulkDownloading.value = false
+        }
+    }
+
+    fun removeLocalDownload(videoId: String) {
+        viewModelScope.launch { localDownloads.delete(videoId) }
+    }
+
+    fun clearDownloadActionError() {
+        _downloadActionError.value = null
+    }
+
+    private fun LibraryVideoDto.toDownloadMetadata(series: SeriesDetailResponse) =
+        LocalDownloadMetadata(
+            videoId = id,
+            kind = LocalDownloadKind.SERIES,
+            title = title,
+            durationSeconds = duration_seconds,
+            thumbnailUrl = thumbnail_url,
+            seriesId = series.id,
+            seriesTitle = series.title,
+            seriesThumbnailUrl = series.thumbnail_url,
+            season = season,
+            episode = episode,
+        )
 
     /**
      * Führt die aktuelle Serie (source) in eine andere (target) zusammen.

@@ -52,6 +52,8 @@ import com.hikari.app.ui.manga.MangaReaderScreen
 import com.hikari.app.ui.player.FullscreenOriginalPlayer
 import com.hikari.app.ui.player.VideoPlayerScreen
 import com.hikari.app.ui.profile.DownloadCategoryScreen
+import com.hikari.app.ui.profile.DownloadMovieDetailScreen
+import com.hikari.app.ui.profile.DownloadSeriesDetailScreen
 import com.hikari.app.ui.profile.ProfileScreen
 import com.hikari.app.ui.profile.tabs.DownloadCategory
 import com.hikari.app.ui.settings.SettingsScreen
@@ -709,6 +711,34 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                         onBack = { nav.popBackStack() },
                         onPlayVideo = { videoId, title, channel ->
                             nav.navigate(playVideoRoute(videoId, title, channel))
+                        },
+                        onOpenSeries = { id -> nav.navigate("download-series/$id") },
+                        onOpenMovie = { id -> nav.navigate("download-movie/$id") },
+                    )
+                }
+            }
+            composable(
+                route = "download-series/{seriesId}",
+                arguments = listOf(navArgument("seriesId") { type = NavType.StringType }),
+            ) {
+                Box(Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding())) {
+                    DownloadSeriesDetailScreen(
+                        onBack = { nav.popBackStack() },
+                        onPlayVideo = { videoId, title, channel ->
+                            nav.navigate(playVideoRoute(videoId, title, channel))
+                        },
+                    )
+                }
+            }
+            composable(
+                route = "download-movie/{videoId}",
+                arguments = listOf(navArgument("videoId") { type = NavType.StringType }),
+            ) {
+                Box(Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding())) {
+                    DownloadMovieDetailScreen(
+                        onBack = { nav.popBackStack() },
+                        onPlayVideo = { id, title, channel ->
+                            nav.navigate(playVideoRoute(id, title, channel))
                         },
                     )
                 }

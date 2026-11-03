@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
@@ -58,6 +59,8 @@ import com.hikari.app.data.api.dto.SeriesDetailResponse
 import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.ui.components.FallbackArtwork
 import com.hikari.app.ui.components.resumeAwareThumbnail
+import com.hikari.app.ui.profile.components.LocalDownloadIcon
+import com.hikari.app.ui.profile.components.LocalState
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariDanger
@@ -75,6 +78,10 @@ fun SeriesDetailScreen(
 ) {
     val state by viewModel.seriesState.collectAsState()
     val allSeries by viewModel.allSeries.collectAsState()
+    val localIds by viewModel.localIds.collectAsState()
+    val downloadProgress by viewModel.downloadProgress.collectAsState()
+    val bulkDownloading by viewModel.seriesBulkDownloading.collectAsState()
+    val downloadError by viewModel.downloadActionError.collectAsState()
 
     var showMergePicker by remember { mutableStateOf(false) }
     var mergeTarget by remember { mutableStateOf<SeriesItemDto?>(null) }
@@ -100,8 +107,16 @@ fun SeriesDetailScreen(
             is SeriesUiState.Success ->
                 SeriesDetailContent(
                     data = s.data,
+                    localIds = localIds,
+                    downloadProgress = downloadProgress,
+                    bulkDownloading = bulkDownloading,
+                    downloadError = downloadError,
                     onBack = onBack,
                     onPlayVideo = onPlayVideo,
+                    onDownloadEpisode = { viewModel.downloadEpisode(s.data, it) },
+                    onRemoveLocal = viewModel::removeLocalDownload,
+                    onBulkDownload = { viewModel.downloadEpisodes(s.data, it) },
+                    onDismissDownloadError = viewModel::clearDownloadActionError,
                     onMergeClick = {
                         viewModel.loadAllSeries()
                         mergeError = null
@@ -192,8 +207,16 @@ fun SeriesDetailScreen(
 @Composable
 private fun SeriesDetailContent(
     data: SeriesDetailResponse,
+    localIds: Set<String>,
+    downloadProgress: Map<String, Float>,
+    bulkDownloading: Boolean,
+    downloadError: String?,
     onBack: () -> Unit,
     onPlayVideo: (String) -> Unit,
+    onDownloadEpisode: (LibraryVideoDto) -> Unit,
+    onRemoveLocal: (String) -> Unit,
+    onBulkDownload: (List<LibraryVideoDto>) -> Unit,
+    onDismissDownloadError: () -> Unit,
     onMergeClick: () -> Unit,
 ) {
     val seasons = remember(data.videos) {
@@ -222,6 +245,12 @@ private fun SeriesDetailContent(
         else data.videos.filter { (it.season ?: 1) == selectedSeason }
             .sortedBy { it.episode ?: 0 }
     }
+
+    val missingForSeason = remember(episodesForSeason, localIds) {
+        episodesForSeason.filter { it.downloaded != 0 && !localIds.contains(it.id) }
+    }
+    val allLocal = episodesForSeason.isNotEmpty() &&
+        episodesForSeason.all { localIds.contains(it.id) }
 
     val year = remember(data.videos) {
         data.videos.firstOrNull()?.published_at?.let {
@@ -256,27 +285,70 @@ private fun SeriesDetailContent(
 
         item { Spacer(Modifier.height(16.dp)) }
 
+        if (downloadError != null) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 6.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(HikariDanger.copy(alpha = 0.12f))
+                        .border(0.5.dp, HikariDanger.copy(alpha = 0.4f), RoundedCornerShape(6.dp))
+                        .clickable(onClick = onDismissDownloadError)
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                ) {
+                    Text(downloadError, color = HikariDanger, fontSize = 12.sp)
+                }
+            }
+        }
+
         item {
-            if (seasons.size >= 2) {
-                SeasonDropdown(
-                    seasons = seasons,
-                    selected = selectedSeason,
-                    onChange = { selectedSeason = it },
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
-                )
-            } else {
-                Text(
-                    text = "Folgen",
-                    color = HikariText,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
-                )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 20.dp, end = 14.dp, top = 4.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (seasons.size >= 2) {
+                    SeasonDropdown(
+                        seasons = seasons,
+                        selected = selectedSeason,
+                        onChange = { selectedSeason = it },
+                    )
+                } else {
+                    Text(
+                        text = "Folgen",
+                        color = HikariText,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                Spacer(Modifier.weight(1f))
+                if (episodesForSeason.isNotEmpty()) {
+                    LibrarySeasonDownloadButton(
+                        missingCount = missingForSeason.size,
+                        allLocal = allLocal,
+                        downloading = bulkDownloading,
+                        onClick = { onBulkDownload(missingForSeason) },
+                    )
+                }
             }
         }
 
         items(episodesForSeason, key = { it.id }) { video ->
-            EpisodeRow(video) { if (video.downloaded != 0) onPlayVideo(video.id) }
+            val isLocal = localIds.contains(video.id)
+            val progress = downloadProgress[video.id]
+            EpisodeRow(
+                video = video,
+                canPlay = video.downloaded != 0 || isLocal,
+                downloadable = video.downloaded != 0 || isLocal,
+                isLocal = isLocal,
+                downloadProgress = progress,
+                onDownloadClick = {
+                    if (isLocal) onRemoveLocal(video.id) else onDownloadEpisode(video)
+                },
+                onClick = { if (video.downloaded != 0 || isLocal) onPlayVideo(video.id) },
+            )
         }
 
         item { Spacer(Modifier.height(40.dp)) }
@@ -509,7 +581,15 @@ private fun SeasonDropdown(
 // ─── Episode row ─────────────────────────────────────────────────────────────
 
 @Composable
-private fun EpisodeRow(video: LibraryVideoDto, onClick: () -> Unit) {
+private fun EpisodeRow(
+    video: LibraryVideoDto,
+    canPlay: Boolean,
+    downloadable: Boolean,
+    isLocal: Boolean,
+    downloadProgress: Float?,
+    onDownloadClick: () -> Unit,
+    onClick: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -555,10 +635,9 @@ private fun EpisodeRow(video: LibraryVideoDto, onClick: () -> Unit) {
         }
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f).padding(top = 2.dp)) {
-            val missing = video.downloaded == 0
             Text(
                 text = com.hikari.app.ui.library.EpisodeTitles.listTitle(video.episode, video.title),
-                color = if (missing) HikariTextFaint else HikariText,
+                color = if (canPlay) HikariText else HikariTextFaint,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
@@ -568,8 +647,12 @@ private fun EpisodeRow(video: LibraryVideoDto, onClick: () -> Unit) {
             Text(
                 // Eine Folge ohne Datei als solche ausweisen, statt den Nutzer
                 // ins Leere tippen zu lassen.
-                text = if (missing) "Nicht heruntergeladen" else "${video.duration_seconds / 60} min",
-                color = HikariTextFaint,
+                text = when {
+                    !canPlay -> "Nicht verfügbar"
+                    isLocal -> "✓ Auf dem Gerät · ${video.duration_seconds / 60} min"
+                    else -> "${video.duration_seconds / 60} min"
+                },
+                color = if (isLocal) HikariAmber else HikariTextFaint,
                 fontSize = 11.sp,
                 modifier = Modifier.padding(top = 4.dp),
             )
@@ -585,5 +668,69 @@ private fun EpisodeRow(video: LibraryVideoDto, onClick: () -> Unit) {
                 )
             }
         }
+        if (downloadable) {
+            LocalDownloadIcon(
+                state = when {
+                    isLocal -> LocalState.Local
+                    downloadProgress != null -> LocalState.Downloading
+                    else -> LocalState.NotLocal
+                },
+                progress = downloadProgress,
+                onClick = onDownloadClick,
+            )
+        }
+    }
+}
+
+/**
+ * „Staffel laden“ im Bibliotheks-Serien-Detail — lädt alle fehlenden Folgen
+ * der aktuellen Staffel nacheinander, genau wie auf der Download-Detailseite.
+ */
+@Composable
+private fun LibrarySeasonDownloadButton(
+    missingCount: Int,
+    allLocal: Boolean,
+    downloading: Boolean,
+    onClick: () -> Unit,
+) {
+    val active = !downloading && missingCount > 0
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .border(
+                1.dp,
+                if (active) HikariAmber.copy(alpha = 0.65f) else Color.White.copy(alpha = 0.18f),
+                RoundedCornerShape(6.dp),
+            )
+            .clickable(enabled = active, onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        when {
+            downloading -> CircularProgressIndicator(
+                color = HikariAmber,
+                strokeWidth = 2.dp,
+                modifier = Modifier.size(14.dp),
+            )
+            else -> Icon(
+                Icons.Default.CloudDownload,
+                contentDescription = null,
+                tint = if (active) HikariAmber else HikariTextFaint,
+                modifier = Modifier.size(15.dp),
+            )
+        }
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = when {
+                downloading -> "Lädt…"
+                allLocal -> "Staffel komplett"
+                missingCount > 0 -> "Staffel laden · $missingCount"
+                else -> "Staffel laden"
+            },
+            color = if (active || downloading) HikariAmber else HikariTextFaint,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+        )
     }
 }

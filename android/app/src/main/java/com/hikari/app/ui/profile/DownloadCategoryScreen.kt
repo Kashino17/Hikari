@@ -27,22 +27,16 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,7 +58,6 @@ import com.hikari.app.data.db.LocalMangaArcEntity
 import com.hikari.app.data.db.LocalMusicDownloadEntity
 import com.hikari.app.data.db.PlaybackPositionEntity
 import com.hikari.app.domain.download.LocalDownloadMetadata
-import com.hikari.app.ui.library.EpisodeTitles
 import com.hikari.app.ui.profile.components.DownloadGroupCard
 import com.hikari.app.ui.profile.components.EpisodeRow
 import com.hikari.app.ui.profile.components.GroupCoverShape
@@ -85,6 +78,8 @@ import com.hikari.app.ui.theme.HikariTextMuted
 fun DownloadCategoryScreen(
     onBack: () -> Unit,
     onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
+    onOpenSeries: (seriesId: String) -> Unit,
+    onOpenMovie: (videoId: String) -> Unit,
     vm: DownloadCategoryViewModel = hiltViewModel(),
 ) {
     val state by vm.state.collectAsState()
@@ -127,32 +122,9 @@ fun DownloadCategoryScreen(
                         DownloadCategory.SERIES -> SeriesPanel(
                             groups = data.series,
                             state = state,
-                            localIds = localIds,
-                            downloadProgress = progress,
                             playbackPositions = positions,
-                            onToggle = { vm.toggleExpand(it) },
-                            onSelect = { vm.toggleSelection(it) },
-                            onSeasonChange = { groupId, season ->
-                                vm.selectSeason(groupId, season)
-                            },
-                            onPlay = { onPlayVideo(it.id, it.title, "") },
-                            onDownload = { group, ep ->
-                                vm.downloadLocally(
-                                    LocalDownloadMetadata(
-                                        videoId = ep.id,
-                                        kind = LocalDownloadKind.SERIES,
-                                        title = ep.title,
-                                        durationSeconds = ep.duration_seconds,
-                                        thumbnailUrl = ep.thumbnail_url,
-                                        seriesId = group.id,
-                                        seriesTitle = group.title,
-                                        seriesThumbnailUrl = group.thumbnail_url,
-                                        season = ep.season,
-                                        episode = ep.episode,
-                                    ),
-                                )
-                            },
-                            onRemoveLocal = { vm.removeLocal(it.id) },
+                            onOpen = onOpenSeries,
+                            onSelectGroup = { group -> vm.toggleGroupSelection(group.episodes.map { it.id }) },
                         )
                         DownloadCategory.CHANNELS -> ChannelsPanel(
                             groups = data.channels,
@@ -188,7 +160,7 @@ fun DownloadCategoryScreen(
                             downloadProgress = progress,
                             playbackPositions = positions,
                             onSelect = { vm.toggleSelection(it) },
-                            onPlay = { onPlayVideo(it.id, it.title, "") },
+                            onOpenMovie = onOpenMovie,
                             onDownload = { m ->
                                 vm.downloadLocally(
                                     LocalDownloadMetadata(
@@ -339,15 +311,9 @@ private fun Hero(title: String, meta: String) {
 private fun SeriesPanel(
     groups: List<SeriesGroupDto>,
     state: DownloadCategoryUiState,
-    localIds: Set<String>,
-    downloadProgress: Map<String, Float>,
     playbackPositions: Map<String, PlaybackPositionEntity>,
-    onToggle: (String) -> Unit,
-    onSelect: (String) -> Unit,
-    onSeasonChange: (groupId: String, season: Int) -> Unit,
-    onPlay: (com.hikari.app.data.api.dto.SeriesEpisodeDto) -> Unit,
-    onDownload: (SeriesGroupDto, com.hikari.app.data.api.dto.SeriesEpisodeDto) -> Unit,
-    onRemoveLocal: (com.hikari.app.data.api.dto.SeriesEpisodeDto) -> Unit,
+    onOpen: (String) -> Unit,
+    onSelectGroup: (SeriesGroupDto) -> Unit,
 ) {
     val totalEps = groups.sumOf { it.episode_count }
     val totalSize = groups.sumOf { it.total_bytes }
@@ -362,130 +328,21 @@ private fun SeriesPanel(
             val watchedCount = group.episodes.count { ep ->
                 episodeProgress(ep.duration_seconds, playbackPositions[ep.id], ep.progress_seconds) >= 0.95f
             }
+            val selected = group.episodes.isNotEmpty() &&
+                group.episodes.all { state.selectedVideoIds.contains(it.id) }
             DownloadGroupCard(
                 title = group.title,
                 meta = "${group.episode_count} Folgen · $watchedCount gesehen · ${formatBytes(group.total_bytes)}",
                 coverShape = GroupCoverShape.SQUARE,
                 coverUrl = group.thumbnail_url,
                 fallbackInitial = group.title.firstOrNull()?.uppercaseChar()?.toString(),
-                expanded = state.expandedGroupId == group.id,
+                expanded = false,
                 itemCount = group.episode_count,
                 selectionMode = state.editMode,
-                selected = false,
-                onToggle = { onToggle(group.id) },
-                onCheckChange = null,
-                expandedContent = {
-                    androidx.compose.foundation.layout.Column {
-                        val seasons = group.episodes.mapNotNull { it.season }.distinct().sorted()
-                        val selectedSeason = state.selectedSeasonByGroup[group.id]
-                            ?: seasons.firstOrNull()
-                            ?: 1
-                        if (seasons.size >= 2) {
-                            SeasonDropdown(
-                                seasons = seasons,
-                                selected = selectedSeason,
-                                onChange = { onSeasonChange(group.id, it) },
-                                modifier = Modifier.padding(start = 80.dp, top = 4.dp, bottom = 4.dp),
-                            )
-                        }
-                        val visibleEpisodes = if (seasons.isEmpty()) {
-                            group.episodes
-                        } else {
-                            group.episodes.filter { (it.season ?: 1) == selectedSeason }
-                        }.sortedBy { it.episode ?: 0 }
-
-                        visibleEpisodes.forEach { ep ->
-                            val isLocal = localIds.contains(ep.id)
-                            val progress = downloadProgress[ep.id]
-                            val fraction = episodeProgress(
-                                ep.duration_seconds,
-                                playbackPositions[ep.id],
-                                ep.progress_seconds,
-                            )
-                            EpisodeRow(
-                                title = EpisodeTitles.listTitle(ep.episode, ep.title),
-                                meta = episodeMeta(
-                                    watched = fraction >= 0.95f,
-                                    sizeBytes = ep.size_bytes,
-                                    durationSeconds = ep.duration_seconds,
-                                ),
-                                duration = formatDuration(ep.duration_seconds),
-                                thumbnailUrl = ep.thumbnail_url,
-                                progress = fraction,
-                                selectionMode = state.editMode,
-                                selected = state.selectedVideoIds.contains(ep.id),
-                                onPlay = { onPlay(ep) },
-                                onCheckChange = { onSelect(ep.id) },
-                                localState = when {
-                                    isLocal -> com.hikari.app.ui.profile.components.LocalState.Local
-                                    progress != null -> com.hikari.app.ui.profile.components.LocalState.Downloading
-                                    else -> com.hikari.app.ui.profile.components.LocalState.NotLocal
-                                },
-                                downloadProgress = progress,
-                                onDownloadClick = {
-                                    if (isLocal) onRemoveLocal(ep) else onDownload(group, ep)
-                                },
-                            )
-                        }
-                    }
-                },
+                selected = selected,
+                onToggle = { onOpen(group.id) },
+                onCheckChange = { onSelectGroup(group) },
             )
-        }
-    }
-}
-
-/**
- * Staffel-Dropdown wie im Bibliotheks-Serien-Detail. Die Download-Ansicht
- * gruppiert Folgen damit genauso wie die Live-Bibliothek.
- */
-@Composable
-private fun SeasonDropdown(
-    seasons: List<Int>,
-    selected: Int,
-    onChange: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    var expanded by remember { mutableStateOf(false) }
-    Box(modifier = modifier) {
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(4.dp))
-                .border(1.dp, Color.White.copy(alpha = 0.4f), RoundedCornerShape(4.dp))
-                .clickable { expanded = true }
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                "Staffel $selected",
-                color = Color.White,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Spacer(Modifier.size(6.dp))
-            Icon(
-                Icons.Default.ArrowDropDown,
-                contentDescription = "Staffel wählen",
-                tint = Color.White,
-            )
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            seasons.forEach { season ->
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            "Staffel $season",
-                            color = if (season == selected) HikariAmber else HikariText,
-                        )
-                    },
-                    onClick = {
-                        onChange(season)
-                        expanded = false
-                    },
-                )
-            }
         }
     }
 }
@@ -594,7 +451,7 @@ private fun MoviesPanel(
     downloadProgress: Map<String, Float>,
     playbackPositions: Map<String, PlaybackPositionEntity>,
     onSelect: (String) -> Unit,
-    onPlay: (MovieEntryDto) -> Unit,
+    onOpenMovie: (String) -> Unit,
     onDownload: (MovieEntryDto) -> Unit,
     onRemoveLocal: (MovieEntryDto) -> Unit,
 ) {
@@ -627,7 +484,7 @@ private fun MoviesPanel(
                     movie.progress_seconds,
                 ),
                 onClick = {
-                    if (state.editMode) onSelect(movie.id) else onPlay(movie)
+                    if (state.editMode) onSelect(movie.id) else onOpenMovie(movie.id)
                 },
                 onDownloadToggle = {
                     if (isLocal) onRemoveLocal(movie) else onDownload(movie)
