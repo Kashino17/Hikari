@@ -308,6 +308,29 @@ fun VideoPlayerScreen(
         switchTo(next.id, next.title)
     }
 
+    // Während der Wiedergabe regelmäßig sichern. Bisher wurde nur bei
+    // Folgenwechsel, Pause oder Verlassen geschrieben — ein Absturz verlor
+    // alles dazwischen, und ein offline gesehener Stand landete nie in der
+    // Sync-Queue. 15 s ist fein genug fürs Resume, aber kein Dauerfeuer.
+    LaunchedEffect(currentVideoId) {
+        while (true) {
+            kotlinx.coroutines.delay(15_000)
+            if (player.isPlaying) {
+                val pos = player.currentPosition
+                if (pos > 0L) savePositionAsync(currentVideoId, pos)
+            }
+        }
+    }
+
+    // Manuelles Pausieren ist ein natürlicher Speicherpunkt (z. B. mitten in
+    // einer Folge offline), noch bevor der Screen verlassen wird.
+    LaunchedEffect(playing) {
+        if (!playing) {
+            val pos = if (cast.casting) castPos else player.currentPosition
+            if (pos > 0L) savePositionAsync(currentVideoId, pos)
+        }
+    }
+
     // ── Laden + Position sichern ─────────────────────────────────────────
     LaunchedEffect(currentVideoId) {
         val isAlreadyPrepared = isReusing && currentVideoId == videoId && player.playbackState != Player.STATE_IDLE

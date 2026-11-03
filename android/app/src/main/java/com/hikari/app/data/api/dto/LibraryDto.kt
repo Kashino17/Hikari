@@ -27,6 +27,8 @@ data class LibraryVideoDto(
     val episode: Int? = null,
     val channelTitle: String? = null,
     val progress_seconds: Float? = null,
+    /** Zeitpunkt des letzten Fortschritts-Updates — für „Weiterschauen“. */
+    val progress_updated_at: Long? = null,
     val overall_score: Int? = null,
     /**
      * 1, wenn die Datei tatsächlich auf dem Server liegt. Eine videos-Zeile

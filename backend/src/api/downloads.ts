@@ -24,6 +24,7 @@ interface VideoRow {
   channel_banner: string | null;
   size_bytes: number;
   downloaded_at: number;
+  progress_seconds: number;
 }
 
 export interface MovieEntry {
@@ -33,6 +34,7 @@ export interface MovieEntry {
   duration_seconds: number;
   size_bytes: number;
   downloaded_at: number;
+  progress_seconds: number;
 }
 
 export interface SeriesEpisode {
@@ -44,6 +46,7 @@ export interface SeriesEpisode {
   thumbnail_url: string | null;
   size_bytes: number;
   downloaded_at: number;
+  progress_seconds: number;
 }
 
 export interface SeriesGroup {
@@ -62,6 +65,7 @@ export interface ChannelVideoEntry {
   thumbnail_url: string | null;
   size_bytes: number;
   downloaded_at: number;
+  progress_seconds: number;
 }
 
 export interface ChannelGroup {
@@ -106,11 +110,14 @@ export async function registerDownloadsRoutes(
             c.thumbnail_url AS channel_thumbnail,
             c.banner_url AS channel_banner,
             dv.file_size_bytes AS size_bytes,
-            dv.downloaded_at
+            dv.downloaded_at,
+            COALESCE(vp.progress_seconds, fi.progress_seconds, 0) AS progress_seconds
          FROM downloaded_videos dv
          JOIN videos v ON v.id = dv.video_id
          JOIN channels c ON c.id = v.channel_id
          LEFT JOIN series s ON s.id = v.series_id
+         LEFT JOIN feed_items fi ON fi.video_id = v.id
+         LEFT JOIN video_progress vp ON vp.video_id = v.id
          ORDER BY dv.downloaded_at DESC`,
       )
       .all() as VideoRow[];
@@ -130,6 +137,7 @@ export async function registerDownloadsRoutes(
           duration_seconds: r.duration_seconds,
           size_bytes: r.size_bytes,
           downloaded_at: r.downloaded_at,
+          progress_seconds: r.progress_seconds,
         });
       } else if (r.series_id) {
         let g = seriesMap.get(r.series_id);
@@ -153,6 +161,7 @@ export async function registerDownloadsRoutes(
           thumbnail_url: r.thumbnail_url,
           size_bytes: r.size_bytes,
           downloaded_at: r.downloaded_at,
+          progress_seconds: r.progress_seconds,
         });
         g.episode_count += 1;
         g.total_bytes += r.size_bytes;
@@ -179,6 +188,7 @@ export async function registerDownloadsRoutes(
           thumbnail_url: r.thumbnail_url,
           size_bytes: r.size_bytes,
           downloaded_at: r.downloaded_at,
+          progress_seconds: r.progress_seconds,
         });
         g.video_count += 1;
         g.total_bytes += r.size_bytes;

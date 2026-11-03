@@ -17,7 +17,7 @@ import com.hikari.app.data.db.LocalDownloadKind
  * Entscheidungen:
  *   - Series ohne seriesId  → fallen als Movie raus (defensiver Drift-Fallback).
  *   - Channel ohne channelId → künstliche Gruppe pro channelTitle, sonst Movie.
- *   - Episoden-Reihenfolge   → episode ASC, downloadedAt ASC als Tiebreaker.
+ *   - Episoden-Reihenfolge   → season ASC, episode ASC, downloadedAt als Tiebreaker.
  *   - Gruppen-Reihenfolge    → max(downloadedAt) DESC (zuletzt aktive oben).
  *   - Movies-Reihenfolge     → downloadedAt DESC (neueste zuerst).
  *   - total_bytes            → Summe aller Entities.
@@ -71,7 +71,8 @@ object OfflineDownloadsBuilder {
         val repr = items.maxBy { it.downloadedAt }
         val episodes = items
             .sortedWith(
-                compareBy<LocalDownloadEntity> { it.episode ?: Int.MAX_VALUE }
+                compareBy<LocalDownloadEntity> { it.season ?: 1 }
+                    .thenBy { it.episode ?: Int.MAX_VALUE }
                     .thenBy { it.downloadedAt },
             )
             .map { it.toEpisode() }

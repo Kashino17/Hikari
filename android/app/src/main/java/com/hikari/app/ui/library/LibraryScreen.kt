@@ -251,10 +251,14 @@ private fun LibraryContent(
     }
 
     val continueWatching = remember(data.recentlyAdded) {
-        data.recentlyAdded.filter {
-            val p = it.progress_seconds ?: 0f
-            p > 0f && p < it.duration_seconds.toFloat() * 0.95f
-        }
+        data.recentlyAdded
+            .filter {
+                val p = it.progress_seconds ?: 0f
+                p > 0f && p < it.duration_seconds.toFloat() * 0.95f
+            }
+            // Zuletzt geschaut zuerst. Ältere Server liefern keinen Zeitstempel
+            // (0) — dann bleibt die bisherige Reihenfolge stabil.
+            .sortedByDescending { it.progress_updated_at ?: 0L }
     }
     val heroVideo = continueWatching.firstOrNull() ?: data.recentlyAdded.firstOrNull()
 

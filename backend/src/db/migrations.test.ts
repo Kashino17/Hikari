@@ -38,6 +38,7 @@ describe("applyMigrations", () => {
       "scores",
       "series",
       "sponsor_segments",
+      "video_progress",
       "videos",
       "watch_later",
     ]);

@@ -219,6 +219,8 @@ fun EpisodeRow(
     onCheckChange: (() -> Unit)? = null,
     localState: LocalState = LocalState.NotLocal,
     downloadProgress: Float? = null,
+    /** 0f..1f — gelber Balken wie in der Bibliothek, voll = gesehen. */
+    progress: Float = 0f,
     onDownloadClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -255,10 +257,26 @@ fun EpisodeRow(
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(2.dp)
+                    .padding(start = 2.dp, end = 2.dp, top = 2.dp, bottom = if (progress > 0f) 5.dp else 2.dp)
                     .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(2.dp))
                     .padding(horizontal = 3.dp, vertical = 1.dp),
             )
+            if (progress > 0f) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .fillMaxWidth()
+                        .height(3.dp)
+                        .background(Color.White.copy(alpha = 0.25f)),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(progress.coerceIn(0f, 1f))
+                            .fillMaxHeight()
+                            .background(HikariAmber),
+                    )
+                }
+            }
         }
         Spacer(Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {

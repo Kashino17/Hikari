@@ -31,6 +31,8 @@ data class SeriesEpisodeDto(
     val thumbnail_url: String? = null,
     val size_bytes: Long = 0L,
     val downloaded_at: Long = 0L,
+    /** Bereits gesehener Fortschritt in Sekunden (Server oder lokal). */
+    val progress_seconds: Float? = null,
 )
 
 @Serializable
@@ -52,6 +54,7 @@ data class ChannelVideoEntryDto(
     val thumbnail_url: String? = null,
     val size_bytes: Long = 0L,
     val downloaded_at: Long = 0L,
+    val progress_seconds: Float? = null,
 )
 
 @Serializable
@@ -62,4 +65,5 @@ data class MovieEntryDto(
     val duration_seconds: Int = 0,
     val size_bytes: Long = 0L,
     val downloaded_at: Long = 0L,
+    val progress_seconds: Float? = null,
 )

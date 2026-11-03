@@ -69,6 +69,16 @@ CREATE TABLE IF NOT EXISTS feed_items (
   queue_order INTEGER
 );
 
+-- Wiedergabefortschritt pro Video, unabhängig davon, ob das Video je im Feed
+-- lag. feed_items deckt nur Feed-Videos ab; heruntergeladene Serienfolgen und
+-- Filme haben dort oft keine Zeile. Ohne diese Tabelle verpuffte ihr Fortschritt
+-- beim PUT /feed/:id/progress still — die Bibliothek zeigte weiter 0 %.
+CREATE TABLE IF NOT EXISTS video_progress (
+  video_id TEXT PRIMARY KEY REFERENCES videos(id) ON DELETE CASCADE,
+  progress_seconds REAL NOT NULL DEFAULT 0,
+  updated_at INTEGER NOT NULL
+);
+
 -- Etappe 4: kuratierter Tagesmix mit Zeitbudget. Ein Eintrag = ein Slot des
 -- Tages; gesehene Items bleiben drin (konsumierte Zeit zaehlt gegen das Budget).
 CREATE TABLE IF NOT EXISTS daily_mix_items (

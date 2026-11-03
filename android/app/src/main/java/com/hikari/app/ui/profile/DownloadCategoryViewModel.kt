@@ -7,6 +7,7 @@ import com.hikari.app.data.api.dto.DownloadsResponse
 import com.hikari.app.data.db.LocalMangaArcEntity
 import com.hikari.app.data.db.LocalMangaDao
 import com.hikari.app.data.db.LocalMusicDownloadEntity
+import com.hikari.app.data.db.PlaybackPositionEntity
 import com.hikari.app.domain.download.LocalDownloadManager
 import com.hikari.app.domain.download.LocalDownloadMetadata
 import com.hikari.app.domain.download.LocalMangaDownloadManager
@@ -14,6 +15,7 @@ import com.hikari.app.domain.download.LocalMusicDownloadManager
 import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.domain.repo.DownloadsRepository
 import com.hikari.app.domain.repo.FeedRepository
+import com.hikari.app.domain.repo.PlaybackRepository
 import com.hikari.app.player.MusicPlayerController
 import com.hikari.app.ui.profile.tabs.DownloadCategory
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,6 +35,8 @@ data class DownloadCategoryUiState(
     val error: String? = null,
     val data: DownloadsResponse? = null,
     val expandedGroupId: String? = null,
+    /** Pro Serie gemerkte Staffel — analog zum Dropdown im Bibliotheks-Detail. */
+    val selectedSeasonByGroup: Map<String, Int> = emptyMap(),
     val editMode: Boolean = false,
     val selectedVideoIds: Set<String> = emptySet(),
 )
@@ -46,6 +50,7 @@ class DownloadCategoryViewModel @Inject constructor(
     private val localMangaDownloads: LocalMangaDownloadManager,
     private val localMusicDownloads: LocalMusicDownloadManager,
     private val musicPlayer: MusicPlayerController,
+    private val playbackRepo: PlaybackRepository,
     localMangaDao: LocalMangaDao,
 ) : ViewModel() {
 
@@ -62,6 +67,14 @@ class DownloadCategoryViewModel @Inject constructor(
 
     /** Per-videoId download progress 0f..1f. Absent = not downloading. */
     val downloadProgress: StateFlow<Map<String, Float>> = localDownloads.progress
+
+    /**
+     * Lokale Wiedergabepositionen. Sie sind auch online maßgeblich, weil ein
+     * offline gesehener Stand noch nicht zwingend im Server angekommen ist.
+     */
+    val playbackPositions: StateFlow<Map<String, PlaybackPositionEntity>> = playbackRepo.positions
+        .map { list -> list.associateBy { it.videoId } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
     /** Live list of locally-downloaded manga arcs, neueste zuerst. */
     val mangaArcs: StateFlow<List<LocalMangaArcEntity>> = localMangaDao.observeArcs()
@@ -132,6 +145,12 @@ class DownloadCategoryViewModel @Inject constructor(
     fun toggleExpand(groupId: String) {
         _state.update {
             it.copy(expandedGroupId = if (it.expandedGroupId == groupId) null else groupId)
+        }
+    }
+
+    fun selectSeason(groupId: String, season: Int) {
+        _state.update {
+            it.copy(selectedSeasonByGroup = it.selectedSeasonByGroup + (groupId to season))
         }
     }
 

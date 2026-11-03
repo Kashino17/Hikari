@@ -326,6 +326,25 @@ function updateFeedRow(db: Database.Database, id: string, set: string, ...params
   db.prepare(`UPDATE feed_items SET ${set} WHERE video_id = ?`).run(...params, id);
 }
 
+/**
+ * Fortschritt eines echten Videos (kein Clip) auch ohne feed_items-Zeile
+ * festhalten. Heruntergeladene Serienfolgen laufen nie durch den Feed und
+ * hatten deshalb bisher keine Zeile, in der ihr Fortschritt landen konnte.
+ * Clip-IDs werden bewusst nicht auf das Elternvideo abgebildet — sonst würde
+ * der Fortschritt eines kurzen Clips den der ganzen Folge überschreiben.
+ */
+function upsertVideoProgress(db: Database.Database, id: string, seconds: number): void {
+  const video = db.prepare("SELECT 1 AS ok FROM videos WHERE id = ?").get(id);
+  if (!video) return;
+  db.prepare(
+    `INSERT INTO video_progress (video_id, progress_seconds, updated_at)
+     VALUES (?, ?, ?)
+     ON CONFLICT(video_id) DO UPDATE SET
+       progress_seconds = excluded.progress_seconds,
+       updated_at = excluded.updated_at`,
+  ).run(id, seconds, Date.now());
+}
+
 // ---------------------------------------------------------------------------
 // Route registration
 // ---------------------------------------------------------------------------
@@ -570,6 +589,7 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
   }>("/feed/:id/progress", async (req, reply) => {
     const seconds = Math.max(0, Number(req.body?.seconds ?? 0));
     updateFeedRow(deps.db, req.params.id, "progress_seconds = ?", seconds);
+    upsertVideoProgress(deps.db, req.params.id, seconds);
     return reply.code(204).send();
   });
 

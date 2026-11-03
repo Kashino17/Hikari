@@ -203,12 +203,18 @@ private fun SeriesDetailContent(
         mutableStateOf(seasons.firstOrNull() ?: 1)
     }
 
-    // "Weiterschauen" target: first video with progress > 0 but not finished, else first video
+    // "Weiterschauen" target: zuletzt geschaute unfertige Folge. Vorher wurde
+    // stur die erste unfertige in Season-/Episodenreihenfolge genommen — wer
+    // S1E1 angefangen und später S2E3 weitergeschaut hatte, landete wieder
+    // bei S1E1. Ohne Zeitstempel (ältere Server) bleibt es beim alten Verhalten.
     val resumeVideo = remember(data.videos) {
-        data.videos.firstOrNull { v ->
+        val unfinished = data.videos.filter { v ->
             val p = v.progress_seconds ?: 0f
             p > 0f && p < v.duration_seconds.toFloat() * 0.95f
-        } ?: data.videos.firstOrNull()
+        }
+        unfinished.maxByOrNull { it.progress_updated_at ?: 0L }
+            ?: unfinished.firstOrNull()
+            ?: data.videos.firstOrNull()
     }
 
     val episodesForSeason = remember(data.videos, selectedSeason, seasons) {

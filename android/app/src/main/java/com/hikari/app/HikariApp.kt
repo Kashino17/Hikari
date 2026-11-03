@@ -10,6 +10,7 @@ import com.hikari.app.data.prefs.DEFAULT_BACKEND_URL
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.download.SmartDownloadScheduler
 import com.hikari.app.domain.news.NewsBriefingScheduler
+import com.hikari.app.domain.sync.ProgressSyncScheduler
 import com.hikari.app.whatsapp.WhatsAppNotificationListenerService
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -27,6 +28,7 @@ class HikariApp : Application(), Configuration.Provider {
     @Inject lateinit var scheduler: SmartDownloadScheduler
     @Inject lateinit var newsScheduler: NewsBriefingScheduler
     @Inject lateinit var podcastScheduler: com.hikari.app.domain.russian.RussianPodcastReminderScheduler
+    @Inject lateinit var progressSyncScheduler: ProgressSyncScheduler
     @Inject lateinit var settings: SettingsStore
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -48,6 +50,8 @@ class HikariApp : Application(), Configuration.Provider {
         // Always schedule the periodic Smart-Downloads job. The worker itself
         // checks the user's preference each fire and short-circuits if off.
         scheduler.schedulePeriodicSync()
+        // Offline gesehener Fortschritt zieht nach, sobald wieder Netz da ist.
+        progressSyncScheduler.schedulePeriodic()
         // News-Tagesbericht nur einplanen, wenn er aktiviert ist — nach einem
         // App-Update oder Neustart stellt das den Zeitplan wieder her.
         appScope.launch {

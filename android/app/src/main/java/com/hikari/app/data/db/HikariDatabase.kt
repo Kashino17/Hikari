@@ -20,7 +20,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         MusicPlayEventEntity::class,
         WhatsAppMessageEntity::class,
     ],
-    version = 19,
+    version = 20,
     exportSchema = false,
 )
 abstract class HikariDatabase : RoomDatabase() {
@@ -156,5 +156,21 @@ val MIGRATION_18_19 = object : Migration(18, 19) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_whatsapp_messages_timestamp` ON `whatsapp_messages` (`timestamp`)")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_whatsapp_messages_isDeleted` ON `whatsapp_messages` (`isDeleted`)")
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_whatsapp_messages_isEdited` ON `whatsapp_messages` (`isEdited`)")
+    }
+}
+
+/**
+ * Wiedergabefortschritt wird offline geschrieben und muss später nachgezogen
+ * werden. `syncedPositionMs` merkt sich, was das Backend zuletzt bestätigt hat;
+ * -1 bedeutet "noch nie übertragen".
+ */
+val MIGRATION_19_20 = object : Migration(19, 20) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "ALTER TABLE playback_positions ADD COLUMN syncedPositionMs INTEGER NOT NULL DEFAULT -1",
+        )
+        db.execSQL(
+            "ALTER TABLE playback_positions ADD COLUMN syncedAt INTEGER NOT NULL DEFAULT 0",
+        )
     }
 }

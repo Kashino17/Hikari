@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import retrofit2.HttpException
 
 /**
@@ -144,6 +145,11 @@ class LibraryViewModel @Inject constructor(
                 showOffline()
                 return@launch
             }
+            // Offline entstandene Positionen zuerst nachziehen, damit die
+            // Bibliothek direkt denselben Fortschritt zeigt wie der Player.
+            // Der WorkManager-Lauf ist die Rückfallebene, falls das hier
+            // timeoutet oder das Backend kurz nicht antwortet.
+            runCatching { withTimeoutOrNull(4_000) { playbackRepo.syncPending() } }
             _uiState.value = LibraryUiState.Loading
             runCatching {
                 repo.getLibrary()
@@ -312,6 +318,11 @@ class LibraryViewModel @Inject constructor(
     fun loadSeries(id: String) {
         viewModelScope.launch {
             _seriesState.value = SeriesUiState.Loading
+            if (connectivity.currentlyOnline()) {
+                // Gleiches Prinzip wie in der Bibliothek: erst lokalen
+                // Fortschritt sichern, dann die Server-Folgenliste holen.
+                runCatching { withTimeoutOrNull(4_000) { playbackRepo.syncPending() } }
+            }
             runCatching {
                 repo.getSeries(id)
             }.onSuccess {

@@ -232,12 +232,15 @@ export async function registerVideosRoutes(app: FastifyInstance, deps: VideosDep
     const libraryRows = (where: string, limit: number) =>
       deps.db
         .prepare(`
-      SELECT v.*, c.title as channelTitle, fi.progress_seconds,
+      SELECT v.*, c.title as channelTitle,
+             COALESCE(vp.progress_seconds, fi.progress_seconds) AS progress_seconds,
+             COALESCE(vp.updated_at, 0) AS progress_updated_at,
              s.overall_score as overall_score
       FROM videos v
       JOIN channels c ON c.id = v.channel_id
       JOIN downloaded_videos dv ON dv.video_id = v.id
       LEFT JOIN feed_items fi ON fi.video_id = v.id
+      LEFT JOIN video_progress vp ON vp.video_id = v.id
       LEFT JOIN scores s ON s.video_id = v.id
       ${where}
       ORDER BY v.discovered_at DESC
@@ -387,10 +390,12 @@ export async function registerVideosRoutes(app: FastifyInstance, deps: VideosDep
     // Antippen ins Leere liefen — genau das „nichts lässt sich abspielen".
     const videos = deps.db
       .prepare(`
-      SELECT v.*, fi.progress_seconds,
+      SELECT v.*, COALESCE(vp.progress_seconds, fi.progress_seconds) AS progress_seconds,
+             COALESCE(vp.updated_at, 0) AS progress_updated_at,
              CASE WHEN dv.video_id IS NULL THEN 0 ELSE 1 END AS downloaded
       FROM videos v
       LEFT JOIN feed_items fi ON fi.video_id = v.id
+      LEFT JOIN video_progress vp ON vp.video_id = v.id
       LEFT JOIN downloaded_videos dv ON dv.video_id = v.id
       WHERE v.series_id = ?
       ORDER BY v.season ASC, v.episode ASC
