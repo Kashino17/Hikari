@@ -6,6 +6,10 @@ set -e
 
 # ─── Config ─────────────────────────────────────────────────────────────────
 BACKEND_DIR="/Users/ayysir/Desktop/Hikari/backend"
+# Absoluter Pfad zu diesem Skript — der Supervisor wird per "$SELF __supervise"
+# gestartet, nachdem run_build schon ins Backend-Verzeichnis gewechselt hat; ein
+# relativer Aufruf (./cli/hikari) fände sich dort nicht mehr.
+SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
 NODE_PATH_PREFIX="/opt/homebrew/opt/node@24/bin"
 
 PORT="${PORT:-3939}"
@@ -16,8 +20,6 @@ MAGIC_DNS_HOST="${HIKARI_HOST:-macbook-pro.taile64a95.ts.net}"
 STATE_DIR="$HOME/.hikari"
 PID_FILE="$STATE_DIR/server.pid"
 LOG_FILE="$STATE_DIR/server.log"
-# Altlast: PID-Datei des entfernten Clipper-Workers (siehe stop_legacy_clipper).
-LEGACY_CLIPPER_PID_FILE="$STATE_DIR/clipper.pid"
 BUILD_STAMP="$BACKEND_DIR/dist/.build-stamp"
 # V8-Heap-Limit: Default (~4GB) hat nachts zu FatalProcessOutOfMemory geführt.
 NODE_HEAP_MB="${HIKARI_HEAP_MB:-8192}"
@@ -42,7 +44,7 @@ is_running() {
 }
 
 # Returns 0 only if /health body contains "service":"hikari".
-# Prevents foreign servers (Vite, ...) from masquerading as Hikari.
+# Prevents foreign servers (Remotion, Vite, ...) from masquerading as Hikari.
 health_says_hikari() {
     local body
     body=$(curl -s --max-time 1 "http://localhost:$PORT/health" 2>/dev/null) || return 1
@@ -70,6 +72,32 @@ rotate_log() {
     : > "$file"
 }
 
+# iCloud-Schutz: Desktop liegt in iCloud Drive. Bei knappem Speicher lagert
+# macOS Dateien aus ("dataless") — node hängt dann beim Laden still, ohne
+# Fehler und ohne Log-Zeile. Vor jedem Start ausgelagerte Dateien zurückholen
+# (Lesen löst den Download aus). node_modules liegt als Symlink auf
+# node_modules.nosync, das iCloud nicht synchronisiert/auslagert.
+ensure_local_files() {
+    local count
+    count=$(find "$BACKEND_DIR" -flags +dataless -type f 2>/dev/null | wc -l | tr -d ' ')
+    if [[ "$count" -gt 0 ]]; then
+        echo "${YELLOW}iCloud hat $count Backend-Dateien ausgelagert — hole sie zurück...${RESET}"
+        find "$BACKEND_DIR" -flags +dataless -type f -print0 2>/dev/null \
+            | xargs -0 -P 16 -n 50 cat > /dev/null 2>&1 || true
+        count=$(find "$BACKEND_DIR" -flags +dataless -type f 2>/dev/null | wc -l | tr -d ' ')
+        if [[ "$count" -gt 0 ]]; then
+            echo "${RED}Noch $count Dateien nicht lokal — Start abgebrochen (node würde hängen).${RESET}"
+            find "$BACKEND_DIR" -flags +dataless -type f 2>/dev/null | head -5 | sed "s/^/  ${DIM}/;s/$/${RESET}/"
+            return 1
+        fi
+        echo "${GREEN}Alle Dateien wieder lokal.${RESET}"
+    fi
+    if [[ -d "$BACKEND_DIR/node_modules" && ! -L "$BACKEND_DIR/node_modules" ]]; then
+        echo "${YELLOW}Hinweis: backend/node_modules ist wieder ein echter Ordner (npm install?) — iCloud kann ihn auslagern.${RESET}"
+        echo "${DIM}  Fix: cd backend && rm -rf node_modules.nosync && mv node_modules node_modules.nosync && ln -s node_modules.nosync node_modules${RESET}"
+    fi
+}
+
 # Build nötig? Nur wenn src/package.json/tsconfig neuer sind als der Stamp
 # des letzten erfolgreichen Builds. Spart die ~40s tsc bei jedem Restart.
 needs_build() {
@@ -88,7 +116,7 @@ run_build() {
     local rc=${PIPESTATUS[0]}
     if [[ $rc -ne 0 ]]; then
         echo "${RED}Build fehlgeschlagen (Exit $rc).${RESET}"
-        echo "${DIM}  Volle Logs: ${BOLD}hikari logs backend${RESET}"
+        echo "${DIM}  Volle Logs: ${BOLD}hikari logs${RESET}"
         return 1
     fi
     touch "$BUILD_STAMP"
@@ -152,6 +180,7 @@ start_backend() {
     fi
 
     rotate_log "$LOG_FILE"
+    ensure_local_files || return 1
     # Build with node@24's tsc (npm scripts), then run dist/ with system node so
     # the native module (better-sqlite3) ABI matches.
     if needs_build; then
@@ -163,7 +192,7 @@ start_backend() {
     echo "${AMBER}Starte Backend im Hintergrund auf Port $PORT...${RESET}"
     cd "$BACKEND_DIR"
     # Supervisor-Modus: startet node und startet es bei Crash automatisch neu.
-    PORT="$PORT" nohup "$0" __supervise >> "$LOG_FILE" 2>&1 &
+    PORT="$PORT" nohup "$SELF" __supervise >> "$LOG_FILE" 2>&1 &
     local pid=$!
     echo "$pid" > "$PID_FILE"
 
@@ -218,24 +247,6 @@ stop_backend() {
     echo "${GREEN}Backend gestoppt.${RESET}"
 }
 
-# ─── Altlast Clipper-Worker ──────────────────────────────────────────────────
-# Der Clipper ist komplett entfernt. Ein Worker aus einer älteren Version kann
-# aber noch laufen (und nachts das Sprachmodell anwerfen) — beim Start/Stopp
-# einmal beenden und die PID-Datei wegräumen.
-stop_legacy_clipper() {
-    [[ -f "$LEGACY_CLIPPER_PID_FILE" ]] || return 0
-    local pid
-    pid=$(cat "$LEGACY_CLIPPER_PID_FILE" 2>/dev/null)
-    if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null \
-        && ps -p "$pid" -o command= 2>/dev/null | grep -q "clipper"; then
-        echo "${DIM}Beende alten Clipper-Worker (PID $pid) — der Clipper wurde entfernt.${RESET}"
-        kill_tree "$pid" TERM
-        sleep 0.5
-        kill -0 "$pid" 2>/dev/null && kill_tree "$pid" KILL
-    fi
-    rm -f "$LEGACY_CLIPPER_PID_FILE"
-}
-
 # ─── Supervisor (interner Modus, via `hikari __supervise`) ──────────────────
 # Läuft als nohup-Hintergrundprozess; PID_FILE zeigt auf DIESEN Prozess.
 # Startet das Backend und bei Crash (z.B. nächtliches OOM) automatisch neu.
@@ -274,7 +285,6 @@ cmd_supervise() {
 
 # ─── Commands ───────────────────────────────────────────────────────────────
 cmd_start() {
-    stop_legacy_clipper
     start_backend || return 1
     echo ""
     echo "${DIM}  Logs:      ${BOLD}hikari logs${RESET}"
@@ -284,7 +294,6 @@ cmd_start() {
 
 cmd_stop() {
     stop_backend
-    stop_legacy_clipper
 }
 
 cmd_status() {
@@ -309,13 +318,6 @@ cmd_status() {
         fi
     fi
 
-    echo ""
-    echo "${BOLD}LM Studio:${RESET}"
-    if lm_studio_reachable; then
-        echo "  ${GREEN}✓ erreichbar${RESET}  (http://localhost:1234)"
-    else
-        echo "  ${YELLOW}✗ nicht erreichbar${RESET}  ${DIM}(nur für KI-News-Zusammenfassungen nötig)${RESET}"
-    fi
 
     if [[ -d "$STATE_DIR" ]]; then
         local size
@@ -327,7 +329,6 @@ cmd_status() {
 
 cmd_restart() {
     stop_backend
-    stop_legacy_clipper
     sleep 0.5
     start_backend || return 1
     echo ""
@@ -361,15 +362,15 @@ cmd_fg() {
 
 cmd_help() {
     cat <<EOF
-${BOLD}Hikari${RESET} — Backend CLI
+${BOLD}Hikari${RESET} — Backend-CLI
 
 ${BOLD}USAGE${RESET}
   ${AMBER}hikari${RESET}                    Starte Backend im Hintergrund (default)
   ${AMBER}hikari start${RESET}              Wie oben (Backend mit Auto-Restart bei Crash)
-  ${AMBER}hikari stop${RESET}               Stoppe das Backend
+  ${AMBER}hikari stop${RESET}               Stoppe Backend
   ${AMBER}hikari restart${RESET}            Stop + Start
-  ${AMBER}hikari status${RESET}             Status + LM Studio Erreichbarkeit
-  ${AMBER}hikari logs${RESET}               Live-Logs des Backends (tail -F)
+  ${AMBER}hikari status${RESET}             Status + Health-Check
+  ${AMBER}hikari logs${RESET}               Live-Backend-Logs (tail -F)
   ${AMBER}hikari build${RESET}              Build erzwingen (sonst nur bei Code-Änderung)
   ${AMBER}hikari fg${RESET}                 Backend im Vordergrund starten (debug)
   ${AMBER}hikari -h${RESET}                 Diese Hilfe
