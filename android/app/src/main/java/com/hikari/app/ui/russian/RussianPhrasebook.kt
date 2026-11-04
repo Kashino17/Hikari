@@ -490,7 +490,7 @@ internal fun PhraseSpeakCheck(p: RuPhrase, onEvaluated: (Boolean) -> Unit = {}) 
         val s = state
         if (s is RuListenState.Done || s is RuListenState.Failed) evaluating = false
         if (s is RuListenState.Done) {
-            val sc = RuAnswerCheck.speech(p.plain, s.hypotheses)
+            val sc = RuAnswerCheck.speech(p.ru, s.hypotheses)
             score = sc
             if (s.hypotheses.isNotEmpty()) {
                 onEvaluated(sc.passed)

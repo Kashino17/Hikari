@@ -141,7 +141,7 @@ fun RuSpeechScoreCard(
                     .padding(horizontal = 10.dp, vertical = 8.dp),
             ) {
                 Text(
-                    "»${latinOf(h.target)}« klang wie »${latinPlain(h.heard.orEmpty())}«",
+                    h.heard?.let { "»${latinOf(h.target)}« klang wie »${latinPlain(it)}«" } ?: "»${latinOf(h.target)}« fehlte",
                     color = Amber,
                     fontSize = small,
                     fontWeight = FontWeight.Bold,

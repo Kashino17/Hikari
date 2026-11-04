@@ -311,6 +311,11 @@ sealed interface RuListenState {
  * erzeugt und benutzt werden.
  */
 class RussianSpeechRecognizer(private val context: Context) {
+    init {
+        // Betonungs-Wörterbuch für die Auswertung (RuAnswerCheck) — klein, einmal pro Prozess.
+        runCatching { com.hikari.app.domain.russian.RussianGlossary.load(context.applicationContext.assets) }
+    }
+
     private val _state = MutableStateFlow<RuListenState>(RuListenState.Idle)
     val state: StateFlow<RuListenState> = _state.asStateFlow()
     private var recognizer: SpeechRecognizer? = null

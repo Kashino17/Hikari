@@ -358,27 +358,35 @@ object RuAnswerCheck {
     const val PASS = 0.75
     private val MUST_MATCH = setOf("не", "нет", "да")
 
+    /** Wie viele Hypothesen der Erkennung zählen (Google liefert bis zu 5, die hinteren sind meist Rauschen). */
+    private const val HYPOTHESES = 3
+
     /**
-     * Vergleicht die Erkennungs-Hypothesen mit dem Zielsatz. Jedes Zielwort
-     * gilt als getroffen, wenn ein gehörtes Wort ihm fast gleicht (kleine
-     * Abweichungen verzeiht die Erkennung ohnehin nicht fair — z. B. е/ё,
-     * Endungen). Die beste Hypothese zählt.
+     * Vergleicht die Erkennungs-Hypothesen mit dem Zielsatz.
+     *
+     * Ein Zielwort gilt als getroffen, wenn eine der ersten [HYPOTHESES]
+     * Hypothesen ein Wort enthält, das gleich KLINGT (siehe [RuSpeechMatch]):
+     * Ziffern zählen als Zahlwort, unbetontes о/а und е/и/я sowie stimmhaft/
+     * stimmlos am Wortende sind gleichwertig. Betonte Vokale und alle anderen
+     * Laute müssen stimmen. Angezeigt wird die Hypothese mit den meisten
+     * Treffern.
      */
     fun speech(target: String, hypotheses: List<String>): SpeechScore {
-        val targetWords = RuLessonBuilder.norm(target).split(' ').filter { it.isNotBlank() }
-        var best: SpeechScore? = null
-        for (h in hypotheses.ifEmpty { listOf("") }) {
-            val heard = RuLessonBuilder.norm(h).split(' ').filter { it.isNotBlank() }.toMutableList()
-            val marks = targetWords.map { tw ->
-                val hit = heard.indexOfFirst { similarity(it, tw) >= 0.75 }
+        // Betonung kennen wir aus dem Kurs — nur dann lässt sich unbetont von betont trennen.
+        val targetToks = RuSpeechMatch.tokens(RussianGlossary.withStress(RussianPhonetics.fromDisplay(target)))
+        val hyps = hypotheses.filter { it.isNotBlank() }.take(HYPOTHESES)
+        val perHyp = hyps.map { h ->
+            val heard = RuSpeechMatch.tokens(h).toMutableList()
+            targetToks.map { tw ->
+                val hit = heard.indexOfFirst { RuSpeechMatch.matches(tw, it) }
                 if (hit >= 0) heard.removeAt(hit)
-                tw to (hit >= 0)
+                hit >= 0
             }
-            val score = if (marks.isEmpty()) 0.0 else marks.count { it.second }.toDouble() / marks.size
-            val cand = SpeechScore(marks, score, h)
-            if (best == null || cand.score > best.score) best = cand
         }
-        return best!!
+        val marks = targetToks.mapIndexed { i, tw -> tw.word to perHyp.any { it[i] } }
+        val score = if (marks.isEmpty()) 0.0 else marks.count { it.second }.toDouble() / marks.size
+        val bestIdx = perHyp.indices.maxByOrNull { k -> perHyp[k].count { it } } ?: -1
+        return SpeechScore(marks, score, hyps.getOrNull(bestIdx) ?: hypotheses.firstOrNull().orEmpty())
     }
 
     fun similarity(a: String, b: String): Double {

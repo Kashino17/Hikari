@@ -50,28 +50,48 @@ object RuSoundCoach {
     private const val SOFT_TIP =
         "Das weiche Zeichen »ь« fehlte. Hebe die Zungenmitte zum Gaumen — der Konsonant davor wird weich, wie ein kleines »j« danach."
 
-    fun hints(sc: RuAnswerCheck.SpeechScore, max: Int = 2): List<RuSoundHint> {
+    /**
+     * Ein Hinweis je verfehltem Wort (höchstens [max]): bekannte Laut-
+     * Verwechslung → gezielter Tipp; sonst was stattdessen ankam und wie es
+     * richtig klingt (Umschrift, betonte Silbe groß); fehlt das Wort ganz,
+     * wird genau das gesagt.
+     */
+    fun hints(sc: RuAnswerCheck.SpeechScore, max: Int = 3): List<RuSoundHint> {
         if (sc.heard.isBlank()) return emptyList()
-        val targets = sc.words
-        val heardWords = RuLessonBuilder.norm(sc.heard).split(' ').filter { it.isNotBlank() }.toMutableList()
+        val heardWords = RuSpeechMatch.tokens(sc.heard).toMutableList()
         // Getroffene Wörter verbrauchen ihr Gegenstück — übrig bleiben die Kandidaten für Verfehltes.
-        for ((w, ok) in targets) {
+        for ((w, ok) in sc.words) {
             if (!ok) continue
-            val hit = heardWords.indexOfFirst { RuAnswerCheck.similarity(it, w) >= 0.75 }
+            val t = RuSpeechMatch.Tok(w)
+            val hit = heardWords.indexOfFirst { RuSpeechMatch.matches(t, it) }
             if (hit >= 0) heardWords.removeAt(hit)
         }
         val out = mutableListOf<RuSoundHint>()
         val seen = mutableSetOf<String>()
-        for ((word, ok) in targets) {
+        for ((word, ok) in sc.words) {
             if (ok || out.size >= max) continue
-            val cand = heardWords.maxByOrNull { RuAnswerCheck.similarity(it, word) } ?: continue
-            if (RuAnswerCheck.similarity(cand, word) < 0.4) continue
-            heardWords.remove(cand)
-            val tip = tipFor(word, cand) ?: continue
-            if (seen.add(tip)) out += RuSoundHint(word, cand, tip)
+            val t = RuSpeechMatch.Tok(word)
+            val cand = heardWords.maxByOrNull { RuSpeechMatch.soundSimilarity(t, it.word) }
+            val close = cand != null && RuSpeechMatch.soundSimilarity(t, cand.word) >= 0.4
+            val hint = if (close) {
+                heardWords.remove(cand)
+                val tip = tipFor(word, cand!!.word) ?: "Kam als anderes Wort an. Sprich es langsam und deutlich: " +
+                    "${reading(word)} — die GROSSE Silbe ist betont, alle anderen Vokale kurz und schwach."
+                RuSoundHint(word, cand.word, tip)
+            } else {
+                // Kurze Füllwörter verzeiht die Prüfung ohnehin — dafür keinen Hinweis.
+                if (word.length < 3 && word !in setOf("не", "да")) continue
+                RuSoundHint(word, null, "Dieses Wort war nicht zu hören. Nicht verschlucken — sprich es mit: ${reading(word)}.")
+            }
+            if (seen.add(hint.tip)) out += hint
         }
         return out
     }
+
+    /** Umschrift mit großgeschriebener betonter Silbe, z. B. »djEssit'«. */
+    internal fun reading(word: String): String =
+        RussianPhonetics.transliterate(RussianGlossary.withStress(word))
+            .joinToString("") { if (it.stressed) it.text.uppercase() else it.text }
 
     /** Erster erklärbarer Unterschied zwischen Soll und Gehörtem, sonst null. */
     internal fun tipFor(target: String, heard: String): String? {

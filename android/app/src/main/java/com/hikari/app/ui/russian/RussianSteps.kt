@@ -261,7 +261,7 @@ internal fun RuRecordCompare(p: RuPhrase, env: RuStepEnv) {
     LaunchedEffect(speechState) {
         when (val s = speechState) {
             is RuListenState.Done -> {
-                miniScore = RuAnswerCheck.speech(p.plain, s.hypotheses)
+                miniScore = RuAnswerCheck.speech(p.ru, s.hypotheses)
             }
             else -> Unit
         }
@@ -697,7 +697,7 @@ internal fun SpeakStep(step: RuExercise.Speak, env: RuStepEnv) {
         val s = state
         if (s is RuListenState.Done || s is RuListenState.Failed) evaluating = false
         if (s is RuListenState.Done) {
-            val sc = RuAnswerCheck.speech(p.plain, s.hypotheses)
+            val sc = RuAnswerCheck.speech(p.ru, s.hypotheses)
             score = sc
             attempts++
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)

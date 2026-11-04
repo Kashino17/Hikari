@@ -233,7 +233,7 @@ private fun TalkRound(key: Int, data: RuTalkRound, vm: RussianTalkViewModel, onF
         if (st is RuListenState.Failed) failure = st.message
         if (st is RuListenState.Done) {
             attempts++
-            val scored = data.accepted.map { it to RuAnswerCheck.speech(it.plain, st.hypotheses) }
+            val scored = data.accepted.map { it to RuAnswerCheck.speech(it.ru, st.hypotheses) }
             val pass = scored.filter { it.second.passed }.maxByOrNull { it.second.score }
             if (pass != null) {
                 matched = pass.first

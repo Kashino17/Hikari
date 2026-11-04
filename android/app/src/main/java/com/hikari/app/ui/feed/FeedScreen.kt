@@ -1522,7 +1522,10 @@ private fun LanguageSlideContent(
                         )
                     }
 
-                    if (item.exampleForeign.isNotBlank()) {
+                    // Kein Beispiel, das nur das Wort selbst wiederholt (z. B. »десять« bei Zahlen).
+                    val sameAsWord = com.hikari.app.domain.russian.RuLessonBuilder.norm(item.exampleForeign) ==
+                        com.hikari.app.domain.russian.RuLessonBuilder.norm(item.foreignWord)
+                    if (item.exampleForeign.isNotBlank() && !sameAsWord) {
                         Spacer(Modifier.height(6.dp))
                         Surface(
                             shape = RoundedCornerShape(8.dp),
@@ -1736,7 +1739,7 @@ private fun LanguageSlideContent(
                 // Score Card mit Wort-für-Wort Hervorhebung
                 speechScore?.let { sc ->
                     Spacer(Modifier.height(8.dp))
-                    com.hikari.app.ui.russian.RuSpeechScoreCard(sc, xpHint = "+15 XP")
+                    com.hikari.app.ui.russian.RuSpeechScoreCard(sc, xpHint = "+15 XP", targetRu = com.hikari.app.domain.russian.RussianPhonetics.fromDisplay(item.foreignWord))
                 }
 
                 val clip = item.audioRes

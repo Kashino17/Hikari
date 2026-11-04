@@ -606,7 +606,7 @@ private fun ReflexRoundView(
             }
             is RuListenState.Done -> {
                 evaluating = false
-                val sc = RuAnswerCheck.speech(phrase.plain, s.hypotheses)
+                val sc = RuAnswerCheck.speech(phrase.ru, s.hypotheses)
                 speechScore = sc
                 if (sc.passed) {
                     passed = true
@@ -961,7 +961,7 @@ fun RussianKombiScreen(
                 LaunchedEffect(state) {
                     val s = state
                     if (s is RuListenState.Done) {
-                        val sc = RuAnswerCheck.speech(item.russianPlain, s.hypotheses)
+                        val sc = RuAnswerCheck.speech(item.russianTarget, s.hypotheses)
                         speechScore = sc
                         if (sc.passed) {
                             solved = true
@@ -1323,7 +1323,7 @@ fun RussianBlindCoachScreen(
                     val s = state
                     if (phase == BlindCoachPhase.LISTENING_USER && (s is RuListenState.Done || s is RuListenState.Failed)) {
                         val sc = if (s is RuListenState.Done) {
-                            RuAnswerCheck.speech(phrase.plain, s.hypotheses)
+                            RuAnswerCheck.speech(phrase.ru, s.hypotheses)
                         } else {
                             null
                         }
