@@ -171,9 +171,7 @@ fun ChannelDetailScreen(
                 DetailHeader(
                     channelTitle = channel?.title,
                     handle = channel?.handle,
-                    autoApprove = channel?.autoApprove == true,
                     onBack = onBack,
-                    onToggleAutoApprove = { vm.toggleAutoApprove() },
                     onSync = { vm.sync() },
                     syncing = syncing,
                     onUnsubscribe = { showUnsubscribe = true },
@@ -288,9 +286,7 @@ fun ChannelDetailScreen(
 private fun DetailHeader(
     channelTitle: String?,
     handle: String?,
-    autoApprove: Boolean,
     onBack: () -> Unit,
-    onToggleAutoApprove: () -> Unit,
     onSync: () -> Unit,
     syncing: Boolean,
     onUnsubscribe: () -> Unit,
@@ -377,26 +373,6 @@ private fun DetailHeader(
                 onDismissRequest = { menuOpen = false },
                 modifier = Modifier.background(HikariSurface),
             ) {
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            if (autoApprove) "Vertrauenskanal · an" else "Vertrauenskanal · aus",
-                            color = HikariText,
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = if (autoApprove) Icons.Default.Star else Icons.Outlined.StarBorder,
-                            contentDescription = null,
-                            tint = if (autoApprove) HikariAmber else HikariTextMuted,
-                            modifier = Modifier.size(18.dp),
-                        )
-                    },
-                    onClick = {
-                        onToggleAutoApprove()
-                        menuOpen = false
-                    },
-                )
                 DropdownMenuItem(
                     text = { Text("Kanal deabonnieren", color = HikariDanger) },
                     leadingIcon = {

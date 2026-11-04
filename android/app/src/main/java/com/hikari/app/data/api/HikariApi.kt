@@ -238,11 +238,6 @@ interface HikariApi {
         @Query("limit") limit: Int? = null,
     ): PollResponse
 
-    @PATCH("channels/{id}/auto-approve")
-    suspend fun setChannelAutoApprove(
-        @Path("id") channelId: String,
-        @Body req: SetAutoApproveRequest,
-    ): SetAutoApproveResponse
 
     @GET("channels/{id}/stats")
     suspend fun getChannelStats(@Path("id") channelId: String): ChannelStatsDto

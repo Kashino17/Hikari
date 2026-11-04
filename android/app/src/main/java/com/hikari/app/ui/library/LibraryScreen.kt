@@ -556,36 +556,6 @@ private fun LibraryContent(
                                 }
                             }
 
-                            if (data.suggestions.isNotEmpty()) {
-                                item {
-                                    SectionHeader(
-                                        "Vorschläge für dich",
-                                        count = data.suggestions.size,
-                                        onShowAll = {
-                                            allView = AllViewState(
-                                                title = "Vorschläge für dich",
-                                                items = data.suggestions.map { dto ->
-                                                    val fi = dto.toFeedItem()
-                                                    fi.toAllViewItem { onPlayVideo(fi.videoId, fi.title, fi.channelTitle) }
-                                                },
-                                            )
-                                        },
-                                    )
-                                    LazyRow(
-                                        contentPadding = PaddingValues(horizontal = 16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    ) {
-                                        items(data.suggestions, key = { it.videoId }) { dto ->
-                                            val fi = dto.toFeedItem()
-                                            CollectionCard(
-                                                item = fi,
-                                                onPlay = { onPlayVideo(fi.videoId, fi.title, fi.channelTitle) },
-                                            )
-                                        }
-                                    }
-                                    Spacer(Modifier.height(20.dp))
-                                }
-                            }
 
                             // ── Von deinen Kanälen (Picks aus abonnierten Kanälen) ───
                             if (data.subscriptionPicks.isNotEmpty()) {

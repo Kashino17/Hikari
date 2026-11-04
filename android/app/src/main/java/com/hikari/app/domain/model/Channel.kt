@@ -10,5 +10,4 @@ data class Channel(
     val thumbnail: String? = null,
     val bannerUrl: String? = null,
     val lastPolledAt: Long? = null,
-    val autoApprove: Boolean = false,
 )
