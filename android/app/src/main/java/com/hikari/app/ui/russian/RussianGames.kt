@@ -168,6 +168,7 @@ fun RussianBlitzScreen(onClose: () -> Unit, vm: RussianGamesViewModel = hiltView
     var round by remember { mutableIntStateOf(0) }
     var picked by remember { mutableStateOf<String?>(null) }
     var newBest by remember { mutableStateOf(false) }
+    val heard = remember { mutableStateListOf<BlitzHeard>() }
     if (vm.pool.size < 4) {
         GameIntro(title = "Hör-Blitz", text = "Schließ zuerst Tag 1 ab — dann gibt es genug Sätze für das Spiel.", onStart = onClose)
         return
@@ -185,6 +186,7 @@ fun RussianBlitzScreen(onClose: () -> Unit, vm: RussianGamesViewModel = hiltView
         }
         if (running && timeLeft <= 0) {
             running = false
+            if (picked == null) heard.record(question.first, null)
             over = true
             vm.audio.stop()
             newBest = vm.finishBlitz(score)
@@ -206,14 +208,18 @@ fun RussianBlitzScreen(onClose: () -> Unit, vm: RussianGamesViewModel = hiltView
             trailing = "$score",
         )
         when {
-            over -> GameOver(
-                title = "Zeit um!",
-                value = "$score Punkte",
+            over -> BlitzSummary(
+                score = score,
                 note = if (newBest) "Neuer Rekord!" else "Rekord: ${vm.progress.value.bestBlitz}",
+                heard = heard,
+                playingAudio = playing,
+                onPlay = { vm.audio.play(it.audio) },
                 onAgain = {
+                    vm.audio.stop()
+                    heard.clear()
                     score = 0; combo = 0; timeLeft = BLITZ_MS; over = false; round++; running = true
                 },
-                onClose = onClose,
+                onClose = { vm.audio.stop(); onClose() },
             )
             !running -> GameIntro(
                 title = "Hör-Blitz",
@@ -257,6 +263,7 @@ fun RussianBlitzScreen(onClose: () -> Unit, vm: RussianGamesViewModel = hiltView
                         if (picked == null) {
                             picked = o.id
                             val isCorrect = o.id == question.first.id
+                            heard.record(question.first, isCorrect)
                             vm.gradeCard(question.first.id, correct = isCorrect)
                             if (isCorrect) {
                                 combo++
@@ -275,6 +282,98 @@ fun RussianBlitzScreen(onClose: () -> Unit, vm: RussianGamesViewModel = hiltView
 }
 
 private fun multiplier(combo: Int) = (1 + combo / 3).coerceAtMost(4)
+
+/** Ein in dieser Runde gehörter Satz; [correct] = null heißt: Zeit lief ab, bevor getippt wurde. */
+internal data class BlitzHeard(val phrase: RuPhrase, val correct: Boolean?)
+
+private fun BlitzHeard.rank() = when (correct) { false -> 0; null -> 1; true -> 2 }
+
+/** Merkt sich jeden Satz einmal — kommt er mehrfach dran, zählt das schlechteste Ergebnis. */
+internal fun MutableList<BlitzHeard>.record(phrase: RuPhrase, correct: Boolean?) {
+    val entry = BlitzHeard(phrase, correct)
+    val i = indexOfFirst { it.phrase.id == phrase.id }
+    when {
+        i < 0 -> add(entry)
+        entry.rank() < this[i].rank() -> this[i] = entry
+    }
+}
+
+/** Reihenfolge der Abschlussliste: falsch, unbeantwortet, richtig — innerhalb jeweils wie gehört. */
+internal fun List<BlitzHeard>.forReview(): List<BlitzHeard> = sortedBy { it.rank() }
+
+@Composable
+private fun BlitzSummary(
+    score: Int,
+    note: String,
+    heard: List<BlitzHeard>,
+    playingAudio: String?,
+    onPlay: (RuPhrase) -> Unit,
+    onAgain: () -> Unit,
+    onClose: () -> Unit,
+) {
+    val review = remember(heard.toList()) { heard.forReview() }
+    val right = heard.count { it.correct == true }
+    val wrong = heard.count { it.correct == false }
+    LazyColumn(
+        Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 28.dp, bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        item {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                RuOverline("Zeit um!", color = HikariAmber)
+                Spacer(Modifier.height(10.dp))
+                Text("$score Punkte", color = HikariText, fontSize = 34.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(6.dp))
+                Text(note, color = HikariTextMuted, fontSize = 15.sp)
+                if (heard.isNotEmpty()) {
+                    Spacer(Modifier.height(4.dp))
+                    Text("$right richtig · $wrong falsch", color = HikariTextFaint, fontSize = 13.sp)
+                }
+                Spacer(Modifier.height(24.dp))
+                RuPrimaryButton("Nochmal", onClick = onAgain)
+                Spacer(Modifier.height(10.dp))
+                RuGhostButton("Fertig", Modifier.fillMaxWidth(), onClose)
+                Spacer(Modifier.height(20.dp))
+            }
+        }
+        if (review.isNotEmpty()) {
+            item { RuOverline("Gehörte Sätze · ${review.size}", Modifier.padding(start = 4.dp, bottom = 2.dp)) }
+            items(review, key = { it.phrase.id }) { h ->
+                BlitzReviewRow(h, playing = playingAudio == h.phrase.audio, onPlay = { onPlay(h.phrase) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun BlitzReviewRow(h: BlitzHeard, playing: Boolean, onPlay: () -> Unit) {
+    val dot = when (h.correct) {
+        true -> RuGood
+        false -> RuBad
+        null -> HikariTextFaint
+    }
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(HikariCardBg)
+            .clickable(onClick = onPlay).padding(start = 14.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(8.dp).clip(CircleShape).background(dot))
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(translitAnnotated(h.phrase.ru), color = HikariText, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(2.dp))
+            Text(h.phrase.de, color = HikariTextMuted, fontSize = 14.sp, lineHeight = 19.sp)
+            Text(h.phrase.display, color = HikariTextFaint, fontSize = 12.5.sp)
+        }
+        Icon(
+            Icons.AutoMirrored.Outlined.VolumeUp,
+            contentDescription = "Anhören",
+            tint = if (playing) HikariAmber else HikariTextMuted,
+            modifier = Modifier.padding(8.dp).size(22.dp),
+        )
+    }
+}
 
 @Composable
 private fun GameIntro(title: String, text: String, onStart: () -> Unit) {

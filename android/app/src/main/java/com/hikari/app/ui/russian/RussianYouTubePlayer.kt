@@ -2,6 +2,7 @@ package com.hikari.app.ui.russian
 
 import android.annotation.SuppressLint
 import android.graphics.Color
+import android.view.ViewGroup
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import androidx.compose.foundation.background
@@ -25,6 +26,10 @@ fun RussianYouTubePlayer(
     val safeVideoId = remember(videoId) { videoId.filter { it.isLetterOrDigit() || it == '_' || it == '-' } }
     val webView = remember(videoId) {
         WebView(context).apply {
+            // Ohne feste LayoutParams gibt Compose der WebView WRAP_CONTENT — Chromium setzt
+            // dann die CSS-Viewport-Höhe auf 0 (um die Inhaltshöhe zu messen). height:100%
+            // wird 0, das YouTube-iframe verschwindet und der Player bleibt schwarz.
+            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             setBackgroundColor(Color.BLACK)
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
