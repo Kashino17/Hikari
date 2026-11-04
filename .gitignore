@@ -7,6 +7,9 @@
 
 # Lokale Artefakte
 node_modules/
+# backend/node_modules ist ein Symlink auf node_modules.nosync (iCloud lagert *.nosync nicht aus)
+node_modules
+*.nosync/
 .serena/
 android/.kotlin/
 backend/.env
