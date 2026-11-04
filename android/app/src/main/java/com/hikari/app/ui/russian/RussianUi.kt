@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -39,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -50,7 +52,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hikari.app.domain.russian.RuGlossData
 import com.hikari.app.domain.russian.RuPhrase
+import com.hikari.app.domain.russian.RussianGlossary
 import com.hikari.app.domain.russian.RussianPhonetics
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBorder
@@ -82,7 +86,154 @@ internal fun translitAnnotated(ru: String): AnnotatedString = buildAnnotatedStri
     }
 }
 
-/** Kyrillisch groß, Umschrift darunter, optional Bedeutung. */
+/** Umschrift eines einzelnen Wortes (Spans aus [RussianPhonetics.words]). */
+internal fun latinAnnotated(spans: List<RussianPhonetics.Span>): AnnotatedString = buildAnnotatedString {
+    for (span in spans) {
+        if (span.stressed) {
+            withStyle(
+                SpanStyle(
+                    color = HikariAmber,
+                    fontWeight = FontWeight.Bold,
+                    textDecoration = TextDecoration.Underline,
+                ),
+            ) { append(span.text) }
+        } else {
+            append(span.text)
+        }
+    }
+}
+
+/** Glossen-Daten einmal pro Prozess aus den Assets laden. */
+@Composable
+internal fun rememberGlossData(): RuGlossData {
+    val context = LocalContext.current
+    return remember { RussianGlossary.load(context.assets) }
+}
+
+/**
+ * Wort-für-Wort-Zeile: Umschrift groß (was du sprichst), darunter klein die
+ * deutsche Bedeutung genau dieses Wortes. Feste Wendungen (потому что =
+ * »weil«) stehen als ein Block. Kyrillisch nur dezent als eine Zeile
+ * darunter — zum Gewöhnen, nicht zum Lernen.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun RuInterlinear(
+    ru: String,
+    modifier: Modifier = Modifier,
+    size: TextUnit = 24.sp,
+    center: Boolean = true,
+    showGloss: Boolean = true,
+    showCyrillic: Boolean = true,
+    latinColor: Color = HikariText,
+    latinWeight: FontWeight = FontWeight.Medium,
+) {
+    val data = rememberGlossData()
+    val chunks = remember(ru, data) { RussianGlossary.chunks(ru, data) }
+    val glossSize = (size.value * 0.5f).coerceIn(11f, 15f).sp
+    Column(
+        modifier,
+        horizontalAlignment = if (center) Alignment.CenterHorizontally else Alignment.Start,
+    ) {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(
+                (size.value * 0.38f).dp,
+                if (center) Alignment.CenterHorizontally else Alignment.Start,
+            ),
+            verticalArrangement = Arrangement.spacedBy(if (showGloss) 10.dp else 2.dp),
+        ) {
+            for (chunk in chunks) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    val latin = buildAnnotatedString {
+                        chunk.words.forEachIndexed { i, w ->
+                            if (i > 0) append(' ')
+                            append(w.before)
+                            append(latinAnnotated(w.latin))
+                            append(w.after)
+                        }
+                    }
+                    Text(
+                        latin,
+                        color = latinColor,
+                        fontSize = size,
+                        fontWeight = latinWeight,
+                        lineHeight = size * 1.15f,
+                        maxLines = 1,
+                    )
+                    if (showGloss) {
+                        Text(
+                            chunk.gloss ?: " ",
+                            color = HikariTextMuted,
+                            fontSize = glossSize,
+                            lineHeight = glossSize * 1.2f,
+                            textAlign = TextAlign.Center,
+                            maxLines = 2,
+                            modifier = Modifier.widthIn(max = 160.dp),
+                        )
+                    }
+                }
+            }
+        }
+        if (showCyrillic) {
+            Spacer(Modifier.height(if (showGloss) 10.dp else 6.dp))
+            Text(
+                RussianPhonetics.display(ru),
+                color = HikariTextFaint,
+                fontSize = (size.value * 0.55f).coerceIn(12f, 16f).sp,
+                textAlign = if (center) TextAlign.Center else TextAlign.Start,
+            )
+        }
+    }
+}
+
+/** Starthilfe: nur das erste Wort (bzw. die erste Wendung) in Umschrift. */
+@Composable
+internal fun RuFirstWordHint(ru: String, modifier: Modifier = Modifier) {
+    val data = rememberGlossData()
+    val first = remember(ru, data) { RussianGlossary.chunks(ru, data).firstOrNull() } ?: return
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Text("Starthilfe", color = HikariTextFaint, fontSize = 12.sp)
+        Text(
+            buildAnnotatedString {
+                first.words.forEachIndexed { i, w ->
+                    if (i > 0) append(' ')
+                    append(latinAnnotated(w.latin))
+                }
+                append(" …")
+            },
+            color = HikariText,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
+        first.gloss?.let { Text(it, color = HikariTextMuted, fontSize = 13.sp) }
+        Text(
+            first.words.joinToString(" ") { it.cyrillic },
+            color = HikariTextFaint,
+            fontSize = 12.sp,
+        )
+    }
+}
+
+/**
+ * Kompakte Listen-Zeile (Satzbuch, Podcast, Antwort-Karten): Umschrift
+ * linksbündig, Bedeutungen darunter, Kyrillisch dezent.
+ */
+@Composable
+internal fun RuCompactPhrase(
+    ru: String,
+    modifier: Modifier = Modifier,
+    size: TextUnit = 16.sp,
+    showGloss: Boolean = true,
+    center: Boolean = false,
+) {
+    RuInterlinear(ru, modifier, size = size, center = center, showGloss = showGloss)
+}
+
+/**
+ * Lern-Satz: Wort-für-Wort-Umschrift mit Bedeutungen, Kyrillisch dezent,
+ * optional die ganze deutsche Übersetzung. [cyrillicSize] heißt aus
+ * historischen Gründen so — es ist die Grundgröße des Blocks.
+ */
 @Composable
 internal fun RuPhraseBlock(
     phrase: RuPhrase,
@@ -90,30 +241,21 @@ internal fun RuPhraseBlock(
     cyrillicSize: TextUnit = 30.sp,
     showGerman: Boolean = true,
     center: Boolean = true,
+    showGloss: Boolean = showGerman,
 ) {
     val align = if (center) TextAlign.Center else TextAlign.Start
     Column(
         modifier,
         horizontalAlignment = if (center) Alignment.CenterHorizontally else Alignment.Start,
     ) {
-        Text(
-            phrase.display,
-            color = HikariText,
-            fontSize = cyrillicSize,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = align,
-            lineHeight = cyrillicSize * 1.2f,
-        )
-        Spacer(Modifier.height(6.dp))
-        Text(
-            translitAnnotated(phrase.ru),
-            color = HikariTextMuted,
-            fontSize = (cyrillicSize.value * 0.62f).sp,
-            textAlign = align,
-            lineHeight = (cyrillicSize.value * 0.8f).sp,
+        RuInterlinear(
+            phrase.ru,
+            size = (cyrillicSize.value * 0.8f).sp,
+            center = center,
+            showGloss = showGloss,
         )
         if (showGerman) {
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(12.dp))
             Text(
                 phrase.de,
                 color = HikariText.copy(alpha = 0.8f),

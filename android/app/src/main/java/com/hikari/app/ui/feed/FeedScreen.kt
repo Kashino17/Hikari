@@ -1469,15 +1469,26 @@ private fun LanguageSlideContent(
                 contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = item.foreignWord,
-                        color = Color.White,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                    )
+                    val russian = item.language == com.hikari.app.domain.feed.LearningLanguage.RUSSIAN
+                    if (russian) {
+                        // Russisch: Umschrift Wort für Wort mit Bedeutung, Kyrillisch dezent.
+                        com.hikari.app.ui.russian.RuInterlinear(
+                            com.hikari.app.domain.russian.RussianPhonetics.fromDisplay(item.foreignWord),
+                            size = 24.sp,
+                            latinColor = Color.White,
+                            latinWeight = FontWeight.Bold,
+                        )
+                    } else {
+                        Text(
+                            text = item.foreignWord,
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                     Spacer(Modifier.height(3.dp))
-                    Surface(
+                    if (!russian) Surface(
                         shape = RoundedCornerShape(6.dp),
                         color = Color.White.copy(alpha = 0.08f),
                         border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
@@ -1520,14 +1531,23 @@ private fun LanguageSlideContent(
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)) {
-                                Text(
-                                    text = "„${item.exampleForeign}“",
-                                    color = Color.White.copy(alpha = 0.90f),
-                                    fontSize = 11.5.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
+                                if (russian) {
+                                    com.hikari.app.ui.russian.RuInterlinear(
+                                        com.hikari.app.domain.russian.RussianPhonetics.fromDisplay(item.exampleForeign),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        size = 14.sp,
+                                        latinColor = Color.White.copy(alpha = 0.92f),
+                                    )
+                                } else {
+                                    Text(
+                                        text = "„${item.exampleForeign}“",
+                                        color = Color.White.copy(alpha = 0.90f),
+                                        fontSize = 11.5.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
+                                }
                                 Text(
                                     text = item.exampleTranslation,
                                     color = HikariTextMuted,

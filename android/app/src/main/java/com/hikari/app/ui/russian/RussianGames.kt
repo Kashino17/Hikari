@@ -245,12 +245,11 @@ fun RussianBlitzScreen(onClose: () -> Unit, vm: RussianGamesViewModel = hiltView
                     size = 80.dp,
                 )
                 Spacer(Modifier.height(16.dp))
-                Text(
-                    if (picked != null) question.first.display else " ",
-                    color = HikariTextMuted,
-                    fontSize = 18.sp,
-                    textAlign = TextAlign.Center,
-                )
+                if (picked != null) {
+                    RuInterlinear(question.first.ru, size = 20.sp)
+                } else {
+                    Text(" ", fontSize = 18.sp)
+                }
                 Spacer(Modifier.height(20.dp))
                 question.second.forEach { o ->
                     val state = when {
@@ -361,10 +360,9 @@ private fun BlitzReviewRow(h: BlitzHeard, playing: Boolean, onPlay: () -> Unit) 
         Box(Modifier.size(8.dp).clip(CircleShape).background(dot))
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(translitAnnotated(h.phrase.ru), color = HikariText, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(Modifier.height(2.dp))
+            RuCompactPhrase(h.phrase.ru, size = 17.sp)
+            Spacer(Modifier.height(4.dp))
             Text(h.phrase.de, color = HikariTextMuted, fontSize = 14.sp, lineHeight = 19.sp)
-            Text(h.phrase.display, color = HikariTextFaint, fontSize = 12.5.sp)
         }
         Icon(
             Icons.AutoMirrored.Outlined.VolumeUp,
@@ -520,8 +518,8 @@ fun RussianPairsScreen(onClose: () -> Unit, vm: RussianGamesViewModel = hiltView
                     ) {
                         if (c.russian) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(c.phrase.display, color = HikariText, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
-                                Text(translitAnnotated(c.phrase.ru), color = HikariTextMuted, fontSize = 12.sp, textAlign = TextAlign.Center)
+                                // Memory: keine Bedeutungen — die sind ja das Rätsel.
+                                RuInterlinear(c.phrase.ru, size = 16.sp, showGloss = false)
                             }
                         } else {
                             Text(c.phrase.de, color = HikariText.copy(alpha = 0.85f), fontSize = 14.5.sp, textAlign = TextAlign.Center)

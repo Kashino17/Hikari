@@ -60,6 +60,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -622,8 +624,6 @@ private fun ReflexRoundView(
 
     val listening = state is RuListenState.Listening || state is RuListenState.Partial
     val pulse by animateFloatAsState(if (listening) 1.12f else 1f, tween(250), label = "reflex-mic")
-    val firstWordDisplay = remember(phrase.display) { phrase.display.trim().substringBefore(" ") }
-    val firstWordRu = remember(phrase.ru) { phrase.ru.trim().substringBefore(" ") }
 
     Column(
         Modifier
@@ -708,17 +708,7 @@ private fun ReflexRoundView(
             // Stufe 1: Nur das allererste Wort als Gedächtnis-Zündfunke
             if (hintLevel == 1 && !passed && !flashSolution) {
                 Spacer(Modifier.height(16.dp))
-                Text(
-                    "Starthilfe: $firstWordDisplay …",
-                    color = HikariAmber,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    translitAnnotated(firstWordRu),
-                    color = HikariTextMuted,
-                    fontSize = 14.sp,
-                )
+                RuFirstWordHint(phrase.ru)
             }
 
             // Stufe 2 (kurzes Einprägen für 2,5s) oder nach erfolgreicher Antwort:
@@ -732,8 +722,9 @@ private fun ReflexRoundView(
                     )
                     Spacer(Modifier.height(6.dp))
                 }
-                RuPhraseBlock(phrase, cyrillicSize = 26.sp)
-                Spacer(Modifier.height(10.dp))
+                // Deutsch steht schon oben — hier nur Wort für Wort.
+                RuPhraseBlock(phrase, cyrillicSize = 30.sp, showGerman = false, showGloss = true)
+                Spacer(Modifier.height(14.dp))
                 RuPlayRow(
                     playingNow = playing == phrase.audio,
                     onPlay = { vm.audio.play(phrase.audio) },
@@ -836,7 +827,7 @@ private fun ReflexRoundView(
 
             speechScore?.let { sc ->
                 Spacer(Modifier.height(12.dp))
-                RuSpeechScoreCard(sc, large = true)
+                RuSpeechScoreCard(sc, large = true, targetRu = phrase.ru)
             }
 
             Spacer(Modifier.height(18.dp))
@@ -846,7 +837,7 @@ private fun ReflexRoundView(
             }
         } else {
             speechScore?.let { sc ->
-                RuSpeechScoreCard(sc, large = true)
+                RuSpeechScoreCard(sc, large = true, targetRu = phrase.ru)
                 Spacer(Modifier.height(16.dp))
             }
             RuPrimaryButton(
@@ -1029,7 +1020,14 @@ fun RussianKombiScreen(
                                         .padding(horizontal = 10.dp, vertical = 6.dp),
                                 ) {
                                     Text(
-                                        "${idx + 1}. $b",
+                                        if (showRuBlocks || solved) {
+                                            buildAnnotatedString {
+                                                append("${idx + 1}. ")
+                                                append(translitAnnotated(RussianPhonetics.fromDisplay(b)))
+                                            }
+                                        } else {
+                                            AnnotatedString("${idx + 1}. $b")
+                                        },
                                         color = if (showRuBlocks || solved) HikariAmber else HikariTextMuted,
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Medium,
@@ -1053,20 +1051,7 @@ fun RussianKombiScreen(
 
                         if (solved) {
                             Spacer(Modifier.height(16.dp))
-                            Text(
-                                RussianPhonetics.display(item.russianTarget),
-                                color = HikariAmber,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                textAlign = TextAlign.Center,
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                translitAnnotated(item.russianTarget),
-                                color = HikariTextMuted,
-                                fontSize = 14.sp,
-                                textAlign = TextAlign.Center,
-                            )
+                            RuInterlinear(item.russianTarget, size = 24.sp)
                         }
                     }
 
@@ -1111,7 +1096,7 @@ fun RussianKombiScreen(
 
                         speechScore?.let { sc ->
                             Spacer(Modifier.height(12.dp))
-                            RuSpeechScoreCard(sc, large = true)
+                            RuSpeechScoreCard(sc, large = true, targetRu = item.russianTarget)
                         }
 
                         Spacer(Modifier.height(18.dp))
@@ -1122,7 +1107,7 @@ fun RussianKombiScreen(
                         }
                     } else {
                         speechScore?.let { sc ->
-                            RuSpeechScoreCard(sc, large = true)
+                            RuSpeechScoreCard(sc, large = true, targetRu = item.russianTarget)
                             Spacer(Modifier.height(14.dp))
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {

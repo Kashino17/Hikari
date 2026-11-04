@@ -292,8 +292,8 @@ private fun SceneBubble(l: RuSceneLine, gender: RuGender, audio: RussianAudioPla
         ) {
             Text(if (user) "Du" else "Anja", color = if (user) HikariAmber else HikariTextFaint, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(2.dp))
-            Text(mk(ru), color = HikariText, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-            Text(translitAnnotated(ru), color = HikariTextMuted, fontSize = 12.5.sp)
+            RuCompactPhrase(ru, size = 17.sp)
+            Spacer(Modifier.height(3.dp))
             Text(de, color = HikariTextFaint, fontSize = 13.sp)
             if (l.how.isNotBlank()) {
                 Spacer(Modifier.height(6.dp))
@@ -374,7 +374,8 @@ private fun BuildStep(
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 slot.options.forEachIndexed { oi, o ->
                     val ru = if (gender == RuGender.FEMALE && o.ruF != null) o.ruF else o.ru
-                    DeepChip(mk(ru), choices[si] == oi) { choices[si] = oi }
+                    val de = if (gender == RuGender.FEMALE && o.deF != null) o.deF else o.de
+                    DeepChip("${mk(ru)} · $de", choices[si] == oi) { choices[si] = oi }
                 }
             }
         }

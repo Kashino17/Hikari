@@ -310,7 +310,8 @@ private fun TalkRound(key: Int, data: RuTalkRound, vm: RussianTalkViewModel, onF
 
         if (m != null) {
             Spacer(Modifier.height(14.dp))
-            Text(m.display, color = HikariText, fontSize = 22.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
+            RuInterlinear(m.ru, size = 22.sp)
+            Spacer(Modifier.height(6.dp))
             Text(m.de, color = HikariTextMuted, fontSize = 14.sp)
         } else if (sc != null && attempts > 0) {
             Spacer(Modifier.height(14.dp))
@@ -329,7 +330,7 @@ private fun TalkRound(key: Int, data: RuTalkRound, vm: RussianTalkViewModel, onF
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text(r.display, color = HikariText, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                        RuCompactPhrase(r.ru, size = 17.sp)
                         Text(r.de, color = HikariTextMuted, fontSize = 13.sp)
                     }
                 }

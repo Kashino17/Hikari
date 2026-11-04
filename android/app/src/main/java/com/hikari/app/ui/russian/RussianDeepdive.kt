@@ -79,8 +79,14 @@ class RussianDeepdiveViewModel @Inject constructor(
     }
 }
 
-/** Text mit "+"-Betonungsmarken (aus den Inhaltsdateien) für die Anzeige aufbereiten. */
-internal fun mk(text: String) = RussianPhonetics.display(text)
+private val CYRILLIC_RUN = Regex("\\+?[А-Яа-яЁё][А-Яа-яЁё+\\-]*(?: \\+?[А-Яа-яЁё][А-Яа-яЁё+\\-]*)*")
+
+/**
+ * Text mit "+"-Betonungsmarken (aus den Inhaltsdateien) für die Anzeige
+ * aufbereiten: Russisch mitten im deutschen Erklärtext steht als Umschrift
+ * (betonter Vokal mit Akut), denn gesprochen wird nach Umschrift.
+ */
+internal fun mk(text: String) = CYRILLIC_RUN.replace(text) { m -> RussianPhonetics.transliterateFlat(m.value) }
 
 /** Deepdive zu einem Satz: Varianten (formell/locker), Beispiele mit Erklärung, männlich/weiblich, Grammatik. */
 @Composable
@@ -234,13 +240,8 @@ internal fun PhraseCard(
             .border(1.dp, if (highlight) HikariAmber.copy(alpha = 0.5f) else HikariBorder, RoundedCornerShape(14.dp))
             .padding(14.dp),
     ) {
-        Text(
-            p.display,
-            color = HikariText,
-            fontSize = if (highlight) 22.sp else if (small) 16.sp else 18.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
-        Text(translitAnnotated(p.ru), color = HikariTextMuted, fontSize = 13.sp)
+        RuCompactPhrase(p.ru, size = if (highlight) 22.sp else if (small) 16.sp else 18.sp)
+        Spacer(Modifier.height(3.dp))
         Text(p.de, color = HikariTextFaint, fontSize = 13.sp)
         explain?.let {
             Spacer(Modifier.height(8.dp))

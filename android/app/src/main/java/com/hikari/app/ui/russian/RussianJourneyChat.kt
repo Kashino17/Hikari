@@ -64,7 +64,7 @@ import com.hikari.app.domain.russian.*
         ConversationChoices("Wie fühlst du dich jetzt?", listOf("1" to "Unsicher", "2" to "Okay", "3" to "Mutig"), s.confidenceAfter?.toString().orEmpty()) { vm.confidence(it.toInt()) }
         s.turns.map { it.reply.chunk }.distinctBy { it.ru }.takeLast(3).forEach { phrase ->
             JourneyCard {
-                JourneyBody(phrase.ru); JourneySmall(phrase.de)
+                RuInterlinear(phrase.ru, size = 18.sp, center = false); JourneySmall(phrase.de)
                 TextButton(onClick = { vm.savePhrase(phrase) }, enabled = p.cards.none { it.phrase.ru == phrase.ru }) {
                     Text(if (p.cards.any { it.phrase.ru == phrase.ru }) "Für später gemerkt" else "In meinen Wortschatz")
                 }
@@ -104,7 +104,7 @@ import com.hikari.app.domain.russian.*
                 r.words.forEach { word ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Column(Modifier.weight(1f)) {
-                            Text(word.ru, fontSize = 21.sp, color = HikariText, fontWeight = FontWeight.Medium)
+                            RuInterlinear(word.ru, size = 21.sp, center = false, showGloss = false)
                             JourneySmall(word.de)
                         }
                         IconButton(onClick = { onPlay(word.ru) }) { Icon(Icons.Rounded.VolumeUp, "${word.de} anhören", tint = HikariAmber) }
@@ -122,10 +122,10 @@ import com.hikari.app.domain.russian.*
             if (s.hint > 0) JourneyCard(color = HikariSurfaceHigh) {
                 JourneyLabel("EIN BISSCHEN RÜCKENWIND")
                 JourneyBody(r.cue)
-                if (s.hint >= 2) r.words.forEach { JourneyBody("${it.ru} — ${it.de}") }
-                if (s.hint >= 3 && r.starter.isNotBlank()) { JourneyBody(r.starter); TextButton(onClick = { vm.draft(r.starter); vm.assistance() }) { Text("Diesen Anfang benutzen") } }
+                if (s.hint >= 2) r.words.forEach { JourneyBody("${RussianPhonetics.transliterateFlat(it.ru)} — ${it.de}") }
+                if (s.hint >= 3 && r.starter.isNotBlank()) { RuInterlinear(r.starter, size = 18.sp, center = false); TextButton(onClick = { vm.draft(r.starter); vm.assistance() }) { Text("Diesen Anfang benutzen") } }
                 if (s.hint >= (if (r.starter.isBlank()) 3 else 4)) r.examples.forEach { example ->
-                    JourneyBody(example.ru); JourneySmall(example.de)
+                    RuInterlinear(example.ru, size = 18.sp, center = false); JourneySmall(example.de)
                     Row {
                         TextButton(onClick = { onPlay(example.ru) }) { Text("Anhören") }
                         TextButton(onClick = { vm.draft(example.ru); vm.assistance() }) { Text("Damit anfangen") }

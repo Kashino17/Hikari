@@ -410,8 +410,8 @@ private fun PhraseRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
-                Text(p.display, color = HikariText, fontSize = 16.5.sp, fontWeight = FontWeight.SemiBold)
-                Text(translitAnnotated(p.ru), color = HikariTextMuted, fontSize = 13.sp)
+                RuCompactPhrase(p.ru, size = 16.5.sp)
+                Spacer(Modifier.height(3.dp))
                 Text(p.de, color = HikariTextFaint, fontSize = 12.5.sp)
             }
             Spacer(Modifier.width(10.dp))

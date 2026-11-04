@@ -123,8 +123,7 @@ internal fun RuListenRow(p: RuPhrase, env: RuStepEnv, showGerman: Boolean = true
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text(p.display, color = HikariText, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-            Text(translitAnnotated(p.ru), color = HikariTextMuted, fontSize = 13.5.sp)
+            RuCompactPhrase(p.ru, size = 17.sp, showGloss = showGerman)
             if (showGerman) Text(p.de, color = HikariTextFaint, fontSize = 12.5.sp)
         }
         Icon(
@@ -345,7 +344,7 @@ internal fun RuRecordCompare(p: RuPhrase, env: RuStepEnv) {
         // Mini AI Score Anzeige falls in Intro geprüft wurde
         miniScore?.let { sc ->
             Spacer(Modifier.height(8.dp))
-            RuSpeechScoreCard(sc)
+            RuSpeechScoreCard(sc, targetRu = p.ru)
         }
 
         if (hasTake && !recording) {
@@ -405,10 +404,8 @@ internal fun MeaningChooseStep(step: RuExercise.MeaningChoose, env: RuStepEnv) {
                     }
                 },
             ) {
-                Column {
-                    Text(o.display, color = HikariText, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                    Text(translitAnnotated(o.ru), color = HikariTextMuted, fontSize = 13.5.sp)
-                }
+                // Bedeutungen erst nach der Wahl — sonst verraten sie die Lösung.
+                RuCompactPhrase(o.ru, size = 18.sp, showGloss = picked != null)
             }
             Spacer(Modifier.height(10.dp))
         }
@@ -429,7 +426,7 @@ internal fun ReplyStep(step: RuExercise.Reply, env: RuStepEnv) {
     var showDe by remember { mutableStateOf(false) }
     RuStepColumn {
         RuStepTitle("Antworte", "Was passt als Antwort?")
-        RuPhraseBlock(step.question, cyrillicSize = 26.sp, showGerman = showDe || picked != null)
+        RuPhraseBlock(step.question, cyrillicSize = 28.sp, showGerman = showDe || picked != null)
         Spacer(Modifier.height(14.dp))
         RuPlayRow(
             playingNow = env.playing == step.question.audio,
@@ -467,8 +464,7 @@ internal fun ReplyStep(step: RuExercise.Reply, env: RuStepEnv) {
                 },
             ) {
                 Column {
-                    Text(o.display, color = HikariText, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                    Text(translitAnnotated(o.ru), color = HikariTextMuted, fontSize = 13.5.sp)
+                    RuCompactPhrase(o.ru, size = 18.sp, showGloss = picked != null)
                     if (picked != null) Text(o.de, color = HikariTextFaint, fontSize = 12.5.sp)
                 }
             }
@@ -628,11 +624,16 @@ private fun RuTile(word: String, selected: Boolean, ghost: Boolean = false, onCl
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val alpha = if (ghost) 0f else 1f
-        Text(word, color = HikariText.copy(alpha = alpha), fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
         Text(
             translitAnnotated(toPlus(word)),
-            color = HikariTextMuted.copy(alpha = alpha * HikariTextMuted.alpha),
-            fontSize = 12.sp,
+            color = HikariText.copy(alpha = alpha),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
+        )
+        Text(
+            word,
+            color = HikariTextFaint.copy(alpha = alpha * HikariTextFaint.alpha),
+            fontSize = 11.5.sp,
         )
     }
 }
@@ -721,8 +722,6 @@ internal fun SpeakStep(step: RuExercise.Speak, env: RuStepEnv) {
         }
     }
 
-    val firstWordDisplay = remember(p.display) { p.display.trim().substringBefore(" ") }
-    val firstWordRu = remember(p.ru) { p.ru.trim().substringBefore(" ") }
 
     Column(Modifier.fillMaxSize()) {
         Column(
@@ -749,7 +748,7 @@ internal fun SpeakStep(step: RuExercise.Speak, env: RuStepEnv) {
                     )
                     Spacer(Modifier.height(8.dp))
                 }
-                RuPhraseBlock(p, cyrillicSize = 28.sp)
+                RuPhraseBlock(p, cyrillicSize = 30.sp)
             } else {
                 // Ablese-Sperre aktiv: Nur der deutsche Gedanke ist sichtbar!
                 Column(
@@ -772,17 +771,7 @@ internal fun SpeakStep(step: RuExercise.Speak, env: RuStepEnv) {
                     )
                     if (peekFirstWord) {
                         Spacer(Modifier.height(12.dp))
-                        Text(
-                            "$firstWordDisplay …",
-                            color = HikariAmber,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Text(
-                            translitAnnotated(firstWordRu),
-                            color = HikariTextMuted,
-                            fontSize = 14.sp,
-                        )
+                        RuFirstWordHint(p.ru)
                     }
                     Spacer(Modifier.height(14.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -860,7 +849,7 @@ internal fun SpeakStep(step: RuExercise.Speak, env: RuStepEnv) {
                 )
                 score?.let { sc ->
                     Spacer(Modifier.height(10.dp))
-                    RuSpeechScoreCard(sc, large = true)
+                    RuSpeechScoreCard(sc, large = true, targetRu = p.ru)
                 }
             } else {
                 val failed = state as? RuListenState.Failed
@@ -993,10 +982,7 @@ internal fun DialogStep(step: RuExercise.Dialog, env: RuStepEnv, onDone: (Int, I
                                 }
                             },
                         ) {
-                            Column {
-                                Text(o.display, color = HikariText, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                                Text(translitAnnotated(o.ru), color = HikariTextMuted, fontSize = 12.5.sp)
-                            }
+                            RuCompactPhrase(o.ru, size = 16.sp, showGloss = false)
                         }
                         Spacer(Modifier.height(8.dp))
                     }
@@ -1032,8 +1018,8 @@ private fun RuBubble(p: RuPhrase, mine: Boolean, partner: String, enabled: Boole
         ) {
             Text(if (mine) "Du" else partner, color = HikariTextFaint, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(2.dp))
-            Text(p.display, color = HikariText, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-            Text(translitAnnotated(p.ru), color = HikariTextMuted, fontSize = 13.sp)
+            RuCompactPhrase(p.ru, size = 17.sp)
+            Spacer(Modifier.height(4.dp))
             Text(p.de, color = HikariTextFaint, fontSize = 12.5.sp)
             p.note?.let { Text(it, color = HikariAmber.copy(alpha = 0.8f), fontSize = 11.5.sp) }
         }

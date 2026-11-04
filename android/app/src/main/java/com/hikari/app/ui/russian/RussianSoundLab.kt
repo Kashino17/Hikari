@@ -56,6 +56,7 @@ import com.hikari.app.domain.russian.RuLabGroup
 import com.hikari.app.domain.russian.RuLabPair
 import com.hikari.app.domain.russian.RuLabWord
 import com.hikari.app.domain.russian.RuLessonBuilder
+import com.hikari.app.domain.russian.RussianPhonetics
 import com.hikari.app.domain.russian.RussianProgressStore
 import com.hikari.app.domain.russian.RussianSoundLabRepository
 import com.hikari.app.ui.theme.HikariAmber
@@ -122,7 +123,7 @@ fun RussianSoundLabScreen(onClose: () -> Unit, vm: RussianSoundLabViewModel = hi
                             Text(g.title, color = HikariText, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                             Spacer(Modifier.height(2.dp))
                             Text(
-                                g.pairs.joinToString("  ·  ") { "${it.a.display} / ${it.b.display}" },
+                                g.pairs.joinToString("  ·  ") { "${it.a.latin} / ${it.b.latin}" },
                                 color = HikariTextMuted,
                                 fontSize = 12.5.sp,
                             )
@@ -253,11 +254,12 @@ private fun PairWordCard(w: RuLabWord, vm: RussianSoundLabViewModel, modifier: M
             .padding(14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            w.display,
-            color = if (playing == w.clip) HikariAmber else HikariText,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.SemiBold,
+        RuInterlinear(
+            w.ru,
+            size = 22.sp,
+            showGloss = false,
+            latinColor = if (playing == w.clip) HikariAmber else HikariText,
+            latinWeight = FontWeight.SemiBold,
         )
         Spacer(Modifier.height(2.dp))
         Text(w.de, color = HikariTextMuted, fontSize = 12.5.sp)
@@ -303,7 +305,7 @@ private fun HearPhase(
                 }
             }) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(word.display, color = HikariText, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
+                    RuInterlinear(word.ru, size = 22.sp, showGloss = false, center = false, latinWeight = FontWeight.SemiBold)
                     Spacer(Modifier.size(12.dp))
                     Text(word.de, color = HikariTextMuted, fontSize = 14.sp)
                 }
@@ -313,7 +315,7 @@ private fun HearPhase(
         if (picked != null) {
             Spacer(Modifier.height(6.dp))
             Text(
-                if (picked == question.playedA) "Richtig." else "Gespielt wurde »${question.played.display}« — ${question.played.de}.",
+                if (picked == question.playedA) "Richtig." else "Gespielt wurde »${question.played.latin}« — ${question.played.de}.",
                 color = if (picked == question.playedA) RuGood else RuBad,
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center,
@@ -374,11 +376,11 @@ private fun SpeakPhase(
             val hitPartner = heardAll.any { it == other }
             when {
                 hitTarget -> {
-                    verdict = "Genau — das war »${word.display}«."
+                    verdict = "Genau — das war »${word.latin}«."
                     passed = true
                     if (!countedOnce) { countedOnce = true; onResult(true) }
                 }
-                hitPartner -> verdict = "Das klang wie »${partner.display}«. ${group.tip}"
+                hitPartner -> verdict = "Das klang wie »${partner.latin}«. ${group.tip}"
                 heardAll.isEmpty() -> verdict = "Nichts verstanden — nochmal, etwas lauter."
                 else -> verdict = "Gehört: »${heardAll.first()}«. Hör das Original nochmal und versuche es erneut."
             }
@@ -397,7 +399,7 @@ private fun SpeakPhase(
         Spacer(Modifier.height(12.dp))
         RuOverline("Sprechen")
         Spacer(Modifier.height(16.dp))
-        Text(word.display, color = HikariText, fontSize = 36.sp, fontWeight = FontWeight.SemiBold)
+        RuInterlinear(word.ru, size = 36.sp, showGloss = false, latinWeight = FontWeight.SemiBold)
         Text(word.de, color = HikariTextMuted, fontSize = 15.sp)
         Spacer(Modifier.height(16.dp))
         RuPlayRow(
@@ -482,3 +484,6 @@ private fun SpeakPhase(
         Spacer(Modifier.height(20.dp))
     }
 }
+
+/** Umschrift eines Laborworts (betonter Vokal mit Akut) für Fließtext. */
+private val RuLabWord.latin: String get() = RussianPhonetics.transliterateFlat(ru)

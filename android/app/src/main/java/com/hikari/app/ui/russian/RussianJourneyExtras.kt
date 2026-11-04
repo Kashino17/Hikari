@@ -34,7 +34,7 @@ import java.util.Locale
             ChatSmall("Wie sagst du das auf Russisch?")
             Text(card.phrase.de, color = HikariText, fontSize = 23.sp)
             if (revealed || checked != null) {
-                ChatBody(card.phrase.ru)
+                RuInterlinear(card.phrase.ru, size = 20.sp, center = false)
                 TextButton(onClick = { onPlay(card.phrase.ru) }) { Text("Ausdruck anhören") }
             }
             OutlinedTextField(heard, onText, modifier = Modifier.fillMaxWidth(), label = { Text("Erinnern, sprechen, dann prüfen") })

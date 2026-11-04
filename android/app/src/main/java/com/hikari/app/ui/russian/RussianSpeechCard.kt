@@ -31,9 +31,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hikari.app.domain.russian.RuAnswerCheck
 import com.hikari.app.domain.russian.RuSoundCoach
+import com.hikari.app.domain.russian.RussianPhonetics
 import androidx.compose.runtime.remember
 
 private val Good = Color(0xFF6EE7B7)
+
+private fun norm(w: String) = w.lowercase().replace('ё', 'е').trim { !it.isLetter() }
+
+/** Umschrift ohne Betonungsinfo (z. B. für das, was die Erkennung gehört hat). */
+private fun latinPlain(ru: String) = RussianPhonetics.transliterate(ru).joinToString("") { it.text }
 private val Amber = Color(0xFFF59E0B)
 
 /**
@@ -47,7 +53,16 @@ fun RuSpeechScoreCard(
     modifier: Modifier = Modifier,
     xpHint: String? = null,
     large: Boolean = false,
+    /** Zielsatz mit Betonung ("+"), damit die Chips die richtige Umschrift zeigen. */
+    targetRu: String? = null,
 ) {
+    // Umschrift je Zielwort: aus dem betonten Zielsatz, sonst aus dem Wort selbst.
+    val known: Map<String, String> = remember(targetRu) {
+        targetRu?.let { t ->
+            RussianPhonetics.words(t).associate { w -> norm(w.plain) to w.latin.joinToString("") { it.text } }
+        } ?: emptyMap()
+    }
+    fun latinOf(word: String): String = known[norm(word)] ?: latinPlain(word)
     val pct = (sc.score * 100).toInt()
     val title = if (large) 14.sp else 11.5.sp
     val chip = if (large) 16.sp else 11.5.sp
@@ -97,7 +112,7 @@ fun RuSpeechScoreCard(
                         .border(0.5.dp, if (ok) Color(0xFF34D399) else Color(0xFFF87171), RoundedCornerShape(6.dp))
                         .padding(horizontal = 8.dp, vertical = 3.dp),
                 ) {
-                    Text(word, color = Color.White, fontSize = chip, fontWeight = FontWeight.SemiBold)
+                    Text(latinOf(word), color = Color.White, fontSize = chip, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -111,7 +126,7 @@ fun RuSpeechScoreCard(
         }
         if (sc.heard.isNotBlank()) {
             Spacer(Modifier.height(4.dp))
-            Text("Gehört: »${sc.heard}«", color = Color.White.copy(alpha = 0.85f), fontSize = small)
+            Text("Gehört: »${latinPlain(sc.heard)}«", color = Color.White.copy(alpha = 0.85f), fontSize = small)
         }
         val hints = remember(sc) { if (sc.passed) emptyList() else RuSoundCoach.hints(sc) }
         hints.forEach { h ->
@@ -124,7 +139,7 @@ fun RuSpeechScoreCard(
                     .padding(horizontal = 10.dp, vertical = 8.dp),
             ) {
                 Text(
-                    "»${h.target}« klang wie »${h.heard}«",
+                    "»${latinOf(h.target)}« klang wie »${latinPlain(h.heard.orEmpty())}«",
                     color = Amber,
                     fontSize = small,
                     fontWeight = FontWeight.Bold,

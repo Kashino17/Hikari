@@ -70,6 +70,16 @@ object RussianPhonetics {
         return sb.toString()
     }
 
+    /** Umkehrung von [display]: Akut nach dem Vokal → "+" davor (Text mit "+" bleibt gleich). */
+    fun fromDisplay(text: String): String {
+        if (ACUTE !in text) return text
+        val sb = StringBuilder()
+        for (c in text) {
+            if (c == ACUTE && sb.isNotEmpty()) sb.insert(sb.length - 1, '+') else sb.append(c)
+        }
+        return sb.toString()
+    }
+
     /** Ohne Betonungszeichen — für Spracherkennung und Vergleiche. */
     fun plain(src: String): String = src.replace("+", "").replace(ACUTE.toString(), "")
 
@@ -181,6 +191,79 @@ object RussianPhonetics {
     // ── Hauptfunktion ────────────────────────────────────────────────────────
 
     fun transliterate(src: String): List<Span> {
+        val a = analyze(src)
+        // Rendern — Separatoren bleiben erhalten.
+        val out = mutableListOf<Span>()
+        a.tokens.forEachIndexed { idx, t ->
+            when (t) {
+                is Sep -> out += Span(t.text, false)
+                is Word -> render(a.unitsPerWord[a.wordAt.getValue(idx)], out)
+            }
+        }
+        return merge(out)
+    }
+
+    /**
+     * Ein Wort des Satzes für die Wort-für-Wort-Anzeige: Umschrift (mit
+     * Satz-Kontext berechnet, also inkl. Stimmangleichung über Wortgrenzen),
+     * Kyrillisch und die Satzzeichen, die optisch am Wort kleben.
+     */
+    data class WordReading(
+        val cyrillic: String,
+        val plain: String,
+        val latin: List<Span>,
+        /** Satzzeichen davor, z. B. "— " oder "«". */
+        val before: String,
+        /** Satzzeichen danach, z. B. "," oder "?". */
+        val after: String,
+    )
+
+    /** Satz in Wörter zerlegt — Reihenfolge wie die Glossen in glosses.json. */
+    fun words(src: String): List<WordReading> {
+        val a = analyze(src)
+        val wordTokens = a.tokens.withIndex().filter { (_, t) -> t is Word }
+        if (wordTokens.isEmpty()) return emptyList()
+        val before = MutableList(wordTokens.size) { "" }
+        val after = MutableList(wordTokens.size) { "" }
+        // Separatoren aufteilen: was direkt am Wort klebt, gehört zu ihm.
+        a.tokens.forEachIndexed { idx, t ->
+            if (t !is Sep) return@forEachIndexed
+            val prev = wordTokens.indexOfLast { it.index < idx }
+            val next = wordTokens.indexOfFirst { it.index > idx }
+            val text = t.text
+            when {
+                prev < 0 -> before[next] += text.trim().let { lead -> if (lead.isEmpty() || lead.last() in OPENERS) lead else "$lead " }
+                next < 0 -> after[prev] += text.trimEnd()
+                else -> {
+                    val glued = text.takeWhile { !it.isWhitespace() }
+                    val rest = text.drop(glued.length).trim()
+                    after[prev] += glued
+                    if (rest.isNotEmpty()) before[next] += if (rest.last() in OPENERS) rest else "$rest "
+                }
+            }
+        }
+        return wordTokens.mapIndexed { i, (idx, t) ->
+            val spans = mutableListOf<Span>()
+            render(a.unitsPerWord[a.wordAt.getValue(idx)], spans)
+            val raw = (t as Word).raw
+            WordReading(display(raw), plain(raw), merge(spans), before[i], after[i])
+        }
+    }
+
+    /** Nur die Wörter (ohne Betonung, klein) — billig, ohne Lautanalyse. */
+    fun wordKeys(src: String): List<String> =
+        tokenize(src).filterIsInstance<Word>().map { plain(it.raw).lowercase().replace('ё', 'е') }
+
+    private const val OPENERS = "«„“\"'(["
+
+    private class Analysis(
+        val tokens: List<Token>,
+        val unitsPerWord: List<List<Unit>>,
+        /** Token-Index → Wort-Index. */
+        val wordAt: Map<Int, Int>,
+    )
+
+    private fun analyze(src: String): Analysis {
         val tokens = tokenize(src)
         // 1) Betonung je Wort bestimmen.
         data class W(val parsed: Parsed, val stressAt: Int?, val lower: String) {
@@ -258,16 +341,8 @@ object RussianPhonetics {
         if (current.isNotEmpty()) groups += current
         for (g in groups) assimilate(g.flatMap { unitsPerWord[it] })
 
-        // 4) Rendern — Separatoren bleiben erhalten.
-        val out = mutableListOf<Span>()
         val wordAt = words.mapIndexed { i, (tokenIdx, _) -> tokenIdx to i }.toMap()
-        tokens.forEachIndexed { idx, t ->
-            when (t) {
-                is Sep -> out += Span(t.text, false)
-                is Word -> render(unitsPerWord[wordAt.getValue(idx)], out)
-            }
-        }
-        return merge(out)
+        return Analysis(tokens, unitsPerWord, wordAt)
     }
 
     private fun merge(spans: List<Span>): List<Span> {

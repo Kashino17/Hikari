@@ -250,8 +250,8 @@ fun RussianPodcastLessonScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text(phrase.display, color = HikariText, fontSize = 16.5.sp, fontWeight = FontWeight.SemiBold)
-                    Text(translitAnnotated(phrase.ru), color = HikariTextMuted, fontSize = 13.sp)
+                    RuCompactPhrase(phrase.ru, size = 16.5.sp)
+                    Spacer(Modifier.height(3.dp))
                     Text(phrase.de, color = HikariTextFaint, fontSize = 12.5.sp)
                 }
                 Icon(

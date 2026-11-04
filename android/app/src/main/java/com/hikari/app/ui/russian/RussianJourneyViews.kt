@@ -142,17 +142,14 @@ import com.hikari.app.domain.russian.*
     JourneyCard {
         JourneyArtwork(word.art, Modifier.fillMaxWidth().height(if (compact) 64.dp else 88.dp))
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(word.display, color = HikariText, fontSize = 40.sp, lineHeight = 48.sp, fontWeight = FontWeight.SemiBold)
+            RuInterlinear(word.ru, size = 38.sp, showGloss = false, latinWeight = FontWeight.SemiBold)
             Text(word.de, color = HikariTextMuted, fontSize = 20.sp, lineHeight = 26.sp)
-            Surface(color = HikariBg, shape = RoundedCornerShape(50)) {
-                Text("${word.reading} · Lesehilfe", Modifier.padding(horizontal = 14.dp, vertical = 8.dp), color = HikariAmber, fontSize = 13.sp)
-            }
             Spacer(Modifier.height(4.dp))
             JourneyAudio("So klingt das Wort") { onPlay(word.plain) }
         }
     }
     JourneyBody(word.note)
-    JourneySmall("Erst anschauen und anhören, wenn du möchtest. Antworten kommt danach. Die Lesehilfe ist eine Annäherung an den Klang.")
+    JourneySmall("Erst anschauen und anhören, wenn du möchtest. Antworten kommt danach. Die Umschrift ist eine Annäherung an den Klang.")
 }
 
 @Composable internal fun JourneyPartnerBubble(ru: String, de: String, onPlay: () -> Unit) {
@@ -167,7 +164,7 @@ import com.hikari.app.domain.russian.*
                 JourneyLabel("ANJA")
                 IconButton(onClick = onPlay, modifier = Modifier.size(48.dp)) { Icon(Icons.Rounded.VolumeUp, "Anja anhören", tint = HikariAmber) }
             } else JourneyLabel("ANJA")
-            Text(ru, color = HikariText, fontSize = 26.sp, lineHeight = 34.sp, fontWeight = FontWeight.Medium)
+            RuInterlinear(ru, size = 24.sp, center = false)
             JourneyBody(de, muted = true)
             if (!compact) JourneyAudio(onClick = onPlay)
         }
@@ -223,7 +220,7 @@ import com.hikari.app.domain.russian.*
                     Icon(Icons.Rounded.VolumeUp, "Antwort anhören", tint = HikariAmber)
                 }
             } else JourneyLabel(if (guided) "DEINE ANTWORT" else "DEINE STARTHILFE")
-            Text(line.answers.first(), color = HikariText, fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.Medium)
+            RuInterlinear(line.answers.first(), size = 22.sp, center = false)
             JourneyBody(line.answerDe, muted = true)
             if (!compact) JourneyAudio("Antwort anhören") { onPlay(line.answers.first()) }
             if (run.helped || typing) TextButton(onClick = { onHelp(); onText(line.answers.first()) }) { Text("Als Starthilfe einsetzen") }
@@ -262,7 +259,7 @@ import com.hikari.app.domain.russian.*
         lesson.words.forEach { word ->
             Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onPlay(word.plain) }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(word.display, color = HikariText, fontSize = 19.sp)
+                    RuInterlinear(word.ru, size = 19.sp, center = false, showGloss = false)
                     JourneySmall(word.de)
                 }
                 Icon(Icons.Rounded.VolumeUp, "${word.de} anhören", tint = HikariAmber)
