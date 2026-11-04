@@ -7,8 +7,6 @@ import com.hikari.app.data.api.dto.AddChannelRequest
 import com.hikari.app.data.api.dto.AddChannelResponse
 import com.hikari.app.data.api.dto.ChannelDto
 import com.hikari.app.data.api.dto.ChannelSearchResultDto
-import com.hikari.app.data.api.dto.SetAutoApproveRequest
-import com.hikari.app.data.api.dto.SetAutoApproveResponse
 import com.hikari.app.data.api.dto.ChannelStatsDto
 import com.hikari.app.data.api.dto.ChannelVideoDto
 import com.hikari.app.data.api.dto.FeedItemDto
