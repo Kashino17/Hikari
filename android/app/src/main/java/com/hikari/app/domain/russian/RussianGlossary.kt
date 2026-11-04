@@ -18,6 +18,8 @@ data class RuGlossData(
     val version: Int = 1,
     val s: Map<String, List<String>> = emptyMap(),
     val w: Map<String, String> = emptyMap(),
+    /** Wortform (klein, ё→е) → betonte Schreibung ("прив+ет") für Texte ohne "+". */
+    val st: Map<String, String> = emptyMap(),
 )
 
 /** Ein Abschnitt der Anzeige: ein Wort oder eine feste Wendung aus mehreren. */
@@ -88,9 +90,37 @@ object RussianGlossary {
         return map
     }
 
+    private val WORD = Regex("[А-Яа-яЁё+][А-Яа-яЁё+\\-]*")
+    private const val VOWELS = "аеёиоуыэюя"
+
+    /**
+     * Setzt fehlende Betonungen aus dem Kurs ein (Привет → Прив+ет). Texte
+     * ohne "+" (Journey, Spracherkennung) bekämen sonst eine falsche
+     * Umschrift, weil jeder Vokal als unbetont gelesen würde.
+     */
+    fun withStress(text: String, d: RuGlossData = data ?: RuGlossData()): String {
+        if (d.st.isEmpty()) return text
+        return WORD.replace(text) { m ->
+            val w = m.value
+            val lower = w.lowercase()
+            if ('+' in w || 'ё' in lower || lower.count { it in VOWELS } < 2) return@replace w
+            val form = d.st[lower.replace('ё', 'е').trimEnd('-')] ?: return@replace w
+            // Groß-/Kleinschreibung des Originals übernehmen.
+            val out = StringBuilder()
+            var i = 0
+            for (c in form) {
+                if (c == '+') { out.append(c); continue }
+                val orig = w.getOrNull(i)
+                out.append(if (orig != null && orig.isUpperCase()) c.uppercaseChar() else c)
+                i++
+            }
+            if (RussianPhonetics.plain(out.toString()).equals(w, ignoreCase = true)) out.toString() else w
+        }
+    }
+
     /** Satz → Abschnitte für die Wort-für-Wort-Zeile. */
     fun chunks(ru: String, d: RuGlossData = data ?: RuGlossData()): List<RuGlossChunk> {
-        val words = RussianPhonetics.words(ru)
+        val words = RussianPhonetics.words(withStress(ru, d))
         val glosses = glossesFor(ru, d)
         val out = mutableListOf<RuGlossChunk>()
         words.forEachIndexed { i, w ->

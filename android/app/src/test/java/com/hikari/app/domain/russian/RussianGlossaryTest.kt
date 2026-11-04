@@ -63,4 +63,13 @@ class RussianGlossaryTest {
         assertEquals("— ", w[3].before)
         assertEquals("кафе́", w[2].cyrillic)
     }
+
+    @Test
+    fun fehlendeBetonungWirdErgaenzt() {
+        assertEquals("Прив+ет! Ты л+юбишь к+офе?", RussianGlossary.withStress("Привет! Ты любишь кофе?", data))
+        // Schon betonte Texte bleiben unverändert.
+        assertEquals("Прив+ет!", RussianGlossary.withStress("Прив+ет!", data))
+        val latin = RussianGlossary.chunks("Привет!", data).single().words.single().latin.joinToString("") { it.text }
+        assertEquals("Priwjet", latin)
+    }
 }

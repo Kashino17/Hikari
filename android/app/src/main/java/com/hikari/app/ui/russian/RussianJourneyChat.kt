@@ -122,7 +122,7 @@ import com.hikari.app.domain.russian.*
             if (s.hint > 0) JourneyCard(color = HikariSurfaceHigh) {
                 JourneyLabel("EIN BISSCHEN RÜCKENWIND")
                 JourneyBody(r.cue)
-                if (s.hint >= 2) r.words.forEach { JourneyBody("${RussianPhonetics.transliterateFlat(it.ru)} — ${it.de}") }
+                if (s.hint >= 2) r.words.forEach { JourneyBody("${RussianPhonetics.transliterateFlat(RussianGlossary.withStress(it.ru))} — ${it.de}") }
                 if (s.hint >= 3 && r.starter.isNotBlank()) { RuInterlinear(r.starter, size = 18.sp, center = false); TextButton(onClick = { vm.draft(r.starter); vm.assistance() }) { Text("Diesen Anfang benutzen") } }
                 if (s.hint >= (if (r.starter.isBlank()) 3 else 4)) r.examples.forEach { example ->
                     RuInterlinear(example.ru, size = 18.sp, center = false); JourneySmall(example.de)

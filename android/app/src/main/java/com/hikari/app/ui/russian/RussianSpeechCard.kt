@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hikari.app.domain.russian.RuAnswerCheck
 import com.hikari.app.domain.russian.RuSoundCoach
+import com.hikari.app.domain.russian.RussianGlossary
 import com.hikari.app.domain.russian.RussianPhonetics
 import androidx.compose.runtime.remember
 
@@ -39,7 +40,8 @@ private val Good = Color(0xFF6EE7B7)
 private fun norm(w: String) = w.lowercase().replace('ё', 'е').trim { !it.isLetter() }
 
 /** Umschrift ohne Betonungsinfo (z. B. für das, was die Erkennung gehört hat). */
-private fun latinPlain(ru: String) = RussianPhonetics.transliterate(ru).joinToString("") { it.text }
+private fun latinPlain(ru: String) =
+    RussianPhonetics.transliterate(RussianGlossary.withStress(ru)).joinToString("") { it.text }
 private val Amber = Color(0xFFF59E0B)
 
 /**

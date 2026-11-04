@@ -14,7 +14,8 @@
 
             {"version": 1,
              "s": {"<Satz ohne Betonung>": ["weil", "=", "das", "interessant"]},
-             "w": {"<wort klein>": "<häufigste Glosse>"}}
+             "w": {"<wort klein>": "<häufigste Glosse>"},
+             "st": {"<wort klein, ё→е>": "<betonte Schreibung, z. B. прив+ет>"}}
 
         "=" heißt: gehört zur Glosse des vorigen Wortes (потому что = weil).
         "w" ist der Rückfall für Sätze, die zur Laufzeit entstehen.
@@ -64,6 +65,40 @@ def tokenize(src: str) -> list[str]:
             while i < len(src) and not (is_word_char(src[i]) and src[i] != "-"):
                 i += 1
     return [w for w in words if CYR.search(w)]
+
+
+def stressed_forms() -> dict[str, str]:
+    """Wortform (klein, ё→е, ohne Betonung) → häufigste betonte Schreibung ("прив+ет").
+
+    Damit bekommen Texte ohne "+" (Journey-Sätze, Spracherkennung) trotzdem
+    die richtige Umschrift — sonst würde aus Привет »Priwit«.
+    """
+    votes: dict[str, collections.Counter] = collections.defaultdict(collections.Counter)
+
+    def scan(text: str):
+        if "+" not in text:
+            return
+        for w in tokenize(text):
+            if "+" in w:
+                votes[plain(w).lower().replace("ё", "е")][w.lower()] += 1
+
+    def walk(o):
+        if isinstance(o, dict):
+            for v in o.values():
+                walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v)
+        elif isinstance(o, str):
+            scan(o)
+
+    for f in SOURCES:
+        walk(json.loads((ASSETS / f).read_text()))
+    lit = re.compile(r'"((?:[^"\\]|\\.)*)"')
+    for kt in sorted(KOTLIN.glob("*.kt")):
+        for m in lit.finditer(kt.read_text()):
+            scan(m.group(1))
+    return {k: c.most_common(1)[0][0] for k, c in sorted(votes.items())}
 
 
 def collect() -> dict[str, str]:
@@ -158,8 +193,9 @@ def merge(outdir: Path):
             votes[plain(w).lower()][g] += 1
     data["s"] = dict(sorted(sentences.items()))
     data["w"] = {w: c.most_common(1)[0][0] for w, c in sorted(votes.items())}
+    data["st"] = stressed_forms()
     OUT.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")))
-    print(f"{len(sentences)} Sätze, {len(data['w'])} Wörter → {OUT} ({bad} ungültig)")
+    print(f"{len(sentences)} Sätze, {len(data['w'])} Wörter, {len(data['st'])} Betonungen → {OUT} ({bad} ungültig)")
 
 
 def check():
