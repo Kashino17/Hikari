@@ -15,12 +15,12 @@ import type { Scorer } from "../scorer/types.js";
 
 export interface ChannelsDeps {
   db: Database.Database;
-  scorer?: Scorer;
+  scorer?: Scorer | undefined;
   videoDir?: string;
   /** Clipper-Maschinerie im Ingest — Default aus seit Etappe 2. */
   clipperEnabled?: boolean;
   /** Karten-Teaser für Langvideos — best-effort, darf fehlen. */
-  summarize?: (title: string, transcript: string) => Promise<string | null>;
+  summarize?: ((title: string, transcript: string) => Promise<string | null>) | undefined;
 }
 
 export async function registerChannelsRoutes(
@@ -170,7 +170,7 @@ export async function registerChannelsRoutes(
     Querystring: { deep?: string; limit?: string };
   }>("/channels/:id/poll", async (req, reply) => {
     if (!deps.scorer || !deps.videoDir) {
-      return reply.code(503).send({ error: "poll not available: scorer/videoDir not configured" });
+      return reply.code(503).send({ error: deps.scorer ? "poll not available: videoDir not configured" : "KI-Bewertung ist abgeschaltet (LLM_PROVIDER=off)" });
     }
     const channelId = req.params.id;
     if (pollsInFlight.has(channelId)) {

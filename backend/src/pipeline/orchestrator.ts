@@ -78,7 +78,8 @@ export interface ProcessNewVideoDeps {
   fetchMetadata: (videoId: string) => Promise<VideoMetadata>;
   fetchTranscript: (url: string) => Promise<string | null>;
   fetchSponsorSegments: (videoId: string) => Promise<SponsorSegment[] | null>;
-  scorer: Scorer;
+  /** null = Bewertung aus (LLM_PROVIDER=off): nur Vertrauenskanäle gehen durch. */
+  scorer: Scorer | null;
   /** Clipper-Maschinerie (clip_status + Queue) — Default aus seit Etappe 2. */
   clipperEnabled?: boolean | undefined;
   /** Karten-Teaser für Langvideos — best-effort, darf fehlen und darf werfen. */
@@ -194,6 +195,12 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
     return;
   }
 
+  const scorer = deps.scorer;
+  if (!scorer) {
+    // Bewusst kein Ergebnis speichern: Wird die Bewertung wieder eingeschaltet,
+    // soll das Video ganz normal geprüft werden können.
+    throw new Error("Bewertung abgeschaltet (LLM_PROVIDER=off) — nur Vertrauenskanäle werden übernommen");
+  }
   const transcript = meta.captionsUrl ? await deps.fetchTranscript(meta.captionsUrl) : null;
   const basePrompt = getActivePromptForChannel(db, channelId);
   // Die Dauer-Regeln des Filters sind Langform-Kriterien. Ohne diesen Hinweis
@@ -203,7 +210,7 @@ export async function processNewVideo(deps: ProcessNewVideoDeps): Promise<void> 
       ? `${basePrompt}${SHORTS_PROMPT_HINT}`
       : basePrompt;
   const [scored, sponsors] = await Promise.all([
-    deps.scorer.score({
+    scorer.score({
       title: meta.title,
       description: meta.description,
       transcript,

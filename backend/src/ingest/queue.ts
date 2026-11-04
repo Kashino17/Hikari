@@ -39,14 +39,23 @@ export function enqueueIngest(
  * hasn't exhausted its retries. A transaction prevents two workers from
  * claiming the same row.
  */
-export function claimNextIngest(db: Database.Database): IngestQueueRow | null {
+export function claimNextIngest(
+  db: Database.Database,
+  opts: { trustedOnly?: boolean } = {},
+): IngestQueueRow | null {
   const claim = db.transaction((): IngestQueueRow | null => {
     const now = Date.now();
+    // trustedOnly: nur Vertrauenskanäle (auto_approve) — die brauchen keinen
+    // Scorer und laufen deshalb auch ohne KI weiter.
+    const trusted = opts.trustedOnly
+      ? "AND channel_id IN (SELECT id FROM channels WHERE auto_approve = 1)"
+      : "";
     const row = db
       .prepare(
         `SELECT * FROM ingest_queue
          WHERE (locked_at IS NULL OR locked_at < ?)
            AND attempts < ?
+           ${trusted}
          ORDER BY queued_at ASC
          LIMIT 1`,
       )

@@ -179,6 +179,9 @@ export async function summarizeItems(
   const system = buildSystemPrompt(lang);
   const user = buildUserMessage(items);
 
+  // KI abgeschaltet: Titel + Anriss der Quelle, ohne Sprachmodell.
+  if (cfg.llmProvider === "off") return items.map(fallbackSummary);
+
   try {
     let raw: string;
     if (cfg.llmProvider === "claude") {

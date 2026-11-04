@@ -1,7 +1,12 @@
 import { join } from "node:path";
 import { type AiWindow, parseAiWindow } from "./pipeline/ai-window.js";
 
-export type LLMProvider = "claude" | "ollama" | "lmstudio";
+/**
+ * "off" = keine Sprachmodell-Aufrufe: keine Video-Bewertung, keine KI-Teaser,
+ * News ohne KI-Zusammenfassung. Nur Vertrauenskanäle (Green Card) laufen
+ * weiter in den Feed, der Rest wartet in der Warteschlange.
+ */
+export type LLMProvider = "claude" | "ollama" | "lmstudio" | "off";
 
 export interface ClipperConfig {
   enabled: boolean;

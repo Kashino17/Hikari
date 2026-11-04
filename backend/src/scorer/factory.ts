@@ -4,8 +4,11 @@ import { LMStudioScorer } from "./lmstudio-scorer.js";
 import { OllamaScorer } from "./ollama-scorer.js";
 import type { Scorer } from "./types.js";
 
-export function createScorer(cfg: Config): Scorer {
+/** null = Bewertung abgeschaltet (LLM_PROVIDER=off). */
+export function createScorer(cfg: Config): Scorer | null {
   switch (cfg.llmProvider) {
+    case "off":
+      return null;
     case "claude":
       return new ClaudeScorer({ apiKey: cfg.claude.apiKey, model: cfg.claude.model });
     case "ollama":

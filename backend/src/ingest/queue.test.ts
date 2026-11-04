@@ -35,6 +35,16 @@ describe("ingest queue", () => {
     db = makeDb();
   });
 
+  it("trustedOnly claims only jobs of trusted (auto_approve) channels", () => {
+    db.prepare("INSERT INTO channels (id, url, title, added_at, auto_approve) VALUES ('ch2','y','T',0,1)").run();
+    enqueueIngest(db, "v1", "ch1");
+    enqueueIngest(db, "v2", "ch2");
+    expect(claimNextIngest(db, { trustedOnly: true })?.video_id).toBe("v2");
+    // Untrusted job stays untouched for later — KI off must not burn it.
+    expect(claimNextIngest(db, { trustedOnly: true })).toBeNull();
+    expect(claimNextIngest(db)?.video_id).toBe("v1");
+  });
+
   it("enqueues a new video and claims it FIFO", () => {
     enqueueIngest(db, "v1", "ch1");
     enqueueIngest(db, "v2", "ch1");

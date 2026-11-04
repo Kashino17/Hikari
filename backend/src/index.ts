@@ -67,6 +67,9 @@ mkdirSync(cfg.coverDir, { recursive: true });
 
 const db = openDatabase(cfg.dbPath);
 const scorer = createScorer(cfg);
+if (!scorer) {
+  console.log("[hikari] KI-Bewertung aus (LLM_PROVIDER=off) — nur Vertrauenskanäle kommen in den Feed");
+}
 const extractor = cfg.claude.apiKey
   ? new MetadataExtractor({ apiKey: cfg.claude.apiKey, model: cfg.claude.model })
   : null;
@@ -134,14 +137,17 @@ await app.register(fastifyStatic, {
 const mockupsDir = new URL("../mockups", import.meta.url).pathname;
 await app.register(fastifyStatic, { root: mockupsDir, prefix: "/mockups/", decorateReply: false });
 await app.register(fastifyMultipart, { limits: { fileSize: 10 * 1024 * 1024 } });
-const summarizeForFeed = (title: string, transcript: string) =>
-  summarizeVideoTranscript(title, transcript, {
-    baseUrl: cfg.clipper.baseUrl,
-    model: cfg.clipper.model,
-  });
+// KI aus (LLM_PROVIDER=off): auch keine Karten-Teaser per Sprachmodell.
+const summarizeForFeed = scorer
+  ? (title: string, transcript: string) =>
+      summarizeVideoTranscript(title, transcript, {
+        baseUrl: cfg.clipper.baseUrl,
+        model: cfg.clipper.model,
+      })
+  : undefined;
 await registerChannelsRoutes(app, {
   db,
-  scorer,
+  scorer: scorer ?? undefined,
   videoDir: cfg.videoDir,
   clipperEnabled: cfg.clipper.enabled,
   summarize: summarizeForFeed,
@@ -298,6 +304,8 @@ function triggerDiscovery(reason: string): void {
   if (discoveryRunning || Date.now() < discoveryNextAllowed) return;
   // Themensuche bewertet jeden Fund per Sprachmodell — außerhalb des Fensters
   // wartet sie. Der Vorrat reicht ohnehin für Tage.
+  // Ohne Bewertung würde jeder Fund nur ungeprüft in der Warteschlange landen.
+  if (!scorer) return;
   if (!isAiWindowOpen(new Date(), cfg.aiWindow)) {
     app.log.debug({ reason }, "discovery verschoben — KI-Fenster geschlossen");
     return;
@@ -354,7 +362,8 @@ async function drainIngestQueue(): Promise<void> {
   let processedAny = false;
   try {
     for (let i = 0; i < DRAIN_BATCH; i++) {
-      const job = claimNextIngest(db);
+      // Ohne Scorer laufen nur Vertrauenskanäle (Green Card) — der Rest wartet.
+      const job = claimNextIngest(db, { trustedOnly: !scorer });
       if (!job) break;
       try {
         await processNewVideo({
@@ -405,7 +414,7 @@ async function drainIngestQueue(): Promise<void> {
   // Läuft gerade kein Ingest, arbeitet der Scorer den Short-Rückstand ab:
   // vor dem Kurzform-Hinweis fielen native Shorts pauschal durch. Nur bei
   // knappem Short-Vorrat, damit der Feed shortslastig bleibt.
-  if (!processedAny) {
+  if (!processedAny && scorer) {
     const shortStock = (
       db
         .prepare(
@@ -464,7 +473,8 @@ cron.schedule("* * * * *", () => {
       open ? "KI-Fenster geöffnet — Warteschlange wird abgearbeitet" : "KI-Fenster geschlossen",
     );
   }
-  if (!open) return;
+  // Das Fenster schont das Sprachmodell — ohne KI gibt es nichts zu schonen.
+  if (!open && scorer) return;
   drainIngestQueue().catch((err) => app.log.error({ err }, "ingest drain crashed"));
 });
 
