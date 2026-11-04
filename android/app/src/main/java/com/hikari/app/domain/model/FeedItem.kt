@@ -14,14 +14,9 @@ data class FeedItem(
     val saved: Boolean,
     val overallScore: Int? = null,
     val educationalValue: Int? = null,
-    // Auto-Clipper fields kept at the end so existing positional callers
-    // (incl. tests that predate the clipper) keep compiling without churn.
-    val kind: String = "legacy",
-    val parentVideoId: String = "",
     val captions: List<Caption>? = null,
     val context: String? = null,
     val summary: String? = null,
-    val source: String? = null,
     val channelId: String = "",
     val publishedAt: Long? = null,
 )

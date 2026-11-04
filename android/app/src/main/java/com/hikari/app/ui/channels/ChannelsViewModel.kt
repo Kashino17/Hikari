@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.ChannelSearchResultDto
 import com.hikari.app.data.api.dto.ChannelStatsDto
-import com.hikari.app.data.api.dto.RecommendationDto
 import com.hikari.app.domain.model.Channel
 import com.hikari.app.domain.repo.ChannelsRepository
 import com.hikari.app.domain.repo.FeedRepository
@@ -48,16 +47,8 @@ class ChannelsViewModel @Inject constructor(
     private val _searching = MutableStateFlow(false)
     val searching: StateFlow<Boolean> = _searching.asStateFlow()
 
-    // ── Recommendations ──────────────────────────────────────────────────────
-    private val _recommendations = MutableStateFlow<List<RecommendationDto>>(emptyList())
-    val recommendations: StateFlow<List<RecommendationDto>> = _recommendations.asStateFlow()
-
-    private val _loadingRecs = MutableStateFlow(false)
-    val loadingRecs: StateFlow<Boolean> = _loadingRecs.asStateFlow()
-
     init {
         load()
-        loadRecommendations()
         // Debounce so we don't fire a search on every keystroke
         viewModelScope.launch {
             _query
@@ -101,28 +92,6 @@ class ChannelsViewModel @Inject constructor(
         _busy.value = false
     }
 
-    fun loadRecommendations(force: Boolean = false) = viewModelScope.launch {
-        _loadingRecs.value = true
-        runCatching { repo.recommendations(force = force) }
-            .onSuccess { _recommendations.value = it }
-            .onFailure { /* silent — recommendations are optional */ }
-        _loadingRecs.value = false
-    }
-
-    /** Subscribe directly from a recommendation. */
-    fun followRecommendation(rec: RecommendationDto) = viewModelScope.launch {
-        _busy.value = true
-        runCatching { repo.add(rec.channelUrl) }
-            .onSuccess {
-                _error.value = null
-                _recommendations.value = _recommendations.value
-                    .map { if (it.channelId == rec.channelId) it.copy(subscribed = true) else it }
-            }
-            .onFailure { _error.value = it.message ?: "Hinzufügen fehlgeschlagen" }
-        _busy.value = false
-        load()
-    }
-
     /** Subscribe directly from a search result — uses the channelUrl as before. */
     fun follow(result: ChannelSearchResultDto) = viewModelScope.launch {
         _busy.value = true
@@ -148,15 +117,12 @@ class ChannelsViewModel @Inject constructor(
         load()
     }
 
-    /** Unsubscribe. Flips the local search/recommendation flags so the pill updates instantly. */
+    /** Unsubscribe. Flips the local search flag so the pill updates instantly. */
     fun remove(channelId: String) = viewModelScope.launch {
         runCatching { repo.remove(channelId) }
             .onSuccess {
                 _error.value = null
                 _searchResults.value = _searchResults.value.map {
-                    if (it.channelId == channelId) it.copy(subscribed = false) else it
-                }
-                _recommendations.value = _recommendations.value.map {
                     if (it.channelId == channelId) it.copy(subscribed = false) else it
                 }
             }

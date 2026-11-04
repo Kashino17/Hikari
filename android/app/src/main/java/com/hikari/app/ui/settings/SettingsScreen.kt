@@ -28,6 +28,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -35,6 +37,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -52,10 +55,13 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.hikari.app.BuildConfig
+import com.hikari.app.data.sponsor.SegmentBehavior
+import com.hikari.app.data.sponsor.SegmentCategories
 import com.hikari.app.domain.update.ApkInstaller
 import com.hikari.app.ui.profile.formatBytes
 import com.hikari.app.ui.theme.HikariAmber
@@ -67,6 +73,7 @@ import com.hikari.app.ui.theme.HikariSurfaceHigh
 import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
+import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
 @Composable
@@ -80,6 +87,9 @@ fun SettingsScreen(
     val disk by vm.diskUsage.collectAsState()
     val authToken by vm.authToken.collectAsState(initial = "")
     val updateState by vm.updateState.collectAsState()
+    val budgetMinutes by vm.budgetMinutes.collectAsState()
+    val sbBehaviors by vm.sbBehaviors.collectAsState(initial = emptyMap())
+    val mangaSyncStatus by vm.mangaSyncStatus.collectAsState()
     val context = LocalContext.current
     var draft by remember(backendUrl) { mutableStateOf(backendUrl) }
     var authDraft by remember(authToken) { mutableStateOf(authToken) }
@@ -321,6 +331,18 @@ fun SettingsScreen(
                 }
             }
 
+            // ── Zeitbudget des Tagesmixes (Backend) ───────────────────────────
+            SectionLabel("ZEITBUDGET")
+            TimeBudgetCard(minutes = budgetMinutes, onCommit = vm::setBudgetMinutes)
+
+            // ── SponsorBlock ──────────────────────────────────────────────────
+            SectionLabel("SPONSORBLOCK")
+            SponsorBlockCard(behaviors = sbBehaviors, onPick = vm::setSbBehavior)
+
+            // ── Manga ─────────────────────────────────────────────────────────
+            SectionLabel("MANGA")
+            MangaSyncCard(status = mangaSyncStatus, onSync = vm::triggerMangaSync)
+
             // ── App-Updates ─────────────────────────────────────────────────
             SectionLabel("APP-UPDATES")
             SettingsCard {
@@ -407,6 +429,131 @@ private fun SettingsCard(content: @Composable androidx.compose.foundation.layout
         verticalArrangement = Arrangement.spacedBy(8.dp),
         content = content,
     )
+}
+
+/** Minuten Feed pro Tag; gespeichert wird erst beim Loslassen des Reglers. */
+@Composable
+private fun TimeBudgetCard(minutes: Int?, onCommit: (Int) -> Unit) {
+    var draft by remember(minutes) { mutableIntStateOf(minutes ?: 45) }
+    SettingsCard {
+        Text("Tagesmix", color = HikariText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        Text(
+            "Etwa $draft Minuten Feed pro Tag — danach ist bewusst Schluss.",
+            color = HikariTextMuted,
+            fontSize = 11.sp,
+            lineHeight = 14.sp,
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Slider(
+                value = draft.toFloat(),
+                onValueChange = { draft = it.roundToInt() },
+                onValueChangeFinished = { onCommit(draft) },
+                valueRange = 10f..240f,
+                steps = 22,
+                colors = SliderDefaults.colors(
+                    thumbColor = HikariAmber,
+                    activeTrackColor = HikariAmber,
+                    inactiveTrackColor = HikariBorder,
+                    activeTickColor = Color.Transparent,
+                    inactiveTickColor = Color.Transparent,
+                ),
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(Modifier.size(8.dp))
+            Text(
+                "$draft min",
+                color = HikariAmber,
+                fontSize = 12.sp,
+                fontFamily = FontFamily.Monospace,
+                modifier = Modifier.width(52.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun SponsorBlockCard(
+    behaviors: Map<String, SegmentBehavior>,
+    onPick: (apiKey: String, behavior: SegmentBehavior) -> Unit,
+) {
+    SettingsCard {
+        Text("Segmente überspringen", color = HikariText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        Text(
+            "A = automatisch · M = manuell per Button · I = ignorieren",
+            color = HikariTextMuted,
+            fontSize = 11.sp,
+            lineHeight = 14.sp,
+        )
+        SegmentCategories.all.forEach { cat ->
+            val current = behaviors[cat.apiKey] ?: cat.defaultBehavior
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(cat.label, color = HikariText, fontSize = 13.sp)
+                    Text(
+                        cat.description,
+                        color = HikariTextMuted,
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Spacer(Modifier.size(8.dp))
+                BehaviorPicker(current = current, onPick = { onPick(cat.apiKey, it) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun BehaviorPicker(current: SegmentBehavior, onPick: (SegmentBehavior) -> Unit) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(HikariBg)
+            .border(0.5.dp, HikariBorder, RoundedCornerShape(6.dp)),
+    ) {
+        listOf(
+            SegmentBehavior.SKIP_AUTO to "A",
+            SegmentBehavior.SKIP_MANUAL to "M",
+            SegmentBehavior.IGNORE to "I",
+        ).forEach { (behavior, letter) ->
+            val active = current == behavior
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .background(if (active) HikariAmber else Color.Transparent, RoundedCornerShape(4.dp))
+                    .clickable { onPick(behavior) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    letter,
+                    color = if (active) HikariBg else HikariTextMuted,
+                    fontSize = 11.sp,
+                    fontFamily = FontFamily.Monospace,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MangaSyncCard(status: String?, onSync: () -> Unit) {
+    SettingsCard {
+        Text("Manga-Bibliothek", color = HikariText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        Text(
+            "Startet den Manga-Abgleich auf dem Server.",
+            color = HikariTextMuted,
+            fontSize = 11.sp,
+            lineHeight = 14.sp,
+        )
+        AmberButton("Jetzt synchronisieren", onClick = onSync)
+        status?.let { Text(it, color = HikariTextMuted, fontSize = 11.sp) }
+    }
 }
 
 @Composable

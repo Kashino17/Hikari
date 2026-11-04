@@ -119,7 +119,7 @@ data class ChapterGroup(
 
 /**
  * Search + streaming go through the Hikari backend (yt-dlp — the same
- * extraction the clipper uses, so it works even when public Piped instances
+ * extraction the video feed uses, so it works even when public Piped instances
  * are blocked). If the backend is unreachable the repo falls back to querying
  * Piped instances directly from the device.
  */

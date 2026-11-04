@@ -31,7 +31,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -88,7 +87,6 @@ private fun fmtDur(sec: Int): String {
 fun ChannelDetailScreen(
     onBack: () -> Unit,
     onEditVideo: (String) -> Unit = {},
-    onOpenFilter: (String) -> Unit = {},
     vm: ChannelDetailViewModel = hiltViewModel(),
 ) {
     val channel by vm.channel.collectAsState()
@@ -176,9 +174,8 @@ fun ChannelDetailScreen(
                     autoApprove = channel?.autoApprove == true,
                     onBack = onBack,
                     onToggleAutoApprove = { vm.toggleAutoApprove() },
-                    onSync = { vm.syncAndClip() },
+                    onSync = { vm.sync() },
                     syncing = syncing,
-                    onOpenFilter = { onOpenFilter(channel?.title.orEmpty()) },
                     onUnsubscribe = { showUnsubscribe = true },
                 )
             }
@@ -296,7 +293,6 @@ private fun DetailHeader(
     onToggleAutoApprove: () -> Unit,
     onSync: () -> Unit,
     syncing: Boolean,
-    onOpenFilter: () -> Unit,
     onUnsubscribe: () -> Unit,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
@@ -338,22 +334,6 @@ private fun DetailHeader(
                 )
             }
         }
-        // Per-channel tuning — own AI criteria just for this channel.
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(50))
-                .clickable(onClick = onOpenFilter),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                Icons.Default.Tune,
-                contentDescription = "Tuning für diesen Kanal",
-                tint = HikariText,
-                modifier = Modifier.size(20.dp),
-            )
-        }
-        Spacer(Modifier.size(4.dp))
         Box(
             modifier = Modifier
                 .size(36.dp)
@@ -370,7 +350,7 @@ private fun DetailHeader(
             } else {
                 Icon(
                     Icons.Default.Refresh,
-                    contentDescription = "Sync & Clip",
+                    contentDescription = "Sync",
                     tint = HikariText,
                     modifier = Modifier.size(20.dp),
                 )

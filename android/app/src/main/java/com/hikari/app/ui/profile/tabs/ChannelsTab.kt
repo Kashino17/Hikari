@@ -53,7 +53,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.hikari.app.data.api.dto.ChannelSearchResultDto
-import com.hikari.app.data.api.dto.RecommendationDto
 import com.hikari.app.domain.model.Channel
 import com.hikari.app.ui.channels.ChannelsViewModel
 import com.hikari.app.ui.profile.components.BannerCard
@@ -76,7 +75,6 @@ fun ChannelsTab(
     val query by vm.query.collectAsState()
     val searchResults by vm.searchResults.collectAsState()
     val searching by vm.searching.collectAsState()
-    val recommendations by vm.recommendations.collectAsState()
     val ctx = LocalContext.current
 
     // Refresh the subscribed list on (re-)entry — e.g. after unsubscribing on the
@@ -228,26 +226,6 @@ fun ChannelsTab(
                     )
                 }
             }
-
-            if (recommendations.isNotEmpty()) {
-                item(span = { GridItemSpan(2) }) {
-                    SectionLabel("EMPFOHLEN")
-                }
-                items(recommendations, key = { it.channelId }) { rec ->
-                    RecommendationBannerCard(
-                        rec = rec,
-                        onClick = {
-                            // Tap = preview on YouTube; subscribing is the explicit pill only.
-                            if (rec.subscribed) onOpenChannel(rec.channelId)
-                            else openInBrowser(rec.channelUrl)
-                        },
-                        onFollowToggle = {
-                            if (rec.subscribed) vm.remove(rec.channelId)
-                            else vm.followRecommendation(rec)
-                        },
-                    )
-                }
-            }
         }
     }
 }
@@ -393,28 +371,7 @@ private fun SearchResultCard(
     )
 }
 
-@Composable
-private fun RecommendationBannerCard(
-    rec: RecommendationDto,
-    onClick: () -> Unit,
-    onFollowToggle: () -> Unit,
-) {
-    val subs = formatSubs(rec.subscribers)
-    val tagPart = if (rec.matchingTags.isNotEmpty()) "passt zu: ${rec.matchingTags.first()}" else null
-    val parts = listOfNotNull(subs, tagPart)
-    BannerCard(
-        title = rec.title,
-        subtitle = parts.joinToString(" · ").ifBlank { null },
-        seed = rec.channelId,
-        avatarText = rec.title.firstOrNull()?.uppercaseChar()?.toString(),
-        bannerUrl = rec.banner,
-        avatarUrl = rec.thumbnail,
-        onClick = onClick,
-        topEndBadge = { FollowPill(subscribed = rec.subscribed, onToggle = onFollowToggle) },
-    )
-}
-
-/** Explicit follow toggle pill, shown top-right on search/recommendation cards. */
+/** Explicit follow toggle pill, shown top-right on search and subscription cards. */
 @Composable
 private fun FollowPill(subscribed: Boolean, onToggle: () -> Unit) {
     val bg = if (subscribed) Color.Black.copy(alpha = 0.55f) else HikariAmber

@@ -5,7 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.DownloadsResponse
 import com.hikari.app.data.prefs.SettingsStore
+import com.hikari.app.data.prefs.SponsorBlockPrefs
+import com.hikari.app.data.sponsor.SegmentBehavior
 import com.hikari.app.domain.repo.FeedRepository
+import com.hikari.app.domain.repo.MangaRepository
 import com.hikari.app.domain.update.UpdateCheckResult
 import com.hikari.app.domain.update.UpdateManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,6 +19,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** UI-State des In-App-Updaters in den Einstellungen. */
@@ -33,6 +37,8 @@ sealed interface UpdateUiState {
 class SettingsViewModel @Inject constructor(
     private val store: SettingsStore,
     private val feedRepo: FeedRepository,
+    private val mangaRepo: MangaRepository,
+    private val sbPrefs: SponsorBlockPrefs,
     private val updateManager: UpdateManager,
     @ApplicationContext private val appContext: Context,
 ) : ViewModel() {
@@ -41,6 +47,14 @@ class SettingsViewModel @Inject constructor(
     val dailyBudget: Flow<Int> = store.dailyBudget
     val smartDownloads: Flow<Boolean> = store.smartDownloads
     val authToken: Flow<String> = store.authToken
+    val sbBehaviors: Flow<Map<String, SegmentBehavior>> = sbPrefs.behaviors
+
+    // Zeitbudget des Tagesmixes (Minuten) — lebt im Backend; null = noch nicht geladen.
+    private val _budgetMinutes = MutableStateFlow<Int?>(null)
+    val budgetMinutes: StateFlow<Int?> = _budgetMinutes.asStateFlow()
+
+    private val _mangaSyncStatus = MutableStateFlow<String?>(null)
+    val mangaSyncStatus: StateFlow<String?> = _mangaSyncStatus.asStateFlow()
 
     private val _diskUsage = MutableStateFlow<DownloadsResponse?>(null)
     val diskUsage: StateFlow<DownloadsResponse?> = _diskUsage.asStateFlow()
@@ -50,6 +64,7 @@ class SettingsViewModel @Inject constructor(
 
     init {
         refreshDiskUsage()
+        loadBudgetMinutes()
     }
 
     fun setBackendUrl(url: String) = viewModelScope.launch {
@@ -66,6 +81,30 @@ class SettingsViewModel @Inject constructor(
 
     fun setAuthToken(token: String) = viewModelScope.launch {
         store.setAuthToken(token)
+    }
+
+    private fun loadBudgetMinutes() = viewModelScope.launch {
+        runCatching { feedRepo.getBudgetMinutes() }.onSuccess { _budgetMinutes.value = it }
+    }
+
+    fun setBudgetMinutes(minutes: Int) = viewModelScope.launch {
+        runCatching { feedRepo.setBudgetMinutes(minutes) }.onSuccess { _budgetMinutes.value = it }
+    }
+
+    fun setSbBehavior(apiKey: String, behavior: SegmentBehavior) = viewModelScope.launch {
+        sbPrefs.setBehavior(apiKey, behavior)
+    }
+
+    fun triggerMangaSync() = viewModelScope.launch {
+        _mangaSyncStatus.value = null
+        runCatching { mangaRepo.startSync() }
+            .onSuccess { _mangaSyncStatus.value = "Sync gestartet" }
+            .onFailure { e ->
+                _mangaSyncStatus.value =
+                    if ("409" in e.message.orEmpty()) "Sync läuft bereits" else "Backend nicht erreichbar"
+            }
+        delay(5_000)
+        _mangaSyncStatus.value = null
     }
 
     fun refreshDiskUsage() = viewModelScope.launch {

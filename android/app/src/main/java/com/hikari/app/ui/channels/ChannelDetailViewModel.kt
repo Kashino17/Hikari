@@ -269,19 +269,15 @@ class ChannelDetailViewModel @Inject constructor(
             }
     }
 
-    fun syncAndClip() = viewModelScope.launch {
+    fun sync() = viewModelScope.launch {
         if (_syncing.value) return@launch
         _syncing.value = true
         _error.value = null
-        runCatching {
-            val pollResult = repo.pollChannel(channelId)
-            repo.forceClipperWindow()
-            pollResult
-        }.onSuccess { result ->
+        runCatching { repo.pollChannel(channelId) }.onSuccess { result ->
             _syncMessage.value = if (result.queued > 0)
-                "Sync: ${result.queued} neu, ${result.skipped} bekannt · Clipper läuft jetzt"
+                "Sync: ${result.queued} neu, ${result.skipped} bekannt"
             else
-                "Keine neuen Videos · Clipper läuft (${result.skipped} bekannt)"
+                "Keine neuen Videos (${result.skipped} bekannt)"
             // Refresh the videos list — new ones should appear shortly via fire-and-forget pipeline
             load()
         }.onFailure {

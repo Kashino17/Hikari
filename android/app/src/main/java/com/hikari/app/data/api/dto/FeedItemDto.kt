@@ -12,10 +12,6 @@ data class CaptionDto(
 @Serializable
 data class FeedItemDto(
     val videoId: String,
-    val kind: String = "legacy",
-    val parentVideoId: String = "",
-    val startSec: Double? = null,
-    val endSec: Double? = null,
     val title: String,
     val durationSeconds: Int,
     val aspectRatio: String? = null,
@@ -33,7 +29,6 @@ data class FeedItemDto(
     val captions: List<CaptionDto>? = null,
     val context: String? = null,
     val summary: String? = null,
-    val source: String? = null,
 )
 
 @Serializable

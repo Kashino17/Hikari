@@ -20,7 +20,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         MusicPlayEventEntity::class,
         WhatsAppMessageEntity::class,
     ],
-    version = 20,
+    version = 21,
     exportSchema = false,
 )
 abstract class HikariDatabase : RoomDatabase() {
@@ -172,5 +172,62 @@ val MIGRATION_19_20 = object : Migration(19, 20) {
         db.execSQL(
             "ALTER TABLE playback_positions ADD COLUMN syncedAt INTEGER NOT NULL DEFAULT 0",
         )
+    }
+}
+
+/**
+ * Clipper und Discovery sind weg: `kind`/`parentVideoId` (Clip-Items) und
+ * `source` (Herkunft fuer das "Neu fuer dich"-Badge) fliegen aus `feed_items`.
+ * SQLite kann DROP COLUMN erst ab 3.35 (Android 14) — daher Tabelle neu
+ * anlegen, Bestand uebernehmen, umbenennen. Clip-Items werden nicht
+ * uebernommen: ihre Dateien liefert der Server nicht mehr aus.
+ */
+val MIGRATION_20_21 = object : Migration(20, 21) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `feed_items_new` (
+                `videoId` TEXT NOT NULL,
+                `title` TEXT NOT NULL,
+                `durationSeconds` INTEGER NOT NULL,
+                `aspectRatio` TEXT,
+                `thumbnailUrl` TEXT,
+                `channelId` TEXT NOT NULL,
+                `channelTitle` TEXT NOT NULL,
+                `category` TEXT NOT NULL,
+                `reasoning` TEXT NOT NULL,
+                `overallScore` INTEGER,
+                `educationalValue` INTEGER,
+                `addedAt` INTEGER NOT NULL,
+                `saved` INTEGER NOT NULL,
+                `seen` INTEGER NOT NULL,
+                `captionsJson` TEXT DEFAULT NULL,
+                `context` TEXT DEFAULT NULL,
+                `summary` TEXT DEFAULT NULL,
+                `position` INTEGER NOT NULL DEFAULT 0,
+                `publishedAt` INTEGER DEFAULT NULL,
+                PRIMARY KEY(`videoId`)
+            )
+            """.trimIndent(),
+        )
+        db.execSQL(
+            """
+            INSERT INTO `feed_items_new` (
+                `videoId`, `title`, `durationSeconds`, `aspectRatio`, `thumbnailUrl`,
+                `channelId`, `channelTitle`, `category`, `reasoning`, `overallScore`,
+                `educationalValue`, `addedAt`, `saved`, `seen`, `captionsJson`,
+                `context`, `summary`, `position`, `publishedAt`
+            )
+            SELECT
+                `videoId`, `title`, `durationSeconds`, `aspectRatio`, `thumbnailUrl`,
+                `channelId`, `channelTitle`, `category`, `reasoning`, `overallScore`,
+                `educationalValue`, `addedAt`, `saved`, `seen`, `captionsJson`,
+                `context`, `summary`, `position`, `publishedAt`
+            FROM `feed_items`
+            WHERE `kind` != 'clip'
+            """.trimIndent(),
+        )
+        db.execSQL("DROP TABLE `feed_items`")
+        db.execSQL("ALTER TABLE `feed_items_new` RENAME TO `feed_items`")
     }
 }

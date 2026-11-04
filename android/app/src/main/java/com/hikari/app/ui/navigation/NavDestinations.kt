@@ -12,7 +12,7 @@ data class NavDest(val route: String, val label: String, val icon: ImageVector)
 
 // Bottom-Nav (ab v0.53.1): Bibliothek · Feed · Musik · Profil. Musik bleibt
 // als täglicher Treiber ein Tab; Tagesbericht, Manga und Spiele sind
-// Bereiche im Profil-Hub. Tuning via Profil-Gear → Settings.
+// Bereiche im Profil-Hub. Einstellungen via Profil-Gear.
 val hikariDestinations = listOf(
     NavDest("library", "Bibliothek", Icons.Default.GridView),
     NavDest("feed", "Feed", Icons.Default.Spa),
