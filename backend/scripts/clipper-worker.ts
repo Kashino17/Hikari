@@ -12,6 +12,15 @@ const log = pino({ name: "clipper-worker", transport: { target: "pino-pretty" } 
 
 async function main(): Promise<void> {
   const cfg = loadConfig(process.env);
+  // Ohne Freigabe kein Qwen-Lauf: Weder ein abgeschalteter Clipper noch
+  // LLM_PROVIDER=off darf nachts alte Jobs aus der Warteschlange abarbeiten.
+  if (!cfg.clipper.enabled || cfg.llmProvider === "off") {
+    log.info(
+      { clipperEnabled: cfg.clipper.enabled, llmProvider: cfg.llmProvider },
+      "clipper-worker beendet — Clipper aus bzw. KI aus, kein Sprachmodell-Aufruf",
+    );
+    return;
+  }
   const db = new Database(cfg.dbPath);
   db.pragma("journal_mode = WAL");
   applyMigrations(db);
