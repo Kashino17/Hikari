@@ -44,7 +44,7 @@ is_running() {
 }
 
 # Returns 0 only if /health body contains "service":"hikari".
-# Prevents foreign servers (Remotion, Vite, ...) from masquerading as Hikari.
+# Prevents foreign servers (Vite, ...) from masquerading as Hikari.
 health_says_hikari() {
     local body
     body=$(curl -s --max-time 1 "http://localhost:$PORT/health" 2>/dev/null) || return 1
