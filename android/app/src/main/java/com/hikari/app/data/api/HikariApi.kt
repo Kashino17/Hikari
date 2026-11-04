@@ -2,7 +2,6 @@ package com.hikari.app.data.api
 
 import com.hikari.app.data.api.dto.BudgetBody
 import com.hikari.app.data.api.dto.ImportRetryResponse
-import com.hikari.app.data.api.dto.RescoreStatus
 import com.hikari.app.data.api.dto.ServerDownloadStatus
 import com.hikari.app.data.api.dto.AddChannelRequest
 import com.hikari.app.data.api.dto.AddChannelResponse
@@ -12,9 +11,7 @@ import com.hikari.app.data.api.dto.SetAutoApproveRequest
 import com.hikari.app.data.api.dto.SetAutoApproveResponse
 import com.hikari.app.data.api.dto.ChannelStatsDto
 import com.hikari.app.data.api.dto.ChannelVideoDto
-import com.hikari.app.data.api.dto.ClearOverrideRequest
 import com.hikari.app.data.api.dto.FeedItemDto
-import com.hikari.app.data.api.dto.FilterStateDto
 import com.hikari.app.data.api.dto.AnalyzeRequest
 import com.hikari.app.data.api.dto.AnalyzeResponse
 import com.hikari.app.data.api.dto.ArtistDto
@@ -26,7 +23,6 @@ import com.hikari.app.data.api.dto.PendingImportPatch
 import com.hikari.app.data.api.dto.PendingImportsResponse
 import com.hikari.app.data.api.dto.SniffedImportRequest
 import com.hikari.app.data.api.dto.BulkImportResponse
-import com.hikari.app.data.api.dto.DiscoveryResponseDto
 import com.hikari.app.data.api.dto.DownloadsResponse
 import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.data.api.dto.LanguagesResponse
@@ -39,21 +35,13 @@ import com.hikari.app.data.api.dto.MangaSeriesDetailDto
 import com.hikari.app.data.api.dto.MangaSeriesDto
 import com.hikari.app.data.api.dto.MangaSyncJobDto
 import com.hikari.app.data.api.dto.PollResponse
-import com.hikari.app.data.api.dto.RecommendationDto
-import com.hikari.app.data.api.dto.RejectedItemDto
 import com.hikari.app.data.api.dto.SeriesDetailResponse
 import com.hikari.app.data.api.dto.SeriesDto
-import com.hikari.app.data.api.dto.SetOverrideRequest
 import com.hikari.app.data.api.dto.UpdateSeriesRequest
 import com.hikari.app.data.api.dto.UpdateVideoRequest
 import com.hikari.app.data.api.dto.VideoDetailDto
 import com.hikari.app.data.api.dto.VideoFullDto
-import com.hikari.app.data.api.dto.ClipperStatusDto
-import com.hikari.app.data.api.dto.ForceWindowResponseDto
-import com.hikari.app.data.api.dto.LlmHealthDto
-import com.hikari.app.data.api.dto.RetryFailedResponse
 import com.hikari.app.data.api.dto.TodayCountResponse
-import com.hikari.app.data.api.dto.UpdateFilterRequest
 import com.hikari.app.data.api.dto.WeeklyStatsDto
 import com.hikari.app.data.api.dto.ArtistPageDto
 import com.hikari.app.data.api.dto.HomeFeedDto
@@ -189,23 +177,11 @@ interface HikariApi {
     @POST("videos/{id}/download")
     suspend fun requestServerDownload(@Path("id") videoId: String): ServerDownloadStatus
 
-    @POST("feed/rescore")
-    suspend fun rescoreFeed(): RescoreStatus
-
-    @GET("feed/rescore")
-    suspend fun rescoreStatus(): RescoreStatus
-
     @GET("feed/budget")
     suspend fun getBudget(): BudgetBody
 
     @PUT("feed/budget")
     suspend fun setBudget(@Body body: BudgetBody): BudgetBody
-
-    @POST("channels/{id}/subscribe")
-    suspend fun subscribeChannel(@Path("id") channelId: String)
-
-    @POST("channels/{id}/block")
-    suspend fun blockChannel(@Path("id") channelId: String)
 
     @POST("feed/{id}/save")
     suspend fun save(@Path("id") videoId: String)
@@ -249,15 +225,6 @@ interface HikariApi {
         @Query("limit") limit: Int = 10,
     ): List<ChannelSearchResultDto>
 
-    @GET("channels/recommendations")
-    suspend fun getRecommendations(@Query("force") force: String? = null): List<RecommendationDto>
-
-    @GET("discovery")
-    suspend fun getDiscovery(
-        @Query("limit") limit: Int = 12,
-        @Query("longFormMinSeconds") longFormMinSeconds: Int? = null,
-    ): DiscoveryResponseDto
-
     @POST("channels")
     suspend fun addChannel(@Body req: AddChannelRequest): AddChannelResponse
 
@@ -271,11 +238,6 @@ interface HikariApi {
         @Query("limit") limit: Int? = null,
     ): PollResponse
 
-    @PATCH("channels/{id}/auto-approve")
-    suspend fun setChannelAutoApprove(
-        @Path("id") channelId: String,
-        @Body req: SetAutoApproveRequest,
-    ): SetAutoApproveResponse
 
     @GET("channels/{id}/stats")
     suspend fun getChannelStats(@Path("id") channelId: String): ChannelStatsDto
@@ -283,8 +245,6 @@ interface HikariApi {
     @GET("channels/{id}/videos")
     suspend fun getChannelVideos(@Path("id") channelId: String): List<ChannelVideoDto>
 
-    @GET("rejected")
-    suspend fun getRejected(@Query("limit") limit: Int = 50): List<RejectedItemDto>
 
     @GET("library")
     suspend fun getLibrary(): LibraryResponse
@@ -382,37 +342,6 @@ interface HikariApi {
     @GET("languages")
     suspend fun listLanguages(): LanguagesResponse
 
-    @GET("filter")
-    suspend fun getFilter(): FilterStateDto
-
-    @PUT("filter")
-    suspend fun updateFilter(@Body req: UpdateFilterRequest): FilterStateDto
-
-    @PUT("filter")
-    suspend fun setPromptOverride(@Body req: SetOverrideRequest): FilterStateDto
-
-    @PUT("filter")
-    suspend fun clearPromptOverride(@Body req: ClearOverrideRequest = ClearOverrideRequest()): FilterStateDto
-
-    // ── Per-channel filter ────────────────────────────────────────────────
-    @GET("channels/{id}/filter")
-    suspend fun getChannelFilter(@Path("id") channelId: String): FilterStateDto
-
-    @PUT("channels/{id}/filter")
-    suspend fun updateChannelFilter(
-        @Path("id") channelId: String,
-        @Body req: UpdateFilterRequest,
-    ): FilterStateDto
-
-    @PUT("channels/{id}/filter")
-    suspend fun setChannelPromptOverride(
-        @Path("id") channelId: String,
-        @Body req: SetOverrideRequest,
-    ): FilterStateDto
-
-    @DELETE("channels/{id}/filter")
-    suspend fun clearChannelFilter(@Path("id") channelId: String)
-
     @GET("api/manga/series")
     suspend fun listMangaSeries(): List<MangaSeriesDto>
 
@@ -454,18 +383,6 @@ interface HikariApi {
 
     @POST("api/manga/arcs/{arcId}/download")
     suspend fun startMangaArcDownload(@Path("arcId") arcId: String)
-
-    @GET("clipper/status")
-    suspend fun getClipperStatus(): ClipperStatusDto
-
-    @POST("clipper/retry-failed")
-    suspend fun retryFailed(): RetryFailedResponse
-
-    @POST("clipper/force-window")
-    suspend fun forceClipperWindow(): ForceWindowResponseDto
-
-    @GET("clipper/llm-health")
-    suspend fun getLlmHealth(): LlmHealthDto
 
     @GET("videos/{id}/full")
     suspend fun getVideoFull(@Path("id") id: String): VideoFullDto

@@ -41,7 +41,6 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Shuffle
-import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -112,7 +111,6 @@ fun LibraryScreen(
     onOpenSeries: (String) -> Unit,
     onOpenChannel: (String) -> Unit,
     onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
-    onOpenTuning: () -> Unit = {},
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -153,7 +151,6 @@ fun LibraryScreen(
                 onOpenSeries = onOpenSeries,
                 onOpenChannel = onOpenChannel,
                 onPlayVideo = onPlayVideo,
-                onOpenTuning = onOpenTuning,
                 onLongPressSeries = { editingSeries = it },
                 watchLater = watchLater,
                 saved = savedItems,
@@ -189,7 +186,6 @@ private fun LibraryContent(
     onOpenSeries: (String) -> Unit,
     onOpenChannel: (String) -> Unit,
     onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
-    onOpenTuning: () -> Unit,
     onLongPressSeries: (SeriesDto) -> Unit,
     watchLater: List<FeedItem> = emptyList(),
     saved: List<FeedItem> = emptyList(),
@@ -357,14 +353,6 @@ private fun LibraryContent(
                             contentDescription = "Suchen",
                             tint = Color.White,
                             modifier = Modifier.size(24.dp),
-                        )
-                    }
-                    IconButton(onClick = onOpenTuning) {
-                        Icon(
-                            imageVector = Icons.Outlined.Tune,
-                            contentDescription = "Tuning",
-                            tint = Color.White.copy(alpha = 0.85f),
-                            modifier = Modifier.size(21.dp),
                         )
                     }
                 }
@@ -568,36 +556,6 @@ private fun LibraryContent(
                                 }
                             }
 
-                            if (data.suggestions.isNotEmpty()) {
-                                item {
-                                    SectionHeader(
-                                        "Vorschläge für dich",
-                                        count = data.suggestions.size,
-                                        onShowAll = {
-                                            allView = AllViewState(
-                                                title = "Vorschläge für dich",
-                                                items = data.suggestions.map { dto ->
-                                                    val fi = dto.toFeedItem()
-                                                    fi.toAllViewItem { onPlayVideo(fi.videoId, fi.title, fi.channelTitle) }
-                                                },
-                                            )
-                                        },
-                                    )
-                                    LazyRow(
-                                        contentPadding = PaddingValues(horizontal = 16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    ) {
-                                        items(data.suggestions, key = { it.videoId }) { dto ->
-                                            val fi = dto.toFeedItem()
-                                            CollectionCard(
-                                                item = fi,
-                                                onPlay = { onPlayVideo(fi.videoId, fi.title, fi.channelTitle) },
-                                            )
-                                        }
-                                    }
-                                    Spacer(Modifier.height(20.dp))
-                                }
-                            }
 
                             // ── Von deinen Kanälen (Picks aus abonnierten Kanälen) ───
                             if (data.subscriptionPicks.isNotEmpty()) {
@@ -1631,9 +1589,7 @@ private fun com.hikari.app.data.api.dto.FeedItemDto.toFeedItem() = FeedItem(
     category = category,
     reasoning = reasoning,
     saved = saved == 1,
-    kind = kind,
     summary = summary,
-    source = source,
     channelId = channelId,
 )
 

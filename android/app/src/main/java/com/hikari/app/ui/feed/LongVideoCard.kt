@@ -53,8 +53,6 @@ fun LongVideoCard(
     item: FeedItem,
     onOpen: () -> Unit,
     modifier: Modifier = Modifier,
-    onSubscribeChannel: () -> Unit = {},
-    onBlockChannel: () -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -151,15 +149,6 @@ fun LongVideoCard(
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-            )
-        }
-
-        if (item.isDiscovery()) {
-            Spacer(Modifier.height(14.dp))
-            DiscoveryActions(
-                item = item,
-                onSubscribe = onSubscribeChannel,
-                onBlock = onBlockChannel,
             )
         }
 

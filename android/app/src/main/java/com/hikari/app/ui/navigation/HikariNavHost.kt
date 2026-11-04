@@ -62,7 +62,6 @@ import java.net.URLEncoder
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
 import com.hikari.app.ui.theme.HikariTextFaint
-import com.hikari.app.ui.tuning.TuningScreen
 import com.hikari.app.ui.music.MiniMusicBubble
 import com.hikari.app.ui.music.ArtistScreen
 import com.hikari.app.ui.music.GroupDetailScreen
@@ -167,9 +166,9 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
     val isVideoRoute = currentRoute?.startsWith("video/") == true ||
         currentRoute?.startsWith("original/") == true
     val isReaderRoute = currentRoute?.matches(Regex("manga/[^/]+/[^/?]+(\\?.*)?")) == true
-    // Settings + Tuning sind ab v0.25.0 nur über Profil-Gear erreichbar — sub-pages,
+    // Settings sind ab v0.25.0 nur über Profil-Gear erreichbar — Sub-Page,
     // also auch ohne Bottom-Nav rendern (eigener Back-Button reicht).
-    val isGearSubPage = currentRoute == "settings" || currentRoute?.startsWith("tuning") == true
+    val isGearSubPage = currentRoute == "settings"
     val isGameRoute = currentRoute?.startsWith("game/") == true ||
         currentRoute?.startsWith("russian") == true ||
         currentRoute == "whatsapp"
@@ -254,7 +253,6 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                         onPlayVideo = { videoId, title, channel ->
                             nav.navigate(playVideoRoute(videoId, title, channel))
                         },
-                        onOpenTuning = { nav.navigate("tuning") },
                     )
                 }
             }
@@ -328,17 +326,11 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
             composable(
                 route = "channel/{channelId}",
                 arguments = listOf(navArgument("channelId") { type = NavType.StringType }),
-            ) { entry ->
-                val channelId = entry.arguments?.getString("channelId").orEmpty()
+            ) {
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     ChannelDetailScreen(
                         onBack = { nav.popBackStack() },
                         onEditVideo = { videoId -> nav.navigate("video-edit/$videoId") },
-                        onOpenFilter = { title ->
-                            val cid = URLEncoder.encode(channelId, "UTF-8")
-                            val ct = URLEncoder.encode(title, "UTF-8")
-                            nav.navigate("tuning?channelId=$cid&channelTitle=$ct")
-                        },
                     )
                 }
             }
@@ -353,17 +345,6 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                         onBack = { nav.popBackStack() },
                         onSaved = { nav.popBackStack() },
                     )
-                }
-            }
-            composable(
-                route = "tuning?channelId={channelId}&channelTitle={channelTitle}",
-                arguments = listOf(
-                    navArgument("channelId") { type = NavType.StringType; defaultValue = "" },
-                    navArgument("channelTitle") { type = NavType.StringType; defaultValue = "" },
-                ),
-            ) {
-                Box(Modifier.fillMaxSize()) {
-                    TuningScreen(onBack = { nav.popBackStack() })
                 }
             }
             composable(

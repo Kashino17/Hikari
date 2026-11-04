@@ -51,19 +51,13 @@ class HikariPlayerFactory @Inject constructor(
         baseUrl: String,
         videoId: String,
         localFilePath: String? = null,
-        kind: String = "legacy",
     ): MediaItem {
         val uri = if (localFilePath != null) {
             "file://$localFilePath"
         } else {
-            val path = when (kind) {
-                // Gerenderte Clips existieren nur auf dem Server, nicht auf YouTube.
-                "clip" -> "/clips/$videoId.mp4"
-                // Live-Proxy: Backend löst die YouTube-URL beim Abspielen auf und
-                // streamt die Bytes durch (206/Range) — kein Server-Download nötig.
-                else   -> "/stream/video/$videoId"
-            }
-            "$baseUrl$path"
+            // Live-Proxy: Backend löst die YouTube-URL beim Abspielen auf und
+            // streamt die Bytes durch (206/Range) — kein Server-Download nötig.
+            "$baseUrl/stream/video/$videoId"
         }
         return MediaItem.fromUri(uri)
     }

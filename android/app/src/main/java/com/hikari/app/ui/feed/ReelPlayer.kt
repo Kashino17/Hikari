@@ -103,8 +103,6 @@ fun ReelPlayer(
     onToggleFullscreen: () -> Unit,
     /** Called when the user taps/double-taps so the parent can show its top chrome. */
     onShowControls: () -> Unit = {},
-    onSubscribeChannel: () -> Unit = {},
-    onBlockChannel: () -> Unit = {},
 ) {
     var playing by remember { mutableStateOf(true) }
     var showTrigger by remember { mutableIntStateOf(0) }
@@ -491,15 +489,6 @@ fun ReelPlayer(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                if (item.isDiscovery()) {
-                    Spacer(Modifier.height(6.dp))
-                    DiscoveryActions(
-                        item = item,
-                        onSubscribe = onSubscribeChannel,
-                        onBlock = onBlockChannel,
-                        overVideo = true,
-                    )
-                }
                 Spacer(Modifier.height(6.dp))
                 Text(
                     text = item.title,
@@ -512,11 +501,9 @@ fun ReelPlayer(
         }
 
         // ── Context overlay — first 6 seconds, then fades out ────────────────
-        // Aligns to the top of the visible video content (16:9 portion inside
-        // a clip's 9:16 frame, or the native letterbox top for legacy items).
+        // Aligns to the top of the visible video content (native letterbox top).
         ContextOverlay(
             context = item.context,
-            kind = item.kind,
             aspectRatio = item.aspectRatio,
             isCurrent = isCurrent,
             positionMs = playerPositionMs,

@@ -15,14 +15,7 @@ data class ChannelDto(
     val subscribers: Long? = null,
     val thumbnail_url: String? = null,
     val banner_url: String? = null,
-    val autoApprove: Int = 0,
 )
-
-@Serializable
-data class SetAutoApproveRequest(val autoApprove: Boolean)
-
-@Serializable
-data class SetAutoApproveResponse(val id: String, val autoApprove: Boolean)
 
 @Serializable
 data class AddChannelRequest(val channelUrl: String)

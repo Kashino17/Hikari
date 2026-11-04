@@ -57,9 +57,8 @@ data class LibraryResponse(
     // Etappe 5: die Sammlung — optional, damit alte Server weiter parsen.
     val watchLater: List<FeedItemDto> = emptyList(),
     val history: List<FeedItemDto> = emptyList(),
-    val suggestions: List<FeedItemDto> = emptyList(),
-    // Empfehlungen aus abonnierten Kanälen — optional wie suggestions,
-    // damit ältere Server (ohne das Feld) weiter parsen.
+    // Empfehlungen aus abonnierten Kanälen — optional, damit ältere Server
+    // (ohne das Feld) weiter parsen.
     val subscriptionPicks: List<FeedItemDto> = emptyList(),
 )
 

@@ -107,7 +107,7 @@ fun MangaListScreen(
                                 modifier = Modifier.padding(top = 12.dp),
                             )
                             Text(
-                                text = "Trigger den Sync im Tuning-Tab → System.",
+                                text = "Starte den Sync unter Profil → Einstellungen → Manga.",
                                 color = HikariTextFaint,
                                 fontSize = 14.sp,
                                 modifier = Modifier.padding(top = 8.dp),

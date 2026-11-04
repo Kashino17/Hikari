@@ -5,9 +5,7 @@ import com.hikari.app.data.api.dto.AddChannelRequest
 import com.hikari.app.data.api.dto.ChannelSearchResultDto
 import com.hikari.app.data.api.dto.ChannelStatsDto
 import com.hikari.app.data.api.dto.ChannelVideoDto
-import com.hikari.app.data.api.dto.ForceWindowResponseDto
 import com.hikari.app.data.api.dto.PollResponse
-import com.hikari.app.data.api.dto.RecommendationDto
 import com.hikari.app.domain.model.Channel
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -30,17 +28,9 @@ class ChannelsRepository @Inject constructor(
             thumbnail = it.thumbnail_url,
             bannerUrl = it.banner_url,
             lastPolledAt = it.last_polled_at,
-            autoApprove = it.autoApprove == 1,
         )
     }
 
-    suspend fun setAutoApprove(channelId: String, autoApprove: Boolean): Boolean {
-        val res = api.setChannelAutoApprove(
-            channelId,
-            com.hikari.app.data.api.dto.SetAutoApproveRequest(autoApprove),
-        )
-        return res.autoApprove
-    }
 
     suspend fun listWithStats(): List<Pair<Channel, ChannelStatsDto?>> {
         val channels = list()
@@ -52,9 +42,6 @@ class ChannelsRepository @Inject constructor(
 
     suspend fun search(query: String): List<ChannelSearchResultDto> =
         api.searchChannels(query)
-
-    suspend fun recommendations(force: Boolean = false): List<RecommendationDto> =
-        api.getRecommendations(force = if (force) "true" else null)
 
     suspend fun add(url: String): Channel {
         val res = api.addChannel(AddChannelRequest(channelUrl = url))
@@ -71,8 +58,6 @@ class ChannelsRepository @Inject constructor(
         api.pollChannel(channelId, deep = true, limit = limit)
 
     suspend fun pollChannel(channelId: String): PollResponse = api.pollChannel(channelId)
-
-    suspend fun forceClipperWindow(): ForceWindowResponseDto = api.forceClipperWindow()
 
     suspend fun listVideos(channelId: String): List<ChannelVideoDto> =
         api.getChannelVideos(channelId)

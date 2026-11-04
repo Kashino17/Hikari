@@ -136,16 +136,6 @@ class FeedRepository @Inject constructor(
 
     suspend fun setBudgetMinutes(minutes: Int): Int = api.setBudget(BudgetBody(minutes)).minutes
 
-    suspend fun subscribeChannel(channelId: String) {
-        api.subscribeChannel(channelId)
-    }
-
-    /** Blockt den Kanal serverseitig und laedt den Feed neu — seine Items verschwinden. */
-    suspend fun blockChannel(channelId: String) {
-        api.blockChannel(channelId)
-        runCatching { refresh() }
-    }
-
     suspend fun todayCount(): TodayCountResponse = api.todayCount()
 
     suspend fun getLibrary(): LibraryResponse = api.getLibrary()
@@ -177,7 +167,7 @@ class FeedRepository @Inject constructor(
 }
 
 private fun FeedItemDto.toEntity(position: Int) = FeedItemEntity(
-    videoId = videoId, kind = kind, parentVideoId = parentVideoId,
+    videoId = videoId,
     title = title, durationSeconds = durationSeconds,
     aspectRatio = aspectRatio, thumbnailUrl = thumbnailUrl,
     channelId = channelId, channelTitle = channelTitle,
@@ -187,13 +177,12 @@ private fun FeedItemDto.toEntity(position: Int) = FeedItemEntity(
     captionsJson = captions?.let { runCatching { Json.encodeToString(it) }.getOrNull() },
     context = context,
     summary = summary,
-    source = source,
     position = position,
     publishedAt = publishedAt,
 )
 
 private fun FeedItemEntity.toDomain() = FeedItem(
-    videoId = videoId, kind = kind, parentVideoId = parentVideoId,
+    videoId = videoId,
     title = title, durationSeconds = durationSeconds,
     aspectRatio = aspectRatio, thumbnailUrl = thumbnailUrl,
     channelTitle = channelTitle, category = category,
@@ -212,13 +201,12 @@ private fun FeedItemEntity.toDomain() = FeedItem(
     },
     context = context,
     summary = summary,
-    source = source,
     channelId = channelId,
     publishedAt = publishedAt,
 )
 
 private fun FeedItemDto.toDomain() = FeedItem(
-    videoId = videoId, kind = kind, parentVideoId = parentVideoId,
+    videoId = videoId,
     title = title, durationSeconds = durationSeconds,
     aspectRatio = aspectRatio, thumbnailUrl = thumbnailUrl,
     channelTitle = channelTitle, category = category,
@@ -233,7 +221,6 @@ private fun FeedItemDto.toDomain() = FeedItem(
     },
     context = context,
     summary = summary,
-    source = source,
     channelId = channelId,
     publishedAt = publishedAt,
 )
