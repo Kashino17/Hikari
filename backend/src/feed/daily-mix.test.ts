@@ -14,23 +14,23 @@ const NOW = new Date("2026-08-18T12:00:00").getTime();
 function seed(
   db: Database.Database,
   id: string,
-  opts: { dur?: number; format?: string; source?: string; seen?: boolean } = {},
+  opts: { dur?: number; format?: string; channel?: string; seen?: boolean; addedAt?: number } = {},
 ) {
   db.prepare(
-    "INSERT OR IGNORE INTO channels (id,url,title,added_at) VALUES ('c1','x','C',0)",
+    "INSERT OR IGNORE INTO channels (id,url,title,added_at,is_active,status) VALUES ('c1','x','C',0,1,'subscribed')",
   ).run();
   db.prepare(
     `INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at, format, source)
-     VALUES (?, 'c1', ?, 0, ?, 0, ?, ?)`,
-  ).run(id, `t-${id}`, opts.dur ?? 60, opts.format ?? "short", opts.source ?? "subscription");
+     VALUES (?, ?, ?, 0, ?, 0, ?, 'subscription')`,
+  ).run(id, opts.channel ?? "c1", `t-${id}`, opts.dur ?? 60, opts.format ?? "short");
   db.prepare(
     `INSERT INTO scores (video_id, overall_score, category, clickbait_risk, educational_value,
       emotional_manipulation, reasoning, model_used, scored_at, decision)
      VALUES (?, 80, 'x', 1, 9, 0, 'ok', 'mock', 0, 'approved')`,
   ).run(id);
   db.prepare(
-    "INSERT INTO feed_items (video_id, added_to_feed_at, seen_at, is_pre_clipper) VALUES (?, ?, ?, 1)",
-  ).run(id, NOW - 1000, opts.seen ? NOW : null);
+    "INSERT INTO feed_items (video_id, added_to_feed_at, seen_at) VALUES (?, ?, ?)",
+  ).run(id, opts.addedAt ?? NOW - 1000, opts.seen ? NOW : null);
 }
 
 describe("daily-mix", () => {
@@ -61,44 +61,36 @@ describe("daily-mix", () => {
     expect(db.prepare("SELECT COUNT(*) c FROM daily_mix_items").get()).toEqual({ c: 10 });
   });
 
-  it("Quellen-Priorität: subscription vor probe vor topic", () => {
-    setTimeBudgetMinutes(db, 10);
-    seed(db, "t-topic", { dur: 60, source: "topic" });
-    seed(db, "s-abo", { dur: 60, source: "subscription" });
-    seed(db, "p-probe", { dur: 60, source: "probe" });
+  it("nur Abos: Videos nicht abonnierter Kanäle kommen nie in den Mix", () => {
+    db.exec(`
+      INSERT INTO channels (id,url,title,added_at,is_active,status) VALUES
+        ('probe','x','P',0,0,'probe'),
+        ('gone','x','G',0,0,'subscribed'),
+        ('manual','manual:hikari','M',0,1,'subscribed');
+    `);
+    seed(db, "abo");
+    seed(db, "fremd", { channel: "probe" });
+    seed(db, "abbestellt", { channel: "gone" });
+    seed(db, "import", { channel: "manual" });
+    buildDailyMix(db, NOW);
+    const ids = (
+      db.prepare("SELECT video_id FROM daily_mix_items").all() as { video_id: string }[]
+    ).map((r) => r.video_id);
+    expect(ids).toEqual(["abo"]);
+    expect(todayMixStats(db, NOW).unseenCount).toBe(1);
+  });
+
+  it("neueste zuerst — es gibt kein Qualitäts-Ranking mehr", () => {
+    seed(db, "alt", { addedAt: NOW - 3 * 86_400_000 });
+    seed(db, "neu", { addedAt: NOW - 1000 });
+    seed(db, "mittel", { addedAt: NOW - 86_400_000 });
     buildDailyMix(db, NOW);
     const order = (
       db.prepare("SELECT video_id FROM daily_mix_items ORDER BY position").all() as {
         video_id: string;
       }[]
     ).map((r) => r.video_id);
-    expect(order).toEqual(["s-abo", "p-probe", "t-topic"]);
-  });
-
-  it("beim Neuwürfeln stehen Abos nicht mehr als Block ganz vorn", () => {
-    for (let i = 0; i < 3; i++) seed(db, `abo${i}`, { dur: 40, source: "subscription" });
-    for (let i = 0; i < 30; i++) seed(db, `thema${i}`, { dur: 40, source: "topic" });
-    buildDailyMix(db, NOW, { reshuffle: true, seed: 4242 });
-    const erste = (
-      db
-        .prepare(
-          `SELECT v.source AS s FROM daily_mix_items m JOIN videos v ON v.id = m.video_id
-            WHERE m.mix_date = ? ORDER BY m.position LIMIT 8`,
-        )
-        .all(mixDateFor(NOW)) as { s: string }[]
-    ).map((r) => r.s);
-    // Themen-Funde mischen sich unter die vorderen Plätze …
-    expect(erste).toContain("topic");
-    // … die Abos landen trotzdem früh, nicht irgendwo hinten.
-    const aboPos = (
-      db
-        .prepare(
-          `SELECT MAX(m.position) AS p FROM daily_mix_items m JOIN videos v ON v.id = m.video_id
-            WHERE m.mix_date = ? AND v.source = 'subscription'`,
-        )
-        .get(mixDateFor(NOW)) as { p: number }
-    ).p;
-    expect(aboPos).toBeLessThan(15);
+    expect(order).toEqual(["neu", "mittel", "alt"]);
   });
 
   it("beim Neuwürfeln kommt eine andere Reihenfolge heraus", () => {
@@ -141,10 +133,10 @@ describe("daily-mix", () => {
 
   it("mischt Kanäle durch — nie zweimal derselbe Kanal hintereinander", () => {
     db.prepare(
-      "INSERT OR IGNORE INTO channels (id,url,title,added_at) VALUES ('cA','x','A',0)",
+      "INSERT OR IGNORE INTO channels (id,url,title,added_at,is_active,status) VALUES ('cA','x','A',0,1,'subscribed')",
     ).run();
     db.prepare(
-      "INSERT OR IGNORE INTO channels (id,url,title,added_at) VALUES ('cB','x','B',0)",
+      "INSERT OR IGNORE INTO channels (id,url,title,added_at,is_active,status) VALUES ('cB','x','B',0,1,'subscribed')",
     ).run();
     // Zwei Kanäle mit je 4 Shorts, blockweise eingespielt.
     for (const ch of ["cA", "cB"]) {
@@ -160,7 +152,7 @@ describe("daily-mix", () => {
            VALUES (?, 80, 'x', 1, 9, 0, 'ok', 'm', 0, 'approved')`,
         ).run(id);
         db.prepare(
-          "INSERT INTO feed_items (video_id, added_to_feed_at, is_pre_clipper) VALUES (?, ?, 1)",
+          "INSERT INTO feed_items (video_id, added_to_feed_at) VALUES (?, ?)",
         ).run(id, NOW - 1000);
       }
     }

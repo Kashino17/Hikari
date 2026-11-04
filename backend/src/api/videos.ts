@@ -24,13 +24,10 @@ import {
   removePending,
   updatePendingMetadata,
 } from "../import/pending-imports.js";
-import type { MetadataExtractor } from "../scorer/metadata-extractor.js";
+import { subscribedChannelCondition } from "../feed/subscriptions.js";
+import type { MetadataExtractor } from "../import/metadata-extractor.js";
 import { hydrateFeedBatch } from "./feed.js";
-import {
-  SUGGESTIONS_POOL_LIMIT,
-  pickDailySuggestions,
-  pickSubscriptionMix,
-} from "./library-picks.js";
+import { PICKS_POOL_LIMIT, pickSubscriptionMix } from "./library-picks.js";
 
 export interface VideosDeps {
   db: Database.Database;
@@ -222,13 +219,9 @@ export async function registerVideosRoutes(app: FastifyInstance, deps: VideosDep
     const series = (
       deps.db.prepare("SELECT * FROM series ORDER BY added_at DESC").all() as SeriesRow[]
     ).map((s) => withCoverFallback(deps.db, s));
-    // Home/Library "recently added". MUST surface videos from BOTH pipelines:
-    // legacy pre-clipper items live in feed_items, but the current auto-clipper
-    // pipeline downloads approved videos WITHOUT a feed_items row (their clips
-    // go to the clips table). The old INNER JOIN feed_items dropped every new
-    // approved video — Home was frozen on month-old legacy items. We now key on
-    // downloaded_videos (every approved video, both paths, gets one) and pull
-    // progress_seconds from feed_items if present.
+    // Home/Library "recently added": keyed on downloaded_videos (alles, was
+    // als Datei auf dem Server liegt — Feed-Downloads wie eigene Importe);
+    // progress_seconds kommt aus video_progress bzw. feed_items, falls vorhanden.
     const libraryRows = (where: string, limit: number) =>
       deps.db
         .prepare(`
@@ -272,35 +265,19 @@ export async function registerVideosRoutes(app: FastifyInstance, deps: VideosDep
       )
       .all() as { id: string }[];
 
-    // Entdeckte Langvideos als Vorschläge — dieselbe Kuration wie im Feed,
-    // aber zum Stöbern statt zum Durchswipen. Aus einem Pool der 120 Neuesten
-    // wird pro Kalendertag gewürfelt: innerhalb des Tages stabil, morgen neu.
     const mixDate = mixDateFor(Date.now());
-    const suggestionPool = deps.db
-      .prepare(
-        `SELECT f.video_id AS id
-           FROM feed_items f
-           JOIN videos v ON v.id = f.video_id
-          WHERE f.seen_at IS NULL AND f.playback_failed = 0 AND f.is_pre_clipper = 1
-            AND v.format = 'long' AND COALESCE(v.source, 'subscription') <> 'subscription'
-          ORDER BY f.added_to_feed_at DESC LIMIT ${SUGGESTIONS_POOL_LIMIT}`,
-      )
-      .all() as { id: string }[];
-    const suggestionRows = pickDailySuggestions(suggestionPool, mixDate);
 
-    // „Von deinen Kanälen": ungesehene Langvideos der abonnierten Kanäle —
-    // genau die Quelle, die suggestions ausschließt. Tagesgedreht und per
-    // Round-Robin über die Kanäle gemischt, damit kein Kanal dominiert.
+    // „Von deinen Kanälen": ungesehene Langvideos der abonnierten Kanäle.
+    // Tagesgedreht und per Round-Robin über die Kanäle gemischt, damit kein
+    // Kanal dominiert.
     const subscriptionPool = deps.db
       .prepare(
         `SELECT f.video_id AS id, v.channel_id AS channelId
            FROM feed_items f
            JOIN videos v ON v.id = f.video_id
-           JOIN channels c ON c.id = v.channel_id
-          WHERE f.seen_at IS NULL AND f.playback_failed = 0 AND f.is_pre_clipper = 1
-            AND v.format = 'long' AND COALESCE(v.source, 'subscription') = 'subscription'
-            AND c.is_active = 1
-          ORDER BY f.added_to_feed_at DESC LIMIT ${SUGGESTIONS_POOL_LIMIT}`,
+          WHERE f.seen_at IS NULL AND f.playback_failed = 0
+            AND v.format = 'long' AND ${subscribedChannelCondition("v.channel_id")}
+          ORDER BY f.added_to_feed_at DESC LIMIT ${PICKS_POOL_LIMIT}`,
       )
       .all() as { id: string; channelId: string }[];
     const subscriptionRows = pickSubscriptionMix(subscriptionPool, mixDate);
@@ -311,7 +288,6 @@ export async function registerVideosRoutes(app: FastifyInstance, deps: VideosDep
       channels,
       watchLater: hydrateFeedBatch(deps.db, watchLaterRows),
       history: hydrateFeedBatch(deps.db, historyRows),
-      suggestions: hydrateFeedBatch(deps.db, suggestionRows),
       subscriptionPicks: hydrateFeedBatch(deps.db, subscriptionRows),
     };
   });

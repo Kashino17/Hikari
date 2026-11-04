@@ -72,26 +72,4 @@ describe("Wiedergabefortschritt für Serienfolgen ohne feed_items", () => {
     };
     expect(body.series[0]?.episodes[0]?.progress_seconds).toBe(1200);
   });
-
-  it("Clip-Fortschritt überschreibt nicht den Fortschritt der ganzen Folge", async () => {
-    const db = new Database(":memory:");
-    applyMigrations(db);
-    seedSeriesVideo(db);
-    db.prepare(
-      "INSERT INTO video_progress (video_id, progress_seconds, updated_at) VALUES ('v1', 1200, 0)",
-    ).run();
-    db.prepare(
-      `INSERT INTO clips (id, parent_video_id, order_in_parent, start_seconds, end_seconds,
-         file_path, file_size_bytes, focus_x, focus_y, focus_w, focus_h, created_at, added_to_feed_at)
-       VALUES ('c1', 'v1', 0, 0, 60, '/tmp/c1.mp4', 10, 0, 0, 1, 1, 0, 0)`,
-    ).run();
-
-    const app = await buildApp(db);
-    await app.inject({ method: "PUT", url: "/feed/c1/progress", payload: { seconds: 30 } });
-
-    const row = db
-      .prepare("SELECT progress_seconds FROM video_progress WHERE video_id = 'v1'")
-      .get() as { progress_seconds: number };
-    expect(row.progress_seconds).toBe(1200);
-  });
 });

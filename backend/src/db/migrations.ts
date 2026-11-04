@@ -24,6 +24,57 @@ function addColumnIfMissing(
   db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${ddlType}`);
 }
 
+/**
+ * Drops a column only if it exists. SQLite refuses `DROP COLUMN` on a column
+ * that is part of an index — every user-created index of the table that
+ * mentions the column is dropped first. PK/UNIQUE/FK columns can't be dropped
+ * this way at all; none of the callers touches such a column.
+ */
+function dropColumnIfExists(db: Database.Database, table: string, column: string): void {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all() as ColumnInfo[];
+  if (!cols.some((c) => c.name === column)) return;
+  const indexes = db
+    .prepare("SELECT name, sql FROM sqlite_master WHERE type = 'index' AND tbl_name = ? AND sql IS NOT NULL")
+    .all(table) as { name: string; sql: string }[];
+  const mentions = new RegExp(`\\b${column}\\b`);
+  for (const idx of indexes) {
+    if (mentions.test(idx.sql)) db.exec(`DROP INDEX IF EXISTS ${idx.name}`);
+  }
+  db.exec(`ALTER TABLE ${table} DROP COLUMN ${column}`);
+}
+
+/**
+ * Feed = nur Abos (Migration 1). Einmalig: alles, was Bewertung, Discovery
+ * und Clipper in den Feed gespült haben, verschwindet — Warteschlangen-Jobs
+ * und Feed-Einträge von Videos, deren Kanal nicht abonniert ist.
+ *
+ * Bewusst verschont: gespeicherte Videos (saved = 1), "Später ansehen",
+ * heruntergeladene Videos und manuelle Importe — das hat der Nutzer selbst
+ * behalten bzw. angelegt. videos, channels und watch_later bleiben unberührt.
+ *
+ * Die Abo-Definition steht hier absichtlich als eingefrorene Kopie (statt
+ * Import aus feed/subscriptions.ts): eine Migration darf sich nicht still
+ * mitändern, wenn die Laufzeit-Definition später angepasst wird.
+ */
+const SUBS_ONLY_MIGRATION_VERSION = 1;
+function migrateToSubscriptionsOnly(db: Database.Database): void {
+  const subscribed = `SELECT id FROM channels
+     WHERE status = 'subscribed' AND is_active = 1 AND id <> 'manual'`;
+  const foreignVideos = `SELECT id FROM videos
+     WHERE channel_id NOT IN (${subscribed}) AND channel_id <> 'manual'`;
+  db.transaction(() => {
+    db.exec(`DELETE FROM ingest_queue WHERE channel_id NOT IN (${subscribed})`);
+    db.exec(`DELETE FROM daily_mix_items WHERE video_id IN (${foreignVideos})`);
+    db.exec(`
+      DELETE FROM feed_items
+       WHERE COALESCE(saved, 0) = 0
+         AND video_id IN (${foreignVideos})
+         AND video_id NOT IN (SELECT video_id FROM watch_later)
+         AND video_id NOT IN (SELECT video_id FROM downloaded_videos)
+    `);
+  })();
+}
+
 export function applyMigrations(db: Database.Database): void {
   const schema = readFileSync(join(here, "schema.sql"), "utf8");
   db.exec(schema);
@@ -54,10 +105,6 @@ export function applyMigrations(db: Database.Database): void {
 
   addColumnIfMissing(db, "manga_chapters", "is_available", "INTEGER DEFAULT 1");
 
-  // Green-Card / "Vertrauenskanal" — when 1, processNewVideo skips the AI scorer
-  // for videos from this channel (still respects isLive + duration filter).
-  addColumnIfMissing(db, "channels", "auto_approve", "INTEGER DEFAULT 0");
-
   // Channel banner art (16:7-ish wide image), extracted from yt-dlp.
   addColumnIfMissing(db, "channels", "banner_url", "TEXT");
 
@@ -66,49 +113,6 @@ export function applyMigrations(db: Database.Database): void {
   // can answer 304 Not Modified when nothing changed.
   addColumnIfMissing(db, "channels", "rss_etag", "TEXT");
   addColumnIfMissing(db, "channels", "rss_last_modified", "TEXT");
-
-  // Auto-Clipper: per-video clip lifecycle status.
-  // NULL = legacy/pre-clipper; values: pending | analyzing | rendering | done
-  //                                    | no_highlights | failed
-  addColumnIfMissing(db, "videos", "clip_status", "TEXT");
-
-  // Auto-Clipper: legacy items predating the clipper get is_pre_clipper=1
-  // and continue to behave as full-length feed items. New clipper-path items
-  // never go into feed_items; they go into the new `clips` table instead.
-  const feedCols = db.prepare("PRAGMA table_info(feed_items)").all() as { name: string }[];
-  const hadPreClipper = feedCols.some((c) => c.name === "is_pre_clipper");
-  addColumnIfMissing(db, "feed_items", "is_pre_clipper", "INTEGER DEFAULT 0");
-  if (!hadPreClipper) {
-    // First migration: every existing row is legacy. From here on, new rows
-    // are inserted with explicit is_pre_clipper values.
-    db.exec(`UPDATE feed_items SET is_pre_clipper = 1`);
-  }
-
-  // Clipper runtime state singleton — seed if not yet present.
-  db.exec(`
-    INSERT OR IGNORE INTO clipper_runtime (id, force_until, updated_at)
-    VALUES (1, 0, ${Date.now()})
-  `);
-
-  // Per-clip display mode. "smart-crop" (default) crops tightly to focus.
-  // "fit" letterboxes the full 16:9 frame in 9:16 with blur-bg padding —
-  // for slides / text-heavy content where cropping would hide info.
-  addColumnIfMissing(db, "clips", "display_mode", "TEXT NOT NULL DEFAULT 'smart-crop'");
-
-  // Per-clip sub-segment overrides for display_mode/focus. JSON array
-  // [{startSec, endSec, mode, focus?}, ...] in clip-local seconds. NULL means
-  // use the single clip-level display_mode for the whole duration (backwards
-  // compat).
-  addColumnIfMissing(db, "clips", "display_segments", "TEXT");
-
-  // Word-level captions JSON: [{start, end, text}, ...] in clip-local seconds.
-  // NULL means transcription hasn't run yet; client falls back to no subtitles.
-  addColumnIfMissing(db, "clips", "captions", "TEXT");
-
-  // AI-generated context summary per clip (1-3 short sentences). Generated
-  // from the clip's Whisper-transcribed captions, not from the parent video
-  // title. Displayed as a top overlay during the first ~6s of playback.
-  addColumnIfMissing(db, "clips", "context", "TEXT");
 
   // Etappe 2 (Feed-Streaming-Umbau): Format-/Quellen-/Zusammenfassungs-Spalten.
   // aspect_ratio existiert auf Ur-DBs vor dem initialen Schema evtl. nicht —
@@ -124,24 +128,6 @@ export function applyMigrations(db: Database.Database): void {
   db.exec("UPDATE videos SET source = 'subscription' WHERE source IS NULL");
   // Ur-DBs vor dem initialen Schema absichern (wie aspect_ratio oben).
   addColumnIfMissing(db, "feed_items", "seen_at", "INTEGER");
-  // Backfill Etappe 2: approvte Videos aus der Clip-Ära haben nie eine
-  // feed_items-Row bekommen (der Feed bestand aus ihren Clips). Ohne Row wären
-  // sie im videobasierten Feed unsichtbar. Gesehen-Status erbt vom Clip-Zustand:
-  // wurde IRGENDEIN Clip des Videos gesehen, gilt das Video als gesehen.
-  db.exec(`
-    INSERT OR IGNORE INTO feed_items (video_id, added_to_feed_at, seen_at, is_pre_clipper)
-    SELECT s.video_id,
-           COALESCE(
-             (SELECT MIN(c.added_to_feed_at) FROM clips c WHERE c.parent_video_id = s.video_id),
-             (SELECT v.discovered_at FROM videos v WHERE v.id = s.video_id)
-           ),
-           (SELECT MAX(c.seen_at) FROM clips c
-             WHERE c.parent_video_id = s.video_id AND c.seen_at IS NOT NULL),
-           1
-      FROM scores s
-     WHERE s.decision = 'approved'
-       AND NOT EXISTS (SELECT 1 FROM feed_items f WHERE f.video_id = s.video_id)
-  `);
 
   // Kurzform-Feed: Länge entscheidet über das Format, nicht das Seitenverhältnis.
   // Kurze Querformat-Videos gehörten bisher in die Langvideo-Schlange.
@@ -207,4 +193,29 @@ export function applyMigrations(db: Database.Database): void {
     "UPDATE pending_imports SET status = 'failed', error = 'Serverneustart wahrend des Downloads' " +
       "WHERE status IN ('queued', 'downloading')",
   );
+
+  // Clipper, KI-Bewertung und Discovery sind entfernt — ihre Tabellen und
+  // Spalten gleich mit, damit nichts davon je wieder anlaufen kann.
+  // Idempotent (IF EXISTS); frische DBs bekommen sie über schema.sql gar nicht.
+  db.exec(`
+    DROP TABLE IF EXISTS clips;
+    DROP TABLE IF EXISTS clipper_queue;
+    DROP TABLE IF EXISTS clipper_runtime;
+    DROP TABLE IF EXISTS filter_config;
+    DROP TABLE IF EXISTS channel_filters;
+    DROP TABLE IF EXISTS discovery_settings;
+    DROP TABLE IF EXISTS channel_match_scores;
+    DROP TABLE IF EXISTS category_preferences;
+  `);
+  dropColumnIfExists(db, "videos", "clip_status");
+  dropColumnIfExists(db, "feed_items", "is_pre_clipper");
+  dropColumnIfExists(db, "channels", "auto_approve");
+
+  // Versionierte Einmal-Migrationen (PRAGMA user_version). Läuft NACH dem
+  // status-Backfill oben, damit aktive Bestandskanäle schon als Abo zählen.
+  const version = db.pragma("user_version", { simple: true }) as number;
+  if (version < SUBS_ONLY_MIGRATION_VERSION) {
+    migrateToSubscriptionsOnly(db);
+    db.pragma(`user_version = ${SUBS_ONLY_MIGRATION_VERSION}`);
+  }
 }

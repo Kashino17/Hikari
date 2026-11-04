@@ -52,7 +52,7 @@ describe("videos API", () => {
          VALUES (?, 80, 'x', 1, 9, 0, 'ok', 'mock', 0, 'approved')`,
       ).run(id);
       db.prepare(
-        "INSERT INTO feed_items (video_id, added_to_feed_at, is_pre_clipper) VALUES (?, 0, 1)",
+        "INSERT INTO feed_items (video_id, added_to_feed_at) VALUES (?, 0)",
       ).run(id);
     };
     seedVideo("wl1");
@@ -69,6 +69,34 @@ describe("videos API", () => {
     };
     expect(body.watchLater.map((x) => x.videoId)).toEqual(["wl1"]);
     expect(body.history.map((x) => x.videoId)).toEqual(["seen1"]);
+  });
+
+  it("GET /library: subscriptionPicks nur aus Abos, keine eigenen Vorschläge mehr", async () => {
+    const Database = (await import("better-sqlite3")).default;
+    const { applyMigrations } = await import("../db/migrations.js");
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    db.exec(`
+      INSERT INTO channels (id,url,title,added_at,is_active,status) VALUES
+        ('abo','x','Abo',0,1,'subscribed'), ('probe','x','Probe',0,0,'probe');
+      INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at, format, source) VALUES
+        ('v-abo','abo','t',0,600,0,'long','subscription'),
+        ('v-probe','probe','t',0,600,0,'long','probe');
+      INSERT INTO scores (video_id, overall_score, category, clickbait_risk, educational_value,
+        emotional_manipulation, reasoning, model_used, scored_at, decision) VALUES
+        ('v-abo',50,'other',0,5,0,'r','subscription',0,'approved'),
+        ('v-probe',80,'x',0,9,0,'r','mock',0,'approved');
+      INSERT INTO feed_items (video_id, added_to_feed_at) VALUES ('v-abo',0), ('v-probe',0);
+    `);
+    const dir = mkdtempSync(join(tmpdir(), "hikari-lib-"));
+    const app = Fastify();
+    await registerVideosRoutes(app, { db, videoDir: dir, coverDir: dir, extractor: null });
+    const body = (await app.inject({ method: "GET", url: "/library" })).json() as Record<
+      string,
+      unknown
+    > & { subscriptionPicks: { videoId: string }[] };
+    expect(body.subscriptionPicks.map((x) => x.videoId)).toEqual(["v-abo"]);
+    expect(body).not.toHaveProperty("suggestions");
   });
 
   it("returns 404 for missing file", async () => {

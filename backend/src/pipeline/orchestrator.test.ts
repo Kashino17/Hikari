@@ -2,7 +2,6 @@ import Database from "better-sqlite3";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { applyMigrations } from "../db/migrations.js";
 import { processNewVideo } from "./orchestrator.js";
-import type { Scorer } from "../scorer/types.js";
 
 const fakeMetadata = {
   id: "vid1",
@@ -32,32 +31,13 @@ const fakeShortLandscape = {
   aspectRatio: "16:9",
 };
 
-function makeScorer(decision: "approve" | "reject"): Scorer {
-  return {
-    name: "mock",
-    async score() {
-      return {
-        modelUsed: "mock-v1",
-        score: {
-          overallScore: decision === "approve" ? 80 : 40,
-          category: "math",
-          clickbaitRisk: 1,
-          educationalValue: 9,
-          emotionalManipulation: 0,
-          reasoning: "test",
-        },
-      };
-    },
-  };
-}
-
 describe("processNewVideo", () => {
   let db: Database.Database;
   beforeEach(() => {
     db = new Database(":memory:");
     applyMigrations(db);
     db.prepare(
-      "INSERT INTO channels (id, url, title, added_at) VALUES ('UC1','x','chan',0)",
+      "INSERT INTO channels (id, url, title, added_at, is_active, status) VALUES ('UC1','x','chan',0,1,'subscribed')",
     ).run();
   });
 
@@ -67,117 +47,50 @@ describe("processNewVideo", () => {
       videoId: "vid1",
       channelId: "UC1",
       fetchMetadata: async () => fakeMetadata,
-      fetchTranscript: async () => null,
       fetchSponsorSegments: async () => [],
-      scorer: makeScorer("approve"),
       ...overrides,
     };
   }
 
-  it("approve (long): feed_items-Row, format/source gesetzt, KEIN Download, KEIN Clipper", async () => {
-    const summarize = vi.fn(async () => "Ein Teaser.");
-    await processNewVideo(
-      baseDeps({
-        fetchTranscript: async () => "ein ausreichend langes transkript ".repeat(10),
-        fetchMetadata: async () => ({ ...fakeMetadata, captionsUrl: "https://cc" }),
-        summarize,
-      }),
-    );
+  it("Abo-Video (lang): direkt in den Feed, neutrale scores-Zeile, KEIN Download", async () => {
+    expect(await processNewVideo(baseDeps())).toBe("added");
 
-    const v = db
-      .prepare("SELECT format, source, summary, clip_status FROM videos WHERE id='vid1'")
-      .get() as { format: string; source: string; summary: string; clip_status: string | null };
-    expect(v).toEqual({ format: "long", source: "subscription", summary: "Ein Teaser.", clip_status: null });
-    expect(summarize).toHaveBeenCalledOnce();
-
-    const feed = db
-      .prepare("SELECT is_pre_clipper FROM feed_items WHERE video_id='vid1'")
-      .get() as { is_pre_clipper: number };
-    expect(feed.is_pre_clipper).toBe(1);
-
-    expect(db.prepare("SELECT COUNT(*) c FROM downloaded_videos").get()).toEqual({ c: 0 });
-    expect(db.prepare("SELECT COUNT(*) c FROM clipper_queue").get()).toEqual({ c: 0 });
-  });
-
-  it("approve (short): format 'short', summarize wird nicht gerufen", async () => {
-    const summarize = vi.fn(async () => "sollte nicht passieren");
-    await processNewVideo(
-      baseDeps({
-        fetchMetadata: async () => ({ ...fakeShortMetadata, captionsUrl: "https://cc" }),
-        fetchTranscript: async () => "worte ".repeat(50),
-        summarize,
-      }),
-    );
-    const v = db.prepare("SELECT format, summary FROM videos WHERE id='vid1'").get() as {
-      format: string;
-      summary: string | null;
-    };
-    expect(v).toEqual({ format: "short", summary: null });
-    expect(summarize).not.toHaveBeenCalled();
-    expect(db.prepare("SELECT COUNT(*) c FROM feed_items").get()).toEqual({ c: 1 });
-  });
-
-  it("summarize wirft ⇒ Approve läuft durch, summary bleibt null", async () => {
-    await processNewVideo(
-      baseDeps({
-        fetchMetadata: async () => ({ ...fakeMetadata, captionsUrl: "https://cc" }),
-        fetchTranscript: async () => "worte ".repeat(50),
-        summarize: async () => {
-          throw new Error("LLM down");
-        },
-      }),
-    );
-    const v = db.prepare("SELECT summary FROM videos WHERE id='vid1'").get() as {
-      summary: string | null;
-    };
-    expect(v.summary).toBeNull();
-    expect(db.prepare("SELECT COUNT(*) c FROM feed_items").get()).toEqual({ c: 1 });
-  });
-
-  it("clipperEnabled=true: clip_status pending + Enqueue wie früher (weiterhin ohne Download)", async () => {
-    await processNewVideo(baseDeps({ clipperEnabled: true }));
-    const v = db.prepare("SELECT clip_status FROM videos WHERE id='vid1'").get() as {
-      clip_status: string;
-    };
-    expect(v.clip_status).toBe("pending");
-    expect(db.prepare("SELECT COUNT(*) c FROM clipper_queue").get()).toEqual({ c: 1 });
-    expect(db.prepare("SELECT COUNT(*) c FROM downloaded_videos").get()).toEqual({ c: 0 });
-  });
-
-  it("Shorts: Scorer-Prompt bekommt den Kurzform-Hinweis, Langvideos nicht", async () => {
-    const prompts: (string | undefined)[] = [];
-    const spyScorer: Scorer = {
-      name: "spy",
-      async score(input: { systemPrompt?: string }) {
-        prompts.push(input.systemPrompt);
-        return {
-          modelUsed: "spy",
-          score: {
-            overallScore: 80,
-            category: "x",
-            clickbaitRisk: 1,
-            educationalValue: 9,
-            emotionalManipulation: 0,
-            reasoning: "ok",
-          },
-        };
-      },
-    } as Scorer;
-    await processNewVideo(
-      baseDeps({ scorer: spyScorer, fetchMetadata: async () => fakeShortMetadata }),
-    );
-    await processNewVideo(
-      baseDeps({ scorer: spyScorer, videoId: "vid2", fetchMetadata: async () => ({ ...fakeMetadata, id: "vid2" }) }),
-    );
-    expect(prompts[0]).toContain("natives YouTube-Short");
-    expect(prompts[1] ?? "").not.toContain("natives YouTube-Short");
-  });
-
-  it("source-Dep landet in videos.source", async () => {
-    await processNewVideo(baseDeps({ source: "topic" }));
-    expect(db.prepare("SELECT source FROM videos WHERE id='vid1'").get()).toEqual({
-      source: "topic",
+    expect(db.prepare("SELECT format, source FROM videos WHERE id='vid1'").get()).toEqual({
+      format: "long",
+      source: "subscription",
     });
+    expect(
+      db.prepare("SELECT decision, model_used FROM scores WHERE video_id='vid1'").get(),
+    ).toEqual({ decision: "approved", model_used: "subscription" });
+    expect(db.prepare("SELECT COUNT(*) c FROM feed_items WHERE video_id='vid1'").get()).toEqual({
+      c: 1,
+    });
+    expect(db.prepare("SELECT COUNT(*) c FROM downloaded_videos").get()).toEqual({ c: 0 });
+  });
+
+  it("keine Dauer-, Sprach- oder Qualitätsfilter: alles Anschaubare kommt durch", async () => {
+    await processNewVideo(baseDeps({ fetchMetadata: async () => fakeShortMetadata }));
+    await processNewVideo(
+      baseDeps({
+        videoId: "vid2",
+        fetchMetadata: async () => ({ ...fakeMetadata, id: "vid2", durationSeconds: 60 * 60 * 5 }),
+      }),
+    );
+    await processNewVideo(
+      baseDeps({
+        videoId: "vid3",
+        fetchMetadata: async () => ({
+          ...fakeMetadata,
+          id: "vid3",
+          title: "Keralam में बारिश बनी आफत!",
+          defaultLanguage: "hi",
+        }),
+      }),
+    );
+    expect(db.prepare("SELECT COUNT(*) c FROM feed_items").get()).toEqual({ c: 3 });
+    expect(
+      db.prepare("SELECT COUNT(*) c FROM scores WHERE decision <> 'approved'").get(),
+    ).toEqual({ c: 0 });
   });
 
   it("kurzes Querformat-Video zählt als Kurzform", async () => {
@@ -187,104 +100,50 @@ describe("processNewVideo", () => {
     });
   });
 
-  it("Themen-Treffer bekommen ihren echten Kanal — abonnierbar statt Sammel-Eintrag", async () => {
+  it("Live-/Premiere-Streams werden nicht aufgenommen", async () => {
+    const res = await processNewVideo(
+      baseDeps({ fetchMetadata: async () => ({ ...fakeMetadata, isLive: true }) }),
+    );
+    expect(res).toBe("live");
+    expect(db.prepare("SELECT COUNT(*) c FROM videos").get()).toEqual({ c: 0 });
+  });
+
+  it("bekanntes Video: kein erneuter Metadaten-Abruf", async () => {
+    await processNewVideo(baseDeps());
+    const fetchMetadata = vi.fn(async () => fakeMetadata);
+    expect(await processNewVideo(baseDeps({ fetchMetadata }))).toBe("known");
+    expect(fetchMetadata).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["Probe-Kanal", "probe", 0],
+    ["geblockter Kanal", "blocked", 0],
+    ["abbestellter Kanal", "subscribed", 0],
+    ["statusloser Kanal", null, 1],
+  ])("%s: nichts aufnehmen, nicht einmal Metadaten holen", async (_label, status, active) => {
     db.prepare(
-      "INSERT INTO channels (id,url,title,added_at,is_active,status) VALUES ('discovery-topics','','Themen',0,0,'probe')",
-    ).run();
+      "INSERT INTO channels (id,url,title,added_at,is_active,status) VALUES ('UC-x','','X',0,?,?)",
+    ).run(active, status);
+    const fetchMetadata = vi.fn(async () => fakeMetadata);
+    const res = await processNewVideo(baseDeps({ channelId: "UC-x", fetchMetadata }));
+    expect(res).toBe("not-subscribed");
+    expect(fetchMetadata).not.toHaveBeenCalled();
+    expect(db.prepare("SELECT COUNT(*) c FROM videos").get()).toEqual({ c: 0 });
+  });
+
+  it("unbekannter Kanal: nichts aufnehmen", async () => {
+    expect(await processNewVideo(baseDeps({ channelId: "UC-unknown" }))).toBe("not-subscribed");
+    expect(db.prepare("SELECT COUNT(*) c FROM videos").get()).toEqual({ c: 0 });
+  });
+
+  it("SponsorBlock-Segmente werden mitgeschrieben", async () => {
     await processNewVideo(
       baseDeps({
-        channelId: "discovery-topics",
-        source: "topic",
-        fetchMetadata: async () => ({
-          ...fakeMetadata,
-          channelId: "UC-echt",
-          channelTitle: "Echter Kanal",
-        }),
+        fetchSponsorSegments: async () => [{ startSeconds: 1, endSeconds: 5, category: "sponsor" }],
       }),
     );
-    expect(db.prepare("SELECT channel_id FROM videos WHERE id='vid1'").get()).toEqual({
-      channel_id: "UC-echt",
-    });
-    expect(db.prepare("SELECT title, status FROM channels WHERE id='UC-echt'").get()).toEqual({
-      title: "Echter Kanal",
-      status: "probe",
-    });
-  });
-
-  it("Videos geblockter Kanäle werden gar nicht erst aufgenommen", async () => {
-    db.prepare(
-      "INSERT INTO channels (id,url,title,added_at,is_active,status) VALUES ('UC-block','','Geblockt',0,0,'blocked')",
-    ).run();
-    await processNewVideo(
-      baseDeps({
-        channelId: "discovery-topics",
-        source: "topic",
-        fetchMetadata: async () => ({ ...fakeMetadata, channelId: "UC-block" }),
-      }),
+    expect(db.prepare("SELECT COUNT(*) c FROM sponsor_segments WHERE video_id='vid1'").get()).toEqual(
+      { c: 1 },
     );
-    expect(db.prepare("SELECT COUNT(*) c FROM videos WHERE id='vid1'").get()).toEqual({ c: 0 });
-  });
-
-  it("Vorfilter lehnt fremdsprachige Titel ohne Scorer-Aufruf ab", async () => {
-    let scorerCalls = 0;
-    const zaehlScorer: Scorer = {
-      name: "zaehl",
-      async score() {
-        scorerCalls++;
-        return makeScorer("approve").score({} as never);
-      },
-    } as Scorer;
-    await processNewVideo(
-      baseDeps({
-        scorer: zaehlScorer,
-        fetchMetadata: async () => ({ ...fakeMetadata, title: "Keralam में बारिश बनी आफत!" }),
-      }),
-    );
-    expect(scorerCalls).toBe(0);
-    const s = db.prepare("SELECT decision, reasoning FROM scores WHERE video_id='vid1'").get() as {
-      decision: string;
-      reasoning: string;
-    };
-    expect(s.decision).toBe("rejected");
-    expect(s.reasoning).toContain("Vorfilter");
-    expect(db.prepare("SELECT COUNT(*) c FROM feed_items").get()).toEqual({ c: 0 });
-  });
-
-  it("rejected: nur videos+scores, keine feed_items", async () => {
-    await processNewVideo(baseDeps({ scorer: makeScorer("reject") }));
-    const s = db.prepare("SELECT decision FROM scores WHERE video_id='vid1'").get() as {
-      decision: string;
-    };
-    expect(s.decision).toBe("rejected");
-    expect(db.prepare("SELECT COUNT(*) c FROM feed_items").get()).toEqual({ c: 0 });
-  });
-
-  it("Green Card: Short unterhalb minDurationSec wird trotzdem approved", async () => {
-    db.prepare("UPDATE channels SET auto_approve = 1 WHERE id='UC1'").run();
-    // DEFAULT_FILTER.minDurationSec = 180 — ein 45s-Short fiele ohne Bypass durch.
-    await processNewVideo(baseDeps({ fetchMetadata: async () => fakeShortMetadata }));
-    const s = db.prepare("SELECT decision FROM scores WHERE video_id='vid1'").get() as {
-      decision: string;
-    };
-    expect(s.decision).toBe("approved");
-    expect(db.prepare("SELECT COUNT(*) c FROM feed_items").get()).toEqual({ c: 1 });
-  });
-
-  it("Green Card: Langvideo außerhalb der Dauer-Range bleibt rejected", async () => {
-    db.prepare("UPDATE channels SET auto_approve = 1 WHERE id='UC1'").run();
-    await processNewVideo(
-      baseDeps({
-        // Über der Höchstdauer des Filters — Kurzform-Bypass greift hier nicht.
-        fetchMetadata: async () => ({
-          ...fakeMetadata,
-          durationSeconds: 60 * 60 * 5,
-          aspectRatio: "16:9",
-        }),
-      }),
-    );
-    const s = db.prepare("SELECT decision FROM scores WHERE video_id='vid1'").get() as {
-      decision: string;
-    };
-    expect(s.decision).toBe("rejected");
   });
 });

@@ -16,7 +16,7 @@ function seedVideo(db: Database.Database, id: string) {
      VALUES (?, 80, 'x', 1, 9, 0, 'ok', 'mock', 0, 'approved')`,
   ).run(id);
   db.prepare(
-    "INSERT INTO feed_items (video_id, added_to_feed_at, is_pre_clipper) VALUES (?, 0, 1)",
+    "INSERT INTO feed_items (video_id, added_to_feed_at) VALUES (?, 0)",
   ).run(id);
 }
 

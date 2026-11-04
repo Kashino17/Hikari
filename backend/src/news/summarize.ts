@@ -89,7 +89,7 @@ async function callLmStudio(
     choices: { message: { content: string; reasoning_content?: string } }[];
   };
   const msg = body.choices[0]?.message;
-  // Reasoning models may put the answer in reasoning_content (see lmstudio-scorer)
+  // Reasoning models may put the answer in reasoning_content instead of content
   const raw = msg?.content?.trim() ? msg.content : (msg?.reasoning_content ?? "");
   if (!raw.trim()) throw new Error("LM Studio returned empty content");
   return raw;

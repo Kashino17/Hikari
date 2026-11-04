@@ -9,7 +9,7 @@ export interface ChannelSearchResult {
   subscribers: number | null;
   thumbnail: string | null;
   /** Wide channel-art banner. Search-mode never has this — populated later
-   *  by the recommendations pipeline's deep fetch. */
+   *  by refreshChannelMetadata once the channel is subscribed. */
   banner: string | null;
   verified: boolean;
 }

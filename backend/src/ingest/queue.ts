@@ -21,17 +21,12 @@ export const MAX_INGEST_ATTEMPTS = 4;
  * re-enqueueing an already-queued video keeps its attempts/lock state. Skips
  * videos already in the library so a re-poll doesn't re-ingest known content.
  */
-export function enqueueIngest(
-  db: Database.Database,
-  videoId: string,
-  channelId: string,
-  source = "subscription",
-): void {
+export function enqueueIngest(db: Database.Database, videoId: string, channelId: string): void {
   const known = db.prepare("SELECT 1 FROM videos WHERE id = ?").get(videoId);
   if (known) return;
   db.prepare(
-    "INSERT OR IGNORE INTO ingest_queue (video_id, channel_id, queued_at, source) VALUES (?, ?, ?, ?)",
-  ).run(videoId, channelId, Date.now(), source);
+    "INSERT OR IGNORE INTO ingest_queue (video_id, channel_id, queued_at, source) VALUES (?, ?, ?, 'subscription')",
+  ).run(videoId, channelId, Date.now());
 }
 
 /**
@@ -39,23 +34,14 @@ export function enqueueIngest(
  * hasn't exhausted its retries. A transaction prevents two workers from
  * claiming the same row.
  */
-export function claimNextIngest(
-  db: Database.Database,
-  opts: { trustedOnly?: boolean } = {},
-): IngestQueueRow | null {
+export function claimNextIngest(db: Database.Database): IngestQueueRow | null {
   const claim = db.transaction((): IngestQueueRow | null => {
     const now = Date.now();
-    // trustedOnly: nur Vertrauenskanäle (auto_approve) — die brauchen keinen
-    // Scorer und laufen deshalb auch ohne KI weiter.
-    const trusted = opts.trustedOnly
-      ? "AND channel_id IN (SELECT id FROM channels WHERE auto_approve = 1)"
-      : "";
     const row = db
       .prepare(
         `SELECT * FROM ingest_queue
          WHERE (locked_at IS NULL OR locked_at < ?)
            AND attempts < ?
-           ${trusted}
          ORDER BY queued_at ASC
          LIMIT 1`,
       )
@@ -87,8 +73,8 @@ export function failIngest(db: Database.Database, videoId: string, error: string
 
 /**
  * Lock freigeben OHNE attempts zu erhöhen — für transiente Infrastruktur-
- * Ausfälle (Scorer-LLM aus, Netz weg): der Job soll später einfach wieder
- * drankommen, statt nach MAX_INGEST_ATTEMPTS Minuten als Dead-Letter zu enden.
+ * Ausfälle (Netz weg): der Job soll später einfach wieder drankommen, statt
+ * nach MAX_INGEST_ATTEMPTS Minuten als Dead-Letter zu enden.
  */
 export function requeueIngest(db: Database.Database, videoId: string, error: string): void {
   db.prepare(
@@ -97,7 +83,7 @@ export function requeueIngest(db: Database.Database, videoId: string, error: str
 }
 
 /**
- * Verbindungs-/Infrastrukturfehler (LM Studio aus, DNS, Timeout) — im
+ * Verbindungs-/Infrastrukturfehler (DNS, Timeout, Verbindung weg) — im
  * Gegensatz zu Inhaltsfehlern (Age-Gate, Parse-Fehler), die ein Retry nie
  * heilt und die deshalb weiterhin attempts verbrauchen.
  */

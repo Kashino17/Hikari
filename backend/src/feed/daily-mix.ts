@@ -1,6 +1,7 @@
 import type Database from "better-sqlite3";
 import { type RawFeedRow, interleaveByChannel, rankCandidates } from "../api/feed.js";
 import { dailySeed, mulberry32 } from "./daily-seed.js";
+import { subscribedChannelCondition } from "./subscriptions.js";
 
 // Zeitbudget-Grenzen (Minuten) — der Tuning-Regler bewegt sich hierin.
 const BUDGET_MIN = 10;
@@ -14,19 +15,13 @@ const SHORTS_PER_LONG = 6;
 // endet der Mix lieber — Nachschub kommt, Blöcke bleiben aus.
 const LONG_RUN_MAX = 2;
 // Vorrat an ungesehenen Items, den der Feed bereithält. Kein Zeitdeckel mehr:
-// der Feed ist unendlich, seine Qualität kommt aus dem Filter, nicht aus einer
-// künstlichen Bremse. Das Zeitbudget bleibt reine Anzeige ("heute geschaut").
+// der Feed besteht aus den Abos, nicht aus einer künstlichen Bremse. Das
+// Zeitbudget bleibt reine Anzeige ("heute geschaut").
 const FEED_TARGET_UNSEEN = 40;
-// Ab diesem Restvorrat wird Discovery angestoßen, damit nie Leere entsteht.
-const REFILL_TRIGGER_UNSEEN = 15;
 
-// Quellen-Priorität: eigene Abos zuerst, dann Entdecktes, Backfill zuletzt.
-const SOURCE_PRIORITY: Record<string, number> = {
-  subscription: 0,
-  probe: 1,
-  topic: 2,
-  backfill: 3,
-};
+// Feed = nur Abos: Videos anderer Kanäle (alte Probe-/Themen-Funde,
+// abbestellte Kanäle) kommen nie in den Mix und zählen nicht zum Vorrat.
+const SUBSCRIBED_VIDEO = subscribedChannelCondition("v.channel_id");
 
 /** Lokaler Kalendertag (sv-SE liefert ISO-Format YYYY-MM-DD in lokaler Zeit). */
 export function mixDateFor(now: number): string {
@@ -77,13 +72,6 @@ interface MixCandidate extends RawFeedRow {
 }
 
 /**
- * Idempotenter Top-up des heutigen Tagesmixes: Kandidaten nach
- * Quellen-Priorität + Kurations-Ranking, Kanal-Vielfalt per Interleave,
- * verwoben im Rhythmus ~5 Shorts : 1 Langvideo, aufgenommen bis die
- * Dauersumme das Zeitbudget erreicht (das letzte Item darf überziehen).
- * Gesehene Mix-Items zählen weiter gegen das Budget — konsumiert ist konsumiert.
- */
-/**
  * Tatsächlich konsumierte Zeit des Tages: die abgespielten Sekunden der
  * Mix-Items (gedeckelt auf die Videolänge). Eine weggeswipte Karte kostet
  * damit NICHTS vom Tagesbudget — nur echtes Schauen zählt.
@@ -101,48 +89,11 @@ function consumedSeconds(db: Database.Database, mixDate: string): number {
   ).s;
 }
 
-/** Dauer der noch ungesehenen Items im heutigen Mix — der aktuelle Vorrat. */
-function unseenSeconds(db: Database.Database, mixDate: string): number {
-  return (
-    db
-      .prepare(
-        `SELECT COALESCE(SUM(m.duration_seconds), 0) AS s
-           FROM daily_mix_items m
-           JOIN feed_items f ON f.video_id = m.video_id
-          WHERE m.mix_date = ? AND f.seen_at IS NULL AND f.playback_failed = 0`,
-      )
-      .get(mixDate) as { s: number }
-  ).s;
-}
-
-/** Wie viele Langvideos schon im heutigen Mix liegen (für den Anteils-Deckel). */
-function existingLongCount(db: Database.Database, mixDate: string): number {
-  return (
-    db
-      .prepare(
-        `SELECT COUNT(*) AS c FROM daily_mix_items m
-           JOIN videos v ON v.id = m.video_id
-           JOIN feed_items f ON f.video_id = m.video_id
-          WHERE m.mix_date = ? AND v.format = 'long'
-            AND f.seen_at IS NULL AND f.playback_failed = 0`,
-      )
-      .get(mixDate) as { c: number }
-  ).c;
-}
-
-/** Anzahl der ungesehenen Items im heutigen Mix. */
-export function unseenMixCount(db: Database.Database, mixDate: string): number {
-  return (
-    db
-      .prepare(
-        `SELECT COUNT(*) AS c FROM daily_mix_items m
-           JOIN feed_items f ON f.video_id = m.video_id
-          WHERE m.mix_date = ? AND f.seen_at IS NULL AND f.playback_failed = 0`,
-      )
-      .get(mixDate) as { c: number }
-  ).c;
-}
-
+/**
+ * Idempotenter Top-up des heutigen Tagesmixes: ungesehene Abo-Videos, neueste
+ * zuerst, Kanal-Vielfalt per Interleave, verwoben im Rhythmus ~6 Shorts : 1
+ * Langvideo, bis der Zielvorrat erreicht ist.
+ */
 export function buildDailyMix(
   db: Database.Database,
   now: number = Date.now(),
@@ -150,23 +101,20 @@ export function buildDailyMix(
 ): void {
   const mixDate = mixDateFor(now);
 
-  // ALLE ungesehenen freigegebenen Videos sind Kandidaten — auch die, die
-  // bereits im Mix liegen. Die Reihenfolge wird bei jedem Lauf neu gedacht,
-  // sonst klebt später eingetroffene Kurzform hinter einer Langvideo-Schlange.
+  // ALLE ungesehenen Abo-Videos sind Kandidaten — auch die, die bereits im
+  // Mix liegen. Die Reihenfolge wird bei jedem Lauf neu gedacht, sonst klebt
+  // später eingetroffene Kurzform hinter einer Langvideo-Schlange.
   const candidates = db
     .prepare(
-      `SELECT f.video_id AS id, f.video_id AS parentVideoId, v.channel_id AS channelId,
+      `SELECT f.video_id AS id, v.channel_id AS channelId,
               v.duration_seconds AS durationSec,
               CASE WHEN v.format = 'short' THEN 'short' ELSE 'video' END AS kind,
               COALESCE(v.source, 'subscription') AS source,
-              f.added_to_feed_at AS addedToFeedAt, s.category AS category,
-              s.overall_score AS overallScore, s.educational_value AS educationalValue,
-              cms.calculated_score AS channelMatch
+              f.added_to_feed_at AS addedToFeedAt, s.category AS category
          FROM feed_items f
          JOIN videos v ON v.id = f.video_id
          LEFT JOIN scores s ON s.video_id = f.video_id
-         LEFT JOIN channel_match_scores cms ON cms.channel_id = v.channel_id
-        WHERE f.seen_at IS NULL AND f.playback_failed = 0 AND f.is_pre_clipper = 1`,
+        WHERE f.seen_at IS NULL AND f.playback_failed = 0 AND ${SUBSCRIBED_VIDEO}`,
     )
     .all() as MixCandidate[];
   if (candidates.length === 0) return;
@@ -180,7 +128,9 @@ export function buildDailyMix(
         .prepare(
           `SELECT m.video_id AS id FROM daily_mix_items m
              JOIN feed_items f ON f.video_id = m.video_id
-            WHERE m.mix_date = ? AND f.seen_at IS NULL AND f.playback_failed = 0`,
+             JOIN videos v ON v.id = m.video_id
+            WHERE m.mix_date = ? AND f.seen_at IS NULL AND f.playback_failed = 0
+              AND ${SUBSCRIBED_VIDEO}`,
         )
         .all(mixDate) as { id: string }[]
     ).map((r) => r.id),
@@ -191,62 +141,22 @@ export function buildDailyMix(
   const target = reshuffle ? FEED_TARGET_UNSEEN : FEED_TARGET_UNSEEN - inMix.size;
   if (pool.length === 0 || target <= 0) return;
 
-  // Priorität nach Quelle, innerhalb einer Quelle das Kurations-Ranking,
-  // darüber Kanal-Round-Robin gegen Kanal-Blöcke.
-  const byPriority = new Map<number, MixCandidate[]>();
-  for (const c of pool) {
-    const prio = SOURCE_PRIORITY[c.source] ?? 9;
-    const bucket = byPriority.get(prio) ?? [];
-    bucket.push(c);
-    byPriority.set(prio, bucket);
-  }
   // Ohne Würfeln hängt die Rotation am Datum: derselbe Tag ergibt denselben
   // Mix. Beim Neuladen bekommt sie einen frischen Startwert, sonst bliebe der
-  // Vorrat hinter den immer gleichen Bestplatzierten verborgen.
+  // Vorrat hinter den immer gleichen Neuesten verborgen.
   const seed =
     options.seed ?? (reshuffle ? Math.floor(Math.random() * 0x7fffffff) : dailySeed(mixDate));
-  const rotation = seed;
   const random = reshuffle || options.seed !== undefined ? mulberry32(seed) : null;
-  const groups = [...byPriority.keys()]
-    .sort((a, b) => a - b)
-    .map(
-      (prio) =>
-        interleaveByChannel(
-          rankCandidates(byPriority.get(prio) ?? [], now),
-          rotation,
-        ) as MixCandidate[],
-    );
-  const ordered: MixCandidate[] = [];
-  if (!random) {
-    // Ohne Würfeln strikt gestaffelt: erst Abos, dann Entdecktes, dann Backfill.
-    for (const g of groups) ordered.push(...g);
-  } else {
-    // Beim Würfeln verschränkt statt gestaffelt. Ein paar Dutzend Abo-Videos
-    // würden sonst immer die vorderen Plätze belegen, und der Feed sähe nach
-    // jedem Neuladen gleich aus. Abos bleiben bevorzugt — sie ziehen doppelt so
-    // oft wie Entdecktes — stehen aber nicht mehr als geschlossener Block vorn.
-    const weights = groups.map((_, i) => 1 / (i + 1));
-    while (groups.some((g) => g.length > 0)) {
-      const total = groups.reduce((sum, g, i) => sum + (g.length > 0 ? (weights[i] ?? 0) : 0), 0);
-      let ticket = random() * total;
-      let idx = groups.findIndex((g, i) => {
-        if (g.length === 0) return false;
-        ticket -= weights[i] ?? 0;
-        return ticket <= 0;
-      });
-      if (idx < 0) idx = groups.findIndex((g) => g.length > 0);
-      const next = groups[idx]?.shift();
-      if (next) ordered.push(next);
-    }
-  }
+  // Neueste zuerst, darüber Kanal-Round-Robin gegen Kanal-Blöcke.
+  const ordered = interleaveByChannel(rankCandidates(pool), seed) as MixCandidate[];
 
   const shorts = ordered.filter((c) => c.kind === "short");
   const longs = ordered.filter((c) => c.kind === "video");
 
   /**
    * Nimmt das nächste Video, das nicht vom zuletzt gezeigten Kanal stammt.
-   * Beim Würfeln nicht stur das bestplatzierte, sondern eines aus den vorderen
-   * Kandidaten — die Kuration bleibt, die Auswahl wird abwechslungsreich.
+   * Beim Würfeln nicht stur das vorderste, sondern eines aus den vorderen
+   * Kandidaten — Frisches bleibt vorn, die Auswahl wird abwechslungsreich.
    */
   const pick = (pool: MixCandidate[], recent: string[]): MixCandidate | undefined => {
     const eligible: number[] = [];
@@ -382,7 +292,9 @@ export function todayMixStats(db: Database.Database, now: number = Date.now()): 
     .prepare(
       `SELECT COUNT(*) AS c FROM daily_mix_items m
          JOIN feed_items f ON f.video_id = m.video_id
-        WHERE m.mix_date = ? AND f.seen_at IS NULL AND f.playback_failed = 0`,
+         JOIN videos v ON v.id = m.video_id
+        WHERE m.mix_date = ? AND f.seen_at IS NULL AND f.playback_failed = 0
+          AND ${SUBSCRIBED_VIDEO}`,
     )
     .get(mixDate) as { c: number };
   const consumed = consumedSeconds(db, mixDate);

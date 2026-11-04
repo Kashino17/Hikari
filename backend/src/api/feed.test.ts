@@ -2,7 +2,7 @@ import Database from "better-sqlite3";
 import Fastify from "fastify";
 import { beforeEach, describe, expect, it } from "vitest";
 import { applyMigrations } from "../db/migrations.js";
-import { applyCooldown, interleaveByChannel, listFeedRaw, registerFeedRoutes } from "./feed.js";
+import { applyCooldown, interleaveByChannel, rankCandidates, registerFeedRoutes } from "./feed.js";
 import type { RawFeedRow } from "./feed.js";
 
 function seedFeedItem(
@@ -11,14 +11,15 @@ function seedFeedItem(
   addedAt: number,
   seen = false,
   saved = false,
+  channelId = "UC1",
 ) {
   db.prepare(
-    "INSERT OR IGNORE INTO channels (id, url, title, added_at) VALUES ('UC1','x','c',0)",
+    "INSERT OR IGNORE INTO channels (id, url, title, added_at, is_active, status) VALUES ('UC1','x','c',0,1,'subscribed')",
   ).run();
   db.prepare(
     `INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at, format)
-     VALUES (?, 'UC1', ?, 0, 60, 0, 'short')`,
-  ).run(id, `t-${id}`);
+     VALUES (?, ?, ?, 0, 60, 0, 'short')`,
+  ).run(id, channelId, `t-${id}`);
   db.prepare(
     `INSERT INTO scores (video_id, overall_score, category, clickbait_risk, educational_value,
       emotional_manipulation, reasoning, model_used, scored_at, decision)
@@ -28,12 +29,17 @@ function seedFeedItem(
     `INSERT INTO downloaded_videos (video_id, file_path, file_size_bytes, downloaded_at)
      VALUES (?, '/x', 0, 0)`,
   ).run(id);
-  // is_pre_clipper=1: these are legacy feed items, equivalent to what the migration
-  // backfills for rows that pre-date the auto-clipper pipeline.
   db.prepare(
-    `INSERT INTO feed_items (video_id, added_to_feed_at, seen_at, saved, is_pre_clipper)
-     VALUES (?, ?, ?, ?, 1)`,
+    `INSERT INTO feed_items (video_id, added_to_feed_at, seen_at, saved)
+     VALUES (?, ?, ?, ?)`,
   ).run(id, addedAt, seen ? addedAt : null, saved ? 1 : 0);
+}
+
+/** Kanal, der NICHT abonniert ist (alte Probe aus der entfernten Discovery). */
+function seedProbeChannel(db: Database.Database) {
+  db.prepare(
+    "INSERT OR IGNORE INTO channels (id, url, title, added_at, is_active, status) VALUES ('UC-probe','x','p',0,0,'probe')",
+  ).run();
 }
 
 describe("feed API", () => {
@@ -70,7 +76,7 @@ describe("feed API", () => {
 
     const res = await app.inject({ method: "GET", url: "/feed" });
     const body = res.json() as { videoId: string }[];
-    // seen items must NOT appear in "new" mode (listFeedRaw filters seen_at IS NULL)
+    // seen items must NOT appear in "new" mode
     expect(body.find((x) => x.videoId === "seen1")).toBeUndefined();
     expect(body.find((x) => x.videoId === "seen2")).toBeUndefined();
     // unseen items must appear
@@ -91,7 +97,7 @@ describe("feed API", () => {
     const res = await app.inject({ method: "GET", url: "/feed?mode=new" });
     expect(res.statusCode).toBe(200);
     const body = res.json() as { videoId: string }[];
-    // Only the unseen item should appear — seen items are excluded from listFeedRaw
+    // Only the unseen item should appear — seen items are excluded
     expect(body).toHaveLength(1);
     expect(body[0].videoId).toBe("unseen_only");
   });
@@ -233,289 +239,8 @@ describe("feed API", () => {
     expect(db.prepare("SELECT 1 FROM downloaded_videos WHERE video_id = 'del1'").get()).toBeUndefined();
     expect(db.prepare("SELECT 1 FROM scores WHERE video_id = 'del1'").get()).toBeUndefined();
   });
-});
 
-// ---------------------------------------------------------------------------
-// New helpers: listFeedRaw UNION + applyCooldown
-// ---------------------------------------------------------------------------
-
-describe("listFeedRaw", () => {
-  it("liefert nur feed_items als kind video/short — Clips tauchen nicht mehr auf", () => {
-    const db = new Database(":memory:");
-    applyMigrations(db);
-
-    db.prepare("INSERT INTO channels (id,url,title,added_at) VALUES ('c1','x','Ch',0)").run();
-    db.prepare(`
-      INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at)
-      VALUES ('parent1', 'c1', 't', 0, 600, 0), ('legacy1', 'c1', 'l', 0, 600, 0)
-    `).run();
-    db.prepare(`
-      INSERT INTO scores (video_id, overall_score, category, clickbait_risk,
-        educational_value, emotional_manipulation, reasoning, model_used,
-        scored_at, decision)
-      VALUES ('parent1', 80, 'math', 0, 9, 0, 'r', 'mock', 0, 'approved'),
-             ('legacy1', 80, 'tech', 0, 9, 0, 'r', 'mock', 0, 'approved')
-    `).run();
-    db.prepare(`
-      INSERT INTO clips (id, parent_video_id, order_in_parent,
-        start_seconds, end_seconds, file_path, file_size_bytes,
-        focus_x, focus_y, focus_w, focus_h,
-        reason, created_at, added_to_feed_at)
-      VALUES ('clip1', 'parent1', 0, 30, 90, '/c.mp4', 5000000, 0, 0, 1, 1, 'r', 2000, 2000)
-    `).run();
-    db.prepare(`
-      INSERT INTO feed_items (video_id, added_to_feed_at, is_pre_clipper)
-      VALUES ('legacy1', 1000, 1)
-    `).run();
-
-    // Ein Short: Hochkant-Video mit format='short' und eigenem feed_item.
-    db.prepare(`
-      INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at, format)
-      VALUES ('short1', 'c1', 's', 0, 45, 0, 'short')
-    `).run();
-    db.prepare(`
-      INSERT INTO feed_items (video_id, added_to_feed_at, is_pre_clipper)
-      VALUES ('short1', 1500, 1)
-    `).run();
-
-    const rows = listFeedRaw(db, 50);
-
-    // Clips sind kein Feed-Bestandteil mehr (Etappe 2).
-    expect(rows.find((r) => r.id === "clip1")).toBeUndefined();
-
-    const video = rows.find((r) => r.id === "legacy1");
-    expect(video).toBeTruthy();
-    expect(video!.kind).toBe("video");
-    expect(video!.parentVideoId).toBe("legacy1");
-
-    const short = rows.find((r) => r.id === "short1");
-    expect(short).toBeTruthy();
-    expect(short!.kind).toBe("short");
-  });
-});
-
-function row(id: string, parent: string, channel: string, cat: string, t: number): RawFeedRow {
-  return {
-    kind: "video", id, parentVideoId: parent, channelId: channel,
-    category: cat, addedToFeedAt: t, durationSec: 60,
-  };
-}
-
-describe("interleaveByChannel — variety", () => {
-  it("alternates channels instead of clustering one dominant channel", () => {
-    // 5 from chA, 2 from chB (skewed, like the real 29-vs-8 case).
-    const cands: RawFeedRow[] = [
-      row("a1", "pa1", "chA", "x", 100), row("a2", "pa2", "chA", "x", 99),
-      row("a3", "pa3", "chA", "x", 98), row("a4", "pa4", "chA", "x", 97),
-      row("a5", "pa5", "chA", "x", 96), row("b1", "pb1", "chB", "x", 95),
-      row("b2", "pb2", "chB", "x", 94),
-    ];
-    const out = interleaveByChannel(cands, 0);
-    // First two items must be from different channels (A then B).
-    expect(out[0]!.channelId).toBe("chA");
-    expect(out[1]!.channelId).toBe("chB");
-    expect(out[2]!.channelId).toBe("chA");
-    expect(out[3]!.channelId).toBe("chB");
-    // Nothing lost: all 7 present.
-    expect(out.length).toBe(7);
-    // No same-parent duplicate.
-    expect(new Set(out.map((r) => r.parentVideoId)).size).toBe(7);
-  });
-
-  it("preserves ranked order WITHIN a channel", () => {
-    const cands: RawFeedRow[] = [
-      row("a1", "pa1", "chA", "x", 100), row("a2", "pa2", "chA", "x", 99),
-      row("b1", "pb1", "chB", "x", 95),
-    ];
-    const out = interleaveByChannel(cands, 0);
-    const aOrder = out.filter((r) => r.channelId === "chA").map((r) => r.id);
-    expect(aOrder).toEqual(["a1", "a2"]);
-  });
-
-  it("rotation changes which channel leads (fresh mix per call)", () => {
-    const cands: RawFeedRow[] = [
-      row("a1", "pa1", "chA", "x", 100),
-      row("b1", "pb1", "chB", "x", 99),
-      row("c1", "pc1", "chC", "x", 98),
-    ];
-    const r0 = interleaveByChannel(cands, 0)[0]!.channelId;
-    const r1 = interleaveByChannel(cands, 1)[0]!.channelId;
-    const r2 = interleaveByChannel(cands, 2)[0]!.channelId;
-    expect(new Set([r0, r1, r2]).size).toBe(3); // each rotation leads differently
-  });
-
-  it("drops same-parent duplicates", () => {
-    const cands: RawFeedRow[] = [
-      row("a1", "pShared", "chA", "x", 100),
-      row("a2", "pShared", "chA", "x", 99), // same parent → dropped
-      row("b1", "pb1", "chB", "x", 95),
-    ];
-    const out = interleaveByChannel(cands, 0);
-    expect(out.map((r) => r.id).sort()).toEqual(["a1", "b1"]);
-  });
-
-  it("handles a single channel without losing items", () => {
-    const cands: RawFeedRow[] = [
-      row("a1", "pa1", "chA", "x", 100), row("a2", "pa2", "chA", "x", 99),
-    ];
-    expect(interleaveByChannel(cands, 0).length).toBe(2);
-  });
-
-  it("is a no-op for 0 or 1 items", () => {
-    expect(interleaveByChannel([], 0)).toEqual([]);
-    const one = [row("a1", "pa1", "chA", "x", 1)];
-    expect(interleaveByChannel(one, 5).length).toBe(1);
-  });
-});
-
-describe("applyCooldown", () => {
-  it("never places same parent_video_id within 3-item window", () => {
-    const cands: RawFeedRow[] = [
-      row("c1", "p1", "ch1", "math", 1000),
-      row("c2", "p1", "ch1", "math", 999),
-      row("c3", "p2", "ch2", "tech", 998),
-      row("c4", "p1", "ch1", "math", 997),
-    ];
-    const out = applyCooldown(cands, 4);
-    const parents = out.map((r) => r.parentVideoId);
-    for (let i = 0; i < parents.length - 2; i++) {
-      expect(new Set([parents[i], parents[i+1], parents[i+2]]).size).toBeGreaterThan(1);
-    }
-  });
-
-  it("allows channel up to 2× in window, blocks 3rd until cooldown", () => {
-    // All same category so topic-mix doesn't interfere — isolates channel cooldown.
-    const cands: RawFeedRow[] = [
-      row("c1", "p1", "ch1", "math", 1000),
-      row("c2", "p2", "ch1", "math", 999),
-      row("c3", "p3", "ch1", "math", 998),
-      row("c4", "p4", "ch2", "math", 997),
-      row("c5", "p5", "ch1", "math", 996),
-    ];
-    const out = applyCooldown(cands, 5);
-    expect(out[0].channelId).toBe("ch1");
-    expect(out[1].channelId).toBe("ch1");
-    expect(out[2].channelId).not.toBe("ch1");
-  });
-
-  it("topic-mix lookahead: prefers different category from last when possible", () => {
-    const cands: RawFeedRow[] = [
-      row("c1", "p1", "ch1", "math", 1000),
-      row("c2", "p2", "ch2", "math", 999),
-      row("c3", "p3", "ch3", "tech", 998),
-    ];
-    const out = applyCooldown(cands, 3);
-    expect(out[0].id).toBe("c1");
-    expect(out[1].id).toBe("c3");
-    expect(out[2].id).toBe("c2");
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Feed mutation routes — clip handling (C2 + C3)
-// ---------------------------------------------------------------------------
-
-function seedClip(
-  db: Database.Database,
-  clipId: string,
-  parentVideoId: string,
-  order = 0,
-  seen = false,
-  saved = false,
-) {
-  db.prepare(
-    "INSERT OR IGNORE INTO channels (id, url, title, added_at) VALUES ('UC1','x','c',0)",
-  ).run();
-  db.prepare(
-    `INSERT OR IGNORE INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at)
-     VALUES (?, 'UC1', ?, 0, 600, 0)`,
-  ).run(parentVideoId, `t-${parentVideoId}`);
-  db.prepare(
-    `INSERT INTO clips (id, parent_video_id, order_in_parent,
-       start_seconds, end_seconds, file_path, file_size_bytes,
-       focus_x, focus_y, focus_w, focus_h,
-       reason, created_at, added_to_feed_at, seen_at, saved)
-     VALUES (?, ?, ?, 10, 70, '/clips/${clipId}.mp4', 2000000,
-             0, 0, 1, 1, 'r', 1000, 1000, ?, ?)`,
-  ).run(clipId, parentVideoId, order, seen ? 1000 : null, saved ? 1 : 0);
-}
-
-describe("feed mutation routes — clip handling", () => {
-  let db: Database.Database;
-  beforeEach(() => {
-    db = new Database(":memory:");
-    applyMigrations(db);
-  });
-
-  it("POST /feed/:id/seen marks a clip as seen", async () => {
-    seedClip(db, "clip-a", "parent-a");
-    const app = Fastify();
-    await registerFeedRoutes(app, { db, dailyBudget: 15 });
-
-    const res = await app.inject({ method: "POST", url: "/feed/clip-a/seen" });
-    expect(res.statusCode).toBe(204);
-
-    const row = db
-      .prepare("SELECT seen_at FROM clips WHERE id = 'clip-a'")
-      .get() as { seen_at: number | null };
-    expect(row.seen_at).toBeGreaterThan(0);
-  });
-
-  it("POST /feed/:id/save sets saved=1 on a clip", async () => {
-    seedClip(db, "clip-b", "parent-b");
-    const app = Fastify();
-    await registerFeedRoutes(app, { db, dailyBudget: 15 });
-
-    await app.inject({ method: "POST", url: "/feed/clip-b/save" });
-    const row = db
-      .prepare("SELECT saved FROM clips WHERE id = 'clip-b'")
-      .get() as { saved: number };
-    expect(row.saved).toBe(1);
-  });
-
-  it("DELETE /feed/:id/save clears saved on a clip", async () => {
-    seedClip(db, "clip-c", "parent-c", 0, false, true);
-    const app = Fastify();
-    await registerFeedRoutes(app, { db, dailyBudget: 15 });
-
-    await app.inject({ method: "DELETE", url: "/feed/clip-c/save" });
-    const row = db
-      .prepare("SELECT saved FROM clips WHERE id = 'clip-c'")
-      .get() as { saved: number };
-    expect(row.saved).toBe(0);
-  });
-
-  it("POST /feed/:id/unplayable sets playback_failed on a clip", async () => {
-    seedClip(db, "clip-d", "parent-d");
-    const app = Fastify();
-    await registerFeedRoutes(app, { db, dailyBudget: 15 });
-
-    await app.inject({ method: "POST", url: "/feed/clip-d/unplayable" });
-    const row = db
-      .prepare("SELECT playback_failed FROM clips WHERE id = 'clip-d'")
-      .get() as { playback_failed: number };
-    expect(row.playback_failed).toBe(1);
-  });
-
-  it("POST /feed/:id/seen updates last_served_at on PARENT video for clips (C3)", async () => {
-    seedClip(db, "clip-e", "parent-e");
-    // Add a downloaded_videos row for the PARENT so last_served_at can be updated.
-    db.prepare(
-      `INSERT INTO downloaded_videos (video_id, file_path, file_size_bytes, downloaded_at)
-       VALUES ('parent-e', '/parent-e.mp4', 0, 0)`,
-    ).run();
-    const app = Fastify();
-    await registerFeedRoutes(app, { db, dailyBudget: 15 });
-
-    await app.inject({ method: "POST", url: "/feed/clip-e/seen" });
-
-    const dl = db
-      .prepare("SELECT last_served_at FROM downloaded_videos WHERE video_id = 'parent-e'")
-      .get() as { last_served_at: number | null };
-    expect(dl.last_served_at).toBeGreaterThan(0);
-  });
-
-  it("POST /feed/:id/seen still updates last_served_at for legacy feed_items rows", async () => {
+  it("POST /feed/:id/seen updates last_served_at of the downloaded file", async () => {
     seedFeedItem(db, "legacy-v", Date.now());
     const app = Fastify();
     await registerFeedRoutes(app, { db, dailyBudget: 15 });
@@ -533,15 +258,13 @@ describe("feed mutation routes — clip handling", () => {
     expect(dl.last_served_at).toBeGreaterThan(0);
   });
 
-  it("POST /feed/:id/less-like-this sets playback_failed and seen_at on a clip", async () => {
-    seedClip(db, "clip-f", "parent-f");
+  it("POST /feed/:id/less-like-this sets playback_failed and seen_at", async () => {
+    seedFeedItem(db, "meh", Date.now());
     const app = Fastify();
     await registerFeedRoutes(app, { db, dailyBudget: 15 });
-
-    await app.inject({ method: "POST", url: "/feed/clip-f/less-like-this" });
-
+    await app.inject({ method: "POST", url: "/feed/meh/less-like-this" });
     const row = db
-      .prepare("SELECT playback_failed, seen_at FROM clips WHERE id = 'clip-f'")
+      .prepare("SELECT playback_failed, seen_at FROM feed_items WHERE video_id = 'meh'")
       .get() as { playback_failed: number; seen_at: number | null };
     expect(row.playback_failed).toBe(1);
     expect(row.seen_at).toBeGreaterThan(0);
@@ -549,20 +272,211 @@ describe("feed mutation routes — clip handling", () => {
 });
 
 // ---------------------------------------------------------------------------
-// today-count UNION (C4)
+// Feed = nur Abos
+// ---------------------------------------------------------------------------
+
+describe("Feed = nur abonnierte Kanäle", () => {
+  let db: Database.Database;
+  beforeEach(() => {
+    db = new Database(":memory:");
+    applyMigrations(db);
+    seedProbeChannel(db);
+  });
+
+  it("new, old und die automatische Queue zeigen keine Videos fremder Kanäle", async () => {
+    const now = Date.now();
+    seedFeedItem(db, "abo-neu", now);
+    seedFeedItem(db, "abo-alt", now - 1000, true);
+    seedFeedItem(db, "probe-neu", now, false, false, "UC-probe");
+    seedFeedItem(db, "probe-alt", now - 1000, true, false, "UC-probe");
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+
+    const ids = async (url: string) =>
+      ((await app.inject({ method: "GET", url })).json() as { videoId: string }[]).map(
+        (x) => x.videoId,
+      );
+    expect(await ids("/feed?mode=new")).toEqual(["abo-neu"]);
+    expect(await ids("/feed?mode=old")).toEqual(["abo-alt"]);
+    expect(await ids("/queue")).not.toContain("probe-neu");
+    expect(await ids("/queue")).not.toContain("probe-alt");
+  });
+
+  it("abbestellter Kanal verschwindet sofort aus dem Feed", async () => {
+    seedFeedItem(db, "v1", Date.now());
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+    expect((await app.inject({ method: "GET", url: "/feed" })).json()).toHaveLength(1);
+    db.prepare("UPDATE channels SET is_active = 0 WHERE id = 'UC1'").run();
+    expect((await app.inject({ method: "GET", url: "/feed" })).json()).toEqual([]);
+  });
+
+  it("Gespeichertes bleibt sichtbar — auch von fremden Kanälen", async () => {
+    seedFeedItem(db, "probe-saved", Date.now(), true, true, "UC-probe");
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+    const body = (await app.inject({ method: "GET", url: "/feed?mode=saved" })).json() as {
+      videoId: string;
+    }[];
+    expect(body.map((x) => x.videoId)).toEqual(["probe-saved"]);
+  });
+
+  it("manuelle Importe landen nie im Feed", async () => {
+    db.prepare(
+      "INSERT INTO channels (id, url, title, added_at, is_active, status) VALUES ('manual','manual:hikari','M',0,1,'subscribed')",
+    ).run();
+    seedFeedItem(db, "folge1", Date.now(), false, true, "manual");
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+    expect((await app.inject({ method: "GET", url: "/feed" })).json()).toEqual([]);
+    expect((await app.inject({ method: "GET", url: "/feed?mode=saved" })).json()).toEqual([]);
+  });
+
+  it("entfernte Bewertungs-Endpunkte antworten 404", async () => {
+    const app = Fastify();
+    await registerFeedRoutes(app, { db, dailyBudget: 15 });
+    expect((await app.inject({ method: "GET", url: "/feed/rescore" })).statusCode).toBe(404);
+    expect((await app.inject({ method: "POST", url: "/feed/rescore" })).statusCode).toBe(404);
+    expect((await app.inject({ method: "GET", url: "/rejected" })).statusCode).toBe(404);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Reihenfolge-Helfer: rankCandidates, interleaveByChannel, applyCooldown
+// ---------------------------------------------------------------------------
+
+function row(id: string, channel: string, cat: string, t: number): RawFeedRow {
+  return { kind: "video", id, channelId: channel, category: cat, addedToFeedAt: t, durationSec: 60 };
+}
+
+describe("rankCandidates", () => {
+  it("sortiert neueste zuerst, Gleichstand nach id", () => {
+    const out = rankCandidates([row("b", "c", "x", 5), row("a", "c", "x", 5), row("n", "c", "x", 9)]);
+    expect(out.map((r) => r.id)).toEqual(["n", "a", "b"]);
+  });
+});
+
+describe("interleaveByChannel — variety", () => {
+  it("alternates channels instead of clustering one dominant channel", () => {
+    // 5 from chA, 2 from chB (skewed, like the real 29-vs-8 case).
+    const cands: RawFeedRow[] = [
+      row("a1", "chA", "x", 100), row("a2", "chA", "x", 99),
+      row("a3", "chA", "x", 98), row("a4", "chA", "x", 97),
+      row("a5", "chA", "x", 96), row("b1", "chB", "x", 95),
+      row("b2", "chB", "x", 94),
+    ];
+    const out = interleaveByChannel(cands, 0);
+    // First two items must be from different channels (A then B).
+    expect(out[0]!.channelId).toBe("chA");
+    expect(out[1]!.channelId).toBe("chB");
+    expect(out[2]!.channelId).toBe("chA");
+    expect(out[3]!.channelId).toBe("chB");
+    // Nothing lost: all 7 present.
+    expect(out.length).toBe(7);
+    // No duplicate.
+    expect(new Set(out.map((r) => r.id)).size).toBe(7);
+  });
+
+  it("preserves ranked order WITHIN a channel", () => {
+    const cands: RawFeedRow[] = [
+      row("a1", "chA", "x", 100), row("a2", "chA", "x", 99),
+      row("b1", "chB", "x", 95),
+    ];
+    const out = interleaveByChannel(cands, 0);
+    const aOrder = out.filter((r) => r.channelId === "chA").map((r) => r.id);
+    expect(aOrder).toEqual(["a1", "a2"]);
+  });
+
+  it("rotation changes which channel leads (fresh mix per call)", () => {
+    const cands: RawFeedRow[] = [
+      row("a1", "chA", "x", 100),
+      row("b1", "chB", "x", 99),
+      row("c1", "chC", "x", 98),
+    ];
+    const r0 = interleaveByChannel(cands, 0)[0]!.channelId;
+    const r1 = interleaveByChannel(cands, 1)[0]!.channelId;
+    const r2 = interleaveByChannel(cands, 2)[0]!.channelId;
+    expect(new Set([r0, r1, r2]).size).toBe(3); // each rotation leads differently
+  });
+
+  it("drops duplicate videos", () => {
+    const cands: RawFeedRow[] = [
+      row("a1", "chA", "x", 100),
+      row("a1", "chA", "x", 99), // same video → dropped
+      row("b1", "chB", "x", 95),
+    ];
+    const out = interleaveByChannel(cands, 0);
+    expect(out.map((r) => r.id).sort()).toEqual(["a1", "b1"]);
+  });
+
+  it("handles a single channel without losing items", () => {
+    const cands: RawFeedRow[] = [
+      row("a1", "chA", "x", 100), row("a2", "chA", "x", 99),
+    ];
+    expect(interleaveByChannel(cands, 0).length).toBe(2);
+  });
+
+  it("is a no-op for 0 or 1 items", () => {
+    expect(interleaveByChannel([], 0)).toEqual([]);
+    const one = [row("a1", "chA", "x", 1)];
+    expect(interleaveByChannel(one, 5).length).toBe(1);
+  });
+});
+
+describe("applyCooldown", () => {
+  it("never places the same video within 3-item window", () => {
+    const cands: RawFeedRow[] = [
+      row("p1", "ch1", "math", 1000),
+      row("p1", "ch1", "math", 999),
+      row("p2", "ch2", "tech", 998),
+      row("p1", "ch1", "math", 997),
+    ];
+    const out = applyCooldown(cands, 4);
+    const parents = out.map((r) => r.id);
+    for (let i = 0; i < parents.length - 2; i++) {
+      expect(new Set([parents[i], parents[i+1], parents[i+2]]).size).toBeGreaterThan(1);
+    }
+  });
+
+  it("allows channel up to 2× in window, blocks 3rd until cooldown", () => {
+    // All same category so topic-mix doesn't interfere — isolates channel cooldown.
+    const cands: RawFeedRow[] = [
+      row("c1", "ch1", "math", 1000),
+      row("c2", "ch1", "math", 999),
+      row("c3", "ch1", "math", 998),
+      row("c4", "ch2", "math", 997),
+      row("c5", "ch1", "math", 996),
+    ];
+    const out = applyCooldown(cands, 5);
+    expect(out[0].channelId).toBe("ch1");
+    expect(out[1].channelId).toBe("ch1");
+    expect(out[2].channelId).not.toBe("ch1");
+  });
+
+  it("topic-mix lookahead: prefers different category from last when possible", () => {
+    const cands: RawFeedRow[] = [
+      row("c1", "ch1", "math", 1000),
+      row("c2", "ch2", "math", 999),
+      row("c3", "ch3", "tech", 998),
+    ];
+    const out = applyCooldown(cands, 3);
+    expect(out[0].id).toBe("c1");
+    expect(out[1].id).toBe("c3");
+    expect(out[2].id).toBe("c2");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// today-count
 // ---------------------------------------------------------------------------
 
 describe("GET /feed/today-count — Zeitbudget", () => {
-  it("zählt nur Mix-Items, Clips nicht mehr", async () => {
+  it("zählt nur Mix-Items abonnierter Kanäle", async () => {
     const db = new Database(":memory:");
     applyMigrations(db);
-
-    // 2 unseen clips
-    seedClip(db, "tc-clip1", "tc-parent1", 0);
-    seedClip(db, "tc-clip2", "tc-parent2", 0);
-    // 1 seen clip — must NOT be counted
-    seedClip(db, "tc-clip3", "tc-parent3", 0, true);
-    // 1 unseen legacy feed_item (is_pre_clipper=1)
+    seedProbeChannel(db);
+    seedFeedItem(db, "tc-probe1", Date.now(), false, false, "UC-probe");
+    seedFeedItem(db, "tc-probe2", Date.now(), false, false, "UC-probe");
     seedFeedItem(db, "tc-legacy1", Date.now());
 
     const app = Fastify();
@@ -572,7 +486,7 @@ describe("GET /feed/today-count — Zeitbudget", () => {
     const res = await app.inject({ method: "GET", url: "/feed/today-count" });
     expect(res.statusCode).toBe(200);
     const body = res.json() as { unseenCount: number; dailyBudget: number; capped: boolean };
-    // Nur das eine Mix-Item zählt — die 2 ungesehenen Clips nicht mehr.
+    // Nur das eine Abo-Video zählt — die zwei fremden nicht.
     expect(body.unseenCount).toBe(1);
     expect(body.capped).toBe(false);
   });
@@ -611,62 +525,13 @@ describe("GET /feed/today-count — Zeitbudget", () => {
 });
 
 // ---------------------------------------------------------------------------
-// DELETE /feed/:id — clip cascade cleanup (I1)
-// ---------------------------------------------------------------------------
-
-describe("DELETE /feed/:id — clip cascade cleanup", () => {
-  it("deletes clips and clipper_queue rows when parent video is deleted", async () => {
-    const db = new Database(":memory:");
-    applyMigrations(db);
-
-    db.prepare("INSERT OR IGNORE INTO channels (id, url, title, added_at) VALUES ('UC1','x','c',0)").run();
-    db.prepare(
-      `INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at)
-       VALUES ('del-parent', 'UC1', 't', 0, 600, 0)`,
-    ).run();
-    db.prepare(
-      `INSERT INTO scores (video_id, overall_score, category, clickbait_risk, educational_value,
-        emotional_manipulation, reasoning, model_used, scored_at, decision)
-       VALUES ('del-parent', 80, 'tech', 0, 9, 0, 'ok', 'mock', 0, 'approved')`,
-    ).run();
-    db.prepare(
-      `INSERT INTO downloaded_videos (video_id, file_path, file_size_bytes, downloaded_at)
-       VALUES ('del-parent', '/tmp/del-parent.mp4', 0, 0)`,
-    ).run();
-    db.prepare(
-      `INSERT INTO clips (id, parent_video_id, order_in_parent,
-         start_seconds, end_seconds, file_path, file_size_bytes,
-         focus_x, focus_y, focus_w, focus_h, reason, created_at, added_to_feed_at)
-       VALUES ('del-clip1', 'del-parent', 0, 10, 70, '/tmp/del-clip1.mp4', 0,
-               0, 0, 1, 1, 'r', 0, 0),
-              ('del-clip2', 'del-parent', 1, 80, 120, '/tmp/del-clip2.mp4', 0,
-               0, 0, 1, 1, 'r', 0, 0)`,
-    ).run();
-    db.prepare(
-      `INSERT INTO clipper_queue (video_id, queued_at) VALUES ('del-parent', 0)`,
-    ).run();
-
-    const app = Fastify();
-    await registerFeedRoutes(app, { db, dailyBudget: 15 });
-
-    const res = await app.inject({ method: "DELETE", url: "/feed/del-parent" });
-    expect(res.statusCode).toBe(204);
-
-    expect(db.prepare("SELECT 1 FROM videos WHERE id = 'del-parent'").get()).toBeUndefined();
-    expect(db.prepare("SELECT COUNT(*) AS c FROM clips WHERE parent_video_id = 'del-parent'").get()).toEqual({ c: 0 });
-    expect(db.prepare("SELECT 1 FROM clipper_queue WHERE video_id = 'del-parent'").get()).toBeUndefined();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Batched hydration (GET /feed new mode) — clips + legacy in one response
+// Batched hydration (GET /feed new mode)
 // ---------------------------------------------------------------------------
 
 describe("GET /feed (new) — batched hydration", () => {
-  it("liefert Videos mit kind/summary; Clips erscheinen nicht mehr in new", async () => {
+  it("liefert Videos mit kind/summary", async () => {
     const db = new Database(":memory:");
     applyMigrations(db);
-    seedClip(db, "h-clip", "h-parent"); // ungesehener Clip — darf nicht auftauchen
     seedFeedItem(db, "h-video", Date.now());
     db.prepare("UPDATE videos SET summary = 'Ein Teaser.', format = 'long' WHERE id = 'h-video'").run();
 
@@ -676,7 +541,6 @@ describe("GET /feed (new) — batched hydration", () => {
     expect(res.statusCode).toBe(200);
 
     const body = res.json() as { videoId: string; kind: string; summary: string | null }[];
-    expect(body.find((x) => x.videoId === "h-clip")).toBeUndefined();
     const video = body.find((x) => x.videoId === "h-video");
     expect(video?.kind).toBe("video");
     expect(video?.summary).toBe("Ein Teaser.");
@@ -696,40 +560,6 @@ describe("GET /feed (new) — batched hydration", () => {
     const video = body.find((x) => x.videoId === "nodl");
     expect(video?.kind).toBe("video");
     expect(video?.filePath ?? null).toBeNull();
-  });
-
-  it("returns an INTEGER durationSeconds for a clip with fractional bounds", async () => {
-    // Regression: clips have REAL start/end seconds, so end-start can be e.g.
-    // 75.5. The Android DTO declares durationSeconds: Int, and a float like
-    // "75.5" made kotlinx.serialization reject the ENTIRE feed response — the
-    // whole list vanished in the app. The API must round to an integer.
-    const db = new Database(":memory:");
-    applyMigrations(db);
-    db.prepare("INSERT OR IGNORE INTO channels (id, url, title, added_at) VALUES ('UC1','x','c',0)").run();
-    db.prepare(
-      `INSERT OR IGNORE INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at)
-       VALUES ('frac-parent', 'UC1', 't', 0, 600, 0)`,
-    ).run();
-    db.prepare(
-      `INSERT INTO clips (id, parent_video_id, order_in_parent,
-         start_seconds, end_seconds, file_path, file_size_bytes,
-         focus_x, focus_y, focus_w, focus_h, reason, created_at, added_to_feed_at)
-       VALUES ('frac-clip', 'frac-parent', 0, 770, 845.5, '/clips/frac.mp4', 1,
-               0, 0, 1, 1, 'r', 1000, 1000)`,
-    ).run();
-
-    db.prepare("UPDATE clips SET saved = 1 WHERE id = 'frac-clip'").run();
-    const app = Fastify();
-    await registerFeedRoutes(app, { db, dailyBudget: 15 });
-    // Clips leben nur noch in saved/old — dort muss die Dauer weiterhin ganzzahlig sein.
-    const res = await app.inject({ method: "GET", url: "/feed?mode=saved" });
-    expect(res.statusCode).toBe(200);
-    const body = res.json() as { videoId: string; durationSeconds: number }[];
-    const clip = body.find((x) => x.videoId === "frac-clip");
-    expect(clip).toBeDefined();
-    // 845.5 - 770 = 75.5 → must be rounded to an integer (76), not 75.5.
-    expect(Number.isInteger(clip!.durationSeconds)).toBe(true);
-    expect(clip!.durationSeconds).toBe(76);
   });
 
   it("mode=new liefert den stabilen Tagesmix in Mix-Reihenfolge", async () => {
@@ -806,23 +636,6 @@ describe("GET /feed (new) — batched hydration", () => {
     );
   });
 
-  it("stößt Discovery an, wenn der Vorrat knapp wird", async () => {
-    const db = new Database(":memory:");
-    applyMigrations(db);
-    seedFeedItem(db, "knapp1", Date.now());
-    let angestossen = 0;
-    const app = Fastify();
-    await registerFeedRoutes(app, {
-      db,
-      dailyBudget: 15,
-      onLowStock: () => {
-        angestossen++;
-      },
-    });
-    await app.inject({ method: "GET", url: "/feed?mode=new" });
-    expect(angestossen).toBe(1);
-  });
-
   it("wärmt die Stream-URLs des Tagesmixes vor", async () => {
     const db = new Database(":memory:");
     applyMigrations(db);
@@ -843,14 +656,14 @@ describe("GET /feed (new) — batched hydration", () => {
     const db = new Database(":memory:");
     applyMigrations(db);
     seedFeedItem(db, "src-v", Date.now());
-    db.prepare("UPDATE videos SET source = 'probe' WHERE id = 'src-v'").run();
+    db.prepare("UPDATE videos SET source = 'subscription' WHERE id = 'src-v'").run();
     const app = Fastify();
     await registerFeedRoutes(app, { db, dailyBudget: 15 });
     const body = (await app.inject({ method: "GET", url: "/feed?mode=new" })).json() as {
       videoId: string;
       source: string;
     }[];
-    expect(body.find((x) => x.videoId === "src-v")?.source).toBe("probe");
+    expect(body.find((x) => x.videoId === "src-v")?.source).toBe("subscription");
   });
 
   it("returns an empty array when nothing is unseen", async () => {

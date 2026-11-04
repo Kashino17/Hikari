@@ -35,16 +35,6 @@ describe("ingest queue", () => {
     db = makeDb();
   });
 
-  it("trustedOnly claims only jobs of trusted (auto_approve) channels", () => {
-    db.prepare("INSERT INTO channels (id, url, title, added_at, auto_approve) VALUES ('ch2','y','T',0,1)").run();
-    enqueueIngest(db, "v1", "ch1");
-    enqueueIngest(db, "v2", "ch2");
-    expect(claimNextIngest(db, { trustedOnly: true })?.video_id).toBe("v2");
-    // Untrusted job stays untouched for later — KI off must not burn it.
-    expect(claimNextIngest(db, { trustedOnly: true })).toBeNull();
-    expect(claimNextIngest(db)?.video_id).toBe("v1");
-  });
-
   it("enqueues a new video and claims it FIFO", () => {
     enqueueIngest(db, "v1", "ch1");
     enqueueIngest(db, "v2", "ch1");
@@ -138,29 +128,23 @@ describe("ingest queue", () => {
     expect(row.last_error.length).toBe(1000);
   });
 
-  it("enqueueIngest speichert die Quelle (Default subscription)", () => {
+  it("enqueueIngest speichert die Quelle 'subscription'", () => {
     enqueueIngest(db, "v1", "c1");
-    enqueueIngest(db, "v2", "c1", "probe");
-    const rows = db
-      .prepare("SELECT video_id, source FROM ingest_queue ORDER BY video_id")
-      .all();
-    expect(rows).toEqual([
-      { video_id: "v1", source: "subscription" },
-      { video_id: "v2", source: "probe" },
-    ]);
+    const rows = db.prepare("SELECT video_id, source FROM ingest_queue").all();
+    expect(rows).toEqual([{ video_id: "v1", source: "subscription" }]);
   });
 
   it("requeueIngest gibt den Lock frei OHNE attempts zu erhöhen", () => {
     enqueueIngest(db, "v1", "c1");
     const job = claimNextIngest(db);
     expect(job?.video_id).toBe("v1");
-    requeueIngest(db, "v1", "scorer unreachable");
+    requeueIngest(db, "v1", "fetch failed");
     const row = db
       .prepare("SELECT attempts, locked_at, last_error FROM ingest_queue WHERE video_id='v1'")
       .get() as { attempts: number; locked_at: number | null; last_error: string };
     expect(row.attempts).toBe(0);
     expect(row.locked_at).toBeNull();
-    expect(row.last_error).toBe("scorer unreachable");
+    expect(row.last_error).toBe("fetch failed");
   });
 
   it("isTransientInfraError erkennt Verbindungsfehler, aber keine Inhaltsfehler", () => {
@@ -168,6 +152,6 @@ describe("ingest queue", () => {
     expect(isTransientInfraError(new Error("connect ECONNREFUSED 127.0.0.1:1234"))).toBe(true);
     expect(isTransientInfraError(new Error("ETIMEDOUT"))).toBe(true);
     expect(isTransientInfraError(new Error("ERROR: [youtube] xyz: Sign in to confirm your age"))).toBe(false);
-    expect(isTransientInfraError(new Error("scorer returned invalid JSON"))).toBe(false);
+    expect(isTransientInfraError(new Error("Unexpected token in JSON"))).toBe(false);
   });
 });

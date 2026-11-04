@@ -5,22 +5,14 @@ import { refreshChannelMetadata, resolveChannel } from "../monitor/channel-resol
 import { validateYouTubeChannelUrl } from "../monitor/youtube-url.js";
 import { searchChannels } from "../monitor/channel-search.js";
 import { fetchChannelDeepScan } from "../monitor/deep-scan.js";
-import { recommendChannels } from "../monitor/recommendations.js";
 import { fetchChannelFeed } from "../monitor/rss-poller.js";
+import { isSubscribedChannel, SUBSCRIBED_CHANNEL_IDS_SQL } from "../feed/subscriptions.js";
 import { processNewVideo } from "../pipeline/orchestrator.js";
 import { fetchVideoMetadata } from "../ingest/metadata.js";
-import { fetchTranscript } from "../ingest/transcript.js";
 import { fetchSponsorSegments } from "../sponsorblock/client.js";
-import type { Scorer } from "../scorer/types.js";
 
 export interface ChannelsDeps {
   db: Database.Database;
-  scorer?: Scorer | undefined;
-  videoDir?: string;
-  /** Clipper-Maschinerie im Ingest — Default aus seit Etappe 2. */
-  clipperEnabled?: boolean;
-  /** Karten-Teaser für Langvideos — best-effort, darf fehlen. */
-  summarize?: ((title: string, transcript: string) => Promise<string | null>) | undefined;
 }
 
 export async function registerChannelsRoutes(
@@ -37,11 +29,25 @@ export async function registerChannelsRoutes(
       return reply.code(400).send({ error: "invalid YouTube channel URL" });
     }
     const resolved = await resolveChannel(safeUrl);
+    // Hinzufügen = abonnieren. Upsert statt INSERT OR REPLACE: ein schon
+    // bekannter Kanal (früher abbestellt, alte Probe) behält seine Zeile samt
+    // Videos und Poll-Stand und wird nur wieder zum Abo.
     deps.db
       .prepare(
-        `INSERT OR REPLACE INTO channels
-         (id, url, title, added_at, is_active, handle, description, subscribers, thumbnail_url, banner_url)
-         VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?)`,
+        `INSERT INTO channels
+         (id, url, title, added_at, is_active, status, handle, description, subscribers, thumbnail_url, banner_url)
+         VALUES (?, ?, ?, ?, 1, 'subscribed', ?, ?, ?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET
+           url = excluded.url,
+           title = excluded.title,
+           added_at = excluded.added_at,
+           is_active = 1,
+           status = 'subscribed',
+           handle = excluded.handle,
+           description = excluded.description,
+           subscribers = excluded.subscribers,
+           thumbnail_url = excluded.thumbnail_url,
+           banner_url = excluded.banner_url`,
       )
       .run(
         resolved.channelId,
@@ -69,28 +75,14 @@ export async function registerChannelsRoutes(
     return deps.db
       .prepare(
         `SELECT id, url, title, added_at, is_active, last_polled_at,
-                handle, description, subscribers, thumbnail_url,
-                banner_url, auto_approve AS autoApprove
+                handle, description, subscribers, thumbnail_url, banner_url
          FROM channels WHERE is_active=1 ORDER BY added_at DESC`,
       )
       .all();
   });
 
-  app.patch<{
-    Params: { id: string };
-    Body: { autoApprove: boolean };
-  }>("/channels/:id/auto-approve", async (req, reply) => {
-    const channel = deps.db
-      .prepare("SELECT id FROM channels WHERE id = ? AND is_active = 1")
-      .get(req.params.id);
-    if (!channel) return reply.code(404).send({ error: "channel not found" });
-    deps.db
-      .prepare("UPDATE channels SET auto_approve = ? WHERE id = ?")
-      .run(req.body.autoApprove ? 1 : 0, req.params.id);
-    return { id: req.params.id, autoApprove: req.body.autoApprove };
-  });
-
-  // Probe → Abo: der Kanal wandert in die reguläre Poll-Rotation.
+  // Bekannter Kanal → Abo (z. B. der Kanal eines gespeicherten Videos): er
+  // wandert in die reguläre Poll-Rotation, seine neuen Videos in den Feed.
   app.post<{ Params: { id: string } }>("/channels/:id/subscribe", async (req, reply) => {
     const row = deps.db.prepare("SELECT 1 FROM channels WHERE id = ?").get(req.params.id);
     if (!row) return reply.code(404).send({ error: "channel not found" });
@@ -99,39 +91,6 @@ export async function registerChannelsRoutes(
       .run(req.params.id);
     return reply.code(204).send();
   });
-
-  // Kanal dauerhaft blocken: taucht nie wieder als Empfehlung/Probe auf.
-  app.post<{ Params: { id: string } }>("/channels/:id/block", async (req, reply) => {
-    const row = deps.db.prepare("SELECT 1 FROM channels WHERE id = ?").get(req.params.id);
-    if (!row) return reply.code(404).send({ error: "channel not found" });
-    deps.db.transaction(() => {
-      deps.db
-        .prepare("UPDATE channels SET status = 'blocked', is_active = 0 WHERE id = ?")
-        .run(req.params.id);
-      // Geblockter Kanal verschwindet sofort aus dem Feed — weich (→ "Alt"), kein Löschen.
-      deps.db
-        .prepare(
-          `UPDATE feed_items SET seen_at = ? WHERE seen_at IS NULL AND video_id IN
-           (SELECT id FROM videos WHERE channel_id = ?)`,
-        )
-        .run(Date.now(), req.params.id);
-    })();
-    return reply.code(204).send();
-  });
-
-  app.get<{ Querystring: { force?: string } }>(
-    "/channels/recommendations",
-    async (req, reply) => {
-      const bypassCache = req.query.force === "true" || req.query.force === "1";
-      try {
-        const results = await recommendChannels(deps.db, { bypassCache });
-        return reply.code(200).send(results);
-      } catch (err) {
-        app.log.warn({ err }, "channel recommendations failed");
-        return reply.code(502).send({ error: "recommendations failed" });
-      }
-    },
-  );
 
   app.get<{ Querystring: { q?: string; limit?: string } }>(
     "/channels/search",
@@ -143,9 +102,7 @@ export async function registerChannelsRoutes(
         const results = await searchChannels(q, limit);
         // Mark which results the user already follows so the UI can dim those.
         const subscribedIds = new Set(
-          (deps.db
-            .prepare("SELECT id FROM channels WHERE is_active=1")
-            .all() as { id: string }[]).map((r) => r.id),
+          (deps.db.prepare(SUBSCRIBED_CHANNEL_IDS_SQL).all() as { id: string }[]).map((r) => r.id),
         );
         return results.map((r) => ({ ...r, subscribed: subscribedIds.has(r.channelId) }));
       } catch (err) {
@@ -161,7 +118,7 @@ export async function registerChannelsRoutes(
   });
 
   // Pro Kanal max. ein laufender Poll: die Ingest-Pipeline unten (yt-dlp-
-  // Metadaten + Transkript + Download pro Video) ist teuer — mehrfaches
+  // Metadaten + SponsorBlock pro Video) ist teuer — mehrfaches
   // Antippen darf keine parallelen Läufe desselben Kanals stapeln.
   const pollsInFlight = new Set<string>();
 
@@ -169,24 +126,23 @@ export async function registerChannelsRoutes(
     Params: { id: string };
     Querystring: { deep?: string; limit?: string };
   }>("/channels/:id/poll", async (req, reply) => {
-    if (!deps.scorer || !deps.videoDir) {
-      return reply.code(503).send({ error: deps.scorer ? "poll not available: videoDir not configured" : "KI-Bewertung ist abgeschaltet (LLM_PROVIDER=off)" });
-    }
     const channelId = req.params.id;
     if (pollsInFlight.has(channelId)) {
       return reply.code(409).send({ error: "poll already running for this channel" });
     }
-    const channel = deps.db
-      .prepare("SELECT id, url FROM channels WHERE id = ? AND is_active = 1")
-      .get(channelId) as { id: string; url: string } | undefined;
-    if (!channel) return reply.code(404).send({ error: "channel not found or inactive" });
-
     // Das Archiv der manuellen Importe ist kein echter Kanal — seine URL
     // ("manual:hikari") ist kein RSS-Feed. Der Abruf endete deshalb in einem
     // 500er, sobald jemand im Archiv auf Aktualisieren tippte. Es gibt hier
     // schlicht nichts abzurufen: Der Bestand wächst nur durch eigene Importe.
     if (channelId === MANUAL_CHANNEL_ID) {
       return { added: 0, skipped: 0, message: "Manuelle Importe kennen keinen Abruf" };
+    }
+    // Nur Abos werden abgerufen — Videos anderer Kanäle kommen nie in den Feed.
+    const channel = deps.db.prepare("SELECT id, url FROM channels WHERE id = ?").get(channelId) as
+      | { id: string; url: string }
+      | undefined;
+    if (!channel || !isSubscribedChannel(deps.db, channelId)) {
+      return reply.code(404).send({ error: "channel not found or not subscribed" });
     }
 
     const isDeep = req.query.deep === "true" || req.query.deep === "1";
@@ -233,11 +189,7 @@ export async function registerChannelsRoutes(
             videoId: e.videoId,
             channelId,
             fetchMetadata: fetchVideoMetadata,
-            fetchTranscript,
             fetchSponsorSegments,
-            scorer: deps.scorer!,
-            clipperEnabled: deps.clipperEnabled,
-            summarize: deps.summarize,
           });
         } catch (err) {
           app.log.warn(

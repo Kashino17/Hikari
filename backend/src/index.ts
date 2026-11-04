@@ -10,11 +10,8 @@ import cron from "node-cron";
 import { registerAuth } from "./api/auth.js";
 import { registerCors } from "./api/cors.js";
 import { registerChannelsRoutes } from "./api/channels.js";
-import { registerDiscoveryRoutes as registerDiscoverySettingsRoutes } from "./api/discovery.js";
-import { registerDiscoveryRoutes } from "./routes/discovery.js";
 import { registerDownloadsRoutes } from "./api/downloads.js";
 import { registerFeedRoutes } from "./api/feed.js";
-import { registerFilterRoutes } from "./api/filter.js";
 import { registerHealthRoute } from "./api/health.js";
 import { registerStatsRoutes } from "./api/stats.js";
 import { registerVideosRoutes } from "./api/videos.js";
@@ -22,31 +19,23 @@ import { registerMangaRoutes } from "./api/manga.js";
 import { registerMusicRoutes } from "./api/music.js";
 import { itChannelShorts } from "./api/music-innertube.js";
 import { registerNewsRoutes } from "./api/news.js";
-import { summarizeVideoTranscript } from "./clipper/context-summarizer.js";
 import { registerStreamRoutes } from "./api/stream.js";
 import { registerWatchLaterRoutes } from "./api/watch-later.js";
 import { registerRussianRoutes } from "./api/russian.js";
 import { registerRussianConversationRoutes } from "./api/russian-conversation.js";
-import { registerClipperStatusRoutes } from "./api/clipper-status.js";
 import { registerVideoFullRoute } from "./api/video-full.js";
 import { registerCastRoutes } from "./api/cast.js";
 import { loadConfig } from "./config.js";
 import { openDatabase } from "./db/connection.js";
-import { runDiscoveryCycle } from "./discovery/feed-sources.js";
-import { describeAiWindow, isAiWindowOpen } from "./pipeline/ai-window.js";
 import { buildDailyMix } from "./feed/daily-mix.js";
+import { SUBSCRIBED_CHANNEL_IDS_SQL } from "./feed/subscriptions.js";
 import { runCleanup } from "./download/cleanup.js";
+import { MetadataExtractor } from "./import/metadata-extractor.js";
 import { fetchVideoMetadata } from "./ingest/metadata.js";
-import { fetchTranscript } from "./ingest/transcript.js";
 import { fetchChannelFeedConditional } from "./monitor/rss-poller.js";
 import { computePollIntervalMs, isChannelDue } from "./monitor/cadence.js";
 import { refreshChannelMetadata } from "./monitor/channel-resolver.js";
 import { processNewVideo } from "./pipeline/orchestrator.js";
-import {
-  outdatedFeedItemCount,
-  rescoreLegacyShorts,
-  rescoreOutdatedFeedItems,
-} from "./pipeline/rescore-shorts.js";
 import {
   enqueueIngest,
   claimNextIngest,
@@ -56,8 +45,6 @@ import {
   requeueIngest,
   unlockStaleIngest,
 } from "./ingest/queue.js";
-import { createScorer } from "./scorer/factory.js";
-import { MetadataExtractor } from "./scorer/metadata-extractor.js";
 import { fetchSponsorSegments } from "./sponsorblock/client.js";
 
 const cfg = loadConfig();
@@ -66,10 +53,8 @@ mkdirSync(cfg.mangaDir, { recursive: true });
 mkdirSync(cfg.coverDir, { recursive: true });
 
 const db = openDatabase(cfg.dbPath);
-const scorer = createScorer(cfg);
-if (!scorer) {
-  console.log("[hikari] KI-Bewertung aus (LLM_PROVIDER=off) — nur Vertrauenskanäle kommen in den Feed");
-}
+// Import-Metadaten (Serie/Staffel/Folge) per Claude verfeinern — optional, nur
+// mit API-Key. Videos werden NICHT bewertet: der Feed besteht aus den Abos.
 const extractor = cfg.claude.apiKey
   ? new MetadataExtractor({ apiKey: cfg.claude.apiKey, model: cfg.claude.model })
   : null;
@@ -109,11 +94,9 @@ registerCors(app, { origins: cfg.corsOrigins });
 // No-op (open) by default for the single-user localhost deployment. Registered
 // before routes so the onRequest hook covers them; GET media stays open.
 registerAuth(app, { token: cfg.authToken });
-// CORS for video assets — Remotion's compositor (headless Chrome) bundles
-// the React composition under a different origin and loads videos via
-// <video> tag, which requires Access-Control-Allow-Origin to render the
-// pixels (otherwise we get silent black frames). Wildcard is safe here:
-// videos are public, single-user backend, no auth.
+// CORS for video assets — a browser <video> on another origin (Web-Client,
+// Cast-Receiver) needs Access-Control-Allow-Origin to render the pixels.
+// Wildcard is safe here: videos are public, single-user backend, no auth.
 const videoCorsHeaders = (res: { setHeader: (name: string, value: string) => void }) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
@@ -124,34 +107,11 @@ await app.register(fastifyStatic, {
   setHeaders: videoCorsHeaders,
 });
 await app.register(fastifyStatic, { root: cfg.coverDir, prefix: "/covers/", decorateReply: false });
-// Clips are written to <videoDir>/clips/<uuid>.mp4 by the clipper worker.
-// Ensure the directory exists even if the worker hasn't run yet (backend boots first).
-await mkdir(join(cfg.videoDir, "clips"), { recursive: true });
-await app.register(fastifyStatic, {
-  root: join(cfg.videoDir, "clips"),
-  prefix: "/clips/",
-  decorateReply: false,
-  setHeaders: videoCorsHeaders,
-});
 // Static mockups for design exploration — served as plain HTML
 const mockupsDir = new URL("../mockups", import.meta.url).pathname;
 await app.register(fastifyStatic, { root: mockupsDir, prefix: "/mockups/", decorateReply: false });
 await app.register(fastifyMultipart, { limits: { fileSize: 10 * 1024 * 1024 } });
-// KI aus (LLM_PROVIDER=off): auch keine Karten-Teaser per Sprachmodell.
-const summarizeForFeed = scorer
-  ? (title: string, transcript: string) =>
-      summarizeVideoTranscript(title, transcript, {
-        baseUrl: cfg.clipper.baseUrl,
-        model: cfg.clipper.model,
-      })
-  : undefined;
-await registerChannelsRoutes(app, {
-  db,
-  scorer: scorer ?? undefined,
-  videoDir: cfg.videoDir,
-  clipperEnabled: cfg.clipper.enabled,
-  summarize: summarizeForFeed,
-});
+await registerChannelsRoutes(app, { db });
 const prefetchStreams = registerStreamRoutes(app, {
   streamCachePath: join(cfg.dataDir, "video-stream-cache.json"),
   videoDir: cfg.videoDir,
@@ -160,32 +120,10 @@ await registerFeedRoutes(app, {
   db,
   dailyBudget: cfg.dailyBudget,
   prefetchStreams,
-  onLowStock: () => triggerDiscovery("feed low stock"),
 });
 await registerWatchLaterRoutes(app, { db });
 await registerRussianRoutes(app);
 await registerRussianConversationRoutes(app);
-await registerFilterRoutes(app, {
-  db,
-  onFilterChanged: () => {
-    // Neue Vorgaben sollen sofort wirken: ungesehenen Mix verwerfen, neu
-    // mischen und passende Inhalte suchen.
-    try {
-      db.prepare(
-        `DELETE FROM daily_mix_items WHERE video_id IN (
-           SELECT m.video_id FROM daily_mix_items m
-             JOIN feed_items f ON f.video_id = m.video_id
-            WHERE f.seen_at IS NULL)`,
-      ).run();
-      buildDailyMix(db);
-    } catch (err) {
-      app.log.warn({ err }, "feed rebuild after filter change failed");
-    }
-    triggerDiscovery("filter changed");
-  },
-});
-await registerDiscoverySettingsRoutes(app, { db });
-await registerDiscoveryRoutes(app, { db });
 await registerHealthRoute(app, { db, videoDir: cfg.videoDir });
 await registerStatsRoutes(app, { db });
 await registerVideosRoutes(app, { db, videoDir: cfg.videoDir, coverDir: cfg.coverDir, extractor });
@@ -198,17 +136,14 @@ await registerMusicRoutes(app, {
 });
 
 await registerNewsRoutes(app, { db, cfg });
-registerClipperStatusRoutes(app, db, {
-  startHour: cfg.clipper.scheduleStartHour,
-  endHour:   cfg.clipper.scheduleEndHour,
-}, cfg.clipper);
 registerVideoFullRoute(app, db);
 registerCastRoutes(app, cfg.port);
 
-// 15-min channel polling.
-// Reentrancy guard: a slow poll (dozens of yt-dlp downloads) can outlast the
-// 15-min interval. Without this flag the next tick would start concurrently and
-// race the (non-atomic) dedup in processNewVideo, duplicating downloads/clips.
+// 15-min channel polling — NUR abonnierte Kanäle. Videos anderer Kanäle
+// kommen nie in den Feed, also werden sie auch nicht abgefragt.
+// Reentrancy guard: a slow poll can outlast the 15-min interval. Without this
+// flag the next tick would start concurrently and race the (non-atomic) dedup
+// in processNewVideo.
 let isPolling = false;
 async function pollAllChannels(): Promise<void> {
   if (isPolling) {
@@ -222,7 +157,7 @@ async function pollAllChannels(): Promise<void> {
       .prepare(
         `SELECT id, url, last_polled_at AS lastPolledAt, rss_etag AS rssEtag,
                 rss_last_modified AS rssLastModified, thumbnail_url AS thumbnailUrl
-           FROM channels WHERE is_active = 1`,
+           FROM channels WHERE id IN (${SUBSCRIBED_CHANNEL_IDS_SQL})`,
       )
       .all() as {
       id: string;
@@ -295,31 +230,6 @@ cron.schedule("*/15 * * * *", () => {
   pollAllChannels().catch((err) => app.log.error({ err }, "channel poll crashed"));
 });
 
-// Discovery-Anstoß mit Cooldown: der Feed ruft ihn auch selbst, sobald der
-// Vorrat knapp wird — so entsteht nie ein leerer Feed.
-let discoveryRunning = false;
-let discoveryNextAllowed = 0;
-const DISCOVERY_COOLDOWN_MS = 20 * 60 * 1000;
-function triggerDiscovery(reason: string): void {
-  if (discoveryRunning || Date.now() < discoveryNextAllowed) return;
-  // Themensuche bewertet jeden Fund per Sprachmodell — außerhalb des Fensters
-  // wartet sie. Der Vorrat reicht ohnehin für Tage.
-  // Ohne Bewertung würde jeder Fund nur ungeprüft in der Warteschlange landen.
-  if (!scorer) return;
-  if (!isAiWindowOpen(new Date(), cfg.aiWindow)) {
-    app.log.debug({ reason }, "discovery verschoben — KI-Fenster geschlossen");
-    return;
-  }
-  discoveryRunning = true;
-  discoveryNextAllowed = Date.now() + DISCOVERY_COOLDOWN_MS;
-  app.log.info({ reason }, "discovery cycle started");
-  runDiscoveryCycle(db)
-    .catch((err) => app.log.error({ err }, "discovery cycle crashed"))
-    .finally(() => {
-      discoveryRunning = false;
-    });
-}
-
 // Tagesmix: früh morgens frisch bauen; zusätzlich Top-up nach jedem Drain
 // (unten) und lazy beim ersten /feed-Abruf des Tages.
 cron.schedule("0 6 * * *", () => {
@@ -335,22 +245,13 @@ try {
   app.log.error({ err }, "daily mix startup build crashed");
 }
 
-// Discovery: Probe-Kanäle, Themen-Suche, Backfill — zweimal täglich reicht,
-// die Quellen sind gedrosselt und der Scorer bleibt der Türsteher.
-// Alle 2 Stunden: der Feed ist unendlich, also braucht er stetigen Nachschub.
-cron.schedule("15 */2 * * *", () => {
-  triggerDiscovery("cron");
-});
-
 // Durable ingest drain: claim queued videos one at a time and run the full
 // pipeline. A reentrancy guard keeps concurrent ticks from racing; each tick
 // drains a bounded batch so it can't run unbounded. A failed video is retried
 // (attempts++) until the dead-letter cap, never blocking the rest.
 let isDraining = false;
 const DRAIN_BATCH = 20;
-// So viele ungesehene Shorts soll der Feed mindestens vorrätig haben.
-const SHORT_STOCK_TARGET = 60;
-// Nach einem transienten Infra-Fehler (Scorer-LLM aus) pausiert der Drain:
+// Nach einem transienten Infra-Fehler (Netz weg) pausiert der Drain:
 // sonst wiederholt jede Minute derselbe Job seinen yt-dlp-Metadaten-Fetch —
 // Log-Spam und unnoetige YouTube-Requests von der Mac-IP (Rate-Limit-Risiko).
 const INFRA_COOLDOWN_MS = 10 * 60 * 1000;
@@ -362,28 +263,24 @@ async function drainIngestQueue(): Promise<void> {
   let processedAny = false;
   try {
     for (let i = 0; i < DRAIN_BATCH; i++) {
-      // Ohne Scorer laufen nur Vertrauenskanäle (Green Card) — der Rest wartet.
-      const job = claimNextIngest(db, { trustedOnly: !scorer });
+      const job = claimNextIngest(db);
       if (!job) break;
       try {
-        await processNewVideo({
+        // Jobs nicht (mehr) abonnierter Kanäle erledigen sich hier ohne
+        // Netzaufruf — processNewVideo prüft das Abo vor allem anderen.
+        const result = await processNewVideo({
           db,
           videoId: job.video_id,
           channelId: job.channel_id,
           fetchMetadata: fetchVideoMetadata,
-          fetchTranscript,
           fetchSponsorSegments,
-          scorer,
-          clipperEnabled: cfg.clipper.enabled,
-          summarize: summarizeForFeed,
-          source: job.source ?? undefined,
         });
         completeIngest(db, job.video_id);
-        processedAny = true;
+        if (result === "added") processedAny = true;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         if (isTransientInfraError(err)) {
-          // Scorer-LLM aus / Netz weg: Job zurücklegen ohne attempts++ und den
+          // Netz weg: Job zurücklegen ohne attempts++ und den
           // Drain fuer INFRA_COOLDOWN_MS aussetzen — ohne Infrastruktur
           // scheitert der Rest genauso, und Minuten-Retries hämmern nur
           // yt-dlp/YouTube und das Log.
@@ -402,7 +299,7 @@ async function drainIngestQueue(): Promise<void> {
   } finally {
     isDraining = false;
   }
-  // Frisch approvte Videos sofort in den Tagesmix aufnehmen.
+  // Neue Abo-Videos sofort in den Tagesmix aufnehmen.
   if (processedAny) {
     try {
       buildDailyMix(db);
@@ -410,71 +307,11 @@ async function drainIngestQueue(): Promise<void> {
       // best-effort — der 6-Uhr-Cron und der lazy Build fangen es auf
     }
   }
-
-  // Läuft gerade kein Ingest, arbeitet der Scorer den Short-Rückstand ab:
-  // vor dem Kurzform-Hinweis fielen native Shorts pauschal durch. Nur bei
-  // knappem Short-Vorrat, damit der Feed shortslastig bleibt.
-  if (!processedAny && scorer) {
-    const shortStock = (
-      db
-        .prepare(
-          `SELECT COUNT(*) AS c FROM feed_items f JOIN videos v ON v.id = f.video_id
-            WHERE f.seen_at IS NULL AND f.playback_failed = 0 AND v.format = 'short'`,
-        )
-        .get() as { c: number }
-    ).c;
-    // Vorrang: Nach geänderten Vorgaben den Bestand aufräumen — sonst stehen
-    // Videos im Feed, die den neuen Regeln nicht mehr entsprechen.
-    let didRescore = false;
-    try {
-      if (outdatedFeedItemCount(db) > 0) {
-        const removed = await rescoreOutdatedFeedItems({ db, scorer, limit: 6 });
-        didRescore = true;
-        if (removed > 0) {
-          app.log.info({ removed }, "feed items dropped after re-evaluation");
-          buildDailyMix(db);
-        }
-      }
-    } catch (err) {
-      app.log.warn({ err }, "feed re-evaluation failed");
-    }
-
-    if (!didRescore && shortStock < SHORT_STOCK_TARGET) {
-      try {
-        const n = await rescoreLegacyShorts({ db, scorer, limit: 6 });
-        if (n > 0) {
-          app.log.info({ approved: n }, "legacy shorts rescored");
-          buildDailyMix(db);
-        }
-      } catch (err) {
-        app.log.warn({ err }, "short rescore failed");
-      }
-    }
-  }
 }
 
 // Recover stale locks from a previous crash, then drain every minute.
 unlockStaleIngest(db);
-let aiWindowWasOpen = isAiWindowOpen(new Date(), cfg.aiWindow);
 cron.schedule("* * * * *", () => {
-  // Der Drain holt Metadaten, zieht Transkripte UND bewertet per Sprachmodell.
-  // Außerhalb des Fensters sammelt sich die Warteschlange einfach an; nichts
-  // geht verloren, es wird nur später abgearbeitet.
-  const open = isAiWindowOpen(new Date(), cfg.aiWindow);
-  if (open !== aiWindowWasOpen) {
-    aiWindowWasOpen = open;
-    app.log.info(
-      {
-        window: describeAiWindow(cfg.aiWindow),
-        queued: (
-          db.prepare("SELECT COUNT(*) AS c FROM ingest_queue").get() as { c: number }
-        ).c,
-      },
-      open ? "KI-Fenster geöffnet — Warteschlange wird abgearbeitet" : "KI-Fenster geschlossen",
-    );
-  }
-  // Das Fenster schont das Sprachmodell — ohne KI gibt es nichts zu schonen.
-  if (!open && scorer) return;
   drainIngestQueue().catch((err) => app.log.error({ err }, "ingest drain crashed"));
 });
 

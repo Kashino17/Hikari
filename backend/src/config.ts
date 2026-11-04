@@ -1,21 +1,11 @@
 import { join } from "node:path";
-import { type AiWindow, parseAiWindow } from "./pipeline/ai-window.js";
 
 /**
- * "off" = keine Sprachmodell-Aufrufe: keine Video-Bewertung, keine KI-Teaser,
- * News ohne KI-Zusammenfassung. Nur Vertrauenskanäle (Green Card) laufen
- * weiter in den Feed, der Rest wartet in der Warteschlange.
+ * Sprachmodell NUR für die KI-Zusammenfassungen der News. Videos werden nicht
+ * bewertet — der Feed besteht aus den abonnierten Kanälen.
+ * "off" = News ohne KI-Zusammenfassung.
  */
 export type LLMProvider = "claude" | "ollama" | "lmstudio" | "off";
-
-export interface ClipperConfig {
-  enabled: boolean;
-  provider: "lmstudio" | "ollama";
-  baseUrl: string;
-  model: string;
-  scheduleStartHour: number;
-  scheduleEndHour: number;
-}
 
 export interface Config {
   port: number;
@@ -30,7 +20,6 @@ export interface Config {
   claude: { apiKey: string; model: string };
   ollama: { baseUrl: string; model: string };
   lmstudio: { baseUrl: string; model: string };
-  clipper: ClipperConfig;
   /**
    * Optional bearer token. When set (HIKARI_AUTH_TOKEN), mutating routes require
    * it (see api/auth.ts). null = open, the single-user localhost default.
@@ -42,12 +31,6 @@ export interface Config {
    * default. A browser client would set e.g. "https://app.example.com".
    */
   corsOrigins: string[];
-  /**
-   * Zeitfenster für KI-Hintergrundarbeit (HIKARI_AI_WINDOW, z. B. "22:00-02:00").
-   * null = jederzeit. Betrifft nur Hintergrundjobs (Bewerten, Themensuche,
-   * Neubewertung) — vom Nutzer angestoßene Aufrufe laufen immer.
-   */
-  aiWindow: AiWindow | null;
 }
 
 /**
@@ -81,10 +64,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
 
   return {
     port: num("PORT", env.PORT, 3939),
-    // Vorgabe: nachts. Das Bewerten lief zuvor im Minutentakt und hielt das
-    // Sprachmodell dauerhaft unter Volllast — auf einem Laptop hörbar und
-    // spürbar, für eine Aufgabe die niemand sofort braucht.
-    aiWindow: parseAiWindow(env.HIKARI_AI_WINDOW ?? "22:00-02:00"),
     dataDir,
     videoDir: join(dataDir, "videos"),
     mangaDir: join(dataDir, "manga"),
@@ -104,15 +83,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     lmstudio: {
       baseUrl: env.LMSTUDIO_URL ?? "http://localhost:1234",
       model: env.LMSTUDIO_MODEL ?? "qwen3-27b",
-    },
-    clipper: {
-      // Seit Etappe 2 (native Shorts im Feed) ist der Clipper Opt-in.
-      enabled: env.CLIPPER_ENABLED === "true",
-      provider: (env.CLIPPER_PROVIDER as "lmstudio" | "ollama") ?? "lmstudio",
-      baseUrl: env.CLIPPER_BASE_URL ?? "http://localhost:1234",
-      model: env.CLIPPER_MODEL ?? "qwen3.6-35b-a3b",
-      scheduleStartHour: num("CLIPPER_START_HOUR", env.CLIPPER_START_HOUR, 22),
-      scheduleEndHour: num("CLIPPER_END_HOUR", env.CLIPPER_END_HOUR, 8),
     },
     authToken: authTokenRaw ? authTokenRaw : null,
     corsOrigins,

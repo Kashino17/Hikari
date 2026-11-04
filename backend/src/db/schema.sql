@@ -18,8 +18,9 @@ CREATE TABLE IF NOT EXISTS channels (
   subscribers INTEGER,
   thumbnail_url TEXT,
   banner_url TEXT,
-  auto_approve INTEGER DEFAULT 0,
-  status TEXT   -- 'subscribed' | 'probe' | 'blocked'
+  -- Feed = Videos der Kanäle mit status 'subscribed' AND is_active = 1.
+  -- 'probe' | 'blocked' stammen aus der entfernten Discovery (Altbestand).
+  status TEXT
 );
 
 CREATE TABLE IF NOT EXISTS videos (
@@ -41,10 +42,13 @@ CREATE TABLE IF NOT EXISTS videos (
   sub_language TEXT,
   is_movie INTEGER DEFAULT 0,
   format TEXT,   -- 'short' | 'long'
-  source TEXT,   -- 'subscription' | 'probe' | 'topic' | 'backfill'
-  summary TEXT   -- KI-Kurzbeschreibung fuer Feed-Karten
+  source TEXT,   -- 'subscription' (Altbestand auch 'probe' | 'topic' | 'backfill')
+  summary TEXT   -- Kurzbeschreibung fuer Feed-Karten (Altbestand, wird nicht mehr erzeugt)
 );
 
+-- Eine Zeile pro aufgenommenem Video. Es wird nicht mehr bewertet: neue
+-- Abo-Videos bekommen eine neutrale Zeile (decision 'approved', model_used
+-- 'subscription'), weil Feed, Bibliothek und Statistik gegen scores joinen.
 CREATE TABLE IF NOT EXISTS scores (
   video_id TEXT PRIMARY KEY REFERENCES videos(id),
   overall_score INTEGER NOT NULL,
@@ -120,24 +124,6 @@ CREATE TABLE IF NOT EXISTS downloaded_videos (
   resolution_height INTEGER,
   downloaded_at INTEGER NOT NULL,
   last_served_at INTEGER
-);
-
-CREATE TABLE IF NOT EXISTS filter_config (
-  id INTEGER PRIMARY KEY CHECK (id = 1),
-  filter_json TEXT NOT NULL,
-  prompt_override TEXT,
-  updated_at INTEGER NOT NULL
-);
-
--- Per-channel filter override. A channel WITHOUT a row here inherits the global
--- filter_config (id=1). A channel WITH a row applies its own FilterConfig +
--- optional prompt_override, scoping curation criteria to that one channel —
--- the data model behind "filter each subscribed channel by its own rules".
-CREATE TABLE IF NOT EXISTS channel_filters (
-  channel_id TEXT PRIMARY KEY REFERENCES channels(id) ON DELETE CASCADE,
-  filter_json TEXT NOT NULL,
-  prompt_override TEXT,
-  updated_at INTEGER NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_feed_items_added ON feed_items(added_to_feed_at DESC);
@@ -227,86 +213,12 @@ CREATE TABLE IF NOT EXISTS manga_sync_jobs (
   finished_at INTEGER
 );
 
--- Discovery: feed-tuning knobs. Singleton row (id = 1) — single user, no auth.
--- category_weights is a JSON-stringified Record<Category, number>; mirrored
--- row-per-row into category_preferences for SQL-friendly joins.
-CREATE TABLE IF NOT EXISTS discovery_settings (
-  id INTEGER PRIMARY KEY CHECK (id = 1),
-  discovery_ratio REAL NOT NULL,
-  quality_threshold INTEGER NOT NULL,
-  category_weights TEXT NOT NULL,
-  updated_at INTEGER NOT NULL
-);
-
--- Per-channel "match score" cached for ranking. Recomputed by a separate job.
-CREATE TABLE IF NOT EXISTS channel_match_scores (
-  channel_id TEXT PRIMARY KEY REFERENCES channels(id) ON DELETE CASCADE,
-  calculated_score REAL NOT NULL,
-  last_updated INTEGER NOT NULL
-);
-
--- Normalized mirror of discovery_settings.category_weights — one row per
--- Category. Kept in sync via transaction on every settings write.
-CREATE TABLE IF NOT EXISTS category_preferences (
-  category TEXT PRIMARY KEY,
-  weight REAL NOT NULL,
-  updated_at INTEGER NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_channel_match_scores_score
-  ON channel_match_scores(calculated_score DESC);
-
--- Auto-Clipper: clip rows function as both clip definitions AND feed items.
-CREATE TABLE IF NOT EXISTS clips (
-  id              TEXT PRIMARY KEY,
-  parent_video_id TEXT NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
-  order_in_parent INTEGER NOT NULL,
-  start_seconds   REAL NOT NULL,
-  end_seconds     REAL NOT NULL,
-  file_path       TEXT NOT NULL,
-  file_size_bytes INTEGER NOT NULL,
-  focus_x         REAL NOT NULL,
-  focus_y         REAL NOT NULL,
-  focus_w         REAL NOT NULL,
-  focus_h         REAL NOT NULL,
-  reason          TEXT,
-  display_mode    TEXT NOT NULL DEFAULT 'smart-crop',
-  display_segments TEXT,
-  captions        TEXT,
-  context         TEXT,
-  created_at      INTEGER NOT NULL,
-  added_to_feed_at INTEGER NOT NULL,
-  seen_at         INTEGER,
-  saved           INTEGER DEFAULT 0,
-  playback_failed INTEGER DEFAULT 0,
-  progress_seconds REAL DEFAULT 0,
-  UNIQUE(parent_video_id, order_in_parent)
-);
-CREATE INDEX IF NOT EXISTS idx_clips_added  ON clips(added_to_feed_at DESC);
-CREATE INDEX IF NOT EXISTS idx_clips_parent ON clips(parent_video_id);
-
--- Single-slot job queue. locked_at NULL = available for dequeue.
--- NOTE: ON DELETE CASCADE applies only to fresh databases; for existing DBs
--- (SQLite cannot alter FK constraints) explicit deletes are done in the
--- DELETE /feed/:id handler. Checked adding a CHECK on clip_status to videos
--- deferred — too disruptive via ALTER TABLE migration.
-CREATE TABLE IF NOT EXISTS clipper_queue (
-  video_id    TEXT PRIMARY KEY REFERENCES videos(id) ON DELETE CASCADE,
-  queued_at   INTEGER NOT NULL,
-  attempts    INTEGER DEFAULT 0,
-  last_error  TEXT,
-  locked_at   INTEGER,
-  locked_step TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_clipper_queue_pending
-  ON clipper_queue(queued_at) WHERE locked_at IS NULL;
-
 -- Durable ingest queue. The channel poll only ENQUEUEs newly-seen video ids
--- here (fast: RSS + insert); a worker drains them, running the heavy
--- metadata/transcript/download/score pipeline off the request loop. Mirrors
--- clipper_queue: locked_at NULL = claimable; a stale lock (crashed worker) is
--- reclaimed; attempts bounds retries so a permanently-failing video is dropped.
--- channel_id is carried because the pipeline scores per-channel.
+-- of subscribed channels here (fast: RSS + insert); a worker drains them,
+-- running the metadata/SponsorBlock pipeline off the request loop.
+-- locked_at NULL = claimable; a stale lock (crashed worker) is reclaimed;
+-- attempts bounds retries so a permanently-failing video is dropped.
+-- channel_id is carried because only subscribed channels are ingested.
 CREATE TABLE IF NOT EXISTS ingest_queue (
   video_id   TEXT PRIMARY KEY,
   channel_id TEXT NOT NULL,
@@ -314,7 +226,7 @@ CREATE TABLE IF NOT EXISTS ingest_queue (
   attempts   INTEGER DEFAULT 0,
   last_error TEXT,
   locked_at  INTEGER,
-  source     TEXT   -- 'subscription' | 'probe' | 'topic' | 'backfill'
+  source     TEXT   -- 'subscription'
 );
 CREATE INDEX IF NOT EXISTS idx_ingest_queue_pending
   ON ingest_queue(queued_at) WHERE locked_at IS NULL;
@@ -325,13 +237,4 @@ CREATE TABLE IF NOT EXISTS news_briefings (
   key TEXT PRIMARY KEY,
   created_at INTEGER NOT NULL,
   payload TEXT NOT NULL
-);
-
--- Clipper runtime state. Singleton (id = 1). Allows manual override of the
--- nightly schedule window so the user can force the worker to run a queue-drain
--- immediately for testing/debugging.
-CREATE TABLE IF NOT EXISTS clipper_runtime (
-  id          INTEGER PRIMARY KEY CHECK (id = 1),
-  force_until INTEGER NOT NULL DEFAULT 0,
-  updated_at  INTEGER NOT NULL
 );

@@ -118,7 +118,7 @@ export function isRetryableYtDlpError(err: unknown): boolean {
 /**
  * Runs the yt-dlp binary with bounded exponential backoff for TRANSIENT
  * failures. Signature is unchanged (args, opts) so every caller — metadata,
- * transcript, download, channel resolve/scan/search — gets resilience for free.
+ * download, channel resolve/scan/search — gets resilience for free.
  * Non-transient failures (private video, age-gate, bad URL) throw immediately
  * as YtDlpError; no wasted retries, no harder throttle.
  */

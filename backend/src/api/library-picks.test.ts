@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pickDailySuggestions, pickSubscriptionMix } from "./library-picks.js";
+import { pickSubscriptionMix } from "./library-picks.js";
 
 function pool(n: number, channels: string[] = ["c1"], prefix = "v") {
   return Array.from({ length: n }, (_, i) => ({
@@ -10,34 +10,6 @@ function pool(n: number, channels: string[] = ["c1"], prefix = "v") {
 
 const DAY_A = "2026-10-13";
 const DAY_B = "2026-10-14";
-
-describe("pickDailySuggestions", () => {
-  it("gleiche Auswahl am selben Tag", () => {
-    const p = pool(60);
-    expect(pickDailySuggestions(p, DAY_A)).toEqual(pickDailySuggestions(p, DAY_A));
-  });
-
-  it("andere Auswahl an verschiedenen Tagen", () => {
-    const p = pool(60);
-    const a = pickDailySuggestions(p, DAY_A).map((r) => r.id);
-    const b = pickDailySuggestions(p, DAY_B).map((r) => r.id);
-    expect(b).not.toEqual(a); // andere Auswahl/Reihenfolge am nächsten Tag
-  });
-
-  it("liefert 20 aus einem großen Pool, alles aus dem Pool", () => {
-    const p = pool(120);
-    const picks = pickDailySuggestions(p, DAY_A);
-    expect(picks).toHaveLength(20);
-    const ids = new Set(p.map((r) => r.id));
-    for (const pick of picks) expect(ids.has(pick.id)).toBe(true);
-    expect(new Set(picks.map((r) => r.id)).size).toBe(20); // keine Duplikate
-  });
-
-  it("kleiner Pool kommt komplett zurück", () => {
-    const p = pool(7);
-    expect(pickDailySuggestions(p, DAY_A)).toHaveLength(7);
-  });
-});
 
 describe("pickSubscriptionMix", () => {
   it("gleiche Auswahl am selben Tag, andere am nächsten", () => {

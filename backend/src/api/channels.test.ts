@@ -51,6 +51,39 @@ describe("channels API", () => {
     expect(row).toEqual({ handle: "@test", subscribers: 12345, thumbnail_url: "https://yt.example/thumb.jpg" });
   });
 
+  it("POST /channels abonniert — auch einen früher abbestellten Kanal mit Videos", async () => {
+    db.prepare(
+      "INSERT INTO channels (id, url, title, added_at, is_active, status) VALUES ('UC1','x','Alt',0,0,'probe')",
+    ).run();
+    db.prepare(
+      "INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at) VALUES ('v1','UC1','t',0,60,0)",
+    ).run();
+    const { resolveChannel } = await import("../monitor/channel-resolver.js");
+    vi.mocked(resolveChannel).mockResolvedValue({
+      channelId: "UC1",
+      title: "Neu",
+      handle: "@neu",
+      description: null,
+      subscribers: null,
+      thumbnail: null,
+      banner: null,
+    });
+    const app = Fastify();
+    await registerChannelsRoutes(app, { db });
+    const res = await app.inject({
+      method: "POST",
+      url: "/channels",
+      payload: { channelUrl: "https://www.youtube.com/@neu" },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(db.prepare("SELECT title, is_active, status FROM channels WHERE id='UC1'").get()).toEqual({
+      title: "Neu",
+      is_active: 1,
+      status: "subscribed",
+    });
+    expect(db.prepare("SELECT COUNT(*) c FROM videos WHERE channel_id='UC1'").get()).toEqual({ c: 1 });
+  });
+
   it("GET /channels lists active channels", async () => {
     db.prepare(
       "INSERT INTO channels (id, url, title, added_at, is_active) VALUES ('UC1','x','Alpha',0,1)",
@@ -95,14 +128,20 @@ describe("channels API", () => {
     ).run();
 
     const app = Fastify();
-    await registerChannelsRoutes(app, {
-      db,
-      scorer: {} as never,
-      videoDir: "/tmp",
-    });
+    await registerChannelsRoutes(app, { db });
     const res = await app.inject({ method: "POST", url: "/channels/manual/poll" });
 
     expect(res.statusCode).toBe(200);
     expect(res.json()).toMatchObject({ added: 0 });
+  });
+
+  it("Abruf eines nicht abonnierten Kanals ⇒ 404 (Feed = nur Abos)", async () => {
+    db.prepare(
+      "INSERT INTO channels (id, url, title, added_at, is_active, status) VALUES ('UC-p','x','P',0,0,'probe')",
+    ).run();
+    const app = Fastify();
+    await registerChannelsRoutes(app, { db });
+    const res = await app.inject({ method: "POST", url: "/channels/UC-p/poll" });
+    expect(res.statusCode).toBe(404);
   });
 });
