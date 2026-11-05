@@ -501,6 +501,14 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                     )
                 }
             }
+            composable("russian-plan") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    com.hikari.app.ui.russian.RussianPlanScreen(
+                        onBack = { nav.popBackStack() },
+                        onOpen = { route -> nav.navigate(route) },
+                    )
+                }
+            }
             composable("russian/podcast") {
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     com.hikari.app.ui.russian.RussianPodcastHomeScreen(

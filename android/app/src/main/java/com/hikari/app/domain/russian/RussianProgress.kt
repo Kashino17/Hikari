@@ -36,6 +36,8 @@ data class RuProgress(
     val podcastDayStars: Map<Int, Int> = emptyMap(),
     val podcastListened: Set<Int> = emptySet(),
     val podcastLastCompletedDay: Long = -1,
+    /** Sprechkurs: Kalendertag (epochDay), an dem zuletzt ein Kurstag abgeschlossen wurde. */
+    val courseLastCompletedDay: Long = -1,
     val cards: Map<String, RuCard> = emptyMap(),
     /** XP pro Kalendertag (epochDay) — für "heute" und den Wochenverlauf. */
     val xpByDay: Map<Long, Int> = emptyMap(),
@@ -164,6 +166,7 @@ fun RuProgress.apply(result: RuSessionResult, today: Long): RuProgress {
         dayStars = stars,
         podcastDayStars = podcastStars,
         podcastLastCompletedDay = if (result.completedPodcastDay != null) today else podcastLastCompletedDay,
+        courseLastCompletedDay = if (result.completedDay != null) today else courseLastCompletedDay,
         cards = cards,
         xpByDay = xpDays,
         spokenOk = spokenOk + result.spokenOk,
