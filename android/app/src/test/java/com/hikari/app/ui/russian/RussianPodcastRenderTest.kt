@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
@@ -37,11 +39,14 @@ class RussianPodcastRenderTest {
             day = 1, title = "Begrüßen und sich vorstellen", videoId = "vdAB-uJ6F-g",
             playing = true, positionMs = 252_000, durationMs = 769_000, bufferedMs = 400_000, speed = 1.25f,
         )
-        HikariScreenTest {
-            Column(Modifier.padding(16.dp)) {
-                PodcastPlayerFull(state, PodcastActions(), onPhrases = {})
-                Spacer(Modifier.height(24.dp))
-                PodcastPlayerBar(state.copy(playing = false), onExpand = {}, onToggle = {}, onClose = {})
+        // Vorschau-Modus: das Cover (Coil) bleibt leer — im Unit-Test gibt es keinen Main-Dispatcher.
+        CompositionLocalProvider(LocalInspectionMode provides true) {
+            HikariScreenTest {
+                Column(Modifier.padding(16.dp)) {
+                    PodcastPlayerFull(state, PodcastActions(), onPhrases = {})
+                    Spacer(Modifier.height(24.dp))
+                    PodcastPlayerBar(state.copy(playing = false), onExpand = {}, onToggle = {}, onClose = {})
+                }
             }
         }
     }

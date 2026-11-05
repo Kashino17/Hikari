@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -193,10 +194,7 @@ private fun PodcastCover(state: PodcastPlayback, actions: PodcastActions) {
                 )
             },
     ) {
-        AsyncImage(
-            model = state.coverUrl, contentDescription = null, contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
-        )
+        PodcastCoverImage(state.coverUrl, Modifier.fillMaxSize())
         if (rippleSide != 0) {
             Column(
                 Modifier.align(if (rippleSide < 0) Alignment.CenterStart else Alignment.CenterEnd)
@@ -334,7 +332,7 @@ internal fun PodcastPlayerBar(
     ) {
         Row(Modifier.fillMaxSize().padding(start = 6.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.width(92.dp).height(52.dp).clip(RoundedCornerShape(9.dp)).background(Color.Black)) {
-                AsyncImage(model = state.coverUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                PodcastCoverImage(state.coverUrl, Modifier.fillMaxSize())
                 if (state.loading) {
                     CircularProgressIndicator(
                         color = Color.White, strokeWidth = 2.dp,
@@ -374,4 +372,11 @@ internal fun PodcastPlayerBar(
             Box(Modifier.fillMaxWidth(state.fraction).fillMaxHeight().background(Color.White))
         }
     }
+}
+
+/** Cover der Folge. In Vorschau/Snapshot-Tests leer — Coil braucht dort einen Main-Dispatcher, den es nicht gibt. */
+@Composable
+private fun PodcastCoverImage(url: String, modifier: Modifier) {
+    if (LocalInspectionMode.current) return
+    AsyncImage(model = url, contentDescription = null, contentScale = ContentScale.Crop, modifier = modifier)
 }
