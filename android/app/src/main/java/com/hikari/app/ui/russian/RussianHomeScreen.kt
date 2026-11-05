@@ -65,7 +65,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -278,7 +277,7 @@ private fun todayText(item: RuTodayItem, days: List<RuDay>, podcastLeftMin: Long
     }
     RuTodayKind.REVIEW ->
         if (item.done) {
-            TodayText("Wiederholen", "Nichts fällig", "Alles wiederholt, was heute dran war", "Erledigt")
+            TodayText("Wiederholen", "Alles wiederholt", "Gerade ist kein Satz fällig", "Erledigt")
         } else {
             TodayText(
                 "Wiederholen",
@@ -342,7 +341,6 @@ private fun TodayRow(item: RuTodayItem, text: TodayText, next: Boolean, onClick:
                     text.title,
                     color = if (item.done) HikariTextMuted else HikariText,
                     fontSize = 15.sp, fontWeight = FontWeight.Medium,
-                    textDecoration = if (item.done) TextDecoration.LineThrough else null,
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
                 Text(text.detail, color = HikariTextMuted, fontSize = 12.5.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
