@@ -415,8 +415,86 @@ describe("GET /music/audio/:videoId", () => {
     const fallbackCall = ytDlp.mock.calls.find(([a]) =>
       (a as string[]).includes("youtube:player_client=tv_simply"),
     ) as [string[]] | undefined;
-    expect(fallbackCall?.[0]).toContain("18/best[ext=mp4][acodec!=none][protocol=https]");
+    expect(fallbackCall?.[0]).toContain("18");
     await app.close();
+  });
+
+  it("wechselt mitten im Song (Range > 0) nie auf die andere Datei", async () => {
+    const ytDlp = vi.fn().mockImplementation(async (args: string[]) => {
+      const tv = args.includes("youtube:player_client=tv_simply");
+      return {
+        stdout: tv ? "https://cdn.example/combined.mp4" : "https://cdn.example/audio.m4a",
+        stderr: "",
+      };
+    });
+    const fetchImpl = vi
+      .fn()
+      .mockImplementation(async (url: string) =>
+        url.includes("combined") ? upstream(206, "COMBINED") : upstream(403, "denied"),
+      );
+    const app = await makeApp({ ytDlp, fetchImpl });
+    const res = await app.inject({
+      method: "GET",
+      url: "/music/audio/dQw4w9WgXcQ",
+      headers: { range: "bytes=500000-" },
+    });
+    // Lieber scheitern als fremde Bytes an angefangene Audio-Bytes hängen.
+    expect(res.statusCode).toBe(502);
+    expect(
+      ytDlp.mock.calls.some(([a]) => (a as string[]).includes("youtube:player_client=tv_simply")),
+    ).toBe(false);
+    await app.close();
+  });
+
+  it("ein Song, der einmal über den Ausweichweg lief, bleibt dabei — auch nach Neustart", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "hikari-combo-"));
+    try {
+      const streamCachePath = join(dir, "stream-cache.json");
+      const ytDlp = vi.fn().mockImplementation(async (args: string[]) => {
+        const tv = args.includes("youtube:player_client=tv_simply");
+        return {
+          stdout: tv ? "https://cdn.example/combined.mp4" : "https://cdn.example/audio.m4a",
+          stderr: "",
+        };
+      });
+      const fetchImpl = vi
+        .fn()
+        .mockImplementation(async (url: string) =>
+          url.includes("combined") ? upstream(200, "COMBINED") : upstream(403, "denied"),
+        );
+      const first = await makeApp({ ytDlp, fetchImpl, streamCachePath });
+      await first.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
+      await first.close();
+
+      // Neustart ohne URL-Cache: die Wahl muss trotzdem bestehen bleiben.
+      await rm(streamCachePath, { force: true });
+      const ytDlp2 = vi.fn().mockImplementation(async (args: string[]) => {
+        const tv = args.includes("youtube:player_client=tv_simply");
+        return {
+          stdout: tv ? "https://cdn.example/combined2.mp4" : "https://cdn.example/audio2.m4a",
+          stderr: "",
+        };
+      });
+      // Jeder Abruf eine frische Response — der Proxy holt in Blöcken.
+      const fetch2 = vi
+        .fn()
+        .mockImplementation(async () =>
+          upstream(206, "OK", { "content-range": "bytes 1000-1001/2000" }),
+        );
+      const restarted = await makeApp({ ytDlp: ytDlp2, fetchImpl: fetch2, streamCachePath });
+      const res = await restarted.inject({
+        method: "GET",
+        url: "/music/audio/dQw4w9WgXcQ",
+        headers: { range: "bytes=1000-" },
+      });
+      expect(res.statusCode).toBe(206);
+      const [args] = ytDlp2.mock.calls[0] as [string[]];
+      expect(args).toContain("youtube:player_client=tv_simply");
+      expect(fetch2).toHaveBeenCalledWith("https://cdn.example/combined2.mp4", expect.anything());
+      await restarted.close();
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 
   it("shares the stream URL cache with /music/stream", async () => {

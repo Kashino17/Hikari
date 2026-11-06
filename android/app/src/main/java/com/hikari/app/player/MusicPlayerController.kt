@@ -37,6 +37,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
@@ -841,6 +842,17 @@ class MusicPlayerController @Inject constructor(
                 return@launch
             }
             val p = ensurePlayer()
+            if (forceRefresh && uri.startsWith("http")) {
+                // Neuer Versuch nach einem Fehler: den Cache dieses Songs
+                // verwerfen. Er kann Anfang und Rest aus zwei verschiedenen
+                // Dateien enthalten (Audio-Datei vs. kombiniertes mp4 des
+                // Server-Ausweichwegs) — der Player las dann bei jedem Versuch
+                // denselben kaputten Mix, der Song blieb dauerhaft unabspielbar.
+                p.stop()
+                withContext(Dispatchers.IO) {
+                    runCatching { musicCache.removeResource(song.videoId) }
+                }
+            }
             syncRepeatMode(p)
             // Bindet den PlaybackService (MediaController) — erst damit darf
             // Media3 die Systemsteuerung posten und der Service im

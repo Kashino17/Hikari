@@ -110,3 +110,28 @@ export function saveStreamCacheSync(path: string, map: Map<string, CacheEntry<st
     // Persistenz ist best-effort — ein Schreibfehler darf keinen Request brechen
   }
 }
+
+/**
+ * Menge von videoIds, die dauerhaft über den kombinierten Ausweichweg laufen
+ * (siehe api/music.ts). Klein und selten geändert — synchron schreiben ist ok.
+ */
+export function loadComboSongs(path: string | undefined): Set<string> {
+  if (!path) return new Set();
+  try {
+    const parsed = JSON.parse(readFileSync(path, "utf8"));
+    return new Set(Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string") : []);
+  } catch {
+    return new Set();
+  }
+}
+
+export function saveComboSongs(path: string | undefined, set: Set<string>): void {
+  if (!path) return;
+  try {
+    const tmp = `${path}.tmp`;
+    writeFileSync(tmp, JSON.stringify([...set]));
+    renameSync(tmp, path);
+  } catch {
+    // best-effort
+  }
+}

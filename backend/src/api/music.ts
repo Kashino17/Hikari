@@ -7,7 +7,9 @@ import {
   cacheGet,
   cachePut,
   dedupInflight,
+  loadComboSongs,
   loadStreamCache,
+  saveComboSongs,
   saveStreamCacheAsync,
   saveStreamCacheSync,
 } from "../stream/url-cache.js";
@@ -816,59 +818,99 @@ export async function registerMusicRoutes(
   const resolveFailUntil = new Map<string, number>();
   const RESOLVE_FAIL_COOLDOWN_MS = 20_000;
 
-  async function resolveAudioUrl(videoId: string, force: boolean): Promise<string | undefined> {
+  /**
+   * Songs, die über den kombinierten Ausweichweg (itag 18) laufen. Die App
+   * cacht Bytes pro videoId — bekäme sie für denselben Song mal die Audio-
+   * Datei (itag 140) und mal das kombinierte mp4, setzte sie aus beiden einen
+   * kaputten Mix zusammen, und der Song wäre dauerhaft unabspielbar. Deshalb
+   * ist die Wahl pro Song endgültig und überlebt Neustarts.
+   */
+  const comboSongsPath = deps.streamCachePath
+    ? deps.streamCachePath.replace(/\.json$/, "") + ".combo.json"
+    : undefined;
+  const comboSongs = loadComboSongs(comboSongsPath);
+  const rememberCombo = (videoId: string) => {
+    if (comboSongs.has(videoId)) return;
+    comboSongs.add(videoId);
+    saveComboSongs(comboSongsPath, comboSongs);
+  };
+
+  /**
+   * @param force       nach Upstream-Ablehnung neu auflösen (Cache umgehen)
+   * @param mayFallback Ausweichweg erlaubt — nur bei Wiedergabe ab Byte 0.
+   *   Ein Range-Request mitten im Song setzt Bytes fort, die die App schon
+   *   hat; die müssen aus derselben Datei kommen.
+   */
+  async function resolveAudioUrl(
+    videoId: string,
+    force: boolean,
+    mayFallback = true,
+  ): Promise<string | undefined> {
+    const combo = comboSongs.has(videoId);
     const cached = force ? undefined : cacheGet(streamCache, videoId, STREAM_CACHE_TTL_MS, now());
     if (cached) return cached;
     if (!force && (resolveFailUntil.get(videoId) ?? 0) > now()) return undefined;
-    const existing = inflightResolutions.get(videoId);
+    // Erst reines Audio; nach einer Ablehnung (force) der Ausweichweg — und
+    // ein Song, der einmal darüber lief, bleibt dauerhaft dabei.
+    const mode: "audio" | "combo" = combo || (force && mayFallback) ? "combo" : "audio";
+    const key = `${videoId}:${mode}`;
+    const existing = inflightResolutions.get(key);
     if (existing) return existing;
-    // Erster Versuch: reines Audio (web_embedded). Jede erzwungene Neuauflösung
-    // — also nachdem googlevideo die Audio-URL abgelehnt hat — nimmt den
-    // tv_simply-Ausweichweg (siehe extractAudioUrl).
-    const pending = extractAudioUrl(videoId, force).then((url) => {
-      if (!url) resolveFailUntil.set(videoId, now() + RESOLVE_FAIL_COOLDOWN_MS);
-      else resolveFailUntil.delete(videoId);
-      return url;
-    });
-    inflightResolutions.set(videoId, pending);
+    const pending = (mode === "combo" ? extractComboUrl(videoId) : extractAudioUrl(videoId)).then(
+      (url) => {
+        if (!url) resolveFailUntil.set(videoId, now() + RESOLVE_FAIL_COOLDOWN_MS);
+        else {
+          resolveFailUntil.delete(videoId);
+          if (mode === "combo") rememberCombo(videoId);
+        }
+        return url;
+      },
+    );
+    inflightResolutions.set(key, pending);
     try {
       return await pending;
     } finally {
-      if (inflightResolutions.get(videoId) === pending) inflightResolutions.delete(videoId);
+      if (inflightResolutions.get(key) === pending) inflightResolutions.delete(key);
     }
   }
 
-  async function extractAudioUrl(videoId: string, fallback = false): Promise<string | undefined> {
+  /**
+   * Ausweichweg seit 11/2026: YouTubes SABR-Experiment lässt reine Audio-URLs
+   * (web_embedded, itag 140) zufällig mit 403 scheitern; ohne Anmeldung gibt es
+   * keinen Audio-Client mehr, der zuverlässig liefert. tv_simply liefert das
+   * kombinierte 360p-mp4 (itag 18) voll rangebar — der Player spielt nur den Ton.
+   */
+  async function extractComboUrl(videoId: string): Promise<string | undefined> {
     try {
-      if (fallback) {
-        // Ausweichweg seit 11/2026: YouTubes SABR-Experiment lässt reine
-        // Audio-URLs (web_embedded, itag 140) zufällig mit 403 scheitern; ohne
-        // Anmeldung gibt es keinen Audio-Client mehr, der zuverlässig liefert.
-        // tv_simply liefert das kombinierte 360p-mp4 (itag 18) voll rangebar —
-        // der Musik-Player spielt daraus nur den Ton. Mehr Daten, etwas
-        // schlechterer Klang, aber der Song startet sofort.
-        const combined = await ytDlp(
-          [
-            ...YT_TV_SIMPLY_CLIENT_ARGS,
-            "--no-playlist",
-            "-4",
-            "-f",
-            "18/best[ext=mp4][acodec!=none][protocol=https]",
-            "-g",
-            `https://www.youtube.com/watch?v=${videoId}`,
-          ],
-          { timeoutMs: 45_000, maxRetries: 1 },
-        ).catch(() => undefined);
-        const url = combined?.stdout.trim().split("\n")[0];
-        if (url?.startsWith("http")) {
-          cachePut(streamCache, videoId, url, now());
-          scheduleStreamCachePersist();
-          return url;
-        }
-        // tv_simply gescheitert → unten normal weiter mit Audio-Clients.
-      }
-      // web_embedded-first (siehe runPreferEmbedded): nur diese URLs sind
-      // voll rangebar — alle anderen Clients kappt googlevideo nach ~768 KiB.
+      const result = await ytDlp(
+        [
+          ...YT_TV_SIMPLY_CLIENT_ARGS,
+          "--no-playlist",
+          "-4",
+          "-f",
+          "18",
+          "-g",
+          `https://www.youtube.com/watch?v=${videoId}`,
+        ],
+        { timeoutMs: 45_000, maxRetries: 1 },
+      );
+      const url = result.stdout.trim().split("\n")[0];
+      if (!url?.startsWith("http")) return undefined;
+      cachePut(streamCache, videoId, url, now());
+      scheduleStreamCachePersist();
+      return url;
+    } catch (err) {
+      app.log.warn(
+        { videoId, err: err instanceof Error ? err.message.slice(0, 500) : String(err) },
+        "combo resolve failed",
+      );
+      return undefined;
+    }
+  }
+
+  async function extractAudioUrl(videoId: string): Promise<string | undefined> {
+    try {
+      // web_embedded-first (siehe runPreferEmbedded).
       const result = await runPreferEmbedded(
         ytDlp,
         [
@@ -879,7 +921,9 @@ export async function registerMusicRoutes(
           // Die IPv4 (hinter NAT) ist stabil, damit passt die Bindung immer.
           "-4",
           "-f",
-          "bestaudio[ext=m4a]/bestaudio/best",
+          // Bewusst KEIN „/best": das fiele still auf das kombinierte mp4
+          // zurück und mischte unter derselben videoId zwei Dateien.
+          "bestaudio[ext=m4a]/bestaudio",
           "-g",
           `https://www.youtube.com/watch?v=${videoId}`,
         ],
@@ -1014,10 +1058,12 @@ export async function registerMusicRoutes(
     }
 
     const range = req.headers.range;
+    // Ausweichweg nur bei Wiedergabe ab Anfang (siehe resolveAudioUrl).
+    const rangeStart = Number(/bytes=(\d*)-/.exec(range ?? "")?.[1] || 0);
     const result = await proxyMediaStream(
       reply,
       range,
-      (force) => resolveAudioUrl(videoId, force),
+      (force) => resolveAudioUrl(videoId, force, rangeStart === 0),
       "audio",
       proxyOpts,
     );
