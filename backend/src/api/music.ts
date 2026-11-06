@@ -11,7 +11,7 @@ import {
   saveStreamCacheAsync,
   saveStreamCacheSync,
 } from "../stream/url-cache.js";
-import { runPreferEmbedded, runYtDlp } from "../yt-dlp/client.js";
+import { YT_TV_SIMPLY_CLIENT_ARGS, runPreferEmbedded, runYtDlp } from "../yt-dlp/client.js";
 import {
   type ArtistPage,
   type HomeFeed,
@@ -822,7 +822,10 @@ export async function registerMusicRoutes(
     if (!force && (resolveFailUntil.get(videoId) ?? 0) > now()) return undefined;
     const existing = inflightResolutions.get(videoId);
     if (existing) return existing;
-    const pending = extractAudioUrl(videoId).then((url) => {
+    // Erster Versuch: reines Audio (web_embedded). Jede erzwungene Neuauflösung
+    // — also nachdem googlevideo die Audio-URL abgelehnt hat — nimmt den
+    // tv_simply-Ausweichweg (siehe extractAudioUrl).
+    const pending = extractAudioUrl(videoId, force).then((url) => {
       if (!url) resolveFailUntil.set(videoId, now() + RESOLVE_FAIL_COOLDOWN_MS);
       else resolveFailUntil.delete(videoId);
       return url;
@@ -835,8 +838,35 @@ export async function registerMusicRoutes(
     }
   }
 
-  async function extractAudioUrl(videoId: string): Promise<string | undefined> {
+  async function extractAudioUrl(videoId: string, fallback = false): Promise<string | undefined> {
     try {
+      if (fallback) {
+        // Ausweichweg seit 11/2026: YouTubes SABR-Experiment lässt reine
+        // Audio-URLs (web_embedded, itag 140) zufällig mit 403 scheitern; ohne
+        // Anmeldung gibt es keinen Audio-Client mehr, der zuverlässig liefert.
+        // tv_simply liefert das kombinierte 360p-mp4 (itag 18) voll rangebar —
+        // der Musik-Player spielt daraus nur den Ton. Mehr Daten, etwas
+        // schlechterer Klang, aber der Song startet sofort.
+        const combined = await ytDlp(
+          [
+            ...YT_TV_SIMPLY_CLIENT_ARGS,
+            "--no-playlist",
+            "-4",
+            "-f",
+            "18/best[ext=mp4][acodec!=none][protocol=https]",
+            "-g",
+            `https://www.youtube.com/watch?v=${videoId}`,
+          ],
+          { timeoutMs: 45_000, maxRetries: 1 },
+        ).catch(() => undefined);
+        const url = combined?.stdout.trim().split("\n")[0];
+        if (url?.startsWith("http")) {
+          cachePut(streamCache, videoId, url, now());
+          scheduleStreamCachePersist();
+          return url;
+        }
+        // tv_simply gescheitert → unten normal weiter mit Audio-Clients.
+      }
       // web_embedded-first (siehe runPreferEmbedded): nur diese URLs sind
       // voll rangebar — alle anderen Clients kappt googlevideo nach ~768 KiB.
       const result = await runPreferEmbedded(

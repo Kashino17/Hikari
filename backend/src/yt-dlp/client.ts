@@ -45,8 +45,10 @@ export const YT_EMBEDDED_CLIENT_ARGS = ["--extractor-args", "youtube:player_clie
  * 4-MiB-Blöcke am Anfang, in der Mitte und am Ende alle 206.
  * tv_simply hat KEINE reinen Audio-Formate — Musik bleibt bei web_embedded.
  */
+export const YT_TV_SIMPLY_CLIENT_ARGS = ["--extractor-args", "youtube:player_client=tv_simply"];
+
 export const YT_VIDEO_CLIENT_CHAIN: readonly (readonly string[])[] = [
-  ["--extractor-args", "youtube:player_client=tv_simply"],
+  YT_TV_SIMPLY_CLIENT_ARGS,
   YT_EMBEDDED_CLIENT_ARGS,
 ];
 

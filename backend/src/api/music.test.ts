@@ -392,6 +392,33 @@ describe("GET /music/audio/:videoId", () => {
     await app.close();
   });
 
+  it("nimmt nach abgelehnter Audio-URL den tv_simply-Ausweichweg (itag 18)", async () => {
+    const ytDlp = vi.fn().mockImplementation(async (args: string[]) => {
+      const tv = args.includes("youtube:player_client=tv_simply");
+      return {
+        stdout: tv ? "https://cdn.example/combined.mp4" : "https://cdn.example/audio.m4a",
+        stderr: "",
+      };
+    });
+    const fetchImpl = vi
+      .fn()
+      .mockImplementation(async (url: string) =>
+        url.includes("combined") ? upstream(200, "COMBINED") : upstream(403, "denied"),
+      );
+    const app = await makeApp({ ytDlp, fetchImpl });
+    const res = await app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toBe("COMBINED");
+    // Erst reines Audio, erst nach der Ablehnung der Ausweichweg mit Format 18.
+    const [firstArgs] = ytDlp.mock.calls[0] as [string[]];
+    expect(firstArgs).not.toContain("youtube:player_client=tv_simply");
+    const fallbackCall = ytDlp.mock.calls.find(([a]) =>
+      (a as string[]).includes("youtube:player_client=tv_simply"),
+    ) as [string[]] | undefined;
+    expect(fallbackCall?.[0]).toContain("18/best[ext=mp4][acodec!=none][protocol=https]");
+    await app.close();
+  });
+
   it("shares the stream URL cache with /music/stream", async () => {
     const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/a.m4a", stderr: "" });
     const fetchImpl = vi.fn().mockResolvedValue(upstream(200, "X"));
