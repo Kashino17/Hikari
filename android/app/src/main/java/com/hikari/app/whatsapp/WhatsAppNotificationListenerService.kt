@@ -233,7 +233,6 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
         }
 
         val key = sbn.key ?: return
-        val tag = sbn.tag
         val removedPayload = buildRawPayload(sbn)
         val removedChatKey = removedPayload?.let { WhatsAppNotificationParser.parse(it).firstOrNull()?.chatKey }
         val jobKey = if (!removedChatKey.isNullOrBlank()) "chat:$removedChatKey" else key
@@ -257,17 +256,22 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
                 }
             }
 
-            // WhatsApp selbst (oder Androids Gruppen-Manager beim Löschen der letzten Nachricht) hat
-            // die Benachrichtigung gecancelt (REASON_APP_CANCEL = 8, REASON_APP_CANCEL_ALL = 9,
-            // REASON_GROUP_SUMMARY_CANCELED = 12):
+            // WhatsApp selbst hat die Benachrichtigung gecancelt (REASON_APP_CANCEL = 8,
+            // REASON_APP_CANCEL_ALL = 9, REASON_GROUP_SUMMARY_CANCELED = 12, ...).
+            //
+            // WICHTIG: Das ist KEIN Löschsignal! WhatsApp cancelt genauso, wenn der Chat gelesen
+            // wurde — in der App selbst (ohne Tipp auf die Benachrichtigung), in WhatsApp Web/Desktop,
+            // auf einem verknüpften Zweitgerät, per Inline-Antwort oder „Als gelesen markieren“.
+            // Ein Cancel als Löschung zu werten markierte deshalb praktisch JEDE gelesene Nachricht
+            // als „gelöscht“. Nur der Platzhaltertext oder ein geschrumpfter Stack mit verbleibenden
+            // Nachrichten sind echte Löschsignale (siehe processNotification).
+            //
+            // Das Leeren des Snapshots wird 1,2 s verzögert: Cancelt WhatsApp nur, um die
+            // Benachrichtigung sofort neu zu posten (z. B. nach einer Löschung mit weiteren
+            // ungelesenen Nachrichten), bricht der neue Post diesen Job ab und der vorherige
+            // Snapshot bleibt für den Stack-Vergleich erhalten.
             else -> {
                 if (isSummary) return
-
-                val isAppDrivenCancel = reason in setOf(
-                    REASON_APP_CANCEL,
-                    REASON_APP_CANCEL_ALL,
-                    REASON_GROUP_SUMMARY_CANCELED,
-                )
 
                 pendingRetractionJobs.remove(key)?.cancel()
                 pendingRetractionJobs.remove(jobKey)?.cancel()
@@ -275,15 +279,7 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
                     delay(1_200L)
                     pendingRetractionJobs.remove(jobKey)
                     processingScope.launch {
-                        if (isAppDrivenCancel) {
-                            repository.onNotificationRetractedByApp(
-                                notificationKey = key,
-                                notificationTag = tag,
-                                chatKey = removedChatKey,
-                            )
-                        } else {
-                            repository.onNotificationCleared(key)
-                        }
+                        repository.onNotificationCleared(key)
                     }
                 }
                 pendingRetractionJobs[jobKey] = job

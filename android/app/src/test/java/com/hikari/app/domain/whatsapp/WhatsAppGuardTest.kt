@@ -270,7 +270,7 @@ class WhatsAppGuardTest {
     }
 
     @Test
-    fun `rescues single message when retracted by WhatsApp via REASON_APP_CANCEL or summary notification`() = runTest {
+    fun `reading a chat elsewhere (WhatsApp cancels notification) never marks messages as deleted`() = runTest {
         val t0 = System.currentTimeMillis() - 30_000L
 
         val singleMsg = RawNotificationPayload(
@@ -294,9 +294,21 @@ class WhatsAppGuardTest {
         repository.processNotification(singleMsg)
         assertTrue(repository.deletedMessages.first().isEmpty())
 
-        // WhatsApp zieht die Benachrichtigung komplett zurück (REASON_APP_CANCEL):
-        repository.onNotificationRetractedByApp("notif_retract", nowMs = t0 + 3_000L)
+        // Nutzer liest den Chat in WhatsApp/Web/Desktop -> WhatsApp cancelt (REASON_APP_CANCEL).
+        // Der Service leert dafür nur den Snapshot — das darf NIE als Löschung zählen.
+        repository.onNotificationCleared("notif_retract")
+        assertTrue(repository.deletedMessages.first().isEmpty())
 
+        // Kommt danach das echte Löschsignal (Platzhalter), wird das Original weiterhin gerettet.
+        repository.processNotification(
+            singleMsg.copy(
+                text = "🚫 Diese Nachricht wurde gelöscht",
+                postTime = t0 + 3_000L,
+                messagingStyleItems = listOf(
+                    RawMessagingItem(sender = "Paul", text = "🚫 Diese Nachricht wurde gelöscht", timestamp = t0),
+                ),
+            ),
+        )
         val deletedList = repository.deletedMessages.first()
         assertEquals(1, deletedList.size)
         assertEquals("Kurz geschickt und sofort zurückgezogen", deletedList.first().text)
