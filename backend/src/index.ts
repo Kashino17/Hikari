@@ -25,6 +25,10 @@ import { registerRussianRoutes } from "./api/russian.js";
 import { registerRussianConversationRoutes } from "./api/russian-conversation.js";
 import { registerVideoFullRoute } from "./api/video-full.js";
 import { registerCastRoutes } from "./api/cast.js";
+import { registerVoiceRoutes } from "./api/voice.js";
+import { VoiceJobStore, VoiceProcessor } from "./voice/jobs.js";
+import { VoiceSummarizer } from "./voice/summarize.js";
+import { WhisperWorker } from "./voice/whisper.js";
 import { loadConfig } from "./config.js";
 import { openDatabase } from "./db/connection.js";
 import { buildDailyMix } from "./feed/daily-mix.js";
@@ -134,6 +138,40 @@ await registerMusicRoutes(app, {
   streamCachePath: join(cfg.dataDir, "music-stream-cache.json"),
   audioDir: join(cfg.dataDir, "music"),
 });
+
+// Sprachnachrichten: Whisper transkribiert, Qwen (LM Studio) fasst zusammen.
+// Beide Modelle liegen nur im Speicher, solange gearbeitet wird, und werden
+// nach VOICE_IDLE_MINUTES Leerlauf entladen.
+{
+  const idleMs = Number(process.env.VOICE_IDLE_MINUTES ?? 10) * 60_000;
+  const voiceStore = new VoiceJobStore(join(cfg.dataDir, "voice"));
+  const whisper = new WhisperWorker({
+    script: new URL("../voice/whisper_worker.py", import.meta.url).pathname,
+    idleMs,
+    language: process.env.VOICE_LANGUAGE?.trim() || null,
+    log: (msg) => app.log.info(msg),
+  });
+  const voiceLlm = {
+    baseUrl: cfg.lmstudio.baseUrl,
+    model: process.env.VOICE_LLM_MODEL ?? "qwen/qwen3.8-27b",
+  };
+  const summarizer = new VoiceSummarizer({ ...voiceLlm, ttlSeconds: idleMs / 1000 });
+  const voiceProcessor = new VoiceProcessor({
+    store: voiceStore,
+    transcribe: (p) => whisper.transcribe(p),
+    summarize: (t) => summarizer.summarize(t),
+    log: (msg, extra) => app.log.info(extra ?? {}, msg),
+  });
+  await registerVoiceRoutes(app, {
+    store: voiceStore,
+    processor: voiceProcessor,
+    whisper,
+    lmstudio: voiceLlm,
+  });
+  const resumed = voiceProcessor.recover();
+  if (resumed > 0) app.log.info({ resumed }, "voice jobs resumed");
+  app.addHook("onClose", async () => whisper.stop());
+}
 
 await registerNewsRoutes(app, { db, cfg });
 registerVideoFullRoute(app, db);

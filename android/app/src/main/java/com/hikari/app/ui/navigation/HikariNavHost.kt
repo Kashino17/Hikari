@@ -91,6 +91,8 @@ import com.hikari.app.ui.games.FruitMergeGame
 import com.hikari.app.ui.games.SpaceShooterGame
 import com.hikari.app.ui.games.TicTacToeGame
 import com.hikari.app.ui.whatsapp.WhatsAppScreen
+import com.hikari.app.ui.whatsapp.WhatsAppTab
+import com.hikari.app.ui.voice.VoiceNoteDetailScreen
 
 private fun navTo(nav: NavController, route: String) {
     nav.navigate(route) {
@@ -154,6 +156,11 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
             (hikariDestinations.any { it.route == deepLinkRoute } || deepLinkRoute in hubSectionRoutes)
         ) {
             navTo(nav, deepLinkRoute)
+        } else if (deepLinkRoute != null && deepLinkRoute.startsWith("voice-notes/")) {
+            // Aus der Zusammenfassungs-Benachrichtigung: Liste drunter, damit
+            // Zurück in der WhatsApp-Ecke landet.
+            navTo(nav, "voice-notes")
+            nav.navigate(deepLinkRoute) { launchSingleTop = true }
         }
     }
 
@@ -171,7 +178,8 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
     val isGearSubPage = currentRoute == "settings"
     val isGameRoute = currentRoute?.startsWith("game/") == true ||
         currentRoute?.startsWith("russian") == true ||
-        currentRoute == "whatsapp"
+        currentRoute == "whatsapp" ||
+        currentRoute?.startsWith("voice-notes") == true
     // Der Browser bringt eigene Leisten oben und unten mit; die Bottom-Nav
     // würde die Fundanzeige verdecken.
     val isBrowserRoute = currentRoute == "browser"
@@ -641,7 +649,26 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     WhatsAppScreen(
                         onBack = { nav.popBackStack() },
+                        onOpenVoiceJob = { id -> nav.navigate("voice-notes/$id") },
                     )
+                }
+            }
+            composable("voice-notes") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    WhatsAppScreen(
+                        onBack = { nav.popBackStack() },
+                        onOpenVoiceJob = { id -> nav.navigate("voice-notes/$id") },
+                        initialTab = WhatsAppTab.VOICE,
+                    )
+                }
+            }
+            composable(
+                route = "voice-notes/{jobId}",
+                arguments = listOf(navArgument("jobId") { type = NavType.StringType }),
+            ) { entry ->
+                val jobId = entry.arguments?.getString("jobId") ?: return@composable
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    VoiceNoteDetailScreen(jobId = jobId, onBack = { nav.popBackStack() })
                 }
             }
             composable(
