@@ -87,6 +87,8 @@ object VoiceNotifications {
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            // Keine automatischen "Karte öffnen"-Knöpfe, nur weil ein Ort fällt.
+            .setAllowSystemGeneratedContextualActions(false)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(openIntent(ctx, job.id, id))
             .setSubText(VoiceFormat.meta(job.total, job.duration))
