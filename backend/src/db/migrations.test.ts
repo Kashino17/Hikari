@@ -32,6 +32,7 @@ describe("applyMigrations", () => {
       "sponsor_segments",
       "video_progress",
       "videos",
+      "watch_history",
       "watch_later",
     ]);
   });
@@ -47,9 +48,9 @@ describe("migrations", () => {
   it("daily_mix_items und feed_settings existieren mit erwarteten Spalten", () => {
     const db = new Database(":memory:");
     applyMigrations(db);
-    const mixCols = (db.prepare("PRAGMA table_info(daily_mix_items)").all() as { name: string }[]).map(
-      (c) => c.name,
-    );
+    const mixCols = (
+      db.prepare("PRAGMA table_info(daily_mix_items)").all() as { name: string }[]
+    ).map((c) => c.name);
     expect(mixCols).toEqual(
       expect.arrayContaining(["mix_date", "video_id", "position", "source", "duration_seconds"]),
     );
@@ -92,9 +93,11 @@ describe("migrations", () => {
     `).run();
     db.prepare("UPDATE videos SET format = NULL, source = NULL").run();
     applyMigrations(db); // idempotent — Backfill klassifiziert den Bestand
-    const rows = db
-      .prepare("SELECT id, format, source FROM videos ORDER BY id")
-      .all() as { id: string; format: string; source: string }[];
+    const rows = db.prepare("SELECT id, format, source FROM videos ORDER BY id").all() as {
+      id: string;
+      format: string;
+      source: string;
+    }[];
     expect(rows).toEqual([
       { id: "v-long", format: "long", source: "subscription" },
       { id: "v-short", format: "short", source: "subscription" },
@@ -153,17 +156,23 @@ describe("Migration: Clipper, Bewertung und Discovery entfernt", () => {
     expect(columnNames(db, "videos")).not.toContain("clip_status");
     expect(columnNames(db, "feed_items")).not.toContain("is_pre_clipper");
     expect(columnNames(db, "channels")).not.toContain("auto_approve");
-    expect(db.pragma("user_version", { simple: true })).toBe(1);
+    expect(db.pragma("user_version", { simple: true })).toBe(2);
   });
 
   it("räumt Altbestand ab: Tabellen, Spalten und Index auf clip_status", () => {
     const db = legacyDb();
-    db.prepare("INSERT INTO channels (id,url,title,added_at,status) VALUES ('c1','x','c',0,'subscribed')").run();
+    db.prepare(
+      "INSERT INTO channels (id,url,title,added_at,status) VALUES ('c1','x','c',0,'subscribed')",
+    ).run();
     db.prepare(
       "INSERT INTO videos (id, channel_id, title, published_at, duration_seconds, discovered_at, clip_status) VALUES ('v1','c1','t',0,60,0,'done')",
     ).run();
-    db.prepare("INSERT INTO clips (id, parent_video_id, order_in_parent, file_path) VALUES ('k1','v1',0,'/c.mp4')").run();
-    db.prepare("INSERT INTO feed_items (video_id, added_to_feed_at, is_pre_clipper) VALUES ('v1',0,1)").run();
+    db.prepare(
+      "INSERT INTO clips (id, parent_video_id, order_in_parent, file_path) VALUES ('k1','v1',0,'/c.mp4')",
+    ).run();
+    db.prepare(
+      "INSERT INTO feed_items (video_id, added_to_feed_at, is_pre_clipper) VALUES ('v1',0,1)",
+    ).run();
 
     applyMigrations(db);
 
@@ -236,7 +245,9 @@ describe("Migration: Feed = nur Abos (einmalige Datenbereinigung)", () => {
     applyMigrations(db);
 
     const feed = (
-      db.prepare("SELECT video_id FROM feed_items ORDER BY video_id").all() as { video_id: string }[]
+      db.prepare("SELECT video_id FROM feed_items ORDER BY video_id").all() as {
+        video_id: string;
+      }[]
     ).map((r) => r.video_id);
     expect(feed).toEqual(["v-dl", "v-later", "v-manual", "v-saved", "v-sub"]);
 
@@ -248,7 +259,9 @@ describe("Migration: Feed = nur Abos (einmalige Datenbereinigung)", () => {
     expect(mix).toEqual(["v-sub"]);
 
     const jobs = (
-      db.prepare("SELECT video_id FROM ingest_queue ORDER BY video_id").all() as { video_id: string }[]
+      db.prepare("SELECT video_id FROM ingest_queue ORDER BY video_id").all() as {
+        video_id: string;
+      }[]
     ).map((r) => r.video_id);
     expect(jobs).toEqual(["q-sub"]);
 
@@ -256,7 +269,7 @@ describe("Migration: Feed = nur Abos (einmalige Datenbereinigung)", () => {
     expect(db.prepare("SELECT COUNT(*) c FROM videos").get()).toEqual({ c: 8 });
     expect(db.prepare("SELECT COUNT(*) c FROM channels").get()).toEqual({ c: 5 });
     expect(db.prepare("SELECT COUNT(*) c FROM watch_later").get()).toEqual({ c: 1 });
-    expect(db.pragma("user_version", { simple: true })).toBe(1);
+    expect(db.pragma("user_version", { simple: true })).toBe(2);
   });
 
   it("läuft nur einmal — spätere Läufe fassen den Bestand nicht mehr an", () => {

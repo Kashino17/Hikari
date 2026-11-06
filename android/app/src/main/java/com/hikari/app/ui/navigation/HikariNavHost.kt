@@ -339,6 +339,11 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                     ChannelDetailScreen(
                         onBack = { nav.popBackStack() },
                         onEditVideo = { videoId -> nav.navigate("video-edit/$videoId") },
+                        onPlayVideo = { videoId, title, channel ->
+                            nav.navigate(playVideoRoute(videoId, title, channel))
+                        },
+                        onOpenSeries = { id -> nav.navigate("download-series/$id") },
+                        onOpenMovie = { id -> nav.navigate("download-movie/$id") },
                     )
                 }
             }

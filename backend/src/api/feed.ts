@@ -1,4 +1,3 @@
-import fs from "node:fs";
 import type Database from "better-sqlite3";
 import type { FastifyInstance } from "fastify";
 import {
@@ -10,6 +9,8 @@ import {
 } from "../feed/daily-mix.js";
 import { subscribedChannelCondition } from "../feed/subscriptions.js";
 import { MANUAL_CHANNEL_ID } from "../import/manual-import.js";
+import { recordWatch } from "../library/history.js";
+import { deleteVideoCompletely } from "../library/removal.js";
 
 /** Seitengröße des Endlos-Feeds; die App lädt beim Scrollen nach. */
 const FEED_PAGE_SIZE = 30;
@@ -441,6 +442,7 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
     const seconds = Math.max(0, Number(req.body?.seconds ?? 0));
     updateFeedRow(deps.db, req.params.id, "progress_seconds = ?", seconds);
     upsertVideoProgress(deps.db, req.params.id, seconds);
+    recordWatch(deps.db, req.params.id, seconds);
     return reply.code(204).send();
   });
 
@@ -490,27 +492,9 @@ export async function registerFeedRoutes(app: FastifyInstance, deps: FeedDeps): 
   });
 
   app.delete<{ Params: { id: string } }>("/feed/:id", async (req, reply) => {
-    const videoId = req.params.id;
-    const existing = deps.db.prepare("SELECT 1 FROM videos WHERE id = ?").get(videoId);
-    if (!existing) return reply.code(404).send({ error: "video not found" });
-
-    const dlRow = deps.db
-      .prepare("SELECT file_path FROM downloaded_videos WHERE video_id = ?")
-      .get(videoId) as { file_path: string } | undefined;
-
-    deps.db.transaction(() => {
-      deps.db.prepare("DELETE FROM sponsor_segments WHERE video_id = ?").run(videoId);
-      deps.db.prepare("DELETE FROM feed_items WHERE video_id = ?").run(videoId);
-      deps.db.prepare("DELETE FROM downloaded_videos WHERE video_id = ?").run(videoId);
-      deps.db.prepare("DELETE FROM scores WHERE video_id = ?").run(videoId);
-      deps.db.prepare("DELETE FROM videos WHERE id = ?").run(videoId);
-    })();
-
-    if (dlRow?.file_path) {
-      try {
-        await fs.promises.unlink(dlRow.file_path);
-      } catch {}
-    }
+    // Vollständig: DB-Zeilen aller abhängigen Tabellen + Datei auf der Platte.
+    const removed = await deleteVideoCompletely(deps.db, req.params.id);
+    if (!removed) return reply.code(404).send({ error: "video not found" });
     return reply.code(204).send();
   });
 }

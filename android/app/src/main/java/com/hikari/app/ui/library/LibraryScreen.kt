@@ -116,8 +116,6 @@ fun LibraryScreen(
     val state by viewModel.uiState.collectAsState()
     val topCharts by viewModel.topCharts.collectAsState()
     val watchLater by viewModel.watchLater.collectAsState()
-    val savedItems by viewModel.savedItems.collectAsState()
-    val history by viewModel.history.collectAsState()
     val coverEdit by viewModel.coverEditState.collectAsState()
     var editingSeries by remember { mutableStateOf<SeriesDto?>(null) }
 
@@ -153,9 +151,9 @@ fun LibraryScreen(
                 onPlayVideo = onPlayVideo,
                 onLongPressSeries = { editingSeries = it },
                 watchLater = watchLater,
-                saved = savedItems,
-                history = history,
                 onRemoveWatchLater = { viewModel.removeWatchLater(it) },
+                onRemoveHistory = { viewModel.removeFromHistory(it) },
+                onClearHistory = { viewModel.clearHistory() },
                 onToggleWatchLater = { id, saved -> viewModel.toggleWatchLater(id, saved) },
             )
         }
@@ -188,9 +186,9 @@ private fun LibraryContent(
     onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
     onLongPressSeries: (SeriesDto) -> Unit,
     watchLater: List<FeedItem> = emptyList(),
-    saved: List<FeedItem> = emptyList(),
-    history: List<FeedItem> = emptyList(),
     onRemoveWatchLater: (String) -> Unit = {},
+    onRemoveHistory: (String) -> Unit = {},
+    onClearHistory: () -> Unit = {},
     onToggleWatchLater: (String, Boolean) -> Unit = { _, _ -> },
 ) {
     fun play(v: LibraryVideoDto) = onPlayVideo(v.id, v.title, v.channelTitle ?: "")
@@ -202,6 +200,8 @@ private fun LibraryContent(
     var showShuffleSheet by remember { mutableStateOf(false) }
     var quickLookItem by remember { mutableStateOf<QuickLookItem?>(null) }
     var allView by remember { mutableStateOf<AllViewState?>(null) }
+    var confirmClearHistory by remember { mutableStateOf(false) }
+    val history = data.watchHistory
 
     fun LibraryVideoDto.toAllViewItem(onClick: () -> Unit) = AllViewItem(
         id = id,
@@ -246,7 +246,10 @@ private fun LibraryContent(
         map
     }
 
-    val continueWatching = remember(data.recentlyAdded) {
+    val continueWatching = remember(data) {
+        // Neuer Server: fertige Liste über alle Quellen, auch gestreamte
+        // YouTube-Videos. Ältere Server: Rückfall auf die Downloads.
+        if (data.continueWatching.isNotEmpty()) return@remember data.continueWatching
         data.recentlyAdded
             .filter {
                 val p = it.progress_seconds ?: 0f
@@ -527,51 +530,34 @@ private fun LibraryContent(
                                 }
                             }
 
-                            if (saved.isNotEmpty()) {
+                            // ── Neu von deinen Kanälen: gestreamt, ohne Download ───
+                            if (data.channelUploads.isNotEmpty()) {
                                 item {
                                     SectionHeader(
-                                        "Gespeichert",
-                                        count = saved.size,
+                                        "Neu von deinen Kanälen",
+                                        count = data.channelUploads.size,
                                         onShowAll = {
                                             allView = AllViewState(
-                                                title = "Gespeichert",
-                                                items = saved.map { fi ->
-                                                    fi.toAllViewItem { onPlayVideo(fi.videoId, fi.title, fi.channelTitle) }
-                                                },
+                                                title = "Neu von deinen Kanälen",
+                                                items = data.channelUploads.map { v -> v.toAllViewItem { play(v) } },
                                             )
                                         },
                                     )
                                     LazyRow(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                                     ) {
-                                        items(saved, key = { it.videoId }) { fi ->
-                                            CollectionCard(
-                                                item = fi,
-                                                onPlay = { onPlayVideo(fi.videoId, fi.title, fi.channelTitle) },
-                                            )
+                                        items(data.channelUploads, key = { "up-${it.id}" }) { v ->
+                                            LibraryVideoCard(video = v, onClick = { play(v) })
                                         }
                                     }
                                     Spacer(Modifier.height(20.dp))
                                 }
-                            }
-
-
-                            // ── Von deinen Kanälen (Picks aus abonnierten Kanälen) ───
-                            if (data.subscriptionPicks.isNotEmpty()) {
+                            } else if (data.subscriptionPicks.isNotEmpty()) {
                                 item {
                                     SubscriptionPicksSection(
                                         picks = data.subscriptionPicks,
                                         onPlayVideo = onPlayVideo,
-                                        onShowAll = {
-                                            allView = AllViewState(
-                                                title = "Von deinen Kanälen",
-                                                items = data.subscriptionPicks.map { dto ->
-                                                    val fi = dto.toFeedItem()
-                                                    fi.toAllViewItem { onPlayVideo(fi.videoId, fi.title, fi.channelTitle) }
-                                                },
-                                            )
-                                        },
                                     )
                                     Spacer(Modifier.height(20.dp))
                                 }
@@ -600,20 +586,21 @@ private fun LibraryContent(
                                         onShowAll = {
                                             allView = AllViewState(
                                                 title = "Verlauf",
-                                                items = history.map { fi ->
-                                                    fi.toAllViewItem { onPlayVideo(fi.videoId, fi.title, fi.channelTitle) }
-                                                },
+                                                items = history.map { v -> v.toAllViewItem { play(v) } },
                                             )
                                         },
+                                        actionLabel = "Leeren",
+                                        onAction = { confirmClearHistory = true },
                                     )
                                     LazyRow(
                                         contentPadding = PaddingValues(horizontal = 16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                                     ) {
-                                        items(history, key = { it.videoId }) { fi ->
-                                            CollectionCard(
-                                                item = fi,
-                                                onPlay = { onPlayVideo(fi.videoId, fi.title, fi.channelTitle) },
+                                        items(history, key = { "h-${it.id}" }) { v ->
+                                            LibraryVideoCard(
+                                                video = v,
+                                                onClick = { play(v) },
+                                                onRemove = { onRemoveHistory(v.id) },
                                             )
                                         }
                                     }
@@ -897,6 +884,17 @@ private fun LibraryContent(
                 }
             }
         }
+    }
+
+    if (confirmClearHistory) {
+        com.hikari.app.ui.components.ConfirmDeleteDialog(
+            title = "Verlauf leeren?",
+            message = "Alle ${history.size} Einträge verschwinden aus dem Verlauf. Die Videos selbst " +
+                "und dein Fortschritt (Weiterschauen) bleiben erhalten.",
+            confirmLabel = "Leeren",
+            onConfirm = onClearHistory,
+            onDismiss = { confirmClearHistory = false },
+        )
     }
 
     if (showShuffleSheet) {
@@ -1234,7 +1232,13 @@ private fun HeroSection(video: LibraryVideoDto?, onPlay: (LibraryVideoDto) -> Un
 }
 
 @Composable
-private fun SectionHeader(title: String, count: Int, onShowAll: (() -> Unit)? = null) {
+private fun SectionHeader(
+    title: String,
+    count: Int,
+    onShowAll: (() -> Unit)? = null,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1250,6 +1254,21 @@ private fun SectionHeader(title: String, count: Int, onShowAll: (() -> Unit)? = 
             fontFamily = FontFamily.Monospace,
         )
         Spacer(Modifier.weight(1f))
+        if (actionLabel != null && onAction != null) {
+            Text(
+                actionLabel.uppercase(),
+                color = HikariTextMuted,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 0.5.sp,
+                fontFamily = FontFamily.Monospace,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .clickable(onClick = onAction)
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+            )
+            Spacer(Modifier.width(6.dp))
+        }
         if (onShowAll != null) {
             Text(
                 "ALLE ›",
@@ -1746,6 +1765,102 @@ private fun RecentVideoCard(video: LibraryVideoDto, onClick: () -> Unit) {
                 overflow = TextOverflow.Ellipsis,
             )
         }
+    }
+}
+
+/**
+ * YouTube-Look für Verlauf und Kanal-Uploads: Bild oben mit Dauer und
+ * Fortschrittsbalken, Titel und Kanal darunter. [onRemove] blendet ein
+ * sichtbares X ein — Entfernen per Langdruck fand niemand.
+ */
+@Composable
+private fun LibraryVideoCard(
+    video: LibraryVideoDto,
+    onClick: () -> Unit,
+    onRemove: (() -> Unit)? = null,
+) {
+    val fraction = video.progress_seconds?.let { p ->
+        if (video.duration_seconds > 0) (p / video.duration_seconds).coerceIn(0f, 1f) else 0f
+    } ?: 0f
+    Column(modifier = Modifier.width(260.dp).clickable(onClick = onClick)) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(10.dp))
+                .background(HikariSurface),
+        ) {
+            FallbackArtwork(title = video.title)
+            AsyncImage(
+                model = video.thumbnail_url,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+            Text(
+                "${video.duration_seconds / 60}:${"%02d".format(video.duration_seconds % 60)}",
+                color = Color.White,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(6.dp)
+                    .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 5.dp, vertical = 2.dp),
+            )
+            if (onRemove != null) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(6.dp)
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(Color.Black.copy(alpha = 0.6f))
+                        .clickable(onClick = onRemove),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Aus dem Verlauf entfernen",
+                        tint = Color.White,
+                        modifier = Modifier.size(15.dp),
+                    )
+                }
+            }
+            if (fraction > 0f) {
+                Box(
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .fillMaxWidth()
+                        .height(3.dp)
+                        .background(Color.White.copy(alpha = 0.25f)),
+                ) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth(fraction)
+                            .height(3.dp)
+                            .background(HikariAmber),
+                    )
+                }
+            }
+        }
+        Text(
+            text = video.title,
+            color = HikariText,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+        Text(
+            text = video.channelTitle?.takeIf { it.isNotBlank() } ?: "Video",
+            color = HikariTextMuted,
+            fontSize = 11.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 2.dp),
+        )
     }
 }
 

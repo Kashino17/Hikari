@@ -205,6 +205,16 @@ interface HikariApi {
     @DELETE("feed/{id}")
     suspend fun deleteVideo(@Path("id") videoId: String)
 
+    /** Serie samt allen Folgen vom Server löschen (DB + Dateien). */
+    @DELETE("series/{id}")
+    suspend fun deleteSeries(@Path("id") seriesId: String)
+
+    @DELETE("history/{id}")
+    suspend fun removeFromHistory(@Path("id") videoId: String)
+
+    @DELETE("history")
+    suspend fun clearHistory()
+
     @GET("feed/today-count")
     suspend fun todayCount(): TodayCountResponse
 

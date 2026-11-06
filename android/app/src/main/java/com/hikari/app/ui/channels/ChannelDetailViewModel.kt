@@ -12,7 +12,10 @@ import com.hikari.app.data.api.dto.ImportItemMetadata
 import com.hikari.app.data.api.dto.SniffedImportItem
 import com.hikari.app.domain.browser.HeadlessSniffer
 import com.hikari.app.domain.model.Channel
+import com.hikari.app.data.api.dto.MovieEntryDto
+import com.hikari.app.data.api.dto.SeriesGroupDto
 import com.hikari.app.domain.repo.ChannelsRepository
+import com.hikari.app.domain.repo.DownloadsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Job
@@ -22,11 +25,22 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * „Manuell hinzugefügt" gegliedert wie Bibliothek/Downloads: Serien und Filme
+ * als Poster, Einzelvideos (eigene Importe ohne Serie/Film) als Liste.
+ */
+data class ManualLibrary(
+    val series: List<SeriesGroupDto>,
+    val movies: List<MovieEntryDto>,
+    val singles: List<ChannelVideoDto>,
+)
+
 @HiltViewModel
 class ChannelDetailViewModel @Inject constructor(
     private val repo: ChannelsRepository,
     savedStateHandle: SavedStateHandle,
     private val sniffer: HeadlessSniffer,
+    private val downloadsRepo: DownloadsRepository,
 ) : ViewModel() {
 
     private val channelId: String = checkNotNull(savedStateHandle["channelId"])
@@ -36,6 +50,9 @@ class ChannelDetailViewModel @Inject constructor(
 
     private val _videos = MutableStateFlow<List<ChannelVideoDto>>(emptyList())
     val videos: StateFlow<List<ChannelVideoDto>> = _videos.asStateFlow()
+
+    private val _manual = MutableStateFlow<ManualLibrary?>(null)
+    val manual: StateFlow<ManualLibrary?> = _manual.asStateFlow()
 
     private val _loading = MutableStateFlow(true)
     val loading: StateFlow<Boolean> = _loading.asStateFlow()
@@ -245,14 +262,38 @@ class ChannelDetailViewModel @Inject constructor(
             _channel.value = ch
             if (ch == null) _error.value = "Kanal nicht gefunden"
             _videos.value = repo.listVideos(channelId)
+            if (showsImports) _manual.value = buildManualLibrary(_videos.value)
         }.onFailure { _error.value = it.message ?: "Konnte Videos nicht laden" }
         _loading.value = false
+    }
+
+    /**
+     * Serien und Filme kommen aus /downloads (dort schon gruppiert, mit Größe
+     * und Folgen), gefiltert auf die Videos dieses Archivs. Was weder Serie
+     * noch Film ist, bleibt als Einzelvideo stehen.
+     */
+    private suspend fun buildManualLibrary(videos: List<ChannelVideoDto>): ManualLibrary {
+        val ids = videos.map { it.videoId }.toSet()
+        val downloads = runCatching { downloadsRepo.load() }.getOrNull()
+        val series = downloads?.series.orEmpty()
+            .filter { g -> g.episodes.any { it.id in ids } }
+            .sortedBy { it.title.lowercase() }
+        val movies = downloads?.movies.orEmpty().filter { it.id in ids }
+        val grouped = series.flatMap { g -> g.episodes.map { it.id } }.toSet() + movies.map { it.id }
+        return ManualLibrary(
+            series = series,
+            movies = movies,
+            singles = videos.filter { it.videoId !in grouped },
+        )
     }
 
     fun deleteVideo(videoId: String) = viewModelScope.launch {
         runCatching { repo.deleteVideo(videoId) }
             .onSuccess {
                 _videos.value = _videos.value.filterNot { it.videoId == videoId }
+                _manual.value = _manual.value?.let { m ->
+                    m.copy(singles = m.singles.filterNot { it.videoId == videoId })
+                }
             }
             .onFailure { _error.value = it.message ?: "Löschen fehlgeschlagen" }
     }

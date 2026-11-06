@@ -25,6 +25,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -52,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.hikari.app.data.db.PlaybackPositionEntity
+import com.hikari.app.ui.components.ConfirmDeleteDialog
 import com.hikari.app.ui.components.FallbackArtwork
 import com.hikari.app.ui.library.EpisodeTitles
 import com.hikari.app.ui.profile.components.LocalDownloadIcon
@@ -59,6 +62,7 @@ import com.hikari.app.ui.profile.components.LocalState
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariDanger
+import com.hikari.app.ui.theme.HikariSurface
 import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
@@ -83,6 +87,30 @@ fun DownloadSeriesDetailScreen(
     val positions by viewModel.playbackPositions.collectAsState()
     val bulkDownloading by viewModel.bulkDownloading.collectAsState()
     val actionError by viewModel.actionError.collectAsState()
+    var episodeToDelete by remember { mutableStateOf<DownloadDetailEpisode?>(null) }
+    var confirmSeriesDelete by remember { mutableStateOf(false) }
+
+    episodeToDelete?.let { ep ->
+        ConfirmDeleteDialog(
+            title = "Folge vom PC löschen?",
+            message = "„${ep.title}“ wird endgültig gelöscht — vom PC und von diesem Handy. " +
+                "Das lässt sich nicht rückgängig machen.",
+            confirmLabel = "Endgültig löschen",
+            onConfirm = { viewModel.deleteFromServer(ep.id) },
+            onDismiss = { episodeToDelete = null },
+        )
+    }
+    if (confirmSeriesDelete) {
+        val detail = (state as? DownloadDetailUiState.Series)?.data
+        ConfirmDeleteDialog(
+            title = "Ganze Serie löschen?",
+            message = "„${detail?.title.orEmpty()}“ mit allen ${detail?.episodes?.size ?: 0} Folgen wird " +
+                "endgültig gelöscht — vom PC und von diesem Handy. Das lässt sich nicht rückgängig machen.",
+            confirmLabel = "Serie löschen",
+            onConfirm = { viewModel.deleteSeriesFromServer(onDone = onBack) },
+            onDismiss = { confirmSeriesDelete = false },
+        )
+    }
 
     Box(Modifier.fillMaxSize().background(HikariBg)) {
         when (val s = state) {
@@ -121,6 +149,8 @@ fun DownloadSeriesDetailScreen(
                 onRemoveLocal = viewModel::removeLocal,
                 onBulkDownload = viewModel::downloadEpisodes,
                 onDismissError = viewModel::clearActionError,
+                onDeleteEpisode = { episodeToDelete = it },
+                onDeleteSeries = { confirmSeriesDelete = true },
             )
         }
     }
@@ -140,6 +170,8 @@ private fun SeriesDetailContent(
     onRemoveLocal: (String) -> Unit,
     onBulkDownload: (List<DownloadDetailEpisode>) -> Unit,
     onDismissError: () -> Unit,
+    onDeleteEpisode: (DownloadDetailEpisode) -> Unit,
+    onDeleteSeries: () -> Unit,
 ) {
     val seasons = remember(detail.episodes) {
         detail.episodes.mapNotNull { it.season }.distinct().sorted()
@@ -193,6 +225,8 @@ private fun SeriesDetailContent(
                 localCount = detail.episodes.count { localIds.contains(it.id) },
                 onBack = onBack,
                 onPlay = { resumeEpisode?.let(onPlay) },
+                // Offline gibt es keinen Server zum Löschen.
+                onDeleteSeries = onDeleteSeries.takeIf { !detail.offlineOnly },
             )
         }
 
@@ -279,6 +313,7 @@ private fun SeriesDetailContent(
                 onDownloadClick = {
                     if (isLocal) onRemoveLocal(episode.id) else onDownload(episode)
                 },
+                onDeleteFromServer = { onDeleteEpisode(episode) }.takeIf { !detail.offlineOnly },
             )
         }
 
@@ -303,6 +338,7 @@ private fun SeriesHero(
     localCount: Int,
     onBack: () -> Unit,
     onPlay: () -> Unit,
+    onDeleteSeries: (() -> Unit)?,
 ) {
     Box(modifier = Modifier.fillMaxWidth().aspectRatio(16f / 10f)) {
         FallbackArtwork(title = detail.title, showTitle = false)
@@ -346,6 +382,19 @@ private fun SeriesHero(
                 .background(Color.Black.copy(alpha = 0.4f)),
         ) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, "Zurück", tint = Color.White)
+        }
+        if (onDeleteSeries != null) {
+            IconButton(
+                onClick = onDeleteSeries,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 40.dp, end = 10.dp)
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color.Black.copy(alpha = 0.4f)),
+            ) {
+                Icon(Icons.Default.Delete, "Serie löschen", tint = Color.White)
+            }
         }
 
         Column(
@@ -550,7 +599,9 @@ private fun DownloadEpisodeRow(
     progress: Float,
     onPlay: () -> Unit,
     onDownloadClick: () -> Unit,
+    onDeleteFromServer: (() -> Unit)? = null,
 ) {
+    var menuOpen by remember { mutableStateOf(false) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -635,6 +686,34 @@ private fun DownloadEpisodeRow(
                 onClick = onDownloadClick,
                 itemTitle = episode.title,
             )
+        }
+        if (onDeleteFromServer != null) {
+            Box {
+                IconButton(onClick = { menuOpen = true }, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        Icons.Default.MoreVert,
+                        contentDescription = "Mehr",
+                        tint = HikariTextMuted,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+                DropdownMenu(
+                    expanded = menuOpen,
+                    onDismissRequest = { menuOpen = false },
+                    modifier = Modifier.background(HikariSurface),
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Vom PC löschen", color = HikariDanger) },
+                        leadingIcon = {
+                            Icon(Icons.Default.Delete, null, tint = HikariDanger, modifier = Modifier.size(18.dp))
+                        },
+                        onClick = {
+                            menuOpen = false
+                            onDeleteFromServer()
+                        },
+                    )
+                }
+            }
         }
     }
 }

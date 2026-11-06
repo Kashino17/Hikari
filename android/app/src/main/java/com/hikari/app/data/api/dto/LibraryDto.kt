@@ -60,6 +60,11 @@ data class LibraryResponse(
     // Empfehlungen aus abonnierten Kanälen — optional, damit ältere Server
     // (ohne das Feld) weiter parsen.
     val subscriptionPicks: List<FeedItemDto> = emptyList(),
+    // Seit v0.89.70: Verlauf/Weiterschauen über alle Quellen (auch gestreamte
+    // YouTube-Videos) und die neuesten Uploads der abonnierten Kanäle.
+    val watchHistory: List<LibraryVideoDto> = emptyList(),
+    val continueWatching: List<LibraryVideoDto> = emptyList(),
+    val channelUploads: List<LibraryVideoDto> = emptyList(),
 )
 
 @Serializable

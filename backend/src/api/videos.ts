@@ -26,6 +26,14 @@ import {
 } from "../import/pending-imports.js";
 import { subscribedChannelCondition } from "../feed/subscriptions.js";
 import type { MetadataExtractor } from "../import/metadata-extractor.js";
+import {
+  clearHistory,
+  listChannelUploads,
+  listContinueWatching,
+  listHistory,
+  removeFromHistory,
+} from "../library/history.js";
+import { deleteSeriesCompletely } from "../library/removal.js";
 import { hydrateFeedBatch } from "./feed.js";
 import { PICKS_POOL_LIMIT, pickSubscriptionMix } from "./library-picks.js";
 
@@ -259,10 +267,10 @@ export async function registerVideosRoutes(app: FastifyInstance, deps: VideosDep
     const watchLaterRows = deps.db
       .prepare("SELECT video_id AS id FROM watch_later ORDER BY added_at DESC LIMIT 50")
       .all() as { id: string }[];
+    // Altes Format (Feed-Karten) nur noch für ältere App-Versionen; neue
+    // Apps lesen watchHistory/continueWatching/channelUploads.
     const historyRows = deps.db
-      .prepare(
-        "SELECT video_id AS id FROM feed_items WHERE seen_at IS NOT NULL ORDER BY seen_at DESC LIMIT 30",
-      )
+      .prepare("SELECT video_id AS id FROM watch_history ORDER BY watched_at DESC LIMIT 30")
       .all() as { id: string }[];
 
     const mixDate = mixDateFor(Date.now());
@@ -289,7 +297,26 @@ export async function registerVideosRoutes(app: FastifyInstance, deps: VideosDep
       watchLater: hydrateFeedBatch(deps.db, watchLaterRows),
       history: hydrateFeedBatch(deps.db, historyRows),
       subscriptionPicks: hydrateFeedBatch(deps.db, subscriptionRows),
+      watchHistory: listHistory(deps.db),
+      continueWatching: listContinueWatching(deps.db),
+      channelUploads: listChannelUploads(deps.db, subscribedChannelCondition("v.channel_id")),
     };
+  });
+
+  // Verlauf pflegen: einzelne Einträge entfernen oder alles leeren. Der
+  // Wiedergabefortschritt bleibt dabei erhalten (Weiterschauen funktioniert).
+  app.delete<{ Params: { id: string } }>("/history/:id", async (req, reply) => {
+    removeFromHistory(deps.db, req.params.id);
+    return reply.code(204).send();
+  });
+
+  app.delete("/history", async () => ({ removed: clearHistory(deps.db) }));
+
+  // Serie samt allen Folgen vom Server löschen — DB-Zeilen und Dateien.
+  app.delete<{ Params: { id: string } }>("/series/:id", async (req, reply) => {
+    const removed = await deleteSeriesCompletely(deps.db, req.params.id);
+    if (removed === null) return reply.code(404).send({ error: "series not found" });
+    return { removedEpisodes: removed };
   });
 
   // Etappe 5: bewusster Offline-Flow. Der Server laedt die Datei on demand;

@@ -40,8 +40,8 @@ android {
         applicationId = "com.hikari.app"
         minSdk = 26
         targetSdk = 34   // was 36 in plan — same deviation
-        versionCode = 220
-        versionName = "0.89.69"
+        versionCode = 221
+        versionName = "0.89.70"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

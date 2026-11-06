@@ -103,9 +103,6 @@ class LibraryViewModel @Inject constructor(
     private val _coverEditState = MutableStateFlow<CoverEditState>(CoverEditState.Idle)
     val coverEditState: StateFlow<CoverEditState> = _coverEditState.asStateFlow()
 
-    private val _savedItems = MutableStateFlow<List<FeedItem>>(emptyList())
-    val savedItems: StateFlow<List<FeedItem>> = _savedItems.asStateFlow()
-
     private val _today = MutableStateFlow<TodayCountResponse?>(null)
     val today: StateFlow<TodayCountResponse?> = _today.asStateFlow()
 
@@ -115,9 +112,6 @@ class LibraryViewModel @Inject constructor(
     // Etappe 5: die Sammlung — Später ansehen + Verlauf.
     private val _watchLater = MutableStateFlow<List<FeedItem>>(emptyList())
     val watchLater: StateFlow<List<FeedItem>> = _watchLater.asStateFlow()
-
-    private val _history = MutableStateFlow<List<FeedItem>>(emptyList())
-    val history: StateFlow<List<FeedItem>> = _history.asStateFlow()
 
     /** Alle Serien — Auswahlliste für den Merge-Dialog im Serien-Detail. */
     private val _allSeries = MutableStateFlow<List<SeriesItemDto>>(emptyList())
@@ -214,10 +208,6 @@ class LibraryViewModel @Inject constructor(
 
     private fun loadBriefingExtras() {
         viewModelScope.launch {
-            runCatching { repo.fetchSaved() }
-                .onSuccess { _savedItems.value = it.distinctBy { item -> item.videoId } }
-        }
-        viewModelScope.launch {
             runCatching { repo.todayCount() }
                 .onSuccess { _today.value = it }
         }
@@ -228,10 +218,6 @@ class LibraryViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { repo.fetchWatchLater() }
                 .onSuccess { _watchLater.value = it.distinctBy { item -> item.videoId } }
-        }
-        viewModelScope.launch {
-            runCatching { repo.fetchOld() }
-                .onSuccess { _history.value = it.distinctBy { item -> item.videoId } }
         }
     }
 
@@ -327,6 +313,26 @@ class LibraryViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Verlauf kommt mit der Bibliothek (LibraryResponse.watchHistory). Sofort
+     * lokal entfernen, damit die Karte ohne Neuladen verschwindet; scheitert
+     * der Server-Call, zeigt das nächste Laden den echten Stand.
+     */
+    fun removeFromHistory(videoId: String) {
+        updateLibrary { it.copy(watchHistory = it.watchHistory.filterNot { v -> v.id == videoId }) }
+        viewModelScope.launch { runCatching { repo.removeFromHistory(videoId) } }
+    }
+
+    fun clearHistory() {
+        updateLibrary { it.copy(watchHistory = emptyList()) }
+        viewModelScope.launch { runCatching { repo.clearHistory() } }
+    }
+
+    private fun updateLibrary(transform: (LibraryResponse) -> LibraryResponse) {
+        val current = _uiState.value as? LibraryUiState.Success ?: return
+        _uiState.value = LibraryUiState.Success(transform(current.data))
     }
 
     fun removeWatchLater(videoId: String) {

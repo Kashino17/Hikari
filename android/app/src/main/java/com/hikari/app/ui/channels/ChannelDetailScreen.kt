@@ -1,10 +1,8 @@
 package com.hikari.app.ui.channels
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +10,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,6 +20,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -28,11 +28,9 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.StarBorder
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -42,7 +40,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -56,18 +56,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.BulkJobStatusDto
 import com.hikari.app.data.api.dto.ChannelVideoDto
 import com.hikari.app.data.api.dto.ImportResultDto
-import com.hikari.app.ui.imports.PendingImportRow
+import com.hikari.app.data.api.dto.MovieEntryDto
+import com.hikari.app.data.api.dto.SeriesGroupDto
+import com.hikari.app.ui.components.ConfirmDeleteDialog
 import com.hikari.app.ui.components.FallbackArtwork
+import com.hikari.app.ui.imports.PendingImportRow
 import com.hikari.app.ui.theme.HikariAmber
-import com.hikari.app.ui.theme.HikariAmberSoft
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
 import com.hikari.app.ui.theme.HikariDanger
@@ -78,19 +84,45 @@ import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 
 private fun fmtDur(sec: Int): String {
-    val m = sec / 60
+    val h = sec / 3600
+    val m = (sec % 3600) / 60
     val s = sec % 60
-    return "%d:%02d".format(m, s)
+    return if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%d:%02d".format(m, s)
+}
+
+/** „vor 3 Tagen" für Millisekunden-Zeitstempel — wie unter YouTube-Videos. */
+private fun relativeAge(ms: Long?, now: Long = System.currentTimeMillis()): String? {
+    if (ms == null || ms <= 0L) return null
+    val minutes = (now - ms) / 60_000
+    return when {
+        minutes < 1 -> "gerade eben"
+        minutes < 60 -> "vor $minutes Min."
+        minutes < 60 * 24 -> "vor ${minutes / 60} Std."
+        minutes < 60 * 24 * 2 -> "gestern"
+        minutes < 60 * 24 * 30 -> "vor ${minutes / (60 * 24)} Tagen"
+        minutes < 60 * 24 * 365 -> (minutes / (60 * 24 * 30)).let { if (it == 1L) "vor 1 Monat" else "vor $it Monaten" }
+        else -> (minutes / (60 * 24 * 365)).let { if (it == 1L) "vor 1 Jahr" else "vor $it Jahren" }
+    }
+}
+
+private fun fmtBytes(bytes: Long): String = when {
+    bytes >= 1_000_000_000L -> "%.1f GB".format(bytes / 1_000_000_000.0)
+    bytes >= 1_000_000L -> "${bytes / 1_000_000} MB"
+    else -> "${bytes / 1_000} KB"
 }
 
 @Composable
 fun ChannelDetailScreen(
     onBack: () -> Unit,
     onEditVideo: (String) -> Unit = {},
+    onPlayVideo: (videoId: String, title: String, channel: String) -> Unit = { _, _, _ -> },
+    onOpenSeries: (String) -> Unit = {},
+    onOpenMovie: (String) -> Unit = {},
     vm: ChannelDetailViewModel = hiltViewModel(),
 ) {
     val channel by vm.channel.collectAsState()
     val videos by vm.videos.collectAsState()
+    val manual by vm.manual.collectAsState()
     val loading by vm.loading.collectAsState()
     val error by vm.error.collectAsState()
     val syncing by vm.syncing.collectAsState()
@@ -106,10 +138,23 @@ fun ChannelDetailScreen(
     // When the channel is unsubscribed, leave the now-empty detail screen.
     LaunchedEffect(removed) { if (removed) onBack() }
 
+    // Zurück aus Serie/Film-Detail (dort kann gelöscht werden) → neu laden.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        var firstResume = true
+        val obs = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                if (firstResume) firstResume = false else vm.load()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(obs)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
+    }
+
     var deleteTarget by remember { mutableStateOf<ChannelVideoDto?>(null) }
-    var expandedVideo by remember { mutableStateOf<String?>(null) }
     var showUnsubscribe by remember { mutableStateOf(false) }
     var bulkExpanded by remember { mutableStateOf(false) }
+    val channelTitle = channel?.title.orEmpty()
 
     if (showUnsubscribe) {
         AlertDialog(
@@ -138,27 +183,13 @@ fun ChannelDetailScreen(
     }
 
     deleteTarget?.let { target ->
-        AlertDialog(
-            onDismissRequest = { deleteTarget = null },
-            containerColor = HikariBg,
-            title = { Text("Video deinstallieren?", color = HikariText) },
-            text = {
-                Text(
-                    "„${target.title}“ wird unwiderruflich entfernt — DB-Eintrag und Datei.",
-                    color = HikariTextMuted,
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    vm.deleteVideo(target.videoId)
-                    deleteTarget = null
-                }) { Text("Deinstallieren", color = HikariDanger) }
-            },
-            dismissButton = {
-                TextButton(onClick = { deleteTarget = null }) {
-                    Text("Abbrechen", color = HikariTextMuted)
-                }
-            },
+        ConfirmDeleteDialog(
+            title = "Video vom PC löschen?",
+            message = "„${target.title}“ wird endgültig gelöscht — vom PC und aus der App. " +
+                "Das lässt sich nicht rückgängig machen.",
+            confirmLabel = "Endgültig löschen",
+            onConfirm = { vm.deleteVideo(target.videoId) },
+            onDismiss = { deleteTarget = null },
         )
     }
 
@@ -179,26 +210,24 @@ fun ChannelDetailScreen(
             }
 
             item {
-                val approved = videos.count { it.decision == "approved" }
-                val rejected = videos.count { it.decision == "rejected" }
-                val processing = videos.count { it.decision == null }
                 val loadingCount = pending.count { it.status != "failed" }
+                val m = manual
                 val parts = buildList {
+                    if (m != null) {
+                        if (m.series.isNotEmpty()) add("${m.series.size} SERIEN")
+                        if (m.movies.isNotEmpty()) add("${m.movies.size} ${if (m.movies.size == 1) "FILM" else "FILME"}")
+                    }
                     add("${videos.size} VIDEOS")
                     if (loadingCount > 0) add("$loadingCount LÄDT")
-                    if (approved > 0) add("$approved OK")
-                    if (rejected > 0) add("$rejected ABG")
-                    if (processing > 0) add("$processing IN ARBEIT")
                 }
-                Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
-                    Text(
-                        parts.joinToString(" · "),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 10.sp, letterSpacing = 1.5.sp, fontFamily = FontFamily.Monospace,
-                        ),
-                        color = HikariTextFaint,
-                    )
-                }
+                Text(
+                    parts.joinToString(" · "),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 10.sp, letterSpacing = 1.5.sp, fontFamily = FontFamily.Monospace,
+                    ),
+                    color = HikariTextFaint,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                )
             }
 
             // Ergebnis-Karte des letzten Bulk-Imports (Sheet/Browser).
@@ -230,7 +259,7 @@ fun ChannelDetailScreen(
                         "Lade Videos…",
                         color = HikariTextFaint,
                         modifier = Modifier.fillMaxWidth().padding(48.dp),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        textAlign = TextAlign.Center,
                     )
                 }
             }
@@ -249,17 +278,62 @@ fun ChannelDetailScreen(
                 HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
             }
 
-            items(videos, key = { it.videoId }) { video ->
-                VideoRow(
-                    video = video,
-                    expanded = expandedVideo == video.videoId,
-                    onToggle = {
-                        expandedVideo = if (expandedVideo == video.videoId) null else video.videoId
-                    },
-                    onLongPress = { onEditVideo(video.videoId) },
-                    onDelete = { deleteTarget = video },
-                )
-                HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
+            val m = manual
+            if (m != null) {
+                // ── Manuell hinzugefügt: gegliedert wie Bibliothek/Downloads ──
+                if (m.series.isNotEmpty()) {
+                    item { ShelfTitle("Serien", m.series.size) }
+                    items(m.series.chunked(3), key = { row -> "s-" + row.first().id }) { row ->
+                        PosterRow {
+                            row.forEach { s ->
+                                SeriesPoster(
+                                    series = s,
+                                    onClick = { onOpenSeries(s.id) },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                            repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                        }
+                    }
+                }
+                if (m.movies.isNotEmpty()) {
+                    item { ShelfTitle("Filme", m.movies.size) }
+                    items(m.movies.chunked(3), key = { row -> "m-" + row.first().id }) { row ->
+                        PosterRow {
+                            row.forEach { movie ->
+                                MoviePoster(
+                                    movie = movie,
+                                    onClick = { onOpenMovie(movie.id) },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                            repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                        }
+                    }
+                }
+                if (m.singles.isNotEmpty()) {
+                    item { ShelfTitle("Einzelne Videos", m.singles.size) }
+                    items(m.singles, key = { it.videoId }) { video ->
+                        YouTubeVideoCard(
+                            video = video,
+                            channelTitle = null,
+                            onPlay = { onPlayVideo(video.videoId, video.title, channelTitle) },
+                            onEdit = { onEditVideo(video.videoId) },
+                            onDelete = { deleteTarget = video },
+                        )
+                    }
+                }
+            } else {
+                // ── YouTube-Kanal: großes Bild, Titel darunter, ⋮-Menü ──
+                items(videos, key = { it.videoId }) { video ->
+                    YouTubeVideoCard(
+                        video = video,
+                        channelTitle = channelTitle,
+                        onPlay = { onPlayVideo(video.videoId, video.title, channelTitle) },
+                        onEdit = { onEditVideo(video.videoId) },
+                        onDelete = { deleteTarget = video },
+                    )
+                }
             }
         }
 
@@ -277,6 +351,204 @@ fun ChannelDetailScreen(
                     .padding(horizontal = 20.dp, vertical = 16.dp),
             ) {
                 Text(msg, color = HikariText, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShelfTitle(title: String, count: Int) {
+    Row(
+        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(title, color = HikariText, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.size(8.dp))
+        Text(count.toString(), color = HikariTextFaint, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+    }
+}
+
+@Composable
+private fun PosterRow(content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        content = content,
+    )
+}
+
+@Composable
+private fun Poster(
+    title: String,
+    subtitle: String,
+    thumbnailUrl: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.clickable(onClick = onClick)) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(2f / 3f)
+                .clip(RoundedCornerShape(10.dp))
+                .background(HikariSurfaceHigh),
+        ) {
+            FallbackArtwork(title = title)
+            AsyncImage(
+                model = thumbnailUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+        Text(
+            title,
+            color = HikariText,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 6.dp),
+        )
+        Text(subtitle, color = HikariTextMuted, fontSize = 11.sp, maxLines = 1)
+    }
+}
+
+@Composable
+private fun SeriesPoster(series: SeriesGroupDto, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Poster(
+        title = series.title,
+        subtitle = "${series.episode_count} Folgen · ${fmtBytes(series.total_bytes)}",
+        thumbnailUrl = series.thumbnail_url,
+        onClick = onClick,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun MoviePoster(movie: MovieEntryDto, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Poster(
+        title = movie.title,
+        subtitle = "${movie.duration_seconds / 60} Min · ${fmtBytes(movie.size_bytes)}",
+        thumbnailUrl = movie.thumbnail_url,
+        onClick = onClick,
+        modifier = modifier,
+    )
+}
+
+/**
+ * Video wie bei YouTube: großes 16:9-Bild über die volle Breite, darunter Titel
+ * und Metazeile, rechts das ⋮-Menü (Bearbeiten, Löschen). Antippen spielt ab.
+ */
+@Composable
+private fun YouTubeVideoCard(
+    video: ChannelVideoDto,
+    channelTitle: String?,
+    onPlay: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onPlay)
+            .padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 14.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(end = 12.dp)
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(12.dp))
+                .background(HikariSurfaceHigh),
+        ) {
+            FallbackArtwork(title = video.title)
+            AsyncImage(
+                model = video.thumbnailUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+            Text(
+                fmtDur(video.durationSeconds),
+                color = Color.White,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp)
+                    .background(Color.Black.copy(alpha = 0.75f), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 5.dp, vertical = 2.dp),
+            )
+        }
+        Row(
+            modifier = Modifier.padding(top = 10.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    video.title,
+                    color = HikariText,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    lineHeight = 20.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                val meta = listOfNotNull(
+                    channelTitle?.takeIf { it.isNotBlank() },
+                    relativeAge(video.publishedAt ?: video.discoveredAt),
+                    video.downloadedBytes?.takeIf { it > 0 }?.let { "auf dem PC · ${fmtBytes(it)}" },
+                ).joinToString(" · ")
+                if (meta.isNotBlank()) {
+                    Text(
+                        meta,
+                        color = HikariTextMuted,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 3.dp),
+                    )
+                }
+            }
+            Box {
+                IconButton(onClick = { menuOpen = true }, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        Icons.Default.MoreVert,
+                        contentDescription = "Mehr",
+                        tint = HikariTextMuted,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+                DropdownMenu(
+                    expanded = menuOpen,
+                    onDismissRequest = { menuOpen = false },
+                    modifier = Modifier.background(HikariSurface),
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Bearbeiten", color = HikariText) },
+                        leadingIcon = {
+                            Icon(Icons.Default.Edit, null, tint = HikariTextMuted, modifier = Modifier.size(18.dp))
+                        },
+                        onClick = {
+                            menuOpen = false
+                            onEdit()
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Vom PC löschen", color = HikariDanger) },
+                        leadingIcon = {
+                            Icon(Icons.Default.Delete, null, tint = HikariDanger, modifier = Modifier.size(18.dp))
+                        },
+                        onClick = {
+                            menuOpen = false
+                            onDelete()
+                        },
+                    )
+                }
             }
         }
     }
@@ -393,153 +665,6 @@ private fun DetailHeader(
     }
     HorizontalDivider(color = HikariBorder, thickness = 0.5.dp)
 }
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun VideoRow(
-    video: ChannelVideoDto,
-    expanded: Boolean,
-    onToggle: () -> Unit,
-    onLongPress: () -> Unit,
-    onDelete: () -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .combinedClickable(onClick = onToggle, onLongClick = onLongPress)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-    ) {
-        Row(verticalAlignment = Alignment.Top) {
-            // 16:9 thumbnail, 120dp wide
-            Box(
-                modifier = Modifier
-                    .size(width = 120.dp, height = 68.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(HikariSurfaceHigh),
-            ) {
-                // Unterlage: fehlendes/fehlerhaftes Thumbnail wirkt gewollt.
-                FallbackArtwork(title = video.title)
-                AsyncImage(
-                    model = video.thumbnailUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
-                // Duration pill, bottom-right
-                Text(
-                    fmtDur(video.durationSeconds),
-                    color = Color.White,
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontFamily = FontFamily.Monospace),
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(4.dp)
-                        .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(4.dp))
-                        .padding(horizontal = 4.dp, vertical = 1.dp),
-                )
-            }
-
-            Spacer(Modifier.size(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    video.title,
-                    color = HikariText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = if (expanded) 4 else 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(Modifier.height(6.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    DecisionBadge(decision = video.decision, score = video.score)
-                    video.category?.let {
-                        Spacer(Modifier.size(6.dp))
-                        Text(
-                            it.uppercase(),
-                            color = HikariTextFaint,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 10.sp,
-                                letterSpacing = 1.sp,
-                                fontFamily = FontFamily.Monospace,
-                            ),
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.size(8.dp))
-
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(androidx.compose.foundation.shape.CircleShape)
-                    .background(HikariSurfaceHigh.copy(alpha = 0.5f))
-                    .clickable(onClick = onDelete),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Deinstallieren",
-                    tint = HikariTextMuted,
-                    modifier = Modifier.size(16.dp),
-                )
-            }
-        }
-
-        // Expanded reasoning section
-        if (expanded && !video.reasoning.isNullOrBlank()) {
-            Spacer(Modifier.height(10.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(HikariSurface, RoundedCornerShape(6.dp))
-                    .border(0.5.dp, HikariBorder, RoundedCornerShape(6.dp))
-                    .padding(12.dp),
-            ) {
-                Text(
-                    video.reasoning,
-                    color = HikariTextMuted,
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DecisionBadge(decision: String?, score: Int?) {
-    val (label, fg, bg, border) = when (decision) {
-        "approved" -> Quad(
-            "OK ${score ?: ""}".trim(),
-            HikariAmber,
-            HikariAmberSoft,
-            HikariAmber.copy(alpha = 0.3f),
-        )
-        "rejected" -> Quad(
-            "ABG ${score ?: ""}".trim(),
-            HikariDanger,
-            HikariDanger.copy(alpha = 0.12f),
-            HikariDanger.copy(alpha = 0.3f),
-        )
-        else -> Quad("…", HikariTextMuted, HikariSurfaceHigh, HikariBorder)
-    }
-    Row(
-        modifier = Modifier
-            .background(bg, RoundedCornerShape(20.dp))
-            .border(0.5.dp, border, RoundedCornerShape(20.dp))
-            .padding(horizontal = 8.dp, vertical = 3.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
-    ) {
-        when (decision) {
-            "approved" -> Icon(Icons.Default.Check, null, tint = fg, modifier = Modifier.size(10.dp))
-            "rejected" -> Icon(Icons.Default.Close, null, tint = fg, modifier = Modifier.size(10.dp))
-            else -> {}
-        }
-        Text(label, color = fg, style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp))
-    }
-}
-
-private data class Quad(val a: String, val b: Color, val c: Color, val d: Color)
 
 /**
  * Kompakte Zusammenfassung des letzten Bulk-Imports über der Liste.

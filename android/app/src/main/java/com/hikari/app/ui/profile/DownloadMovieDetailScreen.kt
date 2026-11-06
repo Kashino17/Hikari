@@ -76,6 +76,23 @@ fun DownloadMovieDetailScreen(
     val downloadProgress by viewModel.downloadProgress.collectAsState()
     val positions by viewModel.playbackPositions.collectAsState()
     val actionError by viewModel.actionError.collectAsState()
+    var confirmDelete by remember { mutableStateOf(false) }
+
+    if (confirmDelete) {
+        val title = (state as? DownloadDetailUiState.Movie)?.data?.title.orEmpty()
+        ConfirmDeleteDialog(
+            title = "Film vom PC löschen?",
+            message = "„$title“ wird endgültig gelöscht — vom PC und von diesem Handy. " +
+                "Das lässt sich nicht rückgängig machen.",
+            confirmLabel = "Endgültig löschen",
+            onConfirm = {
+                (state as? DownloadDetailUiState.Movie)?.data?.id?.let { id ->
+                    viewModel.deleteFromServer(id, onDone = onBack)
+                }
+            },
+            onDismiss = { confirmDelete = false },
+        )
+    }
 
     Box(Modifier.fillMaxSize().background(HikariBg)) {
         when (val s = state) {
@@ -112,6 +129,7 @@ fun DownloadMovieDetailScreen(
                 onDownload = { viewModel.downloadMovie(s.data) },
                 onRemoveLocal = { viewModel.removeLocal(s.data.id) },
                 onDismissError = viewModel::clearActionError,
+                onDeleteFromServer = { confirmDelete = true },
             )
         }
     }
@@ -129,6 +147,7 @@ private fun MovieDetailContent(
     onDownload: () -> Unit,
     onRemoveLocal: () -> Unit,
     onDismissError: () -> Unit,
+    onDeleteFromServer: () -> Unit,
 ) {
     val progress = if (movie.durationSeconds > 0) {
         (progressSeconds(position, movie.serverProgressSeconds) / movie.durationSeconds)
@@ -179,6 +198,23 @@ private fun MovieDetailContent(
                 progress = downloadProgress,
                 onDownload = onDownload,
                 onRemoveLocal = onRemoveLocal,
+            )
+        }
+
+        item {
+            Text(
+                "Vom PC löschen",
+                color = HikariDanger,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 4.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .border(1.dp, HikariDanger.copy(alpha = 0.4f), RoundedCornerShape(6.dp))
+                    .clickable(onClick = onDeleteFromServer)
+                    .padding(vertical = 12.dp),
             )
         }
 

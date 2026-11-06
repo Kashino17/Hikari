@@ -120,6 +120,19 @@ class FeedRepository @Inject constructor(
 
     suspend fun fetchWatchLater(): List<FeedItem> = api.getWatchLater().map { it.toDomain() }
 
+    /** Serie mit allen Folgen vom PC löschen. Wirft bei Fehlern — der Aufrufer meldet sie. */
+    suspend fun deleteSeries(seriesId: String) = api.deleteSeries(seriesId)
+
+    /** Video endgültig vom PC löschen (DB + Datei). Wirft bei Fehlern. */
+    suspend fun deleteVideoFromServer(videoId: String) {
+        api.deleteVideo(videoId)
+        dao.delete(videoId)
+    }
+
+    suspend fun removeFromHistory(videoId: String) = api.removeFromHistory(videoId)
+
+    suspend fun clearHistory() = api.clearHistory()
+
     suspend fun addWatchLater(videoId: String) {
         runCatching { api.addWatchLater(videoId) }
     }

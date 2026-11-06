@@ -310,6 +310,48 @@ class DownloadDetailViewModel @Inject constructor(
         viewModelScope.launch { localDownloads.delete(videoId) }
     }
 
+    private val _deleting = MutableStateFlow(false)
+    val deleting: StateFlow<Boolean> = _deleting.asStateFlow()
+
+    /** Eine Folge/einen Film endgültig löschen: vom PC und vom Handy. */
+    fun deleteFromServer(videoId: String, onDone: () -> Unit = {}) {
+        if (_deleting.value) return
+        viewModelScope.launch {
+            _deleting.value = true
+            _actionError.value = null
+            runCatching { feedRepo.deleteVideoFromServer(videoId) }
+                .onSuccess {
+                    runCatching { localDownloads.delete(videoId) }
+                    val current = _state.value
+                    if (current is DownloadDetailUiState.Series) {
+                        _state.value = DownloadDetailUiState.Series(
+                            current.data.copy(episodes = current.data.episodes.filterNot { it.id == videoId }),
+                        )
+                    }
+                    onDone()
+                }
+                .onFailure { _actionError.value = "Löschen fehlgeschlagen — ist der PC erreichbar?" }
+            _deleting.value = false
+        }
+    }
+
+    /** Ganze Serie mit allen Folgen endgültig löschen: vom PC und vom Handy. */
+    fun deleteSeriesFromServer(onDone: () -> Unit) {
+        val detail = (_state.value as? DownloadDetailUiState.Series)?.data ?: return
+        if (_deleting.value) return
+        viewModelScope.launch {
+            _deleting.value = true
+            _actionError.value = null
+            runCatching { feedRepo.deleteSeries(detail.id) }
+                .onSuccess {
+                    detail.episodes.forEach { runCatching { localDownloads.delete(it.id) } }
+                    onDone()
+                }
+                .onFailure { _actionError.value = "Löschen fehlgeschlagen — ist der PC erreichbar?" }
+            _deleting.value = false
+        }
+    }
+
     fun clearActionError() {
         _actionError.value = null
     }

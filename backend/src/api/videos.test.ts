@@ -51,14 +51,13 @@ describe("videos API", () => {
           emotional_manipulation, reasoning, model_used, scored_at, decision)
          VALUES (?, 80, 'x', 1, 9, 0, 'ok', 'mock', 0, 'approved')`,
       ).run(id);
-      db.prepare(
-        "INSERT INTO feed_items (video_id, added_to_feed_at) VALUES (?, 0)",
-      ).run(id);
+      db.prepare("INSERT INTO feed_items (video_id, added_to_feed_at) VALUES (?, 0)").run(id);
     };
     seedVideo("wl1");
     seedVideo("seen1");
     db.prepare("INSERT INTO watch_later (video_id, added_at) VALUES ('wl1', 1000)").run();
-    db.prepare("UPDATE feed_items SET seen_at = 2000 WHERE video_id = 'seen1'").run();
+    // Verlauf = watch_history (seit v0.89.70), nicht mehr feed_items.seen_at.
+    db.prepare("INSERT INTO watch_history (video_id, watched_at) VALUES ('seen1', 2000)").run();
 
     const dir = mkdtempSync(join(tmpdir(), "hikari-lib-"));
     const app = Fastify();

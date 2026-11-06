@@ -34,7 +34,9 @@ function dropColumnIfExists(db: Database.Database, table: string, column: string
   const cols = db.prepare(`PRAGMA table_info(${table})`).all() as ColumnInfo[];
   if (!cols.some((c) => c.name === column)) return;
   const indexes = db
-    .prepare("SELECT name, sql FROM sqlite_master WHERE type = 'index' AND tbl_name = ? AND sql IS NOT NULL")
+    .prepare(
+      "SELECT name, sql FROM sqlite_master WHERE type = 'index' AND tbl_name = ? AND sql IS NOT NULL",
+    )
     .all(table) as { name: string; sql: string }[];
   const mentions = new RegExp(`\\b${column}\\b`);
   for (const idx of indexes) {
@@ -179,7 +181,9 @@ export function applyMigrations(db: Database.Database): void {
       updated_at INTEGER NOT NULL
     )
   `);
-  db.exec("CREATE INDEX IF NOT EXISTS idx_pending_imports_started ON pending_imports(started_at DESC)");
+  db.exec(
+    "CREATE INDEX IF NOT EXISTS idx_pending_imports_started ON pending_imports(started_at DESC)",
+  );
   // Request-Header des mitgelesenen Streams, damit ein gescheiterter Import
   // per POST /imports/:id/retry ohne die App erneut geladen werden kann.
   addColumnIfMissing(db, "pending_imports", "referer", "TEXT");
@@ -211,6 +215,16 @@ export function applyMigrations(db: Database.Database): void {
   dropColumnIfExists(db, "feed_items", "is_pre_clipper");
   dropColumnIfExists(db, "channels", "auto_approve");
 
+  // Verlauf: ein Eintrag pro tatsächlich angeschautem Video (siehe
+  // library/history.ts). Löst feed_items.seen_at ab, das nicht mehr gesetzt wird.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS watch_history (
+      video_id TEXT PRIMARY KEY REFERENCES videos(id) ON DELETE CASCADE,
+      watched_at INTEGER NOT NULL
+    )
+  `);
+  db.exec("CREATE INDEX IF NOT EXISTS idx_watch_history_at ON watch_history(watched_at DESC)");
+
   // Versionierte Einmal-Migrationen (PRAGMA user_version). Läuft NACH dem
   // status-Backfill oben, damit aktive Bestandskanäle schon als Abo zählen.
   const version = db.pragma("user_version", { simple: true }) as number;
@@ -218,4 +232,27 @@ export function applyMigrations(db: Database.Database): void {
     migrateToSubscriptionsOnly(db);
     db.pragma(`user_version = ${SUBS_ONLY_MIGRATION_VERSION}`);
   }
+  if (version < HISTORY_MIGRATION_VERSION) {
+    migrateHistoryAndSaved(db);
+    db.pragma(`user_version = ${HISTORY_MIGRATION_VERSION}`);
+  }
+}
+
+/**
+ * Migration 2: Verlauf aus dem echten Wiedergabefortschritt vorbefüllen und
+ * die abgeschaffte Speichern-Funktion aufräumen. Gespeicherte Videos hingen
+ * sonst für immer in der Bibliothek, ohne dass die App sie noch entfernen kann.
+ */
+const HISTORY_MIGRATION_VERSION = 2;
+function migrateHistoryAndSaved(db: Database.Database): void {
+  db.transaction(() => {
+    db.exec(`
+      INSERT OR IGNORE INTO watch_history (video_id, watched_at)
+      SELECT vp.video_id, vp.updated_at
+        FROM video_progress vp
+        JOIN videos v ON v.id = vp.video_id
+       WHERE vp.progress_seconds >= 10
+    `);
+    db.exec("UPDATE feed_items SET saved = 0 WHERE saved = 1");
+  })();
 }

@@ -2,6 +2,7 @@ package com.hikari.app.ui.library.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +36,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hikari.app.domain.genre.Genre
+import com.hikari.app.ui.theme.HikariAmber
+import com.hikari.app.ui.theme.HikariAmberSoft
+import com.hikari.app.ui.theme.HikariSurface
+import com.hikari.app.ui.theme.HikariText
+import com.hikari.app.ui.theme.HikariTextMuted
 
 @Composable
 fun MoodDiscoverySection(
@@ -43,7 +49,9 @@ fun MoodDiscoverySection(
     genreCounts: Map<Genre, Int> = emptyMap(),
     modifier: Modifier = Modifier,
 ) {
-    val genres = Genre.entries.filter { it != Genre.ALL }
+    // Leere Genres sind nur Rauschen — Kacheln ohne Inhalt führten ins Leere.
+    val genres = Genre.entries.filter { it != Genre.ALL && (genreCounts[it] ?: 0) > 0 }
+    if (genres.isEmpty()) return
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -106,10 +114,11 @@ fun MoodDiscoverySection(
 
         Spacer(Modifier.height(4.dp))
 
-        // Horizontale Reihe eleganter Gradient-Kacheln
+        // Ruhige Chips statt greller Verlaufskacheln; die Genre-Farbe lebt nur
+        // im Symbol, damit die Bereiche trotzdem unterscheidbar bleiben.
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(genres, key = { it.id }) { genre ->
                 val isSelected = genre == selectedGenre
@@ -137,75 +146,53 @@ fun MoodGenreTile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val gradientBrush = Brush.linearGradient(
-        colors = listOf(
-            Color(0xFF141316),
-            genre.accentColor.copy(alpha = if (isSelected) 0.5f else 0.28f),
-            genre.accentColor.copy(alpha = if (isSelected) 0.8f else 0.45f),
-        ),
-    )
-
-    Surface(
+    val shape = RoundedCornerShape(50)
+    Row(
         modifier = modifier
-            .width(136.dp)
-            .height(84.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick),
-        color = Color(0xFF141316),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(
-            width = if (isSelected) 1.5.dp else 0.7.dp,
-            color = if (isSelected) genre.accentColor else genre.accentColor.copy(alpha = 0.25f),
-        ),
-        shadowElevation = if (isSelected) 8.dp else 2.dp,
+            .height(40.dp)
+            .clip(shape)
+            .background(if (isSelected) HikariAmberSoft else HikariSurface)
+            .border(
+                BorderStroke(
+                    width = 1.dp,
+                    color = if (isSelected) HikariAmber else Color.White.copy(alpha = 0.06f),
+                ),
+                shape,
+            )
+            .clickable(onClick = onClick)
+            .padding(start = 6.dp, end = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .background(gradientBrush)
-                .padding(10.dp),
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(genre.accentColor.copy(alpha = 0.16f)),
+            contentAlignment = Alignment.Center,
         ) {
-            // Minimalistisches SVG Vektor-Icon oben rechts
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(28.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = if (isSelected) 0.18f else 0.08f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = genre.icon,
-                    contentDescription = null,
-                    tint = if (isSelected) Color.White else genre.accentColor,
-                    modifier = Modifier.size(16.dp),
-                )
-            }
-
-            // Titel & Zähler unten links
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth(0.85f),
-            ) {
-                Text(
-                    text = genre.title,
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 14.sp,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (count > 0) {
-                    Text(
-                        text = "$count Titel",
-                        color = Color.White.copy(alpha = 0.75f),
-                        fontSize = 9.5.sp,
-                        fontWeight = FontWeight.Medium,
-                    )
-                }
-            }
+            Icon(
+                imageVector = genre.icon,
+                contentDescription = null,
+                tint = genre.accentColor,
+                modifier = Modifier.size(15.dp),
+            )
+        }
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = genre.title,
+            color = if (isSelected) HikariAmber else HikariText,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (count > 0) {
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text = count.toString(),
+                color = HikariTextMuted,
+                fontSize = 12.sp,
+            )
         }
     }
 }
