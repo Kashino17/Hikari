@@ -66,6 +66,18 @@ class VoiceFormatTest {
     }
 
     @Test
+    fun `Benachrichtigung kürzt die Kurzfassung auf zwei Sätze`() {
+        val long = summary.copy(summary = "Erster Satz mit 18.000 Euro. Zweiter Satz! Dritter Satz. Vierter.")
+        val text = VoiceFormat.notificationText(long)
+        assertTrue(text.startsWith("Erster Satz mit 18.000 Euro. Zweiter Satz!\n\nAufgaben"))
+        assertFalse(text.contains("Dritter"))
+        assertEquals(
+            "Termin am 3. März um 10 Uhr. Danach Abnahme.",
+            VoiceFormat.firstSentences("Termin am 3. März um 10 Uhr. Danach Abnahme. Rest.", 2),
+        )
+    }
+
+    @Test
     fun `Dateinamen werden gesäubert`() {
         assertEquals("PTT-20261106-WA0012.opus", VoiceFormat.safeFileName("PTT-20261106-WA0012.opus", 0))
         assertEquals("x.opus", VoiceFormat.safeFileName("../../etc/x.opus", 0))

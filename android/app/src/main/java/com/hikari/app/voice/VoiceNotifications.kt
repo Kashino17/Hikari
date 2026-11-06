@@ -61,8 +61,9 @@ object VoiceNotifications {
         ensureChannels(ctx)
         return NotificationCompat.Builder(ctx, CH_PROGRESS)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("Hikari hört zu")
-            .setContentText(text)
+            // Eingeklappt zeigt Android nur Titel und Balken — der Status gehört in den Titel.
+            .setContentTitle(text)
+            .setContentText("Hikari fasst deine Sprachnachrichten zusammen")
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setSilent(true)

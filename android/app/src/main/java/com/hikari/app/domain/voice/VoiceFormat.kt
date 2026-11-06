@@ -69,11 +69,21 @@ object VoiceFormat {
         section("Kernpunkte", summary.points)
     }
 
-    /** Text für die aufgeklappte Benachrichtigung: kurz halten, Aufgaben zuerst. */
+    /**
+     * Text für die aufgeklappte Benachrichtigung. Android kappt nach rund zehn
+     * Zeilen — darum nur die ersten zwei Sätze, damit Aufgaben und Fragen
+     * sichtbar bleiben. Alles Weitere steht in der App.
+     */
     fun notificationText(summary: VoiceSummaryDto): String = buildString {
-        append(summary.summary.trim())
+        append(firstSentences(summary.summary, 2))
         section("Aufgaben", summary.todos)
         section("Offene Fragen", summary.questions)
+    }
+
+    /** Die ersten [n] Sätze; "18.000 Euro" und "am 3. März" sind kein Satzende. */
+    fun firstSentences(text: String, n: Int): String {
+        val parts = text.trim().split(Regex("(?<=[^0-9][.!?])\\s+(?=[A-ZÄÖÜ0-9])"))
+        return parts.take(n).joinToString(" ").trim()
     }
 
     private fun StringBuilder.section(title: String, items: List<String>) {

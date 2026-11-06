@@ -64,7 +64,8 @@ Fasse auf Deutsch zusammen, sachlich und konkret, egal in welcher Sprache gespro
 - todos: was ich konkret tun soll ("Kalkulation bis Freitag schicken"). Nur was wirklich gesagt wurde.
 - dates: jeder Termin, jede Frist, jeder Betrag, jede Zahl mit Kontext ("Dienstag 10 Uhr: Termin mit Kunde München").
 - questions: Fragen, auf die er eine Antwort von mir erwartet.
-Erfinde nichts. Das Transkript kann Hörfehler enthalten: bei offensichtlichen Fehlern das Gemeinte nehmen, bei Unklarem lieber weglassen.
+Erfinde nichts. Stellt er eine Frage oder lässt mich entscheiden, ist das noch keine Entscheidung: dann gehört es zu questions, nicht als Tatsache in summary.
+Das Transkript kann Hörfehler enthalten: bei offensichtlichen Fehlern das Gemeinte nehmen, bei Unklarem lieber weglassen.
 Leere Listen sind richtig, wenn nichts davon vorkommt. Antworte NUR mit dem JSON-Objekt.`;
 
 const CHUNK_SYSTEM = `Du bekommst einen Abschnitt aus dem automatischen Transkript von WhatsApp-Sprachnachrichten eines Geschäftspartners.
