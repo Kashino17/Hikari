@@ -497,6 +497,20 @@ describe("GET /music/audio/:videoId", () => {
     }
   });
 
+  it("altersbeschränkte Songs: nach dem ersten Fehlschlag sofort 451 ohne yt-dlp", async () => {
+    const ytDlp = vi
+      .fn()
+      .mockRejectedValue(new Error("ERROR: [youtube] x: Sign in to confirm your age."));
+    const app = await makeApp({ ytDlp, fetchImpl: vi.fn() });
+    const first = await app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
+    expect(first.statusCode).toBe(502);
+    const calls = ytDlp.mock.calls.length;
+    const second = await app.inject({ method: "GET", url: "/music/audio/dQw4w9WgXcQ" });
+    expect(second.statusCode).toBe(451);
+    expect(ytDlp.mock.calls.length).toBe(calls);
+    await app.close();
+  });
+
   it("shares the stream URL cache with /music/stream", async () => {
     const ytDlp = vi.fn().mockResolvedValue({ stdout: "https://cdn.example/a.m4a", stderr: "" });
     const fetchImpl = vi.fn().mockResolvedValue(upstream(200, "X"));

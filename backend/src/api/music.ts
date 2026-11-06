@@ -829,6 +829,18 @@ export async function registerMusicRoutes(
     ? deps.streamCachePath.replace(/\.json$/, "") + ".combo.json"
     : undefined;
   const comboSongs = loadComboSongs(comboSongsPath);
+
+  /**
+   * Altersbeschränkte Songs („Sign in to confirm your age"): ohne YouTube-
+   * Anmeldung liefert KEIN Client sie aus, auch keine andere Version (explicit-
+   * Tracks sind über alle Uploads gesperrt, geprüft 07.11.2026). Gemerkt, damit
+   * jeder weitere Versuch sofort mit 451 endet statt yt-dlp erneut anzuwerfen.
+   */
+  const ageRestricted = new Set<string>();
+  const noteResolveError = (videoId: string, err: unknown) => {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/confirm your age|age[- ]restricted/i.test(msg)) ageRestricted.add(videoId);
+  };
   const rememberCombo = (videoId: string) => {
     if (comboSongs.has(videoId)) return;
     comboSongs.add(videoId);
@@ -900,6 +912,7 @@ export async function registerMusicRoutes(
       scheduleStreamCachePersist();
       return url;
     } catch (err) {
+      noteResolveError(videoId, err);
       app.log.warn(
         { videoId, err: err instanceof Error ? err.message.slice(0, 500) : String(err) },
         "combo resolve failed",
@@ -935,6 +948,7 @@ export async function registerMusicRoutes(
       scheduleStreamCachePersist();
       return url;
     } catch (err) {
+      noteResolveError(videoId, err);
       // Grund sichtbar machen: yt-dlp-Fehler wurden hier bisher verschluckt —
       // die 502-Welle vom 18.08. war deshalb nur per Raten diagnostizierbar.
       app.log.warn(
@@ -1050,6 +1064,9 @@ export async function registerMusicRoutes(
     // während einer Drossel-Welle.
     if (audioQueue?.isDone(videoId)) {
       return sendLocalAudio(req, reply, audioQueue.filePath(videoId));
+    }
+    if (ageRestricted.has(videoId)) {
+      return reply.code(451).send({ error: "age restricted — needs YouTube sign-in" });
     }
     if (waveUntil > now()) {
       const retryAfterS = Math.ceil((waveUntil - now()) / 1000);
