@@ -10,7 +10,7 @@ import {
   saveStreamCacheAsync,
   saveStreamCacheSync,
 } from "../stream/url-cache.js";
-import { runPreferEmbedded, runYtDlp } from "../yt-dlp/client.js";
+import { YT_VIDEO_CLIENT_CHAIN, runPreferEmbedded, runYtDlp } from "../yt-dlp/client.js";
 
 // YouTube-IDs sind exakt 11 Zeichen — manuell importierte Videos tragen
 // dagegen eine praefixierte interne ID ("voe_q33qerdkmle2",
@@ -64,10 +64,7 @@ export interface StreamDeps {
 /** Serielle Vorauflösung: wärmt Stream-URLs, bevor der Player sie braucht. */
 export type PrefetchStreams = (videoIds: string[]) => void;
 
-export function registerStreamRoutes(
-  app: FastifyInstance,
-  deps: StreamDeps = {},
-): PrefetchStreams {
+export function registerStreamRoutes(app: FastifyInstance, deps: StreamDeps = {}): PrefetchStreams {
   const ytDlp = deps.ytDlp ?? runYtDlp;
   const now = deps.now ?? Date.now;
   const cache = loadStreamCache(deps.streamCachePath, STREAM_CACHE_TTL_MS);
@@ -108,8 +105,17 @@ export function registerStreamRoutes(
       // andere raus → 403. Die NAT-IPv4 ist stabil (siehe music.ts).
       const result = await runPreferEmbedded(
         ytDlp,
-        ["--no-playlist", "-4", "-f", VIDEO_FORMAT, "-g", `https://www.youtube.com/watch?v=${videoId}`],
+        [
+          "--no-playlist",
+          "-4",
+          "-f",
+          VIDEO_FORMAT,
+          "-g",
+          `https://www.youtube.com/watch?v=${videoId}`,
+        ],
         { timeoutMs: 45_000, maxRetries: 1 },
+        undefined,
+        YT_VIDEO_CLIENT_CHAIN,
       );
       const url = result.stdout.trim().split("\n")[0];
       if (!url?.startsWith("http")) return undefined;

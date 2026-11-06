@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { openMediaStream } from "../stream/proxy.js";
-import { runPreferEmbedded, runYtDlp } from "../yt-dlp/client.js";
+import { YT_VIDEO_CLIENT_CHAIN, runPreferEmbedded, runYtDlp } from "../yt-dlp/client.js";
 
 export interface DownloadResult {
   filePath: string;
@@ -37,6 +37,8 @@ export async function downloadVideo(opts: {
       `https://www.youtube.com/watch?v=${opts.videoId}`,
     ],
     { timeoutMs: 60_000, maxRetries: 1 },
+    undefined,
+    YT_VIDEO_CLIENT_CHAIN,
   );
   const url = result.stdout.trim().split("\n")[0];
   if (!url?.startsWith("http") || url.includes(".m3u8") || url.includes("/manifest/")) {

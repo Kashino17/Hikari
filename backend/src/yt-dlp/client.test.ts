@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ExecaReturnValue } from "execa";
-import { runYtDlp, isRateLimited, isRetryableYtDlpError } from "./client.js";
+import {
+  YT_VIDEO_CLIENT_CHAIN,
+  isRateLimited,
+  isRetryableYtDlpError,
+  runPreferEmbedded,
+  runYtDlp,
+} from "./client.js";
 
 vi.mock("execa", () => ({
   execa: vi.fn(),
@@ -81,5 +87,48 @@ describe("yt-dlp error classification", () => {
     expect(isRetryableYtDlpError({ stderr: "getaddrinfo ENOTFOUND" })).toBe(true);
     expect(isRetryableYtDlpError(new Error("Video unavailable"))).toBe(false);
     expect(isRetryableYtDlpError(new Error("age-restricted"))).toBe(false);
+  });
+});
+
+describe("runPreferEmbedded mit Client-Reihenfolge", () => {
+  const clientOf = (args: string[]) =>
+    args.find((a) => a.startsWith("youtube:player_client="))?.split("=")[1] ?? "default";
+
+  it("Videos: erst tv_simply, dann web_embedded, dann Default", async () => {
+    const tried: string[] = [];
+    const run = async (args: string[]) => {
+      tried.push(clientOf(args));
+      // Nur der Default-Client liefert hier eine URL.
+      return { stdout: clientOf(args) === "default" ? "https://x" : "", stderr: "" };
+    };
+    const r = await runPreferEmbedded(
+      run,
+      ["-g", "u"],
+      undefined,
+      undefined,
+      YT_VIDEO_CLIENT_CHAIN,
+    );
+    expect(tried).toEqual(["tv_simply", "web_embedded", "default"]);
+    expect(r.stdout).toBe("https://x");
+  });
+
+  it("nimmt den ersten Client mit Ergebnis und bricht dort ab", async () => {
+    const tried: string[] = [];
+    const run = async (args: string[]) => {
+      tried.push(clientOf(args));
+      return { stdout: "https://tv", stderr: "" };
+    };
+    await runPreferEmbedded(run, ["-g", "u"], undefined, undefined, YT_VIDEO_CLIENT_CHAIN);
+    expect(tried).toEqual(["tv_simply"]);
+  });
+
+  it("ohne Kette bleibt es bei web_embedded (Musik)", async () => {
+    const tried: string[] = [];
+    const run = async (args: string[]) => {
+      tried.push(clientOf(args));
+      return { stdout: "https://a", stderr: "" };
+    };
+    await runPreferEmbedded(run, ["-g", "u"]);
+    expect(tried).toEqual(["web_embedded"]);
   });
 });

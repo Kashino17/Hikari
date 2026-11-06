@@ -35,9 +35,19 @@ export interface RunYtDlpOptions {
 // Bevorzugter Player-Client fürs Stream-URL-Auflösen: WEB_EMBEDDED_PLAYER-URLs
 // erlauben (mit Referer/Origin-Headern) als einzige volle Range-Zugriffe —
 // googlevideo kappt URLs aller anderen Clients seit 08/2026 nach ~768 KiB (403).
-export const YT_EMBEDDED_CLIENT_ARGS = [
-  "--extractor-args",
-  "youtube:player_client=web_embedded",
+export const YT_EMBEDDED_CLIENT_ARGS = ["--extractor-args", "youtube:player_client=web_embedded"];
+
+/**
+ * Videos (kombiniertes mp4, itag 18): seit 11/2026 liefert web_embedded nur
+ * noch URLs, die googlevideo mit 403 ablehnt (PO-Token-Pflicht der Web-
+ * Clients); android_vr wird nach dem ersten Block gekappt. tv_simply liefert
+ * voll rangebare URLs ohne Token — gemessen 07.11.2026 mit yt-dlp 2026.10.26:
+ * 4-MiB-Blöcke am Anfang, in der Mitte und am Ende alle 206.
+ * tv_simply hat KEINE reinen Audio-Formate — Musik bleibt bei web_embedded.
+ */
+export const YT_VIDEO_CLIENT_CHAIN: readonly (readonly string[])[] = [
+  ["--extractor-args", "youtube:player_client=tv_simply"],
+  YT_EMBEDDED_CLIENT_ARGS,
 ];
 
 /**
@@ -56,12 +66,16 @@ export async function runPreferEmbedded(
   args: string[],
   opts?: RunYtDlpOptions,
   isUsable: (result: YtDlpResult) => boolean = (r) => r.stdout.trim().length > 0,
+  clientChain: readonly (readonly string[])[] = [YT_EMBEDDED_CLIENT_ARGS],
 ): Promise<YtDlpResult> {
-  try {
-    const result = await run([...YT_EMBEDDED_CLIENT_ARGS, ...args], opts);
-    if (isUsable(result)) return result;
-  } catch {
-    // weiter mit Default-Clients
+  // Clients der Reihe nach; der erste mit brauchbarem Ergebnis gewinnt.
+  for (const clientArgs of clientChain) {
+    try {
+      const result = await run([...clientArgs, ...args], opts);
+      if (isUsable(result)) return result;
+    } catch {
+      // nächster Client
+    }
   }
   return run(args, opts);
 }
@@ -122,10 +136,7 @@ export function isRetryableYtDlpError(err: unknown): boolean {
  * Non-transient failures (private video, age-gate, bad URL) throw immediately
  * as YtDlpError; no wasted retries, no harder throttle.
  */
-export async function runYtDlp(
-  args: string[],
-  opts: RunYtDlpOptions = {},
-): Promise<YtDlpResult> {
+export async function runYtDlp(args: string[], opts: RunYtDlpOptions = {}): Promise<YtDlpResult> {
   const { timeoutMs = DEFAULT_TIMEOUT_MS, maxRetries = 2, sleep = defaultSleep } = opts;
 
   let lastErr: unknown;
