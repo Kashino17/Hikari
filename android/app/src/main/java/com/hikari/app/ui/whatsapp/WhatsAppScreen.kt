@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NotificationsActive
@@ -62,6 +63,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -99,6 +101,8 @@ import com.hikari.app.ui.theme.HikariSurfaceHigh
 import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
+import com.hikari.app.ui.voice.VoiceNotesTab
+import com.hikari.app.ui.voice.VoiceViolet
 import com.hikari.app.whatsapp.WhatsAppNotificationListenerService
 import java.io.File
 import java.text.SimpleDateFormat
@@ -110,7 +114,8 @@ private val WhatsAppGreenDark = Color(0xFF075E54)
 private val WhatsAppGreenSoft = Color(0x2625D366)
 private val DeletedRedSoft = Color(0x26F87171)
 
-private enum class WhatsAppTab {
+enum class WhatsAppTab {
+    VOICE,
     DELETED,
     EDITED,
     TOOLS,
@@ -120,6 +125,8 @@ private enum class WhatsAppTab {
 @Composable
 fun WhatsAppScreen(
     onBack: () -> Unit,
+    onOpenVoiceJob: (String) -> Unit = {},
+    initialTab: WhatsAppTab = WhatsAppTab.DELETED,
     vm: WhatsAppViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -130,7 +137,8 @@ fun WhatsAppScreen(
     val searchQuery by vm.searchQuery.collectAsState()
     val chatAnalysis by vm.chatAnalysis.collectAsState()
 
-    var activeTab by remember { mutableStateOf(WhatsAppTab.DELETED) }
+    // Saveable: nach dem Zurück aus einer Zusammenfassung bleibt der Tab offen.
+    var activeTab by rememberSaveable { mutableStateOf(initialTab) }
     var showInfoSheet by remember { mutableStateOf(false) }
     var hasNotificationAccess by remember {
         mutableStateOf(WhatsAppNotificationListenerService.isNotificationAccessGranted(context))
@@ -183,7 +191,8 @@ fun WhatsAppScreen(
             )
 
             // ── Berechtigungs-Banner (falls Benachrichtigungszugriff noch fehlt) ──
-            if (!hasNotificationAccess) {
+            // Sprachnachrichten brauchen den Wächter nicht — dort kein Banner/Statistik.
+            if (!hasNotificationAccess && activeTab != WhatsAppTab.VOICE) {
                 PermissionSetupBanner(
                     onOpenSettings = {
                         val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
@@ -195,7 +204,7 @@ fun WhatsAppScreen(
             }
 
             // ── Kompakte Statistik-Leiste (inkl. 7-Tage-Auto-Cleanup-Anzeige) ────
-            StatsOverviewStrip(
+            if (activeTab != WhatsAppTab.VOICE) StatsOverviewStrip(
                 deletedCount = stats.deletedCount,
                 editedCount = stats.editedCount,
                 onClearAll = {
@@ -213,7 +222,7 @@ fun WhatsAppScreen(
             )
 
             // ── Suchleiste für Gelöscht / Bearbeitet ────────────────────────────
-            if (activeTab != WhatsAppTab.TOOLS) {
+            if (activeTab != WhatsAppTab.TOOLS && activeTab != WhatsAppTab.VOICE) {
                 WhatsAppSearchBar(
                     query = searchQuery,
                     onQueryChange = vm::setSearchQuery,
@@ -224,6 +233,8 @@ fun WhatsAppScreen(
             Box(modifier = Modifier.fillMaxSize()) {
                 val q = searchQuery.trim().lowercase()
                 when (activeTab) {
+                    WhatsAppTab.VOICE -> VoiceNotesTab(onOpenJob = onOpenVoiceJob)
+
                     WhatsAppTab.DELETED -> {
                         val filtered = remember(deletedMessages, q) {
                             if (q.isEmpty()) {
@@ -597,6 +608,14 @@ private fun WhatsAppTabsRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         WhatsAppTabChip(
+            icon = Icons.Default.GraphicEq,
+            label = "Sprachnachrichten",
+            count = null,
+            selected = activeTab == WhatsAppTab.VOICE,
+            accentColor = VoiceViolet,
+            onClick = { onSelect(WhatsAppTab.VOICE) },
+        )
+        WhatsAppTabChip(
             icon = Icons.Default.RestoreFromTrash,
             label = "Gelöscht",
             count = deletedCount,
@@ -627,7 +646,7 @@ private fun WhatsAppTabsRow(
 private fun WhatsAppTabChip(
     icon: ImageVector,
     label: String,
-    count: Int,
+    count: Int?,
     selected: Boolean,
     accentColor: Color,
     onClick: () -> Unit,
@@ -669,7 +688,7 @@ private fun WhatsAppTabChip(
             fontSize = 12.5.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
         )
-        Box(
+        if (count != null) Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(6.dp))
                 .background(if (selected) accentColor.copy(alpha = 0.2f) else HikariSurface)

@@ -56,6 +56,9 @@ import com.hikari.app.data.api.dto.NewsItemDto
 import com.hikari.app.data.api.dto.NewsTopicDto
 import okhttp3.MultipartBody
 import com.hikari.app.data.api.dto.CastInfoDto
+import com.hikari.app.data.api.dto.VoiceJobDto
+import com.hikari.app.data.api.dto.VoiceJobListItemDto
+import com.hikari.app.data.api.dto.VoiceStatusDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -384,4 +387,33 @@ interface HikariApi {
 
     @GET("videos/{id}/full")
     suspend fun getVideoFull(@Path("id") id: String): VideoFullDto
+
+    // ── Sprachnachrichten: Whisper transkribiert, Qwen fasst zusammen ─────────
+
+    /** Ein Job aus einer oder mehreren Audiodateien (Feldname egal). */
+    @Multipart
+    @POST("voice/jobs")
+    suspend fun createVoiceJob(
+        @Part("label") label: okhttp3.RequestBody?,
+        @Part files: List<MultipartBody.Part>,
+    ): VoiceJobDto
+
+    @GET("voice/jobs")
+    suspend fun listVoiceJobs(): List<VoiceJobListItemDto>
+
+    @GET("voice/jobs/{id}")
+    suspend fun getVoiceJob(@Path("id") id: String): VoiceJobDto
+
+    @POST("voice/jobs/{id}/retry")
+    suspend fun retryVoiceJob(@Path("id") id: String): VoiceJobDto
+
+    @DELETE("voice/jobs/{id}")
+    suspend fun deleteVoiceJob(@Path("id") id: String)
+
+    @GET("voice/status")
+    suspend fun getVoiceStatus(): VoiceStatusDto
+
+    /** Whisper und Qwen sofort entladen statt nach 10 Minuten Leerlauf. */
+    @POST("voice/unload")
+    suspend fun unloadVoiceModels()
 }
