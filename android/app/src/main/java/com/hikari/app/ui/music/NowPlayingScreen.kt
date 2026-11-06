@@ -352,7 +352,7 @@ fun NowPlayingScreen(
                     active = isDownloaded,
                 ) {
                     when {
-                        isDownloaded -> viewModel.deleteDownload(current.videoId)
+                        isDownloaded -> viewModel.requestDeleteDownload(current)
                         // Läuft schon: Tipp bricht den Download ab
                         progress != null -> viewModel.cancelDownload(current.videoId)
                         else -> viewModel.downloadSong(current)

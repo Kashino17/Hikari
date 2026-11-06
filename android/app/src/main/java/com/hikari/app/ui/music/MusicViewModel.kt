@@ -164,6 +164,9 @@ class MusicViewModel @Inject constructor(
     /** Song, für den gerade das "Zu Playlist hinzufügen"-Sheet offen ist. */
     var addToPlaylistTarget by mutableStateOf<MusicSong?>(null)
 
+    /** Song, dessen Offline-Datei nach Rückfrage vom Handy gelöscht werden soll. */
+    var deleteDownloadTarget by mutableStateOf<MusicSong?>(null)
+
     /**
      * Scroll-Zustände der Tabs leben hier statt in der Composition: der
      * Crossfade beim Tab-Wechsel entsorgt die Tab-Inhalte komplett, und beim
@@ -643,10 +646,15 @@ class MusicViewModel @Inject constructor(
         message = "Downloads abgebrochen"
     }
 
+    /** Öffnet die Rückfrage — gelöscht wird erst über [deleteDownload]. */
+    fun requestDeleteDownload(song: MusicSong) {
+        deleteDownloadTarget = song
+    }
+
     fun deleteDownload(videoId: String) {
         viewModelScope.launch {
             downloads.delete(videoId)
-            message = "Download entfernt"
+            message = "Vom Handy gelöscht"
         }
     }
 

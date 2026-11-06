@@ -313,6 +313,7 @@ fun EpisodeRow(
                 state = localState,
                 progress = downloadProgress,
                 onClick = onDownloadClick,
+                itemTitle = title,
             )
             Spacer(Modifier.width(8.dp))
             Box(

@@ -677,6 +677,7 @@ private fun EpisodeRow(
                 },
                 progress = downloadProgress,
                 onClick = onDownloadClick,
+                itemTitle = video.title,
             )
         }
     }

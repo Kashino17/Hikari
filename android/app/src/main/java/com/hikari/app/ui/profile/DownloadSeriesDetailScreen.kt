@@ -633,6 +633,7 @@ private fun DownloadEpisodeRow(
                 },
                 progress = downloadProgress,
                 onClick = onDownloadClick,
+                itemTitle = episode.title,
             )
         }
     }

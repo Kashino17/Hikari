@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hikari.app.ui.components.ConfirmDeleteDialog
 import com.hikari.app.domain.model.MusicSong
 import com.hikari.app.domain.repo.PlaylistWithSongs
 import com.hikari.app.ui.theme.HikariPrimary
@@ -250,10 +251,21 @@ fun NamePlaylistDialog(
 }
 
 /**
- * Hostet das [AddToPlaylistSheet] einheitlich für jeden Screen, der ein MusicViewModel hält.
+ * Hostet die gemeinsamen Song-Dialoge einheitlich für jeden Screen, der ein
+ * MusicViewModel hält: [AddToPlaylistSheet] und die Lösch-Rückfrage.
  */
 @Composable
 fun AddToPlaylistHost(viewModel: MusicViewModel) {
+    viewModel.deleteDownloadTarget?.let { song ->
+        ConfirmDeleteDialog(
+            title = "Download löschen?",
+            message = "„${song.title}“ wird von diesem Handy gelöscht. Der Song bleibt in " +
+                "deiner Bibliothek und kann jederzeit wieder heruntergeladen werden.",
+            confirmLabel = "Vom Handy löschen",
+            onConfirm = { viewModel.deleteDownload(song.videoId) },
+            onDismiss = { viewModel.deleteDownloadTarget = null },
+        )
+    }
     viewModel.addToPlaylistTarget?.let { song ->
         AddToPlaylistSheet(
             song = song,

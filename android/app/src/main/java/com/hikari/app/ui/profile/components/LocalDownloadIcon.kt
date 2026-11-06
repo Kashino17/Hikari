@@ -12,12 +12,17 @@ import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.hikari.app.ui.profile.components.LocalState
+import com.hikari.app.ui.components.ConfirmDeleteDialog
+import com.hikari.app.ui.components.deviceOnlyMessage
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariTextMuted
 
@@ -25,7 +30,7 @@ import com.hikari.app.ui.theme.HikariTextMuted
  * Tri-state download status icon. Tap behaves as:
  * - NotLocal → trigger download
  * - Downloading → cancel (no-op for now; click consumed silently)
- * - Local → trigger remove-from-device (caller may want to confirm)
+ * - Local → fragt erst nach und ruft onClick nur nach „Vom Handy löschen" auf
  */
 @Composable
 fun LocalDownloadIcon(
@@ -33,7 +38,18 @@ fun LocalDownloadIcon(
     progress: Float?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    itemTitle: String? = null,
 ) {
+    var confirmRemove by remember { mutableStateOf(false) }
+    if (confirmRemove) {
+        ConfirmDeleteDialog(
+            title = "Vom Handy löschen?",
+            message = deviceOnlyMessage(itemTitle),
+            confirmLabel = "Vom Handy löschen",
+            onConfirm = onClick,
+            onDismiss = { confirmRemove = false },
+        )
+    }
     Box(
         modifier = modifier
             .size(28.dp)
@@ -45,7 +61,9 @@ fun LocalDownloadIcon(
                     LocalState.NotLocal -> Color.Transparent
                 },
             )
-            .clickable(onClick = onClick),
+            .clickable {
+                if (state == LocalState.Local) confirmRemove = true else onClick()
+            },
         contentAlignment = Alignment.Center,
     ) {
         when (state) {

@@ -30,6 +30,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.hikari.app.ui.components.ConfirmDeleteDialog
+import com.hikari.app.ui.components.deviceOnlyMessage
 import com.hikari.app.data.db.PlaybackPositionEntity
 import com.hikari.app.ui.components.FallbackArtwork
 import com.hikari.app.ui.theme.HikariAmber
@@ -370,6 +375,16 @@ private fun DownloadAction(
     onDownload: () -> Unit,
     onRemoveLocal: () -> Unit,
 ) {
+    var confirmRemove by remember { mutableStateOf(false) }
+    if (confirmRemove) {
+        ConfirmDeleteDialog(
+            title = "Vom Handy löschen?",
+            message = deviceOnlyMessage(null),
+            confirmLabel = "Vom Handy löschen",
+            onConfirm = onRemoveLocal,
+            onDismiss = { confirmRemove = false },
+        )
+    }
     val background = if (isLocal) HikariAmber.copy(alpha = 0.14f) else HikariSurface
     val border = if (isLocal) HikariAmber.copy(alpha = 0.5f) else HikariBorder
     Row(
@@ -380,7 +395,7 @@ private fun DownloadAction(
             .background(background)
             .border(1.dp, border, RoundedCornerShape(6.dp))
             .clickable(enabled = !downloading) {
-                if (isLocal) onRemoveLocal() else onDownload()
+                if (isLocal) confirmRemove = true else onDownload()
             }
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,

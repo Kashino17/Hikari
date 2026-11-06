@@ -37,6 +37,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.hikari.app.ui.components.ConfirmDeleteDialog
 import com.hikari.app.data.api.dto.ChannelGroupDto
 import com.hikari.app.data.api.dto.MovieEntryDto
 import com.hikari.app.data.api.dto.SeriesGroupDto
@@ -83,6 +87,17 @@ fun DownloadCategoryScreen(
     vm: DownloadCategoryViewModel = hiltViewModel(),
 ) {
     val state by vm.state.collectAsState()
+    // Jedes Löschen hier läuft über eine Rückfrage, die sagt, WO gelöscht wird.
+    var pendingDelete by remember { mutableStateOf<PendingDelete?>(null) }
+    pendingDelete?.let { p ->
+        ConfirmDeleteDialog(
+            title = p.title,
+            message = p.message,
+            confirmLabel = p.confirmLabel,
+            onConfirm = p.action,
+            onDismiss = { pendingDelete = null },
+        )
+    }
 
     Box(Modifier.fillMaxSize().background(HikariBg)) {
         Column(Modifier.fillMaxSize()) {
@@ -99,7 +114,16 @@ fun DownloadCategoryScreen(
                 onBack = onBack,
                 onToggleEdit = { vm.setEditMode(!state.editMode) },
                 onCancelEdit = { vm.setEditMode(false) },
-                onDeleteSelected = { vm.deleteSelected() },
+                onDeleteSelected = {
+                    val n = state.selectedVideoIds.size
+                    pendingDelete = PendingDelete(
+                        title = if (n == 1) "1 Video endgültig löschen?" else "$n Videos endgültig löschen?",
+                        message = "Die Auswahl wird vom PC UND von diesem Handy gelöscht. " +
+                            "Das lässt sich nicht rückgängig machen — danach musst du sie neu importieren.",
+                        confirmLabel = "Endgültig löschen",
+                        action = { vm.deleteSelected() },
+                    )
+                },
             )
 
             when {
@@ -178,7 +202,15 @@ fun DownloadCategoryScreen(
                             val arcs by vm.mangaArcs.collectAsState()
                             MangasPanel(
                                 arcs = arcs,
-                                onDelete = { arcId -> vm.deleteMangaArc(arcId) },
+                                onDelete = { arc ->
+                                    pendingDelete = PendingDelete(
+                                        title = "Vom Handy löschen?",
+                                        message = "„${arc.arcTitle}“ wird von diesem Handy gelöscht. " +
+                                            "Auf deinem PC bleibt der Arc erhalten.",
+                                        confirmLabel = "Vom Handy löschen",
+                                        action = { vm.deleteMangaArc(arc.arcId) },
+                                    )
+                                },
                             )
                         }
                         DownloadCategory.MUSIC -> {
@@ -188,7 +220,16 @@ fun DownloadCategoryScreen(
                                 songs = songs,
                                 currentVideoId = currentId,
                                 onPlay = { song -> vm.playMusic(song) },
-                                onDelete = { videoId -> vm.deleteMusic(videoId) },
+                                onDelete = { song ->
+                                    pendingDelete = PendingDelete(
+                                        title = "Download löschen?",
+                                        message = "„${song.title.ifBlank { song.videoId }}“ wird von diesem Handy " +
+                                            "gelöscht. Der Song bleibt in deiner Bibliothek und kann jederzeit " +
+                                            "wieder heruntergeladen werden.",
+                                        confirmLabel = "Vom Handy löschen",
+                                        action = { vm.deleteMusic(song.videoId) },
+                                    )
+                                },
                             )
                         }
                     }
@@ -610,6 +651,7 @@ private fun MoviePoster(
                     },
                     progress = downloadProgress,
                     onClick = onDownloadToggle,
+                    itemTitle = movie.title,
                 )
             }
         }
@@ -643,7 +685,7 @@ private fun SimpleFilterStrip(activeLabel: String, count: Int) {
 @Composable
 private fun MangasPanel(
     arcs: List<LocalMangaArcEntity>,
-    onDelete: (arcId: String) -> Unit,
+    onDelete: (LocalMangaArcEntity) -> Unit,
 ) {
     val totalBytes = arcs.sumOf { it.totalByteSize }
     val totalPages = arcs.sumOf { it.expectedPageCount }
@@ -670,7 +712,7 @@ private fun MangasPanel(
             }
         } else {
             items(arcs, key = { it.arcId }) { arc ->
-                MangaArcRow(arc = arc, onDelete = { onDelete(arc.arcId) })
+                MangaArcRow(arc = arc, onDelete = { onDelete(arc) })
             }
         }
     }
@@ -727,7 +769,7 @@ private fun MusicPanel(
     songs: List<LocalMusicDownloadEntity>,
     currentVideoId: String?,
     onPlay: (LocalMusicDownloadEntity) -> Unit,
-    onDelete: (videoId: String) -> Unit,
+    onDelete: (LocalMusicDownloadEntity) -> Unit,
 ) {
     val totalBytes = songs.sumOf { it.byteSize }
     LazyColumn(
@@ -758,7 +800,7 @@ private fun MusicPanel(
                     song = song,
                     isCurrent = song.videoId == currentVideoId,
                     onPlay = { onPlay(song) },
-                    onDelete = { onDelete(song.videoId) },
+                    onDelete = { onDelete(song) },
                 )
             }
         }
@@ -838,3 +880,11 @@ private fun MusicSongRow(
         }
     }
 }
+
+/** Was die Rückfrage zeigt und was nach „Löschen“ passiert. */
+private data class PendingDelete(
+    val title: String,
+    val message: String,
+    val confirmLabel: String,
+    val action: () -> Unit,
+)

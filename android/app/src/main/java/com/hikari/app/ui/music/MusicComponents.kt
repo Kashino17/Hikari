@@ -234,7 +234,7 @@ fun SongRow(
             isDownloaded = isDownloaded,
             progress = progress,
             onDownload = { viewModel.downloadSong(song) },
-            onDelete = { viewModel.deleteDownload(song.videoId) },
+            onDelete = { viewModel.requestDeleteDownload(song) },
             onCancel = { viewModel.cancelDownload(song.videoId) },
         )
 
@@ -277,7 +277,7 @@ fun SongRow(
                         text = { Text("Download löschen") },
                         onClick = {
                             menuOpen = false
-                            viewModel.deleteDownload(song.videoId)
+                            viewModel.requestDeleteDownload(song)
                         },
                     )
                 } else {
