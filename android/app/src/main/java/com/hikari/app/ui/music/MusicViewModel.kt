@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -62,17 +63,21 @@ class MusicViewModel @Inject constructor(
     val avatarPath: StateFlow<String?> = profile.avatarPath
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    val instrumentalOnly: StateFlow<Boolean> = settings.instrumentalOnly
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
-
     var searchQuery by mutableStateOf("")
     var searchResults by mutableStateOf<List<MusicSong>>(emptyList())
     var searchLoading by mutableStateOf(false)
     var searchAttempted by mutableStateOf(false)
 
-    /** Musik, Hörbücher oder Podcasts — steuert Filter und Dauerheuristik der Suche. */
+    /**
+     * Musik, Instrumental, Hörbücher, Podcasts oder True Crime — steuert Feed,
+     * Suche, Verlauf und Autoplay. Gespeichert in den Settings und damit für
+     * alle Musik-Screens (und den Player-Nachschub) derselbe Modus.
+     */
     var searchMode by mutableStateOf(MusicSearchMode.MUSIC)
         private set
+
+    /** Erst wenn der gespeicherte Modus gelesen ist, darf der Feed laden. */
+    private var modeReady = false
 
     /** Erkannte Hörbücher/Podcast-Shows in den Suchergebnissen (nur außerhalb des Musik-Modus). */
     var searchGroups by mutableStateOf<List<ChapterGroup>>(emptyList())
@@ -147,12 +152,23 @@ class MusicViewModel @Inject constructor(
         private set
 
     var history by mutableStateOf<List<MusicSong>>(emptyList())
+
+    /** "Zuletzt gehört" des aktiven Modus — leer heißt: Leiste ausblenden. */
+    val modeHistory: List<MusicSong>
+        get() = history.filter { it.isFromMode(searchMode) }
     var favorites by mutableStateOf<List<MusicSong>>(emptyList())
     var playlists by mutableStateOf<List<PlaylistWithSongs>>(emptyList())
 
     /** Meistgehörte Songs der letzten 7 Tage — Schnellauswahl im Entdecken. */
     var topWeekSongs by mutableStateOf<List<MusicSong>>(emptyList())
         private set
+
+    /** Schnellauswahl des aktiven Modus. */
+    val modeTopWeek: List<MusicSong>
+        get() = topWeekSongs.filter { it.isFromMode(searchMode) }
+
+    private fun MusicSong.isFromMode(mode: MusicSearchMode) =
+        (listenMode ?: MusicSearchMode.MUSIC.apiValue) == mode.apiValue
 
     /** Erst nach dem ersten Laden darf die UI aus "nicht gefunden" Schlüsse ziehen. */
     var libraryLoaded by mutableStateOf(false)
@@ -213,7 +229,11 @@ class MusicViewModel @Inject constructor(
     private val typedQueries = mutableMapOf<MusicSearchFilter, String>()
 
     init {
-        loadDiscover()
+        viewModelScope.launch {
+            searchMode = MusicSearchMode.fromApiValue(runCatching { settings.musicMode.first() }.getOrNull())
+            modeReady = true
+            loadDiscover()
+        }
         refreshLibrary()
         // Der Server wartet bei einer YouTube-Drossel, statt aufzugeben —
         // das einmal sagen, sonst sieht der stehende Balken wie ein Hänger aus.
@@ -223,8 +243,7 @@ class MusicViewModel @Inject constructor(
         // Kommt das Netz zurück, sind die Entdecken-Vorschläge nachholbar.
         viewModelScope.launch {
             isOnline.collect { online ->
-                val empty = if (searchMode == MusicSearchMode.MUSIC) homeSections.isEmpty() else discoverSections.isEmpty()
-                if (online && empty && !discoverLoading) loadDiscover()
+                if (online && feedEmpty() && !discoverLoading) loadDiscover()
             }
         }
         // Vorschläge zur Eingabe mit kurzer Verzögerung nachladen — in allen
@@ -244,42 +263,89 @@ class MusicViewModel @Inject constructor(
         }
     }
 
-    /** Schaltet zwischen normalen und rein instrumentalen Vorschlägen um. */
-    fun toggleInstrumental() {
-        viewModelScope.launch {
-            val next = !instrumentalOnly.value
-            settings.setInstrumentalOnly(next)
-            discoverSections = emptyList()
-            homeSections = emptyList()
-            loadDiscover(force = true)
-            if (searchAttempted && searchQuery.isNotBlank()) search(searchQuery)
-            message = if (next) "Nur noch Musik ohne Gesang" else "Alle Musik"
-        }
-    }
-
     /** Pull-to-Refresh auf der Entdecken-Seite läuft. */
     var discoverRefreshing by mutableStateOf(false)
         private set
 
+    private var discoverJob: Job? = null
+
+    /** Wofür und wann der Feed zuletzt gebaut wurde — Rückkehr baut nicht neu. */
+    private var discoverBuiltFor: MusicSearchMode? = null
+    private var discoverBuiltAt = 0L
+
+    /** Nachschub beim Runterscrollen läuft bzw. der Pool des Modus ist erschöpft. */
+    var moreLoading by mutableStateOf(false)
+        private set
+    var feedExhausted by mutableStateOf(false)
+        private set
+    private var moreJob: Job? = null
+
     /**
-     * Erzwungener Neuaufbau des Entdecken-Feeds (Pull-to-Refresh): umgeht den
-     * 15-Minuten-Cache und zieht Bibliothek + Schnellauswahl gleich mit nach.
+     * Endloser Feed: kurz vor dem Listenende weitere Mixe anhängen, bis der
+     * Pool des Modus aufgebraucht ist.
+     */
+    fun loadMoreFeed() {
+        if (moreLoading || feedExhausted || discoverLoading || discoverRefreshing || feedEmpty()) return
+        val mode = searchMode
+        moreJob = viewModelScope.launch {
+            moreLoading = true
+            try {
+                val added = if (mode == MusicSearchMode.MUSIC || mode == MusicSearchMode.INSTRUMENTAL) {
+                    val shown = homeSections.mapTo(HashSet()) { it.query }
+                    repo.getMoreHomeSections(mode, shown).also { if (mode == searchMode) homeSections = homeSections + it }
+                } else {
+                    val shown = discoverSections.mapTo(HashSet()) { it.query }
+                    repo.getMoreDiscoverSections(mode, shown)
+                        .also { if (mode == searchMode) discoverSections = discoverSections + it }
+                }
+                if (added.isEmpty()) feedExhausted = true
+            } finally {
+                moreLoading = false
+            }
+        }
+    }
+
+    /** Legt die sichtbaren Songs einer Feed-Sektion für ihre "Alle"-Seite bereit. */
+    fun stageCollection(key: String, songs: List<MusicSong>) = repo.stageCollection(key, songs)
+
+    /** Feed des aktiven Modus ist leer. */
+    private fun feedEmpty(): Boolean =
+        if (searchMode == MusicSearchMode.MUSIC || searchMode == MusicSearchMode.INSTRUMENTAL) {
+            homeSections.isEmpty()
+        } else {
+            discoverSections.isEmpty()
+        }
+
+    /** Baut den Feed des aktiven Modus. [force] umgeht Caches und zieht neue Vorschläge. */
+    private suspend fun buildFeed(force: Boolean) {
+        val mode = searchMode
+        moreJob?.cancel()
+        moreLoading = false
+        feedExhausted = false
+        when (mode) {
+            MusicSearchMode.MUSIC -> homeSections = repo.getPersonalizedHome(force)
+            MusicSearchMode.INSTRUMENTAL -> homeSections = repo.getInstrumentalHome(force)
+            else -> discoverSections = repo.getDiscoverSections(mode)
+        }
+        discoverFailed = feedEmpty()
+        if (!discoverFailed) {
+            discoverBuiltFor = mode
+            discoverBuiltAt = System.currentTimeMillis()
+        }
+    }
+
+    /**
+     * Pull-to-Refresh: neuer Aufbau mit frischer Auswahl — andere Mixe,
+     * Playlists und Radio-Songs — und Bibliothek + Schnellauswahl gleich mit.
      */
     fun refreshDiscover() {
-        if (discoverRefreshing) return
-        viewModelScope.launch {
+        if (discoverRefreshing || !modeReady) return
+        discoverJob?.cancel()
+        discoverJob = viewModelScope.launch {
             discoverRefreshing = true
             try {
                 refreshLibrary()
-                if (searchMode == MusicSearchMode.MUSIC) {
-                    val sections = repo.getPersonalizedHome(force = true)
-                    homeSections = sections
-                    discoverFailed = sections.isEmpty()
-                } else {
-                    val sections = repo.getDiscoverSections(searchMode)
-                    discoverSections = sections
-                    discoverFailed = sections.isEmpty()
-                }
+                buildFeed(force = true)
             } finally {
                 discoverRefreshing = false
             }
@@ -287,22 +353,22 @@ class MusicViewModel @Inject constructor(
     }
 
     fun loadDiscover(force: Boolean = false) {
+        if (!modeReady) return
         if (discoverLoading && !force) return
-        viewModelScope.launch {
+        // Zurück aus einer Detailseite: der Feed steht noch — nicht neu
+        // würfeln, sonst springt die Seite unter dem Daumen weg.
+        val fresh = discoverBuiltFor == searchMode && !feedEmpty() &&
+            System.currentTimeMillis() - discoverBuiltAt < FEED_TTL_MS
+        if (!force && fresh) return
+        discoverJob?.cancel()
+        discoverJob = viewModelScope.launch {
             discoverLoading = true
             discoverFailed = false
-            if (searchMode == MusicSearchMode.MUSIC) {
-                // Musik bekommt den personalisierten Feed; die kuratierten
-                // Sektionen stecken dort als Fallback bereits drin.
-                val sections = repo.getPersonalizedHome(force)
-                homeSections = sections
-                discoverFailed = sections.isEmpty()
-            } else {
-                val sections = repo.getDiscoverSections(searchMode)
-                discoverSections = sections
-                discoverFailed = sections.isEmpty()
+            try {
+                buildFeed(force)
+            } finally {
+                discoverLoading = false
             }
-            discoverLoading = false
         }
     }
 
@@ -320,7 +386,7 @@ class MusicViewModel @Inject constructor(
             repo.recordSearch(q)
             val full = repo.searchFullMusic(q, searchMode)
             fullResults = full
-            if (searchMode == MusicSearchMode.MUSIC) {
+            if (searchMode.isMusical) {
                 // searchResults bleibt der Play-Kontext der Song-Zeilen.
                 searchResults = full?.songs ?: emptyList()
                 searchGroups = emptyList()
@@ -490,12 +556,17 @@ class MusicViewModel @Inject constructor(
     fun selectSearchMode(mode: MusicSearchMode) {
         if (mode == searchMode) return
         searchMode = mode
+        viewModelScope.launch { settings.setMusicMode(mode.apiValue) }
+        moreJob?.cancel()
+        moreLoading = false
+        feedExhausted = false
         // Anderer Modus = andere Treffer: Smart-Search-Zustand zurücksetzen.
         resetSmartSearch()
         discoverSections = emptyList()
         homeSections = emptyList()
         resetDiscoverScroll()
-        loadDiscover(force = true)
+        // Ohne force: der Repo-Cache macht schnelles Hin- und Herwechseln billig.
+        loadDiscover()
         if (searchAttempted && searchQuery.isNotBlank()) search(searchQuery)
     }
 
@@ -592,10 +663,12 @@ class MusicViewModel @Inject constructor(
     }
 
     fun play(song: MusicSong, contextQueue: List<MusicSong>) {
+        player.queueMode = searchMode.apiValue
         player.play(song, contextQueue)
         // Verlauf lokal nachziehen statt Komplett-Reload — das Schreiben in
         // die DB übernimmt repo.recordPlayed im Player-Controller.
-        history = listOf(song) + history.filter { it.videoId != song.videoId }
+        history = listOf(song.copy(listenMode = searchMode.apiValue)) +
+            history.filter { it.videoId != song.videoId }
         // Schnellauswahl aktuell halten: das Play-Event ist gerade geschrieben
         // worden — ohne Nachladen erschiene die Karte erst beim App-Neustart.
         viewModelScope.launch {
@@ -769,6 +842,11 @@ class MusicViewModel @Inject constructor(
             repo.removeFromPlaylist(playlistId, song)
             refreshLibrary()
         }
+    }
+
+    companion object {
+        /** So lange bleibt ein gebauter Feed beim Zurückkehren stehen. */
+        private const val FEED_TTL_MS = 15 * 60 * 1000L
     }
 
     fun clearMessage() {

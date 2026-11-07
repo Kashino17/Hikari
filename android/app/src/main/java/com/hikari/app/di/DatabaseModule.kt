@@ -16,6 +16,7 @@ import com.hikari.app.data.db.MIGRATION_17_18
 import com.hikari.app.data.db.MIGRATION_18_19
 import com.hikari.app.data.db.MIGRATION_19_20
 import com.hikari.app.data.db.MIGRATION_20_21
+import com.hikari.app.data.db.MIGRATION_21_22
 import com.hikari.app.data.db.MusicPlayEventDao
 import com.hikari.app.data.db.MusicPlaylistDao
 import com.hikari.app.data.db.MusicPlaylistSongDao
@@ -45,6 +46,7 @@ object DatabaseModule {
                 MIGRATION_18_19,
                 MIGRATION_19_20,
                 MIGRATION_20_21,
+                MIGRATION_21_22,
             )
             .fallbackToDestructiveMigration()
             .build()

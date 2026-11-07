@@ -487,89 +487,6 @@ fun GroupRow(
     }
 }
 
-/** Moduswahl der Suche: Musik, Hörbücher oder Podcasts. */
-@Composable
-fun SearchModeChips(
-    selected: MusicSearchMode,
-    onSelect: (MusicSearchMode) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val labels = mapOf(
-        MusicSearchMode.MUSIC to "Musik",
-        MusicSearchMode.AUDIOBOOK to "Hörbücher",
-        MusicSearchMode.PODCAST to "Podcasts",
-        MusicSearchMode.TRUECRIME to "True Crime",
-    )
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        MusicSearchMode.entries.forEach { mode ->
-            MuChip(
-                label = labels.getValue(mode),
-                active = mode == selected,
-                onClick = { onSelect(mode) },
-            )
-        }
-    }
-}
-
-/** Schalter für rein instrumentale Vorschläge. */
-@Composable
-fun InstrumentalToggle(
-    enabled: Boolean,
-    onToggle: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val iconTint by animateColorAsState(
-        targetValue = if (enabled) HikariPrimary else HikariTextFaint,
-        animationSpec = spring(stiffness = Spring.StiffnessLow),
-        label = "toggle-icon",
-    )
-
-    Row(
-        modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(HikariCardBg)
-            .border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(14.dp))
-            .muPressable(onClick = onToggle)
-            .padding(start = 14.dp, end = 12.dp, top = 11.dp, bottom = 11.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        // Durchgestrichenes Mikrofon sagt "keine Stimmen" direkter als eine Note.
-        Crossfade(targetState = enabled, label = "toggle-symbol") { on ->
-            Icon(
-                if (on) Icons.Default.MicOff else Icons.Default.Mic,
-                null,
-                tint = iconTint,
-                modifier = Modifier.size(19.dp),
-            )
-        }
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(
-                "Ohne Gesang",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = HikariText,
-            )
-            AnimatedContent(
-                targetState = enabled,
-                transitionSpec = {
-                    (fadeIn(tween(180)) + slideInVertically { it / 3 })
-                        .togetherWith(fadeOut(tween(120)) + slideOutVertically { -it / 3 })
-                },
-                label = "toggle-caption",
-            ) { on ->
-                Text(
-                    if (on) "Nur Instrumentales" else "Alle Vorschläge",
-                    fontSize = 11.sp,
-                    color = HikariTextMuted,
-                )
-            }
-        }
-        HikariSwitch(checked = enabled, onCheckedChange = onToggle)
-    }
-}
-
 /**
  * Leere Trefferliste bei aktivem Instrumental-Filter. Nennt den Grund und
  * bietet die Lösung direkt an, statt den Suchenden raten zu lassen.
@@ -590,8 +507,8 @@ fun FilteredEmptyHint(onDisableFilter: () -> Unit) {
             textAlign = TextAlign.Center,
         )
         Text(
-            "„Ohne Gesang“ ist aktiv — dadurch bleiben Stücke mit Stimme außen vor. " +
-                "Schalte den Filter aus, um die vollständigen Ergebnisse zu sehen.",
+            "Im Instrumental-Modus bleiben Stücke mit Stimme außen vor. " +
+                "Wechsle zu Musik, um die vollständigen Ergebnisse zu sehen.",
             fontSize = 13.sp,
             color = HikariTextMuted,
             textAlign = TextAlign.Center,
@@ -600,7 +517,7 @@ fun FilteredEmptyHint(onDisableFilter: () -> Unit) {
         Row(
             Modifier
                 .clip(RoundedCornerShape(999.dp))
-                .background(HikariPrimary)
+                .background(Color.White)
                 .muPressable(onClick = onDisableFilter)
                 .padding(horizontal = 18.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -608,7 +525,7 @@ fun FilteredEmptyHint(onDisableFilter: () -> Unit) {
             Icon(Icons.Default.Mic, null, tint = Color.Black, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(7.dp))
             Text(
-                "Filter ausschalten",
+                "Zu Musik wechseln",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,

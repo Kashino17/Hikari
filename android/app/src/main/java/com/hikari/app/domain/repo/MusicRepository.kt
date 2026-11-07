@@ -29,6 +29,7 @@ import com.hikari.app.domain.model.ArtistAlbum
 import com.hikari.app.domain.model.ArtistPage
 import com.hikari.app.domain.model.ArtistPlaylist
 import com.hikari.app.domain.model.FullSearchResults
+import com.hikari.app.domain.model.HomeItem
 import com.hikari.app.domain.model.HomeSection
 import com.hikari.app.domain.model.HomeSectionKind
 import com.hikari.app.domain.model.MusicAlbum
@@ -76,12 +77,19 @@ enum class MusicSearchMode(
     val pipedFilter: String,
     /** Mindestdauer in Sekunden — kurze Clips sind selten Hörbuch oder Episode. */
     val minDurationSeconds: Int,
+    /** Modus, mit dem das Backend gefragt wird — Instrumental ist dort Musik. */
+    val backendValue: String = apiValue,
 ) {
     MUSIC("music", "music_songs", 0),
+    /** Musik ohne Gesang: eigener Modus mit Instrumenten statt Playlists. */
+    INSTRUMENTAL("instrumental", "music_songs", 0, backendValue = "music"),
     AUDIOBOOK("audiobook", "videos", 600),
     PODCAST("podcast", "videos", 300),
     TRUECRIME("truecrime", "videos", 300),
     ;
+
+    /** Songs statt gesprochenem Wort — gleiche Dauerregeln, gleiche Such-UI. */
+    val isMusical: Boolean get() = this == MUSIC || this == INSTRUMENTAL
 
     companion object {
         /** Modus zu einem API-Wert — unbekannte Werte fallen auf Musik zurück. */
@@ -176,6 +184,45 @@ class MusicRepository(
             "Anime & Gaming" to "anime opening songs",
             "Zum Trainieren" to "workout music motivation",
             "Party" to "party hits dance",
+            "Throwback 2010er" to "2010s hits throwback",
+            "Feel Good" to "feel good songs happy",
+            "R'n'B Nights" to "rnb slow jams",
+            "Akustisch" to "acoustic songs cover",
+            "Indie Entdeckungen" to "indie pop new songs",
+            "Late Night Drive" to "night drive synthwave songs",
+            "Deutschpop" to "deutschpop hits 2026",
+            "Afrobeats" to "afrobeats hits 2026",
+            "Latin Heat" to "reggaeton hits 2026",
+        )
+
+        /** So viele kuratierte Mixe zeigt der Home-Feed pro Aufbau (Rest rotiert). */
+        private const val CURATED_PER_LOAD = 6
+
+        /** So viele Mixe lädt der endlose Feed pro Nachschub beim Runterscrollen. */
+        private const val MORE_PER_PAGE = 3
+
+        /** Schlüssel für Feed-Sektionen ohne Suchbegriff (Detailseite "Alle"). */
+        const val KEY_RELATED = "related:"
+        const val KEY_FAVORITES = "favorites:"
+        const val KEY_STAGED = "staged:"
+
+        /** Suchbegriffe für "Playlists für dich" — eine davon pro Aufbau. */
+        private val PLAYLIST_QUERIES = listOf(
+            "chill playlist deutsch", "deutschrap playlist 2026", "gym workout playlist 2026",
+            "anime opening playlist", "party playlist deutsch 2026", "lofi hip hop playlist",
+            "2010er hits playlist", "gute laune playlist", "autofahrt playlist deutsch",
+            "pop hits playlist 2026", "rnb playlist 2026", "deutschpop playlist 2026",
+        )
+
+        /** Regional-Playlists, die bei englischen Stimmungs-Suchen gern reinrutschen. */
+        private val FOREIGN_PLAYLIST_MARKERS = listOf(
+            "hindi", "bangla", "bengali", "punjabi", "bollywood", "tamil", "telugu",
+            "urdu", "nepali", "marathi", "malayalam", "kannada", "bhojpuri",
+        )
+
+        private val MONTHS_EN = listOf(
+            "january", "february", "march", "april", "may", "june",
+            "july", "august", "september", "october", "november", "december",
         )
 
         /** Nummern-Muster in Kapitel- und Episodentiteln. */
@@ -183,17 +230,6 @@ class MusicRepository(
             """(?i)\b(?:kapitel|kap\.?|chapter|ch\.?|part|pt\.?|teil|episode|ep\.?|folge|#)\s*0*(\d{1,4})\b""",
         )
 
-        /** Eigene Mixe für den Instrumental-Modus — Suchbegriffe, die von
-         *  vornherein bei Stücken ohne Gesang landen. */
-        private val INSTRUMENTAL_SECTIONS = listOf(
-            "Lofi Beats" to "lofi hip hop instrumental beats no vocals",
-            "Piano" to "relaxing piano music instrumental",
-            "Fokus & Lernen" to "focus study music instrumental no vocals",
-            "Ambient" to "ambient instrumental music calm",
-            "Jazz" to "smooth jazz instrumental",
-            "Klassik" to "classical music instrumental",
-            "Soundtracks" to "epic cinematic instrumental soundtrack",
-        )
 
         /** Kuratierte Genres für den Hörbuch-Modus — Gegenstück zu den Musik-Mixen. */
         private val AUDIOBOOK_SECTIONS = listOf(
@@ -203,6 +239,10 @@ class MusicRepository(
             "Selbstentwicklung" to "selbsthilfe hörbuch",
             "Klassiker" to "hörbuch klassiker deutsch",
             "Horror" to "horror hörbuch deutsch",
+            "Abenteuer" to "abenteuer hörbuch deutsch",
+            "Biografien" to "biografie hörbuch deutsch",
+            "Geschichte" to "geschichte hörbuch deutsch",
+            "Philosophie" to "philosophie hörbuch",
         )
 
         /** Kuratierte Genres für den Podcast-Modus — Gegenstück zu den Musik-Mixen. */
@@ -213,6 +253,10 @@ class MusicRepository(
             "Geschichte" to "geschichte podcast",
             "Technologie" to "tech podcast deutsch",
             "Wirtschaft & Finanzen" to "wirtschaft podcast deutsch",
+            "Psychologie" to "psychologie podcast deutsch",
+            "Gesundheit" to "gesundheit podcast deutsch",
+            "Mystery" to "mystery podcast deutsch",
+            "Sport" to "sport podcast deutsch",
         )
 
         /**
@@ -227,7 +271,14 @@ class MusicRepository(
             "True Crime (EN)" to "true crime podcast english",
             "Cold Cases (EN)" to "cold case true crime english",
             "Unsolved (EN)" to "unsolved mystery true crime english",
+            "Ungeklärte Fälle (DE)" to "ungeklärte fälle podcast deutsch",
+            "Spurensuche (DE)" to "true crime doku deutsch",
+            "Serial Killer (EN)" to "serial killer documentary podcast english",
+            "Investigativ (EN)" to "investigative journalism true crime english",
         )
+
+        /** So viele Genres zeigen die Sprech-Modi pro Aufbau (Rest rotiert). */
+        private const val SPOKEN_SECTIONS_PER_LOAD = 6
 
         /**
          * Deutsche Marker für das DE/EN-Sprach-Badge. Umlaute prüft der Aufrufer
@@ -261,6 +312,10 @@ class MusicRepository(
             "ambient", "bgm", "background music", "soundtrack", "ost", "orchestral",
             "orchestra", "classical", "jazz", "meditation", "relaxing",
             "study music", "sleep music", "no lyrics", "no copyright music",
+            "violin", "violine", "geige", "cello", "saxophone", "saxophon", "sax cover",
+            "flute", "flöte", "harp", "harfe", "acoustic guitar", "guitar cover",
+            "fingerstyle", "strings", "cinematic", "koto", "shakuhachi", "synthwave",
+            "klavier", "piano cover", "instrumental cover",
         )
     }
 
@@ -283,12 +338,17 @@ class MusicRepository(
             INSTRUMENTAL_MARKERS.any { it in haystack }
         }
 
-    private suspend fun instrumentalOnly(): Boolean =
-        runCatching { settings.instrumentalOnly.first() }.getOrDefault(false)
+    /** Der global gewählte Hör-Modus — Rückfall, wenn der Player keinen Queue-Modus kennt. */
+    private suspend fun currentMode(): MusicSearchMode =
+        MusicSearchMode.fromApiValue(runCatching { settings.musicMode.first() }.getOrNull())
+
+    /** Passt die Länge zum Modus? Songs: 1–15 min, Gesprochenes: ab Mindestdauer. */
+    private fun fitsMode(song: MusicSong, mode: MusicSearchMode): Boolean =
+        if (mode.isMusical) song.duration in 60..900 else song.duration >= mode.minDurationSeconds
 
     suspend fun searchMusic(query: String, mode: MusicSearchMode = MusicSearchMode.MUSIC): List<MusicSong> {
-        // Gesangsfilter gibt es nur für Musik — Hörbücher und Podcasts leben vom gesprochenen Wort.
-        val instrumental = mode == MusicSearchMode.MUSIC && instrumentalOnly()
+        // Gesangsfilter nur im Instrumental-Modus — Hörbücher und Podcasts leben vom gesprochenen Wort.
+        val instrumental = mode == MusicSearchMode.INSTRUMENTAL
         // Stichwort und Filter ziehen die Anfrage schon in die richtige Richtung;
         // der Nachfilter räumt die Ausreißer weg. Doppelt anhängen träfe nur den Cache.
         val effectiveQuery = when {
@@ -303,7 +363,7 @@ class MusicRepository(
             else -> query
         }
         val tracks = try {
-            api.searchMusic(effectiveQuery, mode.apiValue).map { it.toSong() }
+            api.searchMusic(effectiveQuery, mode.backendValue).map { it.toSong() }
         } catch (_: Exception) {
             pipedSearchFallback(effectiveQuery, mode)
         }
@@ -354,14 +414,38 @@ class MusicRepository(
         mode: MusicSearchMode = MusicSearchMode.MUSIC,
     ): FullSearchResults? =
         try {
-            val dto = api.searchFullMusic(query.trim(), mode.apiValue)
-            FullSearchResults(
-                topResult = dto.topResult?.toSearchResult(),
-                songs = withFavoriteState(dto.songs.map { it.toSong() }),
-                artists = dto.artists.map { it.toModel() },
-                albums = dto.albums.map { it.toModel() },
-                playlists = dto.playlists.map { it.toModel() },
-            )
+            val instrumental = mode == MusicSearchMode.INSTRUMENTAL
+            val effective = query.trim().let {
+                if (instrumental && !it.contains("instrumental", ignoreCase = true)) "$it instrumental" else it
+            }
+            val dto = api.searchFullMusic(effective, mode.backendValue)
+            val songs = dto.songs.map { it.toSong() }
+            val top = dto.topResult?.toSearchResult()
+            if (!instrumental) {
+                FullSearchResults(
+                    topResult = top,
+                    songs = withFavoriteState(songs),
+                    artists = dto.artists.map { it.toModel() },
+                    albums = dto.albums.map { it.toModel() },
+                    playlists = dto.playlists.map { it.toModel() },
+                )
+            } else {
+                // Ohne Gesang: Songs müssen sich als instrumental ausweisen,
+                // Playlists über ihren Namen; Alben enthalten fast immer Gesang.
+                val kept = filterInstrumental(songs)
+                val keptIds = kept.mapTo(HashSet()) { it.videoId }
+                FullSearchResults(
+                    topResult = top?.takeUnless { it is MusicSearchResult.Song && it.song.videoId !in keptIds }
+                        ?.takeUnless { it is MusicSearchResult.Album },
+                    songs = withFavoriteState(kept),
+                    artists = dto.artists.map { it.toModel() },
+                    albums = emptyList(),
+                    playlists = dto.playlists.map { it.toModel() }.filter { pl ->
+                        val name = pl.name.lowercase()
+                        VOCAL_MARKERS.none { it in name } && INSTRUMENTAL_MARKERS.any { it in name }
+                    },
+                )
+            }
         } catch (_: Exception) {
             null
         }
@@ -531,18 +615,25 @@ class MusicRepository(
         return if (GERMAN_LANGUAGE_MARKERS.any { it in text }) "DE" else "EN"
     }
 
+    /**
+     * Entdecken-Sektionen der Sprech-Modi. Der erste Eintrag jedes Pools ist
+     * der feste Anker (läuft als Rangliste), der Rest rotiert: jeder Aufbau —
+     * auch jedes Pull-to-Refresh — zieht eine neue Auswahl und mischt die
+     * Folgen innerhalb der Sektionen neu.
+     */
     suspend fun getDiscoverSections(mode: MusicSearchMode = MusicSearchMode.MUSIC): List<DiscoverSection> =
         coroutineScope {
-            val sections = when (mode) {
+            val pool = when (mode) {
                 MusicSearchMode.AUDIOBOOK -> AUDIOBOOK_SECTIONS
                 MusicSearchMode.PODCAST -> PODCAST_SECTIONS
                 MusicSearchMode.TRUECRIME -> TRUECRIME_SECTIONS
-                MusicSearchMode.MUSIC -> if (instrumentalOnly()) INSTRUMENTAL_SECTIONS else DISCOVER_SECTIONS
+                MusicSearchMode.MUSIC, MusicSearchMode.INSTRUMENTAL -> DISCOVER_SECTIONS
             }
-            sections.map { (title, query) ->
+            val picked = listOf(pool.first()) + pool.drop(1).shuffled().take(SPOKEN_SECTIONS_PER_LOAD - 1)
+            picked.mapIndexed { index, (title, query) ->
                 async {
                     val songs = try {
-                        getMixSongs(query, mode).take(24)
+                        getMixSongs(query, mode).take(24).let { if (index == 0) it else it.shuffled() }
                     } catch (_: Exception) {
                         emptyList()
                     }
@@ -566,9 +657,10 @@ class MusicRepository(
          *  beim schnellen Pfad ohne Zusatz-Requests. */
         expand: Boolean = false,
     ): List<MusicSong> {
+        if (isCollectionKey(query)) return getCollectionSongs(query, mode, expand)
         val all = searchMusic(query, mode)
         val tracks = when (mode) {
-            MusicSearchMode.MUSIC -> all.filter { it.duration in 60..900 }
+            MusicSearchMode.MUSIC, MusicSearchMode.INSTRUMENTAL -> all.filter { it.duration in 60..900 }
             MusicSearchMode.AUDIOBOOK -> all.filter { it.duration >= 120 }
             MusicSearchMode.PODCAST, MusicSearchMode.TRUECRIME -> all.filter { it.duration >= 180 }
         }
@@ -577,8 +669,17 @@ class MusicRepository(
         // Songs — die Top-Treffer als Seeds der echten YouTube-Radio-Queue
         // füllen den Mix stilistisch passend auf. Nicht im Instrumental-Modus
         // (Related würde den Ohne-Gesang-Filter unterlaufen).
-        if (!expand || mode != MusicSearchMode.MUSIC || base.size >= 40 || instrumentalOnly()) {
-            return base
+        if (!expand || !mode.isMusical || base.size >= 40) return base
+        if (mode == MusicSearchMode.INSTRUMENTAL) {
+            // Radio-Queues können Gesang nicht ausschließen — ihr Nachschub
+            // muss wie jeder Treffer durch den Instrumental-Filter.
+            val related = coroutineScope {
+                base.take(3).map { seed -> async { getRelatedSongs(seed.videoId) } }.map { it.await() }
+            }
+            val seen = base.mapTo(mutableSetOf()) { it.videoId }
+            val extra = filterInstrumental(related.flatten())
+                .filter { it.duration in 60..900 && seen.add(it.videoId) }
+            return (base + extra).take(50)
         }
         val related = coroutineScope {
             base.take(3).map { seed -> async { getRelatedSongs(seed.videoId) } }.map { it.await() }
@@ -589,6 +690,50 @@ class MusicRepository(
         return (base + extra).take(50)
     }
 
+    // --- Feed-Sektionen als eigene Seite ("Alle") ---
+
+    /** Songs, die der Feed gerade zeigt — die Detailseite startet mit genau diesen. */
+    private val stagedCollections = java.util.concurrent.ConcurrentHashMap<String, List<MusicSong>>()
+
+    /** Legt die sichtbaren Songs einer Feed-Sektion für ihre Detailseite bereit. */
+    fun stageCollection(key: String, songs: List<MusicSong>) {
+        if (isCollectionKey(key) && songs.isNotEmpty()) stagedCollections[key] = songs
+    }
+
+    private fun isCollectionKey(query: String) =
+        query.startsWith(KEY_RELATED) || query.startsWith(KEY_FAVORITES) || query.startsWith(KEY_STAGED)
+
+    /**
+     * Inhalt einer Feed-Sektion ohne Suchbegriff ("Ähnlich wie …", Favoriten,
+     * Radio): zuerst exakt die Songs, die im Feed zu sehen waren; mit
+     * [expand] kommen über die Radio-Queues der ersten Songs weitere passende
+     * dazu (im Instrumental-Modus gefiltert). Ohne bereitgelegte Liste —
+     * etwa nach einem App-Neustart — wird der Schlüssel neu aufgelöst.
+     */
+    private suspend fun getCollectionSongs(key: String, mode: MusicSearchMode, expand: Boolean): List<MusicSong> {
+        val instrumental = mode == MusicSearchMode.INSTRUMENTAL
+        // Favoriten bleiben Favoriten: die Seite zeigt alle (nicht nur die
+        // 24 aus dem Feed) und mischt nichts Fremdes unter.
+        if (key.startsWith(KEY_FAVORITES)) {
+            return getFavorites()
+                .filter { (it.listenMode ?: MusicSearchMode.MUSIC.apiValue) == mode.apiValue }
+                .ifEmpty { stagedCollections[key].orEmpty() }
+        }
+        val base = stagedCollections[key] ?: if (key.startsWith(KEY_RELATED)) {
+            getRelatedSongs(key.removePrefix(KEY_RELATED)).let { if (instrumental) filterInstrumental(it) else it }
+        } else {
+            emptyList()
+        }
+        if (!expand || !mode.isMusical || base.size >= 60 || base.isEmpty()) return base
+        val related = coroutineScope {
+            base.take(3).map { seed -> async { getRelatedSongs(seed.videoId) } }.map { it.await() }
+        }.flatten()
+        val seen = base.mapTo(HashSet()) { it.videoId }
+        val extra = (if (instrumental) filterInstrumental(related) else related)
+            .filter { it.duration in 60..900 && seen.add(it.videoId) }
+        return (base + extra).take(60)
+    }
+
     /**
      * Nachschub, wenn die Warteschlange leerläuft. Erste Wahl ist die echte
      * Radio-Queue von YouTube Music ([getRelatedSongs]); erst wenn sie nichts
@@ -596,19 +741,28 @@ class MusicRepository(
      * Instrumental-Filter bleibt es beim Suchweg — nur der filtert verlässlich
      * auf Stücke ohne Gesang.
      */
-    suspend fun getAutoplaySongs(seed: MusicSong, exclude: Set<String>): List<MusicSong> {
-        if (!instrumentalOnly()) {
+    suspend fun getAutoplaySongs(seed: MusicSong, exclude: Set<String>, queueMode: String? = null): List<MusicSong> {
+        val mode = queueMode?.let(MusicSearchMode::fromApiValue) ?: currentMode()
+        // Radio-Queues sind Musik: für Songs erste Wahl (im Instrumental-Modus
+        // durch den Filter), für Podcasts/Hörbücher/True Crime unbrauchbar —
+        // dort geht es über weitere Folgen desselben Kanals weiter.
+        if (mode.isMusical) {
             val related = getRelatedSongs(seed.videoId).filter { it.videoId !in exclude }
-            if (related.size >= 3) return related.take(15)
+            val usable = if (mode == MusicSearchMode.INSTRUMENTAL) filterInstrumental(related) else related
+            if (usable.size >= 3) return usable.shuffled().take(15)
         }
         val queries = listOfNotNull(
             seed.uploader.takeIf { it.isNotBlank() },
             seed.title.split(" ", "(", "-").firstOrNull { it.length > 3 },
-        )
+        ) + when (mode) {
+            // Damit der Strom ohne Gesang nie abreißt: notfalls ein Instrument.
+            MusicSearchMode.INSTRUMENTAL -> listOf(InstrumentalCatalog.INSTRUMENTS.random().query)
+            else -> emptyList()
+        }
         for (q in queries) {
-            val found = runCatching { searchMusic(q) }.getOrDefault(emptyList())
-                .filter { it.videoId !in exclude && it.duration in 60..900 }
-            if (found.size >= 3) return found.take(10)
+            val found = runCatching { searchMusic(q, mode) }.getOrDefault(emptyList())
+                .filter { it.videoId !in exclude && fitsMode(it, mode) }
+            if (found.size >= 3) return found.shuffled().take(10)
         }
         return emptyList()
     }
@@ -623,91 +777,235 @@ class MusicRepository(
 
     // --- Personalisierter Home-Feed ---
 
-    private var homeCache: List<HomeSection>? = null
-    private var homeCacheAt = 0L
+    private val homeCache = mutableMapOf<MusicSearchMode, Pair<Long, List<HomeSection>>>()
+
+    /** Verlauf eines Modus — Seeds und "schon gehört" kommen nur von dort. */
+    private suspend fun historyOf(mode: MusicSearchMode): List<MusicSong> =
+        runCatching { getHistory() }.getOrDefault(emptyList())
+            .filter { (it.listenMode ?: MusicSearchMode.MUSIC.apiValue) == mode.apiValue }
 
     /**
-     * Baut den Entdecken-Feed: Kern sind IMMER die kuratierten Genre-Mixe —
-     * die haben sich als deutlich besser erwiesen als die generischen
-     * YouTube-Home-Karussells (anonyme Quick Picks, teils fremdsprachige
-     * Community-Playlists), die deshalb hier bewusst nicht mehr auftauchen.
-     * Sobald Verlauf/Favoriten existieren, kommen personalisierte Sektionen
-     * ("Dein Mix", "Ähnlich wie …", "Deine Favoriten") OBEN dazu.
-     * Instrumental-Modus nutzt weiter nur die kuratierten Instrumental-Mixe:
-     * Radio-Queues können Gesang nicht ausschließen.
+     * Baut den Musik-Feed. Kern sind die kuratierten Genre-Mixe — aus einem
+     * großen Pool rotiert, damit jedes Pull-to-Refresh andere bringt; dazu
+     * fest "Neu erschienen" mit dem aktuellen Monat. Mit Verlauf kommen oben
+     * "Neu für dich" (Radio aus nie gehörten Songs, Autoplay hält den Strom
+     * am Laufen), "Ähnlich wie …", "Playlists für dich" und die Favoriten.
+     * Der Instrumental-Modus hat einen eigenen Aufbau ([getInstrumentalHome]).
      */
     suspend fun getPersonalizedHome(force: Boolean = false): List<HomeSection> = coroutineScope {
-        if (instrumentalOnly()) return@coroutineScope curatedHomeSections(INSTRUMENTAL_SECTIONS)
         val nowMs = System.currentTimeMillis()
-        homeCache?.takeIf { !force && nowMs - homeCacheAt < HOME_CACHE_TTL_MS }?.let {
-            return@coroutineScope it
+        homeCache[MusicSearchMode.MUSIC]?.takeIf { !force && nowMs - it.first < HOME_CACHE_TTL_MS }?.let {
+            return@coroutineScope it.second
         }
 
-        val history = runCatching { getHistory() }.getOrDefault(emptyList())
+        val history = historyOf(MusicSearchMode.MUSIC)
         val favorites = runCatching { getFavorites() }.getOrDefault(emptyList())
+            .filter { (it.listenMode ?: MusicSearchMode.MUSIC.apiValue) == MusicSearchMode.MUSIC.apiValue }
         // Seeds: jüngster Verlauf zuerst, Favoriten mischen den Geschmack
         // abseits der letzten Tage dazu.
-        val seeds = (history.take(8) + favorites.shuffled().take(4))
+        val seeds = (history.take(12) + favorites.shuffled().take(4))
             .distinctBy { it.videoId }
             .shuffled()
             .take(3)
 
         val relatedDeferred = seeds.map { seed -> async { seed to getRelatedSongs(seed.videoId) } }
-        val curatedDeferred = async { curatedHomeSections(DISCOVER_SECTIONS) }
+        val newReleases = "Neu erschienen" to newReleasesQuery(nowMs)
+        val curatedPick = listOf(DISCOVER_SECTIONS.first(), newReleases) +
+            DISCOVER_SECTIONS.drop(1).shuffled().take(CURATED_PER_LOAD - 1)
+        val curatedDeferred = async { curatedHomeSections(curatedPick) }
+        val playlistsDeferred = async { playlistsForYou(history) }
         val relatedBySeed = relatedDeferred.map { it.await() }
 
-        val recentIds = history.take(10).map { it.videoId }.toSet()
+        val heardIds = history.mapTo(HashSet()) { it.videoId }
         val sections = mutableListOf<HomeSection>()
+        val curated = curatedDeferred.await()
 
-        // "Dein Mix": alle Radio-Queues gemischt, ohne frisch Gehörtes.
-        val mix = relatedBySeed
-            .flatMap { it.second }
+        // "Neu für dich": Radio-Strom aus Songs, die noch nie liefen. Ohne
+        // Verlauf speist er sich aus "Neu erschienen" und den Mixen.
+        val freshPool = relatedBySeed.flatMap { it.second }.ifEmpty { curated.flatMap { it.songs } }
+        val fresh = freshPool
+            .filter { it.videoId !in heardIds && it.duration in 60..900 }
             .shuffled()
             .distinctBy { it.videoId }
-            .filter { it.videoId !in recentIds }
-            .take(30)
-        if (mix.size >= 5) {
-            sections += HomeSection("Dein Mix", HomeSectionKind.MIX, songs = mix)
+            .take(40)
+        if (fresh.size >= 5) {
+            sections += HomeSection("Neu für dich", HomeSectionKind.MIX, songs = fresh, query = "${KEY_STAGED}music-radio")
         }
 
         // Bis zu zwei "Ähnlich wie …"-Sektionen aus einzelnen Seeds.
-        relatedBySeed
-            .filter { it.second.size >= 5 }
-            .take(2)
-            .forEach { (seed, related) ->
-                sections += HomeSection(
-                    "Ähnlich wie ${seedLabelOf(seed)}",
-                    HomeSectionKind.SIMILAR,
-                    songs = related.take(24),
-                )
-            }
+        val similar = relatedBySeed.filter { it.second.size >= 5 }.take(2).map { (seed, related) ->
+            HomeSection(
+                "Ähnlich wie ${seedLabelOf(seed)}",
+                HomeSectionKind.SIMILAR,
+                songs = related.take(24),
+                query = "$KEY_RELATED${seed.videoId}",
+            )
+        }
+        similar.firstOrNull()?.let { sections += it }
+
+        val playlists = playlistsDeferred.await()
+        if (playlists.size >= 3) {
+            sections += HomeSection(
+                "Playlists für dich",
+                HomeSectionKind.PLAYLISTS,
+                items = playlists.map { HomeItem.PlaylistItem(it) },
+            )
+        }
+        sections += similar.drop(1)
 
         if (favorites.size >= 4) {
             sections += HomeSection(
                 "Deine Favoriten",
                 HomeSectionKind.FAVORITES,
                 songs = favorites.shuffled().take(24),
+                query = KEY_FAVORITES,
             )
         }
 
         // Kuratierte Genre-Mixe als fester Kern — auch für frische Accounts.
-        sections += curatedDeferred.await()
+        sections += curated
 
         val result = sections.toList()
-        if (result.isNotEmpty()) {
-            homeCache = result
-            homeCacheAt = nowMs
-        }
+        if (result.isNotEmpty()) homeCache[MusicSearchMode.MUSIC] = nowMs to result
         result
     }
 
-    /** Kuratierte Suchbegriff-Mixe im Home-Sektionsformat (Fallback-Pfad). */
+    /**
+     * Feed des Instrumental-Modus: keine gewöhnlichen Playlists, sondern
+     * Mix-Instrumentals (Instrument-Kombinationen, rotierend) und vorn fest
+     * "Piano für dich". Dazu ein Radio ohne Gesang und — mit Verlauf — ein
+     * gefiltertes "Ähnlich wie …". Die Instrument-Kategorien selbst sind
+     * statisch ([InstrumentalCatalog]) und kosten keinen Request.
+     */
+    suspend fun getInstrumentalHome(force: Boolean = false): List<HomeSection> = coroutineScope {
+        val mode = MusicSearchMode.INSTRUMENTAL
+        val nowMs = System.currentTimeMillis()
+        homeCache[mode]?.takeIf { !force && nowMs - it.first < HOME_CACHE_TTL_MS }?.let {
+            return@coroutineScope it.second
+        }
+        val history = historyOf(mode)
+        val heardIds = history.mapTo(HashSet()) { it.videoId }
+        val seed = history.take(10).randomOrNull()
+        val similarDeferred = seed?.let { s -> async { s to filterInstrumental(getRelatedSongs(s.videoId)) } }
+
+        val piano = InstrumentalCatalog.INSTRUMENTS.first()
+        val picks = listOf(InstrumentalCatalog.PIANO_FOCUS_TITLE to piano.query) +
+            InstrumentalCatalog.MIXES.shuffled().take(InstrumentalCatalog.MIXES_PER_LOAD)
+        val curated = picks.mapIndexed { index, (title, query) ->
+            async {
+                val songs = runCatching { getMixSongs(query, mode) }.getOrDefault(emptyList())
+                    .let { if (index == 0) it.take(24) else it.shuffled().take(16) }
+                HomeSection(title, HomeSectionKind.CURATED, songs = songs, query = query)
+            }
+        }.map { it.await() }.filter { it.songs.isNotEmpty() }
+
+        val sections = mutableListOf<HomeSection>()
+        val radio = curated.flatMap { it.songs }
+            .filter { it.videoId !in heardIds }
+            .shuffled()
+            .distinctBy { it.videoId }
+            .take(40)
+        if (radio.size >= 5) {
+            sections += HomeSection(
+                "Instrumental-Radio",
+                HomeSectionKind.MIX,
+                songs = radio,
+                query = "${KEY_STAGED}instrumental-radio",
+            )
+        }
+        similarDeferred?.await()?.let { (s, related) ->
+            if (related.size >= 5) {
+                sections += HomeSection(
+                    "Ähnlich wie ${seedLabelOf(s)}",
+                    HomeSectionKind.SIMILAR,
+                    songs = related.take(24),
+                    query = "$KEY_RELATED${s.videoId}",
+                )
+            }
+        }
+        sections += curated
+        val result = sections.toList()
+        if (curated.isNotEmpty()) homeCache[mode] = nowMs to result
+        result
+    }
+
+    /**
+     * Nachschub für den endlosen Feed: weitere, noch nicht gezeigte Mixe aus
+     * dem Pool des Modus. Leer, wenn der Pool erschöpft ist.
+     */
+    suspend fun getMoreHomeSections(mode: MusicSearchMode, shownQueries: Set<String>): List<HomeSection> =
+        coroutineScope {
+            val pool = if (mode == MusicSearchMode.INSTRUMENTAL) InstrumentalCatalog.MIXES else DISCOVER_SECTIONS
+            pool.filter { it.second !in shownQueries }.shuffled().take(MORE_PER_PAGE).map { (title, query) ->
+                async {
+                    val songs = runCatching { getMixSongs(query, mode) }.getOrDefault(emptyList())
+                        .shuffled().take(if (mode == MusicSearchMode.INSTRUMENTAL) 16 else 12)
+                    HomeSection(title, HomeSectionKind.CURATED, songs = songs, query = query)
+                }
+            }.map { it.await() }.filter { it.songs.isNotEmpty() }
+        }
+
+    /** Wie [getMoreHomeSections] für die Sprech-Modi (Hörbuch, Podcast, True Crime). */
+    suspend fun getMoreDiscoverSections(mode: MusicSearchMode, shownQueries: Set<String>): List<DiscoverSection> =
+        coroutineScope {
+            val pool = when (mode) {
+                MusicSearchMode.AUDIOBOOK -> AUDIOBOOK_SECTIONS
+                MusicSearchMode.PODCAST -> PODCAST_SECTIONS
+                MusicSearchMode.TRUECRIME -> TRUECRIME_SECTIONS
+                else -> DISCOVER_SECTIONS
+            }
+            pool.filter { it.second !in shownQueries }.shuffled().take(MORE_PER_PAGE).map { (title, query) ->
+                async {
+                    val songs = runCatching { getMixSongs(query, mode) }.getOrDefault(emptyList()).shuffled().take(24)
+                    DiscoverSection(title, songs, query)
+                }
+            }.map { it.await() }.filter { it.songs.isNotEmpty() }
+        }
+
+    /** Suchbegriff für "Neu erschienen" — mit Monat, damit er nicht veraltet. */
+    private fun newReleasesQuery(nowMs: Long): String {
+        val cal = java.util.Calendar.getInstance().apply { timeInMillis = nowMs }
+        return "new songs ${MONTHS_EN[cal.get(java.util.Calendar.MONTH)]} ${cal.get(java.util.Calendar.YEAR)}"
+    }
+
+    /**
+     * Echte YouTube-Playlists für den Feed: eine Suche zum meistgehörten
+     * Künstler der letzten Zeit, eine zu einem rotierenden Stimmungs-Thema.
+     */
+    private suspend fun playlistsForYou(history: List<MusicSong>): List<RemotePlaylist> = coroutineScope {
+        val topArtist = history.take(40)
+            .map { it.uploader.substringBefore(",").substringBefore(" & ").trim() }
+            .filter { it.isNotBlank() }
+            .groupingBy { it }.eachCount()
+            .entries.sortedByDescending { it.value }
+            .take(3).randomOrNull()?.key
+        val queries = listOfNotNull(topArtist?.let { "$it mix" }) +
+            PLAYLIST_QUERIES.shuffled().take(if (topArtist == null) 2 else 1)
+        val lists = queries.map { q -> async { searchTypedPlaylists(q) } }.map { it.await() }
+        // Reißverschluss: abwechselnd aus beiden Quellen statt Block für Block.
+        val merged = mutableListOf<RemotePlaylist>()
+        for (i in 0 until (lists.maxOfOrNull { it.size } ?: 0)) {
+            lists.forEach { l -> l.getOrNull(i)?.let(merged::add) }
+        }
+        // videoCount kommt von der Typed-Suche nicht mit (immer 0) — nicht danach filtern.
+        merged
+            .filter { pl ->
+                val text = "${pl.name} ${pl.uploaderName}".lowercase()
+                FOREIGN_PLAYLIST_MARKERS.none { it in text }
+            }
+            .distinctBy { it.playlistId }
+            .take(12)
+    }
+
+    /** Kuratierte Suchbegriff-Mixe im Home-Sektionsformat; Songs neu gemischt. */
     private suspend fun curatedHomeSections(source: List<Pair<String, String>>): List<HomeSection> =
         coroutineScope {
-            source.map { (title, query) ->
+            source.mapIndexed { index, (title, query) ->
                 async {
                     val songs = try {
-                        getMixSongs(query, MusicSearchMode.MUSIC).take(12)
+                        // Die erste Sektion (Charts) behält ihre Rangfolge.
+                        getMixSongs(query, MusicSearchMode.MUSIC)
+                            .let { if (index == 0) it.take(12) else it.shuffled().take(12) }
                     } catch (_: Exception) {
                         emptyList()
                     }
@@ -797,10 +1095,14 @@ class MusicRepository(
      * Merkt einen Song in der Bibliothek. [touchRecency] steuert, ob er im
      * Verlauf nach oben rutscht — beim Download soll er das nicht.
      */
-    suspend fun recordPlayed(song: MusicSong, touchRecency: Boolean = true) {
+    suspend fun recordPlayed(song: MusicSong, touchRecency: Boolean = true, mode: String? = null) {
         val existing = songDao.getByName(song.videoId)
+        val mode = mode ?: currentMode().apiValue
         val entity = song.toEntity().copy(
             isFavorite = existing?.isFavorite ?: song.isFavorite,
+            // Echte Wiedergabe ordnet den Song dem aktuellen Modus zu; Downloads
+            // und Playlist-Verknüpfungen lassen eine bestehende Zuordnung stehen.
+            listenMode = if (touchRecency) mode else existing?.listenMode ?: mode,
             addedAt = if (touchRecency) {
                 System.currentTimeMillis()
             } else {
@@ -834,7 +1136,7 @@ class MusicRepository(
     suspend fun toggleFavorite(song: MusicSong): Boolean {
         val existing = songDao.getByName(song.videoId)
         return if (existing == null) {
-            songDao.insert(song.toEntity().copy(isFavorite = true))
+            songDao.insert(song.toEntity().copy(isFavorite = true, listenMode = currentMode().apiValue))
             true
         } else {
             val next = !existing.isFavorite
@@ -1077,12 +1379,13 @@ class MusicRepository(
         videoId = videoId, title = title, uploader = uploader, uploaderUrl = uploaderUrl,
         thumbnailUrl = thumbnailUrl, duration = duration, views = views,
         addedAt = addedAt, isFavorite = isFavorite,
+        listenMode = listenMode ?: MusicSearchMode.MUSIC.apiValue,
     )
 
     private fun MusicSongEntity.toSong() = MusicSong(
         videoId = videoId, title = title, uploader = uploader, uploaderUrl = uploaderUrl,
         thumbnailUrl = thumbnailUrl, duration = duration, views = views,
-        addedAt = addedAt, isFavorite = isFavorite,
+        addedAt = addedAt, isFavorite = isFavorite, listenMode = listenMode,
     )
 
     private fun MusicPlaylistEntity.toModel() = MusicPlaylist(

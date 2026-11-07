@@ -35,7 +35,7 @@ sealed interface HomeItem {
 
 /** Woraus eine Home-Sektion entstand — steuert Darstellung und Aktionen. */
 enum class HomeSectionKind {
-    /** Radio-Mix aus den Hör-Seeds des Nutzers. */
+    /** Radio-Strom aus nie gehörten Songs — läuft per Autoplay endlos weiter. */
     MIX,
 
     /** "Ähnlich wie X" — Related-Songs eines einzelnen Seeds. */
@@ -49,6 +49,9 @@ enum class HomeSectionKind {
 
     /** Kuratierter Fallback-Mix mit Suchbegriff (offline/Fehler/Instrumental). */
     CURATED,
+
+    /** Echte YouTube-Playlists passend zum Geschmack ([HomeSection.items]). */
+    PLAYLISTS,
 }
 
 /**

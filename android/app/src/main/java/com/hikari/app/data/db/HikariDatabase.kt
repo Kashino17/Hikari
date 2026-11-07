@@ -20,7 +20,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         MusicPlayEventEntity::class,
         WhatsAppMessageEntity::class,
     ],
-    version = 21,
+    version = 22,
     exportSchema = false,
 )
 abstract class HikariDatabase : RoomDatabase() {
@@ -229,5 +229,39 @@ val MIGRATION_20_21 = object : Migration(20, 21) {
         )
         db.execSQL("DROP TABLE `feed_items`")
         db.execSQL("ALTER TABLE `feed_items_new` RENAME TO `feed_items`")
+    }
+}
+
+/**
+ * Musik-Modi: jeder Song merkt sich, in welchem Modus er lief — "Zuletzt
+ * gehört" filtert danach. Der Bestand wird einmalig per Titel-/Dauer-
+ * Heuristik eingeordnet, damit Podcasts und Hörbücher nicht als Musik
+ * auftauchen; alles Unklare bleibt Musik.
+ */
+val MIGRATION_21_22 = object : Migration(21, 22) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE music_songs ADD COLUMN listenMode TEXT NOT NULL DEFAULT 'music'")
+        fun tag(mode: String, where: String) =
+            db.execSQL("UPDATE music_songs SET listenMode = '$mode' WHERE listenMode = 'music' AND ($where)")
+        tag(
+            "truecrime",
+            "lower(title) LIKE '%true crime%' OR lower(title) LIKE '%mordfall%' OR " +
+                "lower(title) LIKE '%kriminalfall%' OR lower(title) LIKE '%cold case%' OR " +
+                "lower(uploader) LIKE '%crime%' OR lower(uploader) LIKE '%verbrechen%'",
+        )
+        tag(
+            "audiobook",
+            "lower(title) LIKE '%hörbuch%' OR lower(title) LIKE '%hoerbuch%' OR " +
+                "lower(title) LIKE '%audiobook%' OR lower(title) LIKE '%kapitel%'",
+        )
+        tag("podcast", "lower(title) LIKE '%podcast%' OR lower(uploader) LIKE '%podcast%' OR duration >= 1500")
+        tag(
+            "instrumental",
+            "duration < 1500 AND lower(title) NOT LIKE '%lyrics%' AND lower(title) NOT LIKE '%vocal%' AND (" +
+                "lower(title) LIKE '%instrumental%' OR lower(title) LIKE '%piano%' OR " +
+                "lower(title) LIKE '%violin%' OR lower(title) LIKE '%lofi%' OR lower(title) LIKE '%lo-fi%' OR " +
+                "lower(title) LIKE '%ohne gesang%' OR lower(title) LIKE '%no vocals%' OR " +
+                "lower(title) LIKE '%saxophone%' OR lower(title) LIKE '%cello%')",
+        )
     }
 }

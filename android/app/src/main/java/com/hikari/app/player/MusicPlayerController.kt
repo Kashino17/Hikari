@@ -479,6 +479,14 @@ class MusicPlayerController @Inject constructor(
         )
     }
 
+    /**
+     * Hör-Modus, in dem die laufende Warteschlange gestartet wurde
+     * (MusicSearchMode.apiValue). Verlauf und Autoplay-Nachschub richten sich
+     * danach — nicht nach einem späteren Moduswechsel in der Oberfläche.
+     */
+    @Volatile
+    var queueMode: String? = null
+
     fun play(song: MusicSong, contextQueue: List<MusicSong> = emptyList()) {
         autoplayJob?.cancel() // eigene Auswahl schlägt laufenden Nachschub
         retryJob?.cancel()
@@ -795,7 +803,7 @@ class MusicPlayerController @Inject constructor(
         _isBuffering.value = true
         _videoFrameReady.value = false
         _isEnded.value = false
-        scope.launch { repo.recordPlayed(song) }
+        scope.launch { repo.recordPlayed(song, mode = queueMode) }
         loadJob = scope.launch {
             // Video-Modus: der nächste Titel läuft direkt als Video weiter.
             // Ohne Video-Quelle (kein Backend/offline) fällt der Player
@@ -963,7 +971,7 @@ class MusicPlayerController @Inject constructor(
                 _positionMs.value = 0
                 _isEnded.value = false
                 _error.value = null
-                scope.launch { repo.recordPlayed(q[nextIndex]) }
+                scope.launch { repo.recordPlayed(q[nextIndex], mode = queueMode) }
                 p.seekToNextMediaItem()
                 if (p.currentMediaItemIndex > 0) p.removeMediaItem(0)
                 // Gleich den übernächsten Song vorbereiten.
@@ -1015,7 +1023,7 @@ class MusicPlayerController @Inject constructor(
         } else {
             p?.volume = 1f
         }
-        scope.launch { repo.recordPlayed(song) }
+        scope.launch { repo.recordPlayed(song, mode = queueMode) }
         // Gleich den übernächsten Song vorbereiten.
         maybePrefetchNext()
     }
@@ -1084,7 +1092,7 @@ class MusicPlayerController @Inject constructor(
             if (connectivity.currentlyOnline()) {
                 for (attempt in 1..3) {
                     more = try {
-                        repo.getAutoplaySongs(seed, current.map { it.videoId }.toSet())
+                        repo.getAutoplaySongs(seed, current.map { it.videoId }.toSet(), queueMode)
                     } catch (e: CancellationException) {
                         // Abbruch (z. B. eigene Songwahl via play()) ist kein
                         // Fetch-Fehler — nicht als „leeres Ergebnis" weiterlaufen.

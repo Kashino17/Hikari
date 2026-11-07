@@ -21,6 +21,7 @@ private val SMART_DOWNLOADS_KEY = booleanPreferencesKey("smart_downloads")
 private val DOWNLOADS_LIMIT_BYTES_KEY = longPreferencesKey("downloads_limit_bytes")
 private val AUTH_TOKEN_KEY = stringPreferencesKey("auth_token")
 private val INSTRUMENTAL_ONLY_KEY = booleanPreferencesKey("music_instrumental_only")
+private val MUSIC_MODE_KEY = stringPreferencesKey("music_mode")
 private val NEWS_ENABLED_KEY = booleanPreferencesKey("news_enabled")
 private val NEWS_TIME_MINUTES_KEY = intPreferencesKey("news_time_minutes")
 private val NEWS_TOPICS_KEY = stringPreferencesKey("news_topics")
@@ -65,9 +66,13 @@ class SettingsStore @Inject constructor(
         it[AUTH_TOKEN_KEY].orEmpty()
     }
 
-    /** Musik-Vorschläge auf Instrumentalstücke beschränken. */
-    val instrumentalOnly: Flow<Boolean> = ctx.dataStore.data.map {
-        it[INSTRUMENTAL_ONLY_KEY] ?: false
+    /**
+     * Gewählter Hör-Modus des Musikbereichs (MusicSearchMode.apiValue). Der
+     * alte "Ohne Gesang"-Schalter ist im Modus "instrumental" aufgegangen —
+     * wer ihn an hatte, landet beim ersten Start direkt dort.
+     */
+    val musicMode: Flow<String> = ctx.dataStore.data.map {
+        it[MUSIC_MODE_KEY] ?: if (it[INSTRUMENTAL_ONLY_KEY] == true) "instrumental" else "music"
     }
 
     /** Täglicher News-Tagesbericht: Push-Benachrichtigung aktiv. */
@@ -149,8 +154,8 @@ class SettingsStore @Inject constructor(
         ctx.dataStore.edit { it[NEWS_LANG_KEY] = lang }
     }
 
-    suspend fun setInstrumentalOnly(enabled: Boolean) {
-        ctx.dataStore.edit { it[INSTRUMENTAL_ONLY_KEY] = enabled }
+    suspend fun setMusicMode(mode: String) {
+        ctx.dataStore.edit { it[MUSIC_MODE_KEY] = mode }
     }
 
     suspend fun setBackendUrl(url: String) {

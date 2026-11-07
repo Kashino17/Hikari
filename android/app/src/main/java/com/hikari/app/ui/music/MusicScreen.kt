@@ -56,6 +56,7 @@ import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.LocalPolice
 import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.Piano
 import androidx.compose.material.icons.outlined.Podcasts
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -146,7 +147,6 @@ fun MusicScreen(
         }
     }
 
-    val instrumental by viewModel.instrumentalOnly.collectAsState()
     val headerHistory by viewModel.searchHistory.collectAsState()
     val searchMode = viewModel.searchMode
 
@@ -164,11 +164,12 @@ fun MusicScreen(
                 value = viewModel.searchQuery,
                 placeholder = when (searchMode) {
                     MusicSearchMode.MUSIC -> "Songs, Artists, Alben suchen…"
+                    MusicSearchMode.INSTRUMENTAL -> "Instrumentals suchen…"
                     MusicSearchMode.AUDIOBOOK -> "Hörbücher suchen…"
                     MusicSearchMode.PODCAST -> "Podcasts suchen…"
                     MusicSearchMode.TRUECRIME -> "Fälle, Shows suchen…"
                 },
-                filtered = searchMode != MusicSearchMode.MUSIC || instrumental,
+                filtered = searchMode != MusicSearchMode.MUSIC,
                 panelsOpen = panelsOpen,
                 onValueChange = {
                     viewModel.searchQuery = it
@@ -321,24 +322,28 @@ private data class ModeEntry(
     val icon: ImageVector,
     val title: String,
     val desc: String,
+    /** Wiedererkennungsfarbe des Modus — Icon-Kachel im Auswahl-Sheet. */
+    val color: Color,
 )
 
 private val MODE_ENTRIES = listOf(
-    ModeEntry(MusicSearchMode.MUSIC, Icons.Default.MusicNote, "Musik", "Songs, Artists, Alben und Playlists"),
-    ModeEntry(MusicSearchMode.AUDIOBOOK, Icons.Outlined.MenuBook, "Hörbücher", "Ganze Bücher und Kapitel zum Zuhören"),
-    ModeEntry(MusicSearchMode.PODCAST, Icons.Outlined.Podcasts, "Podcasts", "Shows und Folgen aller Themen"),
-    ModeEntry(MusicSearchMode.TRUECRIME, Icons.Outlined.LocalPolice, "True Crime", "Echte Kriminalfälle als Audio"),
+    ModeEntry(MusicSearchMode.MUSIC, Icons.Default.MusicNote, "Musik", "Songs, Artists, Alben und Playlists", Color(0xFF38BDF8)),
+    ModeEntry(
+        MusicSearchMode.INSTRUMENTAL, Icons.Outlined.Piano, "Instrumental",
+        "Ohne Gesang — Piano, Violine, Saxophon und mehr", INSTRUMENTAL_ACCENT,
+    ),
+    ModeEntry(MusicSearchMode.AUDIOBOOK, Icons.Outlined.MenuBook, "Hörbücher", "Ganze Bücher und Kapitel zum Zuhören", Color(0xFF34D399)),
+    ModeEntry(MusicSearchMode.PODCAST, Icons.Outlined.Podcasts, "Podcasts", "Shows und Folgen aller Themen", Color(0xFFA78BFA)),
+    ModeEntry(MusicSearchMode.TRUECRIME, Icons.Outlined.LocalPolice, "True Crime", "Echte Kriminalfälle als Audio", Color(0xFFF472B6)),
 )
 
 /**
  * Modus-Sheet hinter dem Tune-Icon in der Suchleiste: wählt zwischen Musik,
- * Hörbüchern, Podcasts und True Crime; im Musik-Modus wohnt hier auch der
- * "Ohne Gesang"-Schalter. Zurückhaltend: die aktive Zeile trägt nur einen
- * feinen Amber-Border, keine Farbfläche.
+ * Instrumental, Hörbüchern, Podcasts und True Crime. Jeder Modus trägt seine
+ * Farbe in der Icon-Kachel; die aktive Zeile zusätzlich einen feinen Border.
  */
 @Composable
 private fun ModeSheet(viewModel: MusicViewModel, onClose: () -> Unit) {
-    val instrumental by viewModel.instrumentalOnly.collectAsState()
     MuSheet("Was möchtest du hören?", onClose = onClose) {
         MODE_ENTRIES.forEach { entry ->
             val active = viewModel.searchMode == entry.mode
@@ -349,7 +354,7 @@ private fun ModeSheet(viewModel: MusicViewModel, onClose: () -> Unit) {
                     .clip(RoundedCornerShape(16.dp))
                     .border(
                         1.dp,
-                        if (active) HikariPrimary.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.05f),
+                        if (active) entry.color.copy(alpha = 0.55f) else Color.White.copy(alpha = 0.05f),
                         RoundedCornerShape(16.dp),
                     )
                     .muPressable {
@@ -360,12 +365,15 @@ private fun ModeSheet(viewModel: MusicViewModel, onClose: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
-                    Modifier.size(36.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.05f)),
+                    Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(if (active) entry.color else entry.color.copy(alpha = 0.16f)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         entry.icon, null,
-                        tint = if (active) HikariPrimary else HikariTextMuted,
+                        tint = if (active) Color.Black.copy(alpha = 0.85f) else entry.color,
                         modifier = Modifier.size(18.dp),
                     )
                 }
@@ -375,22 +383,14 @@ private fun ModeSheet(viewModel: MusicViewModel, onClose: () -> Unit) {
                         entry.title,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (active) HikariPrimary else HikariText,
+                        color = HikariText,
                     )
                     Text(entry.desc, fontSize = 12.sp, color = HikariTextMuted)
                 }
                 if (active) {
-                    Icon(Icons.Default.Check, null, tint = HikariPrimary, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Check, null, tint = entry.color, modifier = Modifier.size(18.dp))
                 }
             }
-        }
-        if (viewModel.searchMode == MusicSearchMode.MUSIC) {
-            Spacer(Modifier.height(8.dp))
-            InstrumentalToggle(
-                enabled = instrumental,
-                onToggle = { viewModel.toggleInstrumental() },
-            )
-            Spacer(Modifier.height(4.dp))
         }
     }
 }
@@ -418,7 +418,6 @@ private fun DiscoverTab(
     }
 
     val searching = viewModel.searchAttempted
-    val instrumental by viewModel.instrumentalOnly.collectAsState()
     val currentSong by viewModel.player.currentSong.collectAsState()
     val downloadedIds by viewModel.downloadedIds.collectAsState()
     val progressMap by viewModel.downloadProgress.collectAsState()
@@ -431,6 +430,17 @@ private fun DiscoverTab(
     LaunchedEffect(Unit) {
         viewModel.loadDiscover()
         viewModel.refreshLibrary()
+    }
+
+    // Endloser Feed: rückt das Listenende in Sicht, kommen weitere Mixe dazu.
+    val listState = viewModel.discoverListState
+    LaunchedEffect(listState, searching, viewModel.searchActive) {
+        if (searching || viewModel.searchActive) return@LaunchedEffect
+        androidx.compose.runtime.snapshotFlow {
+            val info = listState.layoutInfo
+            val last = info.visibleItemsInfo.lastOrNull()?.index ?: 0
+            info.totalItemsCount > 0 && last >= info.totalItemsCount - 4
+        }.collect { nearEnd -> if (nearEnd) viewModel.loadMoreFeed() }
     }
 
     PullToRefreshBox(
@@ -467,6 +477,13 @@ private fun DiscoverTab(
                     item(key = "genre-browse") {
                         GenreBrowseGrid(onOpenGenre = { title, query ->
                             onOpenMix(title, query, MusicSearchMode.MUSIC.apiValue)
+                        })
+                    }
+                } else if (searchMode == MusicSearchMode.INSTRUMENTAL) {
+                    item(key = "instrument-browse-header") { SectionHeader("Instrumente", eyebrow = "STÖBERN") }
+                    item(key = "instrument-browse") {
+                        InstrumentGrid(onOpenInstrument = { title, query ->
+                            onOpenMix(title, query, MusicSearchMode.INSTRUMENTAL.apiValue)
                         })
                     }
                 }
@@ -508,23 +525,27 @@ private fun DiscoverTab(
             return@LazyColumn
         }
 
-        if (!searching && viewModel.history.isNotEmpty()) {
+        // "Zuletzt gehört" nur aus dem aktiven Modus — gibt es dort nichts,
+        // fällt die Leiste ganz weg.
+        val recent = viewModel.modeHistory.take(10)
+        if (!searching && recent.isNotEmpty()) {
             item(key = "history-strip") {
                 HistoryStrip(
-                    songs = viewModel.history.take(10),
+                    songs = recent,
                     currentVideoId = currentSong?.videoId,
-                    onPlay = { song -> viewModel.play(song, viewModel.history.take(10)) },
+                    onPlay = { song -> viewModel.play(song, recent) },
                 )
             }
         }
 
-        // Schnellauswahl: meistgehörte Songs der letzten 7 Tage.
-        if (!searching && viewModel.topWeekSongs.size >= 4) {
+        // Schnellauswahl: meistgehörte Songs der letzten 7 Tage (ebenfalls pro Modus).
+        val topWeek = viewModel.modeTopWeek
+        if (!searching && topWeek.size >= 4) {
             item(key = "top-week") {
                 TopWeekQuickPicks(
-                    songs = viewModel.topWeekSongs,
+                    songs = topWeek,
                     currentVideoId = currentSong?.videoId,
-                    onPlay = { song -> viewModel.play(song, viewModel.topWeekSongs) },
+                    onPlay = { song -> viewModel.play(song, topWeek) },
                 )
             }
         }
@@ -534,7 +555,6 @@ private fun DiscoverTab(
             smartSearchResults(
                 viewModel = viewModel,
                 mode = searchMode,
-                instrumental = instrumental,
                 currentVideoId = currentSong?.videoId,
                 downloadedIds = downloadedIds,
                 progressMap = progressMap,
@@ -568,6 +588,14 @@ private fun DiscoverTab(
                 onOpenArtist = onOpenArtist,
                 onOpenCollection = onOpenCollection,
             )
+            searchMode == MusicSearchMode.INSTRUMENTAL -> instrumentalContent(
+                viewModel = viewModel,
+                currentVideoId = currentSong?.videoId,
+                downloadedIds = downloadedIds,
+                progressMap = progressMap,
+                online = online,
+                onOpenMix = onOpenMix,
+            )
             else -> discoverContent(
                 viewModel = viewModel,
                 currentVideoId = currentSong?.videoId,
@@ -576,6 +604,9 @@ private fun DiscoverTab(
                 online = online,
                 onOpenMix = onOpenMix,
             )
+        }
+        if (viewModel.moreLoading) {
+            item(key = "feed-more") { CenteredLoader() }
         }
     }
     }
@@ -598,8 +629,37 @@ private fun LazyListScope.homeContent(
     onOpenArtist: (channelId: String, name: String) -> Unit,
     onOpenCollection: (playlistId: String, name: String, isAlbum: Boolean) -> Unit,
 ) {
-    val sections = viewModel.homeSections
-    if (sections.isEmpty()) return
+    val allSections = viewModel.homeSections
+    if (allSections.isEmpty()) return
+
+    // Radio-Strom ganz oben: ein Tipp, und es laufen Songs, die noch nie
+    // liefen — Autoplay hängt danach endlos passenden Nachschub an.
+    val radio = allSections.firstOrNull { it.kind == HomeSectionKind.MIX }
+    if (radio != null) {
+        item(key = "home-radio") {
+            RadioHeroCard(
+                eyebrow = "RADIO · ENDLOS",
+                title = radio.title,
+                subtitle = "Songs, die du noch nie gehört hast — danach geht es automatisch weiter.",
+                songs = radio.songs,
+                accent = Color(0xFF38BDF8),
+                isPlayingFrom = radio.songs.any { it.videoId == currentVideoId },
+                onOpen = {
+                    viewModel.stageCollection(radio.query, radio.songs)
+                    onOpenMix(radio.title, radio.query, MusicSearchMode.MUSIC.apiValue)
+                },
+                onPlay = { viewModel.play(radio.songs.first(), radio.songs) },
+            )
+        }
+    }
+    val sections = allSections.filter { it.kind != HomeSectionKind.MIX }
+
+    // "Alle" öffnet die Sektion als eigene Playlist-Seite: erst die Songs aus
+    // dem Feed, dann nachgeladene passende — speicherbar und offline ladbar.
+    val openSection: (com.hikari.app.domain.model.HomeSection) -> Unit = { section ->
+        viewModel.stageCollection(section.query, section.songs)
+        onOpenMix(section.title, section.query, MusicSearchMode.MUSIC.apiValue)
+    }
 
     // Kuratierte Mixe als Karten-Reihe — die Cover bringen Farbe und
     // Abwechslung in den Feed (gleiche Optik wie im Genre-Entdecken).
@@ -632,18 +692,17 @@ private fun LazyListScope.homeContent(
                 HomeSectionKind.MIX -> SectionHeader(
                     section.title,
                     eyebrow = "FÜR DICH",
-                    onSeeAll = { section.songs.firstOrNull()?.let { viewModel.play(it, section.songs) } },
-                    actionLabel = "Abspielen",
+                    onSeeAll = { openSection(section) },
                 )
                 HomeSectionKind.SIMILAR, HomeSectionKind.FAVORITES -> SectionHeader(
                     section.title,
-                    onSeeAll = { section.songs.firstOrNull()?.let { viewModel.play(it, section.songs) } },
-                    actionLabel = "Abspielen",
+                    onSeeAll = { openSection(section) },
                 )
                 HomeSectionKind.CURATED -> SectionHeader(
                     section.title,
                     onSeeAll = { onOpenMix(section.title, section.query, MusicSearchMode.MUSIC.apiValue) },
                 )
+                HomeSectionKind.PLAYLISTS -> SectionHeader(section.title, eyebrow = "FÜR DICH")
                 HomeSectionKind.BACKEND -> SectionHeader(section.title)
             }
         }
@@ -752,7 +811,6 @@ private fun LazyListScope.homeContent(
 private fun LazyListScope.smartSearchResults(
     viewModel: MusicViewModel,
     mode: MusicSearchMode,
-    instrumental: Boolean,
     currentVideoId: String?,
     downloadedIds: Set<String>,
     progressMap: Map<String, Float>,
@@ -762,8 +820,9 @@ private fun LazyListScope.smartSearchResults(
     onOpenGroup: (title: String, unit: String, query: String, mode: String) -> Unit,
 ) {
     val musicMode = mode == MusicSearchMode.MUSIC
+    val musical = mode.isMusical
     // Modusgerechte Chip-Beschriftung: außerhalb der Musik gibt es keine
-    // Alben, und "Songs/Künstler" heißen dort "Inhalte/Kanäle".
+    // Alben, und "Songs/Künstler" heißen bei Gesprochenem "Inhalte/Kanäle".
     val filterEntries = if (musicMode) {
         MusicSearchFilter.entries.toList()
     } else {
@@ -776,7 +835,7 @@ private fun LazyListScope.smartSearchResults(
     }
     val labelFor: (MusicSearchFilter) -> String = { filter ->
         when {
-            musicMode -> filter.label
+            musical -> filter.label
             filter == MusicSearchFilter.SONGS -> "Inhalte"
             filter == MusicSearchFilter.KUENSTLER -> "Kanäle"
             else -> filter.label
@@ -826,8 +885,8 @@ private fun LazyListScope.smartSearchResults(
                     full.albums.isEmpty() && full.playlists.isEmpty())
             if (nothingFound) {
                 item(key = "search-empty") {
-                    if (musicMode && instrumental) {
-                        FilteredEmptyHint(onDisableFilter = { viewModel.toggleInstrumental() })
+                    if (mode == MusicSearchMode.INSTRUMENTAL) {
+                        FilteredEmptyHint(onDisableFilter = { viewModel.selectSearchMode(MusicSearchMode.MUSIC) })
                     } else {
                         EmptyHint(Icons.Default.Search, "Nichts gefunden — anderer Suchbegriff?")
                     }
@@ -848,15 +907,15 @@ private fun LazyListScope.smartSearchResults(
                     })
                 }
             }
-            if (!musicMode && viewModel.searchGroups.isNotEmpty()) {
+            if (!musical && viewModel.searchGroups.isNotEmpty()) {
                 item(key = "groups-header") { SectionHeader(if (mode == MusicSearchMode.AUDIOBOOK) "Hörbücher" else "Shows") }
                 groupRows()
             }
             // Außerhalb der Musik zeigen die Song-Zeilen nur die Einzelgänger —
             // alles Gruppierte steht schon oben bei den Shows.
-            val songList = if (musicMode) full.songs else viewModel.searchResults
+            val songList = if (musical) full.songs else viewModel.searchResults
             if (songList.isNotEmpty()) {
-                item(key = "songs-header") { SectionHeader(if (musicMode) "Songs" else "Inhalte") }
+                item(key = "songs-header") { SectionHeader(if (musical) "Songs" else "Inhalte") }
                 items(songList, key = { "s-${it.videoId}" }) { song ->
                     SongRow(
                         song,
@@ -872,7 +931,7 @@ private fun LazyListScope.smartSearchResults(
                 }
             }
             if (full.artists.isNotEmpty()) {
-                item(key = "artists-header") { SectionHeader(if (musicMode) "Künstler" else "Kanäle") }
+                item(key = "artists-header") { SectionHeader(if (musical) "Künstler" else "Kanäle") }
                 items(full.artists, key = { "a-${it.channelId}" }) { artist ->
                     ArtistResultRow(artist, onClick = { onOpenArtist(artist.channelId, artist.name) })
                 }
@@ -903,7 +962,7 @@ private fun LazyListScope.smartSearchResults(
                     EmptyHint(Icons.Default.Search, "Nichts gefunden — anderer Suchbegriff?")
                 }
                 else -> {
-                    if (!musicMode) groupRows()
+                    if (!musical) groupRows()
                     items(songs, key = { "ts-${it.videoId}" }) { song ->
                         SongRow(
                             song,
@@ -1150,7 +1209,7 @@ private fun HomeArtistBubble(
 }
 
 @Composable
-private fun TileBound(
+internal fun TileBound(
     song: MusicSong,
     viewModel: MusicViewModel,
     queue: List<MusicSong>,

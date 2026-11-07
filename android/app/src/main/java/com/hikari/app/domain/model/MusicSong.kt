@@ -16,6 +16,8 @@ data class MusicSong(
      * weiterhin nur den zusammengesetzten [uploader]-String.
      */
     val artists: List<SongArtist> = emptyList(),
+    /** Modus, in dem der Song zuletzt lief — nur bei Verlaufs-Einträgen gesetzt. */
+    val listenMode: String? = null,
 )
 
 /** Ein einzelner Artist eines Songs — [channelId] öffnet dessen Seite. */
