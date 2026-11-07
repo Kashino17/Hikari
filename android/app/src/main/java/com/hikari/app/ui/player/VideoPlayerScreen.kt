@@ -54,6 +54,9 @@ import androidx.compose.material.icons.filled.PictureInPictureAlt
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.outlined.FitScreen
+import androidx.compose.material.icons.outlined.Share
+import com.hikari.app.ui.common.shareLink
+import com.hikari.app.ui.common.shareUrlFor
 import androidx.compose.material.icons.outlined.PlaylistPlay
 import androidx.compose.material.icons.outlined.ScreenRotation
 import androidx.compose.material.icons.outlined.SkipNext
@@ -209,6 +212,9 @@ fun VideoPlayerScreen(
     var currentVideoId by remember { mutableStateOf(videoId) }
     var currentTitle by remember { mutableStateOf(title) }
     var detail by remember { mutableStateOf<VideoDetailDto?>(null) }
+    var playerViewRef by remember { mutableStateOf<PlayerView?>(null) }
+    // YouTube-ID → youtu.be-Link, importierte Folge → ihre Quellseite, sonst kein Teilen.
+    val shareUrl = shareUrlFor(currentVideoId, detail?.source_url)
     var episodes by remember { mutableStateOf<List<LibraryVideoDto>>(emptyList()) }
 
     var playing by remember { mutableStateOf(player.isPlaying) }
@@ -280,10 +286,30 @@ fun VideoPlayerScreen(
         }
     }
 
+    // Beim Zurückgehen das aktuelle Bild festhalten: die Mini-Leiste zeigt
+    // es sofort (statt Schwarz bzw. Vorschaubild), auch wenn pausiert ist.
+    // Die Kopie läuft asynchron — spätestens nach 150 ms geht es trotzdem zurück.
+    var leaving by remember { mutableStateOf(false) }
     fun minimizeAndBack() {
+        if (leaving) return
+        leaving = true
         dockManager.setActivePlayer(currentVideoId, currentTitle, channel, player)
-        dockManager.dock()
-        onBack()
+        val id = currentVideoId
+        val handler = android.os.Handler(android.os.Looper.getMainLooper())
+        var done = false
+        val finish = {
+            if (!done) {
+                done = true
+                dockManager.dock()
+                onBack()
+                leaving = false
+            }
+        }
+        captureVideoFrame(playerViewRef) { frame ->
+            dockManager.setLastFrame(id, frame)
+            finish()
+        }
+        handler.postDelayed({ finish() }, 150)
     }
 
     fun savePositionAsync(id: String, pos: Long) {
@@ -349,6 +375,16 @@ fun VideoPlayerScreen(
         showNextOverlay = false
         val d = runCatching { api.getVideo(currentVideoId) }.getOrNull()
         detail = d
+        if (d != null) {
+            val label = when {
+                d.season != null && d.episode != null -> "S${d.season} · F${d.episode}"
+                d.episode != null -> "Folge ${d.episode}"
+                !d.series_title.isNullOrBlank() -> d.series_title
+                else -> null
+            }
+            val thumb = d.thumbnail_url?.let { if (it.startsWith("http")) it else baseUrl.trimEnd('/') + it }
+            dockManager.updateMeta(currentVideoId, label, thumb)
+        }
         if (d != null && currentTitle.isBlank()) {
             currentTitle = d.title
             dockManager.setActivePlayer(currentVideoId, currentTitle, channel, player)
@@ -784,6 +820,7 @@ fun VideoPlayerScreen(
             AndroidView(
                 factory = { c ->
                     PlayerView(c).apply {
+                        playerViewRef = this
                         useController = false
                         resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
                         setBackgroundColor(android.graphics.Color.BLACK)
@@ -949,6 +986,7 @@ fun VideoPlayerScreen(
                             if (episodes.isNotEmpty()) BottomAction(Icons.Outlined.PlaylistPlay, "Folgen", { sheet = Sheet.Episodes })
                             BottomAction(Icons.Outlined.Speed, "Tempo (${speedLabel(speed)})", { sheet = Sheet.Speed })
                             if (hasTrackChoices) BottomAction(Icons.Outlined.Subtitles, "Audio & Untertitel", { sheet = Sheet.Tracks })
+                            shareUrl?.let { url -> BottomAction(Icons.Outlined.Share, "Teilen", { shareLink(ctx, currentTitle, url) }) }
                             if (nextVideo != null) BottomAction(Icons.Outlined.SkipNext, "Nächste Folge", { playNext() })
                         }
                     } else {
@@ -1091,6 +1129,7 @@ fun VideoPlayerScreen(
                     onLock = { toggleLock() },
                     onNext = { playNext() },
                     onPickEpisode = { ep -> switchTo(ep.id, ep.title) },
+                    onShare = shareUrl?.let { url -> { shareLink(ctx, currentTitle, url) } },
                     modifier = Modifier.fillMaxWidth().weight(1f),
                 )
             }
@@ -1121,6 +1160,7 @@ private fun PortraitPanel(
     onLock: () -> Unit,
     onNext: () -> Unit,
     onPickEpisode: (LibraryVideoDto) -> Unit,
+    onShare: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.background(HikariBg)) {
@@ -1164,6 +1204,7 @@ private fun PortraitPanel(
                 BottomAction(if (locked) UnlockIcon else LockIcon, if (locked) "Entsperren" else "Sperren", onLock)
                 BottomAction(Icons.Outlined.Speed, speedLabel(speed), { onSheet(Sheet.Speed) }, tint = if (sheet == Sheet.Speed) HikariAmber else Color.White)
                 if (hasTracks) BottomAction(Icons.Outlined.Subtitles, "Audio", { onSheet(Sheet.Tracks) }, tint = if (sheet == Sheet.Tracks) HikariAmber else Color.White)
+                onShare?.let { BottomAction(Icons.Outlined.Share, "Teilen", it) }
                 Spacer(Modifier.weight(1f))
                 if (next != null) BottomAction(Icons.Outlined.SkipNext, "Nächste", onNext)
             }
@@ -1322,4 +1363,25 @@ private fun isLanUrl(url: String): Boolean {
     val p = host.split(".").mapNotNull { it.toIntOrNull() }
     if (p.size != 4) return false
     return p[0] == 10 || (p[0] == 192 && p[1] == 168) || (p[0] == 172 && p[1] in 16..31)
+}
+
+/**
+ * Kopiert das aktuell angezeigte Videobild (SurfaceView des PlayerView) per
+ * PixelCopy in ein kleines Bitmap — 320 px breit reicht für die Mini-Leiste.
+ * Ohne gültige Fläche passiert nichts; der Aufrufer hat einen Zeitausweg.
+ */
+private fun captureVideoFrame(view: PlayerView?, onFrame: (android.graphics.Bitmap) -> Unit) {
+    val surface = view?.videoSurfaceView as? android.view.SurfaceView ?: return
+    if (surface.width <= 0 || surface.height <= 0 || !surface.holder.surface.isValid) return
+    val w = 320
+    val h = (w * surface.height / surface.width.toFloat()).toInt().coerceIn(1, 640)
+    val bitmap = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
+    runCatching {
+        android.view.PixelCopy.request(
+            surface,
+            bitmap,
+            { result -> if (result == android.view.PixelCopy.SUCCESS) onFrame(bitmap) },
+            android.os.Handler(android.os.Looper.getMainLooper()),
+        )
+    }
 }

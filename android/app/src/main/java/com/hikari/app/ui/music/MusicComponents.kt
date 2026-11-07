@@ -59,6 +59,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import com.hikari.app.ui.common.shareLink
+import com.hikari.app.ui.common.shareUrlFor
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -272,6 +274,16 @@ fun SongRow(
                         viewModel.addToPlaylistTarget = song
                     },
                 )
+                shareUrlFor(song.videoId)?.let { url ->
+                    val shareContext = LocalContext.current
+                    DropdownMenuItem(
+                        text = { Text("Teilen") },
+                        onClick = {
+                            menuOpen = false
+                            shareLink(shareContext, "${song.title} · ${song.uploader}", url)
+                        },
+                    )
+                }
                 if (isDownloaded) {
                     DropdownMenuItem(
                         text = { Text("Download löschen") },

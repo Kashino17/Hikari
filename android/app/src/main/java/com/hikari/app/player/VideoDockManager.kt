@@ -1,5 +1,6 @@
 package com.hikari.app.player
 
+import android.graphics.Bitmap
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +20,8 @@ data class ActiveVideoInfo(
     val title: String,
     val channel: String,
     val thumbnailUrl: String = "https://img.youtube.com/vi/$videoId/mqdefault.jpg",
+    /** Zweite Zeile der Mini-Leiste, z. B. "S2 · F5" oder der Serientitel. */
+    val subtitle: String? = null,
 )
 
 @Singleton
@@ -37,6 +40,28 @@ class VideoDockManager @Inject constructor(
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 
     private var activePlayer: ExoPlayer? = null
+
+    /**
+     * Zuletzt gesehenes Bild des Videos (beim Verlassen des Vollbild-Players
+     * festgehalten). Die Mini-Leiste zeigt es, bis das Live-Bild da ist — und
+     * dauerhaft, solange pausiert ist, statt eines schwarzen Felds.
+     */
+    private val _lastFrame = MutableStateFlow<Bitmap?>(null)
+    val lastFrame: StateFlow<Bitmap?> = _lastFrame.asStateFlow()
+
+    fun setLastFrame(videoId: String, frame: Bitmap) {
+        if (_activeVideo.value?.videoId == videoId) _lastFrame.value = frame
+    }
+
+    /** Folgen-Info und echtes Vorschaubild nachreichen, sobald die Details geladen sind. */
+    fun updateMeta(videoId: String, subtitle: String?, thumbnailUrl: String?) {
+        val current = _activeVideo.value ?: return
+        if (current.videoId != videoId) return
+        _activeVideo.value = current.copy(
+            subtitle = subtitle ?: current.subtitle,
+            thumbnailUrl = thumbnailUrl ?: current.thumbnailUrl,
+        )
+    }
 
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(playing: Boolean) {
@@ -59,7 +84,13 @@ class VideoDockManager @Inject constructor(
             activePlayer = player
             player.addListener(playerListener)
         }
-        _activeVideo.value = ActiveVideoInfo(videoId, title, channel)
+        val previous = _activeVideo.value
+        if (previous?.videoId != videoId) _lastFrame.value = null
+        _activeVideo.value = if (previous?.videoId == videoId) {
+            previous.copy(title = title, channel = channel)
+        } else {
+            ActiveVideoInfo(videoId, title, channel)
+        }
         _isPlaying.value = player.isPlaying
         _isDocked.value = false
     }
@@ -98,6 +129,7 @@ class VideoDockManager @Inject constructor(
         activePlayer?.release()
         activePlayer = null
         _activeVideo.value = null
+        _lastFrame.value = null
         _isDocked.value = false
         _isPlaying.value = false
     }

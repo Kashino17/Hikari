@@ -115,6 +115,8 @@ data class VideoDetailDto(
     val dub_language: String? = null,
     val sub_language: String? = null,
     val is_movie: Int = 0,
+    /** Ursprungsseite importierter Folgen (Browser-Import) — Ziel beim Teilen. */
+    val source_url: String? = null,
 )
 
 @Serializable

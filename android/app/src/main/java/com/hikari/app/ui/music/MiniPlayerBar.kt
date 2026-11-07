@@ -4,6 +4,18 @@ import android.widget.Toast
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.style.TextOverflow
+import coil.request.ImageRequest
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -88,17 +100,36 @@ fun MiniPlayerBar(
     val maxShift = with(LocalDensity.current) { 60.dp.toPx() }
     val shimmer = muShimmerAlpha()
 
+    // Schallplatte: dreht sich nur, solange Musik läuft — Pause hält sie an Ort und Stelle an.
+    val spin = remember { Animatable(0f) }
+    LaunchedEffect(isPlaying) {
+        while (isPlaying) {
+            spin.animateTo(spin.value + 360f, tween(12_000, easing = LinearEasing))
+        }
+    }
+    // Der unscharfe Cover-Hintergrund treibt langsam hin und her.
+    val drift = remember { Animatable(-1f) }
+    LaunchedEffect(isPlaying) {
+        while (isPlaying) {
+            drift.animateTo(if (drift.value < 0f) 1f else -1f, tween(9_000, easing = FastOutSlowInEasing))
+        }
+    }
+    val progress = if (duration > 0) (position.toFloat() / duration).coerceIn(0f, 1f) else 0f
+    val shape = RoundedCornerShape(32.dp)
+    val ringTrack = Color.White.copy(alpha = 0.14f)
+
     MuAppear(0) {
-        Column(
+        Box(
             Modifier
-                .padding(horizontal = 10.dp, vertical = 6.dp)
+                .padding(horizontal = 16.dp, vertical = 6.dp)
                 .graphicsLayer { translationX = swipeX.value }
                 .muPressable(onClick = onOpen)
-                .clip(RoundedCornerShape(14.dp))
-                .background(HikariSurfaceHigh.copy(alpha = 0.97f))
-                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(14.dp))
+                .shadow(16.dp, shape)
+                .clip(shape)
+                .background(Color(0xFF2A2420))
+                .border(1.dp, Color.White.copy(alpha = 0.12f), shape)
                 // Wisch-Geste wie bei YouTube Music: links = nächster Song,
-                // rechts = vorheriger. Die Bar folgt gedämpft dem Finger.
+                // rechts = vorheriger. Die Insel folgt gedämpft dem Finger.
                 .pointerInput(Unit) {
                     var total = 0f
                     var lastDelta = 0f
@@ -132,75 +163,113 @@ fun MiniPlayerBar(
                     )
                 },
         ) {
+            // Hintergrund: das Cover als winziges Bild hochskaliert = weiche
+            // Unschärfe ohne Blur-Shader, dazu eine dunkle Lasur für Lesbarkeit.
+            val context = LocalContext.current
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(current.thumbnailUrl.ifEmpty { null })
+                    .size(28, 16)
+                    .build(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                filterQuality = FilterQuality.Low,
+                modifier = Modifier
+                    .matchParentSize()
+                    .graphicsLayer {
+                        scaleX = 1.35f
+                        scaleY = 1.35f
+                        translationX = drift.value * size.width * 0.08f
+                    },
+            )
+            Box(Modifier.matchParentSize().background(Color(0xFF121216).copy(alpha = 0.52f)))
+
             Row(
-                Modifier.fillMaxWidth().padding(start = 10.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
+                Modifier.fillMaxWidth().height(64.dp).padding(start = 5.dp, end = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                AsyncImage(
-                    model = current.thumbnailUrl.ifEmpty { null },
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)),
-                    contentScale = ContentScale.Crop,
-                )
-                Spacer(Modifier.width(10.dp))
+                // Cover als drehende Platte, Fortschritt als Ring drumherum.
+                Box(Modifier.size(54.dp), contentAlignment = Alignment.Center) {
+                    Canvas(Modifier.matchParentSize()) {
+                        val stroke = 2.dp.toPx()
+                        val inset = stroke / 2f
+                        val arcSize = Size(size.width - stroke, size.height - stroke)
+                        drawArc(ringTrack, 0f, 360f, false, Offset(inset, inset), arcSize, style = Stroke(stroke))
+                        drawArc(
+                            Color.White, -90f, 360f * progress, false, Offset(inset, inset), arcSize,
+                            style = Stroke(stroke, cap = StrokeCap.Round),
+                            alpha = if (isBuffering) shimmer else 1f,
+                        )
+                    }
+                    AsyncImage(
+                        model = current.thumbnailUrl.ifEmpty { null },
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(44.dp)
+                            .graphicsLayer { rotationZ = spin.value }
+                            .clip(CircleShape)
+                            .drawWithContent {
+                                drawContent()
+                                // Rillen und Mittelloch: aus dem Cover wird eine Platte.
+                                val c = center
+                                var r = size.minDimension / 2f - 3.dp.toPx()
+                                while (r > 8.dp.toPx()) {
+                                    drawCircle(Color.Black.copy(alpha = 0.13f), r, c, style = Stroke(0.6.dp.toPx()))
+                                    r -= 3.dp.toPx()
+                                }
+                                drawCircle(Color.White.copy(alpha = 0.25f), 4.5.dp.toPx(), c)
+                                drawCircle(Color(0xFF1F1F22), 3.dp.toPx(), c)
+                            },
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(
                         current.title,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = HikariText,
+                        fontSize = 14.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
                         maxLines = 1,
                         modifier = Modifier.basicMarquee(),
                     )
-                    Text(current.uploader, fontSize = 11.sp, color = HikariTextMuted, maxLines = 1)
+                    val time = if (duration > 0) " · ${formatDurationMs(position)} / ${formatDurationMs(duration)}" else ""
+                    Text(
+                        current.uploader + time,
+                        fontSize = 12.sp,
+                        color = Color.White.copy(alpha = 0.68f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
+                Spacer(Modifier.width(8.dp))
                 Box(
                     Modifier
                         .size(44.dp)
                         .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.14f))
                         .muPressable { controller.toggle() },
                     contentAlignment = Alignment.Center,
                 ) {
                     if (isBuffering) {
                         CircularProgressIndicator(
-                            color = HikariPrimary,
+                            color = Color.White,
                             strokeWidth = 2.dp,
-                            modifier = Modifier.size(22.dp),
+                            modifier = Modifier.size(20.dp),
                         )
                     } else {
                         Crossfade(isPlaying, animationSpec = tween(160), label = "miniPlay") { playing ->
                             Icon(
                                 if (playing) Icons.Default.Pause else if (isEnded) Icons.Outlined.Replay else Icons.Default.PlayArrow,
                                 if (playing) "Pause" else if (isEnded) "Wiederholen" else "Abspielen",
-                                tint = HikariText,
-                                modifier = Modifier.size(26.dp),
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp),
                             )
                         }
                     }
                 }
-                MuIconButton(Icons.Default.SkipNext, "Weiter") { controller.next() }
+                MuIconButton(Icons.Default.SkipNext, "Weiter", tint = Color.White.copy(alpha = 0.9f)) { controller.next() }
             }
-
-            // Schlanke Fortschrittslinie an der Unterkante — pulsiert beim Puffern.
-            val progress = if (duration > 0) position.toFloat() / duration else 0f
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp)
-                    .height(3.dp)
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(Color.White.copy(alpha = 0.07f)),
-            ) {
-                Box(
-                    Modifier
-                        .fillMaxWidth(progress.coerceIn(0f, 1f))
-                        .height(3.dp)
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(Brush.horizontalGradient(listOf(HikariPrimary.copy(alpha = 0.75f), HikariPrimary)))
-                        .graphicsLayer { alpha = if (isBuffering) shimmer else 1f },
-                )
-            }
-            Spacer(Modifier.height(4.dp))
         }
     }
 }

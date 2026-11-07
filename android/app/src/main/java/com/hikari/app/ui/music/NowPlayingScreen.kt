@@ -64,6 +64,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material.icons.outlined.Share
+import com.hikari.app.ui.common.shareLink
+import com.hikari.app.ui.common.shareUrlFor
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -199,6 +202,12 @@ fun NowPlayingScreen(
                             fontWeight = FontWeight.SemiBold,
                             color = if (crossfadeSec > 0) HikariAmber else HikariTextMuted,
                         )
+                    }
+                }
+                val shareContext = LocalContext.current
+                shareUrlFor(current.videoId)?.let { url ->
+                    MuIconButton(Icons.Outlined.Share, "Teilen", iconSize = 22.dp) {
+                        shareLink(shareContext, "${current.title} · ${current.uploader}", url)
                     }
                 }
                 MuIconButton(
