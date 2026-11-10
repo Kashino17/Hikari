@@ -128,8 +128,12 @@ fun PlaylistDetailScreen(
             return@Column
         }
 
-        val songs = entry.songs
-        val allDownloaded = songs.isNotEmpty() && entry.downloadedCount == songs.size
+        val allSongs = entry.songs
+        // Ohne Verbindung zum Server zeigt die Seite nur, was auf dem Gerät liegt —
+        // alles andere ließe sich ohnehin nicht abspielen. Gespeichert bleibt die
+        // ganze Playlist; Bearbeiten arbeitet deshalb weiter auf allen Songs.
+        val songs = if (online) allSongs else allSongs.filter { it.videoId in downloadedIds }
+        val allDownloaded = allSongs.isNotEmpty() && entry.downloadedCount == allSongs.size
 
         if (editMode) {
             // Bearbeiten-Modus: schlanke Kopfzeile, darunter die Drag-Liste.
@@ -204,11 +208,13 @@ fun PlaylistDetailScreen(
                             Spacer(Modifier.height(4.dp))
                             Text(
                                 when {
-                                    songs.isEmpty() -> "Noch keine Songs"
-                                    allDownloaded -> "${songs.size} Songs · offline verfügbar"
+                                    allSongs.isEmpty() -> "Noch keine Songs"
+                                    !online && songs.size < allSongs.size ->
+                                        "${songs.size} von ${allSongs.size} Songs auf dem Gerät"
+                                    allDownloaded -> "${allSongs.size} Songs · offline verfügbar"
                                     entry.downloadedCount > 0 ->
-                                        "${songs.size} Songs · ${entry.downloadedCount} offline"
-                                    else -> if (songs.size == 1) "1 Song" else "${songs.size} Songs"
+                                        "${allSongs.size} Songs · ${entry.downloadedCount} offline"
+                                    else -> if (allSongs.size == 1) "1 Song" else "${allSongs.size} Songs"
                                 },
                                 fontSize = 13.sp,
                                 color = HikariTextMuted,
@@ -221,7 +227,7 @@ fun PlaylistDetailScreen(
                                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                val downloading = songs.any { progressMap.containsKey(it.videoId) }
+                                val downloading = allSongs.any { progressMap.containsKey(it.videoId) }
                                 GhostIconChip(
                                     when {
                                         downloading -> Icons.Default.Close
@@ -232,13 +238,13 @@ fun PlaylistDetailScreen(
                                 ) {
                                     when {
                                         downloading -> viewModel.cancelAllDownloads()
-                                        !allDownloaded && songs.isNotEmpty() -> viewModel.downloadPlaylist(entry)
+                                        !allDownloaded && allSongs.isNotEmpty() -> viewModel.downloadPlaylist(entry)
                                     }
                                 }
                                 GhostIconChip(Icons.Default.Edit, "Reihenfolge bearbeiten") {
-                                    if (songs.size > 1) {
+                                    if (allSongs.size > 1) {
                                         editOrder.clear()
-                                        editOrder.addAll(songs)
+                                        editOrder.addAll(allSongs)
                                         editMode = true
                                     }
                                 }
@@ -277,7 +283,14 @@ fun PlaylistDetailScreen(
                             Spacer(Modifier.height(14.dp))
                         }
                     }
-                    if (songs.isEmpty()) {
+                    if (songs.isEmpty() && allSongs.isNotEmpty()) {
+                        item(key = "none-on-device") {
+                            EmptyHint(
+                                Icons.Outlined.CloudDownload,
+                                "Von dieser Playlist liegt noch kein Song auf dem Gerät.",
+                            )
+                        }
+                    } else if (songs.isEmpty()) {
                         item(key = "empty") {
                             Column(
                                 Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 20.dp),

@@ -26,6 +26,7 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
+import com.hikari.app.data.net.BackendReachability
 import com.hikari.app.data.net.ConnectivityObserver
 import com.hikari.app.domain.download.LocalMusicDownloadManager
 import com.hikari.app.domain.model.MusicSong
@@ -59,6 +60,7 @@ class MusicPlayerController @Inject constructor(
     private val repo: MusicRepository,
     private val downloads: LocalMusicDownloadManager,
     private val connectivity: ConnectivityObserver,
+    private val backend: BackendReachability,
     private val okHttpClient: OkHttpClient,
 ) {
     companion object {
@@ -709,7 +711,7 @@ class MusicPlayerController @Inject constructor(
             }
         } else {
             scope.launch {
-                if (!connectivity.currentlyOnline()) {
+                if (!backend.canStream()) {
                     _error.value = "Video braucht eine Internetverbindung"
                     return@launch
                 }
@@ -809,7 +811,7 @@ class MusicPlayerController @Inject constructor(
             // Ohne Video-Quelle (kein Backend/offline) fällt der Player
             // automatisch auf Audio zurück, statt stumm zu bleiben.
             if (_videoMode.value) {
-                val videoUri = if (connectivity.currentlyOnline()) {
+                val videoUri = if (backend.canStream()) {
                     runCatching { repo.getVideoStream(song.videoId) }.getOrNull()
                 } else {
                     null
@@ -831,7 +833,7 @@ class MusicPlayerController @Inject constructor(
             val localFile = downloads.localFile(song.videoId)
             val uri = if (localFile != null) {
                 "file://${localFile.absolutePath}"
-            } else if (!connectivity.currentlyOnline()) {
+            } else if (!backend.canStream()) {
                 _isBuffering.value = false
                 _error.value = "Offline — „${song.title}“ wurde nicht heruntergeladen"
                 _isPlaying.value = false
@@ -1064,7 +1066,7 @@ class MusicPlayerController @Inject constructor(
             else -> false
         }
         if (!nearTail) return
-        if (!connectivity.currentlyOnline()) return
+        if (!backend.canStream()) return
         launchAutoplayExtend(resumePlayback = false)
     }
 
@@ -1089,7 +1091,7 @@ class MusicPlayerController @Inject constructor(
         autoplayJob = scope.launch {
             val current = _queue.value
             var more = emptyList<MusicSong>()
-            if (connectivity.currentlyOnline()) {
+            if (backend.canStream()) {
                 for (attempt in 1..3) {
                     more = try {
                         repo.getAutoplaySongs(seed, current.map { it.videoId }.toSet(), queueMode)
@@ -1158,7 +1160,7 @@ class MusicPlayerController @Inject constructor(
         val currentId = _currentSong.value?.videoId ?: return
         val next = nextSong() ?: return
         if (prefetchedFor == next.videoId || prefetchJob?.isActive == true) return
-        if (!connectivity.currentlyOnline()) return
+        if (!backend.canStream()) return
         prefetchJob = scope.launch {
             val localFile = downloads.localFile(next.videoId)
             val uri = when {

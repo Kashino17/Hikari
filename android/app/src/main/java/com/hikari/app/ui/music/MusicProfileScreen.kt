@@ -204,6 +204,9 @@ private fun LibraryStat(value: Int, label: String, modifier: Modifier = Modifier
 @Composable
 private fun PlaylistsSection(viewModel: MusicViewModel, onOpenPlaylist: (Int) -> Unit) {
     var showCreate by remember { mutableStateOf(false) }
+    val online by viewModel.isOnline.collectAsState()
+    // Ohne Verbindung zum Server nur Playlists, aus denen etwas auf dem Gerät liegt.
+    val playlists = if (online) viewModel.playlists else viewModel.playlists.filter { it.downloadedCount > 0 }
 
     Column(Modifier.fillMaxSize()) {
         Row(
@@ -211,7 +214,11 @@ private fun PlaylistsSection(viewModel: MusicViewModel, onOpenPlaylist: (Int) ->
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                if (viewModel.playlists.size == 1) "1 Playlist" else "${viewModel.playlists.size} Playlists",
+                when {
+                    !online -> if (playlists.size == 1) "1 Playlist auf dem Gerät" else "${playlists.size} Playlists auf dem Gerät"
+                    playlists.size == 1 -> "1 Playlist"
+                    else -> "${playlists.size} Playlists"
+                },
                 fontSize = 13.sp,
                 color = HikariTextMuted,
                 modifier = Modifier.weight(1f),
@@ -219,10 +226,14 @@ private fun PlaylistsSection(viewModel: MusicViewModel, onOpenPlaylist: (Int) ->
             MuChip("Neue Playlist", active = true, icon = Icons.Default.Add, onClick = { showCreate = true })
         }
 
-        if (viewModel.playlists.isEmpty()) {
+        if (playlists.isEmpty()) {
             EmptyHint(
                 Icons.AutoMirrored.Filled.PlaylistPlay,
-                "Noch keine Playlists — tippe auf „Neu“ oder lange auf einen Song.",
+                if (!online && viewModel.playlists.isNotEmpty()) {
+                    "Aus deinen Playlists liegt noch nichts auf dem Gerät."
+                } else {
+                    "Noch keine Playlists — tippe auf „Neu“ oder lange auf einen Song."
+                },
             )
         } else {
             LazyColumn(
@@ -230,7 +241,7 @@ private fun PlaylistsSection(viewModel: MusicViewModel, onOpenPlaylist: (Int) ->
                 state = viewModel.playlistsListState,
                 contentPadding = PaddingValues(bottom = 12.dp),
             ) {
-                items(viewModel.playlists, key = { it.playlist.id }) { entry ->
+                items(playlists, key = { it.playlist.id }) { entry ->
                     LibraryPlaylistCard(entry, onClick = { onOpenPlaylist(entry.playlist.id) })
                 }
             }
@@ -364,16 +375,22 @@ private fun FavoritesSection(viewModel: MusicViewModel) {
         EmptyHint(Icons.Default.FavoriteBorder, "Tippe das Herz bei einem Song — er landet hier.")
         return
     }
+    // Ohne Verbindung zum Server nur die Favoriten, die auf dem Gerät liegen.
+    val favorites = if (online) viewModel.favorites else viewModel.favorites.filter { it.videoId in downloadedIds }
+    if (favorites.isEmpty()) {
+        EmptyHint(Icons.Outlined.CloudDownload, "Von deinen Favoriten liegt noch keiner auf dem Gerät.")
+        return
+    }
     LazyColumn(
         Modifier.fillMaxSize(),
         state = viewModel.favoritesListState,
         contentPadding = PaddingValues(vertical = 8.dp),
     ) {
-        items(viewModel.favorites, key = { it.videoId }) { song ->
+        items(favorites, key = { it.videoId }) { song ->
             SongRow(
                 song,
                 viewModel,
-                viewModel.favorites,
+                favorites,
                 isCurrent = currentSong?.videoId == song.videoId,
                 isDownloaded = song.videoId in downloadedIds,
                 progress = progressMap[song.videoId],

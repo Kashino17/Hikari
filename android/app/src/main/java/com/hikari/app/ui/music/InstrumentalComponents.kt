@@ -211,6 +211,9 @@ internal fun RadioHeroCard(
     onOpen: () -> Unit,
     /** Tipp auf den Play-Button: Radio sofort starten. */
     onPlay: () -> Unit,
+    /** Kleine Zeile neben den Cover-Punkten — ohne Angabe der Hinweis aufs Autoplay. */
+    footnote: String? = null,
+    playDescription: String = "Radio starten",
 ) {
     if (songs.isEmpty()) return
     val shape = RoundedCornerShape(20.dp)
@@ -308,7 +311,7 @@ internal fun RadioHeroCard(
                 }
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    "${songs.size} Titel · danach Autoplay",
+                    footnote ?: "${songs.size} Titel · danach Autoplay",
                     fontSize = 11.sp,
                     color = HikariTextMuted,
                     maxLines = 1,
@@ -325,7 +328,7 @@ internal fun RadioHeroCard(
                 .muPressable(onClick = onPlay),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Default.PlayArrow, "Radio starten", tint = Color.Black, modifier = Modifier.size(30.dp))
+            Icon(Icons.Default.PlayArrow, playDescription, tint = Color.Black, modifier = Modifier.size(30.dp))
         }
     }
 }

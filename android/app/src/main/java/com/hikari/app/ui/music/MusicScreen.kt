@@ -150,48 +150,57 @@ fun MusicScreen(
     val headerHistory by viewModel.searchHistory.collectAsState()
     val searchMode = viewModel.searchMode
 
+    // Beim Betreten nachfragen, ob der Server antwortet — sonst gilt der Stand
+    // von irgendwann vorher.
+    LaunchedEffect(Unit) { viewModel.checkServer() }
+
     Box(Modifier.fillMaxSize().background(HikariBg)) {
         Column(Modifier.fillMaxSize()) {
-            // Suchleiste ersetzt den Titel in der obersten Zeile und bleibt
-            // dadurch beim Scrollen fest stehen; Profilbild sitzt links.
-            val panelsOpen = viewModel.searchAttempted ||
-                (viewModel.searchActive &&
-                    (viewModel.searchQuery.isNotBlank() || headerHistory.isNotEmpty()))
-            MusicHeaderBar(
-                avatarPath = viewModel.avatarPath.collectAsState().value,
-                onOpenProfile = onOpenProfile,
-                onNavigateBack = onNavigateBack,
-                value = viewModel.searchQuery,
-                placeholder = when (searchMode) {
-                    MusicSearchMode.MUSIC -> "Songs, Artists, Alben suchen…"
-                    MusicSearchMode.INSTRUMENTAL -> "Instrumentals suchen…"
-                    MusicSearchMode.AUDIOBOOK -> "Hörbücher suchen…"
-                    MusicSearchMode.PODCAST -> "Podcasts suchen…"
-                    MusicSearchMode.TRUECRIME -> "Fälle, Shows suchen…"
-                },
-                filtered = searchMode != MusicSearchMode.MUSIC,
-                panelsOpen = panelsOpen,
-                onValueChange = {
-                    viewModel.searchQuery = it
-                    viewModel.onSearchQueryChange(it)
-                },
-                onFocus = { viewModel.onSearchFocus() },
-                onClear = { viewModel.clearSearch() },
-                onSearch = { viewModel.search(viewModel.searchQuery) },
-                onModeClick = { showModeSheet = true },
-                searchOpen = viewModel.searchActive || viewModel.searchQuery.isNotEmpty() ||
-                    viewModel.searchAttempted,
-                onBack = { viewModel.clearSearch() },
-            )
-
-            if (!online) OfflineBanner()
-
-            Box(Modifier.weight(1f)) {
-                DiscoverTab(
-                    viewModel, online,
-                    onOpenMix, onOpenGroup, onOpenArtist, onOpenCollection,
+            // Ohne Verbindung zum Server: statt Entdecken die eigene Sammlung,
+            // soweit sie auf dem Gerät liegt — mit eigenem Kopf und eigener Suche.
+            if (!online) {
+                Box(Modifier.weight(1f)) {
+                    MusicOfflineHome(viewModel, onOpenProfile = onOpenProfile, onNavigateBack = onNavigateBack)
+                }
+            } else {
+                // Suchleiste ersetzt den Titel in der obersten Zeile und bleibt
+                // dadurch beim Scrollen fest stehen; Profilbild sitzt links.
+                val panelsOpen = viewModel.searchAttempted ||
+                    (viewModel.searchActive &&
+                        (viewModel.searchQuery.isNotBlank() || headerHistory.isNotEmpty()))
+                MusicHeaderBar(
+                    avatarPath = viewModel.avatarPath.collectAsState().value,
                     onOpenProfile = onOpenProfile,
+                    onNavigateBack = onNavigateBack,
+                    value = viewModel.searchQuery,
+                    placeholder = when (searchMode) {
+                        MusicSearchMode.MUSIC -> "Songs, Artists, Alben suchen…"
+                        MusicSearchMode.INSTRUMENTAL -> "Instrumentals suchen…"
+                        MusicSearchMode.AUDIOBOOK -> "Hörbücher suchen…"
+                        MusicSearchMode.PODCAST -> "Podcasts suchen…"
+                        MusicSearchMode.TRUECRIME -> "Fälle, Shows suchen…"
+                    },
+                    filtered = searchMode != MusicSearchMode.MUSIC,
+                    panelsOpen = panelsOpen,
+                    onValueChange = {
+                        viewModel.searchQuery = it
+                        viewModel.onSearchQueryChange(it)
+                    },
+                    onFocus = { viewModel.onSearchFocus() },
+                    onClear = { viewModel.clearSearch() },
+                    onSearch = { viewModel.search(viewModel.searchQuery) },
+                    onModeClick = { showModeSheet = true },
+                    searchOpen = viewModel.searchActive || viewModel.searchQuery.isNotEmpty() ||
+                        viewModel.searchAttempted,
+                    onBack = { viewModel.clearSearch() },
                 )
+
+                Box(Modifier.weight(1f)) {
+                    DiscoverTab(
+                        viewModel, online,
+                        onOpenMix, onOpenGroup, onOpenArtist, onOpenCollection,
+                    )
+                }
             }
 
             if (currentSong != null) {
@@ -284,7 +293,7 @@ private fun MusicHeaderBar(
 
 /** Rundes Profilbild mit Amber-Ring — Fallback ist ein Personen-Icon. */
 @Composable
-private fun MusicAvatarChip(avatarPath: String?, size: Dp = 38.dp, onClick: () -> Unit) {
+internal fun MusicAvatarChip(avatarPath: String?, size: Dp = 38.dp, onClick: () -> Unit) {
     // Legacy-"?v="-Suffix abschneiden wie auf der Profil-Seite; fehlt die
     // Datei, bleibt der Icon-Fallback statt eines leeren Kreises.
     val avatarFile = remember(avatarPath) {
@@ -404,19 +413,7 @@ private fun DiscoverTab(
     onOpenGroup: (title: String, unit: String, query: String, mode: String) -> Unit,
     onOpenArtist: (channelId: String, name: String) -> Unit,
     onOpenCollection: (playlistId: String, name: String, isAlbum: Boolean) -> Unit,
-    onOpenProfile: () -> Unit,
 ) {
-    if (!online) {
-        Column(
-            Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            EmptyHint(Icons.Outlined.CloudDownload, "Entdecken braucht Internet — deine Downloads warten in deiner Bibliothek.")
-            MuGhostButton("Zur Bibliothek", onClick = onOpenProfile)
-        }
-        return
-    }
-
     val searching = viewModel.searchAttempted
     val currentSong by viewModel.player.currentSong.collectAsState()
     val downloadedIds by viewModel.downloadedIds.collectAsState()

@@ -104,6 +104,8 @@ fun SongRow(
     number: Int? = null,
     onRemoveFromPlaylist: (() -> Unit)? = null,
     onOpenArtist: ((channelId: String, name: String) -> Unit)? = null,
+    /** Eigener Start statt [MusicViewModel.play] — z. B. der Offline-Bereich, der den Bereich des Songs beibehält. */
+    onPlay: (() -> Unit)? = null,
 ) {
     val isFavorite = song.videoId in viewModel.favoriteIds
     val playable = isDownloaded || online
@@ -140,7 +142,7 @@ fun SongRow(
                 indication = null,
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    viewModel.play(song, contextQueue)
+                    if (onPlay != null) onPlay() else viewModel.play(song, contextQueue)
                 },
                 onLongClick = { menuOpen = true },
             )

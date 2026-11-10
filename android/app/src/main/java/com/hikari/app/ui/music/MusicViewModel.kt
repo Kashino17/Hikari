@@ -8,6 +8,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.db.LocalMusicDownloadEntity
+import com.hikari.app.data.net.BackendReachability
 import com.hikari.app.data.net.ConnectivityObserver
 import com.hikari.app.data.prefs.ProfileStore
 import com.hikari.app.data.prefs.SettingsStore
@@ -37,6 +38,9 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -53,11 +57,60 @@ class MusicViewModel @Inject constructor(
     private val downloads: LocalMusicDownloadManager,
     private val settings: SettingsStore,
     profile: ProfileStore,
-    connectivity: ConnectivityObserver,
+    private val connectivity: ConnectivityObserver,
+    private val backend: BackendReachability,
     val player: MusicPlayerController,
 ) : ViewModel() {
 
-    val isOnline: StateFlow<Boolean> = connectivity.isOnline
+    /**
+     * Streamen ist möglich: das Handy ist im Netz UND der Server antwortet.
+     * Fehlt eines von beiden, zeigt der ganze Musik-Bereich nur noch, was auf
+     * dem Gerät liegt — ein „online" ohne Server brächte lauter Titel, die
+     * sich nicht abspielen lassen.
+     */
+    val isOnline: StateFlow<Boolean> =
+        combine(connectivity.isOnline, backend.reachable) { network, server -> network && server }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, connectivity.currentlyOnline() && backend.reachable.value)
+
+    /** Offline-Bereich: welcher Bereich der Downloads gezeigt wird (`null` = alles) und die Suche darin. */
+    var offlineMode by mutableStateOf<MusicSearchMode?>(null)
+    var offlineQuery by mutableStateOf("")
+
+    /** Die im Offline-Bereich geöffnete Sammlung (Playlist, Favoriten, Interpret) — überlebt die Navigation. */
+    var offlineCollectionKey by mutableStateOf<String?>(null)
+
+    private var serverCheck: Job? = null
+
+    /**
+     * Fragt nach, ob der Server (wieder) antwortet. [announce] meldet einen
+     * Fehlschlag als Hinweis — für den Tipp auf „Offline", nicht für die
+     * stillen Nachfragen im Hintergrund.
+     */
+    fun checkServer(announce: Boolean = false) {
+        if (serverCheck?.isActive == true) return
+        serverCheck = viewModelScope.launch {
+            val ok = backend.check()
+            if (!ok && announce) message = "Noch keine Verbindung zum Server"
+        }
+    }
+
+    /**
+     * Spielt aus dem Offline-Bereich. Der Song behält dabei seinen eigenen
+     * Bereich (Musik, Hörbuch …) — die Offline-Ansicht mischt alle, der gerade
+     * eingestellte Modus der Online-Seite wäre für viele Titel der falsche.
+     */
+    fun playOffline(song: MusicSong, queue: List<MusicSong>) {
+        player.queueMode = song.listenMode ?: MusicSearchMode.MUSIC.apiValue
+        player.play(song, queue.ifEmpty { listOf(song) })
+        history = listOf(song) + history.filter { it.videoId != song.videoId }
+    }
+
+    /** Spielt eine ganze Offline-Sammlung — der Reihe nach oder gemischt. */
+    fun playAllOffline(songs: List<MusicSong>, shuffled: Boolean = false) {
+        if (songs.isEmpty()) return
+        val order = if (shuffled) songs.shuffled() else songs
+        playOffline(order.first(), order)
+    }
 
     /** Profilbild der App — derselbe Avatar wie auf der Profil-Seite. */
     val avatarPath: StateFlow<String?> = profile.avatarPath
@@ -240,6 +293,12 @@ class MusicViewModel @Inject constructor(
         viewModelScope.launch {
             downloads.throttleNotice.filterNotNull().distinctUntilChanged().collect { message = it }
         }
+        // Sobald das Handy wieder im Netz ist, gleich nachfragen, ob auch der
+        // Server antwortet — sonst bliebe die Seite bis zur nächsten stillen
+        // Nachfrage im Offline-Bereich stehen.
+        viewModelScope.launch {
+            connectivity.isOnline.drop(1).filter { it }.collect { checkServer() }
+        }
         // Kommt das Netz zurück, sind die Entdecken-Vorschläge nachholbar.
         viewModelScope.launch {
             isOnline.collect { online ->
@@ -328,6 +387,9 @@ class MusicViewModel @Inject constructor(
             else -> discoverSections = repo.getDiscoverSections(mode)
         }
         discoverFailed = feedEmpty()
+        // Ein leerer Feed heißt fast immer: der Server antwortet nicht. Nachfragen —
+        // dann wechselt die Seite von selbst in den Offline-Bereich.
+        if (discoverFailed) checkServer()
         if (!discoverFailed) {
             discoverBuiltFor = mode
             discoverBuiltAt = System.currentTimeMillis()

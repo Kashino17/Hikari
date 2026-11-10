@@ -7,6 +7,7 @@ import com.hikari.app.data.api.dto.SeriesDetailResponse
 import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.data.db.LocalDownloadDao
 import com.hikari.app.data.db.LocalMangaDao
+import com.hikari.app.data.net.BackendReachability
 import com.hikari.app.data.net.ConnectivityObserver
 import com.hikari.app.domain.model.FeedItem
 import com.hikari.app.domain.model.MusicSong
@@ -85,6 +86,7 @@ class LibraryViewModel @Inject constructor(
     private val localDownloads: LocalDownloadManager,
     private val artworkStore: OfflineArtworkStore,
     private val artworkSync: OfflineArtworkSync,
+    private val backend: BackendReachability,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<LibraryUiState>(LibraryUiState.Loading)
@@ -159,6 +161,7 @@ class LibraryViewModel @Inject constructor(
                 repo.getLibrary()
             }.onSuccess {
                 artworkStore.preferLocal = false
+                backend.report(reachable = true)
                 _uiState.value = LibraryUiState.Success(it)
                 updateTopCharts(it)
                 // Plakate der Downloads gleich mit abgleichen und aufs Gerät sichern.
@@ -179,6 +182,8 @@ class LibraryViewModel @Inject constructor(
     private suspend fun showOffline() {
         // Ab jetzt zeigt jede Ansicht sofort die aufs Gerät gesicherten Bilder.
         artworkStore.preferLocal = true
+        // Auch die Musikseite soll wissen, dass vom Server gerade nichts kommt.
+        backend.report(reachable = false)
         _uiState.value = LibraryUiState.Offline(buildOfflineLibrary())
     }
 
