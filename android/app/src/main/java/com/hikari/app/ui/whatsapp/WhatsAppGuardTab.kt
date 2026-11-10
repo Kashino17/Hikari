@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -57,6 +58,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -92,7 +94,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-private enum class GuardFilter { ALL, DELETED, EDITED }
+private enum class GuardFilter { ALL, DELETED, EDITED, MEDIA }
 
 /** Der Wächter-Bereich: alles Gerettete als ein Verlauf, nach Tagen gegliedert. */
 @Composable
@@ -100,6 +102,7 @@ internal fun WhatsAppGuardTab(
     messages: List<WhatsAppMessageEntity>?,
     hasNotificationAccess: Boolean,
     hasMediaAccess: Boolean,
+    mediaFolderWrong: Boolean,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     decodeHistory: (String?) -> List<WhatsAppEditVersion>,
@@ -120,6 +123,7 @@ internal fun WhatsAppGuardTab(
                 GuardFilter.ALL -> true
                 GuardFilter.DELETED -> msg.isDeleted
                 GuardFilter.EDITED -> msg.isEdited
+                GuardFilter.MEDIA -> msg.mediaType != null
             }
             matchesFilter && (
                 query.isEmpty() ||
@@ -141,6 +145,7 @@ internal fun WhatsAppGuardTab(
                 SetupCard(
                     hasNotificationAccess = hasNotificationAccess,
                     hasMediaAccess = hasMediaAccess,
+                    mediaFolderWrong = mediaFolderWrong,
                     onGrantNotificationAccess = onGrantNotificationAccess,
                     onGrantMediaAccess = onGrantMediaAccess,
                 )
@@ -151,6 +156,11 @@ internal fun WhatsAppGuardTab(
         if (messages != null && all.isEmpty()) {
             item(key = "empty") {
                 EmptyVault(guardActive = hasNotificationAccess, onRunDemo = onRunDemo)
+                // Auch im leeren Tresor sichtbar machen, dass Fotos & Co. mitgesichert werden.
+                if (hasNotificationAccess && hasMediaAccess) {
+                    Spacer(Modifier.height(18.dp))
+                    MediaStatusLine(active = true, wrongFolder = false, onGrant = onGrantMediaAccess)
+                }
             }
         }
 
@@ -164,9 +174,21 @@ internal fun WhatsAppGuardTab(
                     total = all.size,
                     deleted = all.count { it.isDeleted },
                     edited = all.count { it.isEdited },
+                    media = all.count { it.mediaType != null },
                 )
             }
-            if (visible.isEmpty()) {
+            if (filter == GuardFilter.MEDIA) {
+                item(key = "media-status") {
+                    MediaStatusLine(
+                        active = hasMediaAccess,
+                        wrongFolder = mediaFolderWrong,
+                        onGrant = onGrantMediaAccess,
+                    )
+                }
+            }
+            if (visible.isEmpty() && filter == GuardFilter.MEDIA && query.isEmpty()) {
+                item(key = "no-media") { EmptyMedia() }
+            } else if (visible.isEmpty()) {
                 item(key = "no-match") {
                     Text(
                         text = "Nichts gefunden",
@@ -179,33 +201,72 @@ internal fun WhatsAppGuardTab(
                     )
                 }
             }
-            days.forEach { (day, entries) ->
-                item(key = "day-$day") {
-                    Text(
-                        text = dayLabel(day),
-                        color = HikariTextMuted,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(start = 4.dp, top = 26.dp, bottom = 10.dp),
-                    )
+            if (filter == GuardFilter.MEDIA) {
+                // Bilder und Videos als Galerie, alles andere (Sprachnachrichten, nicht Gesichertes) darunter.
+                val (pictures, others) = visible.partition { msg ->
+                    val file = msg.mediaPreviewPath?.let(::File)?.takeIf { it.exists() && it.length() > 0L }
+                    file != null && mediaKind(file).let { it == MediaKind.IMAGE || it == MediaKind.VIDEO }
                 }
-                items(entries, key = { it.id }) { msg ->
+                pictures.chunked(3).forEachIndexed { index, row ->
+                    item(key = "gallery-$index-${row.first().id}") {
+                        Row(
+                            modifier = Modifier.padding(top = if (index == 0) 16.dp else 6.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            row.forEach { msg ->
+                                GalleryTile(
+                                    msg = msg,
+                                    modifier = Modifier.weight(1f),
+                                    onOpen = { msg.mediaPreviewPath?.let { viewer = File(it) } },
+                                )
+                            }
+                            repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                        }
+                    }
+                }
+                if (others.isNotEmpty()) {
+                    item(key = "media-others-gap") { Spacer(Modifier.height(18.dp)) }
+                }
+                items(others, key = { it.id }) { msg ->
                     GuardEntryCard(
                         msg = msg,
                         versions = decodeHistory(msg.editHistoryJson),
                         hasMediaAccess = hasMediaAccess,
                         onOpenMedia = { viewer = it },
-                        onCopy = {
-                            val text = if (msg.isEdited && msg.originalText != null) {
-                                "Vorher: ${msg.originalText}\nJetzt: ${msg.text}"
-                            } else {
-                                msg.text
-                            }
-                            copyToClipboard(context, "Nachricht", text)
-                        },
+                        onCopy = { copyToClipboard(context, "Nachricht", msg.text) },
                         onDelete = { onDeleteEntry(msg) },
                     )
                     Spacer(Modifier.height(12.dp))
+                }
+            } else {
+                days.forEach { (day, entries) ->
+                    item(key = "day-$day") {
+                        Text(
+                            text = dayLabel(day),
+                            color = HikariTextMuted,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(start = 4.dp, top = 26.dp, bottom = 10.dp),
+                        )
+                    }
+                    items(entries, key = { it.id }) { msg ->
+                        GuardEntryCard(
+                            msg = msg,
+                            versions = decodeHistory(msg.editHistoryJson),
+                            hasMediaAccess = hasMediaAccess,
+                            onOpenMedia = { viewer = it },
+                            onCopy = {
+                                val text = if (msg.isEdited && msg.originalText != null) {
+                                    "Vorher: ${msg.originalText}\nJetzt: ${msg.text}"
+                                } else {
+                                    msg.text
+                                }
+                                copyToClipboard(context, "Nachricht", text)
+                            },
+                            onDelete = { onDeleteEntry(msg) },
+                        )
+                        Spacer(Modifier.height(12.dp))
+                    }
                 }
             }
             if (visible.isNotEmpty()) {
@@ -235,6 +296,7 @@ internal fun WhatsAppGuardTab(
 private fun SetupCard(
     hasNotificationAccess: Boolean,
     hasMediaAccess: Boolean,
+    mediaFolderWrong: Boolean,
     onGrantNotificationAccess: () -> Unit,
     onGrantMediaAccess: () -> Unit,
 ) {
@@ -266,8 +328,12 @@ private fun SetupCard(
         if (!hasMediaAccess) {
             SetupStep(
                 icon = Icons.Outlined.FolderOpen,
-                title = "WhatsApp-Medienordner freigeben",
-                text = "Nur so lassen sich gelöschte Fotos, Videos und Sprachnachrichten retten. Im nächsten Fenster unten auf „Diesen Ordner verwenden“ tippen.",
+                title = if (mediaFolderWrong) "Medienordner neu freigeben" else "WhatsApp-Medienordner freigeben",
+                text = if (mediaFolderWrong) {
+                    "Die bisherige Freigabe zeigt nicht auf WhatsApps Ordner „Media“ — so wird nichts gesichert. Im nächsten Fenster unten auf „Diesen Ordner verwenden“ tippen."
+                } else {
+                    "Nur so lassen sich gelöschte Fotos, Videos und Sprachnachrichten retten. Im nächsten Fenster unten auf „Diesen Ordner verwenden“ tippen."
+                },
                 action = "Freigeben",
                 onClick = onGrantMediaAccess,
             )
@@ -323,6 +389,7 @@ private fun SearchAndFilter(
     total: Int,
     deleted: Int,
     edited: Int,
+    media: Int,
 ) {
     Column(
         modifier = Modifier
@@ -374,14 +441,17 @@ private fun SearchAndFilter(
                 .padding(6.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            FilterSegment("Alle", total, filter == GuardFilter.ALL, HikariText, Modifier.weight(1f)) {
+            FilterSegment("Alle", total, filter == GuardFilter.ALL, HikariText, Modifier.weight(0.8f)) {
                 onFilterChange(GuardFilter.ALL)
             }
-            FilterSegment("Gelöscht", deleted, filter == GuardFilter.DELETED, WaDeleted, Modifier.weight(1.2f)) {
+            FilterSegment("Gelöscht", deleted, filter == GuardFilter.DELETED, WaDeleted, Modifier.weight(1.15f)) {
                 onFilterChange(GuardFilter.DELETED)
             }
             FilterSegment("Bearbeitet", edited, filter == GuardFilter.EDITED, WaEdited, Modifier.weight(1.3f)) {
                 onFilterChange(GuardFilter.EDITED)
+            }
+            FilterSegment("Medien", media, filter == GuardFilter.MEDIA, WaMedia, Modifier.weight(1.05f)) {
+                onFilterChange(GuardFilter.MEDIA)
             }
         }
     }
@@ -413,14 +483,130 @@ private fun FilterSegment(
         Text(
             text = label,
             color = if (selected) accent else HikariTextMuted,
-            fontSize = 13.sp,
+            fontSize = 12.5.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+            maxLines = 1,
         )
-        Spacer(Modifier.width(6.dp))
+        Spacer(Modifier.width(5.dp))
         Text(
             text = count.toString(),
             color = if (selected) accent.copy(alpha = 0.75f) else HikariTextFaint,
-            fontSize = 12.5.sp,
+            fontSize = 12.sp,
+            maxLines = 1,
+        )
+    }
+}
+
+// ── Medien-Ansicht ──────────────────────────────────────────────────────────────
+
+private val WaMedia = Color(0xFFA78BFA)
+
+/** Sagt in einer Zeile, ob Medien gerade gesichert werden — und bietet sonst den Weg dorthin. */
+@Composable
+private fun MediaStatusLine(active: Boolean, wrongFolder: Boolean, onGrant: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 14.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(if (active) WaGreenSoft else HikariSurface)
+            .then(if (active) Modifier else Modifier.clickable(onClick = onGrant))
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .size(8.dp)
+                .clip(CircleShape)
+                .background(if (active) WaGreen else HikariAmber),
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = when {
+                    active -> "Mediensicherung läuft"
+                    wrongFolder -> "Falscher Ordner freigegeben"
+                    else -> "Mediensicherung ist aus"
+                },
+                color = HikariText,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = if (active) {
+                    "Neue Fotos, Videos und Sprachnachrichten werden beim Eintreffen gesichert."
+                } else {
+                    "Tippen, um WhatsApps Ordner „Media“ freizugeben."
+                },
+                color = HikariTextMuted,
+                fontSize = 12.5.sp,
+                lineHeight = 17.sp,
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptyMedia() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 44.dp, start = 20.dp, end = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text("Noch keine geretteten Medien", color = HikariText, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "Löscht jemand ein Foto, ein Video oder eine Sprachnachricht für alle, liegt die Datei hier. " +
+                "Gesichert wird nur, was WhatsApp automatisch herunterlädt.",
+            color = HikariTextMuted,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun GalleryTile(msg: WhatsAppMessageEntity, modifier: Modifier, onOpen: () -> Unit) {
+    val file = remember(msg.mediaPreviewPath) { msg.mediaPreviewPath?.let(::File) }
+    val isVideo = file != null && mediaKind(file) == MediaKind.VIDEO
+    Box(
+        modifier = modifier
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isVideo) Color.Black else HikariSurface)
+            .clickable(onClick = onOpen),
+    ) {
+        if (isVideo) {
+            Icon(
+                Icons.Outlined.PlayArrow,
+                contentDescription = "Video",
+                tint = Color.White,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(34.dp),
+            )
+        } else {
+            AsyncImage(
+                model = file,
+                contentDescription = "Gerettetes Foto",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+        Text(
+            text = msg.chatTitle,
+            color = Color.White,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))))
+                .padding(start = 8.dp, end = 8.dp, top = 14.dp, bottom = 6.dp),
         )
     }
 }
@@ -498,7 +684,7 @@ private fun GuardEntryCard(
         Column(modifier = Modifier.padding(end = 6.dp)) {
             if (msg.isEdited && msg.originalText != null) {
                 EditTrail(original = msg.originalText, current = msg.text, versions = versions)
-            } else if (!(bareMedia && mediaFile != null)) {
+            } else if (!bareMedia) {
                 Text(
                     text = msg.text,
                     color = HikariText,
@@ -510,9 +696,9 @@ private fun GuardEntryCard(
             if (mediaFile != null) {
                 Spacer(Modifier.height(if (bareMedia) 0.dp else 12.dp))
                 RescuedMedia(file = mediaFile, onOpen = { onOpenMedia(mediaFile) })
-            } else if (msg.mediaType != null && msg.isDeleted) {
-                Spacer(Modifier.height(12.dp))
-                MissingMediaNote(hasMediaAccess = hasMediaAccess)
+            } else if (msg.mediaType != null) {
+                Spacer(Modifier.height(if (bareMedia) 0.dp else 12.dp))
+                MissingMediaNote(mediaType = msg.mediaType, hasMediaAccess = hasMediaAccess)
             }
         }
 
@@ -747,7 +933,16 @@ private fun RescuedMedia(file: File, onOpen: () -> Unit) {
 }
 
 @Composable
-private fun MissingMediaNote(hasMediaAccess: Boolean) {
+private fun MissingMediaNote(mediaType: String, hasMediaAccess: Boolean) {
+    val label = when (mediaType) {
+        "photo" -> "Foto"
+        "video" -> "Video"
+        "voice" -> "Sprachnachricht"
+        "audio" -> "Audio"
+        "gif" -> "GIF"
+        "sticker" -> "Sticker"
+        else -> "Datei"
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -758,16 +953,19 @@ private fun MissingMediaNote(hasMediaAccess: Boolean) {
     ) {
         Icon(Icons.Outlined.HideImage, contentDescription = null, tint = HikariTextFaint, modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(12.dp))
-        Text(
-            text = if (hasMediaAccess) {
-                "Die Datei war noch nicht heruntergeladen, als sie gelöscht wurde."
-            } else {
-                "Datei nicht gesichert — dafür fehlt die Freigabe des Medienordners."
-            },
-            color = HikariTextMuted,
-            fontSize = 12.5.sp,
-            lineHeight = 17.sp,
-        )
+        Column {
+            Text(label, color = HikariText, fontSize = 14.5.sp, fontWeight = FontWeight.Medium)
+            Text(
+                text = when {
+                    mediaType == "sticker" -> "Sticker werden nicht gesichert."
+                    hasMediaAccess -> "Nicht gesichert — WhatsApp hatte die Datei noch nicht heruntergeladen."
+                    else -> "Nicht gesichert — dafür fehlt die Freigabe des Medienordners."
+                },
+                color = HikariTextMuted,
+                fontSize = 12.5.sp,
+                lineHeight = 17.sp,
+            )
+        }
     }
 }
 
@@ -950,7 +1148,7 @@ private fun EmptyVault(guardActive: Boolean, onRunDemo: () -> Unit) {
         Spacer(Modifier.height(8.dp))
         Text(
             text = if (guardActive) {
-                "Löscht jemand eine Nachricht für alle oder ändert sie nachträglich, erscheint sie hier."
+                "Löscht jemand eine Nachricht, ein Foto oder eine Sprachnachricht für alle — oder ändert einen Text nachträglich —, erscheint das hier."
             } else {
                 "Sobald er Benachrichtigungen mitlesen darf, hält er gelöschte und bearbeitete Nachrichten fest."
             },

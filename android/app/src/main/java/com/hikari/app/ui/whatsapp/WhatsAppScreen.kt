@@ -65,6 +65,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.hikari.app.domain.whatsapp.MediaFolderState
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorderStrong
@@ -104,7 +105,9 @@ fun WhatsAppScreen(
     val alertsEnabled by vm.alertsEnabled.collectAsState()
     val searchQuery by vm.searchQuery.collectAsState()
     val chatAnalysis by vm.chatAnalysis.collectAsState()
-    val hasMediaAccess by vm.hasMediaFolderAccess.collectAsState()
+    val mediaFolderState by vm.mediaFolderState.collectAsState()
+    val hasMediaAccess = mediaFolderState == MediaFolderState.READY
+    val mediaFolderWrong = mediaFolderState == MediaFolderState.WRONG_FOLDER
 
     // Saveable: nach dem Zurück aus einer Zusammenfassung bleibt der Tab offen.
     var activeTab by rememberSaveable { mutableStateOf(initialTab) }
@@ -178,13 +181,14 @@ fun WhatsAppScreen(
                     messages = messages,
                     hasNotificationAccess = hasNotificationAccess,
                     hasMediaAccess = hasMediaAccess,
+                    mediaFolderWrong = mediaFolderWrong,
                     searchQuery = searchQuery,
                     onSearchQueryChange = vm::setSearchQuery,
                     decodeHistory = vm::decodeEditHistory,
                     onGrantNotificationAccess = openNotificationAccess,
                     onGrantMediaAccess = openMediaFolderPicker,
                     onDeleteEntry = { vm.deleteMessage(it.id) },
-                    onRunDemo = vm::runDemoScenario,
+                    onRunDemo = { vm.runDemoScenario(context) },
                 )
 
                 WhatsAppTab.VOICE -> VoiceNotesTab(onOpenJob = onOpenVoiceJob)
@@ -211,13 +215,14 @@ fun WhatsAppScreen(
         GuardSettingsSheet(
             hasNotificationAccess = hasNotificationAccess,
             hasMediaAccess = hasMediaAccess,
+            mediaFolderWrong = mediaFolderWrong,
             alertsEnabled = alertsEnabled,
             hasEntries = messages.orEmpty().isNotEmpty(),
             onToggleAlerts = vm::setAlertsEnabled,
             onOpenNotificationAccess = openNotificationAccess,
             onOpenMediaFolderPicker = openMediaFolderPicker,
             onRunDemo = {
-                vm.runDemoScenario()
+                vm.runDemoScenario(context)
                 showSettings = false
                 activeTab = WhatsAppTab.GUARD
             },
@@ -398,6 +403,7 @@ private fun Segment(
 private fun GuardSettingsSheet(
     hasNotificationAccess: Boolean,
     hasMediaAccess: Boolean,
+    mediaFolderWrong: Boolean,
     alertsEnabled: Boolean,
     hasEntries: Boolean,
     onToggleAlerts: (Boolean) -> Unit,
@@ -463,10 +469,10 @@ private fun GuardSettingsSheet(
                     icon = Icons.Outlined.FolderOpen,
                     accent = if (hasMediaAccess) WaGreen else HikariAmber,
                     title = "Medienordner",
-                    subtitle = if (hasMediaAccess) {
-                        "Freigegeben — Fotos, Videos und Sprachnachrichten werden gesichert"
-                    } else {
-                        "Nicht freigegeben — gelöschte Fotos lassen sich so nicht retten"
+                    subtitle = when {
+                        hasMediaAccess -> "Freigegeben — Fotos, Videos und Sprachnachrichten werden gesichert"
+                        mediaFolderWrong -> "Falscher Ordner freigegeben — bitte WhatsApps Ordner „Media“ wählen"
+                        else -> "Nicht freigegeben — gelöschte Fotos lassen sich so nicht retten"
                     },
                     onClick = onOpenMediaFolderPicker,
                 )
@@ -497,7 +503,7 @@ private fun GuardSettingsSheet(
                     icon = Icons.Outlined.PlayCircleOutline,
                     accent = HikariTextMuted,
                     title = "Beispiel einspielen",
-                    subtitle = "Zeigt, wie eine gelöschte und eine bearbeitete Nachricht aussehen",
+                    subtitle = "Zeigt eine gelöschte Nachricht, eine bearbeitete und ein gelöschtes Foto",
                     onClick = onRunDemo,
                 )
                 if (hasEntries) {

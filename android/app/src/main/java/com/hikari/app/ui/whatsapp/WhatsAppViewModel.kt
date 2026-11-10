@@ -1,11 +1,17 @@
 package com.hikari.app.ui.whatsapp
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.LinearGradient
+import android.graphics.Paint
+import android.graphics.Shader
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.db.WhatsAppMessageEntity
 import com.hikari.app.domain.whatsapp.DirectChatHistoryItem
+import com.hikari.app.domain.whatsapp.MediaFolderState
 import com.hikari.app.domain.whatsapp.WhatsAppChatAnalysis
 import com.hikari.app.domain.whatsapp.WhatsAppChatAnalyzer
 import com.hikari.app.domain.whatsapp.WhatsAppEditVersion
@@ -21,6 +27,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 import javax.inject.Inject
 
 @HiltViewModel
@@ -42,8 +50,11 @@ class WhatsAppViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    private val _hasMediaFolderAccess = MutableStateFlow(mediaVault.hasMediaFolderAccess())
-    val hasMediaFolderAccess: StateFlow<Boolean> = _hasMediaFolderAccess.asStateFlow()
+    /** Zustand der Medienordner-Freigabe; bis zur ersten Prüfung gilt eine vorhandene Freigabe als gut. */
+    private val _mediaFolderState = MutableStateFlow(
+        if (mediaVault.hasMediaFolderAccess()) MediaFolderState.READY else MediaFolderState.MISSING,
+    )
+    val mediaFolderState: StateFlow<MediaFolderState> = _mediaFolderState.asStateFlow()
 
     private val _chatAnalysis = MutableStateFlow<WhatsAppChatAnalysis?>(null)
     val chatAnalysis: StateFlow<WhatsAppChatAnalysis?> = _chatAnalysis.asStateFlow()
@@ -64,11 +75,13 @@ class WhatsAppViewModel @Inject constructor(
 
     fun onMediaFolderGranted(uri: Uri) {
         mediaVault.saveTreeUri(uri)
-        _hasMediaFolderAccess.value = mediaVault.hasMediaFolderAccess()
+        refreshMediaFolderAccess()
     }
 
     fun refreshMediaFolderAccess() {
-        _hasMediaFolderAccess.value = mediaVault.hasMediaFolderAccess()
+        viewModelScope.launch {
+            _mediaFolderState.value = mediaVault.mediaFolderState()
+        }
     }
 
     /** Beim Verlassen der Ecke gilt alles Gezeigte als gesehen. */
@@ -126,11 +139,39 @@ class WhatsAppViewModel @Inject constructor(
         }
     }
 
-    fun runDemoScenario() {
+    fun runDemoScenario(context: Context) {
         viewModelScope.launch {
-            repository.runLiveDemoScenario()
+            val photo = withContext(Dispatchers.IO) { createSamplePhoto(context) }
+            repository.runLiveDemoScenario(samplePhotoPath = photo)
         }
     }
+
+    /** Malt ein schlichtes Beispielbild (Abendhimmel), damit das Beispiel ohne fremde Fotos auskommt. */
+    private fun createSamplePhoto(context: Context): String? = runCatching {
+        val width = 900
+        val height = 1100
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val sky = Paint().apply {
+            shader = LinearGradient(
+                0f, 0f, 0f, height.toFloat(),
+                intArrayOf(0xFF1E1B4B.toInt(), 0xFF7C3AED.toInt(), 0xFFF472B6.toInt(), 0xFFFBBF24.toInt()),
+                floatArrayOf(0f, 0.45f, 0.75f, 1f),
+                Shader.TileMode.CLAMP,
+            )
+        }
+        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), sky)
+        canvas.drawCircle(width * 0.68f, height * 0.7f, 110f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFFF7D6.toInt() })
+        val hills = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF14122B.toInt() }
+        canvas.drawOval(-200f, height * 0.82f, width * 0.75f, height * 1.3f, hills)
+        canvas.drawOval(width * 0.35f, height * 0.88f, width * 1.3f, height * 1.3f, hills)
+
+        val dir = File(context.filesDir, WhatsAppRepository.MEDIA_DIR).apply { mkdirs() }
+        val file = File(dir, "wa_photo_beispiel_${System.currentTimeMillis()}.jpg")
+        FileOutputStream(file).use { bitmap.compress(Bitmap.CompressFormat.JPEG, 88, it) }
+        bitmap.recycle()
+        file.absolutePath
+    }.getOrNull()
 
     fun recordDirectChat(phoneNumber: String, displayFormatted: String, messagePreview: String) {
         repository.addDirectChatHistory(phoneNumber, displayFormatted, messagePreview)

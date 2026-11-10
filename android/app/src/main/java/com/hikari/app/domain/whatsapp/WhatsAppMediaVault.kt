@@ -27,6 +27,8 @@ data class WhatsAppStatusItem(
     val sizeBytes: Long,
 )
 
+enum class MediaFolderState { MISSING, WRONG_FOLDER, READY }
+
 private data class SafChildEntry(
     val documentId: String,
     val name: String,
@@ -69,6 +71,19 @@ class WhatsAppMediaVault @Inject constructor(
         return context.contentResolver.persistedUriPermissions.any {
             it.uri == uri && it.isReadPermission
         }
+    }
+
+    /**
+     * Prüft, ob die Freigabe wirklich auf WhatsApps Medienordner zeigt. Eine Freigabe für einen
+     * anderen Ordner (etwa nur `.Statuses` aus einer früheren App-Version) sieht für Android
+     * gültig aus, enthält aber weder Bilder noch Sprachnachrichten.
+     */
+    suspend fun mediaFolderState(): MediaFolderState = withContext(Dispatchers.IO) {
+        val treeUri = getSavedTreeUri()
+        if (treeUri == null || !hasMediaFolderAccess()) return@withContext MediaFolderState.MISSING
+        val usable = resolveMediaFolders(treeUri, listOf("Images")).isNotEmpty() ||
+            resolveMediaFolders(treeUri, listOf("Voice Notes")).isNotEmpty()
+        if (usable) MediaFolderState.READY else MediaFolderState.WRONG_FOLDER
     }
 
     fun saveTreeUri(uri: Uri) {

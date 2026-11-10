@@ -408,7 +408,7 @@ class WhatsAppRepository @Inject constructor(
      * Spielt ein Beispiel durch den echten Erkennungsweg: eine bearbeitete und eine für alle
      * gelöschte Nachricht. Die unveränderte Nachricht daneben taucht nicht im Tresor auf.
      */
-    suspend fun runLiveDemoScenario() {
+    suspend fun runLiveDemoScenario(samplePhotoPath: String? = null) {
         val baseTime = (System.currentTimeMillis() / 1000L) * 1000L - 180_000L
 
         fun payload(
@@ -465,6 +465,26 @@ class WhatsAppRepository @Inject constructor(
             ),
         )
         onNotificationCleared(groupTag)
+
+        // Ein gelöschtes Foto, damit auch die Medien-Ansicht ein Beispiel zeigt.
+        if (samplePhotoPath != null) {
+            val photoTag = "demo_photo_$baseTime"
+            val photoTime = baseTime + 150_000L
+            val posted = processNotification(
+                payload(
+                    photoTag, "Mila (Beispiel)", null, photoTime,
+                    listOf(RawMessagingItem("Mila (Beispiel)", "📷 Foto", photoTime)),
+                ),
+            )
+            posted.pendingMedia.firstOrNull()?.let { attachMedia(it.rowId, samplePhotoPath) }
+            processNotification(
+                payload(
+                    photoTag, "Mila (Beispiel)", null, photoTime + 30_000L,
+                    listOf(RawMessagingItem("Mila (Beispiel)", "Diese Nachricht wurde gelöscht", photoTime)),
+                ),
+            )
+            onNotificationCleared(photoTag)
+        }
     }
 
     private fun identityKey(chatKey: String, sender: String, timestamp: Long, text: String): String =
