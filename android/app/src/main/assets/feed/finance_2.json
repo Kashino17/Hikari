@@ -1,0 +1,902 @@
+[
+  {
+    "id": "haushaltsbuch",
+    "title": "Haushaltsbuch",
+    "principle": "Wer ein paar Wochen lang jede Ausgabe notiert, sieht zum ersten Mal, wohin das Geld tatsächlich fließt. Das Aufschreiben ist kein Selbstzweck: Es ersetzt Schätzungen durch Zahlen und zeigt, wo sich eine Änderung lohnt.",
+    "example": "Du schätzt deine Ausgaben für Essen außer Haus auf 80 € im Monat. Nach vier Wochen Mitschreiben stehen dort 9 € pro Arbeitstag an 20 Tagen: 180 €. Aufs Jahr gerechnet sind das 2.160 € statt der vermuteten 960 €.",
+    "rule": "Drei Monate lang alles notieren, danach nur noch die drei größten veränderlichen Posten im Blick behalten.",
+    "deep": {
+      "lead": "Ein Haushaltsbuch ist ein Messgerät, kein Sparprogramm – erst messen, dann entscheiden.",
+      "sections": [
+        {
+          "title": "Warum Schätzen nicht reicht",
+          "text": "Feste Kosten wie Miete oder Handyvertrag kennen die meisten auf den Euro genau. Bei den veränderlichen Ausgaben liegt die Schätzung dagegen oft weit daneben, und zwar fast immer zu niedrig. Kleine, häufige Zahlungen hinterlassen kaum eine Erinnerung, besonders wenn sie mit Karte oder Handy erfolgen. Dazu kommen Posten, die nur ein- oder zweimal im Jahr anfallen und im Monatsgefühl ganz fehlen: Versicherungen, Geschenke, Reparaturen, Urlaub. Ein Haushaltsbuch macht beides sichtbar. Seltene Ausgaben teilst du dafür durch zwölf und zählst sie in jedem Monat mit."
+        },
+        {
+          "title": "So hältst du durch",
+          "text": "Die meisten Haushaltsbücher scheitern an zu viel Ehrgeiz. Sechs bis acht grobe Gruppen genügen, etwa Wohnen, Essen, Mobilität, Verträge, Freizeit und Sonstiges. Ob du eine App nutzt, die Umsätze deiner Bank sortierst oder Kassenbons in einem Glas sammelst, ist Geschmackssache; wichtig ist ein fester Termin, zehn Minuten pro Woche. Bewerte im ersten Monat nichts, beobachte nur. Schon das Aufschreiben verändert das Verhalten ein wenig, weil jede Ausgabe einen Moment Aufmerksamkeit bekommt. Nach drei Monaten kennst du deine Muster und darfst wieder aufhören."
+        }
+      ],
+      "tryIt": "Lad die Umsätze des letzten Monats aus dem Onlinebanking und sortiere sie in höchstens acht Gruppen. Welche Gruppe überrascht dich am meisten?",
+      "takeaways": [
+        "Gemessene Zahlen schlagen geschätzte.",
+        "Jahresposten durch zwölf teilen und mitzählen."
+      ]
+    }
+  },
+  {
+    "id": "vertrags-check",
+    "title": "Der jährliche Vertrags-Check",
+    "principle": "Strom, Gas, Internet, Mobilfunk und Versicherungen laufen oft jahrelang unverändert weiter, während Neukunden bessere Preise bekommen. Wer einmal im Jahr vergleicht und wechselt oder nachverhandelt, spart ohne jeden Verzicht.",
+    "example": "Vier Verträge, bei jedem sparst du durch Wechsel oder Nachverhandeln 10 € im Monat: 40 € monatlich, 480 € im Jahr. Kostet dich der Check zusammen vier Stunden, entspricht das 120 € pro Stunde.",
+    "rule": "Einmal im Jahr ein fester Termin: alle Dauerverträge vergleichen und die Kündigungsfristen notieren.",
+    "deep": {
+      "lead": "Treue wird bei Verträgen selten belohnt – der beste Preis geht meist an den, der fragt oder wechselt.",
+      "sections": [
+        {
+          "title": "Die Rechnung mit der Trägheit",
+          "text": "Anbieter wissen, dass die meisten Kunden einen laufenden Vertrag nie wieder ansehen. Deshalb fließt das Geld für gute Konditionen in die Gewinnung neuer Kunden: Wechselboni, Rabatte im ersten Jahr, bessere Tarife zum selben Preis. Bestandskunden zahlen häufig mehr für weniger. Oft genügt schon ein Anruf mit dem Hinweis auf ein günstigeres Angebot der Konkurrenz, um in einen besseren Tarif zu kommen. Erhöht ein Strom- oder Gasanbieter den Preis, hast du in der Regel ein Sonderkündigungsrecht und kannst vor Ablauf der Laufzeit gehen."
+        },
+        {
+          "title": "Worauf du beim Wechsel achtest",
+          "text": "Vergleichsportale sind ein guter Start, aber keine neutrale Instanz: Sie leben von Provisionen und zeigen nicht immer alle Anbieter. Rechne einmalige Boni heraus und vergleiche den Preis ab dem zweiten Jahr, denn dort bleibst du meist hängen. Wähle kurze Laufzeiten, damit du beweglich bleibst. Bei Versicherungen zählt zuerst die Leistung, dann der Preis; ein billiger Tarif mit Lücken ist kein Gewinn. Beim Strom musst du keinen Ausfall fürchten: Scheitert ein Wechsel oder fällt ein Anbieter aus, beliefert dich in Deutschland automatisch der örtliche Grundversorger."
+        }
+      ],
+      "tryIt": "Schreib alle Verträge mit monatlicher oder jährlicher Abbuchung auf, daneben Preis und frühestes Kündigungsdatum. Welcher läuft am längsten unverändert?",
+      "takeaways": [
+        "Bestandskunden zahlen oft mehr als Neukunden.",
+        "Boni herausrechnen: Es zählt der Preis ab dem zweiten Jahr."
+      ]
+    }
+  },
+  {
+    "id": "abos-und-kleinbetraege",
+    "title": "Abos und Kleinbeträge",
+    "principle": "Kleine monatliche Beträge fallen kaum auf und laufen deshalb oft weiter, lange nachdem du sie nicht mehr nutzt. Anbieter setzen darauf, dass Kündigen mehr Mühe macht als Weiterzahlen.",
+    "example": "Fünf Abos zu je 9 € im Monat kosten 45 € monatlich und 540 € im Jahr. Nutzt du zwei davon kaum, zahlst du 216 € jährlich für nichts – in fünf Jahren über 1.000 €.",
+    "rule": "Jedes Abo aufs Jahr hochrechnen und fragen: Würde ich es heute zu diesem Preis neu abschließen?",
+    "deep": {
+      "lead": "Neun Euro im Monat klingen nach nichts – 108 Euro im Jahr für etwas Ungenutztes klingen anders.",
+      "sections": [
+        {
+          "title": "Warum Kleinbeträge durchrutschen",
+          "text": "Monatspreise sind bewusst so gewählt, dass sie unter der Schwelle bleiben, ab der man nachdenkt. Dazu kommt die Macht der Voreinstellung: Ein Probemonat geht automatisch in ein bezahltes Abo über, und um das zu verhindern, müsstest du aktiv werden. Verhaltensforscher nennen die Neigung, alles beim Alten zu lassen, Status-quo-Verzerrung. Sie ist der Grund, warum kostenlose Testphasen für Anbieter so lohnend sind. Auf dem Kontoauszug verschwinden die Abbuchungen zwischen größeren Posten. Erst die Summe aller Abos, aufs Jahr gerechnet, macht die Größenordnung sichtbar."
+        },
+        {
+          "title": "Kündigen ist leichter geworden",
+          "text": "In Deutschland wurden die Regeln in den letzten Jahren verbraucherfreundlicher. Wer Verträge online anbietet, muss auf seiner Website einen gut sichtbaren Kündigungsbutton bereitstellen. Viele neuere Verträge dürfen sich nach der Mindestlaufzeit nicht mehr stillschweigend um ein ganzes Jahr verlängern, sondern laufen dann unbefristet weiter und sind mit einer Frist von höchstens einem Monat kündbar. Für manche Vertragsarten, etwa Versicherungen, gelten eigene Regeln, und Einzelheiten können sich ändern. Lass dir jede Kündigung bestätigen und bewahre die Bestätigung auf, bis die letzte Abbuchung sicher vorbei ist."
+        }
+      ],
+      "tryIt": "Such im Kontoauszug und in den Abo-Einstellungen deines Handys alle wiederkehrenden Abbuchungen unter 20 €. Welche hast du in den letzten vier Wochen gar nicht genutzt?",
+      "takeaways": [
+        "Monatspreis mal zwölf zeigt den wahren Preis.",
+        "Was du heute nicht neu abschließen würdest, kündigen."
+      ]
+    }
+  },
+  {
+    "id": "ruecklagen-fuer-absehbares",
+    "title": "Rücklagen für Absehbares",
+    "principle": "Die Kfz-Versicherung, die neue Waschmaschine oder der Urlaub kommen nicht überraschend, nur unregelmäßig. Wer dafür monatlich kleine Beträge zurücklegt, muss weder den Notgroschen anzapfen noch einen Kredit aufnehmen.",
+    "example": "Kfz-Versicherung 600 €, Urlaub 1.200 €, Geschenke 300 € und Reparaturen 300 € ergeben 2.400 € im Jahr. Geteilt durch 12 sind das 200 € im Monat, die auf ein eigenes Unterkonto wandern.",
+    "rule": "Alle unregelmäßigen Jahreskosten addieren, durch zwölf teilen und monatlich getrennt zurücklegen.",
+    "deep": {
+      "lead": "Die Jahresrechnung ist kein Notfall – sie ist nur eine Monatsrate, die elfmal ausgefallen ist.",
+      "sections": [
+        {
+          "title": "Unregelmäßig ist nicht unerwartet",
+          "text": "Der Notgroschen ist für das gedacht, was niemand vorhersehen kann. Vieles, was Haushalte aus der Bahn wirft, ist aber sehr wohl vorhersehbar: die Versicherung im Januar, der TÜV, Weihnachten, die Nebenkostennachzahlung. Auch Geräte lassen sich einplanen. Eine Waschmaschine für 600 €, die zehn Jahre hält, kostet rechnerisch 5 € im Monat; ein Satz Reifen alle vier Jahre für 400 € gut 8 €. Wer solche Posten als laufende Kosten begreift, erlebt weniger böse Überraschungen und sieht ehrlicher, was sein Lebensstil pro Monat tatsächlich kostet."
+        },
+        {
+          "title": "Ein Topf oder viele?",
+          "text": "Viele Banken bieten kostenlose Unterkonten an, die sich benennen lassen: Auto, Urlaub, Technik. Das hilft, weil sichtbar wird, wofür welches Geld reserviert ist. Ein einziges Rücklagenkonto mit einer kleinen Liste tut es aber auch. Der angenehme Nebeneffekt: Geld aus dem Urlaubstopf darf ohne schlechtes Gewissen ausgegeben werden, denn dafür wurde es gespart. Im ersten Jahr ist der Topf noch nicht voll, wenn die erste Rechnung kommt. Starte deshalb mit dem Posten, der als Nächstes fällig wird, und prüf die Beträge einmal jährlich."
+        }
+      ],
+      "tryIt": "Geh die Kontoauszüge der letzten zwölf Monate durch und markier alle Zahlungen, die nur ein- oder zweimal im Jahr vorkamen. Wie hoch ist die Summe, geteilt durch zwölf?",
+      "takeaways": [
+        "Seltene Ausgaben sind planbar, nur nicht monatlich.",
+        "Ein Zwölftel pro Monat nimmt Jahresrechnungen den Schrecken."
+      ]
+    }
+  },
+  {
+    "id": "sparquote",
+    "title": "Die Sparquote",
+    "principle": "Die Sparquote ist der Anteil des Nettoeinkommens, den du nicht ausgibst. In den ersten Jahren des Vermögensaufbaus bestimmt sie den Kontostand viel stärker als die Rendite, weil auch hohe Renditen auf kleine Beträge wenig bringen.",
+    "example": "Auf 5.000 € bringt ein Prozentpunkt mehr Rendite 50 € im Jahr. Erhöhst du stattdessen bei 2.500 € netto die Sparquote von 10 auf 12 %, sind das 50 € mehr im Monat – also 600 € im Jahr.",
+    "rule": "Solange das Vermögen klein ist: erst an der Sparquote drehen, dann über die Rendite nachdenken.",
+    "deep": {
+      "lead": "Am Anfang entscheidet nicht, wie klug du anlegst, sondern wie viel du überhaupt zur Seite legst.",
+      "sections": [
+        {
+          "title": "Wann die Rendite übernimmt",
+          "text": "Es gibt einen Punkt, an dem die Erträge des Vermögens größer werden als das, was du jährlich neu einzahlst. Er lässt sich leicht überschlagen: Teile deine jährliche Sparleistung durch die erwartete Rendite. Wer 3.000 € im Jahr spart und mit 5 % rechnet, erreicht ihn bei 60.000 €. Davor ist die Sparrate der stärkere Hebel, danach zunehmend der Kapitalmarkt. Das erklärt, warum die Suche nach dem perfekten Produkt bei kleinen Summen wenig bringt, während Kosten und Rendite bei großen Summen plötzlich sehr viel ausmachen."
+        },
+        {
+          "title": "Ein Hebel mit doppelter Wirkung",
+          "text": "Eine höhere Sparquote wirkt auf zwei Seiten zugleich. Du legst mehr zurück, und du gewöhnst dich an ein Leben mit geringeren Ausgaben, brauchst also später auch weniger Vermögen, um deinen Standard zu halten. In Deutschland sparen private Haushalte seit Jahrzehnten im Schnitt grob ein Zehntel ihres verfügbaren Einkommens. Der Durchschnitt verdeckt große Unterschiede: Viele können gar nichts zurücklegen, andere sehr viel. Bei kleinem Einkommen stößt die Sparquote schnell an Grenzen. Dann ist mehr Einkommen der wirksamere Weg, etwa durch Weiterbildung oder einen Stellenwechsel."
+        }
+      ],
+      "tryIt": "Rechne deine Sparquote des letzten Monats aus: gesparter Betrag geteilt durch Nettoeinkommen, mal 100. Was würde ein Prozentpunkt mehr in Euro pro Jahr bedeuten?",
+      "takeaways": [
+        "Am Anfang zählt, wie viel du sparst, nicht wie gut du anlegst.",
+        "Die Rendite überholt die Sparrate erst bei größerem Vermögen."
+      ]
+    }
+  },
+  {
+    "id": "vermoegensbilanz",
+    "title": "Die persönliche Vermögensbilanz",
+    "principle": "Dein Nettovermögen ist alles, was du besitzt, minus alles, was du schuldest. Diese eine Zahl, einmal im Jahr berechnet, zeigt zuverlässiger als jeder Kontostand, ob du finanziell vorankommst.",
+    "example": "Guthaben 8.000 €, Depot 12.000 €, Auto 9.000 €: zusammen 29.000 €. Dagegen stehen ein Autokredit von 6.000 € und 1.000 € Dispo. Nettovermögen: 22.000 €. Ein Jahr später sind es 25.500 € – ein Plus von 3.500 €.",
+    "rule": "Einmal im Jahr am selben Stichtag: Besitz minus Schulden ausrechnen und mit dem Vorjahr vergleichen.",
+    "deep": {
+      "lead": "Unternehmen ziehen jedes Jahr Bilanz – für den eigenen Haushalt genügen dafür zwei Spalten und zehn Minuten.",
+      "sections": [
+        {
+          "title": "Was in die zwei Spalten gehört",
+          "text": "Auf die Habenseite kommen Kontoguthaben, Depotwerte, Rückkaufswerte von Versicherungen und größere Sachwerte wie Immobilie oder Auto, jeweils mit dem Betrag, den du bei einem Verkauf realistisch bekämst. Möbel, Kleidung und Elektronik lässt du weg; ihr Wiederverkaufswert ist gering und schwer zu schätzen. Auf die Sollseite gehören alle Kredite mit ihrer Restschuld, der Dispo, offene Ratenkäufe, geliehenes Geld von Verwandten und absehbare Nachzahlungen. Rentenansprüche lassen sich kaum in einen Betrag fassen. Notier sie getrennt, statt sie in die Summe zu mischen."
+        },
+        {
+          "title": "Die Richtung zählt mehr als die Höhe",
+          "text": "Wichtiger als die Zahl selbst ist ihre Veränderung von Jahr zu Jahr. Ein steigender Kontostand kann täuschen, wenn gleichzeitig Schulden schneller wachsen. Ein negatives Nettovermögen ist beim Berufseinstieg mit Studienkredit nichts Ungewöhnliches, solange die Richtung stimmt. Die Bilanz zeigt auch die Zusammensetzung: Steckt fast alles in einem einzigen Gegenstand, etwa im Auto oder im Haus? Schwankungen durch Börsenkurse gehören dazu und sagen wenig über dein Verhalten. Vergleiche dich deshalb nur mit dir selbst im Vorjahr, nicht mit Durchschnittswerten aus der Zeitung."
+        }
+      ],
+      "tryIt": "Schreib zwei Spalten auf ein Blatt: links alles, was du besitzt und verkaufen könntest, rechts alle Schulden. Zieh die Summen voneinander ab und notier das Datum.",
+      "takeaways": [
+        "Nettovermögen = Besitz minus Schulden.",
+        "Wichtiger als die Höhe ist die Richtung von Jahr zu Jahr."
+      ]
+    }
+  },
+  {
+    "id": "ratenkauf",
+    "title": "Ratenkauf und »Später zahlen«",
+    "principle": "Wer in Raten oder erst in 30 Tagen zahlt, nimmt einen Kredit auf, auch wenn es an der Kasse nicht so heißt. Der Aufschub senkt die Hemmschwelle beim Kauf, und mehrere kleine Raten summieren sich schnell zu einer festen Last.",
+    "example": "Ein Fernseher für 1.200 € in 24 Raten zu 55 € kostet am Ende 1.320 €, also 120 € Aufpreis. Laufen daneben noch ein Handy für 40 € und ein Sofa für 60 € im Monat, sind 155 € jeden Monat schon vergeben.",
+    "rule": "Vor jedem Ratenkauf alle laufenden Raten addieren und den Gesamtpreis vergleichen, nicht die Rate.",
+    "deep": {
+      "lead": "Die Rate macht aus einem großen Preis eine kleine Zahl – bezahlt wird trotzdem der große Preis.",
+      "sections": [
+        {
+          "title": "Warum die kleine Zahl verführt",
+          "text": "Ein Preis von 1.200 € lässt zögern, 55 € im Monat wirken harmlos. Händler bieten Ratenzahlung deshalb nicht aus Gefälligkeit an: Sie steigert den Umsatz, und der Finanzierungspartner verdient an Zinsen, Gebühren oder Zusatzprodukten. Bei Angeboten zum späteren Bezahlen kommt ein zweites Problem hinzu. Wer bei mehreren Händlern gleichzeitig offene Beträge mit unterschiedlichen Fälligkeiten hat, verliert leicht den Überblick, und verpasste Termine kosten Mahngebühren. Die EU hat beschlossen, solche Kleinkredite künftig strenger zu regeln, weil sie bisher oft ohne gründliche Prüfung vergeben wurden."
+        },
+        {
+          "title": "Wann Raten vertretbar sind",
+          "text": "Raten sind nicht grundsätzlich falsch. Geht die Waschmaschine kaputt und die Rücklage reicht nicht, ist eine günstige Finanzierung besser als wochenlanger Waschsalon. Zwei Faustregeln helfen. Erstens sollte die Laufzeit deutlich kürzer sein als die Nutzungsdauer: Nichts abzahlen, was vor der letzten Rate verbraucht oder veraltet ist, also keinen Urlaub und keine Mode. Zweitens zählt die Summe aller Raten, nicht die einzelne. Als Faustwert: Übersteigt sie ein Zehntel deines Nettoeinkommens, wird es eng. Bedenke außerdem, dass Finanzierungen bei Auskunfteien vermerkt werden können."
+        }
+      ],
+      "tryIt": "Liste alle laufenden Raten und offenen »Später zahlen«-Beträge mit Enddatum auf. Wie viel deines Einkommens ist damit schon ausgegeben, bevor der Monat beginnt?",
+      "takeaways": [
+        "Auch null Prozent und »in 30 Tagen« sind Kredit.",
+        "Die Laufzeit sollte kürzer sein als die Nutzungsdauer."
+      ]
+    }
+  },
+  {
+    "id": "teilzahlung-kreditkarte",
+    "title": "Teilzahlung bei Kreditkarten",
+    "principle": "Manche Kreditkarten buchen monatlich nur einen kleinen Teil des offenen Betrags ab. Der Rest wird zu hohen Zinsen weitergeführt. Die Mindestrate fühlt sich bequem an, sorgt aber dafür, dass die Schuld kaum sinkt.",
+    "example": "2.000 € offen bei 18 % Jahreszins: Im ersten Monat fallen 30 € Zinsen an. Zahlst du 50 €, gehen nur 20 € in die Tilgung. Bei gleichbleibend 50 € im Monat dauert es gut fünf Jahre und kostet rund 1.080 € Zinsen.",
+    "rule": "Kreditkarte auf vollständigen Ausgleich stellen – Teilzahlung nur im Notfall und dann schnell tilgen.",
+    "deep": {
+      "lead": "Die kleine Mindestrate ist kein Entgegenkommen der Bank, sondern ihr Geschäftsmodell.",
+      "sections": [
+        {
+          "title": "Karte ist nicht gleich Karte",
+          "text": "Hinter dem Wort Kreditkarte stecken verschiedene Abrechnungsarten. Bei der einen wird der gesamte Monatsumsatz einmal im Monat zinsfrei vom Girokonto eingezogen. Bei der Debitkarte wird jede Zahlung sofort abgebucht. Die dritte Art räumt einen Kreditrahmen ein, von dem monatlich nur ein Teil zurückgezahlt werden muss, etwa ein fester Mindestbetrag oder wenige Prozent des offenen Saldos. Auf den Rest fallen Zinsen an, die deutlich über denen eines Ratenkredits liegen können. Tückisch ist, dass Teilzahlung bei manchen Karten voreingestellt ist und erst aktiv abgewählt werden muss."
+        },
+        {
+          "title": "Die Mechanik der Mindestrate",
+          "text": "Je kleiner die Rate, desto größer der Anteil, der nur Zinsen deckt. Im Beispiel verkürzt eine Verdopplung der Rate auf 100 € die Dauer auf weniger als die Hälfte: Die Schuld ist dann nach zwei Jahren getilgt, bei knapp 400 € Zinsen. Bemisst sich die Mindestrate als Prozentsatz des Saldos, sinkt sie mit der Schuld, und die Rückzahlung zieht sich noch länger hin. Kommen neue Einkäufe hinzu, sinkt der Saldo gar nicht. Wer bereits in der Teilzahlung steckt, fährt mit einer Umschuldung in einen günstigeren Ratenkredit mit festem Ende meist besser."
+        }
+      ],
+      "tryIt": "Schau in der App oder den Vertragsunterlagen deiner Kreditkarte nach, ob Teilzahlung oder Vollzahlung eingestellt ist und wie hoch der Sollzins bei Teilzahlung wäre.",
+      "takeaways": [
+        "Die Mindestrate deckt anfangs vor allem Zinsen.",
+        "Voreinstellung prüfen: vollständiger Ausgleich jeden Monat."
+      ]
+    }
+  },
+  {
+    "id": "bonitaet-und-schufa",
+    "title": "Bonität und Schufa",
+    "principle": "Bevor dir jemand Kredit gibt, prüft er, wie zuverlässig du bisher gezahlt hast. In Deutschland sammeln Auskunfteien wie die Schufa Daten über Konten, Kredite und Zahlungsstörungen. Davon hängt ab, ob und zu welchem Zins du Geld bekommst.",
+    "example": "Für 10.000 € über fünf Jahre zahlst du bei 5 % Zins rund 1.320 € Zinsen, bei 9 % rund 2.455 €. Die schlechtere Einstufung kostet in diesem Beispiel gut 1.100 € – für dasselbe Geld.",
+    "rule": "Rechnungen pünktlich zahlen und einmal im Jahr die kostenlose Selbstauskunft auf Fehler prüfen.",
+    "deep": {
+      "lead": "Deine Zahlungsgeschichte ist eine Art Zeugnis, das andere lesen, bevor sie dir Geld oder Verträge anvertrauen.",
+      "sections": [
+        {
+          "title": "Was gespeichert wird und was nicht",
+          "text": "Eine Auskunftei erhält ihre Daten von Vertragspartnern: Banken, Mobilfunkanbietern, Versandhändlern, Energieversorgern. Gespeichert werden Name, Geburtsdatum und Anschriften, außerdem Girokonten, Kreditkarten, laufende Kredite und Ratenkäufe. Negativ zählen vor allem unbestrittene Forderungen, die trotz Mahnungen nicht bezahlt wurden, sowie Insolvenzverfahren. Nicht gespeichert werden Einkommen, Vermögen oder Beruf. Aus den Daten wird ein Score berechnet, eine statistische Schätzung der Rückzahlungswahrscheinlichkeit. Erledigte Störungen werden nach festgelegten Fristen gelöscht; diese Fristen wurden zuletzt mehrfach verändert, ein Blick auf den aktuellen Stand lohnt sich."
+        },
+        {
+          "title": "Deine Rechte und zwei Irrtümer",
+          "text": "Du hast nach europäischem Datenschutzrecht Anspruch auf eine kostenlose Kopie der über dich gespeicherten Daten. Auskunfteien bewerben lieber kostenpflichtige Varianten, die Gratis-Auskunft ist auf den Websites oft gut versteckt. Fehler, etwa längst getilgte Kredite oder Verwechslungen, musst du nicht hinnehmen und kannst sie berichtigen lassen. Zwei Irrtümer halten sich hartnäckig. Die eigene Abfrage verschlechtert den Score nicht. Und auch der Vergleich mehrerer Kreditangebote schadet nicht, sofern die Banken eine neutrale Konditionenanfrage stellen. Frag im Zweifel nach, welche Art von Anfrage gemeldet wird."
+        }
+      ],
+      "tryIt": "Fordere bei der Schufa die kostenlose Datenkopie nach Artikel 15 der Datenschutz-Grundverordnung an und prüf, ob alle Einträge stimmen und noch aktuell sind.",
+      "takeaways": [
+        "Pünktliches Zahlen ist die beste Bonitätspflege.",
+        "Konditionenanfragen zum Vergleichen schaden dem Score nicht."
+      ]
+    }
+  },
+  {
+    "id": "buergschaft",
+    "title": "Die Bürgschaft",
+    "principle": "Wer bürgt, verspricht, die Schulden eines anderen zu bezahlen, falls dieser nicht mehr kann. Das ist kein Freundschaftsdienst auf dem Papier, sondern eine volle Haftung mit dem eigenen Vermögen – meist ohne jeden eigenen Vorteil.",
+    "example": "Du bürgst für einen Kredit über 20.000 €. Nach zwei Jahren fällt der Kreditnehmer aus, 15.000 € sind noch offen. Die Bank wendet sich an dich. Bei 300 € im Monat zahlst du über vier Jahre lang für ein Auto, das du nie gefahren hast.",
+    "rule": "Bürge nur für Beträge, die du notfalls verschenken könntest, ohne selbst in Not zu geraten.",
+    "deep": {
+      "lead": "Eine Unterschrift für jemand anderen kann teurer werden als jeder eigene Kredit.",
+      "sections": [
+        {
+          "title": "Wie weit die Haftung reicht",
+          "text": "Banken verlangen fast immer eine sogenannte selbstschuldnerische Bürgschaft. Sie bedeutet, dass die Bank sich direkt an dich wenden darf, sobald der Kreditnehmer nicht zahlt, ohne ihn vorher verklagen zu müssen. Gehaftet wird nicht nur für die Restschuld, sondern auch für aufgelaufene Zinsen und Kosten. Eine Bürgschaft muss schriftlich erklärt werden; eine mündliche Zusage unter Privatleuten bindet rechtlich nicht. Wenn du dich doch darauf einlässt, begrenze das Risiko: mit einem ausdrücklichen Höchstbetrag und, wenn möglich, mit einer zeitlichen Befristung."
+        },
+        {
+          "title": "Nein sagen, ohne zu verletzen",
+          "text": "Dass die Bank einen Bürgen verlangt, ist selbst eine Auskunft: Sie hält die Rückzahlung für nicht sicher genug. Wer bürgt, übernimmt genau das Risiko, das Fachleute nicht tragen wollten. Oft gibt es Alternativen, die weniger gefährlich sind, etwa einen kleineren Betrag direkt zu leihen oder zu schenken. Dann ist der mögliche Verlust von Anfang an klar. Auch für die Beziehung ist das ehrlicher, denn sie leidet selten am Nein, aber fast immer am Ernstfall. Gerichte haben einzelne Bürgschaften völlig überforderter Angehöriger gekippt; darauf verlassen sollte sich niemand."
+        }
+      ],
+      "tryIt": "Überleg in Ruhe: Für wen würdest du bürgen, und bis zu welchem Betrag könntest du den Verlust verkraften? Leg die Zahl fest, bevor dich jemand fragt.",
+      "takeaways": [
+        "Bürgen heißt: im Ernstfall selbst zahlen.",
+        "Verlangt die Bank einen Bürgen, zweifelt sie an der Rückzahlung."
+      ]
+    }
+  },
+  {
+    "id": "annuitaetendarlehen",
+    "title": "Annuitätendarlehen",
+    "principle": "Beim klassischen Baukredit bleibt die Monatsrate gleich, aber ihre Zusammensetzung ändert sich. Am Anfang besteht sie überwiegend aus Zinsen. Mit jeder Zahlung sinkt die Restschuld, der Zinsanteil schrumpft und der Tilgungsanteil wächst.",
+    "example": "200.000 € zu 4 % Zins und 2 % Anfangstilgung: Die Rate beträgt 1.000 € im Monat. Im ersten Monat sind davon rund 667 € Zinsen und 333 € Tilgung. Nach zehn Jahren sind noch etwa 151.000 € offen.",
+    "rule": "Nicht nur auf den Zins schauen: Die Höhe der Tilgung entscheidet, wie lange du zahlst.",
+    "deep": {
+      "lead": "Die Rate bleibt gleich, aber in ihr verschiebt sich Monat für Monat das Gewicht von den Zinsen zur Tilgung.",
+      "sections": [
+        {
+          "title": "Ein Prozentpunkt, viele Jahre",
+          "text": "Die Rate ergibt sich aus Zins plus anfänglicher Tilgung, bezogen auf die Darlehenssumme. Wie stark die Tilgung die Laufzeit bestimmt, zeigt ein Vergleich bei 4 % Zins: Mit 1 % Anfangstilgung dauert es rund 40 Jahre, bis der Kredit abbezahlt ist, mit 2 % gut 27 Jahre und mit 3 % etwa 21 Jahre. Überraschend ist die Wirkung des Zinsniveaus. Bei niedrigen Zinsen wächst der Tilgungsanteil langsamer, weil weniger Zinsen wegfallen können. Dieselben 2 % Anfangstilgung führen bei 2 % Zins zu knapp 35 Jahren Laufzeit."
+        },
+        {
+          "title": "Den Tilgungsplan lesen",
+          "text": "Zu jedem Darlehen gehört ein Tilgungsplan, der Jahr für Jahr Zinsen, Tilgung und Restschuld auflistet. Die wichtigste Zeile ist die Restschuld am Ende der Zinsbindung. Für diesen Betrag brauchst du eine Anschlussfinanzierung zu den dann geltenden Zinsen, die niemand vorhersagen kann. Je höher die Tilgung, desto kleiner dieses Risiko. Sinnvoll sind Verträge, die Beweglichkeit lassen: das Recht, den Tilgungssatz während der Laufzeit zu ändern, und die Möglichkeit, jährlich einen Teil zusätzlich zu tilgen. Vergleiche Angebote immer mit derselben Rate und derselben Zinsbindung."
+        }
+      ],
+      "tryIt": "Rechne nach: 150.000 € zu 3 % Zins und 3 % Tilgung. Wie hoch ist die Monatsrate, und wie viel davon sind im ersten Monat Zinsen? (750 €; 375 €.)",
+      "takeaways": [
+        "Gleiche Rate, wandernde Anteile: erst viel Zins, später viel Tilgung.",
+        "Höhere Anfangstilgung verkürzt die Laufzeit um Jahre."
+      ]
+    }
+  },
+  {
+    "id": "sondertilgung",
+    "title": "Sondertilgung",
+    "principle": "Eine Sondertilgung ist eine zusätzliche Zahlung auf einen Kredit außerhalb der normalen Raten. Sie senkt sofort die Restschuld, und auf den getilgten Betrag fallen für die gesamte restliche Laufzeit keine Zinsen mehr an.",
+    "example": "Auf ein Darlehen zu 4 % tilgst du 5.000 € extra. Das spart im ersten Jahr 200 € Zinsen. Weil die Rate gleich bleibt, fließt dieses Geld künftig zusätzlich in die Tilgung – nach zehn Jahren ist die Restschuld dadurch rund 7.450 € niedriger.",
+    "rule": "Sondertilgung lohnt sich, wenn der Kreditzins höher ist als das, was das Geld sicher angelegt brächte.",
+    "deep": {
+      "lead": "Schulden zu tilgen ist die einzige Geldanlage, deren Rendite du vorher sicher kennst: den Kreditzins.",
+      "sections": [
+        {
+          "title": "Eine Rendite ohne Risiko",
+          "text": "Jeder zusätzlich getilgte Euro erspart dir den Kreditzins, und zwar garantiert. Wer ein Darlehen zu 4 % bedient, erzielt mit der Sondertilgung also eine sichere Rendite von 4 %. Auf Zinserträge aus einer Geldanlage fällt oberhalb des Freibetrags Steuer an, auf ersparte Kreditzinsen nicht. Eine sichere Anlage müsste deshalb vor Steuern spürbar mehr bringen, um mitzuhalten. Dem steht ein Nachteil gegenüber: Getilgtes Geld ist gebunden. Du kommst nicht mehr heran, wenn das Auto streikt. Deshalb gilt die Reihenfolge: erst der Notgroschen, dann die Sondertilgung."
+        },
+        {
+          "title": "Was der Vertrag erlaubt",
+          "text": "Bei Immobiliendarlehen mit fester Zinsbindung darfst du nur dann kostenlos extra tilgen, wenn das vereinbart ist. Üblich sind Rechte auf jährlich einige Prozent der Darlehenssumme. Ohne solche Klausel kann die Bank für die vorzeitige Rückzahlung eine Entschädigung verlangen. Nach zehn Jahren Laufzeit haben Kreditnehmer in Deutschland ein gesetzliches Kündigungsrecht mit sechs Monaten Frist, auch bei längerer Zinsbindung. Gewöhnliche Ratenkredite lassen sich in der Regel jederzeit ganz oder teilweise zurückzahlen; die Entschädigung dafür ist gesetzlich auf einen kleinen Prozentsatz begrenzt. Ein Blick in den Vertrag klärt die Details."
+        }
+      ],
+      "tryIt": "Such in deinem Kreditvertrag das Wort »Sondertilgung«. Wie viel darfst du pro Jahr kostenlos zusätzlich zahlen, und bis wann muss die Zahlung eingehen?",
+      "takeaways": [
+        "Jeder extra getilgte Euro spart Zinsen bis zum Ende der Laufzeit.",
+        "Erst Notgroschen, dann Sondertilgung."
+      ]
+    }
+  },
+  {
+    "id": "selbstbeteiligung",
+    "title": "Selbstbeteiligung",
+    "principle": "Mit einer Selbstbeteiligung trägst du bei jedem Schaden einen festen Betrag selbst und zahlst dafür weniger Beitrag. Das lohnt sich, wenn die Ersparnis über die Jahre größer ist als die Eigenanteile, die du voraussichtlich zahlen musst.",
+    "example": "Eine Vollkasko kostet ohne Selbstbeteiligung 900 € im Jahr, mit 500 € Selbstbeteiligung 700 €. Du sparst 200 € jährlich. Hast du im Schnitt alle fünf Jahre einen Schaden, stehen 1.000 € Ersparnis gegen 500 € Eigenanteil.",
+    "rule": "Wähle die Selbstbeteiligung so hoch, wie du sie jederzeit aus Rücklagen bezahlen könntest.",
+    "deep": {
+      "lead": "Wer kleine Schäden selbst trägt, kauft den Schutz vor großen Schäden günstiger ein.",
+      "sections": [
+        {
+          "title": "Warum Versicherer Rabatt geben",
+          "text": "Für einen Versicherer sind kleine Schäden unverhältnismäßig teuer. Jede Meldung muss geprüft, bearbeitet und ausgezahlt werden, und diese Verwaltung kostet bei 300 € Schaden kaum weniger als bei 30.000 €. Mit einer Selbstbeteiligung fallen die Bagatellfälle weg. Zusätzlich verhalten sich Kunden, die im Ernstfall mitzahlen, im Schnitt etwas vorsichtiger und melden nicht jede Kleinigkeit. Beides spart dem Versicherer Geld, und einen Teil davon gibt er als Beitragsnachlass weiter. Du tauschst also ein überschaubares eigenes Risiko gegen einen niedrigeren, sicheren Preis."
+        },
+        {
+          "title": "Die Probe mit dem Taschenrechner",
+          "text": "Ob sich die Selbstbeteiligung lohnt, zeigt eine einfache Division: Eigenanteil geteilt durch jährliche Ersparnis. Im Beispiel sind das 500 durch 200, also zweieinhalb Jahre. Bleibst du im Schnitt länger schadenfrei, gewinnst du. Zu bedenken ist, dass der Eigenanteil pro Schadenfall gilt und in einem Pechjahr mehrfach fällig werden kann. In der privaten Krankenversicherung kommt hinzu, dass der Arbeitgeber sich nur am Beitrag beteiligt, nicht am Selbstbehalt. Bei der Haftpflicht ist die Ersparnis meist gering. Dort lohnt die Selbstbeteiligung deshalb selten."
+        }
+      ],
+      "tryIt": "Frag bei einer deiner Versicherungen den Beitrag mit höherer Selbstbeteiligung an. Teile den zusätzlichen Eigenanteil durch die Jahresersparnis: Nach wie vielen schadenfreien Jahren lohnt es sich?",
+      "takeaways": [
+        "Kleines Risiko selbst tragen, dafür Beitrag sparen.",
+        "Faustprobe: Eigenanteil geteilt durch Jahresersparnis."
+      ]
+    }
+  },
+  {
+    "id": "arbeitskraft-absichern",
+    "title": "Arbeitskraft absichern",
+    "principle": "Für die meisten Menschen ist die Fähigkeit, Geld zu verdienen, der größte Vermögenswert. Wer wegen Krankheit oder Unfall lange nicht arbeiten kann, bekommt vom Staat meist nur einen Teil des bisherigen Einkommens – oder gar nichts.",
+    "example": "Bei 2.500 € netto im Monat verdienst du in 35 Berufsjahren ohne jede Gehaltserhöhung 1.050.000 €. Eine private Rente von 1.500 € monatlich würde im Ernstfall 60 % deines Nettoeinkommens ersetzen.",
+    "rule": "Erst die Arbeitskraft absichern, dann Sachen – und möglichst früh, solange du gesund bist.",
+    "deep": {
+      "lead": "Dein künftiges Einkommen ist mehr wert als alles, was du besitzt – und es hängt an deiner Gesundheit.",
+      "sections": [
+        {
+          "title": "Was die gesetzliche Absicherung leistet",
+          "text": "Nach der Lohnfortzahlung durch den Arbeitgeber zahlt die Krankenkasse für begrenzte Zeit Krankengeld. Danach bleibt die gesetzliche Erwerbsminderungsrente. Die volle Rente erhält nur, wer aus gesundheitlichen Gründen weniger als drei Stunden täglich arbeiten kann, und zwar in irgendeiner Tätigkeit. Der erlernte Beruf spielt für fast alle heute Erwerbstätigen keine Rolle mehr. Voraussetzung sind außerdem ausreichende Versicherungszeiten, was Berufsanfänger und viele Selbstständige ausschließen kann. Die Höhe liegt in aller Regel deutlich unter dem letzten Nettoeinkommen. Den voraussichtlichen Betrag nennt die jährliche Renteninformation."
+        },
+        {
+          "title": "Worauf es bei privater Vorsorge ankommt",
+          "text": "Eine Berufsunfähigkeitsversicherung zahlt üblicherweise, wenn du deinen zuletzt ausgeübten Beruf voraussichtlich dauerhaft zu mindestens der Hälfte nicht mehr ausüben kannst. Die häufigsten Ursachen sind keine Unfälle, sondern psychische Erkrankungen, Leiden des Bewegungsapparats und Krebs. Entscheidend beim Abschluss sind die Gesundheitsfragen: Wer etwas verschweigt, riskiert im Ernstfall die Leistung. Der Beitrag hängt stark von Beruf, Alter und Vorerkrankungen ab, weshalb ein früher Abschluss günstiger ist. Ist der Schutz zu teuer oder nicht zu bekommen, gibt es abgespeckte Alternativen. Eine unabhängige Beratung ist hier gut angelegtes Geld."
+        }
+      ],
+      "tryIt": "Rechne dein Jahresnetto mal die Jahre bis zur Rente. Schau dann in deiner Renteninformation nach, wie hoch die Rente bei voller Erwerbsminderung wäre.",
+      "takeaways": [
+        "Deine Arbeitskraft ist meist mehr wert als all dein Besitz.",
+        "Die gesetzliche Absicherung deckt nur einen Teil."
+      ]
+    }
+  },
+  {
+    "id": "unterversicherung",
+    "title": "Unterversicherung",
+    "principle": "Ist die vereinbarte Versicherungssumme niedriger als der tatsächliche Wert der versicherten Sachen, kürzt der Versicherer jede Zahlung im selben Verhältnis – auch bei kleinen Schäden, die weit unter der Versicherungssumme liegen.",
+    "example": "Dein Hausrat ist 60.000 € wert, versichert sind nur 40.000 €, also zwei Drittel. Ein Wasserschaden verursacht 9.000 € Schaden. Der Versicherer zahlt nur zwei Drittel davon: 6.000 €. Auf 3.000 € bleibst du sitzen.",
+    "rule": "Versicherungssumme alle paar Jahre prüfen – nach Umzug, größeren Anschaffungen und Preissteigerungen sofort.",
+    "deep": {
+      "lead": "Wer am Beitrag spart, indem er zu wenig versichert, zahlt bei jedem Schaden anteilig mit.",
+      "sections": [
+        {
+          "title": "Die Kürzungsformel",
+          "text": "Die Entschädigung berechnet sich aus dem Schaden, multipliziert mit der Versicherungssumme und geteilt durch den tatsächlichen Wert. Diese Regel steht im Gesetz und soll verhindern, dass jemand nur einen Bruchteil seines Besitzes versichert und trotzdem vollen Ersatz erhält. Viele unterschätzen den Wert ihres Hausrats erheblich, weil sie an den heutigen Zeitwert denken. Maßgeblich ist aber, was es kosten würde, alles neu zu kaufen: jede Hose, jedes Buch, jedes Küchengerät. Bei einer Wohnung mittlerer Größe kommen so schnell mehrere Zehntausend Euro zusammen."
+        },
+        {
+          "title": "Der Verzicht auf die Prüfung",
+          "text": "Viele Hausrattarife bieten einen Ausweg. Vereinbarst du eine bestimmte Mindestsumme je Quadratmeter Wohnfläche, häufig um 650 €, verzichtet der Versicherer darauf, eine Unterversicherung zu prüfen, und zahlt Schäden bis zur Versicherungssumme voll. Das schützt vor der Kürzung, nicht aber davor, dass die Summe bei einem Totalschaden schlicht zu klein ist. Wer wertvolle Einrichtung, Instrumente oder Technik besitzt, sollte nachrechnen. Bei Wohngebäuden übernimmt meist eine automatische Anpassung an die Baukosten diese Aufgabe. Mehr zu versichern, als die Sachen wert sind, bringt übrigens nichts: Ersetzt wird höchstens der Schaden."
+        }
+      ],
+      "tryIt": "Geh durch ein Zimmer und schätz, was es kosten würde, alles darin neu zu kaufen. Rechne auf die ganze Wohnung hoch und vergleich mit deiner Versicherungssumme.",
+      "takeaways": [
+        "Zu niedrige Summe kürzt jeden Schaden anteilig.",
+        "Maßstab ist der Neuwert aller Sachen, nicht ihr Zeitwert."
+      ]
+    }
+  },
+  {
+    "id": "sparen-und-versichern-trennen",
+    "title": "Sparen und Versichern trennen",
+    "principle": "Eine Risikolebensversicherung zahlt nur, wenn die versicherte Person stirbt, und ist deshalb günstig. Kombiprodukte, die zugleich versichern und ansparen, sind schwerer zu durchschauen und oft teurer als beides getrennt.",
+    "example": "Angenommen, eine reine Risikoabsicherung über 200.000 € kostet 20 € im Monat, ein Kombivertrag 150 €. Wer trennt, hat jeden Monat 130 € frei zum selbst Anlegen: 1.560 € im Jahr, 46.800 € in 30 Jahren – noch ohne Erträge.",
+    "rule": "Risiken versichern, Vermögen getrennt aufbauen – bei Kombiprodukten beide Teile einzeln nachrechnen.",
+    "deep": {
+      "lead": "Schutz für die Familie und Vermögensaufbau sind zwei verschiedene Aufgaben – ein einziges Produkt löst selten beide gut.",
+      "sections": [
+        {
+          "title": "Wer den Todesfallschutz braucht",
+          "text": "Eine Risikolebensversicherung ist für Menschen gedacht, von deren Einkommen andere abhängen: Kinder, ein Partner mit geringerem Verdienst, die Mitschuldnerin eines Immobilienkredits. Wer niemanden versorgt, braucht sie in der Regel nicht. Als grobe Orientierung für die Höhe nennen Verbraucherschützer häufig das Drei- bis Fünffache des Bruttojahreseinkommens, zuzüglich offener Kredite. Die Laufzeit sollte reichen, bis die Kinder selbstständig sind oder das Haus abbezahlt ist. Unverheiratete Paare sollten sich zur Vertragsgestaltung beraten lassen, weil an Partner ohne Trauschein ausgezahlte Summen erbschaftsteuerpflichtig sein können."
+        },
+        {
+          "title": "Was an Kombiverträgen stört",
+          "text": "Bei einer klassischen Kapitallebensversicherung teilt sich jeder Beitrag in drei Teile: Kosten, Todesfallschutz und Sparanteil. Wie groß die Teile sind, ist für Kunden schwer zu erkennen. Die Abschlusskosten werden zu Beginn verrechnet, weshalb der Rückkaufswert in den ersten Jahren oft unter den Einzahlungen liegt und eine frühe Kündigung Verlust bedeutet. Außerdem bindet der Vertrag über Jahrzehnte. Trotzdem gilt: Bestehende alte Verträge nicht vorschnell kündigen. Manche bieten garantierte Zinsen, die heute nicht mehr zu bekommen sind. Lass sie von einer unabhängigen Stelle prüfen, bevor du entscheidest."
+        }
+      ],
+      "tryIt": "Frag dich: Wer hätte ein finanzielles Problem, wenn dein Einkommen morgen wegfiele? Fällt dir jemand ein: Wie viele Jahre müsste das Geld für diese Person reichen?",
+      "takeaways": [
+        "Reiner Todesfallschutz ist günstig, wenn man ihn einzeln kauft.",
+        "Alte Kombiverträge erst prüfen lassen, dann entscheiden."
+      ]
+    }
+  },
+  {
+    "id": "gesetzliche-rente-umlage",
+    "title": "So funktioniert die gesetzliche Rente",
+    "principle": "Die gesetzliche Rente spart deine Beiträge nicht an. Was Beschäftigte heute einzahlen, wird sofort an die heutigen Rentner ausgezahlt. Dafür erwirbst du Ansprüche in Form von Rentenpunkten, die später die dann Arbeitenden bedienen.",
+    "example": "Wer in einem Jahr genau das Durchschnittseinkommen verdient, erhält 1 Rentenpunkt, bei der Hälfte 0,5. Angenommen, ein Punkt ist 40 € Monatsrente wert: Nach 40 Jahren mit Durchschnittsverdienst ergäben 40 Punkte 1.600 € brutto.",
+    "rule": "Die gesetzliche Rente ist ein Fundament, kein Sparkonto – ihre Höhe hängt an Punkten und am künftigen Rentenwert.",
+    "deep": {
+      "lead": "In der Rentenkasse liegt kein Topf mit deinem Namen – es gibt ein Versprechen zwischen den Generationen.",
+      "sections": [
+        {
+          "title": "Der Generationenvertrag",
+          "text": "Das heutige Umlageverfahren wurde in der Bundesrepublik mit der Rentenreform von 1957 eingeführt. Seither sind die Renten an die Entwicklung der Löhne gekoppelt: Steigen die Einkommen der Beschäftigten, steigt in der Regel auch der Wert eines Rentenpunkts. Das schützt Rentner weitgehend vor Inflation und macht das System unabhängig von Börsenkursen. Der Preis dafür ist die Abhängigkeit vom Arbeitsmarkt und von der Altersstruktur. Reichen die Beiträge nicht, schießt der Bund Steuergeld zu. Dieser Zuschuss deckt seit Langem einen erheblichen Teil der Ausgaben."
+        },
+        {
+          "title": "Vier Stellschrauben",
+          "text": "Anfang der 1960er-Jahre kamen auf einen Rentner rund sechs Beitragszahler, heute sind es etwa zwei. Um das auszugleichen, gibt es nur vier Stellschrauben: höhere Beiträge, ein niedrigeres Rentenniveau, ein späteres Rentenalter oder mehr Steuergeld. Jede Reform dreht an einer oder mehreren davon. Das oft genannte Rentenniveau bezieht sich übrigens auf eine Musterperson mit 45 Jahren Durchschnittsverdienst, nicht auf dein letztes Gehalt. Punkte gibt es nicht nur für Arbeit: Auch Zeiten der Kindererziehung zählen, und in bestimmten Fällen sind freiwillige Zusatzzahlungen möglich."
+        }
+      ],
+      "tryIt": "Schau in deiner Renteninformation nach, wie viele Entgeltpunkte du bisher gesammelt hast, und multipliziere sie mit dem dort genannten aktuellen Rentenwert.",
+      "takeaways": [
+        "Beiträge von heute finanzieren die Renten von heute.",
+        "Ein Jahr Durchschnittsverdienst bringt einen Rentenpunkt."
+      ]
+    }
+  },
+  {
+    "id": "betriebliche-altersvorsorge",
+    "title": "Betriebliche Altersvorsorge",
+    "principle": "Bei der Entgeltumwandlung fließt ein Teil deines Bruttogehalts direkt in einen Vorsorgevertrag. Darauf fallen zunächst keine Steuern und Sozialabgaben an, und der Arbeitgeber muss in der Regel einen Zuschuss dazugeben.",
+    "example": "Du wandelst 100 € brutto um. Dein Netto sinkt je nach Steuersatz nur um etwa 50 bis 55 €. Gibt der Arbeitgeber 15 % dazu, landen 115 € im Vertrag. Für jeden Euro Verzicht werden also gut 2 € angespart.",
+    "rule": "Erst den Arbeitgeberzuschuss mitnehmen, dann Kosten und Bedingungen des Vertrags prüfen.",
+    "deep": {
+      "lead": "Aus dem Brutto zu sparen ist attraktiv – die Rechnung ist aber erst vollständig, wenn man die Auszahlung mitdenkt.",
+      "sections": [
+        {
+          "title": "Der Haken bei der Auszahlung",
+          "text": "Die Förderung in der Ansparphase ist nur aufgeschoben. Die spätere Betriebsrente musst du versteuern, und gesetzlich Krankenversicherte zahlen darauf oberhalb eines Freibetrags Beiträge zur Kranken- und Pflegeversicherung, und zwar ohne Arbeitgeberanteil. Hinzu kommt ein Nebeneffekt, der oft übersehen wird: Auf das umgewandelte Gehalt werden keine Rentenbeiträge gezahlt, deine gesetzliche Rente fällt also etwas niedriger aus. Auch Leistungen, die sich am Lohn orientieren, etwa Krankengeld oder Elterngeld, können geringer sein. Ob sich das Ganze rechnet, hängt deshalb stark vom Zuschuss des Arbeitgebers ab."
+        },
+        {
+          "title": "Wann es sich lohnt",
+          "text": "Beschäftigte haben in Deutschland einen Rechtsanspruch auf Entgeltumwandlung. Spart der Arbeitgeber dadurch Sozialabgaben, muss er grundsätzlich 15 % des umgewandelten Betrags dazugeben; Tarifverträge können anderes regeln, und manche Arbeitgeber zahlen freiwillig deutlich mehr. Je höher der Zuschuss, desto eher überwiegen die Vorteile. Prüf außerdem die Kosten des angebotenen Vertrags und wie das Geld angelegt wird, denn den Anbieter wählt meist der Arbeitgeber. Bei einem Stellenwechsel lässt sich das angesparte Kapital in vielen Fällen mitnehmen oder der Vertrag privat weiterführen. Frag vor der Unterschrift danach."
+        }
+      ],
+      "tryIt": "Frag in der Personalabteilung: Welchen Zuschuss zahlt der Arbeitgeber zur Entgeltumwandlung, und welcher Vertrag wird angeboten? Lass dir die Kosten schriftlich geben.",
+      "takeaways": [
+        "Beim Sparen aus dem Brutto zahlen Staat und Arbeitgeber mit.",
+        "Bei der Auszahlung fallen Steuern und meist Kassenbeiträge an."
+      ]
+    }
+  },
+  {
+    "id": "entnahmephase",
+    "title": "Die Entnahmephase",
+    "principle": "Vermögen aufzubauen ist nur die halbe Aufgabe. Im Ruhestand muss es so entnommen werden, dass es weder zu früh aufgebraucht ist noch aus Vorsicht ungenutzt bleibt. Es kommt auf Entnahmerate, Rendite und die Dauer an.",
+    "example": "Aus 200.000 € entnimmst du jährlich 4 %, also 8.000 € oder rund 667 € im Monat. Ganz ohne Erträge wäre das Geld nach 25 Jahren weg. Mit Erträgen in Höhe der Entnahme bliebe der Betrag nominal erhalten.",
+    "rule": "Plane mit einer vorsichtigen Entnahmerate und pass sie an, wenn die Märkte schlecht laufen.",
+    "deep": {
+      "lead": "Ansparen ist Rechnen mit einer Unbekannten, Entnehmen mit zweien: der Rendite und der eigenen Lebensdauer.",
+      "sections": [
+        {
+          "title": "Die Vier-Prozent-Faustregel",
+          "text": "Der amerikanische Finanzplaner William Bengen untersuchte in den 1990er-Jahren anhand historischer Börsendaten der USA, wie viel ein Ruheständler jährlich entnehmen konnte, ohne dass ein gemischtes Depot aus Aktien und Anleihen binnen 30 Jahren leer war. Sein Ergebnis: Rund 4 % des Anfangsvermögens, jährlich an die Inflation angepasst, hätten in der Vergangenheit fast immer gereicht. Die Regel ist ein Anhaltspunkt, keine Garantie. Sie beruht auf einem einzelnen, sehr erfolgreichen Markt, lässt Kosten und Steuern außer Acht und endet nach 30 Jahren. Viele Fachleute rechnen deshalb vorsichtiger."
+        },
+        {
+          "title": "Reihenfolge und langes Leben",
+          "text": "Zwei Risiken prägen die Entnahme. Das erste ist die Reihenfolge der Renditen: Ein Kurseinbruch kurz nach Beginn schadet weit mehr als derselbe Einbruch zwanzig Jahre später, weil dann Anteile zu Tiefstkursen verkauft werden müssen und für die Erholung fehlen. Dagegen hilft ein Puffer aus sicheren Anlagen für einige Jahresausgaben und die Bereitschaft, in schlechten Jahren weniger zu entnehmen. Das zweite Risiko ist, länger zu leben, als das Geld reicht. Lebenslange Zahlungen wie die gesetzliche Rente wirken hier wie eine Versicherung gegen ein langes Leben."
+        }
+      ],
+      "tryIt": "Rechne rückwärts: Wie viel Vermögen bräuchtest du, um bei 4 % Entnahme 500 € im Monat zu erhalten? (6.000 € im Jahr geteilt durch 0,04: 150.000 €.)",
+      "takeaways": [
+        "Jahresentnahme mal 25 ergibt grob das nötige Vermögen bei 4 %.",
+        "Ein Kurseinbruch zu Beginn der Entnahme wiegt am schwersten."
+      ]
+    }
+  },
+  {
+    "id": "freibetrag-und-freigrenze",
+    "title": "Freibetrag und Freigrenze",
+    "principle": "Beide Begriffe klingen gleich, wirken aber verschieden. Ein Freibetrag bleibt immer steuerfrei, nur der Teil darüber wird besteuert. Bei einer Freigrenze wird alles steuerpflichtig, sobald sie auch nur um einen Euro überschritten ist.",
+    "example": "Angenommen, die Schwelle liegt bei 1.000 € und du hast 1.050 € Gewinn. Als Freibetrag wären nur 50 € zu versteuern. Als Freigrenze wären es die vollen 1.050 €. Bei 25 % Steuer: 12,50 € gegenüber 262,50 €.",
+    "rule": "Bei jeder Steuerschwelle zuerst klären: Freibetrag oder Freigrenze? Bei Grenzen knapp darunter bleiben.",
+    "deep": {
+      "lead": "Ein Buchstabe Unterschied im Wort, ein großer Unterschied auf dem Steuerbescheid.",
+      "sections": [
+        {
+          "title": "Wo dir beides begegnet",
+          "text": "Freibeträge sind der häufigere Fall. Der Grundfreibetrag stellt bei der Einkommensteuer das Existenzminimum frei, der Sparer-Pauschbetrag einen Sockel an Kapitalerträgen, und bei Erbschaften und Schenkungen gelten je nach Verwandtschaftsgrad hohe Freibeträge. Freigrenzen sind seltener, aber tückisch. Eine gilt für Gewinne aus privaten Veräußerungsgeschäften, etwa beim Verkauf von Gold oder Kryptowerten innerhalb eines Jahres nach dem Kauf. Eine andere betrifft kleine Sachzuwendungen des Arbeitgebers wie Gutscheine. Die Beträge ändern sich immer wieder, deshalb lohnt vor einer Entscheidung der Blick auf den aktuellen Stand."
+        },
+        {
+          "title": "Die Wirkung wie ein Fallbeil",
+          "text": "An einer Freigrenze kann ein einziger zusätzlicher Euro Gewinn Hunderte Euro Steuer kosten. Wer das weiß, plant anders: Verkäufe lassen sich auf zwei Kalenderjahre verteilen, sodass der Gewinn jedes Jahres unter der Grenze bleibt, oder man wartet das Ende der Haltefrist ab. Ein dritter Begriff sorgt zusätzlich für Verwirrung, der Pauschbetrag. Er ist ein Betrag, den das Finanzamt ohne jeden Nachweis als Kosten anerkennt, etwa für berufliche Ausgaben von Beschäftigten. Wer höhere Kosten belegen kann, setzt diese an und lässt die Pauschale liegen."
+        }
+      ],
+      "tryIt": "Such heraus, wie hoch aktuell die Freigrenze für private Veräußerungsgeschäfte ist. Was passiert steuerlich, wenn dein Gewinn genau einen Euro darüber liegt?",
+      "takeaways": [
+        "Freibetrag: Nur der Überschuss wird besteuert.",
+        "Freigrenze: Ein Euro zu viel macht alles steuerpflichtig."
+      ]
+    }
+  },
+  {
+    "id": "kalte-progression",
+    "title": "Kalte Progression",
+    "principle": "Steigt dein Lohn nur so stark wie die Preise, kannst du dir nicht mehr leisten als vorher. Weil der Steuertarif aber an festen Eurobeträgen hängt, zahlst du trotzdem einen höheren Anteil an Steuern – real bleibt dir weniger.",
+    "example": "Vereinfacht: Bei 40.000 € zahlst du 20 % Steuer, es bleiben 32.000 €. Lohn und Preise steigen um 5 %. Auf 42.000 € werden 21 % fällig, es bleiben 33.180 €. Für gleiche Kaufkraft wären 33.600 € nötig – 420 € fehlen.",
+    "rule": "Lohnerhöhungen immer netto und nach Abzug der Inflation beurteilen.",
+    "deep": {
+      "lead": "Eine Steuererhöhung, die niemand beschließen muss: Sie entsteht, wenn der Tarif stehen bleibt und die Preise steigen.",
+      "sections": [
+        {
+          "title": "Warum der Tarif das bewirkt",
+          "text": "Die Einkommensteuer ist progressiv: Mit steigendem Einkommen wächst nicht nur der Steuerbetrag, sondern auch der Anteil, den der Staat nimmt. Das ist gewollt, weil starke Schultern mehr tragen sollen. Die Stufen des Tarifs sind jedoch in Euro festgelegt. Wenn Löhne und Preise gemeinsam steigen, rutschen alle Steuerzahler im Tarif nach oben, obwohl niemand wohlhabender geworden ist. Der Staat nimmt dann real mehr ein, ohne dass ein Parlament darüber abgestimmt hätte. Je höher die Inflation, desto stärker der Effekt. In Jahren mit geringer Teuerung fällt er kaum auf."
+        },
+        {
+          "title": "Was dagegen getan wird",
+          "text": "In Deutschland lässt die Bundesregierung regelmäßig berechnen, wie stark die kalte Progression wirkt, und der Gesetzgeber hat die Tarifgrenzen in den vergangenen Jahren wiederholt angehoben. Einen Automatismus gibt es aber nicht; jede Anpassung muss neu beschlossen werden. Einige Länder, darunter die Schweiz, koppeln ihren Tarif fest an die Preisentwicklung. Den Grundfreibetrag muss der deutsche Gesetzgeber ohnehin anpassen, weil das Existenzminimum steuerfrei bleiben muss. Nicht zu verwechseln ist der Effekt mit dem gewollten Fall: Wer real mehr verdient, soll nach der Logik des Tarifs auch einen höheren Anteil zahlen."
+        }
+      ],
+      "tryIt": "Vergleich zwei Gehaltsabrechnungen im Abstand von einem Jahr: Um wie viel Prozent ist dein Netto gestiegen, und wie hoch war die Inflation in derselben Zeit?",
+      "takeaways": [
+        "Gleiche Kaufkraft, höherer Steuersatz: Das ist kalte Progression.",
+        "Ausgleich gibt es nur, wenn der Gesetzgeber den Tarif verschiebt."
+      ]
+    }
+  },
+  {
+    "id": "steuerklassen",
+    "title": "Steuerklassen",
+    "principle": "Die Steuerklasse bestimmt nur, wie viel Lohnsteuer monatlich vorab einbehalten wird. Die tatsächliche Jahressteuer legt erst die Steuererklärung fest. Ein Wechsel verschiebt also Geld im Zeitablauf, ändert aber nicht die Steuerschuld.",
+    "example": "Ein Ehepaar schuldet für das Jahr zusammen 9.000 € Einkommensteuer. In einer Kombination werden übers Jahr 8.400 € einbehalten: 600 € Nachzahlung. In einer anderen sind es 9.500 €: 500 € Erstattung. Die Jahressteuer bleibt 9.000 €.",
+    "rule": "Die Steuerklasse verändert das monatliche Netto, nicht die Jahressteuer – am Ende rechnet das Finanzamt ab.",
+    "deep": {
+      "lead": "Steuerklassen sind ein Abschlagssystem – wie beim Strom, wo die Jahresabrechnung alles geraderückt.",
+      "sections": [
+        {
+          "title": "Die Klassen im Überblick",
+          "text": "Klasse I gilt für Ledige, Klasse II für Alleinerziehende, die dadurch einen Entlastungsbetrag erhalten. Verheiratete landen zunächst beide in Klasse IV. Sie können stattdessen die Kombination III und V wählen, bei der die Person mit dem höheren Einkommen sehr geringe und die andere sehr hohe Abzüge hat, oder das Faktorverfahren, das die Abzüge genauer nach den tatsächlichen Anteilen verteilt. Klasse VI gilt für ein zweites Arbeitsverhältnis. Über die Abschaffung der Kombination III und V wird seit Jahren diskutiert. Wer sie wählt, muss eine Steuererklärung abgeben."
+        },
+        {
+          "title": "Wo die Klasse doch Geld bewegt",
+          "text": "Ganz folgenlos ist die Wahl nicht. Leistungen wie Elterngeld, Arbeitslosengeld oder Krankengeld orientieren sich am Nettolohn, und der hängt von der Steuerklasse ab. Wer absehbar eine solche Leistung bezieht, kann mit einem rechtzeitigen Wechsel in die günstigere Klasse mehr erhalten; dafür gelten Fristen, die mehrere Monate im Voraus liegen können. Dieses Geld kommt tatsächlich zusätzlich und wird nicht später verrechnet. Bedenkenswert ist auch die Verteilung im Paar. In Klasse V sieht ein Gehalt auf dem Konto kleiner aus, als es ist, was den Wert dieser Arbeit optisch schmälert."
+        }
+      ],
+      "tryIt": "Wenn du verheiratet bist: Vergleich die Lohnsteuer beider Abrechnungen mit dem letzten Steuerbescheid. Gab es eine Nachzahlung oder Erstattung, und woran lag das?",
+      "takeaways": [
+        "Steuerklasse = Vorauszahlung, Steuererklärung = Abrechnung.",
+        "Für Elterngeld und ähnliche Leistungen zählt das Netto und damit die Klasse."
+      ]
+    }
+  },
+  {
+    "id": "steuererklaerung-lohnt-sich",
+    "title": "Die Steuererklärung lohnt sich",
+    "principle": "Die monatlich einbehaltene Lohnsteuer ist nur eine Schätzung. Viele Beschäftigte zahlen dabei zu viel, weil ihre tatsächlichen Kosten für den Beruf nicht berücksichtigt sind. Zurück gibt es das Geld nur mit einer Steuererklärung.",
+    "example": "Du fährst an 220 Tagen 25 km einfach zur Arbeit. Mit einer Pauschale von angenommen 0,30 € je Kilometer sind das 1.650 € Werbungskosten. Sind pauschal schon 1.230 € berücksichtigt, wirken 420 € zusätzlich. Bei 30 % Steuersatz: 126 € zurück.",
+    "rule": "Belege übers Jahr sammeln und die Erklärung auch dann abgeben, wenn du nicht dazu verpflichtet bist.",
+    "deep": {
+      "lead": "Das Finanzamt rechnet mit einer Pauschale – wer mehr Kosten hatte, muss es ihm sagen.",
+      "sections": [
+        {
+          "title": "Was typischerweise zählt",
+          "text": "Der größte Block sind bei Beschäftigten die Werbungskosten: der Weg zur Arbeit, Arbeitsmittel wie Computer oder Fachbücher, Fortbildungen, die Tage im Homeoffice, Beiträge zu Berufsverbänden, Bewerbungskosten. Das Finanzamt zieht dafür automatisch eine Pauschale ab; nur was darüber liegt, bringt zusätzlich etwas. Unabhängig davon wirken weitere Posten. Für Handwerker und haushaltsnahe Dienste wird ein Teil der Arbeitskosten direkt von der Steuerschuld abgezogen. Spenden, Kinderbetreuung und bestimmte Versicherungsbeiträge mindern das zu versteuernde Einkommen. Auch wer nur einen Teil des Jahres gearbeitet hat, bekommt häufig Geld zurück."
+        },
+        {
+          "title": "Fristen und Hilfen",
+          "text": "Wer nicht zur Abgabe verpflichtet ist, darf sich Zeit lassen: Eine freiwillige Erklärung kann bis zu vier Jahre rückwirkend eingereicht werden. Nach Zahlen des Statistischen Bundesamts erhält die große Mehrheit derer, die eine Erklärung abgeben, eine Erstattung, im Durchschnitt gut tausend Euro. Die Abgabe ist über das Portal der Finanzverwaltung kostenlos möglich; kommerzielle Programme führen bequemer durch die Fragen, und Lohnsteuerhilfevereine übernehmen die Arbeit gegen einen Mitgliedsbeitrag. Verpflichtet ist unter anderem, wer bestimmte Steuerklassen gewählt, nennenswerte Lohnersatzleistungen bezogen oder Nebeneinkünfte hat."
+        }
+      ],
+      "tryIt": "Leg heute einen Ordner oder ein Fotoalbum namens »Steuer« an und sammle darin ab sofort jede Rechnung für Arbeitsmittel, Fortbildung, Handwerker und Spenden.",
+      "takeaways": [
+        "Lohnsteuer ist eine Vorauszahlung, keine Endabrechnung.",
+        "Freiwillig abgeben geht vier Jahre rückwirkend."
+      ]
+    }
+  },
+  {
+    "id": "widerrufsrecht",
+    "title": "Widerrufsrecht",
+    "principle": "Bei Käufen im Internet, am Telefon oder an der Haustür kannst du den Vertrag in der Regel innerhalb von 14 Tagen ohne Begründung widerrufen. Im Ladengeschäft gibt es dieses Recht nicht – dort ist ein Umtausch reine Kulanz des Händlers.",
+    "example": "Du bestellst online eine Jacke für 120 € plus 5 € Standardversand und widerrufst rechtzeitig. Der Händler muss dir 125 € erstatten. Die Kosten der Rücksendung, etwa 6 €, trägst du selbst, wenn der Händler sie nicht übernimmt.",
+    "rule": "Online: 14 Tage ab Erhalt der Ware. Im Laden: vor dem Kauf nach den Umtauschregeln fragen.",
+    "deep": {
+      "lead": "Das Widerrufsrecht gleicht aus, dass du die Ware beim Fernkauf vorher nicht anfassen und prüfen konntest.",
+      "sections": [
+        {
+          "title": "Fristen und Form",
+          "text": "Die 14 Tage beginnen bei Waren mit der Lieferung, bei Dienstleistungen mit dem Vertragsschluss. Der Widerruf muss ausdrücklich erklärt werden, eine E-Mail genügt. Die Ware kommentarlos zurückzuschicken ist rechtlich nicht mehr automatisch ein Widerruf, auch wenn viele Händler es so behandeln. Es reicht, die Erklärung innerhalb der Frist abzuschicken. Der Händler muss dann den Kaufpreis und die Kosten des Standardversands erstatten, darf damit aber warten, bis die Ware zurück ist oder du den Versand nachweist. Hat er nicht korrekt über das Widerrufsrecht belehrt, verlängert sich die Frist erheblich."
+        },
+        {
+          "title": "Ausnahmen, die überraschen",
+          "text": "Einige Käufe sind ausgenommen. Dazu gehören Waren, die nach deinen Wünschen angefertigt wurden, schnell Verderbliches, versiegelte Hygieneartikel nach dem Öffnen und digitale Inhalte, sobald der Abruf mit deiner Zustimmung begonnen hat. Auch Tickets für Veranstaltungen und Buchungen für einen festen Termin lassen sich meist nicht widerrufen. Wer Ware über das bloße Ausprobieren hinaus benutzt, muss Wertersatz leisten. Bei Käufen von Privatleuten gibt es kein Widerrufsrecht. Für manche Verträge gelten eigene Fristen: Bei Lebensversicherungen sind es beispielsweise 30 Tage, bei Verbraucherkrediten ebenfalls 14 Tage."
+        }
+      ],
+      "tryIt": "Schau bei deiner letzten Onlinebestellung in die Widerrufsbelehrung: Wer trägt die Rücksendekosten, und wohin müsstest du den Widerruf schicken?",
+      "takeaways": [
+        "Widerruf gibt es beim Fernkauf, nicht im Laden.",
+        "Den Widerruf ausdrücklich erklären, nicht nur zurückschicken."
+      ]
+    }
+  },
+  {
+    "id": "gewaehrleistung-und-garantie",
+    "title": "Gewährleistung und Garantie",
+    "principle": "Gewährleistung ist dein gesetzliches Recht gegenüber dem Händler, wenn eine Ware von Anfang an mangelhaft war. Garantie ist ein freiwilliges Zusatzversprechen, meist vom Hersteller, mit eigenen Bedingungen. Beides besteht nebeneinander.",
+    "example": "Eine Kaffeemaschine für 300 € fällt nach 10 Monaten aus. Über die Gewährleistung muss der Händler kostenlos reparieren oder ersetzen. Verweist er dich an den Hersteller, darfst du ablehnen: Dein Vertragspartner ist der Händler.",
+    "rule": "Bei Mängeln zuerst zum Händler – er haftet gesetzlich, unabhängig von jeder Herstellergarantie.",
+    "deep": {
+      "lead": "Das eine schuldet dir der Händler per Gesetz, das andere verspricht der Hersteller aus freien Stücken.",
+      "sections": [
+        {
+          "title": "Zwei Jahre und eine Vermutung",
+          "text": "Für neue Waren beträgt die gesetzliche Frist zwei Jahre ab Übergabe; bei gebrauchten Sachen dürfen Händler sie auf ein Jahr verkürzen. Entscheidend ist die Beweisfrage. Zeigt sich ein Mangel im ersten Jahr nach dem Kauf, wird zu deinen Gunsten vermutet, dass er von Anfang an vorhanden war. Danach musst du das im Streitfall selbst belegen, was oft schwierig ist. Zuerst kannst du Reparatur oder Ersatz verlangen. Scheitert das, darfst du den Preis mindern oder vom Kauf zurücktreten. Privatverkäufer können die Gewährleistung ausschließen, Händler gegenüber Verbrauchern nicht."
+        },
+        {
+          "title": "Was eine Garantie wert ist",
+          "text": "Weil die Garantie freiwillig ist, bestimmt der Garantiegeber Dauer, Umfang und Ausnahmen selbst. Häufig sind Verschleißteile oder Akkus ausgenommen, manchmal ist eine Registrierung nötig. Ihr Vorteil: Sie greift meist unabhängig davon, ob der Fehler schon beim Kauf angelegt war, und hilft deshalb gerade dann, wenn der Nachweis nach dem ersten Jahr schwerfällt. Kostenpflichtige Garantieverlängerungen an der Kasse überschneiden sich dagegen großenteils mit Rechten, die du ohnehin hast, und lohnen sich selten. Bewahr den Kaufbeleg auf, melde Mängel schriftlich und setz eine angemessene Frist."
+        }
+      ],
+      "tryIt": "Such für dein teuerstes Elektrogerät Kaufbeleg und Kaufdatum heraus. Wie lange läuft die Gewährleistung noch, und gibt es zusätzlich eine Herstellergarantie?",
+      "takeaways": [
+        "Gewährleistung: Gesetz, Händler, zwei Jahre.",
+        "Garantie: freiwillig, eigene Bedingungen, zusätzlich."
+      ]
+    }
+  },
+  {
+    "id": "lastschrift-zurueckgeben",
+    "title": "Lastschrift zurückgeben",
+    "principle": "Eine SEPA-Lastschrift kannst du ohne Angabe von Gründen innerhalb von acht Wochen nach der Abbuchung von deiner Bank zurückbuchen lassen. Wurde ganz ohne deine Zustimmung abgebucht, beträgt die Frist sogar 13 Monate.",
+    "example": "Ein Fitnessstudio bucht nach deiner wirksamen Kündigung weiter 35 € im Monat ab. Du bemerkst es nach zwei Abbuchungen und gibst beide zurück: 70 € sind innerhalb weniger Tage wieder auf deinem Konto.",
+    "rule": "Kontoauszüge alle paar Wochen prüfen – unberechtigte Lastschriften binnen acht Wochen zurückgeben.",
+    "deep": {
+      "lead": "Bei der Lastschrift holt sich der Empfänger das Geld – dafür hast du das Recht, es dir zurückzuholen.",
+      "sections": [
+        {
+          "title": "Wie das Verfahren abläuft",
+          "text": "Mit einem Lastschriftmandat erlaubst du einem Unternehmen, Geld von deinem Konto einzuziehen. Deine Bank prüft bei der Abbuchung nicht, ob der Betrag stimmt. Als Ausgleich räumen die europäischen Regeln Verbrauchern ein bedingungsloses Erstattungsrecht ein. Im Onlinebanking genügt meist ein Klick auf die Buchung; die Bank fragt nicht nach dem Grund und schreibt den Betrag wieder gut. Das gilt für die übliche Basislastschrift. Für die Firmenlastschrift zwischen Unternehmen besteht dieses Recht nicht. Unternehmen müssen Abbuchungen außerdem vorab ankündigen, damit du für Deckung sorgen kannst."
+        },
+        {
+          "title": "Die Rückgabe löscht keine Schuld",
+          "text": "Das Erstattungsrecht ist ein Schutz vor Fehlern, kein Mittel gegen berechtigte Forderungen. Schuldest du das Geld tatsächlich, bleibt die Schuld bestehen, und der Empfänger kann zusätzlich Bankgebühren und Mahnkosten verlangen. Sinnvoll ist die Rückgabe bei falschem Betrag, doppelter Abbuchung, gekündigtem Vertrag oder Betrug. Informiere das Unternehmen parallel, damit kein Mahnverfahren anläuft. Wichtig ist der Unterschied zur Überweisung: Die hast du selbst ausgelöst, und sie lässt sich in der Regel nicht zurückholen. Deshalb ist die Lastschrift für regelmäßige Zahlungen an seriöse Anbieter aus Verbrauchersicht die sicherere Wahl."
+        }
+      ],
+      "tryIt": "Öffne dein Onlinebanking und such bei einer beliebigen Lastschrift die Funktion zum Zurückgeben. Nicht auslösen – nur wissen, wo sie ist.",
+      "takeaways": [
+        "Acht Wochen Rückgaberecht ohne Begründung.",
+        "Berechtigte Forderungen bleiben trotz Rückgabe bestehen."
+      ]
+    }
+  },
+  {
+    "id": "ankereffekt-beim-preis",
+    "title": "Der Ankereffekt beim Preis",
+    "principle": "Die erste Zahl, die du siehst, wird zum Maßstab für alles Folgende. Ein durchgestrichener hoher Preis lässt den tatsächlichen Preis günstig erscheinen, auch wenn der hohe nie ernsthaft verlangt wurde.",
+    "example": "Eine Jacke kostet 120 €. Daneben steht durchgestrichen »statt 200 €«. Der Rabatt von 40 % fühlt sich wie 80 € Gewinn an. Tatsächlich gibst du 120 € aus – die Frage ist nur, ob dir die Jacke das wert ist.",
+    "rule": "Ignoriere den Streichpreis: Entscheide, was dir die Sache wert ist, bevor du aufs Preisschild schaust.",
+    "deep": {
+      "lead": "Niemand weiß genau, was eine Jacke wert ist – also klammert sich das Urteil an die erste Zahl in Sichtweite.",
+      "sections": [
+        {
+          "title": "Das Experiment mit dem Glücksrad",
+          "text": "Amos Tversky und Daniel Kahneman ließen Versuchspersonen in den 1970er-Jahren ein Glücksrad drehen, das heimlich so eingestellt war, dass es bei 10 oder bei 65 stehen blieb. Danach sollten sie schätzen, wie viel Prozent der Mitglieder der Vereinten Nationen afrikanische Staaten seien. Wer die 10 gesehen hatte, schätzte im Mittel 25 Prozent, wer die 65 gesehen hatte, 45 Prozent. Eine erkennbar zufällige Zahl verschob also das Urteil. Spätere Studien zeigten, dass auch Fachleute nicht immun sind: Immobilienmakler ließen sich bei der Bewertung eines Hauses vom genannten Angebotspreis beeinflussen."
+        },
+        {
+          "title": "Anker im Laden und am Verhandlungstisch",
+          "text": "Der Handel nutzt den Effekt systematisch: unverbindliche Preisempfehlungen, die kaum jemand verlangt, ein sehr teures Modell neben dem, das verkauft werden soll, oder Hinweise wie »höchstens sechs Stück pro Kunde«, die die gekaufte Menge erhöhen. In der EU müssen Händler bei beworbenen Preissenkungen inzwischen den niedrigsten Preis der letzten 30 Tage als Vergleich nennen, was die gröbsten Tricks erschwert. In Verhandlungen wirkt der Anker ebenso: Wer zuerst eine Zahl nennt, steckt den Rahmen ab. Dagegen hilft, den eigenen Höchstpreis festzulegen, bevor ein Angebot auf dem Tisch liegt."
+        }
+      ],
+      "tryIt": "Schreib vor dem nächsten größeren Kauf auf, was du höchstens zahlen würdest – bevor du Preise recherchierst. Vergleich danach mit dem Angebot.",
+      "takeaways": [
+        "Die erste Zahl färbt jedes spätere Urteil.",
+        "Eigenen Höchstpreis festlegen, bevor du Angebote siehst."
+      ]
+    }
+  },
+  {
+    "id": "verlustaversion",
+    "title": "Verlustaversion",
+    "principle": "Ein Verlust schmerzt ungefähr doppelt so stark, wie ein gleich großer Gewinn freut. Deshalb halten Anleger Verlustpositionen zu lange, verkaufen Gewinner zu früh und meiden auch Risiken, die sich im Durchschnitt lohnen würden.",
+    "example": "Dir wird ein Münzwurf angeboten: Bei Kopf gewinnst du 150 €, bei Zahl verlierst du 100 €. Der Erwartungswert ist plus 25 € pro Wurf. Trotzdem lehnen die meisten ab – erst ab etwa 200 € möglichem Gewinn sagen viele zu.",
+    "rule": "Frag bei jeder Position: Würde ich sie heute zu diesem Preis neu kaufen? Der Einstandskurs ist dafür egal.",
+    "deep": {
+      "lead": "Hundert Euro zu verlieren tut mehr weh, als hundert Euro zu finden freut – und das lenkt Entscheidungen.",
+      "sections": [
+        {
+          "title": "Eine Theorie mit Nobelpreis",
+          "text": "Daniel Kahneman und Amos Tversky beschrieben den Effekt 1979 in ihrer Prospect-Theorie. Sie zeigten, dass Menschen Ergebnisse nicht nach ihrem Endvermögen beurteilen, sondern als Gewinn oder Verlust gegenüber einem Bezugspunkt, meist dem Ausgangszustand oder dem Kaufpreis. Verluste erhalten dabei etwa das doppelte Gewicht. Kahneman bekam dafür 2002 den Wirtschaftsnobelpreis; Tversky war bereits verstorben. Vermutlich hat die Schieflage alte Wurzeln: Für unsere Vorfahren konnte ein Verlust an Nahrung oder Schutz tödlich sein, während ein gleich großer Zugewinn das Leben nur etwas angenehmer machte."
+        },
+        {
+          "title": "Spuren im Depot und im Alltag",
+          "text": "An der Börse führt die Verlustscheu zu einem gut belegten Muster: Anleger verkaufen Papiere im Plus bereitwillig und halten solche im Minus, um den Verlust nicht wahr werden zu lassen. Oft wäre das Gegenteil klüger. Wer täglich ins Depot schaut, sieht zudem häufiger rote Zahlen als jemand, der einmal im Quartal nachsieht, und empfindet dieselbe Anlage als riskanter. Im Alltag nutzen Verkäufer den Effekt mit Probeabos, die man nur ungern wieder hergibt, und mit ablaufenden Rabatten. Hilfreich sind feste Regeln und der Blick auf das Gesamtvermögen."
+        }
+      ],
+      "tryIt": "Nimm eine Geldanlage oder einen Gegenstand, an dem du trotz Verlust festhältst. Würdest du ihn heute zum aktuellen Preis kaufen? Wenn nein: Was hält dich?",
+      "takeaways": [
+        "Verluste wiegen gefühlt etwa doppelt so schwer wie Gewinne.",
+        "Der Kaufpreis von damals ist für die Entscheidung von heute egal."
+      ]
+    }
+  },
+  {
+    "id": "versunkene-kosten",
+    "title": "Versunkene Kosten",
+    "principle": "Geld, das ausgegeben und nicht mehr zurückzuholen ist, sollte keine Rolle für künftige Entscheidungen spielen. Trotzdem investieren Menschen weiter in schlechte Vorhaben, um den bisherigen Einsatz nicht als Verlust anerkennen zu müssen.",
+    "example": "Du hast 2.000 € in die Reparatur eines alten Autos gesteckt. Jetzt stehen weitere 1.500 € an, das Auto wäre danach 2.500 € wert. Die 2.000 € sind weg. Es zählt nur: Sind 1.500 € für ein Auto im Wert von 2.500 € sinnvoll?",
+    "rule": "Entscheide nur nach künftigen Kosten und künftigem Nutzen – was schon bezahlt ist, bleibt außen vor.",
+    "deep": {
+      "lead": "Was weg ist, ist weg – die einzige offene Frage lautet, was der nächste Euro bringt.",
+      "sections": [
+        {
+          "title": "Der Concorde-Effekt",
+          "text": "Seinen bekanntesten Namen verdankt der Denkfehler einem Flugzeug. Großbritannien und Frankreich entwickelten ab den 1960er-Jahren gemeinsam das Überschallflugzeug Concorde. Früh zeichnete sich ab, dass es sich wirtschaftlich nicht tragen würde, doch beide Regierungen finanzierten weiter, auch weil schon so viel Geld geflossen war. Die Psychologen Hal Arkes und Catherine Blumer wiesen den Effekt 1985 im Kleinen nach: Theaterbesucher, die zufällig den vollen Preis für ein Abonnement gezahlt hatten, kamen in den folgenden Monaten häufiger zu den Vorstellungen als solche mit Rabatt, obwohl das Geld in beiden Fällen ausgegeben war."
+        },
+        {
+          "title": "Durchhalten oder aufhören?",
+          "text": "Im eigenen Leben klingt der Fehler meist so: Jetzt habe ich schon so viel hineingesteckt. Das gilt für die Aktie, die erst wieder den Einstandskurs erreichen soll, für das Studium im falschen Fach und für die Renovierung, die immer teurer wird. Daraus folgt nicht, dass Aufgeben stets klug wäre. Durchhalten ist richtig, wenn der künftige Nutzen die künftigen Kosten übersteigt. Eine brauchbare Probe ist die Frage, ob du heute neu einsteigen würdest, wenn du bisher nichts investiert hättest. Außenstehende beantworten sie oft klarer als man selbst."
+        }
+      ],
+      "tryIt": "Such ein Projekt, Abo oder Hobby, bei dem du denkst: »Jetzt habe ich schon so viel reingesteckt.« Würdest du heute neu damit anfangen?",
+      "takeaways": [
+        "Ausgegebenes Geld kommt durch Weitermachen nicht zurück.",
+        "Testfrage: Würde ich heute neu einsteigen?"
+      ]
+    }
+  },
+  {
+    "id": "schmerz-des-bezahlens",
+    "title": "Der Schmerz des Bezahlens",
+    "principle": "Bargeld aus der Hand zu geben fühlt sich unangenehmer an, als eine Karte oder ein Handy an ein Gerät zu halten. Je unsichtbarer die Zahlung und je weiter sie vom Kauf entfernt ist, desto leichter fällt das Ausgeben.",
+    "example": "Du setzt dir für Freizeit 60 € pro Woche in bar. Vorher hast du mit Karte im Schnitt 85 € ausgegeben, ohne es zu merken. Hält das Limit, sparst du 25 € pro Woche, also 1.300 € im Jahr.",
+    "rule": "Für Bereiche, in denen du zu viel ausgibst: ein festes Budget, das du sichtbar schrumpfen siehst.",
+    "deep": {
+      "lead": "Bezahlen tut ein bisschen weh – und genau dieser kleine Schmerz schützt vor unüberlegten Käufen.",
+      "sections": [
+        {
+          "title": "Was Experimente zeigen",
+          "text": "Die Ökonomen Drazen Prelec und George Loewenstein prägten Ende der 1990er-Jahre den Begriff vom Schmerz des Bezahlens. In einem viel zitierten Versuch ließ Prelec mit einem Kollegen Studierende auf begehrte Sportkarten bieten. Wer mit Kreditkarte zahlen sollte, bot im Schnitt deutlich mehr als diejenigen, die bar zahlen mussten. Erklärt wird das mit der Entkopplung: Bei der Karte liegen Kauf und spürbare Belastung zeitlich auseinander, der Verlust wird abstrakt. Dasselbe Prinzip steckt in Pauschalreisen und Flatrates. Wer vorab bezahlt hat, genießt unbeschwerter, weil nicht jedes Getränk einzeln schmerzt."
+        },
+        {
+          "title": "Den Effekt für sich arbeiten lassen",
+          "text": "Daraus folgt nicht, dass du auf Karten verzichten solltest; sie sind bequem und sicher. Es genügt, die Spürbarkeit dort zu erhöhen, wo das Geld zu locker sitzt. Schalte die Sofortmeldung deiner Bank für jede Zahlung ein. Führe für Freizeit oder Essen ein eigenes Konto mit festem Wochenbetrag. Lösch gespeicherte Zahlungsdaten in Onlineshops, damit ein Kauf wieder ein paar Handgriffe braucht, und lass größere Wünsche einen Tag im Warenkorb liegen. Umgekehrt lohnt es sich, Schönes im Voraus zu bezahlen: Dann ist der Schmerz vorbei, wenn der Genuss beginnt."
+        }
+      ],
+      "tryIt": "Zahl eine Woche lang alle Freizeitausgaben bar aus einem festen Betrag. Bei welchen Käufen zögerst du, bei denen du mit Karte nicht gezögert hättest?",
+      "takeaways": [
+        "Je unsichtbarer die Zahlung, desto lockerer sitzt das Geld.",
+        "Sichtbare Budgets bremsen, ohne etwas zu verbieten."
+      ]
+    }
+  },
+  {
+    "id": "gegenwartsverzerrung",
+    "title": "Gegenwartsverzerrung",
+    "principle": "Eine Belohnung jetzt erscheint uns viel wertvoller als eine größere später. Deshalb wird Sparen auf nächsten Monat verschoben – und nächsten Monat wieder. Der Plan ist ernst gemeint, aber das spätere Ich entscheidet wie das heutige.",
+    "example": "100 € heute oder 110 € in einem Monat? Viele nehmen die 100 €. 100 € in zwölf Monaten oder 110 € in dreizehn? Jetzt warten fast alle – obwohl es derselbe Tausch ist: ein Monat Geduld für 10 % mehr.",
+    "rule": "Triff Sparentscheidungen im Voraus und automatisiere sie, damit das spätere Ich nicht neu verhandeln kann.",
+    "deep": {
+      "lead": "Für die ferne Zukunft sind wir geduldig und vernünftig – nur wird aus jeder Zukunft irgendwann ein Jetzt.",
+      "sections": [
+        {
+          "title": "Zwei Ichs mit verschiedenen Plänen",
+          "text": "Ökonomen gingen lange davon aus, dass Menschen künftige Beträge gleichmäßig abwerten, jedes Jahr um denselben Satz. Dann blieben Pläne stabil. Tatsächlich fällt der gefühlte Wert in der unmittelbaren Zukunft steil ab und danach nur noch flach. Der Verhaltensökonom Richard Thaler machte das mit Äpfeln anschaulich: Ein Apfel heute ist vielen lieber als zwei morgen, aber kaum jemand zieht einen Apfel in einem Jahr zwei Äpfeln in einem Jahr und einem Tag vor. Die Folge ist ein ständiger Konflikt zwischen dem planenden Ich und dem handelnden Ich."
+        },
+        {
+          "title": "Sich selbst binden",
+          "text": "Das älteste Gegenmittel steht bei Homer: Odysseus lässt sich an den Mast binden, um den Sirenen zuhören zu können, ohne ihnen zu folgen. Die moderne Fassung entwickelten Richard Thaler und Shlomo Benartzi. In ihrem Programm verpflichteten sich Beschäftigte im Voraus, einen Teil künftiger Gehaltserhöhungen automatisch zu sparen. Weil das heutige Netto unberührt blieb, machten die meisten mit, und ihre Sparquoten vervielfachten sich innerhalb weniger Jahre. Das Muster lässt sich übertragen: Erhöhungen der Sparrate jetzt für später festlegen, Geld für Ziele schwer erreichbar parken und Käufe mit einer Wartefrist versehen."
+        }
+      ],
+      "tryIt": "Leg heute fest, um welchen Betrag deine Sparrate nach der nächsten Gehaltserhöhung steigt, und trag die Änderung des Dauerauftrags mit Datum in den Kalender ein.",
+      "takeaways": [
+        "Heute schlägt später – auch wenn später mehr wäre.",
+        "Im Voraus festlegen, was das künftige Ich tun soll."
+      ]
+    }
+  },
+  {
+    "id": "anleihen-grundidee",
+    "title": "Anleihen: die Grundidee",
+    "principle": "Eine Anleihe ist ein Kredit, den du einem Staat oder Unternehmen gibst. Du bekommst feste Zinsen und am Ende den Nennwert zurück. Zwischendurch schwankt der Kurs: Steigen die Marktzinsen, fallen die Kurse alter Anleihen – und umgekehrt.",
+    "example": "Eine Anleihe über 1.000 € zahlt 2 % Zins, also 20 € im Jahr. Steigt der Marktzins auf 4 %, bringen neue Anleihen 40 €. Niemand zahlt für die alte mehr den vollen Preis – ihr Kurs fällt, bei zehn Jahren Restlaufzeit auf rund 840 €.",
+    "rule": "Je länger die Restlaufzeit, desto stärker reagiert der Kurs auf Zinsänderungen.",
+    "deep": {
+      "lead": "Bei einer Anleihe bist du die Bank: Du verleihst Geld und lebst davon, dass der Schuldner zahlt.",
+      "sections": [
+        {
+          "title": "Zwei Risiken, die man trennen sollte",
+          "text": "Das erste Risiko ist der Zins. Wer eine Anleihe bis zur Fälligkeit hält, bekommt den Nennwert zurück, gleichgültig, wo der Kurs zwischendurch stand. Wer vorher verkaufen muss, erhält den Tageskurs, und der kann nach einem Zinsanstieg deutlich niedriger sein. Im Jahr 2022, als die Zinsen in kurzer Zeit kräftig stiegen, verloren selbst Anleihen sehr sicherer Staaten zweistellig an Wert. Das zweite Risiko ist der Ausfall: Der Schuldner kann zahlungsunfähig werden. Ratingagenturen schätzen diese Gefahr ein. Ein auffällig hoher Zins ist fast immer der Preis für ein höheres Ausfallrisiko."
+        },
+        {
+          "title": "Wozu Anleihen im Depot dienen",
+          "text": "Anleihen guter Schuldner schwanken meist weniger als Aktien und liefern planbare Zahlungen. Deshalb dienen sie in gemischten Depots als ruhigerer Teil. Kurz laufende Papiere sicherer Staaten verhalten sich ähnlich wie Festgeld, lang laufende können kräftig schwanken. Ein Anleihefonds hat keinen Fälligkeitstag, zu dem alles zum Nennwert zurückfließt; sein Kurs bleibt daher dauerhaft zinsempfindlich. Zwei Grenzen gehören dazu. Feste Zinsen schützen nicht vor Inflation, und Anleihen von Unternehmen mit schwacher Bonität fallen in Krisen oft gemeinsam mit Aktien. Sicher ist eine Anleihe nur so weit wie ihr Schuldner."
+        }
+      ],
+      "tryIt": "Du hältst eine Anleihe mit 3 % Zins und zwei Jahren Restlaufzeit. Der Marktzins fällt auf 1 %. Steigt oder fällt ihr Kurs? (Er steigt – ihre höheren Zinsen sind nun begehrt.)",
+      "takeaways": [
+        "Zinsen rauf, Anleihekurse runter – und umgekehrt.",
+        "Bis zur Fälligkeit gehalten, zählt nur, ob der Schuldner zahlt."
+      ]
+    }
+  },
+  {
+    "id": "aktien-grundidee",
+    "title": "Aktien: Anteil am Unternehmen",
+    "principle": "Eine Aktie ist ein Miteigentumsanteil an einem Unternehmen. Dir gehört damit ein kleiner Teil der künftigen Gewinne. Der Kurs spiegelt, was Käufer und Verkäufer heute für diese ungewisse Zukunft zu zahlen bereit sind.",
+    "example": "Ein Unternehmen verdient 5 € je Aktie, die Aktie kostet 100 €. Das Kurs-Gewinn-Verhältnis ist 20: Du zahlst das Zwanzigfache des Jahresgewinns. Schüttet die Firma 2 € als Dividende aus, sind das 2 % auf deinen Einsatz.",
+    "rule": "Hinter jedem Kurs steht ein Unternehmen: Du kaufst künftige Gewinne, keine Zahl auf dem Bildschirm.",
+    "deep": {
+      "lead": "Wer eine Aktie kauft, wird Mitinhaber – mit Anspruch auf Gewinne, aber ohne Anspruch auf Rückzahlung.",
+      "sections": [
+        {
+          "title": "Woher der Ertrag kommt",
+          "text": "Aktionäre verdienen auf zwei Wegen: durch ausgeschüttete Gewinne, die Dividenden, und durch steigende Kurse. Auf lange Sicht folgen die Kurse der Entwicklung der Unternehmensgewinne, auf kurze Sicht vor allem Stimmungen und Erwartungen. Eine Dividende ist kein Geschenk obendrauf. Am Tag der Ausschüttung sinkt der Kurs in der Regel um etwa den ausgezahlten Betrag, denn das Geld hat das Unternehmen verlassen. Im Fall einer Pleite werden zuerst alle Gläubiger bedient, die Eigentümer zuletzt. Für dieses Risiko erwarten Aktionäre eine höhere Rendite. Verlieren können sie höchstens ihren Einsatz."
+        },
+        {
+          "title": "Preis und Wert sind zweierlei",
+          "text": "Der Investor Benjamin Graham erfand dafür in seinem Buch »Der intelligente Investor« eine Figur: Herrn Markt, einen launischen Geschäftspartner, der dir jeden Tag anbietet, deinen Anteil zu kaufen oder ihm seinen abzunehmen. Mal ist er euphorisch und nennt hohe Preise, mal verzweifelt und nennt niedrige. Am Unternehmen hat sich dabei oft wenig geändert. Daraus folgt eine unbequeme Einsicht: Auch ein hervorragendes Unternehmen kann eine schlechte Geldanlage sein, wenn der Preis zu hoch ist. Kennzahlen wie das Kurs-Gewinn-Verhältnis helfen bei der Einordnung, sagen aber nichts Sicheres voraus."
+        }
+      ],
+      "tryIt": "Such zu einem Unternehmen, dessen Produkte du nutzt, den Gewinn je Aktie und den Kurs heraus. Teile den Kurs durch den Gewinn: Das Wievielfache zahlt der Markt?",
+      "takeaways": [
+        "Aktie = Anteil an künftigen Gewinnen.",
+        "Eine Dividende wird am Ausschüttungstag vom Kurs abgezogen."
+      ]
+    }
+  },
+  {
+    "id": "market-timing",
+    "title": "Market Timing",
+    "principle": "Der Versuch, vor Kursrückgängen auszusteigen und rechtzeitig wieder einzusteigen, verlangt zwei richtige Entscheidungen hintereinander. Weil die stärksten Börsentage oft mitten in Krisen liegen, verpasst sie, wer am Rand wartet.",
+    "example": "Angenommen, ein Markt steigt in einem Jahr um 8 %, wobei allein die fünf besten Tage zusammen 12 % brachten. Wer genau an diesen fünf Tagen nicht investiert war, landet statt bei plus 8 % bei rund minus 4 %.",
+    "rule": "Zeit im Markt schlägt den Versuch, den Markt zu timen – ein fester Plan ersetzt die Prognose.",
+    "deep": {
+      "lead": "Aussteigen fühlt sich sicher an – das eigentliche Risiko ist, den Wiedereinstieg zu verpassen.",
+      "sections": [
+        {
+          "title": "Warum die besten Tage in Krisen liegen",
+          "text": "Starke Kursbewegungen treten gehäuft auf. Die größten Tagesgewinne der Börsengeschichte fielen überwiegend in Phasen heftiger Turbulenzen, oft nur Tage nach den größten Verlusten, etwa im Herbst 2008 oder im März 2020. Wer nach einem Absturz verkauft, um abzuwarten, bis sich die Lage beruhigt hat, ist bei der Gegenbewegung häufig nicht mehr dabei. Zur Ehrlichkeit gehört die Kehrseite: Wer auch die schlechtesten Tage vermiede, stünde glänzend da. Nur liegen gute und schlechte Tage so dicht beieinander, dass niemand zuverlässig die einen mitnimmt und die anderen auslässt."
+        },
+        {
+          "title": "Die Lücke im eigenen Depot",
+          "text": "Untersuchungen von Fondsanalysten zeigen seit Jahren dasselbe Bild: Die Anleger eines Fonds erzielen im Durchschnitt weniger als der Fonds selbst. Der Grund sind schlecht gewählte Zeitpunkte. Geld fließt zu, nachdem die Kurse gestiegen sind, und ab, nachdem sie gefallen sind. Auch professionellen Verwaltern gelingt verlässliches Timing kaum. Die Alternative ist unspektakulär: eine Aufteilung festlegen, die du auch in schlechten Zeiten durchhältst, regelmäßig einzahlen und selten nachsehen. Etwas anderes ist es, das Risiko zu senken, weil du das Geld bald brauchst. Das ist Planung, kein Timing."
+        }
+      ],
+      "tryIt": "Erinnere dich an die letzte Börsenschlagzeile, die dich beunruhigt hat. Schau nach, wo ein breiter Aktienindex sechs Monate später stand.",
+      "takeaways": [
+        "Timing braucht zwei Treffer: raus und wieder rein.",
+        "Die besten Tage liegen oft direkt neben den schlechtesten."
+      ]
+    }
+  },
+  {
+    "id": "schneeballsysteme-erkennen",
+    "title": "Schneeballsysteme erkennen",
+    "principle": "Bei einem Schneeballsystem werden die angeblichen Gewinne früher Anleger aus den Einzahlungen neuer Anleger bezahlt. Es gibt kein tragfähiges Geschäft dahinter. Das System bricht zusammen, sobald nicht mehr genug frisches Geld nachkommt.",
+    "example": "Jeder Teilnehmer soll sechs neue werben. Nach der 1. Stufe sind es 6, nach der 5. schon 7.776, nach der 10. über 60 Millionen. In der 13. Stufe bräuchte man mehr Menschen, als auf der Erde leben.",
+    "rule": "Garantierte hohe Rendite, Zeitdruck und Anwerben neuer Einzahler: Bei dieser Mischung Finger weg.",
+    "deep": {
+      "lead": "Solange neues Geld hereinkommt, sieht alles nach Erfolg aus – bis die Rechnung an der Zahl der Menschen scheitert.",
+      "sections": [
+        {
+          "title": "Von Ponzi bis Madoff",
+          "text": "Im Englischen heißen solche Systeme nach Charles Ponzi, der 1920 in Boston 50 Prozent Gewinn in 45 Tagen versprach, angeblich durch den Handel mit internationalen Antwortscheinen der Post. Er zahlte die ersten Anleger aus dem Geld der nächsten und flog nach wenigen Monaten auf. Der größte bekannte Fall ist der des New Yorker Vermögensverwalters Bernard Madoff, dessen System 2008 zusammenbrach; auf dem Papier fehlten rund 65 Milliarden Dollar. Madoff lockte nicht mit Traumrenditen, sondern mit auffallend gleichmäßigen Erträgen ohne Verlustjahre. Gerade diese Glätte hätte misstrauisch machen müssen."
+        },
+        {
+          "title": "Warnzeichen und Gegenprobe",
+          "text": "Die Muster wiederholen sich. Versprochen wird viel Ertrag bei angeblich keinem Risiko. Die Strategie bleibt geheim oder unverständlich. Es wird gedrängt, schnell zu entscheiden, und wer andere anwirbt, bekommt Prämien. Oft läuft der Vertrieb über Bekannte, Vereine oder Gemeinschaften, in denen man einander vertraut. Eine einfache Gegenprobe: Wer in Deutschland Finanzgeschäfte betreibt, braucht eine Erlaubnis der Aufsichtsbehörde BaFin, die eine öffentliche Unternehmensdatenbank und eine Liste mit Warnungen führt. Wichtig zu wissen: Selbst wer früh Gewinne erhalten hat, muss sie nach einem Zusammenbruch unter Umständen zurückzahlen."
+        }
+      ],
+      "tryIt": "Such auf der Website der Finanzaufsicht BaFin die Unternehmensdatenbank und die Liste der Warnungen. Prüf dort einen Anbieter, dessen Werbung dir zuletzt begegnet ist.",
+      "takeaways": [
+        "Stammen Gewinne aus neuen Einzahlungen, endet es im Zusammenbruch.",
+        "Gleichmäßig hohe Erträge ohne Schwankung sind ein Warnzeichen."
+      ]
+    }
+  },
+  {
+    "id": "tagesgeld-und-festgeld",
+    "title": "Tagesgeld und Festgeld",
+    "principle": "Tagesgeld ist täglich verfügbar, der Zins kann sich jederzeit ändern. Festgeld ist für eine feste Laufzeit gebunden und dafür mit einem garantierten Zins versehen. Du tauschst also Verfügbarkeit gegen Planbarkeit.",
+    "example": "10.000 € als Festgeld für zwei Jahre zu 3 %: Mit jährlicher Zinsgutschrift werden daraus 10.609 €. Bringt Tagesgeld anfangs ebenfalls 3 % und fällt nach einem Jahr auf 1,5 %, sind es am Ende nur rund 10.455 €.",
+    "rule": "Was du jederzeit brauchen könntest, gehört aufs Tagesgeld – nur fest anlegen, was sicher liegen bleiben kann.",
+    "deep": {
+      "lead": "Beide Konten sind sicher – der Unterschied liegt darin, wer das Zinsrisiko trägt und wer die Wartezeit.",
+      "sections": [
+        {
+          "title": "Lockzinsen und Kleingedrucktes",
+          "text": "Auffällig hohe Tagesgeldzinsen gelten häufig nur für Neukunden, nur für einige Monate und nur bis zu einem Höchstbetrag. Danach fällt der Satz auf das normale Niveau der Bank, das deutlich niedriger sein kann. Wer dem besten Zins ständig hinterherzieht, eröffnet viele Konten für wenig Mehrertrag. Beim Festgeld lohnt der Blick auf drei Punkte: ob eine vorzeitige Kündigung überhaupt möglich ist, ob sich die Anlage am Ende automatisch verlängert und wann die Zinsen fließen. Werden sie erst zum Schluss in einer Summe gezahlt, kann das in jenem Jahr den Steuerfreibetrag sprengen."
+        },
+        {
+          "title": "Die Zinstreppe",
+          "text": "Wer nicht raten will, wohin sich die Zinsen entwickeln, kann eine Treppe bauen. Dafür teilst du den Betrag in gleiche Teile und legst sie für ein, zwei und drei Jahre fest. Jedes Jahr wird ein Teil fällig. Brauchst du das Geld nicht, legst du es wieder für die längste Laufzeit an. Nach kurzer Zeit laufen alle Teile zum meist höheren Zins langer Laufzeiten, und trotzdem wird jedes Jahr ein Drittel frei. Die Treppe macht dich unabhängig vom Zeitpunkt des Einstiegs. Ob am Ende real etwas übrig bleibt, entscheidet allerdings die Inflation."
+        }
+      ],
+      "tryIt": "Vergleich den Zins deines Tagesgeldkontos mit dem aktuellen Angebot derselben Bank für Neukunden. Wie groß ist der Abstand, und seit wann bekommst du den niedrigeren Satz?",
+      "takeaways": [
+        "Tagesgeld: flexibel, Zins veränderlich. Festgeld: gebunden, Zins fest.",
+        "Eine Zinstreppe verteilt das Geld auf mehrere Laufzeiten."
+      ]
+    }
+  }
+]

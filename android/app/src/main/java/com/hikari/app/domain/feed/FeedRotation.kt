@@ -31,3 +31,25 @@ object FeedRotation {
         if (lastSeen.size <= keep) lastSeen
         else lastSeen.entries.sortedByDescending { it.value }.take(keep).associate { it.key to it.value }
 }
+
+/**
+ * Überwischte Karten gelten nicht als gesehen. Sie setzen ein paar Runden aus und kommen dann
+ * bevorzugt wieder. Wer sie ein zweites Mal überwischt, will sie offenbar nicht — dann sind sie durch.
+ */
+object FeedSkips {
+    /** Kürzer als so lange auf dem Bildschirm heißt: überwischt, nicht gelesen. */
+    const val SEEN_AFTER_MS = 3_500L
+
+    /** Nach so vielen Runden Pause wird eine überwischte Karte wieder angeboten. */
+    const val RETURN_AFTER_ROUNDS = 3
+
+    /** So oft darf man eine Karte überwischen, bis sie als gesehen gilt. */
+    const val MAX_SKIPS = 2
+
+    /** Mehr offene Wiedervorlagen werden nicht gesammelt. */
+    const val MAX_OPEN = 80
+
+    /** Karten, die ihre Pause hinter sich haben und jetzt wieder dran sind. */
+    fun due(pool: List<String>, skipped: Map<String, Int>, round: Int): List<String> =
+        pool.filter { id -> skipped[id]?.let { round - it >= RETURN_AFTER_ROUNDS } == true }
+}

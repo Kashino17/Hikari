@@ -7,6 +7,9 @@ import com.hikari.app.data.prefs.FeedPreferences
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.feed.BuildGame
 import com.hikari.app.domain.feed.ChoiceGame
+import com.hikari.app.domain.feed.DigitSpanGame
+import com.hikari.app.domain.feed.FeedSkips
+import com.hikari.app.domain.feed.SequenceGame
 import com.hikari.app.domain.feed.FeedComposer
 import com.hikari.app.domain.feed.FeedContentRepository
 import com.hikari.app.domain.feed.FeedEntry
@@ -193,21 +196,58 @@ class FeedViewModel @Inject constructor(
             russian = russianContext(),
             memoryLevel = feedPrefs?.memoryLevel() ?: 4,
             legacyLanguageCards = MindfulFeedContentProvider.languagePool(language),
+            skipped = feedPrefs?.skipped().orEmpty(),
+            round = feedPrefs?.nextRound() ?: 0,
+            levels = mapOf(
+                "digits" to (feedPrefs?.level("digits", FeedGameFactory.DIGITS_START) ?: FeedGameFactory.DIGITS_START),
+                "sequence" to (feedPrefs?.level("sequence", FeedGameFactory.SEQUENCE_START) ?: FeedGameFactory.SEQUENCE_START),
+            ),
         ).also { batch ->
             batch.forEach { if (it is FeedEntry.Card) cardCache[it.card.id] = it.card }
         }
     }
 
-    /** Die Seite [index] steht jetzt im Bild: merken (für die Rotation) und rechtzeitig nachladen. */
+    private var shownId: String? = null
+    private var shownAt = 0L
+
+    /**
+     * Die Seite [index] steht jetzt im Bild. Die vorige Karte wird jetzt erst bewertet: gelesen
+     * (lange genug da, erledigt oder gemerkt) oder nur überwischt. Außerdem rechtzeitig nachladen.
+     */
     fun onShown(index: Int) {
         val list = _entries.value
         val entry = list.getOrNull(index) ?: return
         currentIndex = index
-        if (entry is FeedEntry.Card) feedPrefs?.markSeen(entry.id)
+        if (entry.id != shownId) {
+            settlePrevious()
+            shownId = entry.id
+            shownAt = System.currentTimeMillis()
+        }
         if (index >= list.size - LOAD_AHEAD) {
             val more = composeBatch()
             if (more.isNotEmpty()) _entries.update { it + more }
         }
+    }
+
+    /** Bewertet die Karte, die gerade verlassen wird — nur Wissenskarten haben einen Gesehen-Verlauf. */
+    private fun settlePrevious() {
+        val id = shownId ?: return
+        val prefs = feedPrefs ?: return
+        if (_entries.value.none { it.id == id && it is FeedEntry.Card }) return
+        val read = System.currentTimeMillis() - shownAt >= FeedSkips.SEEN_AFTER_MS ||
+            id in completedCards.value || id in savedCardIds.value
+        if (read) {
+            prefs.clearSkipped(id)
+            prefs.markSeen(id)
+        } else if (prefs.markSkipped(id)) {
+            // Zweimal überwischt: gilt als gesehen und reiht sich hinten in die Rotation ein.
+            prefs.markSeen(id)
+        }
+    }
+
+    override fun onCleared() {
+        settlePrevious()
+        super.onCleared()
     }
 
     /** Unter welchem Modus die Zeit auf diesem Eintrag in der Russisch-Statistik zählt (null = gar nicht). */
@@ -237,9 +277,18 @@ class FeedViewModel @Inject constructor(
     ) { savedIds, currentCards ->
         currentCards.forEach { cardCache[it.id] = it }
         savedIds.mapNotNull { id ->
-            cardCache[id] ?: content?.find(id) ?: MindfulFeedContentProvider.findCardById(id)
+            cardCache[id] ?: content?.find(id) ?: russianCard(id) ?: MindfulFeedContentProvider.findCardById(id)
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Gemerkte Russisch-Karte (ID »ru:art:satz«) aus dem Kurs wieder aufbauen — sie steht in keiner Datei. */
+    private fun russianCard(id: String): MindfulCard? {
+        if (!id.startsWith("ru:")) return null
+        val ctx = russianContext() ?: return null
+        return runCatching { composer.languageCardFor(ctx, id.split(':', limit = 3).getOrNull(2).orEmpty()) }.getOrNull()
+            ?.copy(id = id)
+            ?.also { cardCache[id] = it }
+    }
 
     /** Anteil des Tagesziels, der geschafft ist. */
     val progressFraction: StateFlow<Float> = completedCount
@@ -329,6 +378,12 @@ class FeedViewModel @Inject constructor(
                 if (!game.letters && correct) awardXp(PAIRS_XP)
                 GameOutcome(correct, xp = if (!game.letters && correct) PAIRS_XP else 0)
             }
+            is DigitSpanGame -> levelOutcome(
+                "digits", game.level, correct, FeedGameFactory.DIGITS_MIN, FeedGameFactory.DIGITS_MAX, "Ziffern",
+            )
+            is SequenceGame -> levelOutcome(
+                "sequence", game.level, correct, FeedGameFactory.SEQUENCE_MIN, FeedGameFactory.SEQUENCE_MAX, "Felder",
+            )
             is MemoryGridGame -> {
                 val next = (game.level + if (correct) 1 else -1)
                     .coerceIn(FeedGameFactory.MEMORY_MIN_LEVEL, FeedGameFactory.MEMORY_MAX_LEVEL)
@@ -345,6 +400,21 @@ class FeedViewModel @Inject constructor(
             }
             else -> GameOutcome(correct)
         }
+    }
+
+    /** Spiele mit Stufe: Erfolg macht es eins schwerer, ein Fehler eins leichter. */
+    private fun levelOutcome(key: String, level: Int, correct: Boolean, min: Int, max: Int, unit: String): GameOutcome {
+        val next = (level + if (correct) 1 else -1).coerceIn(min, max)
+        feedPrefs?.setLevel(key, next)
+        return GameOutcome(
+            correct,
+            when {
+                next > level -> "Nächstes Mal sind es $next $unit."
+                next < level -> "Nächstes Mal sind es wieder $next $unit."
+                correct -> "Mehr als $level $unit gibt es nicht. Stark."
+                else -> "Es bleibt bei $level $unit."
+            },
+        )
     }
 
     private fun gradeRussian(grade: RuGrade, correct: Boolean): GameOutcome {

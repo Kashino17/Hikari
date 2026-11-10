@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -51,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -63,7 +65,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hikari.app.domain.feed.AnagramGame
 import com.hikari.app.domain.feed.BuildGame
+import com.hikari.app.domain.feed.DigitSpanGame
+import com.hikari.app.domain.feed.DotsGame
+import com.hikari.app.domain.feed.SequenceGame
 import com.hikari.app.domain.feed.ChainMathGame
 import com.hikari.app.domain.feed.ChoiceGame
 import com.hikari.app.domain.feed.ChoiceStyle
@@ -110,6 +116,7 @@ internal fun FeedGameSlide(
     audio: RussianAudioPlayer?,
     letterProgress: Map<String, Int>,
     showTranslit: Boolean,
+    autoPlay: Boolean,
     onFinish: (Boolean) -> GameOutcome,
     onNext: () -> Unit,
 ) {
@@ -138,7 +145,7 @@ internal fun FeedGameSlide(
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             val done = outcome != null
             when (game) {
-                is ChoiceGame -> ChoiceGameContent(game, active, audio, showTranslit, finish)
+                is ChoiceGame -> ChoiceGameContent(game, active, audio, showTranslit, autoPlay, finish)
                 is LetterIntroGame -> LetterIntroContent(game, audio, letterProgress, finish)
                 is BuildGame -> BuildGameContent(game, audio, done, showTranslit, finish)
                 is PairsGame -> PairsGameContent(game, audio, showTranslit, finish)
@@ -146,6 +153,10 @@ internal fun FeedGameSlide(
                 is MemoryGridGame -> MemoryGridContent(game, finish)
                 is ChainMathGame -> ChainMathContent(game, finish)
                 is OddOneOutGame -> OddOneOutContent(game, active, done, finish)
+                is DigitSpanGame -> DigitSpanContent(game, finish)
+                is SequenceGame -> SequenceContent(game, finish)
+                is AnagramGame -> AnagramContent(game, done, finish)
+                is DotsGame -> DotsContent(game, finish)
             }
             AnimatedVisibility(
                 visible = done,
@@ -348,15 +359,24 @@ private fun seconds(ms: Long) = String.format(Locale.GERMANY, "%.1f", ms / 1000f
 // ── Auswahl: Zahlenreihe, Buchstabe, Lesewort, Satz, Hören ──────────────────
 
 @Composable
-private fun ChoiceGameContent(game: ChoiceGame, active: Boolean, audio: RussianAudioPlayer?, showTranslit: Boolean, finish: Finish) {
+private fun ChoiceGameContent(
+    game: ChoiceGame,
+    active: Boolean,
+    audio: RussianAudioPlayer?,
+    showTranslit: Boolean,
+    autoPlay: Boolean,
+    finish: Finish,
+) {
     var picked by remember(game.id) { mutableStateOf<Int?>(null) }
     val answered = picked != null
     // Russisch in der Frage (nicht in den Antworten): Anhören ist schon vor der Antwort erlaubt.
     val russianQuestion = game.style == ChoiceStyle.PHRASE && game.optionSubs.isEmpty()
     val clip = game.audio?.takeIf { audio?.has(it) == true }
 
-    LaunchedEffect(active, game.id) {
-        if (active && game.style == ChoiceStyle.LISTEN && picked == null && clip != null) {
+    LaunchedEffect(active, game.id, autoPlay) {
+        // Hörübungen spielen von selbst; im Audio-Modus auch jeder russische Satz, der als Frage dasteht.
+        val speak = game.style == ChoiceStyle.LISTEN || (autoPlay && russianQuestion)
+        if (active && speak && picked == null && clip != null) {
             delay(350)
             audio?.play(clip)
         }
@@ -389,11 +409,16 @@ private fun ChoiceGameContent(game: ChoiceGame, active: Boolean, audio: RussianA
                         ChoiceStyle.LETTER -> 68.sp
                         ChoiceStyle.WORD -> 40.sp
                         ChoiceStyle.NUMBERS -> 24.sp
+                        ChoiceStyle.TEXT -> 18.sp
                         else -> if (display.length > 28) 21.sp else 26.sp
                     },
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = if (game.style == ChoiceStyle.TEXT) FontWeight.SemiBold else FontWeight.Bold,
                     textAlign = TextAlign.Center,
-                    lineHeight = if (game.style == ChoiceStyle.LETTER) 76.sp else 34.sp,
+                    lineHeight = when (game.style) {
+                        ChoiceStyle.LETTER -> 76.sp
+                        ChoiceStyle.TEXT -> 27.sp
+                        else -> 34.sp
+                    },
                     modifier = Modifier.weight(1f, fill = false),
                 )
                 if (russianQuestion && clip != null) {
@@ -410,7 +435,7 @@ private fun ChoiceGameContent(game: ChoiceGame, active: Boolean, audio: RussianA
     }
     Spacer(Modifier.height(18.dp))
 
-    val grid = game.options.all { it.length <= 8 }
+    val grid = game.options.size >= 4 && game.options.all { it.length <= 8 }
     val onPick: (Int) -> Unit = { i ->
         if (picked == null) {
             picked = i
@@ -1171,5 +1196,368 @@ private fun OddOneOutContent(game: OddOneOutGame, active: Boolean, done: Boolean
                 }
             }
         }
+    }
+}
+
+// ── Zahlen merken ───────────────────────────────────────────────────────────
+
+@Composable
+private fun DigitSpanContent(game: DigitSpanGame, finish: Finish) {
+    // -1 = Erklärung, 0..n-1 = Ziffer wird gezeigt, n = Eingabe, n+1 = fertig
+    var step by remember(game.id) { mutableIntStateOf(-1) }
+    val typed = remember(game.id) { mutableStateListOf<Int>() }
+    val total = game.digits.size
+
+    LaunchedEffect(step) {
+        if (step in 0 until total) {
+            delay(950)
+            step += 1
+        }
+    }
+
+    when {
+        step < 0 -> {
+            Text("Merk dir die Ziffern", color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(10.dp))
+            Text(
+                "Gleich erscheinen $total Ziffern, eine nach der anderen. Danach tippst du sie in derselben Reihenfolge ein.",
+                color = HikariText,
+                fontSize = 14.sp,
+                lineHeight = 21.sp,
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(18.dp))
+            PrimaryButton("Start", onClick = { step = 0 })
+        }
+        step < total -> {
+            Text("Ziffer ${step + 1} von $total", color = HikariTextMuted, fontSize = 12.5.sp)
+            Spacer(Modifier.height(10.dp))
+            AnimatedContent(
+                targetState = step,
+                transitionSpec = { fadeIn(tween(160)) togetherWith fadeOut(tween(120)) },
+                label = "digit",
+            ) { s ->
+                Text(
+                    game.digits.getOrElse(s) { 0 }.toString(),
+                    color = Color.White,
+                    fontSize = 84.sp,
+                    fontWeight = FontWeight.Black,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+        else -> {
+            val done = step > total
+            Prompt(if (done) "Das war die Folge" else "Tippe die Ziffern ein")
+            Spacer(Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                repeat(total) { i ->
+                    val shown = if (done) game.digits[i] else typed.getOrNull(i)
+                    val wrong = done && typed.getOrNull(i) != game.digits[i]
+                    Box(
+                        Modifier
+                            .size(width = 30.dp, height = 42.dp)
+                            .clip(RoundedCornerShape(9.dp))
+                            .background(if (wrong) Wrong.copy(alpha = 0.22f) else Tile)
+                            .border(0.6.dp, if (wrong) Wrong else TileBorder, RoundedCornerShape(9.dp)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(shown?.toString() ?: "", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            if (!done) {
+                Spacer(Modifier.height(16.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(listOf(1, 2, 3), listOf(4, 5, 6), listOf(7, 8, 9), listOf(-1, 0, -2)).forEach { row ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            row.forEach { key ->
+                                if (key == -1) {
+                                    Spacer(Modifier.weight(1f))
+                                } else {
+                                    OptionButton(
+                                        text = if (key == -2) "⌫" else key.toString(),
+                                        state = OptionState.IDLE,
+                                        enabled = true,
+                                        onClick = {
+                                            if (key == -2) {
+                                                if (typed.isNotEmpty()) typed.removeAt(typed.size - 1)
+                                            } else if (typed.size < total) {
+                                                typed.add(key)
+                                                if (typed.size == total) {
+                                                    val ok = typed.toList() == game.digits
+                                                    step = total + 1
+                                                    finish(ok, if (ok) "Alle $total gemerkt" else "Nicht ganz", "")
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        fontSize = 20.sp,
+                                        minHeight = 50.dp,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── Reihenfolge ─────────────────────────────────────────────────────────────
+
+@Composable
+private fun SequenceContent(game: SequenceGame, finish: Finish) {
+    // -1 = Erklärung, 0..n-1 = Feld leuchtet, n = Eingabe, n+1 = fertig
+    var step by remember(game.id) { mutableIntStateOf(-1) }
+    var lit by remember(game.id) { mutableStateOf<Int?>(null) }
+    var tapped by remember(game.id) { mutableIntStateOf(0) }
+    var wrongCell by remember(game.id) { mutableStateOf<Int?>(null) }
+    var flash by remember(game.id) { mutableStateOf<Int?>(null) }
+    val total = game.order.size
+
+    LaunchedEffect(step) {
+        if (step in 0 until total) {
+            lit = game.order[step]
+            delay(620)
+            lit = null
+            delay(220)
+            step += 1
+        }
+    }
+    LaunchedEffect(flash, tapped) {
+        if (flash != null) {
+            delay(220)
+            flash = null
+        }
+    }
+
+    Text(
+        when {
+            step < 0 -> "Merk dir die Reihenfolge von $total Feldern"
+            step < total -> "Einprägen …"
+            step == total -> "Tippe sie in derselben Reihenfolge ($tapped von $total)"
+            wrongCell == null -> "Alle $total in der richtigen Folge"
+            else -> "Hier ging es anders weiter"
+        },
+        color = Color.White,
+        fontSize = 17.sp,
+        fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.Center,
+    )
+    Spacer(Modifier.height(16.dp))
+    Column(Modifier.fillMaxWidth(0.72f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        repeat(game.size) { r ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                repeat(game.size) { c ->
+                    val cell = r * game.size + c
+                    val color by animateColorAsState(
+                        when {
+                            cell == wrongCell -> Wrong.copy(alpha = 0.75f)
+                            cell == lit || cell == flash -> HikariAmber
+                            else -> Tile
+                        },
+                        animationSpec = tween(140),
+                        label = "sequence-cell",
+                    )
+                    Box(
+                        Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(color)
+                            .border(0.6.dp, TileBorder, RoundedCornerShape(14.dp))
+                            .clickable(enabled = step == total) {
+                                if (cell == game.order[tapped]) {
+                                    flash = cell
+                                    tapped += 1
+                                    if (tapped == total) {
+                                        step = total + 1
+                                        finish(true, "Reihenfolge gemerkt", "")
+                                    }
+                                } else {
+                                    wrongCell = cell
+                                    lit = game.order[tapped]
+                                    step = total + 1
+                                    finish(false, "Daneben", "$tapped von $total stimmten. Das leuchtende Feld wäre dran gewesen.")
+                                }
+                            },
+                    )
+                }
+            }
+        }
+    }
+    if (step < 0) {
+        Spacer(Modifier.height(16.dp))
+        PrimaryButton("Reihenfolge zeigen", onClick = { step = 0 })
+    }
+}
+
+// ── Buchstabensalat ─────────────────────────────────────────────────────────
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun AnagramContent(game: AnagramGame, done: Boolean, finish: Finish) {
+    val chosen = remember(game.id) { mutableStateListOf<Int>() }
+    var solved by remember(game.id) { mutableStateOf<Boolean?>(null) }
+    val built = chosen.map { game.letters[it] }.joinToString("")
+
+    Prompt("Welches Wort steckt in den Buchstaben?")
+    Spacer(Modifier.height(4.dp))
+    Text("Hinweis: ${game.hint}", color = HikariTextFaint, fontSize = 12.sp)
+    Spacer(Modifier.height(14.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+        repeat(game.word.length) { i ->
+            val letter = if (solved == false) game.word[i] else built.getOrNull(i)
+            Box(
+                Modifier
+                    .size(width = 30.dp, height = 40.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (solved == true) HikariAmber.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.04f))
+                    .border(0.7.dp, if (solved == true) HikariAmber else TileBorder, RoundedCornerShape(8.dp))
+                    .clickable(enabled = !done && i == chosen.size - 1) { chosen.removeAt(chosen.size - 1) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(letter?.toString() ?: "", color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+    Spacer(Modifier.height(16.dp))
+    if (!done) {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            game.letters.forEachIndexed { index, letter ->
+                val used = index in chosen
+                Surface(
+                    onClick = {
+                        chosen.add(index)
+                        if (chosen.size == game.word.length) {
+                            val ok = chosen.map { game.letters[it] }.joinToString("") == game.word
+                            if (ok) {
+                                solved = true
+                                finish(true, null, "")
+                            }
+                        }
+                    },
+                    enabled = !used && chosen.size < game.word.length,
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (used) Color.Transparent else Tile,
+                    border = BorderStroke(0.6.dp, if (used) Color.White.copy(alpha = 0.05f) else TileBorder),
+                    modifier = Modifier.size(46.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            letter.toString(),
+                            color = if (used) Color.Transparent else Color.White,
+                            fontSize = 21.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(14.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Box(Modifier.weight(1f)) { PrimaryButton("Leeren", enabled = chosen.isNotEmpty(), onClick = { chosen.clear() }) }
+            Box(Modifier.weight(1f)) {
+                PrimaryButton("Auflösen", onClick = {
+                    solved = false
+                    finish(false, "Aufgelöst", "Das Wort war ${game.word}.")
+                })
+            }
+        }
+        if (chosen.size == game.word.length && solved == null) {
+            Spacer(Modifier.height(8.dp))
+            Text("Das ist es noch nicht. Tippe den letzten Buchstaben an, um ihn zurückzunehmen.", color = Wrong, fontSize = 12.sp, textAlign = TextAlign.Center)
+        }
+    }
+}
+
+// ── Blitzblick ──────────────────────────────────────────────────────────────
+
+@Composable
+private fun DotsContent(game: DotsGame, finish: Finish) {
+    // 0 = Erklärung, 1 = Punkte sichtbar, 2 = Frage
+    var phase by remember(game.id) { mutableIntStateOf(0) }
+    var picked by remember(game.id) { mutableStateOf<Int?>(null) }
+
+    LaunchedEffect(phase) {
+        if (phase == 1) {
+            delay(1100)
+            phase = 2
+        }
+    }
+
+    Text(
+        when (phase) {
+            0 -> "Wie viele Punkte sind es?"
+            1 -> "Hinschauen …"
+            else -> if (picked == null) "Wie viele waren es?" else "So viele waren es: ${game.dots.size}"
+        },
+        color = Color.White,
+        fontSize = 19.sp,
+        fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.Center,
+    )
+    if (phase == 0) {
+        Spacer(Modifier.height(8.dp))
+        Text(
+            "Die Punkte blitzen nur eine Sekunde auf. Nicht zählen, schätzen: Dein Blick erfasst Mengen schneller, als du zählen kannst.",
+            color = HikariText,
+            fontSize = 14.sp,
+            lineHeight = 21.sp,
+            textAlign = TextAlign.Center,
+        )
+    }
+    Spacer(Modifier.height(14.dp))
+    val showDots = phase == 1 || picked != null
+    Canvas(
+        Modifier
+            .fillMaxWidth(0.8f)
+            .aspectRatio(1.25f)
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color.White.copy(alpha = 0.04f))
+            .border(0.6.dp, TileBorder, RoundedCornerShape(18.dp)),
+    ) {
+        if (showDots) {
+            game.dots.forEach { (x, y) ->
+                drawCircle(HikariAmber, radius = size.minDimension * 0.035f, center = Offset(x * size.width, y * size.height))
+            }
+        }
+    }
+    Spacer(Modifier.height(14.dp))
+    when (phase) {
+        0 -> PrimaryButton("Zeig sie mir", onClick = { phase = 1 })
+        2 -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            val answered = picked != null
+            game.options.indices.chunked(2).forEach { row ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    row.forEach { i ->
+                        OptionButton(
+                            text = game.options[i].toString(),
+                            state = when {
+                                !answered -> OptionState.IDLE
+                                i == game.correctIndex -> OptionState.CORRECT
+                                i == picked -> OptionState.WRONG
+                                else -> OptionState.DIM
+                            },
+                            enabled = !answered,
+                            onClick = {
+                                picked = i
+                                finish(i == game.correctIndex, null, if (i == game.correctIndex) "" else "Es waren ${game.dots.size}.")
+                            },
+                            modifier = Modifier.weight(1f),
+                            fontSize = 21.sp,
+                            minHeight = 54.dp,
+                        )
+                    }
+                }
+            }
+        }
+        else -> Spacer(Modifier.height(54.dp))
     }
 }

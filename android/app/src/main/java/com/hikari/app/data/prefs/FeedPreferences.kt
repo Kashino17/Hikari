@@ -3,6 +3,7 @@ package com.hikari.app.data.prefs
 import android.content.Context
 import android.content.SharedPreferences
 import com.hikari.app.domain.feed.FeedRotation
+import com.hikari.app.domain.feed.FeedSkips
 import com.hikari.app.domain.feed.LearningLanguage
 import com.hikari.app.domain.feed.MindfulModuleType
 import com.hikari.app.domain.feed.ModuleRank
@@ -254,6 +255,76 @@ class FeedPreferences @Inject constructor(
             .putString("feed_letter_progress", progress.entries.joinToString(",") { "${it.key}:${it.value}" })
             .apply()
         _letterProgress.value = progress
+    }
+
+    // ── Runden und Übersprungenes ───────────────────────────────────────────────
+
+    /** Fortlaufende Nummer des zuletzt zusammengestellten Schwungs — die Uhr für »kommt in drei Runden wieder«. */
+    fun round(): Int = prefs.getInt("feed_round", 0)
+
+    fun nextRound(): Int = (round() + 1).also { prefs.edit().putInt("feed_round", it).apply() }
+
+    private var skippedCache: MutableMap<String, Pair<Int, Int>>? = null
+
+    private fun loadSkipped(): MutableMap<String, Pair<Int, Int>> {
+        skippedCache?.let { return it }
+        val map = mutableMapOf<String, Pair<Int, Int>>()
+        prefs.getString("feed_skipped", null)?.split('\n')?.forEach { line ->
+            val parts = line.split('|')
+            val count = parts.getOrNull(1)?.toIntOrNull()
+            val round = parts.getOrNull(2)?.toIntOrNull()
+            if (parts.size == 3 && count != null && round != null) map[parts[0]] = count to round
+        }
+        skippedCache = map
+        return map
+    }
+
+    private fun saveSkipped(map: Map<String, Pair<Int, Int>>) {
+        prefs.edit()
+            .putString("feed_skipped", map.entries.joinToString("\n") { "${it.key}|${it.value.first}|${it.value.second}" })
+            .apply()
+    }
+
+    /** Überwischte Karten: ID → Runde, in der sie übersprungen wurden. */
+    @Synchronized
+    fun skipped(): Map<String, Int> = loadSkipped().mapValues { it.value.second }
+
+    /**
+     * Eine Karte wurde nur überwischt. Beim ersten Mal kommt sie später noch einmal;
+     * beim zweiten Mal gilt sie als gesehen ([FeedSkips.MAX_SKIPS]) — so staut sich nichts an.
+     * Liefert true, wenn sie damit erledigt ist.
+     */
+    @Synchronized
+    fun markSkipped(cardId: String): Boolean {
+        val map = loadSkipped()
+        val count = (map[cardId]?.first ?: 0) + 1
+        if (count >= FeedSkips.MAX_SKIPS) {
+            map.remove(cardId)
+            saveSkipped(map)
+            return true
+        }
+        map[cardId] = count to round()
+        // Deckel drauf: die ältesten fliegen raus, falls jemand tausend Karten durchwischt.
+        if (map.size > FeedSkips.MAX_OPEN) {
+            map.entries.sortedBy { it.value.second }.take(map.size - FeedSkips.MAX_OPEN).forEach { map.remove(it.key) }
+        }
+        saveSkipped(map)
+        return false
+    }
+
+    @Synchronized
+    fun clearSkipped(cardId: String) {
+        val map = loadSkipped()
+        if (map.remove(cardId) != null) saveSkipped(map)
+    }
+
+    // ── Spielstufen ─────────────────────────────────────────────────────────────
+
+    /** Schwierigkeit eines Spiels mit steigender Stufe (Zahlen merken, Reihenfolge …). */
+    fun level(key: String, default: Int): Int = prefs.getInt("feed_level_$key", default)
+
+    fun setLevel(key: String, level: Int) {
+        prefs.edit().putInt("feed_level_$key", level).apply()
     }
 
     // ── Mustergedächtnis ────────────────────────────────────────────────────────

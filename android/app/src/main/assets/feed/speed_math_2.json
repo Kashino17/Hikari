@@ -1,0 +1,782 @@
+[
+  {
+    "id": "mal-4-und-mal-8",
+    "title": "Mit 4 und 8 multiplizieren",
+    "shortcut": "n × 4 = zweimal verdoppeln; n × 8 = dreimal verdoppeln",
+    "explanation": "Verdopple die Zahl zweimal für mal 4 und dreimal für mal 8. Verdoppeln gelingt fast jedem sicher im Kopf, auch bei krummen Zahlen. Beispiel: 37 × 4 → 74 → 148. Für 23 × 8: 46 → 92 → 184.",
+    "challenge": "Rechne: 37 × 8",
+    "result": "296",
+    "deep": {
+      "lead": "Vier ist zwei mal zwei, acht ist zwei mal zwei mal zwei – aus Malnehmen wird wiederholtes Verdoppeln.",
+      "sections": [
+        {
+          "title": "Warum Verdoppeln so leicht fällt",
+          "text": "Verdoppeln ist die einfachste aller Multiplikationen, weil es nur eine Addition der Zahl mit sich selbst ist. Der Übertrag kann nie größer als eins werden, und du kannst von links arbeiten: Bei 37 verdoppelst du erst die 30 zu 60, dann die 7 zu 14, zusammen 74. Dass sich mal 4 in zwei Verdopplungen zerlegen lässt, folgt daraus, dass man beim Malnehmen beliebig klammern darf. Computer nutzen dasselbe Prinzip: Im Zweiersystem bedeutet Verdoppeln nur, alle Ziffern um eine Stelle nach links zu schieben."
+        },
+        {
+          "title": "Bis 16 und einen Schritt daneben",
+          "text": "Die Kette lässt sich verlängern. Mal 16 sind vier Verdopplungen: 13 wird zu 26, 52, 104, 208. Mit einer kleinen Korrektur erreichst du auch die Nachbarn. Mal 7 ist mal 8 minus einmal die Zahl, also 23 × 7 gleich 184 minus 23 gleich 161. Mal 6 gelingt als Verdoppeln und Verdreifachen in beliebiger Reihenfolge. Rückwärts funktioniert es genauso: Wer durch 4 teilen will, halbiert zweimal. Damit hast du zugleich eine Probe für jedes Ergebnis, denn zweimal halbiert muss wieder die Ausgangszahl herauskommen."
+        }
+      ],
+      "tryIt": "Rechne: 26 × 4, 45 × 8 und 13 × 16. (104, 360, 208.)",
+      "takeaways": [
+        "Mal 4: zweimal verdoppeln. Mal 8: dreimal.",
+        "Mal 7 = mal 8 minus einmal die Zahl."
+      ]
+    }
+  },
+  {
+    "id": "mal-12",
+    "title": "Mit 12 multiplizieren",
+    "shortcut": "n × 12 = n × 10 + n × 2",
+    "explanation": "Häng eine Null an die Zahl und addiere das Doppelte der Zahl dazu. Für 34 × 12 rechnest du 340 plus 68 und erhältst 408. Beide Bausteine sind mühelos: verzehnfachen und verdoppeln.",
+    "challenge": "Rechne: 43 × 12",
+    "result": "516",
+    "deep": {
+      "lead": "Zwölf ist zehn plus zwei – das Dutzend zerfällt in zwei Aufgaben, die keine Mühe machen.",
+      "sections": [
+        {
+          "title": "Zerlegen statt auswendig lernen",
+          "text": "In englischen Schulen lernten Kinder das Einmaleins lange bis zur 12, weil ein Schilling zwölf Pence hatte und ein Fuß zwölf Zoll. Nötig ist das Auswendiglernen nicht. Das Verteilungsgesetz erlaubt, jeden Faktor in bequeme Teile zu zerlegen und die Teilergebnisse zu addieren. Was für die 12 gilt, gilt für jede Zahl knapp über einer runden: Mal 13 ist das Zehnfache plus das Dreifache, mal 21 das Zwanzigfache plus einmal die Zahl. So wird aus 34 × 21 die Rechnung 680 plus 34, also 714."
+        },
+        {
+          "title": "Monate, Jahre, Dutzende",
+          "text": "Die 12 begegnet dir am häufigsten beim Umrechnen von Monats- in Jahresbeträge. Ein Vertrag für 85 € im Monat kostet 850 plus 170, also 1.020 € im Jahr. Solche Hochrechnungen machen sichtbar, was kleine Monatsbeträge wirklich bedeuten. Der Rückweg, das Teilen durch 12, geht am leichtesten in zwei Schritten: erst durch 4, dann durch 3. Aus 1.500 € Jahresbeitrag werden so 375 und dann 125 € pro Monat. Dieselbe Rechnung brauchst du bei Stückzahlen im Dutzend und bei allem, was in Zwölferpackungen verkauft wird."
+        }
+      ],
+      "tryIt": "Rechne: 25 × 12, 67 × 12 und 150 × 12. (300, 804, 1800.)",
+      "takeaways": [
+        "Mal 12 = mal 10 plus das Doppelte.",
+        "Durch 12 teilen: erst durch 4, dann durch 3."
+      ]
+    }
+  },
+  {
+    "id": "mal-101",
+    "title": "Mit 101 multiplizieren",
+    "shortcut": "ab × 101 = abab",
+    "explanation": "Eine zweistellige Zahl mal 101 ergibt die Zahl zweimal hintereinander geschrieben: 47 × 101 = 4747. Der Grund: Mal 100 schiebt die Zahl um zwei Stellen nach links, mal 1 setzt sie in die frei gewordenen Stellen.",
+    "challenge": "Rechne: 38 × 101",
+    "result": "3838",
+    "deep": {
+      "lead": "Hunderteinsmal heißt: einmal um zwei Stellen verschoben, einmal an Ort und Stelle.",
+      "sections": [
+        {
+          "title": "Warum die Zahl doppelt erscheint",
+          "text": "Mal 101 ist mal 100 plus mal 1. Aus 47 werden 4700, und in die beiden Nullen am Ende passt die 47 genau hinein. Nichts überlappt, deshalb muss nichts addiert werden. Bei dreistelligen Zahlen ist das anders: 123 × 101 ergibt 12300 plus 123, hier treffen sich die Ziffern, und das Ergebnis lautet 12423. Für dreistellige Zahlen übernimmt die 1001 die Rolle der 101, denn sie schafft drei freie Stellen: 123 × 1001 ist 123123. Mal 102 geht ebenso leicht: das Hundertfache plus das Doppelte."
+        },
+        {
+          "title": "Ein Zaubertrick mit 7, 11 und 13",
+          "text": "Die Zahl 1001 hat eine hübsche Zerlegung: Sie ist 7 mal 11 mal 13. Daraus lässt sich ein Rechentrick für die nächste Feier bauen. Lass jemanden eine beliebige dreistellige Zahl zweimal hintereinander in einen Taschenrechner tippen, zum Beispiel 584584. Dann soll er durch 7 teilen, das Ergebnis durch 11 und das durch 13. Jedes Mal geht die Division ohne Rest auf, und am Ende steht wieder 584 da. Das Hintereinanderschreiben war eine versteckte Multiplikation mit 1001, und die drei Divisionen machen sie rückgängig."
+        }
+      ],
+      "tryIt": "Rechne: 64 × 101, 29 × 101 und 215 × 101. (6464, 2929, 21715.)",
+      "takeaways": [
+        "Zweistellig mal 101: die Zahl doppelt schreiben.",
+        "Dreistellig mal 1001 funktioniert genauso."
+      ]
+    }
+  },
+  {
+    "id": "summe-von-1-bis-n",
+    "title": "Die Summe von 1 bis n",
+    "shortcut": "1 + 2 + … + n = n × (n + 1) ÷ 2",
+    "explanation": "Multipliziere die letzte Zahl mit ihrer Nachfolgerin und halbiere. Für 1 bis 100: 100 × 101 = 10.100, die Hälfte ist 5.050. Halbiere am besten vor dem Malnehmen die gerade der beiden Zahlen, dann bleibt es leicht: 50 × 101.",
+    "challenge": "Rechne: 1 + 2 + 3 + … + 40",
+    "result": "820",
+    "deep": {
+      "lead": "Wer die Zahlen von vorn und von hinten paart, muss nicht mehr addieren, sondern nur einmal malnehmen.",
+      "sections": [
+        {
+          "title": "Der Schüler Gauß",
+          "text": "Die Formel ist mit einer berühmten Anekdote verbunden. Der neunjährige Carl Friedrich Gauß soll in Braunschweig von seinem Lehrer die Aufgabe bekommen haben, eine lange Reihe von Zahlen zu addieren, und nach kürzester Zeit das Ergebnis abgegeben haben. Sein Gedanke: Die erste und die letzte Zahl ergeben zusammen dasselbe wie die zweite und die vorletzte. Von 1 bis 100 entstehen so fünfzig Paare mit der Summe 101. Überliefert ist die Geschichte erst aus späteren Erzählungen; ob es wirklich die Zahlen von 1 bis 100 waren, weiß niemand."
+        },
+        {
+          "title": "Jede gleichmäßige Reihe",
+          "text": "Der Paartrick funktioniert bei jeder Reihe mit gleichen Abständen. Die allgemeine Regel lautet: Anzahl der Zahlen mal Summe aus erster und letzter, geteilt durch zwei. Für 3 + 6 + 9 bis 30 sind das zehn Zahlen mal 33, halbiert 165. Für die Zahlen von 51 bis 100 sind es fünfzig Zahlen mal 151, halbiert 3.775. Nützlich ist das zum Beispiel bei Sparspielen, bei denen man in der ersten Woche einen Euro zurücklegt, in der zweiten zwei und so weiter. Nach 52 Wochen liegen 1.378 € im Glas."
+        }
+      ],
+      "tryIt": "Rechne: die Summe von 1 bis 20, von 1 bis 60 und aller geraden Zahlen von 2 bis 40. (210, 1830, 420.)",
+      "takeaways": [
+        "Letzte Zahl mal Nachfolgerin, dann halbieren.",
+        "Allgemein: Anzahl mal (erste plus letzte) durch zwei."
+      ]
+    }
+  },
+  {
+    "id": "ungerade-zahlen-addieren",
+    "title": "Ungerade Zahlen addieren",
+    "shortcut": "1 + 3 + 5 + … (n Zahlen) = n²",
+    "explanation": "Die Summe der ersten n ungeraden Zahlen ist immer n mal n. Zähl also nur, wie viele Zahlen es sind, und quadriere. 1 + 3 + 5 + 7 sind vier Zahlen: 16. Die Anzahl findest du über die letzte Zahl: (letzte + 1) ÷ 2.",
+    "challenge": "Rechne: 1 + 3 + 5 + … + 19",
+    "result": "100",
+    "deep": {
+      "lead": "Jede ungerade Zahl ist genau der Winkel aus Punkten, der ein Quadrat zum nächstgrößeren ergänzt.",
+      "sections": [
+        {
+          "title": "Das Bild aus Punkten",
+          "text": "Leg einen einzelnen Punkt auf den Tisch. Um daraus ein Quadrat aus zwei mal zwei Punkten zu machen, legst du drei Punkte als Winkel an zwei Seiten an. Für das Quadrat aus drei mal drei brauchst du einen Winkel aus fünf Punkten, für das nächste sieben. Jeder neue Winkel ist um zwei Punkte länger als der vorige, weil das Quadrat an zwei Seiten um eins gewachsen ist. So entsteht aus den ungeraden Zahlen der Reihe nach jede Quadratzahl. Schon die Pythagoreer im antiken Griechenland kannten dieses Bild."
+        },
+        {
+          "title": "Abschnitte und fallende Körper",
+          "text": "Mit der Regel lassen sich auch Teilstücke der Reihe addieren. Die Summe von 11 bis 19 ist die Summe der ersten zehn ungeraden Zahlen minus die der ersten fünf, also 100 minus 25 gleich 75. Eine berühmte Anwendung fand Galileo Galilei. Er beobachtete, dass ein gleichmäßig beschleunigter Körper in aufeinanderfolgenden gleichen Zeitabschnitten Strecken im Verhältnis 1 zu 3 zu 5 zu 7 zurücklegt. Die gesamte Strecke wächst deshalb mit dem Quadrat der Zeit: Nach doppelter Zeit ist der Körper viermal so weit, nach dreifacher neunmal."
+        }
+      ],
+      "tryIt": "Rechne: 1 + 3 + … + 29, dann 1 + 3 + … + 99 und zuletzt 21 + 23 + … + 29. (225, 2500, 125.)",
+      "takeaways": [
+        "n ungerade Zahlen ab 1 ergeben n².",
+        "Die Anzahl ist (letzte Zahl + 1) ÷ 2."
+      ]
+    }
+  },
+  {
+    "id": "quadrat-aus-nachbarquadrat",
+    "title": "Quadrat aus dem Nachbarquadrat",
+    "shortcut": "(n + 1)² = n² + n + (n + 1)",
+    "explanation": "Kennst du ein Quadrat, bekommst du das nächste, indem du die Zahl und ihre Nachfolgerin addierst. 30² = 900, also 31² = 900 + 30 + 31 = 961. Abwärts ziehst du ab: 29² = 900 − 30 − 29 = 841.",
+    "challenge": "Rechne: 41 × 41",
+    "result": "1681",
+    "deep": {
+      "lead": "Von einem runden Quadrat zum nächsten krummen ist es nur eine kleine Addition.",
+      "sections": [
+        {
+          "title": "Ein Streifen, noch ein Streifen",
+          "text": "Stell dir ein Quadrat aus 30 mal 30 Kästchen vor. Um es auf 31 mal 31 zu vergrößern, legst du an eine Seite einen Streifen aus 30 Kästchen und an die Nachbarseite einen Streifen, der nun 31 Kästchen lang sein muss, damit die Ecke gefüllt ist. Das ist die ganze Regel. Als Formel: n plus 1 zum Quadrat ist n² plus 2n plus 1, und 2n plus 1 ist dasselbe wie n plus n plus 1. Abwärts nimmst du die beiden Streifen wieder weg, erst n, dann n minus 1."
+        },
+        {
+          "title": "Zwei Schritte und eine Kontrolle",
+          "text": "Auch der übernächste Nachbar ist erreichbar. Zwei Schritte nach oben bedeuten viermal die Zahl dazwischen: 52² ist 2.500 plus 4 mal 51, also 2.704, und 48² ist 2.500 minus 4 mal 49, also 2.304. Als Ankerpunkte genügen die Quadrate der Zehnerzahlen, die jeder kennt. Eine schnelle Kontrolle bietet die Endziffer: Quadratzahlen enden nur auf 0, 1, 4, 5, 6 oder 9. Steht am Ende deines Ergebnisses eine 2, 3, 7 oder 8, hast du dich sicher verrechnet. Mit Kommazahlen geht es genauso: 3,1² ist 9,61."
+        }
+      ],
+      "tryIt": "Rechne: 21², 61², 79² und 99². (441, 3721, 6241, 9801.)",
+      "takeaways": [
+        "Nächstes Quadrat: plus die Zahl, plus die Nachfolgerin.",
+        "Quadratzahlen enden nie auf 2, 3, 7 oder 8."
+      ]
+    }
+  },
+  {
+    "id": "quadrat-ueber-runde-zahl",
+    "title": "Jedes Quadrat über eine runde Zahl",
+    "shortcut": "a² = (a − d) × (a + d) + d²",
+    "explanation": "Verschieb die Zahl um d nach unten und um d nach oben, sodass ein Faktor rund wird. Multipliziere beide und addiere d². Für 37²: 34 × 40 = 1360, plus 3² = 9, ergibt 1369.",
+    "challenge": "Rechne: 68 × 68",
+    "result": "4624",
+    "deep": {
+      "lead": "Ein krummes Quadrat wird zu einer leichten Multiplikation mit einer runden Zahl – plus einer kleinen Korrektur.",
+      "sections": [
+        {
+          "title": "Die Formel rückwärts gelesen",
+          "text": "Aus der Schule kennst du, dass a minus d mal a plus d gleich a² minus d² ist. Stellt man das um, steht da: a² ist das Produkt der beiden verschobenen Zahlen plus d². Der Gewinn liegt in der Wahl von d. Du wählst es so, dass einer der beiden Faktoren auf null endet. Bei 37 führt d gleich 3 zur 40, bei 68 führt d gleich 2 zur 70. Übrig bleibt eine Multiplikation mit einer einstelligen Zahl und ein winziges Quadrat. Der amerikanische Mathematiker Arthur Benjamin quadriert mit dieser Methode auf der Bühne mehrstellige Zahlen."
+        },
+        {
+          "title": "Dreistellig und mit Komma",
+          "text": "Die Methode ist nicht auf zweistellige Zahlen beschränkt. Für 112² wählst du d gleich 12: 100 mal 124 ist 12.400, plus 144 ergibt 12.544. Für 198² genügt d gleich 2: 196 mal 200 ist 39.200, plus 4 ergibt 39.204. Auch Kommazahlen lassen sich so behandeln. 4,8² wird zu 4,6 mal 5 gleich 23, plus 0,04, also 23,04. Liegt die Zahl genau zwischen zwei runden, etwa 35, kannst du in beide Richtungen schieben. Dann ergibt sich 30 mal 40 plus 25, die bekannte Regel für Quadrate auf 5."
+        }
+      ],
+      "tryIt": "Rechne: 23², 46², 89² und 198². (529, 2116, 7921, 39204.)",
+      "takeaways": [
+        "Einen Faktor rund schieben, den anderen gegenläufig.",
+        "Am Ende das Quadrat des Abstands addieren."
+      ]
+    }
+  },
+  {
+    "id": "ueber-kreuz-multiplizieren",
+    "title": "Zweistellig mal zweistellig über Kreuz",
+    "shortcut": "ab × cd: a×c | a×d + b×c | b×d",
+    "explanation": "Multipliziere die Zehner miteinander, die Einer miteinander und bilde über Kreuz die Summe aus Zehner mal Einer. Für 23 × 41: 2 × 4 = 8 Hunderter, 2 × 1 + 3 × 4 = 14 Zehner, 3 × 1 = 3 Einer. Also 800 + 140 + 3 = 943.",
+    "challenge": "Rechne: 32 × 21",
+    "result": "672",
+    "deep": {
+      "lead": "Vier kleine Einmaleins-Aufgaben, sauber nach Stellen sortiert, ersetzen die schriftliche Rechnung.",
+      "sections": [
+        {
+          "title": "Vier Teilprodukte, drei Stellen",
+          "text": "Schreib die Faktoren als 10a + b und 10c + d. Beim Ausmultiplizieren entstehen vier Teile: a mal c zählt hundertfach, b mal d einfach, und die beiden gemischten Produkte a mal d und b mal c zählen beide zehnfach. Deshalb darfst du die gemischten zusammenfassen, bevor du sie einsetzt. Die schriftliche Multiplikation berechnet dieselben vier Produkte, verteilt sie aber auf zwei Zeilen. Über Kreuz sortierst du sie gleich nach ihrem Stellenwert. Das Verfahren wurde unter dem Namen »senkrecht und kreuzweise« durch ein indisches Buch über Rechenkunst im 20. Jahrhundert bekannt."
+        },
+        {
+          "title": "Von links mit laufender Summe",
+          "text": "Im Kopf rechnest du am besten von links und führst eine Zwischensumme mit. Für 47 × 36 beginnst du mit 4 mal 3 gleich 12, das sind 1.200. Über Kreuz ergeben 4 mal 6 und 7 mal 3 zusammen 45 Zehner, also 450; die Zwischensumme steigt auf 1.650. Zuletzt kommen 7 mal 6 gleich 42 dazu: 1.692. So musst du nie mehr als eine Zahl behalten. Ist ein Faktor nahe an einer runden Zahl oder enden beide auf 5, sind andere Tricks schneller. Über Kreuz ist das Werkzeug für alles, was sonst nirgends passt."
+        }
+      ],
+      "tryIt": "Rechne über Kreuz: 21 × 34, 42 × 23 und 53 × 62. (714, 966, 3286.)",
+      "takeaways": [
+        "Zehner mal Zehner, Kreuzsumme, Einer mal Einer.",
+        "Von links rechnen und nur die Zwischensumme behalten."
+      ]
+    }
+  },
+  {
+    "id": "zahlen-zwischen-11-und-19",
+    "title": "Zahlen zwischen 11 und 19 malnehmen",
+    "shortcut": "(10 + a)(10 + b) = (10 + a + b) × 10 + a × b",
+    "explanation": "Addiere zur ersten Zahl die Einer der zweiten, häng eine Null an und addiere das Produkt der beiden Einer. Für 13 × 17: 13 + 7 = 20, also 200. Dazu 3 × 7 = 21: zusammen 221.",
+    "challenge": "Rechne: 14 × 18",
+    "result": "252",
+    "deep": {
+      "lead": "Zwei Zahlen knapp über zehn: eine Addition, eine Null, ein kleines Einmaleins.",
+      "sections": [
+        {
+          "title": "Die Zehn als Basis",
+          "text": "Schreib die beiden Zahlen als 10 + a und 10 + b. Ausmultipliziert ergibt das 100 + 10a + 10b + ab. Die ersten drei Teile lassen sich zusammenfassen zu 10 mal (10 + a + b), und in der Klammer steht genau die eine Zahl plus die Einer der anderen. Es spielt keine Rolle, von welcher Zahl du ausgehst: 13 plus 7 und 17 plus 3 ergeben beide 20. Ist das Produkt der Einer zweistellig, wandert sein Zehner einfach mit in die Summe. Bei 19 × 19 rechnest du 28 mal 10 plus 81 und erhältst 361."
+        },
+        {
+          "title": "Dasselbe für die Zwanziger",
+          "text": "Das Muster ist nicht an die Zehn gebunden. Für Zahlen knapp über 20 nimmst du die 20 als Basis: Addiere zur ersten Zahl die Einer der zweiten, multipliziere mit 20 und addiere das Produkt der Einer. Aus 23 × 24 wird 27 mal 20 gleich 540, plus 12, also 552. Mit Basis 30 und Faktor 30 geht es entsprechend. Früher lernten Schüler das große Einmaleins bis 20 mal 20 auswendig. Mit dieser Regel kannst du jede dieser Aufgaben in wenigen Sekunden herleiten und musst nichts davon im Gedächtnis behalten."
+        }
+      ],
+      "tryIt": "Rechne: 12 × 13, 16 × 17, 19 × 15 und 23 × 22. (156, 272, 285, 506.)",
+      "takeaways": [
+        "Erste Zahl plus Einer der zweiten, mal 10, plus Einer mal Einer.",
+        "Mit Basis 20 klappt dasselbe für die Zwanziger."
+      ]
+    }
+  },
+  {
+    "id": "differenz-zweier-quadrate",
+    "title": "Differenz zweier Quadrate",
+    "shortcut": "a² − b² = (a + b) × (a − b)",
+    "explanation": "Statt zwei Quadrate auszurechnen und abzuziehen, multiplizierst du Summe und Differenz der beiden Zahlen. Für 57² − 43²: Die Summe ist 100, die Differenz 14, also 1400. Kein einziges Quadrat muss berechnet werden.",
+    "challenge": "Rechne: 76² − 24²",
+    "result": "5200",
+    "deep": {
+      "lead": "Zwei große Quadrate voneinander abzuziehen ist mühsam – Summe mal Differenz erledigt es in einem Schritt.",
+      "sections": [
+        {
+          "title": "Schneiden und umlegen",
+          "text": "Zeichne ein großes Quadrat mit der Seite a und schneide aus einer Ecke ein kleineres mit der Seite b heraus. Übrig bleibt eine Figur in Form eines L. Schneidest du sie entlang der inneren Ecke in zwei Streifen und legst den einen an das Ende des anderen, entsteht ein Rechteck. Seine eine Seite ist a plus b lang, die andere a minus b. Die Fläche hat sich beim Umlegen nicht geändert. Das ist die dritte binomische Formel, nur in der Richtung gelesen, in der sie im Alltag oft am meisten hilft."
+        },
+        {
+          "title": "Leitern, Ringe und Primfaktoren",
+          "text": "Die Formel taucht überall auf, wo der Satz des Pythagoras gebraucht wird. Eine 13 Meter lange Leiter steht 5 Meter von der Wand entfernt: Die erreichte Höhe im Quadrat ist 13² minus 5², also 18 mal 8 gleich 144, die Höhe damit 12 Meter. Auch die Fläche eines Kreisrings ist eine Differenz zweier Quadrate, multipliziert mit der Kreiszahl. Pierre de Fermat nutzte den Gedanken, um Zahlen in Faktoren zu zerlegen. Weil 8.051 gleich 90² minus 7² ist, muss es 83 mal 97 sein."
+        }
+      ],
+      "tryIt": "Rechne: 65² − 35², 101² − 99² und 51² − 49². (3000, 400, 200.)",
+      "takeaways": [
+        "a² − b² = Summe mal Differenz.",
+        "Besonders bequem, wenn Summe oder Differenz rund ist."
+      ]
+    }
+  },
+  {
+    "id": "ergaenzen-statt-abziehen",
+    "title": "Ergänzen statt abziehen",
+    "shortcut": "a − b = Weg von b hinauf zu a",
+    "explanation": "Zähl von der kleineren Zahl in bequemen Sprüngen zur größeren hinauf und addiere die Sprünge. Für 83 − 47: von 47 bis 50 sind es 3, von 50 bis 83 sind es 33. Zusammen 36. Das Borgen entfällt.",
+    "challenge": "Rechne: 712 − 385",
+    "result": "327",
+    "deep": {
+      "lead": "Abziehen heißt fragen, wie viel fehlt – und Auffüllen ist leichter als Wegnehmen.",
+      "sections": [
+        {
+          "title": "Die Methode an der Ladenkasse",
+          "text": "Bevor Kassen das Rückgeld selbst ausrechneten, zählten Verkäufer es dem Kunden in die Hand, und zwar aufwärts. Bei einem Preis von 7,35 € und einem Zwanziger sagten sie: 7,40, 8, 10, 20, und legten dabei 5 Cent, 60 Cent, 2 € und 10 € hin. Niemand musste subtrahieren. Der Grund, warum das leichter ist: Beim Hinaufzählen bewegst du dich von einer runden Zwischenstation zur nächsten, und an runden Zahlen gibt es nichts zu borgen. Die Subtraktion wird in zwei oder drei kleine Additionen zerlegt, die jeder beherrscht."
+        },
+        {
+          "title": "Uhrzeiten und Jahreszahlen",
+          "text": "Besonders stark ist das Ergänzen dort, wo nicht im Zehnersystem gerechnet wird. Wie lange dauert es von 9:47 bis 14:20 Uhr? Bis 10 Uhr sind es 13 Minuten, bis 14 Uhr weitere 4 Stunden, dann noch 20 Minuten: 4 Stunden 33 Minuten. Schriftliches Abziehen würde hier scheitern, weil eine Stunde nur 60 Minuten hat. Auch Altersangaben gehen so: Von 1987 bis 2000 sind es 13 Jahre, bis 2025 weitere 25, zusammen 38. Die Probe ist eingebaut, denn du hast das Ergebnis bereits als Addition vor dir."
+        }
+      ],
+      "tryIt": "Rechne durch Ergänzen: 91 − 58, 503 − 276 und die Zeit von 8:35 bis 12:10 Uhr. (33; 227; 3 Stunden 35 Minuten.)",
+      "takeaways": [
+        "Von der kleinen Zahl zur großen hochzählen.",
+        "Erst zur nächsten runden Zahl, dann den Rest."
+      ]
+    }
+  },
+  {
+    "id": "beim-abziehen-beide-verschieben",
+    "title": "Beim Abziehen beide verschieben",
+    "shortcut": "a − b = (a + k) − (b + k)",
+    "explanation": "Der Abstand zweier Zahlen ändert sich nicht, wenn du beide um denselben Betrag verschiebst. Mach die abzuziehende Zahl rund: Aus 83 − 47 wird 86 − 50 = 36. Aus 503 − 278 wird 525 − 300 = 225.",
+    "challenge": "Rechne: 634 − 197",
+    "result": "437",
+    "deep": {
+      "lead": "Ein Abstand bleibt ein Abstand, egal wo auf dem Zahlenstrahl er liegt – also schieb ihn dorthin, wo es bequem ist.",
+      "sections": [
+        {
+          "title": "Der Zahlenstrahl als Beweis",
+          "text": "Markier zwei Zahlen auf einem Zahlenstrahl. Ihre Differenz ist die Länge der Strecke dazwischen. Schiebst du beide Marken um gleich viel nach rechts, wandert die Strecke, wird aber weder länger noch kürzer. Genau das nutzt der Trick. Wichtig ist der Unterschied zur Addition, bei der eine andere Regel gilt: Dort gibst du von einer Zahl etwas an die andere ab, verschiebst also gegenläufig. Wer beides verwechselt und beim Abziehen eine Zahl erhöht und die andere senkt, liegt um das Doppelte der Verschiebung daneben."
+        },
+        {
+          "title": "Geldbeträge und volle Tausender",
+          "text": "Bei Geldbeträgen erspart die Verschiebung das Rechnen mit Cent. Aus 20,00 minus 7,85 wird nach einer Verschiebung um 15 Cent die Aufgabe 20,15 minus 8,00, also 12,15. Auch in die andere Richtung lohnt es sich. Soll von einer glatten Zahl abgezogen werden, etwa 5.000 minus 1.764, zieh von beiden eins ab: 4.999 minus 1.763 lässt sich Stelle für Stelle ohne Borgen rechnen und ergibt 3.236. Bei Jahreszahlen hilft dieselbe Idee: 2024 minus 1989 wird durch eine Verschiebung um 11 zu 2035 minus 2000."
+        }
+      ],
+      "tryIt": "Rechne durch Verschieben: 72 − 38, 451 − 296 und 30,00 − 12,75. (34; 155; 17,25.)",
+      "takeaways": [
+        "Bei Minus beide Zahlen in dieselbe Richtung verschieben.",
+        "Bei Plus gegenläufig: eine hoch, die andere runter."
+      ]
+    }
+  },
+  {
+    "id": "durch-4-und-durch-8",
+    "title": "Durch 4 und 8 teilen",
+    "shortcut": "n ÷ 4 = zweimal halbieren; n ÷ 8 = dreimal halbieren",
+    "explanation": "Halbiere die Zahl zweimal für durch 4 und dreimal für durch 8. Für 348 ÷ 4: erst 174, dann 87. Geht es nicht auf, rechnest du mit Komma weiter: 90 ÷ 8 → 45 → 22,5 → 11,25.",
+    "challenge": "Rechne: 1096 ÷ 8",
+    "result": "137",
+    "deep": {
+      "lead": "Teilen durch vier oder acht ist nur Halbieren mit Ausdauer.",
+      "sections": [
+        {
+          "title": "Halbieren in Stücken",
+          "text": "Große Zahlen halbierst du am sichersten, indem du sie in Teile zerlegst, die sich leicht halbieren lassen. 1096 ist 1000 plus 96, die Hälften sind 500 und 48. 548 ist 500 plus 48, also 250 plus 24. 274 ist 260 plus 14, also 130 plus 7. Stört eine ungerade Ziffer, nimm die nächstkleinere gerade Zahl und gib den Rest an die nächste Stelle weiter: Bei 174 halbierst du 160 und 14 statt 170 und 4. Eine ungerade Zahl am Ende liefert einfach ein Komma fünf."
+        },
+        {
+          "title": "Viertel und Achtel im Alltag",
+          "text": "Vierteln brauchst du öfter, als du denkst. Eine Restaurantrechnung von 138 € für vier Personen: 69, dann 34,50 € pro Kopf. Ein Rezept für acht Portionen, gekocht für zwei: jede Menge zweimal halbieren. Ein Jahreswert, umgerechnet auf ein Quartal: durch vier. Auf demselben Weg entstehen die Dezimalwerte der Achtel. Die Eins wird zu 0,5, dann 0,25, dann 0,125. Drei Achtel sind also 0,375 und fünf Achtel 0,625. Für das Teilen durch 16 halbierst du ein viertes Mal: Aus 400 wird 200, 100, 50, 25."
+        }
+      ],
+      "tryIt": "Rechne: 252 ÷ 4, 936 ÷ 8 und 50 ÷ 8. (63; 117; 6,25.)",
+      "takeaways": [
+        "Durch 4: zweimal halbieren. Durch 8: dreimal.",
+        "Große Zahlen vor dem Halbieren in bequeme Teile zerlegen."
+      ]
+    }
+  },
+  {
+    "id": "brueche-als-prozent",
+    "title": "Brüche als Prozent im Kopf",
+    "shortcut": "1/8 = 12,5 %, 1/6 ≈ 16,7 %, 1/3 ≈ 33,3 %",
+    "explanation": "Merk dir die Stammbrüche als Prozentwerte: 1/2 = 50, 1/3 ≈ 33,3, 1/4 = 25, 1/5 = 20, 1/6 ≈ 16,7, 1/8 = 12,5 und 1/10 = 10 Prozent. Alles andere ist ein Vielfaches: 3/8 sind dreimal 12,5 %, also 37,5 %.",
+    "challenge": "Wie viel Prozent sind 5/8?",
+    "result": "62,5 %",
+    "deep": {
+      "lead": "Wer ein Dutzend Bruch-Prozent-Paare auswendig kennt, übersetzt die meisten Anteile ohne Rechnen.",
+      "sections": [
+        {
+          "title": "Die Paare selbst herleiten",
+          "text": "Auswendig lernen musst du wenig, wenn du zwei Ketten kennst. Die erste entsteht durch Halbieren: 50, 25, 12,5 Prozent für Hälfte, Viertel und Achtel. Die zweite beginnt beim Drittel mit 33,3 Prozent; die Hälfte davon ist das Sechstel mit 16,7, und davon wieder die Hälfte das Zwölftel mit 8,3. Bleiben drei Einzelwerte: ein Fünftel sind 20, ein Siebtel rund 14,3 und ein Neuntel rund 11,1 Prozent. Vielfache setzt du zusammen: Zwei Drittel sind 66,7, fünf Sechstel 83,3 und sieben Achtel 87,5 Prozent."
+        },
+        {
+          "title": "Prozentangaben rückwärts lesen",
+          "text": "Noch nützlicher ist die Gegenrichtung. Wenn in einer Umfrage 17 Prozent etwas sagen, ist das etwa jeder Sechste; 14 Prozent sind jeder Siebte, 8 Prozent jeder Zwölfte. So werden abstrakte Anteile zu Bildern. Auch das Rechnen wird leichter: 12,5 Prozent von 240 sind ein Achtel, also 30. Und manche Rätsel lösen sich von selbst. Ein Anstieg um 33,3 Prozent ist ein Drittel mehr, aus drei Teilen werden vier. Um zurückzukommen, muss ein Viertel weg, also 25 Prozent. Als Brüche gedacht, ist das sofort zu sehen."
+        }
+      ],
+      "tryIt": "Übersetze ohne Rechner: 7/8, 5/6 und 2/9 in Prozent, und rechne 12,5 % von 96. (87,5 %; rund 83,3 %; rund 22,2 %; 12.)",
+      "takeaways": [
+        "Zwei Ketten merken: 50 – 25 – 12,5 und 33,3 – 16,7 – 8,3.",
+        "Krumme Prozentsätze sind oft einfache Brüche."
+      ]
+    }
+  },
+  {
+    "id": "rabatt-als-faktor",
+    "title": "Rabatt als Faktor rechnen",
+    "shortcut": "Preis − x % = Preis × (100 − x) ÷ 100",
+    "explanation": "Rechne nicht erst den Rabatt aus, um ihn dann abzuziehen. Multipliziere direkt mit dem, was übrig bleibt: 30 % Rabatt heißt mal 0,7. Für 80 € also 8 × 7 = 56 €. Ein Aufschlag von 15 % heißt entsprechend mal 1,15.",
+    "challenge": "Rechne: 60 € mit 35 % Rabatt",
+    "result": "39 €",
+    "deep": {
+      "lead": "Frag nicht, was wegfällt, sondern was bleibt – dann genügt ein einziger Rechenschritt.",
+      "sections": [
+        {
+          "title": "Ein Schritt statt zwei",
+          "text": "Der übliche Weg hat zwei Stufen: 30 Prozent von 80 ausrechnen, das Ergebnis von 80 abziehen. Der Faktor fasst beides zusammen. Wer 30 Prozent nachlässt, verlangt noch 70 Prozent, und 70 Prozent von 80 sind 7 mal 8, mit dem Komma an der richtigen Stelle. Der größere Vorteil zeigt sich beim Rückweg. Vom reduzierten zum alten Preis kommst du, indem du durch den Faktor teilst: 56 durch 0,7 ist 80. Wer stattdessen 30 Prozent auf die 56 € aufschlägt, landet bei 72,80 € und damit daneben."
+        },
+        {
+          "title": "Faktoren, die sich lohnen",
+          "text": "Einige Faktoren sind besonders bequem. 20 Prozent Rabatt bedeuten vier Fünftel, 25 Prozent drei Viertel, 50 Prozent die Hälfte. Bei 10 Prozent ziehst du ein Zehntel ab, bei 15 Prozent ein Zehntel und noch die Hälfte davon. Kleine Sätze wie 3 Prozent Skonto rechnest du über ein Prozent: Von 450 € ist ein Prozent 4,50 €, dreimal so viel sind 13,50 €, es bleiben 436,50 €. Aufschläge funktionieren spiegelbildlich. Plus 20 Prozent heißt sechs Fünftel, plus 50 Prozent die Zahl und ihre Hälfte."
+        }
+      ],
+      "tryIt": "Rechne: 120 € mit 25 % Rabatt, 45 € mit 20 % Rabatt und 200 € mit 3 % Skonto. (90 €, 36 €, 194 €.)",
+      "takeaways": [
+        "x % Rabatt: mit dem Rest bis 100 % malnehmen.",
+        "Zurück zum alten Preis: durch den Faktor teilen, nicht aufschlagen."
+      ]
+    }
+  },
+  {
+    "id": "veraenderung-in-prozent",
+    "title": "Veränderung in Prozent",
+    "shortcut": "(neu − alt) ÷ alt × 100",
+    "explanation": "Teile den Unterschied durch den alten Wert, nicht durch den neuen. Steigt ein Preis von 40 € auf 50 €, beträgt der Unterschied 10 €. Zehn von vierzig ist ein Viertel: plus 25 %. Der Rückweg von 50 auf 40 sind nur minus 20 %.",
+    "challenge": "Von 64 € auf 80 €: Um wie viel Prozent ist das gestiegen?",
+    "result": "Um 25 %",
+    "deep": {
+      "lead": "Der Ausgangswert ist der Maßstab – deshalb sind Hin- und Rückweg in Prozent nicht gleich groß.",
+      "sections": [
+        {
+          "title": "Den Bruch im Kopf kürzen",
+          "text": "Die Rechnung ist ein Bruch: Unterschied durch Ausgangswert. Oft lässt er sich kürzen, bis ein bekannter Anteil dasteht. Von 64 auf 80 sind es 16, und 16 von 64 ist ein Viertel. Von 45 auf 54 sind es 9, und 9 von 45 ist ein Fünftel, also 20 Prozent. Geht das Kürzen nicht glatt auf, hilft die Ein-Prozent-Methode: Bestimme ein Prozent des alten Werts und zähl, wie oft es in den Unterschied passt. Von 250 auf 270: Ein Prozent sind 2,5, und 20 geteilt durch 2,5 ergibt 8 Prozent."
+        },
+        {
+          "title": "Paare von Hin und Zurück",
+          "text": "Weil der Maßstab wechselt, gehört zu jedem Anstieg ein kleinerer Rückgang, der ihn aufhebt. Plus 25 Prozent wird durch minus 20 ausgeglichen, plus 50 durch minus 33,3, plus 100 durch minus 50. Wer diese Paare kennt, erkennt irreführende Vergleiche. Eine Verdopplung ist ein Plus von 100 Prozent, eine Verdreifachung eines von 200, nicht 300. Ein Rückgang kann nie mehr als 100 Prozent betragen. Vorsicht bei Sätzen wie »um das Dreifache gestiegen«: Manche meinen damit das Dreifache des alten Werts, andere das Vierfache. Im Zweifel nach den absoluten Zahlen fragen."
+        }
+      ],
+      "tryIt": "Rechne jeweils die Veränderung in Prozent: von 50 auf 65, von 200 auf 170 und von 80 auf 100. (+30 %, −15 %, +25 %.)",
+      "takeaways": [
+        "Immer durch den alten Wert teilen.",
+        "Plus 25 % und minus 20 % heben sich auf."
+      ]
+    }
+  },
+  {
+    "id": "zwei-prozentaenderungen-verketten",
+    "title": "Zwei Prozentänderungen verketten",
+    "shortcut": "a % dann b %: zusammen a + b + a × b ÷ 100",
+    "explanation": "Zwei Änderungen hintereinander ergeben ihre Summe plus einen kleinen Zusatz: das Produkt der beiden Sätze, geteilt durch 100. Plus 20 % und dann plus 10 % sind 20 + 10 + 2 = 32 %. Bei Rabatten sind die Sätze negativ: −20 und −10 ergeben −30 + 2 = −28 %.",
+    "challenge": "Erst plus 30 %, dann plus 20 %: Wie viel Prozent insgesamt?",
+    "result": "56 %",
+    "deep": {
+      "lead": "Prozente addieren sich beinahe – der Rest ist ein kleines Produkt, das man im Kopf nachschieben kann.",
+      "sections": [
+        {
+          "title": "Woher der Zusatz kommt",
+          "text": "Plus 20 Prozent heißt mal 1,2, plus 10 Prozent mal 1,1. Multiplizierst du die beiden Faktoren aus, erhältst du 1 plus 0,2 plus 0,1 plus 0,02. Die ersten drei Teile sind die naive Summe, der letzte ist das Produkt der beiden Änderungen. Anschaulich: Ein Rechteck wird erst in der Breite und dann in der Höhe vergrößert. Hinzu kommen zwei Streifen und ein kleines Eckstück, an dem beide Vergrößerungen zusammenwirken. Die Reihenfolge spielt keine Rolle. Bei zwei Rabatten ist das Eckstück positiv, deshalb fällt der Gesamtrabatt kleiner aus als die Summe."
+        },
+        {
+          "title": "Gemischte Vorzeichen",
+          "text": "Mit einem Anstieg und einem Rückgang wird der Zusatz negativ. Plus 50 und minus 30 Prozent ergeben 20 minus 15, also nur plus 5 Prozent. Plus 25 und minus 20 ergeben 5 minus 5, also null: Die beiden heben sich genau auf. Bei kleinen Sätzen darfst du den Zusatz für einen Überschlag weglassen. Zwei und drei Prozent sind zusammen 5,06 Prozent, kaum mehr als 5. Bei großen Sätzen wäre das ein grober Fehler. Zweimal plus 50 Prozent sind nicht 100, sondern 125 Prozent Zuwachs, weil das Eckstück ein Viertel beiträgt."
+        }
+      ],
+      "tryIt": "Rechne: plus 10 % und plus 10 %; minus 30 % und minus 20 %; plus 25 % und minus 20 %. (21 %; −44 %; 0 %.)",
+      "takeaways": [
+        "Summe der Sätze plus Produkt durch 100.",
+        "Bei kleinen Sätzen reicht die Summe als Überschlag."
+      ]
+    }
+  },
+  {
+    "id": "gegenlaeufig-runden",
+    "title": "Gegenläufig runden",
+    "shortcut": "Einen Faktor aufrunden, den anderen abrunden",
+    "explanation": "Für einen schnellen Überschlag rundest du einen Faktor nach oben und den anderen nach unten, damit sich die Fehler weitgehend aufheben. 38 × 53 wird zu 40 × 50 = 2000. Das genaue Ergebnis ist 2014 – weniger als 1 % daneben.",
+    "challenge": "Überschlage: 47 × 62",
+    "result": "Rund 3000 (genau: 2914)",
+    "deep": {
+      "lead": "Ein Überschlag muss nicht stimmen, nur nah genug sein – und das gelingt, wenn sich die Rundungsfehler ausgleichen.",
+      "sections": [
+        {
+          "title": "Warum sich die Fehler aufheben",
+          "text": "Beim Multiplizieren zählen die Rundungsfehler in Prozent, nicht in absoluten Zahlen. Machst du einen Faktor um fünf Prozent größer und den anderen um fünf Prozent kleiner, bleibt das Produkt fast unverändert. Im Beispiel wird die 38 um gut fünf Prozent erhöht und die 53 um knapp sechs Prozent gesenkt. Rundest du dagegen beide nach oben, auf 40 und 60, addieren sich die Fehler, und das Ergebnis 2400 liegt fast ein Fünftel zu hoch. Achte also darauf, in entgegengesetzte Richtungen und um einen ähnlichen Anteil zu runden."
+        },
+        {
+          "title": "Der Überschlag als Kontrolle",
+          "text": "Der wichtigste Einsatz ist die Probe für Ergebnisse, die ein Gerät geliefert hat. Ein Tippfehler oder ein verrutschtes Komma fällt sofort auf, wenn du vorher weißt, dass ungefähr 3000 herauskommen muss. Beim Teilen gilt die umgekehrte Regel: Runde beide Zahlen in dieselbe Richtung, dann bleibt ihr Verhältnis erhalten. Aus 412 geteilt durch 68 wird 420 geteilt durch 70, also 6; genau sind es 6,06. Kannst du nicht gegenläufig runden, merk dir wenigstens die Richtung des Fehlers. Dann weißt du, ob der wahre Wert darüber oder darunter liegt."
+        }
+      ],
+      "tryIt": "Überschlage und vergleich mit dem genauen Wert: 29 × 41, 68 × 73 und 412 ÷ 68. (Rund 1200, 4900 und 6; genau 1189, 4964 und 6,06.)",
+      "takeaways": [
+        "Beim Malnehmen gegenläufig runden.",
+        "Beim Teilen beide Zahlen in dieselbe Richtung runden."
+      ]
+    }
+  },
+  {
+    "id": "nullen-zaehlen",
+    "title": "Große Zahlen: Nullen zählen",
+    "shortcut": "Ziffern malnehmen, Nullen addieren",
+    "explanation": "Trenn jede Zahl in Ziffernteil und Nullen. Multipliziere die Ziffernteile und häng die Summe aller Nullen an. Für 3000 × 400: 3 × 4 = 12, dazu 3 + 2 = 5 Nullen: 1.200.000. Beim Teilen ziehst du die Nullen voneinander ab.",
+    "challenge": "Rechne: 60.000 × 700",
+    "result": "42.000.000",
+    "deep": {
+      "lead": "Bei großen Zahlen passieren die Fehler selten in den Ziffern, sondern in der Anzahl der Nullen.",
+      "sections": [
+        {
+          "title": "Zwei getrennte Buchhaltungen",
+          "text": "Jede runde Zahl besteht aus einem Ziffernteil und einer Zehnerpotenz: 3000 ist 3 mal 10 hoch 3. Beim Multiplizieren werden die Ziffernteile multipliziert und die Hochzahlen addiert. Wer beides getrennt verfolgt, verliert keine Null. Eine Stolperstelle gibt es: Erzeugt das Produkt der Ziffern selbst eine Null, zählt sie zusätzlich. 500 mal 40 ist 5 mal 4 gleich 20, dazu drei Nullen, also 20.000 und nicht 2.000. Bei Kommazahlen addierst du entsprechend die Nachkommastellen: 0,03 mal 0,2 hat drei Stellen hinter dem Komma und ergibt 0,006."
+        },
+        {
+          "title": "Millionen, Milliarden, pro Kopf",
+          "text": "Für Nachrichtenzahlen genügen zwei Merksätze: Tausend mal tausend ist eine Million, tausend mal eine Million eine Milliarde. Damit lassen sich Summen schnell einordnen. Erhalten 83 Millionen Menschen je 50 €, sind das 83 mal 50 gleich 4.150 Millionen, also gut 4 Milliarden €. Umgekehrt: Ein Programm kostet 6 Milliarden € und betrifft 80 Millionen Menschen. Sechstausend Millionen geteilt durch 80 Millionen sind 75 € pro Person. Wer große Beträge gewohnheitsmäßig in dieselbe Einheit bringt, hier Millionen, kürzt die Einheit einfach weg und rechnet mit kleinen Zahlen."
+        }
+      ],
+      "tryIt": "Rechne: 800 × 5000, 120.000 ÷ 400 und 0,04 × 0,5. (4.000.000; 300; 0,02.)",
+      "takeaways": [
+        "Ziffern und Nullen getrennt behandeln.",
+        "Malnehmen: Nullen addieren. Teilen: Nullen abziehen."
+      ]
+    }
+  },
+  {
+    "id": "wurzeln-schaetzen",
+    "title": "Wurzeln schätzen",
+    "shortcut": "√n ≈ a + (n − a²) ÷ (2 × a)",
+    "explanation": "Such die nächste Quadratzahl a² unter n. Teile den Rest durch das Doppelte von a und addiere das zu a. Für √27: Die nächste Quadratzahl ist 25, also a = 5. Der Rest 2, geteilt durch 10, ergibt 0,2. Schätzung: 5,2 (genau: 5,196).",
+    "challenge": "Schätze: √70",
+    "result": "Etwa 8,38 (genau: 8,37)",
+    "deep": {
+      "lead": "Die Wurzel liegt zwischen zwei bekannten Quadratzahlen – ein Bruch verrät, wie weit.",
+      "sections": [
+        {
+          "title": "Warum die Näherung trägt",
+          "text": "Gesucht ist ein kleiner Zuschlag x, sodass a plus x im Quadrat die Zahl n ergibt. Ausmultipliziert steht da: a² plus 2 mal a mal x plus x². Ist x klein, dann ist x² winzig und darf wegfallen. Übrig bleibt, dass 2 mal a mal x dem Rest n minus a² entsprechen muss, und daraus folgt die Regel. Weil das weggelassene Stück fehlt, liegt die Schätzung stets ein wenig zu hoch. Du kannst auch von oben kommen: Für die Wurzel aus 80 nimmst du 9 und ziehst ein Achtzehntel ab, das ergibt 8,944."
+        },
+        {
+          "title": "Ein Verfahren aus Babylon",
+          "text": "Die Idee ist uralt. Eine babylonische Tontafel aus der Zeit vor fast 4000 Jahren zeigt die Wurzel aus 2 auf mehrere Nachkommastellen genau. Das dazu passende Verfahren, später nach Heron von Alexandria benannt, verbessert jede Schätzung: Teile die Zahl durch deine Schätzung und bilde den Mittelwert aus beiden. Aus 5,2 wird so für die Wurzel aus 27 der Wert 5,1962, richtig bis zur vierten Stelle. Praktisch ist das Schätzen bei Flächen. Ein quadratisches Zimmer von 50 Quadratmetern hat eine Seitenlänge von 7 plus einem Vierzehntel, also gut 7,07 Metern."
+        }
+      ],
+      "tryIt": "Schätze: √40, √50 und √90. (6,33; 7,07; 9,5 – genau: 6,32; 7,07; 9,49.)",
+      "takeaways": [
+        "Nächste Quadratzahl suchen, Rest durch das Doppelte ihrer Wurzel teilen.",
+        "Die Schätzung liegt immer leicht über dem wahren Wert."
+      ]
+    }
+  },
+  {
+    "id": "meilen-in-kilometer",
+    "title": "Meilen in Kilometer",
+    "shortcut": "Meilen × 1,6: die Zahl + die Hälfte + ein Zehntel",
+    "explanation": "Eine Meile sind rund 1,6 km. Nimm die Meilenzahl, addiere ihre Hälfte und noch ein Zehntel von ihr. Für 50 Meilen: 50 + 25 + 5 = 80 km. Rückwärts von Kilometern zu Meilen rechnest du mal 5 und durch 8.",
+    "challenge": "Rechne um: 70 Meilen pro Stunde in km/h",
+    "result": "Rund 112 km/h",
+    "deep": {
+      "lead": "Der Faktor 1,6 zerfällt in drei Teile, die jeder im Kopf hat: eins, ein halb, ein Zehntel.",
+      "sections": [
+        {
+          "title": "Wie genau ist 1,6?",
+          "text": "Die internationale Meile ist seit 1959 auf genau 1,609344 Kilometer festgelegt. Mit 1,6 liegst du also nur um gut ein halbes Prozent zu niedrig, was für Straßenschilder und Reiseplanung völlig ausreicht. Der Bruch dahinter ist acht Fünftel, deshalb führt der Rückweg über mal 5 und durch 8. Ein paar Ankerwerte lohnen das Merken: 30 Meilen pro Stunde sind 48 km/h, 55 sind 88 und 70 sind gut 112. Nicht verwechseln darfst du die Landmeile mit der Seemeile, die mit 1,852 Kilometern deutlich länger ist."
+        },
+        {
+          "title": "Die Abkürzung über Fibonacci",
+          "text": "Für eine schnelle Schätzung gibt es einen kuriosen Helfer. In der Fibonacci-Folge 3, 5, 8, 13, 21, 34, 55, 89 ist jede Zahl ungefähr das 1,618-Fache ihrer Vorgängerin, und das liegt sehr nah an 1,609. Deshalb entspricht jede Fibonacci-Zahl in Meilen ziemlich genau der nächsten in Kilometern: 5 Meilen sind rund 8 Kilometer, 8 Meilen rund 13, 13 Meilen rund 21, 55 Meilen rund 89. Andere Werte setzt du zusammen. Ein Marathon ist gut 26 Meilen lang, also zweimal 13, und kommt so auf rund 42 Kilometer."
+        }
+      ],
+      "tryIt": "Rechne um: 30 Meilen, 120 Meilen und 26 Meilen in Kilometer. (48 km, 192 km, rund 42 km.)",
+      "takeaways": [
+        "Meilen in km: plus die Hälfte, plus ein Zehntel.",
+        "Fibonacci-Nachbarn: 5 Meilen ≈ 8 km, 8 Meilen ≈ 13 km."
+      ]
+    }
+  },
+  {
+    "id": "celsius-in-fahrenheit",
+    "title": "Celsius in Fahrenheit",
+    "shortcut": "°F = °C × 2, minus 10 %, plus 32",
+    "explanation": "Verdopple die Celsius-Zahl, zieh ein Zehntel dieses Werts ab und addiere 32. Für 25 °C: 50, minus 5 ist 45, plus 32 ergibt 77 °F. Das ist exakt, denn verdoppeln und 10 % abziehen bedeutet genau mal 1,8.",
+    "challenge": "Rechne um: 30 °C in Fahrenheit",
+    "result": "86 °F",
+    "deep": {
+      "lead": "Der unhandliche Faktor 1,8 wird zu »verdoppeln und ein Zehntel abziehen« – danach fehlt nur noch die 32.",
+      "sections": [
+        {
+          "title": "Zwei Skalen, zwei Nullpunkte",
+          "text": "Der in Danzig geborene Instrumentenbauer Daniel Gabriel Fahrenheit legte seine Skala Anfang des 18. Jahrhunderts fest. Auf ihr gefriert Wasser bei 32 Grad und siedet bei 212 Grad; dazwischen liegen 180 Teilstriche. Der Schwede Anders Celsius teilte denselben Abstand wenig später in 100 Teile. Ein Celsius-Grad ist deshalb 1,8 Fahrenheit-Grade groß, und weil die Nullpunkte verschieden liegen, kommt die 32 hinzu. Bei genau einer Temperatur zeigen beide Skalen dieselbe Zahl: minus 40 Grad. Heute wird Fahrenheit im Alltag fast nur noch in den USA verwendet."
+        },
+        {
+          "title": "Rückweg und Ankerwerte",
+          "text": "Für den Rückweg kehrst du die Schritte um: 32 abziehen, halbieren und etwa ein Zehntel dazugeben. Aus 77 °F werden 45, dann 22,5, dann knapp 25 °C. Für eine grobe Schätzung genügt oft: 30 abziehen und halbieren. Noch schneller geht es mit Ankerwerten, denn je 10 Celsius-Grade entsprechen 18 Fahrenheit-Graden: 0 °C sind 32 °F, 10 sind 50, 20 sind 68, 30 sind 86. Die normale Körpertemperatur von 37 °C entspricht 98,6 °F. Und der Backofen bei 180 °C steht in amerikanischen Rezepten mit rund 350 °F."
+        }
+      ],
+      "tryIt": "Rechne um: 10 °C, 35 °C und −5 °C in Fahrenheit. (50 °F, 95 °F, 23 °F.)",
+      "takeaways": [
+        "Verdoppeln, ein Zehntel abziehen, 32 dazu.",
+        "Anker: 10 °C = 50 °F, 20 °C = 68 °F, 30 °C = 86 °F."
+      ]
+    }
+  },
+  {
+    "id": "meter-pro-sekunde-in-kmh",
+    "title": "Meter pro Sekunde in km/h",
+    "shortcut": "m/s × 3,6: mal 4, dann 10 % abziehen",
+    "explanation": "Multipliziere die Meter pro Sekunde mit 4 und zieh ein Zehntel des Ergebnisses ab. Für 15 m/s: 60 minus 6 ergibt 54 km/h. Rückwärts teilst du durch 3,6 – grob: durch 4 teilen und ein Zehntel dazugeben.",
+    "challenge": "Rechne um: 25 m/s in km/h",
+    "result": "90 km/h",
+    "deep": {
+      "lead": "Eine Stunde hat 3600 Sekunden, ein Kilometer 1000 Meter – daraus entsteht der Faktor 3,6.",
+      "sections": [
+        {
+          "title": "Woher die 3,6 kommt",
+          "text": "Wer eine Stunde lang jede Sekunde einen Meter zurücklegt, schafft 3600 Meter, also 3,6 Kilometer. Ein Meter pro Sekunde entspricht deshalb 3,6 Kilometern pro Stunde. Der Faktor lässt sich bequem zerlegen: Mal 4 und davon ein Zehntel weniger ist genau mal 3,6, denn 4 minus 0,4 ergibt 3,6. Der Rückweg ist nur näherungsweise so elegant. Durch 4 zu teilen und ein Zehntel aufzuschlagen liefert einen Wert, der um etwa ein Prozent zu niedrig liegt. Für Schätzungen ist das genau genug, für eine Physikaufgabe teilst du besser durch 3,6."
+        },
+        {
+          "title": "Ein Gefühl für Geschwindigkeiten",
+          "text": "Meter pro Sekunde sind anschaulicher, als die Schule vermuten lässt. Ein Fußgänger geht etwa 1,4 Meter pro Sekunde, das sind 5 km/h. Ein Auto mit 50 km/h legt in jeder Sekunde knapp 14 Meter zurück; so weit rollt es also, während der Fahrer eine Sekunde lang erschrickt. Bei 130 km/h sind es 36 Meter pro Sekunde. Usain Bolt lief bei seinem Weltrekord über 100 Meter im Schnitt 10,4 Meter pro Sekunde, gut 37 km/h. Und der Schall schafft in Luft rund 340 Meter pro Sekunde, mehr als 1200 km/h."
+        }
+      ],
+      "tryIt": "Rechne um: 10 m/s, 30 m/s und 340 m/s in km/h. (36, 108 und 1224 km/h.)",
+      "takeaways": [
+        "m/s mal 3,6 ergibt km/h.",
+        "Bei 50 km/h legst du in einer Sekunde knapp 14 Meter zurück."
+      ]
+    }
+  },
+  {
+    "id": "mittelwert-ueber-abweichungen",
+    "title": "Mittelwert über Abweichungen",
+    "shortcut": "Bezugswert + Durchschnitt der Abweichungen",
+    "explanation": "Wähl einen runden Wert in der Mitte und notier nur, wie weit jede Zahl davon abweicht. Für 78, 82, 85, 79 nimmst du 80: Die Abweichungen sind −2, +2, +5, −1, zusammen +4. Geteilt durch 4 Zahlen: +1. Der Mittelwert ist 81.",
+    "challenge": "Rechne: Mittelwert von 47, 52, 49 und 56",
+    "result": "51",
+    "deep": {
+      "lead": "Statt große Zahlen aufzusummieren, rechnest du nur mit den kleinen Unterschieden zu einem Bezugswert.",
+      "sections": [
+        {
+          "title": "Warum der Bezugswert beliebig ist",
+          "text": "Der Mittelwert ist der Punkt, an dem sich alle Abweichungen ausgleichen, wie der Drehpunkt einer Wippe. Wählst du einen anderen Bezugswert, bleibt eine durchschnittliche Abweichung übrig, und genau um diesen Betrag liegt der wahre Mittelwert daneben. Deshalb führt jeder Bezugswert zum richtigen Ergebnis. Mit 70 statt 80 wären die Abweichungen 8, 12, 15 und 9, zusammen 44, im Schnitt 11, und 70 plus 11 ist wieder 81. Ein guter Bezugswert liegt mitten in den Daten, weil sich dann positive und negative Abweichungen schon im Kopf weitgehend aufheben."
+        },
+        {
+          "title": "Zielwerte und laufender Schnitt",
+          "text": "Mit Abweichungen beantwortest du auch die Frage, was noch nötig ist. Dein Schnitt aus vier Tests liegt bei 78 Punkten, du willst nach dem fünften bei 80 stehen. Dir fehlen viermal 2 Punkte, also 8. Der fünfte Test muss sie zusätzlich bringen: 88 Punkte. Ebenso leicht lässt sich ein Schnitt aktualisieren. Liegt er bei 81 aus vier Werten und kommt ein fünfter Wert von 91 hinzu, verteilt sich dessen Überschuss von 10 auf fünf Werte: Der neue Schnitt ist 83. Die bisherige Summe brauchst du dafür nie."
+        }
+      ],
+      "tryIt": "Rechne über Abweichungen: den Mittelwert von 96, 103, 99, 106 und den von 21, 19, 24, 20, 16. (101 und 20.)",
+      "takeaways": [
+        "Bezugswert wählen, Abweichungen mitteln, addieren.",
+        "Neuer Schnitt = alter Schnitt + (neuer Wert − Schnitt) ÷ neue Anzahl."
+      ]
+    }
+  },
+  {
+    "id": "minuten-in-dezimalstunden",
+    "title": "Minuten in Dezimalstunden",
+    "shortcut": "Minuten ÷ 6 = Zehntelstunden",
+    "explanation": "Sechs Minuten sind ein Zehntel einer Stunde. Teile die Minuten durch 6 und schreib das Ergebnis hinter das Komma: 36 Minuten sind 0,6 Stunden, 3 Stunden 36 Minuten also 3,6 Stunden. Zurück: Nachkommaziffer mal 6.",
+    "challenge": "Schreib 2 Stunden 45 Minuten als Dezimalzahl",
+    "result": "2,75 Stunden",
+    "deep": {
+      "lead": "Eine Stunde hat 60 Minuten, nicht 100 – deshalb sind anderthalb Stunden 1,5 und nicht 1,30.",
+      "sections": [
+        {
+          "title": "Der klassische Zeitfehler",
+          "text": "In Tabellen und Abrechnungen werden Uhrzeit-Schreibweise und Dezimalzahl ständig verwechselt. 1:30 bedeutet eine Stunde und dreißig Minuten, 1,30 Stunden wären dagegen eine Stunde und achtzehn Minuten. Wer 7 Stunden 48 Minuten gearbeitet hat und 7,48 einträgt, schenkt dem Arbeitgeber fast zwanzig Minuten, denn richtig sind 7,8 Stunden. Die wichtigsten Werte kennst du schnell auswendig: Eine Viertelstunde ist 0,25, eine halbe 0,5, eine Dreiviertelstunde 0,75. Zwanzig Minuten sind ein Drittel, also rund 0,33, vierzig Minuten rund 0,67 und zehn Minuten rund 0,17."
+        },
+        {
+          "title": "Wozu die Dezimalform taugt",
+          "text": "Sobald mit Zeit multipliziert oder durch Zeit geteilt wird, brauchst du die Dezimalform. Für 180 Kilometer in 2 Stunden 24 Minuten rechnest du 180 geteilt durch 2,4 und erhältst 75 km/h. Für 3 Stunden 20 Minuten Arbeit zu 18 € pro Stunde rechnest du zehn Drittel mal 18, also 60 €. Dass die Stunde 60 Teile hat, geht auf die Babylonier zurück, die im Sechzigersystem rechneten. Die 60 lässt sich durch auffallend viele Zahlen ohne Rest teilen. Manche Betriebe erfassen Arbeitszeit in Hundertstelstunden, sogenannten Industrieminuten zu je 36 Sekunden."
+        }
+      ],
+      "tryIt": "Wandle um: 1 Stunde 12 Minuten und 4 Stunden 54 Minuten in Dezimalstunden, 0,4 Stunden in Minuten. (1,2; 4,9; 24 Minuten.)",
+      "takeaways": [
+        "6 Minuten = 0,1 Stunden.",
+        "Viertelstunden: 0,25 – 0,5 – 0,75."
+      ]
+    }
+  },
+  {
+    "id": "teilbar-durch-7",
+    "title": "Teilbar durch 7?",
+    "shortcut": "Letzte Ziffer verdoppeln, vom Rest abziehen",
+    "explanation": "Streich die letzte Ziffer, verdopple sie und zieh sie von der übrigen Zahl ab. Ist das Ergebnis durch 7 teilbar oder null, ist es die Ausgangszahl auch. Für 343: 34 − 6 = 28, und 28 ist 4 × 7. Bei großen Zahlen wiederholst du den Schritt.",
+    "challenge": "Ist 574 durch 7 teilbar?",
+    "result": "Ja (57 − 8 = 49; 574 = 7 × 82)",
+    "deep": {
+      "lead": "Für die 7 gibt es keine Quersummenregel – aber einen kleinen Rechenschritt, der die Zahl schrumpfen lässt.",
+      "sections": [
+        {
+          "title": "Warum der Schritt erlaubt ist",
+          "text": "Nenne die letzte Ziffer b und den Rest der Zahl a; die Zahl selbst ist dann 10a + b. Der Trick behauptet: Sie ist genau dann durch 7 teilbar, wenn a minus 2b es ist. Der Grund ist eine kleine Umformung. Zehnmal a minus 2b ergibt 10a minus 20b. Addierst du 21b, steht wieder 10a + b da. Weil 21b immer ein Vielfaches von 7 ist, ändert es an der Teilbarkeit nichts. Die Regel entscheidet allerdings nur über ja oder nein. Den Rest beim Teilen liefert sie nicht."
+        },
+        {
+          "title": "Dreierblöcke für lange Zahlen",
+          "text": "Bei langen Zahlen ist eine zweite Regel schneller. Sie beruht darauf, dass 1001 gleich 7 mal 11 mal 13 ist. Teil die Zahl von rechts in Dreierblöcke und rechne die Blöcke abwechselnd plus und minus. Für 86.415 ergibt das 415 minus 86 gleich 329. Darauf wendest du den ersten Trick an: 32 minus 18 ist 14, also teilbar. Tatsächlich ist 86.415 gleich 7 mal 12.345. Dieselbe Blockrechnung prüft nebenbei auch die Teilbarkeit durch 11 und durch 13, weil beide ebenfalls in der 1001 stecken."
+        }
+      ],
+      "tryIt": "Prüf: Sind 371, 1001 und 2468 durch 7 teilbar? (Ja: 37 − 2 = 35. Ja: 100 − 2 = 98. Nein: 246 − 16 = 230, und 23 ist nicht teilbar.)",
+      "takeaways": [
+        "Letzte Ziffer verdoppeln und vom Rest abziehen.",
+        "Lange Zahlen: Dreierblöcke abwechselnd plus und minus."
+      ]
+    }
+  },
+  {
+    "id": "von-links-multiplizieren",
+    "title": "Von links multiplizieren",
+    "shortcut": "7 × 86 = 7 × 80 + 7 × 6",
+    "explanation": "Zerleg die größere Zahl in Zehner und Einer und beginn mit dem großen Teil. Für 7 × 86: erst 7 × 80 = 560, dann 7 × 6 = 42, zusammen 602. Du kennst sofort die Größenordnung und musst nur eine Zwischensumme behalten.",
+    "challenge": "Rechne: 6 × 78",
+    "result": "468",
+    "deep": {
+      "lead": "Im Kopf multipliziert man in Leserichtung: erst der große Brocken, dann die Korrektur.",
+      "sections": [
+        {
+          "title": "Papier und Kopf arbeiten verschieden",
+          "text": "Das schriftliche Verfahren beginnt rechts, weil sich Überträge so bequem notieren lassen. Im Kopf gibt es kein Papier, und der knappe Platz im Arbeitsgedächtnis ist schnell voll. Von links rechnest du zuerst den Teil, der das Ergebnis im Wesentlichen bestimmt, und fügst die kleineren Teile hinzu. Nach dem ersten Schritt weißt du bereits, dass 7 mal 86 bei gut 560 liegt. Mit drei Stellen geht es genauso: 4 mal 327 ist 1200 plus 80 plus 28, also 1308. Die Zwischensumme wächst mit, zu merken ist immer nur eine Zahl."
+        },
+        {
+          "title": "Abziehen, wenn die Einer groß sind",
+          "text": "Endet die Zahl auf 8 oder 9, ist der Weg über die nächste runde Zahl kürzer. Statt 7 mal 89 rechnest du 7 mal 90 und nimmst einmal 7 wieder weg: 623. Sechs mal 198 ist 1200 minus 12, also 1188. Bei Preisen ist das besonders praktisch, denn 4 mal 2,95 € sind 12 € minus 20 Cent. Auch zweistellige Faktoren lassen sich stufenweise behandeln. Für 23 mal 45 rechnest du erst 20 mal 45 gleich 900 und dann 3 mal 45 gleich 135, zusammen 1035."
+        }
+      ],
+      "tryIt": "Rechne von links: 8 × 47, 6 × 235 und 7 × 99. (376, 1410, 693.)",
+      "takeaways": [
+        "Erst die große Stelle, dann die kleine dazu.",
+        "Endet die Zahl auf 8 oder 9: aufrunden und abziehen."
+      ]
+    }
+  },
+  {
+    "id": "teilen-durch-kommazahlen",
+    "title": "Durch 0,5, 0,25 und 0,75 teilen",
+    "shortcut": "÷ 0,5 = × 2; ÷ 0,25 = × 4; ÷ 0,75 = × 4 ÷ 3",
+    "explanation": "Durch einen Bruch teilst du, indem du mit seinem Kehrwert malnimmst. 0,5 ist ein Halb, also verdoppelst du. 0,25 ist ein Viertel: mal 4. 0,75 sind drei Viertel: mal 4, dann durch 3. Beispiel: 18 ÷ 0,75 = 72 ÷ 3 = 24.",
+    "challenge": "Rechne: 21 ÷ 0,75",
+    "result": "28",
+    "deep": {
+      "lead": "Teilen durch eine Zahl unter eins macht das Ergebnis größer – gefragt ist ja, wie oft ein kleines Stück hineinpasst.",
+      "sections": [
+        {
+          "title": "Warum das Ergebnis wächst",
+          "text": "Viele verbinden Teilen fest mit Kleinerwerden und stutzen, wenn 18 geteilt durch 0,75 plötzlich 24 ergibt. Hilfreich ist die Lesart »Wie oft passt es hinein?«. Aus sechs Litern Saft lassen sich zwölf halbe Liter abfüllen, also ist sechs geteilt durch ein Halb gleich zwölf. Je kleiner das Stück, desto öfter passt es hinein. Rechnerisch heißt das: Durch einen Bruch zu teilen ist dasselbe, wie mit seinem Kehrwert zu multiplizieren. Der Kehrwert von einem Viertel ist vier, der von drei Vierteln ist vier Drittel."
+        },
+        {
+          "title": "Weitere Kehrwerte für den Alltag",
+          "text": "Ein paar Paare decken fast alles ab. Durch 0,2 teilen heißt mal 5, durch 0,125 mal 8. Durch 1,5 teilst du, indem du verdoppelst und drittelst: 45 geteilt durch 1,5 ist 90 durch 3, also 30. Durch 2,5 geht es mit mal 4 und einer Kommaverschiebung: 70 geteilt durch 2,5 ist 280 durch 10, also 28. Gebraucht wird das ständig. Kostet ein Viertelkilo 3 €, liegt der Kilopreis bei 12 €. Und nach 25 Prozent Rabatt führt der Weg zurück zum alten Preis über geteilt durch 0,75: Aus 60 € werden 80 €."
+        }
+      ],
+      "tryIt": "Rechne: 7 ÷ 0,25, 36 ÷ 0,75 und 45 ÷ 1,5. (28, 48, 30.)",
+      "takeaways": [
+        "Durch einen Bruch teilen = mit dem Kehrwert malnehmen.",
+        "Geteilt durch 0,75 heißt: mal 4, dann durch 3."
+      ]
+    }
+  },
+  {
+    "id": "brueche-ueber-kreuz-vergleichen",
+    "title": "Brüche über Kreuz vergleichen",
+    "shortcut": "a/b oder c/d? Vergleiche a × d mit c × b",
+    "explanation": "Um zu sehen, welcher von zwei Brüchen größer ist, multiplizierst du über Kreuz: jeden Zähler mit dem Nenner des anderen. Für 5/8 und 7/11: 5 × 11 = 55 und 7 × 8 = 56. Die 56 gehört zum Zähler 7, also ist 7/11 größer.",
+    "challenge": "Was ist größer: 4/7 oder 5/9?",
+    "result": "4/7 (denn 4 × 9 = 36 ist mehr als 5 × 7 = 35)",
+    "deep": {
+      "lead": "Zwei Brüche lassen sich vergleichen, ohne einen einzigen davon auszurechnen.",
+      "sections": [
+        {
+          "title": "Der Nenner, den niemand hinschreibt",
+          "text": "Brüche vergleicht man in der Schule, indem man sie auf einen gemeinsamen Nenner bringt. Das Überkreuz-Verfahren tut genau das, lässt aber den Nenner weg. Erweiterst du 5/8 mit 11 und 7/11 mit 8, haben beide den Nenner 88, und die Zähler lauten 55 und 56. Weil die Nenner gleich sind, genügt der Vergleich der Zähler. Die einzige Fehlerquelle ist die Zuordnung. Merk dir: Jedes Produkt gehört zu dem Bruch, dessen Zähler darin steckt. Sind beide Produkte gleich, sind auch die Brüche gleich groß."
+        },
+        {
+          "title": "Preise und Quoten vergleichen",
+          "text": "Am Regal steht: drei Stück für 7 € oder fünf Stück für 12 €. Was ist günstiger? Vergleiche die Stückzahl je Euro, also 3/7 und 5/12. Über Kreuz ergibt das 36 und 35, das erste Angebot liefert mehr Ware pro Euro. Ebenso bei Quoten: 13 Treffer bei 20 Versuchen oder 16 bei 25? Die Produkte lauten 325 und 320, die erste Quote ist knapp besser. Manchmal geht es noch schneller, wenn du auf das Fehlende schaust. Bei 7/8 und 8/9 fehlt einmal ein Achtel, einmal ein Neuntel. Das Neuntel ist kleiner, also ist 8/9 größer."
+        }
+      ],
+      "tryIt": "Vergleich über Kreuz: 3/5 und 5/8; 7/12 und 4/7; 9/13 und 11/16. (Größer sind 5/8, 7/12 und 9/13.)",
+      "takeaways": [
+        "Über Kreuz malnehmen: Das größere Produkt zeigt den größeren Bruch.",
+        "Das Produkt gehört zu dem Bruch, dessen Zähler darin steckt."
+      ]
+    }
+  },
+  {
+    "id": "preise-mit-99-malnehmen",
+    "title": "Preise mit ,99 malnehmen",
+    "shortcut": "n × 4,99 = n × 5 − n Cent",
+    "explanation": "Runde den Preis auf den vollen Betrag, multipliziere und zieh für jedes Stück die fehlenden Cent wieder ab. Für 6 × 4,99 €: 6 × 5 = 30 €, minus 6 Cent, ergibt 29,94 €. Bei Preisen auf ,95 ziehst du pro Stück 5 Cent ab.",
+    "challenge": "Rechne: 7 × 3,99 €",
+    "result": "27,93 €",
+    "deep": {
+      "lead": "Schwellenpreise sollen kleiner aussehen, als sie sind – beim Rechnen behandelst du sie als das, was sie fast sind.",
+      "sections": [
+        {
+          "title": "Warum Preise auf 99 enden",
+          "text": "Dass so viele Preise knapp unter einem runden Betrag liegen, hat mit der Art zu tun, wie wir Zahlen lesen. Die Ziffer ganz links prägt den Eindruck am stärksten: 4,99 € wird als »vier Euro irgendwas« abgespeichert, obwohl ein einziger Cent zu fünf fehlt. Die Forschung nennt das den Effekt der linken Ziffer, und er ist in vielen Verkaufsexperimenten nachgewiesen. Daneben gibt es eine oft erzählte Geschichte, krumme Preise seien eingeführt worden, damit Kassierer für das Wechselgeld die Kasse öffnen und jeden Verkauf registrieren müssen. Belegt ist sie nicht."
+        },
+        {
+          "title": "Dasselbe Muster an Kasse und Zapfsäule",
+          "text": "Die Rechnung funktioniert überall, wo ein kleiner Betrag zu einer runden Zahl fehlt. Drei Artikel zu 19,95 € kosten 60 € minus 15 Cent, also 59,85 €. Ein Abo zu 9,99 € im Monat kostet im Jahr 120 € minus 12 Cent. An der Tankstelle endet der Literpreis üblicherweise auf neun Zehntelcent: 40 Liter zu 1,799 € sind 72 € minus 4 Cent. Auch beim Zusammenzählen hilft das Runden. 2,99 plus 4,99 plus 7,99 € sind 16 € minus 3 Cent. Für den Überblick im Laden genügt meist schon der gerundete Wert."
+        }
+      ],
+      "tryIt": "Rechne: 4 × 2,99 €, 12 × 9,99 € und 3 × 19,95 €. (11,96 €; 119,88 €; 59,85 €.)",
+      "takeaways": [
+        "Auf den vollen Betrag runden, malnehmen, Cent abziehen.",
+        "Die linke Ziffer täuscht: 4,99 € sind praktisch 5 €."
+      ]
+    }
+  }
+]

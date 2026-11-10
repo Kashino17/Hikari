@@ -1,0 +1,2002 @@
+[
+  {
+    "id": "statische-aufladung",
+    "phenomenon": "Elektrostatische Aufladung",
+    "question": "Warum bekommst du an der Türklinke manchmal einen Schlag?",
+    "explanation": "Reiben zwei Stoffe aneinander, etwa Schuhsohle und Teppich, wechseln Elektronen die Seite. Dein Körper sammelt so überschüssige Ladung, die über trockene Luft nicht abfließen kann. Näherst du dich Metall, springt sie in einem winzigen Funken über. Den spürst du als Stich.",
+    "detail": "Solche Funken haben mehrere Tausend Volt. Gefährlich sind sie trotzdem nicht, weil nur winzige Ladungsmengen für Bruchteile einer Sekunde fließen.",
+    "deep": {
+      "lead": "Im Winter knistert es häufiger, weil trockene Heizungsluft die Ladung nicht mehr unbemerkt von deiner Haut ableitet.",
+      "sections": [
+        {
+          "title": "Warum es im Winter öfter funkt",
+          "text": "Feuchte Luft legt einen hauchdünnen Wasserfilm auf Haut, Kleidung und Böden. Über diesen Film fließt Ladung ständig unbemerkt ab. Kalte Winterluft enthält wenig Wasserdampf; wird sie im Zimmer erwärmt, sinkt ihre relative Feuchte noch weiter. Jetzt bleibt die Ladung sitzen, bis sie einen Weg findet. Kunstfasern und Gummisohlen verstärken das, weil sie leicht Elektronen aufnehmen oder abgeben und selbst kaum leiten. Wer barfuß oder mit Ledersohlen über Holzboden geht, lädt sich viel weniger auf."
+        },
+        {
+          "title": "Ernst wird es bei Chips und Benzin",
+          "text": "Für Menschen sind die Funken harmlos, für empfindliche Elektronik nicht. Eine Entladung, die du gar nicht bemerkst, kann die feinen Strukturen in einem Chip zerstören. Deshalb tragen Techniker Erdungsarmbänder, und Bauteile werden in leitfähigen Tüten verschickt. Auch Benzindämpfe können sich an einem Funken entzünden. Tankwagen werden vor dem Umfüllen geerdet, und an der Zapfsäule solltest du während des Tankens nicht wieder ins Auto steigen, weil sich die Kleidung am Sitz neu auflädt. Ein Blitz ist dasselbe Phänomen in riesigem Maßstab."
+        }
+      ],
+      "tryIt": "Reibe einen Luftballon an deinen Haaren und halte ihn neben einen dünnen Wasserstrahl: Der Strahl biegt sich sichtbar zum Ballon hin.",
+      "takeaways": [
+        "Reibung verschiebt Elektronen von einem Stoff auf den anderen.",
+        "Trockene Luft verhindert, dass die Ladung unbemerkt abfließt."
+      ]
+    }
+  },
+  {
+    "id": "streusalz-gefrierpunkt",
+    "phenomenon": "Gefrierpunktserniedrigung",
+    "question": "Warum taut Streusalz das Eis auf der Straße?",
+    "explanation": "Salz löst sich im dünnen Wasserfilm auf dem Eis. Die gelösten Teilchen stören die Wassermoleküle dabei, sich wieder in den Eiskristall einzubauen, während das Schmelzen ungehindert weiterläuft. Salzwasser gefriert deshalb erst deutlich unter null Grad – das Eis taut, obwohl es draußen friert.",
+    "detail": "Kochsalz wirkt in der Praxis nur bis etwa minus zehn Grad, die theoretische Grenze liegt bei rund minus 21 Grad. Darunter bleibt auch Salzlake fest.",
+    "deep": {
+      "lead": "Gelöste Stoffe senken den Gefrierpunkt von Wasser – ob Salz, Zucker oder Alkohol.",
+      "sections": [
+        {
+          "title": "Es zählt die Zahl der Teilchen",
+          "text": "Wie stark der Gefrierpunkt sinkt, hängt kaum von der Art des gelösten Stoffes ab, sondern von der Anzahl der gelösten Teilchen. Kochsalz zerfällt in Wasser in zwei Ionen, Natrium und Chlorid, und wirkt deshalb etwa doppelt so stark wie die gleiche Zahl Zuckermoleküle. Calciumchlorid liefert drei Ionen und taut noch bei tieferen Temperaturen. Meerwasser mit rund 3,5 Prozent Salz gefriert erst bei knapp minus zwei Grad. Dasselbe Prinzip schützt den Motor: Frostschutzmittel im Kühlwasser verschiebt den Gefrierpunkt weit nach unten."
+        },
+        {
+          "title": "Eis mit Salz wird kälter",
+          "text": "Zum Schmelzen braucht Eis Energie. Streust du Salz auf Eis, schmilzt es, obwohl niemand Wärme zuführt – die Energie holt es sich aus der eigenen Umgebung. Die Mischung kühlt dabei weit unter null Grad ab. So stellte man Speiseeis her, bevor es Gefrierschränke gab: ein Gefäß mit Sahne in einem Kübel voll Eis und Salz. Auf der Straße hat Salz Nebenwirkungen. Es fördert Rost an Autos und Brücken, schädigt Straßenbäume und gelangt ins Grundwasser. Viele Gemeinden verlangen deshalb auf Gehwegen Splitt oder Sand."
+        }
+      ],
+      "tryIt": "Lege zwei Eiswürfel auf einen Teller und bestreue einen mit Salz. Nach ein paar Minuten steht er in einer Pfütze, der andere kaum.",
+      "takeaways": [
+        "Gelöste Teilchen senken den Gefrierpunkt von Wasser.",
+        "Unter etwa minus zehn Grad hilft Kochsalz kaum noch."
+      ]
+    }
+  },
+  {
+    "id": "mendel-vererbung",
+    "phenomenon": "Vererbung nach Mendel",
+    "question": "Wie kann ein Kind ein Merkmal zeigen, das keiner der beiden Eltern hat?",
+    "explanation": "Von jedem Gen besitzt du zwei Kopien, eine von jedem Elternteil. Manche Varianten setzen sich durch, sie sind dominant; andere wirken nur, wenn beide Kopien gleich sind, sie sind rezessiv. Tragen beide Eltern verdeckt eine rezessive Variante, kann das Kind sie doppelt erben. Dann zeigt sich das Merkmal.",
+    "detail": "Das Schulbeispiel Augenfarbe ist vereinfacht: Daran wirken mehrere Gene mit. Das Prinzip von dominant und rezessiv gilt trotzdem für viele Merkmale.",
+    "deep": {
+      "lead": "Erbanlagen werden nicht wie Farben vermischt, sondern als getrennte Einheiten weitergegeben, die über Generationen erhalten bleiben.",
+      "sections": [
+        {
+          "title": "Ein Mönch zählt Erbsen",
+          "text": "Gregor Mendel kreuzte um 1860 im Klostergarten von Brünn Tausende Erbsenpflanzen. Er wählte Merkmale mit klaren Gegensätzen, etwa gelbe oder grüne Samen, und zählte die Nachkommen aus. Kreuzte er reinerbig gelbe mit grünen, waren alle Nachkommen gelb. In der Enkelgeneration tauchte Grün wieder auf, ziemlich genau bei einem Viertel. Daraus schloss er, dass jede Pflanze zwei Erbanlagen pro Merkmal trägt und je eine zufällig weitergibt. Seine Arbeit von 1866 blieb unbeachtet. Erst um 1900, lange nach seinem Tod, entdeckten Forscher sie wieder."
+        },
+        {
+          "title": "Das Viertel verstehen",
+          "text": "Tragen beide Eltern je eine dominante und eine rezessive Anlage, gibt es vier gleich wahrscheinliche Kombinationen für das Kind. In drei davon ist mindestens eine dominante Anlage dabei, nur in einer treffen zwei rezessive zusammen. Das erklärt das Verhältnis drei zu eins. So werden auch manche Erbkrankheiten weitergegeben, etwa Mukoviszidose: Gesunde Eltern können Träger sein, ohne es zu wissen. Die Chance beträgt bei jedem Kind neu ein Viertel, der Zufall hat kein Gedächtnis. Die meisten Merkmale wie die Körpergröße hängen allerdings von vielen Genen und von der Umwelt ab."
+        }
+      ],
+      "tryIt": "Wirf zwei Münzen zwanzigmal gleichzeitig und zähle, wie oft beide Zahl zeigen. Es wird ungefähr ein Viertel der Würfe sein – Mendels Verhältnis.",
+      "takeaways": [
+        "Jedes Gen liegt doppelt vor; je eine Kopie stammt von jedem Elternteil.",
+        "Rezessive Anlagen können Generationen verdeckt überspringen."
+      ]
+    }
+  },
+  {
+    "id": "insulin-blutzucker",
+    "phenomenon": "Insulin und Blutzucker",
+    "question": "Wie hält dein Körper den Blutzucker nach einer Mahlzeit im Lot?",
+    "explanation": "Nach dem Essen gelangt Zucker ins Blut. Die Bauchspeicheldrüse registriert den Anstieg und schüttet Insulin aus. Das Hormon wirkt wie ein Schlüssel: Es öffnet Muskel- und Fettzellen für den Zucker und lässt die Leber Vorräte anlegen. Fällt der Spiegel zu tief, setzt der Gegenspieler Glukagon gespeicherten Zucker frei.",
+    "detail": "Das Gehirn verbraucht rund ein Fünftel deiner Ruheenergie und braucht gleichmäßigen Nachschub. Darum wird der Blutzucker so eng geregelt.",
+    "deep": {
+      "lead": "Zwei Hormone aus derselben Drüse halten den Zuckerspiegel im Blut wie ein Thermostat in engen Grenzen.",
+      "sections": [
+        {
+          "title": "Zwei Krankheiten, ein Name",
+          "text": "Bei Diabetes Typ 1 zerstört das eigene Immunsystem die insulinbildenden Zellen der Bauchspeicheldrüse. Die Krankheit beginnt oft in Kindheit oder Jugend; Betroffene müssen lebenslang Insulin zuführen. Beim viel häufigeren Typ 2 wird noch Insulin gebildet, aber die Zellen reagieren immer schwächer darauf. Übergewicht und Bewegungsmangel fördern das, auch die Veranlagung spielt eine Rolle. Dauerhaft hoher Blutzucker schädigt feine Gefäße und Nerven, vor allem in Augen, Nieren und Füßen. Typ 2 lässt sich durch Bewegung und Ernährung oft lange aufhalten."
+        },
+        {
+          "title": "Der Sommer 1921 in Toronto",
+          "text": "Vor gut hundert Jahren war Typ-1-Diabetes ein Todesurteil; Kinder überlebten meist nur kurze Zeit. 1921 gewannen der junge Arzt Frederick Banting und der Student Charles Best in Toronto aus den Bauchspeicheldrüsen von Hunden einen Extrakt, der den Blutzucker zuckerkranker Hunde senkte. Im Januar 1922 wurde erstmals ein Junge damit behandelt und erholte sich. Schon 1923 gab es dafür den Nobelpreis. Jahrzehntelang stammte Insulin aus Schlachttieren. Heute stellen es gentechnisch veränderte Bakterien oder Hefen her, exakt in der menschlichen Form."
+        }
+      ],
+      "tryIt": "Geh nach dem Mittagessen zehn Minuten spazieren: Arbeitende Muskeln nehmen Zucker auch mit wenig Insulin auf, der Blutzucker steigt flacher an.",
+      "takeaways": [
+        "Insulin senkt den Blutzucker, Glukagon hebt ihn.",
+        "Bei Typ 1 fehlt Insulin, bei Typ 2 wirkt es zu schwach."
+      ]
+    }
+  },
+  {
+    "id": "sterne-funkeln",
+    "phenomenon": "Funkeln der Sterne",
+    "question": "Warum funkeln Sterne, Planeten aber kaum?",
+    "explanation": "In der unruhigen Luft brechen warme und kalte Luftpakete das Licht leicht unterschiedlich. Ein Stern ist so weit weg, dass er nur als Punkt erscheint; sein dünner Lichtstrahl wird hin- und hergelenkt, er flackert. Planeten sind winzige Scheibchen. Ihre vielen Lichtstrahlen schwanken unabhängig, das gleicht sich aus.",
+    "detail": "Dicht über dem Horizont funkeln Sterne am stärksten und sogar in wechselnden Farben, weil ihr Licht dort den längsten Weg durch die Luft nimmt.",
+    "deep": {
+      "lead": "Das Funkeln entsteht nicht im Stern, sondern auf den letzten Kilometern seines Lichtwegs – in unserer Luft.",
+      "sections": [
+        {
+          "title": "Planeten erkennen ohne Karte",
+          "text": "Mit dieser Regel findest du Planeten am Himmel: Ein sehr heller »Stern«, der ruhig leuchtet, ist fast immer einer. Venus zeigt sich als gleißend heller Punkt in der Abend- oder Morgendämmerung, nie mitten in der Nacht. Jupiter strahlt gelblich-weiß, Mars deutlich rötlich, Saturn matter und gelblich. Alle Planeten halten sich in der Nähe derselben Linie auf, der Ekliptik, auf der auch Sonne und Mond über den Himmel ziehen. Blinkt ein Punkt regelmäßig oder bewegt er sich zügig, ist es ein Flugzeug oder ein Satellit."
+        },
+        {
+          "title": "Wie Sternwarten das Flimmern überlisten",
+          "text": "Für Teleskope ist die Luftunruhe ein Ärgernis: Sie verschmiert jedes Bild. Deshalb stehen große Sternwarten auf hohen Bergen in trockenen Gegenden, etwa in Chile, auf Hawaii oder den Kanaren, wo wenig Luft über ihnen liegt und sie ruhig strömt. Moderne Geräte gehen weiter: Ein Laser erzeugt hoch oben einen künstlichen Leuchtpunkt, ein Computer misst viele Hundert Mal pro Sekunde dessen Verzerrung und verformt einen dünnen Spiegel im Gegentakt. Diese adaptive Optik gleicht das Flimmern weitgehend aus. Weltraumteleskope umgehen das Problem ganz."
+        }
+      ],
+      "tryIt": "Suche heute Abend den hellsten Lichtpunkt am Himmel und beobachte ihn zehn Sekunden: Leuchtet er ruhig, ist es wahrscheinlich ein Planet. Funkelt er, ein Stern.",
+      "takeaways": [
+        "Sterne funkeln, weil unruhige Luft ihr punktförmiges Licht ablenkt.",
+        "Planeten erscheinen als Scheibchen und leuchten deshalb ruhig."
+      ]
+    }
+  },
+  {
+    "id": "schneekristall-sechseck",
+    "phenomenon": "Schneekristalle",
+    "question": "Warum haben Schneeflocken immer sechs Ecken?",
+    "explanation": "Ein Wassermolekül ist gewinkelt gebaut. Gefrieren die Moleküle, ordnen sie sich deshalb zu einem Gitter aus Sechsecken. Ein Schneekristall beginnt als winziges sechseckiges Plättchen in einer Wolke. An seinen Ecken lagert sich Wasserdampf am schnellsten an, dort wachsen sechs Arme.",
+    "detail": "Was als Flocke vom Himmel fällt, sind meist viele Kristalle, die sich ineinander verhakt haben. Einzelne Sterne sieht man am besten bei trockener Kälte.",
+    "deep": {
+      "lead": "Die Symmetrie einer Schneeflocke ist die sichtbar gewordene Gestalt des Wassermoleküls.",
+      "sections": [
+        {
+          "title": "Warum keine der anderen gleicht",
+          "text": "Wie ein Kristall wächst, hängt empfindlich von Temperatur und Feuchtigkeit ab. Knapp unter null Grad entstehen Plättchen, um minus fünf Grad Nadeln und Säulen, um minus fünfzehn Grad die bekannten verzweigten Sterne. Auf dem Weg durch die Wolke durchquert jeder Kristall wechselnde Bedingungen, und sein Weg ist einmalig. Alle sechs Arme erleben aber zur selben Zeit dasselbe, darum sehen sie einander so ähnlich. Der Japaner Ukichiro Nakaya züchtete in den 1930er-Jahren erstmals Schneekristalle im Labor und ordnete jede Form den Bedingungen ihrer Entstehung zu."
+        },
+        {
+          "title": "Weiß, leise und warm",
+          "text": "Eis ist durchsichtig, Schnee trotzdem weiß: An den unzähligen Grenzflächen zwischen Kristall und Luft wird Licht aller Farben in alle Richtungen zurückgeworfen. Frisch gefallener Schnee besteht zu rund neun Zehnteln aus Luft. Diese Hohlräume schlucken Schall, deshalb ist es nach Schneefall so still. Sie isolieren auch hervorragend: Unter einer dicken Schneedecke bleibt der Boden nahe null Grad, selbst wenn die Luft darüber viel kälter ist. Pflanzen, Mäuse und in Schneehöhlen eingegrabene Menschen überstehen so strengen Frost."
+        }
+      ],
+      "tryIt": "Fange bei Frost Schneeflocken auf einem dunklen Handschuh oder Schal und betrachte sie mit der Handykamera aus der Nähe, bevor dein Atem sie schmilzt.",
+      "takeaways": [
+        "Wassermoleküle bilden beim Gefrieren ein sechseckiges Gitter.",
+        "Schnee ist weiß und leise, weil er vor allem aus Luft besteht."
+      ]
+    }
+  },
+  {
+    "id": "noise-cancelling-gegenschall",
+    "phenomenon": "Aktive Geräuschunterdrückung",
+    "question": "Wie können Kopfhörer Lärm mit noch mehr Schall auslöschen?",
+    "explanation": "Schall ist eine Folge von Druckschwankungen. Mikrofone am Kopfhörer messen den Lärm von außen. Ein Chip berechnet blitzschnell das Gegenstück: dieselbe Welle, nur mit Bergen, wo der Lärm Täler hat. Der Lautsprecher spielt sie dazu. Berg trifft auf Tal, beide heben sich auf, und am Ohr bleibt Stille.",
+    "detail": "Am besten klappt das bei gleichmäßigem, tiefem Brummen wie im Flugzeug. Stimmen und plötzliche Geräusche ändern sich zu schnell für die Elektronik.",
+    "deep": {
+      "lead": "Wellen können sich verstärken oder gegenseitig auslöschen – je nachdem, wie sie aufeinandertreffen.",
+      "sections": [
+        {
+          "title": "Interferenz gilt für alle Wellen",
+          "text": "Treffen zwei Wellen aufeinander, addieren sich ihre Ausschläge. Liegt Berg auf Berg, wird es lauter; liegt Berg auf Tal, wird es still. Das gilt für Schall ebenso wie für Wasserwellen und Licht. Die schillernden Farben einer Seifenblase oder eines Ölfilms entstehen so: Licht wird an Vorder- und Rückseite der dünnen Schicht gespiegelt, und je nach Schichtdicke löschen sich manche Farben aus, andere verstärken sich. Der Engländer Thomas Young zeigte kurz nach 1800 mit zwei engen Spalten, dass Licht solche Muster bildet – ein entscheidender Beleg für seine Wellennatur."
+        },
+        {
+          "title": "Warum es bei hohen Tönen hakt",
+          "text": "Tiefe Töne haben meterlange Wellen; kleine Fehler bei Zeitpunkt und Ort fallen kaum ins Gewicht. Hohe Töne haben Wellenlängen von wenigen Zentimetern, schon eine winzige Verzögerung macht aus Auslöschung Verstärkung. Die Höhen dämpft deshalb vor allem das Polster der Ohrmuschel, ganz ohne Elektronik. Entwickelt wurde die Technik für Piloten, die stundenlang Triebwerkslärm ausgesetzt waren; in den 1980er-Jahren kamen die ersten Headsets ins Cockpit. Wer Musik in lauter Umgebung hört, dreht mit Geräuschunterdrückung meist weniger weit auf und schont so sein Gehör."
+        }
+      ],
+      "tryIt": "Spiele auf zwei Handys denselben tiefen Dauerton ab, etwa mit einer Tongenerator-App, und bewege eines langsam: An manchen Stellen wird der Ton deutlich leiser.",
+      "takeaways": [
+        "Welle plus genau entgegengesetzte Welle ergibt Stille.",
+        "Gegenschall wirkt vor allem bei tiefem, gleichmäßigem Lärm."
+      ]
+    }
+  },
+  {
+    "id": "din-a4-wurzel-zwei",
+    "phenomenon": "DIN-A-Papierformat",
+    "question": "Warum hat ein DIN-A4-Blatt so krumme Maße wie 21 mal 29,7 Zentimeter?",
+    "explanation": "Die Seiten stehen im Verhältnis eins zur Wurzel aus zwei, etwa 1 zu 1,414. Nur bei diesem Verhältnis behält ein Blatt seine Form, wenn man es quer halbiert: Aus A4 werden zwei A5-Blätter mit denselben Proportionen. Ausgangspunkt ist A0 mit genau einem Quadratmeter Fläche. Jede Stufe halbiert sie.",
+    "detail": "Ein A4-Blatt ist ein Sechzehntel Quadratmeter groß. Übliches Papier mit 80 Gramm pro Quadratmeter wiegt deshalb pro Blatt genau 5 Gramm.",
+    "deep": {
+      "lead": "Hinter dem Druckerpapier steckt eine einzige mathematische Forderung: Halbieren soll die Form nicht ändern.",
+      "sections": [
+        {
+          "title": "Die Herleitung in wenigen Zeilen",
+          "text": "Nenne die kurze Seite 1 und die lange x. Halbierst du das Blatt quer, hat das neue Blatt die lange Seite 1 und die kurze Seite x halbe. Soll die Form gleich bleiben, muss x zu 1 dasselbe Verhältnis sein wie 1 zu x halbe. Daraus folgt: x mal x ist 2, also ist x die Wurzel aus zwei. Jedes andere Format würde beim Halbieren abwechselnd gedrungener und schlanker. Praktisch heißt das: Beim Verkleinern von A3 auf A4 im Kopierer passt alles ohne Rand, der Faktor ist stets 71 Prozent."
+        },
+        {
+          "title": "Von Lichtenberg zur Weltnorm",
+          "text": "Auf das Verhältnis wies schon 1786 der Göttinger Physiker Georg Christoph Lichtenberg in einem Brief hin. Zur Norm machte es 1922 der Ingenieur Walter Porstmann beim deutschen Normenausschuss; daher der Name DIN. Vorher hatte fast jede Behörde und Papiermühle eigene Formate, Ordner und Umschläge passten selten zueinander. Heute gilt das System als internationale Norm fast überall auf der Welt. Die wichtigste Ausnahme sind die USA und Kanada mit dem Format »Letter«, das etwas breiter und kürzer ist. Die Reihen B und C für Umschläge folgen derselben Logik."
+        }
+      ],
+      "tryIt": "Falte ein A4-Blatt quer zu A5 und lege es in die Ecke eines zweiten A4-Blatts: Die Diagonalen liegen auf einer Linie – beide Formate haben dieselbe Form.",
+      "takeaways": [
+        "Das Seitenverhältnis ist eins zu Wurzel zwei.",
+        "A0 misst einen Quadratmeter, jede weitere Stufe die Hälfte."
+      ]
+    }
+  },
+  {
+    "id": "resonanz-schaukel",
+    "phenomenon": "Resonanz",
+    "question": "Warum treibt ein kleiner Schubs im richtigen Takt eine Schaukel immer höher?",
+    "explanation": "Alles, was schwingen kann, hat eine Eigenfrequenz, in der es von selbst hin- und herpendelt. Stößt du es genau in diesem Takt an, addiert sich jeder kleine Schubs zum vorigen, die Schwingung wächst. Im falschen Takt bremst du sie immer wieder aus. Dieses Aufschaukeln heißt Resonanz.",
+    "detail": "Die Eigenfrequenz einer Schaukel hängt fast nur von der Länge der Ketten ab, nicht vom Gewicht des Kindes. Lange Schaukeln pendeln langsamer.",
+    "deep": {
+      "lead": "Resonanz steckt in Musikinstrumenten, Radioempfängern und Brücken – überall, wo etwas schwingen kann.",
+      "sections": [
+        {
+          "title": "Vom Weinglas bis zur Gitarre",
+          "text": "Fährst du mit feuchtem Finger über den Rand eines Weinglases, bleibt der Finger immer wieder kurz hängen und rutscht weiter. Diese winzigen Stöße treffen die Eigenfrequenz des Glases, es beginnt zu singen. Bei einer Gitarre schwingt die Saite, der hohle Korpus schwingt mit und gibt den Ton an viel mehr Luft weiter. Ohne Resonanzkörper wäre die Saite kaum zu hören. Auch ein Radio nutzt das Prinzip: Ein Schwingkreis wird auf die Frequenz eines Senders abgestimmt und reagiert dann fast nur auf diesen einen."
+        },
+        {
+          "title": "Wenn Bauwerke mitschwingen",
+          "text": "Ingenieure müssen verhindern, dass Wind, Schritte oder Maschinen ein Bauwerk in seiner Eigenfrequenz anregen. Die Millennium Bridge in London begann im Jahr 2000 kurz nach der Eröffnung seitlich zu schwanken, weil Fußgänger ihren Schritt unwillkürlich an die Bewegung anpassten und sie so verstärkten. Die Brücke bekam nachträglich Dämpfer. Manche Hochhäuser tragen tonnenschwere Pendel, die gegen die Schwingung arbeiten. Dass marschierende Soldaten auf Brücken aus dem Gleichschritt gehen sollen, hat denselben Grund."
+        }
+      ],
+      "tryIt": "Fülle ein dünnwandiges Weinglas halb, feuchte den Finger an und fahre langsam über den Rand. Gieße Wasser nach: Der Ton wird tiefer, je voller das Glas ist.",
+      "takeaways": [
+        "Anstöße im Takt der Eigenfrequenz summieren sich auf.",
+        "Bauwerke brauchen Dämpfer, damit sie sich nicht aufschaukeln."
+      ]
+    }
+  },
+  {
+    "id": "backpulver-kohlendioxid",
+    "phenomenon": "Backpulver",
+    "question": "Wie bringt Backpulver einen Kuchen zum Aufgehen?",
+    "explanation": "Backpulver enthält Natron und ein trockenes Säuerungsmittel. Solange beides trocken bleibt, passiert nichts. Im feuchten Teig lösen sie sich und reagieren miteinander, in der Ofenhitze besonders schnell. Dabei entsteht Kohlendioxid. Die Gasbläschen blähen den Teig auf, und beim Backen erstarrt er um sie herum.",
+    "detail": "Die Stärke im Backpulver dient nicht zum Strecken: Sie hält Feuchtigkeit fern, damit Natron und Säure nicht schon in der Tüte miteinander reagieren.",
+    "deep": {
+      "lead": "Anders als Hefe braucht Backpulver keine Zeit zum Gehen – die Chemie läuft erst im Teig und im Ofen ab.",
+      "sections": [
+        {
+          "title": "Natron allein reicht nicht immer",
+          "text": "Natron, chemisch Natriumhydrogencarbonat, setzt Kohlendioxid frei, sobald es auf Säure trifft. In Rezepten mit Buttermilch, Joghurt, Honig oder Zitronensaft bringt der Teig die Säure selbst mit, dann genügt reines Natron. Fehlt die Säure, zerfällt Natron erst bei größerer Hitze und nur teilweise; zurück bleibt Soda, das seifig schmeckt. Backpulver liefert die passende Säuremenge gleich mit. Deshalb kann man die beiden nicht eins zu eins tauschen. Hirschhornsalz und Pottasche, die alten Triebmittel für Lebkuchen, setzen in der Hitze ebenfalls Gase frei."
+        },
+        {
+          "title": "Eine Erfindung für Eilige",
+          "text": "Bis ins 19. Jahrhundert lockerte man Teig mit Hefe, Sauerteig oder geschlagenem Eischnee. Ein frühes Backpulver mischte in den 1840er-Jahren der englische Apotheker Alfred Bird, weil seine Frau Hefe und Eier nicht vertrug. In Deutschland machte es der Bielefelder Apotheker August Oetker in den 1890er-Jahren populär: Er füllte es in kleine Tütchen ab, deren Menge genau für ein Pfund Mehl reichte. Die gleichmäßige Wirkung überzeugte, und aus der Apotheke wurde ein Lebensmittelkonzern. Auf ein Pfund Mehl sind die Tütchen bis heute abgestimmt."
+        }
+      ],
+      "tryIt": "Gib einen Teelöffel Backpulver in ein Glas mit warmem Wasser: Es schäumt sofort. So prüfst du auch, ob altes Backpulver noch wirkt.",
+      "takeaways": [
+        "Natron und Säure bilden im feuchten Teig Kohlendioxid.",
+        "Reines Natron braucht eine saure Zutat im Rezept."
+      ]
+    }
+  },
+  {
+    "id": "zellatmung-fett-ausatmen",
+    "phenomenon": "Zellatmung",
+    "question": "Wohin verschwindet das Fett, wenn du abnimmst?",
+    "explanation": "Der größte Teil verlässt den Körper durch die Lunge. Fett besteht aus Kohlenstoff, Wasserstoff und Sauerstoff. Die Zellen bauen es mit eingeatmetem Sauerstoff ab und gewinnen daraus Energie. Übrig bleiben Kohlendioxid, das du ausatmest, und Wasser, das du über Urin, Schweiß und Atem verlierst.",
+    "detail": "Rechnerisch verlassen von zehn Kilogramm Fett rund 8,4 Kilogramm den Körper als Kohlendioxid über die Lunge, der Rest als Wasser.",
+    "deep": {
+      "lead": "Atmen und Essen gehören zusammen: Der Sauerstoff dient dazu, in jeder Zelle Nahrung in nutzbare Energie umzuwandeln.",
+      "sections": [
+        {
+          "title": "Kraftwerke in jeder Zelle",
+          "text": "Der Abbau findet in den Mitochondrien statt, winzigen Bestandteilen der Zelle, von denen sie Hunderte bis Tausende enthält. Dort werden Zucker und Fettsäuren schrittweise zerlegt. Die frei werdende Energie wird nicht direkt genutzt, sondern in einem kleinen Molekül namens ATP gespeichert, der Energiewährung aller Lebewesen. Muskeln, Nerven und Transportvorgänge bezahlen damit. Ein Mensch setzt täglich ungefähr sein eigenes Körpergewicht an ATP um, weil jedes Molekül ständig verbraucht und neu aufgeladen wird. Ein Teil der Energie fällt als Wärme an und hält uns auf 37 Grad."
+        },
+        {
+          "title": "Einst eigenständige Bakterien",
+          "text": "Mitochondrien besitzen eigenes Erbgut, getrennt von dem im Zellkern, und vermehren sich durch Teilung. Nach heutigem Wissen stammen sie von Bakterien ab, die vor weit über einer Milliarde Jahren von einer größeren Zelle aufgenommen, aber nicht verdaut wurden. Aus der Zweckgemeinschaft wurde eine feste Einheit. Bei der Befruchtung steuert praktisch nur die Eizelle Mitochondrien bei, ihr Erbgut wird deshalb über die mütterliche Linie vererbt. Die Zellatmung ist im Ergebnis die Umkehrung der Fotosynthese: Dort entsteht mit Licht Zucker, hier wird er mit Sauerstoff wieder abgebaut."
+        }
+      ],
+      "tryIt": "Hauche gegen eine kalte Fensterscheibe: Im Beschlag steckt auch Wasser, das dein Stoffwechsel gerade erst gebildet hat – ein Endprodukt der Zellatmung.",
+      "takeaways": [
+        "Zellen bauen Nahrung mit Sauerstoff zu Kohlendioxid und Wasser ab.",
+        "Abgebautes Fett verlässt den Körper vor allem über die Atemluft."
+      ]
+    }
+  },
+  {
+    "id": "allergie-heuschnupfen",
+    "phenomenon": "Allergie",
+    "question": "Warum niest du bei Heuschnupfen wegen harmloser Pollen?",
+    "explanation": "Dein Immunsystem hält einen harmlosen Stoff für einen Feind. Beim ersten Kontakt bildet es Antikörper, die sich auf Mastzellen in den Schleimhäuten setzen. Kommen erneut Pollen, docken deren Eiweiße dort an, und die Mastzellen schütten Histamin aus. Es weitet Gefäße und reizt Nerven: Die Nase läuft, die Augen jucken.",
+    "detail": "Beim allerersten Kontakt passiert deshalb noch nichts. Eine Allergie zeigt sich frühestens beim zweiten Mal, wenn die Antikörper schon bereitstehen.",
+    "deep": {
+      "lead": "Eine Allergie ist ein Fehlalarm: Die Abwehr arbeitet tadellos, nur gegen das falsche Ziel.",
+      "sections": [
+        {
+          "title": "Wozu diese Abwehr eigentlich da ist",
+          "text": "Die beteiligten Antikörper gehören zur Klasse IgE. Vermutlich hat sich dieser Teil der Abwehr zum Schutz vor Würmern, anderen Parasiten und Giften entwickelt: Niesen, Tränen, Jucken und Durchfall sollen Eindringlinge rasch hinausbefördern. In Ländern mit hohem Hygienestandard haben Allergien stark zugenommen. Kinder, die auf Bauernhöfen mit Tieren aufwachsen, erkranken deutlich seltener. Der frühe Kontakt mit vielen Mikroben scheint das Immunsystem darin zu schulen, Harmloses zu dulden. Die Einzelheiten werden noch erforscht; auch Veranlagung und Luftschadstoffe spielen mit."
+        },
+        {
+          "title": "Was dagegen hilft",
+          "text": "Antihistaminika besetzen die Andockstellen des Histamins und dämpfen so die Beschwerden. Kortisonhaltige Nasensprays bremsen die Entzündung. An der Ursache setzt nur die Hyposensibilisierung an: Über Jahre erhält man den Auslöser in steigender Dosis, als Spritze oder Tablette, bis das Immunsystem gelassener reagiert. Gefährlich ist der anaphylaktische Schock, etwa nach Wespenstichen oder Erdnüssen bei stark Allergischen: Der Blutdruck sackt ab, die Atemwege schwellen zu. Dann hilft nur sofort Adrenalin, das Betroffene als Notfallspritze bei sich tragen."
+        }
+      ],
+      "tryIt": "Schau in einer Pollenflug-Vorhersage nach, welche Pflanzen in deiner Region gerade blühen, und vergleiche das mit Tagen, an denen deine Nase juckt.",
+      "takeaways": [
+        "Bei einer Allergie bekämpft die Abwehr einen harmlosen Stoff.",
+        "Histamin aus Mastzellen löst Niesen, Jucken und Schwellung aus."
+      ]
+    }
+  },
+  {
+    "id": "expansion-universum-urknall",
+    "phenomenon": "Expansion des Universums",
+    "question": "Woher wissen wir, dass sich das Universum ausdehnt?",
+    "explanation": "Das Licht ferner Galaxien ist zum Roten hin verschoben: Seine Wellen wurden unterwegs gedehnt. Je weiter eine Galaxie entfernt ist, desto stärker der Effekt. Daraus folgt, dass der Raum selbst wächst und alle Abstände zunehmen. Rechnet man zurück, war alles einst extrem dicht und heiß – vor rund 13,8 Milliarden Jahren.",
+    "detail": "Der Urknall war keine Explosion an einem Ort in einen leeren Raum hinein. Der Raum selbst dehnt sich aus, überall zugleich; einen Mittelpunkt gibt es nicht.",
+    "deep": {
+      "lead": "Zwei Beobachtungen tragen das Bild vom Urknall: die Flucht der Galaxien und ein schwaches Nachglühen aus allen Richtungen.",
+      "sections": [
+        {
+          "title": "Hubbles Messreihe",
+          "text": "In den 1920er-Jahren war umstritten, ob die Milchstraße das ganze Universum ist. Edwin Hubble bestimmte am damals größten Teleskop der Welt die Entfernung zum Andromedanebel und zeigte, dass er weit außerhalb liegt – eine eigene Galaxie. Kurz darauf verglich er Entfernungen und Rotverschiebungen vieler Galaxien und fand 1929 den Zusammenhang: doppelt so weit, doppelt so schnell. Der belgische Priester und Physiker Georges Lemaître hatte das zwei Jahre zuvor aus Einsteins Gleichungen abgeleitet. Einstein selbst hatte zunächst an ein unveränderliches Universum geglaubt."
+        },
+        {
+          "title": "Das Rauschen in der Antenne",
+          "text": "1964 testeten Arno Penzias und Robert Wilson in den USA eine empfindliche Funkantenne und wurden ein gleichmäßiges Rauschen nicht los. Es kam aus jeder Richtung, Tag und Nacht. Sie verdächtigten sogar Taubenkot in der Antenne. Tatsächlich hatten sie die kosmische Hintergrundstrahlung gefunden: Licht aus der Zeit rund 380.000 Jahre nach dem Urknall, als das Universum erstmals durchsichtig wurde. Die Ausdehnung hat es seither zu Mikrowellen gestreckt, die einer Temperatur von knapp drei Grad über dem absoluten Nullpunkt entsprechen. Theoretiker hatten ein solches Nachglühen vorhergesagt."
+        }
+      ],
+      "tryIt": "Male Punkte auf einen Luftballon und blase ihn auf: Jeder Punkt entfernt sich von jedem anderen, und keiner ist der Mittelpunkt. So dehnt sich der Raum.",
+      "takeaways": [
+        "Je ferner eine Galaxie, desto stärker ist ihr Licht ins Rote gedehnt.",
+        "Die Hintergrundstrahlung ist das Nachglühen des heißen Anfangs."
+      ]
+    }
+  },
+  {
+    "id": "fossilien-versteinerung",
+    "phenomenon": "Fossilien",
+    "question": "Wie wird aus einem toten Tier ein Stein?",
+    "explanation": "Fast nie. Meist fressen Aasfresser und Bakterien alles auf. Ein Fossil entsteht nur, wenn ein Körper rasch von Schlamm oder Sand bedeckt wird, der Sauerstoff abhält. Die Weichteile vergehen meist, Knochen und Schalen bleiben. Später dringt mineralhaltiges Wasser ein und ersetzt die Substanz nach und nach durch Stein.",
+    "detail": "Auch Fußspuren, Fraßgänge, Kot und Abdrücke von Blättern zählen als Fossilien. Sie verraten, wie die Lebewesen sich verhielten.",
+    "deep": {
+      "lead": "Fossilien sind die seltenen Glücksfälle der Erdgeschichte – von den allermeisten Lebewesen bleibt keine Spur.",
+      "sections": [
+        {
+          "title": "Muscheln auf dem Berggipfel",
+          "text": "In den Alpen und im Himalaya findet man in großer Höhe versteinerte Muscheln, Korallen und Ammoniten. Schon Leonardo da Vinci grübelte darüber und verwarf die Erklärung, eine Sintflut habe sie hinaufgespült. Die Lösung lieferte erst die Geologie: Das Gestein war einst Meeresboden. Als Kontinentalplatten zusammenstießen, wurden die Schichten gestaucht, gefaltet und Tausende Meter emporgehoben. Auch auf der Schwäbischen und der Fränkischen Alb liegen Fossilien eines Jurameeres direkt am Wegesrand. Jede Gesteinsschicht ist eine Seite im Archiv, die ältesten liegen normalerweise zuunterst."
+        },
+        {
+          "title": "Lücken und Glücksfunde",
+          "text": "Weichteile, Federn und Haut erhalten sich nur unter Ausnahmebedingungen: in feinstem Kalkschlamm wie beim Urvogel Archaeopteryx aus Solnhofen, im Ölschiefer der Grube Messel bei Darmstadt, in Bernstein oder im Dauerfrostboden. Tiere ohne harte Teile sind deshalb in der Überlieferung stark unterrepräsentiert. Das Alter bestimmt man meist nicht am Fossil selbst, sondern an vulkanischen Ascheschichten darüber und darunter, deren radioaktive Elemente wie eine Uhr zerfallen. Erbgut übersteht höchstens wenige Millionen Jahre. Dinosaurier aus DNA im Bernstein zu klonen bleibt deshalb Kino."
+        }
+      ],
+      "tryIt": "Schau dir polierte Kalksteinplatten auf Fensterbänken, Treppen oder in Bahnhofshallen genau an: Oft stecken angeschnittene Schnecken und Ammoniten darin.",
+      "takeaways": [
+        "Fossilien entstehen nur bei rascher Einbettung ohne Sauerstoff.",
+        "Meeresfossilien im Gebirge zeigen, dass der Fels einst Meeresboden war."
+      ]
+    }
+  },
+  {
+    "id": "roentgenbild-schatten",
+    "phenomenon": "Röntgenbild",
+    "question": "Warum sieht man auf einem Röntgenbild die Knochen, aber kaum die Haut?",
+    "explanation": "Röntgenstrahlen sind Licht mit sehr kurzer Wellenlänge und hoher Energie. Weiches Gewebe durchdringen sie fast ungehindert. Knochen enthalten viel Calcium, dessen schwerere Atome die Strahlung stärker verschlucken. Hinter dem Körper misst ein Detektor, wie viel ankommt: Wo Knochen im Weg waren, bleibt das Bild hell.",
+    "detail": "Ein Röntgenbild ist ein Schattenbild. Luft in der Lunge lässt fast alles durch und erscheint schwarz, Metall wie eine Zahnfüllung leuchtend weiß.",
+    "deep": {
+      "lead": "Röntgenstrahlen zeigen, wie dicht das Gewebe auf ihrem Weg war und woraus es bestand.",
+      "sections": [
+        {
+          "title": "Die Hand von Bertha Röntgen",
+          "text": "Im November 1895 experimentierte Wilhelm Conrad Röntgen in Würzburg mit einer abgedunkelten Entladungsröhre und bemerkte, dass ein Leuchtschirm im Raum trotzdem aufglomm. Eine unbekannte Strahlung musste durch die Abdeckung dringen; er nannte sie X-Strahlen. Wenige Wochen später durchleuchtete er die Hand seiner Frau: Knochen und Ring waren deutlich zu sehen. Die Nachricht ging um die Welt, schon im folgenden Jahr nutzten Ärzte das Verfahren. Röntgen verzichtete auf ein Patent. 1901 erhielt er den ersten Nobelpreis für Physik. Im Englischen heißen die Strahlen bis heute X-rays."
+        },
+        {
+          "title": "Dosis und der Schritt zum CT",
+          "text": "Röntgenstrahlen können Bindungen im Erbgut aufbrechen und so das Krebsrisiko erhöhen. Frühe Anwender erlitten schwere Schäden, bevor man das verstand. Heutige Geräte kommen mit sehr kleinen Dosen aus: Eine Aufnahme der Zähne oder des Brustkorbs entspricht der natürlichen Strahlung weniger Tage. Die Computertomografie dreht Röhre und Detektor um den Körper und errechnet aus Hunderten Schattenbildern Schicht für Schicht ein räumliches Bild. Das zeigt auch Weichteile gut, kostet aber eine deutlich höhere Dosis. Ultraschall und MRT kommen ganz ohne solche Strahlung aus."
+        }
+      ],
+      "tryIt": "Halte im Dunkeln eine helle Taschenlampe hinter deine Finger: Sie glühen rot, aber Knochen siehst du nicht – sichtbares Licht wird im Gewebe zu stark gestreut.",
+      "takeaways": [
+        "Knochen schwächen Röntgenstrahlen stärker als weiches Gewebe.",
+        "Ein CT setzt viele Schattenbilder zu Schichtbildern zusammen."
+      ]
+    }
+  },
+  {
+    "id": "schaltjahr-kalender",
+    "phenomenon": "Schaltjahr",
+    "question": "Warum hat der Februar alle vier Jahre einen Tag mehr?",
+    "explanation": "Die Erde braucht für einen Umlauf um die Sonne nicht genau 365 Tage, sondern knapp sechs Stunden länger. Ohne Ausgleich bliebe der Kalender jedes Jahr um einen Vierteltag zurück, nach hundert Jahren um gut drei Wochen. Der zusätzliche Tag alle vier Jahre holt das auf – fast genau.",
+    "detail": "Weil der Umlauf etwas kürzer ist als 365,25 Tage, fällt der Schalttag in vollen Jahrhunderten aus – außer sie sind durch 400 teilbar. 1900 hatte keinen, 2000 schon.",
+    "deep": {
+      "lead": "Der Kalender muss eine Zahl mit Nachkommastellen in ganze Tage pressen – das geht nur mit Sonderregeln.",
+      "sections": [
+        {
+          "title": "Zehn Tage, die es nie gab",
+          "text": "Julius Cäsar führte 46 vor Christus den Schalttag alle vier Jahre ein. Sein Jahr war damit im Schnitt gut elf Minuten zu lang. Das summierte sich: Bis zum 16. Jahrhundert hatte sich der Frühlingsanfang im Kalender um zehn Tage verschoben, und die Berechnung des Osterdatums geriet durcheinander. Papst Gregor XIII. ließ deshalb 1582 zehn Tage streichen: Auf Donnerstag, den 4. Oktober, folgte Freitag, der 15. Oktober. Zugleich kam die Jahrhundertregel. Viele Länder zogen erst später nach, Großbritannien 1752, Russland sogar erst 1918."
+        },
+        {
+          "title": "Warum ausgerechnet der Februar",
+          "text": "Im frühen römischen Kalender begann das Jahr im März; der Februar war der letzte Monat, und dort hängte man an, was fehlte. Daher tragen September bis Dezember noch die lateinischen Zahlen sieben bis zehn im Namen, obwohl sie heute die Monate neun bis zwölf sind. Der gregorianische Kalender weicht nur noch um rund einen Tag in etwa 3.000 Jahren vom Sonnenjahr ab. Daneben gibt es Schaltsekunden: Weil die Erddrehung leicht unregelmäßig ist, wurde die Weltzeit gelegentlich um eine Sekunde verlängert. Diese Praxis soll künftig entfallen."
+        }
+      ],
+      "tryIt": "Prüfe die Regel an 2024, 2100 und 2400: durch vier teilbar? Volles Jahrhundert? Durch 400 teilbar? Eines der drei Jahre hat keinen 29. Februar.",
+      "takeaways": [
+        "Ein Sonnenjahr dauert rund 365 Tage und knapp sechs Stunden.",
+        "Volle Jahrhunderte sind nur Schaltjahre, wenn sie durch 400 teilbar sind."
+      ]
+    }
+  },
+  {
+    "id": "fliehkraft-traegheit",
+    "phenomenon": "Trägheit in der Kurve",
+    "question": "Welche Kraft drückt dich im Auto in der Kurve nach außen?",
+    "explanation": "Keine. Dein Körper will sich wegen seiner Trägheit geradeaus weiterbewegen. Das Auto biegt ab, weil die Reifen es zur Kurvenmitte zwingen. Sitz und Tür müssen dich mitnehmen und drücken dich nach innen. Du empfindest das als Schub nach außen – die sogenannte Fliehkraft.",
+    "detail": "Von außen betrachtet gibt es nur die Kraft zur Kurvenmitte, die Zentripetalkraft. Die Fliehkraft ist eine Scheinkraft, die nur der Mitfahrende im drehenden System spürt.",
+    "deep": {
+      "lead": "Ohne Kraft bewegt sich jeder Körper geradeaus weiter – eine Kurve muss man ihm ständig aufzwingen.",
+      "sections": [
+        {
+          "title": "Newtons unbequeme Einsicht",
+          "text": "Im Alltag kommt alles irgendwann zum Stehen, deshalb hielt man Ruhe lange für den natürlichen Zustand. Galilei und Newton erkannten im 17. Jahrhundert: Nur die Reibung bremst. Ein Körper, auf den keine Kraft wirkt, behält Tempo und Richtung für immer bei. Eine Kurve ist eine ständige Richtungsänderung und braucht ständig eine Kraft zur Mitte. Beim Auto liefert sie die Haftung der Reifen, beim Mond die Schwerkraft der Erde, beim Hammerwerfer das Seil. Lässt er los, fliegt der Hammer geradeaus davon, nicht im Bogen."
+        },
+        {
+          "title": "Was das beim Fahren bedeutet",
+          "text": "Die nötige Kraft zur Kurvenmitte wächst mit dem Quadrat der Geschwindigkeit. Doppeltes Tempo verlangt also die vierfache Haftung. Auf nasser oder vereister Straße können die Reifen viel weniger Kraft übertragen, das Auto rutscht dann geradeaus aus der Kurve. Bahngleise und Radrennbahnen sind deshalb nach innen geneigt, so hilft ein Teil des Gewichts beim Lenken. Die Wäscheschleuder nutzt denselben Effekt: Die Trommel zwingt die Wäsche auf die Kreisbahn, das Wasser findet Löcher und fliegt geradeaus hinaus."
+        }
+      ],
+      "tryIt": "Halte als Beifahrer eine halb volle Wasserflasche aufrecht und beobachte in einer Kurve den Wasserspiegel: Er neigt sich, weil das Wasser geradeaus weiterwill.",
+      "takeaways": [
+        "Die Fliehkraft ist nur gefühlt; wirklich wirkt eine Kraft zur Kurvenmitte.",
+        "Doppeltes Tempo braucht in derselben Kurve vierfache Haftung."
+      ]
+    }
+  },
+  {
+    "id": "kerzenflamme-wachsdampf",
+    "phenomenon": "Kerzenflamme",
+    "question": "Was brennt bei einer Kerze eigentlich – der Docht oder das Wachs?",
+    "explanation": "Es brennt Wachsdampf. Die Flamme schmilzt das Wachs, der Docht saugt es flüssig nach oben, dort verdampft es in der Hitze. Erst dieses Gas reagiert mit dem Sauerstoff der Luft. Dabei entstehen Kohlendioxid, Wasserdampf und Wärme, die neues Wachs schmilzt. Der Kreislauf hält sich selbst in Gang.",
+    "detail": "Das gelbe Leuchten stammt von winzigen glühenden Rußteilchen in der Flamme. Der blaue Saum unten ist heißer, dort verbrennt das Gas vollständig.",
+    "deep": {
+      "lead": "Eine Flamme ist kein Stoff, sondern eine Zone, in der eine chemische Reaktion Gas zum Leuchten bringt.",
+      "sections": [
+        {
+          "title": "Drei Dinge braucht jedes Feuer",
+          "text": "Brennstoff, Sauerstoff und genügend Hitze müssen zusammenkommen, sonst erlischt die Flamme. Jedes Löschmittel greift eine dieser Bedingungen an. Wasser kühlt unter die Zündtemperatur. Löschdecke, Schaum und Kohlendioxid halten den Sauerstoff fern. Eine Brandschneise im Wald nimmt den Brennstoff weg. Brennendes Fett in der Pfanne darf man nie mit Wasser löschen: Das Wasser sinkt unter das heiße Fett, verdampft schlagartig und schleudert brennende Tröpfchen durch die Küche. Deckel drauf und Herd aus ist die richtige Antwort."
+        },
+        {
+          "title": "Warum die Flamme nach oben zeigt",
+          "text": "Die heißen Verbrennungsgase sind leichter als die umgebende Luft und steigen auf. Von unten strömt frische Luft nach und bringt Sauerstoff. Diese Strömung zieht die Flamme zur Tropfenform. In der Schwerelosigkeit einer Raumstation gibt es kein Aufsteigen: Dort brennt eine Kerze als kleine, bläuliche Kugel und erstickt leicht an ihren eigenen Abgasen. Der Physiker Michael Faraday widmete der Kerze im 19. Jahrhundert eine berühmte Reihe von Weihnachtsvorlesungen für Jugendliche und erklärte an ihr große Teile der Chemie seiner Zeit."
+        }
+      ],
+      "tryIt": "Puste eine Kerze aus und halte sofort ein brennendes Streichholz in den aufsteigenden weißen Faden: Die Flamme springt durch den Wachsdampf zum Docht zurück.",
+      "takeaways": [
+        "Bei der Kerze brennt verdampftes Wachs, nicht der Docht.",
+        "Feuer braucht Brennstoff, Sauerstoff und Hitze zugleich."
+      ]
+    }
+  },
+  {
+    "id": "bienentanz",
+    "phenomenon": "Schwänzeltanz der Bienen",
+    "question": "Wie erklärt eine Biene ihren Schwestern den Weg zu einer Blumenwiese?",
+    "explanation": "Sie tanzt auf der Wabe eine Acht. Auf dem geraden Mittelstück wackelt sie mit dem Hinterleib. Die Richtung dieser Strecke im Verhältnis zur Senkrechten gibt den Winkel zwischen Sonne und Futterquelle an: Senkrecht nach oben heißt »Richtung Sonne«. Je länger das Schwänzeln dauert, desto weiter ist das Ziel entfernt.",
+    "detail": "Im dunklen Stock sehen die anderen den Tanz nicht. Sie laufen dicht hinterher und spüren die Vibrationen; den Blütenduft am Körper der Tänzerin nehmen sie gleich mit.",
+    "deep": {
+      "lead": "Honigbienen haben eine der wenigen bekannten Tiersprachen, die Richtung und Entfernung in Zeichen übersetzt.",
+      "sections": [
+        {
+          "title": "Karl von Frisch und die Glasscheibe",
+          "text": "Der österreichische Zoologe Karl von Frisch baute Bienenstöcke mit Glaswand und markierte einzelne Bienen mit Farbtupfern. Er stellte Schälchen mit Zuckerwasser in verschiedenen Richtungen und Entfernungen auf und protokollierte über Jahre, wie die Rückkehrerinnen tanzten. Verschob er die Futterstelle, änderte sich der Tanz genau passend. Viele Kollegen hielten eine Zeichensprache bei Insekten zunächst für unmöglich. 1973 erhielt er dafür den Nobelpreis. Später bestätigten Versuche mit Radarverfolgung, dass neu angeworbene Bienen tatsächlich in die getanzte Richtung losfliegen."
+        },
+        {
+          "title": "Kompass mit Zeitausgleich",
+          "text": "Die Sonne wandert im Lauf des Tages. Eine Biene, die lange tanzt, dreht ihre Tanzrichtung allmählich mit, sie rechnet die Bewegung der Sonne ein. Ist der Himmel bedeckt, hilft ihr das Polarisationsmuster des Himmelslichts, das ihre Augen wahrnehmen; ein Stück blauer Himmel genügt. Für nahe Futterquellen gibt es den einfacheren Rundtanz ohne klare Richtungsangabe. Auch bei der Wohnungssuche wird getanzt: Kundschafterinnen werben für Nistplätze, und der Schwarm zieht erst um, wenn genügend Bienen für denselben Ort tanzen."
+        }
+      ],
+      "tryIt": "Beobachte an einem blühenden Strauch, ob eine Biene bei einer Blütenart bleibt. Meist tut sie das – diese Blütentreue macht sie zu einem so guten Bestäuber.",
+      "takeaways": [
+        "Der Winkel zur Senkrechten steht für den Winkel zur Sonne.",
+        "Die Dauer des Schwänzelns verrät die Entfernung."
+      ]
+    }
+  },
+  {
+    "id": "schmerzmittel-prostaglandine",
+    "phenomenon": "Schmerzmittel",
+    "question": "Woher weiß eine Kopfschmerztablette, wo es wehtut?",
+    "explanation": "Sie weiß es nicht. Der Wirkstoff verteilt sich mit dem Blut im ganzen Körper. Mittel wie Ibuprofen oder ASS hemmen ein Enzym, das in gereiztem Gewebe Prostaglandine herstellt. Diese Botenstoffe machen Schmerzfühler empfindlicher. Fehlen sie, melden die Nerven weniger. Spürbar ist das nur dort, wo vorher etwas wehtat.",
+    "detail": "Dasselbe Enzym schützt auch die Magenschleimhaut. Darum können diese Mittel bei häufiger Einnahme auf den Magen schlagen.",
+    "deep": {
+      "lead": "Schmerzmittel dieser Gruppe schalten nicht den Schmerz ab, sondern den Verstärker, der ihn laut dreht.",
+      "sections": [
+        {
+          "title": "Von der Weidenrinde zur Tablette",
+          "text": "Schon in der Antike nutzte man Weidenrinde gegen Fieber und Schmerzen. Im 19. Jahrhundert gewannen Chemiker daraus die Salicylsäure, die aber den Magen stark reizte. 1897 gelang es bei Bayer, eine besser verträgliche Abwandlung in reiner Form herzustellen, die Acetylsalicylsäure; zwei Jahre später kam sie als Aspirin auf den Markt. Wie sie wirkt, blieb jahrzehntelang unbekannt. Erst 1971 zeigte der britische Pharmakologe John Vane, dass sie die Bildung der Prostaglandine blockiert. Dafür erhielt er 1982 den Nobelpreis."
+        },
+        {
+          "title": "Nicht alle wirken gleich",
+          "text": "Ibuprofen, Diclofenac und ASS hemmen zusätzlich Entzündungen. ASS verhindert außerdem, dass Blutplättchen verklumpen, weshalb es in niedriger Dosis nach Herzinfarkten verordnet wird. Paracetamol lindert Schmerz und Fieber, wirkt aber kaum gegen Entzündungen; sein Wirkweg ist bis heute nicht vollständig geklärt, und eine Überdosis kann die Leber schwer schädigen. Opioide wie Morphin greifen ganz anders an: Sie besetzen in Rückenmark und Gehirn die Andockstellen körpereigener Schmerzhemmer. Wer sehr oft Schmerzmittel nimmt, kann gerade dadurch Dauerkopfschmerz bekommen."
+        }
+      ],
+      "tryIt": "Lies die Wirkstoffe in deiner Hausapotheke: Viele Erkältungspräparate enthalten bereits Paracetamol oder Ibuprofen – wichtig, um nichts doppelt zu nehmen.",
+      "takeaways": [
+        "Der Wirkstoff ist überall, wirkt aber nur, wo Schmerzbotenstoffe entstehen.",
+        "ASS und Ibuprofen hemmen die Bildung von Prostaglandinen."
+      ]
+    }
+  },
+  {
+    "id": "elemente-aus-sternen",
+    "phenomenon": "Entstehung der Elemente",
+    "question": "Woher stammen die Atome, aus denen du bestehst?",
+    "explanation": "Nach dem Urknall gab es fast nur Wasserstoff und Helium. Alle schwereren Elemente entstanden später in Sternen: Dort verschmelzen leichte Atomkerne zu schwereren, bis hin zu Kohlenstoff, Sauerstoff und Eisen. Sterbende Sterne schleudern das Material ins All. Aus solchen Wolken entstanden Sonne und Erde – und du.",
+    "detail": "Der Wasserstoff im Wasser deines Körpers ist fast so alt wie das Universum. Kohlenstoff, Sauerstoff und Calcium wurden erst in Sternen gebildet.",
+    "deep": {
+      "lead": "Jedes Atom Eisen in deinem Blut und jedes Atom Calcium in deinen Knochen hat einmal in einem Stern gesteckt.",
+      "sections": [
+        {
+          "title": "Bis Eisen und nicht weiter",
+          "text": "Massereiche Sterne zünden nach dem Wasserstoff weitere Brennstufen: Aus Helium werden Kohlenstoff und Sauerstoff, später Neon, Silizium und schließlich Eisen. Bei jeder Stufe wird Energie frei – bis zum Eisen. Noch schwerere Kerne zu bauen kostet Energie, statt welche zu liefern. Der Kern eines schweren Sterns hat dann keinen Brennstoff mehr, stürzt in Sekundenbruchteilen zusammen, und die äußeren Schichten werden in einer Supernova weggesprengt. Für kurze Zeit kann ein einzelner Stern so hell leuchten wie eine ganze Galaxie."
+        },
+        {
+          "title": "Woher das Gold kommt",
+          "text": "Elemente schwerer als Eisen entstehen, wenn Atomkerne Neutronen einfangen. Das geschieht langsam in alternden Riesensternen und sehr schnell bei extremen Ereignissen. 2017 registrierten Detektoren erstmals Gravitationswellen von zwei verschmelzenden Neutronensternen, und Teleskope sahen im Nachleuchten die Spuren frisch gebildeter schwerer Elemente. Seither gilt als gut belegt, dass ein großer Teil des Goldes und Platins aus solchen Kollisionen stammt. Dass Sterne die Fabriken der Elemente sind, hatten Physiker um Fred Hoyle schon in den 1950er-Jahren ausgearbeitet."
+        }
+      ],
+      "tryIt": "Lies das Etikett eines Mineralwassers: Calcium, Magnesium, Natrium. Jedes dieser Elemente entstand in einem Stern, der längst erloschen ist.",
+      "takeaways": [
+        "Der Urknall lieferte Wasserstoff und Helium, Sterne den Rest.",
+        "Sternexplosionen verteilen die Elemente für neue Sterne und Planeten."
+      ]
+    }
+  },
+  {
+    "id": "erdmagnetfeld-kompass",
+    "phenomenon": "Erdmagnetfeld",
+    "question": "Warum zeigt eine Kompassnadel nach Norden?",
+    "explanation": "Die Erde ist selbst ein riesiger Magnet. Tief im Inneren umströmt flüssiges, elektrisch leitendes Eisen den festen Kern. Diese Bewegung erzeugt wie in einem Dynamo elektrische Ströme und damit ein Magnetfeld, das weit ins All reicht. Die Kompassnadel, selbst ein kleiner Magnet, richtet sich danach aus.",
+    "detail": "Der magnetische Pol liegt nicht am geografischen Nordpol und wandert jedes Jahr viele Kilometer. Navigationskarten müssen deshalb regelmäßig berichtigt werden.",
+    "deep": {
+      "lead": "Unter unseren Füßen arbeitet ein Dynamo aus flüssigem Metall – und er läuft nicht gleichmäßig.",
+      "sections": [
+        {
+          "title": "Ein Pol, der wandert und kippt",
+          "text": "Der magnetische Nordpol lag im 19. Jahrhundert in der kanadischen Arktis und hat sich seither über das Polarmeer in Richtung Sibirien verschoben. Zwischen der Richtung der Kompassnadel und dem wahren Norden liegt deshalb je nach Ort ein Winkel, die Missweisung. In erstarrter Lava ist die Feldrichtung zur Zeit der Abkühlung gespeichert. Daran fanden Geologen heraus, dass sich das Feld in der Erdgeschichte viele Male komplett umgepolt hat, zuletzt vor rund 780.000 Jahren. Streifen wechselnder Magnetisierung am Meeresboden wurden zu einem Hauptbeleg für die Plattentektonik."
+        },
+        {
+          "title": "Schutzschild und Wegweiser",
+          "text": "Das Magnetfeld lenkt den Strom geladener Teilchen von der Sonne größtenteils um die Erde herum und schützt so die Lufthülle. Der Mars, dessen Dynamo vor Milliarden Jahren erlosch, hat seine einst dichtere Atmosphäre weitgehend verloren. Viele Tiere nutzen das Feld zur Orientierung: Zugvögel, Meeresschildkröten und Lachse finden damit über Tausende Kilometer ihren Weg. Wie ihr Magnetsinn im Einzelnen funktioniert, wird noch erforscht. Der Kompass selbst stammt aus China; in Europa ist er seit dem späten 12. Jahrhundert in der Seefahrt belegt."
+        }
+      ],
+      "tryIt": "Öffne die Kompass-App deines Handys und halte es neben einen Lautsprecher oder Kühlschrankmagneten: Die Anzeige schlägt aus, weil der Sensor jedes Magnetfeld misst.",
+      "takeaways": [
+        "Strömendes flüssiges Eisen im Erdinneren erzeugt das Magnetfeld.",
+        "Die Magnetpole wandern und haben sich schon oft umgekehrt."
+      ]
+    }
+  },
+  {
+    "id": "kernspaltung-kettenreaktion",
+    "phenomenon": "Kernspaltung",
+    "question": "Woher kommt die Energie in einem Kernkraftwerk?",
+    "explanation": "Trifft ein Neutron den Kern eines Uran-235-Atoms, zerplatzt dieser in zwei mittelschwere Kerne und setzt zwei bis drei neue Neutronen frei. Die Bruchstücke fliegen auseinander und erhitzen den Brennstoff. Die neuen Neutronen spalten weitere Kerne – eine Kettenreaktion. Die Hitze erzeugt Dampf für die Turbine.",
+    "detail": "Die Bruchstücke wiegen zusammen etwas weniger als der ursprüngliche Kern. Diese fehlende Masse ist nach Einsteins Formel zu Energie geworden.",
+    "deep": {
+      "lead": "Ein Kilogramm Uran-235 liefert bei vollständiger Spaltung so viel Wärme wie weit über 2.000 Tonnen Steinkohle.",
+      "sections": [
+        {
+          "title": "Die Kettenreaktion zähmen",
+          "text": "Im Reaktor soll von den Neutronen jeder Spaltung im Mittel genau eines eine weitere Spaltung auslösen. Sind es mehr, steigt die Leistung, sind es weniger, erlischt die Reaktion. Steuerstäbe aus Material, das Neutronen schluckt, werden dazu mehr oder weniger tief zwischen die Brennstäbe geschoben. Das Wasser im Reaktor kühlt nicht nur, es bremst auch die Neutronen ab; nur langsame spalten Uran-235 wirksam. Natururan enthält davon lediglich 0,7 Prozent und wird für Reaktoren auf wenige Prozent angereichert. Für eine Bombe wäre ein weit höherer Anteil nötig."
+        },
+        {
+          "title": "Entdeckung und Erbe",
+          "text": "Ende 1938 fanden Otto Hahn und Fritz Straßmann in Berlin nach dem Beschuss von Uran mit Neutronen das viel leichtere Element Barium. Die Physikerin Lise Meitner, vor den Nationalsozialisten nach Schweden geflohen, deutete das mit ihrem Neffen Otto Frisch richtig: Der Kern war zerplatzt. Das Problem der Technik sind die Spaltprodukte. Sie sind stark radioaktiv und erzeugen auch nach dem Abschalten weiter Wärme, weshalb Brennstäbe jahrelang gekühlt werden müssen. Ein Teil des Abfalls strahlt über Hunderttausende Jahre. Im Betrieb setzen Kernkraftwerke dagegen kaum Kohlendioxid frei."
+        }
+      ],
+      "tryIt": "Stelle Dominosteine so auf, dass jeder fallende Stein zwei weitere umwirft: So wächst eine ungebremste Kettenreaktion. Im Reaktor darf es im Schnitt nur einer sein.",
+      "takeaways": [
+        "Ein Neutron spaltet einen Urankern, dabei werden neue Neutronen frei.",
+        "Steuerstäbe halten die Kettenreaktion im Gleichgewicht."
+      ]
+    }
+  },
+  {
+    "id": "vergessenskurve-wiederholung",
+    "phenomenon": "Vergessenskurve",
+    "question": "Warum hast du Vokabeln nach einer Woche schon wieder vergessen?",
+    "explanation": "Neu Gelerntes verblasst anfangs sehr schnell und dann immer langsamer. Schon nach einem Tag ist ohne Wiederholung ein großer Teil nicht mehr abrufbar. Jede Wiederholung zum richtigen Zeitpunkt macht die Spur haltbarer, die Kurve fällt danach flacher ab. Mit wachsenden Abständen wiederholt, bleibt Wissen lange erhalten.",
+    "detail": "Am wirksamsten ist die Wiederholung kurz bevor du etwas vergessen hättest. Das Hervorholen fällt dann schwer – und genau diese Anstrengung festigt.",
+    "deep": {
+      "lead": "Vergessen folgt einer berechenbaren Kurve – und wer sie kennt, kann gegen sie arbeiten.",
+      "sections": [
+        {
+          "title": "Ebbinghaus und die sinnlosen Silben",
+          "text": "Der deutsche Psychologe Hermann Ebbinghaus machte sich in den 1880er-Jahren selbst zur Versuchsperson. Damit Vorwissen nicht störte, lernte er Listen sinnloser Silben auswendig und maß nach Minuten, Stunden und Tagen, wie viel Zeit er zum erneuten Lernen brauchte. Das Ergebnis war die erste Vergessenskurve: steiler Abfall am Anfang, dann ein langes Auslaufen. Sinnvoller Stoff, der sich mit Bekanntem verknüpfen lässt, hält deutlich besser als seine Silben. Die Grundform der Kurve wurde aber seither viele Male bestätigt."
+        },
+        {
+          "title": "Abrufen schlägt Wiederlesen",
+          "text": "Zwei Befunde der Lernforschung gelten als besonders gut gesichert. Erstens: Verteiltes Lernen ist wirksamer als geballtes. Viermal eine Viertelstunde über zwei Wochen bringt mehr als eine Stunde am Stück. Zweitens: Sich selbst abzufragen festigt stärker als nochmaliges Durchlesen. Beim Wiederlesen wirkt der Stoff vertraut, und man hält Vertrautheit für Können. Karteikästen und Lern-Apps mit Abstandswiederholung verbinden beides: Was du wusstest, kommt später wieder, was du nicht wusstest, bald. Nächtliches Pauken hilft für den nächsten Morgen – und ist nach einer Woche weitgehend verloren."
+        }
+      ],
+      "tryIt": "Lerne heute fünf neue Wörter oder Fakten. Frage dich morgen, in drei Tagen und in einer Woche ab, ohne nachzusehen – erst danach prüfst du die Lösung.",
+      "takeaways": [
+        "Ohne Wiederholung geht das meiste in den ersten Tagen verloren.",
+        "Verteilt wiederholen und sich abfragen wirkt am besten."
+      ]
+    }
+  },
+  {
+    "id": "thermoskanne-waermetransport",
+    "phenomenon": "Thermoskanne",
+    "question": "Woher weiß eine Thermoskanne, ob sie warm oder kalt halten soll?",
+    "explanation": "Sie weiß es nicht – sie bremst einfach jeden Wärmetransport. Wärme wandert auf drei Wegen: durch Leitung im Material, mit strömender Luft oder Flüssigkeit und als Strahlung. Die Kanne hat eine doppelte Wand mit Vakuum dazwischen, das Leitung und Strömung stoppt. Eine Verspiegelung wirft die Strahlung zurück.",
+    "detail": "Erfunden hat das Gefäß der schottische Chemiker James Dewar um 1892, um tiefkalte verflüssigte Gase aufzubewahren. An Kaffee dachte er dabei nicht.",
+    "deep": {
+      "lead": "Wärme fließt von selbst immer vom Warmen zum Kalten – Isolieren heißt, ihr alle drei Wege zu versperren.",
+      "sections": [
+        {
+          "title": "Drei Wege, drei Sperren",
+          "text": "Leitung: In festen Stoffen geben Teilchen ihre Bewegung an die Nachbarn weiter, Metalle besonders gut. Deshalb wird ein Metalllöffel in der Suppe schnell heiß. Strömung: Erwärmte Luft oder Flüssigkeit steigt auf und trägt die Wärme mit, so heizt ein Heizkörper das Zimmer. Strahlung: Jeder warme Körper sendet Infrarotlicht aus, das auch den leeren Raum durchquert – so erreicht uns die Sonnenwärme. Im Vakuum der Kanne gibt es keine Teilchen, also weder Leitung noch Strömung. Die Schwachstelle bleibt der Verschluss, über ihn geht die meiste Wärme verloren."
+        },
+        {
+          "title": "Dasselbe Prinzip an Haus und Körper",
+          "text": "Daunenjacke, Doppelfenster und Dämmwolle arbeiten mit eingeschlossener, ruhender Luft, einem schlechten Wärmeleiter. Entscheidend ist, dass die Luft in kleinen Kammern festsitzt und nicht strömen kann. Eine nasse Jacke wärmt kaum noch, weil Wasser Wärme gut zwanzigmal besser leitet als Luft. Rettungsdecken aus glänzender Folie zielen auf den dritten Weg und werfen die Körperstrahlung zurück. Moderne Fensterscheiben kombinieren alles: Edelgas im Zwischenraum und eine unsichtbar dünne Metallschicht, die Wärmestrahlung ins Zimmer zurückschickt."
+        }
+      ],
+      "tryIt": "Fülle zwei gleiche Tassen mit heißem Wasser, decke nur eine mit einer Untertasse ab und fühle nach zehn Minuten: Der Deckel bremst Strömung und Verdunstung.",
+      "takeaways": [
+        "Wärme wandert durch Leitung, Strömung und Strahlung.",
+        "Vakuum stoppt die ersten beiden Wege, ein Spiegel den dritten."
+      ]
+    }
+  },
+  {
+    "id": "ph-wert-saeure-base",
+    "phenomenon": "pH-Wert",
+    "question": "Was misst der pH-Wert, und warum ist Zitronensaft sauer?",
+    "explanation": "Der pH-Wert gibt an, wie viele Wasserstoff-Ionen in einer wässrigen Lösung schwimmen. Säuren geben solche Ionen ab, Basen fangen sie ein. Die Skala reicht meist von 0 bis 14: Unter 7 ist sauer, 7 neutral, darüber basisch. Zitronensaft liegt bei etwa 2, Seifenlauge um 10. Die Zunge meldet viele dieser Ionen als sauer.",
+    "detail": "Die Skala ist logarithmisch: Ein um eins niedrigerer pH-Wert bedeutet zehnmal so viele Wasserstoff-Ionen. pH 4 ist also hundertmal saurer als pH 6.",
+    "deep": {
+      "lead": "Sauer und basisch sind zwei Enden derselben Skala – und dein Körper hält seinen Wert erstaunlich genau.",
+      "sections": [
+        {
+          "title": "Der Körper als Puffer",
+          "text": "Im Magen herrscht durch Salzsäure ein pH-Wert zwischen 1 und 2, das tötet Keime und hilft beim Zerlegen von Eiweiß. Das Blut dagegen liegt eng bei 7,4. Schon Abweichungen um wenige Zehntel sind lebensgefährlich. Puffersysteme aus Kohlensäure und Hydrogencarbonat fangen überschüssige Säure oder Base ab, Lunge und Nieren regeln nach. Deshalb lässt sich das Blut eines gesunden Menschen durch Ernährung nicht »übersäuern«, wie manche Ratgeber behaupten. Die Haut ist leicht sauer, um pH 5,5, was vielen Bakterien das Leben schwer macht."
+        },
+        {
+          "title": "Neutralisieren im Alltag",
+          "text": "Treffen Säure und Base aufeinander, heben sie sich auf und bilden Wasser und ein Salz. Mittel gegen Sodbrennen enthalten schwache Basen, die Magensäure binden. Essig oder Zitronensäure lösen Kalk, weil Kalk mit Säuren reagiert und dabei zerfällt. Gärtner streuen Kalk auf saure Böden. Gefährlich wird es beim Putzen: Chlorhaltige Reiniger setzen zusammen mit sauren Mitteln wie Essigreiniger giftiges Chlorgas frei. Solche Mittel darf man nie mischen. Starke Basen wie Rohrreiniger verätzen die Haut ebenso schlimm wie starke Säuren."
+        }
+      ],
+      "tryIt": "Koche ein paar Blätter Rotkohl aus und verteile den violetten Saft auf drei Gläser. Gib in eins Essig, in ein anderes Natron: Der Saft wird rot und grünblau.",
+      "takeaways": [
+        "Der pH-Wert misst die Menge an Wasserstoff-Ionen; unter 7 ist sauer.",
+        "Jede Stufe auf der Skala bedeutet den Faktor zehn."
+      ]
+    }
+  },
+  {
+    "id": "echoortung-fledermaus",
+    "phenomenon": "Echoortung",
+    "question": "Wie jagt eine Fledermaus in völliger Dunkelheit Insekten?",
+    "explanation": "Sie stößt in schneller Folge sehr hohe Rufe aus, die wir nicht hören. Trifft der Schall auf ein Hindernis oder ein Insekt, kommt ein Echo zurück. Aus der Laufzeit ermittelt ihr Gehirn die Entfernung, aus dem Unterschied zwischen beiden Ohren die Richtung, aus der Veränderung des Echos Größe und Bewegung der Beute.",
+    "detail": "Kurz vor dem Zugriff steigert die Fledermaus ihre Ruffolge auf bis zu 200 Rufe pro Sekunde. Forscher nennen dieses Schnarren »feeding buzz«.",
+    "deep": {
+      "lead": "Fledermäuse und Zahnwale »sehen« mit den Ohren – und die Technik hat sich das Prinzip abgeschaut.",
+      "sections": [
+        {
+          "title": "Spallanzanis Rätsel",
+          "text": "Der italienische Naturforscher Lazzaro Spallanzani bemerkte Ende des 18. Jahrhunderts, dass geblendete Fledermäuse weiterhin sicher flogen, solche mit verstopften Ohren aber gegen Hindernisse stießen. Niemand konnte das erklären, denn die Tiere schienen stumm. Erst 1938 machte der amerikanische Student Donald Griffin die Rufe mit einem Ultraschalldetektor nachweisbar. Sie sind sehr laut, liegen aber über unserer Hörgrenze. Damit die Fledermaus sich nicht selbst betäubt, spannt sie während jedes Rufs winzige Muskeln im Mittelohr an und entspannt sie rechtzeitig für das Echo."
+        },
+        {
+          "title": "Wettrüsten in der Nacht",
+          "text": "Manche Nachtfalter haben Ohren entwickelt, die genau auf Fledermausfrequenzen ansprechen. Hören sie einen Jäger, lassen sie sich fallen oder fliegen Haken. Einige Bärenspinner senden sogar eigene Klicklaute aus, die das Echo stören oder vor ihrem schlechten Geschmack warnen. Delfine und Pottwale orten unter Wasser nach demselben Prinzip. Der Mensch nutzt es im Sonar von Schiffen, im Echolot, bei der Ultraschalluntersuchung und in den Einparksensoren am Auto. Einige blinde Menschen orientieren sich mit Zungenklicks und hören an den Echos Wände und Pfosten."
+        }
+      ],
+      "tryIt": "Geh mit geschlossenen Augen langsam und laut summend auf eine Wand zu: Kurz davor klingt deine Stimme anders. Das ist Echoortung in ihrer einfachsten Form.",
+      "takeaways": [
+        "Aus der Laufzeit des Echos ergibt sich die Entfernung.",
+        "Sonar, Echolot und Einparkhilfe nutzen dasselbe Prinzip."
+      ]
+    }
+  },
+  {
+    "id": "sonnenbrand-uv",
+    "phenomenon": "Sonnenbrand",
+    "question": "Was passiert in deiner Haut bei einem Sonnenbrand?",
+    "explanation": "Sonnenbrand ist keine Hitzeverbrennung. Ultraviolette Strahlung dringt in Hautzellen ein und beschädigt ihr Erbgut. Stark getroffene Zellen sterben gezielt ab, damit sie nicht entarten. Zugleich lösen Botenstoffe eine Entzündung aus: Gefäße weiten sich, die Haut wird rot, heiß und schmerzt – oft erst Stunden später.",
+    "detail": "UV-Strahlung spürst du nicht, die Wärme der Sonne stammt vom Infrarot. Deshalb verbrennt man an kühlen, windigen Tagen und im Schnee besonders leicht.",
+    "deep": {
+      "lead": "Die Röte zeigt eine Reparaturaktion an – und Bräune ist ein Schutzschild, kein Zeichen von Gesundheit.",
+      "sections": [
+        {
+          "title": "Melanin als Sonnenschirm",
+          "text": "Als Antwort auf UV-Strahlung bilden Pigmentzellen den dunklen Farbstoff Melanin und reichen ihn an die umliegenden Hautzellen weiter. Dort legt er sich wie eine Kappe über den Zellkern und fängt Strahlung ab, bevor sie das Erbgut trifft. Das dauert Tage, deshalb kommt die Bräune erst nach dem Sonnenbrand. Sie entspricht nur einem niedrigen Lichtschutzfaktor. In sonnenreichen Regionen haben Menschen über viele Generationen dauerhaft dunklere Haut entwickelt. Helle Haut hat im Norden einen anderen Vorteil: Sie bildet bei schwacher Sonne leichter Vitamin D."
+        },
+        {
+          "title": "Das Gedächtnis der Haut",
+          "text": "Die meisten UV-Schäden am Erbgut bessern Reparaturenzyme aus. Einzelne Fehler bleiben und summieren sich über das Leben. Jeder Sonnenbrand, besonders in der Kindheit, erhöht das Risiko für Hautkrebs Jahrzehnte später. UV-A-Strahlen dringen tiefer ein, verursachen kaum Rötung, lassen aber die Haut altern und gehen auch durch Fensterglas und Wolken. Der Lichtschutzfaktor gibt an, wievielmal länger man mit Creme in der Sonne bleiben kann als ohne. Erreicht wird er nur bei reichlichem Auftragen, und Nachcremen verlängert die Zeit nicht."
+        }
+      ],
+      "tryIt": "Schau heute in einer Wetter-App nach dem UV-Index. Ab einem Wert von 3 empfehlen Fachleute Schutz – im Sommer ist das oft schon am Vormittag erreicht.",
+      "takeaways": [
+        "UV-Strahlung schädigt das Erbgut der Hautzellen; die Röte ist Entzündung.",
+        "Bräune schützt nur wenig, Schäden summieren sich lebenslang."
+      ]
+    }
+  },
+  {
+    "id": "exoplaneten-transitmethode",
+    "phenomenon": "Exoplaneten",
+    "question": "Wie findet man Planeten bei fremden Sternen, die niemand sehen kann?",
+    "explanation": "Meist indirekt. Zieht ein Planet von uns aus gesehen vor seinem Stern vorbei, verdeckt er einen winzigen Teil der Scheibe, und der Stern wird für Stunden minimal dunkler. Wiederholt sich das in festem Abstand, verrät das die Umlaufzeit. Aus der Stärke der Abdunklung ergibt sich die Größe des Planeten.",
+    "detail": "Ein Planet von der Größe Jupiters dimmt einen sonnenähnlichen Stern um etwa ein Prozent, eine zweite Erde um weniger als ein Hundertstel Prozent.",
+    "deep": {
+      "lead": "Seit 1995 kennen wir Planeten bei anderen sonnenähnlichen Sternen – inzwischen sind es mehrere Tausend.",
+      "sections": [
+        {
+          "title": "Der wackelnde Stern",
+          "text": "Die erste Entdeckung bei einem sonnenähnlichen Stern gelang 1995 den Schweizer Astronomen Michel Mayor und Didier Queloz mit einer anderen Methode. Planet und Stern kreisen um ihren gemeinsamen Schwerpunkt; der Stern wackelt dadurch leicht hin und her. Bewegt er sich auf uns zu, ist sein Licht ein wenig ins Blaue verschoben, entfernt er sich, ins Rote. Der Planet bei 51 Pegasi war eine Überraschung: ein Gasriese wie Jupiter, aber mit einer Umlaufzeit von nur gut vier Tagen. 2019 erhielten die beiden dafür den Nobelpreis."
+        },
+        {
+          "title": "Luft aus Lichtjahren Entfernung prüfen",
+          "text": "Während eines Transits scheint ein wenig Sternlicht durch die Lufthülle des Planeten. Gase darin verschlucken bestimmte Farben und hinterlassen Lücken im Spektrum. So wurden in fernen Atmosphären bereits Wasserdampf, Kohlendioxid und Methan nachgewiesen. Besonders interessant sind Gesteinsplaneten in dem Abstand vom Stern, in dem Wasser flüssig sein könnte. Die Methode findet allerdings nur Systeme, auf deren Bahnebene wir zufällig von der Seite blicken; die allermeisten bleiben ihr verborgen. Hochgerechnet hat im Durchschnitt wohl jeder Stern der Milchstraße mindestens einen Planeten."
+        }
+      ],
+      "tryIt": "Halte abends einen Stecknadelkopf auf Armlänge vor eine ferne Straßenlaterne: So wenig verdeckt ein großer Planet von seinem Stern – eher noch weniger.",
+      "takeaways": [
+        "Ein Transit dimmt den Stern minimal und regelmäßig.",
+        "Im durchscheinenden Sternlicht lassen sich Gase der Atmosphäre erkennen."
+      ]
+    }
+  },
+  {
+    "id": "kuehlschrank-waermepumpe",
+    "phenomenon": "Kühlschrank",
+    "question": "Wie macht ein Kühlschrank Kälte?",
+    "explanation": "Er macht keine Kälte, er schafft Wärme hinaus. In Rohren kreist ein Kältemittel. Im Inneren verdampft es bei niedrigem Druck und entzieht dabei den Lebensmitteln Wärme. Ein Kompressor presst den Dampf zusammen, wodurch er heiß wird. An der Rückseite gibt er die Wärme an die Küche ab und wird wieder flüssig.",
+    "detail": "Deshalb ist die Rückseite des Kühlschranks warm. Lässt du die Tür offen, heizt er die Küche sogar auf, statt sie zu kühlen.",
+    "deep": {
+      "lead": "Kälte lässt sich nicht erzeugen – man kann nur Wärme von einem Ort an einen anderen pumpen.",
+      "sections": [
+        {
+          "title": "Verdampfen und Zusammenpressen",
+          "text": "Zwei Alltagserfahrungen stecken dahinter. Erstens: Verdunstet eine Flüssigkeit, kühlt sie ihre Umgebung. Zweitens: Presst man ein Gas zusammen, wird es warm, wie eine Fahrradpumpe beim Aufpumpen. Der Kühlschrank verbindet beides in einem Kreislauf. Hinter dem Kompressor ist das Kältemittel heißer als die Küche, kann Wärme abgeben und verflüssigt sich. Dann strömt es durch eine enge Stelle, der Druck fällt, und es verdampft schon bei tiefen Minusgraden – im Verdampfer an der Innenwand. Das Brummen, das du hörst, ist der Kompressor."
+        },
+        {
+          "title": "Rückwärts wird eine Heizung daraus",
+          "text": "Eine Wärmepumpe ist derselbe Kreislauf, nur andersherum genutzt: Sie entzieht der Außenluft, dem Erdreich oder dem Grundwasser Wärme und gibt sie ans Heizwasser ab. Das klappt auch bei Frost, denn selbst kalte Luft enthält noch Wärmeenergie. Mit einer Kilowattstunde Strom lassen sich so etwa drei bis vier Kilowattstunden Wärme ins Haus holen. Klimaanlagen arbeiten genauso. Frühere Kältemittel, die FCKW, schädigten die Ozonschicht und wurden nach einem Abkommen von 1987 weltweit schrittweise verboten. Heutige Haushaltskühlschränke nutzen meist kleine Mengen Isobutan."
+        }
+      ],
+      "tryIt": "Fass an die Rück- oder Seitenwand deines Kühlschranks, während er brummt: Sie ist warm. Das ist die Wärme, die er gerade aus dem Inneren geholt hat.",
+      "takeaways": [
+        "Ein Kühlschrank pumpt Wärme von innen nach außen.",
+        "Die Wärmepumpe nutzt denselben Kreislauf zum Heizen."
+      ]
+    }
+  },
+  {
+    "id": "hochspannung-transformator",
+    "phenomenon": "Hochspannungsleitung",
+    "question": "Warum fließt Strom über Land mit Hunderttausenden Volt statt mit 230?",
+    "explanation": "Fließt Strom, erwärmt sich jede Leitung; diese Wärme ist verloren. Der Verlust wächst mit dem Quadrat der Stromstärke. Dieselbe Leistung lässt sich auch mit hoher Spannung und kleinem Strom übertragen. Deshalb wird auf bis zu 380.000 Volt hochgespannt. Erst nahe am Verbraucher setzen Transformatoren sie herab.",
+    "detail": "Zehnfache Spannung bedeutet ein Zehntel des Stroms und damit nur ein Hundertstel der Verluste in derselben Leitung.",
+    "deep": {
+      "lead": "Ohne Transformator gäbe es kein Stromnetz – er macht es möglich, Energie über Hunderte Kilometer mit kleinen Verlusten zu verschicken.",
+      "sections": [
+        {
+          "title": "Zwei Spulen, ein Eisenkern",
+          "text": "Im Transformator sitzen zwei Drahtspulen auf einem gemeinsamen Eisenkern, ohne sich zu berühren. Wechselstrom in der ersten Spule erzeugt ein Magnetfeld, das ständig die Richtung wechselt. Dieses Feld ruft in der zweiten Spule eine Spannung hervor. Hat die zweite Spule zehnmal so viele Windungen, ist die Spannung dort zehnmal so hoch und der Strom entsprechend kleiner; die Leistung bleibt bis auf kleine Verluste gleich. Das funktioniert nur mit Wechselstrom, denn ein gleichbleibendes Magnetfeld bewirkt in der zweiten Spule nichts. Das Brummen von Trafohäuschen kommt vom Eisenkern, der im Takt schwingt."
+        },
+        {
+          "title": "Der Stromkrieg",
+          "text": "In den 1880er-Jahren stritten in den USA zwei Lager. Thomas Edison baute Netze mit Gleichstrom; weil der sich damals nicht transformieren ließ, brauchte er alle paar Kilometer ein Kraftwerk. George Westinghouse setzte mit Patenten von Nikola Tesla auf Wechselstrom, der sich hochspannen und weit transportieren ließ. Edison warnte öffentlich vor dessen Gefahren, verlor aber: Wechselstrom wurde weltweit zum Standard. Heute erlebt Gleichstrom eine Rückkehr. Mit moderner Leistungselektronik lässt er sich umwandeln, und über sehr lange Strecken und in Seekabeln sind seine Verluste sogar geringer."
+        }
+      ],
+      "tryIt": "Lies das Kleingedruckte auf deinem Handy-Ladegerät: Eingang um 230 Volt Wechselstrom, Ausgang wenige Volt Gleichstrom. Darin wird die Spannung herabgesetzt.",
+      "takeaways": [
+        "Hohe Spannung bedeutet kleinen Strom und damit geringe Leitungsverluste.",
+        "Transformatoren ändern die Spannung, aber nur bei Wechselstrom."
+      ]
+    }
+  },
+  {
+    "id": "blinder-fleck",
+    "phenomenon": "Blinder Fleck",
+    "question": "Warum bemerkst du das Loch nicht, das jedes deiner Augen im Sichtfeld hat?",
+    "explanation": "Wo der Sehnerv das Auge verlässt, hat die Netzhaut keine Sinneszellen. Was dorthin fällt, siehst du nicht. Trotzdem nimmst du kein schwarzes Loch wahr: Das andere Auge deckt die Stelle meist ab, und wo es das nicht kann, ergänzt das Gehirn die Lücke einfach mit dem Muster der Umgebung.",
+    "detail": "Der blinde Fleck ist erstaunlich groß: Am Himmel hätten darin mehrere Vollmonde nebeneinander Platz.",
+    "deep": {
+      "lead": "Was du siehst, ist kein Kamerabild, sondern eine Rekonstruktion – und dein Gehirn füllt Lücken, ohne dich zu fragen.",
+      "sections": [
+        {
+          "title": "Ein Konstruktionsdetail der Netzhaut",
+          "text": "Bei Wirbeltieren ist die Netzhaut gewissermaßen verkehrt herum eingebaut: Die Nervenfasern verlaufen auf der dem Licht zugewandten Seite, sammeln sich und müssen an einer Stelle durch die Netzhaut hindurch nach hinten. Dort ist kein Platz für Sinneszellen. Tintenfische haben ein ähnlich leistungsfähiges Linsenauge, das unabhängig entstanden ist; bei ihnen laufen die Fasern hinter der Netzhaut ab, ein blinder Fleck fehlt. Beschrieben hat ihn in den 1660er-Jahren der französische Physiker Edme Mariotte. Seine Vorführung, bei der ein kleiner Gegenstand scheinbar verschwand, erregte großes Aufsehen."
+        },
+        {
+          "title": "Scharf ist nur ein Daumennagel",
+          "text": "Auch sonst täuscht der Eindruck eines lückenlosen, scharfen Bildes. Wirklich scharf und farbig sehen wir nur in der Mitte, in einem Bereich etwa so groß wie der Daumennagel am ausgestreckten Arm. Die Augen springen deshalb mehrmals pro Sekunde von Punkt zu Punkt. Während jedes Sprungs wird die Wahrnehmung kurz unterdrückt, sonst sähen wir Wischer. Aus diesen Schnappschüssen baut das Gehirn eine stabile Welt. Am Rand des Sehfelds erkennen wir kaum Farben und Details, dafür Bewegung besonders gut – nützlich, um Gefahren von der Seite zu bemerken."
+        }
+      ],
+      "tryIt": "Male links ein Kreuz, zehn Zentimeter rechts davon einen Punkt. Linkes Auge zu, mit dem rechten das Kreuz fixieren, Blatt langsam nähern: Der Punkt verschwindet.",
+      "takeaways": [
+        "Am Austritt des Sehnervs ist jedes Auge blind.",
+        "Das Gehirn ergänzt fehlende Bildteile aus der Umgebung."
+      ]
+    }
+  },
+  {
+    "id": "spiegel-links-rechts",
+    "phenomenon": "Spiegelbild",
+    "question": "Warum vertauscht ein Spiegel links und rechts, aber nicht oben und unten?",
+    "explanation": "Er vertauscht weder das eine noch das andere. Ein Spiegel kehrt vorn und hinten um: Deine Nase zeigt zum Spiegel, die des Spiegelbilds zeigt zu dir. Deine rechte Hand bleibt dabei auf der rechten Seite. Den Seitentausch denkst du dir dazu, weil du dir vorstellst, du hättest dich umgedreht und stündest dort.",
+    "detail": "Schrift erscheint im Spiegel verkehrt, weil du selbst das Blatt umgedreht hast, um es dem Spiegel zu zeigen – nicht, weil der Spiegel etwas vertauscht.",
+    "deep": {
+      "lead": "Der Spiegel dreht nur die Tiefe um – den Rest der Verwirrung erledigt unser Gehirn.",
+      "sections": [
+        {
+          "title": "Der Test mit der Klarsichtfolie",
+          "text": "Schreibe ein Wort auf eine durchsichtige Folie und halte sie so vor den Spiegel, dass du es von deiner Seite normal lesen kannst. Im Spiegel ist es ebenfalls normal lesbar, der Spiegel hat nichts vertauscht. Erst wenn du ein Blatt Papier um die senkrechte Achse drehst, damit die Schrift zum Spiegel zeigt, steht sie seitenverkehrt. Drehst du es stattdessen über Kopf, steht die Schrift im Spiegel auf dem Kopf, aber nicht seitenverkehrt. Die Art deiner Drehung bestimmt, was vertauscht erscheint."
+        },
+        {
+          "title": "Warum Rettungswagen falsch beschriftet sind",
+          "text": "Auf der Motorhaube vieler Rettungswagen steht das Wort in Spiegelschrift. Im Rückspiegel des Vordermanns wird es lesbar, weil der Fahrer nach vorn schaut und die Schrift hinter ihm liegt – die Umkehr von vorn und hinten wird so ausgeglichen. Ähnlich erklärt sich, warum dir dein Gesicht auf Fotos fremd vorkommt: Du kennst dich nur aus dem Spiegel, alle anderen kennen die ungespiegelte Ansicht. Da kein Gesicht völlig symmetrisch ist, sitzen Scheitel, Muttermal oder das schiefe Lächeln auf dem Foto plötzlich auf der ungewohnten Seite."
+        }
+      ],
+      "tryIt": "Zeig vor dem Spiegel mit dem Finger nach rechts, dann nach oben, dann auf den Spiegel. Nur beim letzten Mal zeigt dein Spiegelbild in die Gegenrichtung.",
+      "takeaways": [
+        "Ein Spiegel kehrt vorn und hinten um, nicht links und rechts.",
+        "Seitenverkehrt wirkt es nur, weil wir uns in Gedanken umdrehen."
+      ]
+    }
+  },
+  {
+    "id": "maillard-reaktion-kruste",
+    "phenomenon": "Maillard-Reaktion",
+    "question": "Warum duftet und schmeckt die braune Kruste von Brot und Braten so gut?",
+    "explanation": "Ab etwa 140 Grad reagieren Zucker und Eiweißbausteine an der Oberfläche miteinander. In einer Kaskade entstehen Hunderte neuer Verbindungen: braune Farbstoffe und Aromastoffe, die nach Röstung, Nuss oder Karamell riechen. Im feuchten Inneren bleibt die Temperatur bei rund 100 Grad, dort läuft die Reaktion kaum ab.",
+    "detail": "Deshalb wird Gekochtes nicht braun: Solange Wasser da ist, steigt die Temperatur nicht über den Siedepunkt. Erst eine trockene Oberfläche kann bräunen.",
+    "deep": {
+      "lead": "Die Röstaromen von Kaffee, Brotkruste, Steak und Bratkartoffeln gehen auf dieselbe Reaktionsfamilie zurück.",
+      "sections": [
+        {
+          "title": "Ein Arzt, der Eiweiß erhitzte",
+          "text": "Der französische Arzt und Chemiker Louis Camille Maillard erhitzte 1912 Aminosäuren, die Bausteine der Eiweiße, zusammen mit Zucker und beobachtete, wie sich die Mischung braun färbte. Er interessierte sich eigentlich für Vorgänge im Körper. Erst Jahrzehnte später klärten Lebensmittelchemiker auf, welche Vielfalt an Stoffen dabei entsteht. Je nach Aminosäure und Zucker riecht das Ergebnis anders, deshalb duftet gebratenes Fleisch nicht wie Brot. Karamellisieren ist etwas anderes: Dabei zerfällt reiner Zucker in der Hitze, ganz ohne Eiweiß."
+        },
+        {
+          "title": "Küchentricks und eine Schattenseite",
+          "text": "Wer Fleisch vor dem Anbraten trocken tupft, bekommt schneller eine Kruste, weil die Hitze nicht erst Wasser verdampfen muss. Eine zu volle Pfanne kühlt ab, das Bratgut zieht Saft und kocht darin grau. Laugengebäck wird so dunkel, weil die Reaktion in basischer Umgebung schneller läuft. Dass Anbraten »die Poren schließt« und den Saft hält, ist ein Irrtum; es geht allein um Geschmack. Beim sehr starken Bräunen stärkehaltiger Lebensmittel entsteht Acrylamid, das als wahrscheinlich krebserregend gilt. Daher die Faustregel für Pommes und Toast: vergolden statt verkohlen."
+        }
+      ],
+      "tryIt": "Toaste zwei Scheiben Brot unterschiedlich lang und rieche daran: Mit jedem Bräunungsgrad kommen neue Aromen dazu, bis es bitter wird.",
+      "takeaways": [
+        "Zucker und Eiweißbausteine bilden ab etwa 140 Grad Röstaromen.",
+        "Nur trockene Oberflächen bräunen, Nasses bleibt bei 100 Grad."
+      ]
+    }
+  },
+  {
+    "id": "winterschlaf-igel",
+    "phenomenon": "Winterschlaf",
+    "question": "Wie übersteht ein Igel monatelang den Winter, ohne zu fressen?",
+    "explanation": "Er fährt seinen Stoffwechsel fast auf null herunter. Die Körpertemperatur sinkt von rund 35 auf etwa fünf Grad, das Herz schlägt nur noch wenige Male pro Minute, zwischen zwei Atemzügen können Minuten vergehen. So braucht er nur wenige Prozent der üblichen Energie und zehrt vom Fett aus dem Herbst.",
+    "detail": "Bären halten keinen echten Winterschlaf, sondern eine Winterruhe: Ihre Körpertemperatur sinkt nur um wenige Grad, und sie wachen leicht auf.",
+    "deep": {
+      "lead": "Winterschlaf ist kein langer Schlaf, sondern ein geregelter Sparzustand, in dem der Körper fast stillsteht.",
+      "sections": [
+        {
+          "title": "Schlaf, Ruhe, Starre",
+          "text": "Echte Winterschläfer sind Igel, Murmeltier, Siebenschläfer und Fledermäuse. Sie senken ihre Temperatur aktiv ab und überwachen sie weiter: Droht der Körper einzufrieren, heizt er nach oder das Tier wacht auf. Eichhörnchen und Dachs halten Winterruhe, sie dösen viel, bleiben aber warm und fressen zwischendurch. Frösche, Eidechsen und Insekten fallen in Kältestarre. Ihre Temperatur folgt einfach der Umgebung, regeln können sie nichts. Manche lagern Zucker oder Alkohole als Frostschutz in die Zellen ein und überstehen so selbst strengen Frost."
+        },
+        {
+          "title": "Aufwachen kostet am meisten",
+          "text": "Alle paar Wochen heizen Winterschläfer für einige Stunden auf Normaltemperatur auf. Warum sie das tun, ist noch nicht vollständig geklärt. Die Wärme liefert braunes Fettgewebe, das Energie direkt in Hitze umsetzt. Diese Wachphasen verschlingen den Großteil der Fettreserven. Wird ein Igel im Winter mehrfach gestört, kann sein Vorrat deshalb nicht bis zum Frühjahr reichen. Laubhaufen im Garten sollte man also in Ruhe lassen. Mediziner untersuchen den Winterschlaf, weil Organe darin lange Kälte und Sauerstoffmangel unbeschadet überstehen."
+        }
+      ],
+      "tryIt": "Lass im Herbst in einer Gartenecke einen Haufen aus Laub und Reisig liegen. Mit etwas Glück zieht dort ein Igel für den Winter ein.",
+      "takeaways": [
+        "Winterschläfer senken Temperatur, Puls und Atmung drastisch ab.",
+        "Jedes Aufwachen kostet viel Fett; Störungen sind gefährlich."
+      ]
+    }
+  },
+  {
+    "id": "blutgerinnung-wundverschluss",
+    "phenomenon": "Blutgerinnung",
+    "question": "Wie stoppt dein Körper eine Blutung, ohne dass alles Blut gerinnt?",
+    "explanation": "An der Wunde liegt Gewebe frei, das sonst nie Blut berührt. Blutplättchen bleiben daran kleben und bilden einen ersten Pfropf. Zugleich startet eine Kettenreaktion, an deren Ende lange Fibrinfäden stehen. Sie verweben den Pfropf zu einem festen Netz. Hemmstoffe begrenzen die Reaktion auf die Wunde.",
+    "detail": "Schorf ist das getrocknete Netz aus Fibrin und eingefangenen Blutzellen. Darunter wächst neue Haut; kratzt du ihn ab, beginnt die Arbeit von vorn.",
+    "deep": {
+      "lead": "Die Gerinnung ist eine Lawine mit eingebauter Bremse: schnell genug für Wunden, örtlich begrenzt für den Rest des Körpers.",
+      "sections": [
+        {
+          "title": "Eine Kaskade als Verstärker",
+          "text": "Mehr als ein Dutzend Gerinnungsfaktoren schwimmen in inaktiver Form im Blut. Der erste wird an der Wunde aktiviert und schaltet den nächsten ein, der wiederum viele Moleküle des übernächsten. So wird aus einem winzigen Signal in Sekunden eine kräftige Antwort. Fehlt ein einziges Glied, stockt die Kette: Bei der Bluterkrankheit ist meist der Faktor VIII defekt, Blutungen hören dann nur sehr langsam auf. Die Krankheit trifft fast nur Männer, weil das Gen auf dem X-Chromosom liegt. Für mehrere Faktoren braucht die Leber Vitamin K."
+        },
+        {
+          "title": "Wenn es am falschen Ort gerinnt",
+          "text": "Bildet sich ein Gerinnsel in einem unverletzten Gefäß, spricht man von Thrombose. Löst es sich und verstopft ein Gefäß in der Lunge, droht eine Lungenembolie; Gerinnsel in Herz- oder Hirnarterien führen zu Infarkt oder Schlaganfall. Begünstigt wird das durch langsamen Blutfluss, etwa bei langem Sitzen oder Bettruhe, und durch geschädigte Gefäßwände. Gerinnungshemmende Medikamente, oft »Blutverdünner« genannt, machen das Blut nicht dünner; sie bremsen einzelne Schritte der Kaskade. Nach dem Verheilen löst der Körper das Gerinnsel selbst auf: Ein Enzym zerschneidet die Fibrinfäden."
+        }
+      ],
+      "tryIt": "Steh auf langen Flügen oder Zugfahrten jede Stunde auf oder wippe im Sitzen mit den Füßen: Die Wadenmuskeln pumpen das Blut aus den Beinvenen nach oben.",
+      "takeaways": [
+        "Erst kleben Blutplättchen, dann festigt ein Netz aus Fibrin den Pfropf.",
+        "»Blutverdünner« bremsen die Gerinnung, verdünnen aber nichts."
+      ]
+    }
+  },
+  {
+    "id": "erdumfang-eratosthenes",
+    "phenomenon": "Vermessung der Erde",
+    "question": "Wie hat man vor über 2.000 Jahren den Umfang der Erde gemessen?",
+    "explanation": "Eratosthenes wusste: In Syene in Südägypten steht die Sonne zur Sommersonnenwende mittags senkrecht. Im nördlicheren Alexandria warf ein Stab zur selben Zeit einen Schatten, die Sonne stand gut sieben Grad schräg. Das ist ein Fünfzigstel des Vollkreises – der Erdumfang ist also das Fünfzigfache ihres Abstands.",
+    "detail": "Wie genau er traf, hängt davon ab, wie lang seine Längeneinheit, das Stadion, war. Je nach Annahme lag er nur wenige bis etwa fünfzehn Prozent daneben.",
+    "deep": {
+      "lead": "Ein Schatten, eine Entfernung und etwas Geometrie genügten, um einen ganzen Planeten zu vermessen.",
+      "sections": [
+        {
+          "title": "Die Kugel war längst bekannt",
+          "text": "Gebildete Griechen zweifelten schon Jahrhunderte vor Christus nicht mehr an der Kugelgestalt. Aristoteles führte Belege an: Bei einer Mondfinsternis ist der Erdschatten auf dem Mond immer rund. Reist man nach Süden, tauchen Sterne auf, die im Norden nie über den Horizont kommen. Und von einem Schiff, das davonfährt, verschwindet zuerst der Rumpf, dann der Mast. Dass man im Mittelalter die Erde allgemein für eine Scheibe hielt, ist eine Legende aus späterer Zeit. Auch Kolumbus stritt mit seinen Kritikern nicht über die Form, sondern über die Größe."
+        },
+        {
+          "title": "Kolumbus verrechnete sich",
+          "text": "Kolumbus stützte sich auf zu kleine Schätzungen des Erdumfangs und auf übertriebene Angaben zur Ausdehnung Asiens. Er erwartete Japan nur einige Tausend Kilometer westlich von Spanien. Die Gelehrten am Hof hielten die Strecke zu Recht für viel länger. Nur lag ein Kontinent im Weg, von dem beide Seiten nichts wussten. Später wurde die Erdvermessung zur Grundlage des metrischen Systems: Der Meter wurde in den 1790er-Jahren als zehnmillionster Teil der Strecke vom Nordpol zum Äquator festgelegt. Deshalb misst der Erdumfang fast genau 40.000 Kilometer."
+        }
+      ],
+      "tryIt": "Miss an einem sonnigen Mittag die Schattenlänge eines senkrechten Stabs und bitte jemanden weit nördlich oder südlich von dir, dasselbe zu tun. Die Winkel unterscheiden sich.",
+      "takeaways": [
+        "Aus Schattenwinkel und Abstand zweier Orte folgt der Erdumfang.",
+        "Die Kugelgestalt der Erde war schon in der Antike bekannt."
+      ]
+    }
+  },
+  {
+    "id": "induktionskochfeld",
+    "phenomenon": "Induktionskochfeld",
+    "question": "Warum wird auf dem Induktionsherd der Topf heiß, die Platte aber kaum?",
+    "explanation": "Unter dem Glas liegt eine Spule, durch die Wechselstrom fließt. Sie erzeugt ein Magnetfeld, das viele Tausend Mal pro Sekunde die Richtung wechselt. Im Metallboden des Topfs ruft dieses Feld kreisende elektrische Ströme hervor. Der Widerstand des Metalls wandelt sie in Wärme um. Die Hitze entsteht direkt im Topf.",
+    "detail": "Das Glas wird nur warm, weil der heiße Topf darauf steht. Ohne passenden Topf entsteht keine Hitze, und das Kochfeld schaltet ab.",
+    "deep": {
+      "lead": "Das Kochfeld heizt nicht selbst – es macht den Topf zum Heizelement.",
+      "sections": [
+        {
+          "title": "Faradays Entdeckung in der Küche",
+          "text": "1831 fand Michael Faraday heraus, dass ein sich änderndes Magnetfeld in einem Leiter Strom erzeugt. Diese elektromagnetische Induktion steckt in jedem Generator und jedem Transformator. Beim Kochfeld ist der Topfboden der Leiter. Geeignet sind Töpfe aus magnetisierbarem Eisen oder Stahl: In ihnen fließen die Wirbelströme nur in einer dünnen Schicht und stoßen auf hohen Widerstand, zudem trägt das ständige Ummagnetisieren zur Erwärmung bei. Reines Aluminium, Kupfer oder Glas funktionieren nicht, außer der Boden enthält eine eingearbeitete Stahlplatte."
+        },
+        {
+          "title": "Schnell, sparsam, kabellos",
+          "text": "Weil keine Platte erst aufgeheizt werden muss und kaum Wärme am Topf vorbeigeht, kocht Wasser auf Induktion schneller als auf Gas oder Glaskeramik, und die Leistung reagiert sofort auf den Regler. Dasselbe Prinzip lädt die elektrische Zahnbürste und das Handy auf der Ladeschale: Eine Spule im Sockel erzeugt ein Wechselfeld, eine zweite im Gerät macht daraus wieder Strom. Auch Wirbelstrombremsen in Zügen und Achterbahnen beruhen darauf. Menschen mit Herzschrittmacher sollten nach Empfehlung der Hersteller etwas Abstand zum Kochfeld halten."
+        }
+      ],
+      "tryIt": "Halte einen Kühlschrankmagneten an den Boden deiner Töpfe und Pfannen: Bleibt er fest haften, eignet sich das Geschirr für Induktion.",
+      "takeaways": [
+        "Ein wechselndes Magnetfeld erzeugt Wirbelströme im Topfboden.",
+        "Nur magnetisierbares Kochgeschirr wird auf Induktion heiß."
+      ]
+    }
+  },
+  {
+    "id": "rakete-rueckstoss",
+    "phenomenon": "Rückstoßprinzip",
+    "question": "Woran stößt sich eine Rakete im luftleeren Weltraum ab?",
+    "explanation": "An ihrem eigenen Abgas. Im Triebwerk verbrennt Treibstoff, die heißen Gase schießen mit mehreren Kilometern pro Sekunde nach hinten hinaus. Nach Newton gehört zu jeder Kraft eine gleich große Gegenkraft: Die Rakete drückt das Gas nach hinten, das Gas drückt die Rakete nach vorn. Luft zum Abstoßen braucht es nicht.",
+    "detail": "Im Vakuum arbeitet ein Raketentriebwerk sogar etwas besser als am Boden, weil kein Luftdruck dem Abgasstrahl entgegensteht.",
+    "deep": {
+      "lead": "Wer etwas nach hinten wirft, wird selbst nach vorn geschoben – mehr steckt hinter dem Raketenantrieb nicht.",
+      "sections": [
+        {
+          "title": "Ein berühmter Irrtum",
+          "text": "Als der amerikanische Raketenpionier Robert Goddard um 1920 schrieb, Raketen könnten den Mond erreichen, spottete die »New York Times«: Jeder Schüler wisse, dass eine Rakete im Vakuum nichts habe, wogegen sie sich abstoßen könne. Im Juli 1969, während Apollo 11 zum Mond flog, druckte die Zeitung eine Richtigstellung. Den Rückstoß kennst du aus dem Alltag: Ein Luftballon, den du aufgeblasen loslässt, saust davon. Ein Gartenschlauch drückt nach hinten, wenn das Wasser herausschießt. Tintenfische bewegen sich genauso, indem sie Wasser aus ihrem Körper pressen."
+        },
+        {
+          "title": "Fast nur Treibstoff",
+          "text": "Um in eine Erdumlaufbahn zu gelangen, muss eine Rakete knapp 28.000 Kilometer pro Stunde erreichen. Sie muss dabei nicht nur die Nutzlast beschleunigen, sondern auch den Treibstoff, den sie erst später verbrennt. Der nötige Vorrat wächst deshalb lawinenartig: Bei großen Raketen entfallen rund neun Zehntel der Startmasse auf Treibstoff, die Nutzlast macht nur wenige Prozent aus. Darum wirft man ausgebrannte Stufen ab – totes Gewicht muss nicht weiter beschleunigt werden. Den Sauerstoff für die Verbrennung führt die Rakete selbst mit, anders als ein Düsenflugzeug."
+        }
+      ],
+      "tryIt": "Blase einen Luftballon auf, lass ihn los und beobachte die Flugrichtung: Er fliegt immer entgegengesetzt zu der Öffnung, aus der die Luft strömt.",
+      "takeaways": [
+        "Die Rakete stößt sich an ihren ausgestoßenen Gasen ab, nicht an Luft.",
+        "Der größte Teil der Startmasse ist Treibstoff."
+      ]
+    }
+  },
+  {
+    "id": "sinnesgewoehnung-adaptation",
+    "phenomenon": "Sinnesgewöhnung",
+    "question": "Warum riechst du deine eigene Wohnung nicht?",
+    "explanation": "Sinneszellen und Gehirn melden vor allem Veränderungen. Bleibt ein Reiz gleich, feuern die Sinneszellen nach kurzer Zeit schwächer, und das Gehirn blendet das Signal zusätzlich aus. Der Duft deiner Wohnung ist immer da, also verschwindet er aus der Wahrnehmung. Nach einer Reise riechst du ihn kurz wieder.",
+    "detail": "Dasselbe passiert mit dem Gefühl der Kleidung auf der Haut, dem Ticken einer Uhr oder der Brille auf der Nase: vorhanden, aber ausgeblendet.",
+    "deep": {
+      "lead": "Was gleich bleibt, ist selten wichtig – deshalb spart sich das Nervensystem die Meldung.",
+      "sections": [
+        {
+          "title": "Ein Filter mit Überlebenswert",
+          "text": "Jede Sekunde treffen weit mehr Reize ein, als ein Gehirn verarbeiten könnte. Wer alles gleich stark wahrnähme, würde das Rascheln im Gebüsch im Dauerrauschen überhören. Das Ausblenden des Gleichbleibenden macht Kapazität frei für Neues, und Neues kann Gefahr oder Gelegenheit bedeuten. Die Anpassung geschieht auf mehreren Ebenen: Riechzellen werden innerhalb von Minuten unempfindlicher, die Pupille stellt sich auf die Helligkeit ein, und im Gehirn werden wiederholte Signale abgeschwächt. Eine Ausnahme ist der Schmerz. An ihn gewöhnen wir uns kaum, denn er soll nicht übersehen werden."
+        },
+        {
+          "title": "Nützlich und manchmal tückisch",
+          "text": "Wer lange in einem Raum sitzt, bemerkt die verbrauchte Luft nicht mehr – wer hereinkommt, sofort. Tückisch wird es bei Gas: Dem geruchlosen Erdgas wird ein Warngeruch beigemischt, doch nach einiger Zeit im Raum nimmt man auch ihn schwächer wahr. Die Gewöhnung reicht über die Sinne hinaus. An eine Gehaltserhöhung, ein neues Auto oder eine größere Wohnung haben wir uns nach einigen Monaten gewöhnt; die Freude daran flacht ab. Abwechslung und Pausen halten Genuss frischer als ständige Verfügbarkeit. Der erste Bissen schmeckt deshalb am besten."
+        }
+      ],
+      "tryIt": "Lege zwei Minuten lang eine Hand in warmes, die andere in kaltes Wasser und dann beide in lauwarmes: Dasselbe Wasser fühlt sich links und rechts verschieden an.",
+      "takeaways": [
+        "Sinne melden vor allem Veränderungen, Gleichbleibendes wird ausgeblendet.",
+        "An Schmerz gewöhnen wir uns kaum – er ist ein Warnsignal."
+      ]
+    }
+  },
+  {
+    "id": "luftspiegelung-strasse",
+    "phenomenon": "Luftspiegelung",
+    "question": "Warum scheint an heißen Tagen eine Wasserpfütze auf der Straße zu liegen?",
+    "explanation": "Der Asphalt heizt die Luft direkt über sich stark auf. Heiße Luft ist dünner und bricht Licht schwächer als die kühlere darüber. Lichtstrahlen vom Himmel, die flach auf diese Schicht treffen, werden nach oben gebogen und erreichen dein Auge von unten. Du siehst ein Stück Himmel auf der Straße – es wirkt wie Wasser.",
+    "detail": "Die »Pfütze« weicht zurück, wenn du näher kommst: Die Spiegelung gelingt nur unter sehr flachem Blickwinkel, also immer nur in der Ferne.",
+    "deep": {
+      "lead": "Luft ist nicht überall gleich dicht – und wo sich ihre Dichte ändert, läuft Licht in Kurven.",
+      "sections": [
+        {
+          "title": "Gekrümmte Lichtwege",
+          "text": "In dünner, warmer Luft ist Licht eine Spur schneller als in dichter, kalter. Durchquert ein Strahl Schichten unterschiedlicher Temperatur, wird er stetig zur dichteren Seite hin gekrümmt. Über heißem Boden biegt er sich nach oben, das Bild erscheint unter dem wirklichen Gegenstand und steht auf dem Kopf. Das Gehirn nimmt an, Licht käme stets geradlinig, und verlegt die Quelle auf den Boden. Das Flimmern entsteht, weil die heiße Luft in Schlieren aufsteigt und sich die Brechung ständig ändert. Dieselbe Unruhe lässt ferne Dinge über einem Lagerfeuer zittern."
+        },
+        {
+          "title": "Schiffe, die in der Luft hängen",
+          "text": "Über kaltem Wasser oder Eis liegt die Schichtung umgekehrt: unten kalte, oben wärmere Luft. Dann krümmt sich das Licht nach unten, der Erdkrümmung hinterher. Schiffe, Küsten oder Eisberge, die eigentlich hinter dem Horizont liegen, werden sichtbar und scheinen über dem Meer zu schweben, manchmal gestreckt oder mehrfach übereinander. In Italien nannte man solche Bilder Fata Morgana, nach der Fee Morgana aus der Artussage; an der Straße von Messina sind sie häufig. Seefahrerlegenden wie die vom Fliegenden Holländer gehen vermutlich auf solche Erscheinungen zurück."
+        }
+      ],
+      "tryIt": "Stell einen Stift schräg in ein Glas Wasser und schau von der Seite: Am Wasserspiegel knickt er scheinbar ab – dieselbe Brechung, nur an einer scharfen Grenze.",
+      "takeaways": [
+        "Licht wird in geschichteter Luft zur dichteren, kälteren Seite gekrümmt.",
+        "Die »Pfütze« auf der Straße ist ein gespiegeltes Stück Himmel."
+      ]
+    }
+  },
+  {
+    "id": "kohlensaeure-sprudel",
+    "phenomenon": "Kohlensäure im Sprudel",
+    "question": "Warum sprudelt Mineralwasser erst, wenn du die Flasche öffnest?",
+    "explanation": "In der geschlossenen Flasche steht das Wasser unter Druck. Je höher der Druck, desto mehr Kohlendioxid löst sich darin. Beim Öffnen fällt der Druck schlagartig ab, das Wasser kann nicht mehr so viel Gas halten. Der Überschuss sammelt sich zu Bläschen und steigt auf, bis ein neues Gleichgewicht erreicht ist.",
+    "detail": "Nur ein kleiner Teil des gelösten Gases reagiert mit Wasser zu echter Kohlensäure. Sie gibt dem Sprudel seinen leicht säuerlichen Geschmack.",
+    "deep": {
+      "lead": "Wie viel Gas sich in einer Flüssigkeit löst, bestimmen Druck und Temperatur.",
+      "sections": [
+        {
+          "title": "Wo die Bläschen entstehen",
+          "text": "Schau in ein Glas Sprudel: Die Perlenketten steigen immer von denselben Punkten auf. Dort sitzen winzige Kratzer, Staubkörnchen oder Fasern vom Geschirrtuch, in denen ein Luftrest hängt. An solchen Keimstellen kann sich das Gas sammeln; in völlig glatter, sauberer Flüssigkeit fällt ihm die Blasenbildung schwer. Sektgläser bekommen deshalb manchmal absichtlich einen aufgerauten Punkt am Boden. Die raue Oberfläche mancher Kaubonbons bietet unzählige solcher Stellen auf einmal – darum schießt Cola als Fontäne heraus, wenn man welche hineinwirft."
+        },
+        {
+          "title": "Kälte hält das Gas – auch beim Tauchen zählt es",
+          "text": "Kaltes Wasser hält mehr Gas als warmes. Eine warme Flasche schäumt beim Öffnen deshalb stärker über, und im Kühlschrank wird angebrochener Sprudel langsamer schal. Dasselbe Gesetz gilt im Körper eines Tauchers: Unter dem hohen Druck in der Tiefe löst sich mehr Stickstoff aus der Atemluft im Gewebe. Steigt er zu schnell auf, perlt das Gas im Körper aus wie in einer geöffneten Flasche. Diese Taucherkrankheit verhindert man durch langsames Auftauchen mit Pausen, damit der Stickstoff über die Lunge abgeatmet wird."
+        }
+      ],
+      "tryIt": "Gieße Sprudel in ein Glas und wirf ein paar Körner Zucker oder Salz hinein: An jedem Korn bilden sich sofort Bläschen.",
+      "takeaways": [
+        "Unter Druck und in der Kälte löst sich mehr Gas in Wasser.",
+        "Bläschen bilden sich an winzigen Unebenheiten und Fasern."
+      ]
+    }
+  },
+  {
+    "id": "baum-wassertransport",
+    "phenomenon": "Wassertransport im Baum",
+    "question": "Wie gelangt Wasser ohne Pumpe in die Krone eines 50 Meter hohen Baums?",
+    "explanation": "Es wird von oben gezogen. Die Blätter geben durch winzige Poren Wasserdampf ab. Jedes verdunstete Molekül zieht das nächste nach, denn Wassermoleküle haften stark aneinander. So entsteht in den haarfeinen Leitungsbahnen des Holzes ein durchgehender Wasserfaden von der Wurzel bis ins Blatt.",
+    "detail": "Eine große Buche oder Birke verdunstet an einem heißen Sommertag mehrere Hundert Liter Wasser. Den Antrieb liefert allein die Sonne.",
+    "deep": {
+      "lead": "Bäume heben Wasser höher, als es jede Saugpumpe könnte – ganz ohne bewegliche Teile.",
+      "sections": [
+        {
+          "title": "Warum Saugen nicht reicht",
+          "text": "Eine Saugpumpe schafft höchstens zehn Meter: Der Luftdruck, der das Wasser ins Rohr schiebt, trägt keine höhere Säule. Auch die Kapillarwirkung, die Wasser in engen Röhrchen steigen lässt, reicht in den Gefäßen eines Baums bei Weitem nicht bis in die Krone. Die Lösung ist der Zusammenhalt des Wassers selbst. In den dünnen Leitungen steht es unter Zug wie ein Seil und reißt nicht ab, solange keine Luftblase eindringt. Messbar ist das: Baumstämme werden an heißen Tagen eine Winzigkeit dünner, weil der Zug die Leitungen zusammenzieht."
+        },
+        {
+          "title": "Der Preis der offenen Poren",
+          "text": "Die Poren der Blätter, Spaltöffnungen genannt, lassen Kohlendioxid für die Fotosynthese herein. Dabei entweicht unvermeidlich Wasser. Bei Trockenheit schließt die Pflanze die Poren und spart Wasser, kann dann aber kaum noch Zucker bilden. Reißt der Wasserfaden doch, blockiert eine Luftblase die betroffene Leitung; nach Dürrejahren sterben deshalb oft ganze Kronenteile ab. Die höchsten Bäume der Erde, Küstenmammutbäume, werden gut 115 Meter hoch. Viel mehr gilt als kaum möglich, weil der Zug in dieser Höhe an die Grenze dessen kommt, was die Leitungen aushalten."
+        }
+      ],
+      "tryIt": "Stell eine weiße Blume oder eine Selleriestange in Wasser mit Lebensmittelfarbe. Nach einigen Stunden zeigen gefärbte Adern, wo die Leitungsbahnen verlaufen.",
+      "takeaways": [
+        "Verdunstung an den Blättern zieht das Wasser nach oben.",
+        "Der Wasserfaden hält, weil Wassermoleküle aneinanderhaften."
+      ]
+    }
+  },
+  {
+    "id": "laktoseintoleranz",
+    "phenomenon": "Laktoseintoleranz",
+    "question": "Warum vertragen viele Erwachsene keine Milch?",
+    "explanation": "Milchzucker, die Laktose, muss im Dünndarm vom Enzym Laktase gespalten werden. Säuglinge bilden es reichlich. Nach dem Abstillen fährt der Körper die Produktion meist stark zurück. Ungespaltener Milchzucker gelangt dann in den Dickdarm, wo Bakterien ihn vergären – mit Blähungen, Krämpfen und Durchfall.",
+    "detail": "Weltweit ist das der Normalfall: Die Mehrheit der Erwachsenen verträgt Milchzucker schlecht. Die Ausnahme sind Menschen mit einer Genvariante, die das Enzym aktiv hält.",
+    "deep": {
+      "lead": "Nicht die Unverträglichkeit ist die Abweichung, sondern die Fähigkeit, als Erwachsener Milch zu verdauen.",
+      "sections": [
+        {
+          "title": "Evolution im Zeitraffer",
+          "text": "Als Menschen vor einigen Tausend Jahren begannen, Rinder, Schafe und Ziegen zu halten, stand plötzlich eine neue Nahrungsquelle bereit. Wer durch eine zufällige Erbgutänderung auch als Erwachsener Laktase bildete, konnte frische Milch nutzen und hatte in Notzeiten einen Vorteil. Die Variante breitete sich in Viehzüchtergesellschaften rasch aus. Heute vertragen in Nordeuropa die allermeisten Erwachsenen Milch, in Ostasien nur wenige. In Teilen Afrikas und Arabiens entstanden unabhängig davon andere Varianten mit derselben Wirkung – ein Lehrbuchbeispiel dafür, wie eine Lebensweise das Erbgut verändern kann."
+        },
+        {
+          "title": "Käse geht meistens",
+          "text": "Laktoseintoleranz ist keine Allergie; das Immunsystem ist nicht beteiligt, und kleine Mengen vertragen die meisten Betroffenen gut. In lange gereiftem Hartkäse wie Parmesan oder Bergkäse ist der Milchzucker praktisch vollständig abgebaut. Auch Joghurt ist oft bekömmlicher als Milch, weil seine Bakterien einen Teil der Arbeit erledigen. Bei laktosefreier Milch hat man das Enzym zugesetzt: Der Milchzucker ist in seine zwei Bausteine gespalten. Vermutlich waren Käse und Sauermilch für frühe Hirten ein Weg, Milch zu nutzen, lange bevor ihr Erbgut mitzog."
+        }
+      ],
+      "tryIt": "Probiere laktosefreie Milch neben normaler: Sie schmeckt merklich süßer, obwohl kein Zucker zugesetzt ist – der Milchzucker ist nur gespalten.",
+      "takeaways": [
+        "Ohne das Enzym Laktase vergären Darmbakterien den Milchzucker.",
+        "Milch als Erwachsener zu vertragen ist eine junge genetische Anpassung."
+      ]
+    }
+  },
+  {
+    "id": "foucault-pendel-erddrehung",
+    "phenomenon": "Foucaultsches Pendel",
+    "question": "Wie beweist man in einem geschlossenen Raum, dass sich die Erde dreht?",
+    "explanation": "Mit einem langen, schweren Pendel. Einmal angestoßen, schwingt es stets in derselben Ebene, denn keine Kraft dreht es zur Seite. Trotzdem wandert seine Schwingungsrichtung über dem Boden im Lauf von Stunden langsam im Kreis. Nicht das Pendel dreht sich – der Boden mitsamt dem Gebäude dreht sich unter ihm weg.",
+    "detail": "Am Pol bräuchte die Schwingungsebene einen Tag für eine volle Drehung, in Mitteleuropa gut 30 Stunden. Am Äquator dreht sie sich gar nicht.",
+    "deep": {
+      "lead": "Dass die Sonne auf- und untergeht, beweist die Erddrehung noch nicht – ein Pendel im Saal schon.",
+      "sections": [
+        {
+          "title": "Paris, 1851",
+          "text": "Der französische Physiker Léon Foucault hängte 1851 im Panthéon in Paris eine 28 Kilogramm schwere Kugel an einem 67 Meter langen Draht auf. Eine Spitze an der Unterseite zog bei jedem Durchgang eine Spur in einen Sandring. Vor den Augen des Publikums rückte die Spur Schwung für Schwung weiter. Dass die Erde sich dreht, bezweifelte damals kaum noch ein Gelehrter, aber erstmals konnte es jeder mit eigenen Augen sehen, ohne zum Himmel zu blicken. Das Experiment wurde eine Sensation und bald in vielen Städten nachgebaut."
+        },
+        {
+          "title": "Weitere Spuren der Drehung",
+          "text": "Die Rotation verformt die Erde: Am Äquator ist ihr Radius rund 21 Kilometer größer als am Pol. Ein Mensch am Äquator bewegt sich mit etwa 1.670 Kilometern pro Stunde nach Osten, in Mitteleuropa noch mit gut 1.000. Raketen starten deshalb bevorzugt Richtung Osten und nah am Äquator, sie nehmen den Schwung mit. Die Drehung wird übrigens langsamer: Die Gezeitenreibung verlängert den Tag um rund zwei Tausendstelsekunden pro Jahrhundert. Zur Zeit der späten Dinosaurier war ein Tag etwa eine halbe Stunde kürzer als heute."
+        }
+      ],
+      "tryIt": "Viele Museen und Universitäten zeigen ein Foucault-Pendel. Merke dir bei einem Besuch die Schwingungsrichtung und sieh nach einer Stunde noch einmal hin.",
+      "takeaways": [
+        "Das Pendel behält seine Ebene, die Erde dreht sich darunter weg.",
+        "Am Pol dauert die Drehung einen Tag, am Äquator bleibt sie aus."
+      ]
+    }
+  },
+  {
+    "id": "touchscreen-kapazitiv",
+    "phenomenon": "Touchscreen",
+    "question": "Wie merkt dein Handy, wo dein Finger das Display berührt?",
+    "explanation": "Unter dem Glas liegt ein Gitter aus durchsichtigen Leiterbahnen mit einem schwachen elektrischen Feld. Dein Finger leitet Strom und zieht einen Teil dieses Feldes auf sich. An der Berührstelle ändert sich dadurch die gespeicherte Ladung. Ein Chip fragt das Gitter laufend ab und berechnet daraus die Position.",
+    "detail": "Deshalb reagiert der Bildschirm nicht auf Fingernägel, normale Handschuhe oder einen Plastikstift: Sie leiten nicht und verändern das Feld kaum.",
+    "deep": {
+      "lead": "Der Bildschirm fühlt keinen Druck – er misst, wie dein Körper ein elektrisches Feld verändert.",
+      "sections": [
+        {
+          "title": "Zwei Bauarten",
+          "text": "Ältere Geräte, viele Automaten und manche Kassen nutzen druckempfindliche Bildschirme: Zwei leitende Schichten liegen mit winzigem Abstand übereinander; drückt man sie zusammen, fließt an dieser Stelle Strom. Das klappt mit jedem Stift und mit Handschuhen, erkennt aber meist nur einen Punkt und braucht spürbaren Druck. Die heute üblichen kapazitiven Bildschirme reagieren schon auf leichte Berührung und verfolgen mehrere Finger gleichzeitig. Das machte Gesten wie das Zoomen mit zwei Fingern möglich. Die durchsichtigen Leiterbahnen bestehen meist aus Indiumzinnoxid, das Strom leitet und trotzdem Licht durchlässt."
+        },
+        {
+          "title": "Warum Regentropfen stören",
+          "text": "Wasser leitet Strom und verändert das Feld ähnlich wie ein Finger. Tropfen auf dem Display lösen deshalb Fehleingaben aus oder überdecken die echte Berührung, und mit nassen Fingern wird die Bedienung ungenau. Handschuhe für Touchscreens haben eingewebte leitende Fäden in den Fingerkuppen. Auch eine Banane oder ein Würstchen funktionieren als Eingabestift, weil sie feucht und leitfähig sind. Fingerabdrucksensoren unter dem Glas arbeiten je nach Bauart mit elektrischen Feldern, Licht oder Ultraschall: Sie tasten die feinen Rillen der Haut ab."
+        }
+      ],
+      "tryIt": "Tippe erst mit dem Fingernagel, dann mit der Fingerkuppe und zuletzt mit einem Metalllöffel in der Hand aufs Display. Der Nagel bleibt wirkungslos.",
+      "takeaways": [
+        "Der Finger verändert ein elektrisches Feld im Leitergitter unter dem Glas.",
+        "Was nicht leitet, wird vom Touchscreen nicht erkannt."
+      ]
+    }
+  },
+  {
+    "id": "geburtstagsparadoxon",
+    "phenomenon": "Geburtstagsparadoxon",
+    "question": "Ab wie vielen Leuten haben wahrscheinlich zwei am selben Tag Geburtstag?",
+    "explanation": "Schon 23 genügen für eine Chance von gut 50 Prozent. Das wirkt absurd wenig bei 365 Tagen. Der Grund: Es geht nicht darum, ob jemand deinen Geburtstag teilt, sondern ob irgendein Paar zusammenpasst. Unter 23 Personen gibt es 253 verschiedene Paare – 253 Gelegenheiten für einen Treffer.",
+    "detail": "Bei 50 Personen liegt die Wahrscheinlichkeit schon bei rund 97 Prozent, bei 70 über 99,9 Prozent.",
+    "deep": {
+      "lead": "Unser Bauchgefühl zählt Personen, die Mathematik zählt Paare – und davon gibt es viel mehr.",
+      "sections": [
+        {
+          "title": "So rechnet man es aus",
+          "text": "Einfacher als die Trefferchance ist das Gegenteil: dass alle verschiedene Geburtstage haben. Die zweite Person muss einen der 364 übrigen Tage erwischen, die dritte einen von 363, und so weiter. Multipliziert man diese Brüche für 23 Personen, bleiben gut 49 Prozent. Also liegt die Chance auf mindestens ein gemeinsames Datum bei knapp 51 Prozent. Die Zahl der Paare wächst viel schneller als die der Personen: 10 Leute bilden 45 Paare, 23 schon 253, 50 sogar 1.225. Schaltjahre und ungleich verteilte Geburten ändern am Ergebnis kaum etwas."
+        },
+        {
+          "title": "Wo das wichtig wird",
+          "text": "Der Effekt erklärt, warum »unglaubliche Zufälle« ständig vorkommen: Bei genügend vielen Gelegenheiten wird das Unwahrscheinliche fast sicher. Dass zwei Fremde im Urlaub gemeinsame Bekannte entdecken, ist deshalb kein Wunder. In der Informatik ist das Prinzip ernst: Digitale Fingerabdrücke von Dateien, sogenannte Hashwerte, sollen eindeutig sein. Ein Angreifer muss aber nicht einen bestimmten Wert treffen, es genügen zwei beliebige Dateien mit gleichem Wert. Solche Kollisionen findet man viel schneller, als man naiv erwartet. Deshalb müssen Hashwerte sehr lang sein."
+        }
+      ],
+      "tryIt": "Frag bei der nächsten Feier oder im Kollegenkreis nach: Sind 23 oder mehr Leute beisammen, stehen die Chancen auf einen doppelten Geburtstag besser als fifty-fifty.",
+      "takeaways": [
+        "Bei 23 Personen gibt es bereits 253 mögliche Paare.",
+        "Viele Gelegenheiten machen seltene Zufälle wahrscheinlich."
+      ]
+    }
+  },
+  {
+    "id": "stressreaktion-adrenalin",
+    "phenomenon": "Stressreaktion",
+    "question": "Warum bekommst du vor einer Prüfung Herzklopfen und feuchte Hände?",
+    "explanation": "Dein Gehirn stuft die Lage als Bedrohung ein und schaltet auf Alarm. Über Nerven und das Hormon Adrenalin steigen Puls und Blutdruck, die Atmung wird schneller, Zucker gelangt ins Blut, die Muskeln spannen sich an. Die Verdauung wird gedrosselt. Der Körper macht sich bereit für Kampf oder Flucht.",
+    "detail": "Die Reaktion ist uralt und unterscheidet nicht zwischen Raubtier und Vortrag. Sie läuft an, bevor du bewusst nachgedacht hast.",
+    "deep": {
+      "lead": "Stress ist ein Notfallprogramm, das für Minuten gedacht war – nicht für Wochen.",
+      "sections": [
+        {
+          "title": "Zwei Wellen",
+          "text": "Die erste Welle kommt in Sekunden über das Nervensystem: Das Nebennierenmark schüttet Adrenalin aus, das Herz rast. Etwas später folgt die zweite. Der Hypothalamus im Gehirn gibt über die Hirnanhangdrüse das Signal an die Nebennierenrinde, Cortisol freizusetzen. Dieses Hormon hält die Energieversorgung über Stunden hoch und dämpft Entzündungen. Ist die Gefahr vorbei, meldet das Cortisol selbst dem Gehirn, die Produktion zu drosseln – eine eingebaute Bremse. Den Begriff »Kampf oder Flucht« prägte der amerikanische Physiologe Walter Cannon vor gut hundert Jahren."
+        },
+        {
+          "title": "Kurz hilfreich, dauerhaft schädlich",
+          "text": "Ein mittleres Maß an Anspannung verbessert Aufmerksamkeit und Leistung; zu wenig macht träge, zu viel blockiert. Problematisch wird es, wenn der Alarm nicht mehr abklingt, weil der Auslöser bleibt: Zeitdruck, Sorgen, Konflikte. Dauerhaft erhöhtes Cortisol stört den Schlaf, schwächt die Abwehr und begünstigt Bluthochdruck. Was nachweislich hilft, setzt am Körper an: Bewegung baut die bereitgestellte Energie ab, langsames Ausatmen aktiviert den beruhigenden Teil des Nervensystems, ausreichend Schlaf senkt den Grundpegel. Auch das Gefühl, eine Lage beeinflussen zu können, macht sie weniger belastend."
+        }
+      ],
+      "tryIt": "Atme bei der nächsten Anspannung zwei Minuten lang vier Sekunden ein und sechs bis acht Sekunden aus. Langes Ausatmen bremst den Herzschlag.",
+      "takeaways": [
+        "Adrenalin wirkt in Sekunden, Cortisol hält den Alarm über Stunden.",
+        "Kurzer Stress macht leistungsfähig, Dauerstress macht krank."
+      ]
+    }
+  },
+  {
+    "id": "ueberschallknall",
+    "phenomenon": "Überschallknall",
+    "question": "Warum knallt es, wenn ein Jet schneller fliegt als der Schall?",
+    "explanation": "Ein Flugzeug schiebt Druckwellen vor sich her, die sich mit Schallgeschwindigkeit ausbreiten. Fliegt es schneller, können sie nicht mehr nach vorn entkommen. Sie stauen sich zu einer kegelförmigen Stoßfront, die das Flugzeug hinter sich herzieht. Wo dieser Kegel den Boden überstreicht, hörst du einen Knall.",
+    "detail": "Der Knall entsteht nicht nur im Moment des »Durchbrechens«. Der Jet schleppt ihn während des gesamten Überschallflugs wie einen Teppich über das Land.",
+    "deep": {
+      "lead": "Schall legt in Luft gut 1.200 Kilometer pro Stunde zurück – wer schneller ist, läuft seinen eigenen Wellen davon.",
+      "sections": [
+        {
+          "title": "Eine Bugwelle aus Luft",
+          "text": "Ein Boot, das schneller fährt, als die Wasserwellen laufen, zieht eine keilförmige Bugwelle hinter sich her. Beim Überschallflug geschieht dasselbe in drei Dimensionen. An der Stoßfront springt der Luftdruck schlagartig hoch, fällt dann unter den Normalwert und springt am Heck erneut hoch. Deshalb hört man oft einen Doppelknall. Je schneller das Flugzeug, desto spitzer der Kegel. In großer Höhe ist die Luft kälter und der Schall langsamer, nur etwa 1.060 Kilometer pro Stunde. Die Machzahl gibt an, wie viel schneller als der Schall etwas fliegt."
+        },
+        {
+          "title": "Der Knall im Kleinen",
+          "text": "Überschall gibt es auch ohne Flugzeug. Das Knallen einer Peitsche ist ein winziger Überschallknall: Die Bewegung läuft den immer dünner werdenden Riemen entlang und wird dabei so schnell, dass die Spitze die Schallgeschwindigkeit übertrifft. Auch viele Gewehrkugeln fliegen mit Überschall. Die weiße Wolke, die Jets manchmal umhüllt, ist dagegen keine sichtbare Schallmauer. Sie entsteht, wenn feuchte Luft im Unterdruck hinter einer Druckwelle kurz abkühlt und Wasserdampf kondensiert. Wegen des Lärms durfte die Concorde über bewohntem Land meist nicht mit Überschall fliegen."
+        }
+      ],
+      "tryIt": "Schau einem Verkehrsflugzeug hoch am Himmel nach: Sein Geräusch scheint von einer Stelle weit hinter ihm zu kommen, weil der Schall viele Sekunden zu dir braucht.",
+      "takeaways": [
+        "Schneller als der Schall stauen sich die Druckwellen zu einem Kegel.",
+        "Der Knall begleitet den ganzen Überschallflug, nicht nur einen Moment."
+      ]
+    }
+  },
+  {
+    "id": "diamant-graphit-kohlenstoff",
+    "phenomenon": "Diamant und Graphit",
+    "question": "Wie kann derselbe Stoff als Bleistiftmine weich und als Diamant extrem hart sein?",
+    "explanation": "Beide bestehen aus reinem Kohlenstoff, nur sind die Atome anders verbunden. Im Diamant hält jedes Atom vier Nachbarn in einem räumlichen Gitter fest, nichts kann verrutschen. Im Graphit bilden die Atome flache Schichten aus Sechsecken. In der Schicht ist die Bindung stark, dazwischen schwach: Die Schichten gleiten ab.",
+    "detail": "Beim Schreiben bleiben abgeriebene Graphitschichten auf dem Papier haften. Blei war in Bleistiften nie enthalten – der Name beruht auf einer alten Verwechslung.",
+    "deep": {
+      "lead": "Nicht nur die Atomsorte, auch die Anordnung der Atome bestimmt, wie sich ein Stoff verhält.",
+      "sections": [
+        {
+          "title": "Druck macht den Unterschied",
+          "text": "Diamanten entstehen in mehr als hundert Kilometern Tiefe im Erdmantel, wo enormer Druck und große Hitze herrschen. Vulkanische Schlote haben sie rasch an die Oberfläche befördert. Bei normalem Druck ist eigentlich Graphit die stabile Form; ein Diamant wandelt sich trotzdem nicht um, weil die Umordnung der Bindungen bei Zimmertemperatur praktisch unendlich langsam abläuft. Seit den 1950er-Jahren stellt man Diamanten auch künstlich her, in Pressen oder aus kohlenstoffhaltigem Gas. Die meisten Industriediamanten für Bohrer und Schleifscheiben stammen heute aus der Fabrik."
+        },
+        {
+          "title": "Noch mehr Gesichter des Kohlenstoffs",
+          "text": "Eine einzelne Graphitschicht, nur ein Atom dick, heißt Graphen. Zwei Forscher lösten sie 2004 mit Klebeband von einem Graphitblock ab und erhielten dafür den Physik-Nobelpreis. Graphen leitet Strom und Wärme sehr gut und ist auf sein Gewicht bezogen außerordentlich reißfest. Rollt man die Schicht auf, erhält man Nanoröhrchen; schließt man sie zur Kugel, entsteht ein Fulleren, das wie ein Fußball aus Fünf- und Sechsecken aussieht. Graphit leitet Strom, Diamant nicht – auch das folgt allein aus der Art der Bindung."
+        }
+      ],
+      "tryIt": "Reibe mit einem weichen Bleistift eine Fläche schwarz und fahre mit dem Finger darüber: Sie fühlt sich glatt und fettig an. Graphit dient deshalb auch als Schmiermittel.",
+      "takeaways": [
+        "Diamant und Graphit sind beide reiner Kohlenstoff.",
+        "Raumgitter macht hart, lose gestapelte Schichten machen weich."
+      ]
+    }
+  },
+  {
+    "id": "virus-bakterium-unterschied",
+    "phenomenon": "Viren und Bakterien",
+    "question": "Was unterscheidet ein Virus von einem Bakterium?",
+    "explanation": "Ein Bakterium ist eine vollständige Zelle mit eigenem Stoffwechsel, die sich selbst teilt. Ein Virus ist viel kleiner und besteht nur aus Erbgut in einer Eiweißhülle. Allein kann es nichts. Es muss in eine Zelle eindringen und sie umprogrammieren, damit sie neue Viren baut. Viren gelten deshalb nicht als Lebewesen.",
+    "detail": "Antibiotika greifen Bauteile an, die nur Bakterien besitzen, etwa ihre Zellwand. Viren haben nichts davon – gegen Grippe oder Erkältung sind Antibiotika wirkungslos.",
+    "deep": {
+      "lead": "Beide können krank machen, aber sie funktionieren so verschieden wie eine Fabrik und ein eingeschmuggelter Bauplan.",
+      "sections": [
+        {
+          "title": "Zu klein für das Mikroskop",
+          "text": "Bakterien sind etwa ein Tausendstel Millimeter groß und im Lichtmikroskop sichtbar. Die meisten Viren sind zehn- bis hundertmal kleiner; sehen konnte man sie erst mit dem Elektronenmikroskop in den 1930er-Jahren. Entdeckt hatte man sie schon vorher indirekt: Ende des 19. Jahrhunderts blieb der Saft kranker Tabakpflanzen ansteckend, obwohl man ihn durch Filter gepresst hatte, die alle Bakterien zurückhielten. Die allermeisten Bakterien sind harmlos oder nützlich, im Darm, auf der Haut, im Joghurt. Viren befallen alles Lebendige, auch Bakterien selbst; solche Bakteriophagen gibt es in unvorstellbarer Zahl."
+        },
+        {
+          "title": "Wie man Viren trotzdem beikommt",
+          "text": "Weil Viren die Maschinerie unserer eigenen Zellen benutzen, ist es schwer, sie zu treffen, ohne die Zelle zu schädigen. Antivirale Mittel setzen an den wenigen Schritten an, die nur das Virus braucht, etwa an Enzymen zum Kopieren seines Erbguts. Sie wirken meist nur gegen ein bestimmtes Virus. Die wichtigste Waffe bleibt die Impfung, die das Immunsystem vorab trainiert. Händewaschen mit Seife hilft, weil Seife die fettige Hülle vieler Viren zerstört. Erkältungen werden von mehr als hundert verschiedenen Virustypen ausgelöst – deshalb gibt es keine Impfung dagegen."
+        }
+      ],
+      "tryIt": "Lies den Beipackzettel eines Erkältungsmittels: Es lindert nur Beschwerden. Die Viren beseitigt allein dein Immunsystem, meist innerhalb von etwa einer Woche.",
+      "takeaways": [
+        "Bakterien sind eigenständige Zellen, Viren brauchen eine Wirtszelle.",
+        "Antibiotika wirken nur gegen Bakterien."
+      ]
+    }
+  },
+  {
+    "id": "kurzsichtigkeit-brille",
+    "phenomenon": "Kurzsichtigkeit",
+    "question": "Warum sehen Kurzsichtige in der Ferne unscharf, und was ändert die Brille?",
+    "explanation": "Hornhaut und Linse bündeln das Licht zu einem scharfen Bild auf der Netzhaut. Bei Kurzsichtigen ist der Augapfel meist etwas zu lang. Das Bild ferner Dinge entsteht dann vor der Netzhaut und kommt verschwommen an. Eine Streulinse weitet das Lichtbündel leicht auf und schiebt den Brennpunkt nach hinten.",
+    "detail": "Ein Millimeter zu viel Augenlänge entspricht etwa drei Dioptrien. Nahe Dinge sehen Kurzsichtige scharf, weil deren Bild von selbst weiter hinten entsteht.",
+    "deep": {
+      "lead": "Das Auge ist eine Kamera mit fester Baulänge – wächst es zu lang, sitzt der Sensor an der falschen Stelle.",
+      "sections": [
+        {
+          "title": "Draußen spielen schützt",
+          "text": "Kurzsichtigkeit entsteht meist in der Schulzeit, während das Auge noch wächst. In vielen Ländern nimmt sie stark zu; in einigen Großstädten Ostasiens ist heute die große Mehrheit der Schulabgänger kurzsichtig. Veranlagung spielt eine Rolle, erklärt den raschen Anstieg aber nicht. Gut belegt ist: Kinder, die täglich viel Zeit im Freien verbringen, werden seltener kurzsichtig. Helles Tageslicht bremst offenbar das Längenwachstum des Augapfels. Viel Naharbeit gilt als zusätzlicher Risikofaktor. Fachleute empfehlen für Kinder etwa zwei Stunden Tageslicht am Tag."
+        },
+        {
+          "title": "Weitsichtig, alterssichtig, gelasert",
+          "text": "Bei Weitsichtigkeit ist das Auge zu kurz, das Bild läge hinter der Netzhaut; eine Sammellinse hilft. Junge Augen gleichen das oft aus, indem ein Ringmuskel die elastische Linse stärker wölbt. Diese Fähigkeit lässt mit den Jahren nach, weil die Linse steifer wird. Ab Mitte vierzig rückt der Nahpunkt weg, die Arme werden beim Lesen »zu kurz« – das ist Alterssichtigkeit und trifft fast jeden. Beim Augenlasern wird die Hornhaut um Bruchteile eines Millimeters abgetragen und so ihre Brechkraft verändert. Die Länge des Augapfels bleibt gleich."
+        }
+      ],
+      "tryIt": "Stich mit einer Nadel ein kleines Loch in ein Stück Karton und schau ohne Brille hindurch: Das Bild wird schärfer, weil nur ein schmales Lichtbündel ins Auge fällt.",
+      "takeaways": [
+        "Im zu langen Auge entsteht das Bild vor der Netzhaut.",
+        "Viel Tageslicht in der Kindheit senkt das Risiko für Kurzsichtigkeit."
+      ]
+    }
+  },
+  {
+    "id": "wolken-regen-entstehung",
+    "phenomenon": "Wolken und Regen",
+    "question": "Warum fallen Wolken nicht herunter – und wann regnet es dann doch?",
+    "explanation": "Eine Wolke besteht aus Wassertröpfchen, die viel feiner sind als ein Haar. Sie sinken so langsam, dass schon schwache Aufwinde sie tragen. Regen fällt erst, wenn Tröpfchen zusammenstoßen und wachsen oder wenn Eiskristalle auf ihre Kosten größer werden. Ein Regentropfen enthält rund eine Million Wolkentröpfchen.",
+    "detail": "Leicht sind Wolken nicht: Eine gewöhnliche Schönwetterwolke enthält mehrere Hundert Tonnen Wasser, nur eben sehr fein verteilt.",
+    "deep": {
+      "lead": "Wasserdampf ist unsichtbar – eine Wolke zeigt die Stelle, an der er wieder flüssig oder zu Eis geworden ist.",
+      "sections": [
+        {
+          "title": "Ohne Staub keine Wolke",
+          "text": "Steigt feuchte Luft auf, dehnt sie sich aus und kühlt ab, bis der Wasserdampf kondensieren müsste. In völlig reiner Luft gelingt das kaum. Die Wassermoleküle brauchen einen Kern, an dem sie sich sammeln können: Staub, Ruß, Pollen oder Salzkristalle aus der Gischt der Meere. Solche Kondensationskerne schweben in großer Zahl in jedem Liter Luft. An Kondensstreifen sieht man das direkt: Die Abgase eines Flugzeugs liefern Wasserdampf und Rußteilchen, und in der kalten Höhe entsteht sofort eine schmale Eiswolke."
+        },
+        {
+          "title": "Die meisten Tropfen waren einmal Schnee",
+          "text": "In unseren Breiten reichen Regenwolken fast immer in Höhen, in denen es weit unter null Grad kalt ist. Dort schweben unterkühlte Wassertröpfchen neben wenigen Eiskristallen. Wasserdampf lagert sich bevorzugt am Eis an, die Kristalle wachsen rasch, während die Tröpfchen verdunsten. Die Kristalle verhaken sich zu Flocken, werden schwer und fallen. Unterwegs schmelzen sie – unten kommt Regen an, auch im Hochsommer. In warmen tropischen Wolken wachsen Tropfen dagegen allein durch Zusammenstöße. Hagel entsteht, wenn starke Aufwinde Eiskörner mehrmals durch eine Gewitterwolke tragen."
+        }
+      ],
+      "tryIt": "Beobachte einen Kondensstreifen: Löst er sich nach Sekunden auf, ist die Höhenluft trocken. Bleibt er lange stehen und wird breit, ist sie feucht.",
+      "takeaways": [
+        "Wolkentröpfchen sind so klein, dass Aufwind sie in der Schwebe hält.",
+        "Bei uns beginnt Regen meist als Eis hoch oben in der Wolke."
+      ]
+    }
+  },
+  {
+    "id": "solarzelle-photovoltaik",
+    "phenomenon": "Solarzelle",
+    "question": "Wie macht eine Solarzelle aus Sonnenlicht Strom?",
+    "explanation": "Eine Solarzelle besteht aus zwei Schichten Silizium, die mit Fremdatomen versetzt sind. An ihrer Grenze entsteht ein eingebautes elektrisches Feld. Trifft Licht auf das Silizium, schlägt es Elektronen aus ihren Bindungen. Das Feld treibt sie zu einer Seite. Verbindet man beide Seiten über ein Kabel, fließt Strom.",
+    "detail": "Bewegliche Teile oder Brennstoff braucht es nicht. Gängige Module wandeln rund ein Fünftel der eingestrahlten Sonnenenergie in Strom um.",
+    "deep": {
+      "lead": "Licht besteht aus Energiepaketen – in einer Solarzelle hebt jedes passende Paket ein Elektron in den Stromkreis.",
+      "sections": [
+        {
+          "title": "Einsteins Nobelpreis",
+          "text": "Dass Licht Elektronen aus einem Material lösen kann, war seit dem 19. Jahrhundert bekannt, aber rätselhaft: Schwaches blaues Licht schaffte es, noch so helles rotes nicht. Albert Einstein erklärte das 1905 damit, dass Licht in Portionen kommt, den Photonen, deren Energie von der Farbe abhängt. Für diese Deutung, nicht für die Relativitätstheorie, erhielt er den Nobelpreis. Die erste brauchbare Solarzelle aus Silizium bauten 1954 Forscher der Bell-Labore in den USA. Zunächst war sie so teuer, dass sie fast nur Satelliten mit Strom versorgte."
+        },
+        {
+          "title": "Vom Luxus zur billigen Stromquelle",
+          "text": "Seit den 1970er-Jahren ist der Preis von Solarmodulen um weit mehr als 99 Prozent gefallen, weil die Fertigung immer größer und besser wurde. In sonnigen Regionen gehört Solarstrom heute zu den günstigsten Stromquellen. Die Zellen liefern Gleichstrom; ein Wechselrichter wandelt ihn in den Wechselstrom des Netzes um. Auch bei bedecktem Himmel entsteht Strom, nur deutlich weniger. Bei Hitze sinkt die Ausbeute etwas, kalte, klare Tage sind ideal. Die Schwäche bleibt: Nachts kommt nichts, darum braucht es Speicher und andere Quellen als Ergänzung."
+        }
+      ],
+      "tryIt": "Lege einen Solar-Taschenrechner ins Licht und decke die Zellen langsam mit dem Finger ab: Die Anzeige verblasst, sobald zu wenig Licht ankommt.",
+      "takeaways": [
+        "Licht löst im Silizium Elektronen, ein eingebautes Feld sortiert sie.",
+        "Solarzellen liefern Gleichstrom, ganz ohne bewegliche Teile."
+      ]
+    }
+  },
+  {
+    "id": "exponentielles-wachstum-papier",
+    "phenomenon": "Exponentielles Wachstum",
+    "question": "Wie dick würde ein Blatt Papier, wenn du es 42-mal falten könntest?",
+    "explanation": "Rechnerisch reicht es bis zum Mond. Jede Faltung verdoppelt die Dicke. Aus 0,1 Millimetern werden nach 10 Faltungen gut 10 Zentimeter, nach 20 gut 100 Meter, nach 30 über 100 Kilometer, nach 42 rund 440.000 Kilometer. Wachstum durch stetiges Verdoppeln beginnt unscheinbar und wird dann sehr schnell riesig.",
+    "detail": "In der Praxis ist nach sieben oder acht Faltungen Schluss, weil das Papier zu dick und zu klein wird. Der Rekord mit einer sehr langen Bahn liegt bei zwölf.",
+    "deep": {
+      "lead": "Lineares Wachstum addiert in jedem Schritt gleich viel, exponentielles multipliziert – unser Gefühl rechnet fast immer linear.",
+      "sections": [
+        {
+          "title": "Die Legende vom Schachbrett",
+          "text": "Einer alten Erzählung nach wünschte sich der Erfinder des Schachspiels vom König als Lohn Reis: ein Korn auf das erste Feld, zwei auf das zweite, vier auf das dritte, immer das Doppelte. Der König lachte über die Bescheidenheit. Auf dem 64. Feld allein lägen aber über neun Trillionen Körner, insgesamt weit mehr, als alle Reisernten der Geschichte geliefert haben. Das Tückische: Die erste Hälfte des Bretts bleibt harmlos. Bis Feld 32 kommen insgesamt nur etwa hundert Tonnen zusammen. Die Katastrophe steckt vollständig in der zweiten Hälfte."
+        },
+        {
+          "title": "Die 70er-Regel",
+          "text": "Wächst etwas um einen festen Prozentsatz pro Zeitabschnitt, verdoppelt es sich in festen Abständen. Die Faustregel: 70 geteilt durch den Prozentsatz ergibt die Verdopplungszeit. Bei sieben Prozent im Jahr sind es zehn Jahre, bei zwei Prozent 35. Bakterien, die sich alle 20 Minuten teilen, würden bei unbegrenzter Nahrung in zwei Tagen mehr Masse bilden als die Erde. Dazu kommt es nie: Echtes exponentielles Wachstum stößt immer an Grenzen und flacht ab. Gefährlich ist die Phase davor, weil die Lage lange harmlos aussieht – etwa am Beginn einer Epidemie."
+        }
+      ],
+      "tryIt": "Falte ein Blatt Zeitungspapier so oft wie möglich in der Mitte und zähle mit. Spätestens beim siebten oder achten Mal ist Schluss.",
+      "takeaways": [
+        "Verdoppeln wirkt lange harmlos und explodiert dann.",
+        "70 geteilt durch die Wachstumsrate in Prozent ergibt die Verdopplungszeit."
+      ]
+    }
+  },
+  {
+    "id": "placebo-effekt",
+    "phenomenon": "Placebo-Effekt",
+    "question": "Wie kann eine Tablette ohne Wirkstoff Schmerzen lindern?",
+    "explanation": "Erwartung verändert, was im Körper passiert. Bei Menschen, die überzeugt sind, ein wirksames Mittel zu bekommen, schüttet das Gehirn nachweislich körpereigene Schmerzhemmer aus. Auch Zuwendung und das Ritual der Behandlung tragen dazu bei. Die Beschwerden lassen tatsächlich nach, nicht nur in der Einbildung.",
+    "detail": "Es gibt auch das Gegenteil, den Nocebo-Effekt: Wer Nebenwirkungen erwartet, etwa nach dem Lesen des Beipackzettels, bekommt sie häufiger – selbst von Scheinpillen.",
+    "deep": {
+      "lead": "Ein Placebo heilt keine Krankheit – aber es zeigt, wie stark Erwartung das Erleben von Beschwerden steuert.",
+      "sections": [
+        {
+          "title": "Was es kann und was nicht",
+          "text": "Gut belegt ist die Wirkung bei Beschwerden, die das Gehirn stark mitgestaltet: Schmerz, Übelkeit, Erschöpfung, Niedergeschlagenheit. In Versuchen ließ sich die Schmerzlinderung durch ein Placebo aufheben, wenn man die Andockstellen der körpereigenen Opioide blockierte – ein Hinweis auf einen echten biochemischen Vorgang. Einen Tumor schrumpfen lassen, eine Infektion beseitigen oder einen Knochen richten kann ein Placebo nicht. Teure Scheinmittel wirkten in Studien stärker als billige, Spritzen stärker als Tabletten. Selbst offen als Placebo gekennzeichnete Pillen zeigten in einigen Untersuchungen noch eine Wirkung."
+        },
+        {
+          "title": "Warum gute Studien doppelblind sind",
+          "text": "Weil Erwartung allein schon hilft, beweist es wenig, wenn es Patienten nach einer neuen Arznei besser geht. Deshalb vergleicht man: Eine Gruppe erhält das Medikament, eine andere ein äußerlich gleiches Scheinmittel, zugeteilt per Los. Weder die Behandelten noch die Ärzte wissen, wer was bekommt, sonst würden ihre Erwartungen das Ergebnis färben. Nur was besser abschneidet als das Placebo, gilt als wirksam. Dazu kommt ein statistischer Effekt: Menschen suchen Hilfe, wenn es ihnen am schlechtesten geht. Danach wird es meist von allein besser, egal was sie nehmen."
+        }
+      ],
+      "tryIt": "Achte beim nächsten Kopfschmerz darauf, wann die Tablette zu wirken scheint. Oft spürst du Besserung, bevor der Wirkstoff überhaupt im Blut angekommen sein kann.",
+      "takeaways": [
+        "Erwartung kann Schmerz und Übelkeit messbar lindern.",
+        "Medikamente müssen in Studien besser sein als ein Scheinmittel."
+      ]
+    }
+  },
+  {
+    "id": "oberflaechenspannung-wasserlaeufer",
+    "phenomenon": "Oberflächenspannung",
+    "question": "Warum kann ein Wasserläufer über einen Teich laufen, ohne einzusinken?",
+    "explanation": "Wassermoleküle ziehen sich gegenseitig an. Im Inneren wirkt dieser Zug in alle Richtungen, an der Oberfläche fehlen die Nachbarn nach oben. Die obersten Moleküle werden nach innen und zur Seite gezogen, die Oberfläche verhält sich wie eine gespannte Haut. Leichte Insekten dellen sie ein, ohne sie zu durchstoßen.",
+    "detail": "Die Beine des Wasserläufers sind dicht mit feinen, wasserabweisenden Härchen besetzt. Ohne sie würde das Wasser die Beine benetzen, und das Tier sänke ein.",
+    "deep": {
+      "lead": "Die dünne »Haut« des Wassers formt Tropfen, trägt Insekten und erklärt, wozu Spülmittel gut ist.",
+      "sections": [
+        {
+          "title": "Warum Tropfen rund sind",
+          "text": "Die Oberflächenspannung zieht jede Wassermenge in die Form mit der kleinsten Oberfläche zusammen, und das ist die Kugel. Kleine Tropfen auf einer gewachsten Motorhaube sind deshalb fast rund, große werden von der Schwerkraft platt gedrückt. In der Schwerelosigkeit schweben selbst große Wasserportionen als wabbelnde Kugeln. Wasser hat eine besonders hohe Oberflächenspannung, weil seine Moleküle durch Wasserstoffbrücken stark aneinanderhängen. Quecksilber hält noch fester zusammen und perlt selbst von Glas ab. Fallende Regentropfen sind übrigens nicht tränenförmig, sondern rundlich bis leicht abgeflacht."
+        },
+        {
+          "title": "Was Spülmittel verändert",
+          "text": "Tenside in Spülmittel und Seife drängen sich an die Wasseroberfläche und lockern den Zusammenhalt der Moleküle. Die Spannung sinkt deutlich. Jetzt kann das Wasser in feine Gewebe und Fettfilme eindringen, statt abzuperlen – es wird gewissermaßen nasser. Auch Seifenblasen brauchen diesen Effekt: Reines Wasser zieht sich so stark zusammen, dass eine dünne Blasenhaut sofort reißt. Enten fetten ihr Gefieder ein, damit Wasser abperlt. In Wasser, das stark mit Tensiden belastet ist, würde ihr Gefieder durchnässen, und Wasserläufer gingen unter."
+        }
+      ],
+      "tryIt": "Lege eine Büroklammer auf ein Stück Küchenpapier und beides auf ein Glas Wasser. Das Papier sinkt, die Klammer bleibt liegen – bis ein Tropfen Spülmittel dazukommt.",
+      "takeaways": [
+        "An der Oberfläche ziehen sich Wassermoleküle zu einer Art Haut zusammen.",
+        "Tenside senken die Spannung, Wasser benetzt dann besser."
+      ]
+    }
+  },
+  {
+    "id": "feuerwerk-flammenfaerbung",
+    "phenomenon": "Flammenfärbung",
+    "question": "Woher bekommt ein Feuerwerk seine Farben?",
+    "explanation": "In den Leuchtkugeln stecken Metallsalze. In der Hitze nehmen Elektronen der Metallatome Energie auf und springen auf eine höhere Stufe. Fallen sie zurück, geben sie die Energie als Licht ab – in festgelegten Farben, die für jedes Element typisch sind. Strontium leuchtet rot, Barium grün, Natrium gelb, Kupfer blau.",
+    "detail": "Ein sattes Blau gilt als schwierigste Feuerwerksfarbe: Die Kupferverbindung, die es erzeugt, zerfällt, wenn die Flamme nur etwas zu heiß wird.",
+    "deep": {
+      "lead": "Jedes chemische Element sendet beim Erhitzen sein eigenes Farbmuster aus – einen Fingerabdruck aus Licht.",
+      "sections": [
+        {
+          "title": "Woraus die Sonne besteht",
+          "text": "Um 1860 zeigten Robert Bunsen und Gustav Kirchhoff in Heidelberg, dass man Elemente an ihrem Licht erkennen kann. Sie zerlegten das Licht gefärbter Flammen mit einem Prisma und fanden für jedes Element eigene, scharfe Linien. Mit dieser Spektralanalyse entdeckten sie zwei neue Elemente, Cäsium und Rubidium. Dieselben Linien fand man im Licht der Sonne und der Sterne. Plötzlich ließ sich bestimmen, woraus Himmelskörper bestehen, die niemand je erreichen wird. Helium wurde so zuerst im Sonnenlicht nachgewiesen und erst Jahrzehnte später auf der Erde."
+        },
+        {
+          "title": "Der Effekt in deiner Küche",
+          "text": "Kocht Nudelwasser über, flackert die Gasflamme kräftig gelb: Das ist das Natrium aus dem Kochsalz. Dasselbe gelbe Licht kam aus den Natriumdampflampen, die jahrzehntelang Straßen beleuchteten. Leuchtreklamen funktionieren ähnlich, nur regt dort Strom statt Hitze die Atome an: Neon leuchtet rotorange, andere Gase und Beschichtungen liefern die übrigen Farben. Im Feuerwerk sorgt Schwarzpulver für den Antrieb, die Farbe kommt aus kleinen Kügelchen, den Sternen. Ihre Anordnung in der Hülle bestimmt, ob am Himmel eine Kugel, ein Ring oder ein Herz erscheint."
+        }
+      ],
+      "tryIt": "Tauche ein angefeuchtetes Holzstäbchen in Salz und halte es kurz an eine Kerzen- oder Gasflamme: Sie färbt sich kräftig gelb.",
+      "takeaways": [
+        "Angeregte Atome senden Licht in elementtypischen Farben aus.",
+        "Am Spektrum erkennt man, woraus selbst ferne Sterne bestehen."
+      ]
+    }
+  },
+  {
+    "id": "metamorphose-schmetterling",
+    "phenomenon": "Metamorphose",
+    "question": "Was passiert in der Puppe, wenn aus einer Raupe ein Schmetterling wird?",
+    "explanation": "Der Körper der Raupe wird zum großen Teil abgebaut, Enzyme lösen viele Gewebe auf. Erhalten bleiben kleine Zellgruppen, die schon in der Raupe angelegt waren. Aus ihnen wachsen, genährt vom aufgelösten Material, Flügel, Fühler, Beine und Facettenaugen. Nach Tagen bis Wochen schlüpft ein völlig anders gebautes Tier.",
+    "detail": "Raupe und Falter haben dasselbe Erbgut. In den beiden Lebensphasen werden nur unterschiedliche Gene abgelesen.",
+    "deep": {
+      "lead": "Zwei Körper, ein Leben: Die Raupe ist zum Fressen gebaut, der Falter zum Fliegen und Fortpflanzen.",
+      "sections": [
+        {
+          "title": "Arbeitsteilung zwischen Jung und Alt",
+          "text": "Die vollständige Verwandlung hat einen großen Vorteil: Larve und erwachsenes Tier machen sich keine Konkurrenz. Die Raupe frisst Blätter und vervielfacht ihr Gewicht, wobei sie sich mehrfach häutet. Der Falter trinkt Nektar oder frisst gar nichts mehr und sucht Partner. Käfer, Fliegen, Bienen und Ameisen entwickeln sich nach demselben Muster; zusammen stellen diese Gruppen die große Mehrheit aller Insektenarten. Heuschrecken und Libellen gehen den anderen Weg: Ihre Jungen werden mit jeder Häutung etwas erwachsener, ganz ohne Puppenstadium."
+        },
+        {
+          "title": "Hormone geben den Takt",
+          "text": "Zwei Hormone steuern den Ablauf. Eines löst jede Häutung aus. Das andere, das Juvenilhormon, hält das Tier im Larvenstadium: Solange viel davon vorhanden ist, folgt auf die Häutung wieder eine Raupe. Sinkt sein Spiegel, entsteht die Puppe; fehlt es ganz, der Falter. Versuche deuten darauf hin, dass Falter sich an Gerüche erinnern können, die sie als Raupe gelernt haben – Teile des Nervensystems überdauern also den Umbau. Auch bei Fröschen leitet ein Hormon die Verwandlung ein: Das Schilddrüsenhormon lässt Kaulquappen Beine wachsen."
+        }
+      ],
+      "tryIt": "Suche im Frühsommer an Brennnesseln nach den schwarzen Raupen des Tagpfauenauges und sieh alle paar Tage nach, wie schnell sie wachsen.",
+      "takeaways": [
+        "In der Puppe wird der Raupenkörper ab- und der Falter neu aufgebaut.",
+        "Larve und Falter nutzen verschiedene Nahrung und konkurrieren nicht."
+      ]
+    }
+  },
+  {
+    "id": "karies-zucker-saeure",
+    "phenomenon": "Karies",
+    "question": "Wie macht Zucker Löcher in die Zähne?",
+    "explanation": "Zucker selbst greift den Zahn nicht an. Im Zahnbelag leben Bakterien, die Zucker aufnehmen und zu Säure vergären. Die Säure löst Mineralien aus dem Zahnschmelz. In den Pausen zwischen den Mahlzeiten liefert der Speichel Mineralien nach und repariert den Schaden. Kommt ständig Zucker nach, überwiegt das Herauslösen.",
+    "detail": "Entscheidend ist weniger die Zuckermenge als die Häufigkeit. Süßes auf einmal schadet den Zähnen weniger als dieselbe Menge über den Tag verteilt.",
+    "deep": {
+      "lead": "Der Zahnschmelz wird jeden Tag angelöst und wieder gehärtet – Karies entsteht, wenn das Anlösen überwiegt.",
+      "sections": [
+        {
+          "title": "Das härteste Material des Körpers",
+          "text": "Zahnschmelz besteht fast vollständig aus einem kristallinen Calciumphosphat und ist härter als Knochen. Er enthält aber keine lebenden Zellen und kann deshalb nicht nachwachsen. Sinkt der pH-Wert im Mund unter etwa 5,5, gehen Calcium und Phosphat in Lösung. Nach einem süßen Snack dauert es rund eine halbe Stunde, bis der Speichel die Säure abgepuffert hat. Erste Schäden zeigen sich als kreidig-weiße Flecken und sind noch umkehrbar. Erst wenn die Oberfläche einbricht, braucht es eine Füllung. Nachts fließt kaum Speichel, darum ist Putzen vor dem Schlafen besonders wichtig."
+        },
+        {
+          "title": "Was Fluorid bewirkt",
+          "text": "Fluorid aus der Zahnpasta lagert sich in die oberste Schmelzschicht ein. Das so veränderte Mineral ist säurefester und bildet sich bei der Reparatur bevorzugt. In den Mengen, die Zahnpasta und fluoridiertes Speisesalz liefern, gilt es als sicher; seine breite Einführung hat Karies in vielen Ländern deutlich zurückgedrängt. Zuckerfreie Kaugummis helfen, weil Kauen den Speichelfluss anregt. Den Zuckeraustauschstoff Xylit können die Kariesbakterien nicht verwerten. Saure Getränke greifen den Schmelz auch ganz ohne Bakterien an; nach ihnen wartet man mit dem Putzen besser eine Weile."
+        }
+      ],
+      "tryIt": "Zähle einen Tag lang, wie oft du etwas Zuckerhaltiges isst oder trinkst, auch Saft und gesüßten Kaffee. Jedes Mal beginnt für deine Zähne eine halbe Stunde Säure.",
+      "takeaways": [
+        "Bakterien im Zahnbelag machen aus Zucker Säure.",
+        "Häufiges Naschen schadet mehr als viel auf einmal."
+      ]
+    }
+  },
+  {
+    "id": "corioliskraft-tiefdruckwirbel",
+    "phenomenon": "Corioliskraft",
+    "question": "Warum drehen sich Tiefs auf der Nordhalbkugel gegen den Uhrzeigersinn?",
+    "explanation": "Luft strömt von allen Seiten auf ein Tief zu. Weil sich die Erde unter ihr dreht, wird jede großräumige Bewegung auf der Nordhalbkugel nach rechts abgelenkt, auf der Südhalbkugel nach links. Die Luft erreicht das Zentrum deshalb nicht direkt, sondern umkreist es – im Norden gegen den Uhrzeigersinn, im Süden mit ihm.",
+    "detail": "Für den Abfluss im Waschbecken ist der Effekt viel zu schwach. Wie herum das Wasser dort strudelt, bestimmen Beckenform und Restbewegung, nicht die Halbkugel.",
+    "deep": {
+      "lead": "Die Erddrehung prägt das Wetter: Sie macht aus geradlinigen Luftströmen Wirbel und aus Hochs und Tiefs rotierende Gebilde.",
+      "sections": [
+        {
+          "title": "Woher die Ablenkung kommt",
+          "text": "Ein Punkt am Äquator legt bei einer Erdumdrehung rund 40.000 Kilometer zurück, ein Punkt bei uns deutlich weniger, am Pol gar nichts. Luft, die vom Äquator nach Norden strömt, bringt ihren hohen Schwung nach Osten mit und eilt dem langsameren Boden voraus – sie biegt nach rechts ab. Luft auf dem Weg nach Süden bleibt hinter dem schnelleren Boden zurück, auch das ist von ihr aus gesehen rechts. Der französische Mathematiker Gaspard Gustave de Coriolis beschrieb die Rechnung dahinter 1835. Am Äquator selbst verschwindet der Effekt."
+        },
+        {
+          "title": "Passat, Westwind, Wirbelsturm",
+          "text": "Passatwinde wehen nicht einfach zum Äquator hin, sondern schräg aus Nordost und Südost. In unseren Breiten herrscht Westwind, weshalb das Wetter meist vom Atlantik kommt. Die großen Meeresströmungen kreisen im Nordatlantik und Nordpazifik im Uhrzeigersinn, südlich des Äquators andersherum. Tropische Wirbelstürme können sich in einem Streifen von etwa fünf Grad beiderseits des Äquators nicht bilden, weil dort die ablenkende Kraft fehlt. Um ein Hoch dreht sich die Luft übrigens genau entgegengesetzt wie um ein Tief."
+        }
+      ],
+      "tryIt": "Schau dir in einer Wetter-App das Satellitenbild oder die Windkarte an und suche ein Tief über dem Atlantik: Die Wolkenspirale dreht gegen den Uhrzeigersinn.",
+      "takeaways": [
+        "Auf der Nordhalbkugel werden Luftströme nach rechts abgelenkt.",
+        "Im Waschbecken spielt die Corioliskraft keine Rolle."
+      ]
+    }
+  },
+  {
+    "id": "led-leuchtdiode",
+    "phenomenon": "Leuchtdiode",
+    "question": "Warum braucht eine LED so viel weniger Strom als eine Glühbirne?",
+    "explanation": "Eine Glühbirne heizt einen Draht auf über 2.000 Grad, bis er glüht. Dabei wird fast alles zu Wärme, nur wenige Prozent zu Licht. Eine LED erzeugt Licht ohne Umweg über Hitze: In einem Halbleiterkristall fallen Elektronen auf ein niedrigeres Energieniveau und geben die Differenz direkt als Licht ab.",
+    "detail": "Weißes LED-Licht ist ein Trick: Eine blaue LED regt eine gelbliche Leuchtschicht an. Blau und Gelb zusammen empfindet das Auge als Weiß.",
+    "deep": {
+      "lead": "Die LED ist die Umkehrung der Solarzelle: Dort macht Licht Strom, hier macht Strom Licht.",
+      "sections": [
+        {
+          "title": "Das fehlende Blau",
+          "text": "Rote Leuchtdioden gibt es seit den 1960er-Jahren, bald folgten grüne und gelbe; sie dienten als Kontrolllämpchen und in Anzeigen von Taschenrechnern. Für weißes Licht fehlte Blau, und rund drei Jahrzehnte lang gelang es niemandem, den passenden Kristall in ausreichender Qualität herzustellen. Um 1990 schafften es die japanischen Forscher Isamu Akasaki, Hiroshi Amano und Shuji Nakamura mit dem Material Galliumnitrid. Erst damit wurden weiße LED-Lampen, Bildschirme mit LED-Beleuchtung und Blu-ray-Laufwerke möglich. 2014 erhielten die drei den Physik-Nobelpreis."
+        },
+        {
+          "title": "Was auf der Packung steht",
+          "text": "Früher kaufte man Lampen nach Watt, also nach Stromverbrauch. Heute zählt Lumen, die abgegebene Lichtmenge: Etwa 800 Lumen entsprechen einer alten 60-Watt-Birne, eine LED braucht dafür nur rund 7 bis 9 Watt. Die Farbtemperatur in Kelvin beschreibt den Farbton: Um 2.700 Kelvin wirkt das Licht warm und gelblich, über 5.000 kühl wie Tageslicht. LEDs halten viele Tausend Stunden. Kaputt geht meist nicht der Leuchtchip, sondern die Elektronik im Sockel, die unter Hitze leidet – enge, geschlossene Leuchten verkürzen deshalb die Lebensdauer."
+        }
+      ],
+      "tryIt": "Suche auf der Verpackung oder dem Sockel einer LED-Lampe die Angaben Lumen, Watt und Kelvin. Teile Lumen durch Watt: Je höher die Zahl, desto sparsamer.",
+      "takeaways": [
+        "Glühlampen machen vor allem Wärme, LEDs direkt Licht.",
+        "Helligkeit steht in Lumen, der Farbton in Kelvin."
+      ]
+    }
+  },
+  {
+    "id": "falsch-positiv-basisrate",
+    "phenomenon": "Falsch-positive Tests",
+    "question": "Dein Test auf eine seltene Krankheit ist positiv – wie sicher bist du krank?",
+    "explanation": "Oft viel unsicherer, als es klingt. Angenommen, einer von 1.000 Menschen hat die Krankheit, und der Test schlägt bei 5 Prozent der Gesunden fälschlich an. Von 1.000 Getesteten ist dann einer wirklich krank, aber rund 50 Gesunde sind ebenfalls positiv. Nur etwa einer von 51 positiv Getesteten ist tatsächlich krank.",
+    "detail": "Je seltener eine Krankheit ist, desto mehr überwiegen die Fehlalarme – selbst bei einem guten Test. Deshalb folgt auf ein positives Screening ein Bestätigungstest.",
+    "deep": {
+      "lead": "Wie viel ein Testergebnis bedeutet, hängt nicht nur vom Test ab, sondern auch davon, wie häufig das Gesuchte überhaupt ist.",
+      "sections": [
+        {
+          "title": "In Köpfen statt in Prozenten rechnen",
+          "text": "Mit Angaben wie »95 Prozent zuverlässig« verschätzen sich auch Ärztinnen und Ärzte regelmäßig, das haben Studien wiederholt gezeigt. Viel leichter wird es mit natürlichen Häufigkeiten: Stell dir 1.000 Menschen vor und zähle durch, wie viele krank sind, wie viele davon der Test findet und wie viele Gesunde er fälschlich meldet. Dann teilst du die echt Kranken durch alle positiv Getesteten. Der Psychologe Gerd Gigerenzer hat diese Darstellung bekannt gemacht. Die Regel dahinter geht auf den englischen Pfarrer Thomas Bayes im 18. Jahrhundert zurück."
+        },
+        {
+          "title": "Dieselbe Falle anderswo",
+          "text": "Sucht eine Software am Flughafen nach einigen wenigen Gesuchten unter Millionen Reisenden, liefert selbst eine Fehlerquote von einem Promille Tausende falsche Treffer. Dopingtests unter überwiegend sauberen Sportlern, Rauchmelder in der Küche, Betrugswarnungen der Bank: Überall, wo das Gesuchte selten ist, stammen die meisten Alarme von Unschuldigen. Umgekehrt gilt: Wird jemand mit deutlichen Beschwerden getestet, ist die Krankheit in dieser Gruppe viel häufiger, und ein positives Ergebnis wiegt entsprechend schwerer. Der Test ist derselbe, die Ausgangslage nicht."
+        }
+      ],
+      "tryIt": "Rechne nach: Krankheit bei 1 von 100, der Test findet alle Kranken und meldet 10 Prozent der Gesunden falsch. Wie viele von 100 sind positiv, wie viele davon krank?",
+      "takeaways": [
+        "Bei seltenen Krankheiten sind die meisten positiven Tests Fehlalarme.",
+        "Rechne mit konkreten Personenzahlen statt mit Prozenten."
+      ]
+    }
+  },
+  {
+    "id": "unaufmerksamkeitsblindheit-gorilla",
+    "phenomenon": "Unaufmerksamkeitsblindheit",
+    "question": "Wie kann man einen Gorilla übersehen, der mitten durchs Bild läuft?",
+    "explanation": "Bewusst wahrnehmen wir nur, worauf wir die Aufmerksamkeit richten. In einem berühmten Versuch sollten Zuschauer in einem Video die Pässe eines Basketballteams zählen. Währenddessen lief eine Person im Gorillakostüm durch die Spieler und trommelte sich auf die Brust. Etwa die Hälfte der Zuschauer bemerkte sie nicht.",
+    "detail": "Spätere Messungen der Blickrichtung zeigten: Viele hatten direkt auf den Gorilla geschaut. Gesehen ist aber noch nicht wahrgenommen.",
+    "deep": {
+      "lead": "Aufmerksamkeit ist ein Scheinwerfer: Was außerhalb des Lichtkegels liegt, existiert für das Bewusstsein kaum.",
+      "sections": [
+        {
+          "title": "Das Experiment von 1999",
+          "text": "Die Psychologen Daniel Simons und Christopher Chabris zeigten Studierenden der Harvard-Universität einen kurzen Film, in dem ein Team in weißen und eines in schwarzen Hemden Bälle hin- und herwarfen. Aufgabe: die Pässe der Weißen zählen. Der Gorilla war mehrere Sekunden lang zu sehen. Viele, die ihn verpasst hatten, wollten es kaum glauben. Das ist der zweite Teil des Befunds: Wir überschätzen stark, wie viel wir mitbekommen. In einer späteren Studie übersahen selbst erfahrene Radiologen mehrheitlich ein Gorillabildchen, das man in Lungenaufnahmen eingefügt hatte."
+        },
+        {
+          "title": "Folgen im Straßenverkehr",
+          "text": "Wer beim Fahren telefoniert, schaut auf die Straße und verpasst trotzdem mehr: Das Gespräch bindet Aufmerksamkeit, und das gilt für Freisprechanlagen ähnlich wie für das Handy am Ohr. Autofahrer, die einen Radfahrer »einfach nicht gesehen« haben, sagen oft die Wahrheit – sie suchten nach Autos. Unerwartetes wird leichter übersehen als Erwartetes. Zauberkünstler leben davon: Sie lenken den Blick auf die eine Hand, während die andere arbeitet. Echtes Multitasking bei anspruchsvollen Aufgaben gibt es kaum; das Gehirn schaltet hin und her und verliert bei jedem Wechsel Zeit und Genauigkeit."
+        }
+      ],
+      "tryIt": "Bitte jemanden, in einem Raum alle roten Gegenstände zu zählen. Lass ihn dann mit geschlossenen Augen die blauen aufzählen – er wird kaum einen nennen können.",
+      "takeaways": [
+        "Ohne Aufmerksamkeit bleibt selbst Auffälliges unbemerkt.",
+        "Wir überschätzen, wie viel wir von unserer Umgebung mitbekommen."
+      ]
+    }
+  },
+  {
+    "id": "taupunkt-beschlagene-brille",
+    "phenomenon": "Taupunkt",
+    "question": "Warum beschlägt die Brille, wenn du im Winter ins Warme kommst?",
+    "explanation": "Luft kann umso mehr unsichtbaren Wasserdampf aufnehmen, je wärmer sie ist. Trifft warme, feuchte Raumluft auf die kalten Brillengläser, kühlt sie dort schlagartig ab. Sie kann den Dampf nicht mehr halten, er schlägt sich als Film winziger Tröpfchen nieder. Sind die Gläser warm geworden, verdunstet er wieder.",
+    "detail": "Die Temperatur, bei der Luft ihren Wasserdampf nicht mehr halten kann, heißt Taupunkt. Je feuchter die Luft, desto höher liegt er.",
+    "deep": {
+      "lead": "Tau auf der Wiese, Nebel am Fluss, beschlagene Spiegel und Schimmel in der Zimmerecke haben dieselbe Ursache.",
+      "sections": [
+        {
+          "title": "Relative Feuchte ist relativ",
+          "text": "Der Wetterbericht nennt die relative Luftfeuchte: wie viel Prozent der möglichen Dampfmenge die Luft gerade enthält. Luft von 20 Grad fasst gut 17 Gramm Wasser pro Kubikmeter, bei null Grad sind es nur knapp fünf. Kühlt Luft ab, steigt ihre relative Feuchte, ohne dass ein Gramm Wasser dazukommt. Bei 100 Prozent ist der Taupunkt erreicht. So entstehen nachts Tau und Nebel. Umgekehrt wird kalte Außenluft beim Erwärmen im Zimmer sehr trocken – darum hilft kurzes Stoßlüften im Winter gegen feuchte Räume."
+        },
+        {
+          "title": "Wo im Haus der Schimmel sitzt",
+          "text": "An schlecht gedämmten Außenwänden, hinter Schränken und in Fensterecken ist die Oberfläche kälter als die Raumluft. Dort wird der Taupunkt zuerst unterschritten, die Wand wird feucht, auch wenn man kein Wasser sieht. Schimmelpilze brauchen genau das. Ein Mensch gibt durch Atmen, Kochen und Duschen täglich mehrere Liter Wasser an die Raumluft ab. Wer nur das Fenster kippt, kühlt die Wand ringsum aus und tauscht wenig Luft. Mehrmals täglich einige Minuten weit öffnen schafft die Feuchte hinaus, ohne die Wände auszukühlen."
+        }
+      ],
+      "tryIt": "Stell ein Glas mit Eiswasser in die Küche und warte fünf Minuten. Die Tropfen außen stammen nicht aus dem Glas, sondern aus der Luft.",
+      "takeaways": [
+        "Kalte Luft kann weniger Wasserdampf halten als warme.",
+        "Wo eine Fläche kälter ist als der Taupunkt, wird sie nass."
+      ]
+    }
+  },
+  {
+    "id": "tropfstein-kalk",
+    "phenomenon": "Tropfsteinhöhle",
+    "question": "Wie wachsen Tropfsteine in einer Höhle?",
+    "explanation": "Regenwasser nimmt im Boden Kohlendioxid auf und wird leicht sauer. Auf dem Weg durch Kalkgestein löst es etwas Kalk. Tropft es in eine Höhle, entweicht das Kohlendioxid in die Höhlenluft. Das Wasser kann den Kalk nicht mehr halten, er setzt sich ab – Schicht um Schicht, von der Decke hängend und vom Boden aufwachsend.",
+    "detail": "Die Hängenden heißen Stalaktiten, die Stehenden Stalagmiten. Tropfsteine wachsen sehr langsam, oft nur Millimeter bis wenige Zentimeter in hundert Jahren.",
+    "deep": {
+      "lead": "Dieselbe Chemie, die den Wasserkocher verkalkt, höhlt ganze Gebirge aus und füllt sie mit Stein wieder auf.",
+      "sections": [
+        {
+          "title": "Erst lösen, dann abscheiden",
+          "text": "Kalk ist in reinem Wasser fast unlöslich. Mit gelöstem Kohlendioxid bildet sich Kohlensäure, die den Kalk in eine lösliche Form überführt. Über Jahrtausende frisst das Sickerwasser so Klüfte zu Gängen und Hallen aus. Landschaften, die auf diese Weise entstehen, nennt man Karst: Flüsse verschwinden im Boden, die Oberfläche ist trocken und von Trichtern durchsetzt, den Dolinen. Die Reaktion läuft auch rückwärts. Entweicht das Kohlendioxid oder verdunstet Wasser, fällt der Kalk wieder aus. Im Wasserkocher treibt die Hitze das Gas aus, zurück bleibt Kesselstein."
+        },
+        {
+          "title": "Ein Archiv aus Stein",
+          "text": "Tropfsteine wachsen in feinen Lagen, ähnlich wie Bäume in Jahresringen. In ihnen sind Spuren des Wassers gespeichert, aus dem sie entstanden. Forscher bohren dünne Kerne heraus, bestimmen das Alter der Lagen über den Zerfall von Uran und lesen aus der Zusammensetzung ab, wie warm und wie feucht es über der Höhle einst war. So lassen sich Klimaschwankungen über Hunderttausende Jahre zurückverfolgen. Weil Hautfett die Oberfläche versiegelt und das Wachstum an dieser Stelle stören kann, soll man Tropfsteine nicht anfassen."
+        }
+      ],
+      "tryIt": "Schau in deinen Wasserkocher: Der weiße Belag ist derselbe Kalk wie im Tropfstein. Ein Schuss Essig löst ihn unter Sprudeln wieder auf.",
+      "takeaways": [
+        "Kohlensäurehaltiges Wasser löst Kalk; entweicht das Gas, fällt er aus.",
+        "Stalaktiten hängen, Stalagmiten stehen."
+      ]
+    }
+  },
+  {
+    "id": "fieber-sollwert",
+    "phenomenon": "Fieber",
+    "question": "Warum bekommst du bei einer Infektion Fieber?",
+    "explanation": "Fieber ist keine Panne, sondern eine gezielte Reaktion. Entdecken Abwehrzellen Erreger, setzen sie Botenstoffe frei. Diese erreichen im Gehirn den Hypothalamus, den Thermostat des Körpers, und stellen den Sollwert höher. Der Körper heizt auf. Wärme beschleunigt die Abwehr und bremst manche Erreger.",
+    "detail": "Weil der Sollwert steigt, fühlt sich die normale Körpertemperatur plötzlich zu kalt an. Deshalb frierst du und zitterst, während das Fieber steigt.",
+    "deep": {
+      "lead": "Bei Fieber läuft die Heizung nicht aus dem Ruder – der Körper hat sie absichtlich höher gedreht.",
+      "sections": [
+        {
+          "title": "Vom Schüttelfrost zum Schweißausbruch",
+          "text": "Um den neuen Sollwert zu erreichen, nutzt der Körper dieselben Mittel wie bei Kälte: Die Gefäße in der Haut verengen sich, damit weniger Wärme verloren geht, die Haut wird blass und kühl. Muskelzittern erzeugt zusätzliche Wärme, das ist der Schüttelfrost. Ist die Infektion im Griff, sinkt der Sollwert wieder. Nun ist der Körper zu warm: Die Hautgefäße weiten sich, du wirst rot und schwitzt. Ein Schweißausbruch nach Tagen mit Fieber ist deshalb meist ein gutes Zeichen. Fiebersenkende Mittel bremsen die Bildung der Botenstoffe am Thermostat."
+        },
+        {
+          "title": "Senken oder aushalten?",
+          "text": "Mäßiges Fieber muss bei sonst gesunden Erwachsenen nicht um jeden Preis gesenkt werden; es geht dabei vor allem ums Wohlbefinden. Wichtig ist, viel zu trinken, denn mit der Wärme verliert der Körper mehr Wasser. Ärztlichen Rat braucht es bei sehr hohem oder tagelangem Fieber, bei Säuglingen, bei Benommenheit, steifem Nacken oder Atemnot. Etwas anderes ist der Hitzschlag: Dort ist der Sollwert normal, aber der Körper wird die Wärme nicht mehr los. Fiebermittel helfen dann nicht, nur rasches Kühlen von außen."
+        }
+      ],
+      "tryIt": "Miss deine Temperatur morgens nach dem Aufwachen und am frühen Abend: Auch bei Gesunden schwankt sie im Tageslauf um etwa ein halbes Grad.",
+      "takeaways": [
+        "Bei Fieber stellt das Gehirn den Sollwert der Temperatur höher.",
+        "Frieren beim Anstieg, Schwitzen beim Abklingen."
+      ]
+    }
+  },
+  {
+    "id": "lichtlaufzeit-blick-zurueck",
+    "phenomenon": "Lichtlaufzeit",
+    "question": "Warum blickst du in die Vergangenheit, wenn du zu den Sternen schaust?",
+    "explanation": "Licht ist schnell, aber nicht unendlich schnell: Es legt rund 300.000 Kilometer pro Sekunde zurück. Vom Mond braucht es gut eine Sekunde, von der Sonne etwa acht Minuten, vom nächsten Stern mehr als vier Jahre. Du siehst jeden Himmelskörper so, wie er war, als das Licht aufbrach – nicht, wie er jetzt ist.",
+    "detail": "Ein Lichtjahr ist keine Zeit, sondern eine Strecke: der Weg, den Licht in einem Jahr zurücklegt, rund 9,5 Billionen Kilometer.",
+    "deep": {
+      "lead": "Je weiter ein Objekt entfernt ist, desto älter ist das Bild, das wir von ihm empfangen – Teleskope sind Zeitmaschinen.",
+      "sections": [
+        {
+          "title": "Jupitermonde als Stoppuhr",
+          "text": "Lange hielt man die Ausbreitung des Lichts für augenblicklich. Der dänische Astronom Ole Rømer beobachtete in den 1670er-Jahren die Monde des Jupiter. Ihre Verfinsterungen traten mal einige Minuten früher, mal später ein als berechnet – später immer dann, wenn die Erde auf ihrer Bahn weiter vom Jupiter entfernt stand. Rømer schloss, dass das Licht für die zusätzliche Strecke Zeit braucht. Die daraus errechnete Geschwindigkeit lag noch deutlich unter dem heutigen Wert, aber das Prinzip stimmte. Im 19. Jahrhundert gelangen genaue Messungen auf der Erde mit rotierenden Zahnrädern und Spiegeln."
+        },
+        {
+          "title": "Der Blick zurück bis fast zum Anfang",
+          "text": "Mit bloßem Auge siehst du die Andromedagalaxie als blassen Fleck. Ihr Licht war rund zweieinhalb Millionen Jahre unterwegs und brach auf, lange bevor es den modernen Menschen gab. Große Teleskope fangen Licht von Galaxien ein, das über 13 Milliarden Jahre alt ist. Astronomen sehen so direkt, wie das junge Universum aussah. Die Verzögerung hat auch praktische Folgen: Ein Funksignal zum Mars braucht je nach Stellung der Planeten etwa drei bis über zwanzig Minuten. Rover lassen sich deshalb nicht live steuern, sie müssen selbstständig fahren."
+        }
+      ],
+      "tryIt": "Suche an einem klaren Winterabend den rötlichen Stern Beteigeuze an der Schulter des Orion. Sein Licht ist seit mehreren Hundert Jahren zu dir unterwegs.",
+      "takeaways": [
+        "Licht braucht Zeit; jedes Bild vom Himmel zeigt die Vergangenheit.",
+        "Ein Lichtjahr ist eine Entfernung, keine Zeitspanne."
+      ]
+    }
+  },
+  {
+    "id": "tsunami-flachwasser",
+    "phenomenon": "Tsunami",
+    "question": "Warum bemerkt man einen Tsunami auf hoher See kaum, an der Küste aber sehr wohl?",
+    "explanation": "Ein Seebeben hebt oder senkt den Meeresboden und damit die gesamte Wassersäule darüber. Die Welle, die davonläuft, ist im tiefen Ozean nur einige Dezimeter hoch, aber Hunderte Kilometer lang und so schnell wie ein Verkehrsflugzeug. Im flachen Wasser wird sie abgebremst. Die Wassermassen stauen sich auf – meterhoch.",
+    "detail": "Zieht sich das Meer plötzlich ungewöhnlich weit zurück, kann das ein Wellental vor dem ersten Wellenberg sein. Dann bleiben nur Minuten für die Flucht nach oben.",
+    "deep": {
+      "lead": "Ein Tsunami ist keine besonders hohe Windwelle, sondern die Bewegung des ganzen Ozeans vom Grund bis zur Oberfläche.",
+      "sections": [
+        {
+          "title": "Der Unterschied zur Sturmwelle",
+          "text": "Wind bewegt nur die obersten Meter des Meeres; eine Sturmwelle ist nach Sekunden vorbei, die nächste folgt in vielleicht hundert Metern Abstand. Beim Tsunami liegen zwischen zwei Wellenbergen oft zehn Minuten bis eine Stunde. Er bricht deshalb nicht wie eine Brandungswelle zusammen, sondern strömt wie eine rasend schnell steigende Flut minutenlang ins Land und reißt alles mit. Die erste Welle ist häufig nicht die höchste. Das japanische Wort bedeutet »Hafenwelle«: Fischer, die draußen nichts bemerkt hatten, fanden bei der Rückkehr ihren Hafen zerstört."
+        },
+        {
+          "title": "Warnung per Drucksensor",
+          "text": "Die Geschwindigkeit eines Tsunamis hängt allein von der Wassertiefe ab und lässt sich gut berechnen. Für die Überquerung eines Ozeans braucht er Stunden – Zeit für eine Warnung. Seismometer melden das Beben, Drucksensoren am Meeresgrund registrieren die durchlaufende Welle und funken über Bojen an Satelliten. Im Pazifik gibt es ein solches System seit Jahrzehnten. Nach der Katastrophe im Indischen Ozean Ende 2004, bei der mehr als 200.000 Menschen starben, wurde auch dort eines aufgebaut. Küsten nahe am Bebenherd bleiben gefährdet: Dort trifft die Welle nach Minuten ein."
+        }
+      ],
+      "tryIt": "Schiebe in der Badewanne mit der flachen Hand langsam das ganze Wasser an, statt nur auf die Oberfläche zu schlagen: Am Wannenende schwappt es hoch.",
+      "takeaways": [
+        "Ein Tsunami bewegt die ganze Wassersäule, nicht nur die Oberfläche.",
+        "Im flachen Wasser wird die Welle langsamer und dadurch höher."
+      ]
+    }
+  },
+  {
+    "id": "generator-stromerzeugung",
+    "phenomenon": "Generator",
+    "question": "Wie macht ein Kraftwerk aus einer Drehbewegung Strom?",
+    "explanation": "Im Generator dreht sich ein Magnet zwischen Drahtspulen. Dadurch ändert sich das Magnetfeld in den Spulen ständig, und das treibt die Elektronen im Draht an: Es fließt Strom. Fast alle Kraftwerke arbeiten so. Sie unterscheiden sich nur darin, was die Achse dreht: Wind, strömendes Wasser oder heißer Dampf.",
+    "detail": "Ein Elektromotor ist derselbe Aufbau in umgekehrter Richtung: Strom hinein, Drehung heraus. E-Autos nutzen das beim Bremsen und laden so die Batterie.",
+    "deep": {
+      "lead": "Kohle, Gas, Kernkraft, Wasser, Wind: Am Ende dreht sich fast immer eine Welle mit Magneten und Spulen.",
+      "sections": [
+        {
+          "title": "Meistens kocht nur Wasser",
+          "text": "Ein Kohle-, Gas- oder Kernkraftwerk erzeugt zunächst nur Hitze. Sie verdampft Wasser, der Dampf strömt unter hohem Druck durch eine Turbine, ein Rad mit vielen Schaufeln, und versetzt sie in Drehung. Die Turbine treibt den Generator. Danach wird der Dampf abgekühlt und wieder zu Wasser; die weißen Schwaden über Kühltürmen sind deshalb Wasserdampf, kein Rauch. Bei diesem Umweg über Wärme geht grundsätzlich ein großer Teil der Energie als Abwärme verloren, oft mehr als die Hälfte. Wind- und Wasserkraft drehen die Welle direkt."
+        },
+        {
+          "title": "Warum 50 Hertz",
+          "text": "Weil sich der Magnet dreht, wechselt der erzeugte Strom ständig die Richtung – Wechselstrom. In Europa geschieht das 50-mal pro Sekunde, in Nordamerika 60-mal. Alle Generatoren eines Verbundnetzes laufen im selben Takt. Wird mehr Strom verbraucht als erzeugt, werden sie minimal abgebremst, die Frequenz sinkt um Bruchteile eines Hertz. Netzbetreiber lesen daran in jeder Sekunde ab, ob Erzeugung und Verbrauch im Gleichgewicht sind, und regeln nach. Der Fahrraddynamo ist ein Generator im Kleinen: Deshalb wird das Treten schwerer, sobald das Licht brennt."
+        }
+      ],
+      "tryIt": "Falls dein Rad einen Dynamo hat: Heb das Vorderrad an, dreh es und schalte das Licht ein. Mit Licht kommt das Rad spürbar schneller zum Stehen.",
+      "takeaways": [
+        "Ein bewegtes Magnetfeld erzeugt in einer Spule Strom.",
+        "Kraftwerke unterscheiden sich vor allem darin, was die Welle antreibt."
+      ]
+    }
+  },
+  {
+    "id": "median-durchschnitt",
+    "phenomenon": "Mittelwert und Median",
+    "question": "Warum verdienen die meisten Menschen weniger als den Durchschnitt?",
+    "explanation": "Der Durchschnitt addiert alle Werte und teilt durch ihre Anzahl. Wenige sehr hohe Werte ziehen ihn hoch. Betritt ein Milliardär eine Kneipe, sind im Schnitt alle Gäste Millionäre – reicher geworden ist keiner. Der Median ist der Wert in der Mitte: Eine Hälfte liegt darunter, eine darüber. Ausreißer ändern ihn kaum.",
+    "detail": "Bei Einkommen und Vermögen liegt der Median deshalb deutlich unter dem Durchschnitt. Wer wissen will, was typisch ist, schaut besser auf den Median.",
+    "deep": {
+      "lead": "Eine einzige Zahl soll eine ganze Gruppe beschreiben – welche man wählt, entscheidet darüber, was man sieht.",
+      "sections": [
+        {
+          "title": "Wann welcher Wert passt",
+          "text": "Sind die Daten gleichmäßig um die Mitte verteilt, etwa Körpergrößen, liegen Durchschnitt und Median dicht beieinander. Bei schiefen Verteilungen driften sie auseinander: Hauspreise, Wartezeiten, Followerzahlen, Einwohner von Städten. Dort gibt es viele kleine und wenige riesige Werte. Ein dritter Kennwert, der Modus, nennt einfach den häufigsten Wert. Zu jedem Mittelwert gehört außerdem die Streuung: Zwei Städte können dieselbe Durchschnittstemperatur haben, die eine mit mildem Wetter das ganze Jahr, die andere mit Frostwintern und Hitzesommern."
+        },
+        {
+          "title": "Durchschnitte, die in die Irre führen",
+          "text": "Im Schnitt hat ein Mensch weniger als zwei Beine, weil es einige Menschen mit einem oder keinem gibt und niemanden mit dreien. Fast alle liegen also über dem Durchschnitt. Solche Effekte lassen sich ausnutzen: Ein Unternehmen kann wahrheitsgemäß ein hohes Durchschnittsgehalt angeben, obwohl fast alle Beschäftigten weit weniger verdienen als die wenigen an der Spitze. Auch die niedrige durchschnittliche Lebenserwartung früherer Jahrhunderte täuscht. Sie kam vor allem zustande, weil sehr viele Kinder früh starben. Wer die Kindheit überstand, wurde oft sechzig Jahre oder älter."
+        }
+      ],
+      "tryIt": "Schreibe die Preise der letzten sieben Dinge auf, die du gekauft hast. Berechne den Durchschnitt und suche den mittleren Wert: Ein teurer Kauf verschiebt nur den ersten.",
+      "takeaways": [
+        "Ausreißer verzerren den Durchschnitt, den Median kaum.",
+        "Bei schiefen Verteilungen beschreibt der Median das Typische besser."
+      ]
+    }
+  },
+  {
+    "id": "geschmack-geruch-nase",
+    "phenomenon": "Geschmack und Geruch",
+    "question": "Warum schmeckt Essen fade, wenn deine Nase verstopft ist?",
+    "explanation": "Die Zunge erkennt nur wenige Grundqualitäten: süß, sauer, salzig, bitter und das herzhafte Umami. Alles Übrige – ob etwas nach Erdbeere, Vanille oder Kaffee schmeckt – ist Geruch. Beim Kauen und Schlucken steigen Duftstoffe vom Rachen aus in die Nase auf. Ist sie zu, kommt dort nichts an.",
+    "detail": "Die Zungenkarte aus alten Schulbüchern mit getrennten Zonen für süß, sauer und bitter ist falsch. Alle Geschmacksrichtungen werden überall auf der Zunge wahrgenommen.",
+    "deep": {
+      "lead": "Der größte Teil dessen, was wir Geschmack nennen, entsteht nicht im Mund, sondern in der Nase – und im Kopf.",
+      "sections": [
+        {
+          "title": "Fünf Qualitäten und eine falsche Karte",
+          "text": "Auf der Zunge sitzen einige Tausend Geschmacksknospen, jede mit Sinneszellen für alle Qualitäten. Süß zeigt energiereiche Nahrung an, salzig Mineralstoffe, umami Eiweiß; sauer und bitter warnen vor Unreifem, Verdorbenem oder Giftigem. Deshalb mögen Kinder Bitteres meist nicht. Umami wurde 1908 vom japanischen Chemiker Kikunae Ikeda beschrieben, der dem herzhaften Geschmack einer Algenbrühe nachging und Glutamat als Auslöser fand. Die Zungenkarte geht auf eine missverstandene deutsche Arbeit von 1901 zurück, die nur kleine Empfindlichkeitsunterschiede beschrieb. Sie hielt sich jahrzehntelang in Lehrbüchern."
+        },
+        {
+          "title": "Was sonst noch mitisst",
+          "text": "Schärfe ist kein Geschmack, sondern ein Schmerz- und Wärmereiz, Minzkühle ein Kältereiz; beides melden Nerven im Mund, nicht die Geschmacksknospen. Hinzu kommen Temperatur, Biss und Geräusch: Chips, deren Knacken man leiser einspielte, bewerteten Versuchspersonen als weniger frisch. Auch die Farbe redet mit. Weißwein, den man rot gefärbt hatte, wurde von angehenden Weinfachleuten mit Begriffen für Rotwein beschrieben. Im Flugzeug schmeckt Essen fader, weil trockene Luft und niedriger Druck die Nase beeinträchtigen. Herzhaftes wie Tomatensaft leidet darunter offenbar vergleichsweise wenig."
+        }
+      ],
+      "tryIt": "Halte dir die Nase zu und iss ein Gummibärchen: Du schmeckst nur süß. Lass die Nase los – erst jetzt erkennst du die Fruchtsorte.",
+      "takeaways": [
+        "Die Zunge kennt nur fünf Grundqualitäten, Aromen erkennt die Nase.",
+        "Die Zungenkarte mit festen Zonen ist ein Irrtum."
+      ]
+    }
+  },
+  {
+    "id": "schiff-schwimmt-auftrieb",
+    "phenomenon": "Auftrieb im Wasser",
+    "question": "Warum schwimmt ein Schiff aus Stahl, während ein Stahlnagel sofort sinkt?",
+    "explanation": "Wasser drückt jeden eingetauchten Körper mit einer Kraft nach oben, die so groß ist wie das Gewicht des verdrängten Wassers. Ein Nagel verdrängt wenig und wiegt viel mehr. Ein Schiffsrumpf ist hohl: Er verdrängt eine riesige Wassermenge. Sobald deren Gewicht dem des Schiffs entspricht, sinkt es nicht tiefer ein.",
+    "detail": "Entscheidend ist die mittlere Dichte von Stahl und eingeschlossener Luft zusammen. Sie liegt beim Schiff weit unter der von Wasser. Läuft der Rumpf voll, geht es unter.",
+    "deep": {
+      "lead": "Der Auftrieb hängt nicht vom Material ab, sondern allein davon, wie viel Wasser ein Körper verdrängt.",
+      "sections": [
+        {
+          "title": "Archimedes und die Krone",
+          "text": "Das Gesetz stammt von Archimedes, der im dritten Jahrhundert vor Christus in Syrakus lebte. Der Überlieferung nach sollte er prüfen, ob eine Königskrone aus reinem Gold bestand, ohne sie zu beschädigen. Die Idee: Gold ist dichter als Silber, eine gestreckte Krone braucht für dasselbe Gewicht mehr Volumen und verdrängt mehr Wasser. Ob er wirklich nackt und »Heureka« rufend durch die Stadt lief, ist eine Anekdote, die erst Jahrhunderte später aufgeschrieben wurde. Das Prinzip selbst hat er in einer erhaltenen Schrift über schwimmende Körper hergeleitet."
+        },
+        {
+          "title": "U-Boote, Fische und Lademarken",
+          "text": "Ein U-Boot verändert sein Gewicht, nicht seine Form: Es flutet Tanks mit Wasser, um zu tauchen, und bläst sie mit Druckluft aus, um zu steigen. Viele Fische regeln ihren Auftrieb mit einer gasgefüllten Schwimmblase. Salzwasser trägt besser, weil ein Liter davon mehr wiegt als ein Liter Süßwasser. Schiffe liegen deshalb im Meer etwas höher als im Fluss, und an der Bordwand zeigen Lademarken, wie tief sie je nach Gewässer eintauchen dürfen. In sehr salzigem Wasser treibt ein Mensch wie ein Korken."
+        }
+      ],
+      "tryIt": "Forme aus Knete eine Kugel und lass sie in Wasser sinken. Drücke dieselbe Knete zu einer Schale: Jetzt schwimmt sie, obwohl sie genauso viel wiegt.",
+      "takeaways": [
+        "Auftrieb ist so groß wie das Gewicht des verdrängten Wassers.",
+        "Ein hohler Rumpf verdrängt viel Wasser bei wenig Eigengewicht."
+      ]
+    }
+  },
+  {
+    "id": "evolution-natuerliche-selektion",
+    "phenomenon": "Natürliche Selektion",
+    "question": "Wie entstehen neue Arten, ohne dass jemand sie plant?",
+    "explanation": "Nachkommen sind nie exakte Kopien ihrer Eltern: Zufällige Änderungen im Erbgut machen sie etwas verschieden. Manche Varianten kommen mit ihrer Umwelt besser zurecht und haben mehr Nachkommen, die das Merkmal erben. Über viele Generationen häuft es sich an. Werden Gruppen getrennt, entwickeln sie sich auseinander.",
+    "detail": "»Survival of the fittest« heißt nicht, dass der Stärkste überlebt. Gemeint ist der am besten Angepasste – das kann auch der Kleinste oder Sparsamste sein.",
+    "deep": {
+      "lead": "Evolution hat kein Ziel: Der Zufall liefert die Varianten, die Umwelt sortiert aus.",
+      "sections": [
+        {
+          "title": "Darwins langes Zögern",
+          "text": "Charles Darwin sammelte in den 1830er-Jahren auf der Weltreise der »Beagle« Tiere und Fossilien. Auf den Galápagos-Inseln lebten Finken, deren Schnäbel je nach Insel zur dortigen Nahrung passten: dicke für harte Samen, schmale für Insekten. Darwin schloss später, dass alle von gemeinsamen Vorfahren abstammen. Er zögerte rund zwanzig Jahre mit der Veröffentlichung. Erst als Alfred Russel Wallace unabhängig auf dieselbe Idee kam, erschien 1859 sein Buch »Über die Entstehung der Arten«. Wie Vererbung funktioniert, wusste Darwin noch nicht; das lieferte erst die Genetik."
+        },
+        {
+          "title": "Evolution zum Zuschauen",
+          "text": "Selektion braucht nicht immer Jahrmillionen. Insekten werden innerhalb weniger Jahre gegen Spritzmittel unempfindlich, weil nur die widerstandsfähigen überleben und sich vermehren. In englischen Industriegebieten nahmen im 19. Jahrhundert dunkle Birkenspanner zu, weil Vögel sie auf rußgeschwärzten Stämmen schlechter sahen; mit sauberer Luft kehrten die hellen Falter zurück. Ein häufiges Missverständnis: Einzelne Lebewesen passen sich nicht an und vererben das dann. Die Giraffe bekam ihren Hals nicht durch Strecken. Es hatten jene mehr Nachkommen, die zufällig einen längeren besaßen."
+        }
+      ],
+      "tryIt": "Vergleiche Hunderassen vom Dackel bis zur Dogge: Alle stammen vom Wolf ab. Züchter haben in kurzer Zeit ausgewählt, was sonst die Umwelt auswählt.",
+      "takeaways": [
+        "Zufällige Varianten plus Auslese ergeben Anpassung ohne Plan.",
+        "Nicht Einzelne passen sich an, sondern Populationen über Generationen."
+      ]
+    }
+  },
+  {
+    "id": "herz-zwei-kreislaeufe",
+    "phenomenon": "Herz und Blutkreislauf",
+    "question": "Warum hat dein Herz vier Kammern und nicht nur eine?",
+    "explanation": "Das Herz ist eine Doppelpumpe. Die rechte Hälfte schickt verbrauchtes Blut durch die Lunge, wo es Sauerstoff aufnimmt. Die linke Hälfte pumpt das frische Blut mit hohem Druck in den ganzen Körper. Jede Hälfte hat einen Vorhof zum Sammeln und eine Kammer zum Auswerfen. Klappen verhindern den Rückfluss.",
+    "detail": "Der doppelte Herzton, den man durchs Stethoskop hört, ist kein Muskelgeräusch: Es sind die Herzklappen, die nacheinander zuschlagen.",
+    "deep": {
+      "lead": "Rund 100.000 Schläge am Tag treiben das Blut durch zwei getrennte Kreisläufe – einen kleinen zur Lunge, einen großen durch den Körper.",
+      "sections": [
+        {
+          "title": "Harveys Rechnung",
+          "text": "Bis ins 17. Jahrhundert glaubte man mit dem antiken Arzt Galen, Blut werde in der Leber ständig neu gebildet und im Körper verbraucht. Der englische Arzt William Harvey rechnete nach: Auch wenn das Herz bei jedem Schlag nur eine kleine Menge auswirft, kommt in einer halben Stunde mehr zusammen, als der ganze Körper an Blut enthält. So viel kann niemand aus Nahrung nachbilden. Das Blut muss also im Kreis laufen. 1628 veröffentlichte er den Beweis. Die haarfeinen Verbindungen zwischen Arterien und Venen, die Kapillaren, sah man erst später unter dem Mikroskop."
+        },
+        {
+          "title": "Druck, Puls und Training",
+          "text": "Die linke Kammer hat eine viel dickere Muskelwand als die rechte, weil sie das Blut bis in die Zehen und gegen die Schwerkraft ins Gehirn drücken muss. Der Blutdruck wird mit zwei Zahlen angegeben: dem Spitzenwert, wenn die Kammer sich zusammenzieht, und dem unteren Wert, wenn sie sich füllt. Den Puls am Handgelenk spürst du als Druckwelle, die jeder Herzschlag durch die Arterien schickt. Ausdauertraining stärkt den Herzmuskel. Er schafft dann pro Schlag mehr Blut, deshalb haben Trainierte einen niedrigeren Ruhepuls."
+        }
+      ],
+      "tryIt": "Lege zwei Finger an die Innenseite deines Handgelenks unterhalb des Daumens, zähle 30 Sekunden lang die Schläge und verdopple: Das ist dein Ruhepuls.",
+      "takeaways": [
+        "Die rechte Herzhälfte versorgt die Lunge, die linke den Körper.",
+        "Klappen sorgen dafür, dass das Blut nur in eine Richtung fließt."
+      ]
+    }
+  },
+  {
+    "id": "sternschnuppen-meteore",
+    "phenomenon": "Sternschnuppen",
+    "question": "Was leuchtet da auf, wenn du eine Sternschnuppe siehst?",
+    "explanation": "Meist ein Staubkorn, kaum größer als ein Sandkorn. Es trifft mit mehr als 40.000 Kilometern pro Stunde auf die Lufthülle der Erde und presst die Luft vor sich so stark zusammen, dass sie glühend heiß wird. Das Körnchen verdampft in etwa hundert Kilometern Höhe, und die Luft entlang seiner Bahn leuchtet kurz auf.",
+    "detail": "Mit Sternen haben Sternschnuppen nichts zu tun. Die Leuchterscheinung heißt Meteor; erreicht ein Brocken den Boden, nennt man ihn Meteorit.",
+    "deep": {
+      "lead": "Jeden Tag fallen viele Tonnen kosmischer Staub auf die Erde – nachts wird ein winziger Teil davon sichtbar.",
+      "sections": [
+        {
+          "title": "Warum es Sternschnuppennächte gibt",
+          "text": "Kometen verlieren bei jeder Annäherung an die Sonne Staub, der sich entlang ihrer Bahn verteilt. Kreuzt die Erde eine solche Staubspur, häufen sich die Meteore. Weil die Erde jedes Jahr am selben Datum dieselbe Stelle erreicht, kehren die Schwärme pünktlich wieder: die Perseiden um den 12. August, die Geminiden Mitte Dezember. Alle Meteore eines Schwarms scheinen aus einem Punkt am Himmel zu kommen, nach dessen Sternbild sie benannt sind. Das ist ein Effekt der Perspektive, wie bei Schneeflocken, die im Scheinwerferlicht eines fahrenden Autos auseinanderzustreben scheinen."
+        },
+        {
+          "title": "Wenn die Brocken größer sind",
+          "text": "Faust- bis kopfgroße Körper erzeugen helle Feuerkugeln, manchmal mit Donner. Reste können als Meteoriten den Boden erreichen; die meisten stammen aus dem Asteroidengürtel zwischen Mars und Jupiter und sind so alt wie das Sonnensystem, rund 4,6 Milliarden Jahre. 2013 explodierte über der russischen Stadt Tscheljabinsk ein etwa zwanzig Meter großer Brocken in der Luft; die Druckwelle zerbrach Tausende Fensterscheiben. Sehr große Einschläge sind extrem selten. Teleskope suchen den Himmel heute systematisch nach Asteroiden ab, deren Bahn der Erde nahe kommt."
+        }
+      ],
+      "tryIt": "Merke dir den 12. August vor: Leg dich in der Perseiden-Nacht an einen dunklen Ort, gib den Augen 20 Minuten Zeit für die Dunkelheit und schau nach oben.",
+      "takeaways": [
+        "Sternschnuppen sind verglühende Staubkörner, keine Sterne.",
+        "Schwärme entstehen, wenn die Erde die Staubspur eines Kometen kreuzt."
+      ]
+    }
+  },
+  {
+    "id": "meer-salzig",
+    "phenomenon": "Salz im Meer",
+    "question": "Warum ist das Meer salzig, obwohl Flüsse nur Süßwasser hineintragen?",
+    "explanation": "Flusswasser ist nicht salzfrei: Regen löst winzige Mengen Mineralien aus Gestein und Boden, die Flüsse tragen sie ins Meer. Dort verdunstet nur das Wasser, das Salz bleibt zurück. Über Jahrmilliarden hat es sich so angereichert. Heute enthält ein Liter Meerwasser rund 35 Gramm Salz, vor allem Natrium und Chlorid.",
+    "detail": "Der Salzgehalt steigt nicht mehr weiter: Was die Flüsse nachliefern, wird am Meeresboden in Ablagerungen gebunden. Es herrscht ein Gleichgewicht.",
+    "deep": {
+      "lead": "Das Meer ist die Endstation eines sehr langsamen Transportbands, das Gestein auflöst und als Salz ablagert.",
+      "sections": [
+        {
+          "title": "Zwei Zutaten, zwei Quellen",
+          "text": "Kochsalz besteht aus Natrium und Chlor, und die beiden haben verschiedene Herkunft. Das Natrium stammt überwiegend aus verwittertem Gestein an Land. Das Chlor kam größtenteils aus dem Erdinneren: Vulkane stießen es über die Erdgeschichte als Gas aus, und heiße Quellen am Meeresboden liefern weitere gelöste Stoffe. Im Meer bleiben beide besonders lange, weil kaum ein Vorgang sie entfernt. Calcium dagegen, von dem Flüsse viel bringen, wird von Muscheln, Korallen und Plankton rasch in Schalen verbaut und ist deshalb im Meerwasser vergleichsweise knapp."
+        },
+        {
+          "title": "Warum Meerwasser den Durst verschlimmert",
+          "text": "Wo viel Wasser verdunstet und wenig zufließt, steigt der Salzgehalt, im Roten Meer auf rund vier Prozent. Wo große Flüsse münden und wenig verdunstet, sinkt er deutlich. Trinken kann man Meerwasser nirgends. Die Nieren können Urin nicht so salzig machen wie Meerwasser; um das Salz loszuwerden, müsste der Körper mehr Wasser ausscheiden, als man getrunken hat. Wer Meerwasser trinkt, verdurstet deshalb schneller. Die Salzlagerstätten an Land sind eingedampfte Meeresbecken der Vorzeit – Steinsalz aus dem Bergwerk ist uraltes Meersalz."
+        }
+      ],
+      "tryIt": "Löse einen gut gefüllten Teelöffel Salz in einem Glas Wasser, das entspricht etwa Meerwasser. Lass einen Löffel davon auf einem dunklen Teller eintrocknen.",
+      "takeaways": [
+        "Flüsse liefern gelöste Mineralien, die Verdunstung lässt sie im Meer zurück.",
+        "Der Salzgehalt der Ozeane ist heute im Gleichgewicht."
+      ]
+    }
+  },
+  {
+    "id": "verschluesselung-oeffentlicher-schluessel",
+    "phenomenon": "Verschlüsselung im Internet",
+    "question": "Wie tauschst du mit einer Website Geheimnisse aus, obwohl jeder mitlesen kann?",
+    "explanation": "Mit zwei Schlüsseln. Die Website veröffentlicht einen, mit dem jeder Nachrichten verschließt. Öffnen lässt sich das Schloss nur mit dem zweiten, den sie geheim hält. Dahinter stecken Rechnungen, die vorwärts leicht und rückwärts praktisch unlösbar sind – etwa das Produkt zweier riesiger Primzahlen zu zerlegen.",
+    "detail": "Das Schloss-Symbol und »https« in der Adresszeile zeigen, dass die Verbindung so geschützt ist. Ob der Betreiber der Seite seriös ist, sagen sie nicht.",
+    "deep": {
+      "lead": "Bis in die 1970er-Jahre mussten sich zwei Seiten vorab heimlich auf einen Schlüssel einigen – heute geht das vor aller Augen.",
+      "sections": [
+        {
+          "title": "Rechnungen ohne Rückweg",
+          "text": "Zwei Primzahlen mit je mehreren Hundert Stellen multipliziert ein Computer in einem Augenblick. Aus dem Ergebnis die beiden Faktoren zurückzugewinnen würde mit allen bekannten Verfahren und heutigen Rechnern unvorstellbar lange dauern. Auf diesem Gefälle beruht das RSA-Verfahren von 1977, benannt nach seinen Erfindern Rivest, Shamir und Adleman. Der öffentliche Schlüssel enthält das Produkt, der private die Faktoren. Im Alltag dient ein solches Verfahren nur dem Start: Damit einigen sich beide Seiten auf einen gewöhnlichen Schlüssel für diese eine Sitzung, der dann den eigentlichen Datenverkehr schnell verschlüsselt."
+        },
+        {
+          "title": "Unterschrift und offene Flanken",
+          "text": "Dieselbe Mathematik funktioniert auch andersherum als digitale Unterschrift: Was mit dem geheimen Schlüssel erzeugt wurde, kann jeder mit dem öffentlichen prüfen, aber niemand fälschen. So weist sich eine Website gegenüber dem Browser aus, und so werden Software-Updates beglaubigt. Die Schwachstelle ist selten die Mathematik, fast immer der Mensch: erratene Passwörter, gefälschte Login-Seiten, verseuchte Geräte. Künftige Quantencomputer könnten große Zahlen schnell zerlegen. Deshalb werden bereits neue Verfahren eingeführt, die auch solchen Rechnern standhalten sollen."
+        }
+      ],
+      "tryIt": "Tippe im Browser auf das Schloss- oder Einstellungssymbol neben der Adresse einer Website. Dort siehst du, für wen das Zertifikat ausgestellt wurde.",
+      "takeaways": [
+        "Der öffentliche Schlüssel verschließt, nur der private öffnet.",
+        "Sicher ist es, weil manche Rechnungen rückwärts praktisch unlösbar sind."
+      ]
+    }
+  },
+  {
+    "id": "dezibel-logarithmische-skala",
+    "phenomenon": "Dezibel-Skala",
+    "question": "Warum sind 100 Dezibel nicht doppelt so laut wie 50?",
+    "explanation": "Die Dezibel-Skala zählt nicht gleichmäßig, sondern in Vielfachen. Jeweils 10 Dezibel mehr bedeuten die zehnfache Schallleistung. Von 50 auf 100 Dezibel steigt sie also auf das Hunderttausendfache. Unser Gehör empfindet selbst gestaucht: 10 Dezibel mehr wirken auf uns nur etwa doppelt so laut.",
+    "detail": "Zwei gleich laute Maschinen ergeben zusammen nicht den doppelten Dezibelwert, sondern nur drei Dezibel mehr als eine allein.",
+    "deep": {
+      "lead": "Zwischen dem leisesten hörbaren Ton und der Schmerzgrenze liegt ein Faktor von rund einer Billion – dafür braucht es eine gestauchte Skala.",
+      "sections": [
+        {
+          "title": "Sinne arbeiten mit Verhältnissen",
+          "text": "Im 19. Jahrhundert stellten Ernst Heinrich Weber und Gustav Theodor Fechner in Leipzig fest, dass wir Unterschiede nicht absolut, sondern im Verhältnis wahrnehmen. Ob ein Gewicht 100 oder 105 Gramm wiegt, spürst du; zwischen 1.000 und 1.005 Gramm nicht. Eine Kerze erhellt ein dunkles Zimmer deutlich, im Sonnenlicht fällt sie nicht auf. Diese Art der Verarbeitung erlaubt es Ohr und Auge, mit winzigen wie mit gewaltigen Reizen umzugehen. Logarithmische Skalen bilden das nach. Die Einheit ist nach Alexander Graham Bell benannt; ein Dezibel ist ein Zehntel Bel."
+        },
+        {
+          "title": "Verwandte Skalen und die Folgen von Lärm",
+          "text": "Dasselbe Prinzip steckt in der Erdbebenskala: Eine Magnitude mehr bedeutet rund 30-mal so viel freigesetzte Energie. Auch die Helligkeit von Sternen wird in Stufen mit festem Verhältnis angegeben. Für das Gehör gilt als Faustregel: Ab etwa 85 Dezibel droht bei Dauerbelastung ein Schaden, und mit je drei Dezibel mehr halbiert sich die unbedenkliche Zeit. Ein Konzert mit 100 Dezibel schafft in einer Viertelstunde, wofür 85 Dezibel einen Arbeitstag brauchen. Zerstörte Sinneszellen im Innenohr wachsen beim Menschen nicht nach."
+        }
+      ],
+      "tryIt": "Lade eine Schallpegel-App und miss Flüstern, ein Gespräch, den Staubsauger und eine befahrene Straße. Schätze die Werte vorher.",
+      "takeaways": [
+        "Zehn Dezibel mehr bedeuten zehnfache Schallleistung.",
+        "Ab etwa 85 Dezibel schadet Dauerlärm dem Gehör."
+      ]
+    }
+  },
+  {
+    "id": "chili-capsaicin-schaerfe",
+    "phenomenon": "Schärfe von Chili",
+    "question": "Warum brennt Chili im Mund, obwohl nichts heiß ist?",
+    "explanation": "Chilis enthalten Capsaicin. Dieser Stoff passt genau auf einen Fühler in den Nervenenden, der eigentlich Hitze über etwa 43 Grad meldet. Capsaicin öffnet ihn schon bei Körpertemperatur. Die Nerven senden dasselbe Signal wie bei einer Verbrühung, und das Gehirn meldet Hitze und Schmerz.",
+    "detail": "Der Körper reagiert wie auf echte Hitze: Du schwitzt, das Gesicht wird rot, die Nase läuft. Verbrannt wird dabei nichts.",
+    "deep": {
+      "lead": "Schärfe ist kein Geschmack, sondern ein Fehlalarm des Wärmesinns – ausgelöst durch ein Molekül, das den Hitzefühler überlistet.",
+      "sections": [
+        {
+          "title": "Ein Nobelpreis für den Hitzefühler",
+          "text": "Der amerikanische Forscher David Julius suchte in den 1990er-Jahren gezielt nach dem Molekül, an das Capsaicin bindet, und fand 1997 einen Ionenkanal namens TRPV1. Es stellte sich heraus, dass derselbe Kanal auch auf schmerzhafte Hitze reagiert. Damit war erstmals ein Temperaturfühler des Körpers dingfest gemacht. Wenig später entdeckte man mithilfe von Menthol das Gegenstück für Kälte: Deshalb fühlt sich Pfefferminze kühl an, obwohl sie nichts abkühlt. 2021 erhielt Julius gemeinsam mit Ardem Patapoutian, der Druckfühler erforscht hatte, den Nobelpreis für Medizin."
+        },
+        {
+          "title": "Wozu die Pflanze scharf ist",
+          "text": "Die Chilipflanze schützt mit Capsaicin ihre Früchte vor Säugetieren, die die Samen zerkauen würden. Vögel spüren die Schärfe nicht, weil ihr Fühler anders gebaut ist; sie fressen die Früchte und verbreiten die Samen unversehrt. Capsaicin löst sich in Fett und Alkohol, kaum in Wasser. Ein Schluck Wasser verteilt es deshalb nur im Mund, während Milch, Joghurt oder ein Stück Brot mit Butter tatsächlich lindern. Wer regelmäßig scharf isst, dessen Nervenenden reagieren schwächer, er verträgt mehr. Gemessen wird Schärfe in Scoville-Einheiten."
+        }
+      ],
+      "tryIt": "Nimm beim nächsten scharfen Gericht erst einen Schluck Wasser, später einen Löffel Joghurt und vergleiche, was das Brennen wirklich dämpft.",
+      "takeaways": [
+        "Capsaicin aktiviert den Nervenfühler für schmerzhafte Hitze.",
+        "Fett und Milchprodukte lindern Schärfe, Wasser kaum."
+      ]
+    }
+  }
+]

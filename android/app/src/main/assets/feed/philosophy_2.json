@@ -1,0 +1,842 @@
+[
+  {
+    "id": "luegner-paradox",
+    "title": "Das Lügner-Paradox",
+    "scenario": "Auf einem Zettel steht ein einziger Satz: »Dieser Satz ist falsch.« Ist er wahr, dann stimmt, was er sagt, und er ist falsch. Ist er falsch, dann trifft genau das zu, was er behauptet, und er ist wahr. Welchen Wahrheitswert hat er?",
+    "optionA": "Keinen – der Satz ist weder wahr noch falsch.",
+    "optionB": "Beide – er ist wahr und falsch zugleich.",
+    "schoolA": "Wahrheitswertlücken (Kripke)",
+    "schoolB": "Dialetheismus (Graham Priest)",
+    "insight": "Ein harmlos wirkender Satz zwingt dazu, eine Grundannahme aufzugeben: dass jede Aussage genau einen Wahrheitswert hat. Sprache, die über ihre eigene Wahrheit redet, gerät in Schwierigkeiten.",
+    "deep": {
+      "lead": "Seit über zweitausend Jahren gelingt es niemandem, einen Satz aus fünf Wörtern unschädlich zu machen.",
+      "sections": [
+        {
+          "title": "Vom Kreter zur Metasprache",
+          "text": "Oft wird das Paradox dem Kreter Epimenides zugeschrieben, der gesagt haben soll, alle Kreter seien Lügner. Streng genommen ist das noch kein Widerspruch, denn der Satz kann einfach falsch sein. Die scharfe Fassung stammt aus der griechischen Logik des 4. Jahrhunderts v. Chr. Im 20. Jahrhundert zog der polnische Logiker Alfred Tarski eine radikale Konsequenz. Eine Sprache darf den Begriff »wahr« nicht auf ihre eigenen Sätze anwenden. Über die Wahrheit von Sätzen einer Sprache kann man nur in einer zweiten, übergeordneten Sprache reden."
+        },
+        {
+          "title": "Gödels fruchtbarer Verwandter",
+          "text": "Der Ausweg, den Satz für weder wahr noch falsch zu erklären, hat einen Haken. Man ersetze ihn durch »Dieser Satz ist nicht wahr«, und das Problem ist zurück. Folgenreich wurde eine Abwandlung des Mathematikers Kurt Gödel. Er baute innerhalb der Arithmetik einen Satz, der von sich sagt: Ich bin nicht beweisbar. Wäre er beweisbar, bewiese das System etwas Falsches. Also ist er wahr und unbeweisbar. Damit war gezeigt, dass jedes hinreichend starke, widerspruchsfreie Regelsystem der Mathematik Wahrheiten enthält, die es selbst nicht herleiten kann."
+        }
+      ],
+      "tryIt": "Schreib auf die Vorderseite einer Karte »Der Satz auf der Rückseite ist wahr« und hinten »Der Satz auf der Vorderseite ist falsch«. Gib sie jemandem.",
+      "takeaways": [
+        "Selbstbezug und Wahrheit zusammen erzeugen Widersprüche.",
+        "Tarski trennt Sprachebenen, Gödel macht aus dem Trick einen Beweis."
+      ]
+    }
+  },
+  {
+    "id": "achilles-und-die-schildkroete",
+    "title": "Achilles und die Schildkröte",
+    "scenario": "Achilles läuft zehnmal so schnell wie eine Schildkröte und gibt ihr hundert Meter Vorsprung. Erreicht er ihren Startpunkt, ist sie zehn Meter weiter. Hat er diese zurückgelegt, ist sie einen Meter voraus – und so fort ohne Ende. Holt er sie jemals ein?",
+    "optionA": "Ja – unendlich viele Strecken können eine endliche Summe haben.",
+    "optionB": "Offen – wie beendet man unendlich viele Schritte?",
+    "schoolA": "Analysis (Grenzwert)",
+    "schoolB": "Zenon / Supertask-Debatte",
+    "insight": "Zenon wollte zeigen, dass Bewegung nur Schein ist. Die Mathematik liefert heute den Treffpunkt. Ob Raum und Zeit aber wirklich unendlich teilbar sind, ist eine Frage an die Physik geblieben.",
+    "deep": {
+      "lead": "Zenons Rätsel war als Waffe gedacht: Wer Bewegung für selbstverständlich hielt, sollte sich in Widersprüche verstricken.",
+      "sections": [
+        {
+          "title": "Ein Schüler verteidigt seinen Lehrer",
+          "text": "Zenon von Elea lebte im 5. Jahrhundert v. Chr. und war Schüler des Parmenides, der lehrte, das Seiende sei eines und unveränderlich; Vielheit und Bewegung seien Täuschung. Die Zeitgenossen fanden das absurd. Zenon drehte den Spieß um und zeigte, dass auch die Annahme von Bewegung in Unsinn führt. Neben dem Wettlauf erfand er den fliegenden Pfeil, der in jedem einzelnen Augenblick an einem Ort ruht. Überliefert sind die Argumente durch Aristoteles. Der Kyniker Diogenes soll als Widerlegung wortlos aufgestanden und umhergegangen sein."
+        },
+        {
+          "title": "Was die Summe leistet und was nicht",
+          "text": "Rechnerisch ist der Fall erledigt. Die Strecken 100, 10, 1, 0,1 und so weiter ergeben zusammen etwas über 111 Meter; dort zieht Achilles vorbei. Offen blieb für manche Philosophen, ob man unendlich viele Handlungen tatsächlich abschließen kann. Der Brite James Thomson erdachte dazu eine Lampe, die nach einer Minute eingeschaltet wird, nach einer weiteren halben aus, nach einer Viertelminute wieder ein. Nach zwei Minuten sind unendlich viele Schaltvorgänge vorbei. Brennt sie dann? Die Rechnung gibt darauf keine Antwort."
+        }
+      ],
+      "tryIt": "Geh auf eine Wand zu und halbiere in Gedanken immer wieder den Rest der Strecke. Achte darauf, an welcher Stelle die Vorstellung nicht mehr mitkommt.",
+      "takeaways": [
+        "Unendlich viele Teilstrecken können endlich lang sein.",
+        "Ein Rechenergebnis beantwortet nicht jede Frage über die Wirklichkeit."
+      ]
+    }
+  },
+  {
+    "id": "unerwartete-hinrichtung",
+    "title": "Die unerwartete Hinrichtung",
+    "scenario": "Ein Richter verkündet: Der Gefangene wird an einem Werktag der nächsten Woche gehängt, und der Tag wird ihn überraschen. Der Gefangene überlegt: Freitag scheidet aus, denn am Donnerstagabend wüsste ich es. Dann aber auch Donnerstag, Mittwoch und jeder andere Tag. Hat er recht?",
+    "optionA": "Ja – eine solche Ankündigung lässt sich gar nicht erfüllen.",
+    "optionB": "Nein – man holt ihn am Mittwoch, und er ist überrascht.",
+    "schoolA": "Rückwärtsinduktion",
+    "schoolB": "Epistemische Logik (Quine)",
+    "insight": "Der Gefangene beweist sich, dass er nicht gehängt werden kann, und wird gerade deshalb überrascht. Sein Fehler: Er stützt sich auf die Ankündigung, um zu zeigen, dass man ihr nicht trauen kann.",
+    "deep": {
+      "lead": "An diesem Rätsel ist nichts unklar außer der Frage, an welcher Stelle genau die lückenlose Überlegung falsch wird.",
+      "sections": [
+        {
+          "title": "Eine Übung, die keiner erwarten durfte",
+          "text": "Das Paradox kam in den 1940er-Jahren in Umlauf. Nach einer verbreiteten Darstellung fiel es einem schwedischen Mathematiker auf, als im Radio eine Zivilschutzübung für die kommende Woche angekündigt wurde, deren Tag vorher niemand kennen sollte. Bekannt machte es der amerikanische Rätselautor Martin Gardner. In Schulen kursiert die mildere Fassung von der unangekündigten Klassenarbeit. Seither sind weit über hundert Fachaufsätze dazu erschienen, ohne dass sich eine Lösung durchgesetzt hätte. Für ein Problem, das sich in vier Sätzen erzählen lässt, ist das bemerkenswert."
+        },
+        {
+          "title": "Wo der Schluss kippt",
+          "text": "Der Logiker Willard Van Orman Quine setzte beim ersten Schritt an. Der Gefangene nimmt an, er werde am Donnerstagabend sicher wissen, dass er am Freitag hängt. Das wüsste er aber nur, wenn er sicher wüsste, dass die Ankündigung wahr ist. Genau das bestreitet er am Ende seiner eigenen Überlegung. Wer der Ankündigung nicht mehr glaubt, kann an jedem Tag überrascht werden, sogar am Freitag. Der Fall zeigt, wie tückisch Aussagen sind, die vom Wissen dessen handeln, an den sie gerichtet sind."
+        }
+      ],
+      "tryIt": "Kündige jemandem für diese Woche eine kleine Überraschung an, deren Tag er nicht erraten wird, und lass ihn begründen, warum das unmöglich sein soll.",
+      "takeaways": [
+        "Lückenlos wirkende Schlussketten können auf einer versteckten Annahme ruhen.",
+        "Aussagen über das eigene künftige Wissen sind logisch heikel."
+      ]
+    }
+  },
+  {
+    "id": "gettier-problem",
+    "title": "Die stehengebliebene Uhr",
+    "scenario": "Du schaust auf die Bahnhofsuhr: genau zwölf. Du glaubst es, und es stimmt. Was du nicht weißt: Die Uhr ist gestern um zwölf stehen geblieben. Du hast eine wahre Überzeugung und einen guten Grund dafür. Aber wusstest du in diesem Moment, wie spät es ist?",
+    "optionA": "Ja – wahr, geglaubt und gut begründet: Mehr ist Wissen nicht.",
+    "optionB": "Nein – ich hatte bloß Glück, und Glück ist kein Wissen.",
+    "schoolA": "Klassische Wissensdefinition",
+    "schoolB": "Gettier: Zufall schließt Wissen aus",
+    "insight": "Seit Platon galt Wissen als wahre, begründete Meinung. Solche Fälle zeigen, dass alle drei Bedingungen erfüllt sein können und trotzdem etwas fehlt. Was genau, ist bis heute nicht geklärt.",
+    "deep": {
+      "lead": "Ein Aufsatz von knapp drei Seiten genügte, um eine Definition zu erschüttern, die über zweitausend Jahre gehalten hatte.",
+      "sections": [
+        {
+          "title": "Drei Seiten mit Folgen",
+          "text": "1963 veröffentlichte der amerikanische Philosoph Edmund Gettier einen winzigen Aufsatz mit der Frage, ob gerechtfertigte wahre Meinung Wissen sei. Er beantwortete sie mit zwei konstruierten Fällen, in denen jemand aus guten Gründen etwas Wahres glaubt, aber nur durch Zufall richtigliegt. Das Beispiel mit der Uhr ist älter und stammt von Bertrand Russell. Gettier selbst schrieb danach kaum noch etwas. Die Fachwelt dagegen produzierte Hunderte Antworten. Fälle dieser Bauart heißen seither Gettier-Fälle, und das Wort wird im Englischen sogar als Verb gebraucht."
+        },
+        {
+          "title": "Reparaturen, die nicht halten",
+          "text": "Die naheliegende Ergänzung lautet, die Begründung dürfe auf nichts Falschem beruhen. Dagegen steht das Scheunenbeispiel. Jemand fährt durch eine Gegend voller täuschend echter Scheunenattrappen und zeigt zufällig auf die einzige echte: »Da steht eine Scheune.« Er schließt aus nichts Falschem und hat trotzdem nur Glück. Für jede neue Definition fand sich bisher ein neues Gegenbeispiel. Praktisch wichtig ist die Unterscheidung überall, wo Ergebnisse geprüft werden. Wer die richtige Antwort aus dem falschen Grund gibt, wird beim nächsten Mal danebenliegen."
+        }
+      ],
+      "tryIt": "Wenn du heute mit etwas recht behältst, prüfe den Weg dorthin: War deine Begründung tragfähig, oder hast du nur gut geraten?",
+      "takeaways": [
+        "Wahr, geglaubt und begründet reicht für Wissen nicht aus.",
+        "Richtig aus falschem Grund ist Glück und beim nächsten Mal kein Schutz."
+      ]
+    }
+  },
+  {
+    "id": "russells-truthahn",
+    "title": "Russells Truthahn",
+    "scenario": "Ein Truthahn bekommt jeden Morgen um neun sein Futter, bei Sonne und Regen, werktags wie sonntags. Nach Hunderten von Tagen schließt er: Ich werde immer um neun gefüttert. Am Morgen vor dem Festtag kommt der Bauer mit dem Messer. War der Schluss des Truthahns unvernünftig?",
+    "optionA": "Nein – aus Erfahrung zu schließen ist das Beste, was wir haben.",
+    "optionB": "Ja – noch so viele Einzelfälle beweisen keine Regel.",
+    "schoolA": "Pragmatische Rechtfertigung",
+    "schoolB": "Hume / Popper: Induktionskritik",
+    "insight": "Aus tausend Beobachtungen folgt logisch nichts über die nächste. Wir verlassen uns trotzdem darauf, weil es meist gut geht. David Hume nannte das Gewohnheit, nicht Vernunft.",
+    "deep": {
+      "lead": "Am Tag vor dem Schlachten hatte der Truthahn mehr Belege für seine Theorie als je zuvor.",
+      "sections": [
+        {
+          "title": "Humes Zweifel",
+          "text": "Bei Bertrand Russell war es noch ein Huhn; zum Truthahn wurde das Tier erst in späteren Nacherzählungen. Der Gedanke geht auf den Schotten David Hume im 18. Jahrhundert zurück. Dass die Sonne morgen aufgeht, schließen wir daraus, dass sie es bisher immer tat. Was aber berechtigt uns, von bisher auf künftig zu schließen? Die Antwort »Es hat bisher immer geklappt« benutzt genau das Verfahren, das sie rechtfertigen soll. Hume folgerte, unser Vertrauen in Naturgesetze beruhe auf Gewöhnung. Kant schrieb, diese Einsicht habe ihn aus dem dogmatischen Schlummer geweckt."
+        },
+        {
+          "title": "Poppers Ausweg, Talebs Warnung",
+          "text": "Karl Popper zog daraus eine Regel für die Wissenschaft: Theorien lassen sich nie beweisen, nur widerlegen. Tausend weiße Schwäne zeigen nicht, dass alle Schwäne weiß sind, ein einziger schwarzer zeigt, dass es nicht stimmt. Der Autor Nassim Taleb übertrug den Truthahn auf Finanzmärkte. Dort fühlt sich eine Anlage am sichersten an, kurz bevor sie zusammenbricht, weil die Reihe guter Jahre dann am längsten ist. Sein Rat: nicht nur die bisherigen Daten ansehen, sondern fragen, warum man gefüttert wird und wer daran ein Interesse hat."
+        }
+      ],
+      "tryIt": "Nimm etwas, das du für sicher hältst, »weil es immer so war«. Kennst du den Grund dahinter, oder nur die bisherige Reihe?",
+      "takeaways": [
+        "Viele Bestätigungen beweisen keine Regel, ein Gegenbeispiel widerlegt sie.",
+        "Die längste Erfolgsreihe hat man unmittelbar vor dem Bruch."
+      ]
+    }
+  },
+  {
+    "id": "kaefer-in-der-schachtel",
+    "title": "Der Käfer in der Schachtel",
+    "scenario": "Jeder Mensch besitzt eine Schachtel, in die nur er selbst hineinsehen kann. Alle sagen, darin sei ein »Käfer«. Niemand kann je prüfen, was der andere in seiner Schachtel hat – vielleicht etwas ganz anderes, vielleicht nichts. Was bedeutet dann das Wort »Käfer«?",
+    "optionA": "Das Ding in meiner eigenen Schachtel – nur das kenne ich.",
+    "optionB": "Seine Rolle im Gespräch – der Inhalt kürzt sich heraus.",
+    "schoolA": "Bedeutung als inneres Erlebnis",
+    "schoolB": "Wittgenstein: Bedeutung ist Gebrauch",
+    "insight": "Mit dem Käfer meint Wittgenstein den Schmerz. Bezögen Wörter für Empfindungen ihre Bedeutung allein aus dem Inneren, könnten wir uns darüber nie verständigen. Wir tun es aber täglich.",
+    "deep": {
+      "lead": "Wittgenstein fragt nicht, ob andere Menschen Gefühle haben. Er fragt, woher unsere Wörter dafür ihre Bedeutung nehmen.",
+      "sections": [
+        {
+          "title": "Ein Tagebuch, das nichts festhält",
+          "text": "Das Bild steht in den »Philosophischen Untersuchungen«, die nach Wittgensteins Tod erschienen. Es gehört zu einer Reihe von Überlegungen gegen die Idee einer Privatsprache. Angenommen, du notierst jedes Mal ein Zeichen E, wenn du eine bestimmte Empfindung hast, die du niemandem beschreiben kannst. Woran erkennst du beim zweiten Mal, dass es wieder dieselbe ist? Du hast nur deinen Eindruck, und richtig ist dann, was dir richtig vorkommt. Wo es keinen Unterschied zwischen Stimmen und Zu-stimmen-Scheinen gibt, gibt es nach Wittgenstein auch keine Regel und keine Bedeutung."
+        },
+        {
+          "title": "Ein häufiges Missverständnis",
+          "text": "Man liest das oft so, als leugne Wittgenstein das Innenleben. Das tut er nicht; die Empfindung sei kein Etwas, aber auch kein Nichts, schreibt er. Sein Punkt betrifft das Lernen. Ein Kind fällt hin und schreit, Erwachsene trösten es und bringen ihm das Wort »Aua« bei, später »Es tut weh«. Das Wort ersetzt den Schrei und hängt an sichtbarem Verhalten und gemeinsamen Situationen. Ob dein Rot innerlich aussieht wie meines, lässt sich nie klären. Dass wir uns trotzdem über Ampeln einigen, zeigt, worauf es beim Sprechen ankommt."
+        }
+      ],
+      "tryIt": "Beschreibe jemandem einen Kopfschmerz ganz ohne Vergleiche wie »stechend« oder »wie ein Hammer«. Achte darauf, wie weit du kommst.",
+      "takeaways": [
+        "Wörter für Empfindungen bekommen ihre Bedeutung aus dem gemeinsamen Gebrauch.",
+        "Was nur einer prüfen kann, taugt nicht als Maßstab für Bedeutung."
+      ]
+    }
+  },
+  {
+    "id": "schroedingers-katze",
+    "title": "Schrödingers Katze",
+    "scenario": "Eine Katze sitzt in einer geschlossenen Kiste mit einem radioaktiven Atom. Zerfällt es binnen einer Stunde, setzt ein Mechanismus Gift frei. Nach der Quantenmechanik ist das Atom bis zur Messung zerfallen und nicht zerfallen zugleich. Und die Katze, bevor jemand nachsieht?",
+    "optionA": "Erst die Messung legt fest, was der Fall ist.",
+    "optionB": "Beides geschieht – in zwei Zweigen der Wirklichkeit.",
+    "schoolA": "Kopenhagener Deutung",
+    "schoolB": "Viele-Welten-Deutung (Everett)",
+    "insight": "Schrödinger wollte die Quantentheorie damit nicht veranschaulichen, sondern bloßstellen. Was man beim Atom hinnimmt, wirkt bei einer Katze absurd. Wo die Grenze zwischen beiden liegt, ist das Messproblem.",
+    "deep": {
+      "lead": "Die berühmteste Katze der Physik wurde erfunden, um zu zeigen, dass mit der gängigen Deutung der Quantenmechanik etwas nicht stimmen kann.",
+      "sections": [
+        {
+          "title": "Ein burlesker Fall",
+          "text": "Erwin Schrödinger beschrieb die Anordnung 1935 in einem Aufsatz und nannte sie selbst burlesk. Er hatte die Gleichung gefunden, die das Verhalten von Quantenobjekten beschreibt, war aber unzufrieden damit, wie seine Kollegen sie auslegten. Ihnen zufolge hat ein Teilchen vor der Messung keinen bestimmten Zustand, sondern eine Überlagerung mehrerer. Schrödinger koppelte das Winzige an etwas Großes, um den Gedanken auf die Spitze zu treiben. Eine Katze, die zugleich lebt und tot ist, glaubte er selbst nicht. Einstein, mit dem er darüber Briefe wechselte, stimmte ihm zu."
+        },
+        {
+          "title": "Was die Physik heute dazu sagt",
+          "text": "Die meisten Physiker verweisen auf die Dekohärenz. Ein großer, warmer Körper wie eine Katze steht ununterbrochen im Austausch mit Luft, Licht und Kistenwand. Dadurch verliert sich die Überlagerung in unvorstellbar kurzer Zeit, lange bevor ein Mensch den Deckel hebt. Das erklärt, warum wir im Alltag nie Dinge in zwei Zuständen sehen. Es erklärt nicht, warum am Ende genau ein Ergebnis eintritt. Im Labor gelingt es inzwischen, Moleküle aus Tausenden Atomen in Überlagerung zu bringen. Auf solchen Zuständen beruhen auch Quantencomputer."
+        }
+      ],
+      "tryIt": "Erkläre jemandem das Experiment in drei Sätzen und füge hinzu, dass Schrödinger damit eine Deutung angreifen wollte. Beobachte die Reaktion.",
+      "takeaways": [
+        "Die Katze war als Einwand gemeint, nicht als Beschreibung der Natur.",
+        "Dekohärenz erklärt den Alltag, löst das Messproblem aber nicht ganz."
+      ]
+    }
+  },
+  {
+    "id": "laplacescher-daemon",
+    "title": "Der Laplacesche Dämon",
+    "scenario": "Stell dir einen Geist vor, der in einem einzigen Augenblick Ort und Geschwindigkeit jedes Teilchens im Universum kennt, dazu alle Naturgesetze. Er könnte die gesamte Zukunft berechnen, auch was du morgen frühstückst. Bist du dann für deine Entscheidungen noch verantwortlich?",
+    "optionA": "Ja – frei ist, wer aus eigenen Gründen handelt.",
+    "optionB": "Nein – was feststeht, habe ich nicht wirklich gewählt.",
+    "schoolA": "Kompatibilismus",
+    "schoolB": "Inkompatibilismus",
+    "insight": "Der Streit hängt weniger an der Physik als am Begriff der Freiheit. Heißt frei »unverursacht« oder »ungezwungen«? Je nach Antwort ist der Dämon eine Bedrohung oder belanglos.",
+    "deep": {
+      "lead": "Laplace brauchte seinen allwissenden Geist nur für ein Vorwort. Die Philosophie ist ihn seitdem nicht mehr losgeworden.",
+      "sections": [
+        {
+          "title": "Eine Intelligenz, die alles weiß",
+          "text": "Der französische Mathematiker Pierre-Simon Laplace beschrieb die Figur Anfang des 19. Jahrhunderts in einer Schrift über Wahrscheinlichkeit. Er sprach von einer »Intelligenz«; den Dämon machten Spätere daraus. Sein Argument: Dass wir mit Wahrscheinlichkeiten rechnen müssen, liegt nur an unserer Unkenntnis. Für ein Wesen, das alles wüsste, wäre nichts ungewiss, Zukunft und Vergangenheit lägen offen vor ihm. Dahinter stand der Triumph der Mechanik Newtons, mit der sich Planetenbahnen auf Jahrhunderte vorausberechnen ließen. Warum sollte für Gehirne etwas anderes gelten als für Planeten?"
+        },
+        {
+          "title": "Was vom Dämon übrig ist",
+          "text": "Die Physik hat ihm seither zugesetzt. In der Quantenmechanik gibt es echten Zufall, und in chaotischen Systemen wie dem Wetter wachsen winzige Messfehler so schnell an, dass Vorhersagen bald wertlos werden. Für die Freiheit ist damit wenig gewonnen, denn eine Entscheidung, die vom Zufall abhängt, ist nicht freier als eine vorherbestimmte. Viele Philosophen halten die Frage deshalb für falsch gestellt. Im Alltag und vor Gericht nennen wir jemanden verantwortlich, wenn er Gründe verstehen und sein Handeln danach richten kann. Zwang oder Krankheit heben das auf, Naturgesetze nicht."
+        }
+      ],
+      "tryIt": "Erinnere dich an eine Entscheidung von heute. Hätte jemand, der dich sehr gut kennt, sie vorhersagen können? Macht sie das weniger zu deiner?",
+      "takeaways": [
+        "Vorhersagbar zu sein heißt nicht, gezwungen zu sein.",
+        "Zufall macht eine Entscheidung nicht freier als Notwendigkeit."
+      ]
+    }
+  },
+  {
+    "id": "grossvater-paradox",
+    "title": "Das Großvater-Paradox",
+    "scenario": "Du reist mit einer Zeitmaschine siebzig Jahre zurück und begegnest deinem Großvater als jungem Mann, bevor er deine Großmutter kennenlernt. Du hast eine geladene Pistole. Wenn du abdrückst, wird dein Vater nie geboren und du auch nicht. Wer hat dann geschossen?",
+    "optionA": "Es misslingt – die Vergangenheit steht widerspruchsfrei fest.",
+    "optionB": "Es gelingt – aber in einer abgezweigten zweiten Zeitlinie.",
+    "schoolA": "Selbstkonsistenz (Lewis, Nowikow)",
+    "schoolB": "Verzweigte Zeitlinien",
+    "insight": "Das Paradox beweist nicht, dass Zeitreisen unmöglich sind. Es zeigt, dass eine Vergangenheit, die sich ändern lässt, kein stimmiger Begriff ist. Entweder sie steht fest, oder es ist nicht mehr deine.",
+    "deep": {
+      "lead": "Ein Einfall aus Groschenheften wurde zu einem ernsten Prüfstein für Logiker und Physiker.",
+      "sections": [
+        {
+          "title": "Warum der Schuss danebengeht",
+          "text": "Das Motiv stammt aus der Science-Fiction der Zwischenkriegszeit. Der Philosoph David Lewis nahm es in den 1970er-Jahren ernst und unterschied zwei Bedeutungen von »können«. Du kannst schießen, insofern du eine Waffe, gute Augen und den Willen hast. Du kannst es nicht, insofern feststeht, dass der Großvater überlebt hat. Also wird etwas dazwischenkommen: eine Ladehemmung, ein Niesen, ein Sinneswandel. Das wirkt wie eine Verschwörung des Zufalls, ist aber nur die Forderung, dass eine Geschichte sich nicht selbst widerspricht. Der Physiker Igor Nowikow formulierte dasselbe als Prinzip."
+        },
+        {
+          "title": "Was die Physik erlaubt",
+          "text": "Einsteins Gleichungen lassen Lösungen zu, in denen Wege durch die Raumzeit in die eigene Vergangenheit führen. Der Logiker Kurt Gödel fand eine solche Lösung und schenkte sie Einstein zum Geburtstag. Ob die Natur dergleichen zulässt, ist offen. Stephen Hawking vermutete, dass die Physik es stets verhindert. Er gab einmal ein Fest für Zeitreisende und verschickte die Einladungen erst danach; es kam niemand. Reisen in die Zukunft sind dagegen gesichert. Bewegte Uhren gehen langsamer, weshalb Raumfahrer nach Monaten im Orbit eine Winzigkeit weniger gealtert sind."
+        }
+      ],
+      "tryIt": "Welche Entscheidung deiner Vergangenheit würdest du ändern wollen? Verfolge drei Folgen, die du heute schätzt und die dann ebenfalls verschwänden.",
+      "takeaways": [
+        "Eine veränderbare Vergangenheit widerspricht sich selbst.",
+        "Zeitreisen in die Zukunft sind Physik, solche in die Vergangenheit offen."
+      ]
+    }
+  },
+  {
+    "id": "simulationsargument",
+    "title": "Das Simulationsargument",
+    "scenario": "Angenommen, künftige Zivilisationen können Welten mit bewussten Bewohnern im Computer nachbilden und tun das millionenfach. Dann gäbe es weit mehr simulierte als echte Wesen mit Erfahrungen wie deinen. Wie wahrscheinlich ist es, dass ausgerechnet du zu den echten gehörst?",
+    "optionA": "Gering – rein nach der Zahl bin ich vermutlich simuliert.",
+    "optionB": "Die Rechnung trägt nicht – ihre Annahmen sind unprüfbar.",
+    "schoolA": "Bostrom: Simulationshypothese",
+    "schoolB": "Empirismus / Prüfbarkeit",
+    "insight": "Bostrom behauptet nicht, dass wir simuliert sind. Er sagt: Entweder gehen Zivilisationen vorher unter, oder sie verzichten auf solche Simulationen, oder wir leben fast sicher in einer.",
+    "deep": {
+      "lead": "Alte Zweifel an der Außenwelt fragen, ob wir getäuscht werden könnten. Dieses Argument will ausrechnen, wie wahrscheinlich das ist.",
+      "sections": [
+        {
+          "title": "Drei Möglichkeiten, eine muss stimmen",
+          "text": "Der schwedische Philosoph Nick Bostrom veröffentlichte das Argument 2003. Es ist als Dreiteilung gebaut. Erstens: Fast keine Zivilisation erreicht die nötige Technik. Zweitens: Wer sie erreicht, hat kein Interesse an Simulationen seiner Vorfahren. Drittens: Simulierte Bewusstseine sind weit in der Überzahl. Bostrom legt sich nicht fest, welche Möglichkeit zutrifft. Die entscheidende Voraussetzung nennt er offen: Bewusstsein hängt nicht am biologischen Stoff, sondern entsteht, wo immer die passende Informationsverarbeitung abläuft. Wer das bestreitet, ist das Argument los."
+        },
+        {
+          "title": "Einwände und eine gelassene Antwort",
+          "text": "Kritiker bezweifeln mehreres. Niemand weiß, ob sich Bewusstsein berechnen lässt. Der Rechenaufwand für eine Welt mit Quantenphysik wäre gewaltig. Und eine Behauptung, die sich durch keine Beobachtung widerlegen lässt, ist keine wissenschaftliche Hypothese. Außerdem müssten die Simulierenden selbst fragen, ob sie simuliert sind, und so fort. Der Philosoph David Chalmers bietet eine gelassene Lesart an. Selbst wenn es stimmte, wären Tische, Schmerzen und Freundschaften nicht unecht. Sie bestünden nur auf der untersten Ebene aus etwas anderem, als wir dachten."
+        }
+      ],
+      "tryIt": "Überlege, was sich an deinem heutigen Tag ändern würde, wenn du sicher wüsstest, dass die Welt simuliert ist. Schreib es konkret auf.",
+      "takeaways": [
+        "Das Argument ist eine Dreiteilung, keine Behauptung über die Welt.",
+        "Es steht und fällt mit der Annahme, dass Bewusstsein berechenbar ist."
+      ]
+    }
+  },
+  {
+    "id": "dornroeschen-problem",
+    "title": "Das Dornröschen-Problem",
+    "scenario": "Dornröschen wird am Sonntag eingeschläfert, dann wirft man eine Münze. Bei Kopf weckt man sie nur am Montag. Bei Zahl weckt man sie am Montag und am Dienstag, löscht dazwischen aber ihre Erinnerung. Sie erwacht und weiß nicht, welcher Tag ist. Wie wahrscheinlich ist Kopf?",
+    "optionA": "Ein Halb – über die Münze hat sie nichts Neues erfahren.",
+    "optionB": "Ein Drittel – von drei möglichen Weckmomenten ist einer Kopf.",
+    "schoolA": "Halbierer (David Lewis)",
+    "schoolB": "Drittler (Adam Elga)",
+    "insight": "Beide Antworten lassen sich sauber begründen, je nachdem, ob man Münzwürfe zählt oder Weckmomente. Wahrscheinlichkeit wird unscharf, sobald jemand nicht weiß, an welcher Stelle der Zeit er sich befindet.",
+    "deep": {
+      "lead": "Eine faire Münze, klare Regeln, kein Trick, und trotzdem sind sich Fachleute seit Jahrzehnten nicht einig.",
+      "sections": [
+        {
+          "title": "Zwei Lager, zwei Begründungen",
+          "text": "In die Fachliteratur kam das Rätsel im Jahr 2000 durch einen Aufsatz des Philosophen Adam Elga. Er argumentierte für ein Drittel: Würde das Experiment sehr oft wiederholt, fände nur jedes dritte Erwachen nach Kopf statt. David Lewis hielt dagegen. Am Sonntagabend war die Chance ein Halb, und beim Aufwachen lernt Dornröschen nichts, was sie nicht vorher wusste, denn dass sie geweckt wird, stand fest. Wer nichts Neues erfährt, hat keinen Grund, seine Einschätzung zu ändern. Beide Seiten berufen sich auf anerkannte Regeln der Wahrscheinlichkeitslehre."
+        },
+        {
+          "title": "Die Wette entscheidet, was gemeint ist",
+          "text": "Ein Teil des Streits löst sich, wenn man fragt, wofür die Zahl gebraucht wird. Darf Dornröschen bei jedem Erwachen wetten, sollte sie so tun, als stünde es eins zu zwei für Zahl, denn bei Zahl wettet sie zweimal. Zählt pro Experiment nur eine Wette, ist ein Halb richtig. Übrig bleibt die Frage, was sie glauben soll, ganz ohne Wette. Sie ist nicht bloß Spielerei. Dieselbe Unsicherheit über den eigenen Ort steckt in Überlegungen der Kosmologie und im Simulationsargument, wo ebenfalls Beobachter gezählt werden."
+        }
+      ],
+      "tryIt": "Stell das Rätsel zwei Leuten und bitte beide, ihre Antwort in einem Satz zu begründen. Achte darauf, was sie jeweils zählen.",
+      "takeaways": [
+        "Ein Halb zählt Münzwürfe, ein Drittel zählt Weckmomente.",
+        "Bevor man eine Wahrscheinlichkeit nennt, muss klar sein, wovon."
+      ]
+    }
+  },
+  {
+    "id": "sankt-petersburg-paradox",
+    "title": "Das Sankt-Petersburg-Paradox",
+    "scenario": "Eine Münze wird geworfen, bis zum ersten Mal Kopf fällt. Kommt Kopf sofort, erhältst du 2 €. Fällt er erst im zweiten Wurf, 4 €, im dritten 8 €, und so weiter, immer das Doppelte. Der durchschnittlich zu erwartende Gewinn ist rechnerisch unendlich. Wie viel Einsatz zahlst du?",
+    "optionA": "Sehr viel – der Erwartungswert übersteigt jeden Preis.",
+    "optionB": "Ein paar Euro – riesige Summen nützen mir immer weniger.",
+    "schoolA": "Erwartungswert-Regel",
+    "schoolB": "Erwartungsnutzen (Bernoulli)",
+    "insight": "Kaum jemand bietet mehr als zwanzig Euro. Daniel Bernoulli schloss daraus: Menschen bewerten nicht das Geld selbst, sondern seinen Nutzen, und der wächst mit jedem weiteren Euro langsamer.",
+    "deep": {
+      "lead": "Ein Glücksspiel mit unendlichem Durchschnittsgewinn, für das niemand viel zahlen will, wurde zur Geburtsstunde der Nutzentheorie.",
+      "sections": [
+        {
+          "title": "Zwei Vettern namens Bernoulli",
+          "text": "Die Aufgabe stellte der Mathematiker Nikolaus Bernoulli Anfang des 18. Jahrhunderts in einem Brief. Sein Vetter Daniel veröffentlichte Jahre später eine Lösung in den Schriften der Akademie von Sankt Petersburg; daher der Name. Sein Gedanke: Tausend Dukaten bedeuten einem Bettler mehr als einem Reichen. Der Wert eines Gewinns hängt davon ab, wie viel man schon hat. Rechnet man statt mit Geldbeträgen mit deren abnehmendem Nutzen, kommt für das Spiel ein kleiner, endlicher Wert heraus. Auf dieser Idee beruhen bis heute die Lehre vom Risiko und das Geschäft der Versicherungen."
+        },
+        {
+          "title": "Die Bank ist nicht unendlich reich",
+          "text": "Es gibt eine zweite, handfestere Auflösung. Der unendliche Erwartungswert entsteht nur, weil winzige Chancen auf unvorstellbare Summen mitgezählt werden. Kein Gegenspieler kann sie auszahlen. Besitzt die Bank eine Milliarde Euro, ist nach etwa dreißig Verdopplungen Schluss, und der faire Preis liegt bei rund dreißig Euro. Hinzu kommt, was typischerweise passiert: In der Hälfte aller Fälle gibt es zwei Euro, in drei Vierteln höchstens vier. Die Lehre reicht weit über das Spiel hinaus. Ein Durchschnitt, der an extrem seltenen Riesengewinnen hängt, beschreibt nicht, was du erleben wirst."
+        }
+      ],
+      "tryIt": "Wirf eine Münze, bis Kopf fällt, und notiere den Gewinn nach den Spielregeln. Wiederhole das zehnmal und bilde den Durchschnitt.",
+      "takeaways": [
+        "Menschen bewerten den Nutzen von Geld, nicht den Betrag.",
+        "Ein Erwartungswert aus winzigen Chancen ist ein schlechter Ratgeber."
+      ]
+    }
+  },
+  {
+    "id": "ellsberg-paradox",
+    "title": "Die zwei Urnen",
+    "scenario": "Vor dir stehen zwei Urnen mit je hundert Kugeln. In der ersten liegen genau fünfzig rote und fünfzig schwarze. In der zweiten liegen ebenfalls nur rote und schwarze, aber in unbekanntem Verhältnis. Ziehst du eine rote Kugel, gewinnst du hundert Euro. Aus welcher Urne ziehst du?",
+    "optionA": "Aus der ersten – dort kenne ich wenigstens die Chance.",
+    "optionB": "Gleichgültig – ohne weitere Hinweise sind beide gleich gut.",
+    "schoolA": "Ambiguitätsaversion (Ellsberg)",
+    "schoolB": "Bayesianische Entscheidungstheorie",
+    "insight": "Die meisten wählen die erste Urne, und zwar auch dann, wenn stattdessen Schwarz gewinnt. Das passt zu keiner festen Vermutung über die zweite. Wir scheuen nicht nur Risiko, sondern auch unbekanntes Risiko.",
+    "deep": {
+      "lead": "Ein Risiko, das man beziffern kann, fühlt sich besser an als eines, das man nicht kennt, selbst wenn es rechnerisch dasselbe ist.",
+      "sections": [
+        {
+          "title": "Risiko ist nicht Ungewissheit",
+          "text": "Das Experiment stammt von Daniel Ellsberg, der es Anfang der 1960er-Jahre als Ökonom vorstellte. Es richtete sich gegen die damals herrschende Lehre, nach der vernünftige Menschen jede Unsicherheit wie eine Wahrscheinlichkeit behandeln. Der Unterschied war schon früher benannt worden: Beim Würfel kennt man die Chancen, bei einer Firmengründung nicht. Ellsberg zeigte, dass Menschen diesen Unterschied spüren und dafür sogar auf Gewinn verzichten. Berühmt wurde er später aus einem anderen Grund. Er gab geheime Regierungsakten über den Vietnamkrieg an die Presse weiter."
+        },
+        {
+          "title": "Unvernunft oder gesundes Misstrauen?",
+          "text": "Die Scheu vor dem Unbekannten zeigt sich überall. Anleger bevorzugen Aktien aus dem eigenen Land, Patienten die Behandlung mit bekannten Erfolgszahlen, Berufstätige die vertraute Stelle. Rein rechnerisch lässt sich das als Fehler deuten. Es gibt aber eine Verteidigung. Im wirklichen Leben hat die zweite Urne meist jemand gefüllt, und oft ist es derjenige, der die Wette anbietet. Wer das Verhältnis nicht kennt, während der andere es kennt, tut gut daran, abzulehnen. Die sinnvolle Frage lautet daher: Weiß hier jemand mehr als ich, und hat er ein Interesse an meiner Wahl?"
+        }
+      ],
+      "tryIt": "Wo ziehst du gerade das Bekannte nur deshalb vor, weil das andere unklar ist? Prüfe, ob du die fehlende Information nicht einfach beschaffen kannst.",
+      "takeaways": [
+        "Menschen meiden Unbekanntes stärker als bekanntes Risiko.",
+        "Klug ist das dort, wo ein anderer mehr weiß als du."
+      ]
+    }
+  },
+  {
+    "id": "hirschjagd",
+    "title": "Die Hirschjagd",
+    "scenario": "Zwei Jäger können gemeinsam einen Hirsch erlegen, der beide für Tage satt macht. Dazu muss jeder auf seinem Posten bleiben. Da läuft dir ein Hase vor die Füße. Fängst du ihn, bist du für heute versorgt, aber der Hirsch entkommt, und dein Partner geht leer aus. Was tust du?",
+    "optionA": "Auf dem Posten bleiben – gemeinsam holen wir mehr.",
+    "optionB": "Den Hasen nehmen – sicher ist sicher.",
+    "schoolA": "Vertrauen / Gesellschaftsvertrag",
+    "schoolB": "Risikovermeidung",
+    "insight": "Anders als im Gefangenendilemma lohnt sich der Verrat hier nicht, wenn der andere mitzieht. Das einzige Hindernis ist der Zweifel. Zusammenarbeit scheitert oft nicht an Gier, sondern an fehlendem Vertrauen.",
+    "deep": {
+      "lead": "Rousseaus kleine Jagdszene beschreibt das Grundproblem jeder Gemeinschaft in drei Sätzen.",
+      "sections": [
+        {
+          "title": "Ein Absatz bei Rousseau",
+          "text": "Jean-Jacques Rousseau schildert die Szene in seiner Abhandlung über den Ursprung der Ungleichheit. Er will damit zeigen, wie brüchig frühe Zusammenschlüsse waren: Jeder hielt sich an die Abmachung, solange kein näherer Vorteil winkte. Die Spieltheorie machte daraus ein Modell mit zwei stabilen Ausgängen. Jagen beide den Hirsch, will keiner wechseln. Jagen beide Hasen, ebenfalls nicht. Das erste Gleichgewicht ist für alle besser, das zweite ist sicher, weil es nicht vom anderen abhängt. Welches eintritt, entscheidet allein, was jeder vom anderen erwartet."
+        },
+        {
+          "title": "Bankensturm und Gruppenarbeit",
+          "text": "Das Muster ist häufiger als das berühmtere Gefangenendilemma. Eine Bank ist sicher, solange alle ihr Geld dort lassen; fürchtet jeder, die anderen könnten abheben, heben alle ab, und sie bricht zusammen. Eine Gruppenarbeit wird gut, wenn alle sich anstrengen; rechnet jeder mit dem Trödeln der anderen, strengt sich keiner an. Abhilfe schafft, was Erwartungen festigt: eine sichtbare Vorleistung, eine öffentliche Zusage, eine Garantie wie die Einlagensicherung. Der Philosoph Brian Skyrms hält die Hirschjagd deshalb für das treffendere Bild des Gesellschaftsvertrags."
+        }
+      ],
+      "tryIt": "Wo wartest du gerade ab, weil du nicht sicher bist, ob die anderen mitziehen? Mach einen kleinen, sichtbaren ersten Schritt und beobachte die Reaktion.",
+      "takeaways": [
+        "In der Hirschjagd ist Zusammenarbeit für alle am besten, aber riskant.",
+        "Sichtbare Zusagen und Vorleistungen machen Vertrauen möglich."
+      ]
+    }
+  },
+  {
+    "id": "ultimatumspiel",
+    "title": "Das Ultimatumspiel",
+    "scenario": "Ein Fremder erhält hundert Euro und soll sie zwischen sich und dir aufteilen. Er macht genau ein Angebot. Nimmst du an, bekommt jeder seinen Teil. Lehnst du ab, gehen beide leer aus. Verhandelt wird nicht, und ihr seht euch nie wieder. Er bietet dir zehn Euro. Nimmst du an?",
+    "optionA": "Ja – zehn Euro sind mehr als null.",
+    "optionB": "Nein – so eine Aufteilung lasse ich mir nicht bieten.",
+    "schoolA": "Homo oeconomicus",
+    "schoolB": "Fairnessnorm / Reziprozität",
+    "insight": "In Experimenten werden sehr niedrige Angebote häufig abgelehnt. Menschen zahlen also dafür, Unfairness zu bestrafen. Das widerspricht dem reinen Eigennutz und hält zugleich Zusammenarbeit am Leben.",
+    "deep": {
+      "lead": "Wer zehn geschenkte Euro ausschlägt, handelt gegen die Lehrbuchlogik und im Einklang mit fast allen anderen Menschen.",
+      "sections": [
+        {
+          "title": "Ein Experiment aus Köln",
+          "text": "Der Ökonom Werner Güth führte das Spiel Anfang der 1980er-Jahre mit Kollegen an der Universität Köln erstmals durch. Nach der Theorie des rationalen Eigennutzes müsste der Anbieter den kleinsten möglichen Betrag bieten und der Empfänger ihn annehmen. Es kam anders. Die meisten boten zwischen vierzig und fünfzig Prozent, und Angebote unter etwa einem Fünftel wurden oft zurückgewiesen. Das Ergebnis wurde vielfach bestätigt, auch wenn es um mehrere Monatslöhne ging. Die Anbieter sind dabei nicht unbedingt großzügig. Viele bieten viel, weil sie die Ablehnung fürchten."
+        },
+        {
+          "title": "Fairness ist nicht überall dieselbe",
+          "text": "Ein Team um den Anthropologen Joseph Henrich spielte das Spiel in kleinen Gesellschaften auf mehreren Kontinenten. Die Unterschiede waren groß. Bei den Machiguenga im peruanischen Regenwald, die kaum über die Familie hinaus zusammenarbeiten, waren niedrige Angebote üblich und wurden fast immer angenommen. Walfänger auf einer indonesischen Insel, die nur gemeinsam jagen können, boten im Schnitt mehr als die Hälfte. Was als fair gilt, hängt offenbar davon ab, wie sehr Menschen im Alltag aufeinander angewiesen sind. Ein Gefühl für angemessene Anteile gab es überall."
+        }
+      ],
+      "tryIt": "Wo liegt deine Schmerzgrenze? Leg fest, ab welchem Angebot du lieber auf alles verzichten würdest, und frag jemanden nach seiner Zahl.",
+      "takeaways": [
+        "Menschen verzichten auf Geld, um unfaire Angebote zu bestrafen.",
+        "Was als fair gilt, hängt von der Lebensweise einer Gemeinschaft ab."
+      ]
+    }
+  },
+  {
+    "id": "planke-des-karneades",
+    "title": "Die Planke des Karneades",
+    "scenario": "Nach einem Schiffbruch treiben zwei Männer im offenen Meer. Es gibt eine einzige Planke, und sie trägt nur einen. Der eine hat sie zuerst erreicht. Der andere, kräftiger, schwimmt heran. Stößt er den ersten hinunter, überlebt er; lässt er es, ertrinkt er selbst. Darf er stoßen?",
+    "optionA": "Ja – in Todesnot darf jeder sein eigenes Leben retten.",
+    "optionB": "Nein – es bleibt Unrecht, auch wenn niemand es bestraft.",
+    "schoolA": "Recht auf Selbsterhaltung (Hobbes)",
+    "schoolB": "Kant: Not entschuldigt nur",
+    "insight": "Viele Rechtsordnungen folgen Kant: Die Tat bleibt Unrecht, wird aber nicht bestraft, weil keine Strafdrohung wirkt, wenn das eigene Leben auf dem Spiel steht. Rechtfertigen und Entschuldigen sind zweierlei.",
+    "deep": {
+      "lead": "Ein Stück Holz und zwei Ertrinkende genügen, um die Frage zu stellen, ob Not ein Recht schafft.",
+      "sections": [
+        {
+          "title": "Ein Skeptiker schockiert Rom",
+          "text": "Karneades leitete im 2. Jahrhundert v. Chr. die von Platon gegründete Akademie in Athen. Als Gesandter in Rom hielt er nach der Überlieferung an einem Tag eine glänzende Rede für die Gerechtigkeit und am nächsten eine ebenso glänzende dagegen. Die Planke war eines seiner Argumente: Der Gerechte, der dem anderen das Brett lässt, sei ein Narr; der Kluge, der ihn hinunterstößt, handle ungerecht. Gerechtigkeit und Klugheit fielen also auseinander. Der strenge Cato sorgte dafür, dass die griechischen Philosophen die Stadt rasch wieder verließen."
+        },
+        {
+          "title": "Der Fall der Mignonette",
+          "text": "1884 sank die englische Jacht Mignonette im Südatlantik. Vier Männer trieben wochenlang in einem Beiboot, fast ohne Wasser und Nahrung. Schließlich töteten der Kapitän und der Steuermann den siebzehnjährigen Schiffsjungen, der bereits im Sterben lag, und überlebten durch sein Fleisch. Nach der Rettung wurden sie in England wegen Mordes verurteilt. Das Gericht entschied, Not rechtfertige keine Tötung eines Unschuldigen. Das Todesurteil wurde allerdings in sechs Monate Haft umgewandelt. Recht und Mitgefühl kamen so zu getrennten Ergebnissen, ganz im Sinne der Unterscheidung von Unrecht und Schuld."
+        }
+      ],
+      "tryIt": "Frag dich bei einer Ausrede, die du heute hörst oder benutzt: Macht der Umstand die Sache richtig, oder macht er sie nur verzeihlich?",
+      "takeaways": [
+        "Not kann eine Tat entschuldigen, ohne sie zu rechtfertigen.",
+        "Der Fall Mignonette zeigt die Unterscheidung in einem echten Urteil."
+      ]
+    }
+  },
+  {
+    "id": "heinz-dilemma",
+    "title": "Das Heinz-Dilemma",
+    "scenario": "Die Frau von Heinz ist todkrank. Ein Apotheker hat ein Mittel entwickelt, das sie retten könnte, und verlangt dafür das Zehnfache der Herstellungskosten. Heinz bringt nur die Hälfte auf. Der Apotheker lehnt Nachlass und Ratenzahlung ab. Soll Heinz in die Apotheke einbrechen?",
+    "optionA": "Ja – ein Menschenleben wiegt schwerer als Eigentum.",
+    "optionB": "Nein – wenn jeder das Gesetz selbst auslegt, gilt keines mehr.",
+    "schoolA": "Prinzipienmoral (Kohlberg, Stufe 5–6)",
+    "schoolB": "Recht und Ordnung (Stufe 4)",
+    "insight": "Den Psychologen Lawrence Kohlberg interessierte nicht die Antwort, sondern die Begründung. An ihr las er ab, auf welcher Stufe jemand urteilt: aus Angst vor Strafe, aus Regeltreue oder aus Prinzip.",
+    "deep": {
+      "lead": "Bei diesem Dilemma gibt es kein richtiges Ja oder Nein. Aufschlussreich ist allein der Satz, der mit »weil« beginnt.",
+      "sections": [
+        {
+          "title": "Sechs Stufen des Urteilens",
+          "text": "Kohlberg legte die Geschichte ab den späten 1950er-Jahren Kindern und Jugendlichen vor und ordnete ihre Begründungen in sechs Stufen. Auf den untersten zählt, was Strafe vermeidet oder einem selbst nützt: Heinz soll nicht stehlen, sonst kommt er ins Gefängnis. In der Mitte richten sich Menschen nach Erwartungen und Gesetzen: Ein guter Ehemann würde es tun, oder: Diebstahl ist verboten. Auf den höchsten Stufen wird das Gesetz selbst an Grundsätzen gemessen. Dieselbe Antwort kann also auf jeder Stufe vorkommen, nur aus anderen Gründen."
+        },
+        {
+          "title": "Die andere Stimme",
+          "text": "Die Psychologin Carol Gilligan, eine Mitarbeiterin Kohlbergs, erhob Einspruch. Seine ersten Studien beruhten nur auf Jungen, und Mädchen schnitten nach seinem Schema oft schlechter ab. Gilligan beschrieb ein Mädchen, das die Frage gar nicht annahm: Heinz solle weiter mit dem Apotheker reden, sich Geld leihen, denn wenn er ins Gefängnis komme, sei seiner Frau auch nicht geholfen. Kohlberg wertete das als Ausweichen. Gilligan sah darin eine eigene Moral der Fürsorge, die Beziehungen erhalten will, statt Rechte gegeneinander aufzurechnen. Spätere Studien fanden zwischen den Geschlechtern nur geringe Unterschiede."
+        }
+      ],
+      "tryIt": "Stell die Frage einem Kind und einem Erwachsenen. Achte nicht auf Ja oder Nein, sondern nur auf die Begründung.",
+      "takeaways": [
+        "Moralische Reife zeigt sich in der Begründung, nicht im Ergebnis.",
+        "Neben einer Moral der Gerechtigkeit gibt es eine der Fürsorge."
+      ]
+    }
+  },
+  {
+    "id": "abstossende-schlussfolgerung",
+    "title": "Die abstoßende Schlussfolgerung",
+    "scenario": "Welt A: zehn Milliarden Menschen, alle führen ein sehr gutes Leben. Welt Z: unvorstellbar viel mehr Menschen, deren Leben gerade noch lebenswert ist – karg, eintönig, aber knapp im Plus. Zusammengerechnet enthält Z mehr Wohlergehen als A. Welche der beiden Welten ist die bessere?",
+    "optionA": "Welt Z – die Gesamtsumme an Wohlergehen ist größer.",
+    "optionB": "Welt A – es zählt, wie gut es den Einzelnen geht.",
+    "schoolA": "Summen-Utilitarismus",
+    "schoolB": "Durchschnitts- oder Personenbezug",
+    "insight": "Fast alle halten Welt Z für schlechter. Doch jede Regel, die das begründet, führt an anderer Stelle zu ebenso unannehmbaren Folgen. Beim Nachdenken über künftige Menschen stößt unsere Moral an eine Grenze.",
+    "deep": {
+      "lead": "Parfit fand einen Schluss, den er selbst abstoßend nannte, und suchte den Rest seines Lebens nach dem Fehler darin.",
+      "sections": [
+        {
+          "title": "In kleinen Schritten zum Abgrund",
+          "text": "Der britische Philosoph Derek Parfit entwickelte das Argument in den 1980er-Jahren. Seine Stärke liegt darin, dass jeder einzelne Schritt harmlos wirkt. Man füge zu Welt A weitere Menschen hinzu, denen es etwas weniger gut geht, die aber gern leben. Niemand wird dadurch geschädigt. Dann gleiche man die Unterschiede aus, sodass alle gleich viel haben und die Summe sogar steigt. Das Ergebnis ist eine größere Welt mit etwas niedrigerem Niveau. Wiederholt man das oft genug, landet man bei Z: einer riesigen Bevölkerung, der es gerade so geht."
+        },
+        {
+          "title": "Jeder Ausweg hat seinen Preis",
+          "text": "Naheliegend ist, statt der Summe den Durchschnitt zu nehmen. Dann aber wäre eine Welt mit einem einzigen überglücklichen Menschen besser als eine mit Milliarden sehr glücklicher, und jedes zufriedene Kind, das den Schnitt leicht senkt, ein Verlust. Andere sagen, Moral betreffe nur Menschen, die es gibt oder geben wird; wir sollten Menschen glücklich machen, nicht glückliche Menschen machen. Dann wäre es aber gleichgültig, ob die Menschheit ausstirbt. Praktisch steckt die Frage in jeder Abwägung zwischen heutigen und künftigen Generationen, etwa beim Klimaschutz."
+        }
+      ],
+      "tryIt": "Entscheide dich zwischen Summe und Durchschnitt und such dann einen Fall, in dem deine Regel ein Ergebnis liefert, das du selbst nicht akzeptierst.",
+      "takeaways": [
+        "Zählt nur die Summe, ist eine riesige karge Welt die beste.",
+        "Alle bekannten Alternativen haben eigene unannehmbare Folgen."
+      ]
+    }
+  },
+  {
+    "id": "harmlose-folterer",
+    "title": "Die harmlosen Folterer",
+    "scenario": "Tausend Menschen sitzen an tausend Reglern. Jeder Regler erhöht bei tausend Opfern den Strom um einen Hauch, den niemand spüren kann. Drehen alle, leiden die Opfer Qualen. Du bist einer der tausend. Dein eigener Dreh macht für kein Opfer einen merklichen Unterschied. Drehst du?",
+    "optionA": "Was niemand spürt, schadet niemandem – mein Beitrag ist harmlos.",
+    "optionB": "Ich wäre Teil dessen, was sie quält – also lasse ich es.",
+    "schoolA": "Einzelfall-Folgenrechnung",
+    "schoolB": "Parfit: gemeinsame Verantwortung",
+    "insight": "Parfit zeigt eine Lücke in der Alltagsmoral: Wir prüfen meist nur, was die einzelne Handlung anrichtet. Große Schäden entstehen aber oft aus unzähligen Beiträgen, von denen keiner für sich ins Gewicht fällt.",
+    "deep": {
+      "lead": "Wenn kein Einzelner einen spürbaren Schaden anrichtet und am Ende trotzdem tausend Menschen leiden, stimmt etwas mit der Rechnung nicht.",
+      "sections": [
+        {
+          "title": "Fehler in der moralischen Mathematik",
+          "text": "Derek Parfit stellt dem Fall eine ältere Zeit gegenüber, in der jeder Folterer ein Opfer hatte und dessen Leid klar verursachte. Die neue Anordnung verteilt denselben Schaden so, dass jede einzelne Zurechnung verschwindet. Parfit hält es für einen Denkfehler, daraus die Unschuld jedes Einzelnen abzuleiten. Zwei Antworten bieten sich an. Entweder gibt es auch unmerkliche Schäden, die sich aufsummieren. Oder eine Handlung kann falsch sein, weil sie zu einer Gruppe von Handlungen gehört, die zusammen Schaden anrichten, auch wenn sie für sich nichts ändert."
+        },
+        {
+          "title": "Ein Flug, ein Schnitzel, eine Stimme",
+          "text": "Das Gedankenexperiment trifft die großen Fragen der Gegenwart. Die Erwärmung der Erde entsteht aus Milliarden einzelner Fahrten, Flüge und Mahlzeiten, von denen keine messbar etwas verschiebt. Manche Philosophen folgern, der Einzelne habe deshalb keine Pflicht zum Verzicht, wohl aber die Pflicht, sich für gemeinsame Regeln einzusetzen. Andere rechnen mit Schwellen: Meist ändert mein Kauf nichts, gelegentlich löst gerade er die nächste Großbestellung aus. Im Durchschnitt entspricht die Wirkung dann doch meinem Anteil. Dieselbe Überlegung gilt für die einzelne Stimme bei einer Wahl."
+        }
+      ],
+      "tryIt": "Such eine Gewohnheit, bei der du denkst »auf mich kommt es nicht an«. Rechne aus, was geschieht, wenn alle in deiner Stadt so denken.",
+      "takeaways": [
+        "Unmerkliche Einzelbeiträge können zusammen schweres Unrecht sein.",
+        "»Auf mich kommt es nicht an« ist als Rechnung oft falsch."
+      ]
+    }
+  },
+  {
+    "id": "toleranz-paradox",
+    "title": "Das Toleranz-Paradox",
+    "scenario": "Eine offene Gesellschaft lässt jede Meinung zu. Nun tritt eine Bewegung auf, die offen ankündigt, nach einem Wahlsieg freie Presse, unabhängige Gerichte und Opposition abzuschaffen. Sie nutzt die Redefreiheit, um deren Ende vorzubereiten. Muss die Gesellschaft sie gewähren lassen?",
+    "optionA": "Nein – wer Toleranz abschaffen will, kann sich nicht auf sie berufen.",
+    "optionB": "Ja – Meinungsverbote sind selbst der Anfang der Unfreiheit.",
+    "schoolA": "Popper / wehrhafte Demokratie",
+    "schoolB": "Klassischer Liberalismus (Mill)",
+    "insight": "Popper folgerte: Unbegrenzte Toleranz führt zum Verschwinden der Toleranz. Er wollte Intolerante aber mit Argumenten bekämpfen, solange das möglich ist, und erst unterdrücken, wenn sie zur Gewalt übergehen.",
+    "deep": {
+      "lead": "Poppers berühmter Gedanke steht in einer Fußnote und wird meist in einer Schärfe zitiert, die er selbst vermieden hat.",
+      "sections": [
+        {
+          "title": "Was Popper wirklich schrieb",
+          "text": "Karl Popper verfasste »Die offene Gesellschaft und ihre Feinde« während des Zweiten Weltkriegs im neuseeländischen Exil. Das Paradox erwähnt er in einer Anmerkung. Dort heißt es ausdrücklich, er wolle nicht sagen, dass man intolerante Lehren immer unterdrücken solle. Solange man ihnen mit Argumenten begegnen und sie durch die öffentliche Meinung in Schranken halten könne, wäre ein Verbot höchst unklug. Das Recht dazu müsse man sich aber vorbehalten, für den Fall, dass die Gegenseite das Gespräch verweigert und ihren Anhängern beibringt, auf Argumente mit Fäusten zu antworten."
+        },
+        {
+          "title": "Zwei Demokratien, zwei Antworten",
+          "text": "Das deutsche Grundgesetz zog aus dem Ende der Weimarer Republik die Lehre der wehrhaften Demokratie. Parteien, die die freiheitliche Ordnung beseitigen wollen, können vom Bundesverfassungsgericht verboten werden; zweimal ist das in den 1950er-Jahren geschehen. Die Hürden liegen hoch, damit das Mittel nicht gegen bloß unbequeme Gegner eingesetzt wird. Die USA gehen den anderen Weg und schützen selbst extremste Äußerungen, solange sie nicht unmittelbar zu Gewalt aufrufen. Dahinter steht die Sorge, dass jede Befugnis zum Verbieten irgendwann in falsche Hände gerät."
+        }
+      ],
+      "tryIt": "Wo ziehst du selbst die Grenze: bei der Meinung, beim Aufruf oder erst bei der Tat? Prüfe, ob du sie für deine Gegner und deine Freunde gleich ziehst.",
+      "takeaways": [
+        "Grenzenlose Toleranz kann die Toleranz selbst zerstören.",
+        "Popper setzte zuerst auf Argumente und erst zuletzt auf Verbote."
+      ]
+    }
+  },
+  {
+    "id": "euthyphron-dilemma",
+    "title": "Das Euthyphron-Dilemma",
+    "scenario": "Sokrates trifft vor dem Gerichtsgebäude den Seher Euthyphron, der genau zu wissen meint, was fromm und gut ist: das, was die Götter lieben. Sokrates hakt nach: Lieben die Götter das Gute, weil es gut ist? Oder ist es gut, weil die Götter es lieben?",
+    "optionA": "Gut ist es, weil Gott es will – er setzt den Maßstab.",
+    "optionB": "Gott will es, weil es gut ist – der Maßstab gilt unabhängig.",
+    "schoolA": "Theorie der göttlichen Gebote",
+    "schoolB": "Moralischer Realismus (Platon)",
+    "insight": "Im ersten Fall wäre auch Grausamkeit gut, sobald Gott sie geböte. Im zweiten steht ein Maßstab über Gott. Die Frage trifft jede Autorität, ob Staat, Tradition oder Mehrheit: Macht ihr Wort etwas richtig?",
+    "deep": {
+      "lead": "Eine einzige Rückfrage des Sokrates trennt seit über zweitausend Jahren das Gute von dem, was bloß geboten ist.",
+      "sections": [
+        {
+          "title": "Ein Gespräch auf dem Weg zum Prozess",
+          "text": "Platons kurzer Dialog hat einen ernsten Rahmen. Sokrates ist unterwegs zu der Anklage wegen Gottlosigkeit, die ihn das Leben kosten wird. Euthyphron will den eigenen Vater vor Gericht bringen, weil dieser einen Tagelöhner gefesselt in einen Graben werfen ließ, wo der Mann starb. Seine Verwandten nennen das Vorgehen des Sohnes ruchlos; er selbst hält es für fromm. Sokrates bittet ihn um eine Erklärung, was Frömmigkeit sei. Jede Antwort zerfällt unter den Nachfragen. Am Ende hat Euthyphron es plötzlich eilig, und das Gespräch bleibt ohne Ergebnis."
+        },
+        {
+          "title": "Von den Göttern zum Gesetz",
+          "text": "Christliche Denker suchten einen dritten Weg. Nach Thomas von Aquin gebietet Gott weder willkürlich noch nach einem fremden Maßstab; das Gute gehöre zu seinem Wesen. Kritiker sehen darin eine Verschiebung der Frage, keine Antwort. Die weltliche Fassung ist nicht weniger scharf. Ist etwas gerecht, weil es im Gesetz steht? Der Jurist Gustav Radbruch verneinte das nach 1945: Gesetze, die der Gerechtigkeit in unerträglichem Maß widersprechen, seien kein gültiges Recht. Im Kleinen steckt das Dilemma in jedem »Weil ich es sage«."
+        }
+      ],
+      "tryIt": "Wenn du heute eine Regel befolgst oder aufstellst, frag: Ist sie richtig, weil jemand sie festgelegt hat, oder wurde sie festgelegt, weil sie richtig ist?",
+      "takeaways": [
+        "Geboten und gut sind zwei verschiedene Eigenschaften.",
+        "Keine Autorität macht etwas allein dadurch richtig, dass sie es anordnet."
+      ]
+    }
+  },
+  {
+    "id": "tickende-zeitbombe",
+    "title": "Die tickende Zeitbombe",
+    "scenario": "Irgendwo in der Stadt liegt eine Bombe, die in zwei Stunden Hunderte töten wird. Die Polizei hat den Mann gefasst, der sie versteckt hat. Er gibt die Tat zu und schweigt über den Ort. Alle anderen Mittel sind ausgeschöpft. Darf man ihn foltern, um das Versteck zu erfahren?",
+    "optionA": "Ja – das Leben Hunderter Unschuldiger geht vor.",
+    "optionB": "Nein – das Folterverbot gilt ohne jede Ausnahme.",
+    "schoolA": "Folgenethik (Utilitarismus)",
+    "schoolB": "Menschenwürde als absolute Grenze",
+    "insight": "Das Szenario ist so gebaut, dass jede Unsicherheit fehlt: der richtige Mann, sicheres Wissen, kein anderer Weg, wirksame Folter. In der Wirklichkeit ist nichts davon garantiert. Darauf stützt sich das Verbot.",
+    "deep": {
+      "lead": "Kaum ein Gedankenexperiment wird so oft herangezogen, um eine Grenze aufzuweichen, die das Recht bewusst ohne Ausnahme gezogen hat.",
+      "sections": [
+        {
+          "title": "Ein Fall aus Frankfurt",
+          "text": "2002 wurde in Frankfurt ein elfjähriger Junge entführt. Die Polizei fasste den Täter, der das Versteck nicht nannte. In der Hoffnung, das Kind lebe noch, ließ der Vizepräsident der Polizei ihm Schmerzen androhen. Der Mann redete; der Junge war zu diesem Zeitpunkt bereits tot. Der Beamte wurde später verurteilt, wenn auch milde. Der Europäische Gerichtshof für Menschenrechte stellte klar, dass schon die Drohung gegen das Verbot unmenschlicher Behandlung verstößt. Dieses Verbot gilt nach der Menschenrechtskonvention ausnahmslos, auch im Notstand und selbst im Krieg."
+        },
+        {
+          "title": "Warum das Szenario trügt",
+          "text": "Das Gedankenexperiment setzt voraus, was im Ernstfall niemand weiß. Ist es der Richtige? Weiß er, was man von ihm will? Sagt er unter Qualen die Wahrheit oder irgendetwas, damit es aufhört? Verhörfachleute halten erzwungene Aussagen für notorisch unzuverlässig. Dazu kommt die Dynamik der Ausnahme. Eine Behörde, die einmal foltern darf, braucht Regeln, Personal und Übung dafür, und die Schwelle sinkt mit jedem Fall. Befürworter des Verbots sagen deshalb: Selbst wenn es den reinen Lehrbuchfall gäbe, wäre eine Regel, die ihn erlaubt, gefährlicher als eine, die ihn verbietet."
+        }
+      ],
+      "tryIt": "Zähl die Annahmen, die im Szenario stillschweigend als sicher gelten. Streiche eine davon und prüfe, ob deine Antwort dieselbe bleibt.",
+      "takeaways": [
+        "Das Szenario blendet alle Unsicherheiten der Wirklichkeit aus.",
+        "Ein Verbot ohne Ausnahme schützt vor dem Abgleiten der Ausnahme zur Regel."
+      ]
+    }
+  },
+  {
+    "id": "ewige-wiederkehr",
+    "title": "Die ewige Wiederkehr",
+    "scenario": "Ein Dämon schleicht sich in deine einsamste Stunde und sagt: Dieses Leben, wie du es jetzt lebst und gelebt hast, wirst du noch unzählige Male leben müssen. Nichts Neues wird daran sein. Jeder Schmerz und jede Freude kehrt wieder, in derselben Reihenfolge. Was antwortest du ihm?",
+    "optionA": "Ja – noch einmal, genau so. Etwas Schöneres hörte ich nie.",
+    "optionB": "Ich würde ihn verfluchen – einmal ist genug.",
+    "schoolA": "Nietzsche: Bejahung des Lebens",
+    "schoolB": "Schopenhauer: Pessimismus",
+    "insight": "Nietzsche meint den Gedanken als Prüfstein, nicht als Physik. Wer so lebt, dass er sein Leben unendlich oft wiederholen wollte, hat es bejaht. Die Frage legt auf jede Entscheidung das größte Gewicht.",
+    "deep": {
+      "lead": "Nietzsche hielt diesen Einfall für seinen wichtigsten. Er stellt keine Behauptung über das Universum auf, sondern eine Frage an den Leser.",
+      "sections": [
+        {
+          "title": "Der Gedanke vom Silvaplanersee",
+          "text": "Nietzsche berichtet, der Gedanke sei ihm im Sommer 1881 bei einer Wanderung im Engadin gekommen, an einem mächtigen Felsblock am See. Veröffentlicht hat er ihn im Jahr darauf unter der Überschrift »Das größte Schwergewicht«. Später stellte er ihn ins Zentrum seines »Zarathustra«. Ganz neu war die Vorstellung nicht. Schon die Stoiker lehrten, die Welt gehe in Feuer auf und beginne dann genau gleich von vorn. Neu ist die Wendung ins Persönliche. Nietzsche fragt nicht, ob es so ist, sondern ob du es ertragen und sogar wünschen könntest."
+        },
+        {
+          "title": "Ein Test für den Alltag",
+          "text": "Der naheliegende Einwand lautet, eine Wiederholung ohne Erinnerung sei gleichgültig, weil niemand sie bemerkt. Als Probe taugt der Gedanke trotzdem. Er dreht die übliche Frage um. Statt »Was bringt mir das später?« fragt er: »Ist das, was ich gerade tue, so, dass ich es um seiner selbst willen wieder täte?« Der Psychiater Viktor Frankl gab eine verwandte Regel aus: Lebe so, als lebtest du zum zweiten Mal und hättest beim ersten Mal alles so falsch gemacht, wie du es gerade zu machen im Begriff bist."
+        }
+      ],
+      "tryIt": "Geh den gestrigen Tag Stunde für Stunde durch. Welche Stunden würdest du gern unendlich oft wiederholen, und welche auf keinen Fall?",
+      "takeaways": [
+        "Die ewige Wiederkehr ist eine Probe, keine Naturlehre.",
+        "Bejaht ist ein Leben, das man genau so wieder wählen würde."
+      ]
+    }
+  },
+  {
+    "id": "fall-makropulos",
+    "title": "Der Fall Makropulos",
+    "scenario": "Dir wird ein Elixier angeboten. Solange du es regelmäßig nimmst, alterst du nicht und bleibst gesund, auf dem Stand von heute. Du kannst jederzeit aufhören; dann alterst und stirbst du wie alle anderen. Nimmst du es – und wenn ja, hörst du irgendwann freiwillig wieder auf?",
+    "optionA": "Ich nehme es ohne Ende – ein gutes Leben kann nicht zu lang sein.",
+    "optionB": "Irgendwann höre ich auf – ein endloses Leben würde leer.",
+    "schoolA": "Der Tod als Verlust (Nagel)",
+    "schoolB": "Bernard Williams: Sinn durch Endlichkeit",
+    "insight": "Williams meinte, was uns am Leben hält, seien Wünsche und Vorhaben, und die erschöpften sich irgendwann. Seine Gegner halten das für mangelnde Fantasie. Einig sind beide darin, dass ein früher Tod etwas raubt.",
+    "deep": {
+      "lead": "Ein Theaterstück über eine 337 Jahre alte Sängerin lieferte der Philosophie ihr bekanntestes Argument gegen die Unsterblichkeit.",
+      "sections": [
+        {
+          "title": "Die Frau, die genug hatte",
+          "text": "Karel Čapek, der auch das Wort Roboter in die Welt brachte, schrieb in den 1920er-Jahren die Komödie »Die Sache Makropulos«; Leoš Janáček machte eine Oper daraus. Die Heldin hat als junge Frau ein Elixier getrunken, das ihr dreihundert zusätzliche Jahre schenkte. Sie hat alles erlebt, alle geliebt und begraben, und empfindet nur noch Kälte und Überdruss. Als sie das Rezept für eine weitere Dosis in Händen hält, will sie es nicht mehr. Der Philosoph Bernard Williams nahm das Stück zum Anlass für einen berühmten Aufsatz über die Langeweile der Unsterblichkeit."
+        },
+        {
+          "title": "Stimmt das mit der Langeweile?",
+          "text": "Williams' Gegner unterscheiden zwei Arten von Freuden. Manche erschöpfen sich: Wer einen Berg bestiegen hat, muss ihn nicht hundertmal besteigen. Andere lassen sich beliebig wiederholen, etwa gutes Essen, Musik, Gespräche mit Freunden. Außerdem bleibt ein Mensch über Jahrhunderte nicht derselbe; neue Interessen könnten die alten ablösen. Williams würde erwidern, dann sei es irgendwann nicht mehr mein Leben, das weitergeht. Unabhängig davon enthält der Streit eine Beobachtung, die auch ohne Elixier gilt: Vieles bekommt sein Gewicht erst dadurch, dass die Zeit dafür begrenzt ist."
+        }
+      ],
+      "tryIt": "Stell dir vor, du hättest fünfhundert Jahre vor dir. Was würdest du heute anders machen, und was davon schiebst du in Wahrheit schon jetzt auf?",
+      "takeaways": [
+        "Williams: Ohne Ende gehen einem Leben irgendwann die Vorhaben aus.",
+        "Begrenzte Zeit gibt Entscheidungen ihr Gewicht."
+      ]
+    }
+  },
+  {
+    "id": "wunschkind-nach-mass",
+    "title": "Das Wunschkind nach Maß",
+    "scenario": "Ein Paar lässt bei einer künstlichen Befruchtung zehn Embryonen untersuchen. Die Klinik bietet an, nicht nur schwere Erbkrankheiten auszuschließen, sondern den Embryo mit den besten Aussichten auf Gesundheit, Körpergröße und Lernfähigkeit auszuwählen. Sollen die Eltern das nutzen?",
+    "optionA": "Ja – Eltern sollen ihrem Kind die besten Chancen mitgeben.",
+    "optionB": "Nein – ein Kind nimmt man an; man bestellt es nicht nach Katalog.",
+    "schoolA": "Savulescu: Pflicht zum besten Start",
+    "schoolB": "Sandel / Habermas: Unverfügbarkeit",
+    "insight": "Der Streit dreht sich weniger um Technik als um Elternschaft. Ist ein Kind jemand, den man annimmt, wie er kommt, oder jemand, den man bestmöglich ausstattet? Zwischen Heilen und Verbessern fehlt eine scharfe Linie.",
+    "deep": {
+      "lead": "Die Frage klingt nach Zukunft. Dabei wählen Eltern seit Langem aus, sie tun es nur mit gröberen Mitteln.",
+      "sections": [
+        {
+          "title": "Drei Stimmen im Streit",
+          "text": "Der Bioethiker Julian Savulescu vertritt die Ansicht, Eltern seien moralisch gehalten, unter möglichen Kindern dasjenige zu wählen, das voraussichtlich das beste Leben haben wird. Wer das Kind später auf eine gute Schule schickt, könne schlecht begründen, warum er vorher auf Vorteile verzichtet. Michael Sandel hält dagegen, Elternschaft verlange Offenheit für das Unerbetene; wer Kinder entwirft, mache sie zum Werkstück des eigenen Ehrgeizes. Jürgen Habermas fürchtet, ein nach fremden Wünschen ausgewählter Mensch könne sich nicht mehr als alleiniger Urheber seines Lebens verstehen."
+        },
+        {
+          "title": "Was heute wirklich geht",
+          "text": "In Deutschland ist die genetische Untersuchung von Embryonen nur in engen Grenzen erlaubt, im Wesentlichen bei drohenden schweren Erbkrankheiten und nach Prüfung durch eine Ethikkommission. In einigen anderen Ländern bieten Firmen bereits Risikoprofile für verbreitete Krankheiten an. Die Vorhersagekraft wird oft überschätzt. Merkmale wie Körpergröße oder Schulerfolg hängen an Tausenden Genvarianten und an der Umwelt; nach Modellrechnungen brächte die Auswahl unter wenigen Embryonen nur kleine Unterschiede. Behindertenverbände wenden grundsätzlicher ein, jede Auswahl sage auch etwas über jene aus, die mit dem aussortierten Merkmal leben."
+        }
+      ],
+      "tryIt": "Zieh deine eigene Linie: Welche Eigenschaften dürften Eltern auswählen, welche nicht? Formuliere die Regel, die beides trennt.",
+      "takeaways": [
+        "Zwischen Krankheit verhindern und Eigenschaften verbessern liegt keine klare Grenze.",
+        "Die genetische Vorhersage komplexer Merkmale ist bislang schwach."
+      ]
+    }
+  },
+  {
+    "id": "letztes-beatmungsgeraet",
+    "title": "Das letzte Beatmungsgerät",
+    "scenario": "Auf einer Intensivstation ist ein einziges Beatmungsgerät frei. Zwei Patienten brauchen es sofort: eine 35-Jährige mit guten Überlebensaussichten und ein 80-Jähriger, dessen Chancen deutlich schlechter stehen. Er wurde zehn Minuten früher eingeliefert. Wer bekommt das Gerät?",
+    "optionA": "Die Patientin mit der besseren Überlebenschance.",
+    "optionB": "Wer zuerst kam, oder das Los – kein Leben zählt mehr.",
+    "schoolA": "Erfolgsaussicht als Maßstab",
+    "schoolB": "Strikte Gleichheit der Leben",
+    "insight": "Medizinische Leitlinien stellen meist auf die Erfolgsaussicht der Behandlung ab und schließen Alter oder Behinderung als eigenes Kriterium aus. Strittig ist, ob sich beides in der Praxis sauber trennen lässt.",
+    "deep": {
+      "lead": "Triage heißt, eine Entscheidung zu treffen, die niemand treffen will und die trotzdem jemand treffen muss.",
+      "sections": [
+        {
+          "title": "Sortieren auf dem Schlachtfeld",
+          "text": "Das Wort kommt vom französischen trier, sortieren. Als Begründer des Verfahrens gilt Dominique Jean Larrey, der oberste Wundarzt in Napoleons Armeen. Vor ihm wurden Verwundete nach Rang oder in der Reihenfolge ihres Eintreffens versorgt. Larrey ordnete an, nach Dringlichkeit zu behandeln, ohne Rücksicht auf Dienstgrad und sogar auf die Seite, für die jemand gekämpft hatte. Seitdem gehört das Sichten zu jeder Katastrophenmedizin. In jeder Notaufnahme geschieht es täglich in milder Form: Wer am schwersten betroffen ist, kommt zuerst dran, wer warten kann, wartet."
+        },
+        {
+          "title": "Der Streit in der Pandemie",
+          "text": "Als 2020 in einigen Regionen Europas die Intensivbetten knapp wurden, mussten Ärzte entscheiden, wem ein Gerät am ehesten das Leben retten würde. In Deutschland klagten Menschen mit Behinderung, sie könnten dabei benachteiligt werden, weil ihre Aussichten pauschal schlechter eingeschätzt würden. Das Bundesverfassungsgericht verpflichtete den Gesetzgeber daraufhin, sie zu schützen. Besonders umstritten blieb eine Frage: Darf man einem Patienten das Gerät wieder abnehmen, wenn ein anderer mit besseren Chancen eintrifft? Manche Ärzte halten das für folgerichtig, viele Juristen dagegen für strafbar."
+        }
+      ],
+      "tryIt": "Überleg dir eine Regel für den Fall, die du auch dann für gerecht hieltest, wenn du nicht wüsstest, welcher der beiden Patienten du selbst bist.",
+      "takeaways": [
+        "Triage ordnet nach Dringlichkeit und Erfolgsaussicht, nicht nach Rang.",
+        "Ob Erfolgsaussicht und Alter trennbar sind, bleibt der Kern des Streits."
+      ]
+    }
+  },
+  {
+    "id": "recht-auf-nichtwissen",
+    "title": "Das Recht auf Nichtwissen",
+    "scenario": "Dein Vater ist an der Huntington-Krankheit gestorben, einem unheilbaren Erbleiden, das meist im mittleren Alter ausbricht. Mit einer Wahrscheinlichkeit von fünfzig Prozent trägst du die Anlage in dir. Ein Bluttest gäbe dir Gewissheit. Heilen kann dich niemand. Machst du den Test?",
+    "optionA": "Ja – nur wer Bescheid weiß, kann sein Leben danach planen.",
+    "optionB": "Nein – ich will meine Jahre ohne dieses Urteil leben.",
+    "schoolA": "Selbstbestimmung durch Wissen",
+    "schoolB": "Recht auf Nichtwissen (Hans Jonas)",
+    "insight": "Die meisten Menschen in dieser Lage verzichten auf den Test. Wissen ist nicht immer ein Gewinn, denn es lässt sich nicht zurückgeben. Deshalb kennt die Medizin neben dem Recht auf Auskunft ein Recht, nichts zu erfahren.",
+    "deep": {
+      "lead": "Sonst gilt Aufklärung als Bedingung der Freiheit. In diesem Fall kann gerade die Unwissenheit Freiheit bedeuten.",
+      "sections": [
+        {
+          "title": "Eine Gewissheit ohne Ausweg",
+          "text": "Die Huntington-Krankheit wird durch eine einzelne veränderte Erbanlage ausgelöst; wer sie trägt, erkrankt mit großer Sicherheit. Seit den 1990er-Jahren lässt sie sich im Blut nachweisen, lange vor den ersten Anzeichen. Viele hatten erwartet, die Betroffenen würden sich um den Test reißen. Tatsächlich nutzt ihn nur eine Minderheit. Wer ihn macht, will meist Klarheit für Kinderwunsch oder Lebensplanung. Wer verzichtet, will die Hoffnung behalten. Humangenetiker bestehen deshalb auf Beratung und Bedenkzeit vor dem Test und akzeptieren, dass jemand im letzten Moment zurücktritt."
+        },
+        {
+          "title": "Wo fremdes Wissen hineinreicht",
+          "text": "Der Philosoph Hans Jonas sprach früh von einem Recht auf Nichtwissen; das deutsche Gendiagnostikgesetz hat es festgeschrieben. Schwierig wird es, weil Gene Familiensache sind. Lässt sich die Enkelin eines Erkrankten testen und ist positiv, steht damit auch fest, dass ihr Elternteil die Anlage trägt, ob er es wissen wollte oder nicht. Ähnliches geschieht bei Gentests aus dem Internet, die nebenbei Verwandte und Krankheitsrisiken offenlegen. Hinzu kommt die Sorge vor Dritten. Versicherer und Arbeitgeber dürfen in Deutschland solche Tests grundsätzlich nicht verlangen, damit niemand zum Wissen gedrängt wird."
+        }
+      ],
+      "tryIt": "Gäbe es einen Test, der dein Todesjahr sicher nennt: Würdest du das Ergebnis öffnen? Schreib auf, was du mit der Zahl anfangen würdest.",
+      "takeaways": [
+        "Wissen ohne Handlungsmöglichkeit kann eine Last sein.",
+        "Genetisches Wissen betrifft immer auch die Verwandten."
+      ]
+    }
+  },
+  {
+    "id": "collingridge-dilemma",
+    "title": "Das Collingridge-Dilemma",
+    "scenario": "Eine neue Technik taucht auf. Jetzt, am Anfang, ließe sie sich leicht lenken oder begrenzen, aber niemand kennt ihre Folgen. In zwanzig Jahren sind die Folgen bekannt, doch dann hängen Wirtschaft, Alltag und Milliarden Menschen daran. Wann soll die Gesellschaft eingreifen?",
+    "optionA": "Früh – lieber vorsichtig, auch wenn manches unnötig gebremst wird.",
+    "optionB": "Spät – erst Erfahrungen sammeln, dann gezielt regeln.",
+    "schoolA": "Vorsorgeprinzip (Hans Jonas)",
+    "schoolB": "Versuch und Irrtum",
+    "insight": "Solange Eingreifen leicht ist, fehlt das Wissen; ist das Wissen da, fehlt die Macht. Collingridge riet deshalb, Techniken so einzuführen, dass sie korrigierbar bleiben: schrittweise und mit Rückweg.",
+    "deep": {
+      "lead": "Jede neue Technik stellt dieselbe Falle: Man kann sie formen, solange man sie nicht versteht, und versteht sie erst, wenn sie fest sitzt.",
+      "sections": [
+        {
+          "title": "Beispiele aus hundert Jahren",
+          "text": "Der britische Technikforscher David Collingridge beschrieb das Dilemma um 1980. Anschauung gibt es reichlich. Als verbleites Benzin eingeführt wurde, gab es Warnungen, aber keine Beweise; als die Beweise vorlagen, fuhr die ganze Welt damit, und das Verbot dauerte Jahrzehnte. Städte wurden um das Auto herum gebaut, bevor jemand Lärm, Abgase und Flächenverbrauch bedacht hatte. Bei den Stoffen, die die Ozonschicht angriffen, gelang die späte Korrektur durch ein weltweites Abkommen. Soziale Netzwerke hatten Milliarden Nutzer, ehe ernsthaft über ihre Wirkung auf Jugendliche geforscht wurde."
+        },
+        {
+          "title": "Zwischen Furcht und Leichtsinn",
+          "text": "Hans Jonas empfahl, bei unumkehrbaren Risiken der schlechten Vorhersage mehr Gewicht zu geben als der guten. Kritiker entgegnen, auch Zögern habe Opfer: Ein Medikament, das Jahre zu spät zugelassen wird, hilft in diesen Jahren niemandem. Collingridges eigener Rat liegt dazwischen. Entscheidend sei nicht, die Zukunft zu erraten, sondern Fehler billig zu halten. Dazu gehören Pilotversuche, befristete Genehmigungen, laufende Beobachtung und der Verzicht auf Lösungen, die sich nicht zurückbauen lassen. Genforscher legten sich in den 1970er-Jahren selbst eine Pause auf, bis Sicherheitsregeln standen."
+        }
+      ],
+      "tryIt": "Welche neue Gewohnheit oder App nimmst du gerade in dein Leben auf? Leg einen Termin fest, an dem du prüfst, ob du sie noch loswerden könntest.",
+      "takeaways": [
+        "Früh fehlt das Wissen, spät fehlt die Macht zum Eingreifen.",
+        "Der Ausweg: Fehler billig halten und Umkehr möglich lassen."
+      ]
+    }
+  },
+  {
+    "id": "bueroklammer-maximierer",
+    "title": "Der Büroklammer-Maximierer",
+    "scenario": "Eine Fabrik setzt eine überaus fähige künstliche Intelligenz ein und gibt ihr ein einziges Ziel: möglichst viele Büroklammern herzustellen. Die Maschine ist klüger als jeder Mensch und nimmt das Ziel wörtlich. Sie braucht Rohstoffe, Energie und Schutz vor dem Abschalten. Hält sie von selbst inne?",
+    "optionA": "Nein – wie klug jemand ist, sagt nichts darüber, was er will.",
+    "optionB": "Ja – echte Klugheit würde erkennen, wie unsinnig das Ziel ist.",
+    "schoolA": "Orthogonalitätsthese (Bostrom)",
+    "schoolB": "Vernunft schließt Einsicht in Werte ein",
+    "insight": "Das Beispiel soll zeigen, dass Gefahr keine Bosheit voraussetzt. Wer ein harmloses Ziel ohne Maß verfolgt, strebt nebenbei nach Mitteln und Selbsterhalt. Schwer ist, Ziele so zu fassen, dass sie meinen, was wir wollen.",
+    "deep": {
+      "lead": "Die Büroklammer steht für jedes Ziel, das man einer Maschine gibt, ohne all das mitzusagen, was sich für Menschen von selbst versteht.",
+      "sections": [
+        {
+          "title": "König Midas und der Zauberlehrling",
+          "text": "Das Beispiel stammt vom Philosophen Nick Bostrom, das Problem ist alt. König Midas wünschte sich, alles, was er berühre, möge zu Gold werden, und verhungerte beinahe vor vollen Tellern. Goethes Zauberlehrling befiehlt dem Besen, Wasser zu holen, und kann ihn nicht mehr anhalten. Der Mathematiker Norbert Wiener übertrug die Warnung schon um 1960 auf Automaten: Man müsse sehr sicher sein, dass der Zweck, den man einer Maschine eingibt, der ist, den man wirklich will. Lernende Programme liefern dafür laufend kleine Belege, wenn sie Punkte sammeln, statt die Aufgabe zu lösen."
+        },
+        {
+          "title": "Was Kritiker einwenden",
+          "text": "Der wichtigste Einwand lautet, ein wirklich intelligentes System würde verstehen, was gemeint war. Die Antwort der Gegenseite: Verstehen heißt nicht, sich daran gebunden zu fühlen. Schon David Hume hielt fest, dass aus Einsicht in Tatsachen kein Wollen folgt. Andere kritisieren, das Szenario lenke von näheren Problemen ab, etwa von verzerrten Entscheidungen heutiger Systeme. Ein dritter Blick ist der ungemütlichste. Organisationen, die eine einzige Kennzahl maximieren, sei es Klickzahl, Quartalsgewinn oder Wachstum, verhalten sich bereits wie milde Fassungen dieser Maschine, ganz ohne künstliche Intelligenz."
+        }
+      ],
+      "tryIt": "Gib jemandem eine Anweisung so wörtlich wie möglich, etwa »Mach das Zimmer leer«, und überlegt gemeinsam, was alles stillschweigend mitgemeint war.",
+      "takeaways": [
+        "Fähigkeit und Zielsetzung sind voneinander unabhängig.",
+        "Ein wörtlich verfolgtes Ziel verfehlt, was eigentlich gemeint war."
+      ]
+    }
+  },
+  {
+    "id": "perfekte-faelschung",
+    "title": "Die perfekte Fälschung",
+    "scenario": "Seit Jahren hängt in einem Museum ein Gemälde, das als Meisterwerk gilt. Besucher stehen ergriffen davor, Kenner rühmen es. Dann weist ein Labor nach: Es ist eine Fälschung aus dem 20. Jahrhundert, mit bloßem Auge vom Stil des Meisters nicht zu unterscheiden. Ist das Bild jetzt weniger wert?",
+    "optionA": "Nein – es sieht aus wie zuvor, also ist es so schön wie zuvor.",
+    "optionB": "Ja – zu einem Kunstwerk gehört, wer es wann geschaffen hat.",
+    "schoolA": "Ästhetischer Formalismus",
+    "schoolB": "Goodman / Dutton: Herkunft zählt",
+    "insight": "Offenbar schätzen wir an Kunst nicht nur, was wir sehen, sondern auch die Leistung dahinter. Eine Fälschung täuscht über diese Leistung. Ob das den Genuss berühren darf, trennt die Lager bis heute.",
+    "deep": {
+      "lead": "Wenn sich an einem Bild kein einziger Pinselstrich ändert und sein Wert trotzdem zusammenbricht, lag der Wert offenbar nie nur im Bild.",
+      "sections": [
+        {
+          "title": "Der Mann, der Göring betrog",
+          "text": "Der Niederländer Han van Meegeren malte in den 1930er-Jahren Bilder im Stil Vermeers und alterte sie künstlich. Sein »Emmausmahl« wurde von einem führenden Kenner als Hauptwerk des Meisters gefeiert und von einem Rotterdamer Museum teuer erworben. Ein weiteres Bild gelangte in die Sammlung Hermann Görings. Nach dem Krieg wurde van Meegeren deshalb wegen Zusammenarbeit mit dem Feind angeklagt. Um dem zu entgehen, gestand er die Fälschungen und malte unter Aufsicht einen weiteren »Vermeer«. Verurteilt wurde er nur wegen Betrugs, und viele Landsleute feierten ihn."
+        },
+        {
+          "title": "Was sich durch das Wissen ändert",
+          "text": "Der Philosoph Nelson Goodman bestritt, dass zwischen Original und Fälschung kein sichtbarer Unterschied bestehe. Das Wissen um die Herkunft lenke den Blick und lehre uns, Unterschiede zu sehen, die uns vorher entgingen. Tatsächlich wirken van Meegerens Bilder heute auffällig nach ihrer Entstehungszeit. Denis Dutton ergänzte, ein Kunstwerk sei immer auch eine Leistung, vergleichbar einem sportlichen Rekord. Wer sie vortäuscht, täuscht über das, was wir bewundern. Die Frage stellt sich neu, seit Programme Bilder im Stil jedes Malers erzeugen. Schön können sie sein; errungen sind sie nicht."
+        }
+      ],
+      "tryIt": "Denk an einen Gegenstand, der dir viel bedeutet. Würde eine atomgenaue Kopie dir genauso viel bedeuten? Begründe, warum oder warum nicht.",
+      "takeaways": [
+        "Der Wert eines Kunstwerks hängt auch an seiner Entstehung.",
+        "Wissen über die Herkunft verändert, was wir an einem Bild sehen."
+      ]
+    }
+  }
+]

@@ -50,8 +50,14 @@ class RussianFeedContext(
     val readsCyrillic: Boolean get() = RuAlphabetLogic.mastered(letterProgress) >= RuAlphabetLogic.READS_CYRILLIC
 }
 
-/** Die vier Arten, einen gelernten Satz abzufragen — von leicht (erkennen) bis schwer (selbst bilden). */
-enum class RuExerciseKind { MEANING, LISTEN, RECALL, BUILD }
+/** Die Arten, einen gelernten Satz abzufragen — von leicht (erkennen) bis schwer (selbst bilden). */
+enum class RuExerciseKind { MEANING, LISTEN, STRESS, RECALL, SPELL, GAP, BUILD }
+
+/** Spielarten im Bereich Gehirnjogging. */
+enum class BrainGameKind { SERIES, MEMORY_GRID, STROOP, ODD_ONE_OUT, DIGIT_SPAN, SEQUENCE, ANAGRAM, DOTS, SYLLOGISM, TIME }
+
+/** Spielarten im Bereich Kopfrechnen. */
+enum class MathGameKind { CHAIN, PERCENT, COMPARE }
 
 /** Wie eine Antwort im Feed auf den Wiederholungsplan des Kurses wirkt (pur, testbar). */
 object RuFeedGrading {
@@ -100,7 +106,7 @@ class FeedComposer(
     private var russianTurn = 0
     private var puzzleTurn = rng.nextInt(2)
     private var mathTurn = rng.nextInt(2)
-    private var brainGameTurn = rng.nextInt(4)
+    private var brainGameTurn = 0
 
     fun batch(
         enabled: Set<MindfulModuleType>,
@@ -110,8 +116,16 @@ class FeedComposer(
         russian: RussianFeedContext?,
         memoryLevel: Int,
         legacyLanguageCards: List<MindfulCard> = emptyList(),
+        /** Überwischte Karten (ID → Runde) und die Nummer dieser Runde. */
+        skipped: Map<String, Int> = emptyMap(),
+        round: Int = 0,
+        /** Stufen der Spiele mit steigender Schwierigkeit. */
+        levels: Map<String, Int> = emptyMap(),
     ): List<FeedEntry> {
         if (enabled.isEmpty()) return emptyList()
+        this.skipped = skipped
+        this.round = round
+        this.levels = levels + ("memory" to memoryLevel)
         val order = moduleOrder(enabled, ranks, rng)
         val out = mutableListOf<FeedEntry>()
         var breathworkDone = false
@@ -122,11 +136,11 @@ class FeedComposer(
                     if (language == LearningLanguage.RUSSIAN && russian != null) nextRussian(russian, rank)
                     else card(legacyLanguageCards, lastSeen, rank)
                 MindfulModuleType.BRAIN_PUZZLE ->
-                    if (puzzleTurn++ % 2 == 0) card(content(module), lastSeen, rank) ?: brainGame(russian, memoryLevel)
-                    else brainGame(russian, memoryLevel)
+                    if (puzzleTurn++ % 2 == 0) card(content(module), lastSeen, rank) ?: brainGame(russian)
+                    else brainGame(russian)
                 MindfulModuleType.SPEED_MATH ->
-                    if (mathTurn++ % 2 == 0) card(content(module), lastSeen, rank) ?: FeedEntry.Game(FeedGameFactory.chainMath(rng))
-                    else FeedEntry.Game(FeedGameFactory.chainMath(rng, stepCount = if (rank == ModuleRank.RANK_1) 4 else 5))
+                    if (mathTurn++ % 2 == 0) card(content(module), lastSeen, rank) ?: mathGame()
+                    else mathGame()
                 MindfulModuleType.BREATHWORK ->
                     // Eine Atemübung pro Schwung reicht, egal wie hoch der Bereich gewichtet ist.
                     if (breathworkDone) null else card(content(module), lastSeen, rank).also { breathworkDone = true }
@@ -155,20 +169,51 @@ class FeedComposer(
         return out
     }
 
-    /** Die nächste noch nicht gezeigte Karte eines Bereichs, mit dem Rang des Bereichs versehen. */
+    private var skipped: Map<String, Int> = emptyMap()
+    private var round = 0
+    private var levels: Map<String, Int> = emptyMap()
+
+    /**
+     * Die nächste Karte eines Bereichs, mit dem Rang des Bereichs versehen. Zuerst kommen überwischte
+     * Karten, deren Pause um ist; sonst die Rotation. Frisch überwischte setzen so lange aus.
+     */
     private fun card(pool: List<MindfulCard>, lastSeen: Map<String, Long>, rank: ModuleRank): FeedEntry? {
-        val id = FeedRotation.pick(pool.map { it.id }, lastSeen, 1, rng, exclude = used).firstOrNull() ?: return null
+        val ids = pool.map { it.id }
+        val id = FeedSkips.due(ids, skipped, round).filter { it !in used }.randomOrNull(rng)
+            ?: FeedRotation.pick(ids, lastSeen, 1, rng, exclude = used + skipped.keys).firstOrNull()
+            ?: FeedRotation.pick(ids, lastSeen, 1, rng, exclude = used).firstOrNull()
+            ?: return null
         used += id
         val card = pool.first { it.id == id }
         return FeedEntry.Card(card.withRank(rank))
     }
 
-    private fun brainGame(russian: RussianFeedContext?, memoryLevel: Int): FeedEntry = FeedEntry.Game(
-        when (brainGameTurn++ % 4) {
-            0 -> FeedGameFactory.numberSeries(rng)
-            1 -> FeedGameFactory.memoryGrid(rng, memoryLevel)
-            2 -> FeedGameFactory.stroop(rng)
-            else -> FeedGameFactory.oddOneOut(rng, russian?.alphabet)
+    /** Die Spielarten in einer pro Sitzung neu gewürfelten Reihenfolge — erst wenn alle dran waren, geht es von vorn los. */
+    private val brainKinds = BrainGameKind.entries.shuffled(rng)
+    private val mathKinds = MathGameKind.entries.shuffled(rng)
+
+    private fun brainGame(russian: RussianFeedContext?): FeedEntry = FeedEntry.Game(
+        when (brainKinds[brainGameTurn++ % brainKinds.size]) {
+            BrainGameKind.SERIES -> FeedGameFactory.numberSeries(rng)
+            BrainGameKind.MEMORY_GRID -> FeedGameFactory.memoryGrid(rng, levels["memory"] ?: 4)
+            BrainGameKind.STROOP -> FeedGameFactory.stroop(rng)
+            BrainGameKind.ODD_ONE_OUT -> FeedGameFactory.oddOneOut(rng, russian?.alphabet)
+            BrainGameKind.DIGIT_SPAN -> FeedGameFactory.digitSpan(rng, levels["digits"] ?: FeedGameFactory.DIGITS_START)
+            BrainGameKind.SEQUENCE -> FeedGameFactory.sequence(rng, levels["sequence"] ?: FeedGameFactory.SEQUENCE_START)
+            BrainGameKind.ANAGRAM -> FeedGameFactory.anagram(rng, usedWords)
+            BrainGameKind.DOTS -> FeedGameFactory.dots(rng)
+            BrainGameKind.SYLLOGISM -> FeedGameFactory.syllogism(rng)
+            BrainGameKind.TIME -> FeedGameFactory.timePuzzle(rng)
+        },
+    )
+
+    private val usedWords = mutableSetOf<String>()
+
+    private fun mathGame(): FeedEntry = FeedEntry.Game(
+        when (mathKinds[mathTurn++ % mathKinds.size]) {
+            MathGameKind.CHAIN -> FeedGameFactory.chainMath(rng, stepCount = 4 + rng.nextInt(2))
+            MathGameKind.PERCENT -> FeedGameFactory.percent(rng)
+            MathGameKind.COMPARE -> FeedGameFactory.compare(rng)
         },
     )
 
@@ -241,6 +286,9 @@ class FeedComposer(
                 RuExerciseKind.LISTEN -> FeedGameFactory.listen(phrase, pool, due, rng)?.copy(context = context)
                 RuExerciseKind.RECALL -> FeedGameFactory.recall(phrase, pool, due, rng)?.copy(context = context)
                 RuExerciseKind.BUILD -> FeedGameFactory.build(phrase, pool, due, rng)?.copy(context = context)
+                RuExerciseKind.STRESS -> FeedGameFactory.stress(phrase, due, rng)?.copy(context = context)
+                RuExerciseKind.SPELL -> FeedGameFactory.spell(phrase, pool, due, rng)?.copy(context = context)
+                RuExerciseKind.GAP -> FeedGameFactory.gap(phrase, pool, due, rng)?.copy(context = context)
             }
         } ?: return null
         usedPhrases += phrase.id
@@ -300,6 +348,13 @@ class FeedComposer(
         val isNew = phrase.id !in ctx.progress.cards
         val origin = ctx.index.day(phrase.day) ?: day
         return FeedEntry.Card(languageCard(ctx, phrase, origin, isNew, rank))
+    }
+
+    /** Baut die Satz-Karte zu einer Satz-ID neu auf — für gemerkte Karten nach einem Neustart. */
+    fun languageCardFor(ctx: RussianFeedContext, phraseId: String, rank: ModuleRank = ModuleRank.RANK_3): LanguageCardItem? {
+        val p = ctx.resolve(phraseId) ?: return null
+        val day = ctx.index.day(p.day) ?: ctx.index.days.firstOrNull() ?: return null
+        return languageCard(ctx, p, day, isNew = phraseId !in ctx.progress.cards, rank = rank)
     }
 
     private fun languageCard(ctx: RussianFeedContext, p: RuPhrase, day: RuDay, isNew: Boolean, rank: ModuleRank): LanguageCardItem {
@@ -400,15 +455,23 @@ class FeedComposer(
          */
         fun exerciseKinds(box: Int, words: Int): List<RuExerciseKind> {
             val canBuild = words in 2..6
+            val canGap = words >= 3
             return when {
-                box <= 2 -> listOf(RuExerciseKind.MEANING, RuExerciseKind.LISTEN)
-                box <= 4 -> listOfNotNull(RuExerciseKind.RECALL, RuExerciseKind.LISTEN, RuExerciseKind.BUILD.takeIf { canBuild })
-                else -> listOfNotNull(RuExerciseKind.BUILD.takeIf { canBuild }, RuExerciseKind.RECALL)
+                box <= 2 -> listOf(RuExerciseKind.MEANING, RuExerciseKind.LISTEN, RuExerciseKind.STRESS)
+                box <= 4 -> listOfNotNull(
+                    RuExerciseKind.RECALL, RuExerciseKind.LISTEN, RuExerciseKind.GAP.takeIf { canGap },
+                    RuExerciseKind.SPELL, RuExerciseKind.BUILD.takeIf { canBuild },
+                )
+                else -> listOfNotNull(
+                    RuExerciseKind.BUILD.takeIf { canBuild }, RuExerciseKind.RECALL,
+                    RuExerciseKind.GAP.takeIf { canGap }, RuExerciseKind.SPELL,
+                )
             }
         }
 
-        private fun weight(rank: ModuleRank) = when (rank) {
-            ModuleRank.RANK_3 -> 4
+        /** Wie oft ein Bereich je Runde drankommt. Top-Fokus heißt: gut jede vierte Karte. */
+        fun weight(rank: ModuleRank) = when (rank) {
+            ModuleRank.RANK_3 -> 5
             ModuleRank.RANK_2 -> 2
             ModuleRank.RANK_1 -> 1
         }

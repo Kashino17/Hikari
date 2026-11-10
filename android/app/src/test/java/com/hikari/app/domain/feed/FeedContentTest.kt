@@ -9,8 +9,16 @@ import org.junit.Test
 class FeedContentTest {
     private val dir = File("src/main/assets/feed")
 
+    /** Wie die App: Grunddatei plus nummerierte Nachschub-Dateien. */
     private fun cards(module: MindfulModuleType): List<MindfulCard> =
-        FeedContentParser.parse(module, File(dir, FeedContentParser.FILES.getValue(module)).readText())
+        FeedContentParser.filesOf(FeedContentParser.FILES.getValue(module), dir.list()!!.toList())
+            .flatMap { FeedContentParser.parse(module, File(dir, it).readText()) }
+
+    @Test fun nachschubDateienWerdenAmNamenErkannt() {
+        val files = listOf("art.json", "art_2.json", "art_10.json", "quotes.json", "quotes_2.json", "art_notes.json", "smart.json")
+        assertEquals(listOf("art.json", "art_10.json", "art_2.json"), FeedContentParser.filesOf("art.json", files))
+        assertEquals(listOf("quotes.json", "quotes_2.json"), FeedContentParser.filesOf("quotes.json", files))
+    }
 
     @Test fun jederBereichHatGenugKartenFuerWochenOhneWiederholung() {
         for ((module, file) in FeedContentParser.FILES) {
@@ -20,7 +28,7 @@ class FeedContentTest {
             assertTrue(list.all { it.type == module && it.id.startsWith("${module.id}:") }, file)
         }
         val total = FeedContentParser.FILES.keys.sumOf { cards(it).size }
-        assertTrue(total >= 330, "insgesamt nur $total Karten")
+        assertTrue(total >= 1000, "insgesamt nur $total Karten")
     }
 
     @Test fun jedeKarteHatEineGeschriebeneVertiefungMitNeuemInhalt() {

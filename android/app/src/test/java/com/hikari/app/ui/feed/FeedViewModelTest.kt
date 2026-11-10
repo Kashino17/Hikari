@@ -144,8 +144,8 @@ class FeedViewModelTest {
         val vm = FeedViewModel(repo, settings)
         val entries = vm.entries.value
         val modules = entries.map { it.module }
-        // Top-Fokus heißt: viermal je Schwung, aber nie zweimal hintereinander.
-        assertEquals(4, modules.count { it == com.hikari.app.domain.feed.MindfulModuleType.LANGUAGE })
+        // Top-Fokus heißt: bis zu fünfmal je Schwung (hier begrenzt der kleine Ersatz-Vorrat ohne Kurs), nie zweimal hintereinander.
+        assertTrue(modules.count { it == com.hikari.app.domain.feed.MindfulModuleType.LANGUAGE } >= 4)
         assertTrue(modules.zipWithNext().all { (a, b) -> a != b }, "gleicher Bereich direkt hintereinander: $modules")
         // Ohne Kursanbindung kommen trotzdem Spiele in den Feed.
         assertTrue(entries.any { it is com.hikari.app.domain.feed.FeedEntry.Game })

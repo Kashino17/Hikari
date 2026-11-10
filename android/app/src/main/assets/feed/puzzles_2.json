@@ -1,0 +1,2312 @@
+[
+  {
+    "id": "vier-liter-abmessen",
+    "title": "Vier Liter abmessen",
+    "category": "Logik",
+    "question": "Du hast einen 3-Liter- und einen 5-Liter-Krug ohne Markierungen und beliebig viel Wasser. Füllen, Leeren und Umgießen zählen je als ein Schritt. Wie viele Schritte brauchst du mindestens, bis in einem Krug genau 4 Liter sind?",
+    "options": [
+      "4",
+      "6",
+      "8",
+      "Es geht gar nicht"
+    ],
+    "correctIndex": 1,
+    "explanation": "Den 5er füllen und in den 3er gießen: Im 5er bleiben 2. Den 3er leeren, die 2 Liter hinübergießen. Den 5er neu füllen und den 3er auffüllen – dort fehlt genau 1 Liter, also bleiben im 5er 4. Das sind sechs Schritte, kürzer geht es nicht.",
+    "skill": "Zustände systematisch durchgehen",
+    "deep": {
+      "lead": "Die beiden Krüge können nur 3 und 5 – aber ihr Unterschied und ihre Reste liefern alle Mengen dazwischen.",
+      "sections": [
+        {
+          "title": "Vom Rechenbuch ins Kino",
+          "text": "Umfüllaufgaben tauchen seit dem Mittelalter in Rechenbüchern auf, meist mit Wein, der gerecht geteilt werden soll. Genau die Fassung mit drei und fünf wurde 1995 einem Millionenpublikum bekannt: Im Actionfilm »Stirb langsam: Jetzt erst recht« müssen die beiden Helden an einem Brunnen vier Gallonen abmessen, um eine Bombe zu entschärfen. Es gibt übrigens einen zweiten Lösungsweg, der mit dem kleinen Krug beginnt. Er füllt den 3er dreimal und braucht acht Schritte statt sechs. Beide Wege sind zwangsläufig, sobald man sich für den ersten Krug entschieden hat."
+        },
+        {
+          "title": "Warum es überhaupt aufgeht",
+          "text": "Jede Menge, die du erzeugen kannst, entsteht aus Vielfachen von 3 und 5, die addiert oder abgezogen werden: 4 ist zweimal 5 minus zweimal 3. Weil 3 und 5 keinen gemeinsamen Teiler außer 1 haben, lässt sich auf diese Weise jede ganze Literzahl bis 5 herstellen. Mit einem 4- und einem 6-Liter-Krug wäre das anders. Beide Größen sind gerade, also bleibt auch jede Summe und jede Differenz gerade, und 3 Liter wären unerreichbar. Vor dem Probieren lohnt deshalb die Frage nach dem größten gemeinsamen Teiler."
+        }
+      ],
+      "tryIt": "Gleiche Krüge, neues Ziel: Miss genau 1 Liter ab. Wie viele Schritte? (Vier: 3er füllen, in den 5er gießen, 3er wieder füllen, 5er auffüllen – im 3er bleibt 1.)",
+      "takeaways": [
+        "Reste und Unterschiede der Gefäße erzeugen neue Mengen.",
+        "Mit teilerfremden Größen ist jede ganze Menge erreichbar."
+      ]
+    }
+  },
+  {
+    "id": "wolf-ziege-kohlkopf",
+    "title": "Wolf, Ziege und Kohlkopf",
+    "category": "Logik",
+    "question": "Ein Bauer muss einen Wolf, eine Ziege und einen Kohlkopf über den Fluss bringen. Ins Boot passt außer ihm nur eines davon. Unbeaufsichtigt frisst der Wolf die Ziege und die Ziege den Kohl. Wie viele Überfahrten braucht er mindestens?",
+    "options": [
+      "3",
+      "5",
+      "9",
+      "7"
+    ],
+    "correctIndex": 3,
+    "explanation": "Ziege hinüber, leer zurück, Wolf hinüber, Ziege wieder mit zurück, Kohl hinüber, leer zurück, Ziege hinüber: sieben Fahrten. Der Kniff ist die vierte Fahrt, bei der die Ziege zurückreist. Mit Wolf und Kohl vertauscht geht es genauso.",
+    "skill": "Rückschritte einplanen",
+    "deep": {
+      "lead": "Die Lösung verlangt einen Zug, der wie ein Rückschritt aussieht: etwas wieder mitzunehmen.",
+      "sections": [
+        {
+          "title": "Über tausend Jahre alt",
+          "text": "Das Rätsel steht in einer lateinischen Aufgabensammlung, die dem Gelehrten Alkuin von York zugeschrieben wird, einem Berater Karls des Großen. Sie entstand um das Jahr 800 und sollte, so der Titel, den Geist junger Leute schärfen. Damit gehört die Flussüberquerung zu den ältesten überlieferten Denksportaufgaben Europas. Varianten gibt es in vielen Kulturen, mal mit Fuchs, Gans und Bohnen, mal mit anderen Tieren und Feldfrüchten. Der Aufbau bleibt gleich: Ein Ding verträgt sich mit keinem der beiden anderen, und genau dieses muss pendeln."
+        },
+        {
+          "title": "Warum man hier stecken bleibt",
+          "text": "Dass die Ziege zuerst fahren muss, sieht fast jeder. Schwierig wird es danach, weil jede weitere Fahrt scheinbar eine verbotene Lage erzeugt. Der Ausweg, die Ziege wieder zurückzunehmen, fühlt sich falsch an, denn man macht einen Fortschritt rückgängig. Menschen bewerten Züge gern danach, ob sie dem Ziel sichtbar näher kommen, und meiden Umwege. Zuverlässiger ist es, alle erlaubten Lagen aufzuschreiben. Hier sind es nur zehn, wenn man festhält, was am linken Ufer steht und wo das Boot liegt. Der Weg durch sie hindurch ist dann fast erzwungen."
+        }
+      ],
+      "tryIt": "Spiel es mit drei Gegenständen auf dem Tisch nach und sprich jede der sieben Fahrten laut aus. An welcher Stelle wolltest du zuerst anders fahren?",
+      "takeaways": [
+        "Manchmal führt nur ein scheinbarer Rückschritt weiter.",
+        "Bei wenigen Möglichkeiten: alle erlaubten Lagen aufschreiben."
+      ]
+    }
+  },
+  {
+    "id": "zwei-zuendschnuere",
+    "title": "Zwei Zündschnüre",
+    "category": "Logik",
+    "question": "Zwei Zündschnüre brennen je genau 60 Minuten, aber ungleichmäßig: mal schneller, mal langsamer. Du hast nur ein Feuerzeug und willst genau 45 Minuten abmessen. Wie zündest du zu Beginn an?",
+    "options": [
+      "Schnur 1 beidseitig, Schnur 2 einseitig",
+      "Beide Schnüre an je einem Ende",
+      "Beide Schnüre an beiden Enden",
+      "Schnur 1 mittig, Schnur 2 einseitig"
+    ],
+    "correctIndex": 0,
+    "explanation": "Schnur 1 brennt an beiden Enden und ist nach 30 Minuten weg, egal wie ungleichmäßig sie brennt. In diesem Moment zündest du das zweite Ende von Schnur 2 an. Ihr Rest hätte noch 30 Minuten gebraucht und ist nun nach 15 verbrannt: 30 + 15 = 45.",
+    "skill": "Messgrößen neu kombinieren",
+    "deep": {
+      "lead": "Eine Schnur, die an beiden Enden brennt, halbiert ihre Zeit – ganz gleich, wie unregelmäßig sie abbrennt.",
+      "sections": [
+        {
+          "title": "Warum Durchschneiden nicht hilft",
+          "text": "Der naheliegende Gedanke ist, eine Schnur zu halbieren oder zu vierteln. Das scheitert an der Bedingung, dass sie ungleichmäßig brennt: Die halbe Länge kann fünf oder fünfzig Minuten dauern. Verlässlich ist nur die Gesamtzeit. Zündest du beide Enden an, laufen zwei Flammen aufeinander zu. Jede verbraucht ihren Teil der insgesamt sechzig Brennminuten, zusammen arbeiten sie doppelt so schnell und treffen sich nach dreißig Minuten. Wo sie sich treffen, ist unbekannt und unwichtig. Du misst also nicht die Länge, sondern die verbleibende Brenndauer."
+        },
+        {
+          "title": "Welche Zeiten noch möglich sind",
+          "text": "Mit einer einzigen Schnur misst du 60 oder 30 Minuten. Mit zwei Schnüren kommen 45 und 90 Minuten dazu, außerdem 15 Minuten als Abschnitt zwischen dem Erlöschen der ersten und der zweiten Schnur. Das Prinzip taucht bei vielen Messaufgaben auf: Ein Werkzeug, das nur eine feste Größe liefert, lässt sich durch geschicktes Starten und Stoppen zu neuen Größen kombinieren. Dieselbe Denkweise löst Aufgaben mit zwei Sanduhren. Entscheidend ist dort wie hier der Moment, in dem ein Vorgang endet, denn er dient als Startsignal für den nächsten."
+        }
+      ],
+      "tryIt": "Zwei Sanduhren laufen 4 und 7 Minuten. Miss 9 Minuten ab. (Beide starten; die 4er bei Minute 4 wenden, die 7er bei 7 und bei 8 noch einmal – sie läuft dann genau 1 Minute.)",
+      "takeaways": [
+        "An beiden Enden angezündet halbiert sich die Brennzeit.",
+        "Verlässlich ist die Gesamtdauer, nicht die Länge."
+      ]
+    }
+  },
+  {
+    "id": "vier-gewichte-vierzig-kilo",
+    "title": "Vier Gewichte für vierzig Kilo",
+    "category": "Logik",
+    "question": "Ein Händler will auf einer Balkenwaage jedes ganze Gewicht von 1 bis 40 kg abwiegen können. Gewichtsstücke dürfen auf beide Waagschalen gelegt werden. Wie viele Gewichtsstücke braucht er mindestens?",
+    "options": [
+      "6",
+      "5",
+      "4",
+      "3"
+    ],
+    "correctIndex": 2,
+    "explanation": "Es genügen 1, 3, 9 und 27 kg. Jedes Stück kann bei der Ware liegen, gegenüber liegen oder fehlen. So wiegt man 2 kg als 3 − 1, 5 kg als 9 − 3 − 1 und 40 kg mit allen vier. Drei Stücke reichen nicht: Sie erlauben höchstens 13 verschiedene Gewichte.",
+    "skill": "Alle Zustände eines Mittels nutzen",
+    "deep": {
+      "lead": "Ein Gewicht kann links liegen, rechts liegen oder fehlen – drei Zustände statt zwei.",
+      "sections": [
+        {
+          "title": "Bachets Gewichtsproblem",
+          "text": "Die Aufgabe ist nach dem französischen Gelehrten Claude Gaspard Bachet de Méziriac benannt, der sie 1612 in einer Sammlung unterhaltsamer Zahlenprobleme veröffentlichte; ähnliche Fassungen sind noch älter. Dürften die Gewichte nur auf eine Schale, bräuchte man die Zweierpotenzen 1, 2, 4, 8, 16 und 32, also sechs Stücke. Jedes Stück wäre dann entweder dabei oder nicht. Die zweite Schale macht den Unterschied: Ein Gewicht neben der Ware zieht ab. Aus zwei Zuständen pro Stück werden drei, und deshalb sind die Dreierpotenzen die sparsamste Wahl."
+        },
+        {
+          "title": "Rechnen mit plus, null und minus",
+          "text": "Vier Stücke mit je drei Zuständen ergeben 3 hoch 4, also 81 Kombinationen. Eine davon ist die leere Waage, die übrigen 80 kommen paarweise vor, einmal mit der Ware links, einmal rechts. Es bleiben 40 verschiedene Gewichte, genau die Zahlen von 1 bis 40. Mathematiker sprechen von einem balancierten Dreiersystem: Jede Zahl lässt sich mit den Ziffern plus eins, null und minus eins schreiben. Die 7 ist zum Beispiel 9 − 3 + 1. Ein fünftes Gewicht von 81 kg würde die Reichweite auf 121 kg erhöhen."
+        }
+      ],
+      "tryIt": "Stell mit 1, 3, 9 und 27 kg die Gewichte 11, 20 und 32 kg dar. (11 = 9 + 3 − 1; 20 = 27 − 9 + 3 − 1; 32 = 27 + 9 − 3 − 1.)",
+      "takeaways": [
+        "Abziehen dürfen spart Gewichte: 1, 3, 9, 27.",
+        "Drei Zustände pro Stück: Dreierpotenzen statt Zweierpotenzen."
+      ]
+    }
+  },
+  {
+    "id": "drei-huete-hintereinander",
+    "title": "Drei Hüte in einer Reihe",
+    "category": "Logik",
+    "question": "Drei Personen stehen hintereinander und sehen nur die Hüte vor sich. Die Hüte stammen aus einem Vorrat von 3 schwarzen und 2 weißen. Die hinterste sagt: »Ich kenne meine Farbe nicht.« Die mittlere sagt dasselbe. Welche Farbe hat der Hut der vordersten Person?",
+    "options": [
+      "Weiß",
+      "Lässt sich nicht bestimmen",
+      "Schwarz",
+      "Schwarz oder Weiß, je 50 %"
+    ],
+    "correctIndex": 2,
+    "explanation": "Sähe die hinterste zwei weiße Hüte, wüsste sie, dass sie Schwarz trägt. Also ist vorn nicht zweimal Weiß. Die mittlere weiß das: Sähe sie vorn Weiß, müsste ihr eigener Hut schwarz sein. Weil auch sie es nicht weiß, ist der vordere Hut schwarz.",
+    "skill": "Aus Nichtwissen schließen",
+    "deep": {
+      "lead": "Auch ein »Ich weiß es nicht« ist eine Auskunft – wenn man weiß, was der andere sieht.",
+      "sections": [
+        {
+          "title": "Was ein Schweigen verrät",
+          "text": "Die vorderste Person sieht keinen einzigen Hut und kann trotzdem sicher antworten. Sie nutzt, dass die beiden hinter ihr vollkommen logisch denken und ehrlich antworten. Jede Antwort schließt Fälle aus. Von den sieben möglichen Verteilungen streicht die erste Aussage die eine, in der vorn zwei weiße Hüte zu sehen sind. Die zweite Aussage streicht alle, in denen ganz vorn Weiß sitzt. Übrig bleiben vier Verteilungen, und in allen trägt die vorderste Person Schwarz. Was die beiden anderen tragen, bleibt dagegen offen."
+        },
+        {
+          "title": "Wissen über das Wissen anderer",
+          "text": "Rätsel dieser Bauart gehören zur epistemischen Logik, die untersucht, wie sich Wissen durch öffentliche Aussagen verändert. Entscheidend ist gemeinsames Wissen: Alle kennen den Vorrat an Hüten, und alle wissen, dass alle ihn kennen. Fehlt diese Voraussetzung, bricht die Kette. Im Alltag steckt dieselbe Überlegung in Verhandlungen und Auktionen. Wenn ein gut informierter Bieter aussteigt, verrät das den anderen etwas über den Wert. Und wenn in einer Besprechung niemand widerspricht, ziehen alle daraus Schlüsse, die allerdings nur stimmen, wenn Schweigen wirklich Zustimmung bedeutet."
+        }
+      ],
+      "tryIt": "Variante: Die hinterste Person sagt sofort »Ich kenne meine Farbe«. Welche Hüte tragen die beiden vor ihr, und welche Farbe hat sie selbst? (Beide Weiß; sie trägt Schwarz.)",
+      "takeaways": [
+        "Auch »Ich weiß es nicht« schließt Fälle aus.",
+        "Frag: Was hätte der andere gesagt, wenn es anders wäre?"
+      ]
+    }
+  },
+  {
+    "id": "beide-schurken",
+    "title": "»Wir sind beide Schurken«",
+    "category": "Logik",
+    "question": "Auf einer Insel sagen Ritter immer die Wahrheit, Schurken lügen immer. Du triffst A und B. A sagt: »Wir sind beide Schurken.« B schweigt. Was sind die beiden?",
+    "options": [
+      "A Schurke, B Ritter",
+      "Beide sind Schurken",
+      "A Ritter, B Schurke",
+      "Beide sind Ritter"
+    ],
+    "correctIndex": 0,
+    "explanation": "Ein Ritter könnte den Satz nie sagen, denn er wäre dann gelogen. A ist also ein Schurke und sein Satz falsch. Falsch ist »beide Schurken« aber nur, wenn mindestens einer ein Ritter ist. A ist es nicht, also muss B der Ritter sein.",
+    "skill": "Aussage und Sprecher abgleichen",
+    "deep": {
+      "lead": "Manche Sätze kann nur ein Lügner aussprechen – und er verrät dabei mehr, als er wollte.",
+      "sections": [
+        {
+          "title": "Ein Satz, den kein Ehrlicher sagen kann",
+          "text": "Die Aufgabe stammt aus dem Umkreis der Ritter-und-Schurken-Rätsel, mit denen der Logiker Raymond Smullyan ganze Bücher gefüllt hat. Ihr Reiz liegt darin, dass eine einzige Aussage genügt. A redet über sich selbst, und das begrenzt, wer er sein kann. Ähnlich verhält es sich mit dem Satz »Ich bin ein Schurke«: Ihn kann auf der Insel überhaupt niemand sagen. Ein Ritter würde lügen, ein Schurke die Wahrheit sprechen. Hörst du ihn trotzdem, ist eine der Spielregeln verletzt. Solche Prüfungen auf Widerspruchsfreiheit sind das eigentliche Handwerk der Logik."
+        },
+        {
+          "title": "Zwei beliebte Fehlschlüsse",
+          "text": "Viele antworten spontan, beide seien Schurken, weil A es ja zugibt. Dabei wird vergessen, dass ein Geständnis aus dem Mund eines Lügners nichts wert ist. Andere folgern aus der Lüge, beide müssten Ritter sein, und verneinen damit falsch. Sauber geht es in zwei Schritten: erst klären, ob der Sprecher die Wahrheit sagen kann, dann die Aussage entsprechend wörtlich oder verneint auswerten. Mit zwei Personen gibt es nur vier Kombinationen. Wer unsicher ist, schreibt sie auf und prüft bei jeder, ob As Satz zu As Rolle passt."
+        }
+      ],
+      "tryIt": "Gleiche Insel: A sagt »B ist ein Ritter«, B sagt »A und ich sind verschieden«. Wer ist was? (Beide Schurken – alle anderen Fälle widersprechen sich.)",
+      "takeaways": [
+        "Erst prüfen, ob der Sprecher den Satz wahr sagen könnte.",
+        "Das Geständnis eines Lügners ist kein Beweis."
+      ]
+    }
+  },
+  {
+    "id": "loewe-und-einhorn",
+    "title": "Der Löwe und das Einhorn",
+    "category": "Logik",
+    "question": "Der Löwe lügt montags, dienstags und mittwochs, sonst sagt er die Wahrheit. Das Einhorn lügt donnerstags, freitags und samstags. Heute sagen beide: »Gestern war einer meiner Lügentage.« Welcher Wochentag ist heute?",
+    "options": [
+      "Montag",
+      "Sonntag",
+      "Mittwoch",
+      "Donnerstag"
+    ],
+    "correctIndex": 3,
+    "explanation": "Der Löwe kann den Satz nur montags sagen (gelogen, denn sonntags lügt er nicht) oder donnerstags (wahr, denn mittwochs log er). Das Einhorn kann ihn nur donnerstags (gelogen) oder sonntags (wahr) sagen. Der einzige gemeinsame Tag ist Donnerstag.",
+    "skill": "Fälle eingrenzen und schneiden",
+    "deep": {
+      "lead": "Zwei Aussagen, jede für sich mehrdeutig – zusammen lassen sie nur einen Tag übrig.",
+      "sections": [
+        {
+          "title": "Geliehen von Lewis Carroll",
+          "text": "Raymond Smullyan veröffentlichte das Rätsel 1978 in seinem Buch »Wie heißt dieses Buch?« und lieh sich dafür Figuren von Lewis Carroll. Alice hat im Wald des Vergessens jedes Zeitgefühl verloren und muss den Wochentag aus den Aussagen zweier unzuverlässiger Zeugen erschließen. Dass ausgerechnet Carroll Pate stand, passt: Der Autor der Alice-Bücher hieß eigentlich Charles Dodgson, lehrte Mathematik in Oxford und schrieb selbst Logikaufgaben. Smullyan baute aus der Grundidee eine ganze Serie mit immer raffinierteren Aussagen über gestern, morgen und die eigene Ehrlichkeit."
+        },
+        {
+          "title": "Der Wechsel ist der Schlüssel",
+          "text": "Der Satz »Gestern habe ich gelogen« klingt harmlos, ist aber nur an zwei Arten von Tagen möglich: am ersten Wahrheitstag nach einer Lügenphase und am ersten Lügentag nach einer Wahrheitsphase. Mitten in einer Phase scheitert er immer. Ein Ehrlicher, der gestern ehrlich war, kann ihn nicht sagen, und ein Lügner, der gestern log, würde damit die Wahrheit sprechen. Deshalb genügt es, bei jedem Tier die beiden Übergänge zu suchen. Wer stattdessen alle sieben Tage für beide durchprobiert, kommt auch ans Ziel, braucht aber vierzehn Prüfungen statt vier."
+        }
+      ],
+      "tryIt": "An welchen Tagen kann der Löwe sagen: »Morgen werde ich lügen«? (Sonntags, dann ist es wahr, und mittwochs, dann ist es gelogen.)",
+      "takeaways": [
+        "»Gestern habe ich gelogen« geht nur an Wechseltagen.",
+        "Jede Aussage einzeln eingrenzen, dann die Schnittmenge bilden."
+      ]
+    }
+  },
+  {
+    "id": "falsch-beschriftete-kisten",
+    "title": "Drei falsch beschriftete Kisten",
+    "category": "Logik",
+    "question": "Drei Kisten tragen die Etiketten »Äpfel«, »Birnen« und »Gemischt«. Du weißt: Jedes Etikett ist falsch. Du darfst aus einer Kiste blind eine einzige Frucht ziehen. Aus welcher Kiste ziehst du, um danach alle drei Inhalte sicher zu kennen?",
+    "options": [
+      "Aus der Kiste »Äpfel«",
+      "Aus der Kiste »Gemischt«",
+      "Aus der Kiste »Birnen«",
+      "Eine Frucht reicht nie aus"
+    ],
+    "correctIndex": 1,
+    "explanation": "Die Kiste »Gemischt« enthält nur eine Sorte. Ziehst du einen Apfel, ist sie die Apfelkiste. Die Kiste »Birnen« kann dann weder Birnen noch Äpfel enthalten, also ist sie gemischt, und in »Äpfel« liegen die Birnen. Bei einer Birne läuft es spiegelbildlich.",
+    "skill": "Die informativste Probe wählen",
+    "deep": {
+      "lead": "Dass alle Etiketten falsch sind, ist keine Störung, sondern die halbe Lösung.",
+      "sections": [
+        {
+          "title": "Nur zwei Welten sind möglich",
+          "text": "Drei Inhalte lassen sich auf sechs Arten auf drei Kisten verteilen. Die Bedingung, dass kein Etikett stimmt, lässt davon nur zwei übrig: Die Inhalte sind gegenüber den Etiketten im Kreis verschoben, entweder in die eine oder in die andere Richtung. Deine Frucht muss also nur zwischen zwei Möglichkeiten entscheiden. Das gelingt mit der Kiste »Gemischt«, weil sie in beiden Fällen sortenrein ist und sich sofort verrät. Ein Apfel aus der Kiste »Birnen« dagegen ließe offen, ob darin nur Äpfel liegen oder Äpfel und Birnen durcheinander."
+        },
+        {
+          "title": "Wann sich eine Stichprobe lohnt",
+          "text": "Die Lehre reicht über das Rätsel hinaus. Nicht jede Messung bringt gleich viel. Eine Probe ist wertvoll, wenn ihre möglichen Ergebnisse zu verschiedenen Schlüssen führen, und wertlos, wenn du danach dasselbe glaubst wie vorher. Bei der Fehlersuche heißt das: zuerst dort prüfen, wo das Ergebnis die meisten Erklärungen auf einmal ausschließt. Wer bei einem toten Gerät zuerst die Steckdose mit einer Lampe testet, halbiert mit einem Handgriff die Liste der Ursachen. Wer dagegen wahllos Teile tauscht, zieht Früchte aus der falschen Kiste."
+        }
+      ],
+      "tryIt": "Vier Briefe, vier Umschläge, kein Brief steckt im richtigen. Wie viele solche Anordnungen gibt es? (Neun – bei drei Briefen wären es zwei.)",
+      "takeaways": [
+        "Vorwissen zählt mit: »alles falsch« lässt nur zwei Fälle übrig.",
+        "Prüf dort, wo jedes Ergebnis etwas entscheidet."
+      ]
+    }
+  },
+  {
+    "id": "hundert-spinde",
+    "title": "Hundert Spinde",
+    "category": "Zahlen",
+    "question": "100 Spinde sind geschlossen. Schüler 1 öffnet alle. Schüler 2 schließt jeden zweiten, Schüler 3 ändert den Zustand jedes dritten und so weiter bis Schüler 100, der nur Spind 100 umschaltet. Wie viele Spinde stehen am Ende offen?",
+    "options": [
+      "50",
+      "25",
+      "10",
+      "1"
+    ],
+    "correctIndex": 2,
+    "explanation": "Spind n wird von jedem Schüler umgeschaltet, dessen Nummer n teilt. Offen bleibt er bei einer ungeraden Zahl von Teilern. Teiler treten paarweise auf, etwa 3 und 4 bei der 12 – außer bei Quadratzahlen. Von 1 bis 100 gibt es zehn: 1, 4, 9 bis 100.",
+    "skill": "Auf Teiler und Paare achten",
+    "deep": {
+      "lead": "Hinter dem Durcheinander steckt eine einfache Frage: Welche Zahlen haben ungerade viele Teiler?",
+      "sections": [
+        {
+          "title": "Warum Teiler Partner haben",
+          "text": "Zu jedem Teiler einer Zahl gehört ein Partner: Teilt 2 die 36, dann auch 18, zu 3 gehört 12, zu 4 gehört 9. Jedes Paar bedeutet zweimal umschalten, also keine Änderung. Nur wenn ein Teiler sein eigener Partner ist, bleibt einer übrig. Das passiert genau dann, wenn die Zahl ein Quadrat ist; bei 36 ist es die 6. Die 36 hat deshalb neun Teiler, die 35 nur vier. Spind 36 wird neunmal umgeschaltet und steht am Ende offen, Spind 35 viermal und ist zu."
+        },
+        {
+          "title": "Simulieren oder nachdenken",
+          "text": "Man kann die Aufgabe stur durchspielen, mit hundert Kästchen auf Papier oder ein paar Zeilen Programmcode. Das Ergebnis stimmt, aber man sieht nicht, warum. Der bessere Weg wechselt die Blickrichtung: nicht den Schülern folgen, sondern einen einzelnen Spind beobachten und zählen, wie oft er angefasst wird. Dieser Wechsel vom Ablauf zum einzelnen Objekt hilft bei vielen Aufgaben. Er zeigt auch sofort die Verallgemeinerung: Bei tausend Spinden wären 31 offen, weil 31 mal 31 gleich 961 die größte Quadratzahl unter tausend ist."
+        }
+      ],
+      "tryIt": "Welche Spinde werden genau zweimal umgeschaltet, und wie viele davon gibt es bis Nummer 30? (Die mit Primzahl-Nummer: zehn Stück, von 2 bis 29.)",
+      "takeaways": [
+        "Teiler treten paarweise auf – außer bei Quadratzahlen.",
+        "Statt dem Ablauf zu folgen, ein einzelnes Objekt beobachten."
+      ]
+    }
+  },
+  {
+    "id": "schachbrett-ohne-ecken",
+    "title": "Schachbrett ohne zwei Ecken",
+    "category": "Logik",
+    "question": "Von einem Schachbrett mit 64 Feldern werden zwei diagonal gegenüberliegende Eckfelder entfernt. Ein Dominostein deckt genau zwei benachbarte Felder. Lassen sich die übrigen 62 Felder mit 31 Dominosteinen lückenlos bedecken?",
+    "options": [
+      "Nein, das ist unmöglich",
+      "Ja, auf genau eine Art",
+      "Ja, auf viele Arten",
+      "Nur mit einem zerbrochenen Stein"
+    ],
+    "correctIndex": 0,
+    "explanation": "Jeder Dominostein bedeckt ein weißes und ein schwarzes Feld. Diagonal gegenüberliegende Ecken haben dieselbe Farbe. Übrig bleiben also 32 Felder der einen und 30 der anderen Farbe. 31 Steine brauchen aber 31 von jeder Farbe – es kann nicht aufgehen.",
+    "skill": "Eine Invariante finden",
+    "deep": {
+      "lead": "Die Anzahl der Felder passt – aber die Farben verraten, dass es trotzdem nicht geht.",
+      "sections": [
+        {
+          "title": "Ein Beweis ohne Ausprobieren",
+          "text": "Wer die Aufgabe mit echten Steinen versucht, scheitert immer wieder knapp und hat doch nichts bewiesen. Vielleicht gibt es eine Anordnung, die man nur nicht gefunden hat. Das Farbargument erledigt alle denkbaren Anordnungen auf einmal, ohne eine einzige zu prüfen. Größen, die bei jedem Schritt erhalten bleiben, heißen Invarianten: Jeder gelegte Stein nimmt genau ein Feld jeder Farbe weg, der Unterschied zwischen den Farben bleibt also immer zwei. Bekannt wurde das Rätsel durch den Philosophen Max Black, der es 1946 in einem Lehrbuch über kritisches Denken stellte."
+        },
+        {
+          "title": "Und wenn die Farben stimmen?",
+          "text": "Naheliegend ist die Gegenfrage: Was, wenn man ein weißes und ein schwarzes Feld entfernt? Dann stimmt die Bilanz, aber das allein beweist noch nichts. Der Mathematiker Ralph Gomory hat gezeigt, dass es in diesem Fall tatsächlich immer geht, egal welche zwei verschiedenfarbigen Felder fehlen. Er legte dazu gedanklich einen geschlossenen Rundweg über alle Felder des Bretts; die beiden Lücken teilen ihn in Stücke von gerader Länge, die sich mit Steinen pflastern lassen. Eine Invariante zeigt also Unmöglichkeit. Für die Möglichkeit braucht man eine Konstruktion."
+        }
+      ],
+      "tryIt": "Ein Brett hat 5 × 5 Felder. Lässt es sich vollständig mit Dominosteinen bedecken? Und ein Brett mit 6 × 6? (Nein, 25 Felder sind ungerade; ja.)",
+      "takeaways": [
+        "Eine Invariante beweist Unmöglichkeit ohne Durchprobieren.",
+        "Gleiche Anzahl genügt nicht – auch die Farbbilanz muss stimmen."
+      ]
+    }
+  },
+  {
+    "id": "zwei-eier-hundert-stockwerke",
+    "title": "Zwei Eier, hundert Stockwerke",
+    "category": "Logik",
+    "question": "Du hast zwei gleiche Eier und ein Haus mit 100 Stockwerken. Ab einem unbekannten Stockwerk zerbricht ein Ei beim Fall, darunter bleibt es heil und ist wieder verwendbar. Wie viele Würfe brauchst du im ungünstigsten Fall mindestens, um dieses Stockwerk sicher zu finden?",
+    "options": [
+      "7",
+      "14",
+      "19",
+      "50"
+    ],
+    "correctIndex": 1,
+    "explanation": "Wirf das erste Ei aus Stock 14, dann 27, 39, 50 – die Sprünge schrumpfen jedes Mal um eins. Zerbricht es, testest du mit dem zweiten Ei die Stockwerke dazwischen einzeln von unten. So sind es nie mehr als 14 Würfe, denn 14 + 13 + … + 1 = 105 deckt 100 ab.",
+    "skill": "Den schlimmsten Fall ausgleichen",
+    "deep": {
+      "lead": "Das erste Ei darf springen, das zweite muss schleichen – die Kunst liegt in der Größe der Sprünge.",
+      "sections": [
+        {
+          "title": "Warum Halbieren hier scheitert",
+          "text": "Mit beliebig vielen Eiern wäre Halbieren ideal: erst Stock 50, dann 25 oder 75, nach sieben Würfen wäre alles klar. Mit zwei Eiern geht das nicht. Zerbricht das erste in Stock 50, bleibt nur ein Ei, und das darf kein Risiko mehr eingehen. Es muss von Stock 1 aufwärts jedes Stockwerk einzeln prüfen, im schlimmsten Fall 49 weitere Würfe. Feste Zehnersprünge sind besser, führen aber zu 19 Würfen, wenn das Ei erst in Stock 100 bricht: zehn Sprünge und neun Einzeltests. Späte Brüche kosten dort mehr als frühe."
+        },
+        {
+          "title": "Schrumpfende Sprünge",
+          "text": "Die beste Strategie sorgt dafür, dass jeder Fall gleich teuer ist. Hat das erste Ei schon drei Würfe verbraucht, darf dem zweiten entsprechend weniger Arbeit bleiben. Also wird jeder Sprung um ein Stockwerk kürzer als der vorige. Beginnt man mit einem Sprung der Größe n, erreicht man insgesamt n + (n − 1) + … + 1 Stockwerke. Diese Summe muss mindestens 100 betragen. Bei n gleich 13 ergibt sie nur 91, bei 14 schon 105. Die Aufgabe wurde lange gern in Bewerbungsgesprächen von Technikfirmen gestellt."
+        }
+      ],
+      "tryIt": "Gleiche Regeln, aber nur 36 Stockwerke: Mit welchem Stockwerk beginnst du, und wie viele Würfe brauchst du höchstens? (Stock 8; acht Würfe, denn 8 + 7 + … + 1 = 36.)",
+      "takeaways": [
+        "Nicht den Durchschnitt, den schlimmsten Fall klein halten.",
+        "Wer schon Versuche verbraucht hat, darf nur noch kürzer springen."
+      ]
+    }
+  },
+  {
+    "id": "muenzen-im-dunkeln",
+    "title": "Münzen im Dunkeln",
+    "category": "Querdenken",
+    "question": "Auf einem Tisch liegen 100 Münzen, genau 10 davon mit Kopf nach oben. Es ist stockdunkel, du kannst die Seiten weder sehen noch fühlen. Du sollst die Münzen so in zwei Haufen teilen, dass in beiden gleich viele Köpfe liegen. Was tust du?",
+    "options": [
+      "Halbieren: zweimal 50 Münzen",
+      "Das ist ohne Licht unmöglich",
+      "Jede zweite Münze umdrehen",
+      "10 abzählen und alle 10 umdrehen"
+    ],
+    "correctIndex": 3,
+    "explanation": "Nimm irgendwelche 10 Münzen beiseite. Liegen darunter k Köpfe, bleiben im großen Haufen 10 − k Köpfe. Drehst du alle 10 abgezählten um, werden aus ihren k Köpfen genau 10 − k. Beide Haufen enthalten nun gleich viele Köpfe, ohne dass du k kennst.",
+    "skill": "Mit Unbekannten rechnen",
+    "deep": {
+      "lead": "Du musst nicht wissen, wie viele Köpfe du erwischt hast – nur dafür sorgen, dass es auf beiden Seiten gleich viele werden.",
+      "sections": [
+        {
+          "title": "Die Unbekannte hebt sich auf",
+          "text": "Das Rätsel wirkt unlösbar, weil man glaubt, erst etwas herausfinden zu müssen. Tatsächlich bleibt die Zahl der Köpfe in deinem kleinen Haufen bis zum Schluss unbekannt. Die Lösung arbeitet mit einer Beziehung statt mit einer Messung: Die Köpfe im großen Haufen und die Zahlseiten im kleinen sind immer gleich viele, nämlich zehn minus k. Das Umdrehen macht aus Zahlseiten Köpfe. Eine kleine Probe: Liegen unter deinen zehn Münzen drei Köpfe, bleiben draußen sieben, und nach dem Wenden hast du ebenfalls sieben."
+        },
+        {
+          "title": "Ein Wort, das niemand gesagt hat",
+          "text": "Die Größe des kleinen Haufens muss genau der Zahl der Köpfe entsprechen, sonst geht die Rechnung nicht auf. Bei 17 Köpfen unter 500 Münzen zählst du 17 ab und drehst sie um. Die Gesamtzahl der Münzen ist gleichgültig. Die Haufen sind am Ende sehr ungleich groß, und das stört nicht, denn verlangt war nur die gleiche Zahl an Köpfen. Hier liegt der Denkfehler der meisten: Sie lesen »zwei Haufen« als »zwei gleich große Haufen« und suchen nach einer Teilung in fünfzig und fünfzig, die im Dunkeln tatsächlich aussichtslos ist."
+        }
+      ],
+      "tryIt": "Leg 12 Münzen aus, 4 davon mit Kopf nach oben, und lass jemanden mischen. Schließ die Augen, nimm 4 Münzen, dreh sie um und vergleich die Köpfe in beiden Haufen.",
+      "takeaways": [
+        "Eine Unbekannte muss man nicht kennen, wenn sie sich aufhebt.",
+        "»Zwei Haufen« heißt nicht »zwei gleich große Haufen«."
+      ]
+    }
+  },
+  {
+    "id": "muenzen-auf-rundem-tisch",
+    "title": "Münzen auf dem runden Tisch",
+    "category": "Logik",
+    "question": "Zwei Spieler legen abwechselnd gleich große Münzen flach auf einen runden Tisch. Die Münzen dürfen sich nicht überlappen und nicht über den Rand ragen. Wer keine mehr legen kann, verliert. Beide spielen perfekt. Wer gewinnt?",
+    "options": [
+      "Der Zweite, er hat das letzte Wort",
+      "Der Erste: Mitte, dann spiegeln",
+      "Das hängt von der Tischgröße ab",
+      "Niemand, es endet immer unentschieden"
+    ],
+    "correctIndex": 1,
+    "explanation": "Der Erste legt seine Münze genau in die Tischmitte. Danach antwortet er auf jeden Zug mit dem Spiegelbild: gleicher Abstand, gegenüberliegende Seite. Ist für den Gegner ein Platz frei, ist auch der gespiegelte frei. Dem Ersten gehen die Züge also nie zuerst aus.",
+    "skill": "Symmetrie als Strategie nutzen",
+    "deep": {
+      "lead": "Wer die Mitte besetzt, kann jeden Zug des Gegners kopieren – und hat deshalb immer eine Antwort.",
+      "sections": [
+        {
+          "title": "Warum die Mitte alles entscheidet",
+          "text": "Die Tischmitte ist der einzige Punkt, der sein eigenes Spiegelbild ist. Solange er frei ist, könnte der Gegner ihn besetzen und die Symmetrie zerstören. Liegt dort die erste Münze, zerfällt der Rest des Tisches in Paare gegenüberliegender Plätze. Der Gegner bricht mit jedem Zug die Symmetrie, der Erste stellt sie wieder her. Die Antwort ist immer möglich: Der gespiegelte Platz war vor dem gegnerischen Zug frei, und die neue Münze kann ihn nicht verdecken, weil sie von der Mittelmünze Abstand halten muss und ihr Spiegelbild deshalb weit genug entfernt liegt."
+        },
+        {
+          "title": "Kopieren als Gewinnplan",
+          "text": "Spiegelstrategien funktionieren bei vielen Spielen mit symmetrischem Feld. Liegen zwei gleich große Haufen Streichhölzer auf dem Tisch und darf man pro Zug beliebig viele aus einem Haufen nehmen, gewinnt der Zweite, indem er jeden Zug im anderen Haufen nachmacht. Bemerkenswert ist, was die Strategie nicht verlangt: Du musst nie vorausrechnen und brauchst keine Übersicht über freie Plätze. Es genügt, eine Eigenschaft der Stellung zu bewahren. Grenzen hat der Trick dort, wo das Feld keinen Mittelpunkt zum Besetzen bietet oder die Regeln das Nachmachen verbieten."
+        }
+      ],
+      "tryIt": "Spiel es mit Münzen auf einem Bierdeckel oder Teller nach. Leg die erste Münze einmal in die Mitte und einmal an den Rand – wie verändert das den Ausgang?",
+      "takeaways": [
+        "Die Mitte besetzen, dann jeden Zug spiegeln.",
+        "Eine gute Strategie bewahrt eine Eigenschaft, statt vorauszurechnen."
+      ]
+    }
+  },
+  {
+    "id": "einundzwanzig-streichhoelzer",
+    "title": "21 Streichhölzer",
+    "category": "Logik",
+    "question": "Auf dem Tisch liegen 21 Streichhölzer. Zwei Spieler nehmen abwechselnd 1, 2 oder 3 Hölzer. Wer das letzte Holz nimmt, gewinnt. Du beginnst. Wie viele Hölzer nimmst du im ersten Zug, um sicher zu gewinnen?",
+    "options": [
+      "1 Holz",
+      "2 Hölzer",
+      "3 Hölzer",
+      "Egal, der Zweite gewinnt immer"
+    ],
+    "correctIndex": 0,
+    "explanation": "Nimm 1 Holz, dann liegen 20. Ab jetzt ergänzt du jeden Zug des Gegners auf 4: Nimmt er 1, nimmst du 3; nimmt er 2, nimmst du 2. So hinterlässt du 16, 12, 8, 4 und zuletzt 0 Hölzer. Wer vor einem Vielfachen von 4 sitzt, verliert.",
+    "skill": "Vom Ende her denken",
+    "deep": {
+      "lead": "Das Spiel entscheidet sich nicht am Schluss, sondern beim ersten Zug – wenn man rückwärts denkt.",
+      "sections": [
+        {
+          "title": "Rückwärts vom letzten Holz",
+          "text": "Fang am Ende an. Liegen 1, 2 oder 3 Hölzer, gewinnst du sofort. Liegen 4, verlierst du: Was immer du nimmst, der Rest gehört dem Gegner. Also willst du dem anderen 4 hinterlassen, und das gelingt von 5, 6 oder 7 aus. Von 8 aus gelingt es nicht, 8 ist wieder eine Verluststellung. So setzt sich das Muster fort: Alle Vielfachen von 4 sind schlecht für den, der am Zug ist. Die 21 liegt um eins darüber, deshalb führt genau ein Zug zum Sieg."
+        },
+        {
+          "title": "Woher die Vier kommt",
+          "text": "Die Vier entsteht aus den erlaubten Zügen: eins mehr als die größte Menge, die man nehmen darf. Dürfte man bis zu fünf Hölzer nehmen, wären die Vielfachen von 6 die Verluststellungen. Wäre der Startwert selbst ein solches Vielfaches, hätte der Erste gegen einen kundigen Gegner keine Chance. Das Spiel ist ein einfacher Verwandter von Nim, für das der Mathematiker Charles Bouton Anfang des 20. Jahrhunderts eine vollständige Gewinnstrategie veröffentlichte. Die Methode, Stellungen vom Ende her als gewonnen oder verloren zu markieren, trägt weit über Streichhölzer hinaus."
+        }
+      ],
+      "tryIt": "30 Hölzer, man darf 1 bis 5 nehmen, das letzte gewinnt. Möchtest du anfangen? (Nein: 30 ist ein Vielfaches von 6 – wer anfängt, verliert gegen gutes Spiel.)",
+      "takeaways": [
+        "Gewinnstellungen findet man vom Ende her.",
+        "Hinterlass ein Vielfaches von »größter Zug plus eins«."
+      ]
+    }
+  },
+  {
+    "id": "drei-scheiben-kleine-pfanne",
+    "title": "Drei Scheiben, eine kleine Pfanne",
+    "category": "Logik",
+    "question": "In eine Pfanne passen zwei Brotscheiben gleichzeitig. Jede Seite braucht genau 1 Minute. Du willst drei Scheiben von beiden Seiten rösten. Wie lange dauert das mindestens?",
+    "options": [
+      "6 Minuten",
+      "4 Minuten",
+      "2 Minuten",
+      "3 Minuten"
+    ],
+    "correctIndex": 3,
+    "explanation": "Erste Minute: Scheibe A und B, Seite 1. Zweite Minute: A wenden, B herausnehmen und C hineinlegen. Dritte Minute: B und C jeweils mit der zweiten Seite. Sechs Seiten, zwei Plätze, drei Minuten – die Pfanne ist nie halb leer.",
+    "skill": "Engpässe voll auslasten",
+    "deep": {
+      "lead": "Vier Minuten braucht nur, wer jede Scheibe am Stück fertig macht – Unterbrechen spart ein Viertel der Zeit.",
+      "sections": [
+        {
+          "title": "Die untere Grenze zuerst",
+          "text": "Bevor du eine Lösung suchst, lohnt die Frage, was bestenfalls möglich wäre. Drei Scheiben haben sechs Seiten, die Pfanne schafft zwei Seiten pro Minute, also sind drei Minuten das theoretische Minimum. Der naheliegende Plan, erst zwei Scheiben fertig zu rösten und dann die dritte allein, braucht vier Minuten und lässt in den letzten beiden Minuten einen Platz leer. Diese Lücke ist das Signal: Wenn eine Grenze bekannt ist und der eigene Plan darüber liegt, steckt irgendwo ungenutzte Kapazität. Hier verschwindet sie, sobald eine halb fertige Scheibe kurz Pause macht."
+        },
+        {
+          "title": "Dasselbe Muster in Küche und Büro",
+          "text": "Die Aufgabe ist ein Miniaturmodell der Ablaufplanung. In Fabriken, Küchen und Rechenzentren gibt es Engpässe, also Geräte, an denen sich Arbeit staut. Die wichtigste Regel lautet, den Engpass nie leer laufen zu lassen, auch wenn dafür angefangene Arbeit liegen bleiben muss. Das widerspricht dem Gefühl, eine Sache erst abzuschließen, bevor man die nächste beginnt. Unterbrechen lohnt sich allerdings nur, wenn der Wechsel nichts kostet. Muss eine Maschine jedes Mal umgerüstet werden oder braucht der Kopf zwanzig Minuten, um wieder hineinzufinden, kippt die Rechnung."
+        }
+      ],
+      "tryIt": "Gleiche Pfanne, fünf Scheiben: Wie lange dauert es mindestens? (5 Minuten: zehn Seiten, zwei pro Minute – erst zwei Scheiben normal, dann drei mit dem Trick.)",
+      "takeaways": [
+        "Erst ausrechnen, was bestenfalls möglich ist.",
+        "Der Engpass darf nie halb leer laufen."
+      ]
+    }
+  },
+  {
+    "id": "vier-saetze-auf-einem-zettel",
+    "title": "Vier Sätze auf einem Zettel",
+    "category": "Logik",
+    "question": "Auf einem Zettel stehen vier Sätze. 1: »Genau einer dieser Sätze ist falsch.« 2: »Genau zwei dieser Sätze sind falsch.« 3: »Genau drei dieser Sätze sind falsch.« 4: »Genau vier dieser Sätze sind falsch.« Welcher Satz ist wahr?",
+    "options": [
+      "Satz 1",
+      "Satz 2",
+      "Satz 3",
+      "Keiner der vier"
+    ],
+    "correctIndex": 2,
+    "explanation": "Die Sätze widersprechen einander, also kann höchstens einer wahr sein. Wäre keiner wahr, wären alle vier falsch – dann würde Satz 4 stimmen, ein Widerspruch. Also ist genau einer wahr und drei sind falsch. Das behauptet Satz 3, und nur er.",
+    "skill": "Selbstbezügliche Aussagen prüfen",
+    "deep": {
+      "lead": "Sätze, die über sich selbst reden, lassen sich prüfen wie jede andere Behauptung: annehmen und nachzählen.",
+      "sections": [
+        {
+          "title": "Erst zählen, dann zuordnen",
+          "text": "Der schnellste Weg führt nicht über die einzelnen Sätze, sondern über ihre Anzahl. Je zwei Sätze nennen verschiedene Zahlen und können deshalb nicht beide stimmen. Damit sind nur zwei Welten denkbar: kein wahrer Satz oder genau einer. Die erste zerstört sich selbst, weil Satz 4 sie zutreffend beschriebe. In der zweiten sind drei Sätze falsch, und der wahre muss genau das sagen. Diese Reihenfolge, erst die Struktur des Ganzen zu klären und dann die Einzelheiten, spart das Durchprobieren aller sechzehn Kombinationen von wahr und falsch."
+        },
+        {
+          "title": "Nah am Lügner-Paradox",
+          "text": "Satz 4 ist ein enger Verwandter des berühmten Satzes »Dieser Satz ist falsch«, der weder wahr noch falsch sein kann. Hier geht die Sache gut aus, weil die anderen Sätze eine widerspruchsfreie Lösung ermöglichen. Stünde auf dem Zettel nur ein einziger Satz, nämlich »Genau einer dieser Sätze ist falsch«, entstünde das Paradox in Reinform. Der Logiker Alfred Tarski zog aus solchen Fällen den Schluss, dass eine Sprache nicht uneingeschränkt über die Wahrheit ihrer eigenen Sätze reden kann. Rätsel mit Selbstbezug sind also nur lösbar, wenn ihr Erfinder sorgfältig gebaut hat."
+        }
+      ],
+      "tryIt": "Fünf Sätze nach demselben Muster, der n-te sagt: »Genau n dieser Sätze sind falsch.« Welcher ist wahr? (Der vierte – vier sind falsch, einer ist wahr.)",
+      "takeaways": [
+        "Erst klären, wie viele Sätze überhaupt wahr sein können.",
+        "Eine Annahme, die sich selbst widerlegt, scheidet aus."
+      ]
+    }
+  },
+  {
+    "id": "zehn-gefangene-zehn-huete",
+    "title": "Zehn Gefangene, zehn Hüte",
+    "category": "Logik",
+    "question": "Zehn Gefangene stehen hintereinander, jeder sieht nur die Hüte vor sich. Jeder Hut ist schwarz oder weiß. Von hinten nach vorn rät jeder laut seine eigene Farbe; wer richtig liegt, kommt frei. Vorher dürfen sie sich absprechen. Wie viele können sie mit Sicherheit retten?",
+    "options": [
+      "5",
+      "9",
+      "1",
+      "Alle 10"
+    ],
+    "correctIndex": 1,
+    "explanation": "Der Hinterste sagt »Schwarz«, wenn er eine ungerade Zahl schwarzer Hüte sieht, sonst »Weiß«. Jeder weiter vorn vergleicht das mit den schwarzen Hüten, die er sieht und die schon genannt wurden, und erschließt so seinen eigenen. Nur der Hinterste rät: 9 sind sicher.",
+    "skill": "Information in einem Signal bündeln",
+    "deep": {
+      "lead": "Ein einziges Wort des Hintersten genügt, damit alle neun vor ihm ihre Farbe ausrechnen können.",
+      "sections": [
+        {
+          "title": "Gerade oder ungerade genügt",
+          "text": "Der Hinterste kann nicht alle Farben durchsagen, er hat nur ein Wort. Er braucht auch nicht mehr. Es reicht, eine Eigenschaft der ganzen Reihe zu übermitteln: ob die Zahl der schwarzen Hüte vor ihm gerade oder ungerade ist. Der Neunte sieht acht Hüte. Passt deren Parität zur Ansage, trägt er Weiß, sonst Schwarz. Der Achte hat die Ansage und die Antwort des Neunten gehört und rechnet genauso weiter. Jede richtige Antwort ist zugleich eine Auskunft für alle davor. Ein einzelner Fehler in der Kette verfälscht allerdings alles Folgende."
+        },
+        {
+          "title": "Prüfbits in jedem Rechner",
+          "text": "Dieselbe Idee schützt Daten. Beim einfachsten Verfahren hängt man an eine Folge von Nullen und Einsen ein zusätzliches Bit an, das die Zahl der Einsen gerade macht. Kippt bei der Übertragung ein Bit, stimmt die Parität nicht mehr, und der Empfänger bemerkt den Fehler. Mit mehreren geschickt verteilten Prüfbits lässt sich der Fehler sogar orten und beheben; solche Verfahren entwickelte Richard Hamming Mitte des 20. Jahrhunderts. Die Gefangenen nutzen ihr eines Prüfbit umgekehrt: Jeder kennt alle Werte außer seinem eigenen und füllt die Lücke."
+        }
+      ],
+      "tryIt": "Hinten wird »Schwarz« gerufen, also ungerade viele schwarze Hüte davor. Der Neunte sieht 4 schwarze Hüte. Welche Farbe hat er? (Schwarz – sonst wäre die Zahl gerade.)",
+      "takeaways": [
+        "Ein Bit über das Ganze kann jedem Einzelnen genügen.",
+        "Paritäten machen fehlende Einzelwerte berechenbar."
+      ]
+    }
+  },
+  {
+    "id": "acht-flaschen-eine-verdorben",
+    "title": "Acht Flaschen, eine verdorben",
+    "category": "Logik",
+    "question": "Von acht Weinflaschen ist genau eine verdorben. Ein Teststreifen verfärbt sich über Nacht, wenn er mit verdorbenem Wein in Berührung kam; man darf ihn mit Tropfen aus mehreren Flaschen benetzen. Wie viele Streifen brauchst du mindestens, um die Flasche morgen sicher zu kennen?",
+    "options": [
+      "8",
+      "7",
+      "4",
+      "3"
+    ],
+    "correctIndex": 3,
+    "explanation": "Nummeriere die Flaschen von 0 bis 7 im Zweiersystem: 000 bis 111. Streifen 1 bekommt Tropfen aller Flaschen mit einer 1 an der ersten Stelle, Streifen 2 und 3 entsprechend. Das Muster der verfärbten Streifen ist morgen genau die Nummer der Flasche.",
+    "skill": "Binär codieren",
+    "deep": {
+      "lead": "Drei Streifen können acht verschiedene Muster zeigen – eines für jede Flasche.",
+      "sections": [
+        {
+          "title": "Jeder Streifen stellt eine Frage",
+          "text": "Ein Streifen hat zwei mögliche Ergebnisse, verfärbt oder nicht. Drei Streifen zusammen können deshalb zwei mal zwei mal zwei, also acht Muster bilden. Mehr als acht Flaschen lassen sich mit drei Streifen nicht unterscheiden, und mit zwei Streifen wären es nur vier Muster, zu wenig. Die Kunst besteht darin, die Tropfen so zu verteilen, dass jede Flasche ein eigenes Muster erzeugt. Flasche 5 hat die Nummer 101 und kommt auf den ersten und den dritten Streifen. Flasche 0 kommt auf gar keinen: Bleibt alles unverfärbt, ist sie es."
+        },
+        {
+          "title": "Gleichzeitig statt nacheinander",
+          "text": "Der Unterschied zum Ratespiel mit Ja-Nein-Fragen liegt im Zeitpunkt. Dort darf jede Frage von der vorigen Antwort abhängen. Hier müssen alle Tests am selben Abend angesetzt werden, weil das Ergebnis erst am Morgen vorliegt. Bemerkenswert ist, dass das keinen einzigen Streifen zusätzlich kostet. In der bekanntesten Fassung des Rätsels will ein König tausend Fässer vor einem Fest prüfen lassen; dafür genügen zehn Vorkoster, denn zwei hoch zehn ist 1024. Dort wie hier gilt: Jede Verdopplung der Flaschenzahl verlangt nur einen einzigen Test mehr."
+        }
+      ],
+      "tryIt": "Streifen 1 und 2 sind verfärbt, Streifen 3 nicht. Welche Flaschennummer zwischen 0 und 7 ist das? (110 im Zweiersystem, also Flasche 6.)",
+      "takeaways": [
+        "n Ja-Nein-Tests unterscheiden 2 hoch n Fälle.",
+        "Tests laufen parallel, wenn jeder Fall ein eigenes Muster erzeugt."
+      ]
+    }
+  },
+  {
+    "id": "moench-am-berg",
+    "title": "Der Mönch am Berg",
+    "category": "Querdenken",
+    "question": "Ein Mönch steigt montags ab 8 Uhr einen schmalen Pfad zum Gipfel hinauf, mit Pausen und wechselndem Tempo. Dienstags ab 8 Uhr geht er denselben Pfad hinunter, wieder unregelmäßig. Gibt es eine Stelle, an der er an beiden Tagen zur exakt selben Uhrzeit war?",
+    "options": [
+      "Ja, ganz sicher",
+      "Nur bei gleichem Tempo",
+      "Nur mit sehr viel Glück",
+      "Nein, das lässt sich ausschließen"
+    ],
+    "correctIndex": 0,
+    "explanation": "Stell dir vor, beide Wanderungen fänden am selben Tag statt: Ein Mönch startet um 8 Uhr unten, ein zweiter um 8 Uhr oben. Auf dem schmalen Pfad müssen sie einander begegnen. Ort und Uhrzeit dieser Begegnung sind die gesuchte Stelle.",
+    "skill": "Ein Problem umformulieren",
+    "deep": {
+      "lead": "Aus zwei Tagen wird einer – und aus einer kniffligen Frage eine Begegnung, die gar nicht ausbleiben kann.",
+      "sections": [
+        {
+          "title": "Die Kraft eines anderen Bildes",
+          "text": "In der ursprünglichen Fassung denkt man an zwei getrennte Tagesabläufe und sucht nach Gründen, warum sie zufällig zusammenpassen sollten. Legt man beide Tage übereinander, verschwindet der Zufall. Zwei Menschen, die auf demselben Weg in entgegengesetzter Richtung gehen und beide ankommen, können nicht aneinander vorbei. Wann und wo sie sich treffen, bleibt unbekannt, aber dass sie sich treffen, steht fest. Die Aufgabe wird dem Psychologen Karl Duncker zugeschrieben, der erforschte, wie Einsicht entsteht. Der Schriftsteller Arthur Koestler machte sie später als Beispiel für schöpferisches Denken bekannt."
+        },
+        {
+          "title": "Ein Lehrsatz in Wanderschuhen",
+          "text": "Mathematisch steckt ein Satz über stetige Vorgänge dahinter, der Zwischenwertsatz. Betrachte den Höhenunterschied zwischen dem Montags-Mönch und dem Dienstags-Mönch zur selben Uhrzeit. Um 8 Uhr ist der eine ganz unten und der andere ganz oben, später ist es umgekehrt. Der Unterschied wechselt also sein Vorzeichen, und weil niemand springt, muss er irgendwann null sein. Mit demselben Argument lässt sich zeigen, dass es auf dem Äquator immer zwei gegenüberliegende Punkte mit exakt gleicher Temperatur gibt. Solche Beweise sagen, dass es etwas gibt, ohne zu verraten, wo."
+        }
+      ],
+      "tryIt": "Du fährst morgens um 7 von A nach B und am nächsten Morgen um 7 zurück. Erklär jemandem mit dem Bild von zwei Fahrern, warum es einen Ort gibt, den du beide Male zur selben Zeit passierst.",
+      "takeaways": [
+        "Ein anderes Bild kann ein Problem auflösen, statt es zu lösen.",
+        "Was stetig von Minus nach Plus wechselt, geht durch null."
+      ]
+    }
+  },
+  {
+    "id": "die-nasse-strasse",
+    "title": "Die nasse Straße",
+    "category": "Sprachlogik",
+    "question": "Es gilt: »Wenn es regnet, ist die Straße nass.« Du schaust aus dem Fenster und siehst: Die Straße ist nass. Was folgt daraus zwingend?",
+    "options": [
+      "Es hat geregnet",
+      "Es regnet gerade",
+      "Nichts über Regen",
+      "Die Regel muss falsch sein"
+    ],
+    "correctIndex": 2,
+    "explanation": "Die Regel sagt nur, was bei Regen passiert. Sie sagt nicht, dass Regen der einzige Grund für eine nasse Straße ist: Ein Rohrbruch, eine Kehrmaschine oder Tauwetter tun es auch. Sicher schließen ließe sich nur umgekehrt: Ist die Straße trocken, regnet es nicht.",
+    "skill": "Wenn-dann nicht umkehren",
+    "deep": {
+      "lead": "Aus »wenn A, dann B« folgt nicht »wenn B, dann A« – so selbstverständlich es sich auch anfühlt.",
+      "sections": [
+        {
+          "title": "Vier Schlüsse, zwei gültige",
+          "text": "Zu jeder Wenn-dann-Regel gibt es vier naheliegende Schlüsse. Gültig sind zwei: Es regnet, also ist die Straße nass. Und: Die Straße ist trocken, also regnet es nicht. Ungültig sind die beiden anderen: Die Straße ist nass, also regnet es. Und: Es regnet nicht, also ist die Straße trocken. Die ungültigen haben in der Logik eigene Namen, weil sie so häufig vorkommen: Bejahung des Nachsatzes und Verneinung des Vordersatzes. Sie führen manchmal zufällig zum richtigen Ergebnis, und genau das macht sie so schwer zu erkennen."
+        },
+        {
+          "title": "Indiz ist nicht Beweis",
+          "text": "Im Alltag ist der Umkehrschluss oft vernünftig, nur eben nicht zwingend. Eine nasse Straße macht Regen wahrscheinlicher, und Ärzte, Mechaniker und Ermittler arbeiten ständig so: vom Befund zurück zur vermuteten Ursache. Gefährlich wird es, wenn das Indiz als Beweis behandelt wird. Wer Grippe hat, hat häufig Fieber, aber nicht jedes Fieber ist eine Grippe. Wer betrügt, wirkt oft nervös, aber Nervosität überführt niemanden. Die saubere Frage lautet jedes Mal: Welche anderen Ursachen hätten denselben Befund erzeugt, und wie häufig sind sie im Vergleich?"
+        }
+      ],
+      "tryIt": "Regel: »Wer die Prüfung besteht, hat gelernt.« Tom hat gelernt. Was folgt? Und was folgt, wenn Tom nicht gelernt hat? (Nichts; dann hat er nicht bestanden.)",
+      "takeaways": [
+        "Wenn-dann gilt nur in eine Richtung.",
+        "Sicher ist die Umkehrung mit Verneinung: nicht B, also nicht A."
+      ]
+    }
+  },
+  {
+    "id": "zehnmal-rot-in-folge",
+    "title": "Zehnmal Rot in Folge",
+    "category": "Wahrscheinlichkeit",
+    "question": "An einem Roulettetisch mit 18 roten, 18 schwarzen Feldern und einer grünen Null ist zehnmal hintereinander Rot gefallen. Der Kessel ist einwandfrei. Wie groß ist die Wahrscheinlichkeit, dass beim elften Mal wieder Rot fällt?",
+    "options": [
+      "Deutlich kleiner als sonst",
+      "Deutlich größer als sonst",
+      "18/37, genau wie immer",
+      "Genau 1/2"
+    ],
+    "correctIndex": 2,
+    "explanation": "Die Kugel hat kein Gedächtnis. Jeder Wurf ist unabhängig von den vorigen, also bleibt die Chance für Rot bei 18 von 37, knapp 48,6 %. Unwahrscheinlich war die ganze Serie im Voraus – aber sie liegt nun in der Vergangenheit und zählt nicht mehr.",
+    "skill": "Unabhängige Ereignisse erkennen",
+    "deep": {
+      "lead": "Der Zufall gleicht nichts aus – er macht einfach weiter.",
+      "sections": [
+        {
+          "title": "Die Nacht von Monte Carlo",
+          "text": "Der Irrtum heißt Spielerfehlschluss und hat einen berühmten Beleg. Im August 1913 fiel im Casino von Monte Carlo die Kugel 26-mal hintereinander auf Schwarz. Je länger die Serie wurde, desto mehr Spieler setzten hohe Summen auf Rot, überzeugt, es sei nun überfällig. Sie verloren ein Vermögen. Eine solche Serie ist extrem selten, aber bei den vielen Abenden an vielen Tischen irgendwann zu erwarten. Wer mittendrin steht, hat davon nichts: Für den nächsten Wurf gelten immer dieselben 18 von 37, ob davor fünf oder fünfundzwanzig gleiche Farben fielen."
+        },
+        {
+          "title": "Verdünnen statt ausgleichen",
+          "text": "Hinter dem Fehlschluss steht ein halb verstandenes Gesetz. Richtig ist: Über sehr viele Würfe nähert sich der Anteil von Rot seinem erwarteten Wert. Falsch ist die Vorstellung, der Zufall müsse dafür Rückstände aufholen. Der Überschuss von zehn roten Würfen wird nicht ausgeglichen, er wird verdünnt. Nach tausend weiteren Würfen fällt er im Anteil kaum noch auf, obwohl er in absoluten Zahlen bestehen bleiben kann. Anders liegt der Fall nur, wenn Ziehungen einander wirklich beeinflussen, etwa bei Karten, die nicht zurückgelegt werden."
+        }
+      ],
+      "tryIt": "Wirf eine Münze, bis dreimal hintereinander dieselbe Seite kam, und notier den nächsten Wurf. Wiederhol das 20-mal: Wie oft setzte sich die Serie fort? Erwartet: etwa 10-mal.",
+      "takeaways": [
+        "Würfel, Kugeln und Münzen haben kein Gedächtnis.",
+        "Serien werden nicht ausgeglichen, sondern verdünnt."
+      ]
+    }
+  },
+  {
+    "id": "zwei-karten-gleiche-farbe",
+    "title": "Zwei Karten, gleiche Farbe?",
+    "category": "Wahrscheinlichkeit",
+    "question": "Auf dem Tisch liegen verdeckt vier Karten: zwei rote und zwei schwarze. Du ziehst zufällig zwei davon. Wie groß ist die Wahrscheinlichkeit, dass beide dieselbe Farbe haben?",
+    "options": [
+      "1/3",
+      "1/2",
+      "2/3",
+      "1/4"
+    ],
+    "correctIndex": 0,
+    "explanation": "Nimm die erste Karte, etwa eine rote. Unter den drei übrigen sind nur noch eine rote, aber zwei schwarze. Die zweite Karte passt also mit 1/3. Oder gezählt: Von den sechs möglichen Paaren sind nur zwei gleichfarbig, vier sind gemischt.",
+    "skill": "Ziehen ohne Zurücklegen beachten",
+    "deep": {
+      "lead": "Die erste Karte verändert den Stapel – danach ist ihre eigene Farbe in der Minderheit.",
+      "sections": [
+        {
+          "title": "Der Stapel erinnert sich",
+          "text": "Die Intuition sagt: zwei Farben, also fünfzig Prozent. Das wäre richtig, wenn die erste Karte nach dem Ziehen zurückgelegt würde. Sie bleibt aber draußen und fehlt ihrer Farbe. Aus zwei gegen zwei wird eins gegen zwei. Anders als Roulettekugel oder Würfel hat ein Kartenstapel ein Gedächtnis: Jede gezogene Karte verschiebt die Chancen für die nächste. Bei großen Stapeln ist die Verschiebung klein. Zieht man zwei Karten aus einem Blatt mit 26 roten und 26 schwarzen, haben sie mit 25 zu 51 dieselbe Farbe, also in gut 49 Prozent der Fälle."
+        },
+        {
+          "title": "Eine Wette, die fair klingt",
+          "text": "Aus der Aufgabe lässt sich ein altes Wettspiel machen. Jemand bietet an: Bei gleicher Farbe gewinnst du, bei verschiedenen Farben ich, Einsatz eins zu eins. Das klingt ausgewogen und bringt dem Anbieter in zwei von drei Runden den Gewinn. Allgemein gilt bei kleinen Mengen: Gleiche zu ziehen ist schwerer als Verschiedene, weil man sich die Auswahl selbst wegnimmt. Dasselbe erklärt, warum zwei blind gegriffene Socken seltener zusammenpassen als gedacht: Bei zwei schwarzen und zwei weißen Socken erwischst du nur in einem von drei Fällen ein Paar."
+        }
+      ],
+      "tryIt": "Drei rote, drei schwarze Karten, du ziehst zwei. Wie wahrscheinlich ist dieselbe Farbe? (Nach der ersten Karte bleiben 2 passende von 5: 2/5, also 40 %.)",
+      "takeaways": [
+        "Ohne Zurücklegen ändert jede Ziehung die Chancen.",
+        "Bei kleinen Mengen: Paare aufzählen statt schätzen."
+      ]
+    }
+  },
+  {
+    "id": "genau-zweimal-kopf",
+    "title": "Genau zweimal Kopf",
+    "category": "Wahrscheinlichkeit",
+    "question": "Du wirfst eine faire Münze viermal. Wie groß ist die Wahrscheinlichkeit, dass genau zweimal Kopf und zweimal Zahl fällt?",
+    "options": [
+      "1/2",
+      "1/4",
+      "5/8",
+      "3/8"
+    ],
+    "correctIndex": 3,
+    "explanation": "Vier Würfe haben 16 gleich wahrscheinliche Abfolgen. Genau zweimal Kopf kommt in sechs davon vor: KKZZ, KZKZ, KZZK, ZKKZ, ZKZK, ZZKK. Das sind 6/16 = 3/8, also 37,5 %. Das ausgeglichene Ergebnis ist das häufigste, aber seltener als alle anderen zusammen.",
+    "skill": "Günstige Abfolgen abzählen",
+    "deep": {
+      "lead": "Halbe-halbe ist das wahrscheinlichste Einzelergebnis – und tritt trotzdem meistens nicht ein.",
+      "sections": [
+        {
+          "title": "Pascals Dreieck zählt mit",
+          "text": "Wie viele Abfolgen zu jeder Kopfzahl gehören, steht im Pascalschen Dreieck, in dem jede Zahl die Summe der beiden über ihr ist. Die Zeile für vier Würfe lautet 1, 4, 6, 4, 1: eine Abfolge ohne Kopf, vier mit einmal Kopf, sechs mit zweimal und so weiter. Zusammen sind es 16. Die Sechs erhält man auch direkt: Für die Plätze der beiden Köpfe gibt es vier mal drei Möglichkeiten, geteilt durch zwei, weil die Reihenfolge der beiden Köpfe gleichgültig ist. Dieselbe Rechnung zählt Lottotipps und Händedrücke."
+        },
+        {
+          "title": "Je mehr Würfe, desto seltener exakt",
+          "text": "Erstaunlich ist, wie die Wahrscheinlichkeit für ein exaktes Unentschieden mit der Zahl der Würfe sinkt. Bei zwei Würfen beträgt sie 50 Prozent, bei vier 37,5, bei zehn nur noch knapp 25 und bei hundert Würfen rund 8 Prozent. Das widerspricht nicht dem Gesetz der großen Zahlen. Der Anteil der Köpfe rückt immer näher an die Hälfte, aber genau die Hälfte wird immer unwahrscheinlicher, weil es immer mehr Nachbarergebnisse gibt. Wer bei hundert Würfen 46 oder 53 Köpfe zählt, hat keinen Grund, an der Münze zu zweifeln."
+        }
+      ],
+      "tryIt": "Wie wahrscheinlich ist bei sechs Würfen genau dreimal Kopf? Die passende Zeile im Pascalschen Dreieck lautet 1, 6, 15, 20, 15, 6, 1. (20 von 64, also rund 31 %.)",
+      "takeaways": [
+        "Das häufigste Ergebnis muss nicht wahrscheinlich sein.",
+        "Günstige Abfolgen zählen, durch alle Abfolgen teilen."
+      ]
+    }
+  },
+  {
+    "id": "haeufigste-augensumme",
+    "title": "Die häufigste Augensumme",
+    "category": "Wahrscheinlichkeit",
+    "question": "Du wirfst zwei faire Würfel und zählst die Augen zusammen. Die Summe kann 2 bis 12 betragen. Welche Summe ist am wahrscheinlichsten?",
+    "options": [
+      "6",
+      "7",
+      "8",
+      "Alle sind gleich wahrscheinlich"
+    ],
+    "correctIndex": 1,
+    "explanation": "Es gibt 36 gleich wahrscheinliche Kombinationen. Die 7 entsteht auf sechs Arten: 1+6, 2+5, 3+4 und jeweils umgekehrt. Für 6 und 8 gibt es je fünf Wege, für 2 und 12 nur je einen. Die 7 fällt also in einem Sechstel aller Würfe.",
+    "skill": "Wege zum Ergebnis zählen",
+    "deep": {
+      "lead": "Nicht jede Summe ist gleich leicht zu erreichen – in der Mitte führen die meisten Wege zusammen.",
+      "sections": [
+        {
+          "title": "Die Sieben passt zu jedem Würfel",
+          "text": "Die 7 hat eine besondere Eigenschaft: Egal, was der erste Würfel zeigt, es gibt immer genau eine Zahl auf dem zweiten, die zur 7 ergänzt. Bei jeder anderen Summe scheitert mindestens ein Wert. Für die 6 nützt eine Sechs auf dem ersten Würfel nichts, für die 8 nützt die Eins nichts. Deshalb liegt die Chance für die 7 bei genau einem Sechstel. Die Anzahl der Wege steigt von der 2 bis zur 7 gleichmäßig von eins auf sechs und fällt danach spiegelbildlich wieder ab."
+        },
+        {
+          "title": "Vom Spieltisch zur Glockenkurve",
+          "text": "Brettspiele nutzen diese Verteilung gezielt. Bei den »Siedlern von Catan« sind die Zahlenplättchen mit Punkten markiert, die anzeigen, wie oft eine Summe zu erwarten ist; die 6 und die 8 sind begehrt, die 2 und die 12 fast wertlos. Die 7 löst dort eigens den Räuber aus. Nimmt man mehr Würfel, wird aus dem Dreieck allmählich eine Glocke: Mittlere Summen werden immer dominanter, extreme immer seltener. Das ist der Grund, warum sich viele Messgrößen, die aus zahlreichen kleinen Zufallseinflüssen entstehen, um einen Mittelwert häufen."
+        }
+      ],
+      "tryIt": "Wie wahrscheinlich ist bei zwei Würfeln eine Summe von mindestens 10? Zähl die Wege für 10, 11 und 12. (3 + 2 + 1 = 6 von 36, also 1/6.)",
+      "takeaways": [
+        "Für die 7 gibt es sechs Wege, für die 2 nur einen.",
+        "Summen vieler Zufallswerte häufen sich in der Mitte."
+      ]
+    }
+  },
+  {
+    "id": "ein-los-fuer-zwei-euro",
+    "title": "Ein Los für zwei Euro",
+    "category": "Wahrscheinlichkeit",
+    "question": "Bei einer Tombola kostet jedes Los 2 €. Unter 100 Losen ist genau ein Gewinn von 100 €, alle anderen sind Nieten. Was gewinnst oder verlierst du im Durchschnitt pro gekauftem Los?",
+    "options": [
+      "Weder Gewinn noch Verlust",
+      "1 € Gewinn",
+      "1 € Verlust",
+      "2 € Verlust"
+    ],
+    "correctIndex": 2,
+    "explanation": "Mit 1/100 gewinnst du 100 €, im Durchschnitt also 1 € pro Los. Bezahlt hast du 2 €. Der Erwartungswert ist 1 € − 2 € = −1 €. Kaufst du alle 100 Lose, zahlst du 200 € und bekommst sicher 100 € – genau 1 € Verlust je Los.",
+    "skill": "Erwartungswert berechnen",
+    "deep": {
+      "lead": "Ein seltener großer Gewinn und ein sicherer kleiner Preis lassen sich auf eine einzige Zahl bringen.",
+      "sections": [
+        {
+          "title": "Gewinn mal Wahrscheinlichkeit",
+          "text": "Der Erwartungswert ist der Durchschnitt, der sich einstellt, wenn man ein Spiel sehr oft wiederholt. Man multipliziert jeden möglichen Betrag mit seiner Wahrscheinlichkeit und zählt alles zusammen. Die Idee stammt aus dem 17. Jahrhundert; der Niederländer Christiaan Huygens veröffentlichte 1657 eine der ersten Abhandlungen über das Rechnen bei Glücksspielen und fragte darin, was ein Spiel fairerweise wert ist. Eine einfache Kontrolle bietet der Blick auf den Veranstalter: Er nimmt 200 € ein und zahlt 100 € aus. Die Hälfte der Einsätze bleibt bei ihm, also verliert jeder Loskäufer im Schnitt die Hälfte."
+        },
+        {
+          "title": "Wann ein schlechtes Spiel vernünftig ist",
+          "text": "Ein negativer Erwartungswert heißt nicht, dass niemand spielen sollte. Bei einer Tombola für den Sportverein ist der Verlust eine Spende mit Unterhaltungswert. Auch jede Versicherung hat für den Kunden einen negativen Erwartungswert und kann trotzdem klug sein, weil sie einen Schaden abfängt, der sonst nicht zu verkraften wäre. Der Erwartungswert beschreibt den Durchschnitt über viele Wiederholungen. Bei einer einzelnen Entscheidung mit sehr großen Beträgen zählt zusätzlich, was man sich leisten kann zu verlieren. Zur Orientierung: Staatliche Lotterien schütten typischerweise nur etwa die Hälfte der Einsätze wieder aus."
+        }
+      ],
+      "tryIt": "Ein Würfelspiel: Bei einer Sechs bekommst du 5 €, sonst zahlst du 1 €. Lohnt es sich auf Dauer? (Erwartungswert: 5/6 € − 5/6 € = 0. Das Spiel ist genau fair.)",
+      "takeaways": [
+        "Erwartungswert = Betrag mal Wahrscheinlichkeit, aufsummiert.",
+        "Was der Veranstalter behält, verlieren die Spieler im Schnitt."
+      ]
+    }
+  },
+  {
+    "id": "warten-auf-den-bus",
+    "title": "Warten auf den Bus",
+    "category": "Wahrscheinlichkeit",
+    "question": "Eine Buslinie fährt im Schnitt alle 10 Minuten, aber unregelmäßig: Die Abstände betragen abwechselnd 5 und 15 Minuten. Du kommst zu einem zufälligen Zeitpunkt an die Haltestelle. Wie lange wartest du im Durchschnitt?",
+    "options": [
+      "6,25 Minuten",
+      "5 Minuten",
+      "7,5 Minuten",
+      "10 Minuten"
+    ],
+    "correctIndex": 0,
+    "explanation": "Von je 20 Minuten gehören 15 zur langen Lücke. Du triffst sie also mit 3/4 und wartest dann im Mittel 7,5 Minuten; mit 1/4 triffst du die kurze und wartest 2,5 Minuten. Das ergibt 0,75 × 7,5 + 0,25 × 2,5 = 6,25 Minuten – mehr als die halbe Durchschnittslücke.",
+    "skill": "Stichprobenverzerrung erkennen",
+    "deep": {
+      "lead": "Wer zufällig kommt, landet bevorzugt in den langen Lücken – einfach weil sie mehr Zeit einnehmen.",
+      "sections": [
+        {
+          "title": "Das Wartezeitparadox",
+          "text": "Bei exaktem Zehn-Minuten-Takt wäre die mittlere Wartezeit fünf Minuten. Sobald die Abstände schwanken, steigt sie, obwohl pro Stunde gleich viele Busse fahren. Der Grund ist eine verzerrte Stichprobe: Du wählst keinen zufälligen Abstand aus, sondern einen zufälligen Zeitpunkt, und lange Abstände überdecken mehr Zeitpunkte. Statistiker sprechen vom Inspektionsparadox. Kommen Busse völlig regellos, wie es bei sehr unzuverlässigen Linien näherungsweise der Fall ist, wartet man im Mittel sogar den vollen Durchschnittsabstand, also zehn Minuten statt fünf. Das Gefühl, immer besonders lange zu warten, ist also teilweise berechtigt."
+        },
+        {
+          "title": "Volle Züge, lange Schlangen",
+          "text": "Das Muster taucht überall auf, wo Großes leichter getroffen wird als Kleines. Fragt man Fahrgäste, wie voll ihr Zug war, bekommt man ein düstereres Bild als aus den Zählungen der Bahn, denn in vollen Zügen sitzen mehr Befragte. Wer im Krankenhaus an einem Stichtag die Liegedauer der anwesenden Patienten erhebt, überschätzt die typische Dauer, weil Langlieger eher angetroffen werden. Und die Schlange, in der du gerade stehst, ist im Schnitt länger als die durchschnittliche Schlange. Die Gegenfrage lautet immer: Wurde pro Fall gezählt oder pro Mensch und Minute?"
+        }
+      ],
+      "tryIt": "Die Abstände wechseln zwischen 2 und 18 Minuten. Wie lange wartet man im Schnitt? (0,9 × 9 + 0,1 × 1 = 8,2 Minuten – der mittlere Abstand ist weiterhin 10.)",
+      "takeaways": [
+        "Lange Lücken trifft man häufiger als kurze.",
+        "Unregelmäßigkeit verlängert das Warten, auch bei gleichem Schnitt."
+      ]
+    }
+  },
+  {
+    "id": "die-komplette-sammlung",
+    "title": "Die komplette Sammlung",
+    "category": "Wahrscheinlichkeit",
+    "question": "In jedem Überraschungsei steckt zufällig eine von 6 verschiedenen Figuren, alle gleich häufig. Wie viele Eier musst du im Durchschnitt kaufen, bis du alle 6 Figuren mindestens einmal hast?",
+    "options": [
+      "6",
+      "Etwa 9",
+      "Etwa 12",
+      "Etwa 15"
+    ],
+    "correctIndex": 3,
+    "explanation": "Die erste Figur ist immer neu. Für die zweite neue brauchst du im Schnitt 6/5 Eier, für die dritte 6/4, dann 6/3, 6/2 und für die letzte 6/1. Zusammen: 1 + 1,2 + 1,5 + 2 + 3 + 6 = 14,7. Allein die letzte fehlende Figur kostet im Schnitt sechs Eier.",
+    "skill": "Wartezeiten addieren",
+    "deep": {
+      "lead": "Am Anfang ist fast jede Figur neu, am Ende fast keine – die letzte Lücke kostet am meisten.",
+      "sections": [
+        {
+          "title": "Warten in Etappen",
+          "text": "Die Rechnung zerlegt das Sammeln in Abschnitte. Hast du schon vier Figuren, sind zwei von sechs noch neu, die Trefferchance pro Ei beträgt also ein Drittel. Bei einer Chance von eins zu drei braucht man im Schnitt drei Versuche; allgemein ist die mittlere Wartezeit der Kehrwert der Trefferchance. So entstehen die Brüche 6/5, 6/4 und so weiter. Die Summe wächst langsam, aber unaufhaltsam. Bei 50 verschiedenen Bildern wären im Schnitt rund 225 Käufe nötig, bei 100 Bildern etwa 519. Mathematiker nennen die Aufgabe das Sammelbilderproblem."
+        },
+        {
+          "title": "Tauschen schlägt Kaufen",
+          "text": "Der Durchschnitt verschweigt die Streuung. Manche haben nach acht Eiern alles beisammen, andere warten nach dreißig noch auf die letzte Figur. Weil das Ende so teuer ist, lohnt sich Tauschen enorm: Deine doppelten Figuren sind für andere genau die fehlenden. Schon eine kleine Tauschgruppe senkt die Kosten pro Kopf deutlich, weil kaum noch ein Kauf völlig nutzlos ist. Dieselbe Rechnung wird in der Technik gebraucht, etwa bei der Frage, wie viele zufällige Testläufe nötig sind, bis jeder Zweig eines Programms mindestens einmal durchlaufen wurde."
+        }
+      ],
+      "tryIt": "Wie oft musst du im Schnitt würfeln, bis jede der Zahlen 1 bis 6 mindestens einmal gefallen ist? Schätz zuerst, dann probier es dreimal aus. (Im Schnitt 14,7 Würfe.)",
+      "takeaways": [
+        "Mittlere Wartezeit = Kehrwert der Trefferchance.",
+        "Die letzten fehlenden Stücke kosten den Großteil."
+      ]
+    }
+  },
+  {
+    "id": "drei-seltsame-wuerfel",
+    "title": "Drei seltsame Würfel",
+    "category": "Wahrscheinlichkeit",
+    "question": "Würfel A trägt die Zahlen 2, 2, 4, 4, 9, 9. Würfel B: 1, 1, 6, 6, 8, 8. Würfel C: 3, 3, 5, 5, 7, 7. Jeder wählt einen Würfel, die höhere Zahl gewinnt. Dein Gegner nimmt A. Welchen Würfel nimmst du, um häufiger zu gewinnen?",
+    "options": [
+      "B",
+      "C",
+      "Egal, alle sind gleich stark",
+      "Keinen, A ist der stärkste"
+    ],
+    "correctIndex": 1,
+    "explanation": "C schlägt A in 20 von 36 Fällen: Die 3 gewinnt gegen die 2, die 5 und die 7 gewinnen gegen 2 und 4. B dagegen verliert gegen A mit 16 zu 20. Kurios: A schlägt B, B schlägt C und C schlägt A, jeweils mit 5/9.",
+    "skill": "Vergleiche nicht verketten",
+    "deep": {
+      "lead": "Bei diesen Würfeln gibt es keinen besten – zu jedem findet sich einer, der ihn öfter schlägt.",
+      "sections": [
+        {
+          "title": "Schere, Stein, Papier mit Würfeln",
+          "text": "Normalerweise sind Vergleiche übertragbar: Ist Anna größer als Ben und Ben größer als Clara, dann ist Anna größer als Clara. Für »gewinnt meistens gegen« gilt das nicht. Die drei Würfel bilden einen Kreis wie Schere, Stein und Papier. Jeder hat dieselbe Augensumme von 30, im Durchschnitt sind sie also gleich gut. Entscheidend ist aber nicht der Durchschnitt, sondern wie die Zahlen ineinandergreifen. Der Statistiker Bradley Efron entwarf einen bekannten Satz von vier solchen Würfeln, und der Investor Warren Buffett soll Gäste gern damit herausgefordert haben."
+        },
+        {
+          "title": "Wer zuerst wählt, verliert",
+          "text": "Aus dem Kreis folgt eine einfache Regel: Lass den anderen zuerst wählen. Zu jedem Würfel gibt es einen Konter, und wer als Zweiter wählt, hat stets einen Vorteil von fünf zu vier. Das Phänomen ist mehr als ein Partytrick. Auch bei Abstimmungen kann eine Mehrheit A lieber wollen als B, B lieber als C und C lieber als A; der Marquis de Condorcet beschrieb dieses Paradox schon im 18. Jahrhundert. Im Sport kennt man es als Angstgegner: Mannschaft A schlägt regelmäßig B, B schlägt C, und C gewinnt dennoch meist gegen A."
+        }
+      ],
+      "tryIt": "Dein Gegner nimmt Würfel C. Welchen nimmst du, und in wie vielen von 36 Fällen gewinnst du? (B: Die 6 schlägt 3 und 5, die 8 schlägt alles – 8 + 12 = 20 Fälle.)",
+      "takeaways": [
+        "»Gewinnt meistens gegen« lässt sich nicht verketten.",
+        "Bei zyklischen Stärken gewinnt, wer als Zweiter wählt."
+      ]
+    }
+  },
+  {
+    "id": "zwei-kliniken-im-vergleich",
+    "title": "Zwei Kliniken im Vergleich",
+    "category": "Wahrscheinlichkeit",
+    "question": "Klinik A heilt 9 von 10 leichten und 30 von 90 schweren Fällen. Klinik B heilt 72 von 90 leichten und 2 von 10 schweren Fällen. Welche Aussage stimmt?",
+    "options": [
+      "B ist in beiden Gruppen besser",
+      "A ist insgesamt besser",
+      "Beide sind überall gleich gut",
+      "A ist je Gruppe besser, B insgesamt"
+    ],
+    "correctIndex": 3,
+    "explanation": "Leichte Fälle: A 90 %, B 80 %. Schwere Fälle: A 33 %, B 20 %. A ist also in beiden Gruppen besser. Insgesamt heilt A aber nur 39 von 100, B dagegen 74 von 100 – weil A fast nur schwere Fälle behandelt und B fast nur leichte.",
+    "skill": "Gruppen getrennt betrachten",
+    "deep": {
+      "lead": "Eine Gesamtquote kann das Gegenteil dessen zeigen, was in jeder einzelnen Gruppe gilt.",
+      "sections": [
+        {
+          "title": "Das Simpson-Paradoxon",
+          "text": "Der Effekt ist nach dem britischen Statistiker Edward Simpson benannt, der ihn 1951 beschrieb. Er entsteht, wenn die Gruppen sehr ungleich verteilt sind und die Gruppenzugehörigkeit selbst stark auf das Ergebnis wirkt. Klinik A übernimmt die schwierigen Patienten und wird dafür in der Gesamtstatistik bestraft. Ein bekanntes reales Beispiel betraf die Zulassungen an der Universität Berkeley in den 1970er-Jahren. Insgesamt wurden Frauen deutlich seltener angenommen, in den einzelnen Fächern aber meist nicht. Sie hatten sich häufiger für Fächer beworben, die nur wenige Bewerber aufnahmen."
+        },
+        {
+          "title": "Welche Zahl ist die richtige?",
+          "text": "Es gibt keine mechanische Regel, ob die Gesamtzahl oder die Aufteilung gilt. Entscheidend ist die Frage, die du beantworten willst. Für einen Patienten mit bekanntem Schweregrad zählt die Quote seiner Gruppe, also spricht alles für Klinik A. Die Gesamtquote wäre nur dann aussagekräftig, wenn beide Kliniken eine vergleichbare Mischung behandelten. Praktisch folgt daraus eine Gewohnheit: Bei jedem Vergleich von Quoten fragen, ob die Verglichenen dieselbe Ausgangslage hatten. Ranglisten von Schulen, Ärzten oder Fonds leiden häufig an genau diesem Problem."
+        }
+      ],
+      "tryIt": "Spieler X trifft 4 von 5 leichten und 10 von 45 schweren Würfen, Spieler Y 30 von 45 und 1 von 5. Wer ist je Gruppe besser, wer insgesamt? (X je Gruppe; Y insgesamt mit 31 zu 14.)",
+      "takeaways": [
+        "Gesamtquoten können ungleiche Mischungen verstecken.",
+        "Vor jedem Vergleich fragen: gleiche Ausgangslage?"
+      ]
+    }
+  },
+  {
+    "id": "die-erste-ziffer",
+    "title": "Die erste Ziffer",
+    "category": "Wahrscheinlichkeit",
+    "question": "Nimm eine lange Liste natürlich gewachsener Zahlen aus sehr verschiedenen Größenordnungen, etwa die Einwohnerzahlen aller Gemeinden der Welt. Mit welcher Ziffer beginnen diese Zahlen am häufigsten?",
+    "options": [
+      "Mit der 1",
+      "Mit der 5",
+      "Mit der 9",
+      "Alle Ziffern sind gleich häufig"
+    ],
+    "correctIndex": 0,
+    "explanation": "Rund 30 % solcher Zahlen beginnen mit einer 1, nur knapp 5 % mit einer 9. Der Grund: Um von 1.000 auf 2.000 zu wachsen, muss sich ein Wert verdoppeln, von 9.000 auf 10.000 sind es nur gut 11 %. Wachsende Größen halten sich deshalb lange bei der führenden 1 auf.",
+    "skill": "In Größenordnungen denken",
+    "deep": {
+      "lead": "In gewachsenen Datensätzen ist die 1 als Anfangsziffer rund sechsmal so häufig wie die 9.",
+      "sections": [
+        {
+          "title": "Abgegriffene Seiten",
+          "text": "Entdeckt wurde das Muster an einem unscheinbaren Indiz. Der Astronom Simon Newcomb bemerkte 1881, dass in Büchern mit Logarithmentafeln die vorderen Seiten, auf denen die Zahlen mit 1 beginnen, viel stärker abgenutzt waren als die hinteren. Der Physiker Frank Benford prüfte die Beobachtung 1938 an Tausenden von Zahlen: Flusslängen, Einwohnerzahlen, physikalische Konstanten, Zahlen aus Zeitungsartikeln. Fast überall fand er dieselbe Verteilung. Sie heißt heute Benfordsches Gesetz und gibt für die Anfangsziffer 1 rund 30,1 Prozent an, für die 2 etwa 17,6 Prozent und für die 9 nur 4,6."
+        },
+        {
+          "title": "Ein Werkzeug gegen Schwindel",
+          "text": "Menschen, die Zahlen erfinden, verteilen die Anfangsziffern meist zu gleichmäßig. Wirtschaftsprüfer und Steuerfahnder nutzen das: Weichen die Beträge einer Buchhaltung stark vom Benford-Muster ab, lohnt ein genauerer Blick. Ein Beweis für Betrug ist das nicht, nur ein Anlass zur Prüfung. Das Gesetz gilt außerdem nicht für alle Daten. Körpergrößen, Postleitzahlen, Telefonnummern oder Preise mit festen Schwellen wie 9,99 Euro folgen ihm nicht. Voraussetzung ist, dass die Werte sich über mehrere Größenordnungen erstrecken und nicht künstlich vergeben oder begrenzt sind."
+        }
+      ],
+      "tryIt": "Notier die erste Ziffer von 30 Zahlen aus einer Zeitung oder einem Lexikon (keine Jahreszahlen, keine Preise). Wie oft kommt die 1 vor? Erwartet: etwa neunmal.",
+      "takeaways": [
+        "Wachsende Größen beginnen überproportional oft mit einer 1.",
+        "Erfundene Zahlen sind oft zu gleichmäßig verteilt."
+      ]
+    }
+  },
+  {
+    "id": "dreimal-neunzig-prozent",
+    "title": "Dreimal neunzig Prozent",
+    "category": "Wahrscheinlichkeit",
+    "question": "Ein Paket kommt nur pünktlich an, wenn drei Stationen nacheinander pünktlich arbeiten. Jede Station ist unabhängig von den anderen zu 90 % pünktlich. Wie wahrscheinlich ist die pünktliche Lieferung?",
+    "options": [
+      "90 %",
+      "Rund 73 %",
+      "Rund 81 %",
+      "70 %"
+    ],
+    "correctIndex": 1,
+    "explanation": "Alle drei müssen klappen, also wird multipliziert: 0,9 × 0,9 × 0,9 = 0,729, knapp 73 %. Die 90 % gelten nur für jede Station einzeln. Die 70 % entstehen, wenn man dreimal 10 % Ausfall einfach addiert – das überschätzt das Risiko leicht.",
+    "skill": "Wahrscheinlichkeiten verketten",
+    "deep": {
+      "lead": "Jedes Glied ist zuverlässig – und trotzdem scheitert die Kette in mehr als einem von vier Fällen.",
+      "sections": [
+        {
+          "title": "Wie schnell Zuverlässigkeit zerfällt",
+          "text": "Bei unabhängigen Schritten, die alle gelingen müssen, multiplizieren sich die Einzelchancen, und das Produkt sinkt schneller, als das Gefühl erwartet. Sieben Schritte mit je 90 Prozent ergeben nur noch 48 Prozent, weniger als ein Münzwurf. Selbst bei 99 Prozent pro Schritt bleiben nach fünfzig Schritten nur rund 60 Prozent. Für kleine Ausfallraten gilt eine brauchbare Näherung: Die Risiken addieren sich ungefähr. Dreimal ein Prozent ergibt knapp drei Prozent Ausfall. Je größer die Einzelrisiken werden, desto stärker weicht diese Faustregel von der genauen Rechnung ab."
+        },
+        {
+          "title": "Der Planungsfehlschluss",
+          "text": "Dieselbe Rechnung erklärt, warum Vorhaben mit vielen Abhängigkeiten so oft später fertig werden als geplant. Braucht ein Umzug den pünktlichen Handwerker, den zugesagten Transporter, die rechtzeitige Schlüsselübergabe und trockenes Wetter, dann ist der reibungslose Ablauf unwahrscheinlicher als jedes Einzelne davon. Daniel Kahneman und Amos Tversky nannten die Neigung, nur den Idealfall durchzuspielen, Planungsfehlschluss. Ingenieure begegnen der Kette mit Redundanz: Zwei parallele Pumpen, von denen eine genügt, fallen nur dann gemeinsam aus, wenn beide versagen. Bei je zehn Prozent Ausfall ist das ein Prozent."
+        }
+      ],
+      "tryIt": "Vier unabhängige Zusagen für eine Feier, jede hält mit 80 %. Wie wahrscheinlich kommen alle vier? (0,8 hoch 4 = 0,41, also rund 41 %.)",
+      "takeaways": [
+        "Müssen alle Schritte klappen, wird multipliziert.",
+        "Parallel ausgelegte Reserven senken das Risiko drastisch."
+      ]
+    }
+  },
+  {
+    "id": "zusammen-fuenfzig",
+    "title": "Zusammen fünfzig",
+    "category": "Zahlen",
+    "question": "Ein Vater und seine Tochter sind zusammen 50 Jahre alt. Vor fünf Jahren war der Vater genau viermal so alt wie die Tochter. Wie alt ist die Tochter heute?",
+    "options": [
+      "10 Jahre",
+      "12 Jahre",
+      "13 Jahre",
+      "15 Jahre"
+    ],
+    "correctIndex": 2,
+    "explanation": "Vor fünf Jahren waren beide zusammen 40 Jahre alt, denn jeder war fünf Jahre jünger. Der Vater war viermal so alt, zusammen also fünf Teile: 40 ÷ 5 = 8. Die Tochter war damals 8 und ist heute 13, der Vater damals 32 und heute 37. Probe: 13 + 37 = 50.",
+    "skill": "In Anteilen denken",
+    "deep": {
+      "lead": "Zwei Menschen altern gemeinsam: Jedes Jahr verändert die Summe ihrer Alter um zwei.",
+      "sections": [
+        {
+          "title": "Die Summe wandert doppelt",
+          "text": "Der häufigste Fehler steckt im ersten Schritt. Wer von den 50 Jahren nur fünf abzieht, vergisst, dass beide Personen jünger waren. Die Alterssumme zweier Menschen ändert sich pro Jahr um zwei, die von drei Menschen um drei. Ist die Summe von damals bekannt, lässt sich das Verhältnis wie eine Aufteilung behandeln: viermal so alt bedeutet vier Teile gegen einen, zusammen fünf. Dieses Rechnen mit Teilen kommt ohne Unbekannte aus und stammt aus einer Zeit, in der Aufgaben in Worten gelöst wurden, lange bevor man Buchstaben für Zahlen schrieb."
+        },
+        {
+          "title": "Verhältnisse wandern zur Eins",
+          "text": "Fast jedes Altersrätsel nutzt eine von zwei festen Größen: Die Differenz zweier Alter bleibt für immer gleich, die Summe wächst gleichmäßig. Verhältnisse dagegen verändern sich ständig und nähern sich mit den Jahren der Eins. Ein Vater, der bei der Geburt seiner Tochter 24 war, ist an ihrem ersten Geburtstag 25-mal so alt wie sie, mit 8 viermal, mit 24 doppelt so alt. Genau doppelt so alt ist er nur ein einziges Jahr lang, nämlich dann, wenn sie so alt ist wie der Altersunterschied. Danach schrumpft der Faktor immer langsamer weiter."
+        }
+      ],
+      "tryIt": "Zwei Schwestern sind zusammen 30 Jahre alt. Vor drei Jahren war die ältere doppelt so alt wie die jüngere. Wie alt sind sie heute? (Damals zusammen 24: 16 und 8, heute 19 und 11.)",
+      "takeaways": [
+        "Die Alterssumme zweier Menschen wächst um zwei pro Jahr.",
+        "»Viermal so alt« heißt: vier Teile zu einem."
+      ]
+    }
+  },
+  {
+    "id": "als-ich-so-alt-war-wie-du",
+    "title": "Als ich so alt war wie du",
+    "category": "Sprachlogik",
+    "question": "Jan sagt zu Mia: »Als ich so alt war, wie du jetzt bist, warst du halb so alt, wie ich jetzt bin.« Zusammen sind die beiden heute 63 Jahre alt. Wie alt ist Jan?",
+    "options": [
+      "42",
+      "39",
+      "45",
+      "36"
+    ],
+    "correctIndex": 3,
+    "explanation": "Jan ist 36, Mia 27. Der Altersunterschied beträgt 9 Jahre. Vor 9 Jahren war Jan 27, also so alt wie Mia heute, und Mia war 18 – genau die Hälfte von Jans heutigen 36. Rechnerisch: Mia ist drei Viertel so alt wie Jan, und 63 teilt sich im Verhältnis 4 zu 3.",
+    "skill": "Zeitpunkte sauber trennen",
+    "deep": {
+      "lead": "Der Satz springt zwischen zwei Zeitpunkten hin und her – eine kleine Tabelle bringt Ordnung hinein.",
+      "sections": [
+        {
+          "title": "Eine Tabelle statt eines Satzes",
+          "text": "Die Schwierigkeit ist sprachlich, nicht rechnerisch. Leg eine Tabelle mit zwei Zeilen für die Personen und zwei Spalten für damals und heute an. Heute hat Jan das Alter J und Mia das Alter M. Damals war Jan so alt wie Mia heute, also M; dieser Zeitpunkt liegt J minus M Jahre zurück. Mia war damals entsprechend M minus (J minus M), also 2M minus J. Das soll die Hälfte von J sein. Daraus folgt, dass 2M anderthalbmal J ist, M also drei Viertel von J. Mit der Summe 63 ergeben sich 36 und 27."
+        },
+        {
+          "title": "Ein Klassiker in vielen Verkleidungen",
+          "text": "Sätze dieser Bauart stehen seit Langem in Rätselbüchern. Der amerikanische Rätselerfinder Sam Loyd trieb das Prinzip mit einer Aufgabe über Mary und Ann auf die Spitze, deren entscheidender Satz mehrere Zeitangaben ineinander verschachtelt. Solche Aufgaben prüfen, ob man sprachliche Bezüge in eine feste Struktur übersetzen kann. Dieselbe Fähigkeit braucht man bei Vertragsklauseln mit Fristen, die von anderen Fristen abhängen. Das Mittel ist immer gleich: jeden Zeitpunkt benennen, jede Angabe genau einem Zeitpunkt zuordnen, erst dann rechnen. Wer sofort losrechnet, verwechselt fast sicher »jetzt« und »damals«."
+        }
+      ],
+      "tryIt": "»Als ich so alt war wie du jetzt, warst du 10.« Der Sprecher ist heute 30. Wie alt ist die andere Person? (20 – der Altersunterschied beträgt 10 Jahre.)",
+      "takeaways": [
+        "Für jeden Zeitpunkt eine eigene Spalte anlegen.",
+        "Der zeitliche Abstand ist immer der Altersunterschied."
+      ]
+    }
+  },
+  {
+    "id": "dreimal-die-quersumme",
+    "title": "Dreimal die Quersumme",
+    "category": "Zahlen",
+    "question": "Gesucht ist eine zweistellige Zahl, die genau dreimal so groß ist wie ihre Quersumme, also wie die Summe ihrer beiden Ziffern. Welche Zahl ist es?",
+    "options": [
+      "27",
+      "18",
+      "36",
+      "45"
+    ],
+    "correctIndex": 0,
+    "explanation": "Mit Zehnerziffer a und Einerziffer b gilt 10a + b = 3 × (a + b), also 7a = 2b. Die einzige Lösung mit einstelligen Ziffern ist a = 2 und b = 7. Probe: 2 + 7 = 9, und 3 × 9 = 27. Die 18 ist das Doppelte ihrer Quersumme, 36 und 45 das Vier- und Fünffache.",
+    "skill": "Stellenwerte in Gleichungen fassen",
+    "deep": {
+      "lead": "Eine Zahl ist mehr als ihre Ziffern: Die vordere zählt zehnfach – darin steckt die ganze Lösung.",
+      "sections": [
+        {
+          "title": "Ziffern als Unbekannte",
+          "text": "Der Schlüssel zu allen Ziffernrätseln ist die Schreibweise 10a + b. Sie trennt den Wert einer Zahl von ihrem Aussehen. Aus der Bedingung wird dann eine einfache Gleichung, hier 7a gleich 2b. Weil 7 und 2 keinen gemeinsamen Teiler haben, muss a ein Vielfaches von 2 und b ein Vielfaches von 7 sein. Für eine Ziffer bleibt bei b nur die 7 selbst, also ist a gleich 2. Mit derselben Methode findest du, dass nur die 18 das Doppelte ihrer Quersumme ist, während das Vierfache gleich vier Lösungen hat: 12, 24, 36 und 48."
+        },
+        {
+          "title": "Warum die Neun immer mitspielt",
+          "text": "Auffällig ist, dass 18, 27, 36 und 45 alle durch 9 teilbar sind. Das ist kein Zufall. Zieht man von einer Zahl ihre Quersumme ab, bleibt immer ein Vielfaches von 9 übrig, denn 10a + b minus (a + b) ist 9a. Ist eine Zahl das Dreifache ihrer Quersumme, dann ist dieser Unterschied das Doppelte der Quersumme, und das muss durch 9 teilbar sein. Also ist die Quersumme selbst durch 9 teilbar. Auf dieser Eigenschaft beruhen viele Zahlentricks, bei denen der Vorführer scheinbar Gedanken liest."
+        }
+      ],
+      "tryIt": "Denk dir eine zweistellige Zahl, zieh ihre Quersumme ab und bilde vom Ergebnis wieder die Quersumme. Was kommt heraus? (Immer 9.)",
+      "takeaways": [
+        "Zweistellige Zahl = 10 mal Zehnerziffer plus Einerziffer.",
+        "Zahl minus Quersumme ist immer durch 9 teilbar."
+      ]
+    }
+  },
+  {
+    "id": "huehner-und-kaninchen",
+    "title": "Hühner und Kaninchen",
+    "category": "Zahlen",
+    "question": "In einem Stall leben Hühner und Kaninchen. Zusammen haben die Tiere 20 Köpfe und 56 Beine. Wie viele Kaninchen sind im Stall?",
+    "options": [
+      "6",
+      "10",
+      "8",
+      "12"
+    ],
+    "correctIndex": 2,
+    "explanation": "Wären alle 20 Tiere Hühner, gäbe es 40 Beine. Es sind aber 16 mehr. Jedes Kaninchen bringt zwei zusätzliche Beine mit, also sind es 16 ÷ 2 = 8 Kaninchen und 12 Hühner. Probe: 8 × 4 + 12 × 2 = 32 + 24 = 56.",
+    "skill": "Mit einer Annahme starten",
+    "deep": {
+      "lead": "Tu so, als wären alle Tiere gleich – der Fehler in der Rechnung verrät, wie viele es nicht sind.",
+      "sections": [
+        {
+          "title": "Fasane und Hasen",
+          "text": "Die Aufgabe stammt aus China. Sie steht im »Sunzi Suanjing«, einem Rechenbuch, das vermutlich zwischen dem dritten und fünften Jahrhundert entstand, dort mit Fasanen und Hasen, 35 Köpfen und 94 Füßen. Die Lösung des alten Textes ist verblüffend anschaulich: Halbiere die Zahl der Füße, dann zählt jeder Vogel einen Fuß und jeder Hase zwei. Zieh davon die Köpfe ab, und übrig bleibt die Zahl der Hasen. Im Original ergibt das 47 minus 35, also 12 Hasen und 23 Fasane. In Ostasien gehört die Aufgabe bis heute zum Schulstoff."
+        },
+        {
+          "title": "Die Methode der falschen Annahme",
+          "text": "Das Verfahren, mit einer bewusst falschen Annahme zu beginnen und den Fehler auszuwerten, trägt weit. In alten europäischen Rechenbüchern heißt es Regula falsi und war lange ein Standardwerkzeug, bevor sich die Buchstabenrechnung durchsetzte. Es funktioniert bei jeder Mischung aus zwei Sorten: Eintrittskarten für Erwachsene und Kinder, Münzen zweier Werte, Aufgaben mit zwei und vier Punkten. Immer gilt: alles als die kleinere Sorte rechnen, den Fehlbetrag bestimmen, durch den Unterschied pro Stück teilen. Wer lieber Gleichungen mag, findet darin das Einsetzungsverfahren wieder, nur in Worten."
+        }
+      ],
+      "tryIt": "30 Fahrzeuge stehen auf einem Parkplatz, Autos und Motorräder, zusammen 100 Räder. Wie viele Autos sind es? (Alle als Motorräder: 60 Räder, 40 fehlen, also 20 Autos.)",
+      "takeaways": [
+        "Alles als eine Sorte rechnen, dann den Fehler verteilen.",
+        "Der Unterschied pro Stück ist der Teiler."
+      ]
+    }
+  },
+  {
+    "id": "ein-ziegel-und-ein-halber",
+    "title": "Ein Ziegel und ein halber",
+    "category": "Zahlen",
+    "question": "Ein Ziegelstein wiegt ein Kilogramm plus einen halben Ziegelstein. Wie viel wiegt ein Ziegelstein?",
+    "options": [
+      "1,5 kg",
+      "2 kg",
+      "1 kg",
+      "3 kg"
+    ],
+    "correctIndex": 1,
+    "explanation": "Der ganze Ziegel besteht aus zwei Hälften. Eine Hälfte ist der »halbe Ziegel« aus dem Satz, die andere Hälfte muss also das eine Kilogramm sein. Ein halber Ziegel wiegt demnach 1 kg, ein ganzer 2 kg. Probe: 1 kg + 1 kg = 2 kg.",
+    "skill": "Selbstbezug auflösen",
+    "deep": {
+      "lead": "Die gesuchte Größe steckt in ihrer eigenen Beschreibung – und lässt sich trotzdem eindeutig bestimmen.",
+      "sections": [
+        {
+          "title": "Woher die anderthalb Kilo kommen",
+          "text": "Die häufigste falsche Antwort lautet anderthalb Kilogramm. Sie entsteht, wenn man »einen halben Ziegel« stillschweigend durch »ein halbes Kilogramm« ersetzt, als wöge der Ziegel schon bekanntermaßen ein Kilo. Der Satz beschreibt das Gewicht aber mit Hilfe des Gewichts selbst. Als Gleichung: Z gleich 1 plus Z halbe. Zieht man auf beiden Seiten die Hälfte ab, bleibt Z halbe gleich 1. Die Probe entlarvt den Fehler sofort: Ein Ziegel von 1,5 Kilogramm müsste 1 plus 0,75 wiegen, also 1,75, und das passt nicht."
+        },
+        {
+          "title": "Größen, die sich selbst enthalten",
+          "text": "Beschreibungen, in denen das Gesuchte selbst vorkommt, begegnen dir häufiger, als es scheint. Ein Makler verlangt drei Prozent vom Kaufpreis, und der Käufer will insgesamt höchstens einen festen Betrag ausgeben: Der bezahlbare Kaufpreis hängt von der Gebühr ab, die Gebühr vom Kaufpreis. Ein Nettobetrag soll nach Abzug einer Steuer herauskommen, die sich nach dem Brutto bemisst. In all diesen Fällen hilft kein schrittweises Ausrechnen von links nach rechts. Man gibt dem Gesuchten einen Namen, schreibt die Beziehung hin und löst nach diesem Namen auf."
+        }
+      ],
+      "tryIt": "Eine Flasche Saft kostet 1 € plus eine halbe Flasche Saft. Ein Fisch wiegt 2 kg plus ein Drittel seines Gewichts. Was kostet die Flasche, was wiegt der Fisch? (2 €; 3 kg.)",
+      "takeaways": [
+        "Dem Gesuchten einen Namen geben und einsetzen.",
+        "Probe machen: Erfüllt die Antwort den ganzen Satz?"
+      ]
+    }
+  },
+  {
+    "id": "fliege-zwischen-den-zuegen",
+    "title": "Die Fliege zwischen den Zügen",
+    "category": "Zahlen",
+    "question": "Zwei Züge fahren aufeinander zu, anfangs 100 km voneinander entfernt, jeder mit 50 km/h. Eine Fliege startet an der Spitze des einen Zuges und fliegt mit 75 km/h zwischen den Zügen hin und her, bis diese sich treffen. Wie weit fliegt sie insgesamt?",
+    "options": [
+      "50 km",
+      "100 km",
+      "150 km",
+      "75 km"
+    ],
+    "correctIndex": 3,
+    "explanation": "Die Züge nähern sich mit zusammen 100 km/h und treffen sich nach genau einer Stunde. So lange ist die Fliege unterwegs, und mit 75 km/h schafft sie in einer Stunde 75 km. Die immer kürzeren Teilstrecken muss man gar nicht einzeln berechnen.",
+    "skill": "Die einfache Größe suchen",
+    "deep": {
+      "lead": "Statt unendlich viele Teilstrecken zu addieren, genügt eine Frage: Wie lange fliegt die Fliege?",
+      "sections": [
+        {
+          "title": "Die Anekdote um John von Neumann",
+          "text": "Zu diesem Rätsel gehört eine oft erzählte Geschichte. Der Mathematiker John von Neumann, berühmt für sein Kopfrechnen, soll die Aufgabe auf einer Feier gestellt bekommen und nach wenigen Sekunden richtig beantwortet haben. Der Fragesteller sagte anerkennend, die meisten versuchten es mit der unendlichen Reihe und übersähen den Trick. Von Neumann soll erstaunt erwidert haben: Welcher Trick? Ich habe die Reihe summiert. Ob sich das genau so zugetragen hat, ist nicht gesichert. Die Geschichte hält sich, weil sie zeigt, dass es zwei Wege gibt und einer davon für gewöhnliche Köpfe gedacht ist."
+        },
+        {
+          "title": "Der mühsame Weg führt auch ans Ziel",
+          "text": "Man kann die Teilstrecken tatsächlich einzeln berechnen. Auf dem ersten Flug nähern sich Fliege und Gegenzug mit zusammen 125 km/h, sie treffen sich nach vier Fünfteln einer Stunde, und die Fliege hat dann 60 km zurückgelegt. In dieser Zeit ist der Abstand der Züge auf ein Fünftel geschrumpft, also auf 20 km. Jeder weitere Flug ist deshalb ein Fünftel so lang wie der vorige: 60, 12, 2,4 und so weiter. Die Summe dieser unendlich vielen Strecken ist 60 geteilt durch vier Fünftel, also 75 km. Beide Wege stimmen überein."
+        }
+      ],
+      "tryIt": "Zwei Radfahrer starten 30 km voneinander entfernt und fahren je 15 km/h aufeinander zu. Ein Hund läuft mit 20 km/h zwischen ihnen hin und her. Wie weit läuft er? (Eine Stunde lang: 20 km.)",
+      "takeaways": [
+        "Erst fragen: Welche Größe ist leicht zu bestimmen?",
+        "Strecke = Geschwindigkeit mal Zeit, egal wie verschlungen der Weg."
+      ]
+    }
+  },
+  {
+    "id": "die-turmuhr-schlaegt-sechs",
+    "title": "Die Turmuhr schlägt sechs",
+    "category": "Zahlen",
+    "question": "Eine Turmuhr braucht für sechs Schläge genau 5 Sekunden, gemessen vom ersten bis zum letzten Schlag. Die Schläge folgen in gleichmäßigen Abständen. Wie lange braucht sie um zwölf Uhr für zwölf Schläge?",
+    "options": [
+      "10 Sekunden",
+      "12 Sekunden",
+      "11 Sekunden",
+      "9 Sekunden"
+    ],
+    "correctIndex": 2,
+    "explanation": "Zwischen sechs Schlägen liegen nur fünf Pausen, jede dauert also 1 Sekunde. Zwölf Schläge haben elf Pausen und brauchen deshalb 11 Sekunden. Wer einfach verdoppelt, zählt die Schläge – gemessen wird aber die Zeit dazwischen.",
+    "skill": "Zwischenräume statt Dinge zählen",
+    "deep": {
+      "lead": "Gezählt werden die Schläge, aber Zeit vergeht nur in den Pausen dazwischen.",
+      "sections": [
+        {
+          "title": "Was wird eigentlich gemessen?",
+          "text": "Verdoppelt sich die Zahl der Schläge, verdoppelt sich die Dauer nicht ganz, weil der erste Schlag keine Wartezeit kostet. Die Rechnung wird sicher, wenn man vorher klärt, woraus die gemessene Größe besteht. Hier besteht sie aus Pausen, und deren Zahl ist immer um eins kleiner als die Zahl der Schläge. Ein einziger Schlag dauert in diesem Modell null Sekunden. Solche Aufgaben waren ein Lieblingsthema alter Rechenbücher, weil sie zeigen, dass ein Dreisatz nur gilt, wenn die Größen wirklich im gleichen Verhältnis wachsen."
+        },
+        {
+          "title": "Treppen, Tabletten, Tagungen",
+          "text": "Dieselbe Falle steht in vielen Verkleidungen bereit. Wer vom Erdgeschoss in den vierten Stock 60 Sekunden braucht, ist im achten Stock nach 120 Sekunden, denn hier zählen die Treppen, und es sind vier und acht. Startet er aber im ersten Stock, sind es drei und sieben Treppen, und die Verdopplung stimmt nicht mehr. Drei Tabletten im Abstand von einer halben Stunde reichen nur eine Stunde. Und eine Tagung mit fünf Vorträgen hat vier Pausen. Hilfreich ist jedes Mal eine winzige Skizze mit Strichen für die Dinge und Bögen für die Zwischenräume."
+        }
+      ],
+      "tryIt": "Ein Arzt gibt dir vier Tabletten: alle 30 Minuten eine, die erste sofort. Nach wie vielen Minuten nimmst du die letzte? (Nach 90 Minuten – drei Abstände.)",
+      "takeaways": [
+        "n Schläge haben n − 1 Pausen.",
+        "Vor dem Dreisatz klären, was wirklich gemessen wird."
+      ]
+    }
+  },
+  {
+    "id": "wie-oft-kommt-die-neun-vor",
+    "title": "Wie oft kommt die Neun vor?",
+    "category": "Zahlen",
+    "question": "Du schreibst alle Zahlen von 1 bis 100 hintereinander auf. Wie oft schreibst du dabei die Ziffer 9?",
+    "options": [
+      "10-mal",
+      "20-mal",
+      "11-mal",
+      "19-mal"
+    ],
+    "correctIndex": 1,
+    "explanation": "An der Einerstelle steht die 9 zehnmal: 9, 19, 29 bis 99. An der Zehnerstelle steht sie ebenfalls zehnmal: 90 bis 99. Zusammen 20. Die 99 enthält zwei Neunen und zählt deshalb doppelt. Zahlen mit mindestens einer 9 gibt es dagegen nur 19.",
+    "skill": "Stelle für Stelle zählen",
+    "deep": {
+      "lead": "Wer Zahlen zählt statt Ziffern, landet bei 19 – wer nur die Einer sieht, bei 10.",
+      "sections": [
+        {
+          "title": "Zwei Fragen, die sich ähneln",
+          "text": "Die Aufgabe ist tückisch, weil zwei ähnliche Fragen verschiedene Antworten haben. Wie viele Zahlen enthalten eine 9? Neunzehn, denn die 99 ist nur eine Zahl. Wie oft wird die Ziffer geschrieben? Zwanzigmal, denn die 99 liefert zwei. Am sichersten zählt man nach Stellen getrennt und nicht nach Zahlen. Jede Ziffer von 1 bis 9 kommt an der Einerstelle in jedem Zehnerblock genau einmal vor und an der Zehnerstelle in genau einem Block zehnmal. Nur die 1 erreicht 21, weil die 100 eine zusätzliche Eins mitbringt."
+        },
+        {
+          "title": "Hausnummern und Bleisatz",
+          "text": "Das Verfahren lässt sich auf größere Bereiche übertragen. Von 0 bis 999 kommt jede Ziffer an jeder der drei Stellen genau hundertmal vor, wenn man die Zahlen mit führenden Nullen schreibt. Die 9 wird also dreihundertmal geschrieben. Solche Zählungen waren früher handfeste Praxis: Wer Hausnummern aus Metall oder Seitenzahlen für den Bleisatz bestellen musste, brauchte die Stückzahl jeder Ziffer. Für die Seiten 1 bis 100 eines Buches sind insgesamt 192 Ziffern nötig: neun einstellige Zahlen, neunzig zweistellige und eine dreistellige."
+        }
+      ],
+      "tryIt": "Wie oft schreibst du die Ziffer 5, wenn du alle Zahlen von 1 bis 60 notierst? (16-mal: sechsmal an der Einerstelle, zehnmal an der Zehnerstelle von 50 bis 59.)",
+      "takeaways": [
+        "Ziffern zählt man nach Stellen getrennt.",
+        "»Wie viele Zahlen« und »wie viele Ziffern« sind zwei Fragen."
+      ]
+    }
+  },
+  {
+    "id": "immer-bleibt-einer-uebrig",
+    "title": "Immer bleibt einer übrig",
+    "category": "Zahlen",
+    "question": "Eine Lehrerin will ihre Klasse in gleich große Gruppen teilen. Ob sie Zweier-, Dreier-, Vierer-, Fünfer- oder Sechsergruppen bildet: Jedes Mal bleibt genau ein Kind übrig. Wie viele Kinder sind es mindestens, wenn es mehr als eines ist?",
+    "options": [
+      "31",
+      "121",
+      "61",
+      "59"
+    ],
+    "correctIndex": 2,
+    "explanation": "Nimmt man ein Kind heraus, geht jede Aufteilung auf. Die Zahl der übrigen Kinder ist also durch 2, 3, 4, 5 und 6 teilbar. Die kleinste solche Zahl ist 60. Mit dem einen Kind dazu sind es 61. Die 31 scheitert an den Vierergruppen: Dort bleiben drei übrig.",
+    "skill": "Reste auf Teilbarkeit zurückführen",
+    "deep": {
+      "lead": "Zieh den Rest ab – dann wird aus einer verwirrenden Bedingung eine Frage nach gemeinsamen Vielfachen.",
+      "sections": [
+        {
+          "title": "Das kleinste gemeinsame Vielfache",
+          "text": "Die 60 ist nicht das Produkt von 2, 3, 4, 5 und 6, das wäre 720. Gesucht ist das kleinste gemeinsame Vielfache, und dafür zählt jeder Primfaktor nur so oft, wie ihn die anspruchsvollste Zahl verlangt. Die 4 braucht zweimal die 2, die 3 und die 6 brauchen eine 3, die 5 eine 5. Zwei mal zwei mal drei mal fünf ergibt 60. Die 6 stellt keine neue Forderung, weil 2 und 3 schon vorhanden sind. Alle weiteren Lösungen des Rätsels liegen jeweils 60 weiter: 121, 181, 241."
+        },
+        {
+          "title": "Wenn die Reste verschieden sind",
+          "text": "Schwieriger wird es bei unterschiedlichen Resten. In einem chinesischen Rechenbuch des Gelehrten Sunzi, entstanden vor rund anderthalb Jahrtausenden, steht die Frage nach einer Zahl, die beim Teilen durch 3 den Rest 2 lässt, durch 5 den Rest 3 und durch 7 den Rest 2. Die kleinste Antwort ist 23. Der dahinterstehende Lehrsatz heißt Chinesischer Restsatz und garantiert, dass solche Aufgaben bei teilerfremden Teilern immer lösbar sind und sich die Lösungen in festen Abständen wiederholen. Heute steckt er in Verschlüsselungsverfahren und beschleunigt dort das Rechnen mit riesigen Zahlen."
+        }
+      ],
+      "tryIt": "Welche kleinste Zahl lässt beim Teilen durch 2, 3, 4, 5 und 6 jeweils einen Rest, der um eins kleiner ist als der Teiler? (59 – ein Kind mehr, und alles ginge auf.)",
+      "takeaways": [
+        "Gleicher Rest überall: Rest abziehen, dann das kgV suchen.",
+        "Das kgV von 2 bis 6 ist 60, nicht 720."
+      ]
+    }
+  },
+  {
+    "id": "letzte-ziffer-sieben-hoch-hundert",
+    "title": "Die letzte Ziffer von 7 hoch 100",
+    "category": "Zahlen",
+    "question": "Die Zahl 7 hoch 100 hat 85 Stellen und passt in keinen Taschenrechner. Trotzdem lässt sich ihre letzte Ziffer im Kopf bestimmen. Wie lautet sie?",
+    "options": [
+      "1",
+      "3",
+      "7",
+      "9"
+    ],
+    "correctIndex": 0,
+    "explanation": "Die letzte Ziffer hängt nur von der letzten Ziffer der vorigen Potenz ab. Bei der 7 läuft sie im Kreis: 7, 9, 3, 1 und wieder 7. Nach jeweils vier Schritten steht eine 1. Weil 100 durch 4 teilbar ist, endet 7 hoch 100 auf 1.",
+    "skill": "Zyklen erkennen",
+    "deep": {
+      "lead": "Riesige Potenzen sind unhandlich – ihre Endziffern drehen sich dagegen brav im Kreis.",
+      "sections": [
+        {
+          "title": "Warum nur die letzte Stelle zählt",
+          "text": "Beim schriftlichen Multiplizieren entsteht die Einerstelle des Ergebnisses allein aus den Einerstellen der beiden Faktoren. Alles Weitere wandert in höhere Stellen. Deshalb kannst du beim Potenzieren alle Ziffern außer der letzten wegwerfen: 7 mal 7 ist 49, merk dir die 9. Neun mal 7 ist 63, merk dir die 3. Drei mal 7 ist 21, merk dir die 1. Danach beginnt alles von vorn. Weil es nur zehn mögliche Endziffern gibt, muss sich jede solche Folge irgendwann wiederholen. Der Kreis ist nie länger als vier Schritte."
+        },
+        {
+          "title": "Rechnen wie auf dem Zifferblatt",
+          "text": "Dieses Rechnen mit Resten heißt modulare Arithmetik und funktioniert wie eine Uhr: Nach der Zwölf geht es wieder bei eins los. Carl Friedrich Gauß hat es 1801 in seinem Werk »Disquisitiones Arithmeticae« systematisch ausgearbeitet. Mit derselben Methode findest du die beiden letzten Ziffern, wenn du mit Resten zur 100 rechnest. Praktische Bedeutung hat das Potenzieren mit Resten in der Verschlüsselung. Beim RSA-Verfahren werden Zahlen mit Hunderten von Stellen potenziert, und nur weil man zwischendurch immer wieder den Rest bildet, bleibt die Rechnung beherrschbar."
+        }
+      ],
+      "tryIt": "Welche letzte Ziffer hat 3 hoch 2025? Die Endziffern der Dreierpotenzen laufen 3, 9, 7, 1. (2025 lässt beim Teilen durch 4 den Rest 1, also endet die Zahl auf 3.)",
+      "takeaways": [
+        "Endziffern von Potenzen wiederholen sich im Kreis.",
+        "Für die letzte Stelle zählen nur die letzten Stellen."
+      ]
+    }
+  },
+  {
+    "id": "nullen-am-ende-von-25-fakultaet",
+    "title": "Nullen am Ende von 25!",
+    "category": "Zahlen",
+    "question": "25! (gelesen: 25 Fakultät) ist das Produkt aller ganzen Zahlen von 1 bis 25, eine Zahl mit 26 Stellen. Mit wie vielen Nullen endet sie?",
+    "options": [
+      "2",
+      "4",
+      "5",
+      "6"
+    ],
+    "correctIndex": 3,
+    "explanation": "Jede Null am Ende entsteht aus einem Faktor 10, also aus einer 2 und einer 5. Zweien gibt es reichlich, es kommt auf die Fünfen an. 5, 10, 15 und 20 liefern je eine, die 25 liefert als 5 × 5 gleich zwei. Zusammen sechs Fünfen, also sechs Nullen.",
+    "skill": "Primfaktoren zählen",
+    "deep": {
+      "lead": "Endnullen entstehen aus Paaren von 2 und 5 – und die Fünfen sind der Engpass.",
+      "sections": [
+        {
+          "title": "Die versteckte Fünf",
+          "text": "Die naheliegende Antwort ist fünf, denn von 1 bis 25 gibt es fünf Vielfache von 5. Übersehen wird, dass 25 selbst zwei Fünfen enthält. Die allgemeine Zählregel geht auf den französischen Mathematiker Adrien-Marie Legendre zurück: Teile die Zahl durch 5, dann durch 25, dann durch 125 und so weiter, runde jeweils ab und addiere. Für 25 ergibt das 5 plus 1. Für 100 Fakultät sind es 20 plus 4, also 24 Nullen. Für 1000 Fakultät 200 plus 40 plus 8 plus 1, zusammen 249."
+        },
+        {
+          "title": "Wie schnell Fakultäten wachsen",
+          "text": "Fakultäten zählen, auf wie viele Arten sich Dinge anordnen lassen, und sie wachsen schneller als jede Potenz. Zehn Bücher lassen sich auf gut 3,6 Millionen Arten ins Regal stellen. Bei 25 Büchern sind es rund 15 Quadrillionen, eine Zahl mit 26 Stellen. Wer jede Sekunde eine Anordnung ausprobierte, bräuchte dafür viele Millionen Mal das Alter des Universums. Deshalb sind Aufgaben, bei denen die beste Reihenfolge gesucht wird, etwa die kürzeste Rundreise durch viele Städte, für Computer so hart: Schlichtes Durchprobieren scheitert schon bei wenigen Dutzend Stationen."
+        }
+      ],
+      "tryIt": "Mit wie vielen Nullen endet 50!? Zähl die Vielfachen von 5 und zusätzlich die von 25. (10 + 2 = 12 Nullen.)",
+      "takeaways": [
+        "Eine Endnull braucht je einen Faktor 2 und 5.",
+        "Vielfache von 25 liefern zwei Fünfen auf einmal."
+      ]
+    }
+  },
+  {
+    "id": "in-hundert-tagen",
+    "title": "In hundert Tagen",
+    "category": "Zahlen",
+    "question": "Heute ist Mittwoch. Welcher Wochentag ist in genau 100 Tagen?",
+    "options": [
+      "Donnerstag",
+      "Freitag",
+      "Samstag",
+      "Mittwoch"
+    ],
+    "correctIndex": 1,
+    "explanation": "Nach jeweils 7 Tagen ist wieder derselbe Wochentag. 98 ist ein Vielfaches von 7, also ist in 98 Tagen wieder Mittwoch. Bleiben 2 Tage: Donnerstag, Freitag. Es genügt, den Rest von 100 beim Teilen durch 7 zu kennen.",
+    "skill": "Mit Resten rechnen",
+    "deep": {
+      "lead": "Volle Wochen ändern nichts – nur der Rest beim Teilen durch 7 verschiebt den Wochentag.",
+      "sections": [
+        {
+          "title": "Der Kalender als Restrechnung",
+          "text": "Aus der Idee folgen ein paar nützliche Kalenderfakten. Ein gewöhnliches Jahr hat 365 Tage, das sind 52 Wochen und ein Tag. Deshalb rückt jedes Datum von Jahr zu Jahr um einen Wochentag weiter, nach einem Schalttag um zwei. Fiel dein Geburtstag letztes Jahr auf einen Montag, ist es dieses Jahr ein Dienstag, sofern kein 29. Februar dazwischenlag. Monate mit 31 Tagen verschieben um drei Wochentage, solche mit 30 um zwei. Der Februar verschiebt in normalen Jahren gar nichts, weshalb der März dann mit demselben Wochentag beginnt wie der Februar."
+        },
+        {
+          "title": "Wochentage im Kopf bestimmen",
+          "text": "Geübte Kopfrechner bestimmen zu jedem Datum den Wochentag in Sekunden. Eine bekannte Methode stammt vom britischen Mathematiker John Conway. Sie nutzt aus, dass einige leicht zu merkende Daten in jedem Jahr auf denselben Wochentag fallen: der 4.4., der 6.6., der 8.8., der 10.10. und der 12.12., außerdem der letzte Tag im Februar. Kennt man diesen Ankertag für das Jahr, ist jedes andere Datum nur noch wenige Tage entfernt, und der Rest ist Zählen. Conway soll die Methode so lange geübt haben, bis er im Schnitt nur etwa zwei Sekunden brauchte."
+        }
+      ],
+      "tryIt": "Heute ist Samstag. Welcher Wochentag ist in 45 Tagen, und welcher war vor 30 Tagen? (45 = 6 Wochen + 3: Dienstag. 30 = 4 Wochen + 2: Donnerstag.)",
+      "takeaways": [
+        "Für Wochentage zählt nur der Rest beim Teilen durch 7.",
+        "Ein normales Jahr verschiebt jedes Datum um einen Wochentag."
+      ]
+    }
+  },
+  {
+    "id": "der-pferdehandel",
+    "title": "Der Pferdehandel",
+    "category": "Zahlen",
+    "question": "Ein Händler kauft ein Pferd für 60 €, verkauft es für 70 €, kauft es für 80 € zurück und verkauft es schließlich für 90 €. Wie viel Gewinn hat er insgesamt gemacht?",
+    "options": [
+      "20 €",
+      "10 €",
+      "30 €",
+      "0 €"
+    ],
+    "correctIndex": 0,
+    "explanation": "Er hat zweimal gekauft und zweimal verkauft, jedes Mal mit 10 € Gewinn: erst 60 zu 70, dann 80 zu 90. Zusammen 20 €. Probe über die Kasse: Ausgaben 60 + 80 = 140 €, Einnahmen 70 + 90 = 160 €, Unterschied 20 €.",
+    "skill": "Geldflüsse sauber bilanzieren",
+    "deep": {
+      "lead": "Die 10 € zwischen Verkauf und Rückkauf fühlen sich wie ein Verlust an – in der Kasse tauchen sie nie auf.",
+      "sections": [
+        {
+          "title": "Woher die falschen 10 Euro kommen",
+          "text": "Wer auf 10 Euro kommt, erzählt sich die Geschichte als Kette: erst 10 gewonnen, dann beim Rückkauf 10 verloren, weil das Pferd teurer war als beim Verkauf, dann wieder 10 gewonnen. Der mittlere Schritt ist der Fehler. Der Rückkauf für 80 Euro ist kein Verlust, sondern der Beginn eines neuen Geschäfts, dessen Ergebnis sich erst beim Verkauf zeigt. Dass der Händler das Pferd billiger hätte behalten können, ist ein entgangener Gewinn, aber kein Geld, das die Kasse verlassen hat. Psychologen haben die Aufgabe gern für Versuche zum Problemlösen in Gruppen verwendet."
+        },
+        {
+          "title": "Die Kassenprobe",
+          "text": "Bei verschachtelten Geschäften hilft eine schlichte Methode aus der Buchführung: nicht die Geschichte nacherzählen, sondern alle Zahlungen in zwei Spalten schreiben. Links, was hinausging, rechts, was hereinkam. Am Ende zählt nur die Differenz und was noch im Bestand ist. So durchschaust du auch Angebote wie »Altgerät in Zahlung geben und Rabatt sichern« oder mehrfaches Umbuchen einer Reise mit Gebühren und Gutschriften. Gefühlte Gewinne und Verluste aus Zwischenständen führen in die Irre, weil unser Kopf jeden Schritt mit dem vorherigen vergleicht statt mit dem Anfang."
+        }
+      ],
+      "tryIt": "Du kaufst eine Aktie für 100 €, verkaufst für 120 €, kaufst für 150 € zurück und verkaufst für 140 €. Gewinn oder Verlust? (Ausgaben 250 €, Einnahmen 260 €: 10 € Gewinn.)",
+      "takeaways": [
+        "Jedes Kauf-Verkauf-Paar für sich abrechnen.",
+        "Kassenprobe: alle Einnahmen minus alle Ausgaben."
+      ]
+    }
+  },
+  {
+    "id": "der-fehlende-euro",
+    "title": "Der fehlende Euro",
+    "category": "Sprachlogik",
+    "question": "Drei Gäste zahlen je 10 € für ein Zimmer, zusammen 30 €. Der Wirt merkt, dass es nur 25 € kostet, und schickt den Pagen mit 5 € zurück. Der gibt jedem Gast 1 € und behält 2 €. Jeder hat also 9 € gezahlt: 27 €. Plus 2 € beim Pagen sind 29 €. Wo ist der 30. Euro?",
+    "options": [
+      "Der Wirt hat ihn eingesteckt",
+      "Der Page hat 3 € behalten",
+      "Ein Gast hat nur 8 € gezahlt",
+      "Es fehlt keiner – falsch addiert"
+    ],
+    "correctIndex": 3,
+    "explanation": "Die 27 € der Gäste enthalten die 2 € des Pagen bereits: 25 € liegen beim Wirt, 2 € beim Pagen. Die 2 € noch einmal dazuzuzählen ergibt eine sinnlose Zahl. Richtig ist: 27 € gezahlt plus 3 € zurückerhalten gleich 30 €.",
+    "skill": "Prüfen, was addiert wird",
+    "deep": {
+      "lead": "Die Rechnung klingt schlüssig, addiert aber zwei Beträge, die auf derselben Seite der Bilanz stehen.",
+      "sections": [
+        {
+          "title": "Wo die Erzählung trickst",
+          "text": "Der Trick liegt in einem einzigen Wort: »plus«. Die 27 Euro sind das, was die Gäste netto ausgegeben haben. Dieses Geld hat zwei Empfänger, den Wirt und den Pagen. Die 2 Euro des Pagen sind also ein Teil der 27, kein Zusatz. Sinnvoll wäre, sie abzuziehen: 27 minus 2 ergibt die 25 Euro in der Hotelkasse. Die Erzählung addiert stattdessen und landet zufällig knapp neben der 30, was den Eindruck erweckt, es fehle etwas. Die Nähe der beiden Zahlen ist der ganze Zauber."
+        },
+        {
+          "title": "Mit anderen Zahlen entlarvt",
+          "text": "Mach die Probe mit anderen Beträgen. Das Zimmer kostet nur 20 Euro, der Wirt schickt 10 zurück, der Page gibt jedem Gast 2 und behält 4. Jeder Gast hat nun 8 Euro gezahlt, zusammen 24. Plus 4 beim Pagen wären 28 – und niemand käme auf die Idee, zwei Euro zu vermissen, weil 28 erkennbar nichts bedeutet. Richtig gerechnet: 24 gezahlt, davon 20 beim Wirt und 4 beim Pagen. Die Lehre gilt für jede Statistik und jede Abrechnung: Bevor du zwei Zahlen addierst, frag, ob ihre Summe überhaupt etwas beschreibt."
+        }
+      ],
+      "tryIt": "Schreib die Geschichte als Tabelle: Wer hat am Ende wie viel Geld mehr oder weniger als am Anfang? (Gäste je −9 €, Wirt +25 €, Page +2 €. Summe: null.)",
+      "takeaways": [
+        "Nur addieren, was zusammen etwas Sinnvolles ergibt.",
+        "Eine plausible Erzählung ersetzt keine Bilanz."
+      ]
+    }
+  },
+  {
+    "id": "eine-grosse-oder-zwei-kleine",
+    "title": "Eine große oder zwei kleine?",
+    "category": "Schätzen",
+    "question": "Beim Pizzadienst kosten eine Pizza mit 30 cm Durchmesser und zwei Pizzen mit je 20 cm Durchmesser gleich viel. Alle sind gleich dick belegt. Bei welcher Bestellung bekommst du mehr Pizza?",
+    "options": [
+      "Bei der einen großen",
+      "Bei den zwei kleinen",
+      "Beides ist genau gleich viel",
+      "Das hängt vom Belag ab"
+    ],
+    "correctIndex": 0,
+    "explanation": "Die Fläche wächst mit dem Quadrat des Durchmessers. 30 × 30 = 900, zweimal 20 × 20 sind nur 800. Die große Pizza hat also ein Achtel mehr Fläche als beide kleinen zusammen: rund 707 gegen 628 Quadratzentimeter.",
+    "skill": "Flächen quadratisch denken",
+    "deep": {
+      "lead": "Durchmesser lassen sich nicht einfach zusammenzählen – die Fläche folgt dem Quadrat.",
+      "sections": [
+        {
+          "title": "Längen täuschen über Flächen",
+          "text": "Der Kopf vergleicht Längen: zweimal 20 ist 40, und 40 ist mehr als 30. Bei Flächen ist das der falsche Maßstab. Verdoppelt sich der Durchmesser eines Kreises, vervierfacht sich seine Fläche. Für den Vergleich brauchst du die Kreiszahl gar nicht, weil sie auf beiden Seiten steht und sich wegkürzt. Es genügt, die Durchmesser zu quadrieren. Zwei kleine Pizzen wären erst bei gut 21 Zentimetern zusammen so groß wie eine von 30, denn 30 geteilt durch die Wurzel aus zwei ergibt etwa 21,2."
+        },
+        {
+          "title": "Der Rand wächst langsamer",
+          "text": "Ein zweiter Effekt verstärkt den Vorteil. Der Rand einer Pizza wächst nur mit dem Umfang, also im gleichen Verhältnis wie der Durchmesser, die belegte Mitte dagegen quadratisch. Große Pizzen haben deshalb anteilig weniger Rand. Dasselbe Gesetz erklärt viele Alltagserscheinungen: Ein Fernseher mit 20 Prozent längerer Diagonale hat 44 Prozent mehr Bildfläche. Ein Gartenschlauch mit doppeltem Innendurchmesser hat den vierfachen Querschnitt. Im Raum wird es noch drastischer, denn Volumen wächst mit der dritten Potenz. Eine Kugel Eis mit doppeltem Durchmesser enthält die achtfache Menge."
+        }
+      ],
+      "tryIt": "Eine Pizza mit 40 cm oder drei mit je 24 cm – was ist mehr? (40 × 40 = 1600, dreimal 24 × 24 = 1728: Die drei kleinen gewinnen knapp.)",
+      "takeaways": [
+        "Flächen vergleichst du über die Quadrate der Längen.",
+        "Doppelter Durchmesser: vierfache Fläche, achtfaches Volumen."
+      ]
+    }
+  },
+  {
+    "id": "achtundzwanzig-haendedruecke",
+    "title": "28 Händedrücke",
+    "category": "Zahlen",
+    "question": "Auf einer Feier begrüßt jeder Gast jeden anderen genau einmal mit Handschlag. Insgesamt werden 28-mal Hände geschüttelt. Wie viele Gäste sind auf der Feier?",
+    "options": [
+      "14",
+      "7",
+      "8",
+      "28"
+    ],
+    "correctIndex": 2,
+    "explanation": "Bei n Gästen schüttelt jeder n − 1 Hände. Das wären n × (n − 1) Händedrücke, aber jeder wurde doppelt gezählt, einmal von jeder Seite. Also n × (n − 1) ÷ 2 = 28 und n × (n − 1) = 56. Das passt für 8 × 7. Es sind acht Gäste.",
+    "skill": "Paare ohne Doppelzählung zählen",
+    "deep": {
+      "lead": "Jeder Händedruck gehört zwei Leuten – wer das vergisst, zählt alles doppelt.",
+      "sections": [
+        {
+          "title": "Sieben plus sechs plus fünf",
+          "text": "Die Zahl der Paare lässt sich auch anders aufbauen. Der erste Gast begrüßt sieben andere, der zweite noch sechs, weil er dem ersten schon die Hand gegeben hat, der dritte fünf und so weiter. Sieben plus sechs plus fünf bis eins ergibt 28. Solche Summen heißen Dreieckszahlen, weil sich entsprechend viele Punkte zu einem Dreieck legen lassen: 1, 3, 6, 10, 15, 21, 28. Kommt ein neuer Gast zu einer Runde von acht, kommen acht Händedrücke dazu. Die Zahl der Paare wächst also viel schneller als die Zahl der Personen."
+        },
+        {
+          "title": "Warum große Runden zäh werden",
+          "text": "Dasselbe Zählen erklärt ein bekanntes Problem der Zusammenarbeit. In einem Team von vier Personen gibt es sechs mögliche Zweiergespräche, bei acht Personen 28, bei zwanzig schon 190. Der Abstimmungsbedarf wächst ungefähr mit dem Quadrat der Teamgröße. Auch in Sportligen steckt die Formel: Spielt in einer Liga mit 18 Mannschaften jede gegen jede in Hin- und Rückspiel, entfällt das Halbieren, und es ergeben sich 18 mal 17, also 306 Partien pro Saison. Genau so viele Spiele hat eine Saison der Fußball-Bundesliga."
+        }
+      ],
+      "tryIt": "Fünf Freunde stoßen an, jeder mit jedem genau einmal. Wie oft klingen die Gläser? Und bei zehn Freunden? (10-mal; 45-mal.)",
+      "takeaways": [
+        "Paare aus n Personen: n × (n − 1) ÷ 2.",
+        "Die Zahl der Verbindungen wächst etwa mit dem Quadrat."
+      ]
+    }
+  },
+  {
+    "id": "wege-durch-das-strassengitter",
+    "title": "Wege durch das Straßengitter",
+    "category": "Zahlen",
+    "question": "Ein Stadtviertel ist ein Gitter aus 3 × 3 Häuserblocks. Du willst von der Südwestecke zur Nordostecke und gehst nur nach Norden oder nach Osten, also sechs Blocklängen. Wie viele verschiedene Wege gibt es?",
+    "options": [
+      "9",
+      "20",
+      "12",
+      "64"
+    ],
+    "correctIndex": 1,
+    "explanation": "Jeder Weg besteht aus drei Schritten nach Norden und drei nach Osten in beliebiger Reihenfolge. Du wählst also, welche drei der sechs Schritte nach Norden gehen: 6 × 5 × 4 ÷ 6 = 20 Möglichkeiten. Die 64 zählt alle Folgen aus sechs Schritten, auch solche mit falscher Anzahl.",
+    "skill": "Wege als Auswahl deuten",
+    "deep": {
+      "lead": "Ein Weg ist nichts anderes als eine Reihenfolge von Buchstaben: dreimal N, dreimal O.",
+      "sections": [
+        {
+          "title": "Kreuzung für Kreuzung",
+          "text": "Es gibt einen zweiten Weg zur Lösung, der ganz ohne Formel auskommt. Schreib an jede Kreuzung, auf wie vielen Wegen man sie erreicht. Entlang des unteren und des linken Randes steht überall eine 1, denn dorthin führt nur der gerade Weg. An jeder anderen Kreuzung steht die Summe der Zahlen von links und von unten, weil man nur aus diesen beiden Richtungen kommen kann. So füllt sich das Gitter mit 1, 2, 3, 4 in der zweiten Reihe, dann 1, 3, 6, 10, und oben rechts steht schließlich die 20."
+        },
+        {
+          "title": "Kleine Teilprobleme zusammensetzen",
+          "text": "Die Zahlen, die dabei entstehen, sind dieselben wie im Pascalschen Dreieck, nur schräg gelesen. Das ist kein Zufall: Auch dort ist jede Zahl die Summe ihrer beiden Nachbarn aus der Reihe davor. Die Methode, ein großes Zählproblem aus den Lösungen kleinerer Teilprobleme zusammenzusetzen, nennen Informatiker dynamische Programmierung. Sie ist viel robuster als die Formel. Ist eine Kreuzung wegen einer Baustelle gesperrt, trägst du dort einfach eine Null ein und rechnest weiter. Mit der Auswahlformel wäre dieselbe Frage deutlich mühsamer zu beantworten."
+        }
+      ],
+      "tryIt": "Wie viele Wege gibt es in einem Gitter aus 2 × 2 Blocks, und wie viele bei 4 × 4 Blocks? (6 und 70.)",
+      "takeaways": [
+        "Wege im Gitter = Auswahl, welche Schritte nach Norden gehen.",
+        "Große Zählprobleme aus kleinen zusammensetzen."
+      ]
+    }
+  },
+  {
+    "id": "die-buchstaben-von-anna",
+    "title": "Die Buchstaben von ANNA",
+    "category": "Zahlen",
+    "question": "Wie viele verschiedene Buchstabenfolgen lassen sich aus den vier Buchstaben des Namens ANNA bilden, wenn jeder Buchstabe genau einmal verwendet wird? Die Folge ANNA selbst zählt mit.",
+    "options": [
+      "6",
+      "24",
+      "12",
+      "4"
+    ],
+    "correctIndex": 0,
+    "explanation": "Vier verschiedene Buchstaben ergäben 4 × 3 × 2 × 1 = 24 Folgen. Die beiden A sind aber nicht unterscheidbar, ebenso die beiden N; ihr Vertauschen ändert nichts. Also teilt man zweimal durch 2: 24 ÷ 4 = 6. Es sind AANN, ANAN, ANNA, NAAN, NANA und NNAA.",
+    "skill": "Doppelzählungen herausteilen",
+    "deep": {
+      "lead": "Gleiche Buchstaben lassen sich vertauschen, ohne dass es jemand merkt – diese Fälle zählen nur einmal.",
+      "sections": [
+        {
+          "title": "Erst zu viel zählen, dann teilen",
+          "text": "Das Vorgehen ist ein Grundmuster der Kombinatorik: bewusst zu viel zählen und anschließend durch die Zahl der Wiederholungen teilen. Stell dir die beiden A kurz in zwei Farben vor. Dann gibt es 24 Anordnungen, aber je zwei davon unterscheiden sich nur durch die Farbe der A und sehen ohne Farbe gleich aus. Dasselbe gilt für die N. Jede echte Folge wurde also vierfach gezählt. Bei einem Wort mit drei gleichen Buchstaben müsste man durch sechs teilen, weil sich drei Dinge auf sechs Arten untereinander vertauschen lassen."
+        },
+        {
+          "title": "Von OTTO bis MISSISSIPPI",
+          "text": "Die Methode trägt beliebig weit. OTTO hat wie ANNA sechs Anordnungen, ANANAS schon 60: sechs Buchstaben ergeben 720 Folgen, geteilt durch sechs für die drei A und durch zwei für die beiden N. Das Paradebeispiel der Lehrbücher ist MISSISSIPPI mit elf Buchstaben, darunter vier I, vier S und zwei P. Es bringt es auf 34.650 Anordnungen. Die Rechnung hat praktische Verwandte. Auf dieselbe Weise zählt man, wie viele Reihenfolgen ein Kartenstapel mit mehrfach vorhandenen Karten haben kann oder wie viele kürzeste Wege durch ein rechtwinkliges Straßennetz führen."
+        }
+      ],
+      "tryIt": "Wie viele verschiedene Anordnungen haben die Buchstaben von ESSEN? (Fünf Buchstaben: 120, geteilt durch 2 für die E und durch 2 für die S – also 30.)",
+      "takeaways": [
+        "Anordnungen von n verschiedenen Dingen: n Fakultät.",
+        "Für jede Gruppe gleicher Dinge durch deren Vertauschungen teilen."
+      ]
+    }
+  },
+  {
+    "id": "vier-am-runden-tisch",
+    "title": "Vier am runden Tisch",
+    "category": "Zahlen",
+    "question": "Vier Freunde setzen sich an einen runden Tisch mit vier gleichen Stühlen. Zwei Sitzordnungen gelten als gleich, wenn jeder dieselben Nachbarn zur Linken und zur Rechten hat. Wie viele verschiedene Sitzordnungen gibt es?",
+    "options": [
+      "24",
+      "12",
+      "4",
+      "6"
+    ],
+    "correctIndex": 3,
+    "explanation": "In einer Reihe gäbe es 4 × 3 × 2 × 1 = 24 Anordnungen. Am runden Tisch lässt sich jede Sitzordnung auf vier Arten drehen, ohne dass sich Nachbarn ändern. Je vier Anordnungen sind also dieselbe: 24 ÷ 4 = 6. Oder: Einer sitzt fest, die anderen drei verteilen sich auf 6 Arten.",
+    "skill": "Symmetrien herausrechnen",
+    "deep": {
+      "lead": "Ein runder Tisch hat keinen ersten Platz – deshalb zählt nur, wer neben wem sitzt.",
+      "sections": [
+        {
+          "title": "Eine Person festhalten",
+          "text": "Der eleganteste Weg ist, eine Person als Bezugspunkt zu nehmen. Setz Anna irgendwohin; wohin, ist egal, weil alle Stühle gleich sind. Jetzt sind die drei übrigen Plätze unterscheidbar: links von Anna, gegenüber, rechts von ihr. Drei Personen verteilen sich darauf auf sechs Arten. Allgemein gibt es für n Personen am runden Tisch so viele Sitzordnungen wie Anordnungen von n minus eins Personen in einer Reihe. Bei fünf Personen sind es 24, bei sechs 120, bei zehn schon 362.880. Das Festhalten eines Elements ist ein Standardtrick, um Symmetrien loszuwerden."
+        },
+        {
+          "title": "Wenn auch Spiegeln nichts ändert",
+          "text": "Ob zwei Anordnungen als gleich gelten, ist eine Frage der Vereinbarung, und sie verändert die Antwort. Zählt nur, wer neben wem sitzt, egal ob links oder rechts, dann fallen auch Spiegelbilder zusammen, und von den sechs Sitzordnungen bleiben drei. Sie entsprechen der Frage, wer Anna gegenübersitzt. So zählt man etwa Perlenketten, die man umdrehen kann. Die Lehre gilt weit über Tische hinaus: Bevor du zählst, leg fest, welche Unterschiede überhaupt zählen sollen. Viele scheinbare Widersprüche zwischen zwei Lösungen sind in Wahrheit verschiedene Festlegungen."
+        }
+      ],
+      "tryIt": "Fünf Personen am runden Tisch: Wie viele Sitzordnungen gibt es, wenn Drehungen als gleich gelten? Und wie viele, wenn auch Spiegelbilder gleich sind? (24; 12.)",
+      "takeaways": [
+        "Am runden Tisch: einen festhalten, den Rest anordnen.",
+        "Vor dem Zählen festlegen, was als gleich gilt."
+      ]
+    }
+  },
+  {
+    "id": "einen-euro-wechseln",
+    "title": "Einen Euro wechseln",
+    "category": "Zahlen",
+    "question": "Du willst genau 1 € in Münzen wechseln und hast nur 50-, 20- und 10-Cent-Stücke zur Auswahl, von jeder Sorte beliebig viele. Auf wie viele verschiedene Arten geht das? Die Reihenfolge der Münzen spielt keine Rolle.",
+    "options": [
+      "6",
+      "8",
+      "10",
+      "12"
+    ],
+    "correctIndex": 2,
+    "explanation": "Sortier nach der Zahl der 50er. Zwei 50er: 1 Art. Ein 50er: Die restlichen 50 Cent enthalten null, einen oder zwei 20er, der Rest sind 10er – 3 Arten. Kein 50er: null bis fünf 20er, 6 Arten. Zusammen 1 + 3 + 6 = 10.",
+    "skill": "Fälle geordnet aufzählen",
+    "deep": {
+      "lead": "Die Aufgabe ist nicht schwer, aber unübersichtlich – eine feste Reihenfolge verhindert Lücken und Dopplungen.",
+      "sections": [
+        {
+          "title": "Ordnung nach der größten Münze",
+          "text": "Wer drauflos aufzählt, verliert schnell den Überblick und zählt manche Kombination doppelt. Der Ausweg ist eine feste Ordnung: Leg zuerst die Zahl der größten Münzen fest, dann die der zweitgrößten, und füll den Rest mit der kleinsten auf. Weil sich mit 10-Cent-Stücken jeder Zehnerbetrag darstellen lässt, ist der letzte Schritt immer eindeutig. Zu zählen bleibt nur, wie viele 20er jeweils hineinpassen. Diese Technik, einen Bestandteil nach dem anderen festzulegen, funktioniert bei jeder Aufzählaufgabe, vom Stundenplan bis zur Frage, wie sich eine Rechnung auf Scheine aufteilen lässt."
+        },
+        {
+          "title": "Wie die Zahl explodiert",
+          "text": "Mit mehr Münzsorten wächst die Zahl der Möglichkeiten rasant. Nimmt man alle Euromünzen von einem Cent bis zu einem Euro, lässt sich ein Euro bereits auf 4.563 Arten zusammenstellen. Die Frage, auf wie viele Arten ein Betrag gewechselt werden kann, ist ein Klassiker der Informatik-Ausbildung, weil sie sich elegant schrittweise lösen lässt: Man berechnet erst die Möglichkeiten mit nur einer Münzsorte und nimmt dann Sorte für Sorte hinzu. Verwandt ist die Frage nach der kleinsten Münzzahl für einen Betrag. Beim Euro findet man sie, indem man stets die größte passende Münze nimmt."
+        }
+      ],
+      "tryIt": "Auf wie viele Arten lassen sich 50 Cent aus 20-, 10- und 5-Cent-Stücken zusammensetzen? Ordne nach der Zahl der 20er. (12 Arten: 6 + 4 + 2.)",
+      "takeaways": [
+        "Erst die größte Sorte festlegen, dann die nächste.",
+        "Geordnetes Aufzählen verhindert Lücken und Dopplungen."
+      ]
+    }
+  },
+  {
+    "id": "lies-die-zeile-laut-vor",
+    "title": "Lies die Zeile laut vor",
+    "category": "Reihen",
+    "question": "Wie geht die Reihe weiter? 1, 11, 21, 1211, 111221, …",
+    "options": [
+      "112211",
+      "312211",
+      "122211",
+      "1112221"
+    ],
+    "correctIndex": 1,
+    "explanation": "Jede Zeile beschreibt die vorige, laut gelesen. »1« ist eine Eins: 11. »11« sind zwei Einsen: 21. »21« ist eine Zwei, eine Eins: 1211. Die letzte Zeile 111221 besteht aus drei Einsen, zwei Zweien und einer Eins – also 312211.",
+    "skill": "Regeln jenseits des Rechnens suchen",
+    "deep": {
+      "lead": "Hier wird nicht gerechnet, sondern gelesen: Jede Zeile ist die Beschreibung der vorigen.",
+      "sections": [
+        {
+          "title": "Eine Folge ohne Rechenregel",
+          "text": "Wer mit Differenzen, Quotienten oder Quersummen an die Reihe herangeht, kommt nicht weiter. Die Regel ist sprachlich: Zähl von links, wie viele gleiche Ziffern nacheinander stehen, und schreib Anzahl und Ziffer auf. Solche Aufgaben fallen Kindern oft leichter als geübten Rechnern, weil diese zu fest an Rechenoperationen denken. Im Englischen heißt die Folge »look and say«, also ansehen und aufsagen. Eine Eigenheit lässt sich schnell begründen: Es kommt nie eine Ziffer größer als 3 vor, denn vier gleiche Ziffern hintereinander können beim Beschreiben nicht entstehen."
+        },
+        {
+          "title": "Conways überraschende Konstante",
+          "text": "Der Mathematiker John Conway hat die scheinbar verspielte Folge gründlich untersucht. Er fand heraus, dass die Länge der Zeilen auf Dauer mit einem festen Faktor wächst: Jede Zeile ist im Mittel rund 30 Prozent länger als die vorige, genauer um den Faktor 1,3036. Außerdem zeigte er, dass die Zeilen nach einiger Zeit in Bausteine zerfallen, die sich unabhängig voneinander weiterentwickeln. Er zählte 92 solche Grundbausteine und benannte sie augenzwinkernd nach den chemischen Elementen von Wasserstoff bis Uran. Aus einem Kinderrätsel wurde so ein Stück ernsthafter Mathematik."
+        }
+      ],
+      "tryIt": "Starte dieselbe Regel mit der Zahl 3 und schreib die nächsten drei Zeilen auf. (13, 1113, 3113.)",
+      "takeaways": [
+        "Nicht jede Zahlenreihe folgt einer Rechenregel.",
+        "Wenn Rechnen nicht hilft: Form und Sprache prüfen."
+      ]
+    }
+  },
+  {
+    "id": "zwei-reihen-in-einer",
+    "title": "Zwei Reihen in einer",
+    "category": "Reihen",
+    "question": "Wie geht die Reihe weiter? 2, 5, 4, 7, 6, 9, …",
+    "options": [
+      "11",
+      "10",
+      "12",
+      "8"
+    ],
+    "correctIndex": 3,
+    "explanation": "Hier sind zwei Reihen ineinandergeschoben. Die Zahlen an den ungeraden Plätzen lauten 2, 4, 6, die an den geraden Plätzen 5, 7, 9. Beide wachsen um 2. Als Nächstes ist wieder die erste Reihe dran: 8. Oder als Sprünge gelesen: abwechselnd plus 3 und minus 1.",
+    "skill": "Verschränkte Muster trennen",
+    "deep": {
+      "lead": "Wenn eine Reihe hin und her springt, stecken oft zwei ruhige Reihen darin.",
+      "sections": [
+        {
+          "title": "Das Zickzack als Hinweis",
+          "text": "Ein sicheres Erkennungszeichen für verschränkte Reihen ist das Auf und Ab. Eine einzelne einfache Regel lässt Zahlen selten abwechselnd steigen und fallen. Sobald du ein Zickzack siehst, lohnt es sich, nur jede zweite Zahl zu lesen. Hier gibt es sogar zwei gleichwertige Beschreibungen: zwei ineinandergeschobene Reihen oder eine Reihe mit abwechselnden Schritten plus drei und minus eins. Beide sagen dieselbe Fortsetzung voraus. Dass verschiedene Beschreibungen zum selben Ergebnis führen, ist beruhigend. Schwierig wird es erst, wenn zwei einleuchtende Regeln verschiedene Fortsetzungen liefern."
+        },
+        {
+          "title": "Gemischte Daten entwirren",
+          "text": "Daten aus der Wirklichkeit sind häufig auf diese Weise gemischt. Eine Filiale meldet abwechselnd die Umsätze von Vormittag und Nachmittag, und die Zahlenreihe sieht chaotisch aus, bis man die beiden Tageshälften trennt. Monatszahlen schwanken mit den Jahreszeiten; erst der Vergleich mit demselben Monat des Vorjahres zeigt den Trend. Auch in Eignungstests kommen verschränkte Reihen regelmäßig vor, manchmal mit drei Strängen oder mit einer Zahlen- und einer Buchstabenreihe im Wechsel. Der erste Handgriff ist immer derselbe: die Reihe in Teilreihen zerlegen und jede für sich betrachten."
+        }
+      ],
+      "tryIt": "Setze fort: 1, 10, 2, 20, 4, 30, 8, … und 3, 9, 4, 8, 5, 7, … (40 und 6.)",
+      "takeaways": [
+        "Zickzack deutet auf zwei verschränkte Reihen.",
+        "Lies versuchsweise nur jede zweite Zahl."
+      ]
+    }
+  },
+  {
+    "id": "anfangsbuchstaben-der-zahlen",
+    "title": "E, Z, D, V, F, S, S, …",
+    "category": "Reihen",
+    "question": "Welcher Buchstabe setzt die Reihe fort? E, Z, D, V, F, S, S, …",
+    "options": [
+      "E",
+      "N",
+      "A",
+      "Z"
+    ],
+    "correctIndex": 2,
+    "explanation": "Es sind die Anfangsbuchstaben der Zahlwörter: Eins, Zwei, Drei, Vier, Fünf, Sechs, Sieben. Als Nächstes kommt Acht, also A. Danach folgen N für Neun und Z für Zehn. Wer im Alphabet nach Abständen sucht, findet kein Muster.",
+    "skill": "Bedeutung statt Form prüfen",
+    "deep": {
+      "lead": "Die Buchstaben stehen nicht für sich – sie sind Abkürzungen für etwas, das jeder kennt.",
+      "sections": [
+        {
+          "title": "Im falschen Suchraum",
+          "text": "Bei Buchstabenreihen sucht fast jeder zuerst nach Positionen im Alphabet: E ist der fünfte Buchstabe, Z der sechsundzwanzigste. Diese Spur führt ins Leere, und je länger man ihr folgt, desto schwerer fällt der Wechsel. Psychologen nennen das Einstellungseffekt: Ein einmal gewählter Lösungsweg blockiert bessere. Ein Indiz hätte stutzig machen können, nämlich das doppelte S. In einer mathematischen Buchstabenfolge wäre eine Wiederholung ungewöhnlich, bei Anfangsbuchstaben ist sie alltäglich. Wenn ein Ansatz nach einer Minute nichts ergibt, lohnt die Frage, in welcher ganz anderen Welt die Zeichen eine Bedeutung hätten."
+        },
+        {
+          "title": "Wochentage, Monate, Planeten",
+          "text": "Nach demselben Bauplan gibt es viele Reihen. M, D, M, D, F, S, S sind die Wochentage, J, F, M, A, M, J, J die Monate. M, V, E, M, J, S, U, N zählt die Planeten von Merkur bis Neptun auf. Solche Rätsel hängen an der Sprache: Auf Englisch lautet die Zahlenreihe O, T, T, F, F, S, S, E, und wer nur Deutsch im Kopf hat, steht ratlos davor. Sie zeigen, dass Muster nicht in den Zeichen selbst liegen, sondern in dem Wissen, das der Betrachter mitbringt. Ohne den passenden Hintergrund ist die einfachste Reihe unlösbar."
+        }
+      ],
+      "tryIt": "Setze fort: M, D, M, D, F, S, … und J, F, M, A, M, J, J, … (S für Sonntag; A für August.)",
+      "takeaways": [
+        "Buchstaben können Abkürzungen für bekannte Reihen sein.",
+        "Bringt ein Ansatz nichts, den Suchraum wechseln."
+      ]
+    }
+  },
+  {
+    "id": "das-ist-mein-sohn",
+    "title": "»Das ist mein Sohn«",
+    "category": "Querdenken",
+    "question": "Ein Vater und sein Sohn haben einen Autounfall. Der Vater stirbt, der Sohn wird schwer verletzt in die Klinik gebracht. Im Operationssaal heißt es: »Ich kann nicht operieren – das ist mein Sohn!« Wie ist das am einfachsten zu erklären?",
+    "options": [
+      "Der Vater hat doch überlebt",
+      "Am OP-Tisch steht seine Mutter",
+      "Der Junge wird verwechselt",
+      "Das ist schlicht unmöglich"
+    ],
+    "correctIndex": 1,
+    "explanation": "Die Person am Operationstisch ist die Mutter des Jungen, eine Chirurgin. Die Geschichte enthält keinen Widerspruch. Er entsteht erst im Kopf, wenn man sich bei dem Beruf automatisch einen Mann vorstellt und deshalb nach einem zweiten Vater sucht.",
+    "skill": "Eigene Vorannahmen bemerken",
+    "deep": {
+      "lead": "Das Rätsel hat keine Falle im Text – die Falle ist das Bild, das beim Lesen von selbst entsteht.",
+      "sections": [
+        {
+          "title": "Ein Rätsel als Messinstrument",
+          "text": "Die Geschichte kursiert seit Jahrzehnten und ist längst mehr als ein Partyrätsel. Forschende der Universität Boston legten sie vor einigen Jahren Studierenden und Kindern vor. Nur eine kleine Minderheit kam auf die Mutter, obwohl viele der Befragten selbst berufstätige Mütter hatten. Häufiger wurden ausgefallene Erklärungen genannt: ein Stiefvater, ein Adoptivvater, ein Traum. Auch ein zweiter Vater in einer Familie mit zwei Vätern löst den Widerspruch auf und ist eine gültige Antwort. Bemerkenswert ist, wie viel Fantasie aufgewendet wird, um die naheliegendste Erklärung zu umgehen."
+        },
+        {
+          "title": "Lücken füllt das Übliche",
+          "text": "In der deutschen Fassung hängt viel an der Formulierung. Steht im Text »der Chirurg«, führt schon die Grammatik in die Irre, weil die männliche Form zwar alle meinen kann, im Kopf aber meist Männer erzeugt. Diese Fassung nennt deshalb gar keine Berufsbezeichnung, und trotzdem stellt sich das Bild ein. Die Lehre betrifft nicht nur Geschlechterrollen. Unser Denken füllt Lücken ständig mit dem Üblichen: Der Pilot ist ein Mann mittleren Alters, die Pflegekraft eine Frau, der Kunde ein Erwachsener. Meist stimmt das Bild. Rätsel dieser Art zeigen den Moment, in dem es nicht stimmt."
+        }
+      ],
+      "tryIt": "Stell das Rätsel drei Leuten und notier ihre erste Antwort. Wie viele nennen sofort die Mutter, und welche Umwege gehen die anderen?",
+      "takeaways": [
+        "Scheinbare Widersprüche entstehen oft durch unbemerkte Annahmen.",
+        "Frag: Welches Bild habe ich ergänzt, das nicht im Text steht?"
+      ]
+    }
+  },
+  {
+    "id": "vorgestern-noch-25",
+    "title": "Vorgestern noch 25",
+    "category": "Querdenken",
+    "question": "Lena sagt: »Vorgestern war ich noch 25 Jahre alt, und nächstes Jahr werde ich 28.« Sie sagt die Wahrheit. An welchem Tag hat Lena Geburtstag?",
+    "options": [
+      "Am 31. Dezember",
+      "Am 1. Januar",
+      "Am 29. Februar",
+      "Am 30. Dezember"
+    ],
+    "correctIndex": 0,
+    "explanation": "Lena spricht am 1. Januar. Vorgestern, am 30. Dezember, war sie 25. Am 31. Dezember wurde sie 26. Im gerade begonnenen Jahr wird sie am 31. Dezember 27 und im nächsten Jahr 28. Nur mit Geburtstag an Silvester und dem Neujahrstag als heute geht es auf.",
+    "skill": "Zeitgrenzen ausreizen",
+    "deep": {
+      "lead": "Zwischen »vorgestern« und »nächstes Jahr« können drei Geburtstage liegen – wenn man am richtigen Tag spricht.",
+      "sections": [
+        {
+          "title": "Zwei Grenzen fallen zusammen",
+          "text": "Auf den ersten Blick widerspricht die Aussage der Zeitrechnung: von 25 auf 28 in gefühlt einem Jahr. Die Auflösung nutzt, dass zwei Grenzen fast zusammenfallen, der Geburtstag und der Jahreswechsel. »Nächstes Jahr« klingt nach zwölf Monaten Abstand, bezeichnet aber ein ganzes Kalenderjahr, dessen letzter Tag vom Neujahrstag aus fast zwei Jahre entfernt ist. Zwischen dem 30. Dezember des alten und dem 31. Dezember des nächsten Jahres liegen tatsächlich drei Geburtstage. Die Wörter sind unscharf, die Daten dahinter exakt, und das Rätsel lebt von diesem Unterschied."
+        },
+        {
+          "title": "Stichtage im echten Leben",
+          "text": "Dieselbe Unschärfe hat handfeste Folgen. Fristen in Verträgen und Gesetzen hängen an Stichtagen, und wer einen Tag davor oder danach liegt, wird völlig anders behandelt. Ein Kind, das kurz vor dem Einschulungsstichtag geboren ist, kommt fast ein Jahr früher in die Schule als eines, das wenige Tage später Geburtstag hat. Im Jugendsport führt das zu einem gut belegten Effekt: In Auswahlmannschaften sind Kinder, die kurz nach dem Stichtag geboren sind, deutlich überrepräsentiert, weil sie in ihrer Altersklasse die körperlich reifsten sind. Angaben wie »Jahrgang« verdecken solche Unterschiede."
+        }
+      ],
+      "tryIt": "Jemand sagt: »Ich bin 20 Jahre alt, hatte aber erst fünf echte Geburtstage.« An welchem Tag ist er geboren? (Am 29. Februar – der kommt nur alle vier Jahre.)",
+      "takeaways": [
+        "Alltagswörter für Zeit sind unscharf, Daten nicht.",
+        "Bei scheinbar unmöglichen Zeitangaben die Grenztage prüfen."
+      ]
+    }
+  },
+  {
+    "id": "der-buecherwurm",
+    "title": "Der Bücherwurm",
+    "category": "Querdenken",
+    "question": "Im Regal stehen Band 1 und Band 2 eines Lexikons in üblicher Reihenfolge nebeneinander. Jeder Buchblock ist 4 cm dick, jeder Buchdeckel 0,5 cm. Ein Wurm frisst sich von der ersten Seite von Band 1 geradewegs zur letzten Seite von Band 2. Wie weit frisst er?",
+    "options": [
+      "9 cm",
+      "5 cm",
+      "1 cm",
+      "10 cm"
+    ],
+    "correctIndex": 2,
+    "explanation": "Steht ein Buch mit dem Rücken zu dir im Regal, liegt seine erste Seite rechts, direkt hinter dem vorderen Deckel. Die letzte Seite von Band 2 liegt links. Zwischen beiden Seiten liegen nur der Vorderdeckel von Band 1 und der Rückdeckel von Band 2: zweimal 0,5 cm.",
+    "skill": "Sich die Lage genau vorstellen",
+    "deep": {
+      "lead": "Die erste Seite eines Buches steht im Regal nicht dort, wo man sie vermutet.",
+      "sections": [
+        {
+          "title": "Nimm ein Buch in die Hand",
+          "text": "Die meisten rechnen: zwei Buchblöcke plus Deckel, also neun oder zehn Zentimeter. Sie stellen sich die Seiten in Leserichtung vor, Seite eins links, die letzte rechts. Im Regal ist es umgekehrt. Dreh ein Buch so, dass der Rücken zu dir zeigt: Der vordere Deckel liegt jetzt rechts, und mit ihm die erste Seite. Bei Band 1, der links steht, grenzt die erste Seite also an Band 2. Dessen letzte Seite liegt ganz links, direkt an Band 1. Der Wurm muss nur durch zwei Deckel. Das gilt für Bücher, die von links nach rechts gelesen werden."
+        },
+        {
+          "title": "Richtig gerechnet am falschen Bild",
+          "text": "Das Rätsel ist seit über hundert Jahren in Rätselbüchern zu finden. Es zeigt eine besondere Fehlerart: Die Rechnung der meisten Leute ist fehlerfrei, aber sie rechnen an einem falschen Bild. Kein Nachrechnen deckt das auf. Hilfreich ist nur, die Lage zu prüfen, am besten mit einem echten Gegenstand oder einer Skizze. Handwerker kennen das Prinzip: Bevor gemessen und gesägt wird, hält man das Teil an seinen Platz. Bei Aufgaben mit räumlicher Anordnung ist ein Blick auf die Wirklichkeit oft mehr wert als zehn Minuten Nachdenken."
+        }
+      ],
+      "tryIt": "Gleiche Maße, aber drei Bände: Der Wurm frisst von der ersten Seite von Band 1 zur letzten Seite von Band 3. Wie weit? (Ein Deckel, der ganze Band 2 mit 5 cm, noch ein Deckel: 6 cm.)",
+      "takeaways": [
+        "Im Regal liegt die erste Seite eines Buches rechts.",
+        "Bei räumlichen Aufgaben erst das Bild prüfen, dann rechnen."
+      ]
+    }
+  },
+  {
+    "id": "sechs-glaeser-in-einer-reihe",
+    "title": "Sechs Gläser in einer Reihe",
+    "category": "Querdenken",
+    "question": "Sechs Gläser stehen in einer Reihe: die ersten drei sind voll, die letzten drei leer. Am Ende sollen volle und leere Gläser sich abwechseln. Wie viele Gläser musst du dafür mindestens in die Hand nehmen?",
+    "options": [
+      "3",
+      "1",
+      "2",
+      "4"
+    ],
+    "correctIndex": 1,
+    "explanation": "Nimm das zweite Glas, gieß seinen Inhalt in das fünfte und stell es an seinen Platz zurück. Jetzt stehen da: voll, leer, voll, leer, voll, leer. Du hast ein einziges Glas bewegt. Wer nur ans Umstellen denkt, braucht mindestens zwei Gläser.",
+    "skill": "Erlaubte Handlungen erweitern",
+    "deep": {
+      "lead": "Die Aufgabe verlangt eine Reihenfolge von Inhalten – nicht von Gläsern.",
+      "sections": [
+        {
+          "title": "Glas und Inhalt sind zweierlei",
+          "text": "Fast alle beginnen, Gläser im Kopf zu verschieben, und landen beim Tausch von Glas zwei und Glas fünf. Das sind zwei Gläser, und es wirkt wie das Minimum. Der bessere Zug wird übersehen, weil man Glas und Inhalt als Einheit betrachtet. Die Aufgabe spricht aber nur davon, dass volle und leere sich abwechseln sollen. Wie der Zustand zustande kommt, ist offen. Sobald man Glas und Wasser getrennt denkt, ist Umgießen der nächstliegende Schritt. Die Lösung verlangt also keine Raffinesse, sondern nur, das Ziel wörtlich zu lesen."
+        },
+        {
+          "title": "Ziele von Wegen trennen",
+          "text": "Das Rätsel ist ein Musterfall für eine Gewohnheit guter Problemlöser: das Ziel so zu beschreiben, dass kein bestimmter Weg darin steckt. Wer sagt »Ich muss die Gläser umstellen«, hat sich schon festgelegt. Wer sagt »An jeder zweiten Stelle soll Wasser sein«, sieht mehr Möglichkeiten. Im Berufsleben ist der Unterschied oft teuer. »Wir brauchen ein neues Formular« ist ein Weg, »Kunden sollen ihre Adresse ohne Anruf ändern können« ein Ziel. Je später jemand den Weg hinterfragt, desto mehr Arbeit steckt schon in der zweitbesten Lösung."
+        }
+      ],
+      "tryIt": "Zehn Gläser: fünf volle links, fünf leere rechts. Wie viele musst du anfassen, damit sie sich abwechseln? (Zwei: Glas 2 in Glas 7 gießen, Glas 4 in Glas 9.)",
+      "takeaways": [
+        "Das Ziel wörtlich lesen, nicht den vermuteten Weg.",
+        "Dinge und ihre Eigenschaften getrennt betrachten."
+      ]
+    }
+  },
+  {
+    "id": "vier-kettenstuecke",
+    "title": "Vier Kettenstücke",
+    "category": "Querdenken",
+    "question": "Du hast vier Kettenstücke mit je drei Gliedern und willst daraus einen einzigen geschlossenen Ring aus zwölf Gliedern machen. Ein Glied aufzubiegen und wieder zu schließen kostet beim Schmied 1 €. Wie viel kostet der Ring mindestens?",
+    "options": [
+      "4 €",
+      "2 €",
+      "3 €",
+      "6 €"
+    ],
+    "correctIndex": 2,
+    "explanation": "Öffne alle drei Glieder eines einzigen Kettenstücks. Mit diesen drei losen Gliedern verbindest du die drei übrigen Stücke zu einem Ring: zwischen je zwei Stücke eines. Das kostet 3 €. Wer an jedem der vier Stücke ein Endglied öffnet, zahlt 4 €.",
+    "skill": "Stille Annahmen aufgeben",
+    "deep": {
+      "lead": "Vier Stücke haben vier Lücken – es sei denn, eines der Stücke verschwindet und wird selbst zum Verbinder.",
+      "sections": [
+        {
+          "title": "Warum vier nicht das Minimum ist",
+          "text": "Die naheliegende Rechnung lautet: Vier Stücke im Kreis haben vier Nahtstellen, also vier Glieder öffnen. Sie nimmt an, dass alle vier Stücke als Stücke erhalten bleiben. Löst man eines vollständig auf, bleiben nur drei Stücke, und drei Stücke im Kreis haben drei Nahtstellen. Die drei losen Glieder reichen dafür genau. Der Preis des Tricks: Ein Stück muss ganz zerlegt werden, was zunächst wie zusätzliche Zerstörung aussieht. Mit zwei Euro geht es nicht. Zwei offene Glieder schließen höchstens zwei Nahtstellen, es bleiben aber in jedem Fall mindestens vier Stücke übrig."
+        },
+        {
+          "title": "Ein Teil als Material verwenden",
+          "text": "Die Aufgabe steht seit Langem in Rätselbüchern, meist mit fünf Stücken zu je drei Gliedern, die zu einer langen Kette werden sollen. Auch dort spart das Auflösen eines Stücks einen Schnitt: drei statt vier. Dahinter steht ein allgemeines Muster. Manchmal ist es günstiger, ein Teil aufzugeben und als Material zu verwenden, als alle Teile zu erhalten. Wer mehrere kurze Bretter zu einem Regal verbinden will und eines davon zu Verbindungsleisten zersägt, handelt genauso. Die Frage lautet dann nicht, wie man alles verbindet, sondern was sich am besten als Verbinder eignet."
+        }
+      ],
+      "tryIt": "Fünf Kettenstücke mit je drei Gliedern sollen eine einzige lange, offene Kette werden. Wie viele Glieder musst du mindestens öffnen? (Drei – ein Stück ganz zerlegen.)",
+      "takeaways": [
+        "Ein aufgelöstes Stück senkt die Zahl der Nahtstellen.",
+        "Prüf die stille Annahme, dass alle Teile erhalten bleiben."
+      ]
+    }
+  },
+  {
+    "id": "drei-schnitte-wie-viele-stuecke",
+    "title": "Drei Schnitte, wie viele Stücke?",
+    "category": "Querdenken",
+    "question": "Ein runder, hoher Kuchen soll mit genau drei geraden Schnitten zerteilt werden. Die Stücke dürfen zwischen den Schnitten nicht verschoben oder gestapelt werden. Wie viele Stücke kannst du höchstens bekommen?",
+    "options": [
+      "6",
+      "7",
+      "9",
+      "8"
+    ],
+    "correctIndex": 3,
+    "explanation": "Zwei senkrechte Schnitte über Kreuz ergeben vier Stücke. Der dritte Schnitt geht waagerecht durch die halbe Höhe und teilt jedes davon in ein oberes und ein unteres: acht Stücke. Wer nur von oben schneidet, kommt höchstens auf sieben.",
+    "skill": "Die dritte Dimension nutzen",
+    "deep": {
+      "lead": "Von oben betrachtet ist bei sieben Schluss – aber ein Kuchen hat auch eine Höhe.",
+      "sections": [
+        {
+          "title": "Sieben in der Fläche",
+          "text": "Bleibt man bei senkrechten Schnitten, ist die Aufgabe eine Frage über Linien auf einem Kreis. Die erste Linie macht zwei Teile, die zweite höchstens vier. Die dritte kann die beiden anderen an zwei verschiedenen Stellen kreuzen und durchquert dabei drei Gebiete, die sie jeweils teilt: sieben Stücke. Allgemein fügt die n-te Linie höchstens n neue Stücke hinzu, sodass man mit vier Linien elf und mit fünf sechzehn erreicht. Die Stücke sind dabei sehr ungleich, in der Mitte entsteht ein kleines Dreieck. Für einen Kindergeburtstag ist diese Lösung also wenig geeignet."
+        },
+        {
+          "title": "Acht im Raum",
+          "text": "Der waagerechte Schnitt verlässt die Ebene, in der alle zuerst denken. Im Raum teilen drei Ebenen einen Körper in höchstens acht Teile, so wie die drei Koordinatenebenen den Raum in acht Bereiche zerlegen. Mit vier ebenen Schnitten sind sogar fünfzehn Teile möglich. Der Haken an der Kuchenlösung ist praktischer Natur: Vier Stücke haben den ganzen Guss, vier gar keinen. Das Rätsel verlangt aber nur möglichst viele Stücke, keine gerechten. Wieder einmal entscheidet die genaue Formulierung, und wieder steckt die Lösung in einer Einschränkung, die niemand ausgesprochen hat."
+        }
+      ],
+      "tryIt": "Wie viele Stücke bekommst du höchstens mit vier geraden Schnitten, wenn alle senkrecht von oben geführt werden? (Elf: 1 + 1 + 2 + 3 + 4.)",
+      "takeaways": [
+        "Die n-te gerade Linie bringt höchstens n neue Stücke.",
+        "Frag bei Grenzen: Gilt das auch in einer weiteren Dimension?"
+      ]
+    }
+  },
+  {
+    "id": "die-leiter-am-schiff",
+    "title": "Die Leiter am Schiff",
+    "category": "Querdenken",
+    "question": "An der Bordwand eines Schiffes im Hafen hängt eine Strickleiter. Die unterste Sprosse ist 1 m über dem Wasser, die Sprossen haben 25 cm Abstand. Die Flut lässt das Wasser um 50 cm pro Stunde steigen. Nach wie vielen Stunden erreicht das Wasser die dritte Sprosse?",
+    "options": [
+      "Nach 2 Stunden",
+      "Nach 4 Stunden",
+      "Nach 3 Stunden",
+      "Nie"
+    ],
+    "correctIndex": 3,
+    "explanation": "Das Schiff schwimmt. Steigt das Wasser, steigt das Schiff mit, und mit ihm die Leiter. Der Abstand zwischen Wasseroberfläche und unterster Sprosse bleibt 1 m, egal wie hoch die Flut kommt. Die Rechnung mit 3 Stunden gälte für eine Leiter an der Kaimauer.",
+    "skill": "Mitbewegtes von Festem trennen",
+    "deep": {
+      "lead": "Die Zahlen laden zum Rechnen ein – dabei bewegt sich das Entscheidende einfach mit.",
+      "sections": [
+        {
+          "title": "Zahlen als Köder",
+          "text": "Die Aufgabe ist mit Angaben gefüllt, die nach einer Rechnung verlangen: Abstände, Geschwindigkeit, eine bestimmte Sprosse. Wer Zahlen sieht, beginnt zu rechnen, und überspringt die Frage, ob überhaupt etwas zu rechnen ist. Lehrkräfte kennen den Effekt von den sogenannten Kapitänsaufgaben. Fragt man Grundschulkinder, wie alt der Kapitän ist, wenn auf seinem Schiff 26 Schafe und 10 Ziegen sind, antworten viele mit 36. Sie haben gelernt, dass Zahlen in Aufgaben dazu da sind, verrechnet zu werden. Erwachsenen passiert bei der Leiter im Grunde dasselbe."
+        },
+        {
+          "title": "Vom Kai aus und vom Deck aus",
+          "text": "Die physikalische Idee dahinter heißt Bezugssystem. Vom Kai aus gesehen steigen Wasser, Schiff und Leiter gemeinsam. Vom Schiff aus gesehen bleibt das Wasser, wo es ist, und der Kai versinkt. Eine verwandte Frage hat schon viele Stammtische beschäftigt: Ein Eiswürfel schwimmt in einem randvollen Glas Wasser. Läuft das Glas über, wenn er schmilzt? Nein. Der Würfel verdrängt genau so viel Wasser, wie er wiegt, und füllt nach dem Schmelzen exakt diese Mulde. Schwimmende Dinge gleichen Veränderungen des Wasserspiegels von selbst aus."
+        }
+      ],
+      "tryIt": "Ein Boot im Hafenbecken hat einen schweren Stein an Bord. Du wirfst den Stein ins Wasser. Steigt der Wasserspiegel im Becken, sinkt er oder bleibt er gleich? (Er sinkt ein wenig.)",
+      "takeaways": [
+        "Erst fragen, ob überhaupt gerechnet werden muss.",
+        "Was schwimmt, steigt mit dem Wasser."
+      ]
+    }
+  },
+  {
+    "id": "welche-farbe-hat-der-baer",
+    "title": "Welche Farbe hat der Bär?",
+    "category": "Querdenken",
+    "question": "Ein Haus hat vier Außenwände, und alle vier zeigen nach Süden. Vor einem der Fenster läuft ein Bär vorbei. Welche Farbe hat er?",
+    "options": [
+      "Weiß",
+      "Braun",
+      "Schwarz",
+      "Das lässt sich nicht sagen"
+    ],
+    "correctIndex": 0,
+    "explanation": "Nur an einem Ort der Erde zeigt jede Richtung nach Süden: am Nordpol. Die Bären, die in der Arktis leben, sind Eisbären, und die sind weiß. Am Südpol zeigten alle Wände nach Norden, und Bären gibt es dort ohnehin nicht.",
+    "skill": "Unmögliches als Hinweis lesen",
+    "deep": {
+      "lead": "Was wie ein Fehler in der Aufgabe aussieht, ist die entscheidende Ortsangabe.",
+      "sections": [
+        {
+          "title": "Wo die Richtungen zusammenlaufen",
+          "text": "Himmelsrichtungen sind auf einer Kugel keine festen Pfeile wie auf einem Stadtplan. Norden heißt: entlang eines Längenkreises zum Nordpol. Steht man genau dort, gibt es kein weiter nördlich mehr, und jeder Schritt führt nach Süden. Osten und Westen verlieren ihren Sinn. Auf flachen Karten ist das schwer zu sehen, weil der Pol dort oft zu einer ganzen Linie am oberen Rand gezerrt wird. Ein Globus zeigt es sofort. Das Rätsel prüft also weniger Wissen über Bären als die Bereitschaft, vom Stadtplan zur Kugel umzudenken."
+        },
+        {
+          "title": "Der Wanderer und die Polkreise",
+          "text": "Ein verwandtes Rätsel fragt: Von welchem Punkt der Erde kann man einen Kilometer nach Süden, einen nach Osten und einen nach Norden gehen und steht wieder am Start? Die bekannte Antwort ist der Nordpol. Weniger bekannt ist, dass es unendlich viele weitere Punkte gibt, alle in der Nähe des Südpols. Man startet einen Kilometer nördlich eines Breitenkreises, dessen Umfang genau einen Kilometer beträgt. Der Weg nach Osten führt dann einmal um den Pol herum zum selben Punkt zurück. Auch Kreise mit einem halben oder einem drittel Kilometer Umfang funktionieren."
+        }
+      ],
+      "tryIt": "Stell dich in Gedanken genau auf den Südpol. In welche Himmelsrichtung gehst du, egal wohin du dich vorher gedreht hast? (Immer nach Norden.)",
+      "takeaways": [
+        "Eine scheinbar unmögliche Angabe kann der Schlüssel sein.",
+        "Auf der Kugel verhalten sich Richtungen anders als auf der Karte."
+      ]
+    }
+  },
+  {
+    "id": "neun-punkte-ein-linienzug",
+    "title": "Neun Punkte, ein Linienzug",
+    "category": "Querdenken",
+    "question": "Neun winzige Punkte bilden ein Quadrat aus drei Reihen mit je drei Punkten. Du sollst alle neun mit geraden Strichen verbinden, ohne den Stift abzusetzen. Wie viele Striche brauchst du mindestens?",
+    "options": [
+      "5",
+      "4",
+      "3",
+      "6"
+    ],
+    "correctIndex": 1,
+    "explanation": "Es geht mit vier Strichen, wenn der Linienzug über das Quadrat hinausragt: von einer Ecke an der Seite entlang und einen Punktabstand weiter, schräg zurück durch zwei Punkte bis über den Rand, an der nächsten Seite entlang zur Startecke und zuletzt die Diagonale.",
+    "skill": "Über den Rand hinaus denken",
+    "deep": {
+      "lead": "Das Quadrat aus Punkten wirkt wie ein Zaun – aber niemand hat verboten, darüber hinaus zu zeichnen.",
+      "sections": [
+        {
+          "title": "Der Rahmen, den es nicht gibt",
+          "text": "Wer es innerhalb des Quadrats versucht, braucht mindestens fünf Striche und scheitert an vier, so oft er es auch probiert. Die Punkte bilden für das Auge eine geschlossene Figur, und diese Figur wird unbemerkt zur Spielfeldgrenze. In der Aufgabe steht davon nichts. Die Gestaltpsychologen des frühen 20. Jahrhunderts interessierten sich genau dafür: wie die Wahrnehmung Einzelteile zu Ganzheiten zusammenfasst und dadurch das Denken lenkt. Abgedruckt wurde das Rätsel schon 1914 in der großen Rätselsammlung von Sam Loyd, dort mit neun Eiern statt Punkten."
+        },
+        {
+          "title": "Ein Sprichwort und seine Grenzen",
+          "text": "Auf dieses Rätsel wird oft die englische Redewendung vom Denken »outside the box« zurückgeführt, also außerhalb des Kastens; in Managementseminaren war es jahrzehntelang beliebt. Die Sache hat eine ernüchternde Fußnote. In Experimenten sagte man Versuchspersonen ausdrücklich, dass die Linien über das Quadrat hinausgehen dürfen. Die Erfolgsquote stieg nur wenig. Der Hinweis beseitigt die Blockade, liefert aber noch keine Lösung; die muss man weiterhin erarbeiten. Kreativität ist also mehr als das Abschütteln von Einschränkungen. Sie braucht außerdem Ausdauer beim Probieren und ein Gespür dafür, welche Versuche vielversprechend sind."
+        }
+      ],
+      "tryIt": "Zeichne die neun Punkte auf und find die Lösung mit vier Strichen. Tipp: Der erste Strich läuft an einer Seite entlang und endet erst einen Punktabstand außerhalb des Quadrats.",
+      "takeaways": [
+        "Prüf, welche Grenzen in der Aufgabe stehen und welche nur im Kopf.",
+        "Eine Blockade zu lösen ist noch nicht die Lösung."
+      ]
+    }
+  },
+  {
+    "id": "eine-milliarde-in-scheinen",
+    "title": "Eine Milliarde in Scheinen",
+    "category": "Schätzen",
+    "question": "Du stapelst eine Milliarde Euro in 100-Euro-Scheinen zu einem einzigen Turm. Ein Schein ist etwa 0,1 mm dick. Wie hoch wird der Turm ungefähr?",
+    "options": [
+      "Etwa 1 Kilometer",
+      "Etwa 10 Meter",
+      "Etwa 100 Meter",
+      "Etwa 100 Kilometer"
+    ],
+    "correctIndex": 0,
+    "explanation": "Eine Milliarde Euro sind 10 Millionen Hunderter. Zehn Millionen mal 0,1 mm ergeben 1 Million Millimeter, also 1.000 Meter. Zum Vergleich: Eine Million Euro in Hundertern ist ein Stapel von nur 1 Meter Höhe.",
+    "skill": "Mit Zehnerpotenzen überschlagen",
+    "deep": {
+      "lead": "Eine Million ist ein Stapel bis zur Hüfte, eine Milliarde ein Turm höher als jedes Gebäude der Welt.",
+      "sections": [
+        {
+          "title": "Nur die Nullen verfolgen",
+          "text": "Solche Überschläge gelingen, wenn man nur die Nullen verfolgt. Eine Milliarde hat neun Nullen, hundert hat zwei, also sind es zehn hoch sieben Scheine. Ein Zehntelmillimeter ist zehn hoch minus vier Meter. Sieben minus vier ergibt drei: zehn hoch drei Meter, ein Kilometer. Das höchste Gebäude der Welt, der Burj Khalifa in Dubai, misst rund 830 Meter und würde vom Geldturm überragt. Ob ein echter Schein nun 0,1 oder 0,12 Millimeter dick ist, ändert an der Größenordnung nichts, und um die geht es bei jeder Schätzung zuerst."
+        },
+        {
+          "title": "Das Gewicht des Geldes",
+          "text": "Auch das Gewicht lässt sich schätzen. Ein Euroschein wiegt ungefähr ein Gramm. Zehn Millionen Hunderter bringen also rund zehn Tonnen auf die Waage, so viel wie ein beladener Lastwagen. Die Filmszene mit dem Koffer voller Millionen ist dagegen realistisch: Eine Million in Hundertern wiegt nur etwa zehn Kilogramm und passt in eine größere Tasche. Solche Umrechnungen in Höhe und Gewicht sind kein Spiel. Sie machen Beträge aus Nachrichten greifbar und zeigen sofort, wenn in einer Meldung Million und Milliarde verwechselt wurden."
+        }
+      ],
+      "tryIt": "Wie hoch wäre ein Stapel aus einer Billion Euro in 100-Euro-Scheinen? (Tausendmal so hoch wie bei einer Milliarde: 1.000 km, weit über die Bahn der Raumstation ISS hinaus.)",
+      "takeaways": [
+        "Bei Überschlägen zuerst die Zehnerpotenzen zählen.",
+        "Eine Million in Hundertern: 1 Meter. Eine Milliarde: 1 Kilometer."
+      ]
+    }
+  },
+  {
+    "id": "luft-im-zimmer",
+    "title": "Wie viel wiegt die Luft im Zimmer?",
+    "category": "Schätzen",
+    "question": "Ein Zimmer ist 5 m lang, 4 m breit und 2,5 m hoch. Ein Kubikmeter Luft wiegt bei Zimmertemperatur etwa 1,2 kg. Wie viel wiegt die Luft in diesem Zimmer ungefähr?",
+    "options": [
+      "Etwa 60 Gramm",
+      "Etwa 600 Gramm",
+      "Etwa 60 Kilogramm",
+      "Etwa 6 Kilogramm"
+    ],
+    "correctIndex": 2,
+    "explanation": "Das Zimmer fasst 5 × 4 × 2,5 = 50 Kubikmeter. Mal 1,2 kg ergibt 60 kg – so viel wie ein erwachsener Mensch. Luft fühlt sich gewichtslos an, weil wir in ihr leben und sie uns von allen Seiten gleich umgibt.",
+    "skill": "Unsichtbares in Zahlen fassen",
+    "deep": {
+      "lead": "Luft wirkt wie nichts – dabei schwebt in jedem Zimmer das Gewicht eines Menschen.",
+      "sections": [
+        {
+          "title": "Warum wir das Gewicht nicht spüren",
+          "text": "Ein Liter Luft wiegt gut ein Gramm, also etwa ein Achthundertstel eines Liters Wasser. Das klingt nach wenig, aber Räume sind groß: Ein Kubikmeter fasst tausend Liter. Dass wir davon nichts merken, liegt am Auftrieb. Ein Gegenstand in der Luft wird von der umgebenden Luft getragen, so wie ein Eimer Wasser unter Wasser nichts zu wiegen scheint. Erst im Vergleich mit dem Vakuum zeigt sich das Gewicht. Der Magdeburger Bürgermeister Otto von Guericke führte das im 17. Jahrhundert vor, als er Luft aus einem Gefäß pumpte und es vorher und nachher wog."
+        },
+        {
+          "title": "Zehn Tonnen auf jedem Quadratmeter",
+          "text": "Rechnet man weiter, wird es noch erstaunlicher. Über jedem Quadratmeter Erdboden steht eine Luftsäule bis an den Rand der Atmosphäre, und sie wiegt rund zehn Tonnen. Das ist der Luftdruck. Auf einer Tischplatte von einem Quadratmeter lastet also das Gewicht mehrerer Autos. Sie bricht nicht, weil die Luft von unten genauso stark dagegen drückt. Die gesamte Atmosphäre der Erde wiegt etwa fünf Billiarden Tonnen. Wer solche Zahlen einmal überschlagen hat, versteht besser, warum Stürme Dächer abdecken und warum ein Flugzeug von Luft getragen werden kann."
+        }
+      ],
+      "tryIt": "Miss dein Zimmer grob aus (Länge × Breite × Höhe in Metern) und multipliziere mit 1,2. Wie viele Kilogramm Luft sind es? Wiegt sie mehr als du?",
+      "takeaways": [
+        "Ein Kubikmeter Luft wiegt gut ein Kilogramm.",
+        "Kleine Dichte mal großes Volumen ergibt spürbare Mengen."
+      ]
+    }
+  },
+  {
+    "id": "ein-kartenspiel-mischen",
+    "title": "Ein Kartenspiel mischen",
+    "category": "Schätzen",
+    "question": "Ein Kartenspiel mit 52 Karten wird gründlich gemischt. Wie groß ist die Zahl der möglichen Reihenfolgen ungefähr?",
+    "options": [
+      "Etwa so viele wie Menschen leben",
+      "Mehr als Atome in der Erde",
+      "Etwa 52 mal 52, also 2.704",
+      "Rund eine Billion"
+    ],
+    "correctIndex": 1,
+    "explanation": "Für die erste Karte gibt es 52 Möglichkeiten, für die zweite 51, dann 50 und so weiter. Das Produkt, 52 Fakultät, ist eine Zahl mit 68 Stellen: rund 8 × 10 hoch 67. Die Erde besteht aus etwa 10 hoch 50 Atomen – das ist ein winziger Bruchteil davon.",
+    "skill": "Fakultäten einschätzen",
+    "deep": {
+      "lead": "Jede gut gemischte Reihenfolge hat es mit an Sicherheit grenzender Wahrscheinlichkeit noch nie zuvor gegeben.",
+      "sections": [
+        {
+          "title": "Noch nie dagewesen",
+          "text": "Die Zahl ist so groß, dass sich eine verblüffende Folgerung ergibt. Nimm an, acht Milliarden Menschen hätten seit dem Urknall ununterbrochen jede Sekunde ein Spiel gemischt. Das wären gut 3 mal 10 hoch 27 Mischvorgänge, also nur ein unvorstellbar kleiner Teil aller möglichen Reihenfolgen. Die Wahrscheinlichkeit, dass zwei wirklich zufällige Mischungen jemals übereinstimmten, ist praktisch null. Wenn du ein Blatt gründlich mischst, hältst du deshalb aller Voraussicht nach eine Anordnung in der Hand, die in der Geschichte der Menschheit noch nie vorgekommen ist."
+        },
+        {
+          "title": "Wie oft muss man mischen?",
+          "text": "Die Aussage gilt nur für gründliches Mischen, und das ist mühsamer als gedacht. Der Mathematiker Persi Diaconis, früher selbst Zauberkünstler, hat gemeinsam mit Dave Bayer untersucht, wie schnell das übliche Ineinanderblättern zweier Stapelhälften ein Blatt durchmischt. Ihr bekanntes Ergebnis: Nach etwa sieben Durchgängen ist die Reihenfolge einem echten Zufall nahe, davor sind noch deutliche Spuren der alten Ordnung zu erkennen. Beim Überhandmischen, bei dem kleine Päckchen von einer Hand in die andere fallen, braucht man dagegen ein Vielfaches an Wiederholungen. Kartentricks leben von diesem Unterschied."
+        }
+      ],
+      "tryIt": "Auf wie viele Arten lassen sich nur 10 Karten anordnen? Rechne 10 × 9 × 8 × … × 1. (3.628.800 – über dreieinhalb Millionen.)",
+      "takeaways": [
+        "Anordnungen wachsen mit der Fakultät, nicht mit dem Quadrat.",
+        "Schon 52 Dinge haben mehr Reihenfolgen, als sich je durchprobieren ließen."
+      ]
+    }
+  },
+  {
+    "id": "dreissig-generationen-zurueck",
+    "title": "Dreißig Generationen zurück",
+    "category": "Schätzen",
+    "question": "Jeder Mensch hat 2 Eltern, 4 Großeltern, 8 Urgroßeltern. Rechne das schematisch 30 Generationen zurück, das sind etwa 750 bis 900 Jahre. Wie viele Vorfahren ergäbe das allein in dieser einen Generation?",
+    "options": [
+      "Über 1 Milliarde",
+      "Etwa 1 Million",
+      "Etwa 60",
+      "Etwa 30.000"
+    ],
+    "correctIndex": 0,
+    "explanation": "30 Verdopplungen ergeben 2 hoch 30, das sind 1.073.741.824. Damals lebten auf der ganzen Welt aber nur einige Hundert Millionen Menschen. Die Rechnung kann also nicht stimmen: Viele Vorfahren tauchen im Stammbaum mehrfach auf.",
+    "skill": "Modelle an der Wirklichkeit prüfen",
+    "deep": {
+      "lead": "Die Rechnung ist richtig und das Ergebnis unmöglich – genau daraus lässt sich etwas lernen.",
+      "sections": [
+        {
+          "title": "Ahnenschwund",
+          "text": "Ahnenforscher nennen die Auflösung Ahnenschwund. Heiraten entfernte Verwandte, etwa Cousin und Cousine dritten Grades, dann teilen sie sich ein Vorfahrenpaar, und der Stammbaum ihrer Kinder hat an dieser Stelle zwei Personen weniger, als das Schema vorsieht. Über viele Generationen und in Dörfern, in denen jahrhundertelang untereinander geheiratet wurde, summiert sich das gewaltig. Besonders gut dokumentiert ist der Effekt bei europäischen Herrscherhäusern: Manche Könige hatten schon in der sechsten Generation nur einen Bruchteil der rechnerisch möglichen 64 Vorfahren. Je weiter zurück, desto stärker fällt der Baum in sich zusammen."
+        },
+        {
+          "title": "Alle sind verwandt",
+          "text": "Aus der Rechnung folgt eine zweite, schönere Einsicht. Wenn jeder von uns vor einigen Hundert Jahren rechnerisch mehr Vorfahren hatte, als Menschen lebten, dann müssen sich die Stammbäume aller heute Lebenden stark überlappen. Der Statistiker Joseph Chang und Kollegen haben das mit Modellen durchgerechnet. Ihr Ergebnis: Der jüngste gemeinsame Vorfahr aller heute lebenden Menschen könnte vor nur wenigen Tausend Jahren gelebt haben. Für Europa legen Erbgutvergleiche nahe, dass praktisch alle heutigen Europäer gemeinsame Vorfahren haben, die vor rund tausend Jahren lebten."
+        }
+      ],
+      "tryIt": "Wie viele Vorfahren hast du rechnerisch in der zehnten Generation zurück, also vor rund 250 bis 300 Jahren? Und in der zwanzigsten? (1.024; gut eine Million.)",
+      "takeaways": [
+        "Liefert eine Rechnung Unmögliches, ist eine Annahme falsch.",
+        "Vorfahren kommen im Stammbaum mehrfach vor."
+      ]
+    }
+  },
+  {
+    "id": "die-menschheit-auf-einem-fleck",
+    "title": "Die Menschheit auf einem Fleck",
+    "category": "Schätzen",
+    "question": "Stell dir vor, alle rund 8 Milliarden Menschen stellen sich dicht gedrängt nebeneinander, vier Personen pro Quadratmeter wie in einem vollen Konzertsaal. Wie groß ist die benötigte Fläche?",
+    "options": [
+      "Etwa so groß wie Europa",
+      "Etwa so groß wie Deutschland",
+      "Etwa so groß wie Bayern",
+      "Kleiner als das Saarland"
+    ],
+    "correctIndex": 3,
+    "explanation": "8 Milliarden geteilt durch 4 ergibt 2 Milliarden Quadratmeter. Ein Quadratkilometer hat eine Million Quadratmeter, also sind es 2.000 Quadratkilometer. Das Saarland misst rund 2.570 Quadratkilometer – die Menschheit hätte darin sogar noch Platz übrig.",
+    "skill": "Flächeneinheiten umrechnen",
+    "deep": {
+      "lead": "Acht Milliarden klingt nach unendlich viel – dicht gestellt füllen wir nicht einmal das kleinste deutsche Flächenland.",
+      "sections": [
+        {
+          "title": "Die Falle mit den Quadratkilometern",
+          "text": "Der häufigste Rechenfehler steckt in der Umrechnung. Ein Kilometer hat tausend Meter, aber ein Quadratkilometer hat nicht tausend, sondern eine Million Quadratmeter, tausend mal tausend. Auf einen einzigen Quadratkilometer passen bei vier Personen pro Quadratmeter also vier Millionen Menschen, mehr als Berlin Einwohner hat. Die 2.000 Quadratkilometer entsprechen einem Quadrat von knapp 45 Kilometern Seitenlänge. Mit dem Auto wäre man in einer halben Stunde daran entlanggefahren. Flächen wachsen mit dem Quadrat der Länge, und genau das unterschätzt die Vorstellung regelmäßig."
+        },
+        {
+          "title": "Stehen ist nicht leben",
+          "text": "Die Rechnung zeigt, wie wenig Platz Körper brauchen, und sagt nichts darüber, wie viel Fläche ein Mensch zum Leben benötigt. Dafür zählen Äcker, Weiden, Wälder, Straßen und Wasser. Aufschlussreicher ist deshalb ein zweiter Überschlag: Die Landfläche der Erde beträgt rund 150 Millionen Quadratkilometer. Geteilt durch acht Milliarden ergibt das knapp zwei Hektar pro Kopf, etwa zweieinhalb Fußballfelder, wovon allerdings große Teile Wüste, Eis und Gebirge sind. Beide Zahlen sind richtig. Welche man nennt, hängt davon ab, welchen Eindruck man erzeugen will."
+        }
+      ],
+      "tryIt": "Wie viele Menschen passen bei vier Personen pro Quadratmeter auf ein Fußballfeld von 100 mal 70 Metern? (7.000 Quadratmeter mal 4: 28.000.)",
+      "takeaways": [
+        "Ein Quadratkilometer hat eine Million Quadratmeter.",
+        "Bei Vergleichen fragen, welche Größe eigentlich gemeint ist."
+      ]
+    }
+  },
+  {
+    "id": "den-zweiten-ueberholt",
+    "title": "Den Zweiten überholt",
+    "category": "Sprachlogik",
+    "question": "Du läufst ein Rennen und überholst kurz vor dem Ziel den Läufer auf dem zweiten Platz. Auf welchem Platz liegst du jetzt?",
+    "options": [
+      "Auf dem ersten",
+      "Auf dem zweiten",
+      "Auf dem dritten",
+      "Das hängt vom Ersten ab"
+    ],
+    "correctIndex": 1,
+    "explanation": "Du nimmst den Platz dessen ein, den du überholst. Der bisherige Zweite ist nun Dritter, du bist Zweiter, und der Erste läuft weiter vor dir. Um Erster zu werden, müsstest du den Ersten überholen.",
+    "skill": "Wörtlich lesen statt vorausahnen",
+    "deep": {
+      "lead": "Überholen fühlt sich nach Sieg an – aber man gewinnt nur den Platz, den der andere hatte.",
+      "sections": [
+        {
+          "title": "Warum »Erster« so nahe liegt",
+          "text": "Die falsche Antwort kommt schnell, weil das Wort »überholen« im Kopf eine kleine Erfolgsgeschichte startet: Jemand lag vor mir, jetzt nicht mehr, also bin ich vorn. Die Zahl Zwei aus der Frage wird dabei um eins vermindert, als ginge es um eine Rechenaufgabe. Das Gehirn antwortet auf das, was es erwartet, statt auf das, was dasteht. Hilfreich ist ein Bild mit drei Figuren auf dem Tisch. Wer sie verschiebt, sieht sofort, dass der Erste von dem Manöver gar nicht berührt wird und unbehelligt vorn bleibt."
+        },
+        {
+          "title": "Die Zwillingsfrage",
+          "text": "Zu dem Rätsel gehört eine zweite Frage, an der noch mehr Leute scheitern: Du überholst den Letzten. Auf welchem Platz bist du? Viele sagen »Vorletzter«. Tatsächlich ist die Frage in einem Rennen ohne Überrundung unsinnig, denn wer den Letzten überholt, müsste vorher hinter ihm gewesen sein, und dann wäre er selbst der Letzte. Solche Fragen prüfen, ob man eine Situation durchdenkt oder nur ein Antwortmuster abspult. Dieselbe Sorgfalt hilft bei Ranglisten: Ein Aufstieg um einen Platz sagt wenig, solange unklar ist, wie viele teilnehmen und wie eng die Abstände sind."
+        }
+      ],
+      "tryIt": "In einem Rennen mit zehn Läufern überholst du den Fünften, danach wirst du selbst von zwei Läufern überholt. Auf welchem Platz bist du? (Auf dem siebten.)",
+      "takeaways": [
+        "Wer überholt, übernimmt den Platz des Überholten.",
+        "Im Zweifel die Situation mit Gegenständen nachstellen."
+      ]
+    }
+  },
+  {
+    "id": "das-gegenteil-von-alle",
+    "title": "Das Gegenteil von »alle«",
+    "category": "Sprachlogik",
+    "question": "Jemand behauptet: »Alle Gäste haben den Fisch bestellt.« Du willst genau das Gegenteil aussagen, also einen Satz, der immer dann wahr ist, wenn die Behauptung falsch ist, und umgekehrt. Welcher Satz ist das?",
+    "options": [
+      "Mindestens einer hat ihn nicht bestellt",
+      "Kein Gast hat den Fisch bestellt",
+      "Die meisten haben ihn nicht bestellt",
+      "Alle haben etwas anderes bestellt"
+    ],
+    "correctIndex": 0,
+    "explanation": "Um »alle« zu widerlegen, genügt eine einzige Ausnahme. Das genaue Gegenteil lautet deshalb: Mindestens ein Gast hat den Fisch nicht bestellt. »Kein Gast« geht zu weit – haben einige bestellt und andere nicht, wären beide Sätze falsch, also sind sie keine Gegenteile.",
+    "skill": "Aussagen korrekt verneinen",
+    "deep": {
+      "lead": "Das Gegenteil von »alle« ist nicht »keiner«, sondern »nicht alle« – ein einziger Abweichler reicht.",
+      "sections": [
+        {
+          "title": "Widerspruch und Gegensatz",
+          "text": "Die Logik unterscheidet zwei Arten von Gegenteil, und die Unterscheidung geht schon auf Aristoteles zurück. Zwei Aussagen widersprechen sich, wenn immer genau eine von beiden wahr ist: »Alle haben bestellt« und »Mindestens einer hat nicht bestellt«. Zwei Aussagen bilden dagegen nur einen Gegensatz, wenn sie nicht zugleich wahr, wohl aber zugleich falsch sein können: »Alle haben bestellt« und »Keiner hat bestellt«. Dazwischen liegt der ganze Bereich von »einige«. Wer im Streit dem anderen das Extrem unterschiebt, obwohl dieser nur die Allaussage bestritten hat, verwechselt beides."
+        },
+        {
+          "title": "Schwarz-Weiß-Fallen",
+          "text": "Auf »Nicht alle Politiker sind ehrlich« folgt gern die empörte Antwort »Du hältst also alle für Lügner«. Auf »Das Medikament wirkt nicht bei jedem« folgt »Es wirkt also nicht«. Spiegelbildlich funktioniert die Verneinung von »es gibt«: Das Gegenteil von »Mindestens ein Schwan ist schwarz« ist »Kein Schwan ist schwarz«. Daraus folgt eine nützliche Asymmetrie. Allaussagen lassen sich durch ein einziges Gegenbeispiel widerlegen, aber durch noch so viele Beispiele nie endgültig beweisen. Der Philosoph Karl Popper machte diese Beobachtung zum Kern seiner Wissenschaftstheorie: Gute Theorien müssen sich widerlegen lassen."
+        }
+      ],
+      "tryIt": "Bilde das genaue Gegenteil von »Niemand in dieser Runde raucht« und von »Jede Rechnung wurde bezahlt«. (Mindestens einer raucht; mindestens eine Rechnung ist offen.)",
+      "takeaways": [
+        "Nicht alle = mindestens einer nicht.",
+        "Eine Allaussage fällt durch ein einziges Gegenbeispiel."
+      ]
+    }
+  }
+]

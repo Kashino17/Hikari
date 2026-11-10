@@ -18,7 +18,7 @@ sealed interface FeedGame {
 }
 
 /** Wie die Frage einer Auswahl-Aufgabe gesetzt wird. */
-enum class ChoiceStyle { NUMBERS, LETTER, WORD, PHRASE, LISTEN }
+enum class ChoiceStyle { NUMBERS, LETTER, WORD, PHRASE, LISTEN, TEXT }
 
 /** Verknüpft eine Übung mit dem Satz im Russisch-Kurs, damit die Antwort dort zählt. */
 data class RuGrade(val phraseId: String, val due: Boolean)
@@ -149,6 +149,35 @@ data class OddOneOutGame(
 ) : FeedGame {
     override val module = MindfulModuleType.BRAIN_PUZZLE
     override val label = "ADLERAUGE"
+}
+
+/** Zahlen merken: Die Ziffern erscheinen nacheinander und werden danach eingetippt. */
+data class DigitSpanGame(override val id: String, val digits: List<Int>, val level: Int) : FeedGame {
+    override val module = MindfulModuleType.BRAIN_PUZZLE
+    override val label = "ZAHLEN MERKEN"
+}
+
+/** Reihenfolge merken: Felder leuchten nacheinander auf und werden in derselben Folge angetippt. */
+data class SequenceGame(override val id: String, val size: Int, val order: List<Int>, val level: Int) : FeedGame {
+    override val module = MindfulModuleType.BRAIN_PUZZLE
+    override val label = "REIHENFOLGE"
+}
+
+/** Buchstabensalat: aus gemischten Buchstaben das Wort legen. */
+data class AnagramGame(override val id: String, val word: String, val letters: List<Char>, val hint: String) : FeedGame {
+    override val module = MindfulModuleType.BRAIN_PUZZLE
+    override val label = "BUCHSTABENSALAT"
+}
+
+/** Blitzblick: Punkte blitzen kurz auf — wie viele waren es? Positionen im Einheitsquadrat. */
+data class DotsGame(
+    override val id: String,
+    val dots: List<Pair<Float, Float>>,
+    val options: List<Int>,
+) : FeedGame {
+    override val module = MindfulModuleType.BRAIN_PUZZLE
+    override val label = "BLITZBLICK"
+    val correctIndex: Int get() = options.indexOf(dots.size)
 }
 
 /** Erzeugt die Spiele (pur, mit vorgegebenem Zufall testbar). */
@@ -516,6 +545,324 @@ object FeedGameFactory {
             prompt = "Was gehört zusammen?",
             pairs = chosen.map { GamePair(it.display, cleanDe(it.de), it.audio, RussianPhonetics.transliterateFlat(it.ru)) },
             rightOrder = chosen.indices.shuffled(rng),
+        )
+    }
+
+    // ── Zahlen merken, Reihenfolge ──────────────────────────────────────────
+
+    const val DIGITS_START = 5
+    const val DIGITS_MIN = 4
+    const val DIGITS_MAX = 10
+    const val SEQUENCE_START = 4
+    const val SEQUENCE_MIN = 3
+    const val SEQUENCE_MAX = 9
+
+    /** Zufallsfolge ohne zwei gleiche Werte hintereinander. */
+    private fun run(rng: Random, length: Int, values: Int): List<Int> {
+        val out = mutableListOf<Int>()
+        repeat(length) { out += generateSequence { rng.nextInt(values) }.first { it != out.lastOrNull() } }
+        return out
+    }
+
+    fun digitSpan(rng: Random, level: Int): DigitSpanGame {
+        val lv = level.coerceIn(DIGITS_MIN, DIGITS_MAX)
+        return DigitSpanGame("game:digits:${nonce(rng)}", run(rng, lv, 10), lv)
+    }
+
+    fun sequence(rng: Random, level: Int): SequenceGame {
+        val lv = level.coerceIn(SEQUENCE_MIN, SEQUENCE_MAX)
+        return SequenceGame("game:sequence:${nonce(rng)}", 3, run(rng, lv, 9), lv)
+    }
+
+    // ── Buchstabensalat ─────────────────────────────────────────────────────
+
+    /** Wort und Hinweis. Bewusst ohne Wörter, deren Buchstaben ein zweites geläufiges Wort ergeben (Lampe/Ampel/Palme). */
+    internal val ANAGRAM_WORDS: List<Pair<String, String>> = listOf(
+        "WOLKE" to "am Himmel", "STURM" to "Wetter", "BLUME" to "im Garten", "FLUSS" to "Gewässer", "STRAND" to "am Meer",
+        "WÜSTE" to "Landschaft", "GIPFEL" to "im Gebirge", "SCHNEE" to "Winter", "DONNER" to "Gewitter", "BLITZ" to "Gewitter",
+        "KÜSTE" to "am Meer", "QUELLE" to "Gewässer", "HÜGEL" to "Landschaft", "PLANET" to "Weltall", "KOMET" to "Weltall",
+        "TIGER" to "Tier", "ZEBRA" to "Tier", "FUCHS" to "Tier", "HAMSTER" to "Tier", "DELFIN" to "Tier", "PINGUIN" to "Tier",
+        "GIRAFFE" to "Tier", "KAMEL" to "Tier", "BIBER" to "Tier", "PANDA" to "Tier", "HIRSCH" to "Tier", "STORCH" to "Vogel",
+        "FROSCH" to "Tier", "SPINNE" to "Tier", "AMEISE" to "Insekt", "ADLER" to "Vogel",
+        "APFEL" to "Obst", "BIRNE" to "Obst", "TOMATE" to "Gemüse", "GURKE" to "Gemüse", "ZWIEBEL" to "Gemüse", "NUDELN" to "Essen",
+        "BUTTER" to "aufs Brot", "HONIG" to "süß", "PFEFFER" to "Gewürz", "ZUCKER" to "süß", "KUCHEN" to "Gebäck", "SUPPE" to "Essen",
+        "KIRSCHE" to "Obst", "TRAUBE" to "Obst", "MANGO" to "Obst", "ZITRONE" to "Obst", "KAROTTE" to "Gemüse", "PILZE" to "im Wald",
+        "STUHL" to "Möbel", "FENSTER" to "am Haus", "SPIEGEL" to "im Bad", "KOFFER" to "auf Reisen", "BRILLE" to "auf der Nase",
+        "SCHERE" to "Werkzeug", "HAMMER" to "Werkzeug", "PINSEL" to "zum Malen", "TELLER" to "auf dem Tisch", "LÖFFEL" to "Besteck",
+        "FLASCHE" to "zum Trinken", "KERZE" to "Licht", "RADIO" to "Gerät", "KAMERA" to "Gerät", "GITARRE" to "Instrument",
+        "TROMMEL" to "Instrument", "GEIGE" to "Instrument", "KLAVIER" to "Instrument", "FAHRRAD" to "unterwegs", "ROLLER" to "unterwegs",
+        "BRÜCKE" to "Bauwerk", "TREPPE" to "im Haus", "SCHLÜSSEL" to "für die Tür", "TASCHE" to "zum Tragen", "MANTEL" to "Kleidung",
+        "STIEFEL" to "Kleidung", "MÜTZE" to "Kleidung", "HANDSCHUH" to "Kleidung",
+        "SCHULE" to "Ort", "MUSEUM" to "Ort", "BAHNHOF" to "Ort", "MARKT" to "Ort", "KÜCHE" to "im Haus", "KELLER" to "im Haus",
+        "BALKON" to "am Haus", "BÄCKER" to "Beruf", "LEHRER" to "Beruf", "PILOT" to "Beruf", "GÄRTNER" to "Beruf", "RICHTER" to "Beruf",
+        "FÖRSTER" to "Beruf", "FREUDE" to "Gefühl", "GEDULD" to "Tugend", "TRAUM" to "im Schlaf", "GLÜCK" to "Gefühl",
+        "HOFFNUNG" to "Gefühl", "FREIHEIT" to "Wert", "WISSEN" to "im Kopf", "RÄTSEL" to "zum Knobeln", "GEDANKE" to "im Kopf",
+        "REISE" to "unterwegs", "MUSIK" to "zum Hören", "SPRACHE" to "zum Reden", "ZUKUNFT" to "Zeit", "SOMMER" to "Jahreszeit",
+        "WINTER" to "Jahreszeit", "HERBST" to "Jahreszeit", "MORGEN" to "Tageszeit", "FREUND" to "Mensch",
+    )
+
+    /** [used] sammelt die Wörter der Sitzung, damit keins zweimal kommt. */
+    fun anagram(rng: Random, used: MutableSet<String> = mutableSetOf()): AnagramGame {
+        val (word, hint) = ANAGRAM_WORDS.filter { it.first !in used }.ifEmpty { ANAGRAM_WORDS }.random(rng)
+        used += word
+        var letters = word.toList()
+        repeat(20) { if (letters.joinToString("") == word) letters = word.toList().shuffled(rng) }
+        return AnagramGame("game:anagram:$word:${nonce(rng)}", word, letters, hint)
+    }
+
+    // ── Blitzblick ──────────────────────────────────────────────────────────
+
+    fun dots(rng: Random): DotsGame {
+        val count = rng.nextInt(6, 15)
+        val dots = mutableListOf<Pair<Float, Float>>()
+        var guard = 0
+        // Mindestabstand, damit sich keine Punkte überdecken und man wirklich zählen könnte.
+        while (dots.size < count && guard++ < 4000) {
+            val p = (0.08f + rng.nextFloat() * 0.84f) to (0.08f + rng.nextFloat() * 0.84f)
+            if (dots.none { (x, y) -> (x - p.first) * (x - p.first) + (y - p.second) * (y - p.second) < 0.016f }) dots += p
+        }
+        val n = dots.size
+        val wrong = listOf(-3, -2, -1, 1, 2, 3).shuffled(rng).map { n + it }.filter { it > 2 }.take(3)
+        return DotsGame("game:dots:${nonce(rng)}", dots, (wrong + n).shuffled(rng))
+    }
+
+    // ── Logik-Schluss ───────────────────────────────────────────────────────
+
+    private val NONSENSE = listOf(
+        "Blip" to "Blips", "Zork" to "Zorks", "Mulp" to "Mulps", "Drax" to "Draxe", "Grump" to "Grumps",
+        "Fenn" to "Fenns", "Quoll" to "Quolls", "Tarp" to "Tarps", "Wimp" to "Wimps", "Nork" to "Norks",
+    )
+    private val NAMES = listOf("Pim", "Lumo", "Tavi", "Rexo", "Juno")
+    internal const val FOLLOWS = "Ja, das folgt zwingend"
+    internal const val FOLLOWS_NOT = "Nein, das folgt nicht"
+
+    internal data class Syllogism(val premises: List<String>, val conclusion: String, val valid: Boolean, val why: String)
+
+    internal fun syllogismOf(kind: Int, rng: Random): Syllogism {
+        val (a, b, c) = NONSENSE.shuffled(rng).take(3)
+        val x = NAMES.random(rng)
+        return when (kind % 10) {
+            0 -> Syllogism(listOf("Alle ${a.second} sind ${b.second}.", "Alle ${b.second} sind ${c.second}."), "Alle ${a.second} sind ${c.second}.", true,
+                "Die Kette trägt: Wer ${a.first} ist, ist ${b.first}, und jeder ${b.first} ist ${c.first}.")
+            1 -> Syllogism(listOf("Alle ${a.second} sind ${b.second}.", "Alle ${c.second} sind ${b.second}."), "Alle ${a.second} sind ${c.second}.", false,
+                "Beide Gruppen liegen in den ${b.second}, müssen sich aber nicht berühren. Alle Hunde sind Tiere, alle Katzen sind Tiere, trotzdem ist kein Hund eine Katze.")
+            2 -> Syllogism(listOf("Alle ${a.second} sind ${b.second}.", "Kein ${b.first} ist ein ${c.first}."), "Kein ${a.first} ist ein ${c.first}.", true,
+                "Jeder ${a.first} ist ein ${b.first}, und unter den ${b.second} gibt es keinen ${c.first}.")
+            3 -> Syllogism(listOf("Einige ${a.second} sind ${b.second}.", "Alle ${b.second} sind ${c.second}."), "Einige ${a.second} sind ${c.second}.", true,
+                "Die ${a.second}, die ${b.second} sind, sind damit auch ${c.second}.")
+            4 -> Syllogism(listOf("Alle ${a.second} sind ${b.second}.", "Einige ${b.second} sind ${c.second}."), "Einige ${a.second} sind ${c.second}.", false,
+                "Die ${b.second}, die ${c.second} sind, können genau die sein, die keine ${a.second} sind.")
+            5 -> Syllogism(listOf("Kein ${a.first} ist ein ${b.first}.", "Kein ${b.first} ist ein ${c.first}."), "Kein ${a.first} ist ein ${c.first}.", false,
+                "Aus zwei Verneinungen folgt nichts. Kein Fisch ist ein Vogel, kein Vogel ist ein Hai, und doch ist ein Hai ein Fisch.")
+            6 -> Syllogism(listOf("Alle ${a.second} sind ${b.second}.", "$x ist ein ${b.first}."), "$x ist ein ${a.first}.", false,
+                "Umkehrschluss: Alle ${a.second} sind ${b.second}, aber nicht jeder ${b.first} ist ein ${a.first}.")
+            7 -> Syllogism(listOf("Alle ${a.second} sind ${b.second}.", "$x ist kein ${b.first}."), "$x ist kein ${a.first}.", true,
+                "Wäre $x ein ${a.first}, müsste $x auch ein ${b.first} sein. Das ist ausgeschlossen.")
+            8 -> Syllogism(listOf("Einige ${a.second} sind ${b.second}.", "Einige ${b.second} sind ${c.second}."), "Einige ${a.second} sind ${c.second}.", false,
+                "Die beiden »einige« können verschiedene ${b.second} meinen. Eine Überschneidung ist möglich, aber nicht zwingend.")
+            else -> Syllogism(listOf("Alle ${a.second} sind ${b.second}.", "Einige ${a.second} sind ${c.second}."), "Einige ${b.second} sind ${c.second}.", true,
+                "Die ${a.second}, die ${c.second} sind, sind zugleich ${b.second}. Also gibt es ${b.second}, die ${c.second} sind.")
+        }
+    }
+
+    fun syllogism(rng: Random): ChoiceGame {
+        val s = syllogismOf(rng.nextInt(10), rng)
+        return ChoiceGame(
+            id = "game:logic:${nonce(rng)}",
+            module = MindfulModuleType.BRAIN_PUZZLE,
+            label = "LOGIK-SCHLUSS",
+            style = ChoiceStyle.TEXT,
+            prompt = "Folgt der Schluss zwingend aus den beiden Sätzen?",
+            display = s.premises.joinToString("\n") + "\n\nAlso: " + s.conclusion,
+            options = listOf(FOLLOWS, FOLLOWS_NOT),
+            correctIndex = if (s.valid) 0 else 1,
+            explanation = s.why,
+        )
+    }
+
+    // ── Zeit-Rechnen ────────────────────────────────────────────────────────
+
+    private val WEEKDAYS = listOf("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag")
+
+    fun timePuzzle(rng: Random): ChoiceGame = if (rng.nextBoolean()) {
+        val start = rng.nextInt(7)
+        val days = generateSequence { rng.nextInt(10, 101) }.first { it % 7 != 0 }
+        val answer = (start + days) % 7
+        val options = (listOf(answer) + (0 until 7).filter { it != answer }.shuffled(rng).take(3)).shuffled(rng)
+        ChoiceGame(
+            id = "game:weekday:${nonce(rng)}",
+            module = MindfulModuleType.BRAIN_PUZZLE,
+            label = "ZEIT-RECHNEN",
+            style = ChoiceStyle.TEXT,
+            prompt = "Rechne im Kopf",
+            display = "Heute ist ${WEEKDAYS[start]}.\nWelcher Wochentag ist in $days Tagen?",
+            options = options.map { WEEKDAYS[it] },
+            correctIndex = options.indexOf(answer),
+            explanation = "$days Tage sind ${days / 7} volle Wochen und ${days % 7} Tage. Volle Wochen ändern den Wochentag nicht, also ${days % 7} Tage weiterzählen.",
+        )
+    } else {
+        val from = rng.nextInt(6 * 60, 18 * 60)
+        val span = generateSequence { rng.nextInt(45, 301) }.first { it % 5 == 0 && it % 60 != 0 }
+        val to = from + span
+        fun clock(m: Int) = "${m / 60}:${(m % 60).toString().padStart(2, '0')}"
+        val wrong = listOf(-60, -20, -10, 10, 20, 60).shuffled(rng).map { span + it }.filter { it > 0 }.take(3)
+        val options = (wrong + span).shuffled(rng)
+        ChoiceGame(
+            id = "game:minutes:${nonce(rng)}",
+            module = MindfulModuleType.BRAIN_PUZZLE,
+            label = "ZEIT-RECHNEN",
+            style = ChoiceStyle.TEXT,
+            prompt = "Rechne im Kopf",
+            display = "Von ${clock(from)} Uhr bis ${clock(to)} Uhr.\nWie viele Minuten sind das?",
+            options = options.map { "$it Minuten" },
+            correctIndex = options.indexOf(span),
+            explanation = "Erst bis zur vollen Stunde auffüllen, dann die ganzen Stunden, dann den Rest: zusammen $span Minuten (${span / 60} Std. ${span % 60} Min.).",
+        )
+    }
+
+    // ── Prozent, Größer oder kleiner ────────────────────────────────────────
+
+    fun percent(rng: Random): ChoiceGame {
+        val p = listOf(5, 10, 15, 20, 25, 30, 40, 60, 75).random(rng)
+        val base = rng.nextInt(2, 41) * 20
+        val result = p * base / 100
+        val options = numberOptions(result, rng)
+        val tenth = base / 10
+        return ChoiceGame(
+            id = "game:percent:${nonce(rng)}",
+            module = MindfulModuleType.SPEED_MATH,
+            label = "PROZENT IM KOPF",
+            style = ChoiceStyle.NUMBERS,
+            prompt = "Wie viel ist das?",
+            display = "$p % von $base",
+            options = options.map { it.toString() },
+            correctIndex = options.indexOf(result),
+            explanation = when (p) {
+                5 -> "10 % sind $tenth, die Hälfte davon ist $result."
+                10 -> "10 % heißt: Komma eine Stelle nach links. $base wird zu $result."
+                15 -> "10 % sind $tenth, 5 % die Hälfte davon (${tenth / 2}). Zusammen $result."
+                25 -> "25 % ist ein Viertel: $base geteilt durch 4 ist $result."
+                75 -> "Ein Viertel sind ${base / 4}, drei Viertel also $result."
+                else -> "10 % sind $tenth. Mal ${p / 10} ergibt $result."
+            },
+        )
+    }
+
+    private fun de(v: Double): String =
+        if (v == Math.floor(v)) v.toLong().toString() else ((Math.round(v * 100) / 100.0).toString()).replace('.', ',')
+
+    fun compare(rng: Random): ChoiceGame {
+        // Linke Seite: ein Ausdruck zum Rechnen; rechte Seite: eine Zahl knapp daneben oder genau gleich.
+        val (leftText, left) = when (rng.nextInt(4)) {
+            0 -> { val a = rng.nextInt(12, 20); val b = rng.nextInt(4, 10); "$a × $b" to (a * b).toDouble() }
+            1 -> { val d = listOf(4, 5, 8, 10, 20).random(rng); val n = rng.nextInt(1, d); "$n/$d" to n.toDouble() / d }
+            2 -> { val p = listOf(15, 20, 25, 30, 40).random(rng); val base = rng.nextInt(2, 16) * 20; "$p % von $base" to p * base / 100.0 }
+            else -> { val a = rng.nextInt(11, 20); "$a²" to (a * a).toDouble() }
+        }
+        val relation = rng.nextInt(5) // 0,1 = rechts kleiner · 2,3 = rechts größer · 4 = gleich
+        val step = if (left < 1) listOf(0.05, 0.1, 0.15).random(rng) else listOf(2.0, 3.0, 5.0, 8.0).random(rng)
+        val right = when {
+            relation == 4 -> left
+            relation <= 1 -> left - step
+            else -> left + step
+        }.let { Math.round(it * 100) / 100.0 }.coerceAtLeast(0.0)
+        val correct = when {
+            Math.abs(left - right) < 1e-9 -> 2
+            left > right -> 0
+            else -> 1
+        }
+        return ChoiceGame(
+            id = "game:compare:${nonce(rng)}",
+            module = MindfulModuleType.SPEED_MATH,
+            label = "GRÖSSER ODER KLEINER",
+            style = ChoiceStyle.NUMBERS,
+            prompt = "Was ist größer?",
+            display = "$leftText   ?   ${de(right)}",
+            options = listOf("Links ist größer", "Rechts ist größer", "Beide sind gleich"),
+            correctIndex = correct,
+            explanation = "$leftText = ${de(left)}. " + when (correct) {
+                0 -> "Das ist mehr als ${de(right)}."
+                1 -> "Das ist weniger als ${de(right)}."
+                else -> "Genau so viel steht rechts."
+            },
+        )
+    }
+
+    // ── Russisch: Betonung, Gehör, Lücke ────────────────────────────────────
+
+    /** Hören → betonte Silbe antippen. */
+    fun stress(p: RuPhrase, due: Boolean, rng: Random): ChoiceGame? {
+        val tap = RuLessonBuilder.stressTap(p) ?: return null
+        return ChoiceGame(
+            id = "game:ru-stress:${p.id}:${nonce(rng)}",
+            module = MindfulModuleType.LANGUAGE,
+            label = if (due) "RUSSISCH · WIEDERHOLUNG" else "RUSSISCH · BETONUNG",
+            style = ChoiceStyle.PHRASE,
+            prompt = "Hör hin: Welche Silbe ist betont?",
+            display = tap.word,
+            options = tap.syllables,
+            correctIndex = tap.stressedIndex,
+            explanation = "Die betonte Silbe klingt länger und klarer. Unbetonte Vokale werden kürzer und verwaschen.",
+            audio = p.audio,
+            revealRu = p.ru,
+            revealDe = p.de,
+            grade = RuGrade(p.id, due),
+        )
+    }
+
+    /** Hören → den richtigen russischen Satz unter vier geschriebenen finden. */
+    fun spell(p: RuPhrase, pool: List<RuPhrase>, due: Boolean, rng: Random): ChoiceGame? {
+        val wrong = RuLessonBuilder.distractors(p, pool, rng)
+        if (wrong.size < 3) return null
+        val options = (wrong + p).shuffled(rng)
+        return ChoiceGame(
+            id = "game:ru-spell:${p.id}:${nonce(rng)}",
+            module = MindfulModuleType.LANGUAGE,
+            label = if (due) "RUSSISCH · WIEDERHOLUNG" else "RUSSISCH · GEHÖR",
+            style = ChoiceStyle.LISTEN,
+            prompt = "Welcher Satz ist das?",
+            options = options.map { it.display },
+            optionSubs = options.map { RussianPhonetics.transliterateFlat(it.ru) },
+            correctIndex = options.indexOf(p),
+            audio = p.audio,
+            revealRu = p.ru,
+            revealDe = p.de,
+            grade = RuGrade(p.id, due),
+        )
+    }
+
+    /** Ein Wort des Satzes fehlt — welches? */
+    fun gap(p: RuPhrase, pool: List<RuPhrase>, due: Boolean, rng: Random): ChoiceGame? {
+        val words = RuLessonBuilder.words(p.ru)
+        if (words.size < 3) return null
+        val candidates = words.indices.filter { RussianPhonetics.plain(words[it]).count { c -> c.isLetter() } >= 3 }
+        val index = candidates.randomOrNull(rng) ?: return null
+        val target = words[index]
+        fun key(w: String) = RuLessonBuilder.normWord(w)
+        val own = words.map { key(it) }.toSet()
+        val wrong = pool.asSequence().filter { it.id != p.id }.shuffled(rng)
+            .flatMap { RuLessonBuilder.words(it.ru).asSequence() }
+            .filter { key(it) !in own && RussianPhonetics.plain(it).count { c -> c.isLetter() } >= 2 }
+            .distinctBy { key(it) }
+            .take(3).toList()
+        if (wrong.size < 3) return null
+        fun show(w: String) = RussianPhonetics.display(w).replaceFirstChar { it.lowercaseChar() }
+        val options = (wrong + target).shuffled(rng)
+        val sentence = words.mapIndexed { i, w -> if (i == index) "＿＿＿" else RussianPhonetics.display(w) }.joinToString(" ")
+        return ChoiceGame(
+            id = "game:ru-gap:${p.id}:${nonce(rng)}",
+            module = MindfulModuleType.LANGUAGE,
+            label = if (due) "RUSSISCH · WIEDERHOLUNG" else "RUSSISCH · LÜCKE",
+            style = ChoiceStyle.PHRASE,
+            prompt = "»${cleanDe(p.de)}« Welches Wort fehlt?",
+            display = sentence,
+            options = options.map { show(it) },
+            optionSubs = options.map { RussianPhonetics.transliterateFlat(it) },
+            correctIndex = options.indexOf(target),
+            audio = p.audio,
+            revealRu = p.ru,
+            revealDe = p.de,
+            grade = RuGrade(p.id, due),
         )
     }
 }

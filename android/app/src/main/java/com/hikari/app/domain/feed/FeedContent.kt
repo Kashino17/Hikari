@@ -124,6 +124,13 @@ object FeedContentParser {
         MindfulModuleType.PHILOSOPHY to "philosophy.json",
     )
 
+    /** Grunddatei plus nummerierte Nachschub-Dateien eines Bereichs, in fester Reihenfolge. */
+    fun filesOf(base: String, available: List<String>): List<String> {
+        val stem = base.removeSuffix(".json")
+        val extra = Regex("${Regex.escape(stem)}_\\d+\\.json")
+        return available.filter { it == base || extra.matches(it) }.sorted()
+    }
+
     /** Karten-ID: Bereich + ID aus der Datei — bleibt über Tage gleich, damit Gemerktes wiedergefunden wird. */
     fun cardId(module: MindfulModuleType, rawId: String) = "${module.id}:$rawId"
 
@@ -296,12 +303,20 @@ class FeedContentRepository @Inject constructor(
 ) {
     private val cache = ConcurrentHashMap<MindfulModuleType, List<MindfulCard>>()
 
+    /**
+     * Alle Karten eines Bereichs. Zur Grunddatei (z. B. quotes.json) kommen Nachschub-Dateien
+     * mit Nummer (quotes_2.json, quotes_3.json …) — neue Inhalte brauchen also nur eine neue Datei.
+     * Eine kaputte Nachschub-Datei fällt allein aus, der Bereich bleibt.
+     */
     fun cards(module: MindfulModuleType): List<MindfulCard> = cache.getOrPut(module) {
         val file = FeedContentParser.FILES[module]
             ?: return@getOrPut FeedContentParser.parse(module, "")
-        runCatching {
-            context.assets.open("feed/$file").bufferedReader().use { FeedContentParser.parse(module, it.readText()) }
-        }.getOrDefault(emptyList())
+        val all = runCatching { context.assets.list("feed").orEmpty().toList() }.getOrDefault(emptyList())
+        FeedContentParser.filesOf(file, all).flatMap { name ->
+            runCatching {
+                context.assets.open("feed/$name").bufferedReader().use { FeedContentParser.parse(module, it.readText()) }
+            }.getOrDefault(emptyList())
+        }.distinctBy { it.id }
     }
 
     /** Das kyrillische Alphabet mit Beispielwörtern (assets/russian/alphabet.json). */

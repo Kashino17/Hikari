@@ -1,0 +1,1042 @@
+[
+  {
+    "id": "ikea-effekt",
+    "name": "IKEA-Effekt",
+    "category": "Kognitive Verzerrung",
+    "explanation": "Was du selbst zusammengebaut, gekocht oder entworfen hast, erscheint dir wertvoller, als es ist. Die eigene Mühe färbt auf das Ergebnis ab. Deshalb hängst du an schiefen Regalen und mittelmäßigen Entwürfen, die du bei anderen sofort kritisieren würdest.",
+    "example": "Du hast ein Wochenende an einer Präsentation gefeilt. Als die Kollegin vorschlägt, die Hälfte zu streichen, fühlt sich das an wie ein Angriff, obwohl sie recht hat.",
+    "defense": "Frag vor dem Urteil: Was würde ich davon halten, wenn es jemand anderes gemacht hätte? Hol dir die Einschätzung von einem Unbeteiligten.",
+    "deep": {
+      "lead": "Arbeit führt zu Zuneigung. Das macht Selbstgemachtes kostbar und die Kritik daran unverhältnismäßig schmerzhaft.",
+      "sections": [
+        {
+          "title": "Origami-Kraniche im Labor",
+          "text": "Die Forscher Michael Norton, Daniel Mochon und Dan Ariely ließen Versuchspersonen Möbelkartons zusammenstecken, Legomodelle bauen und Papiertiere falten. Danach durften sie für ihr Werk bieten. Die Bastler waren bereit, für ihre krummen Kraniche fast so viel zu zahlen wie für die Stücke von Fachleuten, und sie glaubten, andere sähen das genauso. Unbeteiligte boten nur einen Bruchteil. Eine Bedingung war entscheidend: Das Werk musste fertig werden. Wer mittendrin abbrechen oder das Gebaute wieder zerlegen musste, hing nicht stärker daran als an gekaufter Ware."
+        },
+        {
+          "title": "Wo der Effekt teuer wird",
+          "text": "Unternehmen nutzen die Neigung gezielt. Kochboxen, Konfiguratoren für Autos und Turnschuhe oder Möbel zum Selbstaufbau lassen den Kunden gerade so viel tun, dass er stolz ist, aber nicht scheitert. Im Beruf hat der Effekt eine Kehrseite, die Fachleute »Nicht hier erfunden« nennen: Teams ziehen die eigene, schwächere Lösung der fremden, besseren vor. Auch beim Hausverkauf zeigt er sich. Wer die Küche selbst gefliest hat, setzt den Preis zu hoch an und wundert sich, dass Käufer für die Mühe nichts zahlen wollen."
+        }
+      ],
+      "tryIt": "Nimm etwas Selbstgemachtes, auf das du stolz bist, und schätze, was ein Fremder dafür zahlen würde. Frag anschließend einen.",
+      "takeaways": [
+        "Eigene Mühe erhöht den gefühlten Wert, nicht den tatsächlichen.",
+        "Über eigene Werke urteilt ein Unbeteiligter verlässlicher."
+      ]
+    }
+  },
+  {
+    "id": "kognitive-dissonanz",
+    "name": "Kognitive Dissonanz",
+    "category": "Kognitive Verzerrung",
+    "explanation": "Wenn Handeln und Überzeugung nicht zusammenpassen, entsteht ein unangenehmer innerer Druck. Meist änderst du dann nicht dein Verhalten, sondern deine Meinung: Du redest dir nachträglich zurecht, was du ohnehin getan hast.",
+    "example": "Du hast viel Geld für ein Fitnessstudio bezahlt und gehst nie hin. Statt zu kündigen, erklärst du dir, dass du nächsten Monat ganz sicher anfängst.",
+    "defense": "Achte auf Begründungen, die erst nach der Tat auftauchen. Frag: Hätte ich das vorher auch so gesehen? Fehler eingestehen ist billiger als sie verteidigen.",
+    "deep": {
+      "lead": "Der Mensch ist weniger ein vernünftiges als ein sich rechtfertigendes Wesen: Erst kommt die Tat, dann die passende Überzeugung.",
+      "sections": [
+        {
+          "title": "Ein Dollar überzeugt mehr als zwanzig",
+          "text": "Der Psychologe Leon Festinger ließ Studenten eine Stunde lang eine quälend öde Aufgabe erledigen. Danach bat er sie, dem nächsten Teilnehmer zu erzählen, sie sei spannend gewesen. Die einen bekamen dafür einen Dollar, die anderen zwanzig. Später sollten alle angeben, wie ihnen die Aufgabe wirklich gefallen hatte. Die Gruppe mit dem einen Dollar fand sie deutlich angenehmer. Festingers Erklärung: Zwanzig Dollar rechtfertigen eine kleine Lüge. Wer fast umsonst gelogen hat, hat keinen äußeren Grund und passt deshalb seine Meinung an."
+        },
+        {
+          "title": "Wenn die Flut ausbleibt",
+          "text": "Festinger hatte zuvor eine kleine Sekte begleitet, deren Anführerin eine Sintflut für einen bestimmten Dezembertag ankündigte; nur die Gläubigen würden von einem Raumschiff gerettet. Einige hatten Arbeit und Besitz aufgegeben. Als nichts geschah, gaben sie den Glauben nicht auf. Sie erklärten, ihr Vertrauen habe die Welt gerettet, und warben eifriger als zuvor um neue Mitglieder. Je größer das Opfer, desto schwerer das Eingeständnis. Dasselbe Muster hält Menschen in schlechten Geldanlagen, verfahrenen Projekten und Beziehungen fest, in die sie viel gesteckt haben."
+        }
+      ],
+      "tryIt": "Welche Entscheidung verteidigst du auffallend oft und wortreich? Prüfe, ob du sie heute noch einmal so treffen würdest.",
+      "takeaways": [
+        "Wir passen Überzeugungen eher dem Verhalten an als umgekehrt.",
+        "Je mehr etwas gekostet hat, desto hartnäckiger wird es gerechtfertigt."
+      ]
+    }
+  },
+  {
+    "id": "kontrollillusion",
+    "name": "Kontrollillusion",
+    "category": "Kognitive Verzerrung",
+    "explanation": "Du glaubst, Einfluss auf Dinge zu haben, die vom Zufall abhängen. Sobald du selbst wählen, drücken oder werfen darfst, fühlt sich das Ergebnis steuerbar an, auch wenn dein Zutun nichts ändert.",
+    "example": "Im Lotto vertraust du deinen »eigenen« Zahlen mehr als einem Zufallstipp, und beim Würfeln wirfst du sachter, wenn du eine niedrige Zahl brauchst.",
+    "defense": "Trenn bei jedem Vorhaben: Was liegt in meiner Hand, was ist Zufall? Steck Mühe nur in den ersten Teil und rechne beim zweiten mit Streuung.",
+    "deep": {
+      "lead": "Schon ein Knopf, eine Wahl oder eine geübte Handbewegung genügt, um reinen Zufall wie Können aussehen zu lassen.",
+      "sections": [
+        {
+          "title": "Das Los, das man selbst gezogen hat",
+          "text": "Die Psychologin Ellen Langer verkaufte in einem Büro Lose zu einem Dollar. Die eine Hälfte der Käufer durfte ihr Los selbst aussuchen, der anderen wurde eines zugeteilt. Kurz vor der Ziehung fragte sie, für wie viel sie es abgeben würden. Wer selbst gewählt hatte, verlangte ein Mehrfaches. An der Gewinnchance hatte die Wahl nichts geändert. Langer prägte dafür den Begriff. Sie zeigte auch, dass alles, was an Geschicklichkeit erinnert, die Täuschung verstärkt: Üben, Wettbewerb, Vertrautheit mit dem Spiel und anfängliche Glückstreffer."
+        },
+        {
+          "title": "Knöpfe ohne Kabel",
+          "text": "Die Neigung ist so verlässlich, dass sie im Alltag eingeplant wird. Manche Tasten an Fußgängerampeln und Aufzügen bewirken wenig oder nichts, beruhigen aber die Wartenden. Gefährlich wird es, wo viel auf dem Spiel steht. Eine Studie mit Wertpapierhändlern Londoner Banken ergab, dass jene, die ihren Einfluss auf zufällige Kursbewegungen am stärksten überschätzten, von ihren Vorgesetzten schlechter bewertet wurden und weniger verdienten. Ein Rest der Illusion ist allerdings nützlich. Wer gar keinen Einfluss mehr zu haben glaubt, gibt auch dort auf, wo Anstrengung etwas ändern würde."
+        }
+      ],
+      "tryIt": "Schreib bei deinem wichtigsten laufenden Vorhaben zwei Spalten auf: »liegt bei mir« und »liegt nicht bei mir«. Wohin fließt deine meiste Sorge?",
+      "takeaways": [
+        "Selbst wählen zu dürfen erhöht das Gefühl von Kontrolle, nicht die Chance.",
+        "Mühe lohnt nur dort, wo dein Handeln das Ergebnis wirklich bewegt."
+      ]
+    }
+  },
+  {
+    "id": "fluch-des-wissens",
+    "name": "Fluch des Wissens",
+    "category": "Kognitive Verzerrung",
+    "explanation": "Sobald du etwas weißt, kannst du dir kaum noch vorstellen, wie es war, es nicht zu wissen. Deshalb erklärst du zu knapp, überspringst Schritte und benutzt Wörter, die für andere Fachchinesisch sind.",
+    "example": "Du beschreibst jemandem den Weg zu dir: »Am alten Konsum links.« Für dich ist das eindeutig. Dein Besuch weiß nicht, dass dort vor zehn Jahren ein Laden war.",
+    "defense": "Lass einen Unkundigen gegenlesen und in eigenen Worten wiederholen, was er verstanden hat. Nenn ein Beispiel, bevor du die Regel nennst.",
+    "deep": {
+      "lead": "Wissen lässt sich nicht probeweise vergessen. Darum unterschätzen Kundige so zuverlässig, wie viel sie erklären müssen.",
+      "sections": [
+        {
+          "title": "Klopfer und Zuhörer",
+          "text": "Die Psychologin Elizabeth Newton teilte Versuchspersonen in Klopfer und Zuhörer. Die Klopfer bekamen ein allgemein bekanntes Lied genannt, etwa ein Geburtstagsständchen, und klopften dessen Rhythmus auf den Tisch. Die Zuhörer sollten es erraten. Vorher schätzten die Klopfer, jedes zweite Lied werde erkannt. Tatsächlich gelang es bei etwa einem von vierzig. Der Grund: Wer klopft, hört die Melodie im Kopf mit. Der Zuhörer bekommt nur ein zusammenhangloses Pochen. Den Klopfern erschien das Scheitern ihrer Partner unbegreiflich, manche hielten sie schlicht für begriffsstutzig."
+        },
+        {
+          "title": "Warum Fachleute schlecht erklären",
+          "text": "Der Begriff stammt aus der Wirtschaftsforschung, wo man beobachtete, dass besser Informierte das Wissen der anderen nicht ausblenden können, selbst wenn es ihnen nützen würde. Der Sprachforscher Steven Pinker hält den Effekt für die Hauptursache unverständlicher Texte. Gebrauchsanleitungen, Arztbriefe und Software sind von Leuten gemacht, die das Ding in- und auswendig kennen. Guter Wille allein hilft wenig, weil man die eigene Lücke im Erklären nicht sieht. Wirksam sind nur Proben mit echten Unkundigen: der Text, den die Nachbarin liest, die App, die jemand zum ersten Mal bedient."
+        }
+      ],
+      "tryIt": "Klopf jemandem den Rhythmus eines bekannten Liedes vor und lass raten. Schätze vorher, wie leicht es ihm fallen wird.",
+      "takeaways": [
+        "Wer etwas weiß, überschätzt, wie klar es für andere ist.",
+        "Verständlichkeit prüft man an Unkundigen, nicht im eigenen Kopf."
+      ]
+    }
+  },
+  {
+    "id": "illusion-der-erklaerungstiefe",
+    "name": "Illusion der Erklärungstiefe",
+    "category": "Kognitive Verzerrung",
+    "explanation": "Du glaubst zu verstehen, wie ein Reißverschluss, eine Toilettenspülung oder die Rentenversicherung funktioniert, bis du es Schritt für Schritt erklären sollst. Vertrautheit im Umgang fühlt sich an wie Wissen über das Innenleben.",
+    "example": "In der Diskussion vertrittst du eine klare Meinung zur Strompreisbremse. Auf die Frage, wie sie genau wirkt, bringst du zwei Sätze zustande und merkst, dass du das meiste nur gehört hast.",
+    "defense": "Erklär die Sache schriftlich in einzelnen Schritten, bevor du urteilst. Wo du ins Stocken kommst, liegt die Lücke. Dann nachlesen oder die Meinung abschwächen.",
+    "deep": {
+      "lead": "Die meisten Menschen wissen von den Dingen, die sie täglich benutzen, kaum mehr als die Stelle, an der man drücken muss.",
+      "sections": [
+        {
+          "title": "Zeichne ein Fahrrad",
+          "text": "Leonid Rozenblit und Frank Keil baten Studenten einzuschätzen, wie gut sie Alltagsgeräte verstehen. Dann sollten sie die Funktionsweise genau beschreiben und sich danach erneut einstufen. Die Selbsteinschätzung sank deutlich. Die Psychologin Rebecca Lawson machte es noch einfacher: Sie ließ Erwachsene ein Fahrrad zeichnen. Viele verbanden Vorder- und Hinterrad mit der Kette oder setzten die Pedale an die falsche Stelle, darunter Leute, die täglich Rad fuhren. Bei reinem Faktenwissen, etwa Hauptstädten, tritt die Täuschung kaum auf. Sie betrifft Erklärungen, also Wissen über Ursache und Wirkung."
+        },
+        {
+          "title": "Geliehenes Wissen",
+          "text": "Die Kognitionsforscher Steven Sloman und Philip Fernbach sehen darin keinen Defekt, sondern die Kehrseite einer Stärke. Menschen denken arbeitsteilig. Es genügt zu wissen, dass jemand die Spülung versteht und wo man ihn findet. Problematisch wird das bei Meinungen. In einem Experiment sollten Versuchspersonen erklären, wie eine von ihnen befürwortete politische Maßnahme im Einzelnen wirkt. Danach vertraten sie ihre Position weniger extrem. Die bloße Aufforderung, Gründe für die eigene Ansicht aufzuzählen, hatte diese Wirkung nicht. Erklären macht bescheiden, Rechtfertigen nicht."
+        }
+      ],
+      "tryIt": "Zeichne aus dem Kopf ein Fahrrad mit Rahmen, Kette und Pedalen. Vergleiche es danach mit einem echten.",
+      "takeaways": [
+        "Etwas bedienen können heißt nicht, es erklären zu können.",
+        "Wer den Mechanismus erklären muss, urteilt danach vorsichtiger."
+      ]
+    }
+  },
+  {
+    "id": "peak-end-regel",
+    "name": "Peak-End-Regel",
+    "category": "Kognitive Verzerrung",
+    "explanation": "In der Erinnerung zählt nicht der Durchschnitt eines Erlebnisses, sondern vor allem sein intensivster Moment und sein Ende. Die Dauer spielt kaum eine Rolle. Zwei gute Wochen mit schlechtem Schluss werden als schlechter Urlaub abgespeichert.",
+    "example": "Das Konzert war großartig, aber die letzte Zugabe ging im Tonausfall unter und die Heimfahrt im Stau. Am nächsten Tag erzählst du vor allem von der Technik und dem Stau.",
+    "defense": "Plan das Ende bewusst: Leg bei Urlaub, Besprechung oder Training etwas Gutes an den Schluss. Beim Rückblick: Frag dich, wie die ganze Zeit war, nicht nur der letzte Teil.",
+    "deep": {
+      "lead": "Was du erlebst und was du davon behältst, sind zwei verschiedene Dinge, und Entscheidungen triffst du nach dem zweiten.",
+      "sections": [
+        {
+          "title": "Die Hand im Eiswasser",
+          "text": "Daniel Kahneman und Kollegen ließen Versuchspersonen eine Hand eine Minute lang in schmerzhaft kaltes Wasser halten. In einem zweiten Durchgang folgte auf dieselbe Minute eine halbe weitere, in der das Wasser um ein Grad wärmer wurde, immer noch unangenehm, aber etwas erträglicher. Vor die Wahl gestellt, welchen Durchgang sie wiederholen wollten, entschied sich die Mehrheit für den längeren. Sie wählten also mehr Schmerz, weil er milder endete. Die Dauer hatte ihr Gedächtnis fast nicht verzeichnet. Kahneman nannte das die Vernachlässigung der Dauer."
+        },
+        {
+          "title": "Vom Behandlungszimmer in den Alltag",
+          "text": "Dasselbe zeigte sich bei Darmspiegelungen. Patienten, deren Untersuchung mit einem weniger schmerzhaften Abschnitt endete, weil das Gerät am Schluss noch kurz ruhig liegen blieb, beurteilten den Eingriff im Rückblick besser und kamen eher zur Nachkontrolle. Die Regel erklärt vieles: warum eine Geburt in der Erinnerung verblasst, warum ein Streit am Abreisetag den Urlaub verdirbt, warum Restaurants zum Schluss etwas aufs Haus servieren. Wer ein Erlebnis für andere gestaltet, sollte Höhepunkt und Schluss planen. Die Mitte verzeiht fast alles."
+        }
+      ],
+      "tryIt": "Beende heute eine Sache bewusst gut: das Telefonat mit einem Dank, das Training mit der Lieblingsübung, den Tag mit etwas Schönem.",
+      "takeaways": [
+        "Die Erinnerung speichert Höhepunkt und Ende, kaum die Dauer.",
+        "Ein guter Schluss wiegt in der Erinnerung mehr als eine gute Mitte."
+      ]
+    }
+  },
+  {
+    "id": "fokussierungsillusion",
+    "name": "Fokussierungsillusion",
+    "category": "Kognitive Verzerrung",
+    "explanation": "Worauf du gerade deine Aufmerksamkeit richtest, erscheint dir für dein Glück viel wichtiger, als es ist. Beim Vergleichen siehst du nur den einen Unterschied und vergisst die hundert Dinge, die gleich bleiben.",
+    "example": "Du bist überzeugt, mit Balkon wärst du viel zufriedener. Nach dem Umzug sitzt du im Jahr an zwölf Abenden draußen und fährst dafür täglich zwanzig Minuten länger zur Arbeit.",
+    "defense": "Stell dir bei großen Wünschen einen gewöhnlichen Dienstag in einem Jahr vor. Wie viele Minuten davon hätten mit der Veränderung überhaupt zu tun?",
+    "deep": {
+      "lead": "Nichts im Leben ist so wichtig, wie du glaubst, während du darüber nachdenkst. Der Satz stammt von Daniel Kahneman.",
+      "sections": [
+        {
+          "title": "Macht Kalifornien glücklich?",
+          "text": "Kahneman und David Schkade befragten Studenten im sonnigen Kalifornien und im kalten Mittleren Westen der USA. Beide Gruppen waren überzeugt, in Kalifornien lebe man zufriedener. Gemessen war die Lebenszufriedenheit in beiden Regionen gleich. Wer an den Vergleich denkt, hat das Wetter vor Augen. Wer dort wohnt, denkt an Miete, Prüfungen und Liebeskummer wie überall. Ein Experiment von Fritz Strack zeigte dasselbe im Kleinen: Fragte man Studenten zuerst nach ihren Verabredungen und dann nach ihrem Glück, hing beides plötzlich eng zusammen. In umgekehrter Reihenfolge nicht."
+        },
+        {
+          "title": "Was das für große Anschaffungen bedeutet",
+          "text": "Die Täuschung ist am stärksten bei Dingen, an die man sich gewöhnt: mehr Wohnfläche, ein neueres Auto, ein höheres Gehalt. Nach wenigen Monaten sind sie Hintergrund. Anderes drängt sich dagegen täglich neu auf. Die Ökonomen Bruno Frey und Alois Stutzer fanden, dass Pendler mit langem Arbeitsweg unzufriedener sind und dass das größere Haus im Grünen dies im Schnitt nicht ausgleicht. Als Faustregel taugt die Frage, ob etwas Aufmerksamkeit bindet. Lärm, Schmerzen, Streit und Zeitdruck tun das dauerhaft. Quadratmeter und Pferdestärken tun es nicht."
+        }
+      ],
+      "tryIt": "Nimm deinen derzeit größten Wunsch und schätze, wie viele Minuten eines normalen Tages er verändern würde. Vergleiche das mit seinem Preis.",
+      "takeaways": [
+        "Woran du gerade denkst, wirkt wichtiger, als es im Alltag ist.",
+        "Dauerhaft zählt, was täglich Aufmerksamkeit bindet."
+      ]
+    }
+  },
+  {
+    "id": "barnum-effekt",
+    "name": "Barnum-Effekt",
+    "category": "Kognitive Verzerrung",
+    "explanation": "Allgemeine Aussagen, die auf fast jeden zutreffen, empfindest du als treffende Beschreibung deiner Person, vor allem wenn sie schmeichelhaft sind und angeblich eigens für dich erstellt wurden.",
+    "example": "Im Horoskop steht: »Du wirkst nach außen sicher, zweifelst aber manchmal an dir.« Du denkst: Woher wissen die das? Dasselbe denken an diesem Morgen Millionen andere Leser.",
+    "defense": "Mach die Gegenprobe: Würde der Satz auch auf deine Nachbarin passen? Und das Gegenteil ebenfalls? Dann sagt er nichts über dich.",
+    "deep": {
+      "lead": "Für jeden etwas dabei zu haben war das Erfolgsrezept eines Zirkusdirektors. Es funktioniert auch bei Charakterbeschreibungen.",
+      "sections": [
+        {
+          "title": "Ein Gutachten für alle",
+          "text": "Der Psychologe Bertram Forer ließ seine Studenten Ende der 1940er-Jahre einen Persönlichkeitstest ausfüllen und überreichte jedem eine Woche später eine angeblich individuelle Auswertung. Auf einer Skala von null bis fünf bewerteten sie deren Treffsicherheit im Schnitt mit gut vier. Dann ließ Forer die Blätter herumgehen: Alle hatten denselben Text erhalten, zusammengestellt aus einem Astrologieheft vom Kiosk. Darin standen Sätze wie: Du hast ein starkes Bedürfnis, gemocht zu werden, und neigst zur Selbstkritik. Benannt wurde der Effekt später nach dem Schausteller P. T. Barnum."
+        },
+        {
+          "title": "Das Handwerk der Hellseher",
+          "text": "Wahrsager, Graphologen und manche Typentests arbeiten mit denselben Bausteinen. Besonders wirksam sind Sätze, die beide Seiten abdecken: manchmal gesellig, manchmal lieber für sich. Der Zuhörer liefert die Belege selbst, indem er an die passenden Momente denkt und die anderen übergeht. Kommt Autorität hinzu, etwa ein wissenschaftlich klingender Name oder ein langer Fragebogen, steigt die Zustimmung weiter. Seriöse Tests erkennt man daran, dass ihre Aussagen auch falsch sein können: Sie unterscheiden dich von anderen, und nicht alles daran ist ein Kompliment."
+        }
+      ],
+      "tryIt": "Lies heute das Horoskop eines fremden Sternzeichens so, als wäre es deines. Zähl, wie viele Sätze trotzdem passen.",
+      "takeaways": [
+        "Vage, schmeichelhafte Sätze passen auf fast jeden.",
+        "Eine echte Beschreibung muss auch danebenliegen können."
+      ]
+    }
+  },
+  {
+    "id": "ergebnisverzerrung",
+    "name": "Ergebnisverzerrung",
+    "category": "Kognitive Verzerrung",
+    "explanation": "Du beurteilst eine Entscheidung danach, wie sie ausgegangen ist, statt danach, wie gut sie mit dem damaligen Wissen begründet war. Glück sieht dann aus wie Klugheit und Pech wie Dummheit.",
+    "example": "Ein Bekannter fährt nach drei Bier nach Hause und kommt heil an. »Ist doch nichts passiert«, sagt er. Die Entscheidung war trotzdem schlecht, nur der Ausgang war gut.",
+    "defense": "Schreib bei wichtigen Entscheidungen vorher auf, was du weißt und erwartest. Beurteile sie später anhand dieser Notiz, nicht anhand des Ergebnisses.",
+    "deep": {
+      "lead": "Gute Entscheidungen gehen manchmal schlecht aus und schlechte gut. Wer nur auf den Ausgang schaut, lernt das Falsche.",
+      "sections": [
+        {
+          "title": "Dieselbe Operation, zwei Urteile",
+          "text": "Jonathan Baron und John Hershey legten Versuchspersonen den Fall eines Arztes vor, der sich für eine riskante, aber aussichtsreiche Operation entscheidet. Die Beschreibung war für alle gleich, einschließlich der bekannten Risiken. Nur der letzte Satz unterschied sich: Der Patient überlebt, oder er stirbt. War er gestorben, hielten die Befragten die Entscheidung für deutlich schlechter und den Arzt für weniger fähig. Dabei hatten sie ausdrücklich nur die Güte der Überlegung beurteilen sollen. Der Ausgang färbte auf alles ab, auch bei Leuten, die den Fehler kannten."
+        },
+        {
+          "title": "Lernen wie Pokerspieler",
+          "text": "Die frühere Pokerspielerin Annie Duke hat dafür ein eigenes Wort geprägt, etwa: vom Resultat her urteilen. Im Poker ist offensichtlich, dass man mit dem besseren Blatt verlieren kann; deshalb besprechen gute Spieler nach der Partie den Zug und nicht den Gewinn. Im Berufsleben geschieht das Gegenteil. Der Manager mit der riskanten Wette, die aufging, wird befördert, die Ärztin mit der richtigen Abwägung und dem unglücklichen Verlauf verklagt. Das belohnt Leichtsinn und bestraft Sorgfalt. Abhilfe schafft, Qualität und Ausgang getrennt zu notieren, als zwei verschiedene Spalten."
+        }
+      ],
+      "tryIt": "Denk an deine beste und deine schlechteste Entscheidung des letzten Jahres. Waren die Überlegungen gut oder schlecht, oder nur die Ergebnisse?",
+      "takeaways": [
+        "Die Güte einer Entscheidung und ihr Ausgang sind zweierlei.",
+        "Wer Gründe vorher notiert, kann später fair urteilen."
+      ]
+    }
+  },
+  {
+    "id": "unaufmerksamkeitsblindheit",
+    "name": "Unaufmerksamkeitsblindheit",
+    "category": "Kognitive Verzerrung",
+    "explanation": "Wenn du dich auf eine Aufgabe konzentrierst, übersiehst du Unerwartetes direkt vor deinen Augen. Du nimmst nicht alles wahr, was ins Auge fällt, sondern vor allem das, worauf du achtest, und merkst von der Lücke nichts.",
+    "example": "Du suchst beim Abbiegen nach Autos und übersiehst den Radfahrer, obwohl du genau in seine Richtung geschaut hast. »Der kam aus dem Nichts«, sagst du hinterher.",
+    "defense": "Verlass dich bei Wichtigem nicht auf »Das hätte ich gesehen«. Nutz Checklisten und ein zweites Augenpaar, und leg das Handy weg, wenn du fährst oder gehst.",
+    "deep": {
+      "lead": "Hinsehen und Sehen sind nicht dasselbe. Was du nicht erwartest, kann mitten durchs Bild laufen, ohne dass du es bemerkst.",
+      "sections": [
+        {
+          "title": "Der Gorilla im Basketballspiel",
+          "text": "Daniel Simons und Christopher Chabris zeigten Versuchspersonen ein kurzes Video. Zwei Gruppen in weißen und schwarzen Hemden spielen einander Bälle zu; gezählt werden sollten die Pässe der Weißen. Mitten im Film geht eine Person im Gorillakostüm durchs Bild, bleibt stehen, trommelt sich auf die Brust und geht weiter. Etwa die Hälfte der Zuschauer bemerkte sie nicht und wollte es nicht glauben, bis sie den Film ein zweites Mal sah. Die Forscher betonen: Erstaunlich ist nicht das Übersehen, sondern die Gewissheit, so etwas könne einem selbst nicht passieren."
+        },
+        {
+          "title": "Auch Fachleute sind nicht geschützt",
+          "text": "In einer späteren Studie suchten erfahrene Radiologen in Aufnahmen der Lunge nach Knoten. In eines der Bilder hatten die Forscher einen kleinen Gorilla montiert, um ein Vielfaches größer als ein Knoten. Die große Mehrheit übersah ihn, obwohl die Blickaufzeichnung zeigte, dass viele direkt hingeschaut hatten. Übung schärft also den Blick für das Gesuchte und nicht für das Unerwartete. Im Straßenverkehr ist das der Kern vieler Unfälle mit Motorrädern und Fahrrädern. Telefonieren verstärkt den Effekt, auch mit Freisprechanlage, weil nicht die Hände fehlen, sondern die Aufmerksamkeit."
+        }
+      ],
+      "tryIt": "Achte auf deinem nächsten gewohnten Weg bewusst auf drei Dinge, die du dort noch nie bemerkt hast. Du wirst sie finden.",
+      "takeaways": [
+        "Aufmerksamkeit ist ein enger Lichtkegel; daneben bleibt es dunkel.",
+        "Gegen Übersehen helfen Checklisten und ein zweites Augenpaar."
+      ]
+    }
+  },
+  {
+    "id": "maslows-hammer",
+    "name": "Maslows Hammer",
+    "category": "Kognitive Verzerrung",
+    "explanation": "Wer nur ein Werkzeug gut beherrscht, hält jedes Problem für eines, das genau dieses Werkzeug verlangt. Ausbildung und Gewohnheit bestimmen, was du überhaupt als Lösung in Betracht ziehst, oft ohne dass es dir auffällt.",
+    "example": "Mit Rückenschmerzen gehst du zum Chirurgen und bekommst eine Operation empfohlen, vom Physiotherapeuten Übungen, vom Orthopädietechniker Einlagen. Jeder hat aus seiner Sicht recht.",
+    "defense": "Frag vor der Lösung: Wie würde jemand aus einem ganz anderen Fach das angehen? Hol bei wichtigen Fragen eine zweite Meinung aus einer anderen Zunft.",
+    "deep": {
+      "lead": "Wer nur einen Hammer hat, sieht überall Nägel. Der Satz ist ein Sprichwort geworden, weil er auf jeden Beruf passt.",
+      "sections": [
+        {
+          "title": "Der Wasserkrug-Versuch",
+          "text": "Den Satz vom Hammer formulierte der Psychologe Abraham Maslow in den 1960er-Jahren. Wie die Falle zuschnappt, hatte Abraham Luchins schon früher gezeigt. Er gab Versuchspersonen Rechenaufgaben, bei denen mit drei Krügen eine bestimmte Wassermenge abzumessen war. Die ersten Aufgaben ließen sich alle mit derselben umständlichen Formel lösen. Dann kamen Aufgaben, für die es einen viel kürzeren Weg gab. Die meisten blieben bei der eingeübten Formel. Wer ohne Vorübung anfing, fand den kurzen Weg sofort. Erfahrung macht also schnell und in bestimmten Lagen blind."
+        },
+        {
+          "title": "Ein Werkzeugkasten statt eines Werkzeugs",
+          "text": "Der Investor Charlie Munger zog daraus eine Lebensregel. Man solle die tragenden Ideen aus vielen Fächern kennen, aus Physik, Biologie, Psychologie, Statistik und Geschichte, und sie abwechselnd an ein Problem anlegen. Erst wenn mehrere Sichtweisen in dieselbe Richtung zeigen, sei man auf sicherem Grund. Für den Alltag heißt das: Misstrauisch werden, wenn die Lösung verdächtig genau dem entspricht, was man ohnehin am besten kann oder verkauft. Das gilt für Berater mit ihrer Methode ebenso wie für einen selbst mit der Lieblingsstrategie, alles auszudiskutieren oder alles in Tabellen zu packen."
+        }
+      ],
+      "tryIt": "Welches ist dein Hammer, also deine Standardlösung für fast alles? Wende heute bei einem kleinen Problem absichtlich ein anderes Mittel an.",
+      "takeaways": [
+        "Das vertraute Werkzeug bestimmt, welche Probleme du siehst.",
+        "Mehrere Denkweisen nebeneinander schützen vor Betriebsblindheit."
+      ]
+    }
+  },
+  {
+    "id": "auswahl-ueberlastung",
+    "name": "Auswahl-Überlastung",
+    "category": "Entscheidungsfalle",
+    "explanation": "Mehr Möglichkeiten machen eine Entscheidung nicht immer besser. Ab einer gewissen Menge wird das Vergleichen mühsam, du schiebst die Wahl auf oder bist danach unzufriedener, weil du an all das denkst, was du nicht genommen hast.",
+    "example": "Du willst abends einen Film streamen, scrollst vierzig Minuten durch das Angebot und schaust am Ende eine Serie, die du schon kennst.",
+    "defense": "Leg vor dem Suchen zwei oder drei Kriterien fest und nimm das Erste, das sie erfüllt. Begrenze die Auswahl selbst, etwa auf drei Kandidaten.",
+    "deep": {
+      "lead": "Auswahl gilt als Freiheit. Ab einer bestimmten Menge fühlt sie sich aber wie Arbeit an, und manche kaufen dann lieber gar nichts.",
+      "sections": [
+        {
+          "title": "Der Marmeladenstand",
+          "text": "Sheena Iyengar und Mark Lepper bauten in einem kalifornischen Feinkostladen einen Probierstand auf. An manchen Tagen standen dort vierundzwanzig Sorten Marmelade, an anderen sechs. Der große Stand zog mehr Neugierige an. Gekauft wurde aber vor allem am kleinen: Dort griff etwa jeder dritte Besucher zu, am großen nur jeder dreißigste. Das Ergebnis wurde berühmt. Spätere Versuche, es zu wiederholen, fielen gemischt aus; eine Auswertung vieler Studien fand im Schnitt kaum einen Effekt. Er tritt offenbar nur unter bestimmten Bedingungen auf, etwa wenn die Angebote schwer zu vergleichen sind."
+        },
+        {
+          "title": "Gut genug statt das Beste",
+          "text": "Der Psychologe Barry Schwartz unterscheidet zwei Arten zu wählen. Maximierer wollen die beste Option und müssen dafür alle prüfen. Genügsame, ein Begriff des Ökonomen Herbert Simon, nehmen die erste, die ihre Ansprüche erfüllt. In Befragungen erzielten Maximierer objektiv etwas bessere Ergebnisse, waren aber unzufriedener damit, weil sie länger zweifelten und mehr bereuten. Die Folgerung ist praktisch: Bei den meisten Alltagsentscheidungen ist der Unterschied zwischen gut und optimal kleiner als der Preis der Suche. Gründlichkeit lohnt sich bei den wenigen Entscheidungen, die schwer rückgängig zu machen sind."
+        }
+      ],
+      "tryIt": "Beschränke dich bei der nächsten Auswahl, ob Restaurant, Film oder Hemd, vorab auf drei Möglichkeiten und entscheide binnen zwei Minuten.",
+      "takeaways": [
+        "Mehr Auswahl kann die Entscheidung erschweren und die Zufriedenheit senken.",
+        "»Gut genug« spart Zeit und oft auch Reue."
+      ]
+    }
+  },
+  {
+    "id": "mentale-buchfuehrung",
+    "name": "Mentale Buchführung",
+    "category": "Entscheidungsfalle",
+    "explanation": "Du teilst Geld im Kopf in getrennte Töpfe ein und behandelst es je nach Herkunft oder Zweck verschieden. Dabei ist jeder Euro gleich viel wert. Gewonnenes oder geschenktes Geld gibst du leichter aus als verdientes.",
+    "example": "Die Steuerrückzahlung von 600 € geht für ein Wochenende drauf, »weil es ja geschenktes Geld ist«. Gleichzeitig läuft das Girokonto mit zwölf Prozent Zinsen im Minus.",
+    "defense": "Frag bei jeder Ausgabe: Würde ich das auch von meinem Gehalt bezahlen? Rechne Guthaben und Schulden regelmäßig in einer einzigen Übersicht zusammen.",
+    "deep": {
+      "lead": "Für eine Bank ist Geld beliebig austauschbar. Im Kopf trägt jeder Schein ein Etikett, und das Etikett bestimmt, was damit geschieht.",
+      "sections": [
+        {
+          "title": "Die verlorene Theaterkarte",
+          "text": "Daniel Kahneman und Amos Tversky stellten zwei Fragen. Du hast eine Theaterkarte für zehn Dollar gekauft und merkst am Eingang, dass du sie verloren hast. Kaufst du eine neue? Weniger als die Hälfte sagte Ja. Zweite Fassung: Du wolltest die Karte an der Abendkasse kaufen und stellst fest, dass dir ein Zehndollarschein fehlt. Kaufst du trotzdem? Fast neun von zehn sagten Ja. Der Verlust ist derselbe. Im ersten Fall wird er aber dem Konto »Theater« zugeschlagen, das damit doppelt belastet wirkt, im zweiten dem allgemeinen Geldbeutel."
+        },
+        {
+          "title": "Nützliche und schädliche Töpfe",
+          "text": "Der Ökonom Richard Thaler, der den Begriff prägte, sah darin nicht nur einen Fehler. Töpfe helfen bei der Selbstkontrolle: Wer das Urlaubsgeld auf ein eigenes Konto legt, gibt es nicht versehentlich für Pizza aus. Schädlich werden sie, wenn sie gegeneinander arbeiten. Typisch ist das Sparbuch mit einem Prozent Zinsen neben dem teuren Ratenkredit. Im Kasino heißt das Phänomen Spiel mit dem Geld des Hauses: Gewinne vom selben Abend werden leichtfertig gesetzt, als wären sie weniger wirklich. Auch kleine Beträge wie Trinkgeld oder Versandkosten entkommen so jeder Kontrolle."
+        }
+      ],
+      "tryIt": "Welche Töpfe führst du im Kopf, etwa Urlaub, Notfall, Spaß? Prüfe, ob in einem Geld liegt, während ein anderer Zinsen kostet.",
+      "takeaways": [
+        "Ein Euro ist ein Euro, gleich woher er kommt.",
+        "Töpfe helfen beim Sparen, schaden aber, wenn sie Schulden verdecken."
+      ]
+    }
+  },
+  {
+    "id": "handlungsdrang",
+    "name": "Handlungsdrang",
+    "category": "Entscheidungsfalle",
+    "explanation": "In unklaren Lagen tust du lieber irgendetwas als nichts, auch wenn Abwarten die besseren Aussichten hätte. Handeln fühlt sich nach Kontrolle an und lässt sich rechtfertigen; wer untätig bleibt und Pech hat, steht schlecht da.",
+    "example": "Die Aktien fallen eine Woche lang. Du verkaufst alles, »um etwas zu tun«, und kaufst nach der Erholung teurer zurück.",
+    "defense": "Nimm »abwarten« ausdrücklich als Option in die Liste auf und frag: Was geschieht, wenn ich eine Woche lang nichts tue? Oft ist das die beste Antwort.",
+    "deep": {
+      "lead": "Nichtstun ist auch eine Entscheidung. Sie wird nur selten getroffen, weil sie sich nicht wie eine anfühlt.",
+      "sections": [
+        {
+          "title": "Torhüter, die nicht stehen bleiben",
+          "text": "Der Forscher Michael Bar-Eli wertete Hunderte Elfmeter aus Spitzenligen aus. Die Schüsse verteilten sich ungefähr gleich auf links, rechts und die Mitte. Die Torhüter sprangen trotzdem fast immer in eine Ecke. Wären sie öfter stehen geblieben, hätten sie mehr Bälle gehalten. Befragt, erklärten sie, ein Tor nach einem Sprung fühle sich weniger schlimm an als eines, bei dem man einfach dastand. Die Norm verlangt den Sprung. Dasselbe Muster gilt für jeden, der unter Beobachtung steht: Wer handelt und scheitert, hat es wenigstens versucht."
+        },
+        {
+          "title": "Wo Abwarten die bessere Medizin ist",
+          "text": "In der Medizin gibt es für das Gegenmittel einen festen Begriff, das beobachtende Abwarten. Viele Beschwerden vergehen von selbst, und jede Behandlung hat Nebenwirkungen. An der Börse ist der Befund ähnlich deutlich. Eine große Auswertung von Depots amerikanischer Privatanleger ergab, dass jene, die am häufigsten umschichteten, die schlechtesten Erträge erzielten, vor allem wegen der Gebühren. Der Handlungsdrang hat einen Gegenspieler: Geht es um Schäden durch eigenes Zutun, etwa bei Impfungen, scheuen Menschen oft gerade das Handeln. Beide Fehler entstehen, wenn Tun und Lassen verschieden gewichtet werden."
+        }
+      ],
+      "tryIt": "Wenn du heute den Impuls spürst, sofort einzugreifen, etwa auf eine ärgerliche Mail zu antworten, warte eine Stunde und prüfe dann erneut.",
+      "takeaways": [
+        "Handeln fühlt sich besser an, ist aber nicht immer besser.",
+        "»Nichts tun« gehört als gleichberechtigte Option auf jede Liste."
+      ]
+    }
+  },
+  {
+    "id": "nullrisiko-verzerrung",
+    "name": "Nullrisiko-Verzerrung",
+    "category": "Entscheidungsfalle",
+    "explanation": "Ein Risiko ganz auf null zu bringen ist dir viel mehr wert, als ein größeres Risiko um denselben oder sogar einen höheren Betrag zu senken. Gewissheit wird überbezahlt, auch wenn anderswo mit gleichem Aufwand mehr Schaden zu vermeiden wäre.",
+    "example": "Du kaufst für das neue Handy die Zusatzgarantie, die jeden Schaden ausschließt, fährst aber weiter mit abgefahrenen Reifen, weil neue »gerade nicht drin sind«.",
+    "defense": "Vergleiche Maßnahmen danach, wie viel Risiko sie insgesamt wegnehmen, nicht danach, ob am Ende eine Null steht. Ein kleiner Rest ist fast immer hinnehmbar.",
+    "deep": {
+      "lead": "Der Schritt von einem Prozent auf null fühlt sich größer an als der von zehn auf fünf, obwohl er zehnmal kleiner ist.",
+      "sections": [
+        {
+          "title": "Was Sicherheit kosten darf",
+          "text": "In Befragungen zu Haushaltsgiften nannten Verbraucher, was sie für sicherere Produkte zahlen würden. Für die Verringerung eines Vergiftungsrisikos von fünfzehn auf zehn Fälle je zehntausend Packungen boten sie wenig, für den letzten Schritt von fünf auf null ein Mehrfaches. Ein ähnliches Bild ergab sich bei der Sanierung von Altlasten. Viele zogen es vor, eine Deponie vollständig zu säubern, statt mit demselben Geld an mehreren Standorten zusammen mehr Schadstoffe zu beseitigen. Kahneman und Tversky hatten das Grundmuster zuvor als Sicherheitseffekt beschrieben: Der Übergang zur Gewissheit zählt überproportional."
+        },
+        {
+          "title": "Warum die Null so teuer ist",
+          "text": "Risiken zu senken wird mit jedem Schritt aufwendiger. Die ersten neunzig Prozent sind oft billig, die letzten Prozente verschlingen den Großteil des Budgets. Geld, das dafür ausgegeben wird, fehlt an Stellen, wo es mehr Leben oder Gesundheit schützen würde. Vorschriften, die für einen Stoff keinerlei Rückstand dulden, können so mehr schaden als nützen. Im Privaten zeigt sich der Effekt bei Versicherungen für Kleinigkeiten und bei Werbung mit »hundert Prozent«. Die nüchterne Gegenfrage lautet stets: Was kostet der letzte Rest, und was könnte ich mit demselben Aufwand anderswo erreichen?"
+        }
+      ],
+      "tryIt": "Wo zahlst du für völlige Sicherheit bei einem kleinen Risiko? Überlege, welches größere Risiko du mit demselben Geld spürbar verkleinern könntest.",
+      "takeaways": [
+        "Die letzte Stufe bis zur Null wird stark überbewertet.",
+        "Entscheidend ist, wie viel Risiko pro Euro insgesamt verschwindet."
+      ]
+    }
+  },
+  {
+    "id": "zuschauereffekt",
+    "name": "Zuschauereffekt",
+    "category": "Sozialer Einfluss",
+    "explanation": "Je mehr Menschen einen Notfall beobachten, desto geringer ist die Wahrscheinlichkeit, dass ein Einzelner eingreift. Jeder nimmt an, ein anderer werde helfen, und deutet die Untätigkeit der übrigen als Zeichen, dass es wohl nicht so schlimm ist.",
+    "example": "Auf dem vollen Bahnsteig sackt ein Mann zusammen. Dutzende schauen hin, jeder wartet darauf, dass jemand anderes reagiert. Minuten vergehen, bis eine Frau den Notruf wählt.",
+    "defense": "Sei bewusst die erste Person, die handelt. Brauchst du selbst Hilfe, sprich einen Einzelnen direkt an: »Sie mit der roten Jacke, rufen Sie bitte die 112.«",
+    "deep": {
+      "lead": "In der Menge fühlt sich jeder nur für einen Bruchteil zuständig, und viele Bruchteile ergeben zusammen niemanden.",
+      "sections": [
+        {
+          "title": "Ein Anfall über die Sprechanlage",
+          "text": "John Darley und Bibb Latané setzten Studenten einzeln in Kabinen und ließen sie über eine Sprechanlage diskutieren. Plötzlich schien ein Teilnehmer einen Krampfanfall zu erleiden. Wer glaubte, der einzige Zuhörer zu sein, holte in den allermeisten Fällen sofort Hilfe. Wer meinte, vier weitere hörten mit, tat es deutlich seltener und später. In einem zweiten Versuch quoll Rauch in einen Warteraum. Saßen dort zwei eingeweihte Mitspieler, die ungerührt weiterschrieben, meldete kaum jemand den Rauch. Allein gelassen, taten es die meisten."
+        },
+        {
+          "title": "Eine Legende und eine gute Nachricht",
+          "text": "Anstoß für die Forschung war ein Mord in New York 1964. Eine Zeitung berichtete, achtunddreißig Nachbarn hätten zugesehen und nichts getan. Spätere Recherchen zeigten, dass der Bericht stark übertrieben war; nur wenige hatten etwas vom Geschehen begriffen, und mindestens einer rief die Polizei. Auch der Effekt selbst hat Grenzen. Eine Auswertung von Überwachungsvideos realer Streitigkeiten aus drei Ländern ergab, dass in neun von zehn Fällen mindestens ein Umstehender eingriff, und zwar umso eher, je mehr Menschen anwesend waren. Bei eindeutiger Gefahr hilft fast immer jemand."
+        }
+      ],
+      "tryIt": "Übe den Satz für den Ernstfall jetzt einmal laut: Person benennen, Auftrag geben. Wer ihn schon gesagt hat, sagt ihn leichter.",
+      "takeaways": [
+        "Verantwortung verdünnt sich mit der Zahl der Anwesenden.",
+        "Einzelne direkt ansprechen durchbricht die Starre."
+      ]
+    }
+  },
+  {
+    "id": "gruppendenken",
+    "name": "Gruppendenken",
+    "category": "Sozialer Einfluss",
+    "explanation": "In eingeschworenen Gruppen wird Einigkeit wichtiger als die beste Lösung. Zweifel werden nicht ausgesprochen, um die Stimmung nicht zu stören, und so entsteht der falsche Eindruck, alle seien überzeugt. Kluge Einzelne fassen gemeinsam dumme Beschlüsse.",
+    "example": "Im Projektteam hält jeder den Zeitplan für unrealistisch. Weil die Chefin begeistert ist und niemand der Miesmacher sein will, nicken alle. Drei Monate später ist der Termin geplatzt.",
+    "defense": "Lass vor der Diskussion jeden seine Einschätzung still aufschreiben. Wer leitet, spricht zuletzt. Bestimme reihum jemanden, der gezielt Einwände sucht.",
+    "deep": {
+      "lead": "Je wohler sich eine Gruppe miteinander fühlt, desto größer ist die Gefahr, dass niemand mehr sagt, was er denkt.",
+      "sections": [
+        {
+          "title": "Von der Schweinebucht zur Kubakrise",
+          "text": "Der Psychologe Irving Janis prägte den Begriff, nachdem er politische Fehlentscheidungen untersucht hatte. Sein Hauptbeispiel war die gescheiterte Landung von Exilkubanern in der Schweinebucht 1961, die der Stab von Präsident Kennedy fast ohne Widerspruch gebilligt hatte. Mehrere Berater gaben später an, Bedenken gehabt und geschwiegen zu haben. Kennedy änderte daraufhin die Arbeitsweise. In der Kubakrise im Jahr darauf ließ er Untergruppen getrennt tagen, lud Außenstehende ein und blieb manchen Sitzungen fern, damit niemand ihm nach dem Mund redete. Das Ergebnis war deutlich besser."
+        },
+        {
+          "title": "Die Warnzeichen",
+          "text": "Janis nannte Merkmale, an denen sich die Gefahr erkennen lässt. Die Gruppe hält sich für unverwundbar und moralisch im Recht. Gegner werden als dumm oder böse abgetan. Wer zweifelt, zensiert sich selbst, und Schweigen gilt als Zustimmung. Einzelne schirmen die Leitung vor unbequemen Nachrichten ab. Begünstigt wird all das durch Zeitdruck, Abschottung nach außen und eine Führung, die ihre Wunschlösung früh zu erkennen gibt. Das Gegenmittel ist daher weniger Mut als Verfahren: Regeln, die Widerspruch zur Pflicht machen, sodass ihn niemand als Illoyalität auslegen kann."
+        }
+      ],
+      "tryIt": "Bitte in der nächsten Runde, in der etwas beschlossen wird, alle, erst ihre Bedenken aufzuschreiben, bevor irgendjemand spricht.",
+      "takeaways": [
+        "Schweigen in einer Gruppe ist keine Zustimmung.",
+        "Gute Verfahren machen Widerspruch zur Aufgabe statt zum Risiko."
+      ]
+    }
+  },
+  {
+    "id": "reziprozitaet",
+    "name": "Reziprozität",
+    "category": "Sozialer Einfluss",
+    "explanation": "Wer dir etwas gibt, löst in dir das Bedürfnis aus, etwas zurückzugeben, auch wenn du das Geschenk gar nicht wolltest. Die Regel hält Gemeinschaften zusammen und lässt sich leicht ausnutzen, weil die Gegenleistung oft größer ausfällt als die Gabe.",
+    "example": "Am Marktstand bekommst du ein Stück Käse zum Probieren. Eigentlich brauchst du keinen, gehst aber mit zweihundert Gramm nach Hause, weil Weitergehen sich undankbar anfühlte.",
+    "defense": "Nimm Gefälligkeiten an, aber trenn sie von der Entscheidung: Würde ich das auch ohne die Gabe kaufen oder zusagen? Ein Verkaufstrick verpflichtet zu nichts.",
+    "deep": {
+      "lead": "Keine bekannte Gesellschaft kommt ohne die Regel aus, dass man Gaben erwidert. Gerade deshalb ist sie ein so wirksamer Hebel.",
+      "sections": [
+        {
+          "title": "Eine Cola und doppelt so viele Lose",
+          "text": "Der Psychologe Dennis Regan ließ Versuchspersonen mit einem Mitspieler Bilder bewerten. In einer Pause verschwand der Mitspieler kurz und brachte manchen ungefragt eine Cola mit. Später bat er darum, ihm Lose für eine Tombola abzukaufen. Wer die Cola bekommen hatte, kaufte im Schnitt doppelt so viele, und der Wert der Lose überstieg den des Getränks deutlich. Bemerkenswert: Ob die Versuchsperson den Mitspieler sympathisch fand, spielte nach dem Geschenk keine Rolle mehr. Das Gefühl der Schuld überdeckte die Abneigung."
+        },
+        {
+          "title": "Das Zugeständnis als Geschenk",
+          "text": "Der Sozialpsychologe Robert Cialdini zeigte, dass auch ein Nachgeben wie eine Gabe wirkt. Seine Mitarbeiter baten Passanten, straffällige Jugendliche einen Tag in den Zoo zu begleiten. Nur wenige waren bereit. Fragten sie zuerst nach einer viel größeren Verpflichtung über zwei Jahre und zogen sich nach dem Nein auf den Zoobesuch zurück, sagte ein Vielfaches zu. Wer nachgibt, dem gibt man nach. Verhandler nutzen das mit überhöhten Einstiegsforderungen. Durchschaut man das Muster, darf man das Zugeständnis annehmen, ohne sich zu einem eigenen verpflichtet zu fühlen."
+        }
+      ],
+      "tryIt": "Achte heute auf eine kleine Gabe mit Hintergedanken, etwa Probe, Kugelschreiber oder Gratismonat, und benenne für dich, was dafür erwartet wird.",
+      "takeaways": [
+        "Geschenke erzeugen Schuld, auch ungebetene.",
+        "Die Gabe annehmen und die Entscheidung davon trennen."
+      ]
+    }
+  },
+  {
+    "id": "reaktanz",
+    "name": "Reaktanz",
+    "category": "Sozialer Einfluss",
+    "explanation": "Wenn dir jemand eine Freiheit nehmen oder etwas vorschreiben will, wächst dein Wunsch, genau das Verbotene zu tun. Du verteidigst dann nicht mehr die Sache, sondern deine Wahlfreiheit, manchmal gegen dein eigenes Interesse.",
+    "example": "Die Ärztin sagt streng: »Sie müssen sofort mit dem Rauchen aufhören.« Auf dem Heimweg zündest du dir trotzig eine an, obwohl du selbst längst aufhören wolltest.",
+    "defense": "Merkst du Trotz, frag: Will ich das wirklich, oder will ich nur nicht bevormundet werden? Willst du andere überzeugen, lass ihnen ausdrücklich die Wahl.",
+    "deep": {
+      "lead": "Ein Verbot macht aus einer beliebigen Möglichkeit etwas Begehrenswertes. Das erklärt Trotzphasen ebenso wie manche gescheiterte Kampagne.",
+      "sections": [
+        {
+          "title": "Brehms Theorie und die Toilettenwand",
+          "text": "Der Psychologe Jack Brehm beschrieb das Phänomen in den 1960er-Jahren. Menschen erleben ihre Wahlmöglichkeiten als Besitz; wird eine davon bedroht, steigt ihr Wert. Ein vielzitierter Feldversuch hängte in Universitätstoiletten Schilder auf. Auf dem einen stand barsch, das Beschriften der Wände sei unter allen Umständen untersagt, unterzeichnet vom Sicherheitschef. Auf dem anderen stand eine höfliche Bitte, unterzeichnet von einem einfachen Mitarbeiter. Unter dem strengen Schild fanden sich danach mehr Kritzeleien. Je mächtiger der Absender und je schroffer der Ton, desto stärker der Widerstand."
+        },
+        {
+          "title": "Der Streisand-Effekt",
+          "text": "Die Sängerin Barbra Streisand verklagte 2003 einen Fotografen, der für ein Küstenschutzprojekt Luftbilder gemacht hatte, auf denen ihr Anwesen zu sehen war. Vor der Klage war das Foto kaum ein halbes Dutzend Mal abgerufen worden. Danach sahen es Hunderttausende. Versuche, etwas zu unterdrücken, wecken erst das Interesse daran. Wer überzeugen will, fährt mit dem Gegenteil besser. Französische Psychologen fanden, dass Bitten deutlich öfter erfüllt werden, wenn der Satz angefügt wird: »Aber Sie sind frei, anzunehmen oder abzulehnen.« Die Freiheit, Nein zu sagen, erleichtert das Ja."
+        }
+      ],
+      "tryIt": "Häng heute an eine Bitte den Satz »Du kannst natürlich auch Nein sagen« an und beobachte, wie die Antwort ausfällt.",
+      "takeaways": [
+        "Bedrohte Freiheiten werden plötzlich wertvoll.",
+        "Wer die Wahl lässt, bekommt eher Zustimmung als wer befiehlt."
+      ]
+    }
+  },
+  {
+    "id": "abilene-paradox",
+    "name": "Abilene-Paradox",
+    "category": "Sozialer Einfluss",
+    "explanation": "Eine Gruppe beschließt gemeinsam etwas, das keiner ihrer Mitglieder will. Jeder stimmt zu, weil er glaubt, die anderen wollten es, und niemand spricht die eigene Abneigung aus. Am Ende sind alle unzufrieden und geben einander die Schuld.",
+    "example": "Vier Freunde landen in einem lauten, teuren Lokal. Auf dem Heimweg stellt sich heraus: Jeder wäre lieber Pizza essen gegangen und hat nur zugestimmt, um den anderen den Abend nicht zu verderben.",
+    "defense": "Sag bei gemeinsamen Plänen zuerst ehrlich, was du selbst willst, und frag dann ausdrücklich: Will das hier wirklich jemand, oder sind wir nur alle höflich?",
+    "deep": {
+      "lead": "Nicht Streit, sondern falsch verstandene Einigkeit bringt Gruppen oft an Orte, an die niemand wollte.",
+      "sections": [
+        {
+          "title": "Achtzig Kilometer für ein schlechtes Essen",
+          "text": "Der Managementforscher Jerry Harvey erzählt, wie seine Familie an einem glühend heißen Sonntag in Texas auf der Veranda saß und Domino spielte. Der Schwiegervater schlug vor, zum Essen nach Abilene zu fahren. Die Frau fand die Idee gut, Harvey wollte kein Spielverderber sein, die Schwiegermutter schloss sich an. Vier Stunden später waren sie zurück, verstaubt, verschwitzt und schlecht gesättigt. Dann kam heraus, dass keiner hatte fahren wollen. Selbst der Schwiegervater hatte den Vorschlag nur gemacht, weil er fürchtete, die anderen langweilten sich."
+        },
+        {
+          "title": "Der Unterschied zum Gruppendenken",
+          "text": "Beim Gruppendenken reden sich die Beteiligten ein, der Plan sei gut. Im Abilene-Paradox weiß jeder für sich, dass er schlecht ist, und schweigt aus Rücksicht oder Angst vor Ausgrenzung. Harvey sprach deshalb von der Unfähigkeit, Übereinstimmung zu handhaben. Organisationen führen auf diese Weise Projekte fort, an die niemand mehr glaubt. Sozialpsychologen kennen das verwandte Muster, dass jeder eine Norm ablehnt und annimmt, die anderen stünden dahinter. Die Lösung ist unscheinbar. Meist genügt eine Person, die sagt, was sie denkt, und die anderen atmen hörbar auf."
+        }
+      ],
+      "tryIt": "Wenn beim nächsten Gruppenplan alle nur »Mir egal« oder »Von mir aus« sagen, nenn als Erster ehrlich deine eigene Vorliebe.",
+      "takeaways": [
+        "Zustimmung aus Höflichkeit kann alle an ein ungewolltes Ziel bringen.",
+        "Eine ehrliche Stimme genügt oft, um den Irrtum aufzulösen."
+      ]
+    }
+  },
+  {
+    "id": "fuss-in-der-tuer-technik",
+    "name": "Fuß-in-der-Tür-Technik",
+    "category": "Sozialer Einfluss",
+    "explanation": "Wer einer kleinen Bitte zugestimmt hat, sagt danach viel eher Ja zu einer größeren. Du willst dir selbst treu bleiben: Nach dem ersten Ja siehst du dich als jemand, der so etwas unterstützt, und ein Nein würde nicht mehr dazu passen.",
+    "example": "Erst unterschreibst du auf der Straße eine Petition für den Tierschutz. Zwei Minuten später füllst du das Formular für die monatliche Spende aus, um die man dich direkt nie hätte bitten können.",
+    "defense": "Prüf jede Bitte so, als wäre sie die erste: Würde ich zustimmen, wenn man mich ohne Vorgeschichte danach gefragt hätte? Ein früheres Ja verpflichtet zu nichts.",
+    "deep": {
+      "lead": "Das zweite Ja wird selten erkämpft. Es wird mit einem ersten, ganz harmlosen Ja vorbereitet.",
+      "sections": [
+        {
+          "title": "Das hässliche Schild im Vorgarten",
+          "text": "Jonathan Freedman und Scott Fraser schickten in einer kalifornischen Wohngegend angebliche Ehrenamtliche von Tür zu Tür. Sie baten Hausbesitzer, ein riesiges, plump beschriftetes Schild mit der Aufschrift »Fahrt vorsichtig« in den Vorgarten stellen zu dürfen. Die allermeisten lehnten ab. Eine zweite Gruppe war zwei Wochen zuvor um etwas Winziges gebeten worden: einen kleinen Aufkleber für sicheres Fahren ins Fenster zu kleben. Von diesen Bewohnern stimmte nun eine große Mehrheit dem Schild zu. Die kleine Geste hatte ihr Selbstbild verändert: Ich bin jemand, der sich für Verkehrssicherheit einsetzt."
+        },
+        {
+          "title": "Kleine Schritte im Netz",
+          "text": "Im Internet ist die Technik zur Routine geworden. Erst die Mailadresse für den Rabatt, dann das kostenlose Probeabo, dann die Kreditkarte »nur zur Bestätigung«. Jeder Schritt ist für sich unbedenklich und macht den nächsten wahrscheinlicher. Verwandt ist der Trick mit dem niedrigen Einstieg: Man sagt zu einem günstigen Angebot zu, danach kommen Zusatzkosten ans Licht, und die meisten bleiben trotzdem dabei. Der Mechanismus hat auch eine gute Seite. Wer sich selbst etwas angewöhnen will, kann mit einer lächerlich kleinen Zusage beginnen, etwa zwei Minuten Üben am Tag."
+        }
+      ],
+      "tryIt": "Achte heute auf eine Anmeldung oder ein Angebot in mehreren Schritten und frag dich beim dritten Schritt, ob du ihm als erstem zugestimmt hättest.",
+      "takeaways": [
+        "Ein kleines Ja verändert das Selbstbild und erleichtert das große.",
+        "Jede neue Bitte verdient eine neue Entscheidung."
+      ]
+    }
+  },
+  {
+    "id": "simpson-paradoxon",
+    "name": "Simpson-Paradoxon",
+    "category": "Statistik-Falle",
+    "explanation": "Ein Zusammenhang, der in der Gesamtzahl klar zu sehen ist, kann verschwinden oder sich umkehren, sobald man die Daten in Gruppen aufteilt. Das geschieht, wenn die Gruppen ungleich groß sind und sich in einem verborgenen Merkmal unterscheiden.",
+    "example": "Klinik A hat eine höhere Sterblichkeit als Klinik B und wirkt schlechter. Tatsächlich behandelt A viel mehr schwere Fälle. Bei leichten wie bei schweren Fällen schneidet A jeweils besser ab.",
+    "defense": "Frag bei jedem Gesamtvergleich: Sind die Gruppen überhaupt vergleichbar? Lass dir die Zahlen nach dem wichtigsten Unterschied aufgeschlüsselt zeigen.",
+    "deep": {
+      "lead": "Zusammengefasste Zahlen können das Gegenteil dessen zeigen, was in jeder einzelnen Teilgruppe gilt.",
+      "sections": [
+        {
+          "title": "Der Fall Berkeley",
+          "text": "In den 1970er-Jahren fiel an der Universität Berkeley auf, dass von den männlichen Bewerbern für ein weiterführendes Studium ein deutlich größerer Anteil zugelassen wurde als von den weiblichen. Der Verdacht der Benachteiligung lag nahe. Statistiker prüften die einzelnen Fachbereiche und fanden dort keine systematische Bevorzugung von Männern, in einigen hatten Frauen sogar leicht bessere Chancen. Die Erklärung lag in der Fächerwahl. Frauen bewarben sich häufiger in überlaufenen Fächern mit hohen Ablehnungsquoten, Männer häufiger dort, wo fast jeder genommen wurde."
+        },
+        {
+          "title": "Welche Zahl gilt nun?",
+          "text": "Das Unangenehme am Paradox ist, dass keine Rechenregel sagt, ob die Gesamtzahl oder die Aufschlüsselung die richtige Antwort liefert. Man muss verstehen, wie die Daten zustande kamen. Bei den Kliniken ist die Schwere der Fälle eine Ursache, die vor der Behandlung feststand; also zählt der Vergleich innerhalb der Gruppen. Teilt man dagegen nach etwas auf, das erst Folge der Behandlung ist, führt die Aufschlüsselung in die Irre. Der Informatiker Judea Pearl hat daraus gefolgert: Statistik allein genügt nicht, man braucht eine Vorstellung von Ursache und Wirkung."
+        }
+      ],
+      "tryIt": "Wenn du heute einen Vergleich zweier Gruppen liest, etwa Schulen, Länder oder Kliniken, überlege, worin sich die Gruppen von vornherein unterscheiden.",
+      "takeaways": [
+        "Ein Gesamttrend kann sich in jeder Teilgruppe umkehren.",
+        "Welche Aufteilung zählt, entscheidet das Wissen über Ursachen."
+      ]
+    }
+  },
+  {
+    "id": "gesetz-der-kleinen-zahlen",
+    "name": "Gesetz der kleinen Zahlen",
+    "category": "Statistik-Falle",
+    "explanation": "Du traust kleinen Stichproben zu viel zu. Bei wenigen Fällen schwanken Ergebnisse stark und liefern leicht extreme Werte. Diese Ausschläge wirken wie ein Muster, für das du dann eine Ursache suchst, obwohl nur der Zufall am Werk war.",
+    "example": "Ein Restaurant hat drei Bewertungen mit fünf Sternen, ein anderes vierhundert mit 4,6. Du nimmst das erste und wirst enttäuscht. Drei Stimmen können Zufall sein, vierhundert kaum.",
+    "defense": "Frag bei jeder Zahl zuerst: Auf wie vielen Fällen beruht sie? Je weniger, desto weniger sagt ein besonders gutes oder schlechtes Ergebnis.",
+    "deep": {
+      "lead": "Extreme Ergebnisse finden sich fast immer bei den Kleinen, bei den besten wie bei den schlechtesten. Das ist Rechnen, kein Rätsel.",
+      "sections": [
+        {
+          "title": "Die Landkreise mit dem wenigsten Krebs",
+          "text": "Eine Auswertung amerikanischer Landkreise zeigte, dass Nierenkrebs dort am seltensten vorkam, wo wenige Menschen leben: in ländlichen, dünn besiedelten Gegenden. Die Erklärung scheint auf der Hand zu liegen, saubere Luft, frisches Essen, wenig Stress. Dieselbe Auswertung zeigte jedoch, dass auch die Kreise mit den höchsten Raten ländlich und dünn besiedelt waren. Hier böten sich Armut und schlechte Versorgung an. Beides ist unnötig. In einem Kreis mit wenigen Einwohnern lassen zwei Fälle mehr oder weniger die Rate in die Höhe schnellen oder auf null fallen."
+        },
+        {
+          "title": "Kleine Schulen, große Irrtümer",
+          "text": "Derselbe Fehler kostete viel Geld. Unter den erfolgreichsten Schulen in den USA waren kleine Schulen auffällig häufig. Stiftungen steckten daraufhin Milliarden in die Aufteilung großer Schulen. Übersehen wurde, dass kleine Schulen auch unter den schlechtesten überdurchschnittlich oft vertreten waren. Der Begriff stammt von Amos Tversky und Daniel Kahneman, die zeigten, dass sogar ausgebildete Forscher kleinen Stichproben zu viel zutrauen. Im Alltag steckt der Fehler in jedem »Ich kenne zwei Leute, bei denen das geholfen hat« und in jeder Bestenliste, die nicht nach Fallzahl gewichtet."
+        }
+      ],
+      "tryIt": "Such bei der nächsten Produkt- oder Lokalbewertung zuerst die Zahl der Stimmen und erst dann den Durchschnitt.",
+      "takeaways": [
+        "Kleine Stichproben liefern häufiger extreme Werte, in beide Richtungen.",
+        "Vor dem Deuten kommt die Frage nach der Fallzahl."
+      ]
+    }
+  },
+  {
+    "id": "publikationsverzerrung",
+    "name": "Publikationsverzerrung",
+    "category": "Statistik-Falle",
+    "explanation": "Studien mit auffälligen, positiven Ergebnissen werden eher veröffentlicht als solche, die nichts finden. Wer nur das Gedruckte liest, sieht deshalb ein geschöntes Bild: Wirkungen erscheinen größer und sicherer, als sie sind.",
+    "example": "Zu einem Nahrungsergänzungsmittel findest du fünf Studien mit positivem Ergebnis. Dass zwölf weitere ohne Befund in Schubladen liegen, steht nirgends.",
+    "defense": "Such nach Übersichtsarbeiten, die auch unveröffentlichte und vorab angemeldete Studien einbeziehen. Frag bei jeder Erfolgsmeldung: Wie viele Versuche gab es insgesamt?",
+    "deep": {
+      "lead": "Was nicht veröffentlicht wird, verschwindet nicht einfach. Es verfälscht alles, was veröffentlicht wurde.",
+      "sections": [
+        {
+          "title": "Die Schublade voller Nullergebnisse",
+          "text": "Der Psychologe Robert Rosenthal sprach vom Schubladenproblem: Fachzeitschriften drucken, was neu und eindeutig ist, und Forscher reichen Fehlschläge gar nicht erst ein. Wie groß der Schaden sein kann, zeigte eine Untersuchung zu Antidepressiva. Forscher verglichen alle Studien, die bei der amerikanischen Zulassungsbehörde gemeldet waren, mit dem, was später in Zeitschriften erschien. Bei der Behörde war etwa die Hälfte der Studien positiv ausgefallen. In der Fachliteratur wirkten fast alle positiv, weil negative Ergebnisse nicht veröffentlicht oder günstiger dargestellt worden waren."
+        },
+        {
+          "title": "Gegenmittel und Alltagsfassung",
+          "text": "Die Wissenschaft hat reagiert. Klinische Studien müssen vielerorts vor Beginn in öffentlichen Registern angemeldet werden, mit festgelegter Fragestellung. Manche Zeitschriften sagen den Abdruck zu, bevor das Ergebnis bekannt ist. Große Wiederholungsprojekte in der Psychologie haben gezeigt, dass sich ein erheblicher Teil bekannter Befunde nicht bestätigen ließ. Außerhalb der Forschung wirkt derselbe Filter überall. Nachrichten berichten das Überraschende, Ratgeber die Erfolge, Bekannte ihre gelungenen Diäten. Nahe verwandt ist der Überlebensirrtum. Dort fehlen die Gescheiterten, hier fehlen die Versuche, bei denen nichts herauskam."
+        }
+      ],
+      "tryIt": "Wenn dir heute eine Studie als Beleg genannt wird, frag nach, ob es eine Übersichtsarbeit dazu gibt, und such fünf Minuten danach.",
+      "takeaways": [
+        "Veröffentlicht wird bevorzugt, was eine Wirkung zeigt.",
+        "Einzelne Studien wiegen wenig, Übersichten über alle Versuche viel."
+      ]
+    }
+  },
+  {
+    "id": "relatives-und-absolutes-risiko",
+    "name": "Relatives und absolutes Risiko",
+    "category": "Statistik-Falle",
+    "explanation": "»Das Risiko verdoppelt sich« klingt bedrohlich, sagt aber nichts, solange du die Ausgangszahl nicht kennst. Von eins auf zwei unter zehntausend ist eine Verdopplung und trotzdem winzig. Relative Angaben machen kleine Effekte groß.",
+    "example": "Schlagzeile: »Wurst erhöht Darmkrebsrisiko um 18 Prozent.« Gemeint ist: Von hundert Menschen erkranken im Leben statt etwa fünf dann etwa sechs.",
+    "defense": "Frag immer: Von wie viel auf wie viel, bezogen auf wie viele Menschen und welchen Zeitraum? Lass dir Nutzen und Schaden in denselben Einheiten nennen.",
+    "deep": {
+      "lead": "Dieselbe Tatsache lässt sich als »doppelt so gefährlich« oder als »einer von siebentausend mehr« ausdrücken. Beides stimmt.",
+      "sections": [
+        {
+          "title": "Die Pillen-Panik von 1995",
+          "text": "Der Psychologe Gerd Gigerenzer hat einen Fall bekannt gemacht. In Großbritannien warnte eine Arzneimittelkommission, eine neue Generation der Antibabypille verdopple das Thromboserisiko. Viele Frauen setzten die Pille erschrocken ab. In absoluten Zahlen bedeutete die Warnung: Statt einer von siebentausend Frauen erlitten zwei eine Thrombose. Im Jahr darauf gab es in England und Wales nach Schätzungen rund dreizehntausend zusätzliche Schwangerschaftsabbrüche, dazu viele ungewollte Geburten. Schwangerschaft und Abbruch bergen ihrerseits ein höheres Thromboserisiko als die Pille. Die Warnung hat mehr geschadet als das Mittel."
+        },
+        {
+          "title": "Der Trick mit den zwei Maßstäben",
+          "text": "Besonders irreführend wird es, wenn Nutzen und Schaden verschieden dargestellt werden. Der Nutzen einer Vorsorge oder eines Medikaments erscheint dann relativ, etwa »senkt die Sterblichkeit um zwanzig Prozent«, der Schaden absolut, etwa »Nebenwirkungen bei zwei von hundert«. Die zwanzig Prozent können bedeuten, dass von tausend Menschen vier statt fünf sterben. Ärzte nutzen deshalb eine anschauliche Kennzahl: Wie viele Personen müssen behandelt werden, damit einer einen Nutzen hat? Sind es zweihundert, sieht die Entscheidung anders aus, als die Prozentzahl nahelegt."
+        }
+      ],
+      "tryIt": "Such in den Nachrichten von heute eine Prozentangabe zu einem Risiko und versuch herauszufinden, auf welche absolute Zahl sie sich bezieht.",
+      "takeaways": [
+        "Prozentuale Veränderungen ohne Ausgangswert sagen fast nichts.",
+        "Immer nachfragen: von wie vielen auf wie viele?"
+      ]
+    }
+  },
+  {
+    "id": "texanischer-scharfschuetze",
+    "name": "Texanischer Scharfschütze",
+    "category": "Statistik-Falle",
+    "explanation": "Wer erst schießt und dann die Zielscheibe um die Einschüsse malt, trifft immer. Genauso entstehen scheinbare Muster, wenn man in vorhandenen Daten so lange sucht, bis etwas auffällt, und es nachträglich zur Vorhersage erklärt.",
+    "example": "Ein Börsenbrief zeigt, dass seine Strategie in den letzten zehn Jahren jeden Crash »vorhergesehen« hätte. Die Regeln wurden freilich erst nach diesen zehn Jahren festgelegt.",
+    "defense": "Frag: Stand die Behauptung fest, bevor die Daten angesehen wurden? Ein Muster zählt erst, wenn es sich an neuen, unabhängigen Daten bestätigt.",
+    "deep": {
+      "lead": "In jeder großen Datenmenge finden sich Häufungen und Übereinstimmungen. Die Frage ist nur, ob jemand vorher gesagt hat, wo.",
+      "sections": [
+        {
+          "title": "Geheime Botschaften in jedem dicken Buch",
+          "text": "In den 1990er-Jahren behauptete ein Bestseller, im hebräischen Text der Bibel seien Vorhersagen verschlüsselt, darunter die Ermordung eines israelischen Regierungschefs. Man müsse nur jeden soundsovielten Buchstaben lesen. Der Autor forderte Kritiker heraus, Ähnliches in einem anderen Buch zu finden. Der Mathematiker Brendan McKay nahm an und fand mit derselben Methode in »Moby Dick« die Ankündigung mehrerer berühmter Attentate. Wer bei einem langen Text Schrittweite, Richtung und Stichwort frei wählen darf, findet alles. Das Verfahren beweist nur die Größe des Heuhaufens."
+        },
+        {
+          "title": "Dieselbe Falle in der Forschung",
+          "text": "Seriöser, aber im Kern gleich ist das Problem des vielfachen Testens. Wer in einem Datensatz hundert mögliche Zusammenhänge prüft, findet bei der üblichen Fehlerschwelle im Schnitt fünf, die nur der Zufall erzeugt hat. Berichtet er bloß diese fünf, sieht es nach Entdeckungen aus. So entstehen Meldungen über auffällige Krankheitshäufungen in einzelnen Orten oder über Lebensmittel, die angeblich vor allem Möglichen schützen. Redliche Forschung legt deshalb die Fragestellung vor der Auswertung fest und prüft Zufallsfunde an frischen Daten. Erst dann ist die Zielscheibe vor dem Schuss gemalt."
+        }
+      ],
+      "tryIt": "Wenn dir heute jemand ein erstaunliches Muster zeigt, frag, wie viele andere Muster er hätte finden können, wenn dieses nicht aufgetaucht wäre.",
+      "takeaways": [
+        "Nachträglich gefundene Muster beweisen wenig.",
+        "Eine Vorhersage zählt nur, wenn sie vor den Daten da war."
+      ]
+    }
+  },
+  {
+    "id": "falsifizierbarkeit",
+    "name": "Falsifizierbarkeit",
+    "category": "Denkwerkzeug",
+    "explanation": "Eine Behauptung taugt nur dann etwas, wenn sich angeben lässt, welche Beobachtung sie widerlegen würde. Was mit jedem denkbaren Ausgang vereinbar ist, erklärt nichts. Je mehr eine Aussage verbietet, desto mehr sagt sie.",
+    "example": "»Du wirst bald eine wichtige Begegnung haben« kann nie falsch sein. »Bis Freitag ruft dich jemand an, den du seit einem Jahr nicht gesprochen hast« lässt sich prüfen.",
+    "defense": "Frag bei jeder starken Behauptung, auch bei deiner eigenen: Was müsste geschehen, damit du sagst, ich habe mich geirrt? Gibt es keine Antwort, sei vorsichtig.",
+    "deep": {
+      "lead": "Eine Theorie, die alles erklären kann, hat einen Makel: Sie riskiert nichts und lässt sich darum auch durch nichts bestätigen.",
+      "sections": [
+        {
+          "title": "Wien 1919",
+          "text": "Der junge Karl Popper begegnete in Wien mehreren Lehren, die ihre Anhänger begeisterten, darunter die Psychoanalyse und der Marxismus. Ihn machte stutzig, dass sie jedes Ereignis deuten konnten, auch gegensätzliche. Im selben Jahr prüfte eine Expedition während einer Sonnenfinsternis Einsteins Vorhersage, dass die Sonne das Licht ferner Sterne ablenkt. Hätten die Aufnahmen anderes gezeigt, wäre die Theorie erledigt gewesen. Dieser Unterschied wurde Poppers Maßstab. Wissenschaftlich ist eine Aussage, die an der Erfahrung scheitern kann. Dass sie bisher nicht gescheitert ist, macht sie vorläufig glaubwürdig, nie endgültig."
+        },
+        {
+          "title": "Grenzen des Maßstabs",
+          "text": "Wissenschaftshistoriker haben eingewandt, dass Forscher eine bewährte Theorie nicht beim ersten widersprechenden Messwert fallen lassen, und das zu Recht, denn der Fehler kann im Gerät liegen. Als die Bahn des Uranus nicht zu Newtons Gesetzen passte, verwarf man nicht Newton, sondern vermutete einen unbekannten Planeten und fand den Neptun. Popper selbst sah den Unterschied zwischen solchen prüfbaren Hilfsannahmen und bloßen Ausreden. Für den Alltag bleibt der Kern brauchbar. Ziele, Prognosen und Versprechen sind nur etwas wert, wenn feststeht, woran man ihr Scheitern erkennt."
+        }
+      ],
+      "tryIt": "Formuliere eine deiner Überzeugungen so um, dass sie bis zu einem bestimmten Datum eindeutig bestätigt oder widerlegt sein kann.",
+      "takeaways": [
+        "Was durch nichts widerlegbar ist, sagt nichts über die Welt.",
+        "Gute Aussagen nennen die Bedingung ihres eigenen Scheiterns."
+      ]
+    }
+  },
+  {
+    "id": "bayessches-denken",
+    "name": "Bayes'sches Denken",
+    "category": "Denkwerkzeug",
+    "explanation": "Überzeugungen sind keine Schalter mit an und aus, sondern Regler. Du beginnst mit einer Einschätzung, wie wahrscheinlich etwas ist, und verschiebst sie mit jedem neuen Hinweis ein Stück, je nachdem, wie gut der Hinweis zu den Alternativen passt.",
+    "example": "Deine sonst pünktliche Freundin ist zehn Minuten zu spät. Du denkst nicht »Unfall«, sondern »wahrscheinlich Stau«. Nach einer Stunde ohne Nachricht rückst du die Einschätzung deutlich weiter.",
+    "defense": "Frag bei jedem neuen Hinweis: Wie viel eher würde ich das sehen, wenn meine Vermutung stimmt, als wenn sie falsch ist? Danach richtet sich, wie weit du rückst.",
+    "deep": {
+      "lead": "Wer Wahrscheinlichkeiten statt Gewissheiten führt, muss nie eine Meinung umstoßen. Er passt sie nur laufend an.",
+      "sections": [
+        {
+          "title": "Ein Pfarrer und sein Nachlass",
+          "text": "Thomas Bayes war ein englischer Geistlicher des 18. Jahrhunderts, der sich nebenbei mit Mathematik beschäftigte. Seine Abhandlung darüber, wie man aus Beobachtungen auf deren Ursachen zurückschließt, erschien erst nach seinem Tod, herausgegeben von einem Freund. Der Franzose Laplace entwickelte den Gedanken unabhängig davon zu einem allgemeinen Verfahren. Die Regel besagt im Kern: Die neue Einschätzung ergibt sich aus der alten, gewichtet damit, wie gut die Beobachtung zur Vermutung passt. Lange galt das als unwissenschaftlich, weil man mit einer bloßen Anfangsschätzung beginnen muss."
+        },
+        {
+          "title": "Wracksuche und Prognosen",
+          "text": "Praktisch bewährt hat sich die Methode bei der Suche nach Verschollenem. Als 2009 ein französisches Passagierflugzeug über dem Atlantik abstürzte, blieb das Wrack zwei Jahre unauffindbar. Dann ließen die Ermittler eine Karte der Wahrscheinlichkeiten berechnen, die alle Hinweise und auch die erfolglosen Suchfahrten einbezog. Das Wrack lag nahe der Stelle mit dem höchsten Wert und wurde binnen Tagen gefunden. Der Forscher Philip Tetlock fand Ähnliches bei Menschen, die politische Ereignisse besonders treffsicher vorhersagen: Sie ändern ihre Schätzungen oft und in kleinen Schritten."
+        }
+      ],
+      "tryIt": "Gib einer Vermutung von heute eine Zahl, etwa »70 Prozent, dass der Termin stattfindet«. Passe sie an, sobald ein neuer Hinweis kommt.",
+      "takeaways": [
+        "Überzeugungen sind Grade, die sich mit jedem Hinweis verschieben.",
+        "Ein Hinweis zählt so viel, wie er die Alternativen unterscheidet."
+      ]
+    }
+  },
+  {
+    "id": "erwartungswert",
+    "name": "Erwartungswert",
+    "category": "Denkwerkzeug",
+    "explanation": "Um unsichere Möglichkeiten zu vergleichen, multiplizierst du jeden möglichen Ausgang mit seiner Wahrscheinlichkeit und zählst alles zusammen. Das Ergebnis sagt, was eine Entscheidung im Durchschnitt bringt, wenn du sie viele Male triffst.",
+    "example": "Ein Los kostet 2 € und gewinnt mit einer Chance von eins zu hundert 100 €. Der Erwartungswert ist 1 €. Du zahlst also im Schnitt bei jedem Los einen Euro drauf.",
+    "defense": "Schreib bei wichtigen Entscheidungen Chancen und Beträge auf, statt nur auf den besten oder schlimmsten Fall zu starren. Schließ aber alles aus, was dich ruinieren kann.",
+    "deep": {
+      "lead": "Der Erwartungswert tritt im Einzelfall fast nie ein. Er ist trotzdem die beste Richtschnur für alles, was sich wiederholt.",
+      "sections": [
+        {
+          "title": "Seltene große Gewinne",
+          "text": "Das Verfahren erklärt Entscheidungen, die auf den ersten Blick unvernünftig aussehen. Wer Wagniskapital vergibt, weiß, dass die meisten jungen Firmen scheitern. Er investiert trotzdem, weil die wenigen Erfolge das Vielfache des Einsatzes bringen und die Summe positiv bleibt. Umgekehrt ist eine Wette schlecht, die neunmal von zehn einen kleinen Gewinn abwirft und beim zehnten Mal alles kostet. Menschen bewerten solche Fälle oft nach der Häufigkeit des Gewinnens. Entscheidend ist aber, wie groß die Beträge sind, und zwar auf beiden Seiten."
+        },
+        {
+          "title": "Wann der Durchschnitt in die Irre führt",
+          "text": "Der Erwartungswert setzt voraus, dass du oft genug spielen kannst, um beim Durchschnitt anzukommen. Bei einmaligen oder ruinösen Entscheidungen gilt das nicht. Deshalb ist eine Haftpflichtversicherung vernünftig, obwohl sie im Schnitt mehr kostet, als sie auszahlt: Du tauschst einen kleinen sicheren Verlust gegen die Abwehr eines Schadens, von dem du dich nie erholen würdest. Aus demselben Grund setzen erfahrene Spieler nie ihr ganzes Kapital, selbst wenn die Chancen günstig stehen. Wer einmal bei null ist, kann die folgenden guten Wetten nicht mehr mitmachen."
+        }
+      ],
+      "tryIt": "Rechne für ein Gewinnspiel oder eine Zusatzversicherung, die dir begegnet, grob aus: Chance mal Betrag gegen den Preis.",
+      "takeaways": [
+        "Erwartungswert: jeder Ausgang mal seine Wahrscheinlichkeit, alles addiert.",
+        "Er gilt für Wiederholbares; Ruin muss vorher ausgeschlossen sein."
+      ]
+    }
+  },
+  {
+    "id": "fermi-schaetzung",
+    "name": "Fermi-Schätzung",
+    "category": "Denkwerkzeug",
+    "explanation": "Auch ohne genaue Daten kommst du zu einer brauchbaren Größenordnung, wenn du eine Frage in Teilfragen zerlegst, die du einzeln grob schätzen kannst, und die Ergebnisse malnimmst. Die Fehler der Teilschätzungen heben sich oft gegenseitig auf.",
+    "example": "Wie viele Friseure gibt es in Deutschland? 84 Millionen Menschen, jeder etwa sechs Haarschnitte im Jahr; ein Friseur schafft rund 2500 im Jahr. Das ergibt etwa 200 000.",
+    "defense": "Bevor du eine Zahl glaubst oder nachschlägst, überschlag sie selbst in drei, vier Schritten. Weicht die Angabe um das Zehnfache ab, stimmt etwas nicht.",
+    "deep": {
+      "lead": "Eine Schätzung, die um den Faktor zwei danebenliegt, ist für die meisten Entscheidungen genauso gut wie die exakte Zahl.",
+      "sections": [
+        {
+          "title": "Papierschnipsel in der Druckwelle",
+          "text": "Der Physiker Enrico Fermi war berühmt dafür, mit wenig Information zu erstaunlich guten Zahlen zu kommen. Beim ersten Atombombentest 1945 ließ er, viele Kilometer entfernt, in dem Moment, als die Druckwelle eintraf, Papierschnipsel aus der Hand fallen. Aus der Strecke, die sie verweht wurden, überschlug er die Sprengkraft, lange bevor die Messgeräte ausgewertet waren. Er lag in der richtigen Größenordnung. Seinen Studenten stellte er Aufgaben wie die, wie viele Klavierstimmer es in Chicago gebe. Es ging nie um die Antwort, sondern um den Weg."
+        },
+        {
+          "title": "Warum grobe Rechnungen stimmen",
+          "text": "Das Verfahren lebt davon, dass man eine unbekannte Größe in bekannte zerlegt: Einwohner, Haushalte, Häufigkeiten, Zeiten. Manche Annahme ist zu hoch, manche zu niedrig, und beim Malnehmen gleicht sich vieles aus. Nützlich ist die Methode vor allem als Plausibilitätsprüfung. Angenommen, eine Schlagzeile behauptet, in einer Stadt würden täglich eine Million Kaffeebecher weggeworfen. Bei dreihunderttausend Einwohnern wären das mehr als drei pro Kopf, Säuglinge eingerechnet. Auch für eigene Pläne taugt der Überschlag. Wer vor der Geschäftsidee Kunden, Preis und Kosten grob durchrechnet, erspart sich manche Enttäuschung."
+        }
+      ],
+      "tryIt": "Schätze in vier Schritten, wie viele Liter Wasser du im Jahr verbrauchst. Schlag danach den Durchschnittswert nach und vergleiche.",
+      "takeaways": [
+        "Große Fragen in schätzbare Teile zerlegen und malnehmen.",
+        "Die Größenordnung genügt, um Unsinn zu erkennen."
+      ]
+    }
+  },
+  {
+    "id": "umkehrbare-entscheidungen",
+    "name": "Umkehrbare Entscheidungen",
+    "category": "Denkwerkzeug",
+    "explanation": "Entscheidungen sind entweder Türen, durch die man zurückgehen kann, oder solche, die hinter einem zufallen. Die ersten darfst du schnell und mit wenig Wissen treffen, weil ein Irrtum billig ist. Nur die zweiten verdienen langes Abwägen.",
+    "example": "Eine neue Frisur wächst heraus, ein Probeabo lässt sich kündigen: schnell entscheiden. Ein Hauskauf, eine Tätowierung oder eine Kündigung im Zorn lassen sich kaum zurücknehmen: langsam.",
+    "defense": "Frag zuerst: Was kostet es, das rückgängig zu machen? Ist es wenig, entscheide heute. Ist es viel, nimm dir Zeit und such nach einer Probefassung.",
+    "deep": {
+      "lead": "Wie gründlich du entscheiden solltest, hängt weniger von der Größe der Sache ab als davon, ob es einen Rückweg gibt.",
+      "sections": [
+        {
+          "title": "Türen mit einer und mit zwei Richtungen",
+          "text": "Das Bild von den Türen stammt aus einem Aktionärsbrief des Amazon-Gründers Jeff Bezos. Große Organisationen, schrieb er, behandelten irgendwann jede Entscheidung, als wäre sie endgültig. Das mache sie langsam und ängstlich. Die meisten Entscheidungen seien aber Türen, durch die man einfach zurückkann, und sollten von Einzelnen oder kleinen Gruppen rasch getroffen werden. An anderer Stelle nannte er eine Faustzahl: Wer wartet, bis er neunzig Prozent der gewünschten Information hat, ist meist zu spät; etwa siebzig reichen, wenn man Fehler schnell bemerkt und korrigiert."
+        },
+        {
+          "title": "Aus Einbahnstraßen Proben machen",
+          "text": "Der zweite Nutzen des Gedankens liegt darin, Endgültiges umkehrbar zu machen. Vor dem Umzug in eine andere Stadt kann man dort einen Monat zur Untermiete wohnen, vor dem Berufswechsel ein Praktikum machen, vor der Firmengründung drei zahlende Kunden suchen. Es gibt allerdings einen Haken. Der Psychologe Daniel Gilbert ließ Studenten Fotos auswählen, die sie behalten durften. Wer seine Wahl später noch ändern konnte, war mit dem Bild unzufriedener als jene, deren Entscheidung feststand. Offene Rückwege halten den Zweifel wach. Für die Zufriedenheit ist es deshalb gut, sie irgendwann bewusst zu schließen."
+        }
+      ],
+      "tryIt": "Nimm eine Entscheidung, die du aufschiebst, und frag: Tür mit Rückweg oder ohne? Mit Rückweg: Entscheide sie noch heute.",
+      "takeaways": [
+        "Umkehrbares schnell entscheiden, Endgültiges gründlich.",
+        "Viele Einbahnstraßen lassen sich vorher als Probe testen."
+      ]
+    }
+  },
+  {
+    "id": "komparativer-vorteil",
+    "name": "Komparativer Vorteil",
+    "category": "Denkwerkzeug",
+    "explanation": "Arbeitsteilung lohnt sich selbst dann, wenn einer alles besser kann. Entscheidend ist nicht, wer etwas am besten macht, sondern worauf jeder am wenigsten verzichten muss, wenn er es übernimmt. Jeder sollte das tun, wobei sein Vorsprung am größten ist.",
+    "example": "Eine Anwältin tippt schneller als ihr Assistent. Trotzdem lässt sie ihn die Schriftsätze schreiben, denn jede Stunde am Tippen kostet sie eine Stunde, in der sie das Dreifache verdienen könnte.",
+    "defense": "Frag bei der Verteilung von Aufgaben nicht »Wer kann das am besten?«, sondern »Was bleibt liegen, wenn diese Person es macht?«",
+    "deep": {
+      "lead": "Auch wer in allem schlechter ist, hat etwas anzubieten, und wer in allem besser ist, gewinnt trotzdem, wenn er abgibt.",
+      "sections": [
+        {
+          "title": "Tuch und Wein",
+          "text": "Der englische Ökonom David Ricardo erklärte den Gedanken Anfang des 19. Jahrhunderts an zwei Ländern und zwei Waren. In seinem Beispiel stellt Portugal sowohl Wein als auch Tuch mit weniger Arbeit her als England. Dennoch lohnt sich der Tausch. Portugals Vorsprung ist beim Wein viel größer als beim Tuch. Konzentriert es sich auf Wein und England auf Tuch, entsteht insgesamt mehr von beidem, und beide Seiten stehen besser da als ohne Handel. Die Idee gilt als eine der wenigen Einsichten der Wirtschaftslehre, die zugleich wahr und nicht selbstverständlich sind."
+        },
+        {
+          "title": "Im Haushalt und im Team",
+          "text": "Das Prinzip gilt überall, wo Zeit knapp ist. In einer Wohngemeinschaft kocht vielleicht einer besser und putzt auch gründlicher. Sinnvoll ist trotzdem, dass er kocht, wenn dort der Abstand größer ist, und der andere putzt. In Teams führt die Frage nach dem Besten oft dazu, dass eine Person alles an sich zieht und zum Nadelöhr wird. Grenzen hat das Modell auch. Es unterstellt, dass sich jeder mühelos umstellen kann. Wer seine Arbeit verliert, weil sie anderswo günstiger erledigt wird, hat vom Gesamtgewinn zunächst nichts."
+        }
+      ],
+      "tryIt": "Welche Aufgabe erledigst du selbst, nur weil du sie besser kannst als andere? Überlege, was du in dieser Zeit stattdessen schaffen würdest.",
+      "takeaways": [
+        "Es zählt der größte relative Vorsprung, nicht das absolute Können.",
+        "Abgeben lohnt sich auch für den, der alles besser kann."
+      ]
+    }
+  },
+  {
+    "id": "wohlwollende-auslegung",
+    "name": "Wohlwollende Auslegung",
+    "category": "Denkwerkzeug",
+    "explanation": "Bevor du widersprichst, gib der Aussage des anderen die stärkste und vernünftigste Deutung, die sie zulässt. So prüfst du das beste Argument der Gegenseite statt einer Karikatur und erkennst schneller, ob du selbst falschliegst.",
+    "example": "Dein Kollege sagt: »Homeoffice macht faul.« Statt dich zu ärgern, fragst du: »Meinst du, dass ohne feste Zeiten die Abstimmung leidet?« Darüber lässt sich reden.",
+    "defense": "Gib die Position des anderen in eigenen Worten so wieder, dass er zustimmt, bevor du etwas entgegnest. Gelingt dir das nicht, hast du sie noch nicht verstanden.",
+    "deep": {
+      "lead": "Wer nur die schwächste Fassung einer Ansicht widerlegt, hat nichts gewonnen. Erst die stärkste Fassung ist ein Gegner, an dem man lernt.",
+      "sections": [
+        {
+          "title": "Vier Regeln für fairen Streit",
+          "text": "Der Philosoph Daniel Dennett hat Regeln überliefert, die auf den Spieltheoretiker Anatol Rapoport zurückgehen. Erstens: Gib den Standpunkt deines Gegenübers so klar und fair wieder, dass er sagt, er hätte es selbst nicht besser ausdrücken können. Zweitens: Zähle auf, worin ihr übereinstimmt. Drittens: Sag, was du von ihm gelernt hast. Erst viertens darfst du widersprechen. Das Gegenteil heißt Strohmann: Man verzerrt eine Position, bis sie leicht umzuwerfen ist. Für die wohlwollende Fassung hat sich im Englischen das Scherzwort vom Mann aus Stahl eingebürgert."
+        },
+        {
+          "title": "Nachsicht ist nicht Zustimmung",
+          "text": "Das Prinzip verlangt nicht, dem anderen recht zu geben. Es verlangt, anzunehmen, dass er Gründe hat, und nach ihnen zu suchen. Der Ökonom und Philosoph John Stuart Mill schrieb, wer nur die eigene Seite einer Frage kenne, wisse auch von dieser wenig. Grenzen hat die Methode dort, wo jemand erkennbar nicht an Klärung interessiert ist, sondern provozieren will. Selbst dann schadet es selten, zuerst nachzufragen. Der praktische Gewinn ist groß: Wer sich verstanden fühlt, hört eher zu, und viele Streitpunkte lösen sich als Missverständnis über Wörter auf."
+        }
+      ],
+      "tryIt": "Beginne deinen nächsten Widerspruch mit »Wenn ich dich richtig verstehe, meinst du …« und warte die Bestätigung ab, bevor du weitersprichst.",
+      "takeaways": [
+        "Prüfe die stärkste Fassung der Gegenmeinung, nicht die schwächste.",
+        "Verstehen kommt vor dem Widerlegen und ist keine Zustimmung."
+      ]
+    }
+  },
+  {
+    "id": "rueckkopplungsschleifen",
+    "name": "Rückkopplungsschleifen",
+    "category": "Systemdenken",
+    "explanation": "In vielen Systemen wirkt das Ergebnis auf seine eigene Ursache zurück. Verstärkende Schleifen treiben eine Entwicklung immer weiter an, ausgleichende bremsen sie und halten einen Zustand stabil. Wer nur gerade Ursache-Wirkungs-Ketten sucht, übersieht beide.",
+    "example": "Je mehr Leute ein Lokal empfehlen, desto voller wird es, und desto mehr Leute empfehlen es: verstärkend. Wird es zu voll, bleiben Gäste weg: ausgleichend. Beides läuft gleichzeitig.",
+    "defense": "Frag bei jeder Entwicklung: Was nährt sich hier selbst, und was bremst? Rechne damit, dass Wirkungen verzögert eintreffen, und steuere nicht zu früh nach.",
+    "deep": {
+      "lead": "Ein Thermostat und ein pfeifendes Mikrofon folgen demselben Prinzip mit entgegengesetztem Vorzeichen.",
+      "sections": [
+        {
+          "title": "Zwei Arten von Kreisen",
+          "text": "Hält jemand ein Mikrofon vor den Lautsprecher, nimmt es dessen Ton auf, der Verstärker macht ihn lauter, das Mikrofon nimmt den lauteren Ton auf. Binnen Sekunden entsteht ein Pfeifen. So arbeiten verstärkende Schleifen; man findet sie bei Gerüchten, Börsenpanik und Zinseszins. Die Heizung mit Thermostat macht das Gegenteil. Wird es zu warm, schaltet sie ab, wird es zu kalt, schaltet sie ein. Der Körper regelt so seine Temperatur, ein Markt über den Preis das Angebot. Die Systemforscherin Donella Meadows hat gezeigt, dass sich fast jedes Verhalten komplexer Systeme aus diesen beiden Bausteinen zusammensetzt."
+        },
+        {
+          "title": "Die Tücke der Verzögerung",
+          "text": "Schwierig werden Regelkreise, wenn die Wirkung auf sich warten lässt. Unter einer fremden Dusche drehst du auf heiß, es passiert nichts, du drehst weiter, dann kommt das Wasser kochend. Du drehst zurück, wieder zu weit. Dasselbe Pendeln zeigt sich in der Wirtschaft. Sind Schweine teuer, mästen viele Bauern mehr Tiere. Bis diese schlachtreif sind, vergeht über ein Jahr; dann ist das Angebot zu groß, der Preis fällt, und alle züchten weniger. Agrarökonomen nennen das seit den 1920er-Jahren Schweinezyklus. Geduld nach einem Eingriff ist deshalb oft klüger als Nachregeln."
+        }
+      ],
+      "tryIt": "Zeichne für eine Gewohnheit, etwa spätes Aufbleiben, einen Kreis: Was führt wozu, und an welcher Stelle wirkt die Folge auf den Anfang zurück?",
+      "takeaways": [
+        "Verstärkende Schleifen eskalieren, ausgleichende stabilisieren.",
+        "Verzögerte Wirkung verleitet zum Übersteuern."
+      ]
+    }
+  },
+  {
+    "id": "engpass-denken",
+    "name": "Engpass-Denken",
+    "category": "Systemdenken",
+    "explanation": "Die Leistung eines Ablaufs wird von seiner engsten Stelle bestimmt. Verbesserungen an jeder anderen Stelle bringen nichts oder verschlimmern den Stau davor. Zuerst muss man den Engpass finden, dann alles andere nach ihm ausrichten.",
+    "example": "Ein Team stellt zwei weitere Entwickler ein, doch die Software kommt nicht schneller heraus. Jede Änderung muss von derselben einen Person geprüft und freigegeben werden.",
+    "defense": "Such die Stelle, vor der sich Arbeit staut. Entlaste zuerst diese eine Stelle und beschleunige nichts, was davor oder dahinter liegt.",
+    "deep": {
+      "lead": "Eine Kette ist so stark wie ihr schwächstes Glied. Die anderen Glieder zu verstärken ändert daran nichts.",
+      "sections": [
+        {
+          "title": "Der langsamste Wanderer",
+          "text": "Der israelische Physiker Eliyahu Goldratt verpackte den Gedanken in einen Roman über einen Werksleiter. In der Schlüsselszene führt dieser eine Pfadfindergruppe auf einer Wanderung. Die Reihe zieht sich immer weiter auseinander, weil ein schwer bepackter Junge in der Mitte nicht mithalten kann. Die Lösung: Der Langsamste geht nach vorn, die anderen nehmen ihm Gepäck ab. Nun bleibt die Gruppe zusammen und kommt schneller an. Übertragen auf die Fabrik heißt das: Die langsamste Maschine gibt den Takt vor, und jede Minute, die sie stillsteht, ist für das ganze Werk verloren."
+        },
+        {
+          "title": "Vom Acker bis zum Kalender",
+          "text": "Die Einsicht ist älter als die Betriebswirtschaft. In der Agrarchemie des 19. Jahrhunderts setzte sich das Minimumgesetz durch, das mit dem Namen Justus von Liebig verbunden ist: Das Wachstum einer Pflanze richtet sich nach dem Nährstoff, der am knappsten ist. Mehr Stickstoff hilft nicht, wenn Kalium fehlt. Im eigenen Alltag ist der Engpass selten die Zeit insgesamt. Häufiger ist es Schlaf, eine ausstehende Entscheidung oder eine Person, auf deren Antwort alles wartet. Ist ein Engpass beseitigt, wandert er weiter. Die Suche beginnt dann von vorn."
+        }
+      ],
+      "tryIt": "Wo stapelt sich bei dir gerade Unerledigtes? Die Stelle direkt dahinter ist dein Engpass. Überlege einen Schritt, der nur sie entlastet.",
+      "takeaways": [
+        "Nur die engste Stelle bestimmt den Durchsatz des Ganzen.",
+        "Verbesserungen abseits des Engpasses sind verschwendet."
+      ]
+    }
+  },
+  {
+    "id": "rebound-effekt",
+    "name": "Rebound-Effekt",
+    "category": "Systemdenken",
+    "explanation": "Wird etwas sparsamer oder billiger, nutzen Menschen mehr davon. Ein Teil der erhofften Einsparung, manchmal die ganze, wird so wieder aufgezehrt. Wer nur die Technik betrachtet und das veränderte Verhalten nicht einrechnet, überschätzt den Gewinn.",
+    "example": "Das neue Auto verbraucht einen Liter weniger. Weil das Fahren nun günstiger ist, nimmst du es auch für kurze Wege und fährst im Jahr zweitausend Kilometer mehr.",
+    "defense": "Frag bei jeder Effizienzverbesserung: Was mache ich mit dem Gesparten? Leg vorher fest, wofür Zeit oder Geld verwendet werden, sonst füllt sich die Lücke von selbst.",
+    "deep": {
+      "lead": "Effizienz senkt den Preis einer Sache, und was billiger wird, wird stärker nachgefragt.",
+      "sections": [
+        {
+          "title": "Jevons und die Kohle",
+          "text": "Der englische Ökonom William Stanley Jevons machte Mitte des 19. Jahrhunderts eine Beobachtung, die seinen Zeitgenossen widersinnig vorkam. Dampfmaschinen waren immer sparsamer geworden, und doch stieg Englands Kohleverbrauch rasant. Gerade weil eine Maschine mit weniger Kohle auskam, lohnte sich ihr Einsatz nun in Branchen, für die sie vorher zu teuer gewesen war. Jevons folgerte, es sei ein Irrtum, sparsame Nutzung mit sinkendem Verbrauch gleichzusetzen. Bei der Beleuchtung wiederholte sich das Muster. Jede sparsamere Lampentechnik führte dazu, dass mehr Flächen länger und heller beleuchtet wurden."
+        },
+        {
+          "title": "Straßen, Waschmaschinen, Postfächer",
+          "text": "Verkehrsforscher kennen dasselbe als erzeugten Verkehr. Wird eine verstopfte Straße verbreitert, fließt der Verkehr zunächst besser. Das lockt neue Fahrten an, und nach einigen Jahren ist der Stau zurück. Im Haushalt nahm die Waschmaschine viel Mühe ab, zugleich stiegen die Ansprüche an Sauberkeit, sodass heute weit häufiger gewaschen wird. Die E-Mail machte Briefe billig und füllte die Postfächer. Meist frisst der Effekt nur einen Teil der Einsparung auf, nicht alles. Wer wirklich weniger verbrauchen will, braucht neben besserer Technik aber eine Obergrenze oder einen Preis."
+        }
+      ],
+      "tryIt": "Welche Zeitersparnis der letzten Jahre, etwa durch eine App oder ein Gerät, hat dir wirklich freie Zeit gebracht? Wohin ist der Rest geflossen?",
+      "takeaways": [
+        "Was effizienter wird, wird meist auch mehr genutzt.",
+        "Einsparungen bleiben nur, wenn das Gesparte bewusst gebunden wird."
+      ]
+    }
+  },
+  {
+    "id": "moralisches-risiko",
+    "name": "Moralisches Risiko",
+    "category": "Systemdenken",
+    "explanation": "Wer die Folgen seines Handelns nicht selbst trägt, geht größere Risiken ein oder gibt sich weniger Mühe. Sobald ein anderer für den Schaden aufkommt, etwa eine Versicherung, der Staat oder der Arbeitgeber, verschieben sich die Anreize.",
+    "example": "Mit dem eigenen Auto fährst du vorsichtig über Bordsteine. Im Mietwagen mit Vollkasko ohne Selbstbeteiligung nimmst du es deutlich weniger genau.",
+    "defense": "Frag bei jeder Regelung: Wer entscheidet, und wer zahlt, wenn es schiefgeht? Sorge dafür, dass der Entscheidende einen spürbaren Teil der Folgen selbst trägt.",
+    "deep": {
+      "lead": "Mit Charakterschwäche hat der Begriff wenig zu tun. Er beschreibt, was Absicherung mit ganz gewöhnlichen Menschen macht.",
+      "sections": [
+        {
+          "title": "Ein Begriff aus der Versicherung",
+          "text": "Versicherer bemerkten früh, dass sich Kunden nach Vertragsschluss anders verhalten. Wer gegen Diebstahl versichert ist, schließt das Fahrrad nachlässiger ab. Das eigentliche Problem liegt im ungleichen Wissen: Die Gesellschaft kann nicht beobachten, wie sorgfältig jemand ist. Ihre Gegenmittel sind bekannt. Die Selbstbeteiligung lässt den Kunden einen Teil jedes Schadens tragen, der Schadenfreiheitsrabatt belohnt Vorsicht über Jahre. Beide sollen dafür sorgen, dass sich Achtsamkeit weiterhin lohnt. Ökonomen haben den Begriff später auf jede Beziehung übertragen, in der einer handelt und ein anderer haftet."
+        },
+        {
+          "title": "Zu groß zum Scheitern",
+          "text": "In der Finanzkrise ab 2008 wurde das Muster zum politischen Streitfall. Große Banken hatten hohe Risiken aufgebaut. Als sie zu stürzen drohten, sprangen Staaten ein, weil ein Zusammenbruch die ganze Wirtschaft mitgerissen hätte. Gewinne waren zuvor privat geblieben, Verluste trug nun die Allgemeinheit. Kritiker warnten, wer mit Rettung rechnen dürfe, werde beim nächsten Mal noch mehr wagen. Im Kleinen findet sich dieselbe Lage beim Manager mit Bonus ohne Verlustbeteiligung oder beim Handwerker, der nach Stunden bezahlt wird und es nicht eilig hat."
+        }
+      ],
+      "tryIt": "Such eine Lage, in der du auf Kosten anderer entscheidest, etwa Spesen, Firmenwagen oder Gemeinschaftskasse, und prüfe, ob du mit eigenem Geld gleich handeln würdest.",
+      "takeaways": [
+        "Wer nicht haftet, wird unvorsichtiger, ganz ohne böse Absicht.",
+        "Selbstbeteiligung bringt Entscheidung und Folgen wieder zusammen."
+      ]
+    }
+  },
+  {
+    "id": "lindy-effekt",
+    "name": "Lindy-Effekt",
+    "category": "Faustregel",
+    "explanation": "Bei Dingen, die nicht verschleißen, also Ideen, Büchern, Techniken und Bräuchen, gilt: Je länger es sie schon gibt, desto länger werden sie voraussichtlich noch bestehen. Jedes überstandene Jahr ist ein Hinweis auf Robustheit.",
+    "example": "Ein Buch, das seit hundert Jahren gelesen wird, wird wahrscheinlich auch in fünfzig Jahren noch gelesen. Ob der Bestseller vom letzten Herbst in fünf Jahren noch lieferbar ist, ist offen.",
+    "defense": "Wenn du wenig Zeit hast, gib dem Erprobten den Vorzug: bei Büchern, Ratschlägen und Werkzeugen. Frag bei Neuem: Was hat das Alte so lange am Leben gehalten?",
+    "deep": {
+      "lead": "Bei Menschen bedeutet hohes Alter ein nahes Ende. Bei Ideen und Techniken bedeutet es oft das Gegenteil.",
+      "sections": [
+        {
+          "title": "Ein Feinkostladen in New York",
+          "text": "Der Name geht auf ein Lokal am Broadway zurück, in dem Leute aus dem Showgeschäft nach der Vorstellung saßen und fachsimpelten. Ein Zeitschriftenartikel der 1960er-Jahre beschrieb ihre Faustregeln darüber, wie lange sich ein Komiker im Fernsehen hält. Der Mathematiker Benoît Mandelbrot griff das Stichwort auf und gab ihm eine genauere Fassung. Bekannt machte es Nassim Taleb. Seine Formulierung: Bei allem, was nicht altert wie ein Lebewesen, wächst die zu erwartende Restlaufzeit mit dem bisherigen Alter. Zeit ist für solche Dinge ein Prüfstand, kein Verfall."
+        },
+        {
+          "title": "Brauchbar, aber kein Naturgesetz",
+          "text": "Die Regel erklärt, warum das Rad, der Stuhl und das gebundene Buch viele ihrer modernen Herausforderer überlebt haben. Sie hilft bei der Auswahl, wenn man selbst nicht prüfen kann. Ein Ernährungsrat, den schon die Urgroßeltern befolgten, ist vermutlich solider als die Diät der Saison. Man sollte sie aber nicht überdehnen. Was sich lange hält, tut das manchmal aus Gewohnheit oder weil der Wechsel teuer wäre, und auch sehr Altes verschwindet, wenn sich die Umgebung ändert. Der Effekt gibt eine Wahrscheinlichkeit an und keine Garantie."
+        }
+      ],
+      "tryIt": "Wähle als nächstes Buch eines, das mindestens fünfzig Jahre alt ist und noch gedruckt wird. Überlege beim Lesen, was es haltbar gemacht hat.",
+      "takeaways": [
+        "Für Unverderbliches gilt: Alter spricht für weitere Lebensdauer.",
+        "Die Regel ist eine Wahrscheinlichkeit, keine Garantie."
+      ]
+    }
+  },
+  {
+    "id": "peter-prinzip",
+    "name": "Peter-Prinzip",
+    "category": "Faustregel",
+    "explanation": "In einer Hierarchie wird befördert, wer seine jetzige Aufgabe gut macht. Das wiederholt sich, bis jemand eine Stelle erreicht, der er nicht mehr gewachsen ist. Dort bleibt er. Auf Dauer füllen sich Posten mit Leuten, die für sie ungeeignet sind.",
+    "example": "Die beste Verkäuferin des Hauses wird Vertriebsleiterin. Nun muss sie planen, Konflikte schlichten und Berichte schreiben, was ihr nicht liegt. Das Team verliert seine stärkste Kraft und bekommt eine überforderte Chefin.",
+    "defense": "Prüf vor einem Aufstieg, ob du die neue Tätigkeit willst und kannst oder nur Titel und Gehalt. Wer befördert, sollte auf die Eignung für die neue Rolle achten.",
+    "deep": {
+      "lead": "Befördert wird für die Leistung von gestern in eine Aufgabe, die ganz andere Fähigkeiten verlangt.",
+      "sections": [
+        {
+          "title": "Eine Satire, die sich bestätigte",
+          "text": "Der kanadische Pädagoge Laurence J. Peter veröffentlichte das Prinzip Ende der 1960er-Jahre zusammen mit dem Autor Raymond Hull in einem Buch, das als Parodie auf Managementratgeber angelegt war. Der Kernsatz: In einer Hierarchie neigt jeder dazu, bis zu seiner Stufe der Unfähigkeit aufzusteigen. Was als Spott begann, bekam später Daten. Eine Untersuchung amerikanischer Vertriebsorganisationen mit Zehntausenden Beschäftigten ergab, dass die umsatzstärksten Verkäufer am ehesten befördert wurden und als Vorgesetzte besonders schlecht abschnitten: Die Verkaufszahlen ihrer Teams sanken."
+        },
+        {
+          "title": "Auswege aus der Leiter",
+          "text": "Die Ursache liegt im Aufbau, nicht in den Personen. Fachliches Können und Führen sind verschiedene Berufe, und die Beförderung ist oft die einzige Form der Anerkennung, die ein Betrieb kennt. Abhilfe schaffen Fachlaufbahnen, in denen jemand mehr verdienen und Ansehen gewinnen kann, ohne Mitarbeiter zu führen. Hilfreich sind auch Probezeiten in der neuen Rolle mit der Möglichkeit, ohne Gesichtsverlust zurückzukehren. Peter selbst empfahl augenzwinkernd, sich rechtzeitig ein wenig unfähig zu stellen, um auf der Stufe zu bleiben, auf der man gut und zufrieden ist."
+        }
+      ],
+      "tryIt": "Frag dich bei deinem nächsten Karriereschritt: Welche Tätigkeiten würden meinen Tag füllen, und mache ich genau diese gern?",
+      "takeaways": [
+        "Gute Leistung in einer Rolle sagt wenig über die nächste.",
+        "Fachlaufbahnen belohnen Können, ohne es zu verschwenden."
+      ]
+    }
+  },
+  {
+    "id": "brandolinis-gesetz",
+    "name": "Brandolinis Gesetz",
+    "category": "Faustregel",
+    "explanation": "Unsinn zu widerlegen kostet ein Vielfaches der Mühe, die es braucht, ihn in die Welt zu setzen. Eine falsche Behauptung ist in Sekunden formuliert; die Richtigstellung verlangt Recherche, Belege und Geduld und erreicht meist weniger Leute.",
+    "example": "Im Familienchat steht: »Mikrowellen zerstören alle Vitamine.« Der Satz hat fünf Wörter. Deine Antwort mit Quellen dauert eine halbe Stunde, und der nächste Kettenbrief ist schon unterwegs.",
+    "defense": "Widerleg nicht alles. Wähl aus, was Schaden anrichtet, und gib die Beweislast zurück: »Woher weißt du das?« Wer behauptet, muss belegen.",
+    "deep": {
+      "lead": "Die Wahrheit ist im Nachteil, weil sie genau sein muss. Unsinn darf griffig, kurz und überraschend sein.",
+      "sections": [
+        {
+          "title": "Ein Tweet wird zum Gesetz",
+          "text": "Der italienische Programmierer Alberto Brandolini schrieb den Satz 2013 in einer Kurznachricht, in deutlich derberen Worten: Der Aufwand, Blödsinn zu widerlegen, sei um eine Größenordnung höher als der, ihn hervorzubringen. Der Gedanke ist alt. Schon im 18. Jahrhundert schrieb Jonathan Swift, die Lüge fliege und die Wahrheit humple hinterher. Neu sind die Messungen. Forscher werteten die Verbreitung von weit über hunderttausend Nachrichten auf einem Kurznachrichtendienst aus und fanden, dass falsche Meldungen sich schneller, weiter und über mehr Stufen ausbreiteten als wahre, vor allem weil sie neuartiger und aufregender wirkten."
+        },
+        {
+          "title": "Haushalten mit der eigenen Kraft",
+          "text": "In Debatten wird das Ungleichgewicht gezielt genutzt. Wer in kurzer Zeit zwanzig halbwahre Behauptungen aneinanderreiht, zwingt den anderen, entweder alles zu widerlegen und sich zu verzetteln oder das meiste stehen zu lassen. Sinnvoller ist, die schwächste zentrale Behauptung herauszugreifen und daran die Methode zu zeigen. Studien deuten zudem darauf hin, dass Vorbeugen besser wirkt als Nachbessern. Wer die üblichen Tricks der Irreführung einmal erklärt bekommen hat, fällt seltener auf neue Beispiele herein. Für den Alltag heißt das: nicht jede Schlacht schlagen."
+        }
+      ],
+      "tryIt": "Wenn dir heute eine steile Behauptung begegnet, schreib keine Widerlegung, sondern stell eine einzige Frage: »Was ist die Quelle dafür?«",
+      "takeaways": [
+        "Behaupten ist billig, Widerlegen teuer.",
+        "Kraft sparen: auswählen und die Beweislast zurückgeben."
+      ]
+    }
+  }
+]
