@@ -389,14 +389,10 @@ class LibraryViewModel @Inject constructor(
         viewModelScope.launch {
             _seriesBulkDownloading.value = true
             _downloadActionError.value = null
-            for (video in episodes) {
-                if (localDownloads.isDownloaded(video.id)) continue
-                val result = localDownloads.download(video.toDownloadMetadata(series))
-                if (result.isFailure) {
-                    _downloadActionError.value =
-                        "Download fehlgeschlagen — ist das Gerät online?"
-                    break
-                }
+            val metas = episodes.map { it.toDownloadMetadata(series) }
+            if (localDownloads.downloadAll(metas).isFailure) {
+                _downloadActionError.value =
+                    "Download fehlgeschlagen — ist das Gerät online?"
             }
             _seriesBulkDownloading.value = false
         }

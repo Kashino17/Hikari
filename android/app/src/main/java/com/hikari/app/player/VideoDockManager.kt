@@ -27,6 +27,7 @@ data class ActiveVideoInfo(
 @Singleton
 class VideoDockManager @Inject constructor(
     private val playbackRepository: Lazy<PlaybackRepository>,
+    private val skipEngine: SponsorSkipEngine,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -125,6 +126,7 @@ class VideoDockManager @Inject constructor(
             onSavePosition?.invoke(vid, pos)
             scope.launch { runCatching { playbackRepository.get().savePosition(vid, pos) } }
         }
+        skipEngine.unbind()
         activePlayer?.removeListener(playerListener)
         activePlayer?.release()
         activePlayer = null

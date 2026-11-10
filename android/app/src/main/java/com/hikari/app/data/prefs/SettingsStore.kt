@@ -16,8 +16,9 @@ import kotlinx.coroutines.flow.map
 private val Context.dataStore by preferencesDataStore(name = "hikari_settings")
 
 private val BACKEND_URL_KEY = stringPreferencesKey("backend_url")
-private val DAILY_BUDGET_KEY = intPreferencesKey("daily_budget")
 private val SMART_DOWNLOADS_KEY = booleanPreferencesKey("smart_downloads")
+private val MANUAL_RETENTION_DAYS_KEY = intPreferencesKey("manual_download_retention_days")
+private val SMART_RETENTION_DAYS_KEY = intPreferencesKey("smart_download_retention_days")
 private val DOWNLOADS_LIMIT_BYTES_KEY = longPreferencesKey("downloads_limit_bytes")
 private val AUTH_TOKEN_KEY = stringPreferencesKey("auth_token")
 private val INSTRUMENTAL_ONLY_KEY = booleanPreferencesKey("music_instrumental_only")
@@ -32,7 +33,10 @@ private val RUSSIAN_PODCAST_REMINDER_ENABLED_KEY = booleanPreferencesKey("russia
 private val RUSSIAN_PODCAST_REMINDER_MINUTES_KEY = intPreferencesKey("russian_podcast_reminder_minutes")
 
 const val DEFAULT_BACKEND_URL = "http://macbook-pro.taile64a95.ts.net:3939"
-const val DEFAULT_DAILY_BUDGET = 15
+/** Selbst geladene Videos bleiben, bis man sie löscht. */
+const val DEFAULT_MANUAL_RETENTION_DAYS = 0
+/** Smart-Downloads räumen sich nach einem Monat selbst weg. */
+const val DEFAULT_SMART_RETENTION_DAYS = 30
 const val DEFAULT_NEWS_TIME_MINUTES = 450 // 7:30 Uhr
 const val DEFAULT_NEWS_TOPICS = "politik,technologie,wissen"
 const val DEFAULT_RUSSIAN_PODCAST_REMINDER_MINUTES = 1080
@@ -45,12 +49,18 @@ class SettingsStore @Inject constructor(
         it[BACKEND_URL_KEY] ?: DEFAULT_BACKEND_URL
     }
 
-    val dailyBudget: Flow<Int> = ctx.dataStore.data.map {
-        it[DAILY_BUDGET_KEY] ?: DEFAULT_DAILY_BUDGET
-    }
-
     val smartDownloads: Flow<Boolean> = ctx.dataStore.data.map {
         it[SMART_DOWNLOADS_KEY] ?: true
+    }
+
+    /** Aufbewahrung selbst geladener Videos in Tagen; 0 = für immer. */
+    val manualDownloadRetentionDays: Flow<Int> = ctx.dataStore.data.map {
+        it[MANUAL_RETENTION_DAYS_KEY] ?: DEFAULT_MANUAL_RETENTION_DAYS
+    }
+
+    /** Aufbewahrung der Smart-Downloads in Tagen; 0 = für immer. */
+    val smartDownloadRetentionDays: Flow<Int> = ctx.dataStore.data.map {
+        it[SMART_RETENTION_DAYS_KEY] ?: DEFAULT_SMART_RETENTION_DAYS
     }
 
     /** Letztes vom Server gemeldetes Storage-Limit. Wird offline weitergeführt. */
@@ -162,8 +172,12 @@ class SettingsStore @Inject constructor(
         ctx.dataStore.edit { it[BACKEND_URL_KEY] = url.trimEnd('/') }
     }
 
-    suspend fun setDailyBudget(value: Int) {
-        ctx.dataStore.edit { it[DAILY_BUDGET_KEY] = value.coerceIn(1, 100) }
+    suspend fun setManualDownloadRetentionDays(days: Int) {
+        ctx.dataStore.edit { it[MANUAL_RETENTION_DAYS_KEY] = days.coerceAtLeast(0) }
+    }
+
+    suspend fun setSmartDownloadRetentionDays(days: Int) {
+        ctx.dataStore.edit { it[SMART_RETENTION_DAYS_KEY] = days.coerceAtLeast(0) }
     }
 
     suspend fun setSmartDownloads(enabled: Boolean) {

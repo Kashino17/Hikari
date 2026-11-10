@@ -34,6 +34,14 @@ data class LocalDownloadEntity(
     @ColumnInfo(name = "series_thumbnail_url") val seriesThumbnailUrl: String? = null,
     @ColumnInfo(name = "season") val season: Int? = null,
     @ColumnInfo(name = "episode") val episode: Int? = null,
+
+    /**
+     * Woher der Download kommt: MANUAL (selbst angestoßen) oder SMART (von den
+     * Smart-Downloads geholt). Danach richtet sich, wie lange er bleibt.
+     */
+    @ColumnInfo(name = "source", defaultValue = "MANUAL") val source: String = LocalDownloadSource.MANUAL.name,
 )
 
 enum class LocalDownloadKind { SERIES, CHANNEL, MOVIE }
+
+enum class LocalDownloadSource { MANUAL, SMART }

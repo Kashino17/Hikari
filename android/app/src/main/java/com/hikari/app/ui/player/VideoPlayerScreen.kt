@@ -70,6 +70,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -113,6 +114,9 @@ import com.hikari.app.data.api.dto.NextVideoDto
 import com.hikari.app.data.api.dto.VideoDetailDto
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.repo.PlaybackRepository
+import com.hikari.app.data.sponsor.SegmentBehavior
+import com.hikari.app.data.sponsor.SegmentCategories
+import com.hikari.app.player.AutoSkip
 import com.hikari.app.player.HikariPlayerFactory
 import com.hikari.app.player.VideoDockManager
 import androidx.compose.material.icons.filled.Cast
@@ -145,6 +149,8 @@ interface VideoPlayerEntryPoint {
     fun localDownloadManager(): com.hikari.app.domain.download.LocalDownloadManager
     fun hikariApi(): HikariApi
     fun videoDockManager(): VideoDockManager
+    fun sponsorSkipEngine(): com.hikari.app.player.SponsorSkipEngine
+    fun sponsorBlockPrefs(): com.hikari.app.data.prefs.SponsorBlockPrefs
 }
 
 private const val SEEK_STEP_MS = 10_000L
@@ -188,6 +194,9 @@ fun VideoPlayerScreen(
     val localDl = remember { ep.localDownloadManager() }
     val api = remember { ep.hikariApi() }
     val dockManager = remember { ep.videoDockManager() }
+    val skipEngine = remember { ep.sponsorSkipEngine() }
+    val skipState by skipEngine.state.collectAsState()
+    val skipBehaviors by remember { ep.sponsorBlockPrefs().behaviors }.collectAsState(initial = emptyMap())
     val baseUrl = remember { runBlocking { settingsStore.backendUrl.first() } }
     val cast = remember { CastController(ctx) }
     DisposableEffect(Unit) { onDispose { cast.release() } }
@@ -369,6 +378,8 @@ fun VideoPlayerScreen(
             player.setPlaybackSpeed(speed)
             if (cast.casting) castCurrent(savedPos)
         }
+        // Markierte Abschnitte (Sponsor, Intro …) für dieses Video überwachen.
+        skipEngine.bind(currentVideoId, player)
         dockManager.setActivePlayer(currentVideoId, currentTitle, channel, player)
         nextVideo = playbackRepo.nextVideo(currentVideoId)
         nextDismissed = false
@@ -402,6 +413,7 @@ fun VideoPlayerScreen(
             val isDocked = dockManager.isDocked.value
             val isCurrentDocked = isDocked && dockManager.activeVideo.value?.videoId == id
             if (!isCurrentDocked) {
+                skipEngine.unbind()
                 player.release()
             }
             if (pos > 0L) ioScope.launch { runCatching { playbackRepo.savePosition(id, pos) } }
@@ -747,6 +759,46 @@ fun VideoPlayerScreen(
         sheet = Sheet.None
     }
 
+    // ── Abschnitte & Kapitel ─────────────────────────────────────────────
+    val segmentsHere = if (skipState.videoId == currentVideoId) skipState.segments else emptyList()
+    val seekMarks = remember(segmentsHere, skipBehaviors) {
+        segmentsHere.mapNotNull { seg ->
+            val category = SegmentCategories.byKey(seg.category) ?: return@mapNotNull null
+            // Nur zeigen, was auch übersprungen oder angeboten wird.
+            val behavior = skipBehaviors[seg.category] ?: category.defaultBehavior
+            if (behavior == SegmentBehavior.IGNORE) return@mapNotNull null
+            SeekMark((seg.startSeconds * 1000).toLong(), (seg.endSeconds * 1000).toLong(), category.color)
+        }
+    }
+    val hasDuration = duration > 1L
+    val chapters = remember(detail?.description, hasDuration) {
+        parseChapters(detail?.description, if (hasDuration) duration else Long.MAX_VALUE)
+    }
+
+    // „… überspringen“ zeigt sich beim Eintritt in den Abschnitt 8 s lang und
+    // danach immer dann, wenn die Bedienelemente sichtbar sind.
+    val skipPrompt = skipState.prompt.takeIf { skipState.videoId == currentVideoId }
+    var skipPromptFresh by remember { mutableStateOf(false) }
+    LaunchedEffect(skipPrompt) {
+        skipPromptFresh = skipPrompt != null
+        if (skipPrompt != null) {
+            kotlinx.coroutines.delay(8_000)
+            skipPromptFresh = false
+        }
+    }
+    // Hinweis nach einem automatischen Sprung — 5 s, mit „Rückgängig“. Ein
+    // Sprung von vor dem Öffnen des Players wird nicht noch einmal gemeldet.
+    val skipTokenAtOpen = remember { skipEngine.state.value.lastAuto?.token }
+    val lastAutoSkip = skipState.lastAuto
+    var autoSkipNotice by remember { mutableStateOf<AutoSkip?>(null) }
+    LaunchedEffect(lastAutoSkip?.token) {
+        if (lastAutoSkip != null && lastAutoSkip.token != skipTokenAtOpen) {
+            autoSkipNotice = lastAutoSkip
+            kotlinx.coroutines.delay(5_000)
+        }
+        autoSkipNotice = null
+    }
+
     // ── Aufbau ───────────────────────────────────────────────────────────
     val seriesLabel = buildString {
         val d = detail
@@ -958,6 +1010,8 @@ fun VideoPlayerScreen(
                         positionMs = position,
                         durationMs = duration,
                         bufferedMs = buffered,
+                        marks = seekMarks,
+                        chapters = chapters,
                         onScrubStart = {
                             wasPlayingBeforeScrub.value = player.playWhenReady
                             player.playWhenReady = false
@@ -1037,6 +1091,33 @@ fun VideoPlayerScreen(
                 if (showCastPicker) CastPickerDialog(cast, onDismiss = { showCastPicker = false })
 
                 PlayerToast(toast, modifier = Modifier.align(Alignment.TopCenter).padding(top = if (panelMode) 56.dp else 72.dp))
+
+                // Abschnitt überspringen (Knopf) bzw. Hinweis nach automatischem Sprung.
+                // Im Hochformat mit Bedienelementen wandert er unter die obere Leiste,
+                // damit er die Vor-/Zurück-Knöpfe in der Bildmitte nicht verdeckt.
+                val skipAtTop = panelMode && chrome
+                SkipSegmentOverlay(
+                    prompt = skipPrompt
+                        ?.takeIf { !locked && !isScrubbing && !showNextOverlay && (skipPromptFresh || controlsVisible) }
+                        ?.let { SegmentCategories.byKey(it.category) },
+                    autoSkipped = autoSkipNotice
+                        ?.takeIf { !locked && !showNextOverlay }
+                        ?.let { SegmentCategories.byKey(it.segment.category) },
+                    onSkip = { skipEngine.skipPrompt() },
+                    onUndo = { skipEngine.undoLastAuto(); autoSkipNotice = null },
+                    compact = panelMode,
+                    modifier = Modifier
+                        .align(if (skipAtTop) Alignment.TopEnd else Alignment.BottomEnd)
+                        .padding(
+                            end = 16.dp,
+                            top = if (skipAtTop) 51.dp else 0.dp,
+                            bottom = when {
+                                skipAtTop -> 0.dp
+                                chrome -> 118.dp
+                                else -> 20.dp
+                            },
+                        ),
+                )
 
                 // Nächste Folge
                 val next = nextVideo

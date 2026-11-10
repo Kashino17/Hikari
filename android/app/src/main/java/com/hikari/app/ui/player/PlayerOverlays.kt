@@ -30,6 +30,7 @@ import androidx.compose.material.icons.outlined.BrightnessMedium
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.LockOpen
+import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material.icons.outlined.VolumeDown
 import androidx.compose.material.icons.outlined.VolumeOff
 import androidx.compose.material.icons.outlined.VolumeUp
@@ -37,6 +38,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.LibraryVideoDto
+import com.hikari.app.data.sponsor.SegmentCategory
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBorderStrong
 import com.hikari.app.ui.theme.HikariSurface
@@ -158,6 +161,97 @@ fun PlayerToast(text: String?, modifier: Modifier = Modifier) {
                 .padding(horizontal = 16.dp, vertical = 8.dp),
         )
     }
+}
+
+// ── Abschnitt überspringen (SponsorBlock) ────────────────────────────────────
+
+/**
+ * Rechts unten im Bild: entweder der Knopf „Intro überspringen“ (Abschnitte
+ * mit Verhalten „Knopf zeigen“) oder — nach einem automatischen Sprung — der
+ * Hinweis „Sponsor übersprungen“ samt „Rückgängig“.
+ */
+@Composable
+fun SkipSegmentOverlay(
+    prompt: SegmentCategory?,
+    autoSkipped: SegmentCategory?,
+    onSkip: () -> Unit,
+    onUndo: () -> Unit,
+    modifier: Modifier = Modifier,
+    /** Flachere Variante fürs Hochformat, wo zwischen Kopfleiste und Play-Knopf wenig Platz ist. */
+    compact: Boolean = false,
+) {
+    val padV = if (compact) 6.dp else 9.dp
+    val textSize = if (compact) 12.sp else 13.sp
+    Box(modifier = modifier, contentAlignment = Alignment.CenterEnd) {
+        AnimatedVisibility(
+            visible = prompt != null,
+            enter = fadeIn(tween(160)),
+            exit = fadeOut(tween(160)),
+        ) {
+            // Den zuletzt gezeigten Abschnitt festhalten, damit der Text beim Ausblenden nicht springt.
+            val shown = rememberLast(prompt)
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(Color.White)
+                    .clickable(onClick = onSkip)
+                    .padding(start = 16.dp, end = 12.dp, top = padV, bottom = padV),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "${shown?.shortLabel.orEmpty()} überspringen",
+                    color = Color.Black,
+                    fontSize = textSize,
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(Modifier.width(6.dp))
+                Icon(Icons.Outlined.SkipNext, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
+            }
+        }
+        AnimatedVisibility(
+            visible = prompt == null && autoSkipped != null,
+            enter = fadeIn(tween(160)),
+            exit = fadeOut(tween(220)),
+        ) {
+            val shown = rememberLast(autoSkipped)
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(Color.Black.copy(alpha = 0.72f))
+                    .border(1.dp, HikariBorderStrong, RoundedCornerShape(50))
+                    .padding(start = 14.dp, end = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(Modifier.size(8.dp).clip(CircleShape).background(shown?.color ?: Color.White))
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    "${shown?.shortLabel.orEmpty()} übersprungen",
+                    color = Color.White,
+                    fontSize = textSize,
+                )
+                Text(
+                    "Rückgängig",
+                    color = HikariAmber,
+                    fontSize = textSize,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .padding(start = 4.dp)
+                        .clip(RoundedCornerShape(50))
+                        .clickable(onClick = onUndo)
+                        .padding(horizontal = 10.dp, vertical = padV),
+                )
+            }
+        }
+    }
+}
+
+/** Merkt sich den letzten Nicht-null-Wert — für Inhalte, die gerade ausgeblendet werden. */
+@Composable
+private fun <T : Any> rememberLast(value: T?): T? {
+    val holder = remember { arrayOfNulls<Any>(1) }
+    if (value != null) holder[0] = value
+    @Suppress("UNCHECKED_CAST")
+    return holder[0] as T?
 }
 
 // ── Bildschirmsperre ─────────────────────────────────────────────────────────

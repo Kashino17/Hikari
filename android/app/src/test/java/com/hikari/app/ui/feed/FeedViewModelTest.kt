@@ -31,7 +31,6 @@ class FeedViewModelTest {
 
     @Before fun setUp() {
         every { settings.backendUrl } returns flowOf("http://laptop.local:3000")
-        every { settings.dailyBudget } returns flowOf(15)
         coEvery { repo.refresh() } returns Unit
         coEvery { repo.fetchSaved() } returns emptyList()
         coEvery { repo.fetchOld() } returns emptyList()

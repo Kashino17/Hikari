@@ -30,6 +30,7 @@ class HikariApp : Application(), Configuration.Provider {
     @Inject lateinit var podcastScheduler: com.hikari.app.domain.russian.RussianPodcastReminderScheduler
     @Inject lateinit var progressSyncScheduler: ProgressSyncScheduler
     @Inject lateinit var settings: SettingsStore
+    @Inject lateinit var retentionCleaner: dagger.Lazy<com.hikari.app.domain.download.DownloadRetentionCleaner>
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -64,6 +65,8 @@ class HikariApp : Application(), Configuration.Provider {
                 podcastScheduler.schedule(settings.russianPodcastReminderMinutes.first())
             }
         }
+        // Abgelaufene Downloads gleich beim Start vom Gerät räumen.
+        appScope.launch { runCatching { retentionCleaner.get().run() } }
         appScope.launch { settings.backendUrl.collect { imageBackendUrl = it } }
         appScope.launch { settings.authToken.collect { imageAuthToken = it } }
         Coil.setImageLoader(buildImageLoader())

@@ -20,7 +20,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         MusicPlayEventEntity::class,
         WhatsAppMessageEntity::class,
     ],
-    version = 22,
+    version = 23,
     exportSchema = false,
 )
 abstract class HikariDatabase : RoomDatabase() {
@@ -263,5 +263,16 @@ val MIGRATION_21_22 = object : Migration(21, 22) {
                 "lower(title) LIKE '%ohne gesang%' OR lower(title) LIKE '%no vocals%' OR " +
                 "lower(title) LIKE '%saxophone%' OR lower(title) LIKE '%cello%')",
         )
+    }
+}
+
+/**
+ * Downloads merken sich ihre Herkunft (selbst geladen oder Smart-Download).
+ * Der Bestand gilt als selbst geladen — so räumt die neue Aufbewahrungsfrist
+ * nach dem Update nichts weg, was schon auf dem Gerät liegt.
+ */
+val MIGRATION_22_23 = object : Migration(22, 23) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE local_downloads ADD COLUMN source TEXT NOT NULL DEFAULT 'MANUAL'")
     }
 }

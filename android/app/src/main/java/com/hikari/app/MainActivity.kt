@@ -13,11 +13,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
+import com.hikari.app.domain.update.UpdateCoordinator
 import com.hikari.app.ui.navigation.HikariNavHost
 import com.hikari.app.ui.navigation.SharedImport
 import com.hikari.app.ui.navigation.extractSharedUrl
 import com.hikari.app.ui.theme.HikariTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -30,6 +32,8 @@ class MainActivity : ComponentActivity() {
 
     /** Callback für Video-Player: Bild-im-Bild bei Home-Geste/App-Wechsel (Android 8+). */
     var onUserLeaveHintListener: (() -> Unit)? = null
+
+    @Inject lateinit var updateCoordinator: UpdateCoordinator
 
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -44,6 +48,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         deepLinkRoute = intent.deepLinkRoute()
         sharedImport = intent.sharedImport()
+        // Frischer Start (nicht bloß Drehen): nach Updates suchen und einen
+        // weggeklickten Update-Hinweis wieder zulassen.
+        if (savedInstanceState == null) updateCoordinator.onAppStart()
         // Ohne diese Permission zeigt Android 13+ keinerlei Notifications an —
         // weder die Media-Steuerung beim Musikhören noch den Tagesbericht.
         if (Build.VERSION.SDK_INT >= 33 &&

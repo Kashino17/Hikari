@@ -57,6 +57,7 @@ import com.hikari.app.ui.profile.DownloadSeriesDetailScreen
 import com.hikari.app.ui.profile.ProfileScreen
 import com.hikari.app.ui.profile.tabs.DownloadCategory
 import com.hikari.app.ui.settings.SettingsScreen
+import com.hikari.app.ui.update.UpdateBanner
 import java.net.URLDecoder
 import java.net.URLEncoder
 import com.hikari.app.ui.theme.HikariBg
@@ -723,6 +724,15 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                 )
             }
         }
+
+        // Update-Hinweis von oben — nicht über Vollbild-Inhalten (Video, Manga-
+        // Reader, Vollbild-Feed) und nicht in den Einstellungen, die das Update
+        // selbst zeigen.
+        UpdateBanner(
+            visible = !isVideoRoute && !isReaderRoute && !isGearSubPage &&
+                !(currentRoute == "feed" && feedFullscreen),
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
 
         // Angedockter Mini-Videoplayer (Apple-/YouTube-Lösung) direkt über der Bottom-Bar
         if (isVideoDockVisible) {

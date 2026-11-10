@@ -460,7 +460,7 @@ private fun SmartDownloadsCard(enabled: Boolean, onToggle: (Boolean) -> Unit) {
                 fontWeight = FontWeight.Bold,
             )
             Text(
-                "Lädt automatisch Folgen abonnierter Serien · nur über WLAN",
+                "Lädt »Später ansehen« und Lieblingssongs von selbst · nur im WLAN",
                 color = HikariTextMuted,
                 fontSize = 11.sp,
                 lineHeight = 14.sp,

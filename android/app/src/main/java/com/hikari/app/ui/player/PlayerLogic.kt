@@ -122,3 +122,36 @@ fun episodeLabel(season: Int?, episode: Int?): String = buildString {
         append("F$episode")
     }
 }
+
+// ── Kapitel ──────────────────────────────────────────────────────────────────
+
+/** Ein Kapitel aus der Videobeschreibung („0:00 Einleitung"). */
+data class VideoChapter(val startMs: Long, val title: String)
+
+private val CHAPTER_LINE = Regex(
+    """^\s*[-–•*]?\s*[\[(]?((?:\d{1,2}:)?\d{1,2}:\d{2})[\])]?\s*[-–—:|]?\s*(.+?)\s*$""",
+)
+
+private fun clockToMs(clock: String): Long =
+    clock.split(":").fold(0L) { acc, part -> acc * 60 + (part.toLongOrNull() ?: 0L) } * 1000L
+
+/**
+ * Liest Kapitel aus einer YouTube-Beschreibung. Es gelten YouTubes eigene
+ * Regeln, damit zufällige Zeitangaben im Fließtext keine Kapitel werden:
+ * mindestens drei Zeitmarken, die erste bei 0:00, streng aufsteigend.
+ */
+fun parseChapters(description: String?, durationMs: Long = Long.MAX_VALUE): List<VideoChapter> {
+    if (description.isNullOrBlank()) return emptyList()
+    val found = description.lineSequence()
+        .mapNotNull { line -> CHAPTER_LINE.matchEntire(line) }
+        .map { m -> VideoChapter(clockToMs(m.groupValues[1]), m.groupValues[2].trim()) }
+        .filter { it.title.isNotBlank() && it.startMs < durationMs }
+        .toList()
+    if (found.size < 3 || found.first().startMs != 0L) return emptyList()
+    if (found.zipWithNext().any { (a, b) -> b.startMs <= a.startMs }) return emptyList()
+    return found
+}
+
+/** Das Kapitel, in dem [positionMs] liegt. */
+fun chapterAt(chapters: List<VideoChapter>, positionMs: Long): VideoChapter? =
+    chapters.lastOrNull { it.startMs <= positionMs }

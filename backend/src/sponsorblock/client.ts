@@ -19,7 +19,7 @@ interface ApiSegment {
  * stamp "no segments" and the enhancement would be lost until a manual re-sync.
  */
 export async function fetchSponsorSegments(videoId: string): Promise<SponsorSegment[] | null> {
-  const url = `https://sponsor.ajay.pw/api/skipSegments?videoID=${encodeURIComponent(videoId)}`;
+  const url = `https://sponsor.ajay.app/api/skipSegments?videoID=${encodeURIComponent(videoId)}`;
   try {
     const res = await fetch(url);
     if (res.status === 404) return []; // confirmed: this video has no segments

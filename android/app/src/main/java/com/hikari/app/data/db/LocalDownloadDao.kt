@@ -14,6 +14,9 @@ interface LocalDownloadDao {
     @Query("SELECT * FROM local_downloads ORDER BY downloaded_at DESC")
     fun observeAll(): Flow<List<LocalDownloadEntity>>
 
+    @Query("SELECT * FROM local_downloads")
+    suspend fun all(): List<LocalDownloadEntity>
+
     @Query("SELECT video_id FROM local_downloads")
     fun observeIds(): Flow<List<String>>
 

@@ -4,12 +4,18 @@ import android.content.Context
 import com.hikari.app.data.db.LocalDownloadDao
 import com.hikari.app.data.db.LocalDownloadEntity
 import com.hikari.app.data.db.LocalDownloadKind
+import com.hikari.app.data.db.LocalDownloadSource
 import com.hikari.app.data.prefs.SettingsStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,13 +49,17 @@ data class LocalDownloadMetadata(
     val seriesThumbnailUrl: String? = null,
     val season: Int? = null,
     val episode: Int? = null,
+    /** Selbst angestoßen oder von den Smart-Downloads geholt. */
+    val source: LocalDownloadSource = LocalDownloadSource.MANUAL,
 )
 
 /**
  * Pulls a video file from the backend onto the device's app-private storage
- * (`filesDir/downloads/<videoId>.mp4`) and tracks it in Room. Survives screen
- * rotation but not process death — for v0.23.0 we don't run a foreground
- * service. Smart-Downloads engine (v0.24.0+) will move this to WorkManager.
+ * (`filesDir/downloads/<videoId>.mp4`) and tracks it in Room.
+ *
+ * Die Übertragung läuft in einem eigenen, app-weiten Scope: wer den Bildschirm
+ * verlässt (ViewModel wird beendet), bricht den Download damit nicht mehr ab.
+ * Den Prozess-Tod überlebt er nicht — dafür gibt es keinen Vordergrund-Dienst.
  */
 @Singleton
 class LocalDownloadManager @Inject constructor(
@@ -58,6 +68,11 @@ class LocalDownloadManager @Inject constructor(
     private val client: OkHttpClient,
     private val settings: SettingsStore,
 ) {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /** Laufende Übertragungen — ein zweiter Aufruf fürs selbe Video hängt sich an. */
+    private val inFlight = ConcurrentHashMap<String, Deferred<Result<LocalDownloadEntity>>>()
+
     /** Per-videoId progress 0f..1f. Removed from map when download finishes. */
     private val _progress = MutableStateFlow<Map<String, Float>>(emptyMap())
     val progress: StateFlow<Map<String, Float>> = _progress.asStateFlow()
@@ -95,8 +110,38 @@ class LocalDownloadManager @Inject constructor(
      * Downloads `videos/<videoId>.mp4` from the configured backend into local
      * storage. Returns Result.success on completion, Result.failure on any
      * IO/HTTP error (also clears progress entry).
+     *
+     * Wird der Aufrufer abgebrochen, läuft die Übertragung trotzdem zu Ende.
      */
-    suspend fun download(meta: LocalDownloadMetadata): Result<LocalDownloadEntity> =
+    suspend fun download(meta: LocalDownloadMetadata): Result<LocalDownloadEntity> {
+        val job = inFlight.computeIfAbsent(meta.videoId) { id ->
+            scope.async {
+                try {
+                    transfer(meta)
+                } finally {
+                    inFlight.remove(id)
+                }
+            }
+        }
+        return job.await()
+    }
+
+    /**
+     * Lädt mehrere Videos nacheinander (z. B. eine ganze Staffel) und hört beim
+     * ersten Fehler auf. Schon vorhandene werden übersprungen. Auch das läuft
+     * weiter, wenn der Aufrufer den Bildschirm verlässt.
+     */
+    suspend fun downloadAll(metas: List<LocalDownloadMetadata>): Result<Unit> =
+        scope.async {
+            for (meta in metas) {
+                if (isDownloaded(meta.videoId)) continue
+                val result = download(meta)
+                if (result.isFailure) return@async Result.failure<Unit>(result.exceptionOrNull() ?: IllegalStateException())
+            }
+            Result.success(Unit)
+        }.await()
+
+    private suspend fun transfer(meta: LocalDownloadMetadata): Result<LocalDownloadEntity> =
         withContext(Dispatchers.IO) {
             val target = File(downloadsDir, "${meta.videoId}.mp4")
             try {
@@ -153,6 +198,7 @@ class LocalDownloadManager @Inject constructor(
                     seriesThumbnailUrl = meta.seriesThumbnailUrl,
                     season = meta.season,
                     episode = meta.episode,
+                    source = meta.source.name,
                 )
                 dao.upsert(entity)
                 _progress.remove(meta.videoId)

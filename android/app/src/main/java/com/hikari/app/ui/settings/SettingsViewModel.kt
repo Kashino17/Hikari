@@ -1,36 +1,47 @@
 package com.hikari.app.ui.settings
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.DownloadsResponse
+import com.hikari.app.data.db.LocalDownloadDao
+import com.hikari.app.data.db.LocalDownloadEntity
+import com.hikari.app.data.db.LocalDownloadSource
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.data.prefs.SponsorBlockPrefs
 import com.hikari.app.data.sponsor.SegmentBehavior
+import com.hikari.app.domain.download.SmartDownloadScheduler
 import com.hikari.app.domain.repo.FeedRepository
 import com.hikari.app.domain.repo.MangaRepository
-import com.hikari.app.domain.update.UpdateCheckResult
-import com.hikari.app.domain.update.UpdateManager
+import com.hikari.app.domain.update.UpdateCoordinator
+import com.hikari.app.domain.update.UpdateState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
-import java.io.File
 import javax.inject.Inject
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** UI-State des In-App-Updaters in den Einstellungen. */
-sealed interface UpdateUiState {
-    data object Idle : UpdateUiState
-    data object Checking : UpdateUiState
-    data object UpToDate : UpdateUiState
-    data class Available(val version: String, val downloadUrl: String) : UpdateUiState
-    data class Downloading(val version: String, val percent: Int) : UpdateUiState
-    data class Downloaded(val version: String, val apk: File) : UpdateUiState
-    data class Error(val message: String) : UpdateUiState
+/** Erreichbarkeit des eigenen Servers, wie sie die Einstellungen zeigen. */
+sealed interface ServerStatus {
+    data object Checking : ServerStatus
+    data class Connected(val disk: DownloadsResponse) : ServerStatus
+    data object Unreachable : ServerStatus
+}
+
+/** Video-Downloads auf diesem Gerät, getrennt nach Herkunft. */
+data class DeviceDownloads(
+    val manual: List<LocalDownloadEntity> = emptyList(),
+    val smart: List<LocalDownloadEntity> = emptyList(),
+) {
+    val manualBytes: Long get() = manual.sumOf { it.byteSize }
+    val smartBytes: Long get() = smart.sumOf { it.byteSize }
+    val count: Int get() = manual.size + smart.size
+    val totalBytes: Long get() = manualBytes + smartBytes
 }
 
 @HiltViewModel
@@ -39,116 +50,97 @@ class SettingsViewModel @Inject constructor(
     private val feedRepo: FeedRepository,
     private val mangaRepo: MangaRepository,
     private val sbPrefs: SponsorBlockPrefs,
-    private val updateManager: UpdateManager,
-    @ApplicationContext private val appContext: Context,
+    private val updates: UpdateCoordinator,
+    private val smartScheduler: SmartDownloadScheduler,
+    localDownloadDao: LocalDownloadDao,
 ) : ViewModel() {
 
+    // ── Server ───────────────────────────────────────────────────────────
     val backendUrl: Flow<String> = store.backendUrl
-    val dailyBudget: Flow<Int> = store.dailyBudget
-    val smartDownloads: Flow<Boolean> = store.smartDownloads
     val authToken: Flow<String> = store.authToken
-    val sbBehaviors: Flow<Map<String, SegmentBehavior>> = sbPrefs.behaviors
 
-    // Zeitbudget des Tagesmixes (Minuten) — lebt im Backend; null = noch nicht geladen.
-    private val _budgetMinutes = MutableStateFlow<Int?>(null)
-    val budgetMinutes: StateFlow<Int?> = _budgetMinutes.asStateFlow()
+    private val _server = MutableStateFlow<ServerStatus>(ServerStatus.Checking)
+    val server: StateFlow<ServerStatus> = _server.asStateFlow()
 
     private val _mangaSyncStatus = MutableStateFlow<String?>(null)
     val mangaSyncStatus: StateFlow<String?> = _mangaSyncStatus.asStateFlow()
 
-    private val _diskUsage = MutableStateFlow<DownloadsResponse?>(null)
-    val diskUsage: StateFlow<DownloadsResponse?> = _diskUsage.asStateFlow()
+    // ── Wiedergabe ───────────────────────────────────────────────────────
+    val sbBehaviors: Flow<Map<String, SegmentBehavior>> = sbPrefs.behaviors
+    val skippedCount: Flow<Long> = sbPrefs.totalSkippedCount
+    val skippedMs: Flow<Long> = sbPrefs.totalSkippedMs
 
-    private val _updateState = MutableStateFlow<UpdateUiState>(UpdateUiState.Idle)
-    val updateState: StateFlow<UpdateUiState> = _updateState.asStateFlow()
+    // ── Downloads ────────────────────────────────────────────────────────
+    val smartDownloads: Flow<Boolean> = store.smartDownloads
+    val manualRetentionDays: Flow<Int> = store.manualDownloadRetentionDays
+    val smartRetentionDays: Flow<Int> = store.smartDownloadRetentionDays
+
+    val deviceDownloads: StateFlow<DeviceDownloads> = localDownloadDao.observeAll()
+        .map { rows ->
+            val (smart, manual) = rows.partition { it.source == LocalDownloadSource.SMART.name }
+            DeviceDownloads(manual = manual, smart = smart)
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, DeviceDownloads())
+
+    // ── App ──────────────────────────────────────────────────────────────
+    val updateState: StateFlow<UpdateState> = updates.state
 
     init {
-        refreshDiskUsage()
-        loadBudgetMinutes()
+        refreshServer()
+    }
+
+    /** Fragt den Server einmal an — die Antwort dient zugleich als Speicherstand. */
+    fun refreshServer() = viewModelScope.launch {
+        _server.value = ServerStatus.Checking
+        _server.value = runCatching { feedRepo.getDownloads() }
+            .fold({ ServerStatus.Connected(it) }, { ServerStatus.Unreachable })
     }
 
     fun setBackendUrl(url: String) = viewModelScope.launch {
         store.setBackendUrl(url)
-    }
-
-    fun setDailyBudget(value: Int) = viewModelScope.launch {
-        store.setDailyBudget(value)
-    }
-
-    fun setSmartDownloads(enabled: Boolean) = viewModelScope.launch {
-        store.setSmartDownloads(enabled)
+        // Der Netzwerk-Client übernimmt die neue Adresse über einen Flow — kurz warten.
+        delay(300)
+        refreshServer()
     }
 
     fun setAuthToken(token: String) = viewModelScope.launch {
         store.setAuthToken(token)
+        delay(300)
+        refreshServer()
     }
 
-    private fun loadBudgetMinutes() = viewModelScope.launch {
-        runCatching { feedRepo.getBudgetMinutes() }.onSuccess { _budgetMinutes.value = it }
-    }
-
-    fun setBudgetMinutes(minutes: Int) = viewModelScope.launch {
-        runCatching { feedRepo.setBudgetMinutes(minutes) }.onSuccess { _budgetMinutes.value = it }
+    fun triggerMangaSync() = viewModelScope.launch {
+        _mangaSyncStatus.value = null
+        runCatching { mangaRepo.startSync() }
+            .onSuccess { _mangaSyncStatus.value = "Abgleich gestartet" }
+            .onFailure { e ->
+                _mangaSyncStatus.value =
+                    if ("409" in e.message.orEmpty()) "Abgleich läuft bereits" else "Server nicht erreichbar"
+            }
+        delay(5_000)
+        _mangaSyncStatus.value = null
     }
 
     fun setSbBehavior(apiKey: String, behavior: SegmentBehavior) = viewModelScope.launch {
         sbPrefs.setBehavior(apiKey, behavior)
     }
 
-    fun triggerMangaSync() = viewModelScope.launch {
-        _mangaSyncStatus.value = null
-        runCatching { mangaRepo.startSync() }
-            .onSuccess { _mangaSyncStatus.value = "Sync gestartet" }
-            .onFailure { e ->
-                _mangaSyncStatus.value =
-                    if ("409" in e.message.orEmpty()) "Sync läuft bereits" else "Backend nicht erreichbar"
-            }
-        delay(5_000)
-        _mangaSyncStatus.value = null
+    fun setSmartDownloads(enabled: Boolean) = viewModelScope.launch {
+        store.setSmartDownloads(enabled)
+        // Gleich einmal loslaufen lassen (WLAN vorausgesetzt), statt bis zu 6 h zu warten.
+        if (enabled) smartScheduler.runOnceNow()
     }
 
-    fun refreshDiskUsage() = viewModelScope.launch {
-        runCatching { feedRepo.getDownloads() }
-            .onSuccess { _diskUsage.value = it }
+    fun setManualRetentionDays(days: Int) = viewModelScope.launch {
+        store.setManualDownloadRetentionDays(days)
     }
 
-    /** Prüft über die GitHub-API, ob ein neueres Release verfügbar ist. */
-    fun checkForUpdate() {
-        if (_updateState.value is UpdateUiState.Checking ||
-            _updateState.value is UpdateUiState.Downloading
-        ) return
-        _updateState.value = UpdateUiState.Checking
-        viewModelScope.launch {
-            _updateState.value = when (val result = updateManager.checkForUpdate()) {
-                is UpdateCheckResult.Available ->
-                    UpdateUiState.Available(result.version, result.downloadUrl)
-                UpdateCheckResult.UpToDate -> UpdateUiState.UpToDate
-                is UpdateCheckResult.Error -> UpdateUiState.Error(result.message)
-            }
-        }
+    fun setSmartRetentionDays(days: Int) = viewModelScope.launch {
+        store.setSmartDownloadRetentionDays(days)
     }
 
-    /** Lädt das APK in den App-Cache; Fortschritt landet im State. */
-    fun downloadUpdate(version: String, url: String) {
-        _updateState.value = UpdateUiState.Downloading(version, percent = 0)
-        viewModelScope.launch {
-            val target = File(appContext.cacheDir, "update.apk")
-            updateManager.downloadApk(url, target) { percent ->
-                _updateState.value = UpdateUiState.Downloading(version, percent)
-            }
-                .onSuccess { apk ->
-                    _updateState.value = UpdateUiState.Downloaded(version, apk)
-                }
-                .onFailure { e ->
-                    _updateState.value = UpdateUiState.Error(
-                        e.message ?: "Download fehlgeschlagen",
-                    )
-                }
-        }
-    }
+    fun checkForUpdate() = updates.check()
 
-    /** Zurück auf Idle — z. B. wenn der Update-Dialog geschlossen wird. */
-    fun resetUpdateState() {
-        _updateState.value = UpdateUiState.Idle
-    }
+    /** Lädt das gefundene Update und startet die Installation. */
+    fun startUpdate() = updates.startUpdate()
 }

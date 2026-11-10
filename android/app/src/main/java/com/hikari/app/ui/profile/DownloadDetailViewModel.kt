@@ -272,26 +272,22 @@ class DownloadDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _bulkDownloading.value = true
             _actionError.value = null
-            for (episode in episodes) {
-                if (localDownloads.isDownloaded(episode.id)) continue
-                val result = localDownloads.download(
-                    LocalDownloadMetadata(
-                        videoId = episode.id,
-                        kind = com.hikari.app.data.db.LocalDownloadKind.SERIES,
-                        title = episode.title,
-                        durationSeconds = episode.durationSeconds,
-                        thumbnailUrl = episode.thumbnailUrl,
-                        seriesId = detail.id,
-                        seriesTitle = detail.title,
-                        seriesThumbnailUrl = detail.thumbnailUrl,
-                        season = episode.season,
-                        episode = episode.episode,
-                    ),
+            val metas = episodes.map { episode ->
+                LocalDownloadMetadata(
+                    videoId = episode.id,
+                    kind = com.hikari.app.data.db.LocalDownloadKind.SERIES,
+                    title = episode.title,
+                    durationSeconds = episode.durationSeconds,
+                    thumbnailUrl = episode.thumbnailUrl,
+                    seriesId = detail.id,
+                    seriesTitle = detail.title,
+                    seriesThumbnailUrl = detail.thumbnailUrl,
+                    season = episode.season,
+                    episode = episode.episode,
                 )
-                if (result.isFailure) {
-                    _actionError.value = "Download fehlgeschlagen — ist das Gerät online?"
-                    break
-                }
+            }
+            if (localDownloads.downloadAll(metas).isFailure) {
+                _actionError.value = "Download fehlgeschlagen — ist das Gerät online?"
             }
             _bulkDownloading.value = false
         }

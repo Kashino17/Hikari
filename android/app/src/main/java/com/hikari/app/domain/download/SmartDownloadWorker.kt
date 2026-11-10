@@ -5,6 +5,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.hikari.app.data.db.LocalDownloadKind
+import com.hikari.app.data.db.LocalDownloadSource
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.repo.FeedRepository
 import com.hikari.app.domain.repo.MusicRepository
@@ -30,9 +31,13 @@ class SmartDownloadWorker @AssistedInject constructor(
     private val musicRepo: MusicRepository,
     private val musicDownloads: LocalMusicDownloadManager,
     private val settings: SettingsStore,
+    private val retention: DownloadRetentionCleaner,
 ) : CoroutineWorker(ctx, params) {
 
     override suspend fun doWork(): Result {
+        // Abgelaufene Downloads räumen — unabhängig davon, ob Smart-Downloads an sind.
+        runCatching { retention.run() }
+
         val enabled = runCatching { settings.smartDownloads.first() }.getOrDefault(true)
         if (!enabled) return Result.success()
 
@@ -66,6 +71,7 @@ class SmartDownloadWorker @AssistedInject constructor(
                     durationSeconds = item.durationSeconds,
                     thumbnailUrl = item.thumbnailUrl,
                     channelTitle = item.channelTitle.ifBlank { null },
+                    source = LocalDownloadSource.SMART,
                 ),
             )
             if (res.isSuccess) queued += 1

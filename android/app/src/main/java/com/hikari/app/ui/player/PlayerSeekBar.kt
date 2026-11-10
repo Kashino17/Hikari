@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -32,6 +33,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -39,10 +42,15 @@ import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hikari.app.ui.theme.HikariAmber
 import kotlin.math.abs
+
+/** Farbig markierter Abschnitt auf der Fortschrittsleiste. */
+data class SeekMark(val startMs: Long, val endMs: Long, val color: Color)
 
 /**
  * Netflix-artige Fortschrittsleiste für Serien und Filme.
@@ -54,6 +62,8 @@ import kotlin.math.abs
  *  - Finger deutlich oberhalb/unterhalb der Leiste (> 56 dp) → Feinmodus mit
  *    einem Viertel der Geschwindigkeit, im Tooltip als „fein" markiert.
  *  - Tooltip zeigt Zielzeit und Versatz (+1:23 / −0:40).
+ *  - [marks] färbt markierte Abschnitte (Sponsor, Intro …) auf der Leiste ein,
+ *    [chapters] setzt feine Trennstriche und nennt das laufende Kapitel.
  */
 @Composable
 fun PlayerSeekBar(
@@ -64,6 +74,8 @@ fun PlayerSeekBar(
     onScrubUpdate: (Long) -> Unit,
     onScrubEnd: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    marks: List<SeekMark> = emptyList(),
+    chapters: List<VideoChapter> = emptyList(),
 ) {
     val density = LocalDensity.current
     var trackWidthPx by remember { mutableFloatStateOf(1f) }
@@ -191,6 +203,23 @@ fun PlayerSeekBar(
                     .clip(RoundedCornerShape(50))
                     .background(Color.White),
             )
+            if (marks.isNotEmpty() || chapters.size > 1) {
+                Canvas(Modifier.fillMaxWidth().height(barHeight)) {
+                    val total = safeDuration.toFloat()
+                    marks.forEach { mark ->
+                        val x0 = (mark.startMs / total).coerceIn(0f, 1f) * size.width
+                        val x1 = (mark.endMs / total).coerceIn(0f, 1f) * size.width
+                        // Sehr kurze Abschnitte bleiben als schmaler Strich sichtbar.
+                        val w = (x1 - x0).coerceAtLeast(2.dp.toPx())
+                        drawRect(mark.color, topLeft = Offset(x0, 0f), size = Size(w, size.height))
+                    }
+                    val gap = 2.dp.toPx()
+                    chapters.drop(1).forEach { chapter ->
+                        val x = (chapter.startMs / total).coerceIn(0f, 1f) * size.width
+                        drawRect(Color.Black.copy(alpha = 0.7f), topLeft = Offset(x - gap / 2, 0f), size = Size(gap, size.height))
+                    }
+                }
+            }
             val thumbOffset = with(density) { (fraction * trackWidthPx).toDp() } - thumb / 2
             Box(
                 Modifier
@@ -212,7 +241,20 @@ fun PlayerSeekBar(
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
             )
-            Spacer(Modifier.weight(1f))
+            val chapter = chapterAt(chapters, shownMs)
+            if (chapter != null) {
+                Text(
+                    chapter.title,
+                    color = Color.White.copy(alpha = 0.85f),
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
+                )
+            } else {
+                Spacer(Modifier.weight(1f))
+            }
             Text(
                 formatRemaining(shownMs, durationMs),
                 color = Color.White.copy(alpha = 0.6f),

@@ -136,4 +136,40 @@ class PlayerLogicTest {
         assertEquals("F3", episodeLabel(season = null, episode = 3))
         assertEquals("", episodeLabel(season = null, episode = null))
     }
+
+    // ── Kapitel aus der Beschreibung ─────────────────────────────────────────
+
+    @Test fun chapters_are_parsed_from_description_lines() {
+        val text = """
+            Heute geht es um drei Dinge.
+
+            0:00 Einleitung
+            2:15 - Das Problem
+            [10:05] Die Lösung
+            1:02:30 Fazit
+        """.trimIndent()
+        val chapters = parseChapters(text)
+        assertEquals(listOf(0L, 135_000L, 605_000L, 3_750_000L), chapters.map { it.startMs })
+        assertEquals(listOf("Einleitung", "Das Problem", "Die Lösung", "Fazit"), chapters.map { it.title })
+    }
+
+    @Test fun chapters_need_three_marks_starting_at_zero_in_order() {
+        assertTrue(parseChapters("0:00 Start\n1:00 Ende").isEmpty())
+        assertTrue(parseChapters("0:30 A\n1:00 B\n2:00 C").isEmpty())
+        assertTrue(parseChapters("0:00 A\n5:00 B\n2:00 C").isEmpty())
+        assertTrue(parseChapters(null).isEmpty())
+    }
+
+    @Test fun chapters_beyond_the_video_length_are_dropped() {
+        val chapters = parseChapters("0:00 A\n1:00 B\n2:00 C\n9:00 D", durationMs = 300_000L)
+        assertEquals(3, chapters.size)
+    }
+
+    @Test fun chapter_at_picks_the_running_chapter() {
+        val chapters = parseChapters("0:00 A\n1:00 B\n2:00 C")
+        assertEquals("A", chapterAt(chapters, 59_000L)?.title)
+        assertEquals("B", chapterAt(chapters, 60_000L)?.title)
+        assertEquals("C", chapterAt(chapters, 999_000L)?.title)
+        assertEquals(null, chapterAt(emptyList(), 0L))
+    }
 }
