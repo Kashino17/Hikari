@@ -2,4 +2,6 @@
 <paths>
     <!-- Update-APKs liegen direkt im Cache-Root (cache/update.apk). -->
     <cache-path name="updates" path="." />
+    <!-- Gerettete WhatsApp-Medien, damit sie sich aus dem Tresor heraus teilen lassen. -->
+    <files-path name="whatsapp_media" path="whatsapp_media/" />
 </paths>

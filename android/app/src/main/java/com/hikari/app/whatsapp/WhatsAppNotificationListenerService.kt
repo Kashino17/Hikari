@@ -22,6 +22,7 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -50,13 +51,11 @@ import javax.inject.Inject
 /**
  * Hintergrund-Wächter für WhatsApp & WhatsApp Business.
  *
- * Sobald der Nutzer in den Android-Systemeinstellungen den Benachrichtigungszugriff
- * für Hikari aktiviert hat, empfängt dieser Dienst alle eingehenden WhatsApp-Push-
- * Benachrichtigungen in Echtzeit:
- * - Normale Nachrichten werden kurzzeitig im flüchtigen Puffer gemerkt (nicht in der DB).
- * - Wird eine Nachricht später "Für alle gelöscht" (WhatsApp postet "Diese Nachricht
- *   wurde gelöscht"), sichert Hikari den Originaltext in Room (7 Tage Aufbewahrung).
- * - Wird eine Nachricht bearbeitet, sichert Hikari den Vorher-/Nachher-Verlauf.
+ * Liest die Chat-Benachrichtigungen mit und reicht jeden Nachrichtenstapel an das
+ * [WhatsAppRepository] weiter. Dort — und nur dort — wird entschieden, ob eine Nachricht
+ * gelöscht oder bearbeitet wurde. Dieser Dienst trifft selbst keine solche Entscheidung:
+ * insbesondere ist das Verschwinden einer Benachrichtigung nie ein Löschsignal, denn WhatsApp
+ * entfernt sie genauso, wenn der Chat gelesen wurde (am Handy, im Web, per Antwort).
  */
 @AndroidEntryPoint
 class WhatsAppNotificationListenerService : NotificationListenerService() {
@@ -69,14 +68,16 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
 
     private val alertScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    // Strikt sequenzielle Verarbeitung (FIFO), damit eine schnelle Löschnachricht
-    // niemals die vorangehende Originalnachricht während des Avatar-Speicherns überholt!
+    // Streng der Reihe nach, damit ein schneller Folge-Stapel den vorherigen nie überholt.
     @OptIn(ExperimentalCoroutinesApi::class)
     private val processingScope = CoroutineScope(
         SupervisorJob() + Dispatchers.IO.limitedParallelism(1),
     )
 
-    private val pendingRetractionJobs = ConcurrentHashMap<String, Job>()
+    // Mediensicherung wartet teils über eine Minute auf den Download und läuft daher nebenher.
+    private val mediaScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    private val pendingClearJobs = ConcurrentHashMap<String, Job>()
 
     override fun onCreate() {
         super.onCreate()
@@ -89,8 +90,8 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
-        // Bestehende aktive WhatsApp-Benachrichtigungen in der Statusleiste sofort einlesen,
-        // damit auch bereits vor dem Verbinden eingetroffene Nachrichten bei Löschung gerettet werden.
+        // Bereits sichtbare WhatsApp-Benachrichtigungen einlesen, damit der Vergleichsstapel
+        // nach einem Neustart sofort wieder steht.
         runCatching {
             activeNotifications?.forEach { sbn ->
                 if (sbn != null && WhatsAppNotificationParser.isSupportedPackage(sbn.packageName.orEmpty())) {
@@ -102,6 +103,7 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
 
     override fun onDestroy() {
         processingScope.cancel()
+        mediaScope.cancel()
         alertScope.cancel()
         super.onDestroy()
     }
@@ -120,80 +122,66 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
 
         val isSummary = (notification.flags and Notification.FLAG_GROUP_SUMMARY) != 0
         val isOngoing = sbn.isOngoing || (notification.flags and Notification.FLAG_ONGOING_EVENT) != 0
-        if (isOngoing) return null
-
-        val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()
-        val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString()
-        val bigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString()
-        val subText = extras.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString()
-        val summaryText = extras.getCharSequence(Notification.EXTRA_SUMMARY_TEXT)?.toString()
-        val tickerText = notification.tickerText?.toString()
-        val convTitle = extras.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE)?.toString()
-        val isGroupConv = extras.getBoolean(Notification.EXTRA_IS_GROUP_CONVERSATION, false)
-        val messagingItems = extractMessagingItems(notification, extras)
-        val textLines = extractTextLines(extras)
-
-        // Summary-Notifications ("2 neue Nachrichten aus 2 Chats") ignorieren wir sofort (wie in v0.89.46),
-        // AUSSER sie enthalten explizit "Diese Nachricht wurde gelöscht".
-        if (isSummary) {
-            val hasDeletionPlaceholder = WhatsAppNotificationParser.isDeletedPlaceholder(text.orEmpty()) ||
-                WhatsAppNotificationParser.isDeletedPlaceholder(summaryText.orEmpty()) ||
-                WhatsAppNotificationParser.isDeletedPlaceholder(tickerText.orEmpty()) ||
-                bigText.orEmpty().lines().any { WhatsAppNotificationParser.isDeletedPlaceholder(it) } ||
-                textLines.any { WhatsAppNotificationParser.isDeletedPlaceholder(it) } ||
-                messagingItems.any { WhatsAppNotificationParser.isDeletedPlaceholder(it.text) }
-            if (!hasDeletionPlaceholder) return null
-        }
+        // Sammel-Benachrichtigungen wiederholen nur die Chat-Benachrichtigungen.
+        if (isOngoing || isSummary) return null
 
         return RawNotificationPayload(
             packageName = pkg,
             notificationKey = sbn.key,
             notificationTag = sbn.tag,
-            title = title,
-            text = text,
-            bigText = bigText,
-            subText = subText,
-            summaryText = summaryText,
-            tickerText = tickerText,
-            conversationTitle = convTitle,
-            isGroupConversation = isGroupConv,
-            isSummary = isSummary,
-            isOngoing = isOngoing,
+            title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString(),
+            text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString(),
+            bigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString(),
+            subText = extras.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString(),
+            summaryText = extras.getCharSequence(Notification.EXTRA_SUMMARY_TEXT)?.toString(),
+            tickerText = notification.tickerText?.toString(),
+            conversationTitle = extras.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE)?.toString(),
+            isGroupConversation = extras.getBoolean(Notification.EXTRA_IS_GROUP_CONVERSATION, false),
+            isSummary = false,
+            isOngoing = false,
             category = notification.category,
             postTime = sbn.postTime,
-            messagingStyleItems = messagingItems,
-            textLines = textLines,
+            messagingStyleItems = extractMessagingItems(notification, extras),
         )
     }
 
     private fun enqueueNotification(sbn: StatusBarNotification) {
         val pkg = sbn.packageName ?: return
         val notification = sbn.notification ?: return
-        val extras = notification.extras ?: Bundle.EMPTY
         val payload = buildRawPayload(sbn) ?: return
 
-        sbn.key?.let { key -> pendingRetractionJobs.remove(key)?.cancel() }
-        sbn.tag?.let { tag -> pendingRetractionJobs.remove("tag:$tag")?.cancel() }
-        val resolvedChatKey = WhatsAppNotificationParser.parse(payload).firstOrNull()?.chatKey
-        if (!resolvedChatKey.isNullOrBlank() && !payload.isSummary) {
-            pendingRetractionJobs.remove("chat:$resolvedChatKey")?.cancel()
-        }
+        // WhatsApp hat die Benachrichtigung nur kurz entfernt und neu gepostet:
+        // der Vergleichsstapel bleibt erhalten.
+        sbn.key?.let { key -> pendingClearJobs.remove(key)?.cancel() }
 
         val rawChatName = payload.conversationTitle?.takeIf { it.isNotBlank() } ?: payload.title.orEmpty()
         val cleanChat = WhatsAppNotificationParser.cleanChatTitle(rawChatName.substringBefore(":"))
+        val placeholderCount = payload.messagingStyleItems.count {
+            WhatsAppNotificationParser.isDeletedPlaceholder(it.text)
+        }
+        val lastRowId = notification.extras?.getLong("last_row_id", -1L) ?: -1L
 
         processingScope.launch {
-            val avatarPath = saveAvatarIfPresent(notification, pkg, cleanChat)
-            val detectedMedia = WhatsAppNotificationParser.detectMediaType(
-                (payload.text ?: payload.bigText).orEmpty(),
+            val avatarPath = saveAvatarIfPresent(notification, pkg, sbn.tag ?: cleanChat)
+            val result = runCatching { repository.processNotification(payload, avatarPath) }
+                .onFailure { Log.w(TAG, "processNotification failed", it) }
+                .getOrNull() ?: return@launch
+
+            // Bewusst ohne Nachrichteninhalte: nur Struktur, damit sich das Verhalten von
+            // WhatsApp per `adb logcat -s HikariWaGuard` nachvollziehen lässt.
+            Log.d(
+                TAG,
+                "post chat=${chatLogId(sbn)} channel=${notification.channelId} items=${payload.messagingStyleItems.size} " +
+                    "placeholders=$placeholderCount lastRow=$lastRowId ${result.summary} media=${result.pendingMedia.size}",
             )
-            val mediaPreviewPath = saveMediaPictureIfPresent(extras, sbn.postTime)
-                ?: mediaVault.backupLatestIncomingMedia(detectedMedia, sbn.postTime)
-            repository.processNotification(
-                payload = payload,
-                avatarPath = avatarPath,
-                mediaPreviewPath = mediaPreviewPath,
-            )
+
+            for (pending in result.pendingMedia) {
+                mediaScope.launch {
+                    val path = mediaVault.captureForMessage(pending)
+                    Log.d(TAG, "media type=${pending.mediaType} row=${pending.rowId} saved=${path != null}")
+                    if (path != null) repository.attachMedia(pending.rowId, path)
+                }
+            }
         }
     }
 
@@ -205,94 +193,49 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
         if (sbn == null) return
         val pkg = sbn.packageName.orEmpty()
         if (!WhatsAppNotificationParser.isSupportedPackage(pkg)) return
-
-        val notification = sbn.notification
-        val extras = notification?.extras
-        val isSummary = notification != null && (notification.flags and Notification.FLAG_GROUP_SUMMARY) != 0
-
-        // 1. Falls WhatsApp die Benachrichtigung beim Löschen kurz aktualisiert und sofort entfernt:
-        if (notification != null && extras != null) {
-            val removedText = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString().orEmpty()
-            val removedBigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString().orEmpty()
-            val removedSummary = extras.getCharSequence(Notification.EXTRA_SUMMARY_TEXT)?.toString().orEmpty()
-            val removedTicker = notification.tickerText?.toString().orEmpty()
-            val removedLines = extractTextLines(extras)
-            val removedItems = extractMessagingItems(notification, extras)
-
-            val hasDeletionPlaceholder = WhatsAppNotificationParser.isDeletedPlaceholder(removedText) ||
-                WhatsAppNotificationParser.isDeletedPlaceholder(removedSummary) ||
-                WhatsAppNotificationParser.isDeletedPlaceholder(removedTicker) ||
-                removedBigText.lines().any { WhatsAppNotificationParser.isDeletedPlaceholder(it) } ||
-                removedLines.any { WhatsAppNotificationParser.isDeletedPlaceholder(it) } ||
-                removedItems.any { WhatsAppNotificationParser.isDeletedPlaceholder(it.text) }
-
-            if (hasDeletionPlaceholder) {
-                enqueueNotification(sbn)
-                return
-            }
-        }
-
         val key = sbn.key ?: return
-        val removedPayload = buildRawPayload(sbn)
-        val removedChatKey = removedPayload?.let { WhatsAppNotificationParser.parse(it).firstOrNull()?.chatKey }
-        val jobKey = if (!removedChatKey.isNullOrBlank()) "chat:$removedChatKey" else key
+        val notification = sbn.notification
+        if (notification != null && (notification.flags and Notification.FLAG_GROUP_SUMMARY) != 0) return
 
+        Log.d(TAG, "removed chat=${chatLogId(sbn)} reason=$reason")
+
+        // Trägt die entfernte Benachrichtigung selbst den Lösch-Platzhalter (WhatsApp aktualisiert
+        // und entfernt in einem Zug), wird dieser letzte Stand noch ausgewertet.
+        if (notification != null) {
+            val extras = notification.extras ?: Bundle.EMPTY
+            val carriesPlaceholder =
+                WhatsAppNotificationParser.isDeletedPlaceholder(
+                    extras.getCharSequence(Notification.EXTRA_TEXT)?.toString().orEmpty(),
+                ) || extractMessagingItems(notification, extras).any {
+                    WhatsAppNotificationParser.isDeletedPlaceholder(it.text)
+                }
+            if (carriesPlaceholder) enqueueNotification(sbn)
+        }
+
+        pendingClearJobs.remove(key)?.cancel()
         when (reason) {
-            // Nutzer hat aktiv auf die Benachrichtigung getippt -> Chat wird in WhatsApp geöffnet/gelesen
-            REASON_CLICK -> {
-                pendingRetractionJobs.remove(key)?.cancel()
-                pendingRetractionJobs.remove(jobKey)?.cancel()
-                processingScope.launch {
-                    repository.onNotificationClicked(key)
-                }
+            // Angetippt oder weggewischt: der Vergleichsstapel endet sofort.
+            REASON_CLICK, REASON_CANCEL, REASON_CANCEL_ALL -> {
+                processingScope.launch { repository.onNotificationCleared(key) }
             }
 
-            // Nutzer hat die Benachrichtigung manuell weggewischt -> Snapshot leeren, RAM-Puffer behalten
-            REASON_CANCEL, REASON_CANCEL_ALL -> {
-                pendingRetractionJobs.remove(key)?.cancel()
-                pendingRetractionJobs.remove(jobKey)?.cancel()
-                processingScope.launch {
-                    repository.onNotificationCleared(key)
-                }
-            }
-
-            // WhatsApp selbst hat die Benachrichtigung gecancelt (REASON_APP_CANCEL = 8,
-            // REASON_APP_CANCEL_ALL = 9, REASON_GROUP_SUMMARY_CANCELED = 12, ...).
-            //
-            // WICHTIG: Das ist KEIN Löschsignal! WhatsApp cancelt genauso, wenn der Chat gelesen
-            // wurde — in der App selbst (ohne Tipp auf die Benachrichtigung), in WhatsApp Web/Desktop,
-            // auf einem verknüpften Zweitgerät, per Inline-Antwort oder „Als gelesen markieren“.
-            // Ein Cancel als Löschung zu werten markierte deshalb praktisch JEDE gelesene Nachricht
-            // als „gelöscht“. Nur der Platzhaltertext oder ein geschrumpfter Stack mit verbleibenden
-            // Nachrichten sind echte Löschsignale (siehe processNotification).
-            //
-            // Das Leeren des Snapshots wird 1,2 s verzögert: Cancelt WhatsApp nur, um die
-            // Benachrichtigung sofort neu zu posten (z. B. nach einer Löschung mit weiteren
-            // ungelesenen Nachrichten), bricht der neue Post diesen Job ab und der vorherige
-            // Snapshot bleibt für den Stack-Vergleich erhalten.
+            // Von WhatsApp entfernt — meist weil der Chat gelesen wurde. Kein Löschsignal.
+            // Der Stapel wird erst nach kurzer Wartezeit verworfen: postet WhatsApp die
+            // Benachrichtigung sofort neu, bricht das den Job ab und der Vergleich läuft weiter.
             else -> {
-                if (isSummary) return
-
-                pendingRetractionJobs.remove(key)?.cancel()
-                pendingRetractionJobs.remove(jobKey)?.cancel()
-                val job = alertScope.launch {
+                pendingClearJobs[key] = alertScope.launch {
                     delay(1_200L)
-                    pendingRetractionJobs.remove(jobKey)
-                    processingScope.launch {
-                        repository.onNotificationCleared(key)
-                    }
+                    pendingClearJobs.remove(key)
+                    processingScope.launch { repository.onNotificationCleared(key) }
                 }
-                pendingRetractionJobs[jobKey] = job
             }
         }
     }
 
-    private fun extractTextLines(extras: Bundle): List<String> {
-        val rawLines = extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES) ?: return emptyList()
-        return rawLines.mapNotNull { it?.toString()?.trim()?.takeIf { s -> s.isNotEmpty() } }
-    }
+    /** Kurze, nicht rückrechenbare Kennung eines Chats fürs Protokoll. */
+    private fun chatLogId(sbn: StatusBarNotification): String =
+        Integer.toHexString((sbn.tag ?: sbn.key ?: "").hashCode() and 0xFFFFF)
 
-    @Suppress("DEPRECATION")
     private fun extractMessagingItems(
         notification: Notification,
         extras: Bundle,
@@ -303,17 +246,20 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
                 return style.messages.mapNotNull { msg ->
                     val txt = msg.text?.toString()?.trim().orEmpty()
                     if (txt.isEmpty()) return@mapNotNull null
-                    val sender = msg.person?.name?.toString()
                     RawMessagingItem(
-                        sender = sender,
+                        // Ohne Person stammt die Zeile vom Nutzer selbst (Antwort aus der Benachrichtigung).
+                        sender = msg.person?.name?.toString(),
                         text = txt,
                         timestamp = msg.timestamp,
+                        dataUri = msg.dataUri?.toString(),
+                        dataMimeType = msg.dataMimeType,
                     )
                 }
             }
         }
 
         // Fallback: Direktes Auslesen von EXTRA_MESSAGES (Parcelable-Array von Bundles)
+        @Suppress("DEPRECATION")
         val rawArray: Array<Parcelable>? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             extras.getParcelableArray(Notification.EXTRA_MESSAGES, Parcelable::class.java)
         } else {
@@ -325,12 +271,10 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
             val bundle = parcelable as? Bundle ?: return@mapNotNull null
             val msgText = bundle.getCharSequence("text")?.toString()?.trim().orEmpty()
             if (msgText.isEmpty()) return@mapNotNull null
-            val sender = bundle.getCharSequence("sender")?.toString()
-            val time = bundle.getLong("time", 0L)
             RawMessagingItem(
-                sender = sender,
+                sender = bundle.getCharSequence("sender")?.toString(),
                 text = msgText,
-                timestamp = time,
+                timestamp = bundle.getLong("time", 0L),
             )
         }
     }
@@ -345,31 +289,13 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
             val icon = notification.getLargeIcon() ?: return null
             val drawable = icon.loadDrawable(applicationContext) ?: return null
             val bitmap = drawableToBitmap(drawable, maxSize = 128) ?: return null
-            val dir = File(applicationContext.filesDir, "whatsapp_avatars").apply { mkdirs() }
+            val dir = File(applicationContext.filesDir, WhatsAppRepository.AVATAR_DIR).apply { mkdirs() }
             val safeKey = "${packageName}_${cleanChatTitle.lowercase()}"
                 .replace(Regex("[^a-z0-9_-]"), "_")
                 .take(64)
             val file = File(dir, "$safeKey.png")
             FileOutputStream(file).use { out ->
                 bitmap.compress(Bitmap.CompressFormat.PNG, 90, out)
-            }
-            file.absolutePath
-        }.getOrNull()
-    }
-
-    @Suppress("DEPRECATION")
-    private fun saveMediaPictureIfPresent(extras: Bundle, postTime: Long): String? {
-        return runCatching {
-            val bmp: Bitmap? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                extras.getParcelable(Notification.EXTRA_PICTURE, Bitmap::class.java)
-            } else {
-                extras.getParcelable(Notification.EXTRA_PICTURE) as? Bitmap
-            }
-            if (bmp == null) return null
-            val dir = File(applicationContext.filesDir, "whatsapp_media").apply { mkdirs() }
-            val file = File(dir, "wa_img_${postTime}.jpg")
-            FileOutputStream(file).use { out ->
-                bmp.compress(Bitmap.CompressFormat.JPEG, 88, out)
             }
             file.absolutePath
         }.getOrNull()
@@ -413,7 +339,7 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
             is WhatsAppGuardAlert.MessageDeleted -> {
                 val who = if (alert.isGroup) "${alert.senderName} (${alert.chatTitle})" else alert.senderName
                 Triple(
-                    "🗑️ Gelöschte Nachricht gerettet",
+                    "Gelöschte Nachricht gerettet",
                     "$who: „${alert.preservedText}“",
                     (4301 + (alert.chatTitle.hashCode() and 0x7FF)),
                 )
@@ -421,7 +347,7 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
             is WhatsAppGuardAlert.MessageEdited -> {
                 val who = if (alert.isGroup) "${alert.senderName} (${alert.chatTitle})" else alert.senderName
                 Triple(
-                    "✏️ Bearbeitete Nachricht erkannt",
+                    "Nachricht wurde bearbeitet",
                     "$who: „${alert.oldText}“ → „${alert.newText}“",
                     (5301 + (alert.chatTitle.hashCode() and 0x7FF)),
                 )
@@ -443,7 +369,7 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
     private fun ensureChannel() {
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "WhatsApp-Wächter (Gelöscht & Bearbeitet)",
+            "WhatsApp-Wächter",
             NotificationManager.IMPORTANCE_DEFAULT,
         ).apply {
             description = "Benachrichtigt dich, wenn eine WhatsApp-Nachricht für alle gelöscht oder bearbeitet wurde."
@@ -453,6 +379,7 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
 
     companion object {
         const val CHANNEL_ID = "whatsapp_guard_alerts"
+        private const val TAG = "HikariWaGuard"
 
         /**
          * Prüft, ob Hikari in den Android-Einstellungen als NotificationListener freigeschaltet ist.

@@ -12,7 +12,6 @@ import com.hikari.app.domain.whatsapp.WhatsAppEditVersion
 import com.hikari.app.domain.whatsapp.WhatsAppMediaVault
 import com.hikari.app.domain.whatsapp.WhatsAppRepository
 import com.hikari.app.domain.whatsapp.WhatsAppStats
-import com.hikari.app.domain.whatsapp.WhatsAppStatusItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,11 +29,9 @@ class WhatsAppViewModel @Inject constructor(
     private val mediaVault: WhatsAppMediaVault,
 ) : ViewModel() {
 
-    val deletedMessages: StateFlow<List<WhatsAppMessageEntity>> = repository.deletedMessages
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-
-    val editedMessages: StateFlow<List<WhatsAppMessageEntity>> = repository.editedMessages
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    /** Alles Gerettete — gelöschte und bearbeitete Nachrichten, neueste zuerst. `null` = lädt noch. */
+    val messages: StateFlow<List<WhatsAppMessageEntity>?> = repository.allMessages
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     val stats: StateFlow<WhatsAppStats> = repository.stats
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), WhatsAppStats())
@@ -48,19 +45,12 @@ class WhatsAppViewModel @Inject constructor(
     private val _hasMediaFolderAccess = MutableStateFlow(mediaVault.hasMediaFolderAccess())
     val hasMediaFolderAccess: StateFlow<Boolean> = _hasMediaFolderAccess.asStateFlow()
 
-    private val _statusItems = MutableStateFlow<List<WhatsAppStatusItem>>(emptyList())
-    val statusItems: StateFlow<List<WhatsAppStatusItem>> = _statusItems.asStateFlow()
-
     private val _chatAnalysis = MutableStateFlow<WhatsAppChatAnalysis?>(null)
     val chatAnalysis: StateFlow<WhatsAppChatAnalysis?> = _chatAnalysis.asStateFlow()
 
     init {
-        // Beim Öffnen sofort normale Altlasten und Nachrichten > 7 Tage bereinigen
         viewModelScope.launch {
             repository.pruneExpiredData()
-        }
-        if (_hasMediaFolderAccess.value) {
-            refreshStatuses()
         }
     }
 
@@ -75,21 +65,16 @@ class WhatsAppViewModel @Inject constructor(
     fun onMediaFolderGranted(uri: Uri) {
         mediaVault.saveTreeUri(uri)
         _hasMediaFolderAccess.value = mediaVault.hasMediaFolderAccess()
-        refreshStatuses()
     }
 
-    fun refreshStatuses() {
+    fun refreshMediaFolderAccess() {
         _hasMediaFolderAccess.value = mediaVault.hasMediaFolderAccess()
-        if (!_hasMediaFolderAccess.value) return
-        viewModelScope.launch {
-            _statusItems.value = mediaVault.listWhatsAppStatuses()
-        }
     }
 
-    fun saveStatusToGallery(status: WhatsAppStatusItem, onResult: (Boolean) -> Unit) {
+    /** Beim Verlassen der Ecke gilt alles Gezeigte als gesehen. */
+    fun markAllSeen() {
         viewModelScope.launch {
-            val ok = mediaVault.saveStatusToGallery(status)
-            onResult(ok)
+            repository.markAllSeen()
         }
     }
 

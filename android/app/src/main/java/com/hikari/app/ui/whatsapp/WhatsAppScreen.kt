@@ -1,20 +1,17 @@
 package com.hikari.app.ui.whatsapp
 
 import android.content.Intent
-import android.media.MediaPlayer
-import android.media.PlaybackParams
 import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -26,35 +23,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.DeleteSweep
-import androidx.compose.material.icons.filled.EditNote
-import androidx.compose.material.icons.filled.GraphicEq
-import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.NotificationsOff
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.RestoreFromTrash
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.DeleteSweep
+import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.NotificationsActive
+import androidx.compose.material.icons.outlined.PlayCircleOutline
+import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -68,16 +54,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -85,17 +65,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import coil.compose.AsyncImage
-import com.hikari.app.data.db.WhatsAppMessageEntity
-import com.hikari.app.domain.whatsapp.WhatsAppEditVersion
-import com.hikari.app.domain.whatsapp.WhatsAppRepository
 import com.hikari.app.ui.theme.HikariAmber
-import com.hikari.app.ui.theme.HikariAmberSoft
 import com.hikari.app.ui.theme.HikariBg
-import com.hikari.app.ui.theme.HikariBorder
 import com.hikari.app.ui.theme.HikariBorderStrong
-import com.hikari.app.ui.theme.HikariCardBg
-import com.hikari.app.ui.theme.HikariDanger
 import com.hikari.app.ui.theme.HikariSurface
 import com.hikari.app.ui.theme.HikariSurfaceHigh
 import com.hikari.app.ui.theme.HikariText
@@ -104,1410 +76,529 @@ import com.hikari.app.ui.theme.HikariTextMuted
 import com.hikari.app.ui.voice.VoiceNotesTab
 import com.hikari.app.ui.voice.VoiceViolet
 import com.hikari.app.whatsapp.WhatsAppNotificationListenerService
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
-private val WhatsAppGreen = Color(0xFF25D366)
-private val WhatsAppGreenDark = Color(0xFF075E54)
-private val WhatsAppGreenSoft = Color(0x2625D366)
-private val DeletedRedSoft = Color(0x26F87171)
+// Farbsystem der WhatsApp-Ecke: Grün = Wächter/Bereich, Rosé = gelöscht, Himmelblau = bearbeitet.
+internal val WaGreen = Color(0xFF25D366)
+internal val WaGreenSoft = Color(0x1F25D366)
+internal val WaDeleted = Color(0xFFFB7185)
+internal val WaDeletedSoft = Color(0x1FFB7185)
+internal val WaEdited = Color(0xFF38BDF8)
+internal val WaEditedSoft = Color(0x1F38BDF8)
+private val ToolsTeal = Color(0xFF2DD4BF)
 
 enum class WhatsAppTab {
+    GUARD,
     VOICE,
-    DELETED,
-    EDITED,
     TOOLS,
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WhatsAppScreen(
     onBack: () -> Unit,
     onOpenVoiceJob: (String) -> Unit = {},
-    initialTab: WhatsAppTab = WhatsAppTab.DELETED,
+    initialTab: WhatsAppTab = WhatsAppTab.GUARD,
     vm: WhatsAppViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
-    val deletedMessages by vm.deletedMessages.collectAsState()
-    val editedMessages by vm.editedMessages.collectAsState()
-    val stats by vm.stats.collectAsState()
+    val messages by vm.messages.collectAsState()
     val alertsEnabled by vm.alertsEnabled.collectAsState()
     val searchQuery by vm.searchQuery.collectAsState()
     val chatAnalysis by vm.chatAnalysis.collectAsState()
+    val hasMediaAccess by vm.hasMediaFolderAccess.collectAsState()
 
     // Saveable: nach dem Zurück aus einer Zusammenfassung bleibt der Tab offen.
     var activeTab by rememberSaveable { mutableStateOf(initialTab) }
-    var showInfoSheet by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(false) }
     var hasNotificationAccess by remember {
         mutableStateOf(WhatsAppNotificationListenerService.isNotificationAccessGranted(context))
     }
 
-    // Aktualisiere den Berechtigungs-Status & führe 7-Tage-Auto-Bereinigung bei Rückkehr aus
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                hasNotificationAccess =
-                    WhatsAppNotificationListenerService.isNotificationAccessGranted(context)
-                WhatsAppNotificationListenerService.ensureServiceBound(context)
-                vm.pruneNow()
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    hasNotificationAccess =
+                        WhatsAppNotificationListenerService.isNotificationAccessGranted(context)
+                    WhatsAppNotificationListenerService.ensureServiceBound(context)
+                    vm.refreshMediaFolderAccess()
+                    vm.pruneNow()
+                }
+                Lifecycle.Event.ON_STOP -> vm.markAllSeen()
+                else -> Unit
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            vm.markAllSeen()
+        }
     }
 
-    Box(
+    val openNotificationAccess = {
+        val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        runCatching { context.startActivity(intent) }
+        Unit
+    }
+    val mediaFolderPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree(),
+    ) { uri ->
+        if (uri != null) {
+            vm.onMediaFolderGranted(uri)
+            Toast.makeText(context, "Medienordner freigegeben", Toast.LENGTH_SHORT).show()
+        }
+    }
+    val openMediaFolderPicker = {
+        runCatching { mediaFolderPicker.launch(vm.buildInitialMediaTreeUri()) }
+        Unit
+    }
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(HikariBg),
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // ── Top Bar ──────────────────────────────────────────────────────────
-            WhatsAppTopBar(
-                hasAccess = hasNotificationAccess,
-                alertsEnabled = alertsEnabled,
-                onBack = onBack,
-                onToggleAlerts = {
-                    val next = !alertsEnabled
-                    vm.setAlertsEnabled(next)
-                    Toast.makeText(
-                        context,
-                        if (next) "Wächter-Alarme aktiviert" else "Wächter-Alarme stummgeschaltet",
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                },
-                onRunDemo = {
-                    vm.runDemoScenario()
-                    Toast.makeText(
-                        context,
-                        "Demo-Nachrichten (Gelöscht & Bearbeitet) wurden simuliert!",
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                },
-                onShowInfo = { showInfoSheet = true },
-            )
+        WhatsAppHeader(
+            guardActive = hasNotificationAccess,
+            onBack = onBack,
+            onOpenSettings = { showSettings = true },
+        )
 
-            // ── Berechtigungs-Banner (falls Benachrichtigungszugriff noch fehlt) ──
-            // Sprachnachrichten brauchen den Wächter nicht — dort kein Banner/Statistik.
-            if (!hasNotificationAccess && activeTab != WhatsAppTab.VOICE) {
-                PermissionSetupBanner(
-                    onOpenSettings = {
-                        val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        WhatsAppSegments(
+            activeTab = activeTab,
+            unseenCount = messages.orEmpty().count { !it.isReadInHikari },
+            onSelect = { activeTab = it },
+        )
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            when (activeTab) {
+                WhatsAppTab.GUARD -> WhatsAppGuardTab(
+                    messages = messages,
+                    hasNotificationAccess = hasNotificationAccess,
+                    hasMediaAccess = hasMediaAccess,
+                    searchQuery = searchQuery,
+                    onSearchQueryChange = vm::setSearchQuery,
+                    decodeHistory = vm::decodeEditHistory,
+                    onGrantNotificationAccess = openNotificationAccess,
+                    onGrantMediaAccess = openMediaFolderPicker,
+                    onDeleteEntry = { vm.deleteMessage(it.id) },
+                    onRunDemo = vm::runDemoScenario,
+                )
+
+                WhatsAppTab.VOICE -> VoiceNotesTab(onOpenJob = onOpenVoiceJob)
+
+                WhatsAppTab.TOOLS -> WhatsAppToolsTab(
+                    chatAnalysis = chatAnalysis,
+                    onAnalyzeChatUri = { uri ->
+                        vm.analyzeExportedChatUri(context, uri) {
+                            Toast.makeText(
+                                context,
+                                "Datei konnte nicht als WhatsApp-Chat gelesen werden",
+                                Toast.LENGTH_SHORT,
+                            ).show()
                         }
-                        runCatching { context.startActivity(intent) }
                     },
+                    onRunSampleAnalysis = vm::runSampleChatAnalysis,
+                    onClearAnalysis = vm::clearChatAnalysis,
                 )
-            }
-
-            // ── Kompakte Statistik-Leiste (inkl. 7-Tage-Auto-Cleanup-Anzeige) ────
-            if (activeTab != WhatsAppTab.VOICE) StatsOverviewStrip(
-                deletedCount = stats.deletedCount,
-                editedCount = stats.editedCount,
-                onClearAll = {
-                    vm.clearAllMessages()
-                    Toast.makeText(context, "Nachrichten-Tresor geleert", Toast.LENGTH_SHORT).show()
-                },
-            )
-
-            // ── Tab-Auswahl: Gelöscht · Bearbeitet · Tools ───────────────────────
-            WhatsAppTabsRow(
-                activeTab = activeTab,
-                deletedCount = stats.deletedCount,
-                editedCount = stats.editedCount,
-                onSelect = { activeTab = it },
-            )
-
-            // ── Suchleiste für Gelöscht / Bearbeitet ────────────────────────────
-            if (activeTab != WhatsAppTab.TOOLS && activeTab != WhatsAppTab.VOICE) {
-                WhatsAppSearchBar(
-                    query = searchQuery,
-                    onQueryChange = vm::setSearchQuery,
-                )
-            }
-
-            // ── Hauptinhalt pro Tab ─────────────────────────────────────────────
-            Box(modifier = Modifier.fillMaxSize()) {
-                val q = searchQuery.trim().lowercase()
-                when (activeTab) {
-                    WhatsAppTab.VOICE -> VoiceNotesTab(onOpenJob = onOpenVoiceJob)
-
-                    WhatsAppTab.DELETED -> {
-                        val filtered = remember(deletedMessages, q) {
-                            if (q.isEmpty()) {
-                                deletedMessages
-                            } else {
-                                deletedMessages.filter {
-                                    it.text.lowercase().contains(q) ||
-                                        it.chatTitle.lowercase().contains(q) ||
-                                        it.senderName.lowercase().contains(q)
-                                }
-                            }
-                        }
-                        DeletedMessagesList(
-                            messages = filtered,
-                            onCopy = { copyToClipboard(context, "Nachricht", it.text) },
-                            onDeleteEntry = { vm.deleteMessage(it.id) },
-                            onRunDemo = { vm.runDemoScenario() },
-                        )
-                    }
-
-                    WhatsAppTab.EDITED -> {
-                        val filtered = remember(editedMessages, q) {
-                            if (q.isEmpty()) {
-                                editedMessages
-                            } else {
-                                editedMessages.filter {
-                                    it.text.lowercase().contains(q) ||
-                                        (it.originalText?.lowercase()?.contains(q) == true) ||
-                                        it.chatTitle.lowercase().contains(q) ||
-                                        it.senderName.lowercase().contains(q)
-                                }
-                            }
-                        }
-                        EditedMessagesList(
-                            messages = filtered,
-                            decodeHistory = vm::decodeEditHistory,
-                            onCopy = { copyToClipboard(context, "Nachricht", it) },
-                            onDeleteEntry = { vm.deleteMessage(it.id) },
-                            onRunDemo = { vm.runDemoScenario() },
-                        )
-                    }
-
-                    WhatsAppTab.TOOLS -> {
-                        WhatsAppToolsTab(
-                            chatAnalysis = chatAnalysis,
-                            onAnalyzeChatUri = { uri ->
-                                vm.analyzeExportedChatUri(context, uri) {
-                                    Toast.makeText(
-                                        context,
-                                        "Datei konnte nicht als WhatsApp-Chat gelesen werden",
-                                        Toast.LENGTH_SHORT,
-                                    ).show()
-                                }
-                            },
-                            onRunSampleAnalysis = vm::runSampleChatAnalysis,
-                            onClearAnalysis = vm::clearChatAnalysis,
-                        )
-                    }
-                }
             }
         }
     }
 
-    // ── Funktionsweise / Info-Sheet ──────────────────────────────────────────────
-    if (showInfoSheet) {
-        HowItWorksBottomSheet(
-            hasAccess = hasNotificationAccess,
-            onOpenPermissionSettings = {
-                showInfoSheet = false
-                val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                runCatching { context.startActivity(intent) }
+    if (showSettings) {
+        GuardSettingsSheet(
+            hasNotificationAccess = hasNotificationAccess,
+            hasMediaAccess = hasMediaAccess,
+            alertsEnabled = alertsEnabled,
+            hasEntries = messages.orEmpty().isNotEmpty(),
+            onToggleAlerts = vm::setAlertsEnabled,
+            onOpenNotificationAccess = openNotificationAccess,
+            onOpenMediaFolderPicker = openMediaFolderPicker,
+            onRunDemo = {
+                vm.runDemoScenario()
+                showSettings = false
+                activeTab = WhatsAppTab.GUARD
             },
-            onDismiss = { showInfoSheet = false },
+            onClearAll = {
+                vm.clearAllMessages()
+                showSettings = false
+                Toast.makeText(context, "Tresor geleert", Toast.LENGTH_SHORT).show()
+            },
+            onDismiss = { showSettings = false },
         )
     }
 }
 
 @Composable
-private fun WhatsAppTopBar(
-    hasAccess: Boolean,
-    alertsEnabled: Boolean,
+private fun WhatsAppHeader(
+    guardActive: Boolean,
     onBack: () -> Unit,
-    onToggleAlerts: () -> Unit,
-    onRunDemo: () -> Unit,
-    onShowInfo: () -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(HikariSurfaceHigh.copy(alpha = 0.65f))
-                .clickable(onClick = onBack),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Zurück",
-                tint = HikariText,
-                modifier = Modifier.size(18.dp),
-            )
-        }
-
-        Spacer(Modifier.width(10.dp))
-
+        RoundIconButton(
+            icon = Icons.AutoMirrored.Filled.ArrowBack,
+            description = "Zurück",
+            onClick = onBack,
+        )
+        Spacer(Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Text(
-                    text = "WhatsApp-Ecke",
-                    color = HikariText,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (hasAccess) WhatsAppGreenSoft else HikariAmberSoft)
-                        .border(
-                            0.5.dp,
-                            if (hasAccess) WhatsAppGreen else HikariAmber,
-                            RoundedCornerShape(8.dp),
-                        )
-                        .padding(horizontal = 7.dp, vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .clip(CircleShape)
-                            .background(if (hasAccess) WhatsAppGreen else HikariAmber),
-                    )
-                    Text(
-                        text = if (hasAccess) "Wächter aktiv" else "Zugriff fehlt",
-                        color = if (hasAccess) WhatsAppGreen else HikariAmber,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
             Text(
-                text = "Speichert nur Gelöscht & Bearbeitet · Auto-Reset nach 7 Tagen",
-                color = HikariTextMuted,
-                fontSize = 11.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                text = "WhatsApp",
+                color = HikariText,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
             )
+            Spacer(Modifier.height(2.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(7.dp)
+                        .clip(CircleShape)
+                        .background(if (guardActive) WaGreen else HikariAmber),
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = if (guardActive) "Wächter aktiv" else "Wächter braucht Zugriff",
+                    color = HikariTextMuted,
+                    fontSize = 12.5.sp,
+                )
+            }
         }
-
-        Box(
-            modifier = Modifier
-                .size(34.dp)
-                .clip(CircleShape)
-                .background(HikariSurfaceHigh.copy(alpha = 0.65f))
-                .clickable(onClick = onRunDemo),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                Icons.Default.AutoAwesome,
-                contentDescription = "Demo-Szenario testen",
-                tint = HikariAmber,
-                modifier = Modifier.size(17.dp),
-            )
-        }
-
-        Spacer(Modifier.width(6.dp))
-
-        Box(
-            modifier = Modifier
-                .size(34.dp)
-                .clip(CircleShape)
-                .background(HikariSurfaceHigh.copy(alpha = 0.65f))
-                .clickable(onClick = onToggleAlerts),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                if (alertsEnabled) Icons.Default.NotificationsActive else Icons.Default.NotificationsOff,
-                contentDescription = "Wächter-Benachrichtigung",
-                tint = if (alertsEnabled) WhatsAppGreen else HikariTextFaint,
-                modifier = Modifier.size(17.dp),
-            )
-        }
-
-        Spacer(Modifier.width(6.dp))
-
-        Box(
-            modifier = Modifier
-                .size(34.dp)
-                .clip(CircleShape)
-                .background(HikariSurfaceHigh.copy(alpha = 0.65f))
-                .clickable(onClick = onShowInfo),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                Icons.Default.Info,
-                contentDescription = "Wie funktioniert das?",
-                tint = HikariTextMuted,
-                modifier = Modifier.size(17.dp),
-            )
-        }
+        RoundIconButton(
+            icon = Icons.Outlined.Tune,
+            description = "Wächter einstellen",
+            onClick = onOpenSettings,
+        )
     }
 }
 
 @Composable
-private fun PermissionSetupBanner(onOpenSettings: () -> Unit) {
+private fun RoundIconButton(icon: ImageVector, description: String, onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.linearGradient(
-                    listOf(WhatsAppGreenDark.copy(alpha = 0.55f), HikariCardBg),
-                ),
-            )
-            .border(1.dp, WhatsAppGreen.copy(alpha = 0.6f), RoundedCornerShape(16.dp))
-            .padding(14.dp),
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(HikariSurface)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
     ) {
-        Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.Security,
-                    contentDescription = null,
-                    tint = WhatsAppGreen,
-                    modifier = Modifier.size(20.dp),
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = "Benachrichtigungszugriff erforderlich",
-                    color = HikariText,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = "Damit Hikari gelöschte und bearbeitete WhatsApp-Nachrichten abfangen kann, aktiviere bitte einmalig „Hikari“ im Android-Benachrichtigungszugriff.",
-                color = HikariTextMuted,
-                fontSize = 12.sp,
-                lineHeight = 16.sp,
-            )
-            Spacer(Modifier.height(10.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(WhatsAppGreen)
-                    .clickable(onClick = onOpenSettings)
-                    .padding(vertical = 9.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "Jetzt in Android-Einstellungen aktivieren",
-                    color = Color.Black,
-                    fontSize = 12.5.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-        }
+        Icon(icon, contentDescription = description, tint = HikariText, modifier = Modifier.size(20.dp))
     }
 }
 
+/** Die drei Bereiche als eine zusammenhängende Leiste. */
 @Composable
-private fun StatsOverviewStrip(
-    deletedCount: Int,
-    editedCount: Int,
-    onClearAll: () -> Unit,
-) {
-    val totalSaved = deletedCount + editedCount
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        MiniStatPill(
-            label = "Gelöscht",
-            value = deletedCount.toString(),
-            accentColor = HikariDanger,
-            modifier = Modifier.weight(1f),
-        )
-        MiniStatPill(
-            label = "Bearbeitet",
-            value = editedCount.toString(),
-            accentColor = HikariAmber,
-            modifier = Modifier.weight(1f),
-        )
-        MiniStatPill(
-            label = "Auto-Löschung",
-            value = "7 Tg.",
-            accentColor = WhatsAppGreen,
-            modifier = Modifier.weight(1.15f),
-        )
-        if (totalSaved > 0) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(HikariCardBg)
-                    .border(0.5.dp, HikariBorder, RoundedCornerShape(10.dp))
-                    .clickable(onClick = onClearAll),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    Icons.Default.DeleteSweep,
-                    contentDescription = "Tresor leeren",
-                    tint = HikariTextMuted,
-                    modifier = Modifier.size(17.dp),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun MiniStatPill(
-    label: String,
-    value: String,
-    accentColor: Color,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(11.dp))
-            .background(HikariCardBg)
-            .border(0.5.dp, HikariBorder, RoundedCornerShape(11.dp))
-            .padding(horizontal = 10.dp, vertical = 7.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(
-            text = label,
-            color = HikariTextMuted,
-            fontSize = 11.sp,
-            maxLines = 1,
-        )
-        Text(
-            text = value,
-            color = accentColor,
-            fontSize = 12.5.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = FontFamily.Monospace,
-        )
-    }
-}
-
-@Composable
-private fun WhatsAppTabsRow(
+private fun WhatsAppSegments(
     activeTab: WhatsAppTab,
-    deletedCount: Int,
-    editedCount: Int,
+    unseenCount: Int,
     onSelect: (WhatsAppTab) -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(HikariSurface)
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        WhatsAppTabChip(
-            icon = Icons.Default.GraphicEq,
+        Segment(
+            label = "Wächter",
+            badge = unseenCount.takeIf { it > 0 && activeTab != WhatsAppTab.GUARD },
+            selected = activeTab == WhatsAppTab.GUARD,
+            accent = WaGreen,
+            modifier = Modifier.weight(1f),
+            onClick = { onSelect(WhatsAppTab.GUARD) },
+        )
+        Segment(
             label = "Sprachnachrichten",
-            count = null,
+            badge = null,
             selected = activeTab == WhatsAppTab.VOICE,
-            accentColor = VoiceViolet,
+            accent = VoiceViolet,
+            modifier = Modifier.weight(1.5f),
             onClick = { onSelect(WhatsAppTab.VOICE) },
         )
-        WhatsAppTabChip(
-            icon = Icons.Default.RestoreFromTrash,
-            label = "Gelöscht",
-            count = deletedCount,
-            selected = activeTab == WhatsAppTab.DELETED,
-            accentColor = HikariDanger,
-            onClick = { onSelect(WhatsAppTab.DELETED) },
-        )
-        WhatsAppTabChip(
-            icon = Icons.Default.EditNote,
-            label = "Bearbeitet",
-            count = editedCount,
-            selected = activeTab == WhatsAppTab.EDITED,
-            accentColor = HikariAmber,
-            onClick = { onSelect(WhatsAppTab.EDITED) },
-        )
-        WhatsAppTabChip(
-            icon = Icons.Default.Build,
+        Segment(
             label = "Tools",
-            count = 2,
+            badge = null,
             selected = activeTab == WhatsAppTab.TOOLS,
-            accentColor = WhatsAppGreen,
+            accent = ToolsTeal,
+            modifier = Modifier.weight(0.8f),
             onClick = { onSelect(WhatsAppTab.TOOLS) },
         )
     }
 }
 
 @Composable
-private fun WhatsAppTabChip(
-    icon: ImageVector,
+private fun Segment(
     label: String,
-    count: Int?,
+    badge: Int?,
     selected: Boolean,
-    accentColor: Color,
+    accent: Color,
+    modifier: Modifier,
     onClick: () -> Unit,
 ) {
-    val bgColor by animateColorAsState(
-        targetValue = if (selected) HikariSurfaceHigh else HikariCardBg,
-        animationSpec = tween(160),
-        label = "wa-tab-bg",
+    val background by animateColorAsState(
+        targetValue = if (selected) accent.copy(alpha = 0.16f) else Color.Transparent,
+        animationSpec = tween(180),
+        label = "wa-segment-bg",
     )
-    val borderColor by animateColorAsState(
-        targetValue = if (selected) accentColor else HikariBorder,
-        animationSpec = tween(160),
-        label = "wa-tab-border",
+    val textColor by animateColorAsState(
+        targetValue = if (selected) accent else HikariTextMuted,
+        animationSpec = tween(180),
+        label = "wa-segment-text",
     )
-
     Row(
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(bgColor)
-            .border(
-                width = if (selected) 1.2.dp else 0.5.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(12.dp),
-            )
+            .background(background)
             .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 8.dp),
+            .padding(vertical = 11.dp, horizontal = 6.dp),
+        horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Icon(
-            icon,
-            contentDescription = label,
-            tint = if (selected) accentColor else HikariTextFaint,
-            modifier = Modifier.size(15.dp),
-        )
         Text(
             text = label,
-            color = if (selected) HikariText else HikariTextMuted,
-            fontSize = 12.5.sp,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            color = textColor,
+            fontSize = 13.5.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
-        if (count != null) Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(6.dp))
-                .background(if (selected) accentColor.copy(alpha = 0.2f) else HikariSurface)
-                .padding(horizontal = 5.dp, vertical = 1.dp),
-        ) {
-            Text(
-                text = count.toString(),
-                color = if (selected) accentColor else HikariTextFaint,
-                fontSize = 10.5.sp,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-            )
-        }
-    }
-}
-
-@Composable
-private fun WhatsAppSearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(HikariCardBg)
-            .border(0.5.dp, HikariBorder, RoundedCornerShape(12.dp))
-            .padding(horizontal = 12.dp, vertical = 9.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Default.Search,
-                contentDescription = null,
-                tint = HikariTextFaint,
-                modifier = Modifier.size(16.dp),
-            )
-            Spacer(Modifier.width(8.dp))
-            Box(Modifier.weight(1f)) {
-                BasicTextField(
-                    value = query,
-                    onValueChange = onQueryChange,
-                    singleLine = true,
-                    textStyle = TextStyle(color = HikariText, fontSize = 13.sp),
-                    cursorBrush = SolidColor(WhatsAppGreen),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                if (query.isEmpty()) {
-                    Text(
-                        "Gelöschte & bearbeitete Nachrichten durchsuchen…",
-                        color = HikariTextFaint,
-                        fontSize = 13.sp,
-                    )
-                }
-            }
-            if (query.isNotEmpty()) {
-                Icon(
-                    Icons.Default.Clear,
-                    contentDescription = "Suche löschen",
-                    tint = HikariTextMuted,
-                    modifier = Modifier
-                        .size(16.dp)
-                        .clickable { onQueryChange("") },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DeletedMessagesList(
-    messages: List<WhatsAppMessageEntity>,
-    onCopy: (WhatsAppMessageEntity) -> Unit,
-    onDeleteEntry: (WhatsAppMessageEntity) -> Unit,
-    onRunDemo: () -> Unit,
-) {
-    if (messages.isEmpty()) {
-        EmptyVaultPlaceholder(
-            icon = Icons.Default.RestoreFromTrash,
-            title = "Noch keine gelöschten Nachrichten",
-            subtitle = "Normale Nachrichten werden NICHT dauerhaft gespeichert — nur wenn jemand eine Nachricht „Für alle löscht“, landet sie hier und wird nach 7 Tagen automatisch wieder gelöscht.",
-            onRunDemo = onRunDemo,
-        )
-        return
-    }
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        items(messages, key = { it.id }) { msg ->
-            DeletedMessageCard(
-                msg = msg,
-                onCopy = { onCopy(msg) },
-                onDelete = { onDeleteEntry(msg) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun DeletedMessageCard(
-    msg: WhatsAppMessageEntity,
-    onCopy: () -> Unit,
-    onDelete: () -> Unit,
-) {
-    val remainingDays = remainingRetentionDays(msg.deletedAt ?: msg.timestamp)
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(HikariCardBg)
-            .border(0.8.dp, HikariDanger.copy(alpha = 0.45f), RoundedCornerShape(16.dp))
-            .padding(14.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            ChatAvatarBubble(
-                avatarPath = msg.avatarPath,
-                title = msg.chatTitle,
-                isGroup = msg.isGroup,
-            )
-            Spacer(Modifier.width(10.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = msg.chatTitle,
-                    color = HikariText,
-                    fontSize = 14.5.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (msg.isGroup && msg.senderName != msg.chatTitle) {
-                    Text(
-                        text = "Absender: ${msg.senderName}",
-                        color = WhatsAppGreen,
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-            }
+        if (badge != null) {
+            Spacer(Modifier.width(6.dp))
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(DeletedRedSoft)
-                    .border(0.5.dp, HikariDanger, RoundedCornerShape(8.dp))
-                    .padding(horizontal = 8.dp, vertical = 3.dp),
+                    .clip(CircleShape)
+                    .background(WaGreen)
+                    .padding(horizontal = 6.dp, vertical = 1.dp),
             ) {
                 Text(
-                    text = "GELÖSCHT",
-                    color = HikariDanger,
-                    fontSize = 9.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 0.8.sp,
-                )
-            }
-        }
-
-        Spacer(Modifier.height(10.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(HikariSurface)
-                .border(0.5.dp, HikariBorderStrong, RoundedCornerShape(12.dp))
-                .padding(12.dp),
-        ) {
-            Column {
-                Text(
-                    text = "GERETTETER ORIGINALTEXT",
-                    color = HikariAmber,
-                    fontSize = 9.5.sp,
+                    text = if (badge > 99) "99+" else badge.toString(),
+                    color = Color.Black,
+                    fontSize = 10.5.sp,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp,
-                    fontFamily = FontFamily.Monospace,
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = msg.text,
-                    color = HikariText,
-                    fontSize = 14.sp,
-                    lineHeight = 19.sp,
-                )
-
-                val previewFile = remember(msg.mediaPreviewPath) {
-                    msg.mediaPreviewPath?.let(::File)?.takeIf { it.exists() }
-                }
-                if (previewFile != null) {
-                    Spacer(Modifier.height(8.dp))
-                    if (isAudioFile(previewFile)) {
-                        VoiceNotePlayerBar(audioFile = previewFile)
-                    } else {
-                        AsyncImage(
-                            model = previewFile,
-                            contentDescription = "Gesichertes Vorschaubild",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(160.dp)
-                                .clip(RoundedCornerShape(10.dp)),
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = buildString {
-                    append(formatTimestamp(msg.timestamp))
-                    msg.deletedAt?.let { append(" · Gelöscht ${formatTimeOnly(it)}") }
-                    append(" · Auto-Del in ${remainingDays}d")
-                },
-                color = HikariTextFaint,
-                fontSize = 10.5.sp,
-                fontFamily = FontFamily.Monospace,
-            )
-
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Icon(
-                    Icons.Default.ContentCopy,
-                    contentDescription = "Text kopieren",
-                    tint = HikariTextMuted,
-                    modifier = Modifier
-                        .size(16.dp)
-                        .clickable(onClick = onCopy),
-                )
-                Icon(
-                    Icons.Default.DeleteOutline,
-                    contentDescription = "Eintrag entfernen",
-                    tint = HikariTextFaint,
-                    modifier = Modifier
-                        .size(16.dp)
-                        .clickable(onClick = onDelete),
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun EditedMessagesList(
-    messages: List<WhatsAppMessageEntity>,
-    decodeHistory: (String?) -> List<WhatsAppEditVersion>,
-    onCopy: (String) -> Unit,
-    onDeleteEntry: (WhatsAppMessageEntity) -> Unit,
-    onRunDemo: () -> Unit,
-) {
-    if (messages.isEmpty()) {
-        EmptyVaultPlaceholder(
-            icon = Icons.Default.EditNote,
-            title = "Noch keine bearbeiteten Nachrichten",
-            subtitle = "Wenn ein Kontakt eine gesendete WhatsApp-Nachricht nachträglich ändert, speichert Hikari hier „Vorher“ und „Nachher“ (automatische Löschung nach 7 Tagen).",
-            onRunDemo = onRunDemo,
-        )
-        return
-    }
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        items(messages, key = { it.id }) { msg ->
-            EditedMessageCard(
-                msg = msg,
-                versions = decodeHistory(msg.editHistoryJson),
-                onCopy = onCopy,
-                onDelete = { onDeleteEntry(msg) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun EditedMessageCard(
-    msg: WhatsAppMessageEntity,
-    versions: List<WhatsAppEditVersion>,
-    onCopy: (String) -> Unit,
-    onDelete: () -> Unit,
-) {
-    val beforeText = msg.originalText ?: versions.firstOrNull()?.text ?: msg.text
-    val remainingDays = remainingRetentionDays(msg.editedAt ?: msg.timestamp)
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(HikariCardBg)
-            .border(0.8.dp, HikariAmber.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
-            .padding(14.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            ChatAvatarBubble(
-                avatarPath = msg.avatarPath,
-                title = msg.chatTitle,
-                isGroup = msg.isGroup,
-            )
-            Spacer(Modifier.width(10.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = msg.chatTitle,
-                    color = HikariText,
-                    fontSize = 14.5.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (msg.isGroup && msg.senderName != msg.chatTitle) {
-                    Text(
-                        text = "Absender: ${msg.senderName}",
-                        color = WhatsAppGreen,
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-            }
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(HikariAmberSoft)
-                    .border(0.5.dp, HikariAmber, RoundedCornerShape(8.dp))
-                    .padding(horizontal = 8.dp, vertical = 3.dp),
-            ) {
-                Text(
-                    text = "BEARBEITET",
-                    color = HikariAmber,
-                    fontSize = 9.5.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 0.8.sp,
-                )
-            }
-        }
-
-        Spacer(Modifier.height(10.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(11.dp))
-                .background(DeletedRedSoft.copy(alpha = 0.12f))
-                .border(0.5.dp, HikariDanger.copy(alpha = 0.35f), RoundedCornerShape(11.dp))
-                .padding(10.dp),
-        ) {
-            Column {
-                Text(
-                    text = "VORHER (ORIGINAL)",
-                    color = HikariDanger,
-                    fontSize = 9.5.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp,
-                    fontFamily = FontFamily.Monospace,
-                )
-                Spacer(Modifier.height(3.dp))
-                Text(
-                    text = beforeText,
-                    color = HikariTextMuted,
-                    fontSize = 13.5.sp,
-                    textDecoration = TextDecoration.LineThrough,
-                )
-            }
-        }
-
-        Spacer(Modifier.height(6.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(11.dp))
-                .background(WhatsAppGreenSoft.copy(alpha = 0.14f))
-                .border(0.5.dp, WhatsAppGreen.copy(alpha = 0.45f), RoundedCornerShape(11.dp))
-                .padding(10.dp),
-        ) {
-            Column {
-                Text(
-                    text = "NACHHER (BEARBEITET)",
-                    color = WhatsAppGreen,
-                    fontSize = 9.5.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp,
-                    fontFamily = FontFamily.Monospace,
-                )
-                Spacer(Modifier.height(3.dp))
-                Text(
-                    text = msg.text,
-                    color = HikariText,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                )
-            }
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = buildString {
-                    append(formatTimestamp(msg.timestamp))
-                    msg.editedAt?.let { append(" · Bearb. ${formatTimeOnly(it)}") }
-                    append(" · Auto-Del in ${remainingDays}d")
-                },
-                color = HikariTextFaint,
-                fontSize = 10.5.sp,
-                fontFamily = FontFamily.Monospace,
-            )
-
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Icon(
-                    Icons.Default.ContentCopy,
-                    contentDescription = "Original kopieren",
-                    tint = HikariTextMuted,
-                    modifier = Modifier
-                        .size(16.dp)
-                        .clickable { onCopy("$beforeText -> ${msg.text}") },
-                )
-                Icon(
-                    Icons.Default.DeleteOutline,
-                    contentDescription = "Eintrag entfernen",
-                    tint = HikariTextFaint,
-                    modifier = Modifier
-                        .size(16.dp)
-                        .clickable(onClick = onDelete),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ChatAvatarBubble(
-    avatarPath: String?,
-    title: String,
-    isGroup: Boolean,
-    size: Int = 40,
-) {
-    val avatarFile = remember(avatarPath) {
-        avatarPath?.let(::File)?.takeIf { it.exists() }
-    }
-    Box(
-        modifier = Modifier
-            .size(size.dp)
-            .clip(CircleShape)
-            .background(WhatsAppGreenDark)
-            .border(1.dp, WhatsAppGreen.copy(alpha = 0.5f), CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (avatarFile != null) {
-            AsyncImage(
-                model = avatarFile,
-                contentDescription = title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(CircleShape),
-            )
-        } else if (isGroup) {
-            Icon(
-                Icons.Default.Group,
-                contentDescription = null,
-                tint = WhatsAppGreen,
-                modifier = Modifier.size((size * 0.5f).dp),
-            )
-        } else {
-            Text(
-                text = (title.firstOrNull()?.uppercaseChar() ?: 'W').toString(),
-                color = WhatsAppGreen,
-                fontSize = (size * 0.42f).sp,
-                fontWeight = FontWeight.Bold,
-            )
-        }
-    }
-}
-
-@Composable
-private fun EmptyVaultPlaceholder(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    onRunDemo: () -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 28.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(HikariCardBg)
-                .border(0.5.dp, HikariBorderStrong, RoundedCornerShape(20.dp)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = WhatsAppGreen,
-                modifier = Modifier.size(30.dp),
-            )
-        }
-        Spacer(Modifier.height(14.dp))
-        Text(
-            text = title,
-            color = HikariText,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-        )
-        Spacer(Modifier.height(6.dp))
-        Text(
-            text = subtitle,
-            color = HikariTextMuted,
-            fontSize = 12.5.sp,
-            lineHeight = 18.sp,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-        )
-        Spacer(Modifier.height(16.dp))
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .background(HikariSurfaceHigh)
-                .border(0.5.dp, HikariAmber.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
-                .clickable(onClick = onRunDemo)
-                .padding(horizontal = 14.dp, vertical = 9.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            Icon(
-                Icons.Default.AutoAwesome,
-                contentDescription = null,
-                tint = HikariAmber,
-                modifier = Modifier.size(15.dp),
-            )
-            Text(
-                text = "Demo-Szenario jetzt vorführen",
-                color = HikariAmber,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-            )
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HowItWorksBottomSheet(
-    hasAccess: Boolean,
-    onOpenPermissionSettings: () -> Unit,
+private fun GuardSettingsSheet(
+    hasNotificationAccess: Boolean,
+    hasMediaAccess: Boolean,
+    alertsEnabled: Boolean,
+    hasEntries: Boolean,
+    onToggleAlerts: (Boolean) -> Unit,
+    onOpenNotificationAccess: () -> Unit,
+    onOpenMediaFolderPicker: () -> Unit,
+    onRunDemo: () -> Unit,
+    onClearAll: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var confirmClear by remember { mutableStateOf(false) }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = HikariSurface,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(start = 20.dp, end = 20.dp, bottom = 28.dp),
         ) {
-            Text(
-                text = "So funktioniert der WhatsApp-Wächter",
-                color = HikariText,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-            )
-
-            InfoStepRow(
-                step = "1",
-                title = "Nur gelöschte & bearbeitete Nachrichten werden gespeichert",
-                desc = "Normale Nachrichten landen NICHT in der Datenbank. Sie werden nur kurzzeitig im flüchtigen Arbeitsspeicher (RAM) vorgehalten, falls der Absender sie kurz darauf für alle löscht oder bearbeitet.",
-            )
-            InfoStepRow(
-                step = "2",
-                title = "Erkennung gelöschter & bearbeiteter Nachrichten",
-                desc = "Meldet WhatsApp „🚫 Diese Nachricht wurde gelöscht“ oder ändert sich der Nachrichtentext im Benachrichtigungs-Stack, sichert Hikari genau diese Nachricht im Tresor.",
-            )
-            InfoStepRow(
-                step = "3",
-                title = "Automatische Löschung nach 7 Tagen",
-                desc = "Alle geretteten Nachrichten und zugehörigen Medien-Vorschauen werden nach 7 Tagen vollautomatisch aus der Datenbank und vom Speicher gelöscht, damit dein Speicher immer frei bleibt.",
-            )
-            InfoStepRow(
-                step = "4",
-                title = "Wichtig beim Testen (Push-Prinzip)",
-                desc = "Der jeweilige WhatsApp-Chat darf beim Empfang und beim Löschen NICHT offen auf dem Bildschirm sein (und der Chat darf nicht stummgeschaltet sein), da WhatsApp sonst gar keine Push-Benachrichtigung an Android sendet.",
-            )
-
+            Text("Wächter", color = HikariText, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(4.dp))
+            Text(
+                "Hält fest, was in WhatsApp für alle gelöscht oder nachträglich geändert wird.",
+                color = HikariTextMuted,
+                fontSize = 13.sp,
+                lineHeight = 18.sp,
+            )
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(if (hasAccess) HikariSurfaceHigh else WhatsAppGreen)
-                    .clickable(onClick = onOpenPermissionSettings)
-                    .padding(vertical = 11.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    Icon(
-                        Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        tint = if (hasAccess) WhatsAppGreen else Color.Black,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Text(
-                        text = if (hasAccess) {
-                            "Benachrichtigungszugriff ist aktiv (Einstellungen öffnen)"
+            Spacer(Modifier.height(20.dp))
+            SheetGroup {
+                SheetRow(
+                    icon = Icons.Outlined.NotificationsActive,
+                    accent = WaGreen,
+                    title = "Hinweis bei Fund",
+                    subtitle = "Benachrichtigung, sobald etwas gerettet wurde",
+                    trailing = {
+                        Switch(
+                            checked = alertsEnabled,
+                            onCheckedChange = onToggleAlerts,
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = HikariBg,
+                                checkedTrackColor = WaGreen,
+                                checkedBorderColor = WaGreen,
+                                uncheckedThumbColor = HikariTextMuted,
+                                uncheckedTrackColor = HikariSurface,
+                                uncheckedBorderColor = HikariBorderStrong,
+                            ),
+                        )
+                    },
+                )
+                SheetDivider()
+                SheetRow(
+                    icon = Icons.Outlined.Shield,
+                    accent = if (hasNotificationAccess) WaGreen else HikariAmber,
+                    title = "Benachrichtigungszugriff",
+                    subtitle = if (hasNotificationAccess) "Erteilt" else "Fehlt — ohne ihn sieht der Wächter nichts",
+                    onClick = onOpenNotificationAccess,
+                )
+                SheetDivider()
+                SheetRow(
+                    icon = Icons.Outlined.FolderOpen,
+                    accent = if (hasMediaAccess) WaGreen else HikariAmber,
+                    title = "Medienordner",
+                    subtitle = if (hasMediaAccess) {
+                        "Freigegeben — Fotos, Videos und Sprachnachrichten werden gesichert"
+                    } else {
+                        "Nicht freigegeben — gelöschte Fotos lassen sich so nicht retten"
+                    },
+                    onClick = onOpenMediaFolderPicker,
+                )
+            }
+
+            Spacer(Modifier.height(24.dp))
+            Text("So arbeitet der Wächter", color = HikariText, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(10.dp))
+            ExplainLine(
+                "Er liest die WhatsApp-Benachrichtigungen mit. Jede Nachricht hat dort Absender und Uhrzeit — daran erkennt er sie wieder.",
+            )
+            ExplainLine(
+                "Gelöscht gilt nur, was sich belegen lässt: WhatsApp zeigt an der Stelle „Diese Nachricht wurde gelöscht“, oder die Nachricht fehlt, obwohl ältere ungelesene noch da sind.",
+            )
+            ExplainLine(
+                "Bearbeitet gilt nur, wenn der Text einer noch ungelesenen Nachricht an Ort und Stelle ersetzt wird. Ein zweites Foto ist keine Bearbeitung.",
+            )
+            ExplainLine(
+                "Grenzen: Ist der Chat gerade offen oder stummgeschaltet, kommt keine Benachrichtigung — dann gibt es nichts zu retten. Verschwindet die einzige ungelesene Nachricht samt Benachrichtigung, lässt sich das nicht von „gelesen“ unterscheiden und wird nicht gezählt.",
+            )
+            ExplainLine(
+                "Normale Nachrichten bleiben unsichtbar und werden nach 24 Stunden verworfen, Gerettetes nach 7 Tagen.",
+            )
+
+            Spacer(Modifier.height(20.dp))
+            SheetGroup {
+                SheetRow(
+                    icon = Icons.Outlined.PlayCircleOutline,
+                    accent = HikariTextMuted,
+                    title = "Beispiel einspielen",
+                    subtitle = "Zeigt, wie eine gelöschte und eine bearbeitete Nachricht aussehen",
+                    onClick = onRunDemo,
+                )
+                if (hasEntries) {
+                    SheetDivider()
+                    SheetRow(
+                        icon = Icons.Outlined.DeleteSweep,
+                        accent = WaDeleted,
+                        title = if (confirmClear) "Wirklich alles löschen?" else "Tresor leeren",
+                        subtitle = if (confirmClear) {
+                            "Noch einmal tippen — das lässt sich nicht rückgängig machen"
                         } else {
-                            "Benachrichtigungszugriff jetzt aktivieren"
+                            "Entfernt alle geretteten Nachrichten und Medien"
                         },
-                        color = if (hasAccess) HikariText else Color.Black,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
+                        titleColor = WaDeleted,
+                        onClick = { if (confirmClear) onClearAll() else confirmClear = true },
                     )
                 }
             }
-
-            Spacer(Modifier.height(16.dp))
         }
     }
 }
 
 @Composable
-private fun InfoStepRow(step: String, title: String, desc: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top,
+private fun SheetGroup(content: @Composable () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(HikariSurfaceHigh.copy(alpha = 0.55f)),
     ) {
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .clip(CircleShape)
-                .background(WhatsAppGreenSoft)
-                .border(0.5.dp, WhatsAppGreen, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = step,
-                color = WhatsAppGreen,
-                fontSize = 11.5.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace,
-            )
-        }
-        Spacer(Modifier.width(10.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                color = HikariText,
-                fontSize = 13.5.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = desc,
-                color = HikariTextMuted,
-                fontSize = 12.sp,
-                lineHeight = 16.sp,
-            )
-        }
+        content()
     }
-}
-
-private fun remainingRetentionDays(eventEpochMs: Long): Int {
-    val ageMs = (System.currentTimeMillis() - eventEpochMs).coerceAtLeast(0L)
-    val leftMs = (WhatsAppRepository.RETENTION_MS - ageMs).coerceAtLeast(0L)
-    val days = (leftMs / (24L * 60L * 60L * 1000L)).toInt()
-    return (days + 1).coerceIn(1, WhatsAppRepository.RETENTION_DAYS)
-}
-
-private fun formatTimestamp(epochMs: Long): String {
-    val sdf = SimpleDateFormat("dd.MM. HH:mm", Locale.GERMANY)
-    return sdf.format(Date(epochMs))
-}
-
-private fun formatTimeOnly(epochMs: Long): String {
-    val sdf = SimpleDateFormat("HH:mm", Locale.GERMANY)
-    return sdf.format(Date(epochMs))
-}
-
-private fun isAudioFile(file: File): Boolean {
-    val lower = file.name.lowercase()
-    return lower.endsWith(".opus") ||
-        lower.endsWith(".ogg") ||
-        lower.endsWith(".mp3") ||
-        lower.endsWith(".m4a") ||
-        lower.endsWith(".aac") ||
-        lower.endsWith(".wav")
 }
 
 @Composable
-private fun VoiceNotePlayerBar(audioFile: File) {
-    var isPlaying by remember { mutableStateOf(false) }
-    var speed by remember { mutableStateOf(1.0f) }
-    val playerRef = remember { mutableStateOf<MediaPlayer?>(null) }
+private fun SheetDivider() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 62.dp)
+            .height(0.5.dp)
+            .background(HikariBorderStrong),
+    )
+}
 
-    DisposableEffect(audioFile.absolutePath) {
-        onDispose {
-            playerRef.value?.runCatching {
-                stop()
-                release()
-            }
-            playerRef.value = null
-        }
-    }
-
+@Composable
+private fun SheetRow(
+    icon: ImageVector,
+    accent: Color,
+    title: String,
+    subtitle: String,
+    titleColor: Color = HikariText,
+    onClick: (() -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(WhatsAppGreenSoft)
-            .border(0.5.dp, WhatsAppGreen.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
-            .padding(horizontal = 10.dp, vertical = 8.dp),
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = 14.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Box(
             modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .background(WhatsAppGreen)
-                .clickable {
-                    val current = playerRef.value
-                    if (isPlaying && current != null) {
-                        runCatching { current.pause() }
-                        isPlaying = false
-                    } else {
-                        runCatching {
-                            val mp = current ?: MediaPlayer().apply {
-                                setDataSource(audioFile.absolutePath)
-                                prepare()
-                                setOnCompletionListener { isPlaying = false }
-                                playerRef.value = this
-                            }
-                            mp.playbackParams = PlaybackParams().setSpeed(speed)
-                            mp.start()
-                            isPlaying = true
-                        }
-                    }
-                },
+                .size(34.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(accent.copy(alpha = 0.16f)),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                contentDescription = "Abspielen",
-                tint = Color.Black,
-                modifier = Modifier.size(18.dp),
-            )
+            Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(18.dp))
         }
-
+        Spacer(Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "Gesicherte Sprachnachricht",
-                color = HikariText,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = audioFile.name,
-                color = HikariTextMuted,
-                fontSize = 10.sp,
-                fontFamily = FontFamily.Monospace,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+            Text(title, color = titleColor, fontSize = 14.5.sp, fontWeight = FontWeight.Medium)
+            Spacer(Modifier.height(2.dp))
+            Text(subtitle, color = HikariTextMuted, fontSize = 12.5.sp, lineHeight = 17.sp)
+        }
+        Spacer(Modifier.width(10.dp))
+        when {
+            trailing != null -> trailing()
+            onClick != null -> Icon(
+                Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                contentDescription = null,
+                tint = HikariTextFaint,
+                modifier = Modifier.size(20.dp),
             )
         }
+    }
+}
 
+@Composable
+private fun ExplainLine(text: String) {
+    Row(modifier = Modifier.padding(bottom = 10.dp)) {
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(7.dp))
-                .background(HikariCardBg)
-                .border(0.5.dp, WhatsAppGreen, RoundedCornerShape(7.dp))
-                .clickable {
-                    speed = when (speed) {
-                        1.0f -> 1.5f
-                        1.5f -> 2.0f
-                        else -> 1.0f
-                    }
-                    playerRef.value?.let { mp ->
-                        if (isPlaying) {
-                            runCatching { mp.playbackParams = PlaybackParams().setSpeed(speed) }
-                        }
-                    }
-                }
-                .padding(horizontal = 7.dp, vertical = 3.dp),
-        ) {
-            Text(
-                text = "${speed}x",
-                color = WhatsAppGreen,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace,
-            )
-        }
+                .padding(top = 7.dp)
+                .size(5.dp)
+                .clip(CircleShape)
+                .background(WaGreen),
+        )
+        Spacer(Modifier.width(12.dp))
+        Text(text, color = HikariTextMuted, fontSize = 13.sp, lineHeight = 19.sp)
     }
 }

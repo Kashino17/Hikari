@@ -10,12 +10,14 @@ import android.provider.DocumentsContract
 import android.provider.MediaStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.math.abs
 
 data class WhatsAppStatusItem(
     val uri: String,
@@ -37,20 +39,17 @@ private data class SafChildEntry(
 }
 
 /**
- * Verwaltet den optionalen Ordner-Zugriff (Storage Access Framework via [DocumentsContract]) auf
- * `Android/media/com.whatsapp/WhatsApp/Media`:
+ * Sichert Medien eingehender WhatsApp-Nachrichten, damit sie eine spätere Löschung überleben.
  *
- * 1. **Auto-Backup von Sprachnachrichten & Fotos**:
- *    Wenn eine WhatsApp-Benachrichtigung über eine Sprachnachricht (`🎤`) oder ein
- *    Foto (`📷`) eingeht, kopiert [backupLatestIncomingMedia] die frisch empfangene
- *    Datei sofort in Hikaris geschützten Tresor (`filesDir/whatsapp_media/`).
- *    Löscht der Absender die Sprachnachricht oder das Foto später „Für alle“,
- *    löscht WhatsApp zwar die Originaldatei im WhatsApp-Ordner — Hikaris Kopie
- *    bleibt aber erhalten und direkt in Hikari abspielbar!
+ * WhatsApp verschlüsselt seine Datenbank, legt automatisch heruntergeladene Fotos, Videos und
+ * Sprachnachrichten aber als normale Dateien unter `Android/media/com.whatsapp/WhatsApp/Media`
+ * ab — und entfernt sie dort wieder, wenn der Absender „Für alle löschen“ wählt. Hikari kopiert
+ * die Datei deshalb sofort beim Eintreffen in den eigenen Speicher (`filesDir/whatsapp_media`).
+ * Dafür gibt der Nutzer einmalig den Medienordner frei (Storage Access Framework).
  *
- * 2. **Status-Saver**:
- *    Liest Bilder und Videos aus dem versteckten `.Statuses`-Unterordner und
- *    speichert sie auf Wunsch dauerhaft in der Geräte-Galerie.
+ * Zwei Quellen, in dieser Reihenfolge:
+ *  1. Bild-Anhang direkt an der Benachrichtigung (falls WhatsApp einen mitschickt).
+ *  2. Die frisch heruntergeladene Datei im freigegebenen Medienordner.
  */
 @Singleton
 class WhatsAppMediaVault @Inject constructor(
@@ -73,6 +72,7 @@ class WhatsAppMediaVault @Inject constructor(
     }
 
     fun saveTreeUri(uri: Uri) {
+        folderCache.clear()
         runCatching {
             context.contentResolver.takePersistableUriPermission(
                 uri,
@@ -94,59 +94,114 @@ class WhatsAppMediaVault @Inject constructor(
     }
 
     /**
-     * Sucht bei Eingang einer Medien-Benachrichtigung ("photo", "voice", "audio", "video")
-     * nach der jüngsten Datei im entsprechenden WhatsApp-Unterordner und sichert
-     * eine lokale Kopie in `filesDir/whatsapp_media/`.
+     * Sichert die Datei zu einer gerade eingetroffenen Mediennachricht und gibt den lokalen
+     * Pfad zurück. WhatsApp lädt Medien oft erst Sekunden nach der Benachrichtigung herunter,
+     * deshalb wird der Ordner mehrfach in wachsenden Abständen geprüft.
      */
-    suspend fun backupLatestIncomingMedia(mediaType: String?, notificationTimeMs: Long): String? =
-        withContext(Dispatchers.IO) {
-            if (mediaType == null) return@withContext null
-            val treeUri = getSavedTreeUri() ?: return@withContext null
-            val rootDocId = runCatching { DocumentsContract.getTreeDocumentId(treeUri) }.getOrNull()
-                ?: return@withContext null
+    suspend fun captureForMessage(pending: PendingMedia): String? = withContext(Dispatchers.IO) {
+        copyNotificationAttachment(pending)?.let { return@withContext it }
 
-            val targetFolderNames = when (mediaType) {
-                "voice" -> listOf("WhatsApp Voice Notes", "WhatsApp Audio")
-                "photo" -> listOf("WhatsApp Images")
-                "video" -> listOf("WhatsApp Video")
-                "audio" -> listOf("WhatsApp Audio")
-                "sticker" -> listOf("WhatsApp Stickers")
-                "gif" -> listOf("WhatsApp Animated Gifs")
-                else -> return@withContext null
-            }
+        val treeUri = getSavedTreeUri() ?: return@withContext null
+        if (!hasMediaFolderAccess()) return@withContext null
+        val folderSuffixes = FOLDER_SUFFIXES[pending.mediaType] ?: return@withContext null
 
-            var newestEntry: SafChildEntry? = null
-
-            for (folderName in targetFolderNames) {
-                val folderDocId = findSubfolderDocId(treeUri, rootDocId, folderName) ?: continue
-                val children = listChildren(treeUri, folderDocId)
-                val candidate = if (folderName == "WhatsApp Voice Notes") {
-                    val latestSubDir = children
-                        .filter { it.isDirectory }
-                        .maxByOrNull { it.name }
-                    val files = if (latestSubDir != null) {
-                        listChildren(treeUri, latestSubDir.documentId)
-                    } else {
-                        children
-                    }
-                    files.filter { !it.isDirectory }.maxByOrNull { it.lastModified }
-                } else {
-                    children.filter { !it.isDirectory }.maxByOrNull { it.lastModified }
+        for (waitMs in CAPTURE_SCHEDULE_MS) {
+            if (waitMs > 0L) delay(waitMs)
+            val claimed = claimMutex.withLock {
+                val candidate = findUnclaimedFile(treeUri, folderSuffixes, pending.seenAt) ?: return@withLock null
+                claimedDocumentIds += candidate.documentId
+                if (claimedDocumentIds.size > 600) {
+                    claimedDocumentIds.iterator().let { it.next(); it.remove() }
                 }
-
-                if (candidate != null && (newestEntry == null || candidate.lastModified > newestEntry.lastModified)) {
-                    newestEntry = candidate
-                }
+                candidate
             }
-
-            val entry = newestEntry ?: return@withContext null
-            val ageNow = abs(System.currentTimeMillis() - entry.lastModified)
-            val ageNotif = abs(notificationTimeMs - entry.lastModified)
-            if (ageNow > 90_000L && ageNotif > 90_000L) return@withContext null
-
-            val docUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, entry.documentId)
-            return@withContext copyUriToVault(docUri, entry.name, entry.lastModified, mediaType)
+            if (claimed != null) {
+                val docUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, claimed.documentId)
+                return@withContext copyUriToVault(docUri, claimed.name, pending.rowId, pending.mediaType)
+            }
         }
+        null
+    }
+
+    private fun copyNotificationAttachment(pending: PendingMedia): String? {
+        val raw = pending.dataUri ?: return null
+        return runCatching {
+            val ext = when {
+                pending.dataMimeType?.contains("png") == true -> "png"
+                pending.dataMimeType?.contains("webp") == true -> "webp"
+                pending.dataMimeType?.contains("gif") == true -> "gif"
+                pending.dataMimeType?.startsWith("video") == true -> "mp4"
+                else -> "jpg"
+            }
+            copyUriToVault(Uri.parse(raw), "attachment.$ext", pending.rowId, pending.mediaType)
+        }.getOrNull()
+    }
+
+    /**
+     * Älteste noch nicht vergebene Datei, die rund um das Eintreffen der Nachricht entstanden
+     * ist. „Älteste zuerst“ ordnet mehrere Bilder hintereinander in der richtigen Reihenfolge zu.
+     */
+    private fun findUnclaimedFile(treeUri: Uri, folderSuffixes: List<String>, seenAt: Long): SafChildEntry? {
+        val earliest = seenAt - CAPTURE_LOOKBACK_MS
+        return resolveMediaFolders(treeUri, folderSuffixes)
+            .asSequence()
+            .flatMap { folderDocId -> recentFilesIn(treeUri, folderDocId).asSequence() }
+            .filter { entry ->
+                entry.lastModified >= earliest &&
+                    entry.sizeBytes in 1..MAX_MEDIA_BYTES &&
+                    entry.documentId !in claimedDocumentIds &&
+                    !entry.name.startsWith(".")
+            }
+            .minByOrNull { it.lastModified }
+    }
+
+    /** Dateien eines Medienordners; Sprachnachrichten liegen in Wochen-Unterordnern. */
+    private fun recentFilesIn(treeUri: Uri, folderDocId: String): List<SafChildEntry> {
+        // Kommen mehrere Bilder auf einmal, teilen sich die Suchläufe eine Ordnerabfrage —
+        // der Bilderordner kann zehntausende Dateien enthalten.
+        val now = System.currentTimeMillis()
+        listingCache[folderDocId]?.let { (at, files) -> if (now - at < LISTING_REUSE_MS) return files }
+        return readFilesIn(treeUri, folderDocId).also { listingCache[folderDocId] = now to it }
+    }
+
+    private fun readFilesIn(treeUri: Uri, folderDocId: String): List<SafChildEntry> {
+        val children = listChildren(treeUri, folderDocId)
+        val files = children.filter { !it.isDirectory }
+        val weekFolders = children
+            .filter { it.isDirectory && it.name.firstOrNull()?.isDigit() == true }
+            .sortedByDescending { it.name }
+            .take(2)
+        return files + weekFolders.flatMap { week ->
+            listChildren(treeUri, week.documentId).filter { !it.isDirectory }
+        }
+    }
+
+    /**
+     * Sucht die passenden Unterordner („WhatsApp Images“, „WhatsApp Business Images“ …) — egal ob
+     * der Nutzer `Media`, `WhatsApp` oder `com.whatsapp` freigegeben hat.
+     */
+    private fun resolveMediaFolders(treeUri: Uri, folderSuffixes: List<String>): List<String> {
+        val cacheKey = treeUri.toString() + "|" + folderSuffixes.joinToString(",")
+        folderCache[cacheKey]?.let { return it }
+
+        val rootDocId = runCatching { DocumentsContract.getTreeDocumentId(treeUri) }.getOrNull()
+            ?: return emptyList()
+        var level = listOf(rootDocId)
+        repeat(4) {
+            val children = level.flatMap { listChildren(treeUri, it) }.filter { it.isDirectory }
+            val hits = children.filter { dir ->
+                folderSuffixes.any { suffix -> dir.name.endsWith(suffix, ignoreCase = true) }
+            }
+            if (hits.isNotEmpty()) {
+                return hits.map { it.documentId }.also { folderCache[cacheKey] = it }
+            }
+            level = children
+                .filter { dir -> CONTAINER_FOLDERS.any { dir.name.equals(it, ignoreCase = true) } }
+                .map { it.documentId }
+            if (level.isEmpty()) return emptyList()
+        }
+        return emptyList()
+    }
 
     /**
      * Lädt alle aktuell im `.Statuses`-Ordner vorhandenen WhatsApp-Status-Bilder & -Videos.
@@ -269,34 +324,57 @@ class WhatsAppMediaVault @Inject constructor(
     private fun copyUriToVault(
         docUri: Uri,
         originalName: String,
-        lastModified: Long,
+        rowId: Long,
         mediaType: String,
     ): String? {
         return runCatching {
-            val ext = originalName.substringAfterLast('.', "").takeIf { it.isNotEmpty() }
+            val ext = originalName.substringAfterLast('.', "").takeIf { it.length in 1..5 }
                 ?: when (mediaType) {
                     "voice" -> "opus"
                     "photo" -> "jpg"
-                    "video" -> "mp4"
+                    "video", "gif" -> "mp4"
                     "audio" -> "mp3"
                     else -> "bin"
                 }
-            val dir = File(context.filesDir, "whatsapp_media").apply { mkdirs() }
-            val safeName = "wa_${mediaType}_${lastModified}.$ext"
-            val targetFile = File(dir, safeName)
-            if (targetFile.exists() && targetFile.length() > 0L) {
-                return targetFile.absolutePath
-            }
+            val dir = File(context.filesDir, WhatsAppRepository.MEDIA_DIR).apply { mkdirs() }
+            val targetFile = File(dir, "wa_${mediaType}_${rowId}_${System.currentTimeMillis()}.$ext")
             context.contentResolver.openInputStream(docUri)?.use { input ->
                 FileOutputStream(targetFile).use { output ->
                     input.copyTo(output)
                 }
             }
-            targetFile.takeIf { it.exists() && targetFile.length() > 0L }?.absolutePath
+            if (targetFile.exists() && targetFile.length() > 0L) {
+                targetFile.absolutePath
+            } else {
+                targetFile.delete()
+                null
+            }
         }.getOrNull()
     }
 
+    private val claimMutex = Mutex()
+    private val claimedDocumentIds = LinkedHashSet<String>()
+    private val folderCache = java.util.concurrent.ConcurrentHashMap<String, List<String>>()
+    private val listingCache = java.util.concurrent.ConcurrentHashMap<String, Pair<Long, List<SafChildEntry>>>()
+
     companion object {
         private const val KEY_TREE_URI = "whatsapp_media_tree_uri"
+
+        /** Medientyp -> Endung des WhatsApp-Unterordners. */
+        private val FOLDER_SUFFIXES = mapOf(
+            "photo" to listOf("Images"),
+            "video" to listOf("Video"),
+            "voice" to listOf("Voice Notes"),
+            "audio" to listOf("Audio"),
+            "gif" to listOf("Animated Gifs"),
+            "document" to listOf("Documents"),
+        )
+        private val CONTAINER_FOLDERS = listOf("Media", "WhatsApp", "WhatsApp Business", "com.whatsapp", "com.whatsapp.w4b")
+
+        /** Wartezeiten zwischen den Suchläufen (zusammen gut eine Minute). */
+        private val CAPTURE_SCHEDULE_MS = listOf(0L, 3_000L, 10_000L, 25_000L, 40_000L)
+        private const val LISTING_REUSE_MS = 1_500L
+        private const val CAPTURE_LOOKBACK_MS = 120_000L
+        private const val MAX_MEDIA_BYTES = 64L * 1024L * 1024L
     }
 }
