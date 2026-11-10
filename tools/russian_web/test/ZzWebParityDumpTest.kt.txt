@@ -1,0 +1,128 @@
+package com.hikari.app.domain.russian
+
+import java.io.File
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import org.junit.Test
+
+/**
+ * TEMPORÄR (nicht committen): schreibt die Ergebnisse der Kotlin-Lernlogik für alle
+ * Kurstexte nach build/web-parity.json, damit die Web-Portierung dagegen geprüft wird.
+ */
+class ZzWebParityDumpTest {
+
+    private val assets = File("src/main/assets/russian")
+
+    @Test
+    fun dump() {
+        val course = parseRuCourse(File(assets, "course.json").readText())
+        val podcast = parseRuCourse(File(assets, "podcast.json").readText())
+        val gloss = ruJson.decodeFromString(RuGlossData.serializer(), File(assets, "glosses.json").readText())
+        RussianGlossary.install(gloss)
+        val deep = ruJson.decodeFromString(RuDeepdive.serializer(), File(assets, "deepdive.json").readText())
+        val patterns = ruJson.decodeFromString(RuPatterns.serializer(), File(assets, "patterns.json").readText())
+
+        val texts = LinkedHashSet<String>()
+        for (c in listOf(course, podcast)) for (d in c.days) {
+            for (i in d.items) { texts += i.ru; i.ruF?.let { texts += it } }
+            for (l in d.dialog.lines) { texts += l.ru; l.ruF?.let { texts += it } }
+        }
+        for (e in deep.entries) {
+            e.variants.forEach { texts += it.ru }
+            e.examples.forEach { texts += it.ru }
+            e.gender?.forms?.forEach { texts += it.ru }
+        }
+        for (p in patterns.patterns) {
+            p.scene.lines.forEach { texts += it.ru; it.ruF?.let { f -> texts += f } }
+            p.core.forEach { texts += it.ru }
+            texts += p.free.model.ru
+            for (g in listOf(RuGender.MALE, RuGender.FEMALE)) {
+                texts += RuPatternLogic.build(p, p.slots.map { 0 }, g).ru
+                texts += RuPatternLogic.build(p, p.slots.map { it.options.size - 1 }, g).ru
+            }
+        }
+
+        fun spans(l: List<RussianPhonetics.Span>): JsonArray = buildJsonArray {
+            for (s in l) add(buildJsonArray { add(JsonPrimitive(s.text)); add(JsonPrimitive(s.stressed)) })
+        }
+
+        fun score(sc: RuAnswerCheck.SpeechScore) = buildJsonObject {
+            put("passed", sc.passed)
+            put("score", Math.round(sc.score * 1000).toInt())
+            put("heard", sc.heard)
+            put("words", buildJsonArray { for ((w, ok) in sc.words) add(buildJsonArray { add(JsonPrimitive(w)); add(JsonPrimitive(ok)) }) })
+            put("hints", buildJsonArray {
+                for (h in RuSoundCoach.hints(sc)) add(buildJsonArray {
+                    add(JsonPrimitive(h.target)); add(h.heard?.let { JsonPrimitive(it) } ?: JsonNull); add(JsonPrimitive(h.tip))
+                })
+            })
+        }
+
+        val out = buildJsonArray {
+            for (t in texts) add(buildJsonObject {
+                put("src", t)
+                put("display", RussianPhonetics.display(t))
+                put("flat", RussianPhonetics.transliterateFlat(t))
+                put("spans", spans(RussianPhonetics.transliterate(t)))
+                put("words", buildJsonArray {
+                    for (w in RussianPhonetics.words(t)) add(buildJsonObject {
+                        put("c", w.cyrillic); put("p", w.plain); put("l", spans(w.latin)); put("b", w.before); put("a", w.after)
+                    })
+                })
+                val plain = RussianPhonetics.plain(t)
+                put("withStress", RussianGlossary.withStress(plain))
+                put("chunks", buildJsonArray {
+                    for (c in RussianGlossary.chunks(plain)) add(buildJsonObject {
+                        put("n", c.words.size)
+                        put("g", c.gloss?.let { JsonPrimitive(it) } ?: JsonNull)
+                        put("l", c.words.joinToString(" ") { w -> w.latin.joinToString("") { it.text } })
+                    })
+                })
+                put("syll", buildJsonArray {
+                    for (w in RuLessonBuilder.words(t)) {
+                        val (s, i) = RuLessonBuilder.syllables(w)
+                        add(buildJsonObject { put("w", w); put("s", JsonArray(s.map { JsonPrimitive(it) })); put("i", i) })
+                    }
+                })
+                put("norm", RuLessonBuilder.norm(t))
+                put("search", RuPhrasebookSearch.translit(t))
+                put("clip", RuDeepdiveLogic.clipName(t))
+                val lower = plain.lowercase()
+                val ws = lower.split(' ')
+                val hyps = listOf(
+                    plain,
+                    ws.drop(1).joinToString(" "),
+                    lower.replace('о', 'а'),
+                    lower.replace('и', 'ы'),
+                    lower.replace('ш', 'с').replace('ж', 'з'),
+                    ws.reversed().joinToString(" "),
+                )
+                put("speech", buildJsonArray {
+                    for (h in hyps) add(buildJsonObject { put("h", h); put("r", score(RuAnswerCheck.speech(t, listOf(h)))) })
+                    // Anzeige-Form (mit Akut) als Ziel + mehrere Hypothesen
+                    add(buildJsonObject {
+                        put("h", "multi")
+                        put("r", score(RuAnswerCheck.speech(RussianPhonetics.display(t), listOf(hyps[3], hyps[1], hyps[0]))))
+                    })
+                })
+            })
+        }
+        val numbers = buildJsonArray {
+            for (n in listOf(0, 1, 2, 5, 10, 11, 13, 19, 20, 21, 30, 40, 99, 100, 101, 200, 300, 500, 900, 1000, 1990, 2026, 5000, 9999)) {
+                add(buildJsonObject {
+                    put("n", n)
+                    put("c", JsonArray(RuSpeechMatch.cardinal(n).map { JsonPrimitive(it) }))
+                    put("o", JsonArray(RuSpeechMatch.ordinal(n).map { JsonPrimitive(it) }))
+                })
+            }
+        }
+        val target = File("build/web-parity.json")
+        target.parentFile.mkdirs()
+        target.writeText(buildJsonObject { put("texts", out); put("numbers", numbers) }.toString())
+        println("web-parity: ${texts.size} Texte → ${target.absolutePath}")
+    }
+}

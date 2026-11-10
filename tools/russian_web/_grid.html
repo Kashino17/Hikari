@@ -1,0 +1,13 @@
+<!doctype html>
+<!-- Prüfansicht: mehrere Seiten der App nebeneinander. /_grid.html?r=heute,kurse,ueben -->
+<meta charset="utf-8">
+<style>html,body{margin:0;background:#3c3c3c;height:100%}body{display:flex;gap:8px}iframe{border:0;width:412px;height:100%;flex:none}</style>
+<body>
+<script>
+for (const r of (new URLSearchParams(location.search).get('r') ?? 'heute').split(',')) {
+  const f = document.createElement('iframe');
+  f.src = '/#/' + r;
+  document.body.appendChild(f);
+}
+</script>
+</body>

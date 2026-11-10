@@ -1,0 +1,165 @@
+// Hikari · Russisch — Vorschau-Server für die Web-Oberfläche des Russisch-Bereichs.
+//
+// Die Oberfläche selbst liegt in android/app/src/main/assets/russian-web und wird in
+// der App von einer WebView aus den Assets geladen (ui/russian/RussianWebScreen.kt).
+// Dieser Server liefert dieselben Dateien an einen Browser aus — zum Entwerfen und
+// Ansehen am Rechner oder per Tailscale am Handy, ohne die App neu zu bauen:
+//
+//   /                → die Oberfläche (assets/russian-web)
+//   /data/<name>.json → Kursinhalte (assets/russian)
+//   /audio/<clip>.ogg → Muttersprachler-Clips (assets/russian/audio)
+//   /api/*           → Hikari-Server (Aussprache-Prüfung, Gespräch, Podcast-Audio …)
+//   /store           → Lernstand der Vorschau (~/.hikari/russian-web/store.json)
+//
+// Start: node tools/russian_web/server.mjs   (Port 3079)
+// Tests: node --test tools/russian_web/test/  (braucht test/parity.json, siehe dort)
+import { createServer } from 'node:http';
+import { createReadStream, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
+import { extname, join, normalize } from 'node:path';
+import { Readable } from 'node:stream';
+import { gzipSync } from 'node:zlib';
+
+const PORT = Number(process.env.PORT ?? 3079);
+const BACKEND = process.env.HIKARI_BACKEND ?? 'http://127.0.0.1:3939';
+const HERE = new URL('.', import.meta.url).pathname;
+const ROOT = new URL('../../android/app/src/main/assets/russian-web/', import.meta.url).pathname;
+const ASSETS = process.env.HIKARI_ASSETS ?? new URL('../../android/app/src/main/assets/russian', import.meta.url).pathname;
+const STORE_DIR = join(homedir(), '.hikari', 'russian-web');
+const STORE_FILE = join(STORE_DIR, 'store.json');
+
+const TYPES = {
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml',
+  '.ogg': 'audio/ogg', '.woff2': 'font/woff2', '.png': 'image/png', '.webmanifest': 'application/manifest+json',
+};
+const DATA = new Set(['course', 'podcast', 'phrasebook', 'deepdive', 'patterns', 'sounds', 'glosses']);
+
+// ── Lernstand ──────────────────────────────────────────────────────────────
+mkdirSync(STORE_DIR, { recursive: true });
+let store = { rev: 0, values: {} };
+try { store = JSON.parse(readFileSync(STORE_FILE, 'utf8')); } catch { /* erster Start */ }
+function saveStore() {
+  store.rev++;
+  const tmp = `${STORE_FILE}.tmp`;
+  writeFileSync(tmp, JSON.stringify(store));
+  renameSync(tmp, STORE_FILE);
+}
+const readBody = (req, limit = 4 * 1024 * 1024) => new Promise((resolve, reject) => {
+  const chunks = [];
+  let size = 0;
+  req.on('data', (c) => { size += c.length; if (size > limit) { reject(new Error('too large')); req.destroy(); } else chunks.push(c); });
+  req.on('end', () => resolve(Buffer.concat(chunks)));
+  req.on('error', reject);
+});
+
+function send(req, res, status, body, type, extra = {}) {
+  const headers = { 'content-type': type, ...extra };
+  let out = typeof body === 'string' ? Buffer.from(body) : body;
+  if (out.length > 1024 && /gzip/.test(req.headers['accept-encoding'] ?? '') && /json|javascript|css|html|svg/.test(type)) {
+    out = gzipSync(out);
+    headers['content-encoding'] = 'gzip';
+  }
+  headers['content-length'] = out.length;
+  res.writeHead(status, headers);
+  res.end(req.method === 'HEAD' ? undefined : out);
+}
+const json = (req, res, status, obj) => send(req, res, status, JSON.stringify(obj), TYPES['.json'], { 'cache-control': 'no-store' });
+
+/** Datei mit Range-Unterstützung (Safari verlangt sie für Audio). */
+function sendFile(req, res, file, type, cache) {
+  let st;
+  try { st = statSync(file); } catch { res.writeHead(404).end('not found'); return; }
+  const headers = { 'content-type': type, 'accept-ranges': 'bytes', 'cache-control': cache };
+  const m = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range ?? '');
+  if (m && (m[1] || m[2])) {
+    const start = m[1] ? Number(m[1]) : Math.max(0, st.size - Number(m[2]));
+    const end = m[1] && m[2] ? Math.min(Number(m[2]), st.size - 1) : st.size - 1;
+    if (start > end || start >= st.size) { res.writeHead(416, { 'content-range': `bytes */${st.size}` }).end(); return; }
+    res.writeHead(206, { ...headers, 'content-range': `bytes ${start}-${end}/${st.size}`, 'content-length': end - start + 1 });
+    createReadStream(file, { start, end }).pipe(res);
+    return;
+  }
+  res.writeHead(200, { ...headers, 'content-length': st.size });
+  if (req.method === 'HEAD') res.end(); else createReadStream(file).pipe(res);
+}
+
+/** Reicht eine Anfrage an den Hikari-Server durch (Streaming, Range, Multipart). */
+async function proxy(req, res, path) {
+  const headers = {};
+  for (const h of ['range', 'content-type', 'accept', 'authorization']) if (req.headers[h]) headers[h] = req.headers[h];
+  const ctrl = new AbortController();
+  res.on('close', () => ctrl.abort());
+  try {
+    const hasBody = !['GET', 'HEAD'].includes(req.method);
+    const up = await fetch(BACKEND + path, {
+      method: req.method, headers, signal: ctrl.signal, redirect: 'follow',
+      body: hasBody ? await readBody(req, 12 * 1024 * 1024) : undefined,
+    });
+    const out = {};
+    for (const h of ['content-type', 'content-length', 'content-range', 'accept-ranges', 'cache-control']) {
+      const v = up.headers.get(h);
+      if (v) out[h] = v;
+    }
+    // fetch() hat komprimierte Antworten bereits entpackt — Länge stimmt dann nicht mehr.
+    if (up.headers.get('content-encoding')) delete out['content-length'];
+    res.writeHead(up.status, out);
+    if (!up.body || req.method === 'HEAD') { res.end(); return; }
+    Readable.fromWeb(up.body).on('error', () => res.destroy()).pipe(res);
+  } catch (e) {
+    if (ctrl.signal.aborted) return;
+    if (!res.headersSent) json(req, res, 502, { error: 'backend_unreachable', detail: String(e?.message ?? e) });
+    else res.destroy();
+  }
+}
+
+createServer(async (req, res) => {
+  try {
+    const url = new URL(req.url, 'http://x');
+    const path = decodeURIComponent(url.pathname);
+
+    if (path.startsWith('/api/')) return proxy(req, res, path.slice(4) + url.search);
+
+    if (path === '/store') {
+      if (req.method === 'GET') return json(req, res, 200, store);
+      if (req.method === 'POST') {
+        // {set:{k:v}, remove:[k]} — ein Aufruf für mehrere Änderungen
+        const patch = JSON.parse((await readBody(req)).toString('utf8') || '{}');
+        for (const [k, v] of Object.entries(patch.set ?? {})) store.values[k] = v;
+        for (const k of patch.remove ?? []) delete store.values[k];
+        saveStore();
+        return json(req, res, 200, { rev: store.rev });
+      }
+      return json(req, res, 405, { error: 'method' });
+    }
+
+    let m = /^\/data\/([a-z]+)\.json$/.exec(path);
+    if (m && DATA.has(m[1])) {
+      const body = await readFile(join(ASSETS, `${m[1]}.json`));
+      return send(req, res, 200, body, TYPES['.json'], { 'cache-control': 'no-cache' });
+    }
+    if (path === '/clips.json') {
+      // Welche Clips es gibt — die App fragt nie ins Leere und weiß, wann sie vorlesen lassen muss.
+      const names = readdirSync(join(ASSETS, 'audio')).filter((f) => f.endsWith('.ogg')).map((f) => f.slice(0, -4));
+      return send(req, res, 200, JSON.stringify(names), TYPES['.json'], { 'cache-control': 'no-cache' });
+    }
+    m = /^\/audio\/([a-z0-9_]{1,120})\.ogg$/.exec(path);
+    if (m) return sendFile(req, res, join(ASSETS, 'audio', `${m[1]}.ogg`), TYPES['.ogg'], 'public, max-age=604800');
+
+    if (path === '/healthz') return json(req, res, 200, { ok: true, assets: existsSync(join(ASSETS, 'course.json')) });
+
+    if (path === '/_grid.html') return send(req, res, 200, await readFile(join(HERE, '_grid.html')), TYPES['.html'], { 'cache-control': 'no-store' });
+    const rel = normalize(path === '/' ? '/index.html' : path);
+    if (rel.includes('..')) { res.writeHead(400).end(); return; }
+    const file = join(ROOT, rel);
+    const type = TYPES[extname(file)] ?? 'application/octet-stream';
+    if (/font|image/.test(type)) return sendFile(req, res, file, type, 'public, max-age=604800');
+    const body = await readFile(file);
+    return send(req, res, 200, body, type, { 'cache-control': 'no-store' });
+  } catch (e) {
+    if (e?.code === 'ENOENT') { res.writeHead(404).end('not found'); return; }
+    console.error(new Date().toISOString(), req.method, req.url, e);
+    if (!res.headersSent) res.writeHead(500).end('error'); else res.destroy();
+  }
+}).listen(PORT, '127.0.0.1', () => console.log(`Hikari Russisch (Web) auf :${PORT} — Assets: ${ASSETS}`));

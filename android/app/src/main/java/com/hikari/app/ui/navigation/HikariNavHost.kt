@@ -506,142 +506,39 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                     onOpenNowPlaying = { nav.navigate("nowplaying") },
                 )
             }
-            composable("russian") {
+            // Russisch: Alle Einstiege (Profil, Feed-Karte, Benachrichtigung) führen in dieselbe
+            // Web-Oberfläche (assets/russian-web); die Navigation dazwischen läuft in ihr selbst.
+            // Die früheren Compose-Screens in ui/russian bleiben für diese Version als Rückfall im Code.
+            val russianWeb: @Composable (String) -> Unit = { route ->
                 Box(Modifier.fillMaxSize().padding(padding)) {
-                    RussianHomeScreen(
-                        onBack = { nav.popBackStack() },
-                        onOpen = { route -> nav.navigate(route) },
-                    )
+                    com.hikari.app.ui.russian.RussianWebScreen(startRoute = route, onClose = { nav.popBackStack() })
                 }
             }
-            composable("russian-plan") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    com.hikari.app.ui.russian.RussianPlanScreen(
-                        onBack = { nav.popBackStack() },
-                        onOpen = { route -> nav.navigate(route) },
-                    )
-                }
-            }
-            composable("russian/podcast") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    com.hikari.app.ui.russian.RussianPodcastHomeScreen(
-                        onBack = { nav.popBackStack() },
-                        onOpenLesson = { day -> nav.navigate("russian/podcast/$day") },
-                        onOpenReminder = { nav.navigate("russian/podcast/reminder") },
-                    )
-                }
-            }
-            composable("russian/podcast/reminder") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    com.hikari.app.ui.russian.RussianPodcastReminderScreen(onBack = { nav.popBackStack() })
-                }
-            }
+            listOf(
+                "russian", "russian-plan", "russian/podcast", "russian/podcast/reminder", "russian/review", "russian/blitz",
+                "russian/pairs", "russian/talk", "russian/reflex", "russian/kombi", "russian/blind", "russian/conversation",
+                "russian/sounds", "russian-patterns", "russian/phrases",
+            ).forEach { route -> composable(route) { russianWeb(route) } }
             composable(
                 route = "russian/podcast/{day}",
                 arguments = listOf(navArgument("day") { type = NavType.StringType }),
-            ) {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    com.hikari.app.ui.russian.RussianPodcastLessonScreen(
-                        onBack = { nav.popBackStack() },
-                        onPractice = { day -> nav.navigate("russian/podcastPractice/$day") },
-                    )
-                }
-            }
-            // Lektion und Rollenspiel: russian/lesson/3, russian/dialog/3
+            ) { entry -> russianWeb("russian/podcast/${entry.arguments?.getString("day")}") }
+            // Lektion, Rollenspiel, Podcast-Übungen: russian/lesson/3, russian/dialog/3, russian/podcastPractice/3
             composable(
                 route = "russian/{mode}/{day}",
                 arguments = listOf(
                     navArgument("mode") { type = NavType.StringType },
                     navArgument("day") { type = NavType.StringType },
                 ),
-            ) {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    RussianSessionScreen(onClose = { nav.popBackStack() })
-                }
-            }
-            composable(
-                route = "russian/review",
-                arguments = listOf(navArgument("mode") { type = NavType.StringType; defaultValue = "review" }),
-            ) {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    RussianSessionScreen(onClose = { nav.popBackStack() })
-                }
-            }
-            composable("russian/blitz") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    RussianBlitzScreen(onClose = { nav.popBackStack() })
-                }
-            }
-            composable("russian/pairs") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    RussianPairsScreen(onClose = { nav.popBackStack() })
-                }
-            }
-            composable("russian/talk") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    RussianTalkScreen(onClose = { nav.popBackStack() })
-                }
-            }
-            composable("russian/reflex") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    com.hikari.app.ui.russian.RussianReflexScreen(onClose = { nav.popBackStack() })
-                }
-            }
-            composable("russian/kombi") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    com.hikari.app.ui.russian.RussianKombiScreen(onClose = { nav.popBackStack() })
-                }
-            }
-            composable("russian/blind") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    com.hikari.app.ui.russian.RussianBlindCoachScreen(onClose = { nav.popBackStack() })
-                }
-            }
-            composable("russian/conversation") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    com.hikari.app.ui.russian.RussianConversationScreen(onClose = { nav.popBackStack() })
-                }
-            }
-            composable("russian/sounds") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    RussianSoundLabScreen(onClose = { nav.popBackStack() })
-                }
-            }
+            ) { entry -> russianWeb("russian/${entry.arguments?.getString("mode")}/${entry.arguments?.getString("day")}") }
             composable(
                 route = "russian-deep/{id}",
                 arguments = listOf(navArgument("id") { type = NavType.StringType }),
-            ) {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    com.hikari.app.ui.russian.RussianDeepdiveScreen(onBack = { nav.popBackStack() })
-                }
-            }
-            composable("russian-patterns") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    com.hikari.app.ui.russian.RussianPatternListScreen(
-                        onBack = { nav.popBackStack() },
-                        onOpen = { id -> nav.navigate("russian-pattern/$id") },
-                    )
-                }
-            }
+            ) { entry -> russianWeb("russian-deep/${entry.arguments?.getString("id")}") }
             composable(
                 route = "russian-pattern/{id}",
                 arguments = listOf(navArgument("id") { type = NavType.StringType }),
-            ) {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    com.hikari.app.ui.russian.RussianPatternScreen(onBack = { nav.popBackStack() })
-                }
-            }
-            composable("russian/phrases") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
-                    RussianPhrasebookScreen(
-                        onBack = { nav.popBackStack() },
-                        onTest = { nav.navigate("russian/test/0") },
-                        onReflex = { nav.navigate("russian/reflex") },
-                        onKombi = { nav.navigate("russian/kombi") },
-                        onDeepdive = { id -> nav.navigate("russian-deep/$id") },
-                    )
-                }
-            }
+            ) { entry -> russianWeb("russian-pattern/${entry.arguments?.getString("id")}") }
             composable("games") {
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     GamesScreen(

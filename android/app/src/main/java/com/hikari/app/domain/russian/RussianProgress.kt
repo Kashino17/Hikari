@@ -217,6 +217,22 @@ class RussianProgressStore @Inject constructor(
         prefs.edit().putString(KEY, ruJson.encodeToString(RuProgress.serializer(), next)).apply()
     }
 
+    /**
+     * Übernimmt den Lernstand, den die Web-Oberfläche (ui/russian/RussianWebScreen) schreibt.
+     * Gespeichert wird ihr JSON unverändert; [parsed] ist dieselbe Fassung für die App
+     * (Feed-Karte, Podcast-Player, Erinnerung).
+     */
+    @Synchronized
+    fun replace(parsed: RuProgress, rawJson: String) {
+        _state.value = parsed
+        prefs.edit().putString(KEY, rawJson).apply()
+    }
+
+    fun decode(json: String): RuProgress? =
+        runCatching { ruJson.decodeFromString(RuProgress.serializer(), json) }.getOrNull()
+
+    fun encode(p: RuProgress): String = ruJson.encodeToString(RuProgress.serializer(), p)
+
     fun today(): Long = LocalDate.now().toEpochDay()
 
     /**
