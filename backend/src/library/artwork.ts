@@ -13,11 +13,11 @@ import { execa } from "execa";
  * liegen in eigenen Spalten daneben.
  */
 
-const UA = { "User-Agent": "HikariServer/1.0 (privater Medienserver)" };
+export const UA = { "User-Agent": "HikariServer/1.0 (privater Medienserver)" };
 /** Erfolglose Suche erst nach zwei Wochen wiederholen — neue Einträge tauchen bei den Diensten nicht stündlich auf. */
-const RETRY_AFTER_MS = 14 * 24 * 60 * 60 * 1000;
+export const RETRY_AFTER_MS = 14 * 24 * 60 * 60 * 1000;
 /** Breiten, auf die die Bilder fürs Handy verkleinert werden. */
-const POSTER_WIDTH = 600;
+export const POSTER_WIDTH = 600;
 const BACKDROP_WIDTH = 1280;
 
 type Fetch = typeof fetch;
@@ -55,7 +55,7 @@ async function fetchJson<T>(fetchImpl: Fetch, url: string): Promise<T | null> {
   return (await res.json()) as T;
 }
 
-async function download(
+export async function download(
   fetchImpl: Fetch,
   url: string,
   target: string,
@@ -89,7 +89,7 @@ async function shrink(file: string, maxWidth: number): Promise<void> {
   }
 }
 
-function safeName(id: string): string {
+export function safeName(id: string): string {
   return id.replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 80);
 }
 

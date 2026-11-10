@@ -129,6 +129,8 @@ export function applyMigrations(db: Database.Database): void {
   addColumnIfMissing(db, "series", "poster_url", "TEXT");
   addColumnIfMissing(db, "series", "backdrop_url", "TEXT");
   addColumnIfMissing(db, "series", "artwork_checked_at", "INTEGER");
+  // Manga-Cover (manga/cover.ts): wann zuletzt erfolglos gesucht wurde.
+  addColumnIfMissing(db, "manga_series", "cover_checked_at", "INTEGER");
   // Backfill: Bestandsvideos nach Heuristik klassifizieren (Hochkant + <=3 min = Short).
   db.exec(`UPDATE videos SET format = CASE
     WHEN aspect_ratio = '9:16' AND duration_seconds <= 180 THEN 'short' ELSE 'long' END

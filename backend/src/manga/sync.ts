@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type Database from "better-sqlite3";
+import { scoutMangaCover } from "./cover.js";
 import { downloadPage } from "./image-store.js";
 import { seriesId, upsertChapter, upsertPage, upsertSeries } from "./persist.js";
 import type { MangaSourceAdapter } from "./sources/types.js";
@@ -161,12 +162,14 @@ interface SeriesSyncInput {
 }
 
 export async function runSeriesSync(input: SeriesSyncInput): Promise<void> {
-  upsertSeries(input.db, {
+  const id = upsertSeries(input.db, {
     source: input.adapter.id,
     sourceSlug: input.seriesSlug,
     title: input.seriesTitle,
     sourceUrl: input.seriesUrl,
   });
+  // Cover gleich jetzt besorgen, während die Kapitel noch laden — tut nichts, wenn schon eins da ist.
+  scoutMangaCover(id);
 
   const detail = await input.adapter.fetchSeriesDetail(input.seriesUrl);
 

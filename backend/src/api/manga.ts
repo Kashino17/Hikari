@@ -1,5 +1,5 @@
-import { createReadStream } from "node:fs";
-import { extname, resolve, sep } from "node:path";
+import { createReadStream, existsSync } from "node:fs";
+import { extname, join, resolve, sep } from "node:path";
 import type Database from "better-sqlite3";
 import type { FastifyInstance } from "fastify";
 import {
@@ -8,12 +8,15 @@ import {
   getArcManifest,
   runArcSync,
 } from "../manga/arc-download.js";
+import { isMangaCoverFile } from "../manga/cover.js";
 import { adapters, getAdapter } from "../manga/sources/index.js";
 import { runChapterSync, runFullSync } from "../manga/sync.js";
 
 export interface MangaDeps {
   db: Database.Database;
   mangaDir: string;
+  /** Ordner der Titelbilder (manga/cover.ts). Ohne ihn gibt es keine Cover. */
+  coverDir?: string;
 }
 
 export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void {
@@ -101,6 +104,26 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
     reply.header("Content-Type", ct);
     reply.header("Cache-Control", "public, max-age=31536000, immutable");
     return reply.send(createReadStream(fullAbs));
+  });
+
+  // Titelbild einer Reihe. Die App baut die Adresse aus dem `coverPath` der Reihe.
+  app.get<{ Params: { file: string } }>("/api/manga/cover/:file", async (req, reply) => {
+    const file = req.params.file;
+    if (!deps.coverDir || !isMangaCoverFile(file)) {
+      return reply.code(404).send({ error: "cover not found" });
+    }
+    const full = join(deps.coverDir, file);
+    if (!existsSync(full)) {
+      // Datei verschwunden: die Reihe meldet sich damit selbst wieder als »ohne Cover«,
+      // der nächste Lauf holt es neu.
+      db.prepare(
+        "UPDATE manga_series SET cover_path = NULL, cover_checked_at = NULL WHERE cover_path = ?",
+      ).run(file);
+      return reply.code(404).send({ error: "cover not found" });
+    }
+    reply.header("Content-Type", "image/jpeg");
+    reply.header("Cache-Control", "public, max-age=86400");
+    return reply.send(createReadStream(full));
   });
 
   app.post<{ Params: { seriesId: string } }>("/api/manga/library/:seriesId", async (req) => {

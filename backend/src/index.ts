@@ -51,6 +51,7 @@ import {
 } from "./ingest/queue.js";
 import { fetchSponsorSegments } from "./sponsorblock/client.js";
 import { ArtworkScout, enrichArtwork, setArtworkScout } from "./library/artwork.js";
+import { enrichMangaCovers, ensureMangaCover, setMangaCoverScout } from "./manga/cover.js";
 
 const cfg = loadConfig();
 mkdirSync(cfg.videoDir, { recursive: true });
@@ -133,7 +134,7 @@ await registerHealthRoute(app, { db, videoDir: cfg.videoDir });
 await registerStatsRoutes(app, { db });
 await registerVideosRoutes(app, { db, videoDir: cfg.videoDir, coverDir: cfg.coverDir, extractor });
 await registerDownloadsRoutes(app, { db, diskLimitBytes: cfg.diskLimitBytes });
-await registerMangaRoutes(app, { db, mangaDir: cfg.mangaDir });
+await registerMangaRoutes(app, { db, mangaDir: cfg.mangaDir, coverDir: cfg.coverDir });
 await mkdir(join(cfg.dataDir, "music"), { recursive: true });
 await registerMusicRoutes(app, {
   streamCachePath: join(cfg.dataDir, "music-stream-cache.json"),
@@ -354,7 +355,7 @@ cron.schedule("* * * * *", () => {
   drainIngestQueue().catch((err) => app.log.error({ err }, "ingest drain crashed"));
 });
 
-// Echte Plakate für Serien und Filme nachschlagen (TVmaze / Wikipedia): sofort,
+// Echte Plakate für Serien, Filme und Manga nachschlagen (TVmaze / Wikipedia / AniList): sofort,
 // wenn ein Import beginnt, dazu kurz nach dem Start und alle 12 h als Netz für
 // alles, was dabei durchgerutscht ist.
 // ARTWORK_LOOKUP=off schaltet die Abfragen nach außen ab.
@@ -363,9 +364,19 @@ if (process.env.ARTWORK_LOOKUP !== "off") {
   // damit nie zwei Abfragen dieselbe Bilddatei schreiben.
   const scout = new ArtworkScout({ db, coverDir: cfg.coverDir, log: app.log });
   setArtworkScout(scout);
+  // Manga-Titelbilder (AniList / Kitsu): beim Abgleich einer Reihe, sonst im selben Sammellauf.
+  const mangaCovers = { db, coverDir: cfg.coverDir, log: app.log };
+  setMangaCoverScout((id) => {
+    void scout
+      .run(() => ensureMangaCover(mangaCovers, id))
+      .catch((err) => app.log.warn({ err, manga: id }, "manga cover lookup failed"));
+  });
   const runArtwork = () =>
     void scout
-      .run(() => enrichArtwork({ db, coverDir: cfg.coverDir, log: app.log }))
+      .run(async () => {
+        await enrichArtwork({ db, coverDir: cfg.coverDir, log: app.log });
+        await enrichMangaCovers(mangaCovers);
+      })
       .catch((err) => app.log.warn({ err }, "artwork lookup crashed"));
   setTimeout(runArtwork, 15_000).unref();
   setInterval(runArtwork, 12 * 60 * 60 * 1000).unref();

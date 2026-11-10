@@ -463,3 +463,53 @@ test("POST /api/manga/chapters/:id/sync returns 400 when adapter for source is u
   const r = await app.inject({ method: "POST", url: "/api/manga/chapters/zzz:x:1/sync" });
   expect(r.statusCode).toBe(400);
 });
+
+test("GET /api/manga/cover/:file liefert das Titelbild aus dem Cover-Ordner", async () => {
+  const coverDir = mkdtempSync(join(tmpdir(), "manga-cover-"));
+  try {
+    const bytes = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+    writeFileSync(join(coverDir, "manga_fake_x.jpg"), bytes);
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    const app = Fastify();
+    registerMangaRoutes(app, { db, mangaDir: coverDir, coverDir });
+
+    const r = await app.inject({ method: "GET", url: "/api/manga/cover/manga_fake_x.jpg" });
+    expect(r.statusCode).toBe(200);
+    expect(r.headers["content-type"]).toBe("image/jpeg");
+    expect(r.rawPayload.equals(bytes)).toBe(true);
+
+    // Fremde Dateien aus demselben Ordner (Serienplakate) gibt die Route nicht heraus.
+    writeFileSync(join(coverDir, "poster_abc.jpg"), bytes);
+    const other = await app.inject({ method: "GET", url: "/api/manga/cover/poster_abc.jpg" });
+    expect(other.statusCode).toBe(404);
+  } finally {
+    rmSync(coverDir, { recursive: true, force: true });
+  }
+});
+
+test("GET /api/manga/cover/:file: fehlt die Datei, gilt die Reihe wieder als ohne Cover", async () => {
+  const coverDir = mkdtempSync(join(tmpdir(), "manga-cover-"));
+  try {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    upsertSeries(db, {
+      source: "fake",
+      sourceSlug: "x",
+      title: "X",
+      sourceUrl: "https://fake.test/x",
+      coverPath: "manga_fake_x.jpg",
+    });
+    db.prepare("UPDATE manga_series SET cover_checked_at = 5").run();
+    const app = Fastify();
+    registerMangaRoutes(app, { db, mangaDir: coverDir, coverDir });
+
+    const r = await app.inject({ method: "GET", url: "/api/manga/cover/manga_fake_x.jpg" });
+    expect(r.statusCode).toBe(404);
+    expect(
+      db.prepare("SELECT cover_path, cover_checked_at FROM manga_series WHERE id = 'fake:x'").get(),
+    ).toEqual({ cover_path: null, cover_checked_at: null });
+  } finally {
+    rmSync(coverDir, { recursive: true, force: true });
+  }
+});
