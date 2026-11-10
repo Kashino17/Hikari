@@ -54,7 +54,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -95,7 +94,7 @@ import java.io.File
  * Reiter, dieselben Karten und Plakate, nur gefüllt mit dem, was auf dem Gerät
  * liegt. Serien öffnen ihre gewohnte Seite, „Weiterschauen" kennt den Stand
  * vom Gerät, und die Musik steht als Playlists da (Favoriten, alle Downloads,
- * die eigenen).
+ * die eigenen) — jeweils nur mit den Songs, die geladen sind.
  *
  * Bewusst kein Fehlertext: sobald der Server wieder antwortet, lädt die
  * Bibliothek von selbst nach.
@@ -372,7 +371,7 @@ private fun LazyListScope.overview(
             if (library.songs.isNotEmpty()) {
                 Spacer(Modifier.height(18.dp))
                 library.songs.take(RECENT_SONGS).forEach { song ->
-                    SongRow(song, playable = true, onClick = { onPlaySong(song, library.songs) })
+                    SongRow(song, onClick = { onPlaySong(song, library.songs) })
                 }
             }
             Spacer(Modifier.height(SECTION_GAP))
@@ -546,7 +545,7 @@ private fun LazyListScope.musicTab(
             }
         }
         items(library.songs, key = { "song-${it.videoId}" }) { song ->
-            SongRow(song, playable = true, onClick = { onPlaySong(song, library.songs) })
+            SongRow(song, onClick = { onPlaySong(song, library.songs) })
         }
     }
 }
@@ -592,19 +591,16 @@ private fun OfflinePlaylistScreen(
                         fontSize = 13.5.sp,
                         modifier = Modifier.padding(top = 5.dp),
                     )
-                    if (playlist.playable.isNotEmpty()) {
-                        Spacer(Modifier.height(20.dp))
-                        PlayActions(
-                            onPlay = { onPlayAll(playlist.playable, false) },
-                            onShuffle = { onPlayAll(playlist.playable, true) },
-                            large = true,
-                        )
-                    }
+                    Spacer(Modifier.height(20.dp))
+                    PlayActions(
+                        onPlay = { onPlayAll(playlist.songs, false) },
+                        onShuffle = { onPlayAll(playlist.songs, true) },
+                        large = true,
+                    )
                 }
             }
             items(playlist.songs, key = { it.videoId }) { song ->
-                val playable = playlist.isPlayable(song)
-                SongRow(song, playable = playable, onClick = { onPlaySong(song, playlist.playable) })
+                SongRow(song, onClick = { onPlaySong(song, playlist.songs) })
             }
         }
         Box(
@@ -621,28 +617,13 @@ private fun OfflinePlaylistScreen(
     }
 }
 
-/** „23 Songs · 1 h 12 min" — oder, wenn nicht alles geladen ist, wie viele davon abspielbar sind. */
-private fun playlistSummary(playlist: OfflinePlaylist): String {
-    val total = playlist.songs.size
-    val playable = playlist.playable.size
-    return when {
-        playable == 0 -> "Kein Song davon liegt auf dem Gerät"
-        playable < total -> "$playable von $total Songs auf dem Gerät · ${durationLabel(playlist.totalSeconds)}"
-        else -> "${if (total == 1) "1 Song" else "$total Songs"} · ${durationLabel(playlist.totalSeconds)}"
-    }
-}
+/** „23 Songs · 1 h 12 min". */
+private fun playlistSummary(playlist: OfflinePlaylist): String =
+    "${playlistCaption(playlist)} · ${durationLabel(playlist.totalSeconds)}"
 
 /** Kurzfassung unter der Playlist-Karte. */
-private fun playlistCaption(playlist: OfflinePlaylist): String {
-    val total = playlist.songs.size
-    val playable = playlist.playable.size
-    return when {
-        playable == 0 -> "Nicht auf dem Gerät"
-        playable < total -> "$playable von $total offline"
-        total == 1 -> "1 Song"
-        else -> "$total Songs"
-    }
-}
+private fun playlistCaption(playlist: OfflinePlaylist): String =
+    if (playlist.songs.size == 1) "1 Song" else "${playlist.songs.size} Songs"
 
 // ── Bausteine ────────────────────────────────────────────────────────────────
 
@@ -822,8 +803,6 @@ private fun PlaylistCover(
                 Icon(icon, contentDescription = null, tint = Color.White.copy(alpha = 0.92f), modifier = Modifier.fillMaxSize(0.34f))
             }
         }
-        // Nichts davon abspielbar: das Bild tritt zurück.
-        if (playlist.playable.isEmpty()) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.58f)))
         if (badge && covers.isNotEmpty()) {
             Box(
                 modifier = Modifier
@@ -888,13 +867,12 @@ private fun PlayActions(onPlay: () -> Unit, onShuffle: () -> Unit, large: Boolea
 
 /** Ein Song als ruhige Zeile: Cover, Titel, Interpret und Länge — ein rosa Herz, wenn er Favorit ist. */
 @Composable
-private fun SongRow(song: MusicSong, playable: Boolean, onClick: () -> Unit) {
+private fun SongRow(song: MusicSong, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = playable, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 7.dp)
-            .alpha(if (playable) 1f else 0.42f),
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -917,7 +895,7 @@ private fun SongRow(song: MusicSong, playable: Boolean, onClick: () -> Unit) {
             Text(
                 text = listOfNotNull(
                     song.uploader.takeIf { it.isNotBlank() },
-                    if (playable) song.duration.takeIf { it > 0 }?.let(::clockLabel) else "nicht geladen",
+                    song.duration.takeIf { it > 0 }?.let(::clockLabel),
                 ).joinToString(" · "),
                 color = HikariTextMuted,
                 fontSize = 12.5.sp,

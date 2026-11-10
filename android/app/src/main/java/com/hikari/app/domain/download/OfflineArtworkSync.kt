@@ -7,7 +7,6 @@ import com.hikari.app.data.db.LocalDownloadEntity
 import com.hikari.app.data.db.LocalMusicDownloadDao
 import com.hikari.app.data.net.ConnectivityObserver
 import com.hikari.app.domain.repo.FeedRepository
-import com.hikari.app.domain.repo.MusicRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
@@ -38,7 +37,6 @@ import kotlinx.coroutines.sync.withLock
 class OfflineArtworkSync @Inject constructor(
     private val downloadDao: LocalDownloadDao,
     private val musicDownloadDao: LocalMusicDownloadDao,
-    private val musicRepo: MusicRepository,
     private val feedRepo: FeedRepository,
     private val store: OfflineArtworkStore,
     private val connectivity: ConnectivityObserver,
@@ -90,12 +88,8 @@ class OfflineArtworkSync @Inject constructor(
 
         val wanted = buildList {
             downloads.forEach { addAll(it.artworkUrls()) }
+            // Nur geladene Songs: offline zeigen Bibliothek und Musikseite nichts anderes.
             musicDownloadDao.getAll().forEach { add(it.thumbnailUrl) }
-            // Auch Songs, die nur in Favoriten oder Playlists stehen: ihre Cover
-            // bilden das Titelbild der Playlist.
-            runCatching { musicRepo.getFavorites() }.getOrDefault(emptyList()).forEach { add(it.thumbnailUrl) }
-            runCatching { musicRepo.getPlaylists() }.getOrDefault(emptyList())
-                .forEach { playlist -> playlist.songs.forEach { add(it.thumbnailUrl) } }
         }
         val stored = store.pin(wanted)
         store.prune(wanted)

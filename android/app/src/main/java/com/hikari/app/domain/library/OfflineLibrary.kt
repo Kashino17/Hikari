@@ -28,7 +28,7 @@ data class OfflineLibrary(
     /** Heruntergeladene YouTube-Videos, neueste zuerst. */
     val channelVideos: List<LibraryVideoDto> = emptyList(),
     val manga: List<LocalMangaArcEntity> = emptyList(),
-    /** Favoriten, alle Downloads und die eigenen Playlists — in dieser Reihenfolge. */
+    /** Favoriten, alle Downloads und die eigenen Playlists — in dieser Reihenfolge, jeweils nur Geladenes. */
     val playlists: List<OfflinePlaylist> = emptyList(),
     /** Alle Songs auf dem Gerät, zuletzt geladene zuerst. */
     val songs: List<MusicSong> = emptyList(),
@@ -72,25 +72,21 @@ data class OfflineLibrary(
 enum class OfflinePlaylistKind { FAVORITES, DOWNLOADS, PLAYLIST }
 
 /**
- * Eine Playlist, wie sie ohne Netz nutzbar ist: [songs] sind alle Titel,
- * [playable] die davon, die als Datei auf dem Gerät liegen.
+ * Eine Playlist, wie sie ohne Netz nutzbar ist: [songs] sind nur die Titel,
+ * die als Datei auf dem Gerät liegen. Was nicht geladen ist, taucht nicht auf —
+ * so führt kein Tipp ins Leere.
  */
 data class OfflinePlaylist(
     val key: String,
     val kind: OfflinePlaylistKind,
     val name: String,
     val songs: List<MusicSong>,
-    val playable: List<MusicSong>,
 ) {
-    private val playableIds: Set<String> = playable.mapTo(HashSet()) { it.videoId }
-
-    fun isPlayable(song: MusicSong): Boolean = song.videoId in playableIds
-
-    /** Bis zu vier Cover fürs Titelbild — abspielbare Songs zuerst, kein Cover doppelt. */
+    /** Bis zu vier verschiedene Cover fürs Titelbild. */
     val covers: List<String>
-        get() = (playable + songs).map { it.thumbnailUrl }.filter { it.isNotBlank() }.distinct().take(4)
+        get() = songs.map { it.thumbnailUrl }.filter { it.isNotBlank() }.distinct().take(4)
 
-    val totalSeconds: Int get() = playable.sumOf { it.duration }
+    val totalSeconds: Int get() = songs.sumOf { it.duration }
 }
 
 object OfflineLibraryBuilder {
@@ -137,26 +133,24 @@ object OfflineLibraryBuilder {
         val continueWatching = (resumeEpisodes + resumeSingles).sortedByDescending { it.second }.map { it.first }
 
         val songs = downloadedSongs.sortedByDescending { it.addedAt }
-        val downloadedIds = songs.mapTo(HashSet()) { it.videoId }
-        fun List<MusicSong>.onDevice() = filter { it.videoId in downloadedIds }
+        val onDevice = songs.associateBy { it.videoId }
+        // Aus einer fremden Liste nur das übernehmen, was geladen ist — in deren
+        // Reihenfolge und mit den Angaben des Downloads (dessen Cover liegt auf dem Gerät).
+        fun List<MusicSong>.onDevice(): List<MusicSong> = mapNotNull { onDevice[it.videoId] }
 
+        // Favoriten und Playlists nur mit ihren geladenen Songs; ohne einen
+        // einzigen geladenen Song erscheint die Liste gar nicht.
         val offlinePlaylists = buildList {
-            if (favorites.isNotEmpty()) {
-                add(OfflinePlaylist("favorites", OfflinePlaylistKind.FAVORITES, "Favoriten", favorites, favorites.onDevice()))
+            favorites.onDevice().takeIf { it.isNotEmpty() }?.let {
+                add(OfflinePlaylist("favorites", OfflinePlaylistKind.FAVORITES, "Favoriten", it))
             }
             if (songs.isNotEmpty()) {
-                add(OfflinePlaylist("downloads", OfflinePlaylistKind.DOWNLOADS, "Alle Downloads", songs, songs))
+                add(OfflinePlaylist("downloads", OfflinePlaylistKind.DOWNLOADS, "Alle Downloads", songs))
             }
-            playlists.filter { it.songs.isNotEmpty() }.forEach { p ->
-                add(
-                    OfflinePlaylist(
-                        key = "playlist-${p.playlist.id}",
-                        kind = OfflinePlaylistKind.PLAYLIST,
-                        name = p.playlist.name,
-                        songs = p.songs,
-                        playable = p.songs.onDevice(),
-                    ),
-                )
+            playlists.forEach { p ->
+                p.songs.onDevice().takeIf { it.isNotEmpty() }?.let {
+                    add(OfflinePlaylist("playlist-${p.playlist.id}", OfflinePlaylistKind.PLAYLIST, p.playlist.name, it))
+                }
             }
         }
 

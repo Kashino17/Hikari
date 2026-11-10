@@ -145,7 +145,7 @@ class OfflineLibraryBuilderTest {
         assertNull(library.seriesDetail("gibt-es-nicht"))
     }
 
-    @Test fun favoriten_und_downloads_werden_eigene_playlists() {
+    @Test fun playlists_enthalten_nur_geladene_songs() {
         val onDevice = listOf(song("a", addedAt = 1), song("b", addedAt = 2, favorite = true))
         val library = OfflineLibraryBuilder.build(
             downloads = emptyList(),
@@ -153,20 +153,30 @@ class OfflineLibraryBuilderTest {
             downloadedSongs = onDevice,
             favorites = listOf(song("b", favorite = true), song("c", favorite = true)),
             playlists = listOf(
-                PlaylistWithSongs(MusicPlaylist(id = 7, name = "Sport"), listOf(song("a"), song("c")), downloadedCount = 1),
-                PlaylistWithSongs(MusicPlaylist(id = 8, name = "Leer"), emptyList(), downloadedCount = 0),
+                PlaylistWithSongs(MusicPlaylist(id = 7, name = "Sport"), listOf(song("c"), song("a")), downloadedCount = 1),
+                PlaylistWithSongs(MusicPlaylist(id = 8, name = "Nur online"), listOf(song("c")), downloadedCount = 0),
+                PlaylistWithSongs(MusicPlaylist(id = 9, name = "Leer"), emptyList(), downloadedCount = 0),
             ),
         )
+        // Playlists ohne einen geladenen Song fehlen ganz.
         assertEquals(listOf("Favoriten", "Alle Downloads", "Sport"), library.playlists.map { it.name })
         val favorites = library.playlists[0]
         assertEquals(OfflinePlaylistKind.FAVORITES, favorites.kind)
-        assertEquals(listOf("b", "c"), favorites.songs.map { it.videoId })
-        assertEquals(listOf("b"), favorites.playable.map { it.videoId })
-        assertTrue(favorites.isPlayable(song("b")))
-        assertFalse(favorites.isPlayable(song("c")))
+        assertEquals(listOf("b"), favorites.songs.map { it.videoId })
+        assertEquals(listOf("a"), library.playlists[2].songs.map { it.videoId })
         // Zuletzt geladene Songs zuerst.
         assertEquals(listOf("b", "a"), library.songs.map { it.videoId })
-        assertEquals(listOf("a"), library.playlists[2].playable.map { it.videoId })
+        assertEquals(listOf("b", "a"), library.playlists[1].songs.map { it.videoId })
+    }
+
+    @Test fun ohne_geladene_favoriten_gibt_es_keine_favoriten_playlist() {
+        val library = OfflineLibraryBuilder.build(
+            downloads = emptyList(),
+            positions = emptyList(),
+            downloadedSongs = listOf(song("a")),
+            favorites = listOf(song("x", favorite = true)),
+        )
+        assertEquals(listOf("Alle Downloads"), library.playlists.map { it.name })
     }
 
     @Test fun leer_ist_leer() {
