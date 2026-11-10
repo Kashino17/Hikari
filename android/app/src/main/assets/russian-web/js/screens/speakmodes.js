@@ -2,7 +2,7 @@
 // Regeln und Wertung wie in RussianReflex.kt / RussianTalk.kt.
 import { html, cls, Icon, IL, PhraseBlock, PlayRow, Latin, Mic, ScoreCard, Summary, Speaker, useListen, useKeys, playPhrase, useState, useEffect, useRef, useMemo, fx, audio, tts } from '../ui.js';
 import { D, P, progress, back, learnedPool, myPhrases, phraseById, takeSelection } from '../app.js';
-import { speech as recog } from '../platform.js';
+import { speech as recog, serverVoice } from '../platform.js';
 import * as Co from '../domain/course.js';
 import * as Sp from '../domain/speech.js';
 import * as Ct from '../domain/content.js';
@@ -230,6 +230,7 @@ function KombiRound({ item, onDone }) {
 
 export function Kombi() {
   const [items, setItems] = useState(() => buildKombi(8));
+  useEffect(() => { serverVoice.warm(); }, []); // gebaute Sätze spricht die Kursstimme vom Mac
   const [phase, setPhase] = useState('intro');
   const [round, setRound] = useState(0);
   const [score, setScore] = useState(0);

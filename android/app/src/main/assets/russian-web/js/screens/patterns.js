@@ -38,7 +38,7 @@ function SceneBubble({ l, gender }) {
   const me = l.who === 'U';
   const phrase = useMemo(() => makePhrase({ id: `dd:${clip}`, ru, de, day: 0, audio: clip }), [clip]);
   return html`<div class=${cls('bub', me && 'me', cur?.key === clip && 'on')} style="max-width:90%">
-    <button style="display:block;width:100%" onClick=${() => audio.play(clip, { text: Ph.plain(ru) })}>
+    <button style="display:block;width:100%" onClick=${() => audio.play(clip, { text: Ph.plain(ru), ru, voice: me ? undefined : 'p' })}>
       <div class="who">${me ? 'DU' : 'ANJA'}</div><${IL} ru=${ru} size=${17} /><div class="de">${de}</div>
       ${l.how && html`<div class="nt" style="font-style:italic">Gefühl: ${l.how}</div>`}</button>
     ${me && html`<div class="mt12"><${Practice} phrase=${phrase} compact /></div>`}
@@ -67,7 +67,7 @@ export function Pattern({ id }) {
     for (const l of p.scene.lines) {
       if (playing.current !== token) return;
       const { ru } = Ct.sceneLine(l, gender);
-      if (!(await audio.play(Ct.sceneLineClip(l, gender), { text: Ph.plain(ru) }))) return;
+      if (!(await audio.play(Ct.sceneLineClip(l, gender), { text: Ph.plain(ru), ru, voice: l.who === 'U' ? undefined : 'p' }))) return;
     }
   };
   const goto = (n) => { playing.current++; audio.stop(); setStep(n); };

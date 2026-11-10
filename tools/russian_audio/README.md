@@ -1,7 +1,7 @@
 # Russisch-Audios für Hikari
 
 Quelle aller Inhalte: `android/app/src/main/assets/russian/course.json`
-(14 Tage, Betonung als `+` vor dem Vokal, z. B. `Спас+ибо`).
+(32 Lektionen, Betonung als `+` vor dem Vokal, z. B. `Спас+ибо`).
 
 ## Werkzeuge (alle offline, Open Source)
 
@@ -84,3 +84,65 @@ Lernphrasen. Die App spricht diese Phrasen über den vorhandenen russischen TTS-
 python3 build_podcast_course.py          # Asset neu aufbauen (Netz + yt-dlp erforderlich)
 python3 build_podcast_course.py --check  # vorhandenes Asset offline validieren
 ```
+
+## Jahreskurs: Plan, Lektionen, Gesprächstage
+
+Der Sprechkurs ist ein Jahresplan mit 365 Plan-Tagen in Blöcken zu fünf Tagen: vier Lektionen, dann ein
+Gesprächstag ohne neuen Stoff. Die Lektionen stehen in `assets/russian/course.json` (fortlaufend nummeriert),
+der Plan in `plan_src/year_plan.py` → `assets/russian/plan.json`:
+
+```
+Lektion L  → Plan-Tag L + (L-1)//4          Plan-Tag d → Gesprächstag, wenn d % 5 == 0
+```
+
+Gebaut sind die Blöcke 1–8 (Plan-Tage 1–40, Lektionen 1–32). Alles danach steht im Plan nur mit Titel und
+Lernziel und ist in der App gesperrt sichtbar.
+
+### Neue Kurstage bauen (nächster Block = vier Lektionen)
+
+1. In `plan_src/year_plan.py` die Titel und Lernziele des nächsten Blocks lesen. Soll eine Lektion ein
+   Satzbau-Muster lehren, das Muster in `pattern_src/` anlegen und in `PATTERN_OF_LESSON` eintragen.
+2. Je Lektion eine Datei `dNN.json` schreiben (Format und Regeln: Kopf von `check_lesson.py`; Vorbild: die
+   Lektionen 21–32 in course.json): 14 Sätze, 3–4 Fragen mit `replies`, Laut-Tipp, Satzbau-Hinweis, Rollenspiel
+   mit 8 Zeilen. Männliche Form in `ru`, weibliche in `ruF`. Betonung als `+` VOR dem betonten Vokal.
+3. Prüfen, bis keine Fehler bleiben, und jede PRÜFEN-Zeile am Satz entscheiden:
+   `python check_lesson.py d33.json d34.json d35.json d36.json`
+   (Das Wörterbuch irrt selten, aber es irrt: переживаю und обожал stehen dort falsch. Im Zweifel ein anderes Wort nehmen.)
+4. Einbauen: `python add_lessons.py d33.json …` (hängt an course.json an, trägt Themen ins Satzbuch ein —
+   vorher das Thema der Lektion in `THEMES` ergänzen).
+5. In `plan_src/year_plan.py` `BUILT_BLOCKS` erhöhen, die vier vorgeplanten Lektionen des Blocks durch `[]` ersetzen
+   (Titel und Ziel kommen ab jetzt aus course.json), dann `python build_plan.py`.
+6. Wort-für-Wort-Bedeutungen: `python build_glosses.py extract <ordner>` → jede Zeile glossieren →
+   `python build_glosses.py merge <ordner>` → `python build_glosses.py check`.
+7. Audio in der Kursstimme (normal + langsam gesprochen), mit Hörprüfung:
+   `python generate_missing.py --model ~/.hikari/tts/models/vosk --only course`, danach `--finalize`.
+   Die ungelösten Clips im Bericht `missing_report_course_*.json` ansehen.
+8. App-Tests: in `RussianCourseTest` die Zahl der Lektionen anpassen, dann `./gradlew test`.
+
+## Fehlende Clips ergänzen
+
+`generate_missing.py` erzeugt nur, was fehlt oder dessen Text sich geändert hat, und rührt geprüfte Clips nie an:
+
+```bash
+python stress_podcast.py --model ~/.hikari/tts/models/vosk     # Betonung der Podcast-Phrasen (einmalig bzw. nach Neuaufbau)
+python generate_missing.py --model ~/.hikari/tts/models/vosk --only course|deepdive|patterns|podcast [--fast-judge]
+python generate_missing.py --finalize                           # manifest.json nachziehen
+python generate_missing.py --prune                              # verwaiste dd_-Clips löschen
+```
+
+Nicht mehrere Läufe parallel starten: die Hörprüfung teilt sich die Grafikeinheit, parallel ist langsamer als nacheinander.
+Seit 2026-11 haben alle Kurssätze, Vertiefungen, Podcast-Phrasen und jede Kombination der Satzbau-Bausteine
+einen Clip in normalem und in langsam gesprochenem Tempo.
+
+## Kursstimme auf Abruf
+
+Sätze, die erst beim Üben entstehen (Kombi-Meister, Gespräch mit Anja, eigene Sätze), spricht
+`tts_server.py` in denselben Stimmen. Der Hikari-Server startet ihn bei Bedarf (Port 3941, Leerlauf-Ende nach
+zehn Minuten) und legt Ergebnisse in `~/.hikari/tts/cache/` ab:
+
+```
+GET /russian/voice/status?warm=1                    → { available, ready }
+GET /russian/voice?text=…&voice=m|f|p&rate=0.7      → audio/ogg, oder 503 solange das Modell lädt
+```
+
+Die App fällt bei 503 oder ohne Verbindung sofort auf die Gerätestimme zurück.

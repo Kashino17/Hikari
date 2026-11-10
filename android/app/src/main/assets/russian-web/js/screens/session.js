@@ -4,18 +4,23 @@ import {
   html, cls, Icon, SessionBar, IL, PhraseBlock, PlayRow, Speaker, Opt, LetterLens, Latin, useKeys, useListen, Mic, ScoreCard,
   Practice, PhraseDock, SentenceCard, RecordCompare, Summary, LeaveSheet, usePlaying, playPhrase, useState, useEffect, useRef, useMemo, fx, audio, speech,
 } from '../ui.js';
-import { D, P, progress, back, takeSelection } from '../app.js';
+import { D, P, Pl, progress, planState, dayNo, back, takeSelection } from '../app.js';
 import { storage, SPEECH_ERRORS } from '../platform.js';
 import * as Co from '../domain/course.js';
-import { weightedOrder } from '../learner.js';
+import { weightedOrder, lessonReviewIds, talkDaySelection } from '../learner.js';
+import { StageList } from './stages.js';
+import { PatternStep } from './patternstep.js';
 import * as Sp from '../domain/speech.js';
 import * as Gl from '../domain/glossary.js';
 import * as Ph from '../domain/phonetics.js';
 
 const MODE = {
   LESSON: { c: 'c-speak', bonus: 30 }, PODCAST: { c: 'c-listen', bonus: 30 }, REVIEW: { c: 'c-review', bonus: 10 },
-  TEST: { c: 'c-words', bonus: 10 }, DIALOG: { c: 'c-speak', bonus: 0 },
+  TEST: { c: 'c-words', bonus: 10 }, DIALOG: { c: 'c-speak', bonus: 0 }, TALKDAY: { c: 'c-amber', bonus: 40 },
 };
+const SNAP_KEY = { LESSON: 'lesson_session_v1', PODCAST: 'podcast_session_v1', TALKDAY: 'talk_session_v1' };
+/** Format der Zwischenstände. 2 = mit Etappen und gespeicherter Auswahl. */
+export const SNAP_VERSION = 2;
 
 // ── Ablauf ─────────────────────────────────────────────────────────────────
 
@@ -24,12 +29,19 @@ class Engine {
     Object.assign(this, { mode, day, onChange, pos: 0, feedback: null, summary: null, xp: 0, correct: 0, total: 0, spokenOk: 0 });
     this.firstTry = {}; this.retried = new Set(); this.retriedPositions = new Set(); this.inserts = [];
     this.settings = progress.settings();
-    this.snapKey = mode === 'PODCAST' ? 'podcast_session_v1' : mode === 'LESSON' ? 'lesson_session_v1' : null;
+    this.snapKey = SNAP_KEY[mode] ?? null;
     const saved = this.snapKey ? storage.getJSON(this.snapKey) : null;
-    const snap = saved && saved.web === 1 && saved.day === day ? saved : null;
+    const snap = saved && saved.web === 1 && saved.v === SNAP_VERSION && saved.day === day ? saved : null;
     this.seed = snap?.seed ?? ((Math.random() * 0x7fffffff) | 0);
+    // Was aus dem Lernstand gewählt wird (Wiederholungen, Stoff des Gesprächstags), bleibt über eine Pause hinweg gleich.
+    this.sel = snap?.sel ?? this.select(Co.makeRng(this.seed ^ 0x5bd1e995));
     this.steps = this.build(Co.makeRng(this.seed));
     this.baseSize = this.steps.length;
+    const stageCount = 1 + Math.max(-1, ...this.steps.map((x) => x.stage ?? -1));
+    this.stages = Pl.STAGES[mode] && stageCount > 1 ? Pl.STAGES[mode].slice(0, stageCount) : null;
+    this.stageEst = this.stages ? Pl.stageSeconds(this.steps, this.stages.length) : [];
+    this.active = snap?.active ?? 0;   // aktive Sekunden in der laufenden Etappe
+    this.stepAt = Date.now();
     if (snap) {
       if (snap.baseSize === this.steps.length && snap.pos < this.steps.length + snap.inserts.length) {
         const from = [...snap.retried].sort((a, b) => a - b);
@@ -49,12 +61,23 @@ class Engine {
     return rng.shuffled([...main, ...pod]).slice(0, limit);
   }
 
+  /** Auswahl aus dem Lernstand — einmal je Sitzung, wird im Zwischenstand gespeichert. */
+  select(rng) {
+    if (this.mode === 'LESSON') return { reviewIds: lessonReviewIds(this.day, rng) };
+    if (this.mode === 'TALKDAY') return talkDaySelection(this.day, rng);
+    return {};
+  }
+
   build(rng) {
     const { mode, day, settings } = this;
     const p = progress.get();
     const today = progress.today();
-    if (mode === 'LESSON') return Co.lesson(D.index, day, settings, rng);
+    if (mode === 'LESSON') {
+      const pattern = D.patterns.find((x) => x.id === D.plan.ofLesson(day)?.pattern) ?? null;
+      return Co.lesson(D.index, day, settings, rng, { reviewIds: this.sel.reviewIds, pattern });
+    }
     if (mode === 'PODCAST') return Co.podcastLesson(D.podIndex, day, settings, rng);
+    if (mode === 'TALKDAY') return Co.talkDay(D.index, this.sel, settings);
     if (mode === 'DIALOG') { const d = D.index.day(day); return d ? [{ type: 'dialog', day: d, lines: D.index.dialog(d, settings), gradedId: null }] : []; }
     if (mode === 'TEST') {
       const all = rng.shuffled(takeSelection());
@@ -88,9 +111,11 @@ class Engine {
     const requeue = !isCorrect && id != null && !this.retried.has(this.pos) && !isRetry;
     if (requeue) {
       this.retried.add(this.pos);
-      let dialogAt = -1;
-      this.steps.forEach((s, i) => { if (s.type === 'dialog') dialogAt = i; });
-      const insertAt = dialogAt > this.pos ? dialogAt : this.steps.length;
+      // Noch in derselben Etappe wiederholen: vor dem nächsten Haltepunkt bzw. vor Muster und Rollenspiel.
+      let insertAt = this.steps.length;
+      for (let i = this.pos + 1; i < this.steps.length; i++) {
+        if (['stageBreak', 'dialog', 'pattern'].includes(this.steps[i].type)) { insertAt = i; break; }
+      }
       this.steps.splice(insertAt, 0, step);
       this.inserts.push(insertAt);
       this.retriedPositions = new Set([...this.retriedPositions].map((x) => (x >= insertAt ? x + 1 : x)));
@@ -109,14 +134,32 @@ class Engine {
     this.next();
   }
 
+  /** Aktive Zeit des gerade beendeten Schritts mitzählen (Leerlauf zählt höchstens zwei Minuten). */
+  tick() {
+    const now = Date.now();
+    this.active += Math.min(120, (now - this.stepAt) / 1000);
+    this.stepAt = now;
+  }
+  /** Etappe abgeschlossen: gemessene gegen geschätzte Zeit halten, damit die Minuten-Angaben zu dir passen. */
+  stageDone(i) {
+    const est = this.stageEst[i] ?? 0;
+    if (est > 0 && this.active > est * 0.3) planState.update((st) => Pl.addPace(st, est, this.active));
+    this.active = 0;
+  }
+  get stageIndex() { return this.current?.stage ?? (this.stages ? this.stages.length - 1 : 0); }
+  /** Abgeschlossene Etappen (ein erreichter Haltepunkt zählt mit). */
+  get stagesDone() { return this.steps.slice(0, this.pos + 1).filter((x) => x.type === 'stageBreak').length; }
+
   next() {
     audio.stop();
+    this.tick();
     if (this.pos + 1 >= this.steps.length) { this.finish(); return; }
     this.pos++; this.feedback = null;
+    if (this.current.type === 'stageBreak') this.stageDone(this.current.stage);
     if (this.snapKey) {
-      storage.set(this.snapKey, { web: 1, day: this.day, seed: this.seed, baseSize: this.baseSize, pos: this.pos, inserts: this.inserts,
+      storage.set(this.snapKey, { web: 1, v: SNAP_VERSION, day: this.day, seed: this.seed, sel: this.sel, baseSize: this.baseSize, pos: this.pos, inserts: this.inserts,
         firstTry: this.firstTry, retried: [...this.retried], retriedPositions: [...this.retriedPositions], xp: this.xp, correct: this.correct,
-        total: this.total, spokenOk: this.spokenOk });
+        total: this.total, spokenOk: this.spokenOk, active: this.active, done: this.stagesDone, stages: this.stages?.length ?? 0 });
     }
     this.onChange();
   }
@@ -124,12 +167,22 @@ class Engine {
   finish() {
     const { mode, day } = this;
     if (this.snapKey) storage.remove(this.snapKey);
+    if (this.stages) this.stageDone(this.stages.length - 1);
     const stars = P.stars(this.correct, this.total);
     const xp = this.xp + MODE[mode].bonus;
     const index = mode === 'PODCAST' ? D.podIndex : D.index;
     const dayItems = mode === 'LESSON' || mode === 'PODCAST' ? (index.day(day)?.items ?? []).map((i) => i.id) : [];
     progress.apply({ xp, graded: this.firstTry, introduced: dayItems, completedDay: mode === 'LESSON' ? day : null,
       completedPodcastDay: mode === 'PODCAST' ? day : null, stars, spokenOk: this.spokenOk });
+    if (mode === 'LESSON') {
+      // Das Satzbau-Muster des Tages gilt mit der Lektion als gelernt.
+      const pat = D.plan.ofLesson(day)?.pattern;
+      if (pat && !progress.get().patternsDone.includes(pat)) progress.update((x) => ({ ...x, patternsDone: [...x.patternsDone, pat] }));
+    }
+    if (mode === 'TALKDAY') {
+      const today = progress.today();
+      planState.update((st) => ({ ...st, talk: { ...st.talk, [day]: Math.max(stars, st.talk[day] ?? 0) }, talkLast: today }));
+    }
     const wrong = Object.entries(this.firstTry).filter(([, ok]) => !ok).map(([id]) => D.index.phrase(id, this.settings) ?? D.podIndex.phrase(id, this.settings)).filter(Boolean);
     this.pos = this.steps.length; this.feedback = null;
     this.summary = { xp, correct: this.correct, total: this.total, stars, streak: progress.get().streak, wrong };
@@ -158,7 +211,7 @@ function SoundTipStep({ step, env }) {
   const d = step.day;
   useKeys({ Enter: env.onNext }, []);
   return html`<div class="scroll"><div class="stepc g16">
-      <div><${Head} over=${`Tag ${d.day} · ${d.title}`} c /><div class="title">${d.goal}</div></div>
+      <div><${Head} over=${`Tag ${dayNo(d.day)} · ${d.title}`} c /><div class="title">${d.goal}</div></div>
       <div class="card p"><span class="over amber">Aussprache</span><div class="h2 mt4">${d.sound.title}</div>
         <p class="mt8" style="font-size:14.5px;line-height:1.55;color:rgba(255,255,255,.82)">${d.sound.text}</p>
         ${step.examples.length > 0 && html`<div class="stack mt8" style="border-top:1px solid var(--border)">${step.examples.map((p) => html`<${ListenRow} p=${p} />`)}</div>`}</div>
@@ -409,7 +462,66 @@ function DialogStep({ step, env, onDone }) {
       <button class="btn" onClick=${() => { playing.current++; onDone(right, userLines); }}>Weiter<span class="kb">↵</span></button></div></div>`}`;
 }
 
-const STEPS = { soundTip: SoundTipStep, intro: IntroStep, listenChoose: ListenChooseStep, meaningChoose: MeaningChooseStep, stressTap: StressTapStep, build: BuildStep, speak: SpeakStep, reply: ReplyStep };
+/** Haltepunkt zwischen zwei Etappen: zeigen, was geschafft ist, was kommt und wie lange es dauert. */
+function StageBreakStep({ step, env }) {
+  const e = env.engine;
+  const done = step.stage + 1;
+  const nextStage = e.stages[done];
+  const mins = Pl.toMinutes(e.stageEst[done] ?? 0, planState.pace());
+  useEffect(() => { fx.win(); }, []);
+  useKeys({ Enter: env.onNext }, []);
+  return html`<div class="scroll"><div class="stepc center g16" style="justify-content:center;min-height:100%">
+      <div class="stagedone"><${Icon} n="check" /></div>
+      <div><div class="over c">Etappe ${done} von ${e.stages.length} geschafft</div>
+        <div class="title mt4">${e.stages[step.stage].title} ist durch.</div></div>
+      <${StageList} stages=${e.stages} seconds=${e.stageEst} done=${done} current=${done} />
+      <p class="sub">Guter Punkt für eine Pause: Dein Stand bleibt gespeichert, du machst genau hier weiter.</p>
+    </div></div>
+    <div class="bottom"><button class="btn" onClick=${env.onNext}>Weiter mit »${nextStage.title}« · ${mins} Min.<span class="kb">↵</span></button>
+      <button class="btn ghost" onClick=${env.onPause}><${Icon} n="pause" />Pause machen</button></div>`;
+}
+
+/** Gesprächstag: Anja fragt, du antwortest frei. Jede passende Antwort zählt. */
+function AnswerStep({ step, env }) {
+  // Anja stellt die Frage: mit der weiblichen Stimme, sofern der Satz für beide Geschlechter gleich lautet.
+  const q = useMemo(() => (D.index.itemById.get(step.question.id)?.ruF == null ? { ...step.question, audio: `${step.question.id}_f` } : step.question), []);
+  const [result, setResult] = useState(null);
+  const [attempts, setAttempts] = useState(0);
+  const [show, setShow] = useState(false);
+  const [selfCheck, setSelfCheck] = useState(!speech.available());
+  const answered = env.answered;
+  useAutoPlay(q);
+  const L = useListen((hyps) => {
+    const scored = step.replies.map((r) => ({ r, sc: Sp.speech(r.ru, hyps) })).sort((a, b) => b.sc.score - a.sc.score);
+    const hit = scored.find((x) => x.sc.passed);
+    setAttempts((a) => a + 1);
+    if (hit && !answered) { setResult(hit); env.onSpokenOk(); env.onAnswer(true); playPhrase(hit.r); } else { fx.wrong(); setResult(scored[0]); }
+  });
+  useEffect(() => { if (L.error && L.error !== 'nospeech') setSelfCheck(true); }, [L.error]);
+  const mic = () => { if (L.listening) L.stop(); else { setResult(null); L.start(step.replies[0].ru); } };
+  const open = show || answered;
+  useKeys({ ' ': () => playPhrase(q), m: () => !answered && !selfCheck && mic() }, [answered, selfCheck, L.listening]);
+  return html`<div class="scroll"><div class="stepc center g16">
+      <${Head} over="Frei antworten" title=${answered ? null : 'Anja fragt dich'} c />
+      <${PhraseBlock} phrase=${q} size=${24} />
+      <${PlayRow} phrase=${q} size=${52} />
+      ${!selfCheck && html`<div class="micwrap"><${Mic} L=${L} onClick=${mic} disabled=${answered} />
+        <div class=${cls('mictxt', L.listening && 'on')}>${L.listening ? (L.partial ? html`»${L.partial}«<br />Tippe nochmal, wenn du fertig bist` : 'Ich höre zu … antworte auf Russisch')
+          : L.evaluating ? 'Wird ausgewertet …' : answered ? '' : L.errorText ?? (result ? 'Tippen für einen weiteren Versuch' : 'Tippen und frei antworten')}</div></div>`}
+      ${result && html`<${ScoreCard} sc=${result.sc} targetRu=${result.r.ru} />`}
+      ${selfCheck && !answered && html`<div class="sub">Antworte laut — dann vergleiche mit den Beispielen unten.</div>`}
+      ${open && html`<div style="width:100%;text-align:left"><div class="over">${answered ? 'Passende Antworten' : 'So könntest du antworten'}</div>
+        <div class="list mt8">${step.replies.map((r) => html`<div class="row" style="min-height:0"><div class="tx"><${IL} ru=${r.ru} size=${16} gloss=${false} /><span>${r.de}</span></div><${Speaker} phrase=${r} /></div>`)}</div></div>`}
+    </div></div>
+    ${!answered && html`<div class="bottom">
+      ${selfCheck && html`<button class="btn" disabled=${!show} onClick=${() => env.onAnswer(true)}>Ich habe passend geantwortet</button>`}
+      <div class="rowx g8">${!show && html`<button class="btn ghost" onClick=${() => setShow(true)}>Antworten zeigen</button>`}
+        ${show && !selfCheck && html`<button class="btn ghost" onClick=${() => { L.cancel(); env.onAnswer(false); }}>Wusste ich nicht</button>`}
+        <button class="btn ghost" onClick=${() => { L.cancel(); env.onSkip(); }}>Überspringen</button></div></div>`}`;
+}
+
+const STEPS = { soundTip: SoundTipStep, intro: IntroStep, listenChoose: ListenChooseStep, meaningChoose: MeaningChooseStep, stressTap: StressTapStep, build: BuildStep, speak: SpeakStep, reply: ReplyStep,
+  stageBreak: StageBreakStep, pattern: PatternStep, answer: AnswerStep };
 
 // ── Rückmeldung & Abschluss ────────────────────────────────────────────────
 
@@ -426,7 +538,7 @@ function FeedbackBar({ fb, step, onNext }) {
   </div>`;
 }
 
-const OVER = { LESSON: (d) => `Tag ${d} geschafft`, PODCAST: (d) => `Podcast-Lektion ${d} geschafft`, REVIEW: () => 'Wiederholung fertig', DIALOG: () => 'Gespräch geschafft', TEST: () => 'Test geschafft' };
+const OVER = { TALKDAY: (d) => `Tag ${d}: Gesprächstag geschafft`, LESSON: (d) => `Tag ${dayNo(d)} geschafft`, PODCAST: (d) => `Podcast-Lektion ${d} geschafft`, REVIEW: () => 'Wiederholung fertig', DIALOG: () => 'Gespräch geschafft', TEST: () => 'Test geschafft' };
 
 function SessionSummary({ mode, day, s, onClose }) {
   useKeys({ Enter: onClose }, []);
@@ -451,14 +563,16 @@ export function Session({ mode, day }) {
   if (!ref.current) ref.current = new Engine(mode, day, () => force((x) => x + 1));
   const e = ref.current;
   useEffect(() => () => audio.stop(), []);
-  const close = () => { audio.stop(); back(mode === 'PODCAST' ? `podcast/${day}` : mode === 'LESSON' || mode === 'DIALOG' ? 'plan' : mode === 'TEST' ? 'satzbuch' : 'heute'); };
+  const close = () => { audio.stop(); back(mode === 'PODCAST' ? `podcast/${day}` : ['LESSON', 'DIALOG', 'TALKDAY'].includes(mode) ? 'plan' : mode === 'TEST' ? 'satzbuch' : 'heute'); };
   if (e.summary) return html`<${SessionSummary} mode=${mode} day=${day} s=${e.summary} onClose=${close} />`;
   const step = e.current;
-  const env = { answered: e.feedback != null, onAnswer: (ok) => e.answer(ok), onSkip: () => e.skip(), onSpokenOk: () => e.spokenCorrectly(), onNext: () => e.next() };
+  const env = { engine: e, answered: e.feedback != null, onAnswer: (ok) => e.answer(ok), onSkip: () => e.skip(), onSpokenOk: () => e.spokenCorrectly(), onNext: () => e.next(), onPause: close };
+  // Trennstriche im Balken an den Haltepunkten zwischen den Etappen
+  const marks = e.stages ? e.steps.map((x, i) => (x.type === 'stageBreak' ? i / e.steps.length : null)).filter((x) => x != null) : null;
   const C = STEPS[step.type];
-  const tryClose = () => (e.pos === 0 && !e.feedback ? close() : setLeave(true));
+  const tryClose = () => ((e.pos === 0 && !e.feedback) || step.type === 'stageBreak' ? close() : setLeave(true));
   return html`<div class=${cls('screen', MODE[mode].c)}>
-    <${SessionBar} value=${e.pos / e.steps.length} count=${`${e.pos + 1}/${e.steps.length}`} onClose=${tryClose} />
+    <${SessionBar} value=${e.pos / e.steps.length} count=${e.stages ? `Etappe ${e.stageIndex + 1}/${e.stages.length}` : `${e.pos + 1}/${e.steps.length}`} marks=${marks} onClose=${tryClose} />
     ${step.type === 'dialog'
       ? html`<${DialogStep} key=${e.pos} step=${step} env=${env} onDone=${(r, n) => e.dialogDone(r, n)} />`
       : html`<${C} key=${e.pos} step=${step} env=${env} />`}

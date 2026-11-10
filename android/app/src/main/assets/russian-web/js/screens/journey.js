@@ -3,7 +3,7 @@
 // Regeln wie in RussianConversationViewModel.kt / RussianJourney.kt.
 import { html, cls, Icon, TopBar, IL, Sheet, Mic, useListen, useState, useEffect, useRef, useMemo, fx, tts, audio } from '../ui.js';
 import { progress, back, toast } from '../app.js';
-import { storage, api, speech as recog } from '../platform.js';
+import { storage, api, speech as recog, serverVoice } from '../platform.js';
 import * as Ph from '../domain/phonetics.js';
 import * as Sp from '../domain/speech.js';
 
@@ -59,7 +59,8 @@ const loadChat = () => { const p = storage.getJSON('conv_progress'); return p ? 
 const normalize = (s) => Ph.plain(s).toLowerCase().replaceAll('ё', 'е').replace(/[^а-яa-z ]/g, ' ').trim().replace(/ +/g, ' ');
 const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
 const INTERVALS = [1, 1, 2, 4, 7, 14, 30];
-const say = (ru, speed) => { audio.stop(); return tts.speak(Ph.plain(ru), { rate: Math.min(1.1, Math.max(0.6, speed)) }); };
+// Anja spricht mit ihrer Kursstimme vom Mac; ist der nicht erreichbar, mit der Gerätestimme.
+const say = (ru, speed) => audio.play(null, { text: Ph.plain(ru), ru, voice: 'p', rate: Math.min(1.1, Math.max(0.6, speed)), key: 'anja' });
 
 function gradeCard(card, correct, today) {
   const box = correct ? Math.min(card.box + 1, 6) : 0;
@@ -137,7 +138,7 @@ export function Journey() {
   const setRun = (patch) => setCp((c) => ({ ...c, foundation: { ...c.foundation, run: patch ? { ...c.foundation.run, ...patch } : null } }));
   const setSettings = (patch) => setCp((c) => ({ ...c, settings: { ...c.settings, ...patch } }));
   const checkStatus = () => api.get('/russian/conversation/status').then((r) => setAvailable(!!r.available)).catch(() => setAvailable(false));
-  useEffect(() => { checkStatus(); return () => { audio.stop(); tts.stop(); }; }, []);
+  useEffect(() => { checkStatus(); serverVoice.warm(); return () => { audio.stop(); tts.stop(); }; }, []);
 
   // Aktive Übungszeit (ohne Warten auf die KI).
   useEffect(() => {

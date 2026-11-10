@@ -238,47 +238,81 @@ export const practiceExercise = practiceFor;
 
 const chunked = (arr, n) => { const out = []; for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n)); return out; };
 
-/** Tages-Lektion: Aussprache-Tipp → neue Karten in Dreiergruppen → Übungsrunde → Rollenspiel. */
-export function lesson(index, dayNumber, settings, rng = defaultRng()) {
-  const day = index.day(dayNumber);
-  if (!day) return [];
-  const phrases = index.dayPhrases(day, settings);
-  const pool = index.phrasesUpTo(dayNumber, settings);
-  const out = [];
-  out.push({ type: 'soundTip', day, examples: day.sound.examples.map((id) => index.phrase(id, settings)).filter(Boolean), gradedId: null });
-  for (const group of chunked(phrases, 3)) {
-    for (const p of group) out.push({ type: 'intro', phrase: p, gradedId: null });
-    rng.shuffled(group).forEach((p, i) => out.push(i % 2 === 0 ? listenChoose(p, pool, rng) : meaningChoose(p, pool, rng)));
-  }
-  rng.shuffled(phrases).forEach((p, i) => {
-    const speak = i % 2 === 0 || phrases.length <= 4;
-    out.push(practiceFor(index, p, pool, settings, speak, i, rng));
-  });
-  if (dayNumber > 1) {
-    rng.shuffled(pool.filter((p) => p.day < dayNumber)).slice(0, 3)
-      .forEach((p, idx) => out.push(practiceFor(index, p, pool, settings, idx % 2 === 0, idx + 1, rng)));
-  }
-  out.push({ type: 'dialog', day, lines: index.dialog(day, settings), gradedId: null });
-  return out;
+// ── Etappen ────────────────────────────────────────────────────────────────
+// Lektionen bestehen aus Etappen von rund acht Minuten. Zwischen zwei Etappen steht ein
+// Haltepunkt (`stageBreak`): dort kann man sauber pausieren und später weitermachen.
+
+const tagged = (steps, stage) => steps.map((s) => ({ ...s, stage }));
+const stageBreak = (stage) => ({ type: 'stageBreak', stage, gradedId: null });
+const joinStages = (stages) => stages.flatMap((steps, i) => [...tagged(steps, i), ...(i < stages.length - 1 ? [stageBreak(i)] : [])]);
+
+/** Wiederholungen aus früheren Tagen: vom Lernstand gewählt (`reviewIds`), sonst zufällig. */
+function reviewSteps(index, pool, dayNumber, settings, rng, opts, fallback) {
+  const picked = opts.reviewIds
+    ? opts.reviewIds.map((id) => (opts.resolve ?? ((x) => index.phrase(x, settings)))(id)).filter(Boolean)
+    : rng.shuffled(pool.filter((p) => p.day < dayNumber)).slice(0, fallback);
+  return picked.map((p, i) => practiceFor(index, p, pool, settings, i % 2 === 0, i + 1, rng));
 }
 
-/** Podcast: ohne Zusatzdialog, direkt mit den Phrasen der gehörten Folge. */
-export function podcastLesson(index, dayNumber, settings, rng = defaultRng()) {
+/**
+ * Tages-Lektion in drei Etappen:
+ *   1 Kennenlernen  Aussprache-Tipp, neue Karten in Dreiergruppen, erkennen
+ *   2 Üben          sprechen, bauen, antworten — plus Wiederholungen aus dem Lernstand
+ *   3 Anwenden      Satzbau-Muster des Tages (falls vorhanden) und Rollenspiel
+ * opts: { reviewIds?: string[], pattern?: Muster }
+ */
+export function lesson(index, dayNumber, settings, rng = defaultRng(), opts = {}) {
   const day = index.day(dayNumber);
   if (!day) return [];
   const phrases = index.dayPhrases(day, settings);
   const pool = index.phrasesUpTo(dayNumber, settings);
-  const out = [];
+  const meet = [{ type: 'soundTip', day, examples: day.sound.examples.map((id) => index.phrase(id, settings)).filter(Boolean), gradedId: null }];
   for (const group of chunked(phrases, 3)) {
-    for (const p of group) out.push({ type: 'intro', phrase: p, gradedId: null });
-    rng.shuffled(group).forEach((p, i) => out.push(i % 2 === 0 ? listenChoose(p, pool, rng) : meaningChoose(p, pool, rng)));
+    for (const p of group) meet.push({ type: 'intro', phrase: p, gradedId: null });
+    rng.shuffled(group).forEach((p, i) => meet.push(i % 2 === 0 ? listenChoose(p, pool, rng) : meaningChoose(p, pool, rng)));
   }
-  rng.shuffled(phrases).forEach((p, i) => out.push(practiceFor(index, p, pool, settings, i % 2 === 0, i, rng)));
-  if (dayNumber > 1) {
-    rng.shuffled(pool.filter((p) => p.day < dayNumber)).slice(0, 3)
-      .forEach((p, i) => out.push(practiceFor(index, p, pool, settings, i % 2 === 0, i + 1, rng)));
+  const drill = rng.shuffled(phrases).map((p, i) => practiceFor(index, p, pool, settings, i % 2 === 0 || phrases.length <= 4, i, rng));
+  if (dayNumber > 1) drill.push(...reviewSteps(index, pool, dayNumber, settings, rng, opts, 3));
+  const use = [];
+  if (opts.pattern) use.push({ type: 'pattern', pattern: opts.pattern, gradedId: null });
+  use.push({ type: 'dialog', day, lines: index.dialog(day, settings), gradedId: null });
+  return joinStages([meet, drill, use]);
+}
+
+/** Podcast: zwei Etappen (Kennenlernen, Üben) mit den Phrasen der gehörten Folge, ohne Zusatzdialog. */
+export function podcastLesson(index, dayNumber, settings, rng = defaultRng(), opts = {}) {
+  const day = index.day(dayNumber);
+  if (!day) return [];
+  const phrases = index.dayPhrases(day, settings);
+  const pool = index.phrasesUpTo(dayNumber, settings);
+  const meet = [];
+  for (const group of chunked(phrases, 3)) {
+    for (const p of group) meet.push({ type: 'intro', phrase: p, gradedId: null });
+    rng.shuffled(group).forEach((p, i) => meet.push(i % 2 === 0 ? listenChoose(p, pool, rng) : meaningChoose(p, pool, rng)));
   }
-  return out;
+  const drill = rng.shuffled(phrases).map((p, i) => practiceFor(index, p, pool, settings, i % 2 === 0, i, rng));
+  if (dayNumber > 1) drill.push(...reviewSteps(index, pool, dayNumber, settings, rng, opts, 3));
+  return joinStages([meet, drill]);
+}
+
+/**
+ * Gesprächstag: kein neuer Stoff, nur anwenden.
+ *   1 Aufwärmen       bekannte Sätze aus dem Kopf sagen
+ *   2 Rollenspiele    zwei Gespräche aus dem Block
+ *   3 Frei antworten  Anja fragt, jede passende Antwort zählt
+ * sel: { warmIds, dialogDays, questionIds } — vom Lernstand gewählt.
+ */
+export function talkDay(index, sel, settings) {
+  const get = (id) => index.phrase(id, settings);
+  const warm = sel.warmIds.map(get).filter(Boolean).map((p) => ({ type: 'speak', phrase: p, gradedId: p.id }));
+  const play = sel.dialogDays.map((n) => index.day(n)).filter(Boolean)
+    .map((day) => ({ type: 'dialog', day, lines: index.dialog(day, settings), gradedId: null }));
+  const free = sel.questionIds.map((id) => {
+    const question = get(id);
+    const replies = (index.itemById.get(id)?.replies ?? []).map(get).filter(Boolean);
+    return question && replies.length ? { type: 'answer', question, replies, gradedId: id } : null;
+  }).filter(Boolean);
+  return joinStages([warm, play, free].filter((s) => s.length));
 }
 
 /** Wiederholung fälliger Karten — eine Übung je Karte. `resolve(id)` liefert die Phrase (Kurs oder Podcast). */

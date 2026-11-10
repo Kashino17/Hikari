@@ -473,7 +473,7 @@
       "goal": "Du fragst nach, reagierst und sagst deine Meinung.",
       "sound": {
         "title": "Der Ach-Laut und г als w",
-        "text": "х ist immer das deutsche ch aus »Bach« — auch nach e und i, nie wie in »ich«: хорошо́, пло́хо. Und in den Endungen -ого und -его wird г wie w gesprochen: ничего́ (nitschiwó), что но́вого (schto nówawa).",
+        "text": "х ist immer das deutsche ch aus »Bach« — auch nach e und i, nie wie in »ich«: хорошо́, пло́хо. Und in den Endungen -ог+о und -его wird г wie w gesprochen: ничего́ (nitschiwó), что но́вого (schto nówawa).",
         "examples": ["d03_horosho", "d03_chto_novogo", "d07_kak_ego_zovut"]
       },
       "grammar": "Bei не́ был (war nicht) springt die Betonung auf das не. Frauen sagen не была́ — dort bleibt sie hinten.",
@@ -604,23 +604,23 @@
       "goal": "Du kannst ehrlich erklären, wie du dich innerlich fühlst — auch bei Überforderung, innerer Leere oder Depressionen.",
       "sound": {
         "title": "Sanfter Tonfall bei persönlichen Themen",
-        "text": "Wenn Russen über echte Sorgen oder seelischen Schmerz sprechen, sinkt die Stimme am Satzende ruhig ab. Wörter wie тяж+ело (schwer) oder пустот+а (Leere) tragen die Betonung auf der letzten Silbe.",
+        "text": "Wenn Russen über echte Sorgen oder seelischen Schmerz sprechen, sinkt die Stimme am Satzende ruhig ab. Wörter wie тяжел+о (schwer) oder пустот+а (Leere) tragen die Betonung auf der letzten Silbe.",
         "examples": ["d15_mne_tyazhelo", "d15_u_menya_depressiya", "d15_vnutri_pustota"]
       },
-      "grammar": "Tiefe innere Zustände drückst du im Russischen meist mit Мне + Adverb (Мне тяж+ело на душ+е = Mir ist schwer ums Herz) oder Я ч+увствую + Akkusativ (Я ч+увствую пустот+у = Ich fühle eine Leere) aus.",
+      "grammar": "Tiefe innere Zustände drückst du im Russischen meist mit Мне + Adverb (Мне тяжел+о на душ+е = Mir ist schwer ums Herz) oder Я ч+увствую + Akkusativ (Я ч+увствую пустот+у = Ich fühle eine Leere) aus.",
       "items": [
-        {"id": "d15_mne_tyazhelo", "ru": "Мне сейч+ас тяж+ело на душ+е.", "de": "Mir ist gerade schwer ums Herz.", "lit": "Mir jetzt schwer auf der Seele.", "note": "Sehr natürlicher russischer Ausdruck für seelischen Druck."},
+        {"id": "d15_mne_tyazhelo", "ru": "Мне сейч+ас тяжел+о на душ+е.", "de": "Mir ist gerade schwer ums Herz.", "lit": "Mir jetzt schwer auf der Seele.", "note": "Sehr natürlicher russischer Ausdruck für seelischen Druck."},
         {"id": "d15_u_menya_depressiya", "ru": "У мен+я сейч+ас депр+ессия.", "de": "Ich habe gerade eine Depression.", "replies": ["d15_ya_ryadom"]},
-        {"id": "d15_net_sil", "ru": "У мен+я совсем нет сил.", "de": "Ich habe überhaupt keine Kraft mehr.", "lit": "Bei mir gar keine Kräfte."},
+        {"id": "d15_net_sil", "ru": "У мен+я совс+ем нет сил.", "de": "Ich habe überhaupt keine Kraft mehr.", "lit": "Bei mir gar keine Kräfte."},
         {"id": "d15_vnutri_pustota", "ru": "Я ч+увствую пустот+у внутр+и.", "de": "Ich fühle eine innere Leere.", "lit": "Ich fühle Leere drinnen."},
-        {"id": "d15_vygoranie", "ru": "Каж+ется, у мен+я эмоцион+альное выгор+ание.", "de": "Ich glaube, ich habe ein emotionales Burnout."},
-        {"id": "d15_trudno_vstat", "ru": "Ин+огда мне тр+удно пр+осто встать с кров+ати.", "de": "Manchmal fällt es mir schwer, einfach aus dem Bett aufzustehen."},
+        {"id": "d15_vygoranie", "ru": "К+ажется, у мен+я эмоцион+альное выгор+ание.", "de": "Ich glaube, ich habe ein emotionales Burnout."},
+        {"id": "d15_trudno_vstat", "ru": "Иногд+а мне тр+удно пр+осто встать с кров+ати.", "de": "Manchmal fällt es mir schwer, einfach aus dem Bett aufzustehen."},
         {"id": "d15_slishkom_mnogo_mysley", "ru": "В голов+е сл+ишком мн+ого м+ыслей.", "de": "In meinem Kopf sind viel zu viele Gedanken."},
         {"id": "d15_trevoga", "ru": "Я ч+асто ч+увствую с+ильную трев+огу.", "de": "Ich spüre oft starke innere Unruhe und Angst."},
         {"id": "d15_nuzhna_pauza", "ru": "Мне нужн+а п+ауза и тишин+а.", "de": "Ich brauche eine Pause und Stille."},
         {"id": "d15_rabotayu_nad_soboy", "ru": "Я раб+отаю над соб+ой шаг за ш+агом.", "de": "Ich arbeite Schritt für Schritt an mir selbst."},
         {"id": "d15_kak_ty_sebya_chuvstvuesh", "ru": "Как ты себ+я ч+увствуешь на с+амом д+еле?", "de": "Wie fühlst du dich in Wirklichkeit?", "replies": ["d15_mne_tyazhelo", "d15_uzhe_luchshe"]},
-        {"id": "d15_ya_ryadom", "ru": "Я р+ядом, ты м+ожешь вс+ё мне рассказ+ать.", "de": "Ich bin für dich da, du kannst mir alles erzählen."},
+        {"id": "d15_ya_ryadom", "ru": "Я р+ядом, ты м+ожешь всё мне рассказ+ать.", "de": "Ich bin für dich da, du kannst mir alles erzählen."},
         {"id": "d15_spasibo_za_podderzhku", "ru": "Спас+ибо теб+е за подд+ержку и поним+ание.", "de": "Danke dir für deine Unterstützung und dein Verständnis."},
         {"id": "d15_uzhe_luchshe", "ru": "Сег+одня мне уж+е немн+ого л+учше.", "de": "Heute geht es mir schon etwas besser."}
       ],
@@ -630,10 +630,10 @@
         "scene": "Anja merkt, dass du heute still bist, und fragt ehrlich nach, wie es dir wirklich geht.",
         "lines": [
           {"id": "d15_dlg_1", "who": "P", "ru": "Ты сег+одня +очень т+ихий. Как ты себ+я ч+увствуешь на с+амом д+еле?", "ruF": "Ты сег+одня +очень т+ихая. Как ты себ+я ч+увствуешь на с+амом д+еле?", "de": "Du bist heute sehr still. Wie fühlst du dich in Wirklichkeit?"},
-          {"id": "d15_dlg_2", "who": "U", "ru": "Если ч+естно, мне сейч+ас тяж+ело на душ+е.", "de": "Um ehrlich zu sein, ist mir gerade schwer ums Herz."},
+          {"id": "d15_dlg_2", "who": "U", "ru": "+Если ч+естно, мне сейч+ас тяжел+о на душ+е.", "de": "Um ehrlich zu sein, ist mir gerade schwer ums Herz."},
           {"id": "d15_dlg_3", "who": "P", "ru": "Что случ+илось? +Это из-за раб+оты?", "de": "Was ist los? Liegt es an der Arbeit?"},
-          {"id": "d15_dlg_4", "who": "U", "ru": "Не т+олько. У мен+я сейч+ас депр+ессия и совсем нет сил.", "de": "Nicht nur. Ich habe gerade eine Depression und überhaupt keine Kraft mehr."},
-          {"id": "d15_dlg_5", "who": "P", "ru": "Я р+ядом, ты м+ожешь вс+ё мне рассказ+ать.", "de": "Ich bin für dich da, du kannst mir alles erzählen."},
+          {"id": "d15_dlg_4", "who": "U", "ru": "Не т+олько. У мен+я сейч+ас депр+ессия и совс+ем нет сил.", "de": "Nicht nur. Ich habe gerade eine Depression und überhaupt keine Kraft mehr."},
+          {"id": "d15_dlg_5", "who": "P", "ru": "Я р+ядом, ты м+ожешь всё мне рассказ+ать.", "de": "Ich bin für dich da, du kannst mir alles erzählen."},
           {"id": "d15_dlg_6", "who": "U", "ru": "Я ч+увствую пустот+у внутр+и, но я раб+отаю над соб+ой шаг за ш+агом.", "de": "Ich fühle eine innere Leere, aber ich arbeite Schritt für Schritt an mir selbst."},
           {"id": "d15_dlg_7", "who": "P", "ru": "Ты спр+авишься. Дав+ай пр+осто посид+им в тишин+е.", "de": "Du schaffst das. Lass uns einfach in Ruhe zusammensitzen."},
           {"id": "d15_dlg_8", "who": "U", "ru": "Спас+ибо теб+е за подд+ержку и поним+ание.", "de": "Danke dir für deine Unterstützung und dein Verständnis."}
@@ -646,20 +646,20 @@
       "goal": "Du sprichst über Psychologie, das Unterbewusstsein, Gewohnheiten, Ängste und warum Menschen so handeln, wie sie handeln.",
       "sound": {
         "title": "Психоло́гия — das п vor с wird mitgesprochen",
-        "text": "Anders als im Englischen wird das п in психол+огия und псих+ика im Russischen deutlich ausgesprochen: psichalógija.",
+        "text": "Anders als im Englischen wird das п in психол+огия und пс+ихика im Russischen deutlich ausgesprochen: psichalógija.",
         "examples": ["d16_psihologiya", "d16_podsoznanie", "d16_privychki"]
       },
-      "grammar": "Mit Зави́сеть от + Genitiv sagst du, wovon etwas abhängt: Мн+огое зав+исит от мысл+ения (Vieles hängt vom Mindset ab). Mit Влия́ть на + Akkusativ sagst du, worauf etwas Einfluss hat.",
+      "grammar": "Mit Зави́сеть от + Genitiv sagst du, wovon etwas abhängt: Мн+огое зав+исит от мышл+ения (Vieles hängt vom Mindset ab). Mit Влия́ть на + Akkusativ sagst du, worauf etwas Einfluss hat.",
       "items": [
         {"id": "d16_psihologiya", "ru": "Мен+я +очень интерес+ует психол+огия челов+ека.", "de": "Mich interessiert die Psychologie des Menschen sehr."},
         {"id": "d16_podsoznanie", "ru": "Н+аше подсозн+ание управл+яет мн+огими реш+ениями.", "de": "Unser Unterbewusstsein steuert viele Entscheidungen."},
-        {"id": "d16_privychki", "ru": "Прив+ычки формир+уют наш хар+актер и б+удущее.", "de": "Gewohnheiten formen unseren Charakter und unsere Zukunft."},
+        {"id": "d16_privychki", "ru": "Прив+ычки форм+ируют наш хар+актер и б+удущее.", "de": "Gewohnheiten formen unseren Charakter und unsere Zukunft."},
         {"id": "d16_strahi", "ru": "В+ажно поним+ать сво+и вн+утренние стр+ахи.", "de": "Es ist wichtig, seine eigenen inneren Ängste zu verstehen."},
         {"id": "d16_detstvo", "ru": "Мн+огие пробл+емы ид+ут из д+етства.", "de": "Viele Probleme stammen aus der Kindheit."},
         {"id": "d16_samootsenka", "ru": "Здор+овая самооц+енка даёт спок+ойствие.", "de": "Ein gesundes Selbstwertgefühl gibt innere Ruhe."},
         {"id": "d16_emotsii", "ru": "Я уч+усь не подавл+ять сво+и эм+оции.", "de": "Ich lerne, meine Emotionen nicht zu unterdrücken."},
         {"id": "d16_granitsy", "ru": "Н+ужно ум+еть ст+авить л+ичные гран+ицы.", "de": "Man muss persönliche Grenzen setzen können."},
-        {"id": "d16_myshlenie", "ru": "Мн+огое в ж+изни зав+исит от мысл+ения.", "de": "Vieles im Leben hängt von der Denkweise ab."},
+        {"id": "d16_myshlenie", "ru": "Мн+огое в ж+изни зав+исит от мышл+ения.", "de": "Vieles im Leben hängt von der Denkweise ab."},
         {"id": "d16_doverie", "ru": "Дов+ерие стр+оится д+олго, а тер+яется б+ыстро.", "de": "Vertrauen baut sich langsam auf und geht schnell verloren."},
         {"id": "d16_pochemu_lyudi", "ru": "Как ты д+умаешь, почем+у л+юди бо+ятся перем+ен?", "de": "Was denkst du, warum haben Menschen Angst vor Veränderung?", "replies": ["d16_podsoznanie", "d16_strahi"]},
         {"id": "d16_refleksiya", "ru": "Саморефл+ексия помог+ает мн+е л+учше поним+ать себ+я.", "de": "Selbstreflexion hilft mir, mich selbst besser zu verstehen."},
@@ -671,12 +671,12 @@
         "title": "Gespräch über die menschliche Psyche",
         "scene": "Ihr sprecht darüber, warum Menschen in alten Gewohnheiten feststecken und wie man sich verändert.",
         "lines": [
-          {"id": "d16_dlg_1", "who": "P", "ru": "Ты ч+асто д+умаешь о том, почем+у л+юди п+оступают т+ак, а не ин+аче?", "de": "Denkst du oft darüber nach, warum Menschen so und nicht anders handeln?"},
+          {"id": "d16_dlg_1", "who": "P", "ru": "Ты ч+асто д+умаешь о том, почем+у л+юди поступ+ают т+ак, а не ин+аче?", "de": "Denkst du oft darüber nach, warum Menschen so und nicht anders handeln?"},
           {"id": "d16_dlg_2", "who": "U", "ru": "Да, мен+я +очень интерес+ует психол+огия челов+ека.", "de": "Ja, mich interessiert die Psychologie des Menschen sehr."},
           {"id": "d16_dlg_3", "who": "P", "ru": "Как ты д+умаешь, почем+у л+юди бо+ятся перем+ен?", "de": "Was denkst du, warum haben Menschen Angst vor Veränderung?"},
           {"id": "d16_dlg_4", "who": "U", "ru": "Н+аше подсозн+ание управл+яет мн+огими реш+ениями, и тр+удно мен+ять ст+арые шабл+оны повед+ения.", "de": "Unser Unterbewusstsein steuert viele Entscheidungen, und es ist schwer, alte Verhaltensmuster zu ändern."},
           {"id": "d16_dlg_5", "who": "P", "ru": "Согл+асна! А что помог+ает теб+е мен+яться?", "de": "Stimmt! Und was hilft dir, dich zu verändern?"},
-          {"id": "d16_dlg_6", "who": "U", "ru": "Саморефл+ексия помог+ает мн+е л+учше поним+ать себ+я, а прив+ычки формир+уют наш хар+актер и б+удущее.", "de": "Selbstreflexion hilft mir, mich besser zu verstehen, und Gewohnheiten formen unseren Charakter und unsere Zukunft."},
+          {"id": "d16_dlg_6", "who": "U", "ru": "Саморефл+ексия помог+ает мн+е л+учше поним+ать себ+я, а прив+ычки форм+ируют наш хар+актер и б+удущее.", "de": "Selbstreflexion hilft mir, mich besser zu verstehen, und Gewohnheiten formen unseren Charakter und unsere Zukunft."},
           {"id": "d16_dlg_7", "who": "P", "ru": "С тоб+ой т+ак интер+есно говор+ить о глуб+оких вещ+ах!", "de": "Mit dir ist es so interessant, über tiefgründige Dinge zu sprechen!"},
           {"id": "d16_dlg_8", "who": "U", "ru": "Я цен+ю в л+юдях +искренность и глубин+у.", "de": "Ich schätze an Menschen Aufrichtigkeit und Tiefgang."}
         ]
@@ -697,16 +697,16 @@
         {"id": "d17_mnogo_belka", "ru": "Я стар+аюсь есть б+ольше белк+а к+аждый день.", "de": "Ich versuche, jeden Tag mehr Eiweiß zu essen."},
         {"id": "d17_bez_sahara", "ru": "Я п+олностью отказ+ался от с+ахара и фастф+уда.", "ruF": "Я п+олностью отказ+алась от с+ахара и фастф+уда.", "de": "Ich habe komplett auf Zucker und Fastfood verzichtet."},
         {"id": "d17_intervalnoe", "ru": "Я практик+ую интерв+альное голод+ание.", "de": "Ich praktiziere Intervallfasten."},
-        {"id": "d17_gotovlyu_sam", "ru": "Я гот+овлю свеж+ую ед+у сам д+ома.", "ruF": "Я гот+овлю свеж+ую ед+у сам+а д+ома.", "de": "Ich koche frisches Essen selbst zu Hause."},
+        {"id": "d17_gotovlyu_sam", "ru": "Я гот+овлю св+ежую ед+у сам д+ома.", "ruF": "Я гот+овлю св+ежую ед+у сам+а д+ома.", "de": "Ich koche frisches Essen selbst zu Hause."},
         {"id": "d17_ovoshi_i_myaso", "ru": "В моём раци+оне мн+ого овощ+ей, р+ыбы и м+яса.", "de": "In meinem Speiseplan sind viel Gemüse, Fisch und Fleisch."},
         {"id": "d17_voda_i_son", "ru": "Я пью мн+ого вод+ы и сплю в+осемь час+ов.", "de": "Ich trinke viel Wasser und schlafe acht Stunden."},
-        {"id": "d17_energiya_ot_edy", "ru": "Пит+ание напрям+ую вли+яет на мо+ю эн+ергию и настр+оение.", "de": "Die Ernährung beeinflusst direkt meine Energie und meine Stimmung."},
+        {"id": "d17_energiya_ot_edy", "ru": "Пит+ание напрям+ую вли+яет на мо+ю эн+ергию и настро+ение.", "de": "Die Ernährung beeinflusst direkt meine Energie und meine Stimmung."},
         {"id": "d17_schitayu_kalorii", "ru": "Я зн+аю сво+ю н+орму кал+орий и белк+ов.", "de": "Ich kenne meinen Bedarf an Kalorien und Proteinen."},
         {"id": "d17_trenirovki", "ru": "Я тренир+уюсь чет+ыре р+аза в нед+елю в з+але.", "de": "Ich trainiere viermal pro Woche im Fitnessstudio."},
         {"id": "d17_vitaminy", "ru": "Зим+ой я приним+аю витам+ины и м+агний.", "de": "Im Winter nehme ich Vitamine und Magnesium."},
-        {"id": "d17_tyazhelaya_eda", "ru": "П+осле тяж+ёлой ед+ы я ч+увствую уст+алость.", "de": "Nach schwerem Essen fühle ich mich müde."},
+        {"id": "d17_tyazhelaya_eda", "ru": "П+осле тяжёлой ед+ы я ч+увствую уст+алость.", "de": "Nach schwerem Essen fühle ich mich müde."},
         {"id": "d17_kak_ty_pitaeshsya", "ru": "А как ты об+ычно пит+аешься в теч+ение дня?", "de": "Und wie ernährst du dich normalerweise über den Tag?", "replies": ["d17_pravilnoe_pitanie", "d17_gotovlyu_sam"]},
-        {"id": "d17_disciplina_v_ede", "ru": "Дисципл+ина в пит+ании даёт ясн+ость в голов+е.", "de": "Disziplin bei der Ernährung sorgt für Klarheit im Kopf."}
+        {"id": "d17_disciplina_v_ede", "ru": "Дисципл+ина в пит+ании даёт +ясность в голов+е.", "de": "Disziplin bei der Ernährung sorgt für Klarheit im Kopf."}
       ],
       "dialog": {
         "id": "d17_dlg",
@@ -715,10 +715,10 @@
         "lines": [
           {"id": "d17_dlg_1", "who": "P", "ru": "Ты не б+удешь дес+ерт? Как ты об+ычно пит+аешься в теч+ение дня?", "de": "Nimmst du kein Dessert? Wie ernährst du dich normalerweise über den Tag?"},
           {"id": "d17_dlg_2", "who": "U", "ru": "Я слеж+у за сво+им пит+анием и здор+овьем. Я п+олностью отказ+ался от с+ахара и фастф+уда.", "ruF": "Я слеж+у за сво+им пит+анием и здор+овьем. Я п+олностью отказ+алась от с+ахара и фастф+уда.", "de": "Ich achte auf meine Ernährung und Gesundheit. Ich habe komplett auf Zucker und Fastfood verzichtet."},
-          {"id": "d17_dlg_3", "who": "P", "ru": "Ого, +это сильная дисципл+ина! А что ты об+ычно ешь?", "de": "Wow, das ist starke Disziplin! Und was isst du normalerweise?"},
+          {"id": "d17_dlg_3", "who": "P", "ru": "Ог+о, +это с+ильная дисципл+ина! А что ты об+ычно ешь?", "de": "Wow, das ist starke Disziplin! Und was isst du normalerweise?"},
           {"id": "d17_dlg_4", "who": "U", "ru": "Я стар+аюсь есть б+ольше белк+а к+аждый день. В моём раци+оне мн+ого овощ+ей, р+ыбы и м+яса.", "de": "Ich versuche, jeden Tag mehr Eiweiß zu essen. In meinem Speiseplan sind viel Gemüse, Fisch und Fleisch."},
-          {"id": "d17_dlg_5", "who": "P", "ru": "И ты чувствуешь р+азницу?", "de": "Und spürst du einen Unterschied?"},
-          {"id": "d17_dlg_6", "who": "U", "ru": "Да! Пит+ание напрям+ую вли+яет на мо+ю эн+ергию и настр+оение.", "de": "Ja! Die Ernährung beeinflusst direkt meine Energie und meine Stimmung."},
+          {"id": "d17_dlg_5", "who": "P", "ru": "И ты ч+увствуешь р+азницу?", "de": "Und spürst du einen Unterschied?"},
+          {"id": "d17_dlg_6", "who": "U", "ru": "Да! Пит+ание напрям+ую вли+яет на мо+ю эн+ергию и настро+ение.", "de": "Ja! Die Ernährung beeinflusst direkt meine Energie und meine Stimmung."},
           {"id": "d17_dlg_7", "who": "P", "ru": "А ты ещё и тренир+уешься?", "de": "Und trainierst du auch noch?"},
           {"id": "d17_dlg_8", "who": "U", "ru": "Да, я тренир+уюсь чет+ыре р+аза в нед+елю в з+але и пью мн+ого вод+ы.", "de": "Ja, ich trainiere viermal pro Woche im Studio und trinke viel Wasser."}
         ]
@@ -736,17 +736,17 @@
       "grammar": "Развив+ать + Akkusativ heißt »aufbauen / weiterentwickeln«: Я развив+аю свой б+изнес (Ich baue mein eigenes Business auf). Управл+ять + Instrumental heißt »leiten / steuern«: управл+ять про+ектами (Projekte leiten).",
       "items": [
         {"id": "d18_svoy_biznes", "ru": "Я развив+аю свой б+изнес и н+овые про+екты.", "de": "Ich baue mein eigenes Business und neue Projekte auf."},
-        {"id": "d18_klienty", "ru": "Я раб+отаю напрям+ую с кли+ентами и партн+ёрами.", "de": "Ich arbeite direkt mit Kunden und Partnern zusammen."},
-        {"id": "d18_peregovory", "ru": "Сег+одня у мен+я в+ажные дел+овые перегов+оры.", "de": "Heute habe ich wichtige Geschäftsverhandlungen."},
-        {"id": "d18_strategiya", "ru": "Я отв+ечаю за страт+егию и разв+итие комп+ании.", "de": "Ich bin verantwortlich für die Strategie und die Unternehmensentwicklung."},
+        {"id": "d18_klienty", "ru": "Я раб+отаю напрям+ую с кли+ентами и партнёрами.", "de": "Ich arbeite direkt mit Kunden und Partnern zusammen."},
+        {"id": "d18_peregovory", "ru": "Сег+одня у мен+я в+ажные делов+ые перегов+оры.", "de": "Heute habe ich wichtige Geschäftsverhandlungen."},
+        {"id": "d18_strategiya", "ru": "Я отвеч+аю за страт+егию и разв+итие комп+ании.", "de": "Ich bin verantwortlich für die Strategie und die Unternehmensentwicklung."},
         {"id": "d18_avtomatizatsiya", "ru": "Мы автоматиз+ируем проц+ессы с п+омощью технол+огий.", "de": "Wir automatisieren Prozesse mit Hilfe von Technologie."},
         {"id": "d18_pribyl", "ru": "Н+аша цель — увел+ичить пр+ибыль и к+ачество с+ервиса.", "de": "Unser Ziel ist es, den Gewinn und die Servicequalität zu steigern."},
         {"id": "d18_otvetstvennost", "ru": "Свой б+изнес — +это больш+ая отв+етственность и риск.", "de": "Ein eigenes Business bedeutet große Verantwortung und Risiko."},
         {"id": "d18_resheniya", "ru": "Мне н+ужно приним+ать б+ыстрые и т+очные реш+ения.", "de": "Ich muss schnelle und präzise Entscheidungen treffen."},
         {"id": "d18_komanda", "ru": "С+ильная ком+анда — +это осн+ова люб+ого усп+еха.", "de": "Ein starkes Team ist die Grundlage jedes Erfolgs."},
-        {"id": "d18_rynok", "ru": "Мы анал+изируем р+ынок и потр+ебности кли+ентов.", "de": "Wir analysieren den Markt und die Bedürfnisse der Kunden."},
+        {"id": "d18_rynok", "ru": "Мы анализ+ируем р+ынок и потр+ебности кли+ентов.", "de": "Wir analysieren den Markt und die Bedürfnisse der Kunden."},
         {"id": "d18_investitsii", "ru": "Я инвест+ирую вр+емя и д+еньги в долгоср+очный рост.", "de": "Ich investiere Zeit und Geld in langfristiges Wachstum."},
-        {"id": "d18_masshtabirovanie", "ru": "Сейч+ас мы гот+овимся масштабир+овать наш про+ект.", "de": "Gerade bereiten wir uns darauf vor, unser Projekt zu skalieren."},
+        {"id": "d18_masshtabirovanie", "ru": "Сейч+ас мы гот+овимся масштаб+ировать наш про+ект.", "de": "Gerade bereiten wir uns darauf vor, unser Projekt zu skalieren."},
         {"id": "d18_v_kakoy_sfere", "ru": "В как+ой сф+ере ты развив+аешь свой про+ект?", "de": "In welcher Branche baust du dein Projekt auf?", "replies": ["d18_svoy_biznes", "d18_avtomatizatsiya"]},
         {"id": "d18_svoboda_v_biznese", "ru": "Предприним+ательство даёт мн+е своб+оду д+ействий.", "de": "Unternehmertum gibt mir Handlungsfreiheit."}
       ],
@@ -757,12 +757,12 @@
         "lines": [
           {"id": "d18_dlg_1", "who": "P", "ru": "Расскаж+и подр+обнее, в как+ой сф+ере ты развив+аешь свой про+ект?", "de": "Erzähl genauer, in welcher Branche baust du dein Projekt auf?"},
           {"id": "d18_dlg_2", "who": "U", "ru": "Я развив+аю свой б+изнес и н+овые про+екты. Мы автоматиз+ируем проц+ессы с п+омощью технол+огий.", "de": "Ich baue mein eigenes Business und neue Projekte auf. Wir automatisieren Prozesse mit Hilfe von Technologie."},
-          {"id": "d18_dlg_3", "who": "P", "ru": "Звуч+ит серьёзно! За что им+енно ты отв+ечаешь?", "de": "Klingt seriös! Wofür genau bist du verantwortlich?"},
-          {"id": "d18_dlg_4", "who": "U", "ru": "Я отв+ечаю за страт+егию и разв+итие комп+ании, и я раб+отаю напрям+ую с кли+ентами и партн+ёрами.", "de": "Ich bin verantwortlich für die Strategie und Unternehmensentwicklung, und ich arbeite direkt mit Kunden und Partnern."},
+          {"id": "d18_dlg_3", "who": "P", "ru": "Звуч+ит серьёзно! За что +именно ты отвеч+аешь?", "de": "Klingt seriös! Wofür genau bist du verantwortlich?"},
+          {"id": "d18_dlg_4", "who": "U", "ru": "Я отвеч+аю за страт+егию и разв+итие комп+ании, и я раб+отаю напрям+ую с кли+ентами и партнёрами.", "de": "Ich bin verantwortlich für die Strategie und Unternehmensentwicklung, und ich arbeite direkt mit Kunden und Partnern."},
           {"id": "d18_dlg_5", "who": "P", "ru": "Нав+ерное, +это нелегк+о?", "de": "Das ist bestimmt nicht leicht, oder?"},
           {"id": "d18_dlg_6", "who": "U", "ru": "Да, свой б+изнес — +это больш+ая отв+етственность и риск, но предприним+ательство даёт мн+е своб+оду д+ействий.", "de": "Ja, ein eigenes Business ist große Verantwortung und Risiko, aber Unternehmertum gibt mir Handlungsfreiheit."},
           {"id": "d18_dlg_7", "who": "P", "ru": "Как+ая у вас сейч+ас гл+авная цель?", "de": "Was ist gerade euer Hauptziel?"},
-          {"id": "d18_dlg_8", "who": "U", "ru": "Н+аша цель — увел+ичить пр+ибыль и к+ачество с+ервиса. Сейч+ас мы гот+овимся масштабир+овать наш про+ект.", "de": "Unser Ziel ist es, Gewinn und Servicequalität zu steigern. Gerade bereiten wir uns darauf vor, unser Projekt zu skalieren."}
+          {"id": "d18_dlg_8", "who": "U", "ru": "Н+аша цель — увел+ичить пр+ибыль и к+ачество с+ервиса. Сейч+ас мы гот+овимся масштаб+ировать наш про+ект.", "de": "Unser Ziel ist es, Gewinn und Servicequalität zu steigern. Gerade bereiten wir uns darauf vor, unser Projekt zu skalieren."}
         ]
       }
     },
@@ -784,10 +784,10 @@
         {"id": "d19_zvonki_i_vstrechi", "ru": "П+осле об+еда у мен+я об+ычно звонк+и и встр+ечи.", "de": "Nach dem Mittagessen habe ich meistens Telefonate und Meetings."},
         {"id": "d19_vecherom_otdyh", "ru": "В+ечером я подвож+у ит+оги дня и отдых+аю.", "de": "Abends ziehe ich Bilanz für den Tag und ruhe mich aus."},
         {"id": "d19_kak_prohodit_den", "ru": "А как об+ычно прох+одит твой день с утр+а до в+ечера?", "de": "Und wie sieht dein Tag normalerweise von morgens bis abends aus?", "replies": ["d19_planiruyu_den", "d19_vecherom_otdyh"]},
-        {"id": "d19_kakie_zadachi", "ru": "Как+ие зад+ачи ты об+ычно выполняешь на раб+оте?", "de": "Welche Aufgaben erledigst du normalerweise bei der Arbeit?", "replies": ["d19_moi_zadachi", "d19_zvonki_i_vstrechi"]},
-        {"id": "d19_v_chem_rabota", "ru": "Расскаж+и, в чём им+енно заключ+ается тво+я раб+ота?", "de": "Erzähl mal, worin genau besteht deine Arbeit?", "replies": ["d19_moi_zadachi"]},
-        {"id": "d19_chto_samoe_slozhnoe", "ru": "Что для теб+я с+амое сл+ожное в тво+ём д+еле?", "de": "Was ist für dich das Schwierigste an deiner Tätigkeit?"},
-        {"id": "d19_chto_nravitsya_v_rabote", "ru": "А что теб+е б+ольше всег+о нр+авится в тво+их будн+ях?", "de": "Und was gefällt dir am meisten an deinem Alltag?"},
+        {"id": "d19_kakie_zadachi", "ru": "Как+ие зад+ачи ты об+ычно выполн+яешь на раб+оте?", "de": "Welche Aufgaben erledigst du normalerweise bei der Arbeit?", "replies": ["d19_moi_zadachi", "d19_zvonki_i_vstrechi"]},
+        {"id": "d19_v_chem_rabota", "ru": "Расскаж+и, в чём +именно заключ+ается тво+я раб+ота?", "de": "Erzähl mal, worin genau besteht deine Arbeit?", "replies": ["d19_moi_zadachi"]},
+        {"id": "d19_chto_samoe_slozhnoe", "ru": "Что для теб+я с+амое сл+ожное в твоём д+еле?", "de": "Was ist für dich das Schwierigste an deiner Tätigkeit?"},
+        {"id": "d19_chto_nravitsya_v_rabote", "ru": "А что теб+е б+ольше всег+о нр+авится в тво+их б+уднях?", "de": "Und was gefällt dir am meisten an deinem Alltag?"},
         {"id": "d19_skolko_vremeni", "ru": "Ск+олько вр+емени у теб+я ух+одит на +эту зад+ачу?", "de": "Wie viel Zeit brauchst du für diese Aufgabe?"},
         {"id": "d19_balans", "ru": "Я стар+аюсь держ+ать бал+анс м+ежду раб+отой и ж+изнью.", "de": "Ich versuche, die Balance zwischen Arbeit und Leben zu halten."},
         {"id": "d19_raspisanie", "ru": "У мен+я пл+отный гр+афик, но я сам управл+яю сво+им вр+еменем.", "ruF": "У мен+я пл+отный гр+афик, но я сам+а управл+яю сво+им вр+еменем.", "de": "Ich habe einen vollen Zeitplan, aber ich teile mir meine Zeit selbst ein."}
@@ -797,13 +797,13 @@
         "title": "Alltag & Aufgaben austauschen",
         "scene": "Du beschreibst deinen strukturierten Alltag und fragst Anja gezielt nach ihrem Tagesablauf und ihren Aufgaben.",
         "lines": [
-          {"id": "d19_dlg_1", "who": "P", "ru": "У теб+я так+ая насыщенная ж+изнь! Как об+ычно прох+одит твой день с утр+а до в+ечера?", "de": "Du hast so ein erfülltes Leben! Wie sieht dein Tag normalerweise von morgens bis abends aus?"},
+          {"id": "d19_dlg_1", "who": "P", "ru": "У теб+я так+ая нас+ыщенная ж+изнь! Как об+ычно прох+одит твой день с утр+а до в+ечера?", "de": "Du hast so ein erfülltes Leben! Wie sieht dein Tag normalerweise von morgens bis abends aus?"},
           {"id": "d19_dlg_2", "who": "U", "ru": "К+аждое +утро я план+ирую сво+и гл+авные зад+ачи. Снач+ала я д+елаю с+амое в+ажное и сл+ожное.", "de": "Jeden Morgen plane ich meine wichtigsten Aufgaben. Zuerst erledige ich das Wichtigste und Schwierigste."},
           {"id": "d19_dlg_3", "who": "P", "ru": "А что ты д+елаешь п+осле об+еда?", "de": "Und was machst du nach dem Mittagessen?"},
-          {"id": "d19_dlg_4", "who": "U", "ru": "П+осле об+еда у мен+я об+ычно звонк+и и встр+ечи. А расскаж+и, в чём им+енно заключ+ается тво+я раб+ота?", "de": "Nach dem Mittagessen habe ich meistens Telefonate und Meetings. Und erzähl mal, worin genau besteht deine Arbeit?"},
+          {"id": "d19_dlg_4", "who": "U", "ru": "П+осле об+еда у мен+я об+ычно звонк+и и встр+ечи. А расскаж+и, в чём +именно заключ+ается тво+я раб+ота?", "de": "Nach dem Mittagessen habe ich meistens Telefonate und Meetings. Und erzähl mal, worin genau besteht deine Arbeit?"},
           {"id": "d19_dlg_5", "who": "P", "ru": "Я вед+у диз+айн-про+екты и общ+аюсь с зак+азчиками.", "de": "Ich leite Design-Projekte und kommuniziere mit Auftraggebern."},
-          {"id": "d19_dlg_6", "who": "U", "ru": "Интер+есно! А что для теб+я с+амое сл+ожное в тво+ём д+еле?", "de": "Interessant! Und was ist für dich das Schwierigste an deiner Tätigkeit?"},
-          {"id": "d19_dlg_7", "who": "P", "ru": "Когд+а вс+ё н+ужно сд+елать ср+очно! А как ты отдых+аешь?", "de": "Wenn alles dringend fertig werden muss! Und wie erholst du dich?"},
+          {"id": "d19_dlg_6", "who": "U", "ru": "Интер+есно! А что для теб+я с+амое сл+ожное в твоём д+еле?", "de": "Interessant! Und was ist für dich das Schwierigste an deiner Tätigkeit?"},
+          {"id": "d19_dlg_7", "who": "P", "ru": "Когд+а всё н+ужно сд+елать ср+очно! А как ты отдых+аешь?", "de": "Wenn alles dringend fertig werden muss! Und wie erholst du dich?"},
           {"id": "d19_dlg_8", "who": "U", "ru": "В+ечером я подвож+у ит+оги дня и отдых+аю. Я стар+аюсь держ+ать бал+анс м+ежду раб+отой и ж+изнью.", "de": "Abends ziehe ich Bilanz für den Tag und ruhe mich aus. Ich versuche, die Balance zwischen Arbeit und Leben zu halten."}
         ]
       }
@@ -817,18 +817,18 @@
         "text": "Fließendes Russisch entsteht durch Verbindungs-Brücken wie На с+амом д+еле (Eigentlich / In Wirklichkeit) oder С одн+ой сторон+ы (Einerseits). Sie geben deinem Gehirn eine Sekunde Denkzeit, während du schon flüssig sprichst!",
         "examples": ["d20_na_samom_dele", "d20_smysl_zhizni", "d20_lichnyy_rost"]
       },
-      "grammar": "Mit На с+амом д+еле (In Wirklichkeit), Я уб+еждён, что … (Ich bin überzeugt, dass …) und Т+о, что … (Das, was …) verbindest du komplexe Gedanken zu fließenden Sätzen.",
+      "grammar": "Mit На с+амом д+еле (In Wirklichkeit), Я убеждён, что … (Ich bin überzeugt, dass …) und Т+о, что … (Das, was …) verbindest du komplexe Gedanken zu fließenden Sätzen.",
       "items": [
         {"id": "d20_na_samom_dele", "ru": "На с+амом д+еле для мен+я гл+авное — +это своб+ода и ч+естность.", "de": "In Wirklichkeit sind für mich Freiheit und Ehrlichkeit das Wichtigste."},
         {"id": "d20_glubokie_razgovory", "ru": "Я любл+ю глуб+окие разгов+оры о ж+изни и б+удущем.", "de": "Ich liebe tiefgründige Gespräche über das Leben und die Zukunft."},
         {"id": "d20_lichnyy_rost", "ru": "Я посто+янно уч+усь и стремл+юсь к л+ичному р+осту.", "de": "Ich lerne ständig dazu und strebe nach persönlichem Wachstum."},
-        {"id": "d20_smysl_zhizni", "ru": "К+аждый челов+ек сам созд+аёт смысл сво+ей ж+изни.", "de": "Jeder Mensch erschafft den Sinn seines Lebens selbst."},
+        {"id": "d20_smysl_zhizni", "ru": "К+аждый челов+ек сам создаёт смысл сво+ей ж+изни.", "de": "Jeder Mensch erschafft den Sinn seines Lebens selbst."},
         {"id": "d20_trudnosti_delalut_silnee", "ru": "Тр+удности и ош+ибки д+елают нас сильн+ее и мудр+ее.", "de": "Schwierigkeiten und Fehler machen uns stärker und weiser."},
-        {"id": "d20_nastoyashie_otnosheniya", "ru": "В отнош+ениях для мен+я важн+ы уваж+ение и верн+ость.", "de": "In Beziehungen sind mir Respekt und Treue wichtig."},
+        {"id": "d20_nastoyashie_otnosheniya", "ru": "В отнош+ениях для мен+я важн+ы уваж+ение и в+ерность.", "de": "In Beziehungen sind mir Respekt und Treue wichtig."},
         {"id": "d20_ne_boyus_budushego", "ru": "Я зн+аю, чег+о хоч+у, и ид+у к сво+ей ц+ели.", "de": "Ich weiß, was ich will, und gehe meinen Weg zu meinem Ziel."},
         {"id": "d20_vremya_tsenno", "ru": "Вр+емя — +это с+амый ц+енный рес+урс в н+ашей ж+изни.", "de": "Zeit ist die wertvollste Ressource in unserem Leben."},
         {"id": "d20_okruzhenie", "ru": "Н+аше окруж+ение с+ильно вли+яет на т+о, к+ем мы стан+овимся.", "de": "Unser Umfeld beeinflusst stark, zu wem wir werden."},
-        {"id": "d20_blagodarnost", "ru": "Я благод+арен за вс+ё, чт+о прош+ёл на своём пут+и.", "ruF": "Я благод+арна за вс+ё, чт+о прошл+а на своём пут+и.", "de": "Ich bin dankbar für alles, was ich auf meinem Weg durchlebt habe."},
+        {"id": "d20_blagodarnost", "ru": "Я благод+арен за всё, чт+о прошёл на своём пут+и.", "ruF": "Я благод+арна за всё, чт+о прошл+а на своём пут+и.", "de": "Ich bin dankbar für alles, was ich auf meinem Weg durchlebt habe."},
         {"id": "d20_o_chem_mechtaesh", "ru": "О чём ты мечт+аешь, когд+а д+умаешь о сл+едующих пят+и год+ах?", "de": "Wovon träumst du, wenn du an die nächsten fünf Jahre denkst?", "replies": ["d20_lichnyy_rost", "d20_ne_boyus_budushego"]},
         {"id": "d20_chto_delaet_schastlivym", "ru": "Что д+елает теб+я по-насто+ящему счастл+ивым челов+еком?", "de": "Was macht dich zu einem wahrhaft glücklichen Menschen?", "replies": ["d20_na_samom_dele", "d20_nastoyashie_otnosheniya"]},
         {"id": "d20_svobodno_govoryu", "ru": "Теп+ерь я мог+у своб+одно выраж+ать сво+и м+ысли по-р+усски!", "de": "Jetzt kann ich meine Gedanken frei auf Russisch ausdrücken!"},
@@ -839,14 +839,518 @@
         "title": "Tiefes Gespräch über das Leben",
         "scene": "Ein langer Abendspaziergang über die Stadt. Ihr sprecht frei und tiefgründig über Werte, schwere Zeiten und Zukunftspläne.",
         "lines": [
-          {"id": "d20_dlg_1", "who": "P", "ru": "Зн+аешь, мне т+ак нр+авится, что мы м+ожем говор+ить обо всём без мас+ок.", "de": "Weißt du, mir gefällt es so sehr, dass wir ohne Masken über alles reden können."},
+          {"id": "d20_dlg_1", "who": "P", "ru": "Зн+аешь, мне т+ак нр+авится, что мы м+ожем говор+ить обо всём без м+асок.", "de": "Weißt du, mir gefällt es so sehr, dass wir ohne Masken über alles reden können."},
           {"id": "d20_dlg_2", "who": "U", "ru": "Мне т+оже. Я любл+ю глуб+окие разгов+оры о ж+изни и б+удущем.", "de": "Mir auch. Ich liebe tiefgründige Gespräche über das Leben und die Zukunft."},
           {"id": "d20_dlg_3", "who": "P", "ru": "Что д+елает теб+я по-насто+ящему счастл+ивым челов+еком?", "de": "Was macht dich zu einem wahrhaft glücklichen Menschen?"},
-          {"id": "d20_dlg_4", "who": "U", "ru": "На с+амом д+еле для мен+я гл+авное — +это своб+ода и ч+естность. А в отнош+ениях для мен+я важн+ы уваж+ение и верн+ость.", "de": "In Wirklichkeit sind für mich Freiheit und Ehrlichkeit das Wichtigste. Und in Beziehungen sind mir Respekt und Treue wichtig."},
-          {"id": "d20_dlg_5", "who": "P", "ru": "А как ты отн+осишься к тр+удностям, когд+а в ж+изни наст+упает тёмная полос+а?", "de": "Und wie gehst du mit Schwierigkeiten um, wenn im Leben eine dunkle Phase kommt?"},
-          {"id": "d20_dlg_6", "who": "U", "ru": "Тр+удности и ош+ибки д+елают нас сильн+ее и мудр+ее. Я благод+арен за вс+ё, чт+о прош+ёл на своём пут+и.", "ruF": "Тр+удности и ош+ибки д+елают нас сильн+ее и мудр+ее. Я благод+арна за вс+ё, чт+о прошл+а на своём пут+и.", "de": "Schwierigkeiten und Fehler machen uns stärker und weiser. Ich bin dankbar für alles, was ich auf meinem Weg durchlebt habe."},
-          {"id": "d20_dlg_7", "who": "P", "ru": "Невероятно! Ты говор+ишь об +этом по-р+усски так своб+одно!", "de": "Unglaublich! Du sprichst darüber auf Russisch so frei und fließend!"},
+          {"id": "d20_dlg_4", "who": "U", "ru": "На с+амом д+еле для мен+я гл+авное — +это своб+ода и ч+естность. А в отнош+ениях для мен+я важн+ы уваж+ение и в+ерность.", "de": "In Wirklichkeit sind für mich Freiheit und Ehrlichkeit das Wichtigste. Und in Beziehungen sind mir Respekt und Treue wichtig."},
+          {"id": "d20_dlg_5", "who": "P", "ru": "А как ты отн+осишься к тр+удностям, когд+а в ж+изни наступ+ает тёмная полос+а?", "de": "Und wie gehst du mit Schwierigkeiten um, wenn im Leben eine dunkle Phase kommt?"},
+          {"id": "d20_dlg_6", "who": "U", "ru": "Тр+удности и ош+ибки д+елают нас сильн+ее и мудр+ее. Я благод+арен за всё, чт+о прошёл на своём пут+и.", "ruF": "Тр+удности и ош+ибки д+елают нас сильн+ее и мудр+ее. Я благод+арна за всё, чт+о прошл+а на своём пут+и.", "de": "Schwierigkeiten und Fehler machen uns stärker und weiser. Ich bin dankbar für alles, was ich auf meinem Weg durchlebt habe."},
+          {"id": "d20_dlg_7", "who": "P", "ru": "Неверо+ятно! Ты говор+ишь об +этом по-р+усски так своб+одно!", "de": "Unglaublich! Du sprichst darüber auf Russisch so frei und fließend!"},
           {"id": "d20_dlg_8", "who": "U", "ru": "Теп+ерь я мог+у своб+одно выраж+ать сво+и м+ысли по-р+усски! +Это т+олько нач+ало н+ашей больш+ой ист+ории.", "de": "Jetzt kann ich meine Gedanken frei auf Russisch ausdrücken! Das ist erst der Anfang unserer großen Geschichte."}
+        ]
+      }
+    },
+    {
+      "day": 21,
+      "title": "Unterwegs in der Stadt",
+      "goal": "Du kannst nach dem Weg fragen, Wegbeschreibungen verstehen und sagen, dass du dich verlaufen hast.",
+      "sound": {
+        "title": "Betonung springt: подск+ажете oder подскаж+ите?",
+        "text": "In der Befehlsform sitzt die Betonung oft woanders als in der normalen Form: подск+ажете heißt »Sie sagen mir«, подскаж+ите dagegen »sagen Sie mir!«. Genauso вых+одите (Sie steigen aus) und выход+ите (steigen Sie aus!). Faustregel: Die Befehlsform betont wie die ich-Form — скаж+у → скаж+ите, покаж+у → покаж+ите, поверн+у → поверн+ите.",
+        "examples": ["d21_kak_dobratsya", "d21_ne_podskazhete", "d21_vyhodite"]
+      },
+      "grammar": "Fremde bittest du höflich mit der Sie-Befehlsform plus пож+алуйста: Скаж+ите, Подскаж+ите, Покаж+ите, Поверн+ите. Zu Freunden fällt das те am Ende weg: скаж+и, покаж+и, поверн+и.",
+      "items": [
+        {"id": "d21_gde_metro", "ru": "Скаж+ите, пож+алуйста, где зд+есь метр+о?", "de": "Sagen Sie bitte, wo ist hier die Metro?", "replies": ["d21_za_uglom", "d21_v_dvuh_shagah", "d21_idite_pryamo"]},
+        {"id": "d21_za_uglom", "ru": "+Это ср+азу за угл+ом.", "de": "Das ist gleich um die Ecke."},
+        {"id": "d21_eto_daleko", "ru": "+Это далек+о отс+юда?", "de": "Ist das weit von hier?", "replies": ["d21_v_dvuh_shagah", "d21_peshkom_minut", "d21_luchshe_na_taksi"]},
+        {"id": "d21_v_dvuh_shagah", "ru": "+Это совс+ем р+ядом, в двух шаг+ах.", "de": "Das ist ganz in der Nähe, nur ein paar Schritte.", "lit": "Das ist ganz nah, in zwei Schritten."},
+        {"id": "d21_peshkom_minut", "ru": "Пешк+ом мин+ут д+есять.", "de": "Zu Fuß etwa zehn Minuten.", "note": "Zahl hinter dem Wort heißt »ungefähr«: мин+ут д+есять = etwa zehn Minuten."},
+        {"id": "d21_idite_pryamo", "ru": "Ид+ите пр+ямо, пот+ом поверн+ите нал+ево.", "de": "Gehen Sie geradeaus, dann biegen Sie links ab.", "note": "Nach rechts heißt напр+аво. Zu Freunden sagst du ид+и und поверн+и."},
+        {"id": "d21_budet_sprava", "ru": "Остан+овка б+удет спр+ава, ч+ерез дор+огу.", "de": "Die Haltestelle kommt dann rechts, auf der anderen Straßenseite.", "note": "спр+ава/сл+ева = wo etwas liegt; напр+аво/нал+ево = wohin du abbiegst."},
+        {"id": "d21_luchshe_na_taksi", "ru": "Пешк+ом далек+о, л+учше на такс+и.", "de": "Zu Fuß ist es weit, besser mit dem Taxi."},
+        {"id": "d21_kak_dobratsya", "ru": "Подскаж+ите, пож+алуйста, как добр+аться до ц+ентра?", "de": "Können Sie mir bitte sagen, wie ich ins Zentrum komme?", "replies": ["d21_idite_pryamo", "d21_luchshe_na_taksi"]},
+        {"id": "d21_pokazhite", "ru": "Покаж+ите, пож+алуйста, на к+арте.", "de": "Zeigen Sie es mir bitte auf der Karte."},
+        {"id": "d21_ne_podskazhete", "ru": "Не подск+ажете, где ближ+айшая остан+овка?", "de": "Können Sie mir sagen, wo die nächste Haltestelle ist?", "lit": "Sagen Sie mir nicht (zufällig), wo die nächste Haltestelle ist?", "replies": ["d21_za_uglom", "d21_budet_sprava", "d21_v_dvuh_shagah"]},
+        {"id": "d21_vyhodite", "ru": "Выход+ите на сл+едующей остан+овке.", "de": "Steigen Sie an der nächsten Haltestelle aus.", "note": "Im vollen Bus fragt man: Вы вых+одите? = Steigen Sie aus? Dort liegt der Ton auf о."},
+        {"id": "d21_zabludilsya", "ru": "К+ажется, я заблуд+ился.", "ruF": "К+ажется, я заблуд+илась.", "de": "Ich glaube, ich habe mich verlaufen."},
+        {"id": "d21_ne_mestnyy", "ru": "Я не м+естный и пл+охо зн+аю г+ород.", "ruF": "Я не м+естная и пл+охо зн+аю г+ород.", "de": "Ich bin nicht von hier und kenne die Stadt kaum."}
+      ],
+      "dialog": {
+        "id": "d21_dlg",
+        "title": "Nach dem Weg fragen",
+        "scene": "Du stehst mit dem Stadtplan auf dem Handy an einer Kreuzung in Moskau, und eine Passantin spricht dich an.",
+        "lines": [
+          {"id": "d21_dlg_1", "who": "P", "ru": "Здр+авствуйте! Вы чт+о-то +ищете? Вам пом+очь?", "de": "Guten Tag! Suchen Sie etwas? Kann ich Ihnen helfen?"},
+          {"id": "d21_dlg_2", "who": "U", "ru": "Да, к+ажется, я заблуд+ился. Скаж+ите, пож+алуйста, где зд+есь метр+о?", "ruF": "Да, к+ажется, я заблуд+илась. Скаж+ите, пож+алуйста, где зд+есь метр+о?", "de": "Ja, ich glaube, ich habe mich verlaufen. Sagen Sie bitte, wo ist hier die Metro?"},
+          {"id": "d21_dlg_3", "who": "P", "ru": "Метр+о? Ид+ите пр+ямо до светоф+ора, пот+ом поверн+ите напр+аво.", "de": "Die Metro? Gehen Sie geradeaus bis zur Ampel, dann biegen Sie rechts ab."},
+          {"id": "d21_dlg_4", "who": "U", "ru": "+Это далек+о отс+юда?", "de": "Ist das weit von hier?"},
+          {"id": "d21_dlg_5", "who": "P", "ru": "Нет, пешк+ом мин+ут пять. А куд+а вам н+ужно?", "de": "Nein, zu Fuß etwa fünf Minuten. Und wohin müssen Sie?"},
+          {"id": "d21_dlg_6", "who": "U", "ru": "В центр. Я не м+естный и пл+охо зн+аю г+ород. Покаж+ите, пож+алуйста, на к+арте.", "ruF": "В центр. Я не м+естная и пл+охо зн+аю г+ород. Покаж+ите, пож+алуйста, на к+арте.", "de": "Ins Zentrum. Ich bin nicht von hier und kenne die Stadt kaum. Zeigen Sie es mir bitte auf der Karte."},
+          {"id": "d21_dlg_7", "who": "P", "ru": "Смотр+ите: мы зд+есь, а метр+о вот тут. До ц+ентра три ст+анции.", "de": "Schauen Sie: Wir sind hier, und die Metro ist da. Bis ins Zentrum sind es drei Stationen."},
+          {"id": "d21_dlg_8", "who": "U", "ru": "Теп+ерь пон+ятно: пр+ямо, пот+ом напр+аво. Спас+ибо больш+ое!", "de": "Jetzt ist es klar: geradeaus, dann rechts. Vielen Dank!"}
+        ]
+      }
+    },
+    {
+      "day": 22,
+      "title": "Einkaufen & Geld",
+      "goal": "Du kannst im Laden sagen, was du brauchst, nach Preis und Größe fragen, anprobieren und bezahlen.",
+      "sound": {
+        "title": "Verschluckte Laute: здр+авствуйте, т+ысяча, сейч+ас",
+        "text": "Häufige Wörter werden im Alltag abgeschliffen: In здр+авствуйте bleibt das erste в stumm (»zdrástwujte«), und пож+алуйста klingt wie »paschálsta«. Genauso wird т+ысяча zu »týschscha« und сейч+ас zu »schtschas« — sprich sie ruhig so, nur schreiben darfst du sie nicht so.",
+        "examples": ["d22_skolko_stoit", "d22_pyat_tysyach", "d22_skidka"]
+      },
+      "grammar": "»Ich brauche« heißt wörtlich »mir ist nötig« und richtet sich nach dem Ding: Мне н+ужен пак+ет (männlich), нужн+а к+уртка (weiblich), н+ужно чт+о-нибудь (sächlich), нужн+ы кросс+овки (Mehrzahl). Achte auf die Betonung: н+ужен und н+ужно vorn, нужн+а und нужн+ы hinten.",
+      "items": [
+        {"id": "d22_skolko_stoit", "ru": "Здр+авствуйте, ск+олько ст+оит +эта к+уртка?", "de": "Guten Tag, was kostet diese Jacke?", "replies": ["d22_pyat_tysyach", "d22_skidka"]},
+        {"id": "d22_pyat_tysyach", "ru": "Он+а ст+оит пять т+ысяч рубл+ей.", "de": "Sie kostet fünftausend Rubel."},
+        {"id": "d22_prosto_smotryu", "ru": "Спас+ибо, я пок+а пр+осто смотр+ю.", "de": "Danke, ich schaue mich erst mal nur um.", "note": "Die Standardantwort, wenn im Laden jemand fragt: Вам пом+очь?"},
+        {"id": "d22_nuzhna_kurtka", "ru": "Мне нужн+а тёплая з+имняя к+уртка.", "de": "Ich brauche eine warme Winterjacke."},
+        {"id": "d22_chto_kupit", "ru": "А что ты х+очешь куп+ить?", "de": "Und was willst du kaufen?", "replies": ["d22_nuzhna_kurtka", "d22_nuzhny_krossovki"]},
+        {"id": "d22_primerit", "ru": "Я хоч+у +это прим+ерить.", "de": "Ich möchte das anprobieren.", "note": "Noch kürzer und sehr üblich: М+ожно прим+ерить?"},
+        {"id": "d22_paket", "ru": "Пак+ет не н+ужен, спас+ибо.", "de": "Ich brauche keine Tüte, danke.", "note": "An der Kasse fragt man dich: Пак+ет н+ужен? = Brauchen Sie eine Tüte?"},
+        {"id": "d22_kak_tebe", "ru": "Как теб+е +эта к+уртка?", "de": "Wie findest du diese Jacke?", "lit": "Wie (ist) dir diese Jacke?", "replies": ["d22_tebe_idyot", "d22_razmer_pobolshe"]},
+        {"id": "d22_tebe_idyot", "ru": "Теб+е +очень идёт!", "de": "Steht dir richtig gut!", "lit": "Dir geht (das) sehr!"},
+        {"id": "d22_razmer_pobolshe", "ru": "По-м+оему, н+ужен разм+ер поб+ольше.", "de": "Ich glaube, es muss eine Nummer größer sein.", "note": "Eine Nummer kleiner: н+ужен разм+ер пом+еньше."},
+        {"id": "d22_skidka", "ru": "Сейч+ас на всё ск+идка дв+адцать проц+ентов.", "de": "Im Moment gibt es auf alles zwanzig Prozent Rabatt."},
+        {"id": "d22_podeshevle", "ru": "+Это д+орого, мне н+ужно чт+о-нибудь подеш+евле.", "de": "Das ist teuer, ich brauche etwas Günstigeres."},
+        {"id": "d22_nuzhny_krossovki", "ru": "Мне нужн+ы кросс+овки с+орок втор+ого разм+ера.", "de": "Ich brauche Sneaker in Größe zweiundvierzig."},
+        {"id": "d22_kartoy", "ru": "Я заплач+у к+артой, нал+ичных у мен+я нет.", "de": "Ich zahle mit Karte, Bargeld habe ich keins dabei."}
+      ],
+      "dialog": {
+        "id": "d22_dlg",
+        "title": "Eine Winterjacke kaufen",
+        "scene": "Du brauchst für den russischen Winter eine warme Jacke und gehst in ein Geschäft; die Verkäuferin kommt auf dich zu.",
+        "lines": [
+          {"id": "d22_dlg_1", "who": "P", "ru": "Здр+авствуйте! Вам пом+очь?", "de": "Guten Tag! Kann ich Ihnen helfen?"},
+          {"id": "d22_dlg_2", "who": "U", "ru": "Здр+авствуйте! Мне нужн+а тёплая з+имняя к+уртка.", "de": "Guten Tag! Ich brauche eine warme Winterjacke."},
+          {"id": "d22_dlg_3", "who": "P", "ru": "Вот, прим+ерьте +эту: он+а +очень тёплая.", "de": "Hier, probieren Sie diese an: Die ist sehr warm."},
+          {"id": "d22_dlg_4", "who": "U", "ru": "По-м+оему, н+ужен разм+ер поб+ольше.", "de": "Ich glaube, es muss eine Nummer größer sein."},
+          {"id": "d22_dlg_5", "who": "P", "ru": "Сейч+ас принес+у. Вот, +эта б+ольше. Вам +очень идёт!", "de": "Ich hole sie gleich. Hier, die ist größer. Die steht Ihnen sehr gut!"},
+          {"id": "d22_dlg_6", "who": "U", "ru": "Спас+ибо! А ск+олько ст+оит +эта к+уртка?", "de": "Danke! Und was kostet diese Jacke?"},
+          {"id": "d22_dlg_7", "who": "P", "ru": "Пять т+ысяч рубл+ей, но сег+одня ск+идка. Пак+ет н+ужен?", "de": "Fünftausend Rubel, aber heute gibt es Rabatt. Brauchen Sie eine Tüte?"},
+          {"id": "d22_dlg_8", "who": "U", "ru": "Пак+ет не н+ужен, спас+ибо. Я заплач+у к+артой, нал+ичных у мен+я нет.", "de": "Ich brauche keine Tüte, danke. Ich zahle mit Karte, Bargeld habe ich keins dabei."}
+        ]
+      }
+    },
+    {
+      "day": 23,
+      "title": "Im Restaurant & zu Gast",
+      "goal": "Du kannst einen Tisch reservieren, dir etwas empfehlen lassen und die Rechnung regeln — und bist bei Freunden ein guter Gast.",
+      "sound": {
+        "title": "сч klingt wie щ: счёт, посчит+айте",
+        "text": "Die Buchstabenfolge сч spricht man nicht s-tsch, sondern als ein langes, weiches щ: счёт klingt wie »schtschot«, посчит+айте wie »paschtschitájte«. Dasselbe gilt für сч+астье (Glück): »schtschástje«.",
+        "examples": ["d23_popolam", "d23_poschitayte"]
+      },
+      "grammar": "Я возьм+у … (ich nehme) ist die Zukunft von взять: я возьм+у, ты возьмёшь, вы возьмёте. Mit без + Genitiv sagst du, was du weglassen willst: без ор+ехов (ohne Nüsse), без м+яса (ohne Fleisch), без л+ука (ohne Zwiebeln).",
+      "items": [
+        {"id": "d23_stolik", "ru": "Я хоч+у заброн+ировать ст+олик на дво+их.", "de": "Ich möchte einen Tisch für zwei reservieren."},
+        {"id": "d23_chto_vozmyote", "ru": "А что вы возьмёте?", "de": "Und was nehmen Sie?", "note": "Zu Freunden: А что ты возьмёшь? Der Kellner fragt: Что б+удете зак+азывать?", "replies": ["d23_to_zhe_samoe", "d23_ne_vybral"]},
+        {"id": "d23_to_zhe_samoe", "ru": "Я возьм+у то же с+амое.", "de": "Ich nehme das Gleiche."},
+        {"id": "d23_ne_vybral", "ru": "Я ещё не в+ыбрал.", "ruF": "Я ещё не в+ыбрала.", "de": "Ich habe mich noch nicht entschieden."},
+        {"id": "d23_bylo_vkusno", "ru": "Спас+ибо, всё б+ыло +очень вк+усно!", "de": "Danke, es hat alles sehr gut geschmeckt!"},
+        {"id": "d23_kak_doma", "ru": "Проход+и, ч+увствуй себ+я как д+ома!", "de": "Komm rein, fühl dich wie zu Hause!"},
+        {"id": "d23_chto_prinesti", "ru": "Что мне принест+и с соб+ой?", "de": "Was soll ich mitbringen?", "replies": ["d23_nichego_ne_nuzhno", "d23_k_chayu"]},
+        {"id": "d23_nichego_ne_nuzhno", "ru": "Ничег+о не н+ужно, пр+осто приход+и.", "de": "Du brauchst nichts mitzubringen, komm einfach."},
+        {"id": "d23_k_chayu", "ru": "Возьм+и чт+о-нибудь к ч+аю.", "de": "Bring etwas zum Tee mit.", "note": "к ч+аю = Kuchen, Kekse, Pralinen: das klassische Mitbringsel in Russland."},
+        {"id": "d23_tost", "ru": "Дав+айте в+ыпьем за н+ашу встр+ечу!", "de": "Trinken wir auf unser Treffen!", "note": "Ohne Trinkspruch wird nicht angestoßen. За встр+ечу! passt immer."},
+        {"id": "d23_platim", "ru": "Пл+атим вм+есте +или разд+ельно?", "de": "Zahlen wir zusammen oder getrennt?", "replies": ["d23_poschitayte", "d23_popolam"]},
+        {"id": "d23_popolam", "ru": "Дав+ай разд+елим счёт попол+ам.", "de": "Lass uns die Rechnung halbe-halbe teilen."},
+        {"id": "d23_poschitayte", "ru": "Посчит+айте нас вм+есте, я угощ+аю.", "de": "Rechnen Sie uns bitte zusammen ab, ich lade ein.", "note": "я угощ+аю = ich lade ein, das geht auf mich."},
+        {"id": "d23_posovetuyte", "ru": "Посов+етуйте чт+о-нибудь без ор+ехов, у мен+я аллерг+ия.", "de": "Empfehlen Sie mir etwas ohne Nüsse, ich habe eine Allergie."}
+      ],
+      "dialog": {
+        "id": "d23_dlg",
+        "title": "Zu Gast bei Anja",
+        "scene": "Anja hat dich zum Abendessen zu sich nach Hause eingeladen, und du stehst mit einem Kuchen vor der Tür.",
+        "lines": [
+          {"id": "d23_dlg_1", "who": "P", "ru": "Прив+ет! Проход+и, ч+увствуй себ+я как д+ома!", "de": "Hi! Komm rein, fühl dich wie zu Hause!"},
+          {"id": "d23_dlg_2", "who": "U", "ru": "Спас+ибо! Я принёс торт к ч+аю.", "ruF": "Спас+ибо! Я принесл+а торт к ч+аю.", "de": "Danke! Ich habe einen Kuchen zum Tee mitgebracht."},
+          {"id": "d23_dlg_3", "who": "P", "ru": "Ой, зач+ем! Не н+ужно б+ыло. Сад+ись, всё уж+е гот+ово.", "de": "Oh, wozu denn! Das wäre nicht nötig gewesen. Setz dich, es ist schon alles fertig."},
+          {"id": "d23_dlg_4", "who": "U", "ru": "Как крас+иво! Дав+ай в+ыпьем за н+ашу встр+ечу!", "de": "Wie schön! Trinken wir auf unser Treffen!"},
+          {"id": "d23_dlg_5", "who": "P", "ru": "За встр+ечу! Попр+обуй сал+ат. Т+олько там есть ор+ехи.", "de": "Auf unser Treffen! Probier den Salat. Nur sind da Nüsse drin."},
+          {"id": "d23_dlg_6", "who": "U", "ru": "Ой, у мен+я аллерг+ия. Посов+етуй чт+о-нибудь без ор+ехов.", "de": "Oh, ich habe eine Allergie. Empfiehl mir etwas ohne Nüsse."},
+          {"id": "d23_dlg_7", "who": "P", "ru": "Тогд+а возьм+и пельм+ени, я сам+а их леп+ила. Ну как?", "de": "Dann nimm Pelmeni, die habe ich selbst gemacht. Na, wie sind sie?"},
+          {"id": "d23_dlg_8", "who": "U", "ru": "Спас+ибо, всё +очень вк+усно! Я возьм+у ещё.", "de": "Danke, es schmeckt alles sehr gut! Ich nehme noch welche."}
+        ]
+      }
+    },
+    {
+      "day": 24,
+      "title": "Telefon & Nachrichten",
+      "goal": "Du kannst telefonieren und Nachrichten schreiben: anrufen, zurückrufen, bei schlechtem Empfang reagieren und dich per Nachricht verabreden.",
+      "sound": {
+        "title": "Nach ж und ш klingt и wie ы",
+        "text": "ж und ш sind immer hart. Deshalb schreibt man danach zwar и, spricht aber ы: напиш+и klingt »napischý«, запиш+и »sapischý« und сл+ышишь »slýschysch«. Dasselbe hörst du in скаж+и und маш+ина.",
+        "examples": ["d24_slyshish", "d24_zapishi_nomer", "d24_luchshe_napishi"]
+      },
+      "grammar": "Bei anrufen und schreiben steht die Person im Dativ: Я позвон+ю теб+е, я перезвон+ю теб+е, я напиш+у теб+е. Die Formen von позвон+ить sind immer hinten betont: позвон+ю, позвон+ишь, позвон+ит.",
+      "items": [
+        {"id": "d24_pozvonyu", "ru": "Я позвон+ю теб+е в+ечером.", "de": "Ich rufe dich heute Abend an.", "note": "Immer hinten betont: позвон+ю, позвон+ишь, позвон+ит — nie auf зво."},
+        {"id": "d24_udobno", "ru": "Теб+е сейч+ас уд+обно говор+ить?", "de": "Kannst du gerade reden?", "note": "Die übliche Frage am Telefon, ob der andere gerade beschäftigt ist.", "replies": ["d24_slushayu", "d24_zanyat"]},
+        {"id": "d24_slushayu", "ru": "Да, говор+и, я теб+я сл+ушаю.", "de": "Ja, sprich, ich höre dir zu."},
+        {"id": "d24_zanyat", "ru": "Я сейч+ас з+анят, перезвон+ю п+озже.", "ruF": "Я сейч+ас занят+а, перезвон+ю п+озже.", "de": "Ich bin gerade beschäftigt, ich rufe später zurück."},
+        {"id": "d24_slyshish", "ru": "Алл+о, ты мен+я сл+ышишь?", "de": "Hallo, hörst du mich?", "replies": ["d24_teper_slyshu", "d24_plokho_slyshno"]},
+        {"id": "d24_teper_slyshu", "ru": "Да, теп+ерь сл+ышу хорош+о.", "de": "Ja, jetzt höre ich dich gut."},
+        {"id": "d24_plokho_slyshno", "ru": "Теб+я пл+охо сл+ышно, зд+есь плох+ая связь.", "de": "Ich höre dich schlecht, hier ist schlechter Empfang.", "lit": "Dich (ist) schlecht zu hören, hier (ist) schlechte Verbindung."},
+        {"id": "d24_zapishi_nomer", "ru": "Запиш+и мой н+овый н+омер.", "de": "Speicher dir meine neue Nummer ab."},
+        {"id": "d24_ili_napisat", "ru": "Теб+е л+учше позвон+ить +или напис+ать?", "de": "Soll ich dich lieber anrufen oder dir schreiben?", "replies": ["d24_luchshe_napishi", "d24_zvoni"]},
+        {"id": "d24_zvoni", "ru": "Звон+и в люб+ое вр+емя!", "de": "Ruf jederzeit an!"},
+        {"id": "d24_luchshe_napishi", "ru": "Л+учше напиш+и, я не всегд+а мог+у отв+етить.", "de": "Schreib lieber, ich kann nicht immer rangehen."},
+        {"id": "d24_golosovoe", "ru": "Я отпр+авил теб+е голосов+ое сообщ+ение.", "ruF": "Я отпр+авила теб+е голосов+ое сообщ+ение.", "de": "Ich habe dir eine Sprachnachricht geschickt.", "note": "Im Alltag sagt man kurz голосов+ое und lässt сообщ+ение weg."},
+        {"id": "d24_spishemsya", "ru": "Дав+ай сп+ишемся бл+иже к выходн+ым.", "de": "Lass uns kurz vorm Wochenende schreiben.", "note": "спис+аться = sich schreiben; созвон+иться = miteinander telefonieren."},
+        {"id": "d24_napishu", "ru": "Я напиш+у, как т+олько освобож+усь.", "de": "Ich melde mich, sobald ich frei bin.", "lit": "Ich schreibe, sobald ich frei werde."}
+      ],
+      "dialog": {
+        "id": "d24_dlg",
+        "title": "Schlechte Verbindung",
+        "scene": "Anja ruft dich aus der Metro an, um den Samstag zu besprechen, aber die Verbindung ist wackelig.",
+        "lines": [
+          {"id": "d24_dlg_1", "who": "P", "ru": "Алл+о, прив+ет! +Это +Аня. Теб+е сейч+ас уд+обно говор+ить?", "de": "Hallo, hi! Hier ist Anja. Kannst du gerade reden?"},
+          {"id": "d24_dlg_2", "who": "U", "ru": "Прив+ет! Да, говор+и, я теб+я сл+ушаю.", "de": "Hi! Ja, sprich, ich höre dir zu."},
+          {"id": "d24_dlg_3", "who": "P", "ru": "Я хот+ела спрос+ить про субб+оту. Алл+о? Ты мен+я сл+ышишь?", "de": "Ich wollte wegen Samstag fragen. Hallo? Hörst du mich?"},
+          {"id": "d24_dlg_4", "who": "U", "ru": "Теб+я пл+охо сл+ышно, зд+есь плох+ая связь. Я перезвон+ю п+озже.", "de": "Ich höre dich schlecht, hier ist schlechter Empfang. Ich rufe später zurück."},
+          {"id": "d24_dlg_5", "who": "P", "ru": "Не н+адо, я уж+е в+ышла из метр+о. А теп+ерь сл+ышно?", "de": "Nicht nötig, ich bin schon aus der Metro raus. Und jetzt, hörst du mich?"},
+          {"id": "d24_dlg_6", "who": "U", "ru": "Да, теп+ерь сл+ышу хорош+о. Так что в субб+оту?", "de": "Ja, jetzt höre ich dich gut. Also, was ist mit Samstag?"},
+          {"id": "d24_dlg_7", "who": "P", "ru": "В субб+оту я своб+одна! Но сейч+ас мне н+адо беж+ать. Теб+е п+озже позвон+ить +или напис+ать?", "de": "Am Samstag habe ich Zeit! Aber jetzt muss ich los. Soll ich dich später anrufen oder dir schreiben?"},
+          {"id": "d24_dlg_8", "who": "U", "ru": "Л+учше напиш+и. +Или я сам позвон+ю теб+е в+ечером.", "ruF": "Л+учше напиш+и. +Или я сам+а позвон+ю теб+е в+ечером.", "de": "Schreib lieber. Oder ich rufe dich heute Abend selbst an."}
+        ]
+      }
+    },
+    {
+      "day": 25,
+      "title": "Was gestern war",
+      "goal": "Du kannst der Reihe nach erzählen, was du gestern und am Wochenende gemacht hast, und sagen, woran du dich erinnerst.",
+      "sound": {
+        "title": "был, был+а, б+ыло, б+ыли — die Betonung wandert",
+        "text": "In der Vergangenheit von »sein« springt die Betonung nur bei der weiblichen Form ans Ende: был, б+ыло, б+ыли — aber был+а. Hinten betont sind auch пошл+а und легл+а. Die meisten Verben bleiben dagegen stabil: ход+ил – ход+ила, заб+ыл – заб+ыла.",
+        "examples": ["d25_byl_doma", "d25_bylo_skuchnovato", "d25_v_itoge"]
+      },
+      "grammar": "Die Vergangenheit richtet sich nach dem Geschlecht: я был (Mann), я был+а (Frau), мы б+ыли. Я п+омню + Akkusativ heißt »ich erinnere mich an …« — ohne »mich« und ohne »an«; mit как hängst du einen ganzen Satz an: Я п+омню, как мы гул+яли.",
+      "items": [
+        {"id": "d25_byl_doma", "ru": "Вчер+а я весь день был д+ома.", "ruF": "Вчер+а я весь день был+а д+ома.", "de": "Gestern war ich den ganzen Tag zu Hause."},
+        {"id": "d25_hodil_v_kino", "ru": "В п+ятницу я ход+ил в кин+о, б+ыло зд+орово.", "ruF": "В п+ятницу я ход+ила в кин+о, б+ыло зд+орово.", "de": "Am Freitag war ich im Kino, es war toll.", "note": "ход+ил = hin und wieder zurück. Deshalb passt es zu »ich war im Kino«."},
+        {"id": "d25_bylo_skuchnovato", "ru": "+Если ч+естно, б+ыло скучнов+ато.", "de": "Ehrlich gesagt war es ein bisschen langweilig.", "note": "-ов+ато schwächt ab: скучнов+ато = ein bisschen langweilig."},
+        {"id": "d25_kak_proshli_vyhodnye", "ru": "Как прошл+и тво+и выходн+ые?", "de": "Wie war dein Wochenende?", "lit": "Wie sind deine freien Tage vergangen?", "replies": ["d25_hodil_v_kino", "d25_bylo_skuchnovato", "d25_vstretilsya", "d25_snachala_potom"]},
+        {"id": "d25_a_ty_chto_delal", "ru": "А ты что д+елал вчер+а?", "de": "Und du, was hast du gestern gemacht?", "note": "Zu einer Frau: А ты что д+елала вчер+а?", "replies": ["d25_byl_doma", "d25_snachala_potom"]},
+        {"id": "d25_vstretilsya", "ru": "В субб+оту я встр+етился со ст+арым др+угом.", "ruF": "В субб+оту я встр+етилась со ст+арым др+угом.", "de": "Am Samstag habe ich mich mit einem alten Freund getroffen."},
+        {"id": "d25_snachala_potom", "ru": "Снач+ала я в+ыспался, а пот+ом по+ехал в центр.", "ruF": "Снач+ала я в+ыспалась, а пот+ом по+ехала в центр.", "de": "Zuerst habe ich ausgeschlafen, und dann bin ich in die Stadt gefahren."},
+        {"id": "d25_posle_etogo", "ru": "П+осле +этого мы вм+есте по+ужинали в каф+е.", "de": "Danach haben wir zusammen in einem Café zu Abend gegessen."},
+        {"id": "d25_chto_bylo_potom", "ru": "А что б+ыло пот+ом?", "de": "Und was war dann?", "replies": ["d25_posle_etogo", "d25_vdrug", "d25_v_itoge"]},
+        {"id": "d25_vdrug", "ru": "Вдруг пошёл дождь, и мы побеж+али дом+ой.", "de": "Plötzlich fing es an zu regnen, und wir sind nach Hause gerannt."},
+        {"id": "d25_v_itoge", "ru": "В ит+оге я лёг спать т+олько в два.", "ruF": "В ит+оге я легл+а спать т+олько в два.", "de": "Am Ende bin ich erst um zwei ins Bett gegangen."},
+        {"id": "d25_pomnyu_vecher", "ru": "Я хорош+о п+омню +этот в+ечер.", "de": "Ich erinnere mich gut an diesen Abend.", "note": "п+омнить steht direkt mit Akkusativ — ohne »mich« und ohne »an«."},
+        {"id": "d25_pomnyu_kak", "ru": "Я п+омню, как мы гул+яли до утр+а.", "de": "Ich weiß noch, wie wir bis zum Morgen unterwegs waren."},
+        {"id": "d25_ne_pomnyu", "ru": "Не п+омню, как назыв+ался фильм, — заб+ыл.", "ruF": "Не п+омню, как назыв+ался фильм, — заб+ыла.", "de": "Ich weiß nicht mehr, wie der Film hieß — vergessen."}
+      ],
+      "dialog": {
+        "id": "d25_dlg",
+        "title": "Und, wie war dein Wochenende?",
+        "scene": "Montagabend: Anja ruft an und will wissen, was du am Wochenende erlebt hast.",
+        "lines": [
+          {"id": "d25_dlg_1", "who": "P", "ru": "Прив+ет! Как прошл+и тво+и выходн+ые?", "de": "Hi! Wie war dein Wochenende?"},
+          {"id": "d25_dlg_2", "who": "U", "ru": "Прив+ет! В субб+оту я встр+етился со ст+арым др+угом.", "ruF": "Прив+ет! В субб+оту я встр+етилась со ст+арым др+угом.", "de": "Hi! Am Samstag habe ich mich mit einem alten Freund getroffen."},
+          {"id": "d25_dlg_3", "who": "P", "ru": "Кл+ассно! И что вы д+елали?", "de": "Cool! Und was habt ihr gemacht?"},
+          {"id": "d25_dlg_4", "who": "U", "ru": "Снач+ала мы по+ужинали в каф+е, а пот+ом пошл+и в кин+о.", "de": "Zuerst haben wir in einem Café zu Abend gegessen, und dann sind wir ins Kino gegangen."},
+          {"id": "d25_dlg_5", "who": "P", "ru": "И как фильм?", "de": "Und wie war der Film?"},
+          {"id": "d25_dlg_6", "who": "U", "ru": "+Если ч+естно, б+ыло скучнов+ато. Уж+е не п+омню, как он назыв+ался. А ты что д+елала вчер+а?", "de": "Ehrlich gesagt war er ein bisschen langweilig. Ich weiß schon nicht mehr, wie er hieß. Und du, was hast du gestern gemacht?"},
+          {"id": "d25_dlg_7", "who": "P", "ru": "Я весь день был+а д+ома и смотр+ела сери+ал. А что б+ыло п+осле кин+о?", "de": "Ich war den ganzen Tag zu Hause und habe eine Serie geschaut. Und was war nach dem Kino?"},
+          {"id": "d25_dlg_8", "who": "U", "ru": "Вдруг пошёл дождь, и мы побеж+али дом+ой. В ит+оге я лёг спать т+олько в два.", "ruF": "Вдруг пошёл дождь, и мы побеж+али дом+ой. В ит+оге я легл+а спать т+олько в два.", "de": "Plötzlich fing es an zu regnen, und wir sind nach Hause gerannt. Am Ende bin ich erst um zwei ins Bett gegangen."}
+        ]
+      }
+    },
+    {
+      "day": 26,
+      "title": "Kindheit & Herkunft",
+      "goal": "Du kannst erzählen, woher du kommst und wie du aufgewachsen bist, und dein Gegenüber nach seiner Kindheit fragen.",
+      "sound": {
+        "title": "Weiches т und д vor е und и",
+        "text": "Vor е und и werden т und д sehr weich und bekommen fast ein leises Zischen: д+етство klingt wie »djétstwa«, род+ители wie »radjítjeli«. Leg dabei die Zungenfläche breit an den Gaumen, nicht nur die Spitze. Vor ы bleibt т dagegen hart: темнот+ы.",
+        "examples": ["d26_v_detstve", "d26_roditeli_rodom", "d26_kogda_malenkim"]
+      },
+      "grammar": "Nebensätze mit когд+а (als) werden mit Komma abgetrennt und stehen meist vorn: Когд+а я был м+аленьким, … Nach был steht das, was man war, im Instrumental (м+аленьким, ребёнком); beim Alter sagt man Когд+а мне б+ыло д+есять лет.",
+      "items": [
+        {"id": "d26_rodilsya", "ru": "Я род+ился в Герм+ании.", "ruF": "Я родил+ась в Герм+ании.", "de": "Ich bin in Deutschland geboren.", "note": "Die Betonung springt: род+ился, aber родил+ась."},
+        {"id": "d26_vyros", "ru": "Я в+ырос в небольш+ом г+ороде.", "ruF": "Я в+ыросла в небольш+ом г+ороде.", "de": "Ich bin in einer kleinen Stadt aufgewachsen."},
+        {"id": "d26_roditeli_rodom", "ru": "Мо+и род+ители р+одом из друг+ой стран+ы.", "de": "Meine Eltern stammen aus einem anderen Land.", "note": "р+одом из … = stammen aus; so spricht man über die Herkunft der Familie."},
+        {"id": "d26_gde_proshlo_detstvo", "ru": "Где прошл+о твоё д+етство?", "de": "Wo hast du deine Kindheit verbracht?", "lit": "Wo ist deine Kindheit vergangen?", "replies": ["d26_rodilsya", "d26_vyros", "d26_u_babushki"]},
+        {"id": "d26_v_detstve", "ru": "В д+етстве я мн+ого игр+ал на +улице.", "ruF": "В д+етстве я мн+ого игр+ала на +улице.", "de": "Als Kind habe ich viel draußen gespielt."},
+        {"id": "d26_ranshe", "ru": "Р+аньше я был +очень стесн+ительным.", "ruF": "Р+аньше я был+а +очень стесн+ительной.", "de": "Früher war ich sehr schüchtern."},
+        {"id": "d26_kakim_ty_byl", "ru": "Как+им ты был в д+етстве?", "de": "Wie warst du als Kind?", "note": "Zu einer Frau: Как+ой ты был+а в д+етстве?", "replies": ["d26_v_detstve", "d26_ranshe", "d26_kogda_malenkim"]},
+        {"id": "d26_kogda_malenkim", "ru": "Когд+а я был м+аленьким, я бо+ялся темнот+ы.", "ruF": "Когд+а я был+а м+аленькой, я бо+ялась темнот+ы.", "de": "Als ich klein war, hatte ich Angst im Dunkeln."},
+        {"id": "d26_u_babushki", "ru": "Мы ж+или у б+абушки, когд+а я был ребёнком.", "ruF": "Мы ж+или у б+абушки, когд+а я был+а ребёнком.", "de": "Wir haben bei meiner Oma gewohnt, als ich ein Kind war."},
+        {"id": "d26_kogda_desyat_let", "ru": "Когд+а мне б+ыло д+есять лет, мы пере+ехали.", "de": "Als ich zehn war, sind wir umgezogen.", "note": "Beim Alter immer мне б+ыло … лет — für Männer und Frauen gleich."},
+        {"id": "d26_kogda_v_shkole", "ru": "Когд+а я уч+ился в шк+оле, я +очень люб+ил футб+ол.", "ruF": "Когд+а я уч+илась в шк+оле, я +очень люб+ила футб+ол.", "de": "Als ich zur Schule ging, habe ich Fußball sehr geliebt."},
+        {"id": "d26_skuchaesh_po_detstvu", "ru": "Ты скуч+аешь по д+етству?", "de": "Vermisst du deine Kindheit?", "replies": ["d26_skuchayu", "d26_do_sih_por_pomnyu"]},
+        {"id": "d26_skuchayu", "ru": "Иногд+а я скуч+аю по том+у вр+емени.", "de": "Manchmal vermisse ich diese Zeit."},
+        {"id": "d26_do_sih_por_pomnyu", "ru": "Я до сих пор п+омню наш ст+арый дом.", "de": "Ich erinnere mich bis heute an unser altes Haus."}
+      ],
+      "dialog": {
+        "id": "d26_dlg",
+        "title": "Alte Fotos",
+        "scene": "Anja zeigt dir auf dem Handy ein Kinderfoto von sich, und ihr kommt auf eure Kindheit zu sprechen.",
+        "lines": [
+          {"id": "d26_dlg_1", "who": "P", "ru": "Смотр+и, +это я в д+етстве! А где прошл+о твоё д+етство?", "de": "Schau mal, das bin ich als Kind! Und wo hast du deine Kindheit verbracht?"},
+          {"id": "d26_dlg_2", "who": "U", "ru": "Я род+ился в Герм+ании и в+ырос в небольш+ом г+ороде.", "ruF": "Я родил+ась в Герм+ании и в+ыросла в небольш+ом г+ороде.", "de": "Ich bin in Deutschland geboren und in einer kleinen Stadt aufgewachsen."},
+          {"id": "d26_dlg_3", "who": "P", "ru": "А тво+и род+ители т+оже из Герм+ании?", "de": "Und kommen deine Eltern auch aus Deutschland?"},
+          {"id": "d26_dlg_4", "who": "U", "ru": "Нет, мо+и род+ители р+одом из друг+ой стран+ы.", "de": "Nein, meine Eltern stammen aus einem anderen Land."},
+          {"id": "d26_dlg_5", "who": "P", "ru": "Интер+есно! А как+им ты был в д+етстве?", "ruF": "Интер+есно! А как+ой ты был+а в д+етстве?", "de": "Interessant! Und wie warst du als Kind?"},
+          {"id": "d26_dlg_6", "who": "U", "ru": "Р+аньше я был +очень стесн+ительным. Когд+а я был м+аленьким, я бо+ялся темнот+ы.", "ruF": "Р+аньше я был+а +очень стесн+ительной. Когд+а я был+а м+аленькой, я бо+ялась темнот+ы.", "de": "Früher war ich sehr schüchtern. Als ich klein war, hatte ich Angst im Dunkeln."},
+          {"id": "d26_dlg_7", "who": "P", "ru": "Ой, я т+оже бо+ялась! Ты скуч+аешь по д+етству?", "de": "Oh, ich hatte auch Angst! Vermisst du deine Kindheit?"},
+          {"id": "d26_dlg_8", "who": "U", "ru": "Иногд+а я скуч+аю по том+у вр+емени. Я до сих пор п+омню наш ст+арый дом.", "de": "Manchmal vermisse ich diese Zeit. Ich erinnere mich bis heute an unser altes Haus."}
+        ]
+      }
+    },
+    {
+      "day": 27,
+      "title": "Reisen & Erlebnisse",
+      "goal": "Du kannst von deinen Reisen erzählen, sagen, was dir gefallen hat, und andere nach ihren Reisen fragen.",
+      "sound": {
+        "title": "Unbetontes о in langen Wörtern: mal a, mal nur gemurmelt",
+        "text": "Direkt vor der betonten Silbe klingt о wie ein klares a: по+ездка → »pajéstka«. Weiter weg von der Betonung und hinter ihr bleibt nur ein kurzes, gemurmeltes e wie am Ende von »bitte«: понр+авилось → »panráwiles«, г+ород → »góret«. Sprich lange Wörter von der betonten Silbe aus, der Rest läuft kurz mit.",
+        "examples": ["d27_kak_proshla_poezdka", "d27_ochen_ponravilos", "d27_smotreli_gorod"]
+      },
+      "grammar": "Für Reisen, von denen du zurück bist, nimmst du die Hin-und-zurück-Verben я +ездил (gefahren), я лет+ал (geflogen), я ход+ил (zu Fuß) — oder einfach я был в + Präpositiv. »Es hat mir gefallen« heißt Мне понр+авилось; das Verb richtet sich nach der Sache: г+ород понр+авился, ед+а понр+авилась.",
+      "items": [
+        {"id": "d27_uzhe_byl", "ru": "Я уж+е был в Ит+алии и Исп+ании.", "ruF": "Я уж+е был+а в Ит+алии и Исп+ании.", "de": "Ich war schon in Italien und Spanien."},
+        {"id": "d27_ni_razu_ne_byl", "ru": "Я ещё ни р+азу н+е был в +Азии.", "ruF": "Я ещё ни р+азу не был+а в +Азии.", "de": "Ich war noch kein einziges Mal in Asien.", "note": "ни р+азу = kein einziges Mal. Männer: н+е был, Frauen: не был+а."},
+        {"id": "d27_ezdil_na_more", "ru": "Пр+ошлым л+етом я +ездил на м+оре.", "ruF": "Пр+ошлым л+етом я +ездила на м+оре.", "de": "Letzten Sommer bin ich ans Meer gefahren."},
+        {"id": "d27_letal_na_nedelyu", "ru": "Я лет+ал туд+а на нед+елю.", "ruF": "Я лет+ала туд+а на нед+елю.", "de": "Ich bin für eine Woche dorthin geflogen.", "note": "на нед+елю = für eine Woche. Die geplante Dauer steht immer mit на."},
+        {"id": "d27_ochen_ponravilos", "ru": "Мне там +очень понр+авилось!", "de": "Mir hat es dort sehr gefallen!"},
+        {"id": "d27_kak_proshla_poezdka", "ru": "Как прошл+а по+ездка?", "de": "Wie war die Reise?", "replies": ["d27_ochen_ponravilos", "d27_eda_ne_ochen", "d27_samoe_krasivoe"]},
+        {"id": "d27_v_kakih_stranah", "ru": "В как+их стр+анах ты уж+е был?", "de": "In welchen Ländern warst du schon?", "note": "Zu einer Frau: В как+их стр+анах ты уж+е был+а?", "replies": ["d27_uzhe_byl", "d27_ni_razu_ne_byl", "d27_ezdil_na_more"]},
+        {"id": "d27_zhili_v_otele", "ru": "Мы ж+или в от+еле пр+ямо у м+оря.", "de": "Wir haben in einem Hotel direkt am Meer gewohnt."},
+        {"id": "d27_eda_ne_ochen", "ru": "А вот ед+а мне не +очень понр+авилась.", "de": "Das Essen dagegen hat mir nicht so gefallen.", "note": "не +очень = nicht so. Klingt freundlicher als ein hartes не понр+авилась."},
+        {"id": "d27_smotreli_gorod", "ru": "Мы мн+ого ход+или пешк+ом и смотр+ели г+ород.", "de": "Wir sind viel zu Fuß gegangen und haben uns die Stadt angeschaut."},
+        {"id": "d27_ezdili_v_gory", "ru": "Ещё мы +ездили в г+оры на ц+елый день.", "de": "Außerdem sind wir für einen ganzen Tag in die Berge gefahren."},
+        {"id": "d27_samoe_krasivoe", "ru": "С+амое крас+ивое, что я там в+идел, — +это зак+ат.", "ruF": "С+амое крас+ивое, что я там в+идела, — +это зак+ат.", "de": "Das Schönste, was ich dort gesehen habe, war der Sonnenuntergang."},
+        {"id": "d27_kuda_hochesh", "ru": "Куд+а ты обяз+ательно х+очешь по+ехать?", "de": "Wohin möchtest du unbedingt mal?", "replies": ["d27_davno_hochu", "d27_ni_razu_ne_byl"]},
+        {"id": "d27_davno_hochu", "ru": "Я давн+о хоч+у по+ехать в Яп+онию.", "de": "Ich will schon lange nach Japan."}
+      ],
+      "dialog": {
+        "id": "d27_dlg",
+        "title": "Zurück aus dem Urlaub",
+        "scene": "Du bist gerade aus dem Urlaub zurück, und Anja will alles über die Reise wissen.",
+        "lines": [
+          {"id": "d27_dlg_1", "who": "P", "ru": "Ты так+ой загор+елый! Как прошл+а по+ездка?", "ruF": "Ты так+ая загор+елая! Как прошл+а по+ездка?", "de": "Du bist so braun gebrannt! Wie war die Reise?"},
+          {"id": "d27_dlg_2", "who": "U", "ru": "Мне там +очень понр+авилось! Мы ж+или в от+еле пр+ямо у м+оря.", "de": "Mir hat es dort sehr gefallen! Wir haben in einem Hotel direkt am Meer gewohnt."},
+          {"id": "d27_dlg_3", "who": "P", "ru": "Зав+идую! А что вы там д+елали?", "de": "Da bin ich neidisch! Und was habt ihr dort gemacht?"},
+          {"id": "d27_dlg_4", "who": "U", "ru": "Мы мн+ого ход+или пешк+ом и смотр+ели г+ород. Ещё мы +ездили в г+оры на ц+елый день.", "de": "Wir sind viel zu Fuß gegangen und haben uns die Stadt angeschaut. Außerdem sind wir für einen ganzen Tag in die Berge gefahren."},
+          {"id": "d27_dlg_5", "who": "P", "ru": "А что теб+е понр+авилось б+ольше всег+о?", "de": "Und was hat dir am besten gefallen?"},
+          {"id": "d27_dlg_6", "who": "U", "ru": "С+амое крас+ивое, что я там в+идел, — +это зак+ат. А вот ед+а мне не +очень понр+авилась.", "ruF": "С+амое крас+ивое, что я там в+идела, — +это зак+ат. А вот ед+а мне не +очень понр+авилась.", "de": "Das Schönste, was ich dort gesehen habe, war der Sonnenuntergang. Das Essen dagegen hat mir nicht so gefallen."},
+          {"id": "d27_dlg_7", "who": "P", "ru": "Ж+алко! А куд+а ты х+очешь по+ехать в сл+едующий раз?", "de": "Schade! Und wohin willst du beim nächsten Mal?"},
+          {"id": "d27_dlg_8", "who": "U", "ru": "Я давн+о хоч+у по+ехать в Яп+онию. Я ещё ни р+азу н+е был в +Азии.", "ruF": "Я давн+о хоч+у по+ехать в Яп+онию. Я ещё ни р+азу не был+а в +Азии.", "de": "Ich will schon lange nach Japan. Ich war noch kein einziges Mal in Asien."}
+        ]
+      }
+    },
+    {
+      "day": 28,
+      "title": "Pläne, Träume & Ziele",
+      "goal": "Du kannst über deine Pläne, Träume und Ziele sprechen und sagen, was du gern tun würdest.",
+      "sound": {
+        "title": "бы hängt sich ans Wort davor",
+        "text": "Das Wörtchen бы trägt nie eine eigene Betonung. Es klebt am Wort davor und klingt mit ihm wie ein einziges Wort: я бы → »jáby«, б+ыло бы → »býlaby«, где бы → »gdjéby«. Mach davor keine Pause, sonst klingt der Satz abgehackt.",
+        "examples": ["d28_ya_by_hotel", "d28_bylo_by_zdorovo", "d28_gde_by_hotel"]
+      },
+      "grammar": "Я бы + Vergangenheitsform heißt »ich würde …«: Я бы по+ехал (Mann), Я бы по+ехала (Frau) — gemeint ist kein Gestern, nur die Form ist Vergangenheit. Feste Pläne sagst du mit Я собир+аюсь oder Я план+ирую + Grundform; nach стать (werden) steht der Instrumental: стать незав+исимым.",
+      "items": [
+        {"id": "d28_sobirayus", "ru": "Л+етом я собир+аюсь по+ехать в Росс+ию.", "de": "Im Sommer habe ich vor, nach Russland zu fahren.", "note": "собир+аюсь + Grundform = ich habe fest vor. Verbindlicher als хоч+у."},
+        {"id": "d28_planiruyu", "ru": "В сл+едующем год+у я план+ирую пере+ехать.", "de": "Nächstes Jahr plane ich umzuziehen."},
+        {"id": "d28_cherez_god", "ru": "Ч+ерез год я хоч+у своб+одно говор+ить по-р+усски.", "de": "In einem Jahr will ich fließend Russisch sprechen.", "note": "ч+ерез + Zeit = in … (von jetzt an): ч+ерез нед+елю, ч+ерез год."},
+        {"id": "d28_kakie_plany", "ru": "Как+ие у теб+я пл+аны на б+удущее?", "de": "Was sind deine Pläne für die Zukunft?", "replies": ["d28_sobirayus", "d28_planiruyu", "d28_cherez_god"]},
+        {"id": "d28_mechtayu", "ru": "Я мечт+аю ув+идеть весь мир.", "de": "Ich träume davon, die ganze Welt zu sehen."},
+        {"id": "d28_hochu_stat", "ru": "Я хоч+у стать фин+ансово незав+исимым.", "ruF": "Я хоч+у стать фин+ансово незав+исимой.", "de": "Ich möchte finanziell unabhängig werden."},
+        {"id": "d28_o_chem_mechtaesh", "ru": "О чём ты мечт+аешь б+ольше всег+о?", "de": "Wovon träumst du am meisten?", "replies": ["d28_mechtayu", "d28_hochu_stat", "d28_ya_by_hotel"]},
+        {"id": "d28_bylo_by_zdorovo", "ru": "Б+ыло бы зд+орово по+ехать туд+а вм+есте!", "de": "Es wäre toll, zusammen dorthin zu fahren!"},
+        {"id": "d28_ya_by_hotel", "ru": "Я бы хот+ел пож+ить у м+оря.", "ruF": "Я бы хот+ела пож+ить у м+оря.", "de": "Ich würde gern eine Zeit lang am Meer leben.", "note": "Я бы хот+ел klingt weicher als я хоч+у. пож+ить = eine Zeit lang leben."},
+        {"id": "d28_gde_by_hotel", "ru": "А где бы ты хот+ел жить?", "de": "Und wo würdest du gern leben?", "note": "Zu einer Frau: А где бы ты хот+ела жить?", "replies": ["d28_ya_by_hotel", "d28_planiruyu"]},
+        {"id": "d28_s_udovolstviem", "ru": "Я бы с удов+ольствием по+ехал с тоб+ой.", "ruF": "Я бы с удов+ольствием по+ехала с тоб+ой.", "de": "Ich würde sehr gern mit dir mitfahren."},
+        {"id": "d28_na_tvoyom_meste", "ru": "На твоём м+есте я бы попр+обовал.", "ruF": "На твоём м+есте я бы попр+обовала.", "de": "An deiner Stelle würde ich es versuchen."},
+        {"id": "d28_nadeyus", "ru": "Над+еюсь, у мен+я всё пол+учится.", "de": "Ich hoffe, dass bei mir alles klappt."},
+        {"id": "d28_poka_mechta", "ru": "Пок+а +это т+олько мечт+а, но я в неё в+ерю.", "de": "Noch ist das nur ein Traum, aber ich glaube daran."}
+      ],
+      "dialog": {
+        "id": "d28_dlg",
+        "title": "Was kommt als Nächstes?",
+        "scene": "Ein ruhiger Abend: Anja fragt dich nach deinen Plänen, und ihr merkt, dass ihr ähnliche Träume habt.",
+        "lines": [
+          {"id": "d28_dlg_1", "who": "P", "ru": "Сл+ушай, а как+ие у теб+я пл+аны на б+удущее?", "de": "Sag mal, was sind eigentlich deine Pläne für die Zukunft?"},
+          {"id": "d28_dlg_2", "who": "U", "ru": "Ч+ерез год я хоч+у своб+одно говор+ить по-р+усски. А л+етом я собир+аюсь по+ехать в Росс+ию.", "de": "In einem Jahr will ich fließend Russisch sprechen. Und im Sommer habe ich vor, nach Russland zu fahren."},
+          {"id": "d28_dlg_3", "who": "P", "ru": "Ух ты! А о чём ты мечт+аешь б+ольше всег+о?", "de": "Wow! Und wovon träumst du am meisten?"},
+          {"id": "d28_dlg_4", "who": "U", "ru": "Я мечт+аю ув+идеть весь мир. И я бы хот+ел пож+ить у м+оря.", "ruF": "Я мечт+аю ув+идеть весь мир. И я бы хот+ела пож+ить у м+оря.", "de": "Ich träume davon, die ganze Welt zu sehen. Und ich würde gern eine Zeit lang am Meer leben."},
+          {"id": "d28_dlg_5", "who": "P", "ru": "Я т+оже! Я давн+о мечт+аю по+ехать на Байк+ал.", "de": "Ich auch! Ich träume schon lange davon, an den Baikalsee zu fahren."},
+          {"id": "d28_dlg_6", "who": "U", "ru": "Б+ыло бы зд+орово по+ехать туд+а вм+есте!", "de": "Es wäre toll, zusammen dorthin zu fahren!"},
+          {"id": "d28_dlg_7", "who": "P", "ru": "Пр+авда? Я бы с удов+ольствием по+ехала с тоб+ой!", "de": "Wirklich? Ich würde sehr gern mit dir fahren!"},
+          {"id": "d28_dlg_8", "who": "U", "ru": "Над+еюсь, у нас всё пол+учится. Пок+а +это т+олько мечт+а, но я в неё в+ерю.", "de": "Ich hoffe, dass bei uns alles klappt. Noch ist das nur ein Traum, aber ich glaube daran."}
+        ]
+      }
+    },
+    {
+      "day": 29,
+      "title": "Komplimente & Zuneigung",
+      "goal": "Du kannst ehrlich und warm sagen, was du an jemandem magst, ein Kompliment annehmen und ausdrücken, was du dir für den anderen wünschst.",
+      "sound": {
+        "title": "что und чт+обы: geschrieben ч, gesprochen sch",
+        "text": "In что und чт+обы spricht man das ч wie sch: »schto« und »schtóby«. Als Bindewort mitten im Satz ist что ganz kurz und unbetont und klebt am nächsten Wort — Я рад, что … klingt wie »ja rat-schta«. Bei чт+обы trägt das о die Betonung, das ы am Ende huscht nur vorbei.",
+        "examples": ["d29_rad_chto_poznakomilis", "d29_chtoby_ty_znala", "d29_chtoby_vecher"]
+      },
+      "grammar": "Nach Я хоч+у, чт+обы … steht immer die Vergangenheitsform, auch wenn es um jetzt oder später geht: Я хоч+у, чт+обы ты зн+ала (Ich will, dass du weißt). Die Form richtet sich nach der Person, um die es geht: zu einer Frau чт+обы ты зн+ала / был+а, zu einem Mann чт+обы ты знал / был.",
+      "items": [
+        {"id": "d29_ty_mne_nravishsya", "ru": "Ты мне +очень нр+авишься.", "de": "Du gefällst mir sehr."},
+        {"id": "d29_otlichno_vyglyadish", "ru": "Ты сег+одня отл+ично в+ыглядишь!", "de": "Du siehst heute toll aus!"},
+        {"id": "d29_krasivaya_ulybka", "ru": "У теб+я +очень крас+ивая ул+ыбка.", "de": "Du hast ein sehr schönes Lächeln."},
+        {"id": "d29_s_toboy_legko", "ru": "С тоб+ой так легк+о и спок+ойно.", "de": "Mit dir ist es so leicht und entspannt."},
+        {"id": "d29_pravda_tak_dumaesh", "ru": "Спас+ибо, мне при+ятно. Ты пр+авда так д+умаешь?", "de": "Danke, das ist lieb. Meinst du das wirklich?", "note": "Ein Kompliment nimmt man mit Спас+ибо an – nicht abwehren oder kleinreden.", "replies": ["d29_ty_mne_nravishsya", "d29_vazhnyy_chelovek", "d29_chtoby_ty_znala"]},
+        {"id": "d29_skuchal", "ru": "Я +очень по теб+е скуч+ал.", "ruF": "Я +очень по теб+е скуч+ала.", "de": "Ich habe dich sehr vermisst.", "note": "Vermissen heißt скуч+ать по + Dativ: по теб+е, nicht »теб+я«."},
+        {"id": "d29_dumayu_o_tebe", "ru": "Я ч+асто д+умаю о теб+е.", "de": "Ich denke oft an dich."},
+        {"id": "d29_a_ty_skuchala", "ru": "А ты по мне скуч+ала?", "de": "Und hast du mich vermisst?", "note": "So fragst du eine Frau. Einen Mann fragst du: А ты по мне скуч+ал?", "replies": ["d29_skuchal", "d29_dumayu_o_tebe"]},
+        {"id": "d29_chto_vo_mne_nravitsya", "ru": "А что теб+е во мне нр+авится?", "de": "Und was gefällt dir an mir?", "replies": ["d29_krasivaya_ulybka", "d29_s_toboy_legko"]},
+        {"id": "d29_rad_chto_poznakomilis", "ru": "Я рад, что мы с тоб+ой познак+омились.", "ruF": "Я р+ада, что мы с тоб+ой познак+омились.", "de": "Ich bin froh, dass wir uns kennengelernt haben."},
+        {"id": "d29_vazhnyy_chelovek", "ru": "Ты для мен+я +очень в+ажный челов+ек.", "de": "Du bist mir sehr wichtig.", "lit": "Du bist für mich ein sehr wichtiger Mensch."},
+        {"id": "d29_chtoby_ty_znala", "ru": "Я хоч+у, чт+обы ты +это зн+ала.", "de": "Ich will, dass du das weißt.", "note": "Zu einem Mann: Я хоч+у, чт+обы ты +это знал."},
+        {"id": "d29_chtoby_byla_schastliva", "ru": "Я хоч+у, чт+обы ты был+а сч+астлива.", "de": "Ich will, dass du glücklich bist."},
+        {"id": "d29_chtoby_vecher", "ru": "Я не хоч+у, чт+обы +этот в+ечер зак+анчивался.", "de": "Ich will nicht, dass dieser Abend zu Ende geht."}
+      ],
+      "dialog": {
+        "id": "d29_dlg",
+        "title": "Wiedersehen nach zwei Wochen",
+        "scene": "Ihr habt euch zwei Wochen nicht gesehen und trefft euch abends zu einem Spaziergang — Zeit, ehrlich zu sagen, was ihr aneinander mögt.",
+        "lines": [
+          {"id": "d29_dlg_1", "who": "P", "ru": "Прив+ет! Ск+олько мы не в+иделись — две нед+ели?", "de": "Hi! Wie lange haben wir uns nicht gesehen — zwei Wochen?"},
+          {"id": "d29_dlg_2", "who": "U", "ru": "Прив+ет! Я +очень по теб+е скуч+ал. Ты сег+одня отл+ично в+ыглядишь!", "ruF": "Прив+ет! Я +очень по теб+е скуч+ала. Ты сег+одня отл+ично в+ыглядишь!", "de": "Hi! Ich habe dich sehr vermisst. Du siehst heute toll aus!"},
+          {"id": "d29_dlg_3", "who": "P", "ru": "Спас+ибо, мне при+ятно. Я т+оже скуч+ала. А ты пр+авда обо мне д+умал?", "ruF": "Спас+ибо, мне при+ятно. Я т+оже скуч+ала. А ты пр+авда обо мне д+умала?", "de": "Danke, das ist lieb. Ich habe dich auch vermisst. Und hast du wirklich an mich gedacht?"},
+          {"id": "d29_dlg_4", "who": "U", "ru": "Да, я ч+асто д+умаю о теб+е. С тоб+ой так легк+о и спок+ойно.", "de": "Ja, ich denke oft an dich. Mit dir ist es so leicht und entspannt."},
+          {"id": "d29_dlg_5", "who": "P", "ru": "Ой, ты мен+я смущ+аешь. Мне давн+о никт+о так+ого не говор+ил.", "de": "Oh, du machst mich verlegen. So etwas hat mir schon lange niemand gesagt."},
+          {"id": "d29_dlg_6", "who": "U", "ru": "Я рад, что мы с тоб+ой познак+омились. Ты для мен+я +очень в+ажный челов+ек, и я хоч+у, чт+обы ты +это зн+ала.", "ruF": "Я р+ада, что мы с тоб+ой познак+омились. Ты для мен+я +очень в+ажный челов+ек, и я хоч+у, чт+обы ты +это зн+ала.", "de": "Ich bin froh, dass wir uns kennengelernt haben. Du bist mir sehr wichtig, und ich will, dass du das weißt."},
+          {"id": "d29_dlg_7", "who": "P", "ru": "Ты мне т+оже +очень д+орог. Ж+алко т+олько, что уж+е так п+оздно.", "ruF": "Ты мне т+оже +очень дорог+а. Ж+алко т+олько, что уж+е так п+оздно.", "de": "Du bist mir auch sehr wichtig. Nur schade, dass es schon so spät ist."},
+          {"id": "d29_dlg_8", "who": "U", "ru": "А я не хоч+у, чт+обы +этот в+ечер зак+анчивался.", "de": "Und ich will nicht, dass dieser Abend zu Ende geht."}
+        ]
+      }
+    },
+    {
+      "day": 30,
+      "title": "Streit, Missverständnis & Versöhnung",
+      "goal": "Du kannst einen Streit ruhig klären: sagen, was dich verletzt hat, ein Missverständnis aufklären, dich entschuldigen und Frieden schließen.",
+      "sound": {
+        "title": "Satzmelodie bei Entschuldigungen und Bitten",
+        "text": "Eine Entschuldigung klingt nur ehrlich, wenn die Stimme auf der betonten Silbe ruhig nach unten fällt: Прост+и мен+я — tief und ohne Druck auf -сти. Bei einer Bitte mit Дав+ай … bleibt die Stimme weich und hebt sich leicht auf dem Verb: Дав+ай поговор+им. Sprichst du dieselben Sätze laut und schnell, klingen sie wie ein Vorwurf.",
+        "examples": ["d30_prosti_neprav", "d30_davay_pogovorim", "d30_davay_pomirimsya"]
+      },
+      "grammar": "Wer etwas klärt, spricht in der Vergangenheit, und die richtet sich nach dem Sprecher: Я был непр+ав / Я был+а неправ+а, Я не хот+ел / Я не хот+ела. Sprichst du über dein Gegenüber, richtet sie sich nach ihm: Ты понял+а (zu einer Frau), Ты п+онял (zu einem Mann).",
+      "items": [
+        {"id": "d30_ne_hochu_ssoritsya", "ru": "Я не хоч+у с тоб+ой сс+ориться.", "de": "Ich will nicht mit dir streiten."},
+        {"id": "d30_davay_pogovorim", "ru": "Дав+ай поговор+им спок+ойно.", "de": "Lass uns in Ruhe reden."},
+        {"id": "d30_ty_obizhaeshsya", "ru": "Ты на мен+я обиж+аешься?", "de": "Bist du mir böse?", "replies": ["d30_bylo_obidno", "d30_ne_hochu_ssoritsya"]},
+        {"id": "d30_chto_ne_tak", "ru": "Что я сд+елал не так?", "ruF": "Что я сд+елала не так?", "de": "Was habe ich falsch gemacht?", "replies": ["d30_bylo_obidno", "d30_nepravilno_ponyala"]},
+        {"id": "d30_bylo_obidno", "ru": "Мне б+ыло об+идно +это сл+ышать.", "de": "Es hat mich verletzt, das zu hören.", "note": "Ohne Vorwurf: Du sprichst nur über dein Gefühl, nicht über die Schuld des anderen."},
+        {"id": "d30_ne_eto_imel_v_vidu", "ru": "Я не +это им+ел в вид+у.", "ruF": "Я не +это им+ела в вид+у.", "de": "Das habe ich nicht so gemeint.", "lit": "Ich hatte nicht das im Blick."},
+        {"id": "d30_nepravilno_ponyala", "ru": "Ты мен+я непр+авильно понял+а.", "de": "Du hast mich falsch verstanden.", "note": "Zu einem Mann: Ты мен+я непр+авильно п+онял."},
+        {"id": "d30_ne_hotel_obidet", "ru": "Я не хот+ел теб+я об+идеть.", "ruF": "Я не хот+ела теб+я об+идеть.", "de": "Ich wollte dich nicht verletzen."},
+        {"id": "d30_pogoryachilsya", "ru": "Я погоряч+ился и наговор+ил л+ишнего.", "ruF": "Я погоряч+илась и наговор+ила л+ишнего.", "de": "Ich bin hitzig geworden und habe zu viel gesagt.", "lit": "Ich habe mich erhitzt und Überflüssiges geredet."},
+        {"id": "d30_prosti_neprav", "ru": "Прост+и мен+я, я был непр+ав.", "ruF": "Прост+и мен+я, я был+а неправ+а.", "de": "Verzeih mir, ich war im Unrecht.", "note": "Прост+и geht tiefer als Извин+и – für alles, was wirklich wehgetan hat."},
+        {"id": "d30_tochka_zreniya", "ru": "Я поним+аю тво+ю т+очку зр+ения.", "de": "Ich verstehe deinen Standpunkt."},
+        {"id": "d30_ty_mne_vazhnee", "ru": "Ты мне важн+ее, чем +этот спор.", "de": "Du bist mir wichtiger als dieser Streit."},
+        {"id": "d30_nu_chto_mir", "ru": "Ну что, мир?", "de": "Na, Frieden?", "note": "Locker und versöhnlich – so beendet man einen Streit unter Vertrauten.", "replies": ["d30_davay_pomirimsya", "d30_ty_mne_vazhnee"]},
+        {"id": "d30_davay_pomirimsya", "ru": "Дав+ай помир+имся и заб+удем об +этом.", "de": "Lass uns Frieden schließen und das vergessen."}
+      ],
+      "dialog": {
+        "id": "d30_dlg",
+        "title": "Nach dem Streit",
+        "scene": "Gestern seid ihr im Streit auseinandergegangen. Heute ruft Anja an, und ihr klärt in Ruhe, was eigentlich gemeint war.",
+        "lines": [
+          {"id": "d30_dlg_1", "who": "P", "ru": "Прив+ет. Мне к+ажется, нам н+адо поговор+ить о вчер+ашнем.", "de": "Hi. Ich glaube, wir müssen über gestern reden."},
+          {"id": "d30_dlg_2", "who": "U", "ru": "Да. Я не хоч+у с тоб+ой сс+ориться. Дав+ай поговор+им спок+ойно.", "de": "Ja. Ich will nicht mit dir streiten. Lass uns in Ruhe reden."},
+          {"id": "d30_dlg_3", "who": "P", "ru": "Ты сказ+ал, что я в+ечно оп+аздываю. Мне б+ыло об+идно.", "ruF": "Ты сказ+ала, что я в+ечно оп+аздываю. Мне б+ыло об+идно.", "de": "Du hast gesagt, dass ich ständig zu spät komme. Das hat mich verletzt."},
+          {"id": "d30_dlg_4", "who": "U", "ru": "Я не +это им+ел в вид+у. Я погоряч+ился и наговор+ил л+ишнего.", "ruF": "Я не +это им+ела в вид+у. Я погоряч+илась и наговор+ила л+ишнего.", "de": "Das habe ich nicht so gemeint. Ich bin hitzig geworden und habe zu viel gesagt."},
+          {"id": "d30_dlg_5", "who": "P", "ru": "А я под+умала, что ты мной недов+олен.", "ruF": "А я под+умала, что ты мной недов+ольна.", "de": "Und ich dachte, du bist unzufrieden mit mir."},
+          {"id": "d30_dlg_6", "who": "U", "ru": "Ты мен+я непр+авильно понял+а. Прост+и мен+я, я был непр+ав.", "ruF": "Ты мен+я непр+авильно понял+а. Прост+и мен+я, я был+а неправ+а.", "de": "Du hast mich falsch verstanden. Verzeih mir, ich war im Unrecht."},
+          {"id": "d30_dlg_7", "who": "P", "ru": "И ты мен+я прост+и, я т+оже наговор+ила л+ишнего. Ну что, мир?", "de": "Verzeih du mir auch, ich habe auch zu viel gesagt. Na, Frieden?"},
+          {"id": "d30_dlg_8", "who": "U", "ru": "Кон+ечно, мир! Ты мне важн+ее, чем +этот спор.", "de": "Natürlich, Frieden! Du bist mir wichtiger als dieser Streit."}
+        ]
+      }
+    },
+    {
+      "day": 31,
+      "title": "Gesundheit & Körper",
+      "goal": "Du kannst sagen, was dir fehlt, vom Arztbesuch erzählen und jemandem, der krank ist, Anteil und gute Besserung wünschen.",
+      "sound": {
+        "title": "Lange Wörter: Silbe für Silbe",
+        "text": "Ein langes Wort wie выздор+авливай schaffst du, wenn du es zuerst langsam in Silben sprichst — вы-здо-р+а-вли-вай — und dann um die betonte Silbe herum zusammenziehst: alles davor und danach wird kurz und leise. Genauso bei температ+ура (tim-pi-ra-tú-ra). In ч+увствуешь bleibt das erste в stumm: »tschústwujesch«.",
+        "examples": ["d31_vyzdoravlivay", "d31_temperatura", "d31_kak_chuvstvuesh"]
+      },
+      "grammar": "Schmerzen sagt man mit У мен+я бол+ит + Körperteil in der Grundform, wörtlich »Bei mir schmerzt …«: У мен+я бол+ит голов+а. Tut etwas weh, das in der Mehrzahl steht (Augen, Beine, Zähne), heißt es бол+ят: У мен+я бол+ят глаз+а.",
+      "items": [
+        {"id": "d31_bolit_golova", "ru": "У мен+я с утр+а бол+ит голов+а.", "de": "Ich habe seit heute Morgen Kopfschmerzen.", "lit": "Bei mir schmerzt seit dem Morgen der Kopf."},
+        {"id": "d31_chto_bolit", "ru": "Что у теб+я бол+ит?", "de": "Was tut dir weh?", "replies": ["d31_bolit_golova", "d31_bolyat_glaza", "d31_prostudilsya"]},
+        {"id": "d31_bolyat_glaza", "ru": "У мен+я бол+ят глаз+а от экр+ана.", "de": "Mir tun die Augen vom Bildschirm weh."},
+        {"id": "d31_prostudilsya", "ru": "Я простуд+ился, у мен+я бол+ит г+орло.", "ruF": "Я простуд+илась, у мен+я бол+ит г+орло.", "de": "Ich habe mich erkältet, mir tut der Hals weh."},
+        {"id": "d31_temperatura", "ru": "У мен+я температ+ура и н+асморк.", "de": "Ich habe Fieber und Schnupfen.", "note": "температ+ура allein bedeutet schon »Fieber« – kein Extra-Wort nötig."},
+        {"id": "d31_slabost", "ru": "Я ч+увствую сл+абость во всём т+еле.", "de": "Ich fühle mich am ganzen Körper schwach.", "lit": "Ich fühle Schwäche im ganzen Körper."},
+        {"id": "d31_kak_chuvstvuesh", "ru": "Ну как ты себ+я ч+увствуешь?", "de": "Na, wie fühlst du dich?", "replies": ["d31_slabost", "d31_temperatura", "d31_pochti_zdorov"]},
+        {"id": "d31_byl_u_vracha", "ru": "Я был у врач+а, он в+ыписал табл+етки.", "ruF": "Я был+а у врач+а, он в+ыписал табл+етки.", "de": "Ich war beim Arzt, er hat mir Tabletten verschrieben."},
+        {"id": "d31_prinesti_iz_apteki", "ru": "Теб+е чт+о-нибудь принест+и из апт+еки?", "de": "Soll ich dir etwas aus der Apotheke mitbringen?", "note": "»Soll ich …?« ist im Russischen einfach Теб+е + Grundform, ohne eigenes Verb.", "replies": ["d31_otlezhatsya", "d31_byl_u_vracha"]},
+        {"id": "d31_otlezhatsya", "ru": "Спас+ибо, мне н+ужно пр+осто отлеж+аться.", "de": "Danke, ich muss mich einfach auskurieren.", "note": "отлеж+аться = im Bett bleiben, bis es vorbei ist."},
+        {"id": "d31_vyzdoravlivay", "ru": "Выздор+авливай скор+ее, я за теб+я волн+уюсь.", "de": "Werd schnell wieder gesund, ich mache mir Sorgen um dich.", "note": "Выздор+авливай! allein ist das übliche »Gute Besserung!«."},
+        {"id": "d31_otdohnut", "ru": "Теб+е н+адо отдохн+уть и в+ыспаться.", "de": "Du musst dich ausruhen und ausschlafen."},
+        {"id": "d31_beregi_sebya", "ru": "Берег+и себ+я и не бол+ей!", "de": "Pass auf dich auf und bleib gesund!", "lit": "Hüte dich und sei nicht krank!"},
+        {"id": "d31_pochti_zdorov", "ru": "Я уж+е почт+и здор+ов.", "ruF": "Я уж+е почт+и здор+ова.", "de": "Ich bin schon fast wieder gesund."}
+      ],
+      "dialog": {
+        "id": "d31_dlg",
+        "title": "Krank zu Hause",
+        "scene": "Du liegst erkältet zu Hause. Anja ruft an, hört es sofort an deiner Stimme und will wissen, wie es dir geht.",
+        "lines": [
+          {"id": "d31_dlg_1", "who": "P", "ru": "Алл+о, прив+ет! У теб+я хр+иплый г+олос. Ты забол+ел?", "ruF": "Алл+о, прив+ет! У теб+я хр+иплый г+олос. Ты забол+ела?", "de": "Hallo, hi! Du klingst heiser. Bist du krank geworden?"},
+          {"id": "d31_dlg_2", "who": "U", "ru": "Прив+ет. Я простуд+ился, у мен+я бол+ит г+орло.", "ruF": "Прив+ет. Я простуд+илась, у мен+я бол+ит г+орло.", "de": "Hi. Ich habe mich erkältet, mir tut der Hals weh."},
+          {"id": "d31_dlg_3", "who": "P", "ru": "Б+едный! А температ+ура есть?", "ruF": "Б+едная! А температ+ура есть?", "de": "Du Armer! Und hast du Fieber?", "deF": "Du Arme! Und hast du Fieber?"},
+          {"id": "d31_dlg_4", "who": "U", "ru": "Да, у мен+я температ+ура и н+асморк. Я ч+увствую сл+абость во всём т+еле.", "de": "Ja, ich habe Fieber und Schnupfen. Ich fühle mich am ganzen Körper schwach."},
+          {"id": "d31_dlg_5", "who": "P", "ru": "Теб+е чт+о-нибудь принест+и? Лек+арства, лим+он, мёд?", "de": "Soll ich dir etwas bringen? Medikamente, Zitrone, Honig?"},
+          {"id": "d31_dlg_6", "who": "U", "ru": "Спас+ибо, мне н+ужно пр+осто отлеж+аться. Я был у врач+а, он в+ыписал табл+етки.", "ruF": "Спас+ибо, мне н+ужно пр+осто отлеж+аться. Я был+а у врач+а, он в+ыписал табл+етки.", "de": "Danke, ich muss mich einfach auskurieren. Ich war beim Arzt, er hat mir Tabletten verschrieben."},
+          {"id": "d31_dlg_7", "who": "P", "ru": "Тогд+а леж+и и пей гор+ячий чай. А я сам+а всю нед+елю не высып+аюсь.", "de": "Dann bleib liegen und trink heißen Tee. Und ich selbst schlafe schon die ganze Woche zu wenig."},
+          {"id": "d31_dlg_8", "who": "U", "ru": "Теб+е т+оже н+адо отдохн+уть и в+ыспаться. Берег+и себ+я и не бол+ей!", "de": "Du musst dich auch ausruhen und ausschlafen. Pass auf dich auf und bleib gesund!"}
+        ]
+      }
+    },
+    {
+      "day": 32,
+      "title": "Bilanz: Wer ich bin",
+      "goal": "Du kannst dich in einem längeren Gespräch zusammenhängend vorstellen, deine Sätze mit verbindenden Wörtern verknüpfen und mit Nachfragen ein Gespräch vertiefen.",
+      "sound": {
+        "title": "Verbindende Wörter: Betonung und kleine Pause",
+        "text": "Ein verbindendes Wort am Satzanfang bekommt seine eigene kleine Melodie und danach eine winzige Pause — das gibt dir Zeit zum Denken und klingt ruhig und sicher. Achte auf die Betonung: кор+оче (karótsche), по+этому (paétamu), наприм+ер (naprimjér), в +общем (vorn betont). In кр+оме тог+о spricht man das г wie w: »krómje tawó«.",
+        "examples": ["d32_krome_togo", "d32_poetomu", "d32_v_obshchem"]
+      },
+      "grammar": "Verbindende Wörter wie кр+оме тог+о (außerdem), наприм+ер (zum Beispiel), ч+естно говор+я (ehrlich gesagt) und в +общем (alles in allem) stehen am Satzanfang und werden durch ein Komma abgetrennt — der Satz dahinter bleibt, wie er ist. По+этому (deshalb) verbindet zwei Sätze: erst der Grund, dann die Folge. С одн+ой сторон+ы … с друг+ой сторон+ы benutzt du immer als Paar.",
+      "items": [
+        {"id": "d32_koroche", "ru": "Кор+оче, я челов+ек, кот+орый л+юбит уч+иться.", "de": "Kurz gesagt: Ich bin ein Mensch, der gern lernt.", "note": "Кор+оче ist sehr locker – unter Freunden ja, im Bewerbungsgespräch nein."},
+        {"id": "d32_naprimer", "ru": "Наприм+ер, р+усский я уч+у к+аждый день.", "de": "Zum Beispiel lerne ich jeden Tag Russisch."},
+        {"id": "d32_poetomu", "ru": "Я любл+ю реш+ать сам, по+этому раб+отаю на себ+я.", "ruF": "Я любл+ю реш+ать сам+а, по+этому раб+отаю на себ+я.", "de": "Ich entscheide gern selbst, deshalb arbeite ich selbstständig.", "note": "раб+отать на себ+я = selbstständig sein, wörtlich »für sich arbeiten«."},
+        {"id": "d32_kakoy_ty_chelovek", "ru": "А как+ой ты челов+ек на с+амом д+еле?", "de": "Und was für ein Mensch bist du eigentlich?", "replies": ["d32_koroche", "d32_s_odnoy_storony", "d32_s_drugoy_storony"]},
+        {"id": "d32_s_odnoy_storony", "ru": "С одн+ой сторон+ы, я спок+ойный челов+ек.", "de": "Einerseits bin ich ein ruhiger Mensch."},
+        {"id": "d32_s_drugoy_storony", "ru": "С друг+ой сторон+ы, я любл+ю риск и перем+ены.", "de": "Andererseits liebe ich Risiko und Veränderung."},
+        {"id": "d32_chto_eto_znachit", "ru": "А что +это для теб+я зн+ачит?", "de": "Und was bedeutet das für dich?", "note": "Die beste Frage, um ein Gespräch zu vertiefen – passt nach fast jeder Antwort.", "replies": ["d32_dlya_menya_svoboda", "d32_krome_togo"]},
+        {"id": "d32_dlya_menya_svoboda", "ru": "Для мен+я +это пр+ежде всег+о своб+ода.", "de": "Für mich ist das vor allem Freiheit."},
+        {"id": "d32_krome_togo", "ru": "Кр+оме тог+о, +это даёт мне ув+еренность в себ+е.", "de": "Außerdem gibt mir das Selbstvertrauen."},
+        {"id": "d32_chto_izmenilos", "ru": "А что измен+илось за +это вр+емя?", "de": "Und was hat sich in dieser Zeit verändert?", "replies": ["d32_chestno_govorya", "d32_mnogomu_nauchilsya"]},
+        {"id": "d32_chestno_govorya", "ru": "Ч+естно говор+я, внач+але мне б+ыло стр+ашно говор+ить.", "de": "Ehrlich gesagt hatte ich am Anfang Angst zu sprechen."},
+        {"id": "d32_mnogomu_nauchilsya", "ru": "За +это вр+емя я мн+огому науч+ился.", "ruF": "За +это вр+емя я мн+огому науч+илась.", "de": "In dieser Zeit habe ich viel gelernt."},
+        {"id": "d32_dalshe_hochu", "ru": "Д+альше я хоч+у д+умать по-р+усски, а не перевод+ить.", "de": "Als Nächstes will ich auf Russisch denken, statt zu übersetzen."},
+        {"id": "d32_v_obshchem", "ru": "В +общем, я дов+олен сво+ей ж+изнью, но хоч+у б+ольшего.", "ruF": "В +общем, я дов+ольна сво+ей ж+изнью, но хоч+у б+ольшего.", "de": "Alles in allem bin ich mit meinem Leben zufrieden, aber ich will mehr.", "note": "В +общем fasst zusammen – ideal als letzter Satz einer längeren Antwort."}
+      ],
+      "dialog": {
+        "id": "d32_dlg",
+        "title": "Abschlussgespräch: Wer bist du?",
+        "scene": "Am Ende der ersten Kursphase bittet Anja dich, in Ruhe und im Zusammenhang zu erzählen, wer du bist, was dir wichtig ist und wohin du willst.",
+        "lines": [
+          {"id": "d32_dlg_1", "who": "P", "ru": "Мы уж+е ст+олько говор+или, а я хоч+у усл+ышать всё ср+азу. Как+ой ты челов+ек на с+амом д+еле?", "de": "Wir haben schon so viel geredet, und ich möchte alles auf einmal hören. Was für ein Mensch bist du eigentlich?"},
+          {"id": "d32_dlg_2", "who": "U", "ru": "Кор+оче, я челов+ек, кот+орый л+юбит уч+иться. Наприм+ер, р+усский я уч+у к+аждый день.", "de": "Kurz gesagt: Ich bin ein Mensch, der gern lernt. Zum Beispiel lerne ich jeden Tag Russisch."},
+          {"id": "d32_dlg_3", "who": "P", "ru": "+Это я уж+е зам+етила! А как+ой ты в ж+изни, не т+олько в учёбе?", "de": "Das habe ich schon gemerkt! Und wie bist du im Leben, nicht nur beim Lernen?"},
+          {"id": "d32_dlg_4", "who": "U", "ru": "С одн+ой сторон+ы, я спок+ойный челов+ек. С друг+ой сторон+ы, я любл+ю риск и перем+ены, по+этому раб+отаю на себ+я.", "de": "Einerseits bin ich ein ruhiger Mensch. Andererseits liebe ich Risiko und Veränderung, deshalb arbeite ich selbstständig."},
+          {"id": "d32_dlg_5", "who": "P", "ru": "Раб+отать на себ+я — +это см+ело. А что +это для теб+я зн+ачит?", "de": "Selbstständig arbeiten — das ist mutig. Und was bedeutet das für dich?"},
+          {"id": "d32_dlg_6", "who": "U", "ru": "Для мен+я +это пр+ежде всег+о своб+ода. Кр+оме тог+о, +это даёт мне ув+еренность в себ+е.", "de": "Für mich ist das vor allem Freiheit. Außerdem gibt mir das Selbstvertrauen."},
+          {"id": "d32_dlg_7", "who": "P", "ru": "А что измен+илось за +это вр+емя, пок+а мы с тоб+ой общ+аемся?", "de": "Und was hat sich verändert in der Zeit, in der wir uns unterhalten?"},
+          {"id": "d32_dlg_8", "who": "U", "ru": "Ч+естно говор+я, внач+але мне б+ыло стр+ашно говор+ить. Но за +это вр+емя я мн+огому науч+ился. В +общем, я дов+олен сво+ей ж+изнью, но хоч+у б+ольшего. Д+альше я хоч+у д+умать по-р+усски, а не перевод+ить.", "ruF": "Ч+естно говор+я, внач+але мне б+ыло стр+ашно говор+ить. Но за +это вр+емя я мн+огому науч+илась. В +общем, я дов+ольна сво+ей ж+изнью, но хоч+у б+ольшего. Д+альше я хоч+у д+умать по-р+усски, а не перевод+ить.", "de": "Ehrlich gesagt hatte ich am Anfang Angst zu sprechen. Aber in dieser Zeit habe ich viel gelernt. Alles in allem bin ich mit meinem Leben zufrieden, aber ich will mehr. Als Nächstes will ich auf Russisch denken, statt zu übersetzen."}
         ]
       }
     }

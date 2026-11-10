@@ -1,12 +1,12 @@
 // Start, Rahmen und Routen.
 import { html, render, useEffect, useState } from '../vendor/preact-htm.js';
 import { storage, isNative } from './platform.js';
-import { loadData, progress, useRoute, useToast, useProgress, nav, back, route, TABS, P } from './app.js';
+import { loadData, progress, planState, useRoute, useToast, useProgress, nav, back, route, TABS, P } from './app.js';
 import { Icon, cls } from './ui.js';
 import { Home } from './screens/home.js';
 import { Courses, Plan } from './screens/courses.js';
 import { Practice } from './screens/practice.js';
-import { DevTools, demoProgress } from './screens/me.js';
+import { DevTools, demoProgress, demoPlanState } from './screens/me.js';
 import { Stats } from './screens/stats.js';
 import { ROUTES } from './routes.js';
 import { startTimeTracking } from './timetrack.js';
@@ -86,8 +86,9 @@ async function boot() {
   try {
     await Promise.all([storage.init(), loadData()]);
     progress.load();
+    planState.load();
     startTimeTracking();
-    window.__hk = { progress, nav, storage, demo: (k) => progress.replace(demoProgress(k)) };
+    window.__hk = { progress, planState, nav, storage, demo: (k) => { const d = demoProgress(k); planState.update(() => demoPlanState(d)); progress.replace(d); } };
     if (!location.hash) history.replaceState(null, '', '#/heute');
     root.textContent = '';
     render(html`<${App} />`, root);

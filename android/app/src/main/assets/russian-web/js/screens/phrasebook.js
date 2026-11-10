@@ -1,6 +1,6 @@
 // Tab »Satzbuch«: alle Sätze durchsuchen, nach Lernstand filtern, vertiefen, testen.
 import { html, cls, Icon, TopBar, IL, Sheet, PhraseDock, SentenceCard, OtherFormLine, Speaker, Empty, usePlaying, playPhrase, mk, useState, useMemo, useEffect, useRef, fx } from '../ui.js';
-import { D, P, useProgress, progress, nav, back, testSelection, phrasebookPreset, myPhrases, otherForm, exitApp } from '../app.js';
+import { D, P, useProgress, progress, nav, back, testSelection, phrasebookPreset, myPhrases, otherForm, exitApp, dayNo } from '../app.js';
 import * as Ct from '../domain/content.js';
 
 const STATUS = (box) => (box >= 4 ? ['Sitzt', 'good'] : box === 3 ? ['Aktiv', 'review'] : box >= 1 ? ['Wackelig', 'amber'] : ['Neu', 'faint']);
@@ -75,7 +75,7 @@ export function Phrasebook() {
     const map = new Map();
     const key = (p) => {
       if (byTheme) return (D.themeOf[p.id] ?? []).map((id) => D.themes.find((t) => t.id === id)?.title).find(Boolean) ?? 'Podcast-Kurs';
-      return D.index.itemById.has(p.id) ? `Tag ${p.day} · ${D.index.day(p.day).title}` : `Podcast · Lektion ${p.day} · ${D.podIndex.day(p.day).title}`;
+      return D.index.itemById.has(p.id) ? `Tag ${dayNo(p.day)} · ${D.index.day(p.day).title}` : `Podcast · Lektion ${p.day} · ${D.podIndex.day(p.day).title}`;
     };
     for (const p of shown.slice(0, limit)) { const k = key(p); if (!map.has(k)) map.set(k, []); map.get(k).push(p); }
     let list = [...map.entries()];
@@ -117,7 +117,7 @@ export function Phrasebook() {
     ${themeSheet && html`<${Sheet} onClose=${() => setThemeSheet(false)} title="Thema wählen">
       <div class="rowx g8 wrap mt12"><button class=${cls('chip', !theme && 'on')} onClick=${() => { setTheme(null); setThemeSheet(false); }}>Alle Themen</button>
         ${D.themes.map((t) => html`<button class=${cls('chip', theme === t.id && 'on c')} onClick=${() => { setTheme(t.id); setThemeSheet(false); }}>${t.title}</button>`)}</div>
-      <p class="faint mt16" style="font-size:12px">Themen gibt es für die 300 Sätze des Sprechkurses. Podcast-Sätze findest du über »Nach Tag« oder die Suche.</p><//>`}
+      <p class="faint mt16" style="font-size:12px">Themen gibt es für die Sätze des Jahreskurses. Podcast-Sätze findest du über »Nach Tag« oder die Suche.</p><//>`}
   </div>`;
 }
 

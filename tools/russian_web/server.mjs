@@ -34,7 +34,7 @@ const TYPES = {
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml',
   '.ogg': 'audio/ogg', '.woff2': 'font/woff2', '.png': 'image/png', '.webmanifest': 'application/manifest+json',
 };
-const DATA = new Set(['course', 'podcast', 'phrasebook', 'deepdive', 'patterns', 'sounds', 'glosses']);
+const DATA = new Set(['course', 'podcast', 'phrasebook', 'deepdive', 'patterns', 'sounds', 'glosses', 'plan']);
 
 // ── Lernstand ──────────────────────────────────────────────────────────────
 mkdirSync(STORE_DIR, { recursive: true });

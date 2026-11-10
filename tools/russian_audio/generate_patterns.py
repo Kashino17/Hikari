@@ -12,11 +12,12 @@ import argparse, json, pathlib, re, sys, tempfile
 sys.path.insert(0, str(pathlib.Path(__file__).parent / "pattern_src"))
 import patterns1
 import patterns2
+import patterns3
 import generate as g
 from generate_deepdive import clip_name, speakable
 
 OUT_JSON = g.ROOT / "android/app/src/main/assets/russian/patterns.json"
-PATTERNS = patterns1.PATTERNS + patterns2.PATTERNS
+PATTERNS = patterns1.PATTERNS + patterns2.PATTERNS + patterns3.PATTERNS
 VOW = "аеёиоуыэюяАЕЁИОУЫЭЮЯ"
 
 

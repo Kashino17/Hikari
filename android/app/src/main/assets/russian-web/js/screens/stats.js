@@ -4,7 +4,7 @@
 //   3. Drei Türen   – Wortschatz · Lernzeit · Erfolge (jede öffnet ihre eigene Seite)
 // Alles Weitere liegt eine Ebene tiefer, damit die Hauptseite auf einen Blick lesbar bleibt.
 import { html, cls, Icon, TopBar, Sheet, Ring, useState, useEffect, useMemo } from '../ui.js';
-import { D, P, useProgress, progress, prefs, exitApp, nav, back, testSelection, phrasebookPreset } from '../app.js';
+import { D, P, useProgress, progress, planState, prefs, exitApp, nav, back, testSelection, phrasebookPreset } from '../app.js';
 import { storage, isNative } from '../platform.js';
 import { journeyDone } from './courses.js';
 import { SettingsSheet, DevTools, levelOf } from './me.js';
@@ -237,9 +237,10 @@ export function StatsVocab() {
   const all = countMastery(allIds, cards);
   const ofDays = (idx, a, b) => idx.days.filter((d) => d.day >= a && d.day <= b).flatMap((d) => d.items.map((i) => i.id));
   const cols = useMemo(() => [
-    ['Basis', 'Sprechkurs, Woche 1', 'speak', ofDays(D.index, 1, 7)],
-    ['Alltag', 'Sprechkurs, Woche 2', 'speak', ofDays(D.index, 8, 14)],
-    ['Tief', 'Sprechkurs, Woche 3: tiefe Gespräche', 'speak', ofDays(D.index, 15, 99)],
+    ['Basis', 'Jahreskurs: Small Talk, die Basis', 'speak', ofDays(D.index, 1, 7)],
+    ['Alltag', 'Jahreskurs: Small Talk im Alltag', 'speak', ofDays(D.index, 8, 14)],
+    ['Tief', 'Jahreskurs: tiefe Gespräche', 'speak', ofDays(D.index, 15, 20)],
+    ['Handeln', 'Jahreskurs: handeln, erzählen, Nähe', 'speak', ofDays(D.index, 21, 99)],
     ['Einstieg', 'Podcast, Lektionen 1–33', 'listen', ofDays(D.podIndex, 1, 33)],
     ['Aufbau', 'Podcast, Lektionen 34–66', 'listen', ofDays(D.podIndex, 34, 66)],
     ['Profi', 'Podcast, Lektionen 67–100', 'listen', ofDays(D.podIndex, 67, 100)],
@@ -340,7 +341,7 @@ export function StatsWins() {
   const heat = (d) => { const x = P.xpOn(p, d); const t = daySeconds(d); if (!x && !t) return 0; const r = Math.max(x / prefs.dailyGoal(), t / 60 / prefs.dailyMinutes()); return r >= 1 ? 3 : r >= 0.5 ? 2 : 1; };
   const lab = Object.values(p.labBest);
   const courses = [
-    ['speak', 'Sprechkurs', Object.keys(p.dayStars).length, D.index.days.length, 'plan'],
+    ['speak', 'Jahreskurs', D.plan.doneCount(p, planState.get()), 365, 'plan'],
     ['listen', 'Podcast', Object.keys(p.podcastDayStars).length, D.podIndex.days.length, 'podcast'],
     ['words', 'Satzbau', p.patternsDone.length, D.patterns.length, 'patterns'],
     ['amber', 'Mit Anja', Math.min(4, journeyDone()), 4, 'anja'],

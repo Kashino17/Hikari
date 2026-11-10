@@ -6,6 +6,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Test
@@ -22,7 +23,7 @@ class RussianCourseTest {
 
     @Test
     fun vierzehnTageMitInhalt() {
-        assertEquals((1..20).toList(), index.days.map { it.day })
+        assertEquals((1..32).toList(), index.days.map { it.day })
         for (d in index.days) {
             assertTrue(d.items.size in 12..20, "Tag ${d.day}: ${d.items.size} Items")
             assertTrue(d.dialog.lines.count { it.isUser } >= 3, "Tag ${d.day}: zu wenige eigene Zeilen")
@@ -35,7 +36,7 @@ class RussianCourseTest {
     fun jedesAudioExistiertInAllenVarianten() {
         val missing = mutableListOf<String>()
         for (s in listOf(male, female, RuSettings(RuGender.MALE, RuGender.FEMALE), RuSettings(RuGender.FEMALE, RuGender.MALE))) {
-            for (d in index.days.filter { it.day <= 14 }) {
+            for (d in index.days) {
                 val names = index.dayPhrases(d, s).map { it.audio } + index.dialog(d, s).map { it.second.audio }
                 for (n in names) {
                     if ("$n.ogg" !in audioFiles) missing += n
@@ -46,13 +47,53 @@ class RussianCourseTest {
         assertTrue(missing.isEmpty(), "Fehlende Audios: ${missing.distinct().take(20)}")
     }
 
+    /** Auch jede Podcast-Phrase hat ihre Clips in der Kursstimme — normal und langsam gesprochen. */
+    @Test
+    fun jedePodcastPhraseHatAudio() {
+        val podcast = ruJson.parseToJsonElement(File(assets, "podcast.json").readText()).jsonObject
+        val missing = mutableListOf<String>()
+        for (day in podcast["days"]!!.jsonArray) {
+            for (item in day.jsonObject["items"]!!.jsonArray) {
+                val id = item.jsonObject["id"]!!.jsonPrimitive.content
+                for (n in listOf("${id}_m", "${id}_f", "${id}_m_slow", "${id}_f_slow")) if ("$n.ogg" !in audioFiles) missing += n
+            }
+        }
+        assertTrue(missing.isEmpty(), "Fehlende Podcast-Audios (generate_missing.py --only podcast): ${missing.take(20)}")
+    }
+
+    /** Jahresplan: jede als gebaut markierte Lektion gibt es, jedes zugeordnete Satzbau-Muster auch. */
+    @Test
+    fun jahresplanPasstZumKurs() {
+        val plan = ruJson.parseToJsonElement(File(assets, "plan.json").readText()).jsonObject
+        val days = plan["days"]!!.jsonArray.map { it.jsonObject }
+        assertEquals((1..365).toList(), days.map { it["day"]!!.jsonPrimitive.content.toInt() })
+        val built = plan["builtDays"]!!.jsonPrimitive.content.toInt()
+        val patterns = ruJson.parseToJsonElement(File(assets, "patterns.json").readText()).jsonObject["patterns"]!!.jsonArray
+            .map { it.jsonObject["id"]!!.jsonPrimitive.content }.toSet()
+        val lessons = mutableListOf<Int>()
+        for (d in days) {
+            val n = d["day"]!!.jsonPrimitive.content.toInt()
+            val talk = d["kind"]!!.jsonPrimitive.content == "talk"
+            assertEquals(n % 5 == 0, talk, "Tag $n: jeder fünfte Tag ist ein Gesprächstag")
+            if (talk) continue
+            val lesson = d["lesson"]!!.jsonPrimitive.content.toInt()
+            assertEquals(n - n / 5, lesson, "Tag $n: Lektionsnummer")
+            if (n <= built) {
+                lessons += lesson
+                assertNotNull(index.day(lesson), "Tag $n ist als gebaut markiert, Lektion $lesson fehlt")
+                d["pattern"]?.jsonPrimitive?.content?.let { assertTrue(it in patterns, "Tag $n: Muster $it fehlt") }
+            }
+        }
+        assertEquals(index.days.map { it.day }, lessons, "course.json und die gebauten Plan-Tage müssen dieselben Lektionen enthalten")
+    }
+
     @Test
     fun audiosPassenZumAktuellenText() {
         // Das Manifest hält fest, welcher Text in jeder Datei gesprochen wird.
         val manifest = ruJson.parseToJsonElement(File(assets, "audio/manifest.json").readText()).jsonObject
         val stale = mutableListOf<String>()
         for (s in listOf(male, female)) {
-            for (d in index.days.filter { it.day <= 14 }) {
+            for (d in index.days) {
                 val phrases = index.dayPhrases(d, s) + index.dialog(d, s).map { it.second }
                 for (p in phrases) {
                     val entry = manifest[p.audio]?.jsonObject

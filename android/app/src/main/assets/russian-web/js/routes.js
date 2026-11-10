@@ -34,6 +34,7 @@ export const ROUTES = {
     [/^pattern\/(.+)$/, (m) => html`<${Pattern} id=${m[1]} />`],
     [/^lesson\/(\d+)$/, (m) => html`<${Session} mode="LESSON" day=${+m[1]} />`],
     [/^dialog\/(\d+)$/, (m) => html`<${Session} mode="DIALOG" day=${+m[1]} />`],
+    [/^talkday\/(\d+)$/, (m) => html`<${Session} mode="TALKDAY" day=${+m[1]} key=${`t${m[1]}`} />`],
     [/^podcastPractice\/(\d+)$/, (m) => html`<${Session} mode="PODCAST" day=${+m[1]} />`],
     [/^review$/, () => html`<${Session} mode="REVIEW" day=${1} />`],
     [/^test$/, () => html`<${Session} mode="TEST" day=${0} />`],

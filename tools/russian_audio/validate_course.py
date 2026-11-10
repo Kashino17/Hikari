@@ -19,7 +19,8 @@ def check_ru(where, text):
                 errors.append(f"{where}: + nicht vor Vokal in '{part}'")
             if "ё" in part.lower() and plus:
                 errors.append(f"{where}: ё plus + in '{part}'")
-            if vowels >= 2 and plus == 0 and "ё" not in part.lower():
+            # «обо всём»: zweisilbiges Vorwort, das sich unbetont ans nächste Wort lehnt.
+            if vowels >= 2 and plus == 0 and "ё" not in part.lower() and part.lower() not in {"обо", "нибудь", "либо"}:
                 errors.append(f"{where}: keine Betonung in '{part}'")
             if plus > 1:
                 errors.append(f"{where}: mehrere Betonungen in '{part}'")

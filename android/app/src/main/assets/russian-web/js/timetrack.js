@@ -12,7 +12,8 @@ const IDLE_MS = 60000;
 
 /** Modus → Anzeigename und Bereichsfarbe. Reihenfolge = Reihenfolge in der Statistik. */
 export const MODES = {
-  lesson: ['Sprechkurs: Lektionen', 'speak'],
+  lesson: ['Jahreskurs: Lektionen', 'speak'],
+  talkday: ['Jahreskurs: Gesprächstage', 'speak'],
   dialog: ['Rollenspiele', 'speak'],
   talk: ['Sprich frei', 'speak'],
   reflex: ['Sprech-Reflex', 'speak'],
@@ -32,7 +33,7 @@ export const AREA_COLOR = { speak: 'rgb(244,114,182)', listen: 'rgb(167,139,250)
 export const AREA_NAME = { speak: 'Sprechen', listen: 'Hören', review: 'Wiederholen', words: 'Wörter & Grammatik', amber: 'Gespräch' };
 
 const ROUTE_MODE = [
-  [/^lesson\//, 'lesson'], [/^dialog\//, 'dialog'], [/^review$/, 'review'], [/^test$/, 'review'],
+  [/^lesson\//, 'lesson'], [/^talkday\//, 'talkday'], [/^dialog\//, 'dialog'], [/^review$/, 'review'], [/^test$/, 'review'],
   [/^podcastPractice\//, 'podcastPractice'], [/^podcast/, 'podcast'], [/^pattern/, 'patterns'], [/^anja$/, 'anja'],
   [/^reflex$/, 'reflex'], [/^kombi$/, 'kombi'], [/^blind$/, 'blind'], [/^talk$/, 'talk'], [/^blitz$/, 'blitz'],
   [/^pairs$/, 'pairs'], [/^sounds/, 'sounds'], [/^satzbuch$/, 'satzbuch'], [/^deep\//, 'satzbuch'],

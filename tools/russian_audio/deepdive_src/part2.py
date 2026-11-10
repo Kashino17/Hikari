@@ -210,7 +210,7 @@ ENTRIES = {
         ],
         "gender": {
             "title": "з+анят / занят+а",
-            "text": "Beschäftigt: Mann з+анят, Frau занят+а (Betonung wandert), Mehrzahl занят+ы. Ähnlich: р+ад / р+ада, прав / права.",
+            "text": "Beschäftigt: Mann з+анят, Frau занят+а (Betonung wandert), Mehrzahl з+аняты. Ähnlich: р+ад / р+ада, прав / права.",
         },
         "grammar": "Я бы + Verb in Vergangenheitsform = Konjunktiv: Я бы пошёл (Mann) / Я бы пошл+а (Frau) = 'ich würde gehen'.",
     },
@@ -251,10 +251,10 @@ ENTRIES = {
     },
     "d12_ty_prav": {
         "register": "neutral",
-        "summary": "Прав (m), прав+а (f), прав+ы (Mehrzahl) = 'recht haben'. Die Kurzform richtet sich nach der angesprochenen Person: Ты прав (zu einem Mann) / Ты прав+а (zu einer Frau).",
+        "summary": "Прав (m), прав+а (f), пр+авы (Mehrzahl) = 'recht haben'. Die Kurzform richtet sich nach der angesprochenen Person: Ты прав (zu einem Mann) / Ты прав+а (zu einer Frau).",
         "variants": [
             V("Ты прав+а.", "Du hast recht (zu einer Frau).", "Weiblich: Betonung am Ende."),
-            V("Вы прав+ы.", "Sie haben recht.", "Sie-Form: Mehrzahl -ы."),
+            V("Вы пр+авы.", "Sie haben recht.", "Sie-Form: Mehrzahl -ы."),
             V("Я согл+асен.", "Ich stimme zu (Mann).", "Frau: согл+асна."),
             V("+Именно!", "Genau!", "Betont und zustimmend."),
             V("Т+очно!", "Stimmt genau!", "Locker."),
@@ -262,7 +262,7 @@ ENTRIES = {
         "examples": [
             E("Ты прав!", "Du hast recht! (zu einem Mann)", "Männlich — einfach прав."),
             E("Ты прав+а!", "Du hast recht! (zu einer Frau)", "Weiblich — Betonung am Ende."),
-            E("Мы прав+ы.", "Wir haben recht.", "Plural -ы."),
+            E("Мы пр+авы.", "Wir haben recht.", "Plural -ы."),
         ],
         "gender": {
             "title": "Kurzformen: прав / права / правы",
@@ -329,7 +329,7 @@ ENTRIES = {
         ],
         "examples": [
             E("Прост+и мен+я, пож+алуйста.", "Verzeih mir bitte.", "Меня = Akkusativ von я (mich)."),
-            E("Я не хот+ел теб+я об+идеть.", "Ich wollte dich nicht kränken (Mann).", "Обид+еть = 'kränken'. Frau: хот+ела."),
+            E("Я не хот+ел теб+я об+идеть.", "Ich wollte dich nicht kränken (Mann).", "Об+идеть = 'kränken'. Frau: хот+ела."),
             E("+Это мо+я вин+а. Мне +очень жаль.", "Das ist meine Schuld. Es tut mir sehr leid.", "Zwei Sätze, die Ernst zeigen."),
         ],
         "gender": {
@@ -369,7 +369,7 @@ ENTRIES = {
         "examples": [
             E("Не пережив+ай! Всё б+удет хорош+о.", "Mach dir keine Sorgen! Alles wird gut.", "Befehl mit не + Imperativ."),
             E("Я с тоб+ой. Я теб+я поним+аю.", "Ich bin bei dir. Ich verstehe dich.", "Тоб+ой = Instrumental von ты ('mit dir')."),
-            E("Не волн+уйся, я р+ядом.", "Reg dich nicht auf, ich bin da.", "Ря+дом = 'nebenan, in der Nähe'."),
+            E("Не волн+уйся, я р+ядом.", "Reg dich nicht auf, ich bin da.", "Р+ядом = 'nebenan, in der Nähe'."),
         ],
         "grammar": "Verneinter Befehl: Не + unvollendetes Verb im Imperativ: Не переживай! Не волнуйся! Reflexive Verben enden im Befehl auf -йся/-ись: Успокойся! Не волнуйся!",
     },

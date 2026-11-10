@@ -1,6 +1,6 @@
 // Einstellungen, Geschlechts-Abfrage, XP-Stufen und Test-Werkzeuge (die Statistik selbst liegt in stats.js).
 import { html, cls, Icon, Sheet, useState } from '../ui.js';
-import { D, P, useProgress, progress, prefs, toast } from '../app.js';
+import { D, P, Pl, useProgress, progress, planState, prefs, toast } from '../app.js';
 import { storage } from '../platform.js';
 import { GenderIntro } from './home.js';
 import { timeTrack } from '../timetrack.js';
@@ -116,6 +116,15 @@ export function demoProgress(kind) {
   return p;
 }
 
+/** Gesprächstage passend zum Beispiel-Lernstand: jeder Block, dessen vier Lektionen geschafft sind, gilt als abgeschlossen. */
+export function demoPlanState(p) {
+  const talk = {};
+  for (const d of D.plan.days) {
+    if (d.kind === 'talk' && D.plan.isBuilt(d.day) && d.lessons.every((L) => p.dayStars[L])) talk[d.day] = d.day % 10 === 0 ? 2 : 3;
+  }
+  return { ...Pl.emptyState(), talk };
+}
+
 /** Beispiel-Lernzeiten passend zum Beispiel-Lernstand. */
 function demoTime(kind) {
   if (kind === 'new') return {};
@@ -159,23 +168,27 @@ export function DevTools() {
       storage.set('progress_backup_real', progress.get());
       storage.set('study_time_backup_real', timeTrack.raw());
       storage.set('conv_progress_backup_real', storage.get('conv_progress') ?? '');
+      storage.set('plan_backup_real', planState.get());
     }
     timeTrack.replace(demoTime(kind));
     for (const k of ['lesson_session_v1', 'podcast_session_v1', 'conv_session']) storage.remove(k);
     const chat = demoChat(kind);
     if (chat) storage.set('conv_progress', chat); else storage.remove('conv_progress');
-    progress.replace(demoProgress(kind));
+    const demo = demoProgress(kind);
+    planState.update(() => demoPlanState(demo));
+    progress.replace(demo);
     toast(DEMO_LABEL[kind]);
     bump((x) => x + 1);
   };
   const restore = () => {
     const real = storage.getJSON('progress_backup_real');
     if (!real) return;
+    planState.update(() => storage.getJSON('plan_backup_real') ?? Pl.emptyState());
     progress.replace(real);
     timeTrack.replace(storage.getJSON('study_time_backup_real', {}) ?? {});
     const chat = storage.get('conv_progress_backup_real');
     if (chat) storage.set('conv_progress', chat); else storage.remove('conv_progress');
-    for (const k of ['progress_backup_real', 'study_time_backup_real', 'conv_progress_backup_real']) storage.remove(k);
+    for (const k of ['progress_backup_real', 'study_time_backup_real', 'conv_progress_backup_real', 'plan_backup_real']) storage.remove(k);
     toast('Dein eigener Lernstand ist zurück');
     bump((x) => x + 1);
   };

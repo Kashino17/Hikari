@@ -2,7 +2,7 @@
 // außerhalb der Seiten weiter (wie RussianPodcastPlayer in der App): Audio vom
 // Hikari-Server, Hörstand alle 3 s gesichert, 90 % gehört = Übungen frei.
 import { html, cls, Icon, TopBar, IL, Sheet, Stars, Ring, Speaker, useState, useEffect, useRef, audio } from '../ui.js';
-import { D, P, useProgress, progress, nav, back } from '../app.js';
+import { D, P, Pl, planState, useProgress, progress, nav, back } from '../app.js';
 import { storage, api, app, nativeOn } from '../platform.js';
 import { podcastResumeDay, podcastSpot } from './home.js';
 import { timeTrack } from '../timetrack.js';
@@ -311,6 +311,8 @@ export function PodcastLesson({ day }) {
   const phrases = D.podIndex.dayPhrases(lesson, P.settingsOf(p));
   const mine = s.day === day ? s : { ...s, day, videoId: lesson.media.videoId, pos: podcastSpot(day).pos, dur: podcastSpot(day).dur, playing: false };
   const practice = () => nav(`podcastPractice/${day}`);
+  // Dauer der Übungen (zwei Etappen), damit man weiß, ob die Zeit reicht
+  const practiceTime = Pl.minutesLabel(Pl.podcastEstimate(D.podIndex.day(day)).reduce((a, b) => a + b, 0), planState.pace());
 
   return html`<div class="screen c-listen">
     <${TopBar} title=${`Lektion ${day}`} sub="Podcast-Kurs" onBack=${() => back('podcast')} />
@@ -321,7 +323,7 @@ export function PodcastLesson({ day }) {
         <div class="rowx g8 mt8 wrap"><span class="sub">${mine.dur > 0 ? `${P.formatTime(mine.dur)} · ` : ''}RusslandJournal</span>
           ${listened && html`<span class="tag c-words"><${Icon} n="check" />Gehört</span>`}${stars > 0 && html`<${Stars} n=${stars} />`}</div>
         <p class="mt12" style="line-height:1.55;color:rgba(255,255,255,.82)">${lesson.media.summary}</p>
-        ${listened ? html`<button class="btn area mt16" onClick=${practice}><${Icon} n="fitness_center" />${stars > 0 ? 'Übungen wiederholen' : 'Direkt zu den Übungen'}</button>`
+        ${listened ? html`<button class="btn area mt16" onClick=${practice}><${Icon} n="fitness_center" />${stars > 0 ? 'Übungen wiederholen' : 'Direkt zu den Übungen'} · ${practiceTime}</button>`
           : html`<button class="btn mt16" disabled><${Icon} n="lock" />Übungen nach der Folge</button>
             <div class="sub center mt8">Schon gehört? <button style="color:rgb(var(--c));font-weight:500" onClick=${() => player.markListened(day)}>Als gehört markieren</button></div>`}
       </div>
@@ -332,7 +334,7 @@ export function PodcastLesson({ day }) {
       </div>
       <div class="sec" ref=${phrasesRef}><div class="over" style="margin:0 4px 8px">Lernphrasen · ${phrases.length}</div>
         <div class="list">${phrases.map((ph) => html`<div class="row" style="align-items:flex-start"><div class="tx"><${IL} ru=${ph.ru} size=${17} /><span style="margin-top:4px">${ph.de}</span></div><${Speaker} phrase=${ph} /></div>`)}</div>
-        ${listened && html`<button class="btn area mt16" onClick=${practice}>Übungen zu Lektion ${day}</button>`}
+        ${listened && html`<button class="btn area mt16" onClick=${practice}>Übungen zu Lektion ${day} · ${practiceTime}</button>`}
       </div>
       <div class="end"></div>
     </div>

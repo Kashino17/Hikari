@@ -22,7 +22,7 @@ ENTRIES = {
             V("Прив+етствую!", "Ich begrüße Sie / dich", "Wirkt förmlich-geschäftlich, gern am Anfang einer Nachricht oder Rede."),
         ],
         "examples": [
-            E("Прив+ет, +Анна! К+ак д+ела?", "Hallo Anna! Wie geht's?", "Name direkt dahinter, genau wie im Deutschen. Danach kommt fast immer sofort Как дела? — so beginnt ein Gespräch."),
+            E("Прив+ет, +Анна! К+ак дел+а?", "Hallo Anna! Wie geht's?", "Name direkt dahinter, genau wie im Deutschen. Danach kommt fast immer sofort Как дела? — so beginnt ein Gespräch."),
             E("Здр+авствуйте! Я хоч+у к+офе.", "Guten Tag! Ich möchte einen Kaffee.", "Siezen und gleich bestellen: Я хочу + Wunsch. К+офе ändert sich nie (unveränderliches Fremdwort)."),
             E("Д+оброе +утро, +Анна Ив+ановна!", "Guten Morgen, Anna Iwanowna!", "Vorname + Vatersname (Отчество) ist die respektvolle Anrede für Ältere und Vorgesetzte. Der Vatersname endet bei Frauen auf -овна/-евна."),
         ],
@@ -56,7 +56,7 @@ ENTRIES = {
         ],
         "examples": [
             E("Д+оброе +утро! К+офе +или чай?", "Guten Morgen! Kaffee oder Tee?", "+или heißt 'oder'. Ein typischer Morgensatz bei Gastgebern."),
-            E("Д+обрый в+ечер! Как д+ела?", "Guten Abend! Wie geht's?", "Beides gemischt: Gruß + Standardfrage. So klingst du sofort natürlich."),
+            E("Д+обрый в+ечер! Как дел+а?", "Guten Abend! Wie geht's?", "Beides gemischt: Gruß + Standardfrage. So klingst du sofort natürlich."),
         ],
         "grammar": "Endungen: -ое (sächlich, утро), -ый (männlich, день/вечер), -ая (weiblich, ночь im Nominativ: добрая). In Wünschen steht der Genitiv: Доброй ночи = '(ich wünsche dir) eine gute Nacht'.",
     },
@@ -73,7 +73,7 @@ ENTRIES = {
         ],
         "examples": [
             E("Спас+ибо! — Пож+алуйста!", "Danke! — Bitte!", "Пож+алуйста ist die Standardantwort auf Спасибо."),
-            E("Спас+ибо, +очень помогл+о.", "Danke, das hat sehr geholfen.", "Пом+огло ist sächlich (es hat geholfen) — Verben in der Vergangenheit folgen dem Geschlecht."),
+            E("Спас+ибо, +очень помогл+о.", "Danke, das hat sehr geholfen.", "Помогл+о ist sächlich (es hat geholfen) — Verben in der Vergangenheit folgen dem Geschlecht."),
             E("Спас+ибо теб+е за всё!", "Danke dir für alles!", "За всё = 'für alles'. Warm und persönlich — passt zu Freunden und Familie."),
         ],
         "grammar": "Спасибо ist eigentlich 'Gott rette (dich)' — Спаси Бог. Darum steht die Person, der du dankst, im Dativ: Спасибо вам, Спасибо тебе.",
@@ -110,7 +110,7 @@ ENTRIES = {
         ],
         "gender": {
             "title": "Vergangenheit: männlich oder weiblich",
-            "text": "In der Vergangenheit endet das Verb auf -л (Mann), -ла (Frau) oder -ло (sächlich). Ein Mann sagt Я опозд+ал, eine Frau Я опозд+ала. Das gilt für fast jedes Verb: Я пон+ял / Я поняла, Я устал / Я устала.",
+            "text": "In der Vergangenheit endet das Verb auf -л (Mann), -ла (Frau) oder -ло (sächlich). Ein Mann sagt Я опозд+ал, eine Frau Я опозд+ала. Das gilt für fast jedes Verb: Я п+онял / Я поняла, Я устал / Я устала.",
         },
         "grammar": None,
     },
@@ -179,21 +179,21 @@ ENTRIES = {
     },
     "d03_kak_dela": {
         "register": "neutral",
-        "summary": "Как д+ела? ist die Standardfrage beim Treffen, wörtlich 'Wie (sind die) Sachen?'. Dazu gehören viele Varianten — locker, vertraut oder förmlich.",
+        "summary": "Как дел+а? ist die Standardfrage beim Treffen, wörtlich 'Wie (sind die) Sachen?'. Dazu gehören viele Varianten — locker, vertraut oder förmlich.",
         "variants": [
             V("Как ты?", "Wie geht's dir?", "Vertraut, kurz."),
             V("Как ж+изнь?", "Wie läuft's (im Leben)?", "Locker unter Freunden."),
             V("Как пожив+аете?", "Wie geht es Ihnen?", "Höflich, etwas gehoben (Sie-Form)."),
-            V("Как у вас д+ела?", "Wie geht es Ihnen?", "Standard-höflich: у вас = 'bei Ihnen'."),
+            V("Как у вас дел+а?", "Wie geht es Ihnen?", "Standard-höflich: у вас = 'bei Ihnen'."),
             V("Что н+ового?", "Was gibt's Neues?", "Beliebt unter Bekannten, die sich länger nicht gesehen haben."),
             V("Как настро+ение?", "Wie ist deine Stimmung?", "Fragt nach der Laune — persönlicher und warm."),
         ],
         "examples": [
-            E("Как у теб+я д+ела?", "Wie geht es dir?", "У теб+я = 'bei dir'. У + Genitiv ist das russische Muster für 'bei jemandem'."),
-            E("Как у вас д+ела?", "Wie geht es Ihnen?", "Dasselbe in der Sie-Form."),
+            E("Как у теб+я дел+а?", "Wie geht es dir?", "У теб+я = 'bei dir'. У + Genitiv ist das russische Muster für 'bei jemandem'."),
+            E("Как у вас дел+а?", "Wie geht es Ihnen?", "Dasselbe in der Sie-Form."),
             E("Как ж+изнь? — Ничег+о.", "Wie läuft's? — Nicht schlecht.", "Ничег+о bedeutet im Alltag 'nicht schlecht, geht'."),
         ],
-        "grammar": "Д+ела ist die Mehrzahl von д+ело (Sache). У + Genitiv drückt Besitz und Ort aus: у меня (bei mir), у тебя (bei dir), у вас (bei Ihnen).",
+        "grammar": "Дел+а ist die Mehrzahl von д+ело (Sache). У + Genitiv drückt Besitz und Ort aus: у меня (bei mir), у тебя (bei dir), у вас (bei Ihnen).",
     },
     "d03_horosho": {
         "register": "neutral",
@@ -288,7 +288,7 @@ ENTRIES = {
             V("Не могл+и бы вы повтор+ить?", "Könnten Sie es wiederholen?", "Besonders höflich — dank могл+и бы ('könnten')."),
         ],
         "examples": [
-            E("Повтор+ите, пож+алуйста, м+едленно.", "Wiederholen Sie bitte, langsam.", "Медл+енно ist 'langsam' (Adverb). Hilfreich, wenn jemand zu schnell redet."),
+            E("Повтор+ите, пож+алуйста, м+едленно.", "Wiederholen Sie bitte, langsam.", "М+едленно ist 'langsam' (Adverb). Hilfreich, wenn jemand zu schnell redet."),
             E("Говор+ите, пож+алуйста, м+едленнее.", "Sprechen Sie bitte langsamer.", "М+едленнее ist der Komparativ — 'langsamer'."),
         ],
         "grammar": "Sie-Befehl: Stamm + -ите (повтор+ить → повтор+ите, говор+ить → говор+ите). Du-Befehl: Stamm + -и (повтор+и, говор+и).",

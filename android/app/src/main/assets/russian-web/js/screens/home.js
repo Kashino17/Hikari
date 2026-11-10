@@ -1,6 +1,7 @@
 // Tab »Heute«: Tagesziel, Tagesprogramm, Weitermachen — alles auf einen Blick.
 import { html, cls, Icon, Ring, useState, useEffect } from '../ui.js';
-import { D, P, useProgress, progress, nav, prefs, exitApp } from '../app.js';
+import { D, P, Pl, useProgress, usePlanState, progress, nav, prefs, exitApp } from '../app.js';
+import { dayView } from './courses.js';
 import { storage } from '../platform.js';
 import { SettingsSheet } from './me.js';
 import { daySeconds, fmtDuration, timeTrack } from '../timetrack.js';
@@ -24,13 +25,13 @@ const KIND = {
   PODCAST: { c: 'c-listen', icon: 'podcasts' },
 };
 
-function todayText(item, leftMin) {
+function todayText(item, leftMin, st) {
   if (item.kind === 'COURSE') {
-    const d = D.index.day(item.day);
-    if (item.allDone) return { src: 'Sprechkurs', title: `Alle ${D.index.days.length} Tage geschafft`, desc: 'Wiederhole Tage im Kursplan', meta: 'Erledigt', route: 'plan' };
-    if (item.done) return { src: `Sprechkurs, Tag ${item.day}`, title: `Tag ${item.day} geschafft`, desc: d?.title ?? '', meta: 'Erledigt', route: `lesson/${item.day}` };
-    const n = d?.items.length ?? 12;
-    return { src: `Sprechkurs, Tag ${item.day}`, title: `Lektion: ${d?.title ?? ''}`, desc: `${n} neue Sätze hören und nachsprechen`, meta: `ca. ${Math.max(5, Math.floor((n * 45) / 60))} Min.`, route: `lesson/${item.day}` };
+    const v = item.view;
+    if (item.allDone) return { src: 'Jahreskurs', title: `Alle ${D.plan.builtDays} gebauten Tage geschafft`, desc: 'Wiederhole Tage im Jahresplan', meta: 'Erledigt', route: 'plan' };
+    if (item.done) return { src: `Jahreskurs, Tag ${v.day}`, title: `Tag ${v.day} geschafft`, desc: v.title, meta: 'Erledigt', route: 'plan' };
+    if (v.talk) return { src: `Jahreskurs, Tag ${v.day}`, title: `Gesprächstag: ${v.title}`, desc: v.resume ? `Etappe ${v.stagesDone + 1} von 3 · dein Stand ist gespeichert` : 'Kein neuer Stoff: nur sprechen', meta: v.resume ? `noch ${v.left}` : v.total, route: v.route };
+    return { src: `Jahreskurs, Tag ${v.day}`, title: `Lektion: ${v.title}`, desc: v.resume ? `Etappe ${v.stagesDone + 1} von 3 · dein Stand ist gespeichert` : `${v.lessonDay.items.length} neue Sätze in drei Etappen`, meta: v.resume ? `noch ${v.left}` : v.total, route: v.route };
   }
   if (item.kind === 'REVIEW') {
     if (item.done) return { src: 'Wiederholen', title: 'Alles wiederholt', desc: 'Gerade ist kein Satz fällig', meta: 'Erledigt', route: 'review' };
@@ -39,7 +40,7 @@ function todayText(item, leftMin) {
   const src = `Podcast-Kurs, Lektion ${item.day}`;
   if (item.allDone) return { src: 'Podcast-Kurs', title: 'Alle Lektionen geschafft', desc: 'Folgen bleiben zum Nachhören da', meta: 'Erledigt', route: 'podcast' };
   if (item.done) return { src, title: 'Heutige Lektion geschafft', desc: 'Morgen geht es weiter', meta: 'Erledigt', route: 'podcast' };
-  if (item.practice) return { src, title: 'Übungen zur Folge', desc: 'Folge gehört, jetzt anwenden', meta: '', route: `podcastPractice/${item.day}` };
+  if (item.practice) return { src, title: 'Übungen zur Folge', desc: 'Folge gehört, jetzt anwenden', meta: Pl.minutesLabel(Pl.podcastEstimate(D.podIndex.day(item.day)).reduce((a, b) => a + b, 0), Pl.paceFactor(st)), route: `podcastPractice/${item.day}` };
   if (leftMin != null) return { src, title: 'Folge weiterhören', desc: 'Hören, dann die Übungen dazu', meta: `${leftMin} Min.`, route: `podcast/${item.day}` };
   return { src, title: 'Folge hören', desc: 'Hören, dann die Übungen dazu', meta: '', route: `podcast/${item.day}` };
 }
@@ -58,10 +59,16 @@ const QUICK = {
 export function useToday() {
   const p = useProgress();
   const today = progress.today();
+  const st = usePlanState();
   const plan = P.todayPlan(p, today, D.index.days.length, D.podIndex.days.length, podcastResumeDay(p));
+  // Kurs-Eintrag aus dem Jahresplan: der Tag, der dran ist (Lektion oder Gesprächstag).
+  const cur = D.plan.currentDay(p, st);
+  const doneToday = p.courseLastCompletedDay === today || st.talkLast === today;
+  const shown = doneToday ? Math.max(1, (cur ?? D.plan.builtDays + 1) - 1) : cur ?? D.plan.builtDays;
+  plan[0] = { kind: 'COURSE', done: doneToday || cur == null, allDone: cur == null && !doneToday, day: shown, view: dayView(D.plan.day(shown), p, st) };
   const spot = podcastSpot(plan[2].day);
   const leftMin = spot.dur > 0 ? Math.max(1, Math.floor((spot.dur - spot.pos) / 60000)) : null;
-  const items = plan.map((it) => ({ ...it, ...KIND[it.kind], ...todayText(it, it.kind === 'PODCAST' ? leftMin : null) }));
+  const items = plan.map((it) => ({ ...it, ...KIND[it.kind], ...todayText(it, it.kind === 'PODCAST' ? leftMin : null, st) }));
   return { p, today, items, next: items.findIndex((i) => !i.done) };
 }
 
@@ -87,9 +94,6 @@ export function Home() {
   const streak = P.visibleStreak(p, today);
   const monday = today - ((new Date().getDay() + 6) % 7);
   const first = items[0].day === 1 && !items[0].done && Object.keys(p.dayStars).length === 0;
-  const lesson = storage.getJSON('lesson_session_v1');
-  // Nur Zwischenstände dieser Oberfläche (web: 1) lassen sich fortsetzen — ältere aus der früheren App-Fassung nicht.
-  const lessonSteps = lesson && lesson.web === 1 && Number.isFinite(lesson.baseSize) ? lesson : null;
   const open = (r) => ready && nav(r);
 
   return html`<div class="screen tab">
@@ -126,12 +130,6 @@ export function Home() {
             <span style="font-size:14px">Alles für heute erledigt. Lust auf mehr? Unter <b>Üben</b> wartet Nachschub.</span></div>`}
         </div>
       </div>
-
-      ${lessonSteps && lessonSteps.pos > 0 && ready && html`<div class="sec"><div class="h2">Weitermachen</div><div class="sub">Hier hast du zuletzt aufgehört.</div>
-        <button class="row card c-speak" style="border-radius:18px" onClick=${() => nav(`lesson/${lessonSteps.day}`)}>
-          <div class="ic"><${Icon} n="resume" /></div>
-          <div class="tx"><b>Tag ${lessonSteps.day}: ${D.index.day(lessonSteps.day)?.title}</b><span>Schritt ${lessonSteps.pos + 1} von ${lessonSteps.baseSize + (lessonSteps.inserts?.length ?? 0)} · dein Stand ist gespeichert</span></div>
-          <${Icon} n="chevron_right" c="faint" /></button></div>`}
 
       ${ready && f && html`<div class="sec"><div class="h2">Dein nächster Schritt zu ${f.est.next.id}</div><div class="sub">Aus deinem Lernstand: Das bringt dich gerade am meisten voran.</div>
         <button class="nextstep solo" style=${`--c:${f.dim.color}`} onClick=${f.go}>

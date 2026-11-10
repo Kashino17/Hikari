@@ -83,6 +83,54 @@
   {
    "id": "deep_talk",
    "title": "Tiefe Gespräche"
+  },
+  {
+   "id": "city",
+   "title": "Unterwegs in der Stadt"
+  },
+  {
+   "id": "shopping",
+   "title": "Einkaufen & Geld"
+  },
+  {
+   "id": "guest",
+   "title": "Restaurant & zu Gast"
+  },
+  {
+   "id": "phone",
+   "title": "Telefon & Nachrichten"
+  },
+  {
+   "id": "past",
+   "title": "Erzählen, was war"
+  },
+  {
+   "id": "origin",
+   "title": "Kindheit & Herkunft"
+  },
+  {
+   "id": "travel",
+   "title": "Reisen & Erlebnisse"
+  },
+  {
+   "id": "future",
+   "title": "Pläne & Träume"
+  },
+  {
+   "id": "affection",
+   "title": "Komplimente & Zuneigung"
+  },
+  {
+   "id": "conflict",
+   "title": "Streit & Versöhnung"
+  },
+  {
+   "id": "health",
+   "title": "Gesundheit & Körper"
+  },
+  {
+   "id": "self",
+   "title": "Wer ich bin"
   }
  ],
  "items": {
@@ -1133,6 +1181,547 @@
   ],
   "d20_tolko_nachalo": [
    "deep_talk"
+  ],
+  "d21_gde_metro": [
+   "city",
+   "question"
+  ],
+  "d21_za_uglom": [
+   "city"
+  ],
+  "d21_eto_daleko": [
+   "city",
+   "question"
+  ],
+  "d21_v_dvuh_shagah": [
+   "city"
+  ],
+  "d21_peshkom_minut": [
+   "city"
+  ],
+  "d21_idite_pryamo": [
+   "city"
+  ],
+  "d21_budet_sprava": [
+   "city"
+  ],
+  "d21_luchshe_na_taksi": [
+   "city"
+  ],
+  "d21_kak_dobratsya": [
+   "city",
+   "question"
+  ],
+  "d21_pokazhite": [
+   "city"
+  ],
+  "d21_ne_podskazhete": [
+   "city",
+   "question"
+  ],
+  "d21_vyhodite": [
+   "city"
+  ],
+  "d21_zabludilsya": [
+   "city"
+  ],
+  "d21_ne_mestnyy": [
+   "city"
+  ],
+  "d22_skolko_stoit": [
+   "shopping",
+   "question"
+  ],
+  "d22_pyat_tysyach": [
+   "shopping"
+  ],
+  "d22_prosto_smotryu": [
+   "shopping"
+  ],
+  "d22_nuzhna_kurtka": [
+   "shopping"
+  ],
+  "d22_chto_kupit": [
+   "shopping",
+   "question"
+  ],
+  "d22_primerit": [
+   "shopping"
+  ],
+  "d22_paket": [
+   "shopping"
+  ],
+  "d22_kak_tebe": [
+   "shopping",
+   "question"
+  ],
+  "d22_tebe_idyot": [
+   "shopping"
+  ],
+  "d22_razmer_pobolshe": [
+   "shopping"
+  ],
+  "d22_skidka": [
+   "shopping"
+  ],
+  "d22_podeshevle": [
+   "shopping"
+  ],
+  "d22_nuzhny_krossovki": [
+   "shopping"
+  ],
+  "d22_kartoy": [
+   "shopping"
+  ],
+  "d23_stolik": [
+   "guest"
+  ],
+  "d23_chto_vozmyote": [
+   "guest",
+   "question"
+  ],
+  "d23_to_zhe_samoe": [
+   "guest"
+  ],
+  "d23_ne_vybral": [
+   "guest"
+  ],
+  "d23_bylo_vkusno": [
+   "guest"
+  ],
+  "d23_kak_doma": [
+   "guest"
+  ],
+  "d23_chto_prinesti": [
+   "guest",
+   "question"
+  ],
+  "d23_nichego_ne_nuzhno": [
+   "guest"
+  ],
+  "d23_k_chayu": [
+   "guest"
+  ],
+  "d23_tost": [
+   "guest"
+  ],
+  "d23_platim": [
+   "guest",
+   "question"
+  ],
+  "d23_popolam": [
+   "guest"
+  ],
+  "d23_poschitayte": [
+   "guest"
+  ],
+  "d23_posovetuyte": [
+   "guest"
+  ],
+  "d24_pozvonyu": [
+   "phone"
+  ],
+  "d24_udobno": [
+   "phone",
+   "question"
+  ],
+  "d24_slushayu": [
+   "phone"
+  ],
+  "d24_zanyat": [
+   "phone"
+  ],
+  "d24_slyshish": [
+   "phone",
+   "question"
+  ],
+  "d24_teper_slyshu": [
+   "phone"
+  ],
+  "d24_plokho_slyshno": [
+   "phone"
+  ],
+  "d24_zapishi_nomer": [
+   "phone"
+  ],
+  "d24_ili_napisat": [
+   "phone",
+   "question"
+  ],
+  "d24_zvoni": [
+   "phone"
+  ],
+  "d24_luchshe_napishi": [
+   "phone"
+  ],
+  "d24_golosovoe": [
+   "phone"
+  ],
+  "d24_spishemsya": [
+   "phone"
+  ],
+  "d24_napishu": [
+   "phone"
+  ],
+  "d25_byl_doma": [
+   "past"
+  ],
+  "d25_hodil_v_kino": [
+   "past"
+  ],
+  "d25_bylo_skuchnovato": [
+   "past"
+  ],
+  "d25_kak_proshli_vyhodnye": [
+   "past",
+   "question"
+  ],
+  "d25_a_ty_chto_delal": [
+   "past",
+   "question"
+  ],
+  "d25_vstretilsya": [
+   "past"
+  ],
+  "d25_snachala_potom": [
+   "past"
+  ],
+  "d25_posle_etogo": [
+   "past"
+  ],
+  "d25_chto_bylo_potom": [
+   "past",
+   "question"
+  ],
+  "d25_vdrug": [
+   "past"
+  ],
+  "d25_v_itoge": [
+   "past"
+  ],
+  "d25_pomnyu_vecher": [
+   "past"
+  ],
+  "d25_pomnyu_kak": [
+   "past"
+  ],
+  "d25_ne_pomnyu": [
+   "past"
+  ],
+  "d26_rodilsya": [
+   "origin"
+  ],
+  "d26_vyros": [
+   "origin"
+  ],
+  "d26_roditeli_rodom": [
+   "origin"
+  ],
+  "d26_gde_proshlo_detstvo": [
+   "origin",
+   "question"
+  ],
+  "d26_v_detstve": [
+   "origin"
+  ],
+  "d26_ranshe": [
+   "origin"
+  ],
+  "d26_kakim_ty_byl": [
+   "origin",
+   "question"
+  ],
+  "d26_kogda_malenkim": [
+   "origin"
+  ],
+  "d26_u_babushki": [
+   "origin"
+  ],
+  "d26_kogda_desyat_let": [
+   "origin"
+  ],
+  "d26_kogda_v_shkole": [
+   "origin"
+  ],
+  "d26_skuchaesh_po_detstvu": [
+   "origin",
+   "question"
+  ],
+  "d26_skuchayu": [
+   "origin"
+  ],
+  "d26_do_sih_por_pomnyu": [
+   "origin"
+  ],
+  "d27_uzhe_byl": [
+   "travel"
+  ],
+  "d27_ni_razu_ne_byl": [
+   "travel"
+  ],
+  "d27_ezdil_na_more": [
+   "travel"
+  ],
+  "d27_letal_na_nedelyu": [
+   "travel"
+  ],
+  "d27_ochen_ponravilos": [
+   "travel"
+  ],
+  "d27_kak_proshla_poezdka": [
+   "travel",
+   "question"
+  ],
+  "d27_v_kakih_stranah": [
+   "travel",
+   "question"
+  ],
+  "d27_zhili_v_otele": [
+   "travel"
+  ],
+  "d27_eda_ne_ochen": [
+   "travel"
+  ],
+  "d27_smotreli_gorod": [
+   "travel"
+  ],
+  "d27_ezdili_v_gory": [
+   "travel"
+  ],
+  "d27_samoe_krasivoe": [
+   "travel"
+  ],
+  "d27_kuda_hochesh": [
+   "travel",
+   "question"
+  ],
+  "d27_davno_hochu": [
+   "travel"
+  ],
+  "d28_sobirayus": [
+   "future"
+  ],
+  "d28_planiruyu": [
+   "future"
+  ],
+  "d28_cherez_god": [
+   "future"
+  ],
+  "d28_kakie_plany": [
+   "future",
+   "question"
+  ],
+  "d28_mechtayu": [
+   "future"
+  ],
+  "d28_hochu_stat": [
+   "future"
+  ],
+  "d28_o_chem_mechtaesh": [
+   "future",
+   "question"
+  ],
+  "d28_bylo_by_zdorovo": [
+   "future"
+  ],
+  "d28_ya_by_hotel": [
+   "future"
+  ],
+  "d28_gde_by_hotel": [
+   "future",
+   "question"
+  ],
+  "d28_s_udovolstviem": [
+   "future"
+  ],
+  "d28_na_tvoyom_meste": [
+   "future"
+  ],
+  "d28_nadeyus": [
+   "future"
+  ],
+  "d28_poka_mechta": [
+   "future"
+  ],
+  "d29_ty_mne_nravishsya": [
+   "affection"
+  ],
+  "d29_otlichno_vyglyadish": [
+   "affection"
+  ],
+  "d29_krasivaya_ulybka": [
+   "affection"
+  ],
+  "d29_s_toboy_legko": [
+   "affection"
+  ],
+  "d29_pravda_tak_dumaesh": [
+   "affection",
+   "question"
+  ],
+  "d29_skuchal": [
+   "affection"
+  ],
+  "d29_dumayu_o_tebe": [
+   "affection"
+  ],
+  "d29_a_ty_skuchala": [
+   "affection",
+   "question"
+  ],
+  "d29_chto_vo_mne_nravitsya": [
+   "affection",
+   "question"
+  ],
+  "d29_rad_chto_poznakomilis": [
+   "affection"
+  ],
+  "d29_vazhnyy_chelovek": [
+   "affection"
+  ],
+  "d29_chtoby_ty_znala": [
+   "affection"
+  ],
+  "d29_chtoby_byla_schastliva": [
+   "affection"
+  ],
+  "d29_chtoby_vecher": [
+   "affection"
+  ],
+  "d30_ne_hochu_ssoritsya": [
+   "conflict"
+  ],
+  "d30_davay_pogovorim": [
+   "conflict"
+  ],
+  "d30_ty_obizhaeshsya": [
+   "conflict",
+   "question"
+  ],
+  "d30_chto_ne_tak": [
+   "conflict",
+   "question"
+  ],
+  "d30_bylo_obidno": [
+   "conflict"
+  ],
+  "d30_ne_eto_imel_v_vidu": [
+   "conflict"
+  ],
+  "d30_nepravilno_ponyala": [
+   "conflict"
+  ],
+  "d30_ne_hotel_obidet": [
+   "conflict"
+  ],
+  "d30_pogoryachilsya": [
+   "conflict"
+  ],
+  "d30_prosti_neprav": [
+   "conflict"
+  ],
+  "d30_tochka_zreniya": [
+   "conflict"
+  ],
+  "d30_ty_mne_vazhnee": [
+   "conflict"
+  ],
+  "d30_nu_chto_mir": [
+   "conflict",
+   "question"
+  ],
+  "d30_davay_pomirimsya": [
+   "conflict"
+  ],
+  "d31_bolit_golova": [
+   "health"
+  ],
+  "d31_chto_bolit": [
+   "health",
+   "question"
+  ],
+  "d31_bolyat_glaza": [
+   "health"
+  ],
+  "d31_prostudilsya": [
+   "health"
+  ],
+  "d31_temperatura": [
+   "health"
+  ],
+  "d31_slabost": [
+   "health"
+  ],
+  "d31_kak_chuvstvuesh": [
+   "health",
+   "question"
+  ],
+  "d31_byl_u_vracha": [
+   "health"
+  ],
+  "d31_prinesti_iz_apteki": [
+   "health",
+   "question"
+  ],
+  "d31_otlezhatsya": [
+   "health"
+  ],
+  "d31_vyzdoravlivay": [
+   "health"
+  ],
+  "d31_otdohnut": [
+   "health"
+  ],
+  "d31_beregi_sebya": [
+   "health"
+  ],
+  "d31_pochti_zdorov": [
+   "health"
+  ],
+  "d32_koroche": [
+   "self"
+  ],
+  "d32_naprimer": [
+   "self"
+  ],
+  "d32_poetomu": [
+   "self"
+  ],
+  "d32_kakoy_ty_chelovek": [
+   "self",
+   "question"
+  ],
+  "d32_s_odnoy_storony": [
+   "self"
+  ],
+  "d32_s_drugoy_storony": [
+   "self"
+  ],
+  "d32_chto_eto_znachit": [
+   "self",
+   "question"
+  ],
+  "d32_dlya_menya_svoboda": [
+   "self"
+  ],
+  "d32_krome_togo": [
+   "self"
+  ],
+  "d32_chto_izmenilos": [
+   "self",
+   "question"
+  ],
+  "d32_chestno_govorya": [
+   "self"
+  ],
+  "d32_mnogomu_nauchilsya": [
+   "self"
+  ],
+  "d32_dalshe_hochu": [
+   "self"
+  ],
+  "d32_v_obshchem": [
+   "self"
   ]
  }
 }

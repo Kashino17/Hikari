@@ -240,6 +240,11 @@ def main():
         if errors:
             print("\n".join(errors), file=sys.stderr)
             raise SystemExit(1)
+        # Betonung wie im Hauptkurs ("+" vor dem betonten Vokal) — sonst betont die Stimme falsch.
+        import stress_podcast
+        open_words = stress_podcast.apply(course, pathlib.Path.home() / ".hikari/tts/models/vosk")
+        if open_words:
+            print("Betonung offen (in stress_podcast.py ergänzen): " + ", ".join(sorted(open_words)), file=sys.stderr)
         ASSET.write_text(json.dumps(course, ensure_ascii=False, indent=2) + "\n")
         print(f"{ASSET.relative_to(ROOT)} geschrieben")
     else:

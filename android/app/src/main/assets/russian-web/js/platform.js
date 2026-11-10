@@ -100,7 +100,7 @@ function emitter() {
   return { on(fn) { subs.add(fn); return () => subs.delete(fn); }, emit(v) { for (const fn of [...subs]) fn(v); } };
 }
 
-// ── Sprachausgabe (Rückfall, wenn es keinen Muttersprachler-Clip gibt) ──────
+// ── Sprachausgabe des Geräts (Rückfall, wenn weder Clip noch Kursstimme vom Mac da sind) ──
 
 let ruVoice = null;
 function pickVoice() {
@@ -143,6 +143,47 @@ export const tts = {
   stop() { if (native?.ttsStop) native.ttsStop(); else if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel(); },
 };
 
+// ── Kursstimme vom Mac ─────────────────────────────────────────────────────
+// Für Sätze ohne fertigen Clip (Kombi-Meister, Gespräch mit Anja, eigene Sätze) spricht
+// der Hikari-Server in denselben Stimmen wie der Kurs. Ist er nicht erreichbar oder lädt
+// sein Sprachmodell noch, übernimmt sofort die Gerätestimme.
+
+const voiceUrls = new Map(); // "stimme|tempo|text" → Objekt-URL
+let voicePausedUntil = 0;
+let defaultVoice = 'm';
+const timeoutSignal = (ms) => {
+  if (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) return AbortSignal.timeout(ms);
+  const c = new AbortController();
+  setTimeout(() => c.abort(), ms);
+  return c.signal;
+};
+
+export const serverVoice = {
+  /** Stimme für eigene Sätze: 'm' oder 'f' (aus den Einstellungen); Anja spricht mit 'p'. */
+  setDefault(v) { defaultVoice = v; },
+  defaultVoice: () => defaultVoice,
+  /** Dienst vorwärmen: das Sprachmodell lädt rund eine halbe Minute. */
+  warm() {
+    if (Date.now() < voicePausedUntil) return;
+    fetch('/api/russian/voice/status?warm=1', { cache: 'no-store', signal: timeoutSignal(4000) }).catch(() => { voicePausedUntil = Date.now() + 60000; });
+  },
+  /** Russischen Text (möglichst mit "+") sprechen lassen. → Objekt-URL oder null (dann Gerätestimme). */
+  async fetch(ru, { voice = defaultVoice, rate = 1 } = {}) {
+    const key = `${voice}|${rate}|${ru}`;
+    if (voiceUrls.has(key)) return voiceUrls.get(key);
+    if (Date.now() < voicePausedUntil) return null;
+    try {
+      const r = await fetch(`/api/russian/voice?voice=${voice}&rate=${rate}&text=${encodeURIComponent(ru)}`, { signal: timeoutSignal(5000) });
+      // 503 = Modell lädt noch (gleich wieder versuchen) oder nicht eingerichtet; alles andere = länger Pause.
+      if (!r.ok) { voicePausedUntil = Date.now() + (r.status === 503 ? 8000 : 60000); return null; }
+      const url = URL.createObjectURL(await r.blob());
+      voiceUrls.set(key, url);
+      if (voiceUrls.size > 80) { const [k, old] = voiceUrls.entries().next().value; voiceUrls.delete(k); URL.revokeObjectURL(old); }
+      return url;
+    } catch { voicePausedUntil = Date.now() + 60000; return null; }
+  },
+};
+
 // ── Clips ──────────────────────────────────────────────────────────────────
 
 let clipSet = new Set();
@@ -163,11 +204,12 @@ export const audio = {
 
   /**
    * Spielt einen Clip. `slow` nimmt die langsam gesprochene Aufnahme (falls vorhanden),
-   * sonst wird die normale gebremst. Ohne Clip spricht die Sprachausgabe `text`.
+   * sonst wird die normale gebremst. Ohne Clip spricht die Kursstimme vom Mac (`ru` = Text
+   * mit Betonung, `voice` = 'm' | 'f' | 'p'); ist sie nicht erreichbar, die Gerätestimme (`text`).
    * `key` kennzeichnet, welcher Knopf gerade »spielt« (Standard: der Clip-Name).
    * Löst auf, wenn die Wiedergabe endet: true = zu Ende gespielt, false = abgebrochen/Fehler.
    */
-  async play(clip, { slow = false, text = null, rate = 1, key = null } = {}) {
+  async play(clip, { slow = false, text = null, ru = null, voice = undefined, rate = 1, key = null } = {}) {
     const token = ++playToken;
     this._halt();
     const k = key ?? clip;
@@ -179,20 +221,28 @@ export const audio = {
       if (clipSet.has(`${clip}_slow`)) name = `${clip}_slow`;
       else playbackRate = rate * 0.75;
     }
-    if (name && clipSet.has(name)) {
-      const ok = await new Promise((resolve) => {
-        el.onended = () => resolve(true);
-        el.onerror = () => resolve(false);
-        el.onpause = () => { if (!el.ended) resolve(false); };
-        el.src = this.url(name);
-        el.playbackRate = playbackRate;
-        el.play().catch(() => resolve(false));
-      });
-      el.onended = el.onerror = el.onpause = null;
-      return done(ok);
+    if (name && clipSet.has(name)) return done(await this._element(this.url(name), playbackRate));
+    const spoken = ru ?? text;
+    if (spoken) {
+      // Langsam heißt hier wirklich langsam gesprochen, nicht gebremst abgespielt.
+      const src = await serverVoice.fetch(spoken, { voice, rate: slow ? 0.7 : 1 });
+      if (token !== playToken) return false; // inzwischen wurde etwas anderes gestartet
+      if (src) return done(await this._element(src, rate));
     }
     if (text) return done(await tts.speak(text, { rate: (slow ? 0.6 : 0.92) * rate }));
     return done(false);
+  },
+
+  _element(src, playbackRate) {
+    return new Promise((resolve) => {
+      const fin = (ok) => { el.onended = el.onerror = el.onpause = null; resolve(ok); };
+      el.onended = () => fin(true);
+      el.onerror = () => fin(false);
+      el.onpause = () => { if (!el.ended) fin(false); };
+      el.src = src;
+      el.playbackRate = playbackRate;
+      el.play().catch(() => fin(false));
+    });
   },
 
   /** Eigene Aufnahme (Blob) abspielen. */
@@ -475,7 +525,7 @@ export const api = {
     if (!r.ok) throw Object.assign(new Error(data.error ?? `HTTP ${r.status}`), { status: r.status, data });
     return data;
   },
-  /** Aussprache-Prüfung: eigene Aufnahme gegen den Muttersprachler-Clip. */
+  /** Aussprache-Prüfung: eigene Aufnahme gegen die Kursstimme (Clip-Name oder "text:<Stimme>:<Satz>"). */
   async pronunciation(clip, blob) {
     if (native?.pronounce) {
       const b64 = await blobToBase64(blob);

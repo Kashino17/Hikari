@@ -1,0 +1,3952 @@
+{
+ "version": 1,
+ "builtDays": 40,
+ "phases": [
+  {
+   "id": "p1",
+   "title": "Fundament",
+   "level": "A1",
+   "from": 1,
+   "to": 40,
+   "goal": "Small Talk sicher führen und erste ehrliche Gespräche über dich, deinen Alltag und das, was dich bewegt."
+  },
+  {
+   "id": "p2",
+   "title": "Alltag ohne Stocken",
+   "level": "A2",
+   "from": 41,
+   "to": 100,
+   "goal": "Jede Alltagssituation meistern. Die sechs Fälle kommen der Reihe nach dazu, jeweils an einem Thema, das du sofort brauchst."
+  },
+  {
+   "id": "p3",
+   "title": "Erzählen und Verstehen",
+   "level": "A2+",
+   "from": 101,
+   "to": 170,
+   "goal": "Zusammenhängend erzählen: Vergangenheit, Zukunft, Bewegung, Vergleiche. Du verstehst längere Antworten und hakst nach."
+  },
+  {
+   "id": "p4",
+   "title": "Meinung und Tiefe",
+   "level": "B1",
+   "from": 171,
+   "to": 250,
+   "goal": "Standpunkte begründen, über Psychologie, Beziehungen, Gesundheit und Business diskutieren, auch wenn es kompliziert wird."
+  },
+  {
+   "id": "p5",
+   "title": "Fließend und nuanciert",
+   "level": "B1+",
+   "from": 251,
+   "to": 330,
+   "goal": "Klingen wie jemand, der dort lebt: Partikeln, Umgangssprache, Redewendungen, Humor, Kultur."
+  },
+  {
+   "id": "p6",
+   "title": "Souverän",
+   "level": "B2",
+   "from": 331,
+   "to": 365,
+   "goal": "Argumentieren, beruflich bestehen und die wirklich wichtigen Gespräche führen. Am Ende steht das Jahresgespräch."
+  }
+ ],
+ "blocks": [
+  {
+   "n": 1,
+   "phase": "p1",
+   "title": "Erste Worte",
+   "focus": "Grüßen, vorstellen, erste Fragen",
+   "from": 1,
+   "to": 5
+  },
+  {
+   "n": 2,
+   "phase": "p1",
+   "title": "Alltag und Menschen",
+   "focus": "Nachfragen, Arbeit, Familie, Hobbys",
+   "from": 6,
+   "to": 10
+  },
+  {
+   "n": 3,
+   "phase": "p1",
+   "title": "Verabreden und mitreden",
+   "focus": "Essen, Zeit, Treffen, Meinung",
+   "from": 11,
+   "to": 15
+  },
+  {
+   "n": 4,
+   "phase": "p1",
+   "title": "Reagieren und ehrlich sein",
+   "focus": "Gefühle zeigen, Abschied, innere Zustände",
+   "from": 16,
+   "to": 20
+  },
+  {
+   "n": 5,
+   "phase": "p1",
+   "title": "Dein Leben erklären",
+   "focus": "Körper, Arbeit, Tagesablauf, Werte",
+   "from": 21,
+   "to": 25
+  },
+  {
+   "n": 6,
+   "phase": "p1",
+   "title": "Unterwegs und im Alltag handeln",
+   "focus": "Bitten, brauchen, bestellen, telefonieren",
+   "from": 26,
+   "to": 30
+  },
+  {
+   "n": 7,
+   "phase": "p1",
+   "title": "Erzählen und Erinnern",
+   "focus": "Vergangenheit, Herkunft, Reisen, Pläne",
+   "from": 31,
+   "to": 35
+  },
+  {
+   "n": 8,
+   "phase": "p1",
+   "title": "Nähe und Beziehung",
+   "focus": "Zuneigung, Konflikt, Gesundheit, Bilanz",
+   "from": 36,
+   "to": 40
+  },
+  {
+   "n": 9,
+   "phase": "p2",
+   "title": "Wohnen und Zuhause",
+   "focus": "Präpositiv: wo etwas ist",
+   "from": 41,
+   "to": 45
+  },
+  {
+   "n": 10,
+   "phase": "p2",
+   "title": "Dein Tag im Detail",
+   "focus": "Verben im Präsens, rückbezügliche Verben",
+   "from": 46,
+   "to": 50
+  },
+  {
+   "n": 11,
+   "phase": "p2",
+   "title": "Menschen beschreiben",
+   "focus": "Adjektive passen sich an",
+   "from": 51,
+   "to": 55
+  },
+  {
+   "n": 12,
+   "phase": "p2",
+   "title": "Haben und Fehlen",
+   "focus": "Genitiv: kein, viel, von",
+   "from": 56,
+   "to": 60
+  },
+  {
+   "n": 13,
+   "phase": "p2",
+   "title": "Wohin und Wo",
+   "focus": "Richtung und Ort, gehen und fahren",
+   "from": 61,
+   "to": 65
+  },
+  {
+   "n": 14,
+   "phase": "p2",
+   "title": "Geben und Helfen",
+   "focus": "Dativ: wem?",
+   "from": 66,
+   "to": 70
+  },
+  {
+   "n": 15,
+   "phase": "p2",
+   "title": "Mit wem und womit",
+   "focus": "Instrumental",
+   "from": 71,
+   "to": 75
+  },
+  {
+   "n": 16,
+   "phase": "p2",
+   "title": "Zeit im Griff",
+   "focus": "Uhrzeit, Dauer, Häufigkeit",
+   "from": 76,
+   "to": 80
+  },
+  {
+   "n": 17,
+   "phase": "p2",
+   "title": "Erledigt oder dabei?",
+   "focus": "Verbalaspekt: die Grundidee",
+   "from": 81,
+   "to": 85
+  },
+  {
+   "n": 18,
+   "phase": "p2",
+   "title": "Können, dürfen, müssen",
+   "focus": "Modalwörter",
+   "from": 86,
+   "to": 90
+  },
+  {
+   "n": 19,
+   "phase": "p2",
+   "title": "Dienstleistungen",
+   "focus": "Praktische Situationen",
+   "from": 91,
+   "to": 95
+  },
+  {
+   "n": 20,
+   "phase": "p2",
+   "title": "Meilenstein A2",
+   "focus": "Alles aus Phase 2 im Zusammenhang",
+   "from": 96,
+   "to": 100
+  },
+  {
+   "n": 21,
+   "phase": "p3",
+   "title": "Geschichten bauen",
+   "focus": "Reihenfolge und Zusammenhang",
+   "from": 101,
+   "to": 105
+  },
+  {
+   "n": 22,
+   "phase": "p3",
+   "title": "Bewegung I",
+   "focus": "Gehen und fahren: gerade jetzt oder regelmäßig",
+   "from": 106,
+   "to": 110
+  },
+  {
+   "n": 23,
+   "phase": "p3",
+   "title": "Bewegung II",
+   "focus": "Vorsilben: an-, weg-, hinein-, hinaus-",
+   "from": 111,
+   "to": 115
+  },
+  {
+   "n": 24,
+   "phase": "p3",
+   "title": "Zukunft genau",
+   "focus": "Aspekt in der Zukunft, reale Bedingungen",
+   "from": 116,
+   "to": 120
+  },
+  {
+   "n": 25,
+   "phase": "p3",
+   "title": "Vergleichen und Steigern",
+   "focus": "Komparativ und Superlativ",
+   "from": 121,
+   "to": 125
+  },
+  {
+   "n": 26,
+   "phase": "p3",
+   "title": "Der Mensch, der …",
+   "focus": "Relativsätze",
+   "from": 126,
+   "to": 130
+  },
+  {
+   "n": 27,
+   "phase": "p3",
+   "title": "Er hat gesagt, dass …",
+   "focus": "Indirekte Rede",
+   "from": 131,
+   "to": 135
+  },
+  {
+   "n": 28,
+   "phase": "p3",
+   "title": "Gefühle genau",
+   "focus": "Gefühlswortschatz und seine Satzmuster",
+   "from": 136,
+   "to": 140
+  },
+  {
+   "n": 29,
+   "phase": "p3",
+   "title": "Arbeit konkret",
+   "focus": "Berufsalltag",
+   "from": 141,
+   "to": 145
+  },
+  {
+   "n": 30,
+   "phase": "p3",
+   "title": "Essen als Kultur",
+   "focus": "Kochen und Einladen",
+   "from": 146,
+   "to": 150
+  },
+  {
+   "n": 31,
+   "phase": "p3",
+   "title": "Medien und Unterhaltung",
+   "focus": "Empfehlen und bewerten",
+   "from": 151,
+   "to": 155
+  },
+  {
+   "n": 32,
+   "phase": "p3",
+   "title": "Zahlen im Leben",
+   "focus": "Zahlen in allen Formen",
+   "from": 156,
+   "to": 160
+  },
+  {
+   "n": 33,
+   "phase": "p3",
+   "title": "Niemand und irgendwer",
+   "focus": "Verneinung und Unbestimmtes",
+   "from": 161,
+   "to": 165
+  },
+  {
+   "n": 34,
+   "phase": "p3",
+   "title": "Meilenstein: frei erzählen",
+   "focus": "Alles aus Phase 3 im Zusammenhang",
+   "from": 166,
+   "to": 170
+  },
+  {
+   "n": 35,
+   "phase": "p4",
+   "title": "Meinung begründen",
+   "focus": "Standpunkt, Begründung, Einschränkung",
+   "from": 171,
+   "to": 175
+  },
+  {
+   "n": 36,
+   "phase": "p4",
+   "title": "Was wäre, wenn",
+   "focus": "Konjunktiv und irreale Bedingung",
+   "from": 176,
+   "to": 180
+  },
+  {
+   "n": 37,
+   "phase": "p4",
+   "title": "Ziel und Zweck",
+   "focus": "Sätze mit »damit« und »um zu«",
+   "from": 181,
+   "to": 185
+  },
+  {
+   "n": 38,
+   "phase": "p4",
+   "title": "Psychologie I: Persönlichkeit",
+   "focus": "Fachnaher Wortschatz, Abstraktes",
+   "from": 186,
+   "to": 190
+  },
+  {
+   "n": 39,
+   "phase": "p4",
+   "title": "Psychologie II: Beziehungen",
+   "focus": "Über Beziehungen sprechen",
+   "from": 191,
+   "to": 195
+  },
+  {
+   "n": 40,
+   "phase": "p4",
+   "title": "Körper und Gesundheit vertieft",
+   "focus": "Genau beschreiben und begründen",
+   "from": 196,
+   "to": 200
+  },
+  {
+   "n": 41,
+   "phase": "p4",
+   "title": "Business I: Gründen und Führen",
+   "focus": "Geschäftssprache",
+   "from": 201,
+   "to": 205
+  },
+  {
+   "n": 42,
+   "phase": "p4",
+   "title": "Business II: Verhandeln",
+   "focus": "Angebot, Einwand, Abschluss",
+   "from": 206,
+   "to": 210
+  },
+  {
+   "n": 43,
+   "phase": "p4",
+   "title": "Es wird gemacht",
+   "focus": "Passiv und unpersönliche Sätze",
+   "from": 211,
+   "to": 215
+  },
+  {
+   "n": 44,
+   "phase": "p4",
+   "title": "Gesellschaft und Alltag in Russland",
+   "focus": "Landeskunde im Gespräch",
+   "from": 216,
+   "to": 220
+  },
+  {
+   "n": 45,
+   "phase": "p4",
+   "title": "Geld und Leben",
+   "focus": "Über Geld sprechen",
+   "from": 221,
+   "to": 225
+  },
+  {
+   "n": 46,
+   "phase": "p4",
+   "title": "Technik und Zukunft",
+   "focus": "Über Entwicklungen sprechen",
+   "from": 226,
+   "to": 230
+  },
+  {
+   "n": 47,
+   "phase": "p4",
+   "title": "Aspekt für Fortgeschrittene",
+   "focus": "Aspekt in Befehl, Verneinung, Grundform",
+   "from": 231,
+   "to": 235
+  },
+  {
+   "n": 48,
+   "phase": "p4",
+   "title": "Gefühle in Worte fassen II",
+   "focus": "Schwierige Gefühle benennen",
+   "from": 236,
+   "to": 240
+  },
+  {
+   "n": 49,
+   "phase": "p4",
+   "title": "Sinn und Werte vertieft",
+   "focus": "Abstrakt und trotzdem klar sprechen",
+   "from": 241,
+   "to": 245
+  },
+  {
+   "n": 50,
+   "phase": "p4",
+   "title": "Meilenstein B1",
+   "focus": "Alles aus Phase 4 im Zusammenhang",
+   "from": 246,
+   "to": 250
+  },
+  {
+   "n": 51,
+   "phase": "p5",
+   "title": "Die kleinen Wörter I",
+   "focus": "Partikeln, die Sätze lebendig machen",
+   "from": 251,
+   "to": 255
+  },
+  {
+   "n": 52,
+   "phase": "p5",
+   "title": "Die kleinen Wörter II",
+   "focus": "Füllwörter und Betonung",
+   "from": 256,
+   "to": 260
+  },
+  {
+   "n": 53,
+   "phase": "p5",
+   "title": "Umgangssprache",
+   "focus": "Wie man unter Freunden redet",
+   "from": 261,
+   "to": 265
+  },
+  {
+   "n": 54,
+   "phase": "p5",
+   "title": "Förmlich und offiziell",
+   "focus": "Die Sie-Form sicher beherrschen",
+   "from": 266,
+   "to": 270
+  },
+  {
+   "n": 55,
+   "phase": "p5",
+   "title": "Redewendungen I",
+   "focus": "Bilder aus Körper und Alltag",
+   "from": 271,
+   "to": 275
+  },
+  {
+   "n": 56,
+   "phase": "p5",
+   "title": "Redewendungen II",
+   "focus": "Sprichwörter und Humor",
+   "from": 276,
+   "to": 280
+  },
+  {
+   "n": 57,
+   "phase": "p5",
+   "title": "Erzählkunst",
+   "focus": "Partizipien verstehen",
+   "from": 281,
+   "to": 285
+  },
+  {
+   "n": 58,
+   "phase": "p5",
+   "title": "Bewegung III",
+   "focus": "Bewegungsverben im übertragenen Sinn",
+   "from": 286,
+   "to": 290
+  },
+  {
+   "n": 59,
+   "phase": "p5",
+   "title": "Zahlen, Zeit und Fälle komplett",
+   "focus": "Zahlwörter in allen Fällen",
+   "from": 291,
+   "to": 295
+  },
+  {
+   "n": 60,
+   "phase": "p5",
+   "title": "Russische Kultur I",
+   "focus": "Film und Musik",
+   "from": 296,
+   "to": 300
+  },
+  {
+   "n": 61,
+   "phase": "p5",
+   "title": "Russische Kultur II",
+   "focus": "Literatur, Geschichte, Regionen",
+   "from": 301,
+   "to": 305
+  },
+  {
+   "n": 62,
+   "phase": "p5",
+   "title": "Nachrichten verstehen",
+   "focus": "Mediensprache",
+   "from": 306,
+   "to": 310
+  },
+  {
+   "n": 63,
+   "phase": "p5",
+   "title": "Überzeugen und Präsentieren",
+   "focus": "Vor anderen sprechen",
+   "from": 311,
+   "to": 315
+  },
+  {
+   "n": 64,
+   "phase": "p5",
+   "title": "Schwierige Gespräche",
+   "focus": "Klar und menschlich bleiben",
+   "from": 316,
+   "to": 320
+  },
+  {
+   "n": 65,
+   "phase": "p5",
+   "title": "Nähe und Partnerschaft vertieft",
+   "focus": "Über das Gemeinsame sprechen",
+   "from": 321,
+   "to": 325
+  },
+  {
+   "n": 66,
+   "phase": "p5",
+   "title": "Meilenstein: natürlich klingen",
+   "focus": "Alles aus Phase 5 im Zusammenhang",
+   "from": 326,
+   "to": 330
+  },
+  {
+   "n": 67,
+   "phase": "p6",
+   "title": "Argumentieren",
+   "focus": "These, Zugeständnis, Schluss",
+   "from": 331,
+   "to": 335
+  },
+  {
+   "n": 68,
+   "phase": "p6",
+   "title": "Feinheiten",
+   "focus": "Aspekt, Zeitenfolge, Stil",
+   "from": 336,
+   "to": 340
+  },
+  {
+   "n": 69,
+   "phase": "p6",
+   "title": "Beruflich bestehen",
+   "focus": "Geschäftssprache auf hohem Niveau",
+   "from": 341,
+   "to": 345
+  },
+  {
+   "n": 70,
+   "phase": "p6",
+   "title": "Wissen und Ideen",
+   "focus": "Fachsprache deiner Themen",
+   "from": 346,
+   "to": 350
+  },
+  {
+   "n": 71,
+   "phase": "p6",
+   "title": "Emotionale Tiefe",
+   "focus": "Die großen Gespräche",
+   "from": 351,
+   "to": 355
+  },
+  {
+   "n": 72,
+   "phase": "p6",
+   "title": "Leben auf Russisch",
+   "focus": "Alltag, Freundschaft, Persönlichkeit",
+   "from": 356,
+   "to": 360
+  },
+  {
+   "n": 73,
+   "phase": "p6",
+   "title": "Jahresabschluss",
+   "focus": "Rückblick und Ausblick",
+   "from": 361,
+   "to": 365
+  }
+ ],
+ "days": [
+  {
+   "day": 1,
+   "block": 1,
+   "kind": "lesson",
+   "lesson": 1,
+   "title": "Hallo, Danke, Tschüss",
+   "goal": "Du kannst grüßen, dich bedanken und dich verabschieden — locker und höflich."
+  },
+  {
+   "day": 2,
+   "block": 1,
+   "kind": "lesson",
+   "lesson": 2,
+   "title": "Sich vorstellen",
+   "goal": "Du kannst sagen, wie du heißt, woher du kommst und wo du wohnst — und danach fragen.",
+   "pattern": "p01_hochu"
+  },
+  {
+   "day": 3,
+   "block": 1,
+   "kind": "lesson",
+   "lesson": 3,
+   "title": "Wie geht's?",
+   "goal": "Du kannst fragen, wie es jemandem geht, und ehrlich antworten.",
+   "pattern": "p03_chuvstvuyu"
+  },
+  {
+   "day": 4,
+   "block": 1,
+   "kind": "lesson",
+   "lesson": 4,
+   "title": "Zahlen & Alter",
+   "goal": "Du zählst bis zehn, nennst dein Alter und fragst nach Preisen.",
+   "pattern": "p15_u_menya"
+  },
+  {
+   "day": 5,
+   "block": 1,
+   "kind": "talk",
+   "title": "Erstes Kennenlernen",
+   "scene": "Du triffst Anja zum ersten Mal: begrüßen, vorstellen, fragen, wie es geht und wie alt sie ist.",
+   "lessons": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "day": 6,
+   "block": 2,
+   "kind": "lesson",
+   "lesson": 5,
+   "title": "Nachfragen & Verstehen",
+   "goal": "Du hältst jedes Gespräch am Laufen — auch wenn du nicht alles verstehst.",
+   "pattern": "p09_ne"
+  },
+  {
+   "day": 7,
+   "block": 2,
+   "kind": "lesson",
+   "lesson": 6,
+   "title": "Arbeit & Alltag",
+   "goal": "Du kannst erzählen, was du beruflich machst, und danach fragen.",
+   "pattern": "p06_nuzhno"
+  },
+  {
+   "day": 8,
+   "block": 2,
+   "kind": "lesson",
+   "lesson": 7,
+   "title": "Familie & Freunde",
+   "goal": "Du kannst über Familie und Freunde sprechen und danach fragen.",
+   "pattern": "p10_voprosy"
+  },
+  {
+   "day": 9,
+   "block": 2,
+   "kind": "lesson",
+   "lesson": 8,
+   "title": "Hobbys & Vorlieben",
+   "goal": "Du kannst sagen, was du magst und was du in deiner Freizeit machst.",
+   "pattern": "p02_nravitsya"
+  },
+  {
+   "day": 10,
+   "block": 2,
+   "kind": "talk",
+   "title": "Kaffee mit Anja",
+   "scene": "Ihr sitzt im Café und redet über Arbeit, Familie und das, was ihr gern macht.",
+   "lessons": [
+    5,
+    6,
+    7,
+    8
+   ]
+  },
+  {
+   "day": 11,
+   "block": 3,
+   "kind": "lesson",
+   "lesson": 9,
+   "title": "Essen & Trinken",
+   "goal": "Du bestellst im Café, bezahlst und redest übers Essen.",
+   "pattern": "p13_sravnenie"
+  },
+  {
+   "day": 12,
+   "block": 3,
+   "kind": "lesson",
+   "lesson": 10,
+   "title": "Zeit & Wetter",
+   "goal": "Du plauderst über heute, morgen, das Wochenende und das Wetter.",
+   "pattern": "p08_budushchee"
+  },
+  {
+   "day": 13,
+   "block": 3,
+   "kind": "lesson",
+   "lesson": 11,
+   "title": "Verabreden",
+   "goal": "Du schlägst ein Treffen vor, machst Zeit und Ort aus — oder sagst höflich ab.",
+   "pattern": "p18_esli"
+  },
+  {
+   "day": 14,
+   "block": 3,
+   "kind": "lesson",
+   "lesson": 12,
+   "title": "Fragen & Meinung",
+   "goal": "Du fragst nach, reagierst und sagst deine Meinung.",
+   "pattern": "p05_kazhetsya"
+  },
+  {
+   "day": 15,
+   "block": 3,
+   "kind": "talk",
+   "title": "Den Abend planen",
+   "scene": "Ihr macht aus, wann und wo ihr euch trefft, bestellt etwas und tauscht eure Meinung aus.",
+   "lessons": [
+    9,
+    10,
+    11,
+    12
+   ]
+  },
+  {
+   "day": 16,
+   "block": 4,
+   "kind": "lesson",
+   "lesson": 13,
+   "title": "Reagieren & Gefühle",
+   "goal": "Du reagierst natürlich: loben, trösten, dich freuen, dich entschuldigen.",
+   "pattern": "p04_potomu_chto"
+  },
+  {
+   "day": 17,
+   "block": 4,
+   "kind": "lesson",
+   "lesson": 14,
+   "title": "Abschied & großes Gespräch",
+   "goal": "Du führst ein ganzes Small-Talk-Gespräch — vom Hallo bis zum Tschüss.",
+   "pattern": "p07_proshloe"
+  },
+  {
+   "day": 18,
+   "block": 4,
+   "kind": "lesson",
+   "lesson": 15,
+   "title": "Gefühle, Seelenleben & Depressionen",
+   "goal": "Du kannst ehrlich erklären, wie du dich innerlich fühlst — auch bei Überforderung, innerer Leere oder Depressionen.",
+   "pattern": "p21_chuvstvuyu"
+  },
+  {
+   "day": 19,
+   "block": 4,
+   "kind": "lesson",
+   "lesson": 16,
+   "title": "Menschliche Psyche & Charakter",
+   "goal": "Du sprichst über Psychologie, das Unterbewusstsein, Gewohnheiten, Ängste und warum Menschen so handeln, wie sie handeln.",
+   "pattern": "p22_psihologiya"
+  },
+  {
+   "day": 20,
+   "block": 4,
+   "kind": "talk",
+   "title": "Wie es dir wirklich geht",
+   "scene": "Anja merkt, dass dich etwas beschäftigt. Du erzählst ehrlich und reagierst auf das, was sie sagt.",
+   "lessons": [
+    13,
+    14,
+    15,
+    16
+   ]
+  },
+  {
+   "day": 21,
+   "block": 5,
+   "kind": "lesson",
+   "lesson": 17,
+   "title": "Ernährung, Körper & Energie",
+   "goal": "Du kannst genau erklären, wie du dich ernährst, worauf du achtest und wie Ernährung, Schlaf und Sport deine Energie beeinflussen.",
+   "pattern": "p23_pitanie"
+  },
+  {
+   "day": 22,
+   "block": 5,
+   "kind": "lesson",
+   "lesson": 18,
+   "title": "Business, Geschäfte & Strategie",
+   "goal": "Du kannst über Business, Unternehmertum, Kunden, Projekte, Finanzen und strategische Entscheidungen sprechen.",
+   "pattern": "p24_biznes"
+  },
+  {
+   "day": 23,
+   "block": 5,
+   "kind": "lesson",
+   "lesson": 19,
+   "title": "Alltag, Aufgaben & gezielt nachfragen",
+   "goal": "Du erklärst deinen genauen Tagesablauf und deine Aufgaben — und fragst aktiv nach dem Alltag deines Gegenübers.",
+   "pattern": "p25_glubokiy_vopros"
+  },
+  {
+   "day": 24,
+   "block": 5,
+   "kind": "lesson",
+   "lesson": 20,
+   "title": "Tiefe Gespräche, Werte & Lebensziele",
+   "goal": "Du führst fließende, tiefgründige Gespräche über Lebenssinn, Werte, Beziehungen, Träume und persönliche Entwicklung.",
+   "pattern": "p20_vazhno"
+  },
+  {
+   "day": 25,
+   "block": 5,
+   "kind": "talk",
+   "title": "Was dich ausmacht",
+   "scene": "Ein langer Spaziergang: Ernährung, Arbeit, dein Tag und das, was dir im Leben wichtig ist.",
+   "lessons": [
+    17,
+    18,
+    19,
+    20
+   ]
+  },
+  {
+   "day": 26,
+   "block": 6,
+   "kind": "lesson",
+   "lesson": 21,
+   "title": "Unterwegs in der Stadt",
+   "goal": "Du kannst nach dem Weg fragen, Wegbeschreibungen verstehen und sagen, dass du dich verlaufen hast.",
+   "pattern": "p11_povelitelnoe"
+  },
+  {
+   "day": 27,
+   "block": 6,
+   "kind": "lesson",
+   "lesson": 22,
+   "title": "Einkaufen & Geld",
+   "goal": "Du kannst im Laden sagen, was du brauchst, nach Preis und Größe fragen, anprobieren und bezahlen.",
+   "pattern": "p14_nuzhen"
+  },
+  {
+   "day": 28,
+   "block": 6,
+   "kind": "lesson",
+   "lesson": 23,
+   "title": "Im Restaurant & zu Gast",
+   "goal": "Du kannst einen Tisch reservieren, dir etwas empfehlen lassen und die Rechnung regeln — und bist bei Freunden ein guter Gast."
+  },
+  {
+   "day": 29,
+   "block": 6,
+   "kind": "lesson",
+   "lesson": 24,
+   "title": "Telefon & Nachrichten",
+   "goal": "Du kannst telefonieren und Nachrichten schreiben: anrufen, zurückrufen, bei schlechtem Empfang reagieren und dich per Nachricht verabreden."
+  },
+  {
+   "day": 30,
+   "block": 6,
+   "kind": "talk",
+   "title": "Ein Tag in der Stadt",
+   "scene": "Du findest den Weg, kaufst ein, reservierst einen Tisch und sagst Anja am Telefon Bescheid.",
+   "lessons": [
+    21,
+    22,
+    23,
+    24
+   ]
+  },
+  {
+   "day": 31,
+   "block": 7,
+   "kind": "lesson",
+   "lesson": 25,
+   "title": "Was gestern war",
+   "goal": "Du kannst der Reihe nach erzählen, was du gestern und am Wochenende gemacht hast, und sagen, woran du dich erinnerst.",
+   "pattern": "p16_pomnyu"
+  },
+  {
+   "day": 32,
+   "block": 7,
+   "kind": "lesson",
+   "lesson": 26,
+   "title": "Kindheit & Herkunft",
+   "goal": "Du kannst erzählen, woher du kommst und wie du aufgewachsen bist, und dein Gegenüber nach seiner Kindheit fragen.",
+   "pattern": "p17_kogda"
+  },
+  {
+   "day": 33,
+   "block": 7,
+   "kind": "lesson",
+   "lesson": 27,
+   "title": "Reisen & Erlebnisse",
+   "goal": "Du kannst von deinen Reisen erzählen, sagen, was dir gefallen hat, und andere nach ihren Reisen fragen."
+  },
+  {
+   "day": 34,
+   "block": 7,
+   "kind": "lesson",
+   "lesson": 28,
+   "title": "Pläne, Träume & Ziele",
+   "goal": "Du kannst über deine Pläne, Träume und Ziele sprechen und sagen, was du gern tun würdest.",
+   "pattern": "p12_by"
+  },
+  {
+   "day": 35,
+   "block": 7,
+   "kind": "talk",
+   "title": "Deine Geschichte",
+   "scene": "Anja will alles wissen: wo du herkommst, was du erlebt hast und wovon du träumst.",
+   "lessons": [
+    25,
+    26,
+    27,
+    28
+   ]
+  },
+  {
+   "day": 36,
+   "block": 8,
+   "kind": "lesson",
+   "lesson": 29,
+   "title": "Komplimente & Zuneigung",
+   "goal": "Du kannst ehrlich und warm sagen, was du an jemandem magst, ein Kompliment annehmen und ausdrücken, was du dir für den anderen wünschst.",
+   "pattern": "p19_chtoby"
+  },
+  {
+   "day": 37,
+   "block": 8,
+   "kind": "lesson",
+   "lesson": 30,
+   "title": "Streit, Missverständnis & Versöhnung",
+   "goal": "Du kannst einen Streit ruhig klären: sagen, was dich verletzt hat, ein Missverständnis aufklären, dich entschuldigen und Frieden schließen."
+  },
+  {
+   "day": 38,
+   "block": 8,
+   "kind": "lesson",
+   "lesson": 31,
+   "title": "Gesundheit & Körper",
+   "goal": "Du kannst sagen, was dir fehlt, vom Arztbesuch erzählen und jemandem, der krank ist, Anteil und gute Besserung wünschen."
+  },
+  {
+   "day": 39,
+   "block": 8,
+   "kind": "lesson",
+   "lesson": 32,
+   "title": "Bilanz: Wer ich bin",
+   "goal": "Du kannst dich in einem längeren Gespräch zusammenhängend vorstellen, deine Sätze mit verbindenden Wörtern verknüpfen und mit Nachfragen ein Gespräch vertiefen."
+  },
+  {
+   "day": 40,
+   "block": 8,
+   "kind": "talk",
+   "title": "Abschlussgespräch der ersten Phase",
+   "scene": "Ein Abend zu zweit: Du sagst, was sie dir bedeutet, klärst ein Missverständnis und erzählst, wer du bist.",
+   "lessons": [
+    29,
+    30,
+    31,
+    32
+   ]
+  },
+  {
+   "day": 41,
+   "block": 9,
+   "kind": "lesson",
+   "lesson": 33,
+   "title": "Meine Wohnung",
+   "goal": "Du beschreibst, wo und wie du wohnst."
+  },
+  {
+   "day": 42,
+   "block": 9,
+   "kind": "lesson",
+   "lesson": 34,
+   "title": "Zimmer und Möbel",
+   "goal": "Du sagst, wo etwas steht, liegt oder hängt."
+  },
+  {
+   "day": 43,
+   "block": 9,
+   "kind": "lesson",
+   "lesson": 35,
+   "title": "Nachbarn und Hausregeln",
+   "goal": "Du klärst Alltägliches im Haus: Lärm, Müll, Schlüssel."
+  },
+  {
+   "day": 44,
+   "block": 9,
+   "kind": "lesson",
+   "lesson": 36,
+   "title": "Umziehen und Einrichten",
+   "goal": "Du erzählst vom Umzug und planst, was wohin kommt."
+  },
+  {
+   "day": 45,
+   "block": 9,
+   "kind": "talk",
+   "title": "Wohnungsbesichtigung",
+   "scene": "Anja zeigt dir ihre neue Wohnung, du stellst Fragen und vergleichst mit deiner.",
+   "lessons": [
+    33,
+    34,
+    35,
+    36
+   ]
+  },
+  {
+   "day": 46,
+   "block": 10,
+   "kind": "lesson",
+   "lesson": 37,
+   "title": "Morgenroutine",
+   "goal": "Du beschreibst deinen Morgen vom Aufstehen bis zum Losgehen."
+  },
+  {
+   "day": 47,
+   "block": 10,
+   "kind": "lesson",
+   "lesson": 38,
+   "title": "Unterwegs zur Arbeit",
+   "goal": "Du erzählst, wie du zur Arbeit kommst und was unterwegs passiert."
+  },
+  {
+   "day": 48,
+   "block": 10,
+   "kind": "lesson",
+   "lesson": 39,
+   "title": "Feierabend",
+   "goal": "Du sagst, wie du abschaltest und was du abends machst."
+  },
+  {
+   "day": 49,
+   "block": 10,
+   "kind": "lesson",
+   "lesson": 40,
+   "title": "Wochenende",
+   "goal": "Du erzählst, wie ein gutes Wochenende für dich aussieht."
+  },
+  {
+   "day": 50,
+   "block": 10,
+   "kind": "talk",
+   "title": "Ein typischer Tag",
+   "scene": "Ihr vergleicht eure Tage Stunde für Stunde und findet heraus, wer mehr schläft.",
+   "lessons": [
+    37,
+    38,
+    39,
+    40
+   ]
+  },
+  {
+   "day": 51,
+   "block": 11,
+   "kind": "lesson",
+   "lesson": 41,
+   "title": "Aussehen",
+   "goal": "Du beschreibst, wie jemand aussieht."
+  },
+  {
+   "day": 52,
+   "block": 11,
+   "kind": "lesson",
+   "lesson": 42,
+   "title": "Charakter",
+   "goal": "Du sagst, wie jemand ist: ruhig, offen, stur, herzlich."
+  },
+  {
+   "day": 53,
+   "block": 11,
+   "kind": "lesson",
+   "lesson": 43,
+   "title": "Kleidung und Stil",
+   "goal": "Du sprichst über Kleidung und was jemandem steht."
+  },
+  {
+   "day": 54,
+   "block": 11,
+   "kind": "lesson",
+   "lesson": 44,
+   "title": "Größer, älter, ruhiger",
+   "goal": "Du vergleichst zwei Menschen miteinander."
+  },
+  {
+   "day": 55,
+   "block": 11,
+   "kind": "talk",
+   "title": "Wen du bewunderst",
+   "scene": "Du erzählst Anja von einem Menschen, der dich geprägt hat, und beschreibst ihn genau.",
+   "lessons": [
+    41,
+    42,
+    43,
+    44
+   ]
+  },
+  {
+   "day": 56,
+   "block": 12,
+   "kind": "lesson",
+   "lesson": 45,
+   "title": "Was fehlt",
+   "goal": "Du sagst, was es nicht gibt und was du nicht hast."
+  },
+  {
+   "day": 57,
+   "block": 12,
+   "kind": "lesson",
+   "lesson": 46,
+   "title": "Viel, wenig, ein paar",
+   "goal": "Du nennst Mengen im Alltag."
+  },
+  {
+   "day": 58,
+   "block": 12,
+   "kind": "lesson",
+   "lesson": 47,
+   "title": "Von wem, von wo",
+   "goal": "Du sagst, von wem etwas ist und woher jemand kommt."
+  },
+  {
+   "day": 59,
+   "block": 12,
+   "kind": "lesson",
+   "lesson": 48,
+   "title": "Datum und Geburtstage",
+   "goal": "Du nennst ein Datum und fragst nach Geburtstagen."
+  },
+  {
+   "day": 60,
+   "block": 12,
+   "kind": "talk",
+   "title": "Eine Feier planen",
+   "scene": "Ihr plant einen Geburtstag: wer kommt, was fehlt noch, wer bringt was mit.",
+   "lessons": [
+    45,
+    46,
+    47,
+    48
+   ]
+  },
+  {
+   "day": 61,
+   "block": 13,
+   "kind": "lesson",
+   "lesson": 49,
+   "title": "Wohin gehst du?",
+   "goal": "Du unterscheidest, wohin du gehst und wo du bist."
+  },
+  {
+   "day": 62,
+   "block": 13,
+   "kind": "lesson",
+   "lesson": 50,
+   "title": "Zu Fuß oder fahren",
+   "goal": "Du wählst das richtige Verb für gehen und fahren."
+  },
+  {
+   "day": 63,
+   "block": 13,
+   "kind": "lesson",
+   "lesson": 51,
+   "title": "Verkehrsmittel und Tickets",
+   "goal": "Du kaufst Fahrkarten und fragst nach Verbindungen."
+  },
+  {
+   "day": 64,
+   "block": 13,
+   "kind": "lesson",
+   "lesson": 52,
+   "title": "Verspätung und Planänderung",
+   "goal": "Du sagst Bescheid, wenn etwas dazwischenkommt."
+  },
+  {
+   "day": 65,
+   "block": 13,
+   "kind": "talk",
+   "title": "Einen Ausflug organisieren",
+   "scene": "Ihr plant einen Tagesausflug: Ziel, Abfahrt, Treffpunkt und Plan B.",
+   "lessons": [
+    49,
+    50,
+    51,
+    52
+   ]
+  },
+  {
+   "day": 66,
+   "block": 14,
+   "kind": "lesson",
+   "lesson": 53,
+   "title": "Wem gibst du was?",
+   "goal": "Du sagst, wem du etwas gibst, sagst oder zeigst."
+  },
+  {
+   "day": 67,
+   "block": 14,
+   "kind": "lesson",
+   "lesson": 54,
+   "title": "Geschenke und Feste",
+   "goal": "Du überlegst laut, was du wem schenkst."
+  },
+  {
+   "day": 68,
+   "block": 14,
+   "kind": "lesson",
+   "lesson": 55,
+   "title": "Mir ist kalt, mir ist langweilig",
+   "goal": "Du drückst Zustände mit dem Dativ aus."
+  },
+  {
+   "day": 69,
+   "block": 14,
+   "kind": "lesson",
+   "lesson": 56,
+   "title": "Was andere brauchen",
+   "goal": "Du fragst, was jemand braucht, und bietest Hilfe an."
+  },
+  {
+   "day": 70,
+   "block": 14,
+   "kind": "talk",
+   "title": "Ein Geschenk für Anjas Mutter",
+   "scene": "Ihr sucht gemeinsam ein Geschenk aus und überlegt, was ihr gefallen könnte.",
+   "lessons": [
+    53,
+    54,
+    55,
+    56
+   ]
+  },
+  {
+   "day": 71,
+   "block": 15,
+   "kind": "lesson",
+   "lesson": 57,
+   "title": "Mit Freunden",
+   "goal": "Du sagst, mit wem du etwas machst."
+  },
+  {
+   "day": 72,
+   "block": 15,
+   "kind": "lesson",
+   "lesson": 58,
+   "title": "Beruf und Werden",
+   "goal": "Du sagst, als was du arbeitest und was du werden willst."
+  },
+  {
+   "day": 73,
+   "block": 15,
+   "kind": "lesson",
+   "lesson": 59,
+   "title": "Womit?",
+   "goal": "Du sagst, womit du etwas machst oder fährst."
+  },
+  {
+   "day": 74,
+   "block": 15,
+   "kind": "lesson",
+   "lesson": 60,
+   "title": "Interessen",
+   "goal": "Du erzählst, wofür du dich interessierst und womit du dich beschäftigst."
+  },
+  {
+   "day": 75,
+   "block": 15,
+   "kind": "talk",
+   "title": "Was du werden wolltest",
+   "scene": "Ihr redet über Kinderträume, heutige Berufe und das, was euch wirklich interessiert.",
+   "lessons": [
+    57,
+    58,
+    59,
+    60
+   ]
+  },
+  {
+   "day": 76,
+   "block": 16,
+   "kind": "lesson",
+   "lesson": 61,
+   "title": "Uhrzeit genau",
+   "goal": "Du nennst jede Uhrzeit, auch halb und Viertel."
+  },
+  {
+   "day": 77,
+   "block": 16,
+   "kind": "lesson",
+   "lesson": 62,
+   "title": "Wie lange, seit wann",
+   "goal": "Du sagst, wie lange etwas dauert und seit wann du etwas tust."
+  },
+  {
+   "day": 78,
+   "block": 16,
+   "kind": "lesson",
+   "lesson": 63,
+   "title": "Wie oft",
+   "goal": "Du sagst, wie häufig du etwas machst."
+  },
+  {
+   "day": 79,
+   "block": 16,
+   "kind": "lesson",
+   "lesson": 64,
+   "title": "Termine verschieben",
+   "goal": "Du vereinbarst einen Termin und verschiebst ihn höflich."
+  },
+  {
+   "day": 80,
+   "block": 16,
+   "kind": "talk",
+   "title": "Den Wochenplan abstimmen",
+   "scene": "Zwei volle Kalender: Ihr findet trotzdem drei gemeinsame Termine.",
+   "lessons": [
+    61,
+    62,
+    63,
+    64
+   ]
+  },
+  {
+   "day": 81,
+   "block": 17,
+   "kind": "lesson",
+   "lesson": 65,
+   "title": "Fertig oder noch nicht",
+   "goal": "Du unterscheidest »ich habe gemacht« von »ich habe fertig gemacht«."
+  },
+  {
+   "day": 82,
+   "block": 17,
+   "kind": "lesson",
+   "lesson": 66,
+   "title": "Einmal oder regelmäßig",
+   "goal": "Du wählst die Form für einmalige und für wiederholte Handlungen."
+  },
+  {
+   "day": 83,
+   "block": 17,
+   "kind": "lesson",
+   "lesson": 67,
+   "title": "Anfangen, aufhören, schaffen",
+   "goal": "Du sagst, was du begonnen, beendet oder geschafft hast."
+  },
+  {
+   "day": 84,
+   "block": 17,
+   "kind": "lesson",
+   "lesson": 68,
+   "title": "Mit beiden Formen erzählen",
+   "goal": "Du erzählst eine kurze Begebenheit mit Hintergrund und Ergebnis."
+  },
+  {
+   "day": 85,
+   "block": 17,
+   "kind": "talk",
+   "title": "Was du diese Woche geschafft hast",
+   "scene": "Ihr zieht Wochenbilanz: was fertig ist, woran ihr noch sitzt, was liegen blieb.",
+   "lessons": [
+    65,
+    66,
+    67,
+    68
+   ]
+  },
+  {
+   "day": 86,
+   "block": 18,
+   "kind": "lesson",
+   "lesson": 69,
+   "title": "Können und Beherrschen",
+   "goal": "Du unterscheidest »ich kann gerade« von »ich kann überhaupt«."
+  },
+  {
+   "day": 87,
+   "block": 18,
+   "kind": "lesson",
+   "lesson": 70,
+   "title": "Erlaubt und verboten",
+   "goal": "Du fragst, ob etwas erlaubt ist, und verstehst Verbote."
+  },
+  {
+   "day": 88,
+   "block": 18,
+   "kind": "lesson",
+   "lesson": 71,
+   "title": "Müssen und Sollen",
+   "goal": "Du sagst, was du tun musst und was nötig sein wird."
+  },
+  {
+   "day": 89,
+   "block": 18,
+   "kind": "lesson",
+   "lesson": 72,
+   "title": "Höflich ablehnen",
+   "goal": "Du bittest um Erlaubnis und sagst freundlich Nein."
+  },
+  {
+   "day": 90,
+   "block": 18,
+   "kind": "talk",
+   "title": "Regeln aushandeln",
+   "scene": "Ihr teilt euch eine Ferienwohnung und klärt, wer was darf und wer was muss.",
+   "lessons": [
+    69,
+    70,
+    71,
+    72
+   ]
+  },
+  {
+   "day": 91,
+   "block": 19,
+   "kind": "lesson",
+   "lesson": 73,
+   "title": "Beim Arzt",
+   "goal": "Du beschreibst Beschwerden und verstehst Anweisungen."
+  },
+  {
+   "day": 92,
+   "block": 19,
+   "kind": "lesson",
+   "lesson": 74,
+   "title": "Bank, Post, Behörde",
+   "goal": "Du erledigst einen einfachen Behördengang."
+  },
+  {
+   "day": 93,
+   "block": 19,
+   "kind": "lesson",
+   "lesson": 75,
+   "title": "Friseur und Reparatur",
+   "goal": "Du erklärst, was gemacht werden soll."
+  },
+  {
+   "day": 94,
+   "block": 19,
+   "kind": "lesson",
+   "lesson": 76,
+   "title": "Reklamieren",
+   "goal": "Du beschwerst dich sachlich und forderst eine Lösung."
+  },
+  {
+   "day": 95,
+   "block": 19,
+   "kind": "talk",
+   "title": "Wenn etwas nicht klappt",
+   "scene": "Das Hotelzimmer ist falsch gebucht. Du klärst es ruhig und bekommst, was du brauchst.",
+   "lessons": [
+    73,
+    74,
+    75,
+    76
+   ]
+  },
+  {
+   "day": 96,
+   "block": 20,
+   "kind": "lesson",
+   "lesson": 77,
+   "title": "Mit Fremden ins Gespräch kommen",
+   "goal": "Du beginnst ein Gespräch und hältst es am Laufen."
+  },
+  {
+   "day": 97,
+   "block": 20,
+   "kind": "lesson",
+   "lesson": 78,
+   "title": "Neuigkeiten des Tages",
+   "goal": "Du erzählst, was heute passiert ist, und fragst nach."
+  },
+  {
+   "day": 98,
+   "block": 20,
+   "kind": "lesson",
+   "lesson": 79,
+   "title": "Missverständnisse reparieren",
+   "goal": "Du merkst, wenn etwas falsch ankam, und stellst es richtig."
+  },
+  {
+   "day": 99,
+   "block": 20,
+   "kind": "lesson",
+   "lesson": 80,
+   "title": "Bilanz: mein Alltag auf Russisch",
+   "goal": "Du erzählst zehn Minuten frei von deinem Alltag."
+  },
+  {
+   "day": 100,
+   "block": 20,
+   "kind": "talk",
+   "title": "Großes Alltagsgespräch",
+   "scene": "Der Abschluss der zweiten Phase: ein langes Gespräch quer durch deinen Alltag.",
+   "lessons": [
+    77,
+    78,
+    79,
+    80
+   ]
+  },
+  {
+   "day": 101,
+   "block": 21,
+   "kind": "lesson",
+   "lesson": 81,
+   "title": "Zuerst, dann, schließlich",
+   "goal": "Du erzählst Ereignisse in klarer Reihenfolge."
+  },
+  {
+   "day": 102,
+   "block": 21,
+   "kind": "lesson",
+   "lesson": 82,
+   "title": "Hintergrund und Ereignis",
+   "goal": "Du trennst, was gerade lief, von dem, was passierte."
+  },
+  {
+   "day": 103,
+   "block": 21,
+   "kind": "lesson",
+   "lesson": 83,
+   "title": "Plötzlich und deshalb",
+   "goal": "Du verbindest Ereignisse mit Überraschung und Folge."
+  },
+  {
+   "day": 104,
+   "block": 21,
+   "kind": "lesson",
+   "lesson": 84,
+   "title": "Eine Anekdote",
+   "goal": "Du erzählst eine kurze Geschichte mit Pointe."
+  },
+  {
+   "day": 105,
+   "block": 21,
+   "kind": "talk",
+   "title": "Deine peinlichste Geschichte",
+   "scene": "Ihr erzählt euch reihum Geschichten, über die ihr heute lachen könnt.",
+   "lessons": [
+    81,
+    82,
+    83,
+    84
+   ]
+  },
+  {
+   "day": 106,
+   "block": 22,
+   "kind": "lesson",
+   "lesson": 85,
+   "title": "Unterwegs oder regelmäßig",
+   "goal": "Du unterscheidest »ich gehe gerade« von »ich gehe oft«."
+  },
+  {
+   "day": 107,
+   "block": 22,
+   "kind": "lesson",
+   "lesson": 86,
+   "title": "Ich war dort",
+   "goal": "Du sagst, wo du warst, mit den Verben der Bewegung."
+  },
+  {
+   "day": 108,
+   "block": 22,
+   "kind": "lesson",
+   "lesson": 87,
+   "title": "Fliegen, laufen, schwimmen",
+   "goal": "Du verwendest weitere Bewegungsverben richtig."
+  },
+  {
+   "day": 109,
+   "block": 22,
+   "kind": "lesson",
+   "lesson": 88,
+   "title": "Einen Weg erzählen",
+   "goal": "Du beschreibst, wie du irgendwohin gekommen bist."
+  },
+  {
+   "day": 110,
+   "block": 22,
+   "kind": "talk",
+   "title": "Dein Weg durch die Stadt",
+   "scene": "Du erzählst Anja deinen gestrigen Tag als Weg von Ort zu Ort.",
+   "lessons": [
+    85,
+    86,
+    87,
+    88
+   ]
+  },
+  {
+   "day": 111,
+   "block": 23,
+   "kind": "lesson",
+   "lesson": 89,
+   "title": "Ankommen und Weggehen",
+   "goal": "Du sagst, wann du kommst und wann du gehst."
+  },
+  {
+   "day": 112,
+   "block": 23,
+   "kind": "lesson",
+   "lesson": 90,
+   "title": "Hinein und hinaus",
+   "goal": "Du beschreibst, wer wo hinein- und hinausgeht."
+  },
+  {
+   "day": 113,
+   "block": 23,
+   "kind": "lesson",
+   "lesson": 91,
+   "title": "Vorbei, hinüber, bis",
+   "goal": "Du beschreibst Wege mit drei weiteren Vorsilben."
+  },
+  {
+   "day": 114,
+   "block": 23,
+   "kind": "lesson",
+   "lesson": 92,
+   "title": "Reisebericht",
+   "goal": "Du erzählst eine Reise von der Abfahrt bis zur Rückkehr."
+  },
+  {
+   "day": 115,
+   "block": 23,
+   "kind": "talk",
+   "title": "Die chaotischste Reise",
+   "scene": "Alles ging schief: verpasster Zug, falsches Gleis, falsche Stadt. Du erzählst es.",
+   "lessons": [
+    89,
+    90,
+    91,
+    92
+   ]
+  },
+  {
+   "day": 116,
+   "block": 24,
+   "kind": "lesson",
+   "lesson": 93,
+   "title": "Werde tun oder werde erledigen",
+   "goal": "Du wählst die richtige Zukunftsform."
+  },
+  {
+   "day": 117,
+   "block": 24,
+   "kind": "lesson",
+   "lesson": 94,
+   "title": "Versprechen und Vorhaben",
+   "goal": "Du versprichst etwas und kündigst an, was du vorhast."
+  },
+  {
+   "day": 118,
+   "block": 24,
+   "kind": "lesson",
+   "lesson": 95,
+   "title": "Vermutungen",
+   "goal": "Du sagst, was wahrscheinlich passieren wird."
+  },
+  {
+   "day": 119,
+   "block": 24,
+   "kind": "lesson",
+   "lesson": 96,
+   "title": "Wenn, dann",
+   "goal": "Du knüpfst Pläne an Bedingungen."
+  },
+  {
+   "day": 120,
+   "block": 24,
+   "kind": "talk",
+   "title": "Pläne fürs nächste Jahr",
+   "scene": "Ihr malt euch das kommende Jahr aus und überlegt, was davon realistisch ist.",
+   "lessons": [
+    93,
+    94,
+    95,
+    96
+   ]
+  },
+  {
+   "day": 121,
+   "block": 25,
+   "kind": "lesson",
+   "lesson": 97,
+   "title": "Besser, schlechter, mehr",
+   "goal": "Du vergleichst mit den wichtigsten Steigerungsformen."
+  },
+  {
+   "day": 122,
+   "block": 25,
+   "kind": "lesson",
+   "lesson": 98,
+   "title": "Als",
+   "goal": "Du baust vollständige Vergleichssätze."
+  },
+  {
+   "day": 123,
+   "block": 25,
+   "kind": "lesson",
+   "lesson": 99,
+   "title": "Der beste, am meisten",
+   "goal": "Du sagst, was das Beste und das Schlimmste ist."
+  },
+  {
+   "day": 124,
+   "block": 25,
+   "kind": "lesson",
+   "lesson": 100,
+   "title": "Vor- und Nachteile",
+   "goal": "Du wägst zwei Möglichkeiten gegeneinander ab."
+  },
+  {
+   "day": 125,
+   "block": 25,
+   "kind": "talk",
+   "title": "Stadt oder Land?",
+   "scene": "Wo lebt es sich besser? Ihr sammelt Gründe und kommt zu keinem Ergebnis.",
+   "lessons": [
+    97,
+    98,
+    99,
+    100
+   ]
+  },
+  {
+   "day": 126,
+   "block": 26,
+   "kind": "lesson",
+   "lesson": 101,
+   "title": "Der Mensch, der",
+   "goal": "Du beschreibst Menschen und Dinge mit einem Nebensatz."
+  },
+  {
+   "day": 127,
+   "block": 26,
+   "kind": "lesson",
+   "lesson": 102,
+   "title": "In allen Fällen",
+   "goal": "Du verwendest das Relativwort auch mit Vorwörtern."
+  },
+  {
+   "day": 128,
+   "block": 26,
+   "kind": "lesson",
+   "lesson": 103,
+   "title": "Dinge genauer beschreiben",
+   "goal": "Du erklärst, welches Ding du meinst."
+  },
+  {
+   "day": 129,
+   "block": 26,
+   "kind": "lesson",
+   "lesson": 104,
+   "title": "Wenn ein Wort fehlt",
+   "goal": "Du umschreibst, was du nicht benennen kannst."
+  },
+  {
+   "day": 130,
+   "block": 26,
+   "kind": "talk",
+   "title": "Menschen aus deinem Leben",
+   "scene": "Du stellst Anja die wichtigsten Menschen deines Lebens vor, ohne Fotos.",
+   "lessons": [
+    101,
+    102,
+    103,
+    104
+   ]
+  },
+  {
+   "day": 131,
+   "block": 27,
+   "kind": "lesson",
+   "lesson": 105,
+   "title": "Er sagte, dass",
+   "goal": "Du gibst wieder, was jemand gesagt hat."
+  },
+  {
+   "day": 132,
+   "block": 27,
+   "kind": "lesson",
+   "lesson": 106,
+   "title": "Sie fragte, ob",
+   "goal": "Du gibst Fragen anderer weiter."
+  },
+  {
+   "day": 133,
+   "block": 27,
+   "kind": "lesson",
+   "lesson": 107,
+   "title": "Er bat mich",
+   "goal": "Du gibst Bitten und Aufforderungen weiter."
+  },
+  {
+   "day": 134,
+   "block": 27,
+   "kind": "lesson",
+   "lesson": 108,
+   "title": "Neuigkeiten weitererzählen",
+   "goal": "Du erzählst, was du gehört hast."
+  },
+  {
+   "day": 135,
+   "block": 27,
+   "kind": "talk",
+   "title": "Was man sich so erzählt",
+   "scene": "Du berichtest Anja von einem Gespräch, das du gestern mitbekommen hast.",
+   "lessons": [
+    105,
+    106,
+    107,
+    108
+   ]
+  },
+  {
+   "day": 136,
+   "block": 28,
+   "kind": "lesson",
+   "lesson": 109,
+   "title": "Freude und Stolz",
+   "goal": "Du sagst, worüber du dich freust und worauf du stolz bist."
+  },
+  {
+   "day": 137,
+   "block": 28,
+   "kind": "lesson",
+   "lesson": 110,
+   "title": "Ärger und Enttäuschung",
+   "goal": "Du sagst ruhig, was dich ärgert oder enttäuscht."
+  },
+  {
+   "day": 138,
+   "block": 28,
+   "kind": "lesson",
+   "lesson": 111,
+   "title": "Angst und Sorge",
+   "goal": "Du sprichst über Sorgen, deine und die anderer."
+  },
+  {
+   "day": 139,
+   "block": 28,
+   "kind": "lesson",
+   "lesson": 112,
+   "title": "Mitgefühl zeigen",
+   "goal": "Du tröstest und zeigst, dass du verstehst."
+  },
+  {
+   "day": 140,
+   "block": 28,
+   "kind": "talk",
+   "title": "Ein schwerer Tag",
+   "scene": "Anja hatte einen furchtbaren Tag. Du hörst zu, fragst nach und findest die richtigen Worte.",
+   "lessons": [
+    109,
+    110,
+    111,
+    112
+   ]
+  },
+  {
+   "day": 141,
+   "block": 29,
+   "kind": "lesson",
+   "lesson": 113,
+   "title": "Aufgaben und Zuständigkeiten",
+   "goal": "Du erklärst, wer bei euch wofür zuständig ist."
+  },
+  {
+   "day": 142,
+   "block": 29,
+   "kind": "lesson",
+   "lesson": 114,
+   "title": "Besprechungen",
+   "goal": "Du triffst Absprachen und hältst Ergebnisse fest."
+  },
+  {
+   "day": 143,
+   "block": 29,
+   "kind": "lesson",
+   "lesson": 115,
+   "title": "Probleme melden und lösen",
+   "goal": "Du beschreibst ein Problem und schlägst eine Lösung vor."
+  },
+  {
+   "day": 144,
+   "block": 29,
+   "kind": "lesson",
+   "lesson": 116,
+   "title": "Rückmeldung geben",
+   "goal": "Du lobst, kritisierst sachlich und nimmst Kritik an."
+  },
+  {
+   "day": 145,
+   "block": 29,
+   "kind": "talk",
+   "title": "Projektbesprechung",
+   "scene": "Du leitest eine kurze Besprechung: Stand, Probleme, nächste Schritte.",
+   "lessons": [
+    113,
+    114,
+    115,
+    116
+   ]
+  },
+  {
+   "day": 146,
+   "block": 30,
+   "kind": "lesson",
+   "lesson": 117,
+   "title": "Rezepte",
+   "goal": "Du erklärst, wie man ein Gericht zubereitet."
+  },
+  {
+   "day": 147,
+   "block": 30,
+   "kind": "lesson",
+   "lesson": 118,
+   "title": "Russische Küche",
+   "goal": "Du kennst die wichtigsten Gerichte und bestellst sie sicher."
+  },
+  {
+   "day": 148,
+   "block": 30,
+   "kind": "lesson",
+   "lesson": 119,
+   "title": "Tischgespräche und Trinksprüche",
+   "goal": "Du hältst einen kurzen Trinkspruch."
+  },
+  {
+   "day": 149,
+   "block": 30,
+   "kind": "lesson",
+   "lesson": 120,
+   "title": "Gastgeber sein",
+   "goal": "Du lädst ein, bietest an und sorgst für deine Gäste."
+  },
+  {
+   "day": 150,
+   "block": 30,
+   "kind": "talk",
+   "title": "Abendessen bei Anjas Familie",
+   "scene": "Du bist zum ersten Mal bei ihren Eltern eingeladen und machst alles richtig.",
+   "lessons": [
+    117,
+    118,
+    119,
+    120
+   ]
+  },
+  {
+   "day": 151,
+   "block": 31,
+   "kind": "lesson",
+   "lesson": 121,
+   "title": "Filme und Serien",
+   "goal": "Du erzählst, worum es geht, ohne das Ende zu verraten."
+  },
+  {
+   "day": 152,
+   "block": 31,
+   "kind": "lesson",
+   "lesson": 122,
+   "title": "Musik",
+   "goal": "Du sprichst über Musik, die dich bewegt."
+  },
+  {
+   "day": 153,
+   "block": 31,
+   "kind": "lesson",
+   "lesson": 123,
+   "title": "Bücher",
+   "goal": "Du stellst ein Buch vor, das dich beeinflusst hat."
+  },
+  {
+   "day": 154,
+   "block": 31,
+   "kind": "lesson",
+   "lesson": 124,
+   "title": "Empfehlen und Abraten",
+   "goal": "Du empfiehlst etwas und begründest es."
+  },
+  {
+   "day": 155,
+   "block": 31,
+   "kind": "talk",
+   "title": "Was ich unbedingt sehen sollte",
+   "scene": "Ihr stellt euch gegenseitig eine Liste zusammen und streitet über Geschmack.",
+   "lessons": [
+    121,
+    122,
+    123,
+    124
+   ]
+  },
+  {
+   "day": 156,
+   "block": 32,
+   "kind": "lesson",
+   "lesson": 125,
+   "title": "Große Zahlen und Preise",
+   "goal": "Du nennst und verstehst große Beträge."
+  },
+  {
+   "day": 157,
+   "block": 32,
+   "kind": "lesson",
+   "lesson": 126,
+   "title": "Prozente und Mengen",
+   "goal": "Du sprichst über Anteile und Mengen."
+  },
+  {
+   "day": 158,
+   "block": 32,
+   "kind": "lesson",
+   "lesson": 127,
+   "title": "Jahreszahlen und Alter",
+   "goal": "Du nennst Jahre, Jahrzehnte und genaue Altersangaben."
+  },
+  {
+   "day": 159,
+   "block": 32,
+   "kind": "lesson",
+   "lesson": 128,
+   "title": "Handeln",
+   "goal": "Du verhandelst einen Preis."
+  },
+  {
+   "day": 160,
+   "block": 32,
+   "kind": "talk",
+   "title": "Auf dem Markt",
+   "scene": "Du willst einen Teppich kaufen. Der Händler ist gut, du bist besser.",
+   "lessons": [
+    125,
+    126,
+    127,
+    128
+   ]
+  },
+  {
+   "day": 161,
+   "block": 33,
+   "kind": "lesson",
+   "lesson": 129,
+   "title": "Niemand, nichts, nie",
+   "goal": "Du verneinst vollständig, mit doppelter Verneinung."
+  },
+  {
+   "day": 162,
+   "block": 33,
+   "kind": "lesson",
+   "lesson": 130,
+   "title": "Irgendwer, irgendwas",
+   "goal": "Du unterscheidest die beiden Arten von »irgend«."
+  },
+  {
+   "day": 163,
+   "block": 33,
+   "kind": "lesson",
+   "lesson": 131,
+   "title": "Weder noch",
+   "goal": "Du schließt zwei Dinge gleichzeitig aus."
+  },
+  {
+   "day": 164,
+   "block": 33,
+   "kind": "lesson",
+   "lesson": 132,
+   "title": "Zweifel und Unsicherheit",
+   "goal": "Du sagst, dass du dir nicht sicher bist."
+  },
+  {
+   "day": 165,
+   "block": 33,
+   "kind": "talk",
+   "title": "Wer war's?",
+   "scene": "Der Kuchen ist weg. Ihr rekonstruiert den Abend und verdächtigt jeden.",
+   "lessons": [
+    129,
+    130,
+    131,
+    132
+   ]
+  },
+  {
+   "day": 166,
+   "block": 34,
+   "kind": "lesson",
+   "lesson": 133,
+   "title": "Dein Lebenslauf",
+   "goal": "Du erzählst deinen Werdegang in fünf Minuten."
+  },
+  {
+   "day": 167,
+   "block": 34,
+   "kind": "lesson",
+   "lesson": 134,
+   "title": "Ein Erlebnis ausführlich",
+   "goal": "Du erzählst ein Erlebnis mit allen Einzelheiten."
+  },
+  {
+   "day": 168,
+   "block": 34,
+   "kind": "lesson",
+   "lesson": 135,
+   "title": "Zuhören und Nachhaken",
+   "goal": "Du stellst Fragen, die ein Gespräch vertiefen."
+  },
+  {
+   "day": 169,
+   "block": 34,
+   "kind": "lesson",
+   "lesson": 136,
+   "title": "Bilanz: ich erzähle frei",
+   "goal": "Du erzählst zehn Minuten ohne Vorlage."
+  },
+  {
+   "day": 170,
+   "block": 34,
+   "kind": "talk",
+   "title": "Deine Lebensgeschichte",
+   "scene": "Der Abschluss der dritten Phase: Du erzählst dein Leben, Anja fragt nach.",
+   "lessons": [
+    133,
+    134,
+    135,
+    136
+   ]
+  },
+  {
+   "day": 171,
+   "block": 35,
+   "kind": "lesson",
+   "lesson": 137,
+   "title": "Ich finde, ich halte für",
+   "goal": "Du sagst deine Meinung in mehreren Abstufungen."
+  },
+  {
+   "day": 172,
+   "block": 35,
+   "kind": "lesson",
+   "lesson": 138,
+   "title": "Begründen und Beispiele",
+   "goal": "Du stützt deine Meinung mit Gründen und Beispielen."
+  },
+  {
+   "day": 173,
+   "block": 35,
+   "kind": "lesson",
+   "lesson": 139,
+   "title": "Obwohl, dafür, trotzdem",
+   "goal": "Du schränkst ein und wägst ab."
+  },
+  {
+   "day": 174,
+   "block": 35,
+   "kind": "lesson",
+   "lesson": 140,
+   "title": "Mit Respekt widersprechen",
+   "goal": "Du widersprichst, ohne das Gespräch zu beschädigen."
+  },
+  {
+   "day": 175,
+   "block": 35,
+   "kind": "talk",
+   "title": "Eine Streitfrage des Alltags",
+   "scene": "Homeoffice oder Büro? Ihr seid verschiedener Meinung und bleibt freundlich.",
+   "lessons": [
+    137,
+    138,
+    139,
+    140
+   ]
+  },
+  {
+   "day": 176,
+   "block": 36,
+   "kind": "lesson",
+   "lesson": 141,
+   "title": "Wenn ich hätte",
+   "goal": "Du sprichst über Unwirkliches."
+  },
+  {
+   "day": 177,
+   "block": 36,
+   "kind": "lesson",
+   "lesson": 142,
+   "title": "Wünsche und Bedauern",
+   "goal": "Du sagst, was du dir wünschst und was du bereust."
+  },
+  {
+   "day": 178,
+   "block": 36,
+   "kind": "lesson",
+   "lesson": 143,
+   "title": "An deiner Stelle",
+   "goal": "Du gibst einen Rat, ohne zu belehren."
+  },
+  {
+   "day": 179,
+   "block": 36,
+   "kind": "lesson",
+   "lesson": 144,
+   "title": "Höfliche Vorschläge",
+   "goal": "Du schlägst etwas vorsichtig vor."
+  },
+  {
+   "day": 180,
+   "block": 36,
+   "kind": "talk",
+   "title": "Wenn du eine Million hättest",
+   "scene": "Ihr spielt durch, was ihr mit viel Geld und viel Zeit anfangen würdet.",
+   "lessons": [
+    141,
+    142,
+    143,
+    144
+   ]
+  },
+  {
+   "day": 181,
+   "block": 37,
+   "kind": "lesson",
+   "lesson": 145,
+   "title": "Wozu?",
+   "goal": "Du sagst, wozu du etwas tust."
+  },
+  {
+   "day": 182,
+   "block": 37,
+   "kind": "lesson",
+   "lesson": 146,
+   "title": "Wollen, dass andere",
+   "goal": "Du sagst, was du dir von anderen wünschst."
+  },
+  {
+   "day": 183,
+   "block": 37,
+   "kind": "lesson",
+   "lesson": 147,
+   "title": "Indirekt bitten",
+   "goal": "Du bittest über einen Nebensatz."
+  },
+  {
+   "day": 184,
+   "block": 37,
+   "kind": "lesson",
+   "lesson": 148,
+   "title": "Motivation erklären",
+   "goal": "Du erklärst, was dich antreibt."
+  },
+  {
+   "day": 185,
+   "block": 37,
+   "kind": "talk",
+   "title": "Warum du Russisch lernst",
+   "scene": "Anja fragt dich ganz direkt nach deinem Warum. Du antwortest ehrlich und ausführlich.",
+   "lessons": [
+    145,
+    146,
+    147,
+    148
+   ]
+  },
+  {
+   "day": 186,
+   "block": 38,
+   "kind": "lesson",
+   "lesson": 149,
+   "title": "Temperament und Typen",
+   "goal": "Du beschreibst, wie Menschen verschieden ticken."
+  },
+  {
+   "day": 187,
+   "block": 38,
+   "kind": "lesson",
+   "lesson": 150,
+   "title": "Stärken und Schwächen",
+   "goal": "Du sprichst offen über deine eigenen."
+  },
+  {
+   "day": 188,
+   "block": 38,
+   "kind": "lesson",
+   "lesson": 151,
+   "title": "Gewohnheiten ändern",
+   "goal": "Du erklärst, wie Veränderung gelingt."
+  },
+  {
+   "day": 189,
+   "block": 38,
+   "kind": "lesson",
+   "lesson": 152,
+   "title": "Motivation und Disziplin",
+   "goal": "Du unterscheidest beides und sagst, was dir hilft."
+  },
+  {
+   "day": 190,
+   "block": 38,
+   "kind": "talk",
+   "title": "Was dich antreibt",
+   "scene": "Ihr analysiert euch gegenseitig, liebevoll und ziemlich treffend.",
+   "lessons": [
+    149,
+    150,
+    151,
+    152
+   ]
+  },
+  {
+   "day": 191,
+   "block": 39,
+   "kind": "lesson",
+   "lesson": 153,
+   "title": "Bindung und Vertrauen",
+   "goal": "Du sagst, was Vertrauen für dich bedeutet."
+  },
+  {
+   "day": 192,
+   "block": 39,
+   "kind": "lesson",
+   "lesson": 154,
+   "title": "Grenzen und Bedürfnisse",
+   "goal": "Du sagst klar, was du brauchst."
+  },
+  {
+   "day": 193,
+   "block": 39,
+   "kind": "lesson",
+   "lesson": 155,
+   "title": "Miteinander reden",
+   "goal": "Du beschreibst, was gute Kommunikation ausmacht."
+  },
+  {
+   "day": 194,
+   "block": 39,
+   "kind": "lesson",
+   "lesson": 156,
+   "title": "Familie und Prägung",
+   "goal": "Du erzählst, was du von zu Hause mitbekommen hast."
+  },
+  {
+   "day": 195,
+   "block": 39,
+   "kind": "talk",
+   "title": "Was eine gute Beziehung ausmacht",
+   "scene": "Ein ruhiges, langes Gespräch darüber, was ihr von einer Beziehung erwartet.",
+   "lessons": [
+    153,
+    154,
+    155,
+    156
+   ]
+  },
+  {
+   "day": 196,
+   "block": 40,
+   "kind": "lesson",
+   "lesson": 157,
+   "title": "Training und Erholung",
+   "goal": "Du erklärst deinen Trainingsplan."
+  },
+  {
+   "day": 197,
+   "block": 40,
+   "kind": "lesson",
+   "lesson": 158,
+   "title": "Ernährung im Detail",
+   "goal": "Du begründest, warum du isst, wie du isst."
+  },
+  {
+   "day": 198,
+   "block": 40,
+   "kind": "lesson",
+   "lesson": 159,
+   "title": "Schlaf und Stress",
+   "goal": "Du sprichst über Belastung und Ausgleich."
+  },
+  {
+   "day": 199,
+   "block": 40,
+   "kind": "lesson",
+   "lesson": 160,
+   "title": "Beim Arzt ausführlich",
+   "goal": "Du schilderst einen Verlauf und verstehst die Diagnose."
+  },
+  {
+   "day": 200,
+   "block": 40,
+   "kind": "talk",
+   "title": "Dein Gesundheitsplan",
+   "scene": "Anja will fitter werden und bittet dich um einen Plan. Du erklärst jeden Schritt.",
+   "lessons": [
+    157,
+    158,
+    159,
+    160
+   ]
+  },
+  {
+   "day": 201,
+   "block": 41,
+   "kind": "lesson",
+   "lesson": 161,
+   "title": "Die Geschäftsidee",
+   "goal": "Du stellst eine Idee in zwei Minuten vor."
+  },
+  {
+   "day": 202,
+   "block": 41,
+   "kind": "lesson",
+   "lesson": 162,
+   "title": "Kunden und Markt",
+   "goal": "Du beschreibst Zielgruppe und Wettbewerb."
+  },
+  {
+   "day": 203,
+   "block": 41,
+   "kind": "lesson",
+   "lesson": 163,
+   "title": "Team und Führung",
+   "goal": "Du sagst, wie du führst und was du erwartest."
+  },
+  {
+   "day": 204,
+   "block": 41,
+   "kind": "lesson",
+   "lesson": 164,
+   "title": "Zahlen und Ziele",
+   "goal": "Du sprichst über Umsatz, Kosten und Ziele."
+  },
+  {
+   "day": 205,
+   "block": 41,
+   "kind": "talk",
+   "title": "Der Pitch",
+   "scene": "Du stellst dein Vorhaben einem russischen Investor vor. Anja spielt den Investor.",
+   "lessons": [
+    161,
+    162,
+    163,
+    164
+   ]
+  },
+  {
+   "day": 206,
+   "block": 42,
+   "kind": "lesson",
+   "lesson": 165,
+   "title": "Angebot und Bedingungen",
+   "goal": "Du machst ein Angebot und nennst Bedingungen."
+  },
+  {
+   "day": 207,
+   "block": 42,
+   "kind": "lesson",
+   "lesson": 166,
+   "title": "Einwände behandeln",
+   "goal": "Du gehst auf Bedenken ein."
+  },
+  {
+   "day": 208,
+   "block": 42,
+   "kind": "lesson",
+   "lesson": 167,
+   "title": "Kompromiss und Abschluss",
+   "goal": "Du findest eine Lösung und hältst sie fest."
+  },
+  {
+   "day": 209,
+   "block": 42,
+   "kind": "lesson",
+   "lesson": 168,
+   "title": "Geschäftliche Nachrichten",
+   "goal": "Du schreibst kurze, klare Nachrichten an Geschäftspartner."
+  },
+  {
+   "day": 210,
+   "block": 42,
+   "kind": "talk",
+   "title": "Die Verhandlung",
+   "scene": "Preis, Frist, Umfang: Ihr verhandelt hart und geht zufrieden auseinander.",
+   "lessons": [
+    165,
+    166,
+    167,
+    168
+   ]
+  },
+  {
+   "day": 211,
+   "block": 43,
+   "kind": "lesson",
+   "lesson": 169,
+   "title": "Es wird gemacht",
+   "goal": "Du sagst, was geschieht, ohne den Handelnden zu nennen."
+  },
+  {
+   "day": 212,
+   "block": 43,
+   "kind": "lesson",
+   "lesson": 170,
+   "title": "Ist erledigt",
+   "goal": "Du verwendest Kurzformen wie »gemacht«, »geschlossen«, »verboten«."
+  },
+  {
+   "day": 213,
+   "block": 43,
+   "kind": "lesson",
+   "lesson": 171,
+   "title": "Man sagt, es gilt als",
+   "goal": "Du gibst wieder, was allgemein gilt."
+  },
+  {
+   "day": 214,
+   "block": 43,
+   "kind": "lesson",
+   "lesson": 172,
+   "title": "Anleitungen und Regeln",
+   "goal": "Du verstehst Hinweise, Schilder und Anleitungen."
+  },
+  {
+   "day": 215,
+   "block": 43,
+   "kind": "talk",
+   "title": "Wie das bei euch läuft",
+   "scene": "Du lässt dir erklären, wie in Russland ein Umzug, eine Hochzeit, ein Behördengang abläuft.",
+   "lessons": [
+    169,
+    170,
+    171,
+    172
+   ]
+  },
+  {
+   "day": 216,
+   "block": 44,
+   "kind": "lesson",
+   "lesson": 173,
+   "title": "Stadt und Land",
+   "goal": "Du sprichst über das Leben in Moskau und in der Provinz."
+  },
+  {
+   "day": 217,
+   "block": 44,
+   "kind": "lesson",
+   "lesson": 174,
+   "title": "Feste und Traditionen",
+   "goal": "Du kennst die wichtigsten Feste und was man dann sagt."
+  },
+  {
+   "day": 218,
+   "block": 44,
+   "kind": "lesson",
+   "lesson": 175,
+   "title": "Umgangsformen",
+   "goal": "Du weißt, was als höflich und was als kalt gilt."
+  },
+  {
+   "day": 219,
+   "block": 44,
+   "kind": "lesson",
+   "lesson": 176,
+   "title": "Deutschland und Russland",
+   "goal": "Du vergleichst beide Länder, ohne zu urteilen."
+  },
+  {
+   "day": 220,
+   "block": 44,
+   "kind": "talk",
+   "title": "Kulturschock",
+   "scene": "Ihr erzählt euch, was euch im Land des anderen am meisten überrascht hat.",
+   "lessons": [
+    173,
+    174,
+    175,
+    176
+   ]
+  },
+  {
+   "day": 221,
+   "block": 45,
+   "kind": "lesson",
+   "lesson": 177,
+   "title": "Miete, Kosten, Sparen",
+   "goal": "Du sprichst über Lebenshaltungskosten."
+  },
+  {
+   "day": 222,
+   "block": 45,
+   "kind": "lesson",
+   "lesson": 178,
+   "title": "Arbeit und Gehalt",
+   "goal": "Du sprichst über Verdienst, ohne unhöflich zu sein."
+  },
+  {
+   "day": 223,
+   "block": 45,
+   "kind": "lesson",
+   "lesson": 179,
+   "title": "Anlegen und Risiko",
+   "goal": "Du erklärst, wie du mit Geld umgehst."
+  },
+  {
+   "day": 224,
+   "block": 45,
+   "kind": "lesson",
+   "lesson": 180,
+   "title": "Was dir Geld wert ist",
+   "goal": "Du sagst, wofür du gern Geld ausgibst und wofür nicht."
+  },
+  {
+   "day": 225,
+   "block": 45,
+   "kind": "talk",
+   "title": "Lebensstandard",
+   "scene": "Was braucht man wirklich? Ein Gespräch über Geld, Zeit und Freiheit.",
+   "lessons": [
+    177,
+    178,
+    179,
+    180
+   ]
+  },
+  {
+   "day": 226,
+   "block": 46,
+   "kind": "lesson",
+   "lesson": 181,
+   "title": "Telefon und Apps",
+   "goal": "Du erklärst, wie etwas funktioniert und was nicht geht."
+  },
+  {
+   "day": 227,
+   "block": 46,
+   "kind": "lesson",
+   "lesson": 182,
+   "title": "Künstliche Intelligenz",
+   "goal": "Du sprichst über Automatisierung und ihre Folgen."
+  },
+  {
+   "day": 228,
+   "block": 46,
+   "kind": "lesson",
+   "lesson": 183,
+   "title": "Soziale Medien",
+   "goal": "Du sagst, wie du sie nutzt und was dich stört."
+  },
+  {
+   "day": 229,
+   "block": 46,
+   "kind": "lesson",
+   "lesson": 184,
+   "title": "Chancen und Gefahren",
+   "goal": "Du wägst Nutzen und Risiken ab."
+  },
+  {
+   "day": 230,
+   "block": 46,
+   "kind": "talk",
+   "title": "Die Welt in zehn Jahren",
+   "scene": "Ihr entwerft zwei Zukunftsbilder, ein gutes und ein schlechtes.",
+   "lessons": [
+    181,
+    182,
+    183,
+    184
+   ]
+  },
+  {
+   "day": 231,
+   "block": 47,
+   "kind": "lesson",
+   "lesson": 185,
+   "title": "Befehl und Aspekt",
+   "goal": "Du bittest richtig: einmal, dauerhaft, höflich."
+  },
+  {
+   "day": 232,
+   "block": 47,
+   "kind": "lesson",
+   "lesson": 186,
+   "title": "Verneinung und Aspekt",
+   "goal": "Du unterscheidest »tu es nicht« von »du musst es nicht tun«."
+  },
+  {
+   "day": 233,
+   "block": 47,
+   "kind": "lesson",
+   "lesson": 187,
+   "title": "Grundform und Aspekt",
+   "goal": "Du wählst nach »muss«, »will«, »anfangen« die richtige Form."
+  },
+  {
+   "day": 234,
+   "block": 47,
+   "kind": "lesson",
+   "lesson": 188,
+   "title": "Vorsilben ändern die Bedeutung",
+   "goal": "Du erkennst, was Vorsilben aus einem Verb machen."
+  },
+  {
+   "day": 235,
+   "block": 47,
+   "kind": "talk",
+   "title": "Anweisungen und Erledigungen",
+   "scene": "Ihr bereitet eine Reise vor und verteilt Aufgaben: wer macht was bis wann.",
+   "lessons": [
+    185,
+    186,
+    187,
+    188
+   ]
+  },
+  {
+   "day": 236,
+   "block": 48,
+   "kind": "lesson",
+   "lesson": 189,
+   "title": "Einsamkeit und Nähe",
+   "goal": "Du sprichst darüber, wann du dich allein fühlst."
+  },
+  {
+   "day": 237,
+   "block": 48,
+   "kind": "lesson",
+   "lesson": 190,
+   "title": "Scham und Schuld",
+   "goal": "Du sprichst über Fehler, die dich beschäftigen."
+  },
+  {
+   "day": 238,
+   "block": 48,
+   "kind": "lesson",
+   "lesson": 191,
+   "title": "Dankbarkeit und Vergebung",
+   "goal": "Du bedankst dich von Herzen und vergibst."
+  },
+  {
+   "day": 239,
+   "block": 48,
+   "kind": "lesson",
+   "lesson": 192,
+   "title": "Krisen und Neuanfang",
+   "goal": "Du erzählst von einer schweren Zeit und was danach kam."
+  },
+  {
+   "day": 240,
+   "block": 48,
+   "kind": "talk",
+   "title": "Was dich geprägt hat",
+   "scene": "Ein Gespräch über die Zeiten, die euch zu denen gemacht haben, die ihr seid.",
+   "lessons": [
+    189,
+    190,
+    191,
+    192
+   ]
+  },
+  {
+   "day": 241,
+   "block": 49,
+   "kind": "lesson",
+   "lesson": 193,
+   "title": "Freiheit und Verantwortung",
+   "goal": "Du sagst, wie beides für dich zusammenhängt."
+  },
+  {
+   "day": 242,
+   "block": 49,
+   "kind": "lesson",
+   "lesson": 194,
+   "title": "Erfolg und Glück",
+   "goal": "Du unterscheidest, was dich erfolgreich und was dich glücklich macht."
+  },
+  {
+   "day": 243,
+   "block": 49,
+   "kind": "lesson",
+   "lesson": 195,
+   "title": "Glaube und Zweifel",
+   "goal": "Du sprichst respektvoll über Überzeugungen."
+  },
+  {
+   "day": 244,
+   "block": 49,
+   "kind": "lesson",
+   "lesson": 196,
+   "title": "Was bleibt",
+   "goal": "Du sagst, was du hinterlassen möchtest."
+  },
+  {
+   "day": 245,
+   "block": 49,
+   "kind": "talk",
+   "title": "Ein philosophischer Abend",
+   "scene": "Kein Thema, kein Ziel: Ihr denkt gemeinsam laut nach.",
+   "lessons": [
+    193,
+    194,
+    195,
+    196
+   ]
+  },
+  {
+   "day": 246,
+   "block": 50,
+   "kind": "lesson",
+   "lesson": 197,
+   "title": "Diskutieren ohne Vorlage",
+   "goal": "Du hältst zehn Minuten Diskussion durch."
+  },
+  {
+   "day": 247,
+   "block": 50,
+   "kind": "lesson",
+   "lesson": 198,
+   "title": "Einen Standpunkt halten",
+   "goal": "Du bleibst bei deiner Meinung, auch unter Druck."
+  },
+  {
+   "day": 248,
+   "block": 50,
+   "kind": "lesson",
+   "lesson": 199,
+   "title": "Zusammenfassen und vermitteln",
+   "goal": "Du fasst zwei Standpunkte zusammen und findest das Gemeinsame."
+  },
+  {
+   "day": 249,
+   "block": 50,
+   "kind": "lesson",
+   "lesson": 200,
+   "title": "Bilanz: ich diskutiere frei",
+   "goal": "Du diskutierst ein Thema deiner Wahl."
+  },
+  {
+   "day": 250,
+   "block": 50,
+   "kind": "talk",
+   "title": "Das große Streitgespräch",
+   "scene": "Der Abschluss der vierten Phase: ein Thema, zwei Meinungen, eine Stunde.",
+   "lessons": [
+    197,
+    198,
+    199,
+    200
+   ]
+  },
+  {
+   "day": 251,
+   "block": 51,
+   "kind": "lesson",
+   "lesson": 201,
+   "title": "Doch und ja",
+   "goal": "Du verwendest die häufigste russische Partikel in ihren Bedeutungen."
+  },
+  {
+   "day": 252,
+   "block": 51,
+   "kind": "lesson",
+   "lesson": 202,
+   "title": "Schließlich, ja doch",
+   "goal": "Du erinnerst an etwas, das der andere weiß."
+  },
+  {
+   "day": 253,
+   "block": 51,
+   "kind": "lesson",
+   "lesson": 203,
+   "title": "Da, hier, sieh mal",
+   "goal": "Du zeigst und betonst mit zwei kleinen Wörtern."
+  },
+  {
+   "day": 254,
+   "block": 51,
+   "kind": "lesson",
+   "lesson": 204,
+   "title": "Na, also, und",
+   "goal": "Du beginnst Sätze so, wie man es wirklich tut."
+  },
+  {
+   "day": 255,
+   "block": 51,
+   "kind": "talk",
+   "title": "Klingen wie von dort",
+   "scene": "Dasselbe Gespräch zweimal: erst korrekt, dann lebendig.",
+   "lessons": [
+    201,
+    202,
+    203,
+    204
+   ]
+  },
+  {
+   "day": 256,
+   "block": 52,
+   "kind": "lesson",
+   "lesson": 205,
+   "title": "Zeit gewinnen",
+   "goal": "Du überbrückst Denkpausen, ohne zu verstummen."
+  },
+  {
+   "day": 257,
+   "block": 52,
+   "kind": "lesson",
+   "lesson": 206,
+   "title": "Abschwächen",
+   "goal": "Du sagst etwas vorsichtiger."
+  },
+  {
+   "day": 258,
+   "block": 52,
+   "kind": "lesson",
+   "lesson": 207,
+   "title": "Genau, sogar, nur",
+   "goal": "Du hebst hervor, was dir wichtig ist."
+  },
+  {
+   "day": 259,
+   "block": 52,
+   "kind": "lesson",
+   "lesson": 208,
+   "title": "Etwa? Wirklich?",
+   "goal": "Du drückst Erstaunen und Zweifel mit Fragepartikeln aus."
+  },
+  {
+   "day": 260,
+   "block": 52,
+   "kind": "talk",
+   "title": "Spontan reagieren",
+   "scene": "Anja überrascht dich mit Neuigkeiten. Du reagierst sofort und passend.",
+   "lessons": [
+    205,
+    206,
+    207,
+    208
+   ]
+  },
+  {
+   "day": 261,
+   "block": 53,
+   "kind": "lesson",
+   "lesson": 209,
+   "title": "Alltagssprache",
+   "goal": "Du verstehst und verwendest lockere Alltagswörter."
+  },
+  {
+   "day": 262,
+   "block": 53,
+   "kind": "lesson",
+   "lesson": 210,
+   "title": "Internet und Jugendsprache",
+   "goal": "Du verstehst, was in Chats steht."
+  },
+  {
+   "day": 263,
+   "block": 53,
+   "kind": "lesson",
+   "lesson": 211,
+   "title": "Verkleinerungen und Kosenamen",
+   "goal": "Du verstehst, warum alles ein »-chen« bekommt."
+  },
+  {
+   "day": 264,
+   "block": 53,
+   "kind": "lesson",
+   "lesson": 212,
+   "title": "Was wohin passt",
+   "goal": "Du weißt, was du wo besser nicht sagst."
+  },
+  {
+   "day": 265,
+   "block": 53,
+   "kind": "talk",
+   "title": "Ein Abend mit Freunden",
+   "scene": "Du bist mit Anjas Freunden unterwegs. Alle reden schnell, du hältst mit.",
+   "lessons": [
+    209,
+    210,
+    211,
+    212
+   ]
+  },
+  {
+   "day": 266,
+   "block": 54,
+   "kind": "lesson",
+   "lesson": 213,
+   "title": "Vorname und Vatersname",
+   "goal": "Du sprichst Menschen förmlich korrekt an."
+  },
+  {
+   "day": 267,
+   "block": 54,
+   "kind": "lesson",
+   "lesson": 214,
+   "title": "Offizielle Schreiben",
+   "goal": "Du verstehst Bescheide und schreibst eine kurze Anfrage."
+  },
+  {
+   "day": 268,
+   "block": 54,
+   "kind": "lesson",
+   "lesson": 215,
+   "title": "Telefonate mit Ämtern",
+   "goal": "Du klärst ein Anliegen am Telefon."
+  },
+  {
+   "day": 269,
+   "block": 54,
+   "kind": "lesson",
+   "lesson": 216,
+   "title": "Höflich bestehen",
+   "goal": "Du bleibst freundlich und lässt dich nicht abwimmeln."
+  },
+  {
+   "day": 270,
+   "block": 54,
+   "kind": "talk",
+   "title": "Termin beim Amt",
+   "scene": "Ein Formular fehlt, die Zeit läuft. Du bleibst höflich und bekommst deinen Stempel.",
+   "lessons": [
+    213,
+    214,
+    215,
+    216
+   ]
+  },
+  {
+   "day": 271,
+   "block": 55,
+   "kind": "lesson",
+   "lesson": 217,
+   "title": "Kopf und Herz",
+   "goal": "Du verstehst Wendungen rund um Denken und Fühlen."
+  },
+  {
+   "day": 272,
+   "block": 55,
+   "kind": "lesson",
+   "lesson": 218,
+   "title": "Hand und Fuß",
+   "goal": "Du verstehst Wendungen rund ums Handeln."
+  },
+  {
+   "day": 273,
+   "block": 55,
+   "kind": "lesson",
+   "lesson": 219,
+   "title": "Essen und Trinken",
+   "goal": "Du verstehst Wendungen aus der Küche."
+  },
+  {
+   "day": 274,
+   "block": 55,
+   "kind": "lesson",
+   "lesson": 220,
+   "title": "Tiere",
+   "goal": "Du verstehst, wer hier Bär und wer Hase ist."
+  },
+  {
+   "day": 275,
+   "block": 55,
+   "kind": "talk",
+   "title": "Sprichwörter erklären",
+   "scene": "Du erklärst deutsche Redewendungen auf Russisch, Anja die russischen.",
+   "lessons": [
+    217,
+    218,
+    219,
+    220
+   ]
+  },
+  {
+   "day": 276,
+   "block": 56,
+   "kind": "lesson",
+   "lesson": 221,
+   "title": "Sprichwörter",
+   "goal": "Du kennst die zwanzig, die wirklich jeder sagt."
+  },
+  {
+   "day": 277,
+   "block": 56,
+   "kind": "lesson",
+   "lesson": 222,
+   "title": "Ironie",
+   "goal": "Du erkennst Ironie und setzt sie ein."
+  },
+  {
+   "day": 278,
+   "block": 56,
+   "kind": "lesson",
+   "lesson": 223,
+   "title": "Witze",
+   "goal": "Du verstehst einen Witz und erzählst selbst einen."
+  },
+  {
+   "day": 279,
+   "block": 56,
+   "kind": "lesson",
+   "lesson": 224,
+   "title": "Wortspiele",
+   "goal": "Du verstehst, warum etwas doppeldeutig ist."
+  },
+  {
+   "day": 280,
+   "block": 56,
+   "kind": "talk",
+   "title": "Die lustigste Geschichte",
+   "scene": "Wer zuerst lacht, verliert. Ihr erzählt euch Witze und Missgeschicke.",
+   "lessons": [
+    221,
+    222,
+    223,
+    224
+   ]
+  },
+  {
+   "day": 281,
+   "block": 57,
+   "kind": "lesson",
+   "lesson": 225,
+   "title": "Der lesende, der gelesene",
+   "goal": "Du verstehst Partizipien in Texten."
+  },
+  {
+   "day": 282,
+   "block": 57,
+   "kind": "lesson",
+   "lesson": 226,
+   "title": "Während und nachdem",
+   "goal": "Du verstehst und bildest Sätze mit Adverbialpartizip."
+  },
+  {
+   "day": 283,
+   "block": 57,
+   "kind": "lesson",
+   "lesson": 227,
+   "title": "Spannend erzählen",
+   "goal": "Du baust Spannung auf und setzt Pausen."
+  },
+  {
+   "day": 284,
+   "block": 57,
+   "kind": "lesson",
+   "lesson": 228,
+   "title": "Nacherzählen",
+   "goal": "Du gibst den Inhalt eines Films oder Buchs wieder."
+  },
+  {
+   "day": 285,
+   "block": 57,
+   "kind": "talk",
+   "title": "Erzähl mir einen Film",
+   "scene": "Du erzählst deinen Lieblingsfilm so, dass Anja ihn sehen will.",
+   "lessons": [
+    225,
+    226,
+    227,
+    228
+   ]
+  },
+  {
+   "day": 286,
+   "block": 58,
+   "kind": "lesson",
+   "lesson": 229,
+   "title": "Zeit vergeht, es passt, es klappt",
+   "goal": "Du verwendest Bewegungsverben für Abstraktes."
+  },
+  {
+   "day": 287,
+   "block": 58,
+   "kind": "lesson",
+   "lesson": 230,
+   "title": "Erreichen, übergehen, vorbeischauen",
+   "goal": "Du verstehst drei weitere übertragene Bedeutungen."
+  },
+  {
+   "day": 288,
+   "block": 58,
+   "kind": "lesson",
+   "lesson": 231,
+   "title": "Führen und Tragen",
+   "goal": "Du verwendest die Verben für bringen, führen, tragen."
+  },
+  {
+   "day": 289,
+   "block": 58,
+   "kind": "lesson",
+   "lesson": 232,
+   "title": "Feste Wendungen",
+   "goal": "Du kennst die häufigsten Wendungen mit Bewegungsverben."
+  },
+  {
+   "day": 290,
+   "block": 58,
+   "kind": "talk",
+   "title": "Wie es wirklich läuft",
+   "scene": "Ihr sprecht darüber, wie es im Leben gerade vorangeht, in lauter Bewegungsverben.",
+   "lessons": [
+    229,
+    230,
+    231,
+    232
+   ]
+  },
+  {
+   "day": 291,
+   "block": 59,
+   "kind": "lesson",
+   "lesson": 233,
+   "title": "Das Datum in allen Fällen",
+   "goal": "Du sagst »am«, »seit dem«, »bis zum« mit Datum."
+  },
+  {
+   "day": 292,
+   "block": 59,
+   "kind": "lesson",
+   "lesson": 234,
+   "title": "Zeiträume und Fristen",
+   "goal": "Du sprichst über Dauer und Termine."
+  },
+  {
+   "day": 293,
+   "block": 59,
+   "kind": "lesson",
+   "lesson": 235,
+   "title": "Zu zweit, zu dritt, beide",
+   "goal": "Du verwendest Sammelzahlen."
+  },
+  {
+   "day": 294,
+   "block": 59,
+   "kind": "lesson",
+   "lesson": 236,
+   "title": "Ungefähr",
+   "goal": "Du schätzt und rundest."
+  },
+  {
+   "day": 295,
+   "block": 59,
+   "kind": "talk",
+   "title": "Ein großes Vorhaben planen",
+   "scene": "Ihr plant ein Projekt über sechs Monate mit Terminen, Kosten und Puffern.",
+   "lessons": [
+    233,
+    234,
+    235,
+    236
+   ]
+  },
+  {
+   "day": 296,
+   "block": 60,
+   "kind": "lesson",
+   "lesson": 237,
+   "title": "Kultfilme und Zitate",
+   "goal": "Du erkennst Zitate, die jeder kennt."
+  },
+  {
+   "day": 297,
+   "block": 60,
+   "kind": "lesson",
+   "lesson": 238,
+   "title": "Von Rock bis Pop",
+   "goal": "Du sprichst über russische Musik."
+  },
+  {
+   "day": 298,
+   "block": 60,
+   "kind": "lesson",
+   "lesson": 239,
+   "title": "Lieder verstehen",
+   "goal": "Du verstehst einen Liedtext Zeile für Zeile."
+  },
+  {
+   "day": 299,
+   "block": 60,
+   "kind": "lesson",
+   "lesson": 240,
+   "title": "Über Kunst sprechen",
+   "goal": "Du sagst, was dich an einem Werk berührt."
+  },
+  {
+   "day": 300,
+   "block": 60,
+   "kind": "talk",
+   "title": "Dein Lieblingslied",
+   "scene": "Du erklärst Anja ein Lied, das dir viel bedeutet, und sie dir eines von ihr.",
+   "lessons": [
+    237,
+    238,
+    239,
+    240
+   ]
+  },
+  {
+   "day": 301,
+   "block": 61,
+   "kind": "lesson",
+   "lesson": 241,
+   "title": "Klassiker in einfachen Worten",
+   "goal": "Du weißt, worum es in den großen Romanen geht."
+  },
+  {
+   "day": 302,
+   "block": 61,
+   "kind": "lesson",
+   "lesson": 242,
+   "title": "Ein Gedicht",
+   "goal": "Du lernst ein kurzes Gedicht auswendig und trägst es vor."
+  },
+  {
+   "day": 303,
+   "block": 61,
+   "kind": "lesson",
+   "lesson": 243,
+   "title": "Geschichte in Stichworten",
+   "goal": "Du ordnest die wichtigsten Ereignisse ein."
+  },
+  {
+   "day": 304,
+   "block": 61,
+   "kind": "lesson",
+   "lesson": 244,
+   "title": "Orte und Regionen",
+   "goal": "Du kennst die großen Landschaften und Städte."
+  },
+  {
+   "day": 305,
+   "block": 61,
+   "kind": "talk",
+   "title": "Eine Reise durch Russland",
+   "scene": "Ihr plant drei Wochen: von Petersburg bis zum Baikal.",
+   "lessons": [
+    241,
+    242,
+    243,
+    244
+   ]
+  },
+  {
+   "day": 306,
+   "block": 62,
+   "kind": "lesson",
+   "lesson": 245,
+   "title": "Schlagzeilen",
+   "goal": "Du verstehst die verdichtete Sprache der Überschriften."
+  },
+  {
+   "day": 307,
+   "block": 62,
+   "kind": "lesson",
+   "lesson": 246,
+   "title": "Bericht und Meinung",
+   "goal": "Du erkennst, wo berichtet und wo gewertet wird."
+  },
+  {
+   "day": 308,
+   "block": 62,
+   "kind": "lesson",
+   "lesson": 247,
+   "title": "Wirtschaft und Politik",
+   "goal": "Du kennst den Grundwortschatz."
+  },
+  {
+   "day": 309,
+   "block": 62,
+   "kind": "lesson",
+   "lesson": 248,
+   "title": "Über ein Ereignis sprechen",
+   "goal": "Du gibst eine Nachricht wieder und ordnest sie ein."
+  },
+  {
+   "day": 310,
+   "block": 62,
+   "kind": "talk",
+   "title": "Die Nachricht der Woche",
+   "scene": "Jeder bringt eine Nachricht mit und erklärt, warum sie wichtig ist.",
+   "lessons": [
+    245,
+    246,
+    247,
+    248
+   ]
+  },
+  {
+   "day": 311,
+   "block": 63,
+   "kind": "lesson",
+   "lesson": 249,
+   "title": "Aufbau",
+   "goal": "Du gliederst einen Vortrag."
+  },
+  {
+   "day": 312,
+   "block": 63,
+   "kind": "lesson",
+   "lesson": 250,
+   "title": "Zahlen und Grafiken",
+   "goal": "Du erklärst eine Entwicklung."
+  },
+  {
+   "day": 313,
+   "block": 63,
+   "kind": "lesson",
+   "lesson": 251,
+   "title": "Die Zuhörer abholen",
+   "goal": "Du beginnst so, dass man dir zuhört."
+  },
+  {
+   "day": 314,
+   "block": 63,
+   "kind": "lesson",
+   "lesson": 252,
+   "title": "Fragen beantworten",
+   "goal": "Du gehst souverän mit Zwischenfragen um."
+  },
+  {
+   "day": 315,
+   "block": 63,
+   "kind": "talk",
+   "title": "Dein Kurzvortrag",
+   "scene": "Fünf Minuten über ein Thema, das dir wichtig ist. Danach Fragen.",
+   "lessons": [
+    249,
+    250,
+    251,
+    252
+   ]
+  },
+  {
+   "day": 316,
+   "block": 64,
+   "kind": "lesson",
+   "lesson": 253,
+   "title": "Kritik äußern",
+   "goal": "Du sagst etwas Unangenehmes klar und fair."
+  },
+  {
+   "day": 317,
+   "block": 64,
+   "kind": "lesson",
+   "lesson": 254,
+   "title": "Schlechte Nachrichten",
+   "goal": "Du überbringst eine schlechte Nachricht."
+  },
+  {
+   "day": 318,
+   "block": 64,
+   "kind": "lesson",
+   "lesson": 255,
+   "title": "Nein sagen",
+   "goal": "Du lehnst ab und bleibst dabei."
+  },
+  {
+   "day": 319,
+   "block": 64,
+   "kind": "lesson",
+   "lesson": 256,
+   "title": "Beruhigen",
+   "goal": "Du nimmst die Schärfe aus einem Gespräch."
+  },
+  {
+   "day": 320,
+   "block": 64,
+   "kind": "talk",
+   "title": "Das Konfliktgespräch",
+   "scene": "Ein Freund hat dich enttäuscht. Du sagst es ihm.",
+   "lessons": [
+    253,
+    254,
+    255,
+    256
+   ]
+  },
+  {
+   "day": 321,
+   "block": 65,
+   "kind": "lesson",
+   "lesson": 257,
+   "title": "Gemeinsame Zukunft",
+   "goal": "Du sprichst über Wünsche, die euch beide betreffen."
+  },
+  {
+   "day": 322,
+   "block": 65,
+   "kind": "lesson",
+   "lesson": 258,
+   "title": "Alltag zu zweit",
+   "goal": "Du klärst Alltägliches, ohne dass es Streit gibt."
+  },
+  {
+   "day": 323,
+   "block": 65,
+   "kind": "lesson",
+   "lesson": 259,
+   "title": "Eifersucht und Vertrauen",
+   "goal": "Du sprichst über Unsicherheit."
+  },
+  {
+   "day": 324,
+   "block": 65,
+   "kind": "lesson",
+   "lesson": 260,
+   "title": "Zärtlichkeit und Humor",
+   "goal": "Du neckst liebevoll."
+  },
+  {
+   "day": 325,
+   "block": 65,
+   "kind": "talk",
+   "title": "Worüber Paare reden",
+   "scene": "Ein ganz normaler Abend, an dem über alles gesprochen wird.",
+   "lessons": [
+    257,
+    258,
+    259,
+    260
+   ]
+  },
+  {
+   "day": 326,
+   "block": 66,
+   "kind": "lesson",
+   "lesson": 261,
+   "title": "Spontan über jedes Thema",
+   "goal": "Du sprichst zwei Minuten über ein Thema, das du vorher nicht kennst."
+  },
+  {
+   "day": 327,
+   "block": 66,
+   "kind": "lesson",
+   "lesson": 262,
+   "title": "Umschreiben und Reparieren",
+   "goal": "Du rettest jeden Satz, auch wenn ein Wort fehlt."
+  },
+  {
+   "day": 328,
+   "block": 66,
+   "kind": "lesson",
+   "lesson": 263,
+   "title": "Tempo und Rhythmus",
+   "goal": "Du sprichst flüssig und setzt Pausen bewusst."
+  },
+  {
+   "day": 329,
+   "block": 66,
+   "kind": "lesson",
+   "lesson": 264,
+   "title": "Bilanz: ich klinge natürlich",
+   "goal": "Du führst ein Gespräch, in dem niemand langsamer für dich spricht."
+  },
+  {
+   "day": 330,
+   "block": 66,
+   "kind": "talk",
+   "title": "Zwei Stunden nur Russisch",
+   "scene": "Der Abschluss der fünften Phase: ein ganzer Abend ohne ein deutsches Wort.",
+   "lessons": [
+    261,
+    262,
+    263,
+    264
+   ]
+  },
+  {
+   "day": 331,
+   "block": 67,
+   "kind": "lesson",
+   "lesson": 265,
+   "title": "These und Gegenthese",
+   "goal": "Du baust eine Argumentation auf."
+  },
+  {
+   "day": 332,
+   "block": 67,
+   "kind": "lesson",
+   "lesson": 266,
+   "title": "Zugestehen und Kontern",
+   "goal": "Du gibst einen Punkt zu und setzt nach."
+  },
+  {
+   "day": 333,
+   "block": 67,
+   "kind": "lesson",
+   "lesson": 267,
+   "title": "Abstraktes ausdrücken",
+   "goal": "Du verwendest abstrakte Begriffe sicher."
+  },
+  {
+   "day": 334,
+   "block": 67,
+   "kind": "lesson",
+   "lesson": 268,
+   "title": "Genau formulieren",
+   "goal": "Du triffst die Nuance, die du meinst."
+  },
+  {
+   "day": 335,
+   "block": 67,
+   "kind": "talk",
+   "title": "Die Debatte",
+   "scene": "Ein Thema, Los entscheidet die Seite. Du vertrittst sie, auch wenn es nicht deine ist.",
+   "lessons": [
+    265,
+    266,
+    267,
+    268
+   ]
+  },
+  {
+   "day": 336,
+   "block": 68,
+   "kind": "lesson",
+   "lesson": 269,
+   "title": "Aspekt in Grenzfällen",
+   "goal": "Du verstehst, warum hier diese Form steht und nicht die andere."
+  },
+  {
+   "day": 337,
+   "block": 68,
+   "kind": "lesson",
+   "lesson": 270,
+   "title": "Bedingung und Folge",
+   "goal": "Du baust mehrstufige Bedingungssätze."
+  },
+  {
+   "day": 338,
+   "block": 68,
+   "kind": "lesson",
+   "lesson": 271,
+   "title": "Zeitenfolge",
+   "goal": "Du erzählst mit Rückblenden und Vorgriffen."
+  },
+  {
+   "day": 339,
+   "block": 68,
+   "kind": "lesson",
+   "lesson": 272,
+   "title": "Knapp oder kunstvoll",
+   "goal": "Du wählst den Stil passend zur Situation."
+  },
+  {
+   "day": 340,
+   "block": 68,
+   "kind": "talk",
+   "title": "Eine Geschichte, drei Stile",
+   "scene": "Du erzählst dieselbe Begebenheit sachlich, lustig und dramatisch.",
+   "lessons": [
+    269,
+    270,
+    271,
+    272
+   ]
+  },
+  {
+   "day": 341,
+   "block": 69,
+   "kind": "lesson",
+   "lesson": 273,
+   "title": "Vorstellungsgespräch",
+   "goal": "Du stellst dich und deinen Werdegang überzeugend vor."
+  },
+  {
+   "day": 342,
+   "block": 69,
+   "kind": "lesson",
+   "lesson": 274,
+   "title": "Eine Besprechung leiten",
+   "goal": "Du führst durch die Tagesordnung und kommst zu Entscheidungen."
+  },
+  {
+   "day": 343,
+   "block": 69,
+   "kind": "lesson",
+   "lesson": 275,
+   "title": "Verträge verstehen",
+   "goal": "Du verstehst die wichtigsten Klauseln und fragst gezielt nach."
+  },
+  {
+   "day": 344,
+   "block": 69,
+   "kind": "lesson",
+   "lesson": 276,
+   "title": "Kontakte knüpfen",
+   "goal": "Du kommst mit Fremden beruflich ins Gespräch."
+  },
+  {
+   "day": 345,
+   "block": 69,
+   "kind": "talk",
+   "title": "Das Geschäftsessen",
+   "scene": "Erst wird gegessen, dann verhandelt. Du beherrschst beides.",
+   "lessons": [
+    273,
+    274,
+    275,
+    276
+   ]
+  },
+  {
+   "day": 346,
+   "block": 70,
+   "kind": "lesson",
+   "lesson": 277,
+   "title": "Psychologie",
+   "goal": "Du sprichst fachlich über Verhalten und Denken."
+  },
+  {
+   "day": 347,
+   "block": 70,
+   "kind": "lesson",
+   "lesson": 278,
+   "title": "Gesundheit und Medizin",
+   "goal": "Du verstehst Befunde und erklärst Zusammenhänge."
+  },
+  {
+   "day": 348,
+   "block": 70,
+   "kind": "lesson",
+   "lesson": 279,
+   "title": "Technik und Wirtschaft",
+   "goal": "Du erklärst, wie ein Geschäftsmodell oder ein System funktioniert."
+  },
+  {
+   "day": 349,
+   "block": 70,
+   "kind": "lesson",
+   "lesson": 280,
+   "title": "Einen Fachtext wiedergeben",
+   "goal": "Du fasst einen Artikel zusammen und beurteilst ihn."
+  },
+  {
+   "day": 350,
+   "block": 70,
+   "kind": "talk",
+   "title": "Erklär mir dein Fach",
+   "scene": "Du erklärst Anja, woran du arbeitest, so dass sie es wirklich versteht.",
+   "lessons": [
+    277,
+    278,
+    279,
+    280
+   ]
+  },
+  {
+   "day": 351,
+   "block": 71,
+   "kind": "lesson",
+   "lesson": 281,
+   "title": "Trost und Beistand",
+   "goal": "Du bist für jemanden da, auch sprachlich."
+  },
+  {
+   "day": 352,
+   "block": 71,
+   "kind": "lesson",
+   "lesson": 282,
+   "title": "Über Verlust sprechen",
+   "goal": "Du sprichst über Abschied und Trauer."
+  },
+  {
+   "day": 353,
+   "block": 71,
+   "kind": "lesson",
+   "lesson": 283,
+   "title": "Träume und Ängste teilen",
+   "goal": "Du zeigst, was dich im Innersten bewegt."
+  },
+  {
+   "day": 354,
+   "block": 71,
+   "kind": "lesson",
+   "lesson": 284,
+   "title": "Große Worte",
+   "goal": "Du sagst, was jemand dir bedeutet."
+  },
+  {
+   "day": 355,
+   "block": 71,
+   "kind": "talk",
+   "title": "Das wichtigste Gespräch",
+   "scene": "Es gibt etwas, das du ihr schon lange sagen wolltest.",
+   "lessons": [
+    281,
+    282,
+    283,
+    284
+   ]
+  },
+  {
+   "day": 356,
+   "block": 72,
+   "kind": "lesson",
+   "lesson": 285,
+   "title": "Im Ausland leben",
+   "goal": "Du regelst Wohnen und Arbeiten in russischer Sprache."
+  },
+  {
+   "day": 357,
+   "block": 72,
+   "kind": "lesson",
+   "lesson": 286,
+   "title": "Freundschaften pflegen",
+   "goal": "Du hältst Kontakt, gratulierst, fragst nach."
+  },
+  {
+   "day": 358,
+   "block": 72,
+   "kind": "lesson",
+   "lesson": 287,
+   "title": "Schlagfertigkeit",
+   "goal": "Du antwortest schnell und mit Witz."
+  },
+  {
+   "day": 359,
+   "block": 72,
+   "kind": "lesson",
+   "lesson": 288,
+   "title": "Deine Stimme auf Russisch",
+   "goal": "Du klingst auf Russisch wie du selbst."
+  },
+  {
+   "day": 360,
+   "block": 72,
+   "kind": "talk",
+   "title": "Ein Abend, nur ihr zwei",
+   "scene": "Kein Plan, kein Thema. Ihr redet, bis es hell wird.",
+   "lessons": [
+    285,
+    286,
+    287,
+    288
+   ]
+  },
+  {
+   "day": 361,
+   "block": 73,
+   "kind": "lesson",
+   "lesson": 289,
+   "title": "Rückblick auf das Jahr",
+   "goal": "Du erzählst, wie dein Jahr mit der Sprache war."
+  },
+  {
+   "day": 362,
+   "block": 73,
+   "kind": "lesson",
+   "lesson": 290,
+   "title": "Was sich verändert hat",
+   "goal": "Du sagst, was du heute kannst und früher nicht konntest."
+  },
+  {
+   "day": 363,
+   "block": 73,
+   "kind": "lesson",
+   "lesson": 291,
+   "title": "Ziele für das nächste Jahr",
+   "goal": "Du sagst, wohin du mit der Sprache willst."
+  },
+  {
+   "day": 364,
+   "block": 73,
+   "kind": "lesson",
+   "lesson": 292,
+   "title": "Deine Abschlussrede",
+   "goal": "Du hältst eine kurze Rede auf Russisch."
+  },
+  {
+   "day": 365,
+   "block": 73,
+   "kind": "talk",
+   "title": "Das Jahresgespräch",
+   "scene": "Tag 365. Ein ganzes Gespräch über ein ganzes Jahr, frei und auf Russisch.",
+   "lessons": [
+    289,
+    290,
+    291,
+    292
+   ]
+  }
+ ]
+}

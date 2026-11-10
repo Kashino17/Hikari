@@ -1,6 +1,6 @@
 // Bausteine der Oberfläche — überall gleich, damit sich jeder Modus gleich bedient.
 import { html, useState, useEffect, useRef, useMemo, useCallback } from '../vendor/preact-htm.js';
-import { audio, speech, recorder, decodePcm16k, api, fx, SPEECH_ERRORS, tts } from './platform.js';
+import { audio, speech, recorder, decodePcm16k, api, fx, SPEECH_ERRORS, tts, serverVoice } from './platform.js';
 import * as Ph from './domain/phonetics.js';
 import * as Gl from './domain/glossary.js';
 import * as Sp from './domain/speech.js';
@@ -25,10 +25,11 @@ export function TopBar({ title, sub, onBack, right, big }) {
 }
 
 /** Kopf jeder Übung: Schließen · Fortschritt in Bereichsfarbe · Zähler/Punkte. */
-export function SessionBar({ value, count, onClose, right, hot }) {
+export function SessionBar({ value, count, onClose, right, hot, marks }) {
   return html`<div class="sbar">
     <button class="iconbtn" onClick=${onClose} aria-label="Schließen"><${Icon} n="close" /></button>
-    <div class="pbar"><i style=${`width:${Math.round(Math.min(1, Math.max(0, value)) * 100)}%`}></i></div>
+    <div class="pbar"><i style=${`width:${Math.round(Math.min(1, Math.max(0, value)) * 100)}%`}></i>
+      ${(marks ?? []).map((m) => html`<s style=${`left:${(m * 100).toFixed(2)}%`}></s>`)}</div>
     ${right ?? (count != null && html`<div class=${cls('cnt', hot && 'hot')}>${count}</div>`)}
   </div>`;
 }
@@ -74,7 +75,7 @@ export function usePlaying() {
   useEffect(() => audio.onState(setCur), []);
   return cur;
 }
-export const playPhrase = (p, opts = {}) => audio.play(p.audio, { text: p.plain, ...opts });
+export const playPhrase = (p, opts = {}) => audio.play(p.audio, { text: p.plain, ru: p.ru, ...opts });
 
 /** Großer Abspielknopf + kleiner »Langsam«-Knopf. */
 export function PlayRow({ phrase, size = 64, onPlay }) {
@@ -232,23 +233,29 @@ function prosodyAdvice(c, phon) {
 }
 
 /** Wertet eine Aufnahme aus: Melodie/Rhythmus lokal, Laute über den Hikari-Server. */
-function useTake(clip, take) {
+function useTake(clip, take, ru = null) {
   const [pros, setPros] = useState('busy');
   const [phon, setPhon] = useState({ s: 'busy' });
   useEffect(() => {
     let alive = true;
     setPros('busy'); setPhon({ s: 'busy' });
-    if (!audio.has(clip)) { setPros('none'); setPhon({ s: 'none' }); return undefined; }
+    const own = audio.has(clip);
+    // Sätze ohne fertigen Clip (Kombi-Meister, eigene Sätze): Vorlage ist die Kursstimme vom Mac.
+    if (!own && !ru) { setPros('none'); setPhon({ s: 'none' }); return undefined; }
+    const ref = own ? clip : `text:${serverVoice.defaultVoice()}:${ru}`;
     (async () => {
       try {
-        const [a, b] = await Promise.all([decodePcm16k(audio.url(clip)), decodePcm16k(take)]);
+        const src = own ? audio.url(clip) : await serverVoice.fetch(ru);
+        if (!src) { if (alive) setPros('none'); return; }
+        const [a, b] = await Promise.all([decodePcm16k(src), decodePcm16k(take)]);
         const c = Pr.compare(Pr.analyze(a), Pr.analyze(b));
         if (alive) setPros(c ?? 'fail');
       } catch { if (alive) setPros('fail'); }
     })();
     (async () => {
       for (let attempt = 0; attempt < 3; attempt++) {
-        try { const data = await api.pronunciation(clip, take); if (alive) setPhon({ s: 'ok', data }); return; } catch (e) {
+        try { const data = await api.pronunciation(ref, take); if (alive) setPhon({ s: 'ok', data }); return; } catch (e) {
+          if (!own && e.status === 503) { if (alive) setPhon({ s: 'none' }); return; }
           const retry = !e.status || e.status === 500 || e.status === 502;
           if (!retry || attempt === 2) { if (alive) setPhon({ s: 'err', code: e.status ?? 0 }); return; }
           await new Promise((r) => setTimeout(r, 4000));
@@ -257,7 +264,7 @@ function useTake(clip, take) {
       }
     })();
     return () => { alive = false; };
-  }, [clip, take]);
+  }, [clip, take, ru]);
   return { pros, phon };
 }
 
@@ -283,12 +290,12 @@ function Curve({ orig, user }) {
 
 /** Ergebnis einer Aufnahme: drei Werte, flache Kurve, ein Satz Rat — Laute im Detail auf Wunsch. */
 export function TakeResult({ phrase, take }) {
-  const { pros, phon } = useTake(phrase.audio, take);
+  const { pros, phon } = useTake(phrase.audio, take, phrase.ru);
   const [detail, setDetail] = useState(false);
   const cur = usePlaying();
   const ab = async () => { if (await audio.playBlob(take, { key: 'take-ab' })) await playPhrase(phrase); };
   if (pros === 'none') {
-    return html`<div class="res"><div class="res-row"><span class="grow sub">Für diesen Satz gibt es keine Muttersprachler-Aufnahme zum Vergleichen.</span>
+    return html`<div class="res"><div class="res-row"><span class="grow sub">Zum Vergleichen fehlt gerade die Kursstimme: Für diesen Satz kommt sie vom Hikari-Server.</span>
       <button class=${cls('chip sm', cur?.key === 'take' && 'on')} onClick=${() => audio.playBlob(take)}><${Icon} n="play_arrow" />Ich</button></div></div>`;
   }
   const c = pros !== 'busy' && pros !== 'fail' ? pros : null;

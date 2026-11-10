@@ -622,3 +622,50 @@ button.row:active{background:rgba(255,255,255,.035)}
 .lvrow.past .lvbadge{background:rgba(var(--good-rgb),.18);color:var(--good)}
 
 .nextstep.solo{border:1px solid rgba(var(--c),.35);border-radius:20px;background:linear-gradient(90deg,rgba(var(--c),.14),rgba(var(--c),.04)),var(--card)}
+
+/* ── Jahreskurs: Etappen, Tageskarte, Phasen ─────────────────────────────── */
+.sbar .pbar{position:relative}
+.sbar .pbar s{position:absolute;top:0;bottom:0;width:3px;margin-left:-1.5px;background:var(--bg)}
+.pbar.year{position:relative;overflow:visible}
+.pbar.year s{position:absolute;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:rgba(255,255,255,.45)}
+
+.stages{display:flex;flex-direction:column;gap:2px;width:100%;margin-top:14px;text-align:left}
+.stg{display:flex;align-items:center;gap:12px;padding:9px 0}
+.stg+.stg{border-top:1px solid var(--border)}
+.stg .si{width:32px;height:32px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--border2);color:var(--muted)}
+.stg .si .ms{font-size:18px}
+.stg b{display:block;font-size:14.5px;font-weight:500}
+.stg .grow span{display:block;font-size:12px;color:var(--muted);margin-top:1px}
+.stg .sm{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.stg.done .si{background:rgb(var(--c));border-color:rgb(var(--c));color:var(--ink)}
+.stg.done b{color:var(--muted)}
+.stg.now .si{border:2px solid rgb(var(--c));color:rgb(var(--c))}
+.stg.now .sm{color:rgb(var(--c));font-weight:600}
+
+.stagedone{width:76px;height:76px;border-radius:50%;background:rgb(var(--c));color:var(--ink);display:flex;align-items:center;justify-content:center;animation:pop .45s var(--ease)}
+.stagedone .ms{font-size:42px}
+@keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+
+.daycard{margin:6px 16px 0;padding:18px;border-radius:24px;border:1px solid rgba(var(--c),.34);
+  background:radial-gradient(130% 120% at 100% 0%,rgba(var(--c),.16),transparent 62%),var(--surface)}
+.daycard .stages{margin-top:12px}
+
+.phase{border-radius:20px;background:var(--card);border:1px solid var(--border);overflow:hidden}
+.phase.open{border-color:rgba(var(--c),.3)}
+.ph-h{display:flex;align-items:center;gap:12px;width:100%;padding:14px 14px 12px;text-align:left}
+.ph-h b{display:block;font-size:15.5px;font-weight:600}
+.ph-h .grow span{display:block;font-size:12.5px;color:var(--muted);margin-top:1px}
+.lv{width:42px;height:42px;border-radius:13px;flex:none;display:flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:700;background:rgba(var(--c),.16);color:rgb(var(--c))}
+.phase.future .lv{background:var(--high);color:var(--muted)}
+.phase>.pbar{height:3px;border-radius:0;background:transparent}
+.ph-goal{padding:12px 16px 4px;font-size:13.5px;line-height:1.5}
+.blk{margin:10px 10px 0;border-radius:16px;background:var(--surface)}
+.blk:last-child{margin-bottom:10px}
+.blk-h{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;text-align:left}
+.blk-h b{display:block;font-size:14.5px;font-weight:500}
+.blk-h .grow span{display:block;font-size:12px;color:var(--muted);margin-top:1px}
+.ticks.five{width:62px;flex:none}
+.ticks.five i.t{border-radius:50%;flex:none;width:6px}
+.blk .list{border-radius:0 0 16px 16px;border:0;border-top:1px solid var(--border);background:transparent}
+.blk .row{min-height:54px;padding:10px 14px}
+.row.c-amber.done .dn{background:rgb(var(--c));border-color:rgb(var(--c))}

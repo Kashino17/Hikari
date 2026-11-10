@@ -38,6 +38,7 @@ OUT = ASSETS / "glosses.json"
 SOURCES = ["course.json", "deepdive.json", "patterns.json", "podcast.json", "sounds.json"]
 CYR = re.compile("[а-яА-ЯёЁ]")
 GERMAN = re.compile("[a-zA-ZäöüÄÖÜß]{3,}")
+CODE_FRAGMENTS = {"аеёиоуыэюя", "аеиоуыэюя", "пфктшсхцчщ", "бгджз", "ться", "тся", "ый"}
 
 
 def plain(s: str) -> str:
@@ -138,6 +139,9 @@ def collect() -> dict[str, str]:
             continue
         for m in lit.finditer(kt.read_text()):
             s = m.group(1)
+            # Suchmuster, Buchstabenmengen und Endungen aus dem Programmcode sind keine Sätze.
+            if re.search(r"[\[\]()|\\]", s) or s in CODE_FRAGMENTS:
+                continue
             if CYR.search(s) and not GERMAN.search(s):
                 add(s, None)
     return found

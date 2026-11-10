@@ -23,8 +23,10 @@ OUT = ROOT / "android/app/src/main/assets/russian/audio"
 REPORT = pathlib.Path(__file__).resolve().parent / "report.json"
 
 VOWELS = "аеёиоуыэюя"
+# «но» steht bewusst NICHT hier: es lehnt sich zwar an, behält aber sein klares [o].
+# Als Anhängsel behandelt wurde es zu »na« reduziert («Но сегодня …» klang wie «На сегодня …»).
 CLITICS = {"в", "во", "на", "по", "за", "из", "с", "со", "к", "ко", "у", "о", "об", "от",
-           "до", "без", "при", "и", "а", "но", "не", "ни", "же", "ли", "бы"}
+           "до", "без", "при", "и", "а", "не", "ни", "же", "ли", "бы"}
 
 # Sprecher-IDs im Modell: female_0..2 = 0..2, male_0..1 = 3..4
 # Per QA gewählt: Whisper-Verständlichkeit (alle ≥ 96,8 %) UND Vokalreduktion laut

@@ -84,7 +84,7 @@ ENTRIES = {
         "examples": [
             E("Ск+олько ст+оит? — Сто рубл+ей.", "Wie viel kostet das? — Hundert Rubel.", "Ab fünf steht рублей (Genitiv Plural)."),
             E("Два рубл+я, три рубл+я, пять рубл+ей.", "Zwei, drei, fünf Rubel.", "1 рубль, 2–4 рубля, ab 5 рублей."),
-            E("+Это д+орого. М+ожно деш+евле?", "Das ist teuer. Geht es günstiger?", "Дешев+ле ist der Komparativ von дёшево."),
+            E("+Это д+орого. М+ожно деш+евле?", "Das ist teuer. Geht es günstiger?", "Деш+евле ist der Komparativ von дёшево."),
         ],
         "grammar": "Zahl + Nomen: 1 → Nominativ Singular (рубль), 2–4 → Genitiv Singular (рубля), ab 5 → Genitiv Plural (рублей). Dasselbe Muster gilt für год, часа, часов.",
     },
@@ -101,7 +101,7 @@ ENTRIES = {
             E("Я говор+ю немн+ого по-р+усски. Говор+ите м+едленнее!", "Ich spreche ein bisschen Russisch. Sprechen Sie langsamer!", "Natürlich und höflich."),
             E("Я поним+аю л+учше, чем говор+ю.", "Ich verstehe besser, als ich spreche.", "Чем = als. л+учше = besser."),
         ],
-        "grammar": "по-р+усски (mit Bindestrich) bedeutet 'auf Russisch' und ist ein Adverb; formeller sagst du на р+усском яз+ыке. Beide sind richtig.",
+        "grammar": "по-р+усски (mit Bindestrich) bedeutet 'auf Russisch' und ist ein Adverb; formeller sagst du на р+усском язык+е. Beide sind richtig.",
     },
     "d05_kak_skazat": {
         "register": "neutral",
@@ -184,7 +184,7 @@ ENTRIES = {
             E("У мен+я есть ст+арший брат и мл+адшая сестр+а.", "Ich habe einen älteren Bruder und eine jüngere Schwester.", "Брат ist männlich → старший. Сестра ist weiblich → младшая."),
             E("Мо+я ст+аршая сестр+а раб+отает в Берл+ине.", "Meine ältere Schwester arbeitet in Berlin.", "Alles in weiblicher Form: моя, старшая, сестра."),
         ],
-        "grammar": "Adjektive passen sich an: ст+арший брат (m), ст+аршая сестр+а (f), ст+арший реб+ёнок (m, Kind). Endungen -ый/-ий (m), -ая (f), -ое (n).",
+        "grammar": "Adjektive passen sich an: ст+арший брат (m), ст+аршая сестр+а (f), ст+арший ребёнок (m, Kind). Endungen -ый/-ий (m), -ая (f), -ое (n).",
     },
     "d08_klassno": {
         "register": "locker · jung",
@@ -296,7 +296,7 @@ ENTRIES = {
             E("Как+ая сег+одня пог+ода? — Сег+одня х+олодно и идёт снег.", "Wie ist das Wetter heute? — Heute ist es kalt und es schneit.", "Mit и zwei Beobachtungen verbinden."),
             E("Хор+ошая пог+ода! Дав+ай гул+ять!", "Schönes Wetter! Lass uns spazieren gehen!", "Das Wetter als Anlass."),
         ],
-        "grammar": "Идёт дождь / идёт снег: Die Verben gehen mit Niederschlag (идти). Wettersätze ohne Subjekt: Хол+одно, Тепл+о, Жарко.",
+        "grammar": "Идёт дождь / идёт снег: Die Verben gehen mit Niederschlag (идти). Wettersätze ohne Subjekt: Х+олодно, Тепл+о, Жарко.",
     },
     "d11_vo_skolko": {
         "register": "neutral",
@@ -490,7 +490,7 @@ ENTRIES = {
             "title": "Будь остор+ожен / остор+ожна",
             "text": "Das Kurzadjektiv richtet sich nach dem Angesprochenen: остор+ожен (m), остор+ожна (f). Die Betonung wandert bei der Frauenform ans Ende — hör dir beides an.",
         },
-        "grammar": "Будь + Kurzadjektiv ist der Befehl 'sei …': Будь здор+ов (m) / здор+ова (f), Будь счастл+ив (m) / счастл+ива (f).",
+        "grammar": "Будь + Kurzadjektiv ist der Befehl 'sei …': Будь здор+ов (m) / здор+ова (f), Будь сч+астлив (m) / сч+астлива (f).",
     },
     "d14_mozhno_tvoy_nomer": {
         "register": "locker · höflich",

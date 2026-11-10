@@ -1,6 +1,6 @@
 // Tab »Üben«: alles, was unabhängig vom Kurs jederzeit geht — nach Fähigkeit sortiert.
 import { html, cls, Icon, TopBar, Sheet, useState } from '../ui.js';
-import { D, P, useProgress, progress, nav, exitApp } from '../app.js';
+import { D, P, useProgress, usePlanState, progress, nav, exitApp, openLesson, dayNo } from '../app.js';
 import { GenderGate } from './me.js';
 
 const rec = (v) => (v > 0 ? `Rekord ${v}` : 'Neu');
@@ -20,6 +20,7 @@ function groups(p) {
       { t: 'Lautlabor', d: 'Ähnliche Laute unterscheiden und sprechen', icon: 'graphic_eq', to: 'sounds', badge: lab.length ? `${Math.max(...lab)} %` : 'Neu', hot: lab.length > 0 },
     ] },
     { c: 'c-words', title: 'Wörter und Grammatik', hint: 'festigen und Sätze bauen', tools: [
+      { t: 'Satzbau', d: 'Alle Muster aus dem Kurs, mit Szene und Baukasten', icon: 'construction', to: 'patterns', badge: `${p.patternsDone.length}/${D.patterns.length}`, hot: p.patternsDone.length > 0 },
       { t: 'Kombi-Meister', d: 'Bausteine zu neuen Sätzen kombinieren', icon: 'extension', to: 'kombi', badge: rec(p.bestKombi), hot: p.bestKombi > 0 },
       { t: 'Paare finden', d: 'Russisch und Deutsch zuordnen', icon: 'join_inner', to: 'pairs', badge: p.bestPairsSeconds > 0 ? `${p.bestPairsSeconds} s` : 'Neu', hot: p.bestPairsSeconds > 0 },
     ] },
@@ -32,7 +33,8 @@ export function Practice() {
   const ready = p.gender != null;
   const due = P.dueIds(p.cards, progress.today()).length;
   const open = (to) => { if (!ready) return; if (to === '@dialog') setDialogs(true); else nav(to); };
-  const unlocked = P.unlockedDay(p, D.index.days.length);
+  usePlanState();
+  const unlocked = openLesson(p);
 
   return html`<div class="screen tab">
     <${TopBar} title="Üben" big onBack=${exitApp} />
@@ -61,7 +63,7 @@ export function Practice() {
     ${dialogs && html`<${Sheet} onClose=${() => setDialogs(false)} title="Rollenspiele">
       <p class="sub">Jeder Kurstag endet mit einem Gespräch. Such dir eins aus.</p>
       <div class="list mt16 c-speak">${D.index.days.filter((d) => d.day <= unlocked).map((d) => html`<button class="row" onClick=${() => nav(`dialog/${d.day}`)}>
-        <div class="dn">${d.day}</div><div class="tx"><b class="ell">${d.dialog.title}</b><span class="ell">${d.dialog.scene}</span></div><${Icon} n="chevron_right" c="faint" /></button>`)}</div>
+        <div class="dn">${dayNo(d.day)}</div><div class="tx"><b class="ell">${d.dialog.title}</b><span class="ell">${d.dialog.scene}</span></div><${Icon} n="chevron_right" c="faint" /></button>`)}</div>
       ${unlocked < D.index.days.length && html`<p class="sub mt12">Weitere Gespräche kommen mit den nächsten Kurstagen dazu.</p>`}<//>`}
   </div>`;
 }

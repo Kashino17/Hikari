@@ -39,7 +39,7 @@
    ],
    "examples": [
     {
-     "ru": "Прив+ет, +Анна! К+ак д+ела?",
+     "ru": "Прив+ет, +Анна! К+ак дел+а?",
      "de": "Hallo Anna! Wie geht's?",
      "why": "Name direkt dahinter, genau wie im Deutschen. Danach kommt fast immer sofort Как дела? — so beginnt ein Gespräch."
     },
@@ -139,7 +139,7 @@
      "why": "+или heißt 'oder'. Ein typischer Morgensatz bei Gastgebern."
     },
     {
-     "ru": "Д+обрый в+ечер! Как д+ела?",
+     "ru": "Д+обрый в+ечер! Как дел+а?",
      "de": "Guten Abend! Wie geht's?",
      "why": "Beides gemischt: Gruß + Standardfrage. So klingst du sofort natürlich."
     }
@@ -191,7 +191,7 @@
     {
      "ru": "Спас+ибо, +очень помогл+о.",
      "de": "Danke, das hat sehr geholfen.",
-     "why": "Пом+огло ist sächlich (es hat geholfen) — Verben in der Vergangenheit folgen dem Geschlecht."
+     "why": "Помогл+о ist sächlich (es hat geholfen) — Verben in der Vergangenheit folgen dem Geschlecht."
     },
     {
      "ru": "Спас+ибо теб+е за всё!",
@@ -290,7 +290,7 @@
    ],
    "gender": {
     "title": "Vergangenheit: männlich oder weiblich",
-    "text": "In der Vergangenheit endet das Verb auf -л (Mann), -ла (Frau) oder -ло (sächlich). Ein Mann sagt Я опозд+ал, eine Frau Я опозд+ала. Das gilt für fast jedes Verb: Я пон+ял / Я поняла, Я устал / Я устала."
+    "text": "In der Vergangenheit endet das Verb auf -л (Mann), -ла (Frau) oder -ло (sächlich). Ein Mann sagt Я опозд+ал, eine Frau Я опозд+ала. Das gilt für fast jedes Verb: Я п+онял / Я поняла, Я устал / Я устала."
    }
   },
   {
@@ -457,7 +457,7 @@
   {
    "id": "d03_kak_dela",
    "register": "neutral",
-   "summary": "Как д+ела? ist die Standardfrage beim Treffen, wörtlich 'Wie (sind die) Sachen?'. Dazu gehören viele Varianten — locker, vertraut oder förmlich.",
+   "summary": "Как дел+а? ist die Standardfrage beim Treffen, wörtlich 'Wie (sind die) Sachen?'. Dazu gehören viele Varianten — locker, vertraut oder förmlich.",
    "variants": [
     {
      "ru": "Как ты?",
@@ -475,7 +475,7 @@
      "use": "Höflich, etwas gehoben (Sie-Form)."
     },
     {
-     "ru": "Как у вас д+ела?",
+     "ru": "Как у вас дел+а?",
      "de": "Wie geht es Ihnen?",
      "use": "Standard-höflich: у вас = 'bei Ihnen'."
     },
@@ -492,12 +492,12 @@
    ],
    "examples": [
     {
-     "ru": "Как у теб+я д+ела?",
+     "ru": "Как у теб+я дел+а?",
      "de": "Wie geht es dir?",
      "why": "У теб+я = 'bei dir'. У + Genitiv ist das russische Muster für 'bei jemandem'."
     },
     {
-     "ru": "Как у вас д+ела?",
+     "ru": "Как у вас дел+а?",
      "de": "Wie geht es Ihnen?",
      "why": "Dasselbe in der Sie-Form."
     },
@@ -507,7 +507,7 @@
      "why": "Ничег+о bedeutet im Alltag 'nicht schlecht, geht'."
     }
    ],
-   "grammar": "Д+ела ist die Mehrzahl von д+ело (Sache). У + Genitiv drückt Besitz und Ort aus: у меня (bei mir), у тебя (bei dir), у вас (bei Ihnen)."
+   "grammar": "Дел+а ist die Mehrzahl von д+ело (Sache). У + Genitiv drückt Besitz und Ort aus: у меня (bei mir), у тебя (bei dir), у вас (bei Ihnen)."
   },
   {
    "id": "d03_horosho",
@@ -772,7 +772,7 @@
     {
      "ru": "Повтор+ите, пож+алуйста, м+едленно.",
      "de": "Wiederholen Sie bitte, langsam.",
-     "why": "Медл+енно ist 'langsam' (Adverb). Hilfreich, wenn jemand zu schnell redet."
+     "why": "М+едленно ist 'langsam' (Adverb). Hilfreich, wenn jemand zu schnell redet."
     },
     {
      "ru": "Говор+ите, пож+алуйста, м+едленнее.",
@@ -1341,7 +1341,7 @@
    ],
    "gender": {
     "title": "з+анят / занят+а",
-    "text": "Beschäftigt: Mann з+анят, Frau занят+а (Betonung wandert), Mehrzahl занят+ы. Ähnlich: р+ад / р+ада, прав / права."
+    "text": "Beschäftigt: Mann з+анят, Frau занят+а (Betonung wandert), Mehrzahl з+аняты. Ähnlich: р+ад / р+ада, прав / права."
    },
    "grammar": "Я бы + Verb in Vergangenheitsform = Konjunktiv: Я бы пошёл (Mann) / Я бы пошл+а (Frau) = 'ich würde gehen'."
   },
@@ -1452,7 +1452,7 @@
   {
    "id": "d12_ty_prav",
    "register": "neutral",
-   "summary": "Прав (m), прав+а (f), прав+ы (Mehrzahl) = 'recht haben'. Die Kurzform richtet sich nach der angesprochenen Person: Ты прав (zu einem Mann) / Ты прав+а (zu einer Frau).",
+   "summary": "Прав (m), прав+а (f), пр+авы (Mehrzahl) = 'recht haben'. Die Kurzform richtet sich nach der angesprochenen Person: Ты прав (zu einem Mann) / Ты прав+а (zu einer Frau).",
    "variants": [
     {
      "ru": "Ты прав+а.",
@@ -1460,7 +1460,7 @@
      "use": "Weiblich: Betonung am Ende."
     },
     {
-     "ru": "Вы прав+ы.",
+     "ru": "Вы пр+авы.",
      "de": "Sie haben recht.",
      "use": "Sie-Form: Mehrzahl -ы."
     },
@@ -1492,7 +1492,7 @@
      "why": "Weiblich — Betonung am Ende."
     },
     {
-     "ru": "Мы прав+ы.",
+     "ru": "Мы пр+авы.",
      "de": "Wir haben recht.",
      "why": "Plural -ы."
     }
@@ -1665,7 +1665,7 @@
     {
      "ru": "Я не хот+ел теб+я об+идеть.",
      "de": "Ich wollte dich nicht kränken (Mann).",
-     "why": "Обид+еть = 'kränken'. Frau: хот+ела."
+     "why": "Об+идеть = 'kränken'. Frau: хот+ела."
     },
     {
      "ru": "+Это мо+я вин+а. Мне +очень жаль.",
@@ -1778,7 +1778,7 @@
     {
      "ru": "Не волн+уйся, я р+ядом.",
      "de": "Reg dich nicht auf, ich bin da.",
-     "why": "Ря+дом = 'nebenan, in der Nähe'."
+     "why": "Р+ядом = 'nebenan, in der Nähe'."
     }
    ],
    "grammar": "Verneinter Befehl: Не + unvollendetes Verb im Imperativ: Не переживай! Не волнуйся! Reflexive Verben enden im Befehl auf -йся/-ись: Успокойся! Не волнуйся!"
@@ -2152,7 +2152,7 @@
     {
      "ru": "+Это д+орого. М+ожно деш+евле?",
      "de": "Das ist teuer. Geht es günstiger?",
-     "why": "Дешев+ле ist der Komparativ von дёшево."
+     "why": "Деш+евле ist der Komparativ von дёшево."
     }
    ],
    "grammar": "Zahl + Nomen: 1 → Nominativ Singular (рубль), 2–4 → Genitiv Singular (рубля), ab 5 → Genitiv Plural (рублей). Dasselbe Muster gilt für год, часа, часов."
@@ -2195,7 +2195,7 @@
      "why": "Чем = als. л+учше = besser."
     }
    ],
-   "grammar": "по-р+усски (mit Bindestrich) bedeutet 'auf Russisch' und ist ein Adverb; formeller sagst du на р+усском яз+ыке. Beide sind richtig."
+   "grammar": "по-р+усски (mit Bindestrich) bedeutet 'auf Russisch' und ist ein Adverb; formeller sagst du на р+усском язык+е. Beide sind richtig."
   },
   {
    "id": "d05_kak_skazat",
@@ -2418,7 +2418,7 @@
      "why": "Alles in weiblicher Form: моя, старшая, сестра."
     }
    ],
-   "grammar": "Adjektive passen sich an: ст+арший брат (m), ст+аршая сестр+а (f), ст+арший реб+ёнок (m, Kind). Endungen -ый/-ий (m), -ая (f), -ое (n)."
+   "grammar": "Adjektive passen sich an: ст+арший брат (m), ст+аршая сестр+а (f), ст+арший ребёнок (m, Kind). Endungen -ый/-ий (m), -ая (f), -ое (n)."
   },
   {
    "id": "d08_klassno",
@@ -2731,7 +2731,7 @@
      "why": "Das Wetter als Anlass."
     }
    ],
-   "grammar": "Идёт дождь / идёт снег: Die Verben gehen mit Niederschlag (идти). Wettersätze ohne Subjekt: Хол+одно, Тепл+о, Жарко."
+   "grammar": "Идёт дождь / идёт снег: Die Verben gehen mit Niederschlag (идти). Wettersätze ohne Subjekt: Х+олодно, Тепл+о, Жарко."
   },
   {
    "id": "d11_vo_skolko",
@@ -3241,7 +3241,7 @@
     "title": "Будь остор+ожен / остор+ожна",
     "text": "Das Kurzadjektiv richtet sich nach dem Angesprochenen: остор+ожен (m), остор+ожна (f). Die Betonung wandert bei der Frauenform ans Ende — hör dir beides an."
    },
-   "grammar": "Будь + Kurzadjektiv ist der Befehl 'sei …': Будь здор+ов (m) / здор+ова (f), Будь счастл+ив (m) / счастл+ива (f)."
+   "grammar": "Будь + Kurzadjektiv ist der Befehl 'sei …': Будь здор+ов (m) / здор+ова (f), Будь сч+астлив (m) / сч+астлива (f)."
   },
   {
    "id": "d14_mozhno_tvoy_nomer",

@@ -997,7 +997,7 @@
    "id": "p10_voprosy",
    "week": 2,
    "title": "Erzähl mir von dir — Fragen stellen",
-   "formula": "Где? К+огда? Как? Почем+у? + ты + Verb",
+   "formula": "Где? Когд+а? Как? Почем+у? + ты + Verb",
    "emotion": "Neugier",
    "hook": "Wer gute Fragen stellt, schenkt dem anderen Aufmerksamkeit. Das ist der schnellste Weg zu echten Gesprächen.",
    "scene": {
@@ -1053,7 +1053,7 @@
      "why": "Расскажи ist der Du-Befehl — freundlich-direkt."
     }
    ],
-   "explain": "Russische Fragen ändern die Satzstellung kaum: Fragewort + ты + Verb. Bei Ja/Nein-Fragen gibt es kein Hilfsverb — nur die Melodie steigt auf dem Wort, nach dem du fragst: Ты живёшь в Берл+ине? Die wichtigsten Fragewörter: Кто? Что? Где? К+огда? Как? Почем+у? Ск+олько?",
+   "explain": "Russische Fragen ändern die Satzstellung kaum: Fragewort + ты + Verb. Bei Ja/Nein-Fragen gibt es kein Hilfsverb — nur die Melodie steigt auf dem Wort, nach dem du fragst: Ты живёшь в Берл+ине? Die wichtigsten Fragewörter: Кто? Что? Где? Когд+а? Как? Почем+у? Ск+олько?",
    "template": {
     "ru": "{0}",
     "de": "{0}"
@@ -1265,7 +1265,7 @@
      "why": "Frau: Я бы пошл+а с тоб+ой."
     }
    ],
-   "explain": "бы + Vergangenheitsform = Konjunktiv ('würde'): Я бы пошёл (m) / Я бы пошл+а (f) = ich würde gehen. Die Form richtet sich nach deinem Geschlecht. Mit +если бы + Vergangenheit bildest du Bedingungen, die nicht real sind: +Если бы я мог, я бы приех+ал.",
+   "explain": "бы + Vergangenheitsform = Konjunktiv ('würde'): Я бы пошёл (m) / Я бы пошл+а (f) = ich würde gehen. Die Form richtet sich nach deinem Geschlecht. Mit +если бы + Vergangenheit bildest du Bedingungen, die nicht real sind: +Если бы я мог, я бы при+ехал.",
    "template": {
     "ru": "Я бы {0}.",
     "de": "Ich würde {0}."
@@ -1808,7 +1808,7 @@
    "title": "Wenn du willst … — Angebote und Hoffnung",
    "formula": "+Если … (то) …",
    "emotion": "Hoffnung",
-   "hook": "Mit если baust du Angebote, Hoffnungen und Pläne: Wenn das passiert, dann tue ich das.",
+   "hook": "Mit +если baust du Angebote, Hoffnungen und Pläne: Wenn das passiert, dann tue ich das.",
    "scene": {
     "title": "Wenn du willst, komme ich",
     "setting": "Du bietest an zu kommen, obwohl der Tag lang war. Anja zögert, weil sie sich sorgt.",
@@ -1841,9 +1841,9 @@
    },
    "core": [
     {
-     "ru": "+Если ты х+очешь, я пом+огу.",
+     "ru": "+Если ты х+очешь, я помог+у.",
      "de": "Wenn du willst, helfe ich dir.",
-     "why": "если = wenn (Bedingung)."
+     "why": "+если = wenn (Bedingung)."
     },
     {
      "ru": "+Если у теб+я есть вр+емя, позвон+и мне.",
@@ -1856,7 +1856,7 @@
      "why": "Achtung: Russisch nutzt hier die Zukunft (будет), obwohl Deutsch das Präsens verwendet."
     }
    ],
-   "explain": "+Если = wenn / falls (Bedingung). Wichtig: Der Russe sagt ehrlich, was in der Zukunft passiert, darum steht im если-Satz die Zukunft: +Если б+удет д+ождь, … (wörtlich 'Wenn es Regen geben wird'). Bei vollendeten Verben genügt die Präsensform mit Zukunftsbedeutung (я прид+у, я пом+огу).",
+   "explain": "+Если = wenn / falls (Bedingung). Wichtig: Der Russe sagt ehrlich, was in der Zukunft passiert, darum steht im +если-Satz die Zukunft: +Если б+удет д+ождь, … (wörtlich 'Wenn es Regen geben wird'). Bei vollendeten Verben genügt die Präsensform mit Zukunftsbedeutung (я прид+у, я помог+у).",
    "template": {
     "ru": "+Если {0}, {1}.",
     "de": "Wenn {0}, {1}."
@@ -1895,7 +1895,7 @@
        "de": "bleiben wir zu Hause"
       },
       {
-       "ru": "я пом+огу",
+       "ru": "я помог+у",
        "de": "helfe ich"
       },
       {
@@ -2068,7 +2068,7 @@
      "why": "Vor einer Grundform steht в+ажно (sächlich)."
     }
    ],
-   "explain": "Для мен+я = für mich (для + Genitiv: для теб+я, для н+его). Важно heißt 'wichtig'. Vor Nomen passt es sich an: в+ажен (m), важн+а (f), в+ажно (n), важн+ы (pl). Vor einer Grundform steht immer в+ажно: Для мен+я в+ажно говор+ить пр+авду.",
+   "explain": "Для мен+я = für mich (для + Genitiv: для теб+я, для нег+о). Важно heißt 'wichtig'. Vor Nomen passt es sich an: в+ажен (m), важн+а (f), в+ажно (n), важн+ы (pl). Vor einer Grundform steht immer в+ажно: Для мен+я в+ажно говор+ить пр+авду.",
    "template": {
     "ru": "Для мен+я в+ажно {0}.",
     "de": "Für mich ist es wichtig, {0}."
@@ -2130,7 +2130,7 @@
      },
      {
       "who": "P",
-      "ru": "Я поним+аю теб+я. Ин+огда нужн+а тишин+а.",
+      "ru": "Я поним+аю теб+я. Иногд+а нужн+а тишин+а.",
       "de": "Ich verstehe dich. Manchmal braucht man Stille.",
       "how": "mitfühlend"
      },
@@ -2154,7 +2154,7 @@
      "why": "У меня + Zustand beschreibt ehrlich, was du gerade durchmachst."
     },
     {
-     "ru": "Мне тяж+ело на душ+е, но я не сд+аюсь.",
+     "ru": "Мне тяжел+о на душ+е, но я не сда+юсь.",
      "de": "Mir ist schwer ums Herz, aber ich gebe nicht auf.",
      "why": "Мне тяжело на душе = idiomatisch für seelischen Druck."
     }
@@ -2181,7 +2181,7 @@
        "de": "innere Unruhe"
       },
       {
-       "ru": "глубок+ое спок+ойствие",
+       "ru": "глуб+окое спок+ойствие",
        "de": "tiefe innere Ruhe"
       }
      ]
@@ -2198,11 +2198,11 @@
        "de": "ich lange ohne Erholung arbeite"
       },
       {
-       "ru": "я ост+аюсь наедин+е с соб+ой",
+       "ru": "я оста+юсь наедин+е с соб+ой",
        "de": "ich allein mit mir selbst bin"
       },
       {
-       "ru": "говор+ю с тоб+ой открыто",
+       "ru": "говор+ю с тоб+ой откр+ыто",
        "de": "ich offen mit dir spreche"
       }
      ]
@@ -2230,7 +2230,7 @@
     "lines": [
      {
       "who": "P",
-      "ru": "Как ты д+умаешь, что с+ильнее всег+о мен+яет челов+ека?",
+      "ru": "Как ты д+умаешь, что сильн+ее всег+о мен+яет челов+ека?",
       "de": "Was denkst du, was verändert einen Menschen am stärksten?",
       "how": "neugierig, nachdenklich"
      },
@@ -2248,7 +2248,7 @@
      },
      {
       "who": "U",
-      "ru": "Точно. Подсозн+ание с+ильно вли+яет на н+аши реш+ения к+аждый день.",
+      "ru": "Т+очно. Подсозн+ание с+ильно вли+яет на н+аши реш+ения к+аждый день.",
       "de": "Genau. Das Unterbewusstsein beeinflusst jeden Tag stark unsere Entscheidungen.",
       "how": "klar, ruhig"
      }
@@ -2261,7 +2261,7 @@
      "why": "влиять на + Akkusativ = Einfluss haben auf."
     },
     {
-     "ru": "Прив+ычки формир+уют наш хар+актер.",
+     "ru": "Прив+ычки форм+ируют наш хар+актер.",
      "de": "Gewohnheiten formen unseren Charakter.",
      "why": "формировать + Akkusativ."
     },
@@ -2310,7 +2310,7 @@
        "de": "unsere Zukunft"
       },
       {
-       "ru": "вн+утреннее сост+ояние",
+       "ru": "вн+утреннее состо+яние",
        "de": "den inneren Zustand"
       },
       {
@@ -2354,7 +2354,7 @@
      },
      {
       "who": "P",
-      "ru": "А что ты ст+араешься есть к+аждый день?",
+      "ru": "А что ты стар+аешься есть к+аждый день?",
       "de": "Und was versuchst du jeden Tag zu essen?",
       "how": "neugierig"
      },
@@ -2379,7 +2379,7 @@
      "why": "белок → белка (Genitiv nach больше)."
     },
     {
-     "ru": "Пр+авильное пит+ание даёт ясн+ость в голов+е.",
+     "ru": "Пр+авильное пит+ание даёт +ясность в голов+е.",
      "de": "Richtige Ernährung gibt Klarheit im Kopf.",
      "why": "даёт = gibt."
     }
@@ -2398,7 +2398,7 @@
        "de": "meine Ernährung"
       },
       {
-       "ru": "норм+ой белк+а и вод+ы",
+       "ru": "н+ормой белк+а и вод+ы",
        "de": "meinen Eiweiß- und Wasserbedarf"
       },
       {
@@ -2419,7 +2419,7 @@
        "de": "viel Energie zu haben"
       },
       {
-       "ru": "сохран+ять ясн+ость в голов+е",
+       "ru": "сохран+ять +ясность в голов+е",
        "de": "Klarheit im Kopf zu behalten"
       },
       {
@@ -2428,7 +2428,7 @@
        "ruF": "ч+увствовать себ+я с+ильной"
       },
       {
-       "ru": "продуктивно раб+отать весь день",
+       "ru": "продукт+ивно раб+отать весь день",
        "de": "den ganzen Tag produktiv zu arbeiten"
       }
      ]
@@ -2456,7 +2456,7 @@
     "lines": [
      {
       "who": "P",
-      "ru": "Расскаж+и, в чём им+енно заключ+ается тво+я раб+ота?",
+      "ru": "Расскаж+и, в чём +именно заключ+ается тво+я раб+ота?",
       "de": "Erzähl mal, worin genau besteht deine Arbeit?",
       "how": "gespannt"
      },
@@ -2468,16 +2468,16 @@
      },
      {
       "who": "P",
-      "ru": "Звуч+ит масштабн+о! Ты раб+отаешь од+ин +или с ком+андой?",
+      "ru": "Звуч+ит масшт+абно! Ты раб+отаешь од+ин +или с ком+андой?",
       "de": "Klingt groß! Arbeitest du allein oder mit einem Team?",
       "how": "beeindruckt"
      },
      {
       "who": "U",
-      "ru": "Я раб+отаю с кли+ентами и партн+ёрами, и я сам приним+аю гл+авные реш+ения.",
+      "ru": "Я раб+отаю с кли+ентами и партнёрами, и я сам приним+аю гл+авные реш+ения.",
       "de": "Ich arbeite mit Kunden und Partnern, und ich treffe die wichtigsten Entscheidungen selbst.",
       "how": "ruhig, bestimmt",
-      "ruF": "Я раб+отаю с кли+ентами и партн+ёрами, и я сам+а приним+аю гл+авные реш+ения."
+      "ruF": "Я раб+отаю с кли+ентами и партнёрами, и я сам+а приним+аю гл+авные реш+ения."
      }
     ]
    },
@@ -2493,12 +2493,12 @@
      "why": "Моя задача — + Grundform."
     },
     {
-     "ru": "Я отв+ечаю за результ+ат и раб+оту с кли+ентами.",
+     "ru": "Я отвеч+аю за результ+ат и раб+оту с кли+ентами.",
      "de": "Ich bin verantwortlich für das Ergebnis und die Arbeit mit Kunden.",
      "why": "отвечать за + Akkusativ = verantwortlich sein für."
     }
    ],
-   "explain": "Statt nur einen Berufsbegriff zu nennen, kombinierst du Я развив+аю … (Ich baue … auf) oder Я отв+ечаю за … (Ich verantworte …) mit и мо+я зад+ача — + Grundform (und meine Aufgabe ist es, …). So klingst du sofort wie ein Muttersprachler im Geschäftsleben.",
+   "explain": "Statt nur einen Berufsbegriff zu nennen, kombinierst du Я развив+аю … (Ich baue … auf) oder Я отвеч+аю за … (Ich verantworte …) mit и мо+я зад+ача — + Grundform (und meine Aufgabe ist es, …). So klingst du sofort wie ein Muttersprachler im Geschäftsleben.",
    "template": {
     "ru": "Я развив+аю {0}, и мо+я зад+ача — {1}.",
     "de": "Ich baue {0} auf, und meine Aufgabe ist es, {1}."
@@ -2520,7 +2520,7 @@
        "de": "digitale Produkte"
       },
       {
-       "ru": "долгоср+очные партн+ёрства",
+       "ru": "долгоср+очные партнёрства",
        "de": "langfristige Partnerschaften"
       }
      ]
@@ -2541,7 +2541,7 @@
        "de": "Arbeitsprozesse zu automatisieren"
       },
       {
-       "ru": "приним+ать стратегические реш+ения",
+       "ru": "приним+ать стратег+ические реш+ения",
        "de": "strategische Entscheidungen zu treffen"
       }
      ]
@@ -2581,13 +2581,13 @@
      },
      {
       "who": "U",
-      "ru": "Зд+орово! А расскаж+и, что теб+е б+ольше всег+о нр+авится в тво+ём д+еле?",
+      "ru": "Зд+орово! А расскаж+и, что теб+е б+ольше всег+о нр+авится в твоём д+еле?",
       "de": "Super! Und erzähl mal, was gefällt dir am meisten an deiner Tätigkeit?",
       "how": "aufmerksam"
      },
      {
       "who": "P",
-      "ru": "Мне нр+авится созд+авать чт+о-то н+овое и в+идеть результ+ат!",
+      "ru": "Мне нр+авится создав+ать чт+о-то н+овое и в+идеть результ+ат!",
       "de": "Mir gefällt es, etwas Neues zu erschaffen und das Ergebnis zu sehen!",
       "how": "begeistert"
      }
@@ -2628,7 +2628,7 @@
        "de": "worin deine Arbeit genau besteht"
       },
       {
-       "ru": "что теб+е б+ольше всег+о нр+авится в тво+ём д+еле",
+       "ru": "что теб+е б+ольше всег+о нр+авится в твоём д+еле",
        "de": "was dir an deiner Tätigkeit am meisten gefällt"
       },
       {

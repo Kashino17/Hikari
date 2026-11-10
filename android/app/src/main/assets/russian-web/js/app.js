@@ -1,22 +1,23 @@
 // Gemeinsamer Zustand der App: Kursdaten, Lernstand, Navigation.
 import { useEffect, useState } from '../vendor/preact-htm.js';
-import { storage, audio } from './platform.js';
+import { storage, audio, serverVoice } from './platform.js';
 import * as Gl from './domain/glossary.js';
 import * as P from './domain/progress.js';
 import { CourseIndex, resolveItem } from './domain/course.js';
 import { asPhrase } from './domain/content.js';
+import * as Pl from './domain/plan.js';
 
 // ── Kursdaten ──────────────────────────────────────────────────────────────
 
 export const D = {
   course: null, podcast: null, index: null, podIndex: null,
-  themes: [], themeOf: {}, deepdive: new Map(), patterns: [], sounds: [],
+  themes: [], themeOf: {}, deepdive: new Map(), patterns: [], sounds: [], plan: null,
 };
 
 export async function loadData() {
   const get = (n) => fetch(`/data/${n}.json`).then((r) => { if (!r.ok) throw new Error(`${n}: ${r.status}`); return r.json(); });
-  const [course, podcast, phrasebook, deepdive, patterns, sounds, glosses, clips] = await Promise.all([
-    get('course'), get('podcast'), get('phrasebook'), get('deepdive'), get('patterns'), get('sounds'), get('glosses'),
+  const [course, podcast, phrasebook, deepdive, patterns, sounds, glosses, plan, clips] = await Promise.all([
+    get('course'), get('podcast'), get('phrasebook'), get('deepdive'), get('patterns'), get('sounds'), get('glosses'), get('plan'),
     fetch('/clips.json').then((r) => r.json()),
   ]);
   Gl.install(glosses);
@@ -27,6 +28,7 @@ export async function loadData() {
   D.deepdive = new Map((deepdive.entries ?? []).map((e) => [e.id, e]));
   D.patterns = patterns.patterns ?? [];
   D.sounds = sounds.groups ?? [];
+  D.plan = new Pl.Plan(plan);
 }
 
 // ── Lernstand ──────────────────────────────────────────────────────────────
@@ -34,7 +36,10 @@ export async function loadData() {
 const KEY = 'progress_v1';
 let state = P.emptyProgress();
 const subs = new Set();
-const notify = () => { for (const fn of [...subs]) fn(state); };
+const notify = () => {
+  serverVoice.setDefault((state.voice ?? state.gender) === 'FEMALE' ? 'f' : 'm');
+  for (const fn of [...subs]) fn(state);
+};
 
 export const progress = {
   load() {
@@ -80,6 +85,36 @@ export function useProgress() {
   const [p, setP] = useState(state);
   useEffect(() => { setP(state); return progress.subscribe(setP); }, []);
   return p;
+}
+
+// ── Jahresplan: Gesprächstage und Lerntempo (eigener Speicher, nicht Teil des Lernstands) ──
+
+const PLAN_KEY = 'plan_v1';
+let planSt = Pl.emptyState();
+const planSubs = new Set();
+export const planState = {
+  load() {
+    planSt = Pl.normalizeState(storage.getJSON(PLAN_KEY));
+    if (!this._bound) { this._bound = true; storage.onExternal((key) => { if (key === PLAN_KEY) { planSt = Pl.normalizeState(storage.getJSON(PLAN_KEY)); for (const fn of [...planSubs]) fn(planSt); } }); }
+  },
+  get: () => planSt,
+  update(fn) { planSt = Pl.normalizeState(fn(planSt)); storage.set(PLAN_KEY, planSt); for (const f of [...planSubs]) f(planSt); },
+  subscribe(fn) { planSubs.add(fn); return () => planSubs.delete(fn); },
+  /** Persönlicher Zeitfaktor für alle Minuten-Angaben. */
+  pace: () => Pl.paceFactor(planSt),
+};
+export function usePlanState() {
+  const [s, setS] = useState(planSt);
+  useEffect(() => { setS(planSt); return planState.subscribe(setS); }, []);
+  return s;
+}
+/** »Tag 7« zu einer Lektion: im Kurs zählen Plan-Tage (jeder fünfte ist ein Gesprächstag). */
+export const dayNo = (lesson) => Pl.dayOfLesson(lesson);
+/** Höchste Lektion, die gerade offen ist (Gesprächstage halten die nächste Lektion zurück). */
+export function openLesson(p = state) {
+  const cur = D.plan.currentDay(p, planSt);
+  if (cur == null) return D.plan.builtLessons;
+  return Pl.lessonOfDay(cur) ?? Pl.lessonOfDay(cur - 1);
 }
 
 /** Satz zu einer ID: Kurs, sonst Podcast, sonst eigener Satz ("dd:…"). */
@@ -190,4 +225,4 @@ export const prefs = {
   setSounds: (on) => storage.set('ui_sounds', on ? '1' : '0'),
 };
 
-export { P };
+export { P, Pl };

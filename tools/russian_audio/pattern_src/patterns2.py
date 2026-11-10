@@ -43,7 +43,7 @@ PATTERNS = [
         "id": "p10_voprosy",
         "week": 2,
         "title": "Erzähl mir von dir — Fragen stellen",
-        "formula": "Где? К+огда? Как? Почем+у? + ты + Verb",
+        "formula": "Где? Когд+а? Как? Почем+у? + ты + Verb",
         "emotion": "Neugier",
         "hook": "Wer gute Fragen stellt, schenkt dem anderen Aufmerksamkeit. Das ist der schnellste Weg zu echten Gesprächen.",
         "scene": {
@@ -62,7 +62,7 @@ PATTERNS = [
             C("Почем+у ты +учишь р+усский?", "Warum lernst du Russisch?", "Почему fragt nach dem Grund."),
             C("Расскаж+и мне о себ+е.", "Erzähl mir von dir.", "Расскажи ist der Du-Befehl — freundlich-direkt."),
         ],
-        "explain": "Russische Fragen ändern die Satzstellung kaum: Fragewort + ты + Verb. Bei Ja/Nein-Fragen gibt es kein Hilfsverb — nur die Melodie steigt auf dem Wort, nach dem du fragst: Ты живёшь в Берл+ине? Die wichtigsten Fragewörter: Кто? Что? Где? К+огда? Как? Почем+у? Ск+олько?",
+        "explain": "Russische Fragen ändern die Satzstellung kaum: Fragewort + ты + Verb. Bei Ja/Nein-Fragen gibt es kein Hilfsverb — nur die Melodie steigt auf dem Wort, nach dem du fragst: Ты живёшь в Берл+ине? Die wichtigsten Fragewörter: Кто? Что? Где? Когд+а? Как? Почем+у? Ск+олько?",
         "template": {"ru": "{0}", "de": "{0}"},
         "slots": [
             {"label": "Welche Frage?", "options": [
@@ -138,7 +138,7 @@ PATTERNS = [
             C("Я бы с удов+ольствием!", "Ich würde sehr gern!", "Mit удовольствием = mit Vergnügen — eine warme Zusage."),
             C("Я бы пошёл с тоб+ой.", "Ich würde mit dir gehen.", "Frau: Я бы пошл+а с тоб+ой."),
         ],
-        "explain": "бы + Vergangenheitsform = Konjunktiv ('würde'): Я бы пошёл (m) / Я бы пошл+а (f) = ich würde gehen. Die Form richtet sich nach deinem Geschlecht. Mit +если бы + Vergangenheit bildest du Bedingungen, die nicht real sind: +Если бы я мог, я бы приех+ал.",
+        "explain": "бы + Vergangenheitsform = Konjunktiv ('würde'): Я бы пошёл (m) / Я бы пошл+а (f) = ich würde gehen. Die Form richtet sich nach deinem Geschlecht. Mit +если бы + Vergangenheit bildest du Bedingungen, die nicht real sind: +Если бы я мог, я бы при+ехал.",
         "template": {"ru": "Я бы {0}.", "de": "Ich würde {0}."},
         "slots": [
             {"label": "Was würdest du tun?", "options": [
@@ -340,7 +340,7 @@ PATTERNS = [
         "title": "Wenn du willst … — Angebote und Hoffnung",
         "formula": "+Если … (то) …",
         "emotion": "Hoffnung",
-        "hook": "Mit если baust du Angebote, Hoffnungen und Pläne: Wenn das passiert, dann tue ich das.",
+        "hook": "Mit +если baust du Angebote, Hoffnungen und Pläne: Wenn das passiert, dann tue ich das.",
         "scene": {
             "title": "Wenn du willst, komme ich",
             "setting": "Du bietest an zu kommen, obwohl der Tag lang war. Anja zögert, weil sie sich sorgt.",
@@ -352,11 +352,11 @@ PATTERNS = [
             ],
         },
         "core": [
-            C("+Если ты х+очешь, я пом+огу.", "Wenn du willst, helfe ich dir.", "если = wenn (Bedingung)."),
+            C("+Если ты х+очешь, я помог+у.", "Wenn du willst, helfe ich dir.", "+если = wenn (Bedingung)."),
             C("+Если у теб+я есть вр+емя, позвон+и мне.", "Wenn du Zeit hast, ruf mich an.", "Im Hauptsatz kann ein Befehl stehen."),
             C("+Если б+удет д+ождь, мы ост+анемся д+ома.", "Wenn es regnet, bleiben wir zu Hause.", "Achtung: Russisch nutzt hier die Zukunft (будет), obwohl Deutsch das Präsens verwendet."),
         ],
-        "explain": "+Если = wenn / falls (Bedingung). Wichtig: Der Russe sagt ehrlich, was in der Zukunft passiert, darum steht im если-Satz die Zukunft: +Если б+удет д+ождь, … (wörtlich 'Wenn es Regen geben wird'). Bei vollendeten Verben genügt die Präsensform mit Zukunftsbedeutung (я прид+у, я пом+огу).",
+        "explain": "+Если = wenn / falls (Bedingung). Wichtig: Der Russe sagt ehrlich, was in der Zukunft passiert, darum steht im +если-Satz die Zukunft: +Если б+удет д+ождь, … (wörtlich 'Wenn es Regen geben wird'). Bei vollendeten Verben genügt die Präsensform mit Zukunftsbedeutung (я прид+у, я помог+у).",
         "template": {"ru": "+Если {0}, {1}.", "de": "Wenn {0}, {1}."},
         "slots": [
             {"label": "Wenn …", "options": [
@@ -365,7 +365,7 @@ PATTERNS = [
             ]},
             {"label": "… dann", "options": [
                 O("я прид+у", "komme ich"), O("мы ост+анемся д+ома", "bleiben wir zu Hause"),
-                O("я пом+огу", "helfe ich"), O("я позвон+ю", "rufe ich an"),
+                O("я помог+у", "helfe ich"), O("я позвон+ю", "rufe ich an"),
             ]},
         ],
         "free": {
@@ -431,7 +431,7 @@ PATTERNS = [
             C("Для мен+я в+ажно вр+емя.", "Für mich ist Zeit wichtig.", "время ist sächlich → важно."),
             C("Для мен+я в+ажно быть с тоб+ой.", "Für mich ist es wichtig, bei dir zu sein.", "Vor einer Grundform steht в+ажно (sächlich)."),
         ],
-        "explain": "Для мен+я = für mich (для + Genitiv: для теб+я, для н+его). Важно heißt 'wichtig'. Vor Nomen passt es sich an: в+ажен (m), важн+а (f), в+ажно (n), важн+ы (pl). Vor einer Grundform steht immer в+ажно: Для мен+я в+ажно говор+ить пр+авду.",
+        "explain": "Для мен+я = für mich (для + Genitiv: для теб+я, для нег+о). Важно heißt 'wichtig'. Vor Nomen passt es sich an: в+ажен (m), важн+а (f), в+ажно (n), важн+ы (pl). Vor einer Grundform steht immer в+ажно: Для мен+я в+ажно говор+ить пр+авду.",
         "template": {"ru": "Для мен+я в+ажно {0}.", "de": "Für mich ist es wichtig, {0}."},
         "slots": [
             {"label": "Was ist dir wichtig?", "options": [
