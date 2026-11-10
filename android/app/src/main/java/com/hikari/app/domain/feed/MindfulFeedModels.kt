@@ -28,28 +28,28 @@ enum class MindfulModuleType(
     QUOTE(
         id = "quote",
         title = "Zitate & Lebensweisheiten",
-        subtitle = "Tägliche Stoiker & Denker (Max 2 / Tag)",
+        subtitle = "Belegte Zitate mit Hintergrund",
         icon = Icons.Outlined.FormatQuote,
         accentColor = Color(0xFFF59E0B),
     ),
     BRAIN_PUZZLE(
         id = "brain_puzzle",
         title = "Gehirnjogging & Kognition",
-        subtitle = "Wissenschaftliche Mini-Rätsel (Max 2 / Tag)",
+        subtitle = "Rätsel, Zahlenreihen, Gedächtnis, Farb-Wort-Test",
         icon = Icons.Outlined.Psychology,
         accentColor = Color(0xFF3B82F6),
     ),
     LANGUAGE(
         id = "language",
         title = "Sprachen lernen",
-        subtitle = "Vokabeln, Sprechen & Mini-Dialoge",
+        subtitle = "Russisch nach deinem Kursstand, Kyrillisch lesen",
         icon = Icons.Outlined.Translate,
         accentColor = Color(0xFF10B981),
     ),
     HISTORY(
         id = "history",
-        title = "Heute in der Geschichte",
-        subtitle = "Schlüsselereignisse des Tages",
+        title = "Geschichte",
+        subtitle = "Wendepunkte der Weltgeschichte",
         icon = Icons.Outlined.AccountBalance,
         accentColor = Color(0xFFEC4899),
     ),
@@ -62,8 +62,8 @@ enum class MindfulModuleType(
     ),
     BREATHWORK(
         id = "breathwork",
-        title = "1-Minuten-Atemübung",
-        subtitle = "Box Breathing zur Cortisolsenkung",
+        title = "Atemübung",
+        subtitle = "Fünf Rhythmen zum Runterkommen und Wachwerden",
         icon = Icons.Outlined.Air,
         accentColor = Color(0xFF06B6D4),
     ),
@@ -84,14 +84,14 @@ enum class MindfulModuleType(
     GEOGRAPHY(
         id = "geography",
         title = "Weltatlas & Geografie-Quiz",
-        subtitle = "Länder, Flaggen & Hauptstädte",
+        subtitle = "Länder, Flüsse, Rekorde",
         icon = Icons.Outlined.Public,
         accentColor = Color(0xFF6366F1),
     ),
     SPEED_MATH(
         id = "speed_math",
         title = "Kopfrechnen-Tricks",
-        subtitle = "Geniale mathematische Shortcuts",
+        subtitle = "Rechentricks und Kettenrechnen",
         icon = Icons.Outlined.Calculate,
         accentColor = Color(0xFFEF4444),
     ),
@@ -105,7 +105,7 @@ enum class MindfulModuleType(
     VOCABULARY(
         id = "vocabulary",
         title = "Wortschatz-Meister",
-        subtitle = "Eloquentes Wort des Tages & Etymologie",
+        subtitle = "Schöne Wörter und ihre Herkunft",
         icon = Icons.Outlined.MenuBook,
         accentColor = Color(0xFFF97316),
     ),
@@ -149,9 +149,9 @@ enum class ModuleRank(
     val frequencyLabel: String,
     val badgeColor: Color,
 ) {
-    RANK_1(1, "Stufe 1 · Standard", "Standard", "1x täglich", Color(0xFF9CA3AF)),
-    RANK_2(2, "Stufe 2 · Erhöht", "Erhöht", "3–4x täglich", Color(0xFF60A5FA)),
-    RANK_3(3, "Stufe 3 · Top-Fokus", "Top-Fokus", "6–8x täglich (alle 2–3 Karten)", Color(0xFFFBBF24));
+    RANK_1(1, "Stufe 1 · Standard", "Standard", "1× je Runde", Color(0xFF9CA3AF)),
+    RANK_2(2, "Stufe 2 · Erhöht", "Erhöht", "2× je Runde", Color(0xFF60A5FA)),
+    RANK_3(3, "Stufe 3 · Top-Fokus", "Top-Fokus", "4× je Runde", Color(0xFFFBBF24));
 
     companion object {
         fun fromNumber(num: Int): ModuleRank = when (num) {
@@ -169,6 +169,8 @@ sealed interface MindfulCard {
     val id: String
     val type: MindfulModuleType
     val rank: ModuleRank get() = ModuleRank.RANK_1
+    /** Geschriebene Vertiefung; null bei alten, im Code hinterlegten Karten. */
+    val deep: FeedDeepDive? get() = null
 }
 
 data class QuoteCardItem(
@@ -178,6 +180,7 @@ data class QuoteCardItem(
     val contextEra: String,
     val reflectionPrompt: String,
     override val rank: ModuleRank = ModuleRank.RANK_2,
+    override val deep: FeedDeepDive? = null,
 ) : MindfulCard {
     override val type = MindfulModuleType.QUOTE
 }
@@ -192,6 +195,7 @@ data class BrainPuzzleCardItem(
     val explanation: String,
     val brainRegionTrained: String,
     override val rank: ModuleRank = ModuleRank.RANK_2,
+    override val deep: FeedDeepDive? = null,
 ) : MindfulCard {
     override val type = MindfulModuleType.BRAIN_PUZZLE
 }
@@ -220,6 +224,11 @@ data class LanguageCardItem(
     val phraseId: String? = null,
     val note: String? = null,
     val literalTranslation: String? = null,
+    /** Satz aus der nächsten Lektion, der im Kurs noch nicht dran war — zählt nicht für die Wiederholung. */
+    val isNewPhrase: Boolean = false,
+    /** Seite im Russisch-Bereich mit der ausführlichen Vertiefung dieses Satzes, falls es eine gibt. */
+    val deepRoute: String? = null,
+    override val deep: FeedDeepDive? = null,
 ) : MindfulCard {
     override val type = MindfulModuleType.LANGUAGE
 }
@@ -231,6 +240,7 @@ data class HistoryCardItem(
     val description: String,
     val whyItMatters: String,
     override val rank: ModuleRank = ModuleRank.RANK_3,
+    override val deep: FeedDeepDive? = null,
 ) : MindfulCard {
     override val type = MindfulModuleType.HISTORY
 }
@@ -243,6 +253,7 @@ data class MentalModelCardItem(
     val realLifeExample: String,
     val actionableDefense: String,
     override val rank: ModuleRank = ModuleRank.RANK_3,
+    override val deep: FeedDeepDive? = null,
 ) : MindfulCard {
     override val type = MindfulModuleType.MENTAL_MODEL
 }
@@ -256,6 +267,7 @@ data class BreathworkCardItem(
     val holdOutSeconds: Int = 4,
     val scientificBenefit: String,
     override val rank: ModuleRank = ModuleRank.RANK_3,
+    override val deep: FeedDeepDive? = null,
 ) : MindfulCard {
     override val type = MindfulModuleType.BREATHWORK
 }
@@ -267,6 +279,7 @@ data class ScienceCardItem(
     val coreExplanation: String,
     val fascinatingDetail: String,
     override val rank: ModuleRank = ModuleRank.RANK_3,
+    override val deep: FeedDeepDive? = null,
 ) : MindfulCard {
     override val type = MindfulModuleType.SCIENCE
 }
@@ -278,6 +291,7 @@ data class FinanceCardItem(
     val practicalExample: String,
     val takeawayRule: String,
     override val rank: ModuleRank = ModuleRank.RANK_3,
+    override val deep: FeedDeepDive? = null,
 ) : MindfulCard {
     override val type = MindfulModuleType.FINANCE
 }
@@ -289,6 +303,7 @@ data class GeographyCardItem(
     val correctIndex: Int,
     val interestingFact: String,
     override val rank: ModuleRank = ModuleRank.RANK_3,
+    override val deep: FeedDeepDive? = null,
 ) : MindfulCard {
     override val type = MindfulModuleType.GEOGRAPHY
 }
@@ -301,6 +316,7 @@ data class SpeedMathCardItem(
     val practiceChallenge: String,
     val challengeResult: String,
     override val rank: ModuleRank = ModuleRank.RANK_3,
+    override val deep: FeedDeepDive? = null,
 ) : MindfulCard {
     override val type = MindfulModuleType.SPEED_MATH
 }
@@ -312,6 +328,7 @@ data class ArtCultureCardItem(
     val yearAndOrigin: String,
     val backStory: String,
     override val rank: ModuleRank = ModuleRank.RANK_3,
+    override val deep: FeedDeepDive? = null,
 ) : MindfulCard {
     override val type = MindfulModuleType.ART_CULTURE
 }
@@ -324,6 +341,7 @@ data class VocabularyCardItem(
     val etymology: String,
     val sampleSentence: String,
     override val rank: ModuleRank = ModuleRank.RANK_3,
+    override val deep: FeedDeepDive? = null,
 ) : MindfulCard {
     override val type = MindfulModuleType.VOCABULARY
 }
@@ -338,6 +356,7 @@ data class PhilosophyCardItem(
     val schoolB: String,
     val philosophicalInsight: String,
     override val rank: ModuleRank = ModuleRank.RANK_3,
+    override val deep: FeedDeepDive? = null,
 ) : MindfulCard {
     override val type = MindfulModuleType.PHILOSOPHY
 }
@@ -352,9 +371,45 @@ data class DeepDiveContent(
     val practicalApplication: String? = null,
     val originOrEtymology: String? = null,
     val relatedTakeaways: List<String> = emptyList(),
-)
+    /** Abschnitte einer geschriebenen Vertiefung; leer bei der alten, zusammengesetzten Fassung. */
+    val sections: List<FeedDeepSection> = emptyList(),
+) {
+    val isAuthored: Boolean get() = sections.isNotEmpty()
+}
 
-fun MindfulCard.resolveDeepDive(): DeepDiveContent = when (this) {
+/** Überschrift der Vertiefung: worum es geht und woher es stammt. */
+private fun MindfulCard.deepHeading(): Pair<String, String> = when (this) {
+    is QuoteCardItem -> author to contextEra
+    is BrainPuzzleCardItem -> title to category
+    is LanguageCardItem -> foreignWord to nativeTranslation
+    is HistoryCardItem -> eventTitle to dateLabel
+    is MentalModelCardItem -> modelName to category
+    is BreathworkCardItem -> title to "Atemübung"
+    is ScienceCardItem -> phenomenon to question
+    is FinanceCardItem -> title to "Finanzielle Bildung"
+    is GeographyCardItem -> (options.getOrNull(correctIndex) ?: "Geografie") to question
+    is SpeedMathCardItem -> trickTitle to formulaShortcut
+    is ArtCultureCardItem -> masterpieceTitle to listOf(artist, yearAndOrigin).filter { it.isNotBlank() }.joinToString(" · ")
+    is VocabularyCardItem -> word to wordType
+    is PhilosophyCardItem -> dilemmaTitle to "Gedankenexperiment"
+}
+
+/** Geschriebene Vertiefung, wenn die Karte eine hat — sonst die alte Fassung (früher gemerkte Karten). */
+fun MindfulCard.resolveDeepDive(): DeepDiveContent {
+    val authored = deep ?: return legacyDeepDive()
+    val (title, subtitle) = deepHeading()
+    return DeepDiveContent(
+        title = title,
+        subtitle = subtitle,
+        keyInsight = authored.lead,
+        fullContext = "",
+        practicalApplication = authored.tryIt,
+        relatedTakeaways = authored.takeaways,
+        sections = authored.sections,
+    )
+}
+
+private fun MindfulCard.legacyDeepDive(): DeepDiveContent = when (this) {
     is QuoteCardItem -> DeepDiveContent(
         title = "Philosophischer Tiefgang",
         subtitle = "$author · $contextEra",

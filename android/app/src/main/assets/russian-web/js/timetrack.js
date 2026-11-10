@@ -28,9 +28,13 @@ export const MODES = {
   kombi: ['Kombi-Meister', 'words'],
   pairs: ['Paare finden', 'words'],
   satzbuch: ['Satzbuch und Vertiefung', 'words'],
+  // Der Feed der App bucht diese drei selbst (RussianStudyTime.kt) — hier stehen nur Name und Bereich.
+  feedPractice: ['Wiederholen und Üben', 'feed'],
+  feedPhrases: ['Neue Sätze und Nachsprechen', 'feed'],
+  feedAlphabet: ['Kyrillisch lesen', 'feed'],
 };
-export const AREA_COLOR = { speak: 'rgb(244,114,182)', listen: 'rgb(167,139,250)', review: 'rgb(56,189,248)', words: 'rgb(52,211,153)', amber: '#FBBF24' };
-export const AREA_NAME = { speak: 'Sprechen', listen: 'Hören', review: 'Wiederholen', words: 'Wörter & Grammatik', amber: 'Gespräch' };
+export const AREA_COLOR = { speak: 'rgb(244,114,182)', listen: 'rgb(167,139,250)', review: 'rgb(56,189,248)', words: 'rgb(52,211,153)', amber: '#FBBF24', feed: 'rgb(251,146,60)' };
+export const AREA_NAME = { speak: 'Sprechen', listen: 'Hören', review: 'Wiederholen', words: 'Wörter & Grammatik', amber: 'Gespräch', feed: 'Feed' };
 
 const ROUTE_MODE = [
   [/^lesson\//, 'lesson'], [/^talkday\//, 'talkday'], [/^dialog\//, 'dialog'], [/^review$/, 'review'], [/^test$/, 'review'],

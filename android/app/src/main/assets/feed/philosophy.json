@@ -1,0 +1,674 @@
+[
+  {
+    "id": "trolley-problem",
+    "title": "Das Trolley-Problem",
+    "scenario": "Eine führerlose Straßenbahn rast auf fünf Gleisarbeiter zu. Du stehst an einer Weiche. Stellst du sie um, fährt die Bahn auf ein Nebengleis – dort steht ein einzelner Arbeiter, der dann stirbt.",
+    "optionA": "Weiche umstellen: Einer stirbt, fünf leben.",
+    "optionB": "Nichts tun: Ich darf niemanden aktiv töten.",
+    "schoolA": "Utilitarismus (Folgenethik)",
+    "schoolB": "Deontologie (Pflichtenethik)",
+    "insight": "Die meisten würden die Weiche stellen. Trotzdem spüren wir einen Unterschied zwischen Töten und Sterbenlassen, und der lässt sich durch bloßes Zählen von Leben nicht erklären.",
+    "deep": {
+      "lead": "Das Experiment prüft nicht, wie viele Leben zählen, sondern ob es darauf ankommt, auf welche Weise jemand zu Tode kommt.",
+      "sections": [
+        {
+          "title": "Von der Weiche auf die Brücke",
+          "text": "Die britische Philosophin Philippa Foot stellte den Fall 1967 in einem Aufsatz vor. Ihren Namen und ihre berühmteste Abwandlung bekam die Aufgabe von der Amerikanerin Judith Jarvis Thomson: Diesmal stehst du auf einer Brücke über dem Gleis, neben dir ein sehr schwerer Mann. Stößt du ihn hinunter, stoppt sein Körper die Bahn. Die Rechnung ist dieselbe, einer gegen fünf. Trotzdem lehnen die allermeisten das Stoßen ab. Offenbar zählt, ob ein Mensch als Mittel benutzt wird oder als Nebenfolge stirbt."
+        },
+        {
+          "title": "Gefühl gegen Rechnung",
+          "text": "Der Psychologe Joshua Greene ließ Versuchspersonen solche Fälle im Hirnscanner entscheiden. Beim Brückenfall waren Regionen, die mit Gefühlen zu tun haben, deutlich stärker beteiligt als beim Weichenfall. Kritiker halten die Szenarien für zu künstlich: Im wirklichen Leben weiß niemand sicher, wer überlebt. Praktisch wurde die Frage dennoch, etwa beim autonomen Fahren. Eine deutsche Ethikkommission hielt 2017 fest, dass Menschenleben bei unvermeidbaren Unfällen nicht nach Alter oder anderen persönlichen Merkmalen gegeneinander abgewogen werden dürfen."
+        }
+      ],
+      "tryIt": "Stell heute zwei Menschen erst den Weichenfall und dann den Brückenfall und achte darauf, wie sie den Unterschied begründen.",
+      "takeaways": [
+        "Gleiche Bilanz, anderes Urteil: Die Art des Eingreifens zählt.",
+        "Moralische Urteile entstehen aus Abwägung und Gefühl zugleich."
+      ]
+    }
+  },
+  {
+    "id": "schiff-des-theseus",
+    "title": "Das Schiff des Theseus",
+    "scenario": "Die Athener bewahren das Schiff des Helden Theseus auf. Über Jahrhunderte ersetzen sie jede morsche Planke durch eine neue, bis kein einziges ursprüngliches Teil mehr übrig ist. Ist es noch dasselbe Schiff?",
+    "optionA": "Ja – Form, Zweck und Geschichte sind ununterbrochen erhalten.",
+    "optionB": "Nein – ohne das ursprüngliche Holz ist es nur ein Nachbau.",
+    "schoolA": "Identität durch Kontinuität",
+    "schoolB": "Identität durch Material",
+    "insight": "Ob etwas »dasselbe« bleibt, hängt davon ab, was wir für wesentlich halten: den Stoff, die Form oder die lückenlose Geschichte. Das Wort ist weniger eindeutig, als es klingt.",
+    "deep": {
+      "lead": "Ein Schiff, an dem alles ausgetauscht wurde, zeigt, dass Identität eine Frage des Maßstabs ist.",
+      "sections": [
+        {
+          "title": "Plutarch erzählt, Hobbes verschärft",
+          "text": "Überliefert hat die Geschichte der griechische Schriftsteller Plutarch um das Jahr 100. Er berichtet, das Schiff sei den Philosophen ein beliebtes Streitbeispiel gewesen. Im 17. Jahrhundert setzte Thomas Hobbes eins drauf: Angenommen, jemand sammelt die ausgemusterten Planken und baut sie in der alten Ordnung wieder zusammen. Nun liegen zwei Schiffe im Hafen. Das eine hat die ununterbrochene Geschichte, das andere das ursprüngliche Material. Welches ist das Schiff des Theseus? Beide Antworten lassen sich verteidigen, und genau das ist das Problem."
+        },
+        {
+          "title": "Das Rätsel bist du selbst",
+          "text": "Auch dein Körper tauscht laufend Material aus. Dass sich alle Zellen in sieben Jahren erneuern, ist zwar ein Mythos, denn viele Nervenzellen begleiten dich ein Leben lang. Aber Haut, Blut und Darmschleimhaut werden ständig ersetzt, und deine Überzeugungen von heute sind nicht die von vor zwanzig Jahren. Im Alltag entscheiden wir pragmatisch. Der Ise-Schrein in Japan wird seit Jahrhunderten alle zwanzig Jahre neu errichtet und gilt selbstverständlich als derselbe. Eine Band mit lauter neuen Mitgliedern sorgt dagegen für Streit."
+        }
+      ],
+      "tryIt": "Such in deiner Umgebung etwas, das oft repariert oder erneuert wurde – Fahrrad, Verein, Haus – und entscheide, ab wann es ein anderes wäre.",
+      "takeaways": [
+        "Identität kann an Material, Form oder Geschichte hängen.",
+        "Welcher Maßstab gilt, legen wir je nach Zweck fest."
+      ]
+    }
+  },
+  {
+    "id": "erfahrungsmaschine",
+    "title": "Die Erfahrungsmaschine",
+    "scenario": "Eine Maschine kann dir jedes gewünschte Erlebnis vorspielen: Erfolg, Liebe, Abenteuer. Du würdest nicht merken, dass alles simuliert ist. Du kannst dich für den Rest deines Lebens anschließen lassen.",
+    "optionA": "Anschließen – entscheidend ist, wie sich das Leben anfühlt.",
+    "optionB": "Ablehnen – ich will wirklich leben, nicht nur erleben.",
+    "schoolA": "Hedonismus",
+    "schoolB": "Wirklichkeit als eigener Wert",
+    "insight": "Wer zögert, hält offenbar mehr für wichtig als angenehme Gefühle: etwas wirklich zu tun, ein bestimmter Mensch zu sein und mit der echten Welt in Berührung zu stehen.",
+    "deep": {
+      "lead": "Nozicks Maschine ist ein Test für die Behauptung, am Ende zähle nur, wie wir uns fühlen.",
+      "sections": [
+        {
+          "title": "Drei Gründe gegen den Stecker",
+          "text": "Der amerikanische Philosoph Robert Nozick erfand die Maschine 1974 als Einwand gegen den Hedonismus, also die Lehre, dass allein Lust und Leid über die Güte eines Lebens entscheiden. Er nennt drei Dinge, die uns darüber hinaus wichtig sind. Wir wollen bestimmte Dinge tun und nicht bloß das Erlebnis haben, sie getan zu haben. Wir wollen jemand sein, mutig oder liebevoll, während im Tank nur ein unbestimmter Körper treibt. Und wir wollen Kontakt zu einer Wirklichkeit, die tiefer ist als jede von Menschen gebaute."
+        },
+        {
+          "title": "Der Umkehrtest",
+          "text": "Jahrzehnte später drehten Forscher das Szenario um. Sie sagten Versuchspersonen: Stell dir vor, du erfährst, dass dein bisheriges Leben bereits eine Simulation war. Willst du aussteigen? Viele wollten bleiben. Das spricht dafür, dass unsere Abneigung gegen die Maschine teilweise schlicht die Scheu vor Veränderung ist. Ganz erledigt ist Nozicks Punkt damit nicht. Aber er wird drängender, je besser virtuelle Welten werden. Im Film »Matrix« entscheidet sich eine Figur bewusst für das simulierte Steak."
+        }
+      ],
+      "tryIt": "Nenne drei Dinge, auf die du stolz bist, und prüfe: Würde dir das Gefühl genügen, wenn nichts davon wirklich passiert wäre?",
+      "takeaways": [
+        "Den meisten ist Wirklichkeit mehr wert als das beste Gefühl.",
+        "Ein Teil unserer Ablehnung ist allerdings Gewohnheit am Bestehenden."
+      ]
+    }
+  },
+  {
+    "id": "schleier-des-nichtwissens",
+    "title": "Der Schleier des Nichtwissens",
+    "scenario": "Du sollst die Grundregeln einer Gesellschaft festlegen. Der Haken: Du weißt nicht, wer du darin sein wirst – reich oder arm, gesund oder krank, begabt oder nicht, Mehrheit oder Minderheit.",
+    "optionA": "Die Schwächsten absichern – ich könnte einer von ihnen sein.",
+    "optionB": "Den Wohlstand insgesamt maximieren – im Schnitt fahre ich gut.",
+    "schoolA": "Rawls: Gerechtigkeit als Fairness",
+    "schoolB": "Utilitarismus",
+    "insight": "Fair ist eine Regel, der du zustimmen würdest, ohne zu wissen, ob sie dir selbst nützt. Der Schleier nimmt die eigene Position aus der Rechnung.",
+    "deep": {
+      "lead": "Rawls macht aus der Frage nach Gerechtigkeit eine Wette, bei der niemand seine Karten kennt.",
+      "sections": [
+        {
+          "title": "Zwei Grundsätze",
+          "text": "John Rawls stellte das Gedankenexperiment 1971 in seinem Hauptwerk über Gerechtigkeit vor. Er meint, vernünftige Menschen würden sich hinter dem Schleier auf zwei Grundsätze einigen. Erstens: gleiche Grundfreiheiten für alle. Zweitens: Ungleichheiten bei Einkommen und Einfluss sind nur zulässig, wenn sie auch denen zugutekommen, die am schlechtesten gestellt sind, und wenn alle Positionen jedem offenstehen. Dahinter steht die Überzeugung, dass niemand seine Begabung oder sein Elternhaus verdient hat. Rawls hatte als Kind erlebt, wie zwei Brüder an Krankheiten starben, die er überlebte."
+        },
+        {
+          "title": "Einwände von mehreren Seiten",
+          "text": "Der Ökonom John Harsanyi wandte ein, Rawls unterstelle übertriebene Vorsicht. Wer nicht weiß, wer er wird, sollte auf den höchsten Durchschnitt setzen und nicht nur auf den schlimmsten Fall starren. Robert Nozick kritisierte, es komme darauf an, wie Besitz entstanden ist, nicht auf das Verteilungsmuster. Andere bezweifeln, dass ein Wesen ohne Herkunft und Überzeugungen überhaupt etwas wählen kann. Als Faustregel bleibt der Schleier trotzdem stark. Kinder kennen ihn vom Kuchen: Einer schneidet, der andere sucht aus."
+        }
+      ],
+      "tryIt": "Nimm eine Regel aus deinem Umfeld – Dienstplan, Hausordnung, Notengebung – und frag dich, ob du ihr in jeder Rolle zustimmen würdest.",
+      "takeaways": [
+        "Gerecht ist, was man ohne Kenntnis der eigenen Position wählen würde.",
+        "Strittig bleibt, wie vorsichtig man hinter dem Schleier wählen sollte."
+      ]
+    }
+  },
+  {
+    "id": "gefangenendilemma",
+    "title": "Das Gefangenendilemma",
+    "scenario": "Zwei Komplizen werden getrennt verhört. Schweigen beide, bekommen beide ein Jahr. Verrät nur einer, kommt er frei und der andere sitzt zehn Jahre. Verraten sich beide, bekommen beide fünf Jahre.",
+    "optionA": "Schweigen – gemeinsam kommen wir am besten weg.",
+    "optionB": "Gestehen – was immer der andere tut, ich stehe besser da.",
+    "schoolA": "Kooperation",
+    "schoolB": "Individuelle Rationalität",
+    "insight": "Tut jeder das für sich Vernünftigste, landen beide beim schlechteren Ergebnis. Vertrauen ist hier kein Gefühl, sondern die fehlende Zutat zur besten Lösung.",
+    "deep": {
+      "lead": "Das Dilemma zeigt, wie zwei kluge Entscheidungen zusammen ein dummes Ergebnis ergeben können.",
+      "sections": [
+        {
+          "title": "Eine Erfindung des Kalten Krieges",
+          "text": "Das Spiel wurde 1950 von den Mathematikern Merrill Flood und Melvin Dresher in einer amerikanischen Denkfabrik entwickelt, die das Militär beriet. Die Geschichte mit den zwei Gefangenen erfand kurz darauf ihr Kollege Albert Tucker, um die Sache Studenten zu erklären. Der Hintergrund war ernst: das Wettrüsten. Beide Supermächte wären mit weniger Waffen besser gefahren, aber jede fürchtete, als einzige abzurüsten. Dieselbe Struktur steckt in Preiskämpfen, überfischten Meeren und in jeder Wohngemeinschaft, in der niemand das Bad putzt."
+        },
+        {
+          "title": "Wenn man sich wiedersieht",
+          "text": "Die Lage ändert sich, sobald das Spiel wiederholt wird. Der Politikwissenschaftler Robert Axelrod ließ um 1980 Computerprogramme in Turnieren gegeneinander antreten. Es gewann eines der einfachsten, genannt »Wie du mir, so ich dir«: im ersten Zug kooperieren, danach immer das tun, was der andere zuletzt getan hat. Axelrod leitete daraus ab, was erfolgreiche Strategien auszeichnet. Sie beginnen freundlich, lassen sich nicht ausnutzen, tragen nichts nach und sind leicht zu durchschauen. Kooperation entsteht also auch unter Egoisten, wenn die Zukunft lang genug ist."
+        }
+      ],
+      "tryIt": "Such in deinem Alltag eine Lage, in der alle warten, dass ein anderer anfängt, und mach heute sichtbar den ersten kooperativen Zug.",
+      "takeaways": [
+        "Was für jeden Einzelnen klug ist, kann für alle schlecht sein.",
+        "Wiederholung, Ruf und klare Antworten machen Kooperation stabil."
+      ]
+    }
+  },
+  {
+    "id": "chinesisches-zimmer",
+    "title": "Das chinesische Zimmer",
+    "scenario": "Du sitzt in einem Zimmer und verstehst kein Chinesisch. Durch einen Schlitz kommen Zettel mit Schriftzeichen. Nach einem dicken Regelbuch setzt du passende Antwortzeichen zusammen. Draußen hält man dich für einen Muttersprachler.",
+    "optionA": "Hier versteht niemand etwas – Regeln befolgen ist kein Verstehen.",
+    "optionB": "Das Gesamtsystem versteht, so wie auch kein einzelnes Neuron versteht.",
+    "schoolA": "Searle: Syntax ist keine Semantik",
+    "schoolB": "Funktionalismus (System-Antwort)",
+    "insight": "Richtiges Verhalten beweist noch kein Verstehen. Ob ein System, das perfekt antwortet, auch etwas meint, lässt sich von außen nicht ohne Weiteres feststellen.",
+    "deep": {
+      "lead": "Searle fragt, ob das Hantieren mit Zeichen jemals dasselbe sein kann wie zu wissen, was sie bedeuten.",
+      "sections": [
+        {
+          "title": "Ein Angriff auf den Turing-Test",
+          "text": "Alan Turing hatte 1950 vorgeschlagen, die Frage nach denkenden Maschinen praktisch zu entscheiden: Kann ein Mensch im schriftlichen Gespräch nicht mehr erkennen, ob er mit einer Maschine spricht, solle man ihr Denken zugestehen. Der Philosoph John Searle hielt 1980 mit dem chinesischen Zimmer dagegen. Ein Computer tue genau das, was die Person im Zimmer tut: Er verschiebt Zeichen nach formalen Regeln. Regeln über Zeichen seien Syntax, Bedeutung aber sei Semantik, und aus dem einen folge nie das andere."
+        },
+        {
+          "title": "Die Debatte ist wieder offen",
+          "text": "Die bekannteste Erwiderung lautet: Nicht die Person versteht Chinesisch, sondern das Ganze aus Person, Buch und Zetteln. Searle antwortete, man könne das Buch auswendig lernen und verstehe dann immer noch nichts. Andere meinen, ein System brauche einen Körper und Kontakt zur Welt, damit Zeichen etwas bedeuten. Mit den heutigen Sprachmodellen ist der Streit neu entbrannt. Sie antworten flüssig auf fast alles, und Fachleute sind uneins, ob das Verstehen ist, eine Vorstufe davon oder nur dessen überzeugender Anschein."
+        }
+      ],
+      "tryIt": "Wenn du heute einen Chatbot nutzt, überlege bei einer Antwort: Woran würde ich erkennen, ob er versteht, was er schreibt?",
+      "takeaways": [
+        "Zeichen regelgerecht zu verarbeiten ist nicht dasselbe wie sie zu verstehen.",
+        "Ob Verstehen mehr ist als passendes Verhalten, bleibt umstritten."
+      ]
+    }
+  },
+  {
+    "id": "marys-zimmer",
+    "title": "Marys Zimmer",
+    "scenario": "Mary ist Forscherin und weiß alles, was die Naturwissenschaft über Farben und das Sehen weiß. Ihr ganzes Leben hat sie aber in einem schwarz-weißen Raum verbracht. Eines Tages tritt sie hinaus und sieht zum ersten Mal eine rote Tomate.",
+    "optionA": "Sie lernt etwas Neues: wie es ist, Rot zu sehen.",
+    "optionB": "Sie erfährt keine neue Tatsache, sie gewinnt nur eine Fähigkeit.",
+    "schoolA": "Qualia-Argument (gegen Physikalismus)",
+    "schoolB": "Physikalismus",
+    "insight": "Lernt Mary beim ersten Rot etwas hinzu, dann fehlte in ihrem lückenlosen physikalischen Wissen etwas: das Erleben selbst. Das wäre ein Problem für jede rein physikalische Weltsicht.",
+    "deep": {
+      "lead": "Das Experiment fragt, ob sich Erleben vollständig in Fakten über Gehirn und Licht übersetzen lässt.",
+      "sections": [
+        {
+          "title": "Ein Argument und sein Urheber",
+          "text": "Der australische Philosoph Frank Jackson veröffentlichte die Geschichte 1982. Sein Schluss: Wenn jemand alle physikalischen Tatsachen kennt und trotzdem etwas dazulernt, gibt es mehr als physikalische Tatsachen. Diese zusätzlichen Erlebnisqualitäten heißen in der Fachsprache Qualia. Bemerkenswert ist, was danach geschah. Jackson änderte Jahre später seine Meinung und schloss sich den Physikalisten an, die er angegriffen hatte. Sein Gedankenexperiment war da längst selbstständig geworden und gehört bis heute zu den meistdiskutierten der Philosophie des Geistes."
+        },
+        {
+          "title": "Wissen, dass und wissen, wie",
+          "text": "Eine verbreitete Antwort lautet: Mary gewinnt kein neues Wissen über die Welt, sondern ein Können. Sie kann Rot nun wiedererkennen, sich vorstellen und erinnern, so wie man Radfahren nicht aus Büchern lernt. Der Philosoph Daniel Dennett ging weiter und bezweifelte die Geschichte selbst. Wir könnten uns gar nicht ausmalen, was es hieße, wirklich alles zu wissen; eine solche Mary wäre vielleicht nicht überrascht. Der Alltag kennt die Lücke jedenfalls: Über Elternschaft kann man alles lesen und weiß doch erst danach, wie sie ist."
+        }
+      ],
+      "tryIt": "Versuch, jemandem den Geschmack von Koriander oder Lakritz zu beschreiben, ohne Vergleiche zu benutzen. Wie weit kommst du?",
+      "takeaways": [
+        "Erleben könnte mehr sein als die Summe der Fakten darüber.",
+        "Die Gegenthese: Es kommt kein Wissen hinzu, sondern eine Fähigkeit."
+      ]
+    }
+  },
+  {
+    "id": "ring-des-gyges",
+    "title": "Der Ring des Gyges",
+    "scenario": "Ein Hirte findet einen Ring, der ihn unsichtbar macht, sobald er ihn am Finger dreht. Niemand kann ihn je ertappen oder bestrafen. Stell dir vor, dieser Ring gehörte dir.",
+    "optionA": "Ich würde ihn nutzen – Moral ist nur Angst vor Entdeckung.",
+    "optionB": "Ich bliebe gerecht – Unrecht beschädigt mich selbst.",
+    "schoolA": "Glaukon: Moral als Zweckvertrag",
+    "schoolB": "Platon: Gerechtigkeit als Seelenordnung",
+    "insight": "Der Ring trennt zwei Gründe, anständig zu sein: weil es sich lohnt oder weil man so sein will. Erst ohne Zuschauer zeigt sich, welcher von beiden trägt.",
+    "deep": {
+      "lead": "Platon lässt die Frage stellen, ob irgendjemand gerecht bliebe, wenn Unrecht garantiert folgenlos wäre.",
+      "sections": [
+        {
+          "title": "Die Herausforderung im »Staat«",
+          "text": "Die Geschichte steht im zweiten Buch von Platons Hauptwerk über den Staat. Erzählt wird sie von Glaukon, Platons Bruder, der bewusst die Gegenseite vertritt. Der Hirte findet den Ring nach einem Erdbeben in einer Erdspalte, verführt mit seiner Hilfe die Königin, tötet den König und übernimmt die Herrschaft. Glaukon folgert: Gäbe man einem Gerechten und einem Ungerechten je einen solchen Ring, handelten beide gleich. Gerechtigkeit sei bloß ein Kompromiss unter Schwachen. Sokrates braucht den Rest des Buches für seine Antwort."
+        },
+        {
+          "title": "Der Ring heißt heute Anonymität",
+          "text": "Platons Antwort lautet, der Ungerechte zerstöre die Ordnung seiner eigenen Seele und werde zum Sklaven seiner Begierden, entdeckt oder nicht. Ob das überzeugt, darf man prüfen. Sicher ist, dass Beobachtung Verhalten verändert. Im Netz schreiben Menschen unter Decknamen Dinge, die sie niemandem ins Gesicht sagen würden. In einem bekannten Versuch an einer britischen Universität zahlten Beschäftigte mehr in die Kaffeekasse, wenn darüber ein Foto von Augen hing. Schon der Anschein eines Zuschauers genügt offenbar."
+        }
+      ],
+      "tryIt": "Achte heute auf einen Moment, in dem dich garantiert niemand sieht, und beobachte, ob du dich anders verhältst als unter Zeugen.",
+      "takeaways": [
+        "Wer nur aus Furcht vor Strafe anständig ist, ist es mit Ring nicht mehr.",
+        "Charakter zeigt sich dort, wo niemand zuschaut."
+      ]
+    }
+  },
+  {
+    "id": "haufen-paradox",
+    "title": "Das Haufen-Paradox",
+    "scenario": "Zehntausend Sandkörner sind ein Haufen. Nimmst du ein Korn weg, bleibt es ein Haufen, denn ein einzelnes Korn macht keinen Unterschied. Wiederholst du das oft genug, liegt am Ende ein einziges Korn da. Ist das noch ein Haufen?",
+    "optionA": "Es gibt eine scharfe Grenze, wir können sie nur nicht kennen.",
+    "optionB": "Es gibt keine Grenze – der Begriff ist von sich aus unscharf.",
+    "schoolA": "Epistemische Sicht der Vagheit",
+    "schoolB": "Vagheit gehört zur Sprache",
+    "insight": "Viele Begriffe haben keine scharfen Ränder. Nutzlos sind sie deshalb nicht, aber wo wir Grenzen ziehen, treffen wir oft eine Entscheidung und machen keine Entdeckung.",
+    "deep": {
+      "lead": "Lauter harmlose Schritte führen zu einem absurden Ergebnis, und keiner davon lässt sich als der falsche benennen.",
+      "sections": [
+        {
+          "title": "Ein Rätsel aus dem 4. Jahrhundert v. Chr.",
+          "text": "Das Paradox wird Eubulides von Milet zugeschrieben, einem Zeitgenossen des Aristoteles, der auch das Lügner-Paradox formuliert haben soll. Der Fachname Sorites kommt vom griechischen Wort für Haufen. Ein Zwilling ist der Kahlkopf: Wem ein Haar ausfällt, der wird davon nicht kahl, und doch ist irgendwann keines mehr da. Die Logik dahinter ist tückisch, weil beide Annahmen unbestreitbar wirken. Zehntausend Körner sind ein Haufen, und ein Korn weniger ändert nichts. Zusammen ergeben sie trotzdem Unsinn."
+        },
+        {
+          "title": "Wo unscharfe Wörter teuer werden",
+          "text": "Philosophen haben verschiedene Auswege vorgeschlagen, etwa Wahrheit in Graden statt nur wahr und falsch. Praktisch muss das Recht ständig scharfe Linien durch fließende Übergänge legen: volljährig mit achtzehn, bestanden ab einer bestimmten Punktzahl, zu schnell ab einem Stundenkilometer mehr. Diese Grenzen sind willkürlich und dennoch nötig. Umgekehrt lauert ein Fehlschluss. Aus dem Fehlen einer scharfen Grenze folgt nicht, dass es keinen Unterschied gibt. Zwischen Tag und Nacht liegt die Dämmerung, und doch ist Mittag nicht Mitternacht."
+        }
+      ],
+      "tryIt": "Achte heute auf ein Wort wie »viel«, »bald«, »teuer« oder »erwachsen« und frag nach, was dein Gegenüber konkret damit meint.",
+      "takeaways": [
+        "Unscharfe Begriffe sind brauchbar, aber nicht beliebig dehnbar.",
+        "Keine scharfe Grenze heißt nicht: kein Unterschied."
+      ]
+    }
+  },
+  {
+    "id": "hoehlengleichnis",
+    "title": "Platons Höhle",
+    "scenario": "Menschen sitzen seit ihrer Geburt gefesselt in einer Höhle und sehen nur Schatten an der Wand, die sie für die Wirklichkeit halten. Einer wird befreit, steigt ans Tageslicht und erkennt die Täuschung. Soll er zurückkehren und es den anderen sagen?",
+    "optionA": "Zurückkehren – wer mehr sieht, schuldet es den anderen.",
+    "optionB": "Draußen bleiben – niemand lässt sich zur Einsicht zwingen.",
+    "schoolA": "Platon: Pflicht des Erkennenden",
+    "schoolB": "Skepsis gegenüber Belehrung",
+    "insight": "Erkenntnis ist unbequem und macht einsam. Wer mehr sieht, wird von denen, die an die Schatten gewöhnt sind, selten gefeiert, eher ausgelacht oder bekämpft.",
+    "deep": {
+      "lead": "Das Gleichnis handelt weniger von der Täuschung als davon, wie schmerzhaft und undankbar der Weg hinaus ist.",
+      "sections": [
+        {
+          "title": "Was Platon im Einzelnen erzählt",
+          "text": "Das Gleichnis steht im siebten Buch von Platons Werk über den Staat. Hinter den Gefesselten brennt ein Feuer, davor tragen Leute Gegenstände vorbei, deren Schatten auf die Wand fallen. Der Befreite wird zunächst geblendet und will zurück. Erst allmählich erträgt er das Licht und sieht zuletzt die Sonne, bei Platon das Bild für die Idee des Guten. Kehrt er um, sieht er im Dunkeln schlechter als die anderen. Sie lachen ihn aus und würden ihn töten, wenn sie könnten. Das spielt auf das Schicksal des Sokrates an."
+        },
+        {
+          "title": "Die unbequeme Rückfrage",
+          "text": "Heute wird die Höhle gern auf Filterblasen und Medienwelten bezogen: Jeder sieht nur die Schatten, die sein Bildschirm ihm zeigt. Das passt, hat aber einen Haken. Fast jeder, der das Gleichnis zitiert, hält sich selbst für den Befreiten und die anderen für die Gefesselten. Platon zog aus der Geschichte den Schluss, die Wissenden sollten regieren. Der Philosoph Karl Popper sah darin später eine Wurzel autoritären Denkens. Die ehrlichere Lehre wäre: Woran würde ich merken, dass ich noch drinnen sitze?"
+        }
+      ],
+      "tryIt": "Nenne eine Überzeugung, bei der du dich für den Durchblicker hältst, und such eine ernsthafte Quelle, die das Gegenteil vertritt.",
+      "takeaways": [
+        "Der Aufstieg zur Einsicht blendet zuerst und überzeugt die anderen nicht.",
+        "Wer sich für befreit hält, sollte fragen, woher er das weiß."
+      ]
+    }
+  },
+  {
+    "id": "gehirn-im-tank",
+    "title": "Das Gehirn im Tank",
+    "scenario": "Stell dir vor, dein Gehirn schwimmt in einer Nährlösung, und ein Computer speist ihm alle Sinneseindrücke ein: diesen Bildschirm, deine Hände, deine Erinnerungen. Von innen wäre alles genau wie jetzt. Kannst du wissen, dass es nicht so ist?",
+    "optionA": "Nein – ich kann es grundsätzlich nicht ausschließen.",
+    "optionB": "Doch – der Zweifel ist grundlos oder widerlegt sich selbst.",
+    "schoolA": "Skeptizismus",
+    "schoolB": "Common Sense / Putnam",
+    "insight": "Unbezweifelbare Gewissheit über die Außenwelt ist nicht zu haben. Die interessantere Frage ist, ob Wissen eine solche Gewissheit überhaupt braucht.",
+    "deep": {
+      "lead": "Der Tank ist die moderne Fassung eines alten Zweifels: Vielleicht ist alles, was ich wahrnehme, nur eingespielt.",
+      "sections": [
+        {
+          "title": "Vom bösen Geist zum Computer",
+          "text": "René Descartes spielte den Gedanken 1641 mit einem bösen Geist durch, der ihn in allem täuscht. Übrig blieb ihm eine einzige Gewissheit: Wer zweifelt, denkt, und wer denkt, ist. Die Fassung mit dem Tank machte der amerikanische Philosoph Hilary Putnam 1981 bekannt, und er wollte den Zweifel damit gerade widerlegen. Ein Gehirn, das immer im Tank war, könne mit dem Wort »Tank« gar keine echten Tanks meinen, weil es nie mit einem zu tun hatte. Der Satz hebe sich daher selbst auf. Überzeugt hat das nicht alle."
+        },
+        {
+          "title": "Leben mit dem Restzweifel",
+          "text": "Der Brite G. E. Moore antwortete auf solche Zweifel trocken, indem er seine Hände hob: Hier ist eine Hand. Dessen sei er sich sicherer als jeder Prämisse eines skeptischen Arguments. Die meisten heutigen Erkenntnistheoretiker gehen einen ähnlichen Weg. Wissen verlangt gute Gründe, nicht den Ausschluss jeder denkbaren Täuschung. Sonst wüsste niemand irgendetwas. Der Zweifel bleibt als Übung in Bescheidenheit nützlich. Am Alltag ändert er nichts: Auch im Tank täte der Zahnschmerz weh, und die Miete wäre fällig."
+        }
+      ],
+      "tryIt": "Wähle etwas, das du sicher zu wissen meinst, und frag dich: Welche Gründe habe ich, und welche Täuschung müsste ich dafür nicht ausschließen?",
+      "takeaways": [
+        "Den radikalen Zweifel kann man nicht widerlegen, nur einordnen.",
+        "Wissen braucht gute Gründe, keine absolute Gewissheit."
+      ]
+    }
+  },
+  {
+    "id": "teletransporter",
+    "title": "Der Teletransporter",
+    "scenario": "Ein Gerät erfasst deinen Körper bis zum letzten Atom und zerstört ihn dabei. Die Daten gehen zum Mars, wo eine exakte Kopie entsteht, mit all deinen Erinnerungen, deinem Charakter, deinen Plänen. Steigst du ein?",
+    "optionA": "Ja – die Person, die auf dem Mars aufwacht, bin ich.",
+    "optionB": "Nein – ich sterbe, und ein Doppelgänger lebt weiter.",
+    "schoolA": "Psychologische Kontinuität",
+    "schoolB": "Körperliche Kontinuität",
+    "insight": "Vielleicht ist die Frage »Bin das noch ich?« weniger wichtig als gedacht. Zählen könnte allein, dass jemand mit meinen Erinnerungen, Bindungen und Zielen weiterlebt.",
+    "deep": {
+      "lead": "Parfit benutzt die Maschine, um zu zeigen, dass unser Begriff vom Ich weniger fest ist, als er sich anfühlt.",
+      "sections": [
+        {
+          "title": "Die Panne, die alles ändert",
+          "text": "Der britische Philosoph Derek Parfit beschrieb den Fall 1984 und fügte eine Variante hinzu. Das neue Modell zerstört das Original nicht mehr. Du steigst aus der Kabine, bist noch auf der Erde und telefonierst mit deiner Kopie auf dem Mars. Dann erfährst du, dass der Scan dein Herz geschädigt hat und du in wenigen Tagen stirbst. Plötzlich wirkt es eindeutig: Der dort oben bin nicht ich. Dabei hat sich an der Kopie nichts geändert. Unser Urteil hängt also an Umständen, die mit ihr gar nichts zu tun haben."
+        },
+        {
+          "title": "Worauf es ankommt",
+          "text": "Parfit folgerte, dass persönliche Identität nicht das ist, was zählt. Wichtig sei, dass Erinnerungen, Absichten und Charakter fortbestehen, gleichgültig, ob man das »dieselbe Person« nennt. Er empfand das als Befreiung: Sein Leben habe ihm vorher wie ein gläserner Tunnel erschienen, danach seien die Wände verschwunden. Er sah selbst die Nähe zu buddhistischen Lehren vom Nicht-Selbst. Alltagsnah wird die Frage im Kleinen. Wie viel hast du mit dem Menschen gemeinsam, der du mit zehn warst – und bindet dich, was er versprochen hat?"
+        }
+      ],
+      "tryIt": "Lies einen alten Text von dir – Tagebuch, Mail, Chat von vor zehn Jahren – und frag dich, was dich mit dieser Person noch verbindet.",
+      "takeaways": [
+        "Das Gefühl eines festen Ichs hält der Prüfung schwer stand.",
+        "Für Parfit zählt die Fortsetzung des Innenlebens, nicht das Etikett »ich«."
+      ]
+    }
+  },
+  {
+    "id": "kind-im-teich",
+    "title": "Das Kind im Teich",
+    "scenario": "Auf dem Weg zur Arbeit siehst du ein kleines Kind in einem flachen Teich ertrinken. Du könntest es mühelos retten, würdest dabei aber deine teuren neuen Schuhe ruinieren. Niemand sonst ist in der Nähe.",
+    "optionA": "Retten ist Pflicht – und Entfernung ändert daran nichts.",
+    "optionB": "Hier ja – aber fernen Fremden schulde ich nicht dasselbe.",
+    "schoolA": "Singer: Utilitarismus",
+    "schoolB": "Besondere Pflichten der Nähe",
+    "insight": "Fast jeder würde das Kind retten. Singer fragt: Warum zögern wir dann, denselben Betrag zu geben, wenn er anderswo ein Kind vor dem Tod bewahrt?",
+    "deep": {
+      "lead": "Singers Beispiel greift die bequeme Grenze zwischen Pflicht und freiwilliger Wohltat an.",
+      "sections": [
+        {
+          "title": "Ein Aufsatz aus einem Hungerjahr",
+          "text": "Der australische Philosoph Peter Singer schrieb den Text Anfang der Siebzigerjahre, als in Ostbengalen Millionen Flüchtlinge hungerten und die reichen Länder wenig taten. Sein Grundsatz klingt harmlos: Wenn wir etwas sehr Schlimmes verhindern können, ohne etwas von vergleichbarer moralischer Bedeutung zu opfern, sollten wir es tun. Der Teich macht das anschaulich. Dann folgt der Schritt, der wehtut: Ob das Kind zehn Meter oder zehntausend Kilometer entfernt ist, sei moralisch gleichgültig. Spenden wäre demnach keine Großzügigkeit, sondern geschuldet."
+        },
+        {
+          "title": "Die stärksten Einwände",
+          "text": "Der wichtigste Einwand heißt Überforderung. Nach den Schuhen käme der Urlaub, dann das Auto, und es gäbe keinen Punkt, an dem man genug getan hätte. Andere betonen, dass wir der eigenen Familie und Nachbarschaft mehr schulden als Fremden, oder dass Armut politische Ursachen hat, die Spenden nicht beheben. Psychologisch erklärt sich die Lücke leicht: Ein einzelnes sichtbares Opfer bewegt uns stärker als jede Statistik. Aus Singers Überlegungen ist eine Bewegung entstanden, die Hilfe danach auswählt, wo sie nachweislich am meisten bewirkt."
+        }
+      ],
+      "tryIt": "Rechne aus, was dich dein letzter spontaner Kauf gekostet hat, und überlege, ob du denselben Betrag heute einmal bewusst weitergibst.",
+      "takeaways": [
+        "Entfernung fühlt sich moralisch bedeutsam an, lässt sich aber schwer begründen.",
+        "Offen bleibt, wie viel Verzicht man von Menschen verlangen kann."
+      ]
+    }
+  },
+  {
+    "id": "bewusstloser-geiger",
+    "title": "Der bewusstlose Geiger",
+    "scenario": "Du wachst im Krankenhaus auf. Über Nacht hat man deinen Kreislauf mit dem eines berühmten Geigers verbunden, der sonst an Nierenversagen stirbt. Nur dein Blut passt. In neun Monaten wäre er geheilt. Darfst du den Schlauch ziehen?",
+    "optionA": "Ja – niemand hat einen Anspruch auf meinen Körper.",
+    "optionB": "Nein – sein Leben wiegt schwerer als neun Monate von mir.",
+    "schoolA": "Körperliche Selbstbestimmung",
+    "schoolB": "Vorrang des Lebensrechts",
+    "insight": "Ein Recht auf Leben ist nicht ohne Weiteres ein Recht darauf, den Körper eines anderen zu benutzen. Zu bleiben wäre großherzig. Ob es geschuldet ist, ist eine andere Frage.",
+    "deep": {
+      "lead": "Thomson verlagert den Streit um Abtreibung weg von der Frage, ab wann ein Mensch eine Person ist.",
+      "sections": [
+        {
+          "title": "Ein Zugeständnis als Ausgangspunkt",
+          "text": "Die Philosophin Judith Jarvis Thomson veröffentlichte das Beispiel 1971. Ungewöhnlich war ihr Vorgehen: Sie räumte den Abtreibungsgegnern um des Arguments willen ein, der Fötus sei von Anfang an eine Person mit Recht auf Leben. Selbst dann, meinte sie, folge kein Anspruch auf den Körper der Schwangeren. Der Geiger ist unbestritten eine Person, und trotzdem finden die meisten, man dürfe sich abkoppeln. Thomson unterscheidet den barmherzigen Samariter, der viel auf sich nimmt, vom minimal anständigen. Nur das Zweite lasse sich verlangen."
+        },
+        {
+          "title": "Wo die Analogie hinkt",
+          "text": "Kritiker wenden ein, das Beispiel passe nur auf eine Schwangerschaft nach einer Vergewaltigung, denn du wurdest entführt. Wer ein Risiko freiwillig eingehe, trage mehr Verantwortung. Außerdem sei der Geiger ein Fremder, während Eltern ihren Kindern gegenüber besondere Pflichten hätten. Thomson antwortete mit weiteren Bildern und bestritt, dass in Kauf genommenes Risiko schon eine Zusage sei. Unabhängig vom Thema berührt der Fall einen breiten Grundsatz: Niemand wird gezwungen, Blut oder eine Niere zu spenden, nicht einmal für das eigene Kind."
+        }
+      ],
+      "tryIt": "Überlege, ob sich dein Urteil ändert, wenn es neun Tage statt neun Monate wären – oder neun Jahre. Wo kippt es?",
+      "takeaways": [
+        "Recht auf Leben und Anspruch auf fremde Hilfe sind zweierlei.",
+        "Analogien klären einen Streit, entscheiden ihn aber selten."
+      ]
+    }
+  },
+  {
+    "id": "buridans-esel",
+    "title": "Buridans Esel",
+    "scenario": "Ein hungriger Esel steht genau in der Mitte zwischen zwei völlig gleichen Heuhaufen. Nichts spricht für den linken, nichts für den rechten. Weil er keinen Grund hat, einen vorzuziehen, kann er sich nicht entscheiden und verhungert.",
+    "optionA": "Ohne ausschlaggebenden Grund ist keine Wahl möglich.",
+    "optionB": "Unsinn – man kann auch ohne Grund einfach wählen.",
+    "schoolA": "Der Wille folgt dem stärksten Grund",
+    "schoolB": "Freie Willkür / Pragmatismus",
+    "insight": "Manche Entscheidungen sind nur schwer, weil die Möglichkeiten gleich gut sind. Dann kostet das Zögern mehr als jede der beiden Wahlen.",
+    "deep": {
+      "lead": "Der Esel ist eine Spottfigur auf die Idee, dass vernünftiges Wählen immer einen überwiegenden Grund braucht.",
+      "sections": [
+        {
+          "title": "Ein Esel, den Buridan nie erwähnt",
+          "text": "Johannes Buridan lehrte im 14. Jahrhundert in Paris und vertrat, dass der Wille dem folgt, was die Vernunft als besser beurteilt. In seinen Schriften kommt der Esel nicht vor; vermutlich haben Gegner ihn erfunden, um die Lehre lächerlich zu machen. Das Problem ist älter. Schon Aristoteles erwähnt einen Mann, der gleich hungrig und durstig genau zwischen Speise und Trank steht. Spinoza meinte später trocken, ein Mensch in solchem Gleichgewicht würde tatsächlich verhungern, nur wisse er nicht, ob man ihn dann noch Mensch nennen solle."
+        },
+        {
+          "title": "Die Lage kennt jeder",
+          "text": "Wer zwischen zwei gleich guten Wohnungen, Jobs oder Reisezielen festhängt, steht zwischen den Heuhaufen. Paradox ist: Je näher die Optionen beieinanderliegen, desto weniger steht auf dem Spiel und desto länger grübeln wir. Der Ökonom Herbert Simon empfahl, nicht die beste Lösung zu suchen, sondern die erste, die gut genug ist. Ein alter Trick hilft ebenfalls. Wirf eine Münze und achte darauf, was du hoffst, während sie in der Luft ist. Oft weißt du dann, dass es doch einen Grund gab."
+        }
+      ],
+      "tryIt": "Entscheide die nächste Kleinigkeit, bei der du schwankst, per Münzwurf und halte dich daran – außer du merkst im Flug, was du willst.",
+      "takeaways": [
+        "Gleich gute Optionen sind kein Problem, sondern eine Entlastung.",
+        "Gut genug und entschieden schlägt optimal und unentschieden."
+      ]
+    }
+  },
+  {
+    "id": "pascals-wette",
+    "title": "Pascals Wette",
+    "scenario": "Ob Gott existiert, kannst du nicht beweisen. Wetten musst du trotzdem, denn auch Nichtglauben ist eine Wahl. Glaubst du und liegst richtig, gewinnst du unendlich viel. Glaubst du und irrst, verlierst du wenig.",
+    "optionA": "Auf Gott setzen – der mögliche Gewinn ist unendlich.",
+    "optionB": "Nicht mitwetten – Überzeugungen lassen sich nicht ausrechnen.",
+    "schoolA": "Pascal: Klugheit unter Unsicherheit",
+    "schoolB": "Evidenzprinzip / Religionskritik",
+    "insight": "Pascal behandelt den Glauben als Entscheidung unter Unsicherheit. Die Wette zeigt, wie ein winziges Risiko jede Rechnung sprengt, sobald der Einsatz angeblich unendlich ist.",
+    "deep": {
+      "lead": "Die Wette ist eines der ersten Argumente, das mit Wahrscheinlichkeit und Nutzen statt mit Beweisen arbeitet.",
+      "sections": [
+        {
+          "title": "Ein Spieler rechnet mit dem Himmel",
+          "text": "Blaise Pascal hatte kurz zuvor im Briefwechsel mit dem Mathematiker Fermat die Grundlagen der Wahrscheinlichkeitsrechnung gelegt, ausgehend von Fragen des Glücksspiels. In seinen nachgelassenen Notizen wendet er dieses Denken auf die Religion an und richtet sich dabei an weltgewandte Skeptiker. Er wusste, dass man Glauben nicht einfach beschließen kann. Deshalb rät er, so zu handeln, als glaube man: zur Messe gehen, Weihwasser nehmen. Die Gewohnheit werde das Herz nachziehen. Das Argument soll also nicht überzeugen, sondern in Bewegung setzen."
+        },
+        {
+          "title": "Warum die Rechnung wackelt",
+          "text": "Der bekannteste Einwand stammt aus dem 18. Jahrhundert: Welcher Gott ist gemeint? Für jede Religion ließe sich dieselbe Wette aufstellen, auch für einen Gott, der berechnende Gläubige bestraft. Zweitens ist fraglich, ob ein aus Kalkül angenommener Glaube etwas wert wäre. Drittens macht ein unendlicher Gewinn jede Abwägung unmöglich, weil er alles andere aufwiegt, egal wie unwahrscheinlich er ist. Dieses Muster nutzen auch Betrüger und Lotterien. Wo jemand mit riesigem Gewinn bei winziger Chance lockt, lohnt ein zweiter Blick."
+        }
+      ],
+      "tryIt": "Achte heute auf ein Angebot oder Argument, das mit »stell dir vor, wenn es doch stimmt« arbeitet, und prüfe, was es dich tatsächlich kostet.",
+      "takeaways": [
+        "Pascal ersetzt den Gottesbeweis durch eine Nutzenabwägung.",
+        "Unendliche Einsätze hebeln jede vernünftige Rechnung aus."
+      ]
+    }
+  },
+  {
+    "id": "newcombs-problem",
+    "title": "Newcombs Problem",
+    "scenario": "Vor dir stehen zwei Kisten. In der offenen liegen 1.000 Euro. Die geschlossene enthält eine Million oder nichts. Ein fast unfehlbarer Vorhersager hat die Million nur hineingelegt, wenn er erwartet hat, dass du allein die geschlossene nimmst.",
+    "optionA": "Nur die geschlossene Kiste – so wird man hier Millionär.",
+    "optionB": "Beide Kisten – der Inhalt steht ja längst fest.",
+    "schoolA": "Evidenzielle Entscheidungstheorie",
+    "schoolB": "Kausale Entscheidungstheorie",
+    "insight": "Zwei einleuchtende Regeln vernünftigen Entscheidens führen hier zu entgegengesetzten Ratschlägen. Was rational ist, liegt offenbar weniger klar auf der Hand, als wir meinen.",
+    "deep": {
+      "lead": "Bei kaum einem Rätsel sind beide Lager so sicher, dass die Antwort der anderen Seite schlicht dumm ist.",
+      "sections": [
+        {
+          "title": "Zwei Argumente, beide zwingend",
+          "text": "Das Problem geht auf den Physiker William Newcomb zurück; bekannt machte es 1969 der Philosoph Robert Nozick. Wer nur eine Kiste nimmt, argumentiert mit der Erfahrung: Fast alle, die so wählen, gehen mit einer Million nach Hause, fast alle anderen mit tausend Euro. Wer beide nimmt, argumentiert mit der Ursache: Das Geld liegt drin oder nicht, meine Wahl ändert daran nichts mehr, also sind tausend Euro extra immer besser. Nozick bemerkte, fast jeder halte die Sache für sonnenklar, nur teilten sich die Leute etwa hälftig."
+        },
+        {
+          "title": "Vorhersagbar sein als Vorteil",
+          "text": "Das Szenario wirkt weltfremd, hat aber einen realen Kern. Andere Menschen sagen ständig voraus, wie wir uns verhalten werden, und behandeln uns danach. Wer als jemand gilt, der Zusagen auch dann hält, wenn Brechen sich lohnen würde, bekommt Angebote, die ein bekannter Trickser nie erhält. In diesem Sinn zahlt es sich aus, die Sorte Mensch zu sein, die nur eine Kiste nimmt. Die Frage ist dann nicht mehr, welche Einzelentscheidung klüger ist, sondern welcher Charakter."
+        }
+      ],
+      "tryIt": "Entscheide dich spontan für eine oder zwei Kisten und versuche dann, die Gegenseite so stark wie möglich zu begründen.",
+      "takeaways": [
+        "Vernunftregeln können einander widersprechen.",
+        "Manchmal entscheidet nicht die einzelne Wahl, sondern wer man verlässlich ist."
+      ]
+    }
+  },
+  {
+    "id": "molyneux-problem",
+    "title": "Das Molyneux-Problem",
+    "scenario": "Ein Mensch ist von Geburt an blind und kann Kugel und Würfel durch Tasten sicher unterscheiden. Nach einer Operation kann er plötzlich sehen. Erkennt er allein durch Hinschauen, welches die Kugel und welches der Würfel ist?",
+    "optionA": "Ja – die Form ist dieselbe, gleich welcher Sinn sie erfasst.",
+    "optionB": "Nein – Sehen und Tasten müssen erst verknüpft werden.",
+    "schoolA": "Rationalismus",
+    "schoolB": "Empirismus (Locke)",
+    "insight": "Was uns als eine einzige Welt erscheint, setzt das Gehirn aus getrennten Sinnen zusammen. Diese Verknüpfung ist zu einem guten Teil erlernt.",
+    "deep": {
+      "lead": "Eine philosophische Frage aus dem 17. Jahrhundert, die gut dreihundert Jahre später am Krankenbett geprüft wurde.",
+      "sections": [
+        {
+          "title": "Ein Brief an John Locke",
+          "text": "Der irische Gelehrte William Molyneux, dessen Frau erblindet war, stellte die Frage in einem Brief an den Philosophen John Locke. Locke nahm sie in sein Hauptwerk über den menschlichen Verstand auf und antwortete wie Molyneux mit Nein. Für ihn stammt alles Wissen aus Erfahrung, und der Geheilte habe noch nie erfahren, wie etwas aussieht, das sich rund anfühlt. Leibniz widersprach vorsichtig: Mit etwas Nachdenken müsse der Mann darauf kommen, weil die Kugel keine Ecken hat und der Würfel acht."
+        },
+        {
+          "title": "Die Antwort aus der Praxis",
+          "text": "Lange ließ sich das nicht sauber testen. In jüngerer Zeit operierte ein Hilfsprojekt in Indien Kinder und Jugendliche, die mit behandelbarer Blindheit geboren waren. Forscher prüften wenige Tage danach, ob sie eine ertastete Form unter gesehenen wiedererkannten. Das Ergebnis, veröffentlicht 2011: Zunächst gelang es kaum besser als geraten. Locke hatte also recht. Allerdings verbesserten sich die Kinder innerhalb kurzer Zeit deutlich. Die Verbindung zwischen den Sinnen ist nicht angeboren fertig, aber das Gehirn stellt sie erstaunlich schnell her."
+        }
+      ],
+      "tryIt": "Lass dir mit geschlossenen Augen einen unbekannten Gegenstand in die Hand geben und zeichne ihn, bevor du ihn ansiehst.",
+      "takeaways": [
+        "Die Sinne liefern getrennte Daten, das Gehirn verbindet sie.",
+        "Manche philosophischen Fragen lassen sich empirisch entscheiden."
+      ]
+    }
+  },
+  {
+    "id": "omelas",
+    "title": "Die Stadt Omelas",
+    "scenario": "Omelas ist eine Stadt vollkommenen Glücks: keine Armut, keine Gewalt, lauter Feste. Der Preis: In einem Keller muss ein einziges Kind in Elend und Dunkelheit leben. Wird es befreit, endet das Glück aller. Jeder Bürger weiß davon.",
+    "optionA": "Bleiben – das Glück von Tausenden wiegt dieses Leid auf.",
+    "optionB": "Fortgehen – kein Glück darf auf einem Opfer ruhen.",
+    "schoolA": "Utilitarismus",
+    "schoolB": "Menschenwürde (Deontologie)",
+    "insight": "Die Geschichte prüft, ob es Dinge gibt, die man einem Menschen nicht antun darf, gleich wie viele andere davon haben. Und sie fragt leise, welche Keller unser eigener Wohlstand hat.",
+    "deep": {
+      "lead": "Eine Kurzgeschichte, die die Rechnung des größten Glücks der größten Zahl bis zur Schmerzgrenze durchspielt.",
+      "sections": [
+        {
+          "title": "Le Guin und ihre Vorläufer",
+          "text": "Die amerikanische Autorin Ursula K. Le Guin veröffentlichte die Erzählung 1973. Im Untertitel nennt sie ihre Quelle: den Philosophen William James, der sich gefragt hatte, ob wir ein Glück für Millionen annehmen dürften, wenn dafür eine einzige verlorene Seele einsam gequält würde. Noch früher lässt Dostojewski in den »Brüdern Karamasow« Iwan fragen, ob man das Glück der Menschheit auf den Tränen eines gemarterten Kindes errichten dürfe. Den Namen der Stadt fand Le Guin nach eigener Auskunft auf einem Ortsschild, rückwärts gelesen."
+        },
+        {
+          "title": "Die dritte Möglichkeit, die fehlt",
+          "text": "In der Geschichte gewöhnen sich die meisten Bürger an das Wissen und reden es sich zurecht. Einige wenige verlassen die Stadt, schweigend und allein. Auffällig ist, dass niemand das Kind befreit. Man kann darin eine Schwäche der Weggehenden sehen: Sie halten ihre Hände sauber, dem Kind hilft es nicht. Die Erzählung funktioniert als Spiegel. Günstige Kleidung, Rohstoffe für Elektronik und billiges Fleisch haben ebenfalls Kosten, die andere tragen. Nur sind unsere Keller weiter weg und schlechter beleuchtet."
+        }
+      ],
+      "tryIt": "Wähle ein Produkt, das du heute benutzt, und finde in fünf Minuten heraus, wer es unter welchen Bedingungen hergestellt hat.",
+      "takeaways": [
+        "Nicht jedes Leid lässt sich gegen fremdes Glück aufrechnen.",
+        "Fortgehen beruhigt das Gewissen, ändert aber nichts am Keller."
+      ]
+    }
+  },
+  {
+    "id": "moralischer-zufall",
+    "title": "Moralischer Zufall",
+    "scenario": "Zwei Autofahrer sind gleich unaufmerksam und schauen kurz aufs Handy. Beim einen passiert nichts. Beim anderen läuft in genau diesem Moment ein Kind auf die Straße und stirbt. Trifft den zweiten mehr Schuld?",
+    "optionA": "Nein – beide haben genau denselben Fehler begangen.",
+    "optionB": "Ja – wer einen Menschen tötet, trägt mehr als der Beinahe-Täter.",
+    "schoolA": "Kant: Es zählt der Wille",
+    "schoolB": "Folgenorientierte Sicht",
+    "insight": "Wir meinen, Menschen nur nach dem zu beurteilen, was in ihrer Hand liegt. Tatsächlich urteilen wir ständig nach Ergebnissen, an denen der Zufall mitgewirkt hat.",
+    "deep": {
+      "lead": "Zwischen einem schlechten Menschen und einem unbescholtenen liegt manchmal nur, wer gerade über die Straße lief.",
+      "sections": [
+        {
+          "title": "Ein Widerspruch in unserem Urteilen",
+          "text": "Die Philosophen Bernard Williams und Thomas Nagel haben das Problem in den Siebzigerjahren unter dem Namen »moral luck« bekannt gemacht. Nagel unterscheidet mehrere Formen. Es gibt Zufall im Ergebnis, wie bei den beiden Fahrern. Es gibt Zufall der Umstände: Wer 1930 aus Deutschland ausgewandert ist, wurde nie auf die Probe gestellt, die andere nicht bestanden. Und es gibt Zufall der Anlage, denn sein Temperament sucht sich niemand aus. Auch das Recht folgt dem Ergebnis: Der Versuch wird meist milder bestraft als die vollendete Tat."
+        },
+        {
+          "title": "Was daraus folgt",
+          "text": "Zwei Lehren liegen nahe. Die erste ist Zurückhaltung beim Verurteilen. Wer sich über den Unglücksfahrer empört, sollte sich fragen, wie oft er selbst nur Glück hatte. Die zweite betrifft das Bewerten von Entscheidungen. Wir halten eine Wahl gern für gut, weil sie gut ausging, und für schlecht, weil sie schiefging. Pokerspieler haben dafür ein eigenes Wort und trainieren sich das ab. Besser ist die Frage, ob die Entscheidung mit dem damaligen Wissen vernünftig war. Ein gutes Ergebnis macht Leichtsinn nicht klug."
+        }
+      ],
+      "tryIt": "Denk an eine riskante Entscheidung, die bei dir gut ausging, und beurteile sie neu, als wüsstest du den Ausgang nicht.",
+      "takeaways": [
+        "Schuld und Verdienst hängen stärker am Zufall, als uns lieb ist.",
+        "Bewerte Entscheidungen nach ihrem Zustandekommen, nicht nach dem Ausgang."
+      ]
+    }
+  },
+  {
+    "id": "philosophischer-zombie",
+    "title": "Der philosophische Zombie",
+    "scenario": "Stell dir ein Wesen vor, das dir Atom für Atom gleicht und sich genau so verhält wie du. Es lacht, klagt über Zahnschmerzen, schreibt Liebesbriefe. Nur erlebt es dabei nichts, innen ist es dunkel. Ist ein solches Wesen überhaupt denkbar?",
+    "optionA": "Ja – also ist Bewusstsein mehr als Physik.",
+    "optionB": "Nein – gleiche Physik bedeutet zwingend gleiches Erleben.",
+    "schoolA": "Chalmers: Eigenschaftsdualismus",
+    "schoolB": "Physikalismus (Dennett)",
+    "insight": "Der Zombie macht das schwierige Problem des Bewusstseins greifbar: Warum fühlt sich Informationsverarbeitung nach etwas an, statt einfach im Dunkeln abzulaufen?",
+    "deep": {
+      "lead": "Ein Wesen ohne Innenleben, das niemand von dir unterscheiden könnte, ist als Idee harmlos und als Argument brisant.",
+      "sections": [
+        {
+          "title": "Leichte Probleme, schwieriges Problem",
+          "text": "Der australische Philosoph David Chalmers machte den Zombie in den Neunzigerjahren zum Kern einer berühmten Unterscheidung. Leicht nennt er alle Fragen danach, wie das Gehirn etwas leistet: Reize unterscheiden, Aufmerksamkeit lenken, über sich berichten. Das sei schwer genug, aber grundsätzlich mit den Mitteln der Hirnforschung lösbar. Schwierig sei die Frage, warum diese Vorgänge von Erleben begleitet sind. Wenn ein Zombie auch nur widerspruchsfrei denkbar ist, so sein Argument, dann legen die physikalischen Tatsachen das Bewusstsein nicht fest."
+        },
+        {
+          "title": "Der Einwand: nur scheinbar denkbar",
+          "text": "Kritiker wie Daniel Dennett halten dagegen, wir bildeten uns bloß ein, uns den Zombie vorstellen zu können. Genauso könnte man von einem Wesen fantasieren, bei dem alle Organe tadellos arbeiten und das trotzdem nicht gesund ist. Wer alle Funktionen hat, habe damit das Erleben. Entschieden ist der Streit nicht. Praktische Bedeutung bekommt er bei Tieren und künstlicher Intelligenz. Bewusstsein erschließen wir immer nur aus Verhalten und Ähnlichkeit mit uns selbst. Der Zombie erinnert daran, dass das ein Schluss ist und keine Beobachtung."
+        }
+      ],
+      "tryIt": "Frag dich bei einem Tier oder einem Sprachassistenten, dem du heute begegnest: Aus welchen Anzeichen schließe ich auf Erleben – oder darauf, dass keines da ist?",
+      "takeaways": [
+        "Funktionen zu erklären ist nicht dasselbe wie Erleben zu erklären.",
+        "Fremdes Bewusstsein erschließen wir, wir sehen es nicht."
+      ]
+    }
+  },
+  {
+    "id": "fledermaus",
+    "title": "Wie ist es, eine Fledermaus zu sein?",
+    "scenario": "Eine Fledermaus findet sich im Dunkeln durch Echoortung zurecht: Sie stößt Rufe aus und »hört« daraus Abstand, Größe und Bewegung ihrer Beute. Angenommen, du wüsstest alles über ihr Gehirn. Wüsstest du dann, wie es für sie ist?",
+    "optionA": "Nein – ihre Innenperspektive bleibt uns verschlossen.",
+    "optionB": "Im Prinzip ja – genügend Wissen schließt die Lücke.",
+    "schoolA": "Nagel: Subjektivität ist irreduzibel",
+    "schoolB": "Physikalismus / Funktionalismus",
+    "insight": "Bewusstsein heißt, dass es sich irgendwie anfühlt, dieses Wesen zu sein. Genau diese Perspektive kommt in einer Beschreibung von außen nicht vor.",
+    "deep": {
+      "lead": "Nagels Aufsatz gab der Bewusstseinsdebatte ihre bis heute gebräuchliche Formel: Es ist irgendwie, dieses Wesen zu sein.",
+      "sections": [
+        {
+          "title": "Warum gerade Fledermäuse",
+          "text": "Der amerikanische Philosoph Thomas Nagel wählte das Tier 1974 mit Bedacht. Fledermäuse sind Säugetiere und uns nah genug, dass kaum jemand ihnen Erleben abspricht. Zugleich ist ihr wichtigster Sinn uns völlig fremd. Wenn ich mir ausmale, kopfüber zu hängen und Insekten zu jagen, weiß ich nur, wie es für mich wäre, mich wie eine Fledermaus zu benehmen. Nagel hält die Wissenschaft deshalb nicht für gescheitert. Er meint, uns fehlten bisher schlicht die Begriffe, um Subjektives objektiv zu fassen."
+        },
+        {
+          "title": "Ein Stück näher, als Nagel dachte",
+          "text": "Manche blinde Menschen orientieren sich mit Klicklauten der Zunge und hören am Echo, wo Wände, Autos oder Bäume sind. Hirnuntersuchungen zeigen bei geübten Echoortern Aktivität in Bereichen, die sonst dem Sehen dienen. Ganz verschlossen ist die fremde Sinneswelt also nicht. Trotzdem bleibt es menschliches Erleben mit menschlichem Gehirn. Nagels Punkt reicht ohnehin weiter als bis zur Fledermaus. Streng genommen weißt du auch nicht, wie es ist, dein Nachbar zu sein. Du schließt es aus Ähnlichkeit und aus dem, was er erzählt."
+        }
+      ],
+      "tryIt": "Bitte heute jemanden, dir eine Erfahrung zu schildern, die du nie gemacht hast, und frag zweimal nach, statt »kenn ich« zu sagen.",
+      "takeaways": [
+        "Wissen über ein Gehirn ist nicht Wissen aus seiner Perspektive.",
+        "Fremdes Erleben erschließt sich nur näherungsweise, auch bei Menschen."
+      ]
+    }
+  },
+  {
+    "id": "moerder-an-der-tuer",
+    "title": "Der Mörder an der Tür",
+    "scenario": "Ein Freund flüchtet vor einem Mörder und versteckt sich in deinem Haus. Kurz darauf klopft der Verfolger und fragt dich, ob der Gesuchte bei dir ist. Ausweichen kannst du nicht. Darfst du lügen?",
+    "optionA": "Nein – die Pflicht zur Wahrhaftigkeit kennt keine Ausnahme.",
+    "optionB": "Ja – ein Mörder hat kein Recht auf die Wahrheit.",
+    "schoolA": "Kant: unbedingte Pflicht",
+    "schoolB": "Constant / Folgenethik",
+    "insight": "Der Fall zeigt den Preis ausnahmsloser Regeln und zugleich den Preis der Ausnahmen: Wer aus guten Gründen lügen darf, muss sagen können, wo die guten Gründe enden.",
+    "deep": {
+      "lead": "Kants berühmteste Zumutung: Selbst dem Mörder gegenüber soll man nicht lügen dürfen.",
+      "sections": [
+        {
+          "title": "Ein Streit von 1797",
+          "text": "Der Schriftsteller Benjamin Constant hatte einem ungenannten deutschen Philosophen vorgeworfen, er treibe die Wahrheitspflicht so weit, dass man sogar einen Mörder nicht belügen dürfe. Die Wahrheit schulde man nur dem, der ein Recht auf sie hat. Kant fühlte sich gemeint und antwortete mit einem kurzen Aufsatz. Die Lüge schade immer, schreibt er, wenn nicht einem bestimmten Menschen, dann der Menschheit, weil sie Aussagen überhaupt unglaubwürdig mache. Zudem hafte der Lügner für alle Folgen. Vielleicht ist der Freund längst hinten hinaus, und die Lüge führt den Mörder gerade zu ihm."
+        },
+        {
+          "title": "Kant gegen Kant",
+          "text": "Kaum jemand folgt Kant hier, auch unter seinen Anhängern nicht. Spätestens seit Menschen Verfolgte vor der Gestapo versteckten, wirkt die Antwort unerträglich. Viele, die Kants Ethik schätzen, meinen, er habe seine eigene Theorie falsch angewandt. Der Mörder verschweigt seine Absicht und täuscht damit selbst; ihm gegenüber gelte die gewöhnliche Vertrauensgrundlage nicht. Nützlich bleibt Kants Warnung im Kleinen. Die meisten Lügen des Alltags retten kein Leben, sondern ersparen uns Unbequemlichkeit, und auf den Mörder an der Tür berufen sie sich zu Unrecht."
+        }
+      ],
+      "tryIt": "Zähle heute mit, wie oft du etwas Unwahres sagst, und notiere bei jeder Gelegenheit, wem die Unwahrheit genützt hat.",
+      "takeaways": [
+        "Ausnahmslose Regeln führen in Grenzfällen zu unannehmbaren Ergebnissen.",
+        "Der extreme Ausnahmefall rechtfertigt nicht die bequeme Alltagslüge."
+      ]
+    }
+  },
+  {
+    "id": "tragik-der-allmende",
+    "title": "Die Tragik der Allmende",
+    "scenario": "Ein Dorf teilt sich eine Weide. Jeder Hirte überlegt: Ein Tier mehr bringt mir den vollen Gewinn, den Schaden an der Weide tragen alle gemeinsam. Denken alle so, ist die Weide bald kahl. Du bist einer der Hirten.",
+    "optionA": "Ich halte mich zurück, auch wenn andere es nicht tun.",
+    "optionB": "Ich stocke auf – der Verzicht eines Einzelnen rettet nichts.",
+    "schoolA": "Gemeinsinn / Selbstverpflichtung",
+    "schoolB": "Individuelle Nutzenrechnung",
+    "insight": "Gemeingüter gehen nicht an Bosheit zugrunde, sondern an lauter für sich vernünftigen Entscheidungen. Retten lassen sie sich durch Regeln, auf die sich alle verlassen können.",
+    "deep": {
+      "lead": "Was allen gehört, wird übernutzt, solange jeder den Gewinn allein einstreicht und den Schaden teilt.",
+      "sections": [
+        {
+          "title": "Hardins düstere These",
+          "text": "Den Begriff prägte der amerikanische Biologe Garrett Hardin 1968 in einem viel zitierten Aufsatz. Die Beobachtung selbst ist alt; schon Aristoteles bemerkte, dass am wenigsten gepflegt wird, was den meisten gemeinsam gehört. Hardin ging es eigentlich um das Bevölkerungswachstum, doch sein Bild von der Weide passte auf vieles: überfischte Meere, verschmutzte Luft, später das Klima. Seine Folgerung war streng. Appelle an das Gewissen nützten nichts. Helfen könne nur Privateigentum oder Zwang, auf den sich alle gemeinsam einigen."
+        },
+        {
+          "title": "Ostroms Gegenbeweis",
+          "text": "Die Politikwissenschaftlerin Elinor Ostrom ging hinaus und sah nach. Sie untersuchte Almen in der Schweiz, Bewässerungssysteme in Spanien und Fischgründe an vielen Küsten und fand zahlreiche Gemeinschaften, die ihre Allmende seit Jahrhunderten erfolgreich selbst verwalten. Entscheidend waren stets ähnliche Bedingungen: klare Grenzen, Regeln, die die Nutzer selbst aufstellen, gegenseitige Kontrolle, abgestufte Strafen und einfache Wege, Streit zu schlichten. Dafür erhielt sie 2009 als erste Frau den Wirtschaftsnobelpreis. Die Tragik ist also kein Naturgesetz, sondern das Ergebnis fehlender Absprachen."
+        }
+      ],
+      "tryIt": "Such ein gemeinsam genutztes Gut in deinem Alltag – Küche, Kasse, Kalender – und schlag eine einzige klare Regel dafür vor.",
+      "takeaways": [
+        "Ohne Absprachen zerstört vernünftiger Eigennutz das Gemeingut.",
+        "Gemeinschaften können Allmenden selbst verwalten, wenn die Regeln stimmen."
+      ]
+    }
+  }
+]

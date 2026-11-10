@@ -142,15 +142,26 @@ class FeedViewModelTest {
         Dispatchers.setMain(testDispatcher)
 
         val vm = FeedViewModel(repo, settings)
-        vm.mindfulCards.test {
-            val cards = awaitItem()
-            val languageCards = cards.filterIsInstance<com.hikari.app.domain.feed.LanguageCardItem>()
-            println("Total cards: ${cards.size}, Language cards: ${languageCards.size}")
-            println("Cards order: " + cards.map { it.type.name })
-            assertEquals(7, languageCards.size)
-            assertEquals(com.hikari.app.domain.feed.MindfulModuleType.LANGUAGE, cards.first().type)
-            cancelAndIgnoreRemainingEvents()
-        }
+        val entries = vm.entries.value
+        val modules = entries.map { it.module }
+        // Top-Fokus heißt: viermal je Schwung, aber nie zweimal hintereinander.
+        assertEquals(4, modules.count { it == com.hikari.app.domain.feed.MindfulModuleType.LANGUAGE })
+        assertTrue(modules.zipWithNext().all { (a, b) -> a != b }, "gleicher Bereich direkt hintereinander: $modules")
+        // Ohne Kursanbindung kommen trotzdem Spiele in den Feed.
+        assertTrue(entries.any { it is com.hikari.app.domain.feed.FeedEntry.Game })
+    }
+
+    @Test fun mindfulFeed_growsWhileScrollingAndNeverRepeats() = runTest {
+        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+
+        val vm = FeedViewModel(repo, settings)
+        val first = vm.entries.value.size
+        assertTrue(first > 0)
+        vm.onShown(first - 1)
+        val grown = vm.entries.value
+        assertTrue(grown.size > first, "der Feed muss am Ende nachladen")
+        assertEquals(grown.size, grown.map { it.id }.toSet().size, "doppelte Einträge")
     }
 
     @Test fun recordRussianPractice_updatesStoreAndAwardsXp() = runTest {

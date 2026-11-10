@@ -1,0 +1,722 @@
+[
+  {
+    "id": "mona-lisa",
+    "title": "Mona Lisa",
+    "artist": "Leonardo da Vinci",
+    "origin": "um 1503–1519 · Louvre, Paris",
+    "story": "Leonardo begann das Bildnis um 1503 in Florenz. Es zeigt Lisa Gherardini, die Frau des Seidenhändlers Francesco del Giocondo. Abgeliefert hat er es nie: Er nahm die Tafel mit nach Frankreich und arbeitete wohl noch jahrelang daran. So kam sie in den Besitz der französischen Könige.",
+    "deep": {
+      "lead": "Weltberühmt wurde das kleine Holztafelbild erst 1911 – als es aus dem Louvre gestohlen wurde.",
+      "sections": [
+        {
+          "title": "Malen ohne Linien",
+          "text": "Leonardo trug die Ölfarbe in hauchdünnen, durchscheinenden Schichten auf, sodass Übergänge wie Rauch verschwimmen; die Technik heißt Sfumato, nach dem italienischen Wort für Rauch. Gerade Mund- und Augenwinkel, an denen wir Stimmungen ablesen, liegen im weichen Schatten. Deshalb wirkt das Lächeln deutlicher, wenn du auf die Augen schaust, und schwächer, wenn du den Mund fixierst. Achte auch auf den Hintergrund: Der Horizont der Landschaft liegt links tiefer als rechts. Die beiden Hälften passen nicht zusammen, was der Figur etwas Schwebendes gibt."
+        },
+        {
+          "title": "Wer war die Frau?",
+          "text": "Lange wurde über die Dargestellte gerätselt. 2005 fand sich in der Universitätsbibliothek Heidelberg eine Randnotiz aus dem Oktober 1503: Der Florentiner Kanzleibeamte Agostino Vespucci vermerkte in einem Buch, Leonardo arbeite gerade am Kopf der Lisa del Giocondo. Daher auch der zweite Name des Bildes, La Gioconda. Gemalt ist es auf Pappelholz und nur 77 mal 53 Zentimeter groß – viele Besucher sind überrascht, wie klein es ist. Das Wort »Mona« ist eine verkürzte Form von »Madonna«, also »meine Dame«."
+        },
+        {
+          "title": "Ein Diebstahl macht Karriere",
+          "text": "Am 21. August 1911 nahm der italienische Handwerker Vincenzo Peruggia, der im Louvre gearbeitet hatte, das Bild von der Wand und trug es unter seinem Kittel hinaus. Über zwei Jahre blieb es verschwunden; Zeitungen in aller Welt druckten sein Foto, Menschen standen Schlange vor der leeren Wand. Im Dezember 1913 wurde Peruggia gefasst, als er das Gemälde in Florenz verkaufen wollte. Seitdem ist die Mona Lisa das bekannteste Bild der Welt. Heute hängt sie hinter Panzerglas in einem klimatisierten Gehäuse."
+        }
+      ],
+      "tryIt": "Sieh dir das Bild an und schau abwechselnd fünf Sekunden auf die Augen, dann auf den Mund. Beobachte, wie sich das Lächeln verändert.",
+      "takeaways": [
+        "Sfumato: weiche Übergänge statt Konturen.",
+        "Dargestellt ist Lisa Gherardini aus Florenz.",
+        "Der Raub von 1911 machte das Bild zur Ikone."
+      ]
+    }
+  },
+  {
+    "id": "sternennacht",
+    "title": "Sternennacht",
+    "artist": "Vincent van Gogh",
+    "origin": "1889 · Museum of Modern Art, New York",
+    "story": "Van Gogh malte das Bild im Juni 1889 in der Nervenheilanstalt von Saint-Rémy in der Provence, in die er sich selbst hatte einweisen lassen. Es geht auf den Blick aus seinem Zimmerfenster nach Osten zurück, kurz vor Sonnenaufgang – mit wirbelndem Himmel, Mondsichel und einer flammenden Zypresse.",
+    "deep": {
+      "lead": "Die berühmteste Nacht der Kunstgeschichte entstand bei Tageslicht und aus der Erinnerung – und ihr Maler hielt sie für misslungen.",
+      "sections": [
+        {
+          "title": "Gesehen und erfunden",
+          "text": "Im Schlafraum durfte van Gogh nicht malen; er arbeitete tagsüber in einem Atelierraum im Erdgeschoss. Den Himmel hatte er vielfach durch das vergitterte Fenster beobachtet. Seinem Bruder Theo schrieb er, er habe vor Sonnenaufgang lange die Landschaft betrachtet, in der nur der Morgenstern stand, sehr groß. Das Dorf jedoch war von dort gar nicht zu sehen. Er fügte es hinzu, und der spitze Kirchturm erinnert eher an seine niederländische Heimat als an die Provence. Das Bild verbindet also Beobachtung und Vorstellung."
+        },
+        {
+          "title": "Farbe wie Relief",
+          "text": "Van Gogh setzte die Farbe dick und in kurzen, gerichteten Strichen auf die Leinwand, sodass die Oberfläche fast plastisch wirkt. Die Striche folgen der Bewegung: Sie kreisen um die Sterne, rollen als Wirbel durch den Himmel und züngeln in der Zypresse nach oben. Der Baum im Vordergrund verbindet Erde und Himmel; im Mittelmeerraum steht die Zypresse traditionell auf Friedhöfen. Fast das ganze Bild lebt vom Gegensatz zweier Farben, Blau und Gelb-Orange, die sich gegenseitig zum Leuchten bringen."
+        },
+        {
+          "title": "Später Ruhm",
+          "text": "Van Gogh selbst zählte das Gemälde in Briefen zu den Versuchen, die ihm nicht geglückt seien. Dreizehn Monate nach seiner Entstehung starb er, kaum bekannt und fast ohne Verkäufe. Dass wir ihn heute kennen, ist vor allem das Werk seiner Schwägerin Johanna van Gogh-Bonger: Sie erbte Hunderte Bilder, organisierte Ausstellungen und gab seine Briefe heraus. Die Sternennacht gelangte 1941 ins Museum of Modern Art, als eines der ersten Werke van Goghs in einer New Yorker Museumssammlung."
+        }
+      ],
+      "tryIt": "Schau heute Nacht zwei Minuten in den Himmel und versuche danach, ihn aus dem Gedächtnis zu skizzieren. Was übertreibst du unwillkürlich?",
+      "takeaways": [
+        "Gemalt 1889 in der Anstalt von Saint-Rémy, tagsüber aus der Erinnerung.",
+        "Das Dorf ist hinzuerfunden.",
+        "Berühmt wurde van Gogh erst nach seinem Tod."
+      ]
+    }
+  },
+  {
+    "id": "guernica",
+    "title": "Guernica",
+    "artist": "Pablo Picasso",
+    "origin": "1937 · Museo Reina Sofía, Madrid",
+    "story": "Am 26. April 1937 zerstörten deutsche und italienische Bomber die baskische Stadt Gernika. Picasso, der für den spanischen Pavillon der Pariser Weltausstellung ein Wandbild malen sollte, fand damit sein Thema. In gut fünf Wochen entstand ein fast acht Meter breites Bild in Schwarz, Weiß und Grau.",
+    "deep": {
+      "lead": "Guernica zeigt kein einziges Flugzeug und keine Bombe – nur das, was sie bei Menschen und Tieren anrichten.",
+      "sections": [
+        {
+          "title": "Der Angriff",
+          "text": "Im Spanischen Bürgerkrieg unterstützten Hitler und Mussolini die Putschisten unter General Franco. Die deutsche Legion Condor griff Gernika an einem Montag an, dem Markttag, und warf über Stunden Spreng- und Brandbomben auf die Stadt. Es war einer der ersten großen Luftangriffe auf eine europäische Zivilbevölkerung. Francos Seite behauptete zunächst, die Basken hätten ihre Stadt selbst angezündet. Zeitungsberichte und Fotos erreichten Picasso in Paris wenige Tage später; am 1. Mai zeichnete er die ersten Skizzen. Seine Partnerin Dora Maar fotografierte die Leinwand in allen Stadien."
+        },
+        {
+          "title": "Lesen wie eine Zeitung",
+          "text": "Der Verzicht auf Farbe erinnert an Pressefotos und Zeitungsdruck; das Fell des Pferdes ist mit kleinen Strichen bedeckt, die wie Zeilen aussehen. Links hält eine Mutter ihr totes Kind, daneben steht reglos ein Stier. In der Mitte bäumt sich ein verwundetes Pferd auf, am Boden liegt ein Kämpfer mit zerbrochenem Schwert, rechts stürzt eine Gestalt aus einem brennenden Haus. Über allem hängt eine Glühbirne wie ein grelles Auge. Was Stier und Pferd genau bedeuten, hat Picasso bewusst offengelassen."
+        },
+        {
+          "title": "Ein Bild im Exil",
+          "text": "Nach der Weltausstellung reiste das Gemälde durch Europa und Amerika, um Geld für spanische Flüchtlinge zu sammeln. Picasso verfügte, es dürfe erst nach Spanien, wenn dort wieder demokratische Freiheiten herrschten. So blieb es Jahrzehnte im Museum of Modern Art in New York. Erst 1981, sechs Jahre nach Francos Tod, kam es nach Madrid. Wie stark es wirkt, zeigte sich 2003: Eine Tapisserie nach dem Bild am Sitz der Vereinten Nationen wurde verhängt, als dort für den Irakkrieg geworben wurde."
+        }
+      ],
+      "tryIt": "Betrachte das Bild von links nach rechts und zähle die offenen Münder. Überlege, warum man es fast zu hören meint.",
+      "takeaways": [
+        "Anlass: die Bombardierung Gernikas am 26. April 1937.",
+        "Schwarz-Weiß wie eine Zeitungsseite.",
+        "Kam erst 1981 nach Spanien, wie Picasso es verfügt hatte."
+      ]
+    }
+  },
+  {
+    "id": "grosse-welle-vor-kanagawa",
+    "title": "Die große Welle vor Kanagawa",
+    "artist": "Katsushika Hokusai",
+    "origin": "um 1831 · Farbholzschnitt, Abzüge u. a. in London, New York und Tokio",
+    "story": "Der Holzschnitt gehört zu Hokusais Serie »36 Ansichten des Berges Fuji«. Eine gewaltige Welle türmt sich über drei schmalen Booten auf, deren Ruderer sich tief über die Riemen ducken. Winzig und ruhig steht im Hintergrund der schneebedeckte Fuji. Hokusai war etwa siebzig, als das Blatt erschien.",
+    "deep": {
+      "lead": "Die Welle ist kein Unikat, sondern ein Druck in hoher Auflage – erschwingliche Kunst für Städter, keine Kostbarkeit für Fürsten.",
+      "sections": [
+        {
+          "title": "Ein Blau aus Berlin",
+          "text": "Das tiefe Blau, das dem Blatt seine Kraft gibt, ist Preußischblau – ein künstlicher Farbstoff, der Anfang des 18. Jahrhunderts in Berlin entdeckt und über niederländische und chinesische Händler nach Japan eingeführt wurde. Er war kräftiger und lichtbeständiger als die bis dahin üblichen Pflanzenfarben und löste um 1830 eine regelrechte Blau-Mode aus. Auch die Raumtiefe mit dem kleinen Berg in der Ferne verrät westlichen Einfluss: Hokusai hatte europäische Kupferstiche studiert. Das angeblich typisch japanische Bild ist also ein Ergebnis des Austauschs."
+        },
+        {
+          "title": "Genau hinsehen",
+          "text": "Dargestellt ist kein Tsunami, sondern eine hohe Welle auf offener See. Die drei Boote sind schnelle Ruderboote, die frischen Fisch zu den Märkten von Edo brachten. Die Schaumkrone löst sich in kleine Krallen auf, die nach den Männern zu greifen scheinen, und die Gischt fällt wie Schnee auf den Fuji. Vorn wölbt sich eine kleinere Welle, deren Form den Berg wiederholt. Japanische Bilder liest man von rechts nach links: Der Blick fährt also mit den Booten in die Welle hinein, nicht mit ihr mit."
+        },
+        {
+          "title": "Vom Massenblatt zur Weltikone",
+          "text": "Farbholzschnitte waren Teamarbeit: Der Künstler lieferte die Zeichnung, Holzschneider übertrugen sie auf Druckstöcke, Drucker zogen Farbe für Farbe ab. Von der Welle entstanden vermutlich mehrere Tausend Abzüge, von denen nur ein kleiner Teil erhalten ist; frühe Drucke mit scharfen Linien sind die begehrtesten. Als Japan sich nach 1853 öffnete, gelangten solche Blätter nach Europa und begeisterten Maler wie Monet und van Gogh. Claude Debussy ließ die Welle 1905 auf das Titelblatt seiner Orchesterkomposition »La Mer« drucken."
+        }
+      ],
+      "tryIt": "Such im Bild die kleine Welle im Vordergrund und vergleiche ihre Form mit dem Fuji dahinter. Hokusai hat den Berg zweimal gezeichnet.",
+      "takeaways": [
+        "Ein Farbholzschnitt in hoher Auflage, kein Einzelstück.",
+        "Das Blau ist importiertes Preußischblau.",
+        "Gelesen wird von rechts nach links – gegen die Welle."
+      ]
+    }
+  },
+  {
+    "id": "beethovens-neunte",
+    "title": "Sinfonie Nr. 9 d-Moll",
+    "artist": "Ludwig van Beethoven",
+    "origin": "Uraufführung 7. Mai 1824 · Wien",
+    "story": "Beethovens letzte vollendete Sinfonie sprengte die Gattung: Im Finale treten vier Solisten und ein Chor hinzu und singen Verse aus Schillers Gedicht »An die Freude«. Bei der Uraufführung im Wiener Kärntnertortheater war der Komponist bereits fast völlig taub.",
+    "deep": {
+      "lead": "Die Melodie, die heute jedes Kind kennt, taucht erst nach einer Dreiviertelstunde auf – und zuerst ganz leise in den Bässen.",
+      "sections": [
+        {
+          "title": "Der Abend der Uraufführung",
+          "text": "Beethoven stand mit auf dem Podium und gab die Tempi an, die eigentliche Leitung hatte der Kapellmeister Michael Umlauf. Er soll die Musiker angewiesen haben, sich nur nach ihm zu richten. Zeitzeugen berichten, dass Beethoven den Jubel im Saal nicht bemerkte, bis ihn die Altistin Caroline Unger zum Publikum umdrehte. Das Programm war gewaltig: Außer der Sinfonie erklangen eine Ouvertüre und Teile der Missa solemnis. Geprobt hatte das aus Berufsmusikern und Liebhabern gemischte Orchester nur zweimal vollständig."
+        },
+        {
+          "title": "Wie das Finale gebaut ist",
+          "text": "Der letzte Satz beginnt mit einem schrillen Missklang, den Richard Wagner später »Schreckensfanfare« nannte. Dann zitiert das Orchester nacheinander kurz die drei vorangegangenen Sätze, und jedes Mal fahren Celli und Kontrabässe dazwischen, als verwürfen sie die Erinnerung. Erst danach stimmen dieselben tiefen Streicher leise und ohne Begleitung die Freudenmelodie an. Sie ist bewusst schlicht: Fast alle Töne liegen direkt nebeneinander, jeder kann sie nachsingen. Schillers Text hatte Beethoven schon als junger Mann in Bonn vertonen wollen."
+        },
+        {
+          "title": "Eine Melodie für alle Zwecke",
+          "text": "Kaum ein Musikstück wurde so oft in Dienst genommen. Seit 1972 ist das Hauptthema die Hymne des Europarats, seit 1985 die der Europäischen Union, bewusst ohne Text. Leonard Bernstein dirigierte das Werk Weihnachten 1989 in Berlin und ließ »Freiheit« statt »Freude« singen. In Japan gehört die Neunte fest zum Jahresende, oft mit riesigen Laienchören. Die Originalhandschrift der Partitur, die zum größten Teil in der Staatsbibliothek zu Berlin liegt, zählt seit 2001 zum Weltdokumentenerbe der UNESCO."
+        }
+      ],
+      "tryIt": "Hör dir den Beginn des vierten Satzes an und achte auf den Moment, in dem Celli und Bässe die Melodie zum ersten Mal ganz leise spielen.",
+      "takeaways": [
+        "Erste große Sinfonie mit Chor und Solisten.",
+        "Beethoven war bei der Uraufführung nahezu taub.",
+        "Das Freudenthema ist seit 1985 Hymne der EU."
+      ]
+    }
+  },
+  {
+    "id": "taj-mahal",
+    "title": "Taj Mahal",
+    "artist": "Bauherr: Großmogul Shah Jahan",
+    "origin": "1632 bis um 1653 · Agra, Indien",
+    "story": "Als seine Lieblingsfrau Mumtaz Mahal 1631 bei der Geburt ihres vierzehnten Kindes starb, ließ der Mogulkaiser Shah Jahan ihr am Ufer der Yamuna ein Grabmal aus weißem Marmor errichten. Rund zwanzig Jahre lang arbeiteten Tausende Handwerker an der Anlage mit Kuppel, vier Minaretten, Moschee und Garten.",
+    "deep": {
+      "lead": "Das Taj Mahal ist auf perfekte Spiegelgleichheit angelegt – gestört wird sie nur durch das Grab des Mannes, der es bauen ließ.",
+      "sections": [
+        {
+          "title": "Ein Bau, der seine Farbe wechselt",
+          "text": "Der Marmor stammt aus Makrana in Rajasthan, mehr als 300 Kilometer entfernt. Je nach Tageszeit wirkt er rosig, blendend weiß oder bläulich. In die Wände sind Blütenranken aus Halbedelsteinen eingelegt, darunter Jade, Lapislazuli und Karneol, so fein geschliffen, dass man die Fugen kaum fühlt. Die Bänder mit Koranversen rund um die Portale entwarf der Kalligraf Amanat Khan. Ihre Buchstaben werden nach oben hin größer, damit die Schrift vom Boden aus überall gleich hoch erscheint. Die Minarette neigen sich leicht nach außen."
+        },
+        {
+          "title": "Der gestürzte Bauherr",
+          "text": "Shah Jahan regierte eines der reichsten Reiche seiner Zeit. 1658 entmachtete ihn sein Sohn Aurangzeb und setzte ihn im Roten Fort von Agra fest, von wo aus man das Grabmal sehen kann. Als er 1666 starb, wurde er neben Mumtaz beigesetzt. Ihr Scheinsarg steht genau in der Mittelachse, seiner daneben – die einzige Abweichung von der Symmetrie. Die eigentlichen Gräber liegen in einer schlichten Kammer darunter. Als leitenden Architekten nennen Quellen Ustad Ahmad Lahori; ganz gesichert ist das nicht."
+        },
+        {
+          "title": "Legenden ohne Beleg",
+          "text": "Zwei Geschichten hört fast jeder Besucher. Die eine besagt, der Kaiser habe den Handwerkern die Hände abhacken lassen, damit sie nie wieder Vergleichbares schaffen. Die andere, er habe am anderen Flussufer ein Gegenstück aus schwarzem Marmor geplant. Für beides gibt es keine Belege; Ausgrabungen fanden gegenüber einen Garten, kein Fundament. Real ist dagegen die Bedrohung durch Luftverschmutzung, die den Marmor gelblich verfärbt. Rund um das Bauwerk gelten deshalb strenge Auflagen für Industrie und Verkehr. Seit 1983 ist es UNESCO-Welterbe."
+        }
+      ],
+      "tryIt": "Sieh dir ein Foto des Innenraums an und such die beiden Scheinsärge. Welcher steht in der Mitte?",
+      "takeaways": [
+        "Grabmal für Mumtaz Mahal, begonnen 1632.",
+        "Strenge Symmetrie mit einer einzigen Ausnahme.",
+        "Abgehackte Hände und schwarzes Taj sind unbelegte Legenden."
+      ]
+    }
+  },
+  {
+    "id": "der-kuss-klimt",
+    "title": "Der Kuss",
+    "artist": "Gustav Klimt",
+    "origin": "1907/08 · Belvedere, Wien",
+    "story": "Ein Paar, eingehüllt in einen goldenen Mantel, kniet auf einer Blumenwiese; der Mann beugt sich zum Kuss über die Frau. Klimt malte das quadratische Bild auf dem Höhepunkt seiner »Goldenen Periode« mit Ölfarbe und echtem Blattgold. Der österreichische Staat kaufte es noch vor der Vollendung.",
+    "deep": {
+      "lead": "Unter all dem Gold übersieht man leicht, dass das Paar am Rand eines Abgrunds kniet.",
+      "sections": [
+        {
+          "title": "Gold als Handwerk",
+          "text": "Klimt war der Sohn eines Goldgraveurs und kannte das Material von klein auf. 1903 reiste er zweimal nach Ravenna und sah dort die byzantinischen Mosaiken mit ihren goldenen Hintergründen; in den Jahren danach arbeitete er immer mehr Blattgold in seine Gemälde ein. Im »Kuss« verwendete er neben Gold auch Silber und Platin, teils glatt aufgelegt, teils reliefartig erhöht. Nur Gesichter, Hände und Füße sind mit dem Pinsel naturnah gemalt. Alles andere ist flaches Ornament, sodass die Körper unter den Gewändern fast verschwinden."
+        },
+        {
+          "title": "Zwei Muster, zwei Welten",
+          "text": "Schau auf die Gewänder: Das des Mannes besteht aus harten schwarzen, weißen und grauen Rechtecken, das der Frau aus runden, farbigen Blüten und Kreisen. Erst der gemeinsame Goldmantel fasst beide zusammen. Vom Mann sieht man kaum mehr als Nacken und Hinterkopf, das Gesicht der Frau ist dem Betrachter zugewandt, die Augen geschlossen. Ihre Zehen krallen sich um die Kante der Wiese, hinter der der Bildraum ins Leere fällt. Ob das Hingabe oder Bedrängnis zeigt, darüber wird bis heute gestritten."
+        },
+        {
+          "title": "Skandal und Staatsankauf",
+          "text": "Wenige Jahre zuvor hatte Klimt mit Deckenbildern für die Wiener Universität einen Sturm der Entrüstung ausgelöst; man warf ihm Pornografie vor, und er nahm fortan keine Staatsaufträge mehr an. Umso bemerkenswerter war der Erfolg auf der Kunstschau 1908: Das Unterrichtsministerium erwarb den noch unfertigen »Kuss« für 25 000 Kronen, eine für damalige Verhältnisse außergewöhnlich hohe Summe. Wer die Dargestellten sind, ist offen. Oft werden Klimt selbst und seine Lebensgefährtin Emilie Flöge genannt; belegt ist das nicht."
+        }
+      ],
+      "tryIt": "Sieh dir das Bild an und decke gedanklich das Gold ab. Was bleibt vom Paar übrig – und wie verändert sich die Stimmung?",
+      "takeaways": [
+        "Echtes Blattgold, angeregt von Mosaiken in Ravenna.",
+        "Eckige Muster beim Mann, runde bei der Frau.",
+        "Das Paar kniet am Rand einer abbrechenden Wiese."
+      ]
+    }
+  },
+  {
+    "id": "maedchen-mit-dem-perlenohrring",
+    "title": "Das Mädchen mit dem Perlenohrring",
+    "artist": "Jan Vermeer",
+    "origin": "um 1665 · Mauritshuis, Den Haag",
+    "story": "Ein Mädchen mit blau-gelbem Turban blickt über die Schulter, die Lippen leicht geöffnet, am Ohr ein großer schimmernder Tropfen. Vermeer malte das kleine Bild in Delft. Lange war es vergessen: 1881 wurde es auf einer Auktion in Den Haag für zwei Gulden und dreißig Cent ersteigert.",
+    "deep": {
+      "lead": "Das Bild ist kein Porträt – und die berühmte Perle ist vermutlich gar keine.",
+      "sections": [
+        {
+          "title": "Eine Tronie, kein Bildnis",
+          "text": "Im Holland des 17. Jahrhunderts nannte man solche Bilder Tronie: die Studie eines Kopfes, eines Ausdrucks oder eines exotischen Kostüms, gemalt für den freien Markt und nicht als Auftrag einer bestimmten Person. Wer Modell saß, ist unbekannt. Die Geschichte von der Dienstmagd Griet stammt aus dem Roman von Tracy Chevalier aus dem Jahr 1999 und dem Film danach – sie ist frei erfunden. Der Turban war keine Alltagskleidung; er sollte dem Bild einen Hauch von Orient geben."
+        },
+        {
+          "title": "Was die Untersuchung von 2018 zeigte",
+          "text": "Forscher des Mauritshuis durchleuchteten das Gemälde mit modernen Verfahren. Der heute fast schwarze Hintergrund war ursprünglich ein dunkelgrüner Vorhang; die grüne Lasur ist im Lauf der Zeit verblasst. Das Mädchen hat feine Wimpern, die mit bloßem Auge nicht mehr zu erkennen sind. Und der Ohrschmuck besteht aus wenigen Tupfern Bleiweiß ohne Haken oder Öse – er schwebt regelrecht. Für eine echte Perle wäre er außerdem ungewöhnlich groß; vielleicht hatte Vermeer Glas oder poliertes Zinn vor Augen."
+        },
+        {
+          "title": "Teures Blau, wenige Bilder",
+          "text": "Für das Blau des Turbans nahm Vermeer Ultramarin, gewonnen aus dem Halbedelstein Lapislazuli, der aus dem heutigen Afghanistan kam und zu den teuersten Pigmenten überhaupt gehörte. Er arbeitete langsam: Nur rund 35 Gemälde gelten heute als eigenhändig. Als er 1675 mit 43 Jahren starb, hinterließ er seiner Frau und elf Kindern Schulden. Danach geriet er für fast zwei Jahrhunderte in Vergessenheit. Der Käufer von 1881, Arnoldus des Tombe, vermachte das Bild dem Mauritshuis, wo es seit 1902 hängt."
+        }
+      ],
+      "tryIt": "Zoom in ein hochaufgelöstes Foto des Ohrrings: Zähl, aus wie vielen Pinseltupfern er besteht. Es sind erstaunlich wenige.",
+      "takeaways": [
+        "Eine Tronie: Kopfstudie, kein Porträt.",
+        "Der Hintergrund war ursprünglich ein grüner Vorhang.",
+        "Die Magd Griet ist eine Romanfigur."
+      ]
+    }
+  },
+  {
+    "id": "erschaffung-adams",
+    "title": "Die Erschaffung Adams",
+    "artist": "Michelangelo Buonarroti",
+    "origin": "um 1511 · Sixtinische Kapelle, Vatikan",
+    "story": "Das Fresko ist das berühmteste Feld der Decke, die Michelangelo von 1508 bis 1512 im Auftrag von Papst Julius II. ausmalte. Gott schwebt, von Engeln getragen, auf den liegenden Adam zu und streckt den Arm aus, um ihm das Leben zu geben. Zwischen den Fingerspitzen bleibt ein winziger Spalt.",
+    "deep": {
+      "lead": "Eines der bekanntesten Bilder der Welt zeigt keine Berührung, sondern den Augenblick unmittelbar davor.",
+      "sections": [
+        {
+          "title": "Ein Bildhauer wider Willen",
+          "text": "Michelangelo verstand sich als Bildhauer und nahm den Auftrag nur widerstrebend an; mit der Freskomalerei hatte er wenig Erfahrung. Ursprünglich waren bloß zwölf Apostelfiguren vorgesehen. Er setzte ein weit größeres Programm durch: neun Szenen aus dem Buch Genesis, umgeben von Propheten, Sibyllen und den Vorfahren Christi, insgesamt über 300 Figuren. Dass er dabei auf dem Rücken lag, ist ein Irrtum. Eine eigenhändige Skizze neben einem Gedicht zeigt ihn stehend, den Kopf in den Nacken gelegt – und das Gedicht klagt über Kropf, Krämpfe und Farbe im Gesicht."
+        },
+        {
+          "title": "Malen gegen die Uhr",
+          "text": "Ein Fresko wird in den feuchten Putz gemalt und verbindet sich beim Trocknen mit der Wand. Man kann deshalb nur so viel Fläche verputzen, wie sich an einem Tag bemalen lässt; die Nähte dieser Tagwerke sind aus der Nähe noch zu sehen. Für die ganze Adamsfigur brauchte Michelangelo nur wenige davon. Achte auf den Unterschied der Hände: Adams Hand hängt schlaff, der Finger ist gebeugt, Gottes Arm dagegen ist bis in die Fingerspitze gespannt. Das Leben ist noch nicht übergesprungen."
+        },
+        {
+          "title": "Hineingelesen und freigelegt",
+          "text": "1990 wies ein amerikanischer Arzt darauf hin, dass der rote Mantel um Gott und die Engel dem Umriss eines menschlichen Gehirns gleicht. Michelangelo hatte Leichen seziert, doch ob die Ähnlichkeit gewollt ist, lässt sich nicht beweisen. Gesichert ist eine andere Überraschung: Als die Decke in den 1980er-Jahren gereinigt wurde, kamen unter Jahrhunderten von Kerzenruß und Leim leuchtende, fast grelle Farben zum Vorschein. Das Bild vom düsteren Michelangelo musste korrigiert werden. Papstwahlen finden bis heute unter diesen Fresken statt."
+        }
+      ],
+      "tryIt": "Streck den Arm aus wie Adam, dann wie Gott. Spür den Unterschied zwischen einer Hand, die empfängt, und einer, die gibt.",
+      "takeaways": [
+        "Teil der Decke der Sixtinischen Kapelle, 1508–1512.",
+        "Michelangelo malte im Stehen, nicht im Liegen.",
+        "Die Fingerspitzen berühren sich nicht."
+      ]
+    }
+  },
+  {
+    "id": "nachtwache",
+    "title": "Die Nachtwache",
+    "artist": "Rembrandt van Rijn",
+    "origin": "1642 · Rijksmuseum, Amsterdam",
+    "story": "Rembrandt malte das riesige Gruppenbild für den Festsaal der Amsterdamer Schützengilde der Kloveniers. Es zeigt die Kompanie von Hauptmann Frans Banninck Cocq und Leutnant Willem van Ruytenburch beim Aufbruch. Statt die Männer brav aufzureihen, machte Rembrandt daraus eine Szene voller Bewegung.",
+    "deep": {
+      "lead": "Die Nachtwache spielt gar nicht nachts – ihren Namen verdankt sie einem nachgedunkelten Firnis.",
+      "sections": [
+        {
+          "title": "Ein Name aus Versehen",
+          "text": "Rembrandts Zeitgenossen kannten das Bild unter dem Namen der Kompanie. Erst gegen Ende des 18. Jahrhunderts, als Firnis und Schmutz die Oberfläche stark verdunkelt hatten, kam der Titel »Nachtwache« auf. Nach Reinigungen im 20. Jahrhundert zeigte sich: Die Schützen treten bei Tag aus einem dunklen Torbogen ins Licht. Achtzehn von ihnen hatten für ihr Bildnis bezahlt, je nach Platz im Bild mehr oder weniger; ihre Namen stehen auf dem später hinzugefügten Schild am Tor. Die übrigen Figuren hat Rembrandt zur Belebung hinzugefügt."
+        },
+        {
+          "title": "Das Mädchen im Licht",
+          "text": "Mitten im Gedränge leuchtet ein kleines Mädchen in goldgelbem Kleid. An ihrem Gürtel hängt ein totes Huhn mit auffälligen Krallen – eine Anspielung auf das Wahrzeichen der Kloveniers, die Klaue. Sie ist also eine Art lebendes Maskottchen. Schau auch auf die ausgestreckte Hand des Hauptmanns: Sie wirft einen Schatten auf den hellen Rock des Leutnants, und dessen Lanzenspitze scheint aus dem Bild herauszuragen. Solche Kunstgriffe ließen das Gemälde für damalige Betrachter geradezu lebendig wirken."
+        },
+        {
+          "title": "Beschnitten, angegriffen, erforscht",
+          "text": "1715 zog das Bild ins Amsterdamer Rathaus um. Weil es dort nicht an die Wand passte, schnitt man an allen vier Seiten Streifen ab, links rund sechzig Zentimeter samt einiger Figuren. Wie es ursprünglich aussah, zeigt eine kleine zeitgenössische Kopie. Dreimal wurde das Gemälde attackiert: 1911 und 1975 mit Messern, 1990 mit Säure. Seit 2019 untersucht das Rijksmuseum es vor den Augen der Besucher in einem Glashaus. Dass das Bild Rembrandt ruiniert habe, ist eine Legende; seine Geldnot hatte andere Gründe und kam später."
+        }
+      ],
+      "tryIt": "Such im Bild das Mädchen mit dem Huhn und folge dann dem Schatten der Hand des Hauptmanns. Wohin fällt er?",
+      "takeaways": [
+        "Ein Tagbild – der Titel entstand durch dunklen Firnis.",
+        "1715 wurde die Leinwand rundum beschnitten.",
+        "Gruppenporträt als bewegte Szene statt als Reihe."
+      ]
+    }
+  },
+  {
+    "id": "david-michelangelo",
+    "title": "David",
+    "artist": "Michelangelo Buonarroti",
+    "origin": "1501–1504 · Galleria dell'Accademia, Florenz",
+    "story": "Mit 26 Jahren begann Michelangelo, aus einem einzigen Marmorblock den biblischen Hirtenjungen David zu schlagen, der den Riesen Goliath besiegt. Die mit Sockel über fünf Meter hohe Figur wurde 1504 vor dem Regierungspalast von Florenz aufgestellt – als Wahrzeichen einer Republik, die sich gegen übermächtige Gegner behauptet.",
+    "deep": {
+      "lead": "Michelangelos David hat den Kampf noch vor sich: Er zeigt nicht den Sieger, sondern den Moment der Entscheidung.",
+      "sections": [
+        {
+          "title": "Ein Block, den niemand wollte",
+          "text": "Der Marmor lag seit Jahrzehnten in der Dombauhütte. Zwei Bildhauer hatten sich vor Michelangelo daran versucht und aufgegeben; der Block war ungewöhnlich schmal, angeschlagen und von Wind und Wetter mitgenommen. Die geringe Tiefe erklärt die Haltung der Figur, die fast in einer Ebene bleibt. Geplant war sie ursprünglich für einen Strebepfeiler hoch oben am Dom. Dass Kopf und rechte Hand zu groß geraten sind, hängt vermutlich damit zusammen: Aus der Untersicht hätten sie richtig gewirkt."
+        },
+        {
+          "title": "Der Augenblick davor",
+          "text": "Frühere Florentiner Bildhauer wie Donatello und Verrocchio zeigten David als Knaben nach dem Sieg, den abgeschlagenen Kopf Goliaths zu Füßen. Michelangelo lässt Schwert und Kopf weg. Sein David steht scheinbar entspannt, das Gewicht auf dem rechten Bein, die Schleuder über der Schulter. Doch der Blick geht scharf zur Seite, die Stirn ist gerunzelt, an Hals und Handrücken treten die Adern hervor. Der Körper ruht, der Kopf ist schon im Kampf. Diese Spannung zwischen Ruhe und Bereitschaft macht die Figur so lebendig."
+        },
+        {
+          "title": "Ein Standort mit Folgen",
+          "text": "Über den Aufstellungsort beriet 1504 eine Kommission, der auch Leonardo da Vinci und Botticelli angehörten. Man entschied sich für den Platz vor dem Palazzo Vecchio; der Transport der tonnenschweren Statue durch die Stadt dauerte vier Tage. Unter freiem Himmel litt sie: 1527 brach bei einem Aufstand der linke Arm ab, als ein Möbelstück aus einem Fenster geworfen wurde. 1873 brachte man das Original zum Schutz in die Accademia. Die Figur, die heute auf der Piazza della Signoria steht, ist eine Kopie von 1910."
+        }
+      ],
+      "tryIt": "Stell dich wie David hin: Gewicht auf ein Bein, die Schultern gegenläufig geneigt. Dieses Prinzip heißt Kontrapost – du findest es an vielen Statuen.",
+      "takeaways": [
+        "Aus einem einzigen, zuvor verworfenen Marmorblock.",
+        "Gezeigt ist der Moment vor dem Kampf.",
+        "Das Original steht seit 1873 im Museum."
+      ]
+    }
+  },
+  {
+    "id": "geburt-der-venus",
+    "title": "Die Geburt der Venus",
+    "artist": "Sandro Botticelli",
+    "origin": "um 1485 · Uffizien, Florenz",
+    "story": "Die Liebesgöttin steht nackt auf einer Muschelschale und wird von den Windgöttern ans Ufer geblasen, wo eine junge Frau mit einem blühenden Mantel auf sie wartet. Botticelli malte das fast drei Meter breite Bild vermutlich für die Familie Medici. Später hing es in deren Landvilla bei Florenz.",
+    "deep": {
+      "lead": "Trotz des Titels zeigt das Bild nicht die Geburt der Venus, sondern ihre Ankunft an Land.",
+      "sections": [
+        {
+          "title": "Ein Wagnis in mehrfacher Hinsicht",
+          "text": "Ein großformatiger weiblicher Akt ohne biblischen Vorwand war im 15. Jahrhundert etwas Unerhörtes; seit der Antike hatte es das in dieser Größe kaum gegeben. Botticelli hielt sich deshalb an ein antikes Vorbild: Die Haltung der Göttin, die Brust und Scham mit Hand und Haar bedeckt, folgt römischen Statuen der »schamhaften Venus«. Ungewöhnlich war auch der Bildträger. Große Gemälde malte man in Florenz damals meist auf Holztafeln. Botticelli nahm Leinwand, die leichter und billiger war und sich für ein Landhaus eignete."
+        },
+        {
+          "title": "Schönheit vor Richtigkeit",
+          "text": "Sieh genau hin: Der Hals der Venus ist überlang, die linke Schulter fällt unnatürlich steil ab, und ihr Gewicht liegt so weit außen, dass sie eigentlich von der Muschel kippen müsste. Botticelli beherrschte die Anatomie; er opferte sie der fließenden Linie. Auch der Raum ist flach wie ein Wandteppich, die Wellen sind kleine V-förmige Zeichen. In die Haare, die Flügel und die Blätter der Bäume setzte er feine Lichter aus echtem Gold. Die Rosen, die durch die Luft treiben, sollen der Sage nach mit der Göttin entstanden sein."
+        },
+        {
+          "title": "Vergessen und wiederentdeckt",
+          "text": "In seinen letzten Jahren geriet Botticelli aus der Mode; die jüngere Generation um Leonardo und Michelangelo malte körperhafter und dramatischer. Fast dreihundert Jahre lang galt er als Nebenfigur. Erst im 19. Jahrhundert entdeckten ihn englische Maler und Kritiker neu, und die Venus wurde zum Inbegriff der Renaissance. Dass die früh verstorbene Florentinerin Simonetta Vespucci Modell stand, wird oft erzählt, ist aber nicht belegt – sie war bei der Entstehung des Bildes schon etwa zehn Jahre tot."
+        }
+      ],
+      "tryIt": "Versuch, die Haltung der Venus nachzustellen, das Gewicht weit zur Seite verlagert. Du merkst sofort, dass man so kaum stehen kann.",
+      "takeaways": [
+        "Gezeigt ist die Ankunft der Göttin, nicht ihre Geburt.",
+        "Auf Leinwand gemalt – damals ungewöhnlich für dieses Format.",
+        "Die anatomischen Ungenauigkeiten sind gewollt: Linie geht vor Natur."
+      ]
+    }
+  },
+  {
+    "id": "faust-goethe",
+    "title": "Faust. Eine Tragödie",
+    "artist": "Johann Wolfgang von Goethe",
+    "origin": "Teil I 1808, Teil II 1832 · Weimar",
+    "story": "Der Gelehrte Faust hat alles studiert und ist am Ende so klug wie zuvor. Verzweifelt lässt er sich auf einen Handel mit dem Teufel Mephisto ein, der ihm Erfüllung verspricht. Goethe arbeitete rund sechzig Jahre an dem Stoff, von den ersten Szenen des jungen Mannes bis kurz vor seinem Tod.",
+    "deep": {
+      "lead": "Faust hat wirklich gelebt – und bei Goethe schließt er keinen bloßen Pakt, sondern eine Wette.",
+      "sections": [
+        {
+          "title": "Vom Jahrmarkt zur Weltliteratur",
+          "text": "Um 1500 zog ein Mann namens Georg Faust als Astrologe, Heiler und Wahrsager durch Süddeutschland; Zeitgenossen nannten ihn einen Scharlatan. Nach seinem Tod um 1540 wucherten die Geschichten. 1587 erschien in Frankfurt das Volksbuch vom Doktor Faustus, der seine Seele dem Teufel verschreibt und in der Hölle endet – eine Warnung an alle Neugierigen. Der Engländer Christopher Marlowe machte daraus ein Drama, wandernde Schauspieltruppen und Puppenspieler brachten es zurück nach Deutschland. In dieser Form lernte der junge Goethe den Stoff kennen."
+        },
+        {
+          "title": "Gretchen hatte ein Vorbild",
+          "text": "Die Liebesgeschichte mit Margarete ist Goethes Zutat. Als er 1772 als junger Jurist in Frankfurt lebte, wurde dort die Dienstmagd Susanna Margaretha Brandt hingerichtet, weil sie ihr neugeborenes Kind getötet hatte; Goethe kannte den Fall. Im Drama verführt Faust das Mädchen, lässt es im Stich, und es zerbricht daran. Die früheste Fassung des Stücks hat nur überlebt, weil das Weimarer Hoffräulein Luise von Göchhausen sie abschrieb. Diese Abschrift, der sogenannte Urfaust, wurde erst 1887 in ihrem Nachlass entdeckt."
+        },
+        {
+          "title": "Wette statt Pakt",
+          "text": "Im Volksbuch ist die Sache klar: Seele gegen Dienste, Frist 24 Jahre. Goethe dreht das um. Faust wettet, Mephisto werde es nie schaffen, ihn zufrieden und träge zu machen; nur wenn er zum Augenblick sage, er möge verweilen, habe der Teufel gewonnen. Am Ende des zweiten Teils wird Faust trotz aller Schuld gerettet. Diesen Teil versiegelte Goethe nach der Vollendung 1831 und ließ ihn erst nach seinem Tod drucken. Aus dem Stück stammen Wendungen wie »des Pudels Kern« und die »Gretchenfrage«."
+        }
+      ],
+      "tryIt": "Stell dir heute selbst die Gretchenfrage zu einem Thema, bei dem du gern ausweichst: Wie hältst du es eigentlich damit?",
+      "takeaways": [
+        "Der historische Faust lebte um 1500.",
+        "Goethe arbeitete rund sechzig Jahre an dem Drama.",
+        "Bei Goethe ist es eine Wette – und Faust wird gerettet."
+      ]
+    }
+  },
+  {
+    "id": "don-quijote",
+    "title": "Don Quijote von der Mancha",
+    "artist": "Miguel de Cervantes",
+    "origin": "1605 und 1615 · Madrid",
+    "story": "Ein verarmter Landadliger liest so viele Ritterromane, dass er den Verstand verliert. Er nennt sich Don Quijote, sattelt seinen klapprigen Gaul Rosinante und zieht mit dem Bauern Sancho Panza als Knappen aus, um Unrecht zu bekämpfen – in einer Welt, in der es längst keine fahrenden Ritter mehr gibt.",
+    "deep": {
+      "lead": "Der berühmte Kampf gegen die Windmühlen nimmt im Buch nur wenige Absätze ein – der ganze Roman hat rund tausend Seiten.",
+      "sections": [
+        {
+          "title": "Ein Autor mit Abenteuerleben",
+          "text": "Cervantes wusste, wie hart die Wirklichkeit zuschlägt. 1571 kämpfte er als Soldat in der Seeschlacht von Lepanto und verlor den Gebrauch der linken Hand. Auf der Heimreise kaperten Korsaren sein Schiff; fünf Jahre verbrachte er als Gefangener in Algier und versuchte mehrfach zu fliehen, bis er freigekauft wurde. Später arbeitete er als Steuereintreiber, geriet wegen fehlender Gelder ins Gefängnis und deutet im Vorwort an, sein Roman sei in einem Kerker gezeugt worden. Als der erste Teil erschien, war er 57 und als Schriftsteller bis dahin wenig erfolgreich."
+        },
+        {
+          "title": "Ein Roman, der sich selbst liest",
+          "text": "Der erste Teil wurde sofort ein Erfolg. 1614 brachte ein Unbekannter unter dem Namen Avellaneda eine gefälschte Fortsetzung heraus. Cervantes antwortete im echten zweiten Teil mit einem Kunstgriff: Seine Figuren haben den ersten Band gelesen, wissen, dass sie berühmt sind, und ärgern sich über die Fälschung. Don Quijote ändert sogar seine Reiseroute, um den Betrüger Lügen zu strafen. Ein Buch, das über sich selbst nachdenkt und Erfundenes mit Wirklichem verschränkt – das gab es so vorher kaum. Deshalb gilt es vielen als erster moderner Roman."
+        },
+        {
+          "title": "Narr oder Held?",
+          "text": "Cervantes' Zeitgenossen lasen das Buch als Posse über einen Verrückten, der ständig Prügel bezieht. Erst die Romantiker um 1800 sahen in Don Quijote den tragischen Idealisten, der an einer nüchternen Welt scheitert. Beides steckt im Text, und Sancho Panza, der bodenständige Bauer, gewinnt im Lauf der Reise an Witz und Urteilskraft. Cervantes und Shakespeare starben übrigens nicht am selben Tag, auch wenn für beide oft der 23. April 1616 genannt wird: England rechnete noch nach dem alten Kalender, zehn Tage versetzt."
+        }
+      ],
+      "tryIt": "Achte heute darauf, wo jemand »gegen Windmühlen kämpft« – und frag dich, ob das Narrheit ist oder Haltung.",
+      "takeaways": [
+        "Zwei Teile: 1605 und 1615.",
+        "Die Figuren des zweiten Teils kennen den ersten als Buch.",
+        "Erst die Romantik machte aus dem Narren einen tragischen Helden."
+      ]
+    }
+  },
+  {
+    "id": "hagia-sophia",
+    "title": "Hagia Sophia",
+    "artist": "Anthemios von Tralleis und Isidor von Milet (Bauherr: Kaiser Justinian I.)",
+    "origin": "532–537 · Istanbul",
+    "story": "Nachdem ein Volksaufstand die alte Hauptkirche Konstantinopels in Brand gesetzt hatte, ließ Kaiser Justinian in nur fünf Jahren einen Neubau errichten, wie ihn die Welt noch nicht gesehen hatte. Seine gewaltige Kuppel überspannt einen stützenfreien Raum von über dreißig Metern Durchmesser.",
+    "deep": {
+      "lead": "Die Baumeister waren Mathematiker, keine gelernten Bauleute – und ihre erste Kuppel stürzte nach zwanzig Jahren ein.",
+      "sections": [
+        {
+          "title": "Ein Kreis auf einem Quadrat",
+          "text": "Anthemios und Isidor waren als Gelehrte der Geometrie und Mechanik bekannt. Ihr Problem: eine runde Kuppel auf einen quadratischen Raum zu setzen. Sie lösten es mit vier gebogenen Dreiecksflächen, sogenannten Pendentifs, die zwischen den großen Bögen vom Viereck zum Kreis überleiten – nie zuvor in dieser Größe gewagt. Am Kuppelfuß sitzen vierzig Fenster dicht nebeneinander. Im Gegenlicht verschwinden die Stege dazwischen, und die Schale scheint zu schweben. Der Zeitgenosse Prokop schrieb, sie wirke wie an einer goldenen Kette vom Himmel herabgehängt."
+        },
+        {
+          "title": "Einsturz und zweiter Versuch",
+          "text": "Die erste Kuppel war sehr flach und drückte stark nach außen. Nach mehreren Erdbeben stürzte sie 558 ein. Isidor der Jüngere, ein Neffe des ersten Architekten, baute sie steiler und damit rund sechs Meter höher wieder auf; in dieser Form wurde die Kirche 562 neu geweiht. Auch später gab es Teileinstürze und Reparaturen, weshalb die Kuppel heute nicht ganz kreisrund ist. Die mächtigen Stützpfeiler an den Außenseiten kamen erst nach und nach hinzu, einige durch den osmanischen Baumeister Sinan im 16. Jahrhundert."
+        },
+        {
+          "title": "Kirche, Moschee, Museum, Moschee",
+          "text": "Über neun Jahrhunderte war die Hagia Sophia die Hauptkirche des Byzantinischen Reiches und Krönungsort seiner Kaiser. Nach der Eroberung 1453 machte Sultan Mehmed II. sie zur Moschee; Minarette kamen hinzu, die Mosaiken wurden nach und nach übertüncht. Ihr Raumgedanke prägte die großen osmanischen Moscheen Istanbuls. 1934 ließ Atatürk das Gebäude in ein Museum umwandeln und die Mosaiken freilegen. Seit Juli 2020 dient es wieder als Moschee. Auf einer Brüstung der Empore findet sich noch ein Gruß aus dem Mittelalter: eingeritzte Runen eines Nordmanns."
+        }
+      ],
+      "tryIt": "Sieh dir ein Innenfoto an und folge dem Übergang von den vier Pfeilern zur runden Kuppel. Die gewölbten Dreiecke dazwischen sind die Pendentifs.",
+      "takeaways": [
+        "In nur fünf Jahren erbaut, 537 geweiht.",
+        "Pendentifs tragen die Kuppel über quadratischem Grundriss.",
+        "Fast tausend Jahre lang einer der größten Kirchenräume der Welt."
+      ]
+    }
+  },
+  {
+    "id": "bueste-der-nofretete",
+    "title": "Büste der Nofretete",
+    "artist": "Werkstatt des Bildhauers Thutmosis",
+    "origin": "um 1345 v. Chr. · Neues Museum, Berlin",
+    "story": "Die knapp fünfzig Zentimeter hohe Büste aus Kalkstein und bemaltem Gips zeigt Nofretete, die Hauptgemahlin des Pharaos Echnaton, mit ihrer hohen blauen Krone. Deutsche Ausgräber fanden sie am 6. Dezember 1912 in den Ruinen einer Bildhauerwerkstatt in Amarna – nach mehr als 3200 Jahren im Sand.",
+    "deep": {
+      "lead": "Das berühmteste Gesicht des alten Ägypten war wohl nie zum Ausstellen gedacht: Es diente Bildhauern als Vorlage.",
+      "sections": [
+        {
+          "title": "Ein Modell aus der Werkstatt",
+          "text": "Die Büste lag im Haus des Oberbildhauers Thutmosis, zusammen mit unfertigen Köpfen und Gipsabgüssen. Vieles spricht dafür, dass sie ein Meistermodell war, nach dem weitere Bildnisse der Königin gearbeitet wurden. Das würde auch das fehlende linke Auge erklären: Im rechten sitzt eine Einlage aus Bergkristall mit schwarzer Pupille, die linke Höhle ist leer, und Spuren einer Befestigung fanden sich dort nicht. Als die Stadt nach Echnatons Tod aufgegeben wurde, blieb das Modell offenbar einfach in der Werkstatt zurück."
+        },
+        {
+          "title": "Das Gesicht unter dem Gesicht",
+          "text": "Computertomografien haben gezeigt, dass die Büste zwei Schichten hat. Der Kern aus Kalkstein trägt ein eigenes, fein gemeißeltes Gesicht mit Falten an den Mundwinkeln und einer leichten Unebenheit auf der Nase. Darüber liegt eine Gipsschicht, mit der diese Züge geglättet wurden. Das Idealbild ist also Ergebnis einer Korrektur. Der Name der Königin bedeutet »Die Schöne ist gekommen«. Sie lebte in einer Umbruchzeit: Echnaton hatte den Sonnengott Aton über alle anderen Götter gestellt und eine neue Hauptstadt gegründet."
+        },
+        {
+          "title": "Streit um den Besitz",
+          "text": "Finanziert hatte die Grabung der Berliner Kaufmann James Simon; bei der damals üblichen Teilung der Funde zwischen Ägypten und den Ausgräbern fiel die Büste 1913 der deutschen Seite zu. Simon schenkte sie 1920 den Berliner Museen, öffentlich gezeigt wurde sie erstmals 1924. Seitdem fordert Ägypten sie immer wieder zurück und bezweifelt, dass bei der Fundteilung alles offen zuging. Die deutsche Seite hält den Erwerb für rechtmäßig. Der Fall ist eines der bekanntesten Beispiele in der Debatte um die Rückgabe von Kulturgütern."
+        }
+      ],
+      "tryIt": "Betrachte ein Foto der Büste genau von vorn und vergleiche beide Augen. Die meisten bemerken das fehlende erst nach einigen Sekunden.",
+      "takeaways": [
+        "Gefunden 1912 in der Werkstatt des Thutmosis in Amarna.",
+        "Unter dem Gips liegt ein realistischeres Steingesicht.",
+        "Ägypten fordert die Büste seit den 1920er-Jahren zurück."
+      ]
+    }
+  },
+  {
+    "id": "terrakotta-armee",
+    "title": "Die Terrakotta-Armee",
+    "artist": "unbekannt (im Auftrag von Kaiser Qin Shihuangdi)",
+    "origin": "um 210 v. Chr. · bei Xi'an, China",
+    "story": "Im März 1974 stießen Bauern beim Brunnenbohren nahe der Stadt Xi'an auf Tonscherben und einen Kopf. Darunter lag eine ganze Armee: schätzungsweise 8000 lebensgroße Krieger aus gebranntem Ton, dazu Pferde und Streitwagen, aufgestellt, um den ersten Kaiser Chinas im Jenseits zu bewachen.",
+    "deep": {
+      "lead": "Achttausend Krieger, kein Gesicht wie das andere – und doch stammen sie aus einer Art Serienfertigung.",
+      "sections": [
+        {
+          "title": "Serienfertigung mit Qualitätskontrolle",
+          "text": "Die Figuren wurden aus vorgefertigten Teilen zusammengesetzt: Beine, Rumpf, Arme, Hände und Kopf entstanden getrennt, teils mithilfe von Formen. Erst danach modellierten Handwerker auf jedem Kopf mit feinem Ton Bart, Frisur, Ohren und Gesichtszüge von Hand, sodass kein Krieger dem anderen gleicht. Auf vielen Figuren sind Namen von Werkmeistern eingestempelt oder eingeritzt – so ließ sich bei Mängeln der Verantwortliche finden. Die Soldaten trugen echte Waffen aus Bronze; Zehntausende Pfeilspitzen, dazu Schwerter und Armbrustteile wurden geborgen."
+        },
+        {
+          "title": "Ursprünglich bunt bemalt",
+          "text": "Was heute erdgrau wirkt, war einst leuchtend bemalt: Gesichter in Hauttönen, Rüstungen und Gewänder in Rot, Grün, Blau und Violett. Die Farben lagen auf einer Lackschicht. Sobald die Figuren nach über zweitausend Jahren im feuchten Boden an die trockene Luft kommen, rollt sich dieser Lack zusammen und reißt die Farbe mit, oft binnen Minuten. Deshalb graben die Archäologen bewusst langsam und haben große Teile der Anlage noch gar nicht freigelegt. Chinesische und deutsche Restauratoren entwickelten gemeinsam Verfahren, um Farbreste zu festigen."
+        },
+        {
+          "title": "Das ungeöffnete Grab",
+          "text": "Die Armee ist nur ein Vorposten. Der eigentliche Grabhügel des Kaisers, rund anderthalb Kilometer entfernt, wurde bis heute nicht geöffnet – aus Sorge, den Inhalt nicht erhalten zu können. Der Geschichtsschreiber Sima Qian berichtete rund hundert Jahre nach dem Begräbnis von einem unterirdischen Palast mit Flüssen aus Quecksilber. Bodenproben über dem Hügel zeigen tatsächlich erhöhte Quecksilberwerte. Die Tonkrieger dagegen erwähnt Sima Qian mit keinem Wort; bis 1974 wusste niemand von ihnen. Qin Shihuangdi hatte 221 v. Chr. China erstmals zu einem Reich geeint."
+        }
+      ],
+      "tryIt": "Sieh dir Fotos von fünf verschiedenen Kriegern an und vergleiche nur die Frisuren und Bärte. Wie viele Varianten findest du?",
+      "takeaways": [
+        "Entdeckt 1974 von Bauern beim Brunnenbau.",
+        "Körperteile in Serie, Gesichter von Hand.",
+        "Das Kaisergrab selbst ist bis heute ungeöffnet."
+      ]
+    }
+  },
+  {
+    "id": "parthenon",
+    "title": "Der Parthenon",
+    "artist": "Iktinos und Kallikrates; Skulpturen unter Leitung des Phidias",
+    "origin": "447–432 v. Chr. · Akropolis, Athen",
+    "story": "Auf dem Burgberg von Athen ließ der Staatsmann Perikles der Stadtgöttin Athena einen Tempel aus Marmor bauen, nachdem die Perser die älteren Heiligtümer zerstört hatten. Im Inneren stand ein etwa zwölf Meter hohes Standbild der Göttin aus Gold und Elfenbein, geschaffen von Phidias.",
+    "deep": {
+      "lead": "Am Parthenon gibt es fast keine gerade Linie – alles ist minimal gekrümmt, damit es gerade aussieht.",
+      "sections": [
+        {
+          "title": "Gebaute Augentäuschung",
+          "text": "Der Boden des Tempels wölbt sich zur Mitte hin um einige Zentimeter auf. Die Säulen stehen nicht senkrecht, sondern neigen sich leicht nach innen; ihr Schaft ist leicht bauchig, und die Ecksäulen sind kräftiger als die übrigen. Mit diesen Feinheiten glichen die Baumeister aus, dass lange gerade Linien für das Auge durchzuhängen scheinen. Für die Steinmetze bedeutete das: Kaum ein Block gleicht dem anderen, jeder musste für seinen Platz passend gearbeitet werden. Fertig war der Bau samt Skulpturen trotzdem in rund fünfzehn Jahren."
+        },
+        {
+          "title": "Nicht weiß, und nicht unumstritten",
+          "text": "Die Vorstellung vom reinweißen Marmortempel ist ein Irrtum späterer Jahrhunderte. Figuren und Schmuckbänder waren kräftig bemalt, Farbreste sind bis heute nachweisbar. Auch die Finanzierung war schon damals heikel: Das Geld kam zum großen Teil aus der Kasse des Seebundes, in die Athens Verbündete für die gemeinsame Verteidigung gegen Persien einzahlten. Der spätere Biograf Plutarch überliefert den Vorwurf der Gegner des Perikles, Athen schmücke sich mit fremdem Geld wie eine eitle Frau mit Edelsteinen."
+        },
+        {
+          "title": "Explosion und Streit",
+          "text": "Der Tempel überstand zwei Jahrtausende als Kirche und später als Moschee weitgehend intakt. Dann belagerten 1687 venezianische Truppen die Akropolis. Die osmanischen Verteidiger hatten im Parthenon Schießpulver gelagert; ein Geschoss traf, und die Explosion riss die Mitte des Baus heraus. Ab 1801 ließ der britische Gesandte Lord Elgin einen großen Teil der verbliebenen Skulpturen abnehmen und nach London bringen, wo sie seit 1816 dem Britischen Museum gehören. Griechenland fordert ihre Rückgabe – einer der bekanntesten Kulturgüterstreite der Welt."
+        }
+      ],
+      "tryIt": "Achte heute auf ein Gebäude mit Säulen: Sind sie wirklich überall gleich dick? An klassizistischen Bauten findest du oft die leichte Schwellung.",
+      "takeaways": [
+        "Erbaut 447–432 v. Chr. unter Perikles.",
+        "Feine Krümmungen korrigieren optische Täuschungen.",
+        "1687 durch eine Pulverexplosion schwer zerstört."
+      ]
+    }
+  },
+  {
+    "id": "las-meninas",
+    "title": "Las Meninas",
+    "artist": "Diego Velázquez",
+    "origin": "1656 · Museo del Prado, Madrid",
+    "story": "In einem hohen Raum des Madrider Königspalasts steht die fünfjährige Infantin Margarita, umgeben von Hoffräulein, Hofzwergen und einem dösenden Hund. Links hat sich der Maler selbst vor eine riesige Leinwand gestellt und blickt aus dem Bild heraus – genau dorthin, wo du als Betrachter stehst.",
+    "deep": {
+      "lead": "Das Bild stellt eine Frage, die seit über 350 Jahren niemand endgültig beantwortet hat: Wer wird hier eigentlich gemalt?",
+      "sections": [
+        {
+          "title": "Der Spiegel an der Rückwand",
+          "text": "Im Hintergrund hängt zwischen dunklen Gemälden ein heller Spiegel. Darin erkennt man schemenhaft König Philipp IV. und Königin Mariana. Stehen sie dort, wo wir stehen, und Velázquez malt gerade ihr Doppelbildnis? Oder spiegelt sich die Leinwand, an der er arbeitet? Oder sind sie eben eingetreten, und deshalb schauen alle auf? Jede Lesart hat Anhänger. Hinten in der offenen Tür hält der Hofbeamte José Nieto inne, einen Fuß auf der Treppe – als wüsste auch er nicht, ob er kommt oder geht."
+        },
+        {
+          "title": "Ein Maler will Ritter werden",
+          "text": "Velázquez diente Philipp IV. mehr als dreißig Jahre, zuletzt auch als hoher Palastbeamter. Sein Ehrgeiz galt der Aufnahme in den adligen Santiago-Orden, was für einen Maler fast unerreichbar war, weil Malen als Handwerk galt. Das Bild ist auch ein Argument: Der Künstler steht hier ebenbürtig im Raum der Königsfamilie. 1659 wurde er nach langer Prüfung tatsächlich aufgenommen. Das rote Kreuz des Ordens auf seiner Brust muss also nachträglich aufgemalt worden sein; der Legende nach vom König eigenhändig."
+        },
+        {
+          "title": "Wirkung auf spätere Künstler",
+          "text": "Aus der Nähe lösen sich Kleider und Haare in lockere, fast abstrakte Pinselhiebe auf; erst mit Abstand fügen sie sich zu Seide und Licht. Das beeindruckte zweihundert Jahre später Maler wie Édouard Manet. Pablo Picasso malte 1957 eine Serie von 58 Bildern, die um das Gemälde kreist und heute in Barcelona hängt. Seinen Titel trägt das Gemälde erst seit dem 19. Jahrhundert, vorher hieß es schlicht »Die Familie Philipps IV.«. »Meninas« ist das portugiesische Wort für die jungen Hofdamen einer Prinzessin."
+        }
+      ],
+      "tryIt": "Stell dir vor, du stehst vor dem Bild. Zähle, wie viele Figuren dich direkt ansehen – und überlege, wen sie statt deiner sehen könnten.",
+      "takeaways": [
+        "Der Maler zeigt sich selbst bei der Arbeit.",
+        "Im Spiegel erscheinen König und Königin.",
+        "Das Ordenskreuz kam erst nach 1659 ins Bild."
+      ]
+    }
+  },
+  {
+    "id": "der-schrei",
+    "title": "Der Schrei",
+    "artist": "Edvard Munch",
+    "origin": "1893 · Nationalmuseum, Oslo",
+    "story": "An einem Geländer hoch über dem Fjord presst eine kahle Gestalt die Hände an den Kopf, den Mund weit aufgerissen. Der Himmel dahinter glüht in Wellen aus Orange und Rot. Munch zeigte das Bild erstmals 1893 in Berlin, als Teil eines Zyklus über Liebe, Angst und Tod, den er später »Lebensfries« nannte.",
+    "deep": {
+      "lead": "Die Figur schreit vermutlich gar nicht – sie hält sich die Ohren zu, weil die Natur um sie herum schreit.",
+      "sections": [
+        {
+          "title": "Ein Abend am Ekeberg",
+          "text": "Munch hat den Auslöser selbst notiert. Er ging mit zwei Freunden bei Sonnenuntergang einen Weg oberhalb von Kristiania entlang, dem heutigen Oslo. Plötzlich färbte sich der Himmel blutrot; er blieb erschöpft am Geländer stehen, während die Freunde weitergingen, und spürte, wie er schrieb, einen großen, unendlichen Schrei durch die Natur gehen. Die beiden Gestalten am linken Bildrand sind diese Freunde. Der ursprüngliche deutsche Titel lautete »Der Schrei der Natur«. Das Gesicht ist so weit vereinfacht, dass es weder Alter noch Geschlecht verrät."
+        },
+        {
+          "title": "Nicht ein Bild, sondern vier",
+          "text": "Munch schuf das Motiv mehrfach: 1893 in Tempera und Ölkreide auf Karton und als Kreidezeichnung, 1895 als Pastell, 1910 noch einmal in Tempera. Dazu kommt eine Lithografie von 1895, durch die es rasch bekannt wurde. Karton statt Leinwand, sichtbare Striche, stellenweise unbemalter Grund – das Rohe ist Absicht. In der Fassung von 1893 steht oben links winzig mit Bleistift: »Kann nur von einem Verrückten gemalt worden sein!« Lange hielt man das für die Schmiererei eines Besuchers. 2021 wies das Nationalmuseum nach, dass Munch es selbst schrieb."
+        },
+        {
+          "title": "Gestohlen, versteigert, zum Symbol geworden",
+          "text": "Zweimal wurden Fassungen geraubt. 1994, am Eröffnungstag der Olympischen Winterspiele in Lillehammer, stiegen Diebe über eine Leiter in die Nationalgalerie ein; das Bild tauchte nach drei Monaten wieder auf. 2004 erbeuteten Bewaffnete die Fassung von 1910 aus dem Munch-Museum, sie wurde 2006 beschädigt sichergestellt. Das Pastell von 1895 erzielte 2012 bei einer Auktion fast 120 Millionen Dollar. Längst ist das Motiv Allgemeingut, vom Filmplakat bis zum Emoji mit aufgerissenem Mund – ein Zeichen für Angst, das jeder versteht."
+        }
+      ],
+      "tryIt": "Halte dir vor dem Spiegel beide Hände an die Wangen und öffne den Mund. Wirkt das eher wie Schreien oder wie Zuhören vor Entsetzen?",
+      "takeaways": [
+        "Munch beschrieb einen Schrei, der durch die Natur ging.",
+        "Es gibt vier gemalte Fassungen und eine Lithografie.",
+        "Die Bleistiftnotiz auf dem Bild stammt von Munch selbst."
+      ]
+    }
+  },
+  {
+    "id": "hamlet",
+    "title": "Hamlet, Prinz von Dänemark",
+    "artist": "William Shakespeare",
+    "origin": "um 1600 · London",
+    "story": "Der Geist des toten Königs erscheint seinem Sohn Hamlet und verlangt Rache: Der eigene Bruder habe ihn ermordet, um Thron und Königin zu gewinnen. Hamlet zögert, zweifelt, spielt den Wahnsinnigen – und reißt am Ende fast den ganzen Hof mit in den Tod.",
+    "deep": {
+      "lead": "Den Schädel hält Hamlet nicht beim berühmten Monolog in der Hand – die beiden Szenen liegen zwei Akte auseinander.",
+      "sections": [
+        {
+          "title": "Zwei Szenen, die jeder verwechselt",
+          "text": "»Sein oder Nichtsein« spricht Hamlet im dritten Akt, ohne Requisit; er wägt ab, ob es sich lohnt, das Leben zu ertragen. Den Schädel nimmt er erst im fünften Akt auf dem Friedhof zur Hand. Es ist der Kopf des Hofnarren Yorick, der ihn als Kind auf dem Rücken trug, und Hamlet begreift, dass auch Witz und Macht zu Staub werden. Bilder und Karikaturen haben beide Momente zu einem verschmolzen. Mit rund 4000 Zeilen ist es Shakespeares längstes Stück; ungekürzt dauert es etwa vier Stunden."
+        },
+        {
+          "title": "Welcher Hamlet ist der echte?",
+          "text": "Shakespeare hat seine Stücke nicht selbst herausgegeben. Vom Hamlet gibt es drei frühe Drucke, die stark voneinander abweichen: eine kurze, holprige Ausgabe von 1603, eine fast doppelt so lange von 1604/05 und die Fassung der Gesamtausgabe von 1623. In der ersten lautet der berühmte Vers anders und steht an anderer Stelle. Jede heutige Ausgabe und jede Aufführung ist deshalb eine Auswahl. Der Stoff selbst ist alt: Die Sage vom dänischen Prinzen Amleth schrieb der Chronist Saxo Grammaticus schon um 1200 nieder."
+        },
+        {
+          "title": "Hamlet spricht Deutsch",
+          "text": "Kaum ein ausländisches Stück wurde in Deutschland so sehr als eigenes empfunden. Die Übersetzung von August Wilhelm Schlegel, erschienen 1798, prägte Wendungen, die leicht abgeschliffen bis heute geläufig sind: dass etwas faul ist im Staate Dänemark, dass der Rest Schweigen ist, dass die Zeit aus den Fugen ist. Neu an der Figur war ihr Innenleben. Hamlet handelt nicht einfach, er beobachtet sich beim Denken, misstraut seinen Motiven und redet darüber. Viele sehen darin den ersten modernen Menschen auf der Bühne – einen, der zu viel weiß, um unbefangen zu handeln."
+        }
+      ],
+      "tryIt": "Sprich »Sein oder Nichtsein, das ist hier die Frage« einmal laut und betone jedes Mal ein anderes Wort. Wie verschiebt sich der Sinn?",
+      "takeaways": [
+        "Monolog im dritten Akt, Schädel im fünften.",
+        "Drei frühe Textfassungen weichen stark voneinander ab.",
+        "Schlegels Übersetzung von 1798 prägte deutsche Redewendungen."
+      ]
+    }
+  },
+  {
+    "id": "zauberfloete",
+    "title": "Die Zauberflöte",
+    "artist": "Wolfgang Amadeus Mozart (Text: Emanuel Schikaneder)",
+    "origin": "Uraufführung 30. September 1791 · Wien",
+    "story": "Prinz Tamino soll im Auftrag der Königin der Nacht deren Tochter Pamina aus der Gewalt des Priesters Sarastro befreien, begleitet vom Vogelfänger Papageno. Doch bald zeigt sich, dass Gut und Böse anders verteilt sind als gedacht. Mozart dirigierte die Uraufführung selbst; gut zwei Monate später starb er.",
+    "deep": {
+      "lead": "Eine der meistgespielten Opern der Welt war keine Hofoper, sondern Volkstheater für eine Vorstadtbühne – mit Maschinen und Zaubertricks.",
+      "sections": [
+        {
+          "title": "Ein Stück für den Theaterdirektor",
+          "text": "Emanuel Schikaneder leitete das Freihaustheater auf der Wieden, eine Bühne außerhalb der Wiener Stadtmauern, die von Spektakel lebte. Er schrieb den Text und sang selbst den Papageno, eine Rolle mit einfachen, liedhaften Nummern, die zu seiner Stimme passte. Gesprochen und gesungen wurde auf Deutsch statt auf Italienisch; man nennt die Form Singspiel. Mozart schrieb den Sängern die Partien auf den Leib: Die Königin der Nacht sang seine Schwägerin Josepha Hofer, deren Stimme mühelos in extreme Höhen reichte."
+        },
+        {
+          "title": "Von ganz oben bis ganz unten",
+          "text": "Die Rachearie der Königin der Nacht verlangt mehrfach das dreigestrichene F, einen der höchsten Töne des gängigen Opernrepertoires. Ihr Gegenspieler Sarastro steigt dafür bis zum tiefen F hinab. Zwischen diesen Extremen stehen Papagenos Lieder, die man nach einmaligem Hören mitsummen kann. Diese Mischung aus Kunststück und Gassenhauer gehört zum Wesen des Werks. In einem Brief an seine Frau erzählt Mozart, wie er sich hinter die Bühne schlich und das Glockenspiel selbst spielte, um Schikaneder mitten in der Szene aus dem Konzept zu bringen."
+        },
+        {
+          "title": "Die Zahl Drei",
+          "text": "Mozart und Schikaneder waren beide Freimaurer, und viele sehen im Stück Anspielungen auf die Bräuche der Logen: die Prüfungen, das Schweigegebot, den Weg aus dem Dunkel ins Licht. Auffällig oft kehrt die Drei wieder – drei Damen, drei Knaben, drei Tempel, drei feierliche Akkorde, und die Haupttonart Es-Dur hat drei Vorzeichen. Aus heutiger Sicht fällt anderes auf: Der Text enthält abfällige Sätze über Frauen und die klischeehafte Figur des Monostatos. Moderne Inszenierungen müssen entscheiden, wie sie damit umgehen."
+        }
+      ],
+      "tryIt": "Hör dir die Arie »Der Hölle Rache« an und zähle die ganz hohen Spitzentöne. Danach Sarastros »In diesen heil'gen Hallen« – derselbe Abend, zwei Welten.",
+      "takeaways": [
+        "Uraufführung am 30. September 1791 in einem Wiener Vorstadttheater.",
+        "Ein Singspiel: deutsche Sprache, gesprochene Dialoge.",
+        "Extreme Höhe der Königin, extreme Tiefe Sarastros."
+      ]
+    }
+  },
+  {
+    "id": "metropolis",
+    "title": "Metropolis",
+    "artist": "Fritz Lang",
+    "origin": "1927 · Stummfilm, Uraufführung in Berlin",
+    "story": "In einer Riesenstadt der Zukunft leben die Reichen in Hochhäusern und Gärten, während die Arbeiter tief unter der Erde die Maschinen bedienen. Als der Sohn des Herrschers die Unterstadt entdeckt, gerät die Ordnung ins Wanken. Ein Erfinder baut einen Maschinenmenschen, der die Massen aufhetzt.",
+    "deep": {
+      "lead": "Einer der teuersten Filme seiner Zeit fiel beim Publikum durch – und wurde zur Bildvorlage für unzählige spätere Zukunftsstädte im Kino.",
+      "sections": [
+        {
+          "title": "Ein Kraftakt mit Folgen",
+          "text": "Gedreht wurde 1925 und 1926 über mehr als ein Jahr in den Studios von Babelsberg bei Berlin, mit Tausenden Komparsen und einem Budget, das die Produktionsfirma Ufa in ernste Geldnot brachte. Das Drehbuch schrieb Thea von Harbou, Langs damalige Ehefrau. Die Hochhausschluchten entstanden mit einem Spiegeltrick des Kameramanns Eugen Schüfftan: Ein schräg gestellter, teilweise freigekratzter Spiegel blendet Miniaturmodelle so ins Bild, dass Schauspieler scheinbar darin stehen. Das Verfahren wurde danach jahrzehntelang im Film eingesetzt."
+        },
+        {
+          "title": "Verstümmelt und wiedergefunden",
+          "text": "Nach der Premiere am 10. Januar 1927 blieb der Erfolg aus. Der Film wurde für den Auslandsvertrieb und die weitere Auswertung um etwa ein Viertel gekürzt, das herausgeschnittene Material galt als verloren. 2008 entdeckte man im Filmmuseum von Buenos Aires eine stark abgenutzte Kopie, die fast die gesamte Urfassung enthält. Die restaurierte Version wurde 2010 bei der Berlinale gezeigt. Schon 2001 hatte die UNESCO Metropolis als ersten Film in ihr Register des Weltdokumentenerbes aufgenommen."
+        },
+        {
+          "title": "Bilder, die blieben",
+          "text": "Der Maschinenmensch, gespielt von Brigitte Helm in einem starren Kostüm, ist die Urahnin der Kinoroboter; der goldene Droide C-3PO aus »Star Wars« ist ihr sichtlich nachempfunden. Auch die Stadt mit Flugzeugen zwischen Türmen kehrt in Filmen wie »Blade Runner« wieder. Weniger gut gealtert ist die Botschaft, zwischen Hirn und Händen müsse das Herz vermitteln. Schon Zeitgenossen fanden sie naiv, und Lang selbst hielt sie später für ein Märchen. 1933 verließ er Deutschland und drehte nach einer Zwischenstation in Paris in Hollywood."
+        }
+      ],
+      "tryIt": "Sieh dir die Szene an, in der der Maschinenmensch zum Leben erweckt wird, und überlege, welche späteren Filme dir dabei einfallen.",
+      "takeaways": [
+        "Uraufführung am 10. Januar 1927 in Berlin.",
+        "2008 tauchte in Buenos Aires eine fast vollständige Kopie auf.",
+        "Erster Film im Weltdokumentenerbe der UNESCO."
+      ]
+    }
+  },
+  {
+    "id": "die-zwei-fridas",
+    "title": "Die zwei Fridas",
+    "artist": "Frida Kahlo",
+    "origin": "1939 · Museo de Arte Moderno, Mexiko-Stadt",
+    "story": "Zwei Selbstbildnisse sitzen Hand in Hand vor einem Gewitterhimmel: eine Frida im weißen europäischen Spitzenkleid, eine in mexikanischer Tracht. Beider Herzen liegen offen und sind durch eine Ader verbunden. Kahlo malte ihr größtes Bild im Jahr ihrer Scheidung von dem Maler Diego Rivera.",
+    "deep": {
+      "lead": "Kahlo malte sich doppelt: die Frau, die Diego Rivera liebte, und die, die er verlassen hatte.",
+      "sections": [
+        {
+          "title": "Was die Hände halten",
+          "text": "Die Frida in der Tehuana-Tracht, der Kleidung aus dem Süden Mexikos, die Rivera an ihr mochte, hält ein winziges ovales Bildnis in der Hand: Diego als Kind. Von dort läuft eine Ader zu ihrem unversehrten Herzen und weiter zum aufgeschnittenen Herzen der anderen Frida. Diese versucht, das Ende der Ader mit einer Arztklemme abzudrücken, doch das Blut tropft auf den weißen Rock und mischt sich mit den roten Blüten am Saum. Beide Gesichter bleiben reglos. Der Schmerz steckt in den Dingen, nicht in der Mimik."
+        },
+        {
+          "title": "Ein Körper als Lebensthema",
+          "text": "Mit sechs Jahren erkrankte Kahlo an Kinderlähmung. Mit 18 saß sie in einem Bus, der mit einer Straßenbahn zusammenstieß; eine Eisenstange durchbohrte ihr Becken, Wirbelsäule und Bein waren mehrfach gebrochen. Im Krankenbett begann sie zu malen, mit einer Spezialstaffelei und einem Spiegel über dem Kopf. Es folgten im Lauf ihres Lebens mehr als dreißig Operationen. Rund ein Drittel ihrer Gemälde sind Selbstbildnisse. Die Klemme und die offenen Gefäße im Bild sind also keine bloße Fantasie, sondern Erfahrung aus vielen Klinikaufenthalten."
+        },
+        {
+          "title": "Zwei Herkünfte, kein Traum",
+          "text": "Die Verdopplung lässt sich auch als Bild ihrer Abstammung lesen. Kahlos Vater Guillermo war aus Deutschland eingewandert, ihre Mutter Mexikanerin mit indigenen und spanischen Vorfahren. Der Dichter André Breton zählte sie zu den Surrealisten; das Gemälde hing 1940 in deren internationaler Ausstellung in Mexiko-Stadt. Kahlo selbst wies das Etikett zurück: Sie male keine Träume, sondern ihre eigene Wirklichkeit. 1947 kaufte der mexikanische Staat das Bild – für die höchste Summe, die sie zu Lebzeiten je für ein Werk erhielt."
+        }
+      ],
+      "tryIt": "Wenn du dich doppelt malen müsstest: Welche zwei Seiten von dir säßen nebeneinander, und was würde sie verbinden?",
+      "takeaways": [
+        "Entstanden 1939, im Jahr der Scheidung von Diego Rivera.",
+        "Europäisches Kleid und Tehuana-Tracht stehen für zwei Identitäten.",
+        "Kahlo sah sich nicht als Surrealistin."
+      ]
+    }
+  }
+]

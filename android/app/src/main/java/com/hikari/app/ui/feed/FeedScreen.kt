@@ -192,6 +192,11 @@ import com.hikari.app.domain.feed.QuoteCardItem
 import com.hikari.app.domain.feed.ScienceCardItem
 import com.hikari.app.domain.feed.SpeedMathCardItem
 import com.hikari.app.domain.feed.VocabularyCardItem
+import com.hikari.app.domain.feed.FeedEntry
+import com.hikari.app.domain.feed.RuAlphabetLogic
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
@@ -229,16 +234,15 @@ fun FeedScreen(
     val effectiveBottomPadding = remember(bottomPadding, navBarBottom) {
         if (bottomPadding > 0.dp) bottomPadding + 10.dp else (navBarBottom + 16.dp)
     }
-    val cards by vm.mindfulCards.collectAsState()
+    val entries by vm.entries.collectAsState()
     val completedCardIds by vm.completedCards.collectAsState()
     val savedCardIds by vm.savedCardIds.collectAsState()
     val savedCards by vm.savedCards.collectAsState()
     val commuterMode by vm.commuterMode.collectAsState()
-    val progressFraction by vm.progressFraction.collectAsState()
-    val isGoalCompleted by vm.isGoalCompleted.collectAsState()
     val enabledModules by vm.enabledModules.collectAsState()
     val selectedLanguage by vm.selectedLanguage.collectAsState()
     val moduleRanks by vm.moduleRanks.collectAsState()
+    val letterProgress by vm.letterProgress.collectAsState()
     val streak = remember(completedCardIds) { vm.getStreak() }
     val haptic = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
@@ -247,29 +251,51 @@ fun FeedScreen(
     var showArchiveSheet by remember { mutableStateOf(false) }
     var sharePosterCard by remember { mutableStateOf<MindfulCard?>(null) }
 
-    // Gesamte Pager-Seiten: Kartenanzahl + 1 finale Mindful-Abschlusskarte
-    val totalPages = if (cards.isEmpty()) 0 else cards.size + 1
-    val pagerState = rememberPagerState(pageCount = { totalPages })
+    // Der Feed hat kein Ende: Beim Scrollen hängt das ViewModel den nächsten Schwung an.
+    val pagerState = rememberPagerState(pageCount = { entries.size })
     var settledPage by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.settledPage }.collect { settledPage = it }
+    LaunchedEffect(pagerState, entries.isEmpty()) {
+        snapshotFlow { pagerState.settledPage }.collect {
+            settledPage = it
+            vm.onShown(it)
+        }
+    }
+
+    // Aktive Zeit: zählt nur, solange die App im Vordergrund ist, und je Seite höchstens zwei Minuten —
+    // ein liegen gelassenes Handy soll keine Lernzeit sammeln.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val settledId = entries.getOrNull(settledPage)?.id
+    LaunchedEffect(settledId) {
+        if (settledId == null) return@LaunchedEffect
+        var counted = 0
+        while (counted < 120) {
+            delay(5000)
+            if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                vm.addActiveTime(settledPage, 5)
+                counted += 5
+            }
+        }
+    }
+
+    // Neu gemischt (Einstellungen geändert): wieder oben anfangen.
+    val firstId = entries.firstOrNull()?.id
+    LaunchedEffect(firstId) {
+        if (firstId != null && pagerState.currentPage != 0) pagerState.scrollToPage(0)
     }
 
     // Smart-Modus für unterwegs (Pendler- / Hands-Free-Modus):
     // Spielt 400ms nach dem Erreichen einer Vokabelkarte automatisch das Muttersprachler-Audio ab
     LaunchedEffect(settledPage, commuterMode) {
-        if (commuterMode && settledPage < cards.size) {
-            val currentCard = cards[settledPage]
-            if (currentCard is LanguageCardItem && !currentCard.audioRes.isNullOrBlank()) {
-                delay(400)
-                vm.audio?.play(currentCard.audioRes)
-            }
+        val current = (entries.getOrNull(settledPage) as? FeedEntry.Card)?.card
+        if (commuterMode && current is LanguageCardItem && !current.audioRes.isNullOrBlank()) {
+            delay(400)
+            vm.audio?.play(current.audioRes)
         }
     }
 
     LaunchedEffect(resetTick) {
-        if (resetTick > 0 && cards.isNotEmpty()) {
+        if (resetTick > 0 && entries.isNotEmpty()) {
             pagerState.scrollToPage(0)
         }
     }
@@ -279,8 +305,8 @@ fun FeedScreen(
             .fillMaxSize()
             .background(HikariBg),
     ) {
-        if (cards.isEmpty()) {
-            FeedEmptyState(onOpenSettings = { showSettingsSheet = true })
+        if (entries.isEmpty()) {
+            if (enabledModules.isEmpty()) FeedEmptyState(onOpenSettings = { showSettingsSheet = true })
         } else {
             val flingBehavior = PagerDefaults.flingBehavior(
                 state = pagerState,
@@ -291,73 +317,91 @@ fun FeedScreen(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
                 flingBehavior = flingBehavior,
-                key = { page ->
-                    if (page < cards.size) cards[page].id else "zen_completion_slide"
-                },
+                key = { page -> entries.getOrNull(page)?.id ?: "page-$page" },
             ) { page ->
-                if (page < cards.size) {
-                    val card = cards[page]
-                    val isDone = card.id in completedCardIds
-                    val isSaved = card.id in savedCardIds
+                val entry = entries.getOrNull(page) ?: return@VerticalPager
+                val goNext: () -> Unit = {
+                    coroutineScope.launch { pagerState.animateScrollToPage(page + 1) }
+                }
+                val chrome = FeedChrome(
+                    completedToday = completedCardIds.size,
+                    dailyGoal = vm.dailyGoal,
+                    streak = streak,
+                    isCommuterMode = commuterMode,
+                    onToggleCommuterMode = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        vm.toggleCommuterMode()
+                    },
+                    onOpenSettings = { showSettingsSheet = true },
+                    onOpenArchive = { showArchiveSheet = true },
+                    showSwipeHint = page == 0,
+                    bottomPadding = effectiveBottomPadding,
+                )
+                when (entry) {
+                    is FeedEntry.Card -> {
+                        val card = entry.card
+                        val isDone = card.id in completedCardIds
+                        val isSaved = card.id in savedCardIds
 
-                    // 2D-Gesten: Horizontaler Pager für Deep Dive (Page 0 = Hauptkarte, Page 1 = Deep Dive)
-                    val horizontalPagerState = rememberPagerState(pageCount = { 2 })
+                        // 2D-Gesten: Horizontaler Pager für Deep Dive (Page 0 = Hauptkarte, Page 1 = Deep Dive)
+                        val horizontalPagerState = rememberPagerState(pageCount = { 2 })
 
-                    HorizontalPager(
-                        state = horizontalPagerState,
-                        modifier = Modifier.fillMaxSize(),
-                    ) { hPage ->
-                        if (hPage == 0) {
-                            FeedCardSlide(
-                                card = card,
-                                pageIndex = page,
-                                totalCount = cards.size,
-                                streak = streak,
-                                isDone = isDone,
-                                isSaved = isSaved,
-                                onToggleSave = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    vm.toggleSavedCard(card.id)
-                                },
-                                onOpenDeepDive = {
-                                    coroutineScope.launch {
-                                        horizontalPagerState.animateScrollToPage(1)
-                                    }
-                                },
-                                audioPlayer = vm.audio,
-                                onRecordPractice = { phraseId, correct -> vm.recordRussianPractice(phraseId, correct) },
-                                onNavigate = onNavigate,
-                                onDone = { vm.markCardCompleted(card.id) },
-                                onOpenSettings = { showSettingsSheet = true },
-                                onOpenArchive = { showArchiveSheet = true },
-                                onSharePoster = { sharePosterCard = card },
-                                isCommuterMode = commuterMode,
-                                onToggleCommuterMode = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    vm.toggleCommuterMode()
-                                },
-                                showSwipeHint = page == 0,
-                                bottomPadding = effectiveBottomPadding,
-                            )
-                        } else {
-                            DeepDiveSlide(
-                                card = card,
-                                audioPlayer = vm.audio,
-                                onBack = {
-                                    coroutineScope.launch {
-                                        horizontalPagerState.animateScrollToPage(0)
-                                    }
-                                },
-                                bottomPadding = effectiveBottomPadding,
-                            )
+                        HorizontalPager(
+                            state = horizontalPagerState,
+                            modifier = Modifier.fillMaxSize(),
+                        ) { hPage ->
+                            if (hPage == 0) {
+                                FeedCardSlide(
+                                    card = card,
+                                    chrome = chrome,
+                                    isDone = isDone,
+                                    isSaved = isSaved,
+                                    onToggleSave = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        vm.toggleSavedCard(card.id)
+                                    },
+                                    onOpenDeepDive = {
+                                        coroutineScope.launch {
+                                            horizontalPagerState.animateScrollToPage(1)
+                                        }
+                                    },
+                                    audioPlayer = vm.audio,
+                                    onRecordPractice = { phraseId, correct -> vm.recordRussianPractice(phraseId, correct) },
+                                    onNavigate = onNavigate,
+                                    onDone = { vm.markCardCompleted(card.id) },
+                                    onSharePoster = { sharePosterCard = card },
+                                )
+                            } else {
+                                DeepDiveSlide(
+                                    card = card,
+                                    audioPlayer = vm.audio,
+                                    onBack = {
+                                        coroutineScope.launch {
+                                            horizontalPagerState.animateScrollToPage(0)
+                                        }
+                                    },
+                                    onNavigate = onNavigate,
+                                    bottomPadding = effectiveBottomPadding,
+                                )
+                            }
                         }
                     }
-                } else {
-                    MindfulCompletionSlide(
+                    is FeedEntry.Game -> FeedGameSlide(
+                        game = entry.game,
+                        chrome = chrome,
+                        isDone = entry.id in completedCardIds,
+                        active = page == settledPage,
+                        audio = vm.audio,
+                        letterProgress = letterProgress,
+                        showTranslit = RuAlphabetLogic.mastered(letterProgress) < RuAlphabetLogic.READS_CYRILLIC,
+                        onFinish = { correct -> vm.finishGame(entry.game, correct) },
+                        onNext = goNext,
+                    )
+                    is FeedEntry.Milestone -> MindfulCompletionSlide(
                         streak = streak,
-                        completedCount = cards.count { it.id in completedCardIds },
-                        totalCount = cards.size,
-                        onReset = { vm.resetDailyProgress() },
+                        completedCount = completedCardIds.size,
+                        totalCount = vm.dailyGoal,
+                        onContinue = goNext,
                         onOpenSettings = { showSettingsSheet = true },
                         bottomPadding = effectiveBottomPadding,
                     )
@@ -392,8 +436,9 @@ fun FeedScreen(
             selectedLanguage = selectedLanguage,
             moduleRanks = moduleRanks,
             streak = streak,
-            completedCount = cards.count { it.id in completedCardIds },
-            totalCount = cards.size,
+            completedCount = completedCardIds.size,
+            totalCount = vm.dailyGoal,
+            feedSecondsToday = remember(showSettingsSheet) { vm.feedSecondsToday() },
             onToggleModule = { module, enabled -> vm.toggleModule(module, enabled) },
             onSetModuleRank = { module, rank -> vm.setModuleRank(module, rank) },
             onSelectLanguage = { vm.setLearningLanguage(it) },
@@ -404,14 +449,40 @@ fun FeedScreen(
     }
 }
 
-// ── Einzelne Slide (Full-Screen Focus, Zero-Scroll-Garantie) ──────────────────
+/** Was jede Feed-Seite oben und unten gleich zeigt: Tagesziel, Serie, die runden Knöpfe. */
+internal data class FeedChrome(
+    val completedToday: Int,
+    val dailyGoal: Int,
+    val streak: Int,
+    val isCommuterMode: Boolean,
+    val onToggleCommuterMode: () -> Unit,
+    val onOpenSettings: () -> Unit,
+    val onOpenArchive: () -> Unit,
+    val showSwipeHint: Boolean,
+    val bottomPadding: Dp,
+)
 
+internal fun cardAmbientColor(card: MindfulCard): Color = when (card) {
+    is QuoteCardItem -> Color(0xFFF59E0B)
+    is BrainPuzzleCardItem -> Color(0xFF10B981)
+    is LanguageCardItem -> Color(0xFF3B82F6)
+    is BreathworkCardItem -> Color(0xFF06B6D4)
+    is HistoryCardItem -> Color(0xFFD97706)
+    is MentalModelCardItem -> Color(0xFF8B5CF6)
+    is ScienceCardItem -> Color(0xFF6366F1)
+    is FinanceCardItem -> Color(0xFFEAB308)
+    is GeographyCardItem -> Color(0xFF14B8A6)
+    is SpeedMathCardItem -> Color(0xFFF43F5E)
+    is ArtCultureCardItem -> Color(0xFFEC4899)
+    is VocabularyCardItem -> Color(0xFFF59E0B)
+    is PhilosophyCardItem -> Color(0xFF7C3AED)
+}
+
+/** Eine Wissenskarte im gemeinsamen Rahmen. */
 @Composable
 private fun FeedCardSlide(
     card: MindfulCard,
-    pageIndex: Int,
-    totalCount: Int,
-    streak: Int,
+    chrome: FeedChrome,
     isDone: Boolean,
     isSaved: Boolean,
     onToggleSave: () -> Unit,
@@ -420,29 +491,77 @@ private fun FeedCardSlide(
     onRecordPractice: (String?, Boolean) -> Unit = { _, _ -> },
     onNavigate: (String) -> Unit = {},
     onDone: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onOpenArchive: () -> Unit,
     onSharePoster: () -> Unit = {},
-    isCommuterMode: Boolean,
-    onToggleCommuterMode: () -> Unit,
-    showSwipeHint: Boolean,
-    bottomPadding: Dp,
 ) {
-    val ambientColor = when (card) {
-        is QuoteCardItem -> Color(0xFFF59E0B)
-        is BrainPuzzleCardItem -> Color(0xFF10B981)
-        is LanguageCardItem -> Color(0xFF3B82F6)
-        is BreathworkCardItem -> Color(0xFF06B6D4)
-        is HistoryCardItem -> Color(0xFFD97706)
-        is MentalModelCardItem -> Color(0xFF8B5CF6)
-        is ScienceCardItem -> Color(0xFF6366F1)
-        is FinanceCardItem -> Color(0xFFEAB308)
-        is GeographyCardItem -> Color(0xFF14B8A6)
-        is SpeedMathCardItem -> Color(0xFFF43F5E)
-        is ArtCultureCardItem -> Color(0xFFEC4899)
-        is VocabularyCardItem -> Color(0xFFF59E0B)
-        is PhilosophyCardItem -> Color(0xFF7C3AED)
+    FeedSlideFrame(
+        chrome = chrome,
+        slideKey = card.id,
+        ambientColor = cardAmbientColor(card),
+        icon = getCardIcon(card),
+        label = getCardCategoryLabel(card),
+        topFocus = card.rank == ModuleRank.RANK_3,
+        isDone = isDone,
+        isSaved = isSaved,
+        onToggleSave = onToggleSave,
+        onOpenDeepDive = onOpenDeepDive,
+        onDone = onDone,
+        onSharePoster = onSharePoster,
+    ) {
+        when (card) {
+            is QuoteCardItem -> QuoteSlideContent(card, isDone, onDone)
+            is BrainPuzzleCardItem -> BrainPuzzleSlideContent(card, isDone, onDone)
+            is LanguageCardItem -> LanguageSlideContent(
+                item = card,
+                audioPlayer = audioPlayer,
+                onRecordPractice = onRecordPractice,
+                onNavigate = onNavigate,
+                isDone = isDone,
+                onDone = onDone,
+            )
+            is HistoryCardItem -> HistorySlideContent(card, isDone, onDone)
+            is MentalModelCardItem -> MentalModelSlideContent(card, isDone, onDone)
+            is BreathworkCardItem -> BreathworkSlideContent(card, isDone, onDone)
+            is ScienceCardItem -> ScienceSlideContent(card, isDone, onDone)
+            is FinanceCardItem -> FinanceSlideContent(card, isDone, onDone)
+            is GeographyCardItem -> GeographySlideContent(card, isDone, onDone)
+            is SpeedMathCardItem -> SpeedMathCardSlideContent(card, isDone, onDone)
+            is ArtCultureCardItem -> ArtCultureSlideContent(card, isDone, onDone)
+            is VocabularyCardItem -> VocabularySlideContent(card, isDone, onDone)
+            is PhilosophyCardItem -> PhilosophySlideContent(card, isDone, onDone)
+        }
     }
+}
+
+// ── Einzelne Slide (Full-Screen Focus, Zero-Scroll-Garantie) ──────────────────
+
+/**
+ * Der gemeinsame Rahmen jeder Feed-Seite: oben Tagesziel und Knöpfe, in der Mitte der Inhalt,
+ * unten Vertiefung, Teilen und Erledigt. Spiele lassen die unteren Knöpfe weg.
+ */
+@Composable
+internal fun FeedSlideFrame(
+    chrome: FeedChrome,
+    slideKey: String,
+    ambientColor: Color,
+    icon: ImageVector,
+    label: String,
+    topFocus: Boolean,
+    isDone: Boolean,
+    isSaved: Boolean = false,
+    onToggleSave: (() -> Unit)? = null,
+    onOpenDeepDive: (() -> Unit)? = null,
+    onDone: (() -> Unit)? = null,
+    onSharePoster: (() -> Unit)? = null,
+    content: @Composable () -> Unit,
+) {
+    val streak = chrome.streak
+    val isCommuterMode = chrome.isCommuterMode
+    val onToggleCommuterMode = chrome.onToggleCommuterMode
+    val onOpenSettings = chrome.onOpenSettings
+    val onOpenArchive = chrome.onOpenArchive
+    val showSwipeHint = chrome.showSwipeHint
+    val bottomPadding = chrome.bottomPadding
+    val goalReached = chrome.completedToday >= chrome.dailyGoal
 
     var showSavePop by remember { mutableStateOf(false) }
     LaunchedEffect(isSaved) {
@@ -456,10 +575,10 @@ private fun FeedCardSlide(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .pointerInput(card.id) {
+            .pointerInput(slideKey) {
                 detectTapGestures(
                     onDoubleTap = {
-                        onToggleSave()
+                        onToggleSave?.invoke()
                     },
                 )
             }
@@ -479,7 +598,7 @@ private fun FeedCardSlide(
         ) {
             // ── Top Story Progress Bar (Ganz oben, dezent & präzise) ───────────────
             val progress by animateFloatAsState(
-                targetValue = (pageIndex + 1).toFloat() / totalCount.toFloat(),
+                targetValue = (chrome.completedToday.toFloat() / chrome.dailyGoal).coerceIn(0f, 1f),
                 animationSpec = tween(280, easing = FastOutSlowInEasing),
                 label = "feed-slide-progress",
             )
@@ -491,6 +610,8 @@ private fun FeedCardSlide(
                     .clip(RoundedCornerShape(1.5.dp)),
                 color = HikariAmber,
                 trackColor = Color.White.copy(alpha = 0.10f),
+                gapSize = 0.dp,
+                drawStopIndicator = {},
             )
 
             Spacer(Modifier.height(12.dp))
@@ -519,7 +640,7 @@ private fun FeedCardSlide(
                         fontSize = 13.sp,
                     )
                     Text(
-                        text = "${pageIndex + 1} / $totalCount",
+                        text = if (goalReached) "${chrome.completedToday} heute · Ziel geschafft" else "${chrome.completedToday} / ${chrome.dailyGoal} heute",
                         color = HikariTextFaint,
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.Medium,
@@ -631,20 +752,20 @@ private fun FeedCardSlide(
                         modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
                     ) {
                         Icon(
-                            imageVector = getCardIcon(card),
+                            imageVector = icon,
                             contentDescription = null,
                             tint = ambientColor,
                             modifier = Modifier.size(12.dp),
                         )
                         Spacer(Modifier.width(5.dp))
                         Text(
-                            text = getCardCategoryLabel(card),
+                            text = label,
                             color = Color.White,
                             fontSize = 10.5.sp,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 0.8.sp,
                         )
-                        if (card.rank == ModuleRank.RANK_3) {
+                        if (topFocus) {
                             Spacer(Modifier.width(6.dp))
                             Text(
                                 text = "·  TOP-FOKUS",
@@ -667,33 +788,15 @@ private fun FeedCardSlide(
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
+                // Passt der Inhalt, steht er mittig; ist er länger als der Platz, lässt er sich scrollen.
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    when (card) {
-                        is QuoteCardItem -> QuoteSlideContent(card, isDone, onDone)
-                        is BrainPuzzleCardItem -> BrainPuzzleSlideContent(card, isDone, onDone)
-                        is LanguageCardItem -> LanguageSlideContent(
-                            item = card,
-                            audioPlayer = audioPlayer,
-                            onRecordPractice = onRecordPractice,
-                            onNavigate = onNavigate,
-                            isDone = isDone,
-                            onDone = onDone,
-                        )
-                        is HistoryCardItem -> HistorySlideContent(card, isDone, onDone)
-                        is MentalModelCardItem -> MentalModelSlideContent(card, isDone, onDone)
-                        is BreathworkCardItem -> BreathworkSlideContent(card, isDone, onDone)
-                        is ScienceCardItem -> ScienceSlideContent(card, isDone, onDone)
-                        is FinanceCardItem -> FinanceSlideContent(card, isDone, onDone)
-                        is GeographyCardItem -> GeographySlideContent(card, isDone, onDone)
-                        is SpeedMathCardItem -> SpeedMathCardSlideContent(card, isDone, onDone)
-                        is ArtCultureCardItem -> ArtCultureSlideContent(card, isDone, onDone)
-                        is VocabularyCardItem -> VocabularySlideContent(card, isDone, onDone)
-                        is PhilosophyCardItem -> PhilosophySlideContent(card, isDone, onDone)
-                    }
+                    content()
                 }
             }
 
@@ -708,7 +811,7 @@ private fun FeedCardSlide(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 // Linke Seite: Deep Dive Button
-                Surface(
+                if (onOpenDeepDive == null) Spacer(Modifier.height(38.dp)) else Surface(
                     onClick = onOpenDeepDive,
                     shape = RoundedCornerShape(20.dp),
                     color = Color.White.copy(alpha = 0.08f),
@@ -748,7 +851,7 @@ private fun FeedCardSlide(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     // 1. Poster / Teilen Button
-                    Surface(
+                    if (onSharePoster != null) Surface(
                         onClick = onSharePoster,
                         shape = CircleShape,
                         color = Color.White.copy(alpha = 0.08f),
@@ -766,7 +869,7 @@ private fun FeedCardSlide(
                     }
 
                     // 2. Gelernt / Erledigt Button
-                    Surface(
+                    if (onDone != null) Surface(
                         onClick = onDone,
                         shape = CircleShape,
                         color = if (isDone) Color(0xFF10B981).copy(alpha = 0.25f) else Color.White.copy(alpha = 0.08f),
@@ -968,40 +1071,30 @@ private fun BrainPuzzleSlideContent(item: BrainPuzzleCardItem, isDone: Boolean, 
     val answered = selectedOption != null
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                item.title.uppercase(),
-                color = HikariAmber,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp,
-            )
-            Surface(
-                color = HikariSurfaceHigh,
-                shape = RoundedCornerShape(12.dp),
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                ) {
-                    Icon(
-                        Icons.Outlined.Psychology,
-                        contentDescription = null,
-                        tint = Color(0xFFA7F3D0),
-                        modifier = Modifier.size(13.dp),
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        item.brainRegionTrained,
-                        color = Color(0xFFA7F3D0),
-                        fontSize = 10.5.sp,
-                        fontWeight = FontWeight.Medium,
-                    )
-                }
+        // Titel und Fähigkeit untereinander — nebeneinander quetschen sich lange Texte.
+        Text(
+            item.title.uppercase(),
+            color = HikariAmber,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp,
+        )
+        if (item.brainRegionTrained.isNotBlank()) {
+            Spacer(Modifier.height(6.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Outlined.Psychology,
+                    contentDescription = null,
+                    tint = Color(0xFFA7F3D0),
+                    modifier = Modifier.size(13.dp),
+                )
+                Spacer(Modifier.width(4.dp))
+                Text(
+                    "Trainiert: ${item.brainRegionTrained}",
+                    color = Color(0xFFA7F3D0),
+                    fontSize = 11.5.sp,
+                    fontWeight = FontWeight.Medium,
+                )
             }
         }
 
@@ -1400,12 +1493,12 @@ private fun LanguageSlideContent(
                         }
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            text = "Tag ${item.dayNumber} · ${item.dayTitle ?: item.language.title}",
+                            text = if (item.dayNumber != null) "Lektion ${item.dayNumber} · ${item.dayTitle ?: item.language.title}" else item.language.title,
                             color = Color.White,
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.SemiBold,
                         )
-                        if (item.isDueReview) {
+                        if (item.isDueReview || item.isNewPhrase) {
                             Spacer(Modifier.width(6.dp))
                             Box(
                                 modifier = Modifier
@@ -1414,7 +1507,7 @@ private fun LanguageSlideContent(
                                     .padding(horizontal = 4.dp, vertical = 1.dp),
                             ) {
                                 Text(
-                                    text = "SRS",
+                                    text = if (item.isNewPhrase) "NEU" else "SRS",
                                     color = HikariAmber,
                                     fontSize = 8.sp,
                                     fontWeight = FontWeight.Bold,
@@ -1432,20 +1525,6 @@ private fun LanguageSlideContent(
                         Spacer(Modifier.width(3.dp))
                         Text(
                             text = "${item.currentStreak} d",
-                            color = HikariAmber,
-                            fontSize = 10.5.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Icon(
-                            Icons.Default.Bolt,
-                            contentDescription = null,
-                            tint = HikariAmber,
-                            modifier = Modifier.size(13.dp),
-                        )
-                        Spacer(Modifier.width(3.dp))
-                        Text(
-                            text = "${item.totalXp} XP",
                             color = HikariAmber,
                             fontSize = 10.5.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -1876,7 +1955,7 @@ private fun LanguageSlideContent(
                             }
                             Spacer(Modifier.width(7.dp))
                             Text(
-                                text = if (item.isDueReview) "SRS-Wiederholung im Kurs starten" else "Volle Lektion (Tag ${item.dayNumber})",
+                                text = if (item.isDueReview) "SRS-Wiederholung im Kurs starten" else "Zur ganzen Lektion ${item.dayNumber}",
                                 color = HikariTextMuted,
                                 fontSize = 11.sp,
                             )
@@ -1968,13 +2047,23 @@ private fun BreathworkSlideContent(item: BreathworkCardItem, isDone: Boolean, on
     var phase by remember { mutableStateOf("Bereit") }
     var secondsRemaining by remember { mutableIntStateOf(4) }
 
+    var phaseSeconds by remember { mutableIntStateOf(item.inhaleSeconds) }
+    // Beim Anhalten bleibt der Kreis dort stehen, wo die letzte Bewegung endete.
+    var orbTarget by remember { mutableStateOf(1f) }
+
     LaunchedEffect(active) {
         if (!active) return@LaunchedEffect
-        val phases = listOf("Einatmen", "Halten", "Ausatmen", "Halten")
+        // Phasen mit 0 Sekunden (z. B. kein Anhalten) fallen weg.
+        val phases = listOf(
+            "Einatmen" to item.inhaleSeconds, "Halten" to item.holdInSeconds,
+            "Ausatmen" to item.exhaleSeconds, "Halten" to item.holdOutSeconds,
+        ).filter { it.second > 0 }
         var pIdx = 0
-        while (active) {
-            phase = phases[pIdx]
-            for (sec in 4 downTo 1) {
+        while (active && phases.isNotEmpty()) {
+            phase = phases[pIdx].first
+            phaseSeconds = phases[pIdx].second
+            if (phase == "Einatmen") orbTarget = 1.35f else if (phase == "Ausatmen") orbTarget = 0.85f
+            for (sec in phases[pIdx].second downTo 1) {
                 secondsRemaining = sec
                 delay(1000)
             }
@@ -1983,13 +2072,8 @@ private fun BreathworkSlideContent(item: BreathworkCardItem, isDone: Boolean, on
     }
 
     val breathingScale by animateFloatAsState(
-        targetValue = when {
-            !active -> 1f
-            phase == "Einatmen" -> 1.35f
-            phase == "Ausatmen" -> 0.85f
-            else -> 1.15f
-        },
-        animationSpec = tween(4000, easing = LinearEasing),
+        targetValue = if (active) orbTarget else 1f,
+        animationSpec = tween(phaseSeconds * 1000, easing = LinearEasing),
         label = "orb-scale",
     )
 
@@ -1998,7 +2082,7 @@ private fun BreathworkSlideContent(item: BreathworkCardItem, isDone: Boolean, on
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            "1-MINUTEN-ATEMÜBUNG",
+            "ATEMÜBUNG",
             color = Color(0xFF06B6D4),
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
@@ -2006,7 +2090,7 @@ private fun BreathworkSlideContent(item: BreathworkCardItem, isDone: Boolean, on
         )
         Spacer(Modifier.height(6.dp))
         Text(
-            "Box Breathing (4-4-4-4)",
+            item.title,
             color = Color.White,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
@@ -2674,7 +2758,7 @@ private fun MindfulCompletionSlide(
     streak: Int,
     completedCount: Int,
     totalCount: Int,
-    onReset: () -> Unit,
+    onContinue: () -> Unit,
     onOpenSettings: () -> Unit,
     bottomPadding: Dp,
 ) {
@@ -2754,7 +2838,7 @@ private fun MindfulCompletionSlide(
                     Spacer(Modifier.width(16.dp))
                     Text("•", color = HikariTextFaint)
                     Spacer(Modifier.width(16.dp))
-                    Text("$completedCount / $totalCount gelernt", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                    Text("$completedCount von $totalCount geschafft", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                 }
             }
 
@@ -2762,14 +2846,14 @@ private fun MindfulCompletionSlide(
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(
-                    onClick = onReset,
+                    onClick = onContinue,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981).copy(alpha = 0.35f)),
                     shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
                 ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Tag neu starten", color = Color.White, fontSize = 12.sp)
+                    Text("Weiter im Feed", color = Color.White, fontSize = 12.sp)
                 }
 
                 Button(
@@ -2838,7 +2922,7 @@ private fun FeedEmptyState(onOpenSettings: () -> Unit) {
 // ── Deep Dive Slide (Horizontaler Wisch nach links) ──────────────────────────
 
 @Composable
-private fun LanguageDeepDiveAudioPlayer(
+internal fun LanguageDeepDiveAudioPlayer(
     card: LanguageCardItem,
     audioPlayer: RussianAudioPlayer?,
 ) {
@@ -3049,24 +3133,11 @@ private fun DeepDiveSlide(
     card: MindfulCard,
     audioPlayer: RussianAudioPlayer? = null,
     onBack: () -> Unit,
+    onNavigate: (String) -> Unit = {},
     bottomPadding: Dp,
 ) {
     val deepDive = remember(card.id) { card.resolveDeepDive() }
-    val ambientColor = when (card) {
-        is QuoteCardItem -> Color(0xFFF59E0B)
-        is BrainPuzzleCardItem -> Color(0xFF10B981)
-        is LanguageCardItem -> Color(0xFF3B82F6)
-        is BreathworkCardItem -> Color(0xFF06B6D4)
-        is HistoryCardItem -> Color(0xFFD97706)
-        is MentalModelCardItem -> Color(0xFF8B5CF6)
-        is ScienceCardItem -> Color(0xFF6366F1)
-        is FinanceCardItem -> Color(0xFFEAB308)
-        is GeographyCardItem -> Color(0xFF14B8A6)
-        is SpeedMathCardItem -> Color(0xFFF43F5E)
-        is ArtCultureCardItem -> Color(0xFFEC4899)
-        is VocabularyCardItem -> Color(0xFFF59E0B)
-        is PhilosophyCardItem -> Color(0xFF7C3AED)
-    }
+    val ambientColor = cardAmbientColor(card)
 
     Box(
         modifier = Modifier
@@ -3200,7 +3271,7 @@ private fun DeepDiveSlide(
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                "KERNERKENNTNIS",
+                                if (deepDive.isAuthored) "DARUM GEHT ES" else "KERNERKENNTNIS",
                                 color = HikariAmber,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
@@ -3209,7 +3280,7 @@ private fun DeepDiveSlide(
                         }
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = deepDive.keyInsight,
+                            text = ruProse(deepDive.keyInsight),
                             color = Color.White,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -3218,8 +3289,42 @@ private fun DeepDiveSlide(
                     }
                 }
 
-                // 2. Ausführlicher Kontext & Hintergründe
-                Box(
+                // 2. Geschriebene Abschnitte: jeder mit eigener Überschrift und neuem Inhalt
+                deepDive.sections.forEach { section ->
+                    DeepDiveSection(section, ambientColor, audioPlayer)
+                }
+                val deepRoute = (card as? LanguageCardItem)?.deepRoute
+                if (deepRoute != null) {
+                    Surface(
+                        onClick = { onNavigate(deepRoute) },
+                        shape = RoundedCornerShape(14.dp),
+                        color = ambientColor.copy(alpha = 0.14f),
+                        border = BorderStroke(0.6.dp, ambientColor.copy(alpha = 0.45f)),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                "Im Russisch-Bereich weiter vertiefen",
+                                color = Color.White,
+                                fontSize = 13.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                tint = ambientColor,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
+                }
+
+                // 2b. Ausführlicher Kontext & Hintergründe (alte, zusammengesetzte Fassung)
+                if (deepDive.fullContext.isNotBlank()) Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(18.dp))
@@ -3265,7 +3370,7 @@ private fun DeepDiveSlide(
                                 )
                                 Spacer(Modifier.width(6.dp))
                                 Text(
-                                    "ANWENDUNG & TRANSFER",
+                                    if (deepDive.isAuthored) "PROBIER ES AUS" else "ANWENDUNG & TRANSFER",
                                     color = Color(0xFFA7F3D0),
                                     fontSize = 10.5.sp,
                                     fontWeight = FontWeight.Bold,
@@ -3325,7 +3430,7 @@ private fun DeepDiveSlide(
                 if (deepDive.relatedTakeaways.isNotEmpty()) {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            "SCHLÜSSELERKENNTNISSE",
+                            if (deepDive.isAuthored) "ZUM MITNEHMEN" else "SCHLÜSSELERKENNTNISSE",
                             color = HikariTextMuted,
                             fontSize = 10.5.sp,
                             fontWeight = FontWeight.Bold,
@@ -3343,7 +3448,7 @@ private fun DeepDiveSlide(
                                 Text("•", color = ambientColor, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                                 Spacer(Modifier.width(8.dp))
                                 Text(
-                                    text = takeaway,
+                                    text = ruProse(takeaway),
                                     color = HikariText,
                                     fontSize = 12.5.sp,
                                     lineHeight = 18.sp,
@@ -3842,6 +3947,7 @@ private fun FeedSettingsSheet(
     streak: Int,
     completedCount: Int,
     totalCount: Int,
+    feedSecondsToday: Int = 0,
     onToggleModule: (MindfulModuleType, Boolean) -> Unit,
     onSetModuleRank: (MindfulModuleType, ModuleRank) -> Unit,
     onSelectLanguage: (LearningLanguage) -> Unit,
@@ -4020,6 +4126,7 @@ private fun FeedSettingsSheet(
                         streak = streak,
                         completedCount = completedCount,
                         totalCount = totalCount,
+                        feedSecondsToday = feedSecondsToday,
                         onResetDaily = {
                             onResetDaily()
                             toastMessage = "Tagesfortschritt zurückgesetzt"
@@ -4262,13 +4369,9 @@ private fun TopicsTabContent(
                                 horizontalArrangement = Arrangement.spacedBy(3.dp),
                             ) {
                                 val rankOptions = listOf(
-                                    Triple(ModuleRank.RANK_1, "Stufe 1", "Standard · 1x"),
-                                    Triple(ModuleRank.RANK_2, "Stufe 2", if (isCappedModule) "2x täglich" else "3–4x täglich"),
-                                    Triple(
-                                        ModuleRank.RANK_3,
-                                        "Stufe 3",
-                                        if (isCappedModule) "2x & Fokus" else if (module == MindfulModuleType.LANGUAGE) "Top-Fokus (alle 2–3)" else "6–8x & Fokus",
-                                    ),
+                                    Triple(ModuleRank.RANK_1, "Stufe 1", "ab und zu"),
+                                    Triple(ModuleRank.RANK_2, "Stufe 2", "doppelt so oft"),
+                                    Triple(ModuleRank.RANK_3, "Stufe 3", "Top-Fokus · 4× so oft"),
                                 )
 
                                 rankOptions.forEach { (rank, title, sub) ->
@@ -4470,6 +4573,7 @@ private fun SystemTabContent(
     streak: Int,
     completedCount: Int,
     totalCount: Int,
+    feedSecondsToday: Int = 0,
     onResetDaily: () -> Unit,
     onResetLanguage: () -> Unit,
 ) {
@@ -4541,32 +4645,20 @@ private fun SystemTabContent(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Heute", color = HikariTextMuted, fontSize = 10.5.sp)
                         Spacer(Modifier.height(2.dp))
-                        Text("$completedCount / $totalCount", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text("$completedCount / $totalCount", color = if (completedCount >= totalCount) HikariAmber else Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
 
                     Box(modifier = Modifier.width(1.dp).height(24.dp).background(Color.White.copy(alpha = 0.10f)))
 
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Status", color = HikariTextMuted, fontSize = 10.5.sp)
+                        Text("Zeit heute", color = HikariTextMuted, fontSize = 10.5.sp)
                         Spacer(Modifier.height(2.dp))
-                        val isFinished = completedCount >= totalCount && totalCount > 0
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (isFinished) {
-                                Icon(
-                                    Icons.Outlined.Check,
-                                    contentDescription = null,
-                                    tint = Color(0xFF10B981),
-                                    modifier = Modifier.size(14.dp),
-                                )
-                                Spacer(Modifier.width(4.dp))
-                            }
-                            Text(
-                                if (isFinished) "Gemeistert" else "Aktiv",
-                                color = if (isFinished) Color(0xFF10B981) else Color.White,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
+                        Text(
+                            "${(feedSecondsToday + 30) / 60} Min.",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
                     }
                 }
             }
@@ -4628,9 +4720,9 @@ private fun SystemTabContent(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Sprach-Lernstand zurücksetzen", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Text("Alphabet zurücksetzen", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                             Spacer(Modifier.height(2.dp))
-                            Text("Vokabeln der gewählten Sprache ab Tag 1 starten", color = HikariTextMuted, fontSize = 11.sp)
+                            Text("Die kyrillischen Buchstaben im Feed von vorn lernen. Dein Kurs bleibt unberührt.", color = HikariTextMuted, fontSize = 11.sp)
                         }
                         Spacer(Modifier.width(10.dp))
                         Surface(

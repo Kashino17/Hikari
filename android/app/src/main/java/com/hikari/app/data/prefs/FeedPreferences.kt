@@ -2,6 +2,7 @@ package com.hikari.app.data.prefs
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.hikari.app.domain.feed.FeedRotation
 import com.hikari.app.domain.feed.LearningLanguage
 import com.hikari.app.domain.feed.MindfulModuleType
 import com.hikari.app.domain.feed.ModuleRank
@@ -203,5 +204,88 @@ class FeedPreferences @Inject constructor(
         setCommuterMode(next)
         return next
     }
-}
 
+    // ── Rotation: was wurde wann zuletzt gezeigt ────────────────────────────────
+
+    private var lastSeenCache: MutableMap<String, Long>? = null
+
+    /** Karten-ID → Zeitpunkt, zu dem sie zuletzt im Feed stand. */
+    @Synchronized
+    fun lastSeen(): Map<String, Long> = HashMap(loadLastSeen())
+
+    private fun loadLastSeen(): MutableMap<String, Long> {
+        lastSeenCache?.let { return it }
+        val map = mutableMapOf<String, Long>()
+        prefs.getString("feed_last_seen", null)?.split('\n')?.forEach { line ->
+            val cut = line.lastIndexOf('|')
+            val time = if (cut > 0) line.substring(cut + 1).toLongOrNull() else null
+            if (time != null) map[line.substring(0, cut)] = time
+        }
+        lastSeenCache = map
+        return map
+    }
+
+    @Synchronized
+    fun markSeen(cardId: String) {
+        val map = loadLastSeen()
+        map[cardId] = System.currentTimeMillis()
+        val trimmed = FeedRotation.trim(map)
+        if (trimmed.size != map.size) lastSeenCache = trimmed.toMutableMap()
+        prefs.edit()
+            .putString("feed_last_seen", trimmed.entries.joinToString("\n") { "${it.key}|${it.value}" })
+            .apply()
+    }
+
+    // ── Kyrillisches Alphabet ───────────────────────────────────────────────────
+
+    private val _letterProgress = MutableStateFlow(loadLetterProgress())
+    /** Lernstand je Buchstabe (siehe RuAlphabetLogic). */
+    val letterProgress: StateFlow<Map<String, Int>> = _letterProgress.asStateFlow()
+
+    private fun loadLetterProgress(): Map<String, Int> =
+        prefs.getString("feed_letter_progress", null).orEmpty().split(',')
+            .mapNotNull { part ->
+                val (l, v) = part.split(':').takeIf { it.size == 2 } ?: return@mapNotNull null
+                v.toIntOrNull()?.let { l to it }
+            }.toMap()
+
+    fun setLetterProgress(progress: Map<String, Int>) {
+        prefs.edit()
+            .putString("feed_letter_progress", progress.entries.joinToString(",") { "${it.key}:${it.value}" })
+            .apply()
+        _letterProgress.value = progress
+    }
+
+    // ── Mustergedächtnis ────────────────────────────────────────────────────────
+
+    /** Wie viele Felder das Mustergedächtnis gerade zeigt — steigt mit jedem Erfolg. */
+    fun memoryLevel(): Int = prefs.getInt("feed_memory_level", 4)
+
+    fun setMemoryLevel(level: Int) {
+        prefs.edit().putInt("feed_memory_level", level).apply()
+    }
+
+    // ── Tagesziel ───────────────────────────────────────────────────────────────
+
+    /** Wurde die Tagesziel-Karte heute schon gezeigt? */
+    fun goalCelebratedToday(): Boolean = prefs.getString("feed_goal_celebrated", null) == getTodayDateString()
+
+    fun markGoalCelebrated() {
+        prefs.edit().putString("feed_goal_celebrated", getTodayDateString()).apply()
+    }
+
+    // ── Zeit im Feed ────────────────────────────────────────────────────────────
+
+    /** Aktive Sekunden im Feed heute (alle Karten, nicht nur Russisch). */
+    fun feedSecondsToday(): Int =
+        if (prefs.getString("feed_time_date", null) == getTodayDateString()) prefs.getInt("feed_time_seconds", 0) else 0
+
+    fun addFeedSeconds(seconds: Int) {
+        prefs.edit()
+            .putString("feed_time_date", getTodayDateString())
+            .putInt("feed_time_seconds", feedSecondsToday() + seconds)
+            .apply()
+    }
+
+    fun resetAlphabet() = setLetterProgress(emptyMap())
+}

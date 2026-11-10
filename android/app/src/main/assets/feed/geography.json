@@ -1,0 +1,1262 @@
+[
+  {
+    "id": "wolga-laengster-fluss-europas",
+    "question": "Welcher Fluss ist der längste Europas?",
+    "options": [
+      "Donau",
+      "Wolga",
+      "Rhein",
+      "Dnjepr"
+    ],
+    "correctIndex": 1,
+    "fact": "Die Wolga ist rund 3.500 Kilometer lang und erreicht nie einen Ozean: Sie mündet ins Kaspische Meer, einen abflusslosen Binnensee, dessen Spiegel unter dem Meeresniveau liegt.",
+    "deep": {
+      "lead": "Europas längster Strom fließt vollständig durch Russland und endet in einem See ohne Abfluss.",
+      "sections": [
+        {
+          "title": "Ein Strom aus Stauseen",
+          "text": "Die Wolga entspringt in den Waldaihöhen nordwestlich von Moskau, auf nur gut 200 Metern Höhe. Auf ihrem langen Weg hat sie also kaum Gefälle und fließt entsprechend träge. Im 20. Jahrhundert wurde sie mit einer Kette großer Staudämme zur Stromgewinnung und für die Schifffahrt ausgebaut. Heute ist sie über weite Strecken eher eine Folge von Stauseen als ein frei fließender Fluss. Kanäle verbinden sie mit der Ostsee, dem Weißen Meer und über den Don mit dem Schwarzen Meer. Moskau wurde so zum »Hafen der fünf Meere«."
+        },
+        {
+          "title": "Mütterchen Wolga",
+          "text": "In Russland heißt der Fluss liebevoll »Mütterchen Wolga«. An seinen Ufern liegen Millionenstädte wie Nischni Nowgorod, Kasan, Samara und Wolgograd, das frühere Stalingrad. Über Jahrhunderte war die Wolga Handelsweg zwischen Nordeuropa, Persien und Zentralasien. Entlang des Flusses leben neben Russen viele andere Völker, etwa Tataren, Tschuwaschen und Mari. In Kasan, der Hauptstadt Tatarstans, stehen Moschee und orthodoxe Kathedrale nebeneinander. Im 18. Jahrhundert siedelten sich auf Einladung Katharinas der Großen auch deutsche Bauern an, die Wolgadeutschen."
+        },
+        {
+          "title": "Das Delta am Kaspischen Meer",
+          "text": "Bei Astrachan fächert sich die Wolga in ein riesiges Delta mit Hunderten Armen auf, das größte Flussdelta Europas. Es liegt, wie das ganze Kaspische Meer, knapp 30 Meter unter dem Spiegel der Ozeane. Die Wolga liefert den weitaus größten Teil des Wassers, das dem Kaspischen Meer zufließt. Sein Pegel hängt deshalb stark davon ab, wie viel der Fluss führt und wie viel verdunstet. Das Delta ist ein wichtiges Rastgebiet für Zugvögel und Heimat der Störe, aus deren Rogen Kaviar gewonnen wird."
+        }
+      ],
+      "tryIt": "Folge der Wolga auf einer Karte von der Quelle bis Astrachan und zähle die Städte, deren Namen du schon einmal gehört hast.",
+      "takeaways": [
+        "Die Wolga ist Europas längster Fluss und mündet ins Kaspische Meer.",
+        "Sie hat kaum Gefälle und ist heute eine Kette von Stauseen.",
+        "An ihr leben viele Völker Russlands nebeneinander."
+      ]
+    }
+  },
+  {
+    "id": "suedafrika-drei-hauptstaedte",
+    "question": "Welches Land verteilt seine Hauptstadtfunktionen auf drei Städte?",
+    "options": [
+      "Südafrika",
+      "Australien",
+      "Nigeria",
+      "Kanada"
+    ],
+    "correctIndex": 0,
+    "fact": "In Pretoria sitzt die Regierung, in Kapstadt das Parlament und in Bloemfontein das Oberste Berufungsgericht. Die größte Stadt, Johannesburg, ist keine der drei.",
+    "deep": {
+      "lead": "Südafrikas drei Hauptstädte sind ein Kompromiss aus dem Jahr 1910, der bis heute gilt.",
+      "sections": [
+        {
+          "title": "Ein Kompromiss bei der Staatsgründung",
+          "text": "1910 schlossen sich vier Gebiete zur Südafrikanischen Union zusammen: die britischen Kolonien Kap und Natal sowie die beiden früheren Burenrepubliken Transvaal und Oranje-Freistaat, die kurz zuvor im Burenkrieg unterlegen waren. Keine Seite wollte der anderen die Hauptstadt überlassen. Also teilte man die Staatsgewalten auf: Kapstadt bekam das Parlament, Pretoria im Transvaal die Regierung, Bloemfontein im Freistaat das höchste Gericht. Natal wurde finanziell entschädigt. Die Regelung überstand auch das Ende der Apartheid 1994."
+        },
+        {
+          "title": "Pendeln über 1.400 Kilometer",
+          "text": "Praktisch ist die Aufteilung nicht. Zwischen Pretoria und Kapstadt liegen rund 1.400 Kilometer. Während der Sitzungsperioden des Parlaments ziehen Minister und viele Beamte für Monate nach Kapstadt und danach wieder zurück. Immer wieder wird diskutiert, alles in Pretoria zusammenzulegen, bisher ohne Ergebnis. Das Verfassungsgericht, das seit den 1990er-Jahren über die neue Verfassung wacht, sitzt übrigens in einer vierten Stadt: in Johannesburg, auf dem Gelände eines früheren Gefängnisses."
+        },
+        {
+          "title": "Andere Länder, ähnliche Lösungen",
+          "text": "Südafrika ist nicht das einzige Land mit geteilten Funktionen. In den Niederlanden ist Amsterdam die Hauptstadt, Regierung und Parlament arbeiten aber in Den Haag. Bolivien hat mit Sucre eine verfassungsmäßige Hauptstadt, während die Regierung in La Paz sitzt. Solche Aufteilungen sind fast immer das Ergebnis historischer Rivalitäten zwischen Städten oder Landesteilen. Ein Blick auf die Hauptstadtfrage verrät deshalb oft mehr über die Geschichte eines Landes als über seine Geografie."
+        }
+      ],
+      "tryIt": "Rate, bevor du nachschaust: Wo sitzt in Deutschland das Bundesverfassungsgericht? Auch hier ist es nicht die Hauptstadt.",
+      "takeaways": [
+        "Pretoria regiert, Kapstadt beschließt Gesetze, Bloemfontein richtet.",
+        "Die Aufteilung stammt aus dem Gründungskompromiss von 1910.",
+        "Geteilte Hauptstädte sind fast immer Ergebnis alter Rivalitäten."
+      ]
+    }
+  },
+  {
+    "id": "canberra-hauptstadt-australien",
+    "question": "Wie heißt die Hauptstadt Australiens?",
+    "options": [
+      "Sydney",
+      "Melbourne",
+      "Canberra",
+      "Perth"
+    ],
+    "correctIndex": 2,
+    "fact": "Canberra wurde eigens als Hauptstadt geplant, weil sich Sydney und Melbourne nicht einigen konnten. Die Stadt liegt zwischen beiden, im Landesinneren.",
+    "deep": {
+      "lead": "Canberra entstand am Reißbrett – als Ausweg aus dem Streit zweier rivalisierender Großstädte.",
+      "sections": [
+        {
+          "title": "Zwei Rivalen, ein Kompromiss",
+          "text": "Als sich die australischen Kolonien 1901 zu einem Staat zusammenschlossen, beanspruchten Sydney und Melbourne beide den Hauptstadtrang. Die Verfassung legte einen Mittelweg fest: Die Hauptstadt sollte im Bundesstaat New South Wales liegen, aber mindestens hundert Meilen von Sydney entfernt. Bis sie fertig war, tagte das Parlament in Melbourne. 1908 fiel die Wahl auf ein Weidegebiet im Hochland, 1913 begann der Bau, und 1927 zog das Parlament um. Das Gebiet gehört keinem Bundesstaat, sondern bildet ein eigenes Hauptstadtterritorium."
+        },
+        {
+          "title": "Eine Stadt aus einem Wettbewerb",
+          "text": "Den internationalen Wettbewerb für den Stadtplan gewann der amerikanische Architekt Walter Burley Griffin. Er arbeitete eng mit seiner Frau Marion Mahony Griffin zusammen, von der die eindrucksvollen Zeichnungen stammten. Der Entwurf ordnet die Stadt um einen künstlichen See und entlang von Sichtachsen zu den umliegenden Hügeln. Der See wurde erst in den 1960er-Jahren aufgestaut und trägt Griffins Namen. Der Name Canberra geht vermutlich auf ein Wort der dort lebenden Ngunnawal zurück und wird oft mit »Treffpunkt« übersetzt."
+        },
+        {
+          "title": "Geplante Hauptstädte weltweit",
+          "text": "Canberra ist kein Einzelfall. Washington wurde Ende des 18. Jahrhunderts als neutrale Bundeshauptstadt angelegt, Brasília in den 1950er-Jahren mitten im brasilianischen Hochland gebaut, auch Ottawa war ein Kompromiss zwischen englisch- und französischsprachigen Städten. Oft steckt dieselbe Idee dahinter: Keine der mächtigen Handelsstädte soll den Staat dominieren. Deshalb sind Hauptstädte überraschend oft nicht die größten Städte ihres Landes. Weitere Beispiele sind Rabat, Wellington und Ankara."
+        }
+      ],
+      "tryIt": "Nenne aus dem Kopf drei Länder, deren Hauptstadt nicht die größte Stadt ist, und prüfe sie anschließend auf der Karte.",
+      "takeaways": [
+        "Canberra ist ein Kompromiss zwischen Sydney und Melbourne.",
+        "Die Stadt wurde nach einem Wettbewerbsentwurf neu gebaut.",
+        "Hauptstadt und größte Stadt sind oft nicht dieselbe."
+      ]
+    }
+  },
+  {
+    "id": "baikalsee-tiefster-see",
+    "question": "Welcher See ist der tiefste der Erde?",
+    "options": [
+      "Tanganjikasee",
+      "Kaspisches Meer",
+      "Oberer See",
+      "Baikalsee"
+    ],
+    "correctIndex": 3,
+    "fact": "Der Baikalsee in Sibirien ist über 1.600 Meter tief und enthält rund ein Fünftel des flüssigen Süßwassers an der Erdoberfläche – mehr als alle fünf Großen Seen Nordamerikas zusammen.",
+    "deep": {
+      "lead": "Der Baikalsee ist ein Riss in der Erdkruste, der sich seit Millionen Jahren mit Wasser füllt.",
+      "sections": [
+        {
+          "title": "Ein Ozean im Entstehen",
+          "text": "Der Baikalsee liegt in einem Grabenbruch: Die Erdkruste wird hier auseinandergezogen, der Boden dazwischen sinkt ab. Der Graben weitet sich noch immer um einige Millimeter pro Jahr. Mit rund 25 Millionen Jahren gilt der Baikal als ältester See der Erde, gewöhnliche Seen verlanden nach einigen Zehntausend Jahren. Unter dem Seeboden liegen noch einmal kilometerdicke Ablagerungen. Der zweittiefste See der Welt, der Tanganjikasee in Ostafrika, ist auf dieselbe Weise entstanden. Solche Gräben können sich über sehr lange Zeit zu neuen Meeren öffnen."
+        },
+        {
+          "title": "Eine eigene Tierwelt",
+          "text": "Weil der See so alt und abgeschieden ist, haben sich dort Arten entwickelt, die es nirgends sonst gibt. Die bekannteste ist die Baikalrobbe, die einzige Robbenart, die ausschließlich im Süßwasser lebt. Wie ihre Vorfahren Tausende Kilometer vom Meer entfernt dorthin gelangten, ist nicht sicher geklärt. Winzige Krebse filtern das Wasser und tragen dazu bei, dass man stellenweise Dutzende Meter tief sehen kann. Anders als in den meisten tiefen Seen gelangt Sauerstoff bis zum Grund, sodass auch in großer Tiefe Tiere leben."
+        },
+        {
+          "title": "Eis, das Züge trug",
+          "text": "Von Januar bis in den Mai ist der Baikal zugefroren, das Eis wird einen Meter dick und mehr. Es ist oft so klar, dass man hindurch ins Schwarze blickt. Früher verlegte man im Winter sogar Eisenbahnschienen über den See, bevor die Transsibirische Eisenbahn um das Südufer herumgeführt wurde. Mehr als 300 Flüsse münden in den Baikal, aber nur einer fließt hinaus: die Angara, die ihr Wasser über den Jenissei ins Nordpolarmeer schickt."
+        }
+      ],
+      "tryIt": "Vergleiche auf einer Karte den Umriss des Baikalsees mit dem des Tanganjikasees: Beide sind lang und schmal – die typische Form eines Grabenbruchs.",
+      "takeaways": [
+        "Der Baikalsee ist der tiefste und älteste See der Erde.",
+        "Er liegt in einem Grabenbruch, der sich weiter öffnet.",
+        "Er enthält rund ein Fünftel des flüssigen Oberflächen-Süßwassers."
+      ]
+    }
+  },
+  {
+    "id": "frankreich-meiste-zeitzonen",
+    "question": "Welcher Staat erstreckt sich mit allen seinen Gebieten über die meisten Zeitzonen?",
+    "options": [
+      "Russland",
+      "Frankreich",
+      "USA",
+      "China"
+    ],
+    "correctIndex": 1,
+    "fact": "Dank seiner Überseegebiete von Französisch-Polynesien bis Neukaledonien kommt Frankreich auf zwölf Zeitzonen. Russland hat elf, alle auf zusammenhängendem Staatsgebiet.",
+    "deep": {
+      "lead": "Frankreichs Zeitzonenrekord ist ein Erbe der Kolonialzeit: Irgendwo auf französischem Boden scheint immer die Sonne.",
+      "sections": [
+        {
+          "title": "Frankreich jenseits von Europa",
+          "text": "Zu Frankreich gehören Gebiete in allen drei großen Ozeanen. In der Karibik liegen Guadeloupe und Martinique, in Südamerika Französisch-Guayana, im Indischen Ozean Réunion und Mayotte, im Pazifik Neukaledonien und Französisch-Polynesien, dazu kleinere Inseln bis in subantarktische Breiten. Einige davon sind vollwertige Départements wie jedes im Mutterland. Dort zahlt man mit Euro, wählt das französische Parlament mit und gehört zur Europäischen Union. Die längste Landgrenze Frankreichs verläuft deshalb nicht in Europa, sondern in Südamerika: zwischen Französisch-Guayana und Brasilien."
+        },
+        {
+          "title": "Warum es Zeitzonen gibt",
+          "text": "Bis ins 19. Jahrhundert stellte jeder Ort seine Uhren nach dem Sonnenstand, zwölf Uhr war, wenn die Sonne am höchsten stand. Mit der Eisenbahn wurde das zum Problem, denn Fahrpläne über Hunderte Ortszeiten hinweg waren kaum zu führen. 1884 einigte sich eine internationale Konferenz in Washington auf den Meridian von Greenwich als Nullpunkt. Daraus entstand das System von 24 Zonen zu je 15 Längengraden. Frankreich enthielt sich damals der Stimme und hielt noch bis 1911 an der Pariser Zeit fest."
+        },
+        {
+          "title": "Linien nach politischem Maß",
+          "text": "In der Praxis folgen Zeitzonen selten sauber den Längengraden, sondern Staatsgrenzen und politischen Entscheidungen. Spanien liegt geografisch auf der Länge Großbritanniens, stellt die Uhren aber seit den 1940er-Jahren nach der mitteleuropäischen Zeit. Indien und Nepal nutzen Zonen, die um halbe oder Viertelstunden versetzt sind. Und das europäische Frankreich selbst müsste nach dem Sonnenstand eigentlich dieselbe Zeit haben wie London. Deshalb geht die Sonne in der Bretagne im Sommer erst sehr spät unter."
+        }
+      ],
+      "tryIt": "Sieh in der Weltzeituhr deines Handys nach, wie spät es gerade in Papeete auf Tahiti und in Nouméa in Neukaledonien ist. Beides ist Frankreich.",
+      "takeaways": [
+        "Frankreich hat wegen seiner Überseegebiete die meisten Zeitzonen.",
+        "Zeitzonen wurden wegen der Eisenbahn eingeführt.",
+        "Ihre Grenzen sind politische Entscheidungen."
+      ]
+    }
+  },
+  {
+    "id": "kongo-zweimal-aequator",
+    "question": "Welcher große Fluss überquert den Äquator zweimal?",
+    "options": [
+      "Nil",
+      "Amazonas",
+      "Kongo",
+      "Niger"
+    ],
+    "correctIndex": 2,
+    "fact": "Der Kongo fließt in einem weiten Bogen erst nach Norden über den Äquator und dann zurück nach Süden. Er ist zudem der tiefste Fluss der Erde, stellenweise über 200 Meter.",
+    "deep": {
+      "lead": "Weil der Kongo auf beiden Seiten des Äquators Regen sammelt, führt er das ganze Jahr über viel Wasser.",
+      "sections": [
+        {
+          "title": "Regenzeit ist immer irgendwo",
+          "text": "Nördlich und südlich des Äquators fallen die Regenzeiten in verschiedene Monate. Die Nebenflüsse des Kongo kommen aus beiden Hälften. Wenn die südlichen wenig Wasser bringen, führen die nördlichen viel, und umgekehrt. Der Strom schwankt deshalb viel weniger als andere tropische Flüsse. Nach dem Amazonas ist er der wasserreichste Fluss der Erde. Sein Einzugsgebiet, das Kongobecken, trägt den zweitgrößten Regenwald der Welt. Dort leben Waldelefanten sowie Bonobos und Okapis, die es nirgends sonst in freier Wildbahn gibt."
+        },
+        {
+          "title": "Ein Fluss mit Stufen",
+          "text": "Von der Hauptstadt Kinshasa bis zum Atlantik sind es nur wenige Hundert Kilometer, doch der Kongo ist dort nicht schiffbar. Er durchbricht in einer Folge von Stromschnellen und Katarakten ein Randgebirge. Oberhalb davon ist er dagegen über weite Strecken befahrbar und bis heute der wichtigste Verkehrsweg des Landes, in dem es nur wenige durchgehende Straßen gibt. Um die Schnellen zu umgehen, wurde in der Kolonialzeit eine Eisenbahn gebaut. Das enorme Gefälle macht die Stelle zu einem der größten Wasserkraftpotenziale der Welt."
+        },
+        {
+          "title": "Zwei Hauptstädte in Sichtweite",
+          "text": "Am Kongo liegen sich Kinshasa, Hauptstadt der Demokratischen Republik Kongo, und Brazzaville, Hauptstadt der Republik Kongo, direkt gegenüber. Nur der Fluss trennt die beiden Staaten, eine Brücke gibt es dort bislang nicht, man setzt mit dem Boot über. Die Teilung geht auf die Kolonialzeit zurück: Das eine Ufer war belgisch, das andere französisch. Beide Länder tragen den Namen des Flusses, der wiederum auf das alte Königreich Kongo an seiner Mündung zurückgeht."
+        }
+      ],
+      "tryIt": "Fahre den Kongo auf einer Karte mit dem Finger nach und finde die beiden Stellen, an denen er den Äquator kreuzt.",
+      "takeaways": [
+        "Der Kongo kreuzt den Äquator zweimal.",
+        "Zuflüsse aus beiden Erdhälften gleichen seine Wasserführung aus.",
+        "Kinshasa und Brazzaville liegen sich am Fluss gegenüber."
+      ]
+    }
+  },
+  {
+    "id": "chimborazo-erdmittelpunkt",
+    "question": "Welcher Berggipfel ist am weitesten vom Erdmittelpunkt entfernt?",
+    "options": [
+      "Mount Everest",
+      "K2",
+      "Kilimandscharo",
+      "Chimborazo"
+    ],
+    "correctIndex": 3,
+    "fact": "Die Erde ist am Äquator ausgebaucht. Der Chimborazo in Ecuador steht fast genau dort, sein Gipfel liegt deshalb rund zwei Kilometer weiter vom Erdmittelpunkt entfernt als der des Mount Everest.",
+    "deep": {
+      "lead": "Der höchste Berg hängt davon ab, wo man das Maßband anlegt: am Meeresspiegel, am Bergfuß oder am Erdmittelpunkt.",
+      "sections": [
+        {
+          "title": "Die Erde ist keine Kugel",
+          "text": "Weil sich die Erde dreht, wird sie am Äquator nach außen gedrückt und an den Polen abgeflacht. Der Radius am Äquator ist gut 21 Kilometer größer als der zu den Polen. Isaac Newton hatte das vorhergesagt, im 18. Jahrhundert bestätigten es französische Expeditionen, die in Lappland und im heutigen Ecuador die Länge eines Breitengrades vermaßen. Der Chimborazo liegt nur etwa anderthalb Grad südlich des Äquators, der Everest dagegen auf knapp 28 Grad Nord. Diesen Unterschied gleichen die gut 2.500 Meter mehr Höhe über dem Meer nicht aus."
+        },
+        {
+          "title": "Drei Rekorde, drei Berge",
+          "text": "Über dem Meeresspiegel ist der Mount Everest mit rund 8.850 Metern unangefochten der höchste Berg. Misst man vom Fuß bis zum Gipfel, gewinnt der Mauna Kea auf Hawaii: Er erhebt sich vom Meeresboden mehr als 10.000 Meter, nur gut 4.200 davon ragen aus dem Wasser. Und vom Erdmittelpunkt aus liegt der Chimborazo vorn. Für Bergsteiger zählt allerdings die Höhe über dem Meer, denn sie bestimmt, wie dünn die Luft ist. Auf dem Chimborazo ist sie deutlich dichter als auf dem Everest."
+        },
+        {
+          "title": "Humboldts Rekordversuch",
+          "text": "Zu Beginn des 19. Jahrhunderts galt der Chimborazo als höchster Berg der Welt, die Riesen des Himalaya waren noch nicht vermessen. 1802 versuchte Alexander von Humboldt die Besteigung. Er kam nicht bis zum Gipfel, erreichte aber eine Höhe, auf der vor ihm kein Mensch nachweislich gewesen war. Wichtiger als der Rekord waren seine Beobachtungen: Er notierte, wie sich Pflanzen mit der Höhe in Stufen ablösen, ähnlich wie vom Äquator zu den Polen. Sein Schaubild des Berges wurde ein Klassiker der Geografie."
+        }
+      ],
+      "tryIt": "Überlege auf der Waage: Am Äquator würdest du wegen der Erddrehung und des größeren Abstands zum Erdmittelpunkt etwa ein halbes Prozent weniger wiegen als am Pol.",
+      "takeaways": [
+        "Die Erde ist am Äquator rund 21 Kilometer dicker als an den Polen.",
+        "Everest, Mauna Kea und Chimborazo halten je einen anderen Höhenrekord.",
+        "Welcher Berg der höchste ist, hängt vom Bezugspunkt ab."
+      ]
+    }
+  },
+  {
+    "id": "vatikan-kleinster-staat",
+    "question": "Welcher ist der kleinste international anerkannte Staat der Erde?",
+    "options": [
+      "Vatikanstadt",
+      "Monaco",
+      "San Marino",
+      "Liechtenstein"
+    ],
+    "correctIndex": 0,
+    "fact": "Die Vatikanstadt misst weniger als einen halben Quadratkilometer und liegt vollständig innerhalb Roms. Zu Fuß umrundest du das ganze Staatsgebiet in unter einer Stunde.",
+    "deep": {
+      "lead": "Der Vatikan ist als Staat erst seit 1929 so klein – davor regierten die Päpste über ein Gebiet quer durch Mittelitalien.",
+      "sections": [
+        {
+          "title": "Vom Kirchenstaat zum Stadtstaat",
+          "text": "Über mehr als tausend Jahre herrschten die Päpste nicht nur geistlich, sondern auch als Landesfürsten über den Kirchenstaat, der von Rom bis zur Adria reichte. Bei der Einigung Italiens im 19. Jahrhundert verloren sie dieses Gebiet, 1870 wurde auch Rom eingenommen. Die Päpste erkannten das nicht an und betrachteten sich als Gefangene im Vatikan. Erst 1929 schlossen der Heilige Stuhl und Italien die Lateranverträge. Sie schufen den winzigen Staat, der dem Papst politische Unabhängigkeit sichern soll."
+        },
+        {
+          "title": "Ein Staat mit Besonderheiten",
+          "text": "Trotz seiner Größe hat der Vatikan fast alles, was ein Staat hat: eigene Briefmarken, eigene Euromünzen, ein Postamt, einen Bahnhof, einen Radiosender und eine Apotheke. Für die Sicherheit des Papstes sorgt seit dem frühen 16. Jahrhundert die Schweizergarde. Die Staatsbürgerschaft wird nicht durch Geburt erworben, sondern an ein Amt geknüpft und endet meist mit ihm. Staatsoberhaupt ist der Papst, gewählt von den Kardinälen. Damit ist der Vatikan eine der wenigen Wahlmonarchien der Welt."
+        },
+        {
+          "title": "Europas Zwergstaaten",
+          "text": "Der Vatikan ist nicht der einzige Kleinstaat Europas. Monaco an der Côte d'Azur ist mit rund zwei Quadratkilometern der zweitkleinste Staat der Welt. San Marino, wie der Vatikan ganz von Italien umschlossen, führt seine Gründung auf das frühe 4. Jahrhundert zurück und versteht sich als älteste bestehende Republik. Dazu kommen Liechtenstein, Andorra und Malta. Die meisten überlebten, weil sie abgelegen lagen oder weil größere Nachbarn sie als Puffer duldeten."
+        }
+      ],
+      "tryIt": "Öffne eine Karten-App, zoome auf den Petersplatz und folge der Staatsgrenze einmal ganz herum. Achte darauf, wo die Mauer aufhört.",
+      "takeaways": [
+        "Die Vatikanstadt ist kleiner als ein halber Quadratkilometer.",
+        "Sie entstand 1929 durch die Lateranverträge.",
+        "Der Papst ist ein gewähltes Staatsoberhaupt auf Lebenszeit."
+      ]
+    }
+  },
+  {
+    "id": "nordatlantikstrom-eisfreie-haefen",
+    "question": "Welche Meeresströmung hält Häfen in Nordnorwegen auch im Winter eisfrei?",
+    "options": [
+      "Labradorstrom",
+      "Humboldtstrom",
+      "Nordatlantikstrom",
+      "Benguelastrom"
+    ],
+    "correctIndex": 2,
+    "fact": "Der Nordatlantikstrom, die Verlängerung des Golfstroms, bringt warmes Wasser bis über den Polarkreis. Selbst der russische Hafen Murmansk bleibt deshalb im Winter eisfrei.",
+    "deep": {
+      "lead": "Europa liegt erstaunlich weit im Norden – dass es hier trotzdem mild ist, verdankt es warmem Wasser und Westwind.",
+      "sections": [
+        {
+          "title": "Gleiche Breite, anderes Klima",
+          "text": "Vergleiche die Breitengrade: Berlin liegt nördlicher als die kanadische Stadt Calgary, Rom etwa auf der Höhe von New York. Trotzdem sind die Winter in Westeuropa viel milder als an der Ostküste Nordamerikas. In unseren Breiten weht der Wind überwiegend aus Westen. In Europa kommt er vom Meer und bringt dessen gespeicherte Wärme mit. An der amerikanischen Ostküste kommt derselbe Westwind vom ausgekühlten Kontinent. Der Nordatlantikstrom sorgt dafür, dass das Meer vor Europa auch im Winter ungewöhnlich warm bleibt."
+        },
+        {
+          "title": "Ein Förderband im Ozean",
+          "text": "Der Golfstrom entsteht im Golf von Mexiko und vor Florida, zieht an der amerikanischen Küste nach Norden und biegt dann in den offenen Atlantik ab. Seine Fortsetzung Richtung Europa heißt Nordatlantikstrom. Im Nordmeer gibt das Wasser seine Wärme an die Luft ab, wird kalt und, weil es salzig ist, sehr schwer. Es sinkt in die Tiefe und fließt dort nach Süden zurück. Diese Umwälzung ist Teil eines weltumspannenden Strömungssystems. Forscher beobachten genau, wie die Erwärmung und das Schmelzwasser Grönlands sie beeinflussen."
+        },
+        {
+          "title": "Kalte Gegenstücke",
+          "text": "Wo warme Strömungen Küsten mild machen, bewirken kalte das Gegenteil. Der Labradorstrom bringt eisiges Wasser und Eisberge von Grönland vor die Küste Neufundlands, wo er auf den Golfstrom trifft und dichte Nebel erzeugt. Der Humboldtstrom vor Chile und Peru und der Benguelastrom vor Namibia kühlen die Luft so stark, dass kaum Regen fällt. An beiden Küsten liegen deshalb Wüsten direkt am Meer. Zugleich ist das kalte, nährstoffreiche Wasser außerordentlich fischreich."
+        }
+      ],
+      "tryIt": "Such auf einer Karte den Breitengrad deines Wohnorts und folge ihm nach Westen bis Nordamerika. Wo landest du – und wie sind dort die Winter?",
+      "takeaways": [
+        "Der Nordatlantikstrom ist die Fortsetzung des Golfstroms.",
+        "Westwinde tragen die Wärme des Meeres nach Europa.",
+        "Kalte Strömungen erzeugen Küstenwüsten und Nebel."
+      ]
+    }
+  },
+  {
+    "id": "lesotho-enklave",
+    "question": "Welcher Staat ist vollständig von Südafrika umschlossen?",
+    "options": [
+      "Eswatini",
+      "Lesotho",
+      "Botsuana",
+      "Namibia"
+    ],
+    "correctIndex": 1,
+    "fact": "Lesotho ist eine Enklave mitten in Südafrika. Das ganze Land liegt höher als 1.000 Meter – kein anderer Staat hat einen so hoch gelegenen tiefsten Punkt.",
+    "deep": {
+      "lead": "Lesotho verdankt seine Existenz den Bergen und einem König, der im 19. Jahrhundert geschickt Schutz suchte.",
+      "sections": [
+        {
+          "title": "Das Königreich im Himmel",
+          "text": "Lesotho liegt in den Drakensbergen und im Maloti-Gebirge. Der tiefste Punkt des Landes liegt auf rund 1.400 Metern, höher als fast alle Gipfel der deutschen Mittelgebirge. Im Winter fällt regelmäßig Schnee, es gibt sogar ein kleines Skigebiet. Die traditionelle Kleidung passt dazu: Viele Basotho tragen dicke Wolldecken als Umhang und einen kegelförmigen Strohhut, der auch auf der Flagge abgebildet ist. Pferde und Ponys sind in den abgelegenen Tälern bis heute ein übliches Verkehrsmittel."
+        },
+        {
+          "title": "Wie die Enklave entstand",
+          "text": "Anfang des 19. Jahrhunderts sammelte König Moshoeshoe I. in einer Zeit von Kriegen und Vertreibungen verschiedene Gruppen um eine Bergfestung und formte daraus das Volk der Basotho. Als burische Siedler immer mehr Land beanspruchten, bat er Großbritannien um Schutz. 1868 wurde das Gebiet britisches Protektorat mit dem Namen Basutoland. Deshalb wurde es 1910 nicht Teil der Südafrikanischen Union. 1966 wurde es als Königreich Lesotho unabhängig und blieb so auch von der Apartheid-Gesetzgebung des Nachbarn verschont."
+        },
+        {
+          "title": "Wasser als Exportgut",
+          "text": "Wirtschaftlich ist Lesotho eng an Südafrika gebunden, viele Männer arbeiteten über Generationen in den südafrikanischen Minen. Der wichtigste eigene Rohstoff ist Wasser. In den regenreichen Bergen entspringt der Oranje, einer der größten Flüsse des südlichen Afrika. Über Staudämme und Tunnel wird Wasser in das trockene Industriegebiet um Johannesburg geleitet, Lesotho erhält dafür Gebühren und Strom aus Wasserkraft. Weltweit gibt es nur drei Staaten, die ganz von einem einzigen anderen umschlossen sind: Lesotho, San Marino und die Vatikanstadt."
+        }
+      ],
+      "tryIt": "Such Lesotho auf der Karte und gleich daneben Eswatini. Prüfe, warum Eswatini keine Enklave ist: An welches zweite Land grenzt es?",
+      "takeaways": [
+        "Lesotho liegt als Enklave vollständig in Südafrika.",
+        "Als britisches Protektorat blieb es außerhalb der Südafrikanischen Union.",
+        "Das ganze Land ist Hochgebirge, Wasser ist sein wichtigstes Exportgut."
+      ]
+    }
+  },
+  {
+    "id": "ankara-hauptstadt-tuerkei",
+    "question": "Welche Stadt ist die Hauptstadt der Türkei?",
+    "options": [
+      "Istanbul",
+      "Izmir",
+      "Antalya",
+      "Ankara"
+    ],
+    "correctIndex": 3,
+    "fact": "Ankara ist seit 1923 Hauptstadt. Mustafa Kemal Atatürk wählte die damals kleine Stadt im anatolischen Hochland bewusst anstelle der alten Sultansmetropole Istanbul.",
+    "deep": {
+      "lead": "Die Wahl Ankaras war ein politisches Signal: Die neue Republik sollte nicht vom Hof des Sultans aus regiert werden.",
+      "sections": [
+        {
+          "title": "Ein Neuanfang in Anatolien",
+          "text": "Nach dem Ersten Weltkrieg war das Osmanische Reich besiegt, Istanbul von alliierten Truppen besetzt. Der Widerstand dagegen formierte sich im Landesinneren, und Ankara wurde sein Hauptquartier. Die Stadt lag zentral, war mit der Bahn erreichbar und außerhalb der Reichweite fremder Kriegsschiffe. Als 1923 die Republik ausgerufen wurde, blieb die Regierung dort. Istanbul stand für Sultanat und Kalifat, mit denen Atatürk brechen wollte. Ankara hatte damals nur einige Zehntausend Einwohner und wurde nach Plänen europäischer Stadtplaner zur modernen Hauptstadt ausgebaut."
+        },
+        {
+          "title": "Angora: ein Name in der Wolle",
+          "text": "In europäischen Sprachen hieß die Stadt lange Angora. Der Name lebt weiter: Angoraziegen, Angorakaninchen und Angorakatzen sind nach ihr benannt. Die Wolle der Angoraziege heißt Mohair und war über Jahrhunderte ein wichtiges Handelsgut der Region. Die Stadt selbst ist uralt. Schon in der Antike war sie als Ancyra Hauptort einer römischen Provinz. An einer Tempelwand ist dort der Tatenbericht des Kaisers Augustus erhalten, eine der bedeutendsten Inschriften der römischen Welt."
+        },
+        {
+          "title": "Küste und Hochland",
+          "text": "Die Türkei hat zwei sehr verschiedene Gesichter. Die Küsten an Ägäis und Mittelmeer haben milde Winter und heiße Sommer. Das anatolische Hochland um Ankara liegt rund 900 Meter hoch, ist durch Gebirge vom Meer abgeschirmt und hat trockenes Kontinentalklima mit kalten, oft schneereichen Wintern. Istanbul ist bis heute das wirtschaftliche und kulturelle Zentrum und um ein Mehrfaches größer. Die Arbeitsteilung zwischen politischer Hauptstadt und Wirtschaftsmetropole kennt man auch aus anderen Ländern."
+        }
+      ],
+      "tryIt": "Vergleiche im Wetterbericht die heutige Temperatur in Ankara und in Antalya. Der Unterschied zeigt dir Hochland gegen Küste.",
+      "takeaways": [
+        "Ankara wurde 1923 als bewusster Bruch mit Istanbul Hauptstadt.",
+        "Der alte Name Angora steckt in Angorawolle.",
+        "Istanbul blieb das wirtschaftliche Zentrum des Landes."
+      ]
+    }
+  },
+  {
+    "id": "antarktis-groesste-wueste",
+    "question": "Welche ist die größte Wüste der Erde, wenn man nur nach dem Niederschlag geht?",
+    "options": [
+      "Sahara",
+      "Antarktis",
+      "Gobi",
+      "Arabische Wüste"
+    ],
+    "correctIndex": 1,
+    "fact": "Eine Wüste ist durch Trockenheit definiert, nicht durch Hitze oder Sand. Die Antarktis ist mit rund 14 Millionen Quadratkilometern die größte – deutlich größer als die Sahara.",
+    "deep": {
+      "lead": "Der kälteste Kontinent ist zugleich der trockenste: Im Inneren der Antarktis fällt so wenig Niederschlag wie in einer Sandwüste.",
+      "sections": [
+        {
+          "title": "Warum es dort kaum schneit",
+          "text": "Kalte Luft kann nur wenig Wasserdampf aufnehmen. Über dem antarktischen Hochplateau ist die Luft extrem kalt und sinkt zudem ab, was Wolkenbildung verhindert. Im Inneren fallen im Jahr umgerechnet nur wenige Zentimeter Wasser. Dass dort trotzdem ein kilometerdicker Eispanzer liegt, ist eine Frage der Zeit: Der wenige Schnee schmilzt nie und hat sich über Hunderttausende Jahre aufgeschichtet. In dem Eis stecken winzige Luftblasen, aus denen Forscher die Zusammensetzung der Atmosphäre vergangener Eiszeiten ablesen."
+        },
+        {
+          "title": "Täler ohne Eis",
+          "text": "Besonders extrem sind die Trockentäler nahe der Forschungsstation McMurdo. Gebirge halten das Inlandeis fern, und trockene Fallwinde, die mit hoher Geschwindigkeit von der Hochfläche herabstürzen, lassen Schnee und Eis verdunsten. Zurück bleiben kahler Fels und Schotter. Die Landschaft gilt als eine der marsähnlichsten der Erde, Raumfahrtbehörden haben dort Geräte für Marsmissionen getestet. Trotzdem gibt es Leben: Bakterien und Algen, die im Inneren poröser Steine überdauern."
+        },
+        {
+          "title": "Vier Arten von Wüsten",
+          "text": "Geografen unterscheiden Wüsten nach ihrer Ursache. Wendekreiswüsten wie die Sahara entstehen, wo trockene Luft großräumig absinkt. Küstenwüsten wie die Atacama und die Namib liegen neben kalten Meeresströmungen. Binnenwüsten wie die Gobi sind so weit vom Meer entfernt oder so von Gebirgen abgeschirmt, dass kaum feuchte Luft ankommt. Die vierte Gruppe sind die Kältewüsten der Polargebiete. Sandmeere mit Dünen bedecken übrigens selbst in der Sahara nur einen kleineren Teil, das meiste ist Fels und Geröll."
+        }
+      ],
+      "tryIt": "Schlag nach, wie viel Niederschlag an deinem Wohnort im Jahr fällt, und vergleiche: Unter etwa 250 Millimetern spricht man von Wüste.",
+      "takeaways": [
+        "Wüste heißt wenig Niederschlag, nicht Hitze.",
+        "Die Antarktis ist die größte Wüste, die Sahara die größte heiße.",
+        "Der Eispanzer ist Schnee aus Hunderttausenden Jahren."
+      ]
+    }
+  },
+  {
+    "id": "totes-meer-tiefster-landpunkt",
+    "question": "Wo liegt der tiefste Punkt der Landoberfläche der Erde?",
+    "options": [
+      "Am Ufer des Toten Meeres",
+      "Im Death Valley",
+      "In der Danakil-Senke",
+      "Am Kaspischen Meer"
+    ],
+    "correctIndex": 0,
+    "fact": "Das Ufer des Toten Meeres liegt mehr als 400 Meter unter dem Meeresspiegel. Sein Wasser ist fast zehnmal so salzig wie das der Ozeane, deshalb treibt man darin wie ein Korken.",
+    "deep": {
+      "lead": "Das Tote Meer füllt die tiefste Stelle eines Grabens, an dem zwei Erdplatten aneinander vorbeigleiten.",
+      "sections": [
+        {
+          "title": "Ein See ohne Ausgang",
+          "text": "Das Tote Meer ist kein Meer, sondern ein See an der Grenze zwischen Jordanien, Israel und dem Westjordanland. Der Jordan fließt hinein, aber kein Fluss hinaus. Das Wasser kann nur verdunsten, und in der heißen, trockenen Senke geschieht das schnell. Die gelösten Salze bleiben zurück und reichern sich seit Jahrtausenden an. Bei einem Salzgehalt von rund einem Drittel können Fische und Pflanzen nicht leben, daher der Name. Ganz tot ist es trotzdem nicht: Einige Bakterien und Mikroalgen kommen mit der Lauge zurecht."
+        },
+        {
+          "title": "Der Graben",
+          "text": "Die Senke gehört zu einer langen Bruchzone der Erdkruste, die vom Roten Meer nach Norden bis in die Türkei reicht. Hier gleiten die Arabische und die Afrikanische Platte aneinander vorbei, und dazwischen sind Schollen eingesunken. Auch der See Genezareth und das Jordantal liegen in diesem Graben unter dem Meeresspiegel. Nach Süden setzt sich das System im Roten Meer und im Ostafrikanischen Graben fort. Erdbeben sind in der Region deshalb seit der Antike immer wieder überliefert."
+        },
+        {
+          "title": "Ein schrumpfender See",
+          "text": "Der Wasserspiegel des Toten Meeres sinkt seit Jahrzehnten, zuletzt um etwa einen Meter pro Jahr. Der Hauptgrund: Das Wasser des Jordan wird größtenteils für Landwirtschaft und Trinkwasser abgeleitet, bevor es den See erreicht. Hinzu kommen Verdunstungsbecken, in denen Kalisalze und andere Minerale gewonnen werden. Wo sich das Ufer zurückzieht, löst Grundwasser unterirdische Salzschichten auf, und der Boden bricht in tiefen Löchern ein. Hotels, die einst am Wasser standen, liegen heute weit davon entfernt."
+        }
+      ],
+      "tryIt": "Löse in einem Glas warmem Wasser so viel Salz, wie sich lösen lässt, und lege ein rohes Ei hinein. Es schwimmt – wie du im Toten Meer.",
+      "takeaways": [
+        "Das Ufer des Toten Meeres ist der tiefste Punkt an Land.",
+        "Ohne Abfluss reichert die Verdunstung das Salz an.",
+        "Der See schrumpft, weil der Jordan kaum noch Wasser bringt."
+      ]
+    }
+  },
+  {
+    "id": "donau-schwarzes-meer",
+    "question": "Die Donau entspringt im Schwarzwald. In welches Meer mündet sie?",
+    "options": [
+      "Mittelmeer",
+      "Nordsee",
+      "Schwarzes Meer",
+      "Ostsee"
+    ],
+    "correctIndex": 2,
+    "fact": "Auf ihrem Weg nach Osten durchquert oder berührt die Donau zehn Staaten – mehr als jeder andere Fluss der Erde – und fließt durch vier Hauptstädte: Wien, Bratislava, Budapest und Belgrad.",
+    "deep": {
+      "lead": "Die Donau ist der einzige große Strom Europas, der von West nach Ost fließt und so Mitteleuropa mit dem Balkan verbindet.",
+      "sections": [
+        {
+          "title": "Zwei Quellbäche und ein Loch",
+          "text": "In Donaueschingen fließen die Bäche Brigach und Breg zusammen, ein alter Merkspruch sagt: Brigach und Breg bringen die Donau zuweg. Schon wenige Kilometer weiter geschieht etwas Seltsames. Bei Immendingen versickert das Wasser im zerklüfteten Kalkgestein, an vielen Tagen im Jahr liegt das Flussbett dort trocken. Das Wasser tritt Kilometer entfernt im Aachtopf wieder aus und fließt über den Bodensee in den Rhein. Ein Teil der jungen Donau landet also in der Nordsee statt im Schwarzen Meer."
+        },
+        {
+          "title": "Grenze und Handelsweg",
+          "text": "Für die Römer war die Donau über Jahrhunderte die Nordgrenze ihres Reiches. Entlang des Flusses legten sie Kastelle an, aus denen Städte wie Regensburg, Wien und Budapest hervorgingen. Später verband die Donau die Länder der Habsburgermonarchie. Heute ist sie eine internationale Wasserstraße. Seit den 1990er-Jahren verbindet der Main-Donau-Kanal sie mit dem Rhein, sodass Schiffe von der Nordsee bis zum Schwarzen Meer fahren können. Ihre Kilometer werden, anders als bei den meisten Flüssen, von der Mündung aufwärts gezählt."
+        },
+        {
+          "title": "Das Delta",
+          "text": "Am Ende teilt sich die Donau in drei Hauptarme und bildet in Rumänien und der Ukraine ein riesiges Delta. Es ist das größte zusammenhängende Schilfgebiet der Erde und Welterbe der UNESCO. Hunderte Vogelarten rasten oder brüten dort, darunter große Kolonien von Pelikanen. Der Fluss lagert ständig Schlamm ab, sodass das Delta langsam ins Meer hinauswächst. Weit flussaufwärts durchbricht die Donau am Eisernen Tor zwischen Serbien und Rumänien die Karpaten, früher eine der gefährlichsten Stellen für die Schifffahrt."
+        }
+      ],
+      "tryIt": "Zähle auf einer Karte die zehn Donaustaaten ab, von Deutschland bis zur Ukraine. Welche zwei vergisst man am leichtesten?",
+      "takeaways": [
+        "Die Donau fließt vom Schwarzwald ins Schwarze Meer.",
+        "Sie berührt zehn Staaten und vier Hauptstädte.",
+        "Ein Teil ihres Quellwassers versickert und fließt zum Rhein."
+      ]
+    }
+  },
+  {
+    "id": "liechtenstein-doppelter-binnenstaat",
+    "question": "Welches europäische Land ist ein doppelter Binnenstaat – nur von Binnenstaaten umgeben?",
+    "options": [
+      "Luxemburg",
+      "Schweiz",
+      "Slowakei",
+      "Liechtenstein"
+    ],
+    "correctIndex": 3,
+    "fact": "Liechtenstein grenzt nur an die Schweiz und Österreich, die beide keinen Meereszugang haben. Weltweit gibt es nur einen zweiten solchen Staat: Usbekistan.",
+    "deep": {
+      "lead": "Wer aus Liechtenstein ans Meer will, muss mindestens zwei Staatsgrenzen überqueren – das gilt sonst nur für Usbekistan.",
+      "sections": [
+        {
+          "title": "Ein Fürstentum als Überbleibsel",
+          "text": "Liechtenstein entstand, als die Wiener Adelsfamilie Liechtenstein um 1700 zwei kleine Herrschaften am Alpenrhein kaufte. Sie brauchte reichsunmittelbaren Besitz, um einen Sitz im Fürstenrat des Heiligen Römischen Reiches zu bekommen. 1719 wurden die Gebiete zum Fürstentum erhoben. Die Fürsten selbst lebten weiter in Wien und besuchten ihr Land lange gar nicht. Als das Reich 1806 unterging, blieb der Kleinstaat souverän. Er überstand alle Neuordnungen Europas und ist heute neben Monaco eines der letzten Fürstentümer."
+        },
+        {
+          "title": "Eng verbunden mit der Schweiz",
+          "text": "Bis zum Ersten Weltkrieg war Liechtenstein wirtschaftlich an Österreich angelehnt. Nach dem Zerfall der Habsburgermonarchie wandte es sich der Schweiz zu. Seit den 1920er-Jahren bilden beide Länder ein gemeinsames Zollgebiet, und in Liechtenstein gilt der Schweizer Franken. Eine eigene Armee hat das Land seit 1868 nicht mehr. Aus einem armen Bauernland wurde im 20. Jahrhundert ein Industrie- und Finanzstandort mit sehr hohem Einkommen. Es gibt dort etwa so viele Arbeitsplätze wie Einwohner, täglich pendeln viele Tausend Menschen aus den Nachbarländern ein."
+        },
+        {
+          "title": "Was ein Binnenstaat bedeutet",
+          "text": "Staaten ohne Küste sind beim Handel auf ihre Nachbarn angewiesen: Jede Ware für den Seeweg muss durch fremdes Gebiet. Für arme Binnenstaaten in Afrika oder Zentralasien ist das ein ernstes Entwicklungshindernis. Usbekistan ist sogar von fünf Binnenstaaten umgeben. Das Kaspische Meer, an das zwei seiner Nachbarn grenzen, zählt dabei nicht, weil es keine natürliche Verbindung zum Weltmeer hat. Europas Binnenstaaten zeigen, dass die Lage allein nichts entscheidet, wenn die Nachbarschaft stabil und die Grenzen offen sind."
+        }
+      ],
+      "tryIt": "Zähle auf einer Europakarte alle Staaten ohne Meeresküste. Es sind mehr, als man zuerst denkt.",
+      "takeaways": [
+        "Ein doppelter Binnenstaat grenzt nur an Binnenstaaten.",
+        "Davon gibt es zwei: Liechtenstein und Usbekistan.",
+        "Liechtenstein teilt Zollgebiet und Währung mit der Schweiz."
+      ]
+    }
+  },
+  {
+    "id": "istanbul-zwei-kontinente",
+    "question": "Welche Millionenstadt liegt auf zwei Kontinenten zugleich?",
+    "options": [
+      "Istanbul",
+      "Kairo",
+      "Moskau",
+      "Athen"
+    ],
+    "correctIndex": 0,
+    "fact": "Der Bosporus teilt Istanbul in einen europäischen und einen asiatischen Teil. Die Meerenge ist an der schmalsten Stelle nur rund 700 Meter breit.",
+    "deep": {
+      "lead": "Istanbul sitzt an der einzigen Wasserstraße zwischen Schwarzem Meer und Mittelmeer – diese Lage machte die Stadt zur Weltmetropole.",
+      "sections": [
+        {
+          "title": "Drei Namen, eine Stadt",
+          "text": "Griechische Siedler gründeten die Stadt in der Antike als Byzantion. Im Jahr 330 machte Kaiser Konstantin sie zur neuen Hauptstadt des Römischen Reiches, bald hieß sie Konstantinopel. Über tausend Jahre war sie Zentrum des Byzantinischen Reiches und zeitweise die größte Stadt Europas. 1453 eroberten die Osmanen sie unter Sultan Mehmed II. und machten sie zu ihrer Hauptstadt. Der Name Istanbul war im Alltag schon lange üblich, international verbindlich wurde er aber erst 1930. Die Hagia Sophia hat all diese Epochen überdauert."
+        },
+        {
+          "title": "Die Meerenge",
+          "text": "Der Bosporus ist etwa 30 Kilometer lang und verbindet das Schwarze Meer mit dem Marmarameer. Von dort führen die Dardanellen weiter in die Ägäis. Wer diese beiden Engstellen kontrolliert, kontrolliert den Seeweg aller Schwarzmeerländer. Die Durchfahrt regelt seit 1936 ein internationaler Vertrag, das Abkommen von Montreux. In der Meerenge fließen zwei Strömungen übereinander: Oben strömt salzärmeres Wasser aus dem Schwarzen Meer nach Süden, in der Tiefe salzreicheres in die Gegenrichtung."
+        },
+        {
+          "title": "Zwischen den Ufern",
+          "text": "Für die Menschen in Istanbul ist der Kontinentwechsel Alltag. Viele wohnen auf der asiatischen Seite und arbeiten auf der europäischen. Drei große Brücken überspannen den Bosporus, dazu kommen Tunnel für Bahn und Autos unter dem Meeresboden. Und noch immer pendeln Fähren, auf denen man für den Preis einer Busfahrt von Europa nach Asien fährt. Die Stadt liegt nahe einer großen Erdbebenzone, der Nordanatolischen Verwerfung. Die Erdbebensicherheit der Gebäude ist deshalb ein Dauerthema."
+        }
+      ],
+      "tryIt": "Sieh dir Istanbul in der Satellitenansicht an und finde das Goldene Horn, den Naturhafen, an dem die antike Stadt entstand.",
+      "takeaways": [
+        "Der Bosporus trennt in Istanbul Europa von Asien.",
+        "Byzantion, Konstantinopel und Istanbul sind dieselbe Stadt.",
+        "Die Meerengen sind der einzige Seeweg aus dem Schwarzen Meer."
+      ]
+    }
+  },
+  {
+    "id": "hispaniola-zwei-staaten",
+    "question": "Welche zwei Staaten teilen sich die Karibikinsel Hispaniola?",
+    "options": [
+      "Kuba und Jamaika",
+      "Haiti und Dominikanische Republik",
+      "Trinidad und Tobago",
+      "Puerto Rico und Bahamas"
+    ],
+    "correctIndex": 1,
+    "fact": "Im Westen liegt Haiti, wo Französisch und Kreolisch gesprochen wird, im Osten die spanischsprachige Dominikanische Republik. Die Grenze geht auf die Kolonialmächte Frankreich und Spanien zurück.",
+    "deep": {
+      "lead": "Eine Insel, zwei Länder, zwei Sprachen: Die Teilung Hispaniolas ist ein Erbe konkurrierender Kolonialreiche.",
+      "sections": [
+        {
+          "title": "Von Kolumbus zur Teilung",
+          "text": "Kolumbus landete auf seiner ersten Reise 1492 an der Nordküste und nannte die Insel La Española. Santo Domingo, wenige Jahre später gegründet, gilt als älteste dauerhaft bewohnte europäische Stadtgründung in Amerika. Spanien konzentrierte sich bald auf das Festland mit seinen Silberminen und vernachlässigte den Westen der Insel. Dort setzten sich französische Siedler und Freibeuter fest. Ende des 17. Jahrhunderts trat Spanien das westliche Drittel offiziell an Frankreich ab. Aus dieser Linie wurde die heutige Staatsgrenze."
+        },
+        {
+          "title": "Die Revolution der Versklavten",
+          "text": "Die französische Kolonie Saint-Domingue wurde mit Zuckerrohr und Kaffee zur reichsten Kolonie der Karibik, aufgebaut auf der Arbeit Hunderttausender verschleppter Afrikaner. 1791 erhoben sich die Versklavten. Nach jahrelangem Krieg, auch gegen Truppen Napoleons, erklärte das Land 1804 seine Unabhängigkeit und nannte sich Haiti, nach einem Namen der Ureinwohner für die Insel. Es war der erste Staat der Welt, der aus einem erfolgreichen Sklavenaufstand hervorging, und nach den USA der zweite unabhängige Staat Amerikas."
+        },
+        {
+          "title": "Geteilte Inseln",
+          "text": "Die Grenze ist stellenweise sogar aus der Luft zu erkennen: Auf haitianischer Seite sind die Berghänge vielerorts stark entwaldet, weil Holzkohle der wichtigste Brennstoff ist. Hispaniola ist nicht die einzige Insel mit einer Staatsgrenze. Neuguinea ist zwischen Indonesien und Papua-Neuguinea geteilt, Irland zwischen der Republik Irland und dem Vereinigten Königreich, Timor zwischen Indonesien und Osttimor. Borneo teilen sich gleich drei Staaten: Indonesien, Malaysia und Brunei."
+        }
+      ],
+      "tryIt": "Such Hispaniola in der Satellitenansicht einer Karten-App und folge der Grenze. An einigen Stellen siehst du den Unterschied im Bewuchs.",
+      "takeaways": [
+        "Haiti liegt im Westen, die Dominikanische Republik im Osten.",
+        "Die Grenze geht auf Frankreich und Spanien zurück.",
+        "Haiti entstand 1804 aus einem Aufstand der Versklavten."
+      ]
+    }
+  },
+  {
+    "id": "kilimandscharo-tansania",
+    "question": "In welchem Land steht der Kilimandscharo, der höchste Berg Afrikas?",
+    "options": [
+      "Kenia",
+      "Uganda",
+      "Äthiopien",
+      "Tansania"
+    ],
+    "correctIndex": 3,
+    "fact": "Der Kilimandscharo liegt ganz in Tansania, dicht an der Grenze zu Kenia. Mit 5.895 Metern gilt er als höchster frei stehender Berg der Welt und trägt trotz Äquatornähe Gletscher.",
+    "deep": {
+      "lead": "Der Kilimandscharo ist kein Teil eines Gebirges, sondern ein einzelner riesiger Vulkan, der aus der Savanne aufsteigt.",
+      "sections": [
+        {
+          "title": "Drei Vulkane in einem",
+          "text": "Das Bergmassiv besteht aus drei Vulkankegeln. Der älteste, Shira, ist eingestürzt und bildet heute ein Hochplateau. Der zerklüftete Mawenzi ist der zweithöchste. Der höchste und jüngste ist der Kibo mit seinem weiten Gipfelkrater, an dessen Rand der höchste Punkt liegt, der Uhuru Peak. Uhuru bedeutet auf Swahili Freiheit, der Name erinnert an die Unabhängigkeit des Landes Anfang der 1960er-Jahre. Der Kibo gilt als ruhend, nicht als erloschen: Im Krater treten noch heute Schwefelgase aus."
+        },
+        {
+          "title": "Von den Tropen bis zum Eis",
+          "text": "Wer den Berg besteigt, durchquert in wenigen Tagen Klimazonen wie auf einer Reise vom Äquator in die Arktis. Unten liegen Felder mit Bananen und Kaffee, darüber dichter Bergregenwald, dann Heide und Moorland mit meterhohen Riesensenezien. Ab etwa 4.000 Metern beginnt eine kalte Steinwüste, ganz oben liegt Eis. Der Grund: Mit jedem Kilometer Höhe wird es um etwa sechs Grad kälter. Die Gletscher am Gipfel sind in den letzten hundert Jahren stark geschrumpft und nur noch ein Rest ihrer früheren Ausdehnung."
+        },
+        {
+          "title": "Warum viele an Kenia denken",
+          "text": "Die berühmtesten Fotos des Berges, mit Elefanten im Vordergrund, entstehen im Amboseli-Nationalpark, und der liegt in Kenia. Von dort blickt man über die Grenze auf den Gipfel. Die Grenze selbst stammt aus der Kolonialzeit: Ende des 19. Jahrhunderts teilten Deutschland und Großbritannien Ostafrika unter sich auf, der Berg fiel an Deutsch-Ostafrika, aus dessen Festlandsgebiet später Tansania hervorging. Die erste belegte Besteigung des Gipfels gelang 1889 dem Leipziger Geografen Hans Meyer und dem österreichischen Bergsteiger Ludwig Purtscheller."
+        }
+      ],
+      "tryIt": "Rechne aus: Wenn es am Fuß des Berges auf 900 Metern 28 Grad warm ist, wie kalt ist es dann ungefähr am Gipfel auf knapp 5.900 Metern?",
+      "takeaways": [
+        "Der Kilimandscharo steht in Tansania, nicht in Kenia.",
+        "Er ist ein ruhender Vulkan aus drei Kegeln.",
+        "Pro Kilometer Höhe wird es etwa sechs Grad kälter."
+      ]
+    }
+  },
+  {
+    "id": "datumsgrenze-tag-ueberspringen",
+    "question": "Du fliegst von Los Angeles westwärts über den Pazifik nach Tokio. Was passiert an der Datumsgrenze?",
+    "options": [
+      "Der Kalender springt einen Tag vor",
+      "Die Uhr springt eine Stunde zurück",
+      "Du erlebst denselben Tag zweimal",
+      "Nichts, sie ist nur symbolisch"
+    ],
+    "correctIndex": 0,
+    "fact": "Wer die Datumsgrenze nach Westen überquert, überspringt einen Kalendertag. In der Gegenrichtung bekommt man ihn zurück und erlebt dasselbe Datum zweimal.",
+    "deep": {
+      "lead": "Die Datumsgrenze ist die Naht, an der die 24 Zeitzonen der Erde wieder zusammengefügt werden müssen.",
+      "sections": [
+        {
+          "title": "Warum es sie geben muss",
+          "text": "Reist du nach Westen, stellst du die Uhr in jeder Zeitzone eine Stunde zurück. Nach einer ganzen Erdumrundung hättest du sie 24-mal zurückgestellt und wärst einen vollen Tag hinter dem Kalender. Irgendwo muss dieser Tag wieder hinzugezählt werden. Die Überlebenden von Magellans Weltumsegelung merkten das 1522 als Erste: Ihr sorgfältig geführtes Bordbuch lag bei der Heimkehr einen Tag hinter dem Kalender an Land. Jules Verne machte daraus die Pointe seines Romans »In 80 Tagen um die Welt«, dessen Held ostwärts reist und einen Tag gewinnt."
+        },
+        {
+          "title": "Eine Linie im Zickzack",
+          "text": "Die Datumsgrenze folgt ungefähr dem 180. Längengrad mitten durch den Pazifik, wo kaum Land liegt. Sie ist aber durch keinen Vertrag festgelegt, jeder Staat entscheidet selbst, auf welcher Seite er stehen will. Deshalb macht sie Bögen: um Ostsibirien herum, um die Aleuten und weit nach Osten um Kiribati. Der Inselstaat Samoa wechselte Ende 2011 die Seite, um im Takt seiner Handelspartner Australien und Neuseeland zu liegen. Der 30. Dezember fiel dort in jenem Jahr einfach aus."
+        },
+        {
+          "title": "Drei Daten gleichzeitig",
+          "text": "Weil manche Inselstaaten Zeitzonen jenseits der üblichen zwölf Stunden gewählt haben, umfasst die Spanne der Ortszeiten auf der Erde nicht 24, sondern 26 Stunden. Jeden Tag gibt es deshalb ein kurzes Zeitfenster, in dem auf der Erde drei verschiedene Kalenderdaten gleichzeitig gelten. Zwischen den beiden Diomedes-Inseln in der Beringstraße, die nur wenige Kilometer auseinanderliegen, verläuft die Linie ebenfalls. Von der amerikanischen Insel blickt man hinüber auf die russische und damit buchstäblich ins Morgen."
+        }
+      ],
+      "tryIt": "Sieh in der Weltzeituhr nach, welches Datum gerade auf Kiritimati (Kiribati) und welches auf Hawaii gilt. Beide liegen fast auf demselben Längengrad.",
+      "takeaways": [
+        "Nach Westen über die Linie: ein Tag weiter. Nach Osten: ein Tag zurück.",
+        "Die Linie gleicht die 24 Stunden der Zeitzonen aus.",
+        "Ihr Verlauf ist eine Entscheidung der Anliegerstaaten."
+      ]
+    }
+  },
+  {
+    "id": "anden-laengstes-gebirge",
+    "question": "Welches ist das längste Gebirge an Land?",
+    "options": [
+      "Anden",
+      "Rocky Mountains",
+      "Himalaya",
+      "Ural"
+    ],
+    "correctIndex": 0,
+    "fact": "Die Anden ziehen sich über rund 7.000 Kilometer an der gesamten Westküste Südamerikas entlang, durch sieben Staaten von Venezuela bis Feuerland.",
+    "deep": {
+      "lead": "Die Anden wachsen, weil sich der Boden des Pazifiks unter Südamerika schiebt – das Gebirge ist die Knautschzone.",
+      "sections": [
+        {
+          "title": "Ein Gebirge aus der Tiefe",
+          "text": "Vor der Westküste Südamerikas taucht die ozeanische Nazca-Platte unter den Kontinent ab. Dabei wird der Rand Südamerikas gestaucht und angehoben. In der Tiefe schmilzt Gestein, steigt auf und speist eine Kette von Vulkanen. Direkt vor der Küste liegt ein Tiefseegraben, der mehrere Tausend Meter tiefer ist als der umgebende Meeresboden. Vom Grabenboden bis zu den Gipfeln sind es stellenweise über 14 Kilometer Höhenunterschied. Die Bewegung der Platten löst immer wieder schwere Erdbeben aus, das stärkste je gemessene ereignete sich 1960 in Chile."
+        },
+        {
+          "title": "Wetterscheide eines Kontinents",
+          "text": "Die Anden trennen völlig verschiedene Welten. In den Tropen regnen sich feuchte Winde vom Amazonasbecken am Osthang ab, die Westseite bleibt trocken. Dort liegt die Atacama, eine der trockensten Wüsten der Erde. Weiter südlich kehrt sich das um: Westwinde vom Pazifik bringen Chile Regen, während Patagonien im Windschatten zur Steppe wird. Zwischen den Gebirgsketten liegt in Peru und Bolivien der Altiplano, eine Hochebene auf fast 4.000 Metern mit dem Titicacasee, dem höchstgelegenen großen schiffbaren See der Welt."
+        },
+        {
+          "title": "Die Heimat der Kartoffel",
+          "text": "In den Anden entstanden frühe Hochkulturen, die bekannteste ist das Reich der Inka mit der Hauptstadt Cusco. Die Inka bauten Terrassenfelder an steilen Hängen und ein Straßennetz von vielen Tausend Kilometern, ohne Rad und Zugtiere. Aus der Region stammen Nutzpflanzen, die heute die Welt ernähren: Kartoffeln wurden hier vor Jahrtausenden gezüchtet, es gibt noch immer Tausende Sorten. Auch Quinoa kommt aus den Anden. Lamas und Alpakas wurden hier zu Haustieren und liefern Wolle, Fleisch und Tragkraft."
+        }
+      ],
+      "tryIt": "Achte beim nächsten Einkauf darauf, woher Avocados, Trauben oder Blaubeeren kommen. Erstaunlich oft steht Peru oder Chile auf dem Etikett.",
+      "takeaways": [
+        "Die Anden sind mit rund 7.000 Kilometern das längste Gebirge an Land.",
+        "Sie entstehen, weil die Nazca-Platte unter Südamerika abtaucht.",
+        "Kartoffel und Quinoa stammen aus den Anden."
+      ]
+    }
+  },
+  {
+    "id": "maghreb-bedeutung",
+    "question": "Marokko, Algerien und Tunesien nennt man den Maghreb. Was bedeutet das arabische Wort?",
+    "options": [
+      "Wüste",
+      "Küste",
+      "Westen",
+      "Gebirge"
+    ],
+    "correctIndex": 2,
+    "fact": "Maghreb heißt »Westen« oder »Ort des Sonnenuntergangs« – von Arabien aus gesehen. Marokko trägt den Namen bis heute: Auf Arabisch heißt das Land al-Maghrib.",
+    "deep": {
+      "lead": "Der Maghreb ist der Westen der arabischen Welt, geprägt von Berbern, Arabern, dem Mittelmeer und der Sahara.",
+      "sections": [
+        {
+          "title": "Westen und Osten",
+          "text": "Arabische Geografen des Mittelalters teilten ihre Welt in zwei Hälften. Der Osten, vom Nil bis zum Irak, hieß Maschrek, »wo die Sonne aufgeht«. Alles westlich davon war der Maghreb. Im engeren Sinn zählen Marokko, Algerien und Tunesien dazu, im weiteren auch Libyen und Mauretanien. Die Araber kamen im 7. Jahrhundert nach Nordafrika und brachten ihre Sprache und den Islam mit. Vom Maghreb aus setzten Heere im Jahr 711 nach Spanien über, wo fast acht Jahrhunderte lang muslimische Reiche bestanden."
+        },
+        {
+          "title": "Die Imazighen",
+          "text": "Lange vor den Arabern lebten in Nordafrika die Berber, die sich selbst Imazighen nennen. Ihre Sprachen sind mit dem Arabischen nur entfernt verwandt und werden bis heute von Millionen Menschen gesprochen, vor allem in den Gebirgen Marokkos und Algeriens. Sie haben eine eigene Schrift, das Tifinagh. In Marokko und Algerien ist das Tamazight inzwischen neben dem Arabischen Amtssprache. Aus der Kolonialzeit ist außerdem das Französische geblieben, das in Verwaltung, Wirtschaft und Hochschulen eine große Rolle spielt."
+        },
+        {
+          "title": "Zwischen Meer und Sahara",
+          "text": "Das Rückgrat der Region ist das Atlasgebirge, das sich über mehr als 2.000 Kilometer von Marokko bis Tunesien zieht und im Hohen Atlas über 4.000 Meter erreicht. Es fängt die Regenwolken vom Atlantik und vom Mittelmeer ab. Nördlich davon liegt ein grüner Küstenstreifen mit Olivenhainen, Getreide und den großen Städten. Südlich beginnt die Sahara. Dort leben Menschen in Oasen, in denen Grundwasser Dattelpalmen wachsen lässt. Das gemeinsame Gericht der Region ist Couscous aus gedämpftem Hartweizengrieß."
+        }
+      ],
+      "tryIt": "Sieh im Gewürzregal oder im Supermarkt nach Ras el-Hanout, Harissa oder Couscous: Aus welchem Maghreb-Land stammt das Produkt?",
+      "takeaways": [
+        "Maghreb bedeutet Westen, das Gegenstück ist der Maschrek.",
+        "Die Imazighen lebten dort lange vor der Ankunft der Araber.",
+        "Das Atlasgebirge trennt die grüne Küste von der Sahara."
+      ]
+    }
+  },
+  {
+    "id": "nil-fliesst-nach-norden",
+    "question": "In welche Himmelsrichtung fließt der Nil auf seinem Weg zum Mittelmeer?",
+    "options": [
+      "Nach Süden",
+      "Nach Osten",
+      "Nach Norden",
+      "Nach Westen"
+    ],
+    "correctIndex": 2,
+    "fact": "Der Nil fließt von den Bergen Ostafrikas nach Norden. Deshalb liegt »Oberägypten« im Süden des Landes und »Unterägypten« im Norden, am Delta.",
+    "deep": {
+      "lead": "Flüsse kennen kein Oben und Unten der Landkarte – sie folgen dem Gefälle, und beim Nil führt es nach Norden.",
+      "sections": [
+        {
+          "title": "Zwei Flüsse werden einer",
+          "text": "Der Nil hat zwei Hauptquellflüsse. Der Weiße Nil kommt aus dem Gebiet der großen Seen Ostafrikas, sein wichtigster Speicher ist der Victoriasee. Er führt das ganze Jahr über gleichmäßig Wasser. Der Blaue Nil entspringt im Hochland von Äthiopien am Tanasee. Er schwillt in der Regenzeit des Sommers gewaltig an und liefert dann den weitaus größten Teil des Wassers und des fruchtbaren Schlamms. In Khartum, der Hauptstadt des Sudan, fließen beide zusammen. Von dort bis zum Meer durchquert der Strom fast nur noch Wüste."
+        },
+        {
+          "title": "Ägypten, ein Geschenk des Nil",
+          "text": "Der griechische Geschichtsschreiber Herodot nannte Ägypten ein Geschenk des Flusses. Jeden Sommer trat der Nil über die Ufer und hinterließ eine Schicht fruchtbaren Schlamms. Auf diesem schmalen grünen Band entstand eine der ältesten Hochkulturen. Die Ägypter richteten ihren Kalender nach der Flut und maßen den Pegel an eigenen Bauwerken, um Ernte und Steuern abzuschätzen. Noch heute leben fast alle Einwohner Ägyptens im Niltal und im Delta, auf wenigen Prozent der Landesfläche. Der Rest ist Wüste."
+        },
+        {
+          "title": "Der gezähmte Strom",
+          "text": "Seit der Assuan-Hochdamm um 1970 fertig wurde, gibt es die jährliche Flut in Ägypten nicht mehr. Der Stausee dahinter gleicht nasse und trockene Jahre aus und liefert Strom. Der Schlamm bleibt allerdings im See liegen, die Felder brauchen nun Kunstdünger, und das Delta schrumpft an der Küste. Um das Wasser wird gestritten, seit Äthiopien am Blauen Nil einen eigenen großen Staudamm gebaut hat. Auch andere große Ströme fließen übrigens nach Norden: der Rhein ebenso wie die sibirischen Riesen Ob, Jenissei und Lena."
+        }
+      ],
+      "tryIt": "Öffne ein Satellitenbild von Ägypten bei Nacht: Die Lichter zeichnen den Nil und das Delta nach wie eine Blume mit langem Stiel.",
+      "takeaways": [
+        "Der Nil fließt nach Norden ins Mittelmeer.",
+        "Oberägypten liegt flussaufwärts, also im Süden.",
+        "Der Blaue Nil aus Äthiopien bringt das meiste Wasser."
+      ]
+    }
+  },
+  {
+    "id": "groenland-groesste-insel",
+    "question": "Welche ist die größte Insel der Erde?",
+    "options": [
+      "Neuguinea",
+      "Borneo",
+      "Madagaskar",
+      "Grönland"
+    ],
+    "correctIndex": 3,
+    "fact": "Grönland ist mit gut zwei Millionen Quadratkilometern die größte Insel. Australien ist zwar größer, gilt aber als Kontinent. Auf vielen Weltkarten wirkt Grönland allerdings viel zu groß.",
+    "deep": {
+      "lead": "Grönland ist riesig, aber nicht so riesig, wie die Schulkarte behauptet: Afrika ist rund vierzehnmal so groß.",
+      "sections": [
+        {
+          "title": "Die Täuschung der Karte",
+          "text": "Eine Kugeloberfläche lässt sich nicht ohne Verzerrung auf ein flaches Blatt bringen. Die verbreitete Mercator-Karte aus dem 16. Jahrhundert wurde für Seefahrer entworfen: Auf ihr sind Kurse mit festem Kompasswinkel gerade Linien. Der Preis ist, dass Flächen zu den Polen hin immer stärker aufgebläht werden. Grönland erscheint darauf etwa so groß wie Afrika. Auch Skandinavien, Kanada und Russland wirken größer, als sie sind, während Länder am Äquator vergleichsweise schrumpfen. Flächentreue Karten zeigen die wahren Verhältnisse, verzerren dafür die Formen."
+        },
+        {
+          "title": "Ein Schild aus Eis",
+          "text": "Etwa vier Fünftel Grönlands liegen unter einem Eisschild, der in der Mitte über drei Kilometer dick ist. Sein Gewicht hat den Felsuntergrund im Inneren bis unter den Meeresspiegel eingedrückt. Würde das gesamte Eis schmelzen, stiege der Meeresspiegel weltweit um etwa sieben Meter. Nur ein schmaler Küstensaum ist eisfrei, dort leben die wenigen Zehntausend Einwohner, überwiegend Inuit. Zwischen den Orten gibt es keine Straßen. Man reist mit dem Schiff, dem Flugzeug, dem Hubschrauber oder im Winter mit dem Hundeschlitten."
+        },
+        {
+          "title": "Grünes Land?",
+          "text": "Den Namen gab der Insel der Wikinger Erik der Rote, der Ende des 10. Jahrhunderts aus Island verbannt worden war. Nach den isländischen Sagas wählte er ihn bewusst, um Siedler anzulocken. Ganz gelogen war es nicht: An den Fjorden im Süden gibt es im Sommer grüne Weiden. Die nordischen Siedlungen bestanden einige Jahrhunderte und verschwanden dann. Geografisch gehört Grönland zu Nordamerika, politisch ist es ein weitgehend selbstverwaltetes Gebiet im Königreich Dänemark. Amtssprache ist Grönländisch."
+        }
+      ],
+      "tryIt": "Vergleiche Grönland und Afrika erst auf einer Karten-App und dann auf einem Globus. Auf dem Globus schrumpft Grönland auf sein wahres Maß.",
+      "takeaways": [
+        "Grönland ist die größte Insel, Australien zählt als Kontinent.",
+        "Die Mercator-Karte bläht polnahe Gebiete stark auf.",
+        "Vier Fünftel der Insel liegen unter Eis."
+      ]
+    }
+  },
+  {
+    "id": "sargassosee-meer-ohne-kueste",
+    "question": "Welches Meer hat keine einzige Küste?",
+    "options": [
+      "Sargassosee",
+      "Korallenmeer",
+      "Arabisches Meer",
+      "Beringmeer"
+    ],
+    "correctIndex": 0,
+    "fact": "Die Sargassosee liegt mitten im Nordatlantik und wird nicht von Land, sondern von vier Meeresströmungen begrenzt. Ihren Namen hat sie von treibenden Braunalgen, dem Sargassum.",
+    "deep": {
+      "lead": "Die Sargassosee ist ein Meer im Meer: ein ruhiges Zentrum, um das sich der Nordatlantik im Uhrzeigersinn dreht.",
+      "sections": [
+        {
+          "title": "Grenzen aus Wasser",
+          "text": "Im Nordatlantik bilden vier Strömungen einen riesigen Kreis: der Golfstrom im Westen, der Nordatlantikstrom im Norden, der Kanarenstrom im Osten und der Nordäquatorialstrom im Süden. In der Mitte dieses Wirbels liegt die Sargassosee. Das Wasser dort ist auffallend ruhig, warm, salzig und tiefblau, weil es kaum Nährstoffe und daher wenig Plankton enthält. Was an der Oberfläche treibt, wird von den Strömungen zur Mitte hin zusammengeschoben. Das gilt für die Algen ebenso wie leider für Plastikmüll."
+        },
+        {
+          "title": "Ein schwimmender Wald",
+          "text": "Die goldbraunen Sargassum-Algen wurzeln nirgends. Kleine gasgefüllte Bläschen halten sie an der Oberfläche, wo sie große Teppiche bilden. Darin lebt eine eigene Tiergemeinschaft: Krebse, Garnelen und ein Fisch, der mit seinen Hautlappen selbst wie ein Algenbüschel aussieht. Junge Meeresschildkröten verbringen in dem Dickicht ihre ersten Lebensjahre. Schon Kolumbus berichtete 1492 von den Algenfeldern. Seine Mannschaft fürchtete, darin stecken zu bleiben, zumal in der Region oft tagelang kaum Wind weht."
+        },
+        {
+          "title": "Das Rätsel der Aale",
+          "text": "Jahrhundertelang wusste niemand, wo Aale sich fortpflanzen, denn in Flüssen und Seen fand man nie Tiere mit Laich. Der dänische Biologe Johannes Schmidt fischte Anfang des 20. Jahrhunderts jahrelang den Atlantik nach Aallarven ab. Je näher er der Sargassosee kam, desto kleiner und jünger waren sie. Dort also laichen die europäischen und die amerikanischen Aale. Die durchsichtigen Larven driften mit den Strömungen bis nach Europa, die erwachsenen Tiere schwimmen am Lebensende Tausende Kilometer zurück. Beim Laichen beobachtet hat sie dort noch niemand."
+        }
+      ],
+      "tryIt": "Such die Bermuda-Inseln auf einer Weltkarte. Sie liegen im Westen der Sargassosee – das Meer selbst ist auf den meisten Karten gar nicht eingezeichnet.",
+      "takeaways": [
+        "Die Sargassosee wird von Strömungen begrenzt, nicht von Land.",
+        "Treibende Sargassum-Algen bilden einen eigenen Lebensraum.",
+        "Europäische und amerikanische Aale laichen dort."
+      ]
+    }
+  },
+  {
+    "id": "reykjavik-noerdlichste-hauptstadt",
+    "question": "Welche ist die nördlichste Hauptstadt eines unabhängigen Staates?",
+    "options": [
+      "Helsinki",
+      "Oslo",
+      "Reykjavík",
+      "Stockholm"
+    ],
+    "correctIndex": 2,
+    "fact": "Reykjavík liegt auf rund 64 Grad Nord, knapp südlich des Polarkreises. Der Name bedeutet »Rauchbucht« – gemeint ist der Dampf heißer Quellen.",
+    "deep": {
+      "lead": "Islands Hauptstadt heizt mit der Wärme des Erdinneren, weil die Insel auf der Naht zweier Erdplatten liegt.",
+      "sections": [
+        {
+          "title": "Heißes Wasser aus der Tiefe",
+          "text": "Island sitzt auf dem Mittelatlantischen Rücken, wo die Nordamerikanische und die Eurasische Platte auseinanderdriften, etwa zwei Zentimeter pro Jahr. Unter der Insel steigt heißes Gestein auf. Grundwasser erhitzt sich daran und wird über Bohrungen gefördert. Fast alle Häuser in Reykjavík werden damit beheizt, das Wasser fließt durch isolierte Rohre in die Stadt. Auch Schwimmbäder unter freiem Himmel, beheizte Gehwege und Gewächshäuser, in denen Tomaten reifen, hängen an dieser Wärme. Den Strom liefern Wasserkraft und Erdwärme."
+        },
+        {
+          "title": "Hell im Sommer, mild im Winter",
+          "text": "Weil Reykjavík knapp südlich des Polarkreises liegt, gibt es keine echte Mitternachtssonne. Um die Sommersonnenwende geht die Sonne aber nur für etwa drei Stunden unter, und es wird nicht richtig dunkel. Im Dezember dauert der Tag dafür nur rund vier Stunden. Überraschend ist die Temperatur: Im Januar liegt sie im Mittel um den Gefrierpunkt, kaum kälter als in vielen Städten Mitteleuropas. Dafür sorgt ein Ausläufer des Nordatlantikstroms. Die Sommer bleiben mit gut zehn Grad allerdings kühl."
+        },
+        {
+          "title": "Eine junge Besiedlung",
+          "text": "Island war eines der letzten größeren Gebiete der Erde, das Menschen besiedelten. Nach der mittelalterlichen Überlieferung ließ sich der Norweger Ingólfur Arnarson um 870 als Erster dauerhaft dort nieder, an der Stelle des heutigen Reykjavík. Schon 930 gründeten die Siedler das Althing, eine Versammlung, die als eines der ältesten Parlamente der Welt gilt. Die isländische Sprache hat sich seither so wenig verändert, dass Isländer die mittelalterlichen Sagas noch weitgehend im Original lesen können."
+        }
+      ],
+      "tryIt": "Sieh nach, wann heute in Reykjavík die Sonne auf- und untergeht, und vergleiche mit deinem Wohnort.",
+      "takeaways": [
+        "Reykjavík ist die nördlichste Hauptstadt eines souveränen Staates.",
+        "Erdwärme heizt fast die ganze Stadt.",
+        "Der Nordatlantikstrom hält die Winter mild."
+      ]
+    }
+  },
+  {
+    "id": "amazonas-wasserreichster-fluss",
+    "question": "Welcher Fluss führt mit Abstand das meiste Wasser?",
+    "options": [
+      "Kongo",
+      "Amazonas",
+      "Jangtse",
+      "Mississippi"
+    ],
+    "correctIndex": 1,
+    "fact": "Der Amazonas trägt etwa ein Fünftel allen Flusswassers, das weltweit in die Ozeane strömt. Sein Süßwasser lässt sich noch weit draußen im Atlantik nachweisen.",
+    "deep": {
+      "lead": "Der Amazonas ist weniger ein Fluss als ein fließendes Binnenmeer, gespeist vom größten Regenwald der Erde.",
+      "sections": [
+        {
+          "title": "Ein Strom ohne Brücke",
+          "text": "Über den Hauptstrom des Amazonas führt auf seinem ganzen Weg durch Brasilien keine einzige Brücke. Er ist in der Regenzeit vielerorts viele Kilometer breit, die Ufer sind weicher Schwemmboden, und es gibt kaum Straßen, die eine Brücke verbinden könnte. Der Verkehr läuft über das Wasser. Hochseeschiffe fahren bis Manaus, rund 1.500 Kilometer von der Mündung entfernt, kleinere sogar bis Iquitos in Peru. Zwischen Trocken- und Regenzeit schwankt der Pegel um viele Meter, ganze Wälder stehen dann monatelang unter Wasser."
+        },
+        {
+          "title": "Schwarzes und weißes Wasser",
+          "text": "Bei Manaus trifft der dunkle Rio Negro auf den lehmgelben Hauptstrom. Kilometerlang fließen beide nebeneinander im selben Bett, ohne sich zu mischen, wie Kaffee neben Milchkaffee. Die Wasser unterscheiden sich in Temperatur, Fließgeschwindigkeit und Dichte. Die Farbe verrät die Herkunft: Das helle Wasser trägt Schlamm aus den jungen Anden, das schwarze kommt aus Sandböden im Tiefland und ist durch gelöste Pflanzenstoffe gefärbt wie Tee. Im sauren Schwarzwasser entwickeln sich deutlich weniger Stechmücken."
+        },
+        {
+          "title": "Der Wald macht seinen Regen",
+          "text": "Der Regenwald ist nicht nur Nutznießer des Regens, er erzeugt ihn mit. Die Bäume saugen Wasser aus dem Boden und verdunsten es über ihre Blätter. Die feuchte Luft zieht mit dem Wind nach Westen, regnet ab, wird wieder verdunstet und so mehrfach weitergereicht, bis zu den Anden. Ein großer Teil des Niederschlags im Becken stammt aus diesem Kreislauf. Wird zu viel Wald gerodet, kann die Kette reißen. Vor der Hebung der Anden floss das Wasser des Beckens übrigens nach Westen, in Richtung Pazifik."
+        }
+      ],
+      "tryIt": "Such auf einer Satellitenkarte die Stadt Manaus und zoome auf den Zusammenfluss östlich davon. Die zwei Farben sind aus dem All zu sehen.",
+      "takeaways": [
+        "Der Amazonas führt rund ein Fünftel des weltweiten Flusswassers.",
+        "Über den Hauptstrom in Brasilien führt keine Brücke.",
+        "Der Regenwald erzeugt einen großen Teil seines Regens selbst."
+      ]
+    }
+  },
+  {
+    "id": "brasilia-hauptstadt-brasilien",
+    "question": "Welche Stadt ist die Hauptstadt Brasiliens?",
+    "options": [
+      "Rio de Janeiro",
+      "Brasília",
+      "São Paulo",
+      "Salvador"
+    ],
+    "correctIndex": 1,
+    "fact": "Brasília wurde in nur wenigen Jahren mitten im dünn besiedelten Hochland gebaut und 1960 eingeweiht. Der Stadtgrundriss erinnert aus der Luft an ein Flugzeug.",
+    "deep": {
+      "lead": "Brasília sollte den Blick eines Küstenlandes ins eigene Innere lenken – eine Hauptstadt als Entwicklungsprojekt.",
+      "sections": [
+        {
+          "title": "Weg von der Küste",
+          "text": "Brasiliens Bevölkerung lebte jahrhundertelang fast nur am Atlantik. Die erste Hauptstadt war Salvador im Zuckerrohrgebiet des Nordostens, im 18. Jahrhundert folgte Rio de Janeiro, über dessen Hafen das Gold aus dem Hinterland verschifft wurde. Die Idee, die Hauptstadt ins Landesinnere zu verlegen, stand schon in der ersten republikanischen Verfassung von 1891. Verwirklicht hat sie erst Präsident Juscelino Kubitschek, der mit dem Versprechen antrat, das Land in fünf Jahren um fünfzig Jahre voranzubringen. Der Bau begann 1956."
+        },
+        {
+          "title": "Stadt nach Plan",
+          "text": "Den Grundriss entwarf der Stadtplaner Lúcio Costa: zwei sich kreuzende Achsen, eine gerade mit den Regierungsbauten, eine geschwungene mit den Wohnvierteln. Die Gebäude stammen vom Architekten Oscar Niemeyer, der mit weißem Beton und kühnen Kurven arbeitete, etwa bei der Kathedrale und dem Kongress mit seinen zwei Schalen. Die Stadt wurde für das Auto gebaut, mit breiten Schnellstraßen und möglichst wenigen Kreuzungen. Kritiker bemängeln, dass Fußgänger dabei zu kurz kamen. Seit 1987 gehört die Stadt zum UNESCO-Welterbe."
+        },
+        {
+          "title": "Was daraus wurde",
+          "text": "Geplant war Brasília für etwa eine halbe Million Menschen. Heute leben im Hauptstadtbezirk mehrere Millionen, die meisten in Satellitenstädten rings um den geplanten Kern, von denen einige schon als Arbeitersiedlungen der Bauzeit entstanden. Das Ziel, das Landesinnere zu erschließen, wurde erreicht: Die umliegende Savanne, der Cerrado, ist heute eines der größten Agrargebiete der Welt, vor allem für Soja. Wirtschaftlich und kulturell geben aber weiter São Paulo und Rio de Janeiro den Ton an."
+        }
+      ],
+      "tryIt": "Öffne Brasília in der Satellitenansicht und suche den »Plano Piloto«. Erkennst du Rumpf und Flügel des Flugzeugs?",
+      "takeaways": [
+        "Brasília ist seit 1960 Hauptstadt, davor war es Rio de Janeiro.",
+        "Die Stadt wurde von Lúcio Costa und Oscar Niemeyer entworfen.",
+        "Sie sollte das Landesinnere erschließen."
+      ]
+    }
+  },
+  {
+    "id": "kanada-laengste-kueste",
+    "question": "Welches Land hat die längste Küstenlinie der Welt?",
+    "options": [
+      "Russland",
+      "Indonesien",
+      "Norwegen",
+      "Kanada"
+    ],
+    "correctIndex": 3,
+    "fact": "Kanadas Küsten sind zusammen über 200.000 Kilometer lang, mehrmals so lang wie der Erdumfang. Den größten Teil steuern die Zehntausenden Inseln im Norden bei.",
+    "deep": {
+      "lead": "Kanada grenzt an drei Ozeane, und seine zerklüftete Inselwelt in der Arktis macht die Küste länger als die jedes anderen Landes.",
+      "sections": [
+        {
+          "title": "Das Labyrinth im Norden",
+          "text": "Nördlich des kanadischen Festlands liegt ein Archipel aus Zehntausenden Inseln, darunter einige der größten der Erde wie die Baffininsel. Jede Insel, jede Bucht und jeder Fjord verlängert die Küste. Die Gletscher der Eiszeit haben das Land tief zerschnitten und beim Rückzug unzählige Meeresarme hinterlassen. Durch dieses Labyrinth führt die Nordwestpassage, der lange gesuchte Seeweg zwischen Atlantik und Pazifik. Viele Expeditionen scheiterten im Eis. Die erste vollständige Durchfahrt gelang dem Norweger Roald Amundsen Anfang des 20. Jahrhunderts, er brauchte dafür drei Jahre."
+        },
+        {
+          "title": "Wie lang ist eine Küste?",
+          "text": "Eine Küstenlänge lässt sich nicht eindeutig angeben. Misst du mit einem groben Maßstab, schneidest du Buchten ab. Je feiner der Maßstab, desto mehr Windungen werden erfasst, und das Ergebnis wächst immer weiter. Der Mathematiker Benoît Mandelbrot machte dieses Küstenlinien-Paradox in den 1960er-Jahren berühmt und entwickelte daraus die Geometrie der Fraktale. Deshalb nennen verschiedene Quellen für dasselbe Land sehr verschiedene Zahlen. Kanadas Vorsprung ist allerdings so groß, dass es bei jeder üblichen Messweise vorn liegt."
+        },
+        {
+          "title": "Fjordküsten und glatte Küsten",
+          "text": "Ob eine Küste lang oder kurz ausfällt, hängt weniger von der Landesgröße ab als von ihrer Form. Norwegen ist ein kleines Land, kommt mit seinen Fjorden und vorgelagerten Inseln aber auf eine der längsten Küsten überhaupt. Auch Inselstaaten wie Indonesien und die Philippinen liegen weit vorn. Afrika hat dagegen im Verhältnis zu seiner Größe eine auffallend glatte Küste mit wenigen natürlichen Häfen. Das hat den Seehandel und die Erschließung des Kontinents vom Meer her lange erschwert."
+        }
+      ],
+      "tryIt": "Miss in einer Karten-App die Küste einer kleinen Insel einmal mit wenigen groben und einmal mit vielen feinen Messpunkten. Der zweite Wert ist größer.",
+      "takeaways": [
+        "Kanada hat die längste Küste, vor allem wegen seiner arktischen Inseln.",
+        "Küstenlängen hängen vom Maßstab der Messung ab.",
+        "Zerklüftete Küsten sind viel länger als glatte."
+      ]
+    }
+  },
+  {
+    "id": "salto-angel-hoechster-wasserfall",
+    "question": "In welchem Land stürzt der höchste Wasserfall der Erde in die Tiefe?",
+    "options": [
+      "Venezuela",
+      "Brasilien",
+      "Simbabwe",
+      "Norwegen"
+    ],
+    "correctIndex": 0,
+    "fact": "Der Salto Ángel in Venezuela fällt insgesamt fast 1.000 Meter von einem Tafelberg. In der Trockenzeit zerstäubt ein Großteil des Wassers zu Nebel, bevor es unten ankommt.",
+    "deep": {
+      "lead": "Der höchste Wasserfall der Welt stürzt von einem Tafelberg, dessen Hochfläche wie eine Insel über dem Regenwald liegt.",
+      "sections": [
+        {
+          "title": "Ein Pilot und sein Flugzeug",
+          "text": "Bekannt wurde der Wasserfall durch den amerikanischen Buschpiloten Jimmie Angel, der in den 1930er-Jahren in der Gegend nach Gold suchte. 1937 landete er mit seinem Flugzeug auf der Hochfläche des Tafelbergs, die Räder versanken im Sumpf, und die Maschine blieb stecken. Angel, seine Frau und zwei Begleiter brauchten elf Tage, um zu Fuß hinabzusteigen. Nach ihm ist der Fall benannt. Die dort lebenden Pemón kannten ihn natürlich längst und nennen ihn Kerepakupai Merú."
+        },
+        {
+          "title": "Die Tafelberge",
+          "text": "Der Wasserfall stürzt vom Auyán-Tepui, einem von Dutzenden Tafelbergen im Südosten Venezuelas. Tepui wird meist mit »Haus der Götter« übersetzt. Es sind Reste einer uralten Sandsteinplatte, die zu den ältesten Gesteinsformationen der Erde zählt und über sehr lange Zeit bis auf einzelne Klötze abgetragen wurde. Ihre Wände fallen oft fast senkrecht mehrere Hundert Meter ab. Auf den isolierten Hochflächen haben sich Pflanzen und Tiere entwickelt, die es nur dort gibt. Die Landschaft regte Arthur Conan Doyle zu seinem Roman »Die vergessene Welt« an."
+        },
+        {
+          "title": "Höchster, breitester, mächtigster",
+          "text": "Bei Wasserfällen gibt es mehrere Rekorde. Der Salto Ángel ist der höchste, führt aber vergleichsweise wenig Wasser. Die Victoriafälle am Sambesi zwischen Sambia und Simbabwe bilden mit über 1.700 Metern Breite und gut 100 Metern Höhe den größten geschlossenen Wasservorhang. Die Iguazú-Fälle zwischen Brasilien und Argentinien bestehen aus Hunderten Einzelfällen. Die Niagarafälle sind nur rund 50 Meter hoch, beeindrucken aber durch ihre Wassermenge und sind am leichtesten zu erreichen."
+        }
+      ],
+      "tryIt": "Vergleiche: Der Kölner Dom ist rund 157 Meter hoch. Wie viele Dome müsstest du stapeln, um die 979 Meter des Salto Ángel zu erreichen?",
+      "takeaways": [
+        "Der Salto Ángel in Venezuela ist mit 979 Metern der höchste Wasserfall.",
+        "Er fällt von einem Tafelberg aus uraltem Sandstein.",
+        "Höhe, Breite und Wassermenge ergeben verschiedene Rekordhalter."
+      ]
+    }
+  },
+  {
+    "id": "beringstrasse-asien-amerika",
+    "question": "Welche beiden Kontinente trennt die Beringstraße?",
+    "options": [
+      "Europa und Asien",
+      "Asien und Nordamerika",
+      "Nordamerika und Südamerika",
+      "Asien und Australien"
+    ],
+    "correctIndex": 1,
+    "fact": "Zwischen Sibirien und Alaska liegen an der engsten Stelle nur rund 85 Kilometer Wasser. Russland und die USA sind dort also fast Nachbarn.",
+    "deep": {
+      "lead": "Die Beringstraße ist flach und schmal – in der Eiszeit lag sie trocken und war die Brücke, über die Menschen Amerika erreichten.",
+      "sections": [
+        {
+          "title": "Beringia",
+          "text": "Die Meerenge ist nur etwa 50 Meter tief. Während der letzten Eiszeit war so viel Wasser in den Eisschilden gebunden, dass der Meeresspiegel mehr als 100 Meter tiefer lag als heute. Zwischen Asien und Amerika erstreckte sich eine breite Landverbindung, die Forscher Beringia nennen. Es war keine schmale Brücke, sondern eine weite, kalte Grassteppe mit Mammuts, Wildpferden und Bisons. Über dieses Gebiet kamen nach heutigem Wissen die Vorfahren der amerikanischen Ureinwohner aus Sibirien. Als das Eis schmolz, stieg das Meer und trennte die Kontinente wieder."
+        },
+        {
+          "title": "Zwei Inseln, zwei Tage",
+          "text": "Mitten in der Meerenge liegen die beiden Diomedes-Inseln, knapp vier Kilometer voneinander entfernt. Die größere gehört zu Russland, die kleinere zu den USA. Zwischen ihnen verlaufen die Staatsgrenze und die Datumsgrenze. Der Zeitunterschied beträgt deshalb fast einen ganzen Tag, obwohl man bei klarem Wetter hinübersehen kann. Im Winter friert das Meer dazwischen zu. Alaska gehörte bis 1867 selbst zu Russland, dann verkaufte der Zar es an die Vereinigten Staaten, weil es abgelegen und schwer zu verteidigen war."
+        },
+        {
+          "title": "Wer sie zuerst befuhr",
+          "text": "Benannt ist die Meerenge nach Vitus Bering, einem dänischen Seefahrer in russischen Diensten. Er durchfuhr sie 1728 im Auftrag des Zaren, um zu klären, ob Asien und Amerika zusammenhängen. Wegen Nebels sah er die amerikanische Küste damals nicht. Tatsächlich war der Kosake Semjon Deschnjow schon 80 Jahre vor ihm um die Ostspitze Asiens gesegelt, sein Bericht blieb aber lange unbeachtet in einem Archiv liegen. Das östlichste Kap Asiens trägt heute Deschnjows Namen."
+        }
+      ],
+      "tryIt": "Dreh einen Globus so, dass du von oben auf den Nordpol schaust. Aus diesem Blickwinkel siehst du, wie nah sich Asien und Amerika kommen.",
+      "takeaways": [
+        "Die Beringstraße trennt Asien von Nordamerika.",
+        "In der Eiszeit lag dort trockenes Land: Beringia.",
+        "Zwischen den Diomedes-Inseln verläuft die Datumsgrenze."
+      ]
+    }
+  },
+  {
+    "id": "ural-grenze-europa-asien",
+    "question": "Welches Gebirge zieht sich von Nord nach Süd durch Russland und gilt als Grenze zwischen Europa und Asien?",
+    "options": [
+      "Kaukasus",
+      "Altai",
+      "Ural",
+      "Karpaten"
+    ],
+    "correctIndex": 2,
+    "fact": "Der Ural ist rund 2.000 Kilometer lang, aber meist nur mittelgebirgshoch. Dass er Europa von Asien trennt, ist eine Festlegung von Geografen des 18. Jahrhunderts, keine Naturtatsache.",
+    "deep": {
+      "lead": "Europa und Asien sind eine einzige Landmasse – die Grenze am Ural ist eine Übereinkunft, kein Graben und kein Meer.",
+      "sections": [
+        {
+          "title": "Wie die Grenze an den Ural kam",
+          "text": "Für die alten Griechen endete Europa am Fluss Don, weiter östlich kannten sie das Land kaum. Als das Russische Reich im 18. Jahrhundert weit nach Sibirien hineinreichte, brauchte man eine neue Linie. Der russische Gelehrte Wassili Tatischtschew und der schwedische Offizier Philipp Johann von Strahlenberg, der als Kriegsgefangener Sibirien erkundet hatte, schlugen den Ural vor. Das passte zum Selbstbild des Zarenreichs als europäische Macht mit asiatischem Hinterland. Wie die Grenze südlich des Gebirges bis zum Schwarzen Meer verläuft, wird bis heute unterschiedlich gezogen."
+        },
+        {
+          "title": "Ein uraltes Gebirge",
+          "text": "Der Ural entstand vor rund 300 Millionen Jahren, als zwei Urkontinente zusammenstießen und zu einer Landmasse verschweißt wurden. Er ist damit weit älter als die Alpen oder der Himalaya. Seither hat die Verwitterung ihn abgetragen: Die höchsten Gipfel erreichen keine 2.000 Meter, an vielen Stellen überquert man ihn, ohne es recht zu merken. Die Transsibirische Eisenbahn passiert die Wasserscheide in wenigen Hundert Metern Höhe. An mehreren Stellen stehen Obelisken, an denen man mit einem Bein in Europa und mit dem anderen in Asien steht."
+        },
+        {
+          "title": "Die Schatzkammer Russlands",
+          "text": "Bei der Gebirgsbildung gelangten Erze und Minerale aus der Tiefe nach oben. Der Ural ist reich an Eisen, Kupfer, Gold, Platin und Edelsteinen wie Malachit und Smaragd. Seit dem 18. Jahrhundert entstanden dort Hüttenwerke und Städte wie Jekaterinburg. Im Zweiten Weltkrieg wurden zahlreiche Fabriken aus dem Westen des Landes hinter den Ural verlegt, außer Reichweite der Front. Bis heute ist die Region eines der wichtigsten Industriegebiete Russlands. Russland selbst liegt mit dem kleineren Teil seiner Fläche, aber dem größeren Teil seiner Bevölkerung in Europa."
+        }
+      ],
+      "tryIt": "Such Jekaterinburg auf einer Karte und überlege: Liegt die Stadt in Europa oder in Asien? Prüfe dann, wo die Grenzlinie eingezeichnet ist.",
+      "takeaways": [
+        "Der Ural gilt seit dem 18. Jahrhundert als Grenze Europas.",
+        "Die Grenze ist eine Konvention, Eurasien ist eine Landmasse.",
+        "Das alte, abgetragene Gebirge ist reich an Erzen."
+      ]
+    }
+  },
+  {
+    "id": "papua-neuguinea-meiste-sprachen",
+    "question": "In welchem Land werden die meisten verschiedenen Sprachen gesprochen?",
+    "options": [
+      "Indien",
+      "Nigeria",
+      "Brasilien",
+      "Papua-Neuguinea"
+    ],
+    "correctIndex": 3,
+    "fact": "In Papua-Neuguinea gibt es mehr als 800 Sprachen – mehr als jede zehnte Sprache der Welt, in einem Land, das nur wenig größer ist als Schweden.",
+    "deep": {
+      "lead": "Wo Berge, Sümpfe und Dschungel die Dörfer trennen, entwickeln sich über Jahrtausende Hunderte eigene Sprachen.",
+      "sections": [
+        {
+          "title": "Warum so viele?",
+          "text": "Neuguinea ist seit mindestens 40.000 Jahren besiedelt, genug Zeit, damit sich Sprachen weit auseinanderentwickeln. Entscheidend ist das Gelände: schroffe Gebirge mit tief eingeschnittenen Tälern, dichter Regenwald, Sümpfe und viele Inseln. Gemeinschaften lebten oft nur wenige Kilometer voneinander entfernt und hatten doch kaum Kontakt. Es gab nie ein großes Reich, das eine Sprache durchgesetzt hätte. Die Menschen versorgten sich als Gartenbauern selbst und waren auf weiten Handel kaum angewiesen. Viele Sprachen haben nur einige Hundert oder wenige Tausend Sprecher."
+        },
+        {
+          "title": "Tok Pisin verbindet",
+          "text": "Damit sich die Menschen trotzdem verständigen können, hat sich eine gemeinsame Verkehrssprache entwickelt: Tok Pisin. Sie entstand im 19. Jahrhundert auf Plantagen, wo Arbeiter mit verschiedenen Muttersprachen zusammenkamen. Der Wortschatz stammt überwiegend aus dem Englischen, die Grammatik folgt eigenen Regeln. Der Name selbst kommt von »talk« und »pidgin«. Ein Schlüsselwort der Gesellschaft ist »wantok«, von »one talk«: Menschen derselben Sprache, denen man Beistand schuldet. Weitere Amtssprachen sind Englisch und Hiri Motu."
+        },
+        {
+          "title": "Sprachen sterben leise",
+          "text": "Ein großer Teil der rund 7.000 Sprachen der Welt gilt als bedroht. Eine Sprache verschwindet meist nicht durch Zwang, sondern weil Eltern mit ihren Kindern die Sprache sprechen, die Schule, Arbeit und Aufstieg verspricht. Mit jeder Sprache geht Wissen verloren: Namen für Pflanzen und ihre Heilwirkungen, Erzählungen, eigene Arten zu zählen oder Verwandtschaft zu ordnen. Sprachforscher versuchen, kleine Sprachen aufzuzeichnen, solange es noch Sprecher gibt. Die Vielfalt ist dabei sehr ungleich verteilt: Ganz Europa kommt nur auf wenige Hundert Sprachen."
+        }
+      ],
+      "tryIt": "Sag einen Satz auf Tok Pisin: »Mi laikim yu« heißt »Ich mag dich«. Erkennst du die englischen Wörter dahinter?",
+      "takeaways": [
+        "Papua-Neuguinea hat mit über 800 die meisten Sprachen der Welt.",
+        "Unwegsames Gelände und kleine Gemeinschaften fördern Sprachvielfalt.",
+        "Tok Pisin dient als gemeinsame Verkehrssprache."
+      ]
+    }
+  },
+  {
+    "id": "marianengraben-tiefste-stelle",
+    "question": "In welchem Ozean liegt die tiefste Stelle der Weltmeere?",
+    "options": [
+      "Pazifik",
+      "Atlantik",
+      "Indischer Ozean",
+      "Arktischer Ozean"
+    ],
+    "correctIndex": 0,
+    "fact": "Das Challengertief im Marianengraben liegt knapp 11.000 Meter unter der Meeresoberfläche. Der Mount Everest würde darin versinken, und über seinem Gipfel stünden noch zwei Kilometer Wasser.",
+    "deep": {
+      "lead": "Die tiefsten Stellen der Ozeane liegen nicht in der Mitte, sondern am Rand – dort, wo Meeresboden ins Erdinnere abtaucht.",
+      "sections": [
+        {
+          "title": "Wie ein Graben entsteht",
+          "text": "Der Marianengraben liegt östlich der Marianen-Inseln im Westpazifik. Dort schiebt sich die Pazifische Platte unter eine kleinere Nachbarplatte und biegt sich steil nach unten. Der Meeresboden, der hier abtaucht, gehört zum ältesten der Erde, er ist kalt, dicht und schwer und sinkt deshalb besonders steil. Die Inselkette daneben besteht aus Vulkanen, die von dem aufsteigenden geschmolzenen Gestein gespeist werden. Die meisten Tiefseegräben der Erde säumen den Pazifik. Der Graben ist bogenförmig und rund 2.500 Kilometer lang, aber nur einige Dutzend Kilometer breit."
+        },
+        {
+          "title": "Besuche am Grund",
+          "text": "1960 tauchten der Schweizer Jacques Piccard und der Amerikaner Don Walsh mit dem Tauchboot »Trieste« als erste Menschen zum Grund. Der Abstieg dauerte fast fünf Stunden, unten blieben sie nur etwa zwanzig Minuten. Erst 2012 folgte der nächste Mensch, der Regisseur James Cameron, allein in einer eigens gebauten Kapsel. Seinen Namen hat das Challengertief vom britischen Forschungsschiff »Challenger«, dessen Besatzung in den 1870er-Jahren dort erstmals eine ungeheure Tiefe auslotete, mit einem beschwerten Seil."
+        },
+        {
+          "title": "Leben unter tausend Bar",
+          "text": "Am Grund lastet ein Druck von über 1.000 Bar, als stünde ein Kleinwagen auf jedem Fingernagel. Es ist stockdunkel und nur wenige Grad warm. Trotzdem gibt es Leben: Flohkrebse, Seegurken und einzellige Riesen ernähren sich von dem, was aus den oberen Wasserschichten herabrieselt. Fische wurden bis in etwa 8.000 Meter Tiefe gefilmt, tiefer halten ihre Zellen dem Druck wohl nicht stand. Selbst dort unten fanden Forscher Plastikteilchen und Schadstoffe. Die Meeresböden insgesamt sind schlechter kartiert als die Oberfläche des Mondes."
+        }
+      ],
+      "tryIt": "Rechne nach: Pro zehn Meter Wassertiefe steigt der Druck um etwa ein Bar. Wie hoch ist er dann in 11.000 Metern Tiefe?",
+      "takeaways": [
+        "Die tiefste Meeresstelle liegt im Marianengraben im Pazifik.",
+        "Tiefseegräben entstehen, wo eine Platte unter eine andere abtaucht.",
+        "Selbst in fast 11.000 Metern Tiefe gibt es Leben."
+      ]
+    }
+  },
+  {
+    "id": "china-eine-zeitzone",
+    "question": "China ist fast so breit wie die USA. Wie viele Zeitzonen gelten dort offiziell?",
+    "options": [
+      "Fünf",
+      "Eine",
+      "Drei",
+      "Vier"
+    ],
+    "correctIndex": 1,
+    "fact": "In ganz China gilt offiziell die Peking-Zeit. Im äußersten Westen geht die Sonne im Winter deshalb erst gegen zehn Uhr vormittags auf.",
+    "deep": {
+      "lead": "Nach dem Sonnenstand bräuchte China fünf Zeitzonen – dass es nur eine gibt, ist eine politische Entscheidung.",
+      "sections": [
+        {
+          "title": "Eine Uhr für alle",
+          "text": "Von der Ostküste bis zur Westgrenze Chinas sind es rund 5.000 Kilometer, die Sonne braucht für diese Strecke etwa vier Stunden. Bis 1949 gab es entsprechend fünf Zeitzonen. Nach der Gründung der Volksrepublik wurde eine einheitliche Zeit eingeführt, ausgerichtet am bevölkerungsreichen Osten des Landes. Sie sollte die Einheit des Staates unterstreichen. Für die große Mehrheit der Chinesen, die im Osten lebt, passt die Uhr gut zum Tageslicht. Je weiter man nach Westen kommt, desto mehr klaffen Uhrzeit und Sonnenstand auseinander."
+        },
+        {
+          "title": "Alltag in Xinjiang",
+          "text": "In der Region Xinjiang im Nordwesten behelfen sich die Menschen. Schulen, Läden und Behörden beginnen später am Tag, Mittagessen gibt es eher um zwei als um zwölf. Ein Teil der Bevölkerung, vor allem Uiguren, richtet sich im Alltag nach einer inoffiziellen Ortszeit, die zwei Stunden hinter der Peking-Zeit liegt. Bei Verabredungen muss man deshalb klären, welche Zeit gemeint ist. Bahn, Flugverkehr und Ämter nutzen durchgehend die offizielle Zeit, viele Menschen rechnen deshalb ständig zwischen beiden Zeiten um."
+        },
+        {
+          "title": "Zeitsprünge an der Grenze",
+          "text": "Die Einheitszeit führt zu Kuriositäten an Chinas Rändern. An der kurzen gemeinsamen Grenze mit Afghanistan im Hochgebirge springt die Uhr um dreieinhalb Stunden, der größte Zeitsprung an einer Landgrenze weltweit. Auch Indien hat sich trotz seiner Breite für eine einzige Zeitzone entschieden, die um eine halbe Stunde gegen die üblichen Zonen versetzt ist. Die USA und Russland gingen den anderen Weg und teilen ihr Staatsgebiet in viele Zonen. Beides funktioniert, es ist eine Frage der Prioritäten."
+        }
+      ],
+      "tryIt": "Sieh nach, wann heute in Kaschgar im Westen Chinas und wann in Shanghai die Sonne aufgeht. Beide Städte haben dieselbe Uhrzeit.",
+      "takeaways": [
+        "In ganz China gilt offiziell nur die Peking-Zeit.",
+        "Geografisch erstreckt sich das Land über fünf Zeitzonen.",
+        "Im Westen weichen Uhrzeit und Sonnenstand stark voneinander ab."
+      ]
+    }
+  },
+  {
+    "id": "panamakanal-richtung",
+    "question": "Ein Schiff fährt durch den Panamakanal vom Atlantik zum Pazifik. In welche Richtung fährt es dabei überwiegend?",
+    "options": [
+      "Nach Westen",
+      "Nach Norden",
+      "Nach Südosten",
+      "Nach Südwesten"
+    ],
+    "correctIndex": 2,
+    "fact": "Die Landenge von Panama verläuft in einem S-Bogen von West nach Ost. Der Kanal schneidet sie schräg, sodass die Ausfahrt am Pazifik östlicher liegt als die Einfahrt am Atlantik.",
+    "deep": {
+      "lead": "Der Panamakanal führt Schiffe nicht durch einen Graben auf Meereshöhe, sondern über einen Stausee hinweg – wie über eine Wassertreppe.",
+      "sections": [
+        {
+          "title": "Treppe aus Wasser",
+          "text": "Ein Kanal auf Meereshöhe hätte bedeutet, einen ganzen Bergrücken abzutragen. Die Ingenieure stauten stattdessen den Fluss Chagres zu einem großen See auf, dem Gatúnsee, rund 26 Meter über dem Meer. Schleusen heben die Schiffe auf der einen Seite in drei Stufen hinauf und senken sie auf der anderen wieder ab. Pumpen braucht es dafür nicht, das Wasser fließt allein durch die Schwerkraft aus dem See in die Kammern. Jede Durchfahrt kostet deshalb viel Süßwasser. In sehr trockenen Jahren muss die Zahl der Schiffe begrenzt werden."
+        },
+        {
+          "title": "Ein tödlicher erster Versuch",
+          "text": "In den 1880er-Jahren begann eine französische Gesellschaft unter Ferdinand de Lesseps, dem Erbauer des Suezkanals, mit den Arbeiten. Das Vorhaben scheiterte an Erdrutschen, Geldmangel und vor allem an Gelbfieber und Malaria, die Tausende Arbeiter töteten. Man wusste damals noch nicht, dass Mücken die Krankheiten übertragen. Als die USA das Projekt Anfang des 20. Jahrhunderts übernahmen, ließen sie zuerst Sümpfe trockenlegen und Mücken bekämpfen. 1914 wurde der Kanal eröffnet. Ende 1999 ging er in den Besitz Panamas über."
+        },
+        {
+          "title": "Was der Kanal erspart",
+          "text": "Vor dem Bau mussten Schiffe von New York nach San Francisco ganz Südamerika umrunden, durch die stürmischen Gewässer am Kap Hoorn. Der Kanal verkürzt diese Strecke um mehr als die Hälfte. Die Durchfahrt selbst dauert bei rund 80 Kilometern Länge acht bis zehn Stunden. Die alten Schleusen bestimmten jahrzehntelang, wie groß Frachtschiffe weltweit gebaut wurden, die passende Größe hieß Panamax. Seit 2016 gibt es zusätzliche, größere Schleusen. In Panama-Stadt lässt sich übrigens beobachten, wie die Sonne über dem Pazifik aufgeht."
+        }
+      ],
+      "tryIt": "Öffne eine Karte von Panama und vergleiche die Lage von Colón am Atlantik und Panama-Stadt am Pazifik. Welche Stadt liegt weiter östlich?",
+      "takeaways": [
+        "Vom Atlantik zum Pazifik fährt man im Kanal nach Südosten.",
+        "Schleusen heben die Schiffe auf einen Stausee und senken sie wieder ab.",
+        "Der Kanal erspart die Fahrt um Kap Hoorn."
+      ]
+    }
+  },
+  {
+    "id": "kiribati-vier-hemisphaeren",
+    "question": "Welcher Staat liegt als einziger in allen vier Hemisphären der Erde?",
+    "options": [
+      "Indonesien",
+      "Ecuador",
+      "Fidschi",
+      "Kiribati"
+    ],
+    "correctIndex": 3,
+    "fact": "Die Inseln von Kiribati verteilen sich beiderseits des Äquators und beiderseits des 180. Längengrads. Ausgesprochen wird der Name »Kiribas«.",
+    "deep": {
+      "lead": "Kiribati besteht aus 33 flachen Koralleninseln, verstreut über rund 4.000 Kilometer Pazifik.",
+      "sections": [
+        {
+          "title": "Viel Meer, wenig Land",
+          "text": "Kiribati besteht aus drei Inselgruppen: den Gilbertinseln im Westen, den Phoenixinseln in der Mitte und den Linieninseln im Osten. Zusammen haben sie nur etwa 800 Quadratkilometer Landfläche, weniger als Berlin. Das zugehörige Meeresgebiet ist dagegen mehrere Millionen Quadratkilometer groß. Fast alle Inseln sind Atolle: ringförmige Korallenriffe um eine Lagune, entstanden auf den Flanken längst versunkener Vulkane. Zu den Linieninseln gehört Kiritimati, die Weihnachtsinsel, nach ihrer Landfläche eines der größten Atolle der Welt."
+        },
+        {
+          "title": "Der Knick in der Datumsgrenze",
+          "text": "Lange verlief die Datumsgrenze mitten durch den Staat. Im Westen war schon Montag, im Osten noch Sonntag, und die Behörden beider Landesteile hatten nur vier gemeinsame Arbeitstage pro Woche. 1995 beschloss Kiribati, das ganze Land auf die asiatische Seite der Linie zu legen. Seither macht die Datumsgrenze dort eine riesige Ausbuchtung nach Osten. Die Linieninseln bekamen die früheste Zeitzone der Erde, vierzehn Stunden vor der Weltzeit. Sie begrüßen jeden neuen Tag und jedes neue Jahr als Erste."
+        },
+        {
+          "title": "Ein Land knapp über dem Meer",
+          "text": "Die meisten Inseln ragen nur zwei bis drei Meter aus dem Wasser. Schon heute dringt bei Sturmfluten Salzwasser in Gärten und in die dünnen Süßwasserlinsen im Boden ein, aus denen die Brunnen gespeist werden. Der steigende Meeresspiegel bedroht deshalb die Lebensgrundlage, lange bevor Land dauerhaft untergeht. Der Name Kiribati ist die einheimische Aussprache von »Gilberts«, dem Namen aus der britischen Kolonialzeit. In der Landessprache wird die Buchstabenfolge »ti« wie ein s gesprochen, daher »Kiribas« und »Kirismas« für Kiritimati."
+        }
+      ],
+      "tryIt": "Such auf einem Globus den Punkt, an dem sich Äquator und 180. Längengrad kreuzen. Die Inseln ringsum gehören zu Kiribati.",
+      "takeaways": [
+        "Kiribati liegt nördlich und südlich des Äquators, östlich und westlich des 180. Längengrads.",
+        "Seit 1995 gilt im ganzen Land dasselbe Datum.",
+        "Die flachen Atolle sind vom Meeresspiegelanstieg bedroht."
+      ]
+    }
+  }
+]

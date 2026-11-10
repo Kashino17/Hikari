@@ -1,0 +1,1025 @@
+{
+ "version": 1,
+ "groups": [
+  {
+   "id": "friends",
+   "title": "Alte Bekannte",
+   "hint": "Sehen aus wie im Deutschen und klingen auch so."
+  },
+  {
+   "id": "false",
+   "title": "Falsche Freunde",
+   "hint": "Sehen vertraut aus, klingen aber anders. Hier passieren die meisten Lesefehler."
+  },
+  {
+   "id": "shapes",
+   "title": "Neue Formen",
+   "hint": "Die Form ist neu, den Laut kennst du längst."
+  },
+  {
+   "id": "sounds",
+   "title": "Neue Laute",
+   "hint": "Zischlaute und ein dunkles i, die es im Deutschen so nicht als eigenen Buchstaben gibt."
+  },
+  {
+   "id": "glides",
+   "title": "Doppellaute",
+   "hint": "Ein Buchstabe, zwei Laute: ein j und ein Vokal."
+  },
+  {
+   "id": "signs",
+   "title": "Stumme Zeichen",
+   "hint": "Haben keinen eigenen Laut. Sie verändern den Buchstaben davor."
+  }
+ ],
+ "letters": [
+  {
+   "l": "а",
+   "u": "А",
+   "sound": "a",
+   "like": "wie in »Mama«",
+   "group": "friends",
+   "tip": "Klingt betont wie ein klares deutsches a. Unbetont wird es kürzer und flacher, bleibt aber ein a.",
+   "words": [
+    {
+     "ru": "м+ама",
+     "de": "Mama"
+    },
+    {
+     "ru": "там",
+     "de": "dort"
+    },
+    {
+     "ru": "+атом",
+     "de": "Atom"
+    }
+   ]
+  },
+  {
+   "l": "к",
+   "u": "К",
+   "sound": "k",
+   "like": "wie in »Katze«",
+   "group": "friends",
+   "tip": "Wie das deutsche k, nur ohne den Hauch danach: weicher und trockener gesprochen.",
+   "words": [
+    {
+     "ru": "кот",
+     "de": "Kater"
+    },
+    {
+     "ru": "как",
+     "de": "wie"
+    },
+    {
+     "ru": "к+асса",
+     "de": "Kasse"
+    }
+   ]
+  },
+  {
+   "l": "м",
+   "u": "М",
+   "sound": "m",
+   "like": "wie in »Mond«",
+   "group": "friends",
+   "tip": "Genau wie im Deutschen. Das kleine м sieht aus wie ein kleines großes M, nicht wie unser m.",
+   "words": [
+    {
+     "ru": "м+ама",
+     "de": "Mama"
+    },
+    {
+     "ru": "метр+о",
+     "de": "Metro"
+    },
+    {
+     "ru": "м+аска",
+     "de": "Maske"
+    }
+   ]
+  },
+  {
+   "l": "о",
+   "u": "О",
+   "sound": "o",
+   "like": "wie in »Sonne«",
+   "group": "friends",
+   "tip": "Nur in der betonten Silbe ein echtes o. Unbetont wird es zu einem kurzen a: молок+о klingt wie »malako«.",
+   "words": [
+    {
+     "ru": "он",
+     "de": "er"
+    },
+    {
+     "ru": "кот",
+     "de": "Kater"
+    },
+    {
+     "ru": "окн+о",
+     "de": "Fenster"
+    }
+   ]
+  },
+  {
+   "l": "т",
+   "u": "Т",
+   "sound": "t",
+   "like": "wie in »Tisch«",
+   "group": "friends",
+   "tip": "Wie das deutsche t, aber ohne Hauch. Die Zungenspitze liegt an den oberen Zähnen.",
+   "words": [
+    {
+     "ru": "там",
+     "de": "dort"
+    },
+    {
+     "ru": "тот",
+     "de": "jener"
+    },
+    {
+     "ru": "том+ат",
+     "de": "Tomate"
+    }
+   ]
+  },
+  {
+   "l": "в",
+   "u": "В",
+   "sound": "w",
+   "like": "wie in »Wasser«",
+   "group": "false",
+   "tip": "Sieht aus wie unser B, ist aber ein w. Das B hat im Russischen eine eigene Form: Б.",
+   "words": [
+    {
+     "ru": "вин+о",
+     "de": "Wein"
+    },
+    {
+     "ru": "в+аза",
+     "de": "Vase"
+    },
+    {
+     "ru": "вот",
+     "de": "hier ist"
+    }
+   ]
+  },
+  {
+   "l": "н",
+   "u": "Н",
+   "sound": "n",
+   "like": "wie in »Nase«",
+   "group": "false",
+   "tip": "Sieht aus wie unser H, ist aber ein n. Merkhilfe: нет heißt »nein« und beginnt mit n.",
+   "words": [
+    {
+     "ru": "нет",
+     "de": "nein"
+    },
+    {
+     "ru": "н+ота",
+     "de": "Note"
+    },
+    {
+     "ru": "нос",
+     "de": "Nase"
+    }
+   ]
+  },
+  {
+   "l": "р",
+   "u": "Р",
+   "sound": "r",
+   "like": "gerollt, mit der Zungenspitze",
+   "group": "false",
+   "tip": "Sieht aus wie unser P, ist aber ein gerolltes r. Die Zungenspitze flattert kurz hinter den oberen Zähnen.",
+   "words": [
+    {
+     "ru": "рестор+ан",
+     "de": "Restaurant"
+    },
+    {
+     "ru": "спорт",
+     "de": "Sport"
+    },
+    {
+     "ru": "рак+ета",
+     "de": "Rakete"
+    }
+   ]
+  },
+  {
+   "l": "с",
+   "u": "С",
+   "sound": "ss",
+   "like": "scharf wie in »Wasser«",
+   "group": "false",
+   "tip": "Sieht aus wie unser C, ist aber immer ein scharfes s. Nie weich wie in »Sonne«, dafür gibt es З.",
+   "words": [
+    {
+     "ru": "суп",
+     "de": "Suppe"
+    },
+    {
+     "ru": "сок",
+     "de": "Saft"
+    },
+    {
+     "ru": "спорт",
+     "de": "Sport"
+    }
+   ]
+  },
+  {
+   "l": "у",
+   "u": "У",
+   "sound": "u",
+   "like": "wie in »Mut«",
+   "group": "false",
+   "tip": "Sieht aus wie unser y, ist aber ein u. Lippen rund und nach vorn.",
+   "words": [
+    {
+     "ru": "суп",
+     "de": "Suppe"
+    },
+    {
+     "ru": "тур+ист",
+     "de": "Tourist"
+    },
+    {
+     "ru": "+утро",
+     "de": "Morgen"
+    }
+   ]
+  },
+  {
+   "l": "х",
+   "u": "Х",
+   "sound": "ch",
+   "like": "wie in »Bach«",
+   "group": "false",
+   "tip": "Sieht aus wie unser X, ist aber das raue ch aus »Bach« oder »Dach«. Nie »ks«.",
+   "words": [
+    {
+     "ru": "хорош+о",
+     "de": "gut"
+    },
+    {
+     "ru": "хор",
+     "de": "Chor"
+    },
+    {
+     "ru": "+ухо",
+     "de": "Ohr"
+    }
+   ]
+  },
+  {
+   "l": "е",
+   "u": "Е",
+   "sound": "je",
+   "like": "wie in »jetzt«",
+   "group": "false",
+   "tip": "Am Wortanfang und nach Vokalen »je«. Nach einem Konsonanten hörst du nur »e«, dafür wird der Konsonant davor weich.",
+   "words": [
+    {
+     "ru": "Евр+опа",
+     "de": "Europa"
+    },
+    {
+     "ru": "нет",
+     "de": "nein"
+    },
+    {
+     "ru": "т+ема",
+     "de": "Thema"
+    }
+   ]
+  },
+  {
+   "l": "б",
+   "u": "Б",
+   "sound": "b",
+   "like": "wie in »Ball«",
+   "group": "shapes",
+   "tip": "Das echte b. Das große Б hat oben einen Strich statt eines Bogens, so unterscheidest du es von В (w).",
+   "words": [
+    {
+     "ru": "банк",
+     "de": "Bank"
+    },
+    {
+     "ru": "бан+ан",
+     "de": "Banane"
+    },
+    {
+     "ru": "брат",
+     "de": "Bruder"
+    }
+   ]
+  },
+  {
+   "l": "г",
+   "u": "Г",
+   "sound": "g",
+   "like": "wie in »gut«",
+   "group": "shapes",
+   "tip": "Ein halbes T: nur der Strich nach rechts. Klingt wie g in »gut«.",
+   "words": [
+    {
+     "ru": "год",
+     "de": "Jahr"
+    },
+    {
+     "ru": "гит+ара",
+     "de": "Gitarre"
+    },
+    {
+     "ru": "г+ород",
+     "de": "Stadt"
+    }
+   ]
+  },
+  {
+   "l": "д",
+   "u": "Д",
+   "sound": "d",
+   "like": "wie in »Dach«",
+   "group": "shapes",
+   "tip": "Sieht aus wie ein Häuschen auf Füßen. Merkhilfe: дом heißt »Haus« und beginnt mit d.",
+   "words": [
+    {
+     "ru": "да",
+     "de": "ja"
+    },
+    {
+     "ru": "дом",
+     "de": "Haus"
+    },
+    {
+     "ru": "д+октор",
+     "de": "Doktor"
+    }
+   ]
+  },
+  {
+   "l": "з",
+   "u": "З",
+   "sound": "s",
+   "like": "weich, summend wie in »Sonne«",
+   "group": "shapes",
+   "tip": "Sieht aus wie eine 3. Das weiche, summende s aus »Sonne« oder »Rose«. Das scharfe s schreibt man С.",
+   "words": [
+    {
+     "ru": "з+ебра",
+     "de": "Zebra"
+    },
+    {
+     "ru": "зим+а",
+     "de": "Winter"
+    },
+    {
+     "ru": "р+оза",
+     "de": "Rose"
+    }
+   ]
+  },
+  {
+   "l": "и",
+   "u": "И",
+   "sound": "i",
+   "like": "wie in »Liebe«",
+   "group": "shapes",
+   "tip": "Sieht aus wie ein gespiegeltes N. Ein helles, klares i.",
+   "words": [
+    {
+     "ru": "и",
+     "de": "und"
+    },
+    {
+     "ru": "кин+о",
+     "de": "Kino"
+    },
+    {
+     "ru": "такс+и",
+     "de": "Taxi"
+    }
+   ]
+  },
+  {
+   "l": "й",
+   "u": "Й",
+   "sound": "j",
+   "like": "kurz wie in »Mai«",
+   "group": "shapes",
+   "tip": "Ein И mit Häkchen. Ein ganz kurzes j, meist am Ende einer Silbe: мой klingt wie »moj«.",
+   "words": [
+    {
+     "ru": "мой",
+     "de": "mein"
+    },
+    {
+     "ru": "муз+ей",
+     "de": "Museum"
+    },
+    {
+     "ru": "май",
+     "de": "Mai"
+    }
+   ]
+  },
+  {
+   "l": "л",
+   "u": "Л",
+   "sound": "l",
+   "like": "wie in »Lampe«",
+   "group": "shapes",
+   "tip": "Sieht aus wie ein Zelt. Vor а, о und у klingt es dunkler als das deutsche l, fast wie im Englischen »full«.",
+   "words": [
+    {
+     "ru": "л+ампа",
+     "de": "Lampe"
+    },
+    {
+     "ru": "лим+он",
+     "de": "Zitrone"
+    },
+    {
+     "ru": "сал+ат",
+     "de": "Salat"
+    }
+   ]
+  },
+  {
+   "l": "п",
+   "u": "П",
+   "sound": "p",
+   "like": "wie in »Park«",
+   "group": "shapes",
+   "tip": "Sieht aus wie ein Tor. Merkhilfe: Durch das Tor geht es in den парк. Ohne Hauch gesprochen.",
+   "words": [
+    {
+     "ru": "п+апа",
+     "de": "Papa"
+    },
+    {
+     "ru": "парк",
+     "de": "Park"
+    },
+    {
+     "ru": "п+аспорт",
+     "de": "Pass"
+    }
+   ]
+  },
+  {
+   "l": "ф",
+   "u": "Ф",
+   "sound": "f",
+   "like": "wie in »Foto«",
+   "group": "shapes",
+   "tip": "Ein Kreis mit Strich, wie das griechische Phi. Klingt wie f.",
+   "words": [
+    {
+     "ru": "футб+ол",
+     "de": "Fußball"
+    },
+    {
+     "ru": "ф+ото",
+     "de": "Foto"
+    },
+    {
+     "ru": "к+офе",
+     "de": "Kaffee"
+    }
+   ]
+  },
+  {
+   "l": "э",
+   "u": "Э",
+   "sound": "e",
+   "like": "offen wie in »Ende«",
+   "group": "shapes",
+   "tip": "Ein gespiegeltes Є. Ein offenes e ohne j davor, anders als Е. Steht fast nur am Wortanfang.",
+   "words": [
+    {
+     "ru": "+это",
+     "de": "das"
+    },
+    {
+     "ru": "эт+аж",
+     "de": "Etage"
+    },
+    {
+     "ru": "экз+амен",
+     "de": "Prüfung"
+    }
+   ]
+  },
+  {
+   "l": "ж",
+   "u": "Ж",
+   "sound": "zh",
+   "like": "summend wie in »Garage«",
+   "group": "sounds",
+   "tip": "Sieht aus wie ein Käfer. Ein summendes sch, wie das g in »Garage« oder das j in »Journal«.",
+   "words": [
+    {
+     "ru": "журн+ал",
+     "de": "Zeitschrift"
+    },
+    {
+     "ru": "жир+аф",
+     "de": "Giraffe"
+    },
+    {
+     "ru": "+ужин",
+     "de": "Abendessen"
+    }
+   ]
+  },
+  {
+   "l": "ш",
+   "u": "Ш",
+   "sound": "sch",
+   "like": "wie in »Schule«",
+   "group": "sounds",
+   "tip": "Drei Zinken wie ein Kamm. Ein hartes, dunkles sch. Die Zunge liegt weiter hinten als im Deutschen.",
+   "words": [
+    {
+     "ru": "шк+ола",
+     "de": "Schule"
+    },
+    {
+     "ru": "шокол+ад",
+     "de": "Schokolade"
+    },
+    {
+     "ru": "маш+ина",
+     "de": "Auto"
+    }
+   ]
+  },
+  {
+   "l": "щ",
+   "u": "Щ",
+   "sound": "sch'",
+   "like": "weich und lang, wie »sch« mit einem Lächeln",
+   "group": "sounds",
+   "tip": "Ein Ш mit Häkchen unten rechts. Ein weiches, langes sch: Mundwinkel breit, Zunge vorn am Gaumen.",
+   "words": [
+    {
+     "ru": "борщ",
+     "de": "Borschtsch"
+    },
+    {
+     "ru": "щи",
+     "de": "Kohlsuppe"
+    },
+    {
+     "ru": "пл+ощадь",
+     "de": "Platz"
+    }
+   ]
+  },
+  {
+   "l": "ц",
+   "u": "Ц",
+   "sound": "z",
+   "like": "wie in »Zahn«",
+   "group": "sounds",
+   "tip": "Ein И mit Häkchen unten. Klingt wie das deutsche z, also »ts«.",
+   "words": [
+    {
+     "ru": "центр",
+     "de": "Zentrum"
+    },
+    {
+     "ru": "цирк",
+     "de": "Zirkus"
+    },
+    {
+     "ru": "цен+а",
+     "de": "Preis"
+    }
+   ]
+  },
+  {
+   "l": "ч",
+   "u": "Ч",
+   "sound": "tsch",
+   "like": "wie in »Tschüss«",
+   "group": "sounds",
+   "tip": "Sieht aus wie eine umgedrehte Stuhllehne oder eine 4 ohne Querstrich. Klingt wie tsch.",
+   "words": [
+    {
+     "ru": "чай",
+     "de": "Tee"
+    },
+    {
+     "ru": "час",
+     "de": "Stunde"
+    },
+    {
+     "ru": "чемпи+он",
+     "de": "Champion"
+    }
+   ]
+  },
+  {
+   "l": "ы",
+   "u": "Ы",
+   "sound": "y",
+   "like": "dunkles i, Zunge nach hinten",
+   "group": "sounds",
+   "tip": "Gibt es im Deutschen nicht. Sag »i«, zieh dabei die Zunge nach hinten und lass die Lippen locker. Steht nie am Wortanfang.",
+   "words": [
+    {
+     "ru": "ты",
+     "de": "du"
+    },
+    {
+     "ru": "мы",
+     "de": "wir"
+    },
+    {
+     "ru": "сыр",
+     "de": "Käse"
+    }
+   ]
+  },
+  {
+   "l": "я",
+   "u": "Я",
+   "sound": "ja",
+   "like": "wie in »Jahr«",
+   "group": "glides",
+   "tip": "Ein gespiegeltes R. Klingt wie »ja« und ist allein schon ein ganzes Wort: я heißt »ich«.",
+   "words": [
+    {
+     "ru": "я",
+     "de": "ich"
+    },
+    {
+     "ru": "+яблоко",
+     "de": "Apfel"
+    },
+    {
+     "ru": "Росс+ия",
+     "de": "Russland"
+    }
+   ]
+  },
+  {
+   "l": "ю",
+   "u": "Ю",
+   "sound": "ju",
+   "like": "wie in »Juli«",
+   "group": "glides",
+   "tip": "Ein Strich, der an einem О hängt. Klingt wie »ju«.",
+   "words": [
+    {
+     "ru": "юг",
+     "de": "Süden"
+    },
+    {
+     "ru": "+юмор",
+     "de": "Humor"
+    },
+    {
+     "ru": "мен+ю",
+     "de": "Speisekarte"
+    }
+   ]
+  },
+  {
+   "l": "ё",
+   "u": "Ё",
+   "sound": "jo",
+   "like": "wie in »Joch«",
+   "group": "glides",
+   "tip": "Ein Е mit zwei Punkten. Klingt wie »jo« und ist immer betont. In Büchern und Zeitungen fehlen die Punkte oft.",
+   "words": [
+    {
+     "ru": "ёлка",
+     "de": "Tannenbaum"
+    },
+    {
+     "ru": "актёр",
+     "de": "Schauspieler"
+    },
+    {
+     "ru": "ёж",
+     "de": "Igel"
+    }
+   ]
+  },
+  {
+   "l": "ь",
+   "u": "Ь",
+   "sound": "weich",
+   "like": "kein eigener Laut",
+   "group": "signs",
+   "tip": "Das Weichheitszeichen. Es macht den Konsonanten davor weich: Die Zunge hebt sich Richtung Gaumen, als käme gleich ein j.",
+   "words": [
+    {
+     "ru": "мать",
+     "de": "Mutter"
+    },
+    {
+     "ru": "день",
+     "de": "Tag"
+    },
+    {
+     "ru": "пять",
+     "de": "fünf"
+    }
+   ]
+  },
+  {
+   "l": "ъ",
+   "u": "Ъ",
+   "sound": "Pause",
+   "like": "kein eigener Laut",
+   "group": "signs",
+   "tip": "Das Härtezeichen. Selten. Es trennt Vorsilbe und Wortstamm mit einer winzigen Pause, damit der Konsonant hart bleibt.",
+   "words": [
+    {
+     "ru": "объ+ект",
+     "de": "Objekt"
+    },
+    {
+     "ru": "подъ+езд",
+     "de": "Hauseingang"
+    },
+    {
+     "ru": "съел",
+     "de": "aß auf"
+    }
+   ]
+  }
+ ],
+ "reading": [
+  {
+   "ru": "такс+и",
+   "de": "Taxi"
+  },
+  {
+   "ru": "метр+о",
+   "de": "Metro"
+  },
+  {
+   "ru": "банк",
+   "de": "Bank"
+  },
+  {
+   "ru": "п+аспорт",
+   "de": "Pass"
+  },
+  {
+   "ru": "телеф+он",
+   "de": "Telefon"
+  },
+  {
+   "ru": "рестор+ан",
+   "de": "Restaurant"
+  },
+  {
+   "ru": "аэроп+орт",
+   "de": "Flughafen"
+  },
+  {
+   "ru": "к+офе",
+   "de": "Kaffee"
+  },
+  {
+   "ru": "суп",
+   "de": "Suppe"
+  },
+  {
+   "ru": "парк",
+   "de": "Park"
+  },
+  {
+   "ru": "те+атр",
+   "de": "Theater"
+  },
+  {
+   "ru": "муз+ей",
+   "de": "Museum"
+  },
+  {
+   "ru": "интерн+ет",
+   "de": "Internet"
+  },
+  {
+   "ru": "футб+ол",
+   "de": "Fußball"
+  },
+  {
+   "ru": "шокол+ад",
+   "de": "Schokolade"
+  },
+  {
+   "ru": "компь+ютер",
+   "de": "Computer"
+  },
+  {
+   "ru": "студ+ент",
+   "de": "Student"
+  },
+  {
+   "ru": "д+октор",
+   "de": "Doktor"
+  },
+  {
+   "ru": "тур+ист",
+   "de": "Tourist"
+  },
+  {
+   "ru": "л+ампа",
+   "de": "Lampe"
+  },
+  {
+   "ru": "к+осмос",
+   "de": "Weltraum"
+  },
+  {
+   "ru": "рак+ета",
+   "de": "Rakete"
+  },
+  {
+   "ru": "орк+естр",
+   "de": "Orchester"
+  },
+  {
+   "ru": "спорт",
+   "de": "Sport"
+  },
+  {
+   "ru": "текст",
+   "de": "Text"
+  },
+  {
+   "ru": "к+асса",
+   "de": "Kasse"
+  },
+  {
+   "ru": "м+аска",
+   "de": "Maske"
+  },
+  {
+   "ru": "кин+о",
+   "de": "Kino"
+  },
+  {
+   "ru": "вин+о",
+   "de": "Wein"
+  },
+  {
+   "ru": "бан+ан",
+   "de": "Banane"
+  },
+  {
+   "ru": "лим+он",
+   "de": "Zitrone"
+  },
+  {
+   "ru": "сал+ат",
+   "de": "Salat"
+  },
+  {
+   "ru": "р+адио",
+   "de": "Radio"
+  },
+  {
+   "ru": "в+идео",
+   "de": "Video"
+  },
+  {
+   "ru": "п+ицца",
+   "de": "Pizza"
+  },
+  {
+   "ru": "м+узыка",
+   "de": "Musik"
+  },
+  {
+   "ru": "пробл+ема",
+   "de": "Problem"
+  },
+  {
+   "ru": "сист+ема",
+   "de": "System"
+  },
+  {
+   "ru": "проф+ессор",
+   "de": "Professor"
+  },
+  {
+   "ru": "+адрес",
+   "de": "Adresse"
+  },
+  {
+   "ru": "+офис",
+   "de": "Büro"
+  },
+  {
+   "ru": "от+ель",
+   "de": "Hotel"
+  },
+  {
+   "ru": "бар",
+   "de": "Bar"
+  },
+  {
+   "ru": "клуб",
+   "de": "Klub"
+  },
+  {
+   "ru": "фильм",
+   "de": "Film"
+  },
+  {
+   "ru": "план",
+   "de": "Plan"
+  },
+  {
+   "ru": "бал+ет",
+   "de": "Ballett"
+  },
+  {
+   "ru": "конц+ерт",
+   "de": "Konzert"
+  },
+  {
+   "ru": "бил+ет",
+   "de": "Ticket"
+  },
+  {
+   "ru": "баг+аж",
+   "de": "Gepäck"
+  },
+  {
+   "ru": "в+иза",
+   "de": "Visum"
+  },
+  {
+   "ru": "т+еннис",
+   "de": "Tennis"
+  },
+  {
+   "ru": "хокк+ей",
+   "de": "Eishockey"
+  },
+  {
+   "ru": "в+одка",
+   "de": "Wodka"
+  },
+  {
+   "ru": "гит+ара",
+   "de": "Gitarre"
+  },
+  {
+   "ru": "журн+ал",
+   "de": "Zeitschrift"
+  },
+  {
+   "ru": "центр",
+   "de": "Zentrum"
+  },
+  {
+   "ru": "цирк",
+   "de": "Zirkus"
+  },
+  {
+   "ru": "чемпи+он",
+   "de": "Champion"
+  },
+  {
+   "ru": "чай",
+   "de": "Tee"
+  },
+  {
+   "ru": "борщ",
+   "de": "Borschtsch"
+  },
+  {
+   "ru": "+юмор",
+   "de": "Humor"
+  },
+  {
+   "ru": "мен+ю",
+   "de": "Speisekarte"
+  },
+  {
+   "ru": "эт+аж",
+   "de": "Etage"
+  },
+  {
+   "ru": "зооп+арк",
+   "de": "Zoo"
+  }
+ ]
+}

@@ -1,0 +1,602 @@
+[
+  {
+    "id": "zinseszins",
+    "title": "Zinseszins",
+    "principle": "Erträge, die du nicht entnimmst, bringen selbst wieder Erträge. Das Vermögen wächst dadurch nicht gleichmäßig, sondern immer schneller. Der wichtigste Faktor ist die Zeit, nicht die Höhe des Startbetrags.",
+    "example": "10.000 € zu 5 % pro Jahr: Ohne Zinseszins hast du nach 30 Jahren 25.000 €. Mit Zinseszins sind es rund 43.200 € – gut 18.000 € mehr, ohne einen Cent zusätzlich einzuzahlen.",
+    "rule": "Früh anfangen schlägt viel einzahlen: Die letzten Jahre einer langen Laufzeit bringen den größten Zuwachs.",
+    "deep": {
+      "lead": "Wachstum auf Wachstum: Am Anfang passiert wenig, am Ende fast alles.",
+      "sections": [
+        {
+          "title": "Die Kurve, die erst spät steil wird",
+          "text": "Exponentielles Wachstum ist für unseren Kopf schwer zu greifen, weil wir in geraden Linien denken. Bei 5 % Rendite wächst ein Betrag in den ersten zehn Jahren um etwa 63 %. Im dritten Jahrzehnt kommt in Euro aber mehr als das Doppelte davon hinzu, obwohl der Zinssatz gleich bleibt. Bei 10.000 € Startbetrag sind das rund 6.300 € im ersten und knapp 16.700 € im dritten Jahrzehnt. Der größte Teil des Zuwachses entsteht also ganz am Ende. Wer nach wenigen Jahren enttäuscht aufhört, verlässt die Kurve, bevor sie steil wird."
+        },
+        {
+          "title": "Derselbe Effekt gegen dich",
+          "text": "Zinseszins arbeitet in beide Richtungen. Bei Schulden wachsen unbezahlte Zinsen mit und werden selbst verzinst, weshalb teure Kredite so schwer loszuwerden sind. Auch Kosten und Inflation wirken exponentiell: Ein Prozent Gebühr pro Jahr klingt harmlos, zehrt über Jahrzehnte aber einen spürbaren Teil des Endvermögens auf. Wichtig ist außerdem, dass Rechenbeispiele mit festen Zinssätzen eine Vereinfachung sind. An den Kapitalmärkten schwanken Renditen stark, und niemand garantiert einen bestimmten Wert. Das Prinzip gilt trotzdem: Wer Erträge liegen lässt, gibt ihnen die Chance, selbst zu arbeiten."
+        }
+      ],
+      "tryIt": "Bei 6 % verdoppelt sich ein Betrag in etwa 12 Jahren. Wie oft verdoppelt er sich in 36 Jahren, und was wird dann aus 1.000 €? (Dreimal: rund 8.000 €.)",
+      "takeaways": [
+        "Zeit ist der stärkste Hebel beim Vermögensaufbau.",
+        "Zinseszins wirkt auch bei Schulden, Kosten und Inflation."
+      ]
+    }
+  },
+  {
+    "id": "notgroschen",
+    "title": "Notgroschen",
+    "principle": "Eine Rücklage für Unvorhergesehenes, die sofort verfügbar ist. Sie verhindert, dass eine kaputte Waschmaschine oder eine Lücke zwischen zwei Jobs dich in teure Schulden treibt.",
+    "example": "Bei 1.800 € festen Monatsausgaben sind drei Monatsausgaben 5.400 €. Legst du 150 € im Monat zurück, ist das Polster nach 36 Monaten voll.",
+    "rule": "Drei bis sechs Monatsausgaben, sicher und sofort verfügbar, getrennt vom Girokonto.",
+    "deep": {
+      "lead": "Der Notgroschen bringt keine Rendite – er kauft dir Ruhe und erspart dir den teuersten Kredit.",
+      "sections": [
+        {
+          "title": "Wofür er da ist und wofür nicht",
+          "text": "Der Notgroschen ist für Ausgaben gedacht, die unerwartet, notwendig und dringend sind: die Autoreparatur, eine hohe Nachzahlung, der Verdienstausfall. Der Urlaub, das neue Handy oder ein gutes Angebot gehören nicht dazu. Für absehbare größere Ausgaben wie die jährliche Versicherung oder die nächste Brille lohnt sich ein eigener Topf, in den du monatlich einen festen Betrag legst. Sonst wird der Notgroschen ständig angeknabbert und ist leer, wenn wirklich etwas passiert. Nach jeder Entnahme gilt: zuerst wieder auffüllen."
+        },
+        {
+          "title": "Wie groß und wo",
+          "text": "Die passende Höhe hängt von deiner Lage ab. Wer ein sicheres Einkommen, keine Kinder und kein Auto hat, kommt mit weniger aus als eine Selbstständige mit schwankenden Aufträgen oder ein Alleinverdiener mit Familie. Maßstab sind die Ausgaben, nicht das Gehalt. Aufbewahrt wird die Reserve dort, wo sie sicher und binnen eines Tages erreichbar ist, üblicherweise auf einem Tagesgeldkonto. Rendite ist dabei Nebensache. Dass das Geld durch Inflation etwas an Wert verliert, ist der Preis für die Verfügbarkeit, vergleichbar mit einer Versicherungsprämie."
+        }
+      ],
+      "tryIt": "Addiere deine festen Ausgaben eines Monats (Miete, Essen, Verträge, Fahrtkosten) und multipliziere mit drei. Das ist dein erstes Ziel.",
+      "takeaways": [
+        "Maßstab sind die Monatsausgaben, nicht das Gehalt.",
+        "Nach jeder Entnahme zuerst wieder auffüllen."
+      ]
+    }
+  },
+  {
+    "id": "inflation",
+    "title": "Inflation",
+    "principle": "Preise steigen im Lauf der Zeit, also kauft derselbe Geldbetrag später weniger. Geld, das unverzinst herumliegt, behält seine Zahl, verliert aber Jahr für Jahr an Kaufkraft.",
+    "example": "Bei 2 % Inflation pro Jahr kaufen 100 € nach 20 Jahren nur noch so viel wie heute rund 67 €. Bei 3 % halbiert sich die Kaufkraft in etwa 24 Jahren.",
+    "rule": "Frag bei jedem Zins: Was bleibt nach Abzug der Inflation? Nur das ist echter Zuwachs.",
+    "deep": {
+      "lead": "Die Zahl auf dem Konto bleibt gleich, aber was du dafür bekommst, wird leise weniger.",
+      "sections": [
+        {
+          "title": "Wie Inflation gemessen wird",
+          "text": "Statistikämter beobachten laufend die Preise eines festen Warenkorbs, in dem Miete, Lebensmittel, Energie, Verkehr, Freizeit und vieles mehr nach ihrem Anteil an den typischen Haushaltsausgaben gewichtet sind. Die Veränderung dieses Korbs gegenüber dem Vorjahr ist die Inflationsrate. Deine persönliche Rate kann davon abweichen. Wer viel Auto fährt und mit Gas heizt, spürt steigende Energiepreise stärker als jemand mit kurzer Strecke und Fernwärme. Auch deshalb fühlt sich Inflation oft höher an als die amtliche Zahl: Häufige Käufe wie Butter und Benzin fallen mehr auf als der Fernseher, der billiger wurde."
+        },
+        {
+          "title": "Gewinner, Verlierer, Schrumpfpackungen",
+          "text": "Inflation trifft nicht alle gleich. Wer Bargeld oder niedrig verzinste Guthaben hält, verliert. Wer Schulden mit festem Zins hat, gewinnt, weil die Rückzahlung real leichter wird, sofern das Einkommen mitsteigt. Deshalb zählt bei Gehaltsrunden der Vergleich mit der Preissteigerung: 2 % mehr Lohn bei 3 % Inflation sind real ein Minus. Eine versteckte Form ist die Schrumpfpackung: gleicher Preis, weniger Inhalt. Dagegen hilft der Blick auf den Grundpreis pro Kilo oder Liter am Regal. Die Europäische Zentralbank strebt mittelfristig eine Rate von zwei Prozent an."
+        }
+      ],
+      "tryIt": "Schau beim nächsten Einkauf bei drei Produkten auf den Grundpreis pro Kilo oder Liter statt auf den Packungspreis.",
+      "takeaways": [
+        "Entscheidend ist die Kaufkraft, nicht der Betrag.",
+        "Eine Lohnerhöhung unter der Inflationsrate ist real ein Minus."
+      ]
+    }
+  },
+  {
+    "id": "diversifikation",
+    "title": "Diversifikation",
+    "principle": "Verteile Geld auf viele verschiedene Anlagen, damit der Ausfall einer einzelnen dich nicht ruiniert. Das Risiko einzelner Firmen lässt sich so fast wegstreuen, ohne dass die erwartete Rendite sinken muss.",
+    "example": "Steckt alles in einer Aktie und die Firma geht pleite, sind 100 % weg. Bei 10 gleich großen Positionen kostet dieselbe Pleite 10 %, bei 1.000 Positionen nur 0,1 %.",
+    "rule": "Nie so viel auf eine einzelne Karte setzen, dass ihr Ausfall deine Pläne zerstört.",
+    "deep": {
+      "lead": "Streuen nimmt das Pech der Einzelfirma aus der Rechnung – das Risiko des ganzen Marktes bleibt.",
+      "sections": [
+        {
+          "title": "Das einzige Gratis-Mittagessen",
+          "text": "Der Ökonom Harry Markowitz zeigte in den 1950er-Jahren mathematisch, was das Sprichwort von den Eiern im Korb schon ahnte: Kombiniert man Anlagen, die sich nicht im Gleichschritt bewegen, schwankt das Ganze weniger als seine Teile. Er bekam dafür später den Wirtschaftsnobelpreis. Ihm wird auch der Satz zugeschrieben, Diversifikation sei das einzige kostenlose Mittagessen an der Börse. Gemeint ist: Normalerweise muss man für weniger Risiko auf Rendite verzichten. Beim Streuen fällt nur das Risiko weg, das ohnehin nicht belohnt wird, nämlich das Pech einer einzelnen Firma."
+        },
+        {
+          "title": "Scheinstreuung und Grenzen",
+          "text": "Viele Positionen bedeuten noch keine Streuung. Zehn Aktien aus derselben Branche oder demselben Land fallen in einer Krise gemeinsam. Entscheidend ist, wie unterschiedlich die Anlagen auf dieselben Ereignisse reagieren. Häufig übersehen wird das Klumpenrisiko im eigenen Leben: Wer bei einem Unternehmen arbeitet und zusätzlich dessen Aktien hält, verliert im Ernstfall Arbeitsplatz und Erspartes zugleich. Eine Grenze hat das Prinzip auch. Gegen einen allgemeinen Markteinbruch hilft Streuung innerhalb von Aktien nicht, dann fällt fast alles. Dieses Marktrisiko lässt sich nur durch die Mischung mit sichereren Anlagen dämpfen."
+        }
+      ],
+      "tryIt": "Überleg, woran dein Wohlstand hängt: ein Arbeitgeber, eine Branche, eine Stadt, eine Währung? Wo ist dein größter Klumpen?",
+      "takeaways": [
+        "Viele Positionen derselben Sorte sind keine Streuung.",
+        "Auch Arbeitsplatz und Wohnort zählen zum Klumpenrisiko."
+      ]
+    }
+  },
+  {
+    "id": "etf-grundidee",
+    "title": "ETF: die Grundidee",
+    "principle": "Ein ETF ist ein Fonds, der an der Börse gehandelt wird und einfach einen Index nachbildet, statt einzelne Gewinner auszuwählen. Mit einem Anteil bist du an sehr vielen Unternehmen zugleich beteiligt, bei niedrigen Kosten.",
+    "example": "Ein Index umfasst 1.500 Firmen. Von 100 €, die in einen passenden ETF fließen, landen bei einer Firma mit 5 % Indexgewicht 5 €, bei einer mit 0,01 % Gewicht 1 Cent.",
+    "rule": "Ein ETF ist nur so breit wie sein Index: erst nachsehen, was drinsteckt, dann auf die Kosten schauen.",
+    "deep": {
+      "lead": "Statt die Nadel im Heuhaufen zu suchen, kauft man mit einem Indexfonds den ganzen Heuhaufen.",
+      "sections": [
+        {
+          "title": "Woher die Idee kommt",
+          "text": "Den ersten Indexfonds für Privatanleger brachte John Bogle, der Gründer von Vanguard, Mitte der 1970er-Jahre in den USA auf den Markt. Er wurde anfangs als »Bogles Torheit« verspottet, weil er bewusst nur den Durchschnitt anstrebte. Bogles Rechnung war schlicht: Alle Anleger zusammen sind der Markt, also erzielen sie zusammen die Marktrendite, abzüglich ihrer Kosten. Wer die Kosten niedrig hält, landet deshalb auf Dauer vor der Mehrheit der teureren Konkurrenz. Börsengehandelte Indexfonds, also ETFs, kamen später hinzu und machten die Idee für jeden mit einem Depot zugänglich."
+        },
+        {
+          "title": "Verpackung, kein Gütesiegel",
+          "text": "ETF beschreibt nur die Form, nicht den Inhalt. Es gibt breite Weltindizes, aber auch ETFs auf einzelne Branchen, Länder oder Modethemen, die kaum gestreut und entsprechend schwankungsanfällig sind. Das Fondsvermögen ist rechtlich Sondervermögen und vom Vermögen des Anbieters getrennt; geht der Anbieter pleite, gehört es weiter den Anlegern. Das schützt nicht vor Kursverlusten: Ein Aktien-ETF fällt, wenn der Markt fällt, und das zeitweise deutlich. Unterschieden wird außerdem zwischen ausschüttenden Fonds, die Dividenden auszahlen, und thesaurierenden, die sie automatisch wieder anlegen."
+        }
+      ],
+      "tryIt": "Such das Factsheet eines beliebigen ETFs und find drei Angaben: Zahl der Positionen, größtes Land, laufende Kosten.",
+      "takeaways": [
+        "Ein ETF bildet einen Index ab, er wählt nicht aus.",
+        "Breit gestreut ist nur, was einen breiten Index abbildet."
+      ]
+    }
+  },
+  {
+    "id": "laufende-kosten",
+    "title": "Laufende Kosten (TER)",
+    "principle": "Die Kostenquote eines Fonds wird jedes Jahr vom Vermögen abgezogen, egal wie es läuft. Weil auch die abgezogenen Beträge keine Erträge mehr bringen, wirken kleine Unterschiede über Jahrzehnte enorm.",
+    "example": "10.000 € für 30 Jahre bei 6 % Rendite vor Kosten: Mit 0,2 % Kosten werden daraus rund 54.300 €, mit 1,5 % Kosten rund 37.500 €. Der Unterschied: fast 17.000 €.",
+    "rule": "Kosten sind das Einzige an einer Geldanlage, das sicher ist. Vergleiche sie vor dem Kauf.",
+    "deep": {
+      "lead": "Rendite ist ungewiss, Kosten sind sicher – und sie wachsen mit dem Zinseszins mit.",
+      "sections": [
+        {
+          "title": "Welche Kosten es gibt",
+          "text": "Bei Fonds gibt es mehrere Schichten. Die laufenden Kosten, oft als TER oder Gesamtkostenquote angegeben, decken Verwaltung und Betrieb und werden unauffällig aus dem Fondsvermögen entnommen. Du bekommst dafür nie eine Rechnung. Dazu können einmalige Kosten kommen: ein Ausgabeaufschlag beim Kauf, der bei klassischen Fonds mehrere Prozent betragen kann, sowie Ordergebühren und die Spanne zwischen Kauf- und Verkaufskurs. Manche Fonds verlangen zusätzlich eine Erfolgsgebühr. Bei Versicherungsprodukten mit Fondsanlage kommen Abschluss- und Verwaltungskosten des Vertrags obendrauf. Die wichtigsten Angaben stehen im Basisinformationsblatt."
+        },
+        {
+          "title": "Warum teuer selten besser ist",
+          "text": "Die naheliegende Hoffnung lautet, dass ein teurer, aktiv gemanagter Fonds seine Kosten durch kluge Auswahl wieder hereinholt. Einzelnen gelingt das. Vergleichsstudien zeigen aber seit Jahren, dass über lange Zeiträume die Mehrheit der aktiven Fonds hinter ihrem Vergleichsindex zurückbleibt, vor allem wegen der Kosten. Welcher Fonds künftig zu den Ausnahmen gehört, lässt sich im Voraus kaum erkennen. Der Ökonom William Sharpe hat die Logik dahinter beschrieben: Vor Kosten erzielen alle aktiven Anleger zusammen den Marktdurchschnitt, nach Kosten also weniger. Niedrige Kosten garantieren keinen Gewinn, verbessern aber verlässlich die Ausgangslage."
+        }
+      ],
+      "tryIt": "Hast du einen Fonds oder eine fondsgebundene Versicherung? Such in den Unterlagen die laufenden Kosten in Prozent pro Jahr.",
+      "takeaways": [
+        "Ein Prozent Kosten pro Jahr ist über Jahrzehnte sehr viel Geld.",
+        "Kosten kennst du vorher, die Rendite nicht."
+      ]
+    }
+  },
+  {
+    "id": "durchschnittskosteneffekt",
+    "title": "Durchschnittskosteneffekt",
+    "principle": "Wer regelmäßig denselben Betrag anlegt, kauft bei niedrigen Kursen automatisch mehr Anteile und bei hohen weniger. Der durchschnittliche Kaufpreis liegt dadurch unter dem Durchschnitt der Kurse.",
+    "example": "Du legst dreimal 100 € an, bei Kursen von 50 €, 25 € und 50 €. Du erhältst 2 + 4 + 2 = 8 Anteile für 300 €, also 37,50 € pro Anteil. Der Durchschnittskurs lag bei 41,67 €.",
+    "rule": "Regelmäßig und automatisch anlegen nimmt dir die Frage nach dem richtigen Zeitpunkt ab.",
+    "deep": {
+      "lead": "Der Sparplan ist kein Renditetrick, sondern ein Mittel gegen Zögern und schlechtes Timing.",
+      "sections": [
+        {
+          "title": "Was der Effekt nicht leistet",
+          "text": "Der Durchschnittskosteneffekt wird oft als Renditevorteil verkauft. Das ist er nicht. Wer einen größeren Betrag bereits besitzt und ihn häppchenweise über Monate anlegt, steht im Schnitt eher schlechter da als bei sofortiger Anlage, weil Märkte langfristig häufiger steigen als fallen und das wartende Geld solange nichts verdient. Der mathematische Kern ist nur: Gleiche Beträge führen zum harmonischen Mittel der Kurse, und das liegt nie über dem einfachen Durchschnitt. Daraus folgt kein Gewinn gegenüber anderen Strategien. Auch ein Sparplan kann jahrelang im Minus liegen."
+        },
+        {
+          "title": "Der eigentliche Nutzen",
+          "text": "Der wahre Vorteil ist psychologisch und praktisch. Die meisten Menschen haben keinen großen Betrag, sondern ein monatliches Einkommen; regelmäßiges Anlegen ist für sie schlicht der naheliegende Weg. Ein automatischer Sparplan nimmt außerdem die schwierigste Entscheidung ab, nämlich wann man einsteigt. Wer auf den perfekten Moment wartet, wartet oft für immer oder kauft ausgerechnet dann, wenn alle begeistert sind. Fallende Kurse verlieren mit einem Sparplan zudem einen Teil ihres Schreckens, weil die nächste Rate mehr Anteile kauft. Das hilft, in schlechten Phasen nicht aufzugeben."
+        }
+      ],
+      "tryIt": "Rechne nach: zweimal 60 € bei Kursen von 20 € und 30 €. Wie viele Anteile, welcher Durchschnittspreis? (5 Anteile, 24 € statt 25 €.)",
+      "takeaways": [
+        "Gleiche Beträge kaufen bei tiefen Kursen mehr Anteile.",
+        "Der Nutzen liegt in der Gewohnheit, nicht in einer Extra-Rendite."
+      ]
+    }
+  },
+  {
+    "id": "72er-regel",
+    "title": "Die 72er-Regel",
+    "principle": "Teilst du 72 durch den jährlichen Zinssatz in Prozent, erhältst du ungefähr die Zahl der Jahre, in denen sich ein Betrag verdoppelt. Das funktioniert für Guthaben, Schulden und Preise gleichermaßen.",
+    "example": "Bei 6 % pro Jahr: 72 ÷ 6 = 12 Jahre bis zur Verdopplung. Aus 5.000 € werden nach 12 Jahren rund 10.000 €, nach 24 Jahren 20.000 €, nach 36 Jahren 40.000 €.",
+    "rule": "72 geteilt durch den Zinssatz ergibt die Verdopplungszeit in Jahren.",
+    "deep": {
+      "lead": "Eine einzige Division macht Zinseszins im Kopf greifbar.",
+      "sections": [
+        {
+          "title": "Warum ausgerechnet 72",
+          "text": "Die genaue Verdopplungszeit ergibt sich aus dem natürlichen Logarithmus von 2, der etwa 0,693 beträgt. Für sehr kleine Zinssätze müsste man deshalb eigentlich 69,3 durch den Zinssatz teilen. Weil Zinsen aber meist jährlich gutgeschrieben werden und nicht stetig, passt bei üblichen Sätzen eine etwas höhere Zahl besser. Die 72 hat zudem einen praktischen Vorteil: Sie lässt sich ohne Rest durch 2, 3, 4, 6, 8, 9 und 12 teilen. Beschrieben wurde die Regel schon Ende des 15. Jahrhunderts vom italienischen Mathematiker Luca Pacioli."
+        },
+        {
+          "title": "Drei Anwendungen und eine Grenze",
+          "text": "Die Regel taugt für mehr als Sparguthaben. Bei 3 % Inflation halbiert sich die Kaufkraft in rund 24 Jahren. Ein Dispokredit mit 12 % Zinsen verdoppelt eine nicht bediente Schuld in nur sechs Jahren. Und wächst eine Stadt um 2 % jährlich, hat sie nach 36 Jahren doppelt so viele Einwohner. Umgekehrt kannst du fragen, welche Rendite nötig wäre: Wer sein Geld in zehn Jahren verdoppeln will, bräuchte gut 7 % pro Jahr. Bei Sätzen zwischen etwa 4 und 10 % ist die Näherung sehr gut. Bei sehr hohen Zinssätzen wird sie ungenau."
+        }
+      ],
+      "tryIt": "Wie lange dauert die Verdopplung bei 4 %, bei 8 % und bei 9 %? (18, 9 und 8 Jahre.)",
+      "takeaways": [
+        "72 ÷ Zinssatz = Jahre bis zur Verdopplung.",
+        "Gilt genauso für Schulden und für Preissteigerungen."
+      ]
+    }
+  },
+  {
+    "id": "lifestyle-inflation",
+    "title": "Lifestyle-Inflation",
+    "principle": "Mit dem Einkommen steigen fast unbemerkt die Ausgaben: größere Wohnung, besseres Auto, mehr Abos. Am Monatsende bleibt genauso wenig übrig wie vorher – nur auf höherem Niveau.",
+    "example": "Nach einer Erhöhung hast du 300 € netto mehr. Gibst du die Hälfte aus und sparst 150 € monatlich, sind das 1.800 € im Jahr und 18.000 € in zehn Jahren, noch ohne Zinsen.",
+    "rule": "Von jeder Gehaltserhöhung mindestens die Hälfte in die Sparrate stecken, bevor du dich an das neue Geld gewöhnst.",
+    "deep": {
+      "lead": "Mehr Gehalt macht nur dann freier, wenn die Ausgaben langsamer wachsen als das Einkommen.",
+      "sections": [
+        {
+          "title": "Die hedonische Tretmühle",
+          "text": "Psychologen beschreiben mit diesem Bild, dass Menschen sich an Verbesserungen erstaunlich schnell gewöhnen. Die neue Wohnung begeistert einige Monate, dann ist sie normal, und der Blick wandert zur nächsten Stufe. Das Glücksgefühl kehrt Richtung Ausgangsniveau zurück, die höheren Kosten bleiben. Dazu kommt der Vergleich mit anderen. Mit dem Einkommen ändert sich oft das Umfeld, und was die neuen Kollegen fahren, tragen und buchen, verschiebt den eigenen Maßstab. Der Ökonom Thorstein Veblen prägte dafür schon vor über hundert Jahren den Begriff Geltungskonsum."
+        },
+        {
+          "title": "Fixkosten sind der gefährliche Teil",
+          "text": "Nicht jede Mehrausgabe ist ein Problem. Ein besseres Essen im Monat lässt sich jederzeit wieder streichen. Riskant sind dauerhafte Verpflichtungen: höhere Miete, Leasingrate, Verträge mit langer Laufzeit. Sie machen dich abhängig vom aktuellen Gehalt, und bei einem Einkommensausfall reicht dein Notgroschen entsprechend kürzer. Ein brauchbares Gegenmittel ist die Reihenfolge: erst die Sparrate per Dauerauftrag erhöhen, dann mit dem Rest großzügig sein. So wächst der Lebensstandard weiter, nur langsamer als das Einkommen, und der Abstand zwischen beiden wird mit jeder Gehaltsrunde größer."
+        }
+      ],
+      "tryIt": "Vergleiche deine drei größten Fixkosten von heute mit denen vor drei Jahren. Was ist gestiegen, und war es eine bewusste Entscheidung?",
+      "takeaways": [
+        "An mehr Komfort gewöhnt man sich schnell, an die Kosten bleibt man gebunden.",
+        "Erst die Sparrate erhöhen, dann den Lebensstandard."
+      ]
+    }
+  },
+  {
+    "id": "dispozins",
+    "title": "Dispozins",
+    "principle": "Der Dispokredit ist die eingeräumte Überziehung des Girokontos. Er ist bequem, gehört aber zu den teuersten Krediten überhaupt. Wer dauerhaft im Minus ist, zahlt Monat für Monat, ohne etwas dafür zu bekommen.",
+    "example": "Bist du ein Jahr lang durchgehend mit 2.000 € im Minus und der Dispozins beträgt 12 %, kostet das 240 € im Jahr – 20 € jeden Monat, ohne dass die Schuld kleiner wird.",
+    "rule": "Der Dispo ist für Tage gedacht, nicht für Monate. Dauerhaftes Minus günstiger umschulden und tilgen.",
+    "deep": {
+      "lead": "Der Dispo hat keine Rate und kein Enddatum – genau deshalb bleibt man so leicht darin hängen.",
+      "sections": [
+        {
+          "title": "Wie der Dispo funktioniert",
+          "text": "Die Bank räumt dir einen Rahmen ein, häufig ein Mehrfaches des monatlichen Geldeingangs, den du ohne Antrag nutzen kannst. Zinsen fallen taggenau nur für den tatsächlich überzogenen Betrag an und werden meist einmal im Quartal belastet. Genau das macht ihn tückisch: Es gibt keine feste Rate und kein Enddatum, also auch keinen Druck zu tilgen. Überziehst du über den eingeräumten Rahmen hinaus, spricht man von geduldeter Überziehung, für die manche Banken einen noch höheren Satz verlangen. Den Rahmen kann die Bank außerdem kürzen oder kündigen."
+        },
+        {
+          "title": "Raus aus dem Dauerminus",
+          "text": "Wer seit Monaten im Dispo steckt, hat faktisch einen Kredit, nur zum schlechtesten Preis. Banken sind in Deutschland verpflichtet, Kunden bei längerer erheblicher Überziehung eine Beratung über günstigere Alternativen anzubieten. Der übliche Weg ist die Umschuldung in einen Ratenkredit mit niedrigerem Zins und fester Laufzeit; damit sinken die Kosten, und die Schuld hat ein Ende. Danach lohnt es sich, den Disporahmen bewusst klein setzen zu lassen. Die Ursache löst das allerdings nicht. Wenn regelmäßig mehr hinausgeht als hereinkommt, hilft nur ein ehrlicher Blick auf die Ausgaben."
+        }
+      ],
+      "tryIt": "Schau im Preisverzeichnis oder Kontoauszug nach, wie hoch dein Dispozins und dein Rahmen sind. Brauchst du ihn in dieser Höhe?",
+      "takeaways": [
+        "Kurz überziehen ist in Ordnung, dauerhaft ist es teuer.",
+        "Aus dem Dauerminus hilft ein Kredit mit fester Rate und Ende."
+      ]
+    }
+  },
+  {
+    "id": "opportunitaetskosten-geld",
+    "title": "Opportunitätskosten beim Geld",
+    "principle": "Jeder Euro lässt sich nur einmal ausgeben. Der wahre Preis einer Sache ist das, was du mit demselben Geld sonst hättest tun können – einschließlich dessen, was es angelegt in Zukunft wert wäre.",
+    "example": "4 € Kaffee an 220 Arbeitstagen sind 880 € im Jahr. Zehn Jahre lang jährlich zurückgelegt und zu 5 % verzinst, wären daraus rund 11.000 € geworden.",
+    "rule": "Rechne regelmäßige kleine Ausgaben aufs Jahr hoch und teure Wünsche in Arbeitsstunden um.",
+    "deep": {
+      "lead": "Hinter jedem Preisschild steht ein Tausch: dieses Ding gegen alles andere, was das Geld sein könnte.",
+      "sections": [
+        {
+          "title": "Preise in Arbeitszeit",
+          "text": "Eine hilfreiche Umrechnung ist die in Lebenszeit. Teile dein Nettogehalt durch deine tatsächlichen Arbeitsstunden einschließlich Pendeln, und du erhältst deinen echten Stundenlohn. Bei 15 € netto pro Stunde kostet ein Gerät für 900 € sechzig Stunden deiner Zeit, also anderthalb Arbeitswochen. Manche Dinge sind das mühelos wert, andere verlieren bei dieser Rechnung schlagartig ihren Reiz. Die Frage lautet dann nicht mehr »Kann ich mir das leisten?«, sondern »Würde ich dafür so lange arbeiten?«. Sie macht den Tausch sichtbar, der hinter jedem Kauf steckt."
+        },
+        {
+          "title": "Kein Aufruf zum Geiz",
+          "text": "Das Kaffee-Beispiel wird oft missverstanden. Es geht nicht darum, sich jede kleine Freude zu verbieten. Der tägliche Kaffee kann genau die Ausgabe sein, die dir am meisten bringt. Opportunitätskosten sollen nur dafür sorgen, dass du bewusst wählst, statt aus Gewohnheit zu zahlen. Meist liegen die großen Hebel ohnehin woanders: bei Wohnen, Auto, Versicherungen und Verträgen, die still jeden Monat abbuchen. Und auch Sparen hat Opportunitätskosten. Geld, das du nie ausgibst, hat dir nichts genützt. Das Ziel ist ein guter Tausch, nicht ein möglichst voller Kontostand."
+        }
+      ],
+      "tryIt": "Rechne deinen echten Netto-Stundenlohn aus und übersetze den nächsten Wunsch über 100 € in Arbeitsstunden.",
+      "takeaways": [
+        "Kleine regelmäßige Ausgaben aufs Jahr hochrechnen.",
+        "Bewusst wählen heißt nicht verzichten."
+      ]
+    }
+  },
+  {
+    "id": "rendite-und-risiko",
+    "title": "Rendite und Risiko",
+    "principle": "Höhere erwartete Rendite gibt es nur gegen höheres Risiko. Verspricht jemand viel Ertrag bei voller Sicherheit, ist das Risiko nicht verschwunden – es ist nur versteckt oder wird verschwiegen.",
+    "example": "Fällt eine Anlage von 10.000 € um 50 % auf 5.000 €, muss sie danach um 100 % steigen, um wieder bei 10.000 € zu stehen. Nach minus 20 % braucht es plus 25 %.",
+    "rule": "Frag bei jedem Angebot zuerst: Was kann ich schlimmstenfalls verlieren, und könnte ich damit leben?",
+    "deep": {
+      "lead": "Rendite ist die Entschädigung dafür, Unsicherheit auszuhalten – ohne Risiko gibt es sie nicht.",
+      "sections": [
+        {
+          "title": "Das magische Dreieck",
+          "text": "Jede Geldanlage lässt sich an drei Zielen messen: Sicherheit, Rendite und Verfügbarkeit. Alle drei zugleich gibt es nicht in voller Höhe. Tagesgeld ist sicher und sofort verfügbar, bringt aber wenig. Aktien bieten langfristig höhere Ertragschancen, schwanken jedoch stark. Eine Immobilie kann stabil und ertragreich sein, lässt sich aber nicht schnell zu Geld machen. Die höhere Rendite riskanter Anlagen ist eine Art Entschädigung dafür, dass Anleger Schwankungen und mögliche Verluste aushalten. Gäbe es sie ohne Risiko, würden alle zugreifen, und der Vorteil wäre sofort verschwunden."
+        },
+        {
+          "title": "Schwankung oder Totalverlust",
+          "text": "Mit Risiko ist meist die Schwankung gemeint, also wie stark der Wert zwischendurch fällt und steigt. Für dich zählt aber vor allem, ob du im falschen Moment verkaufen musst. Deshalb hängt das passende Risiko von zwei Dingen ab: wann du das Geld brauchst und wie gut du einen Einbruch aushältst, ohne in Panik zu verkaufen. Eine zweite Art Risiko ist der endgültige Verlust, etwa durch eine Firmenpleite oder Betrug. Schwankungen kann man aussitzen, Totalverluste nicht. Warnzeichen unseriöser Angebote sind garantierte hohe Erträge, Zeitdruck und Modelle, die sich nicht in zwei Sätzen erklären lassen."
+        }
+      ],
+      "tryIt": "Stell dir vor, dein Erspartes wäre morgen 30 % weniger wert. Was würdest du tun? Die ehrliche Antwort zeigt, wie viel Risiko du verträgst.",
+      "takeaways": [
+        "Hohe Rendite ohne Risiko gibt es nicht.",
+        "Verluste wiegen doppelt: Nach minus 50 % braucht es plus 100 %."
+      ]
+    }
+  },
+  {
+    "id": "brutto-und-netto",
+    "title": "Brutto und Netto",
+    "principle": "Brutto ist das vereinbarte Gehalt, netto das, was nach Lohnsteuer und Sozialabgaben auf dem Konto ankommt. Für die Planung zählt nur das Netto – auch von einer Gehaltserhöhung kommt weniger an, als die Bruttozahl verspricht.",
+    "example": "Grobe Orientierung für Angestellte ohne Kinder: Von 3.000 € brutto bleiben etwa zwei Drittel, also rund 2.000 bis 2.100 €. Von 100 € Erhöhung kommt nur gut die Hälfte an.",
+    "rule": "Verhandle brutto, plane netto – und prüf jede Zahl mit einem Brutto-Netto-Rechner.",
+    "deep": {
+      "lead": "Zwischen Vertrag und Konto stehen Sozialabgaben und Steuer – wer sie versteht, plant realistischer.",
+      "sections": [
+        {
+          "title": "Was vom Lohn abgeht",
+          "text": "Die Abzüge bestehen aus zwei Blöcken. Der erste sind die Beiträge zur Sozialversicherung: Renten-, Kranken-, Pflege- und Arbeitslosenversicherung. Sie betragen für Beschäftigte zusammen grob ein Fünftel des Bruttolohns, und der Arbeitgeber zahlt ungefähr noch einmal so viel obendrauf. Der zweite Block ist die Lohnsteuer, gegebenenfalls mit Kirchensteuer. Sie hängt von der Höhe des Einkommens, der Steuerklasse und von Freibeträgen ab. Die Lohnsteuer ist nur eine Vorauszahlung auf die Einkommensteuer. Mit der Steuererklärung wird später genau abgerechnet, und viele bekommen dabei Geld zurück."
+        },
+        {
+          "title": "Der Irrtum mit der Steuerstufe",
+          "text": "Viele fürchten, durch eine Gehaltserhöhung in eine höhere Stufe zu rutschen und am Ende weniger zu haben. Das kann bei der Einkommensteuer nicht passieren. Der höhere Satz gilt immer nur für den zusätzlich verdienten Teil, nie rückwirkend für das gesamte Einkommen. Man unterscheidet deshalb den Grenzsteuersatz, der den nächsten Euro belastet, vom Durchschnittssteuersatz auf alles. Der zweite ist stets niedriger. Mehr brutto führt bei der Steuer also nie zu weniger netto. Richtig ist nur, dass der Zuwachs kleiner ausfällt als erhofft und dass manche Sozialleistungen bei steigendem Einkommen wegfallen können."
+        }
+      ],
+      "tryIt": "Nimm deine letzte Gehaltsabrechnung und rechne aus, wie viel Prozent vom Brutto als Netto ankommen.",
+      "takeaways": [
+        "Der höhere Steuersatz trifft nur den zusätzlichen Euro.",
+        "Für Miete, Raten und Sparrate zählt allein das Netto."
+      ]
+    }
+  },
+  {
+    "id": "schulden-lawine-schneeball",
+    "title": "Schulden: Lawine oder Schneeball",
+    "principle": "Zwei Wege, mehrere Schulden abzubauen: Bei der Lawine fließt jeder Extra-Euro in die Schuld mit dem höchsten Zins, beim Schneeball in die kleinste Schuld. Die Lawine spart am meisten Geld, der Schneeball motiviert schneller.",
+    "example": "Schuld A: 3.000 € zu 12 %, Schuld B: 1.000 € zu 5 %. 100 € Sondertilgung sparen bei A 12 € Zinsen pro Jahr, bei B nur 5 €. Rechnerisch gewinnt A, obwohl B schneller weg wäre.",
+    "rule": "Überall die Mindestrate zahlen, alles Übrige auf eine einzige Schuld bündeln – am besten auf die teuerste.",
+    "deep": {
+      "lead": "Bündeln statt verteilen: Eine Schuld nach der anderen fällt schneller als alle gleichzeitig.",
+      "sections": [
+        {
+          "title": "Zwei Methoden, ein Ablauf",
+          "text": "Beide Verfahren laufen gleich ab. Du listest alle Schulden mit Restbetrag, Zinssatz und Mindestrate auf. Jede Schuld bekommt weiterhin ihre Mindestrate, damit keine Mahnkosten entstehen. Was du darüber hinaus aufbringen kannst, geht vollständig an eine einzige Schuld. Ist sie getilgt, wandert ihre gesamte Rate zusätzlich zur nächsten, sodass der Tilgungsbetrag von Stufe zu Stufe wächst. Daher die Bilder von Lawine und Schneeball. Der Unterschied liegt nur in der Reihenfolge: höchster Zinssatz zuerst oder kleinster Restbetrag zuerst."
+        },
+        {
+          "title": "Rechnen oder durchhalten?",
+          "text": "Mathematisch ist die Lawine immer mindestens so gut, weil sie die teuersten Zinsen zuerst stoppt. Trotzdem empfehlen manche Berater den Schneeball. Eine vollständig getilgte Schuld ist ein sichtbarer Erfolg, und Untersuchungen zum Verbraucherverhalten deuten darauf hin, dass solche frühen Erfolge das Durchhalten erleichtern. Der beste Plan ist der, den du tatsächlich zu Ende führst. Liegen die Zinssätze nah beieinander, kostet der Schneeball kaum etwas. Ist eine Schuld deutlich teurer, etwa ein Dispo oder eine Kreditkarte, sollte sie Vorrang haben. Wer den Überblick verloren hat, findet bei gemeinnützigen Schuldnerberatungsstellen kostenlose Hilfe."
+        }
+      ],
+      "tryIt": "Schreib alle offenen Beträge auf, auch Ratenkäufe und geliehenes Geld, jeweils mit Zinssatz. Welche Schuld ist die teuerste?",
+      "takeaways": [
+        "Lawine spart Zinsen, Schneeball liefert schnelle Erfolge.",
+        "Hauptsache: Mindestraten überall, Extra-Geld gebündelt."
+      ]
+    }
+  },
+  {
+    "id": "nominalzins-und-realzins",
+    "title": "Nominalzins und Realzins",
+    "principle": "Der Nominalzins steht im Angebot. Der Realzins ist das, was nach Abzug der Inflation übrig bleibt, und nur er zeigt, ob deine Kaufkraft wächst. Bei niedrigem Zins und hoher Inflation ist er negativ.",
+    "example": "10.000 € zu 2 % Zins werden in einem Jahr zu 10.200 €. Steigen die Preise in der Zeit um 3 %, kaufst du damit nur so viel wie vorher mit rund 9.900 €. Realzins: etwa minus 1 %.",
+    "rule": "Realzins ≈ Zinssatz minus Inflationsrate. Ist das Ergebnis negativ, schrumpft die Kaufkraft trotz Zinsen.",
+    "deep": {
+      "lead": "Zinsen sind erst dann ein Gewinn, wenn sie höher sind als der Kaufkraftverlust.",
+      "sections": [
+        {
+          "title": "Die Geldillusion",
+          "text": "Menschen achten auf die Zahl auf dem Kontoauszug, nicht auf das, was man dafür bekommt. Der Ökonom Irving Fisher nannte das Geldillusion. Sie erklärt, warum sich 1 % Zins bei 0 % Inflation schlechter anfühlt als 4 % Zins bei 5 % Inflation, obwohl man im ersten Fall real gewinnt und im zweiten verliert. Nach Fisher ist auch die Faustformel benannt, dass der Nominalzins ungefähr die Summe aus Realzins und erwarteter Inflation ist. Die einfache Subtraktion ist eine Näherung, die bei kleinen Prozentsätzen gut genug stimmt."
+        },
+        {
+          "title": "Steuern und Schulden",
+          "text": "Zwei Ergänzungen machen das Bild vollständig. Erstens werden Steuern auf den nominalen Ertrag erhoben, nicht auf den realen. Wer 3 % Zinsen bei 3 % Inflation bekommt, hat real nichts gewonnen und zahlt oberhalb des Freibetrags trotzdem Steuer auf die 3 %. Zweitens gilt die Rechnung auch für Kreditnehmer, nur mit umgekehrtem Vorzeichen. Ein Darlehen zu 4 % bei 3 % Inflation kostet real etwa 1 %, vorausgesetzt, dein Einkommen steigt mit den Preisen. Wer einen festen Zins vereinbart hat, profitiert als Schuldner, wenn die Inflation unerwartet steigt; der Gläubiger verliert."
+        }
+      ],
+      "tryIt": "Such den Zinssatz deines Tagesgelds oder Sparkontos und die aktuelle Inflationsrate. Ist dein Realzins positiv oder negativ?",
+      "takeaways": [
+        "Zins minus Inflation ergibt den echten Zuwachs.",
+        "Besteuert wird der nominale Ertrag, nicht der reale."
+      ]
+    }
+  },
+  {
+    "id": "bezahl-dich-selbst-zuerst",
+    "title": "Bezahl dich selbst zuerst",
+    "principle": "Leg den Sparbetrag direkt nach dem Gehaltseingang zur Seite und lebe vom Rest – statt zu sparen, was am Monatsende übrig bleibt. Denn übrig bleibt meistens nichts.",
+    "example": "Bei 2.500 € netto gehen am Monatsersten 10 % per Dauerauftrag weg: 250 € im Monat, 3.000 € im Jahr. Auf dem Girokonto bleiben 2.250 € zum Leben.",
+    "rule": "Sparen ist die erste Buchung des Monats, nicht die letzte – automatisch, am Tag nach dem Gehalt.",
+    "deep": {
+      "lead": "Wer zuerst spart und dann ausgibt, braucht keine Disziplin mehr, nur einen Dauerauftrag.",
+      "sections": [
+        {
+          "title": "Warum die Reihenfolge alles ändert",
+          "text": "Ausgaben passen sich dem an, was verfügbar ist. Liegt das ganze Gehalt auf dem Girokonto, wirkt es wie Geld zum Ausgeben, und am Monatsende ist es weg, ohne dass du sagen könntest, wofür. Wird der Sparbetrag sofort abgezweigt, richtest du dich unbemerkt mit dem kleineren Betrag ein. Verhaltensökonomen nennen das mentale Buchführung: Wir behandeln Geld je nach Konto unterschiedlich, obwohl ein Euro ein Euro ist. Der Dauerauftrag nutzt diese Eigenheit aus, anstatt gegen sie anzukämpfen. Er verlangt nur eine einzige Entscheidung statt zwölf im Jahr."
+        },
+        {
+          "title": "Praktisch einrichten",
+          "text": "Bewährt hat sich ein einfaches Modell mit getrennten Konten: eines für den Gehaltseingang und die Fixkosten, eines für das Alltagsgeld, eines oder mehrere zum Sparen. Der Dauerauftrag läuft am Tag nach dem üblichen Gehaltseingang. Fang mit einem Betrag an, der nicht wehtut, auch wenn es nur 25 € sind. Wichtiger als die Höhe ist, dass die Gewohnheit steht. Erhöhe dann bei jeder Gehaltsrunde. Eine Einschränkung: Wer teure Schulden hat, etwa im Dispo, sollte zuerst diese tilgen. Sparen zu niedrigen Zinsen bei gleichzeitigen Schulden zu hohen Zinsen ist ein Verlustgeschäft."
+        }
+      ],
+      "tryIt": "Richte heute einen Dauerauftrag für den Tag nach deinem Gehaltseingang ein. Der Betrag darf klein sein – Hauptsache, er läuft.",
+      "takeaways": [
+        "Was automatisch weggeht, wird nicht ausgegeben.",
+        "Teure Schulden tilgen kommt vor dem Sparen."
+      ]
+    }
+  },
+  {
+    "id": "anlagehorizont",
+    "title": "Anlagehorizont",
+    "principle": "Entscheidend ist, wann du das Geld wieder brauchst. Je länger es liegen bleiben kann, desto besser lassen sich Schwankungen aussitzen. Geld, das bald gebraucht wird, sollte nicht stark schwanken können.",
+    "example": "Bricht ein Depot von 10.000 € um 30 % auf 7.000 € ein, braucht es danach plus 43 %, um den Verlust aufzuholen. Wer warten kann, übersteht das. Wer genau dann verkaufen muss, verliert 3.000 €.",
+    "rule": "Erst klären, wann das Geld gebraucht wird, dann die Anlageform wählen – nicht umgekehrt.",
+    "deep": {
+      "lead": "Schwankungen sind nur dann ein Verlust, wenn du mittendrin verkaufen musst.",
+      "sections": [
+        {
+          "title": "Zeit glättet, garantiert aber nichts",
+          "text": "Aktienmärkte haben historisch in einzelnen Jahren stark geschwankt, mit Einbrüchen von einem Drittel und mehr. Über lange Zeiträume von fünfzehn oder zwanzig Jahren lagen breit gestreute Anlagen in der Vergangenheit dagegen meist im Plus, weil gute Jahre die schlechten überwogen. Daraus folgt die Faustregel, dass riskantere Anlagen einen langen Atem brauchen. Eine Garantie ist das nicht. Es gab Märkte, die Jahrzehnte brauchten, um alte Höchststände wieder zu erreichen; der japanische Aktienmarkt ist das bekannteste Beispiel. Vergangene Entwicklungen sagen die Zukunft nicht sicher voraus."
+        },
+        {
+          "title": "Töpfe nach Zeitpunkt",
+          "text": "Praktisch hilft es, Geld nach seinem Verwendungszeitpunkt in Töpfe zu teilen. Was du jederzeit brauchen könntest, ist dein Notgroschen. Was in den nächsten Jahren fest verplant ist, etwa für Auto, Umzug oder Eigenkapital, sollte wenig schwanken. Nur was viele Jahre unangetastet bleiben kann, verträgt stärkere Ausschläge. Der Horizont ist nicht fest: Er schrumpft, wenn der Zeitpunkt näher rückt. Wer in fünf Jahren in Rente geht oder ein Haus kaufen will, hat für diesen Teil des Geldes keinen langen Horizont mehr und sollte das Risiko schrittweise senken, statt auf den letzten Moment zu warten."
+        }
+      ],
+      "tryIt": "Teile dein Erspartes gedanklich in drei Töpfe: jederzeit, in ein bis fünf Jahren, später. Passt die Anlageform zum jeweiligen Topf?",
+      "takeaways": [
+        "Der Zeitpunkt des Bedarfs bestimmt das tragbare Risiko.",
+        "Der Horizont schrumpft – das Risiko sollte mitschrumpfen."
+      ]
+    }
+  },
+  {
+    "id": "effektiver-jahreszins",
+    "title": "Effektiver Jahreszins",
+    "principle": "Der Sollzins ist nur der reine Zins. Der effektive Jahreszins rechnet weitere Pflichtkosten und die Art der Verzinsung mit ein und zeigt, was ein Kredit pro Jahr wirklich kostet. Nur er taugt zum Vergleich.",
+    "example": "1 % Zins pro Monat klingt nach 12 % im Jahr. Weil die Zinsen jeden Monat mitverzinst werden, sind es effektiv rund 12,7 %: Aus 1.000 € Schuld werden in einem Jahr etwa 1.127 €.",
+    "rule": "Kredite über den effektiven Jahreszins und die Gesamtkosten in Euro vergleichen, nie über die Monatsrate.",
+    "deep": {
+      "lead": "Der Effektivzins macht Kredite vergleichbar – die Monatsrate verschleiert, was sie kosten.",
+      "sections": [
+        {
+          "title": "Was drin ist und was nicht",
+          "text": "In der EU müssen Kreditgeber den effektiven Jahreszins nach einer einheitlichen Formel angeben, damit Angebote vergleichbar sind. Er berücksichtigt den Sollzins, die Zeitpunkte der Zahlungen und Kosten, die zwingend mit dem Kredit verbunden sind, etwa Vermittlungsgebühren. Nicht enthalten sind Kosten, die formal freiwillig sind. Das wichtigste Beispiel ist die Restschuldversicherung, die oft zusammen mit Ratenkrediten verkauft wird und den Kredit erheblich verteuern kann, ohne im Effektivzins aufzutauchen. Deshalb lohnt neben dem Zinssatz immer der Blick auf den Gesamtbetrag, den du am Ende zurückzahlst."
+        },
+        {
+          "title": "Die Rate täuscht",
+          "text": "Verkäufer sprechen gern über die Monatsrate, weil sich fast alles in kleine Raten zerlegen lässt. Eine niedrige Rate entsteht aber oft nur durch eine längere Laufzeit, und die macht den Kredit insgesamt teurer. Vorsicht auch bei Werbezinsen mit dem Zusatz »ab«: Den niedrigsten Satz bekommen nur Kunden mit bester Bonität. Aussagekräftiger ist das gesetzlich vorgeschriebene repräsentative Beispiel im Kleingedruckten, das sich an den Konditionen orientieren muss, die mindestens zwei Drittel der Kunden erhalten. Bei Null-Prozent-Finanzierungen steckt der Preis des Kredits häufig im Kaufpreis oder in Zusatzprodukten."
+        }
+      ],
+      "tryIt": "Such in einer Kreditwerbung das repräsentative Beispiel im Kleingedruckten. Wie weit liegt es vom groß beworbenen Zins entfernt?",
+      "takeaways": [
+        "Effektivzins und Gesamtbetrag vergleichen, nicht die Rate.",
+        "Freiwillige Zusatzversicherungen stecken nicht im Effektivzins."
+      ]
+    }
+  },
+  {
+    "id": "budget-50-30-20",
+    "title": "Die 50-30-20-Regel",
+    "principle": "Eine einfache Aufteilung des Nettoeinkommens: etwa 50 % für Notwendiges wie Miete und Essen, 30 % für Wünsche, 20 % für Sparen und Schuldentilgung. Sie ersetzt kein Haushaltsbuch, gibt aber eine schnelle Orientierung.",
+    "example": "Bei 2.500 € netto wären das 1.250 € für Fixkosten und Lebensnotwendiges, 750 € für Freizeit und Wünsche und 500 € für Rücklagen und Tilgung.",
+    "rule": "Halb fürs Nötige, knapp ein Drittel fürs Schöne, ein Fünftel für später.",
+    "deep": {
+      "lead": "Drei Töpfe genügen, um zu sehen, ob die Finanzen im Gleichgewicht sind.",
+      "sections": [
+        {
+          "title": "Herkunft und Zweck",
+          "text": "Bekannt wurde die Aufteilung durch die US-Juristin und spätere Senatorin Elizabeth Warren, die sich als Professorin mit Privatinsolvenzen beschäftigte, und ihre Tochter Amelia Warren Tyagi. Ihre Beobachtung: Familien geraten selten durch Luxus in Not, sondern durch zu hohe feste Verpflichtungen, die bei einem Einkommensausfall nicht mehr tragbar sind. Die 50-Prozent-Grenze für Notwendiges ist deshalb der wichtigste Teil der Regel. Sie sorgt dafür, dass genug Luft bleibt, um Rückschläge abzufangen. Die anderen beiden Zahlen lassen sich leichter einhalten, wenn die erste stimmt."
+        },
+        {
+          "title": "Wenn die Zahlen nicht passen",
+          "text": "In teuren Städten oder bei kleinem Einkommen verschlingen Miete und Grundbedarf oft weit mehr als die Hälfte. Dann ist die Regel kein Vorwurf, sondern ein Messinstrument: Sie zeigt, wie eng es ist und wo der Hebel liegt. Die Trennlinie zwischen Bedarf und Wunsch ist außerdem weniger klar, als sie klingt. Das Handy ist nötig, der teure Tarif nicht; Essen ist nötig, der Lieferdienst nicht. Sinnvoll ist, drei Monate lang die eigenen Ausgaben in die drei Töpfe zu sortieren und erst dann zu urteilen. Viele sind überrascht, wohin das Geld tatsächlich fließt."
+        }
+      ],
+      "tryIt": "Sortiere die Abbuchungen des letzten Monats grob in Nötig, Wunsch und Sparen. Wie sieht deine tatsächliche Aufteilung aus?",
+      "takeaways": [
+        "Die wichtigste Grenze: Notwendiges höchstens die Hälfte.",
+        "Erst drei Monate messen, dann urteilen."
+      ]
+    }
+  },
+  {
+    "id": "freistellungsauftrag",
+    "title": "Freistellungsauftrag",
+    "principle": "Kapitalerträge wie Zinsen und Dividenden sind in Deutschland bis zu einem jährlichen Freibetrag, dem Sparer-Pauschbetrag, steuerfrei. Damit die Bank ihn berücksichtigt, musst du ihr einen Freistellungsauftrag erteilen.",
+    "example": "Angenommen, der Freibetrag beträgt 1.000 € und du hast 1.500 € Zinsen. Mit Auftrag werden nur 500 € besteuert: 25 % sind 125 €, mit Solidaritätszuschlag knapp 132 €. Ohne Auftrag wären es fast 400 €.",
+    "rule": "Bei jeder Bank mit Zinsen oder Depot einen Freistellungsauftrag einrichten und die Summe im Blick behalten.",
+    "deep": {
+      "lead": "Der Freibetrag wirkt nur automatisch, wenn die Bank von ihm weiß.",
+      "sections": [
+        {
+          "title": "So funktioniert die Abgeltungsteuer",
+          "text": "Banken in Deutschland führen die Steuer auf Kapitalerträge direkt ans Finanzamt ab. Der Satz beträgt pauschal 25 %, dazu kommen der Solidaritätszuschlag und gegebenenfalls Kirchensteuer. Mit dem Abzug ist die Sache in der Regel erledigt, daher der Name Abgeltungsteuer. Der Sparer-Pauschbetrag lag zuletzt bei 1.000 € pro Person und Jahr, bei gemeinsam veranlagten Paaren beim Doppelten; der Gesetzgeber kann ihn ändern. Du darfst ihn auf mehrere Banken verteilen, die Summe aller Aufträge darf den Pauschbetrag aber nicht übersteigen. Ändern lässt sich ein Auftrag meist mit wenigen Klicks im Onlinebanking."
+        },
+        {
+          "title": "Vergessen ist kein Drama",
+          "text": "Wer keinen Auftrag erteilt oder ihn ungünstig verteilt hat, verliert das Geld nicht. Zu viel einbehaltene Steuer lässt sich über die Anlage KAP der Steuererklärung zurückholen; die nötige Jahressteuerbescheinigung stellt die Bank aus. Bequemer ist es, die Aufträge einmal im Jahr zu prüfen, vor allem nach einem Bankwechsel oder wenn Zinsen gestiegen sind. Für Menschen mit geringem Einkommen gibt es zusätzlich die Günstigerprüfung: Liegt der persönliche Steuersatz unter 25 %, wird auf Antrag der niedrigere Satz angewendet. Wer voraussichtlich gar keine Einkommensteuer zahlt, kann eine Nichtveranlagungsbescheinigung beantragen."
+        }
+      ],
+      "tryIt": "Logg dich bei deinen Banken ein und prüf, ob und in welcher Höhe ein Freistellungsauftrag hinterlegt ist. Addiere alle Beträge.",
+      "takeaways": [
+        "Ohne Auftrag zieht die Bank ab dem ersten Euro Steuer ab.",
+        "Zu viel gezahlte Steuer gibt es über die Steuererklärung zurück."
+      ]
+    }
+  },
+  {
+    "id": "versichern-grundprinzip",
+    "title": "Versichern: das Grundprinzip",
+    "principle": "Versichere, was dich finanziell ruinieren würde, und trag kleine Schäden selbst. Eine Versicherung ist kein Sparvertrag: Im Durchschnitt zahlst du mehr ein, als du herausbekommst – du kaufst Schutz vor dem Unbezahlbaren.",
+    "example": "Eine Handyversicherung für 8 € im Monat kostet in drei Jahren 288 € – für ein Gerät, dessen Verlust ärgerlich, aber verkraftbar ist. Ein Haftpflichtschaden kann dagegen in die Millionen gehen.",
+    "rule": "Erst die existenziellen Risiken absichern – Kleinkram zahlst du aus dem Notgroschen.",
+    "deep": {
+      "lead": "Eine gute Versicherung tauscht einen kleinen sicheren Verlust gegen den Schutz vor dem Ruin.",
+      "sections": [
+        {
+          "title": "Die Logik dahinter",
+          "text": "Versicherungen funktionieren, weil viele Menschen kleine Beiträge in einen Topf zahlen, aus dem die wenigen großen Schäden beglichen werden. Der Versicherer muss daraus auch Verwaltung, Vertrieb und Gewinn decken. Rein rechnerisch ist jede Police deshalb ein Verlustgeschäft für den Durchschnittskunden. Sinnvoll ist sie trotzdem, wenn der mögliche Schaden so groß ist, dass du ihn allein nie tragen könntest. Dann tauschst du einen kleinen sicheren Verlust gegen den Schutz vor einem seltenen, aber vernichtenden. Bei kleinen Schäden lohnt dieser Tausch nicht; da bist du mit eigenen Rücklagen günstiger."
+        },
+        {
+          "title": "Was als existenziell gilt",
+          "text": "Verbraucherschützer nennen meist drei Bereiche. Erstens Schäden, die du anderen zufügst: Die private Haftpflicht kostet wenig und deckt Forderungen, die dich sonst ein Leben lang verfolgen können. Zweitens der Verlust der eigenen Arbeitskraft durch Krankheit oder Unfall, denn das künftige Einkommen ist für die meisten der größte Vermögenswert. Drittens der Schutz von Menschen, die von deinem Einkommen abhängen, sowie von sehr großen Sachwerten wie einem Haus. Die Krankenversicherung ist ohnehin Pflicht. Geräte-, Brillen- oder Reisegepäckversicherungen decken dagegen Schäden, die wehtun, aber niemanden ruinieren."
+        }
+      ],
+      "tryIt": "Liste deine Versicherungen auf und frag bei jeder: Würde mich der Schaden ohne sie ruinieren oder nur ärgern?",
+      "takeaways": [
+        "Versichert wird der Ruin, nicht der Ärger.",
+        "Haftpflicht und Arbeitskraft kommen vor allem anderen."
+      ]
+    }
+  },
+  {
+    "id": "rentenluecke",
+    "title": "Die Rentenlücke",
+    "principle": "Die Rentenlücke ist der Unterschied zwischen dem, was du im Alter monatlich brauchst, und dem, was du an Rente zu erwarten hast. Die gesetzliche Rente ersetzt nur einen Teil des letzten Nettoeinkommens.",
+    "example": "Du verdienst 2.500 € netto und möchtest im Alter 80 % davon, also 2.000 €. Erwartest du 1.300 € Rente, fehlen 700 € im Monat. Über 20 Jahre sind das 168.000 €, ohne Zinsen und Inflation gerechnet.",
+    "rule": "Einmal im Jahr die Renteninformation lesen und die Lücke neu schätzen – je früher, desto kleiner die Sparrate.",
+    "deep": {
+      "lead": "Wer seine Lücke kennt, kann sie in kleinen Schritten schließen, statt später vor einem Berg zu stehen.",
+      "sections": [
+        {
+          "title": "Die Renteninformation lesen",
+          "text": "Wer in Deutschland gesetzlich rentenversichert ist und genügend Beitragszeiten hat, bekommt jährlich Post von der Rentenversicherung. Darin stehen drei Werte: die Rente bei voller Erwerbsminderung, die bisher erreichte Altersrente und die Hochrechnung für den Fall, dass du bis zum Rentenalter weiter wie bisher einzahlst. Zwei Dinge werden oft übersehen. Die Beträge sind brutto; davon gehen noch Beiträge zur Kranken- und Pflegeversicherung und je nach Höhe Steuern ab. Und was die genannte Summe bei Rentenbeginn noch kaufen kann, hängt von der Preisentwicklung bis dahin ab."
+        },
+        {
+          "title": "Drei Stellschrauben",
+          "text": "Die Lücke lässt sich von drei Seiten verkleinern. Du kannst zusätzlich vorsorgen, über den Betrieb, staatlich gefördert oder privat. Du kannst den Bedarf senken; wer im Alter mietfrei wohnt oder keine Kredite mehr bedient, braucht deutlich weniger. Und du kannst die Erwerbsphase verändern, denn ein späterer Rentenbeginn erhöht die Ansprüche und verkürzt die Zeit, die das Ersparte reichen muss. Die Faustzahl von 80 % ist nur ein Startwert. Aussagekräftiger ist eine Liste deiner voraussichtlichen Ausgaben. Unsicher bleibt jede Schätzung, deshalb gehört sie regelmäßig überprüft."
+        }
+      ],
+      "tryIt": "Such deine letzte Renteninformation heraus und lies die hochgerechnete Altersrente ab. Zieh gut ein Zehntel für Kranken- und Pflegeversicherung ab.",
+      "takeaways": [
+        "Die Zahlen in der Renteninformation sind brutto.",
+        "Vorsorgen, Bedarf senken, länger arbeiten: drei Hebel."
+      ]
+    }
+  },
+  {
+    "id": "einlagensicherung",
+    "title": "Einlagensicherung",
+    "principle": "Guthaben auf Giro-, Tagesgeld- und Festgeldkonten sind in der EU gesetzlich bis 100.000 € pro Person und Bank geschützt, falls die Bank zahlungsunfähig wird.",
+    "example": "Liegen 150.000 € bei einer Bank, sind 50.000 € nicht gesetzlich abgesichert. Verteilt auf zwei Banken mit je 75.000 € ist alles geschützt. Ein Gemeinschaftskonto zweier Personen ist bis 200.000 € gedeckt.",
+    "rule": "Pro Bank nicht mehr als 100.000 € an Einlagen halten – größere Summen auf mehrere Institute verteilen.",
+    "deep": {
+      "lead": "Die Grenze gilt pro Kopf und pro Bank – wer das weiß, kann auch große Summen vollständig absichern.",
+      "sections": [
+        {
+          "title": "Was geschützt ist und was nicht",
+          "text": "Die gesetzliche Sicherung gilt für Einlagen, also für Geld, das du der Bank überlassen hast: Girokonto, Tagesgeld, Festgeld, Sparbuch. Maßgeblich ist die Bank als rechtliche Einheit. Mehrere Marken unter einer Banklizenz teilen sich eine Grenze. Wertpapiere im Depot fallen nicht darunter, brauchen diesen Schutz aber auch nicht. Aktien, Anleihen und Fondsanteile gehören dir und werden von der Bank nur verwahrt; bei einer Pleite kannst du sie auf ein anderes Depot übertragen lassen. Gegen Kursverluste schützt natürlich weder das eine noch das andere."
+        },
+        {
+          "title": "Feinheiten für größere Summen",
+          "text": "Die Sicherung ist in jedem EU-Land national organisiert. Bei einer Bank aus einem anderen EU-Staat ist das Sicherungssystem des Heimatlandes zuständig, mit derselben Mindestgrenze. In Deutschland gibt es zusätzlich freiwillige Sicherungssysteme der Bankenverbände sowie die Institutssicherung von Sparkassen und Genossenschaftsbanken, die über das gesetzliche Minimum hinausgehen können. Für besondere Lebenslagen, etwa kurz nach einem Immobilienverkauf oder einer Abfindung, gilt in Deutschland für einige Monate eine erhöhte Grenze. Entschädigt werden soll nach den EU-Regeln innerhalb weniger Arbeitstage. Ein auffällig hoher Zins bei einer unbekannten Bank ist trotzdem ein Grund, genauer hinzusehen."
+        }
+      ],
+      "tryIt": "Prüf auf der Website deiner Bank, welchem Sicherungssystem sie angehört und in welchem Land es sitzt.",
+      "takeaways": [
+        "100.000 € pro Person und pro Bank.",
+        "Wertpapiere im Depot gehören dir, nicht der Bank."
+      ]
+    }
+  },
+  {
+    "id": "rebalancing",
+    "title": "Rebalancing",
+    "principle": "Wer sein Geld nach einem festen Verhältnis aufteilt, etwa zwischen Aktien und sicheren Anlagen, muss gelegentlich nachjustieren. Sonst verschiebt die unterschiedliche Entwicklung das Risiko unbemerkt.",
+    "example": "Ziel 70/30: 7.000 € Aktien, 3.000 € Zinsanlagen. Steigen die Aktien um 30 % auf 9.100 €, liegt ihr Anteil bei rund 75 %. Um wieder 70 % zu erreichen, schichtest du 630 € um.",
+    "rule": "Einmal im Jahr die Aufteilung prüfen und nur bei deutlicher Abweichung zurückstellen.",
+    "deep": {
+      "lead": "Rebalancing hält das Risiko dort, wo du es haben wolltest – nicht dort, wohin der Markt es schiebt.",
+      "sections": [
+        {
+          "title": "Wozu das gut ist",
+          "text": "Die Aufteilung zwischen schwankenden und stabilen Anlagen bestimmt maßgeblich, wie stark dein Vermögen in einer Krise fallen kann. Lässt du alles laufen, wächst nach guten Börsenjahren der riskante Teil, und du trägst genau dann das höchste Risiko, wenn die Kurse am höchsten stehen. Rebalancing stellt das gewählte Risiko wieder her. Es ist in erster Linie Risikokontrolle, kein Renditeturbo. Nebenbei zwingt es zu einem Verhalten, das den meisten schwerfällt: einen Teil dessen zu verkaufen, was gut gelaufen ist, und nachzukaufen, was gerade niemand haben will."
+        },
+        {
+          "title": "Regeln statt Bauchgefühl",
+          "text": "Zwei Verfahren sind üblich. Beim festen Termin prüfst du einmal im Jahr. Beim Schwellenwert greifst du nur ein, wenn ein Baustein um mehr als etwa fünf Prozentpunkte vom Ziel abweicht. Beides verhindert ständiges Herumschrauben, das Gebühren kostet. Verkäufe mit Gewinn können außerdem Steuern auslösen. Schonender ist es deshalb, neue Sparraten für eine Weile in den untergewichteten Teil zu lenken, bis das Verhältnis wieder stimmt. Wichtig ist vor allem, die Regel in ruhigen Zeiten festzulegen. In einem Crash fühlt sich Nachkaufen falsch an, und dann hilft nur ein vorher gefasster Plan."
+        }
+      ],
+      "tryIt": "Wenn du Geld in verschiedenen Töpfen hast: Rechne die aktuellen Anteile in Prozent aus. Entsprechen sie noch deinem Plan?",
+      "takeaways": [
+        "Ohne Nachjustieren wandert das Risiko von selbst nach oben.",
+        "Regel in ruhigen Zeiten festlegen, in unruhigen befolgen."
+      ]
+    }
+  }
+]

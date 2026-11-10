@@ -210,7 +210,7 @@ object MindfulFeedContentProvider {
     ): List<LanguageCardItem> {
         val progress = store.state.value
         val settings = progress.settings
-        val unlockedDay = progress.unlockedDay(14)
+        val unlockedDay = progress.unlockedDay(repo.index.days.size)
         val courseDay = repo.index.day(unlockedDay) ?: repo.index.days.first()
         val dayPhrases = repo.index.dayPhrases(courseDay, settings)
         val todayEpoch = store.today()
@@ -1044,6 +1044,9 @@ object MindfulFeedContentProvider {
             philosophicalInsight = "Wahre Fairness entsteht, wenn die Mächtigen sich vorstellen müssen, morgen die Schwächsten im System zu sein.",
         ),
     )
+
+    /** Karten der Sprachen ohne eigenen Kurs (alles außer Russisch). */
+    fun languagePool(language: LearningLanguage): List<MindfulCard> = LANGUAGE_POOLS[language].orEmpty()
 
     fun getAllMasterCards(): List<MindfulCard> {
         val list = mutableListOf<MindfulCard>()

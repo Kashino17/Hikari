@@ -1,0 +1,1058 @@
+[
+  {
+    "id": "himmel-blau",
+    "phenomenon": "Rayleigh-Streuung",
+    "question": "Warum ist der Himmel blau – und abends rot?",
+    "explanation": "Sonnenlicht enthält alle Farben. Die Moleküle der Luft streuen kurzwelliges blaues Licht viel stärker als langwelliges rotes. Das gestreute Blau erreicht dein Auge aus allen Richtungen. Abends legt das Licht einen langen Weg durch die Luft zurück, das Blau geht unterwegs verloren, Rot bleibt übrig.",
+    "detail": "Violett wird noch stärker gestreut als Blau. Der Himmel wirkt trotzdem blau, weil die Sonne weniger Violett abstrahlt und unsere Augen dafür unempfindlicher sind.",
+    "deep": {
+      "lead": "Der Himmel leuchtet blau, weil winzige Luftmoleküle blaues Licht um ein Mehrfaches stärker zur Seite lenken als rotes.",
+      "sections": [
+        {
+          "title": "Die Regel mit der vierten Potenz",
+          "text": "Die Streuung an Teilchen, die viel kleiner sind als die Wellenlänge des Lichts, hängt extrem von der Wellenlänge ab: Halbiert man die Wellenlänge, steigt die Streuung auf das Sechzehnfache. Blaues Licht um 450 Nanometer wird deshalb etwa fünf- bis sechsmal stärker gestreut als rotes um 700 Nanometer. Der britische Physiker Lord Rayleigh hat diesen Zusammenhang im 19. Jahrhundert berechnet. Vorher vermutete man Staub oder Wassertröpfchen als Ursache. Tatsächlich genügen die Stickstoff- und Sauerstoffmoleküle selbst – auch völlig saubere Luft ergibt einen blauen Himmel."
+        },
+        {
+          "title": "Warum Wolken weiß sind",
+          "text": "Wassertröpfchen in Wolken sind viel größer als Luftmoleküle, größer auch als die Wellenlänge des Lichts. An so großen Teilchen werden alle Farben annähernd gleich stark gestreut, die Mischung ergibt Weiß. Dasselbe siehst du bei Dunst über einer Stadt: Je mehr große Schwebteilchen in der Luft hängen, desto blasser und milchiger wird das Blau. Nach einem kräftigen Regen, der die Luft ausgewaschen hat, wirkt der Himmel dagegen besonders tiefblau. Auf dem Mond gibt es keine Atmosphäre, dort ist der Himmel auch am Tag schwarz."
+        }
+      ],
+      "tryIt": "Schau heute erst senkrecht nach oben und dann zum Horizont: Oben ist das Blau kräftig, am Rand blasser, weil du dort durch viel mehr Luft und Dunst blickst.",
+      "takeaways": [
+        "Kurzwelliges Licht wird in Luft viel stärker gestreut als langwelliges.",
+        "Große Tröpfchen streuen alle Farben gleich – deshalb sind Wolken weiß."
+      ]
+    }
+  },
+  {
+    "id": "impfung-immungedaechtnis",
+    "phenomenon": "Impfung und Immungedächtnis",
+    "question": "Wie bringt eine Impfung dem Körper bei, einen Erreger zu erkennen?",
+    "explanation": "Eine Impfung zeigt dem Immunsystem einen harmlosen Teil oder eine abgeschwächte Form des Erregers. Der Körper bildet Antikörper und Gedächtniszellen dagegen. Trifft später der echte Erreger ein, reagiert die Abwehr schnell und stark, bevor die Krankheit schwer ausbricht.",
+    "detail": "Die Pocken sind die einzige Infektionskrankheit des Menschen, die durch Impfen weltweit ausgerottet wurde. Die Weltgesundheitsorganisation erklärte das 1980.",
+    "deep": {
+      "lead": "Impfen ist ein Probealarm: Das Immunsystem übt am ungefährlichen Modell und merkt sich den Gegner.",
+      "sections": [
+        {
+          "title": "Was nach dem Piks passiert",
+          "text": "Fresszellen an der Einstichstelle nehmen den Impfstoff auf und wandern in den nächsten Lymphknoten. Dort zeigen sie Bruchstücke des Erregers, die Antigene, den T- und B-Zellen. Unter Milliarden verschiedener B-Zellen passen nur wenige zufällig auf das Antigen. Genau diese vermehren sich nun stark und stellen Antikörper her. Das dauert ein bis zwei Wochen. Ein Teil der Zellen bleibt als Gedächtniszellen über Jahre erhalten. Der schmerzende Arm und leichtes Fieber sind Zeichen dieser Arbeit, nicht der Krankheit selbst."
+        },
+        {
+          "title": "Von Kuhpocken zur mRNA",
+          "text": "Der englische Arzt Edward Jenner zeigte 1796, dass eine Ansteckung mit den harmlosen Kuhpocken vor den echten Pocken schützt. Vom lateinischen Wort für Kuh, vacca, stammt der Begriff Vakzine. Heute gibt es mehrere Bauarten: abgeschwächte lebende Erreger, abgetötete Erreger, einzelne Eiweiße und mRNA-Impfstoffe. Bei den letzten bekommt der Körper nur die Bauanleitung für ein Erreger-Eiweiß und stellt es kurzzeitig selbst her. Die mRNA wird nach wenigen Tagen abgebaut und gelangt nicht ins Erbgut im Zellkern."
+        },
+        {
+          "title": "Warum manche Impfungen aufgefrischt werden",
+          "text": "Das Gedächtnis hält nicht bei jedem Erreger gleich lang. Gegen Masern schützt die Impfung meist lebenslang, gegen Tetanus lässt der Antikörperspiegel über die Jahre nach und wird aufgefrischt. Grippeviren verändern ihre Oberfläche ständig, sodass der Impfstoff jedes Jahr angepasst wird. Sind genug Menschen geschützt, findet ein Erreger kaum noch neue Wirte. Dieser Gemeinschaftsschutz bewahrt auch Säuglinge und Kranke, die selbst nicht geimpft werden können."
+        }
+      ],
+      "tryIt": "Such deinen Impfpass heraus und prüfe, wann deine letzte Tetanus-Auffrischung war. Für Erwachsene wird sie alle zehn Jahre empfohlen.",
+      "takeaways": [
+        "Impfstoffe trainieren die Abwehr, ohne die Krankheit auszulösen.",
+        "Gedächtniszellen machen die zweite Reaktion schneller und stärker.",
+        "Viele Geimpfte schützen auch die, die nicht geimpft werden können."
+      ]
+    }
+  },
+  {
+    "id": "eis-schwimmt",
+    "phenomenon": "Dichteanomalie des Wassers",
+    "question": "Warum schwimmt Eis, obwohl feste Stoffe sonst meist untergehen?",
+    "explanation": "Beim Gefrieren ordnen sich Wassermoleküle zu einem weitmaschigen Gitter aus Sechsecken. Darin haben sie mehr Abstand als im flüssigen Wasser. Eis ist deshalb rund neun Prozent weniger dicht und schwimmt. Am dichtesten ist Wasser bei etwa vier Grad Celsius.",
+    "detail": "Weil vier Grad kaltes Wasser nach unten sinkt, frieren Seen von oben zu. Am Grund bleibt es flüssig, und Fische überleben den Winter.",
+    "deep": {
+      "lead": "Wasserstoffbrücken zwingen gefrierendes Wasser in ein sperriges Gitter – darum ist Eis leichter als Wasser.",
+      "sections": [
+        {
+          "title": "Das gewinkelte Molekül",
+          "text": "Ein Wassermolekül ist gewinkelt gebaut: Der Sauerstoff zieht die Elektronen stärker an und ist leicht negativ geladen, die beiden Wasserstoffatome leicht positiv. Dadurch haften Moleküle aneinander, über sogenannte Wasserstoffbrücken. Im flüssigen Wasser reißen diese Brücken ständig und bilden sich neu, die Moleküle können eng zusammenrücken. Im Eis hält jedes Molekül vier Nachbarn auf festem Abstand. Es entsteht ein Gitter mit Hohlräumen. Dieselbe Sechseckordnung siehst du in jeder Schneeflocke mit ihren sechs Armen."
+        },
+        {
+          "title": "Was die Ausdehnung anrichtet",
+          "text": "Dass Wasser sich beim Gefrieren ausdehnt, hat sichtbare Folgen. Eine volle Glasflasche im Gefrierfach platzt. Wasser in Felsritzen sprengt beim Frieren Gestein, über Jahrtausende zerlegt diese Frostsprengung ganze Bergflanken. Auch Schlaglöcher auf Straßen entstehen so nach dem Winter. Ein Eisberg ragt nur mit etwa einem Zehntel aus dem Meer, der Rest liegt unter Wasser. Die meisten anderen Stoffe verhalten sich umgekehrt: Festes Wachs oder festes Eisen sinkt in der eigenen Schmelze nach unten."
+        }
+      ],
+      "tryIt": "Gib einen Eiswürfel in ein randvolles Glas Wasser und warte, bis er geschmolzen ist. Das Glas läuft nicht über – überlege, warum.",
+      "takeaways": [
+        "Eis hat ein offenes Kristallgitter und ist leichter als Wasser.",
+        "Wasser ist bei rund vier Grad am dichtesten."
+      ]
+    }
+  },
+  {
+    "id": "gps-ortung",
+    "phenomenon": "Satellitennavigation",
+    "question": "Wie findet dein Handy mit GPS heraus, wo du stehst?",
+    "explanation": "Jeder GPS-Satellit sendet laufend seine Position und die genaue Uhrzeit. Dein Handy misst, wie lange jedes Signal unterwegs war, und berechnet daraus die Entfernung zum Satelliten. Mit den Entfernungen zu mindestens vier Satelliten lässt sich der eigene Standort eindeutig bestimmen.",
+    "detail": "Die Uhren an Bord gehen wegen der Relativitätstheorie täglich rund 38 Millionstelsekunden vor. Ohne Korrektur läge die Ortung nach einem Tag um Kilometer daneben.",
+    "deep": {
+      "lead": "GPS ist Zeitmessung: Aus Signallaufzeiten von wenigen Hundertstelsekunden werden Entfernungen und daraus ein Ort.",
+      "sections": [
+        {
+          "title": "Vier Kugeln, ein Punkt",
+          "text": "Kennst du die Entfernung zu einem Satelliten, liegst du irgendwo auf einer Kugelschale um ihn. Zwei Kugeln schneiden sich in einem Kreis, eine dritte lässt nur noch zwei Punkte übrig, von denen einer meist weit im All liegt. Den vierten Satelliten braucht dein Handy aus einem anderen Grund: Seine eingebaute Quarzuhr ist viel zu ungenau. Der Empfänger behandelt den eigenen Uhrenfehler deshalb als vierte Unbekannte und rechnet ihn mit heraus. So bekommt ein billiger Chip nebenbei eine Uhrzeit von Atomuhr-Qualität."
+        },
+        {
+          "title": "Warum die Uhren so genau sein müssen",
+          "text": "Funksignale breiten sich mit Lichtgeschwindigkeit aus, in einer Milliardstelsekunde etwa 30 Zentimeter weit. Ein Uhrenfehler von einer Millionstelsekunde bedeutet schon 300 Meter Abweichung. Deshalb tragen die Satelliten Atomuhren. Zwei Effekte der Relativitätstheorie verstellen sie: Durch ihre hohe Geschwindigkeit gehen sie etwas langsamer, durch die schwächere Schwerkraft in rund 20.000 Kilometern Höhe deutlich schneller. Unter dem Strich gehen sie vor, und dieser Betrag wird von vornherein eingerechnet."
+        },
+        {
+          "title": "Dein Handy sendet nichts",
+          "text": "Ein verbreiteter Irrtum: GPS-Satelliten wissen nicht, wo du bist. Dein Handy empfängt nur und rechnet selbst. Deshalb funktioniert die Ortung auch im Flugmodus und ohne Mobilfunknetz, nur die Karte muss vorher geladen sein. Neben dem amerikanischen GPS gibt es das europäische Galileo, das russische Glonass und das chinesische Beidou. Moderne Handys nutzen mehrere Systeme zugleich. In Häuserschluchten werden Signale an Fassaden gespiegelt, der Weg wird länger, und der blaue Punkt springt."
+        }
+      ],
+      "tryIt": "Lade einen Kartenausschnitt offline, schalte den Flugmodus ein und geh draußen ein Stück: Der Standortpunkt wandert trotzdem mit.",
+      "takeaways": [
+        "Laufzeit mal Lichtgeschwindigkeit ergibt die Entfernung zum Satelliten.",
+        "Der vierte Satellit gleicht die ungenaue Uhr im Handy aus.",
+        "GPS-Empfang braucht kein Internet und verrät den Satelliten nichts."
+      ]
+    }
+  },
+  {
+    "id": "regenbogen",
+    "phenomenon": "Regenbogen",
+    "question": "Wie entsteht ein Regenbogen, und warum ist er immer ein Bogen?",
+    "explanation": "Sonnenlicht tritt in Regentropfen ein, wird an der Rückwand gespiegelt und tritt wieder aus. Dabei wird es zweimal gebrochen, jede Farbe etwas anders. Die Tropfen schicken das Licht bevorzugt unter etwa 42 Grad zurück. Alle Tropfen, die diesen Winkel zu deinem Auge haben, bilden einen Kreisbogen.",
+    "detail": "Vom Flugzeug aus kann ein Regenbogen als geschlossener Kreis erscheinen. Am Boden schneidet der Horizont die untere Hälfte ab.",
+    "deep": {
+      "lead": "Ein Regenbogen ist kein Ding an einem Ort, sondern ein Winkel: Er steht 42 Grad um den Punkt gegenüber der Sonne.",
+      "sections": [
+        {
+          "title": "Jeder sieht seinen eigenen",
+          "text": "Der Mittelpunkt des Bogens liegt genau gegenüber der Sonne, dort, wohin der Schatten deines Kopfes zeigt. Deshalb steht die Sonne beim Regenbogen immer in deinem Rücken. Und deshalb sieht die Person neben dir Licht aus anderen Tropfen, streng genommen also einen anderen Bogen. Du kannst auch nie an sein Ende gelangen: Gehst du los, wandert er mit. Steht die Sonne höher als 42 Grad über dem Horizont, liegt der Bogen unter dem Horizont. Regenbögen sieht man darum vor allem morgens und am späten Nachmittag."
+        },
+        {
+          "title": "Der zweite Bogen und das dunkle Band",
+          "text": "Oft steht über dem Hauptbogen ein schwächerer Nebenbogen. Er entsteht durch Licht, das im Tropfen zweimal gespiegelt wurde, und erscheint unter etwa 51 Grad. Seine Farben sind umgekehrt angeordnet: Rot liegt innen. Zwischen beiden Bögen ist der Himmel auffällig dunkel, weil aus diesem Winkelbereich kaum Licht zurückkommt. Dieses Band ist nach dem antiken Gelehrten Alexander von Aphrodisias benannt. Innerhalb des Hauptbogens ist der Himmel dagegen heller als außerhalb. Die Geometrie dahinter hat René Descartes im 17. Jahrhundert berechnet."
+        }
+      ],
+      "tryIt": "Stell dich an einem sonnigen Tag mit dem Rücken zur Sonne und sprühe mit Gartenschlauch oder Sprühflasche feinen Nebel vor dich: Dein eigener Regenbogen erscheint.",
+      "takeaways": [
+        "Brechung, Spiegelung und nochmals Brechung im Tropfen fächern das Licht auf.",
+        "Der Bogen steht immer gegenüber der Sonne, unter rund 42 Grad."
+      ]
+    }
+  },
+  {
+    "id": "warum-schlafen",
+    "phenomenon": "Schlaf",
+    "question": "Warum müssen wir schlafen?",
+    "explanation": "Im Schlaf festigt das Gehirn Gelerntes, sortiert Eindrücke und baut Stoffwechselreste ab. Der Körper schüttet Wachstumshormon aus, repariert Gewebe und stärkt die Abwehr. Zwei Kräfte steuern den Schlaf: die innere Uhr und der Schlafdruck, der mit jeder wachen Stunde steigt.",
+    "detail": "Delfine schlafen mit nur einer Gehirnhälfte. Die andere bleibt wach, damit sie weiter auftauchen und atmen können.",
+    "deep": {
+      "lead": "Schlaf ist keine Pause, sondern eine aktive Schicht, in der Gehirn und Körper aufräumen und speichern.",
+      "sections": [
+        {
+          "title": "Eine Nacht in Zyklen",
+          "text": "Du schläfst nicht gleichmäßig, sondern in Zyklen von etwa 90 Minuten. Jeder führt vom leichten Schlaf in den Tiefschlaf und endet mit einer REM-Phase, in der sich die Augen schnell bewegen und die lebhaftesten Träume entstehen. In der ersten Nachthälfte überwiegt der Tiefschlaf, gegen Morgen werden die REM-Phasen länger. Während des REM-Schlafs ist die Skelettmuskulatur fast gelähmt, damit du Träume nicht ausführst. Entdeckt wurden diese Phasen in den 1950er-Jahren, als Forscher die Hirnströme Schlafender die ganze Nacht aufzeichneten."
+        },
+        {
+          "title": "Adenosin, Melatonin und Licht",
+          "text": "Solange du wach bist, sammelt sich im Gehirn der Botenstoff Adenosin an und macht zunehmend müde. Im Schlaf wird er wieder abgebaut. Daneben gibt die innere Uhr den Takt vor, ein Nervenkern im Zwischenhirn, der sich täglich am Licht neu einstellt. Abends lässt er die Zirbeldrüse Melatonin ausschütten. Helles, bläuliches Licht am späten Abend bremst diese Ausschüttung und verschiebt die Müdigkeit nach hinten. Morgenlicht wirkt umgekehrt und stellt die Uhr nach vorn."
+        },
+        {
+          "title": "Was Schlafmangel anrichtet",
+          "text": "Nach einer durchwachten Nacht sinken Aufmerksamkeit und Reaktionsvermögen deutlich, ähnlich wie unter Alkoholeinfluss. Tückisch ist, dass man die eigene Leistung dabei überschätzt. Auf Dauer hängt zu wenig Schlaf mit höherem Risiko für Bluthochdruck, Übergewicht und Infekte zusammen. Ein Irrtum ist, man könne Schlaf beliebig am Wochenende nachholen: Ein Teil des Tiefschlafs wird zwar nachgeholt, die unter der Woche verlorene Leistung aber nicht. Die meisten Erwachsenen brauchen sieben bis neun Stunden."
+        }
+      ],
+      "tryIt": "Geh heute Vormittag für zehn Minuten ins Tageslicht, ohne Sonnenbrille. Morgenlicht stellt deine innere Uhr und erleichtert abends das Einschlafen.",
+      "takeaways": [
+        "Schlaf verläuft in Zyklen aus Leicht-, Tief- und REM-Schlaf.",
+        "Schlafdruck und innere Uhr bestimmen gemeinsam, wann du müde wirst.",
+        "Licht am Morgen hilft, Licht am späten Abend stört."
+      ]
+    }
+  },
+  {
+    "id": "auftrieb-fluegel",
+    "phenomenon": "Auftrieb am Flugzeugflügel",
+    "question": "Was hält ein tonnenschweres Flugzeug in der Luft?",
+    "explanation": "Der Flügel ist gewölbt und leicht angestellt. Er lenkt die anströmende Luft nach unten ab. Nach Newtons drittem Gesetz drückt die Luft den Flügel im Gegenzug nach oben. Zugleich ist der Druck über dem Flügel niedriger als darunter. Beides beschreibt denselben Vorgang: den Auftrieb.",
+    "detail": "Kunstflugzeuge fliegen auch auf dem Rücken. Entscheidend ist der Anstellwinkel zur Luftströmung, nicht allein die Wölbung des Profils.",
+    "deep": {
+      "lead": "Ein Flügel fliegt, weil er große Luftmassen nach unten ablenkt – der Druckunterschied ist dieselbe Sache, anders betrachtet.",
+      "sections": [
+        {
+          "title": "Der Irrtum mit der gleichen Laufzeit",
+          "text": "In vielen Büchern steht, die Luft müsse über die längere Oberseite schneller strömen, um gleichzeitig mit der Luft von der Unterseite hinten anzukommen. Dafür gibt es keinen physikalischen Grund, und Messungen im Windkanal zeigen etwas anderes: Die Luft über dem Flügel ist sogar deutlich früher an der Hinterkante. Richtig ist, dass die Strömung oben schneller und der Druck dort niedriger ist. Die Begründung mit der gleichen Laufzeit aber ist falsch und würde einen viel zu kleinen Auftrieb ergeben."
+        },
+        {
+          "title": "Strömung, die der Wölbung folgt",
+          "text": "Luft ist zäh genug, um einer sanft gekrümmten Oberfläche zu folgen. Über dem Flügel wird sie dadurch nach unten umgelenkt. Für diese Kurvenbahn braucht es einen Druckunterschied, so wie ein Auto in der Kurve eine Seitenkraft braucht: Oben am Flügel entsteht Unterdruck. Hinter dem Flügel strömt die Luft schräg abwärts. Diesen Abwind kannst du sehen, wenn ein Flugzeug dicht über eine Wolkendecke oder eine Nebelschicht fliegt und eine Rinne hineindrückt."
+        },
+        {
+          "title": "Wenn die Strömung abreißt",
+          "text": "Je steiler der Flügel angestellt wird, desto mehr Auftrieb liefert er – bis zu einer Grenze von grob 15 Grad. Darüber kann die Luft der Oberseite nicht mehr folgen, sie löst sich in Wirbeln ab, und der Auftrieb bricht ein. Piloten nennen das Strömungsabriss. Beim Landen fahren Flugzeuge deshalb Klappen aus: Sie vergrößern Wölbung und Fläche, sodass der Flügel auch bei geringem Tempo genug Auftrieb erzeugt. Vom Fensterplatz über der Tragfläche kannst du das gut beobachten."
+        }
+      ],
+      "tryIt": "Halte die gewölbte Rückseite eines Löffels locker an einen dünnen Wasserstrahl: Das Wasser folgt der Wölbung, und der Löffel wird in den Strahl hineingezogen.",
+      "takeaways": [
+        "Auftrieb entsteht, weil der Flügel Luft nach unten ablenkt.",
+        "Die Erklärung mit der gleichen Laufzeit ist ein Lehrbuchirrtum.",
+        "Zu steiler Anstellwinkel führt zum Strömungsabriss."
+      ]
+    }
+  },
+  {
+    "id": "halbwertszeit",
+    "phenomenon": "Halbwertszeit",
+    "question": "Was bedeutet es, wenn ein Stoff eine Halbwertszeit hat?",
+    "explanation": "Die Halbwertszeit ist die Zeitspanne, nach der die Hälfte der Atomkerne eines radioaktiven Stoffes zerfallen ist. Nach zwei Halbwertszeiten ist noch ein Viertel übrig, nach drei ein Achtel. Wann ein einzelner Kern zerfällt, ist reiner Zufall – erst bei riesigen Mengen wird die Regel verlässlich.",
+    "detail": "Die Spanne ist gewaltig: Uran-238 hat eine Halbwertszeit von rund 4,5 Milliarden Jahren, manche künstlich erzeugten Kerne zerfallen in Sekundenbruchteilen.",
+    "deep": {
+      "lead": "Atomkerne altern nicht: Jeder hat in jedem Moment dieselbe Zerfallschance, egal wie lange er schon existiert.",
+      "sections": [
+        {
+          "title": "Würfeln mit Atomkernen",
+          "text": "Stell dir tausend Würfel vor. Du wirfst alle und nimmst jede Sechs heraus, dann wirfst du den Rest erneut. Pro Runde verschwindet immer derselbe Anteil, nicht dieselbe Anzahl. Nach etwa vier Runden ist die Hälfte weg, nach weiteren vier die Hälfte vom Rest. Genau so verhalten sich Atomkerne. Daraus folgt auch, dass ein Stoff nie schlagartig »fertig« zerfallen ist. Als Faustregel gilt: Nach zehn Halbwertszeiten ist weniger als ein Tausendstel der Ausgangsmenge übrig."
+        },
+        {
+          "title": "Die Uhr im Kohlenstoff",
+          "text": "Lebewesen nehmen ständig Kohlenstoff auf, darunter einen winzigen Anteil des radioaktiven Kohlenstoff-14. Mit dem Tod endet der Nachschub, und der Vorrat zerfällt mit einer Halbwertszeit von rund 5.700 Jahren. Aus dem verbliebenen Anteil lässt sich berechnen, wann ein Baum gefällt wurde oder ein Tier gestorben ist. Die Methode reicht etwa 50.000 Jahre zurück, danach ist zu wenig übrig. Für das Alter von Gesteinen nutzt man langlebigere Kerne wie Uran. So wurde auch das Alter der Erde bestimmt: rund 4,5 Milliarden Jahre."
+        },
+        {
+          "title": "Halbwertszeit im Körper",
+          "text": "Der Begriff taucht auch in der Medizin auf. Dort meint die biologische Halbwertszeit die Zeit, in der der Körper die Hälfte eines Wirkstoffs abgebaut oder ausgeschieden hat. Bei Koffein sind das bei Erwachsenen grob vier bis sechs Stunden. Vom Kaffee um 16 Uhr ist um 22 Uhr also noch ungefähr die Hälfte im Blut. Mit Radioaktivität hat das nichts zu tun, die Rechnung ist aber dieselbe. Danach richtet sich, wie oft am Tag ein Medikament eingenommen werden muss."
+        }
+      ],
+      "tryIt": "Rechne nach: Jod-131 hat eine Halbwertszeit von etwa acht Tagen. Welcher Bruchteil der Ausgangsmenge ist nach 24 Tagen noch übrig?",
+      "takeaways": [
+        "Pro Halbwertszeit zerfällt immer die Hälfte dessen, was noch da ist.",
+        "Der einzelne Zerfall ist Zufall, die große Menge folgt einem Gesetz.",
+        "Mit bekannten Halbwertszeiten lassen sich Alter bestimmen."
+      ]
+    }
+  },
+  {
+    "id": "gezeiten-mond",
+    "phenomenon": "Ebbe und Flut",
+    "question": "Warum hebt und senkt der Mond zweimal täglich das Meer?",
+    "explanation": "Der Mond zieht die ihm zugewandte Seite der Erde stärker an als die abgewandte. Dieser Unterschied dehnt die Wasserhülle in zwei Richtungen: Ein Flutberg zeigt zum Mond, einer von ihm weg. Die Erde dreht sich unter beiden hindurch, daher gibt es an den meisten Küsten zwei Fluten am Tag.",
+    "detail": "Die Gezeitenreibung bremst die Erddrehung: Die Tage werden pro Jahrhundert um rund zwei Tausendstelsekunden länger, und der Mond entfernt sich jährlich um knapp vier Zentimeter.",
+    "deep": {
+      "lead": "Gezeiten entstehen nicht durch die Anziehung des Mondes an sich, sondern durch ihren Unterschied quer über die Erde.",
+      "sections": [
+        {
+          "title": "Der zweite Flutberg",
+          "text": "Dass sich das Wasser zum Mond hin wölbt, leuchtet ein. Rätselhafter ist der Berg auf der Rückseite. Die Erklärung: Die Anziehung des Mondes nimmt mit der Entfernung ab. Das Wasser vorn wird stärker gezogen als der Erdmittelpunkt, der Erdmittelpunkt stärker als das Wasser hinten. Relativ zur Erde bleibt das hintere Wasser also zurück und bildet den zweiten Berg. Weil der Mond während einer Erddrehung auf seiner Bahn weiterzieht, verspätet sich die Flut jeden Tag um etwa 50 Minuten."
+        },
+        {
+          "title": "Springflut und Nippflut",
+          "text": "Auch die Sonne erzeugt Gezeiten, etwa halb so starke wie der Mond. Bei Vollmond und Neumond stehen Sonne, Erde und Mond in einer Linie, die Wirkungen addieren sich zur Springflut mit besonders hohem Wasserstand. Bei Halbmond stehen sie im rechten Winkel und schwächen sich ab, das ergibt die niedrige Nippflut. Wie hoch das Wasser tatsächlich steigt, bestimmt aber die Küstenform. Auf dem offenen Ozean ist es weniger als ein Meter, in trichterförmigen Buchten wie der kanadischen Bay of Fundy sind es mehr als zehn."
+        },
+        {
+          "title": "Auch der Boden hebt sich",
+          "text": "Die Gezeitenkräfte wirken nicht nur auf Wasser. Auch der feste Erdkörper wird verformt: Der Boden unter dir hebt und senkt sich zweimal täglich um einige Dezimeter, ohne dass du es merkst, weil sich alles ringsum mitbewegt. Umgekehrt hat die Erde den Mond längst gebremst. Er dreht sich genau einmal pro Umlauf um sich selbst und zeigt uns deshalb immer dieselbe Seite. Seen und Badewannen sind übrigens viel zu klein für spürbare Gezeiten."
+        }
+      ],
+      "tryIt": "Schlag im Gezeitenkalender eines Nordseeortes die Hochwasserzeiten von heute und morgen nach und vergleiche: Sie verschieben sich um knapp eine Stunde.",
+      "takeaways": [
+        "Es gibt zwei Flutberge: einen zum Mond hin, einen auf der Gegenseite.",
+        "Sonne und Mond in einer Linie ergeben die Springflut.",
+        "Die Küstenform entscheidet, wie hoch die Flut wirklich wird."
+      ]
+    }
+  },
+  {
+    "id": "muskelwachstum",
+    "phenomenon": "Muskelwachstum",
+    "question": "Wie werden Muskeln durch Training größer und stärker?",
+    "explanation": "Ungewohnt hohe Belastung setzt die Muskelfasern unter mechanische Spannung. Das ist das Signal, mehr Eiweiß einzubauen: Die Fasern lagern zusätzliche kontraktile Fäden ein und werden dicker. Der Aufbau findet in der Erholung statt, nicht beim Training selbst, und braucht Eiweiß und Schlaf.",
+    "detail": "In den ersten Trainingswochen wächst die Kraft vor allem, weil das Nervensystem die vorhandenen Fasern besser ansteuert – der Muskel selbst ist da noch kaum größer.",
+    "deep": {
+      "lead": "Muskeln wachsen, weil sie sich an eine Belastung knapp über dem Gewohnten anpassen – und zwar in der Pause danach.",
+      "sections": [
+        {
+          "title": "Dicker, nicht mehr",
+          "text": "Ein Muskel besteht aus Tausenden langer Fasern, jede eine einzige riesige Zelle mit vielen Zellkernen. Beim Krafttraining nimmt beim Menschen vor allem die Dicke dieser Fasern zu, ihre Zahl bleibt weitgehend gleich. Im Inneren liegen Bündel aus den Eiweißen Aktin und Myosin, die sich beim Anspannen ineinanderschieben. Wachstum heißt, dass mehr solcher Bündel nebeneinander eingebaut werden. Dabei helfen Satellitenzellen, die außen an der Faser sitzen: Sie verschmelzen mit ihr und liefern zusätzliche Zellkerne."
+        },
+        {
+          "title": "Muskelkater ist kein Maßstab",
+          "text": "Lange hieß es, Muskelkater komme von Milchsäure. Das stimmt nicht: Laktat ist kurz nach der Belastung wieder abgebaut, der Kater kommt erst einen Tag später. Ursache sind winzige Risse im Inneren der Fasern, vor allem nach bremsenden Bewegungen wie Bergabgehen, und die anschließende Entzündungsreaktion. Muskelkater zeigt also eine ungewohnte Belastung an, nicht ein besonders wirksames Training. Wer regelmäßig trainiert, baut Muskeln auf, auch ohne jedes Mal Schmerzen zu haben."
+        },
+        {
+          "title": "Was nicht benutzt wird, verschwindet",
+          "text": "Muskelgewebe ist teuer im Unterhalt, deshalb baut der Körper ab, was er nicht braucht. Nach wenigen Wochen im Gips ist ein Bein sichtbar dünner. Astronauten in der Schwerelosigkeit trainieren täglich rund zwei Stunden, um den Abbau zu bremsen. Ab dem mittleren Lebensalter geht ohne Training mit jedem Jahrzehnt Muskelmasse verloren. Krafttraining wirkt dem in jedem Alter entgegen, auch bei über Achtzigjährigen lässt sich noch ein Zuwachs an Kraft und Muskelmasse messen."
+        }
+      ],
+      "tryIt": "Mach heute zehn Kniebeugen und zähle beim Absenken jeweils langsam bis vier. Die bremsende Phase setzt einen besonders starken Reiz.",
+      "takeaways": [
+        "Der Reiz kommt im Training, der Aufbau in der Erholung.",
+        "Fasern werden dicker, nicht zahlreicher.",
+        "Muskelkater entsteht durch Mikrorisse, nicht durch Milchsäure."
+      ]
+    }
+  },
+  {
+    "id": "schwarzes-loch",
+    "phenomenon": "Schwarzes Loch",
+    "question": "Was ist ein Schwarzes Loch, und warum kommt nichts wieder heraus?",
+    "explanation": "Ein Schwarzes Loch ist so viel Masse auf so engem Raum, dass in seiner Nähe die Fluchtgeschwindigkeit die Lichtgeschwindigkeit übersteigt. Die Grenze heißt Ereignishorizont. Was sie überschreitet, kann nicht zurück, auch Licht nicht. Die meisten entstehen, wenn sehr massereiche Sterne am Lebensende kollabieren.",
+    "detail": "Würde die Sonne durch ein Schwarzes Loch gleicher Masse ersetzt, liefe die Erde auf derselben Bahn weiter. Schwarze Löcher saugen nicht stärker als andere Massen.",
+    "deep": {
+      "lead": "Ein Schwarzes Loch ist kein Staubsauger, sondern ein Ort, an dem die Raumzeit so stark gekrümmt ist, dass alle Wege nach innen führen.",
+      "sections": [
+        {
+          "title": "Wie man etwas Unsichtbares findet",
+          "text": "Ein Schwarzes Loch selbst leuchtet nicht, seine Umgebung umso mehr. Gas, das hineinstürzt, sammelt sich in einer schnell rotierenden Scheibe, heizt sich auf Millionen Grad auf und strahlt Röntgenlicht ab. Im Zentrum der Milchstraße umkreisen Sterne mit enormem Tempo einen dunklen Punkt. Aus ihren Bahnen ergibt sich dort eine Masse von rund vier Millionen Sonnen. 2015 wurden erstmals Gravitationswellen gemessen, die beim Verschmelzen zweier Schwarzer Löcher entstanden. 2019 erschien das erste Bild vom Schatten eines Schwarzen Lochs in der Galaxie M87."
+        },
+        {
+          "title": "Was beim Hineinfallen geschieht",
+          "text": "Nahe am Schwarzen Loch ändert sich die Schwerkraft auf kurzer Strecke stark. An den Füßen eines hineinfallenden Astronauten würde sie stärker ziehen als am Kopf, er würde in die Länge gezogen. Physiker nennen das trocken Spaghettisierung. Bei sehr großen Schwarzen Löchern ist dieser Effekt am Horizont noch schwach, man würde die Grenze ohne spürbares Zeichen überqueren. Für einen fernen Beobachter scheint der Fallende dagegen immer langsamer zu werden und zu verblassen, weil die Zeit nahe dem Horizont gedehnt abläuft."
+        },
+        {
+          "title": "Von Stadtgröße bis Sonnensystem",
+          "text": "Der Radius des Ereignishorizonts wächst mit der Masse. Für die Sonne läge er bei etwa drei Kilometern, für die Erde bei knapp einem Zentimeter. Die Sonne wird allerdings nie zum Schwarzen Loch, dafür ist sie zu leicht. Stellare Schwarze Löcher haben einige bis einige Dutzend Sonnenmassen. In den Zentren der Galaxien sitzen Exemplare mit Millionen bis Milliarden Sonnenmassen. Wie diese Riesen schon früh in der Geschichte des Universums so schwer werden konnten, ist noch nicht geklärt."
+        }
+      ],
+      "tryIt": "Such im Netz das Bild des Schwarzen Lochs in M87 von 2019 und überlege: Was genau leuchtet darauf, und was ist der dunkle Fleck in der Mitte?",
+      "takeaways": [
+        "Der Ereignishorizont ist eine Grenze ohne Rückweg, keine feste Oberfläche.",
+        "Aus der Ferne wirkt ein Schwarzes Loch wie jede andere Masse.",
+        "Nachgewiesen wird es über Sternbahnen, heißes Gas und Gravitationswellen."
+      ]
+    }
+  },
+  {
+    "id": "lithium-ionen-akku",
+    "phenomenon": "Lithium-Ionen-Akku",
+    "question": "Wie speichert ein Akku Strom und gibt ihn wieder ab?",
+    "explanation": "Im Akku wandern Lithium-Ionen zwischen zwei Elektroden durch eine Flüssigkeit, den Elektrolyten. Beim Entladen ziehen sie vom Minuspol aus Graphit zum Pluspol aus einem Metalloxid. Die zugehörigen Elektronen müssen außen herum durch das Gerät fließen – das ist der nutzbare Strom. Beim Laden läuft alles rückwärts.",
+    "detail": "Ein Akku speichert keinen Strom, sondern chemische Energie. Geladen und entladen wiegt er praktisch gleich viel.",
+    "deep": {
+      "lead": "Ein Akku trennt Ionen und Elektronen: Die Ionen nehmen den Weg innen, die Elektronen müssen außen durch dein Gerät.",
+      "sections": [
+        {
+          "title": "Die Schaukel der Ionen",
+          "text": "Beide Elektroden sind wie Regale aufgebaut, in deren Lücken sich Lithium einlagern kann. Im Graphit sitzt es zwischen den Kohlenstoffschichten, im Pluspol zwischen Schichten eines Metalloxids. Beim Laden drückt die angelegte Spannung die Ionen ins Graphit, wo sie energetisch ungünstig sitzen, vergleichbar mit Wasser, das in einen Hochspeicher gepumpt wird. Beim Entladen fließen sie von selbst zurück. Zwischen den Elektroden liegt eine dünne Trennfolie, die Ionen durchlässt, aber keinen direkten Kontakt erlaubt. Reißt sie, gibt es einen Kurzschluss."
+        },
+        {
+          "title": "Warum Akkus altern",
+          "text": "Bei jedem Ladezyklus dehnen sich die Elektroden etwas aus und ziehen sich wieder zusammen. Feine Risse entstehen, und an der Oberfläche des Graphits wächst eine Schicht, die Lithium dauerhaft bindet. So sinkt die Kapazität allmählich. Hitze beschleunigt diese Vorgänge, ebenso langes Verweilen bei ganz vollem oder ganz leerem Akku. Den Memory-Effekt älterer Nickel-Cadmium-Akkus gibt es bei Lithium-Ionen-Akkus dagegen nicht. Du musst sie also nicht erst leer machen, Teilladungen sind sogar schonender."
+        },
+        {
+          "title": "Leicht und reaktionsfreudig",
+          "text": "Lithium ist das leichteste Metall und gibt sein äußeres Elektron sehr bereitwillig ab. Beides zusammen ergibt viel Energie pro Kilogramm, weshalb diese Akkus Handys, Laptops und Elektroautos erst praktikabel gemacht haben. Für ihre Entwicklung gab es 2019 den Nobelpreis für Chemie. Die Kehrseite: Der Elektrolyt ist brennbar. Wird eine Zelle beschädigt oder überhitzt, kann sie sich selbst immer weiter aufheizen. Deshalb gehören Akkus im Flugzeug ins Handgepäck und nie in den Hausmüll."
+        }
+      ],
+      "tryIt": "Schau in den Akku-Einstellungen deines Handys nach, ob es eine Ladebegrenzung auf etwa 80 Prozent gibt, und schalte sie für den Alltag ein.",
+      "takeaways": [
+        "Ionen wandern innen, Elektronen außen durch den Verbraucher.",
+        "Hitze und Extremladestände lassen Akkus schneller altern.",
+        "Teilladungen schaden Lithium-Ionen-Akkus nicht."
+      ]
+    }
+  },
+  {
+    "id": "zwiebel-traenen",
+    "phenomenon": "Tränen beim Zwiebelschneiden",
+    "question": "Warum treibt dir eine aufgeschnittene Zwiebel Tränen in die Augen?",
+    "explanation": "Beim Schneiden platzen Zwiebelzellen auf. Dabei treffen schwefelhaltige Stoffe auf Enzyme, die sonst getrennt gelagert sind. In Sekunden entsteht ein flüchtiges Reizgas, das zum Auge aufsteigt. Dort reizt es Nervenenden der Hornhaut, und die Tränendrüse versucht, es wegzuspülen.",
+    "detail": "Das entscheidende Enzym entdeckten japanische Forscher erst 2002. Davor hielt man ein anderes, längst bekanntes Enzym allein für den Auslöser.",
+    "deep": {
+      "lead": "Die Zwiebel wehrt sich chemisch: Erst die Verletzung mischt zwei harmlose Zutaten zu einem Reizgas.",
+      "sections": [
+        {
+          "title": "Eine Waffe mit Zünder",
+          "text": "Die Zwiebel lagert Schwefelverbindungen im Zellsaft und das passende Enzym, die Alliinase, in einem abgetrennten Raum der Zelle. Solange die Zelle heil ist, passiert nichts. Wird sie zerbissen oder zerschnitten, mischt sich beides, und es entstehen Sulfensäuren. Ein zweites Enzym formt daraus das Tränengas der Zwiebel, eine kleine schwefelhaltige Verbindung, die leicht verdunstet. Für die Pflanze ist das ein Schutz vor Fraßfeinden im Boden. Knoblauch nutzt denselben ersten Schritt, bildet aber kein Tränengas, sondern den typischen Geruchsstoff Allicin."
+        },
+        {
+          "title": "Was wirklich hilft",
+          "text": "Ein scharfes Messer zerstört weniger Zellen als ein stumpfes, das die Zwiebel quetscht, also entsteht weniger Gas. Kälte bremst die Enzyme und lässt das Gas langsamer verdunsten: Eine Zwiebel aus dem Kühlschrank reizt spürbar weniger. Auch ein Luftzug vom Gesicht weg oder die Dunstabzugshaube hilft. Das Gas löst sich gut in Wasser, deshalb wirkt Schneiden unter Wasser, ist aber unpraktisch. Kaugummikauen ändert an der Chemie nichts. Kontaktlinsen dagegen schirmen die Hornhaut tatsächlich ein Stück weit ab."
+        }
+      ],
+      "tryIt": "Leg eine Zwiebel 30 Minuten in den Kühlschrank, bevor du sie schneidest, und vergleiche beim nächsten Mal mit einer zimmerwarmen.",
+      "takeaways": [
+        "Das Reizgas entsteht erst, wenn Zellen zerstört werden.",
+        "Scharfes Messer, Kälte und Luftzug verringern die Tränen."
+      ]
+    }
+  },
+  {
+    "id": "jahreszeiten",
+    "phenomenon": "Jahreszeiten",
+    "question": "Warum ist es im Sommer warm und im Winter kalt?",
+    "explanation": "Die Erdachse ist um rund 23,5 Grad geneigt und zeigt auf dem Weg um die Sonne immer in dieselbe Richtung. Im Sommer ist deine Erdhalbkugel der Sonne zugeneigt: Die Sonne steht höher, ihre Strahlen treffen steiler auf, und die Tage sind länger. Ein halbes Jahr später ist es umgekehrt.",
+    "detail": "Die Erde ist der Sonne Anfang Januar am nächsten – mitten im Winter der Nordhalbkugel. Der Abstand ist also nicht die Ursache der Jahreszeiten.",
+    "deep": {
+      "lead": "Nicht die Entfernung zur Sonne macht die Jahreszeiten, sondern der Winkel, in dem ihr Licht auf den Boden trifft.",
+      "sections": [
+        {
+          "title": "Steil oder flach",
+          "text": "Halte eine Taschenlampe senkrecht über einen Tisch: Du siehst einen kleinen, hellen Fleck. Kippst du sie, wird der Fleck größer und blasser, dieselbe Lichtmenge verteilt sich auf mehr Fläche. So ergeht es dem Sonnenlicht im Winter. In Deutschland steht die Mittagssonne im Juni über 60 Grad hoch, im Dezember nur gut 15 Grad. Dazu kommt die Tageslänge: rund 16 Stunden Licht im Sommer gegen etwa 8 im Winter. Beides zusammen ergibt ein Mehrfaches an eingestrahlter Energie pro Tag."
+        },
+        {
+          "title": "Warum der Juli wärmer ist als der Juni",
+          "text": "Der längste Tag ist um den 21. Juni, die heißesten Wochen kommen aber erst im Juli und August. Böden und vor allem Meere brauchen Zeit, um sich aufzuwärmen, und geben die Wärme verzögert wieder ab. Aus demselben Grund ist der Januar kälter als der Dezember. Auf der Südhalbkugel läuft alles spiegelbildlich: Weihnachten fällt in Australien in den Hochsommer. Am Äquator gibt es kaum Temperaturjahreszeiten, dafür vielerorts Regen- und Trockenzeiten."
+        },
+        {
+          "title": "Tagundnachtgleiche und Polartag",
+          "text": "Zweimal im Jahr, um den 20. März und den 23. September, steht die Sonne genau über dem Äquator. Dann sind Tag und Nacht überall auf der Erde etwa gleich lang. Jenseits der Polarkreise führt die Achsneigung zu Extremen: Im Sommer geht die Sonne dort tage- bis monatelang nicht unter, im Winter ebenso lange nicht auf. Die Wendekreise markieren, wie weit nördlich und südlich die Sonne mittags noch senkrecht stehen kann. Ohne Achsneigung gäbe es all das nicht."
+        }
+      ],
+      "tryIt": "Miss heute zur Mittagszeit die Länge deines Schattens und wiederhole das in einem Monat zur selben Uhrzeit. Die Veränderung zeigt dir den Sonnenstand.",
+      "takeaways": [
+        "Die geneigte Erdachse verursacht die Jahreszeiten, nicht der Sonnenabstand.",
+        "Steiler Einfall und lange Tage bringen mehr Energie.",
+        "Meere und Böden verzögern die Erwärmung um Wochen."
+      ]
+    }
+  },
+  {
+    "id": "blitz-donner",
+    "phenomenon": "Blitz und Donner",
+    "question": "Wie entsteht ein Blitz, und woher kommt der Donner?",
+    "explanation": "In Gewitterwolken stoßen Eiskristalle und Graupelkörner zusammen und laden sich elektrisch auf. Positive und negative Ladungen sammeln sich in verschiedenen Höhen. Wird die Spannung zu groß, gleicht sie sich schlagartig aus. Der Blitzkanal erhitzt die Luft so stark, dass sie sich explosionsartig ausdehnt: der Donner.",
+    "detail": "Im Blitzkanal wird es für Sekundenbruchteile rund 30.000 Grad heiß – etwa fünfmal so heiß wie die Oberfläche der Sonne.",
+    "deep": {
+      "lead": "Ein Gewitter ist ein riesiger Ladungstrenner: Aufwinde sortieren Eis, und der Blitz macht die Trennung rückgängig.",
+      "sections": [
+        {
+          "title": "Der Weg nach unten",
+          "text": "Ein Blitz schlägt nicht in einem Zug ein. Zuerst tastet sich ein schwach leuchtender Leitblitz in Sprüngen von einigen Dutzend Metern von der Wolke abwärts und verzweigt sich dabei. Nähert er sich dem Boden, wachsen ihm von erhöhten Punkten Fangentladungen entgegen. Sobald sich beide treffen, ist der Kanal geschlossen, und der eigentliche Hauptblitz schießt mit enormer Stromstärke hindurch. Was du als Flackern siehst, sind oft mehrere Entladungen kurz hintereinander durch denselben Kanal. Die meisten Blitze erreichen den Boden übrigens nie, sie bleiben in den Wolken."
+        },
+        {
+          "title": "Sekunden zählen",
+          "text": "Licht ist praktisch sofort bei dir, Schall braucht für einen Kilometer etwa drei Sekunden. Zählst du die Sekunden zwischen Blitz und Donner und teilst durch drei, hast du die Entfernung in Kilometern. Das Grollen entsteht, weil der Kanal kilometerlang ist und der Schall von verschiedenen Abschnitten nacheinander eintrifft. Liegen weniger als zehn Sekunden dazwischen, ist das Gewitter gefährlich nah. Blitze können auch viele Kilometer vor der Regenfront einschlagen, scheinbar aus heiterem Himmel."
+        },
+        {
+          "title": "Schutz und Irrtümer",
+          "text": "Im Auto bist du sicher, aber nicht wegen der Gummireifen. Die Metallkarosserie leitet den Strom außen um dich herum, ein Prinzip, das nach Michael Faraday benannt ist. Der Spruch, man solle Buchen suchen und Eichen weichen, ist falsch: Jeder einzeln stehende Baum ist gefährlich. Im Freien hockst du dich am besten mit eng geschlossenen Füßen in eine Mulde. Die geschlossenen Füße sind wichtig, weil sich der Strom im Boden ausbreitet und zwischen weit auseinanderstehenden Füßen eine Spannung entsteht."
+        }
+      ],
+      "tryIt": "Zähle beim nächsten Gewitter die Sekunden zwischen Blitz und Donner und teile durch drei. Wiederhole es nach einigen Minuten: Kommt es näher?",
+      "takeaways": [
+        "Zusammenstöße von Eisteilchen trennen die Ladungen in der Wolke.",
+        "Donner ist die Druckwelle der schlagartig erhitzten Luft.",
+        "Drei Sekunden zwischen Blitz und Donner entsprechen einem Kilometer."
+      ]
+    }
+  },
+  {
+    "id": "fotosynthese",
+    "phenomenon": "Fotosynthese",
+    "question": "Wie machen Pflanzen aus Licht, Luft und Wasser Zucker?",
+    "explanation": "In den Chloroplasten der Blätter fängt der grüne Farbstoff Chlorophyll Sonnenlicht ein. Mit dieser Energie spaltet die Pflanze Wasser und baut aus dem Kohlendioxid der Luft Traubenzucker auf. Als Nebenprodukt wird Sauerstoff frei. Der Zucker ist Baustoff und Energiespeicher zugleich.",
+    "detail": "Ein Baum besteht größtenteils aus Luft: Der Kohlenstoff im Holz stammt aus dem Kohlendioxid der Atmosphäre, nicht aus dem Boden.",
+    "deep": {
+      "lead": "Fast alles Leben auf der Erde hängt an einer Reaktion: Pflanzen binden Sonnenenergie in Zucker und setzen dabei Sauerstoff frei.",
+      "sections": [
+        {
+          "title": "Zwei Schritte in einer Zelle",
+          "text": "Die Fotosynthese läuft in zwei Abschnitten. Im ersten treibt Licht die Spaltung von Wasser an. Dabei entstehen Sauerstoff sowie zwei energiereiche Hilfsstoffe, die wie geladene Akkus arbeiten. Im zweiten Abschnitt, der selbst kein Licht mehr braucht, wird mit dieser Energie Kohlendioxid Stück für Stück zu Zucker zusammengesetzt. Der frei werdende Sauerstoff stammt also vollständig aus dem Wasser, nicht aus dem Kohlendioxid. Nachgewiesen wurde das mit Wasser, dessen Sauerstoffatome schwerer und dadurch verfolgbar waren."
+        },
+        {
+          "title": "Warum Blätter grün sind",
+          "text": "Chlorophyll schluckt vor allem rotes und blaues Licht. Den grünen Anteil nutzt es schlecht, er wird zurückgeworfen oder geht hindurch. Deshalb sehen wir Blätter grün, und deshalb ist das Licht unter einem Blätterdach grünlich. Das Kohlendioxid gelangt durch winzige verschließbare Poren ins Blatt, die Spaltöffnungen, die meist auf der Unterseite sitzen. Durch dieselben Poren verdunstet Wasser. Bei Trockenheit schließt die Pflanze sie und muss dann auch die Fotosynthese drosseln. An heißen Mittagen legen viele Pflanzen deshalb eine Pause ein."
+        },
+        {
+          "title": "Wie die Luft atembar wurde",
+          "text": "Die frühe Erde hatte so gut wie keinen freien Sauerstoff. Erst Cyanobakterien, die Fotosynthese betrieben, reicherten ihn vor mehr als zwei Milliarden Jahren in der Atmosphäre an. Die Chloroplasten heutiger Pflanzen stammen von solchen Bakterien ab, die einst von einer größeren Zelle aufgenommen wurden und in ihr weiterlebten. Etwa die Hälfte des heute erzeugten Sauerstoffs kommt nicht von Wäldern, sondern von winzigen Algen und Bakterien im Meer. Auch Kohle, Öl und Gas sind gespeicherte Fotosynthese aus der Erdgeschichte."
+        }
+      ],
+      "tryIt": "Leg ein frisch gepflücktes grünes Blatt in ein Glas Wasser an ein sonniges Fenster. Nach etwa einer Stunde sitzen kleine Gasbläschen am Blatt.",
+      "takeaways": [
+        "Licht, Wasser und Kohlendioxid werden zu Zucker und Sauerstoff.",
+        "Der Sauerstoff stammt aus dem gespaltenen Wasser.",
+        "Die Masse einer Pflanze kommt vor allem aus der Luft."
+      ]
+    }
+  },
+  {
+    "id": "antibiotikaresistenz",
+    "phenomenon": "Antibiotikaresistenz",
+    "question": "Warum wirken Antibiotika gegen manche Bakterien nicht mehr?",
+    "explanation": "Antibiotika töten Bakterien oder hemmen ihr Wachstum. Unter Milliarden Bakterien haben einzelne zufällig eine Erbgutveränderung, die sie schützt. Wird ein Antibiotikum eingesetzt, sterben die empfindlichen, die geschützten überleben und vermehren sich. Je öfter Antibiotika genutzt werden, desto schneller geht das.",
+    "detail": "Bakterien können Resistenzgene direkt aneinander weitergeben, sogar über Artgrenzen hinweg – wie einen kopierten Bauplan.",
+    "deep": {
+      "lead": "Resistenz ist Evolution im Zeitraffer: Nicht der Mensch wird resistent, sondern die Bakterien, die die Behandlung überleben.",
+      "sections": [
+        {
+          "title": "Angriffspunkte, die uns fehlen",
+          "text": "Antibiotika nutzen Unterschiede zwischen Bakterien und menschlichen Zellen. Penicillin etwa stört den Aufbau der bakteriellen Zellwand, die unsere Zellen gar nicht besitzen. Andere Wirkstoffe blockieren die Eiweißfabriken der Bakterien, die anders gebaut sind als unsere. Deshalb schaden sie dem Erreger viel mehr als dem Patienten. Viren haben weder Zellwand noch eigenen Stoffwechsel. Gegen Erkältung und Grippe, die von Viren ausgelöst werden, sind Antibiotika darum wirkungslos. Sie treffen dann nur die nützlichen Bakterien im Darm."
+        },
+        {
+          "title": "Ein Schimmelpilz auf der Laborschale",
+          "text": "Alexander Fleming bemerkte 1928, dass auf einer verschimmelten Bakterienkultur rund um den Pilz keine Bakterien wuchsen. Der Pilz sonderte einen Stoff ab, den er Penicillin nannte. Bis daraus ein Medikament wurde, vergingen mehr als zehn Jahre, erst in den 1940er-Jahren wurde es in großen Mengen hergestellt. Fleming selbst warnte schon in seiner Nobelpreisrede davor, dass zu niedrig dosierte oder leichtfertige Anwendung widerstandsfähige Bakterien heranzüchten könne. Resistente Stämme breiteten sich schon wenige Jahre später in Krankenhäusern aus."
+        },
+        {
+          "title": "Die Tricks der Bakterien",
+          "text": "Bakterien wehren sich auf mehreren Wegen. Manche bilden Enzyme, die das Antibiotikum zerschneiden. Andere verändern die Stelle, an der der Wirkstoff andockt, oder pumpen ihn aktiv wieder aus der Zelle hinaus. Solche Fähigkeiten liegen oft auf kleinen DNA-Ringen, den Plasmiden, die von Zelle zu Zelle wandern können. Was hilft: Antibiotika nur einnehmen, wenn sie verordnet sind, und genau so, wie die Ärztin es festgelegt hat. Reste gehören nicht in die Hausapotheke für das nächste Mal."
+        }
+      ],
+      "tryIt": "Schau nach, ob in deiner Hausapotheke angebrochene Antibiotika liegen. Bring sie zur Apotheke oder entsorge sie nach den Regeln deiner Gemeinde.",
+      "takeaways": [
+        "Antibiotika wirken gegen Bakterien, nicht gegen Viren.",
+        "Jeder Einsatz siebt die widerstandsfähigen Bakterien heraus.",
+        "Resistenzgene werden zwischen Bakterien weitergereicht."
+      ]
+    }
+  },
+  {
+    "id": "plattentektonik-erdbeben",
+    "phenomenon": "Plattentektonik",
+    "question": "Warum bebt die Erde, und warum immer wieder an denselben Stellen?",
+    "explanation": "Die äußere Schale der Erde besteht aus starren Platten, die sich wenige Zentimeter pro Jahr gegeneinander bewegen. An ihren Rändern verhaken sie sich, und über Jahrzehnte baut sich Spannung auf. Bricht das Gestein, entlädt sie sich in Sekunden als Erdbeben. Deshalb liegen fast alle Bebenherde an Plattengrenzen.",
+    "detail": "Die Platten bewegen sich ungefähr so schnell, wie Fingernägel wachsen. Über Millionen Jahre öffnet das ganze Ozeane.",
+    "deep": {
+      "lead": "Kontinente sind nicht fest: Sie reiten auf Platten, die sich trennen, zusammenstoßen oder aneinander vorbeischieben.",
+      "sections": [
+        {
+          "title": "Wegeners verspotteter Einfall",
+          "text": "Alfred Wegener fiel auf, dass die Küsten Südamerikas und Afrikas wie Puzzleteile zusammenpassen. Er fand beiderseits des Atlantiks dieselben Fossilien und Gesteinsfolgen und schlug 1912 vor, die Kontinente seien einst vereint gewesen und auseinandergedriftet. Die Fachwelt lehnte das ab, weil er keinen Antrieb nennen konnte. Erst in den 1960er-Jahren kam der Beweis vom Meeresboden: Beiderseits der mittelozeanischen Rücken liegt spiegelbildlich magnetisiertes Gestein, je weiter entfernt, desto älter. Dort entsteht ständig neuer Ozeanboden."
+        },
+        {
+          "title": "Drei Arten von Grenzen",
+          "text": "Wo Platten auseinanderweichen, steigt Magma auf, wie auf Island, das mitten auf einer solchen Naht sitzt. Wo sie zusammenstoßen, taucht die schwerere ozeanische Platte unter die andere ab. Dort entstehen Tiefseegräben, Vulkanketten und die stärksten Beben, etwa rund um den Pazifik. Treffen zwei Kontinente aufeinander, türmen sie Gebirge auf: Der Himalaya wächst, weil Indien nach Norden gegen Asien drückt. Die dritte Art sind Platten, die seitlich aneinander vorbeigleiten, wie an der San-Andreas-Verwerfung in Kalifornien."
+        },
+        {
+          "title": "Stärke richtig lesen",
+          "text": "Die Magnitude eines Bebens ist ein logarithmisches Maß. Ein Punkt mehr bedeutet etwa zehnmal größere Bodenausschläge und rund dreißigmal mehr freigesetzte Energie. Ein Beben der Stärke 7 ist also nicht ein wenig stärker als eines der Stärke 6, sondern eine andere Größenordnung. Vorhersagen lassen sich Beben bis heute nicht, weder auf den Tag noch auf die Stunde. Möglich sind Gefährdungskarten und Frühwarnungen, die die wenigen Sekunden nutzen, bevor die zerstörerischen Wellen eintreffen."
+        }
+      ],
+      "tryIt": "Öffne eine Live-Erdbebenkarte im Netz und sieh dir die Beben der letzten Woche an: Sie zeichnen die Plattengrenzen fast lückenlos nach.",
+      "takeaways": [
+        "Erdbeben entladen Spannung, die sich an Plattengrenzen aufstaut.",
+        "Platten trennen sich, stoßen zusammen oder gleiten aneinander vorbei.",
+        "Ein Magnitudenpunkt mehr bedeutet rund dreißigmal mehr Energie."
+      ]
+    }
+  },
+  {
+    "id": "treibhauseffekt",
+    "phenomenon": "Treibhauseffekt",
+    "question": "Wie halten ein paar Spurengase die Erde warm?",
+    "explanation": "Sonnenlicht durchdringt die Atmosphäre und erwärmt den Boden. Der gibt die Energie als unsichtbare Wärmestrahlung wieder ab. Gase wie Wasserdampf, Kohlendioxid und Methan nehmen diese Strahlung auf und senden einen Teil zurück zum Boden. Dadurch ist es unten wärmer, als es ohne diese Gase wäre.",
+    "detail": "Ohne den natürlichen Treibhauseffekt läge die mittlere Temperatur an der Erdoberfläche bei etwa minus 18 Grad statt bei rund plus 15.",
+    "deep": {
+      "lead": "Die Atmosphäre lässt Sonnenlicht fast ungehindert herein, die Wärmestrahlung des Bodens aber nur verzögert wieder hinaus.",
+      "sections": [
+        {
+          "title": "Warum gerade diese Gase",
+          "text": "Luft besteht zu 99 Prozent aus Stickstoff und Sauerstoff, beide lassen Wärmestrahlung ungehindert passieren. Ihre Moleküle bestehen aus zwei gleichen Atomen und können von Infrarotlicht nicht zum Schwingen angeregt werden. Moleküle aus drei oder mehr Atomen, wie Kohlendioxid, Wasserdampf und Methan, können das. Sie nehmen die Strahlung auf, geraten in Schwingung und strahlen in alle Richtungen wieder ab, auch nach unten. Deshalb genügt ein Anteil von wenigen Hundertstel Prozent Kohlendioxid, um die Wärmebilanz spürbar zu verändern."
+        },
+        {
+          "title": "Seit wann man das weiß",
+          "text": "Dass die Atmosphäre wie eine Decke wirkt, vermutete der französische Mathematiker Joseph Fourier schon in den 1820er-Jahren. Um 1860 maß John Tyndall im Labor, welche Gase Wärmestrahlung schlucken. Der Schwede Svante Arrhenius berechnete 1896, dass eine Verdopplung des Kohlendioxids die Erde um mehrere Grad erwärmen würde. Seit 1958 wird der Kohlendioxidgehalt auf dem Mauna Loa in Hawaii fortlaufend gemessen. Die Kurve steigt Jahr für Jahr und zeigt dabei ein feines Zickzack: das Atmen der Pflanzenwelt im Wechsel der Jahreszeiten."
+        },
+        {
+          "title": "Natürlich und menschengemacht",
+          "text": "Der natürliche Treibhauseffekt macht die Erde bewohnbar. Das Problem ist die Verstärkung: Durch das Verbrennen von Kohle, Öl und Gas ist der Kohlendioxidgehalt seit Beginn der Industrialisierung um rund die Hälfte gestiegen. Mit dem Ozonloch hat das wenig zu tun, das ist ein eigenes Thema. Ein Vergleich zeigt die Wirkung: Die Venus hat eine dichte Kohlendioxidatmosphäre und ist mit über 450 Grad heißer als der sonnennähere Merkur. Das Bild vom Gewächshaus hinkt übrigens, denn Glashäuser halten vor allem die warme Luft fest."
+        }
+      ],
+      "tryIt": "Vergleiche im Wetterbericht eine klare und eine bewölkte Nacht: Unter Wolken kühlt es weniger aus, weil Wasserdampf und Tröpfchen Wärmestrahlung zurückhalten.",
+      "takeaways": [
+        "Treibhausgase schlucken Wärmestrahlung und senden sie teils zurück.",
+        "Der natürliche Effekt ist lebenswichtig, die Verstärkung das Problem.",
+        "Schon Spurenmengen wirken, weil Stickstoff und Sauerstoff nichts zurückhalten."
+      ]
+    }
+  },
+  {
+    "id": "dna-proteine",
+    "phenomenon": "DNA und Proteine",
+    "question": "Wie wird aus dem Erbgut in deinen Zellen ein lebender Körper?",
+    "explanation": "Die DNA ist ein langes Molekül, dessen vier Bausteine wie Buchstaben einen Text bilden. Ein Abschnitt mit der Anleitung für ein Eiweiß heißt Gen. Die Zelle schreibt ein Gen in eine Arbeitskopie um, die mRNA. Ribosomen lesen sie ab und knüpfen danach Aminosäuren zu einem Eiweiß zusammen.",
+    "detail": "In fast jeder deiner Zellen stecken rund zwei Meter DNA, aufgewickelt in einem Zellkern, der nur wenige Tausendstel Millimeter misst.",
+    "deep": {
+      "lead": "Die DNA ist das Rezeptbuch, Eiweiße sind die Gerichte: Gebaut und gearbeitet wird im Körper fast alles von Proteinen.",
+      "sections": [
+        {
+          "title": "Drei Buchstaben, eine Aminosäure",
+          "text": "Die vier Basen der DNA werden mit A, T, G und C abgekürzt. Immer drei aufeinanderfolgende Basen stehen für eine von zwanzig Aminosäuren. Dieser Code gilt bei Bakterien, Pilzen, Pflanzen und Menschen nahezu gleich, ein starkes Indiz für die gemeinsame Abstammung allen Lebens. Deshalb kann ein Bakterium, dem man das menschliche Insulin-Gen einsetzt, menschliches Insulin herstellen. So wird das Medikament seit den 1980er-Jahren produziert. Die Reihenfolge der Aminosäuren bestimmt, wie sich die Kette faltet, und die Form bestimmt die Aufgabe."
+        },
+        {
+          "title": "Dieselbe DNA, verschiedene Zellen",
+          "text": "Eine Nervenzelle und eine Leberzelle enthalten dasselbe Erbgut und sehen doch völlig verschieden aus. Der Unterschied liegt darin, welche Gene gerade abgelesen werden. Jede Zelle nutzt nur einen Teil des Rezeptbuchs, der Rest ist stillgelegt. Überraschend ist auch, wie wenig der DNA direkt für Eiweiße codiert: beim Menschen nur ein bis zwei Prozent, verteilt auf etwa 20.000 Gene. Große Teile des Rests steuern, wann und wo Gene an- und abgeschaltet werden, bei anderen ist die Funktion unklar."
+        },
+        {
+          "title": "Die Doppelhelix",
+          "text": "Zwei Stränge winden sich umeinander, und ihre Basen passen nur in festen Paaren zusammen: A mit T, G mit C. Darin steckt der Kopiermechanismus. Trennt die Zelle die Stränge, kann sie an jedem den fehlenden Partner ergänzen und erhält zwei identische Moleküle. James Watson und Francis Crick stellten dieses Modell 1953 vor. Entscheidend waren Röntgenaufnahmen von Rosalind Franklin, deren Beitrag lange zu wenig gewürdigt wurde. Das menschliche Erbgut mit rund drei Milliarden Basenpaaren wurde Anfang der 2000er-Jahre erstmals weitgehend entziffert."
+        }
+      ],
+      "tryIt": "Zerdrücke eine Erdbeere mit etwas Spülmittel, Salz und Wasser, filtere den Saft und gieße eiskalten Alkohol darauf: Die weißen Fäden sind DNA.",
+      "takeaways": [
+        "Gene sind Bauanleitungen für Eiweiße.",
+        "Je drei Basen stehen für eine Aminosäure, bei fast allen Lebewesen gleich.",
+        "Zelltypen unterscheiden sich darin, welche Gene sie ablesen."
+      ]
+    }
+  },
+  {
+    "id": "mikrowellenherd",
+    "phenomenon": "Mikrowellenherd",
+    "question": "Wie macht eine Mikrowelle Essen heiß, ohne selbst heiß zu werden?",
+    "explanation": "Der Herd erzeugt elektromagnetische Wellen mit rund 2,45 Gigahertz. Ihr elektrisches Feld wechselt Milliarden Mal pro Sekunde die Richtung. Wassermoleküle sind elektrisch ungleich geladen und versuchen, sich ständig neu auszurichten. Dabei stoßen sie an ihre Nachbarn – diese Bewegung ist Wärme.",
+    "detail": "Die Heizwirkung fiel dem Ingenieur Percy Spencer in den 1940er-Jahren an einer Radaranlage auf: Der Überlieferung nach schmolz ein Schokoriegel in seiner Tasche.",
+    "deep": {
+      "lead": "Mikrowellen erwärmen das Essen direkt, indem sie die Wassermoleküle darin in Bewegung versetzen.",
+      "sections": [
+        {
+          "title": "Warum der Teller sich dreht",
+          "text": "Im Garraum werden die Wellen von den Metallwänden hin- und hergeworfen und überlagern sich. Es entsteht ein festes Muster aus Stellen mit starkem und schwachem Feld, die einige Zentimeter auseinanderliegen. Ohne Drehteller würde das Essen an manchen Punkten kochen und wenige Zentimeter daneben kalt bleiben. Eis wird schlechter erwärmt als flüssiges Wasser, weil die Moleküle im Kristall festsitzen. Deshalb taut Gefrorenes ungleichmäßig: Wo sich das erste Wasser bildet, heizt es rasch weiter, während daneben noch Eis liegt."
+        },
+        {
+          "title": "Drei hartnäckige Irrtümer",
+          "text": "Mikrowellen machen Essen nicht radioaktiv. Ihre Energie reicht nicht aus, um Atome oder Moleküle zu verändern, sie versetzen sie nur in Bewegung. Zweitens gart die Mikrowelle nicht »von innen nach außen«. Die Wellen dringen einige Zentimeter tief ein, dickere Stücke werden innen durch Wärmeleitung gar. Drittens trifft die Frequenz keine besondere Resonanz des Wassers, sie ist ein technischer Kompromiss aus Eindringtiefe und Heizwirkung. Das Gitter in der Tür hält die Wellen zurück, weil seine Löcher viel kleiner sind als die Wellenlänge von rund zwölf Zentimetern."
+        },
+        {
+          "title": "Metall und überhitztes Wasser",
+          "text": "Metall wirft Mikrowellen zurück. An Spitzen und Kanten, etwa an Gabelzinken oder zerknitterter Alufolie, wird das Feld so stark, dass Funken überspringen. Eine zweite Gefahr ist Wasser in einer sehr glatten Tasse: Es kann sich über hundert Grad erhitzen, ohne zu sprudeln, weil Keimstellen für Dampfblasen fehlen. Wird es dann bewegt, kocht es schlagartig auf und kann herausspritzen. Ein Holzstäbchen im Wasser während des Erhitzens verhindert das, weil sich an ihm Blasen bilden können."
+        }
+      ],
+      "tryIt": "Nimm den Drehteller heraus, leg eine Tafel Schokolade auf einem Teller hinein und heize 20 Sekunden: Die Schmelzpunkte liegen etwa sechs Zentimeter auseinander.",
+      "takeaways": [
+        "Das wechselnde Feld bringt Wassermoleküle in Bewegung, das ergibt Wärme.",
+        "Mikrowellen machen nichts radioaktiv und garen nicht von innen.",
+        "Stehende Wellen erzeugen heiße und kalte Stellen."
+      ]
+    }
+  },
+  {
+    "id": "seife-fett",
+    "phenomenon": "Seife",
+    "question": "Warum löst Seife Fett, das Wasser allein nicht wegbekommt?",
+    "explanation": "Seifenmoleküle haben zwei Enden: Eines liebt Wasser, das andere Fett. Die fettliebenden Enden bohren sich in den Schmutz, die wasserliebenden zeigen nach außen. So wird das Fett in winzige Kügelchen verpackt, die im Wasser schweben und sich wegspülen lassen.",
+    "detail": "Seife zerstört auch viele Viren: Grippe- und Coronaviren tragen eine Fetthülle, die von Seifenmolekülen auseinandergerissen wird.",
+    "deep": {
+      "lead": "Seife ist ein Vermittler zwischen zwei Stoffen, die sich nicht mischen wollen: Wasser und Fett.",
+      "sections": [
+        {
+          "title": "Warum Wasser und Öl sich meiden",
+          "text": "Wassermoleküle sind elektrisch ungleich geladen und haften stark aneinander. Fett- und Ölmoleküle sind elektrisch ausgeglichen und passen nicht in dieses Netz. Wasser bleibt lieber unter sich und drängt das Öl zusammen, bis es als Schicht obenauf schwimmt. Diese Haftkraft erzeugt auch die Oberflächenspannung, die wie eine dünne Haut wirkt und Wasserläufer trägt. Seife setzt sie herab. Das Wasser wird dadurch »nasser«: Es perlt nicht mehr ab, sondern kriecht in Gewebe und feine Hautfalten hinein."
+        },
+        {
+          "title": "Asche und Fett",
+          "text": "Seife entsteht, wenn man Fett oder Öl mit einer Lauge kocht. Früher gewann man die Lauge aus Holzasche. Das Verfahren ist seit Jahrtausenden bekannt, schon aus Mesopotamien sind Rezepte überliefert. Bei der Reaktion spaltet die Lauge das Fett in Glycerin und Fettsäuren, deren Salze die eigentliche Seife sind. Moderne Spülmittel und Duschgele enthalten meist künstlich hergestellte Verwandte, die Tenside. Sie arbeiten nach demselben Prinzip, bilden aber in kalkhaltigem Wasser keine graue Kalkseife wie die klassische Kernseife."
+        },
+        {
+          "title": "Zwanzig Sekunden",
+          "text": "Beim Händewaschen braucht Seife Zeit und Reibung. Die Moleküle müssen sich erst in den Schmutzfilm und in die Hüllen der Keime schieben, das Reiben löst die verpackten Teilchen von der Haut. Deshalb empfehlen Gesundheitsbehörden mindestens zwanzig Sekunden, einschließlich Fingerzwischenräumen und Daumen. Dass Ärzte mit ungewaschenen Händen das Kindbettfieber übertrugen, erkannte Ignaz Semmelweis in Wien um 1847. Er schrieb das Waschen mit Chlorkalklösung vor, und die Sterblichkeit auf seiner Station sank stark. Geglaubt haben ihm seine Kollegen lange nicht."
+        }
+      ],
+      "tryIt": "Streue Pfeffer auf einen Teller mit Wasser und tippe mit einem Finger, an dem etwas Spülmittel haftet, in die Mitte: Der Pfeffer schießt an den Rand.",
+      "takeaways": [
+        "Seifenmoleküle haben ein wasserliebendes und ein fettliebendes Ende.",
+        "Fett wird in Kügelchen verpackt und weggespült.",
+        "Zeit und Reibung machen Händewaschen erst wirksam."
+      ]
+    }
+  },
+  {
+    "id": "siedepunkt-hoehe",
+    "phenomenon": "Siedepunkt und Luftdruck",
+    "question": "Warum kocht Wasser auf einem hohen Berg schon unter 100 Grad?",
+    "explanation": "Wasser siedet, wenn sein Dampfdruck so groß ist wie der Druck der Luft darüber. Auf Meereshöhe ist das bei 100 Grad der Fall. In der Höhe ist der Luftdruck niedriger, also genügt weniger Hitze. Pro 300 Meter Höhe sinkt der Siedepunkt um etwa ein Grad.",
+    "detail": "Auf dem Gipfel des Mount Everest siedet Wasser schon bei etwa 70 Grad. Ein Ei hart zu kochen gelingt dort im offenen Topf kaum.",
+    "deep": {
+      "lead": "Sieden ist ein Kräftemessen zwischen Wasserdampf und Luftdruck – wer weniger Luft über sich hat, kocht kühler.",
+      "sections": [
+        {
+          "title": "Was Sieden eigentlich ist",
+          "text": "Wasser verdunstet bei jeder Temperatur, aber nur an der Oberfläche. Beim Sieden bilden sich Dampfblasen mitten in der Flüssigkeit. Eine Blase kann nur bestehen, wenn der Dampf in ihr genauso stark nach außen drückt wie die Umgebung nach innen. Ist dieser Punkt erreicht, steigt die Temperatur nicht weiter, egal wie stark du die Platte aufdrehst. Alle zusätzliche Energie geht in die Umwandlung zu Dampf. Sprudelnd kochendes Wasser ist deshalb nicht heißer als leise siedendes, Nudeln werden auf höchster Stufe nicht schneller gar."
+        },
+        {
+          "title": "Der Schnellkochtopf dreht es um",
+          "text": "Im Schnellkochtopf hält der dichte Deckel den Dampf zurück, der Druck steigt auf etwa das Doppelte des Luftdrucks. Dadurch siedet das Wasser erst bei rund 120 Grad. Die höhere Temperatur verkürzt die Garzeit auf etwa ein Drittel. Bergsteiger und Menschen in hoch gelegenen Städten wie La Paz nutzen solche Töpfe aus genau diesem Grund. Das Gegenstück gibt es in der Industrie: Unter vermindertem Druck lässt sich Wasser schon bei niedrigen Temperaturen verdampfen, so wird etwa Milch schonend eingedickt."
+        },
+        {
+          "title": "Salz im Nudelwasser",
+          "text": "Gelöstes Salz erhöht den Siedepunkt tatsächlich, aber der Effekt ist winzig. Bei der üblichen Menge von etwa zehn Gramm pro Liter sind es ein bis zwei Zehntel Grad. Salz kommt wegen des Geschmacks ins Wasser, nicht wegen der Temperatur. Dass es beim Einstreuen kurz aufschäumt, liegt an den Körnern: Sie bieten Keimstellen, an denen sich Dampfblasen bilden können. Auch ob du das Salz vor oder nach dem Aufkochen zugibst, ändert an der Kochzeit praktisch nichts."
+        }
+      ],
+      "tryIt": "Stell beim Nudelkochen den Herd nach dem Aufkochen so weit herunter, dass es gerade noch siedet. Die Nudeln sind zur gleichen Zeit fertig.",
+      "takeaways": [
+        "Der Siedepunkt hängt vom Umgebungsdruck ab.",
+        "Siedendes Wasser wird nicht heißer, auch bei mehr Hitze.",
+        "Höherer Druck im Schnellkochtopf bedeutet höhere Gartemperatur."
+      ]
+    }
+  },
+  {
+    "id": "doppler-effekt",
+    "phenomenon": "Doppler-Effekt",
+    "question": "Warum klingt eine Sirene tiefer, sobald der Wagen an dir vorbei ist?",
+    "explanation": "Fährt eine Schallquelle auf dich zu, rückt sie jeder ausgesandten Welle ein Stück hinterher. Die Wellenberge kommen dichter bei dir an, der Ton klingt höher. Entfernt sie sich, werden die Abstände größer und der Ton tiefer. Der Fahrer selbst hört die ganze Zeit dieselbe Tonhöhe.",
+    "detail": "Eine verwandte Verschiebung im Licht ferner Galaxien verriet den Astronomen, dass sich das Universum ausdehnt.",
+    "deep": {
+      "lead": "Bewegung staucht oder dehnt Wellen – und unser Ohr hört das als höheren oder tieferen Ton.",
+      "sections": [
+        {
+          "title": "Trompeter auf dem Zug",
+          "text": "Der österreichische Physiker Christian Doppler sagte den Effekt 1842 voraus, zunächst für das Licht von Sternen. Den Beweis für Schall lieferte drei Jahre später der Niederländer Christoph Buys Ballot mit einem denkwürdigen Versuch: Er setzte Trompeter auf einen offenen Eisenbahnwagen und ließ sie einen festen Ton blasen. Musiker mit geschultem Gehör standen am Gleis und notierten, was sie hörten. Beim Heranfahren klang der Ton höher, beim Wegfahren tiefer, etwa so viel, wie Doppler berechnet hatte."
+        },
+        {
+          "title": "Vom Blitzer bis zum Ultraschall",
+          "text": "Eine Radarfalle sendet Funkwellen aus und misst, wie stark sich die Frequenz der vom Auto zurückgeworfenen Wellen verschoben hat. Daraus folgt direkt die Geschwindigkeit. Wetterradar erkennt so, wie schnell Regentropfen auf die Station zu- oder von ihr wegziehen, und damit rotierende Gewitterzellen. In der Medizin macht der Doppler-Ultraschall das strömende Blut hörbar und sichtbar: Ärzte prüfen damit Herzklappen, verengte Gefäße und die Versorgung des Kindes im Mutterleib."
+        },
+        {
+          "title": "Rotverschiebung und ferne Planeten",
+          "text": "Bei Licht bedeutet eine gedehnte Welle eine Verschiebung zum roten Ende des Spektrums, eine gestauchte zum blauen. Astronomen lesen das an dunklen Linien im Sternenlicht ab, deren Lage im Labor genau bekannt ist. Ein Stern, der von einem Planeten umkreist wird, wackelt ein wenig hin und her, und seine Linien pendeln im Takt. Auf diese Weise wurde 1995 der erste Planet um einen sonnenähnlichen Stern entdeckt. Für diese Entdeckung gab es 2019 den Nobelpreis für Physik."
+        }
+      ],
+      "tryIt": "Achte heute auf ein vorbeifahrendes Auto oder Motorrad: Der Motorton kippt genau im Moment des Vorbeifahrens nach unten.",
+      "takeaways": [
+        "Annäherung staucht die Wellen, Entfernung dehnt sie.",
+        "Die Quelle selbst ändert ihren Ton nicht.",
+        "Radar, Ultraschall und Astronomie messen damit Geschwindigkeiten."
+      ]
+    }
+  },
+  {
+    "id": "polarlicht",
+    "phenomenon": "Polarlicht",
+    "question": "Was lässt den Nachthimmel im hohen Norden grün leuchten?",
+    "explanation": "Die Sonne schleudert ständig geladene Teilchen ins All. Das Magnetfeld der Erde lenkt die meisten ab, leitet einen Teil aber in Polnähe in die Atmosphäre. Dort stoßen sie in rund 100 Kilometern Höhe mit Sauerstoff- und Stickstoffatomen zusammen. Die Atome geben die aufgenommene Energie als Licht ab.",
+    "detail": "Polarlichter gibt es auch auf Jupiter und Saturn. Dem Mars fehlt ein globales Magnetfeld, dort treten sie nur fleckenweise auf.",
+    "deep": {
+      "lead": "Polarlichter sind das sichtbare Zeichen dafür, dass das Erdmagnetfeld uns vor dem Teilchenstrom der Sonne abschirmt.",
+      "sections": [
+        {
+          "title": "Woher die Farben kommen",
+          "text": "Jede Farbe verrät, welches Gas in welcher Höhe leuchtet. Das häufige Grün stammt von Sauerstoffatomen in etwa 100 bis 150 Kilometern Höhe. Darüber, wo die Luft extrem dünn ist, leuchtet Sauerstoff rot. Stickstoff steuert blaue und violette Töne bei, oft am unteren Rand der Vorhänge. Das Prinzip ist dasselbe wie in einer Leuchtstoffröhre: Elektronen stoßen Gasatome an, die danach Licht ganz bestimmter Farbe aussenden. Kameras zeigen die Farben kräftiger als das Auge, das im Dunkeln Farben nur schwach wahrnimmt."
+        },
+        {
+          "title": "Ein Ring um die Pole",
+          "text": "Polarlichter treten nicht direkt am Pol am häufigsten auf, sondern in einem ringförmigen Gürtel um die magnetischen Pole. Er verläuft über Nordskandinavien, Island, Südgrönland, Kanada und Alaska. Auf der Südhalbkugel liegt der Ring größtenteils über der Antarktis und dem Meer. Nach starken Ausbrüchen auf der Sonne weitet er sich aus, dann sind Polarlichter gelegentlich auch in Deutschland zu sehen. Die Sonnenaktivität schwankt in einem Zyklus von etwa elf Jahren, entsprechend gibt es bessere und schlechtere Polarlichtjahre."
+        },
+        {
+          "title": "Wenn der Sonnensturm zu stark wird",
+          "text": "Derselbe Teilchenstrom, der das Leuchten erzeugt, kann Technik stören. Starke Sonnenstürme bringen das Magnetfeld zum Schwanken und erzeugen dadurch Ströme in langen Leitungen. 1989 fiel deshalb in der kanadischen Provinz Québec stundenlang das Stromnetz aus. Beim stärksten überlieferten Sturm von 1859 schlugen Telegrafenleitungen Funken, und Polarlichter wurden bis in die Tropen gesehen. Heute überwachen Satelliten die Sonne laufend, damit die Betreiber von Stromnetzen und Satelliten vorgewarnt werden."
+        }
+      ],
+      "tryIt": "Sieh auf einer Polarlicht-Vorhersageseite nach dem aktuellen Kp-Wert. Bei sehr hohen Werten lohnt sich auch in Norddeutschland ein Blick zum Nordhorizont.",
+      "takeaways": [
+        "Sonnenteilchen regen Luftatome in großer Höhe zum Leuchten an.",
+        "Grün und Rot kommen vom Sauerstoff, Blau und Violett vom Stickstoff.",
+        "Das Magnetfeld lenkt die Teilchen in einen Ring um die Pole."
+      ]
+    }
+  },
+  {
+    "id": "herbstlaub",
+    "phenomenon": "Herbstfärbung",
+    "question": "Warum werden grüne Blätter im Herbst gelb und rot?",
+    "explanation": "Im Herbst baut der Baum das grüne Chlorophyll ab und holt wertvolle Nährstoffe wie Stickstoff in Äste und Stamm zurück. Gelbe und orange Farbstoffe, die Carotinoide, waren schon den ganzen Sommer im Blatt und werden nun sichtbar. Rote Farbstoffe bildet das Blatt dagegen im Herbst neu.",
+    "detail": "Das Signal zum Laubabwurf geben vor allem die länger werdenden Nächte, nicht erst der Frost.",
+    "deep": {
+      "lead": "Herbstlaub ist Recycling: Der Baum räumt das Blatt aus, bevor er es abwirft – die Farben sind das, was übrig bleibt.",
+      "sections": [
+        {
+          "title": "Gelb war schon da, Rot kommt dazu",
+          "text": "Carotinoide helfen im Sommer beim Lichtsammeln und schützen das Blatt vor zu viel Strahlung. Vom vielen Chlorophyll werden sie überdeckt. Die roten und violetten Töne stammen von Anthocyanen, denselben Farbstoffen wie in Rotkohl und Kirschen. Sie entstehen aus Zucker, der sich im Blatt staut. Sonnige Tage und kühle, frostfreie Nächte fördern das, deshalb fällt die Färbung von Jahr zu Jahr verschieden kräftig aus. Vermutlich schützen die roten Farbstoffe das Blatt vor Licht, solange der Baum noch Nährstoffe abzieht."
+        },
+        {
+          "title": "Die Sollbruchstelle",
+          "text": "Am Blattstiel bildet der Baum im Herbst eine Trennschicht aus dünnwandigen Zellen. Darunter wächst eine Korkschicht, die die spätere Wunde abdichtet. Schließlich hängt das Blatt nur noch an den Leitungsbahnen, und ein Windstoß genügt. Der Abwurf schützt den Baum vor dem Vertrocknen: Über die Blätter verdunstet viel Wasser, das die Wurzeln aus gefrorenem Boden nicht nachliefern könnten. Außerdem würde Schnee auf belaubten Ästen diese leicht brechen lassen. Nadelbäume lösen das Problem anders, mit schmalen Nadeln und dicker Wachsschicht."
+        }
+      ],
+      "tryIt": "Sammle ein gelbes und ein rotes Blatt. Prüfe, ob das rote auf der Sonnenseite des Baumes hing: Anthocyane bilden sich bevorzugt im Licht.",
+      "takeaways": [
+        "Chlorophyll wird abgebaut, die gelben Farbstoffe kommen zum Vorschein.",
+        "Rote Farbstoffe entstehen im Herbst neu aus Zucker.",
+        "Der Laubabwurf schützt den Baum vor Wassermangel im Winter."
+      ]
+    }
+  },
+  {
+    "id": "koffein-adenosin",
+    "phenomenon": "Koffein",
+    "question": "Wie hält dich Kaffee wach?",
+    "explanation": "Im wachen Gehirn sammelt sich der Botenstoff Adenosin an und meldet Müdigkeit, indem er an bestimmte Empfänger der Nervenzellen bindet. Koffein ist ähnlich gebaut und besetzt diese Empfänger, ohne sie auszulösen. Das Müdigkeitssignal kommt nicht mehr an. Die Müdigkeit ist also nur verdeckt, nicht beseitigt.",
+    "detail": "Für die Pflanze ist Koffein ein Insektengift. Im Blütennektar steckt es in winziger Dosis – Bienen merken sich solche Blüten besser.",
+    "deep": {
+      "lead": "Koffein liefert keine Energie – es blockiert nur den Sensor, der dir sagt, wie müde du bist.",
+      "sections": [
+        {
+          "title": "Der Verlauf im Körper",
+          "text": "Koffein geht schnell ins Blut über, die stärkste Wirkung setzt nach etwa einer halben bis einer Stunde ein. Die Leber baut es langsam ab: Nach vier bis sechs Stunden ist bei den meisten Erwachsenen erst die Hälfte verschwunden. Bei Rauchern geht es schneller, in der Schwangerschaft deutlich langsamer. Wer nachmittags Kaffee trinkt, hat beim Zubettgehen also noch einen spürbaren Rest im Blut. Auch wenn das Einschlafen gelingt, kann der Tiefschlaf flacher ausfallen, ohne dass man es selbst bemerkt."
+        },
+        {
+          "title": "Gewöhnung und Kopfschmerz",
+          "text": "Trinkst du regelmäßig Kaffee, bildet das Gehirn zusätzliche Adenosin-Empfänger. Dieselbe Tasse wirkt dann schwächer, und ohne Koffein trifft das Adenosin auf mehr Andockstellen als früher. Das erklärt die Müdigkeit und den typischen Kopfschmerz, wenn Gewohnheitstrinker plötzlich verzichten. Nach ein bis zwei Wochen hat sich das System zurückgestellt. Für gesunde Erwachsene gelten bis zu 400 Milligramm am Tag als unbedenklich, das entspricht etwa vier Tassen Filterkaffee. Schwangeren wird höchstens die Hälfte empfohlen."
+        },
+        {
+          "title": "Mehr als nur Kaffee",
+          "text": "Dieselbe Substanz steckt in Tee, Mate, Guaraná, Kakao und Cola. Das »Teein« des Tees ist chemisch nichts anderes als Koffein. Eine Tasse Schwarztee enthält etwa halb so viel wie eine Tasse Kaffee. Espresso hat zwar mehr Koffein pro Milliliter, wegen der kleinen Menge aber weniger pro Tasse als ein großer Filterkaffee. Auch entkoffeinierter Kaffee ist nicht völlig frei davon, es bleiben wenige Milligramm. Dass Kaffee dem Körper Wasser entzieht, stimmt bei gewohnten Mengen übrigens nicht."
+        }
+      ],
+      "tryIt": "Trink deinen letzten Kaffee heute vor 14 Uhr und achte morgen früh darauf, wie erholt du dich fühlst.",
+      "takeaways": [
+        "Koffein besetzt die Andockstellen des Müdemachers Adenosin.",
+        "Nach etwa fünf Stunden ist erst die Hälfte abgebaut.",
+        "Regelmäßiger Konsum führt zu Gewöhnung."
+      ]
+    }
+  },
+  {
+    "id": "sonne-kernfusion",
+    "phenomenon": "Kernfusion in der Sonne",
+    "question": "Warum leuchtet die Sonne seit Milliarden Jahren, ohne auszubrennen?",
+    "explanation": "Im Kern der Sonne herrschen rund 15 Millionen Grad und enormer Druck. Dort verschmelzen Wasserstoffkerne zu Helium. Das Helium ist etwas leichter als die Ausgangskerne zusammen, die fehlende Masse wird nach Einsteins Formel zu Energie. Die Sonne verbrennt also nichts, sie wandelt Masse in Strahlung um.",
+    "detail": "Die Sonne verliert so jede Sekunde rund vier Millionen Tonnen Masse – und hat trotzdem noch Brennstoff für etwa fünf Milliarden Jahre.",
+    "deep": {
+      "lead": "Die Sonne ist ein Fusionsreaktor, den die eigene Schwerkraft zusammenhält und zugleich regelt.",
+      "sections": [
+        {
+          "title": "Ein Rätsel des 19. Jahrhunderts",
+          "text": "Wäre die Sonne ein Haufen brennender Kohle, wäre sie nach wenigen Tausend Jahren erloschen. Physiker des 19. Jahrhunderts vermuteten deshalb, sie gewinne Energie, indem sie langsam schrumpft. Das hätte für einige Dutzend Millionen Jahre gereicht. Geologen und Biologen brauchten für Gesteine und Evolution aber viel längere Zeiträume. Der Widerspruch löste sich erst, als man die Kernkräfte verstand. In den späten 1930er-Jahren beschrieb Hans Bethe die Fusionsketten, die Sterne antreiben, und erhielt dafür später den Nobelpreis."
+        },
+        {
+          "title": "Der lange Weg des Lichts",
+          "text": "Die Energie entsteht tief im Kern, kommt aber nicht geradewegs heraus. Das Innere der Sonne ist so dicht, dass Licht nach winzigen Strecken wieder verschluckt und in zufälliger Richtung neu ausgesandt wird. Für den Weg bis zur Oberfläche braucht die Energie deshalb viele Tausend Jahre. Von dort bis zur Erde sind es dann nur gut acht Minuten. Anders die Neutrinos, die bei der Fusion ebenfalls entstehen: Sie durchqueren die Sonne fast ungehindert und liefern Forschern einen direkten Blick in den Kern."
+        },
+        {
+          "title": "Warum die Sonne nicht explodiert",
+          "text": "Die Sonne hält sich selbst im Gleichgewicht. Würde die Fusion stärker, heizte sich der Kern auf und dehnte sich aus. Dadurch sänken Dichte und Temperatur, und die Fusion ließe wieder nach. Umgekehrt zieht die Schwerkraft den Kern zusammen, wenn zu wenig Energie entsteht. Auf der Erde fehlt diese gewaltige Schwerkraft. Fusionsanlagen müssen das heiße Gas deshalb mit Magnetfeldern oder Lasern einschließen und brauchen dafür sogar deutlich höhere Temperaturen als im Sonnenkern, über hundert Millionen Grad."
+        }
+      ],
+      "tryIt": "Wenn heute die Sonne scheint, mach dir klar: Das Licht auf deiner Haut hat die Sonnenoberfläche vor gut acht Minuten verlassen.",
+      "takeaways": [
+        "Die Sonne verschmilzt Wasserstoff zu Helium und wandelt Masse in Energie um.",
+        "Schwerkraft und Druck halten die Fusion im Gleichgewicht.",
+        "Energie aus dem Kern braucht sehr lange bis zur Oberfläche."
+      ]
+    }
+  },
+  {
+    "id": "mondphasen",
+    "phenomenon": "Mondphasen",
+    "question": "Warum sehen wir den Mond mal voll, mal als Sichel?",
+    "explanation": "Die Sonne beleuchtet immer eine Hälfte des Mondes. Während er in rund 29,5 Tagen die Erde umkreist, sehen wir diese helle Hälfte aus wechselndem Blickwinkel: bei Vollmond ganz, bei Neumond gar nicht, dazwischen als Sichel oder Halbkreis. Mit dem Schatten der Erde haben die Phasen nichts zu tun.",
+    "detail": "Bei schmaler Sichel schimmert oft auch der dunkle Teil des Mondes schwach. Das ist Sonnenlicht, das die Erde auf den Mond zurückwirft – der Erdschein.",
+    "deep": {
+      "lead": "Mondphasen sind eine Frage des Blickwinkels: Der Mond ist immer halb beleuchtet, wir sehen nur unterschiedlich viel davon.",
+      "sections": [
+        {
+          "title": "Der Irrtum mit dem Erdschatten",
+          "text": "Viele glauben, die Erde werfe ihren Schatten auf den Mond und erzeuge so die Sichel. Der Erdschatten trifft den Mond aber nur bei einer Mondfinsternis, und die gibt es höchstens ein paarmal im Jahr. Dass nicht jeden Monat eine Finsternis eintritt, liegt an der Mondbahn: Sie ist um etwa fünf Grad gegen die Erdbahn gekippt. Meist zieht der Vollmond deshalb knapp über oder unter dem Erdschatten vorbei. Bei einer Finsternis ist der Schattenrand zudem anders gekrümmt als die Lichtgrenze der Phasen."
+        },
+        {
+          "title": "Wann welcher Mond am Himmel steht",
+          "text": "Die Phase legt fest, wann der Mond zu sehen ist. Der Vollmond steht der Sonne gegenüber, geht bei Sonnenuntergang auf und scheint die ganze Nacht. Der zunehmende Halbmond steht abends hoch im Süden und geht um Mitternacht unter. Der abnehmende Mond geht erst nach Mitternacht auf und ist am Vormittag noch am Taghimmel zu sehen. Eselsbrücke für die Nordhalbkugel: Passt die Sichel in den Bogen eines kleinen Schreibschrift-a, nimmt der Mond ab, passt sie in den Bogen eines geschwungenen z, nimmt er zu."
+        },
+        {
+          "title": "Immer dieselbe Seite",
+          "text": "Der Mond dreht sich genau einmal um sich selbst, während er die Erde einmal umrundet. Deshalb sehen wir stets dieselbe Seite mit denselben dunklen Flecken. Die Rückseite ist nicht dunkel, sie bekommt genauso viel Sonnenlicht ab, nur sehen wir sie von der Erde aus nie. Erstmals fotografiert wurde sie 1959 von einer sowjetischen Raumsonde. Auf der Südhalbkugel erscheint der Mond übrigens auf dem Kopf stehend, und die Sichel wächst dort von links nach rechts."
+        }
+      ],
+      "tryIt": "Such heute Abend den Mond und schätze: zunehmend oder abnehmend? Prüfe es mit der a-z-Regel und schau in drei Tagen noch einmal hin.",
+      "takeaways": [
+        "Der Mond ist immer zur Hälfte beleuchtet.",
+        "Phasen entstehen durch den Blickwinkel, nicht durch den Erdschatten.",
+        "Der Mond zeigt der Erde stets dieselbe Seite."
+      ]
+    }
+  },
+  {
+    "id": "rost-eisen",
+    "phenomenon": "Rost",
+    "question": "Warum rostet Eisen, und warum Edelstahl nicht?",
+    "explanation": "Eisen reagiert mit Sauerstoff und Wasser zu Eisenoxid, dem Rost. Dabei gibt das Eisen Elektronen ab, der Sauerstoff nimmt sie auf – eine langsame Verbrennung ohne Flamme. Rost ist porös und blättert ab, sodass immer neues Metall freiliegt. Deshalb frisst er sich weiter, bis nichts mehr übrig ist.",
+    "detail": "Der Mars ist rot, weil sein Staub reich an Eisenoxid ist. Der ganze Planet ist gewissermaßen angerostet.",
+    "deep": {
+      "lead": "Rosten ist eine elektrochemische Reaktion: Auf dem Eisen bilden sich winzige Batterien, sobald Wasser im Spiel ist.",
+      "sections": [
+        {
+          "title": "Kleine Batterien auf dem Metall",
+          "text": "Damit Eisen rostet, müssen Sauerstoff und Wasser zusammenkommen. In völlig trockener Luft passiert fast nichts, ebenso in Wasser ohne gelösten Sauerstoff. Auf einer feuchten Eisenfläche geht an manchen Stellen Eisen in Lösung und gibt Elektronen ab. Die wandern durch das Metall zu anderen Stellen, wo Sauerstoff sie aufnimmt. Das Wasser schließt den Stromkreis. Salz macht das Wasser leitfähiger und beschleunigt den Vorgang, deshalb rosten Autos nach Wintern mit Streusalz und Schiffe im Meer besonders schnell."
+        },
+        {
+          "title": "Schutzhaut aus Chrom",
+          "text": "Aluminium und Chrom reagieren sogar heftiger mit Sauerstoff als Eisen. Ihre Oxidschicht ist aber dicht, hauchdünn und haftet fest. Sie versiegelt das Metall darunter. Edelstahl enthält mindestens gut zehn Prozent Chrom und bildet deshalb eine solche unsichtbare Schutzhaut, die sich nach einem Kratzer von selbst erneuert. Eisen lässt sich auch anders schützen: durch Lack, durch Öl oder durch Verzinken. Zink ist unedler als Eisen und opfert sich: Selbst wenn die Schicht verletzt ist, rostet zuerst das Zink."
+        },
+        {
+          "title": "Opferanoden und Wärmekissen",
+          "text": "An Schiffsrümpfen und in Warmwasserspeichern hängen Blöcke aus Zink oder Magnesium. Sie lösen sich an Stelle des Stahls auf und werden regelmäßig ersetzt. Dasselbe Prinzip schützt erdverlegte Rohrleitungen. Dass Rosten Wärme freisetzt, nutzen Taschenwärmer zum Aufreißen: Sie enthalten feines Eisenpulver, Salz und etwas Wasser. Sobald Luft herankommt, rostet das Pulver binnen Stunden und wird dabei angenehm warm. Die riesige Oberfläche des Pulvers macht die sonst träge Reaktion schnell."
+        }
+      ],
+      "tryIt": "Leg einen blanken Eisennagel in ein Glas Leitungswasser und einen zweiten in Salzwasser. Vergleiche nach zwei Tagen, welcher stärker rostet.",
+      "takeaways": [
+        "Rost braucht Eisen, Sauerstoff und Wasser zugleich.",
+        "Salz beschleunigt das Rosten, weil es Wasser leitfähiger macht.",
+        "Chrom und Zink schützen Stahl auf unterschiedliche Weise."
+      ]
+    }
+  },
+  {
+    "id": "blutgruppen",
+    "phenomenon": "Blutgruppen",
+    "question": "Warum verträgt nicht jeder Mensch das Blut jedes anderen?",
+    "explanation": "Auf roten Blutkörperchen sitzen Zuckerstrukturen, die Antigene A und B. Wer A hat, bildet Antikörper gegen B, und umgekehrt. Gruppe AB trägt beide Antigene und hat keine dieser Antikörper, Gruppe 0 trägt keines und hat beide. Trifft Blut auf passende Antikörper, verklumpt es.",
+    "detail": "Der Rhesusfaktor heißt nach Rhesusaffen, an deren Blut das Merkmal erstmals untersucht wurde. Etwa 85 Prozent der Europäer sind Rhesus-positiv.",
+    "deep": {
+      "lead": "Blutgruppen sind Erkennungsmarken auf den Blutzellen – und das Immunsystem greift fremde Marken an.",
+      "sections": [
+        {
+          "title": "Landsteiners Mischversuche",
+          "text": "Bis um 1900 endeten Bluttransfusionen oft tödlich, ohne dass jemand wusste, warum. Der Wiener Arzt Karl Landsteiner mischte Blutproben seiner Mitarbeiter miteinander und sah, dass manche Kombinationen verklumpten und andere nicht. Aus dem Muster leitete er 1901 die Gruppen A, B und 0 ab, die Gruppe AB fanden Kollegen kurz darauf. Dafür erhielt er 1930 den Nobelpreis. Erst diese Entdeckung machte Transfusionen und später große Operationen sicher. Vor jeder Übertragung wird bis heute am Krankenbett noch einmal getestet."
+        },
+        {
+          "title": "Wer wem spenden kann",
+          "text": "Bei roten Blutkörperchen gilt 0 Rhesus-negativ als Universalspender, weil diese Zellen keine der Marken tragen, gegen die ein Empfänger Antikörper haben könnte. Menschen mit AB Rhesus-positiv können Zellen aller Gruppen empfangen. Bei Blutplasma ist es genau umgekehrt, weil dort die Antikörper des Spenders zählen: AB-Plasma passt für alle. Vererbt wird die Blutgruppe über zwei Genkopien, eine von jedem Elternteil. A und B setzen sich gegenüber 0 durch. Eltern mit A und B können daher ein Kind mit 0 bekommen."
+        },
+        {
+          "title": "Rhesus in der Schwangerschaft",
+          "text": "Ist die Mutter Rhesus-negativ und das Kind Rhesus-positiv, kann bei der Geburt kindliches Blut in ihren Kreislauf gelangen. Ihr Immunsystem bildet dann Antikörper. Dem ersten Kind schadet das meist nicht, bei einer weiteren Schwangerschaft können diese Antikörper aber die Blutzellen des Kindes angreifen. Heute bekommen Rhesus-negative Schwangere vorbeugend eine Spritze, die das verhindert. Dass die Blutgruppe den Charakter prägt oder eine besondere Ernährung verlangt, ist dagegen nicht belegt."
+        }
+      ],
+      "tryIt": "Finde deine Blutgruppe heraus: Sie steht im Blutspendeausweis, im Mutterpass oder in älteren Arztunterlagen.",
+      "takeaways": [
+        "Antigene auf den Blutzellen bestimmen die Blutgruppe.",
+        "Antikörper im Plasma greifen fremde Antigene an.",
+        "Bei roten Blutzellen ist 0 negativ der Universalspender."
+      ]
+    }
+  },
+  {
+    "id": "glasfaser-totalreflexion",
+    "phenomenon": "Glasfaser",
+    "question": "Wie reist das Internet als Licht durch eine Faser aus Glas?",
+    "explanation": "Daten werden als extrem schnelle Lichtblitze in eine haarfeine Glasfaser geschickt. Trifft das Licht flach auf die Grenze zwischen dem Kern und dem umgebenden Mantel, wird es vollständig zurückgeworfen. So bleibt es in der Faser gefangen, auch in Kurven, und kommt über viele Kilometer fast ungeschwächt an.",
+    "detail": "Der Kern einer üblichen Fernleitungsfaser ist nur etwa neun Tausendstel Millimeter dick – viel dünner als ein Haar.",
+    "deep": {
+      "lead": "Glasfasern sperren Licht ein: Die Totalreflexion macht aus einem Glasfaden einen nahezu verlustfreien Lichtleiter.",
+      "sections": [
+        {
+          "title": "Totalreflexion",
+          "text": "Geht Licht von einem optisch dichteren Stoff in einen dünneren über, wird es von der Senkrechten weggebrochen. Je flacher es auftrifft, desto flacher tritt es aus, bis es ab einem bestimmten Winkel gar nicht mehr hinauskommt und vollständig gespiegelt wird. Anders als bei einem Metallspiegel geht dabei praktisch nichts verloren. Der Kern der Faser besteht aus Glas, das Licht etwas stärker bricht als der Mantel darum. Dasselbe siehst du beim Tauchen: Schaust du schräg nach oben, wirkt die Wasseroberfläche wie ein Spiegel."
+        },
+        {
+          "title": "Glas, klarer als jedes Fenster",
+          "text": "Durch gewöhnliches Fensterglas kommt Licht nur wenige Meter weit, weil Verunreinigungen es schlucken. In den 1960er-Jahren rechnete der Physiker Charles Kao vor, dass hochreines Glas Licht über Kilometer leiten könnte, wenige Jahre später gelang die Herstellung. Kao bekam dafür 2009 den Nobelpreis. Heutige Fasern verlieren auf einem Kilometer nur wenige Prozent des Lichts. Genutzt wird unsichtbares Infrarotlicht, weil Glas dort am durchlässigsten ist. Trotzdem wird das Signal auf langen Strecken in regelmäßigen Abständen optisch verstärkt."
+        },
+        {
+          "title": "Kabel auf dem Meeresgrund",
+          "text": "Fast der gesamte Datenverkehr zwischen den Kontinenten läuft nicht über Satelliten, sondern durch Seekabel aus Glasfasern, die auf dem Meeresboden liegen. Eine einzelne Faser überträgt viele Datenströme gleichzeitig, indem jeder eine leicht andere Lichtfarbe benutzt. Gegenüber Kupferkabeln haben Fasern weitere Vorteile: Sie sind unempfindlich gegen elektrische Störungen, und das Signal wird über die Strecke kaum schwächer. Licht ist in Glas allerdings langsamer als im leeren Raum, es schafft dort nur etwa zwei Drittel der Lichtgeschwindigkeit."
+        }
+      ],
+      "tryIt": "Füll ein Glas mit Wasser und schau von schräg unten gegen die Wasseroberfläche: Sie spiegelt wie Silber – das ist Totalreflexion.",
+      "takeaways": [
+        "Flach auftreffendes Licht wird an der Faserwand vollständig gespiegelt.",
+        "Hochreines Glas leitet Licht über viele Kilometer.",
+        "Seekabel tragen fast den gesamten interkontinentalen Datenverkehr."
+      ]
+    }
+  },
+  {
+    "id": "hefe-gaerung",
+    "phenomenon": "Hefe und Gärung",
+    "question": "Warum geht ein Hefeteig auf?",
+    "explanation": "Hefe ist ein einzelliger Pilz. Im Teig ernährt sie sich von Zucker und scheidet dabei Kohlendioxid und etwas Alkohol aus. Das Gas sammelt sich in vielen kleinen Blasen, die das zähe Klebernetz des Mehls festhält. Der Teig bläht sich auf. Im Ofen dehnen sich die Blasen weiter, dann erstarrt die Krume.",
+    "detail": "Dieselbe Hefeart, Saccharomyces cerevisiae, lässt Brot aufgehen und vergärt Bier und Wein. Der Alkohol im Brot verdampft beim Backen.",
+    "deep": {
+      "lead": "Hefeteig ist ein Zuchtbecken: Milliarden lebender Zellen geben Gas ab, und das Mehl fängt es ein.",
+      "sections": [
+        {
+          "title": "Mit und ohne Sauerstoff",
+          "text": "Hefe kann auf zwei Arten Energie gewinnen. Hat sie Sauerstoff, verbrennt sie Zucker vollständig zu Kohlendioxid und Wasser, wie unsere eigenen Zellen. Fehlt Sauerstoff, schaltet sie auf Gärung um und erzeugt Kohlendioxid und Alkohol. Das bringt ihr viel weniger Energie, funktioniert aber auch im dichten Teig oder im verschlossenen Gärtank. Den Zucker findet sie im Mehl: Enzyme spalten dort Stärke nach und nach in kleine Zuckerbausteine. Ein Löffel Zucker im Teig gibt der Hefe nur einen schnelleren Start."
+        },
+        {
+          "title": "Temperatur ist alles",
+          "text": "Am wohlsten fühlt sich Backhefe bei etwa 30 Grad. Im Kühlschrank arbeitet sie sehr langsam, was Bäcker bewusst nutzen: Ein Teig, der über Nacht kalt geht, entwickelt mehr Aroma, weil neben dem Gas viele Geschmacksstoffe entstehen. Ab etwa 45 Grad nimmt die Hefe Schaden, bei gut 60 Grad stirbt sie ab. Zu heiße Milch ist deshalb ein häufiger Grund für einen Teig, der nicht aufgeht. Salz in direktem Kontakt bremst sie ebenfalls, im fertig gemischten Teig stört die übliche Menge aber nicht."
+        },
+        {
+          "title": "Pasteur und die lebenden Fermente",
+          "text": "Brot und Bier gibt es seit Jahrtausenden, doch lange hielt man Gärung für einen rein chemischen Zerfall. Erst Louis Pasteur zeigte um 1860, dass lebende Mikroorganismen sie verursachen und dass verschiedene Keime verschiedene Gärungen auslösen. Daraus entstand auch das Pasteurisieren, das kurze Erhitzen, das unerwünschte Keime abtötet. Sauerteig funktioniert ähnlich wie Hefeteig, enthält aber neben wilden Hefen Milchsäurebakterien. Sie liefern die Säure, die Roggenmehl erst backfähig macht und das Brot länger frisch hält."
+        }
+      ],
+      "tryIt": "Löse etwas Hefe mit einem Löffel Zucker in lauwarmem Wasser in einer Flasche und stülpe einen Luftballon darüber. Nach 30 Minuten bläht er sich.",
+      "takeaways": [
+        "Hefe wandelt Zucker in Kohlendioxid und Alkohol um.",
+        "Das Klebernetz des Mehls hält die Gasblasen fest.",
+        "Lauwarm ist ideal, über 45 Grad nimmt Hefe Schaden."
+      ]
+    }
+  },
+  {
+    "id": "schwitzen-verdunstung",
+    "phenomenon": "Verdunstungskälte",
+    "question": "Warum kühlt Schwitzen den Körper?",
+    "explanation": "Damit Wasser verdunstet, müssen sich Moleküle aus der Flüssigkeit lösen. Das schaffen nur die schnellsten, also energiereichsten. Sie nehmen ihre Energie mit, die zurückbleibende Flüssigkeit wird kälter. Verdunstet Schweiß auf der Haut, entzieht er ihr auf diese Weise Wärme.",
+    "detail": "Hunde haben kaum Schweißdrüsen. Sie kühlen sich durch Hecheln: Dabei verdunstet Wasser auf Zunge und Atemwegen.",
+    "deep": {
+      "lead": "Nicht der Schweiß kühlt, sondern sein Verdunsten – tropft er nur herunter, ist die Wirkung verschenkt.",
+      "sections": [
+        {
+          "title": "Schwüle bremst die Kühlung",
+          "text": "Wie schnell Schweiß verdunstet, hängt davon ab, wie viel Wasserdampf die Luft schon enthält. In trockener Wüstenluft verschwindet er sofort, man merkt kaum, dass man schwitzt, und verliert trotzdem viel Wasser. In feuchter Tropenluft oder im Dampfbad kann die Luft kaum noch Dampf aufnehmen. Der Schweiß bleibt auf der Haut stehen und kühlt nicht. Deshalb fühlen sich 30 Grad bei hoher Luftfeuchte belastender an als 35 Grad in trockener Luft. Ein Ventilator hilft, weil er die feuchte Luftschicht über der Haut wegbläst."
+        },
+        {
+          "title": "Der Mensch als Ausdauerläufer",
+          "text": "Menschen besitzen einige Millionen Schweißdrüsen und kaum Fell, eine im Tierreich seltene Kombination. Sie erlaubt, auch bei Hitze lange zu laufen, ohne zu überhitzen. Viele Tiere sind auf kurzen Strecken schneller, müssen in der Mittagshitze aber anhalten, um abzukühlen. Bei starker Anstrengung kann ein Mensch mehr als einen Liter Schweiß pro Stunde verlieren. Mit dem Wasser gehen Salze verloren. Wer lange schwitzt und nur reines Wasser trinkt, sollte deshalb auch etwas Salziges essen."
+        },
+        {
+          "title": "Dieselbe Physik im Alltag",
+          "text": "Nach dem Schwimmen frierst du im Wind, obwohl die Luft warm ist: Das Wasser auf der Haut verdunstet und nimmt Wärme mit. Desinfektionsmittel fühlt sich kalt an, weil Alkohol noch schneller verdunstet als Wasser. Unglasierte Tonkrüge halten Wasser kühl, da ständig etwas durch die Wand sickert und außen verdunstet. Ein Kühlschrank arbeitet nach dem gleichen Prinzip in einem geschlossenen Kreislauf: Ein Kältemittel verdampft im Inneren und nimmt dort Wärme auf, außen wird es wieder verflüssigt und gibt sie ab."
+        }
+      ],
+      "tryIt": "Befeuchte einen Handrücken mit Wasser und puste über beide Hände. Die nasse fühlt sich deutlich kälter an, obwohl der Luftstrom derselbe ist.",
+      "takeaways": [
+        "Verdunstung entzieht der Haut Wärme.",
+        "Bei hoher Luftfeuchte verdunstet Schweiß schlechter und kühlt kaum.",
+        "Kühlschränke nutzen dasselbe Prinzip."
+      ]
+    }
+  },
+  {
+    "id": "vulkanausbruch",
+    "phenomenon": "Vulkanausbruch",
+    "question": "Warum fließt bei manchen Vulkanen Lava ruhig aus, während andere explodieren?",
+    "explanation": "Entscheidend sind Zähigkeit und Gasgehalt des Magmas. Dünnflüssiges Magma lässt gelöste Gase leicht entweichen und fließt als Lavastrom aus. In zähem, kieselsäurereichem Magma bleiben die Gase gefangen. Sinkt beim Aufstieg der Druck, dehnen sie sich schlagartig aus und zerreißen das Magma zu Asche.",
+    "detail": "Bimsstein ist erstarrter Magmaschaum mit so vielen Gasblasen, dass er auf Wasser schwimmt.",
+    "deep": {
+      "lead": "Ein explosiver Vulkan funktioniert wie eine geschüttelte Sprudelflasche: Das Gas ist der Treibsatz, nicht die Hitze.",
+      "sections": [
+        {
+          "title": "Wo Magma entsteht",
+          "text": "Das Erdinnere ist heiß, aber der Erdmantel ist fest, nicht flüssig. Gestein schmilzt nur unter besonderen Bedingungen. An mittelozeanischen Rücken steigt Mantelgestein auf, der Druck sinkt, und ein Teil schmilzt. An Subduktionszonen bringt die abtauchende Platte Wasser in die Tiefe, das den Schmelzpunkt des Gesteins darüber senkt. Dort entstehen die explosiven Vulkane rund um den Pazifik. Eine dritte Art sitzt über heißen Aufstiegszonen mitten in einer Platte: Hawaii ist so entstanden, mit dünnflüssiger Lava und flachen Schildvulkanen."
+        },
+        {
+          "title": "Gefährlicher als Lava",
+          "text": "Lavaströme sind meist so langsam, dass Menschen ihnen ausweichen können. Die tödlichste Gefahr sind pyroklastische Ströme: Lawinen aus heißem Gas, Asche und Gesteinsbrocken, die mit dem Tempo eines Schnellzugs die Hänge hinabrasen. Solche Ströme begruben im Jahr 79 Pompeji und Herculaneum am Vesuv. Gefährlich sind auch Schlammströme, wenn Asche sich mit Regen oder Schmelzwasser mischt. Asche in großer Höhe gefährdet Flugzeugtriebwerke, 2010 legte ein isländischer Vulkan deshalb tagelang den Luftverkehr über Europa lahm."
+        },
+        {
+          "title": "Wirkung auf das Klima",
+          "text": "Große Ausbrüche schleudern Schwefelgase bis in die Stratosphäre. Dort bilden sich feine Tröpfchen, die Sonnenlicht ins All zurückwerfen und die Erde vorübergehend abkühlen. Nach dem Ausbruch des Pinatubo auf den Philippinen 1991 sank die globale Durchschnittstemperatur für etwa zwei Jahre um rund ein halbes Grad. Der Ausbruch des Tambora in Indonesien 1815 führte im Jahr darauf in Europa und Nordamerika zu Missernten, es ging als »Jahr ohne Sommer« in die Geschichte ein. Vulkanböden selbst sind dagegen oft besonders fruchtbar."
+        }
+      ],
+      "tryIt": "Suche auf einer Weltkarte Japan, Indonesien, Chile und Alaska: Mit ihren Vulkanen bilden sie den Pazifischen Feuerring.",
+      "takeaways": [
+        "Zähes, gasreiches Magma explodiert, dünnflüssiges fließt aus.",
+        "Pyroklastische Ströme sind gefährlicher als Lava.",
+        "Große Ausbrüche können das Weltklima für Jahre abkühlen."
+      ]
+    }
+  },
+  {
+    "id": "schwerelosigkeit-orbit",
+    "phenomenon": "Schwerelosigkeit im Orbit",
+    "question": "Warum schweben Astronauten auf der Raumstation?",
+    "explanation": "Auf der Raumstation wirkt die Schwerkraft fast so stark wie am Boden. Die Station fällt ununterbrochen auf die Erde zu, fliegt aber zugleich so schnell seitwärts, dass sie den Boden ständig verfehlt. Station und Besatzung fallen gemeinsam. Weil nichts mehr auf eine Unterlage drückt, fühlt sich alles gewichtslos an.",
+    "detail": "In 400 Kilometern Höhe hat die Erdanziehung noch rund 90 Prozent ihrer Stärke am Boden.",
+    "deep": {
+      "lead": "Astronauten schweben nicht, weil die Schwerkraft fehlt, sondern weil sie dauerhaft im freien Fall sind.",
+      "sections": [
+        {
+          "title": "Newtons Kanone",
+          "text": "Isaac Newton stellte sich eine Kanone auf einem sehr hohen Berg vor. Eine waagerecht abgefeuerte Kugel fällt in einem Bogen zu Boden. Je schneller sie fliegt, desto weiter kommt sie. Bei genügend Tempo krümmt sich die Erdoberfläche unter ihr genauso stark weg, wie die Kugel fällt. Sie fällt dann immer weiter, ohne dem Boden näher zu kommen: Sie ist in einer Umlaufbahn. In Bodennähe wären dafür knapp acht Kilometer pro Sekunde nötig. Die Raumstation fliegt mit etwa 28.000 Kilometern pro Stunde und umrundet die Erde in rund anderthalb Stunden."
+        },
+        {
+          "title": "Was Gewicht eigentlich ist",
+          "text": "Was du als Gewicht spürst, ist nicht die Schwerkraft selbst, sondern der Boden, der von unten gegen dich drückt. Fällt die Unterlage mit dir, verschwindet dieses Gefühl. Ein kurzes Beispiel kennst du aus dem Fahrstuhl, der nach unten anfährt, oder von der Kuppe einer Achterbahn. Flugzeuge können diesen Zustand für etwa zwanzig Sekunden herstellen, indem sie eine Wurfparabel fliegen. So trainieren Astronauten, und so werden Experimente vorbereitet. Fachleute sprechen lieber von Mikrogravitation, weil winzige Restkräfte bleiben."
+        },
+        {
+          "title": "Was das mit dem Körper macht",
+          "text": "Ohne Belastung bauen Muskeln und Knochen ab, deshalb gehört tägliches Training auf der Station zum Pflichtprogramm. Körperflüssigkeit verlagert sich in den Oberkörper, das Gesicht wird rundlicher, die Beine dünner. Die Wirbelsäule streckt sich, Astronauten sind im All einige Zentimeter größer. Das Gleichgewichtsorgan verliert seine Orientierung, vielen ist in den ersten Tagen übel. Auch Alltägliches ändert sich: Eine Kerzenflamme wird kugelrund, weil warme Luft nicht mehr aufsteigt, und Wasser bildet schwebende Kugeln."
+        }
+      ],
+      "tryIt": "Stich unten ein Loch in einen Pappbecher, füll Wasser ein und lass ihn über dem Waschbecken fallen: Im Fall hört der Strahl auf zu fließen.",
+      "takeaways": [
+        "Eine Umlaufbahn ist ständiges Fallen um die Erde herum.",
+        "Die Schwerkraft ist im Orbit fast so stark wie am Boden.",
+        "Gewicht spürst du nur, wenn dich etwas am Fallen hindert."
+      ]
+    }
+  }
+]

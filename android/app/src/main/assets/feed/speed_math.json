@@ -1,0 +1,522 @@
+[
+  {
+    "id": "mal-11",
+    "title": "Mit 11 multiplizieren",
+    "shortcut": "ab × 11 = a | (a + b) | b",
+    "explanation": "Bei einer zweistelligen Zahl schreibst du die beiden Ziffern auseinander und setzt ihre Summe in die Mitte. Ist die Summe 10 oder größer, wandert die 1 als Übertrag nach links. Beispiel: 63 × 11 → 6 | 9 | 3 = 693.",
+    "challenge": "Rechne: 78 × 11",
+    "result": "858",
+    "deep": {
+      "lead": "Mal 11 heißt: die Zahl einmal um eine Stelle verschoben plus die Zahl selbst.",
+      "sections": [
+        {
+          "title": "Warum die Summe in die Mitte gehört",
+          "text": "Mit 11 zu multiplizieren bedeutet, die Zahl mit 10 und mit 1 zu multiplizieren und beides zu addieren. Aus 63 wird also 630 plus 63. Schreib die beiden Zahlen untereinander: Ganz rechts steht nur die 3, ganz links nur die 6, und in der mittleren Spalte treffen die 6 und die 3 aufeinander. Deshalb ist die mittlere Ziffer die Summe der beiden äußeren. Allgemein: Eine Zahl mit Zehnerziffer a und Einerziffer b hat den Wert 10a + b. Mal 11 ergibt 110a + 11b, und das ist 100a + 10 mal (a + b) + b."
+        },
+        {
+          "title": "Übertrag und längere Zahlen",
+          "text": "Bei 78 ist die Summe 15. Die 5 bleibt in der Mitte, die 1 wird zur 7 addiert: 858. Bei 99 ergibt sich 9, 18, 9, also 1089. Das Verfahren klappt auch mit längeren Zahlen. Die äußeren Ziffern bleiben stehen, dazwischen schreibst du die Summe von je zwei Nachbarn. Für 243 mal 11: außen 2 und 3, in die Mitte 2 plus 4 gleich 6 und 4 plus 3 gleich 7, zusammen 2673. Rechne von rechts nach links, dann lassen sich Überträge gleich mitnehmen. Mal 22 oder 33 geht ebenso: erst mal 11, dann verdoppeln oder verdreifachen."
+        }
+      ],
+      "tryIt": "Rechne im Kopf: 45 × 11, 86 × 11 und 152 × 11. (495, 946, 1672.)",
+      "takeaways": [
+        "Außen die Ziffern, innen ihre Summe.",
+        "Mal 11 ist mal 10 plus einmal die Zahl."
+      ]
+    }
+  },
+  {
+    "id": "quadrat-auf-5",
+    "title": "Quadrat von Zahlen auf 5",
+    "shortcut": "(n5)² = n × (n + 1), dann 25 anhängen",
+    "explanation": "Nimm die Ziffern vor der 5, multipliziere sie mit der nächsthöheren Zahl und häng 25 an. Für 35² rechnest du 3 × 4 = 12 und schreibst 25 dahinter: 1225.",
+    "challenge": "Rechne: 65 × 65",
+    "result": "4225",
+    "deep": {
+      "lead": "Die Endung ist immer 25 – die ganze Arbeit steckt in einer einzigen kleinen Multiplikation.",
+      "sections": [
+        {
+          "title": "Die Algebra dahinter",
+          "text": "Jede Zahl, die auf 5 endet, lässt sich als 10n + 5 schreiben, bei 65 ist n gleich 6. Das Quadrat davon ist nach der ersten binomischen Formel 100n² + 100n + 25. Die ersten beiden Teile lassen sich zusammenfassen zu 100 mal n mal (n + 1). Das sind genau die Hunderter, und die 25 bleibt als Endung stehen. Deshalb genügt es, n mit seinem Nachfolger zu multiplizieren. Bei 65 also 6 mal 7 gleich 42, dahinter 25. Die Regel ist exakt, keine Näherung, und sie gilt für jede Zahl mit einer 5 am Ende."
+        },
+        {
+          "title": "Größere Zahlen und Kommazahlen",
+          "text": "Der Trick endet nicht bei zweistelligen Zahlen. Für 105 zum Quadrat rechnest du 10 mal 11 gleich 110 und hängst 25 an: 11025. Für 195 brauchst du 19 mal 20 gleich 380, also 38025. Auch Kommazahlen gehen: 6,5 zum Quadrat ist 42,25 und 2,5 zum Quadrat 6,25, nützlich bei Flächen. Verwandt ist ein allgemeinerer Trick: Haben zwei Zahlen dieselbe Zehnerziffer und ergänzen sich ihre Einer zu 10, etwa 43 und 47, funktioniert dasselbe Muster. Das Quadrat auf 5 ist nur der Sonderfall, bei dem beide Einer 5 sind."
+        }
+      ],
+      "tryIt": "Rechne: 25², 75², 95² und 115². (625, 5625, 9025, 13225.)",
+      "takeaways": [
+        "Vordere Zahl mal ihren Nachfolger, dann 25 dahinter.",
+        "Funktioniert auch für 105, 195 oder 6,5."
+      ]
+    }
+  },
+  {
+    "id": "mal-5",
+    "title": "Mit 5 multiplizieren",
+    "shortcut": "n × 5 = n ÷ 2 × 10",
+    "explanation": "Halbiere die Zahl und häng eine Null an. Bei ungeraden Zahlen bleibt beim Halbieren ein halber Rest – dann endet das Ergebnis auf 5 statt auf 0. Beispiel: 68 × 5 → 34 → 340; 37 × 5 → 18,5 → 185.",
+    "challenge": "Rechne: 486 × 5",
+    "result": "2430",
+    "deep": {
+      "lead": "Fünf ist ein halber Zehner – also halbieren statt multiplizieren.",
+      "sections": [
+        {
+          "title": "Warum Halbieren genügt",
+          "text": "Fünf ist die Hälfte von zehn. Statt mit 5 zu multiplizieren, kannst du deshalb mit 10 multiplizieren und durch 2 teilen, und die Reihenfolge der beiden Schritte ist egal. Mit 10 zu multiplizieren kostet in unserem Zahlensystem nichts, es verschiebt nur das Komma. Die ganze Arbeit steckt also im Halbieren, und das fällt den meisten leichter als das Einmaleins mit 5 bei großen Zahlen. Lange Zahlen halbierst du am besten in Stücken von links: 486 ist 400 plus 80 plus 6, die Hälften sind 200, 40 und 3."
+        },
+        {
+          "title": "Dieselbe Idee für 50, 25 und 125",
+          "text": "Der Gedanke lässt sich ausbauen. Mal 50 heißt halbieren und zwei Nullen anhängen: 46 mal 50 ist 2300. Mal 25 heißt durch 4 teilen und mal 100 nehmen, mal 125 durch 8 teilen und mal 1000. Rückwärts funktioniert es genauso: Durch 5 teilen heißt verdoppeln und durch 10 teilen, also 435 durch 5 gleich 870 durch 10 gleich 87. Das ist praktisch bei Preisen: Fünf Stück für 12,40 € kosten pro Stück 24,80 € durch 10, also 2,48 €. Immer wenn eine Zahl ein einfacher Bruchteil von 10, 100 oder 1000 ist, lohnt der Umweg."
+        }
+      ],
+      "tryIt": "Rechne: 84 × 5, 123 × 5 und 2468 × 5. (420, 615, 12340.)",
+      "takeaways": [
+        "Mal 5 = halbieren und Null anhängen.",
+        "Ungerade Zahl: Das Ergebnis endet auf 5."
+      ]
+    }
+  },
+  {
+    "id": "prozent-umdrehen",
+    "title": "Prozent umdrehen",
+    "shortcut": "a % von b = b % von a",
+    "explanation": "Ist eine Prozentaufgabe unbequem, tausch die beiden Zahlen. 8 % von 50 ist schwer zu sehen, 50 % von 8 sofort: 4. Das Ergebnis ist immer dasselbe.",
+    "challenge": "Rechne: 18 % von 50",
+    "result": "9",
+    "deep": {
+      "lead": "Bei Prozent darfst du die Zahlen tauschen – nimm die Richtung, die leichter zu rechnen ist.",
+      "sections": [
+        {
+          "title": "Warum man tauschen darf",
+          "text": "Prozent bedeutet »von hundert«. Die Aufgabe »a Prozent von b« heißt ausgeschrieben: a geteilt durch 100, mal b. Das ist dasselbe wie a mal b geteilt durch 100. Beim Malnehmen darf man die Faktoren vertauschen, also ist a mal b gleich b mal a, und »b Prozent von a« führt auf genau denselben Bruch. Der Trick ist deshalb kein Zufall bei glatten Zahlen, sondern gilt immer. Er hilft allerdings nur dann, wenn eine der beiden Zahlen ein bequemer Prozentsatz ist: 50, 25, 20, 10, 75 oder auch 200."
+        },
+        {
+          "title": "Bequeme Prozentsätze erkennen",
+          "text": "Halte Ausschau nach Zahlen, die als Prozentsatz leicht sind. 25 % ist ein Viertel, also wird aus 32 % von 25 die Aufgabe 25 % von 32, und das ist 8. 12 % von 75 wird zu drei Vierteln von 12, also 9. 7 % von 200 wird zu 200 % von 7, also 14. Auch 4 % von 75 ist plötzlich einfach: 75 % von 4 gleich 3. Passt keine Zahl, zerleg den Prozentsatz: 15 % sind 10 % plus die Hälfte davon. Eine Verwechslung solltest du vermeiden: Tauschen gilt für »Prozent von«, nicht für Aufschläge. 50 % mehr und danach 50 % weniger führen nicht zum Ausgangswert zurück."
+        }
+      ],
+      "tryIt": "Rechne durch Umdrehen: 44 % von 25, 16 % von 50 und 35 % von 20. (11, 8, 7.)",
+      "takeaways": [
+        "a % von b ist immer gleich b % von a.",
+        "Such die Zahl, die als Prozentsatz bequem ist: 10, 20, 25, 50, 75."
+      ]
+    }
+  },
+  {
+    "id": "mal-9",
+    "title": "Mit 9 multiplizieren",
+    "shortcut": "n × 9 = n × 10 − n",
+    "explanation": "Häng eine Null an die Zahl und zieh die Zahl selbst einmal ab. Für 47 × 9 rechnest du 470 − 47 = 423. Abziehen in zwei Schritten macht es leichter: 470 − 40 = 430, dann − 7.",
+    "challenge": "Rechne: 68 × 9",
+    "result": "612",
+    "deep": {
+      "lead": "Neun ist zehn minus eins – aus der Multiplikation wird eine einfache Subtraktion.",
+      "sections": [
+        {
+          "title": "Knapp unter einer runden Zahl",
+          "text": "Der Trick nutzt das Verteilungsgesetz. Neun mal eine Zahl ist dasselbe wie zehn mal die Zahl minus einmal die Zahl, denn 9 ist 10 − 1. Die Multiplikation mit 10 kostet nichts, übrig bleibt eine Subtraktion. Dasselbe Prinzip trägt weiter: Mal 99 heißt mal 100 minus einmal, also 37 mal 99 gleich 3700 − 37 gleich 3663. Mal 999 geht mit mal 1000. Und für die 8 ziehst du die Zahl zweimal ab: 8 mal 26 ist 260 − 52 gleich 208. Immer wenn ein Faktor knapp unter einer runden Zahl liegt, lohnt sich dieser Weg."
+        },
+        {
+          "title": "Muster im Neuner-Einmaleins",
+          "text": "Die Neunerreihe hat ein auffälliges Muster. Von 9 über 18 und 27 bis 90 steigt die Zehnerziffer um eins, während die Einerziffer um eins fällt, und die Quersumme ist jedes Mal 9. Der Grund ist derselbe: Plus 9 bedeutet plus 10 und minus 1. Daraus ergibt sich eine einfache Kontrolle für jede Rechnung mit 9. Das Ergebnis muss eine Quersumme haben, die durch 9 teilbar ist. Bei 612 ist sie 6 + 1 + 2 = 9, passt. Stünde dort 622, wüsstest du sofort, dass etwas nicht stimmt, ohne neu zu rechnen."
+        }
+      ],
+      "tryIt": "Rechne: 34 × 9, 125 × 9 und 46 × 99. (306, 1125, 4554.)",
+      "takeaways": [
+        "Mal 9 = mal 10, dann einmal abziehen.",
+        "Kontrolle: Die Quersumme des Ergebnisses ist durch 9 teilbar."
+      ]
+    }
+  },
+  {
+    "id": "zahlen-nahe-100",
+    "title": "Zahlen knapp unter 100 malnehmen",
+    "shortcut": "(100 − a)(100 − b) = 100 × (100 − a − b) + a × b",
+    "explanation": "Bestimme, wie viel jeder Zahl bis 100 fehlt. Zieh einen Abstand von der anderen Zahl ab: Das sind die Hunderter. Multipliziere die beiden Abstände: Das sind die letzten zwei Stellen. 96 × 93: 96 − 7 = 89, 4 × 7 = 28 → 8928.",
+    "challenge": "Rechne: 97 × 98",
+    "result": "9506",
+    "deep": {
+      "lead": "Statt großer Zahlen multiplizierst du nur ihre kleinen Abstände zur 100.",
+      "sections": [
+        {
+          "title": "Die Rechnung ausgeschrieben",
+          "text": "Schreib die beiden Zahlen als 100 − a und 100 − b, wobei a und b die Abstände zur 100 sind. Multiplizierst du aus, erhältst du 10000 − 100a − 100b + ab. Die ersten drei Teile lassen sich zusammenfassen zu 100 mal (100 − a − b). Der Ausdruck in der Klammer ist die eine Zahl minus der Abstand der anderen, und es ist gleich, welche du nimmst: 97 − 2 und 98 − 3 ergeben beide 95. Dahinter kommt das Produkt der Abstände, 3 mal 2 gleich 6. Weil es zwei Stellen füllen muss, schreibst du 06 und erhältst 9506."
+        },
+        {
+          "title": "Über 100 und gemischt",
+          "text": "Dasselbe klappt oberhalb von 100, nur wird dann addiert. Für 104 mal 107 rechnest du 104 + 7 = 111 und 4 mal 7 = 28, zusammen 11128. Liegt eine Zahl über und eine unter 100, wird das Produkt der Abstände abgezogen: 98 mal 106 ergibt 104 Hunderter minus 12, also 10388. Ist das Produkt der Abstände größer als 99, wandert der Überschuss in die Hunderter: Bei 88 mal 89 sind die Abstände 12 und 11, also 77 Hunderter plus 132 gleich 7832. Mit der Basis 1000 funktioniert die Methode genauso, dann mit drei Endstellen."
+        }
+      ],
+      "tryIt": "Rechne: 95 × 96, 92 × 97 und 103 × 108. (9120, 8924, 11124.)",
+      "takeaways": [
+        "Über Kreuz abziehen gibt die Hunderter, Abstände malnehmen die Endung.",
+        "Die Endung braucht immer zwei Stellen: 6 wird zu 06."
+      ]
+    }
+  },
+  {
+    "id": "teilbar-durch-3-und-9",
+    "title": "Teilbar durch 3 oder 9?",
+    "shortcut": "Quersumme durch 3 (bzw. 9) teilbar → Zahl auch",
+    "explanation": "Addiere alle Ziffern der Zahl. Ist diese Quersumme durch 3 teilbar, ist es die Zahl auch; dasselbe gilt für die 9. Bei großen Quersummen bildest du einfach noch einmal die Quersumme.",
+    "challenge": "Ist 4713 durch 3 teilbar? Und durch 9?",
+    "result": "Durch 3 ja, durch 9 nein (Quersumme 15)",
+    "deep": {
+      "lead": "Die Quersumme hat denselben Rest wie die Zahl selbst – deshalb reicht ein Blick auf die Ziffern.",
+      "sections": [
+        {
+          "title": "Warum die Quersumme genügt",
+          "text": "Der Schlüssel ist, dass 10, 100, 1000 und jede weitere Zehnerpotenz genau um 1 über einer Zahl aus lauter Neunen liegt: 10 = 9 + 1, 100 = 99 + 1. Zerlegst du 4713 in 4 mal 1000 plus 7 mal 100 plus 1 mal 10 plus 3, kannst du aus jedem Teil ein Vielfaches von 9 herausziehen. Übrig bleiben 4 + 7 + 1 + 3, also die Quersumme. Der herausgezogene Teil ist sicher durch 9 und damit auch durch 3 teilbar. Ob die ganze Zahl teilbar ist, hängt deshalb nur noch vom Rest ab, und der ist die Quersumme."
+        },
+        {
+          "title": "Weitere Regeln im Schnelldurchlauf",
+          "text": "Durch 2 teilbar ist jede Zahl mit gerader Endziffer, durch 5 jede mit 0 oder 5 am Ende. Für die 4 genügt ein Blick auf die letzten zwei Stellen, weil 100 durch 4 teilbar ist: 5316 ist teilbar, denn 16 ist es. Für die 8 zählen die letzten drei Stellen. Durch 6 teilbar ist eine Zahl, wenn sie gerade ist und ihre Quersumme durch 3 teilbar ist. Praktisch ist das beim Kürzen von Brüchen und beim Aufteilen von Rechnungen. Die Quersumme verrät sogar den Rest: 4713 hat die Quersumme 15, und 15 lässt beim Teilen durch 9 den Rest 6, genau wie 4713 selbst."
+        }
+      ],
+      "tryIt": "Prüf ohne zu rechnen: Sind 738, 5871 und 123456 durch 3 teilbar? Welche auch durch 9? (Alle durch 3; nur 738 durch 9.)",
+      "takeaways": [
+        "Quersumme durch 3 teilbar: Zahl durch 3 teilbar.",
+        "Für die 4 zählen die letzten zwei, für die 8 die letzten drei Stellen."
+      ]
+    }
+  },
+  {
+    "id": "verdoppeln-und-halbieren",
+    "title": "Verdoppeln und Halbieren",
+    "shortcut": "a × b = (a ÷ 2) × (b × 2)",
+    "explanation": "Halbiere einen Faktor und verdopple den anderen – das Produkt bleibt gleich. Wiederhole das, bis eine bequeme Aufgabe entsteht. 16 × 35 wird zu 8 × 70, und das ist 560.",
+    "challenge": "Rechne: 14 × 45",
+    "result": "630",
+    "deep": {
+      "lead": "Schieb Faktoren so lange zwischen den beiden Zahlen hin und her, bis eine davon rund ist.",
+      "sections": [
+        {
+          "title": "Warum sich nichts ändert",
+          "text": "Wenn du einen Faktor durch 2 teilst und den anderen mit 2 multiplizierst, hast du insgesamt mit 2 geteilt durch 2 multipliziert, also mit 1. Das Produkt bleibt unverändert. Anschaulich: Ein Rechteck von 16 mal 35 Kästchen lässt sich in der Mitte durchschneiden und neu zusammenlegen zu 8 mal 70. Die Fläche ist dieselbe. Besonders lohnend ist der Trick, wenn ein Faktor auf 5 endet, denn Verdoppeln macht daraus eine runde Zahl: Aus 45 wird 90, aus 35 wird 70, aus 125 wird 250 und dann 500."
+        },
+        {
+          "title": "Mehrfach anwenden und abwandeln",
+          "text": "Du darfst mehrmals hintereinander tauschen. 48 mal 125 wird zu 24 mal 250, dann 12 mal 500, dann 6 mal 1000, also 6000. Auch mit ungeraden Zahlen geht es, wenn du Kommazahlen nicht scheust: 3,5 mal 14 ist 7 mal 7 gleich 49. Statt 2 kannst du jede andere Zahl nehmen. Dritteln und Verdreifachen macht aus 15 mal 18 die Aufgabe 45 mal 6 gleich 270. Eine sehr alte Rechenmethode, oft als ägyptische oder russische Bauernmultiplikation bezeichnet, beruht vollständig auf wiederholtem Halbieren und Verdoppeln."
+        }
+      ],
+      "tryIt": "Rechne: 18 × 25, 12 × 35 und 16 × 75. (450, 420, 1200.)",
+      "takeaways": [
+        "Einen Faktor halbieren, den anderen verdoppeln.",
+        "Besonders gut, wenn eine Zahl auf 5 endet."
+      ]
+    }
+  },
+  {
+    "id": "trinkgeld-ueberschlagen",
+    "title": "Trinkgeld überschlagen",
+    "shortcut": "10 % = Komma eine Stelle nach links; 5 % = die Hälfte davon",
+    "explanation": "Verschieb das Komma um eine Stelle nach links, dann hast du 10 %. Die Hälfte davon sind 5 %. Aus diesen beiden Bausteinen setzt du alles zusammen: 15 % sind 10 % plus 5 %, 20 % sind zweimal 10 %.",
+    "challenge": "Rechne: 15 % von 64 €",
+    "result": "9,60 €",
+    "deep": {
+      "lead": "Jeder krumme Prozentsatz lässt sich aus 10 %, 5 % und 1 % zusammensetzen.",
+      "sections": [
+        {
+          "title": "Bausteine statt Formel",
+          "text": "Prozentrechnen im Kopf gelingt, wenn du nicht mit dem krummen Prozentsatz multiplizierst, sondern ihn aus einfachen Teilen zusammensetzt. Das Verteilungsgesetz erlaubt das: 15 % von einem Betrag sind 10 % davon plus 5 % davon. Zehn Prozent sind ein Zehntel, und durch 10 zu teilen verschiebt nur das Komma. Ein Prozent bekommst du, indem du das Komma zwei Stellen verschiebst. Mit 10 %, 5 % und 1 % lässt sich fast jeder Satz bauen: 12 % sind 10 % plus zweimal 1 %, 18 % sind 20 % minus zweimal 1 %."
+        },
+        {
+          "title": "Im Restaurant",
+          "text": "In Deutschland ist Trinkgeld freiwillig; üblich sind im Restaurant etwa 5 bis 10 Prozent, oft wird einfach auf einen glatten Betrag aufgerundet. Praktisch läuft es so: Bei 46 € Rechnung sind 10 % genau 4,60 €, du sagst »51, bitte«. In anderen Ländern gelten andere Gewohnheiten, in den USA zum Beispiel deutlich höhere Sätze, weshalb die Bausteine 15 und 20 % dort nützlich sind. Bei 38 € wären 15 % dann 3,80 € plus 1,90 €, also 5,70 €. Für den Überschlag darfst du die Rechnung vorher runden; auf den Cent kommt es beim Trinkgeld nicht an."
+        }
+      ],
+      "tryIt": "Überschlag: 10 % von 27,50 €, 15 % von 52 € und 20 % von 45 €. (2,75 €, 7,80 €, 9 €.)",
+      "takeaways": [
+        "10 %: Komma eine Stelle nach links.",
+        "15 % = 10 % plus die Hälfte davon."
+      ]
+    }
+  },
+  {
+    "id": "neunerprobe",
+    "title": "Neunerprobe mit der Quersumme",
+    "shortcut": "Quersummen der Faktoren malnehmen = Quersumme des Ergebnisses",
+    "explanation": "Bilde von jeder Zahl die Quersumme, bis nur eine Ziffer übrig ist. Rechne mit diesen Ziffern dieselbe Aufgabe. Stimmt das Ergebnis nicht mit der einstelligen Quersumme deines Resultats überein, hast du dich verrechnet.",
+    "challenge": "Stimmt 347 × 26 = 9122? Prüf mit der Quersumme.",
+    "result": "Nein – richtig ist 9022",
+    "deep": {
+      "lead": "Mit drei kleinen Quersummen entlarvst du die meisten Rechenfehler in Sekunden.",
+      "sections": [
+        {
+          "title": "Rechnen mit Resten",
+          "text": "Die einstellige Quersumme einer Zahl ist ihr Rest beim Teilen durch 9, wobei die 9 für den Rest 0 steht. Reste haben eine angenehme Eigenschaft: Addierst oder multiplizierst du zwei Zahlen, kannst du stattdessen ihre Reste addieren oder multiplizieren und erhältst den Rest des Ergebnisses. Bei 347 mal 26 sind die einstelligen Quersummen 5 und 8. Ihr Produkt ist 40, davon die Quersumme 4. Das behauptete Ergebnis 9122 hat aber die Quersumme 14, also 5. Fünf ist nicht vier, die Rechnung muss falsch sein. Das richtige Ergebnis 9022 liefert 13, also 4."
+        },
+        {
+          "title": "Was die Probe findet und was nicht",
+          "text": "Die Neunerprobe beweist nur Fehler, keine Richtigkeit. Passt die Quersumme nicht, ist das Ergebnis sicher falsch. Passt sie, ist es wahrscheinlich richtig, aber nicht garantiert. Unentdeckt bleiben alle Fehler, die den Neunerrest nicht verändern. Der häufigste ist der Zahlendreher: 9022 und 9202 haben dieselbe Quersumme. Auch eine vergessene Null oder ein Fehler um genau 9 rutscht durch. Für Additionen funktioniert die Probe genauso wie für Multiplikationen. Sie war lange ein Standardwerkzeug in Rechenbüchern, um umfangreiche Rechnungen ohne Maschine zu prüfen."
+        }
+      ],
+      "tryIt": "Prüf mit der Quersumme: Stimmt 2847 + 1695 = 4542? Und 62 × 43 = 2676? (Ja; nein, richtig ist 2666.)",
+      "takeaways": [
+        "Passt die Quersumme nicht, ist das Ergebnis sicher falsch.",
+        "Zahlendreher findet die Neunerprobe nicht."
+      ]
+    }
+  },
+  {
+    "id": "durch-5-teilen",
+    "title": "Durch 5 teilen",
+    "shortcut": "n ÷ 5 = n × 2 ÷ 10",
+    "explanation": "Verdopple die Zahl und verschieb das Komma eine Stelle nach links. Für 435 ÷ 5 rechnest du 870 und teilst durch 10: 87. Das geht auch, wenn es nicht aufgeht: 73 ÷ 5 → 146 → 14,6.",
+    "challenge": "Rechne: 1240 ÷ 5",
+    "result": "248",
+    "deep": {
+      "lead": "Ein Fünftel sind zwei Zehntel – also verdoppeln und das Komma verschieben.",
+      "sections": [
+        {
+          "title": "Teilen durch Malnehmen ersetzen",
+          "text": "Durch 5 zu teilen ist dasselbe wie mit einem Fünftel zu multiplizieren, und ein Fünftel ist zwei Zehntel. Erweiterst du den Bruch mit 2, steht im Nenner eine 10: Aus 435 Fünfteln werden 870 Zehntel. Das Teilen durch 10 ist nur eine Kommaverschiebung. So wird aus einer Division, die viele im Kopf mühsam finden, eine Verdopplung. Dieselbe Überlegung macht das Teilen durch 50 leicht: verdoppeln und durch 100 teilen. Und durch 25 teilst du, indem du mit 4 multiplizierst und durch 100 teilst: 1700 durch 25 ist 6800 durch 100, also 68."
+        },
+        {
+          "title": "Wo du das brauchst",
+          "text": "Fünftel kommen im Alltag häufig vor. Eine Rechnung über 86 € durch fünf Personen: 172 durch 10, also 17,20 € pro Kopf. Fünf Arbeitstage, 37,5 Wochenstunden: 75 durch 10, also 7,5 Stunden am Tag. Auch Strecken lassen sich so überschlagen. Wer in 5 Minuten 1,2 Kilometer fährt, schafft pro Minute 2,4 durch 10, also 0,24 Kilometer. Eine gute Kontrolle bietet die Gegenrichtung: Das Ergebnis mal 5 muss wieder die Ausgangszahl ergeben, und mal 5 heißt halbieren und Null anhängen. 87 halbiert ist 43,5, verzehnfacht 435."
+        }
+      ],
+      "tryIt": "Rechne: 170 ÷ 5, 1350 ÷ 5 und 48 ÷ 5. (34, 270, 9,6.)",
+      "takeaways": [
+        "Durch 5 = verdoppeln, dann durch 10.",
+        "Gegenprobe: Ergebnis halbieren und Null anhängen."
+      ]
+    }
+  },
+  {
+    "id": "mal-25",
+    "title": "Mit 25 multiplizieren",
+    "shortcut": "n × 25 = n ÷ 4 × 100",
+    "explanation": "Teile die Zahl durch 4 und häng zwei Nullen an. 36 × 25: 36 ÷ 4 = 9, also 900. Geht die Division nicht auf, steht der Rest für Viertel: Rest 1 bringt 25, Rest 2 bringt 50, Rest 3 bringt 75.",
+    "challenge": "Rechne: 48 × 25",
+    "result": "1200",
+    "deep": {
+      "lead": "25 ist ein Viertel von 100 – wer vierteln kann, kann mit 25 multiplizieren.",
+      "sections": [
+        {
+          "title": "Ein Viertel von hundert",
+          "text": "25 ist ein Viertel von 100. Mit 25 zu multiplizieren heißt deshalb, mit 100 zu multiplizieren und durch 4 zu teilen. Das Teilen durch 4 erledigst du am einfachsten durch zweimaliges Halbieren: 48, 24, 12. Bleibt ein Rest, rechnest du mit Vierteln weiter. Bei 17 mal 25 ist 17 durch 4 gleich 4 Rest 1. Die 4 ergibt 400, der Rest 1 steht für ein Viertel von 100, also 25. Zusammen 425. Oder in einem Zug gedacht: 17 Viertel sind 4 Ganze und ein Viertel, also 4,25, und mal 100 ergibt das 425."
+        },
+        {
+          "title": "Die Familie der Bruchteile",
+          "text": "Dieselbe Idee funktioniert mit jedem einfachen Bruchteil einer Zehnerpotenz. 125 ist ein Achtel von 1000, also ist 32 mal 125 gleich 32 durch 8 mal 1000, das sind 4000. 50 ist die Hälfte von 100, 75 sind drei Viertel davon: Für 16 mal 75 nimmst du ein Viertel von 16, also 4, mal 3 gleich 12, und hängst zwei Nullen an: 1200. Auch für Kommazahlen ist das nützlich. Mal 2,5 heißt durch 4 teilen und mal 10 nehmen, mal 0,25 heißt einfach vierteln. So wird aus 84 mal 2,5 schnell 210."
+        }
+      ],
+      "tryIt": "Rechne: 28 × 25, 84 × 25 und 13 × 25. (700, 2100, 325.)",
+      "takeaways": [
+        "Mal 25 = durch 4, dann zwei Nullen anhängen.",
+        "Vierteln geht am leichtesten als zweimal halbieren."
+      ]
+    }
+  },
+  {
+    "id": "dritte-binomische-formel",
+    "title": "Dritte binomische Formel nutzen",
+    "shortcut": "(m − d) × (m + d) = m² − d²",
+    "explanation": "Liegen zwei Zahlen gleich weit von einer runden Mitte entfernt, quadrierst du die Mitte und ziehst das Quadrat des Abstands ab. 47 × 53: Mitte 50, Abstand 3, also 2500 − 9 = 2491.",
+    "challenge": "Rechne: 28 × 32",
+    "result": "896",
+    "deep": {
+      "lead": "Zwei Zahlen rund um eine glatte Mitte ergeben fast deren Quadrat – es fehlt nur ein kleines Eckstück.",
+      "sections": [
+        {
+          "title": "Warum der Mittelteil verschwindet",
+          "text": "Multiplizierst du (m − d) mit (m + d) aus, entstehen vier Teile: m mal m, plus m mal d, minus d mal m, minus d mal d. Die beiden mittleren Teile heben sich auf, übrig bleibt m² − d². Das ist die dritte binomische Formel aus der Schule. Geometrisch: Ein Rechteck mit den Seiten 47 und 53 hat fast die Fläche eines Quadrats mit Seite 50. Schneidest du den überstehenden Streifen ab und legst ihn an die andere Seite, fehlt zum vollen Quadrat nur eine kleine Ecke von 3 mal 3 Kästchen."
+        },
+        {
+          "title": "Mitte und Abstand finden",
+          "text": "Die Mitte ist der Durchschnitt der beiden Zahlen, der Abstand die halbe Differenz. Bei 19 mal 21 ist die Mitte 20, das Ergebnis 400 − 1 = 399. Bei 96 mal 104 ist es 10000 − 16 = 9984. Auch größere Abstände sind bequem, solange du ihr Quadrat kennst: 65 mal 75 hat die Mitte 70 und den Abstand 5, also 4900 − 25 = 4875. Der Trick erklärt nebenbei eine hübsche Tatsache: Das Produkt der beiden Nachbarn einer Zahl ist immer um genau 1 kleiner als ihr Quadrat. 7 mal 9 ist 63, und 8 mal 8 ist 64."
+        }
+      ],
+      "tryIt": "Rechne: 38 × 42, 17 × 23 und 59 × 61. (1596, 391, 3599.)",
+      "takeaways": [
+        "Mitte quadrieren, Abstand quadrieren, abziehen.",
+        "Nachbarn einer Zahl ergeben ihr Quadrat minus 1."
+      ]
+    }
+  },
+  {
+    "id": "quadrate-nahe-50",
+    "title": "Quadrate in der Nähe von 50",
+    "shortcut": "(50 + a)² = (25 + a) Hunderter + a²",
+    "explanation": "Addiere den Abstand zur 50 zu 25: Das sind die Hunderter. Häng das Quadrat des Abstands zweistellig an. 53²: 25 + 3 = 28, dahinter 09 → 2809. Unter 50 ziehst du ab: 47² → 25 − 3 = 22, dahinter 09 → 2209.",
+    "challenge": "Rechne: 56 × 56",
+    "result": "3136",
+    "deep": {
+      "lead": "Rund um die 50 wird Quadrieren zu einer Addition und einem kleinen Quadrat.",
+      "sections": [
+        {
+          "title": "Die Herleitung",
+          "text": "Schreib die Zahl als 50 + a. Nach der ersten binomischen Formel ist das Quadrat 2500 + 100a + a². Die ersten beiden Teile sind zusammen 100 mal (25 + a), also 25 + a Hunderter. Dahinter kommt a². Weil zweimal 50 genau 100 ergibt, landet der gemischte Teil der Formel glatt bei den Hundertern, und genau das macht die 50 so angenehm. Für Zahlen unter 50 ist a negativ. Dann wird bei den Hundertern abgezogen, das Quadrat des Abstands bleibt aber positiv: 44² ist 25 − 6 = 19 Hunderter plus 36, also 1936."
+        },
+        {
+          "title": "Wenn das Quadrat dreistellig wird",
+          "text": "Ab einem Abstand von 10 passt a² nicht mehr in zwei Stellen. Dann zählst du den Überschuss zu den Hundertern. Für 61² ist a gleich 11: 25 + 11 = 36 Hunderter, plus 121, ergibt 3721. Dieselbe Bauart funktioniert um andere Basen. Nahe 100 gilt: (100 + a)² = (100 + 2a) Hunderter plus a², also 103² = 10609 und 97² = 9409. Mit der Zeit lohnt es sich, die Quadrate bis 25 auswendig zu kennen. Dann erreichst du mit den Regeln für 50 und 100 fast jedes zweistellige Quadrat in zwei Schritten."
+        }
+      ],
+      "tryIt": "Rechne: 52², 48² und 58². (2704, 2304, 3364.)",
+      "takeaways": [
+        "25 plus Abstand gibt die Hunderter, Abstand zum Quadrat die Endung.",
+        "Unter 50 wird der Abstand von 25 abgezogen."
+      ]
+    }
+  },
+  {
+    "id": "teilbar-durch-11",
+    "title": "Teilbar durch 11?",
+    "shortcut": "Ziffern abwechselnd + und −: Ergebnis 0 oder Vielfaches von 11",
+    "explanation": "Addiere und subtrahiere die Ziffern abwechselnd, von rechts beginnend. Kommt 0, 11, −11 oder ein anderes Vielfaches von 11 heraus, ist die Zahl durch 11 teilbar. Für 5863: 3 − 6 + 8 − 5 = 0, also teilbar.",
+    "challenge": "Ist 9174 durch 11 teilbar?",
+    "result": "Ja (4 − 7 + 1 − 9 = −11; 9174 = 11 × 834)",
+    "deep": {
+      "lead": "Bei der 11 zählt jede zweite Stelle negativ, weil 10 um eins unter 11 liegt.",
+      "sections": [
+        {
+          "title": "Warum die Vorzeichen wechseln",
+          "text": "Bei der Regel für die 9 hilft, dass 10 um eins über 9 liegt. Bei der 11 ist es umgekehrt: 10 liegt um eins darunter. Deshalb verhält sich 10 beim Teilen durch 11 wie −1. Hundert ist 10 mal 10 und verhält sich wie (−1) mal (−1), also wie +1; tatsächlich ist 100 gleich 99 + 1. Tausend verhält sich wieder wie −1, denn 1001 ist 7 mal 11 mal 13. So wechselt das Vorzeichen von Stelle zu Stelle. Die Einer zählen positiv, die Zehner negativ, die Hunderter positiv und so weiter."
+        },
+        {
+          "title": "Schnapszahlen und Prüfziffern",
+          "text": "Die Regel erklärt, warum zweistellige Schnapszahlen wie 33 oder 77 durch 11 teilbar sind: Die beiden gleichen Ziffern heben sich auf. Dasselbe gilt für jedes vierstellige Spiegelmuster wie 2332 oder 7447. Auch 2728 geht auf, weil 8 − 2 + 7 − 2 = 11 ergibt. Die abwechselnde Summe liefert nebenbei den Rest: Kommt 2 heraus, bleibt beim Teilen durch 11 der Rest 2. Rechnen mit Resten zur 11 wird auch praktisch genutzt, etwa in manchen Prüfziffernverfahren wie bei der früheren zehnstelligen ISBN, mit denen Tippfehler in Nummern auffallen sollen."
+        }
+      ],
+      "tryIt": "Prüf: Sind 3729, 7392 und 1234 durch 11 teilbar? (Ja, ja, nein.)",
+      "takeaways": [
+        "Von rechts abwechselnd plus und minus rechnen.",
+        "0 oder ein Vielfaches von 11 heißt: teilbar."
+      ]
+    }
+  },
+  {
+    "id": "von-links-addieren",
+    "title": "Von links addieren",
+    "shortcut": "Erst Hunderter, dann Zehner, dann Einer – laufend mitzählen",
+    "explanation": "Addiere im Kopf von der größten Stelle her und halte immer nur eine Zwischensumme fest. 478 + 356: 400 + 300 = 700, dazu 70 + 50 = 120 macht 820, dazu 8 + 6 = 14 macht 834.",
+    "challenge": "Rechne: 367 + 485",
+    "result": "852",
+    "deep": {
+      "lead": "Im Kopf rechnet man in Leserichtung: erst das Große, dann die Feinheiten.",
+      "sections": [
+        {
+          "title": "Warum links beginnen besser ist",
+          "text": "Auf Papier rechnen wir von rechts, weil sich Überträge so sauber notieren lassen. Im Kopf ist das unpraktisch: Du musst alle Ziffern des Ergebnisses behalten und am Ende rückwärts aufsagen. Von links entsteht das Ergebnis in der Reihenfolge, in der man es ausspricht, und nach dem ersten Schritt kennst du schon die Größenordnung. Mathematisch zerlegst du jede Zahl in ihre Stellenwerte und nutzt aus, dass man beim Addieren beliebig umordnen darf. Ein Übertrag ist dann nichts Besonderes mehr, er wird einfach zur laufenden Summe addiert."
+        },
+        {
+          "title": "Zwei Abkürzungen",
+          "text": "Oft geht es noch schneller. Erstens das Runden mit Ausgleich: Statt 367 + 485 rechnest du 367 + 500 = 867 und ziehst die zu viel genommenen 15 wieder ab, macht 852. Das lohnt sich immer, wenn eine Zahl knapp unter einer runden liegt, also bei Preisen wie 2,99 € oder 19,95 €. Zweitens das Verschieben: Gib von einer Zahl etwas an die andere ab, sodass eine rund wird. Aus 298 + 467 wird 300 + 465. Beim Zusammenzählen mehrerer Posten hilft es außerdem, Paare zu suchen, die sich zu 10 oder 100 ergänzen."
+        }
+      ],
+      "tryIt": "Rechne von links: 256 + 378, 649 + 273 und 1480 + 2750. (634, 922, 4230.)",
+      "takeaways": [
+        "Große Stellen zuerst, immer nur eine Zwischensumme merken.",
+        "Knapp unter rund: aufrunden und den Rest wieder abziehen."
+      ]
+    }
+  },
+  {
+    "id": "von-1000-abziehen",
+    "title": "Von 1000 abziehen",
+    "shortcut": "Jede Ziffer auf 9 ergänzen, die letzte auf 10",
+    "explanation": "Um eine Zahl von 1000 abzuziehen, ergänzt du jede Ziffer auf 9 und nur die letzte auf 10. Für 1000 − 387: 3 → 6, 8 → 1, 7 → 3, also 613. Kein Borgen, kein Übertrag.",
+    "challenge": "Rechne: 1000 − 648",
+    "result": "352",
+    "deep": {
+      "lead": "Statt über drei Nullen hinweg zu borgen, ergänzt du einfach jede Stelle.",
+      "sections": [
+        {
+          "title": "Der Umweg über 999",
+          "text": "Das Borgen beim schriftlichen Abziehen von einer runden Zahl ist lästig, weil man sich über mehrere Nullen hinweg etwas leihen muss. Der Trick umgeht das. 1000 ist 999 + 1. Von 999 lässt sich jede dreistellige Zahl ohne Borgen abziehen, denn keine Ziffer ist größer als 9. Du ziehst also Stelle für Stelle von 9 ab und addierst am Ende die übrig gebliebene 1 wieder dazu. Diese 1 schlägst du gleich der letzten Stelle zu, und deshalb wird dort auf 10 statt auf 9 ergänzt."
+        },
+        {
+          "title": "Wechselgeld und Sonderfälle",
+          "text": "Die Methode funktioniert für jede Zehnerpotenz. 10000 − 2764 ergibt 7236, und wer 37,45 € mit einem 100-Euro-Schein bezahlt, bekommt 62,55 € zurück: 3 → 6, 7 → 2, 4 → 5, und die letzte 5 → 5. Endet die Zahl auf Null, ergänzt du die letzte Stelle, die keine Null ist, auf 10 und lässt die Nullen stehen: 1000 − 640 ist 360. Hat die Zahl weniger Stellen, denk dir führende Nullen dazu: 1000 − 99 wird zu 1000 − 099, also 901. Für andere runde Zahlen kombinierst du: 2000 − 648 ist 1000 mehr als 352, also 1352."
+        }
+      ],
+      "tryIt": "Rechne: 1000 − 275, 1000 − 806 und 10000 − 4321. (725, 194, 5679.)",
+      "takeaways": [
+        "Alle Ziffern auf 9, die letzte auf 10.",
+        "Funktioniert genauso für 100, 10000 und Wechselgeld."
+      ]
+    }
+  },
+  {
+    "id": "mal-15",
+    "title": "Mit 15 multiplizieren",
+    "shortcut": "n × 15 = n × 10 + die Hälfte davon",
+    "explanation": "Häng eine Null an und addiere die Hälfte dieses Wertes dazu. 24 × 15: 240 plus 120 ergibt 360. Bei ungeraden Zahlen endet die Hälfte auf 5: 17 × 15 → 170 + 85 = 255.",
+    "challenge": "Rechne: 36 × 15",
+    "result": "540",
+    "deep": {
+      "lead": "Fünfzehn ist zehn plus die Hälfte von zehn – mehr als eine Halbierung brauchst du nicht.",
+      "sections": [
+        {
+          "title": "Zehn plus die Hälfte von zehn",
+          "text": "15 ist 10 plus 5, und 5 ist die Hälfte von 10. Nach dem Verteilungsgesetz ist n mal 15 deshalb n mal 10 plus n mal 5, und der zweite Teil ist einfach die Hälfte des ersten. Du brauchst also keine neue Multiplikation, nur eine Verzehnfachung, eine Halbierung und eine Addition. Bei geraden Zahlen gibt es einen noch kürzeren Weg über Verdoppeln und Halbieren: 36 mal 15 ist 18 mal 30, also 540. Welcher Weg angenehmer ist, hängt von der Zahl ab; beide führen immer zum selben Ergebnis."
+        },
+        {
+          "title": "Minuten, Prozente, Anderthalbfaches",
+          "text": "Die 15 taucht ständig auf. Eine Viertelstunde hat 15 Minuten, sieben Viertelstunden sind 70 plus 35 gleich 105 Minuten. 15 Prozent berechnest du nach demselben Muster: ein Zehntel plus die Hälfte davon. Auch Verwandte der 15 lassen sich so behandeln. Mal 1,5 heißt: die Zahl plus ihre Hälfte, also 1,5 mal 84 gleich 84 plus 42 gleich 126. Mal 150 ist dasselbe mit zwei Nullen. Mal 12 gelingt ähnlich: das Zehnfache plus das Doppelte, also 12 mal 15 gleich 150 plus 30 gleich 180."
+        }
+      ],
+      "tryIt": "Rechne: 48 × 15, 82 × 15 und 1,5 × 66. (720, 1230, 99.)",
+      "takeaways": [
+        "Mal 15 = mal 10 plus die Hälfte davon.",
+        "Mal 1,5 = die Zahl plus ihre Hälfte."
+      ]
+    }
+  },
+  {
+    "id": "gleiche-zehner-einer-zehn",
+    "title": "Gleiche Zehner, Einer ergeben 10",
+    "shortcut": "(10n + a)(10n + b) = n(n + 1) | a × b, wenn a + b = 10",
+    "explanation": "Haben zwei Zahlen dieselbe Zehnerziffer und ergänzen sich ihre Einer zu 10, multiplizierst du die Zehnerziffer mit ihrem Nachfolger und hängst das Produkt der Einer zweistellig an. 43 × 47: 4 × 5 = 20, 3 × 7 = 21 → 2021.",
+    "challenge": "Rechne: 62 × 68",
+    "result": "4216",
+    "deep": {
+      "lead": "Wenn sich die Einer zu 10 ergänzen, fällt der unbequeme Mittelteil der Rechnung glatt weg.",
+      "sections": [
+        {
+          "title": "Die Rechnung dahinter",
+          "text": "Schreib die Zahlen als 10n + a und 10n + b. Ausmultipliziert ergibt das 100n² + 10n mal (a + b) + ab. Jetzt kommt die Bedingung ins Spiel: Weil a + b gleich 10 ist, wird der mittlere Teil zu 100n. Zusammen mit dem ersten Teil sind das 100 mal n mal (n + 1), also die Hunderter. Übrig bleibt ab als Endung. Ohne die Bedingung fiele der mittlere Teil nicht glatt auf die Hunderter, und der Trick würde scheitern. Deshalb musst du vor dem Rechnen beide Voraussetzungen prüfen: gleiche Zehner, Einer zusammen 10."
+        },
+        {
+          "title": "Sonderfälle und Verwandte",
+          "text": "Das Produkt der Einer muss immer zwei Stellen belegen. Bei 31 mal 39 ist es 9, geschrieben 09, das Ergebnis also 1209. Sind beide Einer gleich 5, erhältst du die bekannte Regel für Quadrate von Zahlen auf 5. Mit dreistelligen Zahlen geht es ebenso, dann ist n zweistellig: 113 mal 117 ergibt 11 mal 12 gleich 132 und 3 mal 7 gleich 21, zusammen 13221. Es gibt auch die spiegelbildliche Regel für gleiche Einer und Zehner, die sich zu 10 ergänzen, etwa 34 mal 74: 3 mal 7 plus 4 gleich 25, dahinter 4 mal 4 gleich 16, also 2516."
+        }
+      ],
+      "tryIt": "Rechne: 84 × 86, 26 × 24 und 91 × 99. (7224, 624, 9009.)",
+      "takeaways": [
+        "Zehnerziffer mal Nachfolger, dann Einer mal Einer dahinter.",
+        "Nur gültig bei gleichen Zehnern und Einern, die zusammen 10 ergeben."
+      ]
+    }
+  },
+  {
+    "id": "neunzehn-prozent",
+    "title": "19 % im Kopf",
+    "shortcut": "19 % = 20 % − 1 %",
+    "explanation": "Berechne ein Fünftel des Betrags (20 %) und zieh ein Hundertstel (1 %) davon ab. Für 19 % von 80 €: 16 € minus 0,80 € ergibt 15,20 €. Ein Fünftel bekommst du durch Verdoppeln und Kommaverschieben.",
+    "challenge": "Rechne: 19 % von 250 €",
+    "result": "47,50 €",
+    "deep": {
+      "lead": "Krumme Prozentsätze werden leicht, wenn du sie als glatten Satz mit kleiner Korrektur liest.",
+      "sections": [
+        {
+          "title": "Krumme Sätze aus glatten bauen",
+          "text": "Kaum jemand kann mit 0,19 im Kopf multiplizieren, aber 20 % und 1 % sind leicht. Weil Prozentsätze desselben Betrags sich addieren und subtrahieren lassen, ist 19 % genau 20 % minus 1 %. Zwanzig Prozent sind ein Fünftel: verdoppeln und das Komma eine Stelle nach links. Ein Prozent: Komma zwei Stellen nach links. Für 250 € also 50 € minus 2,50 €. Auf dieselbe Weise zerlegst du andere Sätze. Der ermäßigte Mehrwertsteuersatz von 7 % ist 5 % plus 2 %, bei 80 € also 4 € plus 1,60 €, zusammen 5,60 €."
+        },
+        {
+          "title": "Netto, brutto und ein beliebter Fehler",
+          "text": "Die Mehrwertsteuer wird auf den Nettopreis aufgeschlagen. Aus 100 € netto werden beim Regelsatz 119 € brutto. Der Rückweg ist tückisch: Wer vom Bruttopreis 19 % abzieht, landet zu tief, denn 19 % von 119 € sind mehr als 19 €. Richtig ist, den Bruttopreis durch 1,19 zu teilen. Für den Überschlag hilft eine Faustzahl: Im Bruttopreis steckt knapp ein Sechstel Steuer, genau 19 von 119 Teilen, das sind rund 16 %. In 59,50 € brutto stecken also 9,50 € Steuer, und der Nettopreis beträgt 50 €. Die Steuersätze legt der Gesetzgeber fest und kann sie ändern."
+        }
+      ],
+      "tryIt": "Rechne: 19 % von 40 €, von 120 € und von 60 €. (7,60 €, 22,80 €, 11,40 €.)",
+      "takeaways": [
+        "19 % = ein Fünftel minus ein Hundertstel.",
+        "Vom Brutto zum Netto: durch 1,19 teilen, nicht 19 % abziehen."
+      ]
+    }
+  }
+]

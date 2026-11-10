@@ -5,33 +5,63 @@ import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.TodayCountResponse
 import com.hikari.app.data.prefs.FeedPreferences
 import com.hikari.app.data.prefs.SettingsStore
+import com.hikari.app.domain.feed.BuildGame
+import com.hikari.app.domain.feed.ChoiceGame
+import com.hikari.app.domain.feed.FeedComposer
+import com.hikari.app.domain.feed.FeedContentRepository
+import com.hikari.app.domain.feed.FeedEntry
+import com.hikari.app.domain.feed.FeedGame
+import com.hikari.app.domain.feed.FeedGameFactory
+import com.hikari.app.domain.feed.LanguageCardItem
 import com.hikari.app.domain.feed.LearningLanguage
+import com.hikari.app.domain.feed.LetterIntroGame
+import com.hikari.app.domain.feed.MemoryGridGame
 import com.hikari.app.domain.feed.MindfulCard
+import com.hikari.app.domain.feed.PairsGame
+import com.hikari.app.domain.feed.RuAlphabet
+import com.hikari.app.domain.feed.RuAlphabetLogic
+import com.hikari.app.domain.feed.RuFeedGrading
+import com.hikari.app.domain.feed.RuGrade
+import com.hikari.app.domain.feed.RussianFeedContext
 import com.hikari.app.domain.feed.MindfulFeedContentProvider
 import com.hikari.app.domain.feed.MindfulModuleType
 import com.hikari.app.domain.feed.ModuleRank
 import com.hikari.app.domain.model.FeedItem
 import com.hikari.app.domain.repo.FeedRepository
+import com.hikari.app.domain.russian.RuLevel
 import com.hikari.app.domain.russian.RuProgress
+import com.hikari.app.domain.russian.RussianStudyTime
 import com.hikari.app.domain.russian.RuSessionResult
 import com.hikari.app.domain.russian.RussianCourseRepository
 import com.hikari.app.domain.russian.RussianProgressStore
 import com.hikari.app.domain.russian.apply
 import com.hikari.app.ui.russian.RussianAudioPlayer
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.util.Calendar
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 
 enum class FeedMode { NEW, SAVED, OLD }
+
+/** Was ein beendetes Spiel bewirkt hat — die Rückmeldung, die der Feed danach zeigt. */
+data class GameOutcome(val correct: Boolean, val message: String = "", val xp: Int = 0)
+
+/** So viele Seiten vor dem Ende lädt der Feed den nächsten Schwung. */
+private const val LOAD_AHEAD = 5
+private const val PAIRS_XP = 6
+private const val SPEECH_XP = 15
 
 @HiltViewModel
 class FeedViewModel @Inject constructor(
@@ -41,9 +71,11 @@ class FeedViewModel @Inject constructor(
     val audio: RussianAudioPlayer? = null,
     val russianRepo: RussianCourseRepository? = null,
     val russianProgress: RussianProgressStore? = null,
+    private val content: FeedContentRepository? = null,
+    private val studyTime: RussianStudyTime? = null,
 ) : ViewModel() {
 
-    constructor(repo: FeedRepository, settings: SettingsStore) : this(repo, settings, null, null, null, null)
+    constructor(repo: FeedRepository, settings: SettingsStore) : this(repo, settings, null, null, null, null, null, null)
 
     val backendUrl: StateFlow<String> = settings.backendUrl
         .stateIn(viewModelScope, SharingStarted.Eagerly, "")
@@ -78,23 +110,126 @@ class FeedViewModel @Inject constructor(
 
     private val cardCache = mutableMapOf<String, MindfulCard>()
 
-    val mindfulCards: StateFlow<List<MindfulCard>> = combine(
-        enabledModules,
-        selectedLanguage,
-        moduleRanks,
-        russianProgress?.state ?: MutableStateFlow(RuProgress()),
-    ) { modules, lang, ranks, _ ->
-        MindfulFeedContentProvider.getDailyCards(
-            calendar = Calendar.getInstance(),
-            enabledModules = modules,
-            language = lang,
-            moduleRanks = ranks,
-            russianRepo = russianRepo,
-            russianProgress = russianProgress,
-        ).also { cards ->
-            cards.forEach { cardCache[it.id] = it }
+    // ── Endloser Feed ───────────────────────────────────────────────────────────
+    // Der Feed ist keine feste Tagesliste mehr: Er wird beim Öffnen frisch gemischt und
+    // wächst beim Scrollen nach. Wissenskarten wandern durch den ganzen Vorrat, bevor sich
+    // etwas wiederholt; Spiele und Russisch-Übungen werden jedes Mal neu erzeugt.
+
+    private val legacyCards: Map<MindfulModuleType, List<MindfulCard>> by lazy {
+        MindfulFeedContentProvider.getAllMasterCards().filter { it !is LanguageCardItem }.groupBy { it.type }
+    }
+
+    private fun cardsOf(module: MindfulModuleType): List<MindfulCard> =
+        content?.cards(module) ?: legacyCards[module].orEmpty()
+
+    private var composer = FeedComposer(::cardsOf)
+    private var currentIndex = 0
+    private var buildJob: Job? = null
+
+    private val _entries = MutableStateFlow<List<FeedEntry>>(emptyList())
+    val entries: StateFlow<List<FeedEntry>> = _entries.asStateFlow()
+
+    /** Nur die Wissenskarten des Feeds (für »Mein Gehirn« und ältere Aufrufer). */
+    val mindfulCards: StateFlow<List<MindfulCard>> = _entries
+        .map { list -> list.filterIsInstance<FeedEntry.Card>().map { it.card } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val dailyGoal: Int = FeedComposer.DAILY_GOAL
+
+    val completedCount: StateFlow<Int> = completedCards
+        .map { it.size }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
+
+    val letterProgress: StateFlow<Map<String, Int>> =
+        feedPrefs?.letterProgress ?: MutableStateFlow(emptyMap())
+
+    val alphabet: RuAlphabet get() = content?.alphabet ?: RuAlphabet()
+
+    init {
+        viewModelScope.launch {
+            combine(enabledModules, selectedLanguage, moduleRanks) { m, l, r -> Triple(m, l, r) }
+                .distinctUntilChanged()
+                .collect { rebuild() }
         }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    }
+
+    /** Neue Sitzung: frisch mischen und von vorn beginnen. */
+    private fun rebuild() {
+        buildJob?.cancel()
+        buildJob = viewModelScope.launch {
+            // Beim ersten Mal die Inhaltsdateien abseits des Hauptthreads einlesen.
+            if (content != null) withContext(Dispatchers.Default) { enabledModules.value.forEach { cardsOf(it) }; content.alphabet; content.warmGlossary() }
+            composer = FeedComposer(::cardsOf)
+            currentIndex = 0
+            _entries.value = composeBatch()
+        }
+    }
+
+    private fun russianContext(): RussianFeedContext? {
+        val repo = russianRepo ?: return null
+        val store = russianProgress ?: return null
+        return runCatching {
+            val progress = store.state.value
+            RussianFeedContext(
+                index = repo.index,
+                progress = progress,
+                today = store.today(),
+                alphabet = alphabet,
+                letterProgress = letterProgress.value,
+                deepdive = repo.deepdive,
+                level = RuLevel.estimate(RuLevel.measure(progress, studyTime?.talkCount() ?: 0)),
+                resolve = { id -> repo.phrase(id, progress.settings) },
+            )
+        }.getOrNull()
+    }
+
+    private fun composeBatch(): List<FeedEntry> {
+        val language = selectedLanguage.value
+        return composer.batch(
+            enabled = enabledModules.value,
+            ranks = moduleRanks.value,
+            language = language,
+            lastSeen = feedPrefs?.lastSeen().orEmpty(),
+            russian = russianContext(),
+            memoryLevel = feedPrefs?.memoryLevel() ?: 4,
+            legacyLanguageCards = MindfulFeedContentProvider.languagePool(language),
+        ).also { batch ->
+            batch.forEach { if (it is FeedEntry.Card) cardCache[it.card.id] = it.card }
+        }
+    }
+
+    /** Die Seite [index] steht jetzt im Bild: merken (für die Rotation) und rechtzeitig nachladen. */
+    fun onShown(index: Int) {
+        val list = _entries.value
+        val entry = list.getOrNull(index) ?: return
+        currentIndex = index
+        if (entry is FeedEntry.Card) feedPrefs?.markSeen(entry.id)
+        if (index >= list.size - LOAD_AHEAD) {
+            val more = composeBatch()
+            if (more.isNotEmpty()) _entries.update { it + more }
+        }
+    }
+
+    /** Unter welchem Modus die Zeit auf diesem Eintrag in der Russisch-Statistik zählt (null = gar nicht). */
+    private fun studyMode(entry: FeedEntry): String? = when {
+        entry is FeedEntry.Card && entry.card is LanguageCardItem ->
+            if ((entry.card as LanguageCardItem).language == LearningLanguage.RUSSIAN) RussianStudyTime.FEED_PHRASES else null
+        entry is FeedEntry.Game && entry.game.module == MindfulModuleType.LANGUAGE ->
+            if (entry.game.label.startsWith("KYRILLISCH")) RussianStudyTime.FEED_ALPHABET else RussianStudyTime.FEED_PRACTICE
+        else -> null
+    }
+
+    /**
+     * [seconds] aktive Zeit auf der Seite [index]. Zählt immer für die Feed-Zeit des Tages;
+     * Russisch-Einträge zählen zusätzlich als Lernzeit im Russisch-Bereich (Bereich »Feed«).
+     */
+    fun addActiveTime(index: Int, seconds: Int) {
+        val entry = _entries.value.getOrNull(index) ?: return
+        feedPrefs?.addFeedSeconds(seconds)
+        studyMode(entry)?.let { studyTime?.add(it, seconds) }
+    }
+
+    fun feedSecondsToday(): Int = feedPrefs?.feedSecondsToday() ?: 0
 
     val savedCards: StateFlow<List<MindfulCard>> = combine(
         savedCardIds,
@@ -102,25 +237,36 @@ class FeedViewModel @Inject constructor(
     ) { savedIds, currentCards ->
         currentCards.forEach { cardCache[it.id] = it }
         savedIds.mapNotNull { id ->
-            cardCache[id] ?: MindfulFeedContentProvider.findCardById(id)
+            cardCache[id] ?: content?.find(id) ?: MindfulFeedContentProvider.findCardById(id)
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    val progressFraction: StateFlow<Float> = combine(mindfulCards, completedCards) { cards, completed ->
-        if (cards.isEmpty()) 1f else (cards.count { it.id in completed }.toFloat() / cards.size.toFloat()).coerceIn(0f, 1f)
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, 0f)
+    /** Anteil des Tagesziels, der geschafft ist. */
+    val progressFraction: StateFlow<Float> = completedCount
+        .map { (it.toFloat() / dailyGoal).coerceIn(0f, 1f) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 0f)
 
-    val isGoalCompleted: StateFlow<Boolean> = combine(mindfulCards, completedCards) { cards, completed ->
-        cards.isNotEmpty() && cards.all { it.id in completed }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    val isGoalCompleted: StateFlow<Boolean> = completedCount
+        .map { it >= dailyGoal }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     fun markCardCompleted(cardId: String) {
+        if (cardId in completedCards.value) return
         feedPrefs?.markCardCompleted(cardId)
-        val allNowDone = mindfulCards.value.isNotEmpty() && mindfulCards.value.all {
-            it.id == cardId || it.id in (completedCards.value)
-        }
-        if (allNowDone) {
+        if (completedCards.value.size >= dailyGoal) {
             feedPrefs?.incrementStreakIfEligible()
+            celebrateGoal()
+        }
+    }
+
+    /** Tagesziel geschafft: einmal am Tag kommt direkt nach der aktuellen Karte die Abschluss-Seite. */
+    private fun celebrateGoal() {
+        val prefs = feedPrefs ?: return
+        if (prefs.goalCelebratedToday()) return
+        prefs.markGoalCelebrated()
+        _entries.update { list ->
+            val at = (currentIndex + 1).coerceAtMost(list.size)
+            list.toMutableList().apply { add(at, FeedEntry.Milestone("milestone:${System.currentTimeMillis()}")) }
         }
     }
 
@@ -153,21 +299,98 @@ class FeedViewModel @Inject constructor(
         feedPrefs?.resetDailyProgress()
     }
 
+    /** Setzt den Alphabet-Lernstand zurück — der Kursfortschritt selbst gehört dem Russisch-Bereich. */
     fun resetLanguageProgress() {
-        feedPrefs?.resetLanguageProgress()
+        feedPrefs?.setLetterProgress(emptyMap())
+        rebuild()
     }
 
     fun getStreak(): Int = feedPrefs?.getStreak() ?: 1
 
+    // ── Rückmeldung zu Spielen und Übungen ──────────────────────────────────────
+
+    /**
+     * Ein Spiel ist beendet. Trägt das Ergebnis dort ein, wo es hingehört (Wiederholungsplan,
+     * Alphabet, Schwierigkeit) und sagt in einem Satz, was das bewirkt hat.
+     */
+    fun finishGame(game: FeedGame, correct: Boolean): GameOutcome {
+        markCardCompleted(game.id)
+        return when (game) {
+            is ChoiceGame -> {
+                game.letter?.let { gradeLetter(it, correct) }
+                game.grade?.let { gradeRussian(it, correct) } ?: GameOutcome(correct)
+            }
+            is BuildGame -> game.grade?.let { gradeRussian(it, correct) } ?: GameOutcome(correct)
+            is LetterIntroGame -> {
+                introduceLetter(game.letter.l)
+                GameOutcome(correct, "${game.letter.u} gehört jetzt zu deinen Buchstaben. Er kommt in den nächsten Übungen wieder.")
+            }
+            is PairsGame -> {
+                if (!game.letters && correct) awardXp(PAIRS_XP)
+                GameOutcome(correct, xp = if (!game.letters && correct) PAIRS_XP else 0)
+            }
+            is MemoryGridGame -> {
+                val next = (game.level + if (correct) 1 else -1)
+                    .coerceIn(FeedGameFactory.MEMORY_MIN_LEVEL, FeedGameFactory.MEMORY_MAX_LEVEL)
+                feedPrefs?.setMemoryLevel(next)
+                GameOutcome(
+                    correct,
+                    when {
+                        next > game.level -> "Nächstes Mal sind es $next Felder."
+                        next < game.level -> "Nächstes Mal sind es wieder $next Felder."
+                        correct -> "Mehr als ${game.level} Felder zeigt das Spiel nicht. Stark."
+                        else -> "Es bleibt bei ${game.level} Feldern."
+                    },
+                )
+            }
+            else -> GameOutcome(correct)
+        }
+    }
+
+    private fun gradeRussian(grade: RuGrade, correct: Boolean): GameOutcome {
+        val store = russianProgress ?: return GameOutcome(correct)
+        val today = store.today()
+        val card = runCatching { store.state.value.cards[grade.phraseId] }.getOrNull()
+        val xp = RuFeedGrading.xp(grade.due, correct)
+        val message = RuFeedGrading.message(card, grade.due, correct, today)
+        if (RuFeedGrading.counts(card, grade.due, correct)) {
+            store.gradeSingleCard(grade.phraseId, correct, xp)
+        } else if (xp > 0) {
+            awardXp(xp)
+        }
+        return GameOutcome(correct, message, xp)
+    }
+
+    private fun awardXp(xp: Int) {
+        val store = russianProgress ?: return
+        val today = store.today()
+        store.update { it.apply(RuSessionResult(xp = xp, graded = emptyMap()), today) }
+    }
+
+    private fun gradeLetter(letter: String, correct: Boolean) {
+        val prefs = feedPrefs ?: return
+        prefs.setLetterProgress(RuAlphabetLogic.graded(prefs.letterProgress.value, letter, correct))
+    }
+
+    private fun introduceLetter(letter: String) {
+        val prefs = feedPrefs ?: return
+        val now = prefs.letterProgress.value
+        if ((now[letter] ?: 0) < 1) prefs.setLetterProgress(now + (letter to 1))
+    }
+
+    /**
+     * Nachsprechen auf der Satz-Karte. Punkte gibt es nur für eine bestandene Aussprache-Prüfung;
+     * in den Wiederholungsplan zählt sie nur bei Sätzen, die im Kurs schon dran waren.
+     */
     fun recordRussianPractice(phraseId: String?, spokenCorrect: Boolean) {
         val store = russianProgress ?: return
         val today = store.today()
+        val known = phraseId != null && runCatching { store.state.value.cards.containsKey(phraseId) }.getOrDefault(false)
         store.update { current ->
-            val graded = if (phraseId != null) mapOf(phraseId to spokenCorrect) else emptyMap()
             current.apply(
                 RuSessionResult(
-                    xp = if (spokenCorrect) 15 else 5,
-                    graded = graded,
+                    xp = if (spokenCorrect) SPEECH_XP else 0,
+                    graded = if (known && spokenCorrect) mapOf(phraseId!! to true) else emptyMap(),
                     spokenOk = if (spokenCorrect) 1 else 0,
                 ),
                 today = today,

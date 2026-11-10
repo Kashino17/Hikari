@@ -1,0 +1,1190 @@
+[
+  {
+    "id": "schlaeger-und-ball",
+    "title": "Schläger und Ball",
+    "category": "Zahlen",
+    "question": "Ein Schläger und ein Ball kosten zusammen 1,10 €. Der Schläger kostet genau 1 € mehr als der Ball. Wie viel kostet der Ball?",
+    "options": [
+      "10 Cent",
+      "5 Cent",
+      "1 Cent",
+      "15 Cent"
+    ],
+    "correctIndex": 1,
+    "explanation": "Kostet der Ball 5 Cent, kostet der Schläger 1,05 €, zusammen 1,10 €. Bei 10 Cent für den Ball würde der Schläger 1,10 € kosten und beides zusammen 1,20 €. Die 10 drängt sich auf, weil 1,10 so leicht in 1 und 0,10 zerfällt.",
+    "skill": "Intuition überprüfen",
+    "deep": {
+      "lead": "Die erste Antwort kommt blitzschnell und ist falsch – das Rätsel misst, ob du sie überprüfst.",
+      "sections": [
+        {
+          "title": "Der Test hinter dem Rätsel",
+          "text": "Die Aufgabe stammt aus dem Cognitive Reflection Test des Verhaltensforschers Shane Frederick. Er besteht aus nur drei Fragen, die alle gleich gebaut sind: Eine falsche Antwort drängt sich sofort auf, und die richtige findet nur, wer kurz innehält. Frederick stellte fest, dass selbst an sehr angesehenen Universitäten ein großer Teil der Studierenden die 10 Cent nannte. Das Rätsel prüft also kaum Rechenkönnen, denn die Probe dauert Sekunden. Es prüft die Bereitschaft, eine Antwort, die sich richtig anfühlt, trotzdem noch einmal anzusehen."
+        },
+        {
+          "title": "Zwei Arten zu denken",
+          "text": "Daniel Kahneman benutzt das Rätsel, um zwei Arbeitsweisen des Denkens zu beschreiben. Die schnelle liefert mühelos Einfälle und Eindrücke, die langsame rechnet, prüft und kostet Anstrengung. Meist verlassen wir uns auf die schnelle, und meist reicht das. Fehler entstehen, wenn die langsame einen Vorschlag einfach durchwinkt. Ein brauchbares Warnsignal ist ausgerechnet das Gefühl von Leichtigkeit: Wenn eine Frage wie ein Rätsel gestellt ist und die Antwort ohne jede Mühe auftaucht, lohnt die Gegenprobe. Hier lautet sie: Passt meine Zahl zu beiden Sätzen der Aufgabe?"
+        }
+      ],
+      "tryIt": "Stell das Rätsel heute zwei Leuten und bitte sie, ihre Antwort laut zu überprüfen, bevor du auflöst.",
+      "takeaways": [
+        "Eine mühelose Antwort ist noch keine geprüfte.",
+        "Immer einsetzen: Erfüllt die Lösung alle Bedingungen?"
+      ]
+    }
+  },
+  {
+    "id": "seerosen",
+    "title": "Die Seerosen im Teich",
+    "category": "Zahlen",
+    "question": "Auf einem Teich wachsen Seerosen. Die bedeckte Fläche verdoppelt sich jeden Tag. Nach 48 Tagen ist der ganze Teich bedeckt. Nach wie vielen Tagen war er zur Hälfte bedeckt?",
+    "options": [
+      "24 Tage",
+      "36 Tage",
+      "47 Tage",
+      "46 Tage"
+    ],
+    "correctIndex": 2,
+    "explanation": "Wenn sich die Fläche täglich verdoppelt, war sie am Tag vor der vollen Bedeckung genau halb so groß – also nach 47 Tagen. Die 24 wäre richtig, wenn jeden Tag gleich viel hinzukäme. Das ist hier aber nicht der Fall.",
+    "skill": "Exponentielles Wachstum verstehen",
+    "deep": {
+      "lead": "Bei Verdopplung liegt die Hälfte nur einen Schritt vor dem Ganzen.",
+      "sections": [
+        {
+          "title": "Die letzten Tage entscheiden",
+          "text": "Rechne rückwärts weiter, um ein Gefühl für die Kurve zu bekommen. Am 46. Tag war ein Viertel bedeckt, am 45. ein Achtel, am 44. ein Sechzehntel. Zehn Tage vor Schluss, am 38. Tag, war weniger als ein Tausendstel der Fläche grün. Wer an diesem Tag am Ufer steht, sieht einen praktisch leeren Teich und hat keinen Anlass zur Sorge, obwohl nur noch zehn Tage bleiben. Das ist die tückische Eigenschaft jedes Wachstums mit fester Verdopplungszeit: Fast alles passiert ganz am Ende, und die lange ruhige Vorgeschichte sagt darüber wenig aus."
+        },
+        {
+          "title": "Wo dir das Muster begegnet",
+          "text": "Dieselbe Rechnung steckt hinter der Ausbreitung ansteckender Krankheiten in der Anfangsphase, hinter Zinseszins und hinter Algenblüten. In allen Fällen unterschätzen Menschen die Entwicklung, weil sie den bisherigen Verlauf geradlinig fortschreiben. Eine Einschränkung gehört dazu: In der Wirklichkeit hält kein Wachstum ewig an. Irgendwann ist der Teich voll, die Nährstoffe sind verbraucht oder der Markt gesättigt, und die Kurve flacht ab. Das Rätsel beschreibt nur die Phase davor, und für die gilt: einen Schritt zurück heißt halbieren."
+        }
+      ],
+      "tryIt": "Ein Guthaben verdoppelt sich alle 10 Jahre und beträgt nach 50 Jahren 32.000 €. Wie viel war es nach 40 Jahren? Und am Anfang? (16.000 €; 1.000 €.)",
+      "takeaways": [
+        "Ein Schritt zurück bedeutet: die Hälfte.",
+        "Exponentielles Wachstum sieht lange harmlos aus."
+      ]
+    }
+  },
+  {
+    "id": "fuenf-maschinen",
+    "title": "Fünf Maschinen, fünf Teile",
+    "category": "Zahlen",
+    "question": "5 Maschinen brauchen 5 Minuten, um 5 Teile herzustellen. Wie lange brauchen 100 Maschinen für 100 Teile?",
+    "options": [
+      "5 Minuten",
+      "100 Minuten",
+      "20 Minuten",
+      "1 Minute"
+    ],
+    "correctIndex": 0,
+    "explanation": "Jede Maschine stellt in 5 Minuten genau ein Teil her. 100 Maschinen schaffen in denselben 5 Minuten also 100 Teile. Die 100 Minuten entstehen, wenn man das Muster 5-5-5 gedankenlos zu 100-100-100 fortsetzt.",
+    "skill": "Raten und Verhältnisse",
+    "deep": {
+      "lead": "Entscheidend ist die Leistung einer einzelnen Maschine – alles andere ergibt sich daraus.",
+      "sections": [
+        {
+          "title": "Erst die Einzelleistung bestimmen",
+          "text": "Aufgaben mit Arbeitern, Maschinen oder Wasserhähnen löst man verlässlich, indem man zuerst auf eine Einheit herunterrechnet: Was schafft eine Maschine in einer Minute? Hier ist es ein Fünftel Teil. Hundert Maschinen schaffen pro Minute zwanzig Teile und brauchen für hundert Teile fünf Minuten. Die Zahl der Maschinen und die Zahl der Teile wachsen im selben Verhältnis, deshalb bleibt die Zeit gleich. Eine Variante zum Prüfen: Für 100 Teile bräuchten die ursprünglichen 5 Maschinen 100 Minuten. Die falsche Antwort gehört also zu einer anderen Frage."
+        },
+        {
+          "title": "Wenn mehr Leute nicht schneller machen",
+          "text": "Im Rätsel arbeiten die Maschinen unabhängig voneinander, deshalb lässt sich die Arbeit beliebig aufteilen. In der Wirklichkeit gilt das nicht immer. Der Softwareingenieur Fred Brooks hat beobachtet, dass zusätzliche Leute ein verspätetes Softwareprojekt oft noch weiter verzögern, weil Einarbeitung und Abstimmung Zeit kosten. Sein oft zitiertes Bild dazu: Neun Frauen bekommen ein Kind nicht in einem Monat. Dreisatz funktioniert nur, wenn sich die Arbeit ohne Reibung teilen lässt. Bei jeder Rechnung dieser Art lohnt deshalb die Frage, ob die Teile wirklich unabhängig voneinander entstehen."
+        }
+      ],
+      "tryIt": "3 Maler streichen 3 Zimmer in 3 Stunden. Wie lange brauchen 6 Maler für 12 Zimmer? (6 Stunden.)",
+      "takeaways": [
+        "Erst auf eine Einheit herunterrechnen, dann hochrechnen.",
+        "Dreisatz gilt nur, wenn sich Arbeit reibungslos teilen lässt."
+      ]
+    }
+  },
+  {
+    "id": "ziegenproblem",
+    "title": "Das Ziegenproblem",
+    "category": "Wahrscheinlichkeit",
+    "question": "Hinter einer von drei Türen steht ein Auto, hinter den anderen je eine Ziege. Du wählst Tür 1. Der Moderator, der weiß, wo das Auto steht, öffnet wie immer eine andere Tür mit einer Ziege und bietet dir an zu wechseln. Was ist am besten?",
+    "options": [
+      "Bleiben – die Chance ist 2/3",
+      "Egal – beide Türen haben 1/2",
+      "Bleiben – Wechseln bringt Pech",
+      "Wechseln – die Chance ist 2/3"
+    ],
+    "correctIndex": 3,
+    "explanation": "Deine erste Wahl trifft mit 1/3 das Auto. In den übrigen 2/3 der Fälle steht es hinter einer der beiden anderen Türen, und der Moderator zeigt dir, hinter welcher nicht. Wechseln gewinnt also in 2 von 3 Fällen.",
+    "skill": "Bedingte Wahrscheinlichkeit",
+    "deep": {
+      "lead": "Der Moderator öffnet nicht zufällig – genau deshalb verrät seine Tür etwas.",
+      "sections": [
+        {
+          "title": "Ein Sturm von Leserbriefen",
+          "text": "Bekannt wurde das Rätsel, als die Kolumnistin Marilyn vos Savant es 1990 in einer amerikanischen Zeitschrift beantwortete und zum Wechseln riet. Sie erhielt Tausende empörter Zuschriften, darunter viele von Leuten mit Doktortitel, die ihr einen Anfängerfehler vorwarfen. Sie hatte recht. Benannt ist die Aufgabe im Englischen nach Monty Hall, dem Moderator einer Spielshow. Selbst der berühmte Mathematiker Paul Erdős soll sich erst durch eine Computersimulation überzeugt haben lassen. Kaum ein Rätsel zeigt so deutlich, wie stark die Intuition bei Wahrscheinlichkeiten danebenliegen kann."
+        },
+        {
+          "title": "Hundert Türen und eine Bedingung",
+          "text": "Am leichtesten überzeugt eine Übertreibung. Stell dir hundert Türen vor. Du wählst eine, und der Moderator öffnet 98 andere, alle mit Ziegen. Übrig bleiben deine Tür und eine einzige weitere. Jetzt spürt fast jeder, dass die andere Tür auffällig ist: Deine Wahl war ein Schuss ins Blaue mit einem Prozent Trefferchance, die andere Tür wurde von jemandem mit Wissen verschont. Wichtig ist die Voraussetzung. Die Rechnung gilt nur, wenn der Moderator immer eine Ziegentür öffnet und weiß, wo das Auto steht. Öffnet er zufällig und erwischt bloß zufällig eine Ziege, stehen die Chancen tatsächlich eins zu eins."
+        }
+      ],
+      "tryIt": "Spiel es mit drei Tassen und einer Münze zehnmal durch, jemand anderes ist der Moderator. Wechsle jedes Mal und zähl die Treffer.",
+      "takeaways": [
+        "Wechseln gewinnt in zwei von drei Fällen.",
+        "Entscheidend ist, dass der Moderator Bescheid weiß."
+      ]
+    }
+  },
+  {
+    "id": "geburtstagsparadoxon",
+    "title": "Das Geburtstagsparadoxon",
+    "category": "Wahrscheinlichkeit",
+    "question": "Wie viele zufällig ausgewählte Personen müssen in einem Raum sein, damit mit mehr als 50 % Wahrscheinlichkeit mindestens zwei am selben Tag Geburtstag haben? (365 Tage, jeder Tag gleich wahrscheinlich)",
+    "options": [
+      "183",
+      "91",
+      "23",
+      "57"
+    ],
+    "correctIndex": 2,
+    "explanation": "Schon bei 23 Personen liegt die Wahrscheinlichkeit bei knapp 51 %. Entscheidend ist nicht die Zahl der Personen, sondern die Zahl der Paare: 23 Personen bilden 253 verschiedene Paare, und jedes ist eine Chance auf einen Treffer.",
+    "skill": "Kombinatorisch denken",
+    "deep": {
+      "lead": "Gefragt ist nicht dein Geburtstag, sondern irgendein gemeinsamer – und dafür gibt es viele Paare.",
+      "sections": [
+        {
+          "title": "Zwei verschiedene Fragen",
+          "text": "Die Intuition beantwortet heimlich eine andere Frage: Wie viele Leute braucht es, damit jemand am selben Tag Geburtstag hat wie ich? Dafür wären tatsächlich 253 andere Personen nötig, um über 50 % zu kommen. Das Rätsel fragt aber nach irgendeinem Paar. Gerechnet wird über das Gegenteil: Wie wahrscheinlich ist es, dass alle verschiedene Geburtstage haben? Die zweite Person hat 364 freie Tage von 365, die dritte 363 und so weiter. Multipliziert man diese Brüche, sinkt das Ergebnis bei 23 Personen knapp unter die Hälfte."
+        },
+        {
+          "title": "Vom Partytrick zur Datensicherheit",
+          "text": "Bei 50 Personen liegt die Wahrscheinlichkeit schon bei rund 97 %, bei 70 Personen über 99,9 %. In einer Schulklasse oder bei einem Fußballspiel mit 22 Spielern und Schiedsrichter ist ein Treffer also gar nicht unwahrscheinlich. In Wirklichkeit sind Geburtstage nicht ganz gleichmäßig über das Jahr verteilt, was Treffer sogar etwas wahrscheinlicher macht. Ernsthafte Bedeutung hat der Effekt in der Informatik. Wenn Daten durch kurze Prüfwerte gekennzeichnet werden, stoßen zwei verschiedene Datensätze viel früher auf denselben Wert, als man naiv erwartet. Fachleute sprechen deshalb vom Geburtstagsangriff und wählen solche Werte entsprechend lang."
+        }
+      ],
+      "tryIt": "Prüf bei der nächsten Gruppe ab etwa 25 Personen (Kollegium, Verein, Chatgruppe), ob es einen doppelten Geburtstag gibt.",
+      "takeaways": [
+        "Es zählen die Paare, nicht die Personen.",
+        "»Irgendein Treffer« ist viel wahrscheinlicher als »mein Treffer«."
+      ]
+    }
+  },
+  {
+    "id": "zwei-kinder",
+    "title": "Zwei Kinder",
+    "category": "Wahrscheinlichkeit",
+    "question": "Betrachte alle Familien mit genau zwei Kindern, in denen mindestens eines ein Junge ist. In welchem Anteil dieser Familien sind beide Kinder Jungen? (Junge und Mädchen gleich wahrscheinlich)",
+    "options": [
+      "1/3",
+      "1/2",
+      "1/4",
+      "2/3"
+    ],
+    "correctIndex": 0,
+    "explanation": "Für zwei Kinder gibt es vier gleich wahrscheinliche Reihenfolgen: JJ, JM, MJ, MM. Die Bedingung schließt nur MM aus. Von den drei verbleibenden Fällen ist einer JJ – also ein Drittel.",
+    "skill": "Fälle vollständig aufzählen",
+    "deep": {
+      "lead": "Gemischte Geschwisterpaare sind doppelt so häufig wie zwei Jungen – das übersieht die Intuition.",
+      "sections": [
+        {
+          "title": "Warum nicht die Hälfte?",
+          "text": "Die naheliegende Überlegung lautet: Ein Kind ist ein Junge, das andere ist Junge oder Mädchen, also fünfzig Prozent. Sie übersieht, dass nicht feststeht, welches Kind der Junge ist. Familien mit einem Jungen und einem Mädchen kommen in zwei Reihenfolgen vor, erst Junge oder erst Mädchen, und sind deshalb doppelt so häufig wie Familien mit zwei Jungen. Unter hundert Zwei-Kind-Familien erwartet man etwa 25 mit zwei Jungen, 50 gemischte und 25 mit zwei Mädchen. Streicht man die letzten, bleiben 75, davon 25 mit zwei Jungen."
+        },
+        {
+          "title": "Kleine Änderung, andere Antwort",
+          "text": "Der Rätselautor Martin Gardner machte die Aufgabe bekannt und wies selbst darauf hin, wie stark sie von der Formulierung abhängt. Lautet die Bedingung »das ältere Kind ist ein Junge«, bleiben nur die Fälle JJ und JM, und die Antwort ist ein Halb. Auch wenn du einer Familie begegnest und zufällig eines der Kinder siehst, einen Jungen, ergibt sich ein Halb, weil Familien mit zwei Jungen dir doppelt so leicht einen Jungen zeigen. Die Lehre: Bei Wahrscheinlichkeiten zählt nicht nur, was du weißt, sondern auch, auf welchem Weg du es erfahren hast."
+        }
+      ],
+      "tryIt": "Wirf zwei Münzen zwanzigmal. Zähl nur die Würfe mit mindestens einmal Kopf. Wie oft war darunter zweimal Kopf? Erwartet: etwa ein Drittel.",
+      "takeaways": [
+        "Alle gleich wahrscheinlichen Fälle aufschreiben, dann streichen.",
+        "Wie du etwas erfährst, verändert die Wahrscheinlichkeit."
+      ]
+    }
+  },
+  {
+    "id": "neun-kugeln",
+    "title": "Neun Kugeln, eine Waage",
+    "category": "Logik",
+    "question": "Neun Kugeln sehen gleich aus, eine ist etwas schwerer. Du hast eine Balkenwaage ohne Gewichte. Wie viele Wägungen brauchst du mindestens, um die schwere Kugel in jedem Fall sicher zu finden?",
+    "options": [
+      "4",
+      "3",
+      "1",
+      "2"
+    ],
+    "correctIndex": 3,
+    "explanation": "Leg je drei Kugeln auf beide Seiten. Sinkt eine Seite, liegt die schwere dort; bleibt die Waage gerade, ist sie im Rest. Aus den drei Verdächtigen wiegst du eine gegen eine: Die schwerere ist es, sonst die dritte.",
+    "skill": "Informationen optimal nutzen",
+    "deep": {
+      "lead": "Eine Balkenwaage kennt drei Antworten – wer alle drei nutzt, kommt mit wenigen Wägungen aus.",
+      "sections": [
+        {
+          "title": "Dritteln statt halbieren",
+          "text": "Der naheliegende Ansatz ist, die Kugeln in zwei Hälften zu teilen. Das verschenkt Information. Eine Balkenwaage hat drei mögliche Ausgänge: links schwerer, rechts schwerer, Gleichgewicht. Auch das Gleichgewicht ist eine Auskunft, nämlich über die Kugeln, die gar nicht auf der Waage liegen. Teilt man in drei gleich große Gruppen, schrumpft der Kreis der Verdächtigen mit jeder Wägung auf ein Drittel. Aus neun werden drei, aus drei wird eine. Mit einer einzigen Wägung lassen sich höchstens drei Möglichkeiten unterscheiden, deshalb reicht eine nicht, und zwei sind das Minimum."
+        },
+        {
+          "title": "Die allgemeine Regel",
+          "text": "Mit n Wägungen findet man die schwere Kugel unter bis zu 3 hoch n Kugeln: drei mit einer Wägung, neun mit zwei, 27 mit drei, 81 mit vier. Dahinter steht ein Grundgedanke der Informationstheorie. Jede Messung kann nur so viele Fälle auseinanderhalten, wie sie Ergebnisse hat. Dasselbe Prinzip erklärt, warum man eine Zahl zwischen 1 und 1000 mit zehn Ja-Nein-Fragen sicher errät: Jede Frage halbiert, und zehnmal halbieren deckt 1024 Möglichkeiten ab. Deutlich kniffliger ist die berühmte Variante mit zwölf Kugeln, bei der man nicht weiß, ob die abweichende schwerer oder leichter ist."
+        }
+      ],
+      "tryIt": "Denk dir eine Zahl von 1 bis 100 aus und lass jemanden mit Ja-Nein-Fragen raten. Wer immer halbiert, braucht höchstens sieben Fragen.",
+      "takeaways": [
+        "Auch »Gleichgewicht« ist eine Information.",
+        "Drei Ergebnisse pro Wägung: 3, 9, 27 Kugeln."
+      ]
+    }
+  },
+  {
+    "id": "mutter-und-sohn",
+    "title": "Mutter und Sohn",
+    "category": "Zahlen",
+    "question": "Anna ist heute dreimal so alt wie ihr Sohn. In zwölf Jahren wird sie genau doppelt so alt sein wie er. Wie alt ist der Sohn heute?",
+    "options": [
+      "8 Jahre",
+      "12 Jahre",
+      "15 Jahre",
+      "18 Jahre"
+    ],
+    "correctIndex": 1,
+    "explanation": "Ist der Sohn x Jahre alt, ist Anna 3x. In zwölf Jahren gilt 3x + 12 = 2 × (x + 12), also 3x + 12 = 2x + 24 und x = 12. Probe: Heute 12 und 36, in zwölf Jahren 24 und 48.",
+    "skill": "Gleichungen aufstellen",
+    "deep": {
+      "lead": "Der Altersabstand bleibt immer gleich – nur das Verhältnis ändert sich.",
+      "sections": [
+        {
+          "title": "Der Trick mit dem Abstand",
+          "text": "Altersrätsel lassen sich oft ohne Gleichung lösen, wenn man auf den Unterschied achtet statt auf die Verhältnisse. Der Abstand zwischen zwei Menschen ändert sich nie. Wenn Anna in zwölf Jahren doppelt so alt ist wie ihr Sohn, dann ist der Abstand in diesem Moment genau so groß wie sein Alter. Heute ist sie dreimal so alt, der Abstand beträgt also das Doppelte seines heutigen Alters. Sein Alter in zwölf Jahren ist demnach doppelt so groß wie heute. Welche Zahl verdoppelt sich, wenn man zwölf dazuzählt? Die Zwölf."
+        },
+        {
+          "title": "Ein Grabstein als Rätsel",
+          "text": "Solche Aufgaben sind uralt. Vom griechischen Mathematiker Diophant von Alexandria ist ein Rätsel in Form einer Grabinschrift überliefert: Ein Sechstel seines Lebens war er Kind, ein Zwölftel später wuchs ihm der Bart, nach einem weiteren Siebtel heiratete er. Fünf Jahre danach wurde sein Sohn geboren, der halb so alt wurde wie der Vater, und vier Jahre nach dessen Tod starb Diophant. Die Lösung ist 84 Jahre. Ob die Angaben stimmen, weiß niemand. Das Rätsel zeigt aber das bis heute gültige Vorgehen: Unbekanntes benennen, Aussagen in eine Gleichung übersetzen, auflösen."
+        }
+      ],
+      "tryIt": "Ein Vater ist 40, seine Tochter 10. In wie vielen Jahren ist er genau doppelt so alt wie sie? (In 20 Jahren: 60 und 30.)",
+      "takeaways": [
+        "Der Altersunterschied ändert sich nie.",
+        "Unbekanntes benennen, Sätze in Gleichungen übersetzen."
+      ]
+    }
+  },
+  {
+    "id": "reihe-wachsende-spruenge",
+    "title": "Reihe mit wachsenden Sprüngen",
+    "category": "Reihen",
+    "question": "Wie geht die Reihe weiter? 2, 6, 12, 20, 30, …",
+    "options": [
+      "36",
+      "40",
+      "42",
+      "44"
+    ],
+    "correctIndex": 2,
+    "explanation": "Die Abstände zwischen den Zahlen sind 4, 6, 8, 10 – sie wachsen jedes Mal um 2. Der nächste Abstand ist 12, also folgt 30 + 12 = 42. Zweiter Weg: Die Zahlen sind 1 × 2, 2 × 3, 3 × 4, 4 × 5, 5 × 6, als Nächstes 6 × 7.",
+    "skill": "Muster erkennen",
+    "deep": {
+      "lead": "Wenn die Zahlen selbst kein Muster zeigen, schau auf ihre Abstände.",
+      "sections": [
+        {
+          "title": "Die Differenzen-Methode",
+          "text": "Bei Zahlenreihen lohnt fast immer der Blick auf die Differenzen. Sind sie gleich, wächst die Reihe gleichmäßig wie 3, 7, 11, 15. Sind die Differenzen selbst eine gleichmäßig wachsende Reihe, steckt eine quadratische Regel dahinter, so wie hier. Erst wenn auch die zweite Ebene nichts ergibt, prüft man andere Bauarten: Verdopplung, abwechselnde Regeln oder die Summe der Vorgänger. Die Zahlen dieser Reihe heißen Rechteckzahlen, weil sich so viele Punkte zu einem Rechteck legen lassen, dessen Seiten sich um eins unterscheiden. Jede ist das Doppelte einer Dreieckszahl: 1, 3, 6, 10, 15."
+        },
+        {
+          "title": "Wie eindeutig ist so eine Reihe?",
+          "text": "Streng genommen lässt sich jede endliche Zahlenfolge auf unendlich viele Arten fortsetzen; mit einer ausreichend komplizierten Formel kann man jede beliebige nächste Zahl rechtfertigen. Reihenaufgaben setzen stillschweigend voraus, dass die einfachste Regel gemeint ist, die alle gegebenen Zahlen erklärt. Das ist Ockhams Rasiermesser in Reinform. Hier führen zwei unabhängige Beschreibungen, wachsende Abstände und Produkte benachbarter Zahlen, zum selben Ergebnis. Solche Übereinstimmung ist ein gutes Zeichen dafür, dass man die beabsichtigte Regel getroffen hat. In Tests gilt deshalb: erst zufrieden sein, wenn die Regel jede Zahl der Reihe erklärt."
+        }
+      ],
+      "tryIt": "Setze fort: 1, 4, 9, 16, 25, … und 3, 6, 11, 18, 27, … Schau jeweils auf die Abstände. (36 und 38.)",
+      "takeaways": [
+        "Erst die Abstände ansehen, dann die Abstände der Abstände.",
+        "Gesucht ist die einfachste Regel, die alles erklärt."
+      ]
+    }
+  },
+  {
+    "id": "fibonacci-reihe",
+    "title": "Jede Zahl aus ihren Vorgängern",
+    "category": "Reihen",
+    "question": "Wie geht die Reihe weiter? 1, 1, 2, 3, 5, 8, 13, …",
+    "options": [
+      "21",
+      "18",
+      "20",
+      "26"
+    ],
+    "correctIndex": 0,
+    "explanation": "Jede Zahl ist die Summe ihrer beiden Vorgänger: 1 + 1 = 2, 1 + 2 = 3, 2 + 3 = 5, 3 + 5 = 8, 5 + 8 = 13. Also folgt 8 + 13 = 21. Die Abstände allein helfen hier wenig – sie wiederholen nur die Reihe selbst.",
+    "skill": "Rekursive Muster erkennen",
+    "deep": {
+      "lead": "Die Fibonacci-Folge entsteht aus einer einzigen Regel: Addiere immer die letzten beiden Zahlen.",
+      "sections": [
+        {
+          "title": "Kaninchen und ein Rechenbuch",
+          "text": "Benannt ist die Folge nach Leonardo von Pisa, genannt Fibonacci, der sie Anfang des 13. Jahrhunderts in seinem Rechenbuch Liber Abaci beschrieb. Er stellte dort eine Aufgabe über die Vermehrung von Kaninchenpaaren, bei der genau diese Zahlen herauskommen. Das Buch war aus anderem Grund bedeutend: Es machte in Europa das Rechnen mit den indisch-arabischen Ziffern bekannt, die das umständliche römische System ablösten. Die Folge selbst war indischen Gelehrten schon Jahrhunderte früher vertraut, die sie bei der Untersuchung von Versmaßen gefunden hatten."
+        },
+        {
+          "title": "Goldener Schnitt und Sonnenblumen",
+          "text": "Teilt man eine Fibonacci-Zahl durch ihre Vorgängerin, nähert sich das Ergebnis immer genauer einem festen Wert von etwa 1,618, dem Goldenen Schnitt. Schon 21 durch 13 ergibt rund 1,615. In der Natur tauchen die Zahlen tatsächlich auf: Bei Sonnenblumen, Kiefernzapfen und Ananas zählt man in den beiden Drehrichtungen der Spiralen häufig benachbarte Fibonacci-Zahlen, etwa 34 und 55. Das liegt an der Art, wie Pflanzen neue Anlagen platzsparend anordnen. Vorsicht ist bei manchen anderen Behauptungen angebracht. Dass der Goldene Schnitt überall in Kunst, Architektur und Körperbau stecke, ist oft mehr Wunsch als Messung."
+        }
+      ],
+      "tryIt": "Starte mit zwei beliebigen Zahlen, etwa 2 und 7, und bilde zehnmal die Summe der letzten beiden. Teile die letzte durch die vorletzte: rund 1,618.",
+      "takeaways": [
+        "Manche Reihen bauen auf ihren eigenen Vorgängern auf.",
+        "Das Verhältnis benachbarter Fibonacci-Zahlen strebt gegen 1,618."
+      ]
+    }
+  },
+  {
+    "id": "socken-im-dunkeln",
+    "title": "Socken im Dunkeln",
+    "category": "Logik",
+    "question": "In einer Schublade liegen 10 schwarze und 10 weiße Socken durcheinander. Es ist stockdunkel. Wie viele Socken musst du mindestens herausnehmen, um sicher ein Paar gleicher Farbe zu haben?",
+    "options": [
+      "2",
+      "3",
+      "11",
+      "20"
+    ],
+    "correctIndex": 1,
+    "explanation": "Es gibt nur zwei Farben. Die ersten beiden Socken können verschieden sein, aber die dritte muss zu einer der beiden passen. Drei Socken genügen also immer. Die 11 wäre nötig, um sicher zwei verschiedene Farben zu haben.",
+    "skill": "Schlimmsten Fall durchdenken",
+    "deep": {
+      "lead": "Wer mehr Dinge als Fächer hat, muss in mindestens einem Fach zwei unterbringen.",
+      "sections": [
+        {
+          "title": "Das Schubfachprinzip",
+          "text": "Hinter dem Rätsel steht ein Satz, der so einfach klingt, dass man ihn kaum für Mathematik hält: Verteilt man mehr Gegenstände auf Fächer, als es Fächer gibt, landen in mindestens einem Fach zwei. Die beiden Farben sind hier die Fächer, die Socken die Gegenstände. Formuliert hat das Prinzip der deutsche Mathematiker Peter Gustav Lejeune Dirichlet im 19. Jahrhundert. Sein Reiz liegt darin, dass es Gewissheit liefert, ohne zu sagen, welches Fach es trifft. Die Zahl der Socken in der Schublade spielt keine Rolle, nur die Zahl der Farben."
+        },
+        {
+          "title": "Erstaunliche Folgerungen",
+          "text": "Mit demselben Gedanken lassen sich überraschende Aussagen beweisen. In einer Großstadt wie Berlin gibt es mit Sicherheit zwei Menschen mit exakt gleich vielen Haaren auf dem Kopf, denn ein Mensch hat höchstens einige Hunderttausend Haare, die Stadt aber Millionen Einwohner. Unter 13 Personen haben mindestens zwei im selben Monat Geburtstag. Und unter 367 Personen teilen sich garantiert zwei den Geburtstag, selbst wenn man den 29. Februar mitzählt. Wichtig ist der Unterschied zwischen sicher und wahrscheinlich: Das Schubfachprinzip betrachtet immer den ungünstigsten Fall. Wahrscheinlich wird ein Treffer meist viel früher."
+        }
+      ],
+      "tryIt": "In der Schublade liegen Socken in vier Farben. Wie viele musst du ziehen, um sicher ein Paar zu haben? Und für sicher zwei Paare? (5; 7.)",
+      "takeaways": [
+        "Für »sicher« zählt der ungünstigste Fall.",
+        "Mehr Dinge als Fächer: Irgendwo liegen zwei."
+      ]
+    }
+  },
+  {
+    "id": "schnecke-im-brunnen",
+    "title": "Die Schnecke im Brunnen",
+    "category": "Zahlen",
+    "question": "Eine Schnecke sitzt am Boden eines 10 Meter tiefen Brunnens. Jeden Tag kriecht sie 3 Meter hoch, jede Nacht rutscht sie 2 Meter zurück. Am wievielten Tag erreicht sie den Rand?",
+    "options": [
+      "Am 10. Tag",
+      "Am 9. Tag",
+      "Am 7. Tag",
+      "Am 8. Tag"
+    ],
+    "correctIndex": 3,
+    "explanation": "Pro Tag und Nacht schafft sie netto 1 Meter. Nach 7 Tagen und Nächten ist sie auf 7 Metern. Am 8. Tag kriecht sie 3 Meter hoch, erreicht den Rand bei 10 Metern und rutscht nicht mehr zurück.",
+    "skill": "Randfälle beachten",
+    "deep": {
+      "lead": "Der Durchschnitt stimmt für jeden Tag – außer für den letzten, und der entscheidet.",
+      "sections": [
+        {
+          "title": "Wo die Durchschnittsrechnung scheitert",
+          "text": "Ein Meter Nettogewinn pro Tag, zehn Meter Brunnen, also zehn Tage: Diese Rechnung behandelt alle Tage gleich. Der letzte Tag ist aber anders, weil das Zurückrutschen entfällt, sobald die Schnecke oben ist. Die richtige Frage lautet deshalb: Von welcher Höhe aus reicht ein einziger Tagesanstieg bis zum Rand? Das sind sieben Meter, erreicht nach sieben vollen Tagen und Nächten. Der achte Tag bringt sie ans Ziel. Wer nur mit dem Durchschnitt rechnet, übersieht, dass ein Vorgang enden kann, bevor der Zyklus vollständig durchlaufen ist."
+        },
+        {
+          "title": "Zaunpfähle und andere Randfehler",
+          "text": "Fehler dieser Art sind so häufig, dass Programmierer einen eigenen Namen dafür haben: Um-eins-daneben-Fehler. Das klassische Beispiel ist der Zaun. Für zehn Meter Zaun mit einem Pfahl pro Meter braucht man elf Pfähle, nicht zehn, weil am Anfang und am Ende einer steht. Ähnlich: Wer vom 3. bis zum 7. eines Monats verreist, ist fünf Tage unterwegs, aber nur vier Nächte. Und wer einen Baumstamm in fünf Stücke sägen will, braucht nur vier Schnitte. Die Gegenmaßnahme ist immer gleich: den ersten und den letzten Schritt einzeln durchspielen."
+        }
+      ],
+      "tryIt": "Ein Brunnen ist 20 Meter tief, die Schnecke schafft tags 5 Meter und rutscht nachts 4 zurück. An welchem Tag ist sie oben? (Am 16. Tag.)",
+      "takeaways": [
+        "Den letzten Schritt immer gesondert betrachten.",
+        "Zehn Zaunfelder brauchen elf Pfähle."
+      ]
+    }
+  },
+  {
+    "id": "papier-falten",
+    "title": "Papier falten bis zum Mond",
+    "category": "Schätzen",
+    "question": "Ein Blatt Papier ist 0,1 mm dick. Angenommen, du könntest es 42-mal in der Mitte falten, sodass sich die Dicke jedes Mal verdoppelt. Wie dick wäre der Stapel ungefähr?",
+    "options": [
+      "Weiter als bis zum Mond",
+      "So hoch wie der Mount Everest",
+      "So hoch wie ein Hochhaus",
+      "Etwa einen Meter"
+    ],
+    "correctIndex": 0,
+    "explanation": "42 Verdopplungen bedeuten das rund 4,4-Billionenfache. Aus 0,1 mm werden etwa 440.000 km – der Mond ist im Mittel rund 384.000 km entfernt. Schon nach 10 Faltungen sind es gut 10 cm, nach 20 über 100 m.",
+    "skill": "Größenordnungen schätzen",
+    "deep": {
+      "lead": "Zweiundvierzig Verdopplungen reichen, um aus einem Zehntelmillimeter eine kosmische Entfernung zu machen.",
+      "sections": [
+        {
+          "title": "Zehn Faltungen sind rund tausend",
+          "text": "Für Überschläge mit Verdopplungen genügt eine Merkzahl: Zehnmal verdoppeln ergibt 1024, also rund tausend. Zwanzigmal ist rund eine Million, dreißigmal eine Milliarde, vierzigmal eine Billion. Zwei weitere Faltungen vervierfachen das noch. Aus 0,1 Millimetern werden so nach zehn Faltungen etwa zehn Zentimeter, nach zwanzig hundert Meter, nach dreißig hundert Kilometer und nach vierzig hunderttausend Kilometer. Der Sprung von einer Stufe zur nächsten wirkt jeweils harmlos, weil man nur zehn weitere Male faltet. Genau deshalb überrascht das Ergebnis so sehr."
+        },
+        {
+          "title": "Warum es in echt nicht klappt",
+          "text": "Praktisch ist bei einem gewöhnlichen Blatt nach sechs oder sieben Faltungen Schluss. Mit jeder Faltung verdoppelt sich die Dicke, während die Fläche sich halbiert, und in der Knickstelle muss das Papier außen einen immer größeren Bogen schlagen. Die amerikanische Schülerin Britney Gallivan untersuchte das genauer, leitete eine Formel für die nötige Papierlänge her und schaffte mit einer sehr langen Bahn dünnen Papiers zwölf Faltungen. Verwandt ist die alte Legende vom Schachbrett: ein Reiskorn auf das erste Feld, auf jedes weitere doppelt so viele. Für das ganze Brett reicht keine Ernte der Welt."
+        }
+      ],
+      "tryIt": "Falte ein Blatt so oft du kannst und zähl mit. Wie oft hat sich die Dicke verdoppelt, und das Wievielfache der Ausgangsdicke ist das?",
+      "takeaways": [
+        "Zehnmal verdoppeln ist rund mal tausend.",
+        "Verdopplungen sprengen schnell jede Vorstellung."
+      ]
+    }
+  },
+  {
+    "id": "seil-um-die-erde",
+    "title": "Ein Seil um die Erde",
+    "category": "Schätzen",
+    "question": "Ein Seil liegt straff um den Äquator, rund 40.000 km lang. Du verlängerst es um genau 1 Meter und hebst es überall gleichmäßig an. Wie hoch schwebt es nun über dem Boden?",
+    "options": [
+      "Weniger als ein Haar breit",
+      "Etwa 1 Millimeter",
+      "Etwa 1 Zentimeter",
+      "Etwa 16 Zentimeter"
+    ],
+    "correctIndex": 3,
+    "explanation": "Der Umfang eines Kreises ist 2π mal Radius. Ein Meter mehr Umfang bedeutet deshalb 1 ÷ (2π) ≈ 0,16 Meter mehr Radius – also rund 16 cm. Die Größe der Erde kommt in der Rechnung gar nicht vor.",
+    "skill": "Formel vor Bauchgefühl",
+    "deep": {
+      "lead": "Wie viel ein Kreis wächst, wenn sein Umfang wächst, hängt nicht von seiner Größe ab.",
+      "sections": [
+        {
+          "title": "Die Erde kürzt sich heraus",
+          "text": "Der alte Umfang ist 2π mal r, der neue 2π mal (r + h), wobei h die gesuchte Höhe ist. Zieht man beides voneinander ab, bleibt 2π mal h übrig, und das soll ein Meter sein. Der Radius r taucht nicht mehr auf. Dasselbe Ergebnis erhält man deshalb für ein Seil um einen Fußball, um einen Tisch oder um die Sonne: Ein Meter mehr Seil schafft immer knapp 16 Zentimeter Abstand. Das Bauchgefühl irrt, weil es den einen Meter mit den 40 Millionen Metern vergleicht und einen winzigen Anteil sieht. Gefragt ist aber kein Anteil, sondern eine Strecke."
+        },
+        {
+          "title": "Lineare Zusammenhänge erkennen",
+          "text": "Das Rätsel wirkt nur deshalb paradox, weil wir bei großen Dingen kleine Wirkungen erwarten. Umfang und Radius hängen aber linear zusammen: Jeder zusätzliche Meter Umfang bringt gleich viel Radius, egal wo man startet. Bei der Fläche wäre das anders, sie wächst mit dem Quadrat. Eine praktische Folge kennt jeder Läufer: Auf der Außenbahn einer Laufbahn ist die Runde länger, und zwar pro Meter Abstand zur Innenbahn um gut sechs Meter, unabhängig davon, wie groß das Stadion ist. Deshalb sind die Startlinien bei Rennen über eine Stadionrunde versetzt."
+        }
+      ],
+      "tryIt": "Schätz erst, rechne dann: Um wie viel wird ein Gürtel länger, wenn er überall 1 cm vom Bauch absteht? (Um gut 6 cm – bei jedem Bauchumfang.)",
+      "takeaways": [
+        "Ein Meter mehr Umfang hebt jeden Kreis um rund 16 cm.",
+        "Nicht den Anteil schätzen, sondern die Formel befragen."
+      ]
+    }
+  },
+  {
+    "id": "hin-und-zurueck",
+    "title": "Hin und zurück",
+    "category": "Zahlen",
+    "question": "Du fährst eine Strecke hin mit 60 km/h und dieselbe Strecke zurück mit 40 km/h. Wie hoch ist deine Durchschnittsgeschwindigkeit über die gesamte Fahrt?",
+    "options": [
+      "50 km/h",
+      "48 km/h",
+      "52 km/h",
+      "45 km/h"
+    ],
+    "correctIndex": 1,
+    "explanation": "Nimm 120 km pro Richtung an: hin 2 Stunden, zurück 3 Stunden. Das sind 240 km in 5 Stunden, also 48 km/h. Du bist länger langsam unterwegs als schnell, deshalb liegt der Schnitt unter 50.",
+    "skill": "Mittelwerte richtig bilden",
+    "deep": {
+      "lead": "Die Durchschnittsgeschwindigkeit ist Gesamtstrecke durch Gesamtzeit – nicht der Mittelwert der Tachostände.",
+      "sections": [
+        {
+          "title": "Das harmonische Mittel",
+          "text": "Die Durchschnittsgeschwindigkeit ist immer Gesamtstrecke geteilt durch Gesamtzeit. Der einfache Mittelwert von 60 und 40 wäre nur richtig, wenn du mit beiden Geschwindigkeiten gleich lange gefahren wärst. Hier sind aber die Strecken gleich, nicht die Zeiten, und für die langsame Hälfte brauchst du mehr Zeit. Für diesen Fall gibt es einen eigenen Mittelwert, das harmonische Mittel: zweimal das Produkt, geteilt durch die Summe. Zweimal 60 mal 40 ist 4800, geteilt durch 100 ergibt 48. Es liegt immer unter dem gewöhnlichen Mittelwert, und umso weiter, je stärker sich die beiden Werte unterscheiden."
+        },
+        {
+          "title": "Verlorene Zeit holt man kaum auf",
+          "text": "Aus der Rechnung folgt eine Einsicht für den Alltag. Angenommen, du willst auf einer Strecke im Schnitt 60 km/h schaffen, fährst aber die erste Hälfte wegen Stau nur 30. Wie schnell musst du die zweite Hälfte fahren? Es geht gar nicht: Die gesamte geplante Zeit ist schon verbraucht. Langsame Abschnitte prägen den Schnitt viel stärker als schnelle. Deshalb bringt Rasen auf der Autobahn wenig, wenn danach eine Baustelle folgt. Dieselbe Mittelwert-Falle steckt im Verbrauch: Liter pro 100 Kilometer lassen sich über die Strecke mitteln, Kilometer pro Liter dagegen nicht."
+        }
+      ],
+      "tryIt": "Du joggst 5 km mit 10 km/h hin und gehst 5 km mit 5 km/h zurück. Wie hoch ist dein Schnitt? (10 km in 1,5 Stunden: rund 6,7 km/h.)",
+      "takeaways": [
+        "Schnitt = Gesamtstrecke ÷ Gesamtzeit.",
+        "Langsame Abschnitte wiegen schwerer als schnelle."
+      ]
+    }
+  },
+  {
+    "id": "erst-teurer-dann-billiger",
+    "title": "Erst teurer, dann billiger",
+    "category": "Zahlen",
+    "question": "Ein Händler erhöht einen Preis um 20 %. Eine Woche später senkt er den neuen Preis wieder um 20 %. Wie steht der Preis jetzt im Vergleich zum Anfang?",
+    "options": [
+      "Genau wie am Anfang",
+      "4 % höher",
+      "4 % niedriger",
+      "2 % niedriger"
+    ],
+    "correctIndex": 2,
+    "explanation": "Aus 100 € werden erst 120 €. Die Senkung um 20 % bezieht sich auf die 120 €, das sind 24 €. Übrig bleiben 96 €, also 4 % weniger als am Anfang. Die Reihenfolge spielt keine Rolle: 0,8 × 1,2 = 0,96.",
+    "skill": "Bezugsgröße bei Prozenten beachten",
+    "deep": {
+      "lead": "Prozente beziehen sich immer auf den aktuellen Wert – deshalb heben sich gleiche Sätze nicht auf.",
+      "sections": [
+        {
+          "title": "Malnehmen statt addieren",
+          "text": "Prozentuale Änderungen hintereinander werden multipliziert, nicht addiert. Plus 20 % bedeutet mal 1,2, minus 20 % bedeutet mal 0,8. Zusammen ergibt das den Faktor 0,96. Weil man beim Malnehmen die Reihenfolge tauschen darf, käme dasselbe heraus, wenn erst gesenkt und dann erhöht würde. Der Verlust wächst mit der Höhe des Satzes: Bei plus und minus 10 % fehlt 1 %, bei 50 % fehlt schon ein Viertel. Dahinter steht die dritte binomische Formel. Eins plus x mal eins minus x ist eins minus x Quadrat, und das Quadrat ist nie negativ."
+        },
+        {
+          "title": "Verluste aufholen ist schwerer",
+          "text": "Die praktisch wichtigste Folge betrifft Verluste. Wer 20 % verliert, braucht danach 25 % Gewinn, um wieder am Ausgangspunkt zu sein. Nach einem Minus von 50 % ist eine Verdopplung nötig. Das gilt für Aktienkurse ebenso wie für Gewicht, Umsätze oder Mitgliederzahlen. Auch Rabatte lassen sich so durchschauen: »20 % auf alles, dazu 10 % extra« sind zusammen nicht 30 %, sondern 28 %, denn die zweiten 10 % gelten nur für den bereits reduzierten Preis. Hilfreich ist die Gewohnheit, jede Prozentangabe sofort mit der Frage zu verbinden: Prozent wovon?"
+        }
+      ],
+      "tryIt": "Ein Kurs fällt um 50 % und steigt danach um 50 %. Wo steht er? Um wie viel müsste er steigen, um wieder am Anfang zu sein? (Bei 75 %; um 100 %.)",
+      "takeaways": [
+        "Prozentänderungen werden multipliziert, nicht addiert.",
+        "Immer fragen: Prozent wovon?"
+      ]
+    }
+  },
+  {
+    "id": "kartoffel-paradoxon",
+    "title": "Das Kartoffel-Paradoxon",
+    "category": "Zahlen",
+    "question": "100 kg Kartoffeln bestehen zu 99 % aus Wasser. Sie liegen in der Sonne, bis der Wasseranteil auf 98 % gesunken ist. Wie viel wiegen die Kartoffeln jetzt?",
+    "options": [
+      "99 kg",
+      "98 kg",
+      "Etwa 90 kg",
+      "50 kg"
+    ],
+    "correctIndex": 3,
+    "explanation": "Am Anfang ist 1 kg Trockenmasse enthalten, und die verdunstet nicht. Nach dem Trocknen macht dieses 1 kg nicht mehr 1 %, sondern 2 % des Gewichts aus. Das Ganze wiegt also 1 kg ÷ 0,02 = 50 kg.",
+    "skill": "Auf die feste Größe achten",
+    "deep": {
+      "lead": "Der Wasseranteil sinkt nur um einen Punkt, aber der Trockenanteil verdoppelt sich.",
+      "sections": [
+        {
+          "title": "Blick auf das, was bleibt",
+          "text": "Die Falle liegt darin, auf das Wasser zu schauen, das sich verändert, statt auf die Trockenmasse, die gleich bleibt. Ein Kilogramm fester Stoff war vorher ein Hundertstel des Ganzen und ist nachher ein Fünfzigstel. Damit ein festes Kilogramm einen doppelt so großen Anteil ausmacht, muss das Ganze halb so schwer sein. Es sind also 50 Kilogramm Wasser verdunstet, obwohl der Wasseranteil nur von 99 auf 98 Prozent gefallen ist. Bei Aufgaben mit Mischungen und Anteilen hilft fast immer dieselbe Frage: Welche Menge ändert sich nicht?"
+        },
+        {
+          "title": "Prozentpunkte sind nicht Prozent",
+          "text": "Das Rätsel macht einen Unterschied greifbar, der in Nachrichten ständig verwischt wird. Der Wasseranteil fällt um einen Prozentpunkt. Der Trockenanteil steigt ebenfalls um einen Prozentpunkt, von eins auf zwei, das ist aber eine Zunahme um hundert Prozent. Kleine Anteile reagieren heftig auf kleine Verschiebungen. Dasselbe passiert, wenn eine Partei von zwei auf drei Prozent klettert: ein Punkt mehr, aber ein um die Hälfte größerer Stimmenanteil. Oder wenn eine Fehlerquote von einem auf ein halbes Prozent sinkt, was die Fehler halbiert. Wer Anteile nahe null oder nahe hundert liest, sollte immer beide Sichtweisen prüfen."
+        }
+      ],
+      "tryIt": "Eine Gurke von 500 g besteht zu 96 % aus Wasser. Sie trocknet auf 95 % Wasseranteil. Wie schwer ist sie dann? (20 g Trockenmasse sind nun 5 %: 400 g.)",
+      "takeaways": [
+        "Frag: Welche Menge bleibt unverändert?",
+        "Ein Prozentpunkt kann eine Verdopplung bedeuten."
+      ]
+    }
+  },
+  {
+    "id": "vier-karten-eine-regel",
+    "title": "Vier Karten, eine Regel",
+    "category": "Logik",
+    "question": "Jede Karte hat auf einer Seite einen Buchstaben, auf der anderen eine Zahl. Du siehst: A, K, 4, 7. Behauptung: Wenn auf einer Seite ein Vokal steht, steht auf der anderen eine gerade Zahl. Welche Karten musst du umdrehen, um das zu prüfen?",
+    "options": [
+      "A und 4",
+      "A und 7",
+      "Nur A",
+      "Alle vier"
+    ],
+    "correctIndex": 1,
+    "explanation": "Widerlegen kann die Regel nur eine Karte mit Vokal und ungerader Zahl. Also prüfst du A (steht hinten etwas Ungerades?) und 7 (steht hinten ein Vokal?). Die 4 ist egal: Die Regel sagt nicht, dass hinter geraden Zahlen ein Vokal stehen muss.",
+    "skill": "Logisches Schließen",
+    "deep": {
+      "lead": "Eine Wenn-dann-Regel prüft man, indem man nach dem Fall sucht, der sie brechen würde.",
+      "sections": [
+        {
+          "title": "Wasons Auswahlaufgabe",
+          "text": "Der Psychologe Peter Wason entwickelte diese Aufgabe in den 1960er-Jahren, und sie wurde zu einem der meistuntersuchten Experimente der Denkpsychologie. In der abstrakten Form mit Buchstaben und Zahlen löst sie nur eine kleine Minderheit richtig. Die meisten wählen A und 4, also die Karten, die in der Regel vorkommen. Die 4 kann die Regel aber nur bestätigen, nie widerlegen. Die 7 dagegen wird übersehen, obwohl sich hinter ihr ein Vokal verbergen könnte. Hier zeigt sich der Bestätigungsfehler in Reinform: Wir suchen Belege und vergessen die Gegenprobe."
+        },
+        {
+          "title": "Dieselbe Logik, plötzlich leicht",
+          "text": "Verblüffend ist, was passiert, wenn man die Aufgabe einkleidet. Vier Gäste sitzen in einer Kneipe: Einer trinkt Bier, einer Cola, einer ist 25, einer 15. Regel: Wer Bier trinkt, muss mindestens 16 sein. Wen kontrollierst du? Fast jeder sagt sofort: den Biertrinker und den Fünfzehnjährigen. Logisch ist das exakt dieselbe Aufgabe. Forscher wie Leda Cosmides und John Tooby schlossen daraus, dass Menschen besonders gut darin sind, Regelbrecher in sozialen Situationen aufzuspüren. Für dich heißt das: Übersetze abstrakte Regeln in eine Kontrollsituation, dann siehst du, was zu prüfen ist."
+        }
+      ],
+      "tryIt": "Regel: »Ist ein Brief zugeklebt, trägt er eine Marke.« Vier Briefe: zugeklebt, offen, mit Marke, ohne Marke. Welche prüfst du? (Den zugeklebten und den ohne Marke.)",
+      "takeaways": [
+        "Prüfen heißt: nach dem Gegenbeispiel suchen.",
+        "Abstrakte Regeln in eine Kontrollsituation übersetzen."
+      ]
+    }
+  },
+  {
+    "id": "linda-problem",
+    "title": "Was ist wahrscheinlicher?",
+    "category": "Wahrscheinlichkeit",
+    "question": "Linda ist 31, klug und redegewandt. Als Studentin engagierte sie sich stark gegen Diskriminierung und für soziale Gerechtigkeit. Welche Aussage über Linda ist wahrscheinlicher?",
+    "options": [
+      "Sie ist Bankangestellte",
+      "Bankangestellte und Feministin",
+      "Beide sind genau gleich wahrscheinlich",
+      "Das lässt sich nie vergleichen"
+    ],
+    "correctIndex": 0,
+    "explanation": "Jede Bankangestellte, die Feministin ist, ist auch Bankangestellte. Die zweite Aussage beschreibt also eine Teilmenge der ersten und kann nie wahrscheinlicher sein. Sie wirkt nur stimmiger, weil die Beschreibung zum Bild einer Feministin passt.",
+    "skill": "Plausibles von Wahrscheinlichem trennen",
+    "deep": {
+      "lead": "Jedes zusätzliche Detail macht eine Geschichte glaubwürdiger – und zugleich unwahrscheinlicher.",
+      "sections": [
+        {
+          "title": "Der Konjunktionsfehler",
+          "text": "Amos Tversky und Daniel Kahneman legten diese Beschreibung Versuchspersonen vor, und die große Mehrheit hielt die Kombination für wahrscheinlicher als die einfache Aussage. Die beiden Forscher nannten das den Konjunktionsfehler. Ihre Erklärung: Wir beurteilen nicht die Wahrscheinlichkeit, sondern die Ähnlichkeit. Die Beschreibung passt gut zum Bild einer Feministin und schlecht zum Bild einer Bankangestellten, also wirkt die Kombination stimmiger. Stimmigkeit ist aber etwas anderes als Wahrscheinlichkeit. Zwei Bedingungen gleichzeitig zu erfüllen ist immer mindestens so schwer wie eine von beiden."
+        },
+        {
+          "title": "Details als Warnzeichen",
+          "text": "Im Alltag macht der Fehler detailreiche Vorhersagen verführerisch. »Die Firma geht pleite« klingt vage. »Die Firma geht pleite, weil ein Konkurrent ein billigeres Produkt herausbringt und der wichtigste Kunde abspringt« klingt durchdacht, ist aber zwangsläufig unwahrscheinlicher, denn es müssen mehrere Dinge zusammen eintreten. Gute Geschichten sind deshalb oft schlechte Prognosen. Es gibt auch Kritik an dem Experiment. Der Psychologe Gerd Gigerenzer wandte ein, dass viele das Wort »wahrscheinlich« im Alltagssinn von »einleuchtend« verstehen. Fragt man nach Häufigkeiten, etwa unter hundert Frauen mit dieser Beschreibung, passiert der Fehler deutlich seltener."
+        }
+      ],
+      "tryIt": "Nimm eine Prognose, an die du glaubst, und zähl, wie viele einzelne Dinge dafür gleichzeitig eintreten müssen.",
+      "takeaways": [
+        "A und B zusammen ist nie wahrscheinlicher als A allein.",
+        "Je ausgeschmückter die Prognose, desto unwahrscheinlicher."
+      ]
+    }
+  },
+  {
+    "id": "der-positive-test",
+    "title": "Der positive Test",
+    "category": "Wahrscheinlichkeit",
+    "question": "Eine Krankheit betrifft 1 von 1.000 Menschen. Ein Test erkennt jeden Kranken, schlägt aber auch bei 5 % der Gesunden fälschlich an. Eine zufällig ausgewählte Person wird positiv getestet. Wie wahrscheinlich ist sie krank?",
+    "options": [
+      "Etwa 95 %",
+      "Etwa 50 %",
+      "Etwa 2 %",
+      "Etwa 20 %"
+    ],
+    "correctIndex": 2,
+    "explanation": "Von 1.000 Personen ist eine krank und testet positiv. Von den 999 Gesunden testen rund 50 falsch positiv. Unter den etwa 51 positiven Ergebnissen ist also nur ein echtes: 1 ÷ 51 ≈ 2 %.",
+    "skill": "Mit Basisraten rechnen",
+    "deep": {
+      "lead": "Bei seltenen Krankheiten stammen die meisten positiven Ergebnisse von Gesunden.",
+      "sections": [
+        {
+          "title": "Warum 95 % die falsche Zahl ist",
+          "text": "Die 95 % beantworten eine andere Frage: Wie oft liegt der Test bei Gesunden richtig? Gefragt ist aber, wie oft ein positives Ergebnis zu einem Kranken gehört. Diese beiden Wahrscheinlichkeiten werden ständig verwechselt, und sie können weit auseinanderliegen. Der Grund ist die Seltenheit der Krankheit. Die Gesunden sind so zahlreich, dass schon ein kleiner Anteil falscher Alarme die wenigen echten Fälle zahlenmäßig erdrückt. Eine ähnliche Aufgabe wurde in einer bekannten Untersuchung Ärzten und Medizinstudierenden vorgelegt. Die häufigste Antwort lautete 95 %, nur eine Minderheit lag richtig."
+        },
+        {
+          "title": "Was das für echte Tests bedeutet",
+          "text": "Die Rechnung gilt für eine zufällig ausgewählte Person ohne Beschwerden, also für Reihenuntersuchungen. Sie ist kein Argument gegen Tests, sondern erklärt, warum auf ein auffälliges Ergebnis fast immer eine zweite, andere Untersuchung folgt, bevor eine Diagnose steht. Hat jemand Symptome oder gehört zu einer Risikogruppe, ist die Ausgangswahrscheinlichkeit viel höher, und dasselbe positive Ergebnis wiegt entsprechend schwerer. Der Wert eines Tests hängt also nie allein vom Test ab, sondern auch davon, wer getestet wird. Am zuverlässigsten rechnest du solche Fälle mit gedachten tausend Personen durch."
+        }
+      ],
+      "tryIt": "Rechne um: Die Krankheit betrifft 1 von 100, der Test ist sonst gleich. Wie wahrscheinlich ist ein positiv Getesteter krank? (1 von rund 6, also etwa 17 %.)",
+      "takeaways": [
+        "Erst fragen, wie selten die Sache ist.",
+        "Mit tausend gedachten Personen rechnen statt mit Prozenten."
+      ]
+    }
+  },
+  {
+    "id": "drei-schalter",
+    "title": "Drei Schalter, eine Lampe",
+    "category": "Querdenken",
+    "question": "Vor einem fensterlosen Raum sind drei Schalter, einer davon gehört zur Glühbirne im Raum. Die Tür ist zu. Du darfst vorher beliebig schalten, den Raum aber nur ein einziges Mal betreten. Kannst du sicher herausfinden, welcher Schalter der richtige ist?",
+    "options": [
+      "Nein, dafür braucht man zwei Besuche",
+      "Ja, wenn man die Birne auch anfasst",
+      "Ja, aber nur mit Glück (1 zu 3)",
+      "Nein, das ist grundsätzlich unmöglich"
+    ],
+    "correctIndex": 1,
+    "explanation": "Schalter 1 einige Minuten an, dann aus. Schalter 2 an, hineingehen. Brennt die Birne, ist es Schalter 2. Ist sie aus, aber warm, war es Schalter 1. Ist sie aus und kalt, bleibt nur Schalter 3.",
+    "skill": "Verborgene Informationsquellen finden",
+    "deep": {
+      "lead": "Wenn ein Kanal nicht genug verrät, such nach einem zweiten, den niemand erwähnt hat.",
+      "sections": [
+        {
+          "title": "Drei Möglichkeiten, zwei Zustände",
+          "text": "Auf den ersten Blick scheint die Aufgabe unlösbar. Du hast drei Kandidaten, aber ein Blick auf die Lampe liefert nur zwei mögliche Beobachtungen: an oder aus. Mit einer Ja-Nein-Auskunft lassen sich höchstens zwei Fälle unterscheiden. Die Lösung besteht darin, eine dritte Beobachtung zu erzeugen. Eine Glühbirne, die eine Weile gebrannt hat, ist heiß. Damit gibt es drei Zustände: leuchtend, dunkel und warm, dunkel und kalt. Das Rätsel wird also nicht durch geschickteres Schalten gelöst, sondern durch die Entdeckung, dass die Birne mehr als eine Eigenschaft hat."
+        },
+        {
+          "title": "Die unausgesprochene Annahme",
+          "text": "Rätsel dieser Art leben von einer Einschränkung, die man sich selbst auferlegt. Niemand hat gesagt, dass du nur schauen darfst. Trotzdem denken die meisten ausschließlich an das Licht, weil Lampen eben zum Leuchten da sind. Psychologen nennen das funktionale Fixierung: Wir sehen an Gegenständen nur ihren üblichen Zweck. Hilfreich ist die Frage, welche Annahmen man getroffen hat, ohne dass sie in der Aufgabe stehen. Das Rätsel verrät übrigens sein Alter. Mit modernen LED-Lampen, die kaum warm werden, funktioniert der Trick deutlich schlechter. Auch Lösungen haben ein Verfallsdatum."
+        }
+      ],
+      "tryIt": "Nimm ein Problem, bei dem du feststeckst, und schreib drei Annahmen auf, die du triffst, ohne dass sie jemand verlangt hat.",
+      "takeaways": [
+        "Dinge haben mehr Eigenschaften als ihren üblichen Zweck.",
+        "Frag: Welche Einschränkung habe ich mir selbst ausgedacht?"
+      ]
+    }
+  },
+  {
+    "id": "zwei-waechter",
+    "title": "Zwei Wächter, zwei Türen",
+    "category": "Logik",
+    "question": "Eine Tür führt in die Freiheit, eine ins Verlies. Davor stehen zwei Wächter: Einer lügt immer, einer sagt immer die Wahrheit, du weißt nicht, wer wer ist. Du fragst einen: »Welche Tür würde der andere als Weg in die Freiheit nennen?« Er zeigt nach links. Welche Tür nimmst du?",
+    "options": [
+      "Die linke",
+      "Egal, die Chance ist 50:50",
+      "Keine, die Antwort hilft nicht",
+      "Die rechte"
+    ],
+    "correctIndex": 3,
+    "explanation": "Fragst du den Ehrlichen, gibt er die Lüge des anderen wahrheitsgetreu wieder: die falsche Tür. Fragst du den Lügner, verdreht er die ehrliche Antwort des anderen: wieder die falsche Tür. Die genannte Tür ist also immer falsch – nimm die andere.",
+    "skill": "Verschachtelt schlussfolgern",
+    "deep": {
+      "lead": "Schick die Frage durch beide Wächter – dann steckt in jeder Antwort genau eine Lüge.",
+      "sections": [
+        {
+          "title": "Warum die Verschachtelung wirkt",
+          "text": "Eine direkte Frage wie »Welche Tür ist die richtige?« hilft nicht, weil du nicht weißt, ob du die Antwort umdrehen musst. Die verschachtelte Frage sorgt dafür, dass die Antwort in jedem Fall genau einmal verfälscht wird. Entweder lügt der Befragte über eine wahre Auskunft, oder er berichtet ehrlich über eine Lüge. Einmal gelogen und einmal wahr ergibt falsch, egal in welcher Reihenfolge. Das ist wie beim Rechnen mit Vorzeichen: Minus mal Plus ist Minus, Plus mal Minus ebenfalls. Du brauchst also gar nicht herauszufinden, wer der Lügner ist."
+        },
+        {
+          "title": "Ritter, Schurken und eine zweite Lösung",
+          "text": "Rätsel mit Wahrsagern und Lügnern hat vor allem der Logiker Raymond Smullyan in seinen Büchern berühmt gemacht; bei ihm heißen sie Ritter und Schurken. Es gibt für die beiden Türen noch eine elegante zweite Frage, die ohne den anderen Wächter auskommt: »Würdest du auf die Frage, ob die linke Tür in die Freiheit führt, mit Ja antworten?« Der Ehrliche antwortet wahr. Der Lügner müsste über seine eigene Lüge lügen und landet ebenfalls bei der Wahrheit. Hier gilt Minus mal Minus gleich Plus. Antwortet der Befragte mit Ja, nimmst du die linke Tür, sonst die rechte."
+        }
+      ],
+      "tryIt": "Prüf die Lösung selbst: Leg fest, dass rechts die Freiheit ist, und spiel beide Fälle durch – erst fragst du den Ehrlichen, dann den Lügner.",
+      "takeaways": [
+        "Eine Lüge und eine Wahrheit hintereinander ergeben immer falsch.",
+        "Du musst den Lügner nicht entlarven, nur einplanen."
+      ]
+    }
+  },
+  {
+    "id": "bruecke-bei-nacht",
+    "title": "Brücke bei Nacht",
+    "category": "Logik",
+    "question": "Vier Personen müssen nachts über eine Brücke, die höchstens zwei zugleich trägt. Es gibt nur eine Fackel, ohne die niemand gehen kann. Sie brauchen 1, 2, 5 und 10 Minuten; ein Paar geht so schnell wie der Langsamere. Wie lange dauert es mindestens, bis alle drüben sind?",
+    "options": [
+      "19 Minuten",
+      "21 Minuten",
+      "17 Minuten",
+      "15 Minuten"
+    ],
+    "correctIndex": 2,
+    "explanation": "1 und 2 gehen hinüber (2), 1 kommt zurück (1), 5 und 10 gehen gemeinsam (10), 2 kommt zurück (2), 1 und 2 gehen hinüber (2). Summe: 17 Minuten. Der Kniff: Die beiden Langsamsten gehen zusammen, damit ihre Zeiten nur einmal zählen.",
+    "skill": "Strategien vergleichen",
+    "deep": {
+      "lead": "Nicht der Schnellste muss alle begleiten – wichtiger ist, die beiden Langsamen zu bündeln.",
+      "sections": [
+        {
+          "title": "Der erste Einfall kostet zwei Minuten",
+          "text": "Der erste Einfall ist fast immer: Der Schnellste bringt jeden einzeln hinüber und trägt die Fackel zurück. Das ergibt 2 + 1 + 5 + 1 + 10 = 19 Minuten. Diese Strategie hält die Rückwege kurz, zahlt aber für die beiden langsamen Überquerungen getrennt, 5 und 10 Minuten. Die bessere Lösung lässt die Langsamen gemeinsam gehen, sodass die 5 Minuten in den 10 verschwinden. Dafür muss auf der anderen Seite schon jemand Schnelles warten, der die Fackel zurückbringt. Deshalb gehen zuerst die beiden Schnellsten, und einer bleibt drüben."
+        },
+        {
+          "title": "Welche Strategie wann gewinnt",
+          "text": "Welche Strategie gewinnt, hängt von den Zeiten ab. Das Bündeln kostet zwei zusätzliche Wege des Zweitschnellsten, hier zweimal 2 Minuten, und spart dafür die Überquerung des Zweitlangsamsten samt einem Rückweg des Schnellsten, hier 5 + 1 Minuten. Wäre der Zweitschnellste viel langsamer, etwa 4 Minuten, wäre das Begleiten durch den Schnellsten besser. Die allgemeine Lehre reicht über das Rätsel hinaus: Eine Lösung, die jeden Einzelschritt so billig wie möglich macht, ist nicht unbedingt die billigste insgesamt. Manchmal lohnt ein scheinbar umständlicher Schritt, weil er einen teuren an anderer Stelle erspart."
+        }
+      ],
+      "tryIt": "Gleiche Regeln, andere Zeiten: 1, 2, 7 und 10 Minuten. Wie schnell geht es? (17 Minuten: 2 + 1 + 10 + 2 + 2.)",
+      "takeaways": [
+        "Die beiden Langsamsten gemeinsam schicken.",
+        "Billige Einzelschritte ergeben nicht automatisch die billigste Lösung."
+      ]
+    }
+  },
+  {
+    "id": "marias-vater",
+    "title": "Marias Vater",
+    "category": "Sprachlogik",
+    "question": "Marias Vater hat fünf Töchter. Vier davon heißen Nana, Nene, Nini und Nono. Wie heißt die fünfte Tochter?",
+    "options": [
+      "Maria",
+      "Nunu",
+      "Nina",
+      "Das lässt sich nicht sagen"
+    ],
+    "correctIndex": 0,
+    "explanation": "Die Antwort steht im ersten Wort der Frage: Es ist Marias Vater, also ist Maria eine seiner Töchter. Die Reihe Nana, Nene, Nini, Nono lenkt ab, weil sie nach einem Muster aussieht, das man fortsetzen möchte.",
+    "skill": "Genau lesen",
+    "deep": {
+      "lead": "Das Gehirn setzt Muster fort, noch bevor es die Frage zu Ende ausgewertet hat.",
+      "sections": [
+        {
+          "title": "Warum »Nunu« so verlockend ist",
+          "text": "Die vier Namen folgen den Vokalen a, e, i, o, und das fehlende u springt förmlich ins Auge. Mustererkennung läuft automatisch und schnell, und sie ist meistens ein Vorteil. Hier wird sie ausgenutzt: Die Aufzählung drängt den Anfang des Satzes aus dem Arbeitsgedächtnis, bevor er ausgewertet wurde. Dasselbe passiert bei der bekannten Frage, wie viele Tiere jeder Art Moses mit auf die Arche nahm. Die meisten antworten »zwei«, ohne zu stutzen, obwohl es Noah war. Solange ein Satz ungefähr in den erwarteten Rahmen passt, prüfen wir die Einzelheiten nicht."
+        },
+        {
+          "title": "Vom Kinderrätsel zum Kleingedruckten",
+          "text": "Solche Fangfragen wirken wie Kinderspiele, trainieren aber eine erwachsene Fähigkeit: zwischen dem zu unterscheiden, was dasteht, und dem, was man erwartet hat. Dieselbe Flüchtigkeit führt zu überlesenen Bedingungen in Verträgen, zu falsch verstandenen Arbeitsaufträgen und zu Antworten auf Fragen, die niemand gestellt hat. Ein einfaches Gegenmittel ist, die Frage vor der Antwort in eigenen Worten zu wiederholen. In Prüfungen heißt das: erst die Aufgabe ein zweites Mal lesen, dann rechnen. Unter Zeitdruck wird die Gefahr größer. Wer es eilig hat, liest das, was er zu lesen glaubt."
+        }
+      ],
+      "tryIt": "Stell jemandem die Frage: »Wie viele Tiere jeder Art nahm Moses mit auf die Arche?« Achte darauf, ob der falsche Name auffällt.",
+      "takeaways": [
+        "Die Lösung steht oft schon in der Frage.",
+        "Erst die Frage wiederholen, dann antworten."
+      ]
+    }
+  },
+  {
+    "id": "rosen-syllogismus",
+    "title": "Verwelken Rosen schnell?",
+    "category": "Logik",
+    "question": "Erste Aussage: Alle Rosen sind Blumen. Zweite Aussage: Einige Blumen verwelken schnell. Schlussfolgerung: Also verwelken einige Rosen schnell. Folgt der Schluss zwingend aus den beiden Aussagen?",
+    "options": [
+      "Ja, der Schluss ist zwingend",
+      "Ja, aber nur für Schnittrosen",
+      "Nein, er folgt nicht zwingend",
+      "Nein, er ist sicher falsch"
+    ],
+    "correctIndex": 2,
+    "explanation": "Die schnell welkenden Blumen könnten ausschließlich andere Blumen sein, etwa Tulpen. Die beiden Aussagen lassen das offen. Der Schluss kann wahr sein, aber er folgt nicht aus dem Gesagten – er klingt nur richtig, weil wir wissen, dass Rosen welken.",
+    "skill": "Gültigkeit von Wahrheit trennen",
+    "deep": {
+      "lead": "Ein Schluss kann zu einer wahren Aussage führen und trotzdem logisch ungültig sein.",
+      "sections": [
+        {
+          "title": "Gültig ist nicht dasselbe wie wahr",
+          "text": "Die Logik fragt nicht, ob die Schlussfolgerung stimmt, sondern ob sie aus den Voraussetzungen folgt. Ein einfacher Test: Ersetze die Begriffe durch andere mit derselben Form. Alle Hunde sind Tiere. Einige Tiere können fliegen. Also können einige Hunde fliegen. Der Aufbau ist identisch, das Ergebnis offensichtlich Unsinn. Wenn eine Form auch nur ein einziges Mal von wahren Voraussetzungen zu einem falschen Schluss führt, ist sie ungültig, und zwar immer, auch im Rosenbeispiel. Dort verdeckt nur unser Wissen über Rosen den Fehler."
+        },
+        {
+          "title": "Der Glaubwürdigkeitsfehler",
+          "text": "Daniel Kahneman verwendet das Rosenbeispiel, um zu zeigen, wie leicht wir Argumente nach ihrem Ergebnis beurteilen statt nach ihrer Bauart. Gefällt uns die Schlussfolgerung, winken wir den Weg dorthin durch. Psychologen nennen das Belief Bias. Er wirkt in beide Richtungen: Saubere Argumente für unbequeme Ergebnisse lehnen wir vorschnell ab, schlampige Argumente für bequeme Ergebnisse nehmen wir an. In Diskussionen ist das besonders tückisch, weil dort fast jeder schon weiß, was am Ende herauskommen soll. Die Übung mit dem Austausch der Begriffe hilft auch hier, die Form vom Inhalt zu trennen."
+        }
+      ],
+      "tryIt": "Prüf mit dem Austausch-Test: »Alle Ärzte haben studiert. Einige Studierte sind reich. Also sind einige Ärzte reich.« Gültig? (Nein.)",
+      "takeaways": [
+        "Ein wahres Ergebnis beweist kein gültiges Argument.",
+        "Test: Begriffe austauschen und sehen, ob Unsinn herauskommt."
+      ]
+    }
+  },
+  {
+    "id": "wer-sagt-die-wahrheit",
+    "title": "Wer sagt die Wahrheit?",
+    "category": "Logik",
+    "question": "Drei Personen, jede sagt entweder immer die Wahrheit oder lügt immer. A sagt: »B lügt.« B sagt: »C lügt.« C sagt: »A und B lügen beide.« Wer sagt die Wahrheit?",
+    "options": [
+      "Nur B",
+      "Nur A",
+      "Nur C",
+      "A und C"
+    ],
+    "correctIndex": 0,
+    "explanation": "Angenommen, A sagt die Wahrheit: Dann lügt B, also sagt C die Wahrheit – C behauptet aber, A lüge. Widerspruch. Also lügt A, damit ist B ehrlich und C ein Lügner. Probe: C sagt, beide lügen; B ist aber ehrlich, die Aussage ist also falsch. Passt.",
+    "skill": "Annahmen auf Widerspruch prüfen",
+    "deep": {
+      "lead": "Nimm eine Möglichkeit an und folge ihr, bis sie sich bestätigt oder sich selbst widerlegt.",
+      "sections": [
+        {
+          "title": "Der Widerspruchsbeweis im Kleinen",
+          "text": "Die Methode, mit der man solche Rätsel löst, gehört zu den ältesten Werkzeugen der Mathematik: Man nimmt etwas versuchsweise an und zieht Folgerungen, bis man auf einen Widerspruch stößt. Dann war die Annahme falsch. Wichtig ist, eine Aussage zu wählen, die viel nach sich zieht. Hier ist das die Behauptung von A, weil sie über B entscheidet und B wiederum über C. So entsteht eine Kette, die sich am Ende gegen ihren Anfang wendet. Bei drei Personen gäbe es zur Not auch den groben Weg: alle acht Kombinationen von ehrlich und verlogen durchprobieren."
+        },
+        {
+          "title": "Achtung bei »und«",
+          "text": "Ein häufiger Stolperstein ist die Verneinung zusammengesetzter Aussagen. C behauptet, dass A und B beide lügen. Wenn C lügt, heißt das nicht, dass beide die Wahrheit sagen. Es heißt nur, dass mindestens einer von ihnen ehrlich ist. Das Gegenteil von »beide« ist »nicht beide«, also »mindestens einer nicht«. Diese Regel ist nach dem Logiker Augustus De Morgan benannt und im Alltag erstaunlich nützlich. Wer sagt, es stimme nicht, dass ein Produkt billig und gut sei, behauptet damit nicht, es sei teuer und schlecht. Er sagt nur, dass mindestens eines von beidem nicht zutrifft."
+        }
+      ],
+      "tryIt": "Zwei Personen, jede lügt immer oder nie. A sagt: »Mindestens einer von uns lügt.« Wer ist was? (A ist ehrlich, B lügt.)",
+      "takeaways": [
+        "Annahme treffen, Folgen ziehen, auf Widerspruch achten.",
+        "Das Gegenteil von »beide« ist »mindestens einer nicht«."
+      ]
+    }
+  },
+  {
+    "id": "ko-turnier",
+    "title": "Das K.-o.-Turnier",
+    "category": "Querdenken",
+    "question": "An einem Tennisturnier im K.-o.-System nehmen 37 Spieler teil. Wer verliert, scheidet aus; bei ungerader Spielerzahl bekommt jemand ein Freilos. Wie viele Spiele werden insgesamt ausgetragen, bis der Sieger feststeht?",
+    "options": [
+      "37",
+      "18",
+      "35",
+      "36"
+    ],
+    "correctIndex": 3,
+    "explanation": "Jedes Spiel wirft genau einen Spieler aus dem Turnier. Am Ende sind 36 von 37 ausgeschieden, also gab es 36 Spiele. Freilose und Rundenzahl spielen dafür keine Rolle.",
+    "skill": "Perspektive wechseln",
+    "deep": {
+      "lead": "Zähl nicht die Runden, zähl die Verlierer.",
+      "sections": [
+        {
+          "title": "Der mühsame und der kurze Weg",
+          "text": "Wer das Turnier Runde für Runde durchrechnet, kommt auch ans Ziel: 18 Spiele und ein Freilos, dann 19 Spieler, 9 Spiele und ein Freilos, dann 10 Spieler, 5 Spiele, dann 5 Spieler, 2 Spiele und ein Freilos, dann 3 Spieler, ein Spiel und ein Freilos, schließlich das Finale. Zusammen 18 + 9 + 5 + 2 + 1 + 1 = 36. Viel schneller geht es mit einer Größe, die sich bei jedem Spiel auf dieselbe Weise ändert: die Zahl der noch nicht Ausgeschiedenen. Sie sinkt pro Spiel um genau eins, von 37 auf 1."
+        },
+        {
+          "title": "Dasselbe Muster anderswo",
+          "text": "Der Gedanke, statt des komplizierten Ablaufs eine einfache Buchhaltungsgröße zu verfolgen, löst viele Aufgaben. Eine Tafel Schokolade mit 24 Stücken soll in Einzelstücke zerbrochen werden: Jeder Bruch erhöht die Zahl der Teile um eins, also braucht man immer 23 Brüche, egal wie geschickt man vorgeht. Um aus zehn Kettenstücken eine lange Kette zu machen, sind neun Verbindungen nötig. Mathematiker sprechen bei solchen Überlegungen von Zählargumenten. Der praktische Nutzen: Bevor du einen verwickelten Vorgang Schritt für Schritt simulierst, frag dich, was bei jedem Schritt mit Sicherheit passiert."
+        }
+      ],
+      "tryIt": "Eine Schokolade hat 4 × 6 Stücke. Wie oft musst du brechen, bis alle einzeln sind, wenn du nie zwei Teile zugleich brichst? (23-mal.)",
+      "takeaways": [
+        "Jedes Spiel erzeugt genau einen Verlierer.",
+        "Such die Größe, die sich bei jedem Schritt gleich ändert."
+      ]
+    }
+  },
+  {
+    "id": "viertel-nach-drei",
+    "title": "Viertel nach drei",
+    "category": "Zahlen",
+    "question": "Eine Zeigeruhr zeigt genau 3:15 Uhr. Wie groß ist der Winkel zwischen Stunden- und Minutenzeiger?",
+    "options": [
+      "0 Grad",
+      "7,5 Grad",
+      "15 Grad",
+      "30 Grad"
+    ],
+    "correctIndex": 1,
+    "explanation": "Der Minutenzeiger steht genau auf der 3. Der Stundenzeiger ist aber seit 3 Uhr weitergewandert: In 60 Minuten schafft er 30 Grad, in 15 Minuten also ein Viertel davon, 7,5 Grad.",
+    "skill": "Bewegte Größen mitdenken",
+    "deep": {
+      "lead": "Der Stundenzeiger bleibt nie stehen – auch nicht, während man auf den Minutenzeiger schaut.",
+      "sections": [
+        {
+          "title": "Zwei Geschwindigkeiten",
+          "text": "Das Zifferblatt hat 360 Grad und zwölf Stunden, zwischen zwei Stundenzahlen liegen also 30 Grad. Der Minutenzeiger schafft die volle Runde in einer Stunde, das sind 6 Grad pro Minute. Der Stundenzeiger braucht für 30 Grad eine ganze Stunde, also ein halbes Grad pro Minute. Mit diesen beiden Werten lässt sich jeder Zeigerwinkel berechnen: Stunden mal 30 plus Minuten mal 0,5 für den kleinen Zeiger, Minuten mal 6 für den großen, dann die Differenz. Um 3:15 Uhr sind das 97,5 und 90 Grad."
+        },
+        {
+          "title": "Wann stehen die Zeiger übereinander?",
+          "text": "Aus den Geschwindigkeiten folgt eine zweite beliebte Rätselfrage. Der Minutenzeiger holt pro Minute 5,5 Grad auf. Nach drei Uhr muss er 90 Grad Vorsprung wettmachen, das dauert 90 geteilt durch 5,5, also gut 16 Minuten. Die Zeiger decken sich deshalb nicht um 3:15 Uhr, sondern kurz nach 3:16 Uhr. In zwölf Stunden überholt der große Zeiger den kleinen nur elfmal, nicht zwölfmal, weil der kleine in dieser Zeit selbst eine Runde dreht. Zwischen zwei Begegnungen liegen deshalb immer etwas mehr als 65 Minuten."
+        }
+      ],
+      "tryIt": "Berechne den Winkel um 6:30 Uhr und um 9:00 Uhr. (15 Grad; 90 Grad.)",
+      "takeaways": [
+        "Stundenzeiger: 0,5 Grad pro Minute. Minutenzeiger: 6 Grad.",
+        "Auch die langsame Größe bewegt sich weiter."
+      ]
+    }
+  },
+  {
+    "id": "muenzfolgen",
+    "title": "Welche Folge ist wahrscheinlicher?",
+    "category": "Wahrscheinlichkeit",
+    "question": "Eine faire Münze wird sechsmal geworfen (K = Kopf, Z = Zahl). Welche dieser beiden genauen Abfolgen ist wahrscheinlicher: KKKKKK oder KZZKZK?",
+    "options": [
+      "Beide sind gleich wahrscheinlich",
+      "KZZKZK ist wahrscheinlicher",
+      "KKKKKK ist wahrscheinlicher",
+      "Das hängt vom ersten Wurf ab"
+    ],
+    "correctIndex": 0,
+    "explanation": "Jeder einzelne Wurf hat die Wahrscheinlichkeit 1/2, unabhängig von den anderen. Jede genaue Abfolge von sechs Würfen hat deshalb dieselbe Wahrscheinlichkeit: 1/2 hoch 6, also 1/64. Das gilt für die gemischte Folge genauso wie für sechsmal Kopf.",
+    "skill": "Einzelfall von Kategorie trennen",
+    "deep": {
+      "lead": "Die gemischte Folge sieht nur zufälliger aus – als einzelne Abfolge ist sie genauso selten wie sechsmal Kopf.",
+      "sections": [
+        {
+          "title": "Die Verwechslung dahinter",
+          "text": "Unser Gefühl vergleicht nicht zwei einzelne Folgen, sondern zwei Sorten von Ergebnissen: »lauter Kopf« gegen »irgendetwas Gemischtes«. Gemischte Ergebnisse sind tatsächlich viel häufiger, weil es so viele davon gibt. Von den 64 möglichen Folgen enthalten 20 genau dreimal Kopf, aber nur eine sechsmal Kopf. Die bestimmte Folge KZZKZK ist jedoch nur eine dieser 20 und damit genauso selten wie KKKKKK. Tversky und Kahneman erklärten den Irrtum mit der Repräsentativität: Wir halten für wahrscheinlicher, was so aussieht, wie wir uns Zufall vorstellen."
+        },
+        {
+          "title": "Lotto und Passwörter",
+          "text": "Daraus folgt, dass die Lottozahlen 1, 2, 3, 4, 5, 6 genauso wahrscheinlich gezogen werden wie jede andere Kombination. Trotzdem ist dieser Tipp eine schlechte Wahl, allerdings aus einem anderen Grund: Auffällige Muster werden von sehr vielen Menschen getippt, und im Gewinnfall müsste man die Summe mit ihnen teilen. Die Gewinnchance ist gleich, die erwartete Auszahlung nicht. Bei Passwörtern verhält es sich ähnlich. Eine Folge wie 123456 ist rechnerisch so wahrscheinlich wie jede andere, wird aber von Angreifern zuerst ausprobiert, weil Menschen eben nicht zufällig wählen."
+        }
+      ],
+      "tryIt": "Schreib eine »zufällige« Folge von 20 Münzwürfen aus dem Kopf auf und wirf danach 20-mal wirklich. Vergleiche die längsten Serien.",
+      "takeaways": [
+        "Jede genaue Abfolge ist gleich wahrscheinlich.",
+        "Häufig ist die Sorte »gemischt«, nicht die einzelne gemischte Folge."
+      ]
+    }
+  },
+  {
+    "id": "drei-karten-im-hut",
+    "title": "Drei Karten im Hut",
+    "category": "Wahrscheinlichkeit",
+    "question": "Im Hut liegen drei Karten: eine ist beidseitig rot, eine beidseitig weiß, eine hat eine rote und eine weiße Seite. Du ziehst blind eine Karte und legst sie auf den Tisch. Die sichtbare Seite ist rot. Wie wahrscheinlich ist die Rückseite ebenfalls rot?",
+    "options": [
+      "1/2",
+      "1/3",
+      "2/3",
+      "3/4"
+    ],
+    "correctIndex": 2,
+    "explanation": "Es gibt drei rote Seiten, und jede liegt gleich wahrscheinlich oben. Zwei davon gehören zur rot-roten Karte, eine zur gemischten. In zwei von drei Fällen ist die Rückseite also rot. Zähl die Seiten, nicht die Karten.",
+    "skill": "Gleich wahrscheinliche Fälle finden",
+    "deep": {
+      "lead": "Die rot-rote Karte zeigt dir doppelt so oft Rot wie die gemischte – das verschiebt die Chancen.",
+      "sections": [
+        {
+          "title": "Warum nicht fünfzig-fünfzig?",
+          "text": "Die verlockende Überlegung lautet: Die weiß-weiße Karte scheidet aus, es bleiben zwei Karten, also ist die Chance eins zu eins. Der Fehler liegt in der Annahme, beide verbliebenen Karten seien gleich wahrscheinlich. Das waren sie vor dem Hinsehen. Die Beobachtung »Rot liegt oben« passt aber besser zur rot-roten Karte, denn sie zeigt immer Rot, die gemischte nur in der Hälfte der Fälle. Eine Beobachtung spricht stärker für die Erklärung, unter der sie wahrscheinlicher wäre. Das ist der Kern dessen, was Statistiker bayessches Schließen nennen."
+        },
+        {
+          "title": "Bertrand und die Wette",
+          "text": "Das Rätsel geht auf den französischen Mathematiker Joseph Bertrand zurück, der es im 19. Jahrhundert mit drei Kästchen und Gold- und Silbermünzen formulierte. Der Mathematiker Warren Weaver beschrieb später, wie sich daraus eine Wette machen lässt: Der Anbieter setzt darauf, dass die Rückseite dieselbe Farbe hat wie die Vorderseite, und bietet gleiche Einsätze an. Das klingt fair, gewinnt aber in zwei von drei Fällen, denn zwei der drei Karten sind einfarbig. Mit dem Ziegenproblem ist die Aufgabe eng verwandt. In beiden Fällen bleibt scheinbar eine Wahl zwischen zwei Möglichkeiten, die nicht gleich wahrscheinlich sind."
+        }
+      ],
+      "tryIt": "Bastel die drei Karten aus Papier und zieh dreißigmal. Zähl, wie oft Vorder- und Rückseite dieselbe Farbe haben. Erwartet: rund 20-mal.",
+      "takeaways": [
+        "Zähl die gleich wahrscheinlichen Fälle – hier die Seiten.",
+        "Zwei übrige Möglichkeiten sind nicht automatisch 50:50."
+      ]
+    }
+  },
+  {
+    "id": "milliarde-zaehlen",
+    "title": "Bis zu einer Milliarde zählen",
+    "category": "Schätzen",
+    "question": "Angenommen, du zählst ohne Pause jede Sekunde eine Zahl weiter. Bis zu einer Million brauchst du dann knapp 12 Tage. Wie lange brauchst du bis zu einer Milliarde?",
+    "options": [
+      "Etwa 4 Monate",
+      "Fast 32 Jahre",
+      "Etwa 3 Jahre",
+      "Rund 320 Jahre"
+    ],
+    "correctIndex": 1,
+    "explanation": "Eine Milliarde ist tausend Millionen, also dauert es tausendmal so lange: knapp 12.000 Tage. Das sind fast 32 Jahre. Der Sprung von der Million zur Milliarde ist viel größer, als die ähnlichen Wörter vermuten lassen.",
+    "skill": "Große Zahlen begreifen",
+    "deep": {
+      "lead": "Zwischen Million und Milliarde liegt nicht ein Schritt, sondern der Faktor tausend.",
+      "sections": [
+        {
+          "title": "Zahlen in Zeit übersetzen",
+          "text": "Große Zahlen bleiben abstrakt, bis man sie in etwas Erlebbares umrechnet. Zeit eignet sich dafür gut. Eine Million Sekunden sind gut elfeinhalb Tage, ein längerer Urlaub. Eine Milliarde Sekunden sind fast 32 Jahre, ein großer Teil eines Berufslebens. Eine Billion Sekunden, also tausend Milliarden, sind rund 31.700 Jahre; damals herrschte noch Eiszeit. Wer das einmal durchgerechnet hat, liest Schlagzeilen anders. Ob ein Programm 50 Millionen oder 50 Milliarden kostet, ist dann nicht mehr dieselbe Größenordnung mit anderem Wort, sondern der Unterschied zwischen einem Tag und fast drei Jahren."
+        },
+        {
+          "title": "Milliarde, Billion und »billion«",
+          "text": "Zur Verwirrung trägt die Sprache bei. Im Deutschen folgt auf die Million die Milliarde und dann die Billion. Im heutigen Englisch heißt die Milliarde »billion« und die Billion »trillion«. Wer englische Nachrichten liest, muss also umdenken, und in Übersetzungen passiert an dieser Stelle immer wieder ein Fehler um den Faktor tausend. Hilfreich ist auch das Herunterrechnen pro Kopf. Eine Milliarde Euro, verteilt auf die gut 80 Millionen Einwohner Deutschlands, sind etwa 12 Euro pro Person. So wird aus einer unvorstellbaren Summe eine Zahl, die man einordnen kann."
+        }
+      ],
+      "tryIt": "Rechne nach: Wie alt bist du in Sekunden? Faustregel: Ein Jahr hat rund 31,5 Millionen Sekunden.",
+      "takeaways": [
+        "Million zu Milliarde: Faktor tausend.",
+        "Große Summen pro Kopf oder in Zeit umrechnen."
+      ]
+    }
+  },
+  {
+    "id": "der-mann-auf-dem-bild",
+    "title": "Der Mann auf dem Bild",
+    "category": "Logik",
+    "question": "Ein Mann betrachtet ein Porträt und sagt: »Brüder und Schwestern habe ich keine, aber der Vater dieses Mannes ist der Sohn meines Vaters.« Wer ist auf dem Bild zu sehen?",
+    "options": [
+      "Er selbst",
+      "Sein Vater",
+      "Sein Neffe",
+      "Sein Sohn"
+    ],
+    "correctIndex": 3,
+    "explanation": "»Der Sohn meines Vaters« kann nur der Sprecher selbst sein, denn er hat keine Geschwister. Der Satz heißt also: Der Vater dieses Mannes bin ich. Auf dem Bild ist demnach sein Sohn.",
+    "skill": "Aussagen schrittweise vereinfachen",
+    "deep": {
+      "lead": "Löse verschachtelte Sätze von innen nach außen auf, ein Stück nach dem anderen.",
+      "sections": [
+        {
+          "title": "Ersetzen wie in der Algebra",
+          "text": "Der Satz wirkt verwirrend, weil er zwei Verwandtschaftsangaben ineinanderschiebt. Das Vorgehen ist dasselbe wie bei einer Rechnung mit Klammern: erst den inneren Ausdruck auswerten, dann das Ergebnis einsetzen. Der innere Ausdruck lautet »der Sohn meines Vaters«. Ohne die Angabe über die Geschwister kämen dafür der Sprecher und seine Brüder infrage; mit ihr bleibt nur er selbst. Ersetzt man den Ausdruck durch »ich«, steht da: Der Vater dieses Mannes bin ich. Die häufigste falsche Antwort ist »er selbst«, weil man beim Auflösen einen Schritt zu früh aufhört."
+        },
+        {
+          "title": "Ein Klassiker mit langer Geschichte",
+          "text": "Das Rätsel steht seit Langem in Rätselsammlungen und wurde unter anderem durch den Logiker Raymond Smullyan wieder bekannt, der es als Einstieg in strengeres Denken nutzte. Er berichtete, dass erstaunlich viele Menschen auch nach der Auflösung auf der falschen Antwort beharren. Verwandtschaftsrätsel dieser Art trainieren eine Fähigkeit, die man beim Lesen juristischer oder technischer Texte braucht: Bezüge sauber verfolgen. Wer ist »dieser«, worauf bezieht sich »dessen«? Im Zweifel hilft ein kleines Diagramm mit Namen und Pfeilen mehr als mehrmaliges Lesen."
+        }
+      ],
+      "tryIt": "Löse von innen nach außen: Wer ist für dich der einzige Sohn der Mutter deiner Mutter? Und die Tochter des Vaters deines Vaters? (Onkel; Tante.)",
+      "takeaways": [
+        "Erst den inneren Ausdruck auflösen, dann einsetzen.",
+        "Bei verschachtelten Bezügen hilft eine Skizze."
+      ]
+    }
+  },
+  {
+    "id": "zwei-vaeter-zwei-soehne",
+    "title": "Zwei Väter, zwei Söhne",
+    "category": "Querdenken",
+    "question": "Zwei Väter und zwei Söhne gehen angeln. Jeder fängt genau einen Fisch, und am Ende liegen genau drei Fische im Eimer. Kein Fisch ging verloren. Wie ist das möglich?",
+    "options": [
+      "Einer hat heimlich nichts gefangen",
+      "Zwei teilen sich einen Fisch",
+      "Ein Fisch wurde gegessen",
+      "Es sind nur drei Personen"
+    ],
+    "correctIndex": 3,
+    "explanation": "Es sind Großvater, Vater und Sohn. Der Großvater und der Vater sind zwei Väter, der Vater und der Sohn sind zwei Söhne. Der Mann in der Mitte zählt in beiden Gruppen mit – drei Personen, drei Fische.",
+    "skill": "Stillschweigende Annahmen prüfen",
+    "deep": {
+      "lead": "Niemand hat gesagt, dass Väter und Söhne vier verschiedene Personen sind.",
+      "sections": [
+        {
+          "title": "Rollen sind keine Personen",
+          "text": "Das Rätsel funktioniert, weil wir Aufzählungen automatisch als getrennte Dinge lesen: zwei plus zwei gleich vier. Die Wörter Vater und Sohn bezeichnen aber Rollen, und eine Person kann mehrere Rollen zugleich haben. Mathematisch gesprochen überschneiden sich die beiden Gruppen. Wer die Mitglieder zweier Gruppen zusammenzählt, muss abziehen, was in beiden vorkommt. Dieselbe Rechnung braucht man bei jeder Umfrage: Wenn 60 Prozent Kaffee mögen und 50 Prozent Tee, sind das zusammen nicht 110 Prozent, sondern es gibt mindestens 10 Prozent, die beides mögen."
+        },
+        {
+          "title": "Doppelt gezählt im Alltag",
+          "text": "Der Fehler, Überschneidungen zu übersehen, hat reale Folgen. Ein Verein zählt 200 Mitglieder in der Fußballabteilung und 150 beim Tennis und meldet 350 Mitglieder, obwohl viele in beiden Abteilungen sind. Statistiken über Besucher, Kunden oder Betroffene werden auf dieselbe Weise aufgebläht, wenn Fälle statt Personen gezählt werden. Umgekehrt nutzt das Rätsel eine gute Gewohnheit: bei einem scheinbaren Widerspruch nicht an den Zahlen zu zweifeln, sondern an der eigenen Deutung der Wörter. Fast immer steckt die Lösung in einer Annahme, die man unbemerkt hinzugefügt hat."
+        }
+      ],
+      "tryIt": "In einer Gruppe sind 12 Leute; 8 spielen ein Instrument, 7 treiben Sport. Wie viele tun mindestens beides? (Mindestens 3.)",
+      "takeaways": [
+        "Eine Person kann mehrere Rollen haben.",
+        "Beim Zusammenzählen von Gruppen die Überschneidung abziehen."
+      ]
+    }
+  },
+  {
+    "id": "zehn-stapel-muenzen",
+    "title": "Zehn Stapel, ein falscher",
+    "category": "Logik",
+    "question": "Zehn Stapel mit je zehn Münzen. Echte Münzen wiegen 10 g. In einem Stapel sind alle Münzen gefälscht und wiegen je 11 g. Du hast eine Digitalwaage, die Gramm anzeigt. Wie oft musst du mindestens wiegen, um den falschen Stapel sicher zu finden?",
+    "options": [
+      "4-mal",
+      "1-mal",
+      "10-mal",
+      "2-mal"
+    ],
+    "correctIndex": 1,
+    "explanation": "Nimm vom 1. Stapel eine Münze, vom 2. zwei, vom 3. drei und so weiter bis zehn vom 10. Stapel. Das sind 55 Münzen, die echt 550 g wögen. Zeigt die Waage 550 g plus n, ist Stapel n der falsche.",
+    "skill": "Messungen geschickt codieren",
+    "deep": {
+      "lead": "Gib jedem Stapel eine eigene Menge mit – dann verrät eine einzige Zahl, welcher es ist.",
+      "sections": [
+        {
+          "title": "Die Waage als Anzeige",
+          "text": "Der Unterschied zur Balkenwaage ist entscheidend. Eine Balkenwaage liefert nur drei mögliche Ergebnisse, eine Digitalwaage dagegen eine Zahl, und eine Zahl kann viele Fälle unterscheiden. Man muss die Messung nur so einrichten, dass jeder mögliche Fall ein anderes Ergebnis erzeugt. Genau das leistet die ungleiche Auswahl: Der falsche Stapel trägt so viele Gramm Übergewicht bei, wie Münzen von ihm auf der Waage liegen. Weil jeder Stapel eine andere Anzahl beisteuert, ist das Übergewicht eindeutig. Zeigt die Waage 557 Gramm, ist es der siebte Stapel."
+        },
+        {
+          "title": "Vom Rätsel zur Technik",
+          "text": "Der Gedanke, viele Proben geschickt zu mischen und aus einer einzigen Messung auf den Verursacher zu schließen, wird praktisch genutzt. Beim sogenannten Gruppentesten untersucht ein Labor mehrere Proben gemeinsam und testet nur dann einzeln nach, wenn die Mischung auffällig ist; das spart bei seltenen Befunden viele Tests. Auch Prüfziffern auf Bankverbindungen und Barcodes folgen einer verwandten Idee: Die Stellen gehen mit unterschiedlichen Gewichten in eine Rechnung ein, sodass die meisten Tippfehler auffallen. Im Rätsel wie in der Technik steckt die Kunst darin, die Messung vorher klug zu gestalten."
+        }
+      ],
+      "tryIt": "Variante mit drei Stapeln, von denen beliebig viele falsch sein können: Welche Mengen nimmst du? (1, 2 und 4 Münzen – jede Summe ist eindeutig.)",
+      "takeaways": [
+        "Eine Zahl kann mehr verraten als ein Ja oder Nein.",
+        "Die Messung so anlegen, dass jeder Fall anders aussieht."
+      ]
+    }
+  },
+  {
+    "id": "brueder-und-schwestern",
+    "title": "Brüder und Schwestern",
+    "category": "Zahlen",
+    "question": "Ein Junge sagt: »Ich habe genauso viele Brüder wie Schwestern.« Seine Schwester sagt: »Ich habe doppelt so viele Brüder wie Schwestern.« Wie viele Kinder hat die Familie?",
+    "options": [
+      "7 Kinder",
+      "5 Kinder",
+      "6 Kinder",
+      "9 Kinder"
+    ],
+    "correctIndex": 0,
+    "explanation": "Vier Jungen und drei Mädchen. Der Junge hat 3 Brüder und 3 Schwestern. Seine Schwester hat 4 Brüder und 2 Schwestern, also doppelt so viele Brüder. Wichtig: Niemand zählt sich selbst mit.",
+    "skill": "Perspektiven sauber trennen",
+    "deep": {
+      "lead": "Jedes Kind zählt alle außer sich selbst – deshalb sehen Bruder und Schwester verschiedene Zahlen.",
+      "sections": [
+        {
+          "title": "Vom Satz zur Gleichung",
+          "text": "Nenne die Zahl der Jungen J und die der Mädchen M. Der Junge hat J − 1 Brüder und M Schwestern, also gilt J − 1 = M. Das Mädchen hat J Brüder und M − 1 Schwestern, also J = 2 mal (M − 1). Setzt man die erste Aussage in die zweite ein, ergibt sich M + 1 = 2M − 2 und damit M = 3 und J = 4. Der typische Fehler ist, das Minus eins zu vergessen. Dann lauten die Gleichungen J = M und J = 2M, und die einzige Lösung wäre eine Familie ohne Kinder."
+        },
+        {
+          "title": "Wer zählt, gehört nicht dazu",
+          "text": "Dass der Zählende sich selbst auslässt, erzeugt auch außerhalb von Rätseln schiefe Bilder. Ein bekanntes Beispiel ist das Freundschaftsparadoxon, das der Soziologe Scott Feld beschrieben hat: Im Durchschnitt haben deine Freunde mehr Freunde als du. Das liegt nicht an dir. Menschen mit sehr vielen Freunden tauchen in entsprechend vielen Freundeslisten auf und heben dort den Schnitt. Ähnlich erlebt die Mehrheit der Studierenden überfüllte Kurse, auch wenn die durchschnittliche Kursgröße klein ist, weil in vollen Kursen eben viele sitzen. Die Sicht von innen und die Zählung von außen ergeben verschiedene Zahlen."
+        }
+      ],
+      "tryIt": "Variante: Ein Mädchen hat gleich viele Brüder wie Schwestern, ihr Bruder hat doppelt so viele Schwestern wie Brüder. Wie viele Kinder? (4 Mädchen, 3 Jungen.)",
+      "takeaways": [
+        "Niemand zählt sich selbst als Bruder oder Schwester.",
+        "Sicht von innen und Zählung von außen unterscheiden sich."
+      ]
+    }
+  },
+  {
+    "id": "mindestens-eine-sechs",
+    "title": "Mindestens eine Sechs",
+    "category": "Wahrscheinlichkeit",
+    "question": "Du wirfst zwei faire Würfel gleichzeitig. Wie groß ist die Wahrscheinlichkeit, dass mindestens einer von ihnen eine Sechs zeigt?",
+    "options": [
+      "1/3",
+      "1/6",
+      "11/36",
+      "1/2"
+    ],
+    "correctIndex": 2,
+    "explanation": "Rechne über das Gegenteil: Kein Würfel zeigt eine Sechs mit 5/6 × 5/6 = 25/36. Mindestens eine Sechs hat also 1 − 25/36 = 11/36, etwa 31 %. Einfach 1/6 + 1/6 zu rechnen zählt den Doppelsechser zweimal.",
+    "skill": "Über das Gegenereignis rechnen",
+    "deep": {
+      "lead": "Bei »mindestens einmal« ist der Umweg über »kein einziges Mal« fast immer der kürzeste.",
+      "sections": [
+        {
+          "title": "Warum Addieren nicht geht",
+          "text": "Die Rechnung ein Sechstel plus ein Sechstel wirkt zunächst vernünftig. Dass sie nicht stimmen kann, zeigt eine Übertreibung: Mit sechs Würfeln käme man auf sechs Sechstel, also Gewissheit, und mit sieben Würfeln auf mehr als hundert Prozent. Tatsächlich überschneiden sich die Ereignisse, denn beide Würfel können gleichzeitig eine Sechs zeigen, und dieser Fall wird beim Addieren doppelt gezählt. Von den 36 möglichen Kombinationen enthalten elf mindestens eine Sechs: fünf mit der Sechs nur auf dem ersten Würfel, fünf nur auf dem zweiten und eine mit beiden."
+        },
+        {
+          "title": "Ein Spieler fragt Pascal",
+          "text": "Genau solche Fragen standen am Anfang der Wahrscheinlichkeitsrechnung. Im 17. Jahrhundert wunderte sich der französische Spieler Chevalier de Méré, warum eine seiner Wetten Geld brachte und eine scheinbar gleichwertige nicht. Bei vier Würfen eines Würfels auf mindestens eine Sechs zu setzen lohnt sich knapp, die Chance liegt bei rund 52 %. Bei 24 Würfen zweier Würfel auf mindestens eine Doppelsechs zu setzen lohnt sich knapp nicht, die Chance beträgt nur etwa 49 %. Er wandte sich an Blaise Pascal, und dessen Briefwechsel mit Pierre de Fermat gilt als Geburtsstunde des Fachs."
+        }
+      ],
+      "tryIt": "Rechne über das Gegenteil: Wie wahrscheinlich ist bei drei Münzwürfen mindestens einmal Kopf? (1 − 1/8 = 7/8.)",
+      "takeaways": [
+        "»Mindestens einmal« = 1 minus »keinmal«.",
+        "Einfaches Addieren zählt Überschneidungen doppelt."
+      ]
+    }
+  }
+]
