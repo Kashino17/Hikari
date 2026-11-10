@@ -1,5 +1,15 @@
 package com.hikari.app.ui.library
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,7 +30,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -233,8 +242,8 @@ private fun SeriesDetailContent(
     val resumeSeason = resumeVideo?.season ?: seasons.firstOrNull() ?: 1
 
     // Die Seite öffnet in der Staffel, in der man stehen geblieben ist — nicht
-    // stur in Staffel 1. Ändert sich das Ziel (man hat weitergeschaut), zieht
-    // die Auswahl mit.
+    // stur in Staffel 1 — aber am Anfang der Seite: wohin es geht, entscheidet
+    // man selbst. Die Folge, bei der es weitergeht, ist nur markiert.
     var selectedSeason by remember(seasons, resumeVideo?.id) { mutableStateOf(resumeSeason) }
 
     val episodesForSeason = remember(data.videos, selectedSeason, seasons) {
@@ -249,20 +258,7 @@ private fun SeriesDetailContent(
     val allLocal = episodesForSeason.isNotEmpty() &&
         episodesForSeason.all { localIds.contains(it.id) }
 
-    val listState = rememberLazyListState()
-    val hasDescription = !data.description.isNullOrBlank()
-    // Beim Öffnen so weit scrollen, dass die Folge, bei der es weitergeht, im
-    // Blick ist. Die ersten Folgen einer Staffel liegen ohnehin direkt unter dem Kopf.
-    LaunchedEffect(resumeVideo?.id) {
-        val index = episodesForSeason.indexOfFirst { it.id == resumeVideo?.id }
-        if (selectedSeason == resumeSeason && index >= 3) {
-            // Einträge vor den Folgen: Kopf, (Beschreibung), Abstand, (Fehlerhinweis), Staffelzeile.
-            val before = 3 + (if (hasDescription) 1 else 0) + (if (downloadError != null) 1 else 0)
-            listState.scrollToItem(before + index - 1)
-        }
-    }
-
-    LazyColumn(modifier = Modifier.fillMaxSize(), state = listState) {
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
             HeroSection(
                 data = data,
@@ -320,12 +316,23 @@ private fun SeriesDetailContent(
                     .padding(start = 20.dp, end = 14.dp, top = 4.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = if (seasons.size >= 2) "Staffel $selectedSeason" else "Folgen",
-                    color = HikariText,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                )
+                AnimatedContent(
+                    targetState = selectedSeason,
+                    transitionSpec = {
+                        // Höhere Staffel kommt von unten, niedrigere von oben.
+                        val up = targetState > initialState
+                        (slideInVertically(tween(220)) { if (up) it / 2 else -it / 2 } + fadeIn(tween(220))) togetherWith
+                            (slideOutVertically(tween(160)) { if (up) -it / 2 else it / 2 } + fadeOut(tween(120)))
+                    },
+                    label = "seasonTitle",
+                ) { season ->
+                    Text(
+                        text = if (seasons.size >= 2) "Staffel $season" else "Folgen",
+                        color = HikariText,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
                 Spacer(Modifier.weight(1f))
                 if (episodesForSeason.isNotEmpty()) {
                     LibrarySeasonDownloadButton(
@@ -342,6 +349,11 @@ private fun SeriesDetailContent(
             val isLocal = localIds.contains(video.id)
             val progress = downloadProgress[video.id]
             EpisodeRow(
+                modifier = Modifier.animateItem(
+                    fadeInSpec = tween(260),
+                    fadeOutSpec = tween(140),
+                    placementSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                ),
                 video = video,
                 isNext = video.id == resumeVideo?.id,
                 canPlay = video.downloaded != 0 || isLocal,
@@ -372,7 +384,7 @@ private fun HeroSection(
 ) {
     Box(modifier = Modifier.fillMaxWidth().aspectRatio(16f / 10f)) {
         // Titel steht im Hero bereits groß unten — hier nur das Artwork.
-        CoverArtwork(title = data.title, coverUrl = data.thumbnail_url, showTitleFallback = false)
+        CoverArtwork(title = data.title, coverUrl = data.backdrop_url ?: data.thumbnail_url, showTitleFallback = false)
         // Top scrim
         Box(
             modifier = Modifier
@@ -531,17 +543,23 @@ private fun SeasonChips(
     ) {
         items(seasons, key = { it }) { season ->
             val active = season == selected
+            val fill by animateColorAsState(
+                if (active) Color.White else Color.White.copy(alpha = 0.08f),
+                tween(220),
+                label = "seasonChip",
+            )
+            val textColor by animateColorAsState(if (active) Color.Black else HikariText, tween(220), label = "seasonChipText")
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
-                    .background(if (active) Color.White else Color.White.copy(alpha = 0.08f))
+                    .background(fill)
                     .clickable { onChange(season) }
                     .padding(horizontal = 16.dp, vertical = 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     "Staffel $season",
-                    color = if (active) Color.Black else HikariText,
+                    color = textColor,
                     fontSize = 14.sp,
                     fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
                 )
@@ -566,9 +584,10 @@ private fun EpisodeRow(
     downloadProgress: Float?,
     onDownloadClick: () -> Unit,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 2.dp)
             .clip(RoundedCornerShape(14.dp))

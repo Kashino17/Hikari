@@ -18,6 +18,8 @@ import com.hikari.app.domain.repo.PlaybackRepository
 import com.hikari.app.player.MusicPlayerController
 import com.hikari.app.data.api.dto.LibraryVideoDto
 import com.hikari.app.data.api.dto.isFilm
+import com.hikari.app.ui.library.components.TopTenCharts
+import com.hikari.app.ui.library.components.TopTenItem
 import com.hikari.app.data.db.LocalDownloadKind
 import com.hikari.app.domain.download.LocalDownloadManager
 import com.hikari.app.domain.download.LocalDownloadMetadata
@@ -91,6 +93,9 @@ class LibraryViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<LibraryUiState>(LibraryUiState.Loading)
     val uiState: StateFlow<LibraryUiState> = _uiState.asStateFlow()
 
+    private val _topCharts = MutableStateFlow(TopTenCharts())
+    val topCharts: StateFlow<TopTenCharts> = _topCharts.asStateFlow()
+
     private val _seriesState = MutableStateFlow<SeriesUiState>(SeriesUiState.Loading)
     val seriesState: StateFlow<SeriesUiState> = _seriesState.asStateFlow()
 
@@ -157,6 +162,7 @@ class LibraryViewModel @Inject constructor(
                 repo.getLibrary()
             }.onSuccess {
                 _uiState.value = LibraryUiState.Success(it)
+                updateTopCharts(it)
             }.onFailure {
                 // Netz da, aber Backend antwortet nicht → trotzdem Offline-Modus
                 // statt technischem Fehlertext.
@@ -192,6 +198,88 @@ class LibraryViewModel @Inject constructor(
     }
 
     /**
+     * Berechnet die TOP 10 Serien und TOP 10 Filme der letzten 30 Tage
+     * basierend auf realen Wiedergabepositionen und Historie.
+     * Füllt bei weniger als 10 Einträgen automatisch mit den höchstbewerteten Titeln auf.
+     */
+    private fun updateTopCharts(data: LibraryResponse) {
+        viewModelScope.launch {
+            val thirtyDaysAgo = System.currentTimeMillis() - 30L * 24 * 3600 * 1000L
+            val recentPositions = runCatching { playbackRepo.getRecentPositions(thirtyDaysAgo) }.getOrDefault(emptyList())
+            val recentWatchedVideoIds = recentPositions.map { it.videoId }.toSet()
+
+            // ── TOP 10 SERIEN (Letzte 30 Tage) ──────────────────────────────
+            val watchedSeriesCount = mutableMapOf<String, Int>()
+            data.recentlyAdded.forEach { v ->
+                val sId = v.series_id
+                if (sId != null && v.id in recentWatchedVideoIds) {
+                    watchedSeriesCount[sId] = (watchedSeriesCount[sId] ?: 0) + 1
+                }
+            }
+
+            val seriesById = data.series.associateBy { it.id }
+            val rankedWatchedSeries = watchedSeriesCount.entries
+                .sortedByDescending { it.value }
+                .mapNotNull { seriesById[it.key] }
+
+            val remainingSeries = data.series
+                .filter { it !in rankedWatchedSeries }
+                .sortedByDescending { it.added_at }
+
+            val finalTopSeries = (rankedWatchedSeries + remainingSeries)
+                .take(10)
+                .mapIndexed { idx, s ->
+                    TopTenItem(
+                        rank = idx + 1,
+                        id = s.id,
+                        title = s.title,
+                        subtitle = s.description ?: "Serie",
+                        thumbnailUrl = s.thumbnail_url,
+                        posterUrl = s.poster_url,
+                        isSeries = true,
+                        seriesId = s.id,
+                    )
+                }
+
+            // ── TOP 10 FILME (Letzte 30 Tage) ───────────────────────────────
+            val allMovies = data.recentlyAdded.filter { it.isFilm() }
+            val watchedMovies = allMovies
+                .filter { it.id in recentWatchedVideoIds }
+                .sortedByDescending { it.progress_seconds ?: 0f }
+
+            val unwatchedMovies = allMovies
+                .filter { it !in watchedMovies }
+                .sortedWith(compareByDescending<LibraryVideoDto> { it.overall_score ?: 0 }.thenByDescending { it.duration_seconds })
+
+            val finalTopMovies = (watchedMovies + unwatchedMovies)
+                .take(10)
+                .mapIndexed { idx, v ->
+                    val min = v.duration_seconds / 60
+                    val durStr = if (min >= 60) "${min / 60}h ${min % 60}m" else "${min}m"
+                    TopTenItem(
+                        rank = idx + 1,
+                        id = v.id,
+                        title = v.title,
+                        subtitle = "$durStr · ${v.channelTitle ?: "Film"}",
+                        thumbnailUrl = v.thumbnail_url,
+                        posterUrl = v.poster_url,
+                        isSeries = false,
+                        channelTitle = v.channelTitle ?: "",
+                        durationSeconds = v.duration_seconds,
+                        matchScore = v.overall_score,
+                        isMovie = true,
+                        progressSeconds = v.progress_seconds,
+                    )
+                }
+
+            _topCharts.value = TopTenCharts(
+                topSeries = finalTopSeries,
+                topMovies = finalTopMovies,
+            )
+        }
+    }
+
+    /**
      * Verlauf kommt mit der Bibliothek (LibraryResponse.watchHistory). Sofort
      * lokal entfernen, damit die Karte ohne Neuladen verschwindet; scheitert
      * der Server-Call, zeigt das nächste Laden den echten Stand.
@@ -213,7 +301,10 @@ class LibraryViewModel @Inject constructor(
 
     fun loadSeries(id: String) {
         viewModelScope.launch {
-            _seriesState.value = SeriesUiState.Loading
+            // Dieselbe Serie wird nur aufgefrischt (Rückkehr aus dem Player):
+            // den bisherigen Stand stehen lassen, statt kurz den Ladekreis zu zeigen.
+            val shown = (_seriesState.value as? SeriesUiState.Success)?.data?.id
+            if (shown != id) _seriesState.value = SeriesUiState.Loading
             if (connectivity.currentlyOnline()) {
                 // Gleiches Prinzip wie in der Bibliothek: erst lokalen
                 // Fortschritt sichern, dann die Server-Folgenliste holen.

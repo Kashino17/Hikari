@@ -22,4 +22,6 @@ data class LocalMusicDownloadEntity(
     @ColumnInfo(name = "uploader") val uploader: String = "",
     @ColumnInfo(name = "thumbnail_url") val thumbnailUrl: String = "",
     @ColumnInfo(name = "duration_seconds") val durationSeconds: Int = 0,
+    /** MANUAL (selbst geladen) oder SMART (von den Smart-Downloads geholt) — wie bei den Videos. */
+    @ColumnInfo(name = "source", defaultValue = "MANUAL") val source: String = LocalDownloadSource.MANUAL.name,
 )

@@ -40,6 +40,42 @@ object SponsorSkipListener {
         }
     }
 
+    /**
+     * Fasst automatisch zu überspringende Abschnitte zusammen, zwischen denen
+     * nur eine kurze Lücke liegt. Die Community markiert eine Werbepassage oft
+     * in zwei, drei Stücken — ohne das Zusammenfassen springt der Player nur
+     * ein Stück, zeigt ein paar Sekunden Werbung und springt wieder.
+     *
+     * Über eine Kapitelgrenze hinweg wird nie zusammengefasst: dort beginnt
+     * erkennbar etwas Neues. Sind keine Kapitel bekannt, gilt eine kleinere Lücke.
+     */
+    fun mergeAutoSegments(
+        segments: List<SponsorSegment>,
+        behaviors: Map<String, SegmentBehavior>,
+        chapterStartsMs: List<Long> = emptyList(),
+    ): List<SponsorSegment> {
+        val maxGap = if (chapterStartsMs.isEmpty()) GAP_WITHOUT_CHAPTERS_S else GAP_WITHIN_CHAPTER_S
+        fun isAuto(s: SponsorSegment) = behaviors[s.category] == SegmentBehavior.SKIP_AUTO
+        val out = mutableListOf<SponsorSegment>()
+        for (next in segments.sortedBy { it.startSeconds }) {
+            val last = out.lastOrNull()
+            val gap = if (last != null) next.startSeconds - last.endSeconds else Double.MAX_VALUE
+            val crossesChapter = last != null && chapterStartsMs.any { start ->
+                val t = start / 1000.0
+                t > last.endSeconds && t <= next.startSeconds
+            }
+            if (last != null && isAuto(last) && isAuto(next) && gap <= maxGap && !crossesChapter) {
+                out[out.lastIndex] = last.copy(endSeconds = maxOf(last.endSeconds, next.endSeconds))
+            } else {
+                out += next
+            }
+        }
+        return out
+    }
+
+    private const val GAP_WITHIN_CHAPTER_S = 30.0
+    private const val GAP_WITHOUT_CHAPTERS_S = 20.0
+
     /** Legacy helper kept for backward compat while migrating callers. */
     @Deprecated("Use evaluate with behaviors map", ReplaceWith("evaluate(...)"))
     fun skipTargetMs(currentMs: Long, segments: List<SponsorSegment>): Long? =

@@ -81,6 +81,7 @@ import com.hikari.app.data.sponsor.SegmentCategories
 import com.hikari.app.data.sponsor.SegmentCategory
 import com.hikari.app.domain.download.DownloadRetentionPolicy
 import com.hikari.app.domain.download.RETENTION_DAY_CHOICES
+import com.hikari.app.domain.download.SMART_BUDGET_GB_CHOICES
 import com.hikari.app.domain.download.retentionLabel
 import com.hikari.app.domain.update.UpdateState
 import com.hikari.app.ui.profile.formatBytes
@@ -299,7 +300,8 @@ private fun PlaybackPage(vm: SettingsViewModel) {
     }
 
     Text(
-        "Abschnitte in YouTube-Videos, die die Community markiert hat. " +
+        "Gilt nur für YouTube-Videos: Abschnitte, die die Community dort markiert hat. " +
+            "Für Serien und Filme gibt es keine solche Erkennung. " +
             "Auto überspringt sofort, Knopf blendet »Überspringen« ein, Aus lässt alles laufen.",
         color = HikariTextMuted,
         fontSize = 13.sp,
@@ -323,6 +325,7 @@ private fun PlaybackPage(vm: SettingsViewModel) {
 
     Text(
         "Markierte Abschnitte erscheinen in ihrer Farbe auf der Fortschrittsleiste. " +
+            "Liegen mehrere Stücke derselben Werbepassage dicht beieinander, werden sie in einem Sprung übersprungen. " +
             "Nach einem automatischen Sprung lässt er sich im Player rückgängig machen.",
         color = HikariTextFaint,
         fontSize = 12.sp,
@@ -390,6 +393,11 @@ private fun DownloadsPage(vm: SettingsViewModel) {
     val smartDays by vm.smartRetentionDays.collectAsState(initial = 30)
     val device by vm.deviceDownloads.collectAsState()
     val server by vm.server.collectAsState()
+    val smartSeries by vm.smartSeries.collectAsState(initial = true)
+    val smartMusic by vm.smartMusic.collectAsState(initial = true)
+    val smartYoutube by vm.smartYoutube.collectAsState(initial = false)
+    val smartBudgetGb by vm.smartBudgetGb.collectAsState(initial = 10)
+    val smartSongBytes by vm.smartSongBytes.collectAsState()
 
     Hero(DownloadsColor) {
         HeroLabel("Videos auf diesem Gerät")
@@ -425,28 +433,77 @@ private fun DownloadsPage(vm: SettingsViewModel) {
             icon = Icons.Outlined.Bolt,
             color = SmartColor,
             title = "Smart-Downloads",
-            description = "Hält die nächsten Folgen deiner laufenden Serien und deine Lieblingssongs bereit — nur im WLAN.",
-            trailing = {
-                Switch(
-                    checked = smart,
-                    onCheckedChange = vm::setSmartDownloads,
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = HikariBg,
-                        checkedTrackColor = SmartColor,
-                        checkedBorderColor = SmartColor,
-                        uncheckedThumbColor = HikariTextMuted,
-                        uncheckedTrackColor = HikariSurface,
-                        uncheckedBorderColor = HikariBorderStrong,
-                    ),
+            description = "Halten im WLAN bereit, was du als Nächstes brauchst.",
+            trailing = { SettingSwitch(checked = smart, color = SmartColor, onChange = vm::setSmartDownloads) },
+        )
+        if (smart) {
+            // Je Art getrennt schaltbar.
+            SmartCategoryRow(
+                title = "Serien & Filme",
+                description = "Die nächsten Folgen laufender Serien, angefangene Filme",
+                checked = smartSeries,
+                onChange = vm::setSmartSeries,
+            )
+            SmartCategoryRow(
+                title = "Musik",
+                description = "Deine Lieblingssongs",
+                checked = smartMusic,
+                onChange = vm::setSmartMusic,
+            )
+            SmartCategoryRow(
+                title = "YouTube",
+                description = "Das neueste Video jedes abonnierten Kanals",
+                checked = smartYoutube,
+                onChange = vm::setSmartYoutube,
+            )
+
+            Spacer(Modifier.height(4.dp))
+            // Budget: wie viel Speicher Smart-Downloads zusammen belegen dürfen.
+            val smartUsed = device.smartBytes + smartSongBytes
+            val budgetBytes = smartBudgetGb * 1024L * 1024 * 1024
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Speicher", color = HikariTextMuted, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                Text(
+                    "${formatBytes(smartUsed)} von $smartBudgetGb GB belegt",
+                    color = if (smartUsed >= budgetBytes) HikariAmber else HikariTextMuted,
+                    fontSize = 12.sp,
                 )
-            },
-        )
-        RetentionPicker(
-            selectedDays = smartDays,
-            color = SmartColor,
-            entities = device.smart,
-            onPick = vm::setSmartRetentionDays,
-        )
+            }
+            ChoiceBar(
+                choices = SMART_BUDGET_GB_CHOICES,
+                selected = smartBudgetGb,
+                label = { "$it GB" },
+                color = SmartColor,
+                onPick = vm::setSmartBudgetGb,
+            )
+            ProgressLine((smartUsed.toFloat() / budgetBytes).coerceIn(0f, 1f), SmartColor)
+            Text(
+                "Ist das Budget voll, weichen zuerst Smart-Downloads, die du nicht mehr brauchst — etwa geschaute Folgen.",
+                color = HikariTextFaint,
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+            )
+
+            Spacer(Modifier.height(4.dp))
+            RetentionPicker(
+                selectedDays = smartDays,
+                color = SmartColor,
+                entities = device.smart,
+                onPick = vm::setSmartRetentionDays,
+            )
+            if (smartUsed > 0) {
+                Text(
+                    "Alle Smart-Downloads vom Gerät löschen",
+                    color = HikariDanger,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .clickable(onClick = vm::clearSmartDownloads)
+                        .padding(vertical = 8.dp),
+                )
+            }
+        }
     }
 
     (server as? ServerStatus.Connected)?.disk?.let { disk ->
@@ -475,30 +532,13 @@ private fun RetentionPicker(
     onPick: (Int) -> Unit,
 ) {
     Text("Behalten", color = HikariTextMuted, fontSize = 12.sp)
-    Row(
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(HikariBg).padding(2.dp),
-    ) {
-        RETENTION_DAY_CHOICES.forEach { days ->
-            val active = days == selectedDays
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(34.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(if (active) color else Color.Transparent)
-                    .clickable { onPick(days) },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    if (days == 0) "Immer" else retentionLabel(days),
-                    color = if (active) Color.Black else HikariTextMuted,
-                    fontSize = 12.sp,
-                    fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
-                    maxLines = 1,
-                )
-            }
-        }
-    }
+    ChoiceBar(
+        choices = RETENTION_DAY_CHOICES,
+        selected = selectedDays,
+        label = { if (it == 0) "Immer" else retentionLabel(it) },
+        color = color,
+        onPick = onPick,
+    )
     val now = remember(entities, selectedDays) { System.currentTimeMillis() }
     val expired = entities.count { DownloadRetentionPolicy.isExpired(it.downloadedAt, selectedDays, now) }
     Text(
@@ -511,6 +551,69 @@ private fun RetentionPicker(
         color = if (expired > 0 && selectedDays != 0) HikariAmber else HikariTextFaint,
         fontSize = 12.sp,
         lineHeight = 16.sp,
+    )
+}
+
+/** Eine Zeile Auswahlmöglichkeiten; die gewählte ist in der Bereichsfarbe gefüllt. */
+@Composable
+private fun ChoiceBar(
+    choices: List<Int>,
+    selected: Int,
+    label: (Int) -> String,
+    color: Color,
+    onPick: (Int) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(HikariBg).padding(2.dp),
+    ) {
+        choices.forEach { choice ->
+            val active = choice == selected
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(34.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (active) color else Color.Transparent)
+                    .clickable { onPick(choice) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    label(choice),
+                    color = if (active) Color.Black else HikariTextMuted,
+                    fontSize = 12.sp,
+                    fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SmartCategoryRow(title: String, description: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, color = HikariText, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            Text(description, color = HikariTextMuted, fontSize = 12.sp, lineHeight = 16.sp)
+        }
+        Spacer(Modifier.width(8.dp))
+        SettingSwitch(checked = checked, color = SmartColor, onChange = onChange)
+    }
+}
+
+@Composable
+private fun SettingSwitch(checked: Boolean, color: Color, onChange: (Boolean) -> Unit) {
+    Switch(
+        checked = checked,
+        onCheckedChange = onChange,
+        colors = SwitchDefaults.colors(
+            checkedThumbColor = HikariBg,
+            checkedTrackColor = color,
+            checkedBorderColor = color,
+            uncheckedThumbColor = HikariTextMuted,
+            uncheckedTrackColor = HikariSurface,
+            uncheckedBorderColor = HikariBorderStrong,
+        ),
     )
 }
 

@@ -13,6 +13,9 @@ data class SeriesDto(
     val episode_count: Int = 0,
     val season_count: Int = 0,
     val last_watched_at: Long? = null,
+    /** Echtes Plakat (hochkant) und Hintergrundbild (quer), falls der Server eines gefunden hat. */
+    val poster_url: String? = null,
+    val backdrop_url: String? = null,
 )
 
 @Serializable
@@ -42,6 +45,8 @@ data class LibraryVideoDto(
      */
     val downloaded: Int = 1,
     val is_movie: Int = 0,
+    /** Echtes Filmplakat, falls der Server eines gefunden hat. */
+    val poster_url: String? = null,
 )
 
 /**
@@ -51,6 +56,9 @@ data class LibraryVideoDto(
  */
 fun LibraryVideoDto.isFilm(): Boolean =
     series_id == null && (is_movie == 1 || channel_id == "manual")
+
+/** Gehört zum Archiv (Serienfolge oder Film) — im Gegensatz zu einem YouTube-Video. */
+fun LibraryVideoDto.isArchive(): Boolean = series_id != null || isFilm()
 
 
 @Serializable
@@ -78,7 +86,9 @@ data class SeriesDetailResponse(
     val description: String? = null,
     val thumbnail_url: String? = null,
     val added_at: Long,
-    val videos: List<LibraryVideoDto>
+    val videos: List<LibraryVideoDto>,
+    val poster_url: String? = null,
+    val backdrop_url: String? = null,
 )
 
 @Serializable

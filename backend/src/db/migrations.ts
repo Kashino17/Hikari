@@ -123,6 +123,12 @@ export function applyMigrations(db: Database.Database): void {
   addColumnIfMissing(db, "videos", "format", "TEXT"); // 'short' | 'long'
   addColumnIfMissing(db, "videos", "source", "TEXT"); // 'subscription' | 'probe' | 'topic' | 'backfill'
   addColumnIfMissing(db, "videos", "summary", "TEXT"); // KI-Kurzbeschreibung fuer Feed-Karten
+  // Echte Plakate (library/artwork.ts): hochkant fürs Regal, quer für den Kopf.
+  addColumnIfMissing(db, "videos", "poster_url", "TEXT");
+  addColumnIfMissing(db, "videos", "artwork_checked_at", "INTEGER");
+  addColumnIfMissing(db, "series", "poster_url", "TEXT");
+  addColumnIfMissing(db, "series", "backdrop_url", "TEXT");
+  addColumnIfMissing(db, "series", "artwork_checked_at", "INTEGER");
   // Backfill: Bestandsvideos nach Heuristik klassifizieren (Hochkant + <=3 min = Short).
   db.exec(`UPDATE videos SET format = CASE
     WHEN aspect_ratio = '9:16' AND duration_seconds <= 180 THEN 'short' ELSE 'long' END

@@ -19,6 +19,10 @@ private val BACKEND_URL_KEY = stringPreferencesKey("backend_url")
 private val SMART_DOWNLOADS_KEY = booleanPreferencesKey("smart_downloads")
 private val MANUAL_RETENTION_DAYS_KEY = intPreferencesKey("manual_download_retention_days")
 private val SMART_RETENTION_DAYS_KEY = intPreferencesKey("smart_download_retention_days")
+private val SMART_SERIES_KEY = booleanPreferencesKey("smart_downloads_series")
+private val SMART_MUSIC_KEY = booleanPreferencesKey("smart_downloads_music")
+private val SMART_YOUTUBE_KEY = booleanPreferencesKey("smart_downloads_youtube")
+private val SMART_BUDGET_GB_KEY = intPreferencesKey("smart_downloads_budget_gb")
 private val DOWNLOADS_LIMIT_BYTES_KEY = longPreferencesKey("downloads_limit_bytes")
 private val AUTH_TOKEN_KEY = stringPreferencesKey("auth_token")
 private val INSTRUMENTAL_ONLY_KEY = booleanPreferencesKey("music_instrumental_only")
@@ -37,6 +41,8 @@ const val DEFAULT_BACKEND_URL = "http://macbook-pro.taile64a95.ts.net:3939"
 const val DEFAULT_MANUAL_RETENTION_DAYS = 0
 /** Smart-Downloads räumen sich nach einem Monat selbst weg. */
 const val DEFAULT_SMART_RETENTION_DAYS = 30
+/** So viel Speicher dürfen Smart-Downloads insgesamt belegen. */
+const val DEFAULT_SMART_BUDGET_GB = 10
 const val DEFAULT_NEWS_TIME_MINUTES = 450 // 7:30 Uhr
 const val DEFAULT_NEWS_TOPICS = "politik,technologie,wissen"
 const val DEFAULT_RUSSIAN_PODCAST_REMINDER_MINUTES = 1080
@@ -62,6 +68,15 @@ class SettingsStore @Inject constructor(
     val smartDownloadRetentionDays: Flow<Int> = ctx.dataStore.data.map {
         it[SMART_RETENTION_DAYS_KEY] ?: DEFAULT_SMART_RETENTION_DAYS
     }
+
+    // Smart-Downloads je Art getrennt schaltbar. Serien/Filme und Musik liefen
+    // schon bisher mit, YouTube ist neu und deshalb zunächst aus.
+    val smartSeries: Flow<Boolean> = ctx.dataStore.data.map { it[SMART_SERIES_KEY] ?: true }
+    val smartMusic: Flow<Boolean> = ctx.dataStore.data.map { it[SMART_MUSIC_KEY] ?: true }
+    val smartYoutube: Flow<Boolean> = ctx.dataStore.data.map { it[SMART_YOUTUBE_KEY] ?: false }
+
+    /** Speicherbudget der Smart-Downloads in GB. */
+    val smartBudgetGb: Flow<Int> = ctx.dataStore.data.map { it[SMART_BUDGET_GB_KEY] ?: DEFAULT_SMART_BUDGET_GB }
 
     /** Letztes vom Server gemeldetes Storage-Limit. Wird offline weitergeführt. */
     val downloadsLimitBytes: Flow<Long> = ctx.dataStore.data.map {
@@ -174,6 +189,22 @@ class SettingsStore @Inject constructor(
 
     suspend fun setManualDownloadRetentionDays(days: Int) {
         ctx.dataStore.edit { it[MANUAL_RETENTION_DAYS_KEY] = days.coerceAtLeast(0) }
+    }
+
+    suspend fun setSmartSeries(enabled: Boolean) {
+        ctx.dataStore.edit { it[SMART_SERIES_KEY] = enabled }
+    }
+
+    suspend fun setSmartMusic(enabled: Boolean) {
+        ctx.dataStore.edit { it[SMART_MUSIC_KEY] = enabled }
+    }
+
+    suspend fun setSmartYoutube(enabled: Boolean) {
+        ctx.dataStore.edit { it[SMART_YOUTUBE_KEY] = enabled }
+    }
+
+    suspend fun setSmartBudgetGb(gb: Int) {
+        ctx.dataStore.edit { it[SMART_BUDGET_GB_KEY] = gb.coerceAtLeast(1) }
     }
 
     suspend fun setSmartDownloadRetentionDays(days: Int) {

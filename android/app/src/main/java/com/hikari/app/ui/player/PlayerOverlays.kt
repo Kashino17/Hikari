@@ -254,6 +254,60 @@ private fun <T : Any> rememberLast(value: T?): T? {
     return holder[0] as T?
 }
 
+// ── Kapitel ──────────────────────────────────────────────────────────────────
+
+/**
+ * Die Gliederung des Videos: Startzeit und Titel je Kapitel. Das laufende
+ * Kapitel ist hervorgehoben, ein Tipp springt an den Kapitelanfang.
+ */
+@Composable
+fun ChapterList(
+    chapters: List<VideoChapter>,
+    positionMs: Long,
+    onPick: (VideoChapter) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val current = chapterAt(chapters, positionMs)
+    val listState = rememberLazyListState()
+    // Beim Öffnen das laufende Kapitel in den Blick holen.
+    LaunchedEffect(chapters) {
+        val index = chapters.indexOf(current)
+        if (index > 1) listState.scrollToItem(index - 1)
+    }
+    LazyColumn(state = listState, modifier = modifier) {
+        items(chapters, key = { it.startMs }) { chapter ->
+            val active = chapter == current
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp, vertical = 1.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(if (active) Color.White.copy(alpha = 0.10f) else Color.Transparent)
+                    .clickable { onPick(chapter) }
+                    .padding(horizontal = 10.dp, vertical = 11.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    formatClock(chapter.startMs),
+                    color = if (active) HikariAmber else Color.White.copy(alpha = 0.55f),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.width(58.dp),
+                )
+                Text(
+                    chapter.title,
+                    color = if (active) Color.White else Color.White.copy(alpha = 0.85f),
+                    fontSize = 14.sp,
+                    fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
+}
+
 // ── Bildschirmsperre ─────────────────────────────────────────────────────────
 
 /**

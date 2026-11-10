@@ -20,7 +20,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         MusicPlayEventEntity::class,
         WhatsAppMessageEntity::class,
     ],
-    version = 23,
+    version = 24,
     exportSchema = false,
 )
 abstract class HikariDatabase : RoomDatabase() {
@@ -274,5 +274,12 @@ val MIGRATION_21_22 = object : Migration(21, 22) {
 val MIGRATION_22_23 = object : Migration(22, 23) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE local_downloads ADD COLUMN source TEXT NOT NULL DEFAULT 'MANUAL'")
+    }
+}
+
+/** Auch Songs merken sich, ob sie selbst geladen oder von den Smart-Downloads geholt wurden. */
+val MIGRATION_23_24 = object : Migration(23, 24) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE local_music_downloads ADD COLUMN source TEXT NOT NULL DEFAULT 'MANUAL'")
     }
 }

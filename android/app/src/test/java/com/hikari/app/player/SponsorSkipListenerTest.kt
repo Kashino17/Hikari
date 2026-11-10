@@ -52,4 +52,33 @@ class SponsorSkipListenerTest {
         assertTrue(d is SponsorSkipListener.Decision.Auto)
         assertEquals(25_000L, (d as SponsorSkipListener.Decision.Auto).targetMs)
     }
+
+    // ── Abschnitte zusammenfassen ────────────────────────────────────────────
+
+    @Test fun nearby_auto_segments_become_one_jump() {
+        // So markiert die Community oft eine Werbepassage: zwei Stücke, 15 s Lücke.
+        val segs = listOf(SponsorSegment(71.9, 83.0, "sponsor"), SponsorSegment(97.9, 114.8, "sponsor"))
+        val merged = SponsorSkipListener.mergeAutoSegments(segs, allAuto, chapterStartsMs = listOf(0L, 71_000L, 130_000L))
+        assertEquals(listOf(SponsorSegment(71.9, 114.8, "sponsor")), merged)
+    }
+
+    @Test fun segments_are_not_merged_across_a_chapter_start() {
+        val segs = listOf(SponsorSegment(10.0, 20.0, "sponsor"), SponsorSegment(30.0, 40.0, "sponsor"))
+        val merged = SponsorSkipListener.mergeAutoSegments(segs, allAuto, chapterStartsMs = listOf(0L, 25_000L))
+        assertEquals(segs, merged)
+    }
+
+    @Test fun distant_segments_stay_separate() {
+        val segs = listOf(SponsorSegment(10.0, 20.0, "sponsor"), SponsorSegment(80.0, 90.0, "sponsor"))
+        assertEquals(segs, SponsorSkipListener.mergeAutoSegments(segs, allAuto))
+    }
+
+    @Test fun only_automatic_segments_are_merged() {
+        val segs = listOf(SponsorSegment(10.0, 20.0, "sponsor"), SponsorSegment(25.0, 40.0, "intro"))
+        assertEquals(segs, SponsorSkipListener.mergeAutoSegments(segs, introManual))
+        assertEquals(
+            listOf(SponsorSegment(10.0, 40.0, "sponsor")),
+            SponsorSkipListener.mergeAutoSegments(segs, allAuto),
+        )
+    }
 }

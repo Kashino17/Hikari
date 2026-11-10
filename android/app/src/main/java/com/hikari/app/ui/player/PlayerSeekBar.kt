@@ -116,7 +116,8 @@ fun PlayerSeekBar(
             ) {
                 val offsetMs = shownMs - startMs
                 val sign = if (offsetMs < 0) "−" else "+"
-                val bubbleWidth = 132.dp
+                val targetChapter = chapterAt(chapters, shownMs)
+                val bubbleWidth = if (targetChapter != null) 200.dp else 132.dp
                 val x = with(density) { (fraction * trackWidthPx).toDp() } - bubbleWidth / 2
                 val maxX = with(density) { trackWidthPx.toDp() } - bubbleWidth
                 Row(
@@ -140,6 +141,17 @@ fun PlayerSeekBar(
                         color = if (fine) HikariAmber else Color.White.copy(alpha = 0.7f),
                         fontSize = 11.sp,
                     )
+                    if (targetChapter != null) {
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            targetChapter.title,
+                            color = Color.White,
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
             }
         }

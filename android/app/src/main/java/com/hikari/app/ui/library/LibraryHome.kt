@@ -1,10 +1,8 @@
 package com.hikari.app.ui.library
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -16,6 +14,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,6 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Close
@@ -53,6 +53,7 @@ import com.hikari.app.data.api.dto.ChannelDto
 import com.hikari.app.data.api.dto.LibraryResponse
 import com.hikari.app.data.api.dto.LibraryVideoDto
 import com.hikari.app.data.api.dto.SeriesDto
+import com.hikari.app.data.api.dto.isArchive
 import com.hikari.app.data.api.dto.isFilm
 import com.hikari.app.ui.components.FallbackArtwork
 import com.hikari.app.ui.components.ResumeArtwork
@@ -65,102 +66,62 @@ import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 
 /**
- * Die Bibliothek als eine durchgehende Seite, geordnet nach dem, was man hier
- * wirklich tut:
- *  1. weiterschauen (großes Bild der Stelle, an der man war),
- *  2. eine Serie oder einen Film wählen,
- *  3. sehen, was die abonnierten Kanäle Neues haben — je Kanal eine eigene Reihe,
- *  4. im Verlauf etwas wiederfinden.
+ * Der Kanal-Bereich: alles von YouTube an einem Ort, getrennt von Serien und
+ * Filmen. Je abonniertem Kanal eine eigene Reihe mit seinen neuesten Videos,
+ * davor die angefangenen Videos, danach der Verlauf.
  */
 @Composable
-internal fun LibraryHome(
+internal fun ChannelsHome(
     data: LibraryResponse,
-    onOpenSeries: (String) -> Unit,
+    onBack: () -> Unit,
     onOpenChannel: (String) -> Unit,
     onPlay: (LibraryVideoDto) -> Unit,
-    onLongPressSeries: (SeriesDto) -> Unit,
     onShowAll: (title: String, videos: List<LibraryVideoDto>) -> Unit,
     onRemoveHistory: (String) -> Unit,
-    onClearHistory: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val seriesById = remember(data.series) { data.series.associateBy { it.id } }
-    val continueWatching = data.continueWatching
+    val channelShelves = remember(data.channels, data.channelUploads) { channelShelves(data) }
+    val started = remember(data.continueWatching) { data.continueWatching.filterNot { it.isArchive() } }
+    val history = remember(data.watchHistory) { data.watchHistory.filterNot { it.isArchive() } }
 
-    // Je Kanal die neuesten Videos; Kanäle mit dem frischesten Upload zuerst.
-    val channelShelves = remember(data.channels, data.channelUploads) {
-        val byChannel = data.channelUploads.groupBy { it.channel_id }
-        data.channels
-            .filter { it.id != MANUAL_CHANNEL }
-            .mapNotNull { channel ->
-                val videos = byChannel[channel.id].orEmpty().sortedByDescending { it.published_at }
-                if (videos.isEmpty()) null else channel to videos
+    Column(modifier = modifier.fillMaxSize().background(HikariBg)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onBack),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Zurück", tint = HikariText, modifier = Modifier.size(22.dp))
             }
-            .sortedByDescending { (_, videos) -> videos.first().published_at }
-    }
-
-    val films = remember(data.recentlyAdded) { data.recentlyAdded.filter { it.isFilm() } }
-
-    // Oben steht, womit es weitergeht — sonst das Neueste von den Kanälen.
-    val hero = continueWatching.firstOrNull()
-        ?: channelShelves.firstOrNull()?.second?.firstOrNull()
-        ?: data.recentlyAdded.firstOrNull()
-    val moreToContinue = continueWatching.drop(1)
-
-    LazyColumn(modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 110.dp)) {
-        if (hero != null) {
-            item(key = "hero") {
-                Hero(
-                    video = hero,
-                    series = hero.series_id?.let(seriesById::get),
-                    onPlay = { onPlay(hero) },
-                    onOpenSeries = onOpenSeries,
-                )
-            }
+            Spacer(Modifier.width(4.dp))
+            Text("Deine Kanäle", color = HikariText, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
 
-        if (moreToContinue.isNotEmpty()) {
-            item(key = "continue") {
-                ShelfTitle(
-                    "Weiterschauen",
-                    onShowAll = { onShowAll("Weiterschauen", continueWatching) },
-                )
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(moreToContinue, key = { it.id }) { video ->
-                        ContinueCard(
-                            video = video,
-                            series = video.series_id?.let(seriesById::get),
-                            onClick = { onPlay(video) },
-                        )
+        LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 110.dp)) {
+            if (started.isNotEmpty()) {
+                item(key = "started") {
+                    ShelfTitle("Angefangen", onShowAll = { onShowAll("Angefangen", started) })
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(started, key = { "started-${it.id}" }) { video ->
+                            VideoCard(
+                                video = video,
+                                secondLine = listOfNotNull(
+                                    video.channelTitle?.takeIf { it.isNotBlank() },
+                                    "noch ${remainingLabel(video)}",
+                                ).joinToString(" · "),
+                                onClick = { onPlay(video) },
+                            )
+                        }
                     }
+                    Spacer(Modifier.height(14.dp))
                 }
             }
-        }
 
-        if (data.series.isNotEmpty() || films.isNotEmpty()) {
-            item(key = "archive") {
-                ShelfTitle(if (films.isEmpty()) "Serien" else "Serien & Filme")
-                ArchiveGrid(
-                    series = data.series,
-                    films = films,
-                    // Für „Weiter mit S3 · F9" an der Kachel: die angefangene Folge je Serie.
-                    resumeBySeries = remember(continueWatching) {
-                        continueWatching.filter { it.series_id != null }
-                            .groupBy { it.series_id!! }
-                            .mapValues { it.value.first() }
-                    },
-                    onOpenSeries = onOpenSeries,
-                    onLongPressSeries = onLongPressSeries,
-                    onPlayFilm = onPlay,
-                )
-            }
-        }
-
-        if (channelShelves.isNotEmpty()) {
-            item(key = "channels-title") { ShelfTitle("Deine Kanäle") }
             items(channelShelves, key = { (channel, _) -> "channel-${channel.id}" }) { (channel, videos) ->
                 ChannelShelf(
                     channel = channel,
@@ -169,48 +130,149 @@ internal fun LibraryHome(
                     onPlay = onPlay,
                 )
             }
-        }
 
-        if (data.watchHistory.isNotEmpty()) {
-            item(key = "history") {
-                ShelfTitle(
-                    "Verlauf",
-                    onShowAll = { onShowAll("Verlauf", data.watchHistory) },
-                    actionLabel = "Leeren",
-                    onAction = onClearHistory,
+            if (history.isNotEmpty()) {
+                item(key = "history") {
+                    ShelfTitle("Zuletzt gesehen", onShowAll = { onShowAll("Zuletzt gesehen", history) })
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(history, key = { "history-${it.id}" }) { video ->
+                            VideoCard(
+                                video = video,
+                                secondLine = video.channelTitle,
+                                onClick = { onPlay(video) },
+                                onRemove = { onRemoveHistory(video.id) },
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (channelShelves.isEmpty() && started.isEmpty() && history.isEmpty()) {
+                item(key = "empty") {
+                    Text(
+                        "Noch keine Kanäle abonniert. Unter Profil → Kanäle fügst du welche hinzu.",
+                        color = HikariTextMuted,
+                        fontSize = 14.sp,
+                        lineHeight = 19.sp,
+                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 96.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Je Kanal die neuesten Videos; Kanäle mit dem frischesten Upload zuerst. */
+internal fun channelShelves(data: LibraryResponse): List<Pair<ChannelDto, List<LibraryVideoDto>>> {
+    val byChannel = data.channelUploads.groupBy { it.channel_id }
+    return data.channels
+        .filter { it.id != MANUAL_CHANNEL }
+        .mapNotNull { channel ->
+            val videos = byChannel[channel.id].orEmpty().sortedByDescending { it.published_at }
+            if (videos.isEmpty()) null else channel to videos
+        }
+        .sortedByDescending { (_, videos) -> videos.first().published_at }
+}
+
+/**
+ * Der Einstieg in den Kanal-Bereich auf der Bibliothek: ein Banner aus den
+ * neuesten Vorschaubildern, davor die Kanalbilder und was es Neues gibt.
+ */
+@Composable
+internal fun ChannelsBanner(data: LibraryResponse, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val shelves = remember(data.channels, data.channelUploads) { channelShelves(data) }
+    if (shelves.isEmpty()) return
+    val newest = remember(shelves) { shelves.map { it.second.first() }.take(3) }
+    val weekAgo = remember { System.currentTimeMillis() - 7L * 86_400_000L }
+    val newThisWeek = remember(shelves) { shelves.sumOf { (_, videos) -> videos.count { it.published_at >= weekAgo } } }
+    val shape = RoundedCornerShape(20.dp)
+
+    Box(
+        modifier = modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+            .height(148.dp)
+            .clip(shape)
+            .background(HikariSurface)
+            .clickable(onClick = onClick),
+    ) {
+        // Hintergrund: die neuesten Vorschaubilder nebeneinander — unscharf und
+        // nach links abgedunkelt, damit ihre Schrift nicht mit dem Text kämpft.
+        Row(modifier = Modifier.fillMaxSize().blur(14.dp)) {
+            newest.forEach { video ->
+                AsyncImage(
+                    model = video.thumbnail_url,
+                    contentDescription = null,
+                    modifier = Modifier.weight(1f).fillMaxSize(),
+                    contentScale = ContentScale.Crop,
                 )
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(data.watchHistory, key = { "history-${it.id}" }) { video ->
-                        VideoCard(
-                            video = video,
-                            secondLine = video.series_id?.let(seriesById::get)?.title ?: video.channelTitle,
-                            onClick = { onPlay(video) },
-                            onRemove = { onRemoveHistory(video.id) },
+            }
+        }
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.horizontalGradient(
+                    0f to Color.Black.copy(alpha = 0.94f),
+                    0.6f to Color.Black.copy(alpha = 0.80f),
+                    1f to Color.Black.copy(alpha = 0.45f),
+                ),
+            ),
+        )
+        Column(modifier = Modifier.align(Alignment.CenterStart).padding(start = 18.dp, end = 72.dp)) {
+            // Kanalbilder leicht überlappend.
+            Row {
+                shelves.take(5).forEachIndexed { index, (channel, _) ->
+                    Box(
+                        modifier = Modifier
+                            .offset(x = (-10 * index).dp)
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black)
+                            .padding(2.dp)
+                            .clip(CircleShape)
+                            .background(HikariSurface),
+                    ) {
+                        AsyncImage(
+                            model = channel.thumbnail_url,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
                         )
                     }
                 }
             }
-        }
-
-        if (hero == null && data.series.isEmpty() && films.isEmpty()) {
-            item(key = "empty") {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 96.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text("Noch nichts in der Bibliothek", color = HikariText, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        "Importiere Serien oder Filme, oder abonniere Kanäle — dann erscheinen sie hier.",
-                        color = HikariTextMuted,
-                        fontSize = 14.sp,
-                        lineHeight = 19.sp,
+            Spacer(Modifier.height(10.dp))
+            Text("Deine Kanäle", color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.Bold)
+            Text(
+                text = buildString {
+                    append(if (shelves.size == 1) "1 Kanal" else "${shelves.size} Kanäle")
+                    append(" · ")
+                    append(
+                        when (newThisWeek) {
+                            0 -> "nichts Neues diese Woche"
+                            1 -> "1 neues Video diese Woche"
+                            else -> "$newThisWeek neue Videos diese Woche"
+                        },
                     )
-                }
-            }
+                },
+                color = Color.White.copy(alpha = 0.75f),
+                fontSize = 13.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 16.dp)
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(Color.White),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = "Kanäle öffnen", tint = Color.Black, modifier = Modifier.size(26.dp))
         }
     }
 }
@@ -225,7 +287,7 @@ private const val MANUAL_CHANNEL = "manual"
  * Text und Knöpfe schieben sich von unten ein Stück ins Bild.
  */
 @Composable
-private fun Hero(
+internal fun LibraryHero(
     video: LibraryVideoDto,
     series: SeriesDto?,
     onPlay: () -> Unit,
@@ -334,7 +396,7 @@ private fun Hero(
 // ── Weiterschauen ────────────────────────────────────────────────────────────
 
 @Composable
-private fun ContinueCard(video: LibraryVideoDto, series: SeriesDto?, onClick: () -> Unit) {
+internal fun ContinueCard(video: LibraryVideoDto, series: SeriesDto?, onClick: () -> Unit) {
     Column(modifier = Modifier.width(236.dp).clickable(onClick = onClick)) {
         Box(
             modifier = Modifier
@@ -370,115 +432,9 @@ private fun ContinueCard(video: LibraryVideoDto, series: SeriesDto?, onClick: ()
     }
 }
 
-// ── Serien & Filme ───────────────────────────────────────────────────────────
-
-/** Zweispaltiges Raster: bei einer Handvoll Titel sieht man alle auf einen Blick, ohne seitlich zu wischen. */
-@Composable
-private fun ArchiveGrid(
-    series: List<SeriesDto>,
-    films: List<LibraryVideoDto>,
-    resumeBySeries: Map<String, LibraryVideoDto>,
-    onOpenSeries: (String) -> Unit,
-    onLongPressSeries: (SeriesDto) -> Unit,
-    onPlayFilm: (LibraryVideoDto) -> Unit,
-) {
-    val tiles: List<@Composable (Modifier) -> Unit> = buildList {
-        series.forEach { s ->
-            add { modifier ->
-                val resume = resumeBySeries[s.id]
-                ArchiveTile(
-                    title = s.title,
-                    coverUrl = s.thumbnail_url,
-                    line = when {
-                        resume != null -> "Weiter mit ${episodeTag(resume.season, resume.episode)}"
-                        s.episode_count > 0 -> seriesScope(s)
-                        else -> "Serie"
-                    },
-                    highlightLine = resume != null,
-                    progress = resume?.let(::progressFraction),
-                    onClick = { onOpenSeries(s.id) },
-                    onLongClick = { onLongPressSeries(s) },
-                    modifier = modifier,
-                )
-            }
-        }
-        films.forEach { film ->
-            add { modifier ->
-                val started = (film.progress_seconds ?: 0f) > 0f
-                ArchiveTile(
-                    title = film.title,
-                    coverUrl = film.thumbnail_url,
-                    line = if (started) "Noch ${remainingLabel(film)}" else "Film · ${durationLabel(film.duration_seconds)}",
-                    highlightLine = started,
-                    progress = if (started) progressFraction(film) else null,
-                    onClick = { onPlayFilm(film) },
-                    onLongClick = null,
-                    modifier = modifier,
-                )
-            }
-        }
-    }
-    Column(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        tiles.chunked(2).forEach { pair ->
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                pair.forEach { tile -> tile(Modifier.weight(1f)) }
-                if (pair.size == 1) Spacer(Modifier.weight(1f))
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun ArchiveTile(
-    title: String,
-    coverUrl: String?,
-    line: String,
-    highlightLine: Boolean,
-    progress: Float?,
-    onClick: () -> Unit,
-    onLongClick: (() -> Unit)?,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier = modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick)) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9f)
-                .clip(RoundedCornerShape(12.dp))
-                .background(HikariSurface),
-        ) {
-            CoverArtwork(title = title, coverUrl = coverUrl)
-            if (progress != null) {
-                ProgressLine(progress, height = 4, modifier = Modifier.align(Alignment.BottomStart))
-            }
-        }
-        Text(
-            text = title,
-            color = HikariText,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 8.dp),
-        )
-        Text(
-            text = line,
-            color = if (highlightLine) HikariAmber else HikariTextMuted,
-            fontSize = 12.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 2.dp),
-        )
-    }
-}
-
 /**
- * Cover in einer 16:9-Kachel. Die meisten Cover sind Standbilder im selben
- * Format und füllen die Kachel. Ein hochkantes Plakat würde beim Zuschneiden
+ * Cover in einer 16:9-Fläche. Die meisten Cover sind Standbilder im selben
+ * Format und füllen sie. Ein hochkantes Plakat würde beim Zuschneiden
  * Kopf und Titel verlieren — es wird deshalb ganz gezeigt, vor einer
  * unscharfen, abgedunkelten Fassung seiner selbst.
  */

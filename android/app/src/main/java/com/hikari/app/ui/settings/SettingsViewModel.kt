@@ -6,10 +6,12 @@ import com.hikari.app.data.api.dto.DownloadsResponse
 import com.hikari.app.data.db.LocalDownloadDao
 import com.hikari.app.data.db.LocalDownloadEntity
 import com.hikari.app.data.db.LocalDownloadSource
+import com.hikari.app.data.db.LocalMusicDownloadDao
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.data.prefs.SponsorBlockPrefs
 import com.hikari.app.data.sponsor.SegmentBehavior
 import com.hikari.app.domain.download.SmartDownloadScheduler
+import com.hikari.app.domain.download.SmartDownloadStorage
 import com.hikari.app.domain.repo.FeedRepository
 import com.hikari.app.domain.repo.MangaRepository
 import com.hikari.app.domain.update.UpdateCoordinator
@@ -52,7 +54,9 @@ class SettingsViewModel @Inject constructor(
     private val sbPrefs: SponsorBlockPrefs,
     private val updates: UpdateCoordinator,
     private val smartScheduler: SmartDownloadScheduler,
+    private val smartStorage: SmartDownloadStorage,
     localDownloadDao: LocalDownloadDao,
+    localMusicDao: LocalMusicDownloadDao,
 ) : ViewModel() {
 
     // ── Server ───────────────────────────────────────────────────────────
@@ -74,6 +78,15 @@ class SettingsViewModel @Inject constructor(
     val smartDownloads: Flow<Boolean> = store.smartDownloads
     val manualRetentionDays: Flow<Int> = store.manualDownloadRetentionDays
     val smartRetentionDays: Flow<Int> = store.smartDownloadRetentionDays
+    val smartSeries: Flow<Boolean> = store.smartSeries
+    val smartMusic: Flow<Boolean> = store.smartMusic
+    val smartYoutube: Flow<Boolean> = store.smartYoutube
+    val smartBudgetGb: Flow<Int> = store.smartBudgetGb
+
+    /** Von Smart-Downloads geholte Songs — zählen mit ins Budget. */
+    val smartSongBytes: StateFlow<Long> = localMusicDao.observeAll()
+        .map { rows -> rows.filter { it.source == LocalDownloadSource.SMART.name }.sumOf { it.byteSize } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 0L)
 
     val deviceDownloads: StateFlow<DeviceDownloads> = localDownloadDao.observeAll()
         .map { rows ->
@@ -130,6 +143,17 @@ class SettingsViewModel @Inject constructor(
         // Gleich einmal loslaufen lassen (WLAN vorausgesetzt), statt bis zu 6 h zu warten.
         if (enabled) smartScheduler.runOnceNow()
     }
+
+    fun setSmartSeries(enabled: Boolean) = viewModelScope.launch { store.setSmartSeries(enabled) }
+
+    fun setSmartMusic(enabled: Boolean) = viewModelScope.launch { store.setSmartMusic(enabled) }
+
+    fun setSmartYoutube(enabled: Boolean) = viewModelScope.launch { store.setSmartYoutube(enabled) }
+
+    fun setSmartBudgetGb(gb: Int) = viewModelScope.launch { store.setSmartBudgetGb(gb) }
+
+    /** Räumt alle Smart-Downloads vom Gerät — sie kommen beim nächsten Lauf nach Bedarf wieder. */
+    fun clearSmartDownloads() = viewModelScope.launch { runCatching { smartStorage.clearAll() } }
 
     fun setManualRetentionDays(days: Int) = viewModelScope.launch {
         store.setManualDownloadRetentionDays(days)

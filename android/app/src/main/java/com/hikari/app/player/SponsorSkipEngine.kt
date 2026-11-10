@@ -65,8 +65,29 @@ class SponsorSkipEngine @Inject constructor(
     @Volatile private var behaviors: Map<String, SegmentBehavior> =
         SegmentCategories.all.associate { it.apiKey to it.defaultBehavior }
 
+    /** Wie von SponsorBlock geliefert — daraus entsteht mit Einstellungen und Kapiteln die Sprungliste. */
+    private var rawSegments: List<SponsorSegment> = emptyList()
+    private var chapterStartsMs: List<Long> = emptyList()
+
     init {
-        scope.launch { prefs.behaviors.collect { behaviors = it } }
+        scope.launch {
+            prefs.behaviors.collect {
+                behaviors = it
+                rebuildSegments()
+            }
+        }
+    }
+
+    /** Kapitelanfänge des laufenden Videos — über sie hinweg werden Abschnitte nicht zusammengefasst. */
+    fun setChapters(videoId: String, startsMs: List<Long>) {
+        if (_state.value.videoId != videoId || chapterStartsMs == startsMs) return
+        chapterStartsMs = startsMs
+        rebuildSegments()
+    }
+
+    private fun rebuildSegments() {
+        val merged = SponsorSkipListener.mergeAutoSegments(rawSegments, behaviors, chapterStartsMs)
+        _state.update { it.copy(segments = merged) }
     }
 
     /** Koppelt die Überwachung an [player]; ein erneuter Aufruf fürs selbe Video ist folgenlos. */
@@ -76,9 +97,9 @@ class SponsorSkipEngine @Inject constructor(
         this.player = player
         _state.value = SponsorSkipState(videoId = videoId)
         job = scope.launch {
-            val segments = client.fetchSegments(videoId)
-            _state.update { it.copy(segments = segments) }
-            if (segments.isEmpty()) return@launch
+            rawSegments = client.fetchSegments(videoId)
+            rebuildSegments()
+            if (rawSegments.isEmpty()) return@launch
             while (isActive) {
                 delay(TICK_MS)
                 tick()
@@ -90,6 +111,8 @@ class SponsorSkipEngine @Inject constructor(
         job?.cancel()
         job = null
         player = null
+        rawSegments = emptyList()
+        chapterStartsMs = emptyList()
         ignored.clear()
         lastSkipped = null
         _state.value = SponsorSkipState()

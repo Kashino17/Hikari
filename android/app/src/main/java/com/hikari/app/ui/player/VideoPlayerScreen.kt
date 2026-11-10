@@ -54,6 +54,7 @@ import androidx.compose.material.icons.filled.PictureInPictureAlt
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.outlined.FitScreen
+import androidx.compose.material.icons.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.Share
 import com.hikari.app.ui.common.shareLink
 import com.hikari.app.ui.common.shareUrlFor
@@ -155,10 +156,9 @@ interface VideoPlayerEntryPoint {
 
 private const val SEEK_STEP_MS = 10_000L
 private const val CHROME_AUTO_HIDE_MS = 4_000L
-private const val NEXT_COUNTDOWN_S = 8
 private const val TOAST_MS = 1_200L
 
-private enum class Sheet { None, Speed, Tracks, Episodes }
+private enum class Sheet { None, Speed, Tracks, Episodes, Chapters }
 
 /**
  * Netflix-artiger Player für Serien, Filme und lange Videos.
@@ -251,7 +251,6 @@ fun VideoPlayerScreen(
     var nextVideo by remember { mutableStateOf<NextVideoDto?>(null) }
     var nextDismissed by remember { mutableStateOf(false) }
     var showNextOverlay by remember { mutableStateOf(false) }
-    var nextCountdown by remember { mutableIntStateOf(NEXT_COUNTDOWN_S) }
 
     val seekAccumulator = remember { SeekAccumulator(SEEK_STEP_MS) }
     var seekBadge by remember { mutableStateOf<Pair<Boolean, Long>?>(null) }
@@ -642,17 +641,6 @@ fun VideoPlayerScreen(
         }
     }
 
-    LaunchedEffect(showNextOverlay) {
-        if (showNextOverlay) {
-            nextCountdown = NEXT_COUNTDOWN_S
-            while (nextCountdown > 0) {
-                kotlinx.coroutines.delay(1_000)
-                nextCountdown--
-            }
-            playNext()
-        }
-    }
-
     // ── Player-Ereignisse ────────────────────────────────────────────────
     DisposableEffect(player) {
         val listener = object : Player.Listener {
@@ -778,6 +766,18 @@ fun VideoPlayerScreen(
     val hasDuration = duration > 1L
     val chapters = remember(detail?.description, hasDuration) {
         parseChapters(detail?.description, if (hasDuration) duration else Long.MAX_VALUE)
+    }
+
+    // Die Sprung-Automatik fasst Abschnitte nur innerhalb eines Kapitels zusammen.
+    LaunchedEffect(currentVideoId, chapters, skipState.videoId) {
+        skipEngine.setChapters(currentVideoId, chapters.map { it.startMs })
+    }
+
+    fun jumpToChapter(chapter: VideoChapter) {
+        player.seekTo(chapter.startMs)
+        position = chapter.startMs
+        sheet = Sheet.None
+        showChrome()
     }
 
     // „… überspringen“ zeigt sich beim Eintritt in den Abschnitt 8 s lang und
@@ -1043,6 +1043,7 @@ fun VideoPlayerScreen(
                         ) {
                             BottomAction(LockIcon, "Sperren", { toggleLock() })
                             if (episodes.isNotEmpty()) BottomAction(Icons.Outlined.PlaylistPlay, "Folgen", { sheet = Sheet.Episodes })
+                            if (chapters.isNotEmpty()) BottomAction(Icons.Outlined.FormatListBulleted, "Kapitel", { sheet = Sheet.Chapters })
                             BottomAction(Icons.Outlined.Speed, "Tempo (${speedLabel(speed)})", { sheet = Sheet.Speed })
                             if (hasTrackChoices) BottomAction(Icons.Outlined.Subtitles, "Audio & Untertitel", { sheet = Sheet.Tracks })
                             shareUrl?.let { url -> BottomAction(Icons.Outlined.Share, "Teilen", { shareLink(ctx, currentTitle, url) }) }
@@ -1129,7 +1130,6 @@ fun VideoPlayerScreen(
                 if (showNextOverlay && next != null && !locked) {
                     NextEpisodeCard(
                         next = next,
-                        countdown = nextCountdown,
                         onCancel = { nextDismissed = true; showNextOverlay = false },
                         onPlayNow = { playNext() },
                         modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = if (panelMode) 24.dp else 120.dp),
@@ -1175,6 +1175,21 @@ fun VideoPlayerScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                 )
                             }
+                            Sheet.Chapters -> Column(Modifier.fillMaxWidth().fillMaxHeight(0.72f)) {
+                                Text(
+                                    "Kapitel",
+                                    color = Color.White,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
+                                )
+                                ChapterList(
+                                    chapters = chapters,
+                                    positionMs = position,
+                                    onPick = ::jumpToChapter,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
                             Sheet.None -> Unit
                         }
                     }
@@ -1205,6 +1220,9 @@ fun VideoPlayerScreen(
                     next = nextVideo,
                     episodes = episodes,
                     currentId = currentVideoId,
+                    chapters = chapters,
+                    positionMs = position,
+                    onPickChapter = ::jumpToChapter,
                     sheet = sheet,
                     audio = audioChoices,
                     subtitles = subtitleChoices,
@@ -1236,6 +1254,9 @@ private fun PortraitPanel(
     next: NextVideoDto?,
     episodes: List<LibraryVideoDto>,
     currentId: String,
+    chapters: List<VideoChapter>,
+    positionMs: Long,
+    onPickChapter: (VideoChapter) -> Unit,
     sheet: Sheet,
     audio: List<TrackChoice>,
     subtitles: List<TrackChoice>,
@@ -1315,6 +1336,22 @@ private fun PortraitPanel(
                 onPick = onPickEpisode,
                 modifier = Modifier.fillMaxWidth().weight(1f).windowInsetsPadding(WindowInsets.navigationBars),
             )
+        } else if (chapters.isNotEmpty()) {
+            // YouTube-Video mit Kapiteln: die Gliederung steht direkt unter dem Video.
+            Text(
+                "Kapitel",
+                color = Color.White.copy(alpha = 0.7f),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.2.sp,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+            )
+            ChapterList(
+                chapters = chapters,
+                positionMs = positionMs,
+                onPick = onPickChapter,
+                modifier = Modifier.fillMaxWidth().weight(1f).windowInsetsPadding(WindowInsets.navigationBars),
+            )
         } else {
             Spacer(Modifier.weight(1f))
         }
@@ -1352,7 +1389,6 @@ private fun trackChoices(tracks: Tracks, type: Int): List<TrackChoice> {
 @Composable
 private fun NextEpisodeCard(
     next: NextVideoDto,
-    countdown: Int,
     onCancel: () -> Unit,
     onPlayNow: () -> Unit,
     modifier: Modifier = Modifier,
@@ -1386,11 +1422,9 @@ private fun NextEpisodeCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            Spacer(Modifier.height(4.dp))
-            Text("in $countdown s", color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = onCancel) { Text("Abbrechen") }
-                Button(onClick = onPlayNow) { Text("Jetzt abspielen") }
+                TextButton(onClick = onCancel) { Text("Schließen") }
+                Button(onClick = onPlayNow) { Text("Abspielen") }
             }
         }
     }

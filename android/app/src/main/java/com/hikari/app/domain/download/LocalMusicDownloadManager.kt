@@ -2,6 +2,7 @@ package com.hikari.app.domain.download
 
 import android.content.Context
 import com.hikari.app.data.db.LocalMusicDownloadDao
+import com.hikari.app.data.db.LocalDownloadSource
 import com.hikari.app.data.db.LocalMusicDownloadEntity
 import com.hikari.app.di.MusicDownloadClient
 import com.hikari.app.domain.model.MusicSong
@@ -90,7 +91,10 @@ class LocalMusicDownloadManager @Inject constructor(
 
     private val musicDir: File by lazy { File(ctx.filesDir, "music").apply { mkdirs() } }
 
-    suspend fun download(song: MusicSong): Result<LocalMusicDownloadEntity> =
+    suspend fun download(
+        song: MusicSong,
+        source: LocalDownloadSource = LocalDownloadSource.MANUAL,
+    ): Result<LocalMusicDownloadEntity> =
         withContext(Dispatchers.IO) {
             if (isDownloaded(song.videoId)) {
                 return@withContext dao.get(song.videoId)?.let { Result.success(it) }
@@ -136,6 +140,7 @@ class LocalMusicDownloadManager @Inject constructor(
                         uploader = song.uploader,
                         thumbnailUrl = song.thumbnailUrl,
                         durationSeconds = song.duration,
+                        source = source.name,
                     )
                     dao.upsert(entity)
                     // Song auch in der Bibliothek kennen (Favoriten/Playlists

@@ -4,7 +4,10 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -55,6 +58,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,10 +80,22 @@ import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.ChannelDto
 import com.hikari.app.data.api.dto.LibraryResponse
 import com.hikari.app.data.api.dto.LibraryVideoDto
+import com.hikari.app.data.api.dto.isArchive
 import com.hikari.app.data.api.dto.isFilm
-import com.hikari.app.domain.model.FeedItem
+import com.hikari.app.domain.genre.Genre
+import com.hikari.app.domain.genre.detectGenres
 import com.hikari.app.data.api.dto.SeriesDto
+import com.hikari.app.ui.library.components.CinemaPosterCard
 import com.hikari.app.ui.library.components.CoverEditSheet
+import com.hikari.app.ui.library.components.LibraryTab
+import com.hikari.app.ui.library.components.LibraryTabNav
+import com.hikari.app.ui.library.components.MoodDiscoverySection
+import com.hikari.app.ui.library.components.NetflixTopTenSection
+import com.hikari.app.ui.library.components.QuickLookItem
+import com.hikari.app.ui.library.components.QuickLookSheet
+import com.hikari.app.ui.library.components.SmartShuffleSheet
+import com.hikari.app.ui.library.components.TopTenCharts
+import com.hikari.app.ui.library.components.TopTenItem
 import com.hikari.app.ui.components.FallbackArtwork
 import com.hikari.app.ui.components.resumeAwareThumbnail
 import com.hikari.app.ui.theme.HikariAmber
@@ -102,6 +118,7 @@ fun LibraryScreen(
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+    val topCharts by viewModel.topCharts.collectAsState()
     val coverEdit by viewModel.coverEditState.collectAsState()
     var editingSeries by remember { mutableStateOf<SeriesDto?>(null) }
 
@@ -131,6 +148,7 @@ fun LibraryScreen(
             )
             is LibraryUiState.Success -> LibraryContent(
                 data = s.data,
+                topCharts = topCharts,
                 onOpenSeries = onOpenSeries,
                 onOpenChannel = onOpenChannel,
                 onPlayVideo = onPlayVideo,
@@ -162,19 +180,133 @@ fun LibraryScreen(
 @Composable
 private fun LibraryContent(
     data: LibraryResponse,
+    topCharts: TopTenCharts,
     onOpenSeries: (String) -> Unit,
     onOpenChannel: (String) -> Unit,
     onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
     onLongPressSeries: (SeriesDto) -> Unit,
-    onRemoveHistory: (String) -> Unit,
-    onClearHistory: () -> Unit,
+    onRemoveHistory: (String) -> Unit = {},
+    onClearHistory: () -> Unit = {},
 ) {
     fun play(v: LibraryVideoDto) = onPlayVideo(v.id, v.title, v.channelTitle ?: "")
 
     var isSearchActive by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    var selectedTab by remember { mutableStateOf(LibraryTab.FOR_YOU) }
+    var selectedGenre by remember { mutableStateOf(Genre.ALL) }
+    var showShuffleSheet by remember { mutableStateOf(false) }
+    var quickLookItem by remember { mutableStateOf<QuickLookItem?>(null) }
     var allView by remember { mutableStateOf<AllViewState?>(null) }
     var confirmClearHistory by remember { mutableStateOf(false) }
+    var showChannels by rememberSaveable { mutableStateOf(false) }
+    // Die Bibliothek zeigt Serien und Filme; alles von YouTube liegt im Kanal-Bereich.
+    val history = remember(data.watchHistory) { data.watchHistory.filter { it.isArchive() } }
+    val seriesById = remember(data.series) { data.series.associateBy { it.id } }
+
+    fun LibraryVideoDto.toAllViewItem(onClick: () -> Unit) = AllViewItem(
+        id = id,
+        title = title,
+        channel = channelTitle,
+        durationSeconds = duration_seconds,
+        thumbnailUrl = thumbnail_url,
+        onClick = onClick,
+    )
+
+    fun isMovie(v: LibraryVideoDto): Boolean = v.isFilm()
+
+    fun formatDuration(seconds: Int): String {
+        val min = seconds / 60
+        return if (min >= 60) "${min / 60}h ${min % 60}m" else "${min}m"
+    }
+
+    val allMovies = remember(data.recentlyAdded) {
+        data.recentlyAdded.filter { isMovie(it) }
+    }
+    val weekendMovies = remember(allMovies) {
+        allMovies.filter { it.duration_seconds >= 4500 }
+    }
+
+    val genreCounts = remember(data) {
+        val map = mutableMapOf<Genre, Int>()
+        data.series.forEach { s ->
+            s.detectGenres().forEach { g -> map[g] = (map[g] ?: 0) + 1 }
+        }
+        data.recentlyAdded.forEach { v ->
+            v.detectGenres().forEach { g -> map[g] = (map[g] ?: 0) + 1 }
+        }
+        map
+    }
+
+    // Je Genre ein Bild aus dem Bestand — möglichst für jedes Genre ein anderes.
+    val genreCovers = remember(data) {
+        val used = mutableSetOf<String>()
+        Genre.entries.filter { it != Genre.ALL }.mapNotNull { genre ->
+            val candidates = data.series.filter { genre in it.detectGenres() }
+                .mapNotNull { it.backdrop_url ?: it.thumbnail_url } +
+                data.recentlyAdded.filter { genre in it.detectGenres() }.mapNotNull { it.thumbnail_url }
+            val pick = candidates.firstOrNull { it !in used } ?: candidates.firstOrNull()
+            pick?.let { used += it; genre to it }
+        }.toMap()
+    }
+
+    val continueWatching = remember(data) {
+        // Neuer Server: fertige Liste über alle Quellen, auch gestreamte
+        // YouTube-Videos. Ältere Server: Rückfall auf die Downloads.
+        if (data.continueWatching.isNotEmpty()) {
+            return@remember data.continueWatching.filter { it.isArchive() }
+        }
+        data.recentlyAdded
+            .filter {
+                val p = it.progress_seconds ?: 0f
+                p > 0f && p < it.duration_seconds.toFloat() * 0.95f
+            }
+            // Zuletzt geschaut zuerst. Ältere Server liefern keinen Zeitstempel
+            // (0) — dann bleibt die bisherige Reihenfolge stabil.
+            .sortedByDescending { it.progress_updated_at ?: 0L }
+    }
+    val heroVideo = continueWatching.firstOrNull() ?: data.recentlyAdded.firstOrNull()
+
+    fun openQuickLookForSeries(s: SeriesDto) {
+        quickLookItem = QuickLookItem(
+            id = s.id,
+            title = s.title,
+            subtitle = "Serie",
+            description = s.description,
+            thumbnailUrl = s.thumbnail_url,
+            isSeries = true,
+            seriesId = s.id,
+        )
+    }
+
+    fun openQuickLookForVideo(v: LibraryVideoDto) {
+        quickLookItem = QuickLookItem(
+            id = v.id,
+            title = v.title,
+            subtitle = "${formatDuration(v.duration_seconds)} · ${v.channelTitle ?: "Video"}",
+            description = v.description,
+            thumbnailUrl = v.thumbnail_url,
+            isSeries = v.series_id != null,
+            seriesId = v.series_id,
+            channelTitle = v.channelTitle ?: "",
+            durationSeconds = v.duration_seconds,
+            matchScore = v.overall_score,
+        )
+    }
+
+    fun openQuickLookForTopTen(item: TopTenItem) {
+        quickLookItem = QuickLookItem(
+            id = item.id,
+            title = item.title,
+            subtitle = item.subtitle,
+            description = null,
+            thumbnailUrl = item.thumbnailUrl,
+            isSeries = item.isSeries,
+            seriesId = item.seriesId,
+            channelTitle = item.channelTitle,
+            durationSeconds = item.durationSeconds,
+            matchScore = item.matchScore,
+        )
+    }
 
     if (isSearchActive) {
         NetflixSearchView(
@@ -192,7 +324,7 @@ private fun LibraryContent(
         )
     } else {
         Column(modifier = Modifier.fillMaxSize()) {
-            // ── Kopf: Schriftzug + Suche ─────────────────────────────────────
+            // ── Top Bar: HIKARI Brand + Shuffle + Search ─────────────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -208,51 +340,541 @@ private fun LibraryContent(
                     letterSpacing = 2.sp,
                     fontFamily = FontFamily.SansSerif,
                 )
-                IconButton(onClick = { isSearchActive = true }) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Suchen",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp),
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { showShuffleSheet = true }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Shuffle,
+                            contentDescription = "Zufallsauswahl",
+                            tint = Color.White.copy(alpha = 0.85f),
+                            modifier = Modifier.size(21.dp),
+                        )
+                    }
+                    IconButton(onClick = { isSearchActive = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Suchen",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
                 }
             }
 
-            LibraryHome(
-                data = data,
-                onOpenSeries = onOpenSeries,
-                onOpenChannel = onOpenChannel,
-                onPlay = ::play,
-                onLongPressSeries = onLongPressSeries,
-                onShowAll = { title, videos ->
-                    allView = AllViewState(
-                        title = title,
-                        items = videos.map { v ->
-                            AllViewItem(
-                                id = v.id,
-                                title = v.title,
-                                channel = v.channelTitle,
-                                durationSeconds = v.duration_seconds,
-                                thumbnailUrl = v.thumbnail_url,
-                                onClick = { play(v) },
-                            )
-                        },
-                    )
+            // ── Apple-Glass Segment Switcher ──────────────────────────────────
+            LibraryTabNav(
+                selectedTab = selectedTab,
+                onSelectTab = {
+                    selectedTab = it
+                    selectedGenre = Genre.ALL
                 },
-                onRemoveHistory = onRemoveHistory,
-                onClearHistory = { confirmClearHistory = true },
             )
+
+            Spacer(Modifier.height(4.dp))
+
+            if (selectedGenre != Genre.ALL) {
+                FilteredNetflixLibraryContent(
+                    data = data,
+                    selectedType = when (selectedTab) {
+                        LibraryTab.SERIES -> NetflixContentType.SERIES
+                        LibraryTab.MOVIES -> NetflixContentType.VIDEOS
+                        else -> NetflixContentType.ALL
+                    },
+                    selectedGenre = selectedGenre,
+                    onOpenSeries = onOpenSeries,
+                    onOpenChannel = onOpenChannel,
+                    onPlayVideo = onPlayVideo,
+                    onLongPressSeries = onLongPressSeries,
+                    onResetFilter = {
+                        selectedGenre = Genre.ALL
+                    },
+                )
+            } else {
+                when (selectedTab) {
+                    LibraryTab.FOR_YOU -> {
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            heroVideo?.let { h ->
+                                item(key = "hero") {
+                                    LibraryHero(h, h.series_id?.let(seriesById::get), { play(h) }, onOpenSeries)
+                                }
+                            }
+
+                            if (continueWatching.isNotEmpty()) {
+                                item {
+                                    SectionHeader(
+                                        "Weiterschauen",
+                                        count = continueWatching.size,
+                                        onShowAll = {
+                                            allView = AllViewState(
+                                                title = "Weiterschauen",
+                                                items = continueWatching.map { v -> v.toAllViewItem { play(v) } },
+                                            )
+                                        },
+                                    )
+                                    LazyRow(
+                                        contentPadding = PaddingValues(horizontal = 16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    ) {
+                                        items(continueWatching, key = { it.id }) { v ->
+                                            ContinueCard(v, v.series_id?.let(seriesById::get), onClick = { play(v) })
+                                        }
+                                    }
+                                    Spacer(Modifier.height(20.dp))
+                                }
+                            }
+
+                            // ── TOP 10 SERIEN (Letzte 30 Tage) ─────────────────────────
+                            if (topCharts.topSeries.isNotEmpty()) {
+                                item {
+                                    NetflixTopTenSection(
+                                        title = "TOP 10 Serien",
+                                        items = topCharts.topSeries,
+                                        onItemClick = { item ->
+                                            if (item.isSeries) onOpenSeries(item.id)
+                                            else onPlayVideo(item.id, item.title, item.channelTitle)
+                                        },
+                                        onItemLongClick = { openQuickLookForTopTen(it) },
+                                    )
+                                    Spacer(Modifier.height(20.dp))
+                                }
+                            }
+
+                            // ── TOP 10 FILME (Letzte 30 Tage) ──────────────────────────
+                            if (topCharts.topMovies.isNotEmpty()) {
+                                item {
+                                    NetflixTopTenSection(
+                                        title = "TOP 10 Filme",
+                                        items = topCharts.topMovies,
+                                        onItemClick = { item ->
+                                            onPlayVideo(item.id, item.title, item.channelTitle)
+                                        },
+                                        onItemLongClick = { openQuickLookForTopTen(it) },
+                                    )
+                                    Spacer(Modifier.height(20.dp))
+                                }
+                            }
+
+                            // ── THEMEN & GENRES ENTDECKEN ──────────────────────────────
+                            item {
+                                MoodDiscoverySection(
+                                    selectedGenre = selectedGenre,
+                                    onSelectGenre = { selectedGenre = it },
+                                    genreCounts = genreCounts,
+                                    genreCovers = genreCovers,
+                                )
+                                Spacer(Modifier.height(20.dp))
+                            }
+
+                            // Wochenend-Kino (> 75 Min)
+                            if (weekendMovies.isNotEmpty()) {
+                                item {
+                                    SectionHeader(
+                                        "Wochenend-Kino (> 75 Min)",
+                                        count = weekendMovies.size,
+                                        onShowAll = {
+                                            allView = AllViewState(
+                                                title = "Wochenend-Kino",
+                                                items = weekendMovies.map { m -> m.toAllViewItem { play(m) } },
+                                            )
+                                        },
+                                    )
+                                    LazyRow(
+                                        contentPadding = PaddingValues(horizontal = 16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    ) {
+                                        items(weekendMovies, key = { "wk-${it.id}" }) { m ->
+                                            CinemaPosterCard(
+                                                title = m.title,
+                                                subtitle = formatDuration(m.duration_seconds),
+                                                thumbnailUrl = m.thumbnail_url,
+                                                posterUrl = m.poster_url,
+                                                tag = "KINO",
+                                                matchScore = m.overall_score,
+                                                onClick = { play(m) },
+                                                onLongClick = { openQuickLookForVideo(m) },
+                                            )
+                                        }
+                                    }
+                                    Spacer(Modifier.height(20.dp))
+                                }
+                            }
+
+                            // ── Alles von YouTube: eigener Bereich hinter einem Banner ───
+                            item(key = "channels-banner") {
+                                ChannelsBanner(data = data, onClick = { showChannels = true })
+                                Spacer(Modifier.height(24.dp))
+                            }
+
+                            if (history.isNotEmpty()) {
+                                item {
+                                    SectionHeader(
+                                        "Verlauf",
+                                        count = history.size,
+                                        onShowAll = {
+                                            allView = AllViewState(
+                                                title = "Verlauf",
+                                                items = history.map { v -> v.toAllViewItem { play(v) } },
+                                            )
+                                        },
+                                        actionLabel = "Leeren",
+                                        onAction = { confirmClearHistory = true },
+                                    )
+                                    LazyRow(
+                                        contentPadding = PaddingValues(horizontal = 16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    ) {
+                                        items(history, key = { "h-${it.id}" }) { v ->
+                                            LibraryVideoCard(
+                                                video = v,
+                                                secondLine = v.series_id?.let(seriesById::get)?.title
+                                                    ?.let { title ->
+                                                        listOf(title, episodeTag(v.season, v.episode))
+                                                            .filter { it.isNotBlank() }.joinToString(" · ")
+                                                    }
+                                                    ?: if (v.isFilm()) "Film" else v.channelTitle,
+                                                onClick = { play(v) },
+                                                onRemove = { onRemoveHistory(v.id) },
+                                            )
+                                        }
+                                    }
+                                    Spacer(Modifier.height(20.dp))
+                                }
+                            }
+
+                            item {
+                                SectionHeader(
+                                    "Neu hinzugefügt",
+                                    count = data.recentlyAdded.size,
+                                    onShowAll = {
+                                        allView = AllViewState(
+                                            title = "Neu hinzugefügt",
+                                            items = data.recentlyAdded.map { v -> v.toAllViewItem { play(v) } },
+                                        )
+                                    },
+                                )
+                                LazyRow(
+                                    contentPadding = PaddingValues(horizontal = 16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    items(data.recentlyAdded, key = { it.id }) { v ->
+                                        RecentVideoCard(video = v, onClick = { play(v) })
+                                    }
+                                }
+                            }
+
+                            item { Spacer(Modifier.height(96.dp)) }
+                        }
+                    }
+
+                    LibraryTab.SERIES -> {
+                        val continueSeries = continueWatching.filter { it.series_id != null }
+                        val heroSeriesVideo = continueSeries.firstOrNull() ?: data.recentlyAdded.firstOrNull { it.series_id != null }
+
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            if (heroSeriesVideo != null) {
+                                item(key = "hero") {
+                                    LibraryHero(
+                                        heroSeriesVideo,
+                                        heroSeriesVideo.series_id?.let(seriesById::get),
+                                        { play(heroSeriesVideo) },
+                                        onOpenSeries,
+                                    )
+                                }
+                            }
+
+                            // ── TOP 10 SERIEN (Meistgesehen) ──────────────────────────
+                            if (topCharts.topSeries.isNotEmpty()) {
+                                item {
+                                    NetflixTopTenSection(
+                                        title = "TOP 10 Serien (Meistgesehen)",
+                                        items = topCharts.topSeries,
+                                        onItemClick = { item -> onOpenSeries(item.id) },
+                                        onItemLongClick = { openQuickLookForTopTen(it) },
+                                    )
+                                    Spacer(Modifier.height(20.dp))
+                                }
+                            }
+
+                            if (continueSeries.isNotEmpty()) {
+                                item {
+                                    SectionHeader("Weiter bingen", count = continueSeries.size)
+                                    LazyRow(
+                                        contentPadding = PaddingValues(horizontal = 16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        items(continueSeries, key = { "cs-${it.id}" }) { v ->
+                                            ContinueCard(v, v.series_id?.let(seriesById::get), onClick = { play(v) })
+                                        }
+                                    }
+                                    Spacer(Modifier.height(20.dp))
+                                }
+                            }
+
+                            // Alle Serien in 2:3 Postern
+                            item {
+                                SectionHeader("Alle Serien", count = data.series.size)
+                                LazyRow(
+                                    contentPadding = PaddingValues(horizontal = 16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                ) {
+                                    items(data.series, key = { "all-s-${it.id}" }) { s ->
+                                        CinemaPosterCard(
+                                            title = s.title,
+                                            subtitle = s.description ?: "Serie",
+                                            thumbnailUrl = s.thumbnail_url,
+                                                posterUrl = s.poster_url,
+                                            tag = "SERIE",
+                                            onClick = { onOpenSeries(s.id) },
+                                            onLongClick = { openQuickLookForSeries(s) },
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.height(20.dp))
+                            }
+
+                            // Serien nach Genre (Anime, SciFi, Action etc.)
+                            val animeSeries = data.series.filter { Genre.ANIME in it.detectGenres() }
+                            if (animeSeries.isNotEmpty()) {
+                                item {
+                                    SectionHeader("Anime-Serien", count = animeSeries.size)
+                                    LazyRow(
+                                        contentPadding = PaddingValues(horizontal = 16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    ) {
+                                        items(animeSeries, key = { "anime-${it.id}" }) { s ->
+                                            CinemaPosterCard(
+                                                title = s.title,
+                                                subtitle = s.description ?: "Anime",
+                                                thumbnailUrl = s.thumbnail_url,
+                                                posterUrl = s.poster_url,
+                                                tag = "ANIME",
+                                                onClick = { onOpenSeries(s.id) },
+                                                onLongClick = { openQuickLookForSeries(s) },
+                                            )
+                                        }
+                                    }
+                                    Spacer(Modifier.height(20.dp))
+                                }
+                            }
+
+                            item { Spacer(Modifier.height(96.dp)) }
+                        }
+                    }
+
+                    LibraryTab.MOVIES -> {
+                        val heroMovie = allMovies.firstOrNull() ?: heroVideo
+
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            if (heroMovie != null) {
+                                item(key = "hero") {
+                                    LibraryHero(heroMovie, null, { play(heroMovie) }, onOpenSeries)
+                                }
+                            }
+
+                            // ── TOP 10 FILME (Meistgesehen) ───────────────────────────
+                            if (topCharts.topMovies.isNotEmpty()) {
+                                item {
+                                    NetflixTopTenSection(
+                                        title = "TOP 10 Filme (Meistgesehen)",
+                                        items = topCharts.topMovies,
+                                        onItemClick = { item -> onPlayVideo(item.id, item.title, item.channelTitle) },
+                                        onItemLongClick = { openQuickLookForTopTen(it) },
+                                    )
+                                    Spacer(Modifier.height(20.dp))
+                                }
+                            }
+
+                            // Spielfilme & Blockbuster (> 75 Min)
+                            if (weekendMovies.isNotEmpty()) {
+                                item {
+                                    SectionHeader("Spielfilme & Blockbuster (> 75 Min)", count = weekendMovies.size)
+                                    LazyRow(
+                                        contentPadding = PaddingValues(horizontal = 16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    ) {
+                                        items(weekendMovies, key = { "m-block-${it.id}" }) { m ->
+                                            CinemaPosterCard(
+                                                title = m.title,
+                                                subtitle = "${formatDuration(m.duration_seconds)} · ${m.channelTitle ?: ""}",
+                                                thumbnailUrl = m.thumbnail_url,
+                                                posterUrl = m.poster_url,
+                                                tag = "KINO",
+                                                matchScore = m.overall_score,
+                                                onClick = { play(m) },
+                                                onLongClick = { openQuickLookForVideo(m) },
+                                            )
+                                        }
+                                    }
+                                    Spacer(Modifier.height(20.dp))
+                                }
+                            }
+
+                            // Alle Filme & Dokus
+                            item {
+                                SectionHeader("Alle Filme & Dokus", count = allMovies.size)
+                                LazyRow(
+                                    contentPadding = PaddingValues(horizontal = 16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                ) {
+                                    items(allMovies, key = { "all-m-${it.id}" }) { m ->
+                                        CinemaPosterCard(
+                                            title = m.title,
+                                            subtitle = "${formatDuration(m.duration_seconds)} · ${m.channelTitle ?: ""}",
+                                            thumbnailUrl = m.thumbnail_url,
+                                                posterUrl = m.poster_url,
+                                            tag = "FILM",
+                                            matchScore = m.overall_score,
+                                            onClick = { play(m) },
+                                            onLongClick = { openQuickLookForVideo(m) },
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.height(20.dp))
+                            }
+
+                            // Dokus
+                            val dokuMovies = allMovies.filter { Genre.DOCS in it.detectGenres() }
+                            if (dokuMovies.isNotEmpty()) {
+                                item {
+                                    SectionHeader("Doku & Wissen", count = dokuMovies.size)
+                                    LazyRow(
+                                        contentPadding = PaddingValues(horizontal = 16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    ) {
+                                        items(dokuMovies, key = { "doku-${it.id}" }) { m ->
+                                            CinemaPosterCard(
+                                                title = m.title,
+                                                subtitle = formatDuration(m.duration_seconds),
+                                                thumbnailUrl = m.thumbnail_url,
+                                                posterUrl = m.poster_url,
+                                                tag = "DOKU",
+                                                matchScore = m.overall_score,
+                                                onClick = { play(m) },
+                                                onLongClick = { openQuickLookForVideo(m) },
+                                            )
+                                        }
+                                    }
+                                    Spacer(Modifier.height(20.dp))
+                                }
+                            }
+
+                            item { Spacer(Modifier.height(96.dp)) }
+                        }
+                    }
+
+                    LibraryTab.DISCOVER -> {
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            item {
+                                Spacer(Modifier.height(8.dp))
+                                MoodDiscoverySection(
+                                    selectedGenre = selectedGenre,
+                                    onSelectGenre = { selectedGenre = it },
+                                    genreCounts = genreCounts,
+                                    genreCovers = genreCovers,
+                                )
+                                Spacer(Modifier.height(20.dp))
+                            }
+
+                            // Curated shelves for each genre
+                            val genres = Genre.entries.filter { it != Genre.ALL }
+                            genres.forEach { genre ->
+                                val genreSeries = data.series.filter { genre in it.detectGenres() }
+                                val genreVideos = data.recentlyAdded.filter { genre in it.detectGenres() }
+                                val total = genreSeries.size + genreVideos.size
+                                if (total > 0) {
+                                    item {
+                                        SectionHeader(genre.title, count = total)
+                                        LazyRow(
+                                            contentPadding = PaddingValues(horizontal = 16.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        ) {
+                                            items(genreSeries, key = { "shelf-s-${it.id}" }) { s ->
+                                                CinemaPosterCard(
+                                                    title = s.title,
+                                                    subtitle = "Serie",
+                                                    thumbnailUrl = s.thumbnail_url,
+                                                posterUrl = s.poster_url,
+                                                    tag = "SERIE",
+                                                    onClick = { onOpenSeries(s.id) },
+                                                    onLongClick = { openQuickLookForSeries(s) },
+                                                )
+                                            }
+                                            items(genreVideos, key = { "shelf-v-${it.id}" }) { v ->
+                                                CinemaPosterCard(
+                                                    title = v.title,
+                                                    subtitle = formatDuration(v.duration_seconds),
+                                                    thumbnailUrl = v.thumbnail_url,
+                                                posterUrl = v.poster_url,
+                                                    tag = if (isMovie(v)) "FILM" else null,
+                                                    matchScore = v.overall_score,
+                                                    onClick = { play(v) },
+                                                    onLongClick = { openQuickLookForVideo(v) },
+                                                )
+                                            }
+                                        }
+                                        Spacer(Modifier.height(20.dp))
+                                    }
+                                }
+                            }
+
+                            item { Spacer(Modifier.height(96.dp)) }
+                        }
+                    }
+                }
+            }
         }
     }
 
     if (confirmClearHistory) {
         com.hikari.app.ui.components.ConfirmDeleteDialog(
             title = "Verlauf leeren?",
-            message = "Alle ${data.watchHistory.size} Einträge verschwinden aus dem Verlauf. Die Videos selbst " +
+            message = "Alle ${history.size} Einträge verschwinden aus dem Verlauf. Die Videos selbst " +
                 "und dein Fortschritt (Weiterschauen) bleiben erhalten.",
             confirmLabel = "Leeren",
             onConfirm = onClearHistory,
             onDismiss = { confirmClearHistory = false },
+        )
+    }
+
+    if (showShuffleSheet) {
+        SmartShuffleSheet(
+            data = data,
+            onOpenSeries = onOpenSeries,
+            onPlayVideo = onPlayVideo,
+            onDismiss = { showShuffleSheet = false },
+        )
+    }
+
+    quickLookItem?.let { item ->
+        QuickLookSheet(
+            item = item,
+            onPlay = {
+                if (item.isSeries && item.seriesId != null) {
+                    onOpenSeries(item.seriesId)
+                } else {
+                    onPlayVideo(item.id, item.title, item.channelTitle)
+                }
+            },
+            onOpenSeries = if (item.isSeries && item.seriesId != null) onOpenSeries else null,
+            onDismiss = { quickLookItem = null },
+        )
+    }
+
+    // Kanal-Bereich: schiebt sich von rechts über die Bibliothek.
+    AnimatedVisibility(
+        visible = showChannels,
+        enter = slideInHorizontally(tween(260)) { it / 3 } + fadeIn(tween(220)),
+        exit = slideOutHorizontally(tween(220)) { it / 3 } + fadeOut(tween(160)),
+    ) {
+        BackHandler(enabled = allView == null) { showChannels = false }
+        ChannelsHome(
+            data = data,
+            onBack = { showChannels = false },
+            onOpenChannel = onOpenChannel,
+            onPlay = ::play,
+            onShowAll = { title, videos ->
+                allView = AllViewState(title = title, items = videos.map { v -> v.toAllViewItem { play(v) } })
+            },
+            onRemoveHistory = onRemoveHistory,
         )
     }
 
@@ -264,6 +886,126 @@ private fun LibraryContent(
     ) {
         allView?.let { state ->
             AllVideosOverlay(state = state, onDismiss = { allView = null })
+        }
+    }
+}
+
+/**
+ * Netflix-Look für Karten mit geladenem Bild: dunkler Scrim am unteren Rand,
+ * darauf der Titel weiß (1–2 Zeilen). Nur einblenden, wenn das Bild wirklich
+ * geladen ist — ohne Bild zeigt das FallbackArtwork den Titel bereits groß,
+ * ein Overlay würde ihn doppeln. [bottomPadding] lässt Raum für eine
+ * Fortschrittsleiste am unteren Kartenrand (z. B. ContinueCard).
+ */
+@Composable
+private fun BoxScope.ImageTitleOverlay(title: String, bottomPadding: Dp = 6.dp) {
+    Box(
+        modifier = Modifier
+            .align(Alignment.BottomStart)
+            .fillMaxWidth()
+            .fillMaxHeight(0.5f)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f)),
+                ),
+            ),
+    )
+    Text(
+        text = title,
+        color = Color.White,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Black,
+        lineHeight = 14.sp,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier
+            .align(Alignment.BottomStart)
+            .padding(start = 8.dp, end = 8.dp, bottom = bottomPadding),
+    )
+}
+
+@Composable
+private fun RecommendedCard(video: LibraryVideoDto, onClick: () -> Unit) {
+    // Erst wenn das Bild wirklich da ist, wandert der Titel als Overlay aufs
+    // Bild — sonst zeigt das FallbackArtwork den Titel (nicht doppelt).
+    var imageLoaded by remember(video.thumbnail_url) { mutableStateOf(false) }
+    Column(modifier = Modifier.width(200.dp).clickable(onClick = onClick)) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(6.dp))
+                .background(HikariSurface),
+        ) {
+            // Fallback-Artwork als Unterlage: fehlendes oder fehlerhaftes
+            // Thumbnail wirkt gewollt statt leer (und dient als Lade-Hintergrund).
+            FallbackArtwork(title = video.title)
+            AsyncImage(
+                model = video.resumeAwareThumbnail(),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                onSuccess = { imageLoaded = true },
+                onError = { imageLoaded = false },
+            )
+            if (imageLoaded) ImageTitleOverlay(video.title)
+            // Match% badge top-left
+            video.overall_score?.let { score ->
+                Text(
+                    "$score%",
+                    color = Color.Black,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Black,
+                    fontFamily = FontFamily.Monospace,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(5.dp)
+                        .background(HikariAmber, RoundedCornerShape(3.dp))
+                        .padding(horizontal = 5.dp, vertical = 2.dp),
+                )
+            }
+            Text(
+                "${video.duration_seconds / 60}:${"%02d".format(video.duration_seconds % 60)}",
+                color = Color.White,
+                fontSize = 10.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(5.dp)
+                    .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(3.dp))
+                    .padding(horizontal = 5.dp, vertical = 2.dp),
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.92f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = Color.Black,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        }
+        // Der Titel liegt bei geladenem Bild als Overlay auf dem Bild; ohne
+        // Bild trägt ihn das FallbackArtwork — hier nur noch der Kanal.
+        if (!video.channelTitle.isNullOrBlank()) {
+            Text(
+                text = video.channelTitle.uppercase(),
+                color = Color(0xFF4ADE80),
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.sp,
+                fontFamily = FontFamily.Monospace,
+                modifier = Modifier.padding(top = 4.dp),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
@@ -541,6 +1283,78 @@ private fun ChannelCircle(channel: ChannelDto, onClick: () -> Unit) {
     }
 }
 
+@Composable
+private fun RecentVideoCard(video: LibraryVideoDto, onClick: () -> Unit) {
+    // Erst wenn das Bild wirklich da ist, wandert der Titel als Overlay aufs
+    // Bild — sonst zeigt das FallbackArtwork den Titel (nicht doppelt).
+    var imageLoaded by remember(video.thumbnail_url) { mutableStateOf(false) }
+    Column(modifier = Modifier.width(200.dp).clickable(onClick = onClick)) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(6.dp))
+                .background(HikariSurface),
+        ) {
+            // Fallback-Artwork als Unterlage: fehlendes oder fehlerhaftes
+            // Thumbnail wirkt gewollt statt leer (und dient als Lade-Hintergrund).
+            FallbackArtwork(title = video.title)
+            // Angefangenes Video: Frame an der Stopp-Position statt Poster.
+            AsyncImage(
+                model = video.resumeAwareThumbnail(),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                onSuccess = { imageLoaded = true },
+                onError = { imageLoaded = false },
+            )
+            if (imageLoaded) ImageTitleOverlay(video.title)
+            Text(
+                "${video.duration_seconds / 60}:${"%02d".format(video.duration_seconds % 60)}",
+                color = Color.White,
+                fontSize = 10.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(5.dp)
+                    .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(3.dp))
+                    .padding(horizontal = 5.dp, vertical = 2.dp),
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.92f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    tint = Color.Black,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        }
+        // Der Titel liegt bei geladenem Bild als Overlay auf dem Bild; ohne
+        // Bild trägt ihn das FallbackArtwork — hier nur noch der Kanal.
+        if (!video.channelTitle.isNullOrBlank()) {
+            Text(
+                text = video.channelTitle.uppercase(),
+                color = HikariAmber,
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.sp,
+                fontFamily = FontFamily.Monospace,
+                modifier = Modifier.padding(top = 4.dp),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
 /**
  * YouTube-Look für Verlauf und Kanal-Uploads: Bild oben mit Dauer und
  * Fortschrittsbalken, Titel und Kanal darunter. [onRemove] blendet ein
@@ -551,6 +1365,7 @@ private fun LibraryVideoCard(
     video: LibraryVideoDto,
     onClick: () -> Unit,
     onRemove: (() -> Unit)? = null,
+    secondLine: String? = video.channelTitle,
 ) {
     val fraction = video.progress_seconds?.let { p ->
         if (video.duration_seconds > 0) (p / video.duration_seconds).coerceIn(0f, 1f) else 0f
@@ -627,7 +1442,7 @@ private fun LibraryVideoCard(
             modifier = Modifier.padding(top = 8.dp),
         )
         Text(
-            text = video.channelTitle?.takeIf { it.isNotBlank() } ?: "Video",
+            text = secondLine?.takeIf { it.isNotBlank() } ?: "Video",
             color = HikariTextMuted,
             fontSize = 11.sp,
             maxLines = 1,
@@ -650,6 +1465,263 @@ private fun channelGradient(title: String): Brush {
     return Brush.linearGradient(listOf(start, end))
 }
 
+private enum class NetflixContentType {
+    ALL,
+    SERIES,
+    VIDEOS,
+}
+
+@Composable
+private fun NetflixPill(
+    text: String,
+    isActive: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(50))
+            .background(if (isActive) Color.White else Color.White.copy(alpha = 0.08f))
+            .border(
+                width = if (isActive) 1.dp else 0.8.dp,
+                color = if (isActive) Color.White else Color.White.copy(alpha = 0.25f),
+                shape = RoundedCornerShape(50),
+            )
+            .clickable { onClick() }
+            .padding(horizontal = 14.dp, vertical = 7.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            color = if (isActive) Color.Black else Color.White,
+            fontSize = 12.5.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NetflixCategorySheet(
+    selectedGenre: Genre,
+    onSelectGenre: (Genre) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF141414),
+        scrimColor = Color.Black.copy(alpha = 0.75f),
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 8.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Kategorien",
+                    color = Color.White,
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.size(28.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Schließen",
+                        tint = Color.White.copy(alpha = 0.7f),
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(440.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                items(Genre.entries) { genre ->
+                    val isSelected = genre == selectedGenre
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isSelected) Color.White.copy(alpha = 0.12f) else Color.Transparent)
+                            .clickable {
+                                onSelectGenre(genre)
+                                onDismiss()
+                            }
+                            .padding(horizontal = 12.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = if (genre == Genre.ALL) "Alle Kategorien" else genre.title,
+                            color = if (isSelected) Color.White else Color(0xFFB3B3B3),
+                            fontSize = 15.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        )
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FilteredNetflixLibraryContent(
+    data: LibraryResponse,
+    selectedType: NetflixContentType,
+    selectedGenre: Genre,
+    onOpenSeries: (String) -> Unit,
+    onOpenChannel: (String) -> Unit,
+    onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
+    onLongPressSeries: (SeriesDto) -> Unit,
+    onResetFilter: () -> Unit,
+) {
+    fun play(v: LibraryVideoDto) = onPlayVideo(v.id, v.title, v.channelTitle ?: "")
+
+    val matchingSeries = remember(data.series, selectedType, selectedGenre) {
+        if (selectedType == NetflixContentType.VIDEOS) emptyList()
+        else data.series.filter { s ->
+            selectedGenre == Genre.ALL || selectedGenre in s.detectGenres()
+        }
+    }
+
+    val matchingVideos = remember(data.recentlyAdded, selectedType, selectedGenre) {
+        if (selectedType == NetflixContentType.SERIES) emptyList()
+        else data.recentlyAdded.filter { v ->
+            selectedGenre == Genre.ALL || selectedGenre in v.detectGenres()
+        }
+    }
+
+    val filterTitle = when {
+        selectedGenre != Genre.ALL -> selectedGenre.title
+        selectedType == NetflixContentType.SERIES -> "Alle Serien"
+        selectedType == NetflixContentType.VIDEOS -> "Alle Filme & Videos"
+        else -> "Alle Inhalte"
+    }
+
+    val totalCount = matchingSeries.size + matchingVideos.size
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(top = 10.dp, bottom = 96.dp),
+    ) {
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column {
+                    Text(
+                        text = filterTitle,
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = "$totalCount Titel verfügbar",
+                        color = Color(0xFF8C8C8C),
+                        fontSize = 12.sp,
+                    )
+                }
+                Text(
+                    text = "Zurücksetzen",
+                    color = HikariAmber,
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable { onResetFilter() }
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                )
+            }
+            Spacer(Modifier.height(12.dp))
+        }
+
+        if (totalCount == 0) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 60.dp, horizontal = 24.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Keine Titel in dieser Kategorie",
+                            color = Color.White,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Wähle eine andere Kategorie oder setze den Filter zurück.",
+                            color = HikariTextMuted,
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+            }
+        }
+
+        if (matchingSeries.isNotEmpty()) {
+            item {
+                SectionHeader("Serien", count = matchingSeries.size)
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(matchingSeries, key = { "filter-s-${it.id}" }) { s ->
+                        SeriesPosterCard(
+                            series = s,
+                            onClick = { onOpenSeries(s.id) },
+                            onLongClick = { onLongPressSeries(s) },
+                        )
+                    }
+                }
+                Spacer(Modifier.height(24.dp))
+            }
+        }
+
+        if (matchingVideos.isNotEmpty()) {
+            item {
+                SectionHeader("Filme & Videos", count = matchingVideos.size)
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(matchingVideos, key = { "filter-v-${it.id}" }) { v ->
+                        RecommendedCard(video = v, onClick = { play(v) })
+                    }
+                }
+                Spacer(Modifier.height(24.dp))
+            }
+        }
+    }
+}
+
 @Composable
 private fun NetflixSearchView(
     data: LibraryResponse,
@@ -669,7 +1741,8 @@ private fun NetflixSearchView(
         if (isBlank) emptyList()
         else data.series.filter { s ->
             s.title.contains(searchQuery, ignoreCase = true) ||
-                (s.description?.contains(searchQuery, ignoreCase = true) == true)
+                (s.description?.contains(searchQuery, ignoreCase = true) == true) ||
+                s.detectGenres().any { it.title.contains(searchQuery, ignoreCase = true) }
         }
     }
 
@@ -678,7 +1751,8 @@ private fun NetflixSearchView(
         else data.recentlyAdded.filter { v ->
             v.title.contains(searchQuery, ignoreCase = true) ||
                 (v.channelTitle?.contains(searchQuery, ignoreCase = true) == true) ||
-                (v.description?.contains(searchQuery, ignoreCase = true) == true)
+                (v.description?.contains(searchQuery, ignoreCase = true) == true) ||
+                v.detectGenres().any { it.title.contains(searchQuery, ignoreCase = true) }
         }
     }
 
@@ -738,7 +1812,7 @@ private fun NetflixSearchView(
                         decorationBox = { inner ->
                             if (searchQuery.isEmpty()) {
                                 Text(
-                                    text = "Serien, Filme, Kanäle …",
+                                    text = "Serien, Filme, Genres...",
                                     color = Color(0xFF8C8C8C),
                                     fontSize = 14.sp,
                                 )
@@ -894,7 +1968,7 @@ private fun NetflixSearchView(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 items(matchingVideos, key = { "search-v-${it.id}" }) { v ->
-                                    LibraryVideoCard(video = v, onClick = { play(v) })
+                                    RecommendedCard(video = v, onClick = { play(v) })
                                 }
                             }
                             Spacer(Modifier.height(20.dp))
