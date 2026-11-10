@@ -102,6 +102,56 @@ class AreaTilesTest {
         assertNull(AreaTiles.newsDay("irgendwann", today, berlin))
     }
 
+    // ── Manga ────────────────────────────────────────────────────────────────
+
+    private val onePiece = MangaShelfEntry("One Piece", "c/one-piece.jpg", totalChapters = 762)
+    private val berserk = MangaShelfEntry("Berserk", "c/berserk.jpg", totalChapters = 380)
+    private val ohneBild = MangaShelfEntry("Akira", null)
+
+    @Test fun manga_nochNichtsAngefangen_zeigtDieErsteReiheMitBild() {
+        val t = AreaTiles.manga(emptyList(), listOf(ohneBild, berserk, onePiece))!!
+        assertEquals("Berserk", t.title)
+        assertEquals("380 Kapitel", t.detail)
+        assertEquals(listOf("c/berserk.jpg", "c/one-piece.jpg"), t.covers)
+    }
+
+    @Test fun manga_angefangeneReihe_gehtVorUndNenntDasKapitel() {
+        val reading = listOf(MangaReading("One Piece", "c/one-piece.jpg", "onepiecetube:one-piece:1094", page = 7))
+        val t = AreaTiles.manga(reading, listOf(berserk, onePiece))!!
+        assertEquals("One Piece", t.title)
+        assertEquals("Kapitel 1094", t.detail)
+        assertEquals(listOf("c/one-piece.jpg", "c/berserk.jpg"), t.covers)
+    }
+
+    @Test fun manga_ohneLesbareKapitelnummer_nenntDieSeite() {
+        val reading = listOf(MangaReading("X", null, "quelle:x:prolog", page = 3))
+        assertEquals("Seite 3", AreaTiles.manga(reading, emptyList())!!.detail)
+    }
+
+    @Test fun manga_reiheOhneBildUndKapitel_bleibtEhrlich() {
+        val t = AreaTiles.manga(emptyList(), listOf(ohneBild))!!
+        assertEquals("Akira", t.title)
+        assertEquals("Noch nicht angefangen", t.detail)
+        assertTrue(t.covers.isEmpty())
+    }
+
+    @Test fun manga_leeresRegal_hatNichtsZuZeigen() {
+        assertNull(AreaTiles.manga(emptyList(), emptyList()))
+    }
+
+    @Test fun manga_hoechstensDreiTitelbilder() {
+        val shelf = (1..5).map { MangaShelfEntry("M$it", "c/$it.jpg") }
+        assertEquals(listOf("c/1.jpg", "c/2.jpg", "c/3.jpg"), AreaTiles.manga(emptyList(), shelf)!!.covers)
+    }
+
+    @Test fun kapitelnummer_ganzOderMitNachkommastelle() {
+        assertEquals("1094", AreaTiles.chapterNumber("onepiecetube:one-piece:1094"))
+        assertEquals("12.5", AreaTiles.chapterNumber("q:reihe:12.5"))
+        assertEquals("7", AreaTiles.chapterNumber("q:reihe:7.0"))
+        assertNull(AreaTiles.chapterNumber("q:reihe:extra"))
+        assertNull(AreaTiles.chapterNumber("ohne-doppelpunkt"))
+    }
+
     @Test fun spielname_kommtAusDerKennung() {
         assertEquals("Sky Strike", AreaTiles.gameTitle("spaceshooter"))
         assertNull(AreaTiles.gameTitle("unbekannt"))

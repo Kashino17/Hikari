@@ -5,6 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.profile.AreaTiles
+import com.hikari.app.domain.profile.MangaReading
+import com.hikari.app.domain.profile.MangaShelfEntry
+import com.hikari.app.domain.profile.MangaTile
 import com.hikari.app.domain.profile.RussianTile
 import com.hikari.app.domain.repo.MangaRepository
 import com.hikari.app.domain.repo.MusicRepository
@@ -37,13 +40,6 @@ data class MusicTile(
     val artist: String,
     val coverUrl: String?,
     val playing: Boolean,
-)
-
-/** Manga-Kachel: die zuletzt gelesene Reihe und bis zu drei Cover. */
-data class MangaTile(
-    val title: String,
-    val page: Int,
-    val covers: List<String>,
 )
 
 /** Tagesbericht-Kachel: die erste Schlagzeile, die Zahl der Meldungen und von wann der Bericht ist. */
@@ -136,16 +132,16 @@ class AreaTilesViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            runCatching { mangaRepo.getContinue() }.onSuccess { cont ->
-                val base = settings.backendUrl.first()
-                _manga.value = cont.firstOrNull()?.let { first ->
-                    MangaTile(
-                        title = first.title,
-                        page = first.pageNumber,
-                        covers = cont.mapNotNull { c -> c.coverPath?.let { mangaRepo.coverImageUrl(base, it) } }.take(3),
-                    )
-                }
-            }
+            val base = settings.backendUrl.first()
+            val cover = { path: String? -> path?.takeIf { it.isNotBlank() }?.let { mangaRepo.coverImageUrl(base, it) } }
+            val reading = runCatching { mangaRepo.getContinue() }.getOrNull()
+            val shelf = runCatching { mangaRepo.listSeries() }.getOrNull()
+            // Beides nicht erreichbar (kein Netz): stehen lassen, was die Kachel schon zeigt.
+            if (reading == null && shelf == null) return@launch
+            _manga.value = AreaTiles.manga(
+                reading = reading.orEmpty().map { MangaReading(it.title, cover(it.coverPath), it.chapterId, it.pageNumber) },
+                shelf = shelf.orEmpty().map { MangaShelfEntry(it.title, cover(it.coverPath), it.totalChapters) },
+            )
         }
     }
 }

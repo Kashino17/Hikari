@@ -21,6 +21,29 @@ data class RussianTile(
     val done: Boolean,
 )
 
+/** Eine Reihe aus dem Manga-Regal; [cover] ist die fertige Bildadresse. */
+data class MangaShelfEntry(
+    val title: String,
+    val cover: String?,
+    val totalChapters: Int = 0,
+)
+
+/** Eine angefangene Reihe mit der Stelle, an der man stehen geblieben ist. */
+data class MangaReading(
+    val title: String,
+    val cover: String?,
+    val chapterId: String,
+    val page: Int,
+)
+
+/** Was die Manga-Kachel im Profil zeigt. */
+data class MangaTile(
+    val title: String,
+    val detail: String,
+    /** Bis zu drei Titelbilder für den Fächer; das der genannten Reihe steht vorn. */
+    val covers: List<String>,
+)
+
 /** Reine Logik hinter den Bereichs-Kacheln im Profil. */
 object AreaTiles {
 
@@ -68,6 +91,41 @@ object AreaTiles {
                 done = true,
             )
         }
+    }
+
+    /**
+     * Manga-Kachel: die zuletzt gelesene Reihe mit ihrem Kapitel — und solange noch nichts
+     * angefangen ist, die erste Reihe aus dem Regal. So zeigt die Kachel Titelbilder, sobald es
+     * welche gibt, nicht erst nach dem ersten Lesen. Leeres Regal → null (Kachel bleibt beim Namen).
+     */
+    fun manga(reading: List<MangaReading>, shelf: List<MangaShelfEntry>): MangaTile? {
+        val current = reading.firstOrNull()
+        val featured = shelf.firstOrNull { it.cover != null } ?: shelf.firstOrNull()
+        val covers = (
+            listOf(current?.cover ?: featured?.cover.takeIf { current == null }) +
+                reading.map { it.cover } +
+                shelf.map { it.cover }
+            ).filterNotNull().distinct().take(3)
+        return when {
+            current != null -> MangaTile(
+                title = current.title,
+                detail = chapterNumber(current.chapterId)?.let { "Kapitel $it" } ?: "Seite ${current.page}",
+                covers = covers,
+            )
+            featured != null -> MangaTile(
+                title = featured.title,
+                detail = if (featured.totalChapters > 0) "${featured.totalChapters} Kapitel" else "Noch nicht angefangen",
+                covers = covers,
+            )
+            else -> null
+        }
+    }
+
+    /** Kapitelnummer aus der Kennung »quelle:reihe:nummer«; ganze Kapitel ohne Nachkommastelle. */
+    fun chapterNumber(chapterId: String): String? {
+        val raw = chapterId.substringAfterLast(':', "")
+        val number = raw.toDoubleOrNull()?.takeIf { it >= 0 && raw.matches(Regex("""\d+(\.\d+)?""")) } ?: return null
+        return if (number % 1.0 == 0.0) number.toLong().toString() else raw
     }
 
     /** Lernzeit von heute als kurze Angabe; unter einer Minute zählt noch nicht. */

@@ -64,9 +64,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import com.hikari.app.domain.profile.AreaTiles
+import com.hikari.app.domain.profile.MangaTile
 import com.hikari.app.domain.profile.RussianTile
 import com.hikari.app.ui.profile.AreaTilesViewModel
-import com.hikari.app.ui.profile.MangaTile
 import com.hikari.app.ui.profile.MusicTile
 import com.hikari.app.ui.profile.NewsTile
 import com.hikari.app.ui.theme.HikariSurface
@@ -376,7 +376,7 @@ private fun MangaAreaTile(tile: MangaTile?, modifier: Modifier, onClick: () -> U
             TileLabel("Manga", hue, icon = Icons.AutoMirrored.Outlined.MenuBook)
             if (covers.isNotEmpty()) {
                 Row(
-                    modifier = Modifier.padding(start = 4.dp, top = 10.dp),
+                    modifier = Modifier.padding(start = if (covers.size == 1) 0.dp else 4.dp, top = 9.dp),
                     horizontalArrangement = Arrangement.spacedBy((-14).dp),
                 ) {
                     covers.forEachIndexed { i, url ->
@@ -391,7 +391,8 @@ private fun MangaAreaTile(tile: MangaTile?, modifier: Modifier, onClick: () -> U
                                     rotationZ = fanAngle(i, covers.size)
                                     translationY = if (middle) -3.dp.toPx() else 0f
                                 }
-                                .width(42.dp)
+                                // Ein einzelnes Titelbild darf größer sein als die drei im Fächer.
+                                .width(if (covers.size == 1) 50.dp else 42.dp)
                                 .aspectRatio(2f / 3f)
                                 .clip(RoundedCornerShape(5.dp))
                                 .background(HikariSurfaceHigh),
@@ -410,7 +411,7 @@ private fun MangaAreaTile(tile: MangaTile?, modifier: Modifier, onClick: () -> U
             )
             Spacer(Modifier.height(2.dp))
             Text(
-                tile?.let { "Seite ${it.page}" } ?: "Deine Reihen",
+                tile?.detail ?: "Deine Reihen",
                 color = HikariTextMuted,
                 fontSize = 12.sp,
                 maxLines = 1,
