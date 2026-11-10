@@ -8,7 +8,11 @@ data class SeriesDto(
     val title: String,
     val description: String? = null,
     val thumbnail_url: String? = null,
-    val added_at: Long
+    val added_at: Long,
+    // Seit v0.89.77 vom Server mitgeliefert; ältere Server lassen sie weg.
+    val episode_count: Int = 0,
+    val season_count: Int = 0,
+    val last_watched_at: Long? = null,
 )
 
 @Serializable

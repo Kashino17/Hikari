@@ -224,8 +224,22 @@ export async function registerVideosRoutes(app: FastifyInstance, deps: VideosDep
   });
 
   app.get("/library", async () => {
+    // Serien mit Umfang und letztem Schauen: die App zeigt „3 Staffeln · 42
+    // Folgen" und sortiert die zuletzt geschaute Serie nach vorn.
     const series = (
-      deps.db.prepare("SELECT * FROM series ORDER BY added_at DESC").all() as SeriesRow[]
+      deps.db
+        .prepare(
+          `SELECT s.*,
+                  (SELECT COUNT(*) FROM videos v WHERE v.series_id = s.id) AS episode_count,
+                  (SELECT COUNT(DISTINCT COALESCE(v.season, 1)) FROM videos v
+                    WHERE v.series_id = s.id) AS season_count,
+                  (SELECT MAX(vp.updated_at) FROM video_progress vp
+                     JOIN videos v ON v.id = vp.video_id
+                    WHERE v.series_id = s.id) AS last_watched_at
+             FROM series s
+            ORDER BY COALESCE(last_watched_at, 0) DESC, s.added_at DESC`,
+        )
+        .all() as SeriesRow[]
     ).map((s) => withCoverFallback(deps.db, s));
     // Home/Library "recently added": keyed on downloaded_videos (alles, was
     // als Datei auf dem Server liegt — Feed-Downloads wie eigene Importe);

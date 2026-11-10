@@ -28,6 +28,7 @@ data class ActiveVideoInfo(
 class VideoDockManager @Inject constructor(
     private val playbackRepository: Lazy<PlaybackRepository>,
     private val skipEngine: SponsorSkipEngine,
+    private val lastFrames: LastFrameStore,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -52,6 +53,8 @@ class VideoDockManager @Inject constructor(
 
     fun setLastFrame(videoId: String, frame: Bitmap) {
         if (_activeVideo.value?.videoId == videoId) _lastFrame.value = frame
+        // Dauerhaft merken — die Bibliothek zeigt es bei „Weiterschauen".
+        scope.launch { lastFrames.save(videoId, frame) }
     }
 
     /** Folgen-Info und echtes Vorschaubild nachreichen, sobald die Details geladen sind. */

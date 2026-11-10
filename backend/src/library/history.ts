@@ -91,7 +91,7 @@ export function listContinueWatching(db: Database.Database, limit = 30): unknown
 export function listChannelUploads(
   db: Database.Database,
   subscribedCondition: string,
-  limit = 40,
+  limit = 72,
   perChannel = 12,
 ): unknown[] {
   return db

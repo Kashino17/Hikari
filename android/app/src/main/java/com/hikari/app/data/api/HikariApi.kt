@@ -166,15 +166,6 @@ interface HikariApi {
     @POST("feed/{id}/seen")
     suspend fun markSeen(@Path("id") videoId: String)
 
-    @GET("watch-later")
-    suspend fun getWatchLater(): List<FeedItemDto>
-
-    @POST("watch-later/{id}")
-    suspend fun addWatchLater(@Path("id") videoId: String)
-
-    @DELETE("watch-later/{id}")
-    suspend fun removeWatchLater(@Path("id") videoId: String)
-
     @POST("videos/{id}/download")
     suspend fun requestServerDownload(@Path("id") videoId: String): ServerDownloadStatus
 

@@ -17,7 +17,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -55,6 +58,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.hikari.app.data.api.dto.LibraryVideoDto
+import com.hikari.app.domain.library.SeriesResume
+import com.hikari.app.ui.components.ResumeArtwork
 import com.hikari.app.data.api.dto.SeriesDetailResponse
 import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.ui.components.FallbackArtwork
@@ -222,23 +227,15 @@ private fun SeriesDetailContent(
     val seasons = remember(data.videos) {
         data.videos.mapNotNull { it.season }.distinct().sorted()
     }
-    var selectedSeason by remember(seasons) {
-        mutableStateOf(seasons.firstOrNull() ?: 1)
-    }
+    // Die Folge, bei der es weitergeht: die zuletzt geschaute, solange sie nicht
+    // zu Ende ist — sonst die danach, auch über die Staffelgrenze.
+    val resumeVideo = remember(data.videos) { SeriesResume.target(data.videos) }
+    val resumeSeason = resumeVideo?.season ?: seasons.firstOrNull() ?: 1
 
-    // "Weiterschauen" target: zuletzt geschaute unfertige Folge. Vorher wurde
-    // stur die erste unfertige in Season-/Episodenreihenfolge genommen — wer
-    // S1E1 angefangen und später S2E3 weitergeschaut hatte, landete wieder
-    // bei S1E1. Ohne Zeitstempel (ältere Server) bleibt es beim alten Verhalten.
-    val resumeVideo = remember(data.videos) {
-        val unfinished = data.videos.filter { v ->
-            val p = v.progress_seconds ?: 0f
-            p > 0f && p < v.duration_seconds.toFloat() * 0.95f
-        }
-        unfinished.maxByOrNull { it.progress_updated_at ?: 0L }
-            ?: unfinished.firstOrNull()
-            ?: data.videos.firstOrNull()
-    }
+    // Die Seite öffnet in der Staffel, in der man stehen geblieben ist — nicht
+    // stur in Staffel 1. Ändert sich das Ziel (man hat weitergeschaut), zieht
+    // die Auswahl mit.
+    var selectedSeason by remember(seasons, resumeVideo?.id) { mutableStateOf(resumeSeason) }
 
     val episodesForSeason = remember(data.videos, selectedSeason, seasons) {
         if (seasons.isEmpty()) data.videos
@@ -252,18 +249,24 @@ private fun SeriesDetailContent(
     val allLocal = episodesForSeason.isNotEmpty() &&
         episodesForSeason.all { localIds.contains(it.id) }
 
-    val year = remember(data.videos) {
-        data.videos.firstOrNull()?.published_at?.let {
-            val cal = Calendar.getInstance().apply { timeInMillis = it }
-            cal.get(Calendar.YEAR)
+    val listState = rememberLazyListState()
+    val hasDescription = !data.description.isNullOrBlank()
+    // Beim Öffnen so weit scrollen, dass die Folge, bei der es weitergeht, im
+    // Blick ist. Die ersten Folgen einer Staffel liegen ohnehin direkt unter dem Kopf.
+    LaunchedEffect(resumeVideo?.id) {
+        val index = episodesForSeason.indexOfFirst { it.id == resumeVideo?.id }
+        if (selectedSeason == resumeSeason && index >= 3) {
+            // Einträge vor den Folgen: Kopf, (Beschreibung), Abstand, (Fehlerhinweis), Staffelzeile.
+            val before = 3 + (if (hasDescription) 1 else 0) + (if (downloadError != null) 1 else 0)
+            listState.scrollToItem(before + index - 1)
         }
     }
 
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    LazyColumn(modifier = Modifier.fillMaxSize(), state = listState) {
         item {
             HeroSection(
                 data = data,
-                year = year,
+                seasonCount = seasons.size,
                 resumeVideo = resumeVideo,
                 onBack = onBack,
                 onPlay = { resumeVideo?.let { onPlayVideo(it.id) } },
@@ -303,26 +306,26 @@ private fun SeriesDetailContent(
         }
 
         item {
+            if (seasons.size >= 2) {
+                SeasonChips(
+                    seasons = seasons,
+                    selected = selectedSeason,
+                    resumeSeason = resumeSeason.takeIf { resumeVideo != null && SeriesResume.isStarted(resumeVideo) },
+                    onChange = { selectedSeason = it },
+                )
+            }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 20.dp, end = 14.dp, top = 4.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (seasons.size >= 2) {
-                    SeasonDropdown(
-                        seasons = seasons,
-                        selected = selectedSeason,
-                        onChange = { selectedSeason = it },
-                    )
-                } else {
-                    Text(
-                        text = "Folgen",
-                        color = HikariText,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
+                Text(
+                    text = if (seasons.size >= 2) "Staffel $selectedSeason" else "Folgen",
+                    color = HikariText,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                )
                 Spacer(Modifier.weight(1f))
                 if (episodesForSeason.isNotEmpty()) {
                     LibrarySeasonDownloadButton(
@@ -340,6 +343,7 @@ private fun SeriesDetailContent(
             val progress = downloadProgress[video.id]
             EpisodeRow(
                 video = video,
+                isNext = video.id == resumeVideo?.id,
                 canPlay = video.downloaded != 0 || isLocal,
                 downloadable = video.downloaded != 0 || isLocal,
                 isLocal = isLocal,
@@ -360,7 +364,7 @@ private fun SeriesDetailContent(
 @Composable
 private fun HeroSection(
     data: SeriesDetailResponse,
-    year: Int?,
+    seasonCount: Int,
     resumeVideo: LibraryVideoDto?,
     onBack: () -> Unit,
     onPlay: () -> Unit,
@@ -368,13 +372,7 @@ private fun HeroSection(
 ) {
     Box(modifier = Modifier.fillMaxWidth().aspectRatio(16f / 10f)) {
         // Titel steht im Hero bereits groß unten — hier nur das Artwork.
-        FallbackArtwork(title = data.title, showTitle = false)
-        AsyncImage(
-            model = data.thumbnail_url,
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop,
-        )
+        CoverArtwork(title = data.title, coverUrl = data.thumbnail_url, showTitleFallback = false)
         // Top scrim
         Box(
             modifier = Modifier
@@ -462,25 +460,12 @@ private fun HeroSection(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Text(
-                    "98% Match",
-                    color = Color(0xFF4ADE80),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                if (year != null) {
-                    Text("$year", color = HikariTextFaint, fontSize = 12.sp)
-                }
-                Box(
-                    modifier = Modifier
-                        .border(1.dp, HikariTextFaint, RoundedCornerShape(2.dp))
-                        .padding(horizontal = 4.dp, vertical = 1.dp),
-                ) {
-                    Text("12+", color = HikariTextFaint, fontSize = 10.sp)
-                }
-                Text(
-                    "${data.videos.size} Folgen",
-                    color = HikariTextFaint,
-                    fontSize = 12.sp,
+                    text = buildString {
+                        if (seasonCount > 1) append("$seasonCount Staffeln · ")
+                        append(if (data.videos.size == 1) "1 Folge" else "${data.videos.size} Folgen")
+                    },
+                    color = HikariTextMuted,
+                    fontSize = 13.sp,
                 )
             }
             HeroPlayButton(
@@ -496,17 +481,19 @@ private fun HeroPlayButton(
     resumeVideo: LibraryVideoDto?,
     onClick: () -> Unit,
 ) {
-    val isResume = (resumeVideo?.progress_seconds ?: 0f) > 0f
-    val label = when {
-        resumeVideo == null -> "Abspielen"
-        isResume -> "Weiterschauen: F${resumeVideo.episode ?: "-"}"
-        else -> "Abspielen"
+    // Der Knopf nennt die Folge beim Namen — man sieht vor dem Tippen, wo man landet.
+    val tag = resumeVideo?.let { episodeTag(it.season, it.episode) }.orEmpty()
+    val verb = if (resumeVideo != null && SeriesResume.isStarted(resumeVideo) && !SeriesResume.isFinished(resumeVideo)) {
+        "Weiterschauen"
+    } else {
+        "Abspielen"
     }
+    val label = if (tag.isBlank()) verb else "$verb · $tag"
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(44.dp)
-            .clip(RoundedCornerShape(6.dp))
+            .height(48.dp)
+            .clip(RoundedCornerShape(50))
             .background(Color.White)
             .clickable(enabled = resumeVideo != null, onClick = onClick)
             .padding(horizontal = 16.dp),
@@ -526,53 +513,42 @@ private fun HeroPlayButton(
 
 // ─── Season dropdown ─────────────────────────────────────────────────────────
 
+/**
+ * Staffeln als antippbare Reihe statt Aufklappliste: ein Tipp wechselt, und
+ * ein Punkt zeigt, in welcher Staffel man stehen geblieben ist.
+ */
 @Composable
-private fun SeasonDropdown(
+private fun SeasonChips(
     seasons: List<Int>,
     selected: Int,
+    resumeSeason: Int?,
     onChange: (Int) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    Box(modifier = modifier) {
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(4.dp))
-                .border(1.dp, Color.White.copy(alpha = 0.4f), RoundedCornerShape(4.dp))
-                .clickable { expanded = true }
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                "Staffel $selected",
-                color = Color.White,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Spacer(Modifier.width(6.dp))
-            Icon(
-                Icons.Default.ArrowDropDown,
-                contentDescription = "Staffel wählen",
-                tint = Color.White,
-            )
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-        ) {
-            seasons.forEach { season ->
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            "Staffel $season",
-                            color = if (season == selected) HikariAmber else HikariText,
-                        )
-                    },
-                    onClick = {
-                        onChange(season)
-                        expanded = false
-                    },
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 20.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(bottom = 10.dp),
+    ) {
+        items(seasons, key = { it }) { season ->
+            val active = season == selected
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(if (active) Color.White else Color.White.copy(alpha = 0.08f))
+                    .clickable { onChange(season) }
+                    .padding(horizontal = 16.dp, vertical = 9.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "Staffel $season",
+                    color = if (active) Color.Black else HikariText,
+                    fontSize = 14.sp,
+                    fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
                 )
+                if (season == resumeSeason) {
+                    Spacer(Modifier.width(7.dp))
+                    Box(Modifier.size(7.dp).clip(RoundedCornerShape(50)).background(HikariAmber))
+                }
             }
         }
     }
@@ -583,6 +559,7 @@ private fun SeasonDropdown(
 @Composable
 private fun EpisodeRow(
     video: LibraryVideoDto,
+    isNext: Boolean,
     canPlay: Boolean,
     downloadable: Boolean,
     isLocal: Boolean,
@@ -593,26 +570,23 @@ private fun EpisodeRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+            .clip(RoundedCornerShape(14.dp))
+            // Die Folge, bei der es weitergeht, liegt auf einer leicht getönten Fläche.
+            .background(if (isNext) HikariAmber.copy(alpha = 0.09f) else Color.Transparent)
             .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 8.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.Top,
     ) {
         Box(
             modifier = Modifier
                 .width(140.dp)
                 .aspectRatio(16f / 9f)
-                .clip(RoundedCornerShape(4.dp))
+                .clip(RoundedCornerShape(8.dp))
                 .background(Color.DarkGray),
         ) {
-            FallbackArtwork(title = video.title)
-            // Angefangene Folge: Frame an der Stopp-Position statt Poster
-            // (Netflix-Stil). Der Server klemmt/rundet die Sekunden selbst.
-            AsyncImage(
-                model = video.resumeAwareThumbnail(),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
+            // Angefangene Folge: Bild der Stelle, an der man aufgehört hat.
+            ResumeArtwork(video = video, modifier = Modifier.fillMaxSize())
             val progress = video.progress_seconds?.let {
                 it / video.duration_seconds.toFloat()
             }
@@ -649,10 +623,14 @@ private fun EpisodeRow(
                 // ins Leere tippen zu lassen.
                 text = when {
                     !canPlay -> "Nicht verfügbar"
-                    isLocal -> "✓ Auf dem Gerät · ${video.duration_seconds / 60} min"
+                    isNext && SeriesResume.isStarted(video) && !SeriesResume.isFinished(video) ->
+                        "Hier weiter · noch ${remainingLabel(video)}"
+                    isNext -> "Als Nächstes · ${video.duration_seconds / 60} min"
+                    isLocal -> "Auf dem Gerät · ${video.duration_seconds / 60} min"
+                    SeriesResume.isFinished(video) -> "Gesehen · ${video.duration_seconds / 60} min"
                     else -> "${video.duration_seconds / 60} min"
                 },
-                color = if (isLocal) HikariAmber else HikariTextFaint,
+                color = if (isNext || isLocal) HikariAmber else HikariTextFaint,
                 fontSize = 11.sp,
                 modifier = Modifier.padding(top = 4.dp),
             )

@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.hikari.app.data.api.dto.LibraryResponse
 import com.hikari.app.data.api.dto.SeriesDetailResponse
 import com.hikari.app.data.api.dto.SeriesItemDto
-import com.hikari.app.data.api.dto.TodayCountResponse
 import com.hikari.app.data.db.LocalDownloadDao
 import com.hikari.app.data.db.LocalDownloadEntity
 import com.hikari.app.data.db.LocalMangaArcEntity
@@ -17,8 +16,6 @@ import com.hikari.app.domain.repo.FeedRepository
 import com.hikari.app.domain.repo.MusicRepository
 import com.hikari.app.domain.repo.PlaybackRepository
 import com.hikari.app.player.MusicPlayerController
-import com.hikari.app.ui.library.components.TopTenCharts
-import com.hikari.app.ui.library.components.TopTenItem
 import com.hikari.app.data.api.dto.LibraryVideoDto
 import com.hikari.app.data.api.dto.isFilm
 import com.hikari.app.data.db.LocalDownloadKind
@@ -94,24 +91,11 @@ class LibraryViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<LibraryUiState>(LibraryUiState.Loading)
     val uiState: StateFlow<LibraryUiState> = _uiState.asStateFlow()
 
-    private val _topCharts = MutableStateFlow(TopTenCharts())
-    val topCharts: StateFlow<TopTenCharts> = _topCharts.asStateFlow()
-
     private val _seriesState = MutableStateFlow<SeriesUiState>(SeriesUiState.Loading)
     val seriesState: StateFlow<SeriesUiState> = _seriesState.asStateFlow()
 
     private val _coverEditState = MutableStateFlow<CoverEditState>(CoverEditState.Idle)
     val coverEditState: StateFlow<CoverEditState> = _coverEditState.asStateFlow()
-
-    private val _today = MutableStateFlow<TodayCountResponse?>(null)
-    val today: StateFlow<TodayCountResponse?> = _today.asStateFlow()
-
-    private val _queueItems = MutableStateFlow<List<FeedItem>>(emptyList())
-    val queueItems: StateFlow<List<FeedItem>> = _queueItems.asStateFlow()
-
-    // Etappe 5: die Sammlung — Später ansehen + Verlauf.
-    private val _watchLater = MutableStateFlow<List<FeedItem>>(emptyList())
-    val watchLater: StateFlow<List<FeedItem>> = _watchLater.asStateFlow()
 
     /** Alle Serien — Auswahlliste für den Merge-Dialog im Serien-Detail. */
     private val _allSeries = MutableStateFlow<List<SeriesItemDto>>(emptyList())
@@ -165,13 +149,14 @@ class LibraryViewModel @Inject constructor(
             // Der WorkManager-Lauf ist die Rückfallebene, falls das hier
             // timeoutet oder das Backend kurz nicht antwortet.
             runCatching { withTimeoutOrNull(4_000) { playbackRepo.syncPending() } }
-            _uiState.value = LibraryUiState.Loading
+            // Beim Auffrischen (z. B. Rückkehr aus dem Player) bleibt der bisherige
+            // Inhalt stehen — sonst blitzt jedes Mal der Ladekreis auf und die
+            // Seite springt an den Anfang.
+            if (_uiState.value !is LibraryUiState.Success) _uiState.value = LibraryUiState.Loading
             runCatching {
                 repo.getLibrary()
             }.onSuccess {
                 _uiState.value = LibraryUiState.Success(it)
-                loadBriefingExtras()
-                updateTopCharts(it)
             }.onFailure {
                 // Netz da, aber Backend antwortet nicht → trotzdem Offline-Modus
                 // statt technischem Fehlertext.
@@ -206,115 +191,6 @@ class LibraryViewModel @Inject constructor(
         musicPlayer.play(song, queue)
     }
 
-    private fun loadBriefingExtras() {
-        viewModelScope.launch {
-            runCatching { repo.todayCount() }
-                .onSuccess { _today.value = it }
-        }
-        viewModelScope.launch {
-            runCatching { repo.fetchQueue() }
-                .onSuccess { _queueItems.value = it.distinctBy { item -> item.videoId } }
-        }
-        viewModelScope.launch {
-            runCatching { repo.fetchWatchLater() }
-                .onSuccess { _watchLater.value = it.distinctBy { item -> item.videoId } }
-        }
-    }
-
-    /**
-     * Berechnet die TOP 10 Serien und TOP 10 Filme der letzten 30 Tage
-     * basierend auf realen Wiedergabepositionen und Historie.
-     * Füllt bei weniger als 10 Einträgen automatisch mit den höchstbewerteten Titeln auf.
-     */
-    private fun updateTopCharts(data: LibraryResponse) {
-        viewModelScope.launch {
-            val thirtyDaysAgo = System.currentTimeMillis() - 30L * 24 * 3600 * 1000L
-            val recentPositions = runCatching { playbackRepo.getRecentPositions(thirtyDaysAgo) }.getOrDefault(emptyList())
-            val recentWatchedVideoIds = recentPositions.map { it.videoId }.toSet()
-
-            // ── TOP 10 SERIEN (Letzte 30 Tage) ──────────────────────────────
-            val watchedSeriesCount = mutableMapOf<String, Int>()
-            data.recentlyAdded.forEach { v ->
-                val sId = v.series_id
-                if (sId != null && v.id in recentWatchedVideoIds) {
-                    watchedSeriesCount[sId] = (watchedSeriesCount[sId] ?: 0) + 1
-                }
-            }
-
-            val seriesById = data.series.associateBy { it.id }
-            val rankedWatchedSeries = watchedSeriesCount.entries
-                .sortedByDescending { it.value }
-                .mapNotNull { seriesById[it.key] }
-
-            val remainingSeries = data.series
-                .filter { it !in rankedWatchedSeries }
-                .sortedByDescending { it.added_at }
-
-            val finalTopSeries = (rankedWatchedSeries + remainingSeries)
-                .take(10)
-                .mapIndexed { idx, s ->
-                    TopTenItem(
-                        rank = idx + 1,
-                        id = s.id,
-                        title = s.title,
-                        subtitle = s.description ?: "Serie",
-                        thumbnailUrl = s.thumbnail_url,
-                        isSeries = true,
-                        seriesId = s.id,
-                    )
-                }
-
-            // ── TOP 10 FILME (Letzte 30 Tage) ───────────────────────────────
-            val allMovies = data.recentlyAdded.filter { it.isFilm() }
-            val watchedMovies = allMovies
-                .filter { it.id in recentWatchedVideoIds }
-                .sortedByDescending { it.progress_seconds ?: 0f }
-
-            val unwatchedMovies = allMovies
-                .filter { it !in watchedMovies }
-                .sortedWith(compareByDescending<LibraryVideoDto> { it.overall_score ?: 0 }.thenByDescending { it.duration_seconds })
-
-            val finalTopMovies = (watchedMovies + unwatchedMovies)
-                .take(10)
-                .mapIndexed { idx, v ->
-                    val min = v.duration_seconds / 60
-                    val durStr = if (min >= 60) "${min / 60}h ${min % 60}m" else "${min}m"
-                    TopTenItem(
-                        rank = idx + 1,
-                        id = v.id,
-                        title = v.title,
-                        subtitle = "$durStr · ${v.channelTitle ?: "Film"}",
-                        thumbnailUrl = v.thumbnail_url,
-                        isSeries = false,
-                        channelTitle = v.channelTitle ?: "",
-                        durationSeconds = v.duration_seconds,
-                        matchScore = v.overall_score,
-                        isMovie = true,
-                        progressSeconds = v.progress_seconds,
-                    )
-                }
-
-            _topCharts.value = TopTenCharts(
-                topSeries = finalTopSeries,
-                topMovies = finalTopMovies,
-            )
-        }
-    }
-
-    fun toggleWatchLater(videoId: String, isCurrentlySaved: Boolean) {
-        viewModelScope.launch {
-            if (isCurrentlySaved) {
-                repo.removeWatchLater(videoId)
-                _watchLater.value = _watchLater.value.filter { it.videoId != videoId }
-            } else {
-                repo.addWatchLater(videoId)
-                runCatching { repo.fetchWatchLater() }.onSuccess { list ->
-                    _watchLater.value = list.distinctBy { it.videoId }
-                }
-            }
-        }
-    }
-
     /**
      * Verlauf kommt mit der Bibliothek (LibraryResponse.watchHistory). Sofort
      * lokal entfernen, damit die Karte ohne Neuladen verschwindet; scheitert
@@ -333,13 +209,6 @@ class LibraryViewModel @Inject constructor(
     private fun updateLibrary(transform: (LibraryResponse) -> LibraryResponse) {
         val current = _uiState.value as? LibraryUiState.Success ?: return
         _uiState.value = LibraryUiState.Success(transform(current.data))
-    }
-
-    fun removeWatchLater(videoId: String) {
-        viewModelScope.launch {
-            repo.removeWatchLater(videoId)
-            _watchLater.value = _watchLater.value.filter { it.videoId != videoId }
-        }
     }
 
     fun loadSeries(id: String) {

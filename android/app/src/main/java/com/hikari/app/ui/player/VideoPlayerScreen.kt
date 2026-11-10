@@ -560,6 +560,11 @@ fun VideoPlayerScreen(
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
+                    // Standbild für „Weiterschauen" festhalten, auch wenn die App einfach verlassen wird.
+                    if (event == Lifecycle.Event.ON_PAUSE) {
+                        val id = currentVideoId
+                        captureVideoFrame(playerViewRef) { frame -> dockManager.setLastFrame(id, frame) }
+                    }
                     if (activity?.isInPictureInPictureMode != true) {
                         player.playWhenReady = false
                         savePositionAsync(currentVideoId, player.currentPosition)
@@ -1448,14 +1453,14 @@ private fun isLanUrl(url: String): Boolean {
 
 /**
  * Kopiert das aktuell angezeigte Videobild (SurfaceView des PlayerView) per
- * PixelCopy in ein kleines Bitmap — 320 px breit reicht für die Mini-Leiste.
+ * PixelCopy in ein kleines Bitmap — 640 px breit reicht für Mini-Leiste und Bibliothek.
  * Ohne gültige Fläche passiert nichts; der Aufrufer hat einen Zeitausweg.
  */
 private fun captureVideoFrame(view: PlayerView?, onFrame: (android.graphics.Bitmap) -> Unit) {
     val surface = view?.videoSurfaceView as? android.view.SurfaceView ?: return
     if (surface.width <= 0 || surface.height <= 0 || !surface.holder.surface.isValid) return
-    val w = 320
-    val h = (w * surface.height / surface.width.toFloat()).toInt().coerceIn(1, 640)
+    val w = 640
+    val h = (w * surface.height / surface.width.toFloat()).toInt().coerceIn(1, 1280)
     val bitmap = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
     runCatching {
         android.view.PixelCopy.request(

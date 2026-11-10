@@ -33,7 +33,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Apps
-import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
@@ -80,7 +79,6 @@ import com.hikari.app.ui.profile.components.AreaHubShowcase
 import com.hikari.app.ui.profile.tabs.ChannelsTab
 import com.hikari.app.ui.profile.tabs.DownloadCategory
 import com.hikari.app.ui.profile.tabs.DownloadsTab
-import com.hikari.app.ui.profile.tabs.SavedTab
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariAmberSoft
 import com.hikari.app.ui.theme.HikariBg
@@ -95,7 +93,7 @@ import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 import java.io.File
 
-private enum class ProfileTab { BEREICHE, CHANNELS, DOWNLOADS, SAVED }
+private enum class ProfileTab { BEREICHE, CHANNELS, DOWNLOADS }
 
 @Composable
 fun ProfileScreen(
@@ -112,7 +110,6 @@ fun ProfileScreen(
     val nickname by vm.nickname.collectAsState()
     val bio by vm.bio.collectAsState()
     val avatarPath by vm.avatarPath.collectAsState()
-    val savedCount by vm.savedCount.collectAsState()
     val channelsCount by vm.channelsCount.collectAsState()
     val downloadsCount by vm.downloadsCount.collectAsState()
     val hubNews by vm.hubNews.collectAsState()
@@ -345,7 +342,6 @@ fun ProfileScreen(
             // ── Unified Modern Tab Switcher mit Zählern ─────────────────────────
             ProfileTabsRow(
                 active = tab,
-                savedCount = savedCount,
                 channelsCount = channelsCount,
                 downloadsCount = downloadsCount,
                 onTabSelected = { tab = it },
@@ -356,9 +352,6 @@ fun ProfileScreen(
             // ── Tab Content: Volle Höhe für maximale UX ─────────────────────────
             Box(modifier = Modifier.fillMaxSize()) {
                 when (tab) {
-                    ProfileTab.SAVED -> SavedTab(
-                        onPlay = { onPlayVideo(it.videoId, it.title, it.channelTitle) },
-                    )
                     ProfileTab.CHANNELS -> ChannelsTab(
                         onOpenChannel = onOpenChannel,
                         onOpenImport = { importOpen = true },
@@ -430,7 +423,6 @@ fun ProfileScreen(
 @Composable
 private fun ProfileTabsRow(
     active: ProfileTab,
-    savedCount: Int,
     channelsCount: Int,
     downloadsCount: Int,
     onTabSelected: (ProfileTab) -> Unit,
@@ -465,13 +457,6 @@ private fun ProfileTabsRow(
             count = downloadsCount,
             selected = active == ProfileTab.DOWNLOADS,
             onClick = { onTabSelected(ProfileTab.DOWNLOADS) },
-        )
-        TabChip(
-            icon = Icons.Default.Bookmark,
-            label = "Gespeichert",
-            count = savedCount,
-            selected = active == ProfileTab.SAVED,
-            onClick = { onTabSelected(ProfileTab.SAVED) },
         )
     }
 }

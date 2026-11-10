@@ -80,18 +80,11 @@ class ProfileViewModel @Inject constructor(
     private val _events = MutableSharedFlow<String>(extraBufferCapacity = 1)
     val events: SharedFlow<String> = _events.asSharedFlow()
 
-    private val _saved = MutableStateFlow<List<FeedItem>>(emptyList())
-    val saved: StateFlow<List<FeedItem>> = _saved.asStateFlow()
-
     private val _channelsCount = MutableStateFlow(0)
     val channelsCount: StateFlow<Int> = _channelsCount.asStateFlow()
 
     private val _downloadsCount = MutableStateFlow(0)
     val downloadsCount: StateFlow<Int> = _downloadsCount.asStateFlow()
-
-    val savedCount: StateFlow<Int> = _saved
-        .map { it.size }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
     init {
         refreshAll()
@@ -99,7 +92,6 @@ class ProfileViewModel @Inject constructor(
 
     /** Reloads all profile-tab data — used on screen-resume so counts stay live. */
     fun refreshAll() {
-        refreshSaved()
         refreshChannelsCount()
         refreshDownloadsCount()
         refreshHub()
@@ -124,13 +116,6 @@ class ProfileViewModel @Inject constructor(
                     }.take(3)
                     _hubMangaLabel.value = cont.firstOrNull()?.let { "${it.title} · Seite ${it.pageNumber}" }
                 }
-        }
-    }
-
-    fun refreshSaved() {
-        viewModelScope.launch {
-            runCatching { feedRepo.fetchSaved() }
-                .onSuccess { _saved.value = it }
         }
     }
 

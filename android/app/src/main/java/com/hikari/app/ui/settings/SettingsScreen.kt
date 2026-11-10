@@ -425,7 +425,7 @@ private fun DownloadsPage(vm: SettingsViewModel) {
             icon = Icons.Outlined.Bolt,
             color = SmartColor,
             title = "Smart-Downloads",
-            description = "Lädt Videos aus »Später ansehen« und deine Lieblingssongs von selbst — nur im WLAN.",
+            description = "Hält die nächsten Folgen deiner laufenden Serien und deine Lieblingssongs bereit — nur im WLAN.",
             trailing = {
                 Switch(
                     checked = smart,

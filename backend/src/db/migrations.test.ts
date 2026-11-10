@@ -156,7 +156,7 @@ describe("Migration: Clipper, Bewertung und Discovery entfernt", () => {
     expect(columnNames(db, "videos")).not.toContain("clip_status");
     expect(columnNames(db, "feed_items")).not.toContain("is_pre_clipper");
     expect(columnNames(db, "channels")).not.toContain("auto_approve");
-    expect(db.pragma("user_version", { simple: true })).toBe(2);
+    expect(db.pragma("user_version", { simple: true })).toBe(3);
   });
 
   it("räumt Altbestand ab: Tabellen, Spalten und Index auf clip_status", () => {
@@ -265,11 +265,12 @@ describe("Migration: Feed = nur Abos (einmalige Datenbereinigung)", () => {
     ).map((r) => r.video_id);
     expect(jobs).toEqual(["q-sub"]);
 
-    // videos, channels und watch_later bleiben vollständig.
+    // videos und channels bleiben vollständig; „Später ansehen" leert
+    // Migration 3 (die Liste gibt es in der App nicht mehr).
     expect(db.prepare("SELECT COUNT(*) c FROM videos").get()).toEqual({ c: 8 });
     expect(db.prepare("SELECT COUNT(*) c FROM channels").get()).toEqual({ c: 5 });
-    expect(db.prepare("SELECT COUNT(*) c FROM watch_later").get()).toEqual({ c: 1 });
-    expect(db.pragma("user_version", { simple: true })).toBe(2);
+    expect(db.prepare("SELECT COUNT(*) c FROM watch_later").get()).toEqual({ c: 0 });
+    expect(db.pragma("user_version", { simple: true })).toBe(3);
   });
 
   it("läuft nur einmal — spätere Läufe fassen den Bestand nicht mehr an", () => {

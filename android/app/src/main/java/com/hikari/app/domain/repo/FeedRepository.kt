@@ -118,8 +118,6 @@ class FeedRepository @Inject constructor(
         runCatching { api.deleteVideo(videoId) }
     }
 
-    suspend fun fetchWatchLater(): List<FeedItem> = api.getWatchLater().map { it.toDomain() }
-
     /** Serie mit allen Folgen vom PC löschen. Wirft bei Fehlern — der Aufrufer meldet sie. */
     suspend fun deleteSeries(seriesId: String) = api.deleteSeries(seriesId)
 
@@ -132,14 +130,6 @@ class FeedRepository @Inject constructor(
     suspend fun removeFromHistory(videoId: String) = api.removeFromHistory(videoId)
 
     suspend fun clearHistory() = api.clearHistory()
-
-    suspend fun addWatchLater(videoId: String) {
-        runCatching { api.addWatchLater(videoId) }
-    }
-
-    suspend fun removeWatchLater(videoId: String) {
-        runCatching { api.removeWatchLater(videoId) }
-    }
 
     /** "ready" | "queued" | null (Netzfehler) — der Server laedt on demand. */
     suspend fun requestServerDownload(videoId: String): String? =

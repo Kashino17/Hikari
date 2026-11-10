@@ -236,7 +236,18 @@ export function applyMigrations(db: Database.Database): void {
     migrateHistoryAndSaved(db);
     db.pragma(`user_version = ${HISTORY_MIGRATION_VERSION}`);
   }
+  if (version < WATCH_LATER_MIGRATION_VERSION) {
+    db.exec("DELETE FROM watch_later");
+    db.pragma(`user_version = ${WATCH_LATER_MIGRATION_VERSION}`);
+  }
 }
+
+/**
+ * Migration 3: „Später ansehen" leeren. Die Liste füllte der frühere Feed
+ * beim Wegwischen von Karten; den gibt es so nicht mehr, die App zeigt die
+ * Liste nicht mehr an und legt nichts mehr hinein.
+ */
+const WATCH_LATER_MIGRATION_VERSION = 3;
 
 /**
  * Migration 2: Verlauf aus dem echten Wiedergabefortschritt vorbefüllen und

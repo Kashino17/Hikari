@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import com.hikari.app.data.db.LocalDownloadKind
 import com.hikari.app.data.db.LocalDownloadSource
 import com.hikari.app.data.prefs.SettingsStore
+import com.hikari.app.domain.library.SeriesResume
 import com.hikari.app.domain.repo.FeedRepository
 import com.hikari.app.domain.repo.MusicRepository
 import dagger.assisted.Assisted
@@ -14,13 +15,12 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
 
 /**
- * Periodic background sync that downloads any "saved" video that isn't yet
- * locally available, plus favorited songs. Runs only when the user's
- * Smart-Downloads preference is on AND the device is on an unmetered network
- * (constraint set in the scheduler).
+ * Smart-Downloads: hält für jede Serie, die gerade läuft, die nächsten Folgen
+ * auf dem Gerät bereit — und dazu die favorisierten Songs. Läuft nur, wenn die
+ * Einstellung an ist UND das Gerät im WLAN hängt (Constraint im Scheduler).
  *
- * Limits per fire: at most 5 downloads each — keeps the worker bounded and lets
- * other Workers run.
+ * Pro Lauf höchstens 5 Downloads je Art — der Worker bleibt überschaubar und
+ * lässt anderen Workern Luft.
  */
 @HiltWorker
 class SmartDownloadWorker @AssistedInject constructor(
@@ -43,40 +43,42 @@ class SmartDownloadWorker @AssistedInject constructor(
 
         downloadFavoriteSongs()
 
-        // Backend down or fetch-saved errors → skip this fire silently. Next
-        // periodic run is in 6h anyway. Result.retry() here would trigger
-        // exponential backoff that hammers the backend during outages —
-        // reserved for genuinely-transient cases where a sooner re-attempt
-        // actually helps.
-        val saved = runCatching { feedRepo.fetchSaved() }.getOrNull() ?: return Result.success()
-        val watchLater = runCatching { feedRepo.fetchWatchLater() }.getOrDefault(emptyList())
-        val candidates = (saved + watchLater).distinctBy { it.videoId }
-
-        var queued = 0
-        for (item in candidates) {
-            if (queued >= MAX_PER_FIRE) break
-            if (localDownloads.isDownloaded(item.videoId)) continue
-            // Streaming-Welt (Etappe 5): der Server hat die Datei meist NICHT
-            // mehr — erst on demand anstossen. "ready" → sofort ziehen;
-            // "queued" → der Server laedt gerade, der naechste 6-h-Lauf zieht;
-            // null → Netzfehler, skip.
-            if (feedRepo.requestServerDownload(item.videoId) != "ready") continue
-            // Smart-Downloads ziehen Saved+Später-Items — die haben Channel-Bezug,
-            // aber keinen Series-Kontext. Daher CHANNEL als kind.
-            val res = localDownloads.download(
-                LocalDownloadMetadata(
-                    videoId = item.videoId,
-                    kind = LocalDownloadKind.CHANNEL,
-                    title = item.title,
-                    durationSeconds = item.durationSeconds,
-                    thumbnailUrl = item.thumbnailUrl,
-                    channelTitle = item.channelTitle.ifBlank { null },
-                    source = LocalDownloadSource.SMART,
-                ),
-            )
-            if (res.isSuccess) queued += 1
-        }
+        downloadNextEpisodes()
         return Result.success()
+    }
+
+    /**
+     * Für die zuletzt geschauten Serien die Folge, bei der es weitergeht, und
+     * die danach aufs Gerät holen. Ist der Server nicht erreichbar, passiert
+     * still nichts — der nächste Lauf kommt in 6 h ohnehin.
+     */
+    private suspend fun downloadNextEpisodes() {
+        val library = runCatching { feedRepo.getLibrary() }.getOrNull() ?: return
+        val running = library.continueWatching.mapNotNull { it.series_id }.distinct().take(MAX_SERIES)
+        var queued = 0
+        for (seriesId in running) {
+            val series = runCatching { feedRepo.getSeries(seriesId) }.getOrNull() ?: continue
+            for (video in SeriesResume.upcoming(series.videos, EPISODES_AHEAD)) {
+                if (queued >= MAX_PER_FIRE) return
+                if (localDownloads.isDownloaded(video.id)) continue
+                val res = localDownloads.download(
+                    LocalDownloadMetadata(
+                        videoId = video.id,
+                        kind = LocalDownloadKind.SERIES,
+                        title = video.title,
+                        durationSeconds = video.duration_seconds,
+                        thumbnailUrl = video.thumbnail_url,
+                        seriesId = series.id,
+                        seriesTitle = series.title,
+                        seriesThumbnailUrl = series.thumbnail_url,
+                        season = video.season,
+                        episode = video.episode,
+                        source = LocalDownloadSource.SMART,
+                    ),
+                )
+                if (res.isSuccess) queued += 1
+            }
+        }
     }
 
     /**
@@ -95,5 +97,9 @@ class SmartDownloadWorker @AssistedInject constructor(
 
     companion object {
         private const val MAX_PER_FIRE = 5
+        /** So viele laufende Serien werden bedient … */
+        private const val MAX_SERIES = 3
+        /** … und je Serie so viele Folgen vorgehalten (die aktuelle und die nächste). */
+        private const val EPISODES_AHEAD = 2
     }
 }
