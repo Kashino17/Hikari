@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -29,6 +30,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -160,12 +162,32 @@ fun ProfileScreen(
                     .padding(horizontal = 4.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                ProfileAvatar(
-                    avatarPath = avatarPath,
-                    fallbackChar = name.firstOrNull()?.uppercaseChar() ?: 'H',
-                    size = 44.dp,
-                    onClick = { showEditSheet = true },
-                )
+                Box {
+                    ProfileAvatar(
+                        avatarPath = avatarPath,
+                        fallbackChar = name.firstOrNull()?.uppercaseChar() ?: 'H',
+                        size = 44.dp,
+                        onClick = { showEditSheet = true },
+                    )
+                    // Der einzige sichtbare Hinweis, dass sich Bild und Name hier ändern lassen.
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .offset(x = 3.dp, y = 3.dp)
+                            .size(19.dp)
+                            .clip(CircleShape)
+                            .background(HikariAmber)
+                            .border(2.dp, HikariBg, CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            Icons.Outlined.Edit,
+                            contentDescription = null,
+                            tint = Color.Black,
+                            modifier = Modifier.size(10.dp),
+                        )
+                    }
+                }
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(

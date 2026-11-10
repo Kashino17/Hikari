@@ -3,6 +3,8 @@ package com.hikari.app.ui.profile
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.media.ExifInterface
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -125,23 +127,28 @@ class ProfileViewModel @Inject constructor(
             runCatching {
                 val dir = ctx.filesDir
 
+                val resolver = ctx.contentResolver
+                fun open() = resolver.openInputStream(uri) ?: error("Bild konnte nicht geöffnet werden")
+
+                // Nur die Maße lesen. decodeStream gibt dabei mit Absicht null zurück —
+                // ob das Bild lesbar ist, sagen allein outWidth/outHeight.
                 val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                ctx.contentResolver.openInputStream(uri)?.use {
-                    BitmapFactory.decodeStream(it, null, bounds)
-                } ?: error("Bild konnte nicht geöffnet werden")
+                open().use { BitmapFactory.decodeStream(it, null, bounds) }
+                if (bounds.outWidth <= 0 || bounds.outHeight <= 0) error("Das Bild lässt sich nicht lesen")
 
-                val targetPx = 1024
-                var sample = 1
-                var w = bounds.outWidth
-                var h = bounds.outHeight
-                while (w / 2 >= targetPx && h / 2 >= targetPx) {
-                    w /= 2; h /= 2; sample *= 2
+                val opts = BitmapFactory.Options().apply {
+                    inSampleSize = avatarSampleSize(bounds.outWidth, bounds.outHeight)
                 }
+                val decoded = open().use { BitmapFactory.decodeStream(it, null, opts) }
+                    ?: error("Das Bild lässt sich nicht lesen")
 
-                val opts = BitmapFactory.Options().apply { inSampleSize = sample }
-                val bitmap = ctx.contentResolver.openInputStream(uri)?.use {
-                    BitmapFactory.decodeStream(it, null, opts)
-                } ?: error("Bild konnte nicht gelesen werden")
+                // Handyfotos liegen oft gedreht in der Datei und tragen die Lage nur als Vermerk.
+                val degrees = runCatching { open().use { exifDegrees(ExifInterface(it)) } }.getOrDefault(0)
+                val bitmap = if (degrees == 0) decoded else {
+                    val turn = Matrix().apply { postRotate(degrees.toFloat()) }
+                    Bitmap.createBitmap(decoded, 0, 0, decoded.width, decoded.height, turn, true)
+                        .also { if (it !== decoded) decoded.recycle() }
+                }
 
                 val file = File(dir, "avatar_${System.currentTimeMillis()}.jpg")
                 file.outputStream().use { out ->
@@ -171,6 +178,28 @@ class ProfileViewModel @Inject constructor(
 
     companion object {
         private val NICKNAME_REGEX = Regex("^[a-z0-9_.]+$")
+
+        /** Kantenlänge, auf die große Fotos beim Übernehmen etwa verkleinert werden. */
+        private const val AVATAR_TARGET_PX = 1024
+
+        /** Verkleinerungsstufe (Zweierpotenz), mit der beide Kanten noch mindestens die Zielgröße haben. */
+        fun avatarSampleSize(width: Int, height: Int, target: Int = AVATAR_TARGET_PX): Int {
+            var sample = 1
+            var w = width
+            var h = height
+            while (w / 2 >= target && h / 2 >= target) {
+                w /= 2; h /= 2; sample *= 2
+            }
+            return sample
+        }
+
+        private fun exifDegrees(exif: ExifInterface): Int =
+            when (exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
+                ExifInterface.ORIENTATION_ROTATE_90 -> 90
+                ExifInterface.ORIENTATION_ROTATE_180 -> 180
+                ExifInterface.ORIENTATION_ROTATE_270 -> 270
+                else -> 0
+            }
 
         fun validateNickname(value: String): NicknameError? {
             if (value.length < 3) return NicknameError("Mindestens 3 Zeichen.")
