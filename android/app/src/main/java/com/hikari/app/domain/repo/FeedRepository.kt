@@ -143,6 +143,9 @@ class FeedRepository @Inject constructor(
 
     suspend fun getLibrary(): LibraryResponse = api.getLibrary()
 
+    suspend fun getUploads(channelId: String?, query: String?, offset: Int, limit: Int): List<LibraryVideoDto> =
+        api.getUploads(channelId, query?.takeIf { it.isNotBlank() }, offset, limit)
+
     suspend fun getDownloads(): com.hikari.app.data.api.dto.DownloadsResponse =
         api.getDownloads()
 

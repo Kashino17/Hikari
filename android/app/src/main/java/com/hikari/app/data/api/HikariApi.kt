@@ -25,6 +25,7 @@ import com.hikari.app.data.api.dto.DownloadsResponse
 import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.data.api.dto.LanguagesResponse
 import com.hikari.app.data.api.dto.LibraryResponse
+import com.hikari.app.data.api.dto.LibraryVideoDto
 import com.hikari.app.data.api.dto.MangaArcManifestDto
 import com.hikari.app.data.api.dto.MangaContinueDto
 import com.hikari.app.data.api.dto.MangaPageDto
@@ -250,6 +251,15 @@ interface HikariApi {
 
     @GET("library")
     suspend fun getLibrary(): LibraryResponse
+
+    /** Uploads der abonnierten Kanäle, neueste zuerst — seitenweise, optional je Kanal und mit Suche. */
+    @GET("library/uploads")
+    suspend fun getUploads(
+        @Query("channel") channelId: String? = null,
+        @Query("q") query: String? = null,
+        @Query("offset") offset: Int = 0,
+        @Query("limit") limit: Int = 5,
+    ): List<LibraryVideoDto>
 
     /** LAN-Adressen des Servers — nur darüber erreicht ein Fernseher den Stream. */
     @GET("cast/info")

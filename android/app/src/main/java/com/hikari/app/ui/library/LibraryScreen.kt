@@ -153,8 +153,6 @@ fun LibraryScreen(
                 onOpenChannel = onOpenChannel,
                 onPlayVideo = onPlayVideo,
                 onLongPressSeries = { editingSeries = it },
-                onRemoveHistory = { viewModel.removeFromHistory(it) },
-                onClearHistory = { viewModel.clearHistory() },
             )
         }
     }
@@ -177,6 +175,9 @@ fun LibraryScreen(
     }
 }
 
+/** Luft zwischen den Bereichen der Bibliothek. */
+private val SECTION_GAP = 40.dp
+
 @Composable
 private fun LibraryContent(
     data: LibraryResponse,
@@ -185,8 +186,6 @@ private fun LibraryContent(
     onOpenChannel: (String) -> Unit,
     onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
     onLongPressSeries: (SeriesDto) -> Unit,
-    onRemoveHistory: (String) -> Unit = {},
-    onClearHistory: () -> Unit = {},
 ) {
     fun play(v: LibraryVideoDto) = onPlayVideo(v.id, v.title, v.channelTitle ?: "")
 
@@ -197,10 +196,8 @@ private fun LibraryContent(
     var showShuffleSheet by remember { mutableStateOf(false) }
     var quickLookItem by remember { mutableStateOf<QuickLookItem?>(null) }
     var allView by remember { mutableStateOf<AllViewState?>(null) }
-    var confirmClearHistory by remember { mutableStateOf(false) }
     var showChannels by rememberSaveable { mutableStateOf(false) }
     // Die Bibliothek zeigt Serien und Filme; alles von YouTube liegt im Kanal-Bereich.
-    val history = remember(data.watchHistory) { data.watchHistory.filter { it.isArchive() } }
     val seriesById = remember(data.series) { data.series.associateBy { it.id } }
 
     fun LibraryVideoDto.toAllViewItem(onClick: () -> Unit) = AllViewItem(
@@ -394,7 +391,8 @@ private fun LibraryContent(
                         LazyColumn(modifier = Modifier.fillMaxSize()) {
                             heroVideo?.let { h ->
                                 item(key = "hero") {
-                                    LibraryHero(h, h.series_id?.let(seriesById::get), { play(h) }, onOpenSeries)
+                                    LibraryHero(h, h.series_id?.let(seriesById::get), onPlay = { play(h) })
+                                    Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
 
@@ -418,7 +416,7 @@ private fun LibraryContent(
                                             ContinueCard(v, v.series_id?.let(seriesById::get), onClick = { play(v) })
                                         }
                                     }
-                                    Spacer(Modifier.height(20.dp))
+                                    Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
 
@@ -434,7 +432,7 @@ private fun LibraryContent(
                                         },
                                         onItemLongClick = { openQuickLookForTopTen(it) },
                                     )
-                                    Spacer(Modifier.height(20.dp))
+                                    Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
 
@@ -449,7 +447,7 @@ private fun LibraryContent(
                                         },
                                         onItemLongClick = { openQuickLookForTopTen(it) },
                                     )
-                                    Spacer(Modifier.height(20.dp))
+                                    Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
 
@@ -461,7 +459,7 @@ private fun LibraryContent(
                                     genreCounts = genreCounts,
                                     genreCovers = genreCovers,
                                 )
-                                Spacer(Modifier.height(20.dp))
+                                Spacer(Modifier.height(SECTION_GAP))
                             }
 
                             // Wochenend-Kino (> 75 Min)
@@ -494,71 +492,14 @@ private fun LibraryContent(
                                             )
                                         }
                                     }
-                                    Spacer(Modifier.height(20.dp))
+                                    Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
 
                             // ── Alles von YouTube: eigener Bereich hinter einem Banner ───
                             item(key = "channels-banner") {
                                 ChannelsBanner(data = data, onClick = { showChannels = true })
-                                Spacer(Modifier.height(24.dp))
-                            }
-
-                            if (history.isNotEmpty()) {
-                                item {
-                                    SectionHeader(
-                                        "Verlauf",
-                                        count = history.size,
-                                        onShowAll = {
-                                            allView = AllViewState(
-                                                title = "Verlauf",
-                                                items = history.map { v -> v.toAllViewItem { play(v) } },
-                                            )
-                                        },
-                                        actionLabel = "Leeren",
-                                        onAction = { confirmClearHistory = true },
-                                    )
-                                    LazyRow(
-                                        contentPadding = PaddingValues(horizontal = 16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                    ) {
-                                        items(history, key = { "h-${it.id}" }) { v ->
-                                            LibraryVideoCard(
-                                                video = v,
-                                                secondLine = v.series_id?.let(seriesById::get)?.title
-                                                    ?.let { title ->
-                                                        listOf(title, episodeTag(v.season, v.episode))
-                                                            .filter { it.isNotBlank() }.joinToString(" · ")
-                                                    }
-                                                    ?: if (v.isFilm()) "Film" else v.channelTitle,
-                                                onClick = { play(v) },
-                                                onRemove = { onRemoveHistory(v.id) },
-                                            )
-                                        }
-                                    }
-                                    Spacer(Modifier.height(20.dp))
-                                }
-                            }
-
-                            item {
-                                SectionHeader(
-                                    "Neu hinzugefügt",
-                                    count = data.recentlyAdded.size,
-                                    onShowAll = {
-                                        allView = AllViewState(
-                                            title = "Neu hinzugefügt",
-                                            items = data.recentlyAdded.map { v -> v.toAllViewItem { play(v) } },
-                                        )
-                                    },
-                                )
-                                LazyRow(
-                                    contentPadding = PaddingValues(horizontal = 16.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    items(data.recentlyAdded, key = { it.id }) { v ->
-                                        RecentVideoCard(video = v, onClick = { play(v) })
-                                    }
-                                }
+                                Spacer(Modifier.height(SECTION_GAP))
                             }
 
                             item { Spacer(Modifier.height(96.dp)) }
@@ -575,9 +516,9 @@ private fun LibraryContent(
                                     LibraryHero(
                                         heroSeriesVideo,
                                         heroSeriesVideo.series_id?.let(seriesById::get),
-                                        { play(heroSeriesVideo) },
-                                        onOpenSeries,
+                                        onPlay = { play(heroSeriesVideo) },
                                     )
+                                    Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
 
@@ -590,7 +531,7 @@ private fun LibraryContent(
                                         onItemClick = { item -> onOpenSeries(item.id) },
                                         onItemLongClick = { openQuickLookForTopTen(it) },
                                     )
-                                    Spacer(Modifier.height(20.dp))
+                                    Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
 
@@ -605,7 +546,7 @@ private fun LibraryContent(
                                             ContinueCard(v, v.series_id?.let(seriesById::get), onClick = { play(v) })
                                         }
                                     }
-                                    Spacer(Modifier.height(20.dp))
+                                    Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
 
@@ -628,7 +569,7 @@ private fun LibraryContent(
                                         )
                                     }
                                 }
-                                Spacer(Modifier.height(20.dp))
+                                Spacer(Modifier.height(SECTION_GAP))
                             }
 
                             // Serien nach Genre (Anime, SciFi, Action etc.)
@@ -652,7 +593,7 @@ private fun LibraryContent(
                                             )
                                         }
                                     }
-                                    Spacer(Modifier.height(20.dp))
+                                    Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
 
@@ -666,7 +607,8 @@ private fun LibraryContent(
                         LazyColumn(modifier = Modifier.fillMaxSize()) {
                             if (heroMovie != null) {
                                 item(key = "hero") {
-                                    LibraryHero(heroMovie, null, { play(heroMovie) }, onOpenSeries)
+                                    LibraryHero(heroMovie, null, onPlay = { play(heroMovie) })
+                                    Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
 
@@ -679,7 +621,7 @@ private fun LibraryContent(
                                         onItemClick = { item -> onPlayVideo(item.id, item.title, item.channelTitle) },
                                         onItemLongClick = { openQuickLookForTopTen(it) },
                                     )
-                                    Spacer(Modifier.height(20.dp))
+                                    Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
 
@@ -704,7 +646,7 @@ private fun LibraryContent(
                                             )
                                         }
                                     }
-                                    Spacer(Modifier.height(20.dp))
+                                    Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
 
@@ -728,7 +670,7 @@ private fun LibraryContent(
                                         )
                                     }
                                 }
-                                Spacer(Modifier.height(20.dp))
+                                Spacer(Modifier.height(SECTION_GAP))
                             }
 
                             // Dokus
@@ -753,7 +695,7 @@ private fun LibraryContent(
                                             )
                                         }
                                     }
-                                    Spacer(Modifier.height(20.dp))
+                                    Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
 
@@ -771,7 +713,7 @@ private fun LibraryContent(
                                     genreCounts = genreCounts,
                                     genreCovers = genreCovers,
                                 )
-                                Spacer(Modifier.height(20.dp))
+                                Spacer(Modifier.height(SECTION_GAP))
                             }
 
                             // Curated shelves for each genre
@@ -811,7 +753,7 @@ private fun LibraryContent(
                                                 )
                                             }
                                         }
-                                        Spacer(Modifier.height(20.dp))
+                                        Spacer(Modifier.height(SECTION_GAP))
                                     }
                                 }
                             }
@@ -822,17 +764,6 @@ private fun LibraryContent(
                 }
             }
         }
-    }
-
-    if (confirmClearHistory) {
-        com.hikari.app.ui.components.ConfirmDeleteDialog(
-            title = "Verlauf leeren?",
-            message = "Alle ${history.size} Einträge verschwinden aus dem Verlauf. Die Videos selbst " +
-                "und dein Fortschritt (Weiterschauen) bleiben erhalten.",
-            confirmLabel = "Leeren",
-            onConfirm = onClearHistory,
-            onDismiss = { confirmClearHistory = false },
-        )
     }
 
     if (showShuffleSheet) {
@@ -871,10 +802,6 @@ private fun LibraryContent(
             onBack = { showChannels = false },
             onOpenChannel = onOpenChannel,
             onPlay = ::play,
-            onShowAll = { title, videos ->
-                allView = AllViewState(title = title, items = videos.map { v -> v.toAllViewItem { play(v) } })
-            },
-            onRemoveHistory = onRemoveHistory,
         )
     }
 
@@ -1021,7 +948,7 @@ private fun SectionHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 10.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(title, color = HikariText, fontSize = 15.sp, fontWeight = FontWeight.Black)
@@ -1279,175 +1206,6 @@ private fun ChannelCircle(channel: ChannelDto, onClick: () -> Unit) {
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 6.dp),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-        )
-    }
-}
-
-@Composable
-private fun RecentVideoCard(video: LibraryVideoDto, onClick: () -> Unit) {
-    // Erst wenn das Bild wirklich da ist, wandert der Titel als Overlay aufs
-    // Bild — sonst zeigt das FallbackArtwork den Titel (nicht doppelt).
-    var imageLoaded by remember(video.thumbnail_url) { mutableStateOf(false) }
-    Column(modifier = Modifier.width(200.dp).clickable(onClick = onClick)) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9f)
-                .clip(RoundedCornerShape(6.dp))
-                .background(HikariSurface),
-        ) {
-            // Fallback-Artwork als Unterlage: fehlendes oder fehlerhaftes
-            // Thumbnail wirkt gewollt statt leer (und dient als Lade-Hintergrund).
-            FallbackArtwork(title = video.title)
-            // Angefangenes Video: Frame an der Stopp-Position statt Poster.
-            AsyncImage(
-                model = video.resumeAwareThumbnail(),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-                onSuccess = { imageLoaded = true },
-                onError = { imageLoaded = false },
-            )
-            if (imageLoaded) ImageTitleOverlay(video.title)
-            Text(
-                "${video.duration_seconds / 60}:${"%02d".format(video.duration_seconds % 60)}",
-                color = Color.White,
-                fontSize = 10.sp,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(5.dp)
-                    .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(3.dp))
-                    .padding(horizontal = 5.dp, vertical = 2.dp),
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.92f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    tint = Color.Black,
-                    modifier = Modifier.size(16.dp),
-                )
-            }
-        }
-        // Der Titel liegt bei geladenem Bild als Overlay auf dem Bild; ohne
-        // Bild trägt ihn das FallbackArtwork — hier nur noch der Kanal.
-        if (!video.channelTitle.isNullOrBlank()) {
-            Text(
-                text = video.channelTitle.uppercase(),
-                color = HikariAmber,
-                fontSize = 9.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 1.sp,
-                fontFamily = FontFamily.Monospace,
-                modifier = Modifier.padding(top = 4.dp),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
-}
-
-/**
- * YouTube-Look für Verlauf und Kanal-Uploads: Bild oben mit Dauer und
- * Fortschrittsbalken, Titel und Kanal darunter. [onRemove] blendet ein
- * sichtbares X ein — Entfernen per Langdruck fand niemand.
- */
-@Composable
-private fun LibraryVideoCard(
-    video: LibraryVideoDto,
-    onClick: () -> Unit,
-    onRemove: (() -> Unit)? = null,
-    secondLine: String? = video.channelTitle,
-) {
-    val fraction = video.progress_seconds?.let { p ->
-        if (video.duration_seconds > 0) (p / video.duration_seconds).coerceIn(0f, 1f) else 0f
-    } ?: 0f
-    Column(modifier = Modifier.width(260.dp).clickable(onClick = onClick)) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9f)
-                .clip(RoundedCornerShape(10.dp))
-                .background(HikariSurface),
-        ) {
-            FallbackArtwork(title = video.title)
-            AsyncImage(
-                model = video.thumbnail_url,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
-            Text(
-                "${video.duration_seconds / 60}:${"%02d".format(video.duration_seconds % 60)}",
-                color = Color.White,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(6.dp)
-                    .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(4.dp))
-                    .padding(horizontal = 5.dp, vertical = 2.dp),
-            )
-            if (onRemove != null) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(6.dp)
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .background(Color.Black.copy(alpha = 0.6f))
-                        .clickable(onClick = onRemove),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        Icons.Default.Close,
-                        contentDescription = "Aus dem Verlauf entfernen",
-                        tint = Color.White,
-                        modifier = Modifier.size(15.dp),
-                    )
-                }
-            }
-            if (fraction > 0f) {
-                Box(
-                    Modifier
-                        .align(Alignment.BottomStart)
-                        .fillMaxWidth()
-                        .height(3.dp)
-                        .background(Color.White.copy(alpha = 0.25f)),
-                ) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth(fraction)
-                            .height(3.dp)
-                            .background(HikariAmber),
-                    )
-                }
-            }
-        }
-        Text(
-            text = video.title,
-            color = HikariText,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 8.dp),
-        )
-        Text(
-            text = secondLine?.takeIf { it.isNotBlank() } ?: "Video",
-            color = HikariTextMuted,
-            fontSize = 11.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 2.dp),
         )
     }
 }
@@ -1956,7 +1714,7 @@ private fun NetflixSearchView(
                                     )
                                 }
                             }
-                            Spacer(Modifier.height(20.dp))
+                            Spacer(Modifier.height(SECTION_GAP))
                         }
                     }
 
@@ -1971,7 +1729,7 @@ private fun NetflixSearchView(
                                     RecommendedCard(video = v, onClick = { play(v) })
                                 }
                             }
-                            Spacer(Modifier.height(20.dp))
+                            Spacer(Modifier.height(SECTION_GAP))
                         }
                     }
 
@@ -1986,7 +1744,7 @@ private fun NetflixSearchView(
                                     ChannelCircle(channel = c, onClick = { onOpenChannel(c.id) })
                                 }
                             }
-                            Spacer(Modifier.height(20.dp))
+                            Spacer(Modifier.height(SECTION_GAP))
                         }
                     }
                 }

@@ -1,5 +1,25 @@
 package com.hikari.app.ui.library
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -66,9 +86,10 @@ import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 
 /**
- * Der Kanal-Bereich: alles von YouTube an einem Ort, getrennt von Serien und
- * Filmen. Je abonniertem Kanal eine eigene Reihe mit seinen neuesten Videos,
- * davor die angefangenen Videos, danach der Verlauf.
+ * Der Kanal-Bereich, aufgebaut wie die YouTube-App: oben die Kanäle als runde
+ * Karten zum Filtern (ganz links die Startseite mit allen Kanälen), darunter
+ * die Videos groß untereinander, das neueste zuerst. Geladen werden immer nur
+ * ein paar — die nächsten erst beim Scrollen.
  */
 @Composable
 internal fun ChannelsHome(
@@ -76,92 +97,354 @@ internal fun ChannelsHome(
     onBack: () -> Unit,
     onOpenChannel: (String) -> Unit,
     onPlay: (LibraryVideoDto) -> Unit,
-    onShowAll: (title: String, videos: List<LibraryVideoDto>) -> Unit,
-    onRemoveHistory: (String) -> Unit,
     modifier: Modifier = Modifier,
+    viewModel: ChannelsFeedViewModel = hiltViewModel(),
 ) {
-    val channelShelves = remember(data.channels, data.channelUploads) { channelShelves(data) }
-    val started = remember(data.continueWatching) { data.continueWatching.filterNot { it.isArchive() } }
-    val history = remember(data.watchHistory) { data.watchHistory.filterNot { it.isArchive() } }
+    val state by viewModel.state.collectAsState()
+    val channels = remember(data.channels, data.channelUploads) { storyChannels(data) }
+    val channelById = remember(data.channels) { data.channels.associateBy { it.id } }
+    var searching by rememberSaveable { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(Unit) { viewModel.start(data.channelUploads) }
+
+    // Kurz vor dem Ende der Liste die nächsten Videos holen.
+    val nearEnd by remember {
+        derivedStateOf {
+            val info = listState.layoutInfo
+            val lastVisible = info.visibleItemsInfo.lastOrNull()?.index ?: 0
+            lastVisible >= info.totalItemsCount - 2
+        }
+    }
+    LaunchedEffect(nearEnd, state.videos.size, state.loading, state.endReached) {
+        if (nearEnd && !state.loading && !state.endReached) viewModel.loadMore()
+    }
+    // Neuer Kanal oder neue Suche: wieder oben anfangen.
+    LaunchedEffect(state.channelId, state.query) { listState.scrollToItem(0) }
+
+    fun closeSearch() {
+        searching = false
+        viewModel.setQuery("")
+    }
+    BackHandler(enabled = searching) { closeSearch() }
 
     Column(modifier = modifier.fillMaxSize().background(HikariBg)) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                modifier = Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onBack),
-                contentAlignment = Alignment.Center,
+        if (searching) {
+            ChannelSearchBar(query = state.query, onQueryChange = viewModel::setQuery, onClose = ::closeSearch)
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 6.dp, top = 8.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Zurück", tint = HikariText, modifier = Modifier.size(22.dp))
+                BarButton(Icons.AutoMirrored.Outlined.ArrowBack, "Zurück", onBack)
+                Spacer(Modifier.width(4.dp))
+                Text("Deine Kanäle", color = HikariText, fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                BarButton(Icons.Outlined.Search, "Suchen") {
+                    // Gesucht wird über alle Kanäle, nicht nur im gerade gewählten.
+                    viewModel.selectChannel(null)
+                    searching = true
+                }
             }
-            Spacer(Modifier.width(4.dp))
-            Text("Deine Kanäle", color = HikariText, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
 
-        LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 110.dp)) {
-            if (started.isNotEmpty()) {
-                item(key = "started") {
-                    ShelfTitle("Angefangen", onShowAll = { onShowAll("Angefangen", started) })
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        items(started, key = { "started-${it.id}" }) { video ->
-                            VideoCard(
-                                video = video,
-                                secondLine = listOfNotNull(
-                                    video.channelTitle?.takeIf { it.isNotBlank() },
-                                    "noch ${remainingLabel(video)}",
-                                ).joinToString(" · "),
-                                onClick = { onPlay(video) },
-                            )
-                        }
-                    }
-                    Spacer(Modifier.height(14.dp))
-                }
-            }
-
-            items(channelShelves, key = { (channel, _) -> "channel-${channel.id}" }) { (channel, videos) ->
-                ChannelShelf(
-                    channel = channel,
-                    videos = videos,
-                    onOpenChannel = { onOpenChannel(channel.id) },
-                    onPlay = onPlay,
-                )
-            }
-
-            if (history.isNotEmpty()) {
-                item(key = "history") {
-                    ShelfTitle("Zuletzt gesehen", onShowAll = { onShowAll("Zuletzt gesehen", history) })
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        items(history, key = { "history-${it.id}" }) { video ->
-                            VideoCard(
-                                video = video,
-                                secondLine = video.channelTitle,
-                                onClick = { onPlay(video) },
-                                onRemove = { onRemoveHistory(video.id) },
-                            )
-                        }
-                    }
-                }
-            }
-
-            if (channelShelves.isEmpty() && started.isEmpty() && history.isEmpty()) {
-                item(key = "empty") {
-                    Text(
-                        "Noch keine Kanäle abonniert. Unter Profil → Kanäle fügst du welche hinzu.",
-                        color = HikariTextMuted,
-                        fontSize = 14.sp,
-                        lineHeight = 19.sp,
-                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 96.dp),
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 110.dp),
+        ) {
+            if (!searching) {
+                item(key = "stories") {
+                    StoryRow(
+                        channels = channels,
+                        selectedId = state.channelId,
+                        onSelect = viewModel::selectChannel,
                     )
                 }
             }
+
+            // Ist ein Kanal gewählt, steht sein Name über der Liste — mit dem Weg zur Kanalseite.
+            channelById[state.channelId]?.takeIf { !searching }?.let { channel ->
+                item(key = "channel-head") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            channel.title,
+                            color = HikariText,
+                            fontSize = 19.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .clickable { onOpenChannel(channel.id) }
+                                .padding(start = 10.dp, end = 2.dp, top = 6.dp, bottom = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("Zum Kanal", color = HikariTextMuted, fontSize = 13.sp)
+                            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, tint = HikariTextMuted, modifier = Modifier.size(18.dp))
+                        }
+                    }
+                }
+            }
+
+            items(state.videos, key = { it.id }) { video ->
+                FeedCard(
+                    video = video,
+                    channel = channelById[video.channel_id],
+                    onClick = { onPlay(video) },
+                    modifier = Modifier.animateItem(fadeInSpec = tween(240), fadeOutSpec = tween(120)),
+                )
+            }
+
+            item(key = "footer") {
+                Box(modifier = Modifier.fillMaxWidth().padding(vertical = 18.dp), contentAlignment = Alignment.Center) {
+                    when {
+                        state.loading -> CircularProgressIndicator(color = HikariTextMuted, strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
+                        state.videos.isEmpty() -> Text(
+                            if (state.query.isNotBlank()) "Nichts gefunden für »${state.query}«."
+                            else "Hier gibt es noch keine Videos.",
+                            color = HikariTextMuted,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(horizontal = 32.dp, vertical = 48.dp),
+                        )
+                        else -> Unit
+                    }
+                }
+            }
         }
+    }
+}
+
+/** Kanäle für die Leiste oben: die mit dem frischesten Upload zuerst. */
+private fun storyChannels(data: LibraryResponse): List<StoryChannel> {
+    val weekAgo = System.currentTimeMillis() - 7L * 86_400_000L
+    val newest = data.channelUploads.groupBy { it.channel_id }.mapValues { (_, v) -> v.maxOf { it.published_at } }
+    return data.channels
+        .filter { it.id != MANUAL_CHANNEL }
+        .map { StoryChannel(it, hasNew = (newest[it.id] ?: 0L) >= weekAgo, newestAt = newest[it.id] ?: 0L) }
+        .sortedByDescending { it.newestAt }
+}
+
+private data class StoryChannel(val channel: ChannelDto, val hasNew: Boolean, val newestAt: Long)
+
+/**
+ * Die Kanäle als runde Karten. Ganz links die Startseite (alle Kanäle); ein
+ * farbiger Ring heißt: von diesem Kanal gibt es diese Woche etwas Neues.
+ */
+@Composable
+private fun StoryRow(channels: List<StoryChannel>, selectedId: String?, onSelect: (String?) -> Unit) {
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier.padding(top = 6.dp, bottom = 16.dp),
+    ) {
+        item(key = "start") {
+            Story(label = "Start", selected = selectedId == null, hasNew = false, onClick = { onSelect(null) }) {
+                Box(Modifier.fillMaxSize().background(HikariSurface), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Outlined.Home, contentDescription = null, tint = HikariText, modifier = Modifier.size(26.dp))
+                }
+            }
+        }
+        items(channels, key = { it.channel.id }) { story ->
+            Story(
+                label = story.channel.title,
+                selected = selectedId == story.channel.id,
+                hasNew = story.hasNew,
+                onClick = { onSelect(story.channel.id) },
+            ) {
+                Box(Modifier.fillMaxSize().background(HikariSurface), contentAlignment = Alignment.Center) {
+                    Text(
+                        story.channel.title.firstOrNull()?.uppercaseChar()?.toString().orEmpty(),
+                        color = HikariTextMuted,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    if (!story.channel.thumbnail_url.isNullOrBlank()) {
+                        AsyncImage(
+                            model = story.channel.thumbnail_url,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Story(
+    label: String,
+    selected: Boolean,
+    hasNew: Boolean,
+    onClick: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    val ring: Brush = when {
+        selected -> SolidColor(Color.White)
+        hasNew -> Brush.linearGradient(listOf(HikariAmber, Color(0xFFF472B6)))
+        else -> SolidColor(Color.White.copy(alpha = 0.14f))
+    }
+    val scale by animateFloatAsState(if (selected) 1.06f else 1f, tween(200), label = "storyScale")
+    Column(
+        modifier = Modifier.width(78.dp).clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(vertical = 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(66.dp)
+                .graphicsLayer { scaleX = scale; scaleY = scale }
+                .border(if (selected) 3.dp else 2.dp, ring, CircleShape)
+                .padding(5.dp)
+                .clip(CircleShape),
+        ) {
+            content()
+        }
+        Spacer(Modifier.height(7.dp))
+        Text(
+            label,
+            color = if (selected) Color.White else HikariTextMuted,
+            fontSize = 11.5.sp,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 4.dp),
+        )
+    }
+}
+
+/** Ein Video wie in der YouTube-App: großes Bild, darunter Kanalbild, Titel und eine Zeile mit Kanal, Länge und Alter. */
+@Composable
+private fun FeedCard(
+    video: LibraryVideoDto,
+    channel: ChannelDto?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val fraction = progressFraction(video)
+    Column(modifier = modifier.fillMaxWidth().clickable(onClick = onClick).padding(bottom = 22.dp)) {
+        Box(
+            modifier = Modifier
+                .padding(horizontal = 12.dp)
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(16.dp))
+                .background(HikariSurface),
+        ) {
+            ResumeArtwork(video = video, modifier = Modifier.fillMaxSize(), resumeFrame = false)
+            Text(
+                clockLabel(video.duration_seconds),
+                color = Color.White,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 8.dp, bottom = 10.dp)
+                    .background(Color.Black.copy(alpha = 0.76f), RoundedCornerShape(6.dp))
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+            )
+            if (fraction > 0f) {
+                ProgressLine(fraction, height = 4, modifier = Modifier.align(Alignment.BottomStart))
+            }
+        }
+        Row(modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 12.dp)) {
+            Box(
+                modifier = Modifier.size(38.dp).clip(CircleShape).background(HikariSurface),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (!channel?.thumbnail_url.isNullOrBlank()) {
+                    AsyncImage(
+                        model = channel?.thumbnail_url,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = video.title,
+                    color = HikariText,
+                    fontSize = 15.5.sp,
+                    lineHeight = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = listOfNotNull(
+                        (channel?.title ?: video.channelTitle)?.takeIf { it.isNotBlank() },
+                        durationLabel(video.duration_seconds),
+                        relativeAge(video.published_at).takeIf { it.isNotBlank() },
+                    ).joinToString(" · "),
+                    color = HikariTextMuted,
+                    fontSize = 12.5.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 3.dp),
+                )
+            }
+        }
+    }
+}
+
+/** Suchzeile: ersetzt den Kopf, solange gesucht wird. */
+@Composable
+private fun ChannelSearchBar(query: String, onQueryChange: (String) -> Unit, onClose: () -> Unit) {
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 12.dp, top = 8.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        BarButton(Icons.AutoMirrored.Outlined.ArrowBack, "Suche schließen", onClose)
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .height(44.dp)
+                .clip(RoundedCornerShape(50))
+                .background(HikariSurface)
+                .padding(start = 16.dp, end = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                if (query.isEmpty()) Text("Videos und Kanäle suchen", color = HikariTextFaint, fontSize = 15.sp)
+                BasicTextField(
+                    value = query,
+                    onValueChange = onQueryChange,
+                    singleLine = true,
+                    cursorBrush = SolidColor(HikariAmber),
+                    textStyle = TextStyle(color = HikariText, fontSize = 15.sp),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focus),
+                )
+            }
+            if (query.isNotEmpty()) {
+                Box(
+                    modifier = Modifier.size(34.dp).clip(CircleShape).clickable { onQueryChange("") },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Outlined.Close, contentDescription = "Eingabe löschen", tint = HikariTextMuted, modifier = Modifier.size(18.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BarButton(icon: androidx.compose.ui.graphics.vector.ImageVector, description: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, contentDescription = description, tint = HikariText, modifier = Modifier.size(22.dp))
     }
 }
 
@@ -283,41 +566,32 @@ private const val MANUAL_CHANNEL = "manual"
 
 /**
  * Das Bild liegt in voller Breite im Format 16:9 — genau das Format von
- * YouTube-Vorschaubildern und Standbildern, es wird also nichts abgeschnitten.
- * Text und Knöpfe schieben sich von unten ein Stück ins Bild.
+ * Vorschaubildern und Standbildern, es wird also nichts abgeschnitten. Titel
+ * und der eine Knopf sitzen unten im Bild; darunter beginnt gleich der
+ * nächste Bereich.
  */
 @Composable
 internal fun LibraryHero(
     video: LibraryVideoDto,
     series: SeriesDto?,
     onPlay: () -> Unit,
-    onOpenSeries: (String) -> Unit,
 ) {
     val started = (video.progress_seconds ?: 0f) > 0f
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        val imageHeight = maxWidth * 9f / 16f
-        Box(modifier = Modifier.fillMaxWidth().height(imageHeight).clickable(onClick = onPlay)) {
-            ResumeArtwork(video = video, modifier = Modifier.fillMaxSize(), showTitleFallback = false)
-            Box(
-                Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth()
-                    .height(imageHeight * 0.62f)
-                    // Kräftig genug, dass Text auch über einem hellen Standbild lesbar bleibt.
-                    .background(
-                        Brush.verticalGradient(
-                            0f to Color.Transparent,
-                            0.45f to HikariBg.copy(alpha = 0.72f),
-                            0.7f to HikariBg.copy(alpha = 0.96f),
-                            1f to HikariBg,
-                        ),
-                    ),
-            )
-        }
+    Box(modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).clickable(onClick = onPlay)) {
+        ResumeArtwork(video = video, modifier = Modifier.fillMaxSize(), showTitleFallback = false)
+        // Nach unten abdunkeln, damit Titel und Knopf auch über hellen Bildern lesbar sind.
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.verticalGradient(
+                    0f to Color.Transparent,
+                    0.38f to Color.Transparent,
+                    0.72f to Color.Black.copy(alpha = 0.72f),
+                    1f to Color.Black.copy(alpha = 0.92f),
+                ),
+            ),
+        )
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = imageHeight - 44.dp, start = 16.dp, end = 16.dp),
+            modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
         ) {
             Text(
                 text = when {
@@ -327,68 +601,50 @@ internal fun LibraryHero(
                     else -> video.channelTitle.orEmpty()
                 },
                 color = HikariAmber,
-                fontSize = 13.sp,
+                fontSize = 12.5.sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Spacer(Modifier.height(4.dp))
             Text(
                 text = video.title,
                 color = Color.White,
-                fontSize = 23.sp,
-                lineHeight = 28.sp,
+                fontSize = 20.sp,
+                lineHeight = 24.sp,
                 fontWeight = FontWeight.Bold,
-                maxLines = 2,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.height(10.dp))
-            if (started) {
-                ProgressLine(progressFraction(video), height = 4)
-                Spacer(Modifier.height(6.dp))
-            }
-            Text(
-                text = if (started) "Noch ${remainingLabel(video)}" else durationLabel(video.duration_seconds),
-                color = HikariTextMuted,
-                fontSize = 13.sp,
-            )
-            Spacer(Modifier.height(14.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Row(
                     modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp)
+                        .height(38.dp)
                         .clip(RoundedCornerShape(50))
                         .background(Color.White)
-                        .clickable(onClick = onPlay),
-                    horizontalArrangement = Arrangement.Center,
+                        .clickable(onClick = onPlay)
+                        .padding(start = 12.dp, end = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.Black, modifier = Modifier.size(22.dp))
-                    Spacer(Modifier.width(6.dp))
+                    Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.Black, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(4.dp))
                     Text(
                         if (started) "Weiterschauen" else "Abspielen",
                         color = Color.Black,
-                        fontSize = 15.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                     )
                 }
-                if (series != null) {
-                    Row(
-                        modifier = Modifier
-                            .height(48.dp)
-                            .clip(RoundedCornerShape(50))
-                            .border(1.dp, HikariBorderStrong, RoundedCornerShape(50))
-                            .clickable { onOpenSeries(series.id) }
-                            .padding(horizontal = 18.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(Icons.Outlined.FormatListBulleted, contentDescription = null, tint = HikariText, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Folgen", color = HikariText, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    }
-                }
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = if (started) "noch ${remainingLabel(video)}" else durationLabel(video.duration_seconds),
+                    color = Color.White.copy(alpha = 0.78f),
+                    fontSize = 13.sp,
+                )
             }
+        }
+        if (started) {
+            ProgressLine(progressFraction(video), height = 3, modifier = Modifier.align(Alignment.BottomStart))
         }
     }
 }
@@ -468,183 +724,7 @@ internal fun CoverArtwork(title: String, coverUrl: String?, showTitleFallback: B
     }
 }
 
-// ── Kanäle ───────────────────────────────────────────────────────────────────
-
-/** Ein Kanal, eine Reihe: Kopf mit Bild und Name (führt zur Kanalseite), darunter seine neuesten Videos. */
-@Composable
-private fun ChannelShelf(
-    channel: ChannelDto,
-    videos: List<LibraryVideoDto>,
-    onOpenChannel: () -> Unit,
-    onPlay: (LibraryVideoDto) -> Unit,
-) {
-    Column(modifier = Modifier.padding(bottom = 22.dp)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onOpenChannel)
-                .padding(start = 16.dp, end = 10.dp, top = 6.dp, bottom = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                modifier = Modifier.size(40.dp).clip(CircleShape).background(HikariSurface),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    channel.title.firstOrNull()?.uppercaseChar()?.toString().orEmpty(),
-                    color = HikariTextMuted,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                if (!channel.thumbnail_url.isNullOrBlank()) {
-                    AsyncImage(
-                        model = channel.thumbnail_url,
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize().clip(CircleShape),
-                        contentScale = ContentScale.Crop,
-                    )
-                }
-            }
-            Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    channel.title,
-                    color = HikariText,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    "Neuestes ${relativeAge(videos.first().published_at)}",
-                    color = HikariTextMuted,
-                    fontSize = 12.sp,
-                    maxLines = 1,
-                )
-            }
-            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = "Kanal öffnen", tint = HikariTextFaint, modifier = Modifier.size(24.dp))
-        }
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            items(videos, key = { it.id }) { video ->
-                VideoCard(
-                    video = video,
-                    secondLine = relativeAge(video.published_at),
-                    onClick = { onPlay(video) },
-                    // Bei „Neu vom Kanal" erkennt man ein Video am Vorschaubild, nicht am Standbild.
-                    resumeFrame = false,
-                )
-            }
-        }
-    }
-}
-
-/** YouTube-Karte: Bild mit Dauer, darunter Titel und eine ruhige zweite Zeile. */
-@Composable
-private fun VideoCard(
-    video: LibraryVideoDto,
-    secondLine: String?,
-    onClick: () -> Unit,
-    onRemove: (() -> Unit)? = null,
-    resumeFrame: Boolean = true,
-) {
-    val fraction = progressFraction(video)
-    Column(modifier = Modifier.width(236.dp).clickable(onClick = onClick)) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9f)
-                .clip(RoundedCornerShape(12.dp))
-                .background(HikariSurface),
-        ) {
-            ResumeArtwork(video = video, modifier = Modifier.fillMaxSize(), resumeFrame = resumeFrame)
-            Text(
-                clockLabel(video.duration_seconds),
-                color = Color.White,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 6.dp, bottom = 8.dp)
-                    .background(Color.Black.copy(alpha = 0.72f), RoundedCornerShape(5.dp))
-                    .padding(horizontal = 5.dp, vertical = 2.dp),
-            )
-            if (onRemove != null) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(6.dp)
-                        .size(30.dp)
-                        .clip(CircleShape)
-                        .background(Color.Black.copy(alpha = 0.6f))
-                        .clickable(onClick = onRemove),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(Icons.Outlined.Close, contentDescription = "Aus dem Verlauf entfernen", tint = Color.White, modifier = Modifier.size(16.dp))
-                }
-            }
-            if (fraction > 0f) {
-                ProgressLine(fraction, height = 4, modifier = Modifier.align(Alignment.BottomStart))
-            }
-        }
-        Text(
-            text = video.title,
-            color = HikariText,
-            fontSize = 14.sp,
-            lineHeight = 18.sp,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 8.dp),
-        )
-        if (!secondLine.isNullOrBlank()) {
-            Text(
-                text = secondLine,
-                color = HikariTextMuted,
-                fontSize = 12.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 2.dp),
-            )
-        }
-    }
-}
-
 // ── Bausteine ────────────────────────────────────────────────────────────────
-
-@Composable
-private fun ShelfTitle(
-    title: String,
-    onShowAll: (() -> Unit)? = null,
-    actionLabel: String? = null,
-    onAction: (() -> Unit)? = null,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 30.dp, bottom = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(title, color = HikariText, fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-        if (actionLabel != null && onAction != null) {
-            Text(
-                actionLabel,
-                color = HikariTextMuted,
-                fontSize = 13.sp,
-                modifier = Modifier.clip(RoundedCornerShape(50)).clickable(onClick = onAction).padding(horizontal = 10.dp, vertical = 6.dp),
-            )
-        }
-        if (onShowAll != null) {
-            Row(
-                modifier = Modifier.clip(RoundedCornerShape(50)).clickable(onClick = onShowAll).padding(start = 10.dp, end = 2.dp, top = 6.dp, bottom = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text("Alle", color = HikariText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, tint = HikariText, modifier = Modifier.size(18.dp))
-            }
-        }
-    }
-}
 
 @Composable
 private fun ProgressLine(fraction: Float, height: Int, modifier: Modifier = Modifier) {

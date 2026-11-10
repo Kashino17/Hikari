@@ -118,3 +118,45 @@ export function listChannelUploads(
     )
     .all(perChannel, limit);
 }
+
+/**
+ * Die Uploads der abonnierten Kanäle als fortlaufende Liste, neueste zuerst —
+ * seitenweise, optional auf einen Kanal und/oder einen Suchbegriff (Titel oder
+ * Kanalname) eingegrenzt. Grundlage für den Kanal-Bereich der App, der beim
+ * Scrollen nachlädt, statt alles auf einmal zu holen.
+ */
+export function listUploadsPage(
+  db: Database.Database,
+  subscribedCondition: string,
+  opts: { channelId?: string; query?: string; offset?: number; limit?: number } = {},
+): unknown[] {
+  const limit = Math.min(Math.max(opts.limit ?? 5, 1), 50);
+  const offset = Math.max(opts.offset ?? 0, 0);
+  const where: string[] = [
+    "v.channel_id != 'manual'",
+    subscribedCondition,
+    "COALESCE(v.format, 'long') != 'short'",
+    "COALESCE(s.decision, 'approved') = 'approved'",
+  ];
+  const params: unknown[] = [];
+  if (opts.channelId) {
+    where.push("v.channel_id = ?");
+    params.push(opts.channelId);
+  }
+  const query = opts.query?.trim();
+  if (query) {
+    // LIKE-Sonderzeichen im Suchbegriff wörtlich nehmen.
+    const like = `%${query.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+    where.push("(v.title LIKE ? ESCAPE '\\' OR c.title LIKE ? ESCAPE '\\')");
+    params.push(like, like);
+  }
+  return db
+    .prepare(
+      `${LIBRARY_VIDEO_SELECT}
+       WHERE ${where.join(" AND ")}
+       ORDER BY COALESCE(v.published_at, v.discovered_at) DESC, v.id DESC
+       LIMIT ? OFFSET ?`,
+    )
+    .all(...params, limit, offset);
+}
+

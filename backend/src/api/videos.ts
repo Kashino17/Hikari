@@ -29,6 +29,7 @@ import type { MetadataExtractor } from "../import/metadata-extractor.js";
 import {
   clearHistory,
   listChannelUploads,
+  listUploadsPage,
   listContinueWatching,
   listHistory,
   removeFromHistory,
@@ -316,6 +317,20 @@ export async function registerVideosRoutes(app: FastifyInstance, deps: VideosDep
       channelUploads: listChannelUploads(deps.db, subscribedChannelCondition("v.channel_id")),
     };
   });
+
+  // Kanal-Bereich der App: Uploads der abonnierten Kanäle, seitenweise.
+  app.get<{ Querystring: { channel?: string; q?: string; offset?: string; limit?: string } }>(
+    "/library/uploads",
+    async (req) => {
+      const { channel, q, offset, limit } = req.query;
+      return listUploadsPage(deps.db, subscribedChannelCondition("v.channel_id"), {
+        ...(channel ? { channelId: channel } : {}),
+        ...(q ? { query: q } : {}),
+        offset: Number.parseInt(offset ?? "0", 10) || 0,
+        limit: Number.parseInt(limit ?? "5", 10) || 5,
+      });
+    },
+  );
 
   // Verlauf pflegen: einzelne Einträge entfernen oder alles leeren. Der
   // Wiedergabefortschritt bleibt dabei erhalten (Weiterschauen funktioniert).
