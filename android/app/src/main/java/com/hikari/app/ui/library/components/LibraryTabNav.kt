@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,6 +30,28 @@ import com.hikari.app.ui.theme.HikariAmber
 fun LibraryTabNav(
     selectedTab: LibraryTab,
     onSelectTab: (LibraryTab) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LibrarySegmentBar(
+        segments = LibraryTab.entries.map { LibrarySegment(it.label, it.icon) },
+        selectedIndex = selectedTab.ordinal,
+        onSelect = { onSelectTab(LibraryTab.entries[it]) },
+        modifier = modifier,
+    )
+}
+
+/** Ein Reiter der Leiste: Beschriftung und Symbol. */
+data class LibrarySegment(val label: String, val icon: ImageVector)
+
+/**
+ * Die Reiterleiste der Bibliothek, unabhängig davon, welche Reiter sie zeigt —
+ * die Offline-Bibliothek nutzt dieselbe Leiste mit ihren eigenen Bereichen.
+ */
+@Composable
+fun LibrarySegmentBar(
+    segments: List<LibrarySegment>,
+    selectedIndex: Int,
+    onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -46,8 +69,8 @@ fun LibraryTabNav(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            LibraryTab.entries.forEach { tab ->
-                val isSelected = tab == selectedTab
+            segments.forEachIndexed { index, segment ->
+                val isSelected = index == selectedIndex
                 val bgColor by animateColorAsState(
                     targetValue = if (isSelected) HikariAmber else Color.Transparent,
                     animationSpec = tween(180),
@@ -64,7 +87,7 @@ fun LibraryTabNav(
                         .weight(1f)
                         .clip(RoundedCornerShape(9.dp))
                         .background(bgColor)
-                        .clickable { onSelectTab(tab) }
+                        .clickable { onSelect(index) }
                         .padding(vertical = 7.dp),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -73,13 +96,13 @@ fun LibraryTabNav(
                         horizontalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
                         Icon(
-                            imageVector = tab.icon,
+                            imageVector = segment.icon,
                             contentDescription = null,
                             modifier = Modifier.size(14.dp),
                             tint = textColor,
                         )
                         Text(
-                            text = tab.label,
+                            text = segment.label,
                             color = textColor,
                             fontSize = 12.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,

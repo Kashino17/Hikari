@@ -34,6 +34,7 @@ import {
   listHistory,
   removeFromHistory,
 } from "../library/history.js";
+import { scoutSeriesArtwork } from "../library/artwork.js";
 import { deleteSeriesCompletely } from "../library/removal.js";
 import { hydrateFeedBatch } from "./feed.js";
 import { PICKS_POOL_LIMIT, pickSubscriptionMix } from "./library-picks.js";
@@ -688,6 +689,8 @@ export async function registerVideosRoutes(app: FastifyInstance, deps: VideosDep
     if ("series_id" in body) newSeriesId = body.series_id;
     else if ("series_title" in body) {
       newSeriesId = body.series_title ? ensureSeries(deps.db, body.series_title) : null;
+      // Von Hand einer neuen Serie zugeordnet: auch die bekommt gleich ihr Plakat.
+      scoutSeriesArtwork(newSeriesId, body.series_title);
     }
     let newIsMovie: number | undefined;
     if ("is_movie" in body) newIsMovie = body.is_movie ? 1 : 0;

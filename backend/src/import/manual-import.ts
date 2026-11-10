@@ -3,6 +3,7 @@ import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type Database from "better-sqlite3";
 import { probeDurationSeconds } from "../download/probe.js";
+import { scoutFilmArtwork, scoutSeriesArtwork } from "../library/artwork.js";
 import { PROGRESS_ARGS, parseProgressLine } from "../download/progress.js";
 import { YtDlpError, runPreferEmbedded, runYtDlp } from "../yt-dlp/client.js";
 import { fillMissingEpisodeInfo } from "./episode-parser.js";
@@ -363,6 +364,29 @@ export function resolveSeriesId(
   return findRelatedSeries(db, seriesSlug(title.trim()))?.id;
 }
 
+/**
+ * Stößt die Plakatsuche an, sobald ein Import beginnt — die Serie hat ihr Plakat
+ * dann meist schon, bevor die erste Folge fertig geladen ist. Läuft nebenher
+ * und hält den Import nie auf.
+ */
+function scoutArtworkForImport(
+  db: Database.Database,
+  videoId: string,
+  title: string,
+  meta: ManualMetadata,
+): void {
+  const seriesTitle = meta.seriesTitle?.trim();
+  if (meta.seriesId || seriesTitle) {
+    const id =
+      meta.seriesId ??
+      resolveSeriesId(db, seriesTitle) ??
+      (seriesTitle ? seriesSlug(seriesTitle) : null);
+    scoutSeriesArtwork(id, seriesTitle);
+  } else if (meta.isMovie) {
+    scoutFilmArtwork(videoId, title);
+  }
+}
+
 export function ensureSeries(db: Database.Database, title: string): string {
   const clean = title.trim();
   const id = seriesSlug(clean);
@@ -544,6 +568,7 @@ export async function importDirectLink(
   });
   markDownloading(db, videoId);
   inFlight.add(videoId);
+  scoutArtworkForImport(db, videoId, title, effectiveMeta);
 
   const filePath = join(videoDir, `${videoId}.mp4`);
   try {
@@ -722,6 +747,11 @@ function persistImportedVideo(db: Database.Database, input: PersistInput): void 
       "UPDATE series SET thumbnail_url = ? WHERE id = ? AND (thumbnail_url IS NULL OR thumbnail_url = '')",
     ).run(input.thumbnail, seriesId);
   }
+
+  // Jetzt gibt es Serie bzw. Film in der Datenbank: das während des Downloads
+  // gefundene Plakat eintragen — oder die Suche nachholen, falls noch keine lief.
+  if (seriesId) scoutSeriesArtwork(seriesId, manualMeta?.seriesTitle);
+  else scoutFilmArtwork(input.videoId, input.title);
 }
 
 /** Im In-App-Browser mitgelesener Stream samt der Header seiner Herkunftsseite. */
@@ -853,6 +883,7 @@ export async function importSniffedMedia(
   });
   markDownloading(db, videoId);
   inFlight.add(videoId);
+  scoutArtworkForImport(db, videoId, initialTitle, effectiveMeta);
 
   const filePath = join(videoDir, `${videoId}.mp4`);
   const headerArgs: string[] = [];

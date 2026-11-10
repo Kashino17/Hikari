@@ -727,13 +727,13 @@ internal fun CoverArtwork(title: String, coverUrl: String?, showTitleFallback: B
 // ── Bausteine ────────────────────────────────────────────────────────────────
 
 @Composable
-private fun ProgressLine(fraction: Float, height: Int, modifier: Modifier = Modifier) {
+internal fun ProgressLine(fraction: Float, height: Int, modifier: Modifier = Modifier) {
     Box(modifier.fillMaxWidth().height(height.dp).clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.22f))) {
         Box(Modifier.fillMaxWidth(fraction.coerceIn(0f, 1f)).height(height.dp).background(HikariAmber))
     }
 }
 
-private fun progressFraction(video: LibraryVideoDto): Float {
+internal fun progressFraction(video: LibraryVideoDto): Float {
     val progress = video.progress_seconds ?: return 0f
     return if (video.duration_seconds > 0) (progress / video.duration_seconds).coerceIn(0f, 1f) else 0f
 }

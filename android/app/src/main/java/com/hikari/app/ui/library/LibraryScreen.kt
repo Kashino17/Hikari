@@ -142,9 +142,12 @@ fun LibraryScreen(
             // Kein Netz oder Backend nicht erreichbar → lokale Downloads statt
             // technischem Fehlertext.
             is LibraryUiState.Offline -> OfflineLibrary(
-                state = s,
+                library = s.library,
+                onOpenSeries = onOpenSeries,
                 onPlayVideo = onPlayVideo,
                 onPlaySong = viewModel::playSong,
+                onPlayAll = viewModel::playAll,
+                onRetry = viewModel::loadLibrary,
             )
             is LibraryUiState.Success -> LibraryContent(
                 data = s.data,
@@ -938,7 +941,7 @@ private fun RecommendedCard(video: LibraryVideoDto, onClick: () -> Unit) {
 }
 
 @Composable
-private fun SectionHeader(
+internal fun SectionHeader(
     title: String,
     count: Int,
     onShowAll: (() -> Unit)? = null,

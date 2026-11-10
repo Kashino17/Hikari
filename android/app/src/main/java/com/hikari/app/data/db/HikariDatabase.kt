@@ -20,7 +20,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         MusicPlayEventEntity::class,
         WhatsAppMessageEntity::class,
     ],
-    version = 24,
+    version = 25,
     exportSchema = false,
 )
 abstract class HikariDatabase : RoomDatabase() {
@@ -281,5 +281,14 @@ val MIGRATION_22_23 = object : Migration(22, 23) {
 val MIGRATION_23_24 = object : Migration(23, 24) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE local_music_downloads ADD COLUMN source TEXT NOT NULL DEFAULT 'MANUAL'")
+    }
+}
+
+/** Downloads merken sich ihre echten Plakate (Film, Serie, Serien-Hintergrund) für die Offline-Bibliothek. */
+val MIGRATION_24_25 = object : Migration(24, 25) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE local_downloads ADD COLUMN poster_url TEXT")
+        db.execSQL("ALTER TABLE local_downloads ADD COLUMN series_poster_url TEXT")
+        db.execSQL("ALTER TABLE local_downloads ADD COLUMN series_backdrop_url TEXT")
     }
 }

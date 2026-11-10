@@ -50,7 +50,7 @@ import {
   unlockStaleIngest,
 } from "./ingest/queue.js";
 import { fetchSponsorSegments } from "./sponsorblock/client.js";
-import { enrichArtwork } from "./library/artwork.js";
+import { ArtworkScout, enrichArtwork, setArtworkScout } from "./library/artwork.js";
 
 const cfg = loadConfig();
 mkdirSync(cfg.videoDir, { recursive: true });
@@ -354,14 +354,19 @@ cron.schedule("* * * * *", () => {
   drainIngestQueue().catch((err) => app.log.error({ err }, "ingest drain crashed"));
 });
 
-// Echte Plakate für Serien und Filme nachschlagen (TVmaze / Wikipedia) — kurz
-// nach dem Start und danach alle 12 h, damit neue Importe eines bekommen.
+// Echte Plakate für Serien und Filme nachschlagen (TVmaze / Wikipedia): sofort,
+// wenn ein Import beginnt, dazu kurz nach dem Start und alle 12 h als Netz für
+// alles, was dabei durchgerutscht ist.
 // ARTWORK_LOOKUP=off schaltet die Abfragen nach außen ab.
 if (process.env.ARTWORK_LOOKUP !== "off") {
+  // Die Sofort-Suche beim Import und der Sammellauf teilen sich eine Schlange,
+  // damit nie zwei Abfragen dieselbe Bilddatei schreiben.
+  const scout = new ArtworkScout({ db, coverDir: cfg.coverDir, log: app.log });
+  setArtworkScout(scout);
   const runArtwork = () =>
-    void enrichArtwork({ db, coverDir: cfg.coverDir, log: app.log }).catch((err) =>
-      app.log.warn({ err }, "artwork lookup crashed"),
-    );
+    void scout
+      .run(() => enrichArtwork({ db, coverDir: cfg.coverDir, log: app.log }))
+      .catch((err) => app.log.warn({ err }, "artwork lookup crashed"));
   setTimeout(runArtwork, 15_000).unref();
   setInterval(runArtwork, 12 * 60 * 60 * 1000).unref();
 }

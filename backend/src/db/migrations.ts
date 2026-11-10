@@ -246,7 +246,18 @@ export function applyMigrations(db: Database.Database): void {
     db.exec("DELETE FROM watch_later");
     db.pragma(`user_version = ${WATCH_LATER_MIGRATION_VERSION}`);
   }
+  if (version < ARTWORK_RECHECK_MIGRATION_VERSION) {
+    db.exec("UPDATE series SET artwork_checked_at = NULL WHERE poster_url IS NULL");
+    db.pragma(`user_version = ${ARTWORK_RECHECK_MIGRATION_VERSION}`);
+  }
 }
+
+/**
+ * Migration 4: Serien ohne Plakat noch einmal nachschlagen. Die Suche erkennt
+ * Serien jetzt auch unter ihrem deutschen Titel — wer vorher leer ausging,
+ * soll nicht erst die übliche Wartezeit absitzen.
+ */
+const ARTWORK_RECHECK_MIGRATION_VERSION = 4;
 
 /**
  * Migration 3: „Später ansehen" leeren. Die Liste füllte der frühere Feed

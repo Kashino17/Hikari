@@ -16,6 +16,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.core.app.PictureInPictureModeChangedInfo
 import androidx.core.util.Consumer
+import com.hikari.app.domain.library.toLibraryVideo
+import com.hikari.app.domain.library.toVideoDetail
 import com.hikari.app.MainActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -383,7 +385,9 @@ fun VideoPlayerScreen(
         nextVideo = playbackRepo.nextVideo(currentVideoId)
         nextDismissed = false
         showNextOverlay = false
+        // Ohne Server (offline) reichen die Angaben, die beim Download gemerkt wurden.
         val d = runCatching { api.getVideo(currentVideoId) }.getOrNull()
+            ?: localDl.entity(currentVideoId)?.toVideoDetail()
         detail = d
         if (d != null) {
             val label = when {
@@ -401,7 +405,8 @@ fun VideoPlayerScreen(
         }
         val sid = d?.series_id
         episodes = if (sid != null) {
-            runCatching { api.getSeries(sid).videos }.getOrDefault(emptyList())
+            runCatching { api.getSeries(sid).videos }
+                .getOrElse { localDl.episodesOf(sid).map { it.toLibraryVideo() } }
                 .sortedWith(compareBy({ it.season ?: 1 }, { it.episode ?: 0 }))
         } else emptyList()
     }

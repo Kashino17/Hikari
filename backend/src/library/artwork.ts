@@ -43,7 +43,10 @@ interface TvmazeHit {
 export function pickShow(title: string, hits: TvmazeHit[]): TvmazeHit["show"] | null {
   const wanted = normalizeTitle(title);
   if (!wanted) return null;
-  return hits.map((h) => h.show).find((s) => normalizeTitle(s.name) === wanted && s.image?.original) ?? null;
+  return (
+    hits.map((h) => h.show).find((s) => normalizeTitle(s.name) === wanted && s.image?.original) ??
+    null
+  );
 }
 
 async function fetchJson<T>(fetchImpl: Fetch, url: string): Promise<T | null> {
@@ -90,6 +93,34 @@ function safeName(id: string): string {
   return id.replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 80);
 }
 
+/** Wie viele Suchtreffer auf ihre anderen Namen geprüft werden, wenn keiner genau so heißt. */
+const AKA_CANDIDATES = 3;
+
+/**
+ * Die Serie zu einem Titel. Zuerst zählt der Name selbst; passt keiner,
+ * die anderen Namen der ersten Treffer („Haus des Geldes" führt TVmaze als
+ * „La Casa de Papel" — der deutsche Titel steht dort unter den Zweitnamen).
+ * Auch hier gilt nur ein genau passender Name.
+ */
+async function findShow(
+  fetchImpl: Fetch,
+  title: string,
+  hits: TvmazeHit[],
+): Promise<TvmazeHit["show"] | null> {
+  const exact = pickShow(title, hits);
+  if (exact) return exact;
+  const wanted = normalizeTitle(title);
+  if (!wanted) return null;
+  for (const { show } of hits.filter((h) => h.show.image?.original).slice(0, AKA_CANDIDATES)) {
+    const akas = await fetchJson<{ name?: string }[]>(
+      fetchImpl,
+      `https://api.tvmaze.com/shows/${show.id}/akas`,
+    );
+    if (akas?.some((aka) => normalizeTitle(aka.name ?? "") === wanted)) return show;
+  }
+  return null;
+}
+
 async function lookupSeries(
   fetchImpl: Fetch,
   title: string,
@@ -98,13 +129,13 @@ async function lookupSeries(
     fetchImpl,
     `https://api.tvmaze.com/search/shows?q=${encodeURIComponent(title)}`,
   );
-  const show = hits ? pickShow(title, hits) : null;
+  const show = hits ? await findShow(fetchImpl, title, hits) : null;
   if (!show?.image?.original) return null;
-  const images = await fetchJson<
-    { type: string; resolutions?: { original?: { url?: string } } }[]
-  >(fetchImpl, `https://api.tvmaze.com/shows/${show.id}/images`);
-  const backdrop =
-    images?.find((i) => i.type === "background")?.resolutions?.original?.url ?? null;
+  const images = await fetchJson<{ type: string; resolutions?: { original?: { url?: string } } }[]>(
+    fetchImpl,
+    `https://api.tvmaze.com/shows/${show.id}/images`,
+  );
+  const backdrop = images?.find((i) => i.type === "background")?.resolutions?.original?.url ?? null;
   return { poster: show.image.original, backdrop };
 }
 
@@ -129,6 +160,53 @@ async function lookupFilm(fetchImpl: Fetch, title: string): Promise<string | nul
     }
   }
   return null;
+}
+
+/** Plakat und Hintergrund einer Serie suchen und in den Cover-Ordner legen. */
+async function fetchSeriesArtwork(
+  fetchImpl: Fetch,
+  coverDir: string,
+  id: string,
+  title: string,
+): Promise<{ poster: string | null; backdrop: string | null }> {
+  const found = await lookupSeries(fetchImpl, title);
+  let poster: string | null = null;
+  let backdrop: string | null = null;
+  if (found) {
+    const name = safeName(id);
+    if (
+      await download(fetchImpl, found.poster, join(coverDir, `poster_${name}.jpg`), POSTER_WIDTH)
+    ) {
+      poster = `/covers/poster_${name}.jpg`;
+    }
+    if (
+      found.backdrop &&
+      (await download(
+        fetchImpl,
+        found.backdrop,
+        join(coverDir, `backdrop_${name}.jpg`),
+        BACKDROP_WIDTH,
+      ))
+    ) {
+      backdrop = `/covers/backdrop_${name}.jpg`;
+    }
+  }
+  return { poster, backdrop };
+}
+
+/** Filmplakat suchen und in den Cover-Ordner legen. */
+async function fetchFilmPoster(
+  fetchImpl: Fetch,
+  coverDir: string,
+  id: string,
+  title: string,
+): Promise<string | null> {
+  const url = await lookupFilm(fetchImpl, title);
+  if (!url) return null;
+  const name = safeName(id);
+  return (await download(fetchImpl, url, join(coverDir, `poster_${name}.jpg`), POSTER_WIDTH))
+    ? `/covers/poster_${name}.jpg`
+    : null;
 }
 
 export interface ArtworkResult {
@@ -160,27 +238,8 @@ export async function enrichArtwork(opts: {
   for (const s of series) {
     result.checked++;
     try {
-      const found = await lookupSeries(fetchImpl, s.title);
-      let poster: string | null = null;
-      let backdrop: string | null = null;
-      if (found) {
-        const name = safeName(s.id);
-        if (await download(fetchImpl, found.poster, join(coverDir, `poster_${name}.jpg`), POSTER_WIDTH)) {
-          poster = `/covers/poster_${name}.jpg`;
-          result.seriesFound++;
-        }
-        if (
-          found.backdrop &&
-          (await download(
-            fetchImpl,
-            found.backdrop,
-            join(coverDir, `backdrop_${name}.jpg`),
-            BACKDROP_WIDTH,
-          ))
-        ) {
-          backdrop = `/covers/backdrop_${name}.jpg`;
-        }
-      }
+      const { poster, backdrop } = await fetchSeriesArtwork(fetchImpl, coverDir, s.id, s.title);
+      if (poster) result.seriesFound++;
       db.prepare(
         "UPDATE series SET poster_url = ?, backdrop_url = ?, artwork_checked_at = ? WHERE id = ?",
       ).run(poster, backdrop, now, s.id);
@@ -200,15 +259,8 @@ export async function enrichArtwork(opts: {
   for (const f of films) {
     result.checked++;
     try {
-      const url = await lookupFilm(fetchImpl, f.title);
-      let poster: string | null = null;
-      if (url) {
-        const name = safeName(f.id);
-        if (await download(fetchImpl, url, join(coverDir, `poster_${name}.jpg`), POSTER_WIDTH)) {
-          poster = `/covers/poster_${name}.jpg`;
-          result.filmsFound++;
-        }
-      }
+      const poster = await fetchFilmPoster(fetchImpl, coverDir, f.id, f.title);
+      if (poster) result.filmsFound++;
       db.prepare("UPDATE videos SET poster_url = ?, artwork_checked_at = ? WHERE id = ?").run(
         poster,
         now,
@@ -221,4 +273,148 @@ export async function enrichArtwork(opts: {
 
   if (result.checked > 0) opts.log?.info({ ...result }, "artwork lookup done");
   return result;
+}
+
+// ── Sofort-Suche beim Import ─────────────────────────────────────────────────
+
+/**
+ * Sucht das Plakat in dem Moment, in dem ein Import beginnt — nicht erst beim
+ * nächsten Sammellauf. Eine neue Serie hat ihr Plakat damit meist schon, bevor
+ * die erste Folge fertig geladen ist.
+ *
+ * Der Haken: Solange der Download läuft, gibt es die Serie in der Datenbank
+ * noch gar nicht (sie entsteht erst mit der ersten fertigen Folge). Das
+ * Ergebnis der Suche wird deshalb im Speicher gehalten und eingetragen, sobald
+ * die Zeile da ist — der Import meldet sich dafür am Ende noch einmal.
+ */
+export class ArtworkScout {
+  private readonly fetchImpl: Fetch;
+  /** Alle Aufträge nacheinander: schont die Dienste und verhindert, dass zwei dieselbe Datei schreiben. */
+  private chain: Promise<unknown> = Promise.resolve();
+  private readonly series = new Map<
+    string,
+    { poster: string | null; backdrop: string | null; at: number }
+  >();
+  private readonly films = new Map<string, { poster: string | null; at: number }>();
+
+  constructor(
+    private readonly opts: {
+      db: Database.Database;
+      coverDir: string;
+      log?: Log;
+      fetchImpl?: Fetch;
+      now?: () => number;
+    },
+  ) {
+    this.fetchImpl = opts.fetchImpl ?? fetch;
+  }
+
+  /** Reiht einen beliebigen Auftrag (z. B. den Sammellauf) in dieselbe Schlange ein. */
+  run<T>(job: () => Promise<T>): Promise<T> {
+    const next = this.chain.then(job, job);
+    this.chain = next.catch(() => {});
+    return next;
+  }
+
+  /** Wartet, bis alle bisher eingereihten Aufträge durch sind (für Tests). */
+  idle(): Promise<void> {
+    return this.chain.then(() => {});
+  }
+
+  /** [title] zählt nur, solange es die Serie noch nicht gibt — sonst gilt ihr gespeicherter Name. */
+  seriesArtwork(id: string, title: string): void {
+    void this.run(() => this.seriesJob(id, title)).catch((err) =>
+      this.opts.log?.warn({ err, series: id }, "artwork lookup failed"),
+    );
+  }
+
+  film(id: string, title: string): void {
+    void this.run(() => this.filmJob(id, title)).catch((err) =>
+      this.opts.log?.warn({ err, video: id }, "artwork lookup failed"),
+    );
+  }
+
+  private now(): number {
+    return this.opts.now?.() ?? Date.now();
+  }
+
+  private async seriesJob(id: string, title: string): Promise<void> {
+    const { db, coverDir } = this.opts;
+    const now = this.now();
+    const row = db
+      .prepare("SELECT title, poster_url, artwork_checked_at FROM series WHERE id = ?")
+      .get(id) as
+      | { title: string; poster_url: string | null; artwork_checked_at: number | null }
+      | undefined;
+    if (row?.poster_url) return;
+
+    let found = this.series.get(id);
+    if (found && now - found.at >= RETRY_AFTER_MS) found = undefined;
+    if (!found) {
+      // Schon vom Sammellauf geprüft und nichts gefunden: nicht bei jeder Folge wieder fragen.
+      if (row && (row.artwork_checked_at ?? 0) >= now - RETRY_AFTER_MS) return;
+      const art = await fetchSeriesArtwork(this.fetchImpl, coverDir, id, row?.title ?? title);
+      found = { ...art, at: now };
+      this.series.set(id, found);
+      this.opts.log?.info({ series: id, found: !!art.poster }, "artwork lookup on import");
+    }
+    // Gibt es die Serie noch nicht, trifft das UPDATE nichts — das Ergebnis bleibt
+    // gemerkt und wird beim zweiten Aufruf (nach dem Anlegen) eingetragen.
+    db.prepare(
+      "UPDATE series SET poster_url = ?, backdrop_url = ?, artwork_checked_at = ? WHERE id = ? AND poster_url IS NULL",
+    ).run(found.poster, found.backdrop, found.at, id);
+  }
+
+  private async filmJob(id: string, title: string): Promise<void> {
+    const { db, coverDir } = this.opts;
+    const now = this.now();
+    const row = db
+      .prepare("SELECT title, series_id, poster_url, artwork_checked_at FROM videos WHERE id = ?")
+      .get(id) as
+      | {
+          title: string;
+          series_id: string | null;
+          poster_url: string | null;
+          artwork_checked_at: number | null;
+        }
+      | undefined;
+    if (row?.poster_url || row?.series_id) return;
+
+    let found = this.films.get(id);
+    if (found && now - found.at >= RETRY_AFTER_MS) found = undefined;
+    // Unter dem vorläufigen Titel nichts gefunden, jetzt steht der endgültige fest: noch ein Versuch.
+    if (found && !found.poster && row && normalizeTitle(row.title) !== normalizeTitle(title)) {
+      found = undefined;
+    }
+    if (!found) {
+      if (row && (row.artwork_checked_at ?? 0) >= now - RETRY_AFTER_MS) return;
+      const poster = await fetchFilmPoster(this.fetchImpl, coverDir, id, row?.title ?? title);
+      found = { poster, at: now };
+      this.films.set(id, found);
+      this.opts.log?.info({ video: id, found: !!poster }, "artwork lookup on import");
+    }
+    db.prepare(
+      "UPDATE videos SET poster_url = ?, artwork_checked_at = ? WHERE id = ? AND poster_url IS NULL",
+    ).run(found.poster, found.at, id);
+  }
+}
+
+let scout: ArtworkScout | null = null;
+
+/** Schaltet die Sofort-Suche ein (Serverstart) oder mit `null` wieder aus (Tests). */
+export function setArtworkScout(next: ArtworkScout | null): void {
+  scout = next;
+}
+
+/** Plakat für eine Serie besorgen — tut nichts, solange die Sofort-Suche aus ist. */
+export function scoutSeriesArtwork(
+  id: string | null | undefined,
+  title: string | null | undefined,
+): void {
+  if (scout && id) scout.seriesArtwork(id, title?.trim() || id);
+}
+
+/** Plakat für einen Film besorgen — tut nichts, solange die Sofort-Suche aus ist. */
+export function scoutFilmArtwork(id: string, title: string | null | undefined): void {
+  if (scout && title?.trim()) scout.film(id, title.trim());
 }

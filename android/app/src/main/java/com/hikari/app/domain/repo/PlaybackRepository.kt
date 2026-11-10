@@ -3,6 +3,7 @@ package com.hikari.app.domain.repo
 import com.hikari.app.data.api.HikariApi
 import com.hikari.app.data.api.dto.NextVideoDto
 import com.hikari.app.data.api.dto.ProgressBody
+import com.hikari.app.data.db.LocalDownloadDao
 import com.hikari.app.data.db.PlaybackPositionDao
 import com.hikari.app.data.db.PlaybackPositionEntity
 import com.hikari.app.domain.sync.ProgressSyncScheduler
@@ -18,9 +19,13 @@ class PlaybackRepository @Inject constructor(
     private val dao: PlaybackPositionDao,
     private val api: HikariApi,
     private val syncScheduler: ProgressSyncScheduler,
+    private val downloadDao: LocalDownloadDao,
 ) {
     /** Lokale Positionen live — Grundlage für Fortschrittsbalken in Downloads. */
     val positions: Flow<List<PlaybackPositionEntity>> = dao.observeAll()
+
+    /** Alle lokalen Positionen auf einmal — Grundlage für „Weiterschauen" ohne Netz. */
+    suspend fun allPositions(): List<PlaybackPositionEntity> = dao.getAll()
 
     suspend fun getPosition(videoId: String): Long = dao.get(videoId)?.positionMs ?: 0L
 
@@ -80,7 +85,32 @@ class PlaybackRepository @Inject constructor(
         false
     }
 
-    /** Nächste Folge derselben Serie — null bei 404 (kein Nachfolger) oder Fehler. */
+    /**
+     * Nächste Folge derselben Serie — null bei 404 (kein Nachfolger). Ohne
+     * Server (offline) gilt die nächste Folge, die auf dem Gerät liegt.
+     */
     suspend fun nextVideo(videoId: String): NextVideoDto? =
-        runCatching { api.getNextVideo(videoId) }.getOrNull()
+        try {
+            api.getNextVideo(videoId)
+        } catch (e: HttpException) {
+            null
+        } catch (e: Exception) {
+            localNext(videoId)
+        }
+
+    private suspend fun localNext(videoId: String): NextVideoDto? {
+        val current = downloadDao.get(videoId) ?: return null
+        val seriesId = current.seriesId ?: return null
+        val episodes = downloadDao.all()
+            .filter { it.seriesId == seriesId }
+            .sortedWith(compareBy({ it.season ?: 1 }, { it.episode ?: 0 }))
+        val next = episodes.getOrNull(episodes.indexOfFirst { it.videoId == videoId } + 1) ?: return null
+        return NextVideoDto(
+            id = next.videoId,
+            title = next.title,
+            season = next.season,
+            episode = next.episode,
+            thumbnailUrl = next.thumbnailUrl,
+        )
+    }
 }

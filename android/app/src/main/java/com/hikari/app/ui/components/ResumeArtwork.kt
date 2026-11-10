@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.hikari.app.data.api.dto.LibraryVideoDto
+import com.hikari.app.domain.download.OfflineArtworkStore
 import com.hikari.app.player.LastFrameStore
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -23,6 +24,7 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 interface LastFrameEntryPoint {
     fun lastFrameStore(): LastFrameStore
+    fun offlineArtworkStore(): OfflineArtworkStore
 }
 
 /** Echte YouTube-Video-IDs: 11 Zeichen. Nur für alles andere liegt eine Datei auf dem Server. */
@@ -45,15 +47,17 @@ fun ResumeArtwork(
     resumeFrame: Boolean = true,
 ) {
     val ctx = LocalContext.current
-    val store = remember {
-        EntryPointAccessors.fromApplication(ctx, LastFrameEntryPoint::class.java).lastFrameStore()
-    }
+    val entryPoint = remember { EntryPointAccessors.fromApplication(ctx, LastFrameEntryPoint::class.java) }
+    val store = remember { entryPoint.lastFrameStore() }
+    // Ohne Server gibt es von dort kein Standbild — gar nicht erst fragen,
+    // sonst wartet die Karte auf eine Zeitüberschreitung.
+    val serverReachable = !entryPoint.offlineArtworkStore().preferLocal
     val progress = video.progress_seconds ?: 0f
     val inProgress = resumeFrame && progress >= MIN_RESUME_SECONDS &&
         video.duration_seconds > 0 &&
         progress < video.duration_seconds * 0.95f
 
-    val candidates = remember(video.id, video.thumbnail_url, progress.toInt(), resumeFrame) {
+    val candidates = remember(video.id, video.thumbnail_url, progress.toInt(), resumeFrame, serverReachable) {
         buildList<Any> {
             if (inProgress) {
                 store.frameFile(video.id)?.let { file ->
@@ -66,7 +70,9 @@ fun ResumeArtwork(
                             .build(),
                     )
                 }
-                if (!YOUTUBE_ID.matches(video.id)) add("/videos/${video.id}/frame?at=${progress.toInt()}")
+                if (serverReachable && !YOUTUBE_ID.matches(video.id)) {
+                    add("/videos/${video.id}/frame?at=${progress.toInt()}")
+                }
             }
             video.thumbnail_url?.takeIf { it.isNotBlank() }?.let(::add)
         }

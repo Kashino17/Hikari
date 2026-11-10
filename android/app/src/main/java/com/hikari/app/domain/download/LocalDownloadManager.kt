@@ -51,6 +51,10 @@ data class LocalDownloadMetadata(
     val episode: Int? = null,
     /** Selbst angestoßen oder von den Smart-Downloads geholt. */
     val source: LocalDownloadSource = LocalDownloadSource.MANUAL,
+    /** Echte Plakate, soweit der Aufrufer sie kennt — sonst trägt OfflineArtworkSync sie nach. */
+    val posterUrl: String? = null,
+    val seriesPosterUrl: String? = null,
+    val seriesBackdropUrl: String? = null,
 )
 
 /**
@@ -97,6 +101,15 @@ class LocalDownloadManager @Inject constructor(
             dao.delete(videoId)
         }
     }
+
+    /** Was über einen Download gemerkt ist — für Ansichten, die ohne Server auskommen müssen. */
+    suspend fun entity(videoId: String): LocalDownloadEntity? = dao.get(videoId)
+
+    /** Alle Folgen einer Serie, die auf dem Gerät liegen, in Sendereihenfolge. */
+    suspend fun episodesOf(seriesId: String): List<LocalDownloadEntity> =
+        dao.all()
+            .filter { it.seriesId == seriesId }
+            .sortedWith(compareBy({ it.season ?: 1 }, { it.episode ?: 0 }))
 
     suspend fun delete(videoId: String) = withContext(Dispatchers.IO) {
         val entity = dao.get(videoId)
@@ -181,6 +194,8 @@ class LocalDownloadManager @Inject constructor(
                     }
                 }
 
+                // Ein erneuter Download kennt die Plakate oft nicht — die schon gemerkten bleiben.
+                val known = dao.get(meta.videoId)
                 val entity = LocalDownloadEntity(
                     videoId = meta.videoId,
                     localFilePath = target.absolutePath,
@@ -199,6 +214,9 @@ class LocalDownloadManager @Inject constructor(
                     season = meta.season,
                     episode = meta.episode,
                     source = meta.source.name,
+                    posterUrl = meta.posterUrl ?: known?.posterUrl,
+                    seriesPosterUrl = meta.seriesPosterUrl ?: known?.seriesPosterUrl,
+                    seriesBackdropUrl = meta.seriesBackdropUrl ?: known?.seriesBackdropUrl,
                 )
                 dao.upsert(entity)
                 _progress.remove(meta.videoId)

@@ -40,6 +40,16 @@ data class LocalDownloadEntity(
      * Smart-Downloads geholt). Danach richtet sich, wie lange er bleibt.
      */
     @ColumnInfo(name = "source", defaultValue = "MANUAL") val source: String = LocalDownloadSource.MANUAL.name,
+
+    /**
+     * Echte Plakate, wie die Bibliothek sie zeigt: das Filmplakat des Videos
+     * selbst sowie Plakat (hochkant) und Hintergrund (quer) seiner Serie. Die
+     * Bilddateien dazu liegen auf dem Gerät (OfflineArtworkStore) — so sieht
+     * die Offline-Bibliothek aus wie die echte.
+     */
+    @ColumnInfo(name = "poster_url") val posterUrl: String? = null,
+    @ColumnInfo(name = "series_poster_url") val seriesPosterUrl: String? = null,
+    @ColumnInfo(name = "series_backdrop_url") val seriesBackdropUrl: String? = null,
 )
 
 enum class LocalDownloadKind { SERIES, CHANNEL, MOVIE }

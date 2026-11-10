@@ -156,7 +156,7 @@ describe("Migration: Clipper, Bewertung und Discovery entfernt", () => {
     expect(columnNames(db, "videos")).not.toContain("clip_status");
     expect(columnNames(db, "feed_items")).not.toContain("is_pre_clipper");
     expect(columnNames(db, "channels")).not.toContain("auto_approve");
-    expect(db.pragma("user_version", { simple: true })).toBe(3);
+    expect(db.pragma("user_version", { simple: true })).toBe(4);
   });
 
   it("räumt Altbestand ab: Tabellen, Spalten und Index auf clip_status", () => {
@@ -270,7 +270,7 @@ describe("Migration: Feed = nur Abos (einmalige Datenbereinigung)", () => {
     expect(db.prepare("SELECT COUNT(*) c FROM videos").get()).toEqual({ c: 8 });
     expect(db.prepare("SELECT COUNT(*) c FROM channels").get()).toEqual({ c: 5 });
     expect(db.prepare("SELECT COUNT(*) c FROM watch_later").get()).toEqual({ c: 0 });
-    expect(db.pragma("user_version", { simple: true })).toBe(3);
+    expect(db.pragma("user_version", { simple: true })).toBe(4);
   });
 
   it("läuft nur einmal — spätere Läufe fassen den Bestand nicht mehr an", () => {
@@ -292,5 +292,31 @@ describe("Migration: Feed = nur Abos (einmalige Datenbereinigung)", () => {
     `);
     applyMigrations(db);
     expect(db.prepare("SELECT COUNT(*) c FROM feed_items").get()).toEqual({ c: 1 });
+  });
+});
+
+describe("Migration: Plakate noch einmal nachschlagen", () => {
+  it("gibt Serien ohne Plakat einmalig wieder frei, lässt gefundene in Ruhe", () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    db.prepare(
+      "INSERT INTO series (id,title,added_at,poster_url,artwork_checked_at) VALUES ('a','Haus des Geldes',0,NULL,5)",
+    ).run();
+    db.prepare(
+      "INSERT INTO series (id,title,added_at,poster_url,artwork_checked_at) VALUES ('b','Ted',0,'/covers/poster_b.jpg',5)",
+    ).run();
+    // Stand vor der Migration nachstellen.
+    db.pragma("user_version = 3");
+    applyMigrations(db);
+    expect(db.prepare("SELECT id, artwork_checked_at FROM series ORDER BY id").all()).toEqual([
+      { id: "a", artwork_checked_at: null },
+      { id: "b", artwork_checked_at: 5 },
+    ]);
+    // Ein zweiter Start setzt nichts mehr zurück.
+    db.prepare("UPDATE series SET artwork_checked_at = 9 WHERE id = 'a'").run();
+    applyMigrations(db);
+    expect(db.prepare("SELECT artwork_checked_at FROM series WHERE id='a'").get()).toEqual({
+      artwork_checked_at: 9,
+    });
   });
 });

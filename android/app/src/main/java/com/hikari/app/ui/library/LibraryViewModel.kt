@@ -6,8 +6,6 @@ import com.hikari.app.data.api.dto.LibraryResponse
 import com.hikari.app.data.api.dto.SeriesDetailResponse
 import com.hikari.app.data.api.dto.SeriesItemDto
 import com.hikari.app.data.db.LocalDownloadDao
-import com.hikari.app.data.db.LocalDownloadEntity
-import com.hikari.app.data.db.LocalMangaArcEntity
 import com.hikari.app.data.db.LocalMangaDao
 import com.hikari.app.data.net.ConnectivityObserver
 import com.hikari.app.domain.model.FeedItem
@@ -23,6 +21,10 @@ import com.hikari.app.ui.library.components.TopTenItem
 import com.hikari.app.data.db.LocalDownloadKind
 import com.hikari.app.domain.download.LocalDownloadManager
 import com.hikari.app.domain.download.LocalDownloadMetadata
+import com.hikari.app.domain.download.OfflineArtworkStore
+import com.hikari.app.domain.download.OfflineArtworkSync
+import com.hikari.app.domain.library.OfflineLibrary
+import com.hikari.app.domain.library.OfflineLibraryBuilder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,14 +58,7 @@ sealed interface LibraryUiState {
     data class Success(val data: LibraryResponse) : LibraryUiState
 
     /** Lokal vorhandene Inhalte — kein Netz oder Backend nicht erreichbar. */
-    data class Offline(
-        val videos: List<LocalDownloadEntity>,
-        val mangaArcs: List<LocalMangaArcEntity>,
-        val songs: List<MusicSong>,
-    ) : LibraryUiState {
-        val isEmpty: Boolean
-            get() = videos.isEmpty() && mangaArcs.isEmpty() && songs.isEmpty()
-    }
+    data class Offline(val library: OfflineLibrary) : LibraryUiState
 }
 
 sealed interface SeriesUiState {
@@ -88,6 +83,8 @@ class LibraryViewModel @Inject constructor(
     private val musicPlayer: MusicPlayerController,
     private val playbackRepo: PlaybackRepository,
     private val localDownloads: LocalDownloadManager,
+    private val artworkStore: OfflineArtworkStore,
+    private val artworkSync: OfflineArtworkSync,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<LibraryUiState>(LibraryUiState.Loading)
@@ -156,13 +153,16 @@ class LibraryViewModel @Inject constructor(
             runCatching { withTimeoutOrNull(4_000) { playbackRepo.syncPending() } }
             // Beim Auffrischen (z. B. Rückkehr aus dem Player) bleibt der bisherige
             // Inhalt stehen — sonst blitzt jedes Mal der Ladekreis auf und die
-            // Seite springt an den Anfang.
-            if (_uiState.value !is LibraryUiState.Success) _uiState.value = LibraryUiState.Loading
+            // Seite springt an den Anfang. Das gilt auch für die Offline-Ansicht:
+            // sie bleibt, bis feststeht, ob der Server wieder antwortet.
             runCatching {
                 repo.getLibrary()
             }.onSuccess {
+                artworkStore.preferLocal = false
                 _uiState.value = LibraryUiState.Success(it)
                 updateTopCharts(it)
+                // Plakate der Downloads gleich mit abgleichen und aufs Gerät sichern.
+                artworkSync.onLibraryLoaded(it)
             }.onFailure {
                 // Netz da, aber Backend antwortet nicht → trotzdem Offline-Modus
                 // statt technischem Fehlertext.
@@ -177,24 +177,34 @@ class LibraryViewModel @Inject constructor(
      * anderen sichtbar.
      */
     private suspend fun showOffline() {
-        val videos = runCatching { downloadDao.observeAll().first() }.getOrDefault(emptyList())
-        val arcs = runCatching { mangaDao.observeArcs().first() }.getOrDefault(emptyList())
-        val songs = runCatching { musicRepo.getDownloadedSongs() }.getOrDefault(emptyList())
-        _uiState.value = LibraryUiState.Offline(
-            videos = videos,
-            mangaArcs = arcs,
-            songs = songs,
-        )
+        // Ab jetzt zeigt jede Ansicht sofort die aufs Gerät gesicherten Bilder.
+        artworkStore.preferLocal = true
+        _uiState.value = LibraryUiState.Offline(buildOfflineLibrary())
     }
 
+    private suspend fun buildOfflineLibrary(): OfflineLibrary = OfflineLibraryBuilder.build(
+        downloads = runCatching { downloadDao.all() }.getOrDefault(emptyList()),
+        positions = runCatching { playbackRepo.allPositions() }.getOrDefault(emptyList()),
+        mangaArcs = runCatching { mangaDao.observeArcs().first() }.getOrDefault(emptyList()),
+        downloadedSongs = runCatching { musicRepo.getDownloadedSongs() }.getOrDefault(emptyList()),
+        favorites = runCatching { musicRepo.getFavorites() }.getOrDefault(emptyList()),
+        playlists = runCatching { musicRepo.getPlaylists() }.getOrDefault(emptyList()),
+    )
+
     /**
-     * Spielt einen heruntergeladenen Song ab. Die komplette Offline-Liste geht
-     * als Queue mit, damit "Weiter" auch ohne Netz funktioniert — der
-     * [MusicPlayerController] greift automatisch auf die lokale Datei zu.
+     * Spielt [song] aus einer Offline-Liste. Die abspielbaren Songs der Liste
+     * gehen als Warteschlange mit, damit „Weiter" auch ohne Netz funktioniert —
+     * der [MusicPlayerController] greift automatisch auf die lokale Datei zu.
      */
-    fun playSong(song: MusicSong) {
-        val queue = (_uiState.value as? LibraryUiState.Offline)?.songs ?: listOf(song)
-        musicPlayer.play(song, queue)
+    fun playSong(song: MusicSong, queue: List<MusicSong>) {
+        musicPlayer.play(song, queue.ifEmpty { listOf(song) })
+    }
+
+    /** Spielt eine ganze Offline-Liste — der Reihe nach oder gemischt. */
+    fun playAll(queue: List<MusicSong>, shuffled: Boolean = false) {
+        if (queue.isEmpty()) return
+        val order = if (shuffled) queue.shuffled() else queue
+        musicPlayer.play(order.first(), order)
     }
 
     /**
@@ -315,7 +325,14 @@ class LibraryViewModel @Inject constructor(
             }.onSuccess {
                 _seriesState.value = SeriesUiState.Success(it)
             }.onFailure {
-                _seriesState.value = SeriesUiState.Error(it.message ?: "Unbekannter Fehler")
+                // Server nicht erreichbar: dieselbe Seite, gefüllt mit den Folgen
+                // auf dem Gerät. Nur wenn auch davon keine da ist, bleibt ein Hinweis.
+                val local = buildOfflineLibrary().seriesDetail(id)
+                _seriesState.value = if (local != null) {
+                    SeriesUiState.Success(local)
+                } else {
+                    SeriesUiState.Error("Offline — von dieser Serie liegt keine Folge auf dem Gerät.")
+                }
             }
         }
     }
@@ -378,6 +395,8 @@ class LibraryViewModel @Inject constructor(
             seriesThumbnailUrl = series.thumbnail_url,
             season = season,
             episode = episode,
+            seriesPosterUrl = series.poster_url,
+            seriesBackdropUrl = series.backdrop_url,
         )
 
     /**

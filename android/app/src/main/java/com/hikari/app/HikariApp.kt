@@ -5,9 +5,15 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import coil.Coil
 import coil.ImageLoader
+import coil.intercept.Interceptor
 import coil.map.Mapper
+import coil.request.ErrorResult
+import coil.request.ImageResult
 import com.hikari.app.data.prefs.DEFAULT_BACKEND_URL
 import com.hikari.app.data.prefs.SettingsStore
+import com.hikari.app.data.net.ConnectivityObserver
+import com.hikari.app.domain.download.OfflineArtworkStore
+import com.hikari.app.domain.download.OfflineArtworkSync
 import com.hikari.app.domain.download.SmartDownloadScheduler
 import com.hikari.app.domain.news.NewsBriefingScheduler
 import com.hikari.app.domain.sync.ProgressSyncScheduler
@@ -31,6 +37,9 @@ class HikariApp : Application(), Configuration.Provider {
     @Inject lateinit var progressSyncScheduler: ProgressSyncScheduler
     @Inject lateinit var settings: SettingsStore
     @Inject lateinit var retentionCleaner: dagger.Lazy<com.hikari.app.domain.download.DownloadRetentionCleaner>
+    @Inject lateinit var artworkStore: OfflineArtworkStore
+    @Inject lateinit var artworkSync: dagger.Lazy<OfflineArtworkSync>
+    @Inject lateinit var connectivity: ConnectivityObserver
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -70,6 +79,9 @@ class HikariApp : Application(), Configuration.Provider {
         appScope.launch { settings.backendUrl.collect { imageBackendUrl = it } }
         appScope.launch { settings.authToken.collect { imageAuthToken = it } }
         Coil.setImageLoader(buildImageLoader())
+        // Bilder der Downloads aufs Gerät sichern — erst nach dem ImageLoader,
+        // denn über ihn werden sie geholt.
+        artworkSync.get().start()
     }
 
     /**
@@ -97,6 +109,7 @@ class HikariApp : Application(), Configuration.Provider {
         return ImageLoader.Builder(this)
             .okHttpClient(client)
             .components {
+                add(OfflineArtworkInterceptor())
                 add(
                     Mapper<String, String> { data, _ ->
                         if (data.startsWith("/")) imageBackendUrl.trimEnd('/') + data else null
@@ -104,5 +117,26 @@ class HikariApp : Application(), Configuration.Provider {
                 )
             }
             .build()
+    }
+
+    /**
+     * Zeigt das aufs Gerät gesicherte Bild, wenn das Netz keines liefert.
+     *
+     * Sitzt vor allem anderen im ImageLoader — dadurch gilt es für jedes Bild
+     * der App, ohne dass eine einzige Ansicht davon wissen muss. Online bleibt
+     * alles beim Alten (das Bild vom Server gewinnt und ist damit immer
+     * aktuell); nur wenn das scheitert oder gar kein Netz da ist, springt die
+     * gesicherte Datei ein.
+     */
+    private inner class OfflineArtworkInterceptor : Interceptor {
+        override suspend fun intercept(chain: Interceptor.Chain): ImageResult {
+            val request = chain.request
+            val local = (request.data as? String)?.let(artworkStore::localFile)
+                ?: return chain.proceed(request)
+            val fromFile = request.newBuilder().data(local).build()
+            if (artworkStore.preferLocal || !connectivity.currentlyOnline()) return chain.proceed(fromFile)
+            val result = chain.proceed(request)
+            return if (result is ErrorResult) chain.proceed(fromFile) else result
+        }
     }
 }
