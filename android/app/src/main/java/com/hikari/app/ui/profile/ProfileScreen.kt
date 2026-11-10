@@ -4,16 +4,12 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -68,6 +64,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
 import com.hikari.app.domain.profile.AreaTiles
 import com.hikari.app.ui.channels.ImportSheet
+import com.hikari.app.ui.common.TextTab
+import com.hikari.app.ui.common.TextTabs
 import com.hikari.app.ui.navigation.SharedImport
 import com.hikari.app.ui.profile.components.AreaTileGrid
 import com.hikari.app.ui.profile.tabs.ChannelsTab
@@ -334,7 +332,6 @@ private fun HeaderButton(icon: ImageVector, label: String, tint: Color, onClick:
     }
 }
 
-/** Schlichte Text-Tabs: der aktive ist hell und trägt den Amber-Strich. */
 @Composable
 private fun ProfileTabsRow(
     active: ProfileTab,
@@ -342,60 +339,12 @@ private fun ProfileTabsRow(
     downloadsCount: Int,
     onTabSelected: (ProfileTab) -> Unit,
 ) {
-    Box(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 14.dp)) {
-        Box(
-            Modifier
-                .align(Alignment.BottomStart)
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(HikariBorder),
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(22.dp)) {
-            ProfileTabLabel("Bereiche", null, active == ProfileTab.BEREICHE) { onTabSelected(ProfileTab.BEREICHE) }
-            ProfileTabLabel("Kanäle", channelsCount, active == ProfileTab.CHANNELS) { onTabSelected(ProfileTab.CHANNELS) }
-            ProfileTabLabel("Downloads", downloadsCount, active == ProfileTab.DOWNLOADS) { onTabSelected(ProfileTab.DOWNLOADS) }
-        }
-    }
-}
-
-@Composable
-private fun ProfileTabLabel(label: String, count: Int?, selected: Boolean, onClick: () -> Unit) {
-    val color by animateColorAsState(
-        targetValue = if (selected) HikariText else HikariTextFaint,
-        animationSpec = tween(160),
-        label = "tab-color",
+    TextTabs(
+        tabs = listOf(TextTab("Bereiche"), TextTab("Kanäle", channelsCount), TextTab("Downloads", downloadsCount)),
+        selected = active.ordinal,
+        onSelect = { onTabSelected(ProfileTab.entries[it]) },
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 14.dp),
     )
-    Column(
-        modifier = Modifier
-            .width(IntrinsicSize.Max)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick,
-            ),
-    ) {
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text(
-                label,
-                color = color,
-                fontSize = 14.sp,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                maxLines = 1,
-            )
-            if (count != null) {
-                Spacer(Modifier.width(4.dp))
-                Text(count.toString(), color = color, fontSize = 12.sp, maxLines = 1)
-            }
-        }
-        Spacer(Modifier.height(10.dp))
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(2.dp)
-                .clip(CircleShape)
-                .background(if (selected) HikariAmber else Color.Transparent),
-        )
-    }
 }
 
 @Composable

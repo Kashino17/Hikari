@@ -1,13 +1,9 @@
 package com.hikari.app.ui.games
 
 import android.content.Context
-import android.content.SharedPreferences
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,21 +14,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.EmojiEvents
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,39 +37,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hikari.app.ui.common.TextTab
+import com.hikari.app.ui.common.TextTabs
 import com.hikari.app.ui.theme.HikariAmber
 import com.hikari.app.ui.theme.HikariBg
-import com.hikari.app.ui.theme.HikariBorder
-import com.hikari.app.ui.theme.HikariCardBg
-import com.hikari.app.ui.theme.HikariSurfaceHigh
+import com.hikari.app.ui.theme.HikariSurface
 import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 
-enum class GameCategory(val label: String) {
-    ALL("Alle"),
-    ARCADE("Arcade & Action"),
-    PUZZLE("Rätsel & Denksport"),
-    TACTICS("Taktik & Klassiker"),
-}
+/** Dunkle Symbole auf voll gefärbten Flächen. */
+private val Ink = Color(0xFF17171A)
 
-data class GameInfo(
-    val id: String,
-    val title: String,
-    val tagline: String,
-    val description: String,
-    val category: GameCategory,
-    val color: Color,
-    val getStat: (SharedPreferences) -> String,
-)
-
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Spiele-Übersicht: oben das zuletzt gespielte Spiel zum Weiterspielen, darunter alle Spiele
+ * als App-Raster in drei Spalten. Unter jedem Symbol steht der erspielte Stand — wo es noch
+ * keinen gibt, worum es geht.
+ */
 @Composable
 fun GamesScreen(
     onBack: () -> Unit,
@@ -82,127 +67,16 @@ fun GamesScreen(
 ) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("hikari_games", Context.MODE_PRIVATE) }
-    var selectedCategory by remember { mutableStateOf(GameCategory.ALL) }
+    val read: (String) -> Int = remember { { key -> prefs.getInt(key, 0) } }
+    var category by remember { mutableStateOf(GameCategory.ALL) }
 
-    val allGames = remember {
-        listOf(
-            GameInfo(
-                id = "blockblast",
-                title = "Block Blast",
-                tagline = "8×8 Reihen räumen",
-                description = "Blöcke platzieren, Zeilen & Spalten sprengen, Booster zünden — mit Abenteuer-Leveln und Zeitrausch.",
-                category = GameCategory.TACTICS,
-                color = Color(0xFFFBBF24),
-                getStat = { p ->
-                    val hs = p.getInt("blockblast_highscore", 0)
-                    if (hs > 0) "Rekord: $hs" else "8×8 Rätsel"
-                },
-            ),
-            GameInfo(
-                id = "fruitmerge",
-                title = "Fruit Merge",
-                tagline = "Suika Wassermelone",
-                description = "Früchte fallen lassen & verschmelzen — mit Ketten-Combos, Power-ups, Zen-Modus und Herausforderungen.",
-                category = GameCategory.TACTICS,
-                color = Color(0xFF4ADE80),
-                getStat = { p ->
-                    val hs = p.getInt("fruitmerge_highscore", 0)
-                    if (hs > 0) "Rekord: $hs" else "Ketten-Combos"
-                },
-            ),
-            GameInfo(
-                id = "spaceshooter",
-                title = "Sky Strike",
-                tagline = "Weltraum-Shooter",
-                description = "Kämpfe dich durch 5 galaktische Sektoren mit gewaltigen Bossen, Hangar-Upgrades und Boss-Rush.",
-                category = GameCategory.ARCADE,
-                color = Color(0xFF22D3EE),
-                getStat = { p ->
-                    val hs = p.getInt("spaceshooter_highscore", 0)
-                    if (hs > 0) "Rekord: $hs" else "5 Sektoren"
-                },
-            ),
-            GameInfo(
-                id = "fruithole",
-                title = "Hungry Hole",
-                tagline = "Black Hole Arcade",
-                description = "Schlucke Power-ups, weiche Bomben aus und fresse die Stadt leer — plus Rush Hour & Welten-Reise.",
-                category = GameCategory.ARCADE,
-                color = Color(0xFFA78BFA),
-                getStat = { p ->
-                    val hs = p.getInt("fruithole_highscore", 0)
-                    if (hs > 0) "Rekord: $hs" else "Rush-Modus"
-                },
-            ),
-            GameInfo(
-                id = "colorsort",
-                title = "Color Sort",
-                tagline = "Wasser-Farbensortieren",
-                description = "Farbschichten in Reagenzgläsern sortieren — Level-Reise mit 3 bis 11 Farben und Zufallsrätsel.",
-                category = GameCategory.PUZZLE,
-                color = Color(0xFFF472B6),
-                getStat = { p ->
-                    val lv = p.getInt("cs_max_level", 1)
-                    if (lv > 1) "Level $lv erreicht" else "Level 1 Start"
-                },
-            ),
-            GameInfo(
-                id = "2048",
-                title = "2048",
-                tagline = "Zahlen-Verschmelzen",
-                description = "Kacheln wischen und addieren — von 3×3 bis 5×5 oder entspannt auf dem 8×8-Riesenbrett mit Rückgängig.",
-                category = GameCategory.PUZZLE,
-                color = Color(0xFFFB923C),
-                getStat = { p ->
-                    val b = maxOf(p.getInt("g2048_best_classic", 0), p.getInt("g2048_best_relaxed", 0))
-                    if (b > 0) "Rekord: $b" else "3×3 bis 8×8"
-                },
-            ),
-            GameInfo(
-                id = "sudoku",
-                title = "Sudoku",
-                tagline = "Klassisches Zahlenrätsel",
-                description = "Vier Schwierigkeiten mit garantierten eindeutigen Lösungen, Notizen, Hinweisen, Fehlergrenze & Timer.",
-                category = GameCategory.PUZZLE,
-                color = Color(0xFF2DD4BF),
-                getStat = { p ->
-                    val solved = p.getInt("sudoku_solved_total", 0)
-                    if (solved > 0) "$solved gelöst" else "4 Stufen"
-                },
-            ),
-            GameInfo(
-                id = "snake",
-                title = "Snake",
-                tagline = "Retro-Wischklassiker",
-                description = "Kultiges Gameplay mit präziser Wischsteuerung, Bonus-Früchten, Portal-Rändern und rasantem Blitz-Modus.",
-                category = GameCategory.ARCADE,
-                color = Color(0xFFA3E635),
-                getStat = { p ->
-                    val b = maxOf(
-                        p.getInt("snake_best_classic", 0),
-                        p.getInt("snake_best_blitz", 0),
-                        p.getInt("snake_best_portal", 0),
-                    )
-                    if (b > 0) "Rekord: $b" else "Klassik & Blitz"
-                },
-            ),
-            GameInfo(
-                id = "tictactoe",
-                title = "Tic-Tac-Toe",
-                tagline = "Klassik & Ultimate",
-                description = "Gegen die smarte KI oder zu zweit an einem Gerät — mit 3×3, Ultimate-Großbrett und Bolt-Modus.",
-                category = GameCategory.TACTICS,
-                color = Color(0xFF60A5FA),
-                getStat = { p ->
-                    val w = p.getInt("ttt_wins_total", 0)
-                    val g = p.getInt("ttt_games_total", 0)
-                    if (w > 0) "$w Siege ($g Runden)" else "1 vs 1 & KI"
-                },
-            ),
-        )
+    // Nach einem Spiel wird die Seite neu aufgebaut — Stände und »zuletzt gespielt« sind dann frisch.
+    val lastPlayed = remember {
+        prefs.getString("last_played_game", null)?.let { id -> GameCatalog.firstOrNull { it.id == id } }
     }
+    val games = remember(category) { gamesIn(category) }
 
-    fun handleLaunch(gameId: String) {
+    fun launch(gameId: String) {
         prefs.edit()
             .putString("last_played_game", gameId)
             .putLong("last_played_time", System.currentTimeMillis())
@@ -210,204 +84,156 @@ fun GamesScreen(
         onLaunchGame(gameId)
     }
 
-    val filteredGames = remember(selectedCategory) {
-        if (selectedCategory == GameCategory.ALL) allGames
-        else allGames.filter { it.category == selectedCategory }
-    }
+    Column(Modifier.fillMaxSize().background(HikariBg)) {
+        GamesTopBar(onBack)
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Spiele",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = HikariText,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Zurück", tint = HikariText)
-                    }
-                },
-                actions = {
-                    Box(
-                        modifier = Modifier
-                            .padding(end = 16.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(HikariSurfaceHigh)
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                    ) {
-                        Text(
-                            "9 OFFLINE",
-                            color = HikariAmber,
-                            fontSize = 10.5.sp,
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = HikariBg,
-                    titleContentColor = HikariText,
-                ),
-            )
-        },
-        containerColor = HikariBg,
-    ) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 96.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(22.dp),
         ) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                ArcadeFeaturesRow()
+            if (lastPlayed != null) {
+                item(key = "continue", span = { GridItemSpan(maxLineSpan) }) {
+                    ContinueTile(lastPlayed, lastPlayed.stat(read)) { launch(lastPlayed.id) }
+                }
             }
 
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                CategoriesRow(
-                    selected = selectedCategory,
-                    onSelect = { selectedCategory = it },
+            item(key = "tabs", span = { GridItemSpan(maxLineSpan) }) {
+                TextTabs(
+                    tabs = GameCategory.entries.map { cat ->
+                        TextTab(cat.label, if (cat == GameCategory.ALL) null else gamesIn(cat).size)
+                    },
+                    selected = category.ordinal,
+                    onSelect = { category = GameCategory.entries[it] },
                 )
             }
 
-            itemsIndexed(filteredGames, key = { _, g -> g.id }) { index, game ->
-                GameGridCell(
-                    game = game,
-                    index = index,
-                    statText = game.getStat(prefs),
-                    onClick = { handleLaunch(game.id) },
-                )
+            itemsIndexed(games, key = { _, g -> g.id }) { index, game ->
+                GameGridCell(game, index, game.stat(read)) { launch(game.id) }
             }
         }
     }
 }
 
 @Composable
-private fun GameGridCell(
-    game: GameInfo,
-    index: Int,
-    statText: String,
-    onClick: () -> Unit,
-) {
-    GxAppear(index) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .gxPressable(onClick = onClick),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            GameAppIcon(game.id, size = 64.dp)
-            Spacer(Modifier.height(8.dp))
-            Text(
-                game.title,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = HikariText,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                statText,
-                fontSize = 10.5.sp,
-                color = HikariTextFaint,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ArcadeFeaturesRow() {
+private fun GamesTopBar(onBack: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth().padding(start = 6.dp, end = 16.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        FeatureTile(title = "9 Spiele", subtitle = "100% Offline", modifier = Modifier.weight(1f))
-        FeatureTile(title = "Highscores", subtitle = "Lokal gesichert", modifier = Modifier.weight(1f))
-        FeatureTile(title = "Zero Ads", subtitle = "Purer Spielspaß", modifier = Modifier.weight(1f))
-    }
-}
-
-@Composable
-private fun FeatureTile(title: String, subtitle: String, modifier: Modifier) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(HikariSurfaceHigh.copy(alpha = 0.5f))
-            .border(0.5.dp, HikariBorder, RoundedCornerShape(14.dp))
-            .padding(vertical = 9.dp, horizontal = 8.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                title,
-                color = HikariText,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
+        Box(
+            modifier = Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onBack),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                Icons.AutoMirrored.Outlined.ArrowBack,
+                contentDescription = "Zurück",
+                tint = HikariText,
+                modifier = Modifier.size(22.dp),
             )
-            Spacer(Modifier.height(2.dp))
+        }
+        Spacer(Modifier.width(4.dp))
+        Column {
+            Text("Spiele", color = HikariText, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             Text(
-                subtitle,
-                color = HikariTextFaint,
-                fontSize = 10.sp,
+                "${GameCatalog.size} Spiele, alle ohne Netz spielbar",
+                color = HikariTextMuted,
+                fontSize = 12.5.sp,
+                maxLines = 1,
             )
         }
     }
 }
 
+/** Das zuletzt gespielte Spiel, groß und in seiner Farbe: ein Tipp, und es geht weiter. */
 @Composable
-private fun CategoriesRow(
-    selected: GameCategory,
-    onSelect: (GameCategory) -> Unit,
-) {
-    val scrollState = rememberScrollState()
-
+private fun ContinueTile(game: GameInfo, stat: GameStat, onClick: () -> Unit) {
+    val hue = game.color
+    val shape = RoundedCornerShape(18.dp)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .horizontalScroll(scrollState),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .gxPressable(onClick = onClick)
+            .clip(shape)
+            .background(lerp(HikariSurface, hue, 0.13f))
+            .border(1.dp, hue.copy(alpha = 0.24f), shape)
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        GameCategory.entries.forEach { cat ->
-            val isSelected = selected == cat
-            val bgColor by animateColorAsState(
-                targetValue = if (isSelected) HikariAmber.copy(alpha = 0.14f) else HikariCardBg,
-                animationSpec = tween(180),
-                label = "cat-bg",
+        GameAppIcon(game.id, size = 62.dp)
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            Text("Weiterspielen", color = hue, fontSize = 12.5.sp, fontWeight = FontWeight.Medium)
+            Text(
+                game.title,
+                color = HikariText,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-            val textColor by animateColorAsState(
-                targetValue = if (isSelected) HikariAmber else HikariTextMuted,
-                animationSpec = tween(180),
-                label = "cat-text",
+            Spacer(Modifier.height(1.dp))
+            StatLine(
+                text = if (stat.earned) stat.spelledOut else game.tagline,
+                earned = stat.earned,
+                fontSize = 12.5,
+                restColor = HikariTextMuted,
             )
-
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(bgColor)
-                    .border(
-                        1.dp,
-                        if (isSelected) Color.Transparent else HikariBorder,
-                        RoundedCornerShape(10.dp),
-                    )
-                    .clickable { onSelect(cat) }
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-            ) {
-                Text(
-                    cat.label,
-                    color = textColor,
-                    fontSize = 12.sp,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                )
-            }
         }
+        Spacer(Modifier.width(10.dp))
+        Box(
+            modifier = Modifier.size(42.dp).clip(CircleShape).background(hue),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Rounded.PlayArrow, contentDescription = null, tint = Ink, modifier = Modifier.size(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun GameGridCell(game: GameInfo, index: Int, stat: GameStat, onClick: () -> Unit) {
+    GxAppear(index) {
+        Column(
+            modifier = Modifier.fillMaxWidth().gxPressable(onClick = onClick),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            GameAppIcon(game.id, size = 68.dp)
+            Spacer(Modifier.height(9.dp))
+            Text(
+                game.title,
+                color = HikariText,
+                fontSize = 13.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(2.dp))
+            StatLine(stat.text, stat.earned, fontSize = 11.0, restColor = HikariTextFaint)
+        }
+    }
+}
+
+/** Erspieltes trägt den Amber-Pokal, alles andere bleibt leise. */
+@Composable
+private fun StatLine(text: String, earned: Boolean, fontSize: Double, restColor: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        if (earned) {
+            Icon(
+                Icons.Outlined.EmojiEvents,
+                contentDescription = null,
+                tint = HikariAmber,
+                modifier = Modifier.size((fontSize + 1.5).dp),
+            )
+            Spacer(Modifier.width(3.dp))
+        }
+        Text(
+            text,
+            color = if (earned) HikariTextMuted else restColor,
+            fontSize = fontSize.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
