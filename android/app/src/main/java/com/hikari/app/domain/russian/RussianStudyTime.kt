@@ -32,6 +32,13 @@ class RussianStudyTime @Inject constructor(
         prefs.edit().putString(KEY, all.toString()).apply()
     }
 
+    /** Lernzeit von heute über alle Modi, in Sekunden — für die Kopfzeile im Profil. */
+    fun todaySeconds(): Int = runCatching {
+        val today = JSONObject(prefs.getString(KEY, null) ?: "{}")
+            .optJSONObject(LocalDate.now().toEpochDay().toString()) ?: return 0
+        today.keys().asSequence().sumOf { today.optInt(it, 0) }
+    }.getOrDefault(0)
+
     /** Freie, klare Antworten im Gespräch mit Anja — zählt fürs Sprachniveau ab B1. */
     fun talkCount(): Int = runCatching {
         val observations = JSONObject(prefs.getString("conv_progress", null) ?: "{}").optJSONArray("observations")

@@ -9,36 +9,28 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Apps
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.LocalFireDepartment
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -56,7 +48,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -73,17 +64,16 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
+import com.hikari.app.domain.profile.AreaTiles
 import com.hikari.app.ui.channels.ImportSheet
 import com.hikari.app.ui.navigation.SharedImport
-import com.hikari.app.ui.profile.components.AreaHubShowcase
+import com.hikari.app.ui.profile.components.AreaTileGrid
 import com.hikari.app.ui.profile.tabs.ChannelsTab
 import com.hikari.app.ui.profile.tabs.DownloadCategory
 import com.hikari.app.ui.profile.tabs.DownloadsTab
 import com.hikari.app.ui.theme.HikariAmber
-import com.hikari.app.ui.theme.HikariAmberSoft
 import com.hikari.app.ui.theme.HikariBg
 import com.hikari.app.ui.theme.HikariBorder
-import com.hikari.app.ui.theme.HikariBorderStrong
 import com.hikari.app.ui.theme.HikariCardBg
 import com.hikari.app.ui.theme.HikariDanger
 import com.hikari.app.ui.theme.HikariSurface
@@ -105,6 +95,7 @@ fun ProfileScreen(
     /** Per Teilen-Menü eingegangener Link: öffnet das Import-Sheet mit ihm vorbefüllt. */
     pendingImport: SharedImport? = null,
     vm: ProfileViewModel = hiltViewModel(),
+    tilesVm: AreaTilesViewModel = hiltViewModel(),
 ) {
     val name by vm.name.collectAsState()
     val nickname by vm.nickname.collectAsState()
@@ -112,10 +103,8 @@ fun ProfileScreen(
     val avatarPath by vm.avatarPath.collectAsState()
     val channelsCount by vm.channelsCount.collectAsState()
     val downloadsCount by vm.downloadsCount.collectAsState()
-    val hubNews by vm.hubNews.collectAsState()
-    val hubNewsCount by vm.hubNewsCount.collectAsState()
-    val hubMangaCovers by vm.hubMangaCovers.collectAsState()
-    val hubMangaLabel by vm.hubMangaLabel.collectAsState()
+    val studySeconds by tilesVm.studySeconds.collectAsState()
+    val streak by tilesVm.streak.collectAsState()
 
     var showEditSheet by remember { mutableStateOf(false) }
     var tab by remember { mutableStateOf(ProfileTab.BEREICHE) }
@@ -133,7 +122,10 @@ fun ProfileScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val obs = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) vm.refreshAll()
+            if (event == Lifecycle.Event.ON_RESUME) {
+                vm.refreshAll()
+                tilesVm.refresh()
+            }
         }
         lifecycleOwner.lifecycle.addObserver(obs)
         onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
@@ -151,223 +143,71 @@ fun ProfileScreen(
         }
     }
 
-    Box(Modifier.fillMaxSize().background(HikariBg)) {
-        Column(Modifier.fillMaxSize()) {
-            // ── Top Bar: Profil Label links, Quick Actions rechts ────────────────
+    Column(Modifier.fillMaxSize().background(HikariBg)) {
+        // ── Kopf: wer du bist und was heute lief, rechts Importieren und Einstellungen ──
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                // Den Abstand zur Statusleiste bringt schon der Rahmen der Navigation mit.
+                .padding(start = 12.dp, end = 16.dp, top = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.statusBars)
-                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp),
+                    .weight(1f)
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable(onClickLabel = "Profil bearbeiten") { showEditSheet = true }
+                    .padding(horizontal = 4.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(HikariAmber),
-                    )
-                    Spacer(Modifier.width(8.dp))
+                ProfileAvatar(
+                    avatarPath = avatarPath,
+                    fallbackChar = name.firstOrNull()?.uppercaseChar() ?: 'H',
+                    size = 44.dp,
+                    onClick = { showEditSheet = true },
+                )
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
                     Text(
-                        text = if (nickname.isNotBlank()) "@$nickname" else "PROFIL",
-                        color = HikariTextMuted,
-                        fontSize = 12.5.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 1.sp,
-                        fontFamily = FontFamily.Monospace,
+                        text = name.ifBlank { "Hikari Nutzer" },
+                        color = HikariText,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
-                }
-
-                // Quick Import Action
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(HikariSurfaceHigh.copy(alpha = 0.6f))
-                        .clickable { importOpen = true },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = "Link importieren",
-                        tint = HikariAmber,
-                        modifier = Modifier.size(19.dp),
-                    )
-                }
-
-                Spacer(Modifier.width(8.dp))
-
-                // Settings Action
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(HikariSurfaceHigh.copy(alpha = 0.6f))
-                        .clickable { onOpenSettings() },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        Icons.Default.Settings,
-                        contentDescription = "Einstellungen",
-                        tint = HikariTextMuted,
-                        modifier = Modifier.size(18.dp),
+                    ProfileSubline(
+                        studyMinutes = AreaTiles.studyMinutes(studySeconds),
+                        streak = streak,
+                        bio = bio,
+                        nickname = nickname,
                     )
                 }
             }
+            Spacer(Modifier.width(8.dp))
+            HeaderButton(Icons.Outlined.Add, "Link importieren", HikariAmber) { importOpen = true }
+            Spacer(Modifier.width(8.dp))
+            HeaderButton(Icons.Outlined.Settings, "Einstellungen", HikariTextMuted, onOpenSettings)
+        }
 
-            // ── Hero Profile Identity Card (Modern Streaming Profile) ───────────
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(
-                        Brush.linearGradient(
-                            listOf(HikariCardBg, HikariSurface),
-                        ),
-                    )
-                    .border(0.5.dp, HikariBorderStrong, RoundedCornerShape(20.dp))
-                    .clickable { showEditSheet = true }
-                    .padding(14.dp),
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    // Avatar mit Glowing Accent Ring & Kamera-Badge
-                    Box(
-                        modifier = Modifier.size(62.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        ProfileAvatar(
-                            avatarPath = avatarPath,
-                            fallbackChar = name.firstOrNull()?.uppercaseChar() ?: 'H',
-                            size = 60.dp,
-                            onClick = { showEditSheet = true },
-                        )
-                        // Mini Edit Badge
-                        Box(
-                            modifier = Modifier
-                                .size(20.dp)
-                                .align(Alignment.BottomEnd)
-                                .clip(CircleShape)
-                                .background(HikariAmber)
-                                .border(1.5.dp, HikariCardBg, CircleShape),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                Icons.Default.Edit,
-                                contentDescription = null,
-                                tint = Color.Black,
-                                modifier = Modifier.size(11.dp),
-                            )
-                        }
-                    }
+        ProfileTabsRow(
+            active = tab,
+            channelsCount = channelsCount,
+            downloadsCount = downloadsCount,
+            onTabSelected = { tab = it },
+        )
 
-                    Spacer(Modifier.width(14.dp))
-
-                    // Name, Handle & Bio / Motto
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = name.ifBlank { "Hikari Nutzer" },
-                            color = HikariText,
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-
-                        Spacer(Modifier.height(2.dp))
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = if (nickname.isNotBlank()) "@$nickname" else "@hikari",
-                                color = HikariAmber,
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                fontFamily = FontFamily.Monospace,
-                            )
-                        }
-
-                        Spacer(Modifier.height(3.dp))
-
-                        Text(
-                            text = bio.ifBlank { "Tippe hier, um dein Profil anzupassen" },
-                            color = if (bio.isBlank()) HikariTextFaint else HikariTextMuted,
-                            fontSize = 11.5.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            lineHeight = 15.sp,
-                        )
-                    }
-
-                    Spacer(Modifier.width(8.dp))
-
-                    // Bearbeiten Button
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(HikariSurfaceHigh)
-                            .border(0.5.dp, HikariBorderStrong, RoundedCornerShape(20.dp))
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            Text(
-                                "Bearbeiten",
-                                color = HikariText,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Medium,
-                            )
-                            Icon(
-                                Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                contentDescription = null,
-                                tint = HikariTextMuted,
-                                modifier = Modifier.size(12.dp),
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(6.dp))
-
-            // ── Unified Modern Tab Switcher mit Zählern ─────────────────────────
-            ProfileTabsRow(
-                active = tab,
-                channelsCount = channelsCount,
-                downloadsCount = downloadsCount,
-                onTabSelected = { tab = it },
-            )
-
-            Spacer(Modifier.height(4.dp))
-
-            // ── Tab Content: Volle Höhe für maximale UX ─────────────────────────
-            Box(modifier = Modifier.fillMaxSize()) {
-                when (tab) {
-                    ProfileTab.CHANNELS -> ChannelsTab(
-                        onOpenChannel = onOpenChannel,
-                        onOpenImport = { importOpen = true },
-                    )
-                    ProfileTab.DOWNLOADS -> DownloadsTab(
-                        onOpenCategory = onOpenDownloadCategory,
-                        onOpenTransfers = { onOpenSection("channel/manual") },
-                    )
-                    ProfileTab.BEREICHE -> AreaHubShowcase(
-                        news = hubNews,
-                        newsCount = hubNewsCount,
-                        mangaCovers = hubMangaCovers,
-                        mangaLabel = hubMangaLabel,
-                        onOpenSection = onOpenSection,
-                    )
-                }
+        Box(modifier = Modifier.fillMaxSize()) {
+            when (tab) {
+                ProfileTab.BEREICHE -> AreaTileGrid(vm = tilesVm, onOpenSection = onOpenSection)
+                ProfileTab.CHANNELS -> ChannelsTab(
+                    onOpenChannel = onOpenChannel,
+                    onOpenImport = { importOpen = true },
+                )
+                ProfileTab.DOWNLOADS -> DownloadsTab(
+                    onOpenCategory = onOpenDownloadCategory,
+                    onOpenTransfers = { onOpenSection("channel/manual") },
+                )
             }
         }
     }
@@ -420,6 +260,59 @@ fun ProfileScreen(
     }
 }
 
+/** Zeile unter dem Namen: was heute lief — sonst die Bio, sonst der Nickname. */
+@Composable
+private fun ProfileSubline(studyMinutes: String?, streak: Int, bio: String, nickname: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        when {
+            studyMinutes != null || streak > 0 -> {
+                if (studyMinutes != null) {
+                    Text("Heute $studyMinutes gelernt", color = HikariTextMuted, fontSize = 12.5.sp, maxLines = 1)
+                    Spacer(Modifier.width(8.dp))
+                }
+                if (streak > 0) {
+                    Icon(
+                        Icons.Outlined.LocalFireDepartment,
+                        contentDescription = "Serie",
+                        tint = HikariAmber,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Spacer(Modifier.width(2.dp))
+                    Text(
+                        if (streak == 1) "1 Tag" else "$streak Tage",
+                        color = HikariAmber,
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                    )
+                }
+            }
+            else -> Text(
+                text = bio.ifBlank { "@" + nickname.ifBlank { "hikari" } },
+                color = HikariTextMuted,
+                fontSize = 12.5.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun HeaderButton(icon: ImageVector, label: String, tint: Color, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(38.dp)
+            .clip(CircleShape)
+            .background(Color.White.copy(alpha = 0.06f))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, contentDescription = label, tint = tint, modifier = Modifier.size(20.dp))
+    }
+}
+
+/** Schlichte Text-Tabs: der aktive ist hell und trägt den Amber-Strich. */
 @Composable
 private fun ProfileTabsRow(
     active: ProfileTab,
@@ -427,101 +320,59 @@ private fun ProfileTabsRow(
     downloadsCount: Int,
     onTabSelected: (ProfileTab) -> Unit,
 ) {
-    val scrollState = rememberScrollState()
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(scrollState)
-            .padding(horizontal = 16.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        TabChip(
-            icon = Icons.Default.Apps,
-            label = "Bereiche",
-            count = 7,
-            selected = active == ProfileTab.BEREICHE,
-            onClick = { onTabSelected(ProfileTab.BEREICHE) },
+    Box(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 14.dp)) {
+        Box(
+            Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(HikariBorder),
         )
-        TabChip(
-            icon = Icons.Default.Public,
-            label = "Kanäle",
-            count = channelsCount,
-            selected = active == ProfileTab.CHANNELS,
-            onClick = { onTabSelected(ProfileTab.CHANNELS) },
-        )
-        TabChip(
-            icon = Icons.Default.Download,
-            label = "Downloads",
-            count = downloadsCount,
-            selected = active == ProfileTab.DOWNLOADS,
-            onClick = { onTabSelected(ProfileTab.DOWNLOADS) },
-        )
+        Row(horizontalArrangement = Arrangement.spacedBy(22.dp)) {
+            ProfileTabLabel("Bereiche", null, active == ProfileTab.BEREICHE) { onTabSelected(ProfileTab.BEREICHE) }
+            ProfileTabLabel("Kanäle", channelsCount, active == ProfileTab.CHANNELS) { onTabSelected(ProfileTab.CHANNELS) }
+            ProfileTabLabel("Downloads", downloadsCount, active == ProfileTab.DOWNLOADS) { onTabSelected(ProfileTab.DOWNLOADS) }
+        }
     }
 }
 
 @Composable
-private fun TabChip(
-    icon: ImageVector,
-    label: String,
-    count: Int,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    val bgColor by animateColorAsState(
-        targetValue = if (selected) HikariSurfaceHigh else HikariCardBg,
-        animationSpec = tween(180),
-        label = "tab-bg",
+private fun ProfileTabLabel(label: String, count: Int?, selected: Boolean, onClick: () -> Unit) {
+    val color by animateColorAsState(
+        targetValue = if (selected) HikariText else HikariTextFaint,
+        animationSpec = tween(160),
+        label = "tab-color",
     )
-    val borderColor by animateColorAsState(
-        targetValue = if (selected) HikariAmber else HikariBorder,
-        animationSpec = tween(180),
-        label = "tab-border",
-    )
-
-    Row(
+    Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(bgColor)
-            .border(
-                width = if (selected) 1.2.dp else 0.5.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(12.dp),
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+            .width(IntrinsicSize.Max)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            ),
     ) {
-        Icon(
-            icon,
-            contentDescription = label,
-            tint = if (selected) HikariAmber else HikariTextFaint,
-            modifier = Modifier.size(15.dp),
-        )
-        Text(
-            text = label,
-            color = if (selected) HikariText else HikariTextFaint,
-            fontSize = 12.5.sp,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-        )
-        // Count Pill
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(6.dp))
-                .background(if (selected) HikariAmberSoft else HikariSurface)
-                .padding(horizontal = 5.dp, vertical = 1.dp),
-            contentAlignment = Alignment.Center,
-        ) {
+        Row(verticalAlignment = Alignment.Bottom) {
             Text(
-                text = count.toString(),
-                color = if (selected) HikariAmber else HikariTextMuted,
-                fontSize = 10.5.sp,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.SemiBold,
+                label,
+                color = color,
+                fontSize = 14.sp,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                maxLines = 1,
             )
+            if (count != null) {
+                Spacer(Modifier.width(4.dp))
+                Text(count.toString(), color = color, fontSize = 12.sp, maxLines = 1)
+            }
         }
+        Spacer(Modifier.height(10.dp))
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(2.dp)
+                .clip(CircleShape)
+                .background(if (selected) HikariAmber else Color.Transparent),
+        )
     }
 }
 
