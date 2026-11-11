@@ -16,6 +16,11 @@ data class SeriesDto(
     /** Echtes Plakat (hochkant) und Hintergrundbild (quer), falls der Server eines gefunden hat. */
     val poster_url: String? = null,
     val backdrop_url: String? = null,
+    /**
+     * Kategorien, die der Server nachgeschlagen hat: kommagetrennte Kennungen (`comedy,drama`).
+     * Leer = nachgeschlagen, nichts gefunden. `null` = noch nicht geprüft (oder älterer Server).
+     */
+    val genres: String? = null,
 )
 
 @Serializable
@@ -47,6 +52,8 @@ data class LibraryVideoDto(
     val is_movie: Int = 0,
     /** Echtes Filmplakat, falls der Server eines gefunden hat. */
     val poster_url: String? = null,
+    /** Kategorien vom Server, wie bei [SeriesDto.genres] — nur Filme bekommen welche. */
+    val genres: String? = null,
     /** Weiterschauen: 1 = die vorige Folge ist zu Ende gesehen, das hier ist die nächste. */
     val up_next: Int = 0,
 )

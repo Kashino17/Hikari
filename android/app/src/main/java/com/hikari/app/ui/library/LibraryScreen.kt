@@ -228,7 +228,8 @@ private fun LibraryContent(
         data.series.forEach { s ->
             s.detectGenres().forEach { g -> map[g] = (map[g] ?: 0) + 1 }
         }
-        data.recentlyAdded.forEach { v ->
+        // Einzelne Folgen zählen über ihre Serie — nur Filme und Einzelvideos kommen dazu.
+        data.recentlyAdded.filter { it.series_id == null }.forEach { v ->
             v.detectGenres().forEach { g -> map[g] = (map[g] ?: 0) + 1 }
         }
         map
@@ -240,7 +241,7 @@ private fun LibraryContent(
         Genre.entries.filter { it != Genre.ALL }.mapNotNull { genre ->
             val candidates = data.series.filter { genre in it.detectGenres() }
                 .mapNotNull { it.backdrop_url ?: it.thumbnail_url } +
-                data.recentlyAdded.filter { genre in it.detectGenres() }.mapNotNull { it.thumbnail_url }
+                data.recentlyAdded.filter { it.series_id == null && genre in it.detectGenres() }.mapNotNull { it.thumbnail_url }
             val pick = candidates.firstOrNull { it !in used } ?: candidates.firstOrNull()
             pick?.let { used += it; genre to it }
         }.toMap()

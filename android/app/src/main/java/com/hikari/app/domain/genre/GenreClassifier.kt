@@ -112,15 +112,27 @@ object GenreClassifier {
     }
 }
 
+/**
+ * Kategorien, die der Server aus dem Netz nachgeschlagen hat. `null`, wenn er für diesen Titel
+ * (noch) nichts geprüft hat — nur dann darf geraten werden. Eine leere Angabe heißt »geprüft,
+ * nichts gefunden« und bleibt leer: lieber keine Kategorie als eine falsche.
+ */
+fun serverGenres(raw: String?): Set<Genre>? {
+    raw ?: return null
+    return raw.split(',')
+        .mapNotNull { id -> Genre.entries.firstOrNull { it != Genre.ALL && it.id == id.trim() } }
+        .toSet()
+}
+
 fun LibraryVideoDto.detectGenres(): Set<Genre> =
-    GenreClassifier.classify(
+    serverGenres(genres) ?: GenreClassifier.classify(
         title = title,
         description = description,
         channelTitle = channelTitle,
     )
 
 fun SeriesDto.detectGenres(): Set<Genre> =
-    GenreClassifier.classify(
+    serverGenres(genres) ?: GenreClassifier.classify(
         title = title,
         description = description,
     )
