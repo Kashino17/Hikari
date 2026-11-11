@@ -242,6 +242,7 @@ fun FeedScreen(
     val savedCards by vm.savedCards.collectAsState()
     val commuterMode by vm.commuterMode.collectAsState()
     val enabledModules by vm.enabledModules.collectAsState()
+    val russianFocus by vm.russianFocus.collectAsState()
     val selectedLanguage by vm.selectedLanguage.collectAsState()
     val moduleRanks by vm.moduleRanks.collectAsState()
     val letterProgress by vm.letterProgress.collectAsState()
@@ -442,6 +443,8 @@ fun FeedScreen(
             completedCount = completedCardIds.size,
             totalCount = vm.dailyGoal,
             feedSecondsToday = remember(showSettingsSheet) { vm.feedSecondsToday() },
+            russianFocus = russianFocus,
+            onSetRussianFocus = { vm.setRussianFocus(it) },
             onToggleModule = { module, enabled -> vm.toggleModule(module, enabled) },
             onSetModuleRank = { module, rank -> vm.setModuleRank(module, rank) },
             onSelectLanguage = { vm.setLearningLanguage(it) },

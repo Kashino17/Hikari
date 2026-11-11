@@ -50,6 +50,28 @@ class RussianFeedContext(
     val readsCyrillic: Boolean get() = RuAlphabetLogic.mastered(letterProgress) >= RuAlphabetLogic.READS_CYRILLIC
 }
 
+/** Was eine Runde des Feeds enthält: welche Bereiche, wie stark gewichtet, welche Sprache. */
+data class FeedMix(
+    val enabled: Set<MindfulModuleType>,
+    val ranks: Map<MindfulModuleType, ModuleRank>,
+    val language: LearningLanguage,
+)
+
+/**
+ * Russisch-Fokus: solange er an ist, besteht der Feed nur aus dem Russisch-Kurs — Übungen zu
+ * gelernten Sätzen, neue Sätze, Kyrillisch. Die eingestellte Mischung bleibt unangetastet und
+ * gilt wieder, sobald der Fokus aus ist.
+ */
+object FeedFocus {
+    private val RUSSIAN_ONLY = FeedMix(
+        enabled = setOf(MindfulModuleType.LANGUAGE),
+        ranks = mapOf(MindfulModuleType.LANGUAGE to ModuleRank.RANK_3),
+        language = LearningLanguage.RUSSIAN,
+    )
+
+    fun mix(russianFocus: Boolean, chosen: FeedMix): FeedMix = if (russianFocus) RUSSIAN_ONLY else chosen
+}
+
 /** Die Arten, einen gelernten Satz abzufragen — von leicht (erkennen) bis schwer (selbst bilden). */
 enum class RuExerciseKind { MEANING, LISTEN, STRESS, RECALL, SPELL, GAP, BUILD }
 
@@ -103,6 +125,9 @@ class FeedComposer(
     /** In dieser Sitzung schon gezeigt — kommt nicht noch einmal, auch wenn der Vorrat klein ist. */
     private val used = mutableSetOf<String>()
     private val usedPhrases = mutableSetOf<String>()
+
+    /** Sätze, die schon als Karte da waren — Karten wiederholen sich in einer Sitzung nie. */
+    private val cardPhrases = mutableSetOf<String>()
     private var russianTurn = 0
     private var puzzleTurn = rng.nextInt(2)
     private var mathTurn = rng.nextInt(2)
@@ -252,8 +277,19 @@ class FeedComposer(
     private fun learned(ctx: RussianFeedContext): List<RuPhrase> =
         ctx.progress.cards.keys.mapNotNull { ctx.resolve(it) }
 
-    /** Fällige Sätze zuerst, danach die wackligsten — jeder höchstens einmal pro Sitzung. */
-    private fun nextPhrase(ctx: RussianFeedContext): Pair<RuPhrase, Boolean>? {
+    /**
+     * Fällige Sätze zuerst, danach die wackligsten — jeder erst wieder, wenn alle dran waren.
+     * Im Russisch-Fokus ist der Vorrat schnell einmal durch; dann beginnt der nächste Durchgang,
+     * statt dass die Übungen versiegen.
+     */
+    private fun nextPhrase(ctx: RussianFeedContext): Pair<RuPhrase, Boolean>? =
+        pickPhrase(ctx) ?: run {
+            if (usedPhrases.isEmpty()) return null
+            usedPhrases.clear()
+            pickPhrase(ctx)
+        }
+
+    private fun pickPhrase(ctx: RussianFeedContext): Pair<RuPhrase, Boolean>? {
         val due = RuSrs.dueIds(ctx.progress.cards, ctx.today)
             .filter { it !in usedPhrases }
             .firstNotNullOfOrNull { ctx.resolve(it) }
@@ -340,11 +376,13 @@ class FeedComposer(
         val s = settings(ctx)
         val unlocked = ctx.progress.unlockedDay(ctx.index.days.size)
         val day = ctx.index.day(unlocked) ?: ctx.index.days.firstOrNull() ?: return null
-        val fresh = ctx.index.dayPhrases(day, s).filter { it.id !in ctx.progress.cards && it.id !in usedPhrases }
+        val taken = usedPhrases + cardPhrases
+        val fresh = ctx.index.dayPhrases(day, s).filter { it.id !in ctx.progress.cards && it.id !in taken }
         val phrase = fresh.randomOrNull(rng)
-            ?: learned(ctx).filter { it.id !in usedPhrases }.randomOrNull(rng)
+            ?: learned(ctx).filter { it.id !in taken }.randomOrNull(rng)
             ?: return null
         usedPhrases += phrase.id
+        cardPhrases += phrase.id
         val isNew = phrase.id !in ctx.progress.cards
         val origin = ctx.index.day(phrase.day) ?: day
         return FeedEntry.Card(languageCard(ctx, phrase, origin, isNew, rank))

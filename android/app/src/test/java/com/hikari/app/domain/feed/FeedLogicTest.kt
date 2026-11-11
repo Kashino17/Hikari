@@ -403,6 +403,43 @@ class FeedLogicTest {
         assertTrue(gaps > 10 && stresses > 20, "Lücken: $gaps, Betonung: $stresses")
     }
 
+    // ── Russisch-Fokus ───────────────────────────────────────────────────────
+
+    @Test fun russischFokus_zeigtNurRussischUndLaesstDieMischungInRuhe() {
+        val chosen = FeedMix(MindfulModuleType.entries.toSet(), ranks, LearningLanguage.SPANISH)
+        assertEquals(chosen, FeedFocus.mix(russianFocus = false, chosen = chosen))
+        val focus = FeedFocus.mix(russianFocus = true, chosen = chosen)
+        assertEquals(setOf(MindfulModuleType.LANGUAGE), focus.enabled)
+        assertEquals(LearningLanguage.RUSSIAN, focus.language)
+
+        val learned = index.days.take(2).flatMap { it.items }.associate { it.id to RuCard(box = 2, due = 100) }
+        val composer = FeedComposer(::fakeCards, Random(3))
+        val all = (1..6).flatMap {
+            composer.batch(focus.enabled, focus.ranks, focus.language, emptyMap(), russian(learned), 4)
+        }
+        assertEquals(30, all.size, "jede Runde bringt fünf Russisch-Einträge")
+        assertTrue(all.all { it.module == MindfulModuleType.LANGUAGE }, "im Fokus kam etwas anderes als Russisch")
+        // Übungen, Kyrillisch und Satz-Karten wechseln sich ab.
+        assertTrue(all.any { it is FeedEntry.Card })
+        assertTrue(all.any { it is FeedEntry.Game && it.game is LetterIntroGame })
+        assertTrue(all.any { it is FeedEntry.Game && ((it.game as? ChoiceGame)?.grade ?: (it.game as? BuildGame)?.grade) != null })
+    }
+
+    @Test fun russischFokus_versiegtNichtWennAlleSaetzeEinmalDranWaren() {
+        // Wenige gelernte Sätze, lange Sitzung: nach einem Durchgang beginnt der nächste.
+        val learned = index.days.first().items.take(5).associate { it.id to RuCard(box = 2, due = 100) }
+        val focus = FeedFocus.mix(true, FeedMix(emptySet(), emptyMap(), LearningLanguage.RUSSIAN))
+        val composer = FeedComposer(::fakeCards, Random(9))
+        val all = (1..20).flatMap {
+            composer.batch(focus.enabled, focus.ranks, focus.language, emptyMap(), russian(learned), 4)
+        }
+        assertEquals(100, all.size, "der Feed lief leer")
+        assertEquals(all.size, all.map { it.id }.toSet().size, "doppelte Einträge")
+        val graded = all.filterIsInstance<FeedEntry.Game>().mapNotNull { (it.game as? ChoiceGame)?.grade ?: (it.game as? BuildGame)?.grade }
+        assertTrue(graded.size > 10, "nur ${graded.size} Übungen in 100 Einträgen")
+        assertTrue(graded.all { it.phraseId in learned })
+    }
+
     @Test fun uebungsartRichtetSichNachDemLernstand() {
         assertEquals(listOf(RuExerciseKind.MEANING, RuExerciseKind.LISTEN, RuExerciseKind.STRESS), FeedComposer.exerciseKinds(1, 3))
         assertTrue(RuExerciseKind.MEANING !in FeedComposer.exerciseKinds(4, 3), "Gefestigtes wird abgerufen, nicht nur erkannt")

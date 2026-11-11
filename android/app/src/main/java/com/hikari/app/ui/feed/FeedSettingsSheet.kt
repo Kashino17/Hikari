@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -34,6 +35,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -49,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -141,6 +145,8 @@ internal fun FeedSettingsSheet(
     completedCount: Int,
     totalCount: Int,
     feedSecondsToday: Int = 0,
+    russianFocus: Boolean = false,
+    onSetRussianFocus: (Boolean) -> Unit = {},
     onToggleModule: (MindfulModuleType, Boolean) -> Unit,
     onSetModuleRank: (MindfulModuleType, ModuleRank) -> Unit,
     onSelectLanguage: (LearningLanguage) -> Unit,
@@ -200,133 +206,152 @@ internal fun FeedSettingsSheet(
 
             Spacer(Modifier.height(16.dp))
 
-            // ── Mischung einer Runde ──
-            val weights = TILE_ORDER.filter { it in enabledModules }
-                .associateWith { FeedComposer.weight(moduleRanks[it] ?: ModuleRank.RANK_1) }
-            val total = weights.values.sum()
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(Color.White.copy(alpha = 0.05f))
-                    .padding(14.dp),
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("So ist eine Runde gemischt", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                    Text(if (total == 0) "nichts an" else "$total Karten", color = HikariTextMuted, fontSize = 12.sp)
-                }
-                Spacer(Modifier.height(10.dp))
-                Row(
-                    Modifier.fillMaxWidth().height(16.dp).clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.06f)),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
-                    weights.forEach { (module, w) ->
-                        val share by animateFloatAsState(w.toFloat(), tween(260), label = "share")
-                        Box(Modifier.weight(share.coerceAtLeast(0.01f)).fillMaxHeight().background(module.accentColor))
-                    }
-                }
-                Spacer(Modifier.height(10.dp))
-                // Die drei größten Anteile beim Namen, der Rest als eine Zahl — mehr liest hier niemand.
-                val top = weights.entries.sortedByDescending { it.value }.take(3)
-                val rest = total - top.sumOf { it.value }
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    top.forEach { (module, w) ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(8.dp).clip(CircleShape).background(module.accentColor))
-                            Spacer(Modifier.width(5.dp))
-                            Text("${shortName(module)} ${Math.round(w * 100f / total)} %", color = HikariText, fontSize = 11.5.sp)
-                        }
-                    }
-                    if (rest > 0) Text("übrige ${Math.round(rest * 100f / total)} %", color = HikariTextMuted, fontSize = 11.5.sp)
-                }
-            }
-
+            // ── Russisch-Fokus ──
+            FocusSwitch(
+                on = russianFocus,
+                onChange = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onSetRussianFocus(it)
+                },
+            )
             Spacer(Modifier.height(14.dp))
 
-            // ── Schnellwahl ──
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PRESETS.forEach { preset ->
-                    val active = MindfulModuleType.entries.all { levelOf(it) == preset.level(it) }
-                    Surface(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            MindfulModuleType.entries.forEach { setLevel(it, preset.level(it)) }
-                        },
-                        shape = RoundedCornerShape(20.dp),
-                        color = if (active) HikariAmber else Color.White.copy(alpha = 0.07f),
-                        border = BorderStroke(0.6.dp, if (active) HikariAmber else Color.White.copy(alpha = 0.14f)),
+            if (russianFocus) {
+                Text(
+                    "Deine Mischung pausiert und ist wieder da, sobald du den Fokus ausschaltest.",
+                    color = HikariTextFaint,
+                    fontSize = 12.5.sp,
+                    lineHeight = 18.sp,
+                )
+            } else {
+                // ── Mischung einer Runde ──
+                val weights = TILE_ORDER.filter { it in enabledModules }
+                    .associateWith { FeedComposer.weight(moduleRanks[it] ?: ModuleRank.RANK_1) }
+                val total = weights.values.sum()
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(Color.White.copy(alpha = 0.05f))
+                        .padding(14.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("So ist eine Runde gemischt", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        Text(if (total == 0) "nichts an" else "$total Karten", color = HikariTextMuted, fontSize = 12.sp)
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Row(
+                        Modifier.fillMaxWidth().height(16.dp).clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.06f)),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
                     ) {
-                        Text(
-                            preset.name,
-                            color = if (active) Color.Black else Color.White,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-            Text("Antippen: mehr davon. Lange drücken: aus oder an.", color = HikariTextFaint, fontSize = 12.sp)
-            Spacer(Modifier.height(10.dp))
-
-            // ── Kacheln ──
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                TILE_ORDER.chunked(2).forEach { row ->
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        row.forEach { module ->
-                            ModuleTile(
-                                module = module,
-                                level = levelOf(module),
-                                onCycle = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    setLevel(module, (levelOf(module) + 1) % 4)
-                                },
-                                onToggle = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    setLevel(module, if (levelOf(module) == 0) 1 else 0)
-                                },
-                                modifier = Modifier.weight(1f),
-                            )
+                        weights.forEach { (module, w) ->
+                            val share by animateFloatAsState(w.toFloat(), tween(260), label = "share")
+                            Box(Modifier.weight(share.coerceAtLeast(0.01f)).fillMaxHeight().background(module.accentColor))
                         }
-                        if (row.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    // Die drei größten Anteile beim Namen, der Rest als eine Zahl — mehr liest hier niemand.
+                    val top = weights.entries.sortedByDescending { it.value }.take(3)
+                    val rest = total - top.sumOf { it.value }
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        top.forEach { (module, w) ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(Modifier.size(8.dp).clip(CircleShape).background(module.accentColor))
+                                Spacer(Modifier.width(5.dp))
+                                Text("${shortName(module)} ${Math.round(w * 100f / total)} %", color = HikariText, fontSize = 11.5.sp)
+                            }
+                        }
+                        if (rest > 0) Text("übrige ${Math.round(rest * 100f / total)} %", color = HikariTextMuted, fontSize = 11.5.sp)
                     }
                 }
-            }
 
-            // ── Sprache ──
-            if (MindfulModuleType.LANGUAGE in enabledModules) {
-                Spacer(Modifier.height(18.dp))
-                Text("Sprache", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.height(8.dp))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    LearningLanguage.entries.forEach { language ->
-                        val active = language == selectedLanguage
-                        val accent = MindfulModuleType.LANGUAGE.accentColor
+                Spacer(Modifier.height(14.dp))
+
+                // ── Schnellwahl ──
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PRESETS.forEach { preset ->
+                        val active = MindfulModuleType.entries.all { levelOf(it) == preset.level(it) }
                         Surface(
-                            onClick = { onSelectLanguage(language) },
-                            shape = RoundedCornerShape(12.dp),
-                            color = if (active) accent.copy(alpha = 0.20f) else Color.White.copy(alpha = 0.06f),
-                            border = BorderStroke(0.6.dp, if (active) accent else Color.White.copy(alpha = 0.12f)),
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                MindfulModuleType.entries.forEach { setLevel(it, preset.level(it)) }
+                            },
+                            shape = RoundedCornerShape(20.dp),
+                            color = if (active) HikariAmber else Color.White.copy(alpha = 0.07f),
+                            border = BorderStroke(0.6.dp, if (active) HikariAmber else Color.White.copy(alpha = 0.14f)),
                         ) {
                             Text(
-                                language.title,
-                                color = if (active) Color.White else HikariTextMuted,
+                                preset.name,
+                                color = if (active) Color.Black else Color.White,
                                 fontSize = 13.sp,
-                                fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                             )
                         }
                     }
                 }
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    "Russisch ist an deinen Kurs angebunden: Übungen nach Lernstand, Kyrillisch, Statistik. Die anderen Sprachen haben nur einzelne Vokabelkarten.",
-                    color = HikariTextFaint,
-                    fontSize = 11.5.sp,
-                    lineHeight = 16.sp,
-                )
+
+                Spacer(Modifier.height(16.dp))
+                Text("Antippen: mehr davon. Lange drücken: aus oder an.", color = HikariTextFaint, fontSize = 12.sp)
+                Spacer(Modifier.height(10.dp))
+
+                // ── Kacheln ──
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TILE_ORDER.chunked(2).forEach { row ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            row.forEach { module ->
+                                ModuleTile(
+                                    module = module,
+                                    level = levelOf(module),
+                                    onCycle = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        setLevel(module, (levelOf(module) + 1) % 4)
+                                    },
+                                    onToggle = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        setLevel(module, if (levelOf(module) == 0) 1 else 0)
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                            if (row.size == 1) Spacer(Modifier.weight(1f))
+                        }
+                    }
+                }
+
+                // ── Sprache ──
+                if (MindfulModuleType.LANGUAGE in enabledModules) {
+                    Spacer(Modifier.height(18.dp))
+                    Text("Sprache", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Spacer(Modifier.height(8.dp))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        LearningLanguage.entries.forEach { language ->
+                            val active = language == selectedLanguage
+                            val accent = MindfulModuleType.LANGUAGE.accentColor
+                            Surface(
+                                onClick = { onSelectLanguage(language) },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (active) accent.copy(alpha = 0.20f) else Color.White.copy(alpha = 0.06f),
+                                border = BorderStroke(0.6.dp, if (active) accent else Color.White.copy(alpha = 0.12f)),
+                            ) {
+                                Text(
+                                    language.title,
+                                    color = if (active) Color.White else HikariTextMuted,
+                                    fontSize = 13.sp,
+                                    fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "Russisch ist an deinen Kurs angebunden: Übungen nach Lernstand, Kyrillisch, Statistik. Die anderen Sprachen haben nur einzelne Vokabelkarten.",
+                        color = HikariTextFaint,
+                        fontSize = 11.5.sp,
+                        lineHeight = 16.sp,
+                    )
+                }
             }
 
             Spacer(Modifier.height(20.dp))
@@ -335,6 +360,52 @@ internal fun FeedSettingsSheet(
                 ConfirmButton("Alphabet neu lernen", onResetLanguage, Modifier.weight(1f))
             }
         }
+    }
+}
+
+/**
+ * Schalter für den Russisch-Fokus, in der Farbe des Sprachbereichs: an heißt, der Feed zeigt
+ * nur noch Russisch — Übungen, neue Sätze, Kyrillisch.
+ */
+@Composable
+private fun FocusSwitch(on: Boolean, onChange: (Boolean) -> Unit) {
+    val accent = MindfulModuleType.LANGUAGE.accentColor
+    val fill by animateColorAsState(if (on) accent.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.05f), label = "focus-fill")
+    val edge by animateColorAsState(if (on) accent.copy(alpha = 0.70f) else Color.White.copy(alpha = 0.10f), label = "focus-edge")
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(fill)
+            .border(0.8.dp, edge, RoundedCornerShape(18.dp))
+            .toggleable(value = on, role = Role.Switch, onValueChange = onChange)
+            .padding(horizontal = 14.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(MindfulModuleType.LANGUAGE.icon, contentDescription = null, tint = accent, modifier = Modifier.size(22.dp))
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text("Russisch-Fokus", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(2.dp))
+            Text(
+                if (on) "An. Im Feed kommt nur noch Russisch." else "Nur noch Russisch im Feed: Übungen, neue Sätze, Kyrillisch.",
+                color = HikariTextMuted,
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+            )
+        }
+        Spacer(Modifier.width(10.dp))
+        Switch(
+            checked = on,
+            onCheckedChange = null,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = accent,
+                uncheckedThumbColor = HikariTextMuted,
+                uncheckedTrackColor = Color.White.copy(alpha = 0.08f),
+                uncheckedBorderColor = Color.White.copy(alpha = 0.18f),
+            ),
+        )
     }
 }
 

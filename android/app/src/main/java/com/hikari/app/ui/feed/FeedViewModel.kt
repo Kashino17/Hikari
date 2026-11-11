@@ -13,6 +13,8 @@ import com.hikari.app.domain.feed.SequenceGame
 import com.hikari.app.domain.feed.FeedComposer
 import com.hikari.app.domain.feed.FeedContentRepository
 import com.hikari.app.domain.feed.FeedEntry
+import com.hikari.app.domain.feed.FeedMix
+import com.hikari.app.domain.feed.FeedFocus
 import com.hikari.app.domain.feed.FeedGame
 import com.hikari.app.domain.feed.FeedGameFactory
 import com.hikari.app.domain.feed.LanguageCardItem
@@ -111,6 +113,20 @@ class FeedViewModel @Inject constructor(
     val commuterMode: StateFlow<Boolean> =
         feedPrefs?.commuterMode ?: MutableStateFlow(false)
 
+    /** Russisch-Fokus: der Feed zeigt nur noch den Russisch-Kurs; die Mischung bleibt gespeichert. */
+    val russianFocus: StateFlow<Boolean> =
+        feedPrefs?.russianFocus ?: MutableStateFlow(false)
+
+    fun setRussianFocus(enabled: Boolean) {
+        feedPrefs?.setRussianFocus(enabled)
+    }
+
+    /** Was gerade gilt: die eingestellte Mischung, oder im Fokus nur Russisch. */
+    private fun mix(): FeedMix = FeedFocus.mix(
+        russianFocus.value,
+        FeedMix(enabledModules.value, moduleRanks.value, selectedLanguage.value),
+    )
+
     private val cardCache = mutableMapOf<String, MindfulCard>()
 
     // ── Endloser Feed ───────────────────────────────────────────────────────────
@@ -150,7 +166,7 @@ class FeedViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            combine(enabledModules, selectedLanguage, moduleRanks) { m, l, r -> Triple(m, l, r) }
+            combine(enabledModules, selectedLanguage, moduleRanks, russianFocus) { _, _, _, _ -> mix() }
                 .distinctUntilChanged()
                 .collect { rebuild() }
         }
@@ -161,7 +177,7 @@ class FeedViewModel @Inject constructor(
         buildJob?.cancel()
         buildJob = viewModelScope.launch {
             // Beim ersten Mal die Inhaltsdateien abseits des Hauptthreads einlesen.
-            if (content != null) withContext(Dispatchers.Default) { enabledModules.value.forEach { cardsOf(it) }; content.alphabet; content.warmGlossary() }
+            if (content != null) withContext(Dispatchers.Default) { mix().enabled.forEach { cardsOf(it) }; content.alphabet; content.warmGlossary() }
             composer = FeedComposer(::cardsOf)
             currentIndex = 0
             _entries.value = composeBatch()
@@ -187,10 +203,11 @@ class FeedViewModel @Inject constructor(
     }
 
     private fun composeBatch(): List<FeedEntry> {
-        val language = selectedLanguage.value
+        val mix = mix()
+        val language = mix.language
         return composer.batch(
-            enabled = enabledModules.value,
-            ranks = moduleRanks.value,
+            enabled = mix.enabled,
+            ranks = mix.ranks,
             language = language,
             lastSeen = feedPrefs?.lastSeen().orEmpty(),
             russian = russianContext(),

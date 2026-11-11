@@ -206,6 +206,16 @@ class FeedPreferences @Inject constructor(
         return next
     }
 
+    // ── Russisch-Fokus: der Feed zeigt nur noch den Russisch-Kurs ──────────────────
+
+    private val _russianFocus = MutableStateFlow(prefs.getBoolean("feed_russian_focus", false))
+    val russianFocus: StateFlow<Boolean> = _russianFocus.asStateFlow()
+
+    fun setRussianFocus(enabled: Boolean) {
+        prefs.edit().putBoolean("feed_russian_focus", enabled).apply()
+        _russianFocus.value = enabled
+    }
+
     // ── Rotation: was wurde wann zuletzt gezeigt ────────────────────────────────
 
     private var lastSeenCache: MutableMap<String, Long>? = null
