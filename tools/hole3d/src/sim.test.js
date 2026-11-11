@@ -132,16 +132,56 @@ test('das Loch bleibt in der Arena', () => {
   assert.ok(s.hole.x <= 10 && s.hole.z >= -10);
 });
 
+test('eine Bombe im Loch beendet das Spiel sofort — ohne Sterne', () => {
+  const s = sim((b) => {
+    b.grid('cherries', 6, 1, -6, 0, 0.9);
+    b.bomb(4, 0);
+  });
+  assert.equal(s.total, 6, 'Bomben zählen nicht zum Aufessen');
+  for (let x = -9; x <= -3; x += 0.5) driveTo(s, x, 0, 0.05);
+  assert.equal(s.eaten, 6);
+  // Das Level wäre jetzt geschafft — also neu, diesmal über die Bombe fahren.
+  const t = sim((b) => {
+    b.grid('cherries', 6, 1, -6, 0, 0.9);
+    b.bomb(4, 0);
+  });
+  driveTo(t, 4, 0, 0.1);
+  assert.equal(t.exploded, true);
+  assert.equal(t.finished, true);
+  assert.equal(t.cleared, false);
+  assert.ok(kinds(t).includes('bomb'));
+  assert.equal(starsFor(t.eaten, t.total, t.exploded), 0);
+  assert.equal(t.eaten, 0, 'die Bombe selbst zählt nicht als verschluckt');
+});
+
+test('eine Bombe rutscht nicht von selbst hinein, sie warnt nur', () => {
+  const s = sim((b) => {
+    b.bomb(0, 0);
+    b.add('cherries', 9, 9);
+  });
+  // Lochrand direkt an der Bombe — ein Donut würde jetzt kippen und hineinrutschen.
+  driveTo(s, 0, 1.2, 3);
+  assert.equal(s.exploded, false);
+  assert.equal(s.items[0].state, REST);
+  assert.equal(s.items[0].x, 0, 'bleibt, wo sie steht');
+  assert.ok(s.items[0].danger > 0.5, 'warnt deutlich');
+  driveTo(s, 0, 8, 0.5);
+  assert.equal(s.items[0].danger, 0, 'Warnung endet, wenn das Loch weg ist');
+});
+
 test('Sterne nach Anteil', () => {
   assert.equal(starsFor(0, 10), 0);
   assert.equal(starsFor(4, 10), 0);
   assert.equal(starsFor(5, 10), 1);
   assert.equal(starsFor(8, 10), 2);
   assert.equal(starsFor(10, 10), 3);
+  assert.equal(starsFor(10, 10, true), 0);
 });
 
 test('unlösbare Level werden erkannt', () => {
   assert.equal(unreachableCount([{ r: 0.38, mass: 1 }, { r: 0.62, mass: 2 }]), 0);
   // Ein Fass, aber viel zu wenig Kleines zum Wachsen.
   assert.equal(unreachableCount([{ r: 0.38, mass: 1 }, { r: 2.5, mass: 30 }]), 1);
+  // Bomben muss niemand erreichen.
+  assert.equal(unreachableCount([{ r: 0.38, mass: 1 }, { r: 0.62, mass: 0, bomb: true }]), 0);
 });

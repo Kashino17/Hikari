@@ -71,6 +71,19 @@
   .go svg { width: 26px; height: 26px; }
 
   h2 { font-size: 15px; font-weight: 700; margin: 24px 2px 10px; }
+  .pager { display: flex; align-items: center; gap: 6px; margin: 24px 0 10px; }
+  .pager h2 { margin: 0 2px; flex: 1; }
+  .pager button { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.07); display: grid; place-items: center; }
+  .pager button:disabled { opacity: .3; }
+  .pager svg { width: 18px; height: 18px; }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 14px; background: var(--raised); }
+  .veil .seg { background: var(--surface); border: 1px solid var(--line); }
+  .seg button { height: 40px; border-radius: 10px; font-size: 14px; font-weight: 500; color: var(--muted); }
+  .seg button.on { background: rgba(255,255,255,.12); color: var(--text); font-weight: 700; }
+  #flash { position: fixed; inset: 0; pointer-events: none; opacity: 0;
+    background: radial-gradient(circle at 50% 55%, #fff 0%, #ffb74d 45%, #f4511e 100%); }
+  #flash.show { animation: flash .9s ease-out; }
+  @keyframes flash { 0% { opacity: .95; } 100% { opacity: 0; } }
   #levels { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
   .lvl { aspect-ratio: 1; border-radius: 14px; background: var(--surface); border: 1px solid var(--line);
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; font-size: 17px; font-weight: 700; }
@@ -121,6 +134,8 @@
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24"><path d="M14.500 6l-6 6 6 6"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="M9.500 6l6 6-6 6"/></symbol>
     <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6.5" y="5" width="4" height="14" rx="1.2"/><rect x="13.5" y="5" width="4" height="14" rx="1.2"/></symbol>
     <symbol id="i-play" viewBox="0 0 24 24"><path d="M8.5 5.4v13.2a.7.7 0 0 0 1.06.6l10.3-6.6a.7.7 0 0 0 0-1.2L9.560 4.800a.7.7 0 0 0-1.060.600z"/></symbol>
     <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.6l2.9 5.9 6.5.9-4.700 4.600 1.100 6.500L12 17.400l-5.800 3.100 1.100-6.500L2.600 9.400l6.500-.9z"/></symbol>
@@ -140,7 +155,8 @@
   </div>
   <div class="pill" id="size"><b>Größe 1</b><div class="bar"><i></i></div></div>
 </div>
-<div id="hint">Noch zu groß — erst wachsen</div>
+<div id="hint"></div>
+<div id="flash"></div>
 <div id="grow"></div>
 
 <div class="veil" id="menu" hidden>
@@ -156,12 +172,20 @@
     <div class="txt"><div class="k">Weiter</div><div class="t"></div><div class="s"></div></div>
     <div class="go"><svg class="fill"><use href="#i-play"/></svg></div>
   </div>
-  <h2>Level</h2>
+  <div class="pager">
+    <h2 id="range">Level</h2>
+    <button id="prev" aria-label="Frühere Level"><svg><use href="#i-prev"/></svg></button>
+    <button id="later" aria-label="Spätere Level"><svg><use href="#i-next"/></svg></button>
+  </div>
   <div id="levels"></div>
   <button class="rush" id="rush">
     <div class="txt"><div class="t">Zeitjagd</div><div class="s">Zwei Minuten, jedes Mal eine neue Tafel</div></div>
     <div class="rec"><svg><use href="#i-cup"/></svg><span id="best">0</span></div>
   </button>
+  <h2>Steuerung</h2>
+  <div class="seg">
+    <button data-pace="0">Ruhig</button><button data-pace="1">Mittel</button><button data-pace="2">Flink</button>
+  </div>
   <div class="credit">3D-Modelle: Kenney Food Kit (CC0)</div>
 </div>
 
@@ -170,6 +194,9 @@
     <h3>Pause</h3>
     <div class="sub" id="pausename"></div>
     <div style="height:18px"></div>
+    <div class="seg" style="margin-bottom:14px">
+      <button data-pace="0">Ruhig</button><button data-pace="1">Mittel</button><button data-pace="2">Flink</button>
+    </div>
     <button class="btn primary" id="resume">Weiter</button>
     <button class="btn quiet" id="restart">Neu starten</button>
     <button class="btn plain" id="quit">Zur Übersicht</button>

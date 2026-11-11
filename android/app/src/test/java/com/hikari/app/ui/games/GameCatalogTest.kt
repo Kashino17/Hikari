@@ -47,21 +47,19 @@ class GameCatalogTest {
         assertFalse(stat("sudoku", mapOf("sudoku_solved_total" to 7)).record)
     }
 
-    @Test fun hungryHole_zeigtErstDieLevelReiseDannDenRekord() {
-        assertEquals(GameStat("15 Level in 3D", earned = false), stat("fruithole"))
+    @Test fun hungryHole_zeigtDenStandDerEndlosenReise_sonstDenRekord() {
+        assertEquals(GameStat("Endlos in 3D", earned = false), stat("fruithole"))
         assertEquals(GameStat("Level 3", earned = true), stat("fruithole", mapOf(HOLE_LEVELS_DONE to 3, HOLE_BEST to 900)))
-        assertEquals(
-            GameStat("2.340", earned = true, record = true),
-            stat("fruithole", mapOf(HOLE_LEVELS_DONE to 15, HOLE_BEST to 2340)),
-        )
-        assertEquals(GameStat("Alle Level", earned = true), stat("fruithole", mapOf(HOLE_LEVELS_DONE to 15)))
+        assertEquals(GameStat("Level 42", earned = true), stat("fruithole", mapOf(HOLE_LEVELS_DONE to 42)))
         // Nur Zeitjagd gespielt, noch kein Level geschafft:
-        assertEquals("1.200", stat("fruithole", mapOf(HOLE_BEST to 1200)).text)
+        assertEquals(GameStat("1.200", earned = true, record = true), stat("fruithole", mapOf(HOLE_BEST to 1200)))
     }
 
     @Test fun hungryHole_kurzfassungDesSpielstands() {
         assertEquals(HoleSummary(levelsDone = 3, best = 1340), holeSummary("""{"stars":[3,1,0,2,0],"best":1340,"sound":true}"""))
         assertEquals(HoleSummary(0, 0), holeSummary("{}"))
+        // Die Reise ist endlos — die Liste darf beliebig lang werden.
+        assertEquals(20, holeSummary("""{"stars":[${List(20) { 2 }.joinToString(",")},0],"best":0}""")?.levelsDone)
         assertEquals(null, holeSummary("kein json"))
     }
 

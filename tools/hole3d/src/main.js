@@ -23,10 +23,13 @@ function loadSave() {
     data = {};
   }
   return {
-    stars: Array.from({ length: LEVELS.length }, (_, i) => Number(data.stars?.[i]) || 0),
+    // Die Reise ist endlos: ein Eintrag je gespieltem Level, in Reihenfolge.
+    stars: Array.isArray(data.stars) ? data.stars.map((s) => Number(s) || 0) : [],
     best: Number(data.best) || 0,
     sound: data.sound !== false,
     haptics: data.haptics !== false,
+    // Tempo der Steuerung: 0 ruhig, 1 mittel, 2 flink.
+    pace: [0, 1, 2].includes(data.pace) ? data.pace : 1,
   };
 }
 function persist() {
@@ -40,11 +43,22 @@ function persist() {
 }
 const save = loadSave();
 
-/** Das erste Level ohne Stern ist dran; alles davor ist frei. */
+const starsOf = (index) => save.stars[index] ?? 0;
+
+/** Das erste Level ohne Stern ist dran; alles davor ist frei. Nach dem letzten kommt immer ein neues. */
 function currentLevel() {
   const open = save.stars.findIndex((s) => s === 0);
-  return open === -1 ? LEVELS.length - 1 : open;
+  return open === -1 ? save.stars.length : open;
 }
+
+const levelTitle = (index) => (index < LEVELS.length ? `Level ${index + 1}: ${LEVELS[index].name}` : `Level ${index + 1}`);
+
+/** Wie viel Fingerweg zu Lochweg wird — und wie zügig das Loch seinem Ziel folgt. */
+const PACES = [
+  { gain: 0.58, follow: 11 },
+  { gain: 0.76, follow: 13 },
+  { gain: 0.98, follow: 16 },
+];
 
 // ── Ton und Vibration ────────────────────────────────────────────────────────
 
@@ -87,6 +101,9 @@ let run = null; // { kind: 'level' | 'rush', index, name }
 let mode = 'loading'; // loading | menu | play | pause | result
 let preview = null;
 const pending = { x: 0, y: 0 };
+const aim = { x: 0, z: 0 }; // Zielpunkt des Fingers; das Loch gleitet weich dorthin
+let page = 0; // Seite der Level-Übersicht (15 je Seite)
+const PER_PAGE = 15;
 
 function setMode(next) {
   mode = next;
@@ -100,28 +117,47 @@ function starIcons(count, extra = '') {
   return [0, 1, 2].map((i) => `<svg class="fill ${i < count ? 'on' : ''} ${extra}"><use href="#i-star"/></svg>`).join('');
 }
 
-function showMenu() {
+function renderLevels() {
   const now = currentLevel();
-  const def = LEVELS[now];
-  const done = save.stars.every((s) => s > 0);
-  $('next').querySelector('.k').textContent = done ? 'Alles geschafft' : save.stars.some((s) => s > 0) ? 'Weiter' : 'Los geht’s';
-  $('next').querySelector('.t').textContent = `Level ${now + 1}: ${def.name}`;
-  $('next').querySelector('.s').textContent = `${Math.floor(def.time / 60)}:${String(def.time % 60).padStart(2, '0')} Minuten`;
-  $('next').onclick = () => startLevel(now);
-
-  $('levels').innerHTML = LEVELS.map((_, i) => {
+  const first = page * PER_PAGE;
+  $('levels').innerHTML = Array.from({ length: PER_PAGE }, (_, k) => {
+    const i = first + k;
     const locked = i > now;
     const cls = `lvl${i === now ? ' current' : ''}${locked ? ' locked' : ''}`;
-    const inner = locked ? '<svg><use href="#i-lock"/></svg>' : `${i + 1}<div class="stars">${starIcons(save.stars[i])}</div>`;
+    const inner = locked ? '<svg><use href="#i-lock"/></svg>' : `${i + 1}<div class="stars">${starIcons(starsOf(i))}</div>`;
     return `<button class="${cls}" data-level="${i}" ${locked ? 'disabled' : ''} aria-label="Level ${i + 1}">${inner}</button>`;
   }).join('');
+  $('range').textContent = `Level ${first + 1} bis ${first + PER_PAGE}`;
+  $('prev').disabled = page === 0;
+  $('later').disabled = first + PER_PAGE > now; // weiter blättern nur bis zur Seite mit dem offenen Level
+}
+
+function renderPace() {
+  for (const button of document.querySelectorAll('[data-pace]')) {
+    button.classList.toggle('on', Number(button.dataset.pace) === save.pace);
+  }
+}
+
+function showMenu() {
+  const now = currentLevel();
+  const level = buildLevel(now);
+  const bombs = level.items.filter((i) => i.bomb).length;
+  $('next').querySelector('.k').textContent = save.stars.some((s) => s > 0) ? 'Weiter' : 'Los geht’s';
+  $('next').querySelector('.t').textContent = levelTitle(now);
+  const minutes = `${Math.floor(level.time / 60)}:${String(level.time % 60).padStart(2, '0')} Minuten`;
+  $('next').querySelector('.s').textContent = bombs === 0 ? minutes : `${minutes}, ${bombs === 1 ? '1 Bombe' : `${bombs} Bomben`}`;
+  $('next').onclick = () => startLevel(now);
+
+  page = Math.floor(now / PER_PAGE);
+  renderLevels();
+  renderPace();
   $('best').textContent = fmt(save.best);
   $('sound').classList.toggle('off', !save.sound);
   $('buzz').classList.toggle('off', !save.haptics);
 
   // Hinter dem Menü dreht sich das nächste Level.
-  preview = createSim(buildLevel(now));
-  stage.setLevel(preview, def.cloth);
+  preview = createSim(level);
+  stage.setLevel(preview, level.cloth);
   setMode('menu');
 }
 
@@ -130,14 +166,17 @@ function begin(level, info) {
   run = info;
   stage.setLevel(sim, level.cloth);
   pending.x = pending.y = 0;
+  aim.x = sim.hole.x;
+  aim.z = sim.hole.z;
   combo = 0;
   lastHint = -1e9;
-  $('pausename').textContent = info.kind === 'rush' ? 'Zeitjagd' : `Level ${info.index + 1}: ${info.name}`;
+  bombHintShown = false;
+  $('pausename').textContent = info.kind === 'rush' ? 'Zeitjagd' : info.name;
   updateHud(true);
   setMode('play');
 }
 function startLevel(index) {
-  begin(buildLevel(index), { kind: 'level', index, name: LEVELS[index].name });
+  begin(buildLevel(index), { kind: 'level', index, name: levelTitle(index) });
 }
 function startRush() {
   begin(buildRush((Math.random() * 2 ** 31) | 0), { kind: 'rush', name: 'Zeitjagd' });
@@ -169,6 +208,31 @@ function updateHud(force) {
   }
 }
 
+/** Knall der Bombe: kurzes Rauschen, das dumpf ausklingt. */
+function boom() {
+  if (!save.sound) return;
+  try {
+    audio ??= new (window.AudioContext || window.webkitAudioContext)();
+    const length = 0.7;
+    const buffer = audio.createBuffer(1, Math.floor(audio.sampleRate * length), audio.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 2.2);
+    const source = audio.createBufferSource();
+    source.buffer = buffer;
+    const filter = audio.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1400, audio.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(120, audio.currentTime + length);
+    const amp = audio.createGain();
+    amp.gain.value = 0.5;
+    source.connect(filter).connect(amp).connect(audio.destination);
+    source.start();
+  } catch {
+    /* ohne Ton spielbar */
+  }
+}
+
+let bombHintShown = false;
 let lastHint = -1e9;
 let hintTimer = 0;
 function hint(text) {
@@ -209,10 +273,18 @@ function handleEvents() {
       buzz('grow');
     } else if (event.type === 'tooBig') {
       hint('Noch zu groß. Friss erst Kleineres.');
+    } else if (event.type === 'bomb') {
+      stage.quake();
+      const flash = $('flash');
+      flash.classList.remove('show');
+      void flash.offsetWidth;
+      flash.classList.add('show');
+      boom();
+      buzz('grow');
     } else if (event.type === 'land') {
       tone(140, 0.07, 0.05, 'triangle');
     } else if (event.type === 'finish') {
-      setTimeout(showResult, event.cleared ? 900 : 500);
+      setTimeout(showResult, sim.exploded ? 1100 : event.cleared ? 900 : 500);
     }
   }
   sim.events.length = 0;
@@ -221,24 +293,31 @@ function handleEvents() {
 function showResult() {
   if (mode !== 'play' && mode !== 'pause') return;
   const rush = run.kind === 'rush';
-  const stars = starsFor(sim.eaten, sim.total);
+  const boomed = sim.exploded;
+  const stars = starsFor(sim.eaten, sim.total, boomed);
   let record = false;
   if (rush) {
     record = sim.score > save.best;
     if (record) save.best = sim.score;
-  } else if (stars > save.stars[run.index]) {
-    save.stars[run.index] = stars;
+  } else {
+    // Lücken auffüllen, damit die Reihenfolge der Level stimmt.
+    while (save.stars.length <= run.index) save.stars.push(0);
+    if (stars > save.stars[run.index]) save.stars[run.index] = stars;
   }
   persist();
 
   const passed = !rush && stars > 0;
-  const hasNext = passed && run.index + 1 < LEVELS.length;
-  $('r-title').textContent = rush ? (record ? 'Neuer Rekord' : 'Zeit abgelaufen') : sim.cleared ? 'Alles verschluckt' : passed ? 'Level geschafft' : 'Zeit abgelaufen';
-  $('r-sub').textContent = rush
-    ? 'Zeitjagd'
-    : passed
-      ? `Level ${run.index + 1}: ${run.name}`
-      : 'Mindestens die Hälfte muss weg, dann geht es weiter.';
+  const hasNext = passed;
+  $('r-title').textContent = boomed
+    ? record ? 'Bombe, aber Rekord' : 'Bombe verschluckt'
+    : rush ? (record ? 'Neuer Rekord' : 'Zeit abgelaufen') : sim.cleared ? 'Alles verschluckt' : passed ? 'Level geschafft' : 'Zeit abgelaufen';
+  $('r-sub').textContent = boomed
+    ? 'Um Bomben musst du herumsteuern. Der rote Ring zeigt sie.'
+    : rush
+      ? 'Zeitjagd'
+      : passed
+        ? run.name
+        : 'Mindestens die Hälfte muss weg, dann geht es weiter.';
   $('r-stars').hidden = rush;
   $('r-stars').innerHTML = starIcons(stars);
   $('r-eaten').textContent = `${sim.eaten} von ${sim.total}`;
@@ -288,6 +367,21 @@ function wire(canvas) {
   $('r-menu').onclick = showMenu;
   $('rush').onclick = startRush;
   $('exit').onclick = () => native?.exit();
+  $('prev').onclick = () => {
+    page = Math.max(0, page - 1);
+    renderLevels();
+  };
+  $('later').onclick = () => {
+    page += 1;
+    renderLevels();
+  };
+  for (const button of document.querySelectorAll('[data-pace]')) {
+    button.onclick = () => {
+      save.pace = Number(button.dataset.pace);
+      persist();
+      renderPace();
+    };
+  }
   $('levels').onclick = (e) => {
     const button = e.target.closest('[data-level]');
     if (button && !button.disabled) startLevel(Number(button.dataset.level));
@@ -328,13 +422,31 @@ function frame(now) {
   const time = now / 1000;
 
   if (mode === 'play') {
-    const per = stage.worldPerPixel() * 1.12;
-    const move = { x: pending.x * per, z: pending.y * per * stage.depthStretch };
+    // Der Finger verschiebt einen Zielpunkt; das Loch gleitet ihm nach. Das glättet die
+    // ruckartigen Schritte der Berührungspunkte, ohne dass sich das Loch träge anfühlt.
+    const pace = PACES[save.pace];
+    const per = stage.worldPerPixel() * pace.gain;
+    const hole = sim.hole;
+    const limit = sim.arena - hole.r * 0.6;
+    aim.x = Math.max(-limit, Math.min(limit, aim.x + pending.x * per));
+    aim.z = Math.max(-limit, Math.min(limit, aim.z + pending.y * per * stage.depthStretch));
     pending.x = pending.y = 0;
+    const glide = 1 - Math.exp(-dt * pace.follow);
+    const move = { x: (aim.x - hole.x) * glide, z: (aim.z - hole.z) * glide };
     // Zwei halbe Schritte: schnelle Wischer überspringen so keine kleinen Dinge.
     step(sim, dt / 2, { x: move.x / 2, z: move.z / 2 });
     step(sim, dt / 2, { x: move.x / 2, z: move.z / 2 });
     handleEvents();
+    if (!bombHintShown) {
+      for (const index of sim.touched) {
+        if (sim.items[index].danger > 0.15) {
+          bombHintShown = true;
+          lastHint = -1e9;
+          hint('Vorsicht, Bombe. Nicht verschlucken.');
+          break;
+        }
+      }
+    }
     updateHud(false);
     stage.sync(sim, dt, time);
   } else if (mode === 'result') {
@@ -366,4 +478,4 @@ start().catch((error) => {
 });
 
 // Für Tests von außen (Entwicklung): Zustand lesen und das Loch führen.
-window.__hole = { get sim() { return sim; }, get mode() { return mode; }, startLevel, startRush, pending };
+window.__hole = { get sim() { return sim; }, get mode() { return mode; }, startLevel, startRush, pending, aim };

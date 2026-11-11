@@ -22,6 +22,8 @@ export const MAX_SIZE = HOLE_RADII.length;
 /** Ein Ding passt, wenn seine Standfläche etwas kleiner ist als das Loch. */
 export const FIT = 0.92;
 const GRAVITY = 34;
+/** Ab diesem Abstand zum »Hineinfallen« warnt eine Bombe. */
+export const BOMB_WARN = 2.2;
 const GRID = 4; // Kantenlänge einer Suchzelle
 
 /** Masse, die das Loch von Größe `size` zur nächsten braucht. */
@@ -47,6 +49,7 @@ export function createSim(level) {
     vis: src.vis ?? src.r * 2, // Darstellungsgröße (bei hohen Dingen kleiner als die Standfläche)
     h: src.h,
     mass: src.mass,
+    bomb: src.bomb === true, // darf nicht ins Loch — sonst ist das Spiel vorbei
     yaw: src.yaw ?? 0,
     supports: src.supports ?? [],
     dependents: [],
@@ -57,6 +60,7 @@ export function createSim(level) {
     spin: 0, // Taumeln beim Fallen
     spinAxis: index * 2.399, // gleichmäßig verteilte Achsen ohne Zufall
     wobble: 0, // Zittern, wenn das Loch noch zu klein ist
+    danger: 0, // Bombe: wie nah der Lochrand schon ist (0…1)
   }));
   for (const item of items) for (const s of item.supports) items[s].dependents.push(item.index);
 
@@ -72,11 +76,12 @@ export function createSim(level) {
     hole: { x: level.start?.x ?? 0, z: level.start?.z ?? 0, r: HOLE_RADII[0], size: 1, progress: 0 },
     time: level.time,
     timeTotal: level.time,
-    total: items.length,
+    total: items.filter((i) => !i.bomb).length, // Bomben zählen nicht zum Aufessen
     eaten: 0,
     score: 0,
     finished: false,
     cleared: false,
+    exploded: false,
     events: [],
   };
 }
@@ -144,7 +149,15 @@ export function step(sim, dt, move) {
     const d = Math.hypot(dx, dz);
     const ok = fits(item.r, R);
     const inside = R - 0.25 * item.r;
-    if (ok && d < inside) {
+    if (item.bomb) {
+      // Bomben rutschen nicht von selbst hinein — nur wer wirklich darüberfährt, verliert.
+      if (ok && d < inside) {
+        explode(sim, item);
+        break;
+      }
+      item.danger = Math.max(0, Math.min(1, 1 - (d - inside) / BOMB_WARN));
+      if (item.danger > 0) sim.touched.add(item.index);
+    } else if (ok && d < inside) {
       startFall(sim, item);
     } else if (ok && d < R + 0.55 * item.r) {
       // Über der Kante: kippt zum Loch und rutscht hinein.
@@ -176,7 +189,8 @@ export function step(sim, dt, move) {
     const d = Math.hypot(hole.x - item.x, hole.z - item.z);
     if (d >= R + 0.55 * item.r) item.tilt = Math.max(0, item.tilt - dt * 4);
     item.wobble = Math.max(0, item.wobble - dt * 3);
-    if (item.tilt === 0 && item.wobble === 0) sim.touched.delete(index);
+    if (item.bomb && d - (R - 0.25 * item.r) >= BOMB_WARN) item.danger = 0;
+    if (item.tilt === 0 && item.wobble === 0 && item.danger === 0) sim.touched.delete(index);
   }
 
   // 4. Was fällt, fällt weiter.
@@ -276,6 +290,19 @@ function releaseDependents(sim, item) {
   }
 }
 
+/** Eine Bombe ist im Loch: Sie fällt noch hinein, dann ist Schluss. */
+function explode(sim, bomb) {
+  bomb.state = FALL;
+  bomb.vy = -2;
+  bomb.danger = 0;
+  gridRemove(sim.grid, bomb);
+  sim.moving.add(bomb.index);
+  sim.touched.delete(bomb.index);
+  sim.exploded = true;
+  sim.events.push({ type: 'bomb', index: bomb.index });
+  finish(sim, false);
+}
+
 function grow(sim, mass) {
   const hole = sim.hole;
   if (hole.size >= MAX_SIZE) return;
@@ -297,9 +324,9 @@ function finish(sim, cleared) {
   sim.events.push({ type: 'finish', cleared });
 }
 
-/** Sterne nach verschlucktem Anteil: ab der Hälfte einer, ab 80 % zwei, alles = drei. */
-export function starsFor(eaten, total) {
-  if (total === 0) return 0;
+/** Sterne nach verschlucktem Anteil: ab der Hälfte einer, ab 80 % zwei, alles = drei. Nach einer Bombe keine. */
+export function starsFor(eaten, total, exploded = false) {
+  if (total === 0 || exploded) return 0;
   const share = eaten / total;
   if (share >= 1) return 3;
   if (share >= 0.8) return 2;
@@ -314,7 +341,7 @@ export function starsFor(eaten, total) {
 export function unreachableCount(items) {
   let size = 1;
   let progress = 0;
-  let left = items.map((i) => ({ r: i.r, mass: i.mass }));
+  let left = items.filter((i) => !i.bomb).map((i) => ({ r: i.r, mass: i.mass }));
   for (;;) {
     const radius = HOLE_RADII[size - 1];
     const edible = left.filter((i) => fits(i.r, radius));

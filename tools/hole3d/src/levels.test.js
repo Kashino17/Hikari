@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { CLOTHS, LEVELS, TYPES, buildLevel, buildRush } from './levels.js';
+import { CLOTHS, LEVELS, TYPES, buildEndless, buildLevel, buildRush } from './levels.js';
 import heights from './foods.json' with { type: 'json' };
 import { unreachableCount } from './sim.js';
 
 function check(level, label) {
   assert.ok(CLOTHS[level.cloth], `${label}: Tischdecke ${level.cloth}`);
-  assert.ok(level.items.length >= 20, `${label}: zu wenig Dinge (${level.items.length})`);
+  assert.ok(level.items.filter((i) => !i.bomb).length >= 20, `${label}: zu wenig Dinge (${level.items.length})`);
+  for (const bomb of level.items.filter((i) => i.bomb)) assert.equal(bomb.mass, 0, `${label}: Bombe mit Masse`);
   for (const item of level.items) {
     assert.ok(TYPES[item.type] && heights[item.type], `${label}: Modell ${item.type}`);
     const edge = Math.max(Math.abs(item.x), Math.abs(item.z)) + item.r;
@@ -42,4 +43,40 @@ test('Zeitjagd: gleiche Zahl, gleiche Karte — und immer lösbar', () => {
   assert.deepEqual(buildRush(7).items, buildRush(7).items);
   assert.notDeepEqual(buildRush(7).items.map((i) => i.type), buildRush(8).items.map((i) => i.type));
   for (const seed of [1, 2, 3, 42, 1234, 99999]) check(buildRush(seed), `Zeitjagd ${seed}`);
+});
+
+test('die Reise geht nach den festen Leveln endlos weiter', () => {
+  const first = buildLevel(LEVELS.length); // Level 16
+  assert.equal(first.name, `Level ${LEVELS.length + 1}`);
+  assert.deepEqual(buildLevel(LEVELS.length).items, first.items, 'dieselbe Nummer, dasselbe Level');
+  assert.notDeepEqual(buildEndless(17).items.map((i) => i.type), buildEndless(18).items.map((i) => i.type));
+});
+
+test('hundert erzeugte Level: alle lösbar, nichts überlappt, Startplatz frei', () => {
+  for (let n = LEVELS.length + 1; n <= LEVELS.length + 100; n++) check(buildEndless(n), `Level ${n}`);
+  for (const n of [250, 500, 1000, 5000]) check(buildEndless(n), `Level ${n}`);
+});
+
+test('mit der Nummer wird es schwerer: mehr Bomben, größere Tafel, weniger Zeit je Ding', () => {
+  const stats = (n) => {
+    const level = buildEndless(n);
+    const bombs = level.items.filter((i) => i.bomb).length;
+    const food = level.items.length - bombs;
+    return { bombs, arena: level.arena, perItem: level.time / food };
+  };
+  const average = (from, to, key) => {
+    let sum = 0;
+    for (let n = from; n <= to; n++) sum += stats(n)[key];
+    return sum / (to - from + 1);
+  };
+  assert.ok(average(60, 80, 'bombs') > average(16, 22, 'bombs') + 2, 'mehr Bomben');
+  assert.ok(stats(70).arena > stats(16).arena, 'größere Tafel');
+  assert.ok(average(100, 120, 'perItem') < average(16, 36, 'perItem'), 'weniger Zeit je Ding');
+  assert.ok(stats(16).bombs >= 1, 'schon das erste erzeugte Level hat eine Bombe');
+});
+
+test('ab Level 5 stehen Bomben in den festen Leveln', () => {
+  const bombs = LEVELS.map((_, i) => buildLevel(i).items.filter((item) => item.bomb).length);
+  assert.deepEqual(bombs.slice(0, 4), [0, 0, 0, 0]);
+  assert.ok(bombs.slice(4).every((n) => n >= 2), `Bomben je Level: ${bombs}`);
 });

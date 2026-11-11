@@ -35,9 +35,6 @@ data class GameInfo(
     val stat: (read: (String) -> Int) -> GameStat,
 )
 
-/** So viele Level hat die Reise in Hungry Hole (tools/hole3d/src/levels.js). */
-internal const val HOLE_LEVEL_COUNT = 15
-
 /** Punktzahl mit Tausenderpunkt: 26348 → »26.348«. */
 internal fun formatScore(score: Int): String = String.format(Locale.GERMAN, "%,d", score)
 
@@ -81,14 +78,13 @@ val GameCatalog: List<GameInfo> = listOf(
         category = GameCategory.ARCADE,
         color = Color(0xFFA78BFA),
         stat = { read ->
-            // Erst zählt die Level-Reise, danach der Rekord der Zeitjagd.
+            // Die Level-Reise ist endlos: Es zählt, wie weit man ist. Wer nur die Zeitjagd spielt, sieht den Rekord.
             val levels = read(HOLE_LEVELS_DONE)
             val best = read(HOLE_BEST)
             when {
-                levels in 1 until HOLE_LEVEL_COUNT -> GameStat("Level $levels", earned = true)
+                levels > 0 -> GameStat("Level $levels", earned = true)
                 best > 0 -> record(best, "")
-                levels >= HOLE_LEVEL_COUNT -> GameStat("Alle Level", earned = true)
-                else -> GameStat("$HOLE_LEVEL_COUNT Level in 3D", earned = false)
+                else -> GameStat("Endlos in 3D", earned = false)
             }
         },
     ),

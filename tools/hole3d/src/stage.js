@@ -12,18 +12,22 @@ const CAM_BACK = 9.5;
 export async function loadFoods(url) {
   const gltf = await new GLTFLoader().loadAsync(url);
   const geometries = new Map();
+  const painted = new Set(); // Modelle ohne Bild, eingefärbt über ihre Eckpunkte (die Bombe)
   let map = null;
   gltf.scene.updateMatrixWorld(true);
   gltf.scene.traverse((node) => {
     if (!node.isMesh) return;
     const geometry = node.geometry.clone();
     geometry.applyMatrix4(node.matrixWorld);
-    geometries.set(node.name.replace(/_\d+$/, ''), geometry);
-    map ??= node.material.map;
+    const name = node.name.replace(/_\d+$/, '');
+    geometries.set(name, geometry);
+    if (geometry.attributes.color) painted.add(name);
+    else map ??= node.material.map;
   });
   // Lambert reicht für die flachen Farben des Kits und ist auf dem Handy am günstigsten.
   const material = new THREE.MeshLambertMaterial({ map });
-  return { geometries, material };
+  const paintedMaterial = new THREE.MeshLambertMaterial({ vertexColors: true });
+  return { geometries, materialFor: (type) => (painted.has(type) ? paintedMaterial : material) };
 }
 
 const GROUND_VERT = /* glsl */ `
@@ -132,6 +136,9 @@ export class Stage {
 
     this.shadowMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.16, depthWrite: false });
     this.shadowGeometry = new THREE.CircleGeometry(0.5, 20).rotateX(-Math.PI / 2);
+    this.ringMaterial = new THREE.MeshBasicMaterial({ color: 0xff4d4d, transparent: true, opacity: 0.75, depthWrite: false });
+    this.ringGeometry = new THREE.RingGeometry(0.86, 1.0, 40).rotateX(-Math.PI / 2);
+    this.shake = 0;
     this.meshes = [];
     this.active = new Set();
 
@@ -174,7 +181,7 @@ export class Stage {
     for (const item of sim.items) counts.set(item.type, (counts.get(item.type) ?? 0) + 1);
     const byType = new Map();
     for (const [type, count] of counts) {
-      const mesh = new THREE.InstancedMesh(this.foods.geometries.get(type), this.foods.material, count);
+      const mesh = new THREE.InstancedMesh(this.foods.geometries.get(type), this.foods.materialFor(type), count);
       mesh.frustumCulled = false; // die Instanzen liegen überall, die Grenzen des Netzes sagen nichts
       this.scene.add(mesh);
       this.meshes.push(mesh);
@@ -186,10 +193,21 @@ export class Stage {
     this.scene.add(this.shadows);
     this.meshes.push(this.shadows);
 
+    // Roter Ring um jede Bombe: von weitem zu sehen, auch zwischen vielen Dingen.
+    const bombs = sim.items.filter((item) => item.bomb);
+    this.rings = new THREE.InstancedMesh(this.ringGeometry, this.ringMaterial, Math.max(1, bombs.length));
+    this.rings.count = bombs.length;
+    this.rings.frustumCulled = false;
+    this.rings.renderOrder = 2;
+    this.scene.add(this.rings);
+    this.meshes.push(this.rings);
+    let ring = 0;
+
     this.slots = sim.items.map((item) => {
       const entry = byType.get(item.type);
-      return { mesh: entry.mesh, slot: entry.next++ };
+      return { mesh: entry.mesh, slot: entry.next++, ring: item.bomb ? ring++ : -1 };
     });
+    this.shake = 0;
     for (const item of sim.items) this.writeItem(sim, item, 0);
     for (const mesh of this.meshes) mesh.instanceMatrix.needsUpdate = true;
 
@@ -233,7 +251,10 @@ export class Stage {
 
   placeCamera() {
     const k = this.zoom;
-    this.camera.position.set(this.focus.x, CAM_UP * k, this.focus.z + CAM_BACK * k);
+    const jolt = this.shake * this.shake * 0.9;
+    const jx = jolt ? (Math.random() - 0.5) * jolt : 0;
+    const jz = jolt ? (Math.random() - 0.5) * jolt : 0;
+    this.camera.position.set(this.focus.x + jx, CAM_UP * k, this.focus.z + CAM_BACK * k + jz);
     this._look.set(this.focus.x, 0, this.focus.z - 0.9 * k);
     this.camera.lookAt(this._look);
   }
@@ -242,6 +263,7 @@ export class Stage {
   sync(sim, dt, time) {
     const hole = sim.hole;
     this.placeHole(hole, dt);
+    this.shake = Math.max(0, this.shake - dt * 1.8);
 
     // Die Kamera folgt dem Loch, bleibt aber über der Decke — am Rand soll nicht der halbe
     // Bildschirm leerer Tisch sein.
@@ -266,9 +288,11 @@ export class Stage {
   }
 
   writeItem(sim, item, time) {
-    const { mesh, slot } = this.slots[item.index];
+    const { mesh, slot, ring } = this.slots[item.index];
     const gone = item.state === GONE;
-    const scale = gone ? 0 : item.vis;
+    // Eine Bombe pocht, wenn der Lochrand näher kommt.
+    const throb = item.danger > 0 ? 1 + item.danger * 0.16 * (0.5 + 0.5 * Math.sin(time * 15)) : 1;
+    const scale = gone ? 0 : item.vis * throb;
     let y = item.y;
 
     this._q.setFromAxisAngle(this._up, item.yaw);
@@ -297,6 +321,17 @@ export class Stage {
     const shadow = grounded ? item.vis * 1.18 : 0;
     this._m.compose(this._p.set(item.x, 0.02, item.z), this._q.identity(), this._s.set(shadow, 1, shadow));
     this.shadows.setMatrixAt(item.index, this._m);
+
+    if (ring >= 0) {
+      const reach = grounded ? item.r * (1.75 + item.danger * 0.5) : 0;
+      this._m.compose(this._p.set(item.x, 0.025, item.z), this._q, this._s.set(reach, 1, reach));
+      this.rings.setMatrixAt(ring, this._m);
+    }
+  }
+
+  /** Erschütterung (Bombe): klingt von selbst ab. */
+  quake() {
+    this.shake = 1;
   }
 
   /** Langsamer Kameraschwenk über das Level, solange das Menü offen ist. */

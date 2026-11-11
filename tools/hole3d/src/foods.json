@@ -9,6 +9,11 @@
   "height": 0.8933,
   "tris": 308
  },
+ "bomb": {
+  "aspect": 1.0,
+  "height": 1.51,
+  "tris": 532
+ },
  "burger": {
   "aspect": 1.0,
   "height": 0.7177,

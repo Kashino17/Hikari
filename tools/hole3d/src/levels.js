@@ -1,5 +1,5 @@
 // Level aus Bausteinen: Reihen, Ringe, Spiralen, Türme, Pyramiden.
-import { CLASSES } from './sim.js';
+import { CLASSES, unreachableCount as unreachable } from './sim.js';
 import heights from './foods.json' with { type: 'json' };
 
 /** Größenklasse je Modell. Stapelbar ist, was oben flach genug ist. */
@@ -15,6 +15,7 @@ export const TYPES = {
   watermelon: 'large', pumpkin: 'large', pizza: 'large', 'cake-birthday': 'large', pie: 'large',
   turkey: 'large', 'loaf-round': 'large',
   barrel: 'huge',
+  bomb: 'small', // kein Essen — siehe Builder.bomb
 };
 
 /** Höchstes Verhältnis von Höhe zu Standfläche, mit dem ein Ding gezeigt wird. */
@@ -58,6 +59,13 @@ export class Builder {
       yaw: yaw ?? ((index * 0.61803) % 1) * Math.PI * 2,
       supports,
     });
+    return index;
+  }
+
+  /** Eine Bombe: steht im Weg und darf nicht ins Loch. */
+  bomb(x, z) {
+    const index = this.add('bomb', x, z, { cls: 'small', yaw: 0 });
+    Object.assign(this.items[index], { bomb: true, mass: 0 });
     return index;
   }
 
@@ -188,6 +196,8 @@ export const LEVELS = [
     b.tower('burger-cheese-double', 4, 9, 4);
     b.grid('cookie', 9, 2, 0, 11, 1.3);
     b.add('turkey', 0, 0);
+    b.bomb(-4.6, 7.4);
+    b.bomb(4.6, 7.4);
   }),
   level('Tortenschlacht', 95, 'flieder', 16, (b) => {
     b.pyramid('cupcake', 4, -8, -6);
@@ -197,6 +207,8 @@ export const LEVELS = [
     b.row('lollypop', 4, -10.6, 13.4, 2.4, 0);
     b.row('lollypop', 4, 3.4, 13.4, 2.4, 0);
     b.add('cake-birthday', 0, 4);
+    b.bomb(0, -6.5);
+    b.bomb(-12.5, 4.5);
   }),
   level('Frühstück', 100, 'vanille', 17, (b) => {
     b.tower('pancakes', 5, -9, -9);
@@ -210,6 +222,8 @@ export const LEVELS = [
     b.add('loaf-round', -11, 4);
     b.add('loaf-round', 11, 4);
     b.add('pie', 0, 6);
+    b.bomb(-5.5, -7);
+    b.bomb(5.5, -7);
   }),
   level('Eisdiele', 100, 'himbeer', 17, (b) => {
     b.spiral('ice-cream', 22, 0, 0, 3, 9.5, 1.7);
@@ -218,6 +232,8 @@ export const LEVELS = [
     b.grid('sundae', 3, 1, 0, -14.6, 2.6);
     b.ring('pudding', 6, 0, 0, 13.6);
     b.add('cake-birthday', 0, 0, { scale: 1.25 });
+    b.bomb(10.7, -10.7);
+    b.bomb(-10.7, 10.7);
   }),
   level('Kürbisfeld', 110, 'wiese', 18, (b) => {
     b.grid('tomato', 7, 4, -9, -12, 1.7);
@@ -228,6 +244,9 @@ export const LEVELS = [
     b.row('pineapple', 3, 7.8, 15, 2.6, 0);
     b.grid('cherries', 5, 2, 0, -12, 1.2);
     b.add('watermelon', 0, 2, { scale: 1.3 });
+    b.bomb(-13.5, 2);
+    b.bomb(13.5, 2);
+    b.bomb(0, -9.2);
   }),
   level('Getränkelager', 110, 'himmel', 18, (b) => {
     b.pyramid('soda-can', 5, -8, -7);
@@ -239,6 +258,9 @@ export const LEVELS = [
     b.add('barrel', -11, 9);
     b.add('barrel', 11, 9);
     b.add('barrel', 0, -15);
+    b.bomb(0, -7);
+    b.bomb(-14.5, -1);
+    b.bomb(14.5, -1);
   }),
   level('Sushi-Garten', 115, 'minze', 19, (b) => {
     for (let k = 0; k < 4; k++) {
@@ -256,6 +278,10 @@ export const LEVELS = [
     b.add('pizza', -16, 0);
     b.add('pizza', 16, 0);
     b.add('turkey', 0, 0, { scale: 1.2 });
+    b.bomb(0, 11.5);
+    b.bomb(0, -11.5);
+    b.bomb(11.5, 0);
+    b.bomb(-11.5, 0);
   }),
   level('Wolkenkratzer', 120, 'flieder', 19, (b) => {
     for (let i = 0; i < 5; i++) {
@@ -269,6 +295,9 @@ export const LEVELS = [
     b.grid('strawberry', 6, 2, -8, 15.6, 1.3);
     b.grid('strawberry', 6, 2, 8, 15.6, 1.3);
     b.tower('pizza', 4, 0, 11);
+    b.bomb(-3.5, 7);
+    b.bomb(3.5, 7);
+    b.bomb(0, -3);
   }),
   level('Picknick', 125, 'wiese', 20, (b) => {
     b.pyramid('apple', 4, -11, -11);
@@ -283,6 +312,10 @@ export const LEVELS = [
     b.add('watermelon', 0, 2, { scale: 1.35 });
     b.add('barrel', -15, 16);
     b.add('barrel', 15, 16);
+    b.bomb(-6.7, -11);
+    b.bomb(6.7, -11);
+    b.bomb(-16.5, -2);
+    b.bomb(16.5, -2);
   }),
   level('Süßes Labyrinth', 130, 'himbeer', 21, (b) => {
     for (let k = 0; k < 4; k++) {
@@ -296,6 +329,10 @@ export const LEVELS = [
     b.tower('pancakes', 7, 15, -7);
     b.add('cake-birthday', -13, 18.2, { scale: 1.3 });
     b.add('cake-birthday', 13, 18.2, { scale: 1.3 });
+    b.bomb(-11, -10);
+    b.bomb(11, 0);
+    b.bomb(-11, 10);
+    b.bomb(0, -10);
   }),
   level('Das große Fressen', 150, 'vanille', 23, (b) => {
     b.spiral('cherries', 40, 0, 0, 3.4, 10.5, 3);
@@ -310,11 +347,19 @@ export const LEVELS = [
     b.add('pumpkin', -19.5, 0);
     b.add('watermelon', 19.5, 0);
     b.add('barrel', 0, 0, { scale: 1.3 });
+    b.bomb(-9.5, 19.8);
+    b.bomb(9.5, 19.8);
+    b.bomb(-9.5, -19.8);
+    b.bomb(9.5, -19.8);
   }),
 ];
 
-/** Baut ein Level der Reise (0-basiert) zu den Daten, die die Simulation braucht. */
+/**
+ * Baut ein Level der Reise (0-basiert) zu den Daten, die die Simulation braucht.
+ * Die ersten Level sind von Hand gebaut, danach geht die Reise mit erzeugten Leveln endlos weiter.
+ */
 export function buildLevel(index) {
+  if (index >= LEVELS.length) return buildEndless(index + 1);
   const def = LEVELS[index];
   const b = new Builder();
   def.build(b);
@@ -384,6 +429,13 @@ export function buildRush(seed) {
       patch(b, gx * cell + (random() - 0.5) * 0.4, gz * cell + (random() - 0.5) * 0.4, pick);
     }
   }
+  // Vier Bomben auf Kreuzungen zwischen den Feldern — nie direkt am Startplatz.
+  const crossings = [];
+  for (let i = -1.5; i <= 1.5; i++) for (let j = -1.5; j <= 0.5; j++) crossings.push([i * cell, j * cell]);
+  for (let n = 0; n < 4; n++) {
+    const [x, z] = crossings.splice(Math.floor(random() * crossings.length), 1)[0];
+    b.bomb(x, z);
+  }
   const cloths = Object.keys(CLOTHS);
   return {
     name: 'Zeitjagd',
@@ -391,6 +443,148 @@ export function buildRush(seed) {
     cloth: cloths[Math.floor(random() * cloths.length)],
     arena,
     start: { x: 0, z: arena - 4 },
+    items: b.items,
+  };
+}
+
+// ── Endlose Reise ────────────────────────────────────────────────────────────
+
+/** Felder für erzeugte Level, nach Anspruch sortiert. Jedes bleibt innerhalb von 3,5 um seine Mitte. */
+const PATCHES = {
+  easy: [
+    (b, x, z, pick) => b.ring(pick('tiny'), 10, x, z, 2.4),
+    (b, x, z, pick) => b.grid(pick('tiny'), 5, 4, x, z, 1.25),
+    (b, x, z, pick) => b.grid(pick('small'), 3, 3, x, z, 1.9),
+    (b, x, z, pick) => b.spiral(pick('tiny'), 16, x, z, 0.8, 3.1, 1.6),
+    (b, x, z, pick) => {
+      b.ring(pick('small'), 9, x, z, 2.85);
+      b.add(pick('medium'), x, z);
+    },
+  ],
+  mid: [
+    (b, x, z, pick) => b.pyramid(pick('stack'), 3, x, z),
+    (b, x, z, pick) => {
+      for (const [dx, dz] of [[-1.5, -1.5], [1.5, -1.5], [-1.5, 1.5], [1.5, 1.5]]) b.tower(pick('stack'), 5, x + dx, z + dz);
+    },
+    (b, x, z, pick) => {
+      b.ring(pick('tiny'), 12, x, z, 3.05);
+      b.add(pick('large'), x, z);
+    },
+    (b, x, z, pick) => {
+      b.add(pick('medium'), x, z);
+      for (const [dx, dz] of [[-2.3, 0], [2.3, 0], [0, -2.3], [0, 2.3]]) b.add(pick('medium'), x + dx, z + dz);
+    },
+    (b, x, z, pick) => {
+      b.grid(pick('tiny'), 4, 4, x, z, 1.2);
+      b.ring(pick('small'), 8, x, z, 2.85, { phase: 0.39 });
+    },
+  ],
+  hard: [
+    (b, x, z, pick) => b.pyramid(pick('stack'), 4, x, z),
+    (b, x, z, pick) => {
+      b.tower(pick('bigstack'), 4, x, z);
+      b.ring(pick('tiny'), 12, x, z, 3.05);
+    },
+    (b, x, z, pick) => {
+      b.add('barrel', x, z);
+      b.ring(pick('tiny'), 14, x, z, 3.1);
+    },
+  ],
+  // Fallen: Leckeres direkt neben einer Bombe.
+  trap: [
+    (b, x, z, pick) => {
+      b.bomb(x, z);
+      b.ring(pick('tiny'), 12, x, z, 2.6);
+    },
+    (b, x, z, pick) => {
+      b.grid(pick('small'), 3, 2, x, z, 1.7);
+      b.bomb(x - 3, z);
+      b.bomb(x + 3, z);
+    },
+    (b, x, z, pick) => {
+      b.ring(pick('small'), 10, x, z, 3.0);
+      b.bomb(x, z);
+      b.ring(pick('tiny'), 6, x, z, 1.5);
+    },
+  ],
+};
+POOLS.bigstack = ['pizza', 'pie', 'cake', 'pancakes', 'waffle'];
+
+function weighted(random, weights) {
+  let roll = random() * Object.values(weights).reduce((a, w) => a + w, 0);
+  for (const [key, w] of Object.entries(weights)) {
+    roll -= w;
+    if (roll <= 0) return key;
+  }
+  return Object.keys(weights)[0];
+}
+
+/**
+ * Ein erzeugtes Level. `number` ist die Levelnummer (1-basiert, nach den handgebauten);
+ * dieselbe Nummer ergibt immer dasselbe Level, damit »Nochmal« fair bleibt.
+ * Mit der Nummer wachsen Tafel, Brocken, Zahl der Bombenfallen und der Zeitdruck.
+ */
+export function buildEndless(number) {
+  const depth = Math.max(1, number - LEVELS.length); // 1, 2, 3 …
+  for (let attempt = 0; ; attempt++) {
+    const level = generate(number, depth, attempt);
+    // Unlösbares (zu wenig Kleines für die dicken Brocken) wird neu gewürfelt, zuletzt ganz ohne Brocken.
+    if (unreachable(level.items) === 0) return level;
+  }
+}
+
+function generate(number, depth, attempt) {
+  const random = rng(Math.imul(number, 2654435761) ^ (attempt * 40503));
+  const pick = (pool) => POOLS[pool][Math.floor(random() * POOLS[pool].length)];
+  const side = depth <= 8 ? 4 : depth <= 30 ? 5 : 6; // Felder je Seite
+  const cell = 7.4;
+  const arena = (side * cell) / 2 + 0.7;
+  const at = (i) => (i - (side - 1) / 2) * cell;
+  const startI = Math.floor(side / 2);
+  const startJ = side - 1;
+
+  const calm = attempt >= 6; // letzter Ausweg: nur Leichtes
+  const weights = {
+    easy: Math.max(1.5, 6 - depth * 0.12),
+    mid: calm ? 0 : Math.min(6, 2 + depth * 0.1),
+    hard: calm ? 0 : Math.min(5, depth * 0.1),
+    trap: Math.min(4, 0.6 + depth * 0.08),
+  };
+
+  const b = new Builder();
+  for (let i = 0; i < side; i++) {
+    for (let j = 0; j < side; j++) {
+      if (i === startI && j === startJ) continue;
+      const kind = weighted(random, weights);
+      const list = PATCHES[kind];
+      list[Math.floor(random() * list.length)](b, at(i), at(j), pick);
+    }
+  }
+
+  // Bomben auf Kreuzungen zwischen den Feldern: Sie machen die Wege eng. Nie am Startfeld,
+  // und nie mehr als 40 % der Kreuzungen — es bleibt immer ein Weg.
+  const crossings = [];
+  for (let i = 0; i < side - 1; i++) {
+    for (let j = 0; j < side - 1; j++) {
+      const nearStart = (i === startI || i === startI - 1) && j === startJ - 1;
+      if (!nearStart) crossings.push([at(i) + cell / 2, at(j) + cell / 2]);
+    }
+  }
+  const wanted = Math.min(Math.floor(crossings.length * 0.4), 1 + Math.floor(depth / 4));
+  for (let n = 0; n < wanted; n++) {
+    const [x, z] = crossings.splice(Math.floor(random() * crossings.length), 1)[0];
+    b.bomb(x, z);
+  }
+
+  const food = b.items.filter((i) => !i.bomb).length;
+  const pressure = 1.12 - 0.27 * Math.min(1, depth / 50);
+  const cloths = Object.keys(CLOTHS);
+  return {
+    name: `Level ${number}`,
+    time: Math.max(60, Math.min(240, Math.round(((38 + 0.42 * food) * pressure) / 5) * 5)),
+    cloth: cloths[Math.floor(random() * cloths.length)],
+    arena,
+    start: { x: at(startI), z: at(startJ) },
     items: b.items,
   };
 }

@@ -73,6 +73,48 @@ for name in names:
         "tris": sum(len(p.vertices) - 2 for p in obj.data.polygons),
     }
 
+
+
+def colored_part(make, color, **kwargs):
+    """Legt ein Grundobjekt an und färbt es über eine Farbschicht ein (kein Bild nötig)."""
+    make(**kwargs)
+    part = bpy.context.view_layer.objects.active
+    layer = part.data.color_attributes.new(name="Color", type="BYTE_COLOR", domain="CORNER")
+    for item in layer.data:
+        item.color = (*color, 1.0)
+    return part
+
+
+def make_bomb():
+    """Die Bombe gibt es im Kit nicht: Kugel, Kappe, Zündschnur und Funke aus Grundkörpern."""
+    parts = [
+        colored_part(bpy.ops.mesh.primitive_uv_sphere_add, (0.035, 0.035, 0.05), segments=20, ring_count=12, radius=0.5, location=(0, 0, 0.5)),
+        colored_part(bpy.ops.mesh.primitive_cylinder_add, (0.28, 0.29, 0.33), vertices=12, radius=0.17, depth=0.16, location=(0, 0, 1.02)),
+        colored_part(bpy.ops.mesh.primitive_cylinder_add, (0.62, 0.45, 0.25), vertices=8, radius=0.04, depth=0.3, location=(0.05, 0, 1.22), rotation=(0, 0.35, 0)),
+        colored_part(bpy.ops.mesh.primitive_ico_sphere_add, (1.0, 0.42, 0.08), subdivisions=1, radius=0.11, location=(0.11, 0, 1.4)),
+    ]
+    bpy.ops.object.select_all(action="DESELECT")
+    for part in parts:
+        part.select_set(True)
+    bpy.context.view_layer.objects.active = parts[0]
+    bpy.ops.object.join()
+    bomb = bpy.context.view_layer.objects.active
+    bpy.ops.object.shade_smooth()
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    material = bpy.data.materials.new("bomb")
+    material.use_nodes = True
+    nodes = material.node_tree.nodes
+    attribute = nodes.new("ShaderNodeVertexColor")
+    attribute.layer_name = "Color"
+    material.node_tree.links.new(attribute.outputs["Color"], nodes["Principled BSDF"].inputs["Base Color"])
+    bomb.data.materials.append(material)
+    bomb.name = bomb.data.name = "bomb"
+    height = max(v.co.z for v in bomb.data.vertices)
+    manifest["bomb"] = {"height": round(height, 4), "aspect": 1.0, "tris": sum(len(p.vertices) - 2 for p in bomb.data.polygons)}
+
+
+make_bomb()
+
 for block in list(bpy.data.materials):
     if block.users == 0:
         bpy.data.materials.remove(block)
