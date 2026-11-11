@@ -1,0 +1,217 @@
+{
+ "apple": {
+  "aspect": 1.0,
+  "height": 0.9718,
+  "tris": 136
+ },
+ "barrel": {
+  "aspect": 0.8933,
+  "height": 0.8933,
+  "tris": 308
+ },
+ "burger": {
+  "aspect": 1.0,
+  "height": 0.7177,
+  "tris": 294
+ },
+ "burger-cheese-double": {
+  "aspect": 1.0,
+  "height": 0.8466,
+  "tris": 392
+ },
+ "cake": {
+  "aspect": 1.0,
+  "height": 0.4272,
+  "tris": 750
+ },
+ "cake-birthday": {
+  "aspect": 1.0,
+  "height": 0.5691,
+  "tris": 1146
+ },
+ "cherries": {
+  "aspect": 0.5435,
+  "height": 1.0544,
+  "tris": 134
+ },
+ "cookie": {
+  "aspect": 0.866,
+  "height": 0.2265,
+  "tris": 68
+ },
+ "cookie-chocolate": {
+  "aspect": 0.866,
+  "height": 0.4657,
+  "tris": 136
+ },
+ "croissant": {
+  "aspect": 0.7246,
+  "height": 0.4053,
+  "tris": 162
+ },
+ "cupcake": {
+  "aspect": 0.866,
+  "height": 1.1933,
+  "tris": 204
+ },
+ "donut": {
+  "aspect": 0.866,
+  "height": 0.3141,
+  "tris": 108
+ },
+ "donut-chocolate": {
+  "aspect": 0.866,
+  "height": 0.3141,
+  "tris": 120
+ },
+ "donut-sprinkles": {
+  "aspect": 0.866,
+  "height": 0.3357,
+  "tris": 180
+ },
+ "egg": {
+  "aspect": 0.866,
+  "height": 1.2324,
+  "tris": 44
+ },
+ "fries": {
+  "aspect": 0.6898,
+  "height": 1.4994,
+  "tris": 564
+ },
+ "grapes": {
+  "aspect": 0.8552,
+  "height": 1.5148,
+  "tris": 592
+ },
+ "hot-dog": {
+  "aspect": 0.3457,
+  "height": 0.2604,
+  "tris": 272
+ },
+ "ice-cream": {
+  "aspect": 0.866,
+  "height": 1.7053,
+  "tris": 80
+ },
+ "lemon": {
+  "aspect": 0.866,
+  "height": 1.12,
+  "tris": 104
+ },
+ "loaf-round": {
+  "aspect": 0.6667,
+  "height": 0.3799,
+  "tris": 116
+ },
+ "lollypop": {
+  "aspect": 0.2054,
+  "height": 2.0253,
+  "tris": 108
+ },
+ "maki-salmon": {
+  "aspect": 0.866,
+  "height": 0.5833,
+  "tris": 56
+ },
+ "muffin": {
+  "aspect": 0.866,
+  "height": 0.8158,
+  "tris": 84
+ },
+ "orange": {
+  "aspect": 1.0,
+  "height": 0.9853,
+  "tris": 120
+ },
+ "pancakes": {
+  "aspect": 0.8642,
+  "height": 0.2413,
+  "tris": 512
+ },
+ "pie": {
+  "aspect": 1.0,
+  "height": 0.1575,
+  "tris": 292
+ },
+ "pineapple": {
+  "aspect": 0.9853,
+  "height": 1.9267,
+  "tris": 196
+ },
+ "pizza": {
+  "aspect": 1.0,
+  "height": 0.0516,
+  "tris": 1208
+ },
+ "popsicle": {
+  "aspect": 0.4167,
+  "height": 2.7222,
+  "tris": 78
+ },
+ "pudding": {
+  "aspect": 0.866,
+  "height": 0.6923,
+  "tris": 56
+ },
+ "pumpkin": {
+  "aspect": 1.0,
+  "height": 0.547,
+  "tris": 188
+ },
+ "sandwich": {
+  "aspect": 0.9964,
+  "height": 0.3872,
+  "tris": 176
+ },
+ "soda-bottle": {
+  "aspect": 0.866,
+  "height": 3.2157,
+  "tris": 100
+ },
+ "soda-can": {
+  "aspect": 1.0,
+  "height": 1.5607,
+  "tris": 164
+ },
+ "strawberry": {
+  "aspect": 1.0,
+  "height": 1.5207,
+  "tris": 156
+ },
+ "sundae": {
+  "aspect": 0.866,
+  "height": 2.5915,
+  "tris": 316
+ },
+ "sushi-salmon": {
+  "aspect": 0.5374,
+  "height": 0.4442,
+  "tris": 96
+ },
+ "taco": {
+  "aspect": 0.2679,
+  "height": 0.616,
+  "tris": 174
+ },
+ "tomato": {
+  "aspect": 1.0,
+  "height": 0.8407,
+  "tris": 132
+ },
+ "turkey": {
+  "aspect": 0.7263,
+  "height": 0.4032,
+  "tris": 368
+ },
+ "waffle": {
+  "aspect": 1.0,
+  "height": 0.125,
+  "tris": 588
+ },
+ "watermelon": {
+  "aspect": 1.0,
+  "height": 1.0455,
+  "tris": 1376
+ }
+}

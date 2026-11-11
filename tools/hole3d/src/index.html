@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Hungry Hole</title>
+<style>
+  :root {
+    --bg: #1f1f22; --surface: #262629; --raised: #333338;
+    --line: rgba(255,255,255,.08); --line-strong: rgba(255,255,255,.14);
+    --text: rgba(255,255,255,.92); --muted: rgba(255,255,255,.55); --faint: rgba(255,255,255,.3);
+    --amber: #fbbf24; --hole: #a78bfa; --ink: #17171a;
+  }
+  * { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: Roboto, system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-user-select: none; user-select: none; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+  svg { display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  svg.fill { fill: currentColor; stroke: none; }
+  [hidden] { display: none !important; }
+
+  /* ── Anzeige im Spiel ── */
+  #hud { position: fixed; left: 0; right: 0; top: 0; padding: 12px 14px 0; pointer-events: none; }
+  .hud-row { display: flex; align-items: center; gap: 10px; }
+  .pill { background: rgba(23,23,26,.72); border: 1px solid rgba(255,255,255,.1); border-radius: 16px;
+    height: 44px; display: flex; align-items: center; padding: 0 14px; font-weight: 700; font-size: 16px; }
+  .round { width: 44px; padding: 0; justify-content: center; pointer-events: auto; }
+  .round svg { width: 20px; height: 20px; }
+  #time { font-variant-numeric: tabular-nums; min-width: 78px; justify-content: center; gap: 7px; }
+  #time svg { width: 16px; height: 16px; color: var(--muted); }
+  #time.low { color: #f87171; border-color: rgba(248,113,113,.5); }
+  #count { margin-left: auto; font-variant-numeric: tabular-nums; }
+  #count small { color: var(--muted); font-weight: 500; font-size: 13px; margin-left: 4px; }
+  #size { margin-top: 10px; height: 36px; gap: 10px; font-size: 13px; padding: 0 12px; }
+  #size b { white-space: nowrap; }
+  .bar { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,.14); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; border-radius: 3px; background: var(--amber); transition: width .18s ease-out; }
+  #size.grew { animation: grew .5s ease-out; }
+  @keyframes grew { 0% { transform: scale(1); } 35% { transform: scale(1.05); border-color: var(--amber); } 100% { transform: scale(1); } }
+  #hint { position: fixed; left: 50%; bottom: 13%; transform: translateX(-50%); background: rgba(23,23,26,.82);
+    border: 1px solid rgba(255,255,255,.1); border-radius: 14px; padding: 9px 14px; font-size: 13.5px; font-weight: 500;
+    white-space: nowrap; opacity: 0; transition: opacity .25s; pointer-events: none; }
+  #hint.show { opacity: 1; }
+  #grow { position: fixed; left: 50%; top: 34%; transform: translate(-50%, -50%) scale(.6); font-size: 30px; font-weight: 900;
+    letter-spacing: -.01em; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.25), 0 6px 22px rgba(0,0,0,.35); opacity: 0; pointer-events: none; }
+  #grow.show { animation: growPop 1.1s ease-out; }
+  @keyframes growPop { 0% { opacity: 0; transform: translate(-50%,-50%) scale(.6); } 18% { opacity: 1; transform: translate(-50%,-50%) scale(1.08); }
+    30% { transform: translate(-50%,-50%) scale(1); } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%,-64%) scale(1); } }
+
+  /* ── Menü und Blätter ── */
+  .veil { position: fixed; inset: 0; background: linear-gradient(180deg, rgba(31,31,34,.55) 0%, rgba(31,31,34,.9) 34%, var(--bg) 62%);
+    overflow-y: auto; padding: 12px 16px 28px; }
+  .top { display: flex; align-items: center; gap: 4px; height: 52px; margin-left: -8px; }
+  .top button { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; }
+  .top svg { width: 22px; height: 22px; }
+  .top h1 { font-size: 22px; font-weight: 700; }
+  .top .toggles { margin-left: auto; display: flex; gap: 8px; }
+  .top .toggles button { background: rgba(255,255,255,.07); width: 38px; height: 38px; color: var(--text); }
+  .top .toggles button.off { color: var(--faint); }
+  .top .toggles svg { width: 19px; height: 19px; }
+
+  /* Feste Höhe statt vh: im WebView der App ist vh beim ersten Aufbau noch 0. */
+  .next { margin-top: 170px; border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 14px;
+    background: color-mix(in oklab, var(--hole) 15%, var(--surface)); border: 1px solid color-mix(in oklab, var(--hole) 30%, transparent); }
+  .next .txt { flex: 1; min-width: 0; }
+  .next .k { font-size: 12.5px; font-weight: 500; color: var(--hole); }
+  .next .t { font-size: 21px; font-weight: 700; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .next .s { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .go { flex: none; width: 52px; height: 52px; border-radius: 50%; background: var(--hole); color: var(--ink); display: grid; place-items: center; }
+  .go svg { width: 26px; height: 26px; }
+
+  h2 { font-size: 15px; font-weight: 700; margin: 24px 2px 10px; }
+  #levels { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .lvl { aspect-ratio: 1; border-radius: 14px; background: var(--surface); border: 1px solid var(--line);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; font-size: 17px; font-weight: 700; }
+  .lvl.current { border-color: var(--hole); background: color-mix(in oklab, var(--hole) 14%, var(--surface)); }
+  .lvl.locked { color: var(--faint); }
+  .lvl.locked svg { width: 15px; height: 15px; }
+  .stars { display: flex; gap: 2px; }
+  .stars svg { width: 10px; height: 10px; color: rgba(255,255,255,.16); }
+  .stars svg.on { color: var(--amber); }
+
+  .rush { margin-top: 12px; border-radius: 18px; padding: 14px 14px 14px 16px; display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--line); width: 100%; text-align: left; }
+  .rush .txt { flex: 1; }
+  .rush .t { font-size: 16px; font-weight: 700; }
+  .rush .s { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .rush .rec { display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; color: var(--muted); }
+  .rush .rec svg { width: 14px; height: 14px; color: var(--amber); }
+  .credit { margin-top: 22px; text-align: center; font-size: 11.5px; color: var(--faint); }
+
+  .sheet-wrap { position: fixed; inset: 0; background: rgba(15,15,17,.62); display: flex; align-items: flex-end; }
+  .sheet { width: 100%; background: var(--surface); border-radius: 24px 24px 0 0; border-top: 1px solid var(--line-strong);
+    padding: 22px 18px 26px; animation: rise .22s ease-out; }
+  @keyframes rise { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .sheet h3 { font-size: 22px; font-weight: 700; text-align: center; }
+  .sheet .sub { text-align: center; color: var(--muted); font-size: 13.5px; margin-top: 4px; }
+  .big-stars { display: flex; justify-content: center; gap: 10px; margin: 18px 0 6px; }
+  .big-stars svg { width: 44px; height: 44px; color: rgba(255,255,255,.12); }
+  .big-stars svg.on { color: var(--amber); animation: star .45s ease-out backwards; }
+  .big-stars svg.on:nth-child(2) { animation-delay: .14s; }
+  .big-stars svg.on:nth-child(3) { animation-delay: .28s; }
+  @keyframes star { from { transform: scale(.3); opacity: 0; } 60% { transform: scale(1.18); } to { transform: scale(1); opacity: 1; } }
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 16px 0 18px; }
+  .facts div { background: var(--raised); border-radius: 14px; padding: 11px 12px; }
+  .facts b { display: block; font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .facts span { font-size: 12px; color: var(--muted); }
+  .facts .rec b { color: var(--amber); }
+  .btn { width: 100%; height: 52px; border-radius: 16px; font-size: 16px; font-weight: 700; display: block; }
+  .btn + .btn { margin-top: 8px; }
+  .btn.primary { background: #fff; color: #111; }
+  .btn.quiet { background: var(--raised); }
+  .btn.plain { color: var(--muted); height: 44px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6.5" y="5" width="4" height="14" rx="1.2"/><rect x="13.5" y="5" width="4" height="14" rx="1.2"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8.5 5.4v13.2a.7.7 0 0 0 1.06.6l10.3-6.6a.7.7 0 0 0 0-1.2L9.560 4.800a.7.7 0 0 0-1.060.600z"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.6l2.9 5.9 6.5.9-4.700 4.600 1.100 6.500L12 17.400l-5.800 3.100 1.100-6.500L2.600 9.400l6.500-.9z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.500V12l3 2"/></symbol>
+    <symbol id="i-cup" viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0zM7 6H4.500c0 3 1 4.500 2.900 4.800M17 6h2.500c0 3-1 4.500-2.900 4.800M12 14v3.500M8.500 20h7M9.500 17.500h5"/></symbol>
+    <symbol id="i-sound" viewBox="0 0 24 24"><path d="M4 9.500v5h3.500L12 18.500v-13L7.500 9.500zM15.500 9a4.200 4.200 0 0 1 0 6M18 6.500a7.800 7.800 0 0 1 0 11"/></symbol>
+    <symbol id="i-buzz" viewBox="0 0 24 24"><rect x="8" y="4" width="8" height="16" rx="2"/><path d="M4.500 9v6M19.500 9v6M2 10.500v3M22 10.500v3"/></symbol>
+  </defs>
+</svg>
+
+<div id="hud" hidden>
+  <div class="hud-row">
+    <button class="pill round" id="pause" aria-label="Pause"><svg class="fill"><use href="#i-pause"/></svg></button>
+    <div class="pill" id="time"><svg><use href="#i-clock"/></svg><span>1:00</span></div>
+    <div class="pill" id="count"><span>0</span><small>von 0</small></div>
+  </div>
+  <div class="pill" id="size"><b>Größe 1</b><div class="bar"><i></i></div></div>
+</div>
+<div id="hint">Noch zu groß — erst wachsen</div>
+<div id="grow"></div>
+
+<div class="veil" id="menu" hidden>
+  <div class="top">
+    <button id="exit" aria-label="Zurück"><svg><use href="#i-back"/></svg></button>
+    <h1>Hungry Hole</h1>
+    <div class="toggles">
+      <button id="sound" aria-label="Ton"><svg><use href="#i-sound"/></svg></button>
+      <button id="buzz" aria-label="Vibration"><svg><use href="#i-buzz"/></svg></button>
+    </div>
+  </div>
+  <div class="next" id="next">
+    <div class="txt"><div class="k">Weiter</div><div class="t"></div><div class="s"></div></div>
+    <div class="go"><svg class="fill"><use href="#i-play"/></svg></div>
+  </div>
+  <h2>Level</h2>
+  <div id="levels"></div>
+  <button class="rush" id="rush">
+    <div class="txt"><div class="t">Zeitjagd</div><div class="s">Zwei Minuten, jedes Mal eine neue Tafel</div></div>
+    <div class="rec"><svg><use href="#i-cup"/></svg><span id="best">0</span></div>
+  </button>
+  <div class="credit">3D-Modelle: Kenney Food Kit (CC0)</div>
+</div>
+
+<div class="sheet-wrap" id="pausesheet" hidden>
+  <div class="sheet">
+    <h3>Pause</h3>
+    <div class="sub" id="pausename"></div>
+    <div style="height:18px"></div>
+    <button class="btn primary" id="resume">Weiter</button>
+    <button class="btn quiet" id="restart">Neu starten</button>
+    <button class="btn plain" id="quit">Zur Übersicht</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="result" hidden>
+  <div class="sheet">
+    <h3 id="r-title"></h3>
+    <div class="sub" id="r-sub"></div>
+    <div class="big-stars" id="r-stars">
+      <svg class="fill"><use href="#i-star"/></svg><svg class="fill"><use href="#i-star"/></svg><svg class="fill"><use href="#i-star"/></svg>
+    </div>
+    <div class="facts">
+      <div><b id="r-eaten"></b><span>verschluckt</span></div>
+      <div id="r-scorebox"><b id="r-score"></b><span id="r-scorelabel">Punkte</span></div>
+    </div>
+    <button class="btn primary" id="r-next">Nächstes Level</button>
+    <button class="btn quiet" id="r-again">Nochmal</button>
+    <button class="btn plain" id="r-menu">Zur Übersicht</button>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>

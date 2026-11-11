@@ -87,7 +87,7 @@ import com.hikari.app.ui.games.ColorSortGame
 import com.hikari.app.ui.games.SnakeGame
 import com.hikari.app.ui.games.SudokuGame
 import com.hikari.app.ui.games.TwentyFortyEightGame
-import com.hikari.app.ui.games.FruitHoleGame
+import com.hikari.app.ui.games.HungryHoleGame
 import com.hikari.app.ui.games.FruitMergeGame
 import com.hikari.app.ui.games.SpaceShooterGame
 import com.hikari.app.ui.games.TicTacToeGame
@@ -584,7 +584,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                         "tictactoe" -> TicTacToeGame(onBack = { nav.popBackStack() })
                         "blockblast" -> BlockBlastGame(onBack = { nav.popBackStack() })
                         "spaceshooter" -> SpaceShooterGame(onBack = { nav.popBackStack() })
-                        "fruithole" -> FruitHoleGame(onBack = { nav.popBackStack() })
+                        "fruithole" -> HungryHoleGame(onBack = { nav.popBackStack() })
                         "fruitmerge" -> FruitMergeGame(onBack = { nav.popBackStack() })
                         "colorsort" -> ColorSortGame(onBack = { nav.popBackStack() })
                         "2048" -> TwentyFortyEightGame(onBack = { nav.popBackStack() })

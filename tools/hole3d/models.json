@@ -1,0 +1,11 @@
+{
+  "source": "Kenney Food Kit 2.0 (CC0) — https://kenney.nl/assets/food-kit",
+  "models": [
+    "cherries", "strawberry", "cookie", "cookie-chocolate", "maki-salmon", "sushi-salmon", "egg", "grapes",
+    "donut", "donut-chocolate", "donut-sprinkles", "apple", "orange", "lemon", "cupcake", "muffin",
+    "soda-can", "croissant", "ice-cream", "lollypop", "popsicle", "tomato",
+    "burger", "burger-cheese-double", "hot-dog", "fries", "pineapple", "soda-bottle", "cake", "pancakes",
+    "pudding", "sandwich", "taco", "sundae", "waffle",
+    "watermelon", "pumpkin", "pizza", "cake-birthday", "pie", "turkey", "loaf-round", "barrel"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "hikari-hole3d",
+  "private": true,
+  "type": "module",
+  "description": "Hungry Hole in 3D — Quelltext des Spiels, gebaut nach android/app/src/main/assets/hole3d",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --serve",
+    "test": "node --test src/*.test.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "three": "^0.170.0"
+  }
+}
