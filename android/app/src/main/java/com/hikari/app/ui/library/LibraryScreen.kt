@@ -360,6 +360,20 @@ private fun LibraryContent(
         }
     }
 
+    // Zurück geht innerhalb der Bibliothek einen Schritt zurück, statt die App zu schließen:
+    // Suche zu → Kategorie aufheben → zurück zu »Für dich«. Erst von dort verlässt Zurück die App.
+    // Steht bewusst vor den Überlagerungen weiter unten — deren eigenes Zurück hat Vorrang.
+    BackHandler(enabled = isSearchActive || selectedGenre != Genre.ALL || selectedTab != LibraryTab.FOR_YOU) {
+        when {
+            isSearchActive -> {
+                searchQuery = ""
+                isSearchActive = false
+            }
+            selectedGenre != Genre.ALL -> selectedGenre = Genre.ALL
+            else -> selectedTab = LibraryTab.FOR_YOU
+        }
+    }
+
     if (isSearchActive) {
         NetflixSearchView(
             data = data,
@@ -392,6 +406,15 @@ private fun LibraryContent(
                     letterSpacing = 2.sp,
                     fontFamily = FontFamily.SansSerif,
                 )
+                Spacer(Modifier.width(12.dp))
+                // Kategorie-Umschalter rechts neben dem Namen, vor Zufall und Suche.
+                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
+                    GenreSwitcher(
+                        selected = selectedGenre,
+                        onOpen = { showGenrePicker = true },
+                        onClear = { selectedGenre = Genre.ALL },
+                    )
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { showShuffleSheet = true }) {
                         Icon(
@@ -421,11 +444,7 @@ private fun LibraryContent(
                 },
             )
 
-            GenreChipRow(
-                selected = selectedGenre,
-                onOpen = { showGenrePicker = true },
-                onClear = { selectedGenre = Genre.ALL },
-            )
+            Spacer(Modifier.height(4.dp))
 
             if (selectedGenre != Genre.ALL) {
                 // Eine Kategorie ist gewählt: alles daraus als Plakat-Raster.

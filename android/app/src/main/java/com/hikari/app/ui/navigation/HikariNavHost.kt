@@ -609,7 +609,11 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                             nav.navigate("download-category/${cat.name}")
                         },
                         // Hub-Bereiche als Push — System-Zurück führt ins Profil.
-                        onOpenSection = { route -> nav.navigate(route) },
+                        onOpenSection = { route ->
+                            // Musik ist ein eigener Reiter der unteren Leiste: Die Kachel führt genau
+                            // dorthin, statt die Musikseite über das Profil zu legen.
+                            if (route == "music") navFresh(nav, route) else nav.navigate(route)
+                        },
                         pendingImport = sharedImport,
                     )
                 }

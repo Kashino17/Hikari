@@ -121,7 +121,7 @@ fun AreaTileGrid(
         RussianAreaTile(russian) { onOpenSection("russian") }
 
         Row(horizontalArrangement = Arrangement.spacedBy(Gap)) {
-            MusicAreaTile(music, Modifier.weight(1f)) { onOpenSection("music?from=profile") }
+            MusicAreaTile(music, Modifier.weight(1f)) { onOpenSection("music") }
             MangaAreaTile(manga, Modifier.weight(1f)) { onOpenSection("manga") }
         }
 

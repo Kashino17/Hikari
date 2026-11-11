@@ -188,15 +188,18 @@ internal fun PosterGridPage(title: String, items: List<PosterItem>, onBack: () -
 
 // ── Kategorien ───────────────────────────────────────────────────────────────
 
+/** Leicht gerundete Ecken für die Knöpfe der Bibliothek — bewusst keine Pille. */
+internal val SoftCorner = RoundedCornerShape(9.dp)
+
 /**
- * Zeile unter den Reitern: »Kategorien« öffnet die Auswahl. Ist eine gewählt, steht ihr Name
- * dort, und das Kreuz davor hebt die Auswahl wieder auf.
+ * Kategorie-Umschalter in der Kopfzeile, neben Zufall und Suche: »Kategorien« öffnet die
+ * Auswahl. Ist eine gewählt, steht ihr Name dort, und das Kreuz davor hebt die Auswahl wieder auf.
  */
 @Composable
-internal fun GenreChipRow(selected: Genre, onOpen: () -> Unit, onClear: () -> Unit) {
+internal fun GenreSwitcher(selected: Genre, onOpen: () -> Unit, onClear: () -> Unit, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val active = selected != Genre.ALL
@@ -204,8 +207,8 @@ internal fun GenreChipRow(selected: Genre, onOpen: () -> Unit, onClear: () -> Un
             Box(
                 modifier = Modifier
                     .size(34.dp)
-                    .clip(CircleShape)
-                    .border(1.dp, HikariBorderStrong, CircleShape)
+                    .clip(SoftCorner)
+                    .border(1.dp, HikariBorderStrong, SoftCorner)
                     .clickable(onClick = onClear),
                 contentAlignment = Alignment.Center,
             ) {
@@ -214,12 +217,13 @@ internal fun GenreChipRow(selected: Genre, onOpen: () -> Unit, onClear: () -> Un
         }
         Row(
             modifier = Modifier
+                .weight(1f, fill = false)
                 .height(34.dp)
-                .clip(RoundedCornerShape(17.dp))
+                .clip(SoftCorner)
                 .background(if (active) HikariSurfaceHigh else Color.Transparent)
-                .border(1.dp, if (active) HikariAmber.copy(alpha = 0.7f) else HikariBorderStrong, RoundedCornerShape(17.dp))
+                .border(1.dp, if (active) HikariAmber.copy(alpha = 0.7f) else HikariBorderStrong, SoftCorner)
                 .clickable(onClick = onOpen)
-                .padding(start = 14.dp, end = 8.dp),
+                .padding(start = 12.dp, end = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -228,6 +232,8 @@ internal fun GenreChipRow(selected: Genre, onOpen: () -> Unit, onClear: () -> Un
                 fontSize = 13.sp,
                 fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
             )
             Spacer(Modifier.width(2.dp))
             Icon(Icons.Outlined.KeyboardArrowDown, null, tint = HikariTextMuted, modifier = Modifier.size(20.dp))

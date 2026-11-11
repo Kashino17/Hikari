@@ -624,7 +624,7 @@ internal fun LibraryHero(
                 Row(
                     modifier = Modifier
                         .height(38.dp)
-                        .clip(RoundedCornerShape(50))
+                        .clip(SoftCorner)
                         .background(Color.White)
                         .clickable(onClick = onPlay)
                         .padding(start = 12.dp, end = 16.dp),
