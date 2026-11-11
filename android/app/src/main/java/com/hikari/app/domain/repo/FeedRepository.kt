@@ -143,6 +143,8 @@ class FeedRepository @Inject constructor(
 
     suspend fun getLibrary(): LibraryResponse = api.getLibrary()
 
+    suspend fun dismissContinue(videoId: String) = api.dismissContinue(videoId)
+
     suspend fun getUploads(channelId: String?, query: String?, offset: Int, limit: Int): List<LibraryVideoDto> =
         api.getUploads(channelId, query?.takeIf { it.isNotBlank() }, offset, limit)
 

@@ -84,6 +84,7 @@ import com.hikari.app.data.api.dto.isArchive
 import com.hikari.app.data.api.dto.isFilm
 import com.hikari.app.domain.genre.Genre
 import com.hikari.app.domain.genre.detectGenres
+import com.hikari.app.domain.library.Shelves
 import com.hikari.app.data.api.dto.SeriesDto
 import com.hikari.app.ui.library.components.CinemaPosterCard
 import com.hikari.app.ui.library.components.CoverEditSheet
@@ -156,6 +157,7 @@ fun LibraryScreen(
                 onOpenChannel = onOpenChannel,
                 onPlayVideo = onPlayVideo,
                 onLongPressSeries = { editingSeries = it },
+                onDismissContinue = viewModel::dismissContinue,
             )
         }
     }
@@ -189,6 +191,7 @@ private fun LibraryContent(
     onOpenChannel: (String) -> Unit,
     onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
     onLongPressSeries: (SeriesDto) -> Unit,
+    onDismissContinue: (videoId: String) -> Unit,
 ) {
     fun play(v: LibraryVideoDto) = onPlayVideo(v.id, v.title, v.channelTitle ?: "")
 
@@ -198,19 +201,13 @@ private fun LibraryContent(
     var selectedGenre by remember { mutableStateOf(Genre.ALL) }
     var showShuffleSheet by remember { mutableStateOf(false) }
     var quickLookItem by remember { mutableStateOf<QuickLookItem?>(null) }
-    var allView by remember { mutableStateOf<AllViewState?>(null) }
+    // Vollständige Übersicht einer Reihe (hinter »Alle«): Titel und alle Plakate.
+    var gridPage by remember { mutableStateOf<Pair<String, List<PosterItem>>?>(null) }
+    var showGenrePicker by remember { mutableStateOf(false) }
+    var continueMenu by remember { mutableStateOf<LibraryVideoDto?>(null) }
     var showChannels by rememberSaveable { mutableStateOf(false) }
     // Die Bibliothek zeigt Serien und Filme; alles von YouTube liegt im Kanal-Bereich.
     val seriesById = remember(data.series) { data.series.associateBy { it.id } }
-
-    fun LibraryVideoDto.toAllViewItem(onClick: () -> Unit) = AllViewItem(
-        id = id,
-        title = title,
-        channel = channelTitle,
-        durationSeconds = duration_seconds,
-        thumbnailUrl = thumbnail_url,
-        onClick = onClick,
-    )
 
     fun isMovie(v: LibraryVideoDto): Boolean = v.isFilm()
 
@@ -253,16 +250,18 @@ private fun LibraryContent(
         // Neuer Server: fertige Liste über alle Quellen, auch gestreamte
         // YouTube-Videos. Ältere Server: Rückfall auf die Downloads.
         if (data.continueWatching.isNotEmpty()) {
-            return@remember data.continueWatching.filter { it.isArchive() }
+            return@remember Shelves.continueRow(data.continueWatching.filter { it.isArchive() })
         }
-        data.recentlyAdded
-            .filter {
-                val p = it.progress_seconds ?: 0f
-                p > 0f && p < it.duration_seconds.toFloat() * 0.95f
-            }
-            // Zuletzt geschaut zuerst. Ältere Server liefern keinen Zeitstempel
-            // (0) — dann bleibt die bisherige Reihenfolge stabil.
-            .sortedByDescending { it.progress_updated_at ?: 0L }
+        Shelves.continueRow(
+            data.recentlyAdded
+                .filter {
+                    val p = it.progress_seconds ?: 0f
+                    p > 0f && p < it.duration_seconds.toFloat() * 0.95f
+                }
+                // Zuletzt geschaut zuerst. Ältere Server liefern keinen Zeitstempel
+                // (0) — dann bleibt die bisherige Reihenfolge stabil.
+                .sortedByDescending { it.progress_updated_at ?: 0L },
+        )
     }
     val heroVideo = continueWatching.firstOrNull() ?: data.recentlyAdded.firstOrNull()
 
@@ -306,6 +305,59 @@ private fun LibraryContent(
             durationSeconds = item.durationSeconds,
             matchScore = item.matchScore,
         )
+    }
+
+    fun seriesPoster(s: SeriesDto, prefix: String, tag: String = "SERIE", subtitle: String = s.description ?: "Serie") =
+        PosterItem(
+            key = "$prefix-s-${s.id}",
+            title = s.title,
+            subtitle = subtitle,
+            thumbnailUrl = s.thumbnail_url,
+            posterUrl = s.poster_url,
+            tag = tag,
+            onClick = { onOpenSeries(s.id) },
+            onLongClick = { openQuickLookForSeries(s) },
+        )
+
+    fun videoPoster(v: LibraryVideoDto, prefix: String, tag: String?, subtitle: String = formatDuration(v.duration_seconds)) =
+        PosterItem(
+            key = "$prefix-v-${v.id}",
+            title = v.title,
+            subtitle = subtitle,
+            thumbnailUrl = v.thumbnail_url,
+            posterUrl = v.poster_url,
+            tag = tag,
+            matchScore = v.overall_score,
+            onClick = { play(v) },
+            onLongClick = { openQuickLookForVideo(v) },
+        )
+
+    val showAll: (String) -> (List<PosterItem>) -> Unit = { title -> { items -> gridPage = title to items } }
+
+    // Was es in einer Kategorie gibt, hängt vom Reiter ab: unter »Serien« nur Serien, unter »Filme« nur Filme.
+    fun genreItems(genre: Genre, prefix: String): List<PosterItem> {
+        val series = if (selectedTab == LibraryTab.MOVIES) emptyList()
+        else data.series.filter { genre in it.detectGenres() }.map { seriesPoster(it, prefix) }
+        // Einzelne Folgen stehen nicht neben ihrer Serie — nur Filme und Einzelvideos.
+        val films = if (selectedTab == LibraryTab.SERIES) emptyList()
+        else data.recentlyAdded.filter { it.series_id == null && genre in it.detectGenres() }
+            .map { videoPoster(it, prefix, if (isMovie(it)) "FILM" else null) }
+        return series + films
+    }
+    val availableGenres = Genre.entries.filter { it != Genre.ALL && genreItems(it, "probe").isNotEmpty() }
+
+    @Composable
+    fun ContinueShelf(title: String, videos: List<LibraryVideoDto>, keyPrefix: String) {
+        // Wie bei Netflix: nur die Reihe, kein »Alle« — sie zeigt ohnehin nur das Jüngste.
+        SectionHeader(title)
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            items(videos, key = { "$keyPrefix-${it.id}" }) { v ->
+                ContinueCard(v, v.series_id?.let(seriesById::get), onClick = { play(v) }, onMenu = { continueMenu = v })
+            }
+        }
     }
 
     if (isSearchActive) {
@@ -369,24 +421,17 @@ private fun LibraryContent(
                 },
             )
 
-            Spacer(Modifier.height(4.dp))
+            GenreChipRow(
+                selected = selectedGenre,
+                onOpen = { showGenrePicker = true },
+                onClear = { selectedGenre = Genre.ALL },
+            )
 
             if (selectedGenre != Genre.ALL) {
-                FilteredNetflixLibraryContent(
-                    data = data,
-                    selectedType = when (selectedTab) {
-                        LibraryTab.SERIES -> NetflixContentType.SERIES
-                        LibraryTab.MOVIES -> NetflixContentType.VIDEOS
-                        else -> NetflixContentType.ALL
-                    },
-                    selectedGenre = selectedGenre,
-                    onOpenSeries = onOpenSeries,
-                    onOpenChannel = onOpenChannel,
-                    onPlayVideo = onPlayVideo,
-                    onLongPressSeries = onLongPressSeries,
-                    onResetFilter = {
-                        selectedGenre = Genre.ALL
-                    },
+                // Eine Kategorie ist gewählt: alles daraus als Plakat-Raster.
+                PosterGrid(
+                    items = genreItems(selectedGenre, "genre"),
+                    emptyText = "In dieser Kategorie gibt es hier noch nichts.",
                 )
             } else {
                 when (selectedTab) {
@@ -401,24 +446,7 @@ private fun LibraryContent(
 
                             if (continueWatching.isNotEmpty()) {
                                 item {
-                                    SectionHeader(
-                                        "Weiterschauen",
-                                        count = continueWatching.size,
-                                        onShowAll = {
-                                            allView = AllViewState(
-                                                title = "Weiterschauen",
-                                                items = continueWatching.map { v -> v.toAllViewItem { play(v) } },
-                                            )
-                                        },
-                                    )
-                                    LazyRow(
-                                        contentPadding = PaddingValues(horizontal = 16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    ) {
-                                        items(continueWatching, key = { it.id }) { v ->
-                                            ContinueCard(v, v.series_id?.let(seriesById::get), onClick = { play(v) })
-                                        }
-                                    }
+                                    ContinueShelf("Weiterschauen", continueWatching, "cw")
                                     Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
@@ -468,33 +496,11 @@ private fun LibraryContent(
                             // Wochenend-Kino (> 75 Min)
                             if (weekendMovies.isNotEmpty()) {
                                 item {
-                                    SectionHeader(
-                                        "Wochenend-Kino (> 75 Min)",
-                                        count = weekendMovies.size,
-                                        onShowAll = {
-                                            allView = AllViewState(
-                                                title = "Wochenend-Kino",
-                                                items = weekendMovies.map { m -> m.toAllViewItem { play(m) } },
-                                            )
-                                        },
+                                    PosterShelf(
+                                        title = "Wochenend-Kino",
+                                        items = weekendMovies.map { videoPoster(it, "wk", "KINO") },
+                                        onShowAll = showAll("Wochenend-Kino"),
                                     )
-                                    LazyRow(
-                                        contentPadding = PaddingValues(horizontal = 16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                    ) {
-                                        items(weekendMovies, key = { "wk-${it.id}" }) { m ->
-                                            CinemaPosterCard(
-                                                title = m.title,
-                                                subtitle = formatDuration(m.duration_seconds),
-                                                thumbnailUrl = m.thumbnail_url,
-                                                posterUrl = m.poster_url,
-                                                tag = "KINO",
-                                                matchScore = m.overall_score,
-                                                onClick = { play(m) },
-                                                onLongClick = { openQuickLookForVideo(m) },
-                                            )
-                                        }
-                                    }
                                     Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
@@ -540,62 +546,28 @@ private fun LibraryContent(
 
                             if (continueSeries.isNotEmpty()) {
                                 item {
-                                    SectionHeader("Weiter bingen", count = continueSeries.size)
-                                    LazyRow(
-                                        contentPadding = PaddingValues(horizontal = 16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    ) {
-                                        items(continueSeries, key = { "cs-${it.id}" }) { v ->
-                                            ContinueCard(v, v.series_id?.let(seriesById::get), onClick = { play(v) })
-                                        }
-                                    }
+                                    ContinueShelf("Weiter bingen", continueSeries, "cs")
                                     Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
 
-                            // Alle Serien in 2:3 Postern
                             item {
-                                SectionHeader("Alle Serien", count = data.series.size)
-                                LazyRow(
-                                    contentPadding = PaddingValues(horizontal = 16.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                ) {
-                                    items(data.series, key = { "all-s-${it.id}" }) { s ->
-                                        CinemaPosterCard(
-                                            title = s.title,
-                                            subtitle = s.description ?: "Serie",
-                                            thumbnailUrl = s.thumbnail_url,
-                                                posterUrl = s.poster_url,
-                                            tag = "SERIE",
-                                            onClick = { onOpenSeries(s.id) },
-                                            onLongClick = { openQuickLookForSeries(s) },
-                                        )
-                                    }
-                                }
+                                PosterShelf(
+                                    title = "Alle Serien",
+                                    items = data.series.map { seriesPoster(it, "all") },
+                                    onShowAll = showAll("Alle Serien"),
+                                )
                                 Spacer(Modifier.height(SECTION_GAP))
                             }
 
-                            // Serien nach Genre (Anime, SciFi, Action etc.)
                             val animeSeries = data.series.filter { Genre.ANIME in it.detectGenres() }
                             if (animeSeries.isNotEmpty()) {
                                 item {
-                                    SectionHeader("Anime-Serien", count = animeSeries.size)
-                                    LazyRow(
-                                        contentPadding = PaddingValues(horizontal = 16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                    ) {
-                                        items(animeSeries, key = { "anime-${it.id}" }) { s ->
-                                            CinemaPosterCard(
-                                                title = s.title,
-                                                subtitle = s.description ?: "Anime",
-                                                thumbnailUrl = s.thumbnail_url,
-                                                posterUrl = s.poster_url,
-                                                tag = "ANIME",
-                                                onClick = { onOpenSeries(s.id) },
-                                                onLongClick = { openQuickLookForSeries(s) },
-                                            )
-                                        }
-                                    }
+                                    PosterShelf(
+                                        title = "Anime-Serien",
+                                        items = animeSeries.map { seriesPoster(it, "anime", tag = "ANIME", subtitle = it.description ?: "Anime") },
+                                        onShowAll = showAll("Anime-Serien"),
+                                    )
                                     Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
@@ -606,6 +578,7 @@ private fun LibraryContent(
 
                     LibraryTab.MOVIES -> {
                         val heroMovie = allMovies.firstOrNull() ?: heroVideo
+                        fun withChannel(m: LibraryVideoDto) = "${formatDuration(m.duration_seconds)} · ${m.channelTitle ?: ""}"
 
                         LazyColumn(modifier = Modifier.fillMaxSize()) {
                             if (heroMovie != null) {
@@ -628,76 +601,34 @@ private fun LibraryContent(
                                 }
                             }
 
-                            // Spielfilme & Blockbuster (> 75 Min)
                             if (weekendMovies.isNotEmpty()) {
                                 item {
-                                    SectionHeader("Spielfilme & Blockbuster (> 75 Min)", count = weekendMovies.size)
-                                    LazyRow(
-                                        contentPadding = PaddingValues(horizontal = 16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                    ) {
-                                        items(weekendMovies, key = { "m-block-${it.id}" }) { m ->
-                                            CinemaPosterCard(
-                                                title = m.title,
-                                                subtitle = "${formatDuration(m.duration_seconds)} · ${m.channelTitle ?: ""}",
-                                                thumbnailUrl = m.thumbnail_url,
-                                                posterUrl = m.poster_url,
-                                                tag = "KINO",
-                                                matchScore = m.overall_score,
-                                                onClick = { play(m) },
-                                                onLongClick = { openQuickLookForVideo(m) },
-                                            )
-                                        }
-                                    }
+                                    PosterShelf(
+                                        title = "Spielfilme & Blockbuster",
+                                        items = weekendMovies.map { videoPoster(it, "block", "KINO", withChannel(it)) },
+                                        onShowAll = showAll("Spielfilme & Blockbuster"),
+                                    )
                                     Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
 
-                            // Alle Filme & Dokus
                             item {
-                                SectionHeader("Alle Filme & Dokus", count = allMovies.size)
-                                LazyRow(
-                                    contentPadding = PaddingValues(horizontal = 16.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                ) {
-                                    items(allMovies, key = { "all-m-${it.id}" }) { m ->
-                                        CinemaPosterCard(
-                                            title = m.title,
-                                            subtitle = "${formatDuration(m.duration_seconds)} · ${m.channelTitle ?: ""}",
-                                            thumbnailUrl = m.thumbnail_url,
-                                                posterUrl = m.poster_url,
-                                            tag = "FILM",
-                                            matchScore = m.overall_score,
-                                            onClick = { play(m) },
-                                            onLongClick = { openQuickLookForVideo(m) },
-                                        )
-                                    }
-                                }
+                                PosterShelf(
+                                    title = "Alle Filme & Dokus",
+                                    items = allMovies.map { videoPoster(it, "all", "FILM", withChannel(it)) },
+                                    onShowAll = showAll("Alle Filme & Dokus"),
+                                )
                                 Spacer(Modifier.height(SECTION_GAP))
                             }
 
-                            // Dokus
                             val dokuMovies = allMovies.filter { Genre.DOCS in it.detectGenres() }
                             if (dokuMovies.isNotEmpty()) {
                                 item {
-                                    SectionHeader("Doku & Wissen", count = dokuMovies.size)
-                                    LazyRow(
-                                        contentPadding = PaddingValues(horizontal = 16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                    ) {
-                                        items(dokuMovies, key = { "doku-${it.id}" }) { m ->
-                                            CinemaPosterCard(
-                                                title = m.title,
-                                                subtitle = formatDuration(m.duration_seconds),
-                                                thumbnailUrl = m.thumbnail_url,
-                                                posterUrl = m.poster_url,
-                                                tag = "DOKU",
-                                                matchScore = m.overall_score,
-                                                onClick = { play(m) },
-                                                onLongClick = { openQuickLookForVideo(m) },
-                                            )
-                                        }
-                                    }
+                                    PosterShelf(
+                                        title = "Doku & Wissen",
+                                        items = dokuMovies.map { videoPoster(it, "doku", "DOKU") },
+                                        onShowAll = showAll("Doku & Wissen"),
+                                    )
                                     Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
@@ -719,45 +650,15 @@ private fun LibraryContent(
                                 Spacer(Modifier.height(SECTION_GAP))
                             }
 
-                            // Curated shelves for each genre
-                            val genres = Genre.entries.filter { it != Genre.ALL }
-                            genres.forEach { genre ->
-                                val genreSeries = data.series.filter { genre in it.detectGenres() }
-                                val genreVideos = data.recentlyAdded.filter { genre in it.detectGenres() }
-                                val total = genreSeries.size + genreVideos.size
-                                if (total > 0) {
-                                    item {
-                                        SectionHeader(genre.title, count = total)
-                                        LazyRow(
-                                            contentPadding = PaddingValues(horizontal = 16.dp),
-                                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                        ) {
-                                            items(genreSeries, key = { "shelf-s-${it.id}" }) { s ->
-                                                CinemaPosterCard(
-                                                    title = s.title,
-                                                    subtitle = "Serie",
-                                                    thumbnailUrl = s.thumbnail_url,
-                                                posterUrl = s.poster_url,
-                                                    tag = "SERIE",
-                                                    onClick = { onOpenSeries(s.id) },
-                                                    onLongClick = { openQuickLookForSeries(s) },
-                                                )
-                                            }
-                                            items(genreVideos, key = { "shelf-v-${it.id}" }) { v ->
-                                                CinemaPosterCard(
-                                                    title = v.title,
-                                                    subtitle = formatDuration(v.duration_seconds),
-                                                    thumbnailUrl = v.thumbnail_url,
-                                                posterUrl = v.poster_url,
-                                                    tag = if (isMovie(v)) "FILM" else null,
-                                                    matchScore = v.overall_score,
-                                                    onClick = { play(v) },
-                                                    onLongClick = { openQuickLookForVideo(v) },
-                                                )
-                                            }
-                                        }
-                                        Spacer(Modifier.height(SECTION_GAP))
-                                    }
+                            // Je Kategorie eine Reihe; »Alle« führt in die Kategorie selbst.
+                            availableGenres.forEach { genre ->
+                                item(key = "shelf-${genre.id}") {
+                                    PosterShelf(
+                                        title = genre.title,
+                                        items = genreItems(genre, "shelf-${genre.id}"),
+                                        onShowAll = { selectedGenre = genre },
+                                    )
+                                    Spacer(Modifier.height(SECTION_GAP))
                                 }
                             }
 
@@ -799,7 +700,7 @@ private fun LibraryContent(
         enter = slideInHorizontally(tween(260)) { it / 3 } + fadeIn(tween(220)),
         exit = slideOutHorizontally(tween(220)) { it / 3 } + fadeOut(tween(160)),
     ) {
-        BackHandler(enabled = allView == null) { showChannels = false }
+        BackHandler(enabled = gridPage == null) { showChannels = false }
         ChannelsHome(
             data = data,
             onBack = { showChannels = false },
@@ -808,15 +709,38 @@ private fun LibraryContent(
         )
     }
 
-    // „Alle"-Vollbildansicht über dem gesamten Bibliotheks-Content.
+    // Vollständige Übersicht einer Reihe, über der ganzen Bibliothek.
     AnimatedVisibility(
-        visible = allView != null,
+        visible = gridPage != null,
         enter = fadeIn() + slideInVertically { it / 24 },
         exit = fadeOut(),
     ) {
-        allView?.let { state ->
-            AllVideosOverlay(state = state, onDismiss = { allView = null })
+        gridPage?.let { (title, items) ->
+            PosterGridPage(title = title, items = items, onBack = { gridPage = null })
         }
+    }
+
+    // Auswahl der Kategorie über den ganzen Bildschirm.
+    AnimatedVisibility(visible = showGenrePicker, enter = fadeIn(tween(160)), exit = fadeOut(tween(120))) {
+        GenrePickerOverlay(
+            genres = availableGenres,
+            selected = selectedGenre,
+            onSelect = { selectedGenre = it },
+            onDismiss = { showGenrePicker = false },
+        )
+    }
+
+    continueMenu?.let { video ->
+        val series = video.series_id?.let(seriesById::get)
+        ContinueMenuSheet(
+            title = series?.title ?: video.title,
+            onOpenSeries = series?.let { { continueMenu = null; onOpenSeries(it.id) } },
+            onRemove = {
+                continueMenu = null
+                onDismissContinue(video.id)
+            },
+            onDismiss = { continueMenu = null },
+        )
     }
 }
 
@@ -943,7 +867,8 @@ private fun RecommendedCard(video: LibraryVideoDto, onClick: () -> Unit) {
 @Composable
 internal fun SectionHeader(
     title: String,
-    count: Int,
+    /** Zahl hinter dem Titel; `null` lässt sie weg (Weiterschauen zeigt ohnehin nur das Jüngste). */
+    count: Int? = null,
     onShowAll: (() -> Unit)? = null,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
@@ -955,13 +880,15 @@ internal fun SectionHeader(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(title, color = HikariText, fontSize = 15.sp, fontWeight = FontWeight.Black)
-        Spacer(Modifier.width(8.dp))
-        Text(
-            count.toString(),
-            color = HikariTextFaint,
-            fontSize = 11.sp,
-            fontFamily = FontFamily.Monospace,
-        )
+        if (count != null) {
+            Spacer(Modifier.width(8.dp))
+            Text(
+                count.toString(),
+                color = HikariTextFaint,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace,
+            )
+        }
         Spacer(Modifier.weight(1f))
         if (actionLabel != null && onAction != null) {
             Text(
@@ -990,126 +917,6 @@ internal fun SectionHeader(
                     .clip(RoundedCornerShape(4.dp))
                     .clickable(onClick = onShowAll)
                     .padding(horizontal = 6.dp, vertical = 2.dp),
-            )
-        }
-    }
-}
-
-// ─── „Alle"-Vollbildansicht (YouTube-Stil) ───────────────────────────────────
-
-private data class AllViewItem(
-    val id: String,
-    val title: String,
-    val channel: String?,
-    val durationSeconds: Int,
-    val thumbnailUrl: String?,
-    val onClick: () -> Unit,
-)
-
-private data class AllViewState(val title: String, val items: List<AllViewItem>)
-
-@Composable
-private fun AllVideosOverlay(state: AllViewState, onDismiss: () -> Unit) {
-    BackHandler(onBack = onDismiss)
-    Column(modifier = Modifier.fillMaxSize().background(HikariBg)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = onDismiss) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Zurück",
-                    tint = Color.White,
-                )
-            }
-            Column {
-                Text(
-                    text = state.title,
-                    color = HikariText,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = "${state.items.size} Videos",
-                    color = HikariTextMuted,
-                    fontSize = 12.sp,
-                    fontFamily = FontFamily.Monospace,
-                )
-            }
-        }
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(top = 4.dp, bottom = 96.dp),
-        ) {
-            items(state.items, key = { it.id }) { item ->
-                AllVideosRow(
-                    item = item,
-                    onClick = {
-                        item.onClick()
-                        onDismiss()
-                    },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun AllVideosRow(item: AllViewItem, onClick: () -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
-        // Thumbnail Edge-to-Edge, fast eckig — wie im YouTube-Feed.
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9f)
-                .clip(RoundedCornerShape(2.dp))
-                .background(HikariSurface),
-        ) {
-            FallbackArtwork(title = item.title)
-            AsyncImage(
-                model = item.thumbnailUrl,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
-            Text(
-                "${item.durationSeconds / 60}:${"%02d".format(item.durationSeconds % 60)}",
-                color = Color.White,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(8.dp)
-                    .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(4.dp))
-                    .padding(horizontal = 5.dp, vertical = 2.dp),
-            )
-        }
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
-            Text(
-                text = item.title,
-                color = HikariText,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            val subtitle = listOfNotNull(
-                item.channel?.takeIf { it.isNotBlank() },
-                "${item.durationSeconds / 60}:${"%02d".format(item.durationSeconds % 60)}",
-            ).joinToString(" · ")
-            Text(
-                text = subtitle,
-                color = HikariTextMuted,
-                fontSize = 12.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 4.dp),
             )
         }
     }
@@ -1224,263 +1031,6 @@ private fun channelGradient(title: String): Brush {
     )
     val (start, end) = palette[(title.hashCode() and 0x7fffffff) % palette.size]
     return Brush.linearGradient(listOf(start, end))
-}
-
-private enum class NetflixContentType {
-    ALL,
-    SERIES,
-    VIDEOS,
-}
-
-@Composable
-private fun NetflixPill(
-    text: String,
-    isActive: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(50))
-            .background(if (isActive) Color.White else Color.White.copy(alpha = 0.08f))
-            .border(
-                width = if (isActive) 1.dp else 0.8.dp,
-                color = if (isActive) Color.White else Color.White.copy(alpha = 0.25f),
-                shape = RoundedCornerShape(50),
-            )
-            .clickable { onClick() }
-            .padding(horizontal = 14.dp, vertical = 7.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = text,
-            color = if (isActive) Color.Black else Color.White,
-            fontSize = 12.5.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun NetflixCategorySheet(
-    selectedGenre: Genre,
-    onSelectGenre: (Genre) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        containerColor = Color(0xFF141414),
-        scrimColor = Color.Black.copy(alpha = 0.75f),
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 8.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "Kategorien",
-                    color = Color.White,
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                IconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.size(28.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Schließen",
-                        tint = Color.White.copy(alpha = 0.7f),
-                        modifier = Modifier.size(18.dp),
-                    )
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(440.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                items(Genre.entries) { genre ->
-                    val isSelected = genre == selectedGenre
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (isSelected) Color.White.copy(alpha = 0.12f) else Color.Transparent)
-                            .clickable {
-                                onSelectGenre(genre)
-                                onDismiss()
-                            }
-                            .padding(horizontal = 12.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = if (genre == Genre.ALL) "Alle Kategorien" else genre.title,
-                            color = if (isSelected) Color.White else Color(0xFFB3B3B3),
-                            fontSize = 15.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        )
-                        if (isSelected) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp),
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun FilteredNetflixLibraryContent(
-    data: LibraryResponse,
-    selectedType: NetflixContentType,
-    selectedGenre: Genre,
-    onOpenSeries: (String) -> Unit,
-    onOpenChannel: (String) -> Unit,
-    onPlayVideo: (videoId: String, title: String, channel: String) -> Unit,
-    onLongPressSeries: (SeriesDto) -> Unit,
-    onResetFilter: () -> Unit,
-) {
-    fun play(v: LibraryVideoDto) = onPlayVideo(v.id, v.title, v.channelTitle ?: "")
-
-    val matchingSeries = remember(data.series, selectedType, selectedGenre) {
-        if (selectedType == NetflixContentType.VIDEOS) emptyList()
-        else data.series.filter { s ->
-            selectedGenre == Genre.ALL || selectedGenre in s.detectGenres()
-        }
-    }
-
-    val matchingVideos = remember(data.recentlyAdded, selectedType, selectedGenre) {
-        if (selectedType == NetflixContentType.SERIES) emptyList()
-        else data.recentlyAdded.filter { v ->
-            selectedGenre == Genre.ALL || selectedGenre in v.detectGenres()
-        }
-    }
-
-    val filterTitle = when {
-        selectedGenre != Genre.ALL -> selectedGenre.title
-        selectedType == NetflixContentType.SERIES -> "Alle Serien"
-        selectedType == NetflixContentType.VIDEOS -> "Alle Filme & Videos"
-        else -> "Alle Inhalte"
-    }
-
-    val totalCount = matchingSeries.size + matchingVideos.size
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = 10.dp, bottom = 96.dp),
-    ) {
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column {
-                    Text(
-                        text = filterTitle,
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text(
-                        text = "$totalCount Titel verfügbar",
-                        color = Color(0xFF8C8C8C),
-                        fontSize = 12.sp,
-                    )
-                }
-                Text(
-                    text = "Zurücksetzen",
-                    color = HikariAmber,
-                    fontSize = 12.5.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .clickable { onResetFilter() }
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                )
-            }
-            Spacer(Modifier.height(12.dp))
-        }
-
-        if (totalCount == 0) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 60.dp, horizontal = 24.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "Keine Titel in dieser Kategorie",
-                            color = Color.White,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = "Wähle eine andere Kategorie oder setze den Filter zurück.",
-                            color = HikariTextMuted,
-                            fontSize = 12.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                }
-            }
-        }
-
-        if (matchingSeries.isNotEmpty()) {
-            item {
-                SectionHeader("Serien", count = matchingSeries.size)
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(matchingSeries, key = { "filter-s-${it.id}" }) { s ->
-                        SeriesPosterCard(
-                            series = s,
-                            onClick = { onOpenSeries(s.id) },
-                            onLongClick = { onLongPressSeries(s) },
-                        )
-                    }
-                }
-                Spacer(Modifier.height(24.dp))
-            }
-        }
-
-        if (matchingVideos.isNotEmpty()) {
-            item {
-                SectionHeader("Filme & Videos", count = matchingVideos.size)
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(matchingVideos, key = { "filter-v-${it.id}" }) { v ->
-                        RecommendedCard(video = v, onClick = { play(v) })
-                    }
-                }
-                Spacer(Modifier.height(24.dp))
-            }
-        }
-    }
 }
 
 @Composable

@@ -299,6 +299,14 @@ class LibraryViewModel @Inject constructor(
      * lokal entfernen, damit die Karte ohne Neuladen verschwindet; scheitert
      * der Server-Call, zeigt das nächste Laden den echten Stand.
      */
+    /** Nimmt einen Titel aus »Weiterschauen«; die Reihe wird danach frisch geladen. */
+    fun dismissContinue(videoId: String) {
+        viewModelScope.launch {
+            runCatching { repo.dismissContinue(videoId) }
+            loadLibrary()
+        }
+    }
+
     fun removeFromHistory(videoId: String) {
         updateLibrary { it.copy(watchHistory = it.watchHistory.filterNot { v -> v.id == videoId }) }
         viewModelScope.launch { runCatching { repo.removeFromHistory(videoId) } }

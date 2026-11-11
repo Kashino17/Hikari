@@ -1,5 +1,9 @@
 package com.hikari.app.ui.library
 
+import com.hikari.app.domain.library.Shelves
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -651,9 +655,20 @@ internal fun LibraryHero(
 
 // ── Weiterschauen ────────────────────────────────────────────────────────────
 
+/**
+ * Karte in »Weiterschauen«. [onMenu] öffnet das Menü des Titels (drei Punkte oder langes Drücken) —
+ * dort lässt er sich aus der Reihe nehmen.
+ */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun ContinueCard(video: LibraryVideoDto, series: SeriesDto?, onClick: () -> Unit) {
-    Column(modifier = Modifier.width(236.dp).clickable(onClick = onClick)) {
+internal fun ContinueCard(
+    video: LibraryVideoDto,
+    series: SeriesDto?,
+    onClick: () -> Unit,
+    onMenu: (() -> Unit)? = null,
+) {
+    val upNext = video.up_next == 1
+    Column(modifier = Modifier.width(236.dp).combinedClickable(onClick = onClick, onLongClick = onMenu)) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -664,27 +679,44 @@ internal fun ContinueCard(video: LibraryVideoDto, series: SeriesDto?, onClick: (
             ResumeArtwork(video = video, modifier = Modifier.fillMaxSize())
             ProgressLine(progressFraction(video), height = 4, modifier = Modifier.align(Alignment.BottomStart))
         }
-        Text(
-            text = series?.title ?: video.title,
-            color = HikariText,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 8.dp),
-        )
-        Text(
-            text = listOfNotNull(
-                if (series != null) episodeTag(video.season, video.episode).takeIf { it.isNotBlank() }
-                else video.channelTitle?.takeIf { it.isNotBlank() },
-                "noch ${remainingLabel(video)}",
-            ).joinToString(" · "),
-            color = HikariTextMuted,
-            fontSize = 12.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 2.dp),
-        )
+        Row(modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.Top) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = series?.title ?: video.title,
+                    color = HikariText,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = Shelves.continueDetail(
+                        episodeTag = if (series != null) episodeTag(video.season, video.episode)
+                        else video.channelTitle?.takeIf { it.isNotBlank() }.orEmpty(),
+                        remaining = remainingLabel(video),
+                        upNext = upNext,
+                    ),
+                    color = HikariTextMuted,
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+            }
+            if (onMenu != null) {
+                Icon(
+                    Icons.Outlined.MoreVert,
+                    contentDescription = "Menü",
+                    tint = HikariTextMuted,
+                    modifier = Modifier
+                        .padding(start = 4.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onMenu)
+                        .padding(6.dp)
+                        .size(20.dp),
+                )
+            }
+        }
     }
 }
 

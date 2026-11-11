@@ -47,6 +47,8 @@ data class LibraryVideoDto(
     val is_movie: Int = 0,
     /** Echtes Filmplakat, falls der Server eines gefunden hat. */
     val poster_url: String? = null,
+    /** Weiterschauen: 1 = die vorige Folge ist zu Ende gesehen, das hier ist die nächste. */
+    val up_next: Int = 0,
 )
 
 /**

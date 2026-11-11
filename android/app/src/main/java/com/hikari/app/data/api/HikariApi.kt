@@ -204,6 +204,10 @@ interface HikariApi {
     @DELETE("history/{id}")
     suspend fun removeFromHistory(@Path("id") videoId: String)
 
+    /** Nimmt einen Titel aus »Weiterschauen« (eine Serie als Ganzes); Fortschritt und Verlauf bleiben. */
+    @POST("library/continue/{id}/dismiss")
+    suspend fun dismissContinue(@Path("id") videoId: String)
+
     @DELETE("history")
     suspend fun clearHistory()
 
