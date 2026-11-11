@@ -335,6 +335,23 @@ class RussianSpeechRecognizer(private val context: Context) {
     private var retries = 0
     private var retryRun: Runnable? = null
 
+    /** Start des laufenden Anlaufs — ein Fehler gleich danach ist ein Stolpern des Dienstes. */
+    private var beganAt = 0L
+
+    /**
+     * Gibt die Instanz frei, sobald ein Versuch zu Ende ist. So liegt zwischen zwei Versuchen
+     * Zeit, in der der Erkennungsdienst seine Sitzung abräumt — statt dass der nächste Versuch
+     * die alte Instanz erst beim Start zerstört und sofort eine neue anlegt.
+     */
+    private fun releaseWhenDone(r: SpeechRecognizer) {
+        mainHandler.post {
+            if (recognizer === r) {
+                runCatching { r.destroy() }
+                recognizer = null
+            }
+        }
+    }
+
     fun start() {
         retries = 0
         begin()
@@ -345,10 +362,18 @@ class RussianSpeechRecognizer(private val context: Context) {
             _state.value = RuListenState.Failed("Keine Spracherkennung auf diesem Gerät gefunden.")
             return
         }
+        // Läuft noch ein Versuch, erst abräumen und dem Dienst einen Moment geben.
+        if (recognizer != null) {
+            destroy()
+            _state.value = RuListenState.Listening
+            retryRun = Runnable { begin() }.also { mainHandler.postDelayed(it, 250L) }
+            return
+        }
         destroy()
         userStopped = false
         lastHypotheses = emptyList()
         lastPartialText = null
+        beganAt = android.os.SystemClock.elapsedRealtime()
 
         val r = runCatching { SpeechRecognizer.createSpeechRecognizer(context) }.getOrNull()
         if (r == null) {
@@ -389,6 +414,7 @@ class RussianSpeechRecognizer(private val context: Context) {
                     emptyList()
                 }
                 _state.value = RuListenState.Done(finalResults)
+                releaseWhenDone(r)
             }
 
             override fun onError(error: Int) {
@@ -403,19 +429,24 @@ class RussianSpeechRecognizer(private val context: Context) {
                         emptyList()
                     }
                     _state.value = RuListenState.Done(fallback)
+                    releaseWhenDone(r)
                     return
                 }
 
-                // Der Erkennungsdienst hat die Verbindung verloren (11), ist noch
-                // belegt (8) oder drosselt (10) — typisch direkt nach einem
-                // Versuch. Mit frischer Instanz still nochmal starten.
-                if ((error == 8 || error == 10 || error == 11) && retries < 2) {
+                // Typisch beim zweiten Versuch kurz nach dem ersten: der Dienst meldet sofort
+                // »Netzwerk«/»Server«, ist noch belegt oder hat die Verbindung verloren, obwohl
+                // alles da ist. Mit frischer Instanz still nochmal starten (siehe RuSpeechRetry).
+                val elapsed = android.os.SystemClock.elapsedRealtime() - beganAt
+                Log.w("RussianSpeechRecognizer", "onError code=$error nach ${elapsed}ms, Anlauf ${retries + 1}")
+                if (com.hikari.app.domain.russian.RuSpeechRetry.shouldRetry(error, elapsed, retries)) {
+                    val wait = com.hikari.app.domain.russian.RuSpeechRetry.delayMs(retries)
                     retries++
                     destroy()
                     _state.value = RuListenState.Listening
-                    retryRun = Runnable { begin() }.also { mainHandler.postDelayed(it, 450L) }
+                    retryRun = Runnable { begin() }.also { mainHandler.postDelayed(it, wait) }
                     return
                 }
+                releaseWhenDone(r)
 
                 // Bei manuellem Client-Stopp oder No-Match ohne Sprache: als Done(leer) werten, nie abbrechen!
                 _state.value = when (error) {
