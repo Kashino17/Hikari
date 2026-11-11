@@ -25,6 +25,7 @@ import { registerRussianRoutes } from "./api/russian.js";
 import { registerRussianConversationRoutes } from "./api/russian-conversation.js";
 import { registerVideoFullRoute } from "./api/video-full.js";
 import { registerCastRoutes } from "./api/cast.js";
+import { KeepAwake, registerKeepAwake } from "./system/keep-awake.js";
 import { registerVoiceRoutes } from "./api/voice.js";
 import { VoiceJobStore, VoiceProcessor } from "./voice/jobs.js";
 import { VoiceSummarizer } from "./voice/summarize.js";
@@ -108,6 +109,10 @@ const videoCorsHeaders = (res: { setHeader: (name: string, value: string) => voi
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
 };
+// Solange Video oder Musik abgerufen wird, darf der Mac nicht einschlafen (auf Akku täte er
+// das nach einer Minute — der Stream zum Fernseher bräche ab). Vor den Routen registriert,
+// damit der Hook auch die statischen Videodateien erfasst.
+if (process.env.KEEP_AWAKE !== "off") registerKeepAwake(app, new KeepAwake({ log: app.log }));
 await app.register(fastifyStatic, {
   root: cfg.videoDir,
   prefix: "/videos/",
