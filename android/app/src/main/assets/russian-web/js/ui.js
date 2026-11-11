@@ -148,10 +148,15 @@ export function Confetti() {
 
 /**
  * Einmal zuhören. `onDone(hyps)` bekommt die Lesarten (leer = nichts verstanden).
- * → {listening, evaluating, partial, error, start(expect), stop(), cancel(), toggle(expect)}
+ * → {listening, ready, evaluating, partial, error, start(expect), stop(), cancel(), toggle(expect)}
+ *
+ * `listening` gilt ab dem Tippen, `ready` erst, wenn das Mikrofon wirklich offen ist. Dazwischen
+ * zeigt die Oberfläche »Moment …« — sonst spricht man los und das erste Wort fehlt.
  */
+export const MIC_WAIT = 'Moment — das Mikrofon öffnet …';
+
 export function useListen(onDone) {
-  const [st, setSt] = useState({ phase: 'idle', partial: '', error: null });
+  const [st, setSt] = useState({ phase: 'idle', partial: '', error: null, ready: false });
   const handle = useRef(null);
   const alive = useRef(true);
   const cb = useRef(onDone);
@@ -159,30 +164,42 @@ export function useListen(onDone) {
   useEffect(() => () => { alive.current = false; handle.current?.abort?.(); }, []);
   const start = useCallback((expect = '') => {
     if (handle.current) return;
-    setSt({ phase: 'listening', partial: '', error: null });
-    const h = speech.listen({ expect, onPartial: (t) => alive.current && setSt((s) => (s.phase === 'idle' ? s : { ...s, partial: t })) });
+    setSt({ phase: 'listening', partial: '', error: null, ready: false });
+    const h = speech.listen({
+      expect,
+      onPartial: (t) => alive.current && setSt((s) => (s.phase === 'idle' ? s : { ...s, partial: t })),
+      onReady: (on) => {
+        if (!alive.current || handle.current !== h) return;
+        if (on) navigator.vibrate?.(10); // spürbar: jetzt sprechen
+        setSt((s) => (s.phase === 'listening' ? { ...s, ready: on } : s));
+      },
+    });
     handle.current = h;
     h.promise.then((r) => {
       if (handle.current !== h) return;
       handle.current = null;
       if (!alive.current) return;
       // Nichts gehört ist kein Fehlversuch — nur ein Hinweis, kein Abzug, kein Fehlerton.
-      if (r.ok) { setSt({ phase: 'idle', partial: '', error: null }); cb.current(r.hyps); }
-      else setSt({ phase: 'idle', partial: '', error: r.error === 'aborted' ? null : r.error });
+      if (r.ok) { setSt({ phase: 'idle', partial: '', error: null, ready: false }); cb.current(r.hyps); }
+      else setSt({ phase: 'idle', partial: '', error: r.error === 'aborted' ? null : r.error, ready: false });
     });
   }, []);
   const stop = useCallback(() => { if (handle.current) { setSt((s) => ({ ...s, phase: 'evaluating' })); handle.current.stop(); } }, []);
-  const cancel = useCallback(() => { const h = handle.current; handle.current = null; h?.abort?.(); setSt({ phase: 'idle', partial: '', error: null }); }, []);
+  const cancel = useCallback(() => { const h = handle.current; handle.current = null; h?.abort?.(); setSt({ phase: 'idle', partial: '', error: null, ready: false }); }, []);
   return {
-    ...st, listening: st.phase === 'listening', evaluating: st.phase === 'evaluating',
+    ...st, listening: st.phase === 'listening', ready: st.phase === 'listening' && st.ready, evaluating: st.phase === 'evaluating',
+    /** Getippt, aber das Mikrofon ist noch nicht offen. */
+    opening: st.phase === 'listening' && !st.ready,
     errorText: st.error ? SPEECH_ERRORS[st.error] ?? SPEECH_ERRORS.nospeech : null,
     start, stop, cancel, toggle: (expect) => (handle.current ? stop() : start(expect)),
   };
 }
 
 export function Mic({ L, onClick, disabled, small }) {
-  return html`<button class=${cls('mic', small && 'sm', L.listening && 'on', L.evaluating && 'busy')} onClick=${onClick} disabled=${disabled || L.evaluating} aria-label=${L.listening ? 'Fertig' : 'Sprechen'}>
-    <${Icon} n=${L.evaluating ? 'progress_activity' : L.listening ? 'graphic_eq' : 'mic'} fill=${!L.evaluating} />
+  // Erst wenn das Mikrofon offen ist, leuchtet der Knopf — vorher dreht sich nur das Rad.
+  const busy = L.evaluating || L.opening;
+  return html`<button class=${cls('mic', small && 'sm', L.ready && 'on', busy && 'busy')} onClick=${onClick} disabled=${disabled || L.evaluating} aria-label=${L.opening ? 'Mikrofon öffnet' : L.listening ? 'Fertig' : 'Sprechen'}>
+    <${Icon} n=${busy ? 'progress_activity' : L.listening ? 'graphic_eq' : 'mic'} fill=${!busy} />
   </button>`;
 }
 
@@ -203,7 +220,9 @@ export function ScoreCard({ sc, targetRu }) {
   const pct = Math.trunc(sc.score * 100);
   const nothing = !sc.heard.trim();
   const reads = useMemo(() => (targetRu ? Ph.words(Gl.withStress(Ph.fromDisplay(targetRu))) : null), [targetRu]);
-  const hints = useMemo(() => (sc.passed ? [] : Sp.hints(sc)), [sc]);
+  // Fehlt nur der Satzanfang in der Aufnahme, ist das kein Aussprachefehler — so wird es auch gezeigt.
+  const clipped = useMemo(() => Sp.clippedStart(sc), [sc]);
+  const hints = useMemo(() => (sc.passed ? [] : Sp.hints(sc).filter((h) => !(clipped && !h.heard))), [sc, clipped]);
   const wordLatin = (w, i) => {
     const r = reads && reads.length === sc.words.length ? reads[i] : null;
     return r ? r.latin.map((s) => s.text).join('') : Ph.transliterateFlat(Gl.withStress(w));
@@ -211,8 +230,9 @@ export function ScoreCard({ sc, targetRu }) {
   if (nothing) return html`<div class="res"><div class="res-row"><${Icon} n="hearing_disabled" c="faint" /><span class="muted">Nichts verstanden — nochmal, etwas lauter.</span></div></div>`;
   return html`<div class=${cls('res', sc.passed ? 'ok' : 'warn')}>
     <div class="res-row"><${ScorePill} pct=${pct} ok=${sc.passed} />
-      <div class="grow"><b class="res-title">${sc.passed ? 'Klar verständlich' : 'Fast — einzelne Wörter fehlen'}</b>
-        <div class="ws">${sc.words.map(([w, ok], i) => html`<span class=${ok ? 'ok' : ''}>${wordLatin(w, i)}</span>`)}</div></div></div>
+      <div class="grow"><b class="res-title">${sc.passed ? 'Klar verständlich' : clipped ? 'Der Anfang fehlt in der Aufnahme' : 'Fast — einzelne Wörter fehlen'}</b>
+        <div class="ws">${sc.words.map(([w, ok], i) => html`<span class=${ok ? 'ok' : i < clipped ? 'unheard' : ''}>${wordLatin(w, i)}</span>`)}</div></div></div>
+    ${clipped > 0 && html`<div class="res-note">»${sc.words.slice(0, clipped).map(([w], i) => wordLatin(w, i)).join(' ')}« wurde nicht aufgenommen — kein Fehler von dir. Sprich erst, wenn »Ich höre zu« erscheint.</div>`}
     ${!sc.passed && html`<div class="res-more">
       <div class="sub">Gehört: »${Ph.transliterate(Gl.withStress(sc.heard)).map((s) => s.text).join('')}«</div>
       ${(more ? hints : hints.slice(0, 1)).map((h) => html`<div class="res-tip"><b>${h.heard ? `»${Sp.reading(h.target).toLowerCase()}« klang wie »${Ph.transliterateFlat(h.heard)}«` : `»${Sp.reading(h.target).toLowerCase()}« fehlte`}</b> ${h.tip}</div>`)}
@@ -390,10 +410,10 @@ export function PhraseDock({ phrase, size = 'md', onEvaluated, onTake, listen = 
         <${DockBtn} icon=${html`<${Icon} n="slow_motion_video" size=${ic} />`} label="Langsam" on=${playing && cur.slow} onClick=${() => playPhrase(phrase, { slow: true })} />`}
       ${canRec && html`<${DockBtn} rec=${!!rec} icon=${rec ? html`<${Icon} n="stop" fill size=${ic} />` : html`<${SvgCompare} s=${ic} />`}
         label=${rec ? `Stopp · ${secs} s` : 'Nachsprechen'} onClick=${doRecord} />`}
-      ${canAi && html`<${DockBtn} on=${L.listening} disabled=${L.evaluating} icon=${L.listening ? html`<${Icon} n="graphic_eq" size=${ic} />` : L.evaluating ? html`<${Icon} n="progress_activity" c="spin" size=${ic} />` : html`<${SvgAiCheck} s=${ic} />`}
-        label=${L.listening ? 'Fertig' : 'KI-Prüfung'} onClick=${doCheck} />`}
+      ${canAi && html`<${DockBtn} on=${L.ready} disabled=${L.evaluating} icon=${L.ready ? html`<${Icon} n="graphic_eq" size=${ic} />` : L.evaluating || L.opening ? html`<${Icon} n="progress_activity" c="spin" size=${ic} />` : html`<${SvgAiCheck} s=${ic} />`}
+        label=${L.opening ? 'Moment …' : L.listening ? 'Fertig' : 'KI-Prüfung'} onClick=${doCheck} />`}
     </div>
-    ${(L.listening || rec) && html`<div class="dock-hint">${rec ? 'Sprich den Satz nach — tippe auf Stopp, dann hörst du dich und das Original.' : L.partial ? `»${L.partial}«` : 'Ich höre zu … sprich den Satz und tippe auf Fertig.'}</div>`}
+    ${(L.listening || rec) && html`<div class="dock-hint">${rec ? 'Sprich den Satz nach — tippe auf Stopp, dann hörst du dich und das Original.' : L.partial ? `»${L.partial}«` : L.opening ? MIC_WAIT : 'Ich höre zu … sprich den Satz und tippe auf Fertig.'}</div>`}
     ${(err || (!L.listening && L.errorText)) && html`<div class="dock-hint">${err ?? L.errorText}</div>`}
     ${(sc || (take && !rec)) && html`<div class="stack g8 dock-res">
       ${sc && html`<${ScoreCard} sc=${sc} targetRu=${phrase.ru} />`}

@@ -1,5 +1,5 @@
 // Lautlabor: Minimalpaare erst hören und unterscheiden, dann selbst sprechen.
-import { html, cls, Icon, TopBar, SessionBar, Opt, Mic, Summary, RecordCompare, useListen, useKeys, usePlaying, useState, useEffect, useMemo, fx, audio } from '../ui.js';
+import { html, cls, Icon, TopBar, SessionBar, Opt, Mic, Summary, RecordCompare, useListen, useKeys, usePlaying, useState, useEffect, useMemo, fx, audio, MIC_WAIT } from '../ui.js';
 import { D, useProgress, progress, nav, back } from '../app.js';
 import { speech as recog } from '../platform.js';
 import * as Ph from '../domain/phonetics.js';
@@ -81,7 +81,7 @@ function Speak({ w, partner, group, onDone }) {
       ${stress ? html`<p class="sub" style="max-width:300px">${group.id === 'stress' ? 'Betonungspaare kann die Spracherkennung nicht trennen. Nimm dich auf und vergleiche Melodie und Laute mit dem Original.' : 'Nimm dich auf und vergleiche mit dem Original.'}</p>
           <${RecordCompare} phrase=${w} onTake=${() => { setPassed(true); setVerdict('Erst du, dann das Original — hörst du den Unterschied?'); }} />`
         : html`<div class="micwrap"><${Mic} L=${L} onClick=${() => { setVerdict(null); L.toggle(w.plain); }} /></div>`}
-      <div class=${cls('mictxt', L.listening && 'on', passed && 'good')} style="max-width:320px">${L.evaluating ? 'Wird ausgewertet …' : L.listening ? 'Ich höre zu … tippe nochmal, wenn du fertig bist' : L.errorText ?? verdict ?? (stress ? '' : 'Tippen und das Wort sagen')}</div>
+      <div class=${cls('mictxt', L.listening && 'on', passed && 'good')} style="max-width:320px">${L.evaluating ? 'Wird ausgewertet …' : L.listening ? (L.opening ? MIC_WAIT : 'Ich höre zu … tippe nochmal, wenn du fertig bist') : L.errorText ?? verdict ?? (stress ? '' : 'Tippen und das Wort sagen')}</div>
     </div></div>
     <div class="bottom"><button class=${cls('btn', !passed && 'ghost')} onClick=${() => { L.cancel(); onDone(passed); }}>${passed ? 'Weiter' : 'Überspringen'}<span class="kb">↵</span></button></div>`;
 }

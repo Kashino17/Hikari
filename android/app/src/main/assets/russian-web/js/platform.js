@@ -312,6 +312,8 @@ export const fx = {
 // ── Spracherkennung ────────────────────────────────────────────────────────
 
 const SR = typeof window !== 'undefined' ? window.SpeechRecognition ?? window.webkitSpeechRecognition : null;
+/** Meldet die Erkennung nie »bereit«, gilt das Mikrofon nach dieser Zeit als offen. */
+const READY_FALLBACK_MS = 2500;
 
 export const speech = {
   available: () => !!((native?.speechAvailable && native.speechAvailable()) || SR || storage.get('dev_speech')),
@@ -319,17 +321,27 @@ export const speech = {
   /**
    * Hört einmal zu. → {promise, stop()}.
    * promise → {ok:true, hyps:[bis zu 5 Lesarten]} | {ok:false, error:'unavailable'|'denied'|'nospeech'|'network'|'aborted'}
+   *
+   * `onReady(offen)` meldet, wann das Mikrofon wirklich offen ist. Bis dahin vergeht nach dem Tippen
+   * spürbar Zeit — wer schon spricht, verliert das erste Wort. Die Oberfläche zeigt deshalb erst dann
+   * »Ich höre zu«. `false` kommt, wenn die Erkennung still neu anläuft.
    */
-  listen({ lang = 'ru-RU', onPartial = null, onStart = null, maxMs = 20000, waitMs = 10000, delayMs = 250, expect = '' } = {}) {
+  listen({ lang = 'ru-RU', onPartial = null, onStart = null, onReady = null, maxMs = 20000, waitMs = 10000, delayMs = 250, expect = '' } = {}) {
     audio.stop();
+    // Meldet »offen« höchstens einmal je Wechsel; und spätestens nach READY_FALLBACK_MS, falls nichts kommt.
+    let open = false;
+    const ready = (on) => { if (on !== open) { open = on; onReady?.(on); } };
     // Test-Werkzeug: Spracherkennung simulieren (ohne Mikrofon durchklickbar).
     const sim = storage.get('dev_speech');
-    if (sim === 'ok' || sim === 'bad') {
-      const text = sim === 'ok' ? expect.replaceAll('+', '').replaceAll('́', '') : 'я не знаю что сказать';
+    if (sim === 'ok' || sim === 'bad' || sim === 'clip') {
+      const said = expect.replaceAll('+', '').replaceAll('́', '');
+      // 'clip' = das erste Wort fehlt in der Aufnahme (zu früh gesprochen).
+      const text = sim === 'ok' ? said : sim === 'clip' ? said.trim().split(/\s+/).slice(1).join(' ') : 'я не знаю что сказать';
       let done = null;
       let timer = null;
       const promise = new Promise((resolve) => {
         done = () => { clearTimeout(timer); resolve(text ? { ok: true, hyps: [text] } : { ok: false, error: 'nospeech' }); };
+        setTimeout(() => ready(true), 150);
         setTimeout(() => onPartial?.(text.split(' ').slice(0, 2).join(' ')), 350);
         timer = setTimeout(done, 1100);
       });
@@ -340,20 +352,29 @@ export const speech = {
       const id = nextId('l');
       let last = '';
       let resolveFn = null;
+      let fallback = null;
       const promise = new Promise((resolve) => {
         resolveFn = resolve;
         nativeCbs.set(id, (m) => {
-          if (m.t === 'partial') { last = m.text; onPartial?.(m.text); return; }
+          if (m.t === 'ready') { clearTimeout(fallback); ready(m.on !== false); return; }
+          if (m.t === 'partial') { last = m.text; ready(true); onPartial?.(m.text); return; }
+          clearTimeout(fallback);
           nativeCbs.delete(id);
           if (m.t === 'done') resolve(m.hyps?.length ? { ok: true, hyps: m.hyps } : last ? { ok: true, hyps: [last] } : { ok: false, error: 'nospeech' });
           else resolve({ ok: false, error: m.code ?? 'unavailable' });
         });
-        setTimeout(() => { if (nativeCbs.has(id)) { onStart?.(); native.listenStart(id, lang); } }, delayMs);
+        // Die Erkennung braucht selbst einen Moment zum Öffnen — eine kurze Pause reicht hier.
+        setTimeout(() => {
+          if (!nativeCbs.has(id)) return;
+          onStart?.();
+          native.listenStart(id, lang);
+          fallback = setTimeout(() => { if (nativeCbs.has(id)) ready(true); }, READY_FALLBACK_MS);
+        }, Math.min(delayMs, 100));
       });
       return {
         promise,
         stop() { native.listenStop(id); },
-        abort() { if (nativeCbs.has(id)) { nativeCbs.delete(id); native.listenAbort(id); resolveFn({ ok: false, error: 'aborted' }); } },
+        abort() { clearTimeout(fallback); if (nativeCbs.has(id)) { nativeCbs.delete(id); native.listenAbort(id); resolveFn({ ok: false, error: 'aborted' }); } },
       };
     }
     if (!SR) return { promise: Promise.resolve({ ok: false, error: 'unavailable' }), stop() {}, abort() {} };
@@ -389,7 +410,7 @@ export const speech = {
       r.maxAlternatives = 5;
       r.continuous = false;
       let fatal = null;
-      r.onstart = () => { if (restarts === 0) onStart?.(); };
+      r.onstart = () => { if (restarts === 0) onStart?.(); ready(true); };
       r.onresult = (e) => {
         const res = e.results[e.results.length - 1];
         const hyps = [...res].map((a) => a.transcript.trim()).filter(Boolean);

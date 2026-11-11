@@ -102,7 +102,7 @@ function AnswerInput({ draft, spoken, onDraft, expect, sendLabel, onSend, micLab
   const L = useListen((hyps) => { const t = (hyps[0] ?? '').trim(); if (t) { onDraft(t, true); setNote(null); } else setNote('Nichts sicher erkannt. Versuch es noch einmal oder tippe.'); });
   const canSpeak = recog.available();
   return html`<div class="stack g10">
-    ${L.listening && html`<${Card}><b>Ich höre zu …</b><div class="sub mt4">${L.partial || 'Ein Wort reicht. Du kannst die Aufnahme jederzeit beenden.'}</div><//>`}
+    ${L.listening && html`<${Card}><b>${L.opening ? 'Moment — das Mikrofon öffnet …' : 'Ich höre zu …'}</b><div class="sub mt4">${L.partial || 'Ein Wort reicht. Du kannst die Aufnahme jederzeit beenden.'}</div><//>`}
     ${(typing || draft || !canSpeak) && html`<div><div class="over" style="margin-bottom:6px">${spoken ? 'So wurde es verstanden' : 'Deine russische Antwort'}</div>
       <textarea class="field" rows="2" maxlength="1500" lang="ru" value=${draft} onInput=${(e) => onDraft(e.target.value, false)} placeholder="Russisch tippen …"></textarea></div>`}
     ${(note || L.errorText) && html`<div class="sub bad">${note ?? (L.error === 'denied' ? 'Mikrofon nicht freigegeben. Du kannst die Antwort auch tippen.' : L.errorText)}</div>`}

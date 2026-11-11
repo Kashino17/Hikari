@@ -1,6 +1,6 @@
 // Sprech-Modi: Sprech-Reflex, Kombi-Meister, Blind-Coach, Sprich frei.
 // Regeln und Wertung wie in RussianReflex.kt / RussianTalk.kt.
-import { html, cls, Icon, IL, PhraseBlock, PlayRow, Latin, Mic, ScoreCard, Summary, Speaker, useListen, useKeys, playPhrase, useState, useEffect, useRef, useMemo, fx, audio, tts } from '../ui.js';
+import { html, cls, Icon, IL, PhraseBlock, PlayRow, Latin, Mic, ScoreCard, Summary, Speaker, useListen, useKeys, playPhrase, useState, useEffect, useRef, useMemo, fx, audio, tts, MIC_WAIT } from '../ui.js';
 import { D, P, progress, back, learnedPool, myPhrases, phraseById, takeSelection } from '../app.js';
 import { speech as recog, serverVoice } from '../platform.js';
 import * as Co from '../domain/course.js';
@@ -40,7 +40,7 @@ function FirstWord({ ru }) {
     ${first.gloss && html`<div class="sub">${first.gloss}</div>`}</div>`;
 }
 
-const micText = (L, idle) => (L.listening ? (L.partial ? `»${L.partial}«` : 'Ich höre zu … tippe nochmal, wenn du fertig bist') : L.evaluating ? 'Wird ausgewertet …' : L.errorText ?? idle);
+const micText = (L, idle) => (L.listening ? (L.partial ? `»${L.partial}«` : (L.opening ? MIC_WAIT : 'Ich höre zu … tippe nochmal, wenn du fertig bist')) : L.evaluating ? 'Wird ausgewertet …' : L.errorText ?? idle);
 
 // ── Sprech-Reflex ──────────────────────────────────────────────────────────
 
@@ -381,7 +381,7 @@ function TalkRound({ r, onDone }) {
   const mic = () => { if (L.listening) L.stop(); else { audio.stop(); setScore(null); L.start(r.replies[0].ru); } };
   const showHelp = !matched && (help || attempts >= 2);
   useKeys({ Enter: () => matched && onDone(true) }, [matched]);
-  const status = matched ? 'Passt — das war eine gute Antwort.' : L.evaluating ? 'Wird ausgewertet …' : L.errorText ?? (L.listening ? (L.partial ? `»${L.partial}«` : 'Ich höre zu … sprich jetzt')
+  const status = matched ? 'Passt — das war eine gute Antwort.' : L.evaluating ? 'Wird ausgewertet …' : L.errorText ?? (L.listening ? (L.partial ? `»${L.partial}«` : (L.opening ? MIC_WAIT : 'Ich höre zu … sprich jetzt'))
     : asking ? 'Hör zu …' : score ? 'Das hat noch nicht gepasst — nochmal versuchen oder Hilfe ansehen.' : 'Tippe aufs Mikrofon und antworte');
   return html`<div class="scroll"><div class="stepc center g16">
       <div><div class="over c">Anja fragt</div><div class="title mt4">Antworte auf Russisch</div></div>

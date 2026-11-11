@@ -1306,6 +1306,7 @@ private fun LanguageSlideContent(
     val recorder = remember(item.id) { RussianRecorder(context) }
     val recognizer = remember(item.id) { RussianSpeechRecognizer(context) }
     val speechState by recognizer.state.collectAsState()
+    val micOpen by recognizer.ready.collectAsState()
     val playingTrack = audioPlayer?.playing?.collectAsState()?.value
 
     var isRecording by remember(item.id) { mutableStateOf(false) }
@@ -1800,6 +1801,7 @@ private fun LanguageSlideContent(
                         Text(
                             text = when {
                                 evaluating -> "Wird ausgewertet …"
+                                isListening && !micOpen -> "Moment — das Mikrofon öffnet …"
                                 isListening -> "Ich höre zu … (Tippen zum Fertigstellen)"
                                 speechScore != null -> "Aussprache erneut prüfen"
                                 else -> "Aussprache mit KI prüfen"

@@ -381,6 +381,10 @@ class RussianWebBridge(
                 val r = recognizer ?: RussianSpeechRecognizer(app).also { rec ->
                     recognizer = rec
                     scope.launch { rec.state.collect(::onListenState) }
+                    // Mikrofon offen bzw. (bei einem stillen Neuanlauf) wieder zu — die Oberfläche zeigt es an.
+                    scope.launch {
+                        rec.ready.collect { on -> listenId?.let { reply(it, JSONObject().put("t", "ready").put("on", on)) } }
+                    }
                 }
                 listenId = id
                 r.reset()

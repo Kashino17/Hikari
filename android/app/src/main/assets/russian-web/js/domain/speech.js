@@ -245,6 +245,23 @@ export function speech(target, hypotheses) {
   return { words, score, heard, passed };
 }
 
+/**
+ * Wie viele Wörter am Satzanfang gar nicht in der Aufnahme sind (0, 1 oder 2).
+ *
+ * Erkennbar daran, dass nur der Anfang fehlt, alles danach stimmt und im Gehörten auch kein
+ * überzähliges Wort steht, das ein missglückter Versuch sein könnte. Dann wurde das Wort nicht
+ * falsch gesprochen, sondern nicht aufgenommen — typisch, wenn man spricht, bevor das Mikrofon
+ * offen ist. Ändert nichts an Punktzahl und Bestehen, nur daran, wie das Ergebnis erklärt wird.
+ */
+export function clippedStart(sc) {
+  const words = sc?.words ?? [];
+  let k = 0;
+  while (k < words.length && !words[k][1]) k++;
+  if (k === 0 || k > 2 || k >= words.length) return 0;
+  if (!words.slice(k).every((w) => w[1])) return 0;
+  return tokens(sc.heard ?? '').length <= words.length - k ? k : 0;
+}
+
 // ── RuSoundCoach ───────────────────────────────────────────────────────────
 const CONFUSIONS = {
   'ы|и': '»ы« klang wie »и«. Zieh die Zunge nach hinten und lass die Lippen locker — kein breites Lächeln.',

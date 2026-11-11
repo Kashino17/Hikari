@@ -318,6 +318,14 @@ class RussianSpeechRecognizer(private val context: Context) {
 
     private val _state = MutableStateFlow<RuListenState>(RuListenState.Idle)
     val state: StateFlow<RuListenState> = _state.asStateFlow()
+
+    /**
+     * true, sobald das Mikrofon wirklich offen ist. Zwischen dem Start und diesem Moment vergeht
+     * spürbar Zeit — wer da schon spricht, verliert das erste Wort. Die Oberfläche zeigt deshalb
+     * erst »Ich höre zu«, wenn das hier true ist.
+     */
+    private val _ready = MutableStateFlow(false)
+    val ready: StateFlow<Boolean> = _ready.asStateFlow()
     private var recognizer: SpeechRecognizer? = null
     private var userStopped: Boolean = false
     private var lastHypotheses: List<String> = emptyList()
@@ -344,6 +352,7 @@ class RussianSpeechRecognizer(private val context: Context) {
      * die alte Instanz erst beim Start zerstört und sofort eine neue anlegt.
      */
     private fun releaseWhenDone(r: SpeechRecognizer) {
+        _ready.value = false
         mainHandler.post {
             if (recognizer === r) {
                 runCatching { r.destroy() }
@@ -384,8 +393,10 @@ class RussianSpeechRecognizer(private val context: Context) {
         r.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
                 _state.value = RuListenState.Listening
+                _ready.value = true
             }
-            override fun onBeginningOfSpeech() {}
+            // Manche Erkenner melden »bereit« nicht — spätestens wenn Sprache ankommt, ist das Mikrofon offen.
+            override fun onBeginningOfSpeech() { _ready.value = true }
             override fun onRmsChanged(rmsdB: Float) {}
             override fun onBufferReceived(buffer: ByteArray?) {}
             override fun onEndOfSpeech() {}
@@ -528,6 +539,7 @@ class RussianSpeechRecognizer(private val context: Context) {
     }
 
     fun destroy() {
+        _ready.value = false
         clearWatchdog()
         retryRun?.let { mainHandler.removeCallbacks(it) }
         retryRun = null

@@ -487,6 +487,8 @@ button.row:active{background:rgba(255,255,255,.035)}
 .res .ws{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
 .res .ws span{padding:1px 8px;border-radius:7px;font-size:13px;font-weight:500;background:rgba(var(--bad-rgb),.2);color:#FCA5A5}
 .res .ws span.ok{background:rgba(var(--good-rgb),.16);color:#6EE7B7}
+.res .ws span.unheard{background:rgba(255,255,255,.07);color:var(--muted);border:1px dashed rgba(255,255,255,.22)}
+.res-note{font-size:12.5px;line-height:1.45;color:var(--muted);padding-top:8px}
 .res-more{display:flex;flex-direction:column;gap:6px;padding-top:10px;border-top:1px solid var(--border)}
 .res-tip{font-size:13px;line-height:1.45;color:rgba(255,255,255,.82)}
 .res-tip b{color:var(--amber);font-weight:600}

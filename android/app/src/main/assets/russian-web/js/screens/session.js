@@ -2,8 +2,7 @@
 // Ablauf und Wertung entsprechen RussianSessionViewModel.kt; die Oberfläche ist neu.
 import {
   html, cls, Icon, SessionBar, IL, PhraseBlock, PlayRow, Speaker, Opt, LetterLens, Latin, useKeys, useListen, Mic, ScoreCard,
-  Practice, PhraseDock, SentenceCard, RecordCompare, Summary, LeaveSheet, usePlaying, playPhrase, useState, useEffect, useRef, useMemo, fx, audio, speech,
-} from '../ui.js';
+  Practice, PhraseDock, SentenceCard, RecordCompare, Summary, LeaveSheet, usePlaying, playPhrase, useState, useEffect, useRef, useMemo, fx, audio, speech, MIC_WAIT } from '../ui.js';
 import { D, P, Pl, progress, planState, dayNo, back, takeSelection } from '../app.js';
 import { storage, SPEECH_ERRORS } from '../platform.js';
 import * as Co from '../domain/course.js';
@@ -372,7 +371,7 @@ function SpeakStep({ step, env }) {
           <button class="chip sm" onClick=${() => { setUsedPeek(true); setPeekTick((x) => x + 1); }}><${Icon} n="visibility" />Kurz spicken</button></div></div>`}
       <${PlayRow} phrase=${p} size=${52} />
       ${!selfCheck && html`<div class="micwrap"><${Mic} L=${L} onClick=${mic} disabled=${answered} />
-        <div class=${cls('mictxt', L.listening && 'on')}>${L.listening ? (L.partial ? html`»${L.partial}«<br />Tippe nochmal, wenn du fertig bist` : 'Ich höre zu … Tippe nochmal, wenn du fertig bist')
+        <div class=${cls('mictxt', L.listening && 'on')}>${L.listening ? (L.partial ? html`»${L.partial}«<br />Tippe nochmal, wenn du fertig bist` : (L.opening ? MIC_WAIT : 'Ich höre zu … Tippe nochmal, wenn du fertig bist'))
           : L.evaluating ? 'Wird ausgewertet …' : answered ? '' : L.errorText ?? (score ? 'Tippen für einen weiteren Versuch' : 'Tippen und auf Russisch sprechen')}</div></div>
         ${score && html`<${ScoreCard} sc=${score} targetRu=${p.ru} />`}`}
       ${selfCheck && !answered && html`${L.errorText && html`<${Hint} title="Spracherkennung">${L.errorText}<//>`}
@@ -453,7 +452,7 @@ function DialogStep({ step, env, onDone }) {
     ${started && cur?.isUser && !busy && html`<div class="fb" style="gap:10px">
       <div class="rowx g10"><div class="grow"><div class="over">Du willst sagen</div><div style="font-size:16px;font-weight:500" class="mt4">${cur.phrase.de}</div></div>
         ${speech.available() && html`<${Mic} small L=${L} onClick=${() => { setSpoken(null); L.toggle(cur.phrase.ru); }} />`}</div>
-      ${L.listening && html`<div class="sub amber">${L.partial ? `»${L.partial}«` : 'Ich höre zu … sprich deine Antwort'}</div>`}
+      ${L.listening && html`<div class="sub amber">${L.partial ? `»${L.partial}«` : (L.opening ? MIC_WAIT : 'Ich höre zu … sprich deine Antwort')}</div>`}
       ${!L.listening && L.errorText && html`<div class="sub">${L.errorText}</div>`}
       ${spoken && html`<${ScoreCard} sc=${spoken} targetRu=${cur.phrase.ru} />`}
       <div class="opts" style="gap:8px">${opts().map((o) => html`<${Opt} state=${wrong.includes(o.phrase.id) ? 'bad' : ''} onClick=${() => pick(o)}><${IL} ru=${o.phrase.ru} size=${16} gloss=${false} /><//>`)}</div>
@@ -506,7 +505,7 @@ function AnswerStep({ step, env }) {
       <${PhraseBlock} phrase=${q} size=${24} />
       <${PlayRow} phrase=${q} size=${52} />
       ${!selfCheck && html`<div class="micwrap"><${Mic} L=${L} onClick=${mic} disabled=${answered} />
-        <div class=${cls('mictxt', L.listening && 'on')}>${L.listening ? (L.partial ? html`»${L.partial}«<br />Tippe nochmal, wenn du fertig bist` : 'Ich höre zu … antworte auf Russisch')
+        <div class=${cls('mictxt', L.listening && 'on')}>${L.listening ? (L.partial ? html`»${L.partial}«<br />Tippe nochmal, wenn du fertig bist` : (L.opening ? MIC_WAIT : 'Ich höre zu … antworte auf Russisch'))
           : L.evaluating ? 'Wird ausgewertet …' : answered ? '' : L.errorText ?? (result ? 'Tippen für einen weiteren Versuch' : 'Tippen und frei antworten')}</div></div>`}
       ${result && html`<${ScoreCard} sc=${result.sc} targetRu=${result.r.ru} />`}
       ${selfCheck && !answered && html`<div class="sub">Antworte laut — dann vergleiche mit den Beispielen unten.</div>`}
