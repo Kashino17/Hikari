@@ -139,6 +139,15 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
     val activeVideo by videoDockManager.activeVideo.collectAsState()
     // Übertragung auf den Fernseher: lebt app-weit, damit Leiste und Steuerung überall greifen.
     val cast = remember { navEntryPoint.castController() }
+    // Zurück in der App: einmal beim Fernseher nachfragen, damit Leiste und Steuerung sofort stimmen.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) cast.onForeground()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     // Zählt Klicks auf den Feed-Tab; der Feed springt daraufhin nach oben
     // und lädt neu — auch wenn er bereits sichtbar ist.

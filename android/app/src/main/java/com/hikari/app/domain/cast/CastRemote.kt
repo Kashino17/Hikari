@@ -21,6 +21,17 @@ object CastRemote {
     val JUMPS_MS = listOf(-300_000L, -60_000L, 60_000L, 300_000L)
     const val STEP_MS = 10_000L
 
+    /**
+     * Mindestabstand zwischen zwei Spulbefehlen an den Fernseher. Jeder Befehl lässt ihn neu
+     * puffern; wer fünfmal schnell »+10 s« tippt, soll einen Sprung um 50 s auslösen und nicht
+     * fünf Pufferpausen. Der erste Tipp geht sofort raus, weitere werden bis hierhin gesammelt.
+     */
+    const val SEEK_GAP_MS = 450L
+
+    /** Wie lange der nächste Spulbefehl noch warten muss (0 = sofort senden). */
+    fun seekDelay(nowMs: Long, lastSentMs: Long): Long =
+        (lastSentMs + SEEK_GAP_MS - nowMs).coerceIn(0L, SEEK_GAP_MS)
+
     /** Ab hier springt »zurück« an den Liedanfang statt zum vorigen Lied (wie im Musikplayer). */
     const val RESTART_AFTER_MS = 3_000L
 

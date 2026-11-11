@@ -50,6 +50,16 @@ class CastRemoteTest {
         assertEquals(360_000L, CastRemote.seekTarget(60_000, 300_000, 0))
     }
 
+    @Test fun ersterSpulbefehlGehtSofortRausWeitereWerdenGesammelt() {
+        // Lange nichts gesendet: sofort.
+        assertEquals(0L, CastRemote.seekDelay(nowMs = 10_000, lastSentMs = 2_000))
+        // Gerade eben gesendet: bis zum Mindestabstand warten — Tipps dazwischen sammeln sich im Ziel.
+        assertEquals(350L, CastRemote.seekDelay(nowMs = 10_100, lastSentMs = 10_000))
+        assertEquals(0L, CastRemote.seekDelay(nowMs = 10_450, lastSentMs = 10_000))
+        // Uhr springt zurück (Neustart): nie länger als der Mindestabstand warten.
+        assertEquals(CastRemote.SEEK_GAP_MS, CastRemote.seekDelay(nowMs = 0, lastSentMs = 99_000))
+    }
+
     @Test fun sprungKnoepfeSindBeschriftet() {
         assertEquals(listOf("− 5 min", "− 1 min", "+ 1 min", "+ 5 min"), CastRemote.JUMPS_MS.map(CastRemote::jumpLabel))
     }

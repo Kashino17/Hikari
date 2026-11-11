@@ -2,6 +2,7 @@ package com.hikari.app.cast
 
 import android.content.Context
 import android.net.Uri
+import android.os.SystemClock
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +31,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
@@ -122,6 +125,17 @@ class CastController @Inject constructor(
     private var lastSaveAt = 0L
     private var replay: (() -> Unit)? = null
 
+    /** Server-Adresse, die der Fernseher erreicht — einmal je Verbindung ermittelt. */
+    private var tvBaseCache: String? = null
+
+    /** »Beenden« wurde getippt: Leiste und Steuerung sind sofort weg, auch wenn der Fernseher noch kurz braucht. */
+    private var ending = false
+
+    // Spulen: gesammeltes Ziel, bis der nächste Befehl an den Fernseher gehen darf.
+    private var seekJob: Job? = null
+    private var seekTarget: Long? = null
+    private var lastSeekSentAt = 0L
+
     private val routes = object : MediaRouter.Callback() {
         override fun onRouteAdded(r: MediaRouter, route: MediaRouter.RouteInfo) = refresh()
         override fun onRouteRemoved(r: MediaRouter, route: MediaRouter.RouteInfo) = refresh()
@@ -131,6 +145,8 @@ class CastController @Inject constructor(
     private val availability = object : SessionAvailabilityListener {
         override fun onCastSessionAvailable() {
             deviceName = castContext?.sessionManager?.currentCastSession?.castDevice?.friendlyName
+            ending = false
+            tvBaseCache = null
             casting = true
             startTicker()
         }
@@ -139,7 +155,11 @@ class CastController @Inject constructor(
             saveNow()
             loadJob?.cancel()
             detailJob?.cancel()
+            seekJob?.cancel()
             ticker?.cancel()
+            seekTarget = null
+            ending = false
+            tvBaseCache = null
             casting = false
             deviceName = null
             media = null
@@ -203,7 +223,25 @@ class CastController @Inject constructor(
     /** Beendet die Übertragung; der Fernseher hört auf zu spielen. */
     fun disconnect() {
         saveNow()
+        // Sofort reagieren: bis der Fernseher das Ende bestätigt, vergeht bis zu einer Sekunde.
+        ending = true
+        loadJob?.cancel()
+        seekJob?.cancel()
+        seekTarget = null
+        media = null
+        playing = false
+        loading = false
         castContext?.sessionManager?.endCurrentSession(true)
+    }
+
+    /**
+     * Die App ist wieder im Vordergrund. Der Fernseher meldet seinen Stand nur bei Änderungen —
+     * nach einer Pause im Hintergrund hier einmal nachfragen, damit die Anzeige sofort stimmt.
+     */
+    fun onForeground() {
+        if (!casting) return
+        runCatching { remoteClient()?.requestStatus() }
+        sync()
     }
 
     // ── Abspielen ────────────────────────────────────────────────────────────
@@ -219,10 +257,15 @@ class CastController @Inject constructor(
         replay = { playVideo(videoId, title, channel, 0L) }
         loadJob = scope.launch {
             val backend = settings.backendUrl.first().trimEnd('/')
-            val detail = runCatching { api.getVideo(videoId) }.getOrNull()
-            val base = tvBase(backend)
+            // Angaben zum Video, Server-Adresse und gemerkte Stelle gleichzeitig holen — jede
+            // gesparte Anfrage ist Zeit, bis das Bild auf dem Fernseher steht.
+            val detailAsync = async { runCatching { api.getVideo(videoId) }.getOrNull() }
+            val baseAsync = async { tvBase(backend) }
+            val savedAsync = async { if (startMs == null) playback.getPosition(videoId) else 0L }
+            val detail = detailAsync.await()
+            val base = baseAsync.await()
             val length = (detail?.duration_seconds ?: 0) * 1000L
-            val start = startMs ?: CastRemote.resumePoint(playback.getPosition(videoId), length)
+            val start = startMs ?: CastRemote.resumePoint(savedAsync.await(), length)
             val shown = CastMedia(
                 kind = CastKind.VIDEO,
                 id = videoId,
@@ -234,7 +277,20 @@ class CastController @Inject constructor(
             media = shown
             positionMs = start
             if (length > 0L) durationMs = length
-            send(p, "$base/stream/video/$videoId", MimeTypes.VIDEO_MP4, shown, absolute(base, detail?.thumbnail_url), start)
+            val url = "$base/stream/video/$videoId"
+            // Genau die Adresse abrufen, die gleich der Fernseher holt: Lehnt der Server ab, steht
+            // das sofort fest (statt nach langem Warten vor schwarzem Bild); YouTube-Videos werden
+            // dabei schon aufgelöst.
+            val probe = probeTv(url)
+            if (probe.status in 400..599) {
+                fail()
+                return@launch
+            }
+            if (probe.status == 0 && base != backend) {
+                warning = "Das Handy erreicht den Server im WLAN nicht — der Fernseher vielleicht auch nicht."
+            }
+            val mime = probe.mime?.takeIf { it.startsWith("video/") } ?: MimeTypes.VIDEO_MP4
+            send(p, url, mime, shown, absolute(base, detail?.thumbnail_url), start)
         }
     }
 
@@ -253,7 +309,9 @@ class CastController @Inject constructor(
             val base = tvBase(backend)
             // Der Server löst das Lied erst beim Abruf auf. Der Probeabruf wärmt das vor und
             // verrät das Format — und zeigt gleich, wenn der Server gerade nicht liefern kann.
-            val probe = probe("$backend/music/audio/$songId")
+            // Erst über die Adresse des Fernsehers; erreicht das Handy sie nicht, über die eingestellte.
+            var probe = probeTv("$base/music/audio/$songId")
+            if (probe.status == 0) probe = probe("$backend/music/audio/$songId")
             if (probe.status != 0 && probe.status !in 200..299) {
                 fail()
                 return@launch
@@ -266,6 +324,8 @@ class CastController @Inject constructor(
         saveNow()
         loadJob?.cancel()
         detailJob?.cancel()
+        seekJob?.cancel()
+        seekTarget = null
         media = next
         positionMs = startMs.coerceAtLeast(0L)
         durationMs = 0L
@@ -300,11 +360,53 @@ class CastController @Inject constructor(
 
     /** Adresse des Servers, die der Fernseher erreicht: die im WLAN, sonst die eingestellte. */
     private suspend fun tvBase(backend: String): String {
-        val lan = runCatching { api.castInfo().lanBaseUrls.firstOrNull() }.getOrNull()?.trimEnd('/')
+        tvBaseCache?.let { return it }
+        val candidates = runCatching { api.castInfo().lanBaseUrls }.getOrNull().orEmpty().map { it.trimEnd('/') }
+        // Hat der Rechner mehrere Netze (WLAN, Kabel, virtuelle), zählt das, in dem auch das Handy
+        // ist — dort hängt der Fernseher. Bei nur einer Adresse entfällt die Prüfung.
+        val lan = if (candidates.size <= 1) candidates.firstOrNull() else firstReachable(candidates) ?: candidates.first()
         if (lan == null && !CastRemote.isLanHost(runCatching { Uri.parse(backend).host }.getOrNull().orEmpty())) {
             warning = "Server im WLAN nicht gefunden — der Fernseher kommt evtl. nicht ran"
         }
+        if (lan != null) tvBaseCache = lan
         return lan ?: backend
+    }
+
+    /**
+     * Eigener HTTP-Client für Adressen im WLAN: der Client der App biegt jeden Host auf den
+     * eingestellten Server um und taugt deshalb nicht, um die Adresse des Fernsehers zu prüfen.
+     */
+    private val lanClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(1500, TimeUnit.MILLISECONDS)
+            .readTimeout(25, TimeUnit.SECONDS)
+            .callTimeout(25, TimeUnit.SECONDS)
+            .build()
+    }
+
+    private suspend fun firstReachable(candidates: List<String>): String? = withContext(Dispatchers.IO) {
+        val quick = lanClient.newBuilder().callTimeout(1500, TimeUnit.MILLISECONDS).build()
+        candidates
+            .map { base ->
+                async {
+                    runCatching {
+                        quick.newCall(Request.Builder().url("$base/cast/info").build()).execute().use { it.isSuccessful }
+                    }.getOrDefault(false)
+                }
+            }
+            .awaitAll()
+            .indexOfFirst { it }
+            .takeIf { it >= 0 }
+            ?.let { candidates[it] }
+    }
+
+    /** Holt die ersten Bytes direkt von der Adresse, die der Fernseher bekommt. */
+    private suspend fun probeTv(url: String): Probe = withContext(Dispatchers.IO) {
+        runCatching {
+            lanClient.newCall(Request.Builder().url(url).header("Range", "bytes=0-1").build()).execute().use { res ->
+                Probe(res.code, res.header("Content-Type")?.substringBefore(';')?.trim()?.takeIf { it.isNotBlank() })
+            }
+        }.getOrElse { Probe(0, null) }
     }
 
     private fun absolute(base: String, path: String?): String? =
@@ -334,13 +436,25 @@ class CastController @Inject constructor(
         sync()
     }
 
-    fun seekTo(ms: Long) {
-        val target = if (durationMs > 0L) ms.coerceIn(0L, durationMs) else ms.coerceAtLeast(0L)
-        activePlayer?.seekTo(target)
-        positionMs = target
-    }
+    fun seekTo(ms: Long) = queueSeek(if (durationMs > 0L) ms.coerceIn(0L, durationMs) else ms.coerceAtLeast(0L))
 
-    fun seekBy(deltaMs: Long) = seekTo(CastRemote.seekTarget(positionMs, deltaMs, durationMs))
+    /** Mehrere schnelle Tipps addieren sich zu einem Sprung (siehe [CastRemote.SEEK_GAP_MS]). */
+    fun seekBy(deltaMs: Long) = queueSeek(CastRemote.seekTarget(seekTarget ?: positionMs, deltaMs, durationMs))
+
+    private fun queueSeek(target: Long) {
+        if (activePlayer == null) return
+        seekTarget = target
+        positionMs = target // die Anzeige springt sofort
+        if (seekJob?.isActive == true) return // der wartende Befehl nimmt das neue Ziel mit
+        val wait = CastRemote.seekDelay(SystemClock.elapsedRealtime(), lastSeekSentAt)
+        seekJob = scope.launch {
+            if (wait > 0L) delay(wait)
+            val to = seekTarget ?: return@launch
+            seekTarget = null
+            lastSeekSentAt = SystemClock.elapsedRealtime()
+            activePlayer?.seekTo(to)
+        }
+    }
 
     /** Der Musikplayer meldet sich an, damit »voriges/nächstes Lied« seine Warteschlange bewegt. */
     fun attachMusic(handler: CastMusicHandler) {
@@ -369,6 +483,7 @@ class CastController @Inject constructor(
 
     private fun sync() {
         val p = activePlayer ?: return
+        if (ending) return
         val current = media
         if (current == null) {
             if (loadJob?.isActive != true) restore(p)
@@ -377,14 +492,18 @@ class CastController @Inject constructor(
         if (loadJob?.isActive == true) return // Adresse wird noch besorgt
         val url = sentUrl ?: return
         val state = p.playbackState
-        val mine = p.currentMediaItem?.localConfiguration?.uri?.toString() == url
+        // »Unser« Stück: doppelt geprüft — über den Player und direkt über die Meldung des Fernsehers.
+        val onTv = remoteClient()?.mediaInfo
+        val mine = p.currentMediaItem?.localConfiguration?.uri?.toString() == url ||
+            (onTv != null && (onTv.contentId == url || onTv.contentUrl == url))
         if (mine && (state == Player.STATE_READY || state == Player.STATE_BUFFERING)) {
             if (state == Player.STATE_READY) started = true
             if (!started) return
             val wasPlaying = playing
             loading = state == Player.STATE_BUFFERING
             playing = p.isPlaying
-            positionMs = p.currentPosition.coerceAtLeast(0L)
+            // Solange ein Spulziel noch nicht gesendet ist, gilt das Ziel — nicht der alte Stand des Fernsehers.
+            if (seekTarget == null) positionMs = p.currentPosition.coerceAtLeast(0L)
             p.duration.takeIf { it > 0L }?.let { durationMs = it }
             val now = System.currentTimeMillis()
             // Pause ist ein natürlicher Speicherpunkt; sonst alle paar Sekunden.
@@ -438,8 +557,9 @@ class CastController @Inject constructor(
         }
     }
 
-    private fun remoteIdleReason(): Int? =
-        castContext?.sessionManager?.currentCastSession?.remoteMediaClient?.idleReason
+    private fun remoteClient() = castContext?.sessionManager?.currentCastSession?.remoteMediaClient
+
+    private fun remoteIdleReason(): Int? = remoteClient()?.idleReason
 
     /**
      * Die App wurde neu gestartet, der Fernseher spielt noch: aus dem, was er meldet, wieder

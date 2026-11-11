@@ -71,8 +71,19 @@ private val Soft = RoundedCornerShape(9.dp)
 @Composable
 fun CastRemoteScreen(cast: CastController, onClose: () -> Unit) {
     // Übertragung beendet (hier, an der Leiste oder am Fernseher): die Steuerung hat nichts mehr zu steuern.
+    // Schließt genau einmal — »Cast beenden« schließt sofort, das Ende der Verbindung kommt später nach.
+    val close = remember {
+        var closed = false
+        val once: () -> Unit = {
+            if (!closed) {
+                closed = true
+                onClose()
+            }
+        }
+        once
+    }
     LaunchedEffect(cast.casting) {
-        if (!cast.casting) onClose()
+        if (!cast.casting) close()
     }
     val media = cast.media
     Column(
@@ -85,7 +96,7 @@ fun CastRemoteScreen(cast: CastController, onClose: () -> Unit) {
     ) {
         Row(Modifier.fillMaxWidth().height(52.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                Modifier.size(44.dp).clip(CircleShape).clickable(onClickLabel = "Einklappen", onClick = onClose),
+                Modifier.size(44.dp).clip(CircleShape).clickable(onClickLabel = "Einklappen", onClick = close),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(Icons.Default.KeyboardArrowDown, "Einklappen", tint = HikariText, modifier = Modifier.size(28.dp))
@@ -166,7 +177,10 @@ fun CastRemoteScreen(cast: CastController, onClose: () -> Unit) {
                 .height(50.dp)
                 .clip(Soft)
                 .background(HikariSurfaceHigh)
-                .clickable { cast.disconnect() },
+                .clickable {
+                    cast.disconnect()
+                    close()
+                },
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
