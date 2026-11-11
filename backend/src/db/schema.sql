@@ -83,6 +83,13 @@ CREATE TABLE IF NOT EXISTS video_progress (
   updated_at INTEGER NOT NULL
 );
 
+-- Aus »Weiterschauen« entfernte Titel: Schlüssel "s:<Serie>" oder "v:<Video>". Der Titel bleibt
+-- verborgen, bis er nach dem Entfernen wieder geschaut wird (library/history.ts).
+CREATE TABLE IF NOT EXISTS continue_dismissed (
+  key TEXT PRIMARY KEY,
+  dismissed_at INTEGER NOT NULL
+);
+
 -- Etappe 4: kuratierter Tagesmix mit Zeitbudget. Ein Eintrag = ein Slot des
 -- Tages; gesehene Items bleiben drin (konsumierte Zeit zaehlt gegen das Budget).
 CREATE TABLE IF NOT EXISTS daily_mix_items (

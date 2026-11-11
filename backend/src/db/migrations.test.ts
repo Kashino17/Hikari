@@ -12,6 +12,7 @@ describe("applyMigrations", () => {
     const names = tables.map((t) => t.name);
     expect(names).toEqual([
       "channels",
+      "continue_dismissed",
       "daily_mix_items",
       "downloaded_videos",
       "feed_items",

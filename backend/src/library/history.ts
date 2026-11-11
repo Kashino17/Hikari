@@ -63,24 +63,110 @@ export function listHistory(db: Database.Database, limit = 50): unknown[] {
     .all(limit);
 }
 
+/** Ab diesem Anteil gilt ein Video als zu Ende gesehen (der Rest ist Abspann). */
+export const FINISHED_SHARE = 0.95;
+/** So viele Titel zeigt »Weiterschauen« höchstens — die zuletzt gesehenen. */
+export const CONTINUE_LIMIT = 10;
+
+interface ProgressRow {
+  id: string;
+  series_id: string | null;
+  season: number | null;
+  episode: number | null;
+  duration_seconds: number;
+  progress_seconds: number;
+  progress_updated_at: number;
+}
+
+/** Unter diesem Schlüssel steht ein Titel in »Weiterschauen«: die Serie als Ganzes oder das einzelne Video. */
+function continueKey(row: { id: string; series_id: string | null }): string {
+  return row.series_id ? `s:${row.series_id}` : `v:${row.id}`;
+}
+
 /**
- * Angefangen, aber nicht fertig (5 %–95 %), zuletzt geschaut zuerst — über
- * alle Quellen. Vorher kam „Weiterschauen" nur aus den 20 jüngsten Server-
- * Downloads, ein gestreamtes YouTube-Video konnte dort nie auftauchen.
+ * »Weiterschauen« nach dem Vorbild von Netflix — ein Eintrag je Titel, zuletzt gesehen zuerst:
+ *  - Film oder Einzelvideo: angefangen und noch nicht zu Ende.
+ *  - Serie: Es zählt die zuletzt gesehene Folge. Ist sie nicht zu Ende, steht sie da. Ist sie
+ *    zu Ende, steht die nächste Folge da (`up_next`); gibt es keine mehr, fällt die Serie heraus.
+ *  - Was aus der Reihe entfernt wurde, bleibt weg, bis man den Titel wieder schaut.
+ * Vorher stand hier jede angefangene Folge einzeln, auch fünf derselben Serie.
  */
-export function listContinueWatching(db: Database.Database, limit = 30): unknown[] {
-  return db
+export function listContinueWatching(db: Database.Database, limit = CONTINUE_LIMIT): unknown[] {
+  const started = db
     .prepare(
       `${LIBRARY_VIDEO_SELECT}
        WHERE vp.progress_seconds IS NOT NULL
          AND v.duration_seconds > 0
          AND vp.progress_seconds >= ${HISTORY_MIN_SECONDS}
-         AND vp.progress_seconds < v.duration_seconds * 0.95
          AND ${PLAYABLE}
        ORDER BY vp.updated_at DESC
-       LIMIT ?`,
+       LIMIT 500`,
     )
-    .all(limit);
+    .all() as ProgressRow[];
+  const dismissed = new Map(
+    (
+      db.prepare("SELECT key, dismissed_at FROM continue_dismissed").all() as {
+        key: string;
+        dismissed_at: number;
+      }[]
+    ).map((d) => [d.key, d.dismissed_at]),
+  );
+  const nextEpisode = db.prepare(
+    `${LIBRARY_VIDEO_SELECT}
+     WHERE v.series_id = ? AND ${PLAYABLE}
+       AND (COALESCE(v.season, 1) > ? OR (COALESCE(v.season, 1) = ? AND COALESCE(v.episode, 0) > ?))
+     ORDER BY COALESCE(v.season, 1), COALESCE(v.episode, 0)
+     LIMIT 1`,
+  );
+
+  const out: unknown[] = [];
+  const seen = new Set<string>();
+  for (const row of started) {
+    if (out.length >= limit) break;
+    const key = continueKey(row);
+    if (seen.has(key)) continue; // die jüngste Folge der Serie hat schon entschieden
+    seen.add(key);
+    if ((dismissed.get(key) ?? 0) >= row.progress_updated_at) continue;
+
+    const finished = row.progress_seconds >= row.duration_seconds * FINISHED_SHARE;
+    if (!finished) {
+      out.push({ ...row, up_next: 0 });
+    } else if (row.series_id) {
+      const season = row.season ?? 1;
+      const next = nextEpisode.get(row.series_id, season, season, row.episode ?? 0) as
+        | ProgressRow
+        | undefined;
+      if (!next) continue;
+      // Eine früher schon ganz gesehene Folge beginnt wieder von vorn; Angefangenes behält seine Stelle.
+      const resume =
+        next.progress_seconds < next.duration_seconds * FINISHED_SHARE
+          ? (next.progress_seconds ?? 0)
+          : 0;
+      out.push({
+        ...next,
+        progress_seconds: resume,
+        progress_updated_at: row.progress_updated_at,
+        up_next: 1,
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * Nimmt einen Titel aus »Weiterschauen« — die Serie als Ganzes, wenn [videoId] eine Folge ist.
+ * Fortschritt und Verlauf bleiben; sobald man den Titel wieder schaut, taucht er wieder auf.
+ */
+export function dismissContinue(db: Database.Database, videoId: string, now = Date.now()): boolean {
+  const row = db.prepare("SELECT id, series_id FROM videos WHERE id = ?").get(videoId) as
+    | { id: string; series_id: string | null }
+    | undefined;
+  if (!row) return false;
+  db.prepare(
+    `INSERT INTO continue_dismissed (key, dismissed_at) VALUES (?, ?)
+     ON CONFLICT(key) DO UPDATE SET dismissed_at = excluded.dismissed_at`,
+  ).run(continueKey(row), now);
+  return true;
 }
 
 /**
@@ -159,4 +245,3 @@ export function listUploadsPage(
     )
     .all(...params, limit, offset);
 }
-

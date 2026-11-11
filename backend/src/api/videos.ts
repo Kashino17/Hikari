@@ -28,6 +28,7 @@ import { subscribedChannelCondition } from "../feed/subscriptions.js";
 import type { MetadataExtractor } from "../import/metadata-extractor.js";
 import {
   clearHistory,
+  dismissContinue,
   listChannelUploads,
   listUploadsPage,
   listContinueWatching,
@@ -341,6 +342,12 @@ export async function registerVideosRoutes(app: FastifyInstance, deps: VideosDep
   });
 
   app.delete("/history", async () => ({ removed: clearHistory(deps.db) }));
+
+  // »Aus der Reihe entfernen« in Weiterschauen. Fortschritt und Verlauf bleiben erhalten.
+  app.post<{ Params: { id: string } }>("/library/continue/:id/dismiss", async (req, reply) => {
+    if (!dismissContinue(deps.db, req.params.id)) return reply.code(404).send({ error: "not found" });
+    return reply.code(204).send();
+  });
 
   // Serie samt allen Folgen vom Server löschen — DB-Zeilen und Dateien.
   app.delete<{ Params: { id: string } }>("/series/:id", async (req, reply) => {
