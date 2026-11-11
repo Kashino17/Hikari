@@ -649,7 +649,9 @@ private fun EpisodeRow(
                     SeriesResume.isFinished(video) -> "Gesehen · ${video.duration_seconds / 60} min"
                     else -> "${video.duration_seconds / 60} min"
                 },
-                color = if (isNext || isLocal) HikariAmber else HikariTextFaint,
+                // Amber nur für die eine Folge, bei der es weitergeht. »Auf dem Gerät« steht bei
+                // geladenen Staffeln in jeder Zeile — in der Akzentfarbe wurde daraus eine gelbe Wand.
+                color = if (isNext) HikariAmber else HikariTextFaint,
                 fontSize = 11.sp,
                 modifier = Modifier.padding(top = 4.dp),
             )
