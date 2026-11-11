@@ -7,6 +7,7 @@ import com.hikari.app.data.api.dto.ImportItemMetadata
 import com.hikari.app.data.api.dto.PendingImportDto
 import com.hikari.app.data.api.dto.SniffedImportItem
 import com.hikari.app.domain.browser.AdBlocker
+import com.hikari.app.domain.browser.Sites
 import com.hikari.app.domain.browser.AdHosts
 import com.hikari.app.domain.browser.EpisodeLinkFilter
 import com.hikari.app.domain.browser.MediaFinding
@@ -51,6 +52,17 @@ data class CrawlState(
     val waitingForHuman: Boolean = false,
 )
 
+/** Ein gesperrtes Ziel, das der Nutzer mit einem Tipp doch öffnen kann. */
+data class BlockedOffer(
+    val url: String,
+    /** Hauptdomain des Ziels, für die Anzeige. */
+    val site: String,
+    /** true = neues Fenster (Pop-up), false = Weiterleitung im selben Fenster. */
+    val popup: Boolean,
+    /** Fortlaufend — jede neue Sperre zeigt den Hinweis wieder frisch. */
+    val id: Long,
+)
+
 data class BrowserUiState(
     val currentUrl: String = "",
     val pageTitle: String = "",
@@ -78,6 +90,8 @@ data class BrowserUiState(
     val recentUrls: List<String> = emptyList(),
     /** Werbeschutz an/aus und wie viele Requests/Pop-ups er gestoppt hat. */
     val shieldEnabled: Boolean = true,
+    /** Zuletzt gesperrtes Pop-up oder gesperrte Weiterleitung, die der Nutzer bewusst öffnen kann. */
+    val blockedOffer: BlockedOffer? = null,
     val blockedCount: Int = 0,
     /** Laufende, wartende und gescheiterte Downloads (Server-Importliste). */
     val transfers: List<PendingImportDto> = emptyList(),
@@ -368,11 +382,32 @@ class BrowserViewModel @Inject constructor(
     /** Aufruf aus der Adressleiste, bevor die eingegebene URL geladen wird. */
     fun onAddressBarGo(url: String) {
         intendedNavigation = url
+        adBlocker.trustNextChain()
     }
 
     private fun navigateTo(url: String) {
         intendedNavigation = url
+        adBlocker.trustNextChain()
         viewModelScope.launch { _navigate.emit(url) }
+    }
+
+    // ---- Gesperrte Pop-ups und Weiterleitungen ---------------------------
+
+    private var offerSeq = 0L
+
+    /** Der Blocker hat ein Ziel gesperrt, das der Nutzer vielleicht doch wollte. */
+    fun offerBlocked(url: String, popup: Boolean) {
+        val site = Sites.siteOf(url) ?: return
+        _ui.update { it.copy(blockedOffer = BlockedOffer(url, site, popup, ++offerSeq), blockedCount = adBlocker.blockedCount) }
+    }
+
+    fun dismissOffer() = _ui.update { it.copy(blockedOffer = null) }
+
+    /** »Öffnen« im Hinweis: das gesperrte Ziel bewusst ansteuern. */
+    fun openOffer() {
+        val offer = _ui.value.blockedOffer ?: return
+        dismissOffer()
+        navigateTo(offer.url)
     }
 
     // ---- Automatischer Durchlauf ----------------------------------------

@@ -1,5 +1,8 @@
 package com.hikari.app.ui.browser
 
+import android.webkit.JsResult
+import android.view.MotionEvent
+import android.os.SystemClock
 import android.annotation.SuppressLint
 import android.os.Message
 import android.webkit.CookieManager
@@ -80,6 +83,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hikari.app.data.api.dto.ChannelVideoDto
 import com.hikari.app.data.api.dto.PendingImportDto
 import com.hikari.app.domain.browser.AdBlocker
+import com.hikari.app.domain.browser.NavVerdict
+import com.hikari.app.domain.browser.Tap
 import com.hikari.app.domain.browser.AdHosts
 import com.hikari.app.domain.browser.PageScripts
 import com.hikari.app.domain.browser.PageTitleFilter
@@ -101,7 +106,7 @@ private const val START_URL = "https://www.google.com"
  * Die Seite entschlüsselt ihren Stream selbst, wir schauen nur zu.
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("SetJavaScriptEnabled")
+@SuppressLint("SetJavaScriptEnabled", "ClickableViewAccessibility")
 @Composable
 fun BrowserScreen(
     onClose: () -> Unit,
@@ -219,17 +224,40 @@ fun BrowserScreen(
                         settings.setSupportMultipleWindows(true)
                         settings.javaScriptCanOpenWindowsAutomatically = false
 
+                        // Der Blocker muss wissen, ob der Nutzer die Seite angefasst hat:
+                        // Eine unberührte Seite darf weiterleiten, eine berührte nicht mehr.
+                        setOnTouchListener { _, event ->
+                            if (event.actionMasked == MotionEvent.ACTION_DOWN) vm.adBlocker.onTouch()
+                            false
+                        }
+
                         webChromeClient = object : WebChromeClient() {
+                            // »Diese Seite wirklich verlassen?« ist eine Falle, kein Schutz.
+                            override fun onJsBeforeUnload(
+                                view: WebView?,
+                                url: String?,
+                                message: String?,
+                                result: JsResult?,
+                            ): Boolean {
+                                result?.confirm()
+                                return true
+                            }
+
                             override fun onCreateWindow(
                                 view: WebView,
                                 isDialog: Boolean,
                                 isUserGesture: Boolean,
                                 resultMsg: Message,
                             ): Boolean {
-                                if (vm.adBlocker.shouldBlockPopup(null, isUserGesture)) return false
-                                // Erlaubtes Pop-up (echter Klick): im selben Tab laden
-                                // statt ein Fenster zu stapeln — Ad-Ziele fängt der
-                                // Blocker erst hier ab, weil die URL vorher fehlt.
+                                // Ohne Fingertipp gibt es kein Fenster. Mit Tipp entscheidet
+                                // das Ziel — das steht erst fest, wenn das neue Fenster zu
+                                // laden beginnt, deshalb der Umweg über einen Träger.
+                                if (!isUserGesture) {
+                                    vm.adBlocker.judgePopup("about:blank", view.url, false, Tap.Other)
+                                    return false
+                                }
+                                val from = view.url
+                                val tap = view.lastTap()
                                 val carrier = WebView(view.context)
                                 carrier.webViewClient = object : WebViewClient() {
                                     override fun shouldOverrideUrlLoading(
@@ -237,10 +265,11 @@ fun BrowserScreen(
                                         request: WebResourceRequest,
                                     ): Boolean {
                                         val target = request.url.toString()
-                                        if (!vm.adBlocker.shouldBlockPopup(target, true) &&
-                                            !vm.adBlocker.shouldBlockNavigation(target, true, false)
-                                        ) {
-                                            view.post { view.loadUrl(target) }
+                                        when (vm.adBlocker.judgePopup(target, from, true, tap)) {
+                                            // Der Browser hat einen Tab: ein erlaubtes Fenster lädt in ihm.
+                                            NavVerdict.ALLOW -> view.post { view.loadUrl(target) }
+                                            NavVerdict.OFFER -> vm.offerBlocked(target, popup = true)
+                                            NavVerdict.BLOCK -> Unit
                                         }
                                         v.post { v.destroy() }
                                         return true
@@ -260,13 +289,18 @@ fun BrowserScreen(
                                 val req = request ?: return false
                                 if (!req.isForMainFrame) return false
                                 val target = req.url.toString()
-                                // true = blockiert: Ad-Weiterleitungen ohne Klick
-                                // und App-Sprünge (intent://, market://).
-                                return vm.adBlocker.shouldBlockNavigation(
-                                    target,
-                                    req.hasGesture(),
-                                    target == vm.intendedNavigation,
+                                val verdict = vm.adBlocker.judgeNavigation(
+                                    url = target,
+                                    fromUrl = view?.url,
+                                    hasGesture = req.hasGesture(),
+                                    isRedirect = req.isRedirect,
+                                    intended = target == vm.intendedNavigation,
+                                    tap = view?.lastTap() ?: Tap.Other,
+                                    nowMs = SystemClock.elapsedRealtime(),
                                 )
+                                if (verdict == NavVerdict.OFFER) vm.offerBlocked(target, popup = false)
+                                // true = der Seitenwechsel findet nicht statt, die Seite bleibt stehen.
+                                return verdict != NavVerdict.ALLOW
                             }
 
                             override fun shouldInterceptRequest(
@@ -296,7 +330,10 @@ fun BrowserScreen(
                                     if (vm.adBlocker.shouldBlockRequest(
                                             url,
                                             request.isForMainFrame,
-                                            request.hasGesture() || url == vm.intendedNavigation,
+                                            // Ob ein Seitenwechsel gewollt war, entscheidet
+                                            // schon shouldOverrideUrlLoading; hier zählt nur noch
+                                            // die bewusst angesteuerte Adresse.
+                                            url == vm.intendedNavigation,
                                         )
                                     ) {
                                         return emptyResponse()
@@ -322,6 +359,7 @@ fun BrowserScreen(
                                 url: String?,
                                 favicon: android.graphics.Bitmap?,
                             ) {
+                                vm.adBlocker.onPageStarted(SystemClock.elapsedRealtime())
                                 url?.let { vm.onPageStarted(it) }
                                 if (vm.adBlocker.enabled) view?.evaluateJavascript(AdBlocker.COSMETIC_SCRIPT, null)
                             }
@@ -354,6 +392,15 @@ fun BrowserScreen(
                     }
                 },
             )
+
+            ui.blockedOffer?.let { offer ->
+                BlockedOfferBar(
+                    offer = offer,
+                    onOpen = vm::openOffer,
+                    onDismiss = vm::dismissOffer,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                )
+            }
 
             if (ui.loading) {
                 LinearProgressIndicator(
@@ -1076,4 +1123,14 @@ internal fun normalizeUrl(input: String): String {
     // Sieht es wie ein Hostname aus (Punkt, kein Leerzeichen), dann als URL.
     if (t.contains('.') && !t.contains(' ')) return "https://$t"
     return "https://www.google.com/search?q=" + java.net.URLEncoder.encode(t, "UTF-8")
+}
+
+/** Was der Finger zuletzt getroffen hat — der WebView kennt den Knoten unter dem letzten Tipp. */
+private fun WebView.lastTap(): Tap {
+    val hit = hitTestResult
+    return when (hit.type) {
+        WebView.HitTestResult.SRC_ANCHOR_TYPE -> Tap.TextLink(hit.extra)
+        WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE -> Tap.ImageLink
+        else -> Tap.Other
+    }
 }
