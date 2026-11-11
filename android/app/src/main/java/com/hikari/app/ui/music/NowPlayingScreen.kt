@@ -24,6 +24,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
+import androidx.compose.material.icons.filled.Cast
+import androidx.compose.material.icons.filled.CastConnected
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -70,6 +72,7 @@ import com.hikari.app.ui.common.shareUrlFor
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -92,9 +95,21 @@ import kotlinx.coroutines.launch
 fun NowPlayingScreen(
     onBack: () -> Unit,
     onOpenArtist: (channelId: String, name: String) -> Unit,
+    /** Das Lied läuft ab jetzt auf dem Fernseher — der Aufrufer wechselt zur Cast-Steuerung. */
+    onCastStarted: () -> Unit = {},
     viewModel: MusicViewModel = hiltViewModel(),
 ) {
     val controller = viewModel.player
+    val cast = viewModel.cast
+    var showCastPicker by remember { mutableStateOf(false) }
+    // Verbindung kam in diesem Bildschirm zustande: das laufende Lied wandert zum Fernseher.
+    val castingAtOpen = remember { cast.casting }
+    LaunchedEffect(cast.casting) {
+        if (cast.casting && !castingAtOpen) {
+            controller.handOffToCast()
+            onCastStarted()
+        }
+    }
     val song by controller.currentSong.collectAsState()
     val isPlaying by controller.isPlaying.collectAsState()
     val isBuffering by controller.isBuffering.collectAsState()
@@ -171,10 +186,16 @@ fun NowPlayingScreen(
                     tint = HikariText, iconSize = 28.dp,
                 ) { onBack() }
                 Text(
-                    if (isDownloaded) "Läuft gerade · offline" else "Läuft gerade",
+                    when {
+                        cast.casting -> "Läuft auf ${cast.deviceName ?: "dem Fernseher"}"
+                        isDownloaded -> "Läuft gerade · offline"
+                        else -> "Läuft gerade"
+                    },
                     fontSize = 13.sp,
                     color = HikariTextMuted,
                     textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
                 )
                 // Crossfade Chip
@@ -209,6 +230,14 @@ fun NowPlayingScreen(
                     MuIconButton(Icons.Outlined.Share, "Teilen", iconSize = 22.dp) {
                         shareLink(shareContext, "${current.title} · ${current.uploader}", url)
                     }
+                }
+                if (cast.supported) {
+                    MuIconButton(
+                        if (cast.casting) Icons.Default.CastConnected else Icons.Default.Cast,
+                        "Auf Fernseher streamen",
+                        iconSize = 22.dp,
+                        active = cast.casting,
+                    ) { showCastPicker = true }
                 }
                 MuIconButton(
                     Icons.AutoMirrored.Filled.QueueMusic, "Warteschlange",
@@ -448,6 +477,7 @@ fun NowPlayingScreen(
     }
 
     AddToPlaylistHost(viewModel)
+    if (showCastPicker) com.hikari.app.ui.player.CastPickerDialog(cast, onDismiss = { showCastPicker = false })
 }
 
 

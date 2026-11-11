@@ -121,6 +121,19 @@ class VideoDockManager @Inject constructor(
         }
     }
 
+    /**
+     * Gibt den Player ab, ohne ihn freizugeben — der Player-Bildschirm räumt ihn selbst ab.
+     * Für die Übergabe an den Fernseher: danach gibt es nichts mehr anzudocken.
+     */
+    fun detach() {
+        activePlayer?.removeListener(playerListener)
+        activePlayer = null
+        _activeVideo.value = null
+        _lastFrame.value = null
+        _isDocked.value = false
+        _isPlaying.value = false
+    }
+
     /** Closes mini-player and releases playback */
     fun closeAndRelease(onSavePosition: ((String, Long) -> Unit)? = null) {
         val vid = _activeVideo.value?.videoId

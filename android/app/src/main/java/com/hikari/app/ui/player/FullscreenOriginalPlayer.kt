@@ -39,6 +39,7 @@ interface FullscreenOriginalEntryPoint {
 fun FullscreenOriginalPlayer(
     videoId: String,
     onBack: () -> Unit,
+    onCastStarted: () -> Unit = {},
 ) {
     val ctx = LocalContext.current
     val ep = remember {
@@ -63,6 +64,7 @@ fun FullscreenOriginalPlayer(
             channel = loaded.channelTitle,
             onBack = onBack,
             startInLandscape = true,
+            onCastStarted = onCastStarted,
         )
         error -> Box(modifier = Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
             Text("Video konnte nicht geladen werden.", color = Color.White.copy(alpha = 0.7f))

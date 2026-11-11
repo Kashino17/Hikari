@@ -62,6 +62,7 @@ class MusicPlayerController @Inject constructor(
     private val connectivity: ConnectivityObserver,
     private val backend: BackendReachability,
     private val okHttpClient: OkHttpClient,
+    private val cast: com.hikari.app.cast.CastController,
 ) {
     companion object {
         const val REPEAT_OFF = 0
@@ -221,6 +222,89 @@ class MusicPlayerController @Inject constructor(
             _queueIndex.value = value
         }
 
+    // ── Übertragung auf den Fernseher ────────────────────────────────────
+    // Solange ein Fernseher verbunden ist, gehen Lieder dorthin statt in den Player am Handy.
+    // Die Warteschlange bleibt hier; der Fernseher bekommt immer nur das aktuelle Lied.
+
+    /** Das aktuelle Lied läuft gerade auf dem Fernseher. */
+    private val onTv: Boolean
+        get() = cast.casting && cast.media.let {
+            it != null && it.kind == com.hikari.app.domain.cast.CastKind.MUSIC && it.id == _currentSong.value?.videoId
+        }
+    private var wasOnTv = false
+
+    /** Stelle, an der das Lied auf dem Fernseher stand, als die Übertragung endete. */
+    private var castResumeMs: Long? = null
+
+    private data class CastMirror(
+        val casting: Boolean,
+        val media: com.hikari.app.domain.cast.CastMedia?,
+        val positionMs: Long,
+        val durationMs: Long,
+        val playing: Boolean,
+        val loading: Boolean,
+    )
+
+    /** Zieht den Zustand des Fernsehers in die Flows, aus denen die Musik-Oberfläche liest. */
+    private fun mirrorCast(m: CastMirror) {
+        val tvMusic = m.casting && m.media?.kind == com.hikari.app.domain.cast.CastKind.MUSIC
+        if (tvMusic && m.media?.id == _currentSong.value?.videoId) {
+            wasOnTv = true
+            _isPlaying.value = m.playing
+            _isBuffering.value = m.loading
+            _positionMs.value = m.positionMs
+            if (m.durationMs > 0) _durationMs.value = m.durationMs
+            // Nächstes Lied am Server vorwärmen und rechtzeitig Nachschub suchen — wie am Handy.
+            if (m.playing && m.positionMs > 5_000) maybePrefetchNext()
+            if (m.playing) maybeExtendQueueEarly(m.positionMs, m.durationMs)
+        } else if (wasOnTv && !tvMusic) {
+            // Übertragung beendet oder ein Video hat den Fernseher übernommen: die Musik steht,
+            // die Stelle bleibt — ein Tipp auf Play setzt am Handy dort fort.
+            wasOnTv = false
+            _isPlaying.value = false
+            _isBuffering.value = false
+            castResumeMs = _positionMs.value
+        }
+    }
+
+    /** Schickt ein Lied an den Fernseher; der Player am Handy schweigt so lange. */
+    private fun castSong(song: MusicSong, startPositionMs: Long) {
+        loadJob?.cancel()
+        retryJob?.cancel()
+        plannedNextIndex = null
+        // Erst das Handy stumm schalten — sein Abmelden setzt die Anzeigen zurück, die danach gelten sollen.
+        player?.let {
+            it.stop()
+            it.clearMediaItems()
+        }
+        _videoMode.value = false
+        _videoFrameReady.value = false
+        _isEnded.value = false
+        _isPlaying.value = false
+        _isBuffering.value = true
+        _positionMs.value = startPositionMs
+        cast.playMusic(song.videoId, song.title, song.uploader, song.thumbnailUrl, startPositionMs)
+    }
+
+    /** Die Verbindung zum Fernseher steht: das laufende Lied wandert an derselben Stelle dorthin. */
+    fun handOffToCast() {
+        val song = _currentSong.value ?: return
+        if (!cast.casting) return
+        castSong(song, player?.currentPosition?.takeIf { it > 0 } ?: _positionMs.value)
+    }
+
+    private val castHandler = object : com.hikari.app.cast.CastMusicHandler {
+        override fun next() = this@MusicPlayerController.next()
+        override fun previous() = this@MusicPlayerController.previous()
+
+        override fun ended() {
+            val song = _currentSong.value
+            if (_repeatMode.value == REPEAT_ONE && song != null) castSong(song, 0L) else advance(forward = true, manual = false)
+        }
+
+        override fun failed() = retryOrSkip()
+    }
+
     private val listener = object : Player.Listener {
         override fun onIsPlayingChanged(playing: Boolean) {
             _isPlaying.value = playing
@@ -268,6 +352,12 @@ class MusicPlayerController @Inject constructor(
     }
 
     init {
+        cast.attachMusic(castHandler)
+        scope.launch {
+            androidx.compose.runtime.snapshotFlow {
+                CastMirror(cast.casting, cast.media, cast.positionMs, cast.durationMs, cast.playing, cast.loading)
+            }.collect { mirrorCast(it) }
+        }
         scope.launch {
             connectivity.isOnline.collect { online ->
                 if (online) {
@@ -509,10 +599,20 @@ class MusicPlayerController @Inject constructor(
 
     fun toggle() {
         val current = _currentSong.value
+        if (cast.casting) {
+            // Fernseher verbunden: Pause/Weiter gilt dort. Läuft das Lied dort (noch) nicht, geht es jetzt hin.
+            when {
+                current == null -> Unit
+                onTv && !_isEnded.value && !cast.ended -> cast.togglePlay()
+                else -> loadAndPlay(current, startPositionMs = if (_isEnded.value || cast.ended) 0L else _positionMs.value)
+            }
+            return
+        }
         val p = player
         if (p == null || p.currentMediaItem == null) {
             if (current != null) {
-                loadAndPlay(current)
+                // Nach einer Übertragung dort weiter, wo der Fernseher stand.
+                loadAndPlay(current, startPositionMs = castResumeMs ?: 0L)
             }
             return
         }
@@ -536,6 +636,11 @@ class MusicPlayerController @Inject constructor(
     fun next() = advance(forward = true, manual = true)
 
     fun previous() {
+        if (onTv) {
+            if (cast.positionMs > com.hikari.app.domain.cast.CastRemote.RESTART_AFTER_MS) cast.seekTo(0L)
+            else advance(forward = false, manual = true)
+            return
+        }
         val p = player
         // First 3 s of a track: go to the previous song, otherwise restart.
         if (p != null && p.currentPosition > 3_000) {
@@ -549,6 +654,11 @@ class MusicPlayerController @Inject constructor(
     }
 
     fun seekTo(ms: Long) {
+        if (onTv) {
+            cast.seekTo(ms)
+            _positionMs.value = ms
+            return
+        }
         val p = player
         p?.seekTo(ms)
         if (p?.playbackState == Player.STATE_ENDED) p.prepare()
@@ -693,6 +803,10 @@ class MusicPlayerController @Inject constructor(
      */
     fun toggleVideoMode() {
         val song = _currentSong.value ?: return
+        if (cast.casting) {
+            _error.value = "Auf dem Fernseher läuft nur der Ton"
+            return
+        }
         videoRetries = 0
         if (_videoMode.value) {
             _videoMode.value = false
@@ -805,7 +919,12 @@ class MusicPlayerController @Inject constructor(
         _isBuffering.value = true
         _videoFrameReady.value = false
         _isEnded.value = false
+        castResumeMs = null
         scope.launch { repo.recordPlayed(song, mode = queueMode) }
+        if (cast.casting) {
+            castSong(song, startPositionMs)
+            return
+        }
         loadJob = scope.launch {
             // Video-Modus: der nächste Titel läuft direkt als Video weiter.
             // Ohne Video-Quelle (kein Backend/offline) fällt der Player
@@ -1051,18 +1170,17 @@ class MusicPlayerController @Inject constructor(
      * Wenn Repeat aktiv ist oder Autoplay deaktiviert wurde, darf kein
      * Autoplay nachgefordert werden, damit die Wiederholung sauber greift.
      */
-    private fun maybeExtendQueueEarly() {
+    private fun maybeExtendQueueEarly(positionMs: Long, durationMs: Long) {
         if (!_autoplayEnabled.value) return
         if (_repeatMode.value != REPEAT_OFF) return
         if (earlyExtendDone || autoplayJob?.isActive == true) return
         val q = _queue.value
         if (q.isEmpty() || queueIndex !in q.indices) return
-        val p = player ?: return
         val nearTail = when {
             // Vorletzter Song: der Nachschub hat eine volle Songlänge Zeit.
             queueIndex == q.size - 2 -> true
             // Letzter Song: ab der Hälfte suchen, damit sie vor dem Ende durch ist.
-            queueIndex == q.size - 1 -> p.duration > 0 && p.currentPosition > p.duration / 2
+            queueIndex == q.size - 1 -> durationMs > 0 && positionMs > durationMs / 2
             else -> false
         }
         if (!nearTail) return
@@ -1133,7 +1251,7 @@ class MusicPlayerController @Inject constructor(
             val shouldResume = resumeAfterExtend
             resumeAfterExtend = false
             _isBuffering.value = false
-            if (shouldResume && player?.isPlaying != true) {
+            if (shouldResume && player?.isPlaying != true && !(onTv && _isPlaying.value)) {
                 queueIndex = current.size
                 loadAndPlay(fresh.first())
             } else {
@@ -1248,7 +1366,7 @@ class MusicPlayerController @Inject constructor(
                         if (it.currentPosition > 5_000) maybePrefetchNext()
                         // Läuft die Queue aus, den Autoplay-Nachschub schon
                         // suchen, bevor die Suchkaskade in der Hörlücke startet.
-                        maybeExtendQueueEarly()
+                        maybeExtendQueueEarly(pos, d)
                         // Läuft ein Song gesund, waren frühere Fehler nur
                         // vorübergehend — Zähler zurücksetzen.
                         if (it.currentPosition > 15_000) {

@@ -60,6 +60,8 @@ class MusicViewModel @Inject constructor(
     private val connectivity: ConnectivityObserver,
     private val backend: BackendReachability,
     val player: MusicPlayerController,
+    /** Übertragung auf den Fernseher — der Musikplayer zeigt den Knopf dafür. */
+    val cast: com.hikari.app.cast.CastController,
 ) : ViewModel() {
 
     /**

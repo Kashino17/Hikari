@@ -120,6 +120,7 @@ private fun navFresh(nav: NavController, route: String) {
 @InstallIn(SingletonComponent::class)
 interface NavHostEntryPoint {
     fun videoDockManager(): VideoDockManager
+    fun castController(): com.hikari.app.cast.CastController
 }
 
 fun playVideoRoute(videoId: String, title: String, channel: String): String {
@@ -136,6 +137,8 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
     val videoDockManager = remember { navEntryPoint.videoDockManager() }
     val isVideoDocked by videoDockManager.isDocked.collectAsState()
     val activeVideo by videoDockManager.activeVideo.collectAsState()
+    // Übertragung auf den Fernseher: lebt app-weit, damit Leiste und Steuerung überall greifen.
+    val cast = remember { navEntryPoint.castController() }
 
     // Zählt Klicks auf den Feed-Tab; der Feed springt daraufhin nach oben
     // und lädt neu — auch wenn er bereits sichtbar ist.
@@ -185,6 +188,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
     // würde die Fundanzeige verdecken.
     val isBrowserRoute = currentRoute == "browser"
     val isNowPlaying = currentRoute == "nowplaying"
+    val isCastRoute = currentRoute == "cast"
     val isPlaylistRoute = currentRoute?.startsWith("playlist/") == true
     val isMixRoute = currentRoute?.startsWith("mix/") == true
     val isArtistRoute = currentRoute?.startsWith("artist/") == true
@@ -195,8 +199,21 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
     val showsBottomBar = !(currentRoute == "feed" && feedFullscreen) && !isVideoRoute &&
         !isReaderRoute && !isGearSubPage && !isGameRoute && !isNowPlaying &&
         !isPlaylistRoute && !isMixRoute && !isArtistRoute && !isCollectionRoute &&
-        !isBrowserRoute
+        !isBrowserRoute && !isCastRoute
     val isVideoDockVisible = !isVideoRoute && isVideoDocked && activeVideo != null
+    // Die Cast-Leiste steht überall, wo man nicht gerade im Vollbild liest, spielt oder schaut.
+    val isCastBarVisible = cast.casting && cast.media != null && !isVideoRoute && !isCastRoute &&
+        !isReaderRoute && !isGameRoute && !(currentRoute == "feed" && feedFullscreen)
+    val castingMusic = cast.casting && cast.media?.kind == com.hikari.app.domain.cast.CastKind.MUSIC
+    // Platz, den Leisten über der Navigation belegen (angedocktes Video bzw. Cast).
+    val barSpace = if (isVideoDockVisible || isCastBarVisible) com.hikari.app.ui.cast.CastBarSpace else 0.dp
+    // Von einem Player zur Cast-Steuerung: der Player verschwindet aus dem Verlauf.
+    val openCastRemote: (String) -> Unit = { leaving ->
+        nav.navigate("cast") {
+            popUpTo(leaving) { inclusive = true }
+            launchSingleTop = true
+        }
+    }
 
     Scaffold(
         containerColor = HikariBg,
@@ -297,12 +314,28 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                 val channel = URLDecoder.decode(
                     backStackEntry.arguments?.getString("channel").orEmpty(), "UTF-8",
                 )
-                VideoPlayerScreen(
-                    videoId = videoId,
-                    title = title,
-                    channel = channel,
-                    onBack = { nav.popBackStack() },
-                )
+                val route = backStackEntry.destination.route.orEmpty()
+                // Läuft schon eine Übertragung, geht das Video direkt an den Fernseher — der
+                // Player am Handy (samt Drehen ins Querformat) wird gar nicht erst geöffnet.
+                val straightToTv = remember { cast.casting }
+                if (straightToTv) {
+                    LaunchedEffect(Unit) {
+                        cast.playVideo(videoId, title, channel)
+                        openCastRemote(route)
+                    }
+                    Box(Modifier.fillMaxSize())
+                } else {
+                    VideoPlayerScreen(
+                        videoId = videoId,
+                        title = title,
+                        channel = channel,
+                        onBack = { nav.popBackStack() },
+                        onCastStarted = { openCastRemote(route) },
+                    )
+                }
+            }
+            composable("cast") {
+                com.hikari.app.ui.cast.CastRemoteScreen(cast = cast, onClose = { nav.popBackStack() })
             }
             composable(
                 route = "original/{videoId}",
@@ -312,6 +345,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                 FullscreenOriginalPlayer(
                     videoId = videoId,
                     onBack = { nav.popBackStack() },
+                    onCastStarted = { openCastRemote(entry.destination.route.orEmpty()) },
                 )
             }
             composable("feed") {
@@ -321,7 +355,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                     onNavigate = { route -> nav.navigate(route) },
                     resetTick = feedResetTick,
                     bottomPadding = if (showsBottomBar) {
-                        padding.calculateBottomPadding() + (if (isVideoDockVisible) 68.dp else 0.dp)
+                        padding.calculateBottomPadding() + barSpace
                     } else {
                         0.dp
                     },
@@ -409,6 +443,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
             composable("nowplaying") {
                 NowPlayingScreen(
                     onBack = { nav.popBackStack() },
+                    onCastStarted = { openCastRemote("nowplaying") },
                     onOpenArtist = { id, name ->
                         nav.navigate("artist/$id?name=${URLEncoder.encode(name, "UTF-8")}")
                     },
@@ -753,16 +788,30 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
             )
         }
 
+        // Leiste für das, was gerade auf dem Fernseher läuft — sitzt an derselben Stelle.
+        if (isCastBarVisible) {
+            com.hikari.app.ui.cast.CastBar(
+                cast = cast,
+                onOpen = { nav.navigate("cast") { launchSingleTop = true } },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(
+                        bottom = if (showsBottomBar) padding.calculateBottomPadding() + 6.dp else 12.dp,
+                    ),
+            )
+        }
+
         // Schnellzugriff auf die laufende Musik — sitzt über der Bottom-Bar
         // im Daumenbereich und nur dort, wo die Leiste ohnehin sichtbar ist.
-        if (showsBottomBar) {
+        // Läuft die Musik auf dem Fernseher, übernimmt die Cast-Leiste.
+        if (showsBottomBar && !castingMusic) {
             MiniMusicBubble(
                 inMusicSection = inMusicSection,
                 onOpen = { navTo(nav, "music") },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(
-                        bottom = padding.calculateBottomPadding() + 8.dp + (if (isVideoDockVisible) 68.dp else 0.dp),
+                        bottom = padding.calculateBottomPadding() + 8.dp + barSpace,
                         end = 12.dp,
                     ),
             )
