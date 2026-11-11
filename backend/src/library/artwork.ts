@@ -32,20 +32,32 @@ export function normalizeTitle(title: string): string {
     .replace(/[^a-z0-9]/g, "");
 }
 
-interface TvmazeHit {
-  show: { id: number; name: string; image?: { original?: string } | null };
+export interface TvmazeHit {
+  show: {
+    id: number;
+    name: string;
+    image?: { original?: string } | null;
+    /** Genre-Angaben und Art der Sendung — für die Kategorien (library/genres.ts). */
+    genres?: string[];
+    type?: string | null;
+  };
 }
 
 /**
  * Wählt aus den TVmaze-Treffern die Serie, deren Name genau passt. Bewusst
  * streng: lieber kein Plakat als das einer fremden Serie („Ted" ≠ „Ted Lasso").
  */
-export function pickShow(title: string, hits: TvmazeHit[]): TvmazeHit["show"] | null {
+export function pickShow(
+  title: string,
+  hits: TvmazeHit[],
+  needImage = true,
+): TvmazeHit["show"] | null {
   const wanted = normalizeTitle(title);
   if (!wanted) return null;
   return (
-    hits.map((h) => h.show).find((s) => normalizeTitle(s.name) === wanted && s.image?.original) ??
-    null
+    hits
+      .map((h) => h.show)
+      .find((s) => normalizeTitle(s.name) === wanted && (!needImage || s.image?.original)) ?? null
   );
 }
 
@@ -102,16 +114,20 @@ const AKA_CANDIDATES = 3;
  * „La Casa de Papel" — der deutsche Titel steht dort unter den Zweitnamen).
  * Auch hier gilt nur ein genau passender Name.
  */
-async function findShow(
+export async function findShow(
   fetchImpl: Fetch,
   title: string,
   hits: TvmazeHit[],
+  /** Für Plakate muss die Serie ein Bild haben; für die Kategorien reicht der Eintrag. */
+  opts: { needImage?: boolean } = {},
 ): Promise<TvmazeHit["show"] | null> {
-  const exact = pickShow(title, hits);
+  const needImage = opts.needImage ?? true;
+  const exact = pickShow(title, hits, needImage);
   if (exact) return exact;
   const wanted = normalizeTitle(title);
   if (!wanted) return null;
-  for (const { show } of hits.filter((h) => h.show.image?.original).slice(0, AKA_CANDIDATES)) {
+  const candidates = hits.filter((h) => !needImage || h.show.image?.original);
+  for (const { show } of candidates.slice(0, AKA_CANDIDATES)) {
     const akas = await fetchJson<{ name?: string }[]>(
       fetchImpl,
       `https://api.tvmaze.com/shows/${show.id}/akas`,

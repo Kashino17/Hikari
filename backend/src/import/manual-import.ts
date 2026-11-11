@@ -4,6 +4,7 @@ import { join } from "node:path";
 import type Database from "better-sqlite3";
 import { probeDurationSeconds } from "../download/probe.js";
 import { scoutFilmArtwork, scoutSeriesArtwork } from "../library/artwork.js";
+import { scoutFilmGenres, scoutSeriesGenres } from "../library/genres.js";
 import { PROGRESS_ARGS, parseProgressLine } from "../download/progress.js";
 import { YtDlpError, runPreferEmbedded, runYtDlp } from "../yt-dlp/client.js";
 import { fillMissingEpisodeInfo } from "./episode-parser.js";
@@ -752,6 +753,9 @@ function persistImportedVideo(db: Database.Database, input: PersistInput): void 
   // gefundene Plakat eintragen — oder die Suche nachholen, falls noch keine lief.
   if (seriesId) scoutSeriesArtwork(seriesId, manualMeta?.seriesTitle);
   else scoutFilmArtwork(input.videoId, input.title);
+  // Jetzt gibt es die Zeile in der Datenbank — die Kategorie gleich mit nachschlagen.
+  if (seriesId) scoutSeriesGenres(seriesId);
+  else scoutFilmGenres(input.videoId);
 }
 
 /** Im In-App-Browser mitgelesener Stream samt der Header seiner Herkunftsseite. */

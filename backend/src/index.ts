@@ -51,6 +51,7 @@ import {
 } from "./ingest/queue.js";
 import { fetchSponsorSegments } from "./sponsorblock/client.js";
 import { ArtworkScout, enrichArtwork, setArtworkScout } from "./library/artwork.js";
+import { enrichGenres, ensureFilmGenres, ensureSeriesGenres, setGenreScout } from "./library/genres.js";
 import { enrichMangaCovers, ensureMangaCover, setMangaCoverScout } from "./manga/cover.js";
 
 const cfg = loadConfig();
@@ -371,11 +372,20 @@ if (process.env.ARTWORK_LOOKUP !== "off") {
       .run(() => ensureMangaCover(mangaCovers, id))
       .catch((err) => app.log.warn({ err, manga: id }, "manga cover lookup failed"));
   });
+  // Kategorien für Serien und Filme (TVmaze / Wikidata): beim Import und im selben Sammellauf.
+  const genreOpts = { db, log: app.log };
+  const scoutGenres = (job: () => Promise<unknown>, what: object) =>
+    void scout.run(job).catch((err) => app.log.warn({ err, ...what }, "genre lookup failed"));
+  setGenreScout({
+    series: (id) => scoutGenres(() => ensureSeriesGenres(genreOpts, id), { series: id }),
+    film: (id) => scoutGenres(() => ensureFilmGenres(genreOpts, id), { video: id }),
+  });
   const runArtwork = () =>
     void scout
       .run(async () => {
         await enrichArtwork({ db, coverDir: cfg.coverDir, log: app.log });
         await enrichMangaCovers(mangaCovers);
+        await enrichGenres(genreOpts);
       })
       .catch((err) => app.log.warn({ err }, "artwork lookup crashed"));
   setTimeout(runArtwork, 15_000).unref();

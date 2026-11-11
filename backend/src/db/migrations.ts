@@ -129,6 +129,11 @@ export function applyMigrations(db: Database.Database): void {
   addColumnIfMissing(db, "series", "poster_url", "TEXT");
   addColumnIfMissing(db, "series", "backdrop_url", "TEXT");
   addColumnIfMissing(db, "series", "artwork_checked_at", "INTEGER");
+  // Kategorien aus dem Netz (library/genres.ts): kommagetrennte Kennungen; leer = nichts gefunden.
+  addColumnIfMissing(db, "series", "genres", "TEXT");
+  addColumnIfMissing(db, "series", "genres_checked_at", "INTEGER");
+  addColumnIfMissing(db, "videos", "genres", "TEXT");
+  addColumnIfMissing(db, "videos", "genres_checked_at", "INTEGER");
   // Manga-Cover (manga/cover.ts): wann zuletzt erfolglos gesucht wurde.
   addColumnIfMissing(db, "manga_series", "cover_checked_at", "INTEGER");
   // Backfill: Bestandsvideos nach Heuristik klassifizieren (Hochkant + <=3 min = Short).
