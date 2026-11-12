@@ -146,6 +146,13 @@ createServer(async (req, res) => {
     }
     m = /^\/audio\/([a-z0-9_]{1,120})\.ogg$/.exec(path);
     if (m) return sendFile(req, res, join(ASSETS, 'audio', `${m[1]}.ogg`), TYPES['.ogg'], 'public, max-age=604800');
+    // Ansagen des Blind-Coachs in Rems Stimme (gen_coach_rem.py).
+    if (path === '/data/coach/index.json') {
+      const f = join(ASSETS, 'coach', 'index.json');
+      return send(req, res, 200, existsSync(f) ? await readFile(f) : '{}', TYPES['.json'], { 'cache-control': 'no-cache' });
+    }
+    m = /^\/coach\/([a-f0-9]{12})\.ogg$/.exec(path);
+    if (m) return sendFile(req, res, join(ASSETS, 'coach', `${m[1]}.ogg`), TYPES['.ogg'], 'public, max-age=604800');
 
     if (path === '/healthz') return json(req, res, 200, { ok: true, assets: existsSync(join(ASSETS, 'course.json')) });
 

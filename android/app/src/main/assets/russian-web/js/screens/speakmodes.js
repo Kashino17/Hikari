@@ -292,8 +292,9 @@ export function Blind() {
     setShow(false); setPartial('');
     (async () => {
       setStep('prompt');
-      await Promise.race([tts.speak(`Sag auf Russisch: ${ph.de}`, { lang: 'de-DE', rate: 1 }), new Promise((r) => { ctl.current.skip = r; })]);
-      tts.stop();
+      // Ansage in Rems Stimme (vorab erzeugt); nur ohne Aufnahme die Gerätestimme.
+      await Promise.race([audio.coach(ph.de), new Promise((r) => { ctl.current.skip = r; })]);
+      audio.stop(); tts.stop();
       if (!alive()) return;
       setStep('listen');
       const h = recog.listen({ expect: ph.ru, onPartial: (t) => alive() && setPartial(t) });

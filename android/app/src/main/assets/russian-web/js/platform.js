@@ -187,6 +187,10 @@ export const serverVoice = {
 // ── Clips ──────────────────────────────────────────────────────────────────
 
 let clipSet = new Set();
+
+/** Coach-Ansagen in Rems Stimme: { deutscher Text: Datei-ID } — einmal geladen. */
+let coachIdx = null;
+const coachIndex = () => (coachIdx ??= fetch('/data/coach/index.json').then((r) => (r.ok ? r.json() : {})).catch(() => ({})));
 const el = typeof Audio !== 'undefined' ? new Audio() : null;
 if (el) { el.preload = 'auto'; el.preservesPitch = true; }
 let playToken = 0;
@@ -243,6 +247,23 @@ export const audio = {
       el.playbackRate = playbackRate;
       el.play().catch(() => fin(false));
     });
+  },
+
+  /**
+   * Deutsche Ansage des Coachs (»Sag auf Russisch: …«) in Rems Stimme — vorab erzeugt
+   * (tools/russian_audio/gen_coach_rem.py), liegt in der App. Ohne Aufnahme (z. B. eigene
+   * Sätze) spricht die Gerätestimme. Löst auf wie play(): true = zu Ende gespielt.
+   */
+  async coach(de) {
+    const token = ++playToken;
+    this._halt();
+    setCurrent({ key: 'coach', slow: false });
+    const done = (ok) => { if (token === playToken) setCurrent(null); return ok; };
+    const id = (await coachIndex())[de?.trim()];
+    if (token !== playToken) return false;
+    if (id && await this._element(`/coach/${id}.ogg`, 1)) return done(true);
+    if (token !== playToken) return false;
+    return done(await tts.speak(`Sag auf Russisch: ${de}`, { lang: 'de-DE', rate: 1 }));
   },
 
   /** Eigene Aufnahme (Blob) abspielen. */

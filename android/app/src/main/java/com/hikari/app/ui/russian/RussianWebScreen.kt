@@ -208,6 +208,8 @@ private class RussianWebClient(private val app: Context, private val okHttp: OkH
             path == "/clips.json" -> ok("application/json", ByteArrayInputStream(clips))
             path.startsWith("/data/") && path.endsWith(".json") -> asset("russian/${path.removePrefix("/data/")}")
             path.startsWith("/audio/") && path.endsWith(".ogg") -> asset("russian/audio/${path.removePrefix("/audio/")}")
+            // Ansagen des Blind-Coachs in Rems Stimme (assets/russian/coach).
+            path.startsWith("/coach/") && path.endsWith(".ogg") -> asset("russian/coach/${path.removePrefix("/coach/")}")
             else -> asset("russian-web${if (path == "/") "/index.html" else path}")
         }
     }
