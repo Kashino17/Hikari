@@ -60,3 +60,21 @@ class RuProgressGuardTest {
         assertEquals(-1L, p.lastActiveDay)
     }
 }
+
+class RuProgressNullCardTest {
+    /** Genau der Stand vom Handy am 12.11.2026: Karte mit box/due = null. */
+    private val fromPhone = """{"gender":"MALE","xp":1163,"podcastDayStars":{"1":3},"cards":{"rj001_01":{"due":null,"seen":2,"box":null},"rj001_02":{"due":20770,"seen":1}}}"""
+
+    @Test fun strengesLesenScheitertNachsichtigesNicht() {
+        assertTrue(runCatching { ruJson.decodeFromString(RuProgress.serializer(), fromPhone) }.isFailure)
+        val p = ruJsonLenient.decodeFromString(RuProgress.serializer(), fromPhone)
+        assertEquals(1163, p.xp)
+        assertEquals(1, p.cards["rj001_01"]!!.box)
+        assertEquals(0L, p.cards["rj001_01"]!!.due)
+    }
+
+    @Test fun schreibenEnthaeltImmerBox() {
+        val json = ruJsonProgress.encodeToString(RuProgress.serializer(), RuProgress(cards = mapOf("a" to RuCard(due = 5))))
+        assertTrue(json.contains("\"box\":1"))
+    }
+}

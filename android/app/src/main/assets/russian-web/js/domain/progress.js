@@ -13,7 +13,26 @@ export const emptyProgress = () => ({
   bestReflex: 0, bestKombi: 0, spokenOk: 0, labBest: {}, favorites: [], patternsDone: [], mySentences: [],
 });
 
-export const normalizeProgress = (p) => ({ ...emptyProgress(), ...(p ?? {}) });
+/**
+ * Karte in gültige Form bringen. Die App (Kotlin) lässt Standardwerte beim Speichern weg
+ * (box 1, seen 0, wrong 0) — ohne diese Ergänzung ergab »richtig« box = NaN → null im JSON,
+ * und die App konnte den ganzen Lernstand nicht mehr lesen (Verlust bis v0.89.104).
+ */
+const num = (x, fallback) => (typeof x === 'number' && Number.isFinite(x) ? x : fallback);
+export const normalizeCard = (c, today = todayEpochDay()) => ({
+  ...c,
+  box: Math.min(Math.max(num(c?.box, 1), 1), MAX_BOX),
+  due: num(c?.due, today),
+  seen: num(c?.seen, 0),
+  wrong: num(c?.wrong, 0),
+});
+
+export const normalizeProgress = (p) => {
+  const out = { ...emptyProgress(), ...(p ?? {}) };
+  const today = todayEpochDay();
+  out.cards = Object.fromEntries(Object.entries(out.cards ?? {}).map(([id, c]) => [id, normalizeCard(c, today)]));
+  return out;
+};
 
 /** Heutiger Kalendertag als epochDay (lokale Zeitzone, wie LocalDate.now().toEpochDay()). */
 export function todayEpochDay(now = new Date()) {
@@ -36,7 +55,8 @@ export const MAX_BOX = 6;
 export const introduce = (existing, today) => existing ?? { box: 1, due: today + INTERVALS[1], seen: 0, wrong: 0 };
 
 /** Richtig → eine Box höher. Falsch → zurück in Box 1 und noch heute erneut fällig. */
-export function grade(card, correct, today) {
+export function grade(raw, correct, today) {
+  const card = normalizeCard(raw, today);
   if (correct) {
     const box = Math.min(card.box + 1, MAX_BOX);
     return { ...card, box, due: today + INTERVALS[box], seen: (card.seen ?? 0) + 1 };

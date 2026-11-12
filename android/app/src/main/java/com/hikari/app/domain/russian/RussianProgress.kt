@@ -16,6 +16,13 @@ import kotlinx.serialization.json.Json
 internal val ruJsonLenient = Json { ignoreUnknownKeys = true; isLenient = true; coerceInputValues = true }
 
 /**
+ * Zum Schreiben des Lernstands: mit allen Standardwerten. Fehlte »box« (Standard 1), rechnete
+ * die Web-Oberfläche box + 1 = NaN, schrieb null zurück — und die App konnte den ganzen
+ * Lernstand nicht mehr lesen. Das war die Ursache des Verlusts bis v0.89.104.
+ */
+internal val ruJsonProgress = Json { ignoreUnknownKeys = true; encodeDefaults = true }
+
+/**
  * Erkennt einen Lernstand, der weniger enthält als der bisherige. Beim Lernen wachsen XP,
  * Karten, Kurstage, Podcast-Tage und gehörte Folgen nur — schrumpft eins davon, wurde
  * ein leerer oder veralteter Stand zurückgeschrieben.
@@ -73,8 +80,8 @@ object RuProgressGuard {
 data class RuCard(
     /** 0 = neu … 6 = sitzt (30 Tage Abstand). */
     val box: Int = 1,
-    /** Fällig ab diesem Tag (epochDay). */
-    val due: Long,
+    /** Fällig ab diesem Tag (epochDay). 0 = sofort (Rückfall, wenn null gespeichert war). */
+    val due: Long = 0,
     val seen: Int = 0,
     val wrong: Int = 0,
 )
@@ -296,7 +303,7 @@ class RussianProgressStore @Inject constructor(
             Log.w(TAG, "update() übersprungen: gespeicherter Lernstand ist nicht lesbar")
             return
         }
-        prefs.edit().putString(KEY, ruJson.encodeToString(RuProgress.serializer(), next)).apply()
+        prefs.edit().putString(KEY, encode(next)).apply()
     }
 
     /**
@@ -331,7 +338,7 @@ class RussianProgressStore @Inject constructor(
         runCatching { ruJson.decodeFromString(RuProgress.serializer(), json) }.getOrNull()
             ?: runCatching { ruJsonLenient.decodeFromString(RuProgress.serializer(), json) }.getOrNull()
 
-    fun encode(p: RuProgress): String = ruJson.encodeToString(RuProgress.serializer(), p)
+    fun encode(p: RuProgress): String = ruJsonProgress.encodeToString(RuProgress.serializer(), p)
 
     fun today(): Long = LocalDate.now().toEpochDay()
 
