@@ -22,6 +22,7 @@ import { registerNewsRoutes } from "./api/news.js";
 import { registerStreamRoutes } from "./api/stream.js";
 import { registerWatchLaterRoutes } from "./api/watch-later.js";
 import { registerRussianRoutes } from "./api/russian.js";
+import { registerRussianBackupRoutes } from "./api/russian-backup.js";
 import { registerRussianConversationRoutes } from "./api/russian-conversation.js";
 import { registerVideoFullRoute } from "./api/video-full.js";
 import { registerCastRoutes } from "./api/cast.js";
@@ -136,6 +137,7 @@ await registerFeedRoutes(app, {
 await registerWatchLaterRoutes(app, { db });
 await registerRussianRoutes(app);
 await registerRussianConversationRoutes(app);
+await registerRussianBackupRoutes(app, { dir: join(cfg.dataDir, "russian-backup") });
 await registerHealthRoute(app, { db, videoDir: cfg.videoDir });
 await registerStatsRoutes(app, { db });
 await registerVideosRoutes(app, { db, videoDir: cfg.videoDir, coverDir: cfg.coverDir, extractor });

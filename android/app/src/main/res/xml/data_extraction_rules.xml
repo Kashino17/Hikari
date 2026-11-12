@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android-Sicherung (Android 12+): nur der Russisch-Lernstand — alles andere bleibt außen vor. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="sharedpref" path="hikari_russian.xml" />
+        <include domain="sharedpref" path="hikari_russian_conversation.xml" />
+        <include domain="file" path="russian-backup/best.json" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="hikari_russian.xml" />
+        <include domain="sharedpref" path="hikari_russian_conversation.xml" />
+        <include domain="file" path="russian-backup/best.json" />
+    </device-transfer>
+</data-extraction-rules>

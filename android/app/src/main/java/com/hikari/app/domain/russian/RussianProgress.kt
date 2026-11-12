@@ -1,6 +1,7 @@
 package com.hikari.app.domain.russian
 
 import android.content.Context
+import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.LocalDate
 import javax.inject.Inject
@@ -9,6 +10,63 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+
+/** Rückfall beim Lesen: verzeiht Zahlen in Anführungszeichen, null statt Standardwert usw. */
+internal val ruJsonLenient = Json { ignoreUnknownKeys = true; isLenient = true; coerceInputValues = true }
+
+/**
+ * Erkennt einen Lernstand, der weniger enthält als der bisherige. Beim Lernen wachsen XP,
+ * Karten, Kurstage, Podcast-Tage und gehörte Folgen nur — schrumpft eins davon, wurde
+ * ein leerer oder veralteter Stand zurückgeschrieben.
+ */
+object RuProgressGuard {
+    fun isRegression(old: RuProgress, new: RuProgress): Boolean =
+        new.xp < old.xp ||
+            new.cards.size < old.cards.size ||
+            new.dayStars.size < old.dayStars.size ||
+            new.podcastDayStars.size < old.podcastDayStars.size ||
+            new.podcastListened.size < old.podcastListened.size
+
+    /**
+     * Führt einen ärmeren Stand [new] mit dem bisherigen [old] zusammen: alles, was je
+     * erreicht wurde, bleibt (höchste XP, alle Karten, beste Sterne, alle gehörten Folgen);
+     * wo [new] etwas Neues hat (z. B. die gerade bewertete Karte), gewinnt [new].
+     */
+    fun merge(old: RuProgress, new: RuProgress): RuProgress {
+        fun <K> maxMerge(a: Map<K, Int>, b: Map<K, Int>): Map<K, Int> =
+            (a.keys + b.keys).associateWith { maxOf(a[it] ?: 0, b[it] ?: 0) }
+        val newer = new.lastActiveDay >= old.lastActiveDay
+        return new.copy(
+            gender = new.gender ?: old.gender,
+            voice = new.voice ?: old.voice,
+            xp = maxOf(old.xp, new.xp),
+            streak = if (newer) new.streak else old.streak,
+            bestStreak = maxOf(old.bestStreak, new.bestStreak),
+            lastActiveDay = maxOf(old.lastActiveDay, new.lastActiveDay),
+            dayStars = maxMerge(old.dayStars, new.dayStars),
+            podcastDayStars = maxMerge(old.podcastDayStars, new.podcastDayStars),
+            podcastListened = old.podcastListened + new.podcastListened,
+            podcastLastCompletedDay = maxOf(old.podcastLastCompletedDay, new.podcastLastCompletedDay),
+            courseLastCompletedDay = maxOf(old.courseLastCompletedDay, new.courseLastCompletedDay),
+            cards = old.cards + new.cards,
+            xpByDay = maxMerge(old.xpByDay, new.xpByDay),
+            bestBlitz = maxOf(old.bestBlitz, new.bestBlitz),
+            bestPairsSeconds = listOf(old.bestPairsSeconds, new.bestPairsSeconds).filter { it > 0 }.minOrNull() ?: 0,
+            bestReflex = maxOf(old.bestReflex, new.bestReflex),
+            bestKombi = maxOf(old.bestKombi, new.bestKombi),
+            spokenOk = maxOf(old.spokenOk, new.spokenOk),
+            labBest = maxMerge(old.labBest, new.labBest),
+            favorites = if (new.favorites.isEmpty()) old.favorites else new.favorites,
+            patternsDone = old.patternsDone + new.patternsDone,
+            mySentences = if (new.mySentences.isEmpty()) old.mySentences else new.mySentences,
+        )
+    }
+
+    /** Grobe Größe des Lernstands — dieselbe Formel wie der Server (backend/src/api/russian-backup.ts). */
+    fun score(p: RuProgress): Int =
+        p.xp + p.cards.size + 10 * p.dayStars.size + 10 * p.podcastDayStars.size + p.podcastListened.size
+}
 
 /** Lernstand einer Karte im Leitner-System. */
 @Serializable
@@ -203,17 +261,41 @@ class RussianProgressStore @Inject constructor(
     @ApplicationContext context: Context,
 ) {
     private val prefs = context.getSharedPreferences("hikari_russian", Context.MODE_PRIVATE)
+
+    /**
+     * true, wenn ein gespeicherter Lernstand da ist, der sich nicht lesen ließ. Dann schreibt
+     * [update] nichts zurück — sonst würde ein leerer Stand den echten überschreiben.
+     */
+    @Volatile private var unreadable = false
     private val _state = MutableStateFlow(load())
     val state: StateFlow<RuProgress> = _state.asStateFlow()
 
-    private fun load(): RuProgress = prefs.getString(KEY, null)?.let {
-        runCatching { ruJson.decodeFromString(RuProgress.serializer(), it) }.getOrNull()
-    } ?: RuProgress()
+    private fun load(): RuProgress {
+        val raw = prefs.getString(KEY, null) ?: return RuProgress().also { unreadable = false }
+        val parsed = decode(raw)
+        unreadable = parsed == null
+        if (parsed == null) {
+            Log.e(TAG, "Lernstand nicht lesbar (${raw.length} Zeichen) — wird nicht überschrieben")
+            // Für alle Fälle eine Kopie neben den Schlüssel legen.
+            if (!prefs.contains(KEY_UNREADABLE)) prefs.edit().putString(KEY_UNREADABLE, raw).apply()
+        }
+        return parsed ?: RuProgress()
+    }
+
+    /** Liest den Stand neu aus den Einstellungen — nach dem Zurückholen einer Sicherung. */
+    @Synchronized
+    fun reload() {
+        _state.value = load()
+    }
 
     @Synchronized
     fun update(transform: (RuProgress) -> RuProgress) {
         val next = transform(_state.value)
         _state.value = next
+        if (unreadable) {
+            Log.w(TAG, "update() übersprungen: gespeicherter Lernstand ist nicht lesbar")
+            return
+        }
         prefs.edit().putString(KEY, ruJson.encodeToString(RuProgress.serializer(), next)).apply()
     }
 
@@ -221,15 +303,33 @@ class RussianProgressStore @Inject constructor(
      * Übernimmt den Lernstand, den die Web-Oberfläche (ui/russian/RussianWebScreen) schreibt.
      * Gespeichert wird ihr JSON unverändert; [parsed] ist dieselbe Fassung für die App
      * (Feed-Karte, Podcast-Player, Erinnerung).
+     *
+     * Ein Stand, der weniger enthält als der aktuelle (weniger XP, Karten, Sterne), wird nicht
+     * übernommen, sondern mit dem aktuellen zusammengeführt — so etwas entsteht beim Lernen nie,
+     * nur wenn irgendwo ein leerer oder veralteter Stand zurückgeschrieben wird.
+     *
+     * Rückgabe: null = so übernommen; sonst der zusammengeführte Stand, den die Oberfläche
+     * statt ihres eigenen anzeigen muss.
      */
     @Synchronized
-    fun replace(parsed: RuProgress, rawJson: String) {
+    fun replace(parsed: RuProgress, rawJson: String): RuProgress? {
+        val current = _state.value
+        if (!unreadable && RuProgressGuard.isRegression(current, parsed)) {
+            val merged = RuProgressGuard.merge(current, parsed)
+            Log.w(TAG, "Ärmerer Lernstand zusammengeführt: xp ${current.xp}→${parsed.xp}, Karten ${current.cards.size}→${parsed.cards.size}, Tage ${current.dayStars.size}→${parsed.dayStars.size}")
+            _state.value = merged
+            prefs.edit().putString(KEY, encode(merged)).apply()
+            return merged
+        }
         _state.value = parsed
+        unreadable = false
         prefs.edit().putString(KEY, rawJson).apply()
+        return null
     }
 
     fun decode(json: String): RuProgress? =
         runCatching { ruJson.decodeFromString(RuProgress.serializer(), json) }.getOrNull()
+            ?: runCatching { ruJsonLenient.decodeFromString(RuProgress.serializer(), json) }.getOrNull()
 
     fun encode(p: RuProgress): String = ruJson.encodeToString(RuProgress.serializer(), p)
 
@@ -282,6 +382,8 @@ class RussianProgressStore @Inject constructor(
 
     private companion object {
         const val KEY = "progress_v1"
+        const val KEY_UNREADABLE = "progress_v1_unreadable"
+        const val TAG = "RussianProgress"
         const val SESSION_KEY = "lesson_session_v1"
         const val PODCAST_SESSION_KEY = "podcast_session_v1"
     }

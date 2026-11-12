@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android-Sicherung (Android 11 und älter): nur der Russisch-Lernstand. -->
+<full-backup-content>
+    <include domain="sharedpref" path="hikari_russian.xml" />
+    <include domain="sharedpref" path="hikari_russian_conversation.xml" />
+    <include domain="file" path="russian-backup/best.json" />
+</full-backup-content>

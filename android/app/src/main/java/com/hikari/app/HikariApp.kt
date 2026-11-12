@@ -40,6 +40,7 @@ class HikariApp : Application(), Configuration.Provider {
     @Inject lateinit var artworkStore: OfflineArtworkStore
     @Inject lateinit var artworkSync: dagger.Lazy<OfflineArtworkSync>
     @Inject lateinit var connectivity: ConnectivityObserver
+    @Inject lateinit var russianBackup: com.hikari.app.domain.russian.RussianBackup
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -57,6 +58,8 @@ class HikariApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         WhatsAppNotificationListenerService.ensureServiceBound(this)
+        // Russisch-Lernstand sichern (Gerät + Mac) und bei Verlust automatisch zurückholen.
+        russianBackup.start(appScope)
         // Always schedule the periodic Smart-Downloads job. The worker itself
         // checks the user's preference each fire and short-circuits if off.
         scheduler.schedulePeriodicSync()

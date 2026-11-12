@@ -294,6 +294,17 @@ interface HikariApi {
     @GET("russian/pronunciation/status")
     suspend fun russianPronunciationStatus(): com.hikari.app.data.api.dto.PronunciationStatusDto
 
+    /** Sicherung des Russisch-Lernstands auf dem Mac (404 = noch keine). */
+    @GET("russian/backup")
+    suspend fun russianBackup(@Query("slot") slot: String): retrofit2.Response<okhttp3.ResponseBody>
+
+    /** 409 = der Server hat einen reicheren Stand und behält ihn. */
+    @PUT("russian/backup")
+    suspend fun putRussianBackup(
+        @Query("slot") slot: String,
+        @Body body: okhttp3.RequestBody,
+    ): retrofit2.Response<okhttp3.ResponseBody>
+
     @GET("russian/conversation/status")
     suspend fun russianConversationStatus(): com.hikari.app.domain.russian.RuChatStatus
 

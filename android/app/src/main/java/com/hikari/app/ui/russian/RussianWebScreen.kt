@@ -14,6 +14,7 @@ import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Base64
+import android.util.Log
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
 import android.webkit.PermissionRequest
@@ -327,11 +328,15 @@ class RussianWebBridge(
         if (playerOwned(key)) return
         if (key == "progress_v1") {
             val parsed = vm.progress.decode(value)
-            if (parsed != null) {
-                lastWebProgress = vm.progress.encode(parsed)
-                vm.progress.replace(parsed, value)
+            if (parsed == null) {
+                // Nie etwas Unlesbares über den Lernstand schreiben.
+                Log.e("RussianWebBridge", "Unlesbarer Lernstand von der Oberfläche verworfen (${value.length} Zeichen)")
                 return
             }
+            lastWebProgress = vm.progress.encode(parsed)
+            // Ärmerer Stand → zusammengeführt; der state-Collector schickt ihn der Oberfläche zurück.
+            vm.progress.replace(parsed, value)
+            return
         }
         prefs.edit().putString(key, value).apply()
     }
