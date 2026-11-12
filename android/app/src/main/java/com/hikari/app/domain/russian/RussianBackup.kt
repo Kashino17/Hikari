@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import com.hikari.app.BuildConfig
 import com.hikari.app.data.api.HikariApi
+import com.hikari.app.data.prefs.SettingsStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.time.LocalDate
@@ -13,6 +14,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -40,6 +42,7 @@ class RussianBackup @Inject constructor(
     @ApplicationContext private val context: Context,
     private val api: HikariApi,
     private val progress: RussianProgressStore,
+    private val settings: SettingsStore,
 ) {
     private val dir = File(context.filesDir, "russian-backup").apply { mkdirs() }
     private val bestFile = File(dir, "best.json")
@@ -55,9 +58,20 @@ class RussianBackup @Inject constructor(
     fun start(appScope: CoroutineScope) {
         scope = appScope
         appScope.launch {
-            runCatching { restoreIfRicher() }.onFailure { Log.w(TAG, "Prüfung beim Start fehlgeschlagen", it) }
+            // Die Server-Adresse kommt aus dem DataStore und landet asynchron im Netzwerk-
+            // Interceptor. Ohne zu warten ginge die erste Anfrage an die Standard-Adresse
+            // statt an die eingestellte — und damit ins Leere (v0.89.103).
+            runCatching { withTimeoutOrNull(5_000) { settings.backendUrl.first() } }
+            delay(START_DELAY_MS)
             for (name in FILES) prefs(name).registerOnSharedPreferenceChangeListener(listener)
-            runCatching { save() }
+            // Bis der Mac einmal erreicht wurde: immer wieder versuchen (30 s, 1, 2, 4 … max. 15 min).
+            var wait = 30_000L
+            while (true) {
+                runCatching { restoreIfRicher() }.onFailure { Log.w(TAG, "Prüfung fehlgeschlagen", it) }
+                if (runCatching { save() }.getOrDefault(false)) break
+                delay(wait)
+                wait = (wait * 2).coerceAtMost(15 * 60_000L)
+            }
         }
     }
 
@@ -124,7 +138,8 @@ class RussianBackup @Inject constructor(
 
     // ── Sichern ──────────────────────────────────────────────────────────────
 
-    private suspend fun save() = mutex.withLock {
+    /** true = der Mac hat geantwortet (angenommen oder abgelehnt). */
+    private suspend fun save(): Boolean = mutex.withLock {
         val files = snapshot()
         val score = scoreOf(files)
         val body = JSONObject().put("savedAt", System.currentTimeMillis()).put("score", score).put("files", files).toString()
@@ -150,6 +165,7 @@ class RussianBackup @Inject constructor(
             else -> Log.w(TAG, "Sichern auf dem Mac: HTTP ${res.code()}")
         }
         res?.body()?.close()
+        res != null
     }
 
     // ── Zurückholen ──────────────────────────────────────────────────────────
@@ -218,6 +234,7 @@ class RussianBackup @Inject constructor(
         private const val PROGRESS_KEY = "progress_v1"
         val FILES = listOf(MAIN, "hikari_russian_conversation")
         private const val SAVE_DELAY_MS = 4_000L
+        private const val START_DELAY_MS = 2_000L
         private const val NET_TIMEOUT_MS = 8_000L
         private const val KEEP_LOCAL_DAYS = 30
         private val JSON = "application/json".toMediaType()
