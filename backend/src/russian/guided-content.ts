@@ -103,35 +103,318 @@ const pick = (
 ): Option => ({ when, example, react, says, vocab });
 const NOT_REALLY = w("Нет, не очень.", "Nein, nicht so sehr.");
 
-/** »Magst du X?« — das häufigste Muster, immer mit eigener Reaktion. */
-function likes(key: string, thing: Line, de: string, lead = "Ты любишь"): Beat {
+const PRAVDA = w("правда", "wirklich");
+const KNIGI = w("книги", "Bücher");
+const SALAT = w("салат", "Salat");
+const U_TEBYA_EST = w("у тебя есть", "du hast");
+const U_MENYA_EST = w("у меня есть", "ich habe");
+const GOVORISH = w("говоришь", "du sprichst");
+const V_GORODE = w("в городе", "in der Stadt");
+const ZHIVU = w("живу", "ich wohne");
+const RABOTAYU = w("работаю", "ich arbeite");
+const TEPLO = w("тепло", "warm");
+const HOLODNO = w("холодно", "kalt");
+const MYASO = w("мясо", "Fleisch");
+const RYBU = w("рыбу", "Fisch (nach »ich esse«)");
+const PIT = w("пить", "trinken");
+const S_SAHAROM = w("с сахаром", "mit Zucker");
+const LETO = w("лето", "Sommer");
+const ZIMU = w("зиму", "Winter (nach »ich mag«)");
+
+/** Anja reagiert nicht immer gleich — drei Tonlagen, damit zehn »Magst du …?« nicht wie ein Fragebogen klingen. */
+type Tone = 0 | 1 | 2;
+
+/** »Magst du X?« — mit eigener Reaktion auf Ja und Nein. */
+function likes(key: string, thing: Line, de: string, lead = "Ты любишь", tone: Tone = 0): Beat {
+  const agree = (
+    [
+      { ru: `Я тоже люблю ${thing.ru}!`, de: `Ich mag auch ${de}!`, vocab: [thing, TOZHE] },
+      { ru: "Отлично! Я тоже.", de: "Super! Ich auch.", vocab: [OTLICHNO, TOZHE] },
+      {
+        ru: `Правда? Я тоже люблю ${thing.ru}!`,
+        de: `Wirklich? Ich mag auch ${de}!`,
+        vocab: [PRAVDA, thing, TOZHE],
+      },
+    ] as const
+  )[tone];
+  const differ = (
+    [
+      {
+        ru: `Понятно. А я люблю ${thing.ru}.`,
+        de: `Verstehe. Und ich mag ${de}.`,
+        vocab: [PONYATNO, thing],
+      },
+      {
+        ru: `Правда? А я очень люблю ${thing.ru}.`,
+        de: `Wirklich? Und ich mag ${de} sehr.`,
+        vocab: [PRAVDA, OCHEN, thing],
+      },
+      { ru: `Ой! А я люблю ${thing.ru}.`, de: `Oh! Und ich mag ${de}.`, vocab: [OJ, thing] },
+    ] as const
+  )[tone];
   return {
     key,
     ask: { ru: `${lead} ${thing.ru}?`, de: `Magst du ${de}?` },
     cue: `Magst du ${de}? Ja oder nein.`,
     vocab: [LJUBISH, thing],
     options: [
-      no(
-        NOT_REALLY,
-        { ru: `Понятно. А я люблю ${thing.ru}.`, de: `Verstehe. Und ich mag ${de}.` },
-        `dass du ${de} nicht so magst`,
-        [NE, OCHEN, PONYATNO, thing],
-      ),
+      no(NOT_REALLY, { ru: differ.ru, de: differ.de }, `dass du ${de} nicht so magst`, [
+        NE,
+        OCHEN,
+        ...differ.vocab,
+      ]),
       yes(
         { ru: `Да, я люблю ${thing.ru}.`, de: `Ja, ich mag ${de}.` },
-        { ru: `Я тоже люблю ${thing.ru}!`, de: `Ich mag auch ${de}!` },
+        { ru: agree.ru, de: agree.de },
         `dass du ${de} magst`,
-        [thing, TOZHE],
+        [thing, ...agree.vocab],
       ),
     ],
   };
 }
 
+/** »Machst du gern X?« — люблю mit Grundform. `de`: Frage, du-Form und ich-Form auf Deutsch. */
+function likesDoing(
+  key: string,
+  verb: Line,
+  de: { ask: string; du: string; ich: string },
+  lead = "Ты любишь",
+): Beat {
+  return {
+    key,
+    ask: { ru: `${lead} ${verb.ru}?`, de: de.ask },
+    cue: `${de.ask} Ja oder nein.`,
+    vocab: [LJUBISH, verb],
+    options: [
+      no(
+        NOT_REALLY,
+        { ru: `Понятно. А я люблю ${verb.ru}.`, de: `Verstehe. Und ich ${de.ich} gern.` },
+        `dass du nicht so gern ${de.du}`,
+        [NE, OCHEN, PONYATNO, verb],
+      ),
+      yes(
+        { ru: `Да, я люблю ${verb.ru}.`, de: `Ja, ich ${de.ich} gern.` },
+        { ru: `Я тоже люблю ${verb.ru}!`, de: `Ich ${de.ich} auch gern!` },
+        `dass du gern ${de.du}`,
+        [verb, TOZHE],
+      ),
+    ],
+  };
+}
+
+// ── Einzelne Themen (stehen in SHARED und zum Teil auch im Anfang eines Szenarios) ──
+const WOHNEN: Beat = {
+  key: "wohnen",
+  ask: { ru: "Ты живёшь в городе?", de: "Wohnst du in der Stadt?" },
+  cue: "Wohnst du in der Stadt? Ja oder nein.",
+  vocab: [w("живёшь", "du wohnst"), V_GORODE],
+  options: [
+    no(
+      w("Нет.", "Nein."),
+      { ru: "Понятно. А я живу в городе.", de: "Verstehe. Und ich wohne in der Stadt." },
+      "dass du nicht in der Stadt wohnst",
+      [PONYATNO, ZHIVU, V_GORODE],
+    ),
+    yes(
+      w("Да, я живу в городе.", "Ja, ich wohne in der Stadt."),
+      { ru: "Я тоже живу в городе.", de: "Ich wohne auch in der Stadt." },
+      "dass du in der Stadt wohnst",
+      [ZHIVU, V_GORODE, TOZHE],
+    ),
+  ],
+};
+
+const SPRACHE: Beat = {
+  key: "sprache",
+  ask: { ru: "Ты говоришь по-русски?", de: "Sprichst du Russisch?" },
+  cue: "Sprichst du schon ein bisschen Russisch?",
+  vocab: [GOVORISH, w("по-русски", "auf Russisch")],
+  options: [
+    pick(
+      ["немног", "чуть"],
+      w("Да, немного.", "Ja, ein bisschen."),
+      { ru: "Отлично! Ты хорошо говоришь.", de: "Super! Du sprichst gut." },
+      "dass du ein bisschen Russisch sprichst",
+      [w("немного", "ein bisschen"), OTLICHNO, GOVORISH],
+    ),
+    no(
+      w("Нет.", "Nein."),
+      { ru: "Правда? Ты хорошо говоришь!", de: "Wirklich? Du sprichst gut!" },
+      "dass du noch kein Russisch sprichst",
+      [PRAVDA, GOVORISH],
+    ),
+    yes(
+      w("Да.", "Ja."),
+      { ru: "Отлично! Ты хорошо говоришь.", de: "Super! Du sprichst gut." },
+      "dass du Russisch sprichst",
+      [OTLICHNO, GOVORISH],
+    ),
+  ],
+};
+
+const WETTER: Beat = {
+  key: "wetter",
+  ask: { ru: "Сегодня тепло или холодно?", de: "Ist es heute warm oder kalt?" },
+  simple: { ru: "Тепло или холодно?", de: "Warm oder kalt?" },
+  cue: "Wie ist es heute bei dir: warm oder kalt?",
+  vocab: [SEGODNYA, TEPLO, HOLODNO],
+  options: [
+    pick(
+      ["тепл"],
+      w("Тепло.", "Warm."),
+      { ru: "Тепло — хорошо!", de: "Warm — schön!" },
+      "dass es heute warm ist",
+      [TEPLO],
+    ),
+    pick(
+      ["холодн"],
+      w("Холодно.", "Kalt."),
+      { ru: "Ой! Холодно.", de: "Oh! Kalt." },
+      "dass es heute kalt ist",
+      [OJ, HOLODNO],
+    ),
+  ],
+};
+
+const JAHRESZEIT: Beat = {
+  key: "jahreszeit",
+  ask: { ru: "Ты любишь лето или зиму?", de: "Magst du den Sommer oder den Winter?" },
+  simple: { ru: "Лето или зима?", de: "Sommer oder Winter?" },
+  cue: "Was magst du lieber: Sommer oder Winter?",
+  vocab: [LJUBISH, LETO, ZIMU, w("зима", "Winter")],
+  starter: "Я люблю …",
+  options: [
+    pick(
+      ["лет"],
+      w("Я люблю лето.", "Ich mag den Sommer."),
+      { ru: "Я тоже люблю лето!", de: "Ich mag auch den Sommer!" },
+      "dass du den Sommer magst",
+      [LETO, TOZHE],
+    ),
+    pick(
+      ["зим"],
+      w("Я люблю зиму.", "Ich mag den Winter."),
+      { ru: "Зиму? А я люблю лето.", de: "Den Winter? Und ich mag den Sommer." },
+      "dass du den Winter magst",
+      [ZIMU, LETO],
+    ),
+  ],
+};
+
+const FAMILIE: Beat = {
+  key: "familie",
+  ask: { ru: "У тебя есть брат или сестра?", de: "Hast du einen Bruder oder eine Schwester?" },
+  simple: { ru: "Брат или сестра?", de: "Bruder oder Schwester?" },
+  cue: "Hast du Geschwister?",
+  vocab: [U_TEBYA_EST, w("брат", "Bruder"), w("сестра", "Schwester")],
+  options: [
+    // Die Beispielantworten bleiben kurz; »у меня есть« bringt Anja in ihrer Reaktion selbst.
+    pick(
+      ["брат"],
+      w("Брат.", "Einen Bruder."),
+      {
+        ru: "Брат — хорошо! А у меня есть сестра.",
+        de: "Ein Bruder — schön! Und ich habe eine Schwester.",
+      },
+      "dass du einen Bruder hast",
+      [w("брат", "Bruder"), U_MENYA_EST, w("сестра", "Schwester")],
+    ),
+    pick(
+      ["сестр"],
+      w("Сестра.", "Eine Schwester."),
+      {
+        ru: "Сестра — хорошо! У меня тоже есть сестра.",
+        de: "Eine Schwester — schön! Ich habe auch eine Schwester.",
+      },
+      "dass du eine Schwester hast",
+      [w("сестра", "Schwester"), U_MENYA_EST, TOZHE],
+    ),
+    no(
+      w("Нет.", "Nein."),
+      { ru: "Понятно. А у меня есть сестра.", de: "Verstehe. Und ich habe eine Schwester." },
+      "dass du keine Geschwister hast",
+      [PONYATNO, U_MENYA_EST, w("сестра", "Schwester")],
+    ),
+  ],
+};
+
+const BUECHER = likes("buecher", KNIGI, "Bücher", "А ты любишь", 2);
+
+const MEDIEN: Beat = {
+  key: "medien",
+  ask: { ru: "Что ты любишь: кино или книги?", de: "Was magst du lieber: Filme oder Bücher?" },
+  simple: { ru: "Кино или книги?", de: "Filme oder Bücher?" },
+  cue: "Was magst du lieber: Filme oder Bücher?",
+  vocab: [CHTO, LJUBISH, KINO, KNIGI],
+  starter: "Я люблю …",
+  options: [
+    pick(
+      ["кино", "фильм"],
+      w("Я люблю кино.", "Ich mag Filme."),
+      { ru: "Кино! Я тоже люблю кино.", de: "Filme! Ich mag auch Filme." },
+      "dass du lieber Filme magst",
+      [KINO, TOZHE],
+    ),
+    pick(
+      ["книг"],
+      w("Я люблю книги.", "Ich mag Bücher."),
+      { ru: "Книги! Я тоже люблю книги.", de: "Bücher! Ich mag auch Bücher." },
+      "dass du lieber Bücher magst",
+      [KNIGI, TOZHE],
+    ),
+  ],
+};
+
+const FISCH_FLEISCH: Beat = {
+  key: "fisch-fleisch",
+  ask: { ru: "Ты ешь мясо или рыбу?", de: "Isst du Fleisch oder Fisch?" },
+  simple: { ru: "Мясо или рыба?", de: "Fleisch oder Fisch?" },
+  cue: "Was isst du: Fleisch oder Fisch?",
+  vocab: [ESH, MYASO, RYBU, w("рыба", "Fisch")],
+  options: [
+    pick(
+      ["мяс"],
+      w("Я ем мясо.", "Ich esse Fleisch."),
+      { ru: "Мясо? А я ем рыбу.", de: "Fleisch? Und ich esse Fisch." },
+      "dass du Fleisch isst",
+      [EM, MYASO, RYBU],
+    ),
+    pick(
+      ["рыб"],
+      w("Я ем рыбу.", "Ich esse Fisch."),
+      { ru: "Я тоже ем рыбу.", de: "Ich esse auch Fisch." },
+      "dass du Fisch isst",
+      [EM, RYBU, TOZHE],
+    ),
+    no(
+      w("Нет.", "Nein."),
+      { ru: "Понятно.", de: "Verstehe." },
+      "dass du weder Fleisch noch Fisch isst",
+      [PONYATNO],
+    ),
+  ],
+};
+
+const SPAZIEREN = likesDoing(
+  "spazieren",
+  w("гулять", "spazieren gehen"),
+  { ask: "Gehst du gern spazieren?", du: "spazieren gehst", ich: "gehe" },
+  "А ты любишь",
+);
+const TANZEN = likesDoing(
+  "tanzen",
+  w("танцевать", "tanzen"),
+  { ask: "Tanzt du gern?", du: "tanzt", ich: "tanze" },
+  "А ты любишь",
+);
+const WALD = likes("wald", w("лес", "Wald"), "den Wald", "А ты любишь");
+
 // ── Themen, die in jedem Gespräch vorkommen können ──────────────────────────
-// Reihenfolge mit Absicht: Auf einen Schritt mit vielen neuen Wörtern folgt einer mit wenigen.
+// Reihenfolge mit Absicht: Auf einen Schritt mit vielen neuen Wörtern folgt einer mit wenigen,
+// und Fragearten wechseln sich ab (mögen · tun · wählen · haben).
 const SHARED: Beat[] = [
-  likes("saft", SOK, "Saft"),
-  likes("kino", KINO, "Filme"),
+  likes("saft", SOK, "Saft", "Ты любишь", 1),
+  likes("kino", KINO, "Filme", "А ты любишь"),
   {
     key: "wasser",
     ask: { ru: "Ты пьёшь воду?", de: "Trinkst du Wasser?" },
@@ -193,7 +476,7 @@ const SHARED: Beat[] = [
       ),
     ],
   },
-  likes("kaese", SYR, "Käse", "А ты любишь"),
+  likes("kaese", SYR, "Käse", "А ты любишь", 2),
   {
     key: "heute",
     ask: { ru: "Сегодня ты дома?", de: "Bist du heute zu Hause?" },
@@ -243,21 +526,21 @@ const SHARED: Beat[] = [
     ask: { ru: "У тебя есть кот или собака?", de: "Hast du einen Kater oder einen Hund?" },
     simple: { ru: "Кот или собака?", de: "Kater oder Hund?" },
     cue: "Hast du ein Haustier?",
-    vocab: [w("у тебя есть", "du hast"), w("кот", "Kater"), w("собака", "Hund")],
+    vocab: [U_TEBYA_EST, w("кот", "Kater"), w("собака", "Hund")],
     options: [
       pick(
         ["кот", "кошк"],
         w("У меня есть кот.", "Ich habe einen Kater."),
         { ru: "Кот — хорошо!", de: "Ein Kater — schön!" },
         "dass du einen Kater hast",
-        [w("у меня есть", "ich habe"), w("кот", "Kater")],
+        [U_MENYA_EST, w("кот", "Kater")],
       ),
       pick(
         ["собак"],
         w("У меня есть собака.", "Ich habe einen Hund."),
         { ru: "Собака — хорошо!", de: "Ein Hund — schön!" },
         "dass du einen Hund hast",
-        [w("у меня есть", "ich habe"), w("собака", "Hund")],
+        [U_MENYA_EST, w("собака", "Hund")],
       ),
       no(w("Нет.", "Nein."), { ru: "Понятно.", de: "Verstehe." }, "dass du kein Haustier hast", [
         PONYATNO,
@@ -265,8 +548,85 @@ const SHARED: Beat[] = [
     ],
   },
   likes("suppe", SUP, "Suppe"),
-  likes("sport", w("спорт", "Sport"), "Sport"),
-  likes("buecher", w("книги", "Bücher"), "Bücher"),
+  {
+    key: "abendessen",
+    ask: { ru: "Что ты ешь вечером: суп или салат?", de: "Was isst du abends: Suppe oder Salat?" },
+    simple: { ru: "Суп или салат?", de: "Suppe oder Salat?" },
+    cue: "Was isst du abends? Such dir eins aus.",
+    vocab: [CHTO, ESH, VECHEROM, SUP, SALAT],
+    options: [
+      pick(
+        ["суп"],
+        w("Я ем суп.", "Ich esse Suppe."),
+        { ru: "Суп вечером — хорошо!", de: "Suppe am Abend — gut!" },
+        "dass du abends Suppe isst",
+        [EM, SUP, VECHEROM],
+      ),
+      pick(
+        ["салат"],
+        w("Я ем салат.", "Ich esse Salat."),
+        { ru: "Салат? А я ем суп.", de: "Salat? Und ich esse Suppe." },
+        "dass du abends Salat isst",
+        [EM, SALAT, SUP],
+      ),
+    ],
+  },
+  SPAZIEREN,
+  WOHNEN,
+  likes("sport", w("спорт", "Sport"), "Sport", "А ты любишь", 1),
+  WETTER,
+  BUECHER,
+  MEDIEN,
+  {
+    key: "arbeit",
+    ask: { ru: "Ты сегодня работаешь?", de: "Arbeitest du heute?" },
+    cue: "Arbeitest du heute? Ja oder nein.",
+    vocab: [SEGODNYA, w("работаешь", "du arbeitest")],
+    options: [
+      no(
+        w("Нет.", "Nein."),
+        { ru: "Отлично! А я сегодня работаю.", de: "Super! Und ich arbeite heute." },
+        "dass du heute nicht arbeitest",
+        [OTLICHNO, SEGODNYA, RABOTAYU],
+      ),
+      yes(
+        w("Да, я работаю.", "Ja, ich arbeite."),
+        { ru: "Я тоже работаю сегодня.", de: "Ich arbeite heute auch." },
+        "dass du heute arbeitest",
+        [RABOTAYU, TOZHE, SEGODNYA],
+      ),
+    ],
+  },
+  JAHRESZEIT,
+  FAMILIE,
+  likesDoing("kochen", w("готовить", "kochen"), {
+    ask: "Kochst du gern?",
+    du: "kochst",
+    ich: "koche",
+  }),
+  FISCH_FLEISCH,
+  SPRACHE,
+  likes("schokolade", w("шоколад", "Schokolade"), "Schokolade", "А ты любишь", 2),
+  {
+    key: "durst",
+    ask: { ru: "Ты хочешь пить?", de: "Hast du Durst?" },
+    cue: "Hast du gerade Durst? Ja oder nein.",
+    vocab: [HOCHESH, PIT],
+    options: [
+      no(
+        w("Нет, спасибо.", "Nein, danke."),
+        { ru: "Хорошо. А я хочу пить.", de: "Gut. Und ich habe Durst." },
+        "dass du keinen Durst hast",
+        [HOCHU, PIT],
+      ),
+      yes(
+        w("Да, я хочу пить.", "Ja, ich habe Durst."),
+        { ru: "Я тоже хочу пить.", de: "Ich habe auch Durst." },
+        "dass du Durst hast",
+        [HOCHU, PIT, TOZHE],
+      ),
+    ],
+  },
   {
     key: "jetzt-tee",
     ask: { ru: "Ты хочешь чай сейчас?", de: "Möchtest du jetzt einen Tee?" },
@@ -287,6 +647,53 @@ const SHARED: Beat[] = [
       ),
     ],
   },
+  {
+    key: "tee-mit-zucker",
+    ask: { ru: "Ты пьёшь чай с сахаром?", de: "Trinkst du Tee mit Zucker?" },
+    cue: "Trinkst du deinen Tee mit Zucker?",
+    vocab: [PJOSH, S_SAHAROM],
+    options: [
+      no(
+        w("Нет.", "Nein."),
+        { ru: "Понятно. А я пью чай с сахаром.", de: "Verstehe. Und ich trinke Tee mit Zucker." },
+        "dass du Tee ohne Zucker trinkst",
+        [PONYATNO, PJU, S_SAHAROM],
+      ),
+      yes(
+        w("Да.", "Ja."),
+        { ru: "Я тоже пью чай с сахаром.", de: "Ich trinke Tee auch mit Zucker." },
+        "dass du Tee mit Zucker trinkst",
+        [PJU, S_SAHAROM, TOZHE],
+      ),
+    ],
+  },
+  WALD,
+  {
+    key: "abends-zuhause",
+    ask: { ru: "Вечером ты дома?", de: "Bist du abends zu Hause?" },
+    cue: "Bist du abends meistens zu Hause?",
+    vocab: [VECHEROM, DOMA],
+    options: [
+      no(
+        w("Нет.", "Nein."),
+        { ru: "Понятно. А я вечером дома.", de: "Verstehe. Und ich bin abends zu Hause." },
+        "dass du abends nicht zu Hause bist",
+        [PONYATNO, VECHEROM, DOMA],
+      ),
+      yes(
+        w("Да, я дома.", "Ja, ich bin zu Hause."),
+        { ru: "Я тоже вечером дома.", de: "Ich bin abends auch zu Hause." },
+        "dass du abends zu Hause bist",
+        [DOMA, TOZHE, VECHEROM],
+      ),
+    ],
+  },
+  likesDoing("schlafen", w("спать", "schlafen"), {
+    ask: "Schläfst du gern?",
+    du: "schläfst",
+    ich: "schlafe",
+  }),
+  TANZEN,
 ];
 
 // ── Der Anfang jedes Szenarios ──────────────────────────────────────────────
@@ -567,6 +974,8 @@ const OPENINGS: Record<string, Beat[]> = {
         },
       ],
     },
+    WOHNEN,
+    SPRACHE,
   ],
   weekend: [
     {
@@ -593,6 +1002,8 @@ const OPENINGS: Record<string, Beat[]> = {
       ],
     },
     whenOfDay(w("Сегодня", "Heute"), [SEGODNYA]),
+    SPAZIEREN,
+    WETTER,
   ],
   journey: [
     {
@@ -636,6 +1047,8 @@ const OPENINGS: Record<string, Beat[]> = {
         ]),
       ],
     },
+    WOHNEN,
+    SPRACHE,
   ],
   memory: [
     {
@@ -671,6 +1084,8 @@ const OPENINGS: Record<string, Beat[]> = {
       ],
     },
     likes("meer", w("море", "Meer"), "das Meer"),
+    WALD,
+    FAMILIE,
   ],
   film: [
     {
@@ -679,6 +1094,8 @@ const OPENINGS: Record<string, Beat[]> = {
       simple: { ru: "Ты любишь кино?", de: "Magst du Filme?" },
     },
     whenOfDay(w("Кино", "Filme"), [KINO]),
+    BUECHER,
+    MEDIEN,
   ],
   music: [
     {
@@ -687,6 +1104,7 @@ const OPENINGS: Record<string, Beat[]> = {
       simple: { ru: "Ты любишь музыку?", de: "Magst du Musik?" },
     },
     whenOfDay(w("Музыка", "Musik"), [w("музыка", "Musik")]),
+    TANZEN,
   ],
   choice: [
     {
@@ -714,6 +1132,7 @@ const OPENINGS: Record<string, Beat[]> = {
       ],
     },
     LIKES_TEA_OR_COFFEE,
+    MEDIEN,
   ],
 };
 
