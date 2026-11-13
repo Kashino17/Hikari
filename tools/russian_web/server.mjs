@@ -10,6 +10,7 @@
 //   /audio/<clip>.ogg → Muttersprachler-Clips (assets/russian/audio)
 //   /api/*           → Hikari-Server (Aussprache-Prüfung, Gespräch, Podcast-Audio …)
 //   /store           → Lernstand der Vorschau (~/.hikari/russian-web/store.json)
+//   /media/<datei>   → Videos und Standbilder für »Lieder & Szenen« (~/.hikari/erleben/media)
 //
 // Start: node tools/russian_web/server.mjs   (Port 3079)
 // Tests: node --test tools/russian_web/test/  (braucht test/parity.json, siehe dort)
@@ -26,15 +27,18 @@ const BACKEND = process.env.HIKARI_BACKEND ?? 'http://127.0.0.1:3939';
 const HERE = new URL('.', import.meta.url).pathname;
 const ROOT = new URL('../../android/app/src/main/assets/russian-web/', import.meta.url).pathname;
 const ASSETS = process.env.HIKARI_ASSETS ?? new URL('../../android/app/src/main/assets/russian', import.meta.url).pathname;
-const STORE_DIR = join(homedir(), '.hikari', 'russian-web');
+// Clips dürfen aus einem anderen Klon kommen (schlanker Arbeitsbaum ohne die 9.500 Audiodateien).
+const AUDIO_ASSETS = process.env.HIKARI_AUDIO_ASSETS ?? ASSETS;
+const MEDIA = process.env.HIKARI_ERLEBEN_MEDIA ?? join(homedir(), '.hikari', 'erleben', 'media');
+const STORE_DIR = process.env.HIKARI_STORE_DIR ?? join(homedir(), '.hikari', 'russian-web');
 const STORE_FILE = join(STORE_DIR, 'store.json');
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml',
-  '.ogg': 'audio/ogg', '.woff2': 'font/woff2', '.png': 'image/png', '.webmanifest': 'application/manifest+json',
+  '.ogg': 'audio/ogg', '.woff2': 'font/woff2', '.png': 'image/png', '.jpg': 'image/jpeg', '.mp4': 'video/mp4', '.webmanifest': 'application/manifest+json',
 };
-const DATA = new Set(['course', 'podcast', 'phrasebook', 'deepdive', 'patterns', 'sounds', 'glosses', 'plan']);
+const DATA = new Set(['course', 'podcast', 'phrasebook', 'deepdive', 'patterns', 'sounds', 'glosses', 'plan', 'erleben']);
 
 // ── Lernstand ──────────────────────────────────────────────────────────────
 mkdirSync(STORE_DIR, { recursive: true });
@@ -141,18 +145,21 @@ createServer(async (req, res) => {
     }
     if (path === '/clips.json') {
       // Welche Clips es gibt — die App fragt nie ins Leere und weiß, wann sie vorlesen lassen muss.
-      const names = readdirSync(join(ASSETS, 'audio')).filter((f) => f.endsWith('.ogg')).map((f) => f.slice(0, -4));
+      const names = readdirSync(join(AUDIO_ASSETS, 'audio')).filter((f) => f.endsWith('.ogg')).map((f) => f.slice(0, -4));
       return send(req, res, 200, JSON.stringify(names), TYPES['.json'], { 'cache-control': 'no-cache' });
     }
     m = /^\/audio\/([a-z0-9_]{1,120})\.ogg$/.exec(path);
-    if (m) return sendFile(req, res, join(ASSETS, 'audio', `${m[1]}.ogg`), TYPES['.ogg'], 'public, max-age=604800');
+    if (m) return sendFile(req, res, join(AUDIO_ASSETS, 'audio', `${m[1]}.ogg`), TYPES['.ogg'], 'public, max-age=604800');
     // Ansagen des Blind-Coachs in Rems Stimme (gen_coach_rem.py).
     if (path === '/data/coach/index.json') {
-      const f = join(ASSETS, 'coach', 'index.json');
+      const f = join(AUDIO_ASSETS, 'coach', 'index.json');
       return send(req, res, 200, existsSync(f) ? await readFile(f) : '{}', TYPES['.json'], { 'cache-control': 'no-cache' });
     }
     m = /^\/coach\/([a-f0-9]{12})\.ogg$/.exec(path);
-    if (m) return sendFile(req, res, join(ASSETS, 'coach', `${m[1]}.ogg`), TYPES['.ogg'], 'public, max-age=604800');
+    if (m) return sendFile(req, res, join(AUDIO_ASSETS, 'coach', `${m[1]}.ogg`), TYPES['.ogg'], 'public, max-age=604800');
+
+    m = /^\/media\/([a-z0-9_]{1,60})\.(mp4|jpg)$/.exec(path);
+    if (m) return sendFile(req, res, join(MEDIA, `${m[1]}.${m[2]}`), TYPES[`.${m[2]}`], 'public, max-age=3600');
 
     if (path === '/healthz') return json(req, res, 200, { ok: true, assets: existsSync(join(ASSETS, 'course.json')) });
 

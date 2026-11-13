@@ -6,6 +6,7 @@ import { storage } from '../platform.js';
 import { SettingsSheet } from './me.js';
 import { daySeconds, fmtDuration, timeTrack } from '../timetrack.js';
 import { focus, quickPicks } from '../learner.js';
+import { ErlebenTeaser } from './erleben.js';
 
 const WD = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
@@ -136,6 +137,8 @@ export function Home() {
           <span class="ic solid"><${Icon} n=${f.dim.icon} /></span>
           <span class="grow"><b>${f.title}</b><span>${f.text}</span></span>
           <span class="go">${f.label}<${Icon} n="chevron_right" size="18" /></span></button></div>`}
+
+      ${ready && html`<${ErlebenTeaser} />`}
 
       <div class="sec"><div class="hd"><div class="h2">Fünf Minuten Zeit?</div><button onClick=${() => nav('ueben')}>Alle Übungen</button></div>
         <div class="sub" style="margin:3px 4px 12px">Passend zu deinem Lernstand ausgesucht.</div>
