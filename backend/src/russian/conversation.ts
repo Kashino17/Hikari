@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { guidedTurn } from "./guided.js";
 
 const text = (max: number) => z.string().trim().min(1).max(max);
 const russian = (max: number) =>
@@ -506,6 +507,46 @@ export type ConversationStatus = {
   wanted?: string;
 };
 
+/** Bis zu dieser Stufe führt fester Code das Gespräch (guided.ts), darüber das Sprachmodell. */
+const GUIDED_UP_TO_STAGE = 1;
+
+/** So lange darf die Satzprüfung durch das Modell dauern — danach geht das Gespräch ohne sie weiter. */
+const CHECK_BUDGET_MS = 8_000;
+
+const CHECK_PROMPT = `You check ONE spoken Russian sentence from a German-speaking beginner who is answering a question.
+It is a speech transcript: ignore punctuation and capitalisation completely.
+Return ONLY a JSON object: {"ok":true|false,"correctedRu":"...","focus":"...","explanationDe":"..."} /no_think
+ok=true when the sentence is understandable and has no real grammar mistake. Short answers and single words are fine.
+WHAT the learner says (likes, dislikes, choices) is never a mistake, and a different wording than you would choose is not a mistake.
+ok=false ONLY for a real language mistake such as a wrong word form or a missing verb. Then:
+correctedRu = the learner's own sentence with ONLY that mistake fixed (same words otherwise),
+focus = one short German sentence naming the issue, explanationDe = one short German sentence explaining the rule.
+When ok=true the other three fields are empty strings.`;
+
+const sentenceCheck = z.object({
+  ok: z.boolean(),
+  correctedRu: z.string().max(600).default(""),
+  focus: z.string().max(240).default(""),
+  explanationDe: z.string().max(400).default(""),
+});
+
+/**
+ * Lässt eine Korrektur des Modells nur durch, wenn sie wirklich den Satz des Lernenden ausbessert:
+ * anderer Wortlaut, aber überwiegend dieselben Wörter und etwa dieselbe Länge. Alles andere
+ * (derselbe Satz noch einmal, ein ganz anderer Satz) wäre eine erfundene Korrektur.
+ */
+export function plausibleCorrection(answer: string, correctedRu: string): boolean {
+  const mine = sameWords(answer).split(" ").filter(Boolean);
+  const fixed = sameWords(correctedRu).split(" ").filter(Boolean);
+  if (!mine.length || !fixed.length || mine.join(" ") === fixed.join(" ")) return false;
+  if (!/[а-я]/.test(fixed.join(""))) return false;
+  if (Math.abs(fixed.length - mine.length) > 2) return false;
+  const shared = fixed.filter((word) =>
+    mine.some((m) => m.slice(0, 3) === word.slice(0, 3)),
+  ).length;
+  return shared * 2 >= Math.max(mine.length, fixed.length);
+}
+
 export class LocalConversationProvider implements ConversationProvider {
   private base: string;
   constructor(
@@ -517,7 +558,81 @@ export class LocalConversationProvider implements ConversationProvider {
       .replace(/\/v1$/, "");
   }
 
+  private get guided() {
+    return this.env.RUSSIAN_CHAT_GUIDED === "1";
+  }
+
+  /** Das geführte Gespräch braucht kein Modell — Anja ist dann immer da. */
   async status(): Promise<ConversationStatus> {
+    const model = await this.modelStatus();
+    return this.guided ? { available: true, model: model.model ?? "guided" } : model;
+  }
+
+  /**
+   * Prüft den Satz des Lernenden auf einen echten Sprachfehler. null = nichts zu verbessern,
+   * oder das Modell war nicht rechtzeitig da — das Gespräch hängt nie an dieser Prüfung.
+   */
+  async checkSentence(question: string, answer: string) {
+    const { model } = await this.modelStatus();
+    if (!model) return null;
+    const native = this.env.RUSSIAN_CHAT_API === "native";
+    const input = JSON.stringify({ question, answer });
+    const response = await this.request(
+      `${this.base}${native ? "/api/v1/chat" : "/v1/chat/completions"}`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        signal: AbortSignal.timeout(CHECK_BUDGET_MS),
+        body: JSON.stringify(
+          native
+            ? {
+                model,
+                system_prompt: CHECK_PROMPT,
+                input,
+                reasoning: "off",
+                store: false,
+                temperature: 0.1,
+                max_output_tokens: 260,
+              }
+            : {
+                model,
+                messages: [
+                  { role: "system", content: CHECK_PROMPT },
+                  { role: "user", content: input },
+                ],
+                temperature: 0.1,
+                max_tokens: 260,
+                stream: false,
+              },
+        ),
+      },
+    );
+    if (!response.ok) return null;
+    const json = (await response.json()) as {
+      output?: { type: string; content?: string }[];
+      choices?: { message: { content: string | null } }[];
+    };
+    const text = native
+      ? (json.output ?? [])
+          .filter((item) => item.type === "message")
+          .map((item) => item.content ?? "")
+          .join("\n")
+      : (json.choices?.[0]?.message.content ?? "");
+    const found = text.match(/\{[\s\S]*\}/);
+    if (!found) return null;
+    const check = sentenceCheck.parse(JSON.parse(found[0]));
+    if (check.ok || !check.focus.trim() || !plausibleCorrection(answer, check.correctedRu))
+      return null;
+    return {
+      focus: check.focus,
+      repairCue:
+        "Versuche deinen Satz noch einmal. Achte auf den Lernimpuls; das Beispiel kannst du danach aufdecken.",
+      correctedRu: check.correctedRu,
+      explanationDe: check.explanationDe,
+    };
+  }
+
+  private async modelStatus(): Promise<ConversationStatus> {
     const offline: ConversationStatus = { available: false, model: null, reason: "offline" };
     try {
       const res = await this.request(`${this.base}/v1/models`, {
@@ -543,7 +658,15 @@ export class LocalConversationProvider implements ConversationProvider {
   }
 
   async respond(input: ConversationRequest) {
-    const { model } = await this.status();
+    if (this.guided && input.stage <= GUIDED_UP_TO_STAGE) {
+      const turn = guidedTurn(input);
+      if (turn.reply.feedback && turn.answered) {
+        const fix = await this.checkSentence(turn.answered.ru, input.message).catch(() => null);
+        if (fix) turn.reply.feedback = { ...turn.reply.feedback, meaning: "partial", ...fix };
+      }
+      return turn.reply;
+    }
+    const { model } = await this.modelStatus();
     if (!model) throw new Error("conversation_unavailable");
     const signal = AbortSignal.timeout(50_000);
     const native = this.env.RUSSIAN_CHAT_API === "native";

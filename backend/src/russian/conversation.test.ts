@@ -6,6 +6,7 @@ import {
   validateBeginnerVocabulary,
   prepareBeginnerVocabulary,
   conversationRequest,
+  plausibleCorrection,
   settleFeedback,
   validateDialogueFlow,
   LocalConversationProvider,
@@ -559,6 +560,105 @@ describe("local model adapter", () => {
     expect(JSON.parse(payload.input).history).toEqual(input.history);
     expect(result.feedback?.repairCue).not.toContain("Я люблю");
     expect(result.partnerRu).toBe(reply.partnerRu);
+  });
+});
+
+describe("guided conversation for the first stages", () => {
+  const env = { RUSSIAN_CHAT_GUIDED: "1" };
+  const cafe = "Ein Café, zwei Menschen: Du triffst Anja in einem kleinen Café.";
+  const history = [
+    { role: "user" as const, content: "Gesprächsaktion: start" },
+    { role: "assistant" as const, content: "Привет! Чай или кофе?" },
+  ];
+  const withCheck = (check: unknown) =>
+    vi
+      .fn<typeof fetch>()
+      .mockImplementation(async (url) =>
+        String(url).endsWith("/v1/models")
+          ? Response.json({ data: [{ id: "m" }] })
+          : Response.json({ choices: [{ message: { content: JSON.stringify(check) } }] }),
+      );
+  const answer = (request: typeof fetch, message: string) =>
+    new LocalConversationProvider(env, request).respond(
+      conversationRequest.parse({ scenario: cafe, action: "reply", message, history }),
+    );
+
+  it("needs no model at all: always available, answers at once, never echoes", async () => {
+    const offline = vi.fn<typeof fetch>().mockRejectedValue(new Error("offline"));
+    const provider = new LocalConversationProvider(env, offline);
+    expect(await provider.status()).toEqual({ available: true, model: "guided" });
+    const start = await provider.respond(
+      conversationRequest.parse({ scenario: cafe, action: "start" }),
+    );
+    expect(start.partnerRu).toBe("Привет! Чай или кофе?");
+    const second = await answer(offline, "я буду чай спасибо");
+    expect(second.partnerRu).toBe("Чай — хорошо. А я буду кофе. Ты будешь сахар?");
+    expect(second.feedback).toMatchObject({ meaning: "clear", focus: "", correctedRu: "" });
+  });
+
+  it("adds a correction only for a real mistake in the learner's own sentence", async () => {
+    const real = await answer(
+      withCheck({
+        ok: false,
+        correctedRu: "Я люблю чай.",
+        focus: "Nach »я« heißt es »люблю«.",
+        explanationDe: "»любить« ist die Grundform.",
+      }),
+      "я любить чай",
+    );
+    expect(real.feedback).toMatchObject({
+      meaning: "partial",
+      correctedRu: "Я люблю чай.",
+      focus: "Nach »я« heißt es »люблю«.",
+    });
+    expect(real.feedback?.praise).toBe("Gut — du hast gesagt, dass du Tee möchtest.");
+    expect(real.partnerRu).toBe("Чай — хорошо. А я буду кофе. Ты будешь сахар?");
+
+    const fine = { meaning: "clear", focus: "", correctedRu: "" };
+    // Das Modell findet nichts, wiederholt den Satz nur, oder erfindet einen ganz anderen.
+    expect((await answer(withCheck({ ok: true }), "я буду чай")).feedback).toMatchObject(fine);
+    expect(
+      (
+        await answer(
+          withCheck({ ok: false, correctedRu: "Я буду чай!", focus: "Komma fehlt." }),
+          "я буду чай",
+        )
+      ).feedback,
+    ).toMatchObject(fine);
+    expect(
+      (
+        await answer(
+          withCheck({
+            ok: false,
+            correctedRu: "Сегодня в Москве хорошая погода.",
+            focus: "Anderer Satz.",
+          }),
+          "я буду чай",
+        )
+      ).feedback,
+    ).toMatchObject(fine);
+    // Unbrauchbare Antwort des Modells: Das Gespräch geht trotzdem weiter.
+    expect((await answer(withCheck("kein JSON"), "я буду чай")).feedback).toMatchObject(fine);
+  });
+
+  it("judges a correction by overlap with what the learner said", () => {
+    expect(plausibleCorrection("я любить чай", "Я люблю чай.")).toBe(true);
+    expect(plausibleCorrection("нет я не чай", "Нет, я не хочу чай.")).toBe(true);
+    expect(plausibleCorrection("я буду чай", "Я буду чай!")).toBe(false);
+    expect(plausibleCorrection("чай", "Я хочу большой чёрный чай с сахаром.")).toBe(false);
+    expect(plausibleCorrection("я буду чай", "Tee, bitte.")).toBe(false);
+  });
+
+  it("leaves later stages and the default setup to the language model", async () => {
+    const model = withCheck(reply);
+    const later = await new LocalConversationProvider(env, model).respond(
+      conversationRequest.parse({ scenario: cafe, action: "start", stage: 2 }),
+    );
+    expect(later.partnerRu).toBe(reply.partnerRu);
+    const plain = await new LocalConversationProvider({}, model).respond(
+      conversationRequest.parse({ scenario: cafe, action: "start" }),
+    );
+    expect(plain.partnerRu).toBe(reply.partnerRu);
   });
 });
 
