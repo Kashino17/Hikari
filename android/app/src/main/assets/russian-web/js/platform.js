@@ -340,6 +340,14 @@ export const speech = {
   available: () => !!((native?.speechAvailable && native.speechAvailable()) || SR || storage.get('dev_speech')),
 
   /**
+   * Russisches Sprachpaket des Handys: 'installed' (Erkennung läuft auf dem Gerät), 'missing'
+   * (ladbar — bis dahin geht jede Aufnahme übers Internet), 'unsupported', 'unknown' (noch nie gesprochen).
+   */
+  pack: () => storage.get('dev_pack') ?? (native?.speechPack ? native.speechPack() : 'unsupported'),
+  /** Öffnet Googles Dialog zum Laden des Sprachpakets. → hat geklappt */
+  downloadPack: () => !!native?.speechPackDownload?.(),
+
+  /**
    * Hört einmal zu. → {promise, stop()}.
    * promise → {ok:true, hyps:[bis zu 5 Lesarten]} | {ok:false, error:'unavailable'|'denied'|'nospeech'|'nomatch'|'network'|'busy'|'aborted'}
    *
@@ -354,6 +362,8 @@ export const speech = {
     const ready = (on) => { if (on !== open) { open = on; onReady?.(on); } };
     // Test-Werkzeug: Spracherkennung simulieren (ohne Mikrofon durchklickbar).
     const sim = storage.get('dev_speech');
+    // 'net' = die Erkennung übers Internet hängt (Netzfehler nach kurzer Zeit).
+    if (sim === 'net') return { promise: new Promise((resolve) => setTimeout(() => resolve({ ok: false, error: 'network' }), 600)), stop() {}, abort() {} };
     if (sim === 'ok' || sim === 'bad' || sim === 'clip') {
       const said = expect.replaceAll('+', '').replaceAll('́', '');
       // 'clip' = das erste Wort fehlt in der Aufnahme (zu früh gesprochen).

@@ -1,7 +1,7 @@
 // Einstellungen, Geschlechts-Abfrage, XP-Stufen und Test-Werkzeuge (die Statistik selbst liegt in stats.js).
 import { html, cls, Icon, Sheet, useState } from '../ui.js';
-import { D, P, Pl, useProgress, progress, planState, prefs, toast } from '../app.js';
-import { storage } from '../platform.js';
+import { D, P, Pl, useProgress, progress, planState, prefs, toast, offerPack } from '../app.js';
+import { storage, speech } from '../platform.js';
 import { GenderIntro } from './home.js';
 import { timeTrack } from '../timetrack.js';
 
@@ -26,6 +26,7 @@ export function SettingsSheet({ onClose }) {
   const p = useProgress();
   const [, bump] = useState(0);
   const s = P.settingsOf(p);
+  const pack = speech.pack();
   return html`<${Sheet} onClose=${onClose} title="Einstellungen">
     <div class="q">Ich bin … (bestimmt, welche Ich-Form du sprichst — die andere lernst du zu erkennen)</div>
     <${Seg} value=${p.gender} options=${[['MALE', 'ein Mann'], ['FEMALE', 'eine Frau']]} onChange=${(g) => progress.update((x) => ({ ...x, gender: g, voice: x.voice ?? g }))} />
@@ -36,6 +37,9 @@ export function SettingsSheet({ onClose }) {
     <${Seg} value=${prefs.dailyGoal()} options=${[[30, 'Locker · 30'], [60, 'Normal · 60'], [120, 'Ehrgeizig · 120']]} onChange=${(n) => { prefs.setDailyGoal(n); bump((x) => x + 1); }} />
     <div class="q">Lernzeit pro Tag</div>
     <${Seg} value=${prefs.dailyMinutes()} options=${[[15, '15 Min.'], [30, '30 Min.'], [60, '1 Std.']]} onChange=${(n) => { prefs.setDailyMinutes(n); bump((x) => x + 1); }} />
+    ${pack !== 'unsupported' && html`<div class="q">Spracherkennung</div>
+      <div class="rowx g8 wrap"><span class="sub grow">${pack === 'installed' ? 'Läuft auf dem Gerät, ohne Internet.' : pack === 'missing' ? 'Läuft übers Internet — das russische Sprachpaket fehlt.' : 'Zeigt sich beim ersten Sprechen. Das russische Sprachpaket macht sie vom Internet unabhängig.'}</span>
+        ${pack !== 'installed' && html`<button class="chip" onClick=${() => { onClose(); offerPack(true); }}><${Icon} n="download" />Sprachpaket</button>`}</div>`}
     <div class="q">Töne bei richtig und falsch</div>
     <${Seg} value=${prefs.sounds()} options=${[[true, 'An'], [false, 'Aus']]} onChange=${(on) => { prefs.setSounds(on); bump((x) => x + 1); }} />
     <button class="btn mt24" onClick=${onClose}>Fertig</button>

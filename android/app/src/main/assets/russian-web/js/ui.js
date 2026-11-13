@@ -6,7 +6,7 @@ import * as Gl from './domain/glossary.js';
 import * as Sp from './domain/speech.js';
 import * as Pr from './domain/prosody.js';
 import { phonemeHints } from './domain/tips.js';
-import { otherForm } from './app.js';
+import { otherForm, offerPack, toast } from './app.js';
 
 export { html, useState, useEffect, useRef, useMemo, useCallback };
 export const cls = (...a) => a.filter(Boolean).join(' ');
@@ -184,7 +184,11 @@ export function useListen(onDone) {
       if (!alive.current) return;
       // Nichts gehört ist kein Fehlversuch — nur ein Hinweis, kein Abzug, kein Fehlerton.
       if (r.ok) { setSt({ phase: 'idle', partial: '', error: null, ready: false }); cb.current(r.hyps); }
-      else setSt({ phase: 'idle', partial: '', error: r.error === 'aborted' ? null : r.error, ready: false });
+      else {
+        setSt({ phase: 'idle', partial: '', error: r.error === 'aborted' ? null : r.error, ready: false });
+        // Hakt die Erkennung übers Internet und das Sprachpaket fehlt: anbieten, es zu laden.
+        if (['network', 'busy', 'nomatch'].includes(r.error) && speech.pack() === 'missing') offerPack();
+      }
     });
   }, []);
   const stop = useCallback(() => { if (handle.current) { setSt((s) => ({ ...s, phase: 'evaluating' })); handle.current.stop(); } }, []);
@@ -196,6 +200,21 @@ export function useListen(onDone) {
     errorText: st.error ? SPEECH_ERRORS[st.error] ?? SPEECH_ERRORS.nospeech : null,
     start, stop, cancel, toggle: (expect) => (handle.current ? stop() : start(expect)),
   };
+}
+
+/** Erklärt das russische Sprachpaket und öffnet Googles Dialog zum Laden. */
+export function PackSheet({ onClose }) {
+  const load = () => {
+    const ok = speech.downloadPack();
+    toast(ok ? 'Im Fenster von Google auf »Herunterladen« tippen' : 'Der Dialog von Google ließ sich nicht öffnen');
+    onClose();
+  };
+  return html`<${Sheet} onClose=${onClose} title="Spracherkennung ohne Internet">
+    <p class="muted mt8" style="line-height:1.5">Dein Handy schickt gerade jede Aufnahme zur Erkennung ins Internet. Hakt die Verbindung, heißt es »nicht verstanden« oder »braucht Internet«.</p>
+    <p class="muted mt8" style="line-height:1.5">Mit dem russischen Sprachpaket von Google erkennt das Handy dich direkt auf dem Gerät. Einmal laden, danach probiert Hikari es von selbst zuerst dort.</p>
+    <button class="btn mt16" onClick=${load}><${Icon} n="download" />Sprachpaket laden</button>
+    <button class="btn text" style="display:block;margin:6px auto 0" onClick=${onClose}>Später</button>
+  <//>`;
 }
 
 export function Mic({ L, onClick, disabled, small }) {

@@ -310,9 +310,37 @@ sealed interface RuListenState {
 }
 
 /**
- * Android-Spracherkennung auf Russisch (kostenlos, auf den meisten Geräten
- * auch offline mit installiertem Sprachpaket). Muss auf dem Main-Thread
- * erzeugt und benutzt werden.
+ * Das russische Sprachpaket des Erkennungsdienstes: Mit ihm läuft die Erkennung auf dem Gerät,
+ * ohne Internet. Ohne es geht jede Aufnahme zu Google — das hakt bei wackeliger Verbindung oder
+ * VPN. Ob es da ist, zeigt sich am ersten Versuch (kein Paket → der Dienst lehnt sofort ab).
+ */
+object RussianSpeechPack {
+    /** null = noch nicht ausprobiert. */
+    @Volatile var installed: Boolean? = null
+
+    /** Googles eigener Dialog zum Laden des Pakets (»Sprachdienste von Google«). */
+    private fun downloadIntent() = Intent("com.google.recognition.action.DOWNLOAD_LANGUAGE")
+        .setPackage("com.google.android.tts")
+        .putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ru-RU")
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+    fun canDownload(context: Context): Boolean =
+        runCatching { downloadIntent().resolveActivity(context.packageManager) != null }.getOrDefault(false)
+
+    /** Öffnet den Dialog. Danach wird beim nächsten Sprechen neu geprüft, ob das Paket da ist. */
+    fun download(context: Context): Boolean = runCatching {
+        context.startActivity(downloadIntent())
+        installed = null
+        true
+    }.getOrElse {
+        Log.w("RussianSpeechPack", "Dialog zum Laden des Sprachpakets ließ sich nicht öffnen", it)
+        false
+    }
+}
+
+/**
+ * Android-Spracherkennung auf Russisch. Mit installiertem Sprachpaket auf dem Gerät, sonst
+ * übers Internet (siehe [RussianSpeechPack]). Muss auf dem Main-Thread erzeugt und benutzt werden.
  */
 class RussianSpeechRecognizer(private val context: Context) {
     init {
@@ -363,6 +391,12 @@ class RussianSpeechRecognizer(private val context: Context) {
     /** Lautester Pegel seit dem Tippen: unterscheidet am Ende »nichts gehört« von »nicht verstanden«. */
     private var peakSinceTap = Float.NEGATIVE_INFINITY
 
+    /** Die laufende Sitzung erkennt auf dem Gerät (true) oder übers Internet (false). */
+    private var onDevice = false
+
+    /** In dieser Wartezeit hing das Netz — bestimmt die Meldung, falls am Ende nichts verstanden ist. */
+    private var sawNetworkError = false
+
     /**
      * Gibt die Instanz frei, sobald ein Versuch zu Ende ist. So liegt zwischen zwei Versuchen
      * Zeit, in der der Erkennungsdienst seine Sitzung abräumt — statt dass der nächste Versuch
@@ -382,6 +416,9 @@ class RussianSpeechRecognizer(private val context: Context) {
         retries = 0
         reopened = 0
         peakSinceTap = Float.NEGATIVE_INFINITY
+        sawNetworkError = false
+        // Erst auf dem Gerät versuchen; fehlt das Sprachpaket, lehnt der Dienst sofort ab (siehe onError).
+        onDevice = RussianSpeechPack.installed != false
         tappedAt = android.os.SystemClock.elapsedRealtime()
         patienceRun?.let { mainHandler.removeCallbacks(it) }
         patienceRun = Runnable { patienceOver() }
@@ -399,15 +436,21 @@ class RussianSpeechRecognizer(private val context: Context) {
         logEnd("Wartezeit um, kein Wort erkannt")
         val heard = com.hikari.app.domain.russian.RuSpeechRetry.heard(peakSinceTap)
         teardown()
-        _state.value = RuListenState.Done(emptyList(), heard = heard)
+        // Der Netz-Hinweis nur, wenn es keinen Erkenner auf dem Gerät gibt — sonst hat schlicht niemand etwas gesagt.
+        val netOnly = sawNetworkError && RussianSpeechPack.installed != true
+        _state.value = if (netOnly) NETWORK_FAILED else RuListenState.Done(emptyList(), heard = heard)
     }
+
+    private fun hasNetwork(): Boolean = runCatching {
+        context.getSystemService(android.net.ConnectivityManager::class.java)?.activeNetwork != null
+    }.getOrDefault(true)
 
     /** Eine Zeile je Sitzungsende — damit sich am Gerät nachlesen lässt, was die Erkennung getan hat. */
     private fun logEnd(what: String) {
         val now = android.os.SystemClock.elapsedRealtime()
         Log.i(
             TAG,
-            "Ende: $what nach ${now - beganAt}ms (seit Tippen ${now - tappedAt}ms), Pegel max $peakRms, " +
+            "Ende: $what nach ${now - beganAt}ms (seit Tippen ${now - tappedAt}ms), ${if (onDevice) "auf dem Gerät" else "übers Netz"}, Pegel max $peakRms, " +
                 "neu geöffnet $reopened, Anläufe $retries, selbst gestoppt $userStopped, Teiltext ${!lastPartialText.isNullOrBlank()}",
         )
     }
@@ -420,6 +463,7 @@ class RussianSpeechRecognizer(private val context: Context) {
         val sinceTap = android.os.SystemClock.elapsedRealtime() - tappedAt
         if (!com.hikari.app.domain.russian.RuSpeechRetry.shouldKeepWaiting(code, sinceTap, reopened)) return false
         reopened++
+        onDevice = com.hikari.app.domain.russian.RuSpeechRetry.nextOnDevice(onDevice, RussianSpeechPack.installed == true, com.hikari.app.domain.russian.RuSpeechRetry.isNetwork(code), hasNetwork())
         teardown()
         _state.value = RuListenState.Listening
         retryRun = Runnable { begin() }
@@ -491,6 +535,7 @@ class RussianSpeechRecognizer(private val context: Context) {
                     emptyList()
                 }
                 logEnd("Ergebnis mit ${finalResults.size} Lesarten")
+                if (onDevice) RussianSpeechPack.installed = true
                 // Leeres Ergebnis, ohne dass jemand gesprochen oder gestoppt hat: weiter warten.
                 if (finalResults.isEmpty() && !userStopped && keepWaiting(SpeechRecognizer.ERROR_NO_MATCH)) return
                 _state.value = RuListenState.Done(finalResults, heard = com.hikari.app.domain.russian.RuSpeechRetry.heard(peakSinceTap))
@@ -501,6 +546,21 @@ class RussianSpeechRecognizer(private val context: Context) {
                 if (recognizer !== r) return // Nachzügler einer schon abgeräumten Sitzung
                 clearWatchdog()
                 logEnd("Fehler $error")
+                val retry = com.hikari.app.domain.russian.RuSpeechRetry
+                if (onDevice && retry.isPackMissing(error)) {
+                    // Kein russisches Sprachpaket: merken und sofort übers Internet weitermachen.
+                    RussianSpeechPack.installed = false
+                    if (!userStopped) {
+                        onDevice = false
+                        teardown()
+                        _state.value = RuListenState.Listening
+                        retryRun = Runnable { begin() }.also { mainHandler.postDelayed(it, 50L) }
+                        return
+                    }
+                } else if (onDevice) {
+                    RussianSpeechPack.installed = true
+                }
+                if (retry.isNetwork(error)) sawNetworkError = true
                 // Wenn der User auf Stopp/Absenden getippt hat oder bereits Text gehört wurde:
                 if (userStopped || !lastPartialText.isNullOrBlank() || lastHypotheses.isNotEmpty()) {
                     val fallback = if (lastHypotheses.isNotEmpty()) {
@@ -519,7 +579,9 @@ class RussianSpeechRecognizer(private val context: Context) {
                 // »Netzwerk«/»Server«, ist noch belegt oder hat die Verbindung verloren, obwohl
                 // alles da ist. Mit frischer Instanz still nochmal starten (siehe RuSpeechRetry).
                 val elapsed = android.os.SystemClock.elapsedRealtime() - beganAt
-                if (com.hikari.app.domain.russian.RuSpeechRetry.shouldRetry(error, elapsed, retries)) {
+                // Hängt das Netz und das Sprachpaket ist da, übernimmt gleich das Gerät (keepWaiting).
+                val deviceTakesOver = retry.isNetwork(error) && RussianSpeechPack.installed == true
+                if (!deviceTakesOver && retry.shouldRetry(error, elapsed, retries)) {
                     val wait = com.hikari.app.domain.russian.RuSpeechRetry.delayMs(retries)
                     retries++
                     teardown()
@@ -542,7 +604,7 @@ class RussianSpeechRecognizer(private val context: Context) {
                     SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ->
                         RuListenState.Failed("Mikrofon-Berechtigung fehlt.")
                     SpeechRecognizer.ERROR_NETWORK, SpeechRecognizer.ERROR_NETWORK_TIMEOUT, SpeechRecognizer.ERROR_SERVER ->
-                        RuListenState.Failed("Die Spracherkennung braucht Internet oder das russische Offline-Sprachpaket.", missingLanguage = true)
+                        NETWORK_FAILED
                     12, 13 -> // ERROR_LANGUAGE_NOT_SUPPORTED / ERROR_LANGUAGE_UNAVAILABLE (API 31)
                         RuListenState.Failed("Russisch ist in der Spracherkennung nicht installiert.", missingLanguage = true)
                     8, 10, 11 -> RuListenState.Failed("Die Spracherkennung ist gerade nicht erreichbar — bitte gleich nochmal versuchen.")
@@ -558,6 +620,7 @@ class RussianSpeechRecognizer(private val context: Context) {
             putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, true)
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+            if (onDevice) putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
             // Bewusst KEINE eigenen Stille-Zeiten (EXTRA_SPEECH_INPUT_*_SILENCE_LENGTH_MILLIS):
             // Mit 1500/1200 ms endete am Handy jede Sitzung nach rund 2 s. Der Verdacht, dass der
             // Dienst sie auch auf die Stille VOR dem ersten Wort anwendet, ist nicht bewiesen —
@@ -646,5 +709,9 @@ class RussianSpeechRecognizer(private val context: Context) {
 
     private companion object {
         const val TAG = "RussianSpeechRecognizer"
+        val NETWORK_FAILED = RuListenState.Failed(
+            "Die Spracherkennung braucht Internet oder das russische Offline-Sprachpaket.",
+            missingLanguage = true,
+        )
     }
 }

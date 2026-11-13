@@ -1,8 +1,8 @@
 // Start, Rahmen und Routen.
 import { html, render, useEffect, useState } from '../vendor/preact-htm.js';
 import { storage, isNative } from './platform.js';
-import { loadData, progress, planState, useRoute, useToast, useProgress, nav, back, route, TABS, P } from './app.js';
-import { Icon, cls } from './ui.js';
+import { loadData, progress, planState, useRoute, useToast, usePackOffer, useProgress, nav, back, route, TABS, P } from './app.js';
+import { Icon, cls, PackSheet } from './ui.js';
 import { Home } from './screens/home.js';
 import { Courses, Plan } from './screens/courses.js';
 import { Practice } from './screens/practice.js';
@@ -45,6 +45,7 @@ function Screen({ r }) {
 function App() {
   const r = useRoute();
   const t = useToast();
+  const [packOpen, closePack] = usePackOffer();
   const tab = TABS.includes(r);
   return html`<div class="desk">
     <div class="phone"><div class="app">
@@ -52,6 +53,7 @@ function App() {
         <div style="position:relative;flex:1;min-height:0"><${Screen} r=${r} key=${tab ? 'tabs' : r} /></div>
         ${tab && html`<${TabBar} active=${r} />`}
       </div>
+      ${packOpen && html`<${PackSheet} onClose=${closePack} />`}
       ${t && html`<div class="toast" key=${t.at}>${t.text}</div>`}
     </div></div>
     <aside class="side">

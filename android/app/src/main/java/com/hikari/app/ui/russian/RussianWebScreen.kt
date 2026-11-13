@@ -379,6 +379,17 @@ class RussianWebBridge(
 
     @JavascriptInterface fun speechAvailable(): Boolean = SpeechRecognizer.isRecognitionAvailable(app)
 
+    /** Russisches Sprachpaket: "installed", "missing" (ladbar), "unsupported" oder "unknown" (noch nie gesprochen). */
+    @JavascriptInterface
+    fun speechPack(): String = when (RussianSpeechPack.installed) {
+        true -> "installed"
+        false -> if (RussianSpeechPack.canDownload(app)) "missing" else "unsupported"
+        null -> "unknown"
+    }
+
+    /** Öffnet Googles Dialog zum Laden des Sprachpakets. */
+    @JavascriptInterface fun speechPackDownload(): Boolean = RussianSpeechPack.download(app)
+
     @JavascriptInterface
     fun listenStart(id: String, lang: String) {
         main.post {

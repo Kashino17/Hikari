@@ -201,6 +201,20 @@ export function exitApp() {
 
 // ── Kurzmeldung ────────────────────────────────────────────────────────────
 
+// Angebot, das russische Sprachpaket zu laden — einmal je App-Start, wenn die Erkennung übers Internet hakt.
+const packSubs = new Set();
+let packOffered = false;
+export function offerPack(force = false) {
+  if (packOffered && !force) return;
+  packOffered = true;
+  for (const fn of packSubs) fn(true);
+}
+export function usePackOffer() {
+  const [open, setOpen] = useState(false);
+  useEffect(() => { packSubs.add(setOpen); return () => packSubs.delete(setOpen); }, []);
+  return [open, () => setOpen(false)];
+}
+
 const toastSubs = new Set();
 export function toast(text) { for (const fn of toastSubs) fn({ text, at: Date.now() }); }
 export function useToast() {

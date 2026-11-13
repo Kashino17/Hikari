@@ -58,10 +58,47 @@ class RuSpeechRetryTest {
     }
 
     @Test fun echteFehlerWartenNicht() {
-        // Netz, Berechtigung, fehlendes Sprachpaket: dafür gibt es eigene Wege und Meldungen.
-        for (code in listOf(1, 2, 4, 5, 8, 9, 10, 11, 12, 13)) {
+        // Berechtigung, belegter Dienst, fehlendes Sprachpaket: dafür gibt es eigene Wege und Meldungen.
+        for (code in listOf(5, 8, 9, 10, 11, 12, 13)) {
             assertFalse(RuSpeechRetry.shouldKeepWaiting(code, sinceTapMs = 500, reopened = 0), "Code $code")
         }
+    }
+
+    @Test fun haengtDasNetzWirdInDerWartezeitNeuGeoeffnet() {
+        // Vom Handy (13.11., 23:15): »ONLINE_NO_PROGRESS« nach 5 s → Code 2. Zu spät für
+        // shouldRetry, früher flog man damit aus der KI-Prüfung.
+        assertFalse(RuSpeechRetry.shouldRetry(2, elapsedMs = 5_023, retries = 0))
+        for (code in listOf(1, 2, 4)) {
+            assertTrue(RuSpeechRetry.shouldKeepWaiting(code, sinceTapMs = 5_023, reopened = 0), "Code $code")
+        }
+        assertFalse(RuSpeechRetry.shouldKeepWaiting(2, sinceTapMs = 12_500, reopened = 1))
+    }
+
+    @Test fun ohneSprachpaketBleibtNurDasInternet() {
+        assertFalse(RuSpeechRetry.nextOnDevice(wasOnDevice = false, packInstalled = false, networkError = false))
+        assertFalse(RuSpeechRetry.nextOnDevice(wasOnDevice = false, packInstalled = false, networkError = true))
+    }
+
+    @Test fun haengtDasNetzUebernimmtDasGeraet() {
+        assertTrue(RuSpeechRetry.nextOnDevice(wasOnDevice = false, packInstalled = true, networkError = true))
+    }
+
+    @Test fun ohneNetzBleibtEsBeimGeraet() {
+        // Im Flugmodus hörte der Internet-Erkenner sonst sekundenlang ins Leere.
+        assertTrue(RuSpeechRetry.nextOnDevice(wasOnDevice = true, packInstalled = true, networkError = false, online = false))
+    }
+
+    @Test fun nichtsVerstandenDannVersuchtEsDerAndereErkenner() {
+        assertFalse(RuSpeechRetry.nextOnDevice(wasOnDevice = true, packInstalled = true, networkError = false))
+        assertTrue(RuSpeechRetry.nextOnDevice(wasOnDevice = false, packInstalled = true, networkError = false))
+    }
+
+    @Test fun fehlendesSprachpaketWirdErkannt() {
+        assertTrue(RuSpeechRetry.isPackMissing(12))
+        assertTrue(RuSpeechRetry.isPackMissing(13))
+        assertFalse(RuSpeechRetry.isPackMissing(7))
+        assertTrue(listOf(1, 2, 4).all(RuSpeechRetry::isNetwork))
+        assertFalse(listOf(5, 6, 7, 8, 13).any(RuSpeechRetry::isNetwork))
     }
 
     @Test fun stimmeWirdAmPegelErkannt() {

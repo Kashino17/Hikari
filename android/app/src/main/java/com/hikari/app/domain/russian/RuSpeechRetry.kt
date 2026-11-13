@@ -68,19 +68,41 @@ object RuSpeechRetry {
 
     private const val SPEECH_TIMEOUT = 6
     private const val NO_MATCH = 7
+    private const val LANGUAGE_NOT_SUPPORTED = 12
+    private const val LANGUAGE_UNAVAILABLE = 13
+
+    /** Die Erkennung übers Internet kam nicht durch (Zeitüberschreitung, Netz, Server). */
+    fun isNetwork(error: Int): Boolean = error == NETWORK_TIMEOUT || error == NETWORK || error == SERVER
+
+    /** Auf dem Gerät verlangt, aber das Sprachpaket für Russisch ist nicht installiert. */
+    fun isPackMissing(error: Int): Boolean = error == LANGUAGE_NOT_SUPPORTED || error == LANGUAGE_UNAVAILABLE
+
+    /**
+     * Welcher Erkenner als Nächstes zuhört, nachdem eine Sitzung ohne Text endete: true = der auf
+     * dem Gerät, false = der übers Internet. Ohne Sprachpaket bleibt nur das Internet. Hing das
+     * Netz oder gibt es gerade keins ([online] false), bleibt es beim Gerät. Hat einer nichts
+     * verstanden, darf es der andere versuchen — am Handy lieferte der Internet-Erkenner für
+     * ein lautes, klares Wort fünfmal nichts.
+     */
+    fun nextOnDevice(wasOnDevice: Boolean, packInstalled: Boolean, networkError: Boolean, online: Boolean = true): Boolean = when {
+        !packInstalled -> false
+        networkError || !online -> true
+        else -> !wasOnDevice
+    }
 
     /** War eine Stimme zu hören? [peakRmsDb] = lautester gemeldeter Pegel. */
     fun heard(peakRmsDb: Float): Boolean = peakRmsDb >= HEARD_RMS_DB
 
     /**
-     * Eine Sitzung endete ohne Text ([error] 6 oder 7; ein leeres Ergebnis zählt als 7), ohne dass
-     * der Lernende selbst gestoppt hat. true = Mikrofon still wieder öffnen und weiter zuhören:
-     * Er liest oder denkt noch — typisch, wenn das Mikrofon von selbst aufgeht — oder er wurde
-     * nicht verstanden und sagt es einfach noch einmal. Erst nach der Wartezeit wird gemeldet.
+     * Eine Sitzung endete ohne Text, ohne dass der Lernende selbst gestoppt hat: nichts
+     * verstanden ([error] 6 oder 7; ein leeres Ergebnis zählt als 7) oder das Netz hing (1, 2, 4).
+     * true = Mikrofon still wieder öffnen und weiter zuhören: Er liest oder denkt noch — typisch,
+     * wenn das Mikrofon von selbst aufgeht —, wurde nicht verstanden und sagt es einfach noch
+     * einmal, oder die Verbindung hakte kurz. Erst nach der Wartezeit wird gemeldet.
      * [sinceTapMs] zählt ab dem Tippen, [reopened] die bisherigen Neu-Öffnungen.
      */
     fun shouldKeepWaiting(error: Int, sinceTapMs: Long, reopened: Int): Boolean {
-        if (error != SPEECH_TIMEOUT && error != NO_MATCH) return false
+        if (error != SPEECH_TIMEOUT && error != NO_MATCH && !isNetwork(error)) return false
         return sinceTapMs < PATIENCE_MS && reopened < MAX_REOPEN
     }
 }
