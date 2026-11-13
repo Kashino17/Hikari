@@ -369,13 +369,17 @@ function FreePage({ cp, setSettings, session, setPage, startChat, freeReady, ava
 }
 
 function ChatPage({ cp, session, setSession, busy, send, scenario, savePhrase, learnTurnWords, setPage, speed, error }) {
-  const [history, setHistory] = useState(false);
   const [shape, setShape] = useState(false);
   const [example, setExample] = useState(false);
   const scroller = useRef(null);
+  const latest = useRef(null);
   const turn = session?.turns[session.turns.length - 1];
   const extra = useMemo(() => ownWords(cp, session), [cp.conversationVocabulary, cp.cards, session?.turns]);
-  useEffect(() => { setExample(false); setShape(false); scroller.current?.scrollTo({ top: 0 }); }, [turn?.id]);
+  // Das Gespräch steht als Verlauf da: Ältere Wortwechsel liegen oberhalb und sind per Hochscrollen erreichbar,
+  // der neueste beginnt am oberen Bildrand.
+  useEffect(() => { setExample(false); setShape(false); latest.current?.scrollIntoView({ block: 'start' }); }, [turn?.id]);
+  // Während Anja überlegt, steht die eigene Antwort schon unten im Verlauf.
+  useEffect(() => { if (busy) scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: 'smooth' }); }, [busy]);
   if (!session) return html`<div class="empty">Kein Gespräch geöffnet.<div class="mt20"><button class="btn" onClick=${() => setPage('free')}>Gespräch einrichten</button></div></div>`;
   const answers = session.turns.filter((t) => t.answer);
   const patch = (p) => setSession({ ...session, ...p });
@@ -395,6 +399,10 @@ function ChatPage({ cp, session, setSession, busy, send, scenario, savePhrase, l
   return html`<div class="scroll" ref=${scroller}><div class="stepc g12">
       <${Over}>${scenario.title} · ${answers.length} eigene Antworten<//>
       ${!turn && html`<div class="title">Anja ist gleich da.</div><p class="muted">Du startest mit einer kurzen Frage. Erst anschauen, dann antworten.</p>${!busy && html`<button class="btn ghost" onClick=${() => send('start')}>Noch einmal verbinden</button>`}`}
+      ${session.turns.slice(0, -1).map((t) => html`
+        ${t.answer && html`<div class="bub me past" style="max-width:92%" key=${`${t.id}a`}><div class="who">DU</div><${IL} ru=${t.answer} size=${16} extra=${extra} /></div>`}
+        <div class="bub past" style="max-width:92%" key=${`${t.id}b`}><div class="who">ANJA</div><${IL} ru=${t.reply.partnerRu} size=${16} extra=${extra} /><div class="de">${t.reply.partnerDe}</div></div>`)}
+      <div ref=${latest} style="height:0;scroll-margin-top:6px"></div>
       ${turn?.answer && html`<div class="bub me" style="max-width:92%"><div class="who">DU</div><${IL} ru=${turn.answer} size=${19} extra=${extra} />
         ${r.feedback && html`<div class="nt" style="color:var(--good)">${r.feedback.praise}</div>
           ${!r.feedback.focus && r.feedback.explanationDe && html`<div class="de"><b>Genau so:</b> ${r.feedback.explanationDe}</div>`}
@@ -402,7 +410,8 @@ function ChatPage({ cp, session, setSession, busy, send, scenario, savePhrase, l
             <div class="rowx g8 wrap mt8">${!session.repair && html`<button class="chip sm" onClick=${() => patch({ repair: true, draft: turn.answer, helped: true })}>Selbst verbessern</button>`}
               <button class=${cls('chip sm', example && 'on')} onClick=${() => { setExample(!example); patch({ helped: true }); }}>Ein Beispiel hilft mir</button></div>
             ${example && html`<div class="mt8"><${IL} ru=${r.feedback.correctedRu} size=${17} /><div class="sub mt4">${r.feedback.explanationDe}</div><div class="mt8"><${Listen} ru=${r.feedback.correctedRu} speed=${speed} /></div></div>`}`}`}</div>`}
-      ${r && html`<div class="bub" style="max-width:92%"><div class="who">ANJA</div><${IL} ru=${r.partnerRu} size=${19} /><div class="de">${r.partnerDe}</div><div class="mt8"><${Listen} ru=${r.partnerRu} speed=${speed} /></div></div>`}
+      ${r && html`<div class="bub" style="max-width:92%"><div class="who">ANJA</div><${IL} ru=${r.partnerRu} size=${19} extra=${extra} /><div class="de">${r.partnerDe}</div><div class="mt8"><${Listen} ru=${r.partnerRu} speed=${speed} /></div></div>`}
+      ${busy && session.draft.trim() && html`<div class="bub me" style="max-width:92%"><div class="who">DU</div><${IL} ru=${session.draft} size=${19} extra=${extra} /></div>`}
       ${busy && html`<div class="typing"><i></i><i></i><i></i></div><div class="sub">Anja denkt über ihre Antwort nach …</div>`}
       ${error && html`<div class="hint" style="border-color:rgba(var(--bad-rgb),.4)"><p>${error}</p></div>`}
       ${r && !busy && !turn.ready && !session.repair && html`<div class="card p tint"><${Over}>Erst in Ruhe anschauen<//><p class="mt8">${r.cue}</p>
@@ -422,8 +431,6 @@ function ChatPage({ cp, session, setSession, busy, send, scenario, savePhrase, l
         ${answers.length >= session.settings.turns && html`<div class="card p tint"><p>Dein Gesprächsziel für heute ist erreicht. Ein guter Moment für eine Pause.</p><button class="btn mt12" onClick=${() => patch({ finished: true })}>Mein Rückblick</button></div>`}
         <${TextBtn} onClick=${() => setShape(!shape)}><${Icon} n="tune" />Das Gespräch gestalten<//>
         ${shape && html`<div class="rowx g8 wrap" style="justify-content:center">${ACTIONS.map(([a, t]) => html`<button class="chip" disabled=${!!session.draft} onClick=${() => send(a)}>${t}</button>`)}</div>`}`}
-      ${session.turns.length >= 2 && html`<${TextBtn} onClick=${() => setHistory(!history)}>${history ? 'Verlauf schließen' : 'Unser bisheriges Gespräch'}<//>
-        ${history && session.turns.slice(0, -1).reverse().map((t) => html`<div class="card p">${t.answer && html`<div class="sub" style="margin-bottom:4px">Du</div><${IL} ru=${t.answer} size=${15} extra=${extra} /><div class="sub mt12" style="margin-bottom:4px">Anja</div>`}<div class="mt4"><${IL} ru=${t.reply.partnerRu} size=${15} gloss=${false} /></div><div class="sub">${t.reply.partnerDe}</div></div>`)}`}
       ${turn && !busy && html`<${TextBtn} onClick=${() => patch({ finished: true })}>Für heute beenden<//>`}
     </div></div>`;
 }

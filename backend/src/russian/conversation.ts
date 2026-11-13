@@ -127,12 +127,28 @@ export const conversationJsonSchema = objectSchema({
 });
 
 const STAGES = [
-  "Absolute beginner: partnerRu MUST contain ONLY ONE short question of 2–6 familiar words. No greeting, introduction or extra sentence. Accept single-word meaningful replies. German support is essential. No unexplained idioms or abstract questions. For listen, a two-word scene plus one tiny question is enough.",
+  "Absolute beginner: partnerRu = an optional tiny reaction to the learner's last answer (one to three familiar words, e.g. «Хорошо!» or «Я тоже.») followed by EXACTLY ONE short NEW question of 2–6 familiar words. No greeting or introduction. Accept single-word meaningful replies. German support is essential. No unexplained idioms or abstract questions. For listen, a two-word scene plus one tiny question is enough.",
   "Beginner: one simple question, 4–9 words, familiar daily vocabulary. Invite one short sentence.",
   "Developing: one or two short sentences. Invite a reason or a simple follow-up question.",
   "Connected speech: a short connected exchange, concrete past/future stories. Invite two to three sentences.",
   "Extended conversation: explore opinions, motives, register and implications, still scaffold unfamiliar language. Never infer certified proficiency.",
 ];
+
+/** Anjas eigene frühere Fragen, als Verbotsliste für die Anweisung (nur Buchstaben, keine Lerner-Daten). */
+function alreadyAsked(input: ConversationRequest) {
+  if (input.action === "simplify") return "";
+  const asked = [
+    ...new Set(
+      input.history
+        .filter((h) => h.role === "assistant")
+        .slice(-8)
+        .map((h) => questionOf(h.content))
+        .filter((q) => /[а-я]/.test(q)),
+    ),
+  ];
+  if (!asked.length) return "";
+  return `\nYou have ALREADY asked these questions — asking any of them again is forbidden: ${asked.map((q) => `«${q.slice(0, 80)}?»`).join(" ")}`;
+}
 
 export function conversationMessages(input: ConversationRequest) {
   const instructions = `You are Anja, a warm Russian conversation practice partner for a German-speaking adult.
@@ -140,15 +156,22 @@ Return ONLY a JSON object with the exact fields described below, no markdown. /n
 Learning policy: ${STAGES[input.stage]}
 Have a coherent, personal dialogue. Refer to what the learner actually said, remember details in history,
 accept diverse relevant answers rather than one memorised phrase. Ask only ONE question at a time.
+Move the conversation forward on EVERY turn, like a real person would: react briefly to what the learner just said, then ask something NEW.
+NEVER repeat or paraphrase the learner's own sentence as your turn. NEVER ask a question that history already contains or that the learner has already answered.
+When the familiar words are used up, open a new topic with ONE new everyday word instead of asking again.
+Do not sound like a questionnaire: never use the same question pattern more than twice in a row. Alternate between a choice («Чай или сок?»),
+an open question («Что ты любишь?») and telling ONE small NEW thing about yourself followed by a question to the learner.
+«А ты?» alone is only allowed right after you said something NEW about yourself — never after the learner has just told you exactly that.
+partnerDe translates partnerRu exactly, and cue describes the question that partnerRu really asks.${alreadyAsked(input)}
 Address the learner consistently with informal singular ты in Russian and du in German; never switch to Вы/Sie.
 At stage 0, examples can be one word and must not require a subordinate clause. Each hint and starter answers the NEW partner question, not the previous one.
 knownWords lists vocabulary already introduced in the app. Prefer those words and familiar combinations.
-At stages 0 and 1 introduce at most ONE new lexical item per turn, explain it in words with German meaning,
+At stages 0 and 1 introduce at most ONE new lexical item per turn (one new topic word; a verb may come in its you-form and I-form), explain it in words with German meaning,
 and keep the expected answer achievable with knownWords plus that item. Do not suddenly escalate difficulty
 because the learner asks for a deeper story. The app teaches your words before inviting an answer.
 At stage 0, EVERY unfamiliar Russian surface form in partnerRu, starter AND examples must occur in words.ru,
 with its German meaning. A conjugation such as любишь is new even if люблю is known.
-Across partnerRu, starter, words and examples use at most TWO unfamiliar surface forms total; reuse knownWords for the rest.
+Across partnerRu, starter, words and examples use at most ${NEW_FORMS_PER_TURN} unfamiliar surface forms total; reuse knownWords for the rest.
 words must prioritize these NEW forms, not just repeat already known helpful answer words.
 Before responding, compare every Russian word in the question and examples with knownWords and words.
 Do not invent personal facts about the learner. Never claim guaranteed fluency, CEFR certification, or perfect pronunciation.
@@ -161,7 +184,8 @@ For a likely transcription problem or ambiguous utterance, ask for clarification
 Keep the learner's intended meaning in any correction. If already fine, focus/repairCue/correctedRu/explanationDe are empty strings.
 The message is SPOKEN: it has no punctuation or capitalisation, and their absence is NEVER an issue to mention or correct.
 A message that is already correct gets praise only: never suggest a word or form the message already contains.
-A real mistake still gets exactly ONE focus with correctedRu: a missing verb, a wrong word form, or an answer that contradicts itself.
+A real LANGUAGE mistake still gets exactly ONE focus with correctedRu: a missing verb or a wrong word form.
+What the learner likes or does is never a mistake, even if it differs from an earlier answer.
 For start and control actions, feedback MUST be null. For reply or repair, provide feedback on message.
 Never demand a private or traumatic story. Offer fictional stories as an equally valid alternative.
 Use Russian for partnerRu, starter, words.ru, examples.ru, chunk.ru and correctedRu. Use German in other text fields.
@@ -239,6 +263,29 @@ const beginnerGlosses: Record<string, string> = {
   там: "dort",
   где: "wo",
   почему: "warum",
+  // Kleinwörter, mit denen ein Gespräch natürlich klingt — das Modell erklärt sie fast nie mit.
+  о: "oh",
+  ах: "ach",
+  ой: "oh · huch",
+  ну: "na · also",
+  вот: "da · hier",
+  ок: "okay",
+  ладно: "in Ordnung",
+  ага: "aha",
+  понятно: "verstehe",
+  ясно: "alles klar",
+  отлично: "super",
+  класс: "klasse",
+  правда: "wirklich",
+  только: "nur",
+  еще: "noch",
+  уже: "schon",
+  это: "das",
+  что: "was",
+  кто: "wer",
+  когда: "wann",
+  с: "mit",
+  без: "ohne",
 };
 
 export function prepareBeginnerVocabulary(
@@ -261,6 +308,13 @@ export function prepareBeginnerVocabulary(
   return { ...reply, words: [...glosses, ...reply.words].slice(0, 4) };
 }
 
+/**
+ * So viele neue Wortformen darf ein Zug auf der ersten Stufe höchstens bringen — jede davon
+ * erklärt, die App zeigt sie vor der Antwort. Mit zwei (bis 14.11.) ließ sich kein neues Thema
+ * öffnen: schon »пьёшь« + »пью« + »воду« sind drei, und Anja drehte sich um Tee und Kaffee.
+ */
+export const NEW_FORMS_PER_TURN = 4;
+
 /** Surface-form coverage is deliberately stricter than lemma coverage for complete beginners. */
 export function validateBeginnerVocabulary(reply: ConversationReply, input: ConversationRequest) {
   if (input.stage !== 0 || input.knownWords.length === 0) return;
@@ -274,7 +328,7 @@ export function validateBeginnerVocabulary(reply: ConversationReply, input: Conv
   ].flatMap(russianForms);
   const unfamiliar = [...new Set(forms.filter((form) => !known.has(form)))];
   const unexplained = unfamiliar.filter((form) => !explained.has(form));
-  if (unfamiliar.length > 2 || unexplained.length)
+  if (unfamiliar.length > NEW_FORMS_PER_TURN || unexplained.length)
     throw new Error(
       `beginner_vocabulary_not_prepared:${JSON.stringify({ unfamiliar, unexplained })}`,
     );
@@ -322,6 +376,61 @@ export function settleFeedback(feedback: Feedback, message: string): Feedback {
     correctedRu: "",
     explanationDe: BLAMES.test(feedback.explanationDe) ? "" : feedback.explanationDe,
   };
+}
+
+/** Was an einem Gesprächszug nicht stimmt — als Nachbesserungs-Hinweis ans Modell. */
+const FLOW_REPAIR: Record<string, string> = {
+  dialogue_echo:
+    "partnerRu repeated the learner's own sentence. Say something NEW: react in one to three words, then ask a different question.",
+  dialogue_no_question:
+    "partnerRu contained no question, so the learner has nothing to answer. End partnerRu with exactly ONE short question mark question.",
+  dialogue_repeated_question:
+    "partnerRu asked one of the forbidden already-asked questions again. Ask about a DIFFERENT thing (another drink or food, a time, a place, a person) with ONE new everyday word, explained in words.",
+};
+
+/**
+ * Die Frage eines Zugs: der letzte Satz, der mit »?« endet. Eine Rückfrage aus ein, zwei Wörtern
+ * (»А ты?«) bedeutet je nach Satz davor etwas anderes — dann zählt der ganze Zug.
+ */
+const questionOf = (text: string) => {
+  const m = text.match(/[^.!?…]*\?/g);
+  if (!m) return "";
+  const last = sameWords(m[m.length - 1] ?? "");
+  return last.split(" ").length <= 2 ? sameWords(text) : last;
+};
+
+/**
+ * Ein Gespräch muss weitergehen. Wirft, wenn Anja den Satz des Lernenden nur wiederholt, auf den
+ * ersten Stufen keine Frage stellt (dann gäbe es nichts zu antworten) oder etwas fragt, das sie
+ * schon gefragt hat (das Letzte nur, solange noch ein Anlauf übrig ist). Ausnahmen: »simplify« darf dieselbe Frage einfacher stellen, bei »roles«
+ * antwortet Anja, »retell« ist eine Bitte; ab Stufe 2 darf sie auch ohne Frage zum Erzählen einladen.
+ */
+export function validateDialogueFlow(
+  reply: ConversationReply,
+  input: ConversationRequest,
+  lastChance = false,
+) {
+  // Nachplappern: der ganze Zug oder einer seiner Sätze ist der Satz des Lernenden (»Я люблю чай. А ты?«
+  // auf »я люблю чай«). Ein einzelnes aufgegriffenes Wort (»Чай!«) ist dagegen eine normale Reaktion.
+  const mine = sameWords(input.message);
+  if (mine) {
+    const sentences = reply.partnerRu
+      .split(/[.!?…]+/)
+      .map(sameWords)
+      .filter(Boolean);
+    const echoed = mine.includes(" ") ? sentences.includes(mine) : sentences.join(" ") === mine;
+    if (echoed) throw new Error("dialogue_echo");
+  }
+  if (input.action === "roles" || input.action === "retell") return;
+  const question = questionOf(reply.partnerRu);
+  if (!question && input.stage <= 1) throw new Error("dialogue_no_question");
+  // Beim letzten Anlauf ist eine wiederholte Frage besser als gar keine Antwort.
+  if (!question || input.action === "simplify" || lastChance) return;
+  const asked = input.history
+    .filter((h) => h.role === "assistant")
+    .slice(-8)
+    .map((h) => questionOf(h.content));
+  if (asked.includes(question)) throw new Error("dialogue_repeated_question");
 }
 
 /**
@@ -378,11 +487,13 @@ export class LocalConversationProvider implements ConversationProvider {
     const signal = AbortSignal.timeout(50_000);
     const native = this.env.RUSSIAN_CHAT_API === "native";
     let vocabularyRepair = "";
-    for (let attempt = 0; attempt < 2; attempt++) {
+    // Drei Anläufe; die gemeinsame Frist von 50 s gilt für alle zusammen.
+    const lastAttempt = 2;
+    for (let attempt = 0; attempt <= lastAttempt; attempt++) {
       const messages = conversationMessages(input);
       if (attempt)
         messages[0]!.content +=
-          "\nYour previous response failed validation. Include EVERY field. Russian text fields must contain Cyrillic, except starter may be empty for a one-word answer. words may be empty when no new words occur. At stage 0 keep partnerRu and examples inside knownWords wherever possible. Any unfamiliar form must appear in words with German meaning, at most TWO unfamiliar forms total. Return complete JSON within the token budget." +
+          "\nYour previous response failed validation. Include EVERY field. Russian text fields must contain Cyrillic, except starter may be empty for a one-word answer. words may be empty when no new words occur. At stage 0 keep partnerRu and examples inside knownWords wherever possible. Any unfamiliar form must appear in words with German meaning, at most FOUR unfamiliar forms total. Return complete JSON within the token budget." +
           vocabularyRepair;
       const response = await this.request(
         `${this.base}${native ? "/api/v1/chat" : "/v1/chat/completions"}`,
@@ -471,9 +582,15 @@ export class LocalConversationProvider implements ConversationProvider {
             "Versuche deinen Satz noch einmal. Achte auf den Lernimpuls; das Beispiel kannst du danach aufdecken.";
         result = prepareBeginnerVocabulary(result, input);
         validateBeginnerVocabulary(result, input);
+        validateDialogueFlow(result, input, attempt === lastAttempt);
         return result;
       } catch (error) {
-        if (attempt || signal.aborted) throw error;
+        // Nur auf Wunsch (Fehlersuche): der Grund je Anlauf — Prüfcodes und Wortformen aus der Modell-Antwort.
+        if (this.env.RUSSIAN_CHAT_DEBUG)
+          console.error(`[anja] Anlauf ${attempt + 1} verworfen: ${String(error).slice(0, 200)}`);
+        if (attempt === lastAttempt || signal.aborted) throw error;
+        if (error instanceof Error && error.message in FLOW_REPAIR)
+          vocabularyRepair = `\nDialogue check: ${FLOW_REPAIR[error.message]}`;
         if (error instanceof Error && error.message.startsWith("beginner_vocabulary_not_prepared:"))
           vocabularyRepair =
             "\nCoverage check: " +

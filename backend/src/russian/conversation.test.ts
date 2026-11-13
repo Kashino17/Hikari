@@ -7,6 +7,7 @@ import {
   prepareBeginnerVocabulary,
   conversationRequest,
   settleFeedback,
+  validateDialogueFlow,
   LocalConversationProvider,
   parseConversationReply,
   type ConversationReply,
@@ -99,6 +100,37 @@ describe("conversation boundary", () => {
       ),
     ).toThrow();
     expect(() => validateBeginnerVocabulary(reply, { ...input, stage: 2 })).not.toThrow();
+  });
+  it("lets a new topic in: a verb in two forms plus a noun, all explained — but not a flood", () => {
+    const input = conversationRequest.parse({
+      scenario: "Kontakt",
+      action: "reply",
+      message: "Я люблю чай",
+      knownWords: [{ ru: "ты чай я люблю кофе а да нет", de: "bekannt" }],
+    });
+    const water = {
+      ...reply,
+      partnerRu: "А ты пьёшь воду?",
+      starter: "",
+      words: [
+        { ru: "пьёшь", de: "du trinkst" },
+        { ru: "пью", de: "ich trinke" },
+        { ru: "воду", de: "Wasser" },
+      ],
+      examples: [
+        { ru: "Да, я пью воду.", de: "Ja, ich trinke Wasser." },
+        { ru: "Нет.", de: "Nein." },
+      ],
+    };
+    expect(() => validateBeginnerVocabulary(water, input)).not.toThrow();
+    const flood = {
+      ...water,
+      partnerRu: "А ты пьёшь воду утром дома?",
+      words: [...water.words, { ru: "утром дома", de: "morgens zu Hause" }],
+    };
+    expect(() => validateBeginnerVocabulary(flood, input)).toThrow(
+      "beginner_vocabulary_not_prepared",
+    );
   });
   it("passes learned vocabulary as bounded learner data, with a gradual input policy", () => {
     const knownWords = [{ ru: "чай", de: "Tee" }];
@@ -225,6 +257,83 @@ describe("feedback on an answer that was already right", () => {
       explanationDe: "",
     };
     expect(settleFeedback(empty, "Нет я не чай")).toEqual({ ...empty, focus: "" });
+  });
+});
+
+describe("a conversation has to move forward", () => {
+  const history = [
+    { role: "user" as const, content: "Gesprächsaktion: start" },
+    { role: "assistant" as const, content: "Ты любишь чай?" },
+    { role: "user" as const, content: "Нет я не люблю чай" },
+    { role: "assistant" as const, content: "А кофе?" },
+  ];
+  const turn = (partnerRu: string, over: Record<string, unknown> = {}) =>
+    [
+      { ...reply, partnerRu },
+      conversationRequest.parse({
+        scenario: "Kontakt",
+        action: "reply",
+        message: "Мне нравится кофе",
+        history,
+        ...over,
+      }),
+    ] as const;
+  it("rejects echoing the learner's own sentence (Kadir, 14.11.: »Мне нравится кофе« → »Мне нравится кофе«)", () => {
+    expect(() => validateDialogueFlow(...turn("Мне нравится кофе"))).toThrow("dialogue_echo");
+    expect(() => validateDialogueFlow(...turn("Мне нр+авится кофе."))).toThrow("dialogue_echo");
+    // … auch mit angehängter Rückfrage — aber ein aufgegriffenes Wort oder »тоже« ist eine echte Reaktion.
+    expect(() => validateDialogueFlow(...turn("Мне нравится кофе. А ты?"))).toThrow(
+      "dialogue_echo",
+    );
+    expect(() => validateDialogueFlow(...turn("Мне тоже нравится кофе. А чай?"))).not.toThrow();
+    expect(() =>
+      validateDialogueFlow(...turn("Кофе! А ты любишь сок?", { message: "кофе" })),
+    ).not.toThrow();
+    expect(() => validateDialogueFlow(...turn("Кофе.", { message: "кофе", stage: 3 }))).toThrow(
+      "dialogue_echo",
+    );
+  });
+  it("rejects a beginner turn without a question — there would be nothing to answer", () => {
+    expect(() => validateDialogueFlow(...turn("Я тоже люблю кофе."))).toThrow(
+      "dialogue_no_question",
+    );
+  });
+  it("rejects asking again what was already asked", () => {
+    expect(() => validateDialogueFlow(...turn("Хорошо! Ты любишь чай?"))).toThrow(
+      "dialogue_repeated_question",
+    );
+    expect(() => validateDialogueFlow(...turn("А кофе?"))).toThrow("dialogue_repeated_question");
+  });
+  it("treats a two-word follow-up like »А ты?« by its whole turn, and gives way on the last attempt", () => {
+    const h = [
+      ...history,
+      { role: "user" as const, content: "x" },
+      { role: "assistant" as const, content: "Я люблю чай. А ты?" },
+    ];
+    expect(() => validateDialogueFlow(...turn("Я люблю сок. А ты?", { history: h }))).not.toThrow();
+    expect(() => validateDialogueFlow(...turn("Я люблю чай. А ты?", { history: h }))).toThrow(
+      "dialogue_repeated_question",
+    );
+    const [r, i] = turn("Хорошо! Ты любишь чай?");
+    expect(() => validateDialogueFlow(r, i, true)).not.toThrow();
+    expect(() => validateDialogueFlow({ ...r, partnerRu: "Мне нравится кофе" }, i, true)).toThrow(
+      "dialogue_echo",
+    );
+  });
+  it("accepts a short reaction followed by a new question", () => {
+    expect(() => validateDialogueFlow(...turn("Я тоже! А молоко?"))).not.toThrow();
+    expect(() => validateDialogueFlow(...turn("Чай или сок?"))).not.toThrow();
+  });
+  it("lets simplify repeat, roles answer without asking, and advanced stages invite freely", () => {
+    expect(() =>
+      validateDialogueFlow(...turn("А кофе?", { action: "simplify", message: "" })),
+    ).not.toThrow();
+    expect(() =>
+      validateDialogueFlow(...turn("Я люблю чай.", { action: "roles", message: "" })),
+    ).not.toThrow();
+    expect(() =>
+      validateDialogueFlow(...turn("Расскажи о своём дне.", { stage: 3 })),
+    ).not.toThrow();
   });
 });
 
