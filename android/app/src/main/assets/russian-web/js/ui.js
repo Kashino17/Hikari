@@ -39,8 +39,8 @@ export function SessionBar({ value, count, onClose, right, hot, marks }) {
 const latin = (spans) => spans.map((s) => (s.stressed ? html`<u>${s.text}</u>` : s.text));
 
 /** Umschrift groß (betonte Silbe amber), darunter Bedeutung je Wort, darunter dezent Kyrillisch. */
-export function IL({ ru, size = 24, center = false, gloss = true, cyr = true }) {
-  const chunks = useMemo(() => Gl.chunks(ru), [ru]);
+export function IL({ ru, size = 24, center = false, gloss = true, cyr = true, extra = null }) {
+  const chunks = useMemo(() => Gl.chunks(ru, extra), [ru, extra]);
   return html`<div class=${cls('il', center && 'center', !gloss && 'nog')} style=${`--fs:${size}px`}>
     <div class="il-ws">${chunks.map((c) => html`<div class="il-w">
       <div class="il-l">${c.words.map((w, i) => html`${i ? ' ' : ''}${w.before}${latin(w.latin)}${w.after}`)}</div>
@@ -256,7 +256,7 @@ export function ScoreCard({ sc, targetRu }) {
         <div class="ws">${sc.words.map(([w, ok], i) => html`<span class=${ok ? 'ok' : i < clipped ? 'unheard' : ''}>${wordLatin(w, i)}</span>`)}</div></div></div>
     ${clipped > 0 && html`<div class="res-note">»${sc.words.slice(0, clipped).map(([w], i) => wordLatin(w, i)).join(' ')}« wurde nicht aufgenommen — kein Fehler von dir. Sprich erst, wenn »Ich höre zu« erscheint.</div>`}
     ${!sc.passed && html`<div class="res-more">
-      <div class="sub">Gehört: »${Ph.transliterate(Gl.withStress(sc.heard)).map((s) => s.text).join('')}«</div>
+      <div class="sub" style="margin-bottom:4px">Gehört:</div><${IL} ru=${sc.heard} size=${16} />
       ${(more ? hints : hints.slice(0, 1)).map((h) => html`<div class="res-tip"><b>${h.heard ? `»${Sp.reading(h.target).toLowerCase()}« klang wie »${Ph.transliterateFlat(h.heard)}«` : `»${Sp.reading(h.target).toLowerCase()}« fehlte`}</b> ${h.tip}</div>`)}
       ${hints.length > 1 && html`<button class="res-link" onClick=${() => setMore(!more)}>${more ? 'Weniger' : `${hints.length - 1} weiterer Tipp${hints.length > 2 ? 's' : ''}`}</button>`}
     </div>`}

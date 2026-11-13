@@ -77,13 +77,20 @@ export function withStress(text) {
   });
 }
 
-/** Satz → Abschnitte für die Wort-für-Wort-Zeile: [{words:[WordReading], gloss}] */
-export function chunks(ru) {
+/** Schlüssel für eigene Wortlisten (siehe `extra` bei chunks): klein, ohne Betonung und Satzzeichen, ё wie е. */
+export const wordKey = (ru) => norm(Ph.plain(ru)).replace(/[^а-яa-z-]/g, '');
+
+/**
+ * Satz → Abschnitte für die Wort-für-Wort-Zeile: [{words:[WordReading], gloss}].
+ * `extra` (Map wordKey → Bedeutung) füllt Wörter, die das Kurs-Wörterbuch nicht kennt —
+ * etwa Wörter, die erst im Gespräch gelernt wurden.
+ */
+export function chunks(ru, extra = null) {
   const words = Ph.words(withStress(ru));
   const glosses = glossesFor(ru);
   const out = [];
   words.forEach((w, i) => {
-    const g = glosses[i] ?? null;
+    const g = glosses[i] ?? extra?.get(wordKey(w.plain)) ?? null;
     if (g === JOIN && out.length) out[out.length - 1].words.push(w);
     else out.push({ words: [w], gloss: g === JOIN ? null : g });
   });

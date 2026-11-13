@@ -6,6 +6,7 @@ import { progress, back, toast } from '../app.js';
 import { storage, api, speech as recog, serverVoice } from '../platform.js';
 import * as Ph from '../domain/phonetics.js';
 import * as Sp from '../domain/speech.js';
+import * as Gl from '../domain/glossary.js';
 
 // ── Inhalt der vier Mini-Gespräche ─────────────────────────────────────────
 const W = (id, ru, de, note, art) => ({ id, ru, de, note, art });
@@ -91,6 +92,17 @@ const WHY = {
 };
 const whyText = (st) => (WHY[st?.reason] ?? (() => 'Für das freie Gespräch muss dein KI-Server (LM Studio auf dem Mac) laufen.'))(st);
 
+/** Wort → Bedeutung aus allem, was in der Gesprächsreise schon vorkam — ergänzt das Kurs-Wörterbuch unter deinen eigenen Sätzen. */
+function ownWords(cp, session) {
+  const m = new Map();
+  const add = (w) => { const k = Gl.wordKey(w?.ru ?? ''); if (k && w.de && !/\s/.test(Ph.plain(w.ru).trim()) && !m.has(k)) m.set(k, w.de.split(' · ')[0]); };
+  for (const l of LESSONS) l.words.forEach(add);
+  cp.conversationVocabulary.forEach(add);
+  cp.cards.forEach((c) => add(c.phrase));
+  for (const t of session?.turns ?? []) (t.reply?.words ?? []).forEach(add);
+  return m;
+}
+
 // ── Bausteine ──────────────────────────────────────────────────────────────
 const Over = ({ children }) => html`<div class="over amber">${children}</div>`;
 const TextBtn = ({ onClick, children, disabled }) => html`<button class="btn text" style="align-self:center" disabled=${disabled} onClick=${onClick}>${children}</button>`;
@@ -105,7 +117,7 @@ function Choice({ value, options, onChange, cols = 2 }) {
 }
 
 /** Antwort sprechen oder tippen: erkannter Text wird zum Entwurf, den du selbst bestätigst. */
-function AnswerInput({ draft, spoken, onDraft, expect, sendLabel, onSend, micLabel = 'Ich antworte', busy }) {
+function AnswerInput({ draft, spoken, onDraft, expect, sendLabel, onSend, micLabel = 'Ich antworte', busy, extra }) {
   const [typing, setTyping] = useState(false);
   const [note, setNote] = useState(null);
   const L = useListen((hyps) => { const t = (hyps[0] ?? '').trim(); if (t) { onDraft(t, true); setNote(null); } else setNote('Nichts sicher erkannt. Versuch es noch einmal oder tippe.'); });
@@ -113,6 +125,7 @@ function AnswerInput({ draft, spoken, onDraft, expect, sendLabel, onSend, micLab
   return html`<div class="stack g10">
     ${L.listening && html`<${Card}><b>${L.opening ? 'Moment — das Mikrofon öffnet …' : 'Ich höre zu …'}</b><div class="sub mt4">${L.partial || 'Ein Wort reicht. Du kannst die Aufnahme jederzeit beenden.'}</div><//>`}
     ${(typing || draft || !canSpeak) && html`<div><div class="over" style="margin-bottom:6px">${spoken ? 'So wurde es verstanden' : 'Deine russische Antwort'}</div>
+      ${draft.trim() && /[а-яё]/i.test(draft) && html`<div class="card p" style="padding:12px 14px;margin-bottom:8px"><${IL} ru=${draft} size=${19} extra=${extra} /></div>`}
       <textarea class="field" rows="2" maxlength="1500" lang="ru" value=${draft} onInput=${(e) => onDraft(e.target.value, false)} placeholder="Russisch tippen …"></textarea></div>`}
     ${(note || L.errorText) && html`<div class="sub bad">${note ?? (L.error === 'denied' ? 'Mikrofon nicht freigegeben. Du kannst die Antwort auch tippen.' : L.errorText)}</div>`}
     ${draft && !L.listening && html`<button class="btn" disabled=${busy} onClick=${onSend}>${sendLabel}</button>`}
@@ -293,6 +306,7 @@ function HomePage({ cp, setPage, today, nextLesson, beginLesson, run, lesson, fr
 }
 
 function LessonPage({ run, lesson, setRun, check, nextStep, lineOf, speed, setPage, beginLesson, cp }) {
+  const extra = useMemo(() => ownWords(cp, null), [cp.conversationVocabulary, cp.cards]);
   const phaseIdx = run.phase === 'learn' ? 0 : run.phase === 'guided' ? 1 : 2;
   const bar = html`<div class="rowx g8" style="padding:0 16px 10px">${['Kennenlernen', 'Gemeinsam', 'Du selbst'].map((t, i) => html`<div class="grow"><div class="pbar" style="height:5px"><i style=${`width:${i <= phaseIdx ? 100 : 0}%`}></i></div>
     <div class="mt4" style=${`font-size:12px;font-weight:${i === phaseIdx ? 600 : 400};color:${i === phaseIdx ? 'var(--text)' : 'var(--faint)'}`}>${t}</div></div>`)}</div>`;
@@ -327,10 +341,10 @@ function LessonPage({ run, lesson, setRun, check, nextStep, lineOf, speed, setPa
             <div class="rowx g8 wrap mt12"><${Listen} ru=${line.answers[0]} speed=${speed} label="Antwort anhören" /><button class="chip sm" onClick=${() => setRun({ draft: line.answers[0], helped: true, spoken: false })}>Als Starthilfe einsetzen</button></div></div>`
           : html`<${TextBtn} onClick=${() => setRun({ helped: true })}><${Icon} n="lightbulb" />Ein kleiner Tipp<//>`}`}
       ${ok && html`<div class="card p" style="border-color:var(--good);background:rgba(var(--good-rgb),.08)"><div class="rowx g8 good" style="font-weight:600"><${Icon} n="check_circle" fill />${line.success}</div>
-        <div class="mt8">Deine Antwort: <b>${run.draft}</b></div><div class="sub mt4">${guided || run.helped ? 'Mit Unterstützung geübt. Genau dafür ist sie da.' : 'Aus dem Kopf — diesen Versuch merken wir uns für deinen Fortschritt.'}</div></div>`}
+        <div class="sub mt8" style="margin-bottom:4px">Deine Antwort</div><${IL} ru=${run.draft} size=${19} extra=${extra} /><div class="sub mt4">${guided || run.helped ? 'Mit Unterstützung geübt. Genau dafür ist sie da.' : 'Aus dem Kopf — diesen Versuch merken wir uns für deinen Fortschritt.'}</div></div>`}
     </div></div>
     <div class="bottom">${ok ? html`<button class="btn good" onClick=${nextStep}>${guided && run.index + 1 >= lesson.lines.length ? 'Jetzt versuche ich es selbst' : 'Weiter im Gespräch'}</button>`
-      : html`<${AnswerInput} draft=${run.draft} spoken=${run.spoken} expect=${line.answers[0]} onDraft=${(t, sp) => setRun({ draft: t.slice(0, 180), spoken: sp, result: '' })} sendLabel="Antwort prüfen" onSend=${check} micLabel=${guided ? 'Ich spreche es nach' : 'Ich antworte'} />`}</div>`;
+      : html`<${AnswerInput} draft=${run.draft} spoken=${run.spoken} expect=${line.answers[0]} onDraft=${(t, sp) => setRun({ draft: t.slice(0, 180), spoken: sp, result: '' })} sendLabel="Antwort prüfen" onSend=${check} micLabel=${guided ? 'Ich spreche es nach' : 'Ich antworte'} extra=${extra} />`}</div>`;
 }
 
 function FreePage({ cp, setSettings, session, setPage, startChat, freeReady, available, status, checking, checkStatus, busy }) {
@@ -360,6 +374,7 @@ function ChatPage({ cp, session, setSession, busy, send, scenario, savePhrase, l
   const [example, setExample] = useState(false);
   const scroller = useRef(null);
   const turn = session?.turns[session.turns.length - 1];
+  const extra = useMemo(() => ownWords(cp, session), [cp.conversationVocabulary, cp.cards, session?.turns]);
   useEffect(() => { setExample(false); setShape(false); scroller.current?.scrollTo({ top: 0 }); }, [turn?.id]);
   if (!session) return html`<div class="empty">Kein Gespräch geöffnet.<div class="mt20"><button class="btn" onClick=${() => setPage('free')}>Gespräch einrichten</button></div></div>`;
   const answers = session.turns.filter((t) => t.answer);
@@ -380,7 +395,7 @@ function ChatPage({ cp, session, setSession, busy, send, scenario, savePhrase, l
   return html`<div class="scroll" ref=${scroller}><div class="stepc g12">
       <${Over}>${scenario.title} · ${answers.length} eigene Antworten<//>
       ${!turn && html`<div class="title">Anja ist gleich da.</div><p class="muted">Du startest mit einer kurzen Frage. Erst anschauen, dann antworten.</p>${!busy && html`<button class="btn ghost" onClick=${() => send('start')}>Noch einmal verbinden</button>`}`}
-      ${turn?.answer && html`<div class="bub me" style="max-width:92%"><div class="who">DU</div><div lang="ru" style="font-size:16px">${turn.answer}</div>
+      ${turn?.answer && html`<div class="bub me" style="max-width:92%"><div class="who">DU</div><${IL} ru=${turn.answer} size=${19} extra=${extra} />
         ${r.feedback && html`<div class="nt" style="color:var(--good)">${r.feedback.praise}</div>
           ${r.feedback.focus && html`<div class="de"><b>Lernimpuls:</b> ${r.feedback.focus}</div><div class="sub mt4">${r.feedback.repairCue}</div>
             <div class="rowx g8 wrap mt8">${!session.repair && html`<button class="chip sm" onClick=${() => patch({ repair: true, draft: turn.answer, helped: true })}>Selbst verbessern</button>`}
@@ -399,7 +414,7 @@ function ChatPage({ cp, session, setSession, busy, send, scenario, savePhrase, l
           ${session.hint >= 2 && (r.words ?? []).map((w) => html`<div class="sub mt4"><b style="color:var(--text)">${Ph.transliterateFlat(w.ru)}</b> — ${w.de}</div>`)}
           ${session.hint >= 3 && r.starter && html`<div class="mt8"><${IL} ru=${r.starter} size=${17} gloss=${false} /><button class="chip sm mt8" onClick=${() => patch({ draft: r.starter, draftSpoken: false })}>Diesen Anfang benutzen</button></div>`}
           ${session.hint >= maxHint && (r.examples ?? []).map((ex) => html`<div class="mt12"><${IL} ru=${ex.ru} size=${16} /><div class="sub">${ex.de}</div><div class="rowx g8 mt8"><${Listen} ru=${ex.ru} speed=${speed} /><button class="chip sm" onClick=${() => patch({ draft: ex.ru, draftSpoken: false })}>Damit anfangen</button></div></div>`)}</div>`}
-        <${AnswerInput} draft=${session.draft} spoken=${session.draftSpoken} expect=${r.examples?.[0]?.ru ?? 'Да.'} busy=${busy} onDraft=${(t, sp) => patch({ draft: t.slice(0, 1500), draftSpoken: sp })} sendLabel="Meine Antwort senden" onSend=${() => send(session.repair ? 'repair' : 'reply')} />
+        <${AnswerInput} draft=${session.draft} spoken=${session.draftSpoken} expect=${r.examples?.[0]?.ru ?? 'Да.'} busy=${busy} onDraft=${(t, sp) => patch({ draft: t.slice(0, 1500), draftSpoken: sp })} sendLabel="Meine Antwort senden" onSend=${() => send(session.repair ? 'repair' : 'reply')} extra=${extra} />
         <${TextBtn} disabled=${session.hint >= maxHint} onClick=${() => patch({ hint: Math.min(session.hint + 1, 4), helped: true })}><${Icon} n="lightbulb" />${session.hint === 0 ? 'Ein kleiner Tipp' : 'Mehr Starthilfe'}<//>
         <p class="faint center" style="font-size:12px">KI-Rückmeldung zu deinem bestätigten Text. Kein Aussprachetest. Andere Formulierungen sind willkommen.</p>
         ${r.chunk?.ru && html`<${TextBtn} disabled=${saved} onClick=${() => savePhrase(r.chunk)}><${Icon} n=${saved ? 'bookmark_added' : 'bookmark_add'} />${saved ? 'Ausdruck gemerkt' : 'Diesen Ausdruck für später merken'}<//>`}
@@ -407,7 +422,7 @@ function ChatPage({ cp, session, setSession, busy, send, scenario, savePhrase, l
         <${TextBtn} onClick=${() => setShape(!shape)}><${Icon} n="tune" />Das Gespräch gestalten<//>
         ${shape && html`<div class="rowx g8 wrap" style="justify-content:center">${ACTIONS.map(([a, t]) => html`<button class="chip" disabled=${!!session.draft} onClick=${() => send(a)}>${t}</button>`)}</div>`}`}
       ${session.turns.length >= 2 && html`<${TextBtn} onClick=${() => setHistory(!history)}>${history ? 'Verlauf schließen' : 'Unser bisheriges Gespräch'}<//>
-        ${history && session.turns.slice(0, -1).reverse().map((t) => html`<div class="card p">${t.answer && html`<div class="sub">Du: <span lang="ru">${t.answer}</span></div>`}<div class="mt4"><${IL} ru=${t.reply.partnerRu} size=${15} gloss=${false} /></div><div class="sub">${t.reply.partnerDe}</div></div>`)}`}
+        ${history && session.turns.slice(0, -1).reverse().map((t) => html`<div class="card p">${t.answer && html`<div class="sub" style="margin-bottom:4px">Du</div><${IL} ru=${t.answer} size=${15} extra=${extra} /><div class="sub mt12" style="margin-bottom:4px">Anja</div>`}<div class="mt4"><${IL} ru=${t.reply.partnerRu} size=${15} gloss=${false} /></div><div class="sub">${t.reply.partnerDe}</div></div>`)}`}
       ${turn && !busy && html`<${TextBtn} onClick=${() => patch({ finished: true })}>Für heute beenden<//>`}
     </div></div>`;
 }
