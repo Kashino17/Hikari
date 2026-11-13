@@ -6,6 +6,7 @@ import {
   validateBeginnerVocabulary,
   prepareBeginnerVocabulary,
   conversationRequest,
+  settleFeedback,
   LocalConversationProvider,
   parseConversationReply,
   type ConversationReply,
@@ -171,6 +172,59 @@ describe("conversation boundary", () => {
     expect(() =>
       parseConversationReply(JSON.stringify({ ...reply, starter: "Ich möchte" })),
     ).toThrow();
+  });
+});
+
+describe("feedback on an answer that was already right", () => {
+  const invented = {
+    meaning: "partial" as const,
+    praise: "Gut, dass du „Nein“ und „Tee“ verbunden hast!",
+    focus: "Die Verneinung braucht das Wort „nicht“.",
+    repairCue: "Füge das Wort für „nicht“ zwischen „ich“ und „mag“ ein.",
+    correctedRu: "Нет, я не люблю чай",
+    explanationDe: "Im Russischen steht „nicht“ (не) vor dem Verb, um eine Aussage zu verneinen.",
+  };
+  it("turns an invented correction into a confirmation (Kadir, 14.11.: »Нет я не люблю чай«)", () => {
+    // Das Modell »verbesserte« den Satz zu exakt demselben Satz — nur mit Komma, das es beim Sprechen nicht gibt.
+    expect(settleFeedback(invented, "Нет я не люблю чай")).toEqual({
+      meaning: "clear",
+      praise: invented.praise,
+      focus: "",
+      repairCue: "",
+      correctedRu: "",
+      explanationDe: invented.explanationDe,
+    });
+  });
+  it("ignores punctuation, capitals, stress marks and ё when comparing", () => {
+    const fb = { ...invented, correctedRu: "Нет, я не любл+ю чай!" };
+    expect(settleFeedback(fb, "нет я не люблю чай").focus).toBe("");
+    expect(settleFeedback({ ...invented, correctedRu: "Ещё чай." }, "еще чай").focus).toBe("");
+  });
+  it("drops an explanation that still blames the learner", () => {
+    const fb = { ...invented, explanationDe: "Du hast das Wort „не“ vergessen." };
+    expect(settleFeedback(fb, "Нет я не люблю чай").explanationDe).toBe("");
+  });
+  it("keeps a real correction untouched", () => {
+    const real = {
+      ...invented,
+      focus: "Der Satz braucht ein Verb.",
+      correctedRu: "Да, спасибо, я хочу чай.",
+    };
+    expect(settleFeedback(real, "Да спасибо я чай")).toEqual(real);
+    // Rückfrage bei unklarer Antwort: Lernimpuls ohne Lösung bleibt stehen.
+    const open = { ...invented, meaning: "unclear" as const, correctedRu: "" };
+    expect(settleFeedback(open, "Нет я не люблю чай")).toEqual(open);
+  });
+  it("drops a focus that has nothing to correct (»Die Struktur ist korrekt.«)", () => {
+    const empty = {
+      ...invented,
+      meaning: "clear" as const,
+      focus: "Die Struktur ist korrekt.",
+      repairCue: "",
+      correctedRu: "",
+      explanationDe: "",
+    };
+    expect(settleFeedback(empty, "Нет я не чай")).toEqual({ ...empty, focus: "" });
   });
 });
 

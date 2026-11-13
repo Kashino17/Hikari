@@ -159,6 +159,9 @@ Explain in simple German without requiring grammar terminology. repairCue is a G
 it MUST NOT reveal the corrected Russian form. Only correctedRu contains the solution, which the app initially hides.
 For a likely transcription problem or ambiguous utterance, ask for clarification, not harsh grading.
 Keep the learner's intended meaning in any correction. If already fine, focus/repairCue/correctedRu/explanationDe are empty strings.
+The message is SPOKEN: it has no punctuation or capitalisation, and their absence is NEVER an issue to mention or correct.
+A message that is already correct gets praise only: never suggest a word or form the message already contains.
+A real mistake still gets exactly ONE focus with correctedRu: a missing verb, a wrong word form, or an answer that contradicts itself.
 For start and control actions, feedback MUST be null. For reply or repair, provide feedback on message.
 Never demand a private or traumatic story. Offer fictional stories as an equally valid alternative.
 Use Russian for partnerRu, starter, words.ru, examples.ru, chunk.ru and correctedRu. Use German in other text fields.
@@ -280,6 +283,45 @@ export function validateBeginnerVocabulary(reply: ConversationReply, input: Conv
 export interface ConversationProvider {
   status(): Promise<ConversationStatus>;
   respond(input: ConversationRequest): Promise<ConversationReply>;
+}
+
+type Feedback = NonNullable<ConversationReply["feedback"]>;
+
+/** Für den Vergleich zweier Sätze: klein, ё wie е, ohne Betonungs- und Satzzeichen. */
+const sameWords = (text: string) =>
+  text
+    .toLowerCase()
+    .replace(/[+\u0301]/g, "")
+    .replaceAll("ё", "е")
+    .replace(/[^a-zа-я0-9]+/g, " ")
+    .trim();
+
+/** Erklärungen, die dem Lernenden einen Fehler zuschreiben — taugen nicht als Bestätigung. */
+const BLAMES =
+  /vergess|fehlt|falsch|fehler|korrig|verbesser|füge|musst|solltest|nicht ganz|noch nicht/i;
+
+/**
+ * Das Modell »verbessert« einen Satz manchmal zu genau demselben Satz — etwa nur mit einem Komma,
+ * das es in einer gesprochenen Antwort gar nicht gibt. Dann war die Antwort richtig: Lernimpuls,
+ * Hinweis und Lösung fallen weg, die Bewertung wird »clear«. Die Erklärung bleibt als Bestätigung
+ * der Regel stehen, sofern sie keinen Fehler behauptet. Ebenso fällt ein Lernimpuls weg, zu dem
+ * das Modell gar keine Lösung nennt, obwohl es die Antwort für klar hält.
+ */
+export function settleFeedback(feedback: Feedback, message: string): Feedback {
+  if (!feedback.correctedRu.trim()) {
+    // »Verstanden« und keine Lösung genannt: Es gibt nichts zu verbessern — ein Lernimpuls wie
+    // »Die Struktur ist korrekt.« würde nur die Knöpfe zum Verbessern einblenden.
+    return feedback.meaning === "clear" ? { ...feedback, focus: "", repairCue: "" } : feedback;
+  }
+  if (sameWords(feedback.correctedRu) !== sameWords(message)) return feedback;
+  return {
+    ...feedback,
+    meaning: "clear",
+    focus: "",
+    repairCue: "",
+    correctedRu: "",
+    explanationDe: BLAMES.test(feedback.explanationDe) ? "" : feedback.explanationDe,
+  };
 }
 
 /**
@@ -423,6 +465,7 @@ export class LocalConversationProvider implements ConversationProvider {
         if (input.action !== "reply" && input.action !== "repair") result.feedback = null;
         if ((input.action === "reply" || input.action === "repair") && !result.feedback)
           throw new Error("feedback_missing");
+        if (result.feedback) result.feedback = settleFeedback(result.feedback, input.message);
         if (result.feedback && /[а-яё]/i.test(result.feedback.repairCue))
           result.feedback.repairCue =
             "Versuche deinen Satz noch einmal. Achte auf den Lernimpuls; das Beispiel kannst du danach aufdecken.";

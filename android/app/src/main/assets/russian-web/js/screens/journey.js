@@ -397,6 +397,7 @@ function ChatPage({ cp, session, setSession, busy, send, scenario, savePhrase, l
       ${!turn && html`<div class="title">Anja ist gleich da.</div><p class="muted">Du startest mit einer kurzen Frage. Erst anschauen, dann antworten.</p>${!busy && html`<button class="btn ghost" onClick=${() => send('start')}>Noch einmal verbinden</button>`}`}
       ${turn?.answer && html`<div class="bub me" style="max-width:92%"><div class="who">DU</div><${IL} ru=${turn.answer} size=${19} extra=${extra} />
         ${r.feedback && html`<div class="nt" style="color:var(--good)">${r.feedback.praise}</div>
+          ${!r.feedback.focus && r.feedback.explanationDe && html`<div class="de"><b>Genau so:</b> ${r.feedback.explanationDe}</div>`}
           ${r.feedback.focus && html`<div class="de"><b>Lernimpuls:</b> ${r.feedback.focus}</div><div class="sub mt4">${r.feedback.repairCue}</div>
             <div class="rowx g8 wrap mt8">${!session.repair && html`<button class="chip sm" onClick=${() => patch({ repair: true, draft: turn.answer, helped: true })}>Selbst verbessern</button>`}
               <button class=${cls('chip sm', example && 'on')} onClick=${() => { setExample(!example); patch({ helped: true }); }}>Ein Beispiel hilft mir</button></div>
