@@ -322,7 +322,67 @@ export function ErlebenTeaser() {
  * Steuert das Video eines Stücks. `pos` = {line, word}: was gerade zu hören ist.
  * `playSeg(a, b)` spielt einen Abschnitt (eine Zeile, ein Wort) und hält danach an.
  */
+// Geladene Ausschnitte bleiben im Speicher, solange der Bereich offen ist — die letzten vier.
+const CLIPS = new Map();
+function keepClip(file, url) {
+  CLIPS.set(file, url);
+  while (CLIPS.size > 4) { const [old, oldUrl] = CLIPS.entries().next().value; CLIPS.delete(old); URL.revokeObjectURL(oldUrl); }
+}
+
+/**
+ * Lädt den Ausschnitt einmal vollständig und spielt ihn dann aus dem Speicher.
+ *
+ * Warum nicht einfach die Server-Adresse als Quelle: In der App laufen Abrufe über die Brücke der
+ * WebView (shouldInterceptRequest). Einen Teilabruf »ab Byte N« — den der Player nach einem Sprung
+ * an eine noch nicht geladene Stelle braucht — kann sie nicht weitergeben; das Video blieb dann in
+ * »sucht« hängen und fragte den Server in Schleife (v0.89.112, gemessen: 13 Anfragen in 10 s).
+ * Direkt vom Server (http) darf die https-Oberfläche kein Video laden. Die Ausschnitte sind klein
+ * (5 bis 10 MB), also: einmal am Stück holen, danach geht jeder Sprung sofort und ohne Netz.
+ */
+function useClip(file) {
+  const [st, setSt] = useState(() => ({ url: CLIPS.get(file) ?? null, part: 0, failed: false }));
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    if (CLIPS.has(file)) { setSt({ url: CLIPS.get(file), part: 1, failed: false }); return undefined; }
+    const ctrl = new AbortController();
+    setSt({ url: null, part: 0, failed: false });
+    (async () => {
+      try {
+        const r = await fetch(media(file), { signal: ctrl.signal });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const total = Number(r.headers.get('content-length')) || 0;
+        const reader = r.body?.getReader?.();
+        let blob;
+        if (reader) {
+          const chunks = [];
+          let got = 0;
+          let shown = 0;
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            got += value.length;
+            const part = total ? Math.min(0.99, got / total) : 0;
+            if (part - shown >= 0.03) { shown = part; setSt((x) => ({ ...x, part })); }
+          }
+          blob = new Blob(chunks, { type: 'video/mp4' });
+        } else blob = await r.blob();
+        if (ctrl.signal.aborted) return;
+        if (blob.size < 1000) throw new Error('leer');
+        const url = URL.createObjectURL(blob);
+        keepClip(file, url);
+        setSt({ url, part: 1, failed: false });
+      } catch {
+        if (!ctrl.signal.aborted) setSt({ url: null, part: 0, failed: true });
+      }
+    })();
+    return () => ctrl.abort();
+  }, [file, attempt]);
+  return { ...st, ready: !!st.url, retry: () => setAttempt((x) => x + 1) };
+}
+
 function usePlayer(piece) {
+  const clip = useClip(piece.media);
   const ref = useRef(null);
   const bar = useRef(null);
   const seg = useRef(null);
@@ -355,14 +415,17 @@ function usePlayer(piece) {
     return () => cancelAnimationFrame(raf);
   }, [piece]);
   const start = (rate = 1) => { const v = ref.current; v.playbackRate = rate; setEnded(false); return v.play().catch(() => {}); };
+  // Solange der Ausschnitt lädt, gibt es nichts abzuspielen — die Knöpfe zeigen dann den Ladestand.
+  const ready = clip.ready;
   return {
-    ref, bar, playing, pos, ended, segKey,
+    ref, bar, playing, pos, ended, segKey, clip, ready,
     bind: { onPlay: () => setPlaying(true), onPause: () => setPlaying(false), onEnded: () => { setPlaying(false); setEnded(true); seg.current = null; setSegKey(null); } },
-    play() { seg.current = null; setSegKey(null); const v = ref.current; if (v.ended || v.currentTime >= piece.dur - 0.3) v.currentTime = 0; start(1); },
+    play() { if (!ready) return; seg.current = null; setSegKey(null); const v = ref.current; if (v.ended || v.currentTime >= piece.dur - 0.3) v.currentTime = 0; start(1); },
     pause() { ref.current?.pause(); },
     toggle() { if (ref.current.paused) this.play(); else this.pause(); },
-    seek(t) { seg.current = null; setSegKey(null); ref.current.currentTime = t; start(1); },
+    seek(t) { if (!ready) return; seg.current = null; setSegKey(null); ref.current.currentTime = t; start(1); },
     playSeg(a, b, { rate = 1, loop = false, key = 'line' } = {}) {
+      if (!ready) return;
       audio.stop();
       const v = ref.current;
       seg.current = { a, b, loop };
@@ -374,20 +437,25 @@ function usePlayer(piece) {
   };
 }
 
+/** Ladestand des Ausschnitts als Text: »Lädt 43 %«, oder der Hinweis nach einem Fehlschlag. */
+const clipLabel = (clip) => (clip.failed ? 'Video nicht geladen. Nochmal versuchen' : clip.part > 0 ? `Video lädt, ${Math.round(clip.part * 100)} %` : 'Video lädt …');
+
 function Stage({ piece, pl, onTap, quiet }) {
-  const tap = onTap ?? (() => pl.toggle());
+  const tap = !pl.ready ? () => pl.clip.failed && pl.clip.retry() : (onTap ?? (() => pl.toggle()));
   const ticks = piece.lines.map((l) => html`<s style=${`left:${((l.a / piece.dur) * 100).toFixed(2)}%`}></s>`);
+  const wait = !pl.ready && html`<${Icon} n=${pl.clip.failed ? 'refresh' : 'progress_activity'} c=${pl.clip.failed ? '' : 'spin'} />`;
   if (piece.still) {
     return html`<div class="ls-audio">
-      <video ref=${pl.ref} src=${media(piece.media)} poster=${media(piece.poster)} playsinline preload="auto" ...${pl.bind}></video>
-      <div class="tx"><b class="ell">${piece.latin}</b><span class="ell">${piece.by}</span>
+      <video ref=${pl.ref} src=${pl.clip.url} poster=${media(piece.poster)} playsinline preload="auto" ...${pl.bind}></video>
+      <div class="tx"><b class="ell">${piece.head}</b><span class="ell">${pl.ready ? piece.by : clipLabel(pl.clip)}</span>
         <div class="ls-track"><i ref=${pl.bar}></i>${ticks}</div></div>
-      <button class="pp" onClick=${tap} aria-label=${pl.playing ? 'Pause' : 'Abspielen'}><${Icon} n=${pl.playing ? 'pause' : 'play_arrow'} fill /></button>
+      <button class="pp" onClick=${tap} aria-label=${pl.ready ? (pl.playing ? 'Pause' : 'Abspielen') : clipLabel(pl.clip)}>${wait || html`<${Icon} n=${pl.playing ? 'pause' : 'play_arrow'} fill />`}</button>
     </div>`;
   }
   return html`<div class="ls-video" style=${`--r:${piece.ratio}`}>
-    <video ref=${pl.ref} src=${media(piece.media)} poster=${media(piece.poster)} playsinline preload="auto" ...${pl.bind}></video>
-    <button class=${cls('tap', pl.playing && 'on', quiet && 'quiet')} onClick=${tap} aria-label=${pl.playing ? 'Pause' : 'Abspielen'}><span class="pp"><${Icon} n="play_arrow" fill /></span></button>
+    <video ref=${pl.ref} src=${pl.clip.url} poster=${media(piece.poster)} playsinline preload="auto" ...${pl.bind}></video>
+    <button class=${cls('tap', pl.playing && 'on', quiet && pl.ready && 'quiet')} onClick=${tap} aria-label=${pl.ready ? (pl.playing ? 'Pause' : 'Abspielen') : clipLabel(pl.clip)}>
+      ${pl.ready ? html`<span class="pp"><${Icon} n="play_arrow" fill /></span>` : html`<span class="ls-load">${wait}<em>${clipLabel(pl.clip)}</em></span>`}</button>
     <div class="ls-track"><i ref=${pl.bar}></i>${ticks}</div>
   </div>`;
 }
@@ -525,7 +593,9 @@ function Understand({ piece, pl, ps, s, known, onWord, toLine, onTake }) {
   </div></div>
   <div class="bottom">
     <div class="dock ls-dock">
-      <${DockBtn} primary fill icon=${pl.playing && pl.segKey === 'line' ? 'graphic_eq' : 'play_arrow'} label="Hören" onClick=${() => hear({ key: 'line' })} />
+      <${DockBtn} primary fill disabled=${!pl.ready && !pl.clip.failed} node=${!pl.ready ? html`<${Icon} n=${pl.clip.failed ? 'refresh' : 'progress_activity'} c=${pl.clip.failed ? '' : 'spin'} />` : null}
+        icon=${pl.playing && pl.segKey === 'line' ? 'graphic_eq' : 'play_arrow'} label=${pl.ready ? 'Hören' : pl.clip.failed ? 'Nochmal' : pl.clip.part > 0 ? `${Math.round(pl.clip.part * 100)} %` : 'Lädt …'}
+        onClick=${() => (pl.ready ? hear({ key: 'line' }) : pl.clip.retry())} />
       <${DockBtn} icon="slow_motion_video" label="Langsam" on=${pl.playing && pl.segKey === 'slow'} onClick=${() => hear({ rate: 0.7, key: 'slow' })} />
       <${DockBtn} icon="repeat" label="Schleife" on=${pl.segKey === 'loop'} onClick=${() => (pl.segKey === 'loop' ? pl.stopSeg() : hear({ loop: true, key: 'loop' }))} />
       ${recorder.available() && html`<${DockBtn} rec=${!!rec} node=${rec ? html`<${Icon} n="stop" fill />` : html`<${SvgCompare} s=${22} />`} label=${rec ? 'Stopp' : 'Nachsprechen'} onClick=${record} />`}
@@ -720,7 +790,8 @@ function PieceView({ piece }) {
 
     ${stage === 0 && html`<${Feel} piece=${piece} pl=${pl} ps=${ps} s=${s} />
       <div class="bottom">${!(ps.started || pl.playing || pl.ended)
-        ? html`<button class="btn" onClick=${watch}><${Icon} n="play_arrow" fill />Ansehen</button>`
+        ? (pl.ready ? html`<button class="btn" onClick=${watch}><${Icon} n="play_arrow" fill />Ansehen</button>`
+          : html`<button class="btn" disabled=${!pl.clip.failed} onClick=${pl.clip.retry}>${clipLabel(pl.clip)}</button>`)
         : html`<button class=${cls('btn', !pl.ended && 'ghost')} onClick=${() => { go(1); toLine(ps.line < piece.uniq.length ? idx : 0); }}>Zeile für Zeile verstehen<${Icon} n="arrow_forward" /></button>`}</div>`}
 
     ${stage === 1 && html`<${Understand} piece=${piece} pl=${pl} ps=${ps} s=${s} known=${known} onWord=${(chunk, line) => setSheet({ chunk, line })} toLine=${toLine} onTake=${() => go(2)} />`}
