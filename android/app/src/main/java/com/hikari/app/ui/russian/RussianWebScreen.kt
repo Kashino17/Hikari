@@ -404,7 +404,10 @@ class RussianWebBridge(
         val id = listenId ?: return
         when (s) {
             is RuListenState.Partial -> reply(id, JSONObject().put("t", "partial").put("text", s.text))
-            is RuListenState.Done -> { listenId = null; reply(id, JSONObject().put("t", "done").put("hyps", JSONArray(s.hypotheses))) }
+            is RuListenState.Done -> {
+                listenId = null
+                reply(id, JSONObject().put("t", "done").put("hyps", JSONArray(s.hypotheses)).put("heard", s.heard))
+            }
             is RuListenState.Failed -> {
                 listenId = null
                 val code = when {

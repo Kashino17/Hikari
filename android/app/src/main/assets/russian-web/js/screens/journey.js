@@ -82,6 +82,15 @@ function record(cp, obs) {
 }
 const supportStage = (cp) => { const last = cp.observations.slice(-3); return last.length === 3 && last.every((o) => !o.clear || !o.independent) ? Math.max(0, cp.stage - 1) : cp.stage; };
 
+// Warum Anja nicht erreichbar ist — der Server nennt den Grund (`reason`), `server` heißt: der Mac selbst antwortet nicht.
+const WHY = {
+  server: () => 'Der Hikari-Server auf deinem Mac antwortet nicht. Ist der Mac an und im selben Netz (oder über Tailscale verbunden)?',
+  offline: () => 'LM Studio auf dem Mac antwortet nicht. Öffne LM Studio und schalte dort den lokalen Server ein.',
+  model_missing: (st) => `Anjas Sprachmodell »${st.wanted}« gibt es in LM Studio nicht mehr. Lade es dort wieder oder trage in der Server-Einstellung RUSSIAN_CHAT_MODEL ein vorhandenes ein.`,
+  no_model: () => 'In LM Studio ist kein Sprachmodell vorhanden. Lade dort eines herunter.',
+};
+const whyText = (st) => (WHY[st?.reason] ?? (() => 'Für das freie Gespräch muss dein KI-Server (LM Studio auf dem Mac) laufen.'))(st);
+
 // ── Bausteine ──────────────────────────────────────────────────────────────
 const Over = ({ children }) => html`<div class="over amber">${children}</div>`;
 const TextBtn = ({ onClick, children, disabled }) => html`<button class="btn text" style="align-self:center" disabled=${disabled} onClick=${onClick}>${children}</button>`;
@@ -124,6 +133,8 @@ export function Journey() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [available, setAvailable] = useState(null);
+  const [status, setStatus] = useState(null); // {reason, wanted, at} der letzten Prüfung
+  const [checking, setChecking] = useState(false);
   const cpRef = useRef(cp);
   const setCp = (fn) => { const next = typeof fn === 'function' ? fn(cpRef.current) : fn; cpRef.current = next; storage.set('conv_progress', next); setCpState(next); };
   const setSession = (s) => { if (s) storage.set('conv_session', s); else storage.remove('conv_session'); setSessionState(s); };
@@ -137,8 +148,18 @@ export function Journey() {
   const speed = cp.settings.speed;
   const setRun = (patch) => setCp((c) => ({ ...c, foundation: { ...c.foundation, run: patch ? { ...c.foundation.run, ...patch } : null } }));
   const setSettings = (patch) => setCp((c) => ({ ...c, settings: { ...c.settings, ...patch } }));
-  const checkStatus = () => api.get('/russian/conversation/status').then((r) => setAvailable(!!r.available)).catch(() => setAvailable(false));
+  // `shown` = vom Lernenden angestoßen: Die Prüfung dauert oft nur Millisekunden — ohne kurze
+  // sichtbare Phase sähe ein Tippen mit gleichem Ergebnis aus, als wäre nichts passiert.
+  const checkStatus = async (shown = false) => {
+    if (shown) setChecking(true);
+    const [r] = await Promise.all([api.get('/russian/conversation/status').catch(() => ({ available: false, reason: 'server' })), shown ? new Promise((ok) => setTimeout(ok, 600)) : null]);
+    setAvailable(!!r.available);
+    setStatus({ reason: r.reason, wanted: r.wanted, at: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) });
+    setChecking(false);
+  };
   useEffect(() => { checkStatus(); serverVoice.warm(); return () => { audio.stop(); tts.stop(); }; }, []);
+  // Beim Öffnen der Gesprächs-Auswahl neu prüfen: Wer LM Studio inzwischen gestartet hat, soll nicht tippen müssen.
+  useEffect(() => { if (page === 'free') checkStatus(); }, [page]);
 
   // Aktive Übungszeit (ohne Warten auf die KI).
   useEffect(() => {
@@ -204,6 +225,7 @@ export function Journey() {
     } catch (e) {
       setError(e.status === 429 ? 'Anja ist gerade beschäftigt. Deine Antwort bleibt erhalten — versuch es gleich erneut.'
         : 'Anja konnte gerade keine passende Antwort vorbereiten. Dein Text bleibt erhalten. Versuche es erneut — falls es wieder nicht klappt, prüfe, ob dein KI-Server (LM Studio) läuft.');
+      checkStatus(); // hält den Grund aktuell, falls die Verbindung mitten im Gespräch wegfiel
     } finally { setBusy(false); }
   };
   const startChat = () => {
@@ -219,7 +241,7 @@ export function Journey() {
     setSession({ ...session, turns: session.turns.map((t) => (t.id === turn.id ? { ...t, ready: true } : t)) });
   };
 
-  const P_ = { cp, setCp, setPage, speed, today, session, setSession, busy, send, scenario, savePhrase, learnTurnWords, freeReady, available, checkStatus, startChat, setSettings, nextLesson, beginLesson, run, lesson, setRun, check, nextStep, lineOf };
+  const P_ = { cp, setCp, setPage, speed, today, session, setSession, busy, send, scenario, savePhrase, learnTurnWords, freeReady, available, status, checking, checkStatus, startChat, setSettings, nextLesson, beginLesson, run, lesson, setRun, check, nextStep, lineOf };
   const title = page === 'lesson' ? lesson?.title ?? 'Dein Einstieg' : TITLES[page] ?? 'Gesprächsreise';
   const sub = page === 'lesson' ? lesson?.place : page === 'chat' ? 'Dein Tempo. Deine Geschichten.' : 'Russisch · Schritt für Schritt';
   return html`<div class="screen c-amber">
@@ -311,7 +333,7 @@ function LessonPage({ run, lesson, setRun, check, nextStep, lineOf, speed, setPa
       : html`<${AnswerInput} draft=${run.draft} spoken=${run.spoken} expect=${line.answers[0]} onDraft=${(t, sp) => setRun({ draft: t.slice(0, 180), spoken: sp, result: '' })} sendLabel="Antwort prüfen" onSend=${check} micLabel=${guided ? 'Ich spreche es nach' : 'Ich antworte'} />`}</div>`;
 }
 
-function FreePage({ cp, setSettings, session, setPage, startChat, freeReady, available, checkStatus, busy }) {
+function FreePage({ cp, setSettings, session, setPage, startChat, freeReady, available, status, checking, checkStatus, busy }) {
   const [more, setMore] = useState(false);
   const s = cp.settings;
   const sc = (list) => list.map((x) => [x.id, x.title, x.goal]);
@@ -319,8 +341,9 @@ function FreePage({ cp, setSettings, session, setPage, startChat, freeReady, ava
       <div><${Over}>Deine Wörter. Dein Gespräch.<//><div class="big mt4">Was bewegt dich heute?</div><p class="muted mt8" style="line-height:1.5">Anja knüpft an das an, was du schon gelernt hast. Neue Wörter schauen wir uns vor deiner Antwort gemeinsam an.</p></div>
       ${!freeReady && html`<div class="hint"><p>Freie Gespräche kommen nach deinen ersten drei Mini-Gesprächen.</p></div>`}
       ${session && !session.finished && session.turns.length > 0 && html`<div class="card p tint"><b>Euer letztes Gespräch wartet noch auf dich.</b><button class="btn mt12" onClick=${() => setPage('chat')}>Gespräch fortsetzen</button></div>`}
-      ${available === false && html`<div class="card p" style="border-color:rgba(var(--bad-rgb),.4)"><b>Anja ist gerade nicht verbunden.</b><p class="sub mt4">Für das freie Gespräch muss dein KI-Server (LM Studio auf dem Mac) laufen. Deine Mini-Gespräche und dein Wortschatz funktionieren weiterhin.</p>
-        <button class="chip mt12" onClick=${checkStatus}><${Icon} n="refresh" />Verbindung erneut prüfen</button></div>`}
+      ${available === false && html`<div class="card p" style="border-color:rgba(var(--bad-rgb),.4)"><b>Anja ist gerade nicht verbunden.</b><p class="sub mt4">${whyText(status)} Deine Mini-Gespräche und dein Wortschatz funktionieren weiterhin.</p>
+        <div class="rowx g8 wrap mt12"><button class="chip" disabled=${checking} onClick=${() => checkStatus(true)}><${Icon} n=${checking ? 'progress_activity' : 'refresh'} c=${checking && 'spin'} />${checking ? 'Prüfe …' : 'Verbindung erneut prüfen'}</button>
+          ${status?.at && !checking && html`<span class="sub">Zuletzt geprüft um ${status.at} — noch nicht erreichbar.</span>`}</div></div>`}
       <div><div class="h3" style="margin-bottom:8px">Wo möchtest du Anja treffen?</div><${Choice} value=${s.scenario} options=${sc(more ? SCENARIOS : SCENARIOS.slice(0, 4))} onChange=${(v) => setSettings({ scenario: v })} /></div>
       <div><div class="h3" style="margin-bottom:8px">Dein Thema, wenn du magst</div><input class="field" maxlength="300" value=${s.interest} onInput=${(e) => setSettings({ interest: e.target.value })} placeholder="Meine Katze, eine Reise, mein Lieblingsfilm …" /></div>
       ${more && html`<div><div class="h3" style="margin-bottom:8px">Was möchtest du üben?</div><${Choice} cols=${3} value=${s.goal} options=${[['everyday', 'Alltag'], ['stories', 'Geschichten'], ['media', 'Film & Musik']]} onChange=${(v) => setSettings({ goal: v })} /></div>

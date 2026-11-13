@@ -341,7 +341,7 @@ export const speech = {
 
   /**
    * Hört einmal zu. → {promise, stop()}.
-   * promise → {ok:true, hyps:[bis zu 5 Lesarten]} | {ok:false, error:'unavailable'|'denied'|'nospeech'|'network'|'aborted'}
+   * promise → {ok:true, hyps:[bis zu 5 Lesarten]} | {ok:false, error:'unavailable'|'denied'|'nospeech'|'nomatch'|'network'|'busy'|'aborted'}
    *
    * `onReady(offen)` meldet, wann das Mikrofon wirklich offen ist. Bis dahin vergeht nach dem Tippen
    * spürbar Zeit — wer schon spricht, verliert das erste Wort. Die Oberfläche zeigt deshalb erst dann
@@ -381,7 +381,8 @@ export const speech = {
           if (m.t === 'partial') { last = m.text; ready(true); onPartial?.(m.text); return; }
           clearTimeout(fallback);
           nativeCbs.delete(id);
-          if (m.t === 'done') resolve(m.hyps?.length ? { ok: true, hyps: m.hyps } : last ? { ok: true, hyps: [last] } : { ok: false, error: 'nospeech' });
+          // Ohne Text: `heard` trennt »gesprochen, aber nicht verstanden« von »gar nichts gehört«.
+          if (m.t === 'done') resolve(m.hyps?.length ? { ok: true, hyps: m.hyps } : last ? { ok: true, hyps: [last] } : { ok: false, error: m.heard ? 'nomatch' : 'nospeech' });
           else resolve({ ok: false, error: m.code ?? 'unavailable' });
         });
         // Die Erkennung braucht selbst einen Moment zum Öffnen — eine kurze Pause reicht hier.
@@ -474,6 +475,7 @@ export const SPEECH_ERRORS = {
   unavailable: native ? 'Auf diesem Gerät wurde keine Spracherkennung gefunden. Vergleiche selbst mit dem Original.' : 'Dieser Browser hat keine Spracherkennung. Vergleiche selbst mit dem Original.',
   denied: native ? 'Kein Zugriff aufs Mikrofon. Erlaube es in den Android-Einstellungen für Hikari.' : 'Kein Zugriff aufs Mikrofon. Erlaube es in den Browser-Einstellungen für diese Seite.',
   nospeech: 'Ich habe nichts gehört. Tippe aufs Mikrofon, wenn du so weit bist.',
+  nomatch: 'Ich habe dich gehört, aber nichts verstanden. Sprich es noch einmal in Ruhe.',
   network: native ? 'Die Spracherkennung braucht Internet oder das russische Offline-Sprachpaket.' : 'Die Spracherkennung braucht gerade Internet und hat keine Verbindung.',
   busy: 'Die Spracherkennung ist gerade nicht erreichbar — bitte gleich nochmal versuchen.',
   aborted: 'Abgebrochen.',

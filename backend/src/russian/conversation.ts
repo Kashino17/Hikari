@@ -278,9 +278,21 @@ export function validateBeginnerVocabulary(reply: ConversationReply, input: Conv
 }
 
 export interface ConversationProvider {
-  status(): Promise<{ available: boolean; model: string | null }>;
+  status(): Promise<ConversationStatus>;
   respond(input: ConversationRequest): Promise<ConversationReply>;
 }
+
+/**
+ * Warum kein Gespräch möglich ist — die App zeigt je Grund einen anderen Hinweis:
+ * `offline` = der KI-Server antwortet nicht, `model_missing` = das fest gewählte Modell
+ * (`wanted`) liegt dort nicht mehr, `no_model` = dort liegt gar kein Sprachmodell.
+ */
+export type ConversationStatus = {
+  available: boolean;
+  model: string | null;
+  reason?: "offline" | "model_missing" | "no_model";
+  wanted?: string;
+};
 
 export class LocalConversationProvider implements ConversationProvider {
   private base: string;
@@ -293,23 +305,28 @@ export class LocalConversationProvider implements ConversationProvider {
       .replace(/\/v1$/, "");
   }
 
-  async status() {
+  async status(): Promise<ConversationStatus> {
+    const offline: ConversationStatus = { available: false, model: null, reason: "offline" };
     try {
       const res = await this.request(`${this.base}/v1/models`, {
         signal: AbortSignal.timeout(2500),
       });
-      if (!res.ok) return { available: false, model: null };
+      if (!res.ok) return offline;
       const body = z
         .object({ data: z.array(z.object({ id: z.string() })) })
         .parse(await res.json());
       const ids = body.data.map((x) => x.id).filter((id) => !/embed|whisper/i.test(id));
-      if (this.env.RUSSIAN_CHAT_MODEL && !ids.includes(this.env.RUSSIAN_CHAT_MODEL))
-        return { available: false, model: null };
-      const configured = this.env.RUSSIAN_CHAT_MODEL ?? this.env.LMSTUDIO_MODEL;
+      // Ein fest gewähltes Lehr-Modell wird nie still ersetzt — aber die Absage nennt es beim Namen.
+      const wanted = this.env.RUSSIAN_CHAT_MODEL;
+      if (wanted && !ids.includes(wanted))
+        return { available: false, model: null, reason: "model_missing", wanted };
+      const configured = wanted ?? this.env.LMSTUDIO_MODEL;
       const model = (configured && ids.includes(configured) ? configured : ids[0]) ?? null;
-      return { available: model !== null, model };
+      return model
+        ? { available: true, model }
+        : { available: false, model: null, reason: "no_model" };
     } catch {
-      return { available: false, model: null };
+      return offline;
     }
   }
 

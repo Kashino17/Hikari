@@ -354,7 +354,7 @@ function SpeakStep({ step, env }) {
     setScore(sc); setAttempts((a) => a + 1);
     if (sc.passed && !answered) { setSpoke(true); env.onSpokenOk(); env.onAnswer(true); } else fx.wrong();
   });
-  useEffect(() => { if (L.error && L.error !== 'nospeech') setSelfCheck(true); }, [L.error]);
+  useEffect(() => { if (L.error && L.error !== 'nospeech' && L.error !== 'nomatch') setSelfCheck(true); }, [L.error]);
   const mic = () => { if (L.listening) L.stop(); else { setScore(null); setMasked(true); L.start(p.ru); } };
   useKeys({ ' ': () => playPhrase(p), m: () => !answered && !selfCheck && mic() }, [answered, selfCheck, L.listening]);
   const visible = answered || !masked;
@@ -496,7 +496,7 @@ function AnswerStep({ step, env }) {
     setAttempts((a) => a + 1);
     if (hit && !answered) { setResult(hit); env.onSpokenOk(); env.onAnswer(true); playPhrase(hit.r); } else { fx.wrong(); setResult(scored[0]); }
   });
-  useEffect(() => { if (L.error && L.error !== 'nospeech') setSelfCheck(true); }, [L.error]);
+  useEffect(() => { if (L.error && L.error !== 'nospeech' && L.error !== 'nomatch') setSelfCheck(true); }, [L.error]);
   const mic = () => { if (L.listening) L.stop(); else { setResult(null); L.start(step.replies[0].ru); } };
   const open = show || answered;
   useKeys({ ' ': () => playPhrase(q), m: () => !answered && !selfCheck && mic() }, [answered, selfCheck, L.listening]);

@@ -43,4 +43,44 @@ object RuSpeechRetry {
 
     /** Pause vor dem nächsten Anlauf — wächst, damit der Dienst Zeit zum Aufräumen bekommt. */
     fun delayMs(retries: Int): Long = 350L + 300L * retries
+
+    // ── Geduld: die Erkennung gibt auf, bevor der Lernende überhaupt angefangen hat ──────────
+
+    /**
+     * So lange nach dem Tippen darf man mit dem Sprechen anfangen, ohne neu tippen zu müssen.
+     * Ist bis dahin kein Wort erkannt, schließt das Mikrofon und meldet es — es bleibt nie
+     * länger stumm offen (manche Erkenner warten bei Stille sonst über 30 s).
+     */
+    const val PATIENCE_MS = 12_000L
+
+    /** Obergrenze für stilles Neu-Öffnen in einer Wartezeit (Schutz vor einer Endlosschleife). */
+    const val MAX_REOPEN = 8
+
+    /** Kurze Pause, bevor das Mikrofon nach einer stillen Sitzung wieder aufgeht. */
+    const val REOPEN_DELAY_MS = 150L
+
+    /**
+     * Ab diesem Spitzenpegel (onRmsChanged, etwa −2 … 10 dB) gilt: Da war eine Stimme. Bestimmt nur
+     * den Wortlaut der Meldung am Ende der Wartezeit. Richtwert, am Handy noch nicht geeicht (im
+     * Emulator lag Stille bei 0 bis 3,4) — der Pegel jeder Sitzung steht im Logcat.
+     */
+    const val HEARD_RMS_DB = 5f
+
+    private const val SPEECH_TIMEOUT = 6
+    private const val NO_MATCH = 7
+
+    /** War eine Stimme zu hören? [peakRmsDb] = lautester gemeldeter Pegel. */
+    fun heard(peakRmsDb: Float): Boolean = peakRmsDb >= HEARD_RMS_DB
+
+    /**
+     * Eine Sitzung endete ohne Text ([error] 6 oder 7; ein leeres Ergebnis zählt als 7), ohne dass
+     * der Lernende selbst gestoppt hat. true = Mikrofon still wieder öffnen und weiter zuhören:
+     * Er liest oder denkt noch — typisch, wenn das Mikrofon von selbst aufgeht — oder er wurde
+     * nicht verstanden und sagt es einfach noch einmal. Erst nach der Wartezeit wird gemeldet.
+     * [sinceTapMs] zählt ab dem Tippen, [reopened] die bisherigen Neu-Öffnungen.
+     */
+    fun shouldKeepWaiting(error: Int, sinceTapMs: Long, reopened: Int): Boolean {
+        if (error != SPEECH_TIMEOUT && error != NO_MATCH) return false
+        return sinceTapMs < PATIENCE_MS && reopened < MAX_REOPEN
+    }
 }

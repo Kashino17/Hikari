@@ -204,7 +204,7 @@ describe("local model adapter", () => {
   it("does not fabricate feedback when the local model is unavailable", async () => {
     const request = vi.fn<typeof fetch>().mockRejectedValue(new Error("offline"));
     const provider = new LocalConversationProvider({}, request);
-    expect(await provider.status()).toEqual({ available: false, model: null });
+    expect(await provider.status()).toEqual({ available: false, model: null, reason: "offline" });
     await expect(
       provider.respond(conversationRequest.parse({ scenario: "Café", action: "start" })),
     ).rejects.toThrow("conversation_unavailable");
@@ -213,9 +213,31 @@ describe("local model adapter", () => {
     const request = vi
       .fn<typeof fetch>()
       .mockResolvedValue(Response.json({ data: [{ id: "other" }] }));
+    // … sagt aber, warum: sonst sieht ein gelöschtes Modell aus wie ein ausgeschalteter Server.
     expect(
       await new LocalConversationProvider({ RUSSIAN_CHAT_MODEL: "teacher" }, request).status(),
-    ).toEqual({ available: false, model: null });
+    ).toEqual({ available: false, model: null, reason: "model_missing", wanted: "teacher" });
+  });
+  it("tells a stopped server, an empty model list and a ready model apart", async () => {
+    const answer = (body: unknown, ok = true) =>
+      vi.fn<typeof fetch>().mockResolvedValue(Response.json(body, { status: ok ? 200 : 500 }));
+    expect(await new LocalConversationProvider({}, answer({}, false)).status()).toEqual({
+      available: false,
+      model: null,
+      reason: "offline",
+    });
+    expect(
+      await new LocalConversationProvider(
+        {},
+        answer({ data: [{ id: "text-embedding-model" }] }),
+      ).status(),
+    ).toEqual({ available: false, model: null, reason: "no_model" });
+    expect(
+      await new LocalConversationProvider(
+        { RUSSIAN_CHAT_MODEL: "teacher" },
+        answer({ data: [{ id: "other" }, { id: "teacher" }] }),
+      ).status(),
+    ).toEqual({ available: true, model: "teacher" });
   });
   it("retries a malformed model answer once within the same overall deadline", async () => {
     const request = vi

@@ -165,12 +165,15 @@ export function useListen(onDone) {
   const start = useCallback((expect = '') => {
     if (handle.current) return;
     setSt({ phase: 'listening', partial: '', error: null, ready: false });
+    let buzzed = false;
     const h = speech.listen({
       expect,
       onPartial: (t) => alive.current && setSt((s) => (s.phase === 'idle' ? s : { ...s, partial: t })),
       onReady: (on) => {
         if (!alive.current || handle.current !== h) return;
-        if (on) navigator.vibrate?.(10); // spürbar: jetzt sprechen
+        // Spürbar: jetzt sprechen. Nur beim ersten Öffnen — geht das Mikrofon beim Warten still
+        // erneut auf, soll es nicht alle paar Sekunden vibrieren.
+        if (on && !buzzed) { buzzed = true; navigator.vibrate?.(10); }
         setSt((s) => (s.phase === 'listening' ? { ...s, ready: on } : s));
       },
     });

@@ -301,7 +301,11 @@ sealed interface RuListenState {
     data object Idle : RuListenState
     data object Listening : RuListenState
     data class Partial(val text: String) : RuListenState
-    data class Done(val hypotheses: List<String>) : RuListenState
+    /**
+     * [heard] ist nur bei leerem Ergebnis von Belang: true = es wurde gesprochen, aber nichts
+     * verstanden; false = es war gar nichts zu hören.
+     */
+    data class Done(val hypotheses: List<String>, val heard: Boolean = false) : RuListenState
     data class Failed(val message: String, val missingLanguage: Boolean = false) : RuListenState
 }
 
@@ -342,9 +346,22 @@ class RussianSpeechRecognizer(private val context: Context) {
 
     private var retries = 0
     private var retryRun: Runnable? = null
+    private var patienceRun: Runnable? = null
 
     /** Start des laufenden Anlaufs — ein Fehler gleich danach ist ein Stolpern des Dienstes. */
     private var beganAt = 0L
+
+    /** Moment des Tippens — ab hier läuft die Wartezeit, in der man anfangen darf zu sprechen. */
+    private var tappedAt = 0L
+
+    /** Wie oft das Mikrofon in dieser Wartezeit still wieder geöffnet wurde. */
+    private var reopened = 0
+
+    /** Lautester Pegel der laufenden Sitzung — steht im Logcat. */
+    private var peakRms = Float.NEGATIVE_INFINITY
+
+    /** Lautester Pegel seit dem Tippen: unterscheidet am Ende »nichts gehört« von »nicht verstanden«. */
+    private var peakSinceTap = Float.NEGATIVE_INFINITY
 
     /**
      * Gibt die Instanz frei, sobald ein Versuch zu Ende ist. So liegt zwischen zwei Versuchen
@@ -363,7 +380,51 @@ class RussianSpeechRecognizer(private val context: Context) {
 
     fun start() {
         retries = 0
+        reopened = 0
+        peakSinceTap = Float.NEGATIVE_INFINITY
+        tappedAt = android.os.SystemClock.elapsedRealtime()
+        patienceRun?.let { mainHandler.removeCallbacks(it) }
+        patienceRun = Runnable { patienceOver() }
+            .also { mainHandler.postDelayed(it, com.hikari.app.domain.russian.RuSpeechRetry.PATIENCE_MS) }
         begin()
+    }
+
+    /** Ende der Wartezeit: Ist bis jetzt kein Wort erkannt, schließt das Mikrofon und meldet es. */
+    private fun patienceOver() {
+        patienceRun = null
+        val s = _state.value
+        if (s !is RuListenState.Listening && s !is RuListenState.Partial) return
+        // Wer gerade spricht oder selbst gestoppt hat, wird nicht unterbrochen.
+        if (userStopped || !lastPartialText.isNullOrBlank() || lastHypotheses.isNotEmpty()) return
+        logEnd("Wartezeit um, kein Wort erkannt")
+        val heard = com.hikari.app.domain.russian.RuSpeechRetry.heard(peakSinceTap)
+        teardown()
+        _state.value = RuListenState.Done(emptyList(), heard = heard)
+    }
+
+    /** Eine Zeile je Sitzungsende — damit sich am Gerät nachlesen lässt, was die Erkennung getan hat. */
+    private fun logEnd(what: String) {
+        val now = android.os.SystemClock.elapsedRealtime()
+        Log.i(
+            TAG,
+            "Ende: $what nach ${now - beganAt}ms (seit Tippen ${now - tappedAt}ms), Pegel max $peakRms, " +
+                "neu geöffnet $reopened, Anläufe $retries, selbst gestoppt $userStopped, Teiltext ${!lastPartialText.isNullOrBlank()}",
+        )
+    }
+
+    /**
+     * Die Sitzung endete ohne Text. Läuft die Wartezeit noch, geht das Mikrofon still wieder auf
+     * (true) — sonst entscheidet der Aufrufer, was gemeldet wird.
+     */
+    private fun keepWaiting(code: Int): Boolean {
+        val sinceTap = android.os.SystemClock.elapsedRealtime() - tappedAt
+        if (!com.hikari.app.domain.russian.RuSpeechRetry.shouldKeepWaiting(code, sinceTap, reopened)) return false
+        reopened++
+        teardown()
+        _state.value = RuListenState.Listening
+        retryRun = Runnable { begin() }
+            .also { mainHandler.postDelayed(it, com.hikari.app.domain.russian.RuSpeechRetry.REOPEN_DELAY_MS) }
+        return true
     }
 
     private fun begin() {
@@ -373,16 +434,17 @@ class RussianSpeechRecognizer(private val context: Context) {
         }
         // Läuft noch ein Versuch, erst abräumen und dem Dienst einen Moment geben.
         if (recognizer != null) {
-            destroy()
+            teardown()
             _state.value = RuListenState.Listening
             retryRun = Runnable { begin() }.also { mainHandler.postDelayed(it, 250L) }
             return
         }
-        destroy()
+        teardown()
         userStopped = false
         lastHypotheses = emptyList()
         lastPartialText = null
         beganAt = android.os.SystemClock.elapsedRealtime()
+        peakRms = Float.NEGATIVE_INFINITY
 
         val r = runCatching { SpeechRecognizer.createSpeechRecognizer(context) }.getOrNull()
         if (r == null) {
@@ -397,7 +459,10 @@ class RussianSpeechRecognizer(private val context: Context) {
             }
             // Manche Erkenner melden »bereit« nicht — spätestens wenn Sprache ankommt, ist das Mikrofon offen.
             override fun onBeginningOfSpeech() { _ready.value = true }
-            override fun onRmsChanged(rmsdB: Float) {}
+            override fun onRmsChanged(rmsdB: Float) {
+                if (rmsdB > peakRms) peakRms = rmsdB
+                if (rmsdB > peakSinceTap) peakSinceTap = rmsdB
+            }
             override fun onBufferReceived(buffer: ByteArray?) {}
             override fun onEndOfSpeech() {}
             override fun onEvent(eventType: Int, params: Bundle?) {}
@@ -413,6 +478,7 @@ class RussianSpeechRecognizer(private val context: Context) {
             }
 
             override fun onResults(results: Bundle?) {
+                if (recognizer !== r) return // Nachzügler einer schon abgeräumten Sitzung
                 clearWatchdog()
                 val list = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION).orEmpty()
                 val finalResults = if (list.isNotEmpty()) {
@@ -424,12 +490,17 @@ class RussianSpeechRecognizer(private val context: Context) {
                 } else {
                     emptyList()
                 }
-                _state.value = RuListenState.Done(finalResults)
+                logEnd("Ergebnis mit ${finalResults.size} Lesarten")
+                // Leeres Ergebnis, ohne dass jemand gesprochen oder gestoppt hat: weiter warten.
+                if (finalResults.isEmpty() && !userStopped && keepWaiting(SpeechRecognizer.ERROR_NO_MATCH)) return
+                _state.value = RuListenState.Done(finalResults, heard = com.hikari.app.domain.russian.RuSpeechRetry.heard(peakSinceTap))
                 releaseWhenDone(r)
             }
 
             override fun onError(error: Int) {
+                if (recognizer !== r) return // Nachzügler einer schon abgeräumten Sitzung
                 clearWatchdog()
+                logEnd("Fehler $error")
                 // Wenn der User auf Stopp/Absenden getippt hat oder bereits Text gehört wurde:
                 if (userStopped || !lastPartialText.isNullOrBlank() || lastHypotheses.isNotEmpty()) {
                     val fallback = if (lastHypotheses.isNotEmpty()) {
@@ -448,22 +519,25 @@ class RussianSpeechRecognizer(private val context: Context) {
                 // »Netzwerk«/»Server«, ist noch belegt oder hat die Verbindung verloren, obwohl
                 // alles da ist. Mit frischer Instanz still nochmal starten (siehe RuSpeechRetry).
                 val elapsed = android.os.SystemClock.elapsedRealtime() - beganAt
-                Log.w("RussianSpeechRecognizer", "onError code=$error nach ${elapsed}ms, Anlauf ${retries + 1}")
                 if (com.hikari.app.domain.russian.RuSpeechRetry.shouldRetry(error, elapsed, retries)) {
                     val wait = com.hikari.app.domain.russian.RuSpeechRetry.delayMs(retries)
                     retries++
-                    destroy()
+                    teardown()
                     _state.value = RuListenState.Listening
                     retryRun = Runnable { begin() }.also { mainHandler.postDelayed(it, wait) }
                     return
                 }
+                // Die Erkennung hat ohne Text aufgegeben: still wieder öffnen, solange die Wartezeit läuft.
+                if (keepWaiting(error)) return
+                val heard = com.hikari.app.domain.russian.RuSpeechRetry.heard(peakSinceTap)
                 releaseWhenDone(r)
 
                 // Bei manuellem Client-Stopp oder No-Match ohne Sprache: als Done(leer) werten, nie abbrechen!
                 _state.value = when (error) {
-                    SpeechRecognizer.ERROR_CLIENT,
                     SpeechRecognizer.ERROR_NO_MATCH,
                     SpeechRecognizer.ERROR_SPEECH_TIMEOUT ->
+                        RuListenState.Done(emptyList(), heard = heard)
+                    SpeechRecognizer.ERROR_CLIENT ->
                         RuListenState.Done(emptyList())
                     SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ->
                         RuListenState.Failed("Mikrofon-Berechtigung fehlt.")
@@ -484,19 +558,29 @@ class RussianSpeechRecognizer(private val context: Context) {
             putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, true)
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-            // Stille-Erkennung für automatisches Fertigstellen
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1500L)
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1200L)
+            // Bewusst KEINE eigenen Stille-Zeiten (EXTRA_SPEECH_INPUT_*_SILENCE_LENGTH_MILLIS):
+            // Mit 1500/1200 ms endete am Handy jede Sitzung nach rund 2 s. Der Verdacht, dass der
+            // Dienst sie auch auf die Stille VOR dem ersten Wort anwendet, ist nicht bewiesen —
+            // »Ende: …« im Logcat zeigt, wie lange die Sitzungen ohne diese Vorgaben dauern.
         }
         _state.value = RuListenState.Listening
         runCatching { r.startListening(intent) }.onFailure { e ->
-            Log.w("RussianSpeechRecognizer", "startListening failed", e)
+            Log.w(TAG, "startListening failed", e)
             _state.value = RuListenState.Failed("Spracherkennung konnte nicht gestartet werden.")
         }
     }
 
     fun stopListening() {
         userStopped = true
+        // Zwischen zwei Anläufen läuft keine Sitzung, die noch antworten könnte: sofort abschließen,
+        // sonst ginge das Mikrofon nach dem Stopp von selbst wieder auf.
+        if (recognizer == null) {
+            retryRun?.let { mainHandler.removeCallbacks(it) }
+            retryRun = null
+            clearWatchdog()
+            _state.value = RuListenState.Done(emptyList())
+            return
+        }
         val partial = lastPartialText
         val hypotheses = lastHypotheses
 
@@ -532,13 +616,23 @@ class RussianSpeechRecognizer(private val context: Context) {
 
     fun reset() {
         clearWatchdog()
+        patienceRun?.let { mainHandler.removeCallbacks(it) }
+        patienceRun = null
         userStopped = false
         lastHypotheses = emptyList()
         lastPartialText = null
         _state.value = RuListenState.Idle
     }
 
+    /** Von außen: alles beenden, auch die laufende Wartezeit. */
     fun destroy() {
+        patienceRun?.let { mainHandler.removeCallbacks(it) }
+        patienceRun = null
+        teardown()
+    }
+
+    /** Die laufende Sitzung abräumen; die Wartezeit seit dem Tippen läuft weiter. */
+    private fun teardown() {
         _ready.value = false
         clearWatchdog()
         retryRun?.let { mainHandler.removeCallbacks(it) }
@@ -548,5 +642,9 @@ class RussianSpeechRecognizer(private val context: Context) {
         userStopped = false
         lastHypotheses = emptyList()
         lastPartialText = null
+    }
+
+    private companion object {
+        const val TAG = "RussianSpeechRecognizer"
     }
 }
