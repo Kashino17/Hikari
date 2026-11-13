@@ -101,6 +101,44 @@ describe("conversation boundary", () => {
     ).toThrow();
     expect(() => validateBeginnerVocabulary(reply, { ...input, stage: 2 })).not.toThrow();
   });
+  it("lets Anja introduce herself: names are not vocabulary (Kadir, 14.11.: start failed twice)", () => {
+    const input = conversationRequest.parse({
+      scenario: "Ein neuer Kontakt",
+      action: "start",
+      knownWords: [{ ru: "Привет как ты я чай кофе", de: "bekannt" }],
+    });
+    const intro = prepareBeginnerVocabulary(
+      {
+        ...reply,
+        partnerRu: "Привет! Меня зовут Аня. Как тебя зовут?",
+        starter: "Меня зовут …",
+        words: [],
+        examples: [
+          { ru: "Меня зовут Макс.", de: "Ich heiße Max." },
+          { ru: "Меня зовут Анна.", de: "Ich heiße Anna." },
+        ],
+      },
+      input,
+    );
+    expect(intro.words.map((w) => w.ru).sort()).toEqual(["зовут", "меня", "тебя"]);
+    expect(() => validateBeginnerVocabulary(intro, input)).not.toThrow();
+    // »Анja« (halb lateinisch) wird zu »Аня«, und der Name steht nicht auf der Wortkarte.
+    const typo = prepareBeginnerVocabulary(
+      {
+        ...reply,
+        partnerRu: "Привет! Я Анja. Как ты?",
+        starter: "",
+        words: [{ ru: "Анja", de: "Anja" }],
+      },
+      input,
+    );
+    expect(typo.partnerRu).toBe("Привет! Я Аня. Как ты?");
+    expect(typo.words.map((w) => w.ru)).not.toContain("Аня");
+    // Ein kleingeschriebenes unbekanntes Wort bleibt eine Vokabel — auch am Satzanfang großgeschrieben.
+    expect(() =>
+      validateBeginnerVocabulary({ ...intro, partnerRu: "Молоко? Меня зовут Аня." }, input),
+    ).toThrow("beginner_vocabulary_not_prepared");
+  });
   it("lets a new topic in: a verb in two forms plus a noun, all explained — but not a flood", () => {
     const input = conversationRequest.parse({
       scenario: "Kontakt",
@@ -401,6 +439,43 @@ describe("local model adapter", () => {
         answer({ data: [{ id: "other" }, { id: "teacher" }] }),
       ).status(),
     ).toEqual({ available: true, model: "teacher" });
+  });
+  it("always opens the conversation: a safe first question when the model fails every attempt", async () => {
+    const request = vi
+      .fn<typeof fetch>()
+      .mockImplementation(async (url) =>
+        String(url).endsWith("/v1/models")
+          ? Response.json({ data: [{ id: "chat" }] })
+          : Response.json({ choices: [{ message: { content: "{}" } }] }),
+      );
+    const provider = new LocalConversationProvider({}, request);
+    const knownWords = [{ ru: "Привет чай или кофе пожалуйста", de: "bekannt" }];
+    const opening = await provider.respond(
+      conversationRequest.parse({ scenario: "Kontakt", action: "start", knownWords }),
+    );
+    expect(opening.partnerRu).toBe("Привет! Чай или кофе?");
+    expect(opening.feedback).toBeNull();
+    // Mitten im Gespräch gibt es kein solches Netz — eine erfundene Antwort wäre schlimmer als ein Fehler.
+    await expect(
+      provider.respond(
+        conversationRequest.parse({
+          scenario: "Kontakt",
+          action: "reply",
+          message: "Чай",
+          knownWords,
+        }),
+      ),
+    ).rejects.toThrow();
+    // Und nur, wenn die Wörter dafür schon gelernt sind.
+    await expect(
+      provider.respond(
+        conversationRequest.parse({
+          scenario: "Kontakt",
+          action: "start",
+          knownWords: [{ ru: "да", de: "ja" }],
+        }),
+      ),
+    ).rejects.toThrow();
   });
   it("retries a malformed model answer once within the same overall deadline", async () => {
     const request = vi

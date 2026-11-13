@@ -286,26 +286,60 @@ const beginnerGlosses: Record<string, string> = {
   когда: "wann",
   с: "mit",
   без: "ohne",
+  // Sich vorstellen — der natürliche Anfang, wenn zwei sich kennenlernen.
+  меня: "mich (Меня зовут … = ich heiße …)",
+  тебя: "dich (Как тебя зовут? = wie heißt du?)",
+  зовут: "nennt man",
 };
+
+/** Anja selbst — ihr Name ist keine Vokabel. */
+const OWN_NAMES = new Set(["аня", "анна"]);
+
+/**
+ * Eigennamen sind keine Vokabeln: großgeschriebene Wörter, die nicht am Satzanfang stehen
+ * (»Меня зовут Макс.«). Russisch schreibt sonst nichts groß.
+ */
+function properNames(texts: string[]) {
+  const names = new Set(OWN_NAMES);
+  for (const text of texts)
+    for (const sentence of text.split(/[.!?…]+/)) {
+      const words = sentence.match(/[А-ЯЁа-яё]+/g) ?? [];
+      for (const word of words.slice(1))
+        if (/^[А-ЯЁ]/.test(word)) names.add(word.toLowerCase().replace(/ё/g, "е"));
+    }
+  return names;
+}
 
 export function prepareBeginnerVocabulary(
   reply: ConversationReply,
   input: ConversationRequest,
 ): ConversationReply {
+  // Das Modell schreibt Anjas Namen gelegentlich halb lateinisch (»Анja«).
+  const name = (text: string) => text.replace(/Ан(?:ja|jа|ya|yа)/g, "Аня");
+  reply = {
+    ...reply,
+    partnerRu: name(reply.partnerRu),
+    starter: name(reply.starter),
+    words: reply.words.map((w) => ({ ...w, ru: name(w.ru) })),
+    examples: reply.examples.map((e) => ({ ...e, ru: name(e.ru) })),
+  };
   if (input.stage !== 0 || input.knownWords.length === 0) return reply;
   const covered = new Set(
     [...input.knownWords, ...reply.words].flatMap((word) => russianForms(word.ru)),
   );
-  const forms = [
-    reply.partnerRu,
-    reply.starter,
-    ...reply.examples.map((example) => example.ru),
-  ].flatMap(russianForms);
-  const missing = [...new Set(forms.filter((form) => !covered.has(form)))];
+  const spoken = [reply.partnerRu, reply.starter, ...reply.examples.map((example) => example.ru)];
+  const names = properNames(spoken);
+  const forms = spoken.flatMap(russianForms);
+  const missing = [...new Set(forms.filter((form) => !covered.has(form) && !names.has(form)))];
   const glosses = missing
     .filter((form) => beginnerGlosses[form])
     .map((ru) => ({ ru, de: beginnerGlosses[ru]! }));
-  return { ...reply, words: [...glosses, ...reply.words].slice(0, 4) };
+  // Namen gehören nicht auf die Wortkarte.
+  const vocabulary = reply.words.filter((word) => {
+    const forms = russianForms(word.ru);
+    return !forms.length || !forms.every((form) => names.has(form));
+  });
+  return { ...reply, words: [...glosses, ...vocabulary].slice(0, 4) };
 }
 
 /**
@@ -320,13 +354,10 @@ export function validateBeginnerVocabulary(reply: ConversationReply, input: Conv
   if (input.stage !== 0 || input.knownWords.length === 0) return;
   const known = new Set(input.knownWords.flatMap((word) => russianForms(word.ru)));
   const explained = new Set(reply.words.flatMap((word) => russianForms(word.ru)));
-  const forms = [
-    reply.partnerRu,
-    reply.starter,
-    ...reply.words.map((word) => word.ru),
-    ...reply.examples.map((example) => example.ru),
-  ].flatMap(russianForms);
-  const unfamiliar = [...new Set(forms.filter((form) => !known.has(form)))];
+  const spoken = [reply.partnerRu, reply.starter, ...reply.examples.map((example) => example.ru)];
+  const names = properNames(spoken);
+  const forms = [...spoken, ...reply.words.map((word) => word.ru)].flatMap(russianForms);
+  const unfamiliar = [...new Set(forms.filter((form) => !known.has(form) && !names.has(form)))];
   const unexplained = unfamiliar.filter((form) => !explained.has(form));
   if (unfamiliar.length > NEW_FORMS_PER_TURN || unexplained.length)
     throw new Error(
@@ -431,6 +462,36 @@ export function validateDialogueFlow(
     .slice(-8)
     .map((h) => questionOf(h.content));
   if (asked.includes(question)) throw new Error("dialogue_repeated_question");
+}
+
+/**
+ * Ein Gespräch muss immer anfangen können. Scheitert das Modell beim ersten Zug mit allen Anläufen,
+ * eröffnet Anja mit dieser festen Frage — sofern der Lernende die Wörter dafür schon kennt.
+ * Mitten im Gespräch gibt es kein solches Netz: Eine erfundene Antwort wäre schlimmer als ein Fehler.
+ */
+const SAFE_START: ConversationReply = {
+  partnerRu: "Привет! Чай или кофе?",
+  partnerDe: "Hallo! Tee oder Kaffee?",
+  cue: "Sag, was du lieber trinken möchtest.",
+  words: [],
+  starter: "",
+  examples: [
+    { ru: "Чай.", de: "Tee." },
+    { ru: "Кофе, пожалуйста.", de: "Kaffee, bitte." },
+  ],
+  feedback: null,
+  chunk: { ru: "Чай или кофе?", de: "Tee oder Kaffee?" },
+  mission: "Sag, was du trinken möchtest.",
+};
+
+function safeStart(input: ConversationRequest): ConversationReply | null {
+  if (input.action !== "start") return null;
+  try {
+    validateBeginnerVocabulary(SAFE_START, input);
+    return SAFE_START;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -588,7 +649,11 @@ export class LocalConversationProvider implements ConversationProvider {
         // Nur auf Wunsch (Fehlersuche): der Grund je Anlauf — Prüfcodes und Wortformen aus der Modell-Antwort.
         if (this.env.RUSSIAN_CHAT_DEBUG)
           console.error(`[anja] Anlauf ${attempt + 1} verworfen: ${String(error).slice(0, 200)}`);
-        if (attempt === lastAttempt || signal.aborted) throw error;
+        if (attempt === lastAttempt || signal.aborted) {
+          const opening = safeStart(input);
+          if (opening) return opening;
+          throw error;
+        }
         if (error instanceof Error && error.message in FLOW_REPAIR)
           vocabularyRepair = `\nDialogue check: ${FLOW_REPAIR[error.message]}`;
         if (error instanceof Error && error.message.startsWith("beginner_vocabulary_not_prepared:"))
