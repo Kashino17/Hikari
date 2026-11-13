@@ -5,10 +5,13 @@ Vier Aufgaben, jede mit dem Modell, das dafür gemessen wurde, und jede mit eige
 
   hear()       gemini-3.5-transcribe   3/min,  25/Tag   zweites Ohr neben Whisper
   review()     gemini-4-hydrogen       5/min,  20/Tag   Übersetzung, Bedeutung im Satz, Kurzbeschreibung
+               gemini-3.6-flash        5/min,  20/Tag   zweiter Topf, sobald Hydrogen für heute leer ist
+                                                        (gemessen: 40/41 richtige durchgelassen, 14/15 Fehler, 10/10)
   second()     gemma-4-31b-it         30/min, 14.400/Tag unabhängige zweite Übersetzung
   same()       gemini-3.5-flash-lite  15/min, 500/Tag   sagen beide Übersetzungen dasselbe?
 
-Der Zähler in usage.json bleibt unter den Tageslimits; zwischen zwei Anfragen an dasselbe Modell
+Googles Tag beginnt um Mitternacht Pazifikzeit — der Zähler in usage.json zählt deshalb nach diesem
+Kalender, nicht nach der Uhr des Macs. Er bleibt unter den Tageslimits; zwischen zwei Anfragen an dasselbe Modell
 wird gewartet, damit das Minutenlimit nicht reißt. Ist ein Kontingent leer, hört die Aufbereitung
 für heute auf — ungeprüft wird nichts fertiggestellt.
 """
@@ -18,8 +21,9 @@ import json
 import time
 import urllib.error
 import urllib.request
-from datetime import date
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from cloud import HOME, USAGE, load_keys
 
@@ -28,10 +32,16 @@ API = "https://generativelanguage.googleapis.com/v1beta/models"
 LIMITS = {
     "gemini-3.5-transcribe": (3, 22),
     "gemini-4-hydrogen": (5, 18),
+    "gemini-3.6-flash": (5, 18),
     "gemma-4-31b-it": (20, 2000),
     "gemini-3.5-flash-lite": (12, 400),
 }
-HEAR, REVIEW, SECOND, JUDGE = LIMITS
+HEAR, REVIEW, REVIEW2, SECOND, JUDGE = LIMITS
+
+
+def quota_day() -> str:
+    """Der Tag, nach dem Google die Tageskontingente zählt."""
+    return datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")
 # Jede Antwort wird gemerkt: dieselbe Frage kostet beim zweiten Mal kein Kontingent.
 CACHE = HOME / "work" / "gemini"
 
@@ -55,10 +65,20 @@ class Gemini:
             u = json.loads(USAGE.read_text())
         except Exception:  # noqa: BLE001
             u = {}
-        return u if u.get("day") == str(date.today()) else {"day": str(date.today()), "count": {}}
+        return u if u.get("day") == quota_day() else {"day": quota_day(), "count": {}}
 
     def left(self, model: str) -> int:
         return LIMITS[model][1] - self._usage()["count"].get(model, 0)
+
+    def reviews_left(self) -> int:
+        """Wie viele Stücke heute noch geprüft werden können (beide Töpfe zusammen)."""
+        return max(0, self.left(REVIEW)) + max(0, self.left(REVIEW2))
+
+    def _spent(self, model: str):
+        """Google meldet das Tageskontingent als leer — den eigenen Zähler angleichen."""
+        u = self._usage()
+        u["count"][model] = LIMITS[model][1]
+        USAGE.write_text(json.dumps(u))
 
     def _count(self, model: str):
         u = self._usage()
@@ -100,6 +120,7 @@ class Gemini:
             except urllib.error.HTTPError as e:
                 detail = e.read().decode(errors="ignore")[:300]
                 if e.code == 429 and "PerDay" in detail:
+                    self._spent(model)
                     raise QuotaReached(model) from e
                 if e.code in (429, 500, 503) and attempt < 2:
                     self.log(f"{model}: HTTP {e.code}, neuer Versuch in {20 * (attempt + 1)} s")
@@ -144,10 +165,20 @@ class Gemini:
             "story": {"type": "STRING"}, "title_de": {"type": "STRING"},
             "lines": {"type": "ARRAY", "items": {"type": "OBJECT", "required": ["n", "de", "stress", "senses"], "properties": {
                 "n": {"type": "INTEGER"}, "de": {"type": "STRING"}, "stress": {"type": "STRING"}, "senses": {"type": "ARRAY", "items": {"type": "INTEGER"}}}}}}}
-        try:
-            out = json.loads(self.text(self.call(REVIEW, [{"text": "\n\n".join(rows)}], schema=schema, system=system, max_tokens=12000)))
-        except (json.JSONDecodeError, KeyError):
-            return None
+        out = None
+        # Hydrogen zuerst; ist sein Tageskontingent leer, übernimmt 3.6 Flash.
+        for model in (REVIEW, REVIEW2):
+            if self.left(model) <= 0:
+                continue
+            try:
+                out = json.loads(self.text(self.call(model, [{"text": "\n\n".join(rows)}], schema=schema, system=system, max_tokens=12000)))
+                break
+            except QuotaReached:
+                continue
+            except (json.JSONDecodeError, KeyError):
+                return None
+        if out is None:
+            raise QuotaReached("Prüfmodelle")
         got = {l.get("n"): l for l in out.get("lines", [])}
         for l in lines:
             g = got.get(l["n"])

@@ -55,8 +55,17 @@ const INTERESTS_FILE = join(ERLEBEN, 'interests.json');
 const CANDIDATES_FILE = join(ERLEBEN, 'candidates.json');
 const USAGE_FILE = join(ERLEBEN, 'usage.json');
 // Wie viele Stücke die Prüfinstanz heute noch schafft (siehe tools/erleben/gemini.py: eine Anfrage je Stück).
-const REVIEW_MODEL = 'gemini-4-hydrogen';
+// Zwei Töpfe: Hydrogen zuerst, danach 3.6 Flash. Das zweite Ohr (Transcribe) begrenzt zusätzlich.
+const REVIEW_MODELS = ['gemini-4-hydrogen', 'gemini-3.6-flash'];
 const REVIEW_PER_DAY = 18;
+const HEAR_MODEL = 'gemini-3.5-transcribe';
+const HEAR_PER_DAY = 22;
+/** Wann Google das Tageskontingent erneuert: Mitternacht Pazifikzeit, als Zeitpunkt für die Anzeige. */
+function quotaResetAt() {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Los_Angeles', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+    .formatToParts(new Date()).map((x) => [x.type, Number(x.value)]));
+  return Date.now() + ((24 - (p.hour % 24)) * 3600 - p.minute * 60 - p.second) * 1000;
+}
 function readJson(file, fallback) { try { return JSON.parse(readFileSync(file, 'utf8')); } catch { return fallback; } }
 function interests() {
   const i = readJson(INTERESTS_FILE, {});
@@ -65,8 +74,11 @@ function interests() {
 }
 function leftToday() {
   const u = readJson(USAGE_FILE, {});
-  const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-  return Math.max(0, REVIEW_PER_DAY - (u.day === today ? (u.count?.[REVIEW_MODEL] ?? 0) : 0));
+  // Google zählt den Tag nach Pazifikzeit (Mitternacht dort = neues Kontingent).
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(new Date());
+  const used = (m) => (u.day === today ? (u.count?.[m] ?? 0) : 0);
+  const reviews = REVIEW_MODELS.reduce((n, m) => n + Math.max(0, REVIEW_PER_DAY - used(m)), 0);
+  return Math.min(reviews, Math.max(0, HEAR_PER_DAY - used(HEAR_MODEL)));
 }
 const PREPARE = new URL('../erleben/prepare.py', import.meta.url).pathname;
 const UV = ['/opt/homebrew/bin/uv', '/usr/local/bin/uv'].find((f) => existsSync(f)) ?? 'uv';
@@ -107,7 +119,7 @@ function feedState(keep = null) {
   const stock = ready().length;
   topUp(stock);
   // Auch Abgelegtes bleibt abrufbar, solange es jemand offen hat.
-  return { shown: feed.shown, ready: stock, busy: !!prepareJob, pieces: all, interests: interests(), leftToday: leftToday() };
+  return { shown: feed.shown, ready: stock, busy: !!prepareJob, pieces: all, interests: interests(), leftToday: leftToday(), resetAt: quotaResetAt() };
 }
 
 // ── Lernstand ──────────────────────────────────────────────────────────────

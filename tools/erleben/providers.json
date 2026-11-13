@@ -22,6 +22,16 @@
       "timeout": 180
     },
     {
+      "name": "flash36",
+      "key": "GEMINI_API_KEY",
+      "signup": "https://aistudio.google.com/apikey",
+      "base": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "model": "gemini-3.6-flash",
+      "perDay": 18,
+      "headroom": 6000,
+      "timeout": 180
+    },
+    {
       "name": "lite",
       "key": "GEMINI_API_KEY",
       "signup": "https://aistudio.google.com/apikey",

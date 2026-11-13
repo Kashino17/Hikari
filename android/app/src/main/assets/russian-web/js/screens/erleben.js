@@ -13,7 +13,7 @@ import * as Ph from '../domain/phonetics.js';
 let DATA = null;
 let loading = null;
 // Nachschub: Stücke, die der Server selbst aufbereitet hat. `shown` = was gerade im Feed steht.
-let FEED = { shown: [], ready: 0, busy: false, interests: { video: [], music: [] }, leftToday: 0 };
+let FEED = { shown: [], ready: 0, busy: false, interests: { video: [], music: [] }, leftToday: 0, resetAt: 0 };
 const feedSubs = new Set();
 const getFeed = () => fetch('/erleben/feed', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
 function takeFeed(f) {
@@ -21,7 +21,7 @@ function takeFeed(f) {
   const hand = (DATA ?? []).filter((p) => !p.auto);
   const have = new Map((DATA ?? []).filter((p) => p.auto).map((p) => [p.id, p]));
   DATA = [...hand, ...f.pieces.map((p) => have.get(p.id) ?? prepare(p))];
-  FEED = { shown: f.shown, ready: f.ready, busy: f.busy, interests: f.interests ?? { video: [], music: [] }, leftToday: f.leftToday ?? 0 };
+  FEED = { shown: f.shown, ready: f.ready, busy: f.busy, interests: f.interests ?? { video: [], music: [] }, leftToday: f.leftToday ?? 0, resetAt: f.resetAt ?? 0 };
   for (const fn of [...feedSubs]) fn(FEED);
 }
 const loadPieces = () => (loading ??= Promise.all([fetch('/data/erleben.json').then((r) => r.json()), getFeed()])
@@ -222,10 +222,12 @@ function FeedSection({ pieces, known, s, f }) {
     setBusy(false);
   };
   const waiting = busy || (f.busy && f.ready === 0);
+  // Das Prüfkontingent erneuert sich einmal am Tag (Mitternacht in Kalifornien) — hier in deiner Uhrzeit.
+  const again = f.resetAt ? `ab ${new Date(f.resetAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr` : 'morgen';
   const status = f.ready > 0 ? `${f.ready === 1 ? 'Ein weiteres liegt' : `${f.ready} weitere liegen`} bereit.`
     : f.busy ? 'Nachschub wird gerade gesucht und geprüft.'
-    : f.leftToday === 0 ? 'Für heute ist das Prüfkontingent aufgebraucht, morgen geht es weiter.'
-    : `Heute sind noch bis zu ${f.leftToday} Stücke möglich.`;
+    : f.leftToday === 0 ? `Das Prüfkontingent ist aufgebraucht, ${again} geht es weiter.`
+    : `Bis ${again.replace('ab ', '')} sind noch bis zu ${f.leftToday} Stücke möglich.`;
   return html`<div class="sec"><div class="hd"><div class="h2">Frisch für dich</div>
       ${has && html`<span class="rowx g8"><button class="ls-more" onClick=${() => setTopics(true)}><${Icon} n="tune" size="18" />Themen</button>
         <button class="ls-more" disabled=${waiting || (f.ready === 0 && shown.length === 0)} onClick=${more}><${Icon} n=${waiting ? 'progress_activity' : 'refresh'} c=${waiting ? 'spin' : ''} size="18" />Neue</button></span>`}</div>
@@ -238,7 +240,7 @@ function FeedSection({ pieces, known, s, f }) {
         ${shown.length > 0 ? html`<div class="list">${shown.map((x) => html`<${PieceRow} piece=${x} known=${known} ps=${pieceState(s, x.id)} />`)}</div>`
           : html`<div class="ls-wait"><${Icon} n=${f.busy ? 'progress_activity' : 'hourglass_empty'} c=${f.busy ? 'spin' : ''} /><span>${f.busy
             ? 'Die ersten Stücke werden gesucht, aufbereitet und doppelt geprüft. Das dauert ein bis zwei Minuten je Stück; nicht jedes Video besteht die Prüfung.'
-            : f.leftToday === 0 ? 'Heute kann nichts mehr geprüft werden. Morgen früh liegen neue Stücke bereit.' : 'Gleich geht es los.'}</span></div>`}`}
+            : f.leftToday === 0 ? `Gerade kann nichts mehr geprüft werden. ${again[0].toUpperCase()}${again.slice(1)} geht es weiter.` : 'Gleich geht es los.'}</span></div>`}`}
     ${topics && html`<${InterestsSheet} f=${f} onClose=${() => setTopics(false)} />`}
   </div>`;
 }

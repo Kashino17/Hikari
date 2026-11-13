@@ -15,8 +15,9 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from datetime import date
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 HOME = Path.home() / ".hikari" / "erleben"
 KEYS = HOME / "keys.env"
@@ -63,7 +64,8 @@ class CloudBackend:
             u = json.loads(USAGE.read_text())
         except Exception:  # noqa: BLE001
             u = {}
-        return u if u.get("day") == str(date.today()) else {"day": str(date.today()), "count": {}}
+        day = datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")   # Googles Zähltag
+        return u if u.get("day") == day else {"day": day, "count": {}}
 
     def _count(self, name: str):
         u = self._usage()

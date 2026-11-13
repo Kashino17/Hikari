@@ -753,7 +753,7 @@ def main():
     todo = [(i, args.kind, "") for i in args.ids] if args.cmd == "video" else discover(args.count, g)
     ok = 0
     for vid, kind, topic in todo:
-        if g.left(HEAR) <= 0 or g.left(REVIEW) <= 0:
+        if g.left(HEAR) <= 0 or g.reviews_left() <= 0:
             log("Tageskontingent bei Gemini aufgebraucht — morgen geht es weiter")
             break
         t0 = time.time()
@@ -768,7 +768,7 @@ def main():
             break
         except Exception as e:  # noqa: BLE001
             log(f"[{vid}] übersprungen: {e}")
-    print(json.dumps({"prepared": ok, "tried": len(todo), "left": {"hören": g.left(HEAR), "prüfen": g.left(REVIEW)}}))
+    print(json.dumps({"prepared": ok, "tried": len(todo), "left": {"hören": g.left(HEAR), "prüfen": g.reviews_left()}}))
 
 
 if __name__ == "__main__":
