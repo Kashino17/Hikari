@@ -848,6 +848,11 @@ def main():
             break
         except Exception as e:  # noqa: BLE001
             log(f"[{vid}] übersprungen: {e}")
+        finally:
+            # Das geladene Ausgangsvideo wird nicht mehr gebraucht (der Ausschnitt liegt in media/);
+            # das Transkript bleibt, damit ein späteres Neuaufbereiten Whisper nicht wiederholt.
+            for leftover in (WORK / f"{vid}.mp4", WORK / f"{vid}.info.json"):
+                leftover.unlink(missing_ok=True)
     print(json.dumps({"prepared": ok, "tried": len(todo), "left": {"hören": g.left(HEAR), "prüfen": g.reviews_left()}}))
 
 

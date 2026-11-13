@@ -24,6 +24,7 @@ import { registerWatchLaterRoutes } from "./api/watch-later.js";
 import { registerRussianRoutes } from "./api/russian.js";
 import { registerRussianBackupRoutes } from "./api/russian-backup.js";
 import { registerRussianConversationRoutes } from "./api/russian-conversation.js";
+import { registerRussianErlebenRoutes } from "./api/russian-erleben.js";
 import { registerVideoFullRoute } from "./api/video-full.js";
 import { registerCastRoutes } from "./api/cast.js";
 import { KeepAwake, registerKeepAwake } from "./system/keep-awake.js";
@@ -138,6 +139,12 @@ await registerWatchLaterRoutes(app, { db });
 await registerRussianRoutes(app);
 await registerRussianConversationRoutes(app);
 await registerRussianBackupRoutes(app, { dir: join(cfg.dataDir, "russian-backup") });
+// Lieder & Szenen: Feed aus geprüften Stücken; aufbereitet werden sie von backend/erleben/prepare.py.
+await registerRussianErlebenRoutes(app, {
+  dir: join(cfg.dataDir, "erleben"),
+  script: new URL("../erleben/prepare.py", import.meta.url).pathname,
+  log: (msg) => app.log.info(msg),
+});
 await registerHealthRoute(app, { db, videoDir: cfg.videoDir });
 await registerStatsRoutes(app, { db });
 await registerVideosRoutes(app, { db, videoDir: cfg.videoDir, coverDir: cfg.coverDir, extractor });

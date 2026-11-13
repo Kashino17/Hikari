@@ -8,7 +8,7 @@ Alle sprechen dieselbe Schnittstelle (OpenAI-Format: POST <base>/chat/completion
   ~/.hikari/erleben/usage.json   wie viele Anfragen heute an wen gingen
 
 Prüfen, ob alles stimmt (Schlüssel da? Modell vorhanden? Antwort kommt?):
-  python3 tools/erleben/cloud.py check
+  python3 backend/erleben/cloud.py check
 """
 import json
 import sys

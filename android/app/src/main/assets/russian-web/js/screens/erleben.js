@@ -1,10 +1,11 @@
 // »Lieder & Szenen«: echtes Russisch (Lied, Filmszene) in drei Schritten —
 // Fühlen (ansehen), Verstehen (Zeile für Zeile, jedes Wort antippbar), Mitnehmen
-// (Sätze ins Satzbuch, kurze Übung). Inhalte: assets/russian/erleben.json,
-// Videos: /media/<datei> vom Hikari-Server.
+// (Sätze ins Satzbuch, kurze Übung). Von Hand aufbereitete Stücke: assets/russian/erleben.json.
+// Der Feed zu den eigenen Themen, seine Stücke und alle Videos kommen vom Hikari-Server
+// (/russian/erleben/…, siehe backend/src/api/russian-erleben.ts).
 import { html, cls, Icon, Sheet, Opt, TopBar, mk, fx, audio, useState, useEffect, useRef, useMemo, useListen, ScoreCard, MIC_WAIT, SvgCompare, SvgAiCheck } from '../ui.js';
 import { progress, useProgress, phraseById, nav, back, toast } from '../app.js';
-import { storage, speech, recorder, SPEECH_ERRORS } from '../platform.js';
+import { storage, speech, recorder, SPEECH_ERRORS, api } from '../platform.js';
 import * as Sp from '../domain/speech.js';
 import * as Ph from '../domain/phonetics.js';
 
@@ -15,7 +16,9 @@ let loading = null;
 // Nachschub: Stücke, die der Server selbst aufbereitet hat. `shown` = was gerade im Feed steht.
 let FEED = { shown: [], ready: 0, busy: false, interests: { video: [], music: [] }, leftToday: 0, resetAt: 0 };
 const feedSubs = new Set();
-const getFeed = () => fetch('/erleben/feed', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+const getFeed = () => api.get('/russian/erleben/feed').catch(() => null);
+/** Adresse eines Videos oder Standbilds auf dem Hikari-Server. */
+const media = (file) => api.mediaUrl(`/russian/erleben/media/${file}`);
 function takeFeed(f) {
   if (!f) return;
   const hand = (DATA ?? []).filter((p) => !p.auto);
@@ -30,12 +33,12 @@ const feed = {
   async reload() { takeFeed(await getFeed()); },
   /** Neue Stücke holen. Angefangene bleiben stehen, der Rest macht Platz. */
   async refresh(keep) {
-    const r = await fetch('/erleben/refresh', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ keep }) }).catch(() => null);
-    takeFeed(r?.ok ? await r.json() : null);
+    takeFeed(await api.post('/russian/erleben/refresh', { keep }).catch(() => null));
   },
   async setInterests(video, music) {
-    const r = await fetch('/erleben/interests', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ video, music }) }).catch(() => null);
-    takeFeed(r?.ok ? await r.json() : null);
+    const f = await api.post('/russian/erleben/interests', { video, music }).catch(() => null);
+    takeFeed(f);
+    return !!f;
   },
 };
 function useFeed() {
@@ -118,6 +121,8 @@ const pieceState = (s, id) => ({ stage: 0, line: 0, marks: [], started: false, d
 
 const fmt = (sec) => `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, '0')}`;
 const KIND = { song: ['Lied', 'music_note'], scene: ['Szene', 'movie'] };
+/** Standbild eines Stücks. Ist der Server nicht erreichbar, bleibt die Fläche dunkel statt ein kaputtes Bild zu zeigen. */
+const Pic = ({ file }) => html`<img src=${media(file)} alt="" onError=${(e) => { e.target.style.visibility = 'hidden'; }} />`;
 const latin = (spans) => spans.map((s) => (s.stressed ? html`<u>${s.text}</u>` : s.text));
 const shuffled = (a) => { const x = [...a]; for (let i = x.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [x[i], x[j]] = [x[j], x[i]]; } return x; };
 const bare = (de) => de.replace(/[»«]/g, '');
@@ -148,7 +153,7 @@ function pickHero(pieces, known, s) {
 function HeroCard({ piece, known, ps }) {
   const st = statusOf(ps, piece);
   return html`<button class="ls-hero c-live" onClick=${() => nav(`erleben/${piece.id}`)}>
-    <img src=${`/media/${piece.poster}`} alt="" />
+    <${Pic} file=${piece.poster} />
     <div class="in">
       <div class="kind"><${Icon} n=${KIND[piece.kind][1]} size="15" />${KIND[piece.kind][0]}${piece.mood ? `, ${piece.mood.toLowerCase()}` : ''}</div>
       <div class="t">${piece.head}</div>
@@ -162,7 +167,7 @@ function HeroCard({ piece, known, ps }) {
 function PieceRow({ piece, known, ps }) {
   const st = statusOf(ps, piece);
   return html`<button class="ls-row c-live" onClick=${() => nav(`erleben/${piece.id}`)}>
-    <span class="th"><img src=${`/media/${piece.poster}`} alt="" /><em>${fmt(piece.dur)}</em></span>
+    <span class="th"><${Pic} file=${piece.poster} /><em>${fmt(piece.dur)}</em></span>
     <span class="tx"><span class="hd1"><b class="ell">${piece.head}</b>${!piece.auto && html`<em class=${cls(piece.level !== 'Einsteiger' && 'hard')}>${piece.level}</em>`}</span>
       <span class="d ell">${piece.auto ? `${KIND[piece.kind][0]}${piece.topic ? ` zu »${piece.topic}«` : ''}, ${piece.level}` : `${piece.titleDe}, ${KIND[piece.kind][0]}`}</span>
       ${st ? html`<span class=${cls('s', st.c)}><${Icon} n=${st.icon} fill size="15" />${st.text}</span>` : html`<${Meter} piece=${piece} known=${known} />`}
@@ -200,7 +205,12 @@ function InterestsSheet({ f, onClose }) {
   const [video, setVideo] = useState(f.interests.video);
   const [music, setMusic] = useState(f.interests.music);
   const [busy, setBusy] = useState(false);
-  const save = async () => { setBusy(true); await feed.setInterests(video, music); setBusy(false); onClose(); };
+  const save = async () => {
+    setBusy(true);
+    const ok = await feed.setInterests(video, music);
+    setBusy(false);
+    if (ok) onClose(); else toast('Der Hikari-Server ist gerade nicht erreichbar');
+  };
   return html`<${Sheet} onClose=${onClose} title="Was interessiert dich?">
     <p class="sub mt4" style="line-height:1.45">Schreib rein, was du wirklich sehen und hören willst. Danach sucht der Server russische Videos und Lieder genau dazu.</p>
     <${TopicList} label="Videos" hint="z. B. One Piece, True Crime, Memes" list=${video} ideas=${IDEAS.video} onChange=${setVideo} />
@@ -300,7 +310,7 @@ export function ErlebenTeaser() {
   return html`<div class="sec c-live"><div class="hd"><div class="h2">Lieder & Szenen</div><button onClick=${() => nav('erleben')}>Alle Stücke</button></div>
     <div class="sub" style="margin:3px 4px 12px">Echtes Russisch: ansehen, verstehen, Sätze mitnehmen.</div>
     <button class="ls-teaser" onClick=${() => nav(`erleben/${hero.id}`)}>
-      <span class="th"><img src=${`/media/${hero.poster}`} alt="" /></span>
+      <span class="th"><${Pic} file=${hero.poster} /></span>
       <span class="tx"><span class="k">${KIND[hero.kind][0]}, ${fmt(hero.dur)}</span><b class="ell">${hero.head}</b>
         <span class="d ell">${ps.started && !ps.done ? `Weitermachen: ${statusOf(ps, hero).text}` : hero.under}</span></span>
       <span class="go"><${Icon} n="play_arrow" fill /></span></button></div>`;
@@ -369,14 +379,14 @@ function Stage({ piece, pl, onTap, quiet }) {
   const ticks = piece.lines.map((l) => html`<s style=${`left:${((l.a / piece.dur) * 100).toFixed(2)}%`}></s>`);
   if (piece.still) {
     return html`<div class="ls-audio">
-      <video ref=${pl.ref} src=${`/media/${piece.media}`} poster=${`/media/${piece.poster}`} playsinline preload="auto" ...${pl.bind}></video>
+      <video ref=${pl.ref} src=${media(piece.media)} poster=${media(piece.poster)} playsinline preload="auto" ...${pl.bind}></video>
       <div class="tx"><b class="ell">${piece.latin}</b><span class="ell">${piece.by}</span>
         <div class="ls-track"><i ref=${pl.bar}></i>${ticks}</div></div>
       <button class="pp" onClick=${tap} aria-label=${pl.playing ? 'Pause' : 'Abspielen'}><${Icon} n=${pl.playing ? 'pause' : 'play_arrow'} fill /></button>
     </div>`;
   }
   return html`<div class="ls-video" style=${`--r:${piece.ratio}`}>
-    <video ref=${pl.ref} src=${`/media/${piece.media}`} poster=${`/media/${piece.poster}`} playsinline preload="auto" ...${pl.bind}></video>
+    <video ref=${pl.ref} src=${media(piece.media)} poster=${media(piece.poster)} playsinline preload="auto" ...${pl.bind}></video>
     <button class=${cls('tap', pl.playing && 'on', quiet && 'quiet')} onClick=${tap} aria-label=${pl.playing ? 'Pause' : 'Abspielen'}><span class="pp"><${Icon} n="play_arrow" fill /></span></button>
     <div class="ls-track"><i ref=${pl.bar}></i>${ticks}</div>
   </div>`;

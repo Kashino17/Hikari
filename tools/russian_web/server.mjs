@@ -10,15 +10,11 @@
 //   /audio/<clip>.ogg → Muttersprachler-Clips (assets/russian/audio)
 //   /api/*           → Hikari-Server (Aussprache-Prüfung, Gespräch, Podcast-Audio …)
 //   /store           → Lernstand der Vorschau (~/.hikari/russian-web/store.json)
-//   /media/<datei>   → Videos und Standbilder für »Lieder & Szenen« (~/.hikari/erleben/media)
-//   /erleben/feed    → Nachschub: Stücke, die tools/erleben/prepare.py selbst aufbereitet hat
-//   /erleben/refresh → neue Stücke in den Feed holen (POST {keep:[ids]})
-//   /erleben/interests → Themen des Lernenden für Videos und Musik (GET, POST {video:[…], music:[…]})
+//                      (auch »Lieder & Szenen«: Feed, Themen und Videos unter /api/russian/erleben/…)
 //
 // Start: node tools/russian_web/server.mjs   (Port 3079)
 // Tests: node --test tools/russian_web/test/  (braucht test/parity.json, siehe dort)
 import { createServer } from 'node:http';
-import { spawn } from 'node:child_process';
 import { createReadStream, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
@@ -33,105 +29,15 @@ const ROOT = new URL('../../android/app/src/main/assets/russian-web/', import.me
 const ASSETS = process.env.HIKARI_ASSETS ?? new URL('../../android/app/src/main/assets/russian', import.meta.url).pathname;
 // Clips dürfen aus einem anderen Klon kommen (schlanker Arbeitsbaum ohne die 9.500 Audiodateien).
 const AUDIO_ASSETS = process.env.HIKARI_AUDIO_ASSETS ?? ASSETS;
-const MEDIA = process.env.HIKARI_ERLEBEN_MEDIA ?? join(homedir(), '.hikari', 'erleben', 'media');
 const STORE_DIR = process.env.HIKARI_STORE_DIR ?? join(homedir(), '.hikari', 'russian-web');
 const STORE_FILE = join(STORE_DIR, 'store.json');
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml',
-  '.ogg': 'audio/ogg', '.woff2': 'font/woff2', '.png': 'image/png', '.jpg': 'image/jpeg', '.mp4': 'video/mp4', '.webmanifest': 'application/manifest+json',
+  '.ogg': 'audio/ogg', '.woff2': 'font/woff2', '.png': 'image/png', '.webmanifest': 'application/manifest+json',
 };
 const DATA = new Set(['course', 'podcast', 'phrasebook', 'deepdive', 'patterns', 'sounds', 'glosses', 'plan', 'erleben']);
-
-// ── Nachschub für »Lieder & Szenen« ─────────────────────────────────────────
-// prepare.py legt fertige Stücke in AUTO ab. Der Feed zeigt immer FEED_SIZE davon; »Neue Stücke«
-// tauscht sie gegen die nächsten aus dem Vorrat. Sinkt der Vorrat, bereitet der Server im
-// Hintergrund neue auf — so steht beim nächsten Tippen schon etwas bereit.
-const ERLEBEN = join(homedir(), '.hikari', 'erleben');
-const AUTO = join(ERLEBEN, 'auto');
-const FEED_FILE = join(ERLEBEN, 'feed.json');
-const INTERESTS_FILE = join(ERLEBEN, 'interests.json');
-const CANDIDATES_FILE = join(ERLEBEN, 'candidates.json');
-const USAGE_FILE = join(ERLEBEN, 'usage.json');
-// Wie viele Stücke die Prüfinstanz heute noch schafft (siehe tools/erleben/gemini.py: eine Anfrage je Stück).
-// Zwei Töpfe: Hydrogen zuerst, danach 3.6 Flash. Das zweite Ohr (Transcribe) begrenzt zusätzlich.
-const REVIEW_MODELS = ['gemini-4-hydrogen', 'gemini-3.6-flash', 'gemini-3.8-flash'];
-const REVIEW_PER_DAY = 20;
-const HEAR_MODEL = 'gemini-3.5-transcribe';
-const HEAR_PER_DAY = 25;
-/** Wann Google das Tageskontingent erneuert: Mitternacht Pazifikzeit, als Zeitpunkt für die Anzeige. */
-function quotaResetAt() {
-  const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Los_Angeles', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
-    .formatToParts(new Date()).map((x) => [x.type, Number(x.value)]));
-  return Date.now() + ((24 - (p.hour % 24)) * 3600 - p.minute * 60 - p.second) * 1000;
-}
-function readJson(file, fallback) { try { return JSON.parse(readFileSync(file, 'utf8')); } catch { return fallback; } }
-function interests() {
-  const i = readJson(INTERESTS_FILE, {});
-  const clean = (a) => (Array.isArray(a) ? [...new Set(a.map((x) => String(x).trim().slice(0, 60)).filter(Boolean))].slice(0, 12) : []);
-  return { video: clean(i.video), music: clean(i.music) };
-}
-function leftToday() {
-  const u = readJson(USAGE_FILE, {});
-  // Google zählt den Tag nach Pazifikzeit (Mitternacht dort = neues Kontingent).
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(new Date());
-  const used = (m) => (u.day === today ? (u.count?.[m] ?? 0) : 0);
-  const reviews = REVIEW_MODELS.reduce((n, m) => n + Math.max(0, REVIEW_PER_DAY - used(m)), 0);
-  return Math.min(reviews, Math.max(0, HEAR_PER_DAY - used(HEAR_MODEL)));
-}
-const PREPARE = new URL('../erleben/prepare.py', import.meta.url).pathname;
-const UV = ['/opt/homebrew/bin/uv', '/usr/local/bin/uv'].find((f) => existsSync(f)) ?? 'uv';
-const FEED_SIZE = 3;
-const STOCK = 3;
-mkdirSync(AUTO, { recursive: true });
-let feed = { shown: [], dismissed: [] };
-try { feed = { ...feed, ...JSON.parse(readFileSync(FEED_FILE, 'utf8')) }; } catch { /* erster Start */ }
-let prepareJob = null;
-// Lief ein Durchgang ohne Ergebnis (Prüfmodelle überlastet oder leer), wird erst nach einer Pause wieder gesucht —
-// sonst verbraucht jeder neue Anlauf eine Hör-Anfrage, ohne dass ein Stück entsteht.
-let pauseUntil = 0;
-const PAUSE_AFTER_EMPTY_MS = 20 * 60 * 1000;
-const saveFeed = () => writeFileSync(FEED_FILE, JSON.stringify(feed));
-function autoPieces() {
-  return readdirSync(AUTO).filter((f) => f.endsWith('.json'))
-    .map((f) => ({ f, at: statSync(join(AUTO, f)).mtimeMs })).sort((a, b) => a.at - b.at)
-    .flatMap(({ f }) => { try { return [JSON.parse(readFileSync(join(AUTO, f), 'utf8'))]; } catch { return []; } })
-    // Nur Stücke, die die ganze Prüfkette durchlaufen haben, kommen je in den Feed.
-    .filter((p) => p.checked === true);
-}
-function topUp(stock) {
-  const wishes = interests();
-  // Ohne Themen wird nichts gesucht; ist das Tageskontingent leer, geht es morgen weiter.
-  if (prepareJob || stock >= STOCK || wishes.video.length + wishes.music.length === 0 || leftToday() === 0 || Date.now() < pauseUntil) return;
-  prepareJob = spawn(UV, ['run', '--script', PREPARE, 'next', '--count', String(STOCK + 1 - stock)], { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, PATH: `/opt/homebrew/bin:${process.env.PATH ?? ''}` } });
-  prepareJob.stderr.on('data', (d) => { for (const l of String(d).split('\n')) if (/^(\[|Thema|Tageskontingent| {6})/.test(l)) console.log(new Date().toISOString(), 'erleben', l); });
-  let result = '';
-  prepareJob.stdout.on('data', (d) => { result += d; });
-  prepareJob.on('exit', () => {
-    prepareJob = null;
-    let prepared = 0;
-    try { prepared = JSON.parse(result.trim().split('\n').pop()).prepared ?? 0; } catch { /* abgebrochen */ }
-    if (prepared === 0) pauseUntil = Date.now() + PAUSE_AFTER_EMPTY_MS;
-  });
-  prepareJob.on('error', (e) => { console.error('erleben: Aufbereitung startet nicht', e.message); prepareJob = null; });
-}
-function feedState(keep = null) {
-  const all = autoPieces();
-  const ids = new Set(all.map((p) => p.id));
-  if (keep) {
-    feed.dismissed = [...new Set([...feed.dismissed, ...feed.shown.filter((id) => !keep.includes(id))])];
-    feed.shown = feed.shown.filter((id) => keep.includes(id));
-  }
-  feed.shown = feed.shown.filter((id) => ids.has(id));
-  const ready = () => all.filter((p) => !feed.shown.includes(p.id) && !feed.dismissed.includes(p.id));
-  for (const p of ready()) { if (feed.shown.length >= FEED_SIZE) break; feed.shown.push(p.id); }
-  saveFeed();
-  const stock = ready().length;
-  topUp(stock);
-  // Auch Abgelegtes bleibt abrufbar, solange es jemand offen hat.
-  return { shown: feed.shown, ready: stock, busy: !!prepareJob, pieces: all, interests: interests(), leftToday: leftToday(), resetAt: quotaResetAt() };
-}
 
 // ── Lernstand ──────────────────────────────────────────────────────────────
 mkdirSync(STORE_DIR, { recursive: true });
@@ -218,23 +124,6 @@ createServer(async (req, res) => {
 
     if (path.startsWith('/api/')) return proxy(req, res, path.slice(4) + url.search);
 
-    if (path === '/erleben/feed' && req.method === 'GET') return json(req, res, 200, feedState());
-    if (path === '/erleben/interests' && req.method === 'POST') {
-      pauseUntil = 0;   // neue Themen: sofort wieder suchen
-      const body = JSON.parse((await readBody(req)).toString('utf8') || '{}');
-      mkdirSync(ERLEBEN, { recursive: true });
-      writeFileSync(INTERESTS_FILE, JSON.stringify({ video: body.video ?? [], music: body.music ?? [] }));
-      writeFileSync(INTERESTS_FILE, JSON.stringify(interests()));
-      // Neue Themen, neue Suche: die gemerkten Trefferlisten verfallen, der Vorrat bleibt.
-      const old = readJson(CANDIDATES_FILE, null);
-      if (old) writeFileSync(CANDIDATES_FILE, JSON.stringify({ ...old, pools: {}, turn: 0 }));
-      return json(req, res, 200, feedState());
-    }
-    if (path === '/erleben/refresh' && req.method === 'POST') {
-      const body = JSON.parse((await readBody(req)).toString('utf8') || '{}');
-      return json(req, res, 200, feedState(Array.isArray(body.keep) ? body.keep.map(String) : []));
-    }
-
     if (path === '/store') {
       if (req.method === 'GET') return json(req, res, 200, store);
       if (req.method === 'POST') {
@@ -267,9 +156,6 @@ createServer(async (req, res) => {
     }
     m = /^\/coach\/([a-f0-9]{12})\.ogg$/.exec(path);
     if (m) return sendFile(req, res, join(AUDIO_ASSETS, 'coach', `${m[1]}.ogg`), TYPES['.ogg'], 'public, max-age=604800');
-
-    m = /^\/media\/([a-z0-9_]{1,60})\.(mp4|jpg)$/.exec(path);
-    if (m) return sendFile(req, res, join(MEDIA, `${m[1]}.${m[2]}`), TYPES[`.${m[2]}`], 'public, max-age=3600');
 
     if (path === '/healthz') return json(req, res, 200, { ok: true, assets: existsSync(join(ASSETS, 'course.json')) });
 
