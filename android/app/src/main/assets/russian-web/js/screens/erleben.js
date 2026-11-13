@@ -13,7 +13,7 @@ import * as Ph from '../domain/phonetics.js';
 let DATA = null;
 let loading = null;
 // Nachschub: Stücke, die der Server selbst aufbereitet hat. `shown` = was gerade im Feed steht.
-let FEED = { shown: [], ready: 0, busy: false };
+let FEED = { shown: [], ready: 0, busy: false, interests: { video: [], music: [] }, leftToday: 0 };
 const feedSubs = new Set();
 const getFeed = () => fetch('/erleben/feed', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
 function takeFeed(f) {
@@ -21,7 +21,7 @@ function takeFeed(f) {
   const hand = (DATA ?? []).filter((p) => !p.auto);
   const have = new Map((DATA ?? []).filter((p) => p.auto).map((p) => [p.id, p]));
   DATA = [...hand, ...f.pieces.map((p) => have.get(p.id) ?? prepare(p))];
-  FEED = { shown: f.shown, ready: f.ready, busy: f.busy };
+  FEED = { shown: f.shown, ready: f.ready, busy: f.busy, interests: f.interests ?? { video: [], music: [] }, leftToday: f.leftToday ?? 0 };
   for (const fn of [...feedSubs]) fn(FEED);
 }
 const loadPieces = () => (loading ??= Promise.all([fetch('/data/erleben.json').then((r) => r.json()), getFeed()])
@@ -33,12 +33,16 @@ const feed = {
     const r = await fetch('/erleben/refresh', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ keep }) }).catch(() => null);
     takeFeed(r?.ok ? await r.json() : null);
   },
+  async setInterests(video, music) {
+    const r = await fetch('/erleben/interests', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ video, music }) }).catch(() => null);
+    takeFeed(r?.ok ? await r.json() : null);
+  },
 };
 function useFeed() {
   const [f, setF] = useState(FEED);
   useEffect(() => { setF(FEED); feedSubs.add(setF); return () => feedSubs.delete(setF); }, []);
   // Solange der Server Nachschub aufbereitet, regelmäßig nachsehen.
-  useEffect(() => { if (!f.busy) return undefined; const t = setInterval(() => feed.reload(), 5000); return () => clearInterval(t); }, [f.busy]);
+  useEffect(() => { if (!f.busy) return undefined; const t = setInterval(() => feed.reload(), 6000); return () => clearInterval(t); }, [f.busy]);
   return f;
 }
 
@@ -55,12 +59,15 @@ function chunksOf(line) {
 
 function prepare(p) {
   const lines = p.lines.map((l, i) => ({ ...l, i, chunks: chunksOf(l), keys: Ph.wordKeys(l.ru) }));
-  const uniq = lines.filter((l) => l.rep == null);
+  // Zeilen, die die Prüfung nicht bestanden haben (ok === false), bleiben hörbar, werden aber weder gezeigt noch geübt.
+  const uniq = lines.filter((l) => l.rep == null && l.ok !== false);
   // Welche Wörter tauchen in dieser Zeile zum ersten Mal auf?
   const seen = new Set();
   for (const l of uniq) { l.fresh = new Set(l.keys.filter((k) => !seen.has(k))); for (const k of l.keys) seen.add(k); }
-  for (const l of lines) l.times = lines.filter((o) => (o.rep ?? o.i) === (l.rep ?? l.i)).length;
-  return { ...p, lines, uniq, keys: [...seen], latin: Ph.transliterateFlat(p.title) };
+  for (const l of lines) l.times = l.ok === false ? 0 : lines.filter((o) => o.ok !== false && (o.rep ?? o.i) === (l.rep ?? l.i)).length;
+  const latin = Ph.transliterateFlat(p.title);
+  // Gefundene Videos tragen oft lange Reißer-Titel — dort steht der deutsche Titel vorn, nicht die Umschrift.
+  return { ...p, lines, uniq, keys: [...seen], latin, head: p.auto ? p.titleDe : latin, under: p.auto ? p.by : p.titleDe, hidden: lines.filter((l) => l.ok === false).length };
 }
 
 export function usePieces() {
@@ -144,8 +151,8 @@ function HeroCard({ piece, known, ps }) {
     <img src=${`/media/${piece.poster}`} alt="" />
     <div class="in">
       <div class="kind"><${Icon} n=${KIND[piece.kind][1]} size="15" />${KIND[piece.kind][0]}${piece.mood ? `, ${piece.mood.toLowerCase()}` : ''}</div>
-      <div class="t">${piece.latin}</div>
-      <div class="d">${piece.titleDe}, ${piece.part}, ${fmt(piece.dur)}</div>
+      <div class="t">${piece.head}</div>
+      <div class="d">${piece.under}, ${piece.part}, ${fmt(piece.dur)}</div>
       <div class="foot"><${Meter} piece=${piece} known=${known} onDark />
         <span class="go"><${Icon} n="play_arrow" fill /></span></div>
       ${st && html`<div class="resume">${ps.done ? 'Nochmal ansehen' : `Weitermachen: ${st.text}`}</div>`}
@@ -156,8 +163,8 @@ function PieceRow({ piece, known, ps }) {
   const st = statusOf(ps, piece);
   return html`<button class="ls-row c-live" onClick=${() => nav(`erleben/${piece.id}`)}>
     <span class="th"><img src=${`/media/${piece.poster}`} alt="" /><em>${fmt(piece.dur)}</em></span>
-    <span class="tx"><span class="hd1"><b class="ell">${piece.latin}</b><em class=${cls(piece.level !== 'Einsteiger' && 'hard')}>${piece.level}</em></span>
-      <span class="d ell">${piece.titleDe}, ${KIND[piece.kind][0]}</span>
+    <span class="tx"><span class="hd1"><b class="ell">${piece.head}</b>${!piece.auto && html`<em class=${cls(piece.level !== 'Einsteiger' && 'hard')}>${piece.level}</em>`}</span>
+      <span class="d ell">${piece.auto ? `${KIND[piece.kind][0]}${piece.topic ? ` zu »${piece.topic}«` : ''}, ${piece.level}` : `${piece.titleDe}, ${KIND[piece.kind][0]}`}</span>
       ${st ? html`<span class=${cls('s', st.c)}><${Icon} n=${st.icon} fill size="15" />${st.text}</span>` : html`<${Meter} piece=${piece} known=${known} />`}
     </span></button>`;
 }
@@ -168,22 +175,71 @@ const HOW = [
   ['Mitnehmen', 'Zwei, drei Sätze wandern in dein Satzbuch. Danach verstehst du sie beim Hören.'],
 ];
 
-/** Nachschub: was der Server selbst aufbereitet hat. »Neue Stücke« tauscht alles aus, was du nicht angefangen hast. */
+const IDEAS = {
+  video: ['Anime', 'Filme und Serien', 'Lustige Videos', 'True Crime', 'Nachrichten', 'Reisen', 'Kochen', 'Gaming', 'Trickfilme', 'Wissenschaft'],
+  music: ['Rock', 'Pop', 'Rap', 'Lieder zur Gitarre', 'Filmmusik', 'Volkslieder', 'Elektronisch', 'Balladen'],
+};
+
+function TopicList({ label, hint, list, ideas, onChange }) {
+  const [text, setText] = useState('');
+  const add = (t) => { const v = t.trim(); if (v && !list.some((x) => x.toLowerCase() === v.toLowerCase()) && list.length < 12) onChange([...list, v]); setText(''); };
+  const open = ideas.filter((i) => !list.some((x) => x.toLowerCase() === i.toLowerCase()));
+  return html`<div class="ls-topics">
+    <div class="q">${label}</div>
+    <div class="have">${list.map((t) => html`<button onClick=${() => onChange(list.filter((x) => x !== t))} aria-label=${`${t} entfernen`}>${t}<${Icon} n="close" size="15" /></button>`)}
+      ${list.length === 0 && html`<span class="none">Noch nichts gewählt</span>`}</div>
+    <form class="add" onSubmit=${(e) => { e.preventDefault(); add(text); }}>
+      <input value=${text} onInput=${(e) => setText(e.target.value)} placeholder=${hint} maxlength="60" enterkeyhint="done" />
+      <button type="submit" disabled=${!text.trim()} aria-label="Hinzufügen"><${Icon} n="add" /></button></form>
+    ${open.length > 0 && html`<div class="ideas">${open.map((i) => html`<button onClick=${() => add(i)}>${i}</button>`)}</div>`}
+  </div>`;
+}
+
+/** Was interessiert dich? Videos und Musik getrennt, frei eintippbar. Danach sucht der Server passend dazu. */
+function InterestsSheet({ f, onClose }) {
+  const [video, setVideo] = useState(f.interests.video);
+  const [music, setMusic] = useState(f.interests.music);
+  const [busy, setBusy] = useState(false);
+  const save = async () => { setBusy(true); await feed.setInterests(video, music); setBusy(false); onClose(); };
+  return html`<${Sheet} onClose=${onClose} title="Was interessiert dich?">
+    <p class="sub mt4" style="line-height:1.45">Schreib rein, was du wirklich sehen und hören willst. Danach sucht der Server russische Videos und Lieder genau dazu.</p>
+    <${TopicList} label="Videos" hint="z. B. One Piece, True Crime, Memes" list=${video} ideas=${IDEAS.video} onChange=${setVideo} />
+    <${TopicList} label="Musik" hint="z. B. Rock, ein Interpret, Filmmusik" list=${music} ideas=${IDEAS.music} onChange=${setMusic} />
+    <button class="btn mt20" disabled=${busy || video.length + music.length === 0} onClick=${save}>${busy ? 'Speichere …' : 'Speichern und suchen'}</button>
+  <//>`;
+}
+
+/** Nachschub: was der Server zu deinen Themen gefunden, aufbereitet und geprüft hat. */
 function FeedSection({ pieces, known, s, f }) {
   const [busy, setBusy] = useState(false);
+  const [topics, setTopics] = useState(false);
   const shown = f.shown.map((id) => pieces.find((p) => p.id === id)).filter(Boolean);
+  const has = f.interests.video.length + f.interests.music.length > 0;
   const more = async () => {
     setBusy(true);
     const keep = shown.filter((p) => { const ps = pieceState(s, p.id); return ps.started && !ps.done; }).map((p) => p.id);
     await feed.refresh(keep);
     setBusy(false);
   };
-  const status = f.ready > 0 ? `${f.ready === 1 ? 'Ein weiteres liegt' : `${f.ready} weitere liegen`} bereit` : f.busy ? 'Nachschub wird gerade aufbereitet' : 'Nachschub kommt beim nächsten Tippen';
+  const waiting = busy || (f.busy && f.ready === 0);
+  const status = f.ready > 0 ? `${f.ready === 1 ? 'Ein weiteres liegt' : `${f.ready} weitere liegen`} bereit.`
+    : f.busy ? 'Nachschub wird gerade gesucht und geprüft.'
+    : f.leftToday === 0 ? 'Für heute ist das Prüfkontingent aufgebraucht, morgen geht es weiter.'
+    : `Heute sind noch bis zu ${f.leftToday} Stücke möglich.`;
   return html`<div class="sec"><div class="hd"><div class="h2">Frisch für dich</div>
-      <button class="ls-more" disabled=${busy || (f.ready === 0 && f.busy)} onClick=${more}><${Icon} n=${busy || (f.busy && f.ready === 0) ? 'progress_activity' : 'refresh'} c=${busy || (f.busy && f.ready === 0) ? 'spin' : ''} size="18" />Neue Stücke</button></div>
-    <div class="sub">Vom Server selbst gefunden und aufbereitet. ${status}.</div>
-    ${shown.length > 0 ? html`<div class="list">${shown.map((x) => html`<${PieceRow} piece=${x} known=${known} ps=${pieceState(s, x.id)} />`)}</div>`
-      : html`<div class="ls-wait"><${Icon} n=${f.busy ? 'progress_activity' : 'inbox'} c=${f.busy ? 'spin' : ''} /><span>${f.busy ? 'Die ersten Stücke werden gerade aufbereitet. Das dauert etwa eine halbe Minute je Stück.' : 'Tippe auf »Neue Stücke«, dann holt der Server Nachschub.'}</span></div>`}
+      ${has && html`<span class="rowx g8"><button class="ls-more" onClick=${() => setTopics(true)}><${Icon} n="tune" size="18" />Themen</button>
+        <button class="ls-more" disabled=${waiting || (f.ready === 0 && shown.length === 0)} onClick=${more}><${Icon} n=${waiting ? 'progress_activity' : 'refresh'} c=${waiting ? 'spin' : ''} size="18" />Neue</button></span>`}</div>
+    ${!has ? html`<div class="sub">Videos und Lieder zu dem, was dich wirklich interessiert.</div>
+        <button class="ls-start" onClick=${() => setTopics(true)}>
+          <span class="ic solid"><${Icon} n="interests" /></span>
+          <span class="grow"><b>Sag, was dich interessiert</b><span>Anime, True Crime, Memes, deine Musik: Du gibst die Richtung vor, der Server sucht, bereitet auf und prüft.</span></span>
+          <${Icon} n="chevron_right" c="faint" /></button>`
+      : html`<div class="sub">${[...f.interests.video, ...f.interests.music].join(', ')}. ${status}</div>
+        ${shown.length > 0 ? html`<div class="list">${shown.map((x) => html`<${PieceRow} piece=${x} known=${known} ps=${pieceState(s, x.id)} />`)}</div>`
+          : html`<div class="ls-wait"><${Icon} n=${f.busy ? 'progress_activity' : 'hourglass_empty'} c=${f.busy ? 'spin' : ''} /><span>${f.busy
+            ? 'Die ersten Stücke werden gesucht, aufbereitet und doppelt geprüft. Das dauert ein bis zwei Minuten je Stück; nicht jedes Video besteht die Prüfung.'
+            : f.leftToday === 0 ? 'Heute kann nichts mehr geprüft werden. Morgen früh liegen neue Stücke bereit.' : 'Gleich geht es los.'}</span></div>`}`}
+    ${topics && html`<${InterestsSheet} f=${f} onClose=${() => setTopics(false)} />`}
   </div>`;
 }
 
@@ -243,8 +299,8 @@ export function ErlebenTeaser() {
     <div class="sub" style="margin:3px 4px 12px">Echtes Russisch: ansehen, verstehen, Sätze mitnehmen.</div>
     <button class="ls-teaser" onClick=${() => nav(`erleben/${hero.id}`)}>
       <span class="th"><img src=${`/media/${hero.poster}`} alt="" /></span>
-      <span class="tx"><span class="k">${KIND[hero.kind][0]}, ${fmt(hero.dur)}</span><b class="ell">${hero.latin}</b>
-        <span class="d ell">${ps.started && !ps.done ? `Weitermachen: ${statusOf(ps, hero).text}` : hero.titleDe}</span></span>
+      <span class="tx"><span class="k">${KIND[hero.kind][0]}, ${fmt(hero.dur)}</span><b class="ell">${hero.head}</b>
+        <span class="d ell">${ps.started && !ps.done ? `Weitermachen: ${statusOf(ps, hero).text}` : hero.under}</span></span>
       <span class="go"><${Icon} n="play_arrow" fill /></span></button></div>`;
 }
 
@@ -335,6 +391,7 @@ function SubToggles({ s }) {
 
 function LiveLine({ line, word, s, dim }) {
   if (!line) return null;
+  if (line.ok === false) return html`<div class=${cls('ls-live', 'dim')}><div class="de">Diese Stelle ist nicht sicher verstanden. Hör einfach zu.</div></div>`;
   const none = !s.subs.lat && !s.subs.cyr && !s.subs.de;
   return html`<div class=${cls('ls-live', dim && 'dim')}>
     ${line.who && html`<div class="who">${line.who}</div>`}
@@ -356,10 +413,10 @@ function Feel({ piece, pl, ps, s }) {
       ? html`<div class="ls-after"><b>Worum ging es?</b><span>Du musst noch nichts verstanden haben. Jetzt nehmt ihr es gemeinsam auseinander, Zeile für Zeile.</span></div>`
       : html`<${LiveLine} line=${next} word=${-1} s=${s} dim />`}</div>`}
     <div class=${cls('ls-story', started && 'small')}>
-      <div class="hd2"><${Icon} n=${KIND[piece.kind][1]} size="17" />${piece.titleDe}<em>${piece.by}</em></div>
+      <div class="hd2"><${Icon} n=${KIND[piece.kind][1]} size="17" />${piece.auto ? 'Worum es geht' : piece.titleDe}<em>${piece.auto ? fmt(piece.dur) : piece.by}</em></div>
       ${piece.story && html`<p>${piece.story}</p>`}
       ${piece.listen && html`<div class="lst"><${Icon} n="hearing" size="17" /><span>${piece.listen}</span></div>`}
-      ${piece.auto && html`<p class="autonote">Dieses Stück hat der Server selbst aufbereitet: Text per Spracherkennung, Bedeutungen aus dem Wörterbuch. Einzelne Stellen können danebenliegen.</p>`}
+      ${piece.auto && html`<p class="autonote"><${Icon} n="verified_user" size="16" />Doppelt geprüft: Jede gezeigte Zeile haben zwei Spracherkenner gleich gehört, Übersetzung und Betonung sind von zwei Quellen bestätigt.${piece.hidden > 0 ? ` ${piece.hidden === 1 ? 'Eine Stelle blieb' : `${piece.hidden} Stellen blieben`} unbestätigt und ${piece.hidden === 1 ? 'ist' : 'sind'} ausgeblendet.` : ''}</p>`}
     </div>
   </div></div>`;
 }
@@ -377,7 +434,7 @@ function Words({ line, known, word, playing, onWord, kept }) {
     const now = playing && c.words.some((w) => w.i === word);
     return html`<button class=${cls('lw', st, now && 'now')} onClick=${() => onWord(c)}>
       <span class="l">${c.words.map((w, k) => html`${k ? ' ' : ''}<i>${w.before}</i>${latin(w.latin)}<i>${w.after}</i>`)}</span>
-      <span class="g">${c.words.some((w) => kept[w.key]) && html`<${Icon} n="bookmark" fill size="12" />`}${c.gloss}</span></button>`;
+      <span class="g">${c.words.some((w) => kept[w.key]) && html`<${Icon} n="bookmark" fill size="12" />`}${c.gloss || '–'}</span></button>`;
   })}</div>`;
 }
 
@@ -491,7 +548,7 @@ function WordSheet({ chunk, line, piece, known, s, pl, onClose }) {
   return html`<${Sheet} onClose=${onClose}>
     <div class="ls-word c-live">
       <div class="big"><span>${chunk.words.map((x, k) => html`${k ? ' ' : ''}${latin(x.latin)}`)}</span><span class="cyr" lang="ru">${chunk.words.map((x) => x.cyrillic).join(' ')}</span></div>
-      <div class="here">Hier: <b>${chunk.gloss}</b></div>
+      <div class="here">${chunk.gloss ? html`Hier: <b>${chunk.gloss}</b>` : 'Keine der Wörterbuch-Bedeutungen passt hier sicher. Die Grundform steht unten.'}</div>
       <div class="rows">
         ${baseDiffers && html`<div><${Icon} n="account_tree" size="18" /><span><span class="faint">Grundform:</span> <b>${Ph.transliterateFlat(info.b)}</b> <span class="cyr" lang="ru">${Ph.display(info.b)}</span> = ${info.de}</span></div>`}
         ${info.n && html`<div><${Icon} n="lightbulb" size="18" /><span>${mk(info.n)}</span></div>`}
@@ -644,7 +701,7 @@ function PieceView({ piece }) {
   // In »Verstehen« und »Mitnehmen« spielt ein Tipp aufs Video die aktuelle Zeile.
   const stageTap = stage === 1 ? () => (pl.playing ? pl.pause() : pl.playSeg(piece.uniq[idx].a, piece.uniq[idx].b, { key: 'line' })) : stage === 0 ? () => (pl.playing ? pl.pause() : watch()) : null;
   return html`<div class="screen c-live ls-piece">
-    <${TopBar} title=${piece.latin} sub=${`${piece.titleDe}, ${piece.part}`} onBack=${() => back('erleben')} />
+    <${TopBar} title=${piece.head} sub=${piece.auto ? `${KIND[piece.kind][0]}${piece.topic ? ` zu »${piece.topic}«` : ''}, ${piece.by}` : `${piece.titleDe}, ${piece.part}`} onBack=${() => back('erleben')} />
     <${Stage} piece=${piece} pl=${pl} onTap=${stageTap} quiet=${stage > 0} />
     <div class="ls-stages">${STAGES.map((t, i) => html`<button class=${cls(stage === i && 'on', (ps.done || i < ps.stage) && stage !== i && 'done')} onClick=${() => go(i)}>
       <i>${(ps.done || i < ps.stage) && stage !== i ? html`<${Icon} n="check" size="13" />` : i + 1}</i>${t}</button>`)}</div>

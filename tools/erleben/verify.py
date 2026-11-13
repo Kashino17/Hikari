@@ -56,6 +56,20 @@ STORY = """You get the German translation of a short excerpt from {source}, titl
 Answer with the sentences only."""
 
 
+PLAUSIBLE_MANY = """You check Russian lines that a speech recogniser produced from songs and film scenes. The recogniser sometimes mishears: it writes words that do not exist, glues or splits words wrongly, picks a wrong ending, or writes a different real word that sounds similar.
+
+For each numbered item decide whether LINE is what a native speaker would really say or sing at this place.
+- Colloquial, poetic, old-fashioned and dialect Russian is fine. Incomplete sentences are fine. Names are fine. Missing or odd punctuation and capital letters are fine. The letter е instead of ё is fine.
+- A line is BAD only if it contains a word that is not Russian, a word that makes no sense at this place, or a grammatical form that cannot be right here.
+- BEFORE and AFTER come from the same recogniser and may themselves contain mistakes. Judge only LINE.
+
+Answer with one line per item and nothing else:  <number>: OK   or   <number>: BAD"""
+
+ARBITER_MANY = """Two speech recognisers heard the same line of a song or film scene differently. For each numbered item decide which version is what was really said. Judge by Russian grammar, real words and the context.
+
+Answer with one line per item and nothing else:  <number>: A   or   <number>: B   or   <number>: ?   (if you cannot decide or both are wrong)"""
+
+
 def words_of(text: str) -> list[str]:
     return [w.lower().replace("ё", "е") for w in re.findall(r"[А-Яа-яЁё]+(?:-[А-Яа-яЁё]+)*", text)]
 
@@ -184,6 +198,34 @@ class Reviewer:
         if first == "B" and second == "A":
             return "b"
         return None
+
+    # Dasselbe für viele Zeilen in EINER Anfrage — Cloud-Modelle haben ein Tageslimit je Anfrage, nicht je Wort.
+
+    def plausible_many(self, items: list[tuple[str, str, str, str]]) -> list[bool] | None:
+        """items: (Art, davor, Zeile, danach) → je Zeile True = plausibel. None = Antwort unbrauchbar."""
+        user = "\n\n".join(f"{n}.\nTYPE: {kind}\nBEFORE: {b or '—'}\nLINE: {l}\nAFTER: {a or '—'}" for n, (kind, b, l, a) in enumerate(items, 1))
+        ans = self.ask(PLAUSIBLE_MANY, user, 12 * len(items) + 50)
+        got = {int(m.group(1)): m.group(2).upper() for m in re.finditer(r"^\s*(\d+)\s*[:.)]\s*(OK|BAD)\b", ans, re.M | re.I)}
+        if sorted(got) != list(range(1, len(items) + 1)):
+            return None
+        return [got[n] == "OK" for n in range(1, len(items) + 1)]
+
+    def arbitrate_many(self, items: list[tuple[str, str, str, str, str]]) -> list[str | None] | None:
+        """items: (Art, davor, A, B, danach) → je Zeile "a" | "b" | None. Jede Zeile wird in beiden
+        Reihenfolgen gefragt; nur eine übereinstimmende Wahl gilt."""
+        both = []
+        for kind, before, a, b, after in items:
+            both += [(kind, before, a, b, after), (kind, before, b, a, after)]
+        user = "\n\n".join(f"{n}.\nTYPE: {kind}\nBEFORE: {bf or '—'}\nA: {a}\nB: {b}\nAFTER: {af or '—'}" for n, (kind, bf, a, b, af) in enumerate(both, 1))
+        ans = self.ask(ARBITER_MANY, user, 10 * len(both) + 50)
+        got = {int(m.group(1)): m.group(2).upper() for m in re.finditer(r"^\s*(\d+)\s*[:.)]\s*([AB?])(?![A-Za-z])", ans, re.M | re.I)}
+        if sorted(got) != list(range(1, len(both) + 1)):
+            return None
+        out = []
+        for i in range(len(items)):
+            first, second = got[2 * i + 1], got[2 * i + 2]
+            out.append("a" if (first, second) == ("A", "B") else "b" if (first, second) == ("B", "A") else None)
+        return out
 
     # ── Was bedeutet es? ────────────────────────────────────────────────────
 

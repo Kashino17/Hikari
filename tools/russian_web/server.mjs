@@ -13,6 +13,7 @@
 //   /media/<datei>   → Videos und Standbilder für »Lieder & Szenen« (~/.hikari/erleben/media)
 //   /erleben/feed    → Nachschub: Stücke, die tools/erleben/prepare.py selbst aufbereitet hat
 //   /erleben/refresh → neue Stücke in den Feed holen (POST {keep:[ids]})
+//   /erleben/interests → Themen des Lernenden für Videos und Musik (GET, POST {video:[…], music:[…]})
 //
 // Start: node tools/russian_web/server.mjs   (Port 3079)
 // Tests: node --test tools/russian_web/test/  (braucht test/parity.json, siehe dort)
@@ -50,6 +51,23 @@ const DATA = new Set(['course', 'podcast', 'phrasebook', 'deepdive', 'patterns',
 const ERLEBEN = join(homedir(), '.hikari', 'erleben');
 const AUTO = join(ERLEBEN, 'auto');
 const FEED_FILE = join(ERLEBEN, 'feed.json');
+const INTERESTS_FILE = join(ERLEBEN, 'interests.json');
+const CANDIDATES_FILE = join(ERLEBEN, 'candidates.json');
+const USAGE_FILE = join(ERLEBEN, 'usage.json');
+// Wie viele Stücke die Prüfinstanz heute noch schafft (siehe tools/erleben/gemini.py: eine Anfrage je Stück).
+const REVIEW_MODEL = 'gemini-4-hydrogen';
+const REVIEW_PER_DAY = 18;
+function readJson(file, fallback) { try { return JSON.parse(readFileSync(file, 'utf8')); } catch { return fallback; } }
+function interests() {
+  const i = readJson(INTERESTS_FILE, {});
+  const clean = (a) => (Array.isArray(a) ? [...new Set(a.map((x) => String(x).trim().slice(0, 60)).filter(Boolean))].slice(0, 12) : []);
+  return { video: clean(i.video), music: clean(i.music) };
+}
+function leftToday() {
+  const u = readJson(USAGE_FILE, {});
+  const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  return Math.max(0, REVIEW_PER_DAY - (u.day === today ? (u.count?.[REVIEW_MODEL] ?? 0) : 0));
+}
 const PREPARE = new URL('../erleben/prepare.py', import.meta.url).pathname;
 const UV = ['/opt/homebrew/bin/uv', '/usr/local/bin/uv'].find((f) => existsSync(f)) ?? 'uv';
 const FEED_SIZE = 3;
@@ -62,12 +80,16 @@ const saveFeed = () => writeFileSync(FEED_FILE, JSON.stringify(feed));
 function autoPieces() {
   return readdirSync(AUTO).filter((f) => f.endsWith('.json'))
     .map((f) => ({ f, at: statSync(join(AUTO, f)).mtimeMs })).sort((a, b) => a.at - b.at)
-    .flatMap(({ f }) => { try { return [JSON.parse(readFileSync(join(AUTO, f), 'utf8'))]; } catch { return []; } });
+    .flatMap(({ f }) => { try { return [JSON.parse(readFileSync(join(AUTO, f), 'utf8'))]; } catch { return []; } })
+    // Nur Stücke, die die ganze Prüfkette durchlaufen haben, kommen je in den Feed.
+    .filter((p) => p.checked === true);
 }
 function topUp(stock) {
-  if (prepareJob || stock >= STOCK) return;
+  const wishes = interests();
+  // Ohne Themen wird nichts gesucht; ist das Tageskontingent leer, geht es morgen weiter.
+  if (prepareJob || stock >= STOCK || wishes.video.length + wishes.music.length === 0 || leftToday() === 0) return;
   prepareJob = spawn(UV, ['run', '--script', PREPARE, 'next', '--count', String(STOCK + 1 - stock)], { stdio: ['ignore', 'ignore', 'pipe'], env: { ...process.env, PATH: `/opt/homebrew/bin:${process.env.PATH ?? ''}` } });
-  prepareJob.stderr.on('data', (d) => { for (const l of String(d).split('\n')) if (l.startsWith('[')) console.log(new Date().toISOString(), 'erleben', l); });
+  prepareJob.stderr.on('data', (d) => { for (const l of String(d).split('\n')) if (/^(\[|Thema|Tageskontingent| {6})/.test(l)) console.log(new Date().toISOString(), 'erleben', l); });
   prepareJob.on('exit', () => { prepareJob = null; });
   prepareJob.on('error', (e) => { console.error('erleben: Aufbereitung startet nicht', e.message); prepareJob = null; });
 }
@@ -85,7 +107,7 @@ function feedState(keep = null) {
   const stock = ready().length;
   topUp(stock);
   // Auch Abgelegtes bleibt abrufbar, solange es jemand offen hat.
-  return { shown: feed.shown, ready: stock, busy: !!prepareJob, pieces: all };
+  return { shown: feed.shown, ready: stock, busy: !!prepareJob, pieces: all, interests: interests(), leftToday: leftToday() };
 }
 
 // ── Lernstand ──────────────────────────────────────────────────────────────
@@ -174,6 +196,16 @@ createServer(async (req, res) => {
     if (path.startsWith('/api/')) return proxy(req, res, path.slice(4) + url.search);
 
     if (path === '/erleben/feed' && req.method === 'GET') return json(req, res, 200, feedState());
+    if (path === '/erleben/interests' && req.method === 'POST') {
+      const body = JSON.parse((await readBody(req)).toString('utf8') || '{}');
+      mkdirSync(ERLEBEN, { recursive: true });
+      writeFileSync(INTERESTS_FILE, JSON.stringify({ video: body.video ?? [], music: body.music ?? [] }));
+      writeFileSync(INTERESTS_FILE, JSON.stringify(interests()));
+      // Neue Themen, neue Suche: die gemerkten Trefferlisten verfallen, der Vorrat bleibt.
+      const old = readJson(CANDIDATES_FILE, null);
+      if (old) writeFileSync(CANDIDATES_FILE, JSON.stringify({ ...old, pools: {}, turn: 0 }));
+      return json(req, res, 200, feedState());
+    }
     if (path === '/erleben/refresh' && req.method === 'POST') {
       const body = JSON.parse((await readBody(req)).toString('utf8') || '{}');
       return json(req, res, 200, feedState(Array.isArray(body.keep) ? body.keep.map(String) : []));

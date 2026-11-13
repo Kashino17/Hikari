@@ -12,6 +12,7 @@ RICHTIG: von Hand geprüfte Zeilen (dürfen nie als Fehler gelten).
 FALSCH:  echte Hörfehler der Spracherkennung aus den Testläufen, mit dem, was wirklich gesagt wurde.
 """
 import json
+import random
 import sys
 import time
 from pathlib import Path
@@ -107,14 +108,23 @@ def main():
     r = Reviewer(backend, log=print)
     out = {"variant": variant}
 
+    batch = variant.startswith("cloud")   # Cloud: viele Zeilen je Anfrage (Tageslimit); Mac: einzeln
     if what in ("plausible", "all"):
         t = time.time()
-        alarms = [line for kind, before, line, after in RICHTIG if not r.plausible(line, before, after, kind)]
+        wrong = [x for x in FALSCH if x[4] is not None]
+        items = [(k, b, l, a, True) for k, b, l, a in RICHTIG] + [(k, b, l, a, False) for k, b, l, a, _ in wrong]
+        random.Random(7).shuffle(items)   # gemischt, damit die Reihenfolge nichts verrät
+        if batch:
+            got = r.plausible_many([x[:4] for x in items])
+            if got is None:
+                print("Plausibilität: Antwort im falschen Format"); got = [None] * len(items)
+        else:
+            got = [r.plausible(l, b, a, k) for k, b, l, a, _ in items]
+        alarms = [x[2] for x, g in zip(items, got) if x[4] and g is not True]
+        missed = [x[2] for x, g in zip(items, got) if not x[4] and g is not False]
         print(f"\nRICHTIGE Zeilen: {len(RICHTIG) - len(alarms)} von {len(RICHTIG)} durchgelassen")
         for a in alarms:
             print("   FEHLALARM:", a)
-        wrong = [x for x in FALSCH if x[4] is not None]
-        missed = [line for kind, before, line, after, truth in wrong if r.plausible(line, before, after, kind)]
         for m in missed:
             print("   ÜBERSEHEN:", m)
         print(f"FALSCHE Zeilen: {len(wrong) - len(missed)} von {len(wrong)} erkannt")
@@ -123,16 +133,17 @@ def main():
 
     if what in ("arbiter", "all"):
         t = time.time()
-        ok = bad = undecided = 0
-        for kind, before, a, b, after, truth in ARBITER:
-            got = r.arbitrate(a, b, before, after, kind)
-            ok += got == truth
-            undecided += got is None
-            bad += got is not None and got != truth
-            if got != truth:
-                print(f"   Schiedsrichter {'UNENTSCHIEDEN' if got is None else 'FALSCH'}: A={a} | B={b}")
-        print(f"\nSCHIEDSRICHTER: {ok} richtig, {bad} falsch, {undecided} unentschieden von {len(ARBITER)}")
-        out["arbiter"] = {"richtig": ok, "falsch": bad, "unentschieden": undecided, "s": round(time.time() - t, 1)}
+        if batch:
+            got = r.arbitrate_many([(k, bf, a, b, af) for k, bf, a, b, af, _ in ARBITER]) or [None] * len(ARBITER)
+        else:
+            got = [r.arbitrate(a, b, bf, af, k) for k, bf, a, b, af, _ in ARBITER]
+        ok = sum(g == x[5] for g, x in zip(got, ARBITER))
+        undecided = sum(g is None for g in got)
+        for g, x in zip(got, ARBITER):
+            if g != x[5]:
+                print(f"   Schiedsrichter {'UNENTSCHIEDEN' if g is None else 'FALSCH'}: A={x[2]} | B={x[3]}")
+        print(f"\nSCHIEDSRICHTER: {ok} richtig, {len(ARBITER) - ok - undecided} falsch, {undecided} unentschieden von {len(ARBITER)}")
+        out["arbiter"] = {"richtig": ok, "falsch": len(ARBITER) - ok - undecided, "unentschieden": undecided, "s": round(time.time() - t, 1)}
 
     if what in ("translate", "all"):
         data = json.loads((Path(__file__).parents[2] / "android/app/src/main/assets/russian/erleben.json").read_text())
