@@ -1,0 +1,44 @@
+{
+  "_": "Reihenfolge = Vorrang. Modellnamen und Limits am 14.11.2026 recherchiert, aber NICHT mit einem Schlüssel geprüft: nach dem Eintragen der Schlüssel `python3 tools/erleben/cloud.py check` laufen lassen — es meldet, wenn ein Modellname nicht stimmt. perDay bleibt bewusst unter dem Limit des Anbieters.",
+  "providers": [
+    {
+      "name": "gemini",
+      "key": "GEMINI_API_KEY",
+      "signup": "https://aistudio.google.com/apikey",
+      "base": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "model": "gemini-3.8-flash",
+      "perDay": 18,
+      "headroom": 600,
+      "_": "Laut Preisseite kostenlos (Gemini 3.8 Flash, 3.6 Flash, 3.5 Flash-Lite, 3.5 Transcribe). Tageslimit steht nur in AI Studio; Dritte nennen 20 Anfragen/Tag für Flash, 500 für Flash-Lite."
+    },
+    {
+      "name": "gemini-lite",
+      "key": "GEMINI_API_KEY",
+      "signup": "https://aistudio.google.com/apikey",
+      "base": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "model": "gemini-3.5-flash-lite",
+      "perDay": 400,
+      "headroom": 300
+    },
+    {
+      "name": "groq",
+      "key": "GROQ_API_KEY",
+      "signup": "https://console.groq.com/keys",
+      "base": "https://api.groq.com/openai/v1",
+      "model": "openai/gpt-oss-120b",
+      "perDay": 900,
+      "headroom": 600,
+      "_": "Tabelle der Limits-Seite: 30 Anfragen/Minute, 1.000/Tag, 200.000 Token/Tag."
+    },
+    {
+      "name": "openrouter",
+      "key": "OPENROUTER_API_KEY",
+      "signup": "https://openrouter.ai/keys",
+      "base": "https://openrouter.ai/api/v1",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "perDay": 45,
+      "headroom": 600,
+      "_": "Offiziell: 20 Anfragen/Minute, 50/Tag; 1.000/Tag, sobald einmalig 10 Dollar Guthaben gekauft wurden. Die Liste der Gratis-Modelle wechselt — bei 404 ein anderes mit Endung :free eintragen."
+    }
+  ]
+}
