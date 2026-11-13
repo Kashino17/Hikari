@@ -2,16 +2,45 @@
 // Fühlen (ansehen), Verstehen (Zeile für Zeile, jedes Wort antippbar), Mitnehmen
 // (Sätze ins Satzbuch, kurze Übung). Inhalte: assets/russian/erleben.json,
 // Videos: /media/<datei> vom Hikari-Server.
-import { html, cls, Icon, Sheet, Opt, TopBar, mk, fx, audio, useState, useEffect, useRef, useMemo } from '../ui.js';
+import { html, cls, Icon, Sheet, Opt, TopBar, mk, fx, audio, useState, useEffect, useRef, useMemo, useListen, ScoreCard, MIC_WAIT, SvgCompare, SvgAiCheck } from '../ui.js';
 import { progress, useProgress, phraseById, nav, back, toast } from '../app.js';
-import { storage } from '../platform.js';
+import { storage, speech, recorder, SPEECH_ERRORS } from '../platform.js';
+import * as Sp from '../domain/speech.js';
 import * as Ph from '../domain/phonetics.js';
 
 // ── Inhalte ────────────────────────────────────────────────────────────────
 
 let DATA = null;
 let loading = null;
-const loadPieces = () => (loading ??= fetch('/data/erleben.json').then((r) => r.json()).then((d) => { DATA = d.pieces.map(prepare); return DATA; }));
+// Nachschub: Stücke, die der Server selbst aufbereitet hat. `shown` = was gerade im Feed steht.
+let FEED = { shown: [], ready: 0, busy: false };
+const feedSubs = new Set();
+const getFeed = () => fetch('/erleben/feed', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+function takeFeed(f) {
+  if (!f) return;
+  const hand = (DATA ?? []).filter((p) => !p.auto);
+  const have = new Map((DATA ?? []).filter((p) => p.auto).map((p) => [p.id, p]));
+  DATA = [...hand, ...f.pieces.map((p) => have.get(p.id) ?? prepare(p))];
+  FEED = { shown: f.shown, ready: f.ready, busy: f.busy };
+  for (const fn of [...feedSubs]) fn(FEED);
+}
+const loadPieces = () => (loading ??= Promise.all([fetch('/data/erleben.json').then((r) => r.json()), getFeed()])
+  .then(([d, f]) => { DATA = d.pieces.map(prepare); takeFeed(f); return DATA; }));
+const feed = {
+  async reload() { takeFeed(await getFeed()); },
+  /** Neue Stücke holen. Angefangene bleiben stehen, der Rest macht Platz. */
+  async refresh(keep) {
+    const r = await fetch('/erleben/refresh', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ keep }) }).catch(() => null);
+    takeFeed(r?.ok ? await r.json() : null);
+  },
+};
+function useFeed() {
+  const [f, setF] = useState(FEED);
+  useEffect(() => { setF(FEED); feedSubs.add(setF); return () => feedSubs.delete(setF); }, []);
+  // Solange der Server Nachschub aufbereitet, regelmäßig nachsehen.
+  useEffect(() => { if (!f.busy) return undefined; const t = setInterval(() => feed.reload(), 5000); return () => clearInterval(t); }, [f.busy]);
+  return f;
+}
 
 /** Zeile → Abschnitte für die Wort-für-Wort-Anzeige ("=" hängt ein Wort an die Bedeutung davor). */
 function chunksOf(line) {
@@ -36,7 +65,12 @@ function prepare(p) {
 
 export function usePieces() {
   const [d, setD] = useState(DATA);
-  useEffect(() => { if (!DATA) loadPieces().then(setD).catch(() => setD([])); }, []);
+  useEffect(() => {
+    if (!DATA) loadPieces().then(setD).catch(() => setD([]));
+    const on = () => setD(DATA);
+    feedSubs.add(on);
+    return () => feedSubs.delete(on);
+  }, []);
   return d;
 }
 
@@ -109,7 +143,7 @@ function HeroCard({ piece, known, ps }) {
   return html`<button class="ls-hero c-live" onClick=${() => nav(`erleben/${piece.id}`)}>
     <img src=${`/media/${piece.poster}`} alt="" />
     <div class="in">
-      <div class="kind"><${Icon} n=${KIND[piece.kind][1]} size="15" />${KIND[piece.kind][0]}, ${piece.mood.toLowerCase()}</div>
+      <div class="kind"><${Icon} n=${KIND[piece.kind][1]} size="15" />${KIND[piece.kind][0]}${piece.mood ? `, ${piece.mood.toLowerCase()}` : ''}</div>
       <div class="t">${piece.latin}</div>
       <div class="d">${piece.titleDe}, ${piece.part}, ${fmt(piece.dur)}</div>
       <div class="foot"><${Meter} piece=${piece} known=${known} onDark />
@@ -134,14 +168,35 @@ const HOW = [
   ['Mitnehmen', 'Zwei, drei Sätze wandern in dein Satzbuch. Danach verstehst du sie beim Hören.'],
 ];
 
+/** Nachschub: was der Server selbst aufbereitet hat. »Neue Stücke« tauscht alles aus, was du nicht angefangen hast. */
+function FeedSection({ pieces, known, s, f }) {
+  const [busy, setBusy] = useState(false);
+  const shown = f.shown.map((id) => pieces.find((p) => p.id === id)).filter(Boolean);
+  const more = async () => {
+    setBusy(true);
+    const keep = shown.filter((p) => { const ps = pieceState(s, p.id); return ps.started && !ps.done; }).map((p) => p.id);
+    await feed.refresh(keep);
+    setBusy(false);
+  };
+  const status = f.ready > 0 ? `${f.ready === 1 ? 'Ein weiteres liegt' : `${f.ready} weitere liegen`} bereit` : f.busy ? 'Nachschub wird gerade aufbereitet' : 'Nachschub kommt beim nächsten Tippen';
+  return html`<div class="sec"><div class="hd"><div class="h2">Frisch für dich</div>
+      <button class="ls-more" disabled=${busy || (f.ready === 0 && f.busy)} onClick=${more}><${Icon} n=${busy || (f.busy && f.ready === 0) ? 'progress_activity' : 'refresh'} c=${busy || (f.busy && f.ready === 0) ? 'spin' : ''} size="18" />Neue Stücke</button></div>
+    <div class="sub">Vom Server selbst gefunden und aufbereitet. ${status}.</div>
+    ${shown.length > 0 ? html`<div class="list">${shown.map((x) => html`<${PieceRow} piece=${x} known=${known} ps=${pieceState(s, x.id)} />`)}</div>`
+      : html`<div class="ls-wait"><${Icon} n=${f.busy ? 'progress_activity' : 'inbox'} c=${f.busy ? 'spin' : ''} /><span>${f.busy ? 'Die ersten Stücke werden gerade aufbereitet. Das dauert etwa eine halbe Minute je Stück.' : 'Tippe auf »Neue Stücke«, dann holt der Server Nachschub.'}</span></div>`}
+  </div>`;
+}
+
 export function ErlebenHub() {
   const pieces = usePieces();
   const known = useKnown();
   const s = useStore();
   const p = useProgress();
+  const f = useFeed();
   if (!pieces) return html`<div class="screen"><${TopBar} title="Lieder & Szenen" onBack=${() => back('heute')} /></div>`;
-  const hero = pickHero(pieces, known, s);
-  const rest = pieces.filter((x) => x !== hero);
+  const hand = pieces.filter((x) => !x.auto);
+  const hero = pickHero(hand, known, s);
+  const rest = hand.filter((x) => x !== hero);
   const taken = p.mySentences.filter((m) => (m.note ?? '').startsWith('Aus »')).length;
   const done = pieces.filter((x) => pieceState(s, x.id).done).length;
   return html`<div class="screen c-live">
@@ -149,8 +204,10 @@ export function ErlebenHub() {
     <div class="scroll">
       <${HeroCard} piece=${hero} known=${known} ps=${pieceState(s, hero.id)} />
 
-      <div class="sec"><div class="h2">Weitere Stücke</div>
-        <div class="sub">Sortiert danach, wie viel du schon verstehst.</div>
+      <${FeedSection} pieces=${pieces} known=${known} s=${s} f=${f} />
+
+      <div class="sec"><div class="h2">Ausgewählte Stücke</div>
+        <div class="sub">Von Hand aufbereitet, mit Geschichte und Tipps.</div>
         <div class="list">${[...rest].sort((a, b) => knownCount(b, known) / b.keys.length - knownCount(a, known) / a.keys.length)
           .map((x) => html`<${PieceRow} piece=${x} known=${known} ps=${pieceState(s, x.id)} />`)}</div>
       </div>
@@ -163,13 +220,13 @@ export function ErlebenHub() {
         <div class="stat3 mt12">
           <div><b><${Icon} n="bookmark" fill c="cc" />${taken}</b><span>Sätze im Satzbuch</span></div>
           <div><b><${Icon} n="translate" c="cc" />${Object.keys(s.words).length}</b><span>Wörter gemerkt</span></div>
-          <div><b><${Icon} n="check_circle" fill c="amber" />${done}</b><span>von ${pieces.length} Stücken</span></div>
+          <div><b><${Icon} n="check_circle" fill c="amber" />${done}</b><span>${done === 1 ? 'Stück' : 'Stücke'} fertig</span></div>
         </div>
       </div>
 
       <div class="sec"><button class="ls-add" onClick=${() => toast('Kommt mit dem Ausbau: Lieder aus deiner Musik, Videos aus der Bibliothek')}>
         <span class="ic sm"><${Icon} n="add" /></span>
-        <span class="grow"><b>Eigenes Lied oder Video</b><span>Später aus deiner Musik und deiner Bibliothek. In dieser Vorschau noch nicht.</span></span></button></div>
+        <span class="grow"><b>Eigenes Lied oder Video</b><span>Später auch aus deiner Musik und deiner Bibliothek. In dieser Vorschau noch nicht.</span></span></button></div>
       <div class="end"></div>
     </div></div>`;
 }
@@ -180,7 +237,7 @@ export function ErlebenTeaser() {
   const known = useKnown();
   const s = useStore();
   if (!pieces?.length) return null;
-  const hero = pickHero(pieces, known, s);
+  const hero = pickHero(pieces.filter((x) => !x.auto || FEED.shown.includes(x.id)), known, s);
   const ps = pieceState(s, hero.id);
   return html`<div class="sec c-live"><div class="hd"><div class="h2">Lieder & Szenen</div><button onClick=${() => nav('erleben')}>Alle Stücke</button></div>
     <div class="sub" style="margin:3px 4px 12px">Echtes Russisch: ansehen, verstehen, Sätze mitnehmen.</div>
@@ -300,8 +357,9 @@ function Feel({ piece, pl, ps, s }) {
       : html`<${LiveLine} line=${next} word=${-1} s=${s} dim />`}</div>`}
     <div class=${cls('ls-story', started && 'small')}>
       <div class="hd2"><${Icon} n=${KIND[piece.kind][1]} size="17" />${piece.titleDe}<em>${piece.by}</em></div>
-      <p>${piece.story}</p>
-      <div class="lst"><${Icon} n="hearing" size="17" /><span>${piece.listen}</span></div>
+      ${piece.story && html`<p>${piece.story}</p>`}
+      ${piece.listen && html`<div class="lst"><${Icon} n="hearing" size="17" /><span>${piece.listen}</span></div>`}
+      ${piece.auto && html`<p class="autonote">Dieses Stück hat der Server selbst aufbereitet: Text per Spracherkennung, Bedeutungen aus dem Wörterbuch. Einzelne Stellen können danebenliegen.</p>`}
     </div>
   </div></div>`;
 }
@@ -323,41 +381,88 @@ function Words({ line, known, word, playing, onWord, kept }) {
   })}</div>`;
 }
 
-function DockBtn({ icon, label, on, primary, onClick, fill }) {
-  return html`<button class=${cls('dk', primary && 'primary', on && 'on')} onClick=${onClick} aria-label=${label}>
-    <span class="dk-c"><${Icon} n=${icon} fill=${fill} /></span><span class="dk-l">${label}</span></button>`;
+function DockBtn({ icon, node, label, on, primary, onClick, fill, rec, disabled }) {
+  return html`<button class=${cls('dk', primary && 'primary', on && 'on', rec && 'rec')} onClick=${onClick} disabled=${disabled} aria-label=${label}>
+    <span class="dk-c">${node ?? html`<${Icon} n=${icon} fill=${fill} />`}</span><span class="dk-l">${label}</span></button>`;
 }
 
 function Understand({ piece, pl, ps, s, known, onWord, toLine, onTake }) {
   const idx = Math.min(ps.line, piece.uniq.length - 1);
   const line = piece.uniq[idx];
   const marked = ps.marks.includes(line.i);
+  const said = (ps.spoken ?? []).includes(line.i);
   const here = pl.pos.line === line.i || (pl.pos.line >= 0 && piece.lines[pl.pos.line].rep === line.i);
   const [lens, setLens] = useState(false);
-  useEffect(() => setLens(false), [idx]);
-  const hear = (opts) => pl.playSeg(line.a, line.b, opts);
+  // Sprechen: KI-Prüfung (Erkennung) und Nachsprechen (eigene Aufnahme gegen das Original).
+  const [sc, setSc] = useState(null);
+  const [rec, setRec] = useState(null);
+  const [take, setTake] = useState(null);
+  const [err, setErr] = useState(null);
+  const L = useListen((hyps) => {
+    const r = Sp.speech(line.ru, hyps);
+    setSc(r);
+    (r.passed ? fx.right : fx.wrong)();
+    if (r.passed && !said) {
+      store.piece(piece.id, { spoken: [...(ps.spoken ?? []), line.i] });
+      progress.apply({ xp: 3, spokenOk: 1 });
+    }
+  });
+  useEffect(() => { setLens(false); setSc(null); setTake(null); setErr(null); L.cancel(); }, [idx]);
+  useEffect(() => () => rec?.cancel(), [rec]);
+  const hear = (opts) => { L.cancel(); pl.playSeg(line.a, line.b, opts); };
   const mark = () => store.piece(piece.id, { marks: marked ? ps.marks.filter((m) => m !== line.i) : [...ps.marks, line.i] });
+  const check = () => {
+    if (L.listening) { L.stop(); return; }
+    if (rec) { rec.cancel(); setRec(null); }
+    pl.stopSeg(); setSc(null); setErr(null);
+    L.start(line.ru);
+  };
+  const record = async () => {
+    if (rec) {
+      const blob = await rec.stop();
+      setRec(null); setTake(blob);
+      // Erst du, dann das Original — so hörst du den Unterschied.
+      if (await audio.playBlob(blob, { key: 'take' })) pl.playSeg(line.a, line.b, { key: 'line' });
+      return;
+    }
+    L.cancel(); pl.stopSeg(); setErr(null);
+    try { setRec(await recorder.start()); } catch { setErr(SPEECH_ERRORS.denied); }
+  };
   const fresh = line.chunks.flatMap((c) => c.words).filter((w) => wordState(w.key, line, known) === 'new').length;
+  const hint = rec ? 'Sprich die Zeile nach und tippe auf Stopp. Dann hörst du dich und das Original.'
+    : L.listening ? (L.partial ? `»${L.partial}«` : L.opening ? MIC_WAIT : 'Ich höre zu … sprich die Zeile und tippe auf Fertig.')
+    : err ?? L.errorText;
   return html`<div class="scroll"><div class="ls-body">
     <div class="ls-linehd"><span class="n">Zeile ${idx + 1} von ${piece.uniq.length}</span>
       ${line.who && html`<span class="who">${line.who}</span>`}
+      ${said && html`<span class="said"><${Icon} n="check_circle" fill size="14" />gesprochen</span>`}
       <span class="grow"></span>
-      ${line.times > 1 && html`<span class="rep"><${Icon} n="repeat" size="14" />kommt ${line.times}-mal vor</span>`}</div>
+      ${line.unsure && html`<span class="rep"><${Icon} n="help" size="14" />unsicher erkannt</span>`}
+      ${line.times > 1 && html`<span class="rep"><${Icon} n="repeat" size="14" />${line.times}-mal</span>`}
+      <button class=${cls('keep', marked && 'on')} onClick=${mark} aria-label=${marked ? 'Nicht mehr merken' : 'Zeile merken'}><${Icon} n="bookmark" fill=${marked} size="20" />${marked ? 'Gemerkt' : 'Merken'}</button></div>
     <div class="ls-card" key=${line.i}>
       <${Words} line=${line} known=${known} word=${pl.pos.word} playing=${here && pl.playing} onWord=${(c) => onWord(c, line)} kept=${s.words} />
       <button class=${cls('cyr-line', lens && 'open')} onClick=${() => setLens(!lens)}><span class="cyr" lang="ru">${Ph.display(line.ru)}</span><span class="abc">${lens ? 'ausblenden' : 'Buchstaben'}</span></button>
       ${lens && html`<div class="lens" style="justify-content:flex-start">${Ph.letterPairs(line.ru).map((p) => (p ? html`<span lang="ru">${p[0]}<small>${p[1]}</small></span>` : html`<i class="sp"></i>`))}</div>`}
-      <div class="de">${line.de}</div>
+      ${line.de && html`<div class="de">${line.de}</div>`}
       ${line.tip && html`<div class="tip"><${Icon} n="lightbulb" size="17" /><span>${mk(line.tip)}</span></div>`}
     </div>
-    <div class="ls-legend">${fresh > 0 ? html`<i class="new"></i>${fresh === 1 ? 'Ein Wort ist neu für dich' : `${fresh} Wörter sind neu für dich`}` : html`<i></i>Alle Wörter dieser Zeile hattest du schon`}<span>Tippe ein Wort an</span></div>
+    ${hint && html`<div class="ls-hint">${hint}</div>`}
+    ${sc && !L.listening && html`<div class="mt12"><${ScoreCard} sc=${sc} targetRu=${line.ru} /></div>`}
+    ${take && !rec && html`<div class="res mt12"><div class="res-row" style="justify-content:space-between"><b class="res-title">Deine Aufnahme</b>
+      <div class="rowx g8"><button class="chip sm" onClick=${() => { pl.pause(); audio.playBlob(take); }}><${Icon} n="play_arrow" />Ich</button>
+        <button class="chip sm" onClick=${() => hear({ key: 'line' })}><${Icon} n="play_arrow" />Original</button></div></div></div>`}
+    ${!hint && !sc && !take && html`<div class="ls-legend">${fresh > 0 ? html`<i class="new"></i>${fresh === 1 ? 'Ein Wort ist neu für dich' : `${fresh} Wörter sind neu für dich`}` : html`<i></i>Alle Wörter dieser Zeile hattest du schon`}<span>Tippe ein Wort an</span></div>`}
   </div></div>
   <div class="bottom">
     <div class="dock ls-dock">
-      <${DockBtn} primary fill icon=${pl.playing && pl.segKey === 'line' ? 'graphic_eq' : 'play_arrow'} label="Zeile hören" onClick=${() => hear({ key: 'line' })} />
+      <${DockBtn} primary fill icon=${pl.playing && pl.segKey === 'line' ? 'graphic_eq' : 'play_arrow'} label="Hören" onClick=${() => hear({ key: 'line' })} />
       <${DockBtn} icon="slow_motion_video" label="Langsam" on=${pl.playing && pl.segKey === 'slow'} onClick=${() => hear({ rate: 0.7, key: 'slow' })} />
       <${DockBtn} icon="repeat" label="Schleife" on=${pl.segKey === 'loop'} onClick=${() => (pl.segKey === 'loop' ? pl.stopSeg() : hear({ loop: true, key: 'loop' }))} />
-      <${DockBtn} icon="bookmark" fill=${marked} label=${marked ? 'Gemerkt' : 'Merken'} on=${marked} onClick=${mark} />
+      ${recorder.available() && html`<${DockBtn} rec=${!!rec} node=${rec ? html`<${Icon} n="stop" fill />` : html`<${SvgCompare} s=${22} />`} label=${rec ? 'Stopp' : 'Nachsprechen'} onClick=${record} />`}
+      ${speech.available() && html`<${DockBtn} on=${L.ready} disabled=${L.evaluating}
+        node=${L.ready ? html`<${Icon} n="graphic_eq" />` : L.evaluating || L.opening ? html`<${Icon} n="progress_activity" c="spin" />` : html`<${SvgAiCheck} s=${22} />`}
+        label=${L.opening ? 'Moment …' : L.listening ? 'Fertig' : 'KI-Prüfung'} onClick=${check} />`}
     </div>
     <div class="rowx g8">
       <button class="btn ghost" style="width:54px;flex:none;padding:0;min-height:54px" disabled=${idx === 0} onClick=${() => toLine(idx - 1)} aria-label="Vorige Zeile"><${Icon} n="arrow_back" /></button>
@@ -408,8 +513,8 @@ function buildQuiz(piece, picked) {
   const qs = [];
   for (const i of picked) {
     const l = piece.lines[i];
-    const others = shuffled(piece.uniq.filter((o) => o.i !== i && o.de !== l.de)).slice(0, 2).map((o) => o.de);
-    qs.push({ type: 'hear', line: l, options: shuffled([l.de, ...others]), answer: l.de });
+    const others = shuffled(piece.uniq.filter((o) => o.i !== i && o.de && o.de !== l.de)).slice(0, 2).map((o) => o.de);
+    if (l.de && others.length === 2) qs.push({ type: 'hear', line: l, options: shuffled([l.de, ...others]), answer: l.de });
   }
   const all = piece.uniq.flatMap((l) => l.chunks.filter((c) => c.words.length === 1 && c.words[0].plain.length >= 3));
   for (const i of picked) {

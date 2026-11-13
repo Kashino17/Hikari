@@ -11,10 +11,13 @@
 //   /api/*           → Hikari-Server (Aussprache-Prüfung, Gespräch, Podcast-Audio …)
 //   /store           → Lernstand der Vorschau (~/.hikari/russian-web/store.json)
 //   /media/<datei>   → Videos und Standbilder für »Lieder & Szenen« (~/.hikari/erleben/media)
+//   /erleben/feed    → Nachschub: Stücke, die tools/erleben/prepare.py selbst aufbereitet hat
+//   /erleben/refresh → neue Stücke in den Feed holen (POST {keep:[ids]})
 //
 // Start: node tools/russian_web/server.mjs   (Port 3079)
 // Tests: node --test tools/russian_web/test/  (braucht test/parity.json, siehe dort)
 import { createServer } from 'node:http';
+import { spawn } from 'node:child_process';
 import { createReadStream, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
@@ -39,6 +42,51 @@ const TYPES = {
   '.ogg': 'audio/ogg', '.woff2': 'font/woff2', '.png': 'image/png', '.jpg': 'image/jpeg', '.mp4': 'video/mp4', '.webmanifest': 'application/manifest+json',
 };
 const DATA = new Set(['course', 'podcast', 'phrasebook', 'deepdive', 'patterns', 'sounds', 'glosses', 'plan', 'erleben']);
+
+// ── Nachschub für »Lieder & Szenen« ─────────────────────────────────────────
+// prepare.py legt fertige Stücke in AUTO ab. Der Feed zeigt immer FEED_SIZE davon; »Neue Stücke«
+// tauscht sie gegen die nächsten aus dem Vorrat. Sinkt der Vorrat, bereitet der Server im
+// Hintergrund neue auf — so steht beim nächsten Tippen schon etwas bereit.
+const ERLEBEN = join(homedir(), '.hikari', 'erleben');
+const AUTO = join(ERLEBEN, 'auto');
+const FEED_FILE = join(ERLEBEN, 'feed.json');
+const PREPARE = new URL('../erleben/prepare.py', import.meta.url).pathname;
+const UV = ['/opt/homebrew/bin/uv', '/usr/local/bin/uv'].find((f) => existsSync(f)) ?? 'uv';
+const FEED_SIZE = 3;
+const STOCK = 3;
+mkdirSync(AUTO, { recursive: true });
+let feed = { shown: [], dismissed: [] };
+try { feed = { ...feed, ...JSON.parse(readFileSync(FEED_FILE, 'utf8')) }; } catch { /* erster Start */ }
+let prepareJob = null;
+const saveFeed = () => writeFileSync(FEED_FILE, JSON.stringify(feed));
+function autoPieces() {
+  return readdirSync(AUTO).filter((f) => f.endsWith('.json'))
+    .map((f) => ({ f, at: statSync(join(AUTO, f)).mtimeMs })).sort((a, b) => a.at - b.at)
+    .flatMap(({ f }) => { try { return [JSON.parse(readFileSync(join(AUTO, f), 'utf8'))]; } catch { return []; } });
+}
+function topUp(stock) {
+  if (prepareJob || stock >= STOCK) return;
+  prepareJob = spawn(UV, ['run', '--script', PREPARE, 'next', '--count', String(STOCK + 1 - stock)], { stdio: ['ignore', 'ignore', 'pipe'], env: { ...process.env, PATH: `/opt/homebrew/bin:${process.env.PATH ?? ''}` } });
+  prepareJob.stderr.on('data', (d) => { for (const l of String(d).split('\n')) if (l.startsWith('[')) console.log(new Date().toISOString(), 'erleben', l); });
+  prepareJob.on('exit', () => { prepareJob = null; });
+  prepareJob.on('error', (e) => { console.error('erleben: Aufbereitung startet nicht', e.message); prepareJob = null; });
+}
+function feedState(keep = null) {
+  const all = autoPieces();
+  const ids = new Set(all.map((p) => p.id));
+  if (keep) {
+    feed.dismissed = [...new Set([...feed.dismissed, ...feed.shown.filter((id) => !keep.includes(id))])];
+    feed.shown = feed.shown.filter((id) => keep.includes(id));
+  }
+  feed.shown = feed.shown.filter((id) => ids.has(id));
+  const ready = () => all.filter((p) => !feed.shown.includes(p.id) && !feed.dismissed.includes(p.id));
+  for (const p of ready()) { if (feed.shown.length >= FEED_SIZE) break; feed.shown.push(p.id); }
+  saveFeed();
+  const stock = ready().length;
+  topUp(stock);
+  // Auch Abgelegtes bleibt abrufbar, solange es jemand offen hat.
+  return { shown: feed.shown, ready: stock, busy: !!prepareJob, pieces: all };
+}
 
 // ── Lernstand ──────────────────────────────────────────────────────────────
 mkdirSync(STORE_DIR, { recursive: true });
@@ -124,6 +172,12 @@ createServer(async (req, res) => {
     const path = decodeURIComponent(url.pathname);
 
     if (path.startsWith('/api/')) return proxy(req, res, path.slice(4) + url.search);
+
+    if (path === '/erleben/feed' && req.method === 'GET') return json(req, res, 200, feedState());
+    if (path === '/erleben/refresh' && req.method === 'POST') {
+      const body = JSON.parse((await readBody(req)).toString('utf8') || '{}');
+      return json(req, res, 200, feedState(Array.isArray(body.keep) ? body.keep.map(String) : []));
+    }
 
     if (path === '/store') {
       if (req.method === 'GET') return json(req, res, 200, store);

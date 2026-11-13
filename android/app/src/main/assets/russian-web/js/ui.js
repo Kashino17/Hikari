@@ -370,10 +370,10 @@ export function RecordCompare({ phrase, onTake }) {
 // ── Satz-Leiste: Anhören · Langsam · Nachsprechen · KI-Prüfung ─────────────
 
 /** Zwei Tonspuren übereinander — deine Aufnahme gegen das Original. */
-const SvgCompare = ({ s = 22 }) => html`<svg viewBox="0 0 24 24" width=${s} height=${s} fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+export const SvgCompare = ({ s = 22 }) => html`<svg viewBox="0 0 24 24" width=${s} height=${s} fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
   <path d="M3 7.5h1.5M7 4.5v6M10.5 6v3M14 3.5v8M17.5 5.5v4M21 7.5h-.5" /><path d="M3 16.5h1.5M7 14v5M10.5 12.5v8M14 15v3M17.5 13.5v6M21 16.5h-.5" opacity=".55" /></svg>`;
 /** Sprechblase mit Haken und Funke — die Erkennung prüft, was ankam. */
-const SvgAiCheck = ({ s = 22 }) => html`<svg viewBox="0 0 24 24" width=${s} height=${s} fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+export const SvgAiCheck = ({ s = 22 }) => html`<svg viewBox="0 0 24 24" width=${s} height=${s} fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
   <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H13M20 11v2.5a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5V9" /><path d="m8 10.5 2.3 2.3L14.5 8.5" />
   <path d="M18.5 2.5v4M16.5 4.5h4" stroke-width="1.7" /></svg>`;
 

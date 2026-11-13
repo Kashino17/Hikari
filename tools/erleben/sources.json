@@ -1,0 +1,13 @@
+{
+  "_": "Woher der Nachschub für »Lieder & Szenen« kommt. Reihum je Quelle ein Video, die meistgesehenen zuerst. min/max = Länge in Sekunden.",
+  "sources": [
+    { "kind": "scene", "query": "Союзмультфильм мультфильм короткий", "min": 120, "max": 720 },
+    { "kind": "song", "query": "русская народная песня живое исполнение", "min": 90, "max": 330 },
+    { "kind": "scene", "query": "Ералаш лучшие серии", "min": 60, "max": 400 },
+    { "kind": "song", "query": "песня под гитару душевная", "min": 90, "max": 330 },
+    { "kind": "scene", "query": "Простоквашино отрывок", "min": 40, "max": 600 },
+    { "kind": "song", "query": "детская песня из мультфильма", "min": 60, "max": 300 },
+    { "kind": "scene", "query": "сцена из советского фильма", "min": 40, "max": 420 },
+    { "kind": "song", "query": "русский рок клип классика", "min": 120, "max": 360 }
+  ]
+}

@@ -861,3 +861,20 @@ button.row:active{background:rgba(255,255,255,.035)}
 .ls-donehd>.ms{font-size:40px}
 .ls-donehd b{display:block;font-size:22px;font-weight:700;letter-spacing:-.3px}
 .ls-donehd div span{display:block;font-size:13.5px;line-height:1.45;color:var(--muted);margin-top:3px}
+
+/* Sprechen im Schritt »Verstehen« und der Nachschub in der Übersicht */
+.ls-linehd .said{display:flex;align-items:center;gap:4px;color:var(--good);font-weight:500}
+.ls-linehd .keep{display:flex;align-items:center;gap:4px;height:30px;padding:0 9px 0 6px;margin:-4px -4px -4px 0;border-radius:9px;font-size:12.5px;color:var(--muted)}
+.ls-linehd .keep:active{background:rgba(255,255,255,.08)}
+.ls-linehd .keep.on{color:rgb(var(--live))}
+.ls-hint{margin-top:14px;font-size:13.5px;line-height:1.45;color:var(--amber)}
+.ls-dock{justify-content:space-between;padding:2px 2px 6px}
+.ls-dock .dk{flex:1 1 0}
+.ls-dock .dk-l{font-size:11px}
+.ls-dock .spin,.ls-more .spin,.ls-wait .spin{animation:spin 1s linear infinite}
+.ls-more{display:flex;align-items:center;gap:6px;height:32px;padding:0 11px 0 9px;border-radius:9px;border:1px solid var(--border2);font-size:13px!important;color:var(--text)!important}
+.ls-more:disabled{color:var(--faint)!important}
+.ls-more:active:not(:disabled){background:rgba(255,255,255,.08)}
+.ls-wait{display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:18px;border:1px dashed var(--border2);font-size:13.5px;line-height:1.45;color:var(--muted)}
+.ls-wait .ms{color:var(--faint)}
+.ls-story .autonote{margin-top:10px;font-size:13px!important;line-height:1.5;color:var(--muted)!important}
