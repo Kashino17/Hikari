@@ -56,10 +56,10 @@ const CANDIDATES_FILE = join(ERLEBEN, 'candidates.json');
 const USAGE_FILE = join(ERLEBEN, 'usage.json');
 // Wie viele Stücke die Prüfinstanz heute noch schafft (siehe tools/erleben/gemini.py: eine Anfrage je Stück).
 // Zwei Töpfe: Hydrogen zuerst, danach 3.6 Flash. Das zweite Ohr (Transcribe) begrenzt zusätzlich.
-const REVIEW_MODELS = ['gemini-4-hydrogen', 'gemini-3.6-flash'];
-const REVIEW_PER_DAY = 18;
+const REVIEW_MODELS = ['gemini-4-hydrogen', 'gemini-3.6-flash', 'gemini-3.8-flash'];
+const REVIEW_PER_DAY = 20;
 const HEAR_MODEL = 'gemini-3.5-transcribe';
-const HEAR_PER_DAY = 22;
+const HEAR_PER_DAY = 25;
 /** Wann Google das Tageskontingent erneuert: Mitternacht Pazifikzeit, als Zeitpunkt für die Anzeige. */
 function quotaResetAt() {
   const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Los_Angeles', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
@@ -88,6 +88,10 @@ mkdirSync(AUTO, { recursive: true });
 let feed = { shown: [], dismissed: [] };
 try { feed = { ...feed, ...JSON.parse(readFileSync(FEED_FILE, 'utf8')) }; } catch { /* erster Start */ }
 let prepareJob = null;
+// Lief ein Durchgang ohne Ergebnis (Prüfmodelle überlastet oder leer), wird erst nach einer Pause wieder gesucht —
+// sonst verbraucht jeder neue Anlauf eine Hör-Anfrage, ohne dass ein Stück entsteht.
+let pauseUntil = 0;
+const PAUSE_AFTER_EMPTY_MS = 20 * 60 * 1000;
 const saveFeed = () => writeFileSync(FEED_FILE, JSON.stringify(feed));
 function autoPieces() {
   return readdirSync(AUTO).filter((f) => f.endsWith('.json'))
@@ -99,10 +103,17 @@ function autoPieces() {
 function topUp(stock) {
   const wishes = interests();
   // Ohne Themen wird nichts gesucht; ist das Tageskontingent leer, geht es morgen weiter.
-  if (prepareJob || stock >= STOCK || wishes.video.length + wishes.music.length === 0 || leftToday() === 0) return;
-  prepareJob = spawn(UV, ['run', '--script', PREPARE, 'next', '--count', String(STOCK + 1 - stock)], { stdio: ['ignore', 'ignore', 'pipe'], env: { ...process.env, PATH: `/opt/homebrew/bin:${process.env.PATH ?? ''}` } });
+  if (prepareJob || stock >= STOCK || wishes.video.length + wishes.music.length === 0 || leftToday() === 0 || Date.now() < pauseUntil) return;
+  prepareJob = spawn(UV, ['run', '--script', PREPARE, 'next', '--count', String(STOCK + 1 - stock)], { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, PATH: `/opt/homebrew/bin:${process.env.PATH ?? ''}` } });
   prepareJob.stderr.on('data', (d) => { for (const l of String(d).split('\n')) if (/^(\[|Thema|Tageskontingent| {6})/.test(l)) console.log(new Date().toISOString(), 'erleben', l); });
-  prepareJob.on('exit', () => { prepareJob = null; });
+  let result = '';
+  prepareJob.stdout.on('data', (d) => { result += d; });
+  prepareJob.on('exit', () => {
+    prepareJob = null;
+    let prepared = 0;
+    try { prepared = JSON.parse(result.trim().split('\n').pop()).prepared ?? 0; } catch { /* abgebrochen */ }
+    if (prepared === 0) pauseUntil = Date.now() + PAUSE_AFTER_EMPTY_MS;
+  });
   prepareJob.on('error', (e) => { console.error('erleben: Aufbereitung startet nicht', e.message); prepareJob = null; });
 }
 function feedState(keep = null) {
@@ -209,6 +220,7 @@ createServer(async (req, res) => {
 
     if (path === '/erleben/feed' && req.method === 'GET') return json(req, res, 200, feedState());
     if (path === '/erleben/interests' && req.method === 'POST') {
+      pauseUntil = 0;   // neue Themen: sofort wieder suchen
       const body = JSON.parse((await readBody(req)).toString('utf8') || '{}');
       mkdirSync(ERLEBEN, { recursive: true });
       writeFileSync(INTERESTS_FILE, JSON.stringify({ video: body.video ?? [], music: body.music ?? [] }));

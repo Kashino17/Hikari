@@ -9,9 +9,9 @@ Was nur eine Quelle sagt, wird nicht gezeigt.
 
   Text einer Zeile     Whisper (auf dem Mac) UND Gemini Transcribe hören Wort für Wort dasselbe
   Betonung, Grundform  OpenRussian-Wörterbuch (jede gebeugte Form mit Akzent), Vosk als Rückfall
-  Bedeutung im Satz    Gemini wählt unter den Bedeutungen des Wörterbuchs — eigene erfindet es nicht
-  Deutsche Zeile       Gemini 4 Hydrogen übersetzt, Gemma übersetzt unabhängig, ein drittes Modell
-                       prüft, ob beide dasselbe sagen
+  Bedeutung im Satz    Gemini übersetzt jedes Wort im Zusammenhang, ein zweites Modell bestätigt jede Bedeutung
+  Deutsche Zeile       Gemini 4 Hydrogen übersetzt, Gemma übersetzt unabhängig; zwei Kontrollmodelle
+                       prüfen, ob die Übersetzung stimmt — gestrichen wird nur, was beide ablehnen
   Zeitmarken           Whisper, je Wort
 
 Zeilen, die eine Prüfung nicht bestehen, bleiben im Video hörbar, werden aber weder gezeigt noch
@@ -53,6 +53,7 @@ VOWELS = "аеёиоуыэюя"
 MAX_TRANSCRIBE_S = 600          # längere Videos: nur die ersten zehn Minuten
 CLIP_MIN, CLIP_MAX = 28, 75     # Länge eines Ausschnitts in Sekunden
 REGION_S = 240                  # so viel hört das zweite Ohr ab; daraus wird der Ausschnitt gewählt
+VERSION = 3                     # 2 = jede Wortbedeutung vom Prüfmodell, von einem zweiten bestätigt; 3 = auch das ё von zwei Quellen
 MIN_LINES, MIN_SHARE = 4, 0.7   # so viele Zeilen und so viel Anteil müssen alle Prüfungen bestehen
 # Was Whisper bei Stille oder Musik gern erfindet.
 HALLUCINATION = re.compile(r"субтитр|продолжение следует|редактор|корректор|подпис|dimatorzok|^\W*$|^песня\W*$|^музыка\W*$", re.I)
@@ -137,7 +138,7 @@ COMMON = {
     **_table("хочу:ich will, хочешь:du willst, хочет:will, хотим:wir wollen, хотите:Sie wollen, хотят:sie wollen", "хотеть", "wollen"),
     **_table("могу:ich kann, можешь:du kannst, может:kann; vielleicht, можем:wir können, можете:Sie können, могут:sie können", "мочь", "können"),
     **_table("я:ich, ты:du, он:er, она:sie, оно:es, мы:wir, вы:Sie; ihr, они:sie, это:das, этот:dieser, то:das, тот:jener, "
-             "что:was; dass, кто:wer, как:wie, где:wo, когда:wann; als, почему:warum, куда:wohin, откуда:woher, зачем:wozu, "
+             "что:was; dass, кто:wer, как:wie, где:wo, когда:wann; als; wenn, почему:warum, куда:wohin, откуда:woher, зачем:wozu, "
              "не:nicht, ни:kein; weder, да:ja; und; aber, нет:nein; gibt es nicht, и:und, а:und; aber, но:aber, или:oder, же:doch, ли:ob, бы:würde, "
              "вот:da; hier, уже:schon, ещё:noch, тоже:auch, так:so, там:dort, тут:hier, здесь:hier, очень:sehr, только:nur, "
              "все:alle; alles, мой:mein, твой:dein, наш:unser, ваш:Ihr, свой:eigen, "
@@ -257,6 +258,10 @@ class Dictionary:
                     "form": hit.get("form"), "note": note}
         if cands:
             return min(cands, key=lambda c: c["rank"])
+        if "-" in word:
+            head, _, tail = word.rpartition("-")
+            if norm(tail) in ("то", "нибудь", "либо", "ка", "таки") and head:
+                return self.lookup(head)
         if self.morph:
             for p in self.morph.parse(word)[:3]:
                 hit = self.lemmas.get(norm(p.normal_form))
@@ -294,19 +299,32 @@ class Dictionary:
                     n += 1
         return out
 
+    def entry_for(self, word: str, prev: str, gloss: str) -> dict | None:
+        """Der Wörterbucheintrag zu einer Wortform. Gibt es mehrere Grundformen (»дорогой«: lieb / auf dem Weg),
+        gewinnt die, deren Bedeutungen zur Bedeutung im Satz passen."""
+        opts = self.options(word, prev)
+        if not opts:
+            return None
+        stems = {w[:4] for w in re.findall(r"[a-zäöüß]{3,}", gloss.lower())}
+        for entry, sense in opts:
+            if stems & {w[:4] for w in re.findall(r"[a-zäöüß]{3,}", sense.lower())}:
+                return entry
+        return opts[0][0]
+
     def stressed(self, word: str, entry: dict | None) -> str:
         """Wort mit + vor dem betonten Vokal; unverändert, wenn die Betonung unbekannt oder überflüssig ist."""
         low = word.lower()
         if "ё" in low:
             return word
         form = entry.get("form") if entry else None
-        if form and norm(form.replace("+", "")) == norm(word) and ("+" in form or "ё" in form.lower()):
+        # Über е oder ё ist schon entschieden (resolve_yo) — vom Wörterbuch kommt hier nur die Betonung.
+        if form and norm(form.replace("+", "")) == norm(word) and "+" in form and "ё" not in form.lower():
             out, i = [], 0
             for c in form:
                 if c == "+":
                     out.append("+")
                     continue
-                out.append(c.upper() if word[i].isupper() else c.lower())
+                out.append(word[i])
                 i += 1
             # Einsilbige Wörter brauchen kein Betonungszeichen (»взял«), wohl aber ihr ё (»всё«).
             return "".join(out) if sum(c in VOWELS for c in low) >= 2 else "".join(out).replace("+", "")
@@ -389,6 +407,10 @@ def to_lines(segs: list[list[dict]]) -> list[dict]:
     for seg in segs:
         cur = []
         for w in seg:
+            if cur and w["w"].startswith("-") and len(w["w"]) > 1:
+                # Whisper trennt Bindestrich-Wörter (»по -настоящему«, »кто -то«) — wieder zusammensetzen.
+                cur[-1] = {**cur[-1], "w": cur[-1]["w"].rstrip(",.") + w["w"], "e": w["e"], "p": min(cur[-1]["p"], w["p"])}
+                continue
             if cur and w["s"] - cur[-1]["e"] > 1.5:
                 groups += split(cur)
                 cur = []
@@ -461,8 +483,9 @@ def second_ear(lines: list[dict], heard: str) -> list[bool]:
     """Vergleicht Whispers Zeilen Wort für Wort mit dem, was das zweite Ohr gehört hat.
     → je Zeile True, wenn beide dieselben Wörter in derselben Reihenfolge haben.
 
-    Nebenbei übernimmt jedes bestätigte Wort das ё des zweiten Ohrs: Whisper schreibt »узнает«
-    für »узнаёт« und »все« für »всё« — zwei verschiedene Wörter mit verschiedener Betonung."""
+    Nebenbei merkt sich jedes bestätigte Wort, wie das zweite Ohr es geschrieben hat (`heard`):
+    Whisper schreibt nie ё (»узнает« für »узнаёт«, »все« für »всё«) — ob eines hingehört,
+    entscheiden später zweites Ohr und Prüfmodell gemeinsam (resolve_yo)."""
     parts = [(t, k) for l in lines for t in l["toks"] for k in range(len(t["w"].split("-")))]
     a = [norm(t["w"].split("-")[k]) for t, k in parts]
     raw = [w for tok in WORD_RE.findall(heard) for w in tok.split("-")]
@@ -472,11 +495,10 @@ def second_ear(lines: list[dict], heard: str) -> list[bool]:
         if tag == "equal":
             for i in range(i1, i2):
                 same[i] = True
-                if "ё" in raw[j1 + i - i1].lower():
-                    t, k = parts[i]
-                    pieces = t["w"].split("-")
-                    pieces[k] = "".join(c.upper() if o.isupper() else c for c, o in zip(raw[j1 + i - i1].lower(), pieces[k]))
-                    t["w"] = "-".join(pieces)
+                t, k = parts[i]
+                pieces = t.get("heard", t["w"]).split("-")
+                pieces[k] = raw[j1 + i - i1]
+                t["heard"] = "-".join(pieces)
         elif tag == "insert" and 0 < i1 < len(a):
             # Das zweite Ohr hat hier ein Wort mehr gehört (»Кто ВЫ и как«) — die Zeile, in der es
             # stünde, gilt als strittig: das Wort davor und das danach verlieren ihre Bestätigung.
@@ -486,11 +508,26 @@ def second_ear(lines: list[dict], heard: str) -> list[bool]:
         n = sum(len(t["w"].split("-")) for t in l["toks"])
         out.append(all(same[pos:pos + n]))
         pos += n
-        if out[-1]:
-            # Auch der Zeilentext bekommt das ё.
-            it = iter(l["toks"])
-            l["text"] = WORD_RE.sub(lambda m: next(it, {"w": m.group(0)})["w"], l["text"])
     return out
+
+
+def resolve_yo(word: str, heard: str, said: str, d: "Dictionary") -> str | None:
+    """Gehört in dieses Wort ein ё? Zweites Ohr (`heard`) und Prüfmodell (`said`) müssen sich einig sein.
+    Sind sie es nicht, entscheidet das Wörterbuch — aber nur, wenn es das Wort in einer einzigen
+    Schreibung kennt (»ёлка«). Gibt es beide (»чем« / »чём«, »все« / »всё«): None = strittig."""
+    said = said.replace("\u0301", "")
+    recase = lambda form: "".join(c.upper() if o.isupper() else c for c, o in zip(form.lower(), word)) if len(form) == len(word) else word
+    a, b = "ё" in (heard or "").lower(), "ё" in said.lower()
+    if a and b:
+        return recase(said)
+    if not a and not b:
+        return word
+    known = {"ё" in (c.get("form") or "").lower() for c in d.forms.get(norm(word), [])}
+    if known == {True}:
+        return recase(heard if a else said)
+    if known == {False}:
+        return word
+    return None
 
 
 # ── Stück bauen ─────────────────────────────────────────────────────────────
@@ -554,43 +591,64 @@ def build(vid: str, kind: str, d: Dictionary, g: Gemini) -> dict:
             log(f"      {why[n] or 'ok':12} {l['text']}")
         raise RuntimeError(reason)
 
-    why: list[str | None] = []
-    # 2) Wörterbuch: jede Wortform braucht einen Eintrag (Namen ausgenommen).
+    why: list[str | None] = [None if ok else "gehört" for ok in agree]
     d.load_vosk({norm(t["w"]) for l in chosen for t in l["toks"] if not d.forms.get(norm(t["w"]))})
-    for l, ok in zip(chosen, agree):
-        prev = ""
-        for t in l["toks"]:
-            t["opts"] = d.options(t["w"], prev)
-            prev = norm(t["w"])
-        unknown = [t["w"] for t in l["toks"] if not t["opts"] and not t.get("cap")]
-        why.append(None if ok and not unknown else "gehört" if not ok else "wörterbuch")
     good = [n for n, w in enumerate(why) if w is None]
     if len(good) < max(MIN_LINES, MIN_SHARE * len(chosen)):
         discard(f"nur {len(good)} von {len(chosen)} Zeilen von beiden Ohren gleich gehört")
 
-    # 3) Bedeutung: Übersetzung, Wortbedeutung im Satz, Kurzbeschreibung — eine Anfrage.
+    # 2) Bedeutung: das Prüfmodell übersetzt jede Zeile und jedes einzelne Wort im Zusammenhang,
+    #    dazu Betonung, Kurzbeschreibung und Titel — eine Anfrage.
     name, by = split_title(meta["title"], meta["channel"])
-    ask = [{"n": n + 1, "ru": chosen[n]["text"], "words": [{"w": t["w"], "options": [o for _, o in t["opts"]]} for t in chosen[n]["toks"] if len(t["opts"]) > 1]} for n in good]
-    rv = g.review(kind, name, ask)
+    rv = g.review(kind, name, [{"n": n + 1, "ru": chosen[n]["text"]} for n in good])
     if rv is None:
-        discard("Antwort des Prüfmodells passte nicht ins Format")
-    # 4) Gegenprobe der Übersetzung: zweites Modell übersetzt, drittes vergleicht.
-    texts = [chosen[n]["text"] for n in good]
-    other = g.second(kind, texts)
-    verdict = g.same([(ru, a["de"], b) for ru, a, b in zip(texts, rv["lines"], other)]) if other else None
+        discard("Antwort des Prüfmodells nicht lesbar")
+    answers = {}
+    for n in good:
+        r = rv["lines"].get(n + 1)
+        mine = [norm(t["w"]) for t in chosen[n]["toks"]]
+        theirs = [norm("".join(WORD_RE.findall(w["w"].replace("\u0301", ""))[:1])) for w in (r or {}).get("words", [])]
+        if not r or theirs != mine or any(not w["de"] for w in r["words"]) or r["words"][0]["de"] == "=":
+            why[n] = "bedeutung"        # die Wortliste der Antwort passt nicht zur Zeile
+        else:
+            answers[n] = r
+    # 3) Gegenprobe der Übersetzung: zweites Modell übersetzt unabhängig, drittes vergleicht.
+    live = [n for n in good if why[n] is None]
+    other = g.second(kind, [chosen[n]["text"] for n in live]) if live else None
+    verdict = g.faithful([(chosen[n]["text"], answers[n]["de"], b) for n, b in zip(live, other)]) if other else None
     if verdict is None:
         discard("Gegenprobe der Übersetzung nicht möglich")
-    for n, ok in zip(good, verdict):
+    for n, ok in zip(live, verdict):
         if not ok:
             why[n] = "übersetzung"
     final = [n for n in good if why[n] is None]
     if len(final) < max(MIN_LINES, MIN_SHARE * len(chosen)):
         discard(f"nur {len(final)} von {len(chosen)} Zeilen haben alle Prüfungen bestanden")
 
-    answers = {n: r for n, r in zip(good, rv["lines"])}
+    # 4) Zweite Meinung zu JEDER Wortbedeutung. Eine Wendung (»в противном случае« = andernfalls)
+    #    wird als Ganzes vorgelegt, Namen nicht.
+    doubt = []
+    for n in final:
+        toks, ws = chosen[n]["toks"], answers[n]["words"]
+        k = 0
+        while k < len(toks):
+            j = k + 1
+            while j < len(toks) and ws[j]["de"] == "=":
+                j += 1
+            if ws[k]["de"] != "Name":
+                doubt.append((n, chosen[n]["text"], answers[n]["de"], " ".join(t["w"] for t in toks[k:j]), ws[k]["de"]))
+            k = j
+    checked = g.confirm([x[1:] for x in doubt])
+    if checked is None:
+        discard("zweite Meinung zu den Wortbedeutungen nicht möglich")
+    for (n, _, _, word, meaning), ok in zip(doubt, checked):
+        if not ok and why[n] is None:
+            log(f"      Bedeutung nicht bestätigt: {word} = {meaning}  ({chosen[n]['text']})")
+            why[n] = "bedeutung"
+    final = [n for n in final if why[n] is None]
     marked: dict[int, list[str]] = {}
     for n in final:
-        said = [w for tok in re.findall(r"[А-Яа-яЁё\u0301]+(?:-[А-Яа-яЁё\u0301]+)*", answers[n].get("stress", "")) for w in [tok]]
+        said = re.findall(r"[А-Яа-яЁё\u0301]+(?:-[А-Яа-яЁё\u0301]+)*", answers[n].get("stress", ""))
         if [norm(w.replace("\u0301", "")) for w in said] != [norm(t["w"]) for t in chosen[n]["toks"]]:
             why[n] = "betonung"
         else:
@@ -609,19 +667,33 @@ def build(vid: str, kind: str, d: Dictionary, g: Gemini) -> dict:
             # Nicht bestätigt: die Stelle bleibt im Video, aber ohne Text — nichts Falsches zum Lernen.
             out_lines.append({"a": round(a, 2), "b": round(b, 2), "ok": False, "why": why[n], "ru": "", "de": "", "g": [], "t": []})
             continue
-        picks = iter(answers[n]["senses"])
+        picks = iter(answers[n]["words"])
         glosses = []
         stress_clash: list[str] = []
         prev = ""
         for t, said in zip(l["toks"], marked[n]):
-            opts = t["opts"]
-            k = (next(picks) - 1) if len(opts) > 1 else 0
-            entry, sense = opts[k] if 0 <= k < len(opts) else ((opts[0][0], "") if opts else (None, "Name"))
+            spelled = resolve_yo(t["w"], t.get("heard", ""), said, d)
+            if spelled is None:
+                stress_clash.append(t["w"] + " (е oder ё)")
+            else:
+                if spelled != t["w"]:
+                    log(f"      ё: {t['w']} → {spelled} (zweites Ohr: {t.get('heard', '')}, Prüfmodell: {said})")
+                t["w"] = spelled
+            # Die Bedeutung kommt vom Prüfmodell (bestätigt vom zweiten); das Wörterbuch liefert dazu
+            # nur noch Grundform, Betonung und die Angabe zur Form.
+            sense = next(picks)["de"]
+            entry = d.entry_for(t["w"], prev, sense)
             t["ru"] = d.stressed(t["w"], entry)
             # Betonung: Wörterbuch und Prüfmodell müssen dieselbe Silbe nennen.
             syll = sum(c in VOWELS for c in t["w"].lower())
             mine, theirs = stress_index(t["ru"]), stress_index(said)
-            if syll >= 2 and "ё" not in t["ru"].lower() and mine != theirs:
+            if "-" in t["w"] and norm(t["w"].rpartition("-")[2]) in ("то", "нибудь", "либо", "ка", "таки"):
+                # »где-нибудь«, »кто-то«: verglichen wird das Wort vor dem Anhängsel, das Anhängsel ist unbetont.
+                mine, theirs = stress_index(t["ru"].rpartition("-")[0]), stress_index(said.rpartition("-")[0])
+                syll = sum(c in VOWELS for c in t["w"].rpartition("-")[0].lower())
+            if t["w"].isupper() and len(t["w"]) <= 5:
+                t["ru"] = t["w"]                                 # Abkürzung (ИИ, СССР): keine Betonung
+            elif syll >= 2 and "ё" not in t["ru"].lower() and mine != theirs:
                 key = norm(t["w"])
                 others = {stress_index(c["form"]): c for c in d.forms.get(key, []) if c.get("form")}
                 if theirs is not None and theirs in others:
@@ -643,7 +715,7 @@ def build(vid: str, kind: str, d: Dictionary, g: Gemini) -> dict:
             key = norm(t["w"])
             if key not in wordbook:
                 wordbook[key] = ({"b": entry["lemma"], "de": entry["de"][:90], **({"n": entry["note"]} if entry.get("note") else {})}
-                                 if entry else {"b": t["ru"], "de": "ein Name"})
+                                 if entry else {"b": t["ru"], "de": "ein Name" if sense == "Name" else sense})
         if stress_clash:
             log(f"      Betonung strittig bei {', '.join(stress_clash)}: {l['text']}")
             why[n] = "betonung"
@@ -671,9 +743,10 @@ def build(vid: str, kind: str, d: Dictionary, g: Gemini) -> dict:
     final = [n for n in final if why[n] is None]
     if len(final) < max(MIN_LINES, MIN_SHARE * len(chosen)):
         discard(f"nur {len(final)} von {len(chosen)} Zeilen haben alle Prüfungen bestanden")
-    dropped = {k: why.count(k) for k in ("gehört", "wörterbuch", "übersetzung", "betonung") if why.count(k)}
+    dropped = {k: why.count(k) for k in ("gehört", "übersetzung", "bedeutung", "betonung") if why.count(k)}
+    log(f"      Kontingent: Hören {g.left(HEAR)}, Prüfen {g.reviews_left()}")
     return {
-        "id": pid, "yt": vid, "auto": True, "checked": True, "kind": kind, "title": title, "titleDe": rv["title_de"] or name,
+        "id": pid, "yt": vid, "auto": True, "checked": True, "v": VERSION, "kind": kind, "title": title, "titleDe": rv["title_de"] or name,
         "part": "Ausschnitt", "by": by, "media": f"{pid}.mp4", "poster": f"{pid}.jpg", "ratio": ratio, "dur": round(dur, 1),
         "mood": "", "level": level, "story": story, "listen": "", "take": sorted(take), "lines": out_lines, "words": wordbook,
         "stats": {"lines": len(chosen), "verified": len(final), "dropped": dropped, "words": total, "easy": round(share, 2),
@@ -744,13 +817,20 @@ def main():
     v = sub.add_parser("video")
     v.add_argument("ids", nargs="+")
     v.add_argument("--kind", default="scene")
+    v.add_argument("--topic", default="")
     n = sub.add_parser("next")
     n.add_argument("--count", type=int, default=3)
     args = ap.parse_args()
     AUTO.mkdir(parents=True, exist_ok=True)
     d = Dictionary()
     g = Gemini(log)
-    todo = [(i, args.kind, "") for i in args.ids] if args.cmd == "video" else discover(args.count, g)
+    if args.cmd == "video":
+        todo = [(i, args.kind, args.topic) for i in args.ids]
+    else:
+        # Zuerst Stücke nach altem Stand neu aufbereiten (das Hören ist gemerkt und kostet nichts), dann Neues suchen.
+        old = [json.loads(f.read_text()) for f in AUTO.glob("*.json")]
+        redo = [(p["yt"], p["kind"], p.get("topic", "")) for p in old if p.get("v", 1) < VERSION][:args.count]
+        todo = redo + (discover(args.count - len(redo), g) if len(redo) < args.count else [])
     ok = 0
     for vid, kind, topic in todo:
         if g.left(HEAR) <= 0 or g.reviews_left() <= 0:
@@ -764,7 +844,7 @@ def main():
             ok += 1
             log(f"[{vid}] fertig in {time.time() - t0:.0f} s: {piece['stats']}")
         except QuotaReached as e:
-            log(f"Tageskontingent von {e} aufgebraucht — morgen geht es weiter")
+            log(f"Kein Kontingent bei {e} — später geht es weiter")
             break
         except Exception as e:  # noqa: BLE001
             log(f"[{vid}] übersprungen: {e}")

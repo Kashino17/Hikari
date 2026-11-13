@@ -7,8 +7,10 @@ Vier Aufgaben, jede mit dem Modell, das dafür gemessen wurde, und jede mit eige
   review()     gemini-4-hydrogen       5/min,  20/Tag   Übersetzung, Bedeutung im Satz, Kurzbeschreibung
                gemini-3.6-flash        5/min,  20/Tag   zweiter Topf, sobald Hydrogen für heute leer ist
                                                         (gemessen: 40/41 richtige durchgelassen, 14/15 Fehler, 10/10)
+               gemini-3.8-flash        5/min,  20/Tag   dritter Topf; oft überlastet, dann wird er übersprungen
+  confirm()    gemini-3.5-flash-lite                    zweite Meinung zu Wortbedeutungen außerhalb des Wörterbuchs
   second()     gemma-4-31b-it         30/min, 14.400/Tag unabhängige zweite Übersetzung
-  same()       gemini-3.5-flash-lite  15/min, 500/Tag   sagen beide Übersetzungen dasselbe?
+  faithful()   gemini-3.5-flash-lite  15/min, 500/Tag   gibt die Übersetzung die Zeile richtig wieder? (Gemma als zweite Stimme)
 
 Googles Tag beginnt um Mitternacht Pazifikzeit — der Zähler in usage.json zählt deshalb nach diesem
 Kalender, nicht nach der Uhr des Macs. Er bleibt unter den Tageslimits; zwischen zwei Anfragen an dasselbe Modell
@@ -28,15 +30,17 @@ from zoneinfo import ZoneInfo
 from cloud import HOME, USAGE, load_keys
 
 API = "https://generativelanguage.googleapis.com/v1beta/models"
-# Modell → (Anfragen je Minute, Anfragen je Tag, die wir uns erlauben)
+# Modell → (Anfragen je Minute, Anfragen je Tag). Die Tageswerte sind Googles echte Limits: lehnt Google
+# vorher ab, gleicht sich der Zähler an (_spent) und das nächste Modell der Kette übernimmt.
 LIMITS = {
-    "gemini-3.5-transcribe": (3, 22),
-    "gemini-4-hydrogen": (5, 18),
-    "gemini-3.6-flash": (5, 18),
+    "gemini-3.5-transcribe": (3, 25),
+    "gemini-4-hydrogen": (5, 20),
+    "gemini-3.6-flash": (5, 20),
+    "gemini-3.8-flash": (5, 20),    # dritter Topf auf Kadirs Wunsch; ungemessen, weil am 14.11. dauernd überlastet
     "gemma-4-31b-it": (20, 2000),
     "gemini-3.5-flash-lite": (12, 400),
 }
-HEAR, REVIEW, REVIEW2, SECOND, JUDGE = LIMITS
+HEAR, REVIEW, REVIEW2, REVIEW3, SECOND, JUDGE = LIMITS
 
 
 def quota_day() -> str:
@@ -72,7 +76,7 @@ class Gemini:
 
     def reviews_left(self) -> int:
         """Wie viele Stücke heute noch geprüft werden können (beide Töpfe zusammen)."""
-        return max(0, self.left(REVIEW)) + max(0, self.left(REVIEW2))
+        return sum(max(0, self.left(m)) for m in (REVIEW, REVIEW2, REVIEW3))
 
     def _spent(self, model: str):
         """Google meldet das Tageskontingent als leer — den eigenen Zähler angleichen."""
@@ -88,7 +92,8 @@ class Gemini:
 
     # ── Anfrage ──────────────────────────────────────────────────────────────
 
-    def call(self, model: str, parts: list[dict], schema: dict | None = None, system: str | None = None, max_tokens: int = 8000) -> dict:
+    def call(self, model: str, parts: list[dict], schema: dict | None = None, system: str | None = None, max_tokens: int = 8000,
+             patient: bool = True) -> dict:
         body_key = hashlib.sha1(json.dumps([model, parts, schema, system, max_tokens], sort_keys=True).encode()).hexdigest()
         cached = CACHE / f"{body_key}.json"
         if cached.exists():
@@ -107,10 +112,10 @@ class Gemini:
             body["systemInstruction"] = {"parts": [{"text": system}]}
         req = urllib.request.Request(f"{API}/{model}:generateContent", data=json.dumps(body).encode(),
                                      headers={"content-type": "application/json", "x-goog-api-key": self.key})
-        for attempt in range(3):
+        for attempt in range(3 if patient else 1):
             self.last[model] = time.time()
             try:
-                with urllib.request.urlopen(req, timeout=240) as r:
+                with urllib.request.urlopen(req, timeout=240 if patient else 90) as r:
                     data = json.loads(r.read())
                 self._count(model)
                 if (data.get("candidates") or [{}])[0].get("finishReason") in (None, "STOP"):
@@ -122,11 +127,15 @@ class Gemini:
                 if e.code == 429 and "PerDay" in detail:
                     self._spent(model)
                     raise QuotaReached(model) from e
-                if e.code in (429, 500, 503) and attempt < 2:
+                if e.code in (429, 500, 503) and attempt < 2 and patient:
                     self.log(f"{model}: HTTP {e.code}, neuer Versuch in {20 * (attempt + 1)} s")
                     time.sleep(20 * (attempt + 1))
                     continue
                 raise RuntimeError(f"{model}: HTTP {e.code} {detail}") from e
+            except (TimeoutError, urllib.error.URLError) as e:
+                if attempt < 2 and patient:
+                    continue
+                raise RuntimeError(f"{model}: keine Antwort ({type(e).__name__})") from e
         raise RuntimeError(f"{model}: keine Antwort")
 
     @staticmethod
@@ -143,77 +152,125 @@ class Gemini:
         return self.text(data)
 
     def review(self, kind: str, title: str, lines: list[dict]) -> dict | None:
-        """lines: [{n, ru, words: [{w, options: [str]}]}] — nur Wörter mit mehreren Wörterbuch-Bedeutungen.
-        → {"lines": [{"n", "de", "senses": [int]}], "story": str, "title_de": str} oder None, wenn die Antwort nicht passt."""
-        rows = []
-        for l in lines:
-            row = [f"LINE {l['n']}: {l['ru']}"]
-            for k, w in enumerate(l["words"], 1):
-                row.append(f"  W{k} {w['w']}: " + "  ".join(f"{i}) {o}" for i, o in enumerate(w["options"], 1)))
-            rows.append("\n".join(row))
+        """lines: [{n, ru}] → {"lines": {n: {"de", "stress", "words": [{"w", "de"}]}}, "story", "title_de"}.
+        Das Modell übersetzt die Zeile UND jedes einzelne Wort im Zusammenhang selbst; jede Wortbedeutung
+        bestätigt danach ein zweites Modell (confirm). Zeilen, deren Antwort nicht passt, fehlen im Ergebnis."""
         system = (
-            f"You prepare a Russian {'song' if kind == 'song' else 'film or cartoon scene'} titled »{title}« for a German beginner who learns Russian from it. "
+            f"You prepare a Russian {'song' if kind == 'song' else 'film or video scene'} titled »{title}« for a German beginner who learns Russian from it. "
             "Whatever you write will be learned by heart, so it must be right.\n\n"
             "For every LINE give:\n"
             "- de: a faithful, natural German translation of exactly this line. Do not add or leave out anything. Keep names. Informal ты is »du«, polite вы is »Sie«. Use the other lines as context.\n"
-            "- stress: the same Russian line, letters unchanged, with an acute accent (U+0301) directly after the stressed vowel of every word that has two or more syllables. Do not mark words with one syllable or words with ё.\n"
-            "- senses: for each listed word W1, W2, … of that line (in this order) the number of the dictionary meaning that fits the word IN THIS LINE. Use 0 if none of the listed meanings fits. If a line lists no words, senses is empty.\n\n"
+            "- stress: the same Russian line, letters unchanged, with an acute accent (U+0301) directly after the stressed vowel of every word that has two or more syllables. Do not mark words with one syllable or words with ё. "
+            "The line may show е where the word is really spoken with ё: write ё there (все → всё when it means »alles«), and only there.\n"
+            "- words: one entry for EVERY word of the line, in order, none skipped (a hyphenated word like по-настоящему or кто-то is one word).\n"
+            "    w: the word exactly as it stands in the line.\n"
+            "    de: what this word means IN THIS LINE, in German, 1 to 3 words, matching the form used here (возьми → nimm, тебя → dich, в лесу → im Wald: в = in, лесу = Wald). "
+            "It must fit your translation of the line. For a name write Name. "
+            "If the word belongs to a fixed expression begun by the previous word, write = and put the meaning of the whole expression at its first word "
+            "(«в противном случае»: в → andernfalls, противном → =, случае → =).\n\n"
             "story: one or two plain German sentences saying what happens in these lines, for someone about to watch. Only what the lines say. No opinion, no praise.\n"
-            "title_de: the title in German (keep names as they are)."
+            "title_de: the title in German, short (keep names as they are)."
         )
         schema = {"type": "OBJECT", "required": ["lines", "story", "title_de"], "properties": {
             "story": {"type": "STRING"}, "title_de": {"type": "STRING"},
-            "lines": {"type": "ARRAY", "items": {"type": "OBJECT", "required": ["n", "de", "stress", "senses"], "properties": {
-                "n": {"type": "INTEGER"}, "de": {"type": "STRING"}, "stress": {"type": "STRING"}, "senses": {"type": "ARRAY", "items": {"type": "INTEGER"}}}}}}}
+            "lines": {"type": "ARRAY", "items": {"type": "OBJECT", "required": ["n", "de", "stress", "words"], "properties": {
+                "n": {"type": "INTEGER"}, "de": {"type": "STRING"}, "stress": {"type": "STRING"},
+                "words": {"type": "ARRAY", "items": {"type": "OBJECT", "required": ["w", "de"], "properties": {"w": {"type": "STRING"}, "de": {"type": "STRING"}}}}}}}}}
+        rows = [f"LINE {l['n']}: {l['ru']}" for l in lines]
         out = None
-        # Hydrogen zuerst; ist sein Tageskontingent leer, übernimmt 3.6 Flash.
-        for model in (REVIEW, REVIEW2):
+        # Hydrogen zuerst; ist sein Tageskontingent leer, übernimmt 3.6 Flash, danach 3.8 Flash.
+        for model in (REVIEW, REVIEW2, REVIEW3):
             if self.left(model) <= 0:
                 continue
             try:
-                out = json.loads(self.text(self.call(model, [{"text": "\n\n".join(rows)}], schema=schema, system=system, max_tokens=12000)))
+                out = json.loads(self.text(self.call(model, [{"text": "\n".join(rows)}], schema=schema, system=system, max_tokens=20000,
+                                                     patient=model != REVIEW3)))
                 break
             except QuotaReached:
                 continue
+            except RuntimeError as e:
+                # Überlastet oder keine Antwort: das nächste Modell der Kette versucht es.
+                self.log(f"{model} nicht erreichbar ({str(e)[:60]}) — nächstes Prüfmodell")
             except (json.JSONDecodeError, KeyError):
                 return None
         if out is None:
-            raise QuotaReached("Prüfmodelle")
-        got = {l.get("n"): l for l in out.get("lines", [])}
-        for l in lines:
-            g = got.get(l["n"])
-            if not g or not str(g.get("de", "")).strip() or len(g.get("senses", [])) != len(l["words"]):
+            raise QuotaReached("allen Prüfmodellen (leer oder überlastet)")
+        ok = {}
+        for g in out.get("lines", []):
+            if isinstance(g.get("n"), int) and str(g.get("de", "")).strip() and isinstance(g.get("words"), list):
+                ok[g["n"]] = {"de": g["de"].strip(), "stress": str(g.get("stress", "")),
+                              "words": [{"w": str(w.get("w", "")), "de": str(w.get("de", "")).strip()} for w in g["words"] if isinstance(w, dict)]}
+        return {"lines": ok, "story": str(out.get("story", "")).strip(), "title_de": str(out.get("title_de", "")).strip()}
+
+    def _verdicts(self, model: str, system: str, blocks: list[str]) -> list[bool] | None:
+        """Je Eintrag ein Ja/Nein von `model`. None, wenn die Antwort nicht zu den Einträgen passt."""
+        schema = {"type": "ARRAY", "items": {"type": "OBJECT", "required": ["n", "ok"], "properties": {"n": {"type": "INTEGER"}, "ok": {"type": "BOOLEAN"}}}}
+        out: list[bool] = []
+        for start in range(0, len(blocks), 40):
+            part = blocks[start:start + 40]
+            user = "\n\n".join(f"{i + 1}.\n{b}" for i, b in enumerate(part))
+            try:
+                if model == SECOND:      # Gemma kennt kein Antwortschema — Format in der Frage vorgeben
+                    raw = self.text(self.call(model, [{"text": system + "\nAnswer with a JSON array of objects {\"n\": number, \"ok\": true or false}, one per item, nothing else.\n\n" + user}], max_tokens=4000))
+                else:
+                    raw = self.text(self.call(model, [{"text": user}], schema=schema, system=system, max_tokens=4000))
+                arr = json.loads(raw[raw.find("["):raw.rfind("]") + 1])
+                got = {x.get("n"): bool(x.get("ok")) for x in arr if isinstance(x, dict)}
+            except (json.JSONDecodeError, KeyError, ValueError, RuntimeError):
                 return None
-            if any(not isinstance(s, int) or s < 0 or s > len(w["options"]) for s, w in zip(g["senses"], l["words"])):
+            if sorted(got) != list(range(1, len(part) + 1)):
                 return None
-        return {"lines": [got[l["n"]] for l in lines], "story": str(out.get("story", "")).strip(), "title_de": str(out.get("title_de", "")).strip()}
+            out += [got[i + 1] for i in range(len(part))]
+        return out
+
+    def _judge(self, system: str, blocks: list[str]) -> list[bool] | None:
+        """Zwei Kontrollmodelle. Abgelehnt ist ein Eintrag erst, wenn BEIDE ihn ablehnen: das Prüfmodell
+        ist das stärkere, ein einzelnes schwächeres soll ihm nichts Richtiges streichen (gemessen:
+        Flash-Lite lehnte »стремительного = rasant« ab)."""
+        if not blocks:
+            return []
+        first = self._verdicts(JUDGE, system, blocks)
+        if first is None:
+            first = self._verdicts(SECOND, system, blocks)
+            return first
+        doubt = [i for i, ok in enumerate(first) if not ok]
+        if doubt:
+            again = self._verdicts(SECOND, system, [blocks[i] for i in doubt])
+            if again is not None:
+                for i, ok in zip(doubt, again):
+                    first[i] = ok
+        return first
+
+    def confirm(self, items: list[tuple[str, str, str, str]]) -> list[bool] | None:
+        """(russische Zeile, deutsche Zeile, Wort oder Wendung, Bedeutung) → stimmt die Bedeutung an dieser Stelle?"""
+        system = ("For each item you get a Russian line, its German translation, one WORD or expression from the line, and a German MEANING proposed for it. "
+                  "Decide whether MEANING is a correct German rendering of WORD as it is used in this line (ok = true). Small differences are fine: a base form "
+                  "instead of the inflected one or the other way round, a synonym, a slightly different wording than in the translation, an article more or less. "
+                  "ok = false only if MEANING means something else, or belongs to a different word of the line.")
+        return self._judge(system, [f"LINE: {ru}\nGERMAN: {de}\nWORD: {w}\nMEANING: {m}" for ru, de, w, m in items])
+
+    def faithful(self, triples: list[tuple[str, str, str]]) -> list[bool] | None:
+        """(Russisch, Übersetzung A, unabhängige Übersetzung B) → gibt A die russische Zeile richtig wieder?"""
+        system = ("For each item you get a Russian line (often only part of a sentence), a German translation A, and an independent second translation B for comparison. "
+                  "Decide whether A renders the Russian line correctly (ok = true). Wording, word order, style and how a sentence fragment is completed do not matter. "
+                  "ok = false only if A says something the Russian line does not say, leaves out part of its meaning, or confuses who does what "
+                  "(du instead of Sie counts). If A and B differ in meaning, check which of them matches the Russian line.")
+        return self._judge(system, [f"RUSSIAN: {ru}\nA: {a}\nB: {b}" for ru, a, b in triples])
 
     def second(self, kind: str, lines: list[str]) -> list[str] | None:
-        """Unabhängige zweite Übersetzung von einem anderen Modell."""
+        """Unabhängige zweite Übersetzung von einem anderen Modell (Gemma; antwortet es nicht brauchbar, Flash-Lite)."""
         prompt = (f"Translate these Russian lines from a {'song' if kind == 'song' else 'film scene'} into German, faithfully, line by line. "
                   "Informal ты is »du«, polite вы is »Sie«. Answer with a JSON array of strings, one German line per Russian line, same order, nothing else.\n\n"
                   + "\n".join(f"{i + 1}. {l}" for i, l in enumerate(lines)))
-        raw = self.text(self.call(SECOND, [{"text": prompt}], max_tokens=4000))
-        start, end = raw.find("["), raw.rfind("]")
-        try:
-            arr = json.loads(raw[start:end + 1])
-        except (json.JSONDecodeError, ValueError):
-            return None
-        return [str(x) for x in arr] if isinstance(arr, list) and len(arr) == len(lines) else None
-
-    def same(self, triples: list[tuple[str, str, str]]) -> list[bool] | None:
-        """(Russisch, Übersetzung A, Übersetzung B) → sagen A und B dasselbe?"""
-        system = ("For each item you get a Russian line and two German translations A and B. Decide whether A and B say the same thing. "
-                  "Differences in wording, word order, articles, tense nuance or style do not matter. They differ only if the meaning differs: "
-                  "another fact, another person (du instead of Sie counts), another action, something missing or added. Answer for every item.")
-        schema = {"type": "ARRAY", "items": {"type": "OBJECT", "required": ["n", "same"], "properties": {"n": {"type": "INTEGER"}, "same": {"type": "BOOLEAN"}}}}
-        user = "\n\n".join(f"{i + 1}.\nRUSSIAN: {ru}\nA: {a}\nB: {b}" for i, (ru, a, b) in enumerate(triples))
-        try:
-            arr = json.loads(self.text(self.call(JUDGE, [{"text": user}], schema=schema, system=system, max_tokens=3000)))
-        except (json.JSONDecodeError, KeyError):
-            return None
-        got = {x.get("n"): bool(x.get("same")) for x in arr if isinstance(x, dict)}
-        return [got[i + 1] for i in range(len(triples))] if sorted(got) == list(range(1, len(triples) + 1)) else None
+        for model in (SECOND, JUDGE):
+            try:
+                raw = self.text(self.call(model, [{"text": prompt}], max_tokens=6000))
+                arr = json.loads(raw[raw.find("["):raw.rfind("]") + 1])
+                if isinstance(arr, list) and len(arr) == len(lines):
+                    return [str(x) for x in arr]
+            except (json.JSONDecodeError, ValueError, RuntimeError):
+                pass
+        return None
 
     def queries(self, topic: str, music: bool) -> list[str]:
         """Aus einem Thema des Lernenden (»One Piece«, »True Crime«, »Rock«) werden russische YouTube-Suchanfragen."""
