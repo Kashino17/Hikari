@@ -68,6 +68,22 @@ function chunksOf(line) {
   return out;
 }
 
+/**
+ * Welche Sätze lohnen sich zum Mitnehmen? Sie werden zu Karten in der Wiederholung, also zählen
+ * ganze Sätze (kein Fetzen, der mit einem Komma endet), ohne Eigennamen, rund vier Wörter lang.
+ */
+export function suggestTake(uniq, count = 3) {
+  const score = (l) => {
+    const ru = Ph.plain(l.ru).trim();
+    const n = l.g.length;
+    return (/[.!?…]$/.test(ru) ? 3 : /[,:;–—-]$/.test(ru) ? -3 : 0)
+      + (/^\p{Lu}/u.test(ru) ? 1 : 0)
+      - (l.g.includes('Name') ? 4 : 0)
+      - (n < 2 ? 4 : Math.abs(n - 4));
+  };
+  return uniq.map((l) => [score(l), l.i]).sort((a, b) => b[0] - a[0] || a[1] - b[1]).slice(0, count).map(([, i]) => i).sort((a, b) => a - b);
+}
+
 function prepare(p) {
   const lines = p.lines.map((l, i) => ({ ...l, i, chunks: chunksOf(l), keys: Ph.wordKeys(l.ru) }));
   // Zeilen, die die Prüfung nicht bestanden haben (ok === false), bleiben hörbar, werden aber weder gezeigt noch geübt.
@@ -78,7 +94,9 @@ function prepare(p) {
   for (const l of lines) l.times = l.ok === false ? 0 : lines.filter((o) => o.ok !== false && (o.rep ?? o.i) === (l.rep ?? l.i)).length;
   const latin = Ph.transliterateFlat(p.title);
   // Gefundene Videos tragen oft lange Reißer-Titel — dort steht der deutsche Titel vorn, nicht die Umschrift.
-  return { ...p, lines, uniq, keys: [...seen], latin, head: p.auto ? p.titleDe : latin, under: p.auto ? p.by : p.titleDe, hidden: lines.filter((l) => l.ok === false).length };
+  // Bei gefundenen Stücken wählt die App den Vorschlag selbst — die Aufbereitung nahm nur die Länge.
+  const take = p.auto ? suggestTake(uniq) : p.take;
+  return { ...p, take, lines, uniq, keys: [...seen], latin, head: p.auto ? p.titleDe : latin, under: p.auto ? p.by : p.titleDe, hidden: lines.filter((l) => l.ok === false).length };
 }
 
 export function usePieces() {
