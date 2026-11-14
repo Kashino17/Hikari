@@ -9,6 +9,7 @@ import { Practice } from './screens/practice.js';
 import { DevTools, demoProgress, demoPlanState } from './screens/me.js';
 import { Stats } from './screens/stats.js';
 import { ROUTES } from './routes.js';
+import { registerTaken } from './screens/erleben.js';
 import { startTimeTracking } from './timetrack.js';
 
 const TAB_META = {
@@ -89,6 +90,7 @@ async function boot() {
     await Promise.all([storage.init(), loadData()]);
     progress.load();
     planState.load();
+    registerTaken();
     startTimeTracking();
     window.__hk = { progress, planState, nav, storage, demo: (k) => { const d = demoProgress(k); planState.update(() => demoPlanState(d)); progress.replace(d); } };
     if (!location.hash) history.replaceState(null, '', '#/heute');

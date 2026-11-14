@@ -21,6 +21,7 @@ export const MODES = {
   anja: ['Gespräch mit Anja', 'amber'],
   podcast: ['Podcast hören', 'listen'],
   podcastPractice: ['Podcast-Übungen', 'listen'],
+  erleben: ['Lieder & Szenen', 'listen'],
   blitz: ['Hör-Blitz', 'listen'],
   sounds: ['Lautlabor', 'listen'],
   review: ['Wiederholen und Tests', 'review'],
@@ -40,7 +41,7 @@ const ROUTE_MODE = [
   [/^lesson\//, 'lesson'], [/^talkday\//, 'talkday'], [/^dialog\//, 'dialog'], [/^review$/, 'review'], [/^test$/, 'review'],
   [/^podcastPractice\//, 'podcastPractice'], [/^podcast/, 'podcast'], [/^pattern/, 'patterns'], [/^anja$/, 'anja'],
   [/^reflex$/, 'reflex'], [/^kombi$/, 'kombi'], [/^blind$/, 'blind'], [/^talk$/, 'talk'], [/^blitz$/, 'blitz'],
-  [/^pairs$/, 'pairs'], [/^sounds/, 'sounds'], [/^satzbuch$/, 'satzbuch'], [/^deep\//, 'satzbuch'],
+  [/^pairs$/, 'pairs'], [/^sounds/, 'sounds'], [/^satzbuch$/, 'satzbuch'], [/^deep\//, 'satzbuch'], [/^erleben/, 'erleben'],
 ];
 const modeOf = (r) => ROUTE_MODE.find(([re]) => re.test(r))?.[1] ?? null;
 
@@ -98,7 +99,9 @@ export function startTimeTracking() {
     if (document.hidden) return;
     const mode = modeOf(location.hash.replace(/^#\/?/, ''));
     if (!mode) return;
-    if (Date.now() - lastInteract < IDLE_MS || audio.current()) add(mode, TICK);
+    // Ein laufendes Video (»Lieder & Szenen«) ist Lernzeit, auch wenn eine Minute lang nichts getippt wurde.
+    const watching = [...document.querySelectorAll('video')].some((v) => !v.paused && !v.ended);
+    if (Date.now() - lastInteract < IDLE_MS || audio.current() || watching) add(mode, TICK);
   }, TICK * 1000);
   setInterval(persist, 15000);
   window.addEventListener('pagehide', persist);

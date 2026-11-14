@@ -14,6 +14,15 @@ export function install(d) {
   index = null;
 }
 
+/**
+ * Zusätzliche Sätze mit Bedeutung je Wort — etwa die aus »Lieder & Szenen« mitgenommenen.
+ * Schlüssel wie in `s`: der Satz ohne Betonungszeichen.
+ */
+export function addSentences(map) {
+  for (const [sentence, glosses] of Object.entries(map ?? {})) if (Array.isArray(glosses)) data.s[sentence] = glosses;
+  index = null;
+}
+
 const norm = (w) => w.toLowerCase().replaceAll('ё', 'е');
 
 function sentenceIndex() {

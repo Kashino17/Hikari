@@ -58,9 +58,12 @@ export const progress = {
   /** Sitzungsergebnis einrechnen (Karten, XP, Serie, Sterne). */
   apply(result) { this.update((p) => P.applyResult(p, result, P.todayEpochDay())); },
 
-  /** Bewertet eine einzelne Karte aus einem freien Modus. Eigene Sätze ("dd:") werden nicht als Karte geführt. */
+  /**
+   * Bewertet eine einzelne Karte aus einem freien Modus. Eigene Sätze ("dd:") zählen nur, wenn sie
+   * als Karte geführt werden — das sind die aus »Lieder & Szenen« mitgenommenen (siehe learnSentence).
+   */
   gradeCard(id, correct, xp = 0, spokenOk = 0) {
-    if (!id || id.startsWith('dd:')) return;
+    if (!id || !this.gradable(id)) return;
     this.apply({ xp, graded: { [id]: correct }, spokenOk });
   },
 
@@ -70,16 +73,41 @@ export const progress = {
     this.update((p) => ({ ...p, xp: p.xp + xp, xpByDay: { ...p.xpByDay, [today]: P.xpOn(p, today) + xp } }));
   },
 
+  /** Wird diese Karte bewertet? Kurssätze immer, eigene Sätze nur mit Karte. */
+  gradable: (id) => !!id && (!id.startsWith('dd:') || !!state.cards[id]),
+
   saveMySentence(s) {
     if (!s.ru?.trim() || !s.de?.trim()) return;
     const norm = (x) => x.replaceAll('+', '').replaceAll('́', '').trim().toLowerCase();
-    this.update((p) => ({ ...p, mySentences: [...p.mySentences.filter((m) => norm(m.ru) !== norm(s.ru)), { patternId: '', note: '', ...s }].slice(-200) }));
+    this.update((p) => withoutOrphanCards({ ...p, mySentences: [...p.mySentences.filter((m) => norm(m.ru) !== norm(s.ru)), { patternId: '', note: '', ...s }].slice(-MY_SENTENCES_MAX) }));
   },
-  removeMySentence(ru) { this.update((p) => ({ ...p, mySentences: p.mySentences.filter((m) => m.ru !== ru) })); },
+  removeMySentence(ru) { this.update((p) => withoutOrphanCards({ ...p, mySentences: p.mySentences.filter((m) => m.ru !== ru) })); },
+
+  /**
+   * Eigenen Satz ins Satzbuch legen UND als Karte führen: Er kommt in die Wiederholung, wird in den
+   * Übungen bewertet und zählt zum Wortschatz, sobald er sitzt. → Karten-ID
+   */
+  learnSentence(s) {
+    this.saveMySentence(s);
+    const id = asPhrase(s.ru, s.de).id;
+    if (!state.cards[id]) this.apply({ xp: 0, introduced: [id] });
+    return id;
+  },
   toggleFavorite(id) {
     this.update((p) => ({ ...p, favorites: p.favorites.includes(id) ? p.favorites.filter((f) => f !== id) : [...p.favorites, id] }));
   },
 };
+
+/** So viele eigene Sätze fasst das Satzbuch; die ältesten fallen danach heraus. */
+const MY_SENTENCES_MAX = 1000;
+/** Karten eigener Sätze verschwinden mit ihrem Satz — sonst blieben sie für immer »fällig«. */
+function withoutOrphanCards(p) {
+  const own = Object.keys(p.cards).filter((id) => id.startsWith('dd:'));
+  if (!own.length) return p;
+  const keep = new Set(p.mySentences.map((m) => asPhrase(m.ru, m.de).id));
+  if (own.every((id) => keep.has(id))) return p;
+  return { ...p, cards: Object.fromEntries(Object.entries(p.cards).filter(([id]) => !id.startsWith('dd:') || keep.has(id))) };
+}
 
 export function useProgress() {
   const [p, setP] = useState(state);

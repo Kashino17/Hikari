@@ -7,6 +7,8 @@ import { html, cls, Icon, Sheet, Opt, TopBar, mk, fx, audio, useState, useEffect
 import { progress, useProgress, phraseById, nav, back, toast } from '../app.js';
 import { storage, speech, recorder, SPEECH_ERRORS, api } from '../platform.js';
 import * as Sp from '../domain/speech.js';
+import * as Gl from '../domain/glossary.js';
+import { asPhrase } from '../domain/content.js';
 import * as Ph from '../domain/phonetics.js';
 
 // ── Inhalte ────────────────────────────────────────────────────────────────
@@ -14,7 +16,7 @@ import * as Ph from '../domain/phonetics.js';
 let DATA = null;
 let loading = null;
 // Nachschub: Stücke, die der Server selbst aufbereitet hat. `shown` = was gerade im Feed steht.
-let FEED = { shown: [], ready: 0, busy: false, interests: { video: [], music: [] }, leftToday: 0, resetAt: 0 };
+let FEED = { shown: [], saved: [], ready: 0, busy: false, interests: { video: [], music: [] }, leftToday: 0, resetAt: 0 };
 const feedSubs = new Set();
 const getFeed = () => api.get('/russian/erleben/feed').catch(() => null);
 /** Adresse eines Videos oder Standbilds auf dem Hikari-Server. */
@@ -24,7 +26,7 @@ function takeFeed(f) {
   const hand = (DATA ?? []).filter((p) => !p.auto);
   const have = new Map((DATA ?? []).filter((p) => p.auto).map((p) => [p.id, p]));
   DATA = [...hand, ...f.pieces.map((p) => have.get(p.id) ?? prepare(p))];
-  FEED = { shown: f.shown, ready: f.ready, busy: f.busy, interests: f.interests ?? { video: [], music: [] }, leftToday: f.leftToday ?? 0, resetAt: f.resetAt ?? 0 };
+  FEED = { shown: f.shown, saved: f.saved ?? [], ready: f.ready, busy: f.busy, interests: f.interests ?? { video: [], music: [] }, leftToday: f.leftToday ?? 0, resetAt: f.resetAt ?? 0 };
   for (const fn of [...feedSubs]) fn(FEED);
 }
 const loadPieces = () => (loading ??= Promise.all([fetch('/data/erleben.json').then((r) => r.json()), getFeed()])
@@ -34,6 +36,12 @@ const feed = {
   /** Neue Stücke holen. Angefangene bleiben stehen, der Rest macht Platz. */
   async refresh(keep) {
     takeFeed(await api.post('/russian/erleben/refresh', { keep }).catch(() => null));
+  },
+  /** Stück in die Bibliothek legen oder herausnehmen — dort bleibt es dauerhaft. */
+  async save(id, on) {
+    const f = await api.post('/russian/erleben/save', { id, on }).catch(() => null);
+    takeFeed(f);
+    return !!f;
   },
   async setInterests(video, music) {
     const f = await api.post('/russian/erleben/interests', { video, music }).catch(() => null);
@@ -104,7 +112,7 @@ const knownCount = (piece, known) => piece.keys.filter((k) => known.has(k)).leng
 // ── Eigener Stand dieses Bereichs ──────────────────────────────────────────
 
 const KEY = 'erleben_v1';
-const EMPTY = { pieces: {}, words: {}, subs: { lat: true, cyr: false, de: true } };
+const EMPTY = { pieces: {}, words: {}, taken: {}, subs: { lat: true, cyr: false, de: true } };
 const subs = new Set();
 const read = () => ({ ...EMPTY, ...storage.getJSON(KEY, {}) });
 const store = {
@@ -118,6 +126,55 @@ function useStore() {
   return s;
 }
 const pieceState = (s, id) => ({ stage: 0, line: 0, marks: [], started: false, done: false, ...s.pieces[id] });
+
+// ── Was du hier lernst, zählt überall ──────────────────────────────────────
+// Mitgenommene Sätze und gemerkte Wörter landen im Satzbuch (»Meine Sätze«) UND als Karte im
+// Lernstand: Sie kommen in die Wiederholung, werden in den Übungen bewertet und zählen zum
+// Wortschatz, sobald sie sitzen. Die Bedeutung je Wort wandert mit, damit sie auch dort unter
+// jedem Wort steht — sie liegt in diesem Speicher (`taken`), weil das Stück selbst später
+// gelöscht sein kann.
+
+const sentenceKey = (ru) => Ph.plain(ru).trim();
+/** Für die Erfolge: so viele Stücke sind durchgearbeitet. */
+export const piecesDone = () => Object.values(read().pieces).filter((x) => x.done).length;
+
+/** Beim Start: die Wortbedeutungen aller mitgenommenen Sätze beim Glossar anmelden. */
+export function registerTaken() { Gl.addSentences(read().taken); }
+
+/** Satz oder Wort aus einem Stück lernen. → Karten-ID */
+function learn(piece, ru, de, glosses, word = false) {
+  const key = sentenceKey(ru);
+  store.update((x) => ({ ...x, taken: { ...x.taken, [key]: glosses } }));
+  Gl.addSentences({ [key]: glosses });
+  return progress.learnSentence({ ru, de, note: `${word ? 'Wort aus' : 'Aus'} »${piece.titleDe}«` });
+}
+function unlearn(ru) {
+  const key = sentenceKey(ru);
+  store.update((x) => { const taken = { ...x.taken }; delete taken[key]; return { ...x, taken }; });
+  progress.removeMySentence(ru);
+}
+
+// ── Wiedersehen ────────────────────────────────────────────────────────────
+// Nach dem Ansehen ohne Deutsch schätzt du ein, wie viel du verstanden hast. Daraus ergibt sich,
+// wann die Bibliothek das Stück wieder vorschlägt: wenig verstanden = morgen, fast alles = in zehn Tagen.
+
+const RATINGS = [[1, 'Wenig'], [2, 'Etwa die Hälfte'], [3, 'Fast alles']];
+/** Dieselbe Einschätzung als Satzteil: »zuletzt … verstanden«. */
+const UNDERSTOOD = { 1: 'wenig', 2: 'etwa die Hälfte', 3: 'fast alles' };
+const REWATCH_DAYS = { 1: 1, 2: 3, 3: 10 };
+const rewatchDue = (ps, today) => !!(ps.done && ps.rating && today - (ps.ratedAt ?? 0) >= REWATCH_DAYS[ps.rating]);
+
+/** Was nach einem fertigen Stück sinnvoll ist: erst Neues aus dem Feed, dann was wieder dran ist. */
+function pickNext(pieces, s, f, currentId, today) {
+  const st = (x) => pieceState(s, x.id);
+  const others = pieces.filter((x) => x.id !== currentId);
+  const fresh = f.shown.map((id) => others.find((x) => x.id === id)).filter((x) => x && !st(x).done);
+  if (fresh.length) return { piece: fresh[0], why: 'Neu für dich' };
+  const due = others.filter((x) => rewatchDue(st(x), today) && (!x.auto || f.saved.includes(x.id)));
+  if (due.length) return { piece: due[0], why: 'Wieder dran' };
+  const hand = others.filter((x) => !x.auto && !st(x).done);
+  return hand.length ? { piece: hand[0], why: 'Ausgewähltes Stück' } : null;
+}
 
 const fmt = (sec) => `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, '0')}`;
 const KIND = { song: ['Lied', 'music_note'], scene: ['Szene', 'movie'] };
@@ -135,7 +192,8 @@ function Meter({ piece, known, onDark }) {
 }
 
 function statusOf(ps, piece) {
-  if (ps.done) return { text: 'Durchgearbeitet', icon: 'check_circle', c: 'amber' };
+  if (rewatchDue(ps, progress.today())) return { text: 'Wieder dran', icon: 'replay_circle_filled', c: 'cc' };
+  if (ps.done) return { text: ps.rating ? `Fertig, ${UNDERSTOOD[ps.rating]} verstanden` : 'Durchgearbeitet', icon: 'check_circle', c: 'amber' };
   if (ps.started) return { text: ps.stage === 0 ? 'Angesehen' : ps.stage === 1 ? `Zeile ${Math.min(ps.line + 1, piece.uniq.length)} von ${piece.uniq.length}` : 'Fast fertig', icon: 'play_circle', c: 'cc' };
   return null;
 }
@@ -255,6 +313,54 @@ function FeedSection({ pieces, known, s, f }) {
   </div>`;
 }
 
+/** Eine Kachel der Bibliothek: Bild, Titel, Stand. */
+function LibTile({ piece, ps }) {
+  const st = statusOf(ps, piece);
+  return html`<button class="ls-tile" onClick=${() => nav(`erleben/${piece.id}`)}>
+    <span class="th"><${Pic} file=${piece.poster} /><em>${fmt(piece.dur)}</em></span>
+    <b>${piece.head}</b>
+    <span class=${cls('s', st?.c)}>${st ? html`<${Icon} n=${st.icon} fill size="14" />${st.text}` : KIND[piece.kind][0]}</span></button>`;
+}
+
+/** Behaltene Stücke: was wieder dran ist zuerst, dann die zuletzt hinzugefügten. */
+function libraryPieces(pieces, s, f) {
+  const today = progress.today();
+  const list = f.saved.map((id) => pieces.find((p) => p.id === id)).filter(Boolean);
+  const due = (p) => (rewatchDue(pieceState(s, p.id), today) ? 0 : 1);
+  return list.map((p, i) => [p, i]).sort((a, b) => due(a[0]) - due(b[0]) || a[1] - b[1]).map(([p]) => p);
+}
+
+function LibrarySection({ pieces, s, f }) {
+  const list = libraryPieces(pieces, s, f);
+  if (!list.length) return null;
+  const today = progress.today();
+  const due = list.filter((p) => rewatchDue(pieceState(s, p.id), today)).length;
+  return html`<div class="sec"><div class="hd"><div class="h2">Bibliothek</div>${list.length > 4 && html`<button onClick=${() => nav('erleben/bibliothek')}>Alle ${list.length}</button>`}</div>
+    <div class="sub">${due > 0 ? `${due === 1 ? 'Ein Stück ist' : `${due} Stücke sind`} wieder dran: noch einmal ansehen festigt, was du daraus gelernt hast.` : 'Was du durchgearbeitet oder behalten hast. Diese Stücke bleiben.'}</div>
+    <div class="ls-tiles">${list.slice(0, 4).map((x) => html`<${LibTile} piece=${x} ps=${pieceState(s, x.id)} />`)}</div>
+  </div>`;
+}
+
+const LIB_FILTERS = [['all', 'Alle'], ['due', 'Wieder dran'], ['song', 'Lieder'], ['scene', 'Szenen']];
+
+export function ErlebenLibrary() {
+  const pieces = usePieces();
+  const s = useStore();
+  const f = useFeed();
+  const [filter, setFilter] = useState('all');
+  if (!pieces) return html`<div class="screen"><${TopBar} title="Bibliothek" onBack=${() => back('erleben')} /></div>`;
+  const today = progress.today();
+  const all = libraryPieces(pieces, s, f);
+  const list = all.filter((p) => filter === 'all' || (filter === 'due' ? rewatchDue(pieceState(s, p.id), today) : p.kind === filter));
+  return html`<div class="screen c-live">
+    <${TopBar} title="Bibliothek" sub=${all.length === 1 ? 'Ein Stück, das bleibt' : `${all.length} Stücke, die bleiben`} onBack=${() => back('erleben')} />
+    <div class="chips" style="padding-top:6px;padding-bottom:10px">${LIB_FILTERS.map(([id, label]) => html`<button class=${cls('chip c sm', filter === id && 'on')} onClick=${() => setFilter(id)}>${label}</button>`)}</div>
+    <div class="scroll"><div style="padding:6px 16px 0">
+      ${list.length ? html`<div class="ls-tiles">${list.map((x) => html`<${LibTile} piece=${x} ps=${pieceState(s, x.id)} />`)}</div>`
+        : html`<div class="empty"><${Icon} n="video_library" /><b>${all.length ? 'Hier ist gerade nichts.' : 'Noch nichts in der Bibliothek.'}</b>${all.length ? 'Wähle oben einen anderen Filter.' : 'Arbeite ein Stück durch oder tippe im Stück oben auf das Lesezeichen.'}</div>`}
+    </div><div class="end"></div></div></div>`;
+}
+
 export function ErlebenHub() {
   const pieces = usePieces();
   const known = useKnown();
@@ -273,6 +379,8 @@ export function ErlebenHub() {
       <${HeroCard} piece=${hero} known=${known} ps=${pieceState(s, hero.id)} />
 
       <${FeedSection} pieces=${pieces} known=${known} s=${s} f=${f} />
+
+      <${LibrarySection} pieces=${pieces} s=${s} f=${f} />
 
       <div class="sec"><div class="h2">Ausgewählte Stücke</div>
         <div class="sub">Von Hand aufbereitet, mit Geschichte und Tipps.</div>
@@ -482,7 +590,7 @@ function LiveLine({ line, word, s, dim }) {
   </div>`;
 }
 
-function Feel({ piece, pl, ps, s }) {
+function Feel({ piece, pl, ps, s, ending }) {
   const started = ps.started || pl.playing;
   const cur = pl.pos.line >= 0 ? piece.lines[pl.pos.line] : null;
   // Zwischen zwei Zeilen: die nächste schon zeigen, gedimmt.
@@ -490,7 +598,8 @@ function Feel({ piece, pl, ps, s }) {
   return html`<div class="scroll"><div class="ls-body">
     ${started && html`<${SubToggles} s=${s} />`}
     ${started && html`<div class="ls-livebox">${cur ? html`<${LiveLine} line=${cur} word=${pl.pos.word} s=${s} />` : pl.ended
-      ? html`<div class="ls-after"><b>Worum ging es?</b><span>Du musst noch nichts verstanden haben. Jetzt nehmt ihr es gemeinsam auseinander, Zeile für Zeile.</span></div>`
+      // Am Ende: beim ersten Mal der Weg zum Verstehen, bei einem fertigen Stück Einschätzung und nächster Schritt.
+      ? (ending ?? (ps.done ? null : html`<div class="ls-after"><b>Worum ging es?</b><span>Du musst noch nichts verstanden haben. Jetzt nehmt ihr es gemeinsam auseinander, Zeile für Zeile.</span></div>`))
       : html`<${LiveLine} line=${next} word=${-1} s=${s} dim />`}</div>`}
     <div class=${cls('ls-story', started && 'small')}>
       <div class="hd2"><${Icon} n=${KIND[piece.kind][1]} size="17" />${piece.auto ? 'Worum es geht' : piece.titleDe}<em>${piece.auto ? fmt(piece.dur) : piece.by}</em></div>
@@ -541,7 +650,9 @@ function Understand({ piece, pl, ps, s, known, onWord, toLine, onTake }) {
     (r.passed ? fx.right : fx.wrong)();
     if (r.passed && !said) {
       store.piece(piece.id, { spoken: [...(ps.spoken ?? []), line.i] });
-      progress.apply({ xp: 3, spokenOk: 1 });
+      // Zählt als gesprochener Satz; ist die Zeile schon eine Karte (mitgenommen), auch für diese.
+      const card = asPhrase(line.ru, bare(line.de)).id;
+      progress.apply({ xp: 3, spokenOk: 1, graded: progress.gradable(card) ? { [card]: true } : {} });
     }
   });
   useEffect(() => { setLens(false); setSc(null); setTake(null); setErr(null); L.cancel(); }, [idx]);
@@ -607,7 +718,7 @@ function Understand({ piece, pl, ps, s, known, onWord, toLine, onTake }) {
       <button class="btn ghost" style="width:54px;flex:none;padding:0;min-height:54px" disabled=${idx === 0} onClick=${() => toLine(idx - 1)} aria-label="Vorige Zeile"><${Icon} n="arrow_back" /></button>
       ${idx + 1 < piece.uniq.length
         ? html`<button class="btn" onClick=${() => toLine(idx + 1)}>Nächste Zeile<${Icon} n="arrow_forward" /></button>`
-        : html`<button class="btn area" onClick=${onTake}>Sätze mitnehmen<${Icon} n="arrow_forward" /></button>`}
+        : html`<button class="btn area" onClick=${onTake}>${ps.done ? 'Zum Abschluss' : 'Sätze mitnehmen'}<${Icon} n="arrow_forward" /></button>`}
     </div>
   </div>`;
 }
@@ -621,11 +732,19 @@ function WordSheet({ chunk, line, piece, known, s, pl, onClose }) {
   const state = wordState(main.key, line, known);
   const from = chunk.words[0].t;
   const nextT = line.t[w.i + 1] ?? line.b;
-  const keep = () => store.update((x) => {
-    const words = { ...x.words };
-    if (kept) delete words[main.key]; else words[main.key] = { ru: info.b ?? main.plain, de: info.de ?? chunk.gloss, piece: piece.id };
-    return { ...x, words };
-  });
+  // Gemerkt wird das Wort (oder die Wendung) so, wie es in der Zeile steht — mit seiner Bedeutung dort.
+  const ruForm = chunk.words.map((x) => Ph.fromDisplay(x.cyrillic)).join(' ');
+  const keep = () => {
+    if (!chunk.gloss || chunk.gloss === 'Name') { toast('Für dieses Wort gibt es keine Bedeutung zum Merken'); return; }
+    if (kept) unlearn(s.words[main.key].ru ?? ruForm);
+    else learn(piece, ruForm, chunk.gloss, [chunk.gloss, ...chunk.words.slice(1).map(() => '=')], true);
+    store.update((x) => {
+      const words = { ...x.words };
+      if (kept) delete words[main.key]; else words[main.key] = { ru: ruForm, de: chunk.gloss, piece: piece.id };
+      return { ...x, words };
+    });
+    toast(kept ? 'Aus dem Satzbuch entfernt' : 'Im Satzbuch und in der Wiederholung');
+  };
   const baseDiffers = info.b && Ph.plain(info.b).toLowerCase() !== main.plain.toLowerCase();
   return html`<${Sheet} onClose=${onClose}>
     <div class="ls-word c-live">
@@ -669,7 +788,7 @@ function buildQuiz(piece, picked) {
   return qs;
 }
 
-function Quiz({ piece, picked, pl, onDone }) {
+function Quiz({ piece, picked, cards, pl, onDone }) {
   // Einmal bauen: sonst würfelt jede Neuzeichnung die Antworten neu.
   const qs = useMemo(() => buildQuiz(piece, picked), [piece, picked.join(',')]);
   const [n, setN] = useState(0);
@@ -682,6 +801,9 @@ function Quiz({ piece, picked, pl, onDone }) {
     const ok = o === q.answer;
     setPick(o);
     if (ok) { setRight(right + 1); fx.right(); } else fx.wrong();
+    // Die Antwort zählt für die Karte dieses Satzes — wie in jeder anderen Übung.
+    const card = cards?.[q.line.i];
+    if (card) progress.apply({ xp: 0, graded: { [card]: ok } });
     if (q.type === 'gap') hear();
   };
   const next = () => { if (n + 1 >= qs.length) onDone(right, qs.length); else { setN(n + 1); setPick(null); } };
@@ -702,38 +824,62 @@ function Quiz({ piece, picked, pl, onDone }) {
   <div class="bottom"><button class="btn" disabled=${!answered} onClick=${next}>${n + 1 >= qs.length ? 'Fertig' : 'Weiter'}</button></div>`;
 }
 
-function Take({ piece, pl, ps, s, onReplay }) {
+function NextRow({ next }) {
+  if (!next) return null;
+  return html`<button class="ls-next" onClick=${() => nav(`erleben/${next.piece.id}`, { replace: true })}>
+    <span class="th"><${Pic} file=${next.piece.poster} /></span>
+    <span class="tx"><span class="k">${next.why}</span><b class="ell">${next.piece.head}</b>
+      <span class="d ell">${KIND[next.piece.kind][0]}, ${fmt(next.piece.dur)}</span></span>
+    <${Icon} n="chevron_right" c="faint" /></button>`;
+}
+
+function Take({ piece, pl, ps, s, next, onReplay }) {
   const [phase, setPhase] = useState(ps.done ? 'done' : 'pick');
   const [sel, setSel] = useState(() => (ps.marks.length ? ps.marks : piece.take).slice().sort((a, b) => a - b));
   const [result, setResult] = useState(null);
+  const [cards, setCards] = useState({});
   const suggested = ps.marks.length === 0;
   const flip = (i) => setSel(sel.includes(i) ? sel.filter((x) => x !== i) : [...sel, i].sort((a, b) => a - b));
   const start = () => {
-    for (const i of sel) { const l = piece.lines[i]; progress.saveMySentence({ ru: l.ru, de: bare(l.de), note: `Aus »${piece.titleDe}«` }); }
+    // Jeder gewählte Satz kommt ins Satzbuch und als Karte in die Wiederholung.
+    const ids = {};
+    for (const i of sel) { const l = piece.lines[i]; ids[i] = learn(piece, l.ru, bare(l.de), l.g); }
+    setCards(ids);
     store.piece(piece.id, { marks: sel });
     setPhase('quiz');
   };
   const finish = (right, total) => {
     setResult({ right, total });
-    if (!ps.done) progress.addXp(10 + right * 5);
-    store.piece(piece.id, { done: true, stage: 2 });
+    // Über apply statt addXp: ein durchgearbeitetes Stück zählt als Lerntag für die Serie.
+    if (!ps.done) progress.apply({ xp: 10 + right * 5 });
+    store.piece(piece.id, { done: true, stage: 2, doneAt: progress.today() });
+    // Woran du gearbeitet hast, bleibt: ab in die Bibliothek.
+    if (!FEED.saved.includes(piece.id)) feed.save(piece.id, true);
     fx.win();
     setPhase('done');
   };
-  if (phase === 'quiz') return html`<${Quiz} piece=${piece} picked=${sel.slice(0, 4)} pl=${pl} onDone=${finish} />`;
+  if (phase === 'quiz') return html`<${Quiz} piece=${piece} picked=${sel.slice(0, 4)} cards=${cards} pl=${pl} onDone=${finish} />`;
   if (phase === 'done') {
     const words = Object.values(s.words).filter((w) => w.piece === piece.id).length;
+    const seen = !!ps.rating;   // schon einmal ohne Deutsch angesehen und eingeschätzt
     return html`<div class="scroll"><div class="ls-body">
-      <div class="ls-donehd"><${Icon} n="verified" fill c="amber" /><div><b>Durchgearbeitet</b><span>${ps.marks.length === 1 ? 'Ein Satz liegt' : `${ps.marks.length} Sätze liegen`} jetzt in deinem Satzbuch unter »Meine Sätze«.</span></div></div>
+      <div class="ls-donehd"><${Icon} n="verified" fill c="amber" /><div><b>Durchgearbeitet</b><span>${ps.marks.length === 1 ? 'Ein Satz liegt' : `${ps.marks.length} Sätze liegen`} in deinem Satzbuch und ${ps.marks.length === 1 ? 'kommt' : 'kommen'} in die Wiederholung.</span></div></div>
       <div class="stat3 mt16">
         <div><b><${Icon} n="bookmark" fill c="cc" />${ps.marks.length}</b><span>Sätze mitgenommen</span></div>
         <div><b><${Icon} n="translate" c="cc" />${words}</b><span>Wörter gemerkt</span></div>
         ${result ? html`<div><b><${Icon} n="task_alt" c="good" />${result.right}/${result.total}</b><span>richtig geübt</span></div>` : html`<div><b><${Icon} n="replay" c="cc" />${piece.uniq.length}</b><span>Zeilen verstanden</span></div>`}
       </div>
-      <div class="ls-after mt20"><b>Jetzt der beste Teil</b><span>Sieh es dir noch einmal an, diesmal ohne Deutsch. Du wirst mehr verstehen als beim ersten Mal.</span></div>
+      ${seen
+        ? html`<div class="ls-after mt20"><b>Das Stück liegt in deiner Bibliothek</b><span>Zuletzt hast du ${UNDERSTOOD[ps.rating]} verstanden. Die Bibliothek schlägt es dir ${REWATCH_DAYS[ps.rating] === 1 ? 'morgen' : `in ${REWATCH_DAYS[ps.rating]} Tagen`} wieder vor.</span></div>
+          ${next && html`<div class="ls-nexthd">Wie es weitergeht</div><${NextRow} next=${next} />`}`
+        : html`<div class="ls-after mt20"><b>Jetzt der beste Teil</b><span>Sieh es dir noch einmal an, diesmal ohne Deutsch. Du wirst mehr verstehen als beim ersten Mal.</span></div>`}
     </div></div>
-    <div class="bottom"><button class="btn" onClick=${onReplay}><${Icon} n="play_arrow" fill />Ohne Deutsch ansehen</button>
-      <button class="btn ghost" onClick=${() => back('erleben')}>Zur Übersicht</button></div>`;
+    <div class="bottom">${seen
+      ? html`${next ? html`<button class="btn" onClick=${() => nav(`erleben/${next.piece.id}`, { replace: true })}>Nächstes Stück<${Icon} n="arrow_forward" /></button>`
+          : html`<button class="btn" onClick=${() => back('erleben')}>Zur Übersicht</button>`}
+        <button class="btn ghost" onClick=${onReplay}>Nochmal ohne Deutsch ansehen</button>`
+      : html`<button class="btn" onClick=${onReplay}><${Icon} n="play_arrow" fill />Ohne Deutsch ansehen</button>
+        <button class="btn ghost" onClick=${() => back('erleben')}>Zur Übersicht</button>`}</div>`;
   }
   return html`<div class="scroll"><div class="ls-body">
     <div class="ls-q"><b>Was nimmst du mit?</b><span class="sub">${suggested ? 'Mein Vorschlag ist angehakt. Zwei, drei Sätze reichen.' : 'Deine gemerkten Zeilen sind angehakt. Zwei, drei Sätze reichen.'}</span></div>
@@ -763,12 +909,20 @@ function PieceView({ piece }) {
   const s = useStore();
   const ps = pieceState(s, piece.id);
   const known = useKnown();
+  const pieces = usePieces() ?? [];
+  const f = useFeed();
   const pl = usePlayer(piece);
+  const today = progress.today();
   const [stage, setStage] = useState(ps.done ? 0 : ps.stage);
   const [sheet, setSheet] = useState(null);
+  // Nur für diese Sitzung: Hast du das fertige Stück gerade noch einmal angesehen und eingeschätzt?
+  const [watched, setWatched] = useState(false);
+  const [rated, setRated] = useState(false);
   useEffect(() => () => audio.stop(), []);
+  const saved = f.saved.includes(piece.id);
+  const next = pickNext(pieces, s, f, piece.id, today);
   const go = (n) => { pl.stopSeg(); setSheet(null); setStage(n); store.piece(piece.id, { stage: Math.max(n, ps.stage), started: true }); };
-  const watch = () => { store.piece(piece.id, { started: true }); pl.play(); };
+  const watch = () => { store.piece(piece.id, { started: true }); setWatched(true); setRated(false); pl.play(); };
   const toLine = (i) => {
     store.piece(piece.id, { line: i, started: true });
     const l = piece.uniq[i];
@@ -776,27 +930,50 @@ function PieceView({ piece }) {
   };
   const replayPlain = () => {
     store.update((x) => ({ ...x, subs: { ...x.subs, lat: true, de: false } }));
-    setStage(0);
+    setStage(0); setWatched(true); setRated(false);
     pl.seek(0);
+  };
+  const rate = (n) => {
+    store.piece(piece.id, { rating: n, ratedAt: today });
+    // Das nächste neue Stück beginnt wieder mit deutschem Text.
+    store.update((x) => ({ ...x, subs: { ...x.subs, de: true } }));
+    setRated(true);
+  };
+  const toggleSaved = async () => {
+    const ok = await feed.save(piece.id, !saved);
+    toast(!ok ? 'Der Hikari-Server ist gerade nicht erreichbar' : saved ? 'Aus der Bibliothek entfernt' : 'In der Bibliothek: Dieses Stück bleibt');
   };
   const idx = Math.min(ps.line, piece.uniq.length - 1);
   // In »Verstehen« und »Mitnehmen« spielt ein Tipp aufs Video die aktuelle Zeile.
   const stageTap = stage === 1 ? () => (pl.playing ? pl.pause() : pl.playSeg(piece.uniq[idx].a, piece.uniq[idx].b, { key: 'line' })) : stage === 0 ? () => (pl.playing ? pl.pause() : watch()) : null;
+  // Fertiges Stück, gerade zu Ende angesehen: erst einschätzen, dann weiter — kein Kreislauf durch die Schritte.
+  const closing = ps.done && watched && pl.ended;
+  const ending = !closing ? null : !rated
+    ? html`<div class="ls-rate"><b>Wie viel hast du ohne Deutsch verstanden?</b>
+        <div>${RATINGS.map(([n, label]) => html`<button onClick=${() => rate(n)}>${label}</button>`)}</div></div>`
+    : html`<div class="ls-after"><b>${ps.rating === 3 ? 'Stark. Das sitzt.' : ps.rating === 2 ? 'Gut. Es wird.' : 'Notiert. Das kommt mit dem Wiedersehen.'}</b>
+        <span>Die Bibliothek schlägt dir das Stück ${REWATCH_DAYS[ps.rating] === 1 ? 'morgen' : `in ${REWATCH_DAYS[ps.rating]} Tagen`} wieder vor.</span></div>
+      ${next && html`<div class="ls-nexthd">Wie es weitergeht</div><${NextRow} next=${next} />`}`;
+  const fresh = !(ps.done ? watched : ps.started) && !pl.playing && !pl.ended;
   return html`<div class="screen c-live ls-piece">
-    <${TopBar} title=${piece.head} sub=${piece.auto ? `${KIND[piece.kind][0]}${piece.topic ? ` zu »${piece.topic}«` : ''}, ${piece.by}` : `${piece.titleDe}, ${piece.part}`} onBack=${() => back('erleben')} />
+    <${TopBar} title=${piece.head} sub=${piece.auto ? `${KIND[piece.kind][0]}${piece.topic ? ` zu »${piece.topic}«` : ''}, ${piece.by}` : `${piece.titleDe}, ${piece.part}`} onBack=${() => back('erleben')}
+      right=${html`<button class=${cls('iconbtn', saved && 'tint')} onClick=${toggleSaved} aria-label=${saved ? 'Aus der Bibliothek entfernen' : 'In die Bibliothek'}><${Icon} n="bookmark" fill=${saved} /></button>`} />
     <${Stage} piece=${piece} pl=${pl} onTap=${stageTap} quiet=${stage > 0} />
     <div class="ls-stages">${STAGES.map((t, i) => html`<button class=${cls(stage === i && 'on', (ps.done || i < ps.stage) && stage !== i && 'done')} onClick=${() => go(i)}>
       <i>${(ps.done || i < ps.stage) && stage !== i ? html`<${Icon} n="check" size="13" />` : i + 1}</i>${t}</button>`)}</div>
 
-    ${stage === 0 && html`<${Feel} piece=${piece} pl=${pl} ps=${ps} s=${s} />
-      <div class="bottom">${!(ps.started || pl.playing || pl.ended)
-        ? (pl.ready ? html`<button class="btn" onClick=${watch}><${Icon} n="play_arrow" fill />Ansehen</button>`
+    ${stage === 0 && html`<${Feel} piece=${piece} pl=${pl} ps=${ps} s=${s} ending=${ending} />
+      <div class="bottom">${fresh
+        ? (pl.ready ? html`<button class="btn" onClick=${watch}><${Icon} n="play_arrow" fill />${ps.done ? 'Nochmal ansehen' : 'Ansehen'}</button>`
           : html`<button class="btn" disabled=${!pl.clip.failed} onClick=${pl.clip.retry}>${clipLabel(pl.clip)}</button>`)
-        : html`<button class=${cls('btn', !pl.ended && 'ghost')} onClick=${() => { go(1); toLine(ps.line < piece.uniq.length ? idx : 0); }}>Zeile für Zeile verstehen<${Icon} n="arrow_forward" /></button>`}</div>`}
+        : !ps.done ? html`<button class=${cls('btn', !pl.ended && 'ghost')} onClick=${() => { go(1); toLine(ps.line < piece.uniq.length ? idx : 0); }}>Zeile für Zeile verstehen<${Icon} n="arrow_forward" /></button>`
+        : closing && rated && next ? html`<button class="btn" onClick=${() => nav(`erleben/${next.piece.id}`, { replace: true })}>Nächstes Stück<${Icon} n="arrow_forward" /></button>
+            <button class="btn ghost" onClick=${() => back('erleben')}>Zur Übersicht</button>`
+        : html`<button class=${cls('btn', !(closing && rated) && 'ghost')} onClick=${() => back('erleben')}>Zur Übersicht</button>`}</div>`}
 
     ${stage === 1 && html`<${Understand} piece=${piece} pl=${pl} ps=${ps} s=${s} known=${known} onWord=${(chunk, line) => setSheet({ chunk, line })} toLine=${toLine} onTake=${() => go(2)} />`}
 
-    ${stage === 2 && html`<${Take} piece=${piece} pl=${pl} ps=${ps} s=${s} onReplay=${replayPlain} />`}
+    ${stage === 2 && html`<${Take} piece=${piece} pl=${pl} ps=${ps} s=${s} next=${next} onReplay=${replayPlain} />`}
 
     ${sheet && html`<${WordSheet} chunk=${sheet.chunk} line=${sheet.line} piece=${piece} known=${known} s=${s} pl=${pl} onClose=${() => setSheet(null)} />`}
   </div>`;

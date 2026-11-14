@@ -3,7 +3,7 @@
 import {
   html, cls, Icon, SessionBar, IL, PhraseBlock, PlayRow, Speaker, Opt, LetterLens, Latin, useKeys, useListen, Mic, ScoreCard,
   Practice, PhraseDock, SentenceCard, RecordCompare, Summary, LeaveSheet, usePlaying, playPhrase, useState, useEffect, useRef, useMemo, fx, audio, speech, MIC_WAIT } from '../ui.js';
-import { D, P, Pl, progress, planState, dayNo, back, takeSelection } from '../app.js';
+import { D, P, Pl, progress, planState, dayNo, back, takeSelection, phraseById } from '../app.js';
 import { storage, SPEECH_ERRORS } from '../platform.js';
 import * as Co from '../domain/course.js';
 import { weightedOrder, lessonReviewIds, talkDaySelection } from '../learner.js';
@@ -57,7 +57,9 @@ class Engine {
     const s = this.settings;
     const main = Co.review(D.index, ids.filter((id) => D.index.itemById.has(id)), D.index.days.length, s, rng, limit);
     const pod = Co.review(D.podIndex, ids.filter((id) => D.podIndex.itemById.has(id)), D.podIndex.days.length, s, rng, limit);
-    return rng.shuffled([...main, ...pod]).slice(0, limit);
+    // Eigene Sätze mit Karte (aus »Lieder & Szenen« mitgenommen) werden wie Kurssätze wiederholt.
+    const own = Co.review(D.index, ids.filter((id) => id.startsWith('dd:')), D.index.days.length, s, rng, limit, (id) => phraseById(id, s));
+    return rng.shuffled([...main, ...pod, ...own]).slice(0, limit);
   }
 
   /** Auswahl aus dem Lernstand — einmal je Sitzung, wird im Zwischenstand gespeichert. */

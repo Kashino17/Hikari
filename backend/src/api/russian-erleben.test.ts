@@ -128,6 +128,25 @@ describe("Feed", () => {
     expect(existsSync(join(s.dir, "media", "b.mp4"))).toBe(true);
   });
 
+  it("Bibliothek: Behaltenes bleibt für immer, auch abgelegt und nach 30 Tagen", async () => {
+    const s = await setup();
+    for (const id of ["a", "b", "c", "d"]) s.piece(id);
+    writeFileSync(join(s.dir, "media", "a.mp4"), "x");
+    await s.feed();
+    let f = await s.post("/russian/erleben/save", { id: "a" });
+    expect(f.saved).toEqual(["a"]);
+    f = await s.post("/russian/erleben/save", { id: "c" });
+    expect(f.saved).toEqual(["c", "a"]); // neueste zuerst
+    await s.post("/russian/erleben/refresh", { keep: [] }); // alles abgelegt
+    f = await s.feed();
+    // a und c bleiben abrufbar, b ist nach der Frist gelöscht.
+    expect(f.pieces.map((p: { id: string }) => p.id)).toEqual(["a", "c", "d"]);
+    expect(existsSync(join(s.dir, "media", "a.mp4"))).toBe(true);
+    f = await s.post("/russian/erleben/save", { id: "a", on: false });
+    expect(f.saved).toEqual(["c"]);
+    expect((await s.post("/russian/erleben/save", { id: "../x" })).saved).toEqual(["c"]);
+  });
+
   it("füllt den Vorrat erst mit Themen auf und nie in zwei Läufen zugleich", async () => {
     const s = await setup();
     s.piece("a");

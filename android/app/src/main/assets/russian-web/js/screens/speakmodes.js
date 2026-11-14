@@ -113,7 +113,7 @@ export function Reflex() {
   const start = () => { res.current = { newBest: false, blind: 0 }; setIdx(0); setScore(0); setStreak(0); setRequeued([]); setPhase('run'); };
   const done = (blind, fastReflex) => {
     const ph = queue[idx];
-    progress.apply({ xp: blind ? 12 : 6, graded: ph.id.startsWith('dd:') ? {} : { [ph.id]: blind }, spokenOk: 1 });
+    progress.apply({ xp: blind ? 12 : 6, graded: !progress.gradable(ph.id) ? {} : { [ph.id]: blind }, spokenOk: 1 });
     let total = score;
     let q = queue;
     if (blind) { const st = streak + 1; setStreak(st); res.current.blind++; total += (fastReflex ? 25 : 15) + Math.min(st, 5) * 3; }
@@ -303,7 +303,7 @@ export function Blind() {
       ctl.current.handle = null;
       if (!alive()) return;
       const ok = r.ok && Sp.speech(ph.ru, r.hyps).passed;
-      if (ok) { setPassed((x) => x + 1); fx.right(); progress.apply({ xp: 12, graded: ph.id.startsWith('dd:') ? {} : { [ph.id]: true }, spokenOk: 1 }); }
+      if (ok) { setPassed((x) => x + 1); fx.right(); progress.apply({ xp: 12, graded: !progress.gradable(ph.id) ? {} : { [ph.id]: true }, spokenOk: 1 }); }
       else if (qRef.current.length < 12) { const q = [...qRef.current]; q.splice(Math.min(round + 3, q.length), 0, ph); setQueue(q); qRef.current = q; }
       setStep('master');
       await playPhrase(ph);

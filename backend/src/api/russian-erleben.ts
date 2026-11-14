@@ -23,6 +23,8 @@ import { resolveUv } from "../voice/whisper.js";
  *  - der Feed zeigt immer FEED_SIZE davon; »Neue« tauscht aus, was nicht angefangen ist
  *  - sinkt der Vorrat unter STOCK, bereitet ein Hintergrundlauf neue Stücke auf
  *  - gesucht wird erst, wenn der Lernende Themen vorgegeben hat
+ *  - was der Lernende behalten will (oder durchgearbeitet hat), kommt in die Bibliothek und
+ *    bleibt — samt Video — dauerhaft liegen
  *
  * In den Feed kommt nur, was die ganze Prüfkette durchlaufen hat (`checked`), und nur im
  * aktuellen Stand der Aufbereitung (`v`); ältere Stücke bereitet prepare.py von selbst neu auf.
@@ -54,6 +56,8 @@ export interface Interests {
 
 export interface ErlebenFeedState {
   shown: string[];
+  /** Bibliothek: behaltene Stücke, die neuesten zuerst. */
+  saved: string[];
   ready: number;
   busy: boolean;
   pieces: ErlebenPiece[];
@@ -127,7 +131,7 @@ export class ErlebenFeed {
   private readonly candidatesFile: string;
   private readonly usageFile: string;
   private readonly now: () => number;
-  private feed: { shown: string[]; dismissed: string[] };
+  private feed: { shown: string[]; dismissed: string[]; saved: string[] };
   private running = false;
   private pauseUntil = 0;
 
@@ -141,7 +145,7 @@ export class ErlebenFeed {
     this.now = deps.now ?? Date.now;
     mkdirSync(this.autoDir, { recursive: true });
     mkdirSync(this.mediaDir, { recursive: true });
-    this.feed = { shown: [], dismissed: [], ...readJson(this.feedFile, {}) };
+    this.feed = { shown: [], dismissed: [], saved: [], ...readJson(this.feedFile, {}) };
   }
 
   mediaFile(name: string): string {
@@ -169,10 +173,19 @@ export class ErlebenFeed {
     return Math.min(reviews, Math.max(0, HEAR_PER_DAY - used(HEAR_MODEL)));
   }
 
+  /** Stück in die Bibliothek legen oder wieder herausnehmen. Was dort liegt, wird nie gelöscht. */
+  setSaved(id: string, on: boolean): void {
+    if (!/^[a-z0-9_]{1,60}$/.test(id)) return;
+    const rest = this.feed.saved.filter((x) => x !== id);
+    this.feed.saved = on ? [id, ...rest] : rest;
+    writeAtomic(this.feedFile, JSON.stringify(this.feed));
+  }
+
   /** Löscht abgelegte Stücke, die älter als 30 Tage sind — ein Video belegt 5 bis 10 MB. */
   private prune(): void {
     const cutoff = this.now() - KEEP_DISMISSED_MS;
     for (const id of this.feed.dismissed) {
+      if (this.feed.saved.includes(id)) continue;
       const file = join(this.autoDir, `${id}.json`);
       if (!/^[a-z0-9_]{1,60}$/.test(id) || !existsSync(file) || statSync(file).mtimeMs > cutoff)
         continue;
@@ -216,6 +229,7 @@ export class ErlebenFeed {
     this.topUp(stock);
     return {
       shown: this.feed.shown,
+      saved: this.feed.saved,
       ready: stock,
       busy: this.running,
       // Auch Abgelegtes bleibt abrufbar, solange es jemand offen hat.
@@ -295,6 +309,11 @@ export async function registerRussianErlebenRoutes(
   app.post<{ Body: { keep?: unknown } }>("/russian/erleben/refresh", async (req) => {
     const keep = Array.isArray(req.body?.keep) ? req.body.keep.map(String) : [];
     return feed.state(keep);
+  });
+
+  app.post<{ Body: { id?: unknown; on?: unknown } }>("/russian/erleben/save", async (req) => {
+    feed.setSaved(String(req.body?.id ?? ""), req.body?.on !== false);
+    return feed.state();
   });
 
   app.post<{ Body: unknown }>("/russian/erleben/interests", async (req) => {

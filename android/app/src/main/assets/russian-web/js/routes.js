@@ -9,7 +9,7 @@ import { Reflex, Kombi, Blind, Talk } from './screens/speakmodes.js';
 import { LabList, LabSession } from './screens/lab.js';
 import { Journey } from './screens/journey.js';
 import { StatsVocab, StatsTime, StatsWins } from './screens/stats.js';
-import { ErlebenHub, ErlebenPiece } from './screens/erleben.js';
+import { ErlebenHub, ErlebenPiece, ErlebenLibrary } from './screens/erleben.js';
 
 const soon = (name) => () => html`<div class="screen"><div class="empty" style="margin-top:120px"><b>${name}</b>Wird gerade gebaut.</div></div>`;
 
@@ -20,6 +20,7 @@ export const ROUTES = {
     [/^ich\/lernzeit$/, () => html`<${StatsTime} />`],
     [/^ich\/erfolge$/, () => html`<${StatsWins} />`],
     [/^erleben$/, () => html`<${ErlebenHub} />`],
+    [/^erleben\/bibliothek$/, () => html`<${ErlebenLibrary} />`],
     [/^erleben\/(\w+)$/, (m) => html`<${ErlebenPiece} id=${m[1]} />`],
     [/^anja$/, () => html`<${Journey} />`],
     [/^blitz$/, () => html`<${Blitz} />`],

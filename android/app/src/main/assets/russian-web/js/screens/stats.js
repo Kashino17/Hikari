@@ -4,6 +4,7 @@
 //   3. Drei Türen   – Wortschatz · Lernzeit · Erfolge (jede öffnet ihre eigene Seite)
 // Alles Weitere liegt eine Ebene tiefer, damit die Hauptseite auf einen Blick lesbar bleibt.
 import { html, cls, Icon, TopBar, Sheet, Ring, useState, useEffect, useMemo } from '../ui.js';
+import { piecesDone } from './erleben.js';
 import { D, P, useProgress, progress, planState, prefs, exitApp, nav, back, testSelection, phrasebookPreset } from '../app.js';
 import { storage, isNative } from '../platform.js';
 import { journeyDone } from './courses.js';
@@ -352,6 +353,7 @@ export function StatsWins() {
     ['extension', 'words', 'Kombi-Meister', p.bestKombi, 'Punkte', 'kombi'],
     ['join_inner', 'words', 'Paare finden', p.bestPairsSeconds, 'Sekunden', 'pairs'],
     ['graphic_eq', 'listen', 'Lautlabor', lab.length ? Math.max(...lab) : 0, 'Prozent', 'sounds'],
+    ['video_library', 'listen', 'Lieder & Szenen', piecesDone(), piecesDone() === 1 ? 'Stück durchgearbeitet' : 'Stücke durchgearbeitet', 'erleben'],
   ];
   return html`<div class="screen">
     <${TopBar} title="Erfolge" onBack=${() => back('ich')} />
