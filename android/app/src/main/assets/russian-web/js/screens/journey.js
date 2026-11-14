@@ -2,7 +2,7 @@
 // mit der KI (Hikari-Server → lokales Sprachmodell), eigener Wortschatz, Lernplan.
 // Regeln wie in RussianConversationViewModel.kt / RussianJourney.kt.
 import { html, cls, Icon, TopBar, IL, Sheet, Mic, useListen, useState, useEffect, useRef, useMemo, fx, tts, audio } from '../ui.js';
-import { progress, back, toast } from '../app.js';
+import { progress, back, nav, toast } from '../app.js';
 import { storage, api, speech as recog, serverVoice } from '../platform.js';
 import * as Ph from '../domain/phonetics.js';
 import * as Sp from '../domain/speech.js';
@@ -41,7 +41,7 @@ export const LESSONS = [
       Ln('Чай.', 'Tee.', 'Anja bringt dir einen Tee. Jetzt möchtest du wissen, wie es ihr geht.', 'Frage Anja: Wie geht es dir? Du kennst как und дела.', ['Как дела?', 'А ты?'], 'Wie geht es dir?', 'Du hast selbst eine Frage gestellt.'),
       Ln('Хорошо, спасибо!', 'Gut, danke!', 'Anja freut sich über deine Frage.', 'Antworte mit Gern geschehen.', ['Пожалуйста!'], 'Gern geschehen!', 'Ihr habt euch gegenseitig zugehört.')] },
 ];
-const SCENARIOS = [
+export const SCENARIOS = [
   ['cafe', 'Ein Café, zwei Menschen', 'Du triffst Anja in einem kleinen Café.', 'Etwas bestellen und eine Vorliebe nennen', 'local_cafe'],
   ['friend', 'Ein neuer Kontakt', 'Ihr lernt euch kennen, ganz ohne Zeitdruck.', 'Dich vorstellen und etwas zurückfragen', 'waving_hand'],
   ['weekend', 'Ein schöner freier Tag', 'Ihr plant etwas, das euch beiden Freude macht.', 'Einen Vorschlag machen und euch einigen', 'wb_sunny'],
@@ -56,7 +56,7 @@ const ACTIONS = [['simplify', 'Einfacher fragen'], ['deeper', 'Tiefer nachfragen
 // ── Zustand ────────────────────────────────────────────────────────────────
 const DEFAULT_SETTINGS = { scenario: 'cafe', interest: '', mood: 'calm', goal: 'everyday', turns: 12, speed: 0.85, targetDate: '', daysPerWeek: 5, minutesPerDay: 30, blockMinutes: 10 };
 const emptyChat = () => ({ stage: 0, observations: [], cards: [], settings: { ...DEFAULT_SETTINGS }, activeSecondsByDay: {}, foundation: { introduced: [], completed: [], run: null }, conversationVocabulary: [] });
-const loadChat = () => { const p = storage.getJSON('conv_progress'); return p ? { ...emptyChat(), ...p, settings: { ...DEFAULT_SETTINGS, ...p.settings }, foundation: { introduced: [], completed: [], run: null, ...p.foundation } } : emptyChat(); };
+export const loadChat = () => { const p = storage.getJSON('conv_progress'); return p ? { ...emptyChat(), ...p, settings: { ...DEFAULT_SETTINGS, ...p.settings }, foundation: { introduced: [], completed: [], run: null, ...p.foundation } } : emptyChat(); };
 const normalize = (s) => Ph.plain(s).toLowerCase().replaceAll('ё', 'е').replace(/[^а-яa-z ]/g, ' ').trim().replace(/ +/g, ' ');
 const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
 const INTERVALS = [1, 1, 2, 4, 7, 14, 30];
@@ -72,7 +72,7 @@ function addCards(cp, phrases, today) {
   const fresh = phrases.filter((p) => !have.has(normalize(p.ru)) && have.add(normalize(p.ru))).map((p) => ({ phrase: { ru: p.ru, de: p.de }, created: today, due: today + 1, box: 0, attempts: 0, delayedCorrect: 0 }));
   return { ...cp, cards: [...cp.cards, ...fresh].slice(-300) };
 }
-function record(cp, obs) {
+export function record(cp, obs) {
   if (cp.observations.some((o) => o.id === obs.id)) return cp;
   const observations = [...cp.observations, obs].slice(-500);
   const recent = observations.filter((o) => o.stage === cp.stage).slice(-20);
@@ -81,7 +81,7 @@ function record(cp, obs) {
     new Set(strong.map((o) => normalize(o.answer))).size >= 8 && cp.cards.filter((c) => c.delayedCorrect > 0).length >= (cp.stage + 1) * 2;
   return { ...cp, observations, stage: ready ? Math.min(4, cp.stage + 1) : cp.stage };
 }
-const supportStage = (cp) => { const last = cp.observations.slice(-3); return last.length === 3 && last.every((o) => !o.clear || !o.independent) ? Math.max(0, cp.stage - 1) : cp.stage; };
+export const supportStage = (cp) => { const last = cp.observations.slice(-3); return last.length === 3 && last.every((o) => !o.clear || !o.independent) ? Math.max(0, cp.stage - 1) : cp.stage; };
 
 // Warum Anja nicht erreichbar ist — der Server nennt den Grund (`reason`), `server` heißt: der Mac selbst antwortet nicht.
 const WHY = {
@@ -93,7 +93,10 @@ const WHY = {
 const whyText = (st) => (WHY[st?.reason] ?? (() => 'Für das freie Gespräch muss dein KI-Server (LM Studio auf dem Mac) laufen.'))(st);
 
 /** Wort → Bedeutung aus allem, was in der Gesprächsreise schon vorkam — ergänzt das Kurs-Wörterbuch unter deinen eigenen Sätzen. */
-function ownWords(cp, session) {
+/** Wörter aus den Mini-Gesprächen und dem eigenen Gesprächs-Wortschatz — das, was Anja voraussetzen darf. */
+export const knownWords = (cp) => [...LESSONS.flatMap((l) => l.words).filter((w) => cp.foundation.introduced.includes(w.id)), ...cp.conversationVocabulary].map((w) => ({ ru: Ph.plain(w.ru), de: w.de }));
+
+export function ownWords(cp, session) {
   const m = new Map();
   const add = (w) => { const k = Gl.wordKey(w?.ru ?? ''); if (k && w.de && !/\s/.test(Ph.plain(w.ru).trim()) && !m.has(k)) m.set(k, w.de.split(' · ')[0]); };
   for (const l of LESSONS) l.words.forEach(add);
@@ -290,6 +293,10 @@ function HomePage({ cp, setPage, today, nextLesson, beginLesson, run, lesson, fr
       <button class="btn mt16" onClick=${() => (resumable ? setPage('lesson') : allDone ? setPage('free') : beginLesson(nextLesson.id))}>
         ${resumable ? 'Hier weitermachen' : allDone ? 'Mein eigenes Gespräch' : started ? 'Nächsten Moment entdecken' : 'Meine ersten 4 Wörter'}<${Icon} n="arrow_forward" /></button>
       <div class="sub mt12 center">Du startest den Ton selbst. Alles wird auf Deutsch erklärt.</div></div>
+    <button class="al-entry" onClick=${() => nav('anja/live')}>
+      <span class="ic"><${Icon} n="graphic_eq" /></span>
+      <span class="tx"><span class="k">Neu · zum Ausprobieren</span><b>Anja live</b><span class="d">Du sprichst, sie antwortet sofort — mit ihrer eigenen Stimme.</span></span>
+      <${Icon} n="chevron_right" c="faint" /></button>
     ${due > 0 && html`<button class="row card" style="border-radius:16px" onClick=${() => setPage('review')}><${Icon} n="style" c="amber" /><div class="tx"><b>${due} ${due === 1 ? 'Wort wartet' : 'Wörter warten'} auf ein Wiedersehen</b></div><${Icon} n="chevron_right" c="faint" /></button>`}
     <div><div class="over" style="margin-bottom:8px">Deine kleine Reise</div><div class="list">${LESSONS.map((l, i) => {
       const done = f.completed.includes(l.id);

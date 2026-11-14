@@ -39,7 +39,7 @@ export const AREA_NAME = { speak: 'Sprechen', listen: 'Hören', review: 'Wiederh
 
 const ROUTE_MODE = [
   [/^lesson\//, 'lesson'], [/^talkday\//, 'talkday'], [/^dialog\//, 'dialog'], [/^review$/, 'review'], [/^test$/, 'review'],
-  [/^podcastPractice\//, 'podcastPractice'], [/^podcast/, 'podcast'], [/^pattern/, 'patterns'], [/^anja$/, 'anja'],
+  [/^podcastPractice\//, 'podcastPractice'], [/^podcast/, 'podcast'], [/^pattern/, 'patterns'], [/^anja/, 'anja'],
   [/^reflex$/, 'reflex'], [/^kombi$/, 'kombi'], [/^blind$/, 'blind'], [/^talk$/, 'talk'], [/^blitz$/, 'blitz'],
   [/^pairs$/, 'pairs'], [/^sounds/, 'sounds'], [/^satzbuch$/, 'satzbuch'], [/^deep\//, 'satzbuch'], [/^erleben/, 'erleben'],
 ];

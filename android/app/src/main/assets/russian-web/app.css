@@ -931,3 +931,77 @@ button.row:active{background:rgba(255,255,255,.035)}
 .ls-next b{font-size:15px;font-weight:600}
 .ls-next .d{font-size:12.5px;color:var(--muted)}
 .ls-next:active{background:var(--high)}
+
+/* ── Anja live: gesprochenes Gespräch ─────────────────────────────────────── */
+.al-entry{display:flex;align-items:center;gap:14px;width:100%;padding:14px 12px 14px 14px;border-radius:20px;text-align:left;background:linear-gradient(rgba(var(--amber-rgb),.13),rgba(var(--amber-rgb),.05)),var(--card);border:1px solid rgba(var(--amber-rgb),.34)}
+.al-entry .ic{flex:none;width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:var(--amber);color:var(--ink)}
+.al-entry .ic .ms{font-size:26px}
+.al-entry .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.al-entry .k{font-size:11.5px;font-weight:600;color:var(--amber)}
+.al-entry b{font-size:17px;font-weight:600}
+.al-entry .d{font-size:13px;color:var(--muted);line-height:1.35}
+.al-entry:active{transform:scale(.985)}
+
+.al-scenes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.al-scene{display:flex;flex-direction:column;gap:3px;padding:12px;border-radius:16px;background:var(--card);border:1.5px solid var(--border);text-align:left;min-height:96px}
+.al-scene .ms{font-size:22px;color:var(--muted);margin-bottom:4px}
+.al-scene b{font-size:14.5px;font-weight:600;line-height:1.25}
+.al-scene span:last-child{font-size:12px;color:var(--muted);line-height:1.35}
+.al-scene.on{border-color:var(--amber);background:linear-gradient(rgba(var(--amber-rgb),.1),rgba(var(--amber-rgb),.1)),var(--card)}
+.al-scene.on .ms{color:var(--amber)}
+.al-switch{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;border-radius:16px;background:var(--card);border:1px solid var(--border);text-align:left}
+.al-switch .tx{flex:1;display:flex;flex-direction:column;gap:2px}
+.al-switch b{font-size:14.5px;font-weight:600}
+.al-switch .tx span{font-size:12.5px;color:var(--muted)}
+.al-switch .sw{flex:none;width:44px;height:26px;border-radius:13px;background:var(--high);position:relative;transition:background .18s}
+.al-switch .sw i{position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .18s var(--ease)}
+.al-switch .sw.on{background:var(--amber)}
+.al-switch .sw.on i{transform:translateX(18px)}
+.al-steps{display:flex;flex-direction:column;gap:10px;padding:2px 2px}
+.al-steps div{display:flex;align-items:center;gap:12px;font-size:14px;color:rgba(255,255,255,.82);line-height:1.35}
+.al-steps .ms{flex:none;font-size:20px;color:var(--amber)}
+
+.al-talk{padding-bottom:12px}
+.al-talk .bub{max-width:92%}
+.al-wait{display:flex;flex-direction:column;align-items:center;gap:6px;padding:56px 0 24px;text-align:center}
+.al-wait b{font-size:19px;font-weight:600;margin-top:10px}
+.al-wait span:last-child{font-size:14px;color:var(--muted)}
+.al-bars{display:inline-flex;align-items:center;gap:2px;height:11px;margin-left:5px;vertical-align:-1px;opacity:0;transition:opacity .2s}
+.al-bars.on{opacity:1}
+.al-bars i{width:2.5px;height:4px;border-radius:2px;background:var(--amber)}
+.al-bars.on i{animation:alBar .9s ease-in-out infinite}
+.al-bars i:nth-child(2){animation-delay:.15s}.al-bars i:nth-child(3){animation-delay:.3s}.al-bars i:nth-child(4){animation-delay:.45s}
+.al-wait .al-bars{height:26px;gap:4px;margin:0}
+.al-wait .al-bars i{width:5px;height:8px;border-radius:3px}
+@keyframes alBar{0%,100%{transform:scaleY(1)}50%{transform:scaleY(2.6)}}
+.al-hers.on{border-color:rgba(var(--amber-rgb),.55)}
+.al-veil{display:flex;align-items:center;gap:8px;width:100%;padding:13px 12px;border-radius:12px;border:1px dashed var(--border2);color:var(--muted);font-size:14px}
+.al-mine.fix{border-color:rgba(var(--amber-rgb),.4)}
+.al-verdict{display:flex;align-items:flex-start;gap:6px;margin-top:8px;font-size:13.5px;line-height:1.4}
+.al-verdict .ms{flex:none;margin-top:1.5px}
+.al-verdict.ok{color:var(--good);font-weight:500}
+.al-verdict.tip{color:var(--amber)}
+.al-verdict.wait{color:var(--muted);font-size:12.5px}
+.al-right{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.al-ex{display:flex;align-items:center;gap:8px;padding:12px 0;border-top:1px solid var(--border)}
+.al-ex .de,.al-review .de{font-size:14px;color:var(--muted);margin-top:4px}
+.al-review{margin-bottom:10px}
+.al-review .was{font-size:16px;color:rgba(255,255,255,.72);margin-top:2px}
+
+.al-dock{flex:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:start;gap:6px;padding:12px 12px 0;border-top:1px solid var(--border);background:var(--bg)}
+.al-side{display:flex;flex-direction:column;align-items:center;gap:5px;padding:14px 4px 0;color:var(--text);font-size:12px;line-height:1.25;text-align:center}
+.al-side .ms{font-size:24px;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--card);border:1px solid var(--border)}
+.al-side:disabled{opacity:.35}
+.al-side:active:not(:disabled) .ms{background:var(--high)}
+.al-center{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:150px}
+.al-mic{--lv:0;position:relative;width:78px;height:78px;border-radius:50%;display:grid;place-items:center;background:var(--amber);color:var(--ink);transition:transform .12s,background .2s}
+.al-mic::before{content:"";position:absolute;inset:-7px;border-radius:50%;border:2px solid rgba(var(--amber-rgb),.5);opacity:0;transform:scale(calc(1 + var(--lv) * .5));transition:transform .08s linear,opacity .2s}
+.al-mic.rec{background:var(--bad);color:#fff}
+.al-mic.rec::before{opacity:1;border-color:rgba(var(--bad-rgb),.6)}
+.al-mic.off{background:var(--high);color:var(--muted)}
+.al-mic:active:not(:disabled){transform:scale(.94)}
+.al-label{font-size:13px;color:var(--muted);min-height:18px;text-align:center}
+.al-time{color:var(--bad);font-weight:600;font-variant-numeric:tabular-nums;margin-right:4px}
+.al-under{flex:none;display:flex;justify-content:center;gap:22px;padding:6px 16px calc(12px + var(--sab));background:var(--bg)}
+.al-under button{font-size:13px;color:var(--muted);min-height:34px}
+.al-under button:disabled{opacity:.35}

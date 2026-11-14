@@ -8,6 +8,7 @@ import { Blitz, Pairs } from './screens/games.js';
 import { Reflex, Kombi, Blind, Talk } from './screens/speakmodes.js';
 import { LabList, LabSession } from './screens/lab.js';
 import { Journey } from './screens/journey.js';
+import { AnjaLive } from './screens/anjalive.js';
 import { StatsVocab, StatsTime, StatsWins } from './screens/stats.js';
 import { ErlebenHub, ErlebenPiece, ErlebenLibrary } from './screens/erleben.js';
 
@@ -23,6 +24,7 @@ export const ROUTES = {
     [/^erleben\/bibliothek$/, () => html`<${ErlebenLibrary} />`],
     [/^erleben\/(\w+)$/, (m) => html`<${ErlebenPiece} id=${m[1]} />`],
     [/^anja$/, () => html`<${Journey} />`],
+    [/^anja\/live$/, () => html`<${AnjaLive} />`],
     [/^blitz$/, () => html`<${Blitz} />`],
     [/^pairs$/, () => html`<${Pairs} />`],
     [/^reflex$/, () => html`<${Reflex} />`],
