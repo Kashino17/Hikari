@@ -24,6 +24,7 @@ import { registerWatchLaterRoutes } from "./api/watch-later.js";
 import { registerRussianRoutes } from "./api/russian.js";
 import { registerRussianBackupRoutes } from "./api/russian-backup.js";
 import { registerRussianConversationRoutes } from "./api/russian-conversation.js";
+import { registerRussianAnjaLiveRoutes } from "./api/russian-anja-live.js";
 import { registerRussianErlebenRoutes } from "./api/russian-erleben.js";
 import { registerVideoFullRoute } from "./api/video-full.js";
 import { registerCastRoutes } from "./api/cast.js";
@@ -143,6 +144,11 @@ await registerRussianBackupRoutes(app, { dir: join(cfg.dataDir, "russian-backup"
 await registerRussianErlebenRoutes(app, {
   dir: join(cfg.dataDir, "erleben"),
   script: new URL("../erleben/prepare.py", import.meta.url).pathname,
+  log: (msg) => app.log.info(msg),
+});
+// Anja live: gesprochenes Gespräch über Gemini Live (Schlüssel und Tageszähler liegen bei »Lieder & Szenen«).
+await registerRussianAnjaLiveRoutes(app, {
+  dir: join(cfg.dataDir, "erleben"),
   log: (msg) => app.log.info(msg),
 });
 await registerHealthRoute(app, { db, videoDir: cfg.videoDir });
