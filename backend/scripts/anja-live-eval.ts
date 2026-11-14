@@ -77,6 +77,7 @@ for (const [i, [question, answer, want]] of cases.entries()) {
       }
     } else if (fix) {
       found++;
+      notes.push(`  Erklärung zu «${answer}»: ${fix.focus} — ${fix.explanationDe}`);
       if (fix.correctedRu.toLowerCase().includes(want)) solved++;
       else notes.push(`schief gelöst: «${answer}» → ${fix.correctedRu}`);
     } else notes.push(`ÜBERSEHEN: «${answer}»`);

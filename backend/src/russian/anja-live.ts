@@ -211,10 +211,10 @@ WHAT the learner says (likes, dislikes, choices) is never a mistake, and a diffe
 Whether the answer fits the question is NOT your concern: an answer about a different topic is still ok=true when its Russian is correct. Never swap a word for another word to make the answer fit the question.
 ok=false ONLY for a real language mistake such as a wrong word form or a missing verb. Then:
 correctedRu = the learner's own sentence with ONLY that mistake fixed (same words otherwise), correctedDe = its German translation,
-focus = one short German sentence naming the issue, explanationDe = one short German sentence explaining the rule.
+focus = one short German sentence naming the issue, explanationDe = one short German sentence explaining the rule precisely, naming the grammar (for example the case or the verb form) and quoting the Russian forms.
 When ok=true, or when answer is empty, the other four fields are empty strings.
 
-goodDe — like a calm teacher: ONE short German sentence (at most 12 words, informal "du") naming one concrete word or phrase Kadir used correctly, quoted exactly as he said it, in plain words. Examples: Die Ich-Form «люблю» stimmt. / Die Verneinung «не люблю» ist richtig. / «в Берлине» hat die richtige Endung. Do NOT use grammar terminology here (no case names, no "Nominativ", "Akkusativ", "Subjekt", "Adverb", "Substantiv"). No exclamation marks, no "super", "perfekt" or "toll". Never mention the mistake here. Empty string when answer is empty, has fewer than three words, or there is nothing specific to name.
+goodDe — like a calm teacher: ONE short German sentence (at most 12 words, informal "du") naming one concrete word or phrase Kadir used correctly, quoted exactly as he said it, in plain words. Examples: Die Ich-Form «люблю» stimmt. / Die Verneinung «не люблю» ist richtig. / «в Берлине» hat die richtige Endung. In goodDe ONLY, avoid grammar terminology (no case names, no "Subjekt", "Adverb", "Substantiv") and never hedge with "oder". No exclamation marks, no "super", "perfekt" or "toll". Never mention the mistake here. Empty string when answer is empty, has fewer than three words, or there is nothing specific to name.
 
 replyDe — a natural German translation of reply (informal "du").
 words — every word of reply in order (skip punctuation, list a repeated word once): ru = the word exactly as it appears in reply (lower case), de = its German meaning in THIS sentence, one to three words, German nouns capitalised as usual.
@@ -268,7 +268,13 @@ export function soundPraise(goodDe: string, answer: string, correctedRu = ""): s
   if (!quoted.every((w) => said.has(w) && (!fixed || fixed.has(w)))) return "";
   // Gemessen: Das Modell nannte »дом« ein Verb und »я дома« einen Nominativ. Ein Lob mit falschem Fachwort
   // lehrt Falsches — Fachbegriffe gehören in die Erklärung eines Fehlers (dort gemessen zuverlässig), nicht ins Lob.
-  if (GRAMMAR_TERMS.test(text)) return "";
+  if (GRAMMAR_TERMS.test(text) || /\boder\b/i.test(text)) return "";
+  // Eine Verneinung loben, wo keine ist — das wäre erfunden.
+  if (
+    /Verneinung/i.test(text) &&
+    !wordsOf(answer).some((w) => w === "не" || w === "нет" || w === "ни")
+  )
+    return "";
   if (/\bVerb|\bIch-Form|\bkonjugiert/i.test(text) && !quoted.some((w) => VERB_LIKE.test(w)))
     return "";
   return text;

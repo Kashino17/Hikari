@@ -365,6 +365,13 @@ describe("settleHelps — Richtiges nie wie falsch", () => {
     expect(soundPraise("Die Verneinung «не люблю» ist richtig.", "Нет, я не люблю кофе")).toBe(
       "Die Verneinung «не люблю» ist richtig.",
     );
+    // Schwammig oder erfunden: kein »oder«, keine Verneinung ohne «не».
+    expect(
+      soundPraise("Die Verneinung oder das Verb «хочу» ist gut.", "Я хочу вода", "Я хочу воду"),
+    ).toBe("");
+    expect(soundPraise("Die Verneinung «хочу» ist richtig.", "Я хочу вода", "Я хочу воду")).toBe(
+      "",
+    );
     // Ohne genanntes Wort ist das Lob zu allgemein.
     expect(soundPraise("Sehr gut gemacht!", "Я хочу воду")).toBe("");
   });
