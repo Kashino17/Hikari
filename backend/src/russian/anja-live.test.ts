@@ -167,6 +167,7 @@ describe("Anja live", () => {
       check: {
         ok: false,
         correctedRu: "Я люблю чай",
+        correctedDe: "Ich mag Tee",
         focus: "Verbform",
         explanationDe: "Nach я: люблю.",
       },
@@ -187,6 +188,7 @@ describe("Anja live", () => {
     expect(t?.helps?.check).toEqual({
       ok: false,
       correctedRu: "Я люблю чай",
+      correctedDe: "Ich mag Tee",
       focus: "Verbform",
       explanationDe: "Nach я: люблю.",
     });

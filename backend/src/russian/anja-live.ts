@@ -73,10 +73,11 @@ const helpsReply = z.object({
     .object({
       ok: z.boolean(),
       correctedRu: z.string().max(600).default(""),
+      correctedDe: z.string().max(600).default(""),
       focus: z.string().max(240).default(""),
       explanationDe: z.string().max(400).default(""),
     })
-    .default({ ok: true, correctedRu: "", focus: "", explanationDe: "" }),
+    .default({ ok: true, correctedRu: "", correctedDe: "", focus: "", explanationDe: "" }),
   replyDe: z.string().trim().min(1).max(900),
   words: z
     .array(z.object({ ru: z.string().trim().max(80), de: z.string().trim().max(100) }))
@@ -94,7 +95,7 @@ export interface LiveHelps {
   check:
     | null
     | { ok: true }
-    | { ok: false; correctedRu: string; focus: string; explanationDe: string };
+    | { ok: false; correctedRu: string; correctedDe: string; focus: string; explanationDe: string };
 }
 
 export type HelpsState = "none" | "pending" | "ready" | "failed";
@@ -198,16 +199,16 @@ export function systemPrompt(
 export const HELPS_PROMPT = `You support a spoken Russian practice conversation between Anja (a Russian native speaker) and Kadir, a German-speaking beginner.
 Input is JSON: {"question": Anja's previous line, "answer": what Kadir just said (a speech transcript), "reply": Anja's new line}.
 Return ONLY one JSON object with exactly these fields:
-{"check":{"ok":true,"correctedRu":"","focus":"","explanationDe":""},"replyDe":"","words":[{"ru":"","de":""}],"examples":[{"ru":"","de":""},{"ru":"","de":""}]}
+{"check":{"ok":true,"correctedRu":"","correctedDe":"","focus":"","explanationDe":""},"replyDe":"","words":[{"ru":"","de":""}],"examples":[{"ru":"","de":""},{"ru":"","de":""}]}
 
 check — judge ONLY Kadir's answer. It is a speech transcript: ignore punctuation and capitalisation completely.
 ok=true when the sentence is understandable and has no real grammar mistake. Short answers and single words are fine.
 WHAT the learner says (likes, dislikes, choices) is never a mistake, and a different wording than you would choose is not a mistake.
 Whether the answer fits the question is NOT your concern: an answer about a different topic is still ok=true when its Russian is correct. Never swap a word for another word to make the answer fit the question.
 ok=false ONLY for a real language mistake such as a wrong word form or a missing verb. Then:
-correctedRu = the learner's own sentence with ONLY that mistake fixed (same words otherwise),
+correctedRu = the learner's own sentence with ONLY that mistake fixed (same words otherwise), correctedDe = its German translation,
 focus = one short German sentence naming the issue, explanationDe = one short German sentence explaining the rule.
-When ok=true, or when answer is empty, the other three fields are empty strings.
+When ok=true, or when answer is empty, the other four fields are empty strings.
 
 replyDe — a natural German translation of reply (informal "du").
 words — every word of reply in order (skip punctuation, list a repeated word once): ru = the word exactly as it appears in reply (lower case), de = its German meaning in THIS sentence, one to three words, German nouns capitalised as usual.
@@ -258,7 +259,13 @@ export function settleHelps(raw: unknown, answer: string, question = ""): LiveHe
     check: !answer.trim()
       ? null
       : fixable
-        ? { ok: false, correctedRu: c.correctedRu, focus: c.focus, explanationDe: c.explanationDe }
+        ? {
+            ok: false,
+            correctedRu: c.correctedRu,
+            correctedDe: c.correctedDe,
+            focus: c.focus,
+            explanationDe: c.explanationDe,
+          }
         : { ok: true },
   };
 }
