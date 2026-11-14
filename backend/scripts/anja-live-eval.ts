@@ -4,7 +4,8 @@
  *
  *   cd backend && ./node_modules/.bin/tsx scripts/anja-live-eval.ts
  *
- * Kostet rund 30 Anfragen aus dem Tageskontingent der Flash-Lite-Modelle.
+ * Kostet rund 45 Anfragen aus dem Tageskontingent der Flash-Lite-Modelle (jede gemeldete
+ * Verbesserung holt eine zweite Meinung ein).
  * Ziel: 0 richtige Sätze korrigiert, alle Fehler gefunden und richtig gelöst.
  */
 import { homedir } from "node:os";
@@ -32,6 +33,12 @@ const RIGHT: [string, string][] = [
   ["Что ты любишь?", "Я люблю мою семью"],
   ["Ты работаешь сегодня?", "Нет, сегодня я отдыхаю"],
   ["Ты хочешь чай?", "Да хочу спасибо"],
+  // Richtig, aber leicht für falsch zu halten (Teilungsgenitiv, freie Wortstellung, ausgelassenes »я«).
+  ["Что ты хочешь?", "Я хочу воды"],
+  ["Что ты хочешь?", "Я хочу чаю"],
+  ["Ты любишь кофе?", "Люблю кофе"],
+  ["Ты любишь музыку?", "Музыку я люблю"],
+  ["Что ты делаешь сегодня?", "Сегодня работаю"],
   // Am Thema vorbei, aber richtiges Russisch — kein Sprachfehler.
   ["Ты любишь кино?", "Нет, я не люблю кофе"],
   ["Что ты делаешь сегодня?", "Я люблю музыку"],

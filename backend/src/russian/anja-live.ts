@@ -6,8 +6,14 @@
  *
  *  - Gemini Live (Sprache rein, Sprache raus) führt das Gespräch. Kein Tageslimit, erste Tonausgabe
  *    nach rund 0,8 s. Es hört Fehler so, wie sie gesagt wurden, und sagt die richtige Form vor.
+ *  - Gemini Transcribe Live ist das Ohr: Es schreibt wortgetreu mit, was der Lernende gesagt hat —
+ *    fest auf Russisch eingestellt. Ohne diese Einstellung rät die Mitschrift die Sprache und macht
+ *    aus Russisch mit Akzent Türkisch oder Spanisch (so geschehen am 14.11.2026).
  *  - Gemini Flash-Lite liefert nach jedem Zug, was auf dem Bildschirm steht: die strenge Satzprüfung,
  *    die deutsche Übersetzung, die Bedeutung je Wort und zwei Beispielantworten.
+ *
+ * Bewertet wird ein Satz nur, wenn zwei Ohren dasselbe gehört haben (das Mitschreib-Modell und die
+ * Mitschrift des Gesprächsmodells). Sonst steht dort »nicht sicher verstanden« — ohne Urteil.
  *
  * Die sichtbare Korrektur kommt NIE aus dem, was Anja sagt (am Ton ist nicht zu erkennen, ob sie
  * korrigiert oder selbst antwortet), sondern nur aus der Satzprüfung — und die wird fest nachgeprüft
@@ -33,6 +39,17 @@ export const HELP_MODELS: [string, number][] = [
   ["gemini-3.1-flash-lite", 480],
 ];
 
+/** Das Ohr: schreibt nur mit. Kein Tageslimit, Antwort rund eine halbe Sekunde nach dem Satzende. */
+export const EAR_MODEL = "gemini-3.5-transcribe-live";
+/** Die Sprache, in der gesprochen wird — als Vorgabe für beide Mitschriften. */
+const SPOKEN_LANGUAGE = "ru-RU";
+/** Bei Stille meldet das Ohr gar nichts; bei Sprache kommt die Mitschrift nach rund 0,6 s. */
+const EAR_TIMEOUT_MS = 3_000;
+/** Google beendet eine Mitschreib-Sitzung nach 10 Minuten. */
+const EAR_MAX_AGE_MS = 8 * 60_000;
+/** Die Mitschrift des Gesprächsmodells kommt manchmal erst nach Anjas Antwort zu Ende an. */
+const LATE_TRANSCRIPT_MS = 700;
+
 const SETUP_TIMEOUT_MS = 8_000;
 const TURN_TIMEOUT_MS = 30_000;
 /** Google beendet eine Sitzung nach 15 Minuten — vorher wird mit dem Verlauf neu verbunden. */
@@ -41,6 +58,8 @@ const IDLE_MS = 10 * 60_000;
 const MAX_SESSIONS = 8;
 /** Üblich sind 1,3 s. Wer nach 6 s nicht geantwortet hat, ist überlastet — dann lieber das nächste Modell. */
 const HELP_TIMEOUT_MS = 6_000;
+/** Höchstens so viele Anfragen je Minute an ein Hilfen-Modell (Google erlaubt 15). */
+const HELP_PER_MINUTE = 12;
 const QUOTA_ZONE = "America/Los_Angeles";
 
 export const liveStart = z.object({
@@ -95,7 +114,10 @@ export interface LiveHelps {
   replyDe: string;
   words: { ru: string; de: string }[];
   examples: { ru: string; de: string }[];
-  /** null = nichts zu prüfen (Anja hat begonnen); ok = der Satz stimmt; sonst die eine Verbesserung. */
+  /**
+   * null = kein Urteil (nichts zu prüfen, nicht sicher verstanden, oder die zweite Meinung fehlt
+   * bzw. widerspricht); ok = der Satz stimmt; sonst die eine, bestätigte Verbesserung.
+   */
   check:
     | null
     | { ok: true }
@@ -104,6 +126,15 @@ export interface LiveHelps {
 
 export type HelpsState = "none" | "pending" | "ready" | "failed";
 
+/**
+ * Wie verlässlich die Mitschrift des Lernenden ist:
+ *  sure    zwei Ohren haben dasselbe gehört — der Satz wird geprüft
+ *  unsure  nur ein Ohr, oder die beiden sind sich uneins — der Satz wird gezeigt, aber nicht bewertet
+ *  foreign kein Russisch verstanden (eine andere Sprache)
+ *  none    nichts verstanden (Stille) oder kein gesprochener Zug
+ */
+export type HeardState = "sure" | "unsure" | "foreign" | "none";
+
 export interface LiveTurnView {
   n: number;
   kind: "start" | LiveInput["kind"];
@@ -111,6 +142,9 @@ export interface LiveTurnView {
   error: string | null;
   /** Was die Spracherkennung vom Lernenden verstanden hat (bei getippter Antwort: der Text). */
   heard: string;
+  heardState: HeardState;
+  /** Die abweichende Fassung des zweiten Ohrs — oder, bei `foreign`, was stattdessen verstanden wurde. */
+  heardAlt: string;
   /** Anjas Antwort als Mitschrift. */
   said: string;
   firstMs: number | null;
@@ -119,6 +153,10 @@ export interface LiveTurnView {
 }
 
 interface Turn extends LiveTurnView {
+  /** Mitschrift des Gesprächsmodells (zweites Ohr). */
+  heardAgent: string;
+  /** Mitschrift des Ohrs; null = das Ohr war nicht erreichbar. */
+  ear: Promise<string | null> | null;
   audio: Buffer[];
   startedAt: number;
   waiters: Set<() => void>;
@@ -146,6 +184,9 @@ export interface AnjaLiveDeps {
   now?: () => number;
   voice?: string | undefined;
   log?: ((msg: string) => void) | undefined;
+  /** Nur für Tests: Geduld mit dem Ohr und mit verspäteten Mitschriften. */
+  earTimeoutMs?: number;
+  lateMs?: number;
 }
 
 const REGIE = {
@@ -178,6 +219,7 @@ export function systemPrompt(
     "Regeln, die immer gelten:",
     "- Sprich NUR Russisch. Kein Deutsch, kein Englisch, auch nicht zur Erklärung.",
     "- Sprich langsam und deutlich.",
+    "- Kadir spricht Russisch mit deutschem Akzent. Versteh alles, was er sagt, als Russisch. Hast du ihn nicht verstanden oder spricht er eine andere Sprache, dann rate nicht: Bitte ihn kurz, es noch einmal auf Russisch zu sagen («Повтори, пожалуйста.»).",
     `- ${LEVELS[setup.stage]}`,
     known ? `- Diese Wörter kennt Kadir schon gut, benutze sie bevorzugt: ${known}.` : "",
     "- Reagiere zuerst kurz und echt auf das, was Kadir gesagt hat, und stelle dann GENAU EINE Frage. Fragt Kadir dich etwas («А ты?»), beantworte es zuerst.",
@@ -220,11 +262,99 @@ replyDe — a natural German translation of reply (informal "du").
 words — every word of reply in order (skip punctuation, list a repeated word once): ru = the word exactly as it appears in reply (lower case), de = its German meaning in THIS sentence, one to three words, German nouns capitalised as usual.
 examples — two DIFFERENT short answers (2 to 6 words) Kadir could give to the question in reply. Simple beginner Russian, grammatically perfect, natural, written as normal sentences (capital letter, full stop); de = German translation. Do not answer with a bare "да" or "нет".`;
 
+/**
+ * Zweite Meinung zu einer Verbesserung — eine eigene Frage an das Modell, bevor irgendetwas als
+ * Fehler gezeigt wird. Gemessen am 14.11.2026:
+ *  - Die Satzprüfung hielt »Я хочу воды« für falsch (richtig wäre nur »воду«) — dabei ist der
+ *    Teilungsgenitiv gutes Russisch. Mit dieser Frage: 12 von 12 Sätzen richtig beurteilt.
+ *  - Erklärungen enthielten gelegentlich falsche Fachwörter (»Reflexivpronomen меня im Genitiv«).
+ *    Als Lehrer befragt, erkannte das Modell 5 von 5 solcher Erklärungen als falsch.
+ */
+export const CONFIRM_PROMPT = `You are a strict but fair native-speaker reviewer of Russian and a careful grammar teacher.
+A beginner said a sentence (speech transcript: ignore punctuation and capitalisation). Another checker claims it contains a grammar mistake, proposes a correction and explains it in German.
+1. originalAcceptable — decide whether the ORIGINAL sentence is acceptable Russian that an educated native speaker could say — even if the proposed correction is also fine or more common.
+Remember that Russian allows, among other things: the partitive genitive after verbs of wanting, giving, eating and drinking («хочу воды», «выпей чаю»), free word order, omitted pronouns, and short elliptical answers.
+2. explanationCorrect — check the German explanation as a grammar teacher would: is every grammatical statement in it factually right (the case named, the word class, the gender, the rule)? A single wrong term (for example calling an accusative a genitive, a personal pronoun a reflexive pronoun, a noun a verb) makes it false. Wording and style do not matter.
+Return ONLY JSON: {"originalAcceptable": true|false, "explanationCorrect": true|false, "why": "one short English sentence"}`;
+
+const secondOpinion = z.object({
+  originalAcceptable: z.boolean(),
+  // Fehlt das Urteil, gilt die Erklärung als nicht bestätigt.
+  explanationCorrect: z.boolean().default(false),
+});
+
+/** Steht statt eines Hinweises, dessen Erklärung die zweite Meinung nicht bestanden hat. */
+export const PLAIN_FOCUS = "Hier stimmt eine Form nicht.";
+
+/** Das erste vollständige JSON-Objekt im Text — Modelle hängen gelegentlich etwas an. */
+export function firstJson(text: string): unknown {
+  const start = text.indexOf("{");
+  if (start < 0) throw new Error("no_json");
+  let depth = 0;
+  let inString = false;
+  for (let i = start; i < text.length; i++) {
+    const c = text[i];
+    if (inString) {
+      if (c === "\\") i++;
+      else if (c === '"') inString = false;
+    } else if (c === '"') inString = true;
+    else if (c === "{") depth++;
+    else if (c === "}" && --depth === 0) return JSON.parse(text.slice(start, i + 1));
+  }
+  throw new Error("no_json");
+}
+
 export function quotaDay(nowMs: number): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: QUOTA_ZONE }).format(new Date(nowMs));
 }
 
 const cyrillic = (s: string) => /[а-яё]/i.test(s);
+const tidy = (s: string) => s.replace(/\s+/g, " ").trim();
+
+/** Russisch ist ein Text, dessen Buchstaben überwiegend kyrillisch sind. */
+export function isRussian(text: string): boolean {
+  const letters = text.match(/\p{L}/gu) ?? [];
+  if (letters.length === 0) return false;
+  return letters.filter((c) => /[а-яё]/i.test(c)).length / letters.length >= 0.6;
+}
+
+/** Steckt `part` als zusammenhängendes Stück in `whole` — und ist es mindestens die Hälfte davon? */
+function mostOf(part: string[], whole: string[]): boolean {
+  if (part.length === 0 || part.length * 2 < whole.length) return false;
+  for (let at = 0; at + part.length <= whole.length; at++)
+    if (part.every((w, i) => w === whole[at + i])) return true;
+  return false;
+}
+
+/**
+ * Legt fest, was der Lernende gesagt hat — aus zwei unabhängigen Mitschriften.
+ * `ear` ist die des Mitschreib-Modells (null = nicht erreichbar), `agent` die des Gesprächsmodells.
+ *
+ * Geprüft und bewertet wird nur, was beide gleich gehört haben. Schon eine andere Endung
+ * (»вода« gegen »воды«) macht aus einem richtigen Satz einen falschen — dann lieber kein Urteil.
+ * Die Mitschrift des Gesprächsmodells kommt gelegentlich abgeschnitten an; ein zusammenhängendes
+ * Stück, das mindestens die Hälfte abdeckt, gilt deshalb als Bestätigung.
+ */
+export function settleHeard(
+  ear: string | null,
+  agent: string,
+): { text: string; state: HeardState; alt: string } {
+  const e = tidy(ear ?? "");
+  const a = tidy(agent);
+  const eRu = isRussian(e);
+  const aRu = isRussian(a);
+  if (!eRu && !aRu)
+    return e || a
+      ? { text: "", state: "foreign", alt: e || a }
+      : { text: "", state: "none", alt: "" };
+  if (!eRu) return { text: a, state: "unsure", alt: "" };
+  if (!aRu) return { text: e, state: "unsure", alt: "" };
+  const we = wordsOf(e);
+  const wa = wordsOf(a);
+  if (we.join(" ") === wa.join(" ") || mostOf(wa, we)) return { text: e, state: "sure", alt: "" };
+  if (mostOf(we, wa)) return { text: a, state: "sure", alt: "" };
+  return { text: e, state: "unsure", alt: a };
+}
 const wordsOf = (s: string) =>
   s
     .toLowerCase()
@@ -284,18 +414,20 @@ export function soundPraise(goodDe: string, answer: string, correctedRu = ""): s
 export function settleHelps(raw: unknown, answer: string, question = ""): LiveHelps {
   const r = helpsReply.parse(raw);
   const c = r.check;
+  // Was kein Russisch ist, wird nicht beurteilt — auch nicht mit »Genau so«.
+  const judged = isRussian(answer);
   const fixable =
-    !!answer.trim() &&
+    judged &&
     !c.ok &&
     !!c.focus.trim() &&
     plausibleCorrection(answer, c.correctedRu) &&
     onlyFormChanged(question, answer, c.correctedRu);
   return {
-    goodDe: soundPraise(r.goodDe, answer, fixable ? c.correctedRu : ""),
+    goodDe: judged ? soundPraise(r.goodDe, answer, fixable ? c.correctedRu : "") : "",
     replyDe: r.replyDe,
     words: r.words.filter((w) => cyrillic(w.ru) && w.de),
     examples: r.examples.filter((e) => cyrillic(e.ru) && e.de).slice(0, 3),
-    check: !answer.trim()
+    check: !judged
       ? null
       : fixable
         ? {
@@ -309,6 +441,158 @@ export function settleHelps(raw: unknown, answer: string, question = ""): LiveHe
   };
 }
 
+/**
+ * Das Ohr eines Gesprächs: eine eigene Verbindung zum Mitschreib-Modell, fest auf Russisch gestellt.
+ * Es bekommt denselben Ton wie Anja und liefert, was wortwörtlich gesagt wurde — samt Fehlern.
+ */
+class Ear {
+  private socket: LiveSocket | null = null;
+  private openedAt = 0;
+  private opening: Promise<LiveSocket | null> | null = null;
+  private pending: { text: string; finish: (text: string | null) => void } | null = null;
+
+  constructor(private host: AnjaLive) {}
+
+  /** Verbindung schon öffnen, bevor der erste Satz kommt. */
+  warm() {
+    void this.ensure();
+  }
+
+  close() {
+    const s = this.socket;
+    this.socket = null;
+    try {
+      s?.close();
+    } catch {
+      /* schon zu */
+    }
+    this.pending?.finish(null);
+  }
+
+  private ensure(): Promise<LiveSocket | null> {
+    if (this.opening) return this.opening;
+    if (this.socket && this.host.now() - this.openedAt < EAR_MAX_AGE_MS)
+      return Promise.resolve(this.socket);
+    this.close();
+    this.opening = this.open()
+      .then((socket) => {
+        this.socket = socket;
+        this.openedAt = this.host.now();
+        return socket as LiveSocket | null;
+      })
+      .catch((e) => {
+        this.host.log(`[anja-live] Ohr nicht bereit: ${String(e).slice(0, 120)}`);
+        return null;
+      })
+      .finally(() => {
+        this.opening = null;
+      });
+    return this.opening;
+  }
+
+  private open(): Promise<LiveSocket> {
+    return new Promise((resolve, reject) => {
+      const key = this.host.deps.key();
+      if (!key) {
+        reject(new Error("no_key"));
+        return;
+      }
+      const socket = this.host.connect(`${LIVE_URL}?key=${encodeURIComponent(key)}`);
+      socket.binaryType = "arraybuffer";
+      let settled = false;
+      const timer = setTimeout(() => finish(new Error("setup_timeout")), SETUP_TIMEOUT_MS);
+      const finish = (error?: Error) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (error) {
+          try {
+            socket.close();
+          } catch {
+            /* schon zu */
+          }
+          reject(error);
+        } else resolve(socket);
+      };
+      socket.onopen = () =>
+        socket.send(
+          JSON.stringify({
+            setup: {
+              model: `models/${EAR_MODEL}`,
+              generationConfig: { responseModalities: ["TEXT"] },
+              inputAudioTranscription: { languageCodes: [SPOKEN_LANGUAGE] },
+              realtimeInputConfig: { automaticActivityDetection: { disabled: true } },
+            },
+          }),
+        );
+      socket.onmessage = (ev) => {
+        const msg = decode(ev.data);
+        if (!msg) return;
+        if (!settled) {
+          if (msg.setupComplete) finish();
+          return;
+        }
+        const sc = msg.serverContent as
+          | {
+              inputTranscription?: { text?: string };
+              generationComplete?: boolean;
+              turnComplete?: boolean;
+            }
+          | undefined;
+        const p = this.pending;
+        if (!sc || !p) return;
+        if (sc.inputTranscription?.text) p.text += sc.inputTranscription.text;
+        if (sc.generationComplete || sc.turnComplete) p.finish(tidy(p.text));
+      };
+      socket.onerror = () => finish(new Error("socket_error"));
+      socket.onclose = (ev) => {
+        finish(new Error(`closed_${ev?.code ?? ""}`));
+        if (this.socket === socket) {
+          this.socket = null;
+          this.pending?.finish(null);
+        }
+      };
+    });
+  }
+
+  /** Schreibt einen gesprochenen Satz mit. "" = nichts gehört (Stille), null = Ohr nicht erreichbar. */
+  async listen(pcm: Buffer, rate: number): Promise<string | null> {
+    const socket = await this.ensure();
+    if (!socket) return null;
+    this.pending?.finish(null);
+    return new Promise((resolve) => {
+      const p = {
+        text: "",
+        finish: (text: string | null) => {
+          if (this.pending === p) this.pending = null;
+          clearTimeout(timer);
+          resolve(text);
+        },
+      };
+      // Bei Stille kommt keine Meldung: Dann gilt, was bis dahin da ist.
+      const timer = setTimeout(
+        () => p.finish(tidy(p.text)),
+        this.host.deps.earTimeoutMs ?? EAR_TIMEOUT_MS,
+      );
+      this.pending = p;
+      try {
+        const say = (payload: unknown) => socket.send(JSON.stringify({ realtimeInput: payload }));
+        say({ activityStart: {} });
+        for (let i = 0; i < pcm.length; i += 16_000)
+          say({
+            audio: {
+              data: pcm.subarray(i, i + 16_000).toString("base64"),
+              mimeType: `audio/pcm;rate=${rate}`,
+            },
+          });
+        say({ activityEnd: {} });
+      } catch {
+        p.finish(null);
+      }
+    });
+  }
+}
+
 class Session {
   readonly id = randomUUID().replace(/-/g, "").slice(0, 16);
   readonly lines: { who: "anja" | "kadir"; ru: string }[];
@@ -318,6 +602,9 @@ class Session {
   private openedAt = 0;
   private stale = false;
   private current: Turn | null = null;
+  private ear: Ear;
+  /** Der gesprochene Zug, zu dem eintreffende Mitschrift-Stücke des Gesprächsmodells gehören. */
+  private listening: Turn | null = null;
 
   constructor(
     private host: AnjaLive,
@@ -325,6 +612,7 @@ class Session {
   ) {
     this.lines = [...setup.lines];
     this.lastUsed = host.now();
+    this.ear = new Ear(host);
   }
 
   get busy() {
@@ -340,6 +628,12 @@ class Session {
       /* schon zu */
     }
     if (this.current && !this.current.done) this.fail(this.current, "closed");
+  }
+
+  /** Gespräch zu Ende: beide Verbindungen schließen. */
+  end() {
+    this.close();
+    this.ear.close();
   }
 
   /** Öffnet die Verbindung zu Google und wartet, bis das Modell bereit ist. */
@@ -396,7 +690,8 @@ class Session {
               },
               systemInstruction: { parts: [{ text: systemPrompt(this.setup, this.lines) }] },
               outputAudioTranscription: {},
-              inputAudioTranscription: {},
+              // Ohne Sprachvorgabe rät die Mitschrift — und macht aus Russisch mit Akzent eine andere Sprache.
+              inputAudioTranscription: { languageCodes: [SPOKEN_LANGUAGE] },
               // Sprechtaste: Der Lernende bestimmt, wann sein Satz zu Ende ist — ein Anfänger denkt mitten im Satz nach.
               realtimeInputConfig: { automaticActivityDetection: { disabled: true } },
             },
@@ -433,6 +728,11 @@ class Session {
           turnComplete?: boolean;
         }
       | undefined;
+    // Mitschrift-Stücke können nach Anjas Antwort noch eintreffen — sie gehören zum letzten gesprochenen Zug.
+    if (sc?.inputTranscription?.text && this.listening) {
+      this.listening.heardAgent += sc.inputTranscription.text;
+      wake(this.listening);
+    }
     if (!turn || turn.done || !sc) return;
     for (const part of sc.modelTurn?.parts ?? []) {
       const data = part.inlineData?.data;
@@ -441,15 +741,27 @@ class Session {
       turn.audio.push(Buffer.from(data, "base64"));
     }
     if (sc.outputTranscription?.text) turn.said += sc.outputTranscription.text;
-    if (sc.inputTranscription?.text) turn.heard += sc.inputTranscription.text;
-    if (sc.turnComplete) this.complete(turn);
+    if (sc.turnComplete) void this.complete(turn);
     else wake(turn);
   }
 
-  private complete(turn: Turn) {
+  /** Anja ist fertig: festlegen, was der Lernende gesagt hat, dann Prüfung und Hilfen anstoßen. */
+  private async complete(turn: Turn) {
     if (turn.timer) clearTimeout(turn.timer);
-    turn.heard = turn.heard.replace(/\s+/g, " ").trim();
-    turn.said = turn.said.replace(/\s+/g, " ").trim();
+    turn.said = tidy(turn.said);
+    if (turn.kind === "audio") {
+      const ear = turn.ear ? await turn.ear : null;
+      // Ist die zweite Mitschrift noch kürzer als die des Ohrs, kommt ihr Rest meist gleich nach.
+      if (wordsOf(turn.heardAgent).length < wordsOf(ear ?? "").length)
+        await new Promise((r) => setTimeout(r, this.host.deps.lateMs ?? LATE_TRANSCRIPT_MS));
+      const heard = settleHeard(ear, turn.heardAgent);
+      turn.heard = heard.text;
+      turn.heardState = heard.state;
+      turn.heardAlt = heard.alt;
+      if (heard.state !== "sure")
+        this.host.log(`[anja-live] Mitschrift ${heard.state}${ear === null ? " (Ohr fehlt)" : ""}`);
+    }
+    if (turn.error) return;
     turn.done = true;
     const question = [...this.lines].reverse().find((l) => l.who === "anja")?.ru ?? "";
     const answered = turn.kind === "audio" || turn.kind === "text";
@@ -458,8 +770,10 @@ class Session {
     wake(turn);
     if (!turn.said) return;
     turn.helpsState = "pending";
+    // Beurteilt wird nur, was sicher verstanden wurde.
+    const judged = answered && turn.heardState === "sure" ? turn.heard : "";
     this.host
-      .helps(question, answered ? turn.heard : "", turn.said)
+      .helps(question, judged, turn.said)
       .then((helps) => {
         turn.helps = helps;
         turn.helpsState = "ready";
@@ -493,6 +807,10 @@ class Session {
       done: false,
       error: null,
       heard: input.kind === "text" ? input.text : "",
+      heardState: input.kind === "text" ? (isRussian(input.text) ? "sure" : "foreign") : "none",
+      heardAlt: "",
+      heardAgent: "",
+      ear: null,
       said: "",
       firstMs: null,
       helps: null,
@@ -512,6 +830,9 @@ class Session {
     const say = (payload: unknown) => socket.send(JSON.stringify({ realtimeInput: payload }));
     if (input.kind === "audio") {
       const pcm = Buffer.from(input.audio, "base64");
+      this.listening = turn;
+      // Derselbe Ton geht zugleich ans Ohr; ein Fehler dort hält das Gespräch nie auf.
+      turn.ear = this.ear.listen(pcm, input.rate).catch(() => null);
       say({ activityStart: {} });
       for (let i = 0; i < pcm.length; i += 16_000)
         say({
@@ -522,8 +843,10 @@ class Session {
         });
       say({ activityEnd: {} });
     } else if (input.kind === "text") say({ text: input.text });
-    else if (input.kind === "start") say({ text: resumed ? REGIE.resume : REGIE.start });
-    else say({ text: REGIE[input.kind] });
+    else if (input.kind === "start") {
+      this.ear.warm();
+      say({ text: resumed ? REGIE.resume : REGIE.start });
+    } else say({ text: REGIE[input.kind] });
     return turn.n;
   }
 
@@ -573,6 +896,8 @@ const view = (t: Turn): LiveTurnView => ({
   done: t.done,
   error: t.error,
   heard: t.heard,
+  heardState: t.heardState,
+  heardAlt: t.heardAlt,
   said: t.said,
   firstMs: t.firstMs,
   helps: t.helps,
@@ -581,7 +906,7 @@ const view = (t: Turn): LiveTurnView => ({
 
 export class AnjaLive {
   private sessions = new Map<string, Session>();
-  private lastHelp = new Map<string, number>();
+  private recent = new Map<string, number[]>();
 
   constructor(readonly deps: AnjaLiveDeps) {}
 
@@ -637,37 +962,52 @@ export class AnjaLive {
 
   // ── Prüfung und Hilfen ───────────────────────────────────────────────────
 
+  /** Bleibt unter Googles Minutenlimit (15), ohne zwischen zwei Anfragen eines Zugs zu warten. */
+  private async pace(model: string) {
+    for (;;) {
+      const now = this.now();
+      const times = (this.recent.get(model) ?? []).filter((t) => now - t < 60_000);
+      if (times.length < HELP_PER_MINUTE) {
+        times.push(now);
+        this.recent.set(model, times);
+        return;
+      }
+      await new Promise((r) => setTimeout(r, Math.max(250, (times[0] as number) + 60_000 - now)));
+    }
+  }
+
   /**
-   * Satzprüfung, Übersetzung, Wortbedeutungen und Beispielantworten in EINER Anfrage.
-   * Überlastete Modelle (503) kommen vor: bis zu vier Anläufe, reihum über die Modelle.
+   * Eine Frage an die Hilfen-Modelle; die Antwort ist ein JSON-Objekt, das `parse` bestehen muss.
+   * Überlastete Modelle (503) und verstümmelte Antworten kommen vor: bis zu fünf Anläufe, reihum.
    */
-  async helps(question: string, answer: string, reply: string): Promise<LiveHelps> {
+  private async ask<T>(
+    what: string,
+    system: string,
+    input: unknown,
+    maxOutputTokens: number,
+    parse: (raw: unknown) => T,
+  ): Promise<T> {
     const key = this.deps.key();
     if (!key) throw new Error("no_key");
     const request = this.deps.request ?? fetch;
     let lastError = "helps_exhausted";
-    for (let attempt = 0; attempt < 4; attempt++) {
+    for (let attempt = 0; attempt < 5; attempt++) {
       const u = this.usage();
       const open = HELP_MODELS.filter(([m, cap]) => (u.count[m] ?? 0) < cap).map(([m]) => m);
       if (!open.length) throw new Error("helps_exhausted");
       const model = open[attempt % open.length] as string;
-      // 15 Anfragen je Minute und Modell: nie dichter als alle 4,2 s an dasselbe Modell.
-      const wait = (this.lastHelp.get(model) ?? 0) + 4_200 - this.now();
-      if (wait > 0) await new Promise((r) => setTimeout(r, wait));
-      this.lastHelp.set(model, this.now());
+      await this.pace(model);
       try {
         const res = await request(`${TEXT_URL}/${model}:generateContent`, {
           method: "POST",
           headers: { "content-type": "application/json", "x-goog-api-key": key },
           signal: AbortSignal.timeout(HELP_TIMEOUT_MS),
           body: JSON.stringify({
-            systemInstruction: { parts: [{ text: HELPS_PROMPT }] },
-            contents: [
-              { role: "user", parts: [{ text: JSON.stringify({ question, answer, reply }) }] },
-            ],
+            systemInstruction: { parts: [{ text: system }] },
+            contents: [{ role: "user", parts: [{ text: JSON.stringify(input) }] }],
             generationConfig: {
               temperature: 0.2,
-              maxOutputTokens: 1200,
+              maxOutputTokens,
               responseMimeType: "application/json",
             },
           }),
@@ -680,7 +1020,7 @@ export class AnjaLive {
         }
         if (!res.ok) {
           lastError = `http_${res.status}`;
-          this.log(`[anja-live] Hilfen ${model}: ${lastError}`);
+          this.log(`[anja-live] ${what} ${model}: ${lastError}`);
           continue;
         }
         this.count(model);
@@ -691,18 +1031,49 @@ export class AnjaLive {
           .filter((p) => !p.thought)
           .map((p) => p.text ?? "")
           .join("");
-        const found = text.match(/\{[\s\S]*\}/);
-        if (!found) {
-          lastError = "no_json";
-          continue;
-        }
-        return settleHelps(JSON.parse(found[0]), answer, question);
+        return parse(firstJson(text));
       } catch (e) {
         lastError = e instanceof Error ? e.message.slice(0, 80) : "failed";
-        this.log(`[anja-live] Hilfen ${model}: ${lastError}`);
+        this.log(`[anja-live] ${what} ${model}: ${lastError}`);
       }
     }
     throw new Error(lastError);
+  }
+
+  /**
+   * Satzprüfung, Übersetzung, Wortbedeutungen und Beispielantworten in EINER Anfrage.
+   * Meldet die Prüfung einen Fehler, wird eine zweite Meinung eingeholt (eigene Frage: Ist der
+   * ursprüngliche Satz wirklich falsch?). Nur wenn beide einig sind, wird die Verbesserung gezeigt.
+   */
+  async helps(question: string, answer: string, reply: string): Promise<LiveHelps> {
+    const helps = await this.ask("Hilfen", HELPS_PROMPT, { question, answer, reply }, 1200, (raw) =>
+      settleHelps(raw, answer, question),
+    );
+    if (helps.check && !helps.check.ok) {
+      const fix = helps.check;
+      const second = await this.ask(
+        "Zweite Meinung",
+        CONFIRM_PROMPT,
+        {
+          original: answer,
+          proposedCorrection: fix.correctedRu,
+          explanationDe: `${fix.focus} ${fix.explanationDe}`.trim(),
+        },
+        300,
+        (raw) => secondOpinion.parse(raw),
+      ).catch(() => null);
+      if (!second || second.originalAcceptable) {
+        // Uneins oder nicht erreichbar: weder »falsch« noch »Genau so« — lieber kein Urteil.
+        this.log(`[anja-live] Korrektur ${second ? "nicht bestätigt" : "ohne zweite Meinung"}`);
+        helps.check = null;
+        helps.goodDe = "";
+      } else if (!second.explanationCorrect) {
+        // Der Fehler ist bestätigt, die Erklärung nicht: die richtige Fassung zeigen, aber nichts Falsches lehren.
+        this.log("[anja-live] Erklärung nicht bestätigt");
+        helps.check = { ...fix, focus: PLAIN_FOCUS, explanationDe: "" };
+      }
+    }
+    return helps;
   }
 
   // ── Gespräche ────────────────────────────────────────────────────────────
@@ -711,13 +1082,13 @@ export class AnjaLive {
     const now = this.now();
     for (const [id, s] of this.sessions)
       if (now - s.lastUsed > IDLE_MS) {
-        s.close();
+        s.end();
         this.sessions.delete(id);
       }
     while (this.sessions.size >= MAX_SESSIONS) {
       const oldest = [...this.sessions.values()].sort((a, b) => a.lastUsed - b.lastUsed)[0];
       if (!oldest) break;
-      oldest.close();
+      oldest.end();
       this.sessions.delete(oldest.id);
     }
   }
@@ -731,7 +1102,7 @@ export class AnjaLive {
     try {
       return { id: session.id, turn: await session.send({ kind: "start" }) };
     } catch (e) {
-      session.close();
+      session.end();
       this.sessions.delete(session.id);
       throw e;
     }
@@ -744,7 +1115,7 @@ export class AnjaLive {
   }
 
   end(id: string) {
-    this.sessions.get(id)?.close();
+    this.sessions.get(id)?.end();
     this.sessions.delete(id);
   }
 

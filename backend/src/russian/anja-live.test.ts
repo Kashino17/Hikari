@@ -4,11 +4,16 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   AnjaLive,
+  CONFIRM_PROMPT,
+  EAR_MODEL,
   HELP_MODELS,
   type LiveSocket,
+  PLAIN_FOCUS,
+  firstJson,
   liveStart,
   onlyFormChanged,
   quotaDay,
+  settleHeard,
   settleHelps,
   soundPraise,
   systemPrompt,
@@ -24,13 +29,26 @@ class FakeSocket implements LiveSocket {
   onmessage: ((ev: { data: unknown }) => void) | null = null;
   onclose: ((ev: { code?: number; reason?: string }) => void) | null = null;
   onerror: ((ev: unknown) => void) | null = null;
-  constructor(private ready = true) {
+  /** Welches Modell hinter der Verbindung steht — bekannt, sobald der Auftrag gesendet ist. */
+  model = "";
+  constructor(private earDown = false) {
     queueMicrotask(() => this.onopen?.({}));
+  }
+  get isEar() {
+    return this.model === `models/${EAR_MODEL}`;
   }
   send(data: string) {
     const msg = JSON.parse(data);
     this.sent.push(msg);
-    if (msg.setup && this.ready) queueMicrotask(() => this.emit({ setupComplete: {} }));
+    if (!msg.setup) return;
+    this.model = msg.setup.model;
+    // Fällt das Ohr aus, schließt Google die Verbindung, statt sie zu bestätigen.
+    if (this.isEar && this.earDown) queueMicrotask(() => this.onclose?.({ code: 1011 }));
+    else queueMicrotask(() => this.emit({ setupComplete: {} }));
+  }
+  /** Das Ohr meldet, was es mitgeschrieben hat. */
+  hear(text: string) {
+    this.emit({ serverContent: { inputTranscription: { text }, generationComplete: true } });
   }
   close() {
     this.closed = true;
@@ -79,15 +97,34 @@ const helpsBody = (check: Record<string, unknown>) => ({
   ],
 });
 
-/** Die n-te Verbindung, die der Test geöffnet hat. */
+/** Die n-te Verbindung zum Gesprächsmodell, die der Test geöffnet hat. */
 function sock(s: { sockets: FakeSocket[] }, n = 0): FakeSocket {
-  const found = s.sockets[n];
+  const found = s.sockets.filter((x) => !x.isEar)[n];
   if (!found) throw new Error(`Verbindung ${n} fehlt`);
   return found;
 }
 
+/** Die Verbindung zum Mitschreib-Modell. */
+function ear(s: { sockets: FakeSocket[] }): FakeSocket {
+  const found = s.sockets.find((x) => x.isEar);
+  if (!found) throw new Error("Das Ohr fehlt");
+  return found;
+}
+
+/** Lässt angestoßene Abläufe (Verbindungsaufbau, Senden) zu Ende laufen. */
+const tick = () => new Promise((r) => setTimeout(r, 0));
+
 function setup(
-  opts: { check?: Record<string, unknown>; statuses?: number[]; key?: string | null } = {},
+  opts: {
+    check?: Record<string, unknown>;
+    statuses?: number[];
+    key?: string | null;
+    earDown?: boolean;
+    /** Was die zweite Meinung zu einer Verbesserung sagt: Ist der ursprüngliche Satz in Ordnung? */
+    acceptable?: boolean | "down";
+    /** … und zur Erklärung: fachlich richtig? */
+    explanationOk?: boolean;
+  } = {},
 ) {
   const dir = mkdtempSync(join(tmpdir(), "anja-live-"));
   const sockets: FakeSocket[] = [];
@@ -99,8 +136,11 @@ function setup(
     key: () => (opts.key === undefined ? "test-key" : opts.key),
     usageFile: join(dir, "usage.json"),
     now: () => now,
+    // Im Test wartet niemand lange: Ein stummes Ohr gilt nach 30 ms als »nichts gehört«.
+    earTimeoutMs: 30,
+    lateMs: 15,
     connect: () => {
-      const s = new FakeSocket();
+      const s = new FakeSocket(opts.earDown);
       sockets.push(s);
       return s;
     },
@@ -108,6 +148,21 @@ function setup(
       requests.push({ url, body: JSON.parse(init.body) });
       // Die Wartezeit zwischen zwei Anfragen an dasselbe Modell soll den Test nicht bremsen.
       now += 5000;
+      const second = JSON.parse(init.body).systemInstruction.parts[0].text === CONFIRM_PROMPT;
+      if (second) {
+        if (opts.acceptable === "down") return new Response("{}", { status: 503 });
+        const verdict = {
+          originalAcceptable: opts.acceptable ?? false,
+          explanationCorrect: opts.explanationOk ?? true,
+          why: "x",
+        };
+        return new Response(
+          JSON.stringify({
+            candidates: [{ content: { parts: [{ text: JSON.stringify(verdict) }] } }],
+          }),
+          { status: 200 },
+        );
+      }
       const status = statuses.shift() ?? 200;
       return new Response(
         JSON.stringify(status === 200 ? helpsBody(opts.check ?? { ok: true }) : {}),
@@ -143,6 +198,8 @@ describe("Anja live", () => {
     const cfg = socket.sent[0]?.setup;
     expect(cfg.model).toBe("models/gemini-3.8-live");
     expect(cfg.realtimeInputConfig.automaticActivityDetection.disabled).toBe(true);
+    // Die Mitschrift ist fest auf Russisch gestellt — sonst rät sie die Sprache.
+    expect(cfg.inputAudioTranscription).toEqual({ languageCodes: ["ru-RU"] });
     expect(cfg.systemInstruction.parts[0].text).toContain("чай, кофе");
     expect(cfg.systemInstruction.parts[0].text).toContain("Im Café");
     expect(socket.sent[1]?.realtimeInput.text).toMatch(/^\(Regie: Beginne/);
@@ -183,9 +240,15 @@ describe("Anja live", () => {
     expect(sent.at(-1)).toBe("activityEnd");
     expect(sent.filter((k) => k === "audio").length).toBe(3);
     expect(socket.sent[3]?.realtimeInput.audio.mimeType).toBe("audio/pcm;rate=16000");
+    // Derselbe Ton geht ans Ohr — fest auf Russisch gestellt.
+    await tick();
+    const e = ear(s);
+    expect(e.sent[0]?.setup.inputAudioTranscription).toEqual({ languageCodes: ["ru-RU"] });
+    expect(e.sent.slice(1).map((m) => Object.keys(m.realtimeInput)[0])).toEqual(sent);
+    e.hear("Я любить чай.");
     socket.speak("Я люблю чай. Хорошо!", "Я любить чай");
     const t = await s.live.turn(id, n, "helps");
-    expect(t?.heard).toBe("Я любить чай");
+    expect(t).toMatchObject({ heard: "Я любить чай.", heardState: "sure", heardAlt: "" });
     expect(t?.helps?.check).toEqual({
       ok: false,
       correctedRu: "Я люблю чай",
@@ -195,9 +258,137 @@ describe("Anja live", () => {
     });
     expect(JSON.parse(s.requests[1]?.body.contents[0].parts[0].text)).toEqual({
       question: "Ты любишь чай?",
-      answer: "Я любить чай",
+      answer: "Я любить чай.",
       reply: "Я люблю чай. Хорошо!",
     });
+  });
+
+  /** Ein gesprochener Zug: was das Ohr hört, was das Gesprächsmodell mitschreibt, was danach noch nachkommt. */
+  async function spoken(
+    s: ReturnType<typeof setup>,
+    heard: { ear?: string | null; agent?: string; late?: string },
+  ) {
+    const { id } = await s.live.start(START);
+    sock(s).speak("Где ты живёшь?");
+    await s.live.turn(id, 1, "helps");
+    const n = await s.live.send(id, { kind: "audio", audio, rate: 16000 });
+    await tick();
+    if (heard.ear != null) ear(s).hear(heard.ear);
+    sock(s).speak("Понятно. Ты любишь кофе?", heard.agent ?? "");
+    if (heard.late) sock(s).emit({ serverContent: { inputTranscription: { text: heard.late } } });
+    const t = await s.live.turn(id, n, "helps");
+    const asked = JSON.parse(s.requests.at(-1)?.body.contents[0].parts[0].text);
+    return { t, asked };
+  }
+
+  it("Russisch mit Akzent: Das Gesprächsmodell schreibt Türkisch mit, das Ohr Russisch — gezeigt, aber nicht bewertet", async () => {
+    // So geschehen am 14.11.2026: Aus »Я живу в Германии« wurde »Yaşadığım Almanya'da« — mit »Genau so.« darunter.
+    const { t, asked } = await spoken(setup(), {
+      ear: "Я живу в Германии.",
+      agent: "Yaşadığım Almanya'da",
+    });
+    expect(t).toMatchObject({ heard: "Я живу в Германии.", heardState: "unsure" });
+    expect(asked.answer).toBe("");
+    expect(t?.helps?.check).toBeNull();
+  });
+
+  it("kein Russisch gesprochen: nichts wird gezeigt oder bewertet, die fremde Mitschrift steht daneben", async () => {
+    const { t, asked } = await spoken(setup(), {
+      ear: "Ich weiß es nicht.",
+      agent: "Ich weiß es nicht, keine Ahnung.",
+    });
+    expect(t).toMatchObject({ heard: "", heardState: "foreign", heardAlt: "Ich weiß es nicht." });
+    expect(asked.answer).toBe("");
+    expect(t?.helps?.check).toBeNull();
+  });
+
+  it("Stille: beide Ohren hören nichts", async () => {
+    const { t } = await spoken(setup(), {});
+    expect(t).toMatchObject({ heard: "", heardState: "none", done: true });
+  });
+
+  it("die beiden Ohren hören verschiedene Endungen: kein Urteil, beide Fassungen bleiben sichtbar", async () => {
+    const { t, asked } = await spoken(setup(), { ear: "Я хочу воды.", agent: "Я хочу вода." });
+    expect(t).toMatchObject({
+      heard: "Я хочу воды.",
+      heardState: "unsure",
+      heardAlt: "Я хочу вода.",
+    });
+    expect(asked.answer).toBe("");
+  });
+
+  it("die zweite Mitschrift kommt erst nach Anjas Antwort zu Ende an — sie zählt trotzdem", async () => {
+    const { t, asked } = await spoken(setup(), {
+      ear: "Нет, я не люблю кофе.",
+      agent: "Нет, я",
+      late: " не люблю кофе.",
+    });
+    expect(t).toMatchObject({ heard: "Нет, я не люблю кофе.", heardState: "sure" });
+    expect(asked.answer).toBe("Нет, я не люблю кофе.");
+  });
+
+  it("fällt das Ohr aus, läuft das Gespräch weiter — nur ohne Bewertung", async () => {
+    const { t, asked } = await spoken(setup({ earDown: true }), {
+      ear: null,
+      agent: "Я живу в Германии.",
+    });
+    expect(t).toMatchObject({ heard: "Я живу в Германии.", heardState: "unsure", done: true });
+    expect(asked.answer).toBe("");
+  });
+
+  const FIX = {
+    ok: false,
+    correctedRu: "Я хочу воду",
+    correctedDe: "Ich möchte Wasser",
+    focus: "Akkusativ",
+    explanationDe: "…",
+  };
+
+  it("eine Verbesserung wird nur gezeigt, wenn die zweite Meinung sie bestätigt", async () => {
+    const yes = await spoken(setup({ check: FIX, acceptable: false }), {
+      ear: "Я хочу вода",
+      agent: "Я хочу вода",
+    });
+    expect(yes.t?.helps?.check).toMatchObject({ ok: false, correctedRu: "Я хочу воду" });
+    expect(yes.asked).toEqual({
+      original: "Я хочу вода",
+      proposedCorrection: "Я хочу воду",
+      explanationDe: "Akkusativ …",
+    });
+  });
+
+  it("hält die zweite Meinung den Satz für richtig, gibt es kein Urteil — weder Korrektur noch »Genau so«", async () => {
+    // Gemessen: »Я хочу воды« (Teilungsgenitiv) wurde als Fehler gemeldet.
+    const no = await spoken(setup({ check: { ...FIX }, acceptable: true }), {
+      ear: "Я хочу воды",
+      agent: "Я хочу воды",
+    });
+    expect(no.t).toMatchObject({ heardState: "sure", helpsState: "ready" });
+    expect(no.t?.helps?.check).toBeNull();
+  });
+
+  it("ist der Fehler bestätigt, die Erklärung aber fachlich falsch, bleibt die Verbesserung — ohne die Erklärung", async () => {
+    // Gemessen: »Das Reflexivpronomen меня steht im Genitiv« zu »Меня зовут Кадир«.
+    const r = await spoken(setup({ check: FIX, acceptable: false, explanationOk: false }), {
+      ear: "Я хочу вода",
+      agent: "Я хочу вода",
+    });
+    expect(r.t?.helps?.check).toEqual({
+      ok: false,
+      correctedRu: "Я хочу воду",
+      correctedDe: "Ich möchte Wasser",
+      focus: PLAIN_FOCUS,
+      explanationDe: "",
+    });
+  });
+
+  it("ist die zweite Meinung nicht erreichbar, gibt es ebenfalls kein Urteil", async () => {
+    const down = await spoken(setup({ check: FIX, acceptable: "down" }), {
+      ear: "Я хочу вода",
+      agent: "Я хочу вода",
+    });
+    expect(down.t?.helps?.check).toBeNull();
+    expect(down.t?.helps?.replyDe).toBe("Gut! Was machst du heute?");
   });
 
   it("der Tonstrom liefert schon, während Anja noch spricht", async () => {
@@ -225,24 +416,24 @@ describe("Anja live", () => {
   it("nach 12 Minuten wird neu verbunden — mit dem bisherigen Verlauf im Auftrag", async () => {
     const s = setup();
     const { id } = await s.live.start(START);
-    s.sockets[0]?.speak("Привет! Как дела?");
+    sock(s, 0).speak("Привет! Как дела?");
     await s.live.turn(id, 1, "helps");
     s.advance(13 * 60_000);
     // Das Gespräch selbst darf nicht als verwaist gelten: Es wurde gerade benutzt.
     const n = await s.live.send(id, { kind: "text", text: "Хорошо" });
-    expect(s.sockets.length).toBe(2);
-    expect(s.sockets[0]?.closed).toBe(true);
-    const prompt = s.sockets[1]?.sent[0]?.setup.systemInstruction.parts[0].text;
+    expect(s.sockets.filter((x) => !x.isEar).length).toBe(2);
+    expect(sock(s, 0).closed).toBe(true);
+    const prompt = sock(s, 1).sent[0]?.setup.systemInstruction.parts[0].text;
     expect(prompt).toContain("Anja: Привет! Как дела?");
-    expect(s.sockets[1]?.sent[1]?.realtimeInput.text).toBe("Хорошо");
-    s.sockets[1]?.speak("Что ты делаешь?");
+    expect(sock(s, 1).sent[1]?.realtimeInput.text).toBe("Хорошо");
+    sock(s, 1).speak("Что ты делаешь?");
     expect((await s.live.turn(id, n, "done"))?.heard).toBe("Хорошо");
   });
 
   it("überlastetes Hilfen-Modell: das nächste übernimmt; 429 sperrt das Modell für den Tag", async () => {
     const s = setup({ statuses: [503, 429, 200] });
     const { id } = await s.live.start(START);
-    s.sockets[0]?.speak("Привет!");
+    sock(s, 0).speak("Привет!");
     const t = await s.live.turn(id, 1, "helps");
     expect(t?.helpsState).toBe("ready");
     expect(s.requests.map((r) => r.url.split("/").pop())).toEqual([
@@ -271,13 +462,13 @@ describe("Anja live", () => {
   });
 
   it("scheitern die Hilfen, läuft das Gespräch trotzdem weiter", async () => {
-    const s = setup({ statuses: [500, 500, 500, 500] });
+    const s = setup({ statuses: [500, 500, 500, 500, 500] });
     const { id } = await s.live.start(START);
-    s.sockets[0]?.speak("Привет!");
+    sock(s, 0).speak("Привет!");
     const t = await s.live.turn(id, 1, "helps");
     expect(t).toMatchObject({ done: true, helpsState: "failed", helps: null });
     await expect(s.live.send(id, { kind: "again" })).resolves.toBe(2);
-    expect(s.sockets[0]?.sent.at(-1)?.realtimeInput.text).toMatch(/nicht verstanden/);
+    expect(sock(s, 0).sent.at(-1)?.realtimeInput.text).toMatch(/nicht verstanden/);
   });
 
   it("ohne Schlüssel kein Gespräch", async () => {
@@ -375,6 +566,15 @@ describe("settleHelps — Richtiges nie wie falsch", () => {
     // Ohne genanntes Wort ist das Lob zu allgemein.
     expect(soundPraise("Sehr gut gemacht!", "Я хочу воду")).toBe("");
   });
+  it("was kein Russisch ist, bekommt kein Urteil — auch kein »Genau so«", () => {
+    const h = settleHelps(
+      { ...base, goodDe: "Gut gesagt.", check: { ok: true } },
+      "Yaşadığım Almanya'da",
+      "Где ты живёшь?",
+    );
+    expect(h.check).toBeNull();
+    expect(h.goodDe).toBe("");
+  });
   it("eine echte Verbesserung bleibt", () => {
     const h = settleHelps(
       {
@@ -384,6 +584,60 @@ describe("settleHelps — Richtiges nie wie falsch", () => {
       "Я хочу вода",
     );
     expect(h.check).toMatchObject({ ok: false, correctedRu: "Я хочу воду" });
+  });
+});
+
+describe("settleHeard — bewertet wird nur, was zwei Ohren gleich gehört haben", () => {
+  it("gleich gehört (Satzzeichen und Großschreibung egal)", () => {
+    expect(settleHeard("Привет, очень хорошо. А у тебя?", "привет очень хорошо а у тебя")).toEqual({
+      text: "Привет, очень хорошо. А у тебя?",
+      state: "sure",
+      alt: "",
+    });
+  });
+  it("abgeschnittene zweite Mitschrift bestätigt, wenn sie mindestens die Hälfte abdeckt", () => {
+    expect(settleHeard("Да, я люблю музыка.", "Да, я люблю").state).toBe("sure");
+    expect(settleHeard("Да, я очень люблю русскую музыку.", "Да").state).toBe("unsure");
+  });
+  it("ist die Mitschrift des Ohrs die kürzere, gilt die vollständige", () => {
+    expect(settleHeard("я хочу", "Я хочу чай.")).toMatchObject({
+      text: "Я хочу чай.",
+      state: "sure",
+    });
+  });
+  it("nur ein Ohr hat Russisch gehört", () => {
+    expect(settleHeard("Я живу в Германии.", "")).toMatchObject({
+      text: "Я живу в Германии.",
+      state: "unsure",
+    });
+    expect(settleHeard(null, "Я живу в Германии.")).toMatchObject({
+      text: "Я живу в Германии.",
+      state: "unsure",
+    });
+    expect(settleHeard("Yo llevo a Alemania.", "Я живу в Германии.")).toMatchObject({
+      text: "Я живу в Германии.",
+      state: "unsure",
+    });
+  });
+  it("fremde Sprache und Stille", () => {
+    expect(settleHeard("Almanya'da yaşıyorum.", "")).toEqual({
+      text: "",
+      state: "foreign",
+      alt: "Almanya'da yaşıyorum.",
+    });
+    expect(settleHeard("", "")).toEqual({ text: "", state: "none", alt: "" });
+    expect(settleHeard(null, "")).toEqual({ text: "", state: "none", alt: "" });
+  });
+});
+
+describe("firstJson", () => {
+  it("nimmt das erste vollständige Objekt, auch wenn etwas dahinter hängt oder Klammern im Text stehen", () => {
+    expect(firstJson('{"a":{"b":"x } y"},"c":1} und noch etwas }')).toEqual({
+      a: { b: "x } y" },
+      c: 1,
+    });
+    expect(firstJson('Hier: {"a":"\\"zitat\\" }"}')).toEqual({ a: '"zitat" }' });
+    expect(() => firstJson("kein Objekt")).toThrow("no_json");
   });
 });
 
