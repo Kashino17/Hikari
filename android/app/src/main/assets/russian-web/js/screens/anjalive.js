@@ -4,11 +4,12 @@
 //
 // Grundsatz: Was Anja SAGT, ist Gespräch. Ob dein Satz richtig war, entscheidet allein die Prüfung —
 // ein richtiger Satz bekommt eine Bestätigung, nie eine Korrektur-Optik.
-import { html, cls, Icon, TopBar, IL, Sheet, useState, useEffect, useRef, useMemo, fx, audio } from '../ui.js';
+import { html, cls, Icon, TopBar, IL, Sheet, PhraseDock, useState, useEffect, useRef, useMemo, fx, audio, speech } from '../ui.js';
 import { progress, back, toast, phraseById } from '../app.js';
 import { storage, api, audioContext } from '../platform.js';
 import * as Ph from '../domain/phonetics.js';
 import * as Gl from '../domain/glossary.js';
+import { asPhrase } from '../domain/content.js';
 import { SCENARIOS, loadChat, supportStage, record, knownWords, ownWords } from './journey.js';
 import { mic, playStream, playPcm, stopPlayback, MAX_RECORD_S } from '../livevoice.js';
 
@@ -43,23 +44,34 @@ function Bars({ on }) {
   return html`<span class=${cls('al-bars', on && 'on')} aria-hidden="true"><i></i><i></i><i></i><i></i></span>`;
 }
 
-/** Deine Zeile: was verstanden wurde, darunter das Urteil der Satzprüfung. */
-function Mine({ t, extra, onKeep, kept }) {
-  const [open, setOpen] = useState(false);
+const NOTE = 'Aus dem Gespräch mit Anja';
+
+/**
+ * Deine Zeile: was verstanden wurde, darunter die Rückmeldung wie von einer Lehrerin —
+ * was gelungen ist, worauf du achten sollst, wie es richtig heißt und warum.
+ */
+function Mine({ t, extra, kept }) {
+  const [practice, setPractice] = useState(false);
   const c = t.helps?.check;
+  const good = t.helps?.goodDe;
+  const phrase = useMemo(() => (c && !c.ok ? asPhrase(c.correctedRu, c.correctedDe || '', NOTE) : null), [c?.correctedRu]);
   return html`<div class=${cls('bub me al-mine', c && !c.ok && 'fix')}>
     <div class="who">DU${!t.spoken ? ' · getippt' : ''}</div>
     ${t.heard ? html`<${IL} ru=${t.heard} size=${18} extra=${extra} />` : html`<div class="sub">${t.done ? 'Ich habe nichts verstanden. Sag es noch einmal, etwas lauter.' : 'Anja hört zu …'}</div>`}
     ${t.heard && t.helpsState === 'pending' && html`<div class="al-verdict wait"><${Icon} n="progress_activity" c="spin" size="15" />Dein Satz wird geprüft …</div>`}
-    ${c?.ok && html`<div class="al-verdict ok"><${Icon} n="check_circle" fill size="16" />Genau so.</div>`}
-    ${c && !c.ok && html`<div class="al-fix">
-      <div class="al-verdict tip"><${Icon} n="lightbulb" fill size="16" />${c.focus}</div>
-      ${!open && html`<button class="chip sm mt8" onClick=${() => setOpen(true)}>So wäre es richtig</button>`}
-      ${open && html`<div class="al-right"><${IL} ru=${c.correctedRu} size=${17} extra=${extra} />
+    ${c?.ok && html`<div class="al-verdict ok"><${Icon} n="check_circle" fill size="16" /><span><b>Genau so.</b>${good ? ` ${good}` : ''}</span></div>`}
+    ${c && !c.ok && html`<div class="al-teach">
+      ${good && html`<div class="al-verdict ok"><${Icon} n="check_circle" fill size="16" /><span>${good}</span></div>`}
+      <div class="al-verdict tip"><${Icon} n="lightbulb" fill size="16" /><span>${c.focus}</span></div>
+      <div class="al-right"><div class="al-k">So heißt es</div>
+        <${IL} ru=${c.correctedRu} size=${18} extra=${extra} />
         ${c.correctedDe && html`<div class="de">${c.correctedDe}</div>`}
-        <div class="sub mt4">${c.explanationDe}</div>
+        <div class="al-why">${c.explanationDe}</div>
         <div class="rowx g8 wrap mt8"><button class="chip sm" onClick=${() => say(c.correctedRu)}><${Icon} n="volume_up" />Anhören</button>
-          ${c.correctedDe && html`<button class="chip sm" disabled=${kept} onClick=${() => onKeep({ ru: c.correctedRu, de: c.correctedDe })}><${Icon} n=${kept ? 'bookmark_added' : 'bookmark_add'} />${kept ? 'Im Satzbuch' : 'Merken'}</button>`}</div></div>`}
+          ${speech.available() && html`<button class=${cls('chip sm', practice && 'on')} onClick=${() => setPractice(!practice)}><${Icon} n="mic" />Selbst sagen</button>`}
+          ${kept && html`<span class="al-kept"><${Icon} n="bookmark_added" fill size="15" />Im Satzbuch</span>`}</div>
+        ${practice && html`<${PhraseDock} phrase=${phrase} size="sm" listen=${false} record=${false} onEvaluated=${(ok) => progress.gradeCard(phrase.id, ok, ok ? 2 : 0, ok ? 1 : 0)} />`}
+      </div>
     </div>`}
     ${t.heard && t.helpsState === 'failed' && html`<div class="al-verdict wait">Die Prüfung war gerade nicht erreichbar.</div>`}
   </div>`;
@@ -179,7 +191,17 @@ export function AnjaLive() {
     const clear = c?.ok === true;
     patch(k, { scored: true });
     progress.apply({ xp: clear ? 6 : 3, graded: {}, spokenOk: clear && t.spoken ? 1 : 0 });
-    if (c) setCp((x) => record(x, { id: `live${t.uid}`, day: today, stage, scenario: scenario.id, answer: t.heard, clear, independent: !t.helped, spoken: t.spoken }));
+    // Zählt fürs Gesprächs-Niveau (wie die getippten Gespräche) und für die Erfolge.
+    setCp((x) => {
+      const live = { talks: 0, answers: 0, clear: 0, ...x.live };
+      const next = { ...x, live: { ...live, answers: live.answers + 1, clear: live.clear + (clear ? 1 : 0) } };
+      return c ? record(next, { id: `live${t.uid}`, day: today, stage, scenario: scenario.id, answer: t.heard, clear, independent: !t.helped, spoken: t.spoken }) : next;
+    });
+    // Aus Fehlern lernt man am meisten: Die richtige Fassung kommt von selbst ins Satzbuch und in die Wiederholung.
+    if (c && !c.ok && c.correctedDe) {
+      progress.learnSentence({ ru: c.correctedRu, de: c.correctedDe, note: NOTE });
+      setKept((old) => new Set([...old, c.correctedRu]));
+    }
     if (clear) fx.right();
   };
 
@@ -276,12 +298,25 @@ export function AnjaLive() {
     if (take.seconds < 0.4) { setStatus('you'); toast('Das war sehr kurz. Halte ruhig einen Moment länger.'); return; }
     await sendTurn({ kind: 'audio', audio: take.audio, rate: take.rate }, { kind: 'audio' });
   };
+  /** Versprochen? Die Aufnahme wird verworfen — nichts geht an Anja. */
+  const cancelRecording = () => {
+    rec.current?.cancel();
+    rec.current = null;
+    setStatus((x) => (x === 'rec' ? 'you' : x));
+  };
+  const restartRecording = async () => {
+    if (opening.current) return;
+    opening.current = true;
+    rec.current?.cancel();
+    rec.current = null;
+    try { rec.current = await mic.start(); } catch { setError(WHY.mic); setStatus('you'); } finally { opening.current = false; }
+  };
   const sendText = (text) => { setSheet(null); sendTurn({ kind: 'text', text }, { kind: 'text', heard: text }); };
   const ask = (kind) => { if (status === 'you') sendTurn({ kind }, { kind }); };
 
   const keep = (s) => {
-    progress.learnSentence({ ru: s.ru, de: s.de, note: 'Aus dem Gespräch mit Anja' });
-    setKept(new Set([...kept, s.ru]));
+    progress.learnSentence({ ru: s.ru, de: s.de, note: NOTE });
+    setKept((old) => new Set([...old, s.ru]));
     toast('Im Satzbuch und in der Wiederholung');
   };
   const playAgain = (t) => {
@@ -294,6 +329,7 @@ export function AnjaLive() {
     stopPlayback(); rec.current?.cancel(); rec.current = null;
     if (sid.current) api.post('/russian/anja/live/end', { id: sid.current }).catch(() => {});
     sid.current = null;
+    if (turnsRef.current.some((t) => t.scored)) setCp((x) => { const live = { talks: 0, answers: 0, clear: 0, ...x.live }; return { ...x, live: { ...live, talks: live.talks + 1 } }; });
     setStatus('idle'); setPhase('done');
   };
   const leave = () => (phase === 'talk' && turns.some((t) => t.heard) ? finish() : back('anja'));
@@ -324,7 +360,8 @@ export function AnjaLive() {
         <div class="al-steps">
           <div><${Icon} n="hearing" />Anja spricht. Hör zu.</div>
           <div><${Icon} n="mic" />Tippe aufs Mikrofon, sprich, tippe noch einmal.</div>
-          <div><${Icon} n="fact_check" />Dein Satz wird geprüft: richtig oder ein Hinweis.</div>
+          <div><${Icon} n="fact_check" />Du bekommst Rückmeldung: was gelungen ist, was nicht, wie es richtig heißt.</div>
+          <div><${Icon} n="restart_alt" />Versprochen? Verwirf die Aufnahme und fang neu an.</div>
         </div>
         <p class="faint" style="font-size:12px;line-height:1.5">Dein Ton geht zur Verarbeitung an Google (kostenlose Stufe; Google darf solche Eingaben zur Verbesserung seiner Dienste nutzen).</p>
       </div></div>
@@ -352,7 +389,8 @@ export function AnjaLive() {
             <div class="sub mt8">Richtig</div><${IL} ru=${c.correctedRu} size=${18} extra=${extra} />${c.correctedDe && html`<div class="de">${c.correctedDe}</div>`}
             <div class="sub mt8">${c.explanationDe}</div>
             <div class="rowx g8 wrap mt12"><button class="chip sm" onClick=${() => say(c.correctedRu)}><${Icon} n="volume_up" />Anhören</button>
-              ${c.correctedDe && html`<button class="chip sm" disabled=${has} onClick=${() => keep({ ru: c.correctedRu, de: c.correctedDe })}><${Icon} n=${has ? 'bookmark_added' : 'bookmark_add'} />${has ? 'Im Satzbuch' : 'Merken'}</button>`}</div></div>`; })}</div>`}
+              ${has && html`<span class="al-kept"><${Icon} n="bookmark_added" fill size="15" />Im Satzbuch</span>`}</div></div>`; })}
+          <p class="sub">Die richtigen Fassungen liegen in deinem Satzbuch und kommen in die Wiederholung.</p></div>`}
         ${answered.length > 0 && fixes.length === 0 && html`<div class="hint"><p>Kein einziger Hinweis. Beim nächsten Mal darf Anja ruhig etwas mehr fragen.</p></div>`}
       </div></div>
       <div class="bottom"><button class="btn area" onClick=${() => { setTurns([]); pcm.current.clear(); setPhase('intro'); }}>Noch ein Gespräch</button>
@@ -370,21 +408,25 @@ export function AnjaLive() {
     <div class="scroll" ref=${scroller}><div class="stepc g12 al-talk">
       ${turns.length === 0 && html`<div class="al-wait"><${Bars} on /><b>Anja kommt gleich.</b><span>Sie begrüßt dich und stellt die erste Frage.</span></div>`}
       ${turns.map((t, i) => html`
-        ${(t.kind === 'audio' || t.kind === 'text') && html`<${Mine} key=${`m${t.k}`} t=${t} extra=${extra} onKeep=${keep} kept=${kept.has(t.helps?.check?.correctedRu)} />`}
+        ${(t.kind === 'audio' || t.kind === 'text') && html`<${Mine} key=${`m${t.k}`} t=${t} extra=${extra} kept=${kept.has(t.helps?.check?.correctedRu)} />`}
         ${!(t.error && !t.said) && html`<${Hers} key=${`a${t.k}`} t=${t} extra=${extra} speaking=${speaking && i === turns.length - 1} latest=${i === turns.length - 1} hideText=${hideText}
           onReplay=${pcm.current.has(t.k) && !speaking && status !== 'rec' ? () => playAgain(t) : null} replaying=${replay === t.k} onKeep=${keep} kept=${kept.has(t.said)} />`}`)}
       ${status === 'sending' && html`<div class="typing" style="align-self:flex-end"><i></i><i></i><i></i></div>`}
       ${error && html`<div class="hint" style="border-color:rgba(var(--bad-rgb),.4)"><p>${error}</p></div>`}
     </div></div>
     <div class="al-dock">
-      <button class="al-side" disabled=${!can || !lastAnja} onClick=${() => ask('again')}><${Icon} n="replay" /><span>Nicht verstanden</span></button>
+      ${status === 'rec'
+        ? html`<button class="al-side" onClick=${cancelRecording}><${Icon} n="close" /><span>Verwerfen</span></button>`
+        : html`<button class="al-side" disabled=${!can || !lastAnja} onClick=${() => ask('again')}><${Icon} n="replay" /><span>Nicht verstanden</span></button>`}
       <div class="al-center">
         <button ref=${micBtn} class=${cls('al-mic', status === 'rec' && 'rec', !can && status !== 'rec' && 'off')} disabled=${!can && status !== 'rec'}
           onClick=${() => (rec.current ? sendRecording() : startRecording())} aria-label=${status === 'rec' ? 'Fertig gesprochen' : 'Sprechen'}>
           <${Icon} n=${status === 'rec' ? 'stop' : speaking ? 'graphic_eq' : 'mic'} fill size="34" /></button>
         <div class="al-label">${status === 'rec' ? html`<b class="al-time" ref=${recLabel}>0 s</b> Tippe, wenn du fertig bist` : label}</div>
       </div>
-      <button class="al-side" disabled=${!can || !lastAnja} onClick=${() => { helped.current = true; setSheet('help'); }}><${Icon} n="lightbulb" /><span>Was kann ich sagen?</span></button>
+      ${status === 'rec'
+        ? html`<button class="al-side" onClick=${restartRecording}><${Icon} n="restart_alt" /><span>Neu anfangen</span></button>`
+        : html`<button class="al-side" disabled=${!can || !lastAnja} onClick=${() => { helped.current = true; setSheet('help'); }}><${Icon} n="lightbulb" /><span>Was kann ich sagen?</span></button>`}
     </div>
     <div class="al-under">
       <button disabled=${!can || !lastAnja} onClick=${() => ask('easier')}>Einfacher fragen</button>

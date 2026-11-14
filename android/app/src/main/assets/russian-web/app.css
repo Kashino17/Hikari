@@ -982,7 +982,15 @@ button.row:active{background:rgba(255,255,255,.035)}
 .al-verdict.ok{color:var(--good);font-weight:500}
 .al-verdict.tip{color:var(--amber)}
 .al-verdict.wait{color:var(--muted);font-size:12.5px}
+.al-verdict.ok b{font-weight:600}
+.al-verdict.ok span{color:rgba(255,255,255,.86);font-weight:400}
+.al-verdict.ok span b{color:var(--good)}
+.al-teach .al-verdict.ok span{color:var(--good)}
 .al-right{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.al-k{font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:5px}
+.al-why{font-size:13.5px;line-height:1.45;color:rgba(255,255,255,.8);margin-top:6px}
+.al-kept{display:inline-flex;align-items:center;gap:4px;height:28px;font-size:12.5px;color:var(--muted)}
+.al-mine .dockwrap{margin-top:10px}
 .al-ex{display:flex;align-items:center;gap:8px;padding:12px 0;border-top:1px solid var(--border)}
 .al-ex .de,.al-review .de{font-size:14px;color:var(--muted);margin-top:4px}
 .al-review{margin-bottom:10px}

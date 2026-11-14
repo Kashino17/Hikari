@@ -341,6 +341,7 @@ export function StatsWins() {
   const cells = Array.from({ length: 35 }, (_, i) => monday - 28 + i);
   const heat = (d) => { const x = P.xpOn(p, d); const t = daySeconds(d); if (!x && !t) return 0; const r = Math.max(x / prefs.dailyGoal(), t / 60 / prefs.dailyMinutes()); return r >= 1 ? 3 : r >= 0.5 ? 2 : 1; };
   const lab = Object.values(p.labBest);
+  const liveAnswers = storage.getJSON('conv_progress')?.live?.answers ?? 0;
   const courses = [
     ['speak', 'Jahreskurs', D.plan.doneCount(p, planState.get()), 365, 'plan'],
     ['listen', 'Podcast', Object.keys(p.podcastDayStars).length, D.podIndex.days.length, 'podcast'],
@@ -353,6 +354,7 @@ export function StatsWins() {
     ['extension', 'words', 'Kombi-Meister', p.bestKombi, 'Punkte', 'kombi'],
     ['join_inner', 'words', 'Paare finden', p.bestPairsSeconds, 'Sekunden', 'pairs'],
     ['graphic_eq', 'listen', 'Lautlabor', lab.length ? Math.max(...lab) : 0, 'Prozent', 'sounds'],
+    ['graphic_eq', 'amber', 'Anja live', liveAnswers, liveAnswers === 1 ? 'gesprochene Antwort' : 'gesprochene Antworten', 'anja/live'],
     ['video_library', 'listen', 'Lieder & Szenen', piecesDone(), piecesDone() === 1 ? 'Stück durchgearbeitet' : 'Stücke durchgearbeitet', 'erleben'],
   ];
   return html`<div class="screen">

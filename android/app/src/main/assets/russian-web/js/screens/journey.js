@@ -295,7 +295,7 @@ function HomePage({ cp, setPage, today, nextLesson, beginLesson, run, lesson, fr
       <div class="sub mt12 center">Du startest den Ton selbst. Alles wird auf Deutsch erklärt.</div></div>
     <button class="al-entry" onClick=${() => nav('anja/live')}>
       <span class="ic"><${Icon} n="graphic_eq" /></span>
-      <span class="tx"><span class="k">Neu · zum Ausprobieren</span><b>Anja live</b><span class="d">Du sprichst, sie antwortet sofort — mit ihrer eigenen Stimme.</span></span>
+      <span class="tx"><span class="k">${cp.live?.answers ? `${cp.live.talks} ${cp.live.talks === 1 ? 'Gespräch' : 'Gespräche'} · ${cp.live.answers} ${cp.live.answers === 1 ? 'Antwort' : 'Antworten'}` : 'Sprechen statt tippen'}</span><b>Anja live</b><span class="d">Du sprichst, sie antwortet sofort — mit ihrer eigenen Stimme.</span></span>
       <${Icon} n="chevron_right" c="faint" /></button>
     ${due > 0 && html`<button class="row card" style="border-radius:16px" onClick=${() => setPage('review')}><${Icon} n="style" c="amber" /><div class="tx"><b>${due} ${due === 1 ? 'Wort wartet' : 'Wörter warten'} auf ein Wiedersehen</b></div><${Icon} n="chevron_right" c="faint" /></button>`}
     <div><div class="over" style="margin-bottom:8px">Deine kleine Reise</div><div class="list">${LESSONS.map((l, i) => {
