@@ -39,7 +39,8 @@ const TURN_TIMEOUT_MS = 30_000;
 const SOCKET_MAX_AGE_MS = 12 * 60_000;
 const IDLE_MS = 10 * 60_000;
 const MAX_SESSIONS = 8;
-const HELP_TIMEOUT_MS = 9_000;
+/** Üblich sind 1,3 s. Wer nach 6 s nicht geantwortet hat, ist überlastet — dann lieber das nächste Modell. */
+const HELP_TIMEOUT_MS = 6_000;
 const QUOTA_ZONE = "America/Los_Angeles";
 
 export const liveStart = z.object({
@@ -641,6 +642,7 @@ export class AnjaLive {
         }
         if (!res.ok) {
           lastError = `http_${res.status}`;
+          this.log(`[anja-live] Hilfen ${model}: ${lastError}`);
           continue;
         }
         this.count(model);
@@ -659,6 +661,7 @@ export class AnjaLive {
         return settleHelps(JSON.parse(found[0]), answer, question);
       } catch (e) {
         lastError = e instanceof Error ? e.message.slice(0, 80) : "failed";
+        this.log(`[anja-live] Hilfen ${model}: ${lastError}`);
       }
     }
     throw new Error(lastError);
