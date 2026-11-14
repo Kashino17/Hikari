@@ -360,6 +360,11 @@ describe("settleHelps — Richtiges nie wie falsch", () => {
     expect(
       soundPraise("Die Ich-Form «работаю» stimmt.", "Я работаю в офис", "Я работаю в офисе"),
     ).toBe("Die Ich-Form «работаю» stimmt.");
+    // Fachbegriffe im Lob waren gemessen unzuverlässig (»я дома« ist kein Nominativ).
+    expect(soundPraise("«я дома» steht richtig im Nominativ.", "Сегодня я дома")).toBe("");
+    expect(soundPraise("Die Verneinung «не люблю» ist richtig.", "Нет, я не люблю кофе")).toBe(
+      "Die Verneinung «не люблю» ist richtig.",
+    );
     // Ohne genanntes Wort ist das Lob zu allgemein.
     expect(soundPraise("Sehr gut gemacht!", "Я хочу воду")).toBe("");
   });

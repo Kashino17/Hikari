@@ -214,7 +214,7 @@ correctedRu = the learner's own sentence with ONLY that mistake fixed (same word
 focus = one short German sentence naming the issue, explanationDe = one short German sentence explaining the rule.
 When ok=true, or when answer is empty, the other four fields are empty strings.
 
-goodDe — like a calm, precise teacher: ONE short German sentence (at most 14 words, informal "du") naming one concrete thing Kadir got right in his answer and WHY it is right — the verb ending, the case, the negation, the word order — quoting that Russian word exactly as he said it. Example: Die Ich-Form «люблю» stimmt. / «в Берлине» steht richtig im Präpositiv. No exclamation marks, no "super", "perfekt" or "toll". Never mention the mistake here. Empty string when answer is empty, has fewer than three words, or there is nothing specific to name.
+goodDe — like a calm teacher: ONE short German sentence (at most 12 words, informal "du") naming one concrete word or phrase Kadir used correctly, quoted exactly as he said it, in plain words. Examples: Die Ich-Form «люблю» stimmt. / Die Verneinung «не люблю» ist richtig. / «в Берлине» hat die richtige Endung. Do NOT use grammar terminology here (no case names, no "Nominativ", "Akkusativ", "Subjekt", "Adverb", "Substantiv"). No exclamation marks, no "super", "perfekt" or "toll". Never mention the mistake here. Empty string when answer is empty, has fewer than three words, or there is nothing specific to name.
 
 replyDe — a natural German translation of reply (informal "du").
 words — every word of reply in order (skip punctuation, list a repeated word once): ru = the word exactly as it appears in reply (lower case), de = its German meaning in THIS sentence, one to three words, German nouns capitalised as usual.
@@ -248,6 +248,8 @@ export function onlyFormChanged(question: string, answer: string, correctedRu: s
   return added.length <= 1 && !added.some((w) => w.length >= 3 && asked.has(w.slice(0, 3)));
 }
 
+const GRAMMAR_TERMS =
+  /Nominativ|Akkusativ|Genitiv|Dativ|Präpositiv|Lokativ|Instrumental|Subjekt|Objekt|Adjektiv|Adverb|Substantiv|Nomen|Infinitiv|Partizip|Kasus|\bFall\b/i;
 /** Endungen, an denen ein Anfänger-Verb zu erkennen ist (Gegenwart, Grundform, Vergangenheit). */
 const VERB_LIKE =
   /(ю|у|ешь|ет|ем|ете|ют|ут|ишь|ит|им|ите|ат|ят|ть|ти|чь|л|ла|ло|ли|юсь|усь|ется|ится)$/;
@@ -264,7 +266,9 @@ export function soundPraise(goodDe: string, answer: string, correctedRu = ""): s
   const said = new Set(wordsOf(answer));
   const fixed = correctedRu ? new Set(wordsOf(correctedRu)) : null;
   if (!quoted.every((w) => said.has(w) && (!fixed || fixed.has(w)))) return "";
-  // Gemessen: Das Modell nannte »дом« ein Verb. Ein Lob mit falschem Fachwort lehrt Falsches — dann lieber keines.
+  // Gemessen: Das Modell nannte »дом« ein Verb und »я дома« einen Nominativ. Ein Lob mit falschem Fachwort
+  // lehrt Falsches — Fachbegriffe gehören in die Erklärung eines Fehlers (dort gemessen zuverlässig), nicht ins Lob.
+  if (GRAMMAR_TERMS.test(text)) return "";
   if (/\bVerb|\bIch-Form|\bkonjugiert/i.test(text) && !quoted.some((w) => VERB_LIKE.test(w)))
     return "";
   return text;
