@@ -79,6 +79,7 @@ const helpsReply = z.object({
       explanationDe: z.string().max(400).default(""),
     })
     .default({ ok: true, correctedRu: "", correctedDe: "", focus: "", explanationDe: "" }),
+  goodDe: z.string().max(300).default(""),
   replyDe: z.string().trim().min(1).max(900),
   words: z
     .array(z.object({ ru: z.string().trim().max(80), de: z.string().trim().max(100) }))
@@ -89,6 +90,8 @@ const helpsReply = z.object({
 });
 
 export interface LiveHelps {
+  /** Was am Satz des Lernenden gelungen ist — ein Satz wie von einer Lehrerin; leer, wenn nichts Bestimmtes. */
+  goodDe: string;
   replyDe: string;
   words: { ru: string; de: string }[];
   examples: { ru: string; de: string }[];
@@ -200,7 +203,7 @@ export function systemPrompt(
 export const HELPS_PROMPT = `You support a spoken Russian practice conversation between Anja (a Russian native speaker) and Kadir, a German-speaking beginner.
 Input is JSON: {"question": Anja's previous line, "answer": what Kadir just said (a speech transcript), "reply": Anja's new line}.
 Return ONLY one JSON object with exactly these fields:
-{"check":{"ok":true,"correctedRu":"","correctedDe":"","focus":"","explanationDe":""},"replyDe":"","words":[{"ru":"","de":""}],"examples":[{"ru":"","de":""},{"ru":"","de":""}]}
+{"check":{"ok":true,"correctedRu":"","correctedDe":"","focus":"","explanationDe":""},"goodDe":"","replyDe":"","words":[{"ru":"","de":""}],"examples":[{"ru":"","de":""},{"ru":"","de":""}]}
 
 check — judge ONLY Kadir's answer. It is a speech transcript: ignore punctuation and capitalisation completely.
 ok=true when the sentence is understandable and has no real grammar mistake. Short answers and single words are fine.
@@ -210,6 +213,8 @@ ok=false ONLY for a real language mistake such as a wrong word form or a missing
 correctedRu = the learner's own sentence with ONLY that mistake fixed (same words otherwise), correctedDe = its German translation,
 focus = one short German sentence naming the issue, explanationDe = one short German sentence explaining the rule.
 When ok=true, or when answer is empty, the other four fields are empty strings.
+
+goodDe — like a calm, precise teacher: ONE short German sentence (at most 14 words, informal "du") naming one concrete thing Kadir got right in his answer and WHY it is right — the verb ending, the case, the negation, the word order — quoting that Russian word exactly as he said it. Example: Die Ich-Form «люблю» stimmt. / «в Берлине» steht richtig im Präpositiv. No exclamation marks, no "super", "perfekt" or "toll". Never mention the mistake here. Empty string when answer is empty, has fewer than three words, or there is nothing specific to name.
 
 replyDe — a natural German translation of reply (informal "du").
 words — every word of reply in order (skip punctuation, list a repeated word once): ru = the word exactly as it appears in reply (lower case), de = its German meaning in THIS sentence, one to three words, German nouns capitalised as usual.
@@ -243,6 +248,28 @@ export function onlyFormChanged(question: string, answer: string, correctedRu: s
   return added.length <= 1 && !added.some((w) => w.length >= 3 && asked.has(w.slice(0, 3)));
 }
 
+/** Endungen, an denen ein Anfänger-Verb zu erkennen ist (Gegenwart, Grundform, Vergangenheit). */
+const VERB_LIKE =
+  /(ю|у|ешь|ет|ем|ете|ют|ут|ишь|ит|им|ите|ат|ят|ть|ти|чь|л|ла|ло|ли|юсь|усь|ется|ится)$/;
+
+/**
+ * Lob gilt nur, wenn es etwas nennt, das der Lernende wirklich gesagt hat: Jedes russische Wort im
+ * Lob muss wörtlich in seiner Antwort stehen — und, falls es eine Verbesserung gibt, auch dort
+ * (sonst würde gerade die falsche Form gelobt). Spricht das Lob von einem Verb, muss eines genannt sein.
+ */
+export function soundPraise(goodDe: string, answer: string, correctedRu = ""): string {
+  const text = goodDe.trim();
+  const quoted = wordsOf(text);
+  if (!text || !answer.trim() || quoted.length === 0) return "";
+  const said = new Set(wordsOf(answer));
+  const fixed = correctedRu ? new Set(wordsOf(correctedRu)) : null;
+  if (!quoted.every((w) => said.has(w) && (!fixed || fixed.has(w)))) return "";
+  // Gemessen: Das Modell nannte »дом« ein Verb. Ein Lob mit falschem Fachwort lehrt Falsches — dann lieber keines.
+  if (/\bVerb|\bIch-Form|\bkonjugiert/i.test(text) && !quoted.some((w) => VERB_LIKE.test(w)))
+    return "";
+  return text;
+}
+
 /** Macht aus der Modell-Antwort das, was die Oberfläche zeigen darf — fest nachgeprüft. */
 export function settleHelps(raw: unknown, answer: string, question = ""): LiveHelps {
   const r = helpsReply.parse(raw);
@@ -254,6 +281,7 @@ export function settleHelps(raw: unknown, answer: string, question = ""): LiveHe
     plausibleCorrection(answer, c.correctedRu) &&
     onlyFormChanged(question, answer, c.correctedRu);
   return {
+    goodDe: soundPraise(r.goodDe, answer, fixable ? c.correctedRu : ""),
     replyDe: r.replyDe,
     words: r.words.filter((w) => cyrillic(w.ru) && w.de),
     examples: r.examples.filter((e) => cyrillic(e.ru) && e.de).slice(0, 3),

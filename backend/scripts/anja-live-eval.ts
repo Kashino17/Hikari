@@ -80,6 +80,7 @@ for (const [i, [question, answer, want]] of cases.entries()) {
       if (fix.correctedRu.toLowerCase().includes(want)) solved++;
       else notes.push(`schief gelöst: «${answer}» → ${fix.correctedRu}`);
     } else notes.push(`ÜBERSEHEN: «${answer}»`);
+    notes.push(`  Lob zu «${answer}»: ${h.goodDe || "—"}`);
     if (i % 8 === 0)
       notes.push(
         `  Beispiel-Hilfen zu «${reply}»: ${h.replyDe} | ${h.words.map((w) => `${w.ru}=${w.de}`).join(", ")} | ${h.examples.map((e) => `${e.ru} (${e.de})`).join(" / ")}`,

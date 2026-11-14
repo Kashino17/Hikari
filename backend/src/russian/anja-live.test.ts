@@ -10,6 +10,7 @@ import {
   onlyFormChanged,
   quotaDay,
   settleHelps,
+  soundPraise,
   systemPrompt,
 } from "./anja-live.js";
 
@@ -339,6 +340,28 @@ describe("settleHelps — Richtiges nie wie falsch", () => {
     expect(onlyFormChanged("Что ты хочешь?", "Я хотеть спать", "Я хочу спать")).toBe(true);
     expect(onlyFormChanged("Где ты работаешь?", "Я работаю офис", "Я работаю в офисе")).toBe(true);
     expect(onlyFormChanged("Что ты делаешь?", "Я дома", "Я читаю книгу дома")).toBe(false);
+  });
+  it("Lob nur für Wörter, die wirklich gesagt wurden — nie für die falsche Form", () => {
+    expect(soundPraise("Du hast «хочу» richtig gebeugt.", "Я хочу вода", "Я хочу воду")).toBe(
+      "Du hast «хочу» richtig gebeugt.",
+    );
+    // »вода« war gerade der Fehler.
+    expect(soundPraise("«вода» steht richtig.", "Я хочу вода", "Я хочу воду")).toBe("");
+    // Das Wort kam in der Antwort gar nicht vor.
+    expect(soundPraise("Schön: «люблю» stimmt.", "Я хочу воду")).toBe("");
+    // Falsches Fachwort: »дом« ist kein Verb.
+    expect(
+      soundPraise(
+        "Das Verb «дом» ist korrekt als Subjekt verwendet.",
+        "Мой дом в Берлин",
+        "Мой дом в Берлине",
+      ),
+    ).toBe("");
+    expect(
+      soundPraise("Die Ich-Form «работаю» stimmt.", "Я работаю в офис", "Я работаю в офисе"),
+    ).toBe("Die Ich-Form «работаю» stimmt.");
+    // Ohne genanntes Wort ist das Lob zu allgemein.
+    expect(soundPraise("Sehr gut gemacht!", "Я хочу воду")).toBe("");
   });
   it("eine echte Verbesserung bleibt", () => {
     const h = settleHelps(
