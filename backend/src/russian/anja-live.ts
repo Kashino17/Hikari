@@ -12,8 +12,8 @@
  *  - Gemini Flash-Lite liefert nach jedem Zug, was auf dem Bildschirm steht: die strenge Satzprüfung,
  *    die deutsche Übersetzung, die Bedeutung je Wort und zwei Beispielantworten.
  *
- * Bewertet wird ein Satz nur, wenn zwei Ohren dasselbe gehört haben (das Mitschreib-Modell und die
- * Mitschrift des Gesprächsmodells). Sonst steht dort »nicht sicher verstanden« — ohne Urteil.
+ * Die Mitschrift des Gesprächsmodells bleibt als zweites Ohr: Hat es andere russische Wörter gehört
+ * als das Mitschreib-Modell, steht dort »nicht sicher verstanden« — ohne Urteil.
  *
  * Die sichtbare Korrektur kommt NIE aus dem, was Anja sagt (am Ton ist nicht zu erkennen, ob sie
  * korrigiert oder selbst antwortet), sondern nur aus der Satzprüfung — und die wird fest nachgeprüft
@@ -128,8 +128,9 @@ export type HelpsState = "none" | "pending" | "ready" | "failed";
 
 /**
  * Wie verlässlich die Mitschrift des Lernenden ist:
- *  sure    zwei Ohren haben dasselbe gehört — der Satz wird geprüft
- *  unsure  nur ein Ohr, oder die beiden sind sich uneins — der Satz wird gezeigt, aber nicht bewertet
+ *  sure    das Ohr hat Russisch gehört und das zweite Ohr widerspricht nicht — der Satz wird geprüft
+ *  unsure  die beiden Ohren haben verschiedene Wörter gehört, oder das Ohr selbst fiel aus —
+ *          der Satz wird gezeigt, aber nicht bewertet
  *  foreign kein Russisch verstanden (eine andere Sprache)
  *  none    nichts verstanden (Stille) oder kein gesprochener Zug
  */
@@ -219,7 +220,7 @@ export function systemPrompt(
     "Regeln, die immer gelten:",
     "- Sprich NUR Russisch. Kein Deutsch, kein Englisch, auch nicht zur Erklärung.",
     "- Sprich langsam und deutlich.",
-    "- Kadir spricht Russisch mit deutschem Akzent. Versteh alles, was er sagt, als Russisch. Hast du ihn nicht verstanden oder spricht er eine andere Sprache, dann rate nicht: Bitte ihn kurz, es noch einmal auf Russisch zu sagen («Повтори, пожалуйста.»).",
+    "- Kadir spricht Russisch mit Akzent und macht Fehler. Geh davon aus, dass er Russisch spricht, und hör wohlwollend zu.",
     `- ${LEVELS[setup.stage]}`,
     known ? `- Diese Wörter kennt Kadir schon gut, benutze sie bevorzugt: ${known}.` : "",
     "- Reagiere zuerst kurz und echt auf das, was Kadir gesagt hat, und stelle dann GENAU EINE Frage. Fragt Kadir dich etwas («А ты?»), beantworte es zuerst.",
@@ -330,17 +331,23 @@ function mostOf(part: string[], whole: string[]): boolean {
  * Legt fest, was der Lernende gesagt hat — aus zwei unabhängigen Mitschriften.
  * `ear` ist die des Mitschreib-Modells (null = nicht erreichbar), `agent` die des Gesprächsmodells.
  *
- * Geprüft und bewertet wird nur, was beide gleich gehört haben. Schon eine andere Endung
- * (»вода« gegen »воды«) macht aus einem richtigen Satz einen falschen — dann lieber kein Urteil.
- * Die Mitschrift des Gesprächsmodells kommt gelegentlich abgeschnitten an; ein zusammenhängendes
- * Stück, das mindestens die Hälfte abdeckt, gilt deshalb als Bestätigung.
+ * Maßgeblich ist das Ohr: ein eigenes Modell nur fürs Mitschreiben. Die Mitschrift des
+ * Gesprächsmodells ist die schwächere Quelle — sie kommt gelegentlich abgeschnitten an und rät bei
+ * Akzent trotz Vorgabe manchmal eine fremde Sprache (gemessen: »Yo llevo Alemania« für
+ * »Я живу в Германии«). Sie dient deshalb nur als Einspruch:
+ *  - Hat sie andere russische Wörter gehört, ist unklar, was gesagt wurde — kein Urteil. Schon eine
+ *    andere Endung (»вода« gegen »воды«) macht aus einem richtigen Satz einen falschen.
+ *  - Fehlt sie, ist sie abgeschnitten oder in einer fremden Sprache, gilt das Ohr.
+ *  - Hat nur sie Russisch gehört (das Ohr nicht), reicht das nicht für ein Urteil.
  */
 export function settleHeard(
   ear: string | null,
   agent: string,
 ): { text: string; state: HeardState; alt: string } {
-  const e = tidy(ear ?? "");
-  const a = tidy(agent);
+  // Zahlen oder Zeichen ohne einen einzigen Buchstaben sind Rauschen, keine Sprache.
+  const spoken = (text: string) => (/\p{L}/u.test(text) ? tidy(text) : "");
+  const e = spoken(ear ?? "");
+  const a = spoken(agent);
   const eRu = isRussian(e);
   const aRu = isRussian(a);
   if (!eRu && !aRu)
@@ -348,11 +355,14 @@ export function settleHeard(
       ? { text: "", state: "foreign", alt: e || a }
       : { text: "", state: "none", alt: "" };
   if (!eRu) return { text: a, state: "unsure", alt: "" };
-  if (!aRu) return { text: e, state: "unsure", alt: "" };
+  if (!aRu) return { text: e, state: "sure", alt: "" };
   const we = wordsOf(e);
   const wa = wordsOf(a);
   if (we.join(" ") === wa.join(" ") || mostOf(wa, we)) return { text: e, state: "sure", alt: "" };
   if (mostOf(we, wa)) return { text: a, state: "sure", alt: "" };
+  // Eine sehr kurze zweite Mitschrift ohne Widerspruch ist nur ein abgeschnittener Anfang.
+  if (wa.length * 2 < we.length && wa.every((w) => we.includes(w)))
+    return { text: e, state: "sure", alt: "" };
   return { text: e, state: "unsure", alt: a };
 }
 const wordsOf = (s: string) =>
@@ -760,6 +770,11 @@ class Session {
       turn.heardAlt = heard.alt;
       if (heard.state !== "sure")
         this.host.log(`[anja-live] Mitschrift ${heard.state}${ear === null ? " (Ohr fehlt)" : ""}`);
+      // Nur zur Fehlersuche (ANJA_LIVE_DEBUG=1): was die beiden Ohren gehört haben. Sonst nie im Protokoll.
+      if (process.env.ANJA_LIVE_DEBUG)
+        this.host.log(
+          `[anja-live] Ohr «${ear ?? "—"}» · Gespräch «${tidy(turn.heardAgent)}» · Anja «${turn.said}»`,
+        );
     }
     if (turn.error) return;
     turn.done = true;

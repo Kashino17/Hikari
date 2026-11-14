@@ -52,13 +52,20 @@ const NOTE = 'Aus dem Gespräch mit Anja';
  */
 function Mine({ t, extra, kept }) {
   const [practice, setPractice] = useState(false);
-  const c = t.helps?.check;
-  const good = t.helps?.goodDe;
+  // Beurteilt wird nur, was sicher verstanden wurde — der Server prüft sonst gar nicht erst.
+  const sure = t.heardState === 'sure';
+  const c = sure ? t.helps?.check : null;
+  const good = sure ? t.helps?.goodDe : '';
   const phrase = useMemo(() => (c && !c.ok ? asPhrase(c.correctedRu, c.correctedDe || '', NOTE) : null), [c?.correctedRu]);
+  const russian = sure || t.heardState === 'unsure';
   return html`<div class=${cls('bub me al-mine', c && !c.ok && 'fix')}>
     <div class="who">DU${!t.spoken ? ' · getippt' : ''}</div>
-    ${t.heard ? html`<${IL} ru=${t.heard} size=${18} extra=${extra} />` : html`<div class="sub">${t.done ? 'Ich habe nichts verstanden. Sag es noch einmal, etwas lauter.' : 'Anja hört zu …'}</div>`}
-    ${t.heard && t.helpsState === 'pending' && html`<div class="al-verdict wait"><${Icon} n="progress_activity" c="spin" size="15" />Dein Satz wird geprüft …</div>`}
+    ${!t.done && !t.heard && html`<div class="sub">Anja hört zu …</div>`}
+    ${russian && t.heard && html`<${IL} ru=${t.heard} size=${18} extra=${extra} />`}
+    ${t.done && t.heardState === 'none' && html`<div class="al-verdict wait"><${Icon} n="hearing_disabled" size="16" /><span>Ich habe nichts gehört. Sag es noch einmal, etwas lauter.</span></div>`}
+    ${t.done && t.heardState === 'foreign' && html`<div class="al-verdict wait"><${Icon} n="hearing_disabled" size="16" /><span>Das habe ich nicht als Russisch verstanden. Sag es noch einmal auf Russisch.${t.heardAlt && t.spoken ? html`<span class="al-alt">Gehört habe ich: »${t.heardAlt}«</span>` : ''}</span></div>`}
+    ${t.done && t.heardState === 'unsure' && html`<div class="al-verdict wait"><${Icon} n="hearing" size="16" /><span>Ich bin nicht sicher, ob ich dich richtig verstanden habe. Deshalb bewerte ich diesen Satz nicht.${t.heardAlt ? html`<span class="al-alt">Vielleicht auch: »${t.heardAlt}«</span>` : ''}</span></div>`}
+    ${sure && t.helpsState === 'pending' && html`<div class="al-verdict wait"><${Icon} n="progress_activity" c="spin" size="15" />Dein Satz wird geprüft …</div>`}
     ${c?.ok && html`<div class="al-verdict ok"><${Icon} n="check_circle" fill size="16" /><span><b>Genau so.</b>${good ? ` ${good}` : ''}</span></div>`}
     ${c && !c.ok && html`<div class="al-teach">
       ${good && html`<div class="al-verdict ok"><${Icon} n="check_circle" fill size="16" /><span>${good}</span></div>`}
@@ -66,14 +73,15 @@ function Mine({ t, extra, kept }) {
       <div class="al-right"><div class="al-k">So heißt es</div>
         <${IL} ru=${c.correctedRu} size=${18} extra=${extra} />
         ${c.correctedDe && html`<div class="de">${c.correctedDe}</div>`}
-        <div class="al-why">${c.explanationDe}</div>
+        ${c.explanationDe && html`<div class="al-why">${c.explanationDe}</div>`}
         <div class="rowx g8 wrap mt8"><button class="chip sm" onClick=${() => say(c.correctedRu)}><${Icon} n="volume_up" />Anhören</button>
           ${speech.available() && html`<button class=${cls('chip sm', practice && 'on')} onClick=${() => setPractice(!practice)}><${Icon} n="mic" />Selbst sagen</button>`}
           ${kept && html`<span class="al-kept"><${Icon} n="bookmark_added" fill size="15" />Im Satzbuch</span>`}</div>
         ${practice && html`<${PhraseDock} phrase=${phrase} size="sm" listen=${false} record=${false} onEvaluated=${(ok) => progress.gradeCard(phrase.id, ok, ok ? 2 : 0, ok ? 1 : 0)} />`}
       </div>
     </div>`}
-    ${t.heard && t.helpsState === 'failed' && html`<div class="al-verdict wait">Die Prüfung war gerade nicht erreichbar.</div>`}
+    ${sure && t.helpsState === 'ready' && t.helps && !c && html`<div class="al-verdict wait"><${Icon} n="help" size="16" /><span>Bei diesem Satz bin ich mir nicht sicher. Deshalb gibt es keine Bewertung.</span></div>`}
+    ${sure && t.helpsState === 'failed' && html`<div class="al-verdict wait">Die Prüfung war gerade nicht erreichbar.</div>`}
   </div>`;
 }
 
@@ -162,6 +170,17 @@ export function AnjaLive() {
   }, []);
   useEffect(() => { scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: 'smooth' }); }, [turns.length, status, turns[turns.length - 1]?.said, turns[turns.length - 1]?.helpsState]);
 
+  // Wechselt man die App oder sperrt das Handy, laufen weder Aufnahme noch Ton weiter.
+  useEffect(() => {
+    const onHide = () => {
+      if (!document.hidden) return;
+      stopPlayback();
+      if (rec.current) { rec.current.cancel(); rec.current = null; setStatus((x) => (x === 'rec' ? 'you' : x)); }
+    };
+    document.addEventListener('visibilitychange', onHide);
+    return () => document.removeEventListener('visibilitychange', onHide);
+  }, []);
+
   // Pegel und Dauer der Aufnahme, ohne den Bildschirm neu zu zeichnen.
   useEffect(() => {
     if (status !== 'rec') return undefined;
@@ -181,13 +200,16 @@ export function AnjaLive() {
   }, [status]);
 
   const startBody = (lines = []) => ({ stage, scenario: `${scenario.title}: ${scenario.scene} ${scenario.goal}`, interest: cp.settings.interest ?? '', knownWords: knownFor(cpRef.current), lines });
-  const linesSoFar = () => turnsRef.current.flatMap((t) => [t.heard && (t.kind === 'audio' || t.kind === 'text') ? { who: 'kadir', ru: t.heard } : null, t.said ? { who: 'anja', ru: t.said } : null]).filter(Boolean).slice(-40);
+  const linesSoFar = () => turnsRef.current.flatMap((t) => [t.heard && t.heardState !== 'foreign' && (t.kind === 'audio' || t.kind === 'text') ? { who: 'kadir', ru: t.heard } : null, t.said ? { who: 'anja', ru: t.said } : null]).filter(Boolean).slice(-40);
 
   /** Belohnt einen beantworteten Zug — einmal, sobald das Urteil der Prüfung da ist. */
   const score = (k) => {
     const t = turnsRef.current.find((x) => x.k === k);
-    if (!t || t.scored || !t.heard || (t.kind !== 'audio' && t.kind !== 'text')) return;
-    const c = t.helps?.check;
+    // Nur Russisch zählt: Stille oder eine andere Sprache ist keine Antwort.
+    const russian = t?.heardState === 'sure' || t?.heardState === 'unsure';
+    if (!t || t.scored || !t.heard || !russian || (t.kind !== 'audio' && t.kind !== 'text')) return;
+    // Ein Urteil gibt es nur für sicher Verstandenes.
+    const c = t.heardState === 'sure' ? t.helps?.check : null;
     const clear = c?.ok === true;
     patch(k, { scored: true });
     progress.apply({ xp: clear ? 6 : 3, graded: {}, spokenOk: clear && t.spoken ? 1 : 0 });
@@ -210,7 +232,7 @@ export function AnjaLive() {
     const k = ++seq.current;
     const id = sid.current;
     const uid = `${Date.now().toString(36)}${k}`;
-    setTurns([...turnsRef.current, { k, n, uid, kind: base.kind, heard: base.heard ?? '', said: '', helps: null, helpsState: 'none', done: false, error: null, spoken: base.kind === 'audio', helped: !!base.helped }]);
+    setTurns([...turnsRef.current, { k, n, uid, kind: base.kind, heard: base.heard ?? '', heardState: base.kind === 'text' ? 'sure' : 'none', heardAlt: '', said: '', helps: null, helpsState: 'none', done: false, error: null, spoken: base.kind === 'audio', helped: !!base.helped }]);
     setStatus('anja');
     let ended = false;
     let done = false;
@@ -232,7 +254,7 @@ export function AnjaLive() {
       let t = await api.get(`/russian/anja/live/turn/${id}/${n}?wait=done`);
       if (!t.done && !t.error) t = await api.get(`/russian/anja/live/turn/${id}/${n}?wait=done`);
       if (t.error || !t.done) throw Object.assign(new Error(t.error ?? 'timeout'), { code: t.error ?? 'timeout' });
-      patch(k, { heard: t.heard || base.heard || '', said: t.said, done: true, helpsState: t.helpsState, helps: t.helps });
+      patch(k, { heard: t.heard || '', heardState: t.heardState ?? 'none', heardAlt: t.heardAlt ?? '', said: t.said, done: true, helpsState: t.helpsState, helps: t.helps });
       done = true; settle();
       if (t.helpsState === 'pending') {
         const h = await api.get(`/russian/anja/live/turn/${id}/${n}?wait=helps`);
@@ -335,7 +357,7 @@ export function AnjaLive() {
   const leave = () => (phase === 'talk' && turns.some((t) => t.heard) ? finish() : back('anja'));
   const setSettings = (p) => setCp((x) => ({ ...x, settings: { ...x.settings, ...p } }));
 
-  const answered = turns.filter((t) => t.heard && (t.kind === 'audio' || t.kind === 'text'));
+  const answered = turns.filter((t) => t.heard && (t.heardState === 'sure' || t.heardState === 'unsure') && (t.kind === 'audio' || t.kind === 'text'));
   const lastAnja = [...turns].reverse().find((t) => t.said);
 
   // ── Einstieg ─────────────────────────────────────────────────────────────
@@ -372,8 +394,9 @@ export function AnjaLive() {
 
   // ── Rückblick ────────────────────────────────────────────────────────────
   if (phase === 'done') {
-    const clear = answered.filter((t) => t.helps?.check?.ok === true).length;
-    const fixes = answered.filter((t) => t.helps?.check && !t.helps.check.ok);
+    const judged = answered.filter((t) => t.heardState === 'sure');
+    const clear = judged.filter((t) => t.helps?.check?.ok === true).length;
+    const fixes = judged.filter((t) => t.helps?.check && !t.helps.check.ok);
     return html`<div class="screen c-amber">
       <${TopBar} title="Anja live" sub="Dein Gespräch" onBack=${() => back('anja')} />
       <div class="scroll"><div class="stepc g16">
@@ -387,7 +410,7 @@ export function AnjaLive() {
           ${fixes.map((t) => { const c = t.helps.check; const has = kept.has(c.correctedRu); return html`<div class="card p al-review">
             <div class="sub">Du hast gesagt</div><div class="was">${t.heard}</div>
             <div class="sub mt8">Richtig</div><${IL} ru=${c.correctedRu} size=${18} extra=${extra} />${c.correctedDe && html`<div class="de">${c.correctedDe}</div>`}
-            <div class="sub mt8">${c.explanationDe}</div>
+            ${c.explanationDe && html`<div class="sub mt8">${c.explanationDe}</div>`}
             <div class="rowx g8 wrap mt12"><button class="chip sm" onClick=${() => say(c.correctedRu)}><${Icon} n="volume_up" />Anhören</button>
               ${has && html`<span class="al-kept"><${Icon} n="bookmark_added" fill size="15" />Im Satzbuch</span>`}</div></div>`; })}
           <p class="sub">Die richtigen Fassungen liegen in deinem Satzbuch und kommen in die Wiederholung.</p></div>`}

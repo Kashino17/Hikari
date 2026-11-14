@@ -281,15 +281,14 @@ describe("Anja live", () => {
     return { t, asked };
   }
 
-  it("Russisch mit Akzent: Das Gesprächsmodell schreibt Türkisch mit, das Ohr Russisch — gezeigt, aber nicht bewertet", async () => {
+  it("Russisch mit Akzent: Das Gesprächsmodell schreibt Türkisch mit, das Ohr Russisch — es gilt das Ohr", async () => {
     // So geschehen am 14.11.2026: Aus »Я живу в Германии« wurde »Yaşadığım Almanya'da« — mit »Genau so.« darunter.
     const { t, asked } = await spoken(setup(), {
       ear: "Я живу в Германии.",
       agent: "Yaşadığım Almanya'da",
     });
-    expect(t).toMatchObject({ heard: "Я живу в Германии.", heardState: "unsure" });
-    expect(asked.answer).toBe("");
-    expect(t?.helps?.check).toBeNull();
+    expect(t).toMatchObject({ heard: "Я живу в Германии.", heardState: "sure", heardAlt: "" });
+    expect(asked.answer).toBe("Я живу в Германии.");
   });
 
   it("kein Russisch gesprochen: nichts wird gezeigt oder bewertet, die fremde Mitschrift steht daneben", async () => {
@@ -587,7 +586,7 @@ describe("settleHelps — Richtiges nie wie falsch", () => {
   });
 });
 
-describe("settleHeard — bewertet wird nur, was zwei Ohren gleich gehört haben", () => {
+describe("settleHeard — das Ohr gilt, das zweite Ohr darf Einspruch erheben", () => {
   it("gleich gehört (Satzzeichen und Großschreibung egal)", () => {
     expect(settleHeard("Привет, очень хорошо. А у тебя?", "привет очень хорошо а у тебя")).toEqual({
       text: "Привет, очень хорошо. А у тебя?",
@@ -595,9 +594,15 @@ describe("settleHeard — bewertet wird nur, was zwei Ohren gleich gehört haben
       alt: "",
     });
   });
-  it("abgeschnittene zweite Mitschrift bestätigt, wenn sie mindestens die Hälfte abdeckt", () => {
+  it("das Ohr gilt, wenn das zweite fehlt, abgeschnitten ist oder eine fremde Sprache gehört hat", () => {
+    expect(settleHeard("Я живу в Германии.", "").state).toBe("sure");
+    expect(settleHeard("Я живу в Германии.", "Yo llevo Alemania.")).toEqual({
+      text: "Я живу в Германии.",
+      state: "sure",
+      alt: "",
+    });
     expect(settleHeard("Да, я люблю музыка.", "Да, я люблю").state).toBe("sure");
-    expect(settleHeard("Да, я очень люблю русскую музыку.", "Да").state).toBe("unsure");
+    expect(settleHeard("Да, я очень люблю русскую музыку.", "Да").state).toBe("sure");
   });
   it("ist die Mitschrift des Ohrs die kürzere, gilt die vollständige", () => {
     expect(settleHeard("я хочу", "Я хочу чай.")).toMatchObject({
@@ -605,11 +610,15 @@ describe("settleHeard — bewertet wird nur, was zwei Ohren gleich gehört haben
       state: "sure",
     });
   });
-  it("nur ein Ohr hat Russisch gehört", () => {
-    expect(settleHeard("Я живу в Германии.", "")).toMatchObject({
-      text: "Я живу в Германии.",
+  it("andere russische Wörter gehört: unklar, was gesagt wurde — kein Urteil", () => {
+    expect(settleHeard("Я хочу воды.", "Я хочу вода.")).toEqual({
+      text: "Я хочу воды.",
       state: "unsure",
+      alt: "Я хочу вода.",
     });
+    expect(settleHeard("Я живу в Германии.", "Он пьёт кофе").state).toBe("unsure");
+  });
+  it("hat nur das zweite Ohr Russisch gehört, reicht das nicht für ein Urteil", () => {
     expect(settleHeard(null, "Я живу в Германии.")).toMatchObject({
       text: "Я живу в Германии.",
       state: "unsure",
@@ -619,7 +628,7 @@ describe("settleHeard — bewertet wird nur, was zwei Ohren gleich gehört haben
       state: "unsure",
     });
   });
-  it("fremde Sprache und Stille", () => {
+  it("fremde Sprache, Stille und Rauschen", () => {
     expect(settleHeard("Almanya'da yaşıyorum.", "")).toEqual({
       text: "",
       state: "foreign",
@@ -627,6 +636,8 @@ describe("settleHeard — bewertet wird nur, was zwei Ohren gleich gehört haben
     });
     expect(settleHeard("", "")).toEqual({ text: "", state: "none", alt: "" });
     expect(settleHeard(null, "")).toEqual({ text: "", state: "none", alt: "" });
+    // Bei Stille erfindet das Gesprächsmodell gelegentlich eine Zahl.
+    expect(settleHeard("", "100")).toEqual({ text: "", state: "none", alt: "" });
   });
 });
 
