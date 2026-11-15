@@ -46,6 +46,10 @@ class FakeSocket implements LiveSocket {
     if (this.isEar && this.earDown) queueMicrotask(() => this.onclose?.({ code: 1011 }));
     else queueMicrotask(() => this.emit({ setupComplete: {} }));
   }
+  /** Das Ohr hat Sprache bemerkt und meldet einen Zwischenstand — die fertige Mitschrift folgt. */
+  noticeSpeech(text = "Я") {
+    this.emit({ serverContent: { interimInputTranscription: { text } } });
+  }
   /** Das Ohr meldet, was es mitgeschrieben hat. */
   hear(text: string) {
     this.emit({ serverContent: { inputTranscription: { text }, generationComplete: true } });
@@ -136,8 +140,10 @@ function setup(
     key: () => (opts.key === undefined ? "test-key" : opts.key),
     usageFile: join(dir, "usage.json"),
     now: () => now,
-    // Im Test wartet niemand lange: Ein stummes Ohr gilt nach 30 ms als »nichts gehört«.
+    // Im Test wartet niemand lange: Ein stummes Ohr gilt nach 30 ms als »nichts gehört«; hat es
+    // Sprache bemerkt, bekommt es 150 ms für die fertige Mitschrift.
     earTimeoutMs: 30,
+    earSpeechTimeoutMs: 150,
     lateMs: 15,
     connect: () => {
       const s = new FakeSocket(opts.earDown);
@@ -356,14 +362,57 @@ describe("Anja live", () => {
     });
   });
 
-  it("hält die zweite Meinung den Satz für richtig, gibt es kein Urteil — weder Korrektur noch »Genau so«", async () => {
-    // Gemessen: »Я хочу воды« (Teilungsgenitiv) wurde als Fehler gemeldet.
+  it("hält die zweite Meinung den Satz für richtig, war die Verbesserung falsch — der Satz ist richtig", async () => {
+    // Gemessen: »Я хочу воды« (Teilungsgenitiv) wurde als Fehler gemeldet. Am 15.11. stand unter
+    // »Я из Германии, а ты?« deshalb gar kein Urteil — der Lernende wusste nicht, ob es stimmte.
     const no = await spoken(setup({ check: { ...FIX }, acceptable: true }), {
       ear: "Я хочу воды",
       agent: "Я хочу воды",
     });
     expect(no.t).toMatchObject({ heardState: "sure", helpsState: "ready" });
-    expect(no.t?.helps?.check).toBeNull();
+    expect(no.t?.helps?.check).toEqual({ ok: true });
+  });
+
+  it("langer Satz: Das Ohr braucht für die Mitschrift länger als bei Stille — es wird abgewartet", async () => {
+    // So geschehen am 15.11.2026: Zwei Sätze mit Denkpausen, das Ohr brauchte länger als die feste
+    // Frist von 3 s — unter klar verstandenem Russisch stand »nicht sicher verstanden«.
+    const s = setup();
+    const { id } = await s.live.start(START);
+    sock(s).speak("Где ты живёшь?");
+    await s.live.turn(id, 1, "helps");
+    const n = await s.live.send(id, { kind: "audio", audio, rate: 16000 });
+    await tick();
+    ear(s).noticeSpeech();
+    sock(s).speak("Здорово! Тебе там нравится?", "Я сейчас в Куала-Лумпур, Малайзия.");
+    // Länger als die Frist bei Stille (30 ms), kürzer als die bei Sprache (150 ms).
+    await new Promise((r) => setTimeout(r, 80));
+    ear(s).hear("Я сейчас в Куала-Лумпур, Малайзия.");
+    const t = await s.live.turn(id, n, "helps");
+    expect(t).toMatchObject({ heard: "Я сейчас в Куала-Лумпур, Малайзия.", heardState: "sure" });
+  });
+
+  it("bleibt die Mitschrift trotz bemerkter Sprache aus, ist das ein Ausfall des Ohrs, keine Stille — und ein spätes Ergebnis landet nie beim nächsten Satz", async () => {
+    const s = setup();
+    const { id } = await s.live.start(START);
+    sock(s).speak("Где ты живёшь?");
+    await s.live.turn(id, 1, "helps");
+    const n = await s.live.send(id, { kind: "audio", audio, rate: 16000 });
+    await tick();
+    const first = ear(s);
+    first.noticeSpeech();
+    sock(s).speak("Понятно.", "Я живу в Германии.");
+    const t = await s.live.turn(id, n, "helps");
+    expect(t).toMatchObject({ heard: "Я живу в Германии.", heardState: "unsure" });
+    // Die verspätete Mitschrift des ersten Satzes darf nicht dem zweiten untergeschoben werden.
+    const n2 = await s.live.send(id, { kind: "audio", audio, rate: 16000 });
+    await tick();
+    first.hear("Я живу в Германии.");
+    const second = s.sockets.filter((x) => x.isEar).at(-1) as FakeSocket;
+    expect(second).not.toBe(first);
+    second.hear("Да.");
+    sock(s).speak("Хорошо.", "Да.");
+    const t2 = await s.live.turn(id, n2, "helps");
+    expect(t2).toMatchObject({ heard: "Да.", heardState: "sure" });
   });
 
   it("ist der Fehler bestätigt, die Erklärung aber fachlich falsch, bleibt die Verbesserung — ohne die Erklärung", async () => {

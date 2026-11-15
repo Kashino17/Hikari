@@ -43,8 +43,20 @@ export const HELP_MODELS: [string, number][] = [
 export const EAR_MODEL = "gemini-3.5-transcribe-live";
 /** Die Sprache, in der gesprochen wird — als Vorgabe für beide Mitschriften. */
 const SPOKEN_LANGUAGE = "ru-RU";
-/** Bei Stille meldet das Ohr gar nichts; bei Sprache kommt die Mitschrift nach rund 0,6 s. */
-const EAR_TIMEOUT_MS = 3_000;
+/**
+ * Wie lange auf das Ohr gewartet wird. Es arbeitet den Ton erst nach dem Loslassen der Sprechtaste
+ * ab — gemessen am 15.11.2026 rund 0,25 s je Sekunde Ton (3 s Ton → 0,9 s, 11 s → 3,0 s,
+ * 20 s mit Denkpausen → 4,9 s), bei Last mehr. Bei Stille meldet es gar nichts; sobald es Sprache
+ * bemerkt, schickt es nach 0,4–1,6 s einen Zwischenstand. Deshalb zwei Fristen:
+ *  - bis zum ersten Lebenszeichen (sonst gilt: Stille),
+ *  - danach großzügig bis zur fertigen Mitschrift (sonst gilt: das Ohr ist ausgefallen).
+ * Vorher galten feste 3 s für alles — lange Sätze liefen hinein und wurden nicht bewertet.
+ */
+const EAR_SILENCE_MS = 3_000;
+const EAR_SILENCE_PER_SECOND_MS = 300;
+const EAR_SPEECH_MS = 5_000;
+const EAR_SPEECH_PER_SECOND_MS = 600;
+const EAR_SPEECH_MAX_MS = 20_000;
 /** Google beendet eine Mitschreib-Sitzung nach 10 Minuten. */
 const EAR_MAX_AGE_MS = 8 * 60_000;
 /** Die Mitschrift des Gesprächsmodells kommt manchmal erst nach Anjas Antwort zu Ende an. */
@@ -185,8 +197,9 @@ export interface AnjaLiveDeps {
   now?: () => number;
   voice?: string | undefined;
   log?: ((msg: string) => void) | undefined;
-  /** Nur für Tests: Geduld mit dem Ohr und mit verspäteten Mitschriften. */
+  /** Nur für Tests: Geduld mit dem Ohr (ohne / mit bemerkter Sprache) und mit verspäteten Mitschriften. */
   earTimeoutMs?: number;
+  earSpeechTimeoutMs?: number;
   lateMs?: number;
 }
 
@@ -459,7 +472,12 @@ class Ear {
   private socket: LiveSocket | null = null;
   private openedAt = 0;
   private opening: Promise<LiveSocket | null> | null = null;
-  private pending: { text: string; finish: (text: string | null) => void } | null = null;
+  private pending: {
+    text: string;
+    finish: (text: string | null) => void;
+    /** Das Ohr hat Sprache bemerkt (Zwischenstand) — die fertige Mitschrift ist unterwegs. */
+    heardSpeech: () => void;
+  } | null = null;
 
   constructor(private host: AnjaLive) {}
 
@@ -477,6 +495,17 @@ class Ear {
       /* schon zu */
     }
     this.pending?.finish(null);
+  }
+
+  /** Verbindung verwerfen, ohne einen wartenden Satz zu beenden. */
+  private drop() {
+    const s = this.socket;
+    this.socket = null;
+    try {
+      s?.close();
+    } catch {
+      /* schon zu */
+    }
   }
 
   private ensure(): Promise<LiveSocket | null> {
@@ -545,12 +574,15 @@ class Ear {
         const sc = msg.serverContent as
           | {
               inputTranscription?: { text?: string };
+              interimInputTranscription?: unknown;
               generationComplete?: boolean;
               turnComplete?: boolean;
             }
           | undefined;
         const p = this.pending;
-        if (!sc || !p) return;
+        // Eine verworfene Verbindung meldet nichts mehr — ihr Nachzügler gehörte zu einem früheren Satz.
+        if (!sc || !p || this.socket !== socket) return;
+        if (sc.interimInputTranscription || sc.inputTranscription?.text) p.heardSpeech();
         if (sc.inputTranscription?.text) p.text += sc.inputTranscription.text;
         if (sc.generationComplete || sc.turnComplete) p.finish(tidy(p.text));
       };
@@ -570,7 +602,15 @@ class Ear {
     const socket = await this.ensure();
     if (!socket) return null;
     this.pending?.finish(null);
+    const seconds = pcm.length / 2 / rate;
+    const deps = this.host.deps;
+    const silenceMs = deps.earTimeoutMs ?? EAR_SILENCE_MS + seconds * EAR_SILENCE_PER_SECOND_MS;
+    const speechMs =
+      deps.earSpeechTimeoutMs ??
+      Math.min(EAR_SPEECH_MAX_MS, EAR_SPEECH_MS + seconds * EAR_SPEECH_PER_SECOND_MS);
+    const startedAt = Date.now();
     return new Promise((resolve) => {
+      let speech = false;
       const p = {
         text: "",
         finish: (text: string | null) => {
@@ -578,12 +618,27 @@ class Ear {
           clearTimeout(timer);
           resolve(text);
         },
+        heardSpeech: () => {
+          if (speech) return;
+          speech = true;
+          clearTimeout(timer);
+          timer = setTimeout(giveUp, Math.max(0, speechMs - (Date.now() - startedAt)));
+        },
+      };
+      const giveUp = () => {
+        // Eine Antwort, die jetzt noch kommt, gehörte zu diesem Satz — nie zum nächsten. Also eine
+        // frische Verbindung für den nächsten Satz.
+        this.drop();
+        if (speech) {
+          this.host.log(
+            `[anja-live] Ohr: Sprache bemerkt, aber nach ${Math.round(speechMs)} ms keine fertige Mitschrift (Ton ${seconds.toFixed(1)} s)`,
+          );
+          // Sprache bemerkt, aber nicht fertig mitgeschrieben: Das Ohr ist ausgefallen, es war keine Stille.
+          p.finish(p.text ? tidy(p.text) : null);
+        } else p.finish(tidy(p.text));
       };
       // Bei Stille kommt keine Meldung: Dann gilt, was bis dahin da ist.
-      const timer = setTimeout(
-        () => p.finish(tidy(p.text)),
-        this.host.deps.earTimeoutMs ?? EAR_TIMEOUT_MS,
-      );
+      let timer = setTimeout(giveUp, silenceMs);
       this.pending = p;
       try {
         const say = (payload: unknown) => socket.send(JSON.stringify({ realtimeInput: payload }));
@@ -1077,11 +1132,18 @@ export class AnjaLive {
         300,
         (raw) => secondOpinion.parse(raw),
       ).catch(() => null);
-      if (!second || second.originalAcceptable) {
-        // Uneins oder nicht erreichbar: weder »falsch« noch »Genau so« — lieber kein Urteil.
-        this.log(`[anja-live] Korrektur ${second ? "nicht bestätigt" : "ohne zweite Meinung"}`);
+      if (!second) {
+        // Nicht erreichbar: weder »falsch« noch »Genau so« — lieber kein Urteil.
+        this.log("[anja-live] Korrektur ohne zweite Meinung");
         helps.check = null;
         helps.goodDe = "";
+      } else if (second.originalAcceptable) {
+        // Die zweite Meinung ist die gezielte Frage »ist das Original wirklich falsch?« und darin
+        // gemessen verlässlich (12/12 Sätze, 10/10 echte Fehler bestätigt); die Satzprüfung meldet
+        // dagegen gelegentlich Fehler, wo keine sind. Verwirft sie die Verbesserung, ist der Satz
+        // richtig — und das soll der Lernende auch erfahren, statt ohne Urteil dazustehen.
+        this.log("[anja-live] Korrektur verworfen — der Satz ist richtig");
+        helps.check = { ok: true };
       } else if (!second.explanationCorrect) {
         // Der Fehler ist bestätigt, die Erklärung nicht: die richtige Fassung zeigen, aber nichts Falsches lehren.
         this.log("[anja-live] Erklärung nicht bestätigt");
