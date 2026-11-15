@@ -312,14 +312,34 @@ describe("Anja live", () => {
     expect(t).toMatchObject({ heard: "", heardState: "none", done: true });
   });
 
-  it("die beiden Ohren hören verschiedene Endungen: kein Urteil, beide Fassungen bleiben sichtbar", async () => {
-    const { t, asked } = await spoken(setup(), { ear: "Я хочу воды.", agent: "Я хочу вода." });
-    expect(t).toMatchObject({
-      heard: "Я хочу воды.",
-      heardState: "unsure",
-      heardAlt: "Я хочу вода.",
+  it("das zweite Ohr erfindet Wörter dazu: Es gilt das Ohr, der Satz wird bewertet", async () => {
+    // So geschehen am 15.11.2026 (v0.89.117): »Да, я люблю чай.« — das Gesprächsmodell schrieb
+    // »Да, я люблю любой чай.« mit, und der richtige Satz blieb ohne Urteil.
+    const { t, asked } = await spoken(setup(), {
+      ear: "Да, я люблю чай.",
+      agent: "Да, я люблю любой чай.",
     });
-    expect(asked.answer).toBe("");
+    expect(t).toMatchObject({ heard: "Да, я люблю чай.", heardState: "sure" });
+    expect(asked.answer).toBe("Да, я люблю чай.");
+    expect(t?.helps?.check).toEqual({ ok: true });
+  });
+
+  it("hat das zweite Ohr genau die verbesserte Form gehört, wird nicht korrigiert", async () => {
+    // Vielleicht hat das Ohr sich verhört — dann wäre ein richtiger Satz als falsch gezeigt.
+    const { t } = await spoken(setup({ check: FIX, acceptable: false }), {
+      ear: "Я хочу вода.",
+      agent: "Я хочу воду.",
+    });
+    expect(t).toMatchObject({ heard: "Я хочу вода.", heardState: "sure" });
+    expect(t?.helps?.check).toBeNull();
+  });
+
+  it("hat das zweite Ohr etwas anderes gehört, aber nicht die verbesserte Form, bleibt die Verbesserung", async () => {
+    const { t } = await spoken(setup({ check: FIX, acceptable: false }), {
+      ear: "Я хочу вода.",
+      agent: "Я хочу любой вода.",
+    });
+    expect(t?.helps?.check).toMatchObject({ ok: false, correctedRu: "Я хочу воду" });
   });
 
   it("die zweite Mitschrift kommt erst nach Anjas Antwort zu Ende an — sie zählt trotzdem", async () => {
@@ -635,7 +655,7 @@ describe("settleHelps — Richtiges nie wie falsch", () => {
   });
 });
 
-describe("settleHeard — das Ohr gilt, das zweite Ohr darf Einspruch erheben", () => {
+describe("settleHeard — das Ohr gilt", () => {
   it("gleich gehört (Satzzeichen und Großschreibung egal)", () => {
     expect(settleHeard("Привет, очень хорошо. А у тебя?", "привет очень хорошо а у тебя")).toEqual({
       text: "Привет, очень хорошо. А у тебя?",
@@ -659,13 +679,15 @@ describe("settleHeard — das Ohr gilt, das zweite Ohr darf Einspruch erheben", 
       state: "sure",
     });
   });
-  it("andere russische Wörter gehört: unklar, was gesagt wurde — kein Urteil", () => {
-    expect(settleHeard("Я хочу воды.", "Я хочу вода.")).toEqual({
-      text: "Я хочу воды.",
-      state: "unsure",
-      alt: "Я хочу вода.",
+  it("andere russische Wörter gehört: Es gilt das Ohr, die andere Fassung bleibt zum Abgleich", () => {
+    // Gemessen am 15.11.2026: Das Gesprächsmodell erfand »любовь«, »любой«, ließ »по-русски« aus —
+    // das Ohr schrieb jedes Mal richtig mit.
+    expect(settleHeard("Нет, я не люблю кофе.", "Нет, я не люблю любовь люблю кофе.")).toEqual({
+      text: "Нет, я не люблю кофе.",
+      state: "sure",
+      alt: "Нет, я не люблю любовь люблю кофе.",
     });
-    expect(settleHeard("Я живу в Германии.", "Он пьёт кофе").state).toBe("unsure");
+    expect(settleHeard("Я живу в Германии.", "Он пьёт кофе").state).toBe("sure");
   });
   it("hat nur das zweite Ohr Russisch gehört, reicht das nicht für ein Urteil", () => {
     expect(settleHeard(null, "Я живу в Германии.")).toMatchObject({

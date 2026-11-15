@@ -345,12 +345,14 @@ function mostOf(part: string[], whole: string[]): boolean {
  * `ear` ist die des Mitschreib-Modells (null = nicht erreichbar), `agent` die des Gesprächsmodells.
  *
  * Maßgeblich ist das Ohr: ein eigenes Modell nur fürs Mitschreiben. Die Mitschrift des
- * Gesprächsmodells ist die schwächere Quelle — sie kommt gelegentlich abgeschnitten an und rät bei
- * Akzent trotz Vorgabe manchmal eine fremde Sprache (gemessen: »Yo llevo Alemania« für
- * »Я живу в Германии«). Sie dient deshalb nur als Einspruch:
- *  - Hat sie andere russische Wörter gehört, ist unklar, was gesagt wurde — kein Urteil. Schon eine
- *    andere Endung (»вода« gegen »воды«) macht aus einem richtigen Satz einen falschen.
- *  - Fehlt sie, ist sie abgeschnitten oder in einer fremden Sprache, gilt das Ohr.
+ * Gesprächsmodells ist die schwächere Quelle — sie kommt gelegentlich abgeschnitten an, rät bei
+ * Akzent trotz Vorgabe manchmal eine fremde Sprache (»Yo llevo Alemania« für »Я живу в Германии«)
+ * und erfindet Wörter dazu (15.11.2026 bei Kadirs Stimme: »люблю любой чай«, »не люблю любовь
+ * люблю кофе«, während das Ohr jedes Mal richtig mitschrieb).
+ *  - Hat sie andere russische Wörter gehört, gilt trotzdem das Ohr; ihre Fassung wird als `alt`
+ *    mitgegeben. Bis v0.89.117 verhinderte jede Abweichung das Urteil — dann blieb jeder zweite
+ *    richtige Satz unbewertet. Gegen ein Verhören des Ohrs schützt jetzt `otherEarHeardFix`
+ *    gezielt an der Stelle, um die es geht: der Form, die korrigiert werden soll.
  *  - Hat nur sie Russisch gehört (das Ohr nicht), reicht das nicht für ein Urteil.
  */
 export function settleHeard(
@@ -376,7 +378,20 @@ export function settleHeard(
   // Eine sehr kurze zweite Mitschrift ohne Widerspruch ist nur ein abgeschnittener Anfang.
   if (wa.length * 2 < we.length && wa.every((w) => we.includes(w)))
     return { text: e, state: "sure", alt: "" };
-  return { text: e, state: "unsure", alt: a };
+  return { text: e, state: "sure", alt: a };
+}
+
+/**
+ * Hat das zweite Ohr genau die Form gehört, die die Verbesserung verlangt? Dann hat sich vielleicht
+ * das Ohr verhört (»вода« statt gesagtem »воду«), und ein richtiger Satz stünde als falsch da.
+ * Verglichen wird nur, was die Verbesserung neu einführt — erfundene Zusatzwörter des zweiten
+ * Ohrs spielen keine Rolle.
+ */
+export function otherEarHeardFix(heard: string, correctedRu: string, alt: string): boolean {
+  if (!alt) return false;
+  const said = new Set(wordsOf(heard));
+  const other = new Set(wordsOf(alt));
+  return wordsOf(correctedRu).some((w) => !said.has(w) && other.has(w));
 }
 const wordsOf = (s: string) =>
   s
@@ -845,6 +860,12 @@ class Session {
     this.host
       .helps(question, judged, turn.said)
       .then((helps) => {
+        const fix = helps.check;
+        if (fix && !fix.ok && otherEarHeardFix(judged, fix.correctedRu, turn.heardAlt)) {
+          this.host.log("[anja-live] Verbesserung zurückgehalten — das zweite Ohr hörte die richtige Form");
+          helps.check = null;
+          helps.goodDe = "";
+        }
         turn.helps = helps;
         turn.helpsState = "ready";
       })
