@@ -40,7 +40,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from gemini import Gemini, QuotaReached, HEAR, REVIEW  # noqa: E402
+from gemini import Busy, Gemini, QuotaReached, HEAR, REVIEW  # noqa: E402
 
 HOME = Path.home() / ".hikari" / "erleben"
 DICT = HOME / "dict"
@@ -861,6 +861,7 @@ def main():
         redo = [(p["yt"], p["kind"], p.get("topic", "")) for p in old if p.get("v", 1) < VERSION][:args.count]
         todo = redo + (discover(args.count - len(redo), g, plan) if len(redo) < args.count else [])
     ok = 0
+    busy = False
     for vid, kind, topic in todo:
         if g.left(HEAR) <= 0 or g.reviews_left() <= 0:
             log("Tageskontingent bei Gemini aufgebraucht — morgen geht es weiter")
@@ -875,6 +876,11 @@ def main():
         except QuotaReached as e:
             log(f"Kein Kontingent bei {e} — später geht es weiter")
             break
+        except Busy:
+            # Kontingent ist noch da — der Server wartet und ruft später noch einmal auf.
+            log("Prüfmodelle bei Google überlastet — der Lauf versucht es später noch einmal")
+            busy = True
+            break
         except Exception as e:  # noqa: BLE001
             log(f"[{vid}] übersprungen: {e}")
         finally:
@@ -882,7 +888,7 @@ def main():
             # das Transkript bleibt, damit ein späteres Neuaufbereiten Whisper nicht wiederholt.
             for leftover in (WORK / f"{vid}.mp4", WORK / f"{vid}.info.json"):
                 leftover.unlink(missing_ok=True)
-    print(json.dumps({"prepared": ok, "tried": len(todo), "left": {"hören": g.left(HEAR), "prüfen": g.reviews_left()}}))
+    print(json.dumps({"prepared": ok, "busy": busy, "tried": len(todo), "left": {"hören": g.left(HEAR), "prüfen": g.reviews_left()}}))
 
 
 if __name__ == "__main__":

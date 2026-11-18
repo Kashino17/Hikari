@@ -34,6 +34,10 @@ interface SetupOpts {
   lastRunAt?: number;
   /** Themenvorschläge vom Sprachmodell (Attrappe). */
   suggest?: ErlebenDeps["suggest"];
+  /** Je Aufruf: Prüfmodelle überlastet (Liste = je Aufruf). */
+  busy?: boolean[];
+  /** Ein vom Neustart unterbrochener Lauf in runs.json (finishedAt null). */
+  unfinished?: { startedAt: number; ids: string[]; resumed?: number };
 }
 
 async function setup(opts: SetupOpts = {}) {
@@ -52,6 +56,13 @@ async function setup(opts: SetupOpts = {}) {
           prepared: 0,
           ids: [],
         },
+      }),
+    );
+  if (opts.unfinished)
+    writeFileSync(
+      join(dir, "runs.json"),
+      JSON.stringify({
+        last: { finishedAt: null, catchUp: false, prepared: opts.unfinished.ids.length, ...opts.unfinished },
       }),
     );
   let t = Date.UTC(2026, 10, 14, 10);
@@ -99,7 +110,7 @@ async function setup(opts: SetupOpts = {}) {
       const n = Math.min(count, want);
       for (let k = 0; k < n; k++) piece(`neu${++made}`, { kind: "scene", topic: "Anime" });
       spend(count);
-      return n;
+      return opts.busy ? { prepared: n, busy: !!opts.busy[i] } : n;
     },
   });
   const feed = async () => (await app.inject({ url: "/russian/erleben/feed" })).json();
@@ -256,6 +267,78 @@ describe("Tageslauf", () => {
     await s.feedObj.idle();
     expect(s.calls.map((c) => c.count)).toEqual([5, 5]);
     expect((await s.feed()).todayCount).toBe(3);
+    await s.app.close();
+  });
+
+  it("Prüfmodelle überlastet: wartet 20 Minuten und macht weiter, bis das Kontingent aufgebraucht ist", async () => {
+    fake(Date.UTC(2026, 10, 14, 9)); // 01:00 PST
+    const s = await setup({ schedule: true, interests: topics, prepared: [2, 5, 5, 5, 5], busy: [true] });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(s.calls).toHaveLength(1);
+    expect((await s.feed()).lastRun).toMatchObject({ finishedAt: null, waitingUntil: Date.UTC(2026, 10, 14, 9, 20) });
+    await vi.advanceTimersByTimeAsync(19 * MIN);
+    expect(s.calls).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(MIN);
+    await s.feedObj.idle();
+    expect(s.calls).toHaveLength(5); // Kontingent 25× Hören, je Aufruf 5
+    const f = await s.feed();
+    expect(f.todayCount).toBe(22);
+    expect(f.lastRun).toMatchObject({ prepared: 22, waitingUntil: null });
+    expect(f.lastRun.finishedAt).not.toBeNull();
+    await s.app.close();
+  });
+
+  it("überlastet kurz vor der Erneuerung: kein Warten in den nächsten Tag hinein", async () => {
+    fake(Date.UTC(2026, 10, 15, 7, 50)); // 14.11. 23:50 PST, Erneuerung um 08:00 UTC
+    const s = await setup({
+      schedule: true,
+      interests: topics,
+      prepared: [1],
+      busy: [true],
+      lastRunAt: Date.UTC(2026, 10, 13, 8, 5),
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    await s.feedObj.idle();
+    expect(s.calls).toHaveLength(1);
+    expect((await s.feed()).lastRun.finishedAt).not.toBeNull();
+    await s.app.close();
+  });
+
+  it("Neustart mitten im Lauf: derselbe Lauf geht am selben Tag weiter, Fertiges bleibt »heute neu«", async () => {
+    fake(Date.UTC(2026, 10, 14, 10)); // 02:00 PST
+    const s = await setup({
+      schedule: true,
+      interests: topics,
+      unfinished: { startedAt: Date.UTC(2026, 10, 14, 8, 5), ids: ["frueh1"] },
+    });
+    s.piece("frueh1", { kind: "scene", topic: "Anime" });
+    await vi.advanceTimersByTimeAsync(0);
+    await s.feedObj.idle();
+    expect(s.calls.length).toBeGreaterThan(0);
+    const f = await s.feed();
+    expect(f.lastRun).toMatchObject({ startedAt: Date.UTC(2026, 10, 14, 8, 5), resumed: 1 });
+    expect(f.lastRun.finishedAt).not.toBeNull();
+    expect(f.todayIds).toContain("frueh1");
+    expect(f.todayCount).toBe(26);
+    // Danach kein weiterer Lauf an diesem Tag.
+    const n = s.calls.length;
+    await vi.advanceTimersByTimeAsync(5 * HOUR);
+    expect(s.calls).toHaveLength(n);
+    await s.app.close();
+  });
+
+  it("unterbrochener Lauf von gestern wird nicht fortgesetzt — dann gilt der Nachholer", async () => {
+    fake(Date.UTC(2026, 10, 15, 10)); // 15.11. 02:00 PST
+    const s = await setup({
+      schedule: true,
+      interests: topics,
+      unfinished: { startedAt: Date.UTC(2026, 10, 14, 8, 5), ids: [] },
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    await s.feedObj.idle();
+    const f = await s.feed();
+    expect(f.lastRun.resumed).toBeUndefined();
+    expect(f.lastRunAt).toBe(Date.UTC(2026, 10, 15, 10));
     await s.app.close();
   });
 

@@ -65,6 +65,14 @@ const CHECK_MS = 10 * 60 * 1000;
 /** Je Aufruf von prepare.py so viele Stücke; ein Abschnitt ohne einziges fertiges Stück beendet den Lauf. */
 const BATCH = 5;
 const MAX_BATCHES = 12;
+/**
+ * Prüfmodelle bei Google überlastet (503), Kontingent aber noch da: warten und denselben Abschnitt
+ * noch einmal — solange der Kontingent-Tag läuft, höchstens BUSY_TRIES-mal (gut drei Stunden).
+ */
+export const BUSY_WAIT_MS = 20 * 60 * 1000;
+export const BUSY_TRIES = 10;
+/** Ein vom Neustart unterbrochener Lauf geht am selben Kontingent-Tag weiter — höchstens so oft. */
+const MAX_RESUMES = 3;
 const PLAN_SLOTS = 20;
 const ID_RE = /^[a-z0-9_]{1,60}$/;
 
@@ -115,7 +123,14 @@ export interface RunInfo {
   ids: string[];
   /** Grund, falls der Lauf nichts versucht hat. */
   skipped?: "no-topics" | "no-quota";
+  /** Wie oft der Lauf nach einem Neustart fortgesetzt wurde. */
+  resumed?: number;
+  /** Wartet gerade, weil Googles Prüfmodelle überlastet sind (bis zu diesem Zeitpunkt). */
+  waitingUntil?: number | null;
 }
+
+/** Was ein Aufruf von prepare.py meldet. Eine bloße Zahl = so viele fertig (ältere Tests). */
+export type PrepareResult = number | { prepared: number; busy?: boolean };
 
 export interface ErlebenFeedState {
   shown: string[];
@@ -160,7 +175,9 @@ export interface ErlebenDeps {
   script: string;
   now?: () => number;
   /** Für Tests: eigener Starter des Aufbereiters. Löst mit der Zahl fertiger Stücke auf. */
-  runPrepare?: (count: number, plan: RunPlan) => Promise<number>;
+  runPrepare?: (count: number, plan: RunPlan) => Promise<PrepareResult>;
+  /** Für Tests: Warten ohne echte Zeit. */
+  sleep?: (ms: number) => Promise<void>;
   /** Für Tests: Zufall der Plan-Ziehung (Standard: Startzeit des Laufs + Abschnitt). */
   seed?: (runStart: number, batch: number) => number;
   log?: (msg: string) => void;
@@ -376,8 +393,18 @@ export class ErlebenFeed {
   private check(): void {
     this.stop();
     const now = this.now();
+    const lr = this.lastRun;
     if (!this.running && runDue(now, this.lastRunAt))
       void this.runDaily(now > lastQuotaReset(now) + RUN_DELAY_MS + CATCH_UP_AFTER_MS);
+    // Vom Neustart unterbrochen, am selben Kontingent-Tag: weitermachen statt den Rest zu verschenken.
+    else if (
+      !this.running &&
+      lr &&
+      lr.finishedAt === null &&
+      lr.startedAt >= lastQuotaReset(now) &&
+      (lr.resumed ?? 0) < MAX_RESUMES
+    )
+      void this.runDaily(lr.catchUp, lr);
     // Genau zur nächsten Startzeit wecken, aber spätestens alle zehn Minuten nachsehen.
     const wait = Math.min(CHECK_MS, Math.max(1000, nextRunAt(now, this.lastRunAt) - now));
     this.timer = setTimeout(() => this.check(), wait);
@@ -390,23 +417,23 @@ export class ErlebenFeed {
   }
 
   /** Der Tageslauf (startet sofort). Läuft schon einer, wird kein zweiter gestartet. */
-  runDaily(catchUp = false): Promise<void> {
+  runDaily(catchUp = false, resume?: RunInfo): Promise<void> {
     if (this.running) return this.running;
-    this.running = this.doRun(catchUp).finally(() => {
+    this.running = this.doRun(catchUp, resume).finally(() => {
       this.running = null;
       this.before = null;
     });
     return this.running;
   }
 
-  private async doRun(catchUp: boolean): Promise<void> {
-    const info: RunInfo = {
-      startedAt: this.now(),
-      finishedAt: null,
-      catchUp,
-      prepared: 0,
-      ids: [],
-    };
+  private async doRun(catchUp: boolean, resume?: RunInfo): Promise<void> {
+    const info: RunInfo = resume
+      ? { ...resume, ids: [...resume.ids], finishedAt: null, resumed: (resume.resumed ?? 0) + 1, waitingUntil: null }
+      : { startedAt: this.now(), finishedAt: null, catchUp, prepared: 0, ids: [] };
+    if (resume) this.deps.log?.(`erleben: unterbrochener Tageslauf geht weiter (${info.ids.length} schon fertig)`);
+    const dayEnd = quotaResetAt(info.startedAt);
+    const sleep = this.deps.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+    let waits = 0;
     // Der Start wird sofort festgehalten: auch ein abgebrochener Lauf ist der Lauf des Tages.
     this.saveRun(info);
     const wishes = this.interests();
@@ -415,7 +442,8 @@ export class ErlebenFeed {
     } else if (this.leftToday() === 0) {
       info.skipped = "no-quota";
     } else {
-      this.before = new Set(this.pieces().map((p) => p.id));
+      // Schon fertige Stücke eines fortgesetzten Laufs zählen weiter als »heute neu«.
+      this.before = new Set(this.pieces().map((p) => p.id).filter((id) => !info.ids.includes(id)));
       const run = this.deps.runPrepare ?? ((count) => this.spawnPrepare(count));
       for (let batch = 0; batch < MAX_BATCHES; batch++) {
         const left = this.leftToday();
@@ -423,11 +451,28 @@ export class ErlebenFeed {
         const plan = this.plan(this.deps.seed?.(info.startedAt, batch) ?? info.startedAt + batch);
         writeAtomic(this.planFile, JSON.stringify(plan));
         const count = Math.min(BATCH, left);
-        const prepared = await run(count, plan).catch(() => 0);
+        const res = await run(count, plan).catch(() => 0 as PrepareResult);
+        const prepared = typeof res === "number" ? res : res.prepared;
+        const busy = typeof res === "number" ? false : !!res.busy;
         info.prepared += prepared;
         info.ids = this.freshIds();
         this.saveRun(info);
         this.deps.log?.(`erleben: Abschnitt ${batch + 1}: ${prepared} von ${count} fertig`);
+        if (busy) {
+          // Überlastet heißt nicht leer: warten und denselben Abschnitt noch einmal (Kadirs Wunsch:
+          // so viel, wie das Kontingent hergibt) — aber nie über die Erneuerung hinaus.
+          if (waits >= BUSY_TRIES || this.now() + BUSY_WAIT_MS >= dayEnd || this.leftToday() <= 0) break;
+          waits++;
+          info.waitingUntil = this.now() + BUSY_WAIT_MS;
+          this.saveRun(info);
+          this.deps.log?.(
+            `erleben: Prüfmodelle überlastet — neuer Versuch in ${BUSY_WAIT_MS / 60_000} min (${waits}/${BUSY_TRIES})`,
+          );
+          await sleep(BUSY_WAIT_MS);
+          info.waitingUntil = null;
+          batch--;
+          continue;
+        }
         // Nichts bestanden, oder kein Kontingent verbraucht (keine Kandidaten mehr) → Schluss.
         if (prepared === 0 || this.leftToday() >= left) break;
       }
@@ -812,7 +857,7 @@ export class ErlebenFeed {
     };
   }
 
-  private spawnPrepare(count: number): Promise<number> {
+  private spawnPrepare(count: number): Promise<PrepareResult> {
     return new Promise((resolve) => {
       let child: ChildProcess;
       try {
@@ -845,7 +890,7 @@ export class ErlebenFeed {
       });
       child.stderr?.on("data", (d) => {
         for (const line of String(d).split("\n"))
-          if (/^(\[|Thema|Kein Kontingent|Plan| {6})/.test(line))
+          if (/^(\[|Thema|Kein Kontingent|Prüfmodelle|Tageskontingent|Plan| {6}|gemini-)/.test(line))
             this.deps.log?.(`erleben ${line}`);
       });
       child.on("error", (e) => {
@@ -855,7 +900,8 @@ export class ErlebenFeed {
       child.on("exit", () => {
         try {
           const last = out.trim().split("\n").pop() ?? "{}";
-          resolve(Number((JSON.parse(last) as { prepared?: number }).prepared ?? 0));
+          const r = JSON.parse(last) as { prepared?: number; busy?: boolean };
+          resolve({ prepared: Number(r.prepared ?? 0), busy: !!r.busy });
         } catch {
           resolve(0);
         }

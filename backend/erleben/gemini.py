@@ -54,6 +54,12 @@ class QuotaReached(RuntimeError):
     """Tageskontingent eines Modells ist aufgebraucht."""
 
 
+class Busy(RuntimeError):
+    """Prüfmodelle überlastet (Google: 503 »high demand«) — Kontingent ist noch da, später noch einmal.
+    Gemessen 18.11.2026: Der Nachhol-Lauf brach nach 2 Stücken ab, alle drei Prüfmodelle meldeten 503,
+    das Tageskontingent war fast unberührt."""
+
+
 class Gemini:
     def __init__(self, log=lambda *a: None):
         self.key = load_keys().get("GEMINI_API_KEY", "")
@@ -178,6 +184,7 @@ class Gemini:
                 "words": {"type": "ARRAY", "items": {"type": "OBJECT", "required": ["w", "de"], "properties": {"w": {"type": "STRING"}, "de": {"type": "STRING"}}}}}}}}}
         rows = [f"LINE {l['n']}: {l['ru']}" for l in lines]
         out = None
+        busy = False
         # Hydrogen zuerst; ist sein Tageskontingent leer, übernimmt 3.6 Flash, danach 3.8 Flash.
         for model in (REVIEW, REVIEW2, REVIEW3):
             if self.left(model) <= 0:
@@ -191,10 +198,13 @@ class Gemini:
             except RuntimeError as e:
                 # Überlastet oder keine Antwort: das nächste Modell der Kette versucht es.
                 self.log(f"{model} nicht erreichbar ({str(e)[:60]}) — nächstes Prüfmodell")
+                busy = True
             except (json.JSONDecodeError, KeyError):
                 return None
         if out is None:
-            raise QuotaReached("allen Prüfmodellen (leer oder überlastet)")
+            if busy:
+                raise Busy("Prüfmodelle bei Google überlastet")
+            raise QuotaReached("allen Prüfmodellen")
         ok = {}
         for g in out.get("lines", []):
             if isinstance(g.get("n"), int) and str(g.get("de", "")).strip() and isinstance(g.get("words"), list):
