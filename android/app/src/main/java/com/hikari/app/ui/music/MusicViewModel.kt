@@ -283,6 +283,27 @@ class MusicViewModel @Inject constructor(
     /** Pro Filter die Query, für die seine Liste bereits geladen wurde. */
     private val typedQueries = mutableMapOf<MusicSearchFilter, String>()
 
+    // Diese Felder MÜSSEN vor dem init-Block stehen: Kotlin initialisiert in Quelltext-
+    // Reihenfolge, und viewModelScope startet sofort (Main.immediate). Liefert die
+    // Einstellung den Modus ohne Warten (DataStore schon im Speicher), läuft buildFeed()
+    // noch im Konstruktor — stand moreLoading dahinter, war es null → Absturz (19.11.).
+    /** Pull-to-Refresh auf der Entdecken-Seite läuft. */
+    var discoverRefreshing by mutableStateOf(false)
+        private set
+
+    private var discoverJob: Job? = null
+
+    /** Wofür und wann der Feed zuletzt gebaut wurde — Rückkehr baut nicht neu. */
+    private var discoverBuiltFor: MusicSearchMode? = null
+    private var discoverBuiltAt = 0L
+
+    /** Nachschub beim Runterscrollen läuft bzw. der Pool des Modus ist erschöpft. */
+    var moreLoading by mutableStateOf(false)
+        private set
+    var feedExhausted by mutableStateOf(false)
+        private set
+    private var moreJob: Job? = null
+
     init {
         viewModelScope.launch {
             searchMode = MusicSearchMode.fromApiValue(runCatching { settings.musicMode.first() }.getOrNull())
@@ -323,23 +344,6 @@ class MusicViewModel @Inject constructor(
                 }
         }
     }
-
-    /** Pull-to-Refresh auf der Entdecken-Seite läuft. */
-    var discoverRefreshing by mutableStateOf(false)
-        private set
-
-    private var discoverJob: Job? = null
-
-    /** Wofür und wann der Feed zuletzt gebaut wurde — Rückkehr baut nicht neu. */
-    private var discoverBuiltFor: MusicSearchMode? = null
-    private var discoverBuiltAt = 0L
-
-    /** Nachschub beim Runterscrollen läuft bzw. der Pool des Modus ist erschöpft. */
-    var moreLoading by mutableStateOf(false)
-        private set
-    var feedExhausted by mutableStateOf(false)
-        private set
-    private var moreJob: Job? = null
 
     /**
      * Endloser Feed: kurz vor dem Listenende weitere Mixe anhängen, bis der
