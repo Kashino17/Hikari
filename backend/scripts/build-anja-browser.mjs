@@ -22,6 +22,10 @@ await build({
   },
   inject: [here('./anja-browser/inject.js')],
   banner: { js: '// Gebaut aus backend/src/russian/anja-browser.ts (scripts/build-anja-browser.mjs) — nicht von Hand ändern.' },
+  // node_modules ist am Mac ein Symlink (node_modules.nosync, gegen iCloud). Ohne das hier
+  // folgt esbuild ihm, hält die Pakete für eigenen Code und setzt "use strict" davor —
+  // dann passt das Bündel nicht mehr zu dem, das die CI baut.
+  preserveSymlinks: true,
   logLevel: 'warning',
 });
 if (!process.env.ANJA_LOCAL_OUT) console.log('anja-local.js gebaut');
