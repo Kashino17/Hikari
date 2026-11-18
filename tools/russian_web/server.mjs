@@ -7,6 +7,7 @@
 //
 //   /                → die Oberfläche (assets/russian-web)
 //   /data/<name>.json → Kursinhalte (assets/russian)
+//   /data/forms/…    → Wortformen (assets/russian/forms, siehe js/domain/forms.js)
 //   /audio/<clip>.ogg → Muttersprachler-Clips (assets/russian/audio)
 //   /api/*           → Hikari-Server (Aussprache-Prüfung, Gespräch, Podcast-Audio …)
 //   /store           → Lernstand der Vorschau (~/.hikari/russian-web/store.json)
@@ -140,6 +141,12 @@ createServer(async (req, res) => {
     let m = /^\/data\/([a-z]+)\.json$/.exec(path);
     if (m && DATA.has(m[1])) {
       const body = await readFile(join(ASSETS, `${m[1]}.json`));
+      return send(req, res, 200, body, TYPES['.json'], { 'cache-control': 'no-cache' });
+    }
+    // Wortformen (js/domain/forms.js): meta.json, i/<n>.json, e/<n>.json unter assets/russian/forms
+    m = /^\/data\/forms\/((?:[ei]\/)?[a-z0-9]+)\.json$/.exec(path);
+    if (m) {
+      const body = await readFile(join(ASSETS, 'forms', `${m[1]}.json`));
       return send(req, res, 200, body, TYPES['.json'], { 'cache-control': 'no-cache' });
     }
     if (path === '/clips.json') {
