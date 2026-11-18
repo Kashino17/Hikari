@@ -46,7 +46,8 @@ async function syncKey() {
   if (synced || linkNow() !== 'online') return;
   try {
     const r = await fetch('/api/russian/anja/key', { cache: 'no-store' });
-    if (!r.ok) return;
+    // Älterer Mac-Server ohne diesen Weg, oder Mac gerade weg: in zehn Minuten noch einmal.
+    if (!r.ok) { setTimeout(syncKey, 10 * 60_000); return; }
     const { key } = await r.json();
     if (typeof key === 'string' && key.length > 10) { anjaKeys.save('mac', key); synced = true; }
   } catch { /* nächstes Mal */ }
