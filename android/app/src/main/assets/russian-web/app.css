@@ -1069,13 +1069,15 @@ button.row:active{background:rgba(255,255,255,.035)}
 .t-mine{font-size:18px;font-weight:600;line-height:1.35}
 .t-mine .bad{color:var(--text);text-decoration:underline wavy rgba(var(--amber-rgb),.85);text-underline-offset:5px;text-decoration-thickness:1.5px}
 .t-wait{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);padding:9px 13px;border-radius:16px;background:var(--card);animation:fadeIn .2s}
-.t-card{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:20px;background:linear-gradient(rgba(var(--speak),.09),rgba(var(--speak),.03)),var(--card);border:1px solid rgba(var(--speak),.3);animation:stepIn .3s var(--ease)}
+.t-card{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:20px;background:linear-gradient(rgba(var(--c),.09),rgba(var(--c),.03)),var(--card);border:1px solid rgba(var(--c),.3);animation:stepIn .3s var(--ease);text-align:left;width:100%}
+.t-card.on{border-color:rgba(var(--c),.6)}
+.t-card .de{font-size:14px;color:var(--muted);margin-top:6px}
 .t-head{display:flex;align-items:center;gap:10px}
 .t-head b{display:block;font-size:15px;font-weight:600}
 .t-head .grow span{display:block;font-size:12px;color:var(--muted)}
 .t-bars{display:inline-flex;align-items:flex-end;gap:2px;height:14px;margin-left:6px;vertical-align:middle}
 .t-bars i{width:3px;height:5px;border-radius:2px;background:var(--faint)}
-.t-bars.on i{background:rgb(var(--speak));animation:barUp .9s ease-in-out infinite alternate}
+.t-bars.on i{background:rgb(var(--c));animation:barUp .9s ease-in-out infinite alternate}
 .t-bars.on i:nth-child(2){animation-delay:.2s}.t-bars.on i:nth-child(3){animation-delay:.4s}
 @keyframes barUp{from{height:4px}to{height:14px}}
 .t-praise{display:flex;gap:8px;align-items:flex-start;font-size:14px;line-height:1.45;color:rgba(255,255,255,.88)}
@@ -1088,13 +1090,13 @@ button.row:active{background:rgba(255,255,255,.035)}
 .t-why p{font-size:14px;line-height:1.55;color:rgba(255,255,255,.86)}
 .t-why p+p{margin-top:6px}
 .t-why .term{font-size:13px;color:var(--muted)}
-.t-why u{text-decoration-color:rgb(var(--speak));text-underline-offset:3px}
-.t-again{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:20px;background:var(--card);border:1.5px dashed rgba(var(--speak),.4)}
+.t-why u{text-decoration-color:rgb(var(--c));text-underline-offset:3px}
+.t-again{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:20px;background:var(--card);border:1.5px dashed rgba(var(--c),.45);text-align:left;width:100%}
 .t-again.ok{border-style:solid;border-color:rgba(var(--good-rgb),.5)}
 .t-tries{display:inline-flex;gap:5px}
 .t-tries i{width:8px;height:8px;border-radius:50%;background:var(--border2)}
 .t-tries i.used{background:var(--amber)}.t-tries i.ok{background:var(--good)}
-.t-mic{width:46px;height:46px;border-radius:50%;background:rgb(var(--speak));color:var(--ink);display:inline-flex;align-items:center;justify-content:center;margin-left:auto}
+.t-mic{width:46px;height:46px;border-radius:50%;background:rgb(var(--c));color:var(--ink);display:inline-flex;align-items:center;justify-content:center;margin-left:auto}
 .t-mic.big{width:68px;height:68px;margin:6px auto 0}.t-mic.big .ms{font-size:32px}
 .t-note{font-size:13px;color:var(--muted);line-height:1.45}
 .t-note.good{display:flex;align-items:center;gap:6px;color:var(--good)}
@@ -1108,7 +1110,7 @@ button.row:active{background:rgba(255,255,255,.035)}
 .t-stone .ex{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
 .t-stone .ex s{text-decoration-color:rgba(var(--bad-rgb),.6)}
 .t-stone .when{font-size:11.5px;color:var(--faint);white-space:nowrap}
-.t-askbtn{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:18px;background:rgba(var(--speak),.14);color:rgb(var(--speak));font-size:13px;font-weight:600;flex:none}
+.t-askbtn{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:18px;background:rgba(var(--c),.14);color:rgb(var(--c));font-size:13px;font-weight:600;flex:none}
 .t-qa{display:flex;flex-direction:column;gap:10px;margin-top:8px}
 .t-qa .bub{max-width:100%;font-size:14.5px;line-height:1.5}
 .t-checked{display:inline-flex;align-items:center;gap:4px;margin-top:8px;font-size:11.5px;color:var(--good)}
@@ -1260,4 +1262,18 @@ button.row:active{background:rgba(255,255,255,.035)}
   .x-row{grid-auto-columns:calc((100% - 36px) / 4)}
   .x-row.big{grid-auto-columns:calc((100% - 24px) / 3)}
   .x-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+
+/* Anja live als Lehrerin: Seitenspalte aufgeklappt, Wiederholen, deutsche Frage */
+.al-body{flex:1;min-height:0;display:flex}
+.al-body>.scroll{flex:1;min-width:0}
+.al-aside{display:none}
+.al-talk>.t-level{align-self:center}
+.al-mine.again{border:1.5px dashed rgba(var(--amber-rgb),.35)}
+.al-de{font-size:15px;line-height:1.4;color:rgba(255,255,255,.88)}
+.al-checked{align-self:flex-start;margin-top:-4px}
+.al-under{gap:14px}
+@container app (min-width:720px){
+  .al-aside{display:block;width:42%;max-width:420px;flex:none;overflow-y:auto;border-left:1px solid var(--border);background:rgba(0,0,0,.14);scrollbar-width:none}
+  .al-stones-btn{display:none}
 }
