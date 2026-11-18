@@ -9,6 +9,7 @@ import { focus, quickPicks } from '../learner.js';
 import { ErlebenTeaser } from './erleben.js';
 import { LESSONS, GRAMMAR_KEY } from '../domain/grammar.js';
 import { stones } from '../stones.js';
+import { OfflineStrip } from './offline.js';
 
 /** Einstieg in die Grammatik: der Schritt, der dran ist, und was dir zuletzt passiert ist. */
 function GrammarTeaser() {
@@ -121,6 +122,7 @@ export function Home() {
       <button class="iconbtn" onClick=${() => setSettings(true)} aria-label="Einstellungen"><${Icon} n="tune" /></button>
     </div>
     <div class="scroll">
+      <${OfflineStrip} />
       <div class="hero">
         <${Ring} value=${xp / goal} size=${84} stroke=${8}><b class="num" style="font-size:20px;line-height:1">${xp}</b><span class="faint" style="font-size:10.5px">von ${goal} XP</span><//>
         <div class="grow">

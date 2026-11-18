@@ -24,7 +24,8 @@ const BUDU = { sg1: 'б+уду', sg2: 'б+удешь', sg3: 'б+удет', pl1: 
 
 const first = (alts) => (alts && alts[0]) || '';
 const plain = (ru) => Ph.plain(ru).toLowerCase().replaceAll('ё', 'е');
-const say = (ru) => audio.play(null, { text: Ph.plain(ru), ru, voice: 'p', rate: 0.9, key: `wf:${ru}` });
+/** Formen in der Kursstimme (nie die Gerätestimme) — offline vom Handy, wenn schon vertont. */
+const say = (ru) => audio.play(null, { text: Ph.plain(ru), ru, key: `wf:${ru}` });
 
 /** Reiter je Wortart. */
 function tabsOf(e) {

@@ -10,7 +10,8 @@
 // Deutsch angezeigt, mit Spicker, höchstens drei Versuche. Typische Fehler merkt sich die App
 // (Stolpersteine) und gibt sie Anja beim nächsten Gespräch mit.
 import { html, cls, Icon, TopBar, IL, Latin, Sheet, HiddenRu, mk, useState, useEffect, useRef, useMemo, fx, audio } from '../ui.js';
-import { progress, back, toast, phraseById, nav } from '../app.js';
+import { progress, back, toast, phraseById, nav, useLink } from '../app.js';
+import { AnjaOffline } from './offline.js';
 import { assess } from '../learner.js';
 import { stones, wrongPositions } from '../stones.js';
 import { storage, api, audioContext } from '../platform.js';
@@ -185,6 +186,7 @@ export function AnjaLive() {
   const [kept, setKept] = useState(() => new Set());
   const [hideText, setHideText] = useState(() => storage.get('anja_live_hide') === '1');
   const [more, setMore] = useState(false);
+  const link = useLink();
   // Spicker beim Wiederholen: Stufe und was davon für die Bewertung zählt.
   const [spick, setSpick] = useState(0);
   const level = useMemo(() => { try { return assess().level.id; } catch { return 'A1'; } }, []);
@@ -437,6 +439,12 @@ export function AnjaLive() {
   const lastAnja = [...turns].reverse().find((t) => t.said);
 
   // ── Einstieg ─────────────────────────────────────────────────────────────
+  if (phase === 'intro' && link !== 'online') {
+    // Ohne Netz oder ohne Mac: klar sagen, warum — und was bis dahin geht.
+    return html`<div class="screen c-amber">
+      <${TopBar} title="Anja live" sub="Sprechen statt tippen" onBack=${() => back('anja')} />
+      <div class="scroll"><div class="stepc g16"><${AnjaOffline} link=${link} /></div></div></div>`;
+  }
   if (phase === 'intro') {
     const off = avail && !avail.available;
     return html`<div class="screen c-amber">

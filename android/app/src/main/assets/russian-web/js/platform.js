@@ -167,22 +167,49 @@ export const serverVoice = {
     if (Date.now() < voicePausedUntil) return;
     fetch('/api/russian/voice/status?warm=1', { cache: 'no-store', signal: timeoutSignal(4000) }).catch(() => { voicePausedUntil = Date.now() + 60000; });
   },
-  /** Russischen Text (möglichst mit "+") sprechen lassen. → Objekt-URL oder null (dann Gerätestimme). */
-  async fetch(ru, { voice = defaultVoice, rate = 1 } = {}) {
+  /**
+   * Russischen Text (möglichst mit "+") sprechen lassen. → Objekt-URL oder null.
+   * Liegt die Aufnahme schon auf dem Handy (Russisch für unterwegs), kommt sie von dort — auch ohne
+   * Netz und auch während einer Pause nach einem Fehlschlag.
+   */
+  async fetch(text, { voice = defaultVoice, rate = 1 } = {}) {
+    const ru = kursFormat(text);
     const key = `${voice}|${rate}|${ru}`;
     if (voiceUrls.has(key)) return voiceUrls.get(key);
-    if (Date.now() < voicePausedUntil) return null;
+    const onPhone = !!native?.voiceCached?.(voice, String(rate), ru);
+    if (!onPhone && Date.now() < voicePausedUntil) return null;
     try {
       const r = await fetch(`/api/russian/voice?voice=${voice}&rate=${rate}&text=${encodeURIComponent(ru)}`, { signal: timeoutSignal(5000) });
       // 503 = Modell lädt noch (gleich wieder versuchen) oder nicht eingerichtet; alles andere = länger Pause.
-      if (!r.ok) { voicePausedUntil = Date.now() + (r.status === 503 ? 8000 : 60000); return null; }
+      if (!r.ok) { if (!onPhone) voicePausedUntil = Date.now() + (r.status === 503 ? 8000 : 60000); return null; }
       const url = URL.createObjectURL(await r.blob());
       voiceUrls.set(key, url);
       if (voiceUrls.size > 80) { const [k, old] = voiceUrls.entries().next().value; voiceUrls.delete(k); URL.revokeObjectURL(old); }
       return url;
     } catch { voicePausedUntil = Date.now() + 60000; return null; }
   },
+  /**
+   * Merkt vor, was in der Kursstimme abgespielt werden soll (neue Wörter aus Lieder & Szenen, eigene
+   * Sätze): Nachts vertont der Mac genau diese Liste und legt sie aufs Handy — offline kommt dann die
+   * Kursstimme statt der Gerätestimme. items: [{ru, voice?, rate?}]
+   */
+  want(items) {
+    let list = [];
+    try { list = JSON.parse(values.get(WISH_KEY) ?? '[]'); } catch { list = []; }
+    // Einträge mit Akzent stammen von vor dem Kursformat (die Kursstimme lehnte sie ab) — weg damit.
+    const set = new Set(list.filter((x) => !String(x).includes('\u0301')));
+    const before = list.length;
+    for (const it of items) if (it?.ru) set.add(`${it.voice ?? defaultVoice}|${it.rate ?? 1}|${kursFormat(it.ru)}`);
+    if (set.size === before) return;
+    storage.set(WISH_KEY, JSON.stringify([...set].slice(-WISH_MAX)));
+  },
 };
+/** Betonung als Akzent (»совсе́м«, aus der Anzeige) → Kursformat »совс+ем« — so versteht es die Kursstimme. */
+const kursFormat = (s) => String(s).normalize('NFD').replace(/([АЕЁИОУЫЭЮЯаеёиоуыэюя])\u0301/g, '+$1').normalize('NFC');
+const WISH_KEY = 'voice_wish_v1';
+const WISH_MAX = 8000;
+/** Russisch ohne Kursstimme (kein Mac, noch nicht auf dem Handy) — die Oberfläche sagt es, statt die Gerätestimme zu nehmen. */
+export const voiceMissing = emitter();
 
 // ── Clips ──────────────────────────────────────────────────────────────────
 
@@ -233,6 +260,8 @@ export const audio = {
       if (token !== playToken) return false; // inzwischen wurde etwas anderes gestartet
       if (src) return done(await this._element(src, rate));
     }
+    // Russisch nie mit der Gerätestimme (Kadirs Wunsch 18.11.2026): lieber sagen, dass die Kursstimme fehlt.
+    if (ru) { voiceMissing.emit(ru); return done(false); }
     if (text) return done(await tts.speak(text, { rate: (slow ? 0.6 : 0.92) * rate }));
     return done(false);
   },
@@ -335,6 +364,17 @@ export const fx = {
 const SR = typeof window !== 'undefined' ? window.SpeechRecognition ?? window.webkitSpeechRecognition : null;
 /** Meldet die Erkennung nie »bereit«, gilt das Mikrofon nach dieser Zeit als offen. */
 const READY_FALLBACK_MS = 2500;
+
+/**
+ * Russisch für unterwegs (nur in der App): Einstellungen und Stand des nächtlichen Ladens.
+ * state() → {limitMb, wifiOnly, chargingOnly, deleteSeen, usedBytes, pieces, voices, lastRun, lastNew} | null
+ */
+export const offlineStore = {
+  available: () => !!native?.offlineState,
+  state() { try { return native?.offlineState ? JSON.parse(native.offlineState()) : null; } catch { return null; } },
+  set(patch) { native?.offlineSet?.(JSON.stringify(patch)); },
+  runNow() { native?.offlineRunNow?.(); },
+};
 
 export const speech = {
   available: () => !!((native?.speechAvailable && native.speechAvailable()) || SR || storage.get('dev_speech')),

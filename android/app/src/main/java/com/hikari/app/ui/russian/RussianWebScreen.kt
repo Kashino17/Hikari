@@ -39,6 +39,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import com.hikari.app.data.prefs.SettingsStore
+import com.hikari.app.domain.russian.RussianOffline
 import com.hikari.app.domain.russian.RussianPodcastReminderScheduler
 import com.hikari.app.domain.russian.RussianProgressStore
 import com.hikari.app.player.MusicPlayerController
@@ -222,11 +223,20 @@ private class RussianWebClient(private val app: Context, private val okHttp: OkH
 
     private fun proxy(pathAndQuery: String, request: WebResourceRequest): WebResourceResponse {
         if (request.method != "GET") return status(405, "Method Not Allowed")
+        // Russisch für unterwegs: Was auf dem Handy liegt, kommt von dort — schneller und ohne Netz.
+        local(pathAndQuery, request)?.let { return it }
         return try {
             // Der Host ist ein Platzhalter — der OkHttp-Client der App schreibt ihn auf die eingestellte Server-Adresse um.
             val builder = Request.Builder().url("http://hikari.invalid$pathAndQuery")
             request.requestHeaders["Range"]?.let { builder.header("Range", it) }
             val res = okHttp.newCall(builder.build()).execute()
+            // Stückliste und Kursstimme merken, damit sie auch ohne Netz da sind.
+            remember(pathAndQuery, request, res)?.let { return it }
+            if (res.code >= 500 && pathAndQuery.startsWith("/russian/erleben/feed")) {
+                res.close()
+                offlineFeed()?.let { return it }
+                return status(502, "Bad Gateway")
+            }
             val headers = mutableMapOf("Cache-Control" to "no-store")
             for (h in listOf("Content-Range", "Accept-Ranges", "Content-Length")) res.header(h)?.let { headers[h] = it }
             val type = res.header("Content-Type").orEmpty()
@@ -239,10 +249,66 @@ private class RussianWebClient(private val app: Context, private val okHttp: OkH
                 res.body?.byteStream() ?: ByteArrayInputStream(ByteArray(0)),
             )
         } catch (e: Exception) {
+            if (pathAndQuery.startsWith("/russian/erleben/feed")) offlineFeed()?.let { return it }
             WebResourceResponse("application/json", "utf-8", 502, "Bad Gateway", mapOf("Cache-Control" to "no-store"),
                 ByteArrayInputStream("""{"error":"backend_unreachable"}""".toByteArray()))
         }
     }
+
+    // ── Russisch für unterwegs (RussianOffline) ───────────────────────────────
+
+    /** Liegt die Antwort schon auf dem Handy (Stück-Video, Standbild, Kursstimme)? */
+    private fun local(pathAndQuery: String, request: WebResourceRequest): WebResourceResponse? {
+        val path = pathAndQuery.substringBefore('?')
+        if (path.startsWith("/russian/erleben/media/")) {
+            val file = RussianOffline.mediaFile(app, path.removePrefix("/russian/erleben/media/")) ?: return null
+            return if (file.exists()) ok(if (file.name.endsWith(".mp4")) "video/mp4" else "image/jpeg", file.inputStream()) else null
+        }
+        if (path == "/russian/voice") {
+            val u = request.url
+            val text = u.getQueryParameter("text") ?: return null
+            val file = RussianOffline.voiceFile(app, u.getQueryParameter("voice") ?: "m", u.getQueryParameter("rate") ?: "1", text)
+            return if (file.exists()) ok("audio/ogg", file.inputStream()) else null
+        }
+        return null
+    }
+
+    /** Stückliste (klein) und Kursstimme beim Durchreichen auf dem Handy ablegen. */
+    private fun remember(pathAndQuery: String, request: WebResourceRequest, res: Response): WebResourceResponse? {
+        if (!res.isSuccessful) return null
+        val path = pathAndQuery.substringBefore('?')
+        val target = when {
+            path == "/russian/erleben/feed" -> RussianOffline.feedFile(app)
+            path == "/russian/voice" -> request.url.getQueryParameter("text")?.let {
+                RussianOffline.voiceFile(app, request.url.getQueryParameter("voice") ?: "m", request.url.getQueryParameter("rate") ?: "1", it)
+            }
+            else -> null
+        } ?: return null
+        val bytes = res.body?.bytes() ?: return null
+        runCatching { RussianOffline.writeAtomic(target, bytes) }
+        val mime = if (path == "/russian/voice") "audio/ogg" else "application/json"
+        return if (mime == "application/json") ok(mime, ByteArrayInputStream(withOfflineIds(bytes))) else ok(mime, ByteArrayInputStream(bytes))
+    }
+
+    /** Ohne Server: die zuletzt gesehene Stückliste — als offline gekennzeichnet, mit den geladenen Stücken. */
+    private fun offlineFeed(): WebResourceResponse? {
+        val file = RussianOffline.feedFile(app)
+        if (!file.exists()) return null
+        val o = runCatching { JSONObject(String(withOfflineIds(file.readBytes()))) }.getOrNull() ?: return null
+        o.put("offline", true).put("busy", false)
+        return ok("application/json", ByteArrayInputStream(o.toString().toByteArray()))
+    }
+
+    /** Welche Stücke liegen auf dem Handy? (Video vorhanden) → Feld `offlineIds` in der Stückliste. */
+    private fun withOfflineIds(bytes: ByteArray): ByteArray = runCatching {
+        val o = JSONObject(String(bytes))
+        val have = RussianOffline.mediaNames(app)
+        val ids = org.json.JSONArray()
+        for (p in RussianOffline.handPieces(app) + listOfNotNull(o.optJSONArray("pieces")).flatMap { a -> (0 until a.length()).mapNotNull { a.optJSONObject(it) } }) {
+            if (p.optString("media") in have) ids.put(p.optString("id"))
+        }
+        o.put("offlineIds", ids).toString().toByteArray()
+    }.getOrDefault(bytes)
 
     private fun ok(mime: String, body: java.io.InputStream) =
         WebResourceResponse(mime, if (mime.startsWith("text/") || "json" in mime || "javascript" in mime) "utf-8" else null, 200, "OK", mapOf("Cache-Control" to "no-cache"), body)
@@ -389,6 +455,14 @@ class RussianWebBridge(
 
     /** Öffnet Googles Dialog zum Laden des Sprachpakets. */
     @JavascriptInterface fun speechPackDownload(): Boolean = RussianSpeechPack.download(app)
+
+    // ── Für unterwegs (Einstellungen und Stand des nächtlichen Ladens) ──────
+    @JavascriptInterface fun offlineState(): String = RussianOffline.stateJson(app)
+    @JavascriptInterface fun offlineSet(json: String) = RussianOffline.saveSettings(app, json)
+    @JavascriptInterface fun offlineRunNow() = RussianOffline.runNow(app)
+    /** Liegt diese Kursstimme schon auf dem Handy? Dann spielt sie auch ohne Netz. */
+    @JavascriptInterface fun voiceCached(voice: String, rate: String, text: String): Boolean =
+        RussianOffline.voiceFile(app, voice, rate, text).exists()
 
     @JavascriptInterface
     fun listenStart(id: String, lang: String) {

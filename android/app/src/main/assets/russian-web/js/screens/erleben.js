@@ -6,7 +6,7 @@
 import { html, cls, Icon, Sheet, Opt, TopBar, mk, fx, audio, useState, useEffect, useRef, useMemo, useListen, ScoreCard, MIC_WAIT, SvgCompare, SvgAiCheck,
   useSpicker, SpickerBtn, SpickNote, HiddenRu } from '../ui.js';
 import { progress, useProgress, phraseById, nav, back, toast, openWord } from '../app.js';
-import { storage, speech, recorder, SPEECH_ERRORS, api } from '../platform.js';
+import { storage, speech, recorder, SPEECH_ERRORS, api, serverVoice } from '../platform.js';
 import * as Sp from '../domain/speech.js';
 import * as Gl from '../domain/glossary.js';
 import { asPhrase } from '../domain/content.js';
@@ -28,14 +28,25 @@ function takeFeed(f) {
   const hand = (DATA ?? []).filter((p) => !p.auto);
   const have = new Map((DATA ?? []).filter((p) => p.auto).map((p) => [p.id, p]));
   DATA = [...hand, ...f.pieces.map((p) => have.get(p.id) ?? prepare(p))];
-  FEED = { shown: f.shown, saved: f.saved ?? [], ready: f.ready, busy: f.busy, interests: f.interests ?? { video: [], music: [] }, leftToday: f.leftToday ?? 0, resetAt: f.resetAt ?? 0,
+  wantWords(DATA);
+  FEED = { offline: !!f.offline, offlineIds: f.offlineIds ?? null, shown: f.shown, saved: f.saved ?? [], ready: f.ready, busy: f.busy, interests: f.interests ?? { video: [], music: [] }, leftToday: f.leftToday ?? 0, resetAt: f.resetAt ?? 0,
     // Seit dem täglichen Lauf: ganze Sammlung, Heute neu, Zeiten, Themen-Vorschläge. Ältere Server liefern sie nicht.
     collection: f.collection ?? [], todayIds: f.todayIds ?? f.shown ?? [], todayCount: f.todayCount ?? (f.todayIds ?? f.shown ?? []).length,
     lastRunAt: f.lastRunAt ?? 0, nextRunAt: f.nextRunAt ?? f.resetAt ?? 0, suggestions: f.suggestions ?? [] };
   for (const fn of [...feedSubs]) fn(FEED);
 }
+/**
+ * Jedes Wort der Stücke wird für die Kursstimme vorgemerkt (»Deutlich« spricht langsam): Nachts
+ * vertont der Mac sie und legt sie aufs Handy — auch neue Wörter aus neuen Stücken. Der Originalton
+ * ganzer Zeilen kommt weiter aus dem Video.
+ */
+function wantWords(pieces) {
+  const items = [];
+  for (const p of pieces) for (const l of p.uniq) for (const c of l.chunks) items.push({ ru: c.words.map((x) => x.cyrillic).join(' '), rate: 0.7 });
+  serverVoice.want(items);
+}
 const loadPieces = () => (loading ??= Promise.all([fetch('/data/erleben.json').then((r) => r.json()), getFeed()])
-  .then(([d, f]) => { DATA = d.pieces.map(prepare); takeFeed(f); return DATA; }));
+  .then(([d, f]) => { DATA = d.pieces.map(prepare); wantWords(DATA); takeFeed(f); return DATA; }));
 const feed = {
   async reload() { takeFeed(await getFeed()); },
   /** Neue Stücke holen. Angefangene bleiben stehen, der Rest macht Platz. */
@@ -422,11 +433,13 @@ export function ErlebenHub() {
   const [query, setQuery] = useState(null);
   if (!pieces) return html`<div class="screen c-live"><${TopBar} title="Lieder & Szenen" onBack=${() => back('heute')} /></div>`;
   const today = progress.today();
-  const auto = pieces.filter((x) => x.auto).sort(newestFirst(f));
-  const hand = pieces.filter((x) => !x.auto);
-  const fresh = (f.todayIds ?? []).map((id) => pieces.find((x) => x.id === id)).filter(Boolean);
-  const started = pieces.filter((x) => { const ps = pieceState(s, x.id); return ps.started && !ps.done; });
-  const due = pieces.filter((x) => rewatchDue(pieceState(s, x.id), today));
+  // Ohne Server: nur, was wirklich auf dem Handy liegt — nichts Ausgegrautes, das nicht spielt.
+  const onPhone = (x) => !f.offline || !f.offlineIds || f.offlineIds.includes(x.id);
+  const auto = pieces.filter((x) => x.auto && onPhone(x)).sort(newestFirst(f));
+  const hand = pieces.filter((x) => !x.auto && onPhone(x));
+  const fresh = (f.todayIds ?? []).map((id) => pieces.find((x) => x.id === id)).filter((x) => x && onPhone(x));
+  const started = pieces.filter((x) => { const ps = pieceState(s, x.id); return ps.started && !ps.done && onPhone(x); });
+  const due = pieces.filter((x) => rewatchDue(pieceState(s, x.id), today) && onPhone(x));
   const topicNames = [...new Set(auto.map((x) => x.topic).filter(Boolean))];
   const q = (query ?? '').trim().toLowerCase();
   const pass = (x) => (filter === 'all' || (filter === 'saved' ? f.saved.includes(x.id) : filter === 'easy' ? knownShare(x, known) >= 0.5 || x.level === 'Einsteiger' : filter === 'short' ? x.dur < 60 : x.kind === filter))
@@ -445,7 +458,9 @@ export function ErlebenHub() {
       <input class="grow" placeholder="Titel, Kanal oder Thema" value=${query} onInput=${(e) => setQuery(e.target.value)} autofocus /></div></div>`}
     <div class="chips" style="padding-bottom:8px">${X_FILTERS.map(([id, l]) => html`<button class=${cls('chip c sm', filter === id && 'on')} onClick=${() => setFilter(id)}>${l}</button>`)}</div>
     <div class="scroll">
-      <${TodayCard} f=${f} sort=${sort} onSort=${() => setSort(X_SORT[(X_SORT.findIndex(([k]) => k === sort) + 1) % X_SORT.length][0])} onTopics=${() => setTopics(true)} />
+      ${f.offline ? html`<div class="sec" style="padding-top:6px"><div class="x-today"><span class="ic sm"><${Icon} n="cloud_off" /></span>
+          <span class="grow"><b>Offline: ${auto.length + hand.length} ${auto.length + hand.length === 1 ? 'Stück' : 'Stücke'} auf dem Handy</b><span>Neue kommen nachts im WLAN beim Laden.</span></span></div></div>`
+        : html`<${TodayCard} f=${f} sort=${sort} onSort=${() => setSort(X_SORT[(X_SORT.findIndex(([k]) => k === sort) + 1) % X_SORT.length][0])} onTopics=${() => setTopics(true)} />`}
       ${flat ? html`<div class="sec"><div class="hd"><div class="h2">${results.length === 1 ? 'Ein Stück' : `${results.length} Stücke`}</div></div>
           ${results.length ? html`<div class="x-grid">${results.map((x) => html`<${XCard} piece=${x} known=${known} f=${f} onOpen=${setOpen} key=${x.id} />`)}</div>`
             : html`<div class="empty"><${Icon} n="search_off" /><b>Nichts gefunden.</b>Probier einen anderen Filter.</div>`}</div>`

@@ -1,7 +1,7 @@
 // Start, Rahmen und Routen.
 import { html, render, useEffect, useState } from '../vendor/preact-htm.js';
-import { storage, isNative } from './platform.js';
-import { loadData, progress, planState, useRoute, useToast, usePackOffer, useProgress, nav, back, route, TABS, P, useWordSheet } from './app.js';
+import { storage, isNative, voiceMissing } from './platform.js';
+import { loadData, progress, planState, useRoute, useToast, usePackOffer, useProgress, nav, back, route, TABS, P, useWordSheet, toast } from './app.js';
 import { WordSheet } from './screens/words.js';
 import { Icon, cls, PackSheet } from './ui.js';
 import { Home } from './screens/home.js';
@@ -80,6 +80,14 @@ function App() {
     </aside>
   </div>`;
 }
+
+// Russisch ohne Kursstimme: sagen, statt die Gerätestimme zu nehmen (höchstens alle paar Sekunden).
+let missingAt = 0;
+voiceMissing.on(() => {
+  if (Date.now() - missingAt < 4000) return;
+  missingAt = Date.now();
+  toast('Für dieses Wort fehlt noch die Kursstimme — sie kommt, sobald dein Mac erreichbar ist, oder nachts mit dem Laden');
+});
 
 // Android-Zurück: innerhalb der Oberfläche eine Ebene zurück; auf »Heute« schließt die App den Bereich.
 window.__hkBack = () => {

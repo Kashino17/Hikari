@@ -65,6 +65,8 @@ class HikariApp : Application(), Configuration.Provider {
         scheduler.schedulePeriodicSync()
         // Offline gesehener Fortschritt zieht nach, sobald wieder Netz da ist.
         progressSyncScheduler.schedulePeriodic()
+        // Russisch für unterwegs: nachts im WLAN beim Laden Stücke und Kursstimme aufs Handy holen.
+        com.hikari.app.domain.russian.RussianOffline.schedule(this)
         // News-Tagesbericht nur einplanen, wenn er aktiviert ist — nach einem
         // App-Update oder Neustart stellt das den Zeitplan wieder her.
         appScope.launch {

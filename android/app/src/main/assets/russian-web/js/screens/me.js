@@ -3,6 +3,7 @@ import { html, cls, Icon, Sheet, useState } from '../ui.js';
 import { D, P, Pl, useProgress, progress, planState, prefs, toast, offerPack } from '../app.js';
 import { storage, speech } from '../platform.js';
 import { GenderIntro } from './home.js';
+import { OfflineSettings } from './offline.js';
 import { timeTrack } from '../timetrack.js';
 
 export function GenderGate() {
@@ -40,6 +41,7 @@ export function SettingsSheet({ onClose }) {
     ${pack !== 'unsupported' && html`<div class="q">Spracherkennung</div>
       <div class="rowx g8 wrap"><span class="sub grow">${pack === 'installed' ? 'Läuft auf dem Gerät, ohne Internet.' : pack === 'missing' ? 'Läuft übers Internet — das russische Sprachpaket fehlt.' : 'Zeigt sich beim ersten Sprechen. Das russische Sprachpaket macht sie vom Internet unabhängig.'}</span>
         ${pack !== 'installed' && html`<button class="chip" onClick=${() => { onClose(); offerPack(true); }}><${Icon} n="download" />Sprachpaket</button>`}</div>`}
+    <${OfflineSettings} />
     <div class="q">Töne bei richtig und falsch</div>
     <${Seg} value=${prefs.sounds()} options=${[[true, 'An'], [false, 'Aus']]} onChange=${(on) => { prefs.setSounds(on); bump((x) => x + 1); }} />
     <button class="btn mt24" onClick=${onClose}>Fertig</button>

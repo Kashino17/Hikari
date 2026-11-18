@@ -25,6 +25,13 @@ describe("referenceClips", () => {
 });
 
 describe("voiceRequest", () => {
+  it("macht aus dem Betonungs-Akzent der Anzeige das Kursformat (sonst antwortete die Kursstimme 500)", () => {
+    expect(voiceRequest({ text: "совсе́м", rate: "0.7" })?.text).toBe("совс+ем");
+    expect(voiceRequest({ text: "Ми́ленький ты мой" })?.text).toBe("М+иленький ты мой");
+    // й und ё bleiben, wie sie sind.
+    expect(voiceRequest({ text: "мой ёж" })?.text).toBe("мой ёж");
+  });
+
   it("nimmt russischen Text und rundet das Tempo auf feste Stufen", () => {
     const q = voiceRequest({ text: "  Как   дел+а? ", voice: "p", rate: "0.71" });
     expect(q).toMatchObject({ text: "Как дел+а?", voice: "p", rate: 0.7 });

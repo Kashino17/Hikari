@@ -267,6 +267,38 @@ export function usePackOffer() {
   return [open, () => setOpen(false)];
 }
 
+// ── Verbindung: Netz und Mac ───────────────────────────────────────────────
+// 'online' | 'noserver' (Netz da, Mac nicht erreichbar) | 'offline' (kein Netz). Für den Offline-Streifen
+// und für Anja: klar sagen, was gerade geht — statt einer stummen Sperre.
+let LINK = 'online';
+const linkSubs = new Set();
+const setLink = (v) => { if (v !== LINK) { LINK = v; for (const fn of [...linkSubs]) fn(v); } };
+async function checkLink() {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) { setLink('offline'); return; }
+  try {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 3500);
+    const r = await fetch('/api/russian/anja/live/status', { cache: 'no-store', signal: ctl.signal });
+    clearTimeout(t);
+    setLink(r.status === 502 || r.status === 504 ? (navigator.onLine === false ? 'offline' : 'noserver') : 'online');
+  } catch { setLink(navigator.onLine === false ? 'offline' : 'noserver'); }
+}
+let linkTimer = null;
+export function useLink() {
+  const [v, setV] = useState(LINK);
+  useEffect(() => {
+    linkSubs.add(setV);
+    if (!linkTimer) {
+      checkLink();
+      linkTimer = setInterval(() => { if (!document.hidden) checkLink(); }, 30000);
+      window.addEventListener('online', checkLink);
+      window.addEventListener('offline', checkLink);
+    }
+    return () => linkSubs.delete(setV);
+  }, []);
+  return v;
+}
+
 // ── Formen eines Wortes: überall per Tippen ────────────────────────────────
 const wordSubs = new Set();
 /** Öffnet das Blatt mit allen Formen eines russischen Wortes (oder einer Wortgruppe). */

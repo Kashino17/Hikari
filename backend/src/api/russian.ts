@@ -35,7 +35,14 @@ export function voiceRequest(q: {
   voice?: string;
   rate?: string;
 }): { text: string; voice: VoiceId; rate: number; key: string } | null {
-  const text = (q.text ?? "").trim().replace(/\s+/g, " ");
+  // Betonung als Akzent (»совсе́м«, so steht es in der Anzeige) → Kursformat »совс+ем«. Gemessen
+  // 18.11.2026: mit Akzent antwortete die Kursstimme 500, die App nahm dann die Gerätestimme.
+  const text = (q.text ?? "")
+    .normalize("NFD")
+    .replace(/([АЕЁИОУЫЭЮЯаеёиоуыэюя])\u0301/g, "+$1")
+    .normalize("NFC")
+    .trim()
+    .replace(/\s+/g, " ");
   if (!text || text.length > 400 || !/[А-Яа-яЁё]/.test(text)) return null;
   const voice = q.voice ?? "m";
   if (voice !== "m" && voice !== "f" && voice !== "p") return null;
