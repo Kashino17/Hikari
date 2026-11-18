@@ -64,7 +64,11 @@ export const conversationReply = z.object({
       focus: z.string().max(240),
       repairCue: z.string().max(240),
       correctedRu: z.string().max(600),
-      explanationDe: z.string().max(400),
+      explanationDe: z.string().max(500),
+      /** Aus der geprüften Lehrerin-Prüfung (Anja als Lehrerin): Stolperstein und zweites Beispiel. */
+      topicDe: z.string().max(80).optional(),
+      exampleRu: z.string().max(200).optional(),
+      exampleDe: z.string().max(200).optional(),
     })
     .nullable(),
   chunk: z.object({ ru: russian(150), de: text(200) }),
@@ -547,11 +551,39 @@ export function plausibleCorrection(answer: string, correctedRu: string): boolea
   return shared * 2 >= Math.max(mine.length, fixed.length);
 }
 
+/**
+ * Die geprüfte Satzprüfung von Anja live (Gemini Flash-Lite + zweite Meinung, gemessen 0/25 richtige
+ * Sätze falsch korrigiert, 10/10 Fehler gefunden). Steht sie zur Verfügung, prüft sie auch im
+ * getippten Gespräch — mit Erklärung für Leute ohne Grammatikwissen, Stolperstein und Beispiel.
+ */
+export type SentenceTeacher = (
+  question: string,
+  answer: string,
+) => Promise<{
+  goodDe: string;
+  check:
+    | null
+    | { ok: true }
+    | {
+        ok: false;
+        correctedRu: string;
+        focus: string;
+        explanationDe: string;
+        topicDe: string;
+        exampleRu: string;
+        exampleDe: string;
+      };
+} | null>;
+
+const REPAIR_CUE =
+  "Versuche deinen Satz noch einmal. Achte auf den Lernimpuls; das Beispiel kannst du danach aufdecken.";
+
 export class LocalConversationProvider implements ConversationProvider {
   private base: string;
   constructor(
     private env: NodeJS.ProcessEnv = process.env,
     private request: typeof fetch = fetch,
+    private teacher: SentenceTeacher | null = null,
   ) {
     this.base = (env.RUSSIAN_CHAT_URL ?? env.LMSTUDIO_URL ?? "http://localhost:1234")
       .replace(/\/$/, "")
@@ -573,6 +605,21 @@ export class LocalConversationProvider implements ConversationProvider {
    * oder das Modell war nicht rechtzeitig da — das Gespräch hängt nie an dieser Prüfung.
    */
   async checkSentence(question: string, answer: string) {
+    if (this.teacher) {
+      const h = await this.teacher(question, answer).catch(() => null);
+      const c = h?.check;
+      if (!c || c.ok) return null;
+      return {
+        focus: c.focus,
+        repairCue: REPAIR_CUE,
+        correctedRu: c.correctedRu,
+        explanationDe: c.explanationDe,
+        topicDe: c.topicDe,
+        exampleRu: c.exampleRu,
+        exampleDe: c.exampleDe,
+        ...(h?.goodDe ? { praise: h.goodDe } : {}),
+      };
+    }
     const { model } = await this.modelStatus();
     if (!model) return null;
     const native = this.env.RUSSIAN_CHAT_API === "native";
@@ -625,8 +672,7 @@ export class LocalConversationProvider implements ConversationProvider {
       return null;
     return {
       focus: check.focus,
-      repairCue:
-        "Versuche deinen Satz noch einmal. Achte auf den Lernimpuls; das Beispiel kannst du danach aufdecken.",
+      repairCue: REPAIR_CUE,
       correctedRu: check.correctedRu,
       explanationDe: check.explanationDe,
     };
@@ -767,6 +813,14 @@ export class LocalConversationProvider implements ConversationProvider {
         result = prepareBeginnerVocabulary(result, input);
         validateBeginnerVocabulary(result, input);
         validateDialogueFlow(result, input, attempt === lastAttempt);
+        // Mit der Lehrerin-Prüfung: Ob ein Fehler gezeigt wird, entscheidet sie — nicht das Gesprächsmodell.
+        if (this.teacher && result.feedback && input.message) {
+          const question = [...input.history].reverse().find((h) => h.role === "assistant")?.content ?? "";
+          const fix = await this.checkSentence(question, input.message).catch(() => null);
+          result.feedback = fix
+            ? { ...result.feedback, meaning: "partial", ...fix }
+            : { ...result.feedback, focus: "", repairCue: "", correctedRu: "" };
+        }
         return result;
       } catch (error) {
         // Nur auf Wunsch (Fehlersuche): der Grund je Anlauf — Prüfcodes und Wortformen aus der Modell-Antwort.

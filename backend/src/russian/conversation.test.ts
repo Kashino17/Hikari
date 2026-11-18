@@ -596,6 +596,39 @@ describe("guided conversation for the first stages", () => {
     expect(second.feedback).toMatchObject({ meaning: "clear", focus: "", correctedRu: "" });
   });
 
+  it("mit der Lehrerin-Prüfung: geprüfte Erklärung, Stolperstein, Beispiel und konkretes Lob", async () => {
+    const offline = vi.fn<typeof fetch>().mockRejectedValue(new Error("offline"));
+    const teacher = vi.fn(async () => ({
+      goodDe: "«чай» stimmt.",
+      check: {
+        ok: false as const,
+        correctedRu: "Я люблю чай.",
+        focus: "Nach »я« heißt es »люблю«.",
+        explanationDe: "Wenn du von dir sprichst, endet das Verb auf -ю (Konjugation).",
+        topicDe: "Endung bei »ich«",
+        exampleRu: "Я читаю книгу.",
+        exampleDe: "Ich lese ein Buch.",
+      },
+    }));
+    const r = await new LocalConversationProvider(env, offline, teacher).respond(
+      conversationRequest.parse({ scenario: cafe, action: "reply", message: "я любить чай", history }),
+    );
+    // Gefragt wird mit Anjas letzter Frage und dem Satz des Lernenden — das lokale Modell braucht es nicht.
+    expect(teacher).toHaveBeenCalledWith(expect.stringMatching(/Чай или кофе/), "я любить чай");
+    expect(r.feedback).toMatchObject({
+      meaning: "partial",
+      correctedRu: "Я люблю чай.",
+      topicDe: "Endung bei »ich«",
+      exampleRu: "Я читаю книгу.",
+      praise: "«чай» stimmt.",
+    });
+    // Findet die Lehrerin nichts, bleibt es bei »klar« — auch ohne lokales Modell.
+    const ok = await new LocalConversationProvider(env, offline, async () => ({ goodDe: "", check: { ok: true } })).respond(
+      conversationRequest.parse({ scenario: cafe, action: "reply", message: "я буду чай", history }),
+    );
+    expect(ok.feedback).toMatchObject({ meaning: "clear", correctedRu: "" });
+  });
+
   it("adds a correction only for a real mistake in the learner's own sentence", async () => {
     const real = await answer(
       withCheck({

@@ -1,7 +1,8 @@
 // Gesprächsreise: vier geführte Mini-Gespräche mit Anja, danach das freie Gespräch
 // mit der KI (Hikari-Server → lokales Sprachmodell), eigener Wortschatz, Lernplan.
 // Regeln wie in RussianConversationViewModel.kt / RussianJourney.kt.
-import { html, cls, Icon, TopBar, IL, Sheet, Mic, useListen, useState, useEffect, useRef, useMemo, fx, tts, audio } from '../ui.js';
+import { html, cls, Icon, TopBar, IL, Sheet, Mic, useListen, useState, useEffect, useRef, useMemo, fx, tts, audio, mk } from '../ui.js';
+import { stones } from '../stones.js';
 import { progress, back, nav, toast } from '../app.js';
 import { storage, api, speech as recog, serverVoice } from '../platform.js';
 import * as Ph from '../domain/phonetics.js';
@@ -235,6 +236,8 @@ export function Journey() {
       setSession({ ...s, turns, history: [...history, { role: 'user', content: message || `Gesprächsaktion: ${action}` }, { role: 'assistant', content: reply.partnerRu }], draft: '', draftSpoken: false, hint: 0, helped: action === 'simplify', repair: false });
       if (action === 'reply' && reply.feedback) {
         setCp((x) => record(x, { id: turn.id, day: today, stage: s.stage, scenario: sc.id, answer: message, clear: reply.feedback.meaning === 'clear', independent: !turn.helped, spoken: turn.spoken }));
+        // Fehler-Gedächtnis: Worüber du stolperst, baut Anja beim nächsten Mal ein.
+        if (reply.feedback.correctedRu) stones.add({ topic: reply.feedback.topicDe || reply.feedback.focus, wrongRu: message, rightRu: reply.feedback.correctedRu, day: today });
         progress.apply({ xp: 8, graded: {}, spokenOk: turn.spoken ? 1 : 0 });
       }
       setAvailable(true);
@@ -415,8 +418,12 @@ function ChatPage({ cp, session, setSession, busy, send, scenario, savePhrase, l
           ${!r.feedback.focus && r.feedback.explanationDe && html`<div class="de"><b>Genau so:</b> ${r.feedback.explanationDe}</div>`}
           ${r.feedback.focus && html`<div class="de"><b>Lernimpuls:</b> ${r.feedback.focus}</div><div class="sub mt4">${r.feedback.repairCue}</div>
             <div class="rowx g8 wrap mt8">${!session.repair && html`<button class="chip sm" onClick=${() => patch({ repair: true, draft: turn.answer, helped: true })}>Selbst verbessern</button>`}
-              <button class=${cls('chip sm', example && 'on')} onClick=${() => { setExample(!example); patch({ helped: true }); }}>Ein Beispiel hilft mir</button></div>
-            ${example && html`<div class="mt8"><${IL} ru=${r.feedback.correctedRu} size=${17} /><div class="sub mt4">${r.feedback.explanationDe}</div><div class="mt8"><${Listen} ru=${r.feedback.correctedRu} speed=${speed} /></div></div>`}`}`}</div>`}
+              <button class=${cls('chip sm', example && 'on')} onClick=${() => { setExample(!example); patch({ helped: true }); }}>Lösung und Erklärung</button></div>
+            ${example && html`<div class="t-card mt8">
+              <div class="t-fix"><div class="k">So heißt es</div><${IL} ru=${r.feedback.correctedRu} size=${17} /><div class="mt8"><${Listen} ru=${r.feedback.correctedRu} speed=${speed} /></div></div>
+              ${r.feedback.explanationDe && html`<div class="t-why"><div class="k">Warum</div><p>${mk(r.feedback.explanationDe)}</p></div>`}
+              ${r.feedback.exampleRu && html`<div class="t-ex"><div class="k">Noch ein Beispiel</div><${IL} ru=${r.feedback.exampleRu} size=${16} gloss=${false} /><span class="sub">${r.feedback.exampleDe}</span></div>`}
+            </div>`}`}`}</div>`}
       ${r && html`<div class="bub" style="max-width:92%"><div class="who">ANJA</div><${IL} ru=${r.partnerRu} size=${19} extra=${extra} /><div class="de">${r.partnerDe}</div><div class="mt8"><${Listen} ru=${r.partnerRu} speed=${speed} /></div></div>`}
       ${busy && session.draft.trim() && html`<div class="bub me" style="max-width:92%"><div class="who">DU</div><${IL} ru=${session.draft} size=${19} extra=${extra} /></div>`}
       ${busy && html`<div class="typing"><i></i><i></i><i></i></div><div class="sub">Anja denkt über ihre Antwort nach …</div>`}

@@ -150,7 +150,8 @@ const helpsReply = z.object({
     })
     .default({ ok: true, correctedRu: "", correctedDe: "", focus: "", explanationDe: "", topicDe: "", exampleRu: "", exampleDe: "" }),
   goodDe: z.string().max(300).default(""),
-  replyDe: z.string().trim().min(1).max(900),
+  // Leer, wenn nur ein Satz geprüft wird (getipptes Gespräch: keine Antwort von Anja dabei).
+  replyDe: z.string().trim().max(900).default(""),
   words: z
     .array(z.object({ ru: z.string().trim().max(80), de: z.string().trim().max(100) }))
     .max(40),

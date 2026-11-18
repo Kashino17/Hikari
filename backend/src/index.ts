@@ -24,7 +24,9 @@ import { registerWatchLaterRoutes } from "./api/watch-later.js";
 import { registerRussianRoutes } from "./api/russian.js";
 import { registerRussianBackupRoutes } from "./api/russian-backup.js";
 import { registerRussianConversationRoutes } from "./api/russian-conversation.js";
-import { registerRussianAnjaLiveRoutes } from "./api/russian-anja-live.js";
+import { readGeminiKey, registerRussianAnjaLiveRoutes } from "./api/russian-anja-live.js";
+import { AnjaLive } from "./russian/anja-live.js";
+import { LocalConversationProvider } from "./russian/conversation.js";
 import { registerRussianErlebenRoutes } from "./api/russian-erleben.js";
 import { registerVideoFullRoute } from "./api/video-full.js";
 import { registerCastRoutes } from "./api/cast.js";
@@ -138,7 +140,19 @@ await registerFeedRoutes(app, {
 });
 await registerWatchLaterRoutes(app, { db });
 await registerRussianRoutes(app);
-await registerRussianConversationRoutes(app);
+// Eine gemeinsame Anja: das gesprochene Gespräch und die geprüfte Satzprüfung im getippten Gespräch.
+const anjaLive = new AnjaLive({
+  key: () => readGeminiKey(join(cfg.dataDir, "erleben")),
+  usageFile: join(cfg.dataDir, "erleben", "usage.json"),
+  voice: process.env.ANJA_LIVE_VOICE,
+  log: (msg) => app.log.info(msg),
+});
+await registerRussianConversationRoutes(
+  app,
+  new LocalConversationProvider(process.env, fetch, (q, a) =>
+    anjaLive.status().available ? anjaLive.helps(q, a, "") : Promise.resolve(null),
+  ),
+);
 await registerRussianBackupRoutes(app, { dir: join(cfg.dataDir, "russian-backup") });
 // Lieder & Szenen: Feed aus geprüften Stücken; aufbereitet werden sie von backend/erleben/prepare.py.
 await registerRussianErlebenRoutes(app, {
@@ -150,6 +164,7 @@ await registerRussianErlebenRoutes(app, {
 await registerRussianAnjaLiveRoutes(app, {
   dir: join(cfg.dataDir, "erleben"),
   log: (msg) => app.log.info(msg),
+  live: anjaLive,
 });
 await registerHealthRoute(app, { db, videoDir: cfg.videoDir });
 await registerStatsRoutes(app, { db });
