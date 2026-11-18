@@ -39,6 +39,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import com.hikari.app.data.prefs.SettingsStore
+import com.hikari.app.domain.russian.AnjaKeys
 import com.hikari.app.domain.russian.RussianOffline
 import com.hikari.app.domain.russian.RussianPodcastReminderScheduler
 import com.hikari.app.domain.russian.RussianProgressStore
@@ -460,6 +461,12 @@ class RussianWebBridge(
     @JavascriptInterface fun offlineState(): String = RussianOffline.stateJson(app)
     @JavascriptInterface fun offlineSet(json: String) = RussianOffline.saveSettings(app, json)
     @JavascriptInterface fun offlineRunNow() = RussianOffline.runNow(app)
+
+    // ── Anja ohne Mac: Schlüssel verschlüsselt auf dem Gerät (AnjaKeys) ─────
+    @JavascriptInterface fun anjaKeyInfo(): String = AnjaKeys.infoJson(app)
+    @JavascriptInterface fun anjaKey(): String = AnjaKeys.active(app) ?: ""
+    @JavascriptInterface fun anjaKeySave(kind: String, key: String) = AnjaKeys.save(app, kind, key)
+    @JavascriptInterface fun anjaKeyUseOwn(on: Boolean) = AnjaKeys.setUseOwn(app, on)
     /** Liegt diese Kursstimme schon auf dem Handy? Dann spielt sie auch ohne Netz. */
     @JavascriptInterface fun voiceCached(voice: String, rate: String, text: String): Boolean =
         RussianOffline.voiceFile(app, voice, rate, text).exists()

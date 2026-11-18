@@ -606,18 +606,83 @@ function nativeResult(m) {
   throw Object.assign(new Error(data.error ?? `HTTP ${m.status}`), { status: m.status || undefined, data });
 }
 
-export const api = {
-  async get(path) {
-    const r = await fetch(`/api${path}`, { cache: 'no-store' });
-    if (!r.ok) throw Object.assign(new Error(`HTTP ${r.status}`), { status: r.status });
-    return r.json();
+/**
+ * Umleitung einzelner Wege an eine Stelle im Handy (Anja ohne Mac, js/anjadirect.js):
+ *   route(method, path, body)    → Promise<Response> oder null (dann wie immer an den Mac)
+ *   fallback(method, path, body) → dasselbe, wenn der Mac gerade nicht antwortet
+ */
+export const apiHook = { route: null, fallback: null };
+const macDown = (e) => !e?.status || e.status === 502 || e.status === 504;
+async function viaHook(method, path, body, real) {
+  const routed = apiHook.route?.(method, path, body);
+  if (routed) return hookResult(await routed);
+  try { return await real(); } catch (e) {
+    const fb = macDown(e) ? apiHook.fallback?.(method, path, body) : null;
+    if (fb) return hookResult(await fb);
+    throw e;
+  }
+}
+async function hookResult(r) {
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error(data.error ?? `HTTP ${r.status}`), { status: r.status, data });
+  return data;
+}
+/** fetch für /api/… — mit derselben Umleitung (Anjas Ton als Strom). */
+export async function apiFetch(url, init) {
+  const path = url.startsWith('/api/') ? url.slice(4) : null;
+  const routed = path && apiHook.route?.(init?.method ?? 'GET', path, null);
+  if (routed) return routed;
+  try {
+    const r = await fetch(url, init);
+    if ((r.status === 502 || r.status === 504) && path) { const fb = apiHook.fallback?.('GET', path, null); if (fb) return fb; }
+    return r;
+  } catch (e) {
+    const fb = path && apiHook.fallback?.('GET', path, null);
+    if (fb) return fb;
+    throw e;
+  }
+}
+
+/** Gemini-Schlüssel für Anja ohne Mac — in der App verschlüsselt im Android-Schlüsselspeicher (AnjaKeys.kt). */
+export const anjaKeys = {
+  info() {
+    if (native?.anjaKeyInfo) { try { return JSON.parse(native.anjaKeyInfo()); } catch { return null; } }
+    // Vorschau im Browser: nur zum Ausprobieren, unverschlüsselt im Browser-Speicher.
+    let k = {};
+    try { k = JSON.parse(localStorage.getItem('anja_keys_dev') ?? '{}'); } catch { /* leer */ }
+    const ready = !!((k.useOwn && k.own) ? k.own : (k.mac ?? k.own));
+    return { mac: !!k.mac, own: !!k.own, ownEnd: (k.own ?? '').slice(-4), useOwn: !!k.useOwn, ready };
   },
-  async post(path, body) {
-    if (native?.httpPost) return nativeResult(await nativeCall('h', (id) => native.httpPost(id, path, JSON.stringify(body ?? {}))));
-    const r = await fetch(`/api${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body ?? {}) });
-    const data = await r.json().catch(() => ({}));
-    if (!r.ok) throw Object.assign(new Error(data.error ?? `HTTP ${r.status}`), { status: r.status, data });
-    return data;
+  active() {
+    if (native?.anjaKey) return native.anjaKey() || null;
+    try { const k = JSON.parse(localStorage.getItem('anja_keys_dev') ?? '{}'); return (k.useOwn && k.own) ? k.own : (k.mac ?? k.own ?? null); } catch { return null; }
+  },
+  save(kind, key) {
+    if (native?.anjaKeySave) return native.anjaKeySave(kind, key ?? '');
+    try { const k = JSON.parse(localStorage.getItem('anja_keys_dev') ?? '{}'); if (key) k[kind] = key; else delete k[kind]; localStorage.setItem('anja_keys_dev', JSON.stringify(k)); } catch { /* egal */ }
+  },
+  useOwn(on) {
+    if (native?.anjaKeyUseOwn) return native.anjaKeyUseOwn(!!on);
+    try { const k = JSON.parse(localStorage.getItem('anja_keys_dev') ?? '{}'); k.useOwn = !!on; localStorage.setItem('anja_keys_dev', JSON.stringify(k)); } catch { /* egal */ }
+  },
+};
+
+export const api = {
+  get(path) {
+    return viaHook('GET', path, null, async () => {
+      const r = await fetch(`/api${path}`, { cache: 'no-store' });
+      if (!r.ok) throw Object.assign(new Error(`HTTP ${r.status}`), { status: r.status });
+      return r.json();
+    });
+  },
+  post(path, body) {
+    return viaHook('POST', path, body, async () => {
+      if (native?.httpPost) return nativeResult(await nativeCall('h', (id) => native.httpPost(id, path, JSON.stringify(body ?? {}))));
+      const r = await fetch(`/api${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body ?? {}) });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw Object.assign(new Error(data.error ?? `HTTP ${r.status}`), { status: r.status, data });
+      return data;
+    });
   },
   /** Aussprache-Prüfung: eigene Aufnahme gegen die Kursstimme (Clip-Name oder "text:<Stimme>:<Satz>"). */
   async pronunciation(clip, blob) {

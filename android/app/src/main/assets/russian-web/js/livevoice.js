@@ -1,6 +1,6 @@
 // Ton für »Anja live«: das Mikrofon als roher 16-kHz-Ton (so will ihn das Sprachmodell) und die
 // Wiedergabe von Anjas Antwort, während sie noch vom Server hereinströmt (24 kHz, 16 Bit, mono).
-import { audioContext } from './platform.js';
+import { audioContext, apiFetch } from './platform.js';
 
 const TARGET_RATE = 16000;
 const OUT_RATE = 24000;
@@ -137,7 +137,7 @@ export async function playStream(url, { onStart, onEnd } = {}) {
     p.push(pcm);
   };
   try {
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await apiFetch(url, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     if (res.body?.getReader) {
       const reader = res.body.getReader();

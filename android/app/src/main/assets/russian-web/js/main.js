@@ -12,6 +12,7 @@ import { Stats } from './screens/stats.js';
 import { ROUTES } from './routes.js';
 import { registerTaken } from './screens/erleben.js';
 import { startTimeTracking } from './timetrack.js';
+import './anjadirect.js';
 
 const TAB_META = {
   heute: ['Heute', 'today', Home],

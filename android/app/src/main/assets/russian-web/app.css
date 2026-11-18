@@ -1298,3 +1298,14 @@ button.t-stone{width:100%;text-align:left}
 .x-sugg{display:flex;align-items:center;gap:10px;padding:12px;border-radius:16px;background:var(--card);border:1px solid var(--border)}
 .x-sugg b{display:block;font-size:14.5px;font-weight:600}
 .x-sugg .grow span{display:block;font-size:12px;color:var(--muted)}
+
+/* Anja ohne Mac */
+.al-direct{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:14px;background:rgba(var(--c),.10);border:1px solid rgba(var(--c),.28);color:rgb(var(--c))}
+.al-direct span{color:var(--muted);font-size:13px;line-height:1.45}
+.al-direct b{display:block;color:var(--text);font-size:14px;margin-bottom:2px}
+.o-seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.o-seg button{display:flex;flex-direction:column;gap:2px;text-align:left;padding:12px;border-radius:12px;background:var(--high);border:1px solid transparent;color:var(--text);font:inherit}
+.o-seg button span{font-size:12px;color:var(--muted)}
+.o-seg button.on{border-color:rgb(var(--c));background:rgba(var(--c),.12)}
+.o-seg button.on b{color:rgb(var(--c))}
+.o-keyin{display:flex;gap:8px}.o-keyin .field{flex:1;min-width:0}

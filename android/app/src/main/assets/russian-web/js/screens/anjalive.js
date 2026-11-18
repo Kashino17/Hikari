@@ -12,6 +12,7 @@
 import { html, cls, Icon, TopBar, IL, Latin, Sheet, HiddenRu, mk, useState, useEffect, useRef, useMemo, fx, audio } from '../ui.js';
 import { progress, back, toast, phraseById, nav, useLink } from '../app.js';
 import { AnjaOffline } from './offline.js';
+import { directPossible } from '../anjadirect.js';
 import { assess } from '../learner.js';
 import { stones, wrongPositions } from '../stones.js';
 import { storage, api, audioContext } from '../platform.js';
@@ -212,8 +213,12 @@ export function AnjaLive() {
   const stage = supportStage(cp);
   const extra = useMemo(() => ownWords(cp, null), [cp.conversationVocabulary, cp.cards]);
 
+  // Status neu, wenn sich die Verbindung ändert: ohne Mac antwortet Anja direkt über Google (anjadirect.js).
   useEffect(() => {
+    if (phase !== 'intro') return;
     api.get('/russian/anja/live/status').then((s) => setAvail(s)).catch(() => setAvail({ available: false, reason: 'server' }));
+  }, [link]);
+  useEffect(() => {
     return () => {
       alive.current = false;
       stopPlayback();
@@ -439,7 +444,7 @@ export function AnjaLive() {
   const lastAnja = [...turns].reverse().find((t) => t.said);
 
   // ── Einstieg ─────────────────────────────────────────────────────────────
-  if (phase === 'intro' && link !== 'online') {
+  if (phase === 'intro' && (link === 'offline' || (link === 'noserver' && !directPossible()))) {
     // Ohne Netz oder ohne Mac: klar sagen, warum — und was bis dahin geht.
     return html`<div class="screen c-amber">
       <${TopBar} title="Anja live" sub="Sprechen statt tippen" onBack=${() => back('anja')} />
@@ -452,6 +457,7 @@ export function AnjaLive() {
       <div class="scroll"><div class="stepc g16">
         <div><div class="over amber">Ein echtes Gespräch</div><div class="big mt4">Du sprichst, Anja antwortet.</div>
           <p class="muted mt8" style="line-height:1.5">Mit ihrer eigenen Stimme, auf Russisch. Stimmt ein Satz nicht, wird sie zur Lehrerin: Sie erklärt dir, was falsch war und warum, und du sagst ihn noch einmal.</p></div>
+        ${avail?.direct && !off && html`<div class="al-direct"><${Icon} n="dns" size="19" /><span><b>Dein Mac ist gerade aus</b>Anja läuft direkt über Google — mit dem Schlüssel auf deinem Handy. Alles wie sonst.</span></div>`}
         ${off && html`<div class="card p" style="border-color:rgba(var(--bad-rgb),.4)"><b>Anja ist gerade nicht erreichbar.</b><p class="sub mt4">${why(avail.reason ?? 'no_key')}</p></div>`}
         ${error && html`<div class="hint" style="border-color:rgba(var(--bad-rgb),.4)"><p>${error}</p></div>`}
         <div><div class="h3" style="margin-bottom:8px">Wo trefft ihr euch?</div>

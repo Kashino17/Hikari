@@ -28,6 +28,29 @@ export function readGeminiKey(dir: string, env: NodeJS.ProcessEnv = process.env)
   return value || null;
 }
 
+/**
+ * Nur aus dem eigenen Netz: Mac selbst, Heimnetz, Tailscale (100.64.0.0/10, fd7a:115c:a1e0::/48),
+ * Emulator. Der Schlüssel für »Anja ohne Mac« geht nie an eine Adresse von außen.
+ */
+export function privateAddress(ip: string | undefined): boolean {
+  if (!ip) return false;
+  const v4 = ip.startsWith("::ffff:") ? ip.slice(7) : ip;
+  const m = v4.match(/^(\d+)\.(\d+)\.\d+\.\d+$/);
+  if (m) {
+    const a = Number(m[1]);
+    const b = Number(m[2]);
+    return (
+      a === 127 ||
+      a === 10 ||
+      (a === 192 && b === 168) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 100 && b >= 64 && b <= 127)
+    );
+  }
+  const low = ip.toLowerCase();
+  return low === "::1" || low.startsWith("fd7a:115c:a1e0:");
+}
+
 const STATUS: Record<string, number> = {
   no_key: 503,
   unknown_session: 404,
@@ -63,6 +86,16 @@ export async function registerRussianAnjaLiveRoutes(app: FastifyInstance, deps: 
   };
 
   app.get("/russian/anja/live/status", () => live.status());
+
+  // Anja ohne Mac (Bauplan 18.11.2026): Das Handy holt sich den Schlüssel, solange es den Mac
+  // erreicht, und legt ihn verschlüsselt im Android-Schlüsselspeicher ab. Im APK steht nichts —
+  // Repo und Releases sind öffentlich.
+  app.get("/russian/anja/key", (req, reply) => {
+    if (!privateAddress(req.ip)) return reply.code(403).send({ error: "forbidden" });
+    const key = readGeminiKey(deps.dir);
+    if (!key) return reply.code(404).send({ error: "no_key" });
+    return reply.header("cache-control", "no-store").send({ key });
+  });
 
   // Nachfrage aus der Grammatik: geprüfte Antwort als Text, vorgelesen über /audio/:id/:n.
   app.post("/russian/anja/ask", async (req, reply) => {

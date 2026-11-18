@@ -284,6 +284,11 @@ async function checkLink() {
   } catch { setLink(navigator.onLine === false ? 'offline' : 'noserver'); }
 }
 let linkTimer = null;
+export const linkNow = () => LINK;
+export const recheckLink = () => checkLink();
+/** Der Mac hat eben nicht geantwortet — nicht erst auf die nächste Prüfung warten. */
+export const markNoServer = () => { if (LINK === 'online') setLink('noserver'); };
+export function onLink(fn) { linkSubs.add(fn); return () => linkSubs.delete(fn); }
 export function useLink() {
   const [v, setV] = useState(LINK);
   useEffect(() => {
