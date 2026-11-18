@@ -43,12 +43,22 @@ function Screen({ r }) {
     <div class="mt20"><button class="btn" onClick=${() => nav('heute', { replace: true })}>Zur Übersicht</button></div></div></div>`;
 }
 
+/**
+ * Rahmen: Am Rechner steht die Oberfläche als Telefon neben der Hilfe. Auf dem Handy (App oder
+ * Browser mit Touch) füllt sie immer den ganzen Bildschirm — auch aufgeklappt auf dem Fold, wo die
+ * Breite sonst den Telefonrahmen auslöste. Zum Entwerfen am Rechner: ?breit zeigt die Oberfläche
+ * so breit wie ein aufgeklapptes Fold.
+ */
+const FRAME = isNative || (typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches) ? 'full'
+  : /[?&]breit\b/.test(location.search) ? 'wide' : '';
+if (FRAME === 'full') document.documentElement.classList.add('full');
+
 function App() {
   const r = useRoute();
   const t = useToast();
   const [packOpen, closePack] = usePackOffer();
   const tab = TABS.includes(r);
-  return html`<div class="desk">
+  return html`<div class=${cls('desk', FRAME)}>
     <div class="phone"><div class="app">
       <div style="position:absolute;inset:0;display:flex;flex-direction:column">
         <div style="position:relative;flex:1;min-height:0"><${Screen} r=${r} key=${tab ? 'tabs' : r} /></div>

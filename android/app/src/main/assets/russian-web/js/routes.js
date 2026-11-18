@@ -10,13 +10,22 @@ import { LabList, LabSession } from './screens/lab.js';
 import { Journey } from './screens/journey.js';
 import { AnjaLive } from './screens/anjalive.js';
 import { StatsVocab, StatsTime, StatsWins } from './screens/stats.js';
-import { ErlebenHub, ErlebenPiece, ErlebenLibrary } from './screens/erleben.js';
+import { ErlebenHub, ErlebenPiece, ErlebenLibrary, DraftExplore } from './screens/erleben.js';
+import { DraftIndex, DraftAnja, DraftGrammar, DraftLesson, DraftWord, DraftOffline } from './screens/entwurf.js';
 
 const soon = (name) => () => html`<div class="screen"><div class="empty" style="margin-top:120px"><b>${name}</b>Wird gerade gebaut.</div></div>`;
 
 export const ROUTES = {
   tab: { satzbuch: Phrasebook },
   list: [
+    // Entwürfe für den Ausbau (Bauplan 18.11.2026)
+    [/^entwurf$/, () => html`<${DraftIndex} />`],
+    [/^entwurf\/anja$/, () => html`<${DraftAnja} />`],
+    [/^entwurf\/grammatik$/, () => html`<${DraftGrammar} />`],
+    [/^entwurf\/lektion$/, () => html`<${DraftLesson} />`],
+    [/^entwurf\/wort$/, () => html`<${DraftWord} />`],
+    [/^entwurf\/entdecken$/, () => html`<${DraftExplore} />`],
+    [/^entwurf\/offline$/, () => html`<${DraftOffline} />`],
     [/^ich\/wortschatz$/, () => html`<${StatsVocab} />`],
     [/^ich\/lernzeit$/, () => html`<${StatsTime} />`],
     [/^ich\/erfolge$/, () => html`<${StatsWins} />`],

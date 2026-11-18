@@ -426,6 +426,105 @@ export function ErlebenHub() {
     </div></div>`;
 }
 
+// ── Entwurf: Entdecken (Bauplan 18.11.2026) ───────────────────────────────
+// Statt »Neue« und drei Stücken: täglicher Stapel, Reihen je Thema, Filter, Sammlung, Bewerten.
+// Mit den echten Stücken vom Server; Bewertungen bleiben in diesem Entwurf nur auf dem Bildschirm.
+
+const X_FILTERS = [['all', 'Alle'], ['scene', 'Videos'], ['song', 'Lieder'], ['saved', 'Gemerkt'], ['easy', 'Leicht'], ['short', 'Unter 1 Min.']];
+const X_SORT = [['new', 'Neu'], ['easy', 'Leicht'], ['best', 'Beste Bewertung']];
+const X_REASONS = ['Zu schwer', 'Zu leicht', 'Langweilig', 'Schlechter Ton', 'Kaum Russisch'];
+const knownShare = (piece, known) => (piece.keys.length ? knownCount(piece, known) / piece.keys.length : 0);
+const clock = (ms) => new Date(ms).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+
+function XCard({ piece, known, mark, big, onOpen }) {
+  const pct = Math.round(knownShare(piece, known) * 100);
+  return html`<button class=${cls('x-card', big && 'big')} onClick=${() => onOpen(piece)}>
+    <span class="th"><${Pic} file=${piece.poster} /><em>${fmt(piece.dur)}</em>
+      ${(mark?.saved || mark?.up) && html`<span class="x-flags">${mark.saved && html`<${Icon} n="bookmark" fill size="14" />`}${mark.up && html`<${Icon} n="thumb_up" fill size="13" />`}</span>`}</span>
+    <b class="x-t">${piece.head}</b>
+    <span class="x-meta"><${Icon} n=${KIND[piece.kind][1]} size="14" />${KIND[piece.kind][0]}<span class="x-know"><i><i style=${`width:${pct}%`}></i></i>${pct} % bekannt</span></span>
+  </button>`;
+}
+
+function XRow({ title, sub, list, known, marks, onOpen, big }) {
+  if (!list.length) return null;
+  return html`<div class="sec"><div class="hd"><div class="h2">${title}</div><span class="sub">${list.length}</span></div>
+    ${sub && html`<div class="sub">${sub}</div>`}
+    <div class=${cls('x-row', big && 'big')}>${list.map((x) => html`<${XCard} piece=${x} known=${known} mark=${marks[x.id]} big=${big} onOpen=${onOpen} />`)}</div></div>`;
+}
+
+function XSheet({ piece, known, mark, onMark, onClose }) {
+  const [down, setDown] = useState(false);
+  const [why, setWhy] = useState([]);
+  const pct = Math.round(knownShare(piece, known) * 100);
+  return html`<${Sheet} onClose=${onClose}>
+    <div class="x-sheet">
+      <div class="x-poster"><${Pic} file=${piece.poster} /><em>${fmt(piece.dur)}</em></div>
+      <div class="over c mt12">${KIND[piece.kind][0]}${piece.topic ? ` · ${piece.topic}` : ''} · ${piece.level}</div>
+      <div class="h2 mt4">${piece.head}</div><div class="sub mt4">${piece.under}</div>
+      <div class="x-know lg mt12"><i><i style=${`width:${pct}%`}></i></i>${knownCount(piece, known)} von ${piece.keys.length} Wörtern kennst du</div>
+      ${!down ? html`<div class="x-rate mt16">
+          <button class=${cls(mark.up && 'on')} onClick=${() => onMark({ up: !mark.up })}><${Icon} n="thumb_up" fill=${mark.up} /><span>Gut</span></button>
+          <button class=${cls(mark.saved && 'on')} onClick=${() => onMark({ saved: !mark.saved })}><${Icon} n="bookmark" fill=${mark.saved} /><span>${mark.saved ? 'Gemerkt' : 'Merken'}</span></button>
+          <button onClick=${() => setDown(true)}><${Icon} n="thumb_down" /><span>Nicht gut</span></button>
+          <button onClick=${() => { toast('Gelöscht — zählt nicht als Bewertung'); onClose(); }}><${Icon} n="delete" /><span>Löschen</span></button></div>
+        ${(mark.up || mark.saved) && html`<div class="x-hint"><${Icon} n="auto_awesome" size="16" />${mark.saved ? 'Besonders gut: Der nächste Lauf sucht mehr in diese Richtung.' : 'Gut: zählt für den nächsten Lauf.'}</div>`}
+        <button class="btn area mt16" onClick=${() => nav(`erleben/${piece.id}`)}><${Icon} n="play_arrow" fill />Ansehen</button>`
+      : html`<div class="x-down mt16"><b>Was passt nicht?</b><span class="sub">Optional — hilft dem nächsten Lauf.</span>
+          <div class="rowx g8 wrap mt8">${X_REASONS.map((r) => html`<button class=${cls('chip sm', why.includes(r) && 'on')} onClick=${() => setWhy(why.includes(r) ? why.filter((x) => x !== r) : [...why, r])}>${r}</button>`)}</div>
+          <p class="sub mt12">Das Stück wird gelöscht, und Ähnliches meidet der nächste Lauf.</p>
+          <div class="rowx g8 mt12"><button class="btn ghost" onClick=${() => setDown(false)}>Abbrechen</button>
+            <button class="btn bad" onClick=${() => { toast(why.length ? `Gelöscht · ${why.join(', ')}` : 'Gelöscht'); onClose(); }}>Löschen und meiden</button></div></div>`}
+    </div><//>`;
+}
+
+export function DraftExplore() {
+  const pieces = usePieces();
+  const known = useKnown();
+  const s = useStore();
+  const f = useFeed();
+  const [filter, setFilter] = useState('all');
+  const [sort, setSort] = useState('new');
+  const [open, setOpen] = useState(null);
+  const [marks, setMarks] = useState(() => Object.fromEntries((FEED.saved ?? []).map((id) => [id, { saved: true }])));
+  if (!pieces) return html`<div class="screen c-live"><${TopBar} title="Lieder & Szenen" onBack=${() => back('entwurf')} /></div>`;
+  const auto = pieces.filter((x) => x.auto);
+  const fresh = [...auto].reverse().slice(0, 6);
+  const started = pieces.filter((x) => { const ps = pieceState(s, x.id); return ps.started && !ps.done; });
+  const topics = [...new Set(auto.map((x) => x.topic).filter(Boolean))];
+  const hand = pieces.filter((x) => !x.auto);
+  const pass = (x) => filter === 'all' || (filter === 'saved' ? marks[x.id]?.saved : filter === 'easy' ? knownShare(x, known) >= 0.5 || x.level === 'Einsteiger' : filter === 'short' ? x.dur < 60 : x.kind === filter);
+  const order = (a, b) => (sort === 'easy' ? knownShare(b, known) - knownShare(a, known) : sort === 'best' ? (marks[b.id]?.saved ? 2 : marks[b.id]?.up ? 1 : 0) - (marks[a.id]?.saved ? 2 : marks[a.id]?.up ? 1 : 0) : 0);
+  const flat = filter !== 'all' || sort !== 'new';
+  const results = pieces.filter(pass).sort(order);
+  // Der Lauf startet, wenn sich Googles Kontingent erneuert (Mitternacht in Kalifornien) — gezeigt in deiner Uhrzeit.
+  const next = f.resetAt || Date.now() + 6 * 3600e3;
+  const last = next - 24 * 3600e3 + 5 * 60e3;
+  const mark = (id, patch) => setMarks((m) => ({ ...m, [id]: { ...m[id], ...patch } }));
+  return html`<div class="screen c-live">
+    <${TopBar} title="Lieder & Szenen" sub="Entdecken" onBack=${() => back('entwurf')}
+      right=${html`<button class="iconbtn" aria-label="Suchen"><${Icon} n="search" /></button><button class="iconbtn" aria-label="Themen"><${Icon} n="tune" /></button>`} />
+    <div class="chips" style="padding-bottom:8px">${X_FILTERS.map(([id, l]) => html`<button class=${cls('chip c sm', filter === id && 'on')} onClick=${() => setFilter(id)}>${l}</button>`)}</div>
+    <div class="scroll">
+      <div class="sec" style="padding-top:6px"><div class="x-today">
+        <span class="ic sm solid"><${Icon} n="calendar_today" /></span>
+        <span class="grow"><b>Heute neu: ${fresh.length}</b><span>Vorbereitet um ${clock(last)} · nächster Lauf um ${clock(next)}</span></span>
+        <button class="x-sort" onClick=${() => setSort(X_SORT[(X_SORT.findIndex(([k]) => k === sort) + 1) % X_SORT.length][0])}><${Icon} n="sort" size="18" />${X_SORT.find(([k]) => k === sort)[1]}</button></div></div>
+      ${flat ? html`<div class="sec"><div class="hd"><div class="h2">${results.length} Stücke</div></div>
+          <div class="x-grid">${results.map((x) => html`<${XCard} piece=${x} known=${known} mark=${marks[x.id]} onOpen=${setOpen} />`)}</div></div>`
+        : html`
+          <${XRow} title="Heute neu" sub="Frisch aufbereitet und doppelt geprüft." list=${fresh} known=${known} marks=${marks} onOpen=${setOpen} big />
+          <${XRow} title="Weitermachen" list=${started} known=${known} marks=${marks} onOpen=${setOpen} />
+          ${topics.map((t) => html`<${XRow} title=${t} list=${auto.filter((x) => x.topic === t)} known=${known} marks=${marks} onOpen=${setOpen} />`)}
+          <${XRow} title="Von Hand aufbereitet" sub="Mit Geschichte und Tipps." list=${hand} known=${known} marks=${marks} onOpen=${setOpen} />
+          <div class="sec"><button class="x-coll" onClick=${() => setFilter('saved')}><span class="ic sm"><${Icon} n="video_library" /></span>
+            <span class="grow"><b>Deine Sammlung</b><span>${pieces.length} Stücke, die bleiben · ${Object.values(marks).filter((m) => m.saved).length} gemerkt</span></span><${Icon} n="chevron_right" c="faint" /></button></div>`}
+      <div class="end"></div>
+    </div>
+    ${open && html`<${XSheet} piece=${open} known=${known} mark=${marks[open.id] ?? {}} onMark=${(p) => mark(open.id, p)} onClose=${() => setOpen(null)} />`}
+  </div>`;
+}
+
 /** Einstieg auf »Heute«. */
 export function ErlebenTeaser() {
   const pieces = usePieces();
