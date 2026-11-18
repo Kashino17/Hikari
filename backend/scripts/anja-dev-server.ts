@@ -11,6 +11,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import Fastify from "fastify";
 import { registerRussianAnjaLiveRoutes } from "../src/api/russian-anja-live.js";
+import { registerRussianErlebenRoutes } from "../src/api/russian-erleben.js";
 
 const PORT = Number(process.env.PORT ?? 3942);
 const REAL = { host: "127.0.0.1", port: 3939 };
@@ -21,7 +22,17 @@ await registerRussianAnjaLiveRoutes(app, {
   log: (m) => console.log(m),
 });
 
-// Alles, was nicht Anja live ist: an den echten Server durchreichen.
+// Lieder & Szenen nur mit einer KOPIE der Daten (ERLEBEN_DIR) und ohne täglichen Lauf — kein
+// Kontingent wird verbraucht, echte Stücke bleiben unberührt.
+if (process.env.ERLEBEN_DIR)
+  await registerRussianErlebenRoutes(app, {
+    dir: process.env.ERLEBEN_DIR,
+    script: new URL("../erleben/prepare.py", import.meta.url).pathname,
+    log: (m) => console.log(m),
+    schedule: false,
+  });
+
+// Alles andere: an den echten Server durchreichen.
 app.setNotFoundHandler((req, reply) => {
   const up = request(
     { ...REAL, method: req.method, path: req.url, headers: { ...req.headers, host: `${REAL.host}:${REAL.port}` } },

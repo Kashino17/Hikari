@@ -10,8 +10,7 @@ import { LabList, LabSession } from './screens/lab.js';
 import { Journey } from './screens/journey.js';
 import { AnjaLive } from './screens/anjalive.js';
 import { StatsVocab, StatsTime, StatsWins } from './screens/stats.js';
-import { ErlebenHub, ErlebenPiece, ErlebenLibrary, DraftExplore } from './screens/erleben.js';
-import { DraftIndex, DraftAnja, DraftGrammar, DraftLesson, DraftWord, DraftOffline } from './screens/entwurf.js';
+import { ErlebenHub, ErlebenPiece, ErlebenLibrary } from './screens/erleben.js';
 import { Grammar, GrammarLesson } from './screens/grammar.js';
 import { FormDrill } from './screens/words.js';
 
@@ -23,14 +22,6 @@ export const ROUTES = {
     [/^grammatik$/, () => html`<${Grammar} />`],
     [/^grammatik\/(\w+)$/, (m) => html`<${GrammarLesson} id=${m[1]} key=${m[1]} />`],
     [/^formen\/(.+)$/, (m) => html`<${FormDrill} lemma=${decodeURIComponent(m[1])} key=${m[1]} />`],
-    // Entwürfe für den Ausbau (Bauplan 18.11.2026)
-    [/^entwurf$/, () => html`<${DraftIndex} />`],
-    [/^entwurf\/anja$/, () => html`<${DraftAnja} />`],
-    [/^entwurf\/grammatik$/, () => html`<${DraftGrammar} />`],
-    [/^entwurf\/lektion$/, () => html`<${DraftLesson} />`],
-    [/^entwurf\/wort$/, () => html`<${DraftWord} />`],
-    [/^entwurf\/entdecken$/, () => html`<${DraftExplore} />`],
-    [/^entwurf\/offline$/, () => html`<${DraftOffline} />`],
     [/^ich\/wortschatz$/, () => html`<${StatsVocab} />`],
     [/^ich\/lernzeit$/, () => html`<${StatsTime} />`],
     [/^ich\/erfolge$/, () => html`<${StatsWins} />`],

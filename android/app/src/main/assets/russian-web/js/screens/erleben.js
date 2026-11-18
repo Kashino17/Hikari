@@ -17,7 +17,8 @@ import * as Ph from '../domain/phonetics.js';
 let DATA = null;
 let loading = null;
 // Nachschub: Stücke, die der Server selbst aufbereitet hat. `shown` = was gerade im Feed steht.
-let FEED = { shown: [], saved: [], ready: 0, busy: false, interests: { video: [], music: [] }, leftToday: 0, resetAt: 0 };
+let FEED = { shown: [], saved: [], ready: 0, busy: false, interests: { video: [], music: [] }, leftToday: 0, resetAt: 0,
+  collection: [], todayIds: [], todayCount: 0, lastRunAt: 0, nextRunAt: 0, suggestions: [] };
 const feedSubs = new Set();
 const getFeed = () => api.get('/russian/erleben/feed').catch(() => null);
 /** Adresse eines Videos oder Standbilds auf dem Hikari-Server. */
@@ -27,7 +28,10 @@ function takeFeed(f) {
   const hand = (DATA ?? []).filter((p) => !p.auto);
   const have = new Map((DATA ?? []).filter((p) => p.auto).map((p) => [p.id, p]));
   DATA = [...hand, ...f.pieces.map((p) => have.get(p.id) ?? prepare(p))];
-  FEED = { shown: f.shown, saved: f.saved ?? [], ready: f.ready, busy: f.busy, interests: f.interests ?? { video: [], music: [] }, leftToday: f.leftToday ?? 0, resetAt: f.resetAt ?? 0 };
+  FEED = { shown: f.shown, saved: f.saved ?? [], ready: f.ready, busy: f.busy, interests: f.interests ?? { video: [], music: [] }, leftToday: f.leftToday ?? 0, resetAt: f.resetAt ?? 0,
+    // Seit dem täglichen Lauf: ganze Sammlung, Heute neu, Zeiten, Themen-Vorschläge. Ältere Server liefern sie nicht.
+    collection: f.collection ?? [], todayIds: f.todayIds ?? f.shown ?? [], todayCount: f.todayCount ?? (f.todayIds ?? f.shown ?? []).length,
+    lastRunAt: f.lastRunAt ?? 0, nextRunAt: f.nextRunAt ?? f.resetAt ?? 0, suggestions: f.suggestions ?? [] };
   for (const fn of [...feedSubs]) fn(FEED);
 }
 const loadPieces = () => (loading ??= Promise.all([fetch('/data/erleben.json').then((r) => r.json()), getFeed()])
@@ -41,6 +45,27 @@ const feed = {
   /** Stück in die Bibliothek legen oder herausnehmen — dort bleibt es dauerhaft. */
   async save(id, on) {
     const f = await api.post('/russian/erleben/save', { id, on }).catch(() => null);
+    takeFeed(f);
+    return !!f;
+  },
+  /** Daumen hoch ('up'), runter ('down', mit Gründen: löscht und meidet Ähnliches) oder zurück (null). */
+  async rate(id, rating, reasons = []) {
+    const f = await api.post('/russian/erleben/rate', { id, rating, reasons }).catch(() => null);
+    takeFeed(f);
+    return !!f;
+  },
+  /** Löschen ohne Bewertung — nur Platz schaffen, zählt nicht für die Suche. */
+  async del(id) {
+    const f = await api.post('/russian/erleben/delete', { id }).catch(() => null);
+    takeFeed(f);
+    return !!f;
+  },
+  /** Wie ein Stück genutzt wurde: übersprungen, angesehen, durchgearbeitet (mit Selbsteinschätzung). */
+  signal(id, kind, understood) {
+    api.post('/russian/erleben/signal', { id, kind, ...(understood ? { understood } : {}) }).catch(() => {});
+  },
+  async suggestion(id, accept) {
+    const f = await api.post('/russian/erleben/suggestion', { id, accept }).catch(() => null);
     takeFeed(f);
     return !!f;
   },
@@ -296,88 +321,92 @@ function InterestsSheet({ f, onClose }) {
   <//>`;
 }
 
-/** Nachschub: was der Server zu deinen Themen gefunden, aufbereitet und geprüft hat. */
-function FeedSection({ pieces, known, s, f }) {
-  const [busy, setBusy] = useState(false);
-  const [topics, setTopics] = useState(false);
-  const shown = f.shown.map((id) => pieces.find((p) => p.id === id)).filter(Boolean);
-  const has = f.interests.video.length + f.interests.music.length > 0;
-  const more = async () => {
-    setBusy(true);
-    const keep = shown.filter((p) => { const ps = pieceState(s, p.id); return ps.started && !ps.done; }).map((p) => p.id);
-    await feed.refresh(keep);
-    setBusy(false);
-  };
-  const waiting = busy || (f.busy && f.ready === 0);
-  // Das Prüfkontingent erneuert sich einmal am Tag (Mitternacht in Kalifornien) — hier in deiner Uhrzeit.
-  const again = f.resetAt ? `ab ${new Date(f.resetAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr` : 'morgen';
-  const status = f.ready > 0 ? `${f.ready === 1 ? 'Ein weiteres liegt' : `${f.ready} weitere liegen`} bereit.`
-    : f.busy ? 'Nachschub wird gerade gesucht und geprüft.'
-    : f.leftToday === 0 ? `Das Prüfkontingent ist aufgebraucht, ${again} geht es weiter.`
-    : `Bis ${again.replace('ab ', '')} sind noch bis zu ${f.leftToday} Stücke möglich.`;
-  return html`<div class="sec"><div class="hd"><div class="h2">Frisch für dich</div>
-      ${has && html`<span class="rowx g8"><button class="ls-more" onClick=${() => setTopics(true)}><${Icon} n="tune" size="18" />Themen</button>
-        <button class="ls-more" disabled=${waiting || (f.ready === 0 && shown.length === 0)} onClick=${more}><${Icon} n=${waiting ? 'progress_activity' : 'refresh'} c=${waiting ? 'spin' : ''} size="18" />Neue</button></span>`}</div>
-    ${!has ? html`<div class="sub">Videos und Lieder zu dem, was dich wirklich interessiert.</div>
-        <button class="ls-start" onClick=${() => setTopics(true)}>
-          <span class="ic solid"><${Icon} n="interests" /></span>
-          <span class="grow"><b>Sag, was dich interessiert</b><span>Anime, True Crime, Memes, deine Musik: Du gibst die Richtung vor, der Server sucht, bereitet auf und prüft.</span></span>
-          <${Icon} n="chevron_right" c="faint" /></button>`
-      : html`<div class="sub">${[...f.interests.video, ...f.interests.music].join(', ')}. ${status}</div>
-        ${shown.length > 0 ? html`<div class="list">${shown.map((x) => html`<${PieceRow} piece=${x} known=${known} ps=${pieceState(s, x.id)} />`)}</div>`
-          : html`<div class="ls-wait"><${Icon} n=${f.busy ? 'progress_activity' : 'hourglass_empty'} c=${f.busy ? 'spin' : ''} /><span>${f.busy
-            ? 'Die ersten Stücke werden gesucht, aufbereitet und doppelt geprüft. Das dauert ein bis zwei Minuten je Stück; nicht jedes Video besteht die Prüfung.'
-            : f.leftToday === 0 ? `Gerade kann nichts mehr geprüft werden. ${again[0].toUpperCase()}${again.slice(1)} geht es weiter.` : 'Gleich geht es los.'}</span></div>`}`}
-    ${topics && html`<${InterestsSheet} f=${f} onClose=${() => setTopics(false)} />`}
-  </div>`;
+// ── Entdecken: täglicher Stapel, Reihen je Thema, Sammlung, Bewerten ──────
+// Ein Lauf am Tag bereitet neue Stücke vor (Server, zur Erneuerung des Google-Kontingents). Hier wird
+// gestöbert, gefiltert und bewertet; der nächste Lauf lernt daraus (Bauplan 18.11.2026).
+
+const X_FILTERS = [['all', 'Alle'], ['scene', 'Videos'], ['song', 'Lieder'], ['saved', 'Gemerkt'], ['easy', 'Leicht'], ['short', 'Unter 1 Min.']];
+const X_SORT = [['new', 'Neu'], ['easy', 'Leicht'], ['best', 'Beste Bewertung']];
+const X_REASONS = ['Zu schwer', 'Zu leicht', 'Langweilig', 'Schlechter Ton', 'Kaum Russisch'];
+const knownShare = (piece, known) => (piece.keys.length ? knownCount(piece, known) / piece.keys.length : 0);
+const clock = (ms) => new Date(ms).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+const dayOf = (ms) => new Date(ms).toLocaleDateString('de-DE', { weekday: 'short' });
+/** Bewertung eines Stücks: gemerkt (besonders gut) und Daumen hoch. */
+const markOf = (f, id) => ({ saved: f.saved.includes(id), up: f.collection.find((c) => c.id === id)?.rating === 'up' });
+const newestFirst = (f) => { const at = new Map(f.collection.map((c, i) => [c.id, c.addedAt ?? -i])); return (a, b) => (at.get(b.id) ?? -1e15) - (at.get(a.id) ?? -1e15); };
+
+function XCard({ piece, known, f, big, onOpen }) {
+  const pct = Math.round(knownShare(piece, known) * 100);
+  const mark = markOf(f, piece.id);
+  return html`<button class=${cls('x-card', big && 'big')} onClick=${() => onOpen(piece)}>
+    <span class="th"><${Pic} file=${piece.poster} /><em>${fmt(piece.dur)}</em>
+      ${(mark.saved || mark.up) && html`<span class="x-flags">${mark.saved && html`<${Icon} n="bookmark" fill size="14" />`}${mark.up && html`<${Icon} n="thumb_up" fill size="13" />`}</span>`}</span>
+    <b class="x-t">${piece.head}</b>
+    <span class="x-meta"><${Icon} n=${KIND[piece.kind][1]} size="14" />${KIND[piece.kind][0]}<span class="x-know"><i><i style=${`width:${pct}%`}></i></i>${pct} % bekannt</span></span>
+  </button>`;
 }
 
-/** Eine Kachel der Bibliothek: Bild, Titel, Stand. */
-function LibTile({ piece, ps }) {
-  const st = statusOf(ps, piece);
-  return html`<button class="ls-tile" onClick=${() => nav(`erleben/${piece.id}`)}>
-    <span class="th"><${Pic} file=${piece.poster} /><em>${fmt(piece.dur)}</em></span>
-    <b>${piece.head}</b>
-    <span class=${cls('s', st?.c)}>${st ? html`<${Icon} n=${st.icon} fill size="14" />${st.text}` : KIND[piece.kind][0]}</span></button>`;
-}
-
-/** Behaltene Stücke: was wieder dran ist zuerst, dann die zuletzt hinzugefügten. */
-function libraryPieces(pieces, s, f) {
-  const today = progress.today();
-  const list = f.saved.map((id) => pieces.find((p) => p.id === id)).filter(Boolean);
-  const due = (p) => (rewatchDue(pieceState(s, p.id), today) ? 0 : 1);
-  return list.map((p, i) => [p, i]).sort((a, b) => due(a[0]) - due(b[0]) || a[1] - b[1]).map(([p]) => p);
-}
-
-function LibrarySection({ pieces, s, f }) {
-  const list = libraryPieces(pieces, s, f);
+function XRow({ title, sub, list, known, f, onOpen, big }) {
   if (!list.length) return null;
-  const today = progress.today();
-  const due = list.filter((p) => rewatchDue(pieceState(s, p.id), today)).length;
-  return html`<div class="sec"><div class="hd"><div class="h2">Bibliothek</div>${list.length > 4 && html`<button onClick=${() => nav('erleben/bibliothek')}>Alle ${list.length}</button>`}</div>
-    <div class="sub">${due > 0 ? `${due === 1 ? 'Ein Stück ist' : `${due} Stücke sind`} wieder dran: noch einmal ansehen festigt, was du daraus gelernt hast.` : 'Was du durchgearbeitet oder behalten hast. Diese Stücke bleiben.'}</div>
-    <div class="ls-tiles">${list.slice(0, 4).map((x) => html`<${LibTile} piece=${x} ps=${pieceState(s, x.id)} />`)}</div>
-  </div>`;
+  return html`<div class="sec"><div class="hd"><div class="h2">${title}</div><span class="sub">${list.length}</span></div>
+    ${sub && html`<div class="sub">${sub}</div>`}
+    <div class=${cls('x-row', big && 'big')}>${list.map((x) => html`<${XCard} piece=${x} known=${known} f=${f} big=${big} onOpen=${onOpen} key=${x.id} />`)}</div></div>`;
 }
 
-const LIB_FILTERS = [['all', 'Alle'], ['due', 'Wieder dran'], ['song', 'Lieder'], ['scene', 'Szenen']];
+/** Ein Stück antippen: ansehen oder bewerten. Daumen runter löscht und meidet Ähnliches. */
+function XSheet({ piece, known, f, onClose }) {
+  const [down, setDown] = useState(false);
+  const [why, setWhy] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const mark = markOf(f, piece.id);
+  const pct = Math.round(knownShare(piece, known) * 100);
+  const run = async (fn, done) => { setBusy(true); const ok = await fn(); setBusy(false); if (!ok) toast('Der Hikari-Server ist gerade nicht erreichbar'); else done?.(); };
+  return html`<${Sheet} onClose=${onClose}>
+    <div class="x-sheet">
+      <div class="x-poster"><${Pic} file=${piece.poster} /><em>${fmt(piece.dur)}</em></div>
+      <div class="over c mt12">${KIND[piece.kind][0]}${piece.topic ? ` · ${piece.topic}` : ''} · ${piece.level}</div>
+      <div class="h2 mt4">${piece.head}</div><div class="sub mt4">${piece.under}</div>
+      <div class="x-know lg mt12"><i><i style=${`width:${pct}%`}></i></i>${knownCount(piece, known)} von ${piece.keys.length} Wörtern kennst du</div>
+      ${!down ? html`<div class=${cls('x-rate mt16', !piece.auto && 'one')}>
+          ${piece.auto && html`<button class=${cls(mark.up && 'on')} disabled=${busy} onClick=${() => run(() => feed.rate(piece.id, mark.up ? null : 'up'))}><${Icon} n="thumb_up" fill=${mark.up} /><span>Gut</span></button>`}
+          <button class=${cls(mark.saved && 'on')} disabled=${busy} onClick=${() => run(() => feed.save(piece.id, !mark.saved))}><${Icon} n="bookmark" fill=${mark.saved} /><span>${mark.saved ? 'Gemerkt' : 'Merken'}</span></button>
+          ${piece.auto && html`<button disabled=${busy} onClick=${() => setDown(true)}><${Icon} n="thumb_down" /><span>Nicht gut</span></button>
+          <button disabled=${busy} onClick=${() => run(() => feed.del(piece.id), () => { toast('Gelöscht — zählt nicht als Bewertung'); onClose(); })}><${Icon} n="delete" /><span>Löschen</span></button>`}</div>
+        ${(mark.up || mark.saved) && html`<div class="x-hint"><${Icon} n="auto_awesome" size="16" />${mark.saved ? 'Besonders gut: Der nächste Lauf sucht mehr in diese Richtung.' : 'Gut: zählt für den nächsten Lauf.'}</div>`}
+        <button class="btn area mt16" onClick=${() => { onClose(); nav(`erleben/${piece.id}`); }}><${Icon} n="play_arrow" fill />${pieceState(store.get(), piece.id).started ? 'Weitermachen' : 'Ansehen'}</button>`
+      : html`<div class="x-down mt16"><b>Was passt nicht?</b><span class="sub">Optional — hilft dem nächsten Lauf.</span>
+          <div class="rowx g8 wrap mt8">${X_REASONS.map((r) => html`<button class=${cls('chip sm', why.includes(r) && 'on')} onClick=${() => setWhy(why.includes(r) ? why.filter((x) => x !== r) : [...why, r])}>${r}</button>`)}</div>
+          <p class="sub mt12">Das Stück wird gelöscht, und Ähnliches meidet der nächste Lauf.${why.includes('Kaum Russisch') ? ' Diesen Kanal nimmt er gar nicht mehr.' : ''}</p>
+          <div class="rowx g8 mt12"><button class="btn ghost" onClick=${() => setDown(false)}>Abbrechen</button>
+            <button class="btn bad" disabled=${busy} onClick=${() => run(() => feed.rate(piece.id, 'down', why), () => { toast(why.length ? `Gelöscht · ${why.join(', ')}` : 'Gelöscht'); onClose(); })}>Löschen und meiden</button></div></div>`}
+    </div><//>`;
+}
 
-export function ErlebenLibrary() {
-  const pieces = usePieces();
-  const s = useStore();
-  const f = useFeed();
-  const [filter, setFilter] = useState('all');
-  if (!pieces) return html`<div class="screen"><${TopBar} title="Bibliothek" onBack=${() => back('erleben')} /></div>`;
-  const today = progress.today();
-  const all = libraryPieces(pieces, s, f);
-  const list = all.filter((p) => filter === 'all' || (filter === 'due' ? rewatchDue(pieceState(s, p.id), today) : p.kind === filter));
-  return html`<div class="screen c-live">
-    <${TopBar} title="Bibliothek" sub=${all.length === 1 ? 'Ein Stück, das bleibt' : `${all.length} Stücke, die bleiben`} onBack=${() => back('erleben')} />
-    <div class="chips" style="padding-top:6px;padding-bottom:10px">${LIB_FILTERS.map(([id, label]) => html`<button class=${cls('chip c sm', filter === id && 'on')} onClick=${() => setFilter(id)}>${label}</button>`)}</div>
-    <div class="scroll"><div style="padding:6px 16px 0">
-      ${list.length ? html`<div class="ls-tiles">${list.map((x) => html`<${LibTile} piece=${x} ps=${pieceState(s, x.id)} />`)}</div>`
-        : html`<div class="empty"><${Icon} n="video_library" /><b>${all.length ? 'Hier ist gerade nichts.' : 'Noch nichts in der Bibliothek.'}</b>${all.length ? 'Wähle oben einen anderen Filter.' : 'Arbeite ein Stück durch oder tippe im Stück oben auf das Lesezeichen.'}</div>`}
-    </div><div class="end"></div></div></div>`;
+/** Neue Themen aus dem, was dir gefällt — erst mit deinem Ja wird danach gesucht. */
+function Suggestions({ f }) {
+  const list = (f.suggestions ?? []).slice(0, 3);
+  if (!list.length) return null;
+  const answer = async (id, accept) => { const ok = await feed.suggestion(id, accept); toast(!ok ? 'Der Hikari-Server ist gerade nicht erreichbar' : accept ? 'Ab dem nächsten Lauf wird auch danach gesucht' : 'Kommt nicht wieder'); };
+  return html`<div class="sec"><div class="h2">Neue Themen für dich</div><div class="sub">Aus dem, was dir gefällt. Du entscheidest.</div>
+    <div class="stack g8 mt12">${list.map((x) => html`<div class="x-sugg"><span class="ic sm"><${Icon} n=${x.kind === 'song' ? 'music_note' : 'movie'} /></span>
+      <span class="grow"><b>${x.topic}</b><span>${x.why}</span></span>
+      <button class="chip sm" onClick=${() => answer(x.id, false)}>Nein</button><button class="chip sm on" onClick=${() => answer(x.id, true)}>Ja</button></div>`)}</div></div>`;
+}
+
+/** Oben: Heute neu, wann der Lauf war und wann der nächste kommt. */
+function TodayCard({ f, sort, onSort, onTopics }) {
+  const has = f.interests.video.length + f.interests.music.length > 0;
+  if (!has) return html`<div class="sec" style="padding-top:6px"><button class="ls-start" onClick=${onTopics}>
+    <span class="ic solid"><${Icon} n="interests" /></span>
+    <span class="grow"><b>Sag, was dich interessiert</b><span>Anime, True Crime, Memes, deine Musik: Jeden Tag bereitet der Server dazu neue russische Videos und Lieder vor.</span></span>
+    <${Icon} n="chevron_right" c="faint" /></button></div>`;
+  const running = f.busy;
+  const head = running ? `Der heutige Lauf läuft — ${f.todayCount} fertig` : `Heute neu: ${f.todayCount}`;
+  const when = f.lastRunAt ? `Vorbereitet ${dayOf(f.lastRunAt)} ${clock(f.lastRunAt)}` : 'Noch kein Lauf';
+  return html`<div class="sec" style="padding-top:6px"><div class="x-today">
+    <span class="ic sm solid"><${Icon} n=${running ? 'progress_activity' : 'calendar_today'} c=${running ? 'spin' : ''} /></span>
+    <span class="grow"><b>${head}</b><span>${when}${running ? '' : !f.nextRunAt ? '' : f.nextRunAt <= Date.now() + 60_000 ? ' · der nächste Lauf startet gleich' : ` · nächster Lauf ${dayOf(f.nextRunAt)} ${clock(f.nextRunAt)}`}</span></span>
+    <button class="x-sort" onClick=${onSort}><${Icon} n="sort" size="18" />${X_SORT.find(([k]) => k === sort)[1]}</button></div></div>`;
 }
 
 export function ErlebenHub() {
@@ -386,142 +415,86 @@ export function ErlebenHub() {
   const s = useStore();
   const p = useProgress();
   const f = useFeed();
-  if (!pieces) return html`<div class="screen"><${TopBar} title="Lieder & Szenen" onBack=${() => back('heute')} /></div>`;
+  const [filter, setFilter] = useState('all');
+  const [sort, setSort] = useState('new');
+  const [open, setOpen] = useState(null);
+  const [topics, setTopics] = useState(false);
+  const [query, setQuery] = useState(null);
+  if (!pieces) return html`<div class="screen c-live"><${TopBar} title="Lieder & Szenen" onBack=${() => back('heute')} /></div>`;
+  const today = progress.today();
+  const auto = pieces.filter((x) => x.auto).sort(newestFirst(f));
   const hand = pieces.filter((x) => !x.auto);
-  const hero = pickHero(hand, known, s);
-  const rest = hand.filter((x) => x !== hero);
+  const fresh = (f.todayIds ?? []).map((id) => pieces.find((x) => x.id === id)).filter(Boolean);
+  const started = pieces.filter((x) => { const ps = pieceState(s, x.id); return ps.started && !ps.done; });
+  const due = pieces.filter((x) => rewatchDue(pieceState(s, x.id), today));
+  const topicNames = [...new Set(auto.map((x) => x.topic).filter(Boolean))];
+  const q = (query ?? '').trim().toLowerCase();
+  const pass = (x) => (filter === 'all' || (filter === 'saved' ? f.saved.includes(x.id) : filter === 'easy' ? knownShare(x, known) >= 0.5 || x.level === 'Einsteiger' : filter === 'short' ? x.dur < 60 : x.kind === filter))
+    && (!q || `${x.head} ${x.under} ${x.titleDe ?? ''} ${x.topic ?? ''}`.toLowerCase().includes(q));
+  const score = (x) => (markOf(f, x.id).saved ? 2 : markOf(f, x.id).up ? 1 : 0);
+  const order = sort === 'easy' ? (a, b) => knownShare(b, known) - knownShare(a, known) : sort === 'best' ? (a, b) => score(b) - score(a) : newestFirst(f);
+  const flat = filter !== 'all' || sort !== 'new' || !!q;
+  const results = [...auto, ...hand].filter(pass).sort(order);
   const taken = p.mySentences.filter((m) => (m.note ?? '').startsWith('Aus »')).length;
   const done = pieces.filter((x) => pieceState(s, x.id).done).length;
   return html`<div class="screen c-live">
-    <${TopBar} title="Lieder & Szenen" sub="Russisch, wie es wirklich klingt" onBack=${() => back('heute')} />
+    <${TopBar} title="Lieder & Szenen" sub="Russisch, wie es wirklich klingt" onBack=${() => back('heute')}
+      right=${html`<button class=${cls('iconbtn', query != null && 'tint')} onClick=${() => setQuery(query == null ? '' : null)} aria-label="Suchen"><${Icon} n="search" /></button>
+        <button class="iconbtn" onClick=${() => setTopics(true)} aria-label="Themen"><${Icon} n="tune" /></button>`} />
+    ${query != null && html`<div class="pad" style="padding-bottom:8px"><div class="g-search" style="margin-top:0"><${Icon} n="search" />
+      <input class="grow" placeholder="Titel, Kanal oder Thema" value=${query} onInput=${(e) => setQuery(e.target.value)} autofocus /></div></div>`}
+    <div class="chips" style="padding-bottom:8px">${X_FILTERS.map(([id, l]) => html`<button class=${cls('chip c sm', filter === id && 'on')} onClick=${() => setFilter(id)}>${l}</button>`)}</div>
     <div class="scroll">
-      <${HeroCard} piece=${hero} known=${known} ps=${pieceState(s, hero.id)} />
-
-      <${FeedSection} pieces=${pieces} known=${known} s=${s} f=${f} />
-
-      <${LibrarySection} pieces=${pieces} s=${s} f=${f} />
-
-      <div class="sec"><div class="h2">Ausgewählte Stücke</div>
-        <div class="sub">Von Hand aufbereitet, mit Geschichte und Tipps.</div>
-        <div class="list">${[...rest].sort((a, b) => knownCount(b, known) / b.keys.length - knownCount(a, known) / a.keys.length)
-          .map((x) => html`<${PieceRow} piece=${x} known=${known} ps=${pieceState(s, x.id)} />`)}</div>
-      </div>
-
-      <div class="sec"><div class="h2">So arbeitest du mit einem Stück</div>
-        <div class="ls-how">${HOW.map(([t, d], i) => html`<div><i>${i + 1}</i><span><b>${t}</b>${d}</span></div>`)}</div>
-      </div>
-
+      <${TodayCard} f=${f} sort=${sort} onSort=${() => setSort(X_SORT[(X_SORT.findIndex(([k]) => k === sort) + 1) % X_SORT.length][0])} onTopics=${() => setTopics(true)} />
+      ${flat ? html`<div class="sec"><div class="hd"><div class="h2">${results.length === 1 ? 'Ein Stück' : `${results.length} Stücke`}</div></div>
+          ${results.length ? html`<div class="x-grid">${results.map((x) => html`<${XCard} piece=${x} known=${known} f=${f} onOpen=${setOpen} key=${x.id} />`)}</div>`
+            : html`<div class="empty"><${Icon} n="search_off" /><b>Nichts gefunden.</b>Probier einen anderen Filter.</div>`}</div>`
+        : html`
+          <${XRow} title="Heute neu" sub="Frisch aufbereitet und doppelt geprüft." list=${fresh} known=${known} f=${f} onOpen=${setOpen} big />
+          <${XRow} title="Weitermachen" list=${started} known=${known} f=${f} onOpen=${setOpen} />
+          <${XRow} title="Wieder dran" sub="Noch einmal ansehen festigt, was du daraus gelernt hast." list=${due} known=${known} f=${f} onOpen=${setOpen} />
+          <${Suggestions} f=${f} />
+          ${topicNames.map((t) => html`<${XRow} title=${t} list=${auto.filter((x) => x.topic === t)} known=${known} f=${f} onOpen=${setOpen} key=${t} />`)}
+          <${XRow} title="Von Hand aufbereitet" sub="Mit Geschichte und Tipps." list=${hand} known=${known} f=${f} onOpen=${setOpen} />
+          <div class="sec"><button class="x-coll" onClick=${() => nav('erleben/bibliothek')}><span class="ic sm"><${Icon} n="video_library" /></span>
+            <span class="grow"><b>Deine Sammlung</b><span>${pieces.length} Stücke, die bleiben · ${f.saved.length} gemerkt</span></span><${Icon} n="chevron_right" c="faint" /></button></div>`}
       <div class="sec"><div class="hd"><div class="h2">Mitgenommen</div>${taken > 0 && html`<button onClick=${() => nav('satzbuch')}>Im Satzbuch</button>`}</div>
         <div class="stat3 mt12">
           <div><b><${Icon} n="bookmark" fill c="cc" />${taken}</b><span>Sätze im Satzbuch</span></div>
           <div><b><${Icon} n="translate" c="cc" />${Object.keys(s.words).length}</b><span>Wörter gemerkt</span></div>
           <div><b><${Icon} n="check_circle" fill c="amber" />${done}</b><span>${done === 1 ? 'Stück' : 'Stücke'} fertig</span></div>
-        </div>
-      </div>
-
-      <div class="sec"><button class="ls-add" onClick=${() => toast('Kommt mit dem Ausbau: Lieder aus deiner Musik, Videos aus der Bibliothek')}>
-        <span class="ic sm"><${Icon} n="add" /></span>
-        <span class="grow"><b>Eigenes Lied oder Video</b><span>Später auch aus deiner Musik und deiner Bibliothek. In dieser Vorschau noch nicht.</span></span></button></div>
+        </div></div>
+      <div class="sec"><div class="h2">So arbeitest du mit einem Stück</div>
+        <div class="ls-how">${HOW.map(([t, d], i) => html`<div><i>${i + 1}</i><span><b>${t}</b>${d}</span></div>`)}</div></div>
       <div class="end"></div>
-    </div></div>`;
+    </div>
+    ${open && html`<${XSheet} piece=${open} known=${known} f=${f} onClose=${() => setOpen(null)} />`}
+    ${topics && html`<${InterestsSheet} f=${f} onClose=${() => setTopics(false)} />`}
+  </div>`;
 }
 
-// ── Entwurf: Entdecken (Bauplan 18.11.2026) ───────────────────────────────
-// Statt »Neue« und drei Stücken: täglicher Stapel, Reihen je Thema, Filter, Sammlung, Bewerten.
-// Mit den echten Stücken vom Server; Bewertungen bleiben in diesem Entwurf nur auf dem Bildschirm.
+const LIB_FILTERS = [['all', 'Alle'], ['saved', 'Gemerkt'], ['due', 'Wieder dran'], ['song', 'Lieder'], ['scene', 'Szenen']];
 
-const X_FILTERS = [['all', 'Alle'], ['scene', 'Videos'], ['song', 'Lieder'], ['saved', 'Gemerkt'], ['easy', 'Leicht'], ['short', 'Unter 1 Min.']];
-const X_SORT = [['new', 'Neu'], ['easy', 'Leicht'], ['best', 'Beste Bewertung']];
-const X_REASONS = ['Zu schwer', 'Zu leicht', 'Langweilig', 'Schlechter Ton', 'Kaum Russisch'];
-const knownShare = (piece, known) => (piece.keys.length ? knownCount(piece, known) / piece.keys.length : 0);
-const clock = (ms) => new Date(ms).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-
-function XCard({ piece, known, mark, big, onOpen }) {
-  const pct = Math.round(knownShare(piece, known) * 100);
-  return html`<button class=${cls('x-card', big && 'big')} onClick=${() => onOpen(piece)}>
-    <span class="th"><${Pic} file=${piece.poster} /><em>${fmt(piece.dur)}</em>
-      ${(mark?.saved || mark?.up) && html`<span class="x-flags">${mark.saved && html`<${Icon} n="bookmark" fill size="14" />`}${mark.up && html`<${Icon} n="thumb_up" fill size="13" />`}</span>`}</span>
-    <b class="x-t">${piece.head}</b>
-    <span class="x-meta"><${Icon} n=${KIND[piece.kind][1]} size="14" />${KIND[piece.kind][0]}<span class="x-know"><i><i style=${`width:${pct}%`}></i></i>${pct} % bekannt</span></span>
-  </button>`;
-}
-
-function XRow({ title, sub, list, known, marks, onOpen, big }) {
-  if (!list.length) return null;
-  return html`<div class="sec"><div class="hd"><div class="h2">${title}</div><span class="sub">${list.length}</span></div>
-    ${sub && html`<div class="sub">${sub}</div>`}
-    <div class=${cls('x-row', big && 'big')}>${list.map((x) => html`<${XCard} piece=${x} known=${known} mark=${marks[x.id]} big=${big} onOpen=${onOpen} />`)}</div></div>`;
-}
-
-function XSheet({ piece, known, mark, onMark, onClose }) {
-  const [down, setDown] = useState(false);
-  const [why, setWhy] = useState([]);
-  const pct = Math.round(knownShare(piece, known) * 100);
-  return html`<${Sheet} onClose=${onClose}>
-    <div class="x-sheet">
-      <div class="x-poster"><${Pic} file=${piece.poster} /><em>${fmt(piece.dur)}</em></div>
-      <div class="over c mt12">${KIND[piece.kind][0]}${piece.topic ? ` · ${piece.topic}` : ''} · ${piece.level}</div>
-      <div class="h2 mt4">${piece.head}</div><div class="sub mt4">${piece.under}</div>
-      <div class="x-know lg mt12"><i><i style=${`width:${pct}%`}></i></i>${knownCount(piece, known)} von ${piece.keys.length} Wörtern kennst du</div>
-      ${!down ? html`<div class="x-rate mt16">
-          <button class=${cls(mark.up && 'on')} onClick=${() => onMark({ up: !mark.up })}><${Icon} n="thumb_up" fill=${mark.up} /><span>Gut</span></button>
-          <button class=${cls(mark.saved && 'on')} onClick=${() => onMark({ saved: !mark.saved })}><${Icon} n="bookmark" fill=${mark.saved} /><span>${mark.saved ? 'Gemerkt' : 'Merken'}</span></button>
-          <button onClick=${() => setDown(true)}><${Icon} n="thumb_down" /><span>Nicht gut</span></button>
-          <button onClick=${() => { toast('Gelöscht — zählt nicht als Bewertung'); onClose(); }}><${Icon} n="delete" /><span>Löschen</span></button></div>
-        ${(mark.up || mark.saved) && html`<div class="x-hint"><${Icon} n="auto_awesome" size="16" />${mark.saved ? 'Besonders gut: Der nächste Lauf sucht mehr in diese Richtung.' : 'Gut: zählt für den nächsten Lauf.'}</div>`}
-        <button class="btn area mt16" onClick=${() => nav(`erleben/${piece.id}`)}><${Icon} n="play_arrow" fill />Ansehen</button>`
-      : html`<div class="x-down mt16"><b>Was passt nicht?</b><span class="sub">Optional — hilft dem nächsten Lauf.</span>
-          <div class="rowx g8 wrap mt8">${X_REASONS.map((r) => html`<button class=${cls('chip sm', why.includes(r) && 'on')} onClick=${() => setWhy(why.includes(r) ? why.filter((x) => x !== r) : [...why, r])}>${r}</button>`)}</div>
-          <p class="sub mt12">Das Stück wird gelöscht, und Ähnliches meidet der nächste Lauf.</p>
-          <div class="rowx g8 mt12"><button class="btn ghost" onClick=${() => setDown(false)}>Abbrechen</button>
-            <button class="btn bad" onClick=${() => { toast(why.length ? `Gelöscht · ${why.join(', ')}` : 'Gelöscht'); onClose(); }}>Löschen und meiden</button></div></div>`}
-    </div><//>`;
-}
-
-export function DraftExplore() {
+/** Die Sammlung: alles, was je aufbereitet wurde — es bleibt, bis du es löschst. */
+export function ErlebenLibrary() {
   const pieces = usePieces();
   const known = useKnown();
   const s = useStore();
   const f = useFeed();
   const [filter, setFilter] = useState('all');
-  const [sort, setSort] = useState('new');
   const [open, setOpen] = useState(null);
-  const [marks, setMarks] = useState(() => Object.fromEntries((FEED.saved ?? []).map((id) => [id, { saved: true }])));
-  if (!pieces) return html`<div class="screen c-live"><${TopBar} title="Lieder & Szenen" onBack=${() => back('entwurf')} /></div>`;
-  const auto = pieces.filter((x) => x.auto);
-  const fresh = [...auto].reverse().slice(0, 6);
-  const started = pieces.filter((x) => { const ps = pieceState(s, x.id); return ps.started && !ps.done; });
-  const topics = [...new Set(auto.map((x) => x.topic).filter(Boolean))];
-  const hand = pieces.filter((x) => !x.auto);
-  const pass = (x) => filter === 'all' || (filter === 'saved' ? marks[x.id]?.saved : filter === 'easy' ? knownShare(x, known) >= 0.5 || x.level === 'Einsteiger' : filter === 'short' ? x.dur < 60 : x.kind === filter);
-  const order = (a, b) => (sort === 'easy' ? knownShare(b, known) - knownShare(a, known) : sort === 'best' ? (marks[b.id]?.saved ? 2 : marks[b.id]?.up ? 1 : 0) - (marks[a.id]?.saved ? 2 : marks[a.id]?.up ? 1 : 0) : 0);
-  const flat = filter !== 'all' || sort !== 'new';
-  const results = pieces.filter(pass).sort(order);
-  // Der Lauf startet, wenn sich Googles Kontingent erneuert (Mitternacht in Kalifornien) — gezeigt in deiner Uhrzeit.
-  const next = f.resetAt || Date.now() + 6 * 3600e3;
-  const last = next - 24 * 3600e3 + 5 * 60e3;
-  const mark = (id, patch) => setMarks((m) => ({ ...m, [id]: { ...m[id], ...patch } }));
+  if (!pieces) return html`<div class="screen"><${TopBar} title="Deine Sammlung" onBack=${() => back('erleben')} /></div>`;
+  const today = progress.today();
+  const all = [...pieces].sort(newestFirst(f));
+  const list = all.filter((p) => filter === 'all' || (filter === 'saved' ? f.saved.includes(p.id) : filter === 'due' ? rewatchDue(pieceState(s, p.id), today) : p.kind === filter));
   return html`<div class="screen c-live">
-    <${TopBar} title="Lieder & Szenen" sub="Entdecken" onBack=${() => back('entwurf')}
-      right=${html`<button class="iconbtn" aria-label="Suchen"><${Icon} n="search" /></button><button class="iconbtn" aria-label="Themen"><${Icon} n="tune" /></button>`} />
-    <div class="chips" style="padding-bottom:8px">${X_FILTERS.map(([id, l]) => html`<button class=${cls('chip c sm', filter === id && 'on')} onClick=${() => setFilter(id)}>${l}</button>`)}</div>
-    <div class="scroll">
-      <div class="sec" style="padding-top:6px"><div class="x-today">
-        <span class="ic sm solid"><${Icon} n="calendar_today" /></span>
-        <span class="grow"><b>Heute neu: ${fresh.length}</b><span>Vorbereitet um ${clock(last)} · nächster Lauf um ${clock(next)}</span></span>
-        <button class="x-sort" onClick=${() => setSort(X_SORT[(X_SORT.findIndex(([k]) => k === sort) + 1) % X_SORT.length][0])}><${Icon} n="sort" size="18" />${X_SORT.find(([k]) => k === sort)[1]}</button></div></div>
-      ${flat ? html`<div class="sec"><div class="hd"><div class="h2">${results.length} Stücke</div></div>
-          <div class="x-grid">${results.map((x) => html`<${XCard} piece=${x} known=${known} mark=${marks[x.id]} onOpen=${setOpen} />`)}</div></div>`
-        : html`
-          <${XRow} title="Heute neu" sub="Frisch aufbereitet und doppelt geprüft." list=${fresh} known=${known} marks=${marks} onOpen=${setOpen} big />
-          <${XRow} title="Weitermachen" list=${started} known=${known} marks=${marks} onOpen=${setOpen} />
-          ${topics.map((t) => html`<${XRow} title=${t} list=${auto.filter((x) => x.topic === t)} known=${known} marks=${marks} onOpen=${setOpen} />`)}
-          <${XRow} title="Von Hand aufbereitet" sub="Mit Geschichte und Tipps." list=${hand} known=${known} marks=${marks} onOpen=${setOpen} />
-          <div class="sec"><button class="x-coll" onClick=${() => setFilter('saved')}><span class="ic sm"><${Icon} n="video_library" /></span>
-            <span class="grow"><b>Deine Sammlung</b><span>${pieces.length} Stücke, die bleiben · ${Object.values(marks).filter((m) => m.saved).length} gemerkt</span></span><${Icon} n="chevron_right" c="faint" /></button></div>`}
-      <div class="end"></div>
-    </div>
-    ${open && html`<${XSheet} piece=${open} known=${known} mark=${marks[open.id] ?? {}} onMark=${(p) => mark(open.id, p)} onClose=${() => setOpen(null)} />`}
+    <${TopBar} title="Deine Sammlung" sub=${all.length === 1 ? 'Ein Stück, das bleibt' : `${all.length} Stücke, die bleiben`} onBack=${() => back('erleben')} />
+    <div class="chips" style="padding-top:6px;padding-bottom:10px">${LIB_FILTERS.map(([id, label]) => html`<button class=${cls('chip c sm', filter === id && 'on')} onClick=${() => setFilter(id)}>${label}</button>`)}</div>
+    <div class="scroll"><div style="padding:6px 16px 0">
+      ${list.length ? html`<div class="x-grid">${list.map((x) => html`<${XCard} piece=${x} known=${known} f=${f} onOpen=${setOpen} key=${x.id} />`)}</div>`
+        : html`<div class="empty"><${Icon} n="video_library" /><b>Hier ist gerade nichts.</b>Wähle oben einen anderen Filter.</div>`}
+    </div><div class="end"></div></div>
+    ${open && html`<${XSheet} piece=${open} known=${known} f=${f} onClose=${() => setOpen(null)} />`}
   </div>`;
 }
 
@@ -531,10 +504,10 @@ export function ErlebenTeaser() {
   const known = useKnown();
   const s = useStore();
   if (!pieces?.length) return null;
-  const hero = pickHero(pieces.filter((x) => !x.auto || FEED.shown.includes(x.id)), known, s);
+  const hero = pickHero(pieces.filter((x) => !x.auto || FEED.todayIds.includes(x.id) || FEED.shown.includes(x.id)), known, s);
   const ps = pieceState(s, hero.id);
-  return html`<div class="sec c-live"><div class="hd"><div class="h2">Lieder & Szenen</div><button onClick=${() => nav('erleben')}>Alle Stücke</button></div>
-    <div class="sub" style="margin:3px 4px 12px">Echtes Russisch: ansehen, verstehen, Sätze mitnehmen.</div>
+  return html`<div class="sec c-live"><div class="hd"><div class="h2">Lieder & Szenen</div><button onClick=${() => nav('erleben')}>Entdecken</button></div>
+    <div class="sub" style="margin:3px 4px 12px">${FEED.todayCount > 0 ? html`<b class="cc">Heute neu: ${FEED.todayCount}</b> · ` : ''}Echtes Russisch: ansehen, verstehen, Sätze mitnehmen.</div>
     <button class="ls-teaser" onClick=${() => nav(`erleben/${hero.id}`)}>
       <span class="th"><${Pic} file=${hero.poster} /></span>
       <span class="tx"><span class="k">${KIND[hero.kind][0]}, ${fmt(hero.dur)}</span><b class="ell">${hero.head}</b>
@@ -1051,10 +1024,21 @@ function PieceView({ piece }) {
   const [watched, setWatched] = useState(false);
   const [rated, setRated] = useState(false);
   useEffect(() => () => audio.stop(), []);
+  // Für den nächsten Lauf: Nach weniger als 20 s wieder raus, ohne anzufangen = übersprungen.
+  const opened = useRef({ at: Date.now(), started: ps.started, watched: false, worked: false });
+  useEffect(() => () => { const o = opened.current; if (piece.auto && !o.started && Date.now() - o.at < 20_000) feed.signal(piece.id, 'skip'); }, []);
+  useEffect(() => {
+    if (piece.auto && pl.ended && !opened.current.watched) { opened.current.watched = true; feed.signal(piece.id, 'watched'); }
+  }, [pl.ended]);
   const saved = f.saved.includes(piece.id);
   const next = pickNext(pieces, s, f, piece.id, today);
-  const go = (n) => { pl.stopSeg(); setSheet(null); setStage(n); store.piece(piece.id, { stage: Math.max(n, ps.stage), started: true }); };
-  const watch = () => { store.piece(piece.id, { started: true }); setWatched(true); setRated(false); pl.play(); };
+  const go = (n) => {
+    pl.stopSeg(); setSheet(null); setStage(n); opened.current.started = true;
+    store.piece(piece.id, { stage: Math.max(n, ps.stage), started: true });
+    // Bis zum Mitnehmen gekommen = durchgearbeitet.
+    if (n === 2 && piece.auto && !opened.current.worked) { opened.current.worked = true; feed.signal(piece.id, 'worked'); }
+  };
+  const watch = () => { opened.current.started = true; store.piece(piece.id, { started: true }); setWatched(true); setRated(false); pl.play(); };
   const toLine = (i) => {
     store.piece(piece.id, { line: i, started: true });
     const l = piece.uniq[i];
@@ -1067,13 +1051,14 @@ function PieceView({ piece }) {
   };
   const rate = (n) => {
     store.piece(piece.id, { rating: n, ratedAt: today });
+    if (piece.auto) feed.signal(piece.id, 'worked', n);
     // Das nächste neue Stück beginnt wieder mit deutschem Text.
     store.update((x) => ({ ...x, subs: { ...x.subs, de: true } }));
     setRated(true);
   };
   const toggleSaved = async () => {
     const ok = await feed.save(piece.id, !saved);
-    toast(!ok ? 'Der Hikari-Server ist gerade nicht erreichbar' : saved ? 'Aus der Bibliothek entfernt' : 'In der Bibliothek: Dieses Stück bleibt');
+    toast(!ok ? 'Der Hikari-Server ist gerade nicht erreichbar' : saved ? 'Nicht mehr gemerkt' : 'Gemerkt — besonders gut: Der nächste Lauf sucht mehr davon');
   };
   const idx = Math.min(ps.line, piece.uniq.length - 1);
   // In »Verstehen« und »Mitnehmen« spielt ein Tipp aufs Video die aktuelle Zeile.
@@ -1089,7 +1074,7 @@ function PieceView({ piece }) {
   const fresh = !(ps.done ? watched : ps.started) && !pl.playing && !pl.ended;
   return html`<div class="screen c-live ls-piece">
     <${TopBar} title=${piece.head} sub=${piece.auto ? `${KIND[piece.kind][0]}${piece.topic ? ` zu »${piece.topic}«` : ''}, ${piece.by}` : `${piece.titleDe}, ${piece.part}`} onBack=${() => back('erleben')}
-      right=${html`<button class=${cls('iconbtn', saved && 'tint')} onClick=${toggleSaved} aria-label=${saved ? 'Aus der Bibliothek entfernen' : 'In die Bibliothek'}><${Icon} n="bookmark" fill=${saved} /></button>`} />
+      right=${html`<button class=${cls('iconbtn', saved && 'tint')} onClick=${toggleSaved} aria-label=${saved ? 'Nicht mehr merken' : 'Merken (besonders gut)'}><${Icon} n="bookmark" fill=${saved} /></button>`} />
     <${Stage} piece=${piece} pl=${pl} onTap=${stageTap} quiet=${stage > 0} />
     <div class="ls-stages">${STAGES.map((t, i) => html`<button class=${cls(stage === i && 'on', (ps.done || i < ps.stage) && stage !== i && 'done')} onClick=${() => go(i)}>
       <i>${(ps.done || i < ps.stage) && stage !== i ? html`<${Icon} n="check" size="13" />` : i + 1}</i>${t}</button>`)}</div>

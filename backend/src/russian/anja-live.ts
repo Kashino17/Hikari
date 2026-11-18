@@ -497,6 +497,17 @@ const secondOpinion = z.object({
 });
 const verifyReply = z.object({ correct: z.boolean() });
 
+/** Themenvorschläge für »Lieder & Szenen«: einmal je Tageslauf, aus dem, was gefallen hat. */
+export const TOPIC_PROMPT = `A German learner of Russian watches Russian YouTube videos and songs on topics he chose himself; a server searches YouTube for them.
+Input JSON: {"liked": pieces he liked [{kind: "scene"|"song", title, topic}], "current": his topics {video: [...], music: [...]}, "declined": topic ids he rejected}.
+Propose up to 3 NEW topics he would probably enjoy, close to what he liked but not already covered. Each topic: a short German label (1 to 4 words) that works as a search theme for Russian-language content (e.g. "Russischer Rock", "Kriminal-Dokus", "Gitarren-Balladen"). Never repeat or rephrase a current or declined topic. kind: "scene" for videos, "song" for music. why: one short German sentence (max 10 words, informal "du") naming what he liked.
+Return ONLY JSON: {"ideas": [{"kind": "scene"|"song", "topic": "...", "why": "..."}]}`;
+const topicIdeas = z.object({
+  ideas: z
+    .array(z.object({ kind: z.enum(["scene", "song"]), topic: z.string().trim().min(1).max(60), why: z.string().trim().max(160) }))
+    .max(5),
+});
+
 export const askInput = z.object({
   question: z.string().trim().min(1).max(300),
   /** Worum es gerade geht (Lektion, Wort) — damit die Antwort dazu passt. */
@@ -1744,6 +1755,15 @@ export class AnjaLive {
       this.log(`[anja-live] Vorlesen nicht möglich: ${String(e).slice(0, 80)}`);
       return { text, verified: true, id: null, turn: null };
     }
+  }
+
+  /** Neue Themen für »Lieder & Szenen« (eine Anfrage je Tageslauf). */
+  async topicIdeas(input: {
+    liked: { kind: "scene" | "song"; title: string; topic: string }[];
+    current: { video: string[]; music: string[] };
+    declined: string[];
+  }): Promise<{ kind: "scene" | "song"; topic: string; why: string }[]> {
+    return this.ask_("Themenvorschläge", TOPIC_PROMPT, input, 400, (raw) => topicIdeas.parse(raw).ideas, ASK_TIMEOUT_MS);
   }
 
   async verify(said: string): Promise<boolean | null> {

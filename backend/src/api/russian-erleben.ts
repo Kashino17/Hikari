@@ -24,6 +24,7 @@ import {
   planRun,
   seededRng,
   suggestTopics,
+  suggestionId,
 } from "../russian/erleben-taste.js";
 import { resolveUv } from "../voice/whisper.js";
 
@@ -165,6 +166,16 @@ export interface ErlebenDeps {
   log?: (msg: string) => void;
   /** false = kein Zeitplan (Tests rufen `runDaily` selbst auf). */
   schedule?: boolean;
+  /**
+   * Neue Themen vorschlagen (Sprachmodell, höchstens einmal je Tageslauf). Ohne diese Abhängigkeit
+   * kommen Vorschläge nur aus Interpreten und Kanälen — gemessen 18.11.2026 unbrauchbar als Thema
+   * (»Песни под гитару от lliillililDetroit (аккорды, табы)«).
+   */
+  suggest?: (input: {
+    liked: { kind: PieceKind; title: string; topic: string }[];
+    current: Interests;
+    declined: string[];
+  }) => Promise<{ kind: PieceKind; topic: string; why: string }[]>;
 }
 
 interface Mark {
@@ -191,7 +202,7 @@ interface SignalsFile {
   marks: Record<string, Mark>;
   /** Gelöschte Stücke: das Video wird nicht noch einmal aufbereitet. */
   gone: Record<string, { yt?: string; at: number; why: "down" | "delete" }>;
-  topics: { declined: string[]; accepted: string[] };
+  topics: { declined: string[]; accepted: string[]; proposed?: TopicSuggestion[] };
 }
 
 function readJson<T>(file: string, fallback: T): T {
@@ -422,6 +433,7 @@ export class ErlebenFeed {
       }
       info.ids = this.freshIds();
     }
+    await this.proposeTopics();
     info.finishedAt = this.now();
     this.saveRun(info);
     this.deps.log?.(
@@ -679,7 +691,43 @@ export class ErlebenFeed {
   }
 
   suggestions(obs: TasteObs[] = this.observations()): TopicSuggestion[] {
-    return suggestTopics(obs, this.interests(), this.signals.topics.declined);
+    if (!this.deps.suggest) return suggestTopics(obs, this.interests(), this.signals.topics.declined);
+    const wishes = this.interests();
+    const have = new Set([
+      ...wishes.video.map((t) => suggestionId("scene", t)),
+      ...wishes.music.map((t) => suggestionId("song", t)),
+    ]);
+    const done = new Set([...this.signals.topics.declined, ...this.signals.topics.accepted]);
+    return (this.signals.topics.proposed ?? []).filter((x) => !done.has(x.id) && !have.has(x.id)).slice(0, 3);
+  }
+
+  /** Einmal je Lauf: neue Themen aus dem, was gefallen hat (mindestens zwei Stücke mit Pluspunkten). */
+  private async proposeTopics(): Promise<void> {
+    if (!this.deps.suggest) return;
+    const pieces = new Map(this.pieces().map((p) => [p.id, p]));
+    const liked = Object.entries(this.signals.marks)
+      .filter(([id, m]) => m.rating !== "down" && (this.feed.saved.includes(id) || m.rating === "up" || (m.worked ?? 0) > 0))
+      .map(([id, m]) => {
+        const p = pieces.get(id) as (ErlebenPiece & { titleDe?: string }) | undefined;
+        const info = m.info;
+        return { kind: (info?.kind ?? p?.kind ?? "scene") as PieceKind, title: String(p?.titleDe ?? p?.title ?? info?.topic ?? "").slice(0, 120), topic: String(info?.topic ?? p?.topic ?? "") };
+      });
+    for (const id of this.feed.saved)
+      if (!this.signals.marks[id] && pieces.get(id)) {
+        const p = pieces.get(id) as ErlebenPiece & { titleDe?: string };
+        liked.push({ kind: p.kind as PieceKind, title: String(p.titleDe ?? p.title ?? "").slice(0, 120), topic: String(p.topic ?? "") });
+      }
+    if (liked.length < 2) return;
+    try {
+      const ideas = await this.deps.suggest({ liked: liked.slice(0, 20), current: this.interests(), declined: this.signals.topics.declined });
+      this.signals.topics.proposed = ideas
+        .filter((x) => x.topic.trim())
+        .slice(0, 3)
+        .map((x) => ({ id: suggestionId(x.kind, x.topic.trim()), kind: x.kind, topic: x.topic.trim().slice(0, 60), why: x.why.trim().slice(0, 120) }));
+      this.saveSignals();
+    } catch (e) {
+      this.deps.log?.(`erleben: Themenvorschläge nicht möglich: ${String(e).slice(0, 80)}`);
+    }
   }
 
   // ── Feed ──────────────────────────────────────────────────────────────────

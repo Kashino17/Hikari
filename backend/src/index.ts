@@ -159,6 +159,8 @@ await registerRussianErlebenRoutes(app, {
   dir: join(cfg.dataDir, "erleben"),
   script: new URL("../erleben/prepare.py", import.meta.url).pathname,
   log: (msg) => app.log.info(msg),
+  // Neue Themen aus dem, was gefallen hat — eine Flash-Lite-Anfrage je Tageslauf.
+  suggest: (input) => anjaLive.topicIdeas(input),
 });
 // Anja live: gesprochenes Gespräch über Gemini Live (Schlüssel und Tageszähler liegen bei »Lieder & Szenen«).
 await registerRussianAnjaLiveRoutes(app, {

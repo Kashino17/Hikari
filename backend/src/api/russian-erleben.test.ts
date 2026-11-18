@@ -17,6 +17,7 @@ import {
   nextRunAt,
   quotaDay,
   quotaResetAt,
+  type ErlebenDeps,
   registerRussianErlebenRoutes,
   runDue,
 } from "./russian-erleben.js";
@@ -31,6 +32,8 @@ interface SetupOpts {
   prepared?: number | number[];
   interests?: { video: string[]; music: string[] };
   lastRunAt?: number;
+  /** Themenvorschläge vom Sprachmodell (Attrappe). */
+  suggest?: ErlebenDeps["suggest"];
 }
 
 async function setup(opts: SetupOpts = {}) {
@@ -82,6 +85,7 @@ async function setup(opts: SetupOpts = {}) {
     script: "/nicht/vorhanden/prepare.py",
     now: clock,
     schedule: opts.schedule ?? false,
+    ...(opts.suggest ? { suggest: opts.suggest } : {}),
     seed: (start, batch) => {
       runStart = start;
       return start + batch;
@@ -589,6 +593,36 @@ describe("Rückmeldungen", () => {
 });
 
 describe("Themenvorschläge", () => {
+  it("mit Sprachmodell: einmal je Lauf aus dem, was gefallen hat; annehmen und ablehnen wie gehabt", async () => {
+    const asked: unknown[] = [];
+    const s = await setup({
+      interests: { video: ["True crime"], music: ["Lieder zur Gitarre"] },
+      lastRunAt: Date.UTC(2026, 10, 14, 8, 5),
+      prepared: 0,
+      suggest: async (input) => {
+        asked.push(input);
+        return [
+          { kind: "song", topic: "Russischer Rock", why: "Dir gefallen Gitarrenlieder." },
+          { kind: "scene", topic: "Kriminal-Dokus", why: "Du magst True Crime." },
+        ];
+      },
+    });
+    s.piece("a", { kind: "song", topic: "Lieder zur Gitarre", title: "Песня", titleDe: "Ein Lied" });
+    s.piece("b", { kind: "scene", topic: "True crime", titleDe: "Ein Fall" });
+    await s.post("/russian/erleben/save", { id: "a" });
+    await s.post("/russian/erleben/rate", { id: "b", rating: "up" });
+    // Vor dem Lauf: noch keine Vorschläge (kein Kanal-Rätselraten).
+    expect((await s.feed()).suggestions).toEqual([]);
+    await s.feedObj.runDaily();
+    expect(asked).toHaveLength(1);
+    expect((asked[0] as { liked: unknown[] }).liked).toHaveLength(2);
+    let f = await s.feed();
+    expect(f.suggestions.map((x: { topic: string }) => x.topic)).toEqual(["Russischer Rock", "Kriminal-Dokus"]);
+    f = await s.post("/russian/erleben/suggestion", { id: f.suggestions[0].id, accept: true });
+    expect(f.interests.music).toContain("Russischer Rock");
+    expect(f.suggestions.map((x: { topic: string }) => x.topic)).toEqual(["Kriminal-Dokus"]);
+  });
+
   it("annehmen nimmt das Thema auf (gesucht ab dem nächsten Lauf), ablehnen für immer", async () => {
     const s = await setup({
       interests: { video: ["Anime"], music: ["Rock"] },
