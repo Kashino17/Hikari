@@ -12,12 +12,17 @@ import { AnjaLive } from './screens/anjalive.js';
 import { StatsVocab, StatsTime, StatsWins } from './screens/stats.js';
 import { ErlebenHub, ErlebenPiece, ErlebenLibrary, DraftExplore } from './screens/erleben.js';
 import { DraftIndex, DraftAnja, DraftGrammar, DraftLesson, DraftWord, DraftOffline } from './screens/entwurf.js';
+import { Grammar, GrammarLesson } from './screens/grammar.js';
+import { FormDrill } from './screens/words.js';
 
 const soon = (name) => () => html`<div class="screen"><div class="empty" style="margin-top:120px"><b>${name}</b>Wird gerade gebaut.</div></div>`;
 
 export const ROUTES = {
   tab: { satzbuch: Phrasebook },
   list: [
+    [/^grammatik$/, () => html`<${Grammar} />`],
+    [/^grammatik\/(\w+)$/, (m) => html`<${GrammarLesson} id=${m[1]} key=${m[1]} />`],
+    [/^formen\/(.+)$/, (m) => html`<${FormDrill} lemma=${decodeURIComponent(m[1])} key=${m[1]} />`],
     // Entwürfe für den Ausbau (Bauplan 18.11.2026)
     [/^entwurf$/, () => html`<${DraftIndex} />`],
     [/^entwurf\/anja$/, () => html`<${DraftAnja} />`],

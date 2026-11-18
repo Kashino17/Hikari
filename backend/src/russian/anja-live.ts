@@ -90,6 +90,8 @@ const HELP_TIMEOUT_MS = 6_000;
 /** Höchstens so viele Anfragen je Minute an ein Hilfen-Modell (Google erlaubt 15). */
 const HELP_PER_MINUTE = 12;
 const QUOTA_ZONE = "America/Los_Angeles";
+/** Nachfragen in der Grammatik: längere Antwort mit Lehrmaterial — mehr Zeit. */
+const ASK_TIMEOUT_MS = 15_000;
 /** So lange gilt eine gemessene Antwortzeit; danach bekommt ein Modell wieder eine Chance. */
 const SPEED_MEMORY_MS = 15 * 60_000;
 
@@ -111,6 +113,8 @@ export const liveStart = z.object({
     )
     .max(8)
     .default([]),
+  /** Nur zum Vorlesen (Nachfragen in der Grammatik): kein Gespräch, keine Begrüßung. */
+  reader: z.boolean().default(false),
   /** Bisheriger Verlauf, wenn ein Gespräch nach einer Unterbrechung weitergeht. */
   lines: z
     .array(z.object({ who: z.enum(["anja", "kadir"]), ru: z.string().trim().min(1).max(600) }))
@@ -133,6 +137,8 @@ export const liveInput = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("help") }),
 ]);
 export type LiveInput = z.infer<typeof liveInput>;
+/** Was eine Sitzung intern bekommt: die Eingaben des Lernenden, den Beginn, oder einen Text zum Vorlesen. */
+type SessionInput = LiveInput | { kind: "start" } | { kind: "read"; text: string };
 
 const helpsReply = z.object({
   check: z
@@ -230,7 +236,7 @@ export type HeardState = "sure" | "unsure" | "foreign" | "none";
 
 export interface LiveTurnView {
   n: number;
-  kind: "start" | LiveInput["kind"];
+  kind: "start" | "read" | LiveInput["kind"];
   done: boolean;
   error: string | null;
   /** Was die Spracherkennung vom Lernenden verstanden hat (bei getippter Antwort: der Text). */
@@ -394,6 +400,8 @@ export function systemPrompt(
   setup: LiveStart,
   lines: { who: "anja" | "kadir"; ru: string }[] = [],
 ): string {
+  if (setup.reader)
+    return "Du bist Anja, eine herzliche Russisch-Lehrerin. Du liest Kadir Texte vor, die du als Regie-Anweisung bekommst — wortgetreu, langsam und deutlich, deutsche Teile auf Deutsch, russische auf Russisch. Du fügst nie etwas hinzu.";
   const known = setup.knownWords.slice(0, 120).join(", ");
   return [
     "Du bist Anja, eine herzliche Russin Mitte zwanzig. Du führst ein gesprochenes Übungsgespräch mit Kadir, einem deutschen Russisch-Lernenden.",
@@ -488,6 +496,38 @@ const secondOpinion = z.object({
   exampleCorrect: z.boolean().default(false),
 });
 const verifyReply = z.object({ correct: z.boolean() });
+
+export const askInput = z.object({
+  question: z.string().trim().min(1).max(300),
+  /** Worum es gerade geht (Lektion, Wort) — damit die Antwort dazu passt. */
+  topic: z.string().trim().max(200).default(""),
+  /** Geprüftes Lehrmaterial dazu (Regel der Lektion, Formen-Tafel) — die Antwort muss dazu passen. */
+  reference: z.string().trim().max(2500).default(""),
+  level: z.enum(["A0", "A1", "A2", "B1", "B2", "C1", "C2"]).default("A1"),
+});
+export type AskInput = z.infer<typeof askInput>;
+
+/** Nachfrage in der Grammatik: Anja antwortet als Lehrerin — erst als Text, dann geprüft, dann vorgelesen. */
+export const ASK_PROMPT = `You are Anja, a warm and precise Russian teacher. Kadir is a German speaker learning Russian who does NOT know grammar terms.
+Input JSON: {"question": his question, "topic": what he is studying right now, "reference": verified teaching material for this topic (may be empty), "level": his CEFR level}.
+Base your answer on the reference and never contradict it; it is checked and correct. Give the real grammatical REASON (gender, case, verb form, stress …) — never a vague or invented one.
+Answer in simple German (informal "du"), at most four short sentences: start from the meaning in the sentence (never claim that German works the same way unless it really does), give ONE short Russian example with its German translation, and name a grammar term only at the very end in parentheses. Write every Russian word in Cyrillic inside «» — even if his question uses Latin letters. Every statement about Russian must be exactly right; if you are not sure, say less. If the question is not about Russian, answer briefly and kindly.
+Return ONLY JSON: {"answerDe": "..."}`;
+const askReply = z.object({ answerDe: z.string().trim().min(1).max(900) });
+
+/**
+ * Prüfung einer Nachfrage-Antwort. Gemessen 18.11.2026: Die allgemeine Prüfung (VERIFY_PROMPT) ließ
+ * »manche Wörter ändern ihren Vokal im Stamm« als Grund für »сок« vs. »воду« durch — falsch, der
+ * Grund ist Geschlecht und Endung. Deshalb hier mit Frage und Lehrmaterial, und ausdrücklich: Stimmt
+ * der genannte Grund?
+ */
+export const ASK_VERIFY_PROMPT = `You are a strict native-speaker reviewer of Russian and an experienced grammar teacher.
+Input JSON: {"question": a German-speaking beginner's question, "reference": verified teaching material (may be empty), "answer": a teacher's answer in German}.
+Return correct=false if ANY of these holds: a statement about Russian is wrong; the REASON given is not the real grammatical reason (for example a vague or invented explanation instead of gender, case or verb form); a comparison with German is false (e.g. claiming German behaves the same when it does not); it contradicts the reference; a Russian example is ungrammatical or mistranslated; it does not actually answer the question.
+Return ONLY JSON: {"correct": true|false, "why": "one short English sentence"}`;
+/** Steht da, wenn keine Antwort die Prüfung bestanden hat — nichts Ungeprüftes. */
+export const ASK_UNSURE =
+  "Da bin ich mir gerade nicht sicher genug, um es dir richtig zu erklären. Schau dir die Lektion dazu an oder frag mich etwas anders.";
 
 /** Steht statt eines Hinweises, dessen Erklärung die zweite Meinung nicht bestanden hat. */
 export const PLAIN_FOCUS = "Hier stimmt eine Form nicht.";
@@ -1270,10 +1310,11 @@ class Session {
     await this.sayExactly(turn, retrySpeech(exp.correctedRu, this.low, "wrong"));
   }
 
-  private async run(turn: Turn, input: LiveInput | { kind: "start" }, resumed: boolean) {
+  private async run(turn: Turn, input: SessionInput, resumed: boolean) {
     try {
       const exp = this.expect;
-      if (input.kind === "audio" && exp) await this.runRepeat(turn, input, exp);
+      if (input.kind === "read") await this.generate(turn, { text: regieSayExactly(input.text) }, false);
+      else if (input.kind === "audio" && exp) await this.runRepeat(turn, input, exp);
       else if (input.kind === "audio" || input.kind === "text") await this.runAnswer(turn, input);
       else if (input.kind === "help") {
         await this.generate(turn, { text: this.low ? REGIE.helpLow : REGIE.helpHigh }, true);
@@ -1329,7 +1370,7 @@ class Session {
     wake(turn);
   }
 
-  async send(input: LiveInput | { kind: "start" }): Promise<number> {
+  async send(input: SessionInput): Promise<number> {
     if (this.busy) throw new Error("busy");
     this.lastUsed = this.host.now();
     const resumed = this.lines.length > 0;
@@ -1541,13 +1582,16 @@ export class AnjaLive {
    * Eine Frage an die Hilfen-Modelle; die Antwort ist ein JSON-Objekt, das `parse` bestehen muss.
    * Überlastete Modelle (503) und verstümmelte Antworten kommen vor: bis zu fünf Anläufe, reihum.
    */
-  private async ask<T>(
+  private async ask_<T>(
     what: string,
     system: string,
     input: unknown,
     maxOutputTokens: number,
     parse: (raw: unknown) => T,
+    /** Längere Antworten (Nachfragen) brauchen mehr Zeit — und zählen nicht für das Tempo der Satzprüfung. */
+    timeoutMs = HELP_TIMEOUT_MS,
   ): Promise<T> {
+    const timed = timeoutMs === HELP_TIMEOUT_MS;
     const key = this.deps.key();
     if (!key) throw new Error("no_key");
     const request = this.deps.request ?? fetch;
@@ -1569,7 +1613,7 @@ export class AnjaLive {
         const res = await request(`${TEXT_URL}/${model}:generateContent`, {
           method: "POST",
           headers: { "content-type": "application/json", "x-goog-api-key": key },
-          signal: AbortSignal.timeout(HELP_TIMEOUT_MS),
+          signal: AbortSignal.timeout(timeoutMs),
           body: JSON.stringify({
             systemInstruction: { parts: [{ text: system }] },
             contents: [{ role: "user", parts: [{ text: JSON.stringify(input) }] }],
@@ -1588,7 +1632,7 @@ export class AnjaLive {
         }
         if (!res.ok) {
           lastError = `http_${res.status}`;
-          this.noteSpeed(model, HELP_TIMEOUT_MS * 2);
+          if (timed) this.noteSpeed(model, HELP_TIMEOUT_MS * 2);
           this.log(`[anja-live] ${what} ${model}: ${lastError}`);
           continue;
         }
@@ -1600,11 +1644,11 @@ export class AnjaLive {
           .filter((p) => !p.thought)
           .map((p) => p.text ?? "")
           .join("");
-        this.noteSpeed(model, Date.now() - t0);
+        if (timed) this.noteSpeed(model, Date.now() - t0);
         return parse(firstJson(text));
       } catch (e) {
         lastError = e instanceof Error ? e.message.slice(0, 80) : "failed";
-        if (/timeout|abort/i.test(lastError)) this.noteSpeed(model, HELP_TIMEOUT_MS * 2);
+        if (timed && /timeout|abort/i.test(lastError)) this.noteSpeed(model, HELP_TIMEOUT_MS * 2);
         this.log(`[anja-live] ${what} ${model}: ${lastError}`);
       }
     }
@@ -1617,12 +1661,12 @@ export class AnjaLive {
    * ursprüngliche Satz wirklich falsch?). Nur wenn beide einig sind, wird die Verbesserung gezeigt.
    */
   async helps(question: string, answer: string, reply: string): Promise<LiveHelps> {
-    const helps = await this.ask("Hilfen", HELPS_PROMPT, { question, answer, reply }, 1200, (raw) =>
+    const helps = await this.ask_("Hilfen", HELPS_PROMPT, { question, answer, reply }, 1200, (raw) =>
       settleHelps(raw, answer, question),
     );
     if (helps.check && !helps.check.ok) {
       const fix = helps.check;
-      const second = await this.ask(
+      const second = await this.ask_(
         "Zweite Meinung",
         CONFIRM_PROMPT,
         {
@@ -1669,8 +1713,41 @@ export class AnjaLive {
    * (Gespräch) braucht keine Prüfung; enthält sie Deutsch, ist es eine Erklärung.
    * → true = bestätigt, false = nicht bestätigt, null = Prüfung nicht erreichbar
    */
+  /**
+   * Nachfrage aus der Grammatik: Antwort als Text, Prüfung, notfalls ein zweiter Anlauf; nur Geprüftes
+   * wird gezeigt und — wenn möglich — in Anjas Stimme vorgelesen (eigene Vorlese-Sitzung).
+   */
+  async ask(input: AskInput): Promise<{ text: string; verified: boolean; id: string | null; turn: number | null }> {
+    const answer = (hint: string) =>
+      this.ask_("Nachfrage", ASK_PROMPT + hint, input, 600, (raw) => askReply.parse(raw).answerDe, ASK_TIMEOUT_MS);
+    const check = (answerDe: string) =>
+      this.ask_("Nachfrage prüfen", ASK_VERIFY_PROMPT, { question: input.question, reference: input.reference, answer: answerDe }, 200, (raw) =>
+        verifyReply.parse(raw).correct, ASK_TIMEOUT_MS,
+      ).catch(() => null);
+    let text = await answer("");
+    let ok = await check(text);
+    if (ok === false) {
+      this.log("[anja-live] Nachfrage: erste Antwort nicht bestätigt — zweiter Anlauf");
+      text = await answer("\nYour previous answer was wrong or gave a wrong reason. Stick closely to the reference; if unsure, explain less and only give a correct example.");
+      ok = await check(text);
+    }
+    if (ok !== true) return { text: ASK_UNSURE, verified: false, id: null, turn: null };
+    try {
+      const session = new Session(this, liveStart.parse({ reader: true, level: input.level }));
+      this.prune();
+      this.sessions.set(session.id, session);
+      const turn = await session.send({ kind: "read", text });
+      // Die Vorlese-Sitzung räumt sich nach dem Vorlesen selbst weg.
+      setTimeout(() => this.end(session.id), 3 * 60_000).unref?.();
+      return { text, verified: true, id: session.id, turn };
+    } catch (e) {
+      this.log(`[anja-live] Vorlesen nicht möglich: ${String(e).slice(0, 80)}`);
+      return { text, verified: true, id: null, turn: null };
+    }
+  }
+
   async verify(said: string): Promise<boolean | null> {
-    return this.ask("Erklärung prüfen", VERIFY_PROMPT, { said }, 200, (raw) => verifyReply.parse(raw).correct).catch(
+    return this.ask_("Erklärung prüfen", VERIFY_PROMPT, { said }, 200, (raw) => verifyReply.parse(raw).correct).catch(
       () => null,
     );
   }

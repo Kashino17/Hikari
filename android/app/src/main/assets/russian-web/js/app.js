@@ -267,6 +267,16 @@ export function usePackOffer() {
   return [open, () => setOpen(false)];
 }
 
+// ── Formen eines Wortes: überall per Tippen ────────────────────────────────
+const wordSubs = new Set();
+/** Öffnet das Blatt mit allen Formen eines russischen Wortes (oder einer Wortgruppe). */
+export function openWord(ru) { if (ru) for (const fn of wordSubs) fn(String(ru)); }
+export function useWordSheet() {
+  const [w, setW] = useState(null);
+  useEffect(() => { wordSubs.add(setW); return () => wordSubs.delete(setW); }, []);
+  return [w, () => setW(null)];
+}
+
 const toastSubs = new Set();
 export function toast(text) { for (const fn of toastSubs) fn({ text, at: Date.now() }); }
 export function useToast() {

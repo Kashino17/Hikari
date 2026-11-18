@@ -99,7 +99,7 @@ function TeacherCard({ t, extra, level, speaking, onReplay, replaying }) {
       <span class="grow"><b>Anja erklärt</b><span>${tc.lang === 'de' ? `auf Deutsch, weil du gerade bei ${level} bist` : 'kurz auf Russisch — klappt es nicht, erklärt sie es auf Deutsch'}</span></span><${Bars} on=${speaking || replaying} /></div>
     ${tc.goodDe && html`<div class="t-praise"><${Icon} n="thumb_up" fill size="16" /><span>${mk(tc.goodDe)}</span></div>`}
     <div class="t-fix"><div class="k">So heißt es</div>
-      <${IL} ru=${fix.correctedRu} size=${19} extra=${extra} />
+      <${IL} ru=${fix.correctedRu} size=${19} extra=${extra} tap />
       ${fix.correctedDe && html`<div class="de">${fix.correctedDe}</div>`}</div>
     ${fix.explanationDe && html`<div class="t-why"><div class="k">Warum</div><p>${mk(fix.explanationDe)}</p></div>`}
     ${fix.exampleRu && html`<div class="t-ex"><div class="k">Noch ein Beispiel</div>
@@ -142,7 +142,7 @@ function Hers({ t, extra, speaking, onReplay, replaying, hideText, onKeep, kept,
     <div class="who">ANJA <${Bars} on=${speaking || replaying} /></div>
     ${!t.said && html`<div class="sub">${speaking ? 'Hör zu …' : t.error ? 'Hier fehlt Anjas Antwort.' : 'Anja überlegt …'}</div>`}
     ${veiled && html`<button class="al-veil" onClick=${() => setShown(true)}><${Icon} n="visibility" size="18" />Text zeigen</button>`}
-    ${t.said && !veiled && html`<${IL} ru=${t.said} size=${19} gloss=${de} extra=${words} />`}
+    ${t.said && !veiled && html`<${IL} ru=${t.said} size=${19} gloss=${de} extra=${words} tap />`}
     ${t.said && !veiled && de && t.helps?.replyDe && html`<div class="de">${t.helps.replyDe}</div>`}
     ${t.said && html`<div class="rowx g8 wrap mt8">
       <button class=${cls('chip sm', replaying && 'on')} disabled=${!onReplay} onClick=${onReplay}><${Icon} n=${replaying ? 'graphic_eq' : 'replay'} />Nochmal hören</button>

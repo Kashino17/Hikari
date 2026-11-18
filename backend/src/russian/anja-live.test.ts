@@ -4,6 +4,9 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   AnjaLive,
+  ASK_PROMPT,
+  ASK_UNSURE,
+  ASK_VERIFY_PROMPT,
   CONFIRM_PROMPT,
   EAR_MODEL,
   REPEAT_TRIES,
@@ -169,7 +172,12 @@ function setup(
       // Die Wartezeit zwischen zwei Anfragen an dasselbe Modell soll den Test nicht bremsen.
       now += 5000;
       const system = JSON.parse(init.body).systemInstruction.parts[0].text;
-      if (system === VERIFY_PROMPT) {
+      if (system.startsWith(ASK_PROMPT))
+        return new Response(
+          JSON.stringify({ candidates: [{ content: { parts: [{ text: JSON.stringify({ answerDe: "«Воду» ist die Wen-Form von «вода»: Я пью воду — ich trinke Wasser. (Akkusativ)" }) }] } }] }),
+          { status: 200 },
+        );
+      if (system === VERIFY_PROMPT || system === ASK_VERIFY_PROMPT) {
         const v = verifies.shift() ?? true;
         if (v === "down") return new Response("{}", { status: 503 });
         return new Response(
@@ -752,6 +760,23 @@ describe("Anja als Lehrerin", () => {
     expect(t?.said).not.toContain("Substantiv");
     expect(t?.said).toContain("nicht sicher erklären");
     expect(await collect(s.live.audio(id, n))).toBe("AAAABBBB");
+  });
+
+  it("Nachfrage: geprüfte Antwort wird gezeigt und von Anja wortgetreu vorgelesen", async () => {
+    const s = setup({ verify: [true] });
+    const r = await s.live.ask({ question: "Warum воду?", topic: "Wen-Fall", level: "A1" });
+    expect(r).toMatchObject({ verified: true, text: expect.stringContaining("Wen-Form") });
+    expect(r.id).toBeTruthy();
+    const reader = s.sockets.filter((x) => !x.isEar).at(-1) as FakeSocket;
+    expect(reader.sent[0]?.setup.systemInstruction.parts[0].text).toContain("liest Kadir Texte vor");
+    const t = await s.live.turn(r.id as string, r.turn as number, "done");
+    expect(t?.said).toContain("Wen-Form");
+  });
+
+  it("Nachfrage: besteht keine Antwort die Prüfung, wird nichts Ungeprüftes gezeigt", async () => {
+    const s = setup({ verify: [false, false] });
+    const r = await s.live.ask({ question: "Warum воду?", topic: "", level: "A1" });
+    expect(r).toEqual({ text: ASK_UNSURE, verified: false, id: null, turn: null });
   });
 
   it("Niveau und Stolpersteine stehen in Anjas Auftrag", () => {

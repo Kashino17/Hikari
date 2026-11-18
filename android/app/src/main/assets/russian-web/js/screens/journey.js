@@ -424,7 +424,7 @@ function ChatPage({ cp, session, setSession, busy, send, scenario, savePhrase, l
               ${r.feedback.explanationDe && html`<div class="t-why"><div class="k">Warum</div><p>${mk(r.feedback.explanationDe)}</p></div>`}
               ${r.feedback.exampleRu && html`<div class="t-ex"><div class="k">Noch ein Beispiel</div><${IL} ru=${r.feedback.exampleRu} size=${16} gloss=${false} /><span class="sub">${r.feedback.exampleDe}</span></div>`}
             </div>`}`}`}</div>`}
-      ${r && html`<div class="bub" style="max-width:92%"><div class="who">ANJA</div><${IL} ru=${r.partnerRu} size=${19} extra=${extra} /><div class="de">${r.partnerDe}</div><div class="mt8"><${Listen} ru=${r.partnerRu} speed=${speed} /></div></div>`}
+      ${r && html`<div class="bub" style="max-width:92%"><div class="who">ANJA</div><${IL} ru=${r.partnerRu} size=${19} extra=${extra} tap /><div class="de">${r.partnerDe}</div><div class="mt8"><${Listen} ru=${r.partnerRu} speed=${speed} /></div></div>`}
       ${busy && session.draft.trim() && html`<div class="bub me" style="max-width:92%"><div class="who">DU</div><${IL} ru=${session.draft} size=${19} extra=${extra} /></div>`}
       ${busy && html`<div class="typing"><i></i><i></i><i></i></div><div class="sub">Anja denkt über ihre Antwort nach …</div>`}
       ${error && html`<div class="hint" style="border-color:rgba(var(--bad-rgb),.4)"><p>${error}</p></div>`}

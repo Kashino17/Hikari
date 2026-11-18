@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import type { FastifyInstance } from "fastify";
-import { AnjaLive, liveInput, liveStart } from "../russian/anja-live.js";
+import { AnjaLive, askInput, liveInput, liveStart } from "../russian/anja-live.js";
 
 export interface AnjaLiveRouteDeps {
   /** Ordner von »Lieder & Szenen« — dort liegen Schlüssel (keys.env) und Tageszähler (usage.json). */
@@ -39,6 +39,7 @@ const STATUS: Record<string, number> = {
  *   POST /russian/anja/live/start          → { id, turn }      Anja eröffnet
  *   POST /russian/anja/live/turn           → { turn }          Antwort des Lernenden (Ton oder Text) / »nochmal« / »einfacher«
  *   GET  /russian/anja/live/audio/:id/:n   → Anjas Ton als Strom (24 kHz, 16 Bit, mono), während er entsteht
+ *   POST /russian/anja/ask                → Nachfrage: geprüfte Antwort {text, verified, id, turn} (vorgelesen über audio)
  *   GET  /russian/anja/live/turn/:id/:n    → Mitschrift, Prüfung und Hilfen (?wait=heard|done|helps hält zurück, bis es so weit ist)
  *   POST /russian/anja/live/end            → Gespräch schließen
  */
@@ -62,6 +63,17 @@ export async function registerRussianAnjaLiveRoutes(app: FastifyInstance, deps: 
   };
 
   app.get("/russian/anja/live/status", () => live.status());
+
+  // Nachfrage aus der Grammatik: geprüfte Antwort als Text, vorgelesen über /audio/:id/:n.
+  app.post("/russian/anja/ask", async (req, reply) => {
+    const parsed = askInput.safeParse(req.body ?? {});
+    if (!parsed.success) return reply.code(400).send({ error: "invalid_ask" });
+    try {
+      return await live.ask(parsed.data);
+    } catch (e) {
+      return fail(reply, e);
+    }
+  });
 
   app.post("/russian/anja/live/start", { bodyLimit: 120_000 }, async (req, reply) => {
     const parsed = liveStart.safeParse(req.body ?? {});

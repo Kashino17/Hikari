@@ -7,6 +7,23 @@ import { SettingsSheet } from './me.js';
 import { daySeconds, fmtDuration, timeTrack } from '../timetrack.js';
 import { focus, quickPicks } from '../learner.js';
 import { ErlebenTeaser } from './erleben.js';
+import { LESSONS, GRAMMAR_KEY } from '../domain/grammar.js';
+import { stones } from '../stones.js';
+
+/** Einstieg in die Grammatik: der Schritt, der dran ist, und was dir zuletzt passiert ist. */
+function GrammarTeaser() {
+  const st = storage.getJSON(GRAMMAR_KEY, {}) ?? {};
+  const done = st.done ?? {};
+  const i = LESSONS.findIndex((l) => !done[l.id]);
+  const l = LESSONS[i < 0 ? 0 : i];
+  const top = stones.top(1)[0];
+  return html`<div class="sec c-words"><div class="hd"><div class="h2">Grammatik</div><button onClick=${() => nav('grammatik')}>Alle Schritte</button></div>
+    <div class="sub" style="margin:3px 4px 12px">${top ? `Zuletzt gestolpert: ${top.topic}.` : 'Verstehen, warum Wörter sich ändern — vom Deutschen her.'}</div>
+    <button class="nextstep solo" style="--c:var(--words)" onClick=${() => nav(`grammatik/${l.id}`)}>
+      <span class="ic solid"><${Icon} n="account_tree" /></span>
+      <span class="grow"><b>${i < 0 ? 'Alle Schritte geschafft' : `Schritt ${i + 1}: ${l.q}`}</b><span>${l.t} · ${Object.keys(done).length} von ${LESSONS.length} geschafft</span></span>
+      <span class="go">${st.at?.[l.id] ? 'Weiter' : 'Los'}<${Icon} n="chevron_right" size="18" /></span></button></div>`;
+}
 
 const WD = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
@@ -139,6 +156,8 @@ export function Home() {
           <span class="go">${f.label}<${Icon} n="chevron_right" size="18" /></span></button></div>`}
 
       ${ready && html`<${ErlebenTeaser} />`}
+
+      ${ready && html`<${GrammarTeaser} />`}
 
       <div class="sec"><div class="hd"><div class="h2">Fünf Minuten Zeit?</div><button onClick=${() => nav('ueben')}>Alle Übungen</button></div>
         <div class="sub" style="margin:3px 4px 12px">Passend zu deinem Lernstand ausgesucht.</div>

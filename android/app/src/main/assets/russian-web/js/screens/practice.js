@@ -2,6 +2,8 @@
 import { html, cls, Icon, TopBar, Sheet, useState } from '../ui.js';
 import { D, P, useProgress, usePlanState, progress, nav, exitApp, openLesson, dayNo } from '../app.js';
 import { GenderGate } from './me.js';
+import { storage } from '../platform.js';
+import { LESSONS, GRAMMAR_KEY } from '../domain/grammar.js';
 
 const rec = (v) => (v > 0 ? `Rekord ${v}` : 'Neu');
 
@@ -20,6 +22,7 @@ function groups(p) {
       { t: 'Lautlabor', d: 'Ähnliche Laute unterscheiden und sprechen', icon: 'graphic_eq', to: 'sounds', badge: lab.length ? `${Math.max(...lab)} %` : 'Neu', hot: lab.length > 0 },
     ] },
     { c: 'c-words', title: 'Wörter und Grammatik', hint: 'festigen und Sätze bauen', tools: [
+      { t: 'Grammatik', d: 'Warum Wörter sich ändern — vom Deutschen her', icon: 'account_tree', to: 'grammatik', badge: `${Object.keys(storage.getJSON(GRAMMAR_KEY, {})?.done ?? {}).length}/${LESSONS.length}`, hot: Object.keys(storage.getJSON(GRAMMAR_KEY, {})?.done ?? {}).length > 0 },
       { t: 'Satzbau', d: 'Alle Muster aus dem Kurs, mit Szene und Baukasten', icon: 'construction', to: 'patterns', badge: `${p.patternsDone.length}/${D.patterns.length}`, hot: p.patternsDone.length > 0 },
       { t: 'Kombi-Meister', d: 'Bausteine zu neuen Sätzen kombinieren', icon: 'extension', to: 'kombi', badge: rec(p.bestKombi), hot: p.bestKombi > 0 },
       { t: 'Paare finden', d: 'Russisch und Deutsch zuordnen', icon: 'join_inner', to: 'pairs', badge: p.bestPairsSeconds > 0 ? `${p.bestPairsSeconds} s` : 'Neu', hot: p.bestPairsSeconds > 0 },

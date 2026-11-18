@@ -1277,3 +1277,19 @@ button.row:active{background:rgba(255,255,255,.035)}
   .al-aside{display:block;width:42%;max-width:420px;flex:none;overflow-y:auto;border-left:1px solid var(--border);background:rgba(0,0,0,.14);scrollbar-width:none}
   .al-stones-btn{display:none}
 }
+
+/* Formen eines Wortes (überall per Tippen) und Grammatik-Bereich */
+.il.tap .il-w{cursor:pointer;border-radius:8px;transition:background .15s}
+.il.tap .il-w:active{background:rgba(var(--words),.14)}
+.w-sheet{padding-bottom:4px}
+.w-table .seg{background:var(--bg)}
+.w-cell{display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-width:0;padding:2px 0}
+.w-cell:disabled{color:var(--faint)}
+.g-tr .gq em,.w-row .p em{display:block;font-style:normal;font-size:10.5px;color:var(--faint);letter-spacing:.2px;margin-top:1px}
+.w-row.hl,.g-tr.hl{background:rgba(var(--words),.1);box-shadow:inset 3px 0 0 rgb(var(--words))}
+.w-row:disabled{opacity:.5}
+.g-search input{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--text);font-size:15px}
+.g-search input::placeholder{color:var(--faint)}
+button.t-stone{width:100%;text-align:left}
+.sheet .w-head{padding-top:0}
+.sheet .g-tr{padding:8px 10px}

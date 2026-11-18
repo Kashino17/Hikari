@@ -6,7 +6,7 @@ import * as Gl from './domain/glossary.js';
 import * as Sp from './domain/speech.js';
 import * as Pr from './domain/prosody.js';
 import { phonemeHints } from './domain/tips.js';
-import { otherForm, offerPack, toast, speakSeen } from './app.js';
+import { otherForm, offerPack, toast, speakSeen, openWord } from './app.js';
 
 export { html, useState, useEffect, useRef, useMemo, useCallback };
 export const cls = (...a) => a.filter(Boolean).join(' ');
@@ -39,10 +39,15 @@ export function SessionBar({ value, count, onClose, right, hot, marks }) {
 const latin = (spans) => spans.map((s) => (s.stressed ? html`<u>${s.text}</u>` : s.text));
 
 /** Umschrift groß (betonte Silbe amber), darunter Bedeutung je Wort, darunter dezent Kyrillisch. */
-export function IL({ ru, size = 24, center = false, gloss = true, cyr = true, extra = null }) {
+/**
+ * Ein russischer Satz: Umschrift groß, Bedeutung je Wort, Kyrillisch dezent.
+ * `tap`: Jedes Wort lässt sich antippen und zeigt alle seine Formen (nicht in Antwortknöpfen).
+ */
+export function IL({ ru, size = 24, center = false, gloss = true, cyr = true, extra = null, tap = false }) {
   const chunks = useMemo(() => Gl.chunks(ru, extra), [ru, extra]);
-  return html`<div class=${cls('il', center && 'center', !gloss && 'nog')} style=${`--fs:${size}px`}>
-    <div class="il-ws">${chunks.map((c) => html`<div class="il-w">
+  const open = (c) => (e) => { e.stopPropagation(); openWord(c.words.map((w) => w.cyrillic).join(' ')); };
+  return html`<div class=${cls('il', center && 'center', !gloss && 'nog', tap && 'tap')} style=${`--fs:${size}px`}>
+    <div class="il-ws">${chunks.map((c) => html`<div class="il-w" onClick=${tap ? open(c) : undefined} role=${tap ? 'button' : undefined}>
       <div class="il-l">${c.words.map((w, i) => html`${i ? ' ' : ''}${w.before}${latin(w.latin)}${w.after}`)}</div>
       ${gloss && html`<div class="il-g">${c.gloss ?? ' '}</div>`}
     </div>`)}</div>
@@ -542,7 +547,7 @@ export function SentenceCard({ phrase, size = 26, center = false, tint = false, 
   }
   return html`<div class=${cls('scard', center && 'center', tint && 'tint')}>
     ${sp?.used && html`<${SpickNote} sp=${sp} />`}
-    <${IL} ru=${phrase.ru} size=${size} center=${center} cyr=${false} />
+    <${IL} ru=${phrase.ru} size=${size} center=${center} cyr=${false} tap />
     <button class=${cls('cyr-line', lens && 'open')} onClick=${() => setLens(!lens)} aria-label=${lens ? 'Buchstaben ausblenden' : 'Buchstaben zeigen'}>
       <span class="cyr" lang="ru">${display}</span><span class="abc">${lens ? 'ausblenden' : 'Buchstaben'}</span></button>
     ${lens && html`<div class="lenswrap"><${LetterLens} ru=${phrase.ru} /></div>`}

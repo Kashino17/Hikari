@@ -5,7 +5,7 @@
 // (/russian/erleben/…, siehe backend/src/api/russian-erleben.ts).
 import { html, cls, Icon, Sheet, Opt, TopBar, mk, fx, audio, useState, useEffect, useRef, useMemo, useListen, ScoreCard, MIC_WAIT, SvgCompare, SvgAiCheck,
   useSpicker, SpickerBtn, SpickNote, HiddenRu } from '../ui.js';
-import { progress, useProgress, phraseById, nav, back, toast } from '../app.js';
+import { progress, useProgress, phraseById, nav, back, toast, openWord } from '../app.js';
 import { storage, speech, recorder, SPEECH_ERRORS, api } from '../platform.js';
 import * as Sp from '../domain/speech.js';
 import * as Gl from '../domain/glossary.js';
@@ -892,6 +892,7 @@ function WordSheet({ chunk, line, piece, known, s, pl, onClose }) {
         <${DockBtn} primary fill icon="play_arrow" label="Im Original" onClick=${() => pl.playSeg(Math.max(line.a, from - 0.12), Math.min(line.b, nextT + 0.1), { key: 'word' })} />
         <${DockBtn} icon="record_voice_over" label="Deutlich" onClick=${() => { pl.pause(); audio.play(null, { ru: chunk.words.map((x) => x.cyrillic).join(' '), text: chunk.words.map((x) => x.plain).join(' '), slow: true, key: 'word' }); }} />
         <${DockBtn} icon="bookmark" fill=${kept} on=${kept} label=${kept ? 'Gemerkt' : 'Wort merken'} onClick=${keep} />
+        <${DockBtn} icon="table_view" label="Alle Formen" onClick=${() => { onClose(); openWord(chunk.words.map((x) => x.cyrillic).join(' ')); }} />
       </div>
     </div><//>`;
 }
