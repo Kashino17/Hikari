@@ -6,6 +6,8 @@ import {
   AnjaLive,
   CONFIRM_PROMPT,
   EAR_MODEL,
+  REPEAT_TRIES,
+  VERIFY_PROMPT,
   HELP_MODELS,
   type LiveSocket,
   PLAIN_FOCUS,
@@ -40,6 +42,9 @@ class FakeSocket implements LiveSocket {
   send(data: string) {
     const msg = JSON.parse(data);
     this.sent.push(msg);
+    // Anja liest einen festen Text vor: Die Attrappe spricht ihn wortgetreu.
+    const exact = String(msg.realtimeInput?.text ?? "").match(/langsam und deutlich: ([\s\S]*)\)$/);
+    if (exact) queueMicrotask(() => this.speak(exact[1] as string));
     if (!msg.setup) return;
     this.model = msg.setup.model;
     // Fällt das Ohr aus, schließt Google die Verbindung, statt sie zu bestätigen.
@@ -128,6 +133,12 @@ function setup(
     acceptable?: boolean | "down";
     /** … und zur Erklärung: fachlich richtig? */
     explanationOk?: boolean;
+    /** Urteile über frei gesprochene Erklärungen, der Reihe nach (fehlt eins: bestätigt). */
+    verify?: (boolean | "down")[];
+    /** … und zum zweiten Beispiel: richtig? */
+    exampleOk?: boolean;
+    /** So viele erste Anfragen brechen wegen Zeitüberschreitung ab. */
+    timeouts?: number;
   } = {},
 ) {
   const dir = mkdtempSync(join(tmpdir(), "anja-live-"));
@@ -135,6 +146,8 @@ function setup(
   // biome-ignore lint/suspicious/noExplicitAny: frei geformte Anfrage an das Hilfen-Modell
   const requests: { url: string; body: any }[] = [];
   const statuses = [...(opts.statuses ?? [])];
+  const verifies = [...(opts.verify ?? [])];
+  let timeouts = opts.timeouts ?? 0;
   let now = Date.parse("2026-11-14T12:00:00Z");
   const live = new AnjaLive({
     key: () => (opts.key === undefined ? "test-key" : opts.key),
@@ -152,14 +165,25 @@ function setup(
     },
     request: (async (url: string, init: { body: string }) => {
       requests.push({ url, body: JSON.parse(init.body) });
+      if (timeouts-- > 0) throw new Error("The operation was aborted due to timeout");
       // Die Wartezeit zwischen zwei Anfragen an dasselbe Modell soll den Test nicht bremsen.
       now += 5000;
-      const second = JSON.parse(init.body).systemInstruction.parts[0].text === CONFIRM_PROMPT;
+      const system = JSON.parse(init.body).systemInstruction.parts[0].text;
+      if (system === VERIFY_PROMPT) {
+        const v = verifies.shift() ?? true;
+        if (v === "down") return new Response("{}", { status: 503 });
+        return new Response(
+          JSON.stringify({ candidates: [{ content: { parts: [{ text: JSON.stringify({ correct: v, why: "x" }) }] } }] }),
+          { status: 200 },
+        );
+      }
+      const second = system === CONFIRM_PROMPT;
       if (second) {
         if (opts.acceptable === "down") return new Response("{}", { status: 503 });
         const verdict = {
           originalAcceptable: opts.acceptable ?? false,
           explanationCorrect: opts.explanationOk ?? true,
+          exampleCorrect: opts.exampleOk ?? true,
           why: "x",
         };
         return new Response(
@@ -255,7 +279,7 @@ describe("Anja live", () => {
     socket.speak("Я люблю чай. Хорошо!", "Я любить чай");
     const t = await s.live.turn(id, n, "helps");
     expect(t).toMatchObject({ heard: "Я любить чай.", heardState: "sure", heardAlt: "" });
-    expect(t?.helps?.check).toEqual({
+    expect(t?.helps?.check).toMatchObject({
       ok: false,
       correctedRu: "Я люблю чай",
       correctedDe: "Ich mag Tee",
@@ -375,7 +399,7 @@ describe("Anja live", () => {
       agent: "Я хочу вода",
     });
     expect(yes.t?.helps?.check).toMatchObject({ ok: false, correctedRu: "Я хочу воду" });
-    expect(yes.asked).toEqual({
+    expect(yes.asked).toMatchObject({
       original: "Я хочу вода",
       proposedCorrection: "Я хочу воду",
       explanationDe: "Akkusativ …",
@@ -441,13 +465,16 @@ describe("Anja live", () => {
       ear: "Я хочу вода",
       agent: "Я хочу вода",
     });
-    expect(r.t?.helps?.check).toEqual({
+    expect(r.t?.helps?.check).toMatchObject({
       ok: false,
       correctedRu: "Я хочу воду",
       correctedDe: "Ich möchte Wasser",
       focus: PLAIN_FOCUS,
       explanationDe: "",
     });
+    // Vorgelesen wird nur Geprüftes: keine Erklärung, nur die richtige Fassung.
+    expect(r.t?.teach?.speech).not.toContain("…");
+    expect(r.t?.teach?.speech).toContain("«Я хочу воду»");
   });
 
   it("ist die zweite Meinung nicht erreichbar, gibt es ebenfalls kein Urteil", async () => {
@@ -514,6 +541,19 @@ describe("Anja live", () => {
     expect(usage.count["gemini-3.5-flash-lite"]).toBe(1);
   });
 
+  it("ein Modell, das in die Frist läuft, wird danach erst als zweites gefragt", async () => {
+    const s = setup({ timeouts: 1 });
+    const { id } = await s.live.start(START);
+    sock(s, 0).speak("Привет!");
+    await s.live.turn(id, 1, "helps");
+    const n = await s.live.send(id, { kind: "text", text: "Привет" });
+    sock(s, 0).speak("Как дела?");
+    await s.live.turn(id, n, "done");
+    const models = s.requests.map((r) => r.url.split("/").pop()?.split(":")[0]);
+    // Erst 3.5 (Abbruch), dann 3.1 — und beim nächsten Zug gleich 3.1.
+    expect(models).toEqual(["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.1-flash-lite"]);
+  });
+
   it("zählt im gemeinsamen Tageszähler mit und lässt fremde Einträge stehen", async () => {
     const s = setup();
     writeFileSync(
@@ -543,6 +583,189 @@ describe("Anja live", () => {
     const s = setup({ key: null });
     expect(s.live.status().available).toBe(false);
     await expect(s.live.start(START)).rejects.toThrow("no_key");
+  });
+});
+
+describe("Anja als Lehrerin", () => {
+  const FIX = {
+    ok: false,
+    correctedRu: "Я хочу воду",
+    correctedDe: "Ich will Wasser",
+    focus: "Hier fehlt die Wen-Form.",
+    explanationDe: "Was du willst, bekommt etwas ab: вода wird zu воду (Akkusativ).",
+    topicDe: "Wen-Fall nach »wollen«",
+    exampleRu: "Я хочу пиццу.",
+    exampleDe: "Ich will Pizza.",
+  };
+
+  /** Bis zur ersten Frage, dann ein gesprochener Satz mit Fehler. → Kennung und Zug */
+  async function wrongSentence(s: ReturnType<typeof setup>, start = START) {
+    const { id } = await s.live.start(start);
+    sock(s).speak("Что ты хочешь пить?");
+    await s.live.turn(id, 1, "helps");
+    const n = await s.live.send(id, { kind: "audio", audio, rate: 16000 });
+    await tick();
+    ear(s).hear("Я хочу вода.");
+    sock(s).speak("Хорошо, вот вода!", "Я хочу вода");
+    const t = await s.live.turn(id, n, "done");
+    return { id, n, t };
+  }
+
+  /** Ein Wiederholungsversuch: Nur das Ohr hört zu. */
+  async function repeat(s: ReturnType<typeof setup>, id: string, heard: string) {
+    const before = sock(s).sent.length;
+    const n = await s.live.send(id, { kind: "audio", audio, rate: 16000 });
+    await tick();
+    // Der Ton geht NICHT an das Gesprächsmodell.
+    expect(sock(s).sent.slice(before).some((m) => m.realtimeInput?.audio)).toBe(false);
+    s.sockets.filter((x) => x.isEar).at(-1)?.hear(heard);
+    for (let i = 0; i < 20 && sock(s).sent.length === before; i++) await tick();
+    return { n, regie: String(sock(s).sent.at(-1)?.realtimeInput?.text ?? "") };
+  }
+
+  it("bestätigter Fehler: Anjas Antwort wird verworfen, sie liest die geprüfte Erklärung vor", async () => {
+    const s = setup({ check: FIX, acceptable: false });
+    const { id, n, t } = await wrongSentence(s);
+    expect(t?.teach?.lang).toBe("de");
+    const speech = t?.teach?.speech ?? "";
+    expect(speech).toContain("So heißt es richtig: «Я хочу воду».");
+    expect(speech).toContain("(Akkusativ)");
+    expect(speech).toContain("Noch ein Beispiel: «Я хочу пиццу.»");
+    expect(speech).toMatch(/Sag den Satz jetzt noch einmal\.$/);
+    // Die verworfene Antwort ist nie zu hören — nur die Erklärung.
+    expect(t?.said).not.toContain("вот вода");
+    expect(t?.said).toBe(speech);
+    expect(t?.expecting).toMatchObject({ correctedRu: "Я хочу воду", tries: 0, topicDe: "Wen-Fall nach »wollen«" });
+    expect(t?.helps?.check).toMatchObject({ ok: false, topicDe: "Wen-Fall nach »wollen«" });
+    // Die Übersetzung der verworfenen Antwort wird nicht gezeigt.
+    expect(t?.helps?.replyDe).toBe("");
+  });
+
+  it("ein nicht bestätigtes Beispiel wird weder gezeigt noch vorgelesen", async () => {
+    const s = setup({ check: FIX, acceptable: false, exampleOk: false });
+    const { t } = await wrongSentence(s);
+    expect(t?.helps?.check).toMatchObject({ exampleRu: "", exampleDe: "" });
+    expect(t?.teach?.speech).not.toContain("Beispiel");
+  });
+
+  it("richtiger Satz: Anjas Antwort wird nach der Prüfung freigegeben", async () => {
+    const s = setup({ check: { ok: true } });
+    const { id } = await s.live.start(START);
+    sock(s).speak("Что ты хочешь пить?");
+    await s.live.turn(id, 1, "helps");
+    const n = await s.live.send(id, { kind: "audio", audio, rate: 16000 });
+    await tick();
+    ear(s).hear("Я хочу воду.");
+    sock(s).speak("Хорошо, вот вода!", "Я хочу воду");
+    const t = await s.live.turn(id, n, "done");
+    expect(t).toMatchObject({ said: "Хорошо, вот вода!", teach: null, expecting: null, helpsState: "ready" });
+    expect(await collect(s.live.audio(id, n))).toBe("AAAABBBB");
+  });
+
+  it("wait=heard meldet sich, sobald verstanden ist — noch bevor Anja antwortet", async () => {
+    const s = setup({ check: { ok: true } });
+    const { id } = await s.live.start(START);
+    sock(s).speak("Что ты хочешь пить?");
+    await s.live.turn(id, 1, "helps");
+    const n = await s.live.send(id, { kind: "audio", audio, rate: 16000 });
+    await tick();
+    ear(s).hear("Я хочу воду.");
+    sock(s).emit({ serverContent: { turnComplete: true } });
+    const heard = await s.live.turn(id, n, "heard");
+    expect(heard).toMatchObject({ heard: "Я хочу воду.", phase: "checking" });
+  });
+
+  it("noch einmal richtig gesagt: Lob und weiter im Gespräch", async () => {
+    const s = setup({ check: FIX, acceptable: false });
+    const { id } = await wrongSentence(s);
+    const r = await repeat(s, id, "Я хочу воду.");
+    expect(r.regie).toContain("jetzt richtig gesagt: «Я хочу воду.»");
+    sock(s).speak("Молодец! А какую воду ты любишь?");
+    const t = await s.live.turn(id, r.n, "done");
+    expect(t).toMatchObject({ repeat: { ok: true, tries: 1, gaveUp: false }, expecting: null });
+    expect(t?.said).toBe("Молодец! А какую воду ты любишь?");
+  });
+
+  it("dreimal nicht geschafft: kein Drama, das Gespräch geht weiter", async () => {
+    const s = setup({ check: FIX, acceptable: false });
+    const { id } = await wrongSentence(s);
+    for (let i = 1; i < REPEAT_TRIES; i++) {
+      const r = await repeat(s, id, "Я хочу вода.");
+      expect(r.regie).toContain("Noch nicht ganz. Hör genau hin: «Я хочу воду».");
+      const t = await s.live.turn(id, r.n, "done");
+      expect(t).toMatchObject({ repeat: { ok: false, tries: i, gaveUp: false }, expecting: { tries: i } });
+    }
+    const last = await repeat(s, id, "Я хочу вода.");
+    expect(last.regie).toContain("noch nicht geschafft");
+    sock(s).speak("Ничего страшного! Что ты делаешь сегодня?");
+    const t = await s.live.turn(id, last.n, "done");
+    expect(t).toMatchObject({ repeat: { ok: false, tries: REPEAT_TRIES, gaveUp: true }, expecting: null });
+  });
+
+  it("Stille beim Wiederholen zählt nicht als Versuch", async () => {
+    const s = setup({ check: FIX, acceptable: false });
+    const { id } = await wrongSentence(s);
+    const n = await s.live.send(id, { kind: "audio", audio, rate: 16000 });
+    const t = await s.live.turn(id, n, "done");
+    expect(t?.said).toContain("Ich habe dich nicht gehört.");
+    expect(t?.expecting).toMatchObject({ tries: 0 });
+  });
+
+  it("ab B1: zuerst kurz auf Russisch, erst nach einem Fehlversuch die Erklärung auf Deutsch", async () => {
+    const s = setup({ check: FIX, acceptable: false });
+    const { id, t } = await wrongSentence(s, liveStart.parse({ ...START, level: "B1" }));
+    expect(t?.teach).toMatchObject({ lang: "ru" });
+    expect(t?.said).toBe("Почти! Правильно так: «Я хочу воду». Скажи ещё раз.");
+    const r = await repeat(s, id, "Я хочу вода.");
+    const t2 = await s.live.turn(id, r.n, "done");
+    expect(t2?.teach?.lang).toBe("de");
+    expect(t2?.said).toContain("So heißt es richtig");
+    expect(t2?.expecting).toMatchObject({ tries: 1, explained: true });
+  });
+
+  it("»Ich komme nicht weiter«: Anjas deutsche Hilfe wird geprüft, bevor sie zu hören ist", async () => {
+    const s = setup({ verify: [true] });
+    const { id } = await s.live.start(START);
+    sock(s).speak("Что ты хочешь пить?");
+    await s.live.turn(id, 1, "helps");
+    const n = await s.live.send(id, { kind: "help" });
+    expect(sock(s).sent.at(-1)?.realtimeInput.text).toMatch(/kommt nicht weiter\. Erklär ihm auf Deutsch/);
+    sock(s).speak("Sie fragt, was du trinken willst. Du kannst sagen: «Я хочу чай». Что ты хочешь пить?");
+    const t = await s.live.turn(id, n, "done");
+    expect(t).toMatchObject({ verified: true });
+    expect(t?.said).toContain("Sie fragt");
+    expect(s.requests.some((r) => r.body.systemInstruction.parts[0].text === VERIFY_PROMPT)).toBe(true);
+  });
+
+  it("nicht bestätigte Erklärung: zweiter Anlauf; scheitert auch der, wird nichts Ungeprüftes vorgelesen", async () => {
+    const s = setup({ verify: [false, false] });
+    const { id } = await s.live.start(START);
+    sock(s).speak("Что ты хочешь пить?");
+    await s.live.turn(id, 1, "helps");
+    const n = await s.live.send(id, { kind: "help" });
+    sock(s).speak("Das ist der Genitiv von пить.");
+    for (let i = 0; i < 20 && !String(sock(s).sent.at(-1)?.realtimeInput?.text ?? "").includes("kürzer und ganz genau"); i++) await tick();
+    sock(s).speak("Пить ist ein Substantiv.");
+    const t = await s.live.turn(id, n, "done");
+    expect(t?.verified).toBe(false);
+    expect(t?.said).not.toContain("Genitiv");
+    expect(t?.said).not.toContain("Substantiv");
+    expect(t?.said).toContain("nicht sicher erklären");
+    expect(await collect(s.live.audio(id, n))).toBe("AAAABBBB");
+  });
+
+  it("Niveau und Stolpersteine stehen in Anjas Auftrag", () => {
+    const text = systemPrompt(
+      liveStart.parse({
+        ...START,
+        level: "A1",
+        stones: [{ topic: "Wen-Fall nach »wollen«", wrongRu: "вода", rightRu: "воду" }],
+      }),
+    );
+    expect(text).toContain("Kadirs Niveau: A1. Hilfen und Erklärungen bekommt er noch auf Deutsch.");
+    expect(text).toContain("Wen-Fall nach »wollen« (falsch «вода», richtig «воду»)");
+    expect(text).toContain("Korrigiere Kadir NIE von dir aus");
+    expect(systemPrompt(liveStart.parse({ ...START, level: "B2" }))).toContain("zuerst in einfachem Russisch");
   });
 });
 
@@ -652,6 +875,15 @@ describe("settleHelps — Richtiges nie wie falsch", () => {
       "Я хочу вода",
     );
     expect(h.check).toMatchObject({ ok: false, correctedRu: "Я хочу воду" });
+  });
+});
+
+describe("soundPraise — Namen", () => {
+  it("einen Namen zu loben ist kein Lob, ein Wort davor schon", () => {
+    expect(soundPraise("Die Form «Кадир» ist richtig.", "Я зовут Кадир")).toBe("");
+    expect(soundPraise("«Меня зовут» stimmt.", "Меня зовут Кадир")).toBe("«Меня зовут» stimmt.");
+    // Am Satzanfang ist Großschreibung kein Name.
+    expect(soundPraise("Die Ich-Form «Люблю» stimmt.", "Люблю кофе")).toBe("Die Ich-Form «Люблю» stimmt.");
   });
 });
 

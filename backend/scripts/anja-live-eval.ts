@@ -4,6 +4,8 @@
  *
  *   cd backend && ./node_modules/.bin/tsx scripts/anja-live-eval.ts
  *
+ * Seit 18.11.2026 auch: Stolperstein-Name, zweites Beispiel und der vorgelesene Lehrerin-Text.
+ *
  * Kostet rund 45 Anfragen aus dem Tageskontingent der Flash-Lite-Modelle (jede gemeldete
  * Verbesserung holt eine zweite Meinung ein).
  * Ziel: 0 richtige Sätze korrigiert, alle Fehler gefunden und richtig gelöst.
@@ -11,7 +13,7 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { readGeminiKey } from "../src/api/russian-anja-live.js";
-import { AnjaLive } from "../src/russian/anja-live.js";
+import { AnjaLive, teachSpeech } from "../src/russian/anja-live.js";
 
 const dir = join(homedir(), ".hikari", "erleben");
 const live = new AnjaLive({ key: () => readGeminiKey(dir), usageFile: join(dir, "usage.json") });
@@ -85,6 +87,8 @@ for (const [i, [question, answer, want]] of cases.entries()) {
     } else if (fix) {
       found++;
       notes.push(`  Erklärung zu «${answer}»: ${fix.focus} — ${fix.explanationDe}`);
+      notes.push(`  Stolperstein: ${fix.topicDe || "—"} · Beispiel: ${fix.exampleRu ? `${fix.exampleRu} (${fix.exampleDe})` : "—"}`);
+      notes.push(`  Vorgelesen (A1): ${teachSpeech(fix, h.goodDe, "de")}`);
       if (fix.correctedRu.toLowerCase().includes(want)) solved++;
       else notes.push(`schief gelöst: «${answer}» → ${fix.correctedRu}`);
     } else notes.push(`ÜBERSEHEN: «${answer}»`);

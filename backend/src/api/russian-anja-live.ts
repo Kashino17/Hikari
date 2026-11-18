@@ -39,7 +39,7 @@ const STATUS: Record<string, number> = {
  *   POST /russian/anja/live/start          → { id, turn }      Anja eröffnet
  *   POST /russian/anja/live/turn           → { turn }          Antwort des Lernenden (Ton oder Text) / »nochmal« / »einfacher«
  *   GET  /russian/anja/live/audio/:id/:n   → Anjas Ton als Strom (24 kHz, 16 Bit, mono), während er entsteht
- *   GET  /russian/anja/live/turn/:id/:n    → Mitschrift, Prüfung und Hilfen (?wait=done|helps hält zurück, bis sie da sind)
+ *   GET  /russian/anja/live/turn/:id/:n    → Mitschrift, Prüfung und Hilfen (?wait=heard|done|helps hält zurück, bis es so weit ist)
  *   POST /russian/anja/live/end            → Gespräch schließen
  */
 export async function registerRussianAnjaLiveRoutes(app: FastifyInstance, deps: AnjaLiveRouteDeps) {
@@ -102,7 +102,9 @@ export async function registerRussianAnjaLiveRoutes(app: FastifyInstance, deps: 
     "/russian/anja/live/turn/:id/:n",
     async (req, reply) => {
       const wait =
-        req.query.wait === "done" || req.query.wait === "helps" ? req.query.wait : "none";
+        req.query.wait === "heard" || req.query.wait === "done" || req.query.wait === "helps"
+          ? req.query.wait
+          : "none";
       const turn = await live.turn(req.params.id, Number(req.params.n), wait);
       if (!turn) return reply.code(404).send({ error: "unknown_turn" });
       return reply.header("cache-control", "no-store").send(turn);

@@ -20,6 +20,19 @@
  * (plausibleCorrection): Richtiges darf nie wie falsch aussehen.
  *
  * Der Server hält die Verbindung zu Google; die Oberfläche braucht nur gewöhnliche Abrufe.
+ *
+ * Anja als Lehrerin (Bauplan 18.11.2026, Kadirs Wahl: »sofort nach jedem Satz korrigieren« und
+ * »Erklärung erst prüfen, dann vorlesen«):
+ *  - Anjas Antwort auf einen Satz wird zurückgehalten, bis die Satzprüfung entschieden hat.
+ *    Stimmt der Satz, wird sie freigegeben. Ist ein Fehler bestätigt, wird sie verworfen: Anja liest
+ *    stattdessen eine Erklärung vor, die fest aus geprüften Teilen zusammengesetzt ist (Lob, so heißt
+ *    es, warum, ein zweites Beispiel) — vom Modell nur vorgelesen, nie frei formuliert.
+ *  - Danach sagt der Lernende den Satz noch einmal (höchstens drei Versuche). Das hört nur das Ohr;
+ *    verglichen wird fest mit dem verbesserten Satz. Dann geht das Gespräch auf Russisch weiter.
+ *  - Frei gesprochene Erklärungen (Frage auf Deutsch, »Ich komme nicht weiter«) werden vor dem
+ *    Abspielen von einem zweiten Modell geprüft.
+ *  - Wie viel Deutsch: nach Niveau. Bis A2 erklärt Anja auf Deutsch, ab B1 zuerst kurz auf Russisch
+ *    und erst, wenn der zweite Versuch nicht klappt, auf Deutsch.
  */
 import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -63,7 +76,11 @@ const EAR_MAX_AGE_MS = 8 * 60_000;
 const LATE_TRANSCRIPT_MS = 700;
 
 const SETUP_TIMEOUT_MS = 8_000;
-const TURN_TIMEOUT_MS = 30_000;
+/** Ein Zug kann jetzt mehrere Schritte haben: hören, Antwort, Prüfung, zweite Meinung, Erklärung. */
+const TURN_TIMEOUT_MS = 60_000;
+/** So oft darf der Lernende einen verbesserten Satz noch einmal sagen, dann geht das Gespräch weiter. */
+export const REPEAT_TRIES = 3;
+const LOW_LEVELS = new Set(["A0", "A1", "A2"]);
 /** Google beendet eine Sitzung nach 15 Minuten — vorher wird mit dem Verlauf neu verbunden. */
 const SOCKET_MAX_AGE_MS = 12 * 60_000;
 const IDLE_MS = 10 * 60_000;
@@ -73,12 +90,27 @@ const HELP_TIMEOUT_MS = 6_000;
 /** Höchstens so viele Anfragen je Minute an ein Hilfen-Modell (Google erlaubt 15). */
 const HELP_PER_MINUTE = 12;
 const QUOTA_ZONE = "America/Los_Angeles";
+/** So lange gilt eine gemessene Antwortzeit; danach bekommt ein Modell wieder eine Chance. */
+const SPEED_MEMORY_MS = 15 * 60_000;
 
 export const liveStart = z.object({
   stage: z.number().int().min(0).max(4).default(0),
   scenario: z.string().trim().max(300).default(""),
   interest: z.string().trim().max(300).default(""),
   knownWords: z.array(z.string().trim().min(1).max(80)).max(150).default([]),
+  /** Geschätztes Sprachniveau aus dem Lernstand — bestimmt, wie viel Anja auf Deutsch erklärt. */
+  level: z.enum(["A0", "A1", "A2", "B1", "B2", "C1", "C2"]).default("A1"),
+  /** Typische Fehler aus früheren Gesprächen (Fehler-Gedächtnis der App) — Anja baut Gelegenheiten dafür ein. */
+  stones: z
+    .array(
+      z.object({
+        topic: z.string().trim().min(1).max(80),
+        wrongRu: z.string().trim().max(200).default(""),
+        rightRu: z.string().trim().max(200).default(""),
+      }),
+    )
+    .max(8)
+    .default([]),
   /** Bisheriger Verlauf, wenn ein Gespräch nach einer Unterbrechung weitergeht. */
   lines: z
     .array(z.object({ who: z.enum(["anja", "kadir"]), ru: z.string().trim().min(1).max(600) }))
@@ -97,6 +129,8 @@ export const liveInput = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("text"), text: z.string().trim().min(1).max(600) }),
   z.object({ kind: z.literal("again") }),
   z.object({ kind: z.literal("easier") }),
+  /** »Ich komme nicht weiter« — Anja hilft, nach Niveau auf Deutsch. */
+  z.object({ kind: z.literal("help") }),
 ]);
 export type LiveInput = z.infer<typeof liveInput>;
 
@@ -107,9 +141,14 @@ const helpsReply = z.object({
       correctedRu: z.string().max(600).default(""),
       correctedDe: z.string().max(600).default(""),
       focus: z.string().max(240).default(""),
-      explanationDe: z.string().max(400).default(""),
+      explanationDe: z.string().max(500).default(""),
+      /** Kurzer Name des Stolpersteins für das Fehler-Gedächtnis, z. B. »Wen-Fall nach »wollen««. */
+      topicDe: z.string().max(80).default(""),
+      /** Ein zweiter kurzer Satz mit derselben Regel. */
+      exampleRu: z.string().max(200).default(""),
+      exampleDe: z.string().max(200).default(""),
     })
-    .default({ ok: true, correctedRu: "", correctedDe: "", focus: "", explanationDe: "" }),
+    .default({ ok: true, correctedRu: "", correctedDe: "", focus: "", explanationDe: "", topicDe: "", exampleRu: "", exampleDe: "" }),
   goodDe: z.string().max(300).default(""),
   replyDe: z.string().trim().min(1).max(900),
   words: z
@@ -130,10 +169,50 @@ export interface LiveHelps {
    * null = kein Urteil (nichts zu prüfen, nicht sicher verstanden, oder die zweite Meinung fehlt
    * bzw. widerspricht); ok = der Satz stimmt; sonst die eine, bestätigte Verbesserung.
    */
-  check:
-    | null
-    | { ok: true }
-    | { ok: false; correctedRu: string; correctedDe: string; focus: string; explanationDe: string };
+  check: null | { ok: true } | LiveFix;
+}
+
+/** Eine bestätigte Verbesserung samt allem, was die Lehrerin dazu sagt. */
+export interface LiveFix {
+  ok: false;
+  correctedRu: string;
+  correctedDe: string;
+  focus: string;
+  explanationDe: string;
+  topicDe: string;
+  exampleRu: string;
+  exampleDe: string;
+}
+
+/** Was Anja nach einem Fehler vorliest — fest zusammengesetzt aus geprüften Teilen. */
+export interface LiveTeach {
+  /** Was der Lernende gesagt hat. */
+  wrongRu: string;
+  fix: LiveFix;
+  /** Konkretes Lob (fest nachgeprüft) — leer, wenn nichts Bestimmtes. */
+  goodDe: string;
+  /** Der vorgelesene Text. */
+  speech: string;
+  /** de = Erklärung auf Deutsch, ru = kurz auf Russisch (ab B1, erster Hinweis). */
+  lang: "de" | "ru";
+}
+
+/** Noch einmal sagen: Stand des verbesserten Satzes, den der Lernende wiederholen soll. */
+export interface LiveExpect {
+  correctedRu: string;
+  correctedDe: string;
+  topicDe: string;
+  /** Bisherige Versuche. */
+  tries: number;
+  /** Wurde schon auf Deutsch erklärt? (ab B1 erst nach dem ersten Fehlversuch) */
+  explained: boolean;
+}
+
+export interface LiveRepeat {
+  ok: boolean;
+  tries: number;
+  /** Nach dem letzten Versuch: Das Gespräch geht weiter, der Satz bleibt im Satzbuch. */
+  gaveUp: boolean;
 }
 
 export type HelpsState = "none" | "pending" | "ready" | "failed";
@@ -163,9 +242,26 @@ export interface LiveTurnView {
   firstMs: number | null;
   helps: LiveHelps | null;
   helpsState: HelpsState;
+  /** hearing → checking → speaking: was gerade passiert (für »Moment, ich schau mir das an«). */
+  phase: "hearing" | "checking" | "speaking";
+  /** Anja hat korrigiert und erklärt. */
+  teach: LiveTeach | null;
+  /** Dieser Zug war ein Wiederholungsversuch. */
+  repeat: LiveRepeat | null;
+  /** Nach diesem Zug soll der Lernende diesen Satz noch einmal sagen. */
+  expecting: LiveExpect | null;
+  /** Anja hat (auch) Deutsch gesprochen und die Erklärung wurde geprüft — false = nicht bestätigt. */
+  verified: boolean | null;
 }
 
 interface Turn extends LiveTurnView {
+  /** Zurückgehaltene Antwort: Ton und Mitschrift, bis die Prüfung entschieden hat. */
+  holding: boolean;
+  held: Buffer[];
+  heldSaid: string;
+  /** Wartet auf das Ende der laufenden Antwort des Gesprächsmodells. */
+  generation: { resolve: () => void; reject: (e: Error) => void } | null;
+  heardSettled: boolean;
   /** Mitschrift des Gesprächsmodells (zweites Ohr). */
   heardAgent: string;
   /** Mitschrift des Ohrs; null = das Ohr war nicht erreichbar. */
@@ -211,7 +307,78 @@ const REGIE = {
     "(Regie: Kadir hat dich nicht verstanden. Sag deinen letzten Satz noch einmal, langsamer und deutlich.)",
   easier:
     "(Regie: Das war zu schwer für Kadir. Stell deine letzte Frage noch einmal, mit einfacheren Wörtern und kürzer.)",
+  helpLow:
+    "(Regie: Kadir kommt nicht weiter. Erklär ihm auf Deutsch in höchstens zwei kurzen Sätzen, was deine letzte Frage bedeutet, und gib ihm einen einfachen Anfang für seine Antwort auf Russisch. Stell danach die Frage noch einmal auf Russisch.)",
+  helpHigh:
+    "(Regie: Kadir kommt nicht weiter. Sag deine letzte Frage noch einmal in ganz einfachem Russisch und gib ihm einen Anfang für seine Antwort. Nur wenn es gar nicht anders geht, ein Wort auf Deutsch.)",
+  /** Die frei gesprochene Erklärung hat die Prüfung nicht bestanden — ein zweiter, vorsichtigerer Anlauf. */
+  retryExplain:
+    "(Regie: Deine letzte Antwort hat Kadir nicht gehört. Antworte ihm noch einmal, kürzer und ganz genau. Bist du bei einer Regel nicht sicher, erkläre keine Regel, sondern gib nur ein richtiges Beispiel.)",
 };
+
+/** Anja liest einen fest zusammengesetzten Text vor — Wort für Wort. */
+export function regieSayExactly(text: string): string {
+  return `(Regie: Deine letzte Antwort hat Kadir nicht gehört — sie zählt nicht. Sprich jetzt als Lehrerin GENAU den folgenden Text, Wort für Wort, ohne etwas wegzulassen oder hinzuzufügen. Deutsche Teile auf Deutsch, die russischen Teile in «» auf Russisch, langsam und deutlich: ${text})`;
+}
+
+/** Der verbesserte Satz kam jetzt richtig: loben und weiter im Gespräch. */
+export function regieRepeatOk(said: string): string {
+  return `(Regie: Kadir hat seinen verbesserten Satz jetzt richtig gesagt: «${said}». Lob ihn kurz auf Russisch (zwei, drei Wörter) und mach mit dem Gespräch weiter: reagiere auf das, was er gesagt hat, und stelle genau eine neue Frage.)`;
+}
+
+/** Dreimal nicht geschafft: kein Drama, weiter im Gespräch. */
+export function regieGiveUp(correctedRu: string): string {
+  return `(Regie: Kadir hat den Satz «${correctedRu}» noch nicht geschafft. Sag ihm freundlich auf Russisch, dass das nicht schlimm ist und ihr später darauf zurückkommt. Mach dann mit dem Gespräch weiter und stelle genau eine neue Frage.)`;
+}
+
+/** Eine Frage oder ein Satz auf Deutsch (nicht als Russisch verstanden), den Anja beantworten soll. */
+export function regieGerman(text: string, low: boolean): string {
+  return `(Regie: Kadir hat gerade auf Deutsch gesprochen: «${text}». ${
+    low
+      ? "Antworte ihm kurz auf Deutsch (höchstens drei kurze Sätze)."
+      : "Antworte zuerst in einfachem Russisch; nur wenn das nicht reicht, kurz auf Deutsch."
+  } Ist die Mitschrift unverständlich, bitte ihn auf Russisch, es noch einmal zu sagen. Kehre danach mit einer russischen Frage ins Gespräch zurück.)`;
+}
+
+/**
+ * Der Text, den Anja nach einem bestätigten Fehler vorliest — nur aus geprüften Teilen.
+ * Bis A2 auf Deutsch mit Erklärung; ab B1 beim ersten Mal nur kurz auf Russisch (die Erklärung
+ * kommt, wenn der nächste Versuch nicht klappt).
+ */
+export function teachSpeech(fix: LiveFix, goodDe: string, lang: "de" | "ru"): string {
+  if (lang === "ru") return `Почти! Правильно так: «${fix.correctedRu}». Скажи ещё раз.`;
+  const why = fix.explanationDe.trim();
+  return [
+    goodDe ? `Fast! ${goodDe}` : "Fast!",
+    `So heißt es richtig: «${fix.correctedRu}».`,
+    why,
+    fix.exampleRu && fix.exampleDe ? `Noch ein Beispiel: «${fix.exampleRu}», das heißt: ${fix.exampleDe}` : "",
+    "Sag den Satz jetzt noch einmal.",
+  ]
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .map((x) => (/[.!?»«]$/.test(x) ? x : `${x}.`))
+    .join(" ");
+}
+
+/** Ein misslungener Wiederholungsversuch: kurz, und der Satz noch einmal zum Nachsprechen. */
+export function retrySpeech(correctedRu: string, low: boolean, reason: "wrong" | "silence" | "unsure"): string {
+  if (!low && reason === "wrong") return `Ещё раз, медленно: «${correctedRu}».`;
+  const lead =
+    reason === "silence"
+      ? "Ich habe dich nicht gehört."
+      : reason === "unsure"
+        ? "Ich habe dich nicht sicher verstanden."
+        : "Noch nicht ganz. Hör genau hin:";
+  return `${lead} «${correctedRu}». Sag es noch einmal.`;
+}
+
+/** Steckt in einem Satz derselbe verbesserte Satz? Satzzeichen, Groß/klein und ё/е zählen nicht. */
+export function sameSentence(heard: string, target: string): boolean {
+  const a = wordsOf(heard);
+  const b = wordsOf(target);
+  return b.length > 0 && a.join(" ") === b.join(" ");
+}
 
 /** Wie anspruchsvoll Anja je Stufe spricht — dieselben fünf Stufen wie im getippten Gespräch. */
 const LEVELS = [
@@ -231,15 +398,25 @@ export function systemPrompt(
     "Du bist Anja, eine herzliche Russin Mitte zwanzig. Du führst ein gesprochenes Übungsgespräch mit Kadir, einem deutschen Russisch-Lernenden.",
     "",
     "Regeln, die immer gelten:",
-    "- Sprich NUR Russisch. Kein Deutsch, kein Englisch, auch nicht zur Erklärung.",
+    "- Du sprichst Russisch. Deutsch nur, wenn eine Regie-Anweisung es verlangt oder Kadir dich auf Deutsch etwas fragt — und danach geht es sofort auf Russisch weiter.",
+    `- Kadirs Niveau: ${setup.level}. ${
+      LOW_LEVELS.has(setup.level)
+        ? "Hilfen und Erklärungen bekommt er noch auf Deutsch."
+        : "Erkläre zuerst in einfachem Russisch, Deutsch nur, wenn es nicht anders geht."
+    }`,
     "- Sprich langsam und deutlich.",
     "- Kadir spricht Russisch mit Akzent und macht Fehler. Geh davon aus, dass er Russisch spricht, und hör wohlwollend zu.",
     `- ${LEVELS[setup.stage]}`,
     known ? `- Diese Wörter kennt Kadir schon gut, benutze sie bevorzugt: ${known}.` : "",
     "- Reagiere zuerst kurz und echt auf das, was Kadir gesagt hat, und stelle dann GENAU EINE Frage. Fragt Kadir dich etwas («А ты?»), beantworte es zuerst.",
     "- Stelle nie eine Frage, die du in diesem Gespräch schon gestellt hast. Wechsle das Thema, wenn eines erschöpft ist — du bist neugierig auf Kadirs Leben.",
-    "- Macht Kadir einen Sprachfehler, sag seinen Satz einmal richtig vor und geh dann weiter. War sein Satz richtig, wiederhole ihn NICHT.",
-    "- Du bist eine Gesprächspartnerin, keine Lehrerin: keine Erklärungen, keine Vorträge, kein Lob für jede Antwort.",
+    "- Korrigiere Kadir NIE von dir aus und wiederhole seinen Satz nicht: Ob er einen Fehler gemacht hat, wird gesondert geprüft — Korrekturen bekommst du als Regie-Anweisung.",
+    "- Du bist Gesprächspartnerin und Lehrerin zugleich: herzlich, direkt und genau. Im Gespräch keine Vorträge; Erklärungen nur, wenn eine Regie-Anweisung es verlangt oder Kadir fragt.",
+    setup.stones.length
+      ? `- Darüber stolpert Kadir oft: ${setup.stones
+          .map((s) => `${s.topic}${s.wrongRu && s.rightRu ? ` (falsch «${s.wrongRu}», richtig «${s.rightRu}»)` : ""}`)
+          .join("; ")}. Stelle ab und zu eine Frage, bei deren Antwort er genau so eine Form braucht.`
+      : "",
     "- Text in runden Klammern, der mit «Regie:» beginnt, stammt nicht von Kadir. Es ist eine Anweisung an dich: befolge sie, sprich sie nie aus.",
     setup.scenario ? `\nDie Situation: ${setup.scenario}` : "",
     setup.interest
@@ -259,7 +436,7 @@ export function systemPrompt(
 export const HELPS_PROMPT = `You support a spoken Russian practice conversation between Anja (a Russian native speaker) and Kadir, a German-speaking beginner.
 Input is JSON: {"question": Anja's previous line, "answer": what Kadir just said (a speech transcript), "reply": Anja's new line}.
 Return ONLY one JSON object with exactly these fields:
-{"check":{"ok":true,"correctedRu":"","correctedDe":"","focus":"","explanationDe":""},"goodDe":"","replyDe":"","words":[{"ru":"","de":""}],"examples":[{"ru":"","de":""},{"ru":"","de":""}]}
+{"check":{"ok":true,"correctedRu":"","correctedDe":"","focus":"","explanationDe":"","topicDe":"","exampleRu":"","exampleDe":""},"goodDe":"","replyDe":"","words":[{"ru":"","de":""}],"examples":[{"ru":"","de":""},{"ru":"","de":""}]}
 
 check — judge ONLY Kadir's answer. It is a speech transcript: ignore punctuation and capitalisation completely.
 ok=true when the sentence is understandable and has no real grammar mistake. Short answers and single words are fine.
@@ -267,8 +444,11 @@ WHAT the learner says (likes, dislikes, choices) is never a mistake, and a diffe
 Whether the answer fits the question is NOT your concern: an answer about a different topic is still ok=true when its Russian is correct. Never swap a word for another word to make the answer fit the question.
 ok=false ONLY for a real language mistake such as a wrong word form or a missing verb. Then:
 correctedRu = the learner's own sentence with ONLY that mistake fixed (same words otherwise), correctedDe = its German translation,
-focus = one short German sentence naming the issue, explanationDe = one short German sentence explaining the rule precisely, naming the grammar (for example the case or the verb form) and quoting the Russian forms.
-When ok=true, or when answer is empty, the other four fields are empty strings.
+focus = one short German sentence naming the issue.
+explanationDe = at most two short German sentences for a learner who does NOT know grammar terms: start from the meaning (what the word does in the sentence, e.g. "Was du willst, ..."), quote the Russian forms, and name the precise grammar term only at the very end in parentheses (for example "(Akkusativ)"). Every grammatical statement must be exactly right.
+topicDe = a short German label of the grammar point for the learner's list of recurring mistakes, at most 6 words, plain words first (e.g. "Wen-Fall nach »wollen«", "Endung bei »du«", "Wo-Fall nach »в«").
+exampleRu = ONE more short, simple Russian sentence (3 to 6 words) that uses exactly the same rule correctly AND shows the same visible change (for example another word ending in -а that becomes -у; never a word that stays unchanged, like «спорт» or «кофе»); exampleDe = its German translation.
+When ok=true, or when answer is empty, all other check fields are empty strings.
 
 goodDe — like a calm teacher: ONE short German sentence (at most 12 words, informal "du") naming one concrete word or phrase Kadir used correctly, quoted exactly as he said it, in plain words. Examples: Die Ich-Form «люблю» stimmt. / Die Verneinung «не люблю» ist richtig. / «в Берлине» hat die richtige Endung. In goodDe ONLY, avoid grammar terminology (no case names, no "Subjekt", "Adverb", "Substantiv") and never hedge with "oder". No exclamation marks, no "super", "perfekt" or "toll". Never mention the mistake here. Empty string when answer is empty, has fewer than three words, or there is nothing specific to name.
 
@@ -289,13 +469,24 @@ A beginner said a sentence (speech transcript: ignore punctuation and capitalisa
 1. originalAcceptable — decide whether the ORIGINAL sentence is acceptable Russian that an educated native speaker could say — even if the proposed correction is also fine or more common.
 Remember that Russian allows, among other things: the partitive genitive after verbs of wanting, giving, eating and drinking («хочу воды», «выпей чаю»), free word order, omitted pronouns, and short elliptical answers.
 2. explanationCorrect — check the German explanation as a grammar teacher would: is every grammatical statement in it factually right (the case named, the word class, the gender, the rule)? A single wrong term (for example calling an accusative a genitive, a personal pronoun a reflexive pronoun, a noun a verb) makes it false. Wording and style do not matter.
-Return ONLY JSON: {"originalAcceptable": true|false, "explanationCorrect": true|false, "why": "one short English sentence"}`;
+3. exampleCorrect — if an example is given: is it a grammatically correct, natural Russian sentence that uses the same rule and shows the same VISIBLE change as the correction (a word whose form does not change, like «спорт» in the accusative, does not count), and is its German translation right? false when no example is given.
+Return ONLY JSON: {"originalAcceptable": true|false, "explanationCorrect": true|false, "exampleCorrect": true|false, "why": "one short English sentence"}`;
+
+/**
+ * Prüft, was Anja frei auf Deutsch erklärt hat (Antwort auf eine Frage, »Ich komme nicht weiter«),
+ * bevor es abgespielt wird. Nur Fakten über das Russische zählen, nicht der Stil.
+ */
+export const VERIFY_PROMPT = `You review what a Russian teacher (Anja) is about to say aloud to a German-speaking beginner. Her answer mixes German and Russian.
+Check every factual claim about the Russian language in it: translations of Russian words or sentences, grammar statements (cases, verb forms, gender, word classes, rules), and whether every quoted Russian phrase is grammatically correct. Ignore style, friendliness, questions she asks and the conversation itself.
+Return ONLY JSON: {"correct": true|false, "why": "one short English sentence"}`;
 
 const secondOpinion = z.object({
   originalAcceptable: z.boolean(),
   // Fehlt das Urteil, gilt die Erklärung als nicht bestätigt.
   explanationCorrect: z.boolean().default(false),
+  exampleCorrect: z.boolean().default(false),
 });
+const verifyReply = z.object({ correct: z.boolean() });
 
 /** Steht statt eines Hinweises, dessen Erklärung die zweite Meinung nicht bestanden hat. */
 export const PLAIN_FOCUS = "Hier stimmt eine Form nicht.";
@@ -434,6 +625,12 @@ export function soundPraise(goodDe: string, answer: string, correctedRu = ""): s
   const said = new Set(wordsOf(answer));
   const fixed = correctedRu ? new Set(wordsOf(correctedRu)) : null;
   if (!quoted.every((w) => said.has(w) && (!fixed || fixed.has(w)))) return "";
+  // Gemessen 18.11.2026: »Die Form «Кадир» ist richtig.« — einen Namen zu loben ist leeres Lob.
+  // Namen sind Wörter, die mitten im Satz groß geschrieben stehen.
+  const names = new Set(
+    (answer.match(/(?<=\S\s+)\p{Lu}\p{Ll}+/gu) ?? []).map((w) => w.toLowerCase().replaceAll("ё", "е")),
+  );
+  if (quoted.every((w) => names.has(w))) return "";
   // Gemessen: Das Modell nannte »дом« ein Verb und »я дома« einen Nominativ. Ein Lob mit falschem Fachwort
   // lehrt Falsches — Fachbegriffe gehören in die Erklärung eines Fehlers (dort gemessen zuverlässig), nicht ins Lob.
   if (GRAMMAR_TERMS.test(text) || /\boder\b/i.test(text)) return "";
@@ -474,6 +671,10 @@ export function settleHelps(raw: unknown, answer: string, question = ""): LiveHe
             correctedDe: c.correctedDe,
             focus: c.focus,
             explanationDe: c.explanationDe,
+            topicDe: c.topicDe.trim() || c.focus.trim().slice(0, 80),
+            // Ein Beispiel nur, wenn es Russisch ist und eine Übersetzung hat; geprüft wird es mit der zweiten Meinung.
+            exampleRu: cyrillic(c.exampleRu) && c.exampleDe.trim() ? c.exampleRu.trim() : "",
+            exampleDe: cyrillic(c.exampleRu) && c.exampleDe.trim() ? c.exampleDe.trim() : "",
           }
         : { ok: true },
   };
@@ -685,6 +886,9 @@ class Session {
   private ear: Ear;
   /** Der gesprochene Zug, zu dem eintreffende Mitschrift-Stücke des Gesprächsmodells gehören. */
   private listening: Turn | null = null;
+  /** Der verbesserte Satz, den der Lernende gerade noch einmal sagen soll. */
+  private expect: LiveExpect | null = null;
+  private expectFix: LiveFix | null = null;
 
   constructor(
     private host: AnjaLive,
@@ -797,6 +1001,10 @@ class Session {
     });
   }
 
+  private get low() {
+    return LOW_LEVELS.has(this.setup.level);
+  }
+
   private onMessage(msg: Record<string, unknown>) {
     if (msg.goAway) this.stale = true;
     const turn = this.current;
@@ -813,59 +1021,294 @@ class Session {
       this.listening.heardAgent += sc.inputTranscription.text;
       wake(this.listening);
     }
-    if (!turn || turn.done || !sc) return;
+    if (!turn || turn.done || turn.error || !sc) return;
     for (const part of sc.modelTurn?.parts ?? []) {
       const data = part.inlineData?.data;
       if (!data) continue;
-      turn.firstMs ??= this.host.now() - turn.startedAt;
-      turn.audio.push(Buffer.from(data, "base64"));
+      const buf = Buffer.from(data, "base64");
+      // Zurückgehalten, bis die Prüfung entschieden hat — sonst sofort hörbar.
+      if (turn.holding) turn.held.push(buf);
+      else {
+        turn.firstMs ??= this.host.now() - turn.startedAt;
+        turn.audio.push(buf);
+      }
     }
-    if (sc.outputTranscription?.text) turn.said += sc.outputTranscription.text;
-    if (sc.turnComplete) void this.complete(turn);
-    else wake(turn);
+    const text = sc.outputTranscription?.text;
+    if (text) {
+      if (turn.holding) turn.heldSaid += text;
+      else turn.said += text;
+    }
+    if (sc.turnComplete) {
+      const g = turn.generation;
+      turn.generation = null;
+      g?.resolve();
+    }
+    wake(turn);
   }
 
-  /** Anja ist fertig: festlegen, was der Lernende gesagt hat, dann Prüfung und Hilfen anstoßen. */
-  private async complete(turn: Turn) {
-    if (turn.timer) clearTimeout(turn.timer);
+  /**
+   * Schickt etwas an das Gesprächsmodell und wartet, bis seine Antwort fertig ist.
+   * `hold`: die Antwort zurückhalten (release/discard entscheiden später).
+   */
+  private generate(turn: Turn, payload: unknown | unknown[], hold: boolean): Promise<void> {
+    const socket = this.socket;
+    if (!socket) return Promise.reject(new Error("connection_lost"));
+    turn.holding = hold;
+    turn.held = [];
+    turn.heldSaid = "";
+    return new Promise<void>((resolve, reject) => {
+      turn.generation = { resolve, reject };
+      for (const p of Array.isArray(payload) ? payload : [payload])
+        socket.send(JSON.stringify({ realtimeInput: p }));
+    });
+  }
+
+  /** Die zurückgehaltene Antwort freigeben: Sie wird jetzt hörbar. */
+  private release(turn: Turn) {
+    if (turn.held.length) turn.firstMs ??= this.host.now() - turn.startedAt;
+    turn.audio.push(...turn.held);
+    turn.said = tidy(`${turn.said} ${turn.heldSaid}`);
+    turn.held = [];
+    turn.heldSaid = "";
+    turn.holding = false;
+    turn.phase = "speaking";
+    wake(turn);
+  }
+
+  /** Die zurückgehaltene Antwort verwerfen — der Lernende hört sie nie. */
+  private discard(turn: Turn) {
+    turn.held = [];
+    turn.heldSaid = "";
+    turn.holding = false;
+  }
+
+  /** Anja liest einen fest zusammengesetzten Text vor; der Ton läuft sofort. */
+  private async sayExactly(turn: Turn, text: string) {
+    turn.phase = "speaking";
+    wake(turn);
+    await this.generate(turn, { text: regieSayExactly(text) }, false);
     turn.said = tidy(turn.said);
-    if (turn.kind === "audio") {
-      const ear = turn.ear ? await turn.ear : null;
-      // Ist die zweite Mitschrift noch kürzer als die des Ohrs, kommt ihr Rest meist gleich nach.
-      if (wordsOf(turn.heardAgent).length < wordsOf(ear ?? "").length)
-        await new Promise((r) => setTimeout(r, this.host.deps.lateMs ?? LATE_TRANSCRIPT_MS));
-      const heard = settleHeard(ear, turn.heardAgent);
-      turn.heard = heard.text;
-      turn.heardState = heard.state;
-      turn.heardAlt = heard.alt;
-      if (heard.state !== "sure")
-        this.host.log(`[anja-live] Mitschrift ${heard.state}${ear === null ? " (Ohr fehlt)" : ""}`);
-      // Nur zur Fehlersuche (ANJA_LIVE_DEBUG=1): was die beiden Ohren gehört haben. Sonst nie im Protokoll.
-      if (process.env.ANJA_LIVE_DEBUG)
-        this.host.log(
-          `[anja-live] Ohr «${ear ?? "—"}» · Gespräch «${tidy(turn.heardAgent)}» · Anja «${turn.said}»`,
-        );
+    // Auf dem Bildschirm steht der feste Text — eine Abweichung beim Vorlesen nur fürs Protokoll.
+    if (!mostlySame(turn.said, text)) this.host.log("[anja-live] Vorgelesener Text weicht vom festen Text ab");
+  }
+
+  /**
+   * Eine zurückgehaltene, frei formulierte Antwort: Ist sie reines Russisch (Gespräch), wird sie
+   * freigegeben. Enthält sie Deutsch, ist es eine Erklärung — erst prüfen, dann abspielen.
+   */
+  private async checkHeld(turn: Turn) {
+    const said = tidy(turn.heldSaid);
+    if (!said || isRussian(said)) {
+      this.release(turn);
+      return;
     }
+    turn.phase = "checking";
+    wake(turn);
+    let ok = await this.host.verify(said);
+    if (ok === false) {
+      this.host.log("[anja-live] Erklärung nicht bestätigt — zweiter Anlauf");
+      await this.generate(turn, { text: REGIE.retryExplain }, true);
+      const again = tidy(turn.heldSaid);
+      ok = !again || isRussian(again) ? true : await this.host.verify(again);
+    }
+    turn.verified = ok === true;
+    if (ok === true) {
+      this.release(turn);
+      return;
+    }
+    // Nicht bestätigt (oder die Prüfung war nicht erreichbar): nichts Ungeprüftes vorlesen.
+    this.host.log(`[anja-live] Erklärung ${ok === false ? "verworfen" : "ungeprüft zurückgehalten"}`);
+    this.discard(turn);
+    await this.sayExactly(
+      turn,
+      this.low
+        ? "Das kann ich dir gerade nicht sicher erklären. Schau es dir gleich in Ruhe in der Grammatik an. Lass uns weitersprechen."
+        : "Давай вернёмся к разговору.",
+    );
+  }
+
+  /** Bestätigter Fehler: Anjas Antwort verwerfen, die feste Erklärung vorlesen, Wiederholung erwarten. */
+  private async teach(turn: Turn, fix: LiveFix, goodDe: string, lang: "de" | "ru") {
+    this.discard(turn);
+    const speech = teachSpeech(fix, goodDe, lang);
+    turn.teach = { wrongRu: turn.heard, fix, goodDe, speech, lang };
+    this.expectFix = fix;
+    this.expect = {
+      correctedRu: fix.correctedRu,
+      correctedDe: fix.correctedDe,
+      topicDe: fix.topicDe,
+      tries: this.expect?.tries ?? 0,
+      explained: lang === "de",
+    };
+    await this.sayExactly(turn, speech);
+  }
+
+  /** Was der Lernende gesagt hat — aus dem Ohr und der Mitschrift des Gesprächsmodells. */
+  private async settleSpoken(turn: Turn) {
+    const ear = turn.ear ? await turn.ear : null;
+    // Ist die zweite Mitschrift noch kürzer als die des Ohrs, kommt ihr Rest meist gleich nach.
+    if (wordsOf(turn.heardAgent).length < wordsOf(ear ?? "").length)
+      await new Promise((r) => setTimeout(r, this.host.deps.lateMs ?? LATE_TRANSCRIPT_MS));
+    const heard = settleHeard(ear, turn.heardAgent);
+    turn.heard = heard.text;
+    turn.heardState = heard.state;
+    turn.heardAlt = heard.alt;
+    if (heard.state !== "sure")
+      this.host.log(`[anja-live] Mitschrift ${heard.state}${ear === null ? " (Ohr fehlt)" : ""}`);
+    // Nur zur Fehlersuche (ANJA_LIVE_DEBUG=1): was die beiden Ohren gehört haben. Sonst nie im Protokoll.
+    if (process.env.ANJA_LIVE_DEBUG)
+      this.host.log(
+        `[anja-live] Ohr «${ear ?? "—"}» · Gespräch «${tidy(turn.heardAgent)}» · Anja «${tidy(turn.heldSaid)}»`,
+      );
+  }
+
+  private heardDone(turn: Turn) {
+    turn.heardSettled = true;
+    turn.phase = "checking";
+    wake(turn);
+  }
+
+  /** Eine Antwort des Lernenden (gesprochen oder getippt). */
+  private async runAnswer(turn: Turn, input: Extract<LiveInput, { kind: "audio" | "text" }>) {
+    if (input.kind === "audio") {
+      const pcm = Buffer.from(input.audio, "base64");
+      this.listening = turn;
+      // Derselbe Ton geht zugleich ans Ohr; ein Fehler dort hält das Gespräch nie auf.
+      turn.ear = this.ear.listen(pcm, input.rate).catch(() => null);
+      const chunks: unknown[] = [{ activityStart: {} }];
+      for (let i = 0; i < pcm.length; i += 16_000)
+        chunks.push({
+          audio: {
+            data: pcm.subarray(i, i + 16_000).toString("base64"),
+            mimeType: `audio/pcm;rate=${input.rate}`,
+          },
+        });
+      chunks.push({ activityEnd: {} });
+      // Anja antwortet — zurückgehalten, bis entschieden ist, ob korrigiert wird.
+      await this.generate(turn, chunks, true);
+      await this.settleSpoken(turn);
+    } else {
+      await this.generate(turn, { text: input.text }, true);
+    }
+    this.heardDone(turn);
+    if (turn.heardState === "sure") {
+      const question = [...this.lines].reverse().find((l) => l.who === "anja")?.ru ?? "";
+      const helps = await this.host.helps(question, turn.heard, tidy(turn.heldSaid)).catch((e) => {
+        this.host.log(`[anja-live] Hilfen fehlgeschlagen: ${String(e).slice(0, 160)}`);
+        return null;
+      });
+      const fix = helps?.check && !helps.check.ok ? helps.check : null;
+      if (helps && fix && otherEarHeardFix(turn.heard, fix.correctedRu, turn.heardAlt)) {
+        this.host.log("[anja-live] Verbesserung zurückgehalten — das zweite Ohr hörte die richtige Form");
+        helps.check = null;
+        helps.goodDe = "";
+      } else if (helps && fix) {
+        // Die verworfene Antwort braucht keine Übersetzung; Urteil und Lob bleiben.
+        turn.helps = { ...helps, replyDe: "", words: [], examples: [] };
+        turn.helpsState = "ready";
+        await this.teach(turn, fix, helps.goodDe, this.low ? "de" : "ru");
+        return;
+      }
+      turn.helps = helps;
+      turn.helpsState = helps ? "ready" : "failed";
+      this.release(turn);
+      return;
+    }
+    // Auf Deutsch gesprochen oder getippt: Anja hat geantwortet — erklärt sie dabei etwas, wird geprüft.
+    if (turn.heardState === "foreign") {
+      await this.checkHeld(turn);
+      return;
+    }
+    // Nichts oder nicht sicher verstanden: wie bisher, ohne Urteil.
+    this.release(turn);
+  }
+
+  /** Der Lernende sagt den verbesserten Satz noch einmal. Nur das Ohr hört zu; verglichen wird fest. */
+  private async runRepeat(turn: Turn, input: Extract<LiveInput, { kind: "audio" }>, exp: LiveExpect) {
+    const pcm = Buffer.from(input.audio, "base64");
+    turn.ear = this.ear.listen(pcm, input.rate).catch(() => null);
+    const heard = settleHeard(await turn.ear, "");
+    turn.heard = heard.text;
+    turn.heardState = heard.state;
+    turn.heardAlt = heard.alt;
+    this.heardDone(turn);
+    if (heard.state === "sure" && sameSentence(heard.text, exp.correctedRu)) {
+      this.expect = null;
+      this.expectFix = null;
+      turn.repeat = { ok: true, tries: exp.tries + 1, gaveUp: false };
+      turn.phase = "speaking";
+      await this.generate(turn, { text: regieRepeatOk(heard.text) }, false);
+      return;
+    }
+    if (heard.state === "foreign") {
+      // Eine Frage auf Deutsch mitten im Wiederholen — beantworten (geprüft), der Satz bleibt offen.
+      await this.generate(turn, { text: regieGerman(heard.alt, this.low) }, true);
+      await this.checkHeld(turn);
+      return;
+    }
+    if (heard.state !== "sure") {
+      await this.sayExactly(turn, retrySpeech(exp.correctedRu, this.low, heard.state === "none" ? "silence" : "unsure"));
+      return;
+    }
+    const tries = exp.tries + 1;
+    if (tries >= REPEAT_TRIES) {
+      this.expect = null;
+      this.expectFix = null;
+      turn.repeat = { ok: false, tries, gaveUp: true };
+      turn.phase = "speaking";
+      await this.generate(turn, { text: regieGiveUp(exp.correctedRu) }, false);
+      return;
+    }
+    this.expect = { ...exp, tries };
+    turn.repeat = { ok: false, tries, gaveUp: false };
+    // Ab B1 kam zuerst nur der kurze russische Hinweis — klappt es nicht, folgt jetzt die Erklärung auf Deutsch.
+    if (!exp.explained && this.expectFix) {
+      await this.teach(turn, this.expectFix, "", "de");
+      return;
+    }
+    await this.sayExactly(turn, retrySpeech(exp.correctedRu, this.low, "wrong"));
+  }
+
+  private async run(turn: Turn, input: LiveInput | { kind: "start" }, resumed: boolean) {
+    try {
+      const exp = this.expect;
+      if (input.kind === "audio" && exp) await this.runRepeat(turn, input, exp);
+      else if (input.kind === "audio" || input.kind === "text") await this.runAnswer(turn, input);
+      else if (input.kind === "help") {
+        await this.generate(turn, { text: this.low ? REGIE.helpLow : REGIE.helpHigh }, true);
+        await this.checkHeld(turn);
+      } else {
+        const regie = input.kind === "start" ? (resumed ? REGIE.resume : REGIE.start) : REGIE[input.kind];
+        await this.generate(turn, { text: regie }, false);
+      }
+      this.finish(turn);
+    } catch (e) {
+      if (!turn.error) this.fail(turn, e instanceof Error ? e.message : "failed");
+    }
+  }
+
+  /** Der Zug ist fertig: Verlauf fortschreiben, Übersetzung zu Anjas Antwort nachtragen. */
+  private finish(turn: Turn) {
     if (turn.error) return;
+    if (turn.timer) clearTimeout(turn.timer);
+    if (turn.holding) this.release(turn);
+    turn.said = tidy(turn.said);
+    turn.heardSettled = true;
     turn.done = true;
+    turn.phase = "speaking";
+    turn.expecting = this.expect ? { ...this.expect } : null;
     const question = [...this.lines].reverse().find((l) => l.who === "anja")?.ru ?? "";
     const answered = turn.kind === "audio" || turn.kind === "text";
-    if (answered && turn.heard) this.lines.push({ who: "kadir", ru: turn.heard });
-    if (turn.said) this.lines.push({ who: "anja", ru: turn.said });
+    if (answered && turn.heard && turn.heardState !== "foreign") this.lines.push({ who: "kadir", ru: turn.heard });
+    if (turn.teach) this.lines.push({ who: "anja", ru: `«${turn.teach.fix.correctedRu}» — скажи ещё раз.` });
+    else if (turn.said) this.lines.push({ who: "anja", ru: turn.said });
     wake(turn);
-    if (!turn.said) return;
+    // Übersetzung und Wortbedeutungen zu Anjas freier Antwort, falls noch nicht da (nicht zu einer Erklärung).
+    if (turn.helpsState !== "none" || !turn.said || turn.teach || !isRussian(turn.said)) return;
     turn.helpsState = "pending";
-    // Beurteilt wird nur, was sicher verstanden wurde.
-    const judged = answered && turn.heardState === "sure" ? turn.heard : "";
     this.host
-      .helps(question, judged, turn.said)
+      .helps(question, "", turn.said)
       .then((helps) => {
-        const fix = helps.check;
-        if (fix && !fix.ok && otherEarHeardFix(judged, fix.correctedRu, turn.heardAlt)) {
-          this.host.log("[anja-live] Verbesserung zurückgehalten — das zweite Ohr hörte die richtige Form");
-          helps.check = null;
-          helps.goodDe = "";
-        }
         turn.helps = helps;
         turn.helpsState = "ready";
       })
@@ -879,6 +1322,9 @@ class Session {
   private fail(turn: Turn, error: string) {
     if (turn.timer) clearTimeout(turn.timer);
     turn.error = error;
+    const g = turn.generation;
+    turn.generation = null;
+    g?.reject(new Error(error));
     wake(turn);
   }
 
@@ -890,8 +1336,7 @@ class Session {
       this.close();
       await this.open();
     }
-    const socket = this.socket;
-    if (!socket) throw new Error("live_unavailable");
+    if (!this.socket) throw new Error("live_unavailable");
     const turn: Turn = {
       n: this.turns.length + 1,
       kind: input.kind,
@@ -899,13 +1344,23 @@ class Session {
       error: null,
       heard: input.kind === "text" ? input.text : "",
       heardState: input.kind === "text" ? (isRussian(input.text) ? "sure" : "foreign") : "none",
-      heardAlt: "",
+      heardAlt: input.kind === "text" && !isRussian(input.text) ? input.text : "",
       heardAgent: "",
       ear: null,
       said: "",
       firstMs: null,
       helps: null,
       helpsState: "none",
+      phase: input.kind === "audio" ? "hearing" : input.kind === "text" ? "checking" : "speaking",
+      teach: null,
+      repeat: null,
+      expecting: null,
+      verified: null,
+      holding: false,
+      held: [],
+      heldSaid: "",
+      generation: null,
+      heardSettled: input.kind !== "audio",
       audio: [],
       startedAt: this.host.now(),
       waiters: new Set(),
@@ -918,26 +1373,10 @@ class Session {
       this.fail(turn, "timeout");
       this.stale = true;
     }, TURN_TIMEOUT_MS);
-    const say = (payload: unknown) => socket.send(JSON.stringify({ realtimeInput: payload }));
-    if (input.kind === "audio") {
-      const pcm = Buffer.from(input.audio, "base64");
-      this.listening = turn;
-      // Derselbe Ton geht zugleich ans Ohr; ein Fehler dort hält das Gespräch nie auf.
-      turn.ear = this.ear.listen(pcm, input.rate).catch(() => null);
-      say({ activityStart: {} });
-      for (let i = 0; i < pcm.length; i += 16_000)
-        say({
-          audio: {
-            data: pcm.subarray(i, i + 16_000).toString("base64"),
-            mimeType: `audio/pcm;rate=${input.rate}`,
-          },
-        });
-      say({ activityEnd: {} });
-    } else if (input.kind === "text") say({ text: input.text });
-    else if (input.kind === "start") {
-      this.ear.warm();
-      say({ text: resumed ? REGIE.resume : REGIE.start });
-    } else say({ text: REGIE[input.kind] });
+    if (input.kind === "start") this.ear.warm();
+    // Der Ablauf läuft weiter, während der Lernende schon den Stand abfragt. Bis zum ersten Warten
+    // ist alles an Google gesendet.
+    void this.run(turn, input, resumed);
     return turn.n;
   }
 
@@ -993,11 +1432,41 @@ const view = (t: Turn): LiveTurnView => ({
   firstMs: t.firstMs,
   helps: t.helps,
   helpsState: t.helpsState,
+  phase: t.phase,
+  teach: t.teach,
+  repeat: t.repeat,
+  expecting: t.expecting,
+  verified: t.verified,
 });
+
+/** Hat Anja beim Vorlesen im Wesentlichen den festen Text gesagt? (Wortvergleich, ohne Satzzeichen) */
+function mostlySame(said: string, text: string): boolean {
+  const words = (x: string) => (x.toLowerCase().replaceAll("ё", "е").match(/\p{L}+/gu) ?? []);
+  const want = words(text);
+  if (!want.length) return true;
+  const got = new Set(words(said));
+  return want.filter((w) => got.has(w)).length / want.length >= 0.7;
+}
 
 export class AnjaLive {
   private sessions = new Map<string, Session>();
   private recent = new Map<string, number[]>();
+  /**
+   * Zuletzt gemessene Antwortzeit je Hilfen-Modell. Gemessen am 18.11.2026: 3.5 Flash-Lite brauchte
+   * 6–7 s (knapp über der Frist, jeder Anlauf brach ab), 3.1 Flash-Lite 1–2 s. Gefragt wird zuerst
+   * das zuletzt schnellere; ein Abbruch stuft ein Modell für eine Weile zurück.
+   */
+  private speed = new Map<string, { ms: number; at: number }>();
+
+  private lastSpeed(model: string): number {
+    const s = this.speed.get(model);
+    return s && this.now() - s.at < SPEED_MEMORY_MS ? s.ms : 0;
+  }
+
+  private noteSpeed(model: string, ms: number) {
+    const prev = this.lastSpeed(model);
+    this.speed.set(model, { ms: prev ? Math.round((prev + ms) / 2) : ms, at: this.now() });
+  }
 
   constructor(readonly deps: AnjaLiveDeps) {}
 
@@ -1082,12 +1551,19 @@ export class AnjaLive {
     if (!key) throw new Error("no_key");
     const request = this.deps.request ?? fetch;
     let lastError = "helps_exhausted";
+    let failedLast = "";
     for (let attempt = 0; attempt < 5; attempt++) {
       const u = this.usage();
-      const open = HELP_MODELS.filter(([m, cap]) => (u.count[m] ?? 0) < cap).map(([m]) => m);
+      const open = HELP_MODELS.filter(([m, cap]) => (u.count[m] ?? 0) < cap)
+        .map(([m]) => m)
+        // Stabil sortiert: ohne Messung bleibt die Reihenfolge aus HELP_MODELS.
+        .sort((a, b) => this.lastSpeed(a) - this.lastSpeed(b));
       if (!open.length) throw new Error("helps_exhausted");
-      const model = open[attempt % open.length] as string;
+      // Das schnellste — aber nicht gleich wieder das, das eben gescheitert ist.
+      const model = (open.find((m) => m !== failedLast) ?? open[0]) as string;
+      failedLast = model;
       await this.pace(model);
+      const t0 = Date.now();
       try {
         const res = await request(`${TEXT_URL}/${model}:generateContent`, {
           method: "POST",
@@ -1111,6 +1587,7 @@ export class AnjaLive {
         }
         if (!res.ok) {
           lastError = `http_${res.status}`;
+          this.noteSpeed(model, HELP_TIMEOUT_MS * 2);
           this.log(`[anja-live] ${what} ${model}: ${lastError}`);
           continue;
         }
@@ -1122,9 +1599,11 @@ export class AnjaLive {
           .filter((p) => !p.thought)
           .map((p) => p.text ?? "")
           .join("");
+        this.noteSpeed(model, Date.now() - t0);
         return parse(firstJson(text));
       } catch (e) {
         lastError = e instanceof Error ? e.message.slice(0, 80) : "failed";
+        if (/timeout|abort/i.test(lastError)) this.noteSpeed(model, HELP_TIMEOUT_MS * 2);
         this.log(`[anja-live] ${what} ${model}: ${lastError}`);
       }
     }
@@ -1149,6 +1628,7 @@ export class AnjaLive {
           original: answer,
           proposedCorrection: fix.correctedRu,
           explanationDe: `${fix.focus} ${fix.explanationDe}`.trim(),
+          example: fix.exampleRu ? `${fix.exampleRu} — ${fix.exampleDe}` : "",
         },
         300,
         (raw) => secondOpinion.parse(raw),
@@ -1165,13 +1645,33 @@ export class AnjaLive {
         // richtig — und das soll der Lernende auch erfahren, statt ohne Urteil dazustehen.
         this.log("[anja-live] Korrektur verworfen — der Satz ist richtig");
         helps.check = { ok: true };
-      } else if (!second.explanationCorrect) {
-        // Der Fehler ist bestätigt, die Erklärung nicht: die richtige Fassung zeigen, aber nichts Falsches lehren.
-        this.log("[anja-live] Erklärung nicht bestätigt");
-        helps.check = { ...fix, focus: PLAIN_FOCUS, explanationDe: "" };
+      } else {
+        let checked: LiveFix = fix;
+        if (!second.explanationCorrect) {
+          // Der Fehler ist bestätigt, die Erklärung nicht: die richtige Fassung zeigen, aber nichts Falsches lehren.
+          this.log("[anja-live] Erklärung nicht bestätigt");
+          // Ohne bestätigte Erklärung auch kein Beispiel (gemessen: »лета« → Beispiel »этот парк« ohne sichtbare Änderung).
+          checked = { ...checked, focus: PLAIN_FOCUS, explanationDe: "", exampleRu: "", exampleDe: "" };
+        }
+        if (checked.exampleRu && !second.exampleCorrect) {
+          this.log("[anja-live] Beispiel nicht bestätigt");
+          checked = { ...checked, exampleRu: "", exampleDe: "" };
+        }
+        helps.check = checked;
       }
     }
     return helps;
+  }
+
+  /**
+   * Prüft eine frei gesprochene Antwort von Anja, bevor sie abgespielt wird. Reines Russisch
+   * (Gespräch) braucht keine Prüfung; enthält sie Deutsch, ist es eine Erklärung.
+   * → true = bestätigt, false = nicht bestätigt, null = Prüfung nicht erreichbar
+   */
+  async verify(said: string): Promise<boolean | null> {
+    return this.ask("Erklärung prüfen", VERIFY_PROMPT, { said }, 200, (raw) => verifyReply.parse(raw).correct).catch(
+      () => null,
+    );
   }
 
   // ── Gespräche ────────────────────────────────────────────────────────────
@@ -1218,7 +1718,7 @@ export class AnjaLive {
   }
 
   /** Stand eines Zugs; `wait` hält die Antwort zurück, bis Anja fertig gesprochen hat bzw. die Hilfen da sind. */
-  async turn(id: string, n: number, wait: "none" | "done" | "helps" = "none", maxMs = 25_000) {
+  async turn(id: string, n: number, wait: "none" | "heard" | "done" | "helps" = "none", maxMs = 25_000) {
     const turn = this.sessions.get(id)?.turn(n);
     if (!turn) return null;
     const until = this.now() + maxMs;
@@ -1226,7 +1726,9 @@ export class AnjaLive {
       !!turn.error ||
       (wait === "none"
         ? true
-        : wait === "done"
+        : wait === "heard"
+          ? turn.heardSettled || turn.done
+          : wait === "done"
           ? turn.done
           : turn.done &&
             turn.helpsState !== "pending" &&
