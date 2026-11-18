@@ -20,6 +20,9 @@ geübt. Besteht weniger als 60 % eines Ausschnitts, wird das ganze Stück verwor
 Aufrufe:
   uv run --script prepare.py video <youtube-id> [--kind song|scene]
   uv run --script prepare.py next --count 3        # nächste Kandidaten aus den Themen (interests.json)
+  uv run --script prepare.py next --count 5 --plan ~/.hikari/erleben/plan.json
+                                                   # Tageslauf des Servers: Themenfolge, gesperrte Kanäle
+                                                   # und Schwierigkeit aus dem Geschmack (russian/erleben-taste.ts)
 
 Ergebnis: ~/.hikari/erleben/auto/<id>.json + media/<id>.mp4|jpg
 Schlüssel und Tageskontingente: siehe gemini.py
@@ -555,14 +558,21 @@ def split_title(title: str, channel: str) -> tuple[str, str]:
     return clean or title, channel
 
 
-def build(vid: str, kind: str, d: Dictionary, g: Gemini) -> dict:
+def build(vid: str, kind: str, d: Dictionary, g: Gemini, plan: dict | None = None) -> dict:
+    plan = plan or {}
     pid = "yt" + hashlib.sha1(vid.encode()).hexdigest()[:10]
     meta, video = fetch(vid)
+    # Gesperrter Kanal (Plan des Tageslaufs): verwerfen, bevor Whisper oder Gemini etwas kosten.
+    if meta["channel"].strip().lower() in {c.lower() for c in plan.get("blocked", [])}:
+        raise RuntimeError(f"Kanal »{meta['channel']}« ist gesperrt")
     log(f"[{vid}] {meta['title']} — transkribiere …")
     lines = to_lines(transcribe(video))
     if len(lines) < 4:
         raise RuntimeError("zu wenig erkannter Text")
-    easy = lambda w: 1.0 if (e := d.lookup(w)) and e["rank"] < 2500 else 0.0
+    # Schwierigkeitsziel: leichte Wörter zählen bei der Wahl des Ausschnitts mehr (Ziel leicht)
+    # oder weniger (Ziel schwer); 1.0 = wie bisher.
+    ew = float(plan.get("easyWeight", 1.0))
+    easy = lambda w: ew if (e := d.lookup(w)) and e["rank"] < 2500 else 0.0
 
     # 1) Zweites Ohr. Es hört einen größeren Abschnitt ab (bis vier Minuten rund um die dichteste
     #    Stelle); der Ausschnitt wird erst danach gewählt — dort, wo beide Ohren übereinstimmen.
@@ -747,7 +757,7 @@ def build(vid: str, kind: str, d: Dictionary, g: Gemini) -> dict:
     log(f"      Kontingent: Hören {g.left(HEAR)}, Prüfen {g.reviews_left()}")
     return {
         "id": pid, "yt": vid, "auto": True, "checked": True, "v": VERSION, "kind": kind, "title": title, "titleDe": rv["title_de"] or name,
-        "part": "Ausschnitt", "by": by, "media": f"{pid}.mp4", "poster": f"{pid}.jpg", "ratio": ratio, "dur": round(dur, 1),
+        "part": "Ausschnitt", "by": by, "channel": meta["channel"], "media": f"{pid}.mp4", "poster": f"{pid}.jpg", "ratio": ratio, "dur": round(dur, 1),
         "mood": "", "level": level, "story": story, "listen": "", "take": sorted(take), "lines": out_lines, "words": wordbook,
         "stats": {"lines": len(chosen), "verified": len(final), "dropped": dropped, "words": total, "easy": round(share, 2),
                   "rate": round(rate, 2), "from": round(start, 1)},
@@ -763,21 +773,32 @@ def load_json(p: Path, fallback):
         return fallback
 
 
-def discover(count: int, g: Gemini) -> list[tuple[str, str]]:
+def discover(count: int, g: Gemini, plan: dict | None = None) -> list[tuple[str, str]]:
     """Nächste Kandidaten aus den Themen des Lernenden. Videos und Musik wechseln sich ab, innerhalb
     davon geht es reihum durch die Themen; je Thema macht Gemini aus dem Stichwort russische
-    Suchanfragen, YouTube liefert dazu die meistgesehenen Treffer passender Länge."""
+    Suchanfragen, YouTube liefert dazu die meistgesehenen Treffer passender Länge.
+
+    Mit Plan (Tageslauf des Servers) gibt der Plan die Reihenfolge der Themen vor — nach Geschmack
+    gewichtet, jeder fünfte Platz erkundet —, Treffer gesperrter Kanäle und gelöschte Videos fallen weg."""
+    plan = plan or {}
     wishes = load_json(INTERESTS, {})
     topics = [("scene", t) for t in wishes.get("video", [])], [("song", t) for t in wishes.get("music", [])]
     order = [x for pair in zip(*topics) for x in pair] + topics[0][len(topics[1]):] + topics[1][len(topics[0]):]
+    planned = [(s["kind"], s["topic"]) for s in plan.get("order", []) if s.get("kind") in ("scene", "song") and s.get("topic")]
+    if planned:
+        order = planned
+        log("Plan: " + ", ".join(t + (" (neu)" if s.get("explore") else "") for s, (_, t) in zip(plan["order"], planned)))
     if not order:
         return []
+    blocked = {c.lower() for c in plan.get("blocked", [])}
     state = load_json(CANDIDATES, {"queries": {}, "pools": {}, "done": [], "turn": 0})
     state.setdefault("queries", {})
-    done = set(state["done"]) | {json.loads(f.read_text()).get("yt") for f in AUTO.glob("*.json")}
+    channels = state.setdefault("channels", {})   # Video → Kanal, aus der Suche gemerkt
+    rot = state.setdefault("rot", {})             # je Thema: wie oft schon dran (für den Plan)
+    done = set(state["done"]) | {json.loads(f.read_text()).get("yt") for f in AUTO.glob("*.json")} | set(plan.get("avoid", []))
     picks, tries = [], 0
     while len(picks) < count and tries < len(order) * 4:
-        kind, topic = order[state["turn"] % len(order)]
+        kind, topic = order[(tries if planned else state["turn"]) % len(order)]
         state["turn"] += 1
         tries += 1
         qkey = f"{kind}:{topic.lower()}"
@@ -786,11 +807,15 @@ def discover(count: int, g: Gemini) -> list[tuple[str, str]]:
             log(f"Thema »{topic}«: suche nach {state['queries'][qkey]}")
         queries = state["queries"][qkey]
         # Je Durchgang eine andere Suchanfrage des Themas, damit die Treffer nicht eintönig werden.
-        query = queries[(state["turn"] // len(order)) % len(queries)]
+        if planned:
+            rot[qkey] = rot.get(qkey, 0) + 1
+            query = queries[(rot[qkey] - 1) % len(queries)]
+        else:
+            query = queries[(state["turn"] // len(order)) % len(queries)]
         pool = state["pools"].get(query)
         if pool is None:
             lo, hi = (90, 360) if kind == "song" else (40, 900)
-            r = run(["yt-dlp", "--flat-playlist", "--print", "%(id)s\t%(duration)s\t%(view_count)s", f"ytsearch15:{query}"])
+            r = run(["yt-dlp", "--flat-playlist", "--print", "%(id)s\t%(duration)s\t%(view_count)s\t%(channel)s", f"ytsearch15:{query}"])
             pool = []
             for line in r.stdout.splitlines():
                 p = line.split("\t")
@@ -800,9 +825,11 @@ def discover(count: int, g: Gemini) -> list[tuple[str, str]]:
                     continue
                 if lo <= dur <= hi:
                     pool.append([p[0], views])
+                    if len(p) > 3 and p[3] not in ("", "NA"):
+                        channels[p[0]] = p[3]
             pool = [v for v, _ in sorted(pool, key=lambda x: -x[1])]
             state["pools"][query] = pool
-        nxt = next((v for v in pool if v not in done), None)
+        nxt = next((v for v in pool if v not in done and channels.get(v, "").lower() not in blocked), None)
         if nxt:
             done.add(nxt)
             picks.append((nxt, kind, topic))
@@ -820,17 +847,19 @@ def main():
     v.add_argument("--topic", default="")
     n = sub.add_parser("next")
     n.add_argument("--count", type=int, default=3)
+    n.add_argument("--plan", default="", help="plan.json des Servers (Tageslauf)")
     args = ap.parse_args()
     AUTO.mkdir(parents=True, exist_ok=True)
     d = Dictionary()
     g = Gemini(log)
+    plan = load_json(Path(args.plan), {}) if args.cmd == "next" and args.plan else {}
     if args.cmd == "video":
         todo = [(i, args.kind, args.topic) for i in args.ids]
     else:
         # Zuerst Stücke nach altem Stand neu aufbereiten (das Hören ist gemerkt und kostet nichts), dann Neues suchen.
         old = [json.loads(f.read_text()) for f in AUTO.glob("*.json")]
         redo = [(p["yt"], p["kind"], p.get("topic", "")) for p in old if p.get("v", 1) < VERSION][:args.count]
-        todo = redo + (discover(args.count - len(redo), g) if len(redo) < args.count else [])
+        todo = redo + (discover(args.count - len(redo), g, plan) if len(redo) < args.count else [])
     ok = 0
     for vid, kind, topic in todo:
         if g.left(HEAR) <= 0 or g.reviews_left() <= 0:
@@ -838,7 +867,7 @@ def main():
             break
         t0 = time.time()
         try:
-            piece = build(vid, kind, d, g)
+            piece = build(vid, kind, d, g, plan)
             piece["topic"] = topic
             (AUTO / f"{piece['id']}.json").write_text(json.dumps(piece, ensure_ascii=False))
             ok += 1
