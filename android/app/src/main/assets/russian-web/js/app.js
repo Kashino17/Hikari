@@ -98,6 +98,30 @@ export const progress = {
   },
 };
 
+/**
+ * Sprechen nur auf Deutsch: Ein Satz steht nur beim allerersten Mal offen auf Russisch da.
+ * Kurssätze gelten als bekannt, sobald es eine Karte gibt; alle anderen (Vertiefung, Muster,
+ * Zeilen aus Lieder & Szenen), sobald sie einmal offen gezeigt wurden. Eigener Schlüssel —
+ * nie in `progress_v1`, das liest die App (Kotlin) mit und verwirft fremde Felder.
+ */
+const SEEN_KEY = 'speak_seen_v1';
+const SEEN_MAX = 6000;
+let seenIds = null;
+const seenSet = () => (seenIds ??= new Set(storage.getJSON(SEEN_KEY, [])));
+export const speakSeen = {
+  isFirst(phrase) {
+    const id = phrase?.id;
+    if (!id) return true;
+    return !state.cards[id] && !seenSet().has(id);
+  },
+  mark(phrase) {
+    const id = phrase?.id;
+    if (!id || state.cards[id] || seenSet().has(id)) return;
+    seenIds.add(id);
+    storage.set(SEEN_KEY, [...seenIds].slice(-SEEN_MAX));
+  },
+};
+
 /** So viele eigene Sätze fasst das Satzbuch; die ältesten fallen danach heraus. */
 const MY_SENTENCES_MAX = 1000;
 /** Karten eigener Sätze verschwinden mit ihrem Satz — sonst blieben sie für immer »fällig«. */

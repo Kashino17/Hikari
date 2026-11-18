@@ -1,19 +1,27 @@
 // Tab »Satzbuch«: alle Sätze durchsuchen, nach Lernstand filtern, vertiefen, testen.
-import { html, cls, Icon, TopBar, IL, Sheet, PhraseDock, SentenceCard, OtherFormLine, Speaker, Empty, usePlaying, playPhrase, mk, useState, useMemo, useEffect, useRef, fx } from '../ui.js';
+import { html, cls, Icon, TopBar, IL, Sheet, PhraseDock, SentenceCard, OtherFormLine, Speaker, Empty, usePlaying, playPhrase, mk, useState, useMemo, useEffect, useRef, fx, useSpicker } from '../ui.js';
 import { D, P, useProgress, progress, nav, back, testSelection, phrasebookPreset, myPhrases, otherForm, exitApp, dayNo } from '../app.js';
 import * as Ct from '../domain/content.js';
 
 const STATUS = (box) => (box >= 4 ? ['Sitzt', 'good'] : box === 3 ? ['Aktiv', 'review'] : box >= 1 ? ['Wackelig', 'amber'] : ['Neu', 'faint']);
 const STATUS_COLOR = { good: 'var(--good)', review: 'rgb(var(--review))', amber: 'var(--amber)', faint: 'var(--faint)' };
 
-/** Karte für einen Satz: Anhören, Langsam, Nachsprechen, KI-Prüfung — überall gleich (Vertiefung, Muster, Meine Sätze). */
+/**
+ * Karte für einen Satz: Anhören, Langsam, Nachsprechen, KI-Prüfung — überall gleich (Vertiefung, Muster, Meine Sätze).
+ * Kennst du den Satz schon, steht nur das Deutsche da; Russisch gibt es über den Spicker.
+ * `onEvaluated(ok, sc, used)` — used: null | 'hint' | 'peek' (gespickt).
+ */
 export function PhraseCard({ p, highlight, small, explain, onEvaluated, children }) {
+  const sp = useSpicker(p);
   return html`<div class=${cls('pcardx', highlight && 'hl', small && 'small')}>
-    <${SentenceCard} phrase=${p} size=${highlight ? 22 : small ? 16 : 19} explain=${explain} notes=${!small} />
+    <${SentenceCard} phrase=${p} size=${highlight ? 22 : small ? 16 : 19} explain=${explain} notes=${!small} sp=${sp} />
     ${children && html`<div class="rowx g8 wrap" style="margin-top:2px">${children}</div>`}
-    <${PhraseDock} phrase=${p} size="sm" onEvaluated=${onEvaluated} />
+    <${PhraseDock} phrase=${p} size="sm" onEvaluated=${onEvaluated} sp=${sp} />
   </div>`;
 }
+
+/** Bewertung einer Satzkarte: gespickt zählt als richtig mit Hilfe (kommt früher wieder). */
+export const gradeSpoken = (id) => (ok, sc, used) => progress.gradeCard(id, ok ? (used ?? true) : false, ok ? (used ? 3 : 5) : 1, ok ? 1 : 0);
 
 function Row({ p, card, fav, open, onToggle }) {
   const box = card?.box ?? 0;
@@ -106,7 +114,7 @@ export function Phrasebook() {
       </div>`}
       ${shown.length === 0 && html`<${Empty} icon=${mine ? 'edit_note' : 'search_off'} title=${query ? `Nichts gefunden für »${query}«` : mine ? 'Noch keine eigenen Sätze' : 'Hier ist noch nichts'}
         text=${mine && !query ? 'Im Kurs »Satzbau« und im Kombi-Meister baust und speicherst du eigene Sätze.' : 'Probier einen anderen Filter oder ein anderes Wort.'} />`}
-      ${mine && html`<div class="pad stack g10 mt12 c-words">${shown.map((p) => html`<${PhraseCard} p=${p} key=${p.id}>
+      ${mine && html`<div class="pad stack g10 mt12 c-words">${shown.map((p) => html`<${PhraseCard} p=${p} key=${p.id} onEvaluated=${gradeSpoken(p.id)}>
         <button class="chip sm" onClick=${() => progress.removeMySentence(p.ru)}><${Icon} n="delete" />Entfernen</button><//>`)}</div>`}
       ${groups.map(([title, list]) => html`<div class="sec" style="padding-top:18px" key=${title}><div class="over" style="margin:0 4px 8px">${title}</div>
         <div class="list">${list.map((p) => html`<${Row} key=${p.id} p=${p} card=${s.cards[p.id]} fav=${s.favorites.includes(p.id)} open=${openId === p.id}
@@ -138,7 +146,7 @@ export function Deepdive({ id }) {
   return html`<div class="screen c-words">
     <${TopBar} title="Vertiefen" onBack=${() => back('satzbuch')} right=${html`<button class=${cls('iconbtn', fav && 'on')} onClick=${() => progress.toggleFavorite(id)} aria-label="Favorit"><${Icon} n="star" fill=${fav} /></button>`} />
     <div class="scroll"><div class="pad stack g12">
-      <${PhraseCard} p=${p} highlight onEvaluated=${(ok) => progress.gradeCard(p.id, ok, ok ? 5 : 1, ok ? 1 : 0)} />
+      <${PhraseCard} p=${p} highlight onEvaluated=${gradeSpoken(p.id)} />
       ${e ? html`<div><span class="tag c-amber">${mk(e.register)}</span><p class="mt12" style="line-height:1.55;color:rgba(255,255,255,.85)">${mk(e.summary)}</p></div>`
         : html`<p class="sub">Für diesen Satz gibt es noch keine ausführliche Vertiefung. Unten siehst du, wo seine Wörter noch vorkommen.</p>
           ${p.lit && html`<p class="sub">Wörtlich: »${p.lit}«</p>`}${p.note && html`<p class="sub">${mk(p.note)}</p>`}`}

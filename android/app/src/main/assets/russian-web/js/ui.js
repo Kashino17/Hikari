@@ -6,7 +6,7 @@ import * as Gl from './domain/glossary.js';
 import * as Sp from './domain/speech.js';
 import * as Pr from './domain/prosody.js';
 import { phonemeHints } from './domain/tips.js';
-import { otherForm, offerPack, toast } from './app.js';
+import { otherForm, offerPack, toast, speakSeen } from './app.js';
 
 export { html, useState, useEffect, useRef, useMemo, useCallback };
 export const cls = (...a) => a.filter(Boolean).join(' ');
@@ -367,6 +367,62 @@ export function RecordCompare({ phrase, onTake }) {
   return html`<${PhraseDock} phrase=${phrase} size="md" listen=${false} ai=${false} onTake=${onTake} />`;
 }
 
+// ── Sprechen nur auf Deutsch: Russisch erst über den Spicker ───────────────
+
+/**
+ * Spicker für einen Satz, den du sprechen sollst. Stufen: 0 verdeckt · 1 erstes Wort ·
+ * 2 Wortanfänge · 3 ganzer Satz. Beim allerersten Mal steht der Satz offen da (`first`).
+ * `used` fürs Bewerten: null = ohne Hilfe, 'hint' = 1. Wort/Wortanfänge, 'peek' = ganzer
+ * Satz gesehen oder angehört (siehe P.grade). Ein misslungener Versuch zeigt die Lösung (`fail`).
+ */
+export function useSpicker(phrase, { hidden = false } = {}) {
+  const id = phrase?.id ?? phrase?.ru ?? '';
+  // hidden: Modi, die immer verdeckt üben (Reflex) — auch ein neuer Satz kommt nur auf Deutsch.
+  const first = useMemo(() => !hidden && speakSeen.isFirst(phrase), [id, hidden]);
+  const fresh = { id, level: 0, heard: false };
+  const [st, setSt] = useState(fresh);
+  const cur = st.id === id ? st : fresh;
+  const set = (patch) => setSt((s) => ({ ...(s.id === id ? s : fresh), ...patch(s.id === id ? s : fresh) }));
+  useEffect(() => { if (first) speakSeen.mark(phrase); }, [id]);
+  const level = first ? 3 : cur.level;
+  return {
+    first, level, open: level >= 3,
+    used: first ? null : cur.level >= 3 || cur.heard ? 'peek' : cur.level >= 1 ? 'hint' : null,
+    more: () => set((s) => ({ level: Math.min(3, s.level + 1) })),
+    fail: () => set(() => ({ level: 3 })),
+    hear: () => { if (!first) set(() => ({ heard: true })); },
+  };
+}
+
+const SPICK_NEXT = ['1. Wort', 'Wortanfänge', 'Ganzer Satz'];
+
+/** Der Spicker-Knopf — zeigt, was der nächste Tipp aufdeckt. */
+export function SpickerBtn({ sp }) {
+  if (sp.first || sp.open) return null;
+  return html`<button class="chip sm spick" onClick=${() => { fx.tap(); sp.more(); }}><${Icon} n="visibility" />Spicker · ${SPICK_NEXT[sp.level]}</button>`;
+}
+
+/** Hinweis, dass gespickt wurde — ruhig, keine Fehler-Optik. */
+export const SpickNote = ({ sp }) => (sp.used && !sp.first ? html`<span class="spick-note"><${Icon} n="history" size="15" />Mit Hilfe — kommt früher wieder</span>` : null);
+
+/** Russischer Satz je nach Spicker-Stufe: verdeckt, erstes Wort, Wortanfänge oder ganz. */
+export function HiddenRu({ ru, level, size = 24, center = true, gloss = true }) {
+  const words = useMemo(() => Gl.chunks(ru).flatMap((c) => c.words), [ru]);
+  if (level >= 3) return html`<${IL} ru=${ru} size=${size} center=${center} gloss=${gloss} />`;
+  const word = (w, i) => {
+    const text = w.latin.map((s) => s.text).join('');
+    if (level >= 1 && i === 0) return html`${w.before}${latin(w.latin)}${w.after}`;
+    if (level >= 2) {
+      const letter = (w.cyrillic.match(/[А-Яа-яЁё]/) ?? [''])[0];
+      const lat = Ph.transliterateFlat(letter);
+      return html`${w.before}${lat}<span class="hr-dots">…</span>${w.after}`;
+    }
+    return html`<i class="hr-bar" style=${`width:${Math.max(1.4, text.length * 0.55).toFixed(2)}em`}></i>`;
+  };
+  return html`<div class=${cls('il nog hidru', center && 'center')} style=${`--fs:${size}px`} aria-label=${level ? 'Russischer Satz, teilweise aufgedeckt' : 'Russischer Satz verdeckt'}>
+    <div class="il-ws">${words.map((w, i) => html`<div class="il-w"><div class="il-l">${word(w, i)}</div></div>`)}</div></div>`;
+}
+
 // ── Satz-Leiste: Anhören · Langsam · Nachsprechen · KI-Prüfung ─────────────
 
 /** Zwei Tonspuren übereinander — deine Aufnahme gegen das Original. */
@@ -387,7 +443,7 @@ function DockBtn({ icon, label, on, primary, onClick, disabled, rec }) {
  * Vertiefung, Muster). Ergebnisse erscheinen darunter, kompakt.
  * size: 'lg' (Lektion) | 'md' | 'sm' (Karten). `onEvaluated(passed, sc)` meldet die KI-Prüfung.
  */
-export function PhraseDock({ phrase, size = 'md', onEvaluated, onTake, listen = true, ai = true, record = true }) {
+export function PhraseDock({ phrase, size = 'md', onEvaluated, onTake, listen = true, ai = true, record = true, sp = null }) {
   const canRec = record && recorder.available();
   const canAi = ai && speech.available();
   const [rec, setRec] = useState(null);
@@ -398,10 +454,15 @@ export function PhraseDock({ phrase, size = 'md', onEvaluated, onTake, listen = 
   const cur = usePlaying();
   const L = useListen((hyps) => {
     const s = Sp.speech(phrase.ru, hyps);
+    const used = sp?.used ?? null;
     setSc(s);
     (s.passed ? fx.right : fx.wrong)();
-    onEvaluated?.(s.passed, s);
+    // Daneben gelegen: Die Lösung wird gezeigt — der nächste Versuch gilt als gespickt.
+    if (!s.passed) sp?.fail();
+    onEvaluated?.(s.passed, s, used);
   });
+  // Verdeckt anhören verrät den Satz — zählt wie Spicken.
+  const play = (opts) => { if (sp && !sp.open) sp.hear(); playPhrase(phrase, opts); };
   useEffect(() => () => rec?.cancel(), [rec]);
   useEffect(() => {
     if (!rec) return undefined;
@@ -428,8 +489,8 @@ export function PhraseDock({ phrase, size = 'md', onEvaluated, onTake, listen = 
   const ic = size === 'lg' ? 26 : size === 'sm' ? 19 : 22;
   return html`<div class=${cls('dockwrap', `dock-${size}`)}>
     <div class="dock">
-      ${listen && html`<${DockBtn} primary icon=${html`<${Icon} n="volume_up" fill size=${ic} />`} label="Anhören" on=${playing && !cur.slow} onClick=${() => playPhrase(phrase)} />
-        <${DockBtn} icon=${html`<${Icon} n="slow_motion_video" size=${ic} />`} label="Langsam" on=${playing && cur.slow} onClick=${() => playPhrase(phrase, { slow: true })} />`}
+      ${listen && html`<${DockBtn} primary icon=${html`<${Icon} n="volume_up" fill size=${ic} />`} label="Anhören" on=${playing && !cur.slow} onClick=${() => play()} />
+        <${DockBtn} icon=${html`<${Icon} n="slow_motion_video" size=${ic} />`} label="Langsam" on=${playing && cur.slow} onClick=${() => play({ slow: true })} />`}
       ${canRec && html`<${DockBtn} rec=${!!rec} icon=${rec ? html`<${Icon} n="stop" fill size=${ic} />` : html`<${SvgCompare} s=${ic} />`}
         label=${rec ? `Stopp · ${secs} s` : 'Nachsprechen'} onClick=${doRecord} />`}
       ${canAi && html`<${DockBtn} on=${L.ready} disabled=${L.evaluating} icon=${L.ready ? html`<${Icon} n="graphic_eq" size=${ic} />` : L.evaluating || L.opening ? html`<${Icon} n="progress_activity" c="spin" size=${ic} />` : html`<${SvgAiCheck} s=${ic} />`}
@@ -465,10 +526,22 @@ export function OtherFormLine({ id }) {
  * (antippen klappt die Buchstaben genau dort auf), Deutsch — und Tipp,
  * wörtliche Übersetzung und die andere Geschlechtsform als ruhige Zeilen darin.
  */
-export function SentenceCard({ phrase, size = 26, center = false, tint = false, notes = true, explain = null, children }) {
+export function SentenceCard({ phrase, size = 26, center = false, tint = false, notes = true, explain = null, sp = null, children }) {
   const [lens, setLens] = useState(false);
   const display = Ph.display(Gl.withStress(phrase.ru));
+  // Sprechen nur auf Deutsch: verdeckt steht der deutsche Satz oben, Russisch nur über den Spicker.
+  // Tipp, wörtliche Übersetzung und Erklärung verraten den Satz — die kommen erst mit der Lösung.
+  if (sp && !sp.open) {
+    return html`<div class=${cls('scard ask', center && 'center', tint && 'tint')}>
+      <div class="over">Sag auf Russisch</div>
+      <div class="scard-ask" style=${`font-size:${Math.max(17, Math.round(size * 0.8))}px`}>${phrase.de}</div>
+      <${HiddenRu} ru=${phrase.ru} level=${sp.level} size=${size} center=${center} />
+      <div class=${cls('rowx g8 wrap', center && 'jc')}><${SpickerBtn} sp=${sp} /><${SpickNote} sp=${sp} /></div>
+      ${children}
+    </div>`;
+  }
   return html`<div class=${cls('scard', center && 'center', tint && 'tint')}>
+    ${sp?.used && html`<${SpickNote} sp=${sp} />`}
     <${IL} ru=${phrase.ru} size=${size} center=${center} cyr=${false} />
     <button class=${cls('cyr-line', lens && 'open')} onClick=${() => setLens(!lens)} aria-label=${lens ? 'Buchstaben ausblenden' : 'Buchstaben zeigen'}>
       <span class="cyr" lang="ru">${display}</span><span class="abc">${lens ? 'ausblenden' : 'Buchstaben'}</span></button>

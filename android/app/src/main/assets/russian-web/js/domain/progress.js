@@ -54,9 +54,24 @@ export const MAX_BOX = 6;
 
 export const introduce = (existing, today) => existing ?? { box: 1, due: today + INTERVALS[1], seen: 0, wrong: 0 };
 
-/** Richtig → eine Box höher. Falsch → zurück in Box 1 und noch heute erneut fällig. */
+/**
+ * Gespickt beim Sprechen: 'hint' = nur 1. Wort oder Wortanfänge gebraucht, 'peek' = ganzer Satz
+ * gesehen oder angehört. Gespickt heißt richtig, aber mit Hilfe — der Satz kommt früher wieder.
+ */
+const PEEK_RANK = { hint: 1, peek: 2 };
+export const strongerPeek = (a, b) => ((PEEK_RANK[b] ?? 0) > (PEEK_RANK[a] ?? 0) ? b : (a ?? b ?? null));
+
+/**
+ * Richtig → eine Box höher. Falsch → zurück in Box 1 und noch heute erneut fällig.
+ * 'hint' → Box bleibt, Abstand wächst halb so stark. 'peek' → Box bleibt, morgen wieder.
+ */
 export function grade(raw, correct, today) {
   const card = normalizeCard(raw, today);
+  if (correct === 'peek') return { ...card, due: today + 1, seen: card.seen + 1 };
+  if (correct === 'hint') {
+    const half = Math.round((INTERVALS[card.box] + INTERVALS[Math.min(card.box + 1, MAX_BOX)]) / 2);
+    return { ...card, due: today + Math.max(1, half), seen: card.seen + 1 };
+  }
   if (correct) {
     const box = Math.min(card.box + 1, MAX_BOX);
     return { ...card, box, due: today + INTERVALS[box], seen: (card.seen ?? 0) + 1 };

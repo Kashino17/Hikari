@@ -2,15 +2,15 @@
 // Ablauf und Wertung entsprechen RussianSessionViewModel.kt; die Oberfläche ist neu.
 import {
   html, cls, Icon, SessionBar, IL, PhraseBlock, PlayRow, Speaker, Opt, LetterLens, Latin, useKeys, useListen, Mic, ScoreCard,
-  Practice, PhraseDock, SentenceCard, RecordCompare, Summary, LeaveSheet, usePlaying, playPhrase, useState, useEffect, useRef, useMemo, fx, audio, speech, MIC_WAIT } from '../ui.js';
-import { D, P, Pl, progress, planState, dayNo, back, takeSelection, phraseById } from '../app.js';
+  Practice, PhraseDock, SentenceCard, RecordCompare, Summary, LeaveSheet, usePlaying, playPhrase, useState, useEffect, useRef, useMemo, fx, audio, speech, MIC_WAIT,
+  useSpicker, SpickerBtn, SpickNote, HiddenRu } from '../ui.js';
+import { D, P, Pl, progress, planState, dayNo, back, takeSelection, phraseById, speakSeen } from '../app.js';
 import { storage, SPEECH_ERRORS } from '../platform.js';
 import * as Co from '../domain/course.js';
 import { weightedOrder, lessonReviewIds, talkDaySelection } from '../learner.js';
 import { StageList } from './stages.js';
 import { PatternStep } from './patternstep.js';
 import * as Sp from '../domain/speech.js';
-import * as Gl from '../domain/glossary.js';
 import * as Ph from '../domain/phonetics.js';
 
 const MODE = {
@@ -98,14 +98,15 @@ class Engine {
 
   get current() { return this.steps[this.pos] ?? null; }
 
-  answer(isCorrect) {
+  /** `used`: beim Sprechen gespickt (null | 'hint' | 'peek') — richtig mit Hilfe kommt früher wieder. */
+  answer(isCorrect, used = null) {
     const step = this.current;
     if (!step || this.feedback) return;
     const id = step.gradedId;
     const isRetry = this.retriedPositions.has(this.pos);
     let gained = 0;
     if (id != null) {
-      if (!(id in this.firstTry)) this.firstTry[id] = isCorrect;
+      if (!(id in this.firstTry)) this.firstTry[id] = isCorrect ? (used ?? true) : false;
       this.total++;
       if (isCorrect) { this.correct++; gained = isRetry ? 5 : 10; this.xp += gained; }
     }
@@ -224,6 +225,8 @@ function SoundTipStep({ step, env }) {
 function IntroStep({ step, env }) {
   const p = step.phrase;
   useAutoPlay(p);
+  // Das ist das erste Mal — beim Sprechen später kommt der Satz nur noch auf Deutsch.
+  useEffect(() => { speakSeen.mark(p); }, [p.id]);
   useKeys({ Enter: env.onNext, ' ': () => playPhrase(p) }, []);
   return html`<div class="scroll"><div class="stepc center g16">
       <div class="over c">Neuer Satz</div>
@@ -326,52 +329,36 @@ function BuildStep({ step, env }) {
     ${result == null && html`<div class="bottom"><button class="btn" disabled=${!chosen.length} onClick=${check}>Prüfen<span class="kb">↵</span></button></div>`}`;
 }
 
-function FirstWordHint({ ru }) {
-  const first = useMemo(() => Gl.chunks(ru)[0], [ru]);
-  if (!first) return null;
-  return html`<div class="mt12"><div class="over">Starthilfe</div>
-    <div class="il mt4" style="--fs:22px;align-items:center"><div class="il-l">${first.words.map((w, i) => html`${i ? ' ' : ''}${w.latin.map((x) => (x.stressed ? html`<u>${x.text}</u>` : x.text))}`)} …</div></div>
-    ${first.gloss && html`<div class="sub">${first.gloss}</div>`}<div class="cyr" lang="ru">${first.words.map((w) => w.cyrillic).join(' ')}</div></div>`;
-}
-
 function SpeakStep({ step, env }) {
   const p = step.phrase;
   const [attempts, setAttempts] = useState(0);
   const [score, setScore] = useState(null);
   const [selfCheck, setSelfCheck] = useState(!speech.available());
-  const [masked, setMasked] = useState(false);
-  const [peekFirst, setPeekFirst] = useState(false);
-  const [usedPeek, setUsedPeek] = useState(false);
-  const [peekTick, setPeekTick] = useState(0);
   const [spoke, setSpoke] = useState(false);
+  // Nur Deutsch: Russisch steht nur beim allerersten Mal offen da, sonst über den Spicker.
+  const sp = useSpicker(p);
   const answered = env.answered;
-  useEffect(() => {
-    if (answered) return undefined;
-    setMasked(false);
-    const t = setTimeout(() => setMasked(true), 2600);
-    return () => clearTimeout(t);
-  }, [peekTick]);
   const L = useListen((hyps) => {
     const sc = Sp.speech(p.ru, hyps);
     setScore(sc); setAttempts((a) => a + 1);
-    if (sc.passed && !answered) { setSpoke(true); env.onSpokenOk(); env.onAnswer(true); } else fx.wrong();
+    if (sc.passed && !answered) { setSpoke(true); env.onSpokenOk(); env.onAnswer(true, sp.used); } else { fx.wrong(); sp.fail(); }
   });
   useEffect(() => { if (L.error === 'unavailable' || L.error === 'denied') setSelfCheck(true); }, [L.error]);
-  const mic = () => { if (L.listening) L.stop(); else { setScore(null); setMasked(true); L.start(p.ru); } };
-  useKeys({ ' ': () => playPhrase(p), m: () => !answered && !selfCheck && mic() }, [answered, selfCheck, L.listening]);
-  const visible = answered || !masked;
+  const mic = () => { if (L.listening) L.stop(); else { setScore(null); L.start(p.ru); } };
+  const listen = () => { if (!sp.open) sp.hear(); playPhrase(p); };
+  useKeys({ ' ': listen, m: () => !answered && !selfCheck && mic() }, [answered, selfCheck, L.listening, sp.open]);
+  const visible = answered || sp.open;
 
   return html`<div class="scroll"><div class="stepc center g16">
       <div><${Head} over="Sprechen" title=${answered ? null : 'Aus dem Kopf sagen'} c /></div>
-      ${!answered && !masked && html`<div class="tag c-amber"><${Icon} n="visibility" />Kurz einprägen — der Text blendet gleich aus</div>`}
-      ${answered && spoke && !usedPeek && html`<div class="tag c-words"><${Icon} n="psychology" />Frei aus dem Gedächtnis gesprochen</div>`}
-      ${visible ? html`<${PhraseBlock} phrase=${p} size=${26} />` : html`<div class="card p" style="width:100%;border-color:rgba(var(--amber-rgb),.4)">
+      ${answered && spoke && !sp.used && !sp.first && html`<div class="tag c-words"><${Icon} n="psychology" />Frei aus dem Gedächtnis gesprochen</div>`}
+      ${sp.first && !answered && html`<div class="tag c-amber"><${Icon} n="fiber_new" />Zum ersten Mal — lies mit und sprich nach</div>`}
+      ${visible ? html`<${PhraseBlock} phrase=${p} size=${26} /><${SpickNote} sp=${sp} />` : html`<div class="card p" style="width:100%;border-color:rgba(var(--amber-rgb),.4)">
         <div class="over amber">Ohne Ablesen — sag auf Russisch</div><div class="title mt8">${p.de}</div>
-        ${peekFirst && html`<${FirstWordHint} ru=${p.ru} />`}
-        <div class="rowx g8 wrap mt16" style="justify-content:center">
-          ${!peekFirst && html`<button class="chip sm" onClick=${() => setPeekFirst(true)}><${Icon} n="lightbulb" />1. Wort zeigen</button>`}
-          <button class="chip sm" onClick=${() => { setUsedPeek(true); setPeekTick((x) => x + 1); }}><${Icon} n="visibility" />Kurz spicken</button></div></div>`}
-      <${PlayRow} phrase=${p} size=${52} />
+        ${sp.level > 0 && html`<div class="mt12"><${HiddenRu} ru=${p.ru} level=${sp.level} size=${22} /></div>`}
+        <div class="rowx g8 wrap mt16 jc"><${SpickerBtn} sp=${sp} /></div>
+        ${sp.used && html`<div class="mt8"><${SpickNote} sp=${sp} /></div>`}</div>`}
+      <${PlayRow} phrase=${p} size=${52} onPlay=${() => { if (!sp.open) sp.hear(); }} />
       ${!selfCheck && html`<div class="micwrap"><${Mic} L=${L} onClick=${mic} disabled=${answered} />
         <div class=${cls('mictxt', L.listening && 'on')}>${L.listening ? (L.partial ? html`»${L.partial}«<br />Tippe nochmal, wenn du fertig bist` : (L.opening ? MIC_WAIT : 'Ich höre zu … Tippe nochmal, wenn du fertig bist'))
           : L.evaluating ? 'Wird ausgewertet …' : answered ? '' : L.errorText ?? (score ? 'Tippen für einen weiteren Versuch' : 'Tippen und auf Russisch sprechen')}</div></div>
@@ -380,7 +367,7 @@ function SpeakStep({ step, env }) {
         <div class="sub">Nimm dich auf und vergleiche selbst mit dem Original.</div><${RecordCompare} phrase=${p} />`}
     </div></div>
     ${!answered && html`<div class="bottom">
-      ${selfCheck && html`<button class="btn" onClick=${() => env.onAnswer(true)}>Klingt wie das Original</button>`}
+      ${selfCheck && html`<button class="btn" onClick=${() => env.onAnswer(true, sp.used)}>Klingt wie das Original</button>`}
       <div class="rowx g8">${!selfCheck && attempts >= 2 && html`<button class="btn ghost" onClick=${() => { L.cancel(); setSelfCheck(true); }}>Selbst vergleichen</button>`}
         <button class="btn ghost" onClick=${() => { L.cancel(); env.onSkip(); }}>Überspringen</button></div></div>`}`;
 }
@@ -567,7 +554,7 @@ export function Session({ mode, day }) {
   const close = () => { audio.stop(); back(mode === 'PODCAST' ? `podcast/${day}` : ['LESSON', 'DIALOG', 'TALKDAY'].includes(mode) ? 'plan' : mode === 'TEST' ? 'satzbuch' : 'heute'); };
   if (e.summary) return html`<${SessionSummary} mode=${mode} day=${day} s=${e.summary} onClose=${close} />`;
   const step = e.current;
-  const env = { engine: e, answered: e.feedback != null, onAnswer: (ok) => e.answer(ok), onSkip: () => e.skip(), onSpokenOk: () => e.spokenCorrectly(), onNext: () => e.next(), onPause: close };
+  const env = { engine: e, answered: e.feedback != null, onAnswer: (ok, used) => e.answer(ok, used), onSkip: () => e.skip(), onSpokenOk: () => e.spokenCorrectly(), onNext: () => e.next(), onPause: close };
   // Trennstriche im Balken an den Haltepunkten zwischen den Etappen
   const marks = e.stages ? e.steps.map((x, i) => (x.type === 'stageBreak' ? i / e.steps.length : null)).filter((x) => x != null) : null;
   const C = STEPS[step.type];

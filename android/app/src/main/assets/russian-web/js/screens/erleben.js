@@ -3,7 +3,8 @@
 // (Sätze ins Satzbuch, kurze Übung). Von Hand aufbereitete Stücke: assets/russian/erleben.json.
 // Der Feed zu den eigenen Themen, seine Stücke und alle Videos kommen vom Hikari-Server
 // (/russian/erleben/…, siehe backend/src/api/russian-erleben.ts).
-import { html, cls, Icon, Sheet, Opt, TopBar, mk, fx, audio, useState, useEffect, useRef, useMemo, useListen, ScoreCard, MIC_WAIT, SvgCompare, SvgAiCheck } from '../ui.js';
+import { html, cls, Icon, Sheet, Opt, TopBar, mk, fx, audio, useState, useEffect, useRef, useMemo, useListen, ScoreCard, MIC_WAIT, SvgCompare, SvgAiCheck,
+  useSpicker, SpickerBtn, SpickNote, HiddenRu } from '../ui.js';
 import { progress, useProgress, phraseById, nav, back, toast } from '../app.js';
 import { storage, speech, recorder, SPEECH_ERRORS, api } from '../platform.js';
 import * as Sp from '../domain/speech.js';
@@ -657,6 +658,10 @@ function Understand({ piece, pl, ps, s, known, onWord, toLine, onTake }) {
   const said = (ps.spoken ?? []).includes(line.i);
   const here = pl.pos.line === line.i || (pl.pos.line >= 0 && piece.lines[pl.pos.line].rep === line.i);
   const [lens, setLens] = useState(false);
+  // Nur Deutsch, wenn du die Zeile schon kennst: Beim ersten Durchgang steht sie offen da, danach
+  // gibt es Russisch über den Spicker — der Originalton zählt wie Spicken.
+  const linePhrase = useMemo(() => (line.de ? asPhrase(line.ru, bare(line.de)) : null), [piece.id, line.i]);
+  const sp = useSpicker(linePhrase);
   // Sprechen: KI-Prüfung (Erkennung) und Nachsprechen (eigene Aufnahme gegen das Original).
   const [sc, setSc] = useState(null);
   const [rec, setRec] = useState(null);
@@ -664,18 +669,21 @@ function Understand({ piece, pl, ps, s, known, onWord, toLine, onTake }) {
   const [err, setErr] = useState(null);
   const L = useListen((hyps) => {
     const r = Sp.speech(line.ru, hyps);
+    const used = sp.used;
     setSc(r);
     (r.passed ? fx.right : fx.wrong)();
+    if (!r.passed) sp.fail();
     if (r.passed && !said) {
       store.piece(piece.id, { spoken: [...(ps.spoken ?? []), line.i] });
-      // Zählt als gesprochener Satz; ist die Zeile schon eine Karte (mitgenommen), auch für diese.
+      // Zählt als gesprochener Satz; ist die Zeile schon eine Karte (mitgenommen), auch für diese —
+      // gespickt kommt sie früher wieder.
       const card = asPhrase(line.ru, bare(line.de)).id;
-      progress.apply({ xp: 3, spokenOk: 1, graded: progress.gradable(card) ? { [card]: true } : {} });
+      progress.apply({ xp: 3, spokenOk: 1, graded: progress.gradable(card) ? { [card]: used ?? true } : {} });
     }
   });
   useEffect(() => { setLens(false); setSc(null); setTake(null); setErr(null); L.cancel(); }, [idx]);
   useEffect(() => () => rec?.cancel(), [rec]);
-  const hear = (opts) => { L.cancel(); pl.playSeg(line.a, line.b, opts); };
+  const hear = (opts) => { if (!sp.open) sp.hear(); L.cancel(); pl.playSeg(line.a, line.b, opts); };
   const mark = () => store.piece(piece.id, { marks: marked ? ps.marks.filter((m) => m !== line.i) : [...ps.marks, line.i] });
   const check = () => {
     if (L.listening) { L.stop(); return; }
@@ -706,19 +714,25 @@ function Understand({ piece, pl, ps, s, known, onWord, toLine, onTake }) {
       ${line.unsure && html`<span class="rep"><${Icon} n="help" size="14" />unsicher erkannt</span>`}
       ${line.times > 1 && html`<span class="rep"><${Icon} n="repeat" size="14" />${line.times}-mal</span>`}
       <button class=${cls('keep', marked && 'on')} onClick=${mark} aria-label=${marked ? 'Nicht mehr merken' : 'Zeile merken'}><${Icon} n="bookmark" fill=${marked} size="20" />${marked ? 'Gemerkt' : 'Merken'}</button></div>
-    <div class="ls-card" key=${line.i}>
+    ${!sp.open ? html`<div class="ls-card ask" key=${'ask' + line.i}>
+      <div class="over">Sag auf Russisch</div>
+      <div class="scard-ask" style="font-size:19px">${bare(line.de)}</div>
+      <${HiddenRu} ru=${line.ru} level=${sp.level} size=${21} center=${false} />
+      <div class="rowx g8 wrap"><${SpickerBtn} sp=${sp} /><${SpickNote} sp=${sp} /></div>
+    </div>` : html`<div class="ls-card" key=${line.i}>
+      ${sp.used && html`<${SpickNote} sp=${sp} />`}
       <${Words} line=${line} known=${known} word=${pl.pos.word} playing=${here && pl.playing} onWord=${(c) => onWord(c, line)} kept=${s.words} />
       <button class=${cls('cyr-line', lens && 'open')} onClick=${() => setLens(!lens)}><span class="cyr" lang="ru">${Ph.display(line.ru)}</span><span class="abc">${lens ? 'ausblenden' : 'Buchstaben'}</span></button>
       ${lens && html`<div class="lens" style="justify-content:flex-start">${Ph.letterPairs(line.ru).map((p) => (p ? html`<span lang="ru">${p[0]}<small>${p[1]}</small></span>` : html`<i class="sp"></i>`))}</div>`}
       ${line.de && html`<div class="de">${line.de}</div>`}
       ${line.tip && html`<div class="tip"><${Icon} n="lightbulb" size="17" /><span>${mk(line.tip)}</span></div>`}
-    </div>
+    </div>`}
     ${hint && html`<div class="ls-hint">${hint}</div>`}
     ${sc && !L.listening && html`<div class="mt12"><${ScoreCard} sc=${sc} targetRu=${line.ru} /></div>`}
     ${take && !rec && html`<div class="res mt12"><div class="res-row" style="justify-content:space-between"><b class="res-title">Deine Aufnahme</b>
       <div class="rowx g8"><button class="chip sm" onClick=${() => { pl.pause(); audio.playBlob(take); }}><${Icon} n="play_arrow" />Ich</button>
         <button class="chip sm" onClick=${() => hear({ key: 'line' })}><${Icon} n="play_arrow" />Original</button></div></div></div>`}
-    ${!hint && !sc && !take && html`<div class="ls-legend">${fresh > 0 ? html`<i class="new"></i>${fresh === 1 ? 'Ein Wort ist neu für dich' : `${fresh} Wörter sind neu für dich`}` : html`<i></i>Alle Wörter dieser Zeile hattest du schon`}<span>Tippe ein Wort an</span></div>`}
+    ${sp.open && !hint && !sc && !take && html`<div class="ls-legend">${fresh > 0 ? html`<i class="new"></i>${fresh === 1 ? 'Ein Wort ist neu für dich' : `${fresh} Wörter sind neu für dich`}` : html`<i></i>Alle Wörter dieser Zeile hattest du schon`}<span>Tippe ein Wort an</span></div>`}
   </div></div>
   <div class="bottom">
     <div class="dock ls-dock">

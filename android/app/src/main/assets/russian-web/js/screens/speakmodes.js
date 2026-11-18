@@ -1,13 +1,12 @@
 // Sprech-Modi: Sprech-Reflex, Kombi-Meister, Blind-Coach, Sprich frei.
 // Regeln und Wertung wie in RussianReflex.kt / RussianTalk.kt.
-import { html, cls, Icon, IL, PhraseBlock, PlayRow, Latin, Mic, ScoreCard, Summary, Speaker, useListen, useKeys, playPhrase, useState, useEffect, useRef, useMemo, fx, audio, tts, MIC_WAIT } from '../ui.js';
+import { html, cls, Icon, IL, PhraseBlock, PlayRow, Latin, Mic, ScoreCard, Summary, Speaker, useListen, useKeys, playPhrase, useState, useEffect, useRef, useMemo, fx, audio, tts, MIC_WAIT,
+  useSpicker, SpickerBtn, SpickNote, HiddenRu } from '../ui.js';
 import { D, P, progress, back, learnedPool, myPhrases, phraseById, takeSelection } from '../app.js';
 import { speech as recog, serverVoice } from '../platform.js';
 import * as Co from '../domain/course.js';
 import * as Sp from '../domain/speech.js';
 import * as Ct from '../domain/content.js';
-import * as Ph from '../domain/phonetics.js';
-import * as Gl from '../domain/glossary.js';
 import { Intro, GameBar } from './games.js';
 import { weightedOrder } from '../learner.js';
 
@@ -33,13 +32,6 @@ function buildReflexQueue(count = 7) {
   return rng.shuffled(uniq([...dueAndWeak.slice(0, Math.max(Math.floor(count * 0.45), 2)), ...mastered.slice(0, Math.max(Math.floor(count * 0.35), 2)), ...fresh]).slice(0, count));
 }
 
-function FirstWord({ ru }) {
-  const first = useMemo(() => Gl.chunks(ru)[0], [ru]);
-  if (!first) return null;
-  return html`<div class="mt12"><div class="over">Starthilfe</div><div class="il mt4 center" style="--fs:22px"><div class="il-l">${first.words.map((w, i) => html`${i ? ' ' : ''}${w.latin.map((x) => (x.stressed ? html`<u>${x.text}</u>` : x.text))}`)} …</div></div>
-    ${first.gloss && html`<div class="sub">${first.gloss}</div>`}</div>`;
-}
-
 const micText = (L, idle) => (L.listening ? (L.partial ? `»${L.partial}«` : (L.opening ? MIC_WAIT : 'Ich höre zu … tippe nochmal, wenn du fertig bist')) : L.evaluating ? 'Wird ausgewertet …' : L.errorText ?? idle);
 
 // ── Sprech-Reflex ──────────────────────────────────────────────────────────
@@ -49,15 +41,15 @@ const WINDOW = 4500;
 function ReflexRound({ phrase, repeat, streak, onDone }) {
   const [left, setLeft] = useState(WINDOW);
   const [fast, setFast] = useState(false);
-  const [hint, setHint] = useState(0);
-  const [flash, setFlash] = useState(false);
   const [passed, setPassed] = useState(false);
+  // Reflex heißt: immer nur der deutsche Gedanke — Russisch über den Spicker, auch beim ersten Mal.
+  const sp = useSpicker(phrase, { hidden: true });
   const [score, setScore] = useState(null);
   const leftRef = useRef(WINDOW);
   const L = useListen((hyps) => {
     const sc = Sp.speech(phrase.ru, hyps);
     setScore(sc);
-    if (sc.passed) { setPassed(true); fx.right(); playPhrase(phrase); } else fx.wrong();
+    if (sc.passed) { setPassed(true); fx.right(); playPhrase(phrase); } else { fx.wrong(); sp.fail(); }
   });
   useEffect(() => { if (recog.available()) L.start(phrase.ru); }, []);
   useEffect(() => {
@@ -66,33 +58,32 @@ function ReflexRound({ phrase, repeat, streak, onDone }) {
     return () => clearInterval(t);
   }, [passed]);
   useEffect(() => { if (L.partial && leftRef.current > 0) setFast(true); }, [L.partial]);
-  const peek = async () => {
-    setHint(2); setFlash(true); L.cancel();
-    setTimeout(() => setFlash(false), 2600);
+  const hearIt = async () => {
+    sp.hear(); L.cancel();
     await playPhrase(phrase);
     if (recog.available()) L.start(phrase.ru);
   };
   const said = () => { L.cancel(); setPassed(true); playPhrase(phrase); };
   const mic = () => { if (L.listening) L.stop(); else { audio.stop(); setScore(null); L.start(phrase.ru); } };
-  const blind = hint === 0;
-  const next = () => onDone(blind, fast && blind);
-  useKeys({ Enter: () => passed && next(), m: () => !passed && mic() }, [passed, L.listening, hint, fast]);
+  const blind = !sp.used;
+  const next = () => onDone(sp.used, fast && blind);
+  useKeys({ Enter: () => passed && next(), m: () => !passed && mic() }, [passed, L.listening, sp.used, fast]);
 
   return html`<div class="scroll"><div class="stepc center g12">
       <div class="rowx" style="width:100%;justify-content:space-between;min-height:26px"><div class=${cls('over', repeat ? 'amber' : 'c')}>${repeat ? 'Nochmal — diesmal ohne Hilfe' : 'Sag es frei auf Russisch'}</div>
         ${streak >= 2 && html`<span class="combo"><${Icon} n="local_fire_department" fill />${streak}× blind</span>`}</div>
       <div class=${cls('timer', left <= 1500 && 'low')} style="width:100%;flex:none"><i style=${`width:${(left / WINDOW) * 100}%`}></i></div>
       <div class="sub" style="min-height:20px">${passed ? (blind && fast ? 'Blitz-Reflex — unter 4,5 Sekunden abgerufen' : blind ? 'Stark — komplett frei gesprochen' : 'Gesprochen. Der Satz kommt gleich noch einmal blind.')
-        : left > 0 ? `Reflex-Zeit: ${(left / 1000).toFixed(1).replace('.', ',')} s — sprich sofort los` : 'Kein Stress — überleg kurz oder nimm die Starthilfe'}</div>
+        : left > 0 ? `Reflex-Zeit: ${(left / 1000).toFixed(1).replace('.', ',')} s — sprich sofort los` : 'Kein Stress — überleg kurz oder nimm den Spicker'}</div>
       <div class="card p" style=${`width:100%;border-color:${passed ? 'var(--good)' : 'rgba(var(--amber-rgb),.45)'}`}>
         <div class="sub">Wie sagst du auf Russisch:</div><div class="title mt8">${phrase.de}</div>
-        ${hint === 1 && !passed && !flash && html`<${FirstWord} ru=${phrase.ru} />`}
-        ${(flash || passed) && html`<div class="mt16">${!passed && html`<div class="over amber" style="margin-bottom:8px">Einprägen — verschwindet gleich wieder</div>`}
-          <${PhraseBlock} phrase=${phrase} size=${22} showDe=${false} gloss />${passed && html`<div class="mt12"><${PlayRow} phrase=${phrase} size=${48} /></div>`}</div>`}
+        ${!passed && sp.level > 0 && sp.level < 3 && html`<div class="mt12"><${HiddenRu} ru=${phrase.ru} level=${sp.level} size=${22} /></div>`}
+        ${(sp.open || passed) && html`<div class="mt16"><${PhraseBlock} phrase=${phrase} size=${22} showDe=${false} gloss />${passed && html`<div class="mt12"><${PlayRow} phrase=${phrase} size=${48} /></div>`}</div>`}
+        ${sp.used && html`<div class="mt8"><${SpickNote} sp=${sp} /></div>`}
       </div>
-      ${!passed && html`<div class="rowx g8 wrap" style="justify-content:center">
-          ${hint < 1 && html`<button class="chip" onClick=${() => setHint(1)}><${Icon} n="lightbulb" />1. Wort zeigen</button>`}
-          <button class="chip" onClick=${peek}><${Icon} n="visibility" />Hören und spicken</button></div>
+      ${!passed && html`<div class="rowx g8 wrap jc">
+          <${SpickerBtn} sp=${sp} />
+          <button class="chip sm" onClick=${hearIt}><${Icon} n="volume_up" />Anhören</button></div>
         ${recog.available() && html`<div class="micwrap mt8"><${Mic} L=${L} onClick=${mic} /><div class=${cls('mictxt', L.listening && 'on')}>${micText(L, 'Tippe aufs Mikrofon und sprich aus dem Kopf')}</div></div>`}`}
       ${score && html`<${ScoreCard} sc=${score} targetRu=${phrase.ru} />`}
     </div></div>
@@ -111,9 +102,11 @@ export function Reflex() {
   const res = useRef({ newBest: false, blind: 0 });
   const close = () => { audio.stop(); back('ueben'); };
   const start = () => { res.current = { newBest: false, blind: 0 }; setIdx(0); setScore(0); setStreak(0); setRequeued([]); setPhase('run'); };
-  const done = (blind, fastReflex) => {
+  const done = (used, fastReflex) => {
     const ph = queue[idx];
-    progress.apply({ xp: blind ? 12 : 6, graded: !progress.gradable(ph.id) ? {} : { [ph.id]: blind }, spokenOk: 1 });
+    const blind = !used;
+    // Mit Spicker gesprochen ist richtig mit Hilfe — der Satz kommt früher wieder (P.grade).
+    progress.apply({ xp: blind ? 12 : 6, graded: !progress.gradable(ph.id) ? {} : { [ph.id]: used ?? true }, spokenOk: 1 });
     let total = score;
     let q = queue;
     if (blind) { const st = streak + 1; setStreak(st); res.current.blind++; total += (fastReflex ? 25 : 15) + Math.min(st, 5) * 3; }
@@ -129,7 +122,7 @@ export function Reflex() {
   if (phase === 'intro') {
     return html`<${Intro} c="c-speak" icon="bolt" over="Gegen den Sprech-Blackout" title="Sprech-Reflex"
       text="Im echten Gespräch gibt es keine Untertitel. Du siehst nur den deutschen Gedanken und sagst ihn frei auf Russisch."
-      points=${[['timer', '4,5 Sekunden Reflex-Zeit — schnell gibt Bonuspunkte'], ['lightbulb', 'Starthilfe erlaubt — der Satz kommt dann noch einmal blind'], ['local_fire_department', 'Jeder Satz ohne Hilfe verlängert deine Serie']]}
+      points=${[['timer', '4,5 Sekunden Reflex-Zeit — schnell gibt Bonuspunkte'], ['visibility', 'Spicken erlaubt — der Satz kommt dann noch einmal blind'], ['local_fire_department', 'Jeder Satz ohne Hilfe verlängert deine Serie']]}
       record=${progress.get().bestReflex > 0 ? `Dein Rekord: ${progress.get().bestReflex}` : null} cta="Training starten" onStart=${start} onClose=${close} />`;
   }
   if (phase === 'over') {
