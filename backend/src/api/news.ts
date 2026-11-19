@@ -59,7 +59,7 @@ export async function registerNewsRoutes(app: FastifyInstance, deps: NewsDeps = 
         headers: {
           "user-agent":
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
-          accept: "image/avif,image/webp,image/*,*/*;q=0.8",
+          accept: "image/webp,image/jpeg,image/png,image/*;q=0.8",
           referer: `${target.origin}/`,
         },
         signal: AbortSignal.timeout(12000),
