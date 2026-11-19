@@ -108,12 +108,13 @@ export function PhotoFlow({ slot }) {
   const [res, setRes] = useState(null);
   const [err, setErr] = useState(null);
   const [hint, setHint] = useState('');
+  // Erst die Auswahl (Kamera oder Galerie) — die Kamera öffnet nie von selbst. Abbrechen führt hierher zurück.
   const take = async (source) => {
     setErr(null);
     const p = await pickPhoto(source);
-    if (!p) { if (!photo) back('ernaehrung'); return; }
+    if (!p) return;
     setPhoto(p); setRes(null);
-    analyze(p, '');
+    analyze(p, hint);
   };
   const analyze = async (p, h) => {
     setRes(null); setErr(null);
@@ -123,17 +124,36 @@ export function PhotoFlow({ slot }) {
       else setRes(r);
     } catch (e) { setErr(e.status === 503 ? 'Kein Gemini-Schlüssel auf dem Server.' : 'Die Erkennung hat nicht geklappt — nochmal versuchen?'); }
   };
-  useEffect(() => { take('camera'); }, []);
-  if (res) return html`<${MealEditor} initial=${{ title: res.dish, items: res.items, photo: res.photo, source: 'foto', note: res.note }} slot=${slot} photoSrc=${`data:image/jpeg;base64,${photo.base64}`} onRetake=${() => take('camera')} />`;
-  return html`<div class="screen c-food">
-    <${Top} title="Mahlzeit erkennen" onBack=${() => back('ernaehrung')} />
-    ${photo ? html`<div class="photoBox"><img src=${`data:${photo.mime};base64,${photo.base64}`} alt="" />${!err && html`<div class="scan" />`}</div>
+  const reset = () => { setPhoto(null); setRes(null); setErr(null); };
+  if (res) return html`<${MealEditor} initial=${{ title: res.dish, items: res.items, photo: res.photo, source: 'foto', note: res.note }} slot=${slot} photoSrc=${`data:image/jpeg;base64,${photo.base64}`} onRetake=${reset} />`;
+  if (photo) {
+    return html`<div class="screen c-food"><${Top} title="Mahlzeit erkennen" onBack=${reset} />
+      <div class="photoBox"><img src=${`data:${photo.mime};base64,${photo.base64}`} alt="" />${!err && html`<div class="scan" />`}</div>
       <div class="pad mt20">${err ? html`<div class="card pad16"><div class="h3">${err}</div>
           <div class="field mt12"><label>Hinweis für die KI (optional)</label><input class="input" placeholder="z. B. »Linsen-Dal mit Reis«" value=${hint} onInput=${(e) => setHint(e.target.value)} /></div>
-          <div class="row mt12"><button class="btn" onClick=${() => analyze(photo, hint)}>Nochmal erkennen</button><button class="btn ghost" onClick=${() => take('camera')}>Neues Foto</button></div></div>`
-        : html`<div class="row gap12"><${Spinner} /><div><div class="h3">Erkenne Gericht und Mengen …</div><div class="small muted">Zutaten werden im Bundeslebensmittelschlüssel nachgeschlagen</div></div></div>`}</div>`
-    : html`<div class="pad"><${Empty} icon="photo_camera" title="Foto aufnehmen" text="Fotografiere deinen Teller von schräg oben — mit Besteck im Bild werden die Mengen genauer.">
-        <div class="row mt12"><button class="btn solid" onClick=${() => take('camera')}><${Icon} n="photo_camera" />Kamera</button><button class="btn ghost" onClick=${() => take('gallery')}><${Icon} n="image" />Galerie</button></div><//></div>`}
+          <div class="row mt12"><button class="btn" onClick=${() => analyze(photo, hint)}>Nochmal erkennen</button><button class="btn ghost" onClick=${reset}>Anderes Foto</button></div></div>`
+        : html`<div class="row gap12"><${Spinner} /><div><div class="h3">Erkenne Gericht und Mengen …</div><div class="small muted">Zutaten werden im Bundeslebensmittelschlüssel nachgeschlagen</div></div></div>`}</div>
+    </div>`;
+  }
+  return html`<div class="screen c-food"><${Top} title="Mahlzeit erkennen" onBack=${() => back('ernaehrung')} />
+    <div class="scroll"><div class="pad">
+      <div class="pickGrid">
+        <button class="pick main" onClick=${() => take('camera')}><${Icon} n="photo_camera" /><b>Foto machen</b><span>Teller jetzt fotografieren</span></button>
+        <button class="pick" onClick=${() => take('gallery')}><${Icon} n="photo_library" /><b>Aus der Galerie</b><span>Ein Foto, das du schon gemacht hast</span></button>
+      </div>
+      <div class="field mt20"><label>Hinweis für die KI (optional)</label><input class="input" placeholder="z. B. »Protein-Pancakes mit Skyr«" value=${hint} onInput=${(e) => setHint(e.target.value)} /></div>
+      <div class="card pad16 mt20">
+        <div class="eyebrow">So wird es genau</div>
+        <ul class="errs tips mt8">
+          <li><${Icon} n="check_circle" />Schräg von oben, der ganze Teller im Bild</li>
+          <li><${Icon} n="check_circle" />Besteck oder Hand daneben — daran erkennt die KI die Mengen</li>
+          <li><${Icon} n="check_circle" />Soßen, Öl und Getränke mit aufs Bild</li>
+        </ul>
+      </div>
+      <button class="card pad16 mt12 row" style="width:100%;text-align:left" onClick=${() => nav(`barcode/${slot ?? slotNow()}`, { replace: true })}>
+        <div class="iconTile soft"><${Icon} n="barcode_scanner" /></div><div class="grow"><div class="h3">Verpackt?</div><div class="small muted">Barcode scannen ist genauer als ein Foto</div></div><${Icon} n="chevron_right" cls="faint" /></button>
+      <div class="end" />
+    </div></div>
   </div>`;
 }
 
