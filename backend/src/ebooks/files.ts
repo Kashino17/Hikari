@@ -5,6 +5,7 @@ import { execa } from "execa";
 import { categorize, kindOf } from "./categories.js";
 import type { PoliteHttp } from "./http.js";
 import { type BookFormat, hideBook } from "./persist.js";
+import { gutenbergAlternates } from "./sources/gutenberg.js";
 import { MIN_WORDS } from "./whole-book.js";
 
 /** Ein PDF unter so vielen Seiten ist kein ganzes Buch (Flyer, Leseprobe, Inhaltsverzeichnis). */
@@ -77,9 +78,21 @@ async function load(
       : { path: known.local_path, format: book.format };
   }
 
-  const r = await http.get(book.file_url);
-  if (r.status !== 200 || r.body.length === 0)
-    throw new Error(`Laden fehlgeschlagen (HTTP ${r.status})`);
+  let r: { status: number; body: Buffer } = { status: 0, body: Buffer.alloc(0) };
+  let lastError: unknown = null;
+  for (const url of [book.file_url, ...gutenbergAlternates(book.file_url)]) {
+    try {
+      r = await http.get(url);
+      if (r.status === 200 && r.body.length > 0) break;
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  if (r.status !== 200 || r.body.length === 0) {
+    throw lastError instanceof Error && r.status === 0
+      ? lastError
+      : new Error(`Laden fehlgeschlagen (HTTP ${r.status})`);
+  }
   mkdirSync(ebookDir, { recursive: true });
   const path = join(ebookDir, `${safe(id)}.${book.format}`);
   const part = `${path}.part`;

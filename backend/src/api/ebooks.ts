@@ -236,6 +236,34 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
     };
   });
 
+  // Vorbereiten: der Mac holt das Buch im Hintergrund (Quellen können langsam sein), die App fragt nach.
+  const preparing = new Map<string, { status: "loading" | "error"; error?: string }>();
+  app.post<{ Params: { id: string } }>("/api/ebooks/:id/prepare", async (req, reply) => {
+    const id = req.params.id;
+    const book = db.prepare("SELECT hidden_reason FROM ebooks WHERE id = ?").get(id) as
+      | { hidden_reason: string | null }
+      | undefined;
+    if (!book) return reply.code(404).send({ error: "unbekanntes Buch" });
+    if (book.hidden_reason)
+      return { status: "hidden", error: `${book.hidden_reason} — kein ganzes Buch` };
+    const file = db.prepare("SELECT local_path FROM ebook_files WHERE book_id = ?").get(id) as
+      | { local_path: string }
+      | undefined;
+    if (file && existsSync(file.local_path)) return { status: "ready" };
+    const cur = preparing.get(id);
+    if (cur?.status === "loading") return { status: "loading" };
+    preparing.set(id, { status: "loading" });
+    ensureBookFile(deps, id)
+      .then((r) => {
+        preparing.delete(id);
+        if ("hidden" in r) deps.log?.(`ebooks: ${id} versteckt — ${r.hidden}`);
+      })
+      .catch((err: Error) => preparing.set(id, { status: "error", error: err.message }));
+    return cur?.status === "error"
+      ? { status: "loading", lastError: cur.error }
+      : { status: "loading" };
+  });
+
   app.get<{ Params: { id: string } }>("/api/ebooks/:id/file", async (req, reply) => {
     try {
       const r = await ensureBookFile(deps, req.params.id);

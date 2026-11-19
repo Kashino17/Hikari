@@ -101,6 +101,40 @@ describe("ensureBookFile", () => {
     expect(a).toEqual(b);
   });
 
+  it("fällt auf einen anderen Gutenberg-Spiegel zurück", async () => {
+    const id = upsertBook(
+      db,
+      {
+        source: "gutenberg",
+        sourceId: "7",
+        title: "x",
+        authors: [],
+        language: "de",
+        subjects: ["DE Prosa"],
+        format: "epub",
+        fileUrl: "https://gutenberg.nabasny.com/cache/epub/7/pg7-images-3.epub",
+        sourceUrl: "y",
+      },
+      ["roman"],
+      1,
+    ).id;
+    const calls: string[] = [];
+    const http: PoliteHttp = {
+      get: async (u) => {
+        calls.push(u);
+        return u.includes("nabasny")
+          ? { status: 404, body: Buffer.from("") }
+          : { status: 200, body: fx("long.epub") };
+      },
+    };
+    const r = await ensureBookFile({ db, ebookDir: dir, http }, id);
+    expect("path" in r).toBe(true);
+    expect(calls).toEqual([
+      "https://gutenberg.nabasny.com/cache/epub/7/pg7-images-3.epub",
+      "https://gutenberg.pglaf.org/cache/epub/7/pg7-images-3.epub",
+    ]);
+  });
+
   it("zweiter Aufruf nimmt die vorhandene Datei", async () => {
     const id = add("da");
     const calls = { n: 0 };

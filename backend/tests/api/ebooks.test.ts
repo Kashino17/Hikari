@@ -156,6 +156,28 @@ describe("/api/ebooks", () => {
     expect((await get("/api/ebooks/gutenberg%3Ar1")).json.downloaded).toBe(true);
   });
 
+  it("Vorbereiten: erst laden lassen, dann ist es bereit", async () => {
+    const post = async () =>
+      (await app.inject({ method: "POST", url: "/api/ebooks/gutenberg%3Ar2/prepare" })).json();
+    const first = await post();
+    expect(["loading", "ready"]).toContain(first.status);
+    for (let i = 0; i < 50 && (await post()).status !== "ready"; i++)
+      await new Promise((r) => setTimeout(r, 20));
+    expect((await post()).status).toBe("ready");
+    httpBody = fx("short.epub");
+    let s = await post();
+    expect(s.status).toBe("ready"); // schon geladen — bleibt bereit
+    s = (await app.inject({ method: "POST", url: "/api/ebooks/gutenberg%3Ak2/prepare" })).json();
+    for (let i = 0; i < 50 && s.status === "loading"; i++) {
+      await new Promise((r) => setTimeout(r, 20));
+      s = (await app.inject({ method: "POST", url: "/api/ebooks/gutenberg%3Ak2/prepare" })).json();
+    }
+    expect(s).toMatchObject({ status: "hidden" });
+    expect(
+      (await app.inject({ method: "POST", url: "/api/ebooks/nix%3A1/prepare" })).statusCode,
+    ).toBe(404);
+  });
+
   it("Datei eines zu kurzen Buchs → 410", async () => {
     httpBody = fx("short.epub");
     const r = await app.inject({ method: "GET", url: "/api/ebooks/gutenberg%3Ak1/file" });

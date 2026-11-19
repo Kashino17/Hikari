@@ -54,8 +54,8 @@ describe("Gutenberg", () => {
       authors: ["Johann Wolfgang von Goethe"],
       language: "de",
       format: "epub",
-      fileUrl: "https://gutenberg.pglaf.org/cache/epub/2054/pg2054-images-3.epub",
-      coverUrl: "https://gutenberg.pglaf.org/cache/epub/2054/pg2054.cover.medium.jpg",
+      fileUrl: "https://gutenberg.nabasny.com/cache/epub/2054/pg2054-images-3.epub",
+      coverUrl: "https://gutenberg.nabasny.com/cache/epub/2054/pg2054.cover.medium.jpg",
       sourceUrl: "https://www.gutenberg.org/ebooks/2054",
     });
     expect(books[0].subjects).toContain("DE Drama");

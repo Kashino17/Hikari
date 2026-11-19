@@ -5,6 +5,13 @@ import type { EbookSource } from "./types.js";
 
 const MIRROR = "https://gutenberg.pglaf.org";
 const MAIN = "https://www.gutenberg.org";
+/** Bücher, Titelbilder und RDF: dieser Spiegel liefert ~30× schneller (gemessen 19.11.: 6 s statt 202 s). */
+const FILES = "https://gutenberg.nabasny.com";
+
+/** Ausweichadressen einer Gutenberg-Datei, falls der schnelle Spiegel sie nicht hat. */
+export function gutenbergAlternates(url: string): string[] {
+  return url.startsWith(FILES) ? [MIRROR + url.slice(FILES.length)] : [];
+}
 /** So viele Downloadzahlen holt ein Lauf höchstens nach (eine Anfrage je Buch). */
 export const GUTENBERG_POPULARITY_PER_RUN = 400;
 const POPULARITY_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
@@ -81,8 +88,8 @@ export const gutenbergSource: EbookSource = {
         language: "de",
         subjects: [...split(r[cSubjects]), ...split(r[cShelves])],
         format: "epub",
-        fileUrl: `${MIRROR}/cache/epub/${id}/pg${id}-images-3.epub`,
-        coverUrl: `${MIRROR}/cache/epub/${id}/pg${id}.cover.medium.jpg`,
+        fileUrl: `${FILES}/cache/epub/${id}/pg${id}-images-3.epub`,
+        coverUrl: `${FILES}/cache/epub/${id}/pg${id}.cover.medium.jpg`,
         sourceUrl: `${MAIN}/ebooks/${id}`,
       });
     }
@@ -112,7 +119,7 @@ async function addPopularity(
   );
   for (const b of stale.slice(0, GUTENBERG_POPULARITY_PER_RUN)) {
     try {
-      const r = await ctx.http.get(`${MIRROR}/cache/epub/${b.sourceId}/pg${b.sourceId}.rdf`);
+      const r = await ctx.http.get(`${FILES}/cache/epub/${b.sourceId}/pg${b.sourceId}.rdf`);
       const n = Number(/<pgterms:downloads[^>]*>(\d+)</.exec(r.body.toString("utf8"))?.[1]);
       if (r.status === 200 && Number.isFinite(n)) {
         b.popularity = n;
