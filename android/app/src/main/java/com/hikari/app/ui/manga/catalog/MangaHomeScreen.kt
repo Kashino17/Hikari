@@ -208,7 +208,7 @@ fun MangaHomeScreen(
             when (tab) {
                 "meine" -> Box(Modifier.weight(1f)) { mine() }
                 "genres" -> GenresTab(s, { vm.cover(base, it) }, onList)
-                else -> DiscoverTab(s, base, vm, onContinue, onList, onOfficial, openCard)
+                else -> DiscoverTab(s, base, vm, onContinue, onList, openCard)
             }
         }
         if (s.opening != null) {
@@ -253,7 +253,6 @@ private fun DiscoverTab(
     vm: MangaHomeViewModel,
     onContinue: (String, String, Int) -> Unit,
     onList: (MangaCatalogFilter, Boolean) -> Unit,
-    onOfficial: () -> Unit,
     openCard: (MangaCatalogCardDto) -> Unit,
 ) {
     val home = s.home
@@ -278,19 +277,6 @@ private fun DiscoverTab(
                                 Text(" Kap. ${c.chapterId.substringAfterLast(':')}", color = HikariTextMuted, fontSize = 11.sp)
                             }
                         }
-                    }
-                }
-            }
-        }
-        item { OfficialBanner(onOfficial) }
-        if (home != null && home.genres.isNotEmpty()) item {
-            Header("Wonach ist dir?", null, null)
-            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(home.genres.take(10), key = { it.name }) { g ->
-                    Row(Modifier.clip(RoundedCornerShape(20.dp)).background(HikariSurface).clickable { onList(MangaCatalogFilter(lang = s.lang, genre = g.name, title = g.name), false) }
-                        .padding(horizontal = 14.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(8.dp).clip(CircleShape).background(genreColor(g.name)))
-                        Text(g.name, color = HikariText, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 8.dp))
                     }
                 }
             }
@@ -349,25 +335,6 @@ private fun ContinueCard(c: MangaContinueDto, cover: String?, onClick: () -> Uni
         }
         Box(Modifier.size(46.dp).clip(CircleShape).background(MangaAccent), contentAlignment = Alignment.Center) {
             Icon(Icons.Filled.PlayArrow, "Weiterlesen", tint = Color(0xFF160F2A))
-        }
-    }
-}
-
-@Composable
-private fun OfficialBanner(onClick: () -> Unit) {
-    Row(
-        Modifier.padding(horizontal = 16.dp, vertical = 8.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp))
-            .background(Color(0x1A4ADE80)).border(1.dp, Color(0x334ADE80), RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick).padding(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(Icons.Outlined.Verified, null, tint = Color(0xFF86EFAC), modifier = Modifier.size(26.dp))
-        Column(Modifier.weight(1f).padding(start = 12.dp)) {
-            Text("Offiziell reinlesen bei Shueisha", color = HikariText, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 3.dp)) {
-                LangBadge("de"); Spacer(Modifier.width(4.dp)); LangBadge("en")
-                Text("  MANGA MILLION · meist die ersten Kapitel", color = HikariTextMuted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
         }
     }
 }

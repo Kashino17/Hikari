@@ -512,3 +512,67 @@ describe("Suche: Titel-Treffer zuerst", () => {
     ]);
   });
 });
+
+describe("Entdecken: jeden Tag neue Vorschläge", () => {
+  const DAY = 24 * 3600 * 1000;
+  function many(n: number) {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    const base = LIST.data[0]!;
+    for (let i = 0; i < n; i++) {
+      const row = catalogFromManga(
+        { ...base, id: `00000000-0000-0000-0001-${String(i).padStart(12, "0")}` },
+        1,
+      );
+      upsertCatalog(db, {
+        ...row,
+        tags: i % 3 === 0 ? ["Action"] : i % 3 === 1 ? ["Romantik"] : ["Isekai"],
+        status: i % 4 === 0 ? "completed" : "ongoing",
+        coverUrl: `https://u.test/${i}.jpg`,
+        popularity: 10000 - i,
+      });
+    }
+    db.exec("UPDATE manga_catalog SET readable_at = 1, readable_en = 5, readable_de = 12");
+    return db;
+  }
+  const ids = (h: ReturnType<typeof catalogHome>, key: string) =>
+    h.shelves.find((s) => s.key === key)?.items.map((c) => c.id) ?? [];
+
+  it("am selben Tag dieselben Regale, am nächsten Tag andere", () => {
+    const db = many(400);
+    const noon = new Date(2026, 10, 19, 12).getTime();
+    const morning = new Date(2026, 10, 19, 7).getTime();
+    expect(ids(catalogHome(db, "all", 20, noon), "action")).toEqual(
+      ids(catalogHome(db, "all", 20, morning), "action"),
+    );
+    for (const key of ["popular", "action", "romcom", "isekai", "completed"]) {
+      const today = ids(catalogHome(db, "all", 20, noon), key);
+      const tomorrow = ids(catalogHome(db, "all", 20, noon + DAY), key);
+      expect(today.length).toBe(20);
+      expect(tomorrow).not.toEqual(today);
+    }
+  });
+
+  it("kein Titel steht am selben Tag in zwei Regalen", () => {
+    const db = many(400);
+    const all = catalogHome(db, "all", 20, new Date(2026, 10, 19, 12).getTime()).shelves.flatMap(
+      (s) => s.items.map((c) => c.id),
+    );
+    expect(new Set(all).size).toBe(all.length);
+  });
+
+  it("was schon in „Meine Mangas“ liegt, wird nicht vorgeschlagen", () => {
+    const db = many(400);
+    const now = new Date(2026, 10, 19, 12).getTime();
+    const shown = ids(catalogHome(db, "all", 20, now), "action");
+    const mine = shown.slice(0, 5);
+    for (const id of mine) {
+      db.prepare(
+        "INSERT INTO manga_series (id, title, source, source_url, added_at) VALUES (?, 'x', 'mangadex', 'u', 1)",
+      ).run(id);
+      db.prepare("INSERT INTO manga_library (series_id, added_at) VALUES (?, 1)").run(id);
+    }
+    const all = catalogHome(db, "all", 20, now).shelves.flatMap((s) => s.items.map((c) => c.id));
+    for (const id of mine) expect(all).not.toContain(id);
+  });
+});

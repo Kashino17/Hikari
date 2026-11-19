@@ -390,7 +390,7 @@ const SHELVES: ShelfDef[] = [
     subtitle: "Mindestens 10 Kapitel auf Deutsch",
     filter: { lang: "de", minDe: 10 },
   },
-  { key: "popular", title: "Beliebt", subtitle: "Die meisten Follower", filter: {} },
+  { key: "popular", title: "Beliebt", subtitle: "Heute aus den beliebtesten Reihen", filter: {} },
   {
     key: "completed",
     title: "Am Stück lesen",
@@ -423,6 +423,33 @@ const SHELVES: ShelfDef[] = [
   },
 ];
 
+/** Aus so vielen der beliebtesten Titel eines Regals wird täglich gewählt. */
+const DAILY_POOL = 150;
+
+/**
+ * Tagesauswahl: die beliebteren Titel kommen öfter dran, aber jeder aus dem Vorrat irgendwann.
+ * Gleicher Schlüssel (Tag + Regal) → gleiche Auswahl.
+ */
+function dailyPick<T>(pool: T[], n: number, seedKey: string): T[] {
+  let h = 2166136261;
+  for (let i = 0; i < seedKey.length; i++) h = Math.imul(h ^ seedKey.charCodeAt(i), 16777619);
+  const rand = () => {
+    h = (h + 0x6d2b79f5) | 0;
+    let t = Math.imul(h ^ (h >>> 15), 1 | h);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  // Gewicht fällt mit dem Rang sanft ab (Platz 1 etwa dreimal so oft wie Platz 150).
+  const scored = pool.map((item, rank) => {
+    const weight = 1 / (1 + (2 * rank) / Math.max(1, pool.length));
+    return { item, key: rand() ** (1 / weight) };
+  });
+  return scored
+    .sort((a, b) => b.key - a.key)
+    .slice(0, n)
+    .map((x) => x.item);
+}
+
 export function catalogHome(
   db: Database.Database,
   lang: LangFilter,
@@ -432,14 +459,53 @@ export function catalogHome(
   shelves: { key: string; title: string; subtitle: string; items: CatalogCard[] }[];
   genres: { name: string; count: number; covers: string[] }[];
 } {
-  const shelves = SHELVES
+  // Jeden Tag neue Vorschläge: je Regal eine Tagesauswahl aus den beliebtesten Titeln seines Themas —
+  // über den Tag gleich, kein Titel in zwei Regalen, nichts, was schon in „Meine Mangas“ liegt.
+  const d = new Date(now);
+  const day = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  const mine = new Set(
+    (db.prepare("SELECT series_id FROM manga_library").all() as { series_id: string }[]).map(
+      (r) => r.series_id,
+    ),
+  );
+  const used = new Set<string>();
+  const visible = SHELVES
     // Wer »nur Englisch« gewählt hat, bekommt kein Regal »Auf Deutsch«.
-    .filter((s) => !(s.filter.lang && lang !== "all" && s.filter.lang !== lang))
+    .filter((s) => !(s.filter.lang && lang !== "all" && s.filter.lang !== lang));
+  // Themen-Regale wählen zuerst, die breiten („Auf Deutsch“, „Beliebt“) nehmen, was übrig ist.
+  const broad = (s: ShelfDef) => s.key === "de" || s.key === "popular";
+  const picked = new Map<string, CatalogCard[]>();
+  for (const s of [...visible.filter((x) => !broad(x)), ...visible.filter(broad)]) {
+    const pool = listCatalog(db, {
+      ...s.filter,
+      lang: s.filter.lang ?? lang,
+      limit: DAILY_POOL,
+    }).items.filter((c) => !mine.has(c.id));
+    const seed = `${day}:${s.key}:${lang}`;
+    const items = dailyPick(
+      pool.filter((c) => !used.has(c.id)),
+      perShelf,
+      seed,
+    );
+    // Kleiner Katalog: lieber ein Titel doppelt als ein halb leeres Regal.
+    if (items.length < perShelf) {
+      items.push(
+        ...dailyPick(
+          pool.filter((c) => used.has(c.id)),
+          perShelf - items.length,
+          seed,
+        ),
+      );
+    }
+    for (const c of items) used.add(c.id);
+    picked.set(s.key, items);
+  }
+  const shelves = visible
     .map((s) => ({
       key: s.key,
       title: s.title,
       subtitle: s.subtitle,
-      items: listCatalog(db, { ...s.filter, lang: s.filter.lang ?? lang, limit: perShelf }).items,
+      items: picked.get(s.key) ?? [],
     }))
     .filter((s) => s.items.length > 0);
 
@@ -456,7 +522,7 @@ export function catalogHome(
 
   // Collage je Genre: drei Cover aus den beliebtesten 24, alle sechs Stunden andere, keins doppelt.
   const window = Math.floor(now / COLLAGE_MS);
-  const used = new Set<string>();
+  used.clear();
   const pool = db.prepare(
     `SELECT c.id FROM manga_catalog c, json_each(c.tags_json) t
       WHERE ${w.sql.join(" AND ")} AND t.value = ? AND c.cover_url IS NOT NULL
