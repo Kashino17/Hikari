@@ -7,6 +7,7 @@ import { bpbSource, looksEnglish, parseBpbPage } from "../../src/ebooks/sources/
 import {
   GUTENBERG_POPULARITY_PER_RUN,
   gutenbergSource,
+  parseAuthors,
 } from "../../src/ebooks/sources/gutenberg.js";
 import { openAccessSource } from "../../src/ebooks/sources/openaccess.js";
 import { SourceBlocked, type SourceContext } from "../../src/ebooks/sources/types.js";
@@ -334,5 +335,20 @@ describe("bpb — Titel und Autoren sauber", () => {
         <span class="opening-header__author">von Krsto Lazarević, Franziska Tschinderle und Danijel Majić</span>`),
     );
     expect(b?.authors).toEqual(["Krsto Lazarević", "Franziska Tschinderle", "Danijel Majić"]);
+  });
+});
+
+describe("Gutenberg — Autorennamen zum Anzeigen", () => {
+  it("ausgeschriebene Vornamen in Klammern fallen weg", () => {
+    expect(parseAuthors("Hoffmann, E. T. A. (Ernst Theodor Amadeus), 1776-1822")).toEqual([
+      "E. T. A. Hoffmann",
+    ]);
+    expect(parseAuthors("Andersen, H. C. (Hans Christian), 1805-1875")).toEqual(["H. C. Andersen"]);
+  });
+  it("lateinische Herrschernamen bekommen den deutschen Namen", () => {
+    expect(parseAuthors("Marcus Aurelius, Emperor of Rome, 121-180")).toEqual(["Mark Aurel"]);
+  });
+  it("„Unknown“ und „Anonymous“ sind kein Autor", () => {
+    expect(parseAuthors("Unknown")).toEqual([]);
   });
 });

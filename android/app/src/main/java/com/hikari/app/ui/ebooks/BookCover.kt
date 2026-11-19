@@ -117,7 +117,7 @@ private fun TypographicCover(title: String, authors: String, category: String?) 
     val base = categoryColor(category)
     val ink = Color(0xFFF3E9D2) // Papierweiß für Schrift und Linien
     val ornament = coverOrnament(title)
-    Box(
+    androidx.compose.foundation.layout.BoxWithConstraints(
         Modifier
             .fillMaxSize()
             .background(Brush.radialGradient(listOf(base.copy(alpha = 0.92f).compositeOver(Color(0xFF2A2420)), base.copy(alpha = 0.7f).compositeOver(Color(0xFF14110F))))),
@@ -153,6 +153,15 @@ private fun TypographicCover(title: String, authors: String, category: String?) 
                     x += step
                 }
             }
+        }
+        // Klein (Listen, Suche): nur der Anfangsbuchstabe — ein ganzer Titel wäre nicht lesbar.
+        if (maxWidth < 72.dp) {
+            Text(
+                title.trim().firstOrNull()?.uppercase() ?: "",
+                color = ink, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold, fontSize = 22.sp,
+                modifier = Modifier.align(Alignment.Center),
+            )
+            return@BoxWithConstraints
         }
         Column(
             Modifier.fillMaxSize().padding(horizontal = 14.dp),

@@ -1,5 +1,7 @@
 package com.hikari.app.ui.ebooks
 
+import androidx.compose.runtime.remember
+
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -265,8 +267,9 @@ private fun FeaturedCard(b: EbookCardDto, saved: Boolean, onOpen: () -> Unit, on
             BookCover(b.title, b.authors.joinToString(", "), b.categories.firstOrNull(), b.isPdf, b.coverUrl, Modifier.width(104.dp).clickable(onClick = onOpen))
             Column(Modifier.weight(1f).padding(start = 16.dp)) {
                 Text("BUCH DES TAGES", color = BooksAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp)
-                Text(shortTitle(b.title), color = Color.White, fontSize = 22.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold,
-                    lineHeight = 25.sp, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
+                Text(shortTitle(b.title), color = Color.White, fontSize = 20.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold,
+                    lineHeight = 24.sp, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp),
+                    style = androidx.compose.ui.text.TextStyle(hyphens = androidx.compose.ui.text.style.Hyphens.Auto, lineBreak = androidx.compose.ui.text.style.LineBreak.Paragraph))
                 Text(listOfNotNull(b.authors.firstOrNull(), b.minutes?.let(::readingTime)).joinToString(" · "),
                     color = Color(0xFFDDD3C7), fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 2.dp))
                 Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -428,7 +431,13 @@ internal fun CardListRow(b: EbookCardDto, onClick: () -> Unit) {
 @Composable
 private fun CategoriesTab(s: BooksHomeState, onList: (EbookFilter) -> Unit) {
     val cats = s.home?.categories.orEmpty()
-    val coverOf = s.home?.shelves.orEmpty().filter { it.key.startsWith("kat:") }.associate { it.key.removePrefix("kat:") to it.books.filter { b -> b.coverUrl != null }.take(2) }
+    // Je Kategorie zwei Titelbilder — jedes Buch nur auf einer Kachel, damit nicht überall Faust liegt.
+    val coverOf = remember(s.home) {
+        val used = HashSet<String>()
+        s.home?.shelves.orEmpty().filter { it.key.startsWith("kat:") }.associate { shelf ->
+            shelf.key.removePrefix("kat:") to shelf.books.filter { b -> b.coverUrl != null && used.add(b.id) }.take(2)
+        }
+    }
     val groups = listOf("belletristik" to "Romane & Geschichten", "sachbuch" to "Sachbuch & Wissen", "weitere" to "Weitere")
     LazyVerticalGrid(
         columns = GridCells.Adaptive(160.dp),

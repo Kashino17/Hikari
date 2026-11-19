@@ -17,6 +17,13 @@ export const GUTENBERG_POPULARITY_PER_RUN = 400;
 const POPULARITY_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 /** "Goethe, Johann Wolfgang von, 1749-1832" → "Johann Wolfgang von Goethe"; Übersetzer usw. fallen weg. */
+/** Bekannte Namen, die der Katalog lateinisch oder englisch führt. */
+const AUTHOR_NAMES: Record<string, string> = {
+  "Emperor of Rome Marcus Aurelius": "Mark Aurel",
+  "Marcus Aurelius": "Mark Aurel",
+};
+const NO_AUTHOR = /^(unknown|anonymous|various)$/i;
+
 export function parseAuthors(field: string): string[] {
   const parts = field
     .split(";")
@@ -32,10 +39,16 @@ export function parseAuthors(field: string): string[] {
     while (segs.length > 1 && /\d|^active\b|^fl\./i.test(segs[segs.length - 1] ?? "")) segs.pop();
     const name = segs.join(", ");
     const [last = "", ...first] = name.split(",").map((s) => s.trim());
-    return { role, name: first.length ? `${first.join(" ")} ${last}`.trim() : last };
+    // Ausgeschriebene Vornamen in Klammern („E. T. A. (Ernst Theodor Amadeus)“) weglassen.
+    const full = (first.length ? `${first.join(" ")} ${last}` : last)
+      .replace(/\s*\([^)]*\)/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    return { role, name: AUTHOR_NAMES[full] ?? full };
   });
-  const authors = people.filter((p) => !p.role || /^author$/i.test(p.role)).map((p) => p.name);
-  return authors.length ? authors : people.map((p) => p.name);
+  const known = people.filter((p) => !NO_AUTHOR.test(p.name));
+  const authors = known.filter((p) => !p.role || /^author$/i.test(p.role)).map((p) => p.name);
+  return authors.length ? authors : known.map((p) => p.name);
 }
 
 export const gutenbergSource: EbookSource = {
