@@ -271,26 +271,19 @@ private fun OfflineMangaList(
     onRetry: () -> Unit,
     onChapter: (seriesId: String, chapterId: String) -> Unit,
 ) {
-    androidx.compose.foundation.lazy.LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 120.dp),
-    ) {
-        item {
-            Column(Modifier.fillMaxWidth().padding(20.dp)) {
-                Text("Ohne Netz", color = HikariText, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Text("Diese Kapitel liegen auf dem Handy und lassen sich jetzt lesen.", color = HikariTextFaint, fontSize = 13.sp,
-                    modifier = Modifier.padding(top = 4.dp))
-                Text("Erneut verbinden", color = com.hikari.app.ui.manga.MangaAccent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(top = 10.dp).clickable(onClick = onRetry))
-            }
+    // Die Seite drumherum scrollt schon — hier eine einfache Spalte (eine zweite Scroll-Liste ließ die App abstürzen).
+    Column(Modifier.fillMaxWidth().padding(bottom = 120.dp)) {
+        Column(Modifier.fillMaxWidth().padding(20.dp)) {
+            Text("Ohne Netz", color = HikariText, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("Diese Kapitel liegen auf dem Handy und lassen sich jetzt lesen.", color = HikariTextFaint, fontSize = 13.sp,
+                modifier = Modifier.padding(top = 4.dp))
+            Text("Erneut verbinden", color = com.hikari.app.ui.manga.MangaAccent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(top = 10.dp).clickable(onClick = onRetry))
         }
         for (s in series) {
-            item(key = "s-" + s.seriesId) {
-                Text(s.title, color = HikariText, fontSize = 17.sp, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 6.dp))
-            }
-            items(s.chapters.size, key = { "c-" + s.chapters[it].id }) { i ->
-                val c = s.chapters[i]
+            Text(s.title, color = HikariText, fontSize = 17.sp, fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 6.dp))
+            for (c in s.chapters) {
                 Row(
                     Modifier.fillMaxWidth().clickable { onChapter(s.seriesId, c.id) }.padding(horizontal = 20.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,

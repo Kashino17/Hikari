@@ -180,16 +180,8 @@ fun MangaHomeScreen(
     val s by vm.state.collectAsState()
     val base by vm.backendUrl.collectAsState()
     var tab by rememberSaveable { mutableStateOf("entdecken") }
-    // Zurück aus dem Leser: „Weiterlesen“ sofort auf den neuen Stand bringen.
-    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
-    androidx.compose.runtime.DisposableEffect(lifecycle) {
-        var first = true
-        val obs = androidx.lifecycle.LifecycleEventObserver { _, e ->
-            if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) { if (first) first = false else vm.refreshReading() }
-        }
-        lifecycle.addObserver(obs)
-        onDispose { lifecycle.removeObserver(obs) }
-    }
+    // Jedes Mal, wenn die Seite erscheint (auch zurück aus dem Leser): „Weiterlesen“ auf den neuen Stand.
+    LaunchedEffect(Unit) { vm.refreshReading() }
     val openCard: (MangaCatalogCardDto) -> Unit = { c -> vm.open(c, onSeries) }
     Box(Modifier.fillMaxSize().background(HikariBg)) {
         Column(Modifier.fillMaxSize()) {
