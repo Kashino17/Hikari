@@ -340,7 +340,20 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                         videoId = videoId,
                         title = title,
                         channel = channel,
-                        onBack = { nav.popBackStack() },
+                        onBack = {
+                            // Zurück aus dem Player: alle Player-Ebenen verlassen. Klappt das nicht
+                            // (leerer Stapel nach Neuaufbau o. Ä.), sicher zur Bibliothek — nie
+                            // im Player festsitzen.
+                            var popped = nav.popBackStack()
+                            while (popped && nav.currentDestination?.route == route) popped = nav.popBackStack()
+                            com.hikari.app.player.PlayerTrace.log("zurück aus Player popped=$popped jetzt=${nav.currentDestination?.route}")
+                            if (!popped || nav.currentDestination?.route == route) {
+                                nav.navigate("library") {
+                                    popUpTo(nav.graph.findStartDestination().id) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                            }
+                        },
                         onCastStarted = { openCastRemote(route) },
                     )
                 }

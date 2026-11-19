@@ -58,6 +58,16 @@ class MainActivity : ComponentActivity() {
         return super.dispatchKeyEvent(event)
     }
 
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        com.hikari.app.player.PlayerTrace.log("config ${newConfig.screenWidthDp}x${newConfig.screenHeightDp} o=${newConfig.orientation}")
+    }
+
+    override fun onDestroy() {
+        com.hikari.app.player.PlayerTrace.log("activity destroy wechsel=$isChangingConfigurations")
+        super.onDestroy()
+    }
+
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         onUserLeaveHintListener?.invoke()
@@ -65,6 +75,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.hikari.app.player.PlayerTrace.log("activity create neuaufbau=${savedInstanceState != null}")
         enableEdgeToEdge()
         deepLinkRoute = intent.deepLinkRoute()
         sharedImport = intent.sharedImport()

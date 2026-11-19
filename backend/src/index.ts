@@ -74,6 +74,7 @@ import {
   shouldSyncCatalogOnStart,
 } from "./manga/mangadex/catalog.js";
 import { mangadexClient } from "./manga/mangadex/client.js";
+import { registerClientTraceRoutes } from "./api/client-trace.js";
 
 const cfg = loadConfig();
 mkdirSync(cfg.videoDir, { recursive: true });
@@ -185,6 +186,7 @@ await registerRussianAnjaLiveRoutes(app, {
   live: anjaLive,
 });
 // Fitness: Training mit KI-Coach, Calisthenics-Skills, Ernährung (eigene Datenbank in ~/.hikari/fitness).
+registerClientTraceRoutes(app, join(cfg.dataDir, "client-trace.log"));
 registerFitnessRoutes(app, {
   dir: join(cfg.dataDir, "fitness"),
   dataDir: new URL("../fitness", import.meta.url).pathname,

@@ -125,6 +125,7 @@ class VideoDockManager @Inject constructor(
      * einen toten Player: schwarzes Bild, Länge 0).
      */
     fun releaseFromScreen(player: ExoPlayer) {
+        PlayerTrace.log("release aktiv=${activePlayer === player} dockOwned=$ownedByDock")
         if (activePlayer === player) {
             if (ownedByDock) return // inzwischen an die Mini-Leiste übergeben
             player.removeListener(playerListener)
@@ -139,6 +140,7 @@ class VideoDockManager @Inject constructor(
 
     /** Minimizes current video playback into docked bottom bar */
     fun dock() {
+        PlayerTrace.log("dock ${_activeVideo.value?.videoId} player=${activePlayer != null}")
         if (_activeVideo.value != null && activePlayer != null) {
             _isDocked.value = true
             ownedByDock = true
@@ -147,6 +149,7 @@ class VideoDockManager @Inject constructor(
 
     /** Expands from docked mini-player back to fullscreen */
     fun expand() {
+        PlayerTrace.log("expand ${_activeVideo.value?.videoId} state=${activePlayer?.playbackState}")
         // Bleibt Eigentum der Mini-Leiste, bis der neue Player-Bildschirm ihn übernimmt
         // (setActivePlayer) — der alte Bildschirm darf ihn auch dann nicht freigeben,
         // wenn er erst jetzt (nach seiner Schließ-Animation) verschwindet.

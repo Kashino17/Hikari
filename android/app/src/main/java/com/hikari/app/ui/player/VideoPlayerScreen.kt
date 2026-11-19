@@ -208,6 +208,13 @@ fun VideoPlayerScreen(
 
     val existingPlayer = remember { dockManager.getPlayer() }
     val isReusing = remember { dockManager.activeVideo.value?.videoId == videoId && existingPlayer != null }
+    remember {
+        com.hikari.app.player.PlayerTrace.setBackend(baseUrl)
+        com.hikari.app.player.PlayerTrace.log(
+            "open $videoId reuse=$isReusing state=${existingPlayer?.playbackState} docked=${dockManager.isDocked.value} recreated=${activity?.isChangingConfigurations}",
+        )
+        true
+    }
     val player = remember {
         if (isReusing) {
             existingPlayer!!
@@ -283,13 +290,21 @@ fun VideoPlayerScreen(
     // es sofort (statt Schwarz bzw. Vorschaubild), auch wenn pausiert ist.
     // Die Kopie läuft asynchron — spätestens nach 150 ms geht es trotzdem zurück.
     var leaving by remember { mutableStateOf(false) }
+    var leavingAt by remember { mutableLongStateOf(0L) }
     // Einmal an die Mini-Leiste übergeben, gehört der Player nicht mehr diesem Bildschirm:
     // er darf ihn weder freigeben noch pausieren — auch nicht, wenn er erst nach seiner
     // Schließ-Animation verschwindet, während schon ein neuer Bildschirm denselben Player zeigt.
     val handedOff = remember { java.util.concurrent.atomic.AtomicBoolean(false) }
     fun minimizeAndBack() {
-        if (leaving) return
+        // Hängt ein früherer Versuch (Rückruf kam nie an), nach 1,5 s trotzdem neu versuchen —
+        // nie mehr im Player festsitzen.
+        if (leaving && System.currentTimeMillis() - leavingAt < 1500) {
+            com.hikari.app.player.PlayerTrace.log("minimize ignoriert (läuft schon) $currentVideoId")
+            return
+        }
         leaving = true
+        leavingAt = System.currentTimeMillis()
+        com.hikari.app.player.PlayerTrace.log("minimize $currentVideoId locked=$locked")
         dockManager.setActivePlayer(currentVideoId, currentTitle, channel, player)
         handedOff.set(true)
         val id = currentVideoId
@@ -300,7 +315,7 @@ fun VideoPlayerScreen(
                 done = true
                 dockManager.dock()
                 handedOff.set(true)
-                onBack()
+                runCatching { onBack() }.onFailure { com.hikari.app.player.PlayerTrace.log("onBack Fehler: $it") }
                 leaving = false
             }
         }
@@ -408,6 +423,7 @@ fun VideoPlayerScreen(
             // freigegeben, die Mini-Leiste hielt ihn aber weiter → der neue Bildschirm bekam einen
             // toten Player: schwarz, Länge 0, Stelle eingefroren.
             val recreating = activity?.isChangingConfigurations == true
+            com.hikari.app.player.PlayerTrace.log("dispose $id handedOff=${handedOff.get()} recreating=$recreating pos=$pos")
             if (!handedOff.get() && !recreating) {
                 skipEngine.unbind()
                 dockManager.releaseFromScreen(player)
@@ -523,6 +539,7 @@ fun VideoPlayerScreen(
         val mainAct = activity as? MainActivity
         val consumer = Consumer<PictureInPictureModeChangedInfo> { info ->
             inPipMode = info.isInPictureInPictureMode
+            com.hikari.app.player.PlayerTrace.log("pip=${info.isInPictureInPictureMode}")
         }
         mainAct?.addOnPictureInPictureModeChangedListener(consumer)
         mainAct?.onUserLeaveHintListener = {
@@ -548,6 +565,7 @@ fun VideoPlayerScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
+            if (event != Lifecycle.Event.ON_ANY) com.hikari.app.player.PlayerTrace.log("lifecycle $event handedOff=${handedOff.get()}")
             when (event) {
                 Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> if (!handedOff.get()) {
                     // Standbild für „Weiterschauen" festhalten, auch wenn die App einfach verlassen wird.
@@ -560,7 +578,16 @@ fun VideoPlayerScreen(
                         savePositionAsync(currentVideoId, player.currentPosition)
                     }
                 }
-                Lifecycle.Event.ON_RESUME -> { if (!handedOff.get() && !cast.casting) player.playWhenReady = true }
+                Lifecycle.Event.ON_RESUME -> {
+                    // Bild-im-Bild-Zustand neu abgleichen: bleibt er fälschlich »an«, sind Zurück
+                    // und der Minimieren-Pfeil abgeschaltet — man säße im Player fest.
+                    val pipNow = activity?.isInPictureInPictureMode == true
+                    if (inPipMode != pipNow) {
+                        com.hikari.app.player.PlayerTrace.log("pip-Zustand korrigiert $inPipMode → $pipNow")
+                        inPipMode = pipNow
+                    }
+                    if (!handedOff.get() && !cast.casting) player.playWhenReady = true
+                }
                 else -> Unit
             }
         }
@@ -718,6 +745,7 @@ fun VideoPlayerScreen(
     }
 
     BackHandler(enabled = !inPipMode) {
+        com.hikari.app.player.PlayerTrace.log("zurück locked=$locked sheet=$sheet")
         when {
             locked -> lockHintVisible = true
             sheet != Sheet.None -> sheet = Sheet.None
@@ -846,6 +874,7 @@ fun VideoPlayerScreen(
                                     centerDragAccumulator += dy
                                     if (centerDragAccumulator > 100f) {
                                         centerDragAccumulator = 0f
+                                        com.hikari.app.player.PlayerTrace.log("wischen nach unten")
                                         minimizeAndBack()
                                     }
                                 }
@@ -928,6 +957,7 @@ fun VideoPlayerScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     CircleControl(Icons.Default.KeyboardArrowDown, "Minimieren", 40.dp, 24.dp, Color.Black.copy(alpha = 0.45f)) {
+                        com.hikari.app.player.PlayerTrace.log("pfeil minimieren")
                         minimizeAndBack()
                     }
                     Spacer(Modifier.width(12.dp))
