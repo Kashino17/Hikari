@@ -16,5 +16,7 @@ class ShortTitleTest {
         assertEquals("Ein Kampf um Rom (Band 2)", shortTitle("Ein Kampf um Rom: Historischer Roman. Zweiter Band"))
         assertEquals("Die Zelle und die Gewebe (Band 2)", shortTitle("Die Zelle und die Gewebe (Vol. 2/2)"))
         assertEquals("Briefe (Band 3)", shortTitle("Briefe: Band 3"))
+        assertEquals("Italienische Reise (Band 1)", shortTitle("Italienische Reise — Band 1"))
+        assertEquals("Römische Geschichte (Buch 8)", shortTitle("Römische Geschichte — Buch 8"))
     }
 }

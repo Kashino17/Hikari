@@ -345,7 +345,7 @@ internal fun authorShort(name: String): String {
  * „Faust: Der Tragödie zweiter Teil“ → „Faust (Teil 2)“, sonst stünde zweimal „Faust“ nebeneinander.
  */
 internal fun shortTitle(t: String): String {
-    val main = t.substringBefore(": ").substringBefore(" (Vol").trim()
+    val main = t.substringBefore(": ").substringBefore(" — ").substringBefore(" (Vol").trim()
     val part = partOf(t.lowercase()) ?: return main
     return "$main ($part)"
 }
@@ -357,12 +357,12 @@ private fun partOf(t: String): String? {
         val n = ORDINALS.indexOfFirst { m.groupValues[1].startsWith(it) && m.groupValues[1].length <= it.length + 2 }
         if (n >= 0) return "${label(m.groupValues[2])} ${n + 1}"
     }
-    Regex("""\b(teil|band)\s+(\d+)""").find(t)?.let { return "${label(it.groupValues[1])} ${it.groupValues[2]}" }
+    Regex("""\b(teil|band|buch)\s+(\d+)""").find(t)?.let { return "${label(it.groupValues[1])} ${it.groupValues[2]}" }
     Regex("""\bvol\.?\s*(\d+)""").find(t)?.let { return "Band ${it.groupValues[1]}" }
     return null
 }
 
-private fun label(word: String) = if (word == "teil") "Teil" else "Band"
+private fun label(word: String) = when (word) { "teil" -> "Teil"; "buch" -> "Buch"; else -> "Band" }
 
 @Composable
 private fun MineTab(s: BooksHomeState, vm: BooksViewModel, onBook: (String) -> Unit, onRead: (LocalEbookEntity) -> Unit) {
