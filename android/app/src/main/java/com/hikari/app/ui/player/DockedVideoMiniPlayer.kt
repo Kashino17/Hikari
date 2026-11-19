@@ -103,6 +103,16 @@ fun DockedVideoMiniPlayer(
         val ctx = LocalContext.current
         val textureView = remember(player) { TextureView(ctx).apply { isOpaque = false } }
 
+        // App verlassen (Home, Sperrbildschirm): das angedockte Video hält an — kein Ton aus dem Off.
+        val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+        DisposableEffect(lifecycleOwner, player) {
+            val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+                if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) player?.pause()
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        }
+
         // Ambilight-Quelle: winziges Abbild des aktuellen Bildes.
         var ambient by remember(video.videoId) { mutableStateOf<Bitmap?>(null) }
         LaunchedEffect(lastFrame) {

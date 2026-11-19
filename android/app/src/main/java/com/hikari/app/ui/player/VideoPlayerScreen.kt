@@ -283,10 +283,15 @@ fun VideoPlayerScreen(
     // es sofort (statt Schwarz bzw. Vorschaubild), auch wenn pausiert ist.
     // Die Kopie läuft asynchron — spätestens nach 150 ms geht es trotzdem zurück.
     var leaving by remember { mutableStateOf(false) }
+    // Einmal an die Mini-Leiste übergeben, gehört der Player nicht mehr diesem Bildschirm:
+    // er darf ihn weder freigeben noch pausieren — auch nicht, wenn er erst nach seiner
+    // Schließ-Animation verschwindet, während schon ein neuer Bildschirm denselben Player zeigt.
+    val handedOff = remember { java.util.concurrent.atomic.AtomicBoolean(false) }
     fun minimizeAndBack() {
         if (leaving) return
         leaving = true
         dockManager.setActivePlayer(currentVideoId, currentTitle, channel, player)
+        handedOff.set(true)
         val id = currentVideoId
         val handler = android.os.Handler(android.os.Looper.getMainLooper())
         var done = false
@@ -294,6 +299,7 @@ fun VideoPlayerScreen(
             if (!done) {
                 done = true
                 dockManager.dock()
+                handedOff.set(true)
                 onBack()
                 leaving = false
             }
@@ -395,14 +401,20 @@ fun VideoPlayerScreen(
     DisposableEffect(Unit) {
         onDispose {
             val pos = player.currentPosition
+            val loaded = player.duration > 0L
             val id = currentVideoId
-            val isDocked = dockManager.isDocked.value
-            val isCurrentDocked = isDocked && dockManager.activeVideo.value?.videoId == id
-            if (!isCurrentDocked) {
+            // Baut Android die App nur neu auf (Drehen/Falten auf dem Fold, Hell/Dunkel …), übernimmt
+            // der neue Bildschirm denselben Player und es läuft nahtlos weiter. Früher wurde er hier
+            // freigegeben, die Mini-Leiste hielt ihn aber weiter → der neue Bildschirm bekam einen
+            // toten Player: schwarz, Länge 0, Stelle eingefroren.
+            val recreating = activity?.isChangingConfigurations == true
+            if (!handedOff.get() && !recreating) {
                 skipEngine.unbind()
-                player.release()
+                dockManager.releaseFromScreen(player)
             }
-            if (pos > 0L) ioScope.launch { runCatching { playbackRepo.savePosition(id, pos) } }
+            // Nur eine echte Stelle sichern — ein nie geladener Player meldet ~0 und hätte
+            // den gemerkten Stand überschrieben (»Weiterschauen« fing dann von vorn an).
+            if (pos >= 1000L && loaded) ioScope.launch { runCatching { playbackRepo.savePosition(id, pos) } }
         }
     }
 
@@ -537,7 +549,7 @@ fun VideoPlayerScreen(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
+                Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> if (!handedOff.get()) {
                     // Standbild für „Weiterschauen" festhalten, auch wenn die App einfach verlassen wird.
                     if (event == Lifecycle.Event.ON_PAUSE) {
                         val id = currentVideoId
@@ -548,7 +560,7 @@ fun VideoPlayerScreen(
                         savePositionAsync(currentVideoId, player.currentPosition)
                     }
                 }
-                Lifecycle.Event.ON_RESUME -> { if (!cast.casting) player.playWhenReady = true }
+                Lifecycle.Event.ON_RESUME -> { if (!handedOff.get() && !cast.casting) player.playWhenReady = true }
                 else -> Unit
             }
         }

@@ -81,9 +81,28 @@ class VideoDockManager @Inject constructor(
 
     fun getPlayer(): ExoPlayer? = activePlayer
 
+    /**
+     * Gehört der Player gerade der Mini-Leiste? Ab dem Minimieren bis ein Player-Bildschirm ihn
+     * wieder übernimmt (oder die Leiste geschlossen wird). Solange darf ihn niemand sonst freigeben.
+     */
+    private var ownedByDock = false
+
     /** Attaches or updates the active video and its ExoPlayer. */
     fun setActivePlayer(videoId: String, title: String, channel: String, player: ExoPlayer) {
         if (activePlayer != player) {
+            // Ein anderes Video wird geöffnet, während die Mini-Leiste noch einen Player hält:
+            // der alte wird sauber beendet (Stelle sichern), sonst liefe er unsichtbar weiter.
+            val old = activePlayer
+            val oldId = _activeVideo.value?.videoId
+            if (old != null && ownedByDock) {
+                val pos = old.currentPosition
+                if (oldId != null && pos >= 1000L && old.duration > 0L) {
+                    scope.launch { runCatching { playbackRepository.get().savePosition(oldId, pos) } }
+                }
+                old.removeListener(playerListener)
+                old.release()
+            }
+            ownedByDock = false
             activePlayer?.removeListener(playerListener)
             activePlayer = player
             player.addListener(playerListener)
@@ -97,17 +116,40 @@ class VideoDockManager @Inject constructor(
         }
         _isPlaying.value = player.isPlaying
         _isDocked.value = false
+        ownedByDock = false
+    }
+
+    /**
+     * Ein Player-Bildschirm wird verlassen, ohne zu minimieren: Player freigeben und vergessen —
+     * nie einen Player behalten, der schon freigegeben ist (sonst öffnet das nächste »Weiter«
+     * einen toten Player: schwarzes Bild, Länge 0).
+     */
+    fun releaseFromScreen(player: ExoPlayer) {
+        if (activePlayer === player) {
+            if (ownedByDock) return // inzwischen an die Mini-Leiste übergeben
+            player.removeListener(playerListener)
+            activePlayer = null
+            _activeVideo.value = null
+            _lastFrame.value = null
+            _isDocked.value = false
+            _isPlaying.value = false
+        }
+        player.release()
     }
 
     /** Minimizes current video playback into docked bottom bar */
     fun dock() {
         if (_activeVideo.value != null && activePlayer != null) {
             _isDocked.value = true
+            ownedByDock = true
         }
     }
 
     /** Expands from docked mini-player back to fullscreen */
     fun expand() {
+        // Bleibt Eigentum der Mini-Leiste, bis der neue Player-Bildschirm ihn übernimmt
+        // (setActivePlayer) — der alte Bildschirm darf ihn auch dann nicht freigeben,
+        // wenn er erst jetzt (nach seiner Schließ-Animation) verschwindet.
         _isDocked.value = false
     }
 
@@ -128,6 +170,7 @@ class VideoDockManager @Inject constructor(
     fun detach() {
         activePlayer?.removeListener(playerListener)
         activePlayer = null
+        ownedByDock = false
         _activeVideo.value = null
         _lastFrame.value = null
         _isDocked.value = false
@@ -138,7 +181,7 @@ class VideoDockManager @Inject constructor(
     fun closeAndRelease(onSavePosition: ((String, Long) -> Unit)? = null) {
         val vid = _activeVideo.value?.videoId
         val pos = activePlayer?.currentPosition ?: 0L
-        if (vid != null && pos > 0L) {
+        if (vid != null && pos >= 1000L && (activePlayer?.duration ?: 0L) > 0L) {
             onSavePosition?.invoke(vid, pos)
             scope.launch { runCatching { playbackRepository.get().savePosition(vid, pos) } }
         }
@@ -146,6 +189,7 @@ class VideoDockManager @Inject constructor(
         activePlayer?.removeListener(playerListener)
         activePlayer?.release()
         activePlayer = null
+        ownedByDock = false
         _activeVideo.value = null
         _lastFrame.value = null
         _isDocked.value = false
