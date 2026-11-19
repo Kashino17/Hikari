@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { registerMangaCatalogRoutes } from "../../src/api/manga-catalog.js";
 import { applyMigrations } from "../../src/db/migrations.js";
 import {
+  catalogHome,
   catalogLastRun,
   checkReadableChapters,
   listCatalog,
@@ -204,7 +205,7 @@ describe("/api/manga/catalog", () => {
     upsertCatalog(db, { ...catalogFromManga(englishOnly(), 1), popularity: 5 });
     // Wie nach der Kapitel-Prüfung: jede gemeldete Sprache hat lesbare Kapitel.
     db.exec(`UPDATE manga_catalog SET readable_at = 1,
-      readable_de = CASE WHEN langs_json LIKE '%"de"%' THEN 3 ELSE 0 END,
+      readable_de = CASE WHEN langs_json LIKE '%"de"%' THEN 12 ELSE 0 END,
       readable_en = CASE WHEN langs_json LIKE '%"en"%' THEN 3 ELSE 0 END`);
     coverDir = mkdtempSync(join(tmpdir(), "mdcv-"));
     client = fakeClient({});
@@ -404,5 +405,27 @@ describe("checkReadableChapters — nur wirklich lesbare Kapitel zählen", () =>
     const before = client.calls.length;
     await checkReadableChapters({ db, client, limit: 10, now: () => 2_000 });
     expect(client.calls.length).toBe(before);
+  });
+});
+
+describe("Regal „Auf Deutsch“", () => {
+  it("zeigt nur Reihen mit mindestens 10 deutschen Kapiteln; die Liste mit lang=de alle", () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    LIST.data
+      .slice(0, 2)
+      .forEach((m, i) =>
+        upsertCatalog(db, { ...catalogFromManga(m, 1), langs: ["de"], popularity: 10 - i }),
+      );
+    const [a, b] = LIST.data.slice(0, 2).map((m) => `mangadex:${m.id}`);
+    db.prepare(
+      "UPDATE manga_catalog SET readable_at = 1, readable_de = ?, readable_en = 0 WHERE id = ?",
+    ).run(2, a);
+    db.prepare(
+      "UPDATE manga_catalog SET readable_at = 1, readable_de = ?, readable_en = 0 WHERE id = ?",
+    ).run(25, b);
+    const shelf = catalogHome(db, "all").shelves.find((s) => s.key === "de");
+    expect(shelf?.items.map((c) => c.id)).toEqual([b]);
+    expect(listCatalog(db, { lang: "de" }).total).toBe(2);
   });
 });

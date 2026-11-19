@@ -95,7 +95,15 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
         .all(id) as { lang: string }[]
     ).map((r) => r.lang);
 
-    return { ...series, langs, arcs, chapters };
+    // Die App liest coverPath/totalChapters (wie in der Reihen-Liste) — ohne die blieb das Titelbild leer.
+    return {
+      ...series,
+      coverPath: series.cover_path ?? undefined,
+      totalChapters: series.total_chapters ?? 0,
+      langs,
+      arcs,
+      chapters,
+    };
   });
 
   app.get<{ Params: { id: string } }>("/api/manga/chapters/:id/pages", async (req, reply) => {

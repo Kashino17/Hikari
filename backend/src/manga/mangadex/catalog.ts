@@ -312,6 +312,8 @@ export interface ListFilter {
   sort?: string;
   offset?: number;
   limit?: number;
+  /** Mindestzahl lesbarer deutscher Kapitel (Regal „Auf Deutsch“). */
+  minDe?: number;
 }
 
 export function listCatalog(
@@ -320,6 +322,10 @@ export function listCatalog(
 ): { total: number; items: CatalogCard[] } {
   const w: Where = { sql: [READABLE], params: [] };
   langWhere(w, f.lang ?? "all");
+  if (f.minDe) {
+    w.sql.push("COALESCE(c.readable_de, 0) >= ?");
+    w.params.push(f.minDe);
+  }
   if (f.genre) {
     const genres = f.genre.split(",").filter(Boolean);
     w.sql.push(
@@ -367,8 +373,8 @@ const SHELVES: ShelfDef[] = [
   {
     key: "de",
     title: "Auf Deutsch",
-    subtitle: "Mit deutschen Kapiteln",
-    filter: { lang: "de" },
+    subtitle: "Mindestens 10 Kapitel auf Deutsch",
+    filter: { lang: "de", minDe: 10 },
   },
   { key: "popular", title: "Beliebt", subtitle: "Die meisten Follower", filter: {} },
   {

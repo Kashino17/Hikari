@@ -87,6 +87,12 @@ internal fun CatalogCard(card: MangaCatalogCardDto, coverUrl: String?, width: Dp
         Text(card.displayTitle, color = HikariText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, lineHeight = 16.sp,
             overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp))
         Text(card.authors.firstOrNull() ?: card.tags.take(2).joinToString(", "), color = HikariTextMuted, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // Wie viel man lesen kann — je Sprache.
+        val counts = listOfNotNull(
+            card.chapters.de.takeIf { it > 0 }?.let { "DE $it" },
+            card.chapters.en.takeIf { it > 0 }?.let { "EN $it" },
+        )
+        if (counts.isNotEmpty()) Text(counts.joinToString(" · ") + " Kap.", color = HikariTextMuted.copy(alpha = 0.8f), fontSize = 11.sp, maxLines = 1)
     }
 }
 

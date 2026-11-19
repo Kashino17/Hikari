@@ -1,5 +1,7 @@
 package com.hikari.app.ui.manga
 
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.draw.blur
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.foundation.border
@@ -245,65 +247,69 @@ private fun DetailHero(
     onCta: () -> Unit,
     onBack: () -> Unit,
 ) {
-    Box(modifier = Modifier.fillMaxWidth().aspectRatio(16f / 12f)) {
-        if (coverUrl != null) {
-            AsyncImage(
-                model = coverUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        } else {
-            MangaCoverFallback(title = title)
-        }
-        // Scrim: Text und CTA müssen auch auf hellen Covern stehen.
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        0f to Color.Transparent,
-                        0.3f to HikariBg.copy(alpha = 0.30f),
-                        0.7f to HikariBg.copy(alpha = 0.85f),
-                        1f to HikariBg.copy(alpha = 0.97f),
-                    )
-                ),
-        )
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier.padding(8.dp).align(Alignment.TopStart),
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Zurück",
-                tint = HikariPrimary,
-            )
-        }
-        AnimatedVisibility(
-            visible = true,
-            enter = fadeIn(tween(350)) + slideInVertically(
-                tween(350, easing = FastOutSlowInEasing),
-            ) { it / 10 },
-            modifier = Modifier.align(Alignment.BottomStart),
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text("MANGA", color = Color.White.copy(alpha = 0.4f), fontSize = 10.sp, letterSpacing = 2.sp)
-                Text(
-                    text = title,
-                    color = Color.White,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    modifier = Modifier.padding(top = 8.dp),
+    Box(modifier = Modifier.fillMaxWidth()) {
+        // Hintergrund: das Cover groß und weich verschwommen, darüber abgedunkelt.
+        Box(Modifier.matchParentSize()) {
+            if (coverUrl != null) {
+                AsyncImage(
+                    model = coverUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().blur(36.dp),
                 )
-                author?.let {
-                    Text(it.uppercase(), color = Color.White.copy(alpha = 0.4f), fontSize = 11.sp, letterSpacing = 1.sp,
-                        modifier = Modifier.padding(top = 4.dp))
+            } else {
+                MangaCoverFallback(title = title)
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            0f to HikariBg.copy(alpha = 0.45f),
+                            0.6f to HikariBg.copy(alpha = 0.8f),
+                            1f to HikariBg,
+                        )
+                    ),
+            )
+        }
+        Column(Modifier.fillMaxWidth().statusBarsPadding()) {
+            IconButton(onClick = onBack, modifier = Modifier.padding(4.dp)) {
+                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück", tint = HikariPrimary)
+            }
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(tween(350)) + slideInVertically(tween(350, easing = FastOutSlowInEasing)) { it / 10 },
+            ) {
+                Row(Modifier.padding(start = 20.dp, end = 20.dp, bottom = 20.dp), verticalAlignment = Alignment.Bottom) {
+                    // Das ganze Titelbild, nicht abgeschnitten.
+                    Box(
+                        Modifier.width(118.dp).aspectRatio(2f / 3f).clip(RoundedCornerShape(8.dp))
+                            .background(HikariSurfaceHigh),
+                    ) {
+                        if (coverUrl != null) {
+                            AsyncImage(model = coverUrl, contentDescription = title, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                        } else {
+                            MangaCoverFallback(title = title)
+                        }
+                    }
+                    Column(Modifier.weight(1f).padding(start = 16.dp)) {
+                        Text("MANGA", color = Color.White.copy(alpha = 0.5f), fontSize = 10.sp, letterSpacing = 2.sp)
+                        Text(
+                            text = title,
+                            color = Color.White,
+                            fontSize = 24.sp,
+                            lineHeight = 27.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            maxLines = 4,
+                            modifier = Modifier.padding(top = 6.dp),
+                        )
+                        author?.let {
+                            Text(it.uppercase(), color = Color.White.copy(alpha = 0.55f), fontSize = 11.sp, letterSpacing = 1.sp, maxLines = 2,
+                                modifier = Modifier.padding(top = 4.dp))
+                        }
+                        DetailCta(label = ctaLabel, onClick = onCta, modifier = Modifier.padding(top = 14.dp))
+                    }
                 }
-                DetailCta(
-                    label = ctaLabel,
-                    onClick = onCta,
-                    modifier = Modifier.padding(top = 16.dp),
-                )
             }
         }
     }

@@ -525,3 +525,14 @@ test("PUT /api/manga/progress nimmt die Reihe in die Bibliothek auf (Lesen = fol
   const r = await app.inject({ method: "GET", url: "/api/manga/continue" });
   expect((r.json() as { seriesId: string }[]).map((x) => x.seriesId)).toEqual(["fake:x"]);
 });
+
+test("GET /api/manga/series/:id liefert coverPath und totalChapters so, wie die App sie liest", async () => {
+  const { app, db } = buildApp();
+  db.prepare("UPDATE manga_series SET cover_path = 'c.jpg', total_chapters = 3 WHERE id = 'fake:x'").run();
+  const body = (await app.inject({ method: "GET", url: "/api/manga/series/fake%3Ax" })).json() as {
+    coverPath?: string;
+    totalChapters?: number;
+  };
+  expect(body.coverPath).toBe("c.jpg");
+  expect(body.totalChapters).toBe(3);
+});
