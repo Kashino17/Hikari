@@ -66,7 +66,10 @@ class MangaReaderViewModel @Inject constructor(
     private var syncStarted = false
 
     /** Überlebt das Schließen des Lesers (nur für das letzte Speichern). */
-    private val detached = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
+    private val detached by lazy { kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + saveDispatcher) }
+
+    /** Wo das Speichern läuft — Tests setzen hier ihre steuerbare Uhr ein. */
+    internal var saveDispatcher: kotlinx.coroutines.CoroutineDispatcher = kotlinx.coroutines.Dispatchers.IO
 
     /** Erst lesen, wenn jede Seite auf dem Mac oder auf dem Handy liegt — sonst bleiben Seiten leer. */
     private fun allReady(pages: List<MangaPageDto>, local: Map<String, String>): Boolean =

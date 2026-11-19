@@ -19,6 +19,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -93,6 +94,7 @@ class MangaReaderViewModelTest {
         coEvery { repo.getChapterPages("ch-1") } returns listOf(MangaPageDto("p1", 1, true))
         coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(id = "s", title = "X")
         val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
+        vm.saveDispatcher = kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)
         try {
             vm.load("s", "ch-1")
             advanceTimeBy(500)
@@ -178,13 +180,14 @@ class MangaReaderViewModelTest {
         coEvery { repo.getChapterPages("ch-1") } returns listOf(MangaPageDto("p1", 1, true))
         coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(id = "s", title = "X")
         val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
+        vm.saveDispatcher = kotlinx.coroutines.test.StandardTestDispatcher(testScheduler)
         vm.load("s", "ch-1")
         advanceTimeBy(100)
         vm.savePosition(7)
         vm.flushProgress()
         vm.viewModelScope.cancel()
-        Thread.sleep(300)
-        coVerify(timeout = 2_000) { repo.setProgress("s", "ch-1", 7) }
+        advanceUntilIdle()
+        coVerify { repo.setProgress("s", "ch-1", 7) }
     }
 
     @Test(timeout = 5_000) fun saves_arriveInOrder_lastPageWins() = runTest {
@@ -198,15 +201,14 @@ class MangaReaderViewModelTest {
             synchronized(saved) { saved += p }
         }
         val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
+        vm.saveDispatcher = kotlinx.coroutines.test.StandardTestDispatcher(testScheduler)
         vm.load("s", "ch-1")
         advanceTimeBy(100)
         vm.savePosition(4)
-        advanceTimeBy(1_600) // Wartezeit vorbei: Seite 4 wird gespeichert (langsam)
+        advanceTimeBy(1_600) // Wartezeit vorbei: Seite 4 wird gespeichert und hängt 400 ms
         vm.savePosition(7)
-        vm.flushProgress()
-        Thread.sleep(300) // die letzte Seite kommt schnell an …
-        advanceTimeBy(1_000) // … dann erst die hängende alte
-        Thread.sleep(300)
-        assertEquals(7, synchronized(saved) { saved.last() })
+        vm.flushProgress() // Seite 7 sofort hinterher
+        advanceUntilIdle()
+        assertEquals(listOf(4, 7), synchronized(saved) { saved.toList() })
     }
 }
