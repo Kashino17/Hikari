@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type Database from "better-sqlite3";
+import { workKey } from "../ebooks/persist.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -85,9 +86,21 @@ export function applyMigrations(db: Database.Database): void {
   // Each call is idempotent — safe across reboots and across CI test DBs.
   addColumnIfMissing(db, "channels", "handle", "TEXT");
   // E-Books: geprüfte Titelbilder (19.11.2026).
-  if ((db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='ebooks'").get())) {
+  if (db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='ebooks'").get()) {
     addColumnIfMissing(db, "ebooks", "cover_status", "TEXT");
     addColumnIfMissing(db, "ebooks", "cover_alt_url", "TEXT");
+    // Dasselbe Werk in mehreren Ausgaben erkennen (20.11.2026).
+    addColumnIfMissing(db, "ebooks", "work_key", "TEXT");
+    db.exec("CREATE INDEX IF NOT EXISTS idx_ebooks_work_key ON ebooks(work_key)");
+    db.exec("CREATE INDEX IF NOT EXISTS idx_ebooks_cover_alt ON ebooks(cover_alt_url)");
+    const todo = db
+      .prepare("SELECT id, title, authors_json FROM ebooks WHERE work_key IS NULL")
+      .all() as { id: string; title: string; authors_json: string }[];
+    const setKey = db.prepare("UPDATE ebooks SET work_key = ? WHERE id = ?");
+    db.transaction(() => {
+      for (const r of todo)
+        setKey.run(workKey(r.title, JSON.parse(r.authors_json) as string[]), r.id);
+    })();
   }
   addColumnIfMissing(db, "channels", "description", "TEXT");
   addColumnIfMissing(db, "channels", "subscribers", "INTEGER");

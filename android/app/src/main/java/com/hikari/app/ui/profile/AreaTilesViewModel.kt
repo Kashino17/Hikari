@@ -170,8 +170,8 @@ class AreaTilesViewModel @Inject constructor(
                     val at = st.lastOpenedAt ?: return@mapNotNull null
                     // Titelbild auf dem Handy nur, wenn die Datei wirklich da ist — sonst vom Mac.
                     val cover = b.coverPath?.takeIf { java.io.File(it).length() > 100 }
-                        ?: "/api/ebooks/${android.net.Uri.encode(b.id)}/cover?v=2"
-                    if (st.finished?.value == true) null else BookReading(b.title.substringBefore(": "), cover, pct, at)
+                        ?: "/api/ebooks/${android.net.Uri.encode(b.id)}/cover?v=3"
+                    if (st.finished?.value == true) null else BookReading(com.hikari.app.ui.ebooks.shortTitle(b.title), cover, pct, at)
                 }
             }.getOrDefault(emptyList())
             // Nichts erreichbar und kein Buch: stehen lassen, was die Kachel schon zeigt.

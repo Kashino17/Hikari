@@ -442,6 +442,7 @@ describe("Genre-Kacheln mit Covern", () => {
       );
       upsertCatalog(db, {
         ...row,
+        title: `Reihe ${i}`,
         tags: i % 2 ? ["Action"] : ["Romantik"],
         coverUrl: `https://u.test/${i}.jpg`,
         popularity: 1000 - i,
@@ -526,6 +527,7 @@ describe("Entdecken: jeden Tag neue Vorschläge", () => {
       );
       upsertCatalog(db, {
         ...row,
+        title: `Tagesreihe ${i}`,
         tags: i % 3 === 0 ? ["Action"] : i % 3 === 1 ? ["Romantik"] : ["Isekai"],
         status: i % 4 === 0 ? "completed" : "ongoing",
         coverUrl: `https://u.test/${i}.jpg`,
@@ -574,5 +576,35 @@ describe("Entdecken: jeden Tag neue Vorschläge", () => {
     }
     const all = catalogHome(db, "all", 20, now).shelves.flatMap((s) => s.items.map((c) => c.id));
     for (const id of mine) expect(all).not.toContain(id);
+  });
+});
+
+describe("Doppelte Reihen im Katalog", () => {
+  it("dieselbe Reihe zweimal bei MangaDex: nur der Eintrag mit mehr lesbaren Kapiteln erscheint", () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    const base = LIST.data[0]!;
+    const a = "00000000-0000-0000-0002-000000000001";
+    const b = "00000000-0000-0000-0002-000000000002";
+    for (const [id, pop] of [
+      [a, 500],
+      [b, 900],
+    ] as const) {
+      upsertCatalog(db, {
+        ...catalogFromManga({ ...base, id }, 1),
+        title: "The Maid I Hired Recently Is Mysterious",
+        authors: ["Konbu Wakame"],
+        popularity: pop,
+      });
+    }
+    db.prepare(
+      "UPDATE manga_catalog SET readable_at = 1, readable_de = 0, readable_en = ? WHERE id = ?",
+    ).run(31, `mangadex:${a}`);
+    db.prepare(
+      "UPDATE manga_catalog SET readable_at = 1, readable_de = 0, readable_en = ? WHERE id = ?",
+    ).run(1, `mangadex:${b}`);
+    db.exec("UPDATE manga_catalog SET search_text = lower(title)");
+    expect(listCatalog(db, {}).items.map((c) => c.id)).toEqual([`mangadex:${a}`]);
+    expect(listCatalog(db, { q: "maid" }).items.map((c) => c.id)).toEqual([`mangadex:${a}`]);
   });
 });

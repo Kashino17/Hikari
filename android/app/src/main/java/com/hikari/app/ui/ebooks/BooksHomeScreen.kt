@@ -340,7 +340,29 @@ internal fun authorShort(name: String): String {
     return if (parts.size <= 2 || parts.dropLast(1).all { it.endsWith(".") }) clean else parts.last()
 }
 /** Haupttitel ohne Untertitel. */
-internal fun shortTitle(t: String): String = t.substringBefore(": ").trim()
+/**
+ * Haupttitel ohne Untertitel — aber Teile und Bände bleiben unterscheidbar:
+ * „Faust: Der Tragödie zweiter Teil“ → „Faust (Teil 2)“, sonst stünde zweimal „Faust“ nebeneinander.
+ */
+internal fun shortTitle(t: String): String {
+    val main = t.substringBefore(": ").substringBefore(" (Vol").trim()
+    val part = partOf(t.lowercase()) ?: return main
+    return "$main ($part)"
+}
+
+private val ORDINALS = listOf("erst", "zweit", "dritt", "viert", "fünft", "sechst", "siebt", "acht", "neunt", "zehnt")
+
+private fun partOf(t: String): String? {
+    Regex("""(\p{L}+)\s+(teil|band)\b""").findAll(t).forEach { m ->
+        val n = ORDINALS.indexOfFirst { m.groupValues[1].startsWith(it) && m.groupValues[1].length <= it.length + 2 }
+        if (n >= 0) return "${label(m.groupValues[2])} ${n + 1}"
+    }
+    Regex("""\b(teil|band)\s+(\d+)""").find(t)?.let { return "${label(it.groupValues[1])} ${it.groupValues[2]}" }
+    Regex("""\bvol\.?\s*(\d+)""").find(t)?.let { return "Band ${it.groupValues[1]}" }
+    return null
+}
+
+private fun label(word: String) = if (word == "teil") "Teil" else "Band"
 
 @Composable
 private fun MineTab(s: BooksHomeState, vm: BooksViewModel, onBook: (String) -> Unit, onRead: (LocalEbookEntity) -> Unit) {

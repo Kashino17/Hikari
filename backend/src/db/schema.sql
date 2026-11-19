@@ -204,6 +204,7 @@ CREATE TABLE IF NOT EXISTS manga_catalog (
   missing_since  INTEGER
 );
 CREATE INDEX IF NOT EXISTS idx_manga_catalog_pop ON manga_catalog(popularity DESC);
+CREATE INDEX IF NOT EXISTS idx_manga_catalog_ltitle ON manga_catalog(lower(title));
 CREATE TABLE IF NOT EXISTS manga_catalog_meta (
   key        TEXT PRIMARY KEY,
   value      TEXT NOT NULL,

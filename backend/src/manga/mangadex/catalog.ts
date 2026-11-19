@@ -283,9 +283,22 @@ export function toCard(r: CatalogDbRow): CatalogCard {
 
 const COLS =
   "c.id, c.source, c.title, c.title_de, c.authors_json, c.tags_json, c.status, c.year, c.kind, c.langs_json, c.last_chapter, c.cover_url, c.description, c.popularity, c.content_rating, c.readable_de, c.readable_en";
-/** Nur geprüfte Reihen mit mindestens einem lesbaren Kapitel. */
-const READABLE =
-  "c.readable_at IS NOT NULL AND (COALESCE(c.readable_de, 0) > 0 OR COALESCE(c.readable_en, 0) > 0)";
+/**
+ * Dieselbe Reihe steht bei MangaDex manchmal zweimal (gleicher Titel, gleicher Zeichner). Gezeigt wird nur
+ * der bessere Eintrag: mehr lesbare Kapitel und jede Sprache, die der andere auch hat — so verliert
+ * „Deutsch“ nie seine einzige deutsche Fassung.
+ */
+const TOTAL = (a: string) => `(COALESCE(${a}.readable_de, 0) + COALESCE(${a}.readable_en, 0))`;
+const NOT_DUP = `NOT EXISTS (SELECT 1 FROM manga_catalog d
+  WHERE lower(d.title) = lower(c.title) AND d.authors_json = c.authors_json AND d.id <> c.id
+    AND d.readable_at IS NOT NULL AND ${TOTAL("d")} > 0
+    AND (COALESCE(c.readable_de, 0) = 0 OR COALESCE(d.readable_de, 0) > 0)
+    AND (COALESCE(c.readable_en, 0) = 0 OR COALESCE(d.readable_en, 0) > 0)
+    AND (${TOTAL("d")} > ${TOTAL("c")}
+      OR (${TOTAL("d")} = ${TOTAL("c")} AND (COALESCE(d.popularity, -1) > COALESCE(c.popularity, -1)
+        OR (COALESCE(d.popularity, -1) = COALESCE(c.popularity, -1) AND d.id < c.id)))))`;
+/** Nur geprüfte Reihen mit mindestens einem lesbaren Kapitel, jede Reihe einmal. */
+const READABLE = `c.readable_at IS NOT NULL AND (COALESCE(c.readable_de, 0) > 0 OR COALESCE(c.readable_en, 0) > 0) AND ${NOT_DUP}`;
 
 const SORT: Record<string, string> = {
   pop: "c.popularity IS NULL, c.popularity DESC, c.title COLLATE NOCASE",
@@ -327,7 +340,10 @@ export function listCatalog(
 ): { total: number; items: CatalogCard[] } {
   // Bei einer Suche auch geprüfte Reihen ohne lesbare Kapitel finden (lizenziert) — markiert und hinten.
   const searching = !!f.q?.trim() && (f.lang ?? "all") === "all";
-  const w: Where = { sql: [searching ? "c.readable_at IS NOT NULL" : READABLE], params: [] };
+  const w: Where = {
+    sql: [searching ? `c.readable_at IS NOT NULL AND ${NOT_DUP}` : READABLE],
+    params: [],
+  };
   langWhere(w, f.lang ?? "all");
   if (f.minDe) {
     w.sql.push("COALESCE(c.readable_de, 0) >= ?");

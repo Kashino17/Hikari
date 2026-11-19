@@ -20,6 +20,39 @@ export interface RawBook {
   popularity?: number | undefined;
 }
 
+const WORK_STOP = new Set([
+  "der",
+  "die",
+  "das",
+  "des",
+  "dem",
+  "den",
+  "ein",
+  "eine",
+  "einer",
+  "eines",
+  "einem",
+  "einen",
+  "und",
+  "the",
+  "a",
+  "an",
+  "of",
+  "and",
+]);
+
+/**
+ * Schlüssel für „dasselbe Werk“: Titel ohne Satzzeichen, Klammern und Artikel, dazu der erste Autor.
+ * „Faust: Der Tragödie erster Teil“ und „Faust: Eine Tragödie [erster Teil]“ → gleich,
+ * „… zweiter Teil“ → anders.
+ */
+export function workKey(title: string, authors: string[]): string {
+  const words = normalizeForSearch(title)
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((w) => w && !WORK_STOP.has(w));
+  return `${words.join(" ")}|${normalizeForSearch(authors[0] ?? "").trim()}`;
+}
+
 /** Für Index UND Suchanfrage gleich: klein, ä→a, ö→o, ü→u, ß→ss. */
 export function normalizeForSearch(s: string): string {
   return s
@@ -58,6 +91,7 @@ export function upsertBook(
       source_url: raw.sourceUrl,
       word_count: raw.wordCount ?? null,
       popularity: raw.popularity ?? null,
+      work_key: workKey(raw.title, raw.authors),
       now,
     };
     if (exists) {
@@ -68,15 +102,15 @@ export function upsertBook(
            cover_alt_url=CASE WHEN cover_url IS @cover_url THEN cover_alt_url ELSE NULL END,
            cover_url=@cover_url,
            source_url=@source_url, word_count=COALESCE(@word_count, word_count), popularity=@popularity,
-           updated_at=@now, missing_since=NULL
+           updated_at=@now, missing_since=NULL, work_key=@work_key
          WHERE id=@id`,
       ).run(vals);
     } else {
       db.prepare(
         `INSERT INTO ebooks (id, source, source_id, title, authors_json, year, description, subjects_json, format,
-           file_url, cover_url, source_url, word_count, popularity, added_at, updated_at)
+           file_url, cover_url, source_url, word_count, popularity, added_at, updated_at, work_key)
          VALUES (@id, @source, @source_id, @title, @authors_json, @year, @description, @subjects_json, @format,
-           @file_url, @cover_url, @source_url, @word_count, @popularity, @now, @now)`,
+           @file_url, @cover_url, @source_url, @word_count, @popularity, @now, @now, @work_key)`,
       ).run(vals);
     }
     db.prepare("DELETE FROM ebook_categories WHERE book_id = ?").run(id);

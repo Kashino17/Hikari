@@ -1,5 +1,5 @@
-import { test, expect } from "vitest";
 import Database from "better-sqlite3";
+import { expect, test } from "vitest";
 import { applyMigrations } from "../../src/db/migrations.js";
 
 test("manga tables exist after migration", () => {
@@ -30,6 +30,7 @@ test("manga_pages indexes exist", () => {
     .prepare("SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'idx_manga_%'")
     .all() as { name: string }[];
   expect(idx.map((i) => i.name).sort()).toEqual([
+    "idx_manga_catalog_ltitle",
     "idx_manga_catalog_pop",
     "idx_manga_chapters_series_num",
     "idx_manga_pages_chapter",

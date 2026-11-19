@@ -104,6 +104,9 @@ interface Row {
   description: string | null;
   source_url: string;
   cover_status: string | null;
+  cover_alt_url: string | null;
+  work_key: string | null;
+  popularity: number | null;
 }
 
 /** FTS-Anfrage aus freier Eingabe: jedes Wort als Wortanfang, alle Wörter müssen passen. */
@@ -122,13 +125,33 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
   // Dasselbe Werk mehrfach im Katalog (z. B. zwei Gutenberg-Ausgaben von Faust): nur die beliebtere zeigen.
   db.exec("CREATE INDEX IF NOT EXISTS idx_ebooks_title ON ebooks(title)");
   const visible = () =>
-    `${alive("e")} AND (e.id IN (SELECT book_id FROM ebook_state) OR NOT EXISTS (SELECT 1 FROM ebooks d WHERE d.title = e.title AND d.authors_json = e.authors_json
+    `${alive("e")} AND (e.id IN (SELECT book_id FROM ebook_state) OR NOT EXISTS (SELECT 1 FROM ebooks d WHERE d.work_key = e.work_key
        AND d.id <> e.id AND ${alive("d")}
        AND (COALESCE(d.popularity, -1) > COALESCE(e.popularity, -1)
             OR (COALESCE(d.popularity, -1) = COALESCE(e.popularity, -1) AND d.id < e.id))))`;
   const catsOf = db.prepare(
     "SELECT category FROM ebook_categories WHERE book_id = ? ORDER BY category",
   );
+
+  // Ein Ersatz-Cover aus Open Library, das auch ein anderes (beliebteres) Werk trägt, gehört diesem —
+  // sonst sehen „Faust I“ und „Faust II“ gleich aus.
+  const coverTaken = db.prepare(
+    `SELECT 1 FROM ebooks d WHERE d.cover_alt_url = ? AND d.cover_status = 'openlibrary'
+       AND d.id <> ? AND COALESCE(d.work_key, '') <> COALESCE(?, '') AND ${alive("d")}
+       AND (COALESCE(d.popularity, -1) > COALESCE(?, -1)
+            OR (COALESCE(d.popularity, -1) = COALESCE(?, -1) AND d.id < ?)) LIMIT 1`,
+  );
+  const borrowedCover = (r: {
+    id: string;
+    cover_status: string | null;
+    cover_alt_url: string | null;
+    work_key: string | null;
+    popularity: number | null;
+  }) =>
+    r.cover_status === "openlibrary" &&
+    !!r.cover_alt_url &&
+    coverTaken.get(r.cover_alt_url, r.id, r.work_key, r.popularity, r.popularity, r.id) !==
+      undefined;
 
   function card(r: Row) {
     return {
@@ -139,9 +162,9 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
       format: r.format,
       // Kein echtes Bild → kein Pfad, die App zeichnet ein Titelbild. v=2: alte Muster-Cover im Bild-Speicher der App verwerfen.
       coverUrl:
-        r.cover_status === "none" || (r.cover_status === null && !r.cover_url)
+        r.cover_status === "none" || (r.cover_status === null && !r.cover_url) || borrowedCover(r)
           ? undefined
-          : `/api/ebooks/${encodeURIComponent(r.id)}/cover?v=2`,
+          : `/api/ebooks/${encodeURIComponent(r.id)}/cover?v=3`,
       categories: (catsOf.all(r.id) as { category: string }[]).map((c) => c.category),
       source: r.source,
       wordCount: r.word_count ?? undefined,
@@ -149,12 +172,12 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
     };
   }
   const COLS =
-    "e.id, e.source, e.title, e.authors_json, e.year, e.format, e.cover_url, e.word_count, e.description, e.source_url, e.cover_status";
+    "e.id, e.source, e.title, e.authors_json, e.year, e.format, e.cover_url, e.word_count, e.description, e.source_url, e.cover_status, e.cover_alt_url, e.work_key, e.popularity";
 
   app.get<{ Querystring: { because?: string } }>("/api/ebooks/home", async (req) => {
     const newest = db
       .prepare(
-        `SELECT ${COLS} FROM ebooks e WHERE ${visible()} ORDER BY e.added_at DESC, e.title LIMIT 20`,
+        `SELECT ${COLS} FROM ebooks e WHERE ${visible()} ORDER BY e.added_at DESC, e.title LIMIT 80`,
       )
       .all() as Row[];
     const counts = db
@@ -176,13 +199,14 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
         books: (inCat.all(c.id) as Row[]).map(card),
       }));
     const sync = ebookSyncState();
+    // Etwas mehr holen als gezeigt wird: Bücher aus Regalen weiter oben fallen unten wieder raus.
     const pick = (where: string, params: unknown[] = [], order = SORT.beliebt, limit = 12) =>
       (
         db
           .prepare(
             `SELECT ${COLS} FROM ebooks e WHERE ${visible()} AND ${where} ORDER BY ${order} LIMIT ?`,
           )
-          .all(...params, limit) as Row[]
+          .all(...params, limit + 40) as Row[]
       ).map(card);
     const shelves: {
       key: string;
@@ -190,14 +214,20 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
       subtitle: string;
       books: ReturnType<typeof card>[];
     }[] = [];
+    // Kein Buch in zwei Regalen: was weiter oben steht, kommt weiter unten nicht nochmal.
+    const shown = new Set<string>();
     const add = (
       key: string,
       title: string,
       subtitle: string,
       books: ReturnType<typeof card>[],
       min = 4,
+      max = 12,
     ) => {
-      if (books.length >= min) shelves.push({ key, title, subtitle, books });
+      const fresh = books.filter((b) => !shown.has(b.id)).slice(0, max);
+      if (fresh.length < min) return;
+      for (const b of fresh) shown.add(b.id);
+      shelves.push({ key, title, subtitle, books: fresh });
     };
     // „Weil du … liest“: zuerst derselbe Autor, dann dieselbe Art Buch.
     const because = req.query.because
@@ -260,7 +290,7 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
       );
     }
     add("pdf", "Wissen kompakt", "Sachbücher als PDF", pick("e.format = 'pdf'", [], SORT.neu));
-    add("neu", "Neu dazugekommen", "Seit dem letzten Abgleich", newest.map(card));
+    add("neu", "Neu dazugekommen", "Seit dem letzten Abgleich", newest.map(card), 4, 20);
     // Buch des Tages: jeden Tag ein anderes der beliebtesten, möglichst mit echtem Titelbild.
     const candidates = pick("e.popularity IS NOT NULL", [], SORT.beliebt, 40);
     const withCover = candidates.filter((x) => x.coverUrl);
@@ -290,7 +320,7 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
       shelves,
       featured,
       authors,
-      newest: newest.map(card),
+      newest: newest.slice(0, 20).map(card),
       rows,
       categories: CATEGORIES.filter((c) => countOf.has(c.id)).map((c) => ({
         ...c,
@@ -491,7 +521,8 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
     const path = join(dir, `${createHash("sha1").update(name).digest("hex")}.img`);
     if (!existsSync(path)) {
       const got = await (deps.coverHttp ?? deps.http).get(url, { tries: 1 }).catch(() => null);
-      if (!got || got.status !== 200 || got.body.length < 100) return reply.code(404).send({ error: "kein Foto" });
+      if (!got || got.status !== 200 || got.body.length < 100)
+        return reply.code(404).send({ error: "kein Foto" });
       mkdirSync(dir, { recursive: true });
       writeFileSync(path, got.body);
     }
@@ -502,11 +533,20 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
   app.get<{ Params: { id: string } }>("/api/ebooks/:id/cover", async (req, reply) => {
     const id = req.params.id;
     const r = db
-      .prepare("SELECT cover_url, cover_status, cover_alt_url FROM ebooks WHERE id = ?")
+      .prepare(
+        "SELECT id, cover_url, cover_status, cover_alt_url, work_key, popularity FROM ebooks WHERE id = ?",
+      )
       .get(id) as
-      | { cover_url: string | null; cover_status: string | null; cover_alt_url: string | null }
+      | {
+          id: string;
+          cover_url: string | null;
+          cover_status: string | null;
+          cover_alt_url: string | null;
+          work_key: string | null;
+          popularity: number | null;
+        }
       | undefined;
-    if (!r) return reply.code(404).send({ error: "kein Titelbild" });
+    if (!r || borrowedCover(r)) return reply.code(404).send({ error: "kein Titelbild" });
     let status = r.cover_status;
     let url = status === "openlibrary" ? r.cover_alt_url : r.cover_url;
     if (status === null) {

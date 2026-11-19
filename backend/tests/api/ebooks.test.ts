@@ -92,17 +92,27 @@ describe("/api/ebooks", () => {
   });
 
   it("home: Regale, Buch des Tages und Autoren", async () => {
+    // Genug Bücher, damit jedes Regal eigene Titel hat (keins darf ein Buch zweimal zeigen).
+    for (let i = 1; i <= 30; i++)
+      upsertBook(
+        db,
+        raw(`x${i}`, { wordCount: i <= 12 ? 10_000 + i : 200_000 + i }),
+        ["krimi"],
+        5000 + i,
+      );
     const { json } = await get("/api/ebooks/home");
     const keys = json.shelves.map((x: { key: string }) => x.key);
     expect(keys).toEqual(expect.arrayContaining(["beliebt", "kurz", "kat:krimi"]));
     const shelf = (k: string) => json.shelves.find((x: { key: string }) => x.key === k);
     expect(shelf("beliebt").books[0].id).toBe("gutenberg:k7");
     expect(shelf("kat:krimi").title).toBe("Krimi & Mystery");
-    // kurz = unter 2 Stunden Lesezeit (bei 230 Wörtern pro Minute)
-    expect(ids(shelf("kurz").books)).toEqual(["gutenberg:k1", "gutenberg:k2", "gutenberg:r1"]);
+    // kurz = unter 2 Stunden Lesezeit (bei 230 Wörtern pro Minute), ohne die schon gezeigten Beliebten
+    const kurz = shelf("kurz").books as { id: string; wordCount: number }[];
+    expect(kurz.every((b) => b.wordCount < 230 * 120)).toBe(true);
+    expect(ids(kurz)).not.toContain("gutenberg:k1");
     expect(json.featured.id).toMatch(/^gutenberg:/);
     // Autoren ab zwei Büchern, versteckte zählen nicht
-    expect(json.authors).toEqual([{ name: "Autor", count: 9 }]);
+    expect(json.authors).toEqual([{ name: "Autor", count: 39 }]);
   });
 
   it("home mit zuletzt gelesenem Buch: Regal „Weil du … liest“", async () => {
@@ -141,6 +151,68 @@ describe("/api/ebooks", () => {
     const { json } = await get("/api/ebooks/list?q=faust");
     expect(ids(json.books)).toEqual(["gutenberg:f2"]);
     expect((await get("/api/ebooks/gutenberg%3Af1")).status).toBe(200);
+  });
+
+  it("Ausgaben desselben Werks mit leicht anderem Titel erscheinen nur einmal, andere Teile bleiben", async () => {
+    const g = ["Johann Wolfgang von Goethe"];
+    upsertBook(
+      db,
+      raw("p1", { title: "Faust: Der Tragödie erster Teil", authors: g, popularity: 10 }),
+      ["drama"],
+      3000,
+    );
+    upsertBook(
+      db,
+      raw("p1b", { title: "Faust: Eine Tragödie [erster Teil]", authors: g, popularity: 3 }),
+      ["drama"],
+      3001,
+    );
+    upsertBook(
+      db,
+      raw("p2", { title: "Faust: Der Tragödie zweiter Teil", authors: g, popularity: 2 }),
+      ["drama"],
+      3002,
+    );
+    const { json } = await get("/api/ebooks/list?q=faust");
+    expect(ids(json.books).sort()).toEqual(["gutenberg:p1", "gutenberg:p2"]);
+  });
+
+  it("ein Ersatz-Cover, das sich verschiedene Werke teilen, bekommt nur das beliebteste", async () => {
+    upsertBook(
+      db,
+      raw("c1", { title: "Faust: Der Tragödie erster Teil", popularity: 10 }),
+      ["drama"],
+      3000,
+    );
+    upsertBook(
+      db,
+      raw("c2", { title: "Faust: Der Tragödie zweiter Teil", popularity: 2 }),
+      ["drama"],
+      3001,
+    );
+    db.prepare(
+      "UPDATE ebooks SET cover_status = 'openlibrary', cover_alt_url = 'https://covers.test/1-L.jpg' WHERE id IN ('gutenberg:c1','gutenberg:c2')",
+    ).run();
+    const { json } = await get("/api/ebooks/list?q=faust");
+    const byId = Object.fromEntries(
+      json.books.map((b: { id: string; coverUrl?: string }) => [b.id, b.coverUrl]),
+    );
+    expect(byId["gutenberg:c1"]).toBeTruthy();
+    expect(byId["gutenberg:c2"]).toBeUndefined();
+  });
+
+  it("Startseite: kein Buch steht in zwei Regalen", async () => {
+    for (let i = 1; i <= 30; i++)
+      upsertBook(
+        db,
+        raw(`m${i}`, { wordCount: 5000 + i, popularity: 100 + i }),
+        ["krimi"],
+        4000 + i,
+      );
+    const { json } = await get(`/api/ebooks/home?because=${encodeURIComponent("gutenberg:k1")}`);
+    const all = json.shelves.flatMap((s: { books: { id: string }[] }) => s.books.map((b) => b.id));
+    expect(all.length).toBeGreaterThan(0);
+    expect(new Set(all).size).toBe(all.length);
   });
 
   it("ein gemerktes Doppel bleibt sichtbar (Merkliste, Suche)", async () => {
@@ -332,7 +404,7 @@ describe("/api/ebooks", () => {
       (await app.inject({ method: "GET", url: "/api/ebooks/gutenberg%3Ar1/cover" })).statusCode,
     ).toBe(404);
     const { json } = await get("/api/ebooks/gutenberg%3Ac1");
-    expect(json.coverUrl).toBe("/api/ebooks/gutenberg%3Ac1/cover?v=2");
+    expect(json.coverUrl).toBe("/api/ebooks/gutenberg%3Ac1/cover?v=3");
   });
 
   it("Bücher ohne echtes Titelbild bekommen keinen Bildpfad (die App zeichnet eines)", async () => {
