@@ -188,6 +188,11 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
          page_number = excluded.page_number,
          updated_at = excluded.updated_at`,
     ).run(req.params.seriesId, chapterId, pageNumber, Date.now());
+    // Wer liest, folgt der Reihe: sie steht dann unter „Weiterlesen“ und „Meine Mangas“.
+    db.prepare("INSERT OR IGNORE INTO manga_library (series_id, added_at) VALUES (?, ?)").run(
+      req.params.seriesId,
+      Date.now(),
+    );
     return { ok: true };
   });
 

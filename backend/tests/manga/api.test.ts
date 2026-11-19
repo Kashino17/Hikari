@@ -513,3 +513,15 @@ test("GET /api/manga/cover/:file: fehlt die Datei, gilt die Reihe wieder als ohn
     rmSync(coverDir, { recursive: true, force: true });
   }
 });
+
+test("PUT /api/manga/progress nimmt die Reihe in die Bibliothek auf (Lesen = folgen)", async () => {
+  const { app } = buildApp();
+  const put = await app.inject({
+    method: "PUT",
+    url: "/api/manga/progress/fake%3Ax",
+    payload: { chapterId: "fake:x:1", pageNumber: 2 },
+  });
+  expect(put.statusCode).toBeLessThan(300);
+  const r = await app.inject({ method: "GET", url: "/api/manga/continue" });
+  expect((r.json() as { seriesId: string }[]).map((x) => x.seriesId)).toEqual(["fake:x"]);
+});
