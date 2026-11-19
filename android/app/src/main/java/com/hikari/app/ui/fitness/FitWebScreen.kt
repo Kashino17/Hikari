@@ -245,6 +245,8 @@ class FitWebBridge(
         tts = null
         setAwake(false)
         setDuck(false)
+        ambient?.release()
+        ambient = null
         webView = null
     }
 
@@ -399,7 +401,21 @@ class FitWebBridge(
      * leiser statt zu pausieren. Früher holte sich die WebView für jeden Clip den vollen Fokus
      * (Medien) — jede Musik blieb stehen.
      */
-    @JavascriptInterface fun duck(on: Boolean) { main.post { if (!closed) setDuck(on) } }
+    @JavascriptInterface fun duck(on: Boolean) { main.post { if (!closed) { ambient?.duck(on); setDuck(on) } } }
+
+    // ── Klangbett unter Meditation, Yoga, Atem (MindAmbient) ──
+    private var ambient: MindAmbient? = null
+    private fun ambient(): MindAmbient = ambient ?: MindAmbient(app, okHttp, music) { st, id ->
+        js("window.__hkEvent && window.__hkEvent('ambient', ${JSONObject().put("state", st).put("id", id)})")
+    }.also { ambient = it }
+    @JavascriptInterface fun ambientPlay(id: String, ver: String, volume: Float, loopFromMs: Double, loopToMs: Double) {
+        main.post { if (!closed) ambient().play(id, ver, volume, loopFromMs.toLong(), loopToMs.toLong()) }
+    }
+    @JavascriptInterface fun ambientVolume(volume: Float) { main.post { ambient?.setVolume(volume) } }
+    @JavascriptInterface fun ambientPause(on: Boolean) { main.post { ambient?.pause(on) } }
+    @JavascriptInterface fun ambientStop(fadeMs: Int) { main.post { ambient?.stop(fadeMs.toLong()) } }
+    /** Läuft gerade Hikaris eigene Musik? (Dann schlägt die Einheit »Stille« statt eines Betts vor.) */
+    @JavascriptInterface fun musicPlaying(): Boolean = music?.isPlaying?.value == true
 
     private val audio by lazy { app.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager }
     private var duckRequest: android.media.AudioFocusRequest? = null

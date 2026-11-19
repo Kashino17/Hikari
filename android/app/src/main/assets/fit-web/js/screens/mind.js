@@ -1,7 +1,7 @@
 // Achtsamkeit: Meditation (geführt in Rems Stimme + Videos), Atem, Yoga-Pfad mit Stufen,
 // Affirmationen, Impulse und Wissen. Jede Übung endet mit einer kurzen Einkehr (Stimmung vorher/nachher).
 import { html, useEffect, useMemo, useRef, useState } from '../../vendor/preact-htm.js';
-import { api, local, voice, bell, haptic, keepAwake, openVideo } from '../platform.js';
+import { api, local, voice, bell, haptic, keepAwake, openVideo, ambient } from '../platform.js';
 import { nav, back, useData, setData, refresh, toast, img, fmtNum } from '../app.js';
 import { Icon, Top, Sheet, cls, Spinner, Empty, Ring, Bar } from '../ui.js';
 
@@ -377,17 +377,20 @@ export function Breath({ id }) {
   const [mood, setMood] = useState(null);
   const [run, setRun] = useState(null); // { start, paused }
   const [doneSec, setDoneSec] = useState(null);
+  const bed = useSoundChoice('atem', id, a?.wofuer);
+  useBedPreviewOff();
   if (!a) return html`<div class="screen"><${Top} title="Atmen" /><div class="pad"><div class="skel" style="height:300px" /></div></div>`;
   const n = rounds ?? a.runden_standard;
   const cycle = a.phasen.reduce((s, p) => s + p.sekunden, 0);
   if (doneSec != null) return html`<div class="screen c-mind"><${Top} title=${a.name} /><div class="scroll"><div class="pad"><${Done} kind="atem" ref=${a.id} seconds=${doneSec} moodBefore=${mood} title=${a.name} onAgain=${() => { setDoneSec(null); setRun(null); }} /></div></div></div>`;
-  if (run) return html`<${BreathRun} a=${a} rounds=${n} onEnd=${(s) => { setRun(null); setDoneSec(s); }} onQuit=${() => setRun(null)} />`;
+  if (run) return html`<${BreathRun} a=${a} rounds=${n} bed=${bed} onEnd=${(s) => { setRun(null); setDoneSec(s); }} onQuit=${() => setRun(null)} />`;
   return html`<div class="screen c-mind">
     <${Top} title=${a.name} sub=${a.kurz} />
     <div class="scroll"><div class="pad">
       <div class="breathPreview"><div class="orb"><i /></div><div class="phRow">${a.phasen.map((p) => html`<span><b>${fmtNum(p.sekunden, 1)}</b>${p.sage}</span>`)}</div></div>
       <div class="sec"><h2 class="h2">Runden</h2><span class="small muted">≈ ${min(cycle * n)} min</span></div>
       <div class="chips wrap">${[...new Set([Math.max(3, Math.round(a.runden_standard / 2)), a.runden_standard, a.runden_standard * 2])].map((r) => html`<button class=${cls('chip', n === r && 'on')} onClick=${() => setRounds(r)}>${r} Runden</button>`)}</div>
+      <${SoundPick} c=${bed} preview />
       <div class="mt20"><${MoodPick} value=${mood} onChange=${setMood} label="Wie fühlst du dich gerade? (optional)" /></div>
       <button class="btn mt20" onClick=${() => setRun({ start: Date.now() })}><${Icon} n="play_arrow" fill />Beginnen</button>
       <div class="card pad16 mt20"><div class="h3">So geht's</div><ol class="steps mt8">${a.anleitung.map((s) => html`<li>${s}</li>`)}</ol></div>
@@ -398,13 +401,14 @@ export function Breath({ id }) {
   </div>`;
 }
 
-function BreathRun({ a, rounds, onEnd, onQuit }) {
+function BreathRun({ a, rounds, bed, onEnd, onQuit }) {
   const cycle = a.phasen.reduce((s, p) => s + p.sekunden, 0);
   const total = cycle * rounds;
   const [t, setT] = useState(0);
   const [paused, setPaused] = useState(false);
   const base = useRef({ start: performance.now(), acc: 0 });
   const last = useRef(-1);
+  useBed(bed, paused);
   useEffect(() => { keepAwake(true); bell(0.6); return () => { keepAwake(false); voice.stop(); }; }, []);
   useEffect(() => {
     if (paused) { base.current.acc = t; return undefined; }
@@ -438,13 +442,84 @@ function BreathRun({ a, rounds, onEnd, onQuit }) {
     voice.speak(ph.sage);
   }, [key]);
   return html`<div class="screen breathRun c-mind">
-    <div class="brTop"><button class="ib" onClick=${() => { voice.stop(); onQuit(); }} aria-label="Beenden"><${Icon} n="close" /></button><span>Runde ${round} von ${rounds}</span><span>${mmss(Math.max(0, total - t))}</span></div>
+    <div class="brTop"><button class="ib" onClick=${() => { voice.stop(); onQuit(); }} aria-label="Beenden"><${Icon} n="close" /></button><span>Runde ${round} von ${rounds} · ${mmss(Math.max(0, total - t))}</span><${BedButton} c=${bed} /></div>
     <div class="brStage" onClick=${() => setPaused(!paused)}>
       <div class="brOrb" style=${{ transform: `scale(${scale})` }}><i /></div>
       <div class="brLabel"><b>${paused ? 'Pause' : ph.sage}</b><span>${paused ? 'Tippen zum Weitermachen' : Math.ceil(ph.sekunden - (inCycle - acc))}</span></div>
     </div>
     <div class="brBottom"><div class="bar"><i style=${{ width: `${(t / total) * 100}%` }} /></div></div>
   </div>`;
+}
+
+// ── Klangbett: Hintergrundmusik unter Meditation, Yoga und Atem ─────────────
+// Die Betten kommen vom Server (/fitness/mind/sounds), gespielt wird nativ (platform.js → ambient).
+// Vorschlag nach Thema; wer selbst wählt, behält die Wahl für genau diese Einheit.
+const SOUND_FOR = { schlaf: 'schlaf', stress: 'tibet', angst: 'hz528', koerper: 'hz432', fokus: 'kristall', ruhe: 'hz432', energie: 'wald' };
+function recommendSound(kind, themen = []) {
+  if (kind === 'yoga') return 'handpan';
+  const t = themen[0];
+  if (kind === 'atem' && t === 'schlaf') return 'regen';
+  return SOUND_FOR[t] ?? 'kristall';
+}
+function useSoundChoice(kind, ref, themen) {
+  const [sounds] = useData(`${M}/sounds`);
+  const key = `mind:klang:${kind}:${ref}`;
+  // Läuft schon deine eigene Musik, bleibt sie (Vorschlag »Stille«) — außer du hast hier etwas gewählt.
+  const [picked, setPicked] = useState(() => local.get(key, null));
+  const [ownMusic] = useState(() => ambient.musicPlaying());
+  const [vol, setVol] = useState(() => local.get('mind:klangVol', 0.6));
+  // Der Vorschlag folgt den Themen, sobald die Einheit geladen ist (nicht beim ersten Rendern einfrieren).
+  const id = picked ?? (ownMusic ? 'aus' : recommendSound(kind, themen));
+  const sound = (id !== 'aus' && sounds?.find((x) => x.id === id)) || null;
+  return {
+    sounds, sound, vol, id: sound ? id : 'aus', rec: recommendSound(kind, themen),
+    pick(x) { setPicked(x); local.set(key, x); },
+    volume(v) { setVol(v); local.set('mind:klangVol', v); },
+  };
+}
+/** Auswahl als Kachelreihe (Stille + Betten) und Lautstärke. preview: Antippen spielt das Bett an. */
+function SoundPick({ c, preview }) {
+  const rail = useRef(null);
+  // Die gewählte Kachel sichtbar machen (der Vorschlag liegt oft weiter rechts in der Reihe).
+  useEffect(() => {
+    const r = rail.current;
+    const on = r?.querySelector('.kl.on');
+    if (r && on) r.scrollLeft = Math.max(0, on.offsetLeft - r.offsetLeft - (r.clientWidth - on.clientWidth) / 2);
+  }, [c.sounds?.length, c.id]);
+  if (!c.sounds?.length) return null;
+  const choose = (x) => {
+    c.pick(x);
+    if (!preview) return;
+    const snd = c.sounds.find((y) => y.id === x);
+    if (snd) ambient.play(snd.id, snd.v, c.vol, snd.loop); else ambient.stop(1200);
+  };
+  return html`<div class="klang">
+    <div class="sec"><h2 class="h2">Klang</h2><span class="small muted">${c.sound ? c.sound.kurz : 'Nur Rems Stimme'}</span></div>
+    <div class="rail klRail" ref=${rail}>
+      <button class=${cls('kl', c.id === 'aus' && 'on')} style=${{ '--kc': '#232a52' }} onClick=${() => choose('aus')}><span class="kl-art"><${Icon} n="volume_off" /></span><b>Stille</b></button>
+      ${c.sounds.map((x) => html`<button class=${cls('kl', c.id === x.id && 'on')} style=${{ '--kc': x.farbe }} onClick=${() => choose(x.id)}>
+        <span class="kl-art"><${Icon} n=${x.icon} />${x.id === c.rec && html`<i>passt</i>`}</span><b>${x.name}</b></button>`)}
+    </div>
+    ${c.sound && html`<label class="klVol"><${Icon} n="volume_down" /><input type="range" min="0.1" max="1" step="0.05" value=${c.vol}
+      onInput=${(e) => { const v = Number(e.target.value); c.volume(v); if (preview) ambient.volume(v); }} /><${Icon} n="volume_up" /></label>`}
+  </div>`;
+}
+/** Bett während einer Einheit: an, leiser/lauter, Pause, am Ende ausblenden. */
+function useBed(c, paused) {
+  useEffect(() => { if (c.sound) ambient.play(c.sound.id, c.sound.v, c.vol, c.sound.loop); else ambient.stop(1500); }, [c.sound?.id]);
+  useEffect(() => { if (c.sound) ambient.volume(c.vol); }, [c.vol]);
+  useEffect(() => { if (c.sound) ambient.pause(paused); }, [paused]);
+  useEffect(() => () => ambient.stop(3500), []);
+}
+/** Vorschauseite verlassen (zurück) → angespieltes Bett aus. */
+function useBedPreviewOff() { useEffect(() => () => ambient.stop(1200), []); }
+/** Knopf + Blatt, um das Bett während der Einheit zu wechseln. */
+function BedButton({ c }) {
+  const [open, setOpen] = useState(false);
+  if (!c.sounds?.length) return null;
+  return html`<button class="ib" onClick=${(e) => { e.stopPropagation(); setOpen(true); }} aria-label="Klang"><${Icon} n=${c.sound ? 'music_note' : 'music_off'} /></button>
+    ${open && html`<${Sheet} title="Klang" onClose=${() => setOpen(false)}><div class="pad klSheet" onClick=${(e) => e.stopPropagation()}><${SoundPick} c=${c} />
+      <p class="tiny faint mt12">${c.sound?.quelle?.kanal ? `Musik: ${c.sound.quelle.kanal} (YouTube) · ` : ''}Klangschalen: »דג בלי מלח«, Wikimedia Commons, CC BY-SA 4.0</p></div><//>`}`;
 }
 
 // ── Geführte Meditation (Rems Stimme, mit Stille dazwischen) ────────────────
@@ -454,13 +529,16 @@ export function Guided({ id }) {
   const [mood, setMood] = useState(null);
   const [run, setRun] = useState(false);
   const [doneSec, setDoneSec] = useState(null);
+  const bed = useSoundChoice('meditation', id, g?.themen);
+  useBedPreviewOff();
   if (!g) return html`<div class="screen"><${Top} title="Meditation" /><div class="pad"><div class="skel" style="height:300px" /></div></div>`;
   if (doneSec != null) return html`<div class="screen c-mind"><${Top} title=${g.titel} /><div class="scroll"><div class="pad"><${Done} kind="meditation" ref=${g.id} seconds=${doneSec} moodBefore=${mood} title=${g.titel} /></div></div></div>`;
-  if (run) return html`<${GuidedRun} g=${g} onEnd=${(s) => { setRun(false); setDoneSec(s); }} onQuit=${() => setRun(false)} />`;
+  if (run) return html`<${GuidedRun} g=${g} bed=${bed} onEnd=${(s) => { setRun(false); setDoneSec(s); }} onQuit=${() => setRun(false)} />`;
   return html`<div class="screen c-mind">
     <${Top} title=${g.titel} sub=${`${g.minuten} min · geführt von Rem`} />
     <div class="scroll"><div class="pad">
       <div class="guidedHero"><div class="orb big"><i /></div><p class="mt20" style="text-align:center;line-height:1.55">${g.untertitel}</p></div>
+      <${SoundPick} c=${bed} preview />
       <div class="mt20"><${MoodPick} value=${mood} onChange=${setMood} label="Wie fühlst du dich gerade? (optional)" /></div>
       <button class="btn mt20" onClick=${() => setRun(true)}><${Icon} n="play_arrow" fill />Beginnen</button>
       <p class="tiny faint mt12" style="text-align:center">Kopfhörer und ein ruhiger Platz helfen. Der Bildschirm bleibt an.</p>
@@ -469,7 +547,7 @@ export function Guided({ id }) {
   </div>`;
 }
 
-function GuidedRun({ g, onEnd, onQuit }) {
+function GuidedRun({ g, bed, onEnd, onQuit }) {
   const steps = g.schritte;
   const [i, setI] = useState(0);
   const [phase, setPhase] = useState('sage'); // sage | stille
@@ -483,6 +561,7 @@ function GuidedRun({ g, onEnd, onQuit }) {
   const est = (s) => s.sage.split(/\s+/).length / 2.3;
   const total = steps.reduce((s, x) => s + est(x) + x.pause, 0);
   useEffect(() => { pausedRef.current = paused; }, [paused]);
+  useBed(bed, paused);
   useEffect(() => {
     keepAwake(true);
     alive.current = true;
@@ -522,7 +601,7 @@ function GuidedRun({ g, onEnd, onQuit }) {
   return html`<div class="screen guidedRun c-mind">
     <div class="brTop"><button class="ib" onClick=${() => { alive.current = false; voice.stop(); onQuit(); }} aria-label="Beenden"><${Icon} n="close" /></button>
       <span>${g.titel}</span>
-      <button class="ib" onClick=${() => { setShowText(!showText); local.set('mind:text', !showText); }} aria-label="Text"><${Icon} n=${showText ? 'subtitles' : 'subtitles_off'} /></button></div>
+      <div class="row"><${BedButton} c=${bed} /><button class="ib" onClick=${() => { setShowText(!showText); local.set('mind:text', !showText); }} aria-label="Text"><${Icon} n=${showText ? 'subtitles' : 'subtitles_off'} /></button></div></div>
     <div class="grStage" onClick=${toggle}>
       <div class=${cls('orb', 'huge', (paused || phase === 'stille') && 'slow')}><i /></div>
       <div class="grText">${paused ? html`<b>Pausiert</b><span>Tippen zum Weitermachen</span>` : showText && phase === 'sage' ? html`<p>${steps[i]?.sage}</p>` : html`<span class="faint">${phase === 'stille' ? 'Stille' : ''}</span>`}</div>
@@ -654,14 +733,17 @@ export function YogaFlow({ n }) {
   const [mood, setMood] = useState(null);
   const [started, setStarted] = useState(false);
   const [doneSec, setDoneSec] = useState(null);
+  const bed = useSoundChoice('yoga', `stufe-${n}`);
+  useBedPreviewOff();
   if (!l || !d) return html`<div class="screen"><${Top} title="Yoga" /><div class="pad"><div class="skel" style="height:400px" /></div></div>`;
   if (doneSec != null) return html`<div class="screen c-mind"><${Top} title=${l.name} /><div class="scroll"><div class="pad"><${Done} kind="yoga" ref=${`stufe-${l.stufe}`} seconds=${doneSec} moodBefore=${mood} title=${`Stufe ${l.stufe} · ${l.name}`} /></div></div></div>`;
-  if (started) return html`<${FlowRun} l=${l} asanas=${d.asanas} onEnd=${(s) => { setStarted(false); setDoneSec(s); }} onQuit=${() => setStarted(false)} />`;
+  if (started) return html`<${FlowRun} l=${l} asanas=${d.asanas} bed=${bed} onEnd=${(s) => { setStarted(false); setDoneSec(s); }} onQuit=${() => setStarted(false)} />`;
   const total = l.flow.reduce((s, f) => s + f.sekunden, 0);
   return html`<div class="screen c-mind">
     <${Top} title=${`Stufe ${l.stufe} · ${l.name}`} sub=${`${min(total)} min · ${l.flow.filter((f) => f.phase === 'asana').length} Haltungen`} />
     <div class="scroll"><div class="pad">
       <div class="lh-int card pad16"><span class="eyebrow">Intention</span><p class="mt4">${l.intention}</p></div>
+      <${SoundPick} c=${bed} preview />
       <div class="sec"><h2 class="h2">Ablauf</h2></div>
       <div class="flowList">${l.flow.map((f) => {
         const a = f.asana && d.asanas.find((x) => x.id === f.asana);
@@ -675,14 +757,20 @@ export function YogaFlow({ n }) {
   </div>`;
 }
 
-function FlowRun({ l, asanas, onEnd, onQuit }) {
+function FlowRun({ l, asanas, bed, onEnd, onQuit }) {
   const steps = l.flow;
   const [i, setI] = useState(0);
   const [left, setLeft] = useState(steps[0].sekunden);
   const [paused, setPaused] = useState(false);
   const spent = useRef(0);
   useEffect(() => { keepAwake(true); bell(0.8); return () => { keepAwake(false); voice.stop(); }; }, []);
-  useEffect(() => { voice.speak(steps[i].sage); if (steps[i].phase === 'asana') haptic(); }, [i]);
+  useBed(bed, paused);
+  useEffect(() => {
+    // Übergang in Stille oder Endentspannung: eine helle Schale statt nur der Stimme.
+    if (i > 0 && (steps[i].phase === 'savasana' || steps[i].phase === 'stille')) bell(0.55, 'hell');
+    voice.speak(steps[i].sage);
+    if (steps[i].phase === 'asana') haptic();
+  }, [i]);
   useEffect(() => {
     if (paused) return undefined;
     const iv = setInterval(() => {
@@ -704,7 +792,7 @@ function FlowRun({ l, asanas, onEnd, onQuit }) {
   const total = steps.reduce((x, f) => x + f.sekunden, 0);
   const done = steps.slice(0, i).reduce((x, f) => x + f.sekunden, 0) + (s.sekunden - left);
   return html`<div class="screen flowRun c-mind">
-    <div class="brTop"><button class="ib" onClick=${() => { voice.stop(); onQuit(); }} aria-label="Beenden"><${Icon} n="close" /></button><span>${PHASE[s.phase]}${s.seite ? ` · ${s.seite}` : ''}</span><span>${mmss(total - done)}</span></div>
+    <div class="brTop"><button class="ib" onClick=${() => { voice.stop(); onQuit(); }} aria-label="Beenden"><${Icon} n="close" /></button><span>${PHASE[s.phase]}${s.seite ? ` · ${s.seite}` : ''} · ${mmss(total - done)}</span><${BedButton} c=${bed} /></div>
     <div class="frStage" onClick=${() => { if (!paused) voice.stop(); setPaused(!paused); }}>
       ${a ? html`<div class="frPose"><img src=${poseImg(a.api)} alt="" />${s.seite && html`<span class="frSide">${s.seite}</span>`}</div>` : html`<div class=${cls('orb', 'huge', 'slow')}><i /></div>`}
       <div class="frName"><b>${a ? a.de : PHASE[s.phase]}</b>${a && html`<span>${a.sanskrit}</span>`}</div>

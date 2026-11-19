@@ -1,0 +1,20 @@
+[
+  { "id": "tibet", "name": "Klangschalen", "kurz": "Tibetische Schalen, warm und erdend", "farbe": "#8C5A2B", "icon": "radio_button_checked",
+    "quelle": { "kanal": "ParadiseTonight", "titel": "Peaceful Mind Meditation 5 | Tibetan Singing Bowls", "video": "-4rtl36Cz48" } },
+  { "id": "kristall", "name": "Kristallschalen", "kurz": "Klar und hell, auf 432 Hz", "farbe": "#3F6FD0", "icon": "diamond",
+    "quelle": { "kanal": "Healing Vibrations", "titel": "432Hz - 3 Hour Crystal Singing Bowl Healing Sound Bath", "video": "gq8snFSEwlU" } },
+  { "id": "hz432", "name": "432 Hz", "kurz": "Weiche Klangflächen für innere Ruhe", "farbe": "#6A47B5", "icon": "graphic_eq",
+    "quelle": { "kanal": "Inner Lotus Music", "titel": "Inner Balance | 432Hz + 111Hz Healing Calm & Inner Peace", "video": "C9hMaqQFKXk" } },
+  { "id": "hz528", "name": "528 Hz", "kurz": "Warm und öffnend, für Mitgefühl", "farbe": "#B04476", "icon": "favorite",
+    "quelle": { "kanal": "Meditative Mind", "titel": "528Hz - Whole Body Regeneration", "video": "0MM5NwGbg7c" } },
+  { "id": "schlaf", "name": "Tiefschlaf", "kurz": "Delta-Wellen, sehr ruhig", "farbe": "#22408F", "icon": "bedtime",
+    "quelle": { "kanal": "Yellow Brick Cinema", "titel": "8 Hour Deep Sleep Music: Delta Waves", "video": "txQ6t4yPIM0" } },
+  { "id": "regen", "name": "Sanfter Regen", "kurz": "Gleichmäßiger Regen, ohne Donner", "farbe": "#2C6B7A", "icon": "rainy",
+    "quelle": { "kanal": "Sleep & Relaxation", "titel": "GENTLE RAIN Sounds for Sleeping", "video": "M0qWBKQ7ldY" } },
+  { "id": "wald", "name": "Waldbach", "kurz": "Fließendes Wasser und Vögel", "farbe": "#2E7A4C", "icon": "forest",
+    "quelle": { "kanal": "Naturescapes", "titel": "Forest River Nature Sounds - Gentle Stream with Birdsong", "video": "29XymHesxa0" } },
+  { "id": "handpan", "name": "Handpan", "kurz": "Sanft und fließend, wie gemacht für Yoga", "farbe": "#A8731F", "icon": "music_note",
+    "quelle": { "kanal": "Malte Marten", "titel": "Calming Meditation | 1 hour handpan music", "video": "uwEaQk5VeS4" } },
+  { "id": "fokus", "name": "Fokus", "kurz": "Ruhige Flächen mit Alpha-Wellen", "farbe": "#3A6A8A", "icon": "psychology",
+    "quelle": { "kanal": "Yellow Brick Cinema", "titel": "3 Hour Focus Music: Study Music, Alpha Waves", "video": "5LXhPbmoHmU" } }
+]

@@ -162,13 +162,13 @@ let duckOffTimer = null;
 function duckOn() {
   ducks++;
   clearTimeout(duckOffTimer);
-  if (ducks === 1) native?.duck?.(true);
+  if (ducks === 1) { native?.duck?.(true); if (!native) ambient._duck(true); }
 }
 function duckOff(after = 450) {
   ducks = Math.max(0, ducks - 1);
   if (ducks > 0) return;
   clearTimeout(duckOffTimer);
-  duckOffTimer = setTimeout(() => { if (ducks === 0) native?.duck?.(false); }, after);
+  duckOffTimer = setTimeout(() => { if (ducks === 0) { native?.duck?.(false); if (!native) ambient._duck(false); } }, after);
 }
 
 const clipCache = new Map();
@@ -267,17 +267,37 @@ export function beep(kind = 'tick') {
   } catch { /* stumm */ }
 }
 
-/** Klangschale: weicher Gong aus mehreren Teiltönen mit langem Ausklang (Meditation, Yoga). */
-export function bell(strength = 1) {
+/**
+ * Klangschale: echte Aufnahmen (Wikimedia Commons, CC BY-SA 4.0) — »tief« (11-Zoll-Schale) für
+ * Anfang und Ende, »hell« (4,5-Zoll) für Übergänge. Fehlt die Datei, klingt die alte Synthese.
+ */
+const bowlCache = new Map();
+function loadBowl(kind) {
+  if (!bowlCache.has(kind)) bowlCache.set(kind, fetch(`/sounds/bowl-${kind}.ogg`).then((r) => r.arrayBuffer()).then((b) => audioCtx().decodeAudioData(b)).catch((e) => { bowlCache.delete(kind); throw e; }));
+  return bowlCache.get(kind);
+}
+if (typeof window !== 'undefined') setTimeout(() => { loadBowl('tief').catch(() => {}); loadBowl('hell').catch(() => {}); }, 1500);
+export function bell(strength = 1, kind = 'tief') {
   if (native?.haptic) native.haptic('tick');
+  duckOn();
+  setTimeout(() => duckOff(300), 4500);
+  loadBowl(kind).then((buf) => {
+    const ctx = audioCtx();
+    const src = ctx.createBufferSource();
+    const g = ctx.createGain();
+    src.buffer = buf;
+    g.gain.value = Math.min(1, 0.85 * strength);
+    src.connect(g).connect(ctx.destination);
+    src.start();
+  }).catch(() => synthBell(strength));
+}
+function synthBell(strength) {
   try {
     const ctx = audioCtx();
     const now = ctx.currentTime;
     const out = ctx.createGain();
     out.gain.value = 0.22 * strength;
     out.connect(ctx.destination);
-    duckOn();
-    setTimeout(() => duckOff(300), 4500);
     for (const [f, g, d] of [[432, 1, 7], [864.5, 0.45, 5], [1296.8, 0.22, 3.5], [1735, 0.12, 2.4], [2160, 0.06, 1.6]]) {
       const o = ctx.createOscillator();
       const v = ctx.createGain();
@@ -291,6 +311,37 @@ export function bell(strength = 1) {
     }
   } catch { /* stumm */ }
 }
+
+/**
+ * Klangbett unter Meditation, Yoga und Atem. In der App spielt es nativ (MindAmbient.kt: einmal
+ * geladen, dann auf dem Gerät; wird unter Rems Stimme leiser; hält eigene Musik an). In der
+ * Vorschau im Browser ein einfaches <audio loop>.
+ */
+let bedEl = null;
+let bedVol = 0.5;
+let bedDuck = false;
+const bedApply = () => { if (bedEl) bedEl.volume = Math.max(0, Math.min(1, bedVol * bedVol * (bedDuck ? 0.5625 : 1))); };
+export const ambient = {
+  /** loop: [vonMs, bisMs] — nahtloser Bereich der Datei (Katalog). */
+  play(id, ver, volume = 0.5, loop = null) {
+    bedVol = volume;
+    if (native?.ambientPlay) { native.ambientPlay(id, String(ver ?? ''), volume, loop?.[0] ?? 0, loop?.[1] ?? 0); return; }
+    if (bedEl?.dataset.id !== id) {
+      bedEl?.pause();
+      bedEl = new Audio(api.url(`/fitness/mind/sound/${id}`));
+      bedEl.loop = true;
+      bedEl.dataset.id = id;
+    }
+    bedApply();
+    bedEl.play().catch(() => {});
+  },
+  volume(v) { bedVol = v; if (native?.ambientVolume) native.ambientVolume(v); else bedApply(); },
+  pause(on) { if (native?.ambientPause) native.ambientPause(on); else if (bedEl) { if (on) bedEl.pause(); else bedEl.play().catch(() => {}); } },
+  stop(fadeMs = 3000) { if (native?.ambientStop) native.ambientStop(fadeMs); else { bedEl?.pause(); bedEl = null; } },
+  /** Läuft Hikaris eigene Musik? */
+  musicPlaying: () => !!native?.musicPlaying?.(),
+  _duck(on) { bedDuck = on; bedApply(); },
+};
 
 export function haptic(kind = 'tick') { if (native?.haptic) native.haptic(kind); else navigator.vibrate?.(kind === 'tick' ? 12 : 30); }
 

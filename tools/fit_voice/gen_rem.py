@@ -150,3 +150,7 @@ def candidates(list_file, out_dir, n):
 
 if __name__ == "__main__":
     main()
+    # Neue Clips weich ausklingen lassen (das Modell hört oft mitten im letzten Laut auf) — soften.py
+    # überspringt schon behandelte Clips. Nach judge.py --pick bitte ebenfalls soften.py laufen lassen.
+    import subprocess as _sp
+    _sp.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "soften.py")], check=False)

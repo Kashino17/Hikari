@@ -80,7 +80,7 @@ export function Me() {
     ${info === 'ueber' && html`<${Sheet} title="Daten und Quellen" onClose=${() => setInfo(null)}><p class="small muted" style="line-height:1.6">
       <b style="color:var(--text)">KI</b> · ${state.ai.hasKey ? `Gemini (kostenlos) · heute ${Object.values(state.ai.used ?? {}).reduce((x, y) => x + y, 0)} Anfragen` : 'kein Schlüssel'}<br />
       <b style="color:var(--text)">Rezepte</b> · ${state.recipes.have} von ${state.recipes.total || 790} aufbereitet${state.recipes.running ? ' (läuft)' : ''}<br />
-      Videos: Sworkit, Freeletics, ExerciseDB (AscendAPI) · Nährwerte: BLS 4.0 (MRI) · Rezepte: TheMealDB</p><//>`}
+      Videos: Sworkit, Freeletics, ExerciseDB (AscendAPI) · Nährwerte: BLS 4.0 (MRI) · Rezepte: TheMealDB<br />Achtsamkeit: Klangschalen-Aufnahmen von »דג בלי מלח«, Wikimedia Commons (CC BY-SA 4.0) · Yoga-Figuren: yoga-api (MIT) · Klangbetten: YouTube-Kanäle, im Klang-Blatt genannt</p><//>`}
   </div>`;
 }
 

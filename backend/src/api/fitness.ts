@@ -12,7 +12,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { FitnessAi } from "../fitness/ai.js";
 import { BarcodeLookup } from "../fitness/barcode.js";
@@ -131,7 +131,8 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     join(deps.dataDir, "skills.json"),
   );
   const ndb = new BlsDb(join(deps.dataDir, "bls.json.gz"));
-  registerMindRoutes(app, db, join(deps.dataDir, "mind"));
+  // Klangbetten liegen einmal für alle (auch fitness-dev) unter ~/.hikari/fitness/mind-sounds.
+  registerMindRoutes(app, db, join(deps.dataDir, "mind"), join(dirname(deps.dir), "fitness", "mind-sounds"));
   const ai = new FitnessAi({
     key: deps.geminiKey,
     usageFile: join(deps.dir, "ai-usage.json"),

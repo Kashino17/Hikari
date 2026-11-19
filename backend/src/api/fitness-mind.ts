@@ -1,6 +1,8 @@
 /**
  * Achtsamkeit (Meditation, Atem, Yoga-Pfad, Affirmationen, Wissen) — Teil des Fitness-Bereichs.
  */
+import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
 import type { FastifyInstance } from "fastify";
 import { type FitDb, localDay } from "../fitness/db.js";
 import {
@@ -14,7 +16,21 @@ import {
 
 const KINDS = new Set(["meditation", "atem", "yoga", "video"]);
 
-export function registerMindRoutes(app: FastifyInstance, db: FitDb, dir: string) {
+/** Ein Klangbett unter geführten Einheiten (Datei: <soundDir>/<id>.ogg, gebaut mit tools/mind_sounds). */
+interface MindSound {
+  id: string;
+  name: string;
+  kurz: string;
+  farbe: string;
+  icon: string;
+  quelle: { kanal: string; titel: string; video: string };
+}
+
+/**
+ * @param dir     Inhalte (backend/fitness/mind)
+ * @param soundDir fertige Klangbetten (~/.hikari/fitness/mind-sounds) — liegen nicht im Repo
+ */
+export function registerMindRoutes(app: FastifyInstance, db: FitDb, dir: string, soundDir?: string) {
   let mind: MindCatalog = loadMind(dir);
   const fresh = () => {
     // Inhalte dürfen nachgelegt werden, ohne den Server neu zu starten.
@@ -83,6 +99,37 @@ export function registerMindRoutes(app: FastifyInstance, db: FitDb, dir: string)
   app.get<{ Params: { id: string } }>("/fitness/mind/deep/:id", async (req, reply) =>
     fresh().content.deepdives.find((g) => g.id === req.params.id) ?? reply.code(404).send({ error: "not_found" }),
   );
+  // ── Klangbetten (Hintergrundmusik unter Meditation, Yoga, Atem) ──
+  const soundFile = (id: string) => (soundDir && /^[a-z0-9-]+$/.test(id) ? join(soundDir, `${id}.ogg`) : null);
+  app.get("/fitness/mind/sounds", async () => {
+    const f = join(dir, "sounds.json");
+    const all: MindSound[] = existsSync(f) ? JSON.parse(readFileSync(f, "utf8")) : [];
+    return all.flatMap((x) => {
+      const file = soundFile(x.id);
+      if (!file || !existsSync(file)) return [];
+      const st = statSync(file);
+      // v: ändert sich, wenn die Datei neu gebaut wird → die App lädt sie dann neu.
+      // loop: der nahtlose Bereich (ms) — die Datei hat vorn/hinten je 0,5 s Polster (tools/mind_sounds/build.sh).
+      return [{ ...x, v: `${st.size.toString(36)}${Math.round(st.mtimeMs / 1000).toString(36)}`, bytes: st.size, loop: [500, 1_440_500] }];
+    });
+  });
+  app.get<{ Params: { id: string } }>("/fitness/mind/sound/:id", async (req, reply) => {
+    const file = soundFile(req.params.id);
+    if (!file || !existsSync(file)) return reply.code(404).send({ error: "not_found" });
+    const size = statSync(file).size;
+    reply.header("Accept-Ranges", "bytes").header("Cache-Control", "public, max-age=86400").type("audio/ogg");
+    const range = /^bytes=(\d+)-(\d*)$/.exec(req.headers.range ?? "");
+    if (range) {
+      const start = Number(range[1]);
+      const end = range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
+      if (start >= size) return reply.code(416).header("Content-Range", `bytes */${size}`).send();
+      reply.code(206).header("Content-Range", `bytes ${start}-${end}/${size}`).header("Content-Length", end - start + 1);
+      return reply.send(createReadStream(file, { start, end }));
+    }
+    reply.header("Content-Length", size);
+    return reply.send(createReadStream(file));
+  });
+
   app.get("/fitness/mind/affirmations", async () => fresh().content.affirmationen);
   app.get("/fitness/mind/impulse", async () => fresh().content.impulse);
 
