@@ -82,11 +82,27 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
 
     private val pendingClearJobs = ConcurrentHashMap<String, Job>()
 
+    /** Zählt jeden Post je Benachrichtigung — eine verspätete Auswertung darf keinen neueren Stand anfassen. */
+    private val postGeneration = ConcurrentHashMap<String, Long>()
+
+    /**
+     * Zeitpunkte neu eingetroffener (klingelnder) WhatsApp-Nachrichten je Benachrichtigung.
+     * Gemessen 20.11.: Kommt irgendwo eine neue Nachricht, nimmt WhatsApp ältere Benachrichtigungen
+     * kurz heraus und postet sie erst Sekunden bis Minuten später wieder — ohne dieses Wissen sah
+     * das aus wie eine gelöschte Einzelnachricht.
+     */
+    private val recentAlertingPosts = java.util.concurrent.ConcurrentLinkedDeque<Pair<String, Long>>()
+
     override fun onCreate() {
         super.onCreate()
         // Sichert jede Datei, die WhatsApp herunterlädt, sobald sie fertig ist (braucht
         // „Zugriff auf alle Dateien“; ohne läuft die alte Suche über die Ordnerfreigabe).
         mediaWatcher.start(mediaScope)
+        alertScope.launch {
+            runCatching {
+                WhatsAppForeground.warmUp(applicationContext, listOf("com.whatsapp", "com.whatsapp.w4b"))
+            }
+        }
         alertScope.launch {
             repository.guardAlerts.collect { alert ->
                 showGuardNotification(alert)
@@ -124,6 +140,18 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
         val pkg = sbn.packageName ?: return
         if (!WhatsAppNotificationParser.isSupportedPackage(pkg)) return
         WhatsAppProbe.posted(sbn)
+        val n = sbn.notification
+        if (n != null &&
+            (n.flags and Notification.FLAG_GROUP_SUMMARY) == 0 &&
+            (n.flags and Notification.FLAG_ONLY_ALERT_ONCE) == 0 &&
+            (n.flags and Notification.FLAG_ONGOING_EVENT) == 0
+        ) {
+            val now = System.currentTimeMillis()
+            recentAlertingPosts.addLast(sbn.key.orEmpty() to now)
+            while (recentAlertingPosts.peekFirst()?.let { now - it.second > 60_000L } == true) {
+                recentAlertingPosts.pollFirst()
+            }
+        }
         enqueueNotification(sbn)
     }
 
@@ -164,7 +192,10 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
 
         // WhatsApp hat die Benachrichtigung nur kurz entfernt und neu gepostet:
         // der Vergleichsstapel bleibt erhalten.
-        sbn.key?.let { key -> pendingClearJobs.remove(key)?.cancel() }
+        sbn.key?.let { key ->
+            pendingClearJobs.remove(key)?.cancel()
+            postGeneration.merge(key, 1L, Long::plus)
+        }
 
         val rawChatName = payload.conversationTitle?.takeIf { it.isNotBlank() } ?: payload.title.orEmpty()
         val cleanChat = WhatsAppNotificationParser.cleanChatTitle(rawChatName.substringBefore(":"))
@@ -255,6 +286,7 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
 
         pendingClearJobs.remove(key)?.cancel()
         val removedAt = System.currentTimeMillis()
+        val generation = postGeneration[key]
         when (reason) {
             // Angetippt oder weggewischt: der Vergleichsstapel endet sofort.
             REASON_CLICK, REASON_CANCEL, REASON_CANCEL_ALL -> {
@@ -266,7 +298,9 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
             // Benachrichtigung sofort neu, bricht das den Job ab und der Vergleich läuft weiter.
             else -> {
                 pendingClearJobs[key] = alertScope.launch {
-                    delay(1_200L)
+                    // Etwas länger als der Neu-Post-Abstand, damit eine gleichzeitige neue
+                    // Nachricht (kommt ~0,2 s nach dem Herausnehmen) schon bekannt ist.
+                    delay(2_500L)
                     pendingClearJobs.remove(key)
                     // WhatsApp hat sie selbst entfernt und nicht neu gepostet. War WhatsApp dabei
                     // nicht offen, kann es nur eine gelöschte Einzelnachricht sein (Lesen geht nur
@@ -276,8 +310,20 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
                     } else {
                         null
                     }
+                    // Kam im selben Moment woanders eine neue Nachricht, hat WhatsApp nur umsortiert.
+                    val reshuffled = recentAlertingPosts.any { (otherKey, at) ->
+                        otherKey != key && kotlin.math.abs(at - removedAt) <= RESHUFFLE_WINDOW_MS
+                    }
                     processingScope.launch {
-                        if (open == false) {
+                        if (postGeneration[key] != generation) {
+                            // Inzwischen kam eine neue Nachricht in diese Benachrichtigung: deren
+                            // Stapel ist der aktuelle und bleibt unangetastet.
+                            WhatsAppProbe.note("weg chat=${chatLogId(sbn)} -> inzwischen neu gepostet, verworfen")
+                            return@launch
+                        }
+                        if (reshuffled && reason == REASON_APP_CANCEL) {
+                            WhatsAppProbe.note("weg chat=${chatLogId(sbn)} whatsappOffen=$open -> umsortiert (neue Nachricht anderswo)")
+                        } else if (open == false) {
                             val verdict = runCatching { repository.onLoneMessageVanished(key, removedAt) }
                                 .getOrDefault("fehler")
                             WhatsAppProbe.note("weg chat=${chatLogId(sbn)} whatsappOffen=false -> $verdict")
@@ -445,6 +491,7 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
 
     companion object {
         const val CHANNEL_ID = "whatsapp_guard_alerts"
+        private const val RESHUFFLE_WINDOW_MS = 2_000L
         private const val TAG = "HikariWaGuard"
 
         /**
