@@ -1,0 +1,2220 @@
+{
+ "result": "ok",
+ "response": "collection",
+ "data": [
+  {
+   "id": "3c652754-fbf7-4465-be54-f61e50eadc5a",
+   "type": "chapter",
+   "attributes": {
+    "volume": "1",
+    "chapter": "1",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2018-12-30T12:51:36+00:00",
+    "readableAt": "2018-12-30T12:51:36+00:00",
+    "createdAt": "2018-12-30T12:51:36+00:00",
+    "updatedAt": "2018-12-30T12:51:36+00:00",
+    "version": 1,
+    "pages": 37
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "ea4cdf47-9092-4514-a76f-1eadfdf9f8db",
+   "type": "chapter",
+   "attributes": {
+    "volume": "1",
+    "chapter": "1",
+    "title": null,
+    "translatedLanguage": "de",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2022-11-01T18:06:20+00:00",
+    "readableAt": "2022-11-01T18:06:20+00:00",
+    "createdAt": "2022-11-01T10:54:32+00:00",
+    "updatedAt": "2022-11-03T19:50:21+00:00",
+    "version": 6,
+    "pages": 37
+   },
+   "relationships": [
+    {
+     "id": "5eff5f83-2366-4ea5-8b6a-2ee5cdf5b16d",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Black Poison",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "cd09f387-c585-4485-a96a-72b1a9516402",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "162146ad-ce1f-432e-972e-4fc3e00ea059",
+   "type": "chapter",
+   "attributes": {
+    "volume": "1",
+    "chapter": "2",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2019-02-09T02:38:45+00:00",
+    "readableAt": "2019-02-09T02:38:45+00:00",
+    "createdAt": "2019-02-09T02:38:45+00:00",
+    "updatedAt": "2019-02-09T02:38:45+00:00",
+    "version": 1,
+    "pages": 38
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "d16b6614-97c8-472e-b4a1-0d99d2300047",
+   "type": "chapter",
+   "attributes": {
+    "volume": "1",
+    "chapter": "3",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2019-03-18T05:56:40+00:00",
+    "readableAt": "2019-03-18T05:56:40+00:00",
+    "createdAt": "2019-03-18T05:56:40+00:00",
+    "updatedAt": "2019-03-18T05:56:40+00:00",
+    "version": 1,
+    "pages": 38
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "69ea7794-06fb-42f5-bd0b-fd548632b908",
+   "type": "chapter",
+   "attributes": {
+    "volume": "1",
+    "chapter": "4",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2019-04-01T16:32:01+00:00",
+    "readableAt": "2019-04-01T16:32:01+00:00",
+    "createdAt": "2019-04-01T16:32:01+00:00",
+    "updatedAt": "2019-04-01T16:32:01+00:00",
+    "version": 1,
+    "pages": 37
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "ded1978a-183e-44d5-a415-a37e252eb9bb",
+   "type": "chapter",
+   "attributes": {
+    "volume": "2",
+    "chapter": "5",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2019-05-02T16:00:02+00:00",
+    "readableAt": "2019-05-02T16:00:02+00:00",
+    "createdAt": "2019-05-02T16:00:02+00:00",
+    "updatedAt": "2019-05-02T16:00:02+00:00",
+    "version": 1,
+    "pages": 38
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "6d18f564-9081-4e86-8622-f80d7c31aed7",
+   "type": "chapter",
+   "attributes": {
+    "volume": "2",
+    "chapter": "6",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2019-06-02T07:38:09+00:00",
+    "readableAt": "2019-06-02T07:38:09+00:00",
+    "createdAt": "2019-06-02T07:38:09+00:00",
+    "updatedAt": "2019-06-02T07:38:09+00:00",
+    "version": 1,
+    "pages": 36
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "bf4bc478-17ee-4639-94bf-ae38876169a5",
+   "type": "chapter",
+   "attributes": {
+    "volume": "2",
+    "chapter": "7",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2019-06-30T17:12:58+00:00",
+    "readableAt": "2019-06-30T17:12:58+00:00",
+    "createdAt": "2019-06-30T17:12:58+00:00",
+    "updatedAt": "2019-06-30T17:12:58+00:00",
+    "version": 1,
+    "pages": 35
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "5215d037-6058-4be8-b471-4b13cee4caea",
+   "type": "chapter",
+   "attributes": {
+    "volume": "2",
+    "chapter": "8",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2019-07-28T16:25:42+00:00",
+    "readableAt": "2019-07-28T16:25:42+00:00",
+    "createdAt": "2019-07-28T16:25:42+00:00",
+    "updatedAt": "2019-07-28T16:25:42+00:00",
+    "version": 1,
+    "pages": 36
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "d4992fe1-6e05-4c96-ad7d-2bcb442278c0",
+   "type": "chapter",
+   "attributes": {
+    "volume": "3",
+    "chapter": "9",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2019-09-04T16:05:11+00:00",
+    "readableAt": "2019-09-04T16:05:11+00:00",
+    "createdAt": "2019-09-04T16:05:11+00:00",
+    "updatedAt": "2019-09-04T16:05:11+00:00",
+    "version": 1,
+    "pages": 36
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "a6686755-0e63-4506-a02c-159a551b3908",
+   "type": "chapter",
+   "attributes": {
+    "volume": "3",
+    "chapter": "10.1",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2019-10-01T17:10:38+00:00",
+    "readableAt": "2019-10-01T17:10:38+00:00",
+    "createdAt": "2019-10-01T17:10:38+00:00",
+    "updatedAt": "2019-10-01T17:10:38+00:00",
+    "version": 1,
+    "pages": 21
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "96378e20-143b-402f-a1c6-f7bc8e3854a0",
+   "type": "chapter",
+   "attributes": {
+    "volume": "3",
+    "chapter": "10.2",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2019-10-30T16:41:07+00:00",
+    "readableAt": "2019-10-30T16:41:07+00:00",
+    "createdAt": "2019-10-30T16:41:07+00:00",
+    "updatedAt": "2019-10-30T16:41:07+00:00",
+    "version": 1,
+    "pages": 22
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "ab948337-a053-4c66-8bee-029d30050b96",
+   "type": "chapter",
+   "attributes": {
+    "volume": "3",
+    "chapter": "11",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2019-12-07T14:09:51+00:00",
+    "readableAt": "2019-12-07T14:09:51+00:00",
+    "createdAt": "2019-12-07T14:09:51+00:00",
+    "updatedAt": "2019-12-07T14:09:51+00:00",
+    "version": 1,
+    "pages": 33
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "8237c9f6-ad2a-42e9-815a-f71756c8f200",
+   "type": "chapter",
+   "attributes": {
+    "volume": "3",
+    "chapter": "12",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2019-12-30T03:02:29+00:00",
+    "readableAt": "2019-12-30T03:02:29+00:00",
+    "createdAt": "2019-12-30T03:02:29+00:00",
+    "updatedAt": "2019-12-30T03:02:29+00:00",
+    "version": 1,
+    "pages": 33
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "56877fa3-081f-4e66-8d42-a48bac93c257",
+   "type": "chapter",
+   "attributes": {
+    "volume": "4",
+    "chapter": "13",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2020-01-26T16:40:48+00:00",
+    "readableAt": "2020-01-26T16:40:48+00:00",
+    "createdAt": "2020-01-26T16:40:48+00:00",
+    "updatedAt": "2020-01-26T16:40:48+00:00",
+    "version": 1,
+    "pages": 37
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "11a3c024-dcba-4f0c-9ea1-4361302775de",
+   "type": "chapter",
+   "attributes": {
+    "volume": "4",
+    "chapter": "14",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2020-03-02T16:08:12+00:00",
+    "readableAt": "2020-03-02T16:08:12+00:00",
+    "createdAt": "2020-03-02T16:08:12+00:00",
+    "updatedAt": "2020-03-02T16:08:12+00:00",
+    "version": 1,
+    "pages": 34
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "c70a24fa-6560-4717-9188-43da46052fb1",
+   "type": "chapter",
+   "attributes": {
+    "volume": "4",
+    "chapter": "15",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2020-03-28T14:20:24+00:00",
+    "readableAt": "2020-03-28T14:20:24+00:00",
+    "createdAt": "2020-03-28T14:20:24+00:00",
+    "updatedAt": "2020-03-28T14:20:24+00:00",
+    "version": 1,
+    "pages": 36
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "fd2c99d6-8b41-4aca-acd0-f954115d881c",
+   "type": "chapter",
+   "attributes": {
+    "volume": "4",
+    "chapter": "16",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2020-05-03T15:40:43+00:00",
+    "readableAt": "2020-05-03T15:40:43+00:00",
+    "createdAt": "2020-05-03T15:40:43+00:00",
+    "updatedAt": "2020-05-03T15:40:43+00:00",
+    "version": 1,
+    "pages": 34
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "cc0e4610-3fc6-45af-a607-2c17ec1d9cb6",
+   "type": "chapter",
+   "attributes": {
+    "volume": "5",
+    "chapter": "17",
+    "title": "Version 2",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2020-06-13T14:03:27+00:00",
+    "readableAt": "2020-06-13T14:03:27+00:00",
+    "createdAt": "2020-06-13T14:03:27+00:00",
+    "updatedAt": "2020-06-13T14:03:27+00:00",
+    "version": 1,
+    "pages": 33
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "c9a39b8d-47cd-4d07-b609-2365f03668dc",
+   "type": "chapter",
+   "attributes": {
+    "volume": "5",
+    "chapter": "18",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2020-06-29T13:21:35+00:00",
+    "readableAt": "2020-06-29T13:21:35+00:00",
+    "createdAt": "2020-06-29T13:21:35+00:00",
+    "updatedAt": "2020-06-29T13:21:35+00:00",
+    "version": 1,
+    "pages": 36
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "d3a80d91-cb12-443b-bf88-e42d1bb94955",
+   "type": "chapter",
+   "attributes": {
+    "volume": "5",
+    "chapter": "19",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2020-08-06T11:15:29+00:00",
+    "readableAt": "2020-08-06T11:15:29+00:00",
+    "createdAt": "2020-08-06T11:15:29+00:00",
+    "updatedAt": "2020-08-06T11:15:29+00:00",
+    "version": 1,
+    "pages": 23
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "1fb15a4a-883a-4d0a-9bd7-05c11731b3d3",
+   "type": "chapter",
+   "attributes": {
+    "volume": "5",
+    "chapter": "20",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2020-08-28T11:05:16+00:00",
+    "readableAt": "2020-08-28T11:05:16+00:00",
+    "createdAt": "2020-08-28T11:05:16+00:00",
+    "updatedAt": "2020-08-28T11:05:16+00:00",
+    "version": 1,
+    "pages": 27
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "c10d903c-c88a-4b33-99e5-4204f495c48c",
+   "type": "chapter",
+   "attributes": {
+    "volume": "5",
+    "chapter": "21",
+    "title": "",
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2020-09-29T11:30:06+00:00",
+    "readableAt": "2020-09-29T11:30:06+00:00",
+    "createdAt": "2020-09-29T11:30:06+00:00",
+    "updatedAt": "2020-09-29T11:30:06+00:00",
+    "version": 1,
+    "pages": 27
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "07dfcbfd-3b72-4e6b-8805-7c12e20c6a9e",
+   "type": "chapter",
+   "attributes": {
+    "volume": "6",
+    "chapter": "22",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2020-10-28T12:40:42+00:00",
+    "readableAt": "2020-10-28T12:40:42+00:00",
+    "createdAt": "2020-10-28T12:40:42+00:00",
+    "updatedAt": "2022-04-15T16:03:38+00:00",
+    "version": 2,
+    "pages": 33
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "d93a38c3-f810-449e-a97d-0ef0666a49b4",
+   "type": "chapter",
+   "attributes": {
+    "volume": "6",
+    "chapter": "23",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2020-11-29T11:42:19+00:00",
+    "readableAt": "2020-11-29T11:42:19+00:00",
+    "createdAt": "2020-11-29T11:42:19+00:00",
+    "updatedAt": "2022-04-15T16:03:40+00:00",
+    "version": 2,
+    "pages": 35
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "55373498-1071-468f-ba86-1cc47f797d98",
+   "type": "chapter",
+   "attributes": {
+    "volume": "6",
+    "chapter": "24",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2020-12-31T12:17:19+00:00",
+    "readableAt": "2020-12-31T12:17:19+00:00",
+    "createdAt": "2020-12-31T12:17:19+00:00",
+    "updatedAt": "2022-04-15T16:03:42+00:00",
+    "version": 2,
+    "pages": 32
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "977d18f2-d25c-4a43-a43d-a4dc5cf572bd",
+   "type": "chapter",
+   "attributes": {
+    "volume": "6",
+    "chapter": "25",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2021-01-30T11:30:12+00:00",
+    "readableAt": "2021-01-30T11:30:12+00:00",
+    "createdAt": "2021-01-30T11:30:12+00:00",
+    "updatedAt": "2022-04-15T16:03:43+00:00",
+    "version": 2,
+    "pages": 35
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "d741c4fe-7a88-44a5-90a7-3a93b65dcfb9",
+   "type": "chapter",
+   "attributes": {
+    "volume": "7",
+    "chapter": "26",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2021-03-01T12:43:31+00:00",
+    "readableAt": "2021-03-01T12:43:31+00:00",
+    "createdAt": "2021-03-01T12:43:31+00:00",
+    "updatedAt": "2022-05-16T22:24:00+00:00",
+    "version": 2,
+    "pages": 37
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "1fd4102b-2a56-4f5e-9e17-e161360d8692",
+   "type": "chapter",
+   "attributes": {
+    "volume": "7",
+    "chapter": "27",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2021-07-09T13:53:19+00:00",
+    "readableAt": "2021-07-09T13:53:19+00:00",
+    "createdAt": "2021-07-09T13:17:55+00:00",
+    "updatedAt": "2022-05-16T22:24:12+00:00",
+    "version": 4,
+    "pages": 33
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "f244d893-62a7-413e-96ba-156cf012e478",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "74b7e82a-a923-4f76-8caf-8b9898f3a704",
+   "type": "chapter",
+   "attributes": {
+    "volume": "7",
+    "chapter": "28",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2021-07-08T15:17:51+00:00",
+    "readableAt": "2021-07-08T15:17:51+00:00",
+    "createdAt": "2021-07-08T15:17:51+00:00",
+    "updatedAt": "2022-05-16T22:24:39+00:00",
+    "version": 4,
+    "pages": 37
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "4fab166a-38d4-4f07-a11a-cd2a4e00304c",
+   "type": "chapter",
+   "attributes": {
+    "volume": "7",
+    "chapter": "29",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2021-07-08T15:21:49+00:00",
+    "readableAt": "2021-07-08T15:21:49+00:00",
+    "createdAt": "2021-07-08T15:21:49+00:00",
+    "updatedAt": "2022-05-16T22:24:57+00:00",
+    "version": 4,
+    "pages": 35
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "a478aa01-24d7-4fda-a587-895e6e38ce2d",
+   "type": "chapter",
+   "attributes": {
+    "volume": "8",
+    "chapter": "30",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2021-07-08T15:25:35+00:00",
+    "readableAt": "2021-07-08T15:25:35+00:00",
+    "createdAt": "2021-07-08T15:25:34+00:00",
+    "updatedAt": "2022-10-04T04:38:32+00:00",
+    "version": 4,
+    "pages": 38
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "eb8b80d5-e98b-4fde-b7cb-9de9488da4eb",
+   "type": "chapter",
+   "attributes": {
+    "volume": "8",
+    "chapter": "31",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2021-07-30T23:41:19+00:00",
+    "readableAt": "2021-07-30T23:41:19+00:00",
+    "createdAt": "2021-07-30T23:41:19+00:00",
+    "updatedAt": "2022-10-04T04:38:33+00:00",
+    "version": 4,
+    "pages": 30
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "a7da5e6d-87f0-4f62-b250-2e97600d5b11",
+   "type": "chapter",
+   "attributes": {
+    "volume": "8",
+    "chapter": "32",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2021-08-28T01:06:46+00:00",
+    "readableAt": "2021-08-28T01:06:46+00:00",
+    "createdAt": "2021-08-28T01:06:46+00:00",
+    "updatedAt": "2022-10-04T04:38:34+00:00",
+    "version": 4,
+    "pages": 37
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "c38c6913-5778-4fd5-a34a-ace1f4985704",
+   "type": "chapter",
+   "attributes": {
+    "volume": "8",
+    "chapter": "33",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2021-09-29T15:40:19+00:00",
+    "readableAt": "2021-09-29T15:40:19+00:00",
+    "createdAt": "2021-09-29T15:40:18+00:00",
+    "updatedAt": "2022-10-04T04:38:35+00:00",
+    "version": 4,
+    "pages": 31
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "a9612b7d-b21d-4f9b-a824-d44f2408c135",
+   "type": "chapter",
+   "attributes": {
+    "volume": "9",
+    "chapter": "34",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2021-10-28T16:45:27+00:00",
+    "readableAt": "2021-10-28T16:45:27+00:00",
+    "createdAt": "2021-10-28T16:45:27+00:00",
+    "updatedAt": "2022-10-25T07:32:34+00:00",
+    "version": 4,
+    "pages": 31
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "ee07c594-7d6c-4499-b387-6902d51105da",
+   "type": "chapter",
+   "attributes": {
+    "volume": "9",
+    "chapter": "35",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2021-11-30T14:54:54+00:00",
+    "readableAt": "2021-11-30T14:54:54+00:00",
+    "createdAt": "2021-11-30T14:54:54+00:00",
+    "updatedAt": "2022-10-25T07:32:35+00:00",
+    "version": 4,
+    "pages": 35
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "bbd44f5d-b16b-4ab3-be52-c7414bbc372f",
+   "type": "chapter",
+   "attributes": {
+    "volume": "9",
+    "chapter": "36",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2022-01-02T09:43:47+00:00",
+    "readableAt": "2022-01-02T09:43:47+00:00",
+    "createdAt": "2022-01-02T09:43:47+00:00",
+    "updatedAt": "2022-10-25T07:32:37+00:00",
+    "version": 4,
+    "pages": 36
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "774b4cb6-d775-45c5-8483-7f2e1bbcc27d",
+   "type": "chapter",
+   "attributes": {
+    "volume": "9",
+    "chapter": "37",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2022-01-28T14:32:29+00:00",
+    "readableAt": "2022-01-28T14:32:29+00:00",
+    "createdAt": "2022-01-28T14:32:29+00:00",
+    "updatedAt": "2022-10-25T07:32:39+00:00",
+    "version": 4,
+    "pages": 35
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "80be832b-a850-4aff-805a-688b0329731d",
+   "type": "chapter",
+   "attributes": {
+    "volume": "10",
+    "chapter": "38",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2022-03-02T10:27:55+00:00",
+    "readableAt": "2022-03-02T10:27:55+00:00",
+    "createdAt": "2022-03-02T10:27:55+00:00",
+    "updatedAt": "2022-11-24T17:53:33+00:00",
+    "version": 4,
+    "pages": 34
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "1f8b8b5b-6e9d-4ead-995a-a3d4a40005ad",
+   "type": "chapter",
+   "attributes": {
+    "volume": "10",
+    "chapter": "39",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2022-04-15T09:24:59+00:00",
+    "readableAt": "2022-04-15T09:24:59+00:00",
+    "createdAt": "2022-04-15T09:24:59+00:00",
+    "updatedAt": "2022-11-24T17:53:38+00:00",
+    "version": 4,
+    "pages": 35
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "df297419-93d1-4375-b6fe-f0ab5bcb3bea",
+   "type": "chapter",
+   "attributes": {
+    "volume": "10",
+    "chapter": "39",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2022-03-27T15:12:20+00:00",
+    "readableAt": "2022-03-27T15:12:20+00:00",
+    "createdAt": "2022-03-27T15:12:20+00:00",
+    "updatedAt": "2022-11-24T17:53:34+00:00",
+    "version": 4,
+    "pages": 36
+   },
+   "relationships": [
+    {
+     "id": "0be0e211-44cc-49aa-8eb8-62812789642f",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Weeaboo Scans",
+      "official": false,
+      "website": "https://mangaweeaboo.com/"
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "737fdc5b-4cf3-483c-99d5-0f2427bf303e",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "ab37b160-8fe0-4d09-95b0-ef738d8f1a10",
+   "type": "chapter",
+   "attributes": {
+    "volume": "10",
+    "chapter": "40",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2022-04-30T17:56:53+00:00",
+    "readableAt": "2022-04-30T17:56:53+00:00",
+    "createdAt": "2022-04-30T17:56:51+00:00",
+    "updatedAt": "2022-11-24T17:53:41+00:00",
+    "version": 4,
+    "pages": 34
+   },
+   "relationships": [
+    {
+     "id": "0be0e211-44cc-49aa-8eb8-62812789642f",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Weeaboo Scans",
+      "official": false,
+      "website": "https://mangaweeaboo.com/"
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "737fdc5b-4cf3-483c-99d5-0f2427bf303e",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "6a24ecf9-610a-4b0f-9c63-b1c745e3eb1e",
+   "type": "chapter",
+   "attributes": {
+    "volume": "10",
+    "chapter": "40",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2022-04-25T19:57:23+00:00",
+    "readableAt": "2022-04-25T19:57:23+00:00",
+    "createdAt": "2022-04-25T19:57:23+00:00",
+    "updatedAt": "2022-11-24T17:53:38+00:00",
+    "version": 8,
+    "pages": 34
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "15f7505e-b116-4e01-bfa2-6e522f628b1c",
+   "type": "chapter",
+   "attributes": {
+    "volume": "10",
+    "chapter": "41",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2022-05-27T09:38:40+00:00",
+    "readableAt": "2022-05-27T09:38:40+00:00",
+    "createdAt": "2022-05-27T09:38:40+00:00",
+    "updatedAt": "2022-11-24T17:53:41+00:00",
+    "version": 4,
+    "pages": 36
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "35a869b7-1f6c-43dc-b59a-4e527dfea270",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "55d0445f-feb9-4a60-854f-19c7f98dab58",
+   "type": "chapter",
+   "attributes": {
+    "volume": "11",
+    "chapter": "42",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2022-06-28T15:48:16+00:00",
+    "readableAt": "2022-06-28T15:48:16+00:00",
+    "createdAt": "2022-06-28T15:48:16+00:00",
+    "updatedAt": "2023-05-28T09:53:15+00:00",
+    "version": 4,
+    "pages": 34
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "f05fef7c-74e6-4230-b59e-ff4737b0f18c",
+   "type": "chapter",
+   "attributes": {
+    "volume": "11",
+    "chapter": "43",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2022-07-30T14:31:53+00:00",
+    "readableAt": "2022-07-30T14:31:53+00:00",
+    "createdAt": "2022-07-30T14:31:52+00:00",
+    "updatedAt": "2023-05-28T09:53:15+00:00",
+    "version": 4,
+    "pages": 33
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "4f7e4b02-bb9b-41a6-b6d0-ad8c39e8d867",
+   "type": "chapter",
+   "attributes": {
+    "volume": "11",
+    "chapter": "44",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2022-08-31T08:08:17+00:00",
+    "readableAt": "2022-08-31T08:08:17+00:00",
+    "createdAt": "2022-08-31T08:08:17+00:00",
+    "updatedAt": "2023-05-28T09:53:17+00:00",
+    "version": 5,
+    "pages": 36
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "65d969d7-fc4a-4208-97b0-dd0615d5938d",
+   "type": "chapter",
+   "attributes": {
+    "volume": "11",
+    "chapter": "45",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2022-10-04T16:20:24+00:00",
+    "readableAt": "2022-10-04T16:20:24+00:00",
+    "createdAt": "2022-10-04T16:20:23+00:00",
+    "updatedAt": "2023-05-28T09:53:18+00:00",
+    "version": 4,
+    "pages": 33
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "23670fd3-e8c5-4474-98c3-810132b13cb5",
+   "type": "chapter",
+   "attributes": {
+    "volume": "12",
+    "chapter": "46",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2022-11-02T17:19:00+00:00",
+    "readableAt": "2022-11-02T17:19:00+00:00",
+    "createdAt": "2022-11-02T17:19:00+00:00",
+    "updatedAt": "2023-12-03T01:02:05+00:00",
+    "version": 4,
+    "pages": 34
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "55149170-4840-4980-9a34-d27afd596276",
+   "type": "chapter",
+   "attributes": {
+    "volume": "12",
+    "chapter": "47",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2022-12-05T22:38:46+00:00",
+    "readableAt": "2022-12-05T22:38:46+00:00",
+    "createdAt": "2022-12-05T22:38:45+00:00",
+    "updatedAt": "2023-12-03T01:02:06+00:00",
+    "version": 8,
+    "pages": 32
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "b25e301f-9766-4e8a-99a9-d27d3ae5de1a",
+   "type": "chapter",
+   "attributes": {
+    "volume": "12",
+    "chapter": "47",
+    "title": null,
+    "translatedLanguage": "de",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2023-01-05T18:01:16+00:00",
+    "readableAt": "2023-01-05T18:01:16+00:00",
+    "createdAt": "2023-01-05T18:01:16+00:00",
+    "updatedAt": "2023-12-03T01:02:08+00:00",
+    "version": 7,
+    "pages": 32
+   },
+   "relationships": [
+    {
+     "id": "5eff5f83-2366-4ea5-8b6a-2ee5cdf5b16d",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Black Poison",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "cd09f387-c585-4485-a96a-72b1a9516402",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "312de6f9-ce42-4659-ae66-ca4b64c37959",
+   "type": "chapter",
+   "attributes": {
+    "volume": "12",
+    "chapter": "48",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2023-01-04T08:01:46+00:00",
+    "readableAt": "2023-01-04T08:01:46+00:00",
+    "createdAt": "2023-01-04T08:01:45+00:00",
+    "updatedAt": "2023-12-03T01:02:08+00:00",
+    "version": 4,
+    "pages": 35
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "6501c249-d9fc-4ac2-9d47-318d35ef87a4",
+   "type": "chapter",
+   "attributes": {
+    "volume": "12",
+    "chapter": "49",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2023-02-05T14:32:34+00:00",
+    "readableAt": "2023-02-05T14:32:34+00:00",
+    "createdAt": "2023-02-05T14:32:34+00:00",
+    "updatedAt": "2023-12-03T01:02:11+00:00",
+    "version": 5,
+    "pages": 33
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "13dbaf2f-3559-46ea-a1d6-57c5bfb67b91",
+   "type": "chapter",
+   "attributes": {
+    "volume": "13",
+    "chapter": "50",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2023-02-26T13:19:58+00:00",
+    "readableAt": "2023-02-26T13:19:58+00:00",
+    "createdAt": "2023-02-26T11:46:10+00:00",
+    "updatedAt": "2024-07-26T17:24:41+00:00",
+    "version": 4,
+    "pages": 32
+   },
+   "relationships": [
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "ece3f5e9-3226-408b-9736-94ba17e87b39",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "f7170eaf-f882-4609-8279-4724013a7d2a",
+   "type": "chapter",
+   "attributes": {
+    "volume": "13",
+    "chapter": "50",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2023-03-01T17:23:03+00:00",
+    "readableAt": "2023-03-01T17:23:03+00:00",
+    "createdAt": "2023-03-01T17:23:02+00:00",
+    "updatedAt": "2024-07-26T17:24:43+00:00",
+    "version": 5,
+    "pages": 33
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "7bde8123-c53b-4f3d-8953-ed67f727511c",
+   "type": "chapter",
+   "attributes": {
+    "volume": "13",
+    "chapter": "51",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2023-03-26T08:09:57+00:00",
+    "readableAt": "2023-03-26T08:09:57+00:00",
+    "createdAt": "2023-03-26T08:09:56+00:00",
+    "updatedAt": "2024-07-26T17:24:47+00:00",
+    "version": 4,
+    "pages": 30
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "e63f62f6-66e6-4c6b-9682-f2d8c0f595f2",
+   "type": "chapter",
+   "attributes": {
+    "volume": "13",
+    "chapter": "52",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2023-05-02T05:27:30+00:00",
+    "readableAt": "2023-05-02T05:27:30+00:00",
+    "createdAt": "2023-05-02T05:27:29+00:00",
+    "updatedAt": "2024-07-26T17:24:53+00:00",
+    "version": 4,
+    "pages": 37
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "af456519-3791-47c3-af8a-23ed894b5dd8",
+   "type": "chapter",
+   "attributes": {
+    "volume": "13",
+    "chapter": "53",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2023-05-31T03:33:07+00:00",
+    "readableAt": "2023-05-31T03:33:07+00:00",
+    "createdAt": "2023-05-31T03:33:06+00:00",
+    "updatedAt": "2024-07-26T17:24:56+00:00",
+    "version": 6,
+    "pages": 33
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "114ab30e-f16d-40d7-9277-e183f7b3ccb4",
+   "type": "chapter",
+   "attributes": {
+    "volume": "14",
+    "chapter": "54",
+    "title": null,
+    "translatedLanguage": "en",
+    "externalUrl": null,
+    "isUnavailable": false,
+    "publishAt": "2023-07-02T09:23:50+00:00",
+    "readableAt": "2023-07-02T09:23:50+00:00",
+    "createdAt": "2023-07-02T09:23:49+00:00",
+    "updatedAt": "2025-03-18T15:04:28+00:00",
+    "version": 4,
+    "pages": 34
+   },
+   "relationships": [
+    {
+     "id": "4192c7dc-e814-4bf2-9cda-91a3c07ff890",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Biamam Scans",
+      "official": false,
+      "website": null
+     }
+    },
+    {
+     "id": "77bee52c-d2d6-44ad-a33a-1734c1fe696a",
+     "type": "manga"
+    },
+    {
+     "id": "9aaddca8-dba7-4cf0-a619-23f18d60d4ee",
+     "type": "user"
+    }
+   ]
+  }
+ ],
+ "limit": 60,
+ "offset": 0,
+ "total": 102
+}

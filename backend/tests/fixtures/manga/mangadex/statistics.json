@@ -1,0 +1,29 @@
+{
+ "result": "ok",
+ "statistics": {
+  "e18fe8c6-f6dc-4f05-8462-7b2083ff9a6c": {
+   "comments": {
+    "threadId": 62175,
+    "repliesCount": 519
+   },
+   "follows": 143035,
+   "rating": {
+    "average": 9.5266,
+    "bayesian": 9.516526663060196
+   },
+   "unavailableChaptersCount": 421
+  },
+  "a1c7c817-4e59-43b7-9365-09675a149a6f": {
+   "comments": {
+    "threadId": 672,
+    "repliesCount": 278
+   },
+   "follows": 142310,
+   "rating": {
+    "average": 9.5608,
+    "bayesian": 9.552579559653276
+   },
+   "unavailableChaptersCount": 5942
+  }
+ }
+}

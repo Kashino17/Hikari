@@ -10,6 +10,7 @@ import {
 } from "../manga/arc-download.js";
 import { isMangaCoverFile } from "../manga/cover.js";
 import { adapters, getAdapter } from "../manga/sources/index.js";
+import type { MangaSourceAdapter } from "../manga/sources/types.js";
 import { runChapterSync, runFullSync } from "../manga/sync.js";
 
 export interface MangaDeps {
@@ -17,10 +18,35 @@ export interface MangaDeps {
   mangaDir: string;
   /** Ordner der Titelbilder (manga/cover.ts). Ohne ihn gibt es keine Cover. */
   coverDir?: string;
+  /** Quelle zu einer Kennung (Tests setzen hier einen Adapter ohne Netz ein). */
+  adapterFor?: (id: string) => MangaSourceAdapter | undefined;
+}
+
+/**
+ * Slug für den Kapitel-Abgleich aus der Kapitel-Kennung `<source>:<slug>:<nummer>`.
+ * Bei onepiece.tube ist das der Slug der Reihe, bei MangaDex "<uuid>:<lang>".
+ */
+export function chapterSlug(
+  chapterId: string,
+  source: string,
+  number: number,
+  seriesId: string,
+): string {
+  const prefix = `${source}:`;
+  const suffix = `:${number}`;
+  if (
+    chapterId.startsWith(prefix) &&
+    chapterId.endsWith(suffix) &&
+    chapterId.length > prefix.length + suffix.length
+  ) {
+    return chapterId.slice(prefix.length, -suffix.length);
+  }
+  return seriesId.slice(source.length + 1); // "source:slug" → "slug"
 }
 
 export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void {
   const { db } = deps;
+  const adapterFor = deps.adapterFor ?? getAdapter;
   let syncQueuedOrRunning = false;
 
   app.get("/api/manga/series", async () => {
@@ -53,15 +79,23 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
         `SELECT c.id, c.number, c.title, c.arc_id AS arcId,
                 c.page_count AS pageCount,
                 c.is_available AS isAvailable,
+                c.lang, c.scanlation_group AS scanlationGroup,
                 CASE WHEN r.chapter_id IS NOT NULL THEN 1 ELSE 0 END AS isRead
          FROM manga_chapters c
          LEFT JOIN manga_chapter_read r ON r.chapter_id = c.id
          WHERE c.series_id = ?
-         ORDER BY c.number DESC`,
+         ORDER BY c.number DESC, c.lang`,
       )
       .all(id);
+    const langs = (
+      db
+        .prepare(
+          "SELECT DISTINCT lang FROM manga_chapters WHERE series_id = ? AND lang IS NOT NULL ORDER BY lang",
+        )
+        .all(id) as { lang: string }[]
+    ).map((r) => r.lang);
 
-    return { ...series, arcs, chapters };
+    return { ...series, langs, arcs, chapters };
   });
 
   app.get<{ Params: { id: string } }>("/api/manga/chapters/:id/pages", async (req, reply) => {
@@ -191,9 +225,13 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
       return reply.code(409).send({ error: "sync already running" });
 
     const sourceId = req.body?.sourceId;
-    const targets = sourceId
-      ? [getAdapter(sourceId)].filter((x): x is NonNullable<typeof x> => Boolean(x))
-      : adapters;
+    // Katalog-Quellen (MangaDex) gehören nicht in den globalen Abgleich — die Reihen
+    // werden einzeln über /api/manga/catalog/:id/open geholt.
+    const targets = (
+      sourceId
+        ? [adapterFor(sourceId)].filter((x): x is NonNullable<typeof x> => Boolean(x))
+        : adapters
+    ).filter((a) => !a.catalogOnly);
     if (sourceId && targets.length === 0) return reply.code(400).send({ error: "no such source" });
     if (targets.length === 0) return reply.code(400).send({ error: "no source registered" });
 
@@ -248,7 +286,7 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
         .get(req.params.arcId) as { arcId: string; source: string } | undefined;
       if (!arc) return reply.code(404).send({ error: "arc not found" });
 
-      const adapter = getAdapter(arc.source);
+      const adapter = adapterFor(arc.source);
       if (!adapter) {
         return reply.code(400).send({ error: `no adapter for source ${arc.source}` });
       }
@@ -301,10 +339,10 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
       | undefined;
     if (!chapter) return reply.code(404).send({ error: "chapter not found" });
 
-    const adapter = getAdapter(chapter.source);
+    const adapter = adapterFor(chapter.source);
     if (!adapter) return reply.code(400).send({ error: `no adapter for source ${chapter.source}` });
 
-    const seriesSlug = chapter.seriesId.slice(chapter.source.length + 1); // "source:slug" → "slug"
+    const seriesSlug = chapterSlug(chapter.id, chapter.source, chapter.number, chapter.seriesId);
 
     if (syncQueuedOrRunning) return reply.code(409).send({ error: "sync already running" });
     syncQueuedOrRunning = true;

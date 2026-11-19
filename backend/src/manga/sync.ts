@@ -123,9 +123,12 @@ export async function runChapterSync(input: ChapterSyncInput): Promise<void> {
     }
 
     const ext = extFromUrl(p.sourceUrl);
-    const relativePath = `${input.adapter.id}/${input.seriesSlug}/${input.chapterNumber}/${String(p.pageNumber).padStart(2, "0")}${ext}`;
+    // MangaDex-Slugs sind "<uuid>:<lang>" — auf Platte als Unterordner statt Doppelpunkt.
+    const slugDir = input.seriesSlug.replace(/:/g, "/");
+    const relativePath = `${input.adapter.id}/${slugDir}/${input.chapterNumber}/${String(p.pageNumber).padStart(2, "0")}${ext}`;
+    const download = input.adapter.downloadPage?.bind(input.adapter) ?? downloadPage;
     try {
-      const result = await downloadPage({
+      const result = await download({
         sourceUrl: p.sourceUrl,
         baseDir: input.mangaDir,
         relativePath,
@@ -209,6 +212,7 @@ export async function runSeriesSync(input: SeriesSyncInput): Promise<void> {
       ...(ch.pageCount !== undefined && { pageCount: ch.pageCount }),
       isAvailable: ch.isAvailable !== false,
       ...(ch.publishedAt !== undefined && { publishedAt: ch.publishedAt }),
+      ...(ch.lang !== undefined && { lang: ch.lang }),
     });
   }
 

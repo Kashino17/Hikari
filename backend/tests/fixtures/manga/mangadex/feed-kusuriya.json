@@ -1,0 +1,305 @@
+{
+ "result": "ok",
+ "response": "collection",
+ "data": [
+  {
+   "id": "0409b1fd-d76d-4114-9294-e1ac934fce05",
+   "type": "chapter",
+   "attributes": {
+    "volume": "1",
+    "chapter": "1.1",
+    "title": "The Curse of the Inner Court",
+    "translatedLanguage": "en",
+    "externalUrl": "https://global.manga-up.com/manga/164/14826",
+    "isUnavailable": false,
+    "publishAt": "2026-09-08T01:52:37+00:00",
+    "readableAt": "2026-09-08T01:52:37+00:00",
+    "createdAt": "2026-09-08T01:52:37+00:00",
+    "updatedAt": "2026-09-08T01:52:38+00:00",
+    "version": 2,
+    "pages": 0
+   },
+   "relationships": [
+    {
+     "id": "32908541-c7ec-40d4-b129-d4f0ce85884b",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Manga UP!",
+      "official": true,
+      "website": "https://global.manga-up.com/"
+     }
+    },
+    {
+     "id": "e18fe8c6-f6dc-4f05-8462-7b2083ff9a6c",
+     "type": "manga"
+    },
+    {
+     "id": "74d95af1-7492-4fca-bc44-10c9142703e8",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "ec5ff5b5-328b-4adb-b0c9-bbe30cdc4686",
+   "type": "chapter",
+   "attributes": {
+    "volume": "1",
+    "chapter": "1.2",
+    "title": "The Curse of the Inner Court",
+    "translatedLanguage": "en",
+    "externalUrl": "https://global.manga-up.com/manga/164/14827",
+    "isUnavailable": false,
+    "publishAt": "2026-09-08T01:57:27+00:00",
+    "readableAt": "2026-09-08T01:57:27+00:00",
+    "createdAt": "2026-09-08T01:57:27+00:00",
+    "updatedAt": "2026-09-08T01:57:27+00:00",
+    "version": 2,
+    "pages": 0
+   },
+   "relationships": [
+    {
+     "id": "32908541-c7ec-40d4-b129-d4f0ce85884b",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Manga UP!",
+      "official": true,
+      "website": "https://global.manga-up.com/"
+     }
+    },
+    {
+     "id": "e18fe8c6-f6dc-4f05-8462-7b2083ff9a6c",
+     "type": "manga"
+    },
+    {
+     "id": "74d95af1-7492-4fca-bc44-10c9142703e8",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "92b1ac74-7ad3-470f-a7c8-52f2a10ca58b",
+   "type": "chapter",
+   "attributes": {
+    "volume": "1",
+    "chapter": "1.3",
+    "title": "The Curse of the Inner Court",
+    "translatedLanguage": "en",
+    "externalUrl": "https://global.manga-up.com/manga/164/14828",
+    "isUnavailable": false,
+    "publishAt": "2026-09-08T02:02:07+00:00",
+    "readableAt": "2026-09-08T02:02:07+00:00",
+    "createdAt": "2026-09-08T02:02:07+00:00",
+    "updatedAt": "2026-09-08T02:02:07+00:00",
+    "version": 2,
+    "pages": 0
+   },
+   "relationships": [
+    {
+     "id": "32908541-c7ec-40d4-b129-d4f0ce85884b",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Manga UP!",
+      "official": true,
+      "website": "https://global.manga-up.com/"
+     }
+    },
+    {
+     "id": "e18fe8c6-f6dc-4f05-8462-7b2083ff9a6c",
+     "type": "manga"
+    },
+    {
+     "id": "74d95af1-7492-4fca-bc44-10c9142703e8",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "3114df58-58ca-455f-b89c-2dc0fef16931",
+   "type": "chapter",
+   "attributes": {
+    "volume": "1",
+    "chapter": "1.4",
+    "title": "The Curse of the Inner Court",
+    "translatedLanguage": "en",
+    "externalUrl": "https://global.manga-up.com/manga/164/14829",
+    "isUnavailable": false,
+    "publishAt": "2026-09-08T02:06:52+00:00",
+    "readableAt": "2026-09-08T02:06:52+00:00",
+    "createdAt": "2026-09-08T02:06:51+00:00",
+    "updatedAt": "2026-09-08T02:06:52+00:00",
+    "version": 2,
+    "pages": 0
+   },
+   "relationships": [
+    {
+     "id": "32908541-c7ec-40d4-b129-d4f0ce85884b",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Manga UP!",
+      "official": true,
+      "website": "https://global.manga-up.com/"
+     }
+    },
+    {
+     "id": "e18fe8c6-f6dc-4f05-8462-7b2083ff9a6c",
+     "type": "manga"
+    },
+    {
+     "id": "74d95af1-7492-4fca-bc44-10c9142703e8",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "f75c43f4-9afe-453e-a6a8-b9f312ecc75f",
+   "type": "chapter",
+   "attributes": {
+    "volume": "1",
+    "chapter": "2.1",
+    "title": "The Mad Scientist",
+    "translatedLanguage": "en",
+    "externalUrl": "https://global.manga-up.com/manga/164/14830",
+    "isUnavailable": false,
+    "publishAt": "2026-09-08T02:11:32+00:00",
+    "readableAt": "2026-09-08T02:11:32+00:00",
+    "createdAt": "2026-09-08T02:11:31+00:00",
+    "updatedAt": "2026-09-16T03:48:20+00:00",
+    "version": 3,
+    "pages": 1
+   },
+   "relationships": [
+    {
+     "id": "32908541-c7ec-40d4-b129-d4f0ce85884b",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Manga UP!",
+      "official": true,
+      "website": "https://global.manga-up.com/"
+     }
+    },
+    {
+     "id": "e18fe8c6-f6dc-4f05-8462-7b2083ff9a6c",
+     "type": "manga"
+    },
+    {
+     "id": "74d95af1-7492-4fca-bc44-10c9142703e8",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "2841c3a9-d7ee-4a05-9dbc-dffadd146d87",
+   "type": "chapter",
+   "attributes": {
+    "volume": "1",
+    "chapter": "2.2",
+    "title": "The Mad Scientist",
+    "translatedLanguage": "en",
+    "externalUrl": "https://global.manga-up.com/manga/164/14831",
+    "isUnavailable": false,
+    "publishAt": "2026-09-08T02:16:12+00:00",
+    "readableAt": "2026-09-08T02:16:12+00:00",
+    "createdAt": "2026-09-08T02:16:11+00:00",
+    "updatedAt": "2026-09-10T06:50:34+00:00",
+    "version": 3,
+    "pages": 1
+   },
+   "relationships": [
+    {
+     "id": "32908541-c7ec-40d4-b129-d4f0ce85884b",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Manga UP!",
+      "official": true,
+      "website": "https://global.manga-up.com/"
+     }
+    },
+    {
+     "id": "e18fe8c6-f6dc-4f05-8462-7b2083ff9a6c",
+     "type": "manga"
+    },
+    {
+     "id": "74d95af1-7492-4fca-bc44-10c9142703e8",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "7cea0906-e685-4e86-acac-7e4dfb087d17",
+   "type": "chapter",
+   "attributes": {
+    "volume": "1",
+    "chapter": "2.3",
+    "title": "The Mad Scientist",
+    "translatedLanguage": "en",
+    "externalUrl": "https://global.manga-up.com/manga/164/14832",
+    "isUnavailable": false,
+    "publishAt": "2026-09-08T02:20:54+00:00",
+    "readableAt": "2026-09-08T02:20:54+00:00",
+    "createdAt": "2026-09-08T02:20:53+00:00",
+    "updatedAt": "2026-09-11T16:20:40+00:00",
+    "version": 3,
+    "pages": 1
+   },
+   "relationships": [
+    {
+     "id": "32908541-c7ec-40d4-b129-d4f0ce85884b",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Manga UP!",
+      "official": true,
+      "website": "https://global.manga-up.com/"
+     }
+    },
+    {
+     "id": "e18fe8c6-f6dc-4f05-8462-7b2083ff9a6c",
+     "type": "manga"
+    },
+    {
+     "id": "74d95af1-7492-4fca-bc44-10c9142703e8",
+     "type": "user"
+    }
+   ]
+  },
+  {
+   "id": "9dda3237-7eb5-4e82-b43b-3f0a07e490f6",
+   "type": "chapter",
+   "attributes": {
+    "volume": "1",
+    "chapter": "3.1",
+    "title": "The Heavenly Maiden of the Court",
+    "translatedLanguage": "en",
+    "externalUrl": "https://global.manga-up.com/manga/164/14833",
+    "isUnavailable": false,
+    "publishAt": "2026-09-08T02:25:41+00:00",
+    "readableAt": "2026-09-08T02:25:41+00:00",
+    "createdAt": "2026-09-08T02:25:40+00:00",
+    "updatedAt": "2026-09-12T10:00:47+00:00",
+    "version": 3,
+    "pages": 1
+   },
+   "relationships": [
+    {
+     "id": "32908541-c7ec-40d4-b129-d4f0ce85884b",
+     "type": "scanlation_group",
+     "attributes": {
+      "name": "Manga UP!",
+      "official": true,
+      "website": "https://global.manga-up.com/"
+     }
+    },
+    {
+     "id": "e18fe8c6-f6dc-4f05-8462-7b2083ff9a6c",
+     "type": "manga"
+    },
+    {
+     "id": "74d95af1-7492-4fca-bc44-10c9142703e8",
+     "type": "user"
+    }
+   ]
+  }
+ ],
+ "limit": 500,
+ "offset": 0,
+ "total": 8
+}

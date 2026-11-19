@@ -1,3 +1,5 @@
+import type { DownloadInput, DownloadResult } from "../image-store.js";
+
 export interface RawSeries {
   sourceSlug: string;
   title: string;
@@ -20,6 +22,8 @@ export interface RawChapter {
   pageCount?: number;
   isAvailable?: boolean;
   publishedAt?: number;
+  /** Sprache des Kapitels ("de", "en"). */
+  lang?: string;
 }
 
 export interface RawPage {
@@ -40,6 +44,13 @@ export interface MangaSourceAdapter {
   listSeries(): Promise<RawSeries[]>;
   fetchSeriesDetail(seriesUrl: string): Promise<RawSeriesDetail>;
   fetchChapterPages(chapterUrl: string): Promise<RawPage[]>;
+  /**
+   * Reihen kommen über den Katalog (MangaDex), nicht über listSeries — der globale
+   * Abgleich (POST /api/manga/sync) lässt diese Quelle aus.
+   */
+  readonly catalogOnly?: boolean;
+  /** Eigenes Laden einer Seite (Kennung, Wiederholung, Rückmeldung); sonst image-store. */
+  downloadPage?(input: DownloadInput): Promise<DownloadResult>;
 }
 
 export class SourceLayoutError extends Error {

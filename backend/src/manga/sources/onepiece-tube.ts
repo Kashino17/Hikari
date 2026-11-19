@@ -122,6 +122,7 @@ async function fetchSeriesDetail(seriesUrl: string): Promise<RawSeriesDetail> {
         sourceUrl: e.href,
         pageCount: e.pages ?? 0,
         isAvailable: e.is_available !== false,
+        lang: "de",
         ...(publishedAt !== undefined ? { publishedAt } : {}),
       };
     });

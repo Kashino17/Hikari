@@ -171,10 +171,44 @@ CREATE TABLE IF NOT EXISTS manga_chapters (
   page_count INTEGER DEFAULT 0,
   is_available INTEGER DEFAULT 1,
   published_at INTEGER,
-  added_at INTEGER NOT NULL
+  added_at INTEGER NOT NULL,
+  -- Sprache des Kapitels ('de' / 'en') und die Gruppe, die es übersetzt hat (MangaDex).
+  lang TEXT,
+  scanlation_group TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_manga_chapters_series_num
   ON manga_chapters(series_id, number);
+
+-- MangaDex-Katalog (19.11.2026): zum Stöbern, noch nicht in den Leser-Tabellen.
+-- Wer eine Reihe öffnet, bekommt sie nach manga_series/manga_chapters kopiert.
+-- Titel, die aus der Liste fallen, bleiben und bekommen missing_since.
+CREATE TABLE IF NOT EXISTS manga_catalog (
+  id             TEXT PRIMARY KEY,           -- "mangadex:<uuid>"
+  source         TEXT NOT NULL,
+  title          TEXT NOT NULL,              -- englisch, sonst Umschrift
+  title_de       TEXT,
+  authors_json   TEXT NOT NULL DEFAULT '[]',
+  tags_json      TEXT NOT NULL DEFAULT '[]', -- deutsche Genre-Namen
+  status         TEXT,
+  year           INTEGER,
+  kind           TEXT NOT NULL,              -- Manga | Manhwa | Manhua | Webcomic
+  langs_json     TEXT NOT NULL DEFAULT '[]', -- Teilmenge von ["de","en"]
+  last_chapter   TEXT,
+  cover_url      TEXT,
+  description    TEXT,
+  popularity     INTEGER,                    -- Follower bei MangaDex
+  content_rating TEXT,
+  search_text    TEXT NOT NULL DEFAULT '',   -- normalisiert: Titel, Zweittitel, Autoren
+  updated_at     INTEGER,
+  synced_at      INTEGER NOT NULL,
+  missing_since  INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_manga_catalog_pop ON manga_catalog(popularity DESC);
+CREATE TABLE IF NOT EXISTS manga_catalog_meta (
+  key        TEXT PRIMARY KEY,
+  value      TEXT NOT NULL,
+  updated_at INTEGER NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS manga_pages (
   id TEXT PRIMARY KEY,

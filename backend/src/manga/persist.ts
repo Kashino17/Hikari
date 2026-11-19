@@ -63,24 +63,32 @@ export interface UpsertChapterInput {
   pageCount?: number;
   isAvailable?: boolean;
   publishedAt?: number;
+  /** Reihe, wenn sie nicht `source:seriesSlug` heißt (MangaDex: Slug = "<uuid>:<lang>"). */
+  seriesId?: string;
+  lang?: string;
+  scanlationGroup?: string | null;
 }
 
 export function upsertChapter(db: Database.Database, input: UpsertChapterInput): string {
   const id = chapterId(input.source, input.seriesSlug, input.number);
-  const sId = seriesId(input.source, input.seriesSlug);
+  const sId = input.seriesId ?? seriesId(input.source, input.seriesSlug);
   const now = Date.now();
   db.prepare(
     `INSERT INTO manga_chapters
-       (id, series_id, arc_id, number, title, source_url, page_count, is_available, published_at, added_at)
+       (id, series_id, arc_id, number, title, source_url, page_count, is_available, published_at, added_at,
+        lang, scanlation_group)
      VALUES
-       (@id, @series_id, @arc_id, @number, @title, @source_url, @page_count, @is_available, @published_at, @added_at)
+       (@id, @series_id, @arc_id, @number, @title, @source_url, @page_count, @is_available, @published_at, @added_at,
+        @lang, @scanlation_group)
      ON CONFLICT(id) DO UPDATE SET
        title = excluded.title,
        source_url = excluded.source_url,
        arc_id = COALESCE(excluded.arc_id, manga_chapters.arc_id),
        page_count = COALESCE(excluded.page_count, manga_chapters.page_count),
        is_available = excluded.is_available,
-       published_at = COALESCE(excluded.published_at, manga_chapters.published_at)`,
+       published_at = COALESCE(excluded.published_at, manga_chapters.published_at),
+       lang = COALESCE(excluded.lang, manga_chapters.lang),
+       scanlation_group = COALESCE(excluded.scanlation_group, manga_chapters.scanlation_group)`,
   ).run({
     id,
     series_id: sId,
@@ -92,6 +100,8 @@ export function upsertChapter(db: Database.Database, input: UpsertChapterInput):
     is_available: input.isAvailable === false ? 0 : 1,
     published_at: input.publishedAt ?? null,
     added_at: now,
+    lang: input.lang ?? null,
+    scanlation_group: input.scanlationGroup ?? null,
   });
   return id;
 }

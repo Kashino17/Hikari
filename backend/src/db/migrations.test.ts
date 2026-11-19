@@ -30,6 +30,8 @@ describe("applyMigrations", () => {
       "feed_settings",
       "ingest_queue",
       "manga_arcs",
+      "manga_catalog",
+      "manga_catalog_meta",
       "manga_chapter_read",
       "manga_chapters",
       "manga_library",

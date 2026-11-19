@@ -16,6 +16,7 @@ import { registerHealthRoute } from "./api/health.js";
 import { registerStatsRoutes } from "./api/stats.js";
 import { registerVideosRoutes } from "./api/videos.js";
 import { registerEbookRoutes } from "./api/ebooks.js";
+import { registerMangaCatalogRoutes } from "./api/manga-catalog.js";
 import { registerMangaRoutes } from "./api/manga.js";
 import { resolvePendingCovers } from "./ebooks/covers.js";
 import { createPoliteHttp } from "./ebooks/http.js";
@@ -64,6 +65,8 @@ import { fetchSponsorSegments } from "./sponsorblock/client.js";
 import { ArtworkScout, enrichArtwork, setArtworkScout } from "./library/artwork.js";
 import { enrichGenres, ensureFilmGenres, ensureSeriesGenres, setGenreScout } from "./library/genres.js";
 import { enrichMangaCovers, ensureMangaCover, setMangaCoverScout } from "./manga/cover.js";
+import { runMangaCatalogSync, shouldSyncCatalogOnStart } from "./manga/mangadex/catalog.js";
+import { mangadexClient } from "./manga/mangadex/client.js";
 
 const cfg = loadConfig();
 mkdirSync(cfg.videoDir, { recursive: true });
@@ -179,6 +182,13 @@ await registerStatsRoutes(app, { db });
 await registerVideosRoutes(app, { db, videoDir: cfg.videoDir, coverDir: cfg.coverDir, extractor });
 await registerDownloadsRoutes(app, { db, diskLimitBytes: cfg.diskLimitBytes });
 await registerMangaRoutes(app, { db, mangaDir: cfg.mangaDir, coverDir: cfg.coverDir });
+// MangaDex-Katalog: Stöbern, Cover, Öffnen — eine gemeinsame, gedrosselte Leitung (≤ 4/s).
+registerMangaCatalogRoutes(app, {
+  db,
+  client: mangadexClient(),
+  coverDir: cfg.coverDir,
+  log: (msg) => app.log.info(msg),
+});
 const ebookHttp = createPoliteHttp();
 // Open Library höflich: eine Anfrage pro Sekunde (Titelbilder).
 const ebookCoverHttp = createPoliteHttp({ perSecond: 1 });
@@ -474,6 +484,16 @@ const runEbooks = () =>
     .catch((err) => app.log.warn({ err }, "ebooks: Abgleich abgestürzt"))
     .then(() => runEbookCovers());
 cron.schedule("30 4 * * *", () => void runEbooks());
+
+// MangaDex-Katalog nachts um 4:50 (nach den E-Books), beim Start nur, wenn er leer ist
+// oder der letzte vollständige Lauf über 24 h her ist.
+const runMangaCatalog = () =>
+  runMangaCatalogSync({ db, client: mangadexClient(), log: (msg) => app.log.info(msg) }).catch(
+    (err) => app.log.warn({ err }, "manga-katalog: Abgleich abgestürzt"),
+  );
+cron.schedule("50 4 * * *", () => void runMangaCatalog());
+if (shouldSyncCatalogOnStart(db, Date.now()))
+  setTimeout(() => void runMangaCatalog(), 120_000).unref();
 if (shouldSyncOnStart(db, Date.now())) setTimeout(() => void runEbooks(), 60_000).unref();
 else setTimeout(() => void runEbookCovers(), 90_000).unref();
 
