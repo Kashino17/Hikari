@@ -120,6 +120,8 @@ internal fun readerColors(theme: String) = when (theme) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
+    // Beim Lesen soll das Handy nicht abdunkeln oder ausgehen.
+    com.hikari.app.ui.player.KeepScreenOn()
     val s by vm.state.collectAsState()
     val settings by vm.settings.collectAsState()
     val book = s.book
@@ -259,6 +261,10 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
                 WebView(c).apply {
                     layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                     setBackgroundColor(AColor.TRANSPARENT)
+                    // Kein Nachfedern am Rand und keine Rollbalken — die Seite steht wie gedruckt.
+                    overScrollMode = android.view.View.OVER_SCROLL_NEVER
+                    isHorizontalScrollBarEnabled = false
+                    isVerticalScrollBarEnabled = false
                     this.settings.javaScriptEnabled = true
                     this.settings.domStorageEnabled = true
                     this.settings.allowFileAccess = false
@@ -372,6 +378,8 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
                 modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 6.dp),
             )
         }
+        // Blaulichtfilter zuoberst: deckt Text und Leisten ab, lässt Berührungen durch.
+        com.hikari.app.ui.reader.BlueLightFilter(settings.blueFilter)
     }
 
     when (sheet) {
@@ -441,6 +449,9 @@ private fun ReaderSettingsSheet(s: ReaderSettings, update: ((ReaderSettings) -> 
         Choices("Zeilenabstand", listOf("1.3" to "Eng", "1.5" to "Normal", "1.8" to "Weit"), s.lineHeight.toString()) { v -> update { it.copy(lineHeight = v.toDouble()) } }
         Choices("Rand", listOf("schmal" to "Schmal", "mittel" to "Mittel", "breit" to "Breit"), s.margin) { v -> update { it.copy(margin = v) } }
         Choices("Umblättern", listOf("BOOK" to "Blättern", "SLIDE" to "Gleiten", "FADE" to "Ruhig", "NONE" to "Sofort"), s.pageAnim) { v -> update { it.copy(pageAnim = v) } }
+        Choices("Blaulichtfilter", com.hikari.app.ui.reader.BlueFilter.OPTIONS.map { (k, v) -> k.toString() to v }, s.blueFilter.toString()) { v ->
+            update { it.copy(blueFilter = v.toInt()) }
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text("Tippen zum Blättern", color = Color(0xB3FFFFFF), fontSize = 14.sp)

@@ -64,6 +64,8 @@ fun MangaReaderScreen(
     onOpenChapter: (chapterId: String) -> Unit,
     vm: MangaReaderViewModel = hiltViewModel(),
 ) {
+    // Beim Lesen soll das Handy nicht abdunkeln oder ausgehen.
+    com.hikari.app.ui.player.KeepScreenOn()
     LaunchedEffect(seriesId, chapterId) { vm.load(seriesId, chapterId) }
     val state by vm.uiState.collectAsState()
     val baseUrl by vm.backendUrl.collectAsState()
@@ -296,6 +298,8 @@ private fun ReaderContent(
                 }
             },
         )
+        // Blaulichtfilter zuoberst: deckt Seiten und Menü ab, lässt Berührungen durch.
+        com.hikari.app.ui.reader.BlueLightFilter(settings.blueFilter)
     }
     if (showSettings) {
         ModalBottomSheet(onDismissRequest = { showSettings = false }, containerColor = Color(0xFF1C1B20)) {

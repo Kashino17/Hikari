@@ -107,7 +107,13 @@ function hookDoc(doc, index) {
     if (!drag) {
       const sel = doc.getSelection()
       if (sel && !sel.isCollapsed) return
-      if (Math.abs(dx) < 12 || Math.abs(dx) < Math.abs(dy) * 1.3) return
+      if (Math.abs(dx) < 12 || Math.abs(dx) < Math.abs(dy) * 1.3) {
+        // Noch kein Blättern: die Seite bleibt liegen. Sonst schiebt foliate sie bei jeder
+        // kleinen oder schrägen Bewegung mit und lässt sie zurückschnappen — das Ruckeln.
+        e.preventDefault()
+        e.stopImmediatePropagation()
+        return
+      }
       drag = { lastX: t.screenX, lastT: e.timeStamp, vx: 0 }
       send('onDrag', { phase: 'start', dir: dx < 0 ? 1 : -1 })
     }
@@ -167,6 +173,10 @@ async function open(url, startCfi, settingsJson) {
     $msg.textContent = 'Buch wird geöffnet …'
     view = document.createElement('foliate-view')
     document.body.append(view)
+    // Auch auf den Rändern außerhalb des Textes schiebt ein Finger die Seite nicht mit.
+    document.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 1) { e.preventDefault(); e.stopPropagation() }
+    }, { capture: true, passive: false })
     view.addEventListener('load', (e) => hookDoc(e.detail.doc, e.detail.index))
     view.addEventListener('relocate', (e) => {
       relocations++

@@ -117,6 +117,9 @@ internal fun MangaReaderSettingsSheet(s: MangaReaderSettings, onChange: (MangaRe
         Option("Hintergrund", null) {
             Segments(listOf("schwarz" to "Schwarz", "grau" to "Grau", "weiss" to "Papier"), s.background) { onChange(s.copy(background = it)) }
         }
+        Option("Blaulichtfilter", com.hikari.app.ui.reader.BlueFilter.hint(s.blueFilter)) {
+            Segments(com.hikari.app.ui.reader.BlueFilter.OPTIONS, s.blueFilter) { onChange(s.copy(blueFilter = it)) }
+        }
         Text(
             "Zoomen: mit zwei Fingern bis zu ${MANGA_MAX_ZOOM.toInt()}-fach, Doppeltippen zoomt an die Stelle. Gezoomt blättert nichts, bis du wieder ganz herausgezoomt hast.",
             color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp,

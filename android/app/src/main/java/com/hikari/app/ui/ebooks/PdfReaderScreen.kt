@@ -100,6 +100,8 @@ private class PdfPages(file: File) : AutoCloseable {
 
 @Composable
 fun PdfReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
+    // Beim Lesen soll das Handy nicht abdunkeln oder ausgehen.
+    com.hikari.app.ui.player.KeepScreenOn()
     val s by vm.state.collectAsState()
     val book = s.book ?: run {
         Box(Modifier.fillMaxSize().background(Color(0xFF1F1F22)), contentAlignment = Alignment.Center) {
@@ -129,6 +131,8 @@ fun PdfReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
     var jump by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
+    val readerSettings by vm.settings.collectAsState()
+    Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().background(Color(0xFF1F1F22))) {
         Row(Modifier.fillMaxWidth().statusBarsPadding().padding(end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { vm.flush(); onBack() }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Zurück", tint = Color.White) }
@@ -168,6 +172,9 @@ fun PdfReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
                 }
             }
         }
+    }
+    // Blaulichtfilter zuoberst (wie im Buch- und Manga-Leser).
+    com.hikari.app.ui.reader.BlueLightFilter(readerSettings.blueFilter)
     }
     if (jump) {
         var text by remember { mutableStateOf("${current + 1}") }

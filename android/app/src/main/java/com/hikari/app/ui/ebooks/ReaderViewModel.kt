@@ -38,6 +38,8 @@ data class ReaderSettings(
     val pageAnim: String = "BOOK",
     /** Tippen an den Rändern blättert; aus = nur wischen. */
     val tapTurn: Boolean = true,
+    /** Blaulichtfilter, siehe [com.hikari.app.ui.reader.BlueFilter]. */
+    val blueFilter: Int = 0,
 )
 
 data class ReaderUiState(

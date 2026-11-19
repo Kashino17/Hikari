@@ -19,6 +19,8 @@ data class MangaReaderSettings(
     val tapTurn: Boolean = true,
     val background: String = "schwarz",
     val volumeKeys: Boolean = true,
+    /** Blaulichtfilter, siehe [com.hikari.app.ui.reader.BlueFilter]. */
+    val blueFilter: Int = 0,
 ) {
     fun encode(): String = json.encodeToString(serializer(), this)
 
