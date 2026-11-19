@@ -50,3 +50,14 @@ describe("isWholeBook", () => {
     expect(MIN_WORDS).toEqual({ prosa: 8000, drama: 5000, lyrik: 3000 });
   });
 });
+
+describe("isWholeBook — Plakate und Faltblätter", () => {
+  it("Wandzeitung, Plakat und Faltblatt sind keine Bücher", () => {
+    for (const title of [
+      'Wandzeitung "Ableismus begegnen"',
+      "Plakat: Grundrechte",
+      "Faltblatt Wahlen",
+    ])
+      expect(isWholeBook({ ...base, title }).ok).toBe(false);
+  });
+});

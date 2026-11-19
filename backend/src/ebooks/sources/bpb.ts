@@ -38,12 +38,28 @@ export function parseBpbPage(html: string): Parsed["book"] {
   const pdf = files.find((f) => /\.pdf(\?|$)/i.test(f));
   const file = epub ?? pdf;
   if (!file) return undefined;
+  const heading = $("h2.opening-header__title").first();
+  const subtitle = heading.find(".opening-header__subtitle").text().replace(/\s+/g, " ").trim();
+  const main = heading
+    .clone()
+    .children(".opening-header__subtitle")
+    .remove()
+    .end()
+    .text()
+    .replace(/\s+/g, " ")
+    .trim();
+  // Untertitel wie bei Gutenberg mit Doppelpunkt absetzen; die App zeigt ihn kleiner.
   const title =
-    $("h2.opening-header__title").first().text().replace(/\s+/g, " ").trim() ||
+    (main && subtitle ? `${main}: ${subtitle}` : main) ||
     String($('meta[property="og:title"]').attr("content") ?? "")
       .replace(/\s*\|\s*bpb\.de$/, "")
       .trim();
-  const author = $(".opening-header__author").first().text().replace(/\s+/g, " ").trim();
+  const author = $(".opening-header__author")
+    .first()
+    .text()
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^von\s+/i, "");
   const desc = String(
     $('meta[property="og:description"]').attr("content") ??
       $('meta[name="description"]').attr("content") ??

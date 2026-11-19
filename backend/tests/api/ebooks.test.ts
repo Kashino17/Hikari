@@ -90,6 +90,58 @@ describe("/api/ebooks", () => {
     expect(json.syncing).toBe(false);
   });
 
+  it("home: Regale, Buch des Tages und Autoren", async () => {
+    const { json } = await get("/api/ebooks/home");
+    const keys = json.shelves.map((x: { key: string }) => x.key);
+    expect(keys).toEqual(expect.arrayContaining(["beliebt", "kurz", "kat:krimi"]));
+    const shelf = (k: string) => json.shelves.find((x: { key: string }) => x.key === k);
+    expect(shelf("beliebt").books[0].id).toBe("gutenberg:k7");
+    expect(shelf("kat:krimi").title).toBe("Krimi & Mystery");
+    // kurz = unter 2 Stunden Lesezeit (bei 230 Wörtern pro Minute)
+    expect(ids(shelf("kurz").books)).toEqual(["gutenberg:k1", "gutenberg:k2", "gutenberg:r1"]);
+    expect(json.featured.id).toMatch(/^gutenberg:/);
+    // Autoren ab zwei Büchern, versteckte zählen nicht
+    expect(json.authors).toEqual([{ name: "Autor", count: 9 }]);
+  });
+
+  it("home mit zuletzt gelesenem Buch: Regal „Weil du … liest“", async () => {
+    const { json } = await get(`/api/ebooks/home?because=${encodeURIComponent("gutenberg:k1")}`);
+    const s = json.shelves.find((x: { key: string }) => x.key === "because");
+    expect(s.title).toBe("Weil du Buch k1 liest");
+    expect(ids(s.books)).not.toContain("gutenberg:k1");
+    expect(s.books.length).toBeGreaterThan(0);
+  });
+
+  it("list nach Autor", async () => {
+    const { json } = await get(`/api/ebooks/list?author=${encodeURIComponent("Max Müller")}`);
+    expect(ids(json.books)).toEqual(["gutenberg:r2"]);
+  });
+
+  it("Detail: mehr vom Autor und ähnliche Bücher", async () => {
+    const { json } = await get(`/api/ebooks/${encodeURIComponent("gutenberg:r1")}`);
+    expect(ids(json.moreByAuthor)).not.toContain("gutenberg:r1");
+    expect(json.moreByAuthor.length).toBeGreaterThan(0);
+    expect(ids(json.similar)).toEqual(["gutenberg:r2"]);
+  });
+
+  it("dasselbe Werk zweimal im Katalog erscheint nur einmal (das beliebtere)", async () => {
+    upsertBook(
+      db,
+      raw("f1", { title: "Faust", authors: ["Goethe"], popularity: 3 }),
+      ["drama"],
+      3000,
+    );
+    upsertBook(
+      db,
+      raw("f2", { title: "Faust", authors: ["Goethe"], popularity: 10 }),
+      ["drama"],
+      3001,
+    );
+    const { json } = await get("/api/ebooks/list?q=faust");
+    expect(ids(json.books)).toEqual(["gutenberg:f2"]);
+    expect((await get("/api/ebooks/gutenberg%3Af1")).status).toBe(200);
+  });
+
   it("BookCard hat Format, Minuten und Titelbild-Weg", async () => {
     const { json } = await get("/api/ebooks/list?category=roman&sort=titel");
     expect(json.books[0]).toMatchObject({

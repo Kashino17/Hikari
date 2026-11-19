@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import { type PoliteHttp, createPoliteHttp } from "../../src/ebooks/http.js";
-import { bpbSource, looksEnglish } from "../../src/ebooks/sources/bpb.js";
+import { bpbSource, looksEnglish, parseBpbPage } from "../../src/ebooks/sources/bpb.js";
 import {
   GUTENBERG_POPULARITY_PER_RUN,
   gutenbergSource,
@@ -311,5 +311,28 @@ describe("createPoliteHttp", () => {
     });
     await http.get("https://x.test/a");
     expect(ua).toBe("Hikari-Ebooks/1.0 (private reader)");
+  });
+});
+
+describe("bpb — Titel und Autoren sauber", () => {
+  const page = (
+    inner: string,
+  ) => `<html><head><meta property="og:title" content="X | bpb.de"></head><body>
+    <div class="opening-header__heading">${inner}</div>
+    <bpb-input-radio-option value="/system/files/dokument_pdf/x.pdf?download=1">PDF</bpb-input-radio-option></body></html>`;
+  it("Untertitel wird mit Doppelpunkt abgesetzt, „von“ fällt vor dem Autor weg", () => {
+    const b = parseBpbPage(
+      page(`<h2 class="opening-header__title">Indien <span class="opening-header__subtitle">Porträt einer aufstrebenden Großmacht</span></h2>
+        <span class="opening-header__author"><strong>von Heribert Dieter</strong></span>`),
+    );
+    expect(b?.title).toBe("Indien: Porträt einer aufstrebenden Großmacht");
+    expect(b?.authors).toEqual(["Heribert Dieter"]);
+  });
+  it("mehrere Autoren nach „von“", () => {
+    const b = parseBpbPage(
+      page(`<h2 class="opening-header__title">Der Westbalkan</h2>
+        <span class="opening-header__author">von Krsto Lazarević, Franziska Tschinderle und Danijel Majić</span>`),
+    );
+    expect(b?.authors).toEqual(["Krsto Lazarević", "Franziska Tschinderle", "Danijel Majić"]);
   });
 });

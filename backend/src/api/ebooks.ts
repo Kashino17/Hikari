@@ -38,6 +38,44 @@ const SOURCE_NAMES: Record<string, string> = {
 };
 const WORDS_PER_MINUTE = 230;
 const MISSING_GRACE_MS = 30 * 24 * 60 * 60 * 1000;
+/** Kategorien, die als eigenes Regal auf der Startseite erscheinen (in dieser Reihenfolge). */
+const SHELF_CATEGORIES = [
+  "krimi",
+  "fantastik",
+  "maerchen",
+  "philosophie",
+  "abenteuer",
+  "liebe",
+  "humor",
+  "drama",
+  "lyrik",
+  "historisch",
+  "reisen",
+  "wissenschaft",
+  "geschichte",
+  "biografie",
+];
+const SHELF_SUBTITLES: Record<string, string> = {
+  krimi: "Verbrechen, Gericht, Unheimliches",
+  fantastik: "Zauber, Spuk und ferne Welten",
+  maerchen: "Märchen und Sagen",
+  philosophie: "Große Ideen",
+  abenteuer: "Fahrten, Inseln, Wildnis",
+  liebe: "Herzklopfen von damals",
+  humor: "Zum Lachen",
+  drama: "Dramen zum Lesen",
+  lyrik: "Gedichte und Balladen",
+  historisch: "Romane aus alten Zeiten",
+  reisen: "Reiseberichte von damals",
+  wissenschaft: "Entdeckungen und Erfindungen",
+  geschichte: "Wie es gewesen ist",
+  biografie: "Leben und Erinnerungen",
+};
+/** Haupttitel ohne Untertitel („Faust: Der Tragödie erster Teil“ → „Faust“). */
+function shortTitle(t: string): string {
+  const i = t.indexOf(": ");
+  return i > 0 ? t.slice(0, i) : t;
+}
 const LENGTH: Record<string, string> = {
   kurz: "e.word_count < 30000",
   mittel: "e.word_count BETWEEN 30000 AND 100000",
@@ -77,8 +115,15 @@ export function ftsQuery(q: string): string | null {
 
 export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void {
   const { db } = deps;
+  const alive = (a: string) =>
+    `${a}.hidden_reason IS NULL AND (${a}.missing_since IS NULL OR ${a}.missing_since > ${Date.now() - MISSING_GRACE_MS})`;
+  // Dasselbe Werk mehrfach im Katalog (z. B. zwei Gutenberg-Ausgaben von Faust): nur die beliebtere zeigen.
+  db.exec("CREATE INDEX IF NOT EXISTS idx_ebooks_title ON ebooks(title)");
   const visible = () =>
-    `e.hidden_reason IS NULL AND (e.missing_since IS NULL OR e.missing_since > ${Date.now() - MISSING_GRACE_MS})`;
+    `${alive("e")} AND NOT EXISTS (SELECT 1 FROM ebooks d WHERE d.title = e.title AND d.authors_json = e.authors_json
+       AND d.id <> e.id AND ${alive("d")}
+       AND (COALESCE(d.popularity, -1) > COALESCE(e.popularity, -1)
+            OR (COALESCE(d.popularity, -1) = COALESCE(e.popularity, -1) AND d.id < e.id)))`;
   const catsOf = db.prepare(
     "SELECT category FROM ebook_categories WHERE book_id = ? ORDER BY category",
   );
@@ -104,7 +149,7 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
   const COLS =
     "e.id, e.source, e.title, e.authors_json, e.year, e.format, e.cover_url, e.word_count, e.description, e.source_url, e.cover_status";
 
-  app.get("/api/ebooks/home", async () => {
+  app.get<{ Querystring: { because?: string } }>("/api/ebooks/home", async (req) => {
     const newest = db
       .prepare(
         `SELECT ${COLS} FROM ebooks e WHERE ${visible()} ORDER BY e.added_at DESC, e.title LIMIT 20`,
@@ -129,7 +174,113 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
         books: (inCat.all(c.id) as Row[]).map(card),
       }));
     const sync = ebookSyncState();
+    const pick = (where: string, params: unknown[] = [], order = SORT.beliebt, limit = 12) =>
+      (
+        db
+          .prepare(
+            `SELECT ${COLS} FROM ebooks e WHERE ${visible()} AND ${where} ORDER BY ${order} LIMIT ?`,
+          )
+          .all(...params, limit) as Row[]
+      ).map(card);
+    const shelves: {
+      key: string;
+      title: string;
+      subtitle: string;
+      books: ReturnType<typeof card>[];
+    }[] = [];
+    const add = (
+      key: string,
+      title: string,
+      subtitle: string,
+      books: ReturnType<typeof card>[],
+      min = 4,
+    ) => {
+      if (books.length >= min) shelves.push({ key, title, subtitle, books });
+    };
+    // „Weil du … liest“: zuerst derselbe Autor, dann dieselbe Art Buch.
+    const because = req.query.because
+      ? (db.prepare(`SELECT ${COLS} FROM ebooks e WHERE e.id = ?`).get(req.query.because) as
+          | Row
+          | undefined)
+      : undefined;
+    if (because) {
+      const b = card(because);
+      const first = b.authors[0];
+      const byAuthor = first
+        ? pick(
+            "e.id <> ? AND EXISTS (SELECT 1 FROM json_each(e.authors_json) a WHERE a.value = ?)",
+            [b.id, first],
+            SORT.beliebt,
+            6,
+          )
+        : [];
+      const cat =
+        b.categories.find((c) => c !== "roman" && c !== "erzaehlungen") ?? b.categories[0];
+      const seen = new Set([b.id, ...byAuthor.map((x) => x.id)]);
+      const byCat = cat
+        ? pick(
+            "e.id IN (SELECT book_id FROM ebook_categories WHERE category = ?)",
+            [cat],
+            SORT.beliebt,
+            20,
+          ).filter((x) => !seen.has(x.id))
+        : [];
+      add(
+        "because",
+        `Weil du ${shortTitle(b.title)} liest`,
+        "Vom selben Autor und Ähnliches",
+        [...byAuthor, ...byCat].slice(0, 12),
+        1,
+      );
+    }
+    add(
+      "beliebt",
+      "Die meistgelesenen",
+      "Downloads der letzten 30 Tage",
+      pick("e.popularity IS NOT NULL"),
+    );
+    add(
+      "kurz",
+      "Kurz & gut",
+      "An einem Abend gelesen",
+      pick(`e.word_count IS NOT NULL AND e.word_count < ${WORDS_PER_MINUTE * 120}`),
+      3,
+    );
+    for (const id of SHELF_CATEGORIES) {
+      const c = CATEGORIES.find((x) => x.id === id);
+      if (!c) continue;
+      add(
+        `kat:${id}`,
+        c.label,
+        SHELF_SUBTITLES[id] ?? "",
+        pick("e.id IN (SELECT book_id FROM ebook_categories WHERE category = ?)", [id]),
+        6,
+      );
+    }
+    add("pdf", "Wissen kompakt", "Sachbücher als PDF", pick("e.format = 'pdf'", [], SORT.neu));
+    add("neu", "Neu dazugekommen", "Seit dem letzten Abgleich", newest.map(card));
+    // Buch des Tages: jeden Tag ein anderes der beliebtesten, möglichst mit echtem Titelbild.
+    const candidates = pick("e.popularity IS NOT NULL", [], SORT.beliebt, 40);
+    const withCover = candidates.filter((x) => x.coverUrl);
+    const pool = withCover.length ? withCover : candidates;
+    const day = Math.floor(Date.now() / 86_400_000);
+    const featured = pool.length ? pool[day % pool.length] : undefined;
+    // Autoren mit mindestens zwei Büchern, die meisten zuerst.
+    const authorCount = new Map<string, number>();
+    for (const r of db.prepare(`SELECT e.authors_json FROM ebooks e WHERE ${visible()}`).all() as {
+      authors_json: string;
+    }[])
+      for (const a of JSON.parse(r.authors_json) as string[])
+        authorCount.set(a, (authorCount.get(a) ?? 0) + 1);
+    const authors = [...authorCount]
+      .filter(([, n]) => n >= 2)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "de"))
+      .slice(0, 30)
+      .map(([name, count]) => ({ name, count }));
     return {
+      shelves,
+      featured,
+      authors,
       newest: newest.map(card),
       rows,
       categories: CATEGORIES.filter((c) => countOf.has(c.id)).map((c) => ({
@@ -144,7 +295,16 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
   app.get<{
     Querystring: Partial<
       Record<
-        "q" | "category" | "source" | "format" | "length" | "sort" | "state" | "offset" | "limit",
+        | "q"
+        | "category"
+        | "author"
+        | "source"
+        | "format"
+        | "length"
+        | "sort"
+        | "state"
+        | "offset"
+        | "limit",
         string
       >
     >;
@@ -161,6 +321,10 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
     if (q.category) {
       where.push("e.id IN (SELECT book_id FROM ebook_categories WHERE category = ?)");
       params.push(q.category);
+    }
+    if (q.author) {
+      where.push("EXISTS (SELECT 1 FROM json_each(e.authors_json) a WHERE a.value = ?)");
+      params.push(q.author);
     }
     if (q.source) {
       where.push("e.source = ?");
@@ -234,8 +398,31 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
       .prepare("SELECT local_path, bytes FROM ebook_files WHERE book_id = ?")
       .get(r.id) as { local_path: string; bytes: number } | undefined;
     const downloaded = !!file && existsSync(file.local_path);
+    const c = card(r);
+    const near = (where: string, params: unknown[], limit = 12) =>
+      (
+        db
+          .prepare(
+            `SELECT ${COLS} FROM ebooks e WHERE ${visible()} AND e.id <> ? AND ${where} ORDER BY ${SORT.beliebt} LIMIT ?`,
+          )
+          .all(r.id, ...params, limit) as Row[]
+      ).map(card);
+    const first = c.authors[0];
+    const moreByAuthor = first
+      ? near("EXISTS (SELECT 1 FROM json_each(e.authors_json) a WHERE a.value = ?)", [first])
+      : [];
+    const mainCat =
+      c.categories.find((x) => x !== "roman" && x !== "erzaehlungen") ?? c.categories[0];
+    const taken = new Set(moreByAuthor.map((x) => x.id));
+    const similar = mainCat
+      ? near("e.id IN (SELECT book_id FROM ebook_categories WHERE category = ?)", [mainCat], 24)
+          .filter((x) => !taken.has(x.id))
+          .slice(0, 12)
+      : [];
     return {
-      ...card(r),
+      ...c,
+      moreByAuthor,
+      similar,
       description: r.description ?? undefined,
       sourceUrl: r.source_url,
       sourceName: SOURCE_NAMES[r.source] ?? r.source,

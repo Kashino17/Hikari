@@ -12,10 +12,13 @@ const SNIPPET = /leseprobe|auszug|excerpt|sample chapter|probekapitel/i;
 const PERIODICAL = /periodicals|zeitschrift|zeitung|magazine/i;
 /** Im Titel nur eindeutige Heft-Angaben — „Das blaue Heft“ oder „Journal einer Reise“ sind Bücher. */
 const PERIODICAL_TITLE = /jahrgang|\bheft\s*\d|\bnr\.\s*\d/i;
+/** Plakate und Faltblätter der bpb sind keine Bücher. */
+const NOT_A_BOOK = /^(wandzeitung|plakat|poster|faltblatt|flyer)\b/i;
 
 /** Nur ganze Bücher: keine Leseproben, Unterseiten, Zeitschriften oder zu kurzen Texte. */
 export function isWholeBook(raw: RawBook): { ok: true } | { ok: false; reason: string } {
   if (SNIPPET.test(raw.title)) return { ok: false, reason: "Leseprobe oder Auszug" };
+  if (NOT_A_BOOK.test(raw.title)) return { ok: false, reason: "Plakat oder Faltblatt" };
   if (raw.source === "wikisource" && raw.title.includes("/"))
     return { ok: false, reason: "Teil eines Werks" };
   if (raw.subjects.some((s) => PERIODICAL.test(s)) || PERIODICAL_TITLE.test(raw.title))
