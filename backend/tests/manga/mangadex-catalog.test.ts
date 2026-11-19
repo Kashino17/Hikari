@@ -489,3 +489,26 @@ describe("Suche findet auch nicht lesbare Reihen", () => {
     expect(listCatalog(db, {}).items.map((c) => c.title)).toEqual(["Solo Camping"]);
   });
 });
+
+describe("Suche: Titel-Treffer zuerst", () => {
+  it("eine Reihe mit dem Wort im Titel steht vor beliebteren, die es nur im Nebentitel haben", () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    const [m1, m2] = LIST.data.slice(0, 2);
+    upsertCatalog(db, {
+      ...catalogFromManga(m1!, 1),
+      title: "Irgendwas Beliebtes",
+      popularity: 1000,
+    });
+    upsertCatalog(db, { ...catalogFromManga(m2!, 1), title: "Solo Camping", popularity: 1 });
+    db.exec("UPDATE manga_catalog SET readable_at = 1, readable_en = 5, readable_de = 0");
+    db.exec(
+      "UPDATE manga_catalog SET search_text = 'irgendwas beliebtes solo' WHERE title = 'Irgendwas Beliebtes'",
+    );
+    db.exec("UPDATE manga_catalog SET search_text = 'solo camping' WHERE title = 'Solo Camping'");
+    expect(listCatalog(db, { q: "solo" }).items.map((c) => c.title)).toEqual([
+      "Solo Camping",
+      "Irgendwas Beliebtes",
+    ]);
+  });
+});

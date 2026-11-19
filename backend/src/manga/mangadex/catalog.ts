@@ -358,14 +358,21 @@ export function listCatalog(
     }
   }
   const from = `FROM manga_catalog c WHERE ${w.sql.join(" AND ")}`;
+  // Suche: Treffer im (deutschen) Titel vor Treffern nur in Nebentiteln oder bei Autoren.
+  const titleFirst = f.q?.trim() && (f.sort ?? "pop") === "pop" ? f.q.trim().toLowerCase() : "";
   const limit = Math.min(Math.max(Number(f.limit) || 30, 1), 100);
   const offset = Math.max(Number(f.offset) || 0, 0);
   const total = (db.prepare(`SELECT COUNT(*) AS n ${from}`).get(...w.params) as { n: number }).n;
   const rows = db
     .prepare(
-      `SELECT ${COLS} ${from} ORDER BY ${searching ? "(COALESCE(c.readable_de, 0) + COALESCE(c.readable_en, 0)) = 0, " : ""}${SORT[f.sort ?? "pop"] ?? SORT.pop} LIMIT ? OFFSET ?`,
+      `SELECT ${COLS} ${from} ORDER BY ${searching ? "(COALESCE(c.readable_de, 0) + COALESCE(c.readable_en, 0)) = 0, " : ""}${titleFirst ? "(instr(lower(c.title), ?) > 0 OR instr(lower(COALESCE(c.title_de, '')), ?) > 0) DESC, " : ""}${SORT[f.sort ?? "pop"] ?? SORT.pop} LIMIT ? OFFSET ?`,
     )
-    .all(...w.params, limit, offset) as CatalogDbRow[];
+    .all(
+      ...w.params,
+      ...(titleFirst ? [titleFirst, titleFirst] : []),
+      limit,
+      offset,
+    ) as CatalogDbRow[];
   return { total, items: rows.map(toCard) };
 }
 
